@@ -8,9 +8,11 @@ find_package(OpenGL REQUIRED)
 find_package(glfw3 3.3 REQUIRED)
 find_package(glm REQUIRED)
 
-file(GLOB ATLAS_SOURCES "atlas/*.cpp")
+file(GLOB_RECURSE ATLAS_SOURCES "atlas/*.cpp" "external/*.c" "external/*.cpp")
 
-add_library(atlas STATIC ${ATLAS_SOURCES})
+file(GLOB_RECURSE GLAD_SOURCES "external/glad/glad.cpp")
+
+add_library(atlas STATIC ${ATLAS_SOURCES} ${GLAD_SOURCES})
 
 target_link_libraries(atlas
     PRIVATE
@@ -22,9 +24,10 @@ target_include_directories(atlas
     PRIVATE
     ${GLM_INCLUDE_DIRS}
     include
+    external
 )
 
-file(GLOB TEST_SOURCES "test/*.cpp")
+file(GLOB_RECURSE TEST_SOURCES "test/*.cpp")
 
 add_executable(atlas_test ${TEST_SOURCES})
 
@@ -34,6 +37,8 @@ target_include_directories(atlas_test
     PRIVATE
     include
 )
+
+include_directories(include)
 
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)

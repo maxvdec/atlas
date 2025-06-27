@@ -7,9 +7,11 @@
  Copyright (c) 2025 maxvdec
 */
 
+#include <atlas/window.hpp>
 #include <iostream>
 
 int main() {
-    std::cout << "Hello, World!" << std::endl;
+    Window mywin = Window("Atlas Test", Frame(800, 600));
+    mywin.run();
     return 0;
 }
