@@ -56,7 +56,28 @@ Window::Window(const std::string &title, Frame mesures, Position2d position) {
 
 void Window::run() {
     while (!glfwWindowShouldClose(this->window)) {
+        glClearColor(this->backgroundColor.r, this->backgroundColor.g,
+                     this->backgroundColor.b, this->backgroundColor.a);
+
+        switch (this->renderingMode) {
+        case RenderingMode::Full:
+            break;
+        case RenderingMode::Points:
+            glPointSize(5.0f);
+            break;
+        case RenderingMode::Lines:
+            glLineWidth(2.0f);
+            break;
+        }
+
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
         glfwSwapBuffers(this->window);
         glfwPollEvents();
     }
+
+    glfwDestroyWindow(this->window);
+    glfwTerminate();
+    this->window = nullptr;
+    return;
 }

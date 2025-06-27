@@ -24,6 +24,16 @@ struct Size2d {
     Size2d(int width = 0, int height = 0) : width(width), height(height) {}
 };
 
+struct Color {
+    float r;
+    float g;
+    float b;
+    float a;
+
+    Color(float r = 1.0f, float g = 1.0f, float b = 1.0f, float a = 1.0f)
+        : r(r), g(g), b(b), a(a) {}
+};
+
 typedef Size2d Frame;
 
 #endif // ATLAS_UNITS_HPP

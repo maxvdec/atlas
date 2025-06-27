@@ -15,6 +15,12 @@
 
 struct GLFWwindow;
 
+enum class RenderingMode {
+    Full,
+    Points,
+    Lines,
+};
+
 class Window {
   public:
     Window(const std::string &title, Frame mesures,
@@ -24,6 +30,9 @@ class Window {
 
     Frame size;
     Position2d position;
+
+    Color backgroundColor = Color(0.0f, 0.0f, 0.0f, 1.0f);
+    RenderingMode renderingMode = RenderingMode::Full;
 
   private:
     GLFWwindow *window;
