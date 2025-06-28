@@ -7,14 +7,14 @@
  Copyright (c) 2025 maxvdec
 */
 
-#include <glad/gl.h>
+#include <glad/glad.h>
 
 #include "atlas/core/rendering.hpp"
 #include "atlas/units.hpp"
 #include <GLFW/glfw3.h>
-#include <OpenGL/gl.h>
 #include <atlas/window.hpp>
 #include <cstddef>
+#include <iostream>
 #include <stdexcept>
 #include <string>
 
@@ -46,13 +46,20 @@ Window::Window(const std::string &title, Frame mesures, Position2d position) {
 
     glfwMakeContextCurrent(this->window);
 
-    if (!gladLoadGL(reinterpret_cast<GLADloadfunc>(glfwGetProcAddress))) {
+    if (!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))) {
         throw std::runtime_error("Failed to initialize GLAD");
     }
 
     glViewport(0, 0, this->size.width, this->size.height);
 
     glfwSetFramebufferSizeCallback(this->window, framebuffer_size_callback);
+
+    const char *renderer =
+        reinterpret_cast<const char *>(glGetString(GL_RENDERER));
+    const char *version =
+        reinterpret_cast<const char *>(glGetString(GL_VERSION));
+    std::cout << "Renderer: " << (renderer ? renderer : "Unknown")
+              << "\nVersion: " << (version ? version : "Unknown") << std::endl;
 }
 
 void Window::run() {

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-project(Atlas LANGUAGES CXX)
+project(Atlas LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -30,7 +30,7 @@ find_package(glm REQUIRED)
 
 file(GLOB_RECURSE ATLAS_SOURCES "atlas/*.cpp" "external/*.c" "external/*.cpp")
 
-file(GLOB_RECURSE GLAD_SOURCES "external/glad/glad.cpp")
+file(GLOB_RECURSE GLAD_SOURCES "external/glad/glad.c")
 
 add_library(atlas STATIC ${ATLAS_SOURCES} ${GLAD_SOURCES})
 add_dependencies(atlas GenerateShadersHeader)

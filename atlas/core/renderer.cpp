@@ -8,17 +8,26 @@
 */
 
 #include "atlas/core/rendering.hpp"
+#include <glad/glad.h>
+#include <iostream>
 
 void Renderer::registerObject(CoreObject *object, RenderingFn dispatcher) {
     object->id = static_cast<int>(this->registeredObjects.size());
     this->registeredObjects.push_back(object);
-    this->dispactchers.push_back(dispatcher);
+    this->dispatchers.push_back(dispatcher);
 }
 
 void Renderer::dispatchAll() {
     for (size_t i = 0; i < this->registeredObjects.size(); ++i) {
-        if (this->dispactchers[i]) {
-            this->dispactchers[i](this->registeredObjects[i]);
-        }
+        this->dispatchers[i](this->registeredObjects[i]);
+    }
+}
+
+void checkGLError(const std::string &operation) {
+    GLenum error = glGetError();
+    if (error != GL_NO_ERROR) {
+        std::cerr << "OpenGL error during " << operation << ": " << error
+                  << std::endl;
+        throw std::runtime_error("OpenGL error occurred");
     }
 }

@@ -9,24 +9,30 @@
 
 #include "atlas/core/rendering.hpp"
 #include "atlas/core/shaders.h"
-#include <OpenGL/gl.h>
+#include <glad/glad.h>
+#include <iostream>
+#include <optional>
 #include <string>
 #include <vector>
 
-#ifdef __APPLE__
-#include <OpenGL/glext.h>
-#endif
-
 std::vector<float> CoreObject::makeVertexData() const {
     std::vector<float> vertexData;
-    vertexData.reserve(vertices.size() * 3);
+    vertexData.reserve(vertices.size() * 6);
 
     for (const auto &vertex : vertices) {
         vertexData.push_back(vertex.x);
         vertexData.push_back(vertex.y);
         vertexData.push_back(vertex.z);
+
+        vertexData.push_back(vertex.color.r);
+        vertexData.push_back(vertex.color.g);
+        vertexData.push_back(vertex.color.b);
+        std::cout << "Vertex: (" << vertex.x << ", " << vertex.y << ", "
+                  << vertex.z << ") Color: (" << vertex.color.r << ", "
+                  << vertex.color.g << ", " << vertex.color.b << ")\n";
     }
 
+    std::cout << "Total vertices: " << vertices.size() << "\n";
     return vertexData;
 }
 
@@ -95,8 +101,8 @@ void CoreShaderProgram::use() const { glUseProgram(this->ID); }
 
 std::vector<CoreShader> CoreObject::makeShaderList() const {
     std::vector<CoreShader> shaderList;
-    shaderList.push_back(this->vertexShader);
-    shaderList.push_back(this->fragmentShader);
+    shaderList.push_back(this->vertexShader.value());
+    shaderList.push_back(this->fragmentShader.value());
     for (const auto &shader : this->shaders) {
         shaderList.push_back(shader);
     }
@@ -105,21 +111,16 @@ std::vector<CoreShader> CoreObject::makeShaderList() const {
 
 void CoreObject::initialize() {
     unsigned int VAO;
-#ifdef __APPLE__
-    glGenVertexArraysAPPLE(1, &VAO);
-    glBindVertexArrayAPPLE(VAO);
-#else
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
-#endif
     unsigned int VBO;
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    this->attributes = {VBO, 0}; // VAO will be set later
+    this->attributes = {VBO, VAO};
 
     const auto vertexData = makeVertexData();
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertexData), vertexData.data(),
-                 GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(float),
+                 vertexData.data(), GL_STATIC_DRAW);
 
     CoreShader vertexShader(NORMAL_VERT, CoreShaderType::Vertex);
     this->vertexShader = vertexShader;
@@ -130,8 +131,29 @@ void CoreObject::initialize() {
     CoreShaderProgram shaderProgram(makeShaderList());
     this->program = shaderProgram;
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
+                          (void *)0);
     glEnableVertexAttribArray(0);
 
-    this->program.use();
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
+                          (void *)(3 * sizeof(float)));
+
+    this->program.value().use();
+
+    auto dispatcher = [](CoreObject *object) {
+        glUseProgram(object->program.value().ID);
+        glBindVertexArray(object->attributes.VAO);
+        glDrawArrays(GL_TRIANGLES, 0,
+                     static_cast<GLsizei>(object->vertices.size()));
+    };
+
+    Renderer::instance().registerObject(this, dispatcher);
+}
+
+CoreObject::CoreObject(std::vector<CoreVertex> vertices) {
+    this->vertices = std::move(vertices);
+    this->vertexShader = std::nullopt;
+    this->fragmentShader = std::nullopt;
+    this->program = std::nullopt;
+    this->initialize();
 }

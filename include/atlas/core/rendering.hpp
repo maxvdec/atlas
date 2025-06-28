@@ -12,6 +12,7 @@
 
 #include "atlas/units.hpp"
 #include <functional>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -43,8 +44,8 @@ struct CoreShaderProgram {
 };
 
 struct CoreVertexAttributes {
-    unsigned int VBO;
-    unsigned int VAO;
+    unsigned int VBO = 0;
+    unsigned int VAO = 0;
 };
 
 struct CoreObject {
@@ -52,20 +53,22 @@ struct CoreObject {
     std::vector<CoreVertex> vertices;
     CoreVertexAttributes attributes;
     std::vector<CoreShader> shaders;
-    CoreShader vertexShader;
-    CoreShader fragmentShader;
-    CoreShaderProgram program;
+    std::optional<CoreShader> vertexShader;
+    std::optional<CoreShader> fragmentShader;
+    std::optional<CoreShaderProgram> program;
 
     void initialize();
 
     std::vector<float> makeVertexData() const;
     std::vector<CoreShader> makeShaderList() const;
+
+    CoreObject(std::vector<CoreVertex> vertices = {});
 };
 
 using RenderingFn = std::function<void(CoreObject *)>;
 
 struct Renderer {
-    std::vector<RenderingFn> dispactchers;
+    std::vector<RenderingFn> dispatchers;
     std::vector<CoreObject *> registeredObjects;
 
     static Renderer &instance() {
@@ -83,5 +86,7 @@ struct Renderer {
   private:
     Renderer() = default;
 };
+
+void checkGLError(const std::string &operation);
 
 #endif // ATLAS_RENDERING_HPP

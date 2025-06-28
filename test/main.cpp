@@ -7,11 +7,15 @@
  Copyright (c) 2025 maxvdec
 */
 
+#include <atlas/core/rendering.hpp>
 #include <atlas/window.hpp>
 #include <iostream>
 
 int main() {
-    Window mywin = Window("Atlas Test", Frame(800, 600));
+    Window mywin = Window("Atlas Test", Frame(1500, 800));
+    auto object = CoreObject({{0.0f, 0.5f, 0.0f, Color(1.0f, 0.0f, 0.0f)},
+                              {-0.5f, -0.5f, 0.0f, Color(0.0f, 1.0f, 0.0f)},
+                              {0.5f, -0.5f, 0.0f, Color(0.0f, 0.0f, 1.0f)}});
     mywin.run();
     return 0;
 }
