@@ -9,6 +9,7 @@
 
 #include <glad/gl.h>
 
+#include "atlas/core/rendering.hpp"
 #include "atlas/units.hpp"
 #include <GLFW/glfw3.h>
 #include <OpenGL/gl.h>
@@ -71,6 +72,8 @@ void Window::run() {
         }
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        Renderer::instance().dispatchAll();
 
         glfwSwapBuffers(this->window);
         glfwPollEvents();

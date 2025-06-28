@@ -11,6 +11,7 @@
 #define ATLAS_RENDERING_HPP
 
 #include "atlas/units.hpp"
+#include <functional>
 #include <string>
 #include <vector>
 
@@ -47,6 +48,7 @@ struct CoreVertexAttributes {
 };
 
 struct CoreObject {
+    int id = 0;
     std::vector<CoreVertex> vertices;
     CoreVertexAttributes attributes;
     std::vector<CoreShader> shaders;
@@ -58,6 +60,28 @@ struct CoreObject {
 
     std::vector<float> makeVertexData() const;
     std::vector<CoreShader> makeShaderList() const;
+};
+
+using RenderingFn = std::function<void(CoreObject *)>;
+
+struct Renderer {
+    std::vector<RenderingFn> dispactchers;
+    std::vector<CoreObject *> registeredObjects;
+
+    static Renderer &instance() {
+        static Renderer inst;
+        return inst;
+    }
+
+    Renderer(const Renderer &) = delete;
+    Renderer &operator=(const Renderer &) = delete;
+
+    void registerObject(CoreObject *object, RenderingFn dispatcher);
+
+    void dispatchAll();
+
+  private:
+    Renderer() = default;
 };
 
 #endif // ATLAS_RENDERING_HPP

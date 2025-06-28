@@ -13,6 +13,10 @@
 #include <string>
 #include <vector>
 
+#ifdef __APPLE__
+#include <OpenGL/glext.h>
+#endif
+
 std::vector<float> CoreObject::makeVertexData() const {
     std::vector<float> vertexData;
     vertexData.reserve(vertices.size() * 3);
@@ -100,6 +104,14 @@ std::vector<CoreShader> CoreObject::makeShaderList() const {
 }
 
 void CoreObject::initialize() {
+    unsigned int VAO;
+#ifdef __APPLE__
+    glGenVertexArraysAPPLE(1, &VAO);
+    glBindVertexArrayAPPLE(VAO);
+#else
+    glGenVertexArrays(1, &VAO);
+    glBindVertexArray(VAO);
+#endif
     unsigned int VBO;
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
