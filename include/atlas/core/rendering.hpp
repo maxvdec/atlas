@@ -61,6 +61,11 @@ struct CoreVertexAttributes {
     unsigned int elementCount = 0;
 };
 
+enum class ProjectionType {
+    Orthographic,
+    Perspective,
+};
+
 struct CoreObject {
     int id = 0;
     std::vector<CoreVertex> vertices;
@@ -71,7 +76,10 @@ struct CoreObject {
     std::optional<CoreShaderProgram> program;
     Texture texture;
     bool visualizeTexture = false;
+    ProjectionType projectionType = ProjectionType::Perspective;
     glm::mat4 modelMatrix = glm::mat4(1.0f);
+    glm::mat4 projectionMatrix = glm::mat4(1.0f);
+    glm::mat4 viewMatrix = glm::mat4(1.0f);
 
     void initialize();
     void provideIndexedDrawing(std::vector<unsigned int> indices);
@@ -86,8 +94,10 @@ struct CoreObject {
     void disableTexturing();
 
     void translate(float x, float y, float z);
-    void rotate(float angle);
+    void rotate(float angle, Axis axis = Axis::Z);
     void scale(float x, float y, float z);
+
+    void updateProjectionType(ProjectionType type);
 
     std::vector<float> makeVertexData() const;
     std::vector<CoreShader> makeShaderList() const;

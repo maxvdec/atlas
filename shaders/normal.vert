@@ -7,13 +7,15 @@ out vec4 fragColor;
 out vec2 texCoord;
 
 uniform mat4 uModel;
+uniform mat4 uView;
+uniform mat4 uProjection;
 uniform vec2 uAspectCorrection;
 
 void main()
 {
     fragColor = aColor;
     texCoord = aTexCoord;
-    gl_Position = uModel * vec4(aPos, 1.0);
+    gl_Position = uModel * uView * uProjection * vec4(aPos, 1.0);
     gl_Position.x *= uAspectCorrection.x;
     gl_Position.y *= uAspectCorrection.y;
 }

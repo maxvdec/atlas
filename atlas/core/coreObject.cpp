@@ -229,6 +229,9 @@ void CoreObject::initialize() {
 
         object->program.value().setInt("uTexture", 0);
         object->program.value().setMatrix4("uModel", object->modelMatrix);
+        object->program.value().setMatrix4("uProjection",
+                                           object->projectionMatrix);
+        object->program.value().setMatrix4("uView", object->viewMatrix);
         if (object->visualizeTexture) {
             object->program.value().setBool("uUseTexture", true);
             glActiveTexture(GL_TEXTURE0);
@@ -288,6 +291,9 @@ CoreObject::CoreObject(std::vector<CoreVertex> vertices) {
     this->fragmentShader = std::nullopt;
     this->program = std::nullopt;
     this->texture = Texture();
+    updateProjectionType(this->projectionType);
+    this->modelMatrix = glm::mat4(1.0f);
+    this->viewMatrix = glm::mat4(1.0f);
 }
 
 void CoreObject::setVertexColor(int index, Color color) {
@@ -307,9 +313,23 @@ void CoreObject::translate(float x, float y, float z) {
     this->modelMatrix = glm::translate(this->modelMatrix, glm::vec3(x, y, z));
 }
 
-void CoreObject::rotate(float angle) {
-    this->modelMatrix = glm::rotate(this->modelMatrix, glm::radians(angle),
-                                    glm::vec3(0.0f, 0.0f, 1.0f));
+void CoreObject::rotate(float anglem, Axis axis) {
+    switch (axis) {
+    case Axis::X:
+        this->modelMatrix = glm::rotate(this->modelMatrix, glm::radians(anglem),
+                                        glm::vec3(1.0f, 0.0f, 0.0f));
+        break;
+    case Axis::Y:
+        this->modelMatrix = glm::rotate(this->modelMatrix, glm::radians(anglem),
+                                        glm::vec3(0.0f, 1.0f, 0.0f));
+        break;
+    case Axis::Z:
+        this->modelMatrix = glm::rotate(this->modelMatrix, glm::radians(anglem),
+                                        glm::vec3(0.0f, 0.0f, 1.0f));
+        break;
+    default:
+        throw std::invalid_argument("Invalid axis for rotation");
+    }
 }
 
 void CoreObject::scale(float x, float y, float z) {
@@ -326,4 +346,15 @@ void CoreShaderProgram::setVec2(const std::string &name,
                                 const glm::vec2 &vector) const {
     glUniform2fv(glGetUniformLocation(this->ID, name.c_str()), 1,
                  glm::value_ptr(vector));
+}
+
+void CoreObject::updateProjectionType(ProjectionType type) {
+    this->projectionType = type;
+    if (type == ProjectionType::Orthographic) {
+        this->projectionMatrix =
+            glm::ortho(-1.0f, 1.0f, -1.0f, 1.0f, -1.0f, 1.0f);
+    } else {
+        this->projectionMatrix = glm::perspective(
+            glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
+    }
 }
