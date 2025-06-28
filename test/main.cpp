@@ -17,13 +17,18 @@ int main() {
     Window mywin = Window("Atlas Test", Frame(1500, 800));
 
     Workspace workspace(TEST_PATH);
-    Resource textureResource = workspace.loadResource("wooden.jng");
+    Resource textureResource = workspace.loadResource("wooden.jpg");
     Texture texture;
+    texture.fromImage(textureResource);
 
     auto object = CoreObject({{1.0f, 1.f, 0.0f, Color(1.0f, 0.0f, 0.0f)},
                               {1.0f, -1.f, 0.0f, Color(0.0f, 1.0f, 0.0f)},
                               {-1.0f, -1.0f, 0.0f, Color(0.0f, 0.0f, 1.0f)},
                               {-1.0f, 1.0f, 0.0f, Color(1.0f, 1.0f, 0.0f)}});
+
+    object.provideTextureCoords({Size2d(1.0f, 1.0f), Size2d(1.0f, 0.0f),
+                                 Size2d(0.0f, 0.0f), Size2d(0.0f, 1.0f)});
+    object.setTexture(texture);
     unsigned int indices[] = {0, 1, 2, 2, 3, 0};
     object.provideIndexedDrawing(
         std::vector<unsigned int>(indices, indices + 6));

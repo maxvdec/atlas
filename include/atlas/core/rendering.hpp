@@ -10,6 +10,7 @@
 #ifndef ATLAS_RENDERING_HPP
 #define ATLAS_RENDERING_HPP
 
+#include "atlas/texture.hpp"
 #include "atlas/units.hpp"
 #include <functional>
 #include <optional>
@@ -65,9 +66,18 @@ struct CoreObject {
     std::optional<CoreShader> vertexShader;
     std::optional<CoreShader> fragmentShader;
     std::optional<CoreShaderProgram> program;
+    Texture texture;
+    bool visualizeTexture = false;
 
     void initialize();
     void provideIndexedDrawing(std::vector<unsigned int> indices);
+    void provideVertexData(std::vector<CoreVertex> vertices);
+    void provideTextureCoords(std::vector<Size2d> textureCoords);
+    void provideColors(std::vector<Color> colors);
+    void setTexture(Texture texture);
+
+    void enableTexturing();
+    void disableTexturing();
 
     std::vector<float> makeVertexData() const;
     std::vector<CoreShader> makeShaderList() const;

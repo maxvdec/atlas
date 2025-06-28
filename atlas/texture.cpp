@@ -74,7 +74,6 @@ void Texture::setProperties() {
 }
 
 void Texture::fromImage(Resource resc) {
-    this->setProperties();
     int width, height, nrChannels;
     unsigned char *data =
         stbi_load(resc.path.c_str(), &width, &height, &nrChannels, 0);
@@ -82,6 +81,8 @@ void Texture::fromImage(Resource resc) {
     unsigned int textureID;
     glGenTextures(1, &textureID);
     glBindTexture(GL_TEXTURE_2D, textureID);
+
+    this->setProperties();
 
     if (resc.getExtension() == ".png") {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,

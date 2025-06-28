@@ -27,6 +27,9 @@ std::vector<float> CoreObject::makeVertexData() const {
         vertexData.push_back(vertex.color.r);
         vertexData.push_back(vertex.color.g);
         vertexData.push_back(vertex.color.b);
+
+        vertexData.push_back(vertex.textCoords.width);
+        vertexData.push_back(vertex.textCoords.height);
         std::cout << "Vertex: (" << vertex.x << ", " << vertex.y << ", "
                   << vertex.z << ") Color: (" << vertex.color.r << ", "
                   << vertex.color.g << ", " << vertex.color.b << ")\n";
@@ -34,6 +37,29 @@ std::vector<float> CoreObject::makeVertexData() const {
 
     std::cout << "Total vertices: " << vertices.size() << "\n";
     return vertexData;
+}
+
+void CoreObject::provideTextureCoords(std::vector<Size2d> textureCoords) {
+    if (textureCoords.size() != vertices.size()) {
+        throw std::runtime_error(
+            "Texture coordinates size must match vertices size");
+    }
+    for (size_t i = 0; i < vertices.size(); ++i) {
+        vertices[i].textCoords = textureCoords[i];
+    }
+}
+
+void CoreObject::provideColors(std::vector<Color> colors) {
+    if (colors.size() != vertices.size()) {
+        throw std::runtime_error("Colors size must match vertices size");
+    }
+    for (size_t i = 0; i < vertices.size(); ++i) {
+        vertices[i].color = colors[i];
+    }
+}
+
+void CoreObject::provideVertexData(std::vector<CoreVertex> vertices) {
+    this->vertices = std::move(vertices);
 }
 
 CoreShader::CoreShader(std::string code, CoreShaderType type) {
@@ -155,13 +181,24 @@ void CoreObject::initialize() {
     CoreShaderProgram shaderProgram(makeShaderList());
     this->program = shaderProgram;
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
+    if (this->visualizeTexture) {
+        this->program.value().setBool("uUseTexture", true);
+    } else {
+        this->program.value().setBool("uUseTexture", false);
+    }
+    this->program.value().setInt("uTexture", 0);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
                           (void *)0);
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float),
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
                           (void *)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
+
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
+                          (void *)(6 * sizeof(float)));
+    glEnableVertexAttribArray(2);
 
     glBindVertexArray(0);
 
@@ -169,6 +206,15 @@ void CoreObject::initialize() {
 
     auto dispatcher = [](CoreObject *object) {
         glUseProgram(object->program.value().ID);
+        object->program.value().setInt("uTexture", 0);
+        if (object->visualizeTexture) {
+            object->program.value().setBool("uUseTexture", true);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, object->texture.ID);
+        } else {
+            object->program.value().setBool("uUseTexture", false);
+            glBindTexture(GL_TEXTURE_2D, 0);
+        }
         glBindVertexArray(object->attributes.VAO);
         if (object->attributes.EBO.has_value()) {
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,
@@ -184,6 +230,29 @@ void CoreObject::initialize() {
     Renderer::instance().registerObject(this, dispatcher);
 }
 
+void CoreObject::setTexture(Texture texture) {
+    this->texture = std::move(texture);
+    this->visualizeTexture = true;
+}
+
+void CoreObject::enableTexturing() {
+    this->visualizeTexture = true;
+    if (!this->program.has_value()) {
+        throw std::runtime_error(
+            "Shader program not initialized, Do it before enabling texturing.");
+    }
+    this->program.value().setBool("uUseTexture", true);
+}
+
+void CoreObject::disableTexturing() {
+    this->visualizeTexture = false;
+    if (!this->program.has_value()) {
+        throw std::runtime_error("Shader program not initialized, Do it before "
+                                 "disabling texturing.");
+    }
+    this->program.value().setBool("uUseTexture", false);
+}
+
 void CoreObject::provideIndexedDrawing(std::vector<unsigned int> indices) {
     this->attributes.indices = std::move(indices);
     this->attributes.elementCount =
@@ -195,4 +264,5 @@ CoreObject::CoreObject(std::vector<CoreVertex> vertices) {
     this->vertexShader = std::nullopt;
     this->fragmentShader = std::nullopt;
     this->program = std::nullopt;
+    this->texture = Texture();
 }
