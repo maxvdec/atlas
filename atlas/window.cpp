@@ -50,7 +50,9 @@ Window::Window(const std::string &title, Frame mesures, Position2d position) {
         throw std::runtime_error("Failed to initialize GLAD");
     }
 
-    glViewport(0, 0, this->size.width, this->size.height);
+    int framebufferWidth, framebufferHeight;
+    glfwGetFramebufferSize(this->window, &framebufferWidth, &framebufferHeight);
+    glViewport(0, 0, framebufferWidth, framebufferHeight);
 
     glfwSetFramebufferSizeCallback(this->window, framebuffer_size_callback);
 
