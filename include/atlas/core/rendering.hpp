@@ -13,6 +13,7 @@
 #include "atlas/texture.hpp"
 #include "atlas/units.hpp"
 #include <functional>
+#include <glm/glm.hpp>
 #include <optional>
 #include <string>
 #include <vector>
@@ -48,6 +49,8 @@ struct CoreShaderProgram {
     void setFloat(const std::string &name, float val) const;
     void setInt(const std::string &name, int val) const;
     void setBool(const std::string &name, bool value) const;
+    void setMatrix4(const std::string &name, const glm::mat4 &matrix) const;
+    void setVec2(const std::string &name, const glm::vec2 &vector) const;
 };
 
 struct CoreVertexAttributes {
@@ -68,6 +71,7 @@ struct CoreObject {
     std::optional<CoreShaderProgram> program;
     Texture texture;
     bool visualizeTexture = false;
+    glm::mat4 modelMatrix = glm::mat4(1.0f);
 
     void initialize();
     void provideIndexedDrawing(std::vector<unsigned int> indices);
@@ -75,9 +79,15 @@ struct CoreObject {
     void provideTextureCoords(std::vector<Size2d> textureCoords);
     void provideColors(std::vector<Color> colors);
     void setTexture(Texture texture);
+    void setVertexColor(int index, Color color);
+    void setObjectAlpha(float alpha);
 
     void enableTexturing();
     void disableTexturing();
+
+    void translate(float x, float y, float z);
+    void rotate(float angle);
+    void scale(float x, float y, float z);
 
     std::vector<float> makeVertexData() const;
     std::vector<CoreShader> makeShaderList() const;

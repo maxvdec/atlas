@@ -28,6 +28,9 @@ find_package(OpenGL REQUIRED)
 find_package(glfw3 3.3 REQUIRED)
 find_package(glm REQUIRED)
 
+
+
+
 file(GLOB_RECURSE ATLAS_SOURCES "atlas/*.cpp" "external/*.c" "external/*.cpp")
 
 file(GLOB_RECURSE GLAD_SOURCES "external/glad/glad.c")
@@ -44,6 +47,7 @@ target_link_libraries(atlas
 
 target_include_directories(atlas
     PUBLIC 
+    ${GLM_INCLUDE_DIR}
     include
     external
 )
@@ -55,6 +59,13 @@ add_executable(atlas_test ${TEST_SOURCES})
 get_filename_component(TEST_PATH_ABS "${CMAKE_CURRENT_SOURCE_DIR}/test" ABSOLUTE)
 
 target_link_libraries(atlas_test PRIVATE atlas)
+
+target_include_directories(atlas_test
+    PRIVATE
+    ${GLM_INCLUDE_DIR}
+    include
+    external
+)
 
 target_compile_definitions(atlas_test
     PRIVATE

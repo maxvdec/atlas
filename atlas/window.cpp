@@ -18,6 +18,8 @@
 #include <stdexcept>
 #include <string>
 
+Window *Window::current_window = nullptr;
+
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
     glViewport(0, 0, width, height);
 }
@@ -25,6 +27,7 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
 Window::Window(const std::string &title, Frame mesures, Position2d position) {
     this->size = mesures;
     this->position = position;
+    current_window = this;
 
     if (!glfwInit()) {
         throw std::runtime_error("Failed to initialize GLFW");
@@ -53,6 +56,7 @@ Window::Window(const std::string &title, Frame mesures, Position2d position) {
     int framebufferWidth, framebufferHeight;
     glfwGetFramebufferSize(this->window, &framebufferWidth, &framebufferHeight);
     glViewport(0, 0, framebufferWidth, framebufferHeight);
+    this->framebufferSize = Frame(framebufferWidth, framebufferHeight);
 
     glfwSetFramebufferSizeCallback(this->window, framebuffer_size_callback);
 

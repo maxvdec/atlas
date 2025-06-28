@@ -15,16 +15,17 @@
 
 int main() {
     Window mywin = Window("Atlas Test", Frame(1500, 800));
+    mywin.backgroundColor = Color(0.2f, 0.2f, 0.2f, 1.0f);
 
     Workspace workspace(TEST_PATH);
     Resource textureResource = workspace.loadResource("wooden.jpg");
     Texture texture;
     texture.fromImage(textureResource);
 
-    auto object = CoreObject({{1.0f, 1.f, 0.0f, Color(1.0f, 0.0f, 0.0f)},
-                              {1.0f, -1.f, 0.0f, Color(0.0f, 1.0f, 0.0f)},
-                              {-1.0f, -1.0f, 0.0f, Color(0.0f, 0.0f, 1.0f)},
-                              {-1.0f, 1.0f, 0.0f, Color(1.0f, 1.0f, 0.0f)}});
+    auto object = CoreObject({{0.5f, 0.5f, 0.0f, Color(1.0f, 0.0f, 0.0f)},
+                              {0.5f, -0.5f, 0.0f, Color(0.0f, 1.0f, 0.0f)},
+                              {-0.5f, -0.5f, 0.0f, Color(0.0f, 0.0f, 1.0f)},
+                              {-0.5f, 0.5f, 0.0f, Color(1.0f, 1.0f, 0.0f)}});
 
     object.provideTextureCoords({Size2d(1.0f, 1.0f), Size2d(1.0f, 0.0f),
                                  Size2d(0.0f, 0.0f), Size2d(0.0f, 1.0f)});

@@ -9,7 +9,11 @@
 
 #include "atlas/core/rendering.hpp"
 #include "atlas/core/shaders.h"
+#include "atlas/window.hpp"
 #include <glad/glad.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 #include <optional>
 #include <string>
@@ -27,6 +31,7 @@ std::vector<float> CoreObject::makeVertexData() const {
         vertexData.push_back(vertex.color.r);
         vertexData.push_back(vertex.color.g);
         vertexData.push_back(vertex.color.b);
+        vertexData.push_back(vertex.color.a);
 
         vertexData.push_back(vertex.textCoords.width);
         vertexData.push_back(vertex.textCoords.height);
@@ -188,16 +193,18 @@ void CoreObject::initialize() {
     }
     this->program.value().setInt("uTexture", 0);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
+    this->program.value().setMatrix4("uModel", this->modelMatrix);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float),
                           (void *)0);
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 9 * sizeof(float),
                           (void *)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
-                          (void *)(6 * sizeof(float)));
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float),
+                          (void *)(7 * sizeof(float)));
     glEnableVertexAttribArray(2);
 
     glBindVertexArray(0);
@@ -206,7 +213,22 @@ void CoreObject::initialize() {
 
     auto dispatcher = [](CoreObject *object) {
         glUseProgram(object->program.value().ID);
+
+        float windowAspect =
+            (float)Window::current_window->framebufferSize.width /
+            (float)Window::current_window->framebufferSize.height;
+        glm::vec2 aspectCorrection;
+
+        if (windowAspect > 1.0f) {
+            aspectCorrection = glm::vec2(1.0f / windowAspect, 1.0f);
+        } else {
+            aspectCorrection = glm::vec2(1.0f, windowAspect);
+        }
+
+        object->program.value().setVec2("uAspectCorrection", aspectCorrection);
+
         object->program.value().setInt("uTexture", 0);
+        object->program.value().setMatrix4("uModel", object->modelMatrix);
         if (object->visualizeTexture) {
             object->program.value().setBool("uUseTexture", true);
             glActiveTexture(GL_TEXTURE0);
@@ -233,6 +255,7 @@ void CoreObject::initialize() {
 void CoreObject::setTexture(Texture texture) {
     this->texture = std::move(texture);
     this->visualizeTexture = true;
+    this->setObjectAlpha(0.0f);
 }
 
 void CoreObject::enableTexturing() {
@@ -265,4 +288,42 @@ CoreObject::CoreObject(std::vector<CoreVertex> vertices) {
     this->fragmentShader = std::nullopt;
     this->program = std::nullopt;
     this->texture = Texture();
+}
+
+void CoreObject::setVertexColor(int index, Color color) {
+    if (index < 0 || index >= static_cast<int>(this->vertices.size())) {
+        throw std::out_of_range("Index out of range for vertex colors");
+    }
+    this->vertices[index].color = color;
+}
+
+void CoreObject::setObjectAlpha(float alpha) {
+    for (auto &vertex : this->vertices) {
+        vertex.color.a = alpha;
+    }
+}
+
+void CoreObject::translate(float x, float y, float z) {
+    this->modelMatrix = glm::translate(this->modelMatrix, glm::vec3(x, y, z));
+}
+
+void CoreObject::rotate(float angle) {
+    this->modelMatrix = glm::rotate(this->modelMatrix, glm::radians(angle),
+                                    glm::vec3(0.0f, 0.0f, 1.0f));
+}
+
+void CoreObject::scale(float x, float y, float z) {
+    this->modelMatrix = glm::scale(this->modelMatrix, glm::vec3(x, y, z));
+}
+
+void CoreShaderProgram::setMatrix4(const std::string &name,
+                                   const glm::mat4 &matrix) const {
+    glUniformMatrix4fv(glGetUniformLocation(this->ID, name.c_str()), 1,
+                       GL_FALSE, glm::value_ptr(matrix));
+}
+
+void CoreShaderProgram::setVec2(const std::string &name,
+                                const glm::vec2 &vector) const {
+    glUniform2fv(glGetUniformLocation(this->ID, name.c_str()), 1,
+                 glm::value_ptr(vector));
 }

@@ -4,7 +4,7 @@
 
 static const char* NORMAL_FRAG = R"(
 #version 330 core
-in vec3 fragColor;
+in vec4 fragColor;
 in vec2 texCoord;
 
 uniform bool uUseTexture;
@@ -14,9 +14,13 @@ out vec4 FragColor;
 
 void main() {
     if (uUseTexture) {
-        FragColor = texture(uTexture, texCoord);
+        if (fragColor.a < 0.01) {
+            FragColor = texture(uTexture, texCoord);
+        } else {
+            FragColor = texture(uTexture, texCoord) * vec4(fragColor.xyz, 1.0);
+        }
     } else {
-        FragColor = vec4(fragColor, 1.0);
+        FragColor = vec4(fragColor);
     }
 }
 
@@ -25,17 +29,22 @@ void main() {
 static const char* NORMAL_VERT = R"(
 #version 330 core
 layout (location = 0) in vec3 aPos;
-layout (location = 1) in vec3 aColor;
+layout (location = 1) in vec4 aColor;
 layout (location = 2) in vec2 aTexCoord;
 
-out vec3 fragColor;
+out vec4 fragColor;
 out vec2 texCoord;
+
+uniform mat4 uModel;
+uniform vec2 uAspectCorrection;
 
 void main()
 {
     fragColor = aColor;
     texCoord = aTexCoord;
-    gl_Position = vec4(aPos, 1.0);
+    gl_Position = uModel * vec4(aPos, 1.0);
+    gl_Position.x *= uAspectCorrection.x;
+    gl_Position.y *= uAspectCorrection.y;
 }
 
 )";

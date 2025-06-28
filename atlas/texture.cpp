@@ -75,6 +75,7 @@ void Texture::setProperties() {
 
 void Texture::fromImage(Resource resc) {
     int width, height, nrChannels;
+    stbi_set_flip_vertically_on_load(true);
     unsigned char *data =
         stbi_load(resc.path.c_str(), &width, &height, &nrChannels, 0);
 

@@ -29,10 +29,13 @@ class Window {
     void run();
 
     Frame size;
+    Frame framebufferSize;
     Position2d position;
 
     Color backgroundColor = Color(0.0f, 0.0f, 0.0f, 1.0f);
     RenderingMode renderingMode = RenderingMode::Full;
+
+    static Window *current_window;
 
   private:
     GLFWwindow *window;
