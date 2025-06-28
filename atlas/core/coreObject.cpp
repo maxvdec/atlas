@@ -97,6 +97,18 @@ CoreShaderProgram::CoreShaderProgram(const std::vector<CoreShader> &shaders) {
     this->ID = shaderProgram;
 }
 
+void CoreShaderProgram::setFloat(const std::string &name, float val) const {
+    glUniform1f(glGetUniformLocation(this->ID, name.c_str()), val);
+}
+
+void CoreShaderProgram::setInt(const std::string &name, int val) const {
+    glUniform1i(glGetUniformLocation(this->ID, name.c_str()), val);
+}
+
+void CoreShaderProgram::setBool(const std::string &name, bool value) const {
+    glUniform1i(glGetUniformLocation(this->ID, name.c_str()), value);
+}
+
 void CoreShaderProgram::use() const { glUseProgram(this->ID); }
 
 std::vector<CoreShader> CoreObject::makeShaderList() const {
@@ -113,10 +125,22 @@ void CoreObject::initialize() {
     unsigned int VAO;
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
+
+    if (this->attributes.indices.has_value()) {
+        unsigned int EBO;
+        glGenBuffers(1, &EBO);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                     this->attributes.indices->size() * sizeof(unsigned int),
+                     this->attributes.indices->data(), GL_STATIC_DRAW);
+        this->attributes.EBO = EBO;
+    }
+
     unsigned int VBO;
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    this->attributes = {VBO, VAO};
+    this->attributes.VBO = VBO;
+    this->attributes.VAO = VAO;
 
     const auto vertexData = makeVertexData();
     glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(float),
@@ -146,11 +170,24 @@ void CoreObject::initialize() {
     auto dispatcher = [](CoreObject *object) {
         glUseProgram(object->program.value().ID);
         glBindVertexArray(object->attributes.VAO);
-        glDrawArrays(GL_TRIANGLES, 0,
-                     static_cast<GLsizei>(object->vertices.size()));
+        if (object->attributes.EBO.has_value()) {
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,
+                         object->attributes.EBO.value());
+            glDrawElements(GL_TRIANGLES, object->attributes.elementCount,
+                           GL_UNSIGNED_INT, 0);
+        } else {
+            glDrawArrays(GL_TRIANGLES, 0,
+                         static_cast<GLsizei>(object->vertices.size()));
+        }
     };
 
     Renderer::instance().registerObject(this, dispatcher);
+}
+
+void CoreObject::provideIndexedDrawing(std::vector<unsigned int> indices) {
+    this->attributes.indices = std::move(indices);
+    this->attributes.elementCount =
+        static_cast<unsigned int>(this->attributes.indices->size());
 }
 
 CoreObject::CoreObject(std::vector<CoreVertex> vertices) {
@@ -158,5 +195,4 @@ CoreObject::CoreObject(std::vector<CoreVertex> vertices) {
     this->vertexShader = std::nullopt;
     this->fragmentShader = std::nullopt;
     this->program = std::nullopt;
-    this->initialize();
 }

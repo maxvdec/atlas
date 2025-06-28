@@ -39,11 +39,11 @@ target_link_libraries(atlas
     PRIVATE
         OpenGL::GL
         glfw
+        glm::glm
 )
 
 target_include_directories(atlas
-    PRIVATE
-    ${GLM_INCLUDE_DIRS}
+    PUBLIC 
     include
     external
 )
@@ -52,14 +52,14 @@ file(GLOB_RECURSE TEST_SOURCES "test/*.cpp")
 
 add_executable(atlas_test ${TEST_SOURCES})
 
+get_filename_component(TEST_PATH_ABS "${CMAKE_CURRENT_SOURCE_DIR}/test" ABSOLUTE)
+
 target_link_libraries(atlas_test PRIVATE atlas)
 
-target_include_directories(atlas_test
+target_compile_definitions(atlas_test
     PRIVATE
-    include
+    TEST_PATH="${TEST_PATH_ABS}"
 )
-
-include_directories(include)
 
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)

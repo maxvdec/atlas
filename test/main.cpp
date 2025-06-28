@@ -7,15 +7,27 @@
  Copyright (c) 2025 maxvdec
 */
 
+#include "atlas/texture.hpp"
+#include "atlas/workspace.hpp"
 #include <atlas/core/rendering.hpp>
 #include <atlas/window.hpp>
 #include <iostream>
 
 int main() {
     Window mywin = Window("Atlas Test", Frame(1500, 800));
-    auto object = CoreObject({{0.0f, 1.f, 0.0f, Color(1.0f, 0.0f, 0.0f)},
-                              {-1.0f, -1.f, 0.0f, Color(0.0f, 1.0f, 0.0f)},
-                              {1.0f, -1.0f, 0.0f, Color(0.0f, 0.0f, 1.0f)}});
+
+    Workspace workspace(TEST_PATH);
+    Resource textureResource = workspace.loadResource("wooden.jng");
+    Texture texture;
+
+    auto object = CoreObject({{1.0f, 1.f, 0.0f, Color(1.0f, 0.0f, 0.0f)},
+                              {1.0f, -1.f, 0.0f, Color(0.0f, 1.0f, 0.0f)},
+                              {-1.0f, -1.0f, 0.0f, Color(0.0f, 0.0f, 1.0f)},
+                              {-1.0f, 1.0f, 0.0f, Color(1.0f, 1.0f, 0.0f)}});
+    unsigned int indices[] = {0, 1, 2, 2, 3, 0};
+    object.provideIndexedDrawing(
+        std::vector<unsigned int>(indices, indices + 6));
+    object.initialize();
     mywin.run();
     return 0;
 }

@@ -71,12 +71,13 @@ void Window::run() {
 
         switch (this->renderingMode) {
         case RenderingMode::Full:
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
             break;
         case RenderingMode::Points:
-            glPointSize(5.0f);
+            glPolygonMode(GL_FRONT_AND_BACK, GL_POINT);
             break;
         case RenderingMode::Lines:
-            glLineWidth(2.0f);
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
             break;
         }
 
