@@ -220,6 +220,11 @@ void CoreObject::initialize() {
     this->program.value().setMatrix4("uModel", this->modelMatrix);
 
     auto dispatcher = [](CoreObject *object) {
+        if (object->program.has_value() == false) {
+            std::cout << "Skipping corrupted object with ID: " << object->id
+                      << std::endl;
+            return;
+        }
         glUseProgram(object->program.value().ID);
 
         float windowAspect =

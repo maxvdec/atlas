@@ -28,18 +28,18 @@ class MainScene : public Scene {
     Camera camera;
     void init() override {
         Workspace workspace(TEST_PATH);
-        Resource textureResource = workspace.loadResource("wooden.jpg");
+        Resource textureResource = workspace.loadResource("container.png");
         Texture texture;
         texture.fromImage(textureResource);
 
         camera.position = Position3d(0.0f, 0.0f, -3.0f);
         camera.useCamera();
 
-        light = Light(Position3d(0.0f, 1.2f, 0.0f), Color(1.0f, 0.0f, 1.0f));
+        light = Light(Position3d(0.0f, 2.f, 0.0f), Color(1.0f, 1.0f, 1.0f));
         light.debugLight();
 
         object = generateCubeObject(Position3d(0.0f, 0.0f, 0.0f),
-                                    Size3d(50.0f, 1.0f, 50.0f));
+                                    Size3d(1.0f, 1.0f, 1.0f));
 
         std::vector<Size2d> faceUVs = {
             {0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f}};
@@ -86,7 +86,7 @@ class MainScene : public Scene {
 
         object.provideNormals(normals);
 
-        // object.setTexture(texture);
+        object.setTexture(texture);
 
         std::vector<uint32_t> indices;
         for (int i = 0; i < 6; ++i) {
@@ -102,14 +102,7 @@ class MainScene : public Scene {
         object.show();
         object.initialize();
     }
-    void update(float deltaTime) override {
-        Color lightColor;
-        lightColor.r = sin(Window::getTime() * 2.0f);
-        lightColor.g = sin(Window::getTime() * 0.7f);
-        lightColor.b = sin(Window::getTime() * 1.3f);
-
-        light.color = lightColor;
-    }
+    void update(float deltaTime) override {}
 };
 
 int main() {
