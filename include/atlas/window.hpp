@@ -43,7 +43,6 @@ class Window {
     Color ambientColor = Color(0.2f, 0.2f, 0.2f, 1.0f);
     RenderingMode renderingMode = RenderingMode::Full;
     std::vector<Interactive *> interactiveObjects;
-    std::vector<Light *> lights;
     bool firstMouse = true;
 
     float lastFrame = 0.0f;

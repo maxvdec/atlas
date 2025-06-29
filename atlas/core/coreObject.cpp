@@ -250,71 +250,92 @@ void CoreObject::initialize() {
             object->program.value().setVec3(
                 "uAmbientColor", Window::current_window->ambientColor.toVec3());
         }
-        if (object->program.value().symbolExists("uLight.position") &&
-            Window::current_window->lights.size() > 0) {
-            const auto &light = Window::current_window->lights[0];
-            object->program.value().setVec3("uLight.position",
-                                            light->position.toVec3());
-            object->program.value().setVec3("uLight.color",
-                                            light->color.toVec3());
-            object->program.value().setFloat("uLight.intensity",
-                                             light->intensity);
-            object->program.value().setVec3("uLight.specular",
-                                            light->material.specular.toVec3());
-            object->program.value().setVec3("uLight.ambient",
-                                            light->ambientColor.toVec3());
-            object->program.value().setVec3("uLight.diffuse",
-                                            light->material.diffuse.toVec3());
-            if (light->type == LightType::Directional) {
-                const auto &directionalLight =
-                    static_cast<DirectionalLight *>(light);
-                object->program.value().setBool("uLight.isDirectional", true);
+        const auto lights = Window::current_window->currentScene->lights;
+        if (object->program.value().symbolExists("uLights[0].position") &&
+            lights.size() > 0) {
+
+            int lightCount = std::min((int)lights.size(), MAX_LIGHTS);
+            object->program.value().setInt("uLightCount", lightCount);
+
+            for (int i = 0; i < lightCount; ++i) {
+                const auto &light = lights[i];
+                std::string lightBase = "uLights[" + std::to_string(i) + "]";
+
+                object->program.value().setVec3(lightBase + ".position",
+                                                light->position.toVec3());
+                object->program.value().setVec3(lightBase + ".color",
+                                                light->color.toVec3());
+                object->program.value().setFloat(lightBase + ".intensity",
+                                                 light->intensity);
                 object->program.value().setVec3(
-                    "uLight.directionalLight.direction",
-                    directionalLight->direction.toVec3());
-            } else if (light->type == LightType::Point) {
-                const auto &pointLight = static_cast<PointLight *>(light);
-                object->program.value().setBool("uLight.isPointLight", true);
-                object->program.value().setVec3("uLight.position",
-                                                pointLight->position.toVec3());
-                std::cout << "Position is " << pointLight->position.toVec3().x
-                          << ", " << pointLight->position.toVec3().y << ", "
-                          << pointLight->position.toVec3().z << std::endl;
-                object->program.value().setFloat(
-                    "uLight.pointLight.constant",
-                    pointLight->attenuation.constant);
-                std::cout << "Attenuation constant is "
-                          << pointLight->attenuation.constant << std::endl;
-                object->program.value().setFloat(
-                    "uLight.pointLight.linear", pointLight->attenuation.linear);
-                std::cout << "Attenuation linear is "
-                          << pointLight->attenuation.linear << std::endl;
-                object->program.value().setFloat(
-                    "uLight.pointLight.quadratic",
-                    pointLight->attenuation.quadratic);
-                std::cout << "Attenuation quadratic is "
-                          << pointLight->attenuation.quadratic << std::endl;
-            } else if (light->type == LightType::SpotLight) {
-                const auto &spotLight = static_cast<SpotLight *>(light);
-                object->program.value().setBool("uLight.isSpotLight", true);
-                object->program.value().setBool("uLight.isPointLight", true);
-                object->program.value().setVec3("uLight.position",
-                                                spotLight->position.toVec3());
-                object->program.value().setVec3("uLight.spotLight.direction",
-                                                spotLight->direction.toVec3());
-                object->program.value().setFloat("uLight.spotLight.cutOff",
-                                                 spotLight->cutOff);
-                object->program.value().setFloat("uLight.spotLight.outerCutOff",
-                                                 spotLight->outerCutOff);
-                object->program.value().setFloat(
-                    "uLight.pointLight.constant",
-                    spotLight->attenuation.constant);
-                object->program.value().setFloat("uLight.pointLight.linear",
-                                                 spotLight->attenuation.linear);
-                object->program.value().setFloat(
-                    "uLight.pointLight.quadratic",
-                    spotLight->attenuation.quadratic);
+                    lightBase + ".specular", light->material.specular.toVec3());
+                object->program.value().setVec3(lightBase + ".ambient",
+                                                light->ambientColor.toVec3());
+                object->program.value().setVec3(
+                    lightBase + ".diffuse", light->material.diffuse.toVec3());
+
+                object->program.value().setBool(lightBase + ".isDirectional",
+                                                false);
+                object->program.value().setBool(lightBase + ".isPointLight",
+                                                false);
+                object->program.value().setBool(lightBase + ".isSpotLight",
+                                                false);
+
+                if (light->type == LightType::Directional) {
+                    const auto &directionalLight =
+                        static_cast<DirectionalLight *>(light);
+                    object->program.value().setBool(
+                        lightBase + ".isDirectional", true);
+                    object->program.value().setVec3(
+                        lightBase + ".directionalLight.direction",
+                        directionalLight->direction.toVec3());
+                } else if (light->type == LightType::Point) {
+                    const auto &pointLight = static_cast<PointLight *>(light);
+                    object->program.value().setBool(lightBase + ".isPointLight",
+                                                    true);
+                    object->program.value().setVec3(
+                        lightBase + ".position", pointLight->position.toVec3());
+
+                    object->program.value().setFloat(
+                        lightBase + ".pointLight.constant",
+                        pointLight->attenuation.constant);
+                    object->program.value().setFloat(
+                        lightBase + ".pointLight.linear",
+                        pointLight->attenuation.linear);
+                    object->program.value().setFloat(
+                        lightBase + ".pointLight.quadratic",
+                        pointLight->attenuation.quadratic);
+
+                } else if (light->type == LightType::SpotLight) {
+                    const auto &spotLight = static_cast<SpotLight *>(light);
+                    object->program.value().setBool(lightBase + ".isSpotLight",
+                                                    true);
+                    object->program.value().setBool(lightBase + ".isPointLight",
+                                                    true);
+
+                    object->program.value().setVec3(
+                        lightBase + ".position", spotLight->position.toVec3());
+                    object->program.value().setVec3(
+                        lightBase + ".spotLight.direction",
+                        spotLight->direction.toVec3());
+                    object->program.value().setFloat(
+                        lightBase + ".spotLight.cutOff", spotLight->cutOff);
+                    object->program.value().setFloat(
+                        lightBase + ".spotLight.outerCutOff",
+                        spotLight->outerCutOff);
+
+                    object->program.value().setFloat(
+                        lightBase + ".pointLight.constant",
+                        spotLight->attenuation.constant);
+                    object->program.value().setFloat(
+                        lightBase + ".pointLight.linear",
+                        spotLight->attenuation.linear);
+                    object->program.value().setFloat(
+                        lightBase + ".pointLight.quadratic",
+                        spotLight->attenuation.quadratic);
+                }
             }
+
             object->program.value().setFloat("uMaterial.shininess",
                                              object->material.shininess);
             object->program.value().setVec3("uMaterial.specular",

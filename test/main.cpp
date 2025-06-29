@@ -24,7 +24,7 @@
 
 class MainScene : public Scene {
   public:
-    SpotLight light;
+    SpotLight *light = nullptr;
     CoreObject object;
     Camera camera;
     void init() override {
@@ -39,11 +39,11 @@ class MainScene : public Scene {
         camera.position = Position3d(0.0f, 0.0f, -3.0f);
         camera.useCamera();
 
-        light =
-            SpotLight(Position3d(0.0f, 0.0f, -2.0f),
-                      Position3d(0.0f, 0.0f, 1.0f), Color(1.0f, 1.0f, 1.0f));
-        light.debugLight();
-        light.intensity = 1.0f;
+        light = new SpotLight(Position3d(0.0f, 0.0f, -2.0f),
+                              Position3d(0.0f, 0.0f, 1.0f),
+                              Color(1.0f, 1.0f, 1.0f));
+        light->debugLight();
+        light->intensity = 1.0f;
 
         object = generateCubeObject(Position3d(0.0f, 0.0f, 0.0f),
                                     Size3d(1.0f, 1.0f, 1.0f));

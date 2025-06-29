@@ -22,6 +22,10 @@ enum class LightType {
     None,
 };
 
+#define MAX_LIGHTS 10
+
+struct Scene;
+
 class Light {
   public:
     Position3d position;
@@ -30,7 +34,7 @@ class Light {
 
     Light(Position3d position = Position3d(0.0f, 0.0f, 0.0f),
           Color color = Color(1.0f, 1.0f, 1.0f),
-          LightType type = LightType::None);
+          LightType type = LightType::None, Scene *scene = nullptr);
 
     void debugLight();
     CoreObject debugObject;
@@ -46,8 +50,10 @@ class DirectionalLight : public Light {
     Position3d direction;
 
     DirectionalLight(Position3d direction = Position3d(0.0f, -1.0f, 0.0f),
-                     Color color = Color(1.0f, 1.0f, 1.0f))
-        : Light(Position3d(0.0f, 0.0f, 0.0f), color, LightType::Directional),
+                     Color color = Color(1.0f, 1.0f, 1.0f),
+                     Scene *scene = nullptr)
+        : Light(Position3d(0.0f, 0.0f, 0.0f), color, LightType::Directional,
+                scene),
           direction(direction) {};
 };
 
@@ -70,8 +76,8 @@ class PointLight : public Light {
     }
 
     PointLight(Position3d position = Position3d(0.0f, 0.0f, 0.0f),
-               Color color = Color(1.0f, 1.0f, 1.0f))
-        : Light(position, color, LightType::Point) {};
+               Color color = Color(1.0f, 1.0f, 1.0f), Scene *scene = nullptr)
+        : Light(position, color, LightType::Point, scene) {};
 };
 
 class SpotLight : public Light {
@@ -89,8 +95,9 @@ class SpotLight : public Light {
 
     SpotLight(Position3d position = Position3d(0.0f, 0.0f, 0.0f),
               Position3d direction = Position3d(0.0f, -1.0f, 0.0f),
-              Color color = Color(1.0f, 1.0f, 1.0f))
-        : Light(position, color, LightType::SpotLight), direction(direction) {};
+              Color color = Color(1.0f, 1.0f, 1.0f), Scene *scene = nullptr)
+        : Light(position, color, LightType::SpotLight, scene),
+          direction(direction) {};
 };
 
 #endif // ATLAS_LIGHT_HPP

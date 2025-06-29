@@ -15,7 +15,7 @@
 #include <glm/glm.hpp>
 #include <iostream>
 
-Light::Light(Position3d position, Color color, LightType type)
+Light::Light(Position3d position, Color color, LightType type, Scene *scene)
     : position(position), color(color) {
 
     this->debugObject = generateCubeObject(position, Size3d(0.1f, 0.1f, 0.1f));
@@ -29,7 +29,13 @@ Light::Light(Position3d position, Color color, LightType type)
     debugObject.hide();
     debugObject.initialize();
     this->type = type;
-    Window::current_window->lights.push_back(this);
+    if (Window::current_window == nullptr) {
+        throw std::runtime_error("Window is not initialized");
+    }
+    if (Window::current_window->currentScene == nullptr) {
+        return;
+    }
+    Window::current_window->currentScene->useLight(this);
 }
 
 void Light::debugLight() { this->debugObject.show(); }

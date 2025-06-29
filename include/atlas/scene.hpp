@@ -11,6 +11,8 @@
 #define ATLAS_SCENE_HPP
 
 #include "atlas/input.hpp"
+#include "atlas/light.hpp"
+#include <vector>
 
 class Scene : public Interactive {
   public:
@@ -19,6 +21,17 @@ class Scene : public Interactive {
     inline void atEachFrame(float deltaTime) override {
         this->update(deltaTime);
     }
+
+    inline void useLight(Light *light) {
+        if (light == nullptr) {
+            throw std::invalid_argument("Light cannot be null");
+        }
+        if (this->lights.size() == 10) {
+            throw std::runtime_error("Maximum number of lights reached");
+        }
+        this->lights.push_back(light);
+    }
+    std::vector<Light *> lights;
 };
 
 #endif // ATLAS_SCENE_HPP
