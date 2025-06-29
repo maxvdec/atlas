@@ -24,6 +24,7 @@ class Light {
 
     void debugLight();
     CoreObject debugObject;
+    float intensity = 0.5f;
 };
 
 #endif // ATLAS_LIGHT_HPP

@@ -9,6 +9,7 @@
 
 #include "atlas/camera.hpp"
 #include "atlas/light.hpp"
+#include "atlas/material.hpp"
 #include "atlas/texture.hpp"
 #include "atlas/workspace.hpp"
 #include <atlas/core/rendering.hpp>
@@ -30,44 +31,11 @@ int main() {
     cam.position = Position3d(0.0f, 0.0f, -3.0f);
     cam.useCamera();
 
-    Light light(Position3d(0.0f, 2.0f, 0.0f), Color(1.0f, 1.0f, 1.0f));
+    Light light(Position3d(0.0f, 1.2f, 0.0f), Color(1.0f, 1.0f, 1.0f));
     light.debugLight();
 
-    auto object = CoreObject({// Front face
-                              {-0.5f, -0.5f, 0.5f, Color(1, 0, 0)},
-                              {0.5f, -0.5f, 0.5f, Color(0, 1, 0)},
-                              {0.5f, 0.5f, 0.5f, Color(0, 0, 1)},
-                              {-0.5f, 0.5f, 0.5f, Color(1, 1, 0)},
-
-                              // Back face
-                              {0.5f, -0.5f, -0.5f, Color(1, 0, 0)},
-                              {-0.5f, -0.5f, -0.5f, Color(0, 1, 0)},
-                              {-0.5f, 0.5f, -0.5f, Color(0, 0, 1)},
-                              {0.5f, 0.5f, -0.5f, Color(1, 1, 0)},
-
-                              // Left face
-                              {-0.5f, -0.5f, -0.5f, Color(1, 0, 0)},
-                              {-0.5f, -0.5f, 0.5f, Color(0, 1, 0)},
-                              {-0.5f, 0.5f, 0.5f, Color(0, 0, 1)},
-                              {-0.5f, 0.5f, -0.5f, Color(1, 1, 0)},
-
-                              // Right face
-                              {0.5f, -0.5f, 0.5f, Color(1, 0, 0)},
-                              {0.5f, -0.5f, -0.5f, Color(0, 1, 0)},
-                              {0.5f, 0.5f, -0.5f, Color(0, 0, 1)},
-                              {0.5f, 0.5f, 0.5f, Color(1, 1, 0)},
-
-                              // Top face
-                              {-0.5f, 0.5f, 0.5f, Color(1, 0, 0)},
-                              {0.5f, 0.5f, 0.5f, Color(0, 1, 0)},
-                              {0.5f, 0.5f, -0.5f, Color(0, 0, 1)},
-                              {-0.5f, 0.5f, -0.5f, Color(1, 1, 0)},
-
-                              // Bottom face
-                              {-0.5f, -0.5f, -0.5f, Color(1, 0, 0)},
-                              {0.5f, -0.5f, -0.5f, Color(0, 1, 0)},
-                              {0.5f, -0.5f, 0.5f, Color(0, 0, 1)},
-                              {-0.5f, -0.5f, 0.5f, Color(1, 1, 0)}});
+    auto object =
+        generateCubeObject(Position3d(0, 0, 0), Size3d(30.f, 1.f, 30.f));
 
     std::vector<Size2d> faceUVs = {
         {0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f}};
@@ -114,7 +82,7 @@ int main() {
 
     object.provideNormals(normals);
 
-    object.setTexture(texture);
+    // object.setTexture(texture);
 
     std::vector<uint32_t> indices;
     for (int i = 0; i < 6; ++i) {

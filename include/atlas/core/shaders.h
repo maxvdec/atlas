@@ -31,17 +31,29 @@ static const char* AMBIENT_FRAG = R"(
 in vec4 fragColor;
 in vec2 texCoord;
 in vec3 normal;
+in vec3 fragPos;
+
+struct Light {
+    vec3 position;
+    vec3 color;
+    float intensity;
+};
+
+struct Material {
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+    float shininess;
+};
 
 uniform bool uUseTexture;
 uniform sampler2D uTexture;
-uniform vec3 uAmbientColor;
-uniform vec3 uLightPos;
+uniform Light uLight;
+uniform Material uMaterial;
+uniform vec3 uCameraPos;
 
 out vec4 FragColor;
-
 void main() {
-    FragColor = vec4(normal, 1.0);
-    return;
     if (uUseTexture) {
         if (fragColor.a < 0.01) {
             FragColor = texture(uTexture, texCoord);
@@ -52,7 +64,20 @@ void main() {
         FragColor = vec4(fragColor);
     }
 
-    FragColor.rgb *= uAmbientColor;
+    vec3 ambient = uMaterial.ambient * uLight.color * uLight.intensity;
+
+    vec3 norm = normalize(normal);
+    vec3 lightDir = normalize(uLight.position - fragPos);
+    float diff = max(dot(norm, lightDir), 0.0);
+    vec3 diffuse = uLight.color * (diff * uMaterial.diffuse) * uLight.intensity;
+
+    vec3 viewDir = normalize(uCameraPos - fragPos);
+    vec3 reflectDir = reflect(-lightDir, norm);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), uMaterial.shininess) * uLight.intensity;
+    vec3 specular = uLight.color * (spec * uMaterial.specular);
+
+    vec3 result = uMaterial.ambient + diffuse + specular;
+    FragColor = vec4(result, FragColor.a);
 }
 
 )";
@@ -67,6 +92,7 @@ layout (location = 3) in vec3 aNormal;
 out vec4 fragColor;
 out vec2 texCoord;
 out vec3 normal;
+out vec3 fragPos;
 
 uniform mat4 uModel;
 uniform mat4 uView;
@@ -77,8 +103,9 @@ void main()
 {
     fragColor = aColor;
     texCoord = aTexCoord;
-    normal = aNormal;
+    normal = mat3(transpose(inverse(uModel))) * aNormal;
     gl_Position = uProjection * uView * uModel * vec4(aPos, 1.0);
+    fragPos = vec3(uModel * vec4(aPos, 1.0));
 }
 
 )";

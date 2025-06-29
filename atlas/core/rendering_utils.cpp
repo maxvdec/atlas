@@ -91,7 +91,6 @@ CoreObject generateCubeObject(Position3d position, Size3d size) {
     };
     object.provideIndexedDrawing(std::move(indices));
     object.provideTextureCoords(allUVs);
-    object.fragmentShader = CoreShader(NORMAL_FRAG, CoreShaderType::Fragment);
 
     return object;
 }

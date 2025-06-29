@@ -11,6 +11,7 @@
 #include "atlas/core/rendering.hpp"
 #include "atlas/core/shaders.h"
 #include "atlas/units.hpp"
+#include "atlas/window.hpp"
 #include <glm/glm.hpp>
 #include <iostream>
 
@@ -23,8 +24,12 @@ Light::Light(Position3d position, Color color)
         debugObject.setVertexColor(i, color);
     }
 
+    debugObject.fragmentShader =
+        CoreShader(NORMAL_FRAG, CoreShaderType::Fragment);
+
     debugObject.initialize();
     debugObject.disableTexturing();
+    Window::current_window->lights.push_back(*this);
 }
 
 void Light::debugLight() { this->debugObject.show(); }

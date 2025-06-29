@@ -10,6 +10,7 @@
 #ifndef ATLAS_RENDERING_HPP
 #define ATLAS_RENDERING_HPP
 
+#include "atlas/material.hpp"
 #include "atlas/texture.hpp"
 #include "atlas/units.hpp"
 #include <functional>
@@ -87,6 +88,7 @@ struct CoreObject {
     glm::mat4 modelMatrix = glm::mat4(1.0f);
     glm::mat4 projectionMatrix = glm::mat4(1.0f);
     glm::mat4 viewMatrix = glm::mat4(1.0f);
+    Material material;
 
     bool hidden = false;
 
