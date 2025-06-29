@@ -6,6 +6,7 @@ in vec3 normal;
 uniform bool uUseTexture;
 uniform sampler2D uTexture;
 uniform vec3 uAmbientColor;
+uniform vec3 uLightPos;
 
 out vec4 FragColor;
 

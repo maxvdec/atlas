@@ -177,15 +177,6 @@ void CoreObject::initialize() {
 
     const auto vertexData = makeVertexData();
 
-    std::cout << "Vertex data size: " << vertexData.size() << std::endl;
-    std::cout << "Expected size: " << vertices.size() * 12 << std::endl;
-    if (vertexData.size() >= 12) {
-        std::cout << "First vertex data: ";
-        for (int i = 0; i < 12; ++i) {
-            std::cout << vertexData[i] << " ";
-        }
-        std::cout << std::endl;
-    }
     glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(float),
                  vertexData.data(), GL_STATIC_DRAW);
     if (this->attributes.indices.has_value()) {

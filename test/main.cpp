@@ -15,6 +15,7 @@
 #include <atlas/window.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <iostream>
+#include <vector>
 
 int main() {
     Window mywin = Window("Atlas Test", Frame(1500, 800));
@@ -77,6 +78,41 @@ int main() {
     }
 
     object.provideTextureCoords(allUVs);
+
+    std::vector<Size3d> normals = {
+        // Front face
+        {0.0f, 0.0f, 1.0f},
+        {0.0f, 0.0f, 1.0f},
+        {0.0f, 0.0f, 1.0f},
+        {0.0f, 0.0f, 1.0f},
+        // Back face
+        {0.0f, 0.0f, -1.0f},
+        {0.0f, 0.0f, -1.0f},
+        {0.0f, 0.0f, -1.0f},
+        {0.0f, 0.0f, -1.0f},
+        // Left face
+        {-1.0f, 0.0f, 0.0f},
+        {-1.0f, 0.0f, 0.0f},
+        {-1.0f, 0.0f, 0.0f},
+        {-1.0f, 0.0f, 0.0f},
+        // Right face
+        {1.0f, 0.0f, 0.0f},
+        {1.0f, 0.0f, 0.0f},
+        {1.0f, 0.0f, 0.0f},
+        {1.0f, 0.0f, 0.0f},
+        // Top face
+        {0.0f, 1.0f, 0.0f},
+        {0.0f, 1.0f, 0.0f},
+        {0.0f, 1.0f, 0.0f},
+        {0.0f, 1.0f, 0.0f},
+        // Bottom face
+        {0.0f, -1.0f, 0.0f},
+        {0.0f, -1.0f, 0.0f},
+        {0.0f, -1.0f, 0.0f},
+        {0.0f, -1.0f, 0.0f},
+    };
+
+    object.provideNormals(normals);
 
     object.setTexture(texture);
 

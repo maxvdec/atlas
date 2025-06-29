@@ -21,9 +21,6 @@ Light::Light(Position3d position, Color color)
 
     for (int i = 0; i < debugObject.vertices.size(); ++i) {
         debugObject.setVertexColor(i, color);
-        std::cout << "Setting vertex color for debug object at index " << i
-                  << " to " << color.r << ", " << color.g << ", " << color.b
-                  << ", " << color.a << std::endl;
     }
 
     debugObject.initialize();
