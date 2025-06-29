@@ -10,6 +10,8 @@ uniform vec3 uAmbientColor;
 out vec4 FragColor;
 
 void main() {
+    FragColor = vec4(normal, 1.0);
+    return;
     if (uUseTexture) {
         if (fragColor.a < 0.01) {
             FragColor = texture(uTexture, texCoord);

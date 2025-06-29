@@ -49,8 +49,8 @@ class Camera : Interactive {
     glm::vec3 right;
     glm::vec3 worldUp;
 
-    float yaw;
-    float pitch;
+    float yaw = DEFAULT_YAW;
+    float pitch = DEFAULT_PITCH;
 
     void updateCameraVectors();
 };
