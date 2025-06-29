@@ -26,6 +26,8 @@ struct CoreVertex {
     Color color;
 
     Size2d textCoords = Size2d(0.0f, 0.0f);
+
+    Size3d normal = Size3d(0.0f, 0.0f, 0.0f);
 };
 
 enum class CoreShaderType {
@@ -95,6 +97,7 @@ struct CoreObject {
     void provideIndexedDrawing(std::vector<unsigned int> indices);
     void provideVertexData(std::vector<CoreVertex> vertices);
     void provideTextureCoords(std::vector<Size2d> textureCoords);
+    void provideNormals(std::vector<Size3d> normals);
     void provideColors(std::vector<Color> colors);
     void setTexture(Texture texture);
     void setVertexColor(int index, Color color);
@@ -144,5 +147,14 @@ CoreObject generateCubeObject(Position3d position, Size3d size);
 extern GLuint defaultTexture;
 
 GLuint getDefaultTexture();
+
+#define CHECK_ERROR                                                            \
+    do {                                                                       \
+        GLenum error = glGetError();                                           \
+        if (error != GL_NO_ERROR) {                                            \
+            std::cerr << "OpenGL error: " << error << std::endl;               \
+            throw std::runtime_error("OpenGL error occurred");                 \
+        }                                                                      \
+    } while (0)
 
 #endif // ATLAS_RENDERING_HPP

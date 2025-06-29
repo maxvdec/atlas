@@ -21,7 +21,7 @@
 
 std::vector<float> CoreObject::makeVertexData() const {
     std::vector<float> vertexData;
-    vertexData.reserve(vertices.size() * 6);
+    vertexData.reserve(vertices.size() * 12);
 
     for (const auto &vertex : vertices) {
         vertexData.push_back(vertex.x);
@@ -35,6 +35,10 @@ std::vector<float> CoreObject::makeVertexData() const {
 
         vertexData.push_back(vertex.textCoords.width);
         vertexData.push_back(vertex.textCoords.height);
+
+        vertexData.push_back(vertex.normal.width);
+        vertexData.push_back(vertex.normal.height);
+        vertexData.push_back(vertex.normal.depth);
     }
 
     return vertexData;
@@ -172,6 +176,16 @@ void CoreObject::initialize() {
     this->attributes.VAO = VAO;
 
     const auto vertexData = makeVertexData();
+
+    std::cout << "Vertex data size: " << vertexData.size() << std::endl;
+    std::cout << "Expected size: " << vertices.size() * 12 << std::endl;
+    if (vertexData.size() >= 12) {
+        std::cout << "First vertex data: ";
+        for (int i = 0; i < 12; ++i) {
+            std::cout << vertexData[i] << " ";
+        }
+        std::cout << std::endl;
+    }
     glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(float),
                  vertexData.data(), GL_STATIC_DRAW);
     if (this->attributes.indices.has_value()) {
@@ -184,17 +198,22 @@ void CoreObject::initialize() {
         this->attributes.EBO = EBO;
     }
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float),
-                          (void *)0);
+    const int stride = 12 * sizeof(float);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void *)0);
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 9 * sizeof(float),
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, stride,
                           (void *)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float),
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride,
                           (void *)(7 * sizeof(float)));
     glEnableVertexAttribArray(2);
+
+    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, stride,
+                          (void *)(9 * sizeof(float)));
+    glEnableVertexAttribArray(3);
 
     glBindVertexArray(0);
 
@@ -379,4 +398,13 @@ GLuint getDefaultTexture() {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     }
     return defaultTexture;
+}
+
+void CoreObject::provideNormals(std::vector<Size3d> normals) {
+    if (normals.size() != vertices.size()) {
+        throw std::runtime_error("Normals size must match vertices size");
+    }
+    for (size_t i = 0; i < vertices.size(); ++i) {
+        vertices[i].normal = normals[i];
+    }
 }

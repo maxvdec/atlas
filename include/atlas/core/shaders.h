@@ -6,6 +6,7 @@ static const char* NORMAL_FRAG = R"(
 #version 330 core
 in vec4 fragColor;
 in vec2 texCoord;
+in vec3 normal;
 
 uniform bool uUseTexture;
 uniform sampler2D uTexture;
