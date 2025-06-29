@@ -7,6 +7,7 @@
  Copyright (c) 2025 maxvdec
 */
 
+#include "atlas/camera.hpp"
 #include "atlas/texture.hpp"
 #include "atlas/workspace.hpp"
 #include <atlas/core/rendering.hpp>
@@ -22,6 +23,10 @@ int main() {
     Resource textureResource = workspace.loadResource("wooden.jpg");
     Texture texture;
     texture.fromImage(textureResource);
+
+    Camera cam;
+    cam.position = Position3d(0.0f, 0.0f, -3.0f);
+    cam.useCamera();
 
     auto object = CoreObject({// Front face
                               {-0.5f, -0.5f, 0.5f, Color(1, 0, 0)},

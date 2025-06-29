@@ -10,8 +10,11 @@
 #ifndef ATLAS_WINDOW_HPP
 #define ATLAS_WINDOW_HPP
 
+#include "atlas/camera.hpp"
+#include "atlas/input.hpp"
 #include <atlas/units.hpp>
 #include <string>
+#include <vector>
 
 struct GLFWwindow;
 
@@ -31,13 +34,24 @@ class Window {
     Frame size;
     Frame framebufferSize;
     Position2d position;
+    Camera *mainCam;
 
     Color backgroundColor = Color(0.0f, 0.0f, 0.0f, 1.0f);
     RenderingMode renderingMode = RenderingMode::Full;
+    std::vector<Interactive *> interactiveObjects;
+    bool firstMouse = true;
+
+    float lastFrame = 0.0f;
+    float deltaTime = 0.0f;
+    int frameCount = 0;
+
+    inline void registerInteractive(Interactive *object) {
+        this->interactiveObjects.push_back(object);
+    }
+
+    inline void setMainCamera(Camera *cam) { this->mainCam = cam; }
 
     static Window *current_window;
-
-  private:
     GLFWwindow *window;
 };
 

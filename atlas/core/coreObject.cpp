@@ -14,7 +14,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <iostream>
 #include <optional>
 #include <string>
 #include <vector>
@@ -35,12 +34,8 @@ std::vector<float> CoreObject::makeVertexData() const {
 
         vertexData.push_back(vertex.textCoords.width);
         vertexData.push_back(vertex.textCoords.height);
-        std::cout << "Vertex: (" << vertex.x << ", " << vertex.y << ", "
-                  << vertex.z << ") Color: (" << vertex.color.r << ", "
-                  << vertex.color.g << ", " << vertex.color.b << ")\n";
     }
 
-    std::cout << "Total vertices: " << vertices.size() << "\n";
     return vertexData;
 }
 

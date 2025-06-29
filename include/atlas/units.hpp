@@ -11,6 +11,7 @@
 #define ATLAS_UNITS_HPP
 
 #include <glm/glm.hpp>
+#include <stdexcept>
 
 struct Position2d {
     float x;
@@ -18,6 +19,8 @@ struct Position2d {
 
     Position2d(float x = 0, float y = 0) : x(x), y(y) {}
 };
+
+enum class Axis { X, Y, Z };
 
 struct Position3d {
     float x;
@@ -31,7 +34,73 @@ struct Position3d {
         return x == other.x && y == other.y && z == other.z;
     }
 
+    inline bool operator!=(const Position3d &other) const {
+        return !(*this == other);
+    }
+
+    inline Position3d operator+(const Position3d &other) const {
+        return Position3d(x + other.x, y + other.y, z + other.z);
+    }
+
+    inline Position3d operator-(const Position3d &other) const {
+        return Position3d(x - other.x, y - other.y, z - other.z);
+    }
+
+    inline Position3d operator*(float scalar) const {
+        return Position3d(x * scalar, y * scalar, z * scalar);
+    }
+
+    inline Position3d operator*(const glm::vec3 &vec) const {
+        return Position3d(x * vec.x, y * vec.y, z * vec.z);
+    }
+
+    inline Position3d operator/(float scalar) const {
+        if (scalar == 0.0f) {
+            throw std::invalid_argument("Division by zero in Position3d");
+        }
+        return Position3d(x / scalar, y / scalar, z / scalar);
+    }
+
+    inline Position3d operator-() const { return Position3d(-x, -y, -z); }
+
+    inline void operator+=(const Position3d &other) {
+        x += other.x;
+        y += other.y;
+        z += other.z;
+    }
+
+    inline void operator-=(const Position3d &other) {
+        x -= other.x;
+        y -= other.y;
+        z -= other.z;
+    }
+
+    inline void operator+=(const glm::vec3 &vec) {
+        x += vec.x;
+        y += vec.y;
+        z += vec.z;
+    }
+
+    inline void operator-=(const glm::vec3 &vec) {
+        x -= vec.x;
+        y -= vec.y;
+        z -= vec.z;
+    }
+
     inline glm::vec3 toVec3() const { return glm::vec3(x, y, z); }
+
+    inline Position3d withInverted(Axis axis) const {
+        switch (axis) {
+        case Axis::X:
+            return Position3d(-x, y, z);
+        case Axis::Y:
+            return Position3d(x, -y, z);
+        case Axis::Z:
+            return Position3d(x, y, -z);
+        default:
+            throw std::invalid_argument("Invalid axis for inversion");
+        }
+    }
 };
 
 struct Size2d {
@@ -53,8 +122,6 @@ struct Color {
     Color(float r = 1.0f, float g = 1.0f, float b = 1.0f, float a = 1.0f)
         : r(r), g(g), b(b), a(a) {}
 };
-
-enum class Axis { X, Y, Z };
 
 typedef Size2d Frame;
 
