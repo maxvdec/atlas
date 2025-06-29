@@ -83,6 +83,7 @@ struct CoreObject {
     std::optional<CoreShader> fragmentShader;
     std::optional<CoreShaderProgram> program;
     Texture texture;
+    std::optional<Texture> specularTexture = std::nullopt;
     bool visualizeTexture = false;
     ProjectionType projectionType = ProjectionType::Perspective;
     glm::mat4 modelMatrix = glm::mat4(1.0f);
@@ -94,6 +95,10 @@ struct CoreObject {
 
     inline void hide() { this->hidden = true; }
     inline void show() { this->hidden = false; }
+
+    inline void setSpecularMap(Texture specular) {
+        this->specularTexture = specular;
+    }
 
     void initialize();
     void provideIndexedDrawing(std::vector<unsigned int> indices);

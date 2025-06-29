@@ -32,11 +32,15 @@ class MainScene : public Scene {
         Texture texture;
         texture.fromImage(textureResource);
 
+        Texture specular;
+        specular.fromImage(workspace.loadResource("specular.png"));
+
         camera.position = Position3d(0.0f, 0.0f, -3.0f);
         camera.useCamera();
 
-        light = Light(Position3d(0.0f, 2.f, 0.0f), Color(1.0f, 1.0f, 1.0f));
+        light = Light(Position3d(2.0f, 1.1f, 0.0f), Color(1.0f, 1.0f, 1.0f));
         light.debugLight();
+        light.intensity = 1.0f;
 
         object = generateCubeObject(Position3d(0.0f, 0.0f, 0.0f),
                                     Size3d(1.0f, 1.0f, 1.0f));
@@ -87,6 +91,7 @@ class MainScene : public Scene {
         object.provideNormals(normals);
 
         object.setTexture(texture);
+        object.setSpecularMap(specular);
 
         std::vector<uint32_t> indices;
         for (int i = 0; i < 6; ++i) {

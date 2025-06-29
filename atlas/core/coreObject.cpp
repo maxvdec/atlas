@@ -290,6 +290,18 @@ void CoreObject::initialize() {
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, object->texture.ID);
             object->program.value().setBool("uUseTexture", true);
+            if (object->specularTexture.has_value()) {
+                glActiveTexture(GL_TEXTURE1);
+                glBindTexture(GL_TEXTURE_2D,
+                              object->specularTexture.value().ID);
+                object->program.value().setInt("uMaterial.specularMap", 1);
+                object->program.value().setBool("uMaterial.useSpecularMap",
+                                                true);
+            } else {
+                object->program.value().setInt("uMaterial.specularMap", 0);
+                object->program.value().setBool("uMaterial.useSpecularMap",
+                                                false);
+            }
         } else {
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, getDefaultTexture());
