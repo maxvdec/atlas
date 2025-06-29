@@ -119,6 +119,8 @@ struct CoreObject {
 
     void updateProjectionType(ProjectionType type);
 
+    CoreObject copy();
+
     std::vector<float> makeVertexData() const;
     std::vector<CoreShader> makeShaderList() const;
 

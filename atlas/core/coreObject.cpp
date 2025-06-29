@@ -9,6 +9,7 @@
 
 #include "atlas/core/rendering.hpp"
 #include "atlas/core/shaders.h"
+#include "atlas/light.hpp"
 #include "atlas/window.hpp"
 #include <glad/glad.h>
 #include <glm/glm.hpp>
@@ -251,24 +252,41 @@ void CoreObject::initialize() {
         }
         if (object->program.value().symbolExists("uLight.position") &&
             Window::current_window->lights.size() > 0) {
-            object->program.value().setVec3(
-                "uLight.position",
-                Window::current_window->lights[0]->position.toVec3());
-            object->program.value().setVec3(
-                "uLight.color",
-                Window::current_window->lights[0]->color.toVec3());
-            object->program.value().setFloat(
-                "uLight.intensity",
-                Window::current_window->lights[0]->intensity);
-            object->program.value().setVec3(
-                "uLight.specular",
-                Window::current_window->lights[0]->material.specular.toVec3());
-            object->program.value().setVec3(
-                "uLight.ambient",
-                Window::current_window->lights[0]->ambientColor.toVec3());
-            object->program.value().setVec3(
-                "uLight.diffuse",
-                Window::current_window->lights[0]->material.diffuse.toVec3());
+            const auto &light = Window::current_window->lights[0];
+            object->program.value().setVec3("uLight.position",
+                                            light->position.toVec3());
+            object->program.value().setVec3("uLight.color",
+                                            light->color.toVec3());
+            object->program.value().setFloat("uLight.intensity",
+                                             light->intensity);
+            object->program.value().setVec3("uLight.specular",
+                                            light->material.specular.toVec3());
+            object->program.value().setVec3("uLight.ambient",
+                                            light->ambientColor.toVec3());
+            object->program.value().setVec3("uLight.diffuse",
+                                            light->material.diffuse.toVec3());
+            if (light->type == LightType::Directional) {
+                const auto &directionalLight =
+                    static_cast<DirectionalLight *>(light);
+                object->program.value().setBool("uLight.isDirectional", true);
+                object->program.value().setVec3(
+                    "uLight.directionalLight.direction",
+                    directionalLight->direction.toVec3());
+            } else if (light->type == LightType::Point) {
+                const auto &pointLight = static_cast<PointLight *>(light);
+                object->program.value().setBool("uLight.isPointLight", true);
+                object->program.value().setVec3("uLight.position",
+                                                pointLight->position.toVec3());
+                object->program.value().setFloat(
+                    "uLight.attenuation.constant",
+                    pointLight->attenuation.constant);
+                object->program.value().setFloat(
+                    "uLight.attenuation.linear",
+                    pointLight->attenuation.linear);
+                object->program.value().setFloat(
+                    "uLight.attenuation.quadratic",
+                    pointLight->attenuation.quadratic);
+            }
 
             object->program.value().setFloat("uMaterial.shininess",
                                              object->material.shininess);
@@ -452,4 +470,21 @@ void CoreObject::provideNormals(std::vector<Size3d> normals) {
     for (size_t i = 0; i < vertices.size(); ++i) {
         vertices[i].normal = normals[i];
     }
+}
+
+CoreObject CoreObject::copy() {
+    CoreObject copy;
+    copy.vertices = this->vertices;
+    copy.vertexShader = this->vertexShader;
+    copy.fragmentShader = this->fragmentShader;
+    copy.program = this->program;
+    copy.attributes = this->attributes;
+    copy.texture = this->texture;
+    copy.specularTexture = this->specularTexture;
+    copy.visualizeTexture = this->visualizeTexture;
+    copy.modelMatrix = this->modelMatrix;
+    copy.viewMatrix = this->viewMatrix;
+    copy.projectionMatrix = this->projectionMatrix;
+    copy.projectionType = this->projectionType;
+    return copy;
 }

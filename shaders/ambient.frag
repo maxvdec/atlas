@@ -4,6 +4,16 @@ in vec2 texCoord;
 in vec3 normal;
 in vec3 fragPos;
 
+struct DirectionalLight {
+    vec3 direction;
+};
+
+struct PointLight {
+    float constant;
+    float linear;
+    float quadratic;
+};
+
 struct Light {
     vec3 position;
     vec3 color;
@@ -11,6 +21,10 @@ struct Light {
     vec3 ambient;
     vec3 diffuse;
     vec3 specular;
+    bool isDirectional;
+    DirectionalLight directionalLight;
+    bool isPointLight;
+    PointLight pointLight;
 };
 
 struct Material {
@@ -43,7 +57,12 @@ void main() {
     }
     
     vec3 norm = normalize(normal);
-    vec3 lightDir = normalize(uLight.position - fragPos);
+    vec3 lightDir;
+    if (uLight.isDirectional) {
+        lightDir = normalize(-uLight.directionalLight.direction);
+    } else {
+        lightDir = normalize(uLight.position - fragPos);
+    }
     vec3 viewDir = normalize(uCameraPos - fragPos);
     vec3 reflectDir = reflect(-lightDir, norm);
     
@@ -59,6 +78,15 @@ void main() {
         specularColor = texture(uMaterial.specularMap, texCoord).rgb;
     }
     vec3 specular = uLight.specular * uLight.color * spec * specularColor * uLight.intensity;
+
+     if (uLight.isPointLight) {
+        float dist = length(uLight.position - fragPos);
+        float attenuation = 1.0 / (uLight.pointLight.constant + 
+                                   uLight.pointLight.linear * dist + 
+                                   uLight.pointLight.quadratic * (dist * dist));
+        specular *= attenuation;
+        diffuse *= attenuation;
+    }
     
     vec3 ambientDiffuse = (ambient + diffuse) * uMaterial.diffuse;
     vec3 finalColor = baseColor.rgb * ambientDiffuse + specular;

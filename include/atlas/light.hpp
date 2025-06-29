@@ -15,6 +15,13 @@
 #include "atlas/units.hpp"
 #include <glm/glm.hpp>
 
+enum class LightType {
+    Point,
+    Directional,
+    SpotLight,
+    None,
+};
+
 class Light {
   public:
     Position3d position;
@@ -22,13 +29,49 @@ class Light {
     Color ambientColor = Color(0.2f, 0.2f, 0.2f, 1.0f);
 
     Light(Position3d position = Position3d(0.0f, 0.0f, 0.0f),
-          Color color = Color(1.0f, 1.0f, 1.0f));
+          Color color = Color(1.0f, 1.0f, 1.0f),
+          LightType type = LightType::None);
 
     void debugLight();
     CoreObject debugObject;
     float intensity = 0.5f;
 
     Material material = Material();
+
+    LightType type;
+};
+
+class DirectionalLight : public Light {
+  public:
+    Position3d direction;
+
+    DirectionalLight(Position3d direction = Position3d(0.0f, -1.0f, 0.0f),
+                     Color color = Color(1.0f, 1.0f, 1.0f))
+        : Light(Position3d(0.0f, 0.0f, 0.0f), color, LightType::Directional),
+          direction(direction) {};
+};
+
+struct Attenuation {
+    float constant;
+    float linear;
+    float quadratic;
+};
+
+Attenuation getAttenuationForDistance(float distance);
+
+class PointLight : public Light {
+  public:
+    float max_distance = 100.0f;
+    Attenuation attenuation = {1.0f, 0.09f, 0.032f};
+
+    inline void changeMaxDistance(float distance) {
+        this->max_distance = distance;
+        this->attenuation = getAttenuationForDistance(distance);
+    }
+
+    PointLight(Position3d position = Position3d(0.0f, 0.0f, 0.0f),
+               Color color = Color(1.0f, 1.0f, 1.0f))
+        : Light(position, color, LightType::Point) {};
 };
 
 #endif // ATLAS_LIGHT_HPP

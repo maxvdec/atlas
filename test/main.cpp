@@ -23,7 +23,7 @@
 
 class MainScene : public Scene {
   public:
-    Light light;
+    PointLight light;
     CoreObject object;
     Camera camera;
     void init() override {
@@ -38,7 +38,8 @@ class MainScene : public Scene {
         camera.position = Position3d(0.0f, 0.0f, -3.0f);
         camera.useCamera();
 
-        light = Light(Position3d(2.0f, 1.1f, 0.0f), Color(1.0f, 1.0f, 1.0f));
+        light =
+            PointLight(Position3d(-0.3f, -2.0f, 0.2f), Color(1.0f, 1.0f, 1.0f));
         light.debugLight();
         light.intensity = 1.0f;
 
@@ -105,6 +106,8 @@ class MainScene : public Scene {
         }
         object.provideIndexedDrawing(indices);
         object.show();
+
+        CoreObject copy = object.copy();
         object.initialize();
     }
     void update(float deltaTime) override {}
