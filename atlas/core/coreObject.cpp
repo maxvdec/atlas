@@ -149,12 +149,15 @@ std::vector<CoreShader> CoreObject::makeShaderList() const {
 }
 
 void CoreObject::initialize() {
+    if (!this->vertexShader.has_value()) {
+        CoreShader vertexShader(MAIN_VERT, CoreShaderType::Vertex);
+        this->vertexShader = vertexShader;
+    }
 
-    CoreShader vertexShader(MAIN_VERT, CoreShaderType::Vertex);
-    this->vertexShader = vertexShader;
-
-    CoreShader fragmentShader(AMBIENT_FRAG, CoreShaderType::Fragment);
-    this->fragmentShader = fragmentShader;
+    if (!this->fragmentShader.has_value()) {
+        CoreShader fragmentShader(AMBIENT_FRAG, CoreShaderType::Fragment);
+        this->fragmentShader = fragmentShader;
+    }
 
     CoreShaderProgram shaderProgram(makeShaderList());
     this->program = shaderProgram;
@@ -232,14 +235,10 @@ void CoreObject::initialize() {
                 "uAmbientColor", Window::current_window->ambientColor.toVec3());
         }
         if (object->visualizeTexture) {
-            std::cout << "Using texture for object ID: " << object->id
-                      << std::endl;
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, object->texture.ID);
             object->program.value().setBool("uUseTexture", true);
         } else {
-            std::cout << "Not using texture for object ID: " << object->id
-                      << std::endl;
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, getDefaultTexture());
             object->program.value().setBool("uUseTexture", false);

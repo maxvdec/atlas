@@ -26,8 +26,6 @@ Light::Light(Position3d position, Color color)
                   << ", " << color.a << std::endl;
     }
 
-    debugObject.translate(position.x, position.y, position.z);
-
     debugObject.initialize();
     debugObject.disableTexturing();
 }

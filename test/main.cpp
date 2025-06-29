@@ -29,7 +29,7 @@ int main() {
     cam.position = Position3d(0.0f, 0.0f, -3.0f);
     cam.useCamera();
 
-    Light light(Position3d(0.0f, 3.0f, 0.0f), Color(1.0f, 1.0f, 1.0f));
+    Light light(Position3d(0.0f, 2.0f, 0.0f), Color(1.0f, 1.0f, 1.0f));
     light.debugLight();
 
     auto object = CoreObject({// Front face

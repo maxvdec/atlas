@@ -8,71 +8,71 @@
 */
 
 #include "atlas/core/rendering.hpp"
+#include "atlas/core/shaders.h"
 #include "atlas/units.hpp"
 
 CoreObject generateCubeObject(Position3d position, Size3d size) {
     std::vector<CoreVertex> vertices = {
-        // Front face
+        // Front face (Z+)
         {position.x - size.width / 2, position.y - size.height / 2,
-         position.z + size.depth / 2, Color(1, 0, 0)},
+         position.z + size.depth / 2, Color(1, 1, 1)},
         {position.x + size.width / 2, position.y - size.height / 2,
-         position.z + size.depth / 2, Color(0, 1, 0)},
+         position.z + size.depth / 2, Color(1, 1, 1)},
         {position.x + size.width / 2, position.y + size.height / 2,
-         position.z + size.depth / 2, Color(0, 0, 1)},
+         position.z + size.depth / 2, Color(1, 1, 1)},
         {position.x - size.width / 2, position.y + size.height / 2,
-         position.z + size.depth / 2, Color(1, 1, 0)},
+         position.z + size.depth / 2, Color(1, 1, 1)},
 
-        // Back face
+        // Back face (Z-)
         {position.x + size.width / 2, position.y - size.height / 2,
-         position.z - size.depth / 2, Color(1, 0, 0)},
+         position.z - size.depth / 2, Color(1, 1, 1)},
         {position.x - size.width / 2, position.y - size.height / 2,
-         position.z - size.depth / 2, Color(0, 1, 0)},
+         position.z - size.depth / 2, Color(1, 1, 1)},
         {position.x - size.width / 2, position.y + size.height / 2,
-         position.z - size.depth / 2, Color(0, 0, 1)},
+         position.z - size.depth / 2, Color(1, 1, 1)},
         {position.x + size.width / 2, position.y + size.height / 2,
-         position.z - size.depth / 2, Color(1, 1, 0)},
+         position.z - size.depth / 2, Color(1, 1, 1)},
 
-        // Left face
+        // Left face (X-)
         {position.x - size.width / 2, position.y - size.height / 2,
-         position.z - size.depth / 2, Color(1, 0, 0)},
+         position.z - size.depth / 2, Color(1, 1, 1)},
         {position.x - size.width / 2, position.y - size.height / 2,
-         position.z + size.depth / 2, Color(0, 1, 0)},
+         position.z + size.depth / 2, Color(1, 1, 1)},
         {position.x - size.width / 2, position.y + size.height / 2,
-         position.z + size.depth / 2, Color(0, 0, 1)},
+         position.z + size.depth / 2, Color(1, 1, 1)},
         {position.x - size.width / 2, position.y + size.height / 2,
-         position.z - size.depth / 2, Color(1, 1, 0)},
+         position.z - size.depth / 2, Color(1, 1, 1)},
 
-        // Right
+        // Right face (X+)
         {position.x + size.width / 2, position.y - size.height / 2,
-         position.z + size.depth / 2, Color(1, 0, 0)},
+         position.z + size.depth / 2, Color(1, 1, 1)},
         {position.x + size.width / 2, position.y - size.height / 2,
-         position.z - size.depth / 2, Color(0, 1, 0)},
+         position.z - size.depth / 2, Color(1, 1, 1)},
         {position.x + size.width / 2, position.y + size.height / 2,
-         position.z - size.depth / 2, Color(0, 0, 1)},
+         position.z - size.depth / 2, Color(1, 1, 1)},
         {position.x + size.width / 2, position.y + size.height / 2,
-         position.z + size.depth / 2, Color(1, 1, 0)},
+         position.z + size.depth / 2, Color(1, 1, 1)},
 
-        // Top face
+        // Top face (Y+)
         {position.x - size.width / 2, position.y + size.height / 2,
-         position.z + size.depth / 2, Color(1, 0, 0)},
+         position.z + size.depth / 2, Color(1, 1, 1)},
         {position.x + size.width / 2, position.y + size.height / 2,
-         position.z + size.depth / 2, Color(0, 1, 0)},
+         position.z + size.depth / 2, Color(1, 1, 1)},
         {position.x + size.width / 2, position.y + size.height / 2,
-         position.z - size.depth / 2, Color(0, 0, 1)},
+         position.z - size.depth / 2, Color(1, 1, 1)},
         {position.x - size.width / 2, position.y + size.height / 2,
-         position.z - size.depth / 2, Color(1, 1, 0)},
+         position.z - size.depth / 2, Color(1, 1, 1)},
 
-        // Bottom face
+        // Bottom face (Y-)
         {position.x - size.width / 2, position.y - size.height / 2,
-         position.z + size.depth / 2, Color(1, 0, 0)},
+         position.z + size.depth / 2, Color(1, 1, 1)},
         {position.x + size.width / 2, position.y - size.height / 2,
-         position.z + size.depth / 2, Color(0, 1, 0)},
+         position.z + size.depth / 2, Color(1, 1, 1)},
         {position.x + size.width / 2, position.y - size.height / 2,
-         position.z - size.depth / 2, Color(0, 0, 1)},
+         position.z - size.depth / 2, Color(1, 1, 1)},
         {position.x - size.width / 2, position.y - size.height / 2,
-         position.z - size.depth / 2, Color(1, 1, 0)},
+         position.z - size.depth / 2, Color(1, 1, 1)},
     };
-
     CoreObject object(std::move(vertices));
     std::vector<Size2d> faceUVs = {
         {0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f}};
@@ -80,7 +80,18 @@ CoreObject generateCubeObject(Position3d position, Size3d size) {
     for (int i = 0; i < 6; ++i) {
         allUVs.insert(allUVs.end(), faceUVs.begin(), faceUVs.end());
     }
+
+    std::vector<uint32_t> indices = {
+        0,  1,  2,  2,  3,  0,  // Front
+        4,  5,  6,  6,  7,  4,  // Back
+        8,  9,  10, 10, 11, 8,  // Left
+        12, 13, 14, 14, 15, 12, // Right
+        16, 17, 18, 18, 19, 16, // Top
+        20, 21, 22, 22, 23, 20  // Bottom
+    };
+    object.provideIndexedDrawing(std::move(indices));
     object.provideTextureCoords(allUVs);
+    object.fragmentShader = CoreShader(NORMAL_FRAG, CoreShaderType::Fragment);
 
     return object;
 }
