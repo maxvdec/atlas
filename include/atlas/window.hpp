@@ -54,6 +54,14 @@ class Window {
         this->interactiveObjects.push_back(object);
     }
 
+    inline void lockCursor() {
+        glfwSetInputMode(this->window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    }
+
+    inline void unlockCursor() {
+        glfwSetInputMode(this->window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    }
+
     inline void setMainCamera(Camera *cam) { this->mainCam = cam; }
 
     static inline float getTime() { return static_cast<float>(glfwGetTime()); }

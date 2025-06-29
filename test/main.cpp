@@ -8,6 +8,7 @@
 */
 
 #include "atlas/camera.hpp"
+#include "atlas/input.hpp"
 #include "atlas/light.hpp"
 #include "atlas/material.hpp"
 #include "atlas/scene.hpp"
@@ -23,7 +24,7 @@
 
 class MainScene : public Scene {
   public:
-    PointLight light;
+    SpotLight light;
     CoreObject object;
     Camera camera;
     void init() override {
@@ -39,7 +40,8 @@ class MainScene : public Scene {
         camera.useCamera();
 
         light =
-            PointLight(Position3d(-0.3f, -2.0f, 0.2f), Color(1.0f, 1.0f, 1.0f));
+            SpotLight(Position3d(0.0f, 0.0f, -2.0f),
+                      Position3d(0.0f, 0.0f, 1.0f), Color(1.0f, 1.0f, 1.0f));
         light.debugLight();
         light.intensity = 1.0f;
 
@@ -110,7 +112,11 @@ class MainScene : public Scene {
         CoreObject copy = object.copy();
         object.initialize();
     }
-    void update(float deltaTime) override {}
+    void update(float deltaTime) override {
+        if (isKeyPressed(Key::Escape)) {
+            Window::current_window->unlockCursor();
+        }
+    }
 };
 
 int main() {

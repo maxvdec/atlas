@@ -277,17 +277,44 @@ void CoreObject::initialize() {
                 object->program.value().setBool("uLight.isPointLight", true);
                 object->program.value().setVec3("uLight.position",
                                                 pointLight->position.toVec3());
+                std::cout << "Position is " << pointLight->position.toVec3().x
+                          << ", " << pointLight->position.toVec3().y << ", "
+                          << pointLight->position.toVec3().z << std::endl;
                 object->program.value().setFloat(
-                    "uLight.attenuation.constant",
+                    "uLight.pointLight.constant",
                     pointLight->attenuation.constant);
+                std::cout << "Attenuation constant is "
+                          << pointLight->attenuation.constant << std::endl;
                 object->program.value().setFloat(
-                    "uLight.attenuation.linear",
-                    pointLight->attenuation.linear);
+                    "uLight.pointLight.linear", pointLight->attenuation.linear);
+                std::cout << "Attenuation linear is "
+                          << pointLight->attenuation.linear << std::endl;
                 object->program.value().setFloat(
-                    "uLight.attenuation.quadratic",
+                    "uLight.pointLight.quadratic",
                     pointLight->attenuation.quadratic);
+                std::cout << "Attenuation quadratic is "
+                          << pointLight->attenuation.quadratic << std::endl;
+            } else if (light->type == LightType::SpotLight) {
+                const auto &spotLight = static_cast<SpotLight *>(light);
+                object->program.value().setBool("uLight.isSpotLight", true);
+                object->program.value().setBool("uLight.isPointLight", true);
+                object->program.value().setVec3("uLight.position",
+                                                spotLight->position.toVec3());
+                object->program.value().setVec3("uLight.spotLight.direction",
+                                                spotLight->direction.toVec3());
+                object->program.value().setFloat("uLight.spotLight.cutOff",
+                                                 spotLight->cutOff);
+                object->program.value().setFloat("uLight.spotLight.outerCutOff",
+                                                 spotLight->outerCutOff);
+                object->program.value().setFloat(
+                    "uLight.pointLight.constant",
+                    spotLight->attenuation.constant);
+                object->program.value().setFloat("uLight.pointLight.linear",
+                                                 spotLight->attenuation.linear);
+                object->program.value().setFloat(
+                    "uLight.pointLight.quadratic",
+                    spotLight->attenuation.quadratic);
             }
-
             object->program.value().setFloat("uMaterial.shininess",
                                              object->material.shininess);
             object->program.value().setVec3("uMaterial.specular",

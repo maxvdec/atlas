@@ -74,4 +74,23 @@ class PointLight : public Light {
         : Light(position, color, LightType::Point) {};
 };
 
+class SpotLight : public Light {
+  public:
+    Position3d direction;
+    float cutOff = glm::cos(glm::radians(12.5f));
+    float outerCutOff = glm::cos(glm::radians(15.0f));
+    Attenuation attenuation = {1.0f, 0.09f, 0.032f};
+    float max_distance = 100.0f;
+
+    inline void changeMaxDistance(float distance) {
+        this->max_distance = distance;
+        this->attenuation = getAttenuationForDistance(distance);
+    }
+
+    SpotLight(Position3d position = Position3d(0.0f, 0.0f, 0.0f),
+              Position3d direction = Position3d(0.0f, -1.0f, 0.0f),
+              Color color = Color(1.0f, 1.0f, 1.0f))
+        : Light(position, color, LightType::SpotLight), direction(direction) {};
+};
+
 #endif // ATLAS_LIGHT_HPP
