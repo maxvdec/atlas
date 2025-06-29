@@ -70,6 +70,7 @@ Window::Window(const std::string &title, Frame mesures, Position2d position) {
 
 void Window::run() {
     while (!glfwWindowShouldClose(this->window)) {
+        glEnable(GL_DEPTH_TEST);
         glClearColor(this->backgroundColor.r, this->backgroundColor.g,
                      this->backgroundColor.b, this->backgroundColor.a);
 

@@ -23,20 +23,66 @@ int main() {
     Texture texture;
     texture.fromImage(textureResource);
 
-    auto object = CoreObject({{0.5f, 0.5f, 0.0f, Color(1.0f, 0.0f, 0.0f)},
-                              {0.5f, -0.5f, 0.0f, Color(0.0f, 1.0f, 0.0f)},
-                              {-0.5f, -0.5f, 0.0f, Color(0.0f, 0.0f, 1.0f)},
-                              {-0.5f, 0.5f, 0.0f, Color(1.0f, 1.0f, 0.0f)}});
+    auto object = CoreObject({// Front face
+                              {-0.5f, -0.5f, 0.5f, Color(1, 0, 0)},
+                              {0.5f, -0.5f, 0.5f, Color(0, 1, 0)},
+                              {0.5f, 0.5f, 0.5f, Color(0, 0, 1)},
+                              {-0.5f, 0.5f, 0.5f, Color(1, 1, 0)},
 
-    object.provideTextureCoords({Size2d(1.0f, 1.0f), Size2d(1.0f, 0.0f),
-                                 Size2d(0.0f, 0.0f), Size2d(0.0f, 1.0f)});
+                              // Back face
+                              {0.5f, -0.5f, -0.5f, Color(1, 0, 0)},
+                              {-0.5f, -0.5f, -0.5f, Color(0, 1, 0)},
+                              {-0.5f, 0.5f, -0.5f, Color(0, 0, 1)},
+                              {0.5f, 0.5f, -0.5f, Color(1, 1, 0)},
+
+                              // Left face
+                              {-0.5f, -0.5f, -0.5f, Color(1, 0, 0)},
+                              {-0.5f, -0.5f, 0.5f, Color(0, 1, 0)},
+                              {-0.5f, 0.5f, 0.5f, Color(0, 0, 1)},
+                              {-0.5f, 0.5f, -0.5f, Color(1, 1, 0)},
+
+                              // Right face
+                              {0.5f, -0.5f, 0.5f, Color(1, 0, 0)},
+                              {0.5f, -0.5f, -0.5f, Color(0, 1, 0)},
+                              {0.5f, 0.5f, -0.5f, Color(0, 0, 1)},
+                              {0.5f, 0.5f, 0.5f, Color(1, 1, 0)},
+
+                              // Top face
+                              {-0.5f, 0.5f, 0.5f, Color(1, 0, 0)},
+                              {0.5f, 0.5f, 0.5f, Color(0, 1, 0)},
+                              {0.5f, 0.5f, -0.5f, Color(0, 0, 1)},
+                              {-0.5f, 0.5f, -0.5f, Color(1, 1, 0)},
+
+                              // Bottom face
+                              {-0.5f, -0.5f, -0.5f, Color(1, 0, 0)},
+                              {0.5f, -0.5f, -0.5f, Color(0, 1, 0)},
+                              {0.5f, -0.5f, 0.5f, Color(0, 0, 1)},
+                              {-0.5f, -0.5f, 0.5f, Color(1, 1, 0)}});
+
+    std::vector<Size2d> faceUVs = {
+        {0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f}};
+
+    std::vector<Size2d> allUVs;
+    for (int i = 0; i < 6; ++i) {
+        allUVs.insert(allUVs.end(), faceUVs.begin(), faceUVs.end());
+    }
+
+    object.provideTextureCoords(allUVs);
+
     object.setTexture(texture);
-    object.rotate(-55.0f, Axis::X);
-    object.viewMatrix =
-        glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -3.0f));
-    unsigned int indices[] = {0, 1, 2, 2, 3, 0};
-    object.provideIndexedDrawing(
-        std::vector<unsigned int>(indices, indices + 6));
+
+    std::vector<uint32_t> indices;
+    for (int i = 0; i < 6; ++i) {
+        uint32_t start = i * 4;
+        indices.push_back(start + 0);
+        indices.push_back(start + 1);
+        indices.push_back(start + 2);
+        indices.push_back(start + 2);
+        indices.push_back(start + 3);
+        indices.push_back(start + 0);
+    }
+    object.provideIndexedDrawing(indices);
+
     object.initialize();
     mywin.run();
     return 0;

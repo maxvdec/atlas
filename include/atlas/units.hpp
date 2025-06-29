@@ -13,10 +13,10 @@
 #include <glm/glm.hpp>
 
 struct Position2d {
-    int x;
-    int y;
+    float x;
+    float y;
 
-    Position2d(int x = 0, int y = 0) : x(x), y(y) {}
+    Position2d(float x = 0, float y = 0) : x(x), y(y) {}
 };
 
 struct Position3d {
@@ -35,10 +35,13 @@ struct Position3d {
 };
 
 struct Size2d {
-    int width;
-    int height;
+    float width;
+    float height;
 
-    Size2d(int width = 0, int height = 0) : width(width), height(height) {}
+    Size2d(float width = 0, float height = 0) : width(width), height(height) {}
+    Size2d(int width, int height)
+        : width(static_cast<float>(width)), height(static_cast<float>(height)) {
+    }
 };
 
 struct Color {

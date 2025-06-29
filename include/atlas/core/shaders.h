@@ -44,9 +44,7 @@ void main()
 {
     fragColor = aColor;
     texCoord = aTexCoord;
-    gl_Position = uModel * uView * uProjection * vec4(aPos, 1.0);
-    gl_Position.x *= uAspectCorrection.x;
-    gl_Position.y *= uAspectCorrection.y;
+    gl_Position = uProjection * uView * uModel * vec4(aPos, 1.0);
 }
 
 )";
