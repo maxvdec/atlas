@@ -14,6 +14,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <iostream>
 #include <optional>
 #include <string>
 #include <vector>
@@ -226,18 +227,25 @@ void CoreObject::initialize() {
         object->program.value().setMatrix4("uProjection",
                                            object->projectionMatrix);
         object->program.value().setMatrix4("uView", object->viewMatrix);
+        if (object->program.value().symbolExists("uAmbientColor")) {
+            object->program.value().setVec3(
+                "uAmbientColor", Window::current_window->ambientColor.toVec3());
+        }
         if (object->visualizeTexture) {
-            object->program.value().setBool("uUseTexture", true);
+            std::cout << "Using texture for object ID: " << object->id
+                      << std::endl;
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, object->texture.ID);
+            object->program.value().setBool("uUseTexture", true);
         } else {
+            std::cout << "Not using texture for object ID: " << object->id
+                      << std::endl;
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, getDefaultTexture());
             object->program.value().setBool("uUseTexture", false);
-            glBindTexture(GL_TEXTURE_2D, 0);
         }
         glBindVertexArray(object->attributes.VAO);
         if (object->attributes.EBO.has_value()) {
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,
-                         object->attributes.EBO.value());
             glDrawElements(GL_TRIANGLES, object->attributes.elementCount,
                            GL_UNSIGNED_INT, 0);
         } else {
@@ -351,4 +359,25 @@ void CoreObject::updateProjectionType(ProjectionType type) {
         this->projectionMatrix = glm::perspective(
             glm::radians(45.0f), 800.0f / 600.0f, 0.1f, 100.0f);
     }
+}
+
+void CoreShaderProgram::setVec3(const std::string &name,
+                                const glm::vec3 &vector) const {
+    glUniform3fv(glGetUniformLocation(this->ID, name.c_str()), 1,
+                 glm::value_ptr(vector));
+}
+
+GLuint defaultTexture = 0;
+
+GLuint getDefaultTexture() {
+    if (defaultTexture == 0) {
+        glGenTextures(1, &defaultTexture);
+        glBindTexture(GL_TEXTURE_2D, defaultTexture);
+        unsigned char whitePixel[4] = {255, 255, 255, 255};
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA,
+                     GL_UNSIGNED_BYTE, whitePixel);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    }
+    return defaultTexture;
 }

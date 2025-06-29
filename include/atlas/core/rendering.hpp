@@ -51,6 +51,11 @@ struct CoreShaderProgram {
     void setBool(const std::string &name, bool value) const;
     void setMatrix4(const std::string &name, const glm::mat4 &matrix) const;
     void setVec2(const std::string &name, const glm::vec2 &vector) const;
+    void setVec3(const std::string &name, const glm::vec3 &vector) const;
+
+    inline bool symbolExists(const std::string &name) const {
+        return glGetUniformLocation(this->ID, name.c_str()) != -1;
+    }
 };
 
 struct CoreVertexAttributes {
@@ -133,5 +138,11 @@ struct Renderer {
 };
 
 void checkGLError(const std::string &operation);
+
+CoreObject generateCubeObject(Position3d position, Size3d size);
+
+extern GLuint defaultTexture;
+
+GLuint getDefaultTexture();
 
 #endif // ATLAS_RENDERING_HPP

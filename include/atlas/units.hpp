@@ -113,6 +113,18 @@ struct Size2d {
     }
 };
 
+struct Size3d {
+    float width;
+    float height;
+    float depth;
+
+    Size3d(float width = 0, float height = 0, float depth = 0)
+        : width(width), height(height), depth(depth) {}
+    Size3d(int width, int height, int depth)
+        : width(static_cast<float>(width)), height(static_cast<float>(height)),
+          depth(static_cast<float>(depth)) {}
+};
+
 struct Color {
     float r;
     float g;
@@ -121,6 +133,9 @@ struct Color {
 
     Color(float r = 1.0f, float g = 1.0f, float b = 1.0f, float a = 1.0f)
         : r(r), g(g), b(b), a(a) {}
+
+    inline glm::vec3 toVec3() const { return glm::vec3(r, g, b); }
+    inline glm::vec4 toVec4() const { return glm::vec4(r, g, b, a); }
 };
 
 typedef Size2d Frame;

@@ -94,6 +94,7 @@ void Texture::fromImage(Resource resc) {
     }
     glGenerateMipmap(GL_TEXTURE_2D);
     stbi_image_free(data);
+    glBindTexture(GL_TEXTURE_2D, 0);
     this->ID = textureID;
     this->image = resc;
 }

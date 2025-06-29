@@ -37,6 +37,7 @@ class Window {
     Camera *mainCam;
 
     Color backgroundColor = Color(0.0f, 0.0f, 0.0f, 1.0f);
+    Color ambientColor = Color(0.2f, 0.2f, 0.2f, 1.0f);
     RenderingMode renderingMode = RenderingMode::Full;
     std::vector<Interactive *> interactiveObjects;
     bool firstMouse = true;
