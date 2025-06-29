@@ -12,7 +12,13 @@
 #include <iostream>
 
 void Renderer::registerObject(CoreObject *object, RenderingFn dispatcher) {
-    object->id = static_cast<int>(this->registeredObjects.size());
+    if (object == nullptr || object->program.has_value() == false) {
+        std::cerr << "Error: Attempting to register a null object."
+                  << std::endl;
+        return;
+    }
+    object->id = static_cast<int>(this->registeredObjects.size() + 1);
+    std::cout << "Registering object with ID: " << object->id << std::endl;
     this->registeredObjects.push_back(object);
     this->dispatchers.push_back(dispatcher);
 }
@@ -25,8 +31,8 @@ void Renderer::dispatchAll() {
                 << i << std::endl;
             continue;
         }
+
         if (this->registeredObjects[i]->hidden) {
-            std::cout << "Skipping hidden object at index " << i << std::endl;
             continue;
         }
         this->dispatchers[i](this->registeredObjects[i]);

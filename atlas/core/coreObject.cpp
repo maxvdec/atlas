@@ -248,21 +248,29 @@ void CoreObject::initialize() {
             Window::current_window->lights.size() > 0) {
             object->program.value().setVec3(
                 "uLight.position",
-                Window::current_window->lights[0].position.toVec3());
+                Window::current_window->lights[0]->position.toVec3());
             object->program.value().setVec3(
                 "uLight.color",
-                Window::current_window->lights[0].color.toVec3());
+                Window::current_window->lights[0]->color.toVec3());
             object->program.value().setFloat(
                 "uLight.intensity",
-                Window::current_window->lights[0].intensity);
+                Window::current_window->lights[0]->intensity);
+            object->program.value().setVec3(
+                "uLight.specular",
+                Window::current_window->lights[0]->material.specular.toVec3());
+            object->program.value().setVec3(
+                "uLight.ambient",
+                Window::current_window->lights[0]->ambientColor.toVec3());
+            object->program.value().setVec3(
+                "uLight.diffuse",
+                Window::current_window->lights[0]->material.diffuse.toVec3());
+
             object->program.value().setFloat("uMaterial.shininess",
                                              object->material.shininess);
             object->program.value().setVec3("uMaterial.specular",
                                             object->material.specular.toVec3());
             object->program.value().setVec3("uMaterial.diffuse",
                                             object->material.diffuse.toVec3());
-            object->program.value().setVec3(
-                "uMaterial.ambient", object->material.ambientColor.toVec3());
         }
         if (object->program.value().symbolExists("uCameraPos")) {
             if (Window::current_window->mainCam != nullptr) {

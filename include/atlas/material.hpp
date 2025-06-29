@@ -21,7 +21,6 @@
 
 struct Material {
     float shininess = SHININESS_MEDIUM;
-    Color ambientColor = Color(0.2f, 0.2f, 0.2f, 1.0f);
     Color diffuse = Color(0.8f, 0.8f, 0.8f, 1.0f);
     Color specular = Color(1.0f, 1.0f, 1.0f, 1.0f);
 

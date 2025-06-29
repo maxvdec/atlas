@@ -146,6 +146,10 @@ Window::Window(const std::string &title, Frame mesures, Position2d position) {
 
 void Window::run() {
     double previousTime = glfwGetTime();
+    if (this->currentScene != nullptr) {
+        this->currentScene->init();
+        this->registerInteractive(this->currentScene);
+    }
 
     while (!glfwWindowShouldClose(this->window)) {
         double currentTime = glfwGetTime();

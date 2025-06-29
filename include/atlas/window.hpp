@@ -13,6 +13,7 @@
 #include "atlas/camera.hpp"
 #include "atlas/input.hpp"
 #include "atlas/light.hpp"
+#include "atlas/scene.hpp"
 #include <atlas/units.hpp>
 #include <string>
 #include <vector>
@@ -36,12 +37,13 @@ class Window {
     Frame framebufferSize;
     Position2d position;
     Camera *mainCam;
+    Scene *currentScene = nullptr;
 
     Color backgroundColor = Color(0.0f, 0.0f, 0.0f, 1.0f);
     Color ambientColor = Color(0.2f, 0.2f, 0.2f, 1.0f);
     RenderingMode renderingMode = RenderingMode::Full;
     std::vector<Interactive *> interactiveObjects;
-    std::vector<Light> lights;
+    std::vector<Light *> lights;
     bool firstMouse = true;
 
     float lastFrame = 0.0f;
@@ -53,6 +55,8 @@ class Window {
     }
 
     inline void setMainCamera(Camera *cam) { this->mainCam = cam; }
+
+    static inline float getTime() { return static_cast<float>(glfwGetTime()); }
 
     static Window *current_window;
     GLFWwindow *window;
