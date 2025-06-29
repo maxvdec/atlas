@@ -148,19 +148,18 @@ std::vector<CoreShader> CoreObject::makeShaderList() const {
 }
 
 void CoreObject::initialize() {
+
+    CoreShader vertexShader(MAIN_VERT, CoreShaderType::Vertex);
+    this->vertexShader = vertexShader;
+
+    CoreShader fragmentShader(AMBIENT_FRAG, CoreShaderType::Fragment);
+    this->fragmentShader = fragmentShader;
+
+    CoreShaderProgram shaderProgram(makeShaderList());
+    this->program = shaderProgram;
     unsigned int VAO;
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
-
-    if (this->attributes.indices.has_value()) {
-        unsigned int EBO;
-        glGenBuffers(1, &EBO);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                     this->attributes.indices->size() * sizeof(unsigned int),
-                     this->attributes.indices->data(), GL_STATIC_DRAW);
-        this->attributes.EBO = EBO;
-    }
 
     unsigned int VBO;
     glGenBuffers(1, &VBO);
@@ -171,24 +170,15 @@ void CoreObject::initialize() {
     const auto vertexData = makeVertexData();
     glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(float),
                  vertexData.data(), GL_STATIC_DRAW);
-
-    CoreShader vertexShader(NORMAL_VERT, CoreShaderType::Vertex);
-    this->vertexShader = vertexShader;
-
-    CoreShader fragmentShader(NORMAL_FRAG, CoreShaderType::Fragment);
-    this->fragmentShader = fragmentShader;
-
-    CoreShaderProgram shaderProgram(makeShaderList());
-    this->program = shaderProgram;
-
-    if (this->visualizeTexture) {
-        this->program.value().setBool("uUseTexture", true);
-    } else {
-        this->program.value().setBool("uUseTexture", false);
+    if (this->attributes.indices.has_value()) {
+        unsigned int EBO;
+        glGenBuffers(1, &EBO);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER,
+                     this->attributes.indices->size() * sizeof(unsigned int),
+                     this->attributes.indices->data(), GL_STATIC_DRAW);
+        this->attributes.EBO = EBO;
     }
-    this->program.value().setInt("uTexture", 0);
-
-    this->program.value().setMatrix4("uModel", this->modelMatrix);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float),
                           (void *)0);
@@ -205,6 +195,15 @@ void CoreObject::initialize() {
     glBindVertexArray(0);
 
     this->program.value().use();
+
+    if (this->visualizeTexture) {
+        this->program.value().setBool("uUseTexture", true);
+    } else {
+        this->program.value().setBool("uUseTexture", false);
+    }
+    this->program.value().setInt("uTexture", 0);
+
+    this->program.value().setMatrix4("uModel", this->modelMatrix);
 
     auto dispatcher = [](CoreObject *object) {
         glUseProgram(object->program.value().ID);

@@ -19,6 +19,16 @@ void Renderer::registerObject(CoreObject *object, RenderingFn dispatcher) {
 
 void Renderer::dispatchAll() {
     for (size_t i = 0; i < this->registeredObjects.size(); ++i) {
+        if (this->registeredObjects[i] == nullptr) {
+            std::cerr
+                << "Warning: Attempting to dispatch a null object at index "
+                << i << std::endl;
+            continue;
+        }
+        if (this->registeredObjects[i]->hidden) {
+            std::cout << "Skipping hidden object at index " << i << std::endl;
+            continue;
+        }
         this->dispatchers[i](this->registeredObjects[i]);
     }
 }
