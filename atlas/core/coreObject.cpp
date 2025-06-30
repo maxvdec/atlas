@@ -232,8 +232,6 @@ void CoreObject::initialize() {
     } else {
         this->program.value().setBool("uUseTexture", false);
     }
-    this->program.value().setInt("uTexture", 0);
-
     this->program.value().setMatrix4("uModel", this->modelMatrix);
 
     auto dispatcher = [](CoreObject *object) {

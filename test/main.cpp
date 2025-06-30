@@ -11,6 +11,7 @@
 #include "atlas/input.hpp"
 #include "atlas/light.hpp"
 #include "atlas/material.hpp"
+#include "atlas/model.hpp"
 #include "atlas/scene.hpp"
 #include "atlas/texture.hpp"
 #include "atlas/units.hpp"
@@ -24,9 +25,10 @@
 
 class MainScene : public Scene {
   public:
-    SpotLight *light = nullptr;
+    PointLight *light = nullptr;
     CoreObject object;
     Camera camera;
+    Model model;
     void init() override {
         Workspace workspace(TEST_PATH);
         Resource textureResource = workspace.loadResource("container.png");
@@ -40,78 +42,13 @@ class MainScene : public Scene {
         camera.position = Position3d(0.0f, 0.0f, -3.0f);
         camera.useCamera();
 
-        light = new SpotLight(Position3d(0.0f, 0.0f, -2.0f),
-                              Position3d(0.0f, 0.0f, 1.0f),
-                              Color(1.0f, 0.83f, 0.5f));
+        light = new PointLight(Position3d(0.0f, 0.0f, 1.0f),
+                               Color(1.0f, 0.83f, 0.5f));
         light->debugLight();
         light->intensity = 1.5f;
 
-        object = generateCubeObject(Position3d(0.0f, 0.0f, 0.0f),
-                                    Size3d(1.0f, 1.0f, 1.0f));
-
-        std::vector<Size2d> faceUVs = {
-            {0.0f, 0.0f}, {1.0f, 0.0f}, {1.0f, 1.0f}, {0.0f, 1.0f}};
-
-        std::vector<Size2d> allUVs;
-        for (int i = 0; i < 6; ++i) {
-            allUVs.insert(allUVs.end(), faceUVs.begin(), faceUVs.end());
-        }
-
-        object.provideTextureCoords(allUVs);
-
-        std::vector<Size3d> normals = {
-            // Front face
-            {0.0f, 0.0f, 1.0f},
-            {0.0f, 0.0f, 1.0f},
-            {0.0f, 0.0f, 1.0f},
-            {0.0f, 0.0f, 1.0f},
-            // Back face
-            {0.0f, 0.0f, -1.0f},
-            {0.0f, 0.0f, -1.0f},
-            {0.0f, 0.0f, -1.0f},
-            {0.0f, 0.0f, -1.0f},
-            // Left face
-            {-1.0f, 0.0f, 0.0f},
-            {-1.0f, 0.0f, 0.0f},
-            {-1.0f, 0.0f, 0.0f},
-            {-1.0f, 0.0f, 0.0f},
-            // Right face
-            {1.0f, 0.0f, 0.0f},
-            {1.0f, 0.0f, 0.0f},
-            {1.0f, 0.0f, 0.0f},
-            {1.0f, 0.0f, 0.0f},
-            // Top face
-            {0.0f, 1.0f, 0.0f},
-            {0.0f, 1.0f, 0.0f},
-            {0.0f, 1.0f, 0.0f},
-            {0.0f, 1.0f, 0.0f},
-            // Bottom face
-            {0.0f, -1.0f, 0.0f},
-            {0.0f, -1.0f, 0.0f},
-            {0.0f, -1.0f, 0.0f},
-            {0.0f, -1.0f, 0.0f},
-        };
-
-        object.provideNormals(normals);
-
-        object.addTexture(texture);
-        object.addTexture(specular);
-
-        std::vector<uint32_t> indices;
-        for (int i = 0; i < 6; ++i) {
-            uint32_t start = i * 4;
-            indices.push_back(start + 0);
-            indices.push_back(start + 1);
-            indices.push_back(start + 2);
-            indices.push_back(start + 2);
-            indices.push_back(start + 3);
-            indices.push_back(start + 0);
-        }
-        object.provideIndexedDrawing(indices);
-        object.show();
-
-        CoreObject copy = object.copy();
-        object.initialize();
+        model = Model(workspace.loadResource("backpack/backpack.obj"));
+        model.initialize();
     }
     void update(float deltaTime) override {
         if (isKeyPressed(Key::Escape)) {

@@ -8,4 +8,4 @@ lib
 CMakeFiles
 .git
 .cache
-
+.DS_Store
