@@ -27,9 +27,7 @@ add_compile_definitions(GL_SILENCE_DEPRECATION)
 find_package(OpenGL REQUIRED)
 find_package(glfw3 3.3 REQUIRED)
 find_package(glm REQUIRED)
-
-
-
+find_package(assimp REQUIRED)
 
 file(GLOB_RECURSE ATLAS_SOURCES "atlas/*.cpp" "external/*.c" "external/*.cpp")
 
@@ -43,6 +41,7 @@ target_link_libraries(atlas
         OpenGL::GL
         glfw
         glm::glm
+        assimp::assimp
 )
 
 target_include_directories(atlas

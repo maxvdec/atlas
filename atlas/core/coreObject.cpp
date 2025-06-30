@@ -10,6 +10,7 @@
 #include "atlas/core/rendering.hpp"
 #include "atlas/core/shaders.h"
 #include "atlas/light.hpp"
+#include "atlas/texture.hpp"
 #include "atlas/window.hpp"
 #include <glad/glad.h>
 #include <glm/glm.hpp>
@@ -130,15 +131,30 @@ CoreShaderProgram::CoreShaderProgram(const std::vector<CoreShader> &shaders) {
 }
 
 void CoreShaderProgram::setFloat(const std::string &name, float val) const {
-    glUniform1f(glGetUniformLocation(this->ID, name.c_str()), val);
+    if (symbolExists(name)) {
+        glUniform1f(glGetUniformLocation(this->ID, name.c_str()), val);
+    } else {
+        std::cerr << "Warning: Uniform '" << name
+                  << "' does not exist in shader program." << std::endl;
+    }
 }
 
 void CoreShaderProgram::setInt(const std::string &name, int val) const {
-    glUniform1i(glGetUniformLocation(this->ID, name.c_str()), val);
+    if (symbolExists(name)) {
+        glUniform1i(glGetUniformLocation(this->ID, name.c_str()), val);
+    } else {
+        std::cerr << "Warning: Uniform '" << name
+                  << "' does not exist in shader program." << std::endl;
+    }
 }
 
 void CoreShaderProgram::setBool(const std::string &name, bool value) const {
-    glUniform1i(glGetUniformLocation(this->ID, name.c_str()), value);
+    if (symbolExists(name)) {
+        glUniform1i(glGetUniformLocation(this->ID, name.c_str()), value);
+    } else {
+        std::cerr << "Warning: Uniform '" << name
+                  << "' does not exist in shader program." << std::endl;
+    }
 }
 
 void CoreShaderProgram::use() const { glUseProgram(this->ID); }
@@ -239,9 +255,6 @@ void CoreObject::initialize() {
             aspectCorrection = glm::vec2(1.0f, windowAspect);
         }
 
-        object->program.value().setVec2("uAspectCorrection", aspectCorrection);
-
-        object->program.value().setInt("uTexture", 0);
         object->program.value().setMatrix4("uModel", object->modelMatrix);
         object->program.value().setMatrix4("uProjection",
                                            object->projectionMatrix);
@@ -353,21 +366,40 @@ void CoreObject::initialize() {
             }
         }
         if (object->visualizeTexture) {
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, object->texture.ID);
+            int specularMaps = 0;
+            int diffuseMaps = 0;
             object->program.value().setBool("uUseTexture", true);
-            if (object->specularTexture.has_value()) {
-                glActiveTexture(GL_TEXTURE1);
-                glBindTexture(GL_TEXTURE_2D,
-                              object->specularTexture.value().ID);
-                object->program.value().setInt("uMaterial.specularMap", 1);
-                object->program.value().setBool("uMaterial.useSpecularMap",
-                                                true);
-            } else {
+
+            for (int i = 0; i < object->textures.size(); i++) {
+                glActiveTexture(GL_TEXTURE0 + i);
+                glBindTexture(GL_TEXTURE_2D, object->textures[i].ID);
+                const auto &texture = object->textures[i];
+                if (texture.type == TextureType::Specular) {
+                    specularMaps++;
+
+                    object->program.value().setInt(
+                        "uMaterial.specularMap" + std::to_string(specularMaps),
+                        i);
+                    object->program.value().setBool("uMaterial.useSpecularMap",
+                                                    true);
+                } else if (texture.type == TextureType::Color) {
+                    diffuseMaps++;
+                    object->program.value().setInt(
+                        "uTexture" + std::to_string(diffuseMaps), i);
+                } else {
+                    std::cerr
+                        << "Unknown texture type for texture ID: " << texture.ID
+                        << std::endl;
+                }
+            }
+            if (specularMaps == 0) {
                 object->program.value().setInt("uMaterial.specularMap", 0);
                 object->program.value().setBool("uMaterial.useSpecularMap",
                                                 false);
             }
+            object->program.value().setInt("uTextureCount", diffuseMaps);
+            object->program.value().setInt("uMaterial.specularMapCount",
+                                           diffuseMaps);
         } else {
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, getDefaultTexture());
@@ -386,8 +418,8 @@ void CoreObject::initialize() {
     Renderer::instance().registerObject(this, dispatcher);
 }
 
-void CoreObject::setTexture(Texture texture) {
-    this->texture = std::move(texture);
+void CoreObject::addTexture(Texture texture) {
+    this->textures.push_back(std::move(texture));
     this->visualizeTexture = true;
     this->setObjectAlpha(0.0f);
 }
@@ -421,7 +453,7 @@ CoreObject::CoreObject(std::vector<CoreVertex> vertices) {
     this->vertexShader = std::nullopt;
     this->fragmentShader = std::nullopt;
     this->program = std::nullopt;
-    this->texture = Texture();
+    this->textures = {};
     updateProjectionType(this->projectionType);
     this->modelMatrix = glm::mat4(1.0f);
     this->viewMatrix = glm::mat4(1.0f);
@@ -469,12 +501,22 @@ void CoreObject::scale(float x, float y, float z) {
 
 void CoreShaderProgram::setMatrix4(const std::string &name,
                                    const glm::mat4 &matrix) const {
+    if (!symbolExists(name)) {
+        std::cerr << "Warning: Uniform '" << name
+                  << "' does not exist in shader program." << std::endl;
+        return;
+    }
     glUniformMatrix4fv(glGetUniformLocation(this->ID, name.c_str()), 1,
                        GL_FALSE, glm::value_ptr(matrix));
 }
 
 void CoreShaderProgram::setVec2(const std::string &name,
                                 const glm::vec2 &vector) const {
+    if (!symbolExists(name)) {
+        std::cerr << "Warning: Uniform '" << name
+                  << "' does not exist in shader program." << std::endl;
+        return;
+    }
     glUniform2fv(glGetUniformLocation(this->ID, name.c_str()), 1,
                  glm::value_ptr(vector));
 }
@@ -492,6 +534,11 @@ void CoreObject::updateProjectionType(ProjectionType type) {
 
 void CoreShaderProgram::setVec3(const std::string &name,
                                 const glm::vec3 &vector) const {
+    if (!symbolExists(name)) {
+        std::cerr << "Warning: Uniform '" << name
+                  << "' does not exist in shader program." << std::endl;
+        return;
+    }
     glUniform3fv(glGetUniformLocation(this->ID, name.c_str()), 1,
                  glm::value_ptr(vector));
 }
@@ -527,8 +574,7 @@ CoreObject CoreObject::copy() {
     copy.fragmentShader = this->fragmentShader;
     copy.program = this->program;
     copy.attributes = this->attributes;
-    copy.texture = this->texture;
-    copy.specularTexture = this->specularTexture;
+    copy.textures = this->textures;
     copy.visualizeTexture = this->visualizeTexture;
     copy.modelMatrix = this->modelMatrix;
     copy.viewMatrix = this->viewMatrix;

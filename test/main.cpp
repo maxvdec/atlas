@@ -31,19 +31,20 @@ class MainScene : public Scene {
         Workspace workspace(TEST_PATH);
         Resource textureResource = workspace.loadResource("container.png");
         Texture texture;
-        texture.fromImage(textureResource);
+        texture.fromImage(textureResource, TextureType::Color);
 
         Texture specular;
-        specular.fromImage(workspace.loadResource("specular.png"));
+        specular.fromImage(workspace.loadResource("specular.png"),
+                           TextureType::Specular);
 
         camera.position = Position3d(0.0f, 0.0f, -3.0f);
         camera.useCamera();
 
         light = new SpotLight(Position3d(0.0f, 0.0f, -2.0f),
                               Position3d(0.0f, 0.0f, 1.0f),
-                              Color(1.0f, 1.0f, 1.0f));
+                              Color(1.0f, 0.83f, 0.5f));
         light->debugLight();
-        light->intensity = 1.0f;
+        light->intensity = 1.5f;
 
         object = generateCubeObject(Position3d(0.0f, 0.0f, 0.0f),
                                     Size3d(1.0f, 1.0f, 1.0f));
@@ -93,8 +94,8 @@ class MainScene : public Scene {
 
         object.provideNormals(normals);
 
-        object.setTexture(texture);
-        object.setSpecularMap(specular);
+        object.addTexture(texture);
+        object.addTexture(specular);
 
         std::vector<uint32_t> indices;
         for (int i = 0; i < 6; ++i) {

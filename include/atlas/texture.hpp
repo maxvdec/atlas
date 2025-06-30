@@ -25,6 +25,11 @@ enum class MipmapFilteringMode {
     LinearMipmapLinear
 };
 
+enum class TextureType {
+    Color,
+    Specular,
+};
+
 struct Texture {
     unsigned int ID;
     Size2d size;
@@ -34,9 +39,10 @@ struct Texture {
         MipmapFilteringMode::LinearMipmapLinear;
     Color borderColor = Color(0.0f, 0.0f, 0.0f, 1.0f);
     Resource image = Resource();
+    TextureType type = TextureType::Color;
 
     void setProperties();
-    void fromImage(Resource resc);
+    void fromImage(Resource resc, TextureType type);
 };
 
 #endif // ATLAS_TEXTURE_HPP

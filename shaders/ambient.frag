@@ -39,12 +39,17 @@ struct Material {
     vec3 diffuse;
     vec3 specular;
     float shininess;
-    sampler2D specularMap;
+    sampler2D specularMap1;
+    sampler2D specularMap2;
+    int specularMapCount;
     bool useSpecularMap;
 };
 
 uniform bool uUseTexture;
-uniform sampler2D uTexture;
+uniform sampler2D uTexture1;
+uniform sampler2D uTexture2;
+uniform sampler2D uTexture3;
+uniform int uTextureCount;
 uniform Material uMaterial;
 uniform vec3 uCameraPos;
 
@@ -54,7 +59,42 @@ uniform Light uLights[MAX_LIGHTS];
 
 out vec4 FragColor;
 
-vec3 calculateLighting(Light light, vec3 norm, vec3 viewDir, vec3 fragPos) {
+vec4 blendDiffuseTextures() {
+    vec4 finalTexture = vec4(1.0);
+    
+    if (uTextureCount >= 1) {
+        finalTexture = texture(uTexture1, texCoord);
+    }
+    
+    if (uTextureCount >= 2) {
+        vec4 tex2 = texture(uTexture2, texCoord);
+        finalTexture = mix(finalTexture, tex2, 0.5); 
+    }
+    
+    if (uTextureCount >= 3) {
+        vec4 tex3 = texture(uTexture3, texCoord);
+        finalTexture = mix(finalTexture, tex3, 0.33); 
+    }
+    
+    return finalTexture;
+}
+
+vec3 blendSpecularTextures() {
+    vec3 finalSpecular = vec3(1.0);
+    
+    if (uMaterial.specularMapCount >= 1) {
+        finalSpecular = texture(uMaterial.specularMap1, texCoord).rgb;
+    }
+    
+    if (uMaterial.specularMapCount >= 2) {
+        vec3 spec2 = texture(uMaterial.specularMap2, texCoord).rgb;
+        finalSpecular = (finalSpecular + spec2) * 0.5;
+    }
+    
+    return finalSpecular;
+}
+
+vec3 calculateLighting(Light light, vec3 norm, vec3 viewDir, vec3 fragPos, vec3 materialDiffuse) {
     vec3 lightDir;
     if (light.isDirectional) {
         lightDir = normalize(-light.directionalLight.direction);
@@ -92,15 +132,15 @@ vec3 calculateLighting(Light light, vec3 norm, vec3 viewDir, vec3 fragPos) {
         }
     }
     
-    vec3 ambient = light.ambient * light.color * uMaterial.diffuse;
+    vec3 ambient = light.ambient * light.color * materialDiffuse;
     
     float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = light.diffuse * light.color * diff * uMaterial.diffuse * attenuation * spotlightEffect;
+    vec3 diffuse = light.diffuse * light.color * diff * materialDiffuse * attenuation * spotlightEffect;
     
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), uMaterial.shininess);
     vec3 specularColor = uMaterial.specular;
     if (uMaterial.useSpecularMap) {
-        specularColor = texture(uMaterial.specularMap, texCoord).rgb;
+        specularColor = blendSpecularTextures();
     }
     vec3 specular = light.specular * light.color * spec * specularColor * attenuation * spotlightEffect;
     
@@ -109,14 +149,18 @@ vec3 calculateLighting(Light light, vec3 norm, vec3 viewDir, vec3 fragPos) {
 
 void main() {
     vec4 baseColor;
+    vec3 materialDiffuse;
+
     if (uUseTexture) {
-        vec4 texColor = texture(uTexture, texCoord);
+        vec4 texColor = blendDiffuseTextures();
         if (texColor.a < 0.1) {
             discard; 
         }
         baseColor = texColor * fragColor;
+        materialDiffuse = texColor.rgb ;
     } else {
         baseColor = fragColor;
+        materialDiffuse = uMaterial.diffuse;
     }
     
     vec3 norm = normalize(normal);
@@ -125,10 +169,10 @@ void main() {
     vec3 totalLighting = vec3(0.0);
     
     for (int i = 0; i < min(uLightCount, MAX_LIGHTS); ++i) {
-        totalLighting += calculateLighting(uLights[i], norm, viewDir, fragPos);
+        totalLighting += calculateLighting(uLights[i], norm, viewDir, fragPos, materialDiffuse);
     }
     
-    vec3 finalColor = baseColor.rgb * totalLighting;
+    vec3 finalColor = totalLighting;
     
     FragColor = vec4(finalColor, baseColor.a);
 }

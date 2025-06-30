@@ -38,7 +38,7 @@ class Light {
 
     void debugLight();
     CoreObject debugObject;
-    float intensity = 0.5f;
+    float intensity = 5.f;
 
     Material material = Material();
 

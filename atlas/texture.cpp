@@ -74,7 +74,8 @@ void Texture::setProperties() {
     }
 }
 
-void Texture::fromImage(Resource resc) {
+void Texture::fromImage(Resource resc, TextureType type) {
+    this->type = type;
     int width, height, nrChannels;
     stbi_set_flip_vertically_on_load(true);
     unsigned char *data =
