@@ -183,6 +183,7 @@ void Window::run() {
         }
 
         glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LESS);
         glClearColor(this->backgroundColor.r, this->backgroundColor.g,
                      this->backgroundColor.b, this->backgroundColor.a);
 
