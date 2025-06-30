@@ -31,13 +31,6 @@ class MainScene : public Scene {
     Model model;
     void init() override {
         Workspace workspace(TEST_PATH);
-        Resource textureResource = workspace.loadResource("container.png");
-        Texture texture;
-        texture.fromImage(textureResource, TextureType::Color);
-
-        Texture specular;
-        specular.fromImage(workspace.loadResource("specular.png"),
-                           TextureType::Specular);
 
         camera.position = Position3d(0.0f, 0.0f, -3.0f);
         camera.useCamera();
@@ -45,10 +38,12 @@ class MainScene : public Scene {
         light = new PointLight(Position3d(0.0f, 0.0f, 1.0f),
                                Color(1.0f, 0.83f, 0.5f));
         light->debugLight();
-        light->intensity = 1.5f;
+        light->intensity = 4.f;
+        light->changeMaxDistance(200.f);
 
-        model = Model(workspace.loadResource("backpack/backpack.obj"));
-        model.initialize();
+        object = generateCubeObject(Position3d(0, 0, 0), Size3d(1.f, 1.f, 1.f));
+
+        object.initialize();
     }
     void update(float deltaTime) override {
         if (isKeyPressed(Key::Escape)) {

@@ -184,6 +184,11 @@ void Window::run() {
 
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LESS);
+        glEnable(GL_STENCIL_TEST);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_BACK);
         glClearColor(this->backgroundColor.r, this->backgroundColor.g,
                      this->backgroundColor.b, this->backgroundColor.a);
 
@@ -199,7 +204,8 @@ void Window::run() {
             break;
         }
 
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |
+                GL_STENCIL_BUFFER_BIT);
 
         Renderer::instance().dispatchAll();
 
