@@ -391,7 +391,6 @@ void CoreObject::initialize() {
                 }
             }
             if (specularMaps == 0) {
-                object->program.value().setInt("uMaterial.specularMap", 0);
                 object->program.value().setBool("uMaterial.useSpecularMap",
                                                 false);
             }

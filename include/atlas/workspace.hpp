@@ -27,6 +27,11 @@ struct Resource {
     inline std::string getName() const {
         return fs::path(path).filename().string();
     }
+
+    Resource(std::string path);
+    Resource(std::string path, std::vector<char> data)
+        : path(std::move(path)), data(std::move(data)) {}
+    Resource() = default;
 };
 
 class Workspace {

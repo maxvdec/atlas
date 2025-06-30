@@ -41,3 +41,16 @@ Resource Workspace::loadResource(const std::string &resourceName) const {
 fs::path Workspace::getResourcePath(const std::string &resourceName) const {
     return fs::path(path) / resourceName;
 }
+
+Resource::Resource(std::string path) : path(std::move(path)) {
+    if (!fs::exists(this->path)) {
+        throw std::runtime_error("Resource path does not exist: " + this->path);
+    }
+
+    std::ifstream file(this->path, std::ios::binary);
+    if (!file) {
+        throw std::runtime_error("Failed to open resource file: " + this->path);
+    }
+    data = std::vector<char>((std::istreambuf_iterator<char>(file)),
+                             std::istreambuf_iterator<char>());
+}

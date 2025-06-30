@@ -42,6 +42,7 @@ class Model {
     std::vector<Texture> loadMaterialTextures(aiMaterial *mat,
                                               aiTextureType type,
                                               TextureType textType);
+    std::vector<Texture> loadedTextures;
 };
 
 #endif // ATLAS_MODEL_HPP

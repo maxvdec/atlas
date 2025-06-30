@@ -10,6 +10,8 @@
 #include "atlas/model.hpp"
 #include "atlas/core/rendering.hpp"
 #include "atlas/workspace.hpp"
+#include <iostream>
+#include <string>
 #include <vector>
 
 Model::Model(Resource resc) {
@@ -76,5 +78,47 @@ CoreObject Model::processMesh(aiMesh *mesh, const aiScene *scene) {
 
     coreObject.provideIndexedDrawing(indices);
 
+    for (unsigned int i = 0; i < mesh->mMaterialIndex; i++) {
+        aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
+        std::vector<Texture> textures = loadMaterialTextures(
+            material, aiTextureType_DIFFUSE, TextureType::Color);
+        for (const auto &texture : textures) {
+            coreObject.addTexture(texture);
+        }
+        std::vector<Texture> specularTextures = loadMaterialTextures(
+            material, aiTextureType_SPECULAR, TextureType::Specular);
+        for (const auto &texture : specularTextures) {
+            coreObject.addTexture(texture);
+        }
+    }
+
     return coreObject;
+}
+
+std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat,
+                                                 aiTextureType type,
+                                                 TextureType textType) {
+    std::vector<Texture> textures;
+    for (unsigned int i = 0; i < mat->GetTextureCount(type); i++) {
+        aiString str;
+        mat->GetTexture(type, i, &str);
+        std::string texturePath = directory + "/" + str.C_Str();
+        bool skip = false;
+        for (unsigned int j = 0; j < loadedTextures.size(); j++) {
+            if (loadedTextures[j].image.path == texturePath) {
+                textures.push_back(loadedTextures[j]);
+                skip = true;
+                break;
+            }
+        }
+        if (skip) {
+            continue;
+        }
+
+        Texture texture;
+        texture.fromImage(Resource(texturePath), textType);
+        textures.push_back(texture);
+        loadedTextures.push_back(texture);
+    }
+    return textures;
 }
