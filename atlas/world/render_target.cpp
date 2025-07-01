@@ -96,6 +96,16 @@ void RenderTarget::renderToScreen() {
                 object->program.value().setFloat("uKernelIntensity",
                                                  effect.intensity);
                 break;
+            case EffectType::Blur:
+                object->program.value().setBool("uBlur", true);
+                object->program.value().setFloat("uBlurIntensity",
+                                                 effect.intensity);
+                break;
+            case EffectType::EdgeDetection:
+                object->program.value().setBool("uEdgeDetection", true);
+                object->program.value().setFloat("uKernelIntensity",
+                                                 effect.intensity);
+                break;
             default:
                 std::cerr << "Unknown effect!" << std::endl;
                 break;

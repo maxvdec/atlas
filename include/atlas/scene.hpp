@@ -10,9 +10,24 @@
 #ifndef ATLAS_SCENE_HPP
 #define ATLAS_SCENE_HPP
 
+#include "atlas/core/rendering.hpp"
 #include "atlas/input.hpp"
 #include "atlas/light.hpp"
+#include "atlas/texture.hpp"
+#include <optional>
 #include <vector>
+
+struct Skybox {
+    std::optional<Cubemap> cubemap = std::nullopt;
+    std::optional<CoreObject> object = std::nullopt;
+    RenderingFn dispatcher;
+
+    void addCubemap(Cubemap cubemap);
+
+    Skybox() = default;
+
+    void useSkybox();
+};
 
 class Scene : public Interactive {
   public:
@@ -32,6 +47,7 @@ class Scene : public Interactive {
         this->lights.push_back(light);
     }
     std::vector<Light *> lights;
+    Skybox *skybox;
 };
 
 #endif // ATLAS_SCENE_HPP

@@ -43,6 +43,9 @@ struct Material {
     sampler2D specularMap2;
     int specularMapCount;
     bool useSpecularMap;
+    float reflectivity;
+    float refractiveIndex;
+    bool useRefraction;
 };
 
 uniform bool uUseTexture;
@@ -156,13 +159,14 @@ void main() {
         if (texColor.a < 0.1) {
             discard; 
         }
-        baseColor = texColor * fragColor;
-        materialDiffuse = texColor.rgb ;
+
+        baseColor = vec4(texColor.rgb * fragColor.rgb, texColor.a);
+        materialDiffuse = texColor.rgb * uMaterial.diffuse;
     } else {
         baseColor = fragColor;
         materialDiffuse = uMaterial.diffuse;
     }
-    
+
     vec3 norm = normalize(normal);
     vec3 viewDir = normalize(uCameraPos - fragPos);
     
@@ -173,6 +177,5 @@ void main() {
     }
     
     vec3 finalColor = totalLighting;
-    
     FragColor = vec4(finalColor, baseColor.a);
 }

@@ -27,10 +27,7 @@ enum class MipmapFilteringMode {
     LinearMipmapLinear
 };
 
-enum class TextureType {
-    Color,
-    Specular,
-};
+enum class TextureType { Color, Specular, Cubemap };
 
 struct Texture {
     unsigned int ID;
@@ -45,6 +42,22 @@ struct Texture {
 
     void setProperties();
     void fromImage(Resource resc, TextureType type);
+};
+
+struct CubemapPacket {
+    Resource right;
+    Resource left;
+    Resource top;
+    Resource bottom;
+    Resource front;
+    Resource back;
+};
+
+struct Cubemap {
+    unsigned int ID;
+    Texture texture;
+    void fromImages(CubemapPacket packet,
+                    TextureType type = TextureType::Cubemap);
 };
 
 struct CoreObject;

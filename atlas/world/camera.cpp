@@ -27,14 +27,23 @@ void Camera::atEachFrame(float deltaTime) {
     float velocity = this->movementSpeed * deltaTime;
     if (isKeyPressed(Key::W)) {
         this->position += front * velocity;
-    } else if (isKeyPressed(Key::S)) {
+    }
+    if (isKeyPressed(Key::S)) {
         this->position -= front * velocity;
-    } else if (isKeyPressed(Key::A)) {
+    }
+    if (isKeyPressed(Key::A)) {
         this->position -=
             glm::normalize(glm::cross(front, up.toVec3())) * velocity;
-    } else if (isKeyPressed(Key::D)) {
+    }
+    if (isKeyPressed(Key::D)) {
         this->position +=
             glm::normalize(glm::cross(front, up.toVec3())) * velocity;
+    }
+    if (isKeyPressed(Key::Space)) {
+        this->position += up.toVec3() * velocity;
+    }
+    if (isKeyPressed(Key::LeftShift)) {
+        this->position -= up.toVec3() * velocity;
     }
     updateCameraVectors();
 }

@@ -234,13 +234,6 @@ void CoreObject::initCore() {
     glBindVertexArray(0);
 
     this->program.value().use();
-
-    if (this->visualizeTexture) {
-        this->program.value().setBool("uUseTexture", true);
-    } else {
-        this->program.value().setBool("uUseTexture", false);
-    }
-    this->program.value().setMatrix4("uModel", this->modelMatrix);
 }
 
 void CoreObject::registerObject() {
@@ -370,6 +363,27 @@ void CoreObject::registerObject() {
                 object->program.value().setVec3("uCameraPos", glm::vec3(0.0f));
             }
         }
+
+        if (Window::current_window->currentScene != nullptr &&
+            Window::current_window->currentScene->skybox != nullptr) {
+            if (object->material.isReflective) {
+                object->program.value().setBool("uMaterial.useRefraction",
+                                                false);
+                object->program.value().setFloat("uMaterial.reflectivity",
+                                                 object->material.reflection);
+            } else {
+                object->program.value().setBool("uMaterial.useRefraction",
+                                                true);
+                object->program.value().setFloat("uMaterial.refractiveIndex",
+                                                 object->material.refraction);
+            }
+        } else {
+            object->program.value().setBool("uUseSkybox", false);
+            object->program.value().setInt("uSkyboxTexture", 0);
+            object->program.value().setBool("uMaterial.useRefraction", false);
+            object->program.value().setFloat("uMaterial.reflectivity", 0.0f);
+        }
+
         if (object->visualizeTexture) {
             int specularMaps = 0;
             int diffuseMaps = 0;
@@ -425,7 +439,6 @@ void CoreObject::registerObject() {
 void CoreObject::addTexture(Texture texture) {
     this->textures.push_back(std::move(texture));
     this->visualizeTexture = true;
-    this->setObjectAlpha(0.0f);
 }
 
 void CoreObject::enableTexturing() {

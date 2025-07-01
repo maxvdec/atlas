@@ -212,7 +212,22 @@ void Window::run() {
                         GL_STENCIL_BUFFER_BIT);
                 glClearColor(this->backgroundColor.r, this->backgroundColor.g,
                              this->backgroundColor.b, this->backgroundColor.a);
+                const auto skybox =
+                    this->currentScene ? this->currentScene->skybox : nullptr;
+                if (skybox != nullptr) {
+                    skybox->object->viewMatrix =
+                        this->mainCam ? this->mainCam->getViewMatrix()
+                                      : glm::mat4(1.0f);
+                    skybox->object->projectionMatrix =
+                        this->mainCam
+                            ? this->mainCam->getProjectionMatrix(
+                                  static_cast<float>(this->size.width) /
+                                  static_cast<float>(this->size.height))
+                            : glm::mat4(1.0f);
+                    skybox->dispatcher(&skybox->object.value());
+                }
                 Renderer::instance().dispatchAll();
+
                 performedTargets++;
             }
         }
@@ -224,8 +239,19 @@ void Window::run() {
         glClearColor(this->backgroundColor.r, this->backgroundColor.g,
                      this->backgroundColor.b, this->backgroundColor.a);
         if (performedTargets == 0) {
-            std::cout << "No render targets were active, rendering to screen."
-                      << std::endl;
+            const auto skybox =
+                this->currentScene ? this->currentScene->skybox : nullptr;
+            if (skybox != nullptr) {
+                skybox->object->viewMatrix =
+                    this->mainCam ? this->mainCam->getViewMatrix()
+                                  : glm::mat4(1.0f);
+                skybox->object->projectionMatrix =
+                    this->mainCam ? this->mainCam->getProjectionMatrix(
+                                        static_cast<float>(this->size.width) /
+                                        static_cast<float>(this->size.height))
+                                  : glm::mat4(1.0f);
+                skybox->dispatcher(&skybox->object.value());
+            }
             Renderer::instance().dispatchAll();
         }
 

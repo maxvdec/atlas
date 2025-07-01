@@ -19,10 +19,19 @@
 #define SHININESS_VERY_HIGH 128.0f
 #define SHININESS_EXTREME 256.0f
 
+#define REFRACTION_NONE 0.0f
+#define REFRACTION_AIR 1.0f
+#define REFRACTION_WATER 1.33f
+#define REFRACTION_GLASS 1.5f
+#define REFRACTION_DIAMOND 2.42f
+
 struct Material {
     float shininess = SHININESS_MEDIUM;
     Color diffuse = Color(0.8f, 0.8f, 0.8f, 1.0f);
     Color specular = Color(1.0f, 1.0f, 1.0f, 1.0f);
+    float reflection = 0.0;
+    float refraction = 0.0f;
+    bool isReflective = false;
 
     inline void setReflection(float reflection) {
         if (reflection < 0.0f || reflection > 1.0f) {

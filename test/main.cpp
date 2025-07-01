@@ -31,6 +31,7 @@ class MainScene : public Scene {
     Camera camera;
     Model model;
     RenderTarget renderTarget;
+    Skybox skybox;
     void init() override {
         Workspace workspace(TEST_PATH);
 
@@ -38,18 +39,29 @@ class MainScene : public Scene {
         texture.fromImage(workspace.loadResource("container.jpg"),
                           TextureType::Color);
 
+        CubemapPacket cubemapPacket;
+        cubemapPacket.right = workspace.loadResource("skybox/right.jpg");
+        cubemapPacket.left = workspace.loadResource("skybox/left.jpg");
+        cubemapPacket.top = workspace.loadResource("skybox/top.jpg");
+        cubemapPacket.bottom = workspace.loadResource("skybox/bottom.jpg");
+        cubemapPacket.front = workspace.loadResource("skybox/front.jpg");
+        cubemapPacket.back = workspace.loadResource("skybox/back.jpg");
+        Cubemap cubemap;
+        cubemap.fromImages(cubemapPacket, TextureType::Cubemap);
+        skybox.addCubemap(cubemap);
+        skybox.useSkybox();
+
         camera.position = Position3d(0.0f, 0.0f, -3.0f);
         camera.useCamera();
 
         sun = new DirectionalLight(Position3d(0.0f, 0.0f, 1.0f),
                                    Color(1.0f, 0.98f, 0.8f));
         sun->direction = Position3d(-1.0f, -1.0f, -1.0f);
-        sun->intensity = 15.f;
+        sun->intensity = 3.f;
 
-        // renderTarget = RenderTarget(Size2d(1500, 800), TextureType::Color);
-        // renderTarget.enable();
-        // renderTarget.addEffect(EffectType::Kernel);
-        // renderTarget.renderToScreen();
+        renderTarget = RenderTarget(Size2d(1500, 800), TextureType::Color);
+        renderTarget.enable();
+        renderTarget.renderToScreen();
 
         object = generateCubeObject(Position3d(0, 0, 0), Size3d(1.f, 1.f, 1.f));
         std::vector<Size3d> normals = {

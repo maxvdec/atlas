@@ -9,6 +9,7 @@
 
 #include "atlas/workspace.hpp"
 #include <iostream>
+#include <vector>
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
 
@@ -99,4 +100,47 @@ void Texture::fromImage(Resource resc, TextureType type) {
     glBindTexture(GL_TEXTURE_2D, 0);
     this->ID = textureID;
     this->image = resc;
+}
+
+void Cubemap::fromImages(CubemapPacket packet, TextureType type) {
+    this->texture = Texture();
+    this->texture.type = type;
+    glGenTextures(1, &this->texture.ID);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, this->texture.ID);
+
+    std::vector<Resource> resources = {packet.right, packet.left,
+                                       packet.top,   packet.bottom,
+                                       packet.front, packet.back};
+
+    stbi_set_flip_vertically_on_load(false);
+
+    for (unsigned int i = 0; i < resources.size(); i++) {
+        int width, height, nrChannels;
+        unsigned char *data = stbi_load(resources[i].path.c_str(), &width,
+                                        &height, &nrChannels, 0);
+        if (data) {
+            if (resources[i].getExtension() == ".png") {
+                glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA,
+                             width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+            } else {
+                glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB,
+                             width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+            }
+            stbi_image_free(data);
+        } else {
+            std::cerr << "Cubemap texture failed to load at path: "
+                      << resources[i].path << std::endl;
+            stbi_image_free(data);
+        }
+    }
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER,
+                    GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 }
