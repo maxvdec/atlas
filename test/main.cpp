@@ -26,22 +26,99 @@
 class MainScene : public Scene {
   public:
     PointLight *light = nullptr;
+    DirectionalLight *sun = nullptr;
     CoreObject object;
     Camera camera;
     Model model;
+    RenderTarget renderTarget;
     void init() override {
         Workspace workspace(TEST_PATH);
+
+        Texture texture;
+        texture.fromImage(workspace.loadResource("container.jpg"),
+                          TextureType::Color);
 
         camera.position = Position3d(0.0f, 0.0f, -3.0f);
         camera.useCamera();
 
-        light = new PointLight(Position3d(0.0f, 0.0f, 1.0f),
-                               Color(1.0f, 0.83f, 0.5f));
-        light->debugLight();
-        light->intensity = 4.f;
-        light->changeMaxDistance(200.f);
+        sun = new DirectionalLight(Position3d(0.0f, 0.0f, 1.0f),
+                                   Color(1.0f, 0.98f, 0.8f));
+        sun->direction = Position3d(-1.0f, -1.0f, -1.0f);
+        sun->intensity = 15.f;
+
+        // renderTarget = RenderTarget(Size2d(1500, 800), TextureType::Color);
+        // renderTarget.enable();
+        // renderTarget.addEffect(EffectType::Kernel);
+        // renderTarget.renderToScreen();
 
         object = generateCubeObject(Position3d(0, 0, 0), Size3d(1.f, 1.f, 1.f));
+        std::vector<Size3d> normals = {
+            // Front face
+            {0.0f, 0.0f, 1.0f},
+            {0.0f, 0.0f, 1.0f},
+            {0.0f, 0.0f, 1.0f},
+            {0.0f, 0.0f, 1.0f},
+            // Back face
+            {0.0f, 0.0f, -1.0f},
+            {0.0f, 0.0f, -1.0f},
+            {0.0f, 0.0f, -1.0f},
+            {0.0f, 0.0f, -1.0f},
+            // Left face
+            {-1.0f, 0.0f, 0.0f},
+            {-1.0f, 0.0f, 0.0f},
+            {-1.0f, 0.0f, 0.0f},
+            {-1.0f, 0.0f, 0.0f},
+            // Right face
+            {1.0f, 0.0f, 0.0f},
+            {1.0f, 0.0f, 0.0f},
+            {1.0f, 0.0f, 0.0f},
+            {1.0f, 0.0f, 0.0f},
+            // Top face
+            {0.0f, 1.0f, 0.0f},
+            {0.0f, 1.0f, 0.0f},
+            {0.0f, 1.0f, 0.0f},
+            {0.0f, 1.0f, 0.0f},
+            // Bottom face
+            {0.0f, -1.0f, 0.0f},
+            {0.0f, -1.0f, 0.0f},
+            {0.0f, -1.0f, 0.0f},
+            {0.0f, -1.0f, 0.0f},
+        };
+
+        object.provideNormals(normals);
+
+        std::vector<Size2d> textureCoords = {// Front face
+                                             {0.0f, 0.0f},
+                                             {1.0f, 0.0f},
+                                             {1.0f, 1.0f},
+                                             {0.0f, 1.0f},
+                                             // Back face
+                                             {0.0f, 0.0f},
+                                             {1.0f, 0.0f},
+                                             {1.0f, 1.0f},
+                                             {0.0f, 1.0f},
+                                             // Left face
+                                             {0.0f, 0.0f},
+                                             {1.0f, 0.0f},
+                                             {1.0f, 1.0f},
+                                             {0.0f, 1.0f},
+                                             // Right face
+                                             {0.0f, 0.0f},
+                                             {1.0f, 0.0f},
+                                             {1.0f, 1.0f},
+                                             {0.0f, 1.0f},
+                                             // Top face
+                                             {0.0f, 0.0f},
+                                             {1.0f, 0.0f},
+                                             {1.0f, 1.0f},
+                                             {0.0f, 1.0f},
+                                             // Bottom face
+                                             {0.0f, 0.0f},
+                                             {1.0f, 0.0f},
+                                             {1.0f, 1.0f},
+                                             {0.0f, 1.0f}};
+        object.provideTextureCoords(textureCoords);
+        object.addTexture(texture);
 
         object.initialize();
     }

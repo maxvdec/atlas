@@ -26,6 +26,64 @@ void main() {
 
 )";
 
+static const char* FULLSCREEN_FRAG = R"(
+#version 330 core
+out vec4 FragColor;
+
+in vec2 textCoord;
+
+uniform sampler2D uTexture1;
+uniform bool uInverted;
+uniform bool uGrayscale;
+uniform bool uKernel;
+uniform float uKernelStrength;
+uniform vec2 uTexelSize;
+
+void main() {
+    vec3 color = texture(uTexture1, textCoord).rgb;
+    
+    if (uInverted) {
+        color = vec3(1.0) - color; 
+    }
+
+    if (uGrayscale) {
+        float gray = dot(color, vec3(0.299, 0.587, 0.114));
+        color = vec3(gray);
+    }
+
+    vec2 offsets[9] = vec2[](
+        vec2(-1,  1), vec2(0,  1), vec2(1,  1),
+        vec2(-1,  0), vec2(0,  0), vec2(1,  0),
+        vec2(-1, -1), vec2(0, -1), vec2(1, -1)
+    );
+
+    if (uKernel) {
+        float kernel[9] = float[](
+            -1, -1, -1,
+            -1,  9, -1,
+            -1, -1, -1
+        );
+
+        vec3 sampleTex[9];
+        for (int i = 0; i < 9; i++) {
+            vec2 samplePos = textCoord + offsets[i] * uTexelSize;
+            sampleTex[i] = texture(uTexture1, samplePos).rgb;
+        }
+
+        vec3 result = vec3(0.0);
+        for (int i = 0; i < 9; i++) {
+            result += sampleTex[i] * kernel[i];
+        }
+
+        result = mix(color, result, uKernelStrength);
+        color = result;
+    }
+
+    FragColor = vec4(color, 1.0);
+}
+
+)";
+
 static const char* AMBIENT_FRAG = R"(
 #version 330 core
 in vec4 fragColor;
@@ -142,7 +200,7 @@ vec3 calculateLighting(Light light, vec3 norm, vec3 viewDir, vec3 fragPos, vec3 
                            light.pointLight.linear * dist + 
                            light.pointLight.quadratic * (dist * dist));
     }
-    
+
     if (light.isSpotLight) {
         vec3 lightToFrag = normalize(fragPos - light.position);
         vec3 spotDirection = normalize(light.spotLight.direction);
@@ -232,6 +290,22 @@ void main()
     normal = mat3(transpose(inverse(uModel))) * aNormal;
     gl_Position = uProjection * uView * uModel * vec4(aPos, 1.0);
     fragPos = vec3(uModel * vec4(aPos, 1.0));
+}
+
+)";
+
+static const char* FULLSCREEN_VERT = R"(
+#version 330 core
+layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec4 aColor;
+layout (location = 2) in vec2 aTexCoord;
+layout (location = 3) in vec3 aNormal;
+
+out vec2 textCoord;
+
+void main() {
+    textCoord = aTexCoord;
+    gl_Position = vec4(aPos.xy, 0.0, 1.0);
 }
 
 )";

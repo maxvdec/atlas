@@ -14,6 +14,7 @@
 #include "atlas/input.hpp"
 #include "atlas/light.hpp"
 #include "atlas/scene.hpp"
+#include "atlas/texture.hpp"
 #include <atlas/units.hpp>
 #include <string>
 #include <vector>
@@ -40,9 +41,10 @@ class Window {
     Scene *currentScene = nullptr;
 
     Color backgroundColor = Color(0.0f, 0.0f, 0.0f, 1.0f);
-    Color ambientColor = Color(0.2f, 0.2f, 0.2f, 1.0f);
+    Color ambientColor = Color(0.1f, 0.1f, 0.1f, 1.0f);
     RenderingMode renderingMode = RenderingMode::Full;
     std::vector<Interactive *> interactiveObjects;
+    std::vector<RenderTarget *> renderTargets;
     bool firstMouse = true;
 
     float lastFrame = 0.0f;

@@ -34,7 +34,8 @@ class Light {
 
     Light(Position3d position = Position3d(0.0f, 0.0f, 0.0f),
           Color color = Color(1.0f, 1.0f, 1.0f),
-          LightType type = LightType::None, Scene *scene = nullptr);
+          LightType type = LightType::None, Scene *scene = nullptr,
+          float intensity = 5.f);
 
     void debugLight();
     CoreObject debugObject;
@@ -53,7 +54,7 @@ class DirectionalLight : public Light {
                      Color color = Color(1.0f, 1.0f, 1.0f),
                      Scene *scene = nullptr)
         : Light(Position3d(0.0f, 0.0f, 0.0f), color, LightType::Directional,
-                scene),
+                scene, 15.f),
           direction(direction) {};
 };
 

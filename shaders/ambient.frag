@@ -113,7 +113,7 @@ vec3 calculateLighting(Light light, vec3 norm, vec3 viewDir, vec3 fragPos, vec3 
                            light.pointLight.linear * dist + 
                            light.pointLight.quadratic * (dist * dist));
     }
-    
+
     if (light.isSpotLight) {
         vec3 lightToFrag = normalize(fragPos - light.position);
         vec3 spotDirection = normalize(light.spotLight.direction);

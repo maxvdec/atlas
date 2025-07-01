@@ -131,30 +131,33 @@ CoreShaderProgram::CoreShaderProgram(const std::vector<CoreShader> &shaders) {
 }
 
 void CoreShaderProgram::setFloat(const std::string &name, float val) const {
-    if (symbolExists(name)) {
-        glUniform1f(glGetUniformLocation(this->ID, name.c_str()), val);
-    } else {
+#ifdef DEBUG_UNIFORMS
+    if (!symbolExists(name)) {
         std::cerr << "Warning: Uniform '" << name
                   << "' does not exist in shader program." << std::endl;
     }
+#endif
+    glUniform1f(glGetUniformLocation(this->ID, name.c_str()), val);
 }
 
 void CoreShaderProgram::setInt(const std::string &name, int val) const {
-    if (symbolExists(name)) {
-        glUniform1i(glGetUniformLocation(this->ID, name.c_str()), val);
-    } else {
+#ifdef DEBUG_UNIFORMS
+    if (!symbolExists(name)) {
         std::cerr << "Warning: Uniform '" << name
                   << "' does not exist in shader program." << std::endl;
     }
+#endif
+    glUniform1i(glGetUniformLocation(this->ID, name.c_str()), val);
 }
 
 void CoreShaderProgram::setBool(const std::string &name, bool value) const {
-    if (symbolExists(name)) {
-        glUniform1i(glGetUniformLocation(this->ID, name.c_str()), value);
-    } else {
+#ifdef DEBUG_UNIFORMS
+    if (!symbolExists(name)) {
         std::cerr << "Warning: Uniform '" << name
                   << "' does not exist in shader program." << std::endl;
     }
+#endif
+    glUniform1i(glGetUniformLocation(this->ID, name.c_str()), value);
 }
 
 void CoreShaderProgram::use() const { glUseProgram(this->ID); }
@@ -170,6 +173,11 @@ std::vector<CoreShader> CoreObject::makeShaderList() const {
 }
 
 void CoreObject::initialize() {
+    initCore();
+    registerObject();
+}
+
+void CoreObject::initCore() {
     if (!this->vertexShader.has_value()) {
         CoreShader vertexShader(MAIN_VERT, CoreShaderType::Vertex);
         this->vertexShader = vertexShader;
@@ -233,7 +241,9 @@ void CoreObject::initialize() {
         this->program.value().setBool("uUseTexture", false);
     }
     this->program.value().setMatrix4("uModel", this->modelMatrix);
+}
 
+void CoreObject::registerObject() {
     auto dispatcher = [](CoreObject *object) {
         if (object->program.has_value() == false) {
             std::cout << "Skipping corrupted object with ID: " << object->id
@@ -257,10 +267,6 @@ void CoreObject::initialize() {
         object->program.value().setMatrix4("uProjection",
                                            object->projectionMatrix);
         object->program.value().setMatrix4("uView", object->viewMatrix);
-        if (object->program.value().symbolExists("uAmbientColor")) {
-            object->program.value().setVec3(
-                "uAmbientColor", Window::current_window->ambientColor.toVec3());
-        }
         const auto lights = Window::current_window->currentScene->lights;
         if (object->program.value().symbolExists("uLights[0].position") &&
             lights.size() > 0) {
@@ -280,8 +286,9 @@ void CoreObject::initialize() {
                                                  light->intensity);
                 object->program.value().setVec3(
                     lightBase + ".specular", light->material.specular.toVec3());
-                object->program.value().setVec3(lightBase + ".ambient",
-                                                light->ambientColor.toVec3());
+                object->program.value().setVec3(
+                    lightBase + ".ambient",
+                    Window::current_window->ambientColor.toVec3());
                 object->program.value().setVec3(
                     lightBase + ".diffuse", light->material.diffuse.toVec3());
 
@@ -498,22 +505,24 @@ void CoreObject::scale(float x, float y, float z) {
 
 void CoreShaderProgram::setMatrix4(const std::string &name,
                                    const glm::mat4 &matrix) const {
+#ifdef DEBUG_UNIFORMS
     if (!symbolExists(name)) {
         std::cerr << "Warning: Uniform '" << name
                   << "' does not exist in shader program." << std::endl;
-        return;
     }
+#endif
     glUniformMatrix4fv(glGetUniformLocation(this->ID, name.c_str()), 1,
                        GL_FALSE, glm::value_ptr(matrix));
 }
 
 void CoreShaderProgram::setVec2(const std::string &name,
                                 const glm::vec2 &vector) const {
+#ifdef DEBUG_UNIFORMS
     if (!symbolExists(name)) {
         std::cerr << "Warning: Uniform '" << name
                   << "' does not exist in shader program." << std::endl;
-        return;
     }
+#endif
     glUniform2fv(glGetUniformLocation(this->ID, name.c_str()), 1,
                  glm::value_ptr(vector));
 }

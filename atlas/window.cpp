@@ -189,8 +189,6 @@ void Window::run() {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glEnable(GL_CULL_FACE);
         glCullFace(GL_BACK);
-        glClearColor(this->backgroundColor.r, this->backgroundColor.g,
-                     this->backgroundColor.b, this->backgroundColor.a);
 
         switch (this->renderingMode) {
         case RenderingMode::Full:
@@ -204,10 +202,39 @@ void Window::run() {
             break;
         }
 
+        int performedTargets = 0;
+        for (auto &renderTarget : this->renderTargets) {
+            if (renderTarget->isOn) {
+                glBindFramebuffer(GL_FRAMEBUFFER, renderTarget->fbo);
+                glViewport(0, 0, renderTarget->size.width,
+                           renderTarget->size.height);
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |
+                        GL_STENCIL_BUFFER_BIT);
+                glClearColor(this->backgroundColor.r, this->backgroundColor.g,
+                             this->backgroundColor.b, this->backgroundColor.a);
+                Renderer::instance().dispatchAll();
+                performedTargets++;
+            }
+        }
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glViewport(0, 0, this->framebufferSize.width,
+                   this->framebufferSize.height);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |
                 GL_STENCIL_BUFFER_BIT);
+        glClearColor(this->backgroundColor.r, this->backgroundColor.g,
+                     this->backgroundColor.b, this->backgroundColor.a);
+        if (performedTargets == 0) {
+            std::cout << "No render targets were active, rendering to screen."
+                      << std::endl;
+            Renderer::instance().dispatchAll();
+        }
 
-        Renderer::instance().dispatchAll();
+        for (auto &renderTarget : this->renderTargets) {
+            if (renderTarget->isRendering) {
+                renderTarget->dispatcher(renderTarget->fullScreenObject.get(),
+                                         renderTarget);
+            }
+        }
 
         glfwSwapBuffers(this->window);
         glfwPollEvents();

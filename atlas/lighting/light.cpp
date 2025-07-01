@@ -15,10 +15,12 @@
 #include <glm/glm.hpp>
 #include <iostream>
 
-Light::Light(Position3d position, Color color, LightType type, Scene *scene)
+Light::Light(Position3d position, Color color, LightType type, Scene *scene,
+             float intensity)
     : position(position), color(color) {
 
     this->debugObject = generateCubeObject(position, Size3d(0.1f, 0.1f, 0.1f));
+    this->intensity = intensity;
     for (int i = 0; i < debugObject.vertices.size(); ++i) {
         debugObject.setVertexColor(i, color);
     }

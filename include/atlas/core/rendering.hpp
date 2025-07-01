@@ -13,6 +13,7 @@
 #include "atlas/material.hpp"
 #include "atlas/texture.hpp"
 #include "atlas/units.hpp"
+#include <algorithm>
 #include <functional>
 #include <glm/glm.hpp>
 #include <optional>
@@ -96,6 +97,8 @@ struct CoreObject {
     inline void show() { this->hidden = false; }
 
     void initialize();
+    void initCore();
+    void registerObject();
     void provideIndexedDrawing(std::vector<unsigned int> indices);
     void provideVertexData(std::vector<CoreVertex> vertices);
     void provideTextureCoords(std::vector<Size2d> textureCoords);
@@ -127,6 +130,8 @@ using RenderingFn = std::function<void(CoreObject *)>;
 struct Renderer {
     std::vector<RenderingFn> dispatchers;
     std::vector<CoreObject *> registeredObjects;
+    std::vector<CoreObject *> postRegisteredObjects;
+    std::vector<RenderingFn> postDispatchers;
 
     static Renderer &instance() {
         static Renderer inst;
@@ -136,9 +141,11 @@ struct Renderer {
     Renderer(const Renderer &) = delete;
     Renderer &operator=(const Renderer &) = delete;
 
-    void registerObject(CoreObject *object, RenderingFn dispatcher);
+    void registerObject(CoreObject *object, RenderingFn dispatcher,
+                        bool postObject = false);
 
     void dispatchAll();
+    void postDispatchAll();
 
   private:
     Renderer() = default;
@@ -160,5 +167,7 @@ GLuint getDefaultTexture();
             throw std::runtime_error("OpenGL error occurred");                 \
         }                                                                      \
     } while (0)
+
+CoreObject presentFullScreenTexture(Texture texture);
 
 #endif // ATLAS_RENDERING_HPP

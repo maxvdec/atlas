@@ -36,6 +36,8 @@ file(GLOB_RECURSE GLAD_SOURCES "external/glad/glad.c")
 add_library(atlas STATIC ${ATLAS_SOURCES} ${GLAD_SOURCES})
 add_dependencies(atlas GenerateShadersHeader)
 
+target_compile_definitions(atlas PRIVATE DEBUG_UNIFORMS)
+
 target_link_libraries(atlas
     PRIVATE
         OpenGL::GL

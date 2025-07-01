@@ -94,3 +94,21 @@ CoreObject generateCubeObject(Position3d position, Size3d size) {
 
     return object;
 }
+
+CoreObject presentFullScreenTexture(Texture texture) {
+    CoreObject object;
+    object.vertices = {
+        {1.0f, 1.0f, 0.0f, Color(1, 1, 1), Size2d(1.0f, 1.0f)},
+        {-1.0f, 1.0f, 0.0f, Color(1, 1, 1), Size2d(0.0f, 1.0f)},
+        {-1.0f, -1.0f, 0.0f, Color(1, 1, 1), Size2d(0.0f, 0.0f)},
+
+        {1.0f, 1.0f, 0.0f, Color(1, 1, 1), Size2d(1.0f, 1.0f)},
+        {-1.0f, -1.0f, 0.0f, Color(1, 1, 1), Size2d(0.0f, 0.0f)},
+        {1.0f, -1.0f, 0.0f, Color(1, 1, 1), Size2d(1.0f, 0.0f)},
+    };
+    object.addTexture(texture);
+    object.fragmentShader =
+        CoreShader(FULLSCREEN_FRAG, CoreShaderType::Fragment);
+    object.vertexShader = CoreShader(FULLSCREEN_VERT, CoreShaderType::Vertex);
+    return object;
+}
