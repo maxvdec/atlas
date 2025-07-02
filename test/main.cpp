@@ -48,15 +48,19 @@ class MainScene : public Scene {
         sun->direction = Position3d(-1.0f, -1.0f, -1.0f);
         sun->intensity = 1.f;
 
+        Texture depth = Texture();
+        depth.fromId(sun->depthMapID, Size2d(1024, 1024), TextureType::Depth);
+        depth.renderToScreen();
+
         // this->light =
         //     new SpotLight(Position3d(0.0f, 4.0f, 0.0f),
         //                   Position3d(0.0f, -1.0f, 0.0f), LIGHT_COLOR, this);
         // light->intensity = 2.0f;
         // light->debugLight();
 
-        renderTarget = RenderTarget(Size2d(1500, 800), TextureType::Color);
-        renderTarget.enable();
-        renderTarget.renderToScreen();
+        // renderTarget = RenderTarget(Size2d(1500, 800), TextureType::Color);
+        // renderTarget.enable();
+        // renderTarget.renderToScreen();
 
         object =
             generateCubeObject(Position3d(0, 0, 0), Size3d(10.f, 0.1f, 10.f));

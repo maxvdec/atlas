@@ -69,7 +69,10 @@ RenderTarget::RenderTarget(Size2d size, TextureType type) : size(size) {
 }
 
 void RenderTarget::renderToScreen() {
-    if (!isOn) {
+    if (!isRendering) {
+        std::cerr << "RenderTarget is not rendering!" << std::endl;
+        return;
+    } else if (!isOn) {
         std::cerr << "RenderTarget is not enabled!" << std::endl;
         return;
     }

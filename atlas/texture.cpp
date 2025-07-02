@@ -7,6 +7,9 @@
  Copyright (c) 2025 maxvdec
 */
 
+#include "atlas/core/rendering.hpp"
+#include "atlas/core/shaders.h"
+#include "atlas/window.hpp"
 #include "atlas/workspace.hpp"
 #include <iostream>
 #include <vector>
@@ -143,4 +146,37 @@ void Cubemap::fromImages(CubemapPacket packet, TextureType type) {
 
     glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+}
+
+void Texture::renderToScreen() {
+    this->fullScreenObject = new CoreObject(presentFullScreenTexture(*this));
+    if (this->type == TextureType::Depth) {
+        this->fullScreenObject->fragmentShader =
+            CoreShader(VISUALIZE_DEPTH_FRAG, CoreShaderType::Fragment);
+    }
+    this->fullScreenObject->initCore();
+    this->dispatcher = [](CoreObject *object) {
+        if (!object->program.has_value()) {
+            std::cerr << "Error: Shader program not initialized for texture "
+                         "rendering."
+                      << std::endl;
+            return;
+        }
+
+        glUseProgram(object->program.value().ID);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, object->textures[0].ID);
+
+        if (glGetError() != GL_NO_ERROR) {
+            std::cerr << "Error binding texture to shader program."
+                      << std::endl;
+            return;
+        }
+
+        object->program.value().setInt("uTexture1", 0);
+        glBindVertexArray(object->attributes.VAO);
+        glDrawArrays(GL_TRIANGLES, 0,
+                     static_cast<GLsizei>(object->vertices.size()));
+    };
+    Window::current_window->fullScreenTexture = *this;
 }

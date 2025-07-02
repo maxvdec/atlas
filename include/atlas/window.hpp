@@ -16,6 +16,7 @@
 #include "atlas/scene.hpp"
 #include "atlas/texture.hpp"
 #include <atlas/units.hpp>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -45,6 +46,7 @@ class Window {
     RenderingMode renderingMode = RenderingMode::Full;
     std::vector<Interactive *> interactiveObjects;
     std::vector<RenderTarget *> renderTargets;
+    std::optional<Texture> fullScreenTexture = std::nullopt;
     bool firstMouse = true;
 
     float lastFrame = 0.0f;

@@ -153,6 +153,14 @@ void Window::run() {
     }
 
     while (!glfwWindowShouldClose(this->window)) {
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LESS);
+        glEnable(GL_STENCIL_TEST);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_BACK);
+        glEnable(GL_MULTISAMPLE);
         double currentTime = glfwGetTime();
         this->frameCount++;
 
@@ -172,6 +180,16 @@ void Window::run() {
             interactive->atEachFrame(deltaTime);
         }
 
+        for (auto &light : this->currentScene->lights) {
+            if (light->type == LightType::Directional) {
+                auto directionalLight = dynamic_cast<DirectionalLight *>(light);
+                if (directionalLight) {
+                    directionalLight->storeDepthMap(
+                        Renderer::instance().registeredObjects);
+                }
+            }
+        }
+
         for (auto &object : Renderer::instance().registeredObjects) {
             if (this->mainCam != nullptr) {
                 object->viewMatrix = this->mainCam->getViewMatrix();
@@ -182,15 +200,6 @@ void Window::run() {
                 object->viewMatrix = glm::mat4(1.0f);
             }
         }
-
-        glEnable(GL_DEPTH_TEST);
-        glDepthFunc(GL_LESS);
-        glEnable(GL_STENCIL_TEST);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glEnable(GL_CULL_FACE);
-        glCullFace(GL_BACK);
-        glEnable(GL_MULTISAMPLE);
 
         switch (this->renderingMode) {
         case RenderingMode::Full:
@@ -262,6 +271,11 @@ void Window::run() {
                 renderTarget->dispatcher(renderTarget->fullScreenObject.get(),
                                          renderTarget);
             }
+        }
+
+        if (this->fullScreenTexture.has_value()) {
+            this->fullScreenTexture->dispatcher(
+                this->fullScreenTexture->fullScreenObject);
         }
 
         glfwSwapBuffers(this->window);

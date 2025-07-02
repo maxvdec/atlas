@@ -27,7 +27,12 @@ enum class MipmapFilteringMode {
     LinearMipmapLinear
 };
 
-enum class TextureType { Color, Specular, Cubemap };
+enum class TextureType { Color, Specular, Cubemap, Depth };
+
+struct CoreObject;
+struct RenderTarget;
+typedef std::function<void(CoreObject *, RenderTarget *)> RenderingTargetFn;
+typedef std::function<void(CoreObject *)> RenderingFn;
 
 struct Texture {
     unsigned int ID;
@@ -39,9 +44,19 @@ struct Texture {
     Color borderColor = Color(0.0f, 0.0f, 0.0f, 1.0f);
     Resource image = Resource();
     TextureType type = TextureType::Color;
+    CoreObject *fullScreenObject = nullptr;
+    RenderingFn dispatcher;
 
     void setProperties();
     void fromImage(Resource resc, TextureType type);
+    inline void fromId(unsigned int id, Size2d size,
+                       TextureType type = TextureType::Color) {
+        this->ID = id;
+        this->size = size;
+        this->type = type;
+    }
+
+    void renderToScreen();
 };
 
 struct CubemapPacket {
@@ -60,18 +75,12 @@ struct Cubemap {
                     TextureType type = TextureType::Cubemap);
 };
 
-struct CoreObject;
-
 enum class EffectType { Inverse, Grayscale, Kernel, Blur, EdgeDetection };
 
 struct Effect {
     EffectType type;
     float intensity = 1.0f;
 };
-
-struct RenderTarget;
-
-typedef std::function<void(CoreObject *, RenderTarget *)> RenderingTargetFn;
 
 struct RenderTarget {
     Texture texture;

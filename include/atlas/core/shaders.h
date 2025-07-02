@@ -211,6 +211,22 @@ void main() {
 
 )";
 
+static const char* DEPTH_VERT = R"(
+#version 330 core
+layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec4 aColor;
+layout (location = 2) in vec2 aTexCoord;
+layout (location = 3) in vec3 aNormal;
+
+uniform mat4 uModel;
+uniform mat4 uLightSpaceMatrix;
+
+void main() {
+    gl_Position = uLightSpaceMatrix * uModel * vec4(aPos, 1.0);
+}
+
+)";
+
 static const char* SKYBOX_FRAG = R"(
 #version 330 core
 
@@ -222,6 +238,13 @@ uniform samplerCube uSkyboxTexture;
 void main() {
     FragColor = texture(uSkyboxTexture, texCoord);
 }
+
+)";
+
+static const char* EMPTY_FRAG = R"(
+#version 330 core
+
+void main() {}
 
 )";
 
@@ -540,6 +563,32 @@ void main() {
     texCoord = aPos;
     vec4 pos = uProjection * uView * vec4(aPos, 1.0);
     gl_Position = pos.xyww;
+}
+
+)";
+
+static const char* VISUALIZE_DEPTH_FRAG = R"(
+
+#version 330 core
+out vec4 FragColor;
+in vec2 textCoord;
+
+uniform sampler2D uTexture1;
+
+uniform float nearPlane = 0.1;
+uniform float farPlane = 100.0;
+
+float linearizeDepth(float depth) {
+    float z = depth * 2.0 - 1.0; 
+    return (2.0 * nearPlane * farPlane) / (farPlane + nearPlane - z * (farPlane - nearPlane));
+}
+
+void main() {
+    float depth = texture(uTexture1, textCoord).r; 
+    float linearDepth = linearizeDepth(depth);
+    float normalizedDepth = linearDepth / farPlane;
+    vec3 color = vec3(pow(normalizedDepth, 0.5)); 
+    FragColor = vec4(color, 1.0);
 }
 
 )";
