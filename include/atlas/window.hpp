@@ -51,6 +51,8 @@ class Window {
     float deltaTime = 0.0f;
     int frameCount = 0;
 
+    LightTechnique lightTechnique = LightTechnique::BlinnPhong;
+
     inline void registerInteractive(Interactive *object) {
         this->interactiveObjects.push_back(object);
     }

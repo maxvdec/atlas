@@ -22,6 +22,8 @@ enum class LightType {
     None,
 };
 
+enum class LightTechnique { Phong, BlinnPhong };
+
 #define MAX_LIGHTS 10
 
 struct Scene;
@@ -80,6 +82,8 @@ class PointLight : public Light {
                Color color = Color(1.0f, 1.0f, 1.0f), Scene *scene = nullptr)
         : Light(position, color, LightType::Point, scene) {};
 };
+
+#define LIGHT_COLOR Color(1.0, 0.95, 1.0)
 
 class SpotLight : public Light {
   public:

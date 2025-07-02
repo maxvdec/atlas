@@ -17,10 +17,37 @@ RenderTarget::RenderTarget(Size2d size, TextureType type) : size(size) {
     this->texture.size = size;
     this->texture.type = type;
 
+    const int samples = 4;
+
     glGenFramebuffers(1, &fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-    this->texture = Texture();
 
+    GLuint colorRBO;
+    glGenRenderbuffers(1, &colorRBO);
+    glBindRenderbuffer(GL_RENDERBUFFER, colorRBO);
+    glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, GL_RGBA8,
+                                     size.width, size.height);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                              GL_RENDERBUFFER, colorRBO);
+
+    GLuint depthStencilRBO;
+    glGenRenderbuffers(1, &depthStencilRBO);
+    glBindRenderbuffer(GL_RENDERBUFFER, depthStencilRBO);
+    glRenderbufferStorageMultisample(
+        GL_RENDERBUFFER, samples, GL_DEPTH24_STENCIL8, size.width, size.height);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
+                              GL_RENDERBUFFER, depthStencilRBO);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        std::cerr << "Error: Multisampled Framebuffer is not complete!"
+                  << std::endl;
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glGenFramebuffers(1, &resolveFbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, resolveFbo);
+
+    this->texture = Texture();
     glGenTextures(1, &this->texture.ID);
     glBindTexture(GL_TEXTURE_2D, this->texture.ID);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.width, size.height, 0, GL_RGBA,
@@ -29,23 +56,13 @@ RenderTarget::RenderTarget(Size2d size, TextureType type) : size(size) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
                            this->texture.ID, 0);
 
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        std::cerr << "Error: Framebuffer is not complete!" << std::endl;
-    }
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        std::cerr << "Error: Resolve Framebuffer is not complete!" << std::endl;
 
     glBindTexture(GL_TEXTURE_2D, 0);
-
-    glGenRenderbuffers(1, &rbo);
-    glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, size.width,
-                          size.height);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
-                              GL_RENDERBUFFER, rbo);
-
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     Window::current_window->renderTargets.push_back(this);
@@ -67,7 +84,13 @@ void RenderTarget::renderToScreen() {
                       << std::endl;
             return;
         }
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, target->fbo);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, target->resolveFbo);
+        glBlitFramebuffer(0, 0, target->size.width, target->size.height, 0, 0,
+                          target->size.width, target->size.height,
+                          GL_COLOR_BUFFER_BIT, GL_NEAREST);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
         glUseProgram(object->program.value().ID);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, object->textures[0].ID);

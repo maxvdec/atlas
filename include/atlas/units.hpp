@@ -136,6 +136,9 @@ struct Color {
 
     inline glm::vec3 toVec3() const { return glm::vec3(r, g, b); }
     inline glm::vec4 toVec4() const { return glm::vec4(r, g, b, a); }
+    inline static Color fromWhite(float white) {
+        return Color(white, white, white, 1.0f);
+    }
 };
 
 typedef Size2d Frame;

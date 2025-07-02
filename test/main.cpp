@@ -25,9 +25,10 @@
 
 class MainScene : public Scene {
   public:
-    PointLight *light = nullptr;
+    SpotLight *light = nullptr;
     DirectionalLight *sun = nullptr;
     CoreObject object;
+    CoreObject cube;
     Camera camera;
     Model model;
     RenderTarget renderTarget;
@@ -39,31 +40,26 @@ class MainScene : public Scene {
         texture.fromImage(workspace.loadResource("container.jpg"),
                           TextureType::Color);
 
-        CubemapPacket cubemapPacket;
-        cubemapPacket.right = workspace.loadResource("skybox/right.jpg");
-        cubemapPacket.left = workspace.loadResource("skybox/left.jpg");
-        cubemapPacket.top = workspace.loadResource("skybox/top.jpg");
-        cubemapPacket.bottom = workspace.loadResource("skybox/bottom.jpg");
-        cubemapPacket.front = workspace.loadResource("skybox/front.jpg");
-        cubemapPacket.back = workspace.loadResource("skybox/back.jpg");
-        Cubemap cubemap;
-        cubemap.fromImages(cubemapPacket, TextureType::Cubemap);
-        skybox.addCubemap(cubemap);
-        skybox.useSkybox();
-
         camera.position = Position3d(0.0f, 0.0f, -3.0f);
         camera.useCamera();
 
         sun = new DirectionalLight(Position3d(0.0f, 0.0f, 1.0f),
                                    Color(1.0f, 0.98f, 0.8f));
         sun->direction = Position3d(-1.0f, -1.0f, -1.0f);
-        sun->intensity = 3.f;
+        sun->intensity = 1.f;
+
+        // this->light =
+        //     new SpotLight(Position3d(0.0f, 4.0f, 0.0f),
+        //                   Position3d(0.0f, -1.0f, 0.0f), LIGHT_COLOR, this);
+        // light->intensity = 2.0f;
+        // light->debugLight();
 
         renderTarget = RenderTarget(Size2d(1500, 800), TextureType::Color);
         renderTarget.enable();
         renderTarget.renderToScreen();
 
-        object = generateCubeObject(Position3d(0, 0, 0), Size3d(1.f, 1.f, 1.f));
+        object =
+            generateCubeObject(Position3d(0, 0, 0), Size3d(10.f, 0.1f, 10.f));
         std::vector<Size3d> normals = {
             // Front face
             {0.0f, 0.0f, 1.0f},
@@ -133,6 +129,15 @@ class MainScene : public Scene {
         object.addTexture(texture);
 
         object.initialize();
+
+        cube = generateCubeObject(Position3d(0, 0, 0), Size3d(1.f, 1.f, 1.f));
+        cube.provideNormals(normals);
+        cube.provideTextureCoords(textureCoords);
+        cube.translate(0, 0.1, 0);
+
+        cube.addTexture(texture);
+
+        cube.initialize();
     }
     void update(float deltaTime) override {
         if (isKeyPressed(Key::Escape)) {
@@ -144,6 +149,7 @@ class MainScene : public Scene {
 int main() {
     Window mywin = Window("Atlas Test", Frame(1500, 800));
     mywin.backgroundColor = Color(0.2f, 0.2f, 0.2f, 1.0f);
+    mywin.ambientColor = Color::fromWhite(0.6);
     MainScene *mainScene = new MainScene();
     mywin.currentScene = mainScene;
 

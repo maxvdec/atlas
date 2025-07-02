@@ -184,8 +184,18 @@ void CoreObject::initCore() {
     }
 
     if (!this->fragmentShader.has_value()) {
-        CoreShader fragmentShader(AMBIENT_FRAG, CoreShaderType::Fragment);
-        this->fragmentShader = fragmentShader;
+        switch (Window::current_window->lightTechnique) {
+        case LightTechnique::Phong: {
+            CoreShader fragmentShader(PHONG_FRAG, CoreShaderType::Fragment);
+            this->fragmentShader = fragmentShader;
+            break;
+        }
+        case LightTechnique::BlinnPhong: {
+            CoreShader fragmentShader(BLINN_FRAG, CoreShaderType::Fragment);
+            this->fragmentShader = fragmentShader;
+            break;
+        }
+        }
     }
 
     CoreShaderProgram shaderProgram(makeShaderList());
@@ -362,26 +372,6 @@ void CoreObject::registerObject() {
             } else {
                 object->program.value().setVec3("uCameraPos", glm::vec3(0.0f));
             }
-        }
-
-        if (Window::current_window->currentScene != nullptr &&
-            Window::current_window->currentScene->skybox != nullptr) {
-            if (object->material.isReflective) {
-                object->program.value().setBool("uMaterial.useRefraction",
-                                                false);
-                object->program.value().setFloat("uMaterial.reflectivity",
-                                                 object->material.reflection);
-            } else {
-                object->program.value().setBool("uMaterial.useRefraction",
-                                                true);
-                object->program.value().setFloat("uMaterial.refractiveIndex",
-                                                 object->material.refraction);
-            }
-        } else {
-            object->program.value().setBool("uUseSkybox", false);
-            object->program.value().setInt("uSkyboxTexture", 0);
-            object->program.value().setBool("uMaterial.useRefraction", false);
-            object->program.value().setFloat("uMaterial.reflectivity", 0.0f);
         }
 
         if (object->visualizeTexture) {

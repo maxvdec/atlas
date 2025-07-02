@@ -94,6 +94,7 @@ struct RenderTarget {
 
     void renderToScreen();
     unsigned int fbo = 0;
+    unsigned int resolveFbo = 0;
 
     std::vector<Effect> effects;
 
