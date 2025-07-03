@@ -351,6 +351,7 @@ in vec4 fragColor;
 in vec2 texCoord;
 in vec3 normal;
 in vec3 fragPos;
+in vec4 lightSpacePos; 
 
 struct DirectionalLight {
     vec3 direction;
@@ -404,6 +405,11 @@ uniform int uTextureCount;
 uniform Material uMaterial;
 uniform vec3 uCameraPos;
 
+uniform sampler2D uShadowMap;
+uniform bool uUseShadows;
+uniform float uShadowBias;
+uniform int uShadowSamples;
+
 #define MAX_LIGHTS 10
 uniform int uLightCount;
 uniform Light uLights[MAX_LIGHTS];
@@ -452,6 +458,41 @@ vec3 blendSpecularTextures() {
     return finalSpecular;
 }
 
+float calculateShadow(vec4 lightSpacePosition, vec3 norm, vec3 lightDir) {
+    vec3 projCoords = lightSpacePosition.xyz / lightSpacePosition.w;
+    projCoords = projCoords * 0.5 + 0.5; 
+
+    if (projCoords.x < 0.0 || projCoords.x > 1.0 ||
+        projCoords.y < 0.0 || projCoords.y > 1.0 ||
+        projCoords.z < 0.0 || projCoords.z > 1.0) {
+        return 0.0;
+    }
+
+    float closestDepth = texture(uShadowMap, projCoords.xy).r;
+    float currentDepth = projCoords.z;
+    float bias = max(uShadowBias * (1.0 - dot(norm, lightDir)), uShadowBias * 0.1);
+
+    float shadow = 0.0;
+    vec2 texelSize = 1.0 / textureSize(uShadowMap, 0);
+
+    int samples = max(1, uShadowSamples);
+    int halfSamples = samples / 2;
+
+    for (int x = -halfSamples; x <= halfSamples; ++x) {
+        for (int y = -halfSamples; y <= halfSamples; ++y) {
+            vec2 offset = vec2(x, y) * texelSize;
+            float sampleDepth = texture(uShadowMap, projCoords.xy + offset).r;
+            if (currentDepth - bias > sampleDepth) {
+                shadow += 1.0;
+            }
+        }
+    }
+
+    shadow /= float(samples * samples);
+    
+    return shadow;
+}
+
 vec3 calculateBlinnPhongLighting(Light light, vec3 norm, vec3 viewDir, vec3 fragPos, vec3 materialDiffuse) {
     vec3 lightDir;
     if (light.isDirectional) {
@@ -498,18 +539,24 @@ vec3 calculateBlinnPhongLighting(Light light, vec3 norm, vec3 viewDir, vec3 frag
             spotlightEffect *= spotAttenuation;
         }
     }
+
+    float shadowFactor = 1.0;
+    if (uUseShadows) {
+        float shadow = calculateShadow(lightSpacePos, norm, lightDir);
+        shadowFactor = 1.0 - shadow;
+    }
     
     vec3 ambient = light.ambient * light.color * materialDiffuse;
     
     float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = light.diffuse * light.color * diff * materialDiffuse * attenuation * spotlightEffect;
+    vec3 diffuse = light.diffuse * light.color * diff * materialDiffuse * attenuation * spotlightEffect * shadowFactor;
     
     float spec = pow(max(dot(norm, halfwayDir), 0.0), uMaterial.shininess);
     vec3 specularColor = uMaterial.specular;
     if (uMaterial.useSpecularMap) {
         specularColor = blendSpecularTextures();
     }
-    vec3 specular = light.specular * light.color * spec * specularColor * attenuation * spotlightEffect;
+    vec3 specular = light.specular * light.color * spec * specularColor * attenuation * spotlightEffect * shadowFactor;
     
     return (ambient + diffuse + specular) * light.intensity;
 }
@@ -531,10 +578,10 @@ void main() {
         materialDiffuse = uMaterial.diffuse;
     }
 
-    vec3 norm = normalize(normal);
     vec3 viewDir = normalize(uCameraPos - fragPos);
     
     vec3 totalLighting = vec3(0.0);
+    vec3 norm = normalize(normal);
     
     for (int i = 0; i < min(uLightCount, MAX_LIGHTS); ++i) {
         totalLighting += calculateBlinnPhongLighting(uLights[i], norm, viewDir, fragPos, materialDiffuse);
@@ -568,28 +615,18 @@ void main() {
 )";
 
 static const char* VISUALIZE_DEPTH_FRAG = R"(
-
 #version 330 core
 out vec4 FragColor;
+  
 in vec2 textCoord;
 
 uniform sampler2D uTexture1;
 
-uniform float nearPlane = 0.1;
-uniform float farPlane = 100.0;
-
-float linearizeDepth(float depth) {
-    float z = depth * 2.0 - 1.0; 
-    return (2.0 * nearPlane * farPlane) / (farPlane + nearPlane - z * (farPlane - nearPlane));
-}
-
-void main() {
-    float depth = texture(uTexture1, textCoord).r; 
-    float linearDepth = linearizeDepth(depth);
-    float normalizedDepth = linearDepth / farPlane;
-    vec3 color = vec3(pow(normalizedDepth, 0.5)); 
-    FragColor = vec4(color, 1.0);
-}
+void main()
+{             
+    float depthValue = texture(uTexture1, textCoord).r;
+    FragColor = vec4(vec3(depthValue), 1.0);
+}  
 
 )";
 
@@ -604,19 +641,24 @@ out vec4 fragColor;
 out vec2 texCoord;
 out vec3 normal;
 out vec3 fragPos;
+out vec4 lightSpacePos;
 
 uniform mat4 uModel;
 uniform mat4 uView;
 uniform mat4 uProjection;
 uniform vec2 uAspectCorrection;
+uniform mat4 uLightSpaceMatrix;
+uniform mat3 uNormalMatrix;
 
 void main()
 {
+    vec4 worldPos = uModel * vec4(aPos, 1.0);
     fragColor = aColor;
     texCoord = aTexCoord;
-    normal = mat3(transpose(inverse(uModel))) * aNormal;
-    gl_Position = uProjection * uView * uModel * vec4(aPos, 1.0);
-    fragPos = vec3(uModel * vec4(aPos, 1.0));
+    normal = uNormalMatrix * aNormal;
+    lightSpacePos = uLightSpaceMatrix * worldPos;
+    fragPos = vec3(worldPos); 
+    gl_Position = uProjection * uView * worldPos;
 }
 
 )";

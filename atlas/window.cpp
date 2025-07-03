@@ -189,6 +189,8 @@ void Window::run() {
                 }
             }
         }
+        glViewport(0, 0, this->framebufferSize.width,
+                   this->framebufferSize.height);
 
         for (auto &object : Renderer::instance().registeredObjects) {
             if (this->mainCam != nullptr) {

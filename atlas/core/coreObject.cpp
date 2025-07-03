@@ -16,6 +16,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/string_cast.hpp>
 #include <iostream>
 #include <optional>
 #include <string>
@@ -270,6 +272,9 @@ void CoreObject::registerObject() {
         object->program.value().setMatrix4("uProjection",
                                            object->projectionMatrix);
         object->program.value().setMatrix4("uView", object->viewMatrix);
+        glm::mat3 normalMatrix = glm::mat3(
+            glm::transpose(glm::inverse(glm::mat3(object->modelMatrix))));
+        object->program.value().setMatrix3("uNormalMatrix", normalMatrix);
         const auto lights = Window::current_window->currentScene->lights;
         if (object->program.value().symbolExists("uLights[0].position") &&
             lights.size() > 0) {
@@ -371,6 +376,29 @@ void CoreObject::registerObject() {
                     Window::current_window->mainCam->position.toVec3());
             } else {
                 object->program.value().setVec3("uCameraPos", glm::vec3(0.0f));
+            }
+        }
+
+        if (object->program.value().symbolExists("uUseShadows")) {
+            DirectionalLight *dirLight = nullptr;
+            for (const auto &light :
+                 Window::current_window->currentScene->lights) {
+                if (light->type == LightType::Directional) {
+                    dirLight = static_cast<DirectionalLight *>(light);
+                    break;
+                }
+            }
+            if (dirLight != nullptr) {
+                object->program.value().setBool("uUseShadows", true);
+                glActiveTexture(GL_TEXTURE6);
+                glBindTexture(GL_TEXTURE_2D, dirLight->depthMapID);
+                object->program.value().setInt("uShadowMap", 6);
+                object->program.value().setFloat("uShadowBias", 0.005f);
+                object->program.value().setInt("uShadowSamples", 4);
+                object->program.value().setMatrix4("uLightSpaceMatrix",
+                                                   dirLight->lightSpaceMatrix);
+            } else {
+                object->program.value().setBool("uUseShadows", false);
             }
         }
 
@@ -550,6 +578,17 @@ void CoreShaderProgram::setVec3(const std::string &name,
     }
     glUniform3fv(glGetUniformLocation(this->ID, name.c_str()), 1,
                  glm::value_ptr(vector));
+}
+
+void CoreShaderProgram::setMatrix3(const std::string &name,
+                                   const glm::mat3 &matrix) const {
+    if (!symbolExists(name)) {
+        std::cerr << "Warning: Uniform '" << name
+                  << "' does not exist in shader program." << std::endl;
+        return;
+    }
+    glUniformMatrix3fv(glGetUniformLocation(this->ID, name.c_str()), 1,
+                       GL_FALSE, glm::value_ptr(matrix));
 }
 
 GLuint defaultTexture = 0;

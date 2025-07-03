@@ -14,6 +14,7 @@
 #include "atlas/material.hpp"
 #include "atlas/units.hpp"
 #include <glm/glm.hpp>
+#include <optional>
 #include <vector>
 
 enum class LightType {
@@ -57,6 +58,10 @@ class DirectionalLight : public Light {
 
     unsigned int depthMapFBO = 0;
     unsigned int depthMapID = 0;
+
+    std::optional<CoreShaderProgram> depthShader;
+
+    glm::mat4 lightSpaceMatrix;
 
     DirectionalLight(Position3d direction = Position3d(0.0f, -1.0f, 0.0f),
                      Color color = Color(1.0f, 1.0f, 1.0f),

@@ -8,17 +8,22 @@ out vec4 fragColor;
 out vec2 texCoord;
 out vec3 normal;
 out vec3 fragPos;
+out vec4 lightSpacePos;
 
 uniform mat4 uModel;
 uniform mat4 uView;
 uniform mat4 uProjection;
 uniform vec2 uAspectCorrection;
+uniform mat4 uLightSpaceMatrix;
+uniform mat3 uNormalMatrix;
 
 void main()
 {
+    vec4 worldPos = uModel * vec4(aPos, 1.0);
     fragColor = aColor;
     texCoord = aTexCoord;
-    normal = mat3(transpose(inverse(uModel))) * aNormal;
-    gl_Position = uProjection * uView * uModel * vec4(aPos, 1.0);
-    fragPos = vec3(uModel * vec4(aPos, 1.0));
+    normal = uNormalMatrix * aNormal;
+    lightSpacePos = uLightSpaceMatrix * worldPos;
+    fragPos = vec3(worldPos); 
+    gl_Position = uProjection * uView * worldPos;
 }

@@ -15,6 +15,9 @@
 #include "atlas/window.hpp"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/string_cast.hpp>
 #include <iostream>
 
 Light::Light(Position3d position, Color color, LightType type, Scene *scene,
@@ -99,10 +102,13 @@ DirectionalLight::DirectionalLight(Position3d direction, Color color,
     glBindTexture(GL_TEXTURE_2D, this->depthMapID);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH,
                  SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+
+    float borderColor[] = {1.0f, 1.0f, 1.0f, 1.0f};
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 
     glBindFramebuffer(GL_FRAMEBUFFER, this->depthMapFBO);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
@@ -119,21 +125,58 @@ DirectionalLight::DirectionalLight(Position3d direction, Color color,
 void DirectionalLight::storeDepthMap(std::vector<CoreObject *> &objects) {
     glBindFramebuffer(GL_FRAMEBUFFER, this->depthMapFBO);
     glViewport(0, 0, 1024, 1024);
+
+    glEnable(GL_DEPTH_TEST);
     glClear(GL_DEPTH_BUFFER_BIT);
 
-    float near_plane = 1.0f, far_plane = 7.5f;
-    glm::mat4 lightProjection =
-        glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
+    glDepthFunc(GL_LESS);
 
-    glm::mat4 lightView = glm::lookAt(
-        glm::vec3(this->direction.x, this->direction.y, this->direction.z),
-        glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+    glm::vec3 minBounds = glm::vec3(FLT_MAX);
+    glm::vec3 maxBounds = glm::vec3(-FLT_MAX);
 
-    glm::mat4 lightSpaceMatrix = lightProjection * lightView;
+    for (auto &object : objects) {
+        if (object == nullptr)
+            continue;
 
-    CoreShader emptyFrag(EMPTY_FRAG, CoreShaderType::Fragment);
-    CoreShader depthVert(DEPTH_VERT, CoreShaderType::Vertex);
-    CoreShaderProgram depthProgram({emptyFrag, depthVert});
+        glm::vec3 objPos = glm::vec3(object->modelMatrix[3]);
+
+        float padding = 2.0f;
+        minBounds = glm::min(minBounds, objPos - glm::vec3(padding));
+        maxBounds = glm::max(maxBounds, objPos + glm::vec3(padding));
+    }
+
+    glm::vec3 sceneCenter = (minBounds + maxBounds) * 0.5f;
+    float sceneSize = glm::length(maxBounds - minBounds);
+
+    if (sceneSize < 1.0f) {
+        sceneSize = 10.0f;
+    }
+
+    float halfSize = sceneSize * 0.6f;
+    glm::mat4 lightProjection = glm::ortho(-halfSize, halfSize, -halfSize,
+                                           halfSize, 0.1f, sceneSize * 2.0f);
+
+    glm::vec3 lightDir = glm::normalize(this->direction.toVec3());
+    glm::vec3 lightPos = sceneCenter - lightDir * sceneSize;
+
+    glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f);
+    if (glm::abs(glm::dot(lightDir, up)) > 0.99f) {
+        up = glm::vec3(1.0f, 0.0f, 0.0f);
+    }
+
+    glm::mat4 lightView = glm::lookAt(lightPos, sceneCenter, up);
+    this->lightSpaceMatrix = lightProjection * lightView;
+
+    if (this->depthShader.has_value() == false) {
+        this->depthShader = CoreShaderProgram(
+            {CoreShader(DEPTH_VERT, CoreShaderType::Vertex),
+             CoreShader(EMPTY_FRAG, CoreShaderType::Fragment)});
+    }
+
+    depthShader->use();
+    depthShader->setMatrix4("uLightSpaceMatrix", lightSpaceMatrix);
+
+    glDisable(GL_CULL_FACE);
 
     for (auto &object : objects) {
         if (object == nullptr) {
@@ -141,10 +184,10 @@ void DirectionalLight::storeDepthMap(std::vector<CoreObject *> &objects) {
                       << std::endl;
             continue;
         }
-        depthProgram.use();
-        depthProgram.setMatrix4("uLightSpaceMatrix", lightSpaceMatrix);
-        depthProgram.setMatrix4("uModel", object->modelMatrix);
+
+        depthShader->setMatrix4("uModel", object->modelMatrix);
         glBindVertexArray(object->attributes.VAO);
+
         if (object->attributes.EBO.has_value()) {
             glDrawElements(GL_TRIANGLES, object->attributes.indices->size(),
                            GL_UNSIGNED_INT, 0);
@@ -152,6 +195,9 @@ void DirectionalLight::storeDepthMap(std::vector<CoreObject *> &objects) {
             glDrawArrays(GL_TRIANGLES, 0, object->vertices.size());
         }
     }
+
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }

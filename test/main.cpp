@@ -40,23 +40,21 @@ class MainScene : public Scene {
         texture.fromImage(workspace.loadResource("container.jpg"),
                           TextureType::Color);
 
-        camera.position = Position3d(0.0f, 0.0f, -3.0f);
+        camera.position = Position3d(0.0f, 1.0f, -3.0f);
         camera.useCamera();
 
-        sun = new DirectionalLight(Position3d(0.0f, 0.0f, 1.0f),
+        sun = new DirectionalLight(Position3d(-1.0f, -1.0f, -1.0f),
                                    Color(1.0f, 0.98f, 0.8f));
-        sun->direction = Position3d(-1.0f, -1.0f, -1.0f);
         sun->intensity = 1.f;
+        sun->ambientColor = Color(0.2f, 0.2f, 0.2f, 1.0f);
+        sun->material.diffuse = Color(1.0f, 0.98f, 0.8f, 1.0f);
+        sun->material.specular = Color(1.0f, 0.98f, 0.8f, 1.0f);
+        sun->debugLight();
 
-        Texture depth = Texture();
-        depth.fromId(sun->depthMapID, Size2d(1024, 1024), TextureType::Depth);
-        depth.renderToScreen();
-
-        // this->light =
-        //     new SpotLight(Position3d(0.0f, 4.0f, 0.0f),
-        //                   Position3d(0.0f, -1.0f, 0.0f), LIGHT_COLOR, this);
-        // light->intensity = 2.0f;
-        // light->debugLight();
+        // Texture depthTexture;
+        // depthTexture.fromId(sun->depthMapID, Size2d(1024, 1024),
+        //                     TextureType::Depth);
+        // depthTexture.renderToScreen();
 
         // renderTarget = RenderTarget(Size2d(1500, 800), TextureType::Color);
         // renderTarget.enable();
@@ -132,14 +130,26 @@ class MainScene : public Scene {
         object.provideTextureCoords(textureCoords);
         object.addTexture(texture);
 
+        Material groundMaterial;
+        groundMaterial.diffuse = Color(0.8f, 0.8f, 0.8f);
+        groundMaterial.specular = Color(0.2f, 0.2f, 0.2f);
+        groundMaterial.shininess = 32.0f;
+        object.material = groundMaterial;
+
         object.initialize();
 
         cube = generateCubeObject(Position3d(0, 0, 0), Size3d(1.f, 1.f, 1.f));
         cube.provideNormals(normals);
         cube.provideTextureCoords(textureCoords);
-        cube.translate(0, 0.1, 0);
+        cube.translate(0, 0.6, 0);
 
         cube.addTexture(texture);
+
+        Material cubeMaterial;
+        cubeMaterial.diffuse = Color(1.0f, 1.0f, 1.0f);
+        cubeMaterial.specular = Color(0.5f, 0.5f, 0.5f);
+        cubeMaterial.shininess = 64.0f;
+        cube.addMaterial(cubeMaterial);
 
         cube.initialize();
     }
@@ -153,7 +163,7 @@ class MainScene : public Scene {
 int main() {
     Window mywin = Window("Atlas Test", Frame(1500, 800));
     mywin.backgroundColor = Color(0.2f, 0.2f, 0.2f, 1.0f);
-    mywin.ambientColor = Color::fromWhite(0.6);
+    mywin.ambientColor = Color::fromWhite(1);
     MainScene *mainScene = new MainScene();
     mywin.currentScene = mainScene;
 

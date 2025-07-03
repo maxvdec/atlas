@@ -56,6 +56,7 @@ struct CoreShaderProgram {
     void setMatrix4(const std::string &name, const glm::mat4 &matrix) const;
     void setVec2(const std::string &name, const glm::vec2 &vector) const;
     void setVec3(const std::string &name, const glm::vec3 &vector) const;
+    void setMatrix3(const std::string &name, const glm::mat3 &matrix) const;
 
     inline bool symbolExists(const std::string &name) const {
         return glGetUniformLocation(this->ID, name.c_str()) != -1;
@@ -95,6 +96,7 @@ struct CoreObject {
 
     inline void hide() { this->hidden = true; }
     inline void show() { this->hidden = false; }
+    inline void addMaterial(const Material &mat) { this->material = mat; }
 
     void initialize();
     void initCore();
