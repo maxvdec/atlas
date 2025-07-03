@@ -201,3 +201,40 @@ void DirectionalLight::storeDepthMap(std::vector<CoreObject *> &objects) {
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
+
+SpotLight::SpotLight(Position3d position, Position3d direction, Color color,
+                     Scene *scene)
+    : Light(position, color, LightType::SpotLight, scene),
+      direction(direction) {
+    const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+
+    glGenFramebuffers(1, &this->depthMapFBO);
+
+    glGenTextures(1, &this->depthMapID);
+    glBindTexture(GL_TEXTURE_2D, this->depthMapID);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH,
+                 SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+
+    float borderColor[] = {1.0f, 1.0f, 1.0f, 1.0f};
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, this->depthMapFBO);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D,
+                           this->depthMapID, 0);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        std::cerr << "Error: Spot Light Framebuffer is not complete!"
+                  << std::endl;
+    }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    this->castsShadows = true;
+    this->shadowMapIndex =
+        ShadowManager::getInstance().registerShadowCaster(this);
+}

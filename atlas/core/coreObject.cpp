@@ -80,6 +80,9 @@ CoreShader::CoreShader(std::string code, CoreShaderType type) {
     case CoreShaderType::Fragment:
         shader = glCreateShader(GL_FRAGMENT_SHADER);
         break;
+    case CoreShaderType::Geometry:
+        shader = glCreateShader(GL_GEOMETRY_SHADER);
+        break;
     default:
         throw std::runtime_error("Unsupported shader type");
     }

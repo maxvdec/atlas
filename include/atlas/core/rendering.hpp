@@ -35,6 +35,7 @@ struct CoreVertex {
 enum class CoreShaderType {
     Vertex,
     Fragment,
+    Geometry,
 };
 
 struct CoreShader {

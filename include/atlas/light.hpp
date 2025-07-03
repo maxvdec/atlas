@@ -44,10 +44,18 @@ class Light {
     void debugLight();
     CoreObject debugObject;
     float intensity = 5.f;
-
     Material material = Material();
-
     LightType type;
+
+    bool castsShadows = false;
+    unsigned int depthMapFBO = 0;
+    unsigned int depthMapID = 0;
+    int shadowMapIndex = -1;
+    std::optional<CoreShaderProgram> depthShader;
+    glm::mat4 lightSpaceMatrix;
+
+    inline void castShadows() { this->castsShadows = true; }
+    inline void disableShadows() { this->castsShadows = false; }
 
     virtual ~Light() {}
 };
@@ -55,13 +63,6 @@ class Light {
 class DirectionalLight : public Light {
   public:
     Position3d direction;
-
-    unsigned int depthMapFBO = 0;
-    unsigned int depthMapID = 0;
-
-    std::optional<CoreShaderProgram> depthShader;
-
-    glm::mat4 lightSpaceMatrix;
 
     DirectionalLight(Position3d direction = Position3d(0.0f, -1.0f, 0.0f),
                      Color color = Color(1.0f, 1.0f, 1.0f),
@@ -110,9 +111,7 @@ class SpotLight : public Light {
 
     SpotLight(Position3d position = Position3d(0.0f, 0.0f, 0.0f),
               Position3d direction = Position3d(0.0f, -1.0f, 0.0f),
-              Color color = Color(1.0f, 1.0f, 1.0f), Scene *scene = nullptr)
-        : Light(position, color, LightType::SpotLight, scene),
-          direction(direction) {};
+              Color color = Color(1.0f, 1.0f, 1.0f), Scene *scene = nullptr);
 };
 
 #endif // ATLAS_LIGHT_HPP
