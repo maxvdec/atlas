@@ -19,10 +19,9 @@ public struct Position3d: Equatable, ExpressibleByArrayLiteral {
     }
     
     public init(arrayLiteral elements: Float...) {
-        precondition(elements.count == 3, "Position3d requires exactly three elements: x, y, z.")
-        self.x = elements[0]
-        self.y = elements[1]
-        self.z = elements[2]
+        self.x = elements.count > 0 ? elements[0] : 0
+        self.y = elements.count > 1 ? elements[1] : 0
+        self.z = elements.count > 2 ? elements[2] : 0
     }
     
     public func toSimd() -> SIMD3<Float> {

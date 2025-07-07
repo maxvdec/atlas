@@ -29,12 +29,16 @@ struct MetalVertex {
     var color: SIMD4<Float>
 }
 
+public typealias PrimitiveIndex = UInt16
+
 // TODO: Remove the 'public' for release
 public class CoreObject: Identifiable {
     public let id: UUID
     var vertices: [CoreVertex]
+    var indices: [PrimitiveIndex]?
     var dispatcher: RenderDispatch?
     var pipelineState: MTLRenderPipelineState?
+    var useIndexedDrawing: Bool = false
     
     var vertexBuffer: MTLBuffer?
     var indexBuffer: MTLBuffer?
@@ -53,6 +57,11 @@ public class CoreObject: Identifiable {
         self.vertices = vertices
     }
     
+    public func setIndices(_ indices: [PrimitiveIndex]) {
+        self.indices = indices
+        useIndexedDrawing = true
+    }
+    
     public func initialize() {
         // First, we build the vertex buffer
         var vertexData: [MetalVertex] = []
@@ -62,6 +71,10 @@ public class CoreObject: Identifiable {
         let device = RenderDispatcher.shared.device!
         vertexBuffer = device.makeBuffer(bytes: vertexData, length: MemoryLayout<MetalVertex>.stride * vertexData.count, options: [])
         
+        if useIndexedDrawing {
+            indexBuffer = device.makeBuffer(bytes: indices!, length: MemoryLayout<PrimitiveIndex>.stride * indices!.count, options: [])
+        }
+        
         // Then the pipeline state
         let shader = BasicShader()
         pipelineState = shader.makePipeline(device: device)
@@ -70,7 +83,12 @@ public class CoreObject: Identifiable {
         dispatcher = { object, encoder in
             encoder.setRenderPipelineState(object.pipelineState!)
             encoder.setVertexBuffer(object.vertexBuffer!, offset: 0, index: 0)
-            encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: object.vertices.count)
+            
+            if object.useIndexedDrawing {
+                encoder.drawIndexedPrimitives(type: .triangle, indexCount: object.indices!.count, indexType: .uint16, indexBuffer: object.indexBuffer!, indexBufferOffset: 0)
+            } else {
+                encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: object.vertices.count)
+            }
         }
         
         // And we register the object
