@@ -8,28 +8,28 @@
 import Foundation
 import Metal
 
-typealias RenderDispatch = (inout CoreObject) -> Void
+typealias RenderDispatch = (inout CoreObject, inout MTLRenderCommandEncoder) -> Void
 
 class RenderDispatcher {
     nonisolated(unsafe) static let shared = RenderDispatcher()
-    
+
     var dispatchers: [RenderDispatch]
     var objects: [CoreObject]
     var device: MTLDevice!
     var library: MTLLibrary?
-    
+
     private init() {
         self.dispatchers = []
         self.objects = []
-        device = MTLCreateSystemDefaultDevice()!
+        self.device = MTLCreateSystemDefaultDevice()!
     }
-    
-    public func dispatchAll() {
-        for i in 0...dispatchers.count {
-           dispatchers[i](&objects[i])
+
+    public func dispatchAll(encoder: inout MTLRenderCommandEncoder) {
+        for i in 0 ..< dispatchers.count {
+            dispatchers[i](&objects[i], &encoder)
         }
     }
-    
+
     public func registerObject(coreObject: CoreObject) {
         if let dispatch = coreObject.dispatcher {
             dispatchers.append(dispatch)

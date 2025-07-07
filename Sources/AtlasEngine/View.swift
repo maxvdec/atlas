@@ -1,21 +1,36 @@
 import MetalKit
 import SwiftUI
 
+@MainActor
 class CoreRenderer: NSObject, MTKViewDelegate {
     var metalView: MTKView
     var metalDevice: MTLDevice!
     var pipelineState: MTLRenderPipelineState!
-    
+    var commandQueue: MTLCommandQueue!
+
     init(metalView: MTKView) {
         self.metalView = metalView
+        self.metalView.isPaused = false
+
+        metalView.device = RenderDispatcher.shared.device!
+        self.commandQueue = metalView.device!.makeCommandQueue()
     }
-    
-    func draw(in view: MTKView) {
-        
-    }
-    
+
+    func draw(in view: MTKView) {}
+
     func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {
-        
+        guard let drawable = view.currentDrawable,
+              let renderPassDescriptor = view.currentRenderPassDescriptor else { return }
+
+        let commandBuffer = commandQueue.makeCommandBuffer()
+
+        var renderEncoder = commandBuffer!.makeRenderCommandEncoder(descriptor: renderPassDescriptor)!
+
+        RenderDispatcher.shared.dispatchAll(encoder: &renderEncoder)
+
+        renderEncoder.endEncoding()
+        commandBuffer!.present(drawable)
+        commandBuffer!.commit()
     }
 }
 
@@ -45,31 +60,32 @@ class CoreMetalView: MTKView {
 public class RenderViewController: NSViewController {
     private var metalView: CoreMetalView!
     private var initialFrame: CGRect
-    
+
     init(frame: CGRect) {
         self.initialFrame = frame
         super.init(nibName: nil, bundle: nil)
     }
-    
+
+    @available(*, unavailable)
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
-    public override func loadView() {
+
+    override public func loadView() {
         let metalView = CoreMetalView(frame: initialFrame)
         self.metalView = metalView
-        self.view = metalView
+        view = metalView
     }
-    
+
     func setFrame(_ frame: CGRect) {
-        self.view.frame = frame
+        view.frame = frame
         metalView.frame = frame
     }
 }
 
 public struct MetalRenderView: NSViewControllerRepresentable {
     private var frame: CGRect = .zero
-    
+
     public init(frame: CGRect = .zero) {
         self.frame = frame
     }
@@ -77,7 +93,7 @@ public struct MetalRenderView: NSViewControllerRepresentable {
     public func makeNSViewController(context: Context) -> RenderViewController {
         RenderViewController(frame: frame)
     }
-    
+
     public func updateNSViewController(_ nsViewController: RenderViewController, context: Context) {
         nsViewController.setFrame(frame)
     }
