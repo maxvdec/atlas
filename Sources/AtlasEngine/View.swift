@@ -23,7 +23,7 @@ class CoreMetalView: MTKView {
     var renderer: CoreRenderer!
 
     required init(coder: NSCoder) {
-        let device = MTLCreateSystemDefaultDevice()
+        let device = RenderDispatcher.shared.device
         super.init(coder: coder)
         self.device = device
         self.colorPixelFormat = .bgra8Unorm
@@ -33,7 +33,7 @@ class CoreMetalView: MTKView {
     }
 
     override init(frame: CGRect, device: MTLDevice? = nil) {
-        let useDevice = device ?? MTLCreateSystemDefaultDevice()
+        let useDevice = device ?? RenderDispatcher.shared.device
         super.init(frame: frame, device: useDevice)
         self.colorPixelFormat = .bgra8Unorm
         self.clearColor = MTLClearColorMake(0.1, 0.1, 0.1, 1.0)

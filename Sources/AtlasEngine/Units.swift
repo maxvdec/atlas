@@ -11,6 +11,10 @@ struct Position3d: Equatable {
     var x: Float
     var y: Float
     var z: Float
+    
+    public func toSimd() -> SIMD3<Float> {
+        return SIMD3<Float>(x, y, z)
+    }
 }
 
 extension Position3d {
