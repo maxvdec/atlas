@@ -49,7 +49,13 @@ public extension Position3d {
     static func /(lhs: Position3d, rhs: Float) -> Position3d {
         return Position3d(x: lhs.x / rhs, y: lhs.y / rhs, z: lhs.z / rhs)
     }
+    
+    static func +=(lhs: inout Position3d, rhs: Position3d) {
+        lhs = rhs + lhs
+    }
 }
+
+public typealias Magnitude3d = Position3d
 
 public struct Size3d: Equatable, ExpressibleByArrayLiteral {
     public var width: Float
@@ -92,6 +98,10 @@ public extension Size3d {
 
     static func /(lhs: Size3d, rhs: Float) -> Size3d {
         Size3d(width: lhs.width / rhs, height: lhs.height / rhs, depth: lhs.depth / rhs)
+    }
+    
+    static func +=(lhs: inout Size3d, rhs: Size3d) {
+        lhs = lhs + rhs
     }
 }
 

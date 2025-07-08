@@ -22,11 +22,14 @@ struct VertexOut {
 
 struct BasicUniforms {
     int textureCount;
+    float4x4 model;
 };
 
 vertex VertexOut basic_vertex(Vertex in [[stage_in]], constant BasicUniforms &uniforms [[ buffer(1)]]) {
     VertexOut out;
-    out.position = float4(in.position, 1.0);
+    float4 position = float4(in.position, 1.0);
+    position = uniforms.model * position;
+    out.position = position;
     out.color = in.color;
     out.texCoords = in.texCoords;
     return out;

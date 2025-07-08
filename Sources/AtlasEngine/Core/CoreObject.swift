@@ -49,6 +49,14 @@ public class CoreObject: Identifiable {
     var indexBuffer: MTLBuffer?
     var uniformsBuffer: MTLBuffer?
     
+    var position: Position3d = [0, 0, 0]
+    var rotation: Magnitude3d = [0, 0, 0]
+    var scale: Size3d = [1, 1, 1]
+    
+    var model: float4x4 = float4x4()
+    
+    var shader: CoreShader = BasicShader()
+    
     var textures: [Texture] = []
     
     public init() {
@@ -76,6 +84,18 @@ public class CoreObject: Identifiable {
         }
     }
     
+    public func scale(by magnitude: Size3d) {
+        self.scale += magnitude
+    }
+    
+    public func move(by offset: Position3d) {
+        self.position += offset
+    }
+    
+    public func rotate(by magnitude: Magnitude3d) {
+        self.rotation += magnitude
+    }
+    
     public func attachTexture(_ texture: Texture) {
         textures.append(texture)
     }
@@ -87,6 +107,14 @@ public class CoreObject: Identifiable {
         for i in vertices.indices {
             vertices[i].texCoord = coordinates[i]
         }
+    }
+    
+    func makeModelMatrix() -> simd_float4x4 {
+        let translation_matrix = simd_float4x4(translation: position.toSimd())
+        let rotation_matrix = simd_float4x4(rotation: rotation.toSimd())
+        let scale_matrix = simd_float4x4(scaling: scale.toSimd())
+        
+        return translation_matrix * rotation_matrix * scale_matrix
     }
     
     public func initialize() {
@@ -103,7 +131,7 @@ public class CoreObject: Identifiable {
         }
         
         // Then the pipeline state
-        let shader = BasicShader()
+        shader = BasicShader()
         pipelineState = shader.makePipeline(device: device)
         
         // We then make the uniform buffer
@@ -116,9 +144,15 @@ public class CoreObject: Identifiable {
         dispatcher = { object, encoder in
             encoder.setRenderPipelineState(object.pipelineState!)
             encoder.setVertexBuffer(object.vertexBuffer!, offset: 0, index: 0)
-            encoder.setVertexBuffer(object.uniformsBuffer!, offset: 0, index: 1)
-            encoder.setFragmentBuffer(object.uniformsBuffer!, offset: 0, index: 1)
+            
+            object.model = object.makeModelMatrix()
+            let uniformBuffer = object.shader.makeUniforms(coreObject: object)
+            
+            encoder.setVertexBuffer(uniformBuffer, offset: 0, index: 1)
+            encoder.setFragmentBuffer(uniformBuffer, offset: 0, index: 1)
             encoder.setFragmentSamplerState(object.samplerState!, index: 0)
+            
+           
             
             for (i, texture) in object.textures.enumerated() {
                 encoder.setFragmentTexture(texture.mtlTexture, index: i)
@@ -188,4 +222,49 @@ public func generateCubeObject(size: Size3d) -> CoreObject {
     let cube = CoreObject(vertices: vertices)
     cube.setIndices(indices)
     return cube
+}
+
+extension simd_float4x4 {
+    init(translation: SIMD3<Float>) {
+        self = matrix_identity_float4x4
+        columns.3 = SIMD4<Float>(translation, 1)
+    }
+    
+    init(scaling: SIMD3<Float>) {
+        self = matrix_identity_float4x4
+        columns.0.x = scaling.x
+        columns.1.y = scaling.y
+        columns.2.z = scaling.z
+    }
+
+    init(rotation: SIMD3<Float>) {
+        let rotationX = simd_float4x4(rotationX: rotation.x)
+        let rotationY = simd_float4x4(rotationY: rotation.y)
+        let rotationZ = simd_float4x4(rotationZ: rotation.z)
+        self = rotationZ * rotationY * rotationX
+    }
+    
+    init(rotationX angle: Float) {
+        self = matrix_identity_float4x4
+        columns.1.y = cos(angle)
+        columns.1.z = sin(angle)
+        columns.2.y = -sin(angle)
+        columns.2.z = cos(angle)
+    }
+
+    init(rotationY angle: Float) {
+        self = matrix_identity_float4x4
+        columns.0.x = cos(angle)
+        columns.0.z = -sin(angle)
+        columns.2.x = sin(angle)
+        columns.2.z = cos(angle)
+    }
+
+    init(rotationZ angle: Float) {
+        self = matrix_identity_float4x4
+        columns.0.x = cos(angle)
+        columns.0.y = sin(angle)
+        columns.1.x = -sin(angle)
+        columns.1.y = cos(angle)
+    }
 }
