@@ -103,7 +103,7 @@ public class Camera: Interactive {
         if Key.isPressed(.space) {
             moveUp(velocity)
         }
-        if Key.isPressed(.shift) {
+        if Key.isPressed(.rightShift) {
             moveUp(-velocity)
         }
     }

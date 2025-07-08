@@ -7,6 +7,7 @@ class CoreRenderer: NSObject, MTKViewDelegate {
     var metalDevice: MTLDevice!
     var pipelineState: MTLRenderPipelineState!
     var commandQueue: MTLCommandQueue!
+    var depthState: MTLDepthStencilState!
 
     init(metalView: MTKView) {
         self.metalView = metalView
@@ -14,7 +15,13 @@ class CoreRenderer: NSObject, MTKViewDelegate {
         metalView.device = RenderDispatcher.shared.device!
         self.metalView.isPaused = false
         self.metalView.enableSetNeedsDisplay = false
+        self.metalView.depthStencilPixelFormat = .depth32Float
         self.commandQueue = metalView.device!.makeCommandQueue()
+        
+        let depthDescriptor = MTLDepthStencilDescriptor()
+        depthDescriptor.depthCompareFunction = .less
+        depthDescriptor.isDepthWriteEnabled = true
+        self.depthState = metalView.device!.makeDepthStencilState(descriptor: depthDescriptor)
     }
 
     func draw(in view: MTKView) {
@@ -28,6 +35,7 @@ class CoreRenderer: NSObject, MTKViewDelegate {
         let commandBuffer = commandQueue.makeCommandBuffer()
 
         var renderEncoder = commandBuffer!.makeRenderCommandEncoder(descriptor: renderPassDescriptor)!
+        renderEncoder.setDepthStencilState(depthState)
 
         RenderDispatcher.shared.performAll(deltaTime)
 
@@ -186,8 +194,6 @@ class CoreMetalView: MTKView {
         
         CGDisplayHideCursor(CGMainDisplayID())
         CGAssociateMouseAndMouseCursorPosition(0)
-        
-        print("Mouse captured - use ESC to release")
     }
     
     private func releaseMouse() {
@@ -195,8 +201,6 @@ class CoreMetalView: MTKView {
         
         CGAssociateMouseAndMouseCursorPosition(1)
         CGDisplayShowCursor(CGMainDisplayID())
-        
-        print("Mouse released")
     }
     
     private func recenterMouse() {}
@@ -318,12 +322,12 @@ public class RenderViewController: NSViewController {
     private func setupKeyEventHandling() {
         let keyDownMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             self?.handleKeyDown(event)
-            return event
+            return nil
         }
 
         let keyUpMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyUp) { [weak self] event in
             self?.handleKeyUp(event)
-            return event
+            return nil
         }
 
         if let keyDownMonitor = keyDownMonitor {
@@ -355,11 +359,7 @@ public class RenderViewController: NSViewController {
         }
     }
     
-    private func handleCustomMouseMovement(deltaX: Float, deltaY: Float) {
-        if abs(deltaX) > 0.01 || abs(deltaY) > 0.01 {
-            print("Custom mouse movement: (\(deltaX), \(deltaY))")
-        }
-    }
+    private func handleCustomMouseMovement(deltaX: Float, deltaY: Float) {}
     
     private func handleCustomMouseClick(button: MouseInput.MouseButton, position: CGPoint) {}
     
@@ -370,6 +370,9 @@ public class RenderViewController: NSViewController {
 
         if !event.isARepeat {
             Key.addPressedKey(key)
+        }
+        if event.keyCode == 53 {
+            Key.addPressedKey(Key.escape)
         }
     }
 
@@ -426,4 +429,12 @@ public extension MetalRenderView {
                 }
         }
     }
+}
+
+public struct Atlas {
+    public nonisolated(unsafe) static var preferences = Atlas()
+    
+    public var viewportSize: Size2d = [800, 600]
+    
+    private init() {}
 }

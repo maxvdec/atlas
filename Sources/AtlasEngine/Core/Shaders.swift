@@ -42,6 +42,7 @@ class BasicShader: CoreShader {
         pipeline.vertexFunction = vertex
         pipeline.fragmentFunction = fragment
         pipeline.colorAttachments[0].pixelFormat = .bgra8Unorm
+        pipeline.depthAttachmentPixelFormat = .depth32Float
 
         pipeline.vertexDescriptor = vertexDescriptor
 
