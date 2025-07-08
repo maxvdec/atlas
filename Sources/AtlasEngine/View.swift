@@ -10,15 +10,14 @@ class CoreRenderer: NSObject, MTKViewDelegate {
 
     init(metalView: MTKView) {
         self.metalView = metalView
-        self.metalView.isPaused = false
 
         metalView.device = RenderDispatcher.shared.device!
+        self.metalView.isPaused = false
+        self.metalView.enableSetNeedsDisplay = false
         self.commandQueue = metalView.device!.makeCommandQueue()
     }
 
-    func draw(in view: MTKView) {}
-
-    func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {
+    func draw(in view: MTKView) {
         guard let drawable = view.currentDrawable,
               let renderPassDescriptor = view.currentRenderPassDescriptor else { return }
 
@@ -26,12 +25,16 @@ class CoreRenderer: NSObject, MTKViewDelegate {
 
         var renderEncoder = commandBuffer!.makeRenderCommandEncoder(descriptor: renderPassDescriptor)!
 
+        RenderDispatcher.shared.performAll()
+
         RenderDispatcher.shared.dispatchAll(encoder: &renderEncoder)
 
         renderEncoder.endEncoding()
         commandBuffer!.present(drawable)
         commandBuffer!.commit()
     }
+
+    func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {}
 }
 
 class CoreMetalView: MTKView {
@@ -60,6 +63,7 @@ class CoreMetalView: MTKView {
 public class RenderViewController: NSViewController {
     private var metalView: CoreMetalView!
     private var initialFrame: CGRect
+    private var eventMonitors: [Any] = []
 
     init(frame: CGRect) {
         self.initialFrame = frame
@@ -75,6 +79,62 @@ public class RenderViewController: NSViewController {
         let metalView = CoreMetalView(frame: initialFrame)
         self.metalView = metalView
         view = metalView
+
+        metalView.canBecomeKeyView = true
+    }
+
+    override public func viewDidLoad() {
+        super.viewDidLoad()
+        setupKeyEventHandling()
+    }
+
+    override public func viewDidAppear() {
+        super.viewDidAppear()
+        view.window?.makeFirstResponder(view)
+    }
+
+    private func setupKeyEventHandling() {
+        // Monitor key down events
+        let keyDownMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            self?.handleKeyDown(event)
+            return event
+        }
+
+        let keyUpMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyUp) { [weak self] event in
+            self?.handleKeyUp(event)
+            return event
+        }
+
+        if let keyDownMonitor = keyDownMonitor {
+            eventMonitors.append(keyDownMonitor)
+        }
+        if let keyUpMonitor = keyUpMonitor {
+            eventMonitors.append(keyUpMonitor)
+        }
+
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(windowDidResignKey),
+            name: NSWindow.didResignKeyNotification,
+            object: nil
+        )
+    }
+
+    private func handleKeyDown(_ event: NSEvent) {
+        guard let key = Key(rawValue: event.keyCode) else { return }
+
+        if !event.isARepeat {
+            Key.addPressedKey(key)
+        }
+    }
+
+    private func handleKeyUp(_ event: NSEvent) {
+        guard let key = Key(rawValue: event.keyCode) else { return }
+        Key.removePressedKey(key)
+    }
+
+    @objc private func windowDidResignKey(_ notification: Notification) {
+        Key.clearAllPressedKeys()
     }
 
     func setFrame(_ frame: CGRect) {
