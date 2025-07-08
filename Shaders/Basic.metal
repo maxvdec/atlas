@@ -11,21 +11,41 @@ using namespace metal;
 struct Vertex {
     float3 position [[attribute(0)]];
     float4 color [[attribute(1)]];
+    float2 texCoords [[attribute(2)]];
 };
 
 struct VertexOut {
     float4 position [[position]];
     float4 color;
+    float2 texCoords;
 };
 
-vertex VertexOut basic_vertex(Vertex in [[stage_in]]) {
+struct BasicUniforms {
+    int textureCount;
+};
+
+vertex VertexOut basic_vertex(Vertex in [[stage_in]], constant BasicUniforms &uniforms [[ buffer(1)]]) {
     VertexOut out;
     out.position = float4(in.position, 1.0);
     out.color = in.color;
+    out.texCoords = in.texCoords;
     return out;
 }
 
-fragment float4 basic_fragment(VertexOut in [[stage_in]]) {
-    return in.color;
+fragment float4 basic_fragment(VertexOut in [[stage_in]],
+                               constant BasicUniforms &uniforms [[ buffer(1)]],
+                               array<texture2d<float>, 3> color_textures [[ texture(0) ]],
+                               sampler s [[ sampler(0) ]]) {
+    float4 finalColor = float4(0);
+    if (uniforms.textureCount != 0) {
+        for (uint i = 0; i < uint(uniforms.textureCount); ++i) {
+            finalColor += color_textures[i].sample(s, in.texCoords);
+        }
+        finalColor /= float(uniforms.textureCount); // average
+    } else {
+        finalColor = in.color;
+    }
+    return finalColor;
 }
+
 
