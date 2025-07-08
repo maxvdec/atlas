@@ -11,6 +11,12 @@ import MetalKit
 protocol CoreShader {
     func makePipeline(device: MTLDevice) -> MTLRenderPipelineState
     func makeUniforms(coreObject: CoreObject) -> MTLBuffer
+    var type: CoreShaderType { get }
+}
+
+enum CoreShaderType {
+    case basicShader
+    case phongShader
 }
 
 struct BasicShaderUniforms {
@@ -20,8 +26,18 @@ struct BasicShaderUniforms {
     var projection: simd_float4x4 = .init()
 }
 
-/// Shader that renders the object with a solid color and no lighting nor transformation
+struct PhongShaderUniforms {
+    var textureCount: Int32
+    var model: simd_float4x4 = .init()
+    var view: simd_float4x4 = .init()
+    var projection: simd_float4x4 = .init()
+    var ambientColor: Color = []
+    var lightCount: Int32 = 0
+}
+
+/// Shader that renders the object with a solid color and no lighting
 class BasicShader: CoreShader {
+    var type: CoreShaderType { .basicShader }
     public func makePipeline(device: any MTLDevice) -> any MTLRenderPipelineState {
         if RenderDispatcher.shared.library == nil {
             RenderDispatcher.shared.library = try! device.makeLibrary(source: allMetalShaders, options: nil)
@@ -65,6 +81,54 @@ class BasicShader: CoreShader {
     }
 }
 
+/// Shader that renders the object with a color or texture based on a simple lighting model
+class PhongShader: CoreShader {
+    var type: CoreShaderType { .phongShader }
+    public func makePipeline(device: any MTLDevice) -> any MTLRenderPipelineState {
+        if RenderDispatcher.shared.library == nil {
+            RenderDispatcher.shared.library = try! device.makeLibrary(source: allMetalShaders, options: nil)
+            if RenderDispatcher.shared.library == nil {
+                fatalError("Could not create library")
+            }
+        }
+
+        let library = RenderDispatcher.shared.library!
+        let vertex = library.makeFunction(name: "phong_vertex")!
+        let fragment = library.makeFunction(name: "phong_fragment")!
+
+        // According to the shader, we need to create a Vertex Descriptor
+        let vertexDescriptor = makeVertexDescriptor()
+
+        // We use a Pipeline Descriptor to create the Rendering Pipeline
+        let pipeline = MTLRenderPipelineDescriptor()
+        pipeline.vertexFunction = vertex
+        pipeline.fragmentFunction = fragment
+        pipeline.colorAttachments[0].pixelFormat = .bgra8Unorm
+        pipeline.depthAttachmentPixelFormat = .depth32Float
+
+        pipeline.vertexDescriptor = vertexDescriptor
+
+        do {
+            return try device.makeRenderPipelineState(descriptor: pipeline)
+        } catch {
+            fatalError("Failed to create pipeline: \(error)")
+        }
+    }
+
+    public func makeUniforms(coreObject: CoreObject) -> any MTLBuffer {
+        var uniforms = PhongShaderUniforms(textureCount: Int32(coreObject.textures.count), model: coreObject.model)
+        uniforms.view = RenderDispatcher.shared.viewMatrix
+        uniforms.projection = RenderDispatcher.shared.projectionMatrix
+        uniforms.ambientColor = RenderDispatcher.shared.currentScene.ambientColor
+        uniforms.lightCount = Int32(RenderDispatcher.shared.currentScene.lights.count)
+        let uniformBuffer = RenderDispatcher.shared.device.makeBuffer(length: MemoryLayout<PhongShaderUniforms>.stride, options: .storageModeShared)!
+        let bufferPointer = uniformBuffer.contents()
+        memcpy(bufferPointer, &uniforms, MemoryLayout<PhongShaderUniforms>.stride)
+
+        return uniformBuffer
+    }
+}
+
 func makeVertexDescriptor() -> MTLVertexDescriptor {
     let vertexDescriptor = MTLVertexDescriptor()
     vertexDescriptor.layouts[0].stride = MemoryLayout<MetalVertex>.stride
@@ -91,6 +155,13 @@ func makeVertexDescriptor() -> MTLVertexDescriptor {
     vertexDescriptor.attributes[2].format = .float2
     vertexDescriptor.attributes[2].offset = offset
     vertexDescriptor.attributes[2].bufferIndex = 0
+
+    offset += MemoryLayout<SIMD2<Float>>.stride
+
+    // Normals
+    vertexDescriptor.attributes[3].format = .float3
+    vertexDescriptor.attributes[3].offset = offset
+    vertexDescriptor.attributes[3].bufferIndex = 0
 
     return vertexDescriptor
 }

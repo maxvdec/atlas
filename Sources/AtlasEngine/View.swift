@@ -16,6 +16,7 @@ class CoreRenderer: NSObject, MTKViewDelegate {
         self.metalView.isPaused = false
         self.metalView.enableSetNeedsDisplay = false
         self.metalView.depthStencilPixelFormat = .depth32Float
+        self.metalView.clearColor = .init(red: Double(Atlas.preferences.backgroundColor.r), green: Double(Atlas.preferences.backgroundColor.g), blue: Double(Atlas.preferences.backgroundColor.b), alpha: Double(Atlas.preferences.backgroundColor.a))
         self.commandQueue = metalView.device!.makeCommandQueue()
         
         let depthDescriptor = MTLDepthStencilDescriptor()
@@ -448,6 +449,7 @@ public struct Atlas {
     public nonisolated(unsafe) static var preferences = Atlas()
     
     public var viewportSize: Size2d = [800, 600]
+    public var backgroundColor: Color = [0, 0, 0, 1]
     
     private init() {}
 }

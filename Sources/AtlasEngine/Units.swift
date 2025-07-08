@@ -177,6 +177,10 @@ public struct Color: ExpressibleByArrayLiteral {
     func toSimd() -> SIMD4<Float> {
         return SIMD4<Float>(r, g, b, a)
     }
+    
+    func toSimd3() -> SIMD3<Float> {
+        return SIMD3<Float>(r, g, b)
+    }
 }
 
 public struct Size2d: Equatable, ExpressibleByArrayLiteral {

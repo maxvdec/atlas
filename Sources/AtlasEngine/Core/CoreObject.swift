@@ -14,15 +14,17 @@ public struct CoreVertex {
     public var position: Position3d
     public var color: Color
     public var texCoord: Position2d
+    public var normal: Magnitude3d
     
-    public init(position: Position3d, color: Color, texCoordinates: Position2d = [0, 0]) {
+    public init(position: Position3d, color: Color, texCoordinates: Position2d = [0, 0], normal: Magnitude3d = [0, 0, 0]) {
         self.position = position
         self.color = color
         self.texCoord = texCoordinates
+        self.normal = normal
     }
     
     func toMetalVertex() -> MetalVertex {
-        return MetalVertex(position: position.toSimd(), color: color.toSimd(), texCoordinates: texCoord.toSimd())
+        return MetalVertex(position: position.toSimd(), color: color.toSimd(), texCoordinates: texCoord.toSimd(), normal: normal.toSimd())
     }
 }
 
@@ -30,6 +32,7 @@ struct MetalVertex {
     var position: SIMD3<Float>
     var color: SIMD4<Float>
     var texCoordinates: SIMD2<Float>
+    var normal: SIMD3<Float>
 }
 
 public typealias PrimitiveIndex = UInt16
@@ -55,7 +58,7 @@ public class CoreObject: Identifiable {
     
     var model: float4x4 = .init()
     
-    var shader: CoreShader = BasicShader()
+    var shader: CoreShader = PhongShader()
     
     var textures: [Texture] = []
     
@@ -131,7 +134,6 @@ public class CoreObject: Identifiable {
         }
         
         // Then the pipeline state
-        shader = BasicShader()
         pipelineState = shader.makePipeline(device: device)
         
         // We then make the uniform buffer
@@ -151,6 +153,10 @@ public class CoreObject: Identifiable {
             encoder.setVertexBuffer(uniformBuffer, offset: 0, index: 1)
             encoder.setFragmentBuffer(uniformBuffer, offset: 0, index: 1)
             encoder.setFragmentSamplerState(object.samplerState!, index: 0)
+            
+            if object.shader.type == .phongShader && RenderDispatcher.shared.currentScene.lights.count > 0 {
+                encoder.setFragmentBuffer(RenderDispatcher.shared.currentScene.lightBuffer!, offset: 0, index: 2)
+            }
             
             for (i, texture) in object.textures.enumerated() {
                 encoder.setFragmentTexture(texture.mtlTexture, index: i)
@@ -190,42 +196,51 @@ public func generateCubeObject(size: Size3d) -> CoreObject {
 
     let color: Color = [1, 1, 1] // default white color
 
-    let vertices: [CoreVertex] = [
-        // Back face (0, 1, 2, 3)
-        CoreVertex(position: positions[0], color: color, texCoordinates: uvs[0]),
-        CoreVertex(position: positions[1], color: color, texCoordinates: uvs[1]),
-        CoreVertex(position: positions[2], color: color, texCoordinates: uvs[2]),
-        CoreVertex(position: positions[3], color: color, texCoordinates: uvs[3]),
+    let normals: [Position3d] = [
+        [0, 0, -1], // back
+        [0, 0, 1], // front
+        [-1, 0, 0], // left
+        [1, 0, 0], // right
+        [0, 1, 0], // top
+        [0, -1, 0], // bottom
+    ]
 
-        // Front face (4, 5, 6, 7)
-        CoreVertex(position: positions[4], color: color, texCoordinates: uvs[0]),
-        CoreVertex(position: positions[5], color: color, texCoordinates: uvs[1]),
-        CoreVertex(position: positions[6], color: color, texCoordinates: uvs[2]),
-        CoreVertex(position: positions[7], color: color, texCoordinates: uvs[3]),
+    let vertices: [CoreVertex] = [
+        // Back face
+        CoreVertex(position: positions[0], color: color, texCoordinates: uvs[0], normal: normals[0]),
+        CoreVertex(position: positions[1], color: color, texCoordinates: uvs[1], normal: normals[0]),
+        CoreVertex(position: positions[2], color: color, texCoordinates: uvs[2], normal: normals[0]),
+        CoreVertex(position: positions[3], color: color, texCoordinates: uvs[3], normal: normals[0]),
+
+        // Front face
+        CoreVertex(position: positions[4], color: color, texCoordinates: uvs[0], normal: normals[1]),
+        CoreVertex(position: positions[5], color: color, texCoordinates: uvs[1], normal: normals[1]),
+        CoreVertex(position: positions[6], color: color, texCoordinates: uvs[2], normal: normals[1]),
+        CoreVertex(position: positions[7], color: color, texCoordinates: uvs[3], normal: normals[1]),
 
         // Left face
-        CoreVertex(position: positions[0], color: color, texCoordinates: uvs[0]),
-        CoreVertex(position: positions[4], color: color, texCoordinates: uvs[1]),
-        CoreVertex(position: positions[7], color: color, texCoordinates: uvs[2]),
-        CoreVertex(position: positions[3], color: color, texCoordinates: uvs[3]),
+        CoreVertex(position: positions[0], color: color, texCoordinates: uvs[0], normal: normals[2]),
+        CoreVertex(position: positions[4], color: color, texCoordinates: uvs[1], normal: normals[2]),
+        CoreVertex(position: positions[7], color: color, texCoordinates: uvs[2], normal: normals[2]),
+        CoreVertex(position: positions[3], color: color, texCoordinates: uvs[3], normal: normals[2]),
 
         // Right face
-        CoreVertex(position: positions[1], color: color, texCoordinates: uvs[0]),
-        CoreVertex(position: positions[5], color: color, texCoordinates: uvs[1]),
-        CoreVertex(position: positions[6], color: color, texCoordinates: uvs[2]),
-        CoreVertex(position: positions[2], color: color, texCoordinates: uvs[3]),
+        CoreVertex(position: positions[1], color: color, texCoordinates: uvs[0], normal: normals[3]),
+        CoreVertex(position: positions[5], color: color, texCoordinates: uvs[1], normal: normals[3]),
+        CoreVertex(position: positions[6], color: color, texCoordinates: uvs[2], normal: normals[3]),
+        CoreVertex(position: positions[2], color: color, texCoordinates: uvs[3], normal: normals[3]),
 
         // Top face
-        CoreVertex(position: positions[3], color: color, texCoordinates: uvs[0]),
-        CoreVertex(position: positions[2], color: color, texCoordinates: uvs[1]),
-        CoreVertex(position: positions[6], color: color, texCoordinates: uvs[2]),
-        CoreVertex(position: positions[7], color: color, texCoordinates: uvs[3]),
+        CoreVertex(position: positions[3], color: color, texCoordinates: uvs[0], normal: normals[4]),
+        CoreVertex(position: positions[2], color: color, texCoordinates: uvs[1], normal: normals[4]),
+        CoreVertex(position: positions[6], color: color, texCoordinates: uvs[2], normal: normals[4]),
+        CoreVertex(position: positions[7], color: color, texCoordinates: uvs[3], normal: normals[4]),
 
         // Bottom face
-        CoreVertex(position: positions[0], color: color, texCoordinates: uvs[0]),
-        CoreVertex(position: positions[1], color: color, texCoordinates: uvs[1]),
-        CoreVertex(position: positions[5], color: color, texCoordinates: uvs[2]),
-        CoreVertex(position: positions[4], color: color, texCoordinates: uvs[3]),
+        CoreVertex(position: positions[0], color: color, texCoordinates: uvs[0], normal: normals[5]),
+        CoreVertex(position: positions[1], color: color, texCoordinates: uvs[1], normal: normals[5]),
+        CoreVertex(position: positions[5], color: color, texCoordinates: uvs[2], normal: normals[5]),
+        CoreVertex(position: positions[4], color: color, texCoordinates: uvs[3], normal: normals[5]),
     ]
 
     // Index list for triangles (two per face)

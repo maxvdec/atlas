@@ -27,6 +27,7 @@ class RenderDispatcher {
     var viewMatrix: simd_float4x4 = makeDefaultViewMatrix()
     var projectionMatrix: simd_float4x4 = makeDefaultProjectionMatrix(aspect: 16.0 / 9.0)
     var lastFrameTime = CACurrentMediaTime()
+    var currentScene: RenderScene = RenderScene()
 
     private init() {
         self.dispatchers = []

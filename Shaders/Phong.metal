@@ -1,5 +1,5 @@
 //
-//  Basic.metal
+//  Phong.metal
 //  Atlas
 //
 //  Created by Max Van den Eynde on 7/7/25.
@@ -8,7 +8,7 @@
 #include <metal_stdlib>
 using namespace metal;
 
-vertex VertexOut basic_vertex(Vertex in [[stage_in]], constant BasicUniforms &uniforms [[ buffer(1)]]) {
+vertex VertexOut phong_vertex(Vertex in [[stage_in]], constant PhongUniforms &uniforms [[ buffer(1)]]) {
     VertexOut out;
     float4 position = float4(in.position, 1.0);
     float4x4 mvp = uniforms.projection * uniforms.view * uniforms.model;
@@ -23,9 +23,10 @@ vertex VertexOut basic_vertex(Vertex in [[stage_in]], constant BasicUniforms &un
     return out;
 }
 
-fragment float4 basic_fragment(VertexOut in [[stage_in]],
-                               constant BasicUniforms &uniforms [[ buffer(1)]],
+fragment float4 phong_fragment(VertexOut in [[stage_in]],
+                               constant PhongUniforms &uniforms [[ buffer(1)]],
                                array<texture2d<float>, 3> color_textures [[ texture(0) ]],
+                               constant Light *lights [[ buffer(2) ]],
                                sampler s [[ sampler(0) ]]) {
     float4 finalColor = float4(0);
     if (uniforms.textureCount != 0) {
@@ -36,6 +37,8 @@ fragment float4 basic_fragment(VertexOut in [[stage_in]],
     } else {
         finalColor = in.color;
     }
+    
+    finalColor *= uniforms.ambientColor;
     return finalColor;
 }
 
