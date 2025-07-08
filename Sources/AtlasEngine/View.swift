@@ -181,22 +181,16 @@ class CoreMetalView: MTKView {
     
     override func keyDown(with event: NSEvent) {
         super.keyDown(with: event)
-        
-        if event.keyCode == 53 { // Escape key
-            if isMouseCaptured {
-                releaseMouse()
-            }
-        }
     }
     
-    private func captureMouse() {
+    func captureMouse() {
         isMouseCaptured = true
         
         CGDisplayHideCursor(CGMainDisplayID())
         CGAssociateMouseAndMouseCursorPosition(0)
     }
     
-    private func releaseMouse() {
+    func releaseMouse() {
         isMouseCaptured = false
         
         CGAssociateMouseAndMouseCursorPosition(1)
@@ -318,6 +312,24 @@ public class RenderViewController: NSViewController {
         super.viewDidAppear()
         view.window?.makeFirstResponder(view)
     }
+    
+    override public func flagsChanged(with event: NSEvent) {
+        let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+
+        if flags.contains(.shift) {
+            Key.addPressedKey(Key.shift)
+            Key.addPressedKey(Key.rightShift)
+        } else {
+            Key.removePressedKey(Key.shift)
+            Key.removePressedKey(Key.rightShift)
+        }
+        
+        if flags.contains(.command) {
+            Key.addPressedKey(Key.command)
+        } else {
+            Key.removePressedKey(Key.command)
+        }
+    }
 
     private func setupKeyEventHandling() {
         let keyDownMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
@@ -367,12 +379,13 @@ public class RenderViewController: NSViewController {
 
     private func handleKeyDown(_ event: NSEvent) {
         guard let key = Key(rawValue: event.keyCode) else { return }
+        
+        if event.keyCode == 53 {
+            metalView.releaseMouse()
+        }
 
         if !event.isARepeat {
             Key.addPressedKey(key)
-        }
-        if event.keyCode == 53 {
-            Key.addPressedKey(Key.escape)
         }
     }
 
@@ -394,9 +407,9 @@ public class RenderViewController: NSViewController {
 public struct MetalRenderView: NSViewControllerRepresentable {
     private var frame: CGRect = .zero
 
-    public init(frame: CGRect = .zero) {
+    public init(frame: CGRect) {
         self.frame = frame
-
+        
         let aspectRatio = frame.width > 0 && frame.height > 0 ? Float(frame.width / frame.height) : 16.0 / 9.0
 
         print("MetalRenderView init - frame: \(frame), aspectRatio: \(aspectRatio)")
