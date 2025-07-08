@@ -15,7 +15,9 @@ protocol CoreShader {
 
 struct BasicShaderUniforms {
     var textureCount: Int32
-    var model: simd_float4x4
+    var model: simd_float4x4 = .init()
+    var view: simd_float4x4 = .init()
+    var projection: simd_float4x4 = .init()
 }
 
 /// Shader that renders the object with a solid color and no lighting nor transformation
@@ -52,6 +54,8 @@ class BasicShader: CoreShader {
 
     public func makeUniforms(coreObject: CoreObject) -> any MTLBuffer {
         var uniforms = BasicShaderUniforms(textureCount: Int32(coreObject.textures.count), model: coreObject.model)
+        uniforms.view = RenderDispatcher.shared.viewMatrix
+        uniforms.projection = RenderDispatcher.shared.projectionMatrix
         let uniformBuffer = RenderDispatcher.shared.device.makeBuffer(length: MemoryLayout<BasicShaderUniforms>.stride, options: .storageModeShared)!
         let bufferPointer = uniformBuffer.contents()
         memcpy(bufferPointer, &uniforms, MemoryLayout<BasicShaderUniforms>.stride)

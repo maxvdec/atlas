@@ -8,15 +8,17 @@
 import AppKit
 
 public protocol Interactive {
-    func onMouseMove(_ offset: Position3d)
+    func onMouseMove(_ delta: Size2d)
+    func onMouseScroll(_ yOffset: Float)
     func onKeyPress(_ key: Key)
-    func eachFrame(_ self: inout Interactive)
+    mutating func eachFrame(_ time: Double)
 }
 
 public extension Interactive {
-    func onMouseMove(_ offset: Position3d) {}
+    func onMouseMove(_ delta: Size2d) {}
     func onKeyPress(_ key: Key) {}
-    func eachFrame(_ self: inout Interactive) {}
+    func eachFrame(_ time: Double) {}
+    func onMouseScroll(_ yOffset: Float) {}
 }
 
 public enum Key: UInt16, CaseIterable, Sendable {

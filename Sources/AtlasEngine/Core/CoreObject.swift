@@ -53,7 +53,7 @@ public class CoreObject: Identifiable {
     var rotation: Magnitude3d = [0, 0, 0]
     var scale: Size3d = [1, 1, 1]
     
-    var model: float4x4 = float4x4()
+    var model: float4x4 = .init()
     
     var shader: CoreShader = BasicShader()
     
@@ -85,15 +85,15 @@ public class CoreObject: Identifiable {
     }
     
     public func scale(by magnitude: Size3d) {
-        self.scale += magnitude
+        scale += magnitude
     }
     
     public func move(by offset: Position3d) {
-        self.position += offset
+        position += offset
     }
     
     public func rotate(by magnitude: Magnitude3d) {
-        self.rotation += magnitude
+        rotation += magnitude
     }
     
     public func attachTexture(_ texture: Texture) {
@@ -152,8 +152,6 @@ public class CoreObject: Identifiable {
             encoder.setFragmentBuffer(uniformBuffer, offset: 0, index: 1)
             encoder.setFragmentSamplerState(object.samplerState!, index: 0)
             
-           
-            
             for (i, texture) in object.textures.enumerated() {
                 encoder.setFragmentTexture(texture.mtlTexture, index: i)
             }
@@ -193,30 +191,51 @@ public func generateCubeObject(size: Size3d) -> CoreObject {
     let color: Color = [1, 1, 1] // default white color
 
     let vertices: [CoreVertex] = [
+        // Back face (0, 1, 2, 3)
         CoreVertex(position: positions[0], color: color, texCoordinates: uvs[0]),
         CoreVertex(position: positions[1], color: color, texCoordinates: uvs[1]),
         CoreVertex(position: positions[2], color: color, texCoordinates: uvs[2]),
         CoreVertex(position: positions[3], color: color, texCoordinates: uvs[3]),
+
+        // Front face (4, 5, 6, 7)
         CoreVertex(position: positions[4], color: color, texCoordinates: uvs[0]),
         CoreVertex(position: positions[5], color: color, texCoordinates: uvs[1]),
         CoreVertex(position: positions[6], color: color, texCoordinates: uvs[2]),
         CoreVertex(position: positions[7], color: color, texCoordinates: uvs[3]),
+
+        // Left face
+        CoreVertex(position: positions[0], color: color, texCoordinates: uvs[0]),
+        CoreVertex(position: positions[4], color: color, texCoordinates: uvs[1]),
+        CoreVertex(position: positions[7], color: color, texCoordinates: uvs[2]),
+        CoreVertex(position: positions[3], color: color, texCoordinates: uvs[3]),
+
+        // Right face
+        CoreVertex(position: positions[1], color: color, texCoordinates: uvs[0]),
+        CoreVertex(position: positions[5], color: color, texCoordinates: uvs[1]),
+        CoreVertex(position: positions[6], color: color, texCoordinates: uvs[2]),
+        CoreVertex(position: positions[2], color: color, texCoordinates: uvs[3]),
+
+        // Top face
+        CoreVertex(position: positions[3], color: color, texCoordinates: uvs[0]),
+        CoreVertex(position: positions[2], color: color, texCoordinates: uvs[1]),
+        CoreVertex(position: positions[6], color: color, texCoordinates: uvs[2]),
+        CoreVertex(position: positions[7], color: color, texCoordinates: uvs[3]),
+
+        // Bottom face
+        CoreVertex(position: positions[0], color: color, texCoordinates: uvs[0]),
+        CoreVertex(position: positions[1], color: color, texCoordinates: uvs[1]),
+        CoreVertex(position: positions[5], color: color, texCoordinates: uvs[2]),
+        CoreVertex(position: positions[4], color: color, texCoordinates: uvs[3]),
     ]
 
     // Index list for triangles (two per face)
     let indices: [PrimitiveIndex] = [
-        // back face
-        0, 1, 2, 2, 3, 0,
-        // front face
-        4, 5, 6, 6, 7, 4,
-        // left face
-        0, 4, 7, 7, 3, 0,
-        // right face
-        1, 5, 6, 6, 2, 1,
-        // top face
-        3, 2, 6, 6, 7, 3,
-        // bottom face
-        0, 1, 5, 5, 4, 0,
+        0, 1, 2, 2, 3, 0, // back
+        4, 5, 6, 6, 7, 4, // front
+        8, 9, 10, 10, 11, 8, // left
+        12, 13, 14, 14, 15, 12, // right
+        16, 17, 18, 18, 19, 16, // top
+        20, 21, 22, 22, 23, 20, // bottom
     ]
 
     let cube = CoreObject(vertices: vertices)

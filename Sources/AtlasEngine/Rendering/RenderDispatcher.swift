@@ -7,9 +7,11 @@
 
 import Foundation
 import Metal
+import QuartzCore
+import simd
 
 typealias RenderDispatch = (inout CoreObject, inout MTLRenderCommandEncoder) -> Void
-typealias FramePerform = (inout Interactive) -> Void
+typealias FramePerform = (inout Interactive, Double) -> Void
 
 class RenderDispatcher {
     nonisolated(unsafe) static let shared = RenderDispatcher()
@@ -18,14 +20,20 @@ class RenderDispatcher {
     var eachFrame: [FramePerform]
     var objects: [CoreObject]
     var frameObjects: [Interactive]
+    var interactives: [Interactive]
     var device: MTLDevice!
     var library: MTLLibrary?
+    var aspectRatio: Float = 1.0
+    var viewMatrix: simd_float4x4 = makeDefaultViewMatrix()
+    var projectionMatrix: simd_float4x4 = makeDefaultProjectionMatrix(aspect: 16.0 / 9.0)
+    var lastFrameTime = CACurrentMediaTime()
 
     private init() {
         self.dispatchers = []
         self.objects = []
         self.frameObjects = []
         self.eachFrame = []
+        self.interactives = []
         self.device = MTLCreateSystemDefaultDevice()!
     }
 
@@ -35,9 +43,9 @@ class RenderDispatcher {
         }
     }
 
-    public func performAll() {
+    public func performAll(_ delta: Double) {
         for i in 0 ..< frameObjects.count {
-            eachFrame[i](&frameObjects[i])
+            eachFrame[i](&frameObjects[i], delta)
         }
     }
 
@@ -51,9 +59,11 @@ class RenderDispatcher {
     }
 
     public func registerFrameObject(_ object: Interactive) {
-        eachFrame.append { object in
-            object.eachFrame(&object)
+        eachFrame.append { (object: inout Interactive, time: Double) in
+            object.eachFrame(time)
         }
+
         frameObjects.append(object)
+        interactives.append(object)
     }
 }

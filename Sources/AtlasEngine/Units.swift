@@ -49,9 +49,13 @@ public extension Position3d {
     static func /(lhs: Position3d, rhs: Float) -> Position3d {
         return Position3d(x: lhs.x / rhs, y: lhs.y / rhs, z: lhs.z / rhs)
     }
-    
+
     static func +=(lhs: inout Position3d, rhs: Position3d) {
         lhs = rhs + lhs
+    }
+
+    static func +=(lhs: inout Position3d, rhs: SIMD3<Float>) {
+        lhs += Position3d(x: lhs.x + rhs.x, y: lhs.y + rhs.y, z: lhs.z + rhs.z)
     }
 }
 
@@ -99,7 +103,7 @@ public extension Size3d {
     static func /(lhs: Size3d, rhs: Float) -> Size3d {
         Size3d(width: lhs.width / rhs, height: lhs.height / rhs, depth: lhs.depth / rhs)
     }
-    
+
     static func +=(lhs: inout Size3d, rhs: Size3d) {
         lhs = lhs + rhs
     }
@@ -172,5 +176,50 @@ public struct Color: ExpressibleByArrayLiteral {
 
     func toSimd() -> SIMD4<Float> {
         return SIMD4<Float>(r, g, b, a)
+    }
+}
+
+public struct Size2d: Equatable, ExpressibleByArrayLiteral {
+    public var width: Float
+    public var height: Float
+
+    public init(width: Float, height: Float) {
+        self.width = width
+        self.height = height
+    }
+
+    public init(arrayLiteral elements: Float...) {
+        self.width = elements.count > 0 ? elements[0] : 0
+        self.height = elements.count > 1 ? elements[1] : 0
+    }
+
+    public func toSimd() -> SIMD2<Float> {
+        SIMD2<Float>(width, height)
+    }
+}
+
+public extension Size2d {
+    static func ==(lhs: Size2d, rhs: Size2d) -> Bool {
+        lhs.width == rhs.width && lhs.height == rhs.height
+    }
+
+    static func +(lhs: Size2d, rhs: Size2d) -> Size2d {
+        Size2d(width: lhs.width + rhs.width, height: lhs.height + rhs.height)
+    }
+
+    static func -(lhs: Size2d, rhs: Size2d) -> Size2d {
+        Size2d(width: lhs.width - rhs.width, height: lhs.height - rhs.height)
+    }
+
+    static func *(lhs: Size2d, rhs: Float) -> Size2d {
+        Size2d(width: lhs.width * rhs, height: lhs.height * rhs)
+    }
+
+    static func /(lhs: Size2d, rhs: Float) -> Size2d {
+        Size2d(width: lhs.width / rhs, height: lhs.height / rhs)
+    }
+
+    static func +=(lhs: inout Size2d, rhs: Size2d) {
+        lhs = lhs + rhs
     }
 }
