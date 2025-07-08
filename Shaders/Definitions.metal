@@ -53,7 +53,10 @@ struct PhongUniforms {
 
 struct Light {
     uint type;
-    float3 color;
-    float3 position;
+    float4 color;
+    float4 position;
     float intensity;
+    
+    float4 specular;
+    float4 diffuse;
 };

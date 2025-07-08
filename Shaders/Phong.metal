@@ -5,9 +5,6 @@
 //  Created by Max Van den Eynde on 7/7/25.
 //
 
-#include <metal_stdlib>
-using namespace metal;
-
 vertex VertexOut phong_vertex(Vertex in [[stage_in]], constant PhongUniforms &uniforms [[ buffer(1)]]) {
     VertexOut out;
     float4 position = float4(in.position, 1.0);
@@ -16,6 +13,7 @@ vertex VertexOut phong_vertex(Vertex in [[stage_in]], constant PhongUniforms &un
     out.position = position;
     out.color = in.color;
     out.texCoords = in.texCoords;
+    
     float3x3 normalMatrix = transpose(inverse3x3(toFloat3x3(uniforms.model)));
     float3 transformedNormal = normalize(normalMatrix * in.normals);
     out.normals = transformedNormal;
@@ -42,29 +40,27 @@ fragment float4 phong_fragment(VertexOut in [[stage_in]],
     float3 fragPos = in.fragPosition;
     float3 viewDir = normalize(uniforms.cameraPos - fragPos);
 
-    float3 ambient = uniforms.ambientColor.rgb * finalColor.rgb;
+    float3 ambient = uniforms.ambientColor.rgb * finalColor.rgb * uniforms.material.ambient;
     float3 lighting = float3(0);
-
-    for (uint i = 0; i < uint(uniforms.lightCount); ++i) {
+    
+    for (uint i = 0; i < uniforms.lightCount; ++i) {
         if (lights[i].type == POINT_LIGHT) {
-            float3 lightDir = normalize(lights[i].position - fragPos);
+            float3 lightDir = normalize(lights[i].position.xyz - fragPos);
 
             float diff = max(dot(normal, lightDir), 0.0);
-            float3 diffuse = diff * lights[i].color * lights[i].intensity * finalColor.rgb;
+            float3 diffuse = (uniforms.material.diffuse * diff * lights[i].diffuse.rgb) * lights[i].color.rgb * lights[i].intensity * finalColor.rgb;
 
             float3 reflectDir = reflect(-lightDir, normal);
-            float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
-            float3 specular = uniforms.material.specularStrength * spec * lights[i].color * lights[i].intensity;
+            float spec = pow(max(dot(viewDir, reflectDir), 0.0), uniforms.material.shininess);
+            float3 specular = (uniforms.material.specular * spec * lights[i].specular.rgb) * lights[i].color.rgb * lights[i].intensity;
 
             lighting += diffuse + specular;
         }
     }
 
     float3 color = ambient + lighting;
-    color = pow(color, float3(1.0 / 2.2)); // gamma correction
+    
+    color = clamp(color, 0.0, 1.0);
 
     return float4(color, finalColor.a);
 }
-
-
-

@@ -27,6 +27,10 @@ public struct Position3d: Equatable, ExpressibleByArrayLiteral {
     public func toSimd() -> SIMD3<Float> {
         return SIMD3<Float>(x, y, z)
     }
+    
+    public func toSimd4() -> SIMD4<Float> {
+        return SIMD4<Float>(x, y, z, 1.0)
+    }
 }
 
 public extension Position3d {

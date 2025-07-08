@@ -11,9 +11,12 @@ public enum LightType: UInt32 {
 
 struct MetalLight {
     var type: UInt32
-    var color: SIMD3<Float>
-    var position: SIMD3<Float>
+    var color: SIMD4<Float>
+    var position: SIMD4<Float>
     var intensity: Float
+
+    var specular: SIMD4<Float>
+    var diffuse: SIMD4<Float>
 }
 
 public class Light {
@@ -21,6 +24,7 @@ public class Light {
     public var color: Color = .shadeOfWhite(1)
     public var intensity: Float = 1.0
     public var position: Position3d
+    public var material: Material = .init()
 
     var debugObject: CoreObject?
 
@@ -29,10 +33,11 @@ public class Light {
         self.color = color
         self.intensity = intensity
         self.position = position
+        material.diffuse = [0.5, 0.5, 0.5]
     }
 
     func toMetalLight() -> MetalLight {
-        return MetalLight(type: type.rawValue, color: color.toSimd3(), position: position.toSimd(), intensity: intensity)
+        return MetalLight(type: type.rawValue, color: color.toSimd(), position: position.toSimd4(), intensity: intensity, specular: material.specular.toSimd(), diffuse: material.diffuse.toSimd())
     }
 
     public func addToScene() {
