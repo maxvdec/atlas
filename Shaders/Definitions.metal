@@ -31,6 +31,13 @@ struct BasicUniforms {
     float4x4 projection;
 };
 
+struct Material {
+    float3 ambient;
+    float3 diffuse;
+    float3 specular;
+    float shininess;
+};
+
 struct PhongUniforms {
     int textureCount;
     float4x4 model;
@@ -38,6 +45,8 @@ struct PhongUniforms {
     float4x4 projection;
     float4 ambientColor;
     int lightCount;
+    float3 cameraPos;
+    Material material;
 };
 
 #define POINT_LIGHT 0

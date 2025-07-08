@@ -11,6 +11,7 @@ import MetalKit
 protocol CoreShader {
     func makePipeline(device: MTLDevice) -> MTLRenderPipelineState
     func makeUniforms(coreObject: CoreObject) -> MTLBuffer
+    func uniformsSize() -> Int
     var type: CoreShaderType { get }
 }
 
@@ -33,6 +34,8 @@ struct PhongShaderUniforms {
     var projection: simd_float4x4 = .init()
     var ambientColor: Color = []
     var lightCount: Int32 = 0
+    var cameraPos: SIMD3<Float> = .init()
+    var material: MetalMaterial = .init()
 }
 
 /// Shader that renders the object with a solid color and no lighting
@@ -79,6 +82,10 @@ class BasicShader: CoreShader {
 
         return uniformBuffer
     }
+
+    func uniformsSize() -> Int {
+        return MemoryLayout<BasicShaderUniforms>.stride
+    }
 }
 
 /// Shader that renders the object with a color or texture based on a simple lighting model
@@ -121,11 +128,24 @@ class PhongShader: CoreShader {
         uniforms.projection = RenderDispatcher.shared.projectionMatrix
         uniforms.ambientColor = RenderDispatcher.shared.currentScene.ambientColor
         uniforms.lightCount = Int32(RenderDispatcher.shared.currentScene.lights.count)
+        let camera = RenderDispatcher.shared.frameObjects.first(where: {
+            $0 is Camera
+        })
+        if camera == nil {
+            uniforms.cameraPos = ([0, 0, 0] as Position3d).toSimd()
+        } else {
+            uniforms.cameraPos = (camera as! Camera).position.toSimd()
+        }
+        uniforms.material = coreObject.material.toMetalMaterial()
         let uniformBuffer = RenderDispatcher.shared.device.makeBuffer(length: MemoryLayout<PhongShaderUniforms>.stride, options: .storageModeShared)!
         let bufferPointer = uniformBuffer.contents()
         memcpy(bufferPointer, &uniforms, MemoryLayout<PhongShaderUniforms>.stride)
 
         return uniformBuffer
+    }
+
+    func uniformsSize() -> Int {
+        return MemoryLayout<PhongShaderUniforms>.stride
     }
 }
 

@@ -33,13 +33,38 @@ fragment float4 phong_fragment(VertexOut in [[stage_in]],
         for (uint i = 0; i < uint(uniforms.textureCount); ++i) {
             finalColor += color_textures[i].sample(s, in.texCoords);
         }
-        finalColor /= float(uniforms.textureCount); // average
+        finalColor /= float(uniforms.textureCount);
     } else {
         finalColor = in.color;
     }
-    
-    finalColor *= uniforms.ambientColor;
-    return finalColor;
+
+    float3 normal = normalize(in.normals);
+    float3 fragPos = in.fragPosition;
+    float3 viewDir = normalize(uniforms.cameraPos - fragPos);
+
+    float3 ambient = uniforms.ambientColor.rgb * finalColor.rgb;
+    float3 lighting = float3(0);
+
+    for (uint i = 0; i < uint(uniforms.lightCount); ++i) {
+        if (lights[i].type == POINT_LIGHT) {
+            float3 lightDir = normalize(lights[i].position - fragPos);
+
+            float diff = max(dot(normal, lightDir), 0.0);
+            float3 diffuse = diff * lights[i].color * lights[i].intensity * finalColor.rgb;
+
+            float3 reflectDir = reflect(-lightDir, normal);
+            float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
+            float3 specular = uniforms.material.specularStrength * spec * lights[i].color * lights[i].intensity;
+
+            lighting += diffuse + specular;
+        }
+    }
+
+    float3 color = ambient + lighting;
+    color = pow(color, float3(1.0 / 2.2)); // gamma correction
+
+    return float4(color, finalColor.a);
 }
+
 
 

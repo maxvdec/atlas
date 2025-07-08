@@ -27,14 +27,27 @@ public class RenderScene {
     public func addLight(_ light: Light) {
         lights.append(light)
     }
+    
+    func ensureLightBuffer() {
+        if lightBuffer == nil {
+            makeLightBuffer()
+        }
+    }
 
     func makeLightBuffer() {
         let device = RenderDispatcher.shared.device!
-        var metalLights: [MetalLight] = []
-        for light in lights {
-            metalLights.append(light.toMetalLight())
-        }
+        if lights.count > 0 {
+            var metalLights: [MetalLight] = []
+            for light in lights {
+                metalLights.append(light.toMetalLight())
+            }
 
-        lightBuffer = device.makeBuffer(bytes: metalLights, length: MemoryLayout<MetalLight>.stride * metalLights.count, options: [])
+            lightBuffer = device.makeBuffer(bytes: metalLights, length: MemoryLayout<MetalLight>.stride * metalLights.count, options: [])
+        } else {
+            let dummyLight: [MetalLight] = [
+                MetalLight(type: 0, color: .init(), position: .init(), intensity: 0.0)
+            ]
+            lightBuffer = device.makeBuffer(bytes: dummyLight, length: MemoryLayout<MetalLight>.stride, options: [])
+        }
     }
 }

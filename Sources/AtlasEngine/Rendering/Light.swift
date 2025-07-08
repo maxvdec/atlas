@@ -22,7 +22,9 @@ public class Light {
     public var intensity: Float = 1.0
     public var position: Position3d
 
-    init(position: Position3d, type: LightType, color: Color = .shadeOfWhite(1), intensity: Float = 1.0) {
+    var debugObject: CoreObject?
+
+    public init(position: Position3d, type: LightType, color: Color = .shadeOfWhite(1), intensity: Float = 1.0) {
         self.type = type
         self.color = color
         self.intensity = intensity
@@ -35,5 +37,25 @@ public class Light {
 
     public func addToScene() {
         RenderDispatcher.shared.currentScene.addLight(self)
+    }
+
+    public func debugLight() {
+        if debugObject == nil {
+            debugObject = generateCubeObject(size: [0.1, 0.1, 0.1])
+            debugObject!.shader = BasicShader()
+            debugObject!.move(by: position)
+            debugObject!.initialize()
+        }
+        debugObject!.isRendering = true
+    }
+
+    public func hideDebugLight() {
+        if debugObject == nil {
+            debugObject = generateCubeObject(size: [0.1, 0.1, 0.1])
+            debugObject!.shader = BasicShader()
+            debugObject!.move(by: position)
+            debugObject!.initialize()
+        }
+        debugObject!.isRendering = false
     }
 }

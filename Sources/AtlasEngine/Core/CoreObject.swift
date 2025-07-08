@@ -47,6 +47,9 @@ public class CoreObject: Identifiable {
     var pipelineState: MTLRenderPipelineState?
     var samplerState: MTLSamplerState?
     var useIndexedDrawing: Bool = false
+    var isRendering: Bool = true
+    
+    public var material: Material = .init()
     
     var vertexBuffer: MTLBuffer?
     var indexBuffer: MTLBuffer?
@@ -74,6 +77,14 @@ public class CoreObject: Identifiable {
     
     func setVertices(_ vertices: [CoreVertex]) {
         self.vertices = vertices
+    }
+    
+    public func hide() {
+        isRendering = false
+    }
+    
+    public func show() {
+        isRendering = true
     }
     
     public func setIndices(_ indices: [PrimitiveIndex]) {
@@ -142,20 +153,30 @@ public class CoreObject: Identifiable {
         // We make the sampler state
         samplerState = sampler.makeMetalSampler(device: device)
         
+        if shader.type == .phongShader {
+            RenderDispatcher.shared.currentScene.ensureLightBuffer()
+        }
+        
         // We set the rendering logic
         dispatcher = { object, encoder in
             encoder.setRenderPipelineState(object.pipelineState!)
             encoder.setVertexBuffer(object.vertexBuffer!, offset: 0, index: 0)
             
             object.model = object.makeModelMatrix()
-            let uniformBuffer = object.shader.makeUniforms(coreObject: object)
             
-            encoder.setVertexBuffer(uniformBuffer, offset: 0, index: 1)
-            encoder.setFragmentBuffer(uniformBuffer, offset: 0, index: 1)
+            object.updateUniforms()
+            
+            encoder.setVertexBuffer(object.uniformsBuffer!, offset: 0, index: 1)
+            encoder.setFragmentBuffer(object.uniformsBuffer!, offset: 0, index: 1)
             encoder.setFragmentSamplerState(object.samplerState!, index: 0)
             
-            if object.shader.type == .phongShader && RenderDispatcher.shared.currentScene.lights.count > 0 {
-                encoder.setFragmentBuffer(RenderDispatcher.shared.currentScene.lightBuffer!, offset: 0, index: 2)
+            if object.shader.type == .phongShader {
+                let scene = RenderDispatcher.shared.currentScene
+                if let lightBuffer = scene.lightBuffer {
+                    encoder.setFragmentBuffer(lightBuffer, offset: 0, index: 2)
+                } else {
+                    print("Warning: Light buffer is nil for Phong shader")
+                }
             }
             
             for (i, texture) in object.textures.enumerated() {
@@ -172,8 +193,18 @@ public class CoreObject: Identifiable {
         // And we register the object
         RenderDispatcher.shared.registerObject(coreObject: self)
     }
+    
+    private func updateUniforms() {
+        guard let uniformsBuffer = uniformsBuffer else { return }
+        
+        let newUniformBuffer = shader.makeUniforms(coreObject: self)
+        
+        let bufferSize = shader.uniformsSize()
+        memcpy(uniformsBuffer.contents(), newUniformBuffer.contents(), bufferSize)
+    }
 }
 
+// FIXED: Improved cube generation with proper normals
 public func generateCubeObject(size: Size3d) -> CoreObject {
     let w = size.width / 2
     let h = size.height / 2
@@ -196,47 +227,48 @@ public func generateCubeObject(size: Size3d) -> CoreObject {
 
     let color: Color = [1, 1, 1] // default white color
 
-    let normals: [Position3d] = [
-        [0, 0, -1], // back
-        [0, 0, 1], // front
-        [-1, 0, 0], // left
-        [1, 0, 0], // right
-        [0, 1, 0], // top
-        [0, -1, 0], // bottom
+    // FIXED: Proper face normals for cube
+    let normals: [Magnitude3d] = [
+        [0, 0, -1], // back face
+        [0, 0, 1], // front face
+        [-1, 0, 0], // left face
+        [1, 0, 0], // right face
+        [0, 1, 0], // top face
+        [0, -1, 0], // bottom face
     ]
 
     let vertices: [CoreVertex] = [
-        // Back face
+        // Back face (facing -Z)
         CoreVertex(position: positions[0], color: color, texCoordinates: uvs[0], normal: normals[0]),
         CoreVertex(position: positions[1], color: color, texCoordinates: uvs[1], normal: normals[0]),
         CoreVertex(position: positions[2], color: color, texCoordinates: uvs[2], normal: normals[0]),
         CoreVertex(position: positions[3], color: color, texCoordinates: uvs[3], normal: normals[0]),
 
-        // Front face
+        // Front face (facing +Z)
         CoreVertex(position: positions[4], color: color, texCoordinates: uvs[0], normal: normals[1]),
         CoreVertex(position: positions[5], color: color, texCoordinates: uvs[1], normal: normals[1]),
         CoreVertex(position: positions[6], color: color, texCoordinates: uvs[2], normal: normals[1]),
         CoreVertex(position: positions[7], color: color, texCoordinates: uvs[3], normal: normals[1]),
 
-        // Left face
+        // Left face (facing -X)
         CoreVertex(position: positions[0], color: color, texCoordinates: uvs[0], normal: normals[2]),
         CoreVertex(position: positions[4], color: color, texCoordinates: uvs[1], normal: normals[2]),
         CoreVertex(position: positions[7], color: color, texCoordinates: uvs[2], normal: normals[2]),
         CoreVertex(position: positions[3], color: color, texCoordinates: uvs[3], normal: normals[2]),
 
-        // Right face
+        // Right face (facing +X)
         CoreVertex(position: positions[1], color: color, texCoordinates: uvs[0], normal: normals[3]),
         CoreVertex(position: positions[5], color: color, texCoordinates: uvs[1], normal: normals[3]),
         CoreVertex(position: positions[6], color: color, texCoordinates: uvs[2], normal: normals[3]),
         CoreVertex(position: positions[2], color: color, texCoordinates: uvs[3], normal: normals[3]),
 
-        // Top face
+        // Top face (facing +Y)
         CoreVertex(position: positions[3], color: color, texCoordinates: uvs[0], normal: normals[4]),
         CoreVertex(position: positions[2], color: color, texCoordinates: uvs[1], normal: normals[4]),
         CoreVertex(position: positions[6], color: color, texCoordinates: uvs[2], normal: normals[4]),
         CoreVertex(position: positions[7], color: color, texCoordinates: uvs[3], normal: normals[4]),
 
-        // Bottom face
+        // Bottom face (facing -Y)
         CoreVertex(position: positions[0], color: color, texCoordinates: uvs[0], normal: normals[5]),
         CoreVertex(position: positions[1], color: color, texCoordinates: uvs[1], normal: normals[5]),
         CoreVertex(position: positions[5], color: color, texCoordinates: uvs[2], normal: normals[5]),

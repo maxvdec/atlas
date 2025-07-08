@@ -40,6 +40,9 @@ class RenderDispatcher {
 
     public func dispatchAll(encoder: inout MTLRenderCommandEncoder) {
         for i in 0 ..< dispatchers.count {
+            if !objects[i].isRendering {
+                continue
+            }
             dispatchers[i](&objects[i], &encoder)
         }
     }

@@ -29,10 +29,11 @@ float3x3 inverse3x3(float3x3 m) {
     float invDet = 1.0 / det;
 
     return float3x3(
-        A * invDet, D * invDet, G * invDet,
-        B * invDet, E * invDet, H * invDet,
-        C * invDet, F * invDet, I * invDet
+        float3(A * invDet, B * invDet, C * invDet),
+        float3(D * invDet, E * invDet, F * invDet),
+        float3(G * invDet, H * invDet, I * invDet)
     );
+
 }
 
 float3x3 toFloat3x3(float4x4 m) {

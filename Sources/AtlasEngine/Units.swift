@@ -170,7 +170,7 @@ public struct Color: ExpressibleByArrayLiteral {
         self.a = elements.count > 3 ? elements[3] : 1
     }
 
-    static func shadeOfWhite(_ val: Float) -> Color {
+    public static func shadeOfWhite(_ val: Float) -> Color {
         return Color(r: val, g: val, b: val)
     }
 
