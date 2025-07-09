@@ -33,7 +33,7 @@ public class Light {
         self.color = color
         self.intensity = intensity
         self.position = position
-        material.diffuse = [0.5, 0.5, 0.5]
+        material.diffuse = [0.8, 0.8, 0.8]
     }
 
     func toMetalLight() -> MetalLight {

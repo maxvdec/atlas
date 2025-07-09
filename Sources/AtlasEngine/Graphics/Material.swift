@@ -13,9 +13,9 @@ struct MetalMaterial {
 }
 
 public struct Material {
-    public var ambient: Color = [0.1, 0.1, 0.1]
+    public var ambient: Color = [0.2, 0.2, 0.2]
     public var diffuse: Color = [0.8, 0.8, 0.8]
-    public var specular: Color = [0.5, 0.5, 0.5]
+    public var specular: Color = [0.3, 0.3, 0.3]
     public var shininess: Float = 32.0
     
     func toMetalMaterial() -> MetalMaterial {

@@ -8,6 +8,14 @@
 #include <metal_stdlib>
 using namespace metal;
 
+float3x3 transpose3x3(float3x3 m) {
+    return float3x3(
+        float3(m[0].x, m[1].x, m[2].x),
+        float3(m[0].y, m[1].y, m[2].y),
+        float3(m[0].z, m[1].z, m[2].z)
+    );
+}
+
 float3x3 inverse3x3(float3x3 m) {
     float a = m[0][0], b = m[0][1], c = m[0][2];
     float d = m[1][0], e = m[1][1], f = m[1][2];
@@ -24,17 +32,17 @@ float3x3 inverse3x3(float3x3 m) {
     float I =   (a * e - b * d);
 
     float det = a * A + b * B + c * C;
-    if (abs(det) < 1e-6) return float3x3(0); // non-invertible, return zero matrix
+    if (abs(det) < 1e-6) return float3x3(0); // non-invertible
 
     float invDet = 1.0 / det;
 
     return float3x3(
-        float3(A * invDet, B * invDet, C * invDet),
-        float3(D * invDet, E * invDet, F * invDet),
-        float3(G * invDet, H * invDet, I * invDet)
+        float3(A, D, G) * invDet,
+        float3(B, E, H) * invDet,
+        float3(C, F, I) * invDet
     );
-
 }
+
 
 float3x3 toFloat3x3(float4x4 m) {
     return float3x3(

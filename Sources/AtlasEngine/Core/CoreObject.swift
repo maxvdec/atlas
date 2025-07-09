@@ -147,9 +147,6 @@ public class CoreObject: Identifiable {
         // Then the pipeline state
         pipelineState = shader.makePipeline(device: device)
         
-        // We then make the uniform buffer
-        uniformsBuffer = shader.makeUniforms(coreObject: self)
-        
         // We make the sampler state
         samplerState = sampler.makeMetalSampler(device: device)
         
@@ -164,7 +161,7 @@ public class CoreObject: Identifiable {
             
             object.model = object.makeModelMatrix()
             
-            object.updateUniforms()
+            object.uniformsBuffer = object.shader.makeUniforms(coreObject: object)
             
             encoder.setVertexBuffer(object.uniformsBuffer!, offset: 0, index: 1)
             encoder.setFragmentBuffer(object.uniformsBuffer!, offset: 0, index: 1)
@@ -193,96 +190,66 @@ public class CoreObject: Identifiable {
         // And we register the object
         RenderDispatcher.shared.registerObject(coreObject: self)
     }
-    
-    private func updateUniforms() {
-        guard let uniformsBuffer = uniformsBuffer else { return }
-        
-        let newUniformBuffer = shader.makeUniforms(coreObject: self)
-        
-        let bufferSize = shader.uniformsSize()
-        memcpy(uniformsBuffer.contents(), newUniformBuffer.contents(), bufferSize)
-    }
 }
 
-// FIXED: Improved cube generation with proper normals
 public func generateCubeObject(size: Size3d) -> CoreObject {
     let w = size.width / 2
     let h = size.height / 2
     let d = size.depth / 2
-
-    let positions: [Position3d] = [
-        [-w, -h, -d], // 0
-        [w, -h, -d], // 1
-        [w, h, -d], // 2
-        [-w, h, -d], // 3
-        [-w, -h, d], // 4
-        [w, -h, d], // 5
-        [w, h, d], // 6
-        [-w, h, d], // 7
-    ]
     
-    let uvs: [Position2d] = [
-        [0, 0], [1, 0], [1, 1], [0, 1],
-    ]
-
-    let color: Color = [1, 1, 1] // default white color
-
-    // FIXED: Proper face normals for cube
-    let normals: [Magnitude3d] = [
-        [0, 0, -1], // back face
-        [0, 0, 1], // front face
-        [-1, 0, 0], // left face
-        [1, 0, 0], // right face
-        [0, 1, 0], // top face
-        [0, -1, 0], // bottom face
-    ]
-
+    let color: Color = [1, 1, 1]
+    
     let vertices: [CoreVertex] = [
-        // Back face (facing -Z)
-        CoreVertex(position: positions[0], color: color, texCoordinates: uvs[0], normal: normals[0]),
-        CoreVertex(position: positions[1], color: color, texCoordinates: uvs[1], normal: normals[0]),
-        CoreVertex(position: positions[2], color: color, texCoordinates: uvs[2], normal: normals[0]),
-        CoreVertex(position: positions[3], color: color, texCoordinates: uvs[3], normal: normals[0]),
+        // Front face (facing +Z) - normal: [0, 0, 1]
+        CoreVertex(position: [-w, -h, d], color: color, texCoordinates: [0, 0], normal: [0, 0, 1]),
+        CoreVertex(position: [w, -h, d], color: color, texCoordinates: [1, 0], normal: [0, 0, 1]),
+        CoreVertex(position: [w, h, d], color: color, texCoordinates: [1, 1], normal: [0, 0, 1]),
+        CoreVertex(position: [-w, h, d], color: color, texCoordinates: [0, 1], normal: [0, 0, 1]),
 
-        // Front face (facing +Z)
-        CoreVertex(position: positions[4], color: color, texCoordinates: uvs[0], normal: normals[1]),
-        CoreVertex(position: positions[5], color: color, texCoordinates: uvs[1], normal: normals[1]),
-        CoreVertex(position: positions[6], color: color, texCoordinates: uvs[2], normal: normals[1]),
-        CoreVertex(position: positions[7], color: color, texCoordinates: uvs[3], normal: normals[1]),
+        // Back face (facing -Z) - normal: [0, 0, -1]
+        CoreVertex(position: [w, -h, -d], color: color, texCoordinates: [0, 0], normal: [0, 0, -1]),
+        CoreVertex(position: [-w, -h, -d], color: color, texCoordinates: [1, 0], normal: [0, 0, -1]),
+        CoreVertex(position: [-w, h, -d], color: color, texCoordinates: [1, 1], normal: [0, 0, -1]),
+        CoreVertex(position: [w, h, -d], color: color, texCoordinates: [0, 1], normal: [0, 0, -1]),
 
-        // Left face (facing -X)
-        CoreVertex(position: positions[0], color: color, texCoordinates: uvs[0], normal: normals[2]),
-        CoreVertex(position: positions[4], color: color, texCoordinates: uvs[1], normal: normals[2]),
-        CoreVertex(position: positions[7], color: color, texCoordinates: uvs[2], normal: normals[2]),
-        CoreVertex(position: positions[3], color: color, texCoordinates: uvs[3], normal: normals[2]),
+        // Left face (facing -X) - normal: [-1, 0, 0]
+        CoreVertex(position: [-w, -h, -d], color: color, texCoordinates: [0, 0], normal: [-1, 0, 0]),
+        CoreVertex(position: [-w, -h, d], color: color, texCoordinates: [1, 0], normal: [-1, 0, 0]),
+        CoreVertex(position: [-w, h, d], color: color, texCoordinates: [1, 1], normal: [-1, 0, 0]),
+        CoreVertex(position: [-w, h, -d], color: color, texCoordinates: [0, 1], normal: [-1, 0, 0]),
 
-        // Right face (facing +X)
-        CoreVertex(position: positions[1], color: color, texCoordinates: uvs[0], normal: normals[3]),
-        CoreVertex(position: positions[5], color: color, texCoordinates: uvs[1], normal: normals[3]),
-        CoreVertex(position: positions[6], color: color, texCoordinates: uvs[2], normal: normals[3]),
-        CoreVertex(position: positions[2], color: color, texCoordinates: uvs[3], normal: normals[3]),
+        // Right face (facing +X) - normal: [1, 0, 0]
+        CoreVertex(position: [w, -h, d], color: color, texCoordinates: [0, 0], normal: [1, 0, 0]),
+        CoreVertex(position: [w, -h, -d], color: color, texCoordinates: [1, 0], normal: [1, 0, 0]),
+        CoreVertex(position: [w, h, -d], color: color, texCoordinates: [1, 1], normal: [1, 0, 0]),
+        CoreVertex(position: [w, h, d], color: color, texCoordinates: [0, 1], normal: [1, 0, 0]),
 
-        // Top face (facing +Y)
-        CoreVertex(position: positions[3], color: color, texCoordinates: uvs[0], normal: normals[4]),
-        CoreVertex(position: positions[2], color: color, texCoordinates: uvs[1], normal: normals[4]),
-        CoreVertex(position: positions[6], color: color, texCoordinates: uvs[2], normal: normals[4]),
-        CoreVertex(position: positions[7], color: color, texCoordinates: uvs[3], normal: normals[4]),
+        // Top face (facing +Y) - normal: [0, 1, 0]
+        CoreVertex(position: [-w, h, d], color: color, texCoordinates: [0, 0], normal: [0, 1, 0]),
+        CoreVertex(position: [w, h, d], color: color, texCoordinates: [1, 0], normal: [0, 1, 0]),
+        CoreVertex(position: [w, h, -d], color: color, texCoordinates: [1, 1], normal: [0, 1, 0]),
+        CoreVertex(position: [-w, h, -d], color: color, texCoordinates: [0, 1], normal: [0, 1, 0]),
 
-        // Bottom face (facing -Y)
-        CoreVertex(position: positions[0], color: color, texCoordinates: uvs[0], normal: normals[5]),
-        CoreVertex(position: positions[1], color: color, texCoordinates: uvs[1], normal: normals[5]),
-        CoreVertex(position: positions[5], color: color, texCoordinates: uvs[2], normal: normals[5]),
-        CoreVertex(position: positions[4], color: color, texCoordinates: uvs[3], normal: normals[5]),
+        // Bottom face (facing -Y) - normal: [0, -1, 0]
+        CoreVertex(position: [-w, -h, -d], color: color, texCoordinates: [0, 0], normal: [0, -1, 0]),
+        CoreVertex(position: [w, -h, -d], color: color, texCoordinates: [1, 0], normal: [0, -1, 0]),
+        CoreVertex(position: [w, -h, d], color: color, texCoordinates: [1, 1], normal: [0, -1, 0]),
+        CoreVertex(position: [-w, -h, d], color: color, texCoordinates: [0, 1], normal: [0, -1, 0]),
     ]
 
-    // Index list for triangles (two per face)
     let indices: [PrimitiveIndex] = [
-        0, 1, 2, 2, 3, 0, // back
-        4, 5, 6, 6, 7, 4, // front
-        8, 9, 10, 10, 11, 8, // left
-        12, 13, 14, 14, 15, 12, // right
-        16, 17, 18, 18, 19, 16, // top
-        20, 21, 22, 22, 23, 20, // bottom
+        // Front face
+        0, 1, 2, 2, 3, 0,
+        // Back face
+        4, 5, 6, 6, 7, 4,
+        // Left face
+        8, 9, 10, 10, 11, 8,
+        // Right face
+        12, 13, 14, 14, 15, 12,
+        // Top face
+        16, 17, 18, 18, 19, 16,
+        // Bottom face
+        20, 21, 22, 22, 23, 20,
     ]
 
     let cube = CoreObject(vertices: vertices)
