@@ -63,7 +63,15 @@ class BasicShader: CoreShader {
         pipeline.fragmentFunction = fragment
         pipeline.colorAttachments[0].pixelFormat = .bgra8Unorm
         pipeline.depthAttachmentPixelFormat = .depth32Float
+        pipeline.rasterSampleCount = Atlas.preferences.sampleCount
+        pipeline.colorAttachments[0].isBlendingEnabled = true
 
+        pipeline.colorAttachments[0].rgbBlendOperation = .add
+        pipeline.colorAttachments[0].alphaBlendOperation = .add
+        pipeline.colorAttachments[0].sourceRGBBlendFactor = .sourceAlpha
+        pipeline.colorAttachments[0].destinationRGBBlendFactor = .oneMinusSourceAlpha
+        pipeline.colorAttachments[0].sourceAlphaBlendFactor = .one
+        pipeline.colorAttachments[0].destinationAlphaBlendFactor = .oneMinusSourceAlpha
         pipeline.vertexDescriptor = vertexDescriptor
 
         do {
@@ -113,6 +121,15 @@ class PhongShader: CoreShader {
         pipeline.fragmentFunction = fragment
         pipeline.colorAttachments[0].pixelFormat = .bgra8Unorm
         pipeline.depthAttachmentPixelFormat = .depth32Float
+        pipeline.rasterSampleCount = Atlas.preferences.sampleCount
+        pipeline.colorAttachments[0].isBlendingEnabled = true
+
+        pipeline.colorAttachments[0].rgbBlendOperation = .add
+        pipeline.colorAttachments[0].alphaBlendOperation = .add
+        pipeline.colorAttachments[0].sourceRGBBlendFactor = .sourceAlpha
+        pipeline.colorAttachments[0].destinationRGBBlendFactor = .oneMinusSourceAlpha
+        pipeline.colorAttachments[0].sourceAlphaBlendFactor = .one
+        pipeline.colorAttachments[0].destinationAlphaBlendFactor = .oneMinusSourceAlpha
 
         pipeline.vertexDescriptor = vertexDescriptor
 

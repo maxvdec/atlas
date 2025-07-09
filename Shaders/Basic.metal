@@ -36,6 +36,9 @@ fragment float4 basic_fragment(VertexOut in [[stage_in]],
     } else {
         finalColor = in.color;
     }
+    if (finalColor.a < 0.1) {
+        discard_fragment();
+    }
     return finalColor;
 }
 

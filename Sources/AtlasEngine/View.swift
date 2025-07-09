@@ -1,5 +1,6 @@
 import MetalKit
 import SwiftUI
+import MetalPerformanceShaders
 
 @MainActor
 class CoreRenderer: NSObject, MTKViewDelegate {
@@ -16,6 +17,7 @@ class CoreRenderer: NSObject, MTKViewDelegate {
         self.metalView.isPaused = false
         self.metalView.enableSetNeedsDisplay = false
         self.metalView.depthStencilPixelFormat = .depth32Float
+        self.metalView.sampleCount = Atlas.preferences.sampleCount
         self.metalView.clearColor = .init(red: Double(Atlas.preferences.backgroundColor.r), green: Double(Atlas.preferences.backgroundColor.g), blue: Double(Atlas.preferences.backgroundColor.b), alpha: Double(Atlas.preferences.backgroundColor.a))
         self.commandQueue = metalView.device!.makeCommandQueue()
         
@@ -37,6 +39,7 @@ class CoreRenderer: NSObject, MTKViewDelegate {
 
         var renderEncoder = commandBuffer!.makeRenderCommandEncoder(descriptor: renderPassDescriptor)!
         renderEncoder.setDepthStencilState(depthState)
+        renderEncoder.setCullMode(.front)
 
         RenderDispatcher.shared.performAll(deltaTime)
 
@@ -450,6 +453,7 @@ public struct Atlas {
     
     public var viewportSize: Size2d = [800, 600]
     public var backgroundColor: Color = [0, 0, 0, 1]
+    public var sampleCount: Int = 4
     
     private init() {}
 }
