@@ -5,9 +5,13 @@
 //  Created by Max Van den Eynde on 8/7/25.
 //
 
+import Foundation
+import simd
+
 public enum LightType: UInt32 {
     case pointLight = 0
     case directionalLight = 1
+    case spotlight = 2
 }
 
 struct AttenuationProperties {
@@ -55,6 +59,9 @@ struct MetalLight {
     var constant: Float
     var linear: Float
     var quadratic: Float
+    
+    var innerCutoff: Float
+    var outerCutoff: Float
 }
 
 public class Light {
@@ -65,6 +72,8 @@ public class Light {
     public var direction: Position3d = .init(x: 0, y: 0, z: 0)
     public var material: Material = .init()
     public var distance: LightDistance = .distance50
+    public var innerCutoff: Float = 15.0
+    public var outerCutoff: Float = 25.0
 
     var debugObject: CoreObject?
 
@@ -91,10 +100,22 @@ public class Light {
         light.material.diffuse = [0.8, 0.8, 0.8]
         return light
     }
+    
+    public static func spotlight(position: Position3d, direction: Direction3d, color: Color = .shadeOfWhite(1), intensity: Float = 1.0) -> Light {
+        let light = Light()
+        light.direction = direction
+        light.position = position
+        light.type = .spotlight
+        light.color = color
+        light.intensity = intensity
+        light.material.diffuse = [0.8, 0.8, 0.8]
+        return light
+
+    }
 
     func toMetalLight() -> MetalLight {
         let attenuationProperties = distance.getProperties()
-        return MetalLight(type: type.rawValue, color: color.toSimd(), position: position.toSimd4(), direction: direction.toSimd4(), intensity: intensity, specular: material.specular.toSimd(), diffuse: material.diffuse.toSimd(), constant: attenuationProperties.constant, linear: attenuationProperties.linear, quadratic: attenuationProperties.quadratic)
+        return MetalLight(type: type.rawValue, color: color.toSimd(), position: position.toSimd4(), direction: direction.toSimd4(), intensity: intensity, specular: material.specular.toSimd(), diffuse: material.diffuse.toSimd(), constant: attenuationProperties.constant, linear: attenuationProperties.linear, quadratic: attenuationProperties.quadratic, innerCutoff: cos(radians(fromDegrees: innerCutoff)), outerCutoff: cos(radians(fromDegrees: outerCutoff)))
     }
 
     public func addToScene() {

@@ -52,18 +52,22 @@ struct PhongUniforms {
 
 #define POINT_LIGHT 0
 #define DIRECTIONAL_LIGHT 1
+#define SPOTLIGHT 2
 
 struct Light {
     uint type;
     float4 color;
-    float4 position; // Used in: PointLight
-    float4 direction; // Used in: DirectionalLight
+    float4 position; // Used in: PointLight, SpotLight
+    float4 direction; // Used in: DirectionalLight, Spotlight
     float intensity;
     
     float4 specular;
     float4 diffuse;
     
-    float constantVal;
-    float linear;
-    float quadratic;
+    float constantVal; // Used in: PointLight
+    float linear; // Used in: PointLight
+    float quadratic; // Used in: PointLight
+    
+    float innerCutoff; // Used in: SpotLight
+    float outerCutoff;
 };

@@ -82,6 +82,29 @@ fragment float4 phong_fragment(VertexOut in [[stage_in]],
             float3 specular = lights[i].specular.rgb * (spec * uniforms.material.specular) * specularMapColor;
             
             result += (diffuse + specular + ambient) * lights[i].intensity;
+        } else if (lights[i].type == SPOTLIGHT) {
+            float3 lightDir = normalize(lights[i].position.xyz - in.fragPosition);
+            float3 spotDir = normalize(lights[i].direction.xyz);
+            
+            float theta = dot(lightDir, -spotDir);
+            
+            if (theta > lights[i].outerCutoff) {
+                float epsilon = lights[i].innerCutoff - lights[i].outerCutoff;
+                float intensity = clamp((theta - lights[i].outerCutoff) / epsilon, 0.0, 1.0);
+                    
+                float distance = length(lights[i].position.xyz - in.fragPosition);
+                float attenuation = 1.0 / (lights[i].constantVal + lights[i].linear * distance + lights[i].quadratic * (distance * distance));
+                    
+                float diff = max(dot(norm, lightDir), 0.0);
+                float3 diffuse = lights[i].diffuse.rgb * (diff * uniforms.material.diffuse) * baseColor.rgb * attenuation * intensity;
+                    
+                float3 viewDir = normalize(uniforms.cameraPos - in.fragPosition);
+                float3 reflectDir = reflect(-lightDir, norm);
+                float spec = pow(max(dot(viewDir, reflectDir), 0.0), uniforms.material.shininess);
+                float3 specular = lights[i].specular.rgb * (spec * uniforms.material.specular) * specularMapColor * attenuation * intensity;
+                    
+                result += (diffuse + specular + (ambient * attenuation * intensity)) * lights[i].intensity;
+            }
         }
     }
     
