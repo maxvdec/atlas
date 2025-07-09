@@ -1,6 +1,6 @@
 import MetalKit
-import SwiftUI
 import MetalPerformanceShaders
+import SwiftUI
 
 @MainActor
 class CoreRenderer: NSObject, MTKViewDelegate {
@@ -36,6 +36,13 @@ class CoreRenderer: NSObject, MTKViewDelegate {
         RenderDispatcher.shared.lastFrameTime = currentTime
 
         let commandBuffer = commandQueue.makeCommandBuffer()
+        
+        for light in RenderDispatcher.shared.currentScene.lights {
+            if light.castsShadows {
+                let shadowEncoder = commandBuffer!.makeRenderCommandEncoder(descriptor: light.shadowRenderer.shadowPassDescriptor)
+                light.makeShadowPass(renderEncoder: shadowEncoder!, objects: RenderDispatcher.shared.objects)
+            }
+        }
 
         var renderEncoder = commandBuffer!.makeRenderCommandEncoder(descriptor: renderPassDescriptor)!
         renderEncoder.setDepthStencilState(depthState)
@@ -44,8 +51,10 @@ class CoreRenderer: NSObject, MTKViewDelegate {
         RenderDispatcher.shared.performAll(deltaTime)
 
         RenderDispatcher.shared.dispatchAll(encoder: &renderEncoder)
-
         renderEncoder.endEncoding()
+        
+        RenderDispatcher.shared.postDispatchAll(cmdBuffer: commandBuffer!, descriptor: renderPassDescriptor)
+
         commandBuffer!.present(drawable)
         commandBuffer!.commit()
     }

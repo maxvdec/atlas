@@ -71,3 +71,15 @@ struct Light {
     float innerCutoff; // Used in: SpotLight
     float outerCutoff;
 };
+
+struct DepthPassVertexIn {
+    float4 position [[attribute(0)]];
+};
+
+struct DepthPassVertexOut {
+    float4 position [[position]];
+};
+
+#define COLOR_TEXTURE 0
+#define SPECULAR_MAP 1
+#define DEPTH_TEXTURE 2

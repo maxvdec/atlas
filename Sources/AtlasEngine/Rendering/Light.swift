@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Metal
 import simd
 
 public enum LightType: UInt32 {
@@ -59,7 +60,7 @@ struct MetalLight {
     var constant: Float
     var linear: Float
     var quadratic: Float
-    
+
     var innerCutoff: Float
     var outerCutoff: Float
 }
@@ -74,6 +75,12 @@ public class Light {
     public var distance: LightDistance = .distance50
     public var innerCutoff: Float = 15.0
     public var outerCutoff: Float = 25.0
+    public var castsShadows: Bool = false
+    public var depthTexture: Texture {
+        return Texture.fromMetal(shadowRenderer.depthTexture, type: .depth)
+    }
+
+    var shadowRenderer: ShadowRenderer = .init(device: RenderDispatcher.shared.device)
 
     var debugObject: CoreObject?
 
@@ -100,7 +107,7 @@ public class Light {
         light.material.diffuse = [0.8, 0.8, 0.8]
         return light
     }
-    
+
     public static func spotlight(position: Position3d, direction: Direction3d, color: Color = .shadeOfWhite(1), intensity: Float = 1.0) -> Light {
         let light = Light()
         light.direction = direction
@@ -110,7 +117,6 @@ public class Light {
         light.intensity = intensity
         light.material.diffuse = [0.8, 0.8, 0.8]
         return light
-
     }
 
     func toMetalLight() -> MetalLight {
@@ -140,5 +146,26 @@ public class Light {
             debugObject!.initialize()
         }
         debugObject!.isRendering = false
+    }
+
+    func getLightViewProjectionMatrix() -> simd_float4x4 {
+        let isDirectional = (type == .directionalLight)
+
+        let eye: SIMD3<Float> = isDirectional ? -direction.toSimd() * 10 : position.toSimd()
+        let center: SIMD3<Float> = isDirectional ? .zero : eye + direction.toSimd()
+        let up = SIMD3<Float>(0, 1, 0)
+
+        let viewMatrix = lookAt(eye: eye, center: center, up: up)
+        let projectionMatrix = orthographicProjection(
+            left: -10, right: 10,
+            bottom: -10, top: 10,
+            near: 0.1, far: 100
+        )
+
+        return projectionMatrix * viewMatrix
+    }
+
+    func makeShadowPass(renderEncoder: MTLRenderCommandEncoder, objects: [CoreObject]) {
+        shadowRenderer.performShadowPass(renderEncoder: renderEncoder, objects: objects, light: self)
     }
 }

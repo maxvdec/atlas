@@ -254,3 +254,19 @@ func makeDefaultProjectionMatrix(aspect: Float) -> matrix_float4x4 {
     let far: Float = 100.0
     return perspectiveFovRH(fov, aspect, near, far)
 }
+
+func orthographicProjection(left: Float, right: Float, bottom: Float, top: Float, near: Float, far: Float) -> simd_float4x4 {
+    let ral = right + left
+    let rsl = right - left
+    let tab = top + bottom
+    let tsb = top - bottom
+    let fan = far + near
+    let fsn = far - near
+
+    return simd_float4x4(
+        SIMD4(2 / rsl, 0, 0, 0),
+        SIMD4(0, 2 / tsb, 0, 0),
+        SIMD4(0, 0, -2 / fsn, 0),
+        SIMD4(-ral / rsl, -tab / tsb, -fan / fsn, 1)
+    )
+}

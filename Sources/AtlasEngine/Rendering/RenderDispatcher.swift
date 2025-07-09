@@ -12,6 +12,11 @@ import simd
 
 typealias RenderDispatch = (inout CoreObject, inout MTLRenderCommandEncoder) -> Void
 typealias FramePerform = (inout Interactive, Double) -> Void
+typealias PostPerform = (inout Renderable, inout MTLRenderCommandEncoder) -> Void
+
+protocol Renderable {
+    func isAvailable() -> Bool
+}
 
 class RenderDispatcher {
     nonisolated(unsafe) static let shared = RenderDispatcher()
@@ -21,13 +26,15 @@ class RenderDispatcher {
     var objects: [CoreObject]
     var frameObjects: [Interactive]
     var interactives: [Interactive]
+    var postExecute: [PostPerform]
+    var postObjects: [Renderable]
     var device: MTLDevice!
     var library: MTLLibrary?
     var aspectRatio: Float = 1.0
     var viewMatrix: simd_float4x4 = makeDefaultViewMatrix()
     var projectionMatrix: simd_float4x4 = makeDefaultProjectionMatrix(aspect: 16.0 / 9.0)
     var lastFrameTime = CACurrentMediaTime()
-    var currentScene: RenderScene = RenderScene()
+    var currentScene: RenderScene = .init()
 
     private init() {
         self.dispatchers = []
@@ -35,6 +42,8 @@ class RenderDispatcher {
         self.frameObjects = []
         self.eachFrame = []
         self.interactives = []
+        self.postExecute = []
+        self.postObjects = []
         self.device = MTLCreateSystemDefaultDevice()!
     }
 
@@ -69,5 +78,20 @@ class RenderDispatcher {
 
         frameObjects.append(object)
         interactives.append(object)
+    }
+
+    public func registerPostObject(_ dispatcher: @escaping PostPerform, object: Renderable) {
+        postExecute.append(dispatcher)
+        postObjects.append(object)
+    }
+
+    public func postDispatchAll(cmdBuffer: MTLCommandBuffer, descriptor: MTLRenderPassDescriptor) {
+        for i in 0 ..< postExecute.count {
+            if postObjects[i].isAvailable() {
+                var encoder = cmdBuffer.makeRenderCommandEncoder(descriptor: descriptor)!
+                postExecute[i](&postObjects[i], &encoder)
+                encoder.endEncoding()
+            }
+        }
     }
 }

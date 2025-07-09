@@ -8,6 +8,25 @@
 import Metal
 import MetalKit
 
+public protocol SceneInteractive: Interactive {}
+
+public extension SceneInteractive {
+    func getObjects() -> [CoreObject] {
+        return RenderDispatcher.shared.objects
+    }
+
+    func getPresents() -> [FullscreenPresent] {
+        let objects = RenderDispatcher.shared.postObjects
+        var fullScreen: [FullscreenPresent] = []
+        for object in objects {
+            if object is FullscreenPresent {
+                fullScreen.append(object as! FullscreenPresent)
+            }
+        }
+        return fullScreen
+    }
+}
+
 public class RenderScene {
     public var ambientColor: Color = [0.25, 0.25, 0.25]
     public var lights: [Light] = [] {
@@ -18,7 +37,11 @@ public class RenderScene {
 
     var lightBuffer: MTLBuffer?
 
-    public init() {}
+    public init(interactive: SceneInteractive? = nil) {
+        if interactive != nil {
+            RenderDispatcher.shared.registerFrameObject(interactive!)
+        }
+    }
 
     public func setAsCurrent() {
         RenderDispatcher.shared.currentScene = self
@@ -27,7 +50,7 @@ public class RenderScene {
     public func addLight(_ light: Light) {
         lights.append(light)
     }
-    
+
     func ensureLightBuffer() {
         if lightBuffer == nil {
             makeLightBuffer()

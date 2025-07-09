@@ -8,9 +8,10 @@
 import Metal
 import MetalKit
 
-public enum TextureClass {
-    case color
-    case specular
+public enum TextureClass: UInt32 {
+    case color = 0
+    case specular = 1
+    case depth = 2
 }
 
 public enum TextureFilterMode {
@@ -111,5 +112,44 @@ public class Texture: Identifiable {
         } catch {
             fatalError("Could not load texture '\(url.absoluteString)': \(error.localizedDescription)")
         }
+    }
+
+    static func fromMetal(_ texture: MTLTexture!, type: TextureClass) -> Texture {
+        return Texture(type: type, mtlTexture: texture, path: nil)
+    }
+}
+
+public class FullscreenPresent: Renderable, Identifiable {
+    public var texture: Texture
+    public var hidden: Bool = true
+    public let id: UUID = .init()
+
+    var dispatcher: PostPerform!
+    var object: CoreObject!
+
+    public init(texture: Texture) {
+        self.texture = texture
+        hidden = true
+
+        object = generateCubeObject(size: [2, 2, 2])
+        object.shader = FullscreenShader()
+        object.initializeCore()
+
+        dispatcher = { renderable, encoder in
+            let fullscreen = renderable as! FullscreenPresent
+            encoder.setRenderPipelineState(fullscreen.object.pipelineState!)
+            encoder.setVertexBuffer(fullscreen.object.vertexBuffer!, offset: 0, index: 0)
+            encoder.setFragmentTexture(fullscreen.texture.mtlTexture, index: 0)
+            var type = fullscreen.texture.type.rawValue
+            encoder.setFragmentBytes(&type, length: MemoryLayout<UInt32>.stride, index: 0)
+            encoder.setFragmentSamplerState(fullscreen.object.samplerState!, index: 0)
+            encoder.drawIndexedPrimitives(type: .triangle, indexCount: fullscreen.object.indices!.count, indexType: .uint16, indexBuffer: fullscreen.object.indexBuffer!, indexBufferOffset: 0)
+        }
+
+        RenderDispatcher.shared.registerPostObject(dispatcher, object: self)
+    }
+
+    func isAvailable() -> Bool {
+        return !hidden
     }
 }

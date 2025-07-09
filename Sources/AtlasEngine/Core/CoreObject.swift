@@ -26,6 +26,10 @@ public struct CoreVertex {
     func toMetalVertex() -> MetalVertex {
         return MetalVertex(position: position.toSimd4(), color: color.toSimd(), texCoordinates: texCoord.toSimd(), _texPadding: .init(0, 0), normal: normal.toSimd4())
     }
+    
+    func toDepthVertex() -> DepthShaderVertex {
+        return DepthShaderVertex(position: position.toSimd4())
+    }
 }
 
 struct MetalVertex {
@@ -53,6 +57,7 @@ public class CoreObject: Identifiable {
     public var material: Material = .init()
     
     var vertexBuffer: MTLBuffer?
+    var depthVertexBuffer: MTLBuffer?
     var indexBuffer: MTLBuffer?
     var uniformsBuffer: MTLBuffer?
     
@@ -132,14 +137,17 @@ public class CoreObject: Identifiable {
         return translation_matrix * rotation_matrix * scale_matrix
     }
     
-    public func initialize() {
+    func initializeCore() {
         // First, we build the vertex buffer
         var vertexData: [MetalVertex] = []
+        var depthVertexData: [DepthShaderVertex] = []
         for vertex in vertices {
             vertexData.append(vertex.toMetalVertex())
+            depthVertexData.append(vertex.toDepthVertex())
         }
         let device = RenderDispatcher.shared.device!
         vertexBuffer = device.makeBuffer(bytes: vertexData, length: MemoryLayout<MetalVertex>.stride * vertexData.count, options: [])
+        depthVertexBuffer = device.makeBuffer(bytes: depthVertexData, length: MemoryLayout<DepthShaderVertex>.stride * depthVertexData.count, options: [])
         
         if useIndexedDrawing {
             indexBuffer = device.makeBuffer(bytes: indices!, length: MemoryLayout<PrimitiveIndex>.stride * indices!.count, options: [])
@@ -154,20 +162,22 @@ public class CoreObject: Identifiable {
         if shader.type == .phongShader {
             RenderDispatcher.shared.currentScene.ensureLightBuffer()
         }
-        
+    }
+    
+    func initializeDispatcher() {
         // We set the rendering logic
         dispatcher = { object, encoder in
             encoder.setRenderPipelineState(object.pipelineState!)
             encoder.setVertexBuffer(object.vertexBuffer!, offset: 0, index: 0)
-            
+             
             object.model = object.makeModelMatrix()
-            
+             
             object.uniformsBuffer = object.shader.makeUniforms(coreObject: object)
-            
+             
             encoder.setVertexBuffer(object.uniformsBuffer!, offset: 0, index: 1)
             encoder.setFragmentBuffer(object.uniformsBuffer!, offset: 0, index: 1)
             encoder.setFragmentSamplerState(object.samplerState!, index: 0)
-            
+             
             if object.shader.type == .phongShader {
                 let scene = RenderDispatcher.shared.currentScene
                 if let lightBuffer = scene.lightBuffer {
@@ -176,7 +186,7 @@ public class CoreObject: Identifiable {
                     print("Warning: Light buffer is nil for Phong shader")
                 }
             }
-            
+             
             for (i, texture) in object.textures.enumerated() {
                 if texture.type == .color {
                     encoder.setFragmentTexture(texture.mtlTexture, index: i)
@@ -184,16 +194,21 @@ public class CoreObject: Identifiable {
                     encoder.setFragmentTexture(texture.mtlTexture, index: i + 3) // We leave 3 slots for color textures
                 }
             }
-            
+             
             if object.useIndexedDrawing {
                 encoder.drawIndexedPrimitives(type: .triangle, indexCount: object.indices!.count, indexType: .uint16, indexBuffer: object.indexBuffer!, indexBufferOffset: 0)
             } else {
                 encoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: object.vertices.count)
             }
         }
-        
+         
         // And we register the object
         RenderDispatcher.shared.registerObject(coreObject: self)
+    }
+    
+    public func initialize() {
+        initializeCore()
+        initializeDispatcher()
     }
 }
 
