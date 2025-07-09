@@ -58,8 +58,10 @@ fragment float4 phong_fragment(VertexOut in [[stage_in]],
     
     for (int i = 0; i < uniforms.lightCount; ++i) {
         if (lights[i].type == POINT_LIGHT) {
+            float distance = length(lights[i].position.xyz - in.fragPosition);
+            float attenuation = 1.0 / (lights[i].constantVal + lights[i].linear * distance + lights[i].quadratic * (distance * distance));
+            
             float3 lightDir = normalize(lights[i].position.xyz - in.fragPosition);
-            float attenuation = 1.0 / (lights[i].constantVal + lights[i].linear * lightDir + lights[i].quadratic * (lightDir * lightDir));
             float diff = max(dot(norm, lightDir), 0.0);
             float3 diffuse = lights[i].diffuse.rgb * (diff * uniforms.material.diffuse) * baseColor.rgb * attenuation;
             
