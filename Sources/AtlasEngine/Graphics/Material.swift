@@ -13,7 +13,7 @@ struct MetalMaterial {
 }
 
 public struct Material {
-    public var ambient: Color = [0.2, 0.2, 0.2]
+    public var ambient: Color = [1, 1, 1]
     public var diffuse: Color = [0.8, 0.8, 0.8]
     public var specular: Color = [0.3, 0.3, 0.3]
     public var shininess: Float = 32.0

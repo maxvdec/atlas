@@ -24,15 +24,16 @@ public struct CoreVertex {
     }
     
     func toMetalVertex() -> MetalVertex {
-        return MetalVertex(position: position.toSimd(), color: color.toSimd(), texCoordinates: texCoord.toSimd(), normal: normal.toSimd())
+        return MetalVertex(position: position.toSimd4(), color: color.toSimd(), texCoordinates: texCoord.toSimd(), _texPadding: .init(0, 0), normal: normal.toSimd4())
     }
 }
 
 struct MetalVertex {
-    var position: SIMD3<Float>
+    var position: SIMD4<Float>
     var color: SIMD4<Float>
     var texCoordinates: SIMD2<Float>
-    var normal: SIMD3<Float>
+    var _texPadding: SIMD2<Float> = .init(0, 0)
+    var normal: SIMD4<Float>
 }
 
 public typealias PrimitiveIndex = UInt16

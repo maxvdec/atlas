@@ -10,10 +10,10 @@
 using namespace metal;
 
 struct Vertex {
-    float3 position [[attribute(0)]];
+    float4 position [[attribute(0)]];
     float4 color [[attribute(1)]];
     float2 texCoords [[attribute(2)]];
-    float3 normals [[attribute(3)]];
+    float4 normals [[attribute(3)]];
 };
 
 struct VertexOut {

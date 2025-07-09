@@ -7,16 +7,18 @@
 
 vertex VertexOut phong_vertex(Vertex in [[stage_in]], constant PhongUniforms &uniforms [[ buffer(1)]]) {
     VertexOut out;
-    float4 position = float4(in.position, 1.0);
+    float4 position = in.position;
     float4x4 mvp = uniforms.projection * uniforms.view * uniforms.model;
     position = mvp * position;
     out.position = position;
     out.color = in.color;
     out.texCoords = in.texCoords;
     
-    out.normals = in.normals;
+    float3x3 normalMatrix = transpose3x3(inverse3x3(toFloat3x3(uniforms.model)));
+    float3 transformedNormal = normalize(normalMatrix * in.normals.xyz);
+    out.normals = transformedNormal;
     
-    out.fragPosition = (uniforms.model * float4(in.position, 1.0)).xyz;
+    out.fragPosition = (uniforms.model * in.position).xyz;
     
     return out;
 }
@@ -37,24 +39,25 @@ fragment float4 phong_fragment(VertexOut in [[stage_in]],
         baseColor = in.color;
     }
 
-    float3 ambient = uniforms.ambientColor.rgb * uniforms.material.ambient;
-    float3 result = 0;
+    float3 ambient = uniforms.ambientColor.rgb * uniforms.material.ambient * baseColor.rgb;
+    float3 result = ambient;
     
-    float3 norm = in.normals;
-    return float4((in.normals * 0.5 + 0.5), 1.0);
+    float3 norm = normalize(in.normals);
     
     for (int i = 0; i < uniforms.lightCount; ++i) {
-        float3 lightDir = normalize(lights[i].position.xyz - in.fragPosition);
-        float diff = max(dot(norm, lightDir), 0.0);
-        float3 diffuse = lights[i].diffuse.rgb * (diff * uniforms.material.diffuse) * lights[i].intensity;
-        
-        float3 viewDir = normalize(uniforms.cameraPos - in.fragPosition);
-        float3 reflectDir = reflect(-lightDir, norm);
-        float spec = pow(max(dot(viewDir, reflectDir), 0.0), uniforms.material.shininess);
-        float3 specular = lights[i].specular.rgb * (spec * uniforms.material.specular) * lights[i].intensity;
-        
-        result += ambient + diffuse + specular;
+        if (lights[i].type == POINT_LIGHT) {
+            float3 lightDir = normalize(lights[i].position.xyz - in.fragPosition);
+            float diff = max(dot(norm, lightDir), 0.0);
+            float3 diffuse = lights[i].diffuse.rgb * (diff * uniforms.material.diffuse) * baseColor.rgb;
+            
+            float3 viewDir = normalize(uniforms.cameraPos - in.fragPosition);
+            float3 reflectDir = reflect(-lightDir, norm);
+            float spec = pow(max(dot(viewDir, reflectDir), 0.0), uniforms.material.shininess);
+            float3 specular = lights[i].specular.rgb * (spec * uniforms.material.specular);
+            
+            result += (diffuse + specular) * lights[i].intensity;
+        }
     }
     
-    return float4(result, 1.0);
+    return float4(result, baseColor.a);
 }

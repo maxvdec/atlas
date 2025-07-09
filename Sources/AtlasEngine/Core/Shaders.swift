@@ -158,11 +158,11 @@ func makeVertexDescriptor() -> MTLVertexDescriptor {
     var offset = 0
 
     // Position (x, y, z)
-    vertexDescriptor.attributes[0].format = .float3
+    vertexDescriptor.attributes[0].format = .float4
     vertexDescriptor.attributes[0].offset = offset
     vertexDescriptor.attributes[0].bufferIndex = 0
 
-    offset += MemoryLayout<SIMD3<Float>>.stride
+    offset += MemoryLayout<SIMD4<Float>>.stride
 
     // Color (r, g, b, a)
     vertexDescriptor.attributes[1].format = .float4
@@ -176,10 +176,10 @@ func makeVertexDescriptor() -> MTLVertexDescriptor {
     vertexDescriptor.attributes[2].offset = offset
     vertexDescriptor.attributes[2].bufferIndex = 0
 
-    offset += MemoryLayout<SIMD2<Float>>.stride
+    offset += MemoryLayout<SIMD2<Float>>.stride * 2 // For padding
 
     // Normals
-    vertexDescriptor.attributes[3].format = .float3
+    vertexDescriptor.attributes[3].format = .float4
     vertexDescriptor.attributes[3].offset = offset
     vertexDescriptor.attributes[3].bufferIndex = 0
 

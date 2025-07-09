@@ -10,16 +10,16 @@ using namespace metal;
 
 vertex VertexOut basic_vertex(Vertex in [[stage_in]], constant BasicUniforms &uniforms [[ buffer(1)]]) {
     VertexOut out;
-    float4 position = float4(in.position, 1.0);
+    float4 position = in.position;
     float4x4 mvp = uniforms.projection * uniforms.view * uniforms.model;
     position = mvp * position;
     out.position = position;
     out.color = in.color;
     out.texCoords = in.texCoords;
     float3x3 normalMatrix = transpose(inverse3x3(toFloat3x3(uniforms.model)));
-    float3 transformedNormal = normalize(normalMatrix * in.normals);
+    float3 transformedNormal = normalize(normalMatrix * in.normals.xyz);
     out.normals = transformedNormal;
-    out.fragPosition = (uniforms.model * float4(in.position, 1.0)).xyz;
+    out.fragPosition = (uniforms.model * in.position).xyz;
     return out;
 }
 
