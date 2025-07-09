@@ -45,7 +45,7 @@ public class RenderScene {
             lightBuffer = device.makeBuffer(bytes: metalLights, length: MemoryLayout<MetalLight>.stride * metalLights.count, options: [])
         } else {
             let dummyLight: [MetalLight] = [
-                MetalLight(type: 0, color: .init(), position: .init(), intensity: 0.0, specular: .init(), diffuse: .init())
+                MetalLight(type: 0, color: .init(), position: .init(), direction: .init(), intensity: 0.0, specular: .init(), diffuse: .init(), constant: 0.0, linear: 0.0, quadratic: 0.0)
             ]
             lightBuffer = device.makeBuffer(bytes: dummyLight, length: MemoryLayout<MetalLight>.stride, options: [])
         }

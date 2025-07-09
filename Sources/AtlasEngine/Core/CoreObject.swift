@@ -178,7 +178,11 @@ public class CoreObject: Identifiable {
             }
             
             for (i, texture) in object.textures.enumerated() {
-                encoder.setFragmentTexture(texture.mtlTexture, index: i)
+                if texture.type == .color {
+                    encoder.setFragmentTexture(texture.mtlTexture, index: i)
+                } else if texture.type == .specular {
+                    encoder.setFragmentTexture(texture.mtlTexture, index: i + 3) // We leave 3 slots for color textures
+                }
             }
             
             if object.useIndexedDrawing {

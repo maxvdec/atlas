@@ -28,7 +28,8 @@ struct BasicShaderUniforms {
 }
 
 struct PhongShaderUniforms {
-    var textureCount: Int32
+    var textureCount: Int32 = 0
+    var specularMapCount: Int32 = 0
     var model: simd_float4x4 = .init()
     var view: simd_float4x4 = .init()
     var projection: simd_float4x4 = .init()
@@ -123,7 +124,12 @@ class PhongShader: CoreShader {
     }
 
     public func makeUniforms(coreObject: CoreObject) -> any MTLBuffer {
-        var uniforms = PhongShaderUniforms(textureCount: Int32(coreObject.textures.count), model: coreObject.model)
+        var uniforms = PhongShaderUniforms()
+        let diffuseTextures = coreObject.textures.filter { $0.type == .color }
+        let specularTextures = coreObject.textures.filter { $0.type == .specular }
+        uniforms.specularMapCount = Int32(specularTextures.count)
+        uniforms.textureCount = Int32(diffuseTextures.count)
+        uniforms.model = coreObject.model
         uniforms.view = RenderDispatcher.shared.viewMatrix
         uniforms.projection = RenderDispatcher.shared.projectionMatrix
         uniforms.ambientColor = RenderDispatcher.shared.currentScene.ambientColor

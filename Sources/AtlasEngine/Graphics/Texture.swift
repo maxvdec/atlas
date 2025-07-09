@@ -10,6 +10,7 @@ import MetalKit
 
 public enum TextureClass {
     case color
+    case specular
 }
 
 public enum TextureFilterMode {

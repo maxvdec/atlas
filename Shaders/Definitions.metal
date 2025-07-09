@@ -40,6 +40,7 @@ struct Material {
 
 struct PhongUniforms {
     int textureCount;
+    int specularTextureCount;
     float4x4 model;
     float4x4 view;
     float4x4 projection;
@@ -50,13 +51,19 @@ struct PhongUniforms {
 };
 
 #define POINT_LIGHT 0
+#define DIRECTIONAL_LIGHT 1
 
 struct Light {
     uint type;
     float4 color;
-    float4 position;
+    float4 position; // Used in: PointLight
+    float4 direction; // Used in: DirectionalLight
     float intensity;
     
     float4 specular;
     float4 diffuse;
+    
+    float constantVal;
+    float linear;
+    float quadratic;
 };

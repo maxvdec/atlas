@@ -26,6 +26,7 @@ vertex VertexOut phong_vertex(Vertex in [[stage_in]], constant PhongUniforms &un
 fragment float4 phong_fragment(VertexOut in [[stage_in]],
                                constant PhongUniforms &uniforms [[ buffer(1)]],
                                array<texture2d<float>, 3> color_textures [[ texture(0) ]],
+                               array<texture2d<float>, 2> specular_textures [[ texture(3) ]],
                                constant Light *lights [[ buffer(2) ]],
                                sampler s [[ sampler(0) ]]) {
     
@@ -40,22 +41,45 @@ fragment float4 phong_fragment(VertexOut in [[stage_in]],
     }
 
     float3 ambient = uniforms.ambientColor.rgb * uniforms.material.ambient * baseColor.rgb;
-    float3 result = ambient;
+    float3 result = float3(0);
     
     float3 norm = normalize(in.normals);
+    
+    float3 specularMapColor = float3(1.0);
+
+    if (uniforms.specularTextureCount > 0) {
+        specularMapColor = float3(0.0);
+        for (uint i = 0; i < uint(uniforms.specularTextureCount); ++i) {
+            specularMapColor += specular_textures[i].sample(s, in.texCoords).rgb;
+        }
+        specularMapColor /= float(uniforms.specularTextureCount);
+    }
+
     
     for (int i = 0; i < uniforms.lightCount; ++i) {
         if (lights[i].type == POINT_LIGHT) {
             float3 lightDir = normalize(lights[i].position.xyz - in.fragPosition);
+            float attenuation = 1.0 / (lights[i].constantVal + lights[i].linear * lightDir + lights[i].quadratic * (lightDir * lightDir));
+            float diff = max(dot(norm, lightDir), 0.0);
+            float3 diffuse = lights[i].diffuse.rgb * (diff * uniforms.material.diffuse) * baseColor.rgb * attenuation;
+            
+            float3 viewDir = normalize(uniforms.cameraPos - in.fragPosition);
+            float3 reflectDir = reflect(-lightDir, norm);
+            float spec = pow(max(dot(viewDir, reflectDir), 0.0), uniforms.material.shininess);
+            float3 specular = lights[i].specular.rgb * (spec * uniforms.material.specular) * specularMapColor * attenuation;
+            
+            result += (diffuse + specular + (ambient * attenuation)) * lights[i].intensity;
+        } else if (lights[i].type == DIRECTIONAL_LIGHT) {
+            float3 lightDir = normalize(-lights[i].direction.xyz);
             float diff = max(dot(norm, lightDir), 0.0);
             float3 diffuse = lights[i].diffuse.rgb * (diff * uniforms.material.diffuse) * baseColor.rgb;
             
             float3 viewDir = normalize(uniforms.cameraPos - in.fragPosition);
             float3 reflectDir = reflect(-lightDir, norm);
             float spec = pow(max(dot(viewDir, reflectDir), 0.0), uniforms.material.shininess);
-            float3 specular = lights[i].specular.rgb * (spec * uniforms.material.specular);
+            float3 specular = lights[i].specular.rgb * (spec * uniforms.material.specular) * specularMapColor;
             
-            result += (diffuse + specular) * lights[i].intensity;
+            result += (diffuse + specular + ambient) * lights[i].intensity;
         }
     }
     

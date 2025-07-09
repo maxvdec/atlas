@@ -64,6 +64,7 @@ public extension Position3d {
 }
 
 public typealias Magnitude3d = Position3d
+public typealias Direction3d = Position3d
 
 public struct Size3d: Equatable, ExpressibleByArrayLiteral {
     public var width: Float
