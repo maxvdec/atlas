@@ -56,15 +56,36 @@ public class CoreObject: Identifiable {
     var indexBuffer: MTLBuffer?
     var uniformsBuffer: MTLBuffer?
     
-    var position: Position3d = [0, 0, 0]
-    var rotation: Magnitude3d = [0, 0, 0]
-    var scale: Size3d = [1, 1, 1]
+    var position: Position3d = [0, 0, 0] {
+        didSet {
+            model = makeModelMatrix()
+            RenderDispatcher.shared.remakeDepthMaps = true
+        }
+    }
+
+    var rotation: Magnitude3d = [0, 0, 0] {
+        didSet {
+            model = makeModelMatrix()
+            RenderDispatcher.shared.remakeDepthMaps = true
+        }
+    }
+
+    var scale: Size3d = [1, 1, 1] {
+        didSet {
+            model = makeModelMatrix()
+            RenderDispatcher.shared.remakeDepthMaps = true
+        }
+    }
     
     var model: float4x4 = .init()
     
     var shader: CoreShader = PhongShader()
     
-    var textures: [Texture] = []
+    var textures: [Texture] = [] {
+        didSet {
+            RenderDispatcher.shared.remakeUniforms = true
+        }
+    }
     
     public init() {
         self.id = UUID()
@@ -132,7 +153,7 @@ public class CoreObject: Identifiable {
         return translation_matrix * rotation_matrix * scale_matrix
     }
     
-    public func initialize() {
+    func initializeCore() {
         // First, we build the vertex buffer
         var vertexData: [MetalVertex] = []
         for vertex in vertices {
@@ -154,15 +175,17 @@ public class CoreObject: Identifiable {
         if shader.type == .phongShader {
             RenderDispatcher.shared.currentScene.ensureLightBuffer()
         }
-        
+    }
+    
+    func initializeDispatcher() {
         // We set the rendering logic
         dispatcher = { object, encoder in
             encoder.setRenderPipelineState(object.pipelineState!)
             encoder.setVertexBuffer(object.vertexBuffer!, offset: 0, index: 0)
             
-            object.model = object.makeModelMatrix()
-            
-            object.uniformsBuffer = object.shader.makeUniforms(coreObject: object)
+            if RenderDispatcher.shared.remakeUniforms {
+                object.uniformsBuffer = object.shader.makeUniforms(coreObject: object)
+            }
             
             encoder.setVertexBuffer(object.uniformsBuffer!, offset: 0, index: 1)
             encoder.setFragmentBuffer(object.uniformsBuffer!, offset: 0, index: 1)
@@ -194,6 +217,11 @@ public class CoreObject: Identifiable {
         
         // And we register the object
         RenderDispatcher.shared.registerObject(coreObject: self)
+    }
+    
+    public func initialize() {
+        initializeCore()
+        initializeDispatcher()
     }
 }
 

@@ -18,6 +18,7 @@ protocol CoreShader {
 enum CoreShaderType {
     case basicShader
     case phongShader
+    case fullscreenShader
 }
 
 struct BasicShaderUniforms {
@@ -111,6 +112,81 @@ class PhongShader: CoreShader {
         let library = RenderDispatcher.shared.library!
         let vertex = library.makeFunction(name: "phong_vertex")!
         let fragment = library.makeFunction(name: "phong_fragment")!
+
+        // According to the shader, we need to create a Vertex Descriptor
+        let vertexDescriptor = makeVertexDescriptor()
+
+        // We use a Pipeline Descriptor to create the Rendering Pipeline
+        let pipeline = MTLRenderPipelineDescriptor()
+        pipeline.vertexFunction = vertex
+        pipeline.fragmentFunction = fragment
+        pipeline.colorAttachments[0].pixelFormat = .bgra8Unorm
+        pipeline.depthAttachmentPixelFormat = .depth32Float
+        pipeline.rasterSampleCount = Atlas.preferences.sampleCount
+        pipeline.colorAttachments[0].isBlendingEnabled = true
+
+        pipeline.colorAttachments[0].rgbBlendOperation = .add
+        pipeline.colorAttachments[0].alphaBlendOperation = .add
+        pipeline.colorAttachments[0].sourceRGBBlendFactor = .sourceAlpha
+        pipeline.colorAttachments[0].destinationRGBBlendFactor = .oneMinusSourceAlpha
+        pipeline.colorAttachments[0].sourceAlphaBlendFactor = .one
+        pipeline.colorAttachments[0].destinationAlphaBlendFactor = .oneMinusSourceAlpha
+
+        pipeline.vertexDescriptor = vertexDescriptor
+
+        do {
+            return try device.makeRenderPipelineState(descriptor: pipeline)
+        } catch {
+            fatalError("Failed to create pipeline: \(error)")
+        }
+    }
+
+    public func makeUniforms(coreObject: CoreObject) -> any MTLBuffer {
+        var uniforms = PhongShaderUniforms()
+        let diffuseTextures = coreObject.textures.filter { $0.type == .color }
+        let specularTextures = coreObject.textures.filter { $0.type == .specular }
+        uniforms.specularMapCount = Int32(specularTextures.count)
+        uniforms.textureCount = Int32(diffuseTextures.count)
+        uniforms.model = coreObject.model
+        uniforms.view = RenderDispatcher.shared.viewMatrix
+        uniforms.projection = RenderDispatcher.shared.projectionMatrix
+        uniforms.ambientColor = RenderDispatcher.shared.currentScene.ambientColor
+        uniforms.lightCount = Int32(RenderDispatcher.shared.currentScene.lights.count)
+        let camera = RenderDispatcher.shared.frameObjects.first(where: {
+            $0 is Camera
+        })
+        if camera == nil {
+            uniforms.cameraPos = ([0, 0, 0] as Position3d).toSimd()
+        } else {
+            uniforms.cameraPos = (camera as! Camera).position.toSimd()
+        }
+        uniforms.material = coreObject.material.toMetalMaterial()
+        let uniformBuffer = RenderDispatcher.shared.device.makeBuffer(length: MemoryLayout<PhongShaderUniforms>.stride, options: .storageModeShared)!
+        let bufferPointer = uniformBuffer.contents()
+        memcpy(bufferPointer, &uniforms, MemoryLayout<PhongShaderUniforms>.stride)
+
+        return uniformBuffer
+    }
+
+    func uniformsSize() -> Int {
+        return MemoryLayout<PhongShaderUniforms>.stride
+    }
+}
+
+/// Shader that renders a full texture to the screen
+class FullscreenShader: CoreShader {
+    var type: CoreShaderType { .fullscreenShader }
+    public func makePipeline(device: any MTLDevice) -> any MTLRenderPipelineState {
+        if RenderDispatcher.shared.library == nil {
+            RenderDispatcher.shared.library = try! device.makeLibrary(source: allMetalShaders, options: nil)
+            if RenderDispatcher.shared.library == nil {
+                fatalError("Could not create library")
+            }
+        }
+
+        let library = RenderDispatcher.shared.library!
+        let vertex = library.makeFunction(name: "fullscreen_vertex")!
+        let fragment = library.makeFunction(name: "fullscreen_fragment")!
 
         // According to the shader, we need to create a Vertex Descriptor
         let vertexDescriptor = makeVertexDescriptor()

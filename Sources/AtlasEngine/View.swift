@@ -1,6 +1,6 @@
 import MetalKit
-import SwiftUI
 import MetalPerformanceShaders
+import SwiftUI
 
 @MainActor
 class CoreRenderer: NSObject, MTKViewDelegate {
@@ -46,8 +46,14 @@ class CoreRenderer: NSObject, MTKViewDelegate {
         RenderDispatcher.shared.dispatchAll(encoder: &renderEncoder)
 
         renderEncoder.endEncoding()
+        
+        RenderDispatcher.shared.postDispatchAll(cmdBuffer: commandBuffer!, descriptor: renderPassDescriptor)
+        
         commandBuffer!.present(drawable)
         commandBuffer!.commit()
+        
+        RenderDispatcher.shared.remakeUniforms = false
+        RenderDispatcher.shared.remakeDepthMaps = false
     }
 
     func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {}

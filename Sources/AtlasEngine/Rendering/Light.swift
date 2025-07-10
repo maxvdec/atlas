@@ -59,7 +59,7 @@ struct MetalLight {
     var constant: Float
     var linear: Float
     var quadratic: Float
-    
+
     var innerCutoff: Float
     var outerCutoff: Float
 }
@@ -74,6 +74,7 @@ public class Light {
     public var distance: LightDistance = .distance50
     public var innerCutoff: Float = 15.0
     public var outerCutoff: Float = 25.0
+    public var castsShadows: Bool = false
 
     var debugObject: CoreObject?
 
@@ -100,7 +101,7 @@ public class Light {
         light.material.diffuse = [0.8, 0.8, 0.8]
         return light
     }
-    
+
     public static func spotlight(position: Position3d, direction: Direction3d, color: Color = .shadeOfWhite(1), intensity: Float = 1.0) -> Light {
         let light = Light()
         light.direction = direction
@@ -110,7 +111,6 @@ public class Light {
         light.intensity = intensity
         light.material.diffuse = [0.8, 0.8, 0.8]
         return light
-
     }
 
     func toMetalLight() -> MetalLight {
