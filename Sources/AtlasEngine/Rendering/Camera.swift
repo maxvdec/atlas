@@ -125,10 +125,12 @@ public class Camera: Interactive {
     }
 
     private func updateViewMatrix() {
+        RenderDispatcher.shared.remakeUniforms = true
         cachedViewMatrix = lookAt(eye: position.toSimd(), center: position.toSimd() + front, up: up)
     }
 
     private func updateProjectionMatrix() {
+        RenderDispatcher.shared.remakeUniforms = true
         let fovRadians = radians(fromDegrees: fov)
         cachedProjectionMatrix = perspectiveFovRH(fovRadians, aspectRatio, nearPlane, farPlane)
     }

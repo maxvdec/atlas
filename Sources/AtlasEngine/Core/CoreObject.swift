@@ -61,13 +61,30 @@ public class CoreObject: Identifiable {
     var indexBuffer: MTLBuffer?
     var uniformsBuffer: MTLBuffer?
     
-    var position: Position3d = [0, 0, 0]
-    var rotation: Magnitude3d = [0, 0, 0]
-    var scale: Size3d = [1, 1, 1]
+    var position: Position3d = [0, 0, 0] {
+        didSet {
+            model = makeModelMatrix()
+            RenderDispatcher.shared.remakeDepthMaps = true
+        }
+    }
+
+    var rotation: Magnitude3d = [0, 0, 0] {
+        didSet {
+            model = makeModelMatrix()
+            RenderDispatcher.shared.remakeDepthMaps = true
+        }
+    }
+
+    var scale: Size3d = [1, 1, 1] {
+        didSet {
+            model = makeModelMatrix()
+            RenderDispatcher.shared.remakeDepthMaps = true
+        }
+    }
     
     var model: float4x4 = .init()
     
-    var shader: CoreShader = PhongShader()
+    var shader: CoreShader = ShadowShader()
     
     var textures: [Texture] = []
     
@@ -162,6 +179,8 @@ public class CoreObject: Identifiable {
         if shader.type == .phongShader {
             RenderDispatcher.shared.currentScene.ensureLightBuffer()
         }
+        
+        model = makeModelMatrix()
     }
     
     func initializeDispatcher() {
@@ -169,16 +188,16 @@ public class CoreObject: Identifiable {
         dispatcher = { object, encoder in
             encoder.setRenderPipelineState(object.pipelineState!)
             encoder.setVertexBuffer(object.vertexBuffer!, offset: 0, index: 0)
-             
-            object.model = object.makeModelMatrix()
-             
-            object.uniformsBuffer = object.shader.makeUniforms(coreObject: object)
+            
+            if RenderDispatcher.shared.remakeUniforms {
+                object.uniformsBuffer = object.shader.makeUniforms(coreObject: object)
+            }
              
             encoder.setVertexBuffer(object.uniformsBuffer!, offset: 0, index: 1)
             encoder.setFragmentBuffer(object.uniformsBuffer!, offset: 0, index: 1)
             encoder.setFragmentSamplerState(object.samplerState!, index: 0)
              
-            if object.shader.type == .phongShader {
+            if object.shader.type != .basicShader || object.shader.type != .fullscreenShader {
                 let scene = RenderDispatcher.shared.currentScene
                 if let lightBuffer = scene.lightBuffer {
                     encoder.setFragmentBuffer(lightBuffer, offset: 0, index: 2)
@@ -193,6 +212,10 @@ public class CoreObject: Identifiable {
                 } else if texture.type == .specular {
                     encoder.setFragmentTexture(texture.mtlTexture, index: i + 3) // We leave 3 slots for color textures
                 }
+            }
+            
+            if (RenderDispatcher.shared.currentScene.lights.filter { $0.castsShadows }).count > 0 {
+                encoder.setFragmentTexture((RenderDispatcher.shared.currentScene.lights.filter { $0.castsShadows }).first?.shadowRenderer.depthTexture, index: 5)
             }
              
             if object.useIndexedDrawing {

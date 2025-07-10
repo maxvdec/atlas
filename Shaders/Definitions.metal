@@ -22,6 +22,7 @@ struct VertexOut {
     float4 color;
     float2 texCoords;
     float3 normals;
+    float4 fragPositionLightSpace;
 };
 
 struct BasicUniforms {
@@ -48,6 +49,20 @@ struct PhongUniforms {
     int lightCount;
     float3 cameraPos;
     Material material;
+};
+
+struct ShadowUniforms {
+    int textureCount;
+    int specularTextureCount;
+    float4x4 model;
+    float4x4 view;
+    float4x4 projection;
+    float4 ambientColor;
+    int lightCount;
+    float3 cameraPos;
+    Material material;
+    float4x4 lightSpace;
+    int casters;
 };
 
 #define POINT_LIGHT 0

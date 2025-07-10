@@ -38,7 +38,7 @@ class CoreRenderer: NSObject, MTKViewDelegate {
         var commandBuffer = commandQueue.makeCommandBuffer()
         
         for light in RenderDispatcher.shared.currentScene.lights {
-            if light.castsShadows {
+            if light.castsShadows && RenderDispatcher.shared.remakeDepthMaps {
                 light.makeShadowPass(cmdBuffer: &commandBuffer!, objects: RenderDispatcher.shared.objects)
             }
         }
@@ -56,6 +56,9 @@ class CoreRenderer: NSObject, MTKViewDelegate {
 
         commandBuffer!.present(drawable)
         commandBuffer!.commit()
+        
+        RenderDispatcher.shared.remakeUniforms = false
+        RenderDispatcher.shared.remakeDepthMaps = false
     }
 
     func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {}

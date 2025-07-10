@@ -69,8 +69,18 @@ public class Light {
     public var type: LightType = .pointLight
     public var color: Color = .shadeOfWhite(1)
     public var intensity: Float = 1.0
-    public var position: Position3d = .init(x: 0, y: 0, z: 0)
-    public var direction: Position3d = .init(x: 0, y: 0, z: 0)
+    public var position: Position3d = .init(x: 0, y: 0, z: 0) {
+        didSet {
+            RenderDispatcher.shared.remakeDepthMaps = true
+        }
+    }
+
+    public var direction: Position3d = .init(x: 0, y: 0, z: 0) {
+        didSet {
+            RenderDispatcher.shared.remakeDepthMaps = true
+        }
+    }
+
     public var material: Material = .init()
     public var distance: LightDistance = .distance50
     public var innerCutoff: Float = 15.0
