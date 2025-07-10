@@ -288,3 +288,18 @@ func orthographicProjection(left: Float, right: Float, bottom: Float, top: Float
         SIMD4(-ral / rsl, -tab / tsb, -near / fsn, 1)
     )
 }
+
+func perspective(fovY: Float, aspect: Float, nearZ: Float, farZ: Float) -> float4x4 {
+    let yScale = 1 / tan(fovY * 0.5)
+    let xScale = yScale / aspect
+    let zRange = farZ - nearZ
+    let zScale = farZ / zRange
+    let wzScale = -nearZ * farZ / zRange
+
+    return float4x4(columns: (
+        [xScale, 0, 0, 0],
+        [0, yScale, 0, 0],
+        [0, 0, zScale, 1],
+        [0, 0, wzScale, 0]
+    ))
+}

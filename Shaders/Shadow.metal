@@ -34,20 +34,20 @@ float calculate_shadow(float4 fragPosLightSpace, ShadowUniforms uniforms, depth2
     if (projCoords.x < 0.0 || projCoords.x > 1.0 ||
         projCoords.y < 0.0 || projCoords.y > 1.0 ||
         projCoords.z < 0.0 || projCoords.z > 1.0) {
-        return 1.0;
+        return 1.0; // No shadow outside frustum
     }
     
     float closestDepth = depthMap.sample(s, projCoords.xy);
     float currentDepth = projCoords.z;
     
-    float3 lightDir = normalize(light.direction.xyz);
+    float3 lightDir = normalize(-light.direction.xyz);
     float3 normal = normalize(normals);
-    float cosTheta = clamp(dot(lightDir, normal), 0.0, 1.0);
-    float bias = 0.001 * tan(acos(cosTheta));
-    bias = clamp(bias, 0.0001, 0.005);
+    float cosTheta = clamp(dot(normal, lightDir), 0.0, 1.0);
     
+    float bias = max(0.005 * (1.0 - cosTheta), 0.0005);
+
     float shadow = 0.0;
-    float2 texelSize = 1.0 / 1024.0;
+    float2 texelSize = 1.0 / float2(1024.0, 1024.0);
     
     for(int x = -1; x <= 1; ++x) {
         for(int y = -1; y <= 1; ++y) {
@@ -73,11 +73,10 @@ float calculate_shadow_simple(float4 fragPosLightSpace, ShadowUniforms uniforms,
     float closestDepth = depthMap.sample(s, projCoords.xy);
     float currentDepth = projCoords.z;
     
-    float3 lightDir = normalize(light.direction.xyz);
+    float3 lightDir = normalize(-light.direction.xyz);
     float3 normal = normalize(normals);
-    float cosTheta = clamp(dot(lightDir, normal), 0.0, 1.0);
-    float bias = 0.0005 + 0.0005 * tan(acos(cosTheta));
-    bias = clamp(bias, 0.0001, 0.002);
+    float cosTheta = clamp(dot(normal, lightDir), 0.0, 1.0);
+    float bias = max(0.005 * (1.0 - cosTheta), 0.0005);
     
     float shadow = (currentDepth - bias) > closestDepth ? 0.0 : 1.0;
     return shadow;
@@ -103,37 +102,39 @@ fragment float4 shadow_fragment(VertexOut in [[stage_in]],
     float3 norm = normalize(in.normals);
     float3 viewDir = normalize(uniforms.cameraPos - in.fragPosition);
     
-    Light mainCaster;
+    bool hasCaster = false;
     
     for (int i = 0; i < uniforms.lightCount; ++i) {
+        float3 lightContribution = float3(0);
+        
         if (lights[i].type == POINT_LIGHT) {
-            result += calculatePointLight(lights[i], in.fragPosition, norm, viewDir, baseColor.rgb,
+            lightContribution = calculatePointLight(lights[i], in.fragPosition, norm, viewDir, baseColor.rgb,
                                         specularMapColor, uniforms.material.diffuse, uniforms.material.specular,
                                         ambient, uniforms.material.shininess);
         }
         else if (lights[i].type == DIRECTIONAL_LIGHT) {
-            result += calculateDirectionalLight(lights[i], norm, viewDir, baseColor.rgb,
+            lightContribution = calculateDirectionalLight(lights[i], norm, viewDir, baseColor.rgb,
                                               specularMapColor, uniforms.material.diffuse, uniforms.material.specular,
                                               ambient, uniforms.material.shininess);
         }
         else if (lights[i].type == SPOTLIGHT) {
-            result += calculateSpotlight(lights[i], in.fragPosition, norm, viewDir, baseColor.rgb,
+            lightContribution = calculateSpotlight(lights[i], in.fragPosition, norm, viewDir, baseColor.rgb,
                                        specularMapColor, uniforms.material.diffuse, uniforms.material.specular,
                                        ambient, uniforms.material.shininess);
         }
         
-        if (lights[i].casts) {
-            mainCaster = lights[i];
+        if (lights[i].casts && uniforms.casters > 0) {
+            float shadow = calculate_shadow(in.fragPositionLightSpace, uniforms, depth_texture, s, in.normals, lights[i]);
+            lightContribution *= shadow;
+            hasCaster = true;
         }
+        
+        result += lightContribution;
     }
     
-    float shadow = 1.0;
-    
-    if (uniforms.casters > 0) {
-        shadow = calculate_shadow(in.fragPositionLightSpace, uniforms, depth_texture, s, in.normals, mainCaster);
+    if (hasCaster) {
+        result += ambient * 0.3; 
     }
-    
-    result *= shadow;
     
     return float4(result, 1.0);
 }
@@ -150,18 +151,19 @@ fragment float4 debug_shadow_fragment(VertexOut in [[stage_in]],
         if (projCoords.x < 0.0 || projCoords.x > 1.0 ||
             projCoords.y < 0.0 || projCoords.y > 1.0 ||
             projCoords.z < 0.0 || projCoords.z > 1.0) {
-            return float4(1.0, 0.0, 0.0, 1.0);
+            return float4(1.0, 0.0, 0.0, 1.0); // Red for outside
         }
         
         float closestDepth = depth_texture.sample(s, projCoords.xy);
         float currentDepth = projCoords.z;
         
-        if (currentDepth > closestDepth + 0.001) {
-            return float4(0.0, 0.0, 1.0, 1.0);
+        float depthDiff = currentDepth - closestDepth;
+        if (depthDiff > 0.001) {
+            return float4(0.0, 0.0, 1.0, 1.0); // Blue for shadowed
         } else {
-            return float4(0.0, 1.0, 0.0, 1.0);
+            return float4(0.0, 1.0, 0.0, 1.0); // Green for lit
         }
     }
     
-    return float4(0.5, 0.5, 0.5, 1.0);
+    return float4(0.5, 0.5, 0.5, 1.0); // Gray for no shadow casting
 }

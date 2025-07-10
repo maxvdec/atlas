@@ -44,6 +44,8 @@ class ShadowRenderer {
         shadowPassDescriptor.depthAttachment.clearDepth = 1.0
 
         shadowPassDescriptor.colorAttachments[0].texture = nil
+        shadowPassDescriptor.colorAttachments[0].loadAction = .dontCare
+        shadowPassDescriptor.colorAttachments[0].storeAction = .dontCare
 
         var library = RenderDispatcher.shared.library
         if library == nil {
@@ -80,6 +82,8 @@ class ShadowRenderer {
         let renderEncoder = cmdBuffer.makeRenderCommandEncoder(descriptor: shadowPassDescriptor)!
         renderEncoder.setRenderPipelineState(pipelineState)
         renderEncoder.setDepthStencilState(depthStencilState)
+
+        renderEncoder.setViewport(MTLViewport(originX: 0, originY: 0, width: 1024, height: 1024, znear: 0.0, zfar: 1.0))
 
         for object in objects {
             if object.shader.type == .basicShader || object.shader.type == .fullscreenShader {

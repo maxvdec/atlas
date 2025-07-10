@@ -17,4 +17,6 @@ vertex DepthPassVertexOut depth_vertex(DepthPassVertexIn in [[stage_in]],
     return out;
 }
 
-fragment void depth_fragment() {}
+fragment float depth_fragment(DepthPassVertexOut in [[stage_in]]) {
+    return in.position.z / in.position.w;
+}

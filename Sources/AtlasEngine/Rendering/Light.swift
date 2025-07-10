@@ -162,23 +162,37 @@ public class Light {
 
     func getLightViewProjectionMatrix() -> simd_float4x4 {
         let isDirectional = (type == .directionalLight)
+        let isSpotlight = (type == .spotlight)
 
         var lightDir = direction.toSimd()
         if simd_length_squared(lightDir) < 0.0001 {
             lightDir = SIMD3<Float>(0, -1, 0)
         }
+        lightDir = normalize(lightDir)
 
         let eye: SIMD3<Float> = isDirectional ? -lightDir * 10 : position.toSimd()
         let center: SIMD3<Float> = isDirectional ? .zero : eye + lightDir
-        let up = SIMD3<Float>(0, 1, 0)
+
+        // Fix: Handle up vector properly
+        var up = SIMD3<Float>(0, 1, 0)
+        if abs(dot(lightDir, up)) > 0.95 {
+            up = SIMD3<Float>(1, 0, 0)
+        }
 
         let viewMatrix = lookAt(eye: eye, center: center, up: up)
 
-        let projectionMatrix = orthographicProjection(
-            left: -15, right: 15,
-            bottom: -15, top: 15,
-            near: 0.1, far: 100
-        )
+        let projectionMatrix: simd_float4x4 = {
+            if isDirectional {
+                return orthographicProjection(left: -15, right: 15,
+                                              bottom: -15, top: 15,
+                                              near: 0.1, far: 100)
+            } else if isSpotlight {
+                let fovRadians = radians(fromDegrees: 60)
+                return perspectiveFovRH(fovRadians, 1.0, 0.1, 100.0)
+            } else {
+                return perspective(fovY: .pi / 3, aspect: 1.0, nearZ: 0.1, farZ: 100)
+            }
+        }()
 
         return projectionMatrix * viewMatrix
     }
