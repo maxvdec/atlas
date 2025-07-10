@@ -78,7 +78,6 @@ public class CoreObject: Identifiable {
     var scale: Size3d = [1, 1, 1] {
         didSet {
             model = makeModelMatrix()
-            RenderDispatcher.shared.remakeDepthMaps = true
         }
     }
     
@@ -176,7 +175,7 @@ public class CoreObject: Identifiable {
         // We make the sampler state
         samplerState = sampler.makeMetalSampler(device: device)
         
-        if shader.type == .phongShader {
+        if shader.type != .basicShader && shader.type != .fullscreenShader {
             RenderDispatcher.shared.currentScene.ensureLightBuffer()
         }
         

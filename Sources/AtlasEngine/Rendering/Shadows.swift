@@ -82,7 +82,7 @@ class ShadowRenderer {
         renderEncoder.setDepthStencilState(depthStencilState)
 
         for object in objects {
-            if object.shader.type != .phongShader {
+            if object.shader.type == .basicShader || object.shader.type == .fullscreenShader {
                 continue
             }
             var lightVP = light.getLightViewProjectionMatrix()

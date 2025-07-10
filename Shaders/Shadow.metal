@@ -90,8 +90,5 @@ fragment float4 shadow_fragment(VertexOut in [[stage_in]],
     
     result *= shadow;
     
-    float3 projCoords = in.fragPositionLightSpace.xyz / in.fragPositionLightSpace.w;
-    float test = depth_texture.sample(s, projCoords.xy);
-    
-    return float4(test, test, test, 1.0);
+    return float4(result, 1.0);
 }
