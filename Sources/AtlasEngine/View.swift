@@ -36,6 +36,12 @@ class CoreRenderer: NSObject, MTKViewDelegate {
         RenderDispatcher.shared.lastFrameTime = currentTime
 
         let commandBuffer = commandQueue.makeCommandBuffer()
+        
+        for light in RenderDispatcher.shared.currentScene.lights {
+            if light.castsShadows {
+                light.shadowRenderer.executeShadowPass(commandBuffer: commandBuffer!, objects: RenderDispatcher.shared.objects, light: light)
+            }
+        }
 
         var renderEncoder = commandBuffer!.makeRenderCommandEncoder(descriptor: renderPassDescriptor)!
         renderEncoder.setDepthStencilState(depthState)

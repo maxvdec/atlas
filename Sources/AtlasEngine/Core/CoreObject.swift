@@ -53,6 +53,7 @@ public class CoreObject: Identifiable {
     public var material: Material = .init()
     
     var vertexBuffer: MTLBuffer?
+    var depthBuffer: MTLBuffer?
     var indexBuffer: MTLBuffer?
     var uniformsBuffer: MTLBuffer?
     
@@ -156,11 +157,14 @@ public class CoreObject: Identifiable {
     func initializeCore() {
         // First, we build the vertex buffer
         var vertexData: [MetalVertex] = []
+        var depthData: [DepthVertex] = []
         for vertex in vertices {
             vertexData.append(vertex.toMetalVertex())
+            depthData.append(DepthVertex(position: vertex.position.toSimd()))
         }
         let device = RenderDispatcher.shared.device!
         vertexBuffer = device.makeBuffer(bytes: vertexData, length: MemoryLayout<MetalVertex>.stride * vertexData.count, options: [])
+        depthBuffer = device.makeBuffer(bytes: depthData, length: MemoryLayout<DepthVertex>.stride * depthData.count, options: [])
         
         if useIndexedDrawing {
             indexBuffer = device.makeBuffer(bytes: indices!, length: MemoryLayout<PrimitiveIndex>.stride * indices!.count, options: [])

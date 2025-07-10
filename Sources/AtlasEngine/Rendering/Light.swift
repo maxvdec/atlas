@@ -75,11 +75,16 @@ public class Light {
     public var innerCutoff: Float = 15.0
     public var outerCutoff: Float = 25.0
     public var castsShadows: Bool = false
+    public var depthTexture: Texture {
+        return Texture(type: .depth, mtlTexture: shadowRenderer.texture, path: nil)
+    }
 
     var debugObject: CoreObject?
+    var shadowRenderer: ShadowRenderer
 
     init() {
         self.debugObject = nil
+        self.shadowRenderer = ShadowRenderer(device: RenderDispatcher.shared.device)
     }
 
     public static func pointLight(position: Position3d, color: Color = .shadeOfWhite(1), intensity: Float = 1.0) -> Light {
