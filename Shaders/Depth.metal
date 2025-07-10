@@ -8,9 +8,10 @@
 #include <metal_stdlib>
 using namespace metal;
 
-vertex DepthVertexOut depth_vertex(DepthVertexIn in [[stage_in]], constant float4x4 &lightVP [[buffer(1)]]) {
+vertex DepthVertexOut depth_vertex(DepthVertexIn in [[stage_in]], constant float4x4 &lightVP [[buffer(1)]], constant float4x4 &model [[buffer(2)]] ) {
     DepthVertexOut out;
-    out.position = lightVP * float4(in.position, 1.0);
+    float4 worldPos = model * float4(in.position, 1.0);
+    out.position = lightVP * worldPos;
     return out;
 }
 

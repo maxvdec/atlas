@@ -214,16 +214,26 @@ func clamp<T: Comparable>(_ value: T, _ minVal: T, _ maxVal: T) -> T {
 }
 
 func lookAt(eye: SIMD3<Float>, center: SIMD3<Float>, up: SIMD3<Float>) -> simd_float4x4 {
-    let f = normalize(center - eye)
-    let s = normalize(cross(f, up))
-    let u = cross(s, f)
+    let z = simd_normalize(eye - center)
+    var upVector = up
+    if abs(simd_dot(z, up)) > 0.999 {
+        upVector = SIMD3<Float>(0, 0, 1)
+    }
+    let x = simd_normalize(simd_cross(upVector, z))
+    let y = simd_cross(z, x)
 
-    var result = matrix_identity_float4x4
-    result.columns.0 = SIMD4<Float>(s.x, u.x, -f.x, 0)
-    result.columns.1 = SIMD4<Float>(s.y, u.y, -f.y, 0)
-    result.columns.2 = SIMD4<Float>(s.z, u.z, -f.z, 0)
-    result.columns.3 = SIMD4<Float>(-dot(s, eye), -dot(u, eye), dot(f, eye), 1)
-    return result
+    let translate = SIMD3<Float>(
+        -simd_dot(x, eye),
+        -simd_dot(y, eye),
+        -simd_dot(z, eye)
+    )
+
+    return simd_float4x4(
+        SIMD4<Float>(x.x, y.x, z.x, 0),
+        SIMD4<Float>(x.y, y.y, z.y, 0),
+        SIMD4<Float>(x.z, y.z, z.z, 0),
+        SIMD4<Float>(translate.x, translate.y, translate.z, 1)
+    )
 }
 
 func perspectiveFovRH(_ fovY: Float, _ aspect: Float, _ nearZ: Float, _ farZ: Float) -> simd_float4x4 {
@@ -255,149 +265,29 @@ func makeDefaultProjectionMatrix(aspect: Float) -> matrix_float4x4 {
     return perspectiveFovRH(fov, aspect, near, far)
 }
 
-extension Light {
-    func getLightViewMatrix() -> simd_float4x4 {
-        switch type {
-        case .directionalLight:
-            return getDirectionalLightViewMatrix()
-        case .pointLight:
-            return getPointLightViewMatrix()
-        case .spotlight:
-            return getSpotlightViewMatrix()
-        }
-    }
-
-    func getLightProjectionMatrix(shadowMapSize: Float = 1024.0) -> simd_float4x4 {
-        switch type {
-        case .directionalLight:
-            return getDirectionalLightProjectionMatrix()
-        case .pointLight:
-            return getPointLightProjectionMatrix()
-        case .spotlight:
-            return getSpotlightProjectionMatrix()
-        }
-    }
-
-    func getLightVPMatrix(shadowMapSize: Float = 1024.0) -> simd_float4x4 {
-        let viewMatrix = getLightViewMatrix()
-        let projectionMatrix = getLightProjectionMatrix(shadowMapSize: shadowMapSize)
-        return projectionMatrix * viewMatrix
-    }
-
-    private func getDirectionalLightViewMatrix() -> simd_float4x4 {
-        let lightDir = normalize(direction.toSimd())
-        let lightPos = -lightDir * 50.0 // Position light far away
-
-        let worldUp = SIMD3<Float>(0, 1, 0)
-        let right = normalize(cross(worldUp, lightDir))
-        let up = cross(lightDir, right)
-
-        return lookAt(eye: lightPos, center: lightPos + lightDir, up: up)
-    }
-
-    private func getPointLightViewMatrix() -> simd_float4x4 {
-        let lightPos = position.toSimd()
-        let lookDirection = SIMD3<Float>(0, 0, 1) // Default forward direction
-        let up = SIMD3<Float>(0, 1, 0)
-
-        return lookAt(eye: lightPos, center: lightPos + lookDirection, up: up)
-    }
-
-    private func getSpotlightViewMatrix() -> simd_float4x4 {
-        let lightPos = position.toSimd()
-        let lightDir = normalize(direction.toSimd())
-
-        let worldUp = SIMD3<Float>(0, 1, 0)
-        let right = normalize(cross(worldUp, lightDir))
-        let up = cross(lightDir, right)
-
-        return lookAt(eye: lightPos, center: lightPos + lightDir, up: up)
-    }
-
-    private func getDirectionalLightProjectionMatrix() -> simd_float4x4 {
-        let size: Float = 20.0 // TODO: Change in release
-        let near: Float = 0.1
-        let far: Float = 100.0
-
-        return orthographicProjection(left: -size, right: size, bottom: -size, top: size, near: near, far: far)
-    }
-
-    private func getPointLightProjectionMatrix() -> simd_float4x4 {
-        let fov: Float = 90.0 * .pi / 180.0
-        let aspect: Float = 1.0 // Square shadow maps
-        let near: Float = 0.1
-
-        let far = getLightRange()
-
-        return perspectiveFovRH(fov, aspect, near, far)
-    }
-
-    private func getSpotlightProjectionMatrix() -> simd_float4x4 {
-        let fov = radians(fromDegrees: outerCutoff * 2.0) // Convert cutoff to full FOV
-        let aspect: Float = 1.0 // Square shadow maps
-        let near: Float = 0.1
-        let far = getLightRange()
-
-        return perspectiveFovRH(fov, aspect, near, far)
-    }
-
-    private func getLightRange() -> Float {
-        let attenuation = distance.getProperties()
-
-        let threshold: Float = 1.0 / 256.0
-        let a = attenuation.quadratic
-        let b = attenuation.linear
-        let c = attenuation.constant - (intensity / threshold)
-
-        if a != 0 {
-            let discriminant = b * b - 4 * a * c
-            if discriminant >= 0 {
-                let range = (-b + sqrt(discriminant)) / (2 * a)
-                return max(range, 1.0) // Minimum range of 1
-            }
-        }
-
-        switch distance {
-        case .distance7: return 7.0
-        case .distance13: return 13.0
-        case .distance20: return 20.0
-        case .distance50: return 50.0
-        case .distance100: return 100.0
-        case .distance200: return 200.0
-        }
-    }
-
-    func getPointLightVPMatrices(shadowMapSize: Float = 1024.0) -> [simd_float4x4] {
-        guard type == .pointLight else { return [getLightVPMatrix(shadowMapSize: shadowMapSize)] }
-
-        let lightPos = position.toSimd()
-        let projectionMatrix = getPointLightProjectionMatrix()
-
-        let directions: [(SIMD3<Float>, SIMD3<Float>)] = [
-            (SIMD3<Float>(1, 0, 0), SIMD3<Float>(0, -1, 0)), // +X
-            (SIMD3<Float>(-1, 0, 0), SIMD3<Float>(0, -1, 0)), // -X
-            (SIMD3<Float>(0, 1, 0), SIMD3<Float>(0, 0, 1)), // +Y
-            (SIMD3<Float>(0, -1, 0), SIMD3<Float>(0, 0, -1)), // -Y
-            (SIMD3<Float>(0, 0, 1), SIMD3<Float>(0, -1, 0)), // +Z
-            (SIMD3<Float>(0, 0, -1), SIMD3<Float>(0, -1, 0)) // -Z
-        ]
-
-        return directions.map { direction, up in
-            let viewMatrix = lookAt(eye: lightPos, center: lightPos + direction, up: up)
-            return projectionMatrix * viewMatrix
-        }
-    }
-}
-
-func orthographicProjection(left: Float, right: Float, bottom: Float, top: Float, near: Float, far: Float) -> simd_float4x4 {
-    let width = right - left
-    let height = top - bottom
-    let depth = far - near
+func makeOrthographicMatrix(left: Float, right: Float, bottom: Float, top: Float, near: Float, far: Float) -> simd_float4x4 {
+    let ral = right + left
+    let rsl = right - left
+    let tab = top + bottom
+    let tsb = top - bottom
+    let fan = far - near
 
     return simd_float4x4(
-        SIMD4<Float>(2.0 / width, 0, 0, 0),
-        SIMD4<Float>(0, 2.0 / height, 0, 0),
-        SIMD4<Float>(0, 0, -2.0 / depth, 0),
-        SIMD4<Float>(-(right + left) / width, -(top + bottom) / height, -(far + near) / depth, 1)
+        SIMD4<Float>(2.0 / rsl, 0.0, 0.0, 0.0),
+        SIMD4<Float>(0.0, 2.0 / tsb, 0.0, 0.0),
+        SIMD4<Float>(0.0, 0.0, 1.0 / fan, 0.0),
+        SIMD4<Float>(-ral / rsl, -tab / tsb, -near / fan, 1.0)
     )
+}
+
+extension Light {
+    func getViewProjectionMatrix() -> simd_float4x4 {
+        let (near, far): (Float, Float) = (0.1, 50.0)
+        let lightProj = makeOrthographicMatrix(left: -10, right: 10, bottom: -10, top: 10, near: near, far: far)
+        print(lightProj)
+        let view = lookAt(eye: position.toSimd(), center: [0, 0, 0], up: [0, 1, 0])
+        print(view)
+
+        return view * lightProj
+    }
 }

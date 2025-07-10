@@ -72,11 +72,14 @@ struct ShadowRenderer {
         let renderEncoder = commandBuffer.makeRenderCommandEncoder(descriptor: light.shadowRenderer.renderPassDescriptor)!
         renderEncoder.setRenderPipelineState(light.shadowRenderer.pipeline)
         renderEncoder.setDepthStencilState(light.shadowRenderer.depthStencilState)
-        var lightVP = light.getLightVPMatrix()
+        var lightVP = light.getViewProjectionMatrix()
         renderEncoder.setVertexBytes(&lightVP, length: MemoryLayout<simd_float4x4>.stride, index: 1)
+        print(lightVP)
 
         for object in objects {
             renderEncoder.setVertexBuffer(object.depthBuffer, offset: 0, index: 0)
+            var model = object.model
+            renderEncoder.setVertexBytes(&model, length: MemoryLayout<simd_float4x4>.stride, index: 2)
             if object.useIndexedDrawing {
                 renderEncoder.drawIndexedPrimitives(type: .triangle, indexCount: object.indices!.count, indexType: .uint16, indexBuffer: object.indexBuffer!, indexBufferOffset: 0)
             } else {
