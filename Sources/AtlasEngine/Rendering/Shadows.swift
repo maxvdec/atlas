@@ -43,6 +43,8 @@ class ShadowRenderer {
         shadowPassDescriptor.depthAttachment.storeAction = .store
         shadowPassDescriptor.depthAttachment.clearDepth = 1.0
 
+        shadowPassDescriptor.colorAttachments[0].texture = nil
+
         var library = RenderDispatcher.shared.library
         if library == nil {
             RenderDispatcher.shared.library = try! device.makeLibrary(source: allMetalShaders, options: nil)
@@ -74,15 +76,19 @@ class ShadowRenderer {
         depthStencilState = device.makeDepthStencilState(descriptor: depthStencilDescriptor)!
     }
 
-    public func performShadowPass(renderEncoder: MTLRenderCommandEncoder, objects: [CoreObject], light: Light) {
+    public func performShadowPass(cmdBuffer: inout MTLCommandBuffer, objects: [CoreObject], light: Light) {
+        let renderEncoder = cmdBuffer.makeRenderCommandEncoder(descriptor: shadowPassDescriptor)!
         renderEncoder.setRenderPipelineState(pipelineState)
         renderEncoder.setDepthStencilState(depthStencilState)
 
         for object in objects {
+            if object.shader.type != .phongShader {
+                continue
+            }
             var lightVP = light.getLightViewProjectionMatrix()
             renderEncoder.setVertexBytes(&lightVP, length: MemoryLayout<float4x4>.stride, index: 2)
             renderEncoder.setVertexBuffer(object.depthVertexBuffer!, offset: 0, index: 0)
-            var objectModel = object.model
+            var objectModel = object.makeModelMatrix()
             renderEncoder.setVertexBytes(&objectModel, length: MemoryLayout<float4x4>.stride, index: 1)
             if object.indices != nil {
                 renderEncoder.drawIndexedPrimitives(type: .triangle, indexCount: object.indices!.count, indexType: .uint16, indexBuffer: object.indexBuffer!, indexBufferOffset: 0)
@@ -90,7 +96,6 @@ class ShadowRenderer {
                 renderEncoder.drawPrimitives(type: .triangle, vertexStart: 0, vertexCount: object.vertices.count)
             }
         }
-
         renderEncoder.endEncoding()
     }
 }

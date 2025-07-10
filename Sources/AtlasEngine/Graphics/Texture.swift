@@ -139,7 +139,11 @@ public class FullscreenPresent: Renderable, Identifiable {
             let fullscreen = renderable as! FullscreenPresent
             encoder.setRenderPipelineState(fullscreen.object.pipelineState!)
             encoder.setVertexBuffer(fullscreen.object.vertexBuffer!, offset: 0, index: 0)
-            encoder.setFragmentTexture(fullscreen.texture.mtlTexture, index: 0)
+            if fullscreen.texture.type == .color {
+                encoder.setFragmentTexture(fullscreen.texture.mtlTexture, index: 0)
+            } else if fullscreen.texture.type == .depth {
+                encoder.setFragmentTexture(fullscreen.texture.mtlTexture, index: 1)
+            }
             var type = fullscreen.texture.type.rawValue
             encoder.setFragmentBytes(&type, length: MemoryLayout<UInt32>.stride, index: 0)
             encoder.setFragmentSamplerState(fullscreen.object.samplerState!, index: 0)

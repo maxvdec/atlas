@@ -35,12 +35,11 @@ class CoreRenderer: NSObject, MTKViewDelegate {
         let deltaTime = currentTime - RenderDispatcher.shared.lastFrameTime
         RenderDispatcher.shared.lastFrameTime = currentTime
 
-        let commandBuffer = commandQueue.makeCommandBuffer()
+        var commandBuffer = commandQueue.makeCommandBuffer()
         
         for light in RenderDispatcher.shared.currentScene.lights {
             if light.castsShadows {
-                let shadowEncoder = commandBuffer!.makeRenderCommandEncoder(descriptor: light.shadowRenderer.shadowPassDescriptor)
-                light.makeShadowPass(renderEncoder: shadowEncoder!, objects: RenderDispatcher.shared.objects)
+                light.makeShadowPass(cmdBuffer: &commandBuffer!, objects: RenderDispatcher.shared.objects)
             }
         }
 

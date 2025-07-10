@@ -151,21 +151,27 @@ public class Light {
     func getLightViewProjectionMatrix() -> simd_float4x4 {
         let isDirectional = (type == .directionalLight)
 
-        let eye: SIMD3<Float> = isDirectional ? -direction.toSimd() * 10 : position.toSimd()
-        let center: SIMD3<Float> = isDirectional ? .zero : eye + direction.toSimd()
+        var lightDir = direction.toSimd()
+        if simd_length_squared(lightDir) < 0.0001 {
+            lightDir = SIMD3<Float>(0, -1, 0)
+        }
+
+        let eye: SIMD3<Float> = isDirectional ? -lightDir * 10 : position.toSimd()
+        let center: SIMD3<Float> = isDirectional ? .zero : eye + lightDir
         let up = SIMD3<Float>(0, 1, 0)
 
         let viewMatrix = lookAt(eye: eye, center: center, up: up)
+
         let projectionMatrix = orthographicProjection(
-            left: -10, right: 10,
-            bottom: -10, top: 10,
+            left: -15, right: 15,
+            bottom: -15, top: 15,
             near: 0.1, far: 100
         )
 
         return projectionMatrix * viewMatrix
     }
 
-    func makeShadowPass(renderEncoder: MTLRenderCommandEncoder, objects: [CoreObject]) {
-        shadowRenderer.performShadowPass(renderEncoder: renderEncoder, objects: objects, light: self)
+    func makeShadowPass(cmdBuffer: inout MTLCommandBuffer, objects: [CoreObject]) {
+        shadowRenderer.performShadowPass(cmdBuffer: &cmdBuffer, objects: objects, light: self)
     }
 }

@@ -214,16 +214,26 @@ func clamp<T: Comparable>(_ value: T, _ minVal: T, _ maxVal: T) -> T {
 }
 
 func lookAt(eye: SIMD3<Float>, center: SIMD3<Float>, up: SIMD3<Float>) -> simd_float4x4 {
-    let f = normalize(center - eye)
-    let s = normalize(cross(f, up))
-    let u = cross(s, f)
+    let z = simd_normalize(eye - center)
+    var upVector = up
+    if abs(simd_dot(z, up)) > 0.999 {
+        upVector = SIMD3<Float>(0, 0, 1)
+    }
+    let x = simd_normalize(simd_cross(upVector, z))
+    let y = simd_cross(z, x)
 
-    var result = matrix_identity_float4x4
-    result.columns.0 = SIMD4<Float>(s.x, u.x, -f.x, 0)
-    result.columns.1 = SIMD4<Float>(s.y, u.y, -f.y, 0)
-    result.columns.2 = SIMD4<Float>(s.z, u.z, -f.z, 0)
-    result.columns.3 = SIMD4<Float>(-dot(s, eye), -dot(u, eye), dot(f, eye), 1)
-    return result
+    let translate = SIMD3<Float>(
+        -simd_dot(x, eye),
+        -simd_dot(y, eye),
+        -simd_dot(z, eye)
+    )
+
+    return simd_float4x4(
+        SIMD4<Float>(x.x, y.x, z.x, 0),
+        SIMD4<Float>(x.y, y.y, z.y, 0),
+        SIMD4<Float>(x.z, y.z, z.z, 0),
+        SIMD4<Float>(translate.x, translate.y, translate.z, 1)
+    )
 }
 
 func perspectiveFovRH(_ fovY: Float, _ aspect: Float, _ nearZ: Float, _ farZ: Float) -> simd_float4x4 {
@@ -256,17 +266,23 @@ func makeDefaultProjectionMatrix(aspect: Float) -> matrix_float4x4 {
 }
 
 func orthographicProjection(left: Float, right: Float, bottom: Float, top: Float, near: Float, far: Float) -> simd_float4x4 {
-    let ral = right + left
     let rsl = right - left
-    let tab = top + bottom
     let tsb = top - bottom
-    let fan = far + near
     let fsn = far - near
+
+    if abs(rsl) < 0.0001 || abs(tsb) < 0.0001 || abs(fsn) < 0.0001 {
+        assertionFailure("Orthographic projection parameters produce divide-by-zero!")
+        return matrix_identity_float4x4
+    }
+
+    let ral = right + left
+    let tab = top + bottom
+    let fan = far + near
 
     return simd_float4x4(
         SIMD4(2 / rsl, 0, 0, 0),
         SIMD4(0, 2 / tsb, 0, 0),
-        SIMD4(0, 0, -2 / fsn, 0),
-        SIMD4(-ral / rsl, -tab / tsb, -fan / fsn, 1)
+        SIMD4(0, 0, -1 / fsn, 0),
+        SIMD4(-ral / rsl, -tab / tsb, -near / fsn, 1)
     )
 }
