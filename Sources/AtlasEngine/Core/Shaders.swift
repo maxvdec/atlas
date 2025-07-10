@@ -201,7 +201,7 @@ class ShadowShader: CoreShader {
 
         let library = RenderDispatcher.shared.library!
         let vertex = library.makeFunction(name: "shadow_vertex")!
-        let fragment = library.makeFunction(name: "shadow_fragment")!
+        let fragment = library.makeFunction(name: "debug_shadow_fragment")!
 
         // According to the shader, we need to create a Vertex Descriptor
         let vertexDescriptor = makeVertexDescriptor()
@@ -243,8 +243,14 @@ class ShadowShader: CoreShader {
         uniforms.ambientColor = RenderDispatcher.shared.currentScene.ambientColor
         uniforms.lightCount = Int32(RenderDispatcher.shared.currentScene.lights.count)
         uniforms.casters = Int32(RenderDispatcher.shared.currentScene.lights.filter { $0.castsShadows }.count)
-        if RenderDispatcher.shared.currentScene.lights.count > 0 && RenderDispatcher.shared.currentScene.lights[0].castsShadows {
-            uniforms.lightSpaceMatrix = RenderDispatcher.shared.currentScene.lights[0].getLightViewProjectionMatrix()
+
+        let firstCaster = RenderDispatcher.shared.currentScene.lights.first { $0.castsShadows }
+
+        if firstCaster != nil {
+            uniforms.lightSpaceMatrix = firstCaster!.getLightViewProjectionMatrix()
+            print(uniforms.lightSpaceMatrix)
+        } else {
+            print("NO CASTERS")
         }
         let camera = RenderDispatcher.shared.frameObjects.first(where: {
             $0 is Camera

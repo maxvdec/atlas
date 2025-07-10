@@ -86,6 +86,7 @@ class ShadowRenderer {
                 continue
             }
             var lightVP = light.getLightViewProjectionMatrix()
+            print(lightVP)
             renderEncoder.setVertexBytes(&lightVP, length: MemoryLayout<float4x4>.stride, index: 2)
             renderEncoder.setVertexBuffer(object.depthVertexBuffer!, offset: 0, index: 0)
             var objectModel = object.makeModelMatrix()

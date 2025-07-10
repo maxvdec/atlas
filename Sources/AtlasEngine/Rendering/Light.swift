@@ -63,6 +63,8 @@ struct MetalLight {
 
     var innerCutoff: Float
     var outerCutoff: Float
+
+    var casts: Bool = false
 }
 
 public class Light {
@@ -131,7 +133,7 @@ public class Light {
 
     func toMetalLight() -> MetalLight {
         let attenuationProperties = distance.getProperties()
-        return MetalLight(type: type.rawValue, color: color.toSimd(), position: position.toSimd4(), direction: direction.toSimd4(), intensity: intensity, specular: material.specular.toSimd(), diffuse: material.diffuse.toSimd(), constant: attenuationProperties.constant, linear: attenuationProperties.linear, quadratic: attenuationProperties.quadratic, innerCutoff: cos(radians(fromDegrees: innerCutoff)), outerCutoff: cos(radians(fromDegrees: outerCutoff)))
+        return MetalLight(type: type.rawValue, color: color.toSimd(), position: position.toSimd4(), direction: direction.toSimd4(), intensity: intensity, specular: material.specular.toSimd(), diffuse: material.diffuse.toSimd(), constant: attenuationProperties.constant, linear: attenuationProperties.linear, quadratic: attenuationProperties.quadratic, innerCutoff: cos(radians(fromDegrees: innerCutoff)), outerCutoff: cos(radians(fromDegrees: outerCutoff)), casts: castsShadows)
     }
 
     public func addToScene() {

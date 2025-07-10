@@ -84,7 +84,9 @@ struct Light {
     float quadratic; // Used in: PointLight
     
     float innerCutoff; // Used in: SpotLight
-    float outerCutoff;
+    float outerCutoff; // Used in: SpotLight
+    
+    bool casts;
 };
 
 struct DepthPassVertexIn {
