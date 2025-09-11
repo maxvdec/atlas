@@ -1,0 +1,12 @@
+.jj
+.git
+cmake_install.cmake
+CMakeCache.txt
+compile_commands.json
+.DS_Store
+libatlas.a
+Makefile
+bin
+CMakeFiles
+.cache
+
