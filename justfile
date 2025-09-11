@@ -9,3 +9,6 @@ run:
 
 clangd:
     cmake . -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+
+lint:
+    clang-tidy -p build atlas/*.cpp

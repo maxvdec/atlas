@@ -1,0 +1,19 @@
+name: Format the Code
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  format:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install clang-format
+        run: brew install clang-format
+
+      - name: Check formatting
+        run: |
+          find . \( -name '*.cpp' -o -name '*.h' \) \
+            | xargs clang-format --dry-run -Werror
