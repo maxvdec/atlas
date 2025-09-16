@@ -3,6 +3,7 @@ project(Atlas)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_COMPILER /usr/bin/clang++)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
@@ -14,10 +15,12 @@ find_package(OpenGL REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
 
-target_link_libraries(atlas PRIVATE OpenGL::GL glfw3 glm::glm)
+target_link_libraries(atlas PRIVATE OpenGL::GL glfw glm::glm)
 
 file(GLOB_RECURSE TEST_SOURCES test/*.cpp)
 
 add_executable(atlas_test ${TEST_SOURCES})
+
+target_link_libraries(atlas_test PRIVATE atlas)
 
 include_directories(include extern)

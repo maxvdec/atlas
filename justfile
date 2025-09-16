@@ -9,3 +9,7 @@ run:
 
 clangd:
     cmake . -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+
+lint:
+   find atlas test \( -name '*.cpp' -o -name '*.h' \) -print0 | xargs -0 clang-format --dry-run --Werror
+

@@ -1,0 +1,18 @@
+name: Format the Code
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  format:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install clang-format
+        run: brew install clang-format
+
+      - name: Check formatting
+        run: |
+          find atlas test \( -name '*.cpp' -o -name '*.h' \) -print0 | xargs -0 clang-format --dry-run --Werror

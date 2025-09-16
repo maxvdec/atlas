@@ -1,0 +1,20 @@
+name: Build and Test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install Dependencies
+        run: |
+          brew install cmake glfw glm
+      - name: Build
+        run: |
+          mkdir build
+          cd build
+          cmake ..
+          make
