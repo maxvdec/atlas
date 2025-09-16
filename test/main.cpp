@@ -1,8 +1,8 @@
 
-#include <atlas/test.h>
-#include <iostream>
+#include <atlas/window.h>
 
 int main() {
-    hello();
+    Window window("Atlas Window", 800, 600);
+    window.run();
     return 0;
 }
