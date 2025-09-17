@@ -12,8 +12,8 @@
 #include <atlas/window.h>
 #include <string>
 
-Window::Window(const std::string &title, int width, int height)
-    : title(title), width(width), height(height) {
+Window::Window(WindowConfiguration config)
+    : title(config.title), width(config.width), height(config.height) {
     if (!glfwInit()) {
         throw std::runtime_error("Failed to initialize GLFW");
     }
@@ -39,6 +39,22 @@ Window::Window(const std::string &title, int width, int height)
     glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
     glViewport(0, 0, fbWidth, fbHeight);
 
+    if (config.posX != WINDOW_CENTERED && config.posY != WINDOW_CENTERED) {
+        glfwSetWindowPos(window, config.posX, config.posY);
+    }
+
+    glfwWindowHint(GLFW_DECORATED, config.decorations ? GLFW_TRUE : GLFW_FALSE);
+    glfwWindowHint(GLFW_RESIZABLE, config.resizable ? GLFW_TRUE : GLFW_FALSE);
+    glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER,
+                   config.transparent ? GLFW_TRUE : GLFW_FALSE);
+    glfwWindowHint(GLFW_FLOATING, config.alwaysOnTop ? GLFW_TRUE : GLFW_FALSE);
+    glfwSetWindowOpacity(window, config.opacity);
+    if (config.aspectRatioX != DEFAULT_ASPECT_RATIO &&
+        config.aspectRatioY != DEFAULT_ASPECT_RATIO) {
+        glfwSetWindowAspectRatio(window, config.aspectRatioX,
+                                 config.aspectRatioY);
+    }
+
     this->windowRef = static_cast<CoreWindowReference>(window);
 
     glfwSetFramebufferSizeCallback(window, [](GLFWwindow *win, int w, int h) {
@@ -59,8 +75,103 @@ void Window::run() {
     }
 }
 
+void Window::close() {
+    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
+    glfwSetWindowShouldClose(window, true);
+}
+
+void Window::setFullscreen(bool enable) {
+    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
+    if (enable) {
+        GLFWmonitor *monitor = glfwGetPrimaryMonitor();
+        const GLFWvidmode *mode = glfwGetVideoMode(monitor);
+        glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height,
+                             mode->refreshRate);
+    } else {
+        int width = this->width;
+        int height = this->height;
+        glfwSetWindowMonitor(window, nullptr, 100, 100, width, height, 0);
+    }
+}
+
+void Window::setFullscreen(Monitor &monitor) {
+    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
+    GLFWmonitor *glfwMonitor = static_cast<GLFWmonitor *>(monitor.monitorRef);
+    const GLFWvidmode *mode = glfwGetVideoMode(glfwMonitor);
+    glfwSetWindowMonitor(window, glfwMonitor, 0, 0, mode->width, mode->height,
+                         mode->refreshRate);
+}
+
+void Window::setWindowed(WindowConfiguration config) {
+    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
+    int width = config.width;
+    int height = config.height;
+    int posX = config.posX != WINDOW_CENTERED ? config.posX : 100;
+    int posY = config.posY != WINDOW_CENTERED ? config.posY : 100;
+    glfwSetWindowMonitor(window, nullptr, posX, posY, width, height, 0);
+}
+
+std::vector<Monitor> Window::enumerateMonitors() {
+    int count;
+    GLFWmonitor **monitors = glfwGetMonitors(&count);
+    std::vector<Monitor> monitorList;
+    for (int i = 0; i < count; ++i) {
+        bool isPrimary = (monitors[i] == glfwGetPrimaryMonitor());
+        monitorList.emplace_back(static_cast<CoreMonitorReference>(monitors[i]),
+                                 i, isPrimary);
+    }
+    return monitorList;
+}
+
 Window::~Window() {
     GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
     glfwDestroyWindow(window);
     glfwTerminate();
+}
+
+Monitor::Monitor(CoreMonitorReference ref, int id, bool isPrimary)
+    : monitorRef(ref), monitorID(id), primary(isPrimary) {}
+
+std::vector<VideoMode> Monitor::queryVideoModes() {
+    GLFWmonitor *glfwMonitor = static_cast<GLFWmonitor *>(this->monitorRef);
+    int count;
+    const GLFWvidmode *modes = glfwGetVideoModes(glfwMonitor, &count);
+    std::vector<VideoMode> videoModes;
+    for (int i = 0; i < count; ++i) {
+        videoModes.push_back(
+            {modes[i].width, modes[i].height, modes[i].refreshRate});
+    }
+    return videoModes;
+}
+
+VideoMode Monitor::getCurrentVideoMode() {
+    GLFWmonitor *glfwMonitor = static_cast<GLFWmonitor *>(this->monitorRef);
+    const GLFWvidmode *mode = glfwGetVideoMode(glfwMonitor);
+    return {mode->width, mode->height, mode->refreshRate};
+}
+
+std::tuple<int, int> Monitor::getPhysicalSize() {
+    GLFWmonitor *glfwMonitor = static_cast<GLFWmonitor *>(this->monitorRef);
+    int widthMM, heightMM;
+    glfwGetMonitorPhysicalSize(glfwMonitor, &widthMM, &heightMM);
+    return {widthMM, heightMM};
+}
+
+std::tuple<int, int> Monitor::getPosition() {
+    GLFWmonitor *glfwMonitor = static_cast<GLFWmonitor *>(this->monitorRef);
+    int posX, posY;
+    glfwGetMonitorPos(glfwMonitor, &posX, &posY);
+    return {posX, posY};
+}
+
+std::tuple<float, float> Monitor::getContentScale() {
+    GLFWmonitor *glfwMonitor = static_cast<GLFWmonitor *>(this->monitorRef);
+    float scaleX, scaleY;
+    glfwGetMonitorContentScale(glfwMonitor, &scaleX, &scaleY);
+    return {scaleX, scaleY};
+}
+
+std::string Monitor::getName() {
+    GLFWmonitor *glfwMonitor = static_cast<GLFWmonitor *>(this->monitorRef);
+    return std::string(glfwGetMonitorName(glfwMonitor));
 }
