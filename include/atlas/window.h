@@ -10,6 +10,7 @@
 #ifndef WINDOW_H
 #define WINDOW_H
 
+#include "atlas/object.h"
 #include <string>
 #include <tuple>
 #include <vector>
@@ -75,8 +76,11 @@ class Window {
     void setWindowed(WindowConfiguration config);
     std::vector<Monitor> static enumerateMonitors();
 
+    void addObject(Renderable *object);
+
   private:
     CoreWindowReference windowRef;
+    std::vector<Renderable *> renderables;
 };
 
 #endif // WINDOW_H

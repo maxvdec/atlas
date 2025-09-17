@@ -7,6 +7,7 @@
  Copyright (c) 2025 maxvdec
 */
 
+#include "atlas/object.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <atlas/window.h>
@@ -22,6 +23,12 @@ Window::Window(WindowConfiguration config)
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
+    glfwWindowHint(GLFW_DECORATED, config.decorations ? GLFW_TRUE : GLFW_FALSE);
+    glfwWindowHint(GLFW_RESIZABLE, config.resizable ? GLFW_TRUE : GLFW_FALSE);
+    glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER,
+                   config.transparent ? GLFW_TRUE : GLFW_FALSE);
+    glfwWindowHint(GLFW_FLOATING, config.alwaysOnTop ? GLFW_TRUE : GLFW_FALSE);
+
     GLFWwindow *window =
         glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
     if (window == nullptr) {
@@ -35,6 +42,8 @@ Window::Window(WindowConfiguration config)
         throw std::runtime_error("Failed to initialize GLAD");
     }
 
+    glfwSetWindowOpacity(window, config.opacity);
+
     int fbWidth, fbHeight;
     glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
     glViewport(0, 0, fbWidth, fbHeight);
@@ -43,12 +52,6 @@ Window::Window(WindowConfiguration config)
         glfwSetWindowPos(window, config.posX, config.posY);
     }
 
-    glfwWindowHint(GLFW_DECORATED, config.decorations ? GLFW_TRUE : GLFW_FALSE);
-    glfwWindowHint(GLFW_RESIZABLE, config.resizable ? GLFW_TRUE : GLFW_FALSE);
-    glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER,
-                   config.transparent ? GLFW_TRUE : GLFW_FALSE);
-    glfwWindowHint(GLFW_FLOATING, config.alwaysOnTop ? GLFW_TRUE : GLFW_FALSE);
-    glfwSetWindowOpacity(window, config.opacity);
     if (config.aspectRatioX != DEFAULT_ASPECT_RATIO &&
         config.aspectRatioY != DEFAULT_ASPECT_RATIO) {
         glfwSetWindowAspectRatio(window, config.aspectRatioX,
@@ -70,10 +73,16 @@ void Window::run() {
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
+        for (auto &obj : this->renderables) {
+            obj->render();
+        }
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 }
+
+void Window::addObject(Renderable *obj) { this->renderables.push_back(obj); }
 
 void Window::close() {
     GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
