@@ -21,6 +21,9 @@ class Camera {
     float fov = 45.0f; // Field of view in degrees
     float nearClip = 0.1f;
     float farClip = 100.0f;
+    float orthographicSize = 5.0f;
+
+    bool useOrthographic = false;
 
     void move(const Position3d &delta);
     void setPosition(const Position3d &newPosition);

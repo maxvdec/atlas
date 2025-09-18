@@ -115,14 +115,26 @@ void Window::setScene(Scene *scene) {
 }
 
 glm::mat4 Window::calculateProjectionMatrix() {
-    int fbWidth, fbHeight;
-    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
-    glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
+    if (!this->camera->useOrthographic) {
+        int fbWidth, fbHeight;
+        GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
+        glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
 
-    float aspectRatio =
-        static_cast<float>(fbWidth) / static_cast<float>(fbHeight);
-    return glm::perspective(glm::radians(camera->fov), aspectRatio,
-                            camera->nearClip, camera->farClip);
+        float aspectRatio =
+            static_cast<float>(fbWidth) / static_cast<float>(fbHeight);
+        return glm::perspective(glm::radians(camera->fov), aspectRatio,
+                                camera->nearClip, camera->farClip);
+    } else {
+        float orthoSize = this->camera->orthographicSize;
+        int fbWidth, fbHeight;
+        GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
+        glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
+        float aspectRatio =
+            static_cast<float>(fbWidth) / static_cast<float>(fbHeight);
+        return glm::ortho(-orthoSize * aspectRatio, orthoSize * aspectRatio,
+                          -orthoSize, orthoSize, camera->nearClip,
+                          camera->farClip);
+    }
 }
 
 void Window::setFullscreen(bool enable) {
