@@ -68,6 +68,9 @@ Window::Window(WindowConfiguration config)
 }
 
 void Window::run() {
+    for (auto &obj : this->renderables) {
+        obj->initialize();
+    }
     GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
     while (!glfwWindowShouldClose(window)) {
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
