@@ -14,12 +14,12 @@
 #include <vector>
 
 std::vector<LayoutDescriptor> CoreVertex::getLayoutDescriptors() {
-    return {
-        {0, 3, GL_DOUBLE, GL_FALSE, sizeof(CoreVertex),
-         offsetof(CoreVertex, position)},
-        {1, 4, GL_DOUBLE, GL_FALSE, sizeof(CoreVertex),
-         offsetof(CoreVertex, color)},
-    };
+    return {{0, 3, GL_DOUBLE, GL_FALSE, sizeof(CoreVertex),
+             offsetof(CoreVertex, position)},
+            {1, 4, GL_DOUBLE, GL_FALSE, sizeof(CoreVertex),
+             offsetof(CoreVertex, color)},
+            {2, 2, GL_DOUBLE, GL_FALSE, sizeof(CoreVertex),
+             offsetof(CoreVertex, textureCoordinate)}};
 }
 
 CoreObject::CoreObject() : vbo(0), vao(0) {
@@ -32,6 +32,10 @@ void CoreObject::attachProgram(const ShaderProgram &program) {
         shaderProgram.compile();
     }
 }
+
+void CoreObject::renderColorWithTexture() { onlyTexture = false; }
+
+void CoreObject::attachTexture(const Texture &tex) { texture = tex; }
 
 void CoreObject::attachVertices(const std::vector<CoreVertex> &newVertices) {
     vertices = newVertices;
@@ -93,6 +97,13 @@ void CoreObject::render() {
     glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
     if (static_cast<Id>(currentProgram) != shaderProgram.programId) {
         glUseProgram(shaderProgram.programId);
+    }
+
+    if (texture.has_value()) {
+        shaderProgram.setUniformBool("useTexture", true);
+        shaderProgram.setUniformBool("onlyTexture", onlyTexture);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture.value().id);
     }
 
     glBindVertexArray(vao);

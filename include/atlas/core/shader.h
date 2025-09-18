@@ -20,12 +20,13 @@
 #include <glm/glm.hpp>
 #endif
 
-#define DEFAULT_FRAG_SHADER Color
-#define DEFAULT_VERT_SHADER Color
+#define DEFAULT_FRAG_SHADER Main
+#define DEFAULT_VERT_SHADER Main
 
 enum class AtlasVertexShader {
     Debug,
     Color,
+    Main,
 };
 
 struct VertexShader {
@@ -43,6 +44,7 @@ struct VertexShader {
 enum class AtlasFragmentShader {
     Debug,
     Color,
+    Main,
 };
 
 struct FragmentShader {
@@ -83,6 +85,7 @@ struct ShaderProgram {
     void setUniform1f(std::string name, float v0);
     void setUniform1i(std::string name, int v0);
     void setUniformMat4f(std::string name, const glm::mat4 &matrix);
+    void setUniformBool(std::string name, bool value);
 #endif
 };
 

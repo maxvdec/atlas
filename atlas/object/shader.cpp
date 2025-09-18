@@ -26,6 +26,11 @@ VertexShader VertexShader::fromDefaultShader(AtlasVertexShader shader) {
         vertexShader.desiredAttributes = {0, 1};
         break;
     }
+    case AtlasVertexShader::Main: {
+        vertexShader = VertexShader::fromSource(MAIN_VERT);
+        vertexShader.desiredAttributes = {0, 1, 2};
+        break;
+    }
     default:
         throw std::runtime_error("Unknown default vertex shader");
     }
@@ -66,6 +71,8 @@ FragmentShader FragmentShader::fromDefaultShader(AtlasFragmentShader shader) {
         return FragmentShader::fromSource(DEBUG_FRAG);
     case AtlasFragmentShader::Color:
         return FragmentShader::fromSource(COLOR_FRAG);
+    case AtlasFragmentShader::Main:
+        return FragmentShader::fromSource(MAIN_FRAG);
     default:
         throw std::runtime_error("Unknown default fragment shader");
     }
@@ -169,4 +176,8 @@ void ShaderProgram::setUniformMat4f(std::string name, const glm::mat4 &matrix) {
 
 void ShaderProgram::setUniform1i(std::string name, int v0) {
     glUniform1i(glGetUniformLocation(programId, name.c_str()), v0);
+}
+
+void ShaderProgram::setUniformBool(std::string name, bool value) {
+    glUniform1i(glGetUniformLocation(programId, name.c_str()), (int)value);
 }
