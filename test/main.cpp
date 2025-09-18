@@ -1,7 +1,9 @@
 
 #include "atlas/object.h"
 #include "atlas/units.h"
+#include "atlas/workspace.h"
 #include <atlas/window.h>
+#include <iostream>
 #include <vector>
 
 int main() {
@@ -13,6 +15,11 @@ int main() {
     CoreObject quadObject;
     quadObject.attachVertices(quad);
     quadObject.attachIndices({0, 1, 3, 1, 2, 3});
+
+    Workspace::get().setRootPath(std::filesystem::path(TEST_PATH));
+    Resource texture_resource = Workspace::get().createResource(
+        "resources/wall.jpg", "WallTexture", ResourceType::Image);
+    std::cout << "Image loaded " << texture_resource.path << std::endl;
 
     window.addObject(&quadObject);
     window.run();

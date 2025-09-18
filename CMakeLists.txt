@@ -41,8 +41,15 @@ target_compile_definitions(atlas PRIVATE ATLAS_LIBRARY_IMPL)
 
 file(GLOB_RECURSE TEST_SOURCES test/*.cpp)
 
+get_filename_component(TEST_PATH_ABS "${CMAKE_CURRENT_SOURCE_DIR}/test" ABSOLUTE)
+
 add_executable(atlas_test ${TEST_SOURCES})
 
 target_link_libraries(atlas_test PRIVATE atlas)
+
+target_compile_definitions(atlas_test
+    PRIVATE
+    TEST_PATH="${TEST_PATH_ABS}"
+)
 
 include_directories(include extern)
