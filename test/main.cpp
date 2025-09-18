@@ -1,5 +1,6 @@
 
 #include "atlas/object.h"
+#include "atlas/texture.h"
 #include "atlas/units.h"
 #include "atlas/workspace.h"
 #include <atlas/window.h>
@@ -20,6 +21,8 @@ int main() {
     Resource texture_resource = Workspace::get().createResource(
         "resources/wall.jpg", "WallTexture", ResourceType::Image);
     std::cout << "Image loaded " << texture_resource.path << std::endl;
+
+    Texture texture = Texture::fromResource(texture_resource);
 
     window.addObject(&quadObject);
     window.run();
