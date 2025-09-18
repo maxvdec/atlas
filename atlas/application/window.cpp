@@ -70,16 +70,27 @@ Window::Window(WindowConfiguration config)
 }
 
 void Window::run() {
+    if (this->currentScene == nullptr) {
+        throw std::runtime_error("No scene set for the window");
+    }
+    if (this->camera == nullptr) {
+        this->camera = new Camera();
+    }
     for (auto &obj : this->renderables) {
         obj->initialize();
     }
     GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
+
+    glEnable(GL_DEPTH_TEST);
+
     while (!glfwWindowShouldClose(window)) {
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        currentScene->update(*this);
 
         for (auto &obj : this->renderables) {
-            obj->setViewMatrix(this->camera.calculateViewMatrix());
+            obj->setViewMatrix(this->camera->calculateViewMatrix());
             obj->setProjectionMatrix(calculateProjectionMatrix());
             obj->render();
         }
@@ -96,7 +107,12 @@ void Window::close() {
     glfwSetWindowShouldClose(window, true);
 }
 
-void Window::setCamera(const Camera &newCamera) { this->camera = newCamera; }
+void Window::setCamera(Camera *newCamera) { this->camera = newCamera; }
+
+void Window::setScene(Scene *scene) {
+    this->currentScene = scene;
+    scene->initialize(*this);
+}
 
 glm::mat4 Window::calculateProjectionMatrix() {
     int fbWidth, fbHeight;
@@ -105,8 +121,8 @@ glm::mat4 Window::calculateProjectionMatrix() {
 
     float aspectRatio =
         static_cast<float>(fbWidth) / static_cast<float>(fbHeight);
-    return glm::perspective(glm::radians(camera.fov), aspectRatio,
-                            camera.nearClip, camera.farClip);
+    return glm::perspective(glm::radians(camera->fov), aspectRatio,
+                            camera->nearClip, camera->farClip);
 }
 
 void Window::setFullscreen(bool enable) {
@@ -204,3 +220,5 @@ std::string Monitor::getName() {
     GLFWmonitor *glfwMonitor = static_cast<GLFWmonitor *>(this->monitorRef);
     return std::string(glfwGetMonitorName(glfwMonitor));
 }
+
+float Window::getTime() { return static_cast<float>(glfwGetTime()); }

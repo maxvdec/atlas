@@ -70,6 +70,8 @@ class CoreObject : public Renderable {
 
     void updateModelMatrix();
 
+    CoreObject clone() const;
+
   private:
     BufferIndex vbo;
     BufferIndex vao;

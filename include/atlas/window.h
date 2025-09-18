@@ -12,6 +12,8 @@
 
 #include "atlas/camera.h"
 #include "atlas/object.h"
+#include "atlas/scene.h"
+#include <optional>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -79,15 +81,19 @@ class Window {
 
     void addObject(Renderable *object);
 
-    void setCamera(const Camera &newCamera);
+    void setCamera(Camera *newCamera);
+    void setScene(Scene *scene);
+
+    float getTime();
 
   private:
     CoreWindowReference windowRef;
     std::vector<Renderable *> renderables;
+    Scene *currentScene = nullptr;
 
     glm::mat4 calculateProjectionMatrix();
 
-    Camera camera = Camera();
+    Camera *camera = nullptr;
 };
 
 #endif // WINDOW_H

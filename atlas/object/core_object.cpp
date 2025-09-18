@@ -190,3 +190,15 @@ void CoreObject::setViewMatrix(const glm::mat4 &view) { this->view = view; }
 void CoreObject::setProjectionMatrix(const glm::mat4 &projection) {
     this->projection = projection;
 }
+
+CoreObject CoreObject::clone() const {
+    CoreObject newObject = *this;
+
+    glGenVertexArrays(1, &newObject.vao);
+    glGenBuffers(1, &newObject.vbo);
+    glGenBuffers(1, &newObject.ebo);
+
+    newObject.initialize();
+
+    return newObject;
+}
