@@ -20,11 +20,12 @@
 #include <glm/glm.hpp>
 #endif
 
-#define DEFAULT_FRAG_SHADER Debug
-#define DEFAULT_VERT_SHADER Debug
+#define DEFAULT_FRAG_SHADER Color
+#define DEFAULT_VERT_SHADER Color
 
 enum class AtlasVertexShader {
     Debug,
+    Color,
 };
 
 struct VertexShader {
@@ -34,11 +35,14 @@ struct VertexShader {
     static VertexShader fromSource(const char *source);
     void compile();
 
+    std::vector<uint32_t> desiredAttributes;
+
     Id shaderId;
 };
 
 enum class AtlasFragmentShader {
     Debug,
+    Color,
 };
 
 struct FragmentShader {

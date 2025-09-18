@@ -14,18 +14,30 @@
 #include <string>
 
 VertexShader VertexShader::fromDefaultShader(AtlasVertexShader shader) {
+    VertexShader vertexShader;
     switch (shader) {
-    case AtlasVertexShader::Debug:
-        return VertexShader::fromSource(DEBUG_VERT);
+    case AtlasVertexShader::Debug: {
+        vertexShader = VertexShader::fromSource(DEBUG_VERT);
+        vertexShader.desiredAttributes = {0};
+        break;
+    }
+    case AtlasVertexShader::Color: {
+        vertexShader = VertexShader::fromSource(COLOR_VERT);
+        vertexShader.desiredAttributes = {0, 1};
+        break;
+    }
     default:
         throw std::runtime_error("Unknown default vertex shader");
     }
+
+    return vertexShader;
 }
 
 VertexShader VertexShader::fromSource(const char *source) {
     VertexShader shader;
     shader.source = source;
     shader.shaderId = 0;
+    shader.desiredAttributes = {};
     return shader;
 }
 
@@ -52,6 +64,8 @@ FragmentShader FragmentShader::fromDefaultShader(AtlasFragmentShader shader) {
     switch (shader) {
     case AtlasFragmentShader::Debug:
         return FragmentShader::fromSource(DEBUG_FRAG);
+    case AtlasFragmentShader::Color:
+        return FragmentShader::fromSource(COLOR_FRAG);
     default:
         throw std::runtime_error("Unknown default fragment shader");
     }
@@ -96,6 +110,8 @@ void ShaderProgram::compile() {
         throw std::runtime_error("Fragment shader not compiled");
     }
 
+    desiredAttributes = vertexShader.desiredAttributes;
+
     programId = glCreateProgram();
     glAttachShader(programId, vertexShader.shaderId);
     glAttachShader(programId, fragmentShader.shaderId);
@@ -121,6 +137,7 @@ ShaderProgram ShaderProgram::defaultProgram() {
     program.fragmentShader = FragmentShader::fromDefaultShader(
         AtlasFragmentShader::DEFAULT_FRAG_SHADER);
     program.programId = 0;
+    program.desiredAttributes = program.vertexShader.desiredAttributes;
     program.vertexShader.compile();
     program.fragmentShader.compile();
     program.compile();

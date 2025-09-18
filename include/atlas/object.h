@@ -16,6 +16,7 @@
 
 struct CoreVertex {
     Position3d position;
+    Color color = {1.0, 1.0, 1.0, 1.0};
 
     static std::vector<LayoutDescriptor> getLayoutDescriptors();
 };

@@ -6,10 +6,10 @@ static const char* COLOR_FRAG = R"(
 #version 330 core
 out vec4 FragColor;
 
-in vec4 inColor;
+in vec4 vertexColor;
 
 void main() {
-    FragColor = inColor;
+    FragColor = vertexColor;
 }
 
 )";

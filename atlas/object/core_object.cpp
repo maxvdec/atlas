@@ -13,6 +13,15 @@
 #include <glad/glad.h>
 #include <vector>
 
+std::vector<LayoutDescriptor> CoreVertex::getLayoutDescriptors() {
+    return {
+        {0, 3, GL_DOUBLE, GL_FALSE, sizeof(CoreVertex),
+         offsetof(CoreVertex, position)},
+        {1, 4, GL_DOUBLE, GL_FALSE, sizeof(CoreVertex),
+         offsetof(CoreVertex, color)},
+    };
+}
+
 CoreObject::CoreObject() : vbo(0), vao(0) {
     shaderProgram = ShaderProgram::defaultProgram();
 }
@@ -43,38 +52,33 @@ void CoreObject::initialize() {
     glBindVertexArray(vao);
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(CoreVertex),
+                 vertices.data(), GL_STATIC_DRAW);
 
-    std::vector<LayoutDescriptor> layoutDescriptors =
-        CoreVertex::getLayoutDescriptors();
-
-    std::vector<unsigned int> activeLocations = shaderProgram.desiredAttributes;
-    if (activeLocations.empty()) {
-        for (const auto &desc : layoutDescriptors) {
-            activeLocations.push_back(desc.layoutPos);
-        }
-    }
-
-    for (const auto &attr : layoutDescriptors) {
-        if (std::find(activeLocations.begin(), activeLocations.end(),
-                      attr.layoutPos) != activeLocations.end()) {
-            glVertexAttribPointer(attr.layoutPos, attr.size, attr.type,
-                                  attr.normalized, attr.stride,
-                                  (void *)attr.offset);
-            glEnableVertexAttribArray(attr.layoutPos);
-        } else {
-            glDisableVertexAttribArray(attr.layoutPos);
-        }
-    }
-
-    if (indices.size() > 0) {
+    if (!indices.empty()) {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(Index),
                      indices.data(), GL_STATIC_DRAW);
     }
 
-    glVertexAttribPointer(0, 3, GL_DOUBLE, GL_FALSE, sizeof(CoreVertex),
-                          (void *)offsetof(CoreVertex, position));
-    glEnableVertexAttribArray(0);
+    std::vector<LayoutDescriptor> layoutDescriptors =
+        CoreVertex::getLayoutDescriptors();
+
+    std::vector<GLuint> activeLocations = shaderProgram.desiredAttributes;
+    if (activeLocations.empty()) {
+        for (const auto &attr : layoutDescriptors) {
+            activeLocations.push_back(attr.layoutPos);
+        }
+    }
+    for (const auto &attr : layoutDescriptors) {
+        if (std::find(activeLocations.begin(), activeLocations.end(),
+                      attr.layoutPos) != activeLocations.end()) {
+            glEnableVertexAttribArray(attr.layoutPos);
+            glVertexAttribPointer(attr.layoutPos, attr.size, attr.type,
+                                  attr.normalized, attr.stride,
+                                  (void *)attr.offset);
+        }
+    }
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
