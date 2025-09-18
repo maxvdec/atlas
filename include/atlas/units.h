@@ -10,9 +10,7 @@
 #ifndef ATLAS_UNITS_H
 #define ATLAS_UNITS_H
 
-#ifdef ATLAS_LIBRARY_IMPL
 #include <glm/glm.hpp>
-#endif
 
 struct Position3d {
     double x;
@@ -35,12 +33,39 @@ struct Position3d {
         return {x / scalar, y / scalar, z / scalar};
     }
 
-#ifdef ATLAS_LIBRARY_IMPL
     inline glm::vec3 toGlm() const {
         return glm::vec3(static_cast<float>(x), static_cast<float>(y),
                          static_cast<float>(z));
     }
-#endif
+};
+
+typedef Position3d Scale3d;
+
+struct Rotation3d {
+    double pitch; // Rotation around the X-axis
+    double yaw;   // Rotation around the Y-axis
+    double roll;  // Rotation around the Z-axis
+
+    Rotation3d operator+(const Rotation3d &other) const {
+        return {pitch + other.pitch, yaw + other.yaw, roll + other.roll};
+    }
+
+    Rotation3d operator-(const Rotation3d &other) const {
+        return {pitch - other.pitch, yaw - other.yaw, roll - other.roll};
+    }
+
+    Rotation3d operator*(double scalar) const {
+        return {pitch * scalar, yaw * scalar, roll * scalar};
+    }
+
+    Rotation3d operator/(double scalar) const {
+        return {pitch / scalar, yaw / scalar, roll / scalar};
+    }
+
+    inline glm::vec3 toGlm() const {
+        return glm::vec3(static_cast<float>(pitch), static_cast<float>(yaw),
+                         static_cast<float>(roll));
+    }
 };
 
 struct Color {
@@ -85,12 +110,10 @@ struct Color {
     static Color olive() { return {0.5, 0.5, 0.0, 1.0}; }
     static Color maroon() { return {0.5, 0.0, 0.0, 1.0}; }
 
-#ifdef ATLAS_LIBRARY_IMPL
     inline glm::vec4 toGlm() const {
         return glm::vec4(static_cast<float>(r), static_cast<float>(g),
                          static_cast<float>(b), static_cast<float>(a));
     }
-#endif
 };
 
 typedef unsigned int Id;

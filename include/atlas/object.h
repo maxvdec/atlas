@@ -17,6 +17,8 @@
 #include <optional>
 #include <vector>
 
+#include <glm/glm.hpp>
+
 typedef std::array<double, 2> TextureCoordinate;
 
 struct CoreVertex {
@@ -54,10 +56,24 @@ class CoreObject : public Renderable {
 
     void renderColorWithTexture();
 
+    Position3d position = {0.0, 0.0, 0.0};
+    Rotation3d rotation = {0.0, 0.0, 0.0};
+    Scale3d scale = {1.0, 1.0, 1.0};
+
+    void setPosition(const Position3d &newPosition);
+    void move(const Position3d &deltaPosition);
+    void setRotation(const Rotation3d &newRotation);
+    void rotate(const Rotation3d &deltaRotation);
+    void setScale(const Scale3d &newScale);
+
+    void updateModelMatrix();
+
   private:
     BufferIndex vbo;
     BufferIndex vao;
     BufferIndex ebo;
+
+    glm::mat4 model = glm::mat4(1.0f);
 
     bool onlyTexture = true;
 

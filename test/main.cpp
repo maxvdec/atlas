@@ -1,4 +1,3 @@
-
 #include "atlas/object.h"
 #include "atlas/texture.h"
 #include "atlas/units.h"
@@ -15,6 +14,7 @@ int main() {
         {{-0.5, -0.5, 0.0}, Color::blue(), {0.0, 0.0}},
         {{-0.5, 0.5, 0.0}, Color::white(), {0.0, 1.0}},
     };
+
     CoreObject quadObject;
     quadObject.attachVertices(quad);
     quadObject.attachIndices({0, 1, 3, 1, 2, 3});
@@ -24,9 +24,10 @@ int main() {
         "resources/wall.jpg", "WallTexture", ResourceType::Image);
     std::cout << "Image loaded " << texture_resource.path << std::endl;
 
+    quadObject.move({0.0f, 0.3f, 0.0f});
+
     Texture texture = Texture::fromResource(texture_resource);
     quadObject.attachTexture(texture);
-
     window.addObject(&quadObject);
     window.run();
     return 0;

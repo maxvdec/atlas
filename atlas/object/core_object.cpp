@@ -12,6 +12,9 @@
 #include <algorithm>
 #include <glad/glad.h>
 #include <vector>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 std::vector<LayoutDescriptor> CoreVertex::getLayoutDescriptors() {
     return {{0, 3, GL_DOUBLE, GL_FALSE, sizeof(CoreVertex),
@@ -38,6 +41,10 @@ void CoreObject::renderColorWithTexture() { onlyTexture = false; }
 void CoreObject::attachTexture(const Texture &tex) { textures.push_back(tex); }
 
 void CoreObject::attachVertices(const std::vector<CoreVertex> &newVertices) {
+    if (newVertices.empty()) {
+        throw std::runtime_error("Cannot attach empty vertex array");
+    }
+
     vertices = newVertices;
     glGenVertexArrays(1, &vao);
     glGenBuffers(1, &vbo);
@@ -46,6 +53,51 @@ void CoreObject::attachVertices(const std::vector<CoreVertex> &newVertices) {
 void CoreObject::attachIndices(const std::vector<Index> &newIndices) {
     indices = newIndices;
     glGenBuffers(1, &ebo);
+}
+
+void CoreObject::setPosition(const Position3d &newPosition) {
+    position = newPosition;
+
+    updateModelMatrix();
+}
+
+void CoreObject::setRotation(const Rotation3d &newRotation) {
+    rotation = newRotation;
+
+    updateModelMatrix();
+}
+
+void CoreObject::setScale(const Scale3d &newScale) {
+    scale = newScale;
+
+    updateModelMatrix();
+}
+
+void CoreObject::move(const Position3d &delta) {
+    setPosition(position + delta);
+}
+
+void CoreObject::rotate(const Rotation3d &delta) {
+    setRotation(rotation + delta);
+}
+
+void CoreObject::updateModelMatrix() {
+    glm::mat4 scale_matrix = glm::scale(glm::mat4(1.0f), scale.toGlm());
+
+    glm::mat4 rotation_matrix = glm::mat4(1.0f);
+    rotation_matrix =
+        glm::rotate(rotation_matrix, glm::radians(float(rotation.roll)),
+                    glm::vec3(0, 0, 1));
+    rotation_matrix =
+        glm::rotate(rotation_matrix, glm::radians(float(rotation.pitch)),
+                    glm::vec3(1, 0, 0));
+    rotation_matrix = glm::rotate(
+        rotation_matrix, glm::radians(float(rotation.yaw)), glm::vec3(0, 1, 0));
+
+    glm::mat4 translation_matrix =
+        glm::translate(glm::mat4(1.0f), position.toGlm());
+
+    model = translation_matrix * rotation_matrix * scale_matrix;
 }
 
 void CoreObject::initialize() {
@@ -74,6 +126,7 @@ void CoreObject::initialize() {
             activeLocations.push_back(attr.layoutPos);
         }
     }
+
     for (const auto &attr : layoutDescriptors) {
         if (std::find(activeLocations.begin(), activeLocations.end(),
                       attr.layoutPos) != activeLocations.end()) {
@@ -98,6 +151,8 @@ void CoreObject::render() {
     if (static_cast<Id>(currentProgram) != shaderProgram.programId) {
         glUseProgram(shaderProgram.programId);
     }
+
+    shaderProgram.setUniformMat4f("model", model);
 
     if (!textures.empty()) {
         shaderProgram.setUniformBool("useTexture", true);

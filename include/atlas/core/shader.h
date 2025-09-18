@@ -16,9 +16,7 @@
 #include <string>
 #include <vector>
 
-#ifdef ATLAS_LIBRARY_IMPL
 #include <glm/glm.hpp>
-#endif
 
 #define DEFAULT_FRAG_SHADER Main
 #define DEFAULT_VERT_SHADER Main
@@ -78,7 +76,6 @@ struct ShaderProgram {
 
     std::vector<uint32_t> desiredAttributes;
 
-#ifdef ATLAS_LIBRARY_IMPL
     void setUniform4f(std::string name, float v0, float v1, float v2, float v3);
     void setUniform3f(std::string name, float v0, float v1, float v2);
     void setUniform2f(std::string name, float v0, float v1);
@@ -86,7 +83,6 @@ struct ShaderProgram {
     void setUniform1i(std::string name, int v0);
     void setUniformMat4f(std::string name, const glm::mat4 &matrix);
     void setUniformBool(std::string name, bool value);
-#endif
 };
 
 #endif // SHADER_H

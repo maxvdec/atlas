@@ -36,8 +36,7 @@ find_package(OpenGL REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
 
-target_link_libraries(atlas PRIVATE OpenGL::GL glfw glm::glm)
-target_compile_definitions(atlas PRIVATE ATLAS_LIBRARY_IMPL)
+target_link_libraries(atlas PUBLIC OpenGL::GL glfw glm::glm)
 
 file(GLOB_RECURSE TEST_SOURCES test/*.cpp)
 
