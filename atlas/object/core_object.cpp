@@ -7,8 +7,11 @@
  Copyright (c) 2025 maxvdec
 */
 
+#include "atlas/core/shader.h"
 #include "atlas/object.h"
+#include <algorithm>
 #include <glad/glad.h>
+#include <vector>
 
 CoreObject::CoreObject() : vbo(0), vao(0) {
     shaderProgram = ShaderProgram::defaultProgram();
@@ -40,8 +43,28 @@ void CoreObject::initialize() {
     glBindVertexArray(vao);
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(CoreVertex),
-                 vertices.data(), GL_STATIC_DRAW);
+
+    std::vector<LayoutDescriptor> layoutDescriptors =
+        CoreVertex::getLayoutDescriptors();
+
+    std::vector<unsigned int> activeLocations = shaderProgram.desiredAttributes;
+    if (activeLocations.empty()) {
+        for (const auto &desc : layoutDescriptors) {
+            activeLocations.push_back(desc.layoutPos);
+        }
+    }
+
+    for (const auto &attr : layoutDescriptors) {
+        if (std::find(activeLocations.begin(), activeLocations.end(),
+                      attr.layoutPos) != activeLocations.end()) {
+            glVertexAttribPointer(attr.layoutPos, attr.size, attr.type,
+                                  attr.normalized, attr.stride,
+                                  (void *)attr.offset);
+            glEnableVertexAttribArray(attr.layoutPos);
+        } else {
+            glDisableVertexAttribArray(attr.layoutPos);
+        }
+    }
 
     if (indices.size() > 0) {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);

@@ -126,3 +126,30 @@ ShaderProgram ShaderProgram::defaultProgram() {
     program.compile();
     return program;
 }
+
+void ShaderProgram::setUniform4f(std::string name, float v0, float v1, float v2,
+                                 float v3) {
+    glUniform4f(glGetUniformLocation(programId, name.c_str()), v0, v1, v2, v3);
+}
+
+void ShaderProgram::setUniform3f(std::string name, float v0, float v1,
+                                 float v2) {
+    glUniform3f(glGetUniformLocation(programId, name.c_str()), v0, v1, v2);
+}
+
+void ShaderProgram::setUniform2f(std::string name, float v0, float v1) {
+    glUniform2f(glGetUniformLocation(programId, name.c_str()), v0, v1);
+}
+
+void ShaderProgram::setUniform1f(std::string name, float v0) {
+    glUniform1f(glGetUniformLocation(programId, name.c_str()), v0);
+}
+
+void ShaderProgram::setUniformMat4f(std::string name, const glm::mat4 &matrix) {
+    glUniformMatrix4fv(glGetUniformLocation(programId, name.c_str()), 1,
+                       GL_FALSE, &matrix[0][0]);
+}
+
+void ShaderProgram::setUniform1i(std::string name, int v0) {
+    glUniform1i(glGetUniformLocation(programId, name.c_str()), v0);
+}

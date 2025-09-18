@@ -16,6 +16,8 @@
 
 struct CoreVertex {
     Position3d position;
+
+    static std::vector<LayoutDescriptor> getLayoutDescriptors();
 };
 
 typedef unsigned int BufferIndex;

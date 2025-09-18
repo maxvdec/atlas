@@ -11,7 +11,14 @@
 #define SHADER_H
 
 #include "atlas/units.h"
+#include <cstddef>
 #include <optional>
+#include <string>
+#include <vector>
+
+#ifdef ATLAS_LIBRARY_IMPL
+#include <glm/glm.hpp>
+#endif
 
 #define DEFAULT_FRAG_SHADER Debug
 #define DEFAULT_VERT_SHADER Debug
@@ -44,6 +51,15 @@ struct FragmentShader {
     Id shaderId;
 };
 
+struct LayoutDescriptor {
+    int layoutPos;
+    int size;
+    unsigned int type;
+    bool normalized;
+    int stride;
+    std::size_t offset;
+};
+
 struct ShaderProgram {
     VertexShader vertexShader;
     FragmentShader fragmentShader;
@@ -53,6 +69,17 @@ struct ShaderProgram {
     static ShaderProgram defaultProgram();
 
     Id programId;
+
+    std::vector<uint32_t> desiredAttributes;
+
+#ifdef ATLAS_LIBRARY_IMPL
+    void setUniform4f(std::string name, float v0, float v1, float v2, float v3);
+    void setUniform3f(std::string name, float v0, float v1, float v2);
+    void setUniform2f(std::string name, float v0, float v1);
+    void setUniform1f(std::string name, float v0);
+    void setUniform1i(std::string name, int v0);
+    void setUniformMat4f(std::string name, const glm::mat4 &matrix);
+#endif
 };
 
 #endif // SHADER_H
