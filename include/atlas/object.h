@@ -42,7 +42,7 @@ class CoreObject : public Renderable {
     std::vector<CoreVertex> vertices;
     std::vector<Index> indices;
     ShaderProgram shaderProgram;
-    std::optional<Texture> texture;
+    std::vector<Texture> textures;
 
     CoreObject();
 

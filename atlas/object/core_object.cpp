@@ -35,7 +35,7 @@ void CoreObject::attachProgram(const ShaderProgram &program) {
 
 void CoreObject::renderColorWithTexture() { onlyTexture = false; }
 
-void CoreObject::attachTexture(const Texture &tex) { texture = tex; }
+void CoreObject::attachTexture(const Texture &tex) { textures.push_back(tex); }
 
 void CoreObject::attachVertices(const std::vector<CoreVertex> &newVertices) {
     vertices = newVertices;
@@ -99,11 +99,23 @@ void CoreObject::render() {
         glUseProgram(shaderProgram.programId);
     }
 
-    if (texture.has_value()) {
+    if (!textures.empty()) {
         shaderProgram.setUniformBool("useTexture", true);
         shaderProgram.setUniformBool("onlyTexture", onlyTexture);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture.value().id);
+
+        int count = std::min((int)textures.size(), 16);
+        shaderProgram.setUniform1i("textureCount", count);
+        GLint units[16];
+        for (int i = 0; i < count; i++)
+            units[i] = i;
+
+        glUniform1iv(glGetUniformLocation(shaderProgram.programId, "textures"),
+                     count, units);
+
+        for (int i = 0; i < count; i++) {
+            glActiveTexture(GL_TEXTURE0 + i);
+            glBindTexture(GL_TEXTURE_2D, textures[i].id);
+        }
     }
 
     glBindVertexArray(vao);

@@ -51,6 +51,7 @@ Texture Texture::fromResource(const Resource &resource,
     }
 
     int width, height, channels;
+    stbi_set_flip_vertically_on_load(true);
     unsigned char *data = stbi_load(resource.path.string().c_str(), &width,
                                     &height, &channels, 0);
     TextureCreationData creationData{width, height, channels};
