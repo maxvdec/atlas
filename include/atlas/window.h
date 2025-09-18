@@ -10,6 +10,7 @@
 #ifndef WINDOW_H
 #define WINDOW_H
 
+#include "atlas/camera.h"
 #include "atlas/object.h"
 #include <string>
 #include <tuple>
@@ -78,9 +79,15 @@ class Window {
 
     void addObject(Renderable *object);
 
+    void setCamera(const Camera &newCamera);
+
   private:
     CoreWindowReference windowRef;
     std::vector<Renderable *> renderables;
+
+    glm::mat4 calculateProjectionMatrix();
+
+    Camera camera = Camera();
 };
 
 #endif // WINDOW_H

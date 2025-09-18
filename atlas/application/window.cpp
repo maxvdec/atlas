@@ -12,6 +12,8 @@
 #include <GLFW/glfw3.h>
 #include <atlas/window.h>
 #include <string>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 Window::Window(WindowConfiguration config)
     : title(config.title), width(config.width), height(config.height) {
@@ -77,6 +79,8 @@ void Window::run() {
         glClear(GL_COLOR_BUFFER_BIT);
 
         for (auto &obj : this->renderables) {
+            obj->setViewMatrix(this->camera.calculateViewMatrix());
+            obj->setProjectionMatrix(calculateProjectionMatrix());
             obj->render();
         }
 
@@ -90,6 +94,19 @@ void Window::addObject(Renderable *obj) { this->renderables.push_back(obj); }
 void Window::close() {
     GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
     glfwSetWindowShouldClose(window, true);
+}
+
+void Window::setCamera(const Camera &newCamera) { this->camera = newCamera; }
+
+glm::mat4 Window::calculateProjectionMatrix() {
+    int fbWidth, fbHeight;
+    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
+    glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
+
+    float aspectRatio =
+        static_cast<float>(fbWidth) / static_cast<float>(fbHeight);
+    return glm::perspective(glm::radians(camera.fov), aspectRatio,
+                            camera.nearClip, camera.farClip);
 }
 
 void Window::setFullscreen(bool enable) {

@@ -1,3 +1,4 @@
+#include "atlas/camera.h"
 #include "atlas/object.h"
 #include "atlas/texture.h"
 #include "atlas/units.h"
@@ -25,6 +26,10 @@ int main() {
     std::cout << "Image loaded " << texture_resource.path << std::endl;
 
     quadObject.move({0.0f, 0.3f, 0.0f});
+
+    Camera camera;
+    camera.setPosition({0.0f, 0.0f, 5.0f});
+    window.setCamera(camera);
 
     Texture texture = Texture::fromResource(texture_resource);
     quadObject.attachTexture(texture);

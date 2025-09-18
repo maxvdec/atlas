@@ -153,6 +153,8 @@ void CoreObject::render() {
     }
 
     shaderProgram.setUniformMat4f("model", model);
+    shaderProgram.setUniformMat4f("view", view);
+    shaderProgram.setUniformMat4f("projection", projection);
 
     if (!textures.empty()) {
         shaderProgram.setUniformBool("useTexture", true);
@@ -181,4 +183,10 @@ void CoreObject::render() {
     }
     glDrawArrays(GL_TRIANGLES, 0, vertices.size());
     glBindVertexArray(0);
+}
+
+void CoreObject::setViewMatrix(const glm::mat4 &view) { this->view = view; }
+
+void CoreObject::setProjectionMatrix(const glm::mat4 &projection) {
+    this->projection = projection;
 }

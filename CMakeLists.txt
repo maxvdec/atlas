@@ -38,6 +38,8 @@ find_package(glm REQUIRED)
 
 target_link_libraries(atlas PUBLIC OpenGL::GL glfw glm::glm)
 
+target_compile_definitions(atlas PRIVATE ATLAS_LIB)
+
 file(GLOB_RECURSE TEST_SOURCES test/*.cpp)
 
 get_filename_component(TEST_PATH_ABS "${CMAKE_CURRENT_SOURCE_DIR}/test" ABSOLUTE)
