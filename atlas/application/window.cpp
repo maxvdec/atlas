@@ -234,3 +234,9 @@ std::string Monitor::getName() {
 }
 
 float Window::getTime() { return static_cast<float>(glfwGetTime()); }
+
+bool Window::isKeyPressed(Key key) {
+    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
+    int state = glfwGetKey(window, static_cast<int>(key));
+    return state == GLFW_PRESS || state == GLFW_REPEAT;
+}

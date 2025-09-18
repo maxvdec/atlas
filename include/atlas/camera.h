@@ -13,6 +13,8 @@
 #include "atlas/units.h"
 #include <glm/glm.hpp>
 
+class Window;
+
 class Camera {
   public:
     Position3d position;
@@ -23,6 +25,8 @@ class Camera {
     float farClip = 100.0f;
     float orthographicSize = 5.0f;
 
+    float movementSpeed = 4.f;
+
     bool useOrthographic = false;
 
     void move(const Position3d &delta);
@@ -31,7 +35,14 @@ class Camera {
 
     Camera() : position({0.0f, 0.0f, 3.0f}), target({0.0f, 0.0f, 0.0f}) {}
 
+    void update(Window &window);
+
+    void moveTo(Direction3d direction, float speed);
+
     glm::mat4 calculateViewMatrix() const;
+
+  private:
+    float lastFrame;
 };
 
 #endif // CAMERA_H

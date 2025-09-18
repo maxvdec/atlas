@@ -15,13 +15,7 @@ class MainScene : public Scene {
     CoreObject quadObject2;
     Camera camera;
 
-    void update(Window &window) override {
-        const float radius = 10.0f;
-        float camX = sin(window.getTime()) * radius;
-        float camZ = cos(window.getTime()) * radius;
-
-        camera.setPosition({camX, 0.0f, camZ});
-    }
+    void update(Window &window) override { camera.update(window); }
 
     void initialize(Window &window) override {
         std::vector<CoreVertex> quad = {

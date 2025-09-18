@@ -119,4 +119,6 @@ struct Color {
 
 typedef unsigned int Id;
 
+enum class Direction3d { Up, Down, Left, Right, Forward, Backward };
+
 #endif // ATLAS_UNITS_H

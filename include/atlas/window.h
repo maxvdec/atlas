@@ -11,6 +11,7 @@
 #define WINDOW_H
 
 #include "atlas/camera.h"
+#include "atlas/input.h"
 #include "atlas/object.h"
 #include "atlas/scene.h"
 #include <optional>
@@ -85,6 +86,8 @@ class Window {
     void setScene(Scene *scene);
 
     float getTime();
+
+    bool isKeyPressed(Key key);
 
   private:
     CoreWindowReference windowRef;

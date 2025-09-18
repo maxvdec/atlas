@@ -8,8 +8,12 @@
 */
 
 #include "atlas/camera.h"
+#include "atlas/units.h"
+#include "atlas/window.h"
+#include "atlas/input.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/glm.hpp>
+#include <iostream>
 
 glm::mat4 Camera::calculateViewMatrix() const {
     glm::vec3 camPos(position.x, position.y, position.z);
@@ -30,3 +34,71 @@ void Camera::setPosition(const Position3d &newPosition) {
 }
 
 void Camera::lookAt(const Point3d &newTarget) { target = newTarget; }
+
+void Camera::moveTo(Direction3d direction, float speed) {
+    glm::vec3 camPos = glm::vec3(position.x, position.y, position.z);
+    glm::vec3 camFront =
+        glm::normalize(glm::vec3(target.x, target.y, target.z) - camPos);
+    glm::vec3 upVector(0.0f, 1.0f, 0.0f); // Assuming Y-up coordinate system
+
+    switch (direction) {
+    case Direction3d::Forward:
+        camPos += speed * camFront;
+        break;
+    case Direction3d::Backward:
+        camPos -= speed * camFront;
+        break;
+    case Direction3d::Left:
+        camPos -= glm::normalize(glm::cross(camFront, upVector)) * speed;
+        break;
+    case Direction3d::Right:
+        camPos += glm::normalize(glm::cross(camFront, upVector)) * speed;
+        break;
+    case Direction3d::Up:
+        camPos += upVector * speed;
+        break;
+    case Direction3d::Down:
+        camPos -= upVector * speed;
+        break;
+    }
+
+    position = {camPos.x, camPos.y, camPos.z};
+    target = {camPos.x + camFront.x, camPos.y + camFront.y,
+              camPos.z + camFront.z};
+}
+
+void Camera::update(Window &window) {
+    glm::vec3 camPos = glm::vec3(position.x, position.y, position.z);
+    glm::vec3 camFront =
+        glm::normalize(glm::vec3(target.x, target.y, target.z) - camPos);
+    glm::vec3 upVector(0.0f, 1.0f, 0.0f); // Assuming Y-up coordinate system
+
+    float currentFrame = window.getTime();
+    float deltaTime = currentFrame - lastFrame;
+    lastFrame = currentFrame;
+
+    float cameraSpeed = movementSpeed * deltaTime;
+
+    if (window.isKeyPressed(Key::W) || window.isKeyPressed(Key::Up)) {
+        camPos += cameraSpeed * camFront;
+    }
+    if (window.isKeyPressed(Key::S) || window.isKeyPressed(Key::Down)) {
+        camPos -= cameraSpeed * camFront;
+    }
+    if (window.isKeyPressed(Key::A) || window.isKeyPressed(Key::Left)) {
+        camPos -= glm::normalize(glm::cross(camFront, upVector)) * cameraSpeed;
+    }
+    if (window.isKeyPressed(Key::D) || window.isKeyPressed(Key::Right)) {
+        camPos += glm::normalize(glm::cross(camFront, upVector)) * cameraSpeed;
+    }
+    if (window.isKeyPressed(Key::Space)) {
+        camPos.y += cameraSpeed;
+    }
+    if (window.isKeyPressed(Key::LeftShift)) {
+        camPos.y -= cameraSpeed;
+    }
+
+    position = {camPos.x, camPos.y, camPos.z};
+    target = {camPos.x + camFront.x, camPos.y + camFront.y,
+              camPos.z + camFront.z};
+}
