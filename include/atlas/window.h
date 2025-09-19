@@ -10,7 +10,11 @@
 #ifndef WINDOW_H
 #define WINDOW_H
 
+#include "atlas/camera.h"
+#include "atlas/input.h"
 #include "atlas/object.h"
+#include "atlas/scene.h"
+#include <optional>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -25,6 +29,8 @@ struct WindowConfiguration {
     std::string title;
     int width;
     int height;
+    bool mouseHidden = true;
+    bool mouseCaptured = true;
     int posX = WINDOW_CENTERED;
     int posY = WINDOW_CENTERED;
     bool decorations = true;
@@ -78,9 +84,30 @@ class Window {
 
     void addObject(Renderable *object);
 
+    void setCamera(Camera *newCamera);
+    void setScene(Scene *scene);
+
+    float getTime();
+
+    bool isKeyPressed(Key key);
+
+    void releaseMouse();
+    void captureMouse();
+
+    std::tuple<int, int> getCursorPosition();
+
+    static Window *mainWindow;
+
   private:
     CoreWindowReference windowRef;
     std::vector<Renderable *> renderables;
+    Scene *currentScene = nullptr;
+
+    glm::mat4 calculateProjectionMatrix();
+
+    Camera *camera = nullptr;
+    float lastMouseX;
+    float lastMouseY;
 };
 
 #endif // WINDOW_H

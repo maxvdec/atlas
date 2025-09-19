@@ -17,6 +17,8 @@
 #include <optional>
 #include <vector>
 
+#include <glm/glm.hpp>
+
 typedef std::array<double, 2> TextureCoordinate;
 
 struct CoreVertex {
@@ -34,6 +36,8 @@ class Renderable {
   public:
     virtual void render() = 0;
     virtual void initialize() = 0;
+    virtual void setViewMatrix(const glm::mat4 &view) = 0;
+    virtual void setProjectionMatrix(const glm::mat4 &projection) = 0;
     virtual ~Renderable() = default;
 };
 
@@ -54,15 +58,35 @@ class CoreObject : public Renderable {
 
     void renderColorWithTexture();
 
+    Position3d position = {0.0, 0.0, 0.0};
+    Rotation3d rotation = {0.0, 0.0, 0.0};
+    Scale3d scale = {1.0, 1.0, 1.0};
+
+    void setPosition(const Position3d &newPosition);
+    void move(const Position3d &deltaPosition);
+    void setRotation(const Rotation3d &newRotation);
+    void rotate(const Rotation3d &deltaRotation);
+    void setScale(const Scale3d &newScale);
+
+    void updateModelMatrix();
+
+    CoreObject clone() const;
+
   private:
     BufferIndex vbo;
     BufferIndex vao;
     BufferIndex ebo;
 
+    glm::mat4 model = glm::mat4(1.0f);
+    glm::mat4 view = glm::mat4(1.0f);
+    glm::mat4 projection = glm::mat4(1.0f);
+
     bool onlyTexture = true;
 
   public:
     void render() override;
+    void setViewMatrix(const glm::mat4 &view) override;
+    void setProjectionMatrix(const glm::mat4 &projection) override;
 };
 
 #endif // ATLAS_OBJECT_H

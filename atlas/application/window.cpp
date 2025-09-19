@@ -8,10 +8,17 @@
 */
 
 #include "atlas/object.h"
+#include "atlas/units.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <atlas/window.h>
+#include <iostream>
 #include <string>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <tuple>
+
+Window *Window::mainWindow = nullptr;
 
 Window::Window(WindowConfiguration config)
     : title(config.title), width(config.width), height(config.height) {
@@ -43,6 +50,9 @@ Window::Window(WindowConfiguration config)
     }
 
     glfwSetWindowOpacity(window, config.opacity);
+    glfwSetInputMode(window, GLFW_CURSOR,
+                     config.mouseCaptured ? GLFW_CURSOR_DISABLED
+                                          : GLFW_CURSOR_NORMAL);
 
     int fbWidth, fbHeight;
     glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
@@ -60,23 +70,69 @@ Window::Window(WindowConfiguration config)
 
     this->windowRef = static_cast<CoreWindowReference>(window);
 
+    Window::mainWindow = this;
+
     glfwSetFramebufferSizeCallback(window, [](GLFWwindow *win, int w, int h) {
         int fbWidth, fbHeight;
         glfwGetFramebufferSize(win, &fbWidth, &fbHeight);
         glViewport(0, 0, fbWidth, fbHeight);
     });
+
+    lastMouseX = width / 2.0;
+    lastMouseY = height / 2.0;
+
+    glfwSetCursorPosCallback(
+        window, [](GLFWwindow *win, double xpos, double ypos) {
+            Window *window = Window::mainWindow;
+            Position2d movement = {xpos - window->lastMouseX,
+                                   window->lastMouseY - ypos};
+            if (window->currentScene != nullptr) {
+                window->currentScene->onMouseMove(*window, movement);
+            }
+            window->lastMouseX = xpos;
+            window->lastMouseY = ypos;
+        });
+
+    glfwSetScrollCallback(
+        window, [](GLFWwindow *win, double xoffset, double yoffset) {
+            Window *window = Window::mainWindow;
+            Position2d offset = {xoffset, yoffset};
+            if (window->currentScene != nullptr) {
+                window->currentScene->onMouseScroll(*window, offset);
+            }
+        });
+}
+
+std::tuple<int, int> Window::getCursorPosition() {
+    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
+    double xpos, ypos;
+    glfwGetCursorPos(window, &xpos, &ypos);
+    return {static_cast<int>(xpos), static_cast<int>(ypos)};
 }
 
 void Window::run() {
+    if (this->currentScene == nullptr) {
+        throw std::runtime_error("No scene set for the window");
+    }
+    if (this->camera == nullptr) {
+        this->camera = new Camera();
+    }
     for (auto &obj : this->renderables) {
         obj->initialize();
     }
     GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
+
+    glEnable(GL_DEPTH_TEST);
+
     while (!glfwWindowShouldClose(window)) {
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        currentScene->update(*this);
 
         for (auto &obj : this->renderables) {
+            obj->setViewMatrix(this->camera->calculateViewMatrix());
+            obj->setProjectionMatrix(calculateProjectionMatrix());
             obj->render();
         }
 
@@ -90,6 +146,36 @@ void Window::addObject(Renderable *obj) { this->renderables.push_back(obj); }
 void Window::close() {
     GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
     glfwSetWindowShouldClose(window, true);
+}
+
+void Window::setCamera(Camera *newCamera) { this->camera = newCamera; }
+
+void Window::setScene(Scene *scene) {
+    this->currentScene = scene;
+    scene->initialize(*this);
+}
+
+glm::mat4 Window::calculateProjectionMatrix() {
+    if (!this->camera->useOrthographic) {
+        int fbWidth, fbHeight;
+        GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
+        glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
+
+        float aspectRatio =
+            static_cast<float>(fbWidth) / static_cast<float>(fbHeight);
+        return glm::perspective(glm::radians(camera->fov), aspectRatio,
+                                camera->nearClip, camera->farClip);
+    } else {
+        float orthoSize = this->camera->orthographicSize;
+        int fbWidth, fbHeight;
+        GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
+        glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
+        float aspectRatio =
+            static_cast<float>(fbWidth) / static_cast<float>(fbHeight);
+        return glm::ortho(-orthoSize * aspectRatio, orthoSize * aspectRatio,
+                          -orthoSize, orthoSize, camera->nearClip,
+                          camera->farClip);
+    }
 }
 
 void Window::setFullscreen(bool enable) {
@@ -186,4 +272,22 @@ std::tuple<float, float> Monitor::getContentScale() {
 std::string Monitor::getName() {
     GLFWmonitor *glfwMonitor = static_cast<GLFWmonitor *>(this->monitorRef);
     return std::string(glfwGetMonitorName(glfwMonitor));
+}
+
+float Window::getTime() { return static_cast<float>(glfwGetTime()); }
+
+bool Window::isKeyPressed(Key key) {
+    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
+    int state = glfwGetKey(window, static_cast<int>(key));
+    return state == GLFW_PRESS || state == GLFW_REPEAT;
+}
+
+void Window::releaseMouse() {
+    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+}
+
+void Window::captureMouse() {
+    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
