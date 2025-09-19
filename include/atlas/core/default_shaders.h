@@ -21,7 +21,14 @@ out vec4 FragColor;
 in vec2 TexCoord;
 in vec4 outColor;
 
+struct AmbientLight {
+    vec4 color;
+    float intensity;
+};
+
 uniform sampler2D textures[16];
+
+uniform AmbientLight ambientLight;
 
 uniform bool useTexture;
 uniform bool useColor;
@@ -42,14 +49,16 @@ vec4 calculateAllTextures() {
 void main() {
     if (useTexture && !useColor) {
         FragColor = calculateAllTextures(); 
-        return;
     }
 
     if (useTexture && useColor) {
         FragColor = calculateAllTextures() * outColor;
-    } else {
+    } else if (!useTexture && useColor) {
         FragColor = outColor;
     }
+
+    vec4 ambient = vec4(ambientLight.color.rgb * ambientLight.intensity, 1.0);
+    FragColor = FragColor * ambient;
 }
 
 )";

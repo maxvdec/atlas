@@ -97,12 +97,14 @@ class Window {
 
     static Window *mainWindow;
 
+    inline Scene *getCurrentScene() { return currentScene; }
+
   private:
     CoreWindowReference windowRef;
     std::vector<Renderable *> renderables;
-    Scene *currentScene = nullptr;
 
     glm::mat4 calculateProjectionMatrix();
+    Scene *currentScene = nullptr;
 
     Camera *camera = nullptr;
     float lastMouseX;

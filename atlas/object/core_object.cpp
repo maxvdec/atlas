@@ -9,6 +9,8 @@
 
 #include "atlas/core/shader.h"
 #include "atlas/object.h"
+#include "atlas/scene.h"
+#include "atlas/window.h"
 #include <algorithm>
 #include <glad/glad.h>
 #include <vector>
@@ -176,7 +178,11 @@ void CoreObject::render() {
     shaderProgram.setUniform1i("useColor", useColor ? 1 : 0);
     shaderProgram.setUniform1i("useTexture", useTexture ? 1 : 0);
 
-    if (!textures.empty()) {
+    if (!textures.empty() && useTexture &&
+        std::find(shaderProgram.capabilities.begin(),
+                  shaderProgram.capabilities.end(),
+                  ShaderCapability::Textures) !=
+            shaderProgram.capabilities.end()) {
         int count = std::min((int)textures.size(), 16);
         shaderProgram.setUniform1i("textureCount", count);
         GLint units[16];
@@ -190,6 +196,20 @@ void CoreObject::render() {
             glActiveTexture(GL_TEXTURE0 + i);
             glBindTexture(GL_TEXTURE_2D, textures[i].id);
         }
+    }
+
+    if (std::find(shaderProgram.capabilities.begin(),
+                  shaderProgram.capabilities.end(),
+                  ShaderCapability::Lighting) !=
+        shaderProgram.capabilities.end()) {
+        Window *window = Window::mainWindow;
+        Scene *scene = window->getCurrentScene();
+
+        shaderProgram.setUniform4f(
+            "ambientLight.color", scene->ambientLight.color.r,
+            scene->ambientLight.color.g, scene->ambientLight.color.b, 1.0f);
+        shaderProgram.setUniform1f("ambientLight.intensity",
+                                   scene->ambientLight.intensity);
     }
 
     glBindVertexArray(vao);

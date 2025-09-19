@@ -10,7 +10,9 @@
 #ifndef ATLAS_SCENE_H
 #define ATLAS_SCENE_H
 
+#include "atlas/light.h"
 #include "atlas/units.h"
+
 class Window;
 
 class Scene {
@@ -19,6 +21,8 @@ class Scene {
     virtual void initialize(Window &window) = 0;
     virtual void onMouseMove(Window &window, Movement2d movement) {}
     virtual void onMouseScroll(Window &window, Movement2d offset) {}
+
+    AmbientLight ambientLight = {{1.0f, 1.0f, 1.0f}, 0.1f};
 };
 
 #endif // ATLAS_SCENE_H

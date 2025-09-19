@@ -28,6 +28,8 @@ enum class AtlasVertexShader {
     Texture,
 };
 
+enum class ShaderCapability { Lighting, Textures };
+
 struct VertexShader {
     const char *source;
 
@@ -36,6 +38,7 @@ struct VertexShader {
     void compile();
 
     std::vector<uint32_t> desiredAttributes;
+    std::vector<ShaderCapability> capabilities;
 
     Id shaderId;
 };
@@ -77,6 +80,8 @@ struct ShaderProgram {
     Id programId;
 
     std::vector<uint32_t> desiredAttributes;
+
+    std::vector<ShaderCapability> capabilities;
 
     void setUniform4f(std::string name, float v0, float v1, float v2, float v3);
     void setUniform3f(std::string name, float v0, float v1, float v2);

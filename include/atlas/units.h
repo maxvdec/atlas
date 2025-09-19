@@ -148,6 +148,7 @@ struct Position2d {
 };
 
 typedef Position2d Scale2d;
+typedef Position2d Size2d;
 typedef Position2d Point2d;
 typedef Position2d Movement2d;
 

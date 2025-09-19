@@ -93,5 +93,6 @@ class CoreObject : public Renderable {
 };
 
 CoreObject createBox(Size3d size, Color color = {1.0, 1.0, 1.0, 1.0});
+CoreObject createPlane(Size2d size, Color color = {1.0, 1.0, 1.0, 1.0});
 
 #endif // ATLAS_OBJECT_H

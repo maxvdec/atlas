@@ -62,3 +62,21 @@ CoreObject createBox(Size3d size, Color color) {
                        20, 21, 22, 22, 23, 20}); // Bottom face
     return box;
 }
+
+CoreObject createPlane(Size2d size, Color color) {
+    double w = size.x / 2.0;
+    double h = size.y / 2.0;
+
+    std::vector<CoreVertex> vertices = {
+        {{-w, -h, 0.0}, color, {0.0, 0.0}},
+        {{w, -h, 0.0}, color, {1.0, 0.0}},
+        {{w, h, 0.0}, color, {1.0, 1.0}},
+        {{-w, h, 0.0}, color, {0.0, 1.0}},
+    };
+
+    CoreObject plane;
+    plane.attachVertices(vertices);
+    plane.attachIndices({0, 1, 2, 2, 3, 0});
+    plane.rotate({-90.0, 0.0, 0.0});
+    return plane;
+}

@@ -10,6 +10,7 @@
 #ifndef ATLAS_INPUT_HPP
 #define ATLAS_INPUT_HPP
 
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
 enum class Key : int {

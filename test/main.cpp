@@ -47,9 +47,13 @@ class MainScene : public Scene {
         camera.lookAt({0.0f, 0.0f, 0.0f});
         window.setCamera(&camera);
 
+        quadObject2 = createPlane({4.0f, 4.0f}, Color::brown());
+
         Texture texture = Texture::fromResource(texture_resource);
-        // quadObject.attachTexture(texture);
+        quadObject.attachTexture(texture);
+        quadObject2.move({0.0f, -0.5f, 0.0f});
         window.addObject(&quadObject);
+        window.addObject(&quadObject2);
     }
 };
 
