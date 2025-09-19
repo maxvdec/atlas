@@ -29,7 +29,6 @@ struct WindowConfiguration {
     std::string title;
     int width;
     int height;
-    bool mouseHidden = true;
     bool mouseCaptured = true;
     int posX = WINDOW_CENTERED;
     int posY = WINDOW_CENTERED;

@@ -40,6 +40,7 @@ struct Position3d {
 };
 
 typedef Position3d Scale3d;
+typedef Position3d Size3d;
 typedef Position3d Point3d;
 
 struct Rotation3d {

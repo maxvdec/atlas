@@ -7,7 +7,7 @@ in vec4 outColor;
 uniform sampler2D textures[16];
 
 uniform bool useTexture;
-uniform bool useColor;
+uniform bool onlyTexture;
 uniform int textureCount;
 
 vec4 calculateAllTextures() {
@@ -23,12 +23,12 @@ vec4 calculateAllTextures() {
 }
 
 void main() {
-    if (useTexture && !useColor) {
+    if (onlyTexture) {
         FragColor = calculateAllTextures(); 
         return;
     }
 
-    if (useTexture && useColor) {
+    if (useTexture) {
         FragColor = calculateAllTextures() * outColor;
     } else {
         FragColor = outColor;

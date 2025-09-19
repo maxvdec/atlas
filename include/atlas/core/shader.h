@@ -25,6 +25,7 @@ enum class AtlasVertexShader {
     Debug,
     Color,
     Main,
+    Texture,
 };
 
 struct VertexShader {
@@ -43,6 +44,7 @@ enum class AtlasFragmentShader {
     Debug,
     Color,
     Main,
+    Texture,
 };
 
 struct FragmentShader {

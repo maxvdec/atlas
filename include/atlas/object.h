@@ -57,6 +57,8 @@ class CoreObject : public Renderable {
     void initialize() override;
 
     void renderColorWithTexture();
+    void renderOnlyColor();
+    void renderOnlyTexture();
 
     Position3d position = {0.0, 0.0, 0.0};
     Rotation3d rotation = {0.0, 0.0, 0.0};
@@ -81,12 +83,15 @@ class CoreObject : public Renderable {
     glm::mat4 view = glm::mat4(1.0f);
     glm::mat4 projection = glm::mat4(1.0f);
 
-    bool onlyTexture = true;
+    bool useColor = true;
+    bool useTexture = false;
 
   public:
     void render() override;
     void setViewMatrix(const glm::mat4 &view) override;
     void setProjectionMatrix(const glm::mat4 &projection) override;
 };
+
+CoreObject createBox(Size3d size, Color color = {1.0, 1.0, 1.0, 1.0});
 
 #endif // ATLAS_OBJECT_H

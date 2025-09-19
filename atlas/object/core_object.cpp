@@ -36,9 +36,26 @@ void CoreObject::attachProgram(const ShaderProgram &program) {
     }
 }
 
-void CoreObject::renderColorWithTexture() { onlyTexture = false; }
+void CoreObject::renderColorWithTexture() {
+    useColor = true;
+    useTexture = true;
+}
 
-void CoreObject::attachTexture(const Texture &tex) { textures.push_back(tex); }
+void CoreObject::renderOnlyColor() {
+    useColor = true;
+    useTexture = false;
+}
+
+void CoreObject::renderOnlyTexture() {
+    useColor = false;
+    useTexture = true;
+}
+
+void CoreObject::attachTexture(const Texture &tex) {
+    textures.push_back(tex);
+    useTexture = true;
+    useColor = false;
+}
 
 void CoreObject::attachVertices(const std::vector<CoreVertex> &newVertices) {
     if (newVertices.empty()) {
@@ -156,10 +173,10 @@ void CoreObject::render() {
     shaderProgram.setUniformMat4f("view", view);
     shaderProgram.setUniformMat4f("projection", projection);
 
-    if (!textures.empty()) {
-        shaderProgram.setUniformBool("useTexture", true);
-        shaderProgram.setUniformBool("onlyTexture", onlyTexture);
+    shaderProgram.setUniform1i("useColor", useColor ? 1 : 0);
+    shaderProgram.setUniform1i("useTexture", useTexture ? 1 : 0);
 
+    if (!textures.empty()) {
         int count = std::min((int)textures.size(), 16);
         shaderProgram.setUniform1i("textureCount", count);
         GLint units[16];

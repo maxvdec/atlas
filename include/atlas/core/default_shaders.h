@@ -24,7 +24,7 @@ in vec4 outColor;
 uniform sampler2D textures[16];
 
 uniform bool useTexture;
-uniform bool onlyTexture;
+uniform bool useColor;
 uniform int textureCount;
 
 vec4 calculateAllTextures() {
@@ -40,16 +40,38 @@ vec4 calculateAllTextures() {
 }
 
 void main() {
-    if (onlyTexture) {
+    if (useTexture && !useColor) {
         FragColor = calculateAllTextures(); 
         return;
     }
 
-    if (useTexture) {
+    if (useTexture && useColor) {
         FragColor = calculateAllTextures() * outColor;
     } else {
         FragColor = outColor;
     }
+}
+
+)";
+
+static const char* TEXTURE_VERT = R"(
+#version 330 core
+layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec4 aColor;
+layout (location = 2) in vec2 aTexCoord;
+
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+
+out vec4 outColor;
+out vec2 TexCoord; 
+
+void main() {
+    mat4 mvp = projection * view * model;
+    gl_Position = mvp * vec4(aPos, 1.0);
+    TexCoord = aTexCoord;
+    outColor = aColor;
 }
 
 )";
@@ -85,6 +107,46 @@ layout (location = 0) in vec3 aPos;
 
 void main() {
     gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
+}
+
+)";
+
+static const char* TEXTURE_FRAG = R"(
+#version 330 core
+out vec4 FragColor;
+
+in vec2 TexCoord;
+in vec4 outColor;
+
+uniform sampler2D textures[16];
+
+uniform bool useTexture;
+uniform bool onlyTexture;
+uniform int textureCount;
+
+vec4 calculateAllTextures() {
+    vec4 color = vec4(0.0);
+
+    for (int i = 0; i <= textureCount; i++) {
+        color += texture(textures[i], TexCoord);
+    }
+
+    color /= float(textureCount + 1); 
+
+    return color;
+}
+
+void main() {
+    if (onlyTexture) {
+        FragColor = calculateAllTextures(); 
+        return;
+    }
+
+    if (useTexture) {
+        FragColor = calculateAllTextures() * outColor;
+    } else {
+        FragColor = outColor;
+    }
 }
 
 )";

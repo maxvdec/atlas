@@ -25,7 +25,7 @@ class Camera {
     float farClip = 100.0f;
     float orthographicSize = 5.0f;
 
-    float movementSpeed = 4.f;
+    float movementSpeed = 2.f;
     float mouseSensitivity = 0.1f;
     float lookSmoothness = 0.15f;
 
