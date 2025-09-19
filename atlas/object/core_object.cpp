@@ -24,7 +24,9 @@ std::vector<LayoutDescriptor> CoreVertex::getLayoutDescriptors() {
             {1, 4, GL_DOUBLE, GL_FALSE, sizeof(CoreVertex),
              offsetof(CoreVertex, color)},
             {2, 2, GL_DOUBLE, GL_FALSE, sizeof(CoreVertex),
-             offsetof(CoreVertex, textureCoordinate)}};
+             offsetof(CoreVertex, textureCoordinate)},
+            {3, 3, GL_DOUBLE, GL_FALSE, sizeof(CoreVertex),
+             offsetof(CoreVertex, normal)}};
 }
 
 CoreObject::CoreObject() : vbo(0), vao(0) {

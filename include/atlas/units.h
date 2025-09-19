@@ -42,6 +42,7 @@ struct Position3d {
 typedef Position3d Scale3d;
 typedef Position3d Size3d;
 typedef Position3d Point3d;
+typedef Position3d Normal3d;
 
 struct Rotation3d {
     double pitch; // Rotation around the X-axis

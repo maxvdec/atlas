@@ -16,40 +16,41 @@ CoreObject createBox(Size3d size, Color color) {
     double d = size.z / 2.0;
 
     std::vector<CoreVertex> vertices = {
-        // Front face
-        {{-w, -h, d}, color, {0.0, 0.0}},
-        {{w, -h, d}, color, {1.0, 0.0}},
-        {{w, h, d}, color, {1.0, 1.0}},
-        {{-w, h, d}, color, {0.0, 1.0}},
+        // Front face (normal 0,0,1)
+        {{-w, -h, d}, color, {0.0, 0.0}, {0.0f, 0.0f, 1.0f}},
+        {{w, -h, d}, color, {1.0, 0.0}, {0.0f, 0.0f, 1.0f}},
+        {{w, h, d}, color, {1.0, 1.0}, {0.0f, 0.0f, 1.0f}},
+        {{-w, h, d}, color, {0.0, 1.0}, {0.0f, 0.0f, 1.0f}},
 
-        // Back face
-        {{-w, -h, -d}, color, {1.0, 0.0}},
-        {{-w, h, -d}, color, {1.0, 1.0}},
-        {{w, h, -d}, color, {0.0, 1.0}},
-        {{w, -h, -d}, color, {0.0, 0.0}},
+        // Back face (normal 0,0,-1)
+        {{-w, -h, -d}, color, {1.0, 0.0}, {0.0f, 0.0f, -1.0f}},
+        {{-w, h, -d}, color, {1.0, 1.0}, {0.0f, 0.0f, -1.0f}},
+        {{w, h, -d}, color, {0.0, 1.0}, {0.0f, 0.0f, -1.0f}},
+        {{w, -h, -d}, color, {0.0, 0.0}, {0.0f, 0.0f, -1.0f}},
 
-        // Left face
-        {{-w, -h, -d}, color, {0.0, 0.0}},
-        {{-w, -h, d}, color, {1.0, 0.0}},
-        {{-w, h, d}, color, {1.0, 1.0}},
-        {{-w, h, -d}, color, {0.0, 1.0}},
+        // Left face (normal -1,0,0)
+        {{-w, -h, -d}, color, {0.0, 0.0}, {-1.0f, 0.0f, 0.0f}},
+        {{-w, -h, d}, color, {1.0, 0.0}, {-1.0f, 0.0f, 0.0f}},
+        {{-w, h, d}, color, {1.0, 1.0}, {-1.0f, 0.0f, 0.0f}},
+        {{-w, h, -d}, color, {0.0, 1.0}, {-1.0f, 0.0f, 0.0f}},
 
-        // Right face
-        {{w, -h, -d}, color, {1.0, 0.0}},
-        {{w, h, -d}, color, {1.0, 1.0}},
-        {{w, h, d}, color, {0.0, 1.0}},
-        {{w, -h, d}, color, {0.0, 0.0}},
+        // Right face (normal 1,0,0)
+        {{w, -h, -d}, color, {1.0, 0.0}, {1.0f, 0.0f, 0.0f}},
+        {{w, h, -d}, color, {1.0, 1.0}, {1.0f, 0.0f, 0.0f}},
+        {{w, h, d}, color, {0.0, 1.0}, {1.0f, 0.0f, 0.0f}},
+        {{w, -h, d}, color, {0.0, 0.0}, {1.0f, 0.0f, 0.0f}},
 
-        // Top face
-        {{-w, h, -d}, color, {0.0, 1.0}},
-        {{-w, h, d}, color, {0.0, 0.0}},
-        {{w, h, d}, color, {1.0, 0.0}},
-        {{w, h, -d}, color, {1.0, 1.0}},
-        // Bottom face
-        {{-w, -h, -d}, color, {1.0, 1.0}},
-        {{w, -h, -d}, color, {0.0, 1.0}},
-        {{w, -h, d}, color, {0.0, 0.0}},
-        {{-w, -h, d}, color, {1.0, 0.0}},
+        // Top face (normal 0,1,0)
+        {{-w, h, -d}, color, {0.0, 1.0}, {0.0f, 1.0f, 0.0f}},
+        {{-w, h, d}, color, {0.0, 0.0}, {0.0f, 1.0f, 0.0f}},
+        {{w, h, d}, color, {1.0, 0.0}, {0.0f, 1.0f, 0.0f}},
+        {{w, h, -d}, color, {1.0, 1.0}, {0.0f, 1.0f, 0.0f}},
+
+        // Bottom face (normal 0,-1,0)
+        {{-w, -h, -d}, color, {1.0, 1.0}, {0.0f, -1.0f, 0.0f}},
+        {{w, -h, -d}, color, {0.0, 1.0}, {0.0f, -1.0f, 0.0f}},
+        {{w, -h, d}, color, {0.0, 0.0}, {0.0f, -1.0f, 0.0f}},
+        {{-w, -h, d}, color, {1.0, 0.0}, {0.0f, -1.0f, 0.0f}},
     };
 
     CoreObject box;
@@ -68,10 +69,10 @@ CoreObject createPlane(Size2d size, Color color) {
     double h = size.y / 2.0;
 
     std::vector<CoreVertex> vertices = {
-        {{-w, -h, 0.0}, color, {0.0, 0.0}},
-        {{w, -h, 0.0}, color, {1.0, 0.0}},
-        {{w, h, 0.0}, color, {1.0, 1.0}},
-        {{-w, h, 0.0}, color, {0.0, 1.0}},
+        {{-w, -h, 0.0}, color, {0.0, 0.0}, {0.0f, 0.0f, 1.0f}},
+        {{w, -h, 0.0}, color, {1.0, 0.0}, {0.0f, 0.0f, 1.0f}},
+        {{w, h, 0.0}, color, {1.0, 1.0}, {0.0f, 0.0f, 1.0f}},
+        {{-w, h, 0.0}, color, {0.0, 1.0}, {0.0f, 0.0f, 1.0f}},
     };
 
     CoreObject plane;

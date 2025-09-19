@@ -25,6 +25,7 @@ struct CoreVertex {
     Position3d position;
     Color color = {1.0, 1.0, 1.0, 1.0};
     TextureCoordinate textureCoordinate = {0.0, 0.0};
+    Normal3d normal = {0.0, 0.0, 0.0};
 
     static std::vector<LayoutDescriptor> getLayoutDescriptors();
 };

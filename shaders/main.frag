@@ -3,6 +3,8 @@ out vec4 FragColor;
 
 in vec2 TexCoord;
 in vec4 outColor;
+in vec3 Normal;
+in vec3 FragPos;
 
 struct AmbientLight {
     vec4 color;
@@ -29,6 +31,17 @@ vec4 calculateAllTextures() {
     return color;
 }
 
+vec3 calculateDiffuse() {
+    vec3 norm = normalize(Normal);
+    vec3 lightPos = vec3(3.0, 1.0, 0.0); // Example light position
+    vec3 lightDir = normalize(lightPos - FragPos);
+
+    float diff = max(dot(norm, lightDir), 0.0);
+    vec3 diffuse = diff * vec3(1.0); // Assuming white light for simplicity 
+
+    return diffuse;
+}
+
 void main() {
     if (useTexture && !useColor) {
         FragColor = calculateAllTextures(); 
@@ -40,6 +53,8 @@ void main() {
         FragColor = outColor;
     }
 
-    vec4 ambient = vec4(ambientLight.color.rgb * ambientLight.intensity, 1.0);
-    FragColor = FragColor * ambient;
+    vec3 ambient = vec3(ambientLight.color.rgb * ambientLight.intensity);
+    vec3 diffuse = calculateDiffuse();
+
+    FragColor =  vec4(ambient + diffuse, 1.0) * FragColor;
 }

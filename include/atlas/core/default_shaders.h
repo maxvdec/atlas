@@ -20,6 +20,8 @@ out vec4 FragColor;
 
 in vec2 TexCoord;
 in vec4 outColor;
+in vec3 Normal;
+in vec3 FragPos;
 
 struct AmbientLight {
     vec4 color;
@@ -46,6 +48,17 @@ vec4 calculateAllTextures() {
     return color;
 }
 
+vec3 calculateDiffuse() {
+    vec3 norm = normalize(Normal);
+    vec3 lightPos = vec3(3.0, 1.0, 0.0); // Example light position
+    vec3 lightDir = normalize(lightPos - FragPos);
+
+    float diff = max(dot(norm, lightDir), 0.0);
+    vec3 diffuse = diff * vec3(1.0); // Assuming white light for simplicity 
+
+    return diffuse;
+}
+
 void main() {
     if (useTexture && !useColor) {
         FragColor = calculateAllTextures(); 
@@ -57,8 +70,10 @@ void main() {
         FragColor = outColor;
     }
 
-    vec4 ambient = vec4(ambientLight.color.rgb * ambientLight.intensity, 1.0);
-    FragColor = FragColor * ambient;
+    vec3 ambient = vec3(ambientLight.color.rgb * ambientLight.intensity);
+    vec3 diffuse = calculateDiffuse();
+
+    FragColor =  vec4(ambient + diffuse, 1.0) * FragColor;
 }
 
 )";
@@ -165,6 +180,7 @@ static const char* MAIN_VERT = R"(
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec4 aColor;
 layout (location = 2) in vec2 aTexCoord;
+layout (location = 3) in vec3 aNormal;
 
 uniform mat4 model;
 uniform mat4 view;
@@ -172,11 +188,15 @@ uniform mat4 projection;
 
 out vec4 outColor;
 out vec2 TexCoord; 
+out vec3 Normal;
+out vec3 FragPos;
 
 void main() {
     mat4 mvp = projection * view * model;
     gl_Position = mvp * vec4(aPos, 1.0);
+    FragPos = vec3(model * vec4(aPos, 1.0));
     TexCoord = aTexCoord;
+    Normal = mat3(transpose(inverse(model))) * aNormal;
     outColor = aColor;
 }
 
