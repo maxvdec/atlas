@@ -212,6 +212,10 @@ void CoreObject::render() {
             scene->ambientLight.color.g, scene->ambientLight.color.b, 1.0f);
         shaderProgram.setUniform1f("ambientLight.intensity",
                                    scene->ambientLight.intensity);
+
+        shaderProgram.setUniform3f(
+            "cameraPosition", window->getCamera()->position.x,
+            window->getCamera()->position.y, window->getCamera()->position.z);
     }
 
     glBindVertexArray(vao);

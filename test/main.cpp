@@ -17,18 +17,18 @@ class MainScene : public Scene {
     Camera camera;
 
     void update(Window &window) override {
-        // camera.update(window);
+        camera.update(window);
         if (window.isKeyPressed(Key::Escape)) {
             window.releaseMouse();
         }
     }
 
     void onMouseMove(Window &window, Movement2d movement) override {
-        // camera.updateLook(window, movement);
+        camera.updateLook(window, movement);
     }
 
     void onMouseScroll(Window &window, Movement2d offset) override {
-        // camera.updateZoom(window, offset);
+        camera.updateZoom(window, offset);
     }
 
     void initialize(Window &window) override {
@@ -58,7 +58,7 @@ class MainScene : public Scene {
 };
 
 int main() {
-    Window window({"My Window", 1600, 1200, false});
+    Window window({"My Window", 1600, 1200});
     MainScene scene;
     window.setScene(&scene);
     window.run();

@@ -98,6 +98,7 @@ class Window {
     static Window *mainWindow;
 
     inline Scene *getCurrentScene() { return currentScene; }
+    inline Camera *getCamera() { return camera; }
 
   private:
     CoreWindowReference windowRef;
