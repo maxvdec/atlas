@@ -8,6 +8,7 @@
 */
 
 #include "atlas/core/shader.h"
+#include "atlas/light.h"
 #include "atlas/object.h"
 #include "atlas/scene.h"
 #include "atlas/window.h"
@@ -227,6 +228,18 @@ void CoreObject::render() {
         shaderProgram.setUniform3f("material.specular", material.specular.r,
                                    material.specular.g, material.specular.b);
         shaderProgram.setUniform1f("material.shininess", material.shininess);
+
+        // Send the lights
+        Light firstLight =
+            scene->lights.empty() ? Light({0, 0, 0}) : scene->lights[0];
+        shaderProgram.setUniform3f("light.position", firstLight.position.x,
+                                   firstLight.position.y,
+                                   firstLight.position.z);
+        shaderProgram.setUniform3f("light.diffuse", firstLight.color.r,
+                                   firstLight.color.g, firstLight.color.b);
+        shaderProgram.setUniform3f("light.specular", firstLight.shineColor.r,
+                                   firstLight.shineColor.g,
+                                   firstLight.shineColor.b);
     }
 
     glBindVertexArray(vao);

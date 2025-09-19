@@ -4,8 +4,13 @@ layout (location = 1) in vec4 aColor;
 
 out vec4 vertexColor;
 
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+
 void main()
 {
-    gl_Position = vec4(aPos, 1.0);
+    mat4 mvp = projection * view * model;
+    gl_Position = mvp * vec4(aPos, 1.0);
     vertexColor = aColor;
 }

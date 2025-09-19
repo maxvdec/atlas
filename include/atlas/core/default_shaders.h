@@ -34,18 +34,24 @@ struct Material {
     float shininess;
 };
 
+struct Light {
+    vec3 position;
+
+    vec3 diffuse;
+    vec3 specular;
+};
+
 uniform sampler2D textures[16];
 uniform int textureCount;
 
 uniform AmbientLight ambientLight;
 uniform Material material;
+uniform Light light;
 
 uniform vec3 cameraPosition;
 
 uniform bool useTexture;
 uniform bool useColor;
-
-vec3 lightPos = vec3(3.0, 1.0, 0.0); // Example light position
 
 vec4 calculateAllTextures() {
     vec4 color = vec4(0.0);
@@ -58,20 +64,20 @@ vec4 calculateAllTextures() {
 
 vec3 calculateDiffuse() {
     vec3 norm = normalize(Normal);
-    vec3 lightDir = normalize(lightPos - FragPos);
+    vec3 lightDir = normalize(light.position - FragPos);
     float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = (diff * material.diffuse) * vec3(1.0); // Assuming white light for simplicity 
+    vec3 diffuse = (diff * material.diffuse) * light.diffuse;
     return diffuse;
 }
 
 vec3 calculateSpecular() {
     vec3 norm = normalize(Normal);
     vec3 viewDir = normalize(cameraPosition - FragPos);
-    vec3 lightDir = normalize(lightPos - FragPos);
+    vec3 lightDir = normalize(light.position - FragPos);
     vec3 reflectDir = reflect(-lightDir, norm); // Use normalized normal
     
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess); 
-    vec3 specular = (spec * material.specular) * vec3(1.0);
+    vec3 specular = (spec * material.specular) * light.specular;
     return specular;
 }
 
@@ -87,7 +93,9 @@ void main() {
         baseColor = vec4(1.0); 
     }
     
-    vec3 ambient = ambientLight.color.rgb * ambientLight.intensity * material.ambient;
+   
+    vec3 ambient = (ambientLight.color.rgb * ambientLight.intensity) * material.ambient; 
+
     vec3 diffuse = calculateDiffuse();
     vec3 specular = calculateSpecular();
     
@@ -136,9 +144,14 @@ layout (location = 1) in vec4 aColor;
 
 out vec4 vertexColor;
 
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+
 void main()
 {
-    gl_Position = vec4(aPos, 1.0);
+    mat4 mvp = projection * view * model;
+    gl_Position = mvp * vec4(aPos, 1.0);
     vertexColor = aColor;
 }
 

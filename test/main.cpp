@@ -1,4 +1,5 @@
 #include "atlas/camera.h"
+#include "atlas/light.h"
 #include "atlas/object.h"
 #include "atlas/scene.h"
 #include "atlas/texture.h"
@@ -14,6 +15,7 @@ class MainScene : public Scene {
   public:
     CoreObject quadObject;
     CoreObject quadObject2;
+    CoreObject lightObj;
     Camera camera;
 
     void update(Window &window) override {
@@ -54,6 +56,11 @@ class MainScene : public Scene {
         quadObject2.move({0.0f, -0.5f, 0.0f});
         window.addObject(&quadObject);
         window.addObject(&quadObject2);
+
+        Light light({2.0f, 4.0f, 1.0f}, Color::white(), Color::white());
+        lightObj = light.createDebugObject();
+        lights.push_back(light);
+        window.addObject(&lightObj);
     }
 };
 
