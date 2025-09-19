@@ -27,13 +27,23 @@ struct AmbientLight {
     float intensity;
 };
 
+struct Material {
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+    float shininess;
+};
+
 uniform sampler2D textures[16];
+uniform int textureCount;
+
 uniform AmbientLight ambientLight;
+uniform Material material;
+
 uniform vec3 cameraPosition;
-float specularStrength = 0.5;
+
 uniform bool useTexture;
 uniform bool useColor;
-uniform int textureCount;
 
 vec3 lightPos = vec3(3.0, 1.0, 0.0); // Example light position
 
@@ -50,7 +60,7 @@ vec3 calculateDiffuse() {
     vec3 norm = normalize(Normal);
     vec3 lightDir = normalize(lightPos - FragPos);
     float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = diff * vec3(1.0); // Assuming white light for simplicity 
+    vec3 diffuse = (diff * material.diffuse) * vec3(1.0); // Assuming white light for simplicity 
     return diffuse;
 }
 
@@ -60,8 +70,8 @@ vec3 calculateSpecular() {
     vec3 lightDir = normalize(lightPos - FragPos);
     vec3 reflectDir = reflect(-lightDir, norm); // Use normalized normal
     
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32); 
-    vec3 specular = specularStrength * spec * vec3(1.0);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess); 
+    vec3 specular = (spec * material.specular) * vec3(1.0);
     return specular;
 }
 
@@ -77,7 +87,7 @@ void main() {
         baseColor = vec4(1.0); 
     }
     
-    vec3 ambient = ambientLight.color.rgb * ambientLight.intensity;
+    vec3 ambient = ambientLight.color.rgb * ambientLight.intensity * material.ambient;
     vec3 diffuse = calculateDiffuse();
     vec3 specular = calculateSpecular();
     

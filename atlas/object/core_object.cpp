@@ -207,15 +207,26 @@ void CoreObject::render() {
         Window *window = Window::mainWindow;
         Scene *scene = window->getCurrentScene();
 
+        // Set ambient light
         shaderProgram.setUniform4f(
             "ambientLight.color", scene->ambientLight.color.r,
             scene->ambientLight.color.g, scene->ambientLight.color.b, 1.0f);
         shaderProgram.setUniform1f("ambientLight.intensity",
                                    scene->ambientLight.intensity);
 
+        // Set camera position
         shaderProgram.setUniform3f(
             "cameraPosition", window->getCamera()->position.x,
             window->getCamera()->position.y, window->getCamera()->position.z);
+
+        // Set material properties
+        shaderProgram.setUniform3f("material.ambient", material.ambient.r,
+                                   material.ambient.g, material.ambient.b);
+        shaderProgram.setUniform3f("material.diffuse", material.diffuse.r,
+                                   material.diffuse.g, material.diffuse.b);
+        shaderProgram.setUniform3f("material.specular", material.specular.r,
+                                   material.specular.g, material.specular.b);
+        shaderProgram.setUniform1f("material.shininess", material.shininess);
     }
 
     glBindVertexArray(vao);

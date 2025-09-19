@@ -21,6 +21,13 @@
 
 typedef std::array<double, 2> TextureCoordinate;
 
+struct Material {
+    Color ambient = Color::white();
+    Color diffuse = Color::white();
+    Color specular = Color::white();
+    float shininess = 32.0f;
+};
+
 struct CoreVertex {
     Position3d position;
     Color color = {1.0, 1.0, 1.0, 1.0};
@@ -48,6 +55,7 @@ class CoreObject : public Renderable {
     std::vector<Index> indices;
     ShaderProgram shaderProgram;
     std::vector<Texture> textures;
+    Material material = Material();
 
     CoreObject();
 
