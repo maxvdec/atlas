@@ -121,4 +121,33 @@ typedef unsigned int Id;
 
 enum class Direction3d { Up, Down, Left, Right, Forward, Backward };
 
+struct Position2d {
+    double x;
+    double y;
+
+    Position2d operator+(const Position2d &other) const {
+        return {x + other.x, y + other.y};
+    }
+
+    Position2d operator-(const Position2d &other) const {
+        return {x - other.x, y - other.y};
+    }
+
+    Position2d operator*(double scalar) const {
+        return {x * scalar, y * scalar};
+    }
+
+    Position2d operator/(double scalar) const {
+        return {x / scalar, y / scalar};
+    }
+
+    inline glm::vec2 toGlm() const {
+        return glm::vec2(static_cast<float>(x), static_cast<float>(y));
+    }
+};
+
+typedef Position2d Scale2d;
+typedef Position2d Point2d;
+typedef Position2d Movement2d;
+
 #endif // ATLAS_UNITS_H

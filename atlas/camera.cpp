@@ -102,3 +102,27 @@ void Camera::update(Window &window) {
     target = {camPos.x + camFront.x, camPos.y + camFront.y,
               camPos.z + camFront.z};
 }
+
+void Camera::updateLook(Window &window, Movement2d movement) {
+    float xoffset = movement.x * mouseSensitivity;
+    float yoffset = movement.y * mouseSensitivity;
+
+    targetYaw += xoffset;
+    targetPitch += yoffset;
+
+    if (targetPitch > 89.0f)
+        targetPitch = 89.0f;
+    if (targetPitch < -89.0f)
+        targetPitch = -89.0f;
+
+    yaw += (targetYaw - yaw) * lookSmoothness;
+    pitch += (targetPitch - pitch) * lookSmoothness;
+
+    glm::vec3 front;
+    front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    front.y = sin(glm::radians(pitch));
+    front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+    front = glm::normalize(front);
+
+    target = {position.x + front.x, position.y + front.y, position.z + front.z};
+}

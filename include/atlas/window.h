@@ -29,6 +29,8 @@ struct WindowConfiguration {
     std::string title;
     int width;
     int height;
+    bool mouseHidden = true;
+    bool mouseCaptured = true;
     int posX = WINDOW_CENTERED;
     int posY = WINDOW_CENTERED;
     bool decorations = true;
@@ -89,6 +91,13 @@ class Window {
 
     bool isKeyPressed(Key key);
 
+    void releaseMouse();
+    void captureMouse();
+
+    std::tuple<int, int> getCursorPosition();
+
+    static Window *mainWindow;
+
   private:
     CoreWindowReference windowRef;
     std::vector<Renderable *> renderables;
@@ -97,6 +106,8 @@ class Window {
     glm::mat4 calculateProjectionMatrix();
 
     Camera *camera = nullptr;
+    float lastMouseX;
+    float lastMouseY;
 };
 
 #endif // WINDOW_H

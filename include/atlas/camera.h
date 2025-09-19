@@ -26,6 +26,8 @@ class Camera {
     float orthographicSize = 5.0f;
 
     float movementSpeed = 4.f;
+    float mouseSensitivity = 0.1f;
+    float lookSmoothness = 0.15f;
 
     bool useOrthographic = false;
 
@@ -36,6 +38,7 @@ class Camera {
     Camera() : position({0.0f, 0.0f, 3.0f}), target({0.0f, 0.0f, 0.0f}) {}
 
     void update(Window &window);
+    void updateLook(Window &window, Movement2d movement);
 
     void moveTo(Direction3d direction, float speed);
 
@@ -43,6 +46,12 @@ class Camera {
 
   private:
     float lastFrame;
+
+    float yaw = -90.0f;
+    float pitch = 0.0f;
+
+    float targetYaw = -90.0f;
+    float targetPitch = 0.0f;
 };
 
 #endif // CAMERA_H

@@ -8,12 +8,17 @@
 */
 
 #include "atlas/object.h"
+#include "atlas/units.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <atlas/window.h>
+#include <iostream>
 #include <string>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <tuple>
+
+Window *Window::mainWindow = nullptr;
 
 Window::Window(WindowConfiguration config)
     : title(config.title), width(config.width), height(config.height) {
@@ -45,6 +50,9 @@ Window::Window(WindowConfiguration config)
     }
 
     glfwSetWindowOpacity(window, config.opacity);
+    glfwSetInputMode(window, GLFW_CURSOR,
+                     config.mouseCaptured ? GLFW_CURSOR_DISABLED
+                                          : GLFW_CURSOR_NORMAL);
 
     int fbWidth, fbHeight;
     glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
@@ -62,11 +70,35 @@ Window::Window(WindowConfiguration config)
 
     this->windowRef = static_cast<CoreWindowReference>(window);
 
+    Window::mainWindow = this;
+
     glfwSetFramebufferSizeCallback(window, [](GLFWwindow *win, int w, int h) {
         int fbWidth, fbHeight;
         glfwGetFramebufferSize(win, &fbWidth, &fbHeight);
         glViewport(0, 0, fbWidth, fbHeight);
     });
+
+    lastMouseX = width / 2.0;
+    lastMouseY = height / 2.0;
+
+    glfwSetCursorPosCallback(
+        window, [](GLFWwindow *win, double xpos, double ypos) {
+            Window *window = Window::mainWindow;
+            Position2d movement = {xpos - window->lastMouseX,
+                                   window->lastMouseY - ypos};
+            if (window->currentScene != nullptr) {
+                window->currentScene->onMouseMove(*window, movement);
+            }
+            window->lastMouseX = xpos;
+            window->lastMouseY = ypos;
+        });
+}
+
+std::tuple<int, int> Window::getCursorPosition() {
+    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
+    double xpos, ypos;
+    glfwGetCursorPos(window, &xpos, &ypos);
+    return {static_cast<int>(xpos), static_cast<int>(ypos)};
 }
 
 void Window::run() {
@@ -239,4 +271,14 @@ bool Window::isKeyPressed(Key key) {
     GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
     int state = glfwGetKey(window, static_cast<int>(key));
     return state == GLFW_PRESS || state == GLFW_REPEAT;
+}
+
+void Window::releaseMouse() {
+    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+}
+
+void Window::captureMouse() {
+    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }

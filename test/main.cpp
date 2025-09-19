@@ -4,6 +4,7 @@
 #include "atlas/texture.h"
 #include "atlas/units.h"
 #include "atlas/workspace.h"
+#include <atlas/input.h>
 #include <atlas/window.h>
 #include <cmath>
 #include <iostream>
@@ -15,7 +16,16 @@ class MainScene : public Scene {
     CoreObject quadObject2;
     Camera camera;
 
-    void update(Window &window) override { camera.update(window); }
+    void update(Window &window) override {
+        camera.update(window);
+        if (window.isKeyPressed(Key::Escape)) {
+            window.releaseMouse();
+        }
+    }
+
+    void onMouseMove(Window &window, Movement2d movement) override {
+        camera.updateLook(window, movement);
+    }
 
     void initialize(Window &window) override {
         std::vector<CoreVertex> quad = {
