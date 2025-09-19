@@ -27,6 +27,10 @@ class MainScene : public Scene {
         camera.updateLook(window, movement);
     }
 
+    void onMouseScroll(Window &window, Movement2d offset) override {
+        camera.updateZoom(window, offset);
+    }
+
     void initialize(Window &window) override {
         std::vector<CoreVertex> quad = {
             {{0.5, 0.5, 0.0}, Color::red(), {1.0, 1.0}},

@@ -39,6 +39,7 @@ class Camera {
 
     void update(Window &window);
     void updateLook(Window &window, Movement2d movement);
+    void updateZoom(Window &window, Movement2d offset);
 
     void moveTo(Direction3d direction, float speed);
 

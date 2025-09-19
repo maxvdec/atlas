@@ -18,6 +18,7 @@ class Scene {
     virtual void update(Window &window) = 0;
     virtual void initialize(Window &window) = 0;
     virtual void onMouseMove(Window &window, Movement2d movement) {}
+    virtual void onMouseScroll(Window &window, Movement2d offset) {}
 };
 
 #endif // ATLAS_SCENE_H

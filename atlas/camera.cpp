@@ -126,3 +126,19 @@ void Camera::updateLook(Window &window, Movement2d movement) {
 
     target = {position.x + front.x, position.y + front.y, position.z + front.z};
 }
+
+void Camera::updateZoom(Window &window, Movement2d offset) {
+    if (!useOrthographic) {
+        fov -= offset.y;
+        if (fov < 1.0f)
+            fov = 1.0f;
+        if (fov > 90.0f)
+            fov = 90.0f;
+    } else {
+        orthographicSize -= offset.y * 0.1f;
+        if (orthographicSize < 1.0f)
+            orthographicSize = 1.0f;
+        if (orthographicSize > 20.0f)
+            orthographicSize = 20.0f;
+    }
+}

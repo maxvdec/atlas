@@ -92,6 +92,15 @@ Window::Window(WindowConfiguration config)
             window->lastMouseX = xpos;
             window->lastMouseY = ypos;
         });
+
+    glfwSetScrollCallback(
+        window, [](GLFWwindow *win, double xoffset, double yoffset) {
+            Window *window = Window::mainWindow;
+            Position2d offset = {xoffset, yoffset};
+            if (window->currentScene != nullptr) {
+                window->currentScene->onMouseScroll(*window, offset);
+            }
+        });
 }
 
 std::tuple<int, int> Window::getCursorPosition() {
