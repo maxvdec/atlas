@@ -11,7 +11,9 @@
 #define ATLAS_SCENE_H
 
 #include "atlas/light.h"
+#include "atlas/object.h"
 #include "atlas/units.h"
+#include <memory>
 #include <vector>
 
 class Window;
@@ -24,7 +26,13 @@ class Scene {
     virtual void onMouseScroll(Window &window, Movement2d offset) {}
 
     AmbientLight ambientLight = {{1.0f, 1.0f, 1.0f}, 0.1f};
-    std::vector<Light> lights;
+
+    inline void addLight(Light *light) { lights.push_back(light); }
+
+  private:
+    std::vector<Light *> lights;
+
+    friend class CoreObject;
 };
 
 #endif // ATLAS_SCENE_H

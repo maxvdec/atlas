@@ -9,13 +9,14 @@
 #include <atlas/window.h>
 #include <cmath>
 #include <iostream>
+#include <memory>
 #include <vector>
 
 class MainScene : public Scene {
   public:
     CoreObject quadObject;
     CoreObject quadObject2;
-    CoreObject lightObj;
+    Light light;
     Camera camera;
 
     void update(Window &window) override {
@@ -23,6 +24,13 @@ class MainScene : public Scene {
         if (window.isKeyPressed(Key::Escape)) {
             window.releaseMouse();
         }
+
+        Color color;
+        color.r = std::sin(window.getTime()) * 2.0f;
+        color.g = std::cos(window.getTime()) * 0.7f;
+        color.b = std::sin(window.getTime()) * 1.3f;
+
+        light.setColor(color);
     }
 
     void onMouseMove(Window &window, Movement2d movement) override {
@@ -57,10 +65,10 @@ class MainScene : public Scene {
         window.addObject(&quadObject);
         window.addObject(&quadObject2);
 
-        Light light({2.0f, 4.0f, 1.0f}, Color::white(), Color::white());
-        lightObj = light.createDebugObject();
-        lights.push_back(light);
-        window.addObject(&lightObj);
+        light = Light({2.0f, 4.0f, 1.0f}, Color::white(), Color::white());
+        light.createDebugObject();
+        light.addDebugObject(window);
+        this->addLight(&light);
     }
 };
 

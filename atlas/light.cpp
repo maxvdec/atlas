@@ -12,18 +12,28 @@
 #include "atlas/object.h"
 #include "atlas/window.h"
 
-CoreObject Light::createDebugObject() {
+void Light::createDebugObject() {
     CoreObject cube = createBox({0.1f, 0.1f, 0.1f}, this->color);
     cube.setPosition(this->position);
     FragmentShader shader =
         FragmentShader::fromDefaultShader(AtlasFragmentShader::Color);
-    shader.compile();
     VertexShader vShader =
         VertexShader::fromDefaultShader(AtlasVertexShader::Color);
-    vShader.compile();
-    ShaderProgram program = ShaderProgram(vShader, shader);
-    program.compile();
 
-    cube.attachProgram(program);
-    return cube;
+    cube.createAndAttachProgram(vShader, shader);
+    this->debugObject = std::make_shared<CoreObject>(cube);
+}
+
+void Light::setColor(Color color) {
+    this->color = color;
+    if (this->debugObject != nullptr) {
+        this->debugObject->setColor(color);
+    }
+}
+
+void Light::addDebugObject(Window &window) {
+    if (this->debugObject == nullptr) {
+        this->createDebugObject();
+    }
+    window.addObject(this->debugObject.get());
 }

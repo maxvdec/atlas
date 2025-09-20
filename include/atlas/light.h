@@ -12,6 +12,7 @@
 
 #include "atlas/object.h"
 #include "atlas/units.h"
+#include <memory>
 
 class Window;
 
@@ -21,16 +22,29 @@ struct AmbientLight {
 };
 
 struct Light {
-    Position3d position;
+    Position3d position = {0.0f, 0.0f, 0.0f};
 
-    Color color;
+    Color color = Color::white();
     Color shineColor = Color::white();
 
-    Light(const Position3d &pos, const Color &color = Color::white(),
+    Light(const Position3d &pos = {0.0f, 0.0f, 0.0f},
+          const Color &color = Color::white(),
           const Color &shineColor = Color::white())
         : position(pos), color(color), shineColor(shineColor) {}
 
-    CoreObject createDebugObject();
+    static std::shared_ptr<Light>
+    create(const Position3d &pos = {0.0f, 0.0f, 0.0f},
+           const Color &color = Color::white(),
+           const Color &shineColor = Color::white()) {
+        return std::make_shared<Light>(pos, color, shineColor);
+    }
+
+    void setColor(Color color);
+
+    void createDebugObject();
+    void addDebugObject(Window &window);
+
+    std::shared_ptr<CoreObject> debugObject = nullptr;
 };
 
 #endif // ATLAS_LIGHT_H

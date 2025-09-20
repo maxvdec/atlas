@@ -41,6 +41,20 @@ void CoreObject::attachProgram(const ShaderProgram &program) {
     }
 }
 
+void CoreObject::createAndAttachProgram(VertexShader &vertexShader,
+                                        FragmentShader &fragmentShader) {
+    if (vertexShader.shaderId == 0) {
+        vertexShader.compile();
+    }
+
+    if (fragmentShader.shaderId == 0) {
+        fragmentShader.compile();
+    }
+
+    shaderProgram = ShaderProgram(vertexShader, fragmentShader);
+    shaderProgram.compile();
+}
+
 void CoreObject::renderColorWithTexture() {
     useColor = true;
     useTexture = true;
@@ -60,6 +74,15 @@ void CoreObject::attachTexture(const Texture &tex) {
     textures.push_back(tex);
     useTexture = true;
     useColor = false;
+}
+
+void CoreObject::setColor(const Color &color) {
+    for (auto &vertex : vertices) {
+        vertex.color = color;
+    }
+    useColor = true;
+    useTexture = false;
+    updateVertices();
 }
 
 void CoreObject::attachVertices(const std::vector<CoreVertex> &newVertices) {
@@ -230,8 +253,10 @@ void CoreObject::render() {
         shaderProgram.setUniform1f("material.shininess", material.shininess);
 
         // Send the lights
-        Light firstLight =
-            scene->lights.empty() ? Light({0, 0, 0}) : scene->lights[0];
+        Light *firstLightPtr = scene->lights.empty()
+                                   ? Light::create({0, 0, 0}).get()
+                                   : scene->lights[0];
+        Light &firstLight = *firstLightPtr;
         shaderProgram.setUniform3f("light.position", firstLight.position.x,
                                    firstLight.position.y,
                                    firstLight.position.z);
@@ -268,4 +293,16 @@ CoreObject CoreObject::clone() const {
     newObject.initialize();
 
     return newObject;
+}
+
+void CoreObject::updateVertices() {
+    if (vbo == 0 || vertices.empty()) {
+        throw std::runtime_error(
+            "Cannot update vertices: VBO not initialized or empty vertex list");
+    }
+
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(CoreVertex),
+                    vertices.data());
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }

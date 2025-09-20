@@ -62,12 +62,15 @@ class CoreObject : public Renderable {
     void attachVertices(const std::vector<CoreVertex> &newVertices);
     void attachIndices(const std::vector<Index> &newIndices);
     void attachProgram(const ShaderProgram &program);
+    void createAndAttachProgram(VertexShader &vertexShader,
+                                FragmentShader &fragmentShader);
     void attachTexture(const Texture &texture);
     void initialize() override;
 
     void renderColorWithTexture();
     void renderOnlyColor();
     void renderOnlyTexture();
+    void setColor(const Color &color);
 
     Position3d position = {0.0, 0.0, 0.0};
     Rotation3d rotation = {0.0, 0.0, 0.0};
@@ -80,6 +83,7 @@ class CoreObject : public Renderable {
     void setScale(const Scale3d &newScale);
 
     void updateModelMatrix();
+    void updateVertices();
 
     CoreObject clone() const;
 
