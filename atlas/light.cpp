@@ -13,7 +13,7 @@
 #include "atlas/window.h"
 
 void Light::createDebugObject() {
-    CoreObject sphere = createSphere(0.1f, 36, 18, this->color);
+    CoreObject sphere = createSphere(0.05f, 36, 18, this->color);
     sphere.setPosition(this->position);
     FragmentShader shader =
         FragmentShader::fromDefaultShader(AtlasFragmentShader::Color);
