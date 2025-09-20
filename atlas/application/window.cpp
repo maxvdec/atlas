@@ -130,15 +130,45 @@ void Window::run() {
     glCullFace(GL_BACK);
 
     while (!glfwWindowShouldClose(window)) {
+        currentScene->update(*this);
+
+        // Render to the targets
+        for (auto &target : this->renderTargets) {
+            glBindFramebuffer(GL_FRAMEBUFFER, target.fbo);
+            glViewport(0, 0, target.texture.creationData.width,
+                       target.texture.creationData.height);
+            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+            for (auto &obj : this->renderables) {
+                obj->setViewMatrix(this->camera->calculateViewMatrix());
+                obj->setProjectionMatrix(calculateProjectionMatrix());
+                obj->render();
+            }
+        }
+
+        // Render to the screen
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        int fbWidth, fbHeight;
+        glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
+        glViewport(0, 0, fbWidth, fbHeight);
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        currentScene->update(*this);
+        if (this->renderTargets.size() > 0) {
+            glDisable(GL_DEPTH_TEST);
 
-        for (auto &obj : this->renderables) {
-            obj->setViewMatrix(this->camera->calculateViewMatrix());
-            obj->setProjectionMatrix(calculateProjectionMatrix());
-            obj->render();
+            for (auto &obj : this->preferenceRenderables) {
+                obj->render();
+            }
+
+            glEnable(GL_DEPTH_TEST);
+        } else {
+            for (auto &obj : this->renderables) {
+                obj->setViewMatrix(this->camera->calculateViewMatrix());
+                obj->setProjectionMatrix(calculateProjectionMatrix());
+                obj->render();
+            }
         }
 
         glfwSwapBuffers(window);
@@ -147,6 +177,10 @@ void Window::run() {
 }
 
 void Window::addObject(Renderable *obj) { this->renderables.push_back(obj); }
+
+void Window::addPreferencedObject(Renderable *obj) {
+    this->preferenceRenderables.push_back(obj);
+}
 
 void Window::close() {
     GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);

@@ -219,6 +219,8 @@ void CoreObject::initialize() {
 }
 
 void CoreObject::render() {
+    if (!isVisible)
+        return;
     if (shaderProgram.programId == 0) {
         throw std::runtime_error("Shader program not compiled");
     }

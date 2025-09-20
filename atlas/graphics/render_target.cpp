@@ -8,6 +8,9 @@
 */
 
 #include <glad/glad.h>
+#include <vector>
+#include "atlas/core/shader.h"
+#include "atlas/object.h"
 #include "atlas/texture.h"
 #include "atlas/units.h"
 #include "atlas/window.h"
@@ -34,6 +37,8 @@ RenderTarget RenderTarget::create(Window &window, RenderTargetType type) {
 
         texture.id = textureColorBuffer;
         texture.type = TextureType::Color;
+        texture.creationData =
+            TextureCreationData{window.width, window.height, 3};
 
         Id rbo;
         glGenRenderbuffers(1, &rbo);
@@ -53,5 +58,57 @@ RenderTarget RenderTarget::create(Window &window, RenderTargetType type) {
 
     } else {
         throw std::runtime_error("Unsupported render target type");
+    }
+
+    RenderTarget renderTarget;
+    renderTarget.fbo = fbo;
+    renderTarget.rbo = 0;
+    renderTarget.texture = texture;
+    renderTarget.type = type;
+
+    return renderTarget;
+}
+
+void RenderTarget::display(Window &window, float zindex) {
+    if (object == nullptr) {
+        CoreObject obj;
+        std::vector<CoreVertex> vertices = {
+            // positions        // texture coords
+            {{1.0f, 1.0f, zindex}, Color::white(), {1.0f, 1.0f}}, // top right
+            {{1.0f, -1.0f, zindex},
+             Color::white(),
+             {1.0f, 0.0f}}, // bottom right
+            {{-1.0f, -1.0f, zindex},
+             Color::white(),
+             {0.0f, 0.0f}},                                       // bottom left
+            {{-1.0f, 1.0f, zindex}, Color::white(), {0.0f, 1.0f}} // top left
+        };
+        VertexShader vertexShader =
+            VertexShader::fromDefaultShader(AtlasVertexShader::Fullscreen);
+        FragmentShader fragmentShader =
+            FragmentShader::fromDefaultShader(AtlasFragmentShader::Fullscreen);
+
+        obj.createAndAttachProgram(vertexShader, fragmentShader);
+        obj.attachTexture(this->texture);
+        this->object = std::make_shared<CoreObject>(obj);
+        window.addPreferencedObject(this->object.get());
+    } else {
+        this->object->show();
+    }
+}
+
+void RenderTarget::hide() {
+    if (object != nullptr) {
+        object->hide();
+    } else {
+        throw std::runtime_error("Render target object is null");
+    }
+}
+
+void RenderTarget::show() {
+    if (object != nullptr) {
+        object->show();
+    } else {
+        throw std::runtime_error("Render target object is null");
     }
 }

@@ -14,6 +14,7 @@
 #include "atlas/input.h"
 #include "atlas/object.h"
 #include "atlas/scene.h"
+#include "atlas/texture.h"
 #include <optional>
 #include <string>
 #include <tuple>
@@ -82,6 +83,7 @@ class Window {
     std::vector<Monitor> static enumerateMonitors();
 
     void addObject(Renderable *object);
+    void addPreferencedObject(Renderable *object);
 
     void setCamera(Camera *newCamera);
     void setScene(Scene *scene);
@@ -99,10 +101,15 @@ class Window {
 
     inline Scene *getCurrentScene() { return currentScene; }
     inline Camera *getCamera() { return camera; }
+    inline void addRenderTarget(RenderTarget target) {
+        renderTargets.push_back(target);
+    }
 
   private:
     CoreWindowReference windowRef;
     std::vector<Renderable *> renderables;
+    std::vector<Renderable *> preferenceRenderables;
+    std::vector<RenderTarget> renderTargets;
 
     glm::mat4 calculateProjectionMatrix();
     Scene *currentScene = nullptr;

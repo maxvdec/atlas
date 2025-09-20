@@ -93,6 +93,9 @@ class CoreObject : public Renderable {
 
     CoreObject clone() const;
 
+    inline void show() { isVisible = true; }
+    inline void hide() { isVisible = false; }
+
   private:
     BufferIndex vbo;
     BufferIndex vao;
@@ -104,6 +107,8 @@ class CoreObject : public Renderable {
 
     bool useColor = true;
     bool useTexture = false;
+
+    bool isVisible = true;
 
   public:
     void render() override;

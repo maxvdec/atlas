@@ -14,6 +14,22 @@ void main() {
 
 )";
 
+static const char* FULLSCREEN_FRAG = R"(
+#version 330 core
+
+uniform sampler2D screenTexture;
+
+in vec2 TexCoord;
+
+out vec4 FragColor;
+
+void main() {
+    vec3 col = texture(screenTexture, TexCoord).rgb;
+    FragColor = vec4(col, 1.0);
+}
+
+)";
+
 static const char* MAIN_FRAG = R"(
 #version 330 core
 out vec4 FragColor;
@@ -380,6 +396,21 @@ void main() {
     TexCoord = aTexCoord;
     Normal = mat3(transpose(inverse(model))) * aNormal;
     outColor = aColor;
+}
+
+)";
+
+static const char* FULLSCREEN_VERT = R"(
+#version 330 core
+
+layout (location = 0) in vec3 aPos;
+layout (location = 2) in vec2 aTexCoord;
+
+out vec2 TexCoord;
+
+void main() {
+    gl_Position = vec4(aPos, 1.0);
+    TexCoord = aTexCoord;
 }
 
 )";
