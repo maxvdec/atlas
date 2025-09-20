@@ -24,13 +24,6 @@ class MainScene : public Scene {
         if (window.isKeyPressed(Key::Escape)) {
             window.releaseMouse();
         }
-
-        Color color;
-        color.r = std::sin(window.getTime()) * 2.0f;
-        color.g = std::cos(window.getTime()) * 0.7f;
-        color.b = std::sin(window.getTime()) * 1.3f;
-
-        light.setColor(color);
     }
 
     void onMouseMove(Window &window, Movement2d movement) override {
@@ -47,8 +40,12 @@ class MainScene : public Scene {
 
         Workspace::get().setRootPath(std::filesystem::path(TEST_PATH));
         Resource texture_resource = Workspace::get().createResource(
-            "resources/wall.jpg", "WallTexture", ResourceType::Image);
-        std::cout << "Image loaded " << texture_resource.path << std::endl;
+            "resources/container.png", "Container", ResourceType::Image);
+        Resource floor_texture = Workspace::get().createResource(
+            "resources/wall.jpg", "Floor", ResourceType::Image);
+        Resource specular_texture = Workspace::get().createResource(
+            "resources/container_specular.png", "SpecularTexture",
+            ResourceType::Image);
 
         quadObject.move({0.0f, 0.0f, 0.0f});
 
@@ -61,7 +58,11 @@ class MainScene : public Scene {
 
         Texture texture = Texture::fromResource(texture_resource);
         quadObject.attachTexture(texture);
+        Texture specular =
+            Texture::fromResource(specular_texture, TextureType::Specular);
+        quadObject.attachTexture(specular);
         quadObject2.move({0.0f, -0.5f, 0.0f});
+        quadObject2.attachTexture(Texture::fromResource(floor_texture));
         window.addObject(&quadObject);
         window.addObject(&quadObject2);
 

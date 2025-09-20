@@ -5,6 +5,9 @@ in vec4 outColor;
 in vec3 Normal;
 in vec3 FragPos;
 
+const int TEXTURE_COLOR = 0;
+const int TEXTURE_SPECULAR = 1;
+
 struct AmbientLight {
     vec4 color;
     float intensity;
@@ -25,6 +28,7 @@ struct Light {
 };
 
 uniform sampler2D textures[16];
+uniform int textureTypes[16];
 uniform int textureCount;
 
 uniform AmbientLight ambientLight;
@@ -36,12 +40,25 @@ uniform vec3 cameraPosition;
 uniform bool useTexture;
 uniform bool useColor;
 
-vec4 calculateAllTextures() {
+vec4 enableTextures(int type) {
     vec4 color = vec4(0.0);
-    for (int i = 0; i <= textureCount; i++) {
-        color += texture(textures[i], TexCoord);
+    int count = 0; 
+    
+    for (int i = 0; i < textureCount; i++) {
+        if (textureTypes[i] == type) { 
+            color += texture(textures[i], TexCoord);
+            count++;
+        }
     }
-    color /= float(textureCount + 1); 
+    
+    if (count > 0) {
+        color /= float(count); 
+    }
+
+    if (count == 0) {
+        return vec4(-1.0);
+    }
+    
     return color;
 }
 
@@ -57,19 +74,28 @@ vec3 calculateSpecular() {
     vec3 norm = normalize(Normal);
     vec3 viewDir = normalize(cameraPosition - FragPos);
     vec3 lightDir = normalize(light.position - FragPos);
-    vec3 reflectDir = reflect(-lightDir, norm); // Use normalized normal
+    vec3 reflectDir = reflect(-lightDir, norm);
     
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess); 
-    vec3 specular = (spec * material.specular) * light.specular;
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+    
+    vec4 specularTexture = enableTextures(TEXTURE_SPECULAR);
+    vec3 specularColor = material.specular;
+    
+    if (specularTexture.r != -1.0 || specularTexture.g != -1.0 || specularTexture.b != -1.0) {
+        specularColor *= specularTexture.rgb;
+    }
+    
+    vec3 specular = (spec * specularColor) * light.specular;
     return specular;
 }
+
 
 void main() {
     vec4 baseColor;
     if (useTexture && !useColor) {
-        baseColor = calculateAllTextures(); 
+        baseColor = enableTextures(TEXTURE_COLOR); 
     } else if (useTexture && useColor) {
-        baseColor = calculateAllTextures() * outColor;
+        baseColor = enableTextures(TEXTURE_COLOR) * outColor;
     } else if (!useTexture && useColor) {
         baseColor = outColor;
     } else {

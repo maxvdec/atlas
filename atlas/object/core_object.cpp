@@ -218,6 +218,13 @@ void CoreObject::render() {
         glUniform1iv(glGetUniformLocation(shaderProgram.programId, "textures"),
                      count, units);
 
+        GLint textureTypes[16];
+        for (int i = 0; i < count; i++)
+            textureTypes[i] = static_cast<int>(textures[i].type);
+        glUniform1iv(
+            glGetUniformLocation(shaderProgram.programId, "textureTypes"),
+            count, textureTypes);
+
         for (int i = 0; i < count; i++) {
             glActiveTexture(GL_TEXTURE0 + i);
             glBindTexture(GL_TEXTURE_2D, textures[i].id);
