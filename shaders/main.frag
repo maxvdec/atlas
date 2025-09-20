@@ -31,13 +31,22 @@ struct DirectionalLight {
 struct PointLight {
     vec3 position;
     
-    vec3 ambient;
     vec3 diffuse;
     vec3 specular;
     
     float constant;
     float linear;
     float quadratic;
+};
+
+struct SpotLight {
+    vec3 position;
+    vec3 direction;
+    float cutOff;
+    float outerCutOff;
+
+    vec3 diffuse;
+    vec3 specular;
 };
 
 // ----- Uniforms -----
@@ -53,6 +62,9 @@ uniform int directionalLightCount;
 
 uniform PointLight pointLights[32];
 uniform int pointLightCount;
+
+uniform SpotLight spotlights[32];
+uniform int spotlightCount;
 
 uniform vec3 cameraPosition;
 
@@ -145,6 +157,54 @@ vec3 calcAllPointLights(vec3 norm, vec3 fragPos, vec3 viewDir) {
     return diffuseSum + specularSum;
 }
 
+// ----- Spot Light -----
+vec3 calcSpotDiffuse(SpotLight light, vec3 norm, vec3 fragPos) {
+    vec3 lightDir = normalize(light.position - fragPos);
+    float diff = max(dot(norm, lightDir), 0.0);
+    
+    vec3 spotDirection = normalize(light.direction);
+    float theta = dot(lightDir, -spotDirection); 
+    
+    float epsilon = light.cutOff - light.outerCutOff;
+    float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
+    
+    return diff * light.diffuse * intensity;
+}
+
+vec3 calcSpotSpecular(SpotLight light, vec3 norm, vec3 fragPos, vec3 viewDir, vec3 specColor, float shininess) {
+    vec3 lightDir = normalize(light.position - fragPos);
+    vec3 reflectDir = reflect(-lightDir, norm);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
+    
+    vec3 spotDirection = normalize(light.direction);
+    float theta = dot(lightDir, -spotDirection);  
+    
+    float epsilon = light.cutOff - light.outerCutOff;
+    float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
+    
+    return spec * specColor * light.specular * intensity;
+}
+
+float calcSpotAttenuation(SpotLight light, vec3 fragPos) {
+    float distance = length(light.position - fragPos);
+    return 1.0 / (1.0 + 0.09 * distance + 0.032 * (distance * distance));
+}
+
+vec3 calcAllSpotLights(vec3 norm, vec3 fragPos, vec3 viewDir) {
+    vec3 diffuseSum = vec3(0.0);
+    vec3 specularSum = vec3(0.0);
+    vec3 specColor = getSpecularColor();
+
+    for (int i = 0; i < spotlightCount; i++) {
+        float attenuation = calcSpotAttenuation(spotlights[i], fragPos);
+        diffuseSum += calcSpotDiffuse(spotlights[i], norm, fragPos) * attenuation;
+        specularSum += calcSpotSpecular(spotlights[i], norm, fragPos, viewDir, specColor, material.shininess) * attenuation;
+    }
+
+    diffuseSum *= material.diffuse;
+    return diffuseSum + specularSum;
+}
+
 // ----- Main -----
 void main() {
     vec4 baseColor;
@@ -164,8 +224,9 @@ void main() {
     vec3 ambient = ambientLight.color.rgb * ambientLight.intensity * material.ambient;
     vec3 directionalLights = calcAllDirectionalLights(norm, viewDir);
     vec3 pointLights = calcAllPointLights(norm, FragPos, viewDir);
-    
-    vec3 lightContribution = directionalLights + pointLights;
+    vec3 spotLightsContrib = calcAllSpotLights(norm, FragPos, viewDir);
+
+    vec3 lightContribution = directionalLights + pointLights + spotLightsContrib;
 
     vec3 finalColor = (ambient + lightContribution) * baseColor.rgb;
 

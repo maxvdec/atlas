@@ -126,6 +126,38 @@ void CoreObject::rotate(const Rotation3d &delta) {
     setRotation(rotation + delta);
 }
 
+void CoreObject::lookAt(const Position3d &target, const Normal3d &up) {
+    glm::vec3 pos = position.toGlm();
+    glm::vec3 targetPos = target.toGlm();
+    glm::vec3 upVec = up.toGlm();
+
+    glm::vec3 forward = glm::normalize(targetPos - pos);
+
+    glm::vec3 right = glm::normalize(glm::cross(forward, upVec));
+
+    glm::vec3 realUp = glm::cross(right, forward);
+
+    glm::mat3 rotMatrix;
+    rotMatrix[0] = right;    // X-axis
+    rotMatrix[1] = realUp;   // Y-axis
+    rotMatrix[2] = -forward; // Z-axis (negative because OpenGL looks down -Z)
+
+    float pitch, yaw, roll;
+
+    pitch = glm::degrees(asin(glm::clamp(rotMatrix[2][1], -1.0f, 1.0f)));
+
+    if (abs(cos(glm::radians(pitch))) > 0.00001f) {
+        yaw = glm::degrees(atan2(-rotMatrix[2][0], rotMatrix[2][2]));
+        roll = glm::degrees(atan2(-rotMatrix[0][1], rotMatrix[1][1]));
+    } else {
+        yaw = glm::degrees(atan2(rotMatrix[1][0], rotMatrix[0][0]));
+        roll = 0.0f;
+    }
+
+    rotation = Rotation3d{roll, yaw, pitch};
+    updateModelMatrix();
+}
+
 void CoreObject::updateModelMatrix() {
     glm::mat4 scale_matrix = glm::scale(glm::mat4(1.0f), scale.toGlm());
 
@@ -299,6 +331,30 @@ void CoreObject::render() {
             shaderProgram.setUniform1f(baseName + ".constant", plc.constant);
             shaderProgram.setUniform1f(baseName + ".linear", plc.linear);
             shaderProgram.setUniform1f(baseName + ".quadratic", plc.quadratic);
+        }
+
+        // Send spotlights
+
+        int spotlightCount = std::min((int)scene->spotlights.size(), 256);
+        shaderProgram.setUniform1i("spotlightCount", spotlightCount);
+
+        for (int i = 0; i < spotlightCount; i++) {
+            Spotlight *light = scene->spotlights[i];
+            std::string baseName = "spotlights[" + std::to_string(i) + "]";
+            shaderProgram.setUniform3f(baseName + ".position",
+                                       light->position.x, light->position.y,
+                                       light->position.z);
+            shaderProgram.setUniform3f(baseName + ".direction",
+                                       light->direction.x, light->direction.y,
+                                       light->direction.z);
+            shaderProgram.setUniform3f(baseName + ".diffuse", light->color.r,
+                                       light->color.g, light->color.b);
+            shaderProgram.setUniform3f(baseName + ".specular",
+                                       light->shineColor.r, light->shineColor.g,
+                                       light->shineColor.b);
+            shaderProgram.setUniform1f(baseName + ".cutOff", light->cutOff);
+            shaderProgram.setUniform1f(baseName + ".outerCutOff",
+                                       light->outerCutoff);
         }
     }
 

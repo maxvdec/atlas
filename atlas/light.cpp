@@ -13,15 +13,15 @@
 #include "atlas/window.h"
 
 void Light::createDebugObject() {
-    CoreObject cube = createBox({0.1f, 0.1f, 0.1f}, this->color);
-    cube.setPosition(this->position);
+    CoreObject sphere = createSphere(0.1f, 36, 18, this->color);
+    sphere.setPosition(this->position);
     FragmentShader shader =
         FragmentShader::fromDefaultShader(AtlasFragmentShader::Color);
     VertexShader vShader =
         VertexShader::fromDefaultShader(AtlasVertexShader::Color);
 
-    cube.createAndAttachProgram(vShader, shader);
-    this->debugObject = std::make_shared<CoreObject>(cube);
+    sphere.createAndAttachProgram(vShader, shader);
+    this->debugObject = std::make_shared<CoreObject>(sphere);
 }
 
 void Light::setColor(Color color) {
@@ -78,4 +78,48 @@ PointLightConstants Light::calculateConstants() const {
     }
 
     return {distance, 1.0f, 0.0f, 0.0f};
+}
+
+void Spotlight::createDebugObject() {
+    CoreObject pyramid = createPyramid({0.1f, 0.1f, 0.1f}, this->color);
+    pyramid.setPosition(this->position);
+    pyramid.lookAt(this->position + this->direction);
+    FragmentShader shader =
+        FragmentShader::fromDefaultShader(AtlasFragmentShader::Color);
+    VertexShader vShader =
+        VertexShader::fromDefaultShader(AtlasVertexShader::Color);
+
+    pyramid.createAndAttachProgram(vShader, shader);
+    this->debugObject = std::make_shared<CoreObject>(pyramid);
+}
+
+void Spotlight::setColor(Color color) {
+    this->color = color;
+    if (this->debugObject != nullptr) {
+        this->debugObject->setColor(color);
+    }
+}
+
+void Spotlight::addDebugObject(Window &window) {
+    if (this->debugObject == nullptr) {
+        this->createDebugObject();
+    }
+    window.addObject(this->debugObject.get());
+}
+
+void Spotlight::updateDebugObjectRotation() {
+    if (this->debugObject != nullptr) {
+        this->debugObject->setPosition(this->position);
+        this->debugObject->lookAt(this->position + this->direction);
+    }
+}
+
+void Spotlight::lookAt(const Position3d &target) {
+    Magnitude3d newDirection = {target.x - this->position.x,
+                                target.y - this->position.y,
+                                target.z - this->position.z};
+
+    this->direction = newDirection.normalized();
+
+    updateDebugObjectRotation();
 }

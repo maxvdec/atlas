@@ -34,6 +34,11 @@ struct CoreVertex {
     TextureCoordinate textureCoordinate = {0.0, 0.0};
     Normal3d normal = {0.0, 0.0, 0.0};
 
+    CoreVertex(Position3d pos = {0.0, 0.0, 0.0},
+               Color col = {1.0, 1.0, 1.0, 1.0},
+               TextureCoordinate tex = {0.0, 0.0}, Normal3d n = {0.0, 0.0, 0.0})
+        : position(pos), color(col), textureCoordinate(tex), normal(n) {}
+
     static std::vector<LayoutDescriptor> getLayoutDescriptors();
 };
 
@@ -79,6 +84,7 @@ class CoreObject : public Renderable {
     void setPosition(const Position3d &newPosition);
     void move(const Position3d &deltaPosition);
     void setRotation(const Rotation3d &newRotation);
+    void lookAt(const Position3d &target, const Normal3d &up = {0.0, 1.0, 0.0});
     void rotate(const Rotation3d &deltaRotation);
     void setScale(const Scale3d &newScale);
 
@@ -107,5 +113,9 @@ class CoreObject : public Renderable {
 
 CoreObject createBox(Size3d size, Color color = {1.0, 1.0, 1.0, 1.0});
 CoreObject createPlane(Size2d size, Color color = {1.0, 1.0, 1.0, 1.0});
+CoreObject createPyramid(Size3d size, Color color = {1.0, 1.0, 1.0, 1.0});
+CoreObject createSphere(double radius, unsigned int sectorCount = 36,
+                        unsigned int stackCount = 18,
+                        Color color = {1.0, 1.0, 1.0, 1.0});
 
 #endif // ATLAS_OBJECT_H

@@ -33,9 +33,12 @@ class Scene {
 
     void addLight(Light *light) { pointLights.push_back(light); }
 
+    void addSpotlight(Spotlight *light) { spotlights.push_back(light); }
+
   private:
     std::vector<DirectionalLight *> directionalLights;
     std::vector<Light *> pointLights;
+    std::vector<Spotlight *> spotlights;
 
     friend class CoreObject;
 };

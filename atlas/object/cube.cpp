@@ -81,3 +81,164 @@ CoreObject createPlane(Size2d size, Color color) {
     plane.rotate({-90.0, 0.0, 0.0});
     return plane;
 }
+
+CoreObject createPyramid(Size3d size, Color color) {
+    double w = size.x / 2.0;
+    double h = size.y;
+    double d = size.z / 2.0;
+
+    glm::vec3 apexVec{0.0, h, 0.0};
+    Position3d apex = Position3d::fromGlm(apexVec);
+
+    glm::vec3 blVec{-w, 0.0, -d};
+    glm::vec3 brVec{w, 0.0, -d};
+    glm::vec3 trVec{w, 0.0, d};
+    glm::vec3 tlVec{-w, 0.0, d};
+
+    Position3d bl = Position3d::fromGlm(blVec);
+    Position3d br = Position3d::fromGlm(brVec);
+    Position3d tr = Position3d::fromGlm(trVec);
+    Position3d tl = Position3d::fromGlm(tlVec);
+
+    std::vector<CoreVertex> vertices = {
+        // Base (normal down)
+        {bl, color, {0.0, 0.0}, Normal3d{0.0, -1.0, 0.0}},
+        {br, color, {1.0, 0.0}, Normal3d{0.0, -1.0, 0.0}},
+        {tr, color, {1.0, 1.0}, Normal3d{0.0, -1.0, 0.0}},
+        {tl, color, {0.0, 1.0}, Normal3d{0.0, -1.0, 0.0}},
+
+        // Side 1 (bl, br, apex)
+        {bl,
+         color,
+         {0.0, 0.0},
+         Normal3d::fromGlm(
+             glm::normalize(glm::cross(brVec - blVec, apexVec - blVec)))},
+        {br,
+         color,
+         {1.0, 0.0},
+         Normal3d::fromGlm(
+             glm::normalize(glm::cross(brVec - blVec, apexVec - blVec)))},
+        {apex,
+         color,
+         {0.5, 1.0},
+         Normal3d::fromGlm(
+             glm::normalize(glm::cross(brVec - blVec, apexVec - blVec)))},
+
+        // Side 2 (br, tr, apex)
+        {br,
+         color,
+         {0.0, 0.0},
+         Normal3d::fromGlm(
+             glm::normalize(glm::cross(trVec - brVec, apexVec - brVec)))},
+        {tr,
+         color,
+         {1.0, 0.0},
+         Normal3d::fromGlm(
+             glm::normalize(glm::cross(trVec - brVec, apexVec - brVec)))},
+        {apex,
+         color,
+         {0.5, 1.0},
+         Normal3d::fromGlm(
+             glm::normalize(glm::cross(trVec - brVec, apexVec - brVec)))},
+
+        // Side 3 (tr, tl, apex)
+        {tr,
+         color,
+         {0.0, 0.0},
+         Normal3d::fromGlm(
+             glm::normalize(glm::cross(tlVec - trVec, apexVec - trVec)))},
+        {tl,
+         color,
+         {1.0, 0.0},
+         Normal3d::fromGlm(
+             glm::normalize(glm::cross(tlVec - trVec, apexVec - trVec)))},
+        {apex,
+         color,
+         {0.5, 1.0},
+         Normal3d::fromGlm(
+             glm::normalize(glm::cross(tlVec - trVec, apexVec - trVec)))},
+
+        // Side 4 (tl, bl, apex)
+        {tl,
+         color,
+         {0.0, 0.0},
+         Normal3d::fromGlm(
+             glm::normalize(glm::cross(blVec - tlVec, apexVec - tlVec)))},
+        {bl,
+         color,
+         {1.0, 0.0},
+         Normal3d::fromGlm(
+             glm::normalize(glm::cross(blVec - tlVec, apexVec - tlVec)))},
+        {apex,
+         color,
+         {0.5, 1.0},
+         Normal3d::fromGlm(
+             glm::normalize(glm::cross(blVec - tlVec, apexVec - tlVec)))}};
+
+    std::vector<unsigned int> indices = {0, 1, 2, 2,  3,  0,  4,  5,  6,
+                                         7, 8, 9, 10, 11, 12, 13, 14, 15};
+
+    CoreObject pyramid;
+    pyramid.attachVertices(vertices);
+    pyramid.attachIndices(indices);
+
+    return pyramid;
+}
+
+CoreObject createSphere(double radius, unsigned int sectorCount,
+                        unsigned int stackCount, Color color) {
+    std::vector<CoreVertex> vertices;
+    std::vector<Index> indices;
+
+    const double PI = 3.141592653589793;
+
+    for (unsigned int i = 0; i <= stackCount; ++i) {
+        double stackAngle = PI / 2 - i * (PI / stackCount);
+        double xy = radius * cos(stackAngle);
+        double z = radius * sin(stackAngle);
+
+        for (unsigned int j = 0; j <= sectorCount; ++j) {
+            double sectorAngle = j * (2 * PI / sectorCount);
+
+            double x = xy * cos(sectorAngle);
+            double y = xy * sin(sectorAngle);
+
+            glm::vec3 pos((float)x, (float)y, (float)z);
+            glm::vec3 normal = glm::normalize(pos);
+            glm::vec2 uv((float)j / sectorCount, (float)i / stackCount);
+
+            CoreVertex v;
+            v.position = Position3d(pos.x, pos.y, pos.z);
+            v.normal = Normal3d(normal.x, normal.y, normal.z);
+            v.textureCoordinate = {uv.x, uv.y};
+            v.color = color;
+
+            vertices.push_back(v);
+        }
+    }
+
+    for (unsigned int i = 0; i < stackCount; ++i) {
+        unsigned int k1 = i * (sectorCount + 1);
+        unsigned int k2 = k1 + sectorCount + 1;
+
+        for (unsigned int j = 0; j < sectorCount; ++j, ++k1, ++k2) {
+            if (i != 0) {
+                indices.push_back(k1);
+                indices.push_back(k2);
+                indices.push_back(k1 + 1);
+            }
+
+            if (i != (stackCount - 1)) {
+                indices.push_back(k1 + 1);
+                indices.push_back(k2);
+                indices.push_back(k2 + 1);
+            }
+        }
+    }
+
+    CoreObject sphere;
+    sphere.attachVertices(vertices);
+    sphere.attachIndices(indices);
+    sphere.initialize();
+    return sphere;
+}
