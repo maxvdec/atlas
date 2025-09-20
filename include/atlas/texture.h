@@ -36,16 +36,21 @@ struct TextureParameters {
     TextureFilteringMode magnifyingFilter = TextureFilteringMode::Linear;
 };
 
+enum class TextureType : int { Color = 0, Specular = 1 };
+
 struct Texture {
     Resource resource;
     TextureCreationData creationData;
     Id id;
+    TextureType type;
     Color borderColor = {0, 0, 0, 0};
 
     static Texture fromResource(const Resource &resource,
+                                TextureType type = TextureType::Color,
                                 TextureParameters params = {},
                                 Color borderColor = {0, 0, 0, 0});
     static Texture fromResourceName(const std::string &resourceName,
+                                    TextureType type = TextureType::Color,
                                     TextureParameters params = {},
                                     Color borderColor = {0, 0, 0, 0});
 

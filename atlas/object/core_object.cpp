@@ -8,7 +8,10 @@
 */
 
 #include "atlas/core/shader.h"
+#include "atlas/light.h"
 #include "atlas/object.h"
+#include "atlas/scene.h"
+#include "atlas/window.h"
 #include <algorithm>
 #include <glad/glad.h>
 #include <vector>
@@ -22,7 +25,9 @@ std::vector<LayoutDescriptor> CoreVertex::getLayoutDescriptors() {
             {1, 4, GL_DOUBLE, GL_FALSE, sizeof(CoreVertex),
              offsetof(CoreVertex, color)},
             {2, 2, GL_DOUBLE, GL_FALSE, sizeof(CoreVertex),
-             offsetof(CoreVertex, textureCoordinate)}};
+             offsetof(CoreVertex, textureCoordinate)},
+            {3, 3, GL_DOUBLE, GL_FALSE, sizeof(CoreVertex),
+             offsetof(CoreVertex, normal)}};
 }
 
 CoreObject::CoreObject() : vbo(0), vao(0) {
@@ -36,9 +41,49 @@ void CoreObject::attachProgram(const ShaderProgram &program) {
     }
 }
 
-void CoreObject::renderColorWithTexture() { onlyTexture = false; }
+void CoreObject::createAndAttachProgram(VertexShader &vertexShader,
+                                        FragmentShader &fragmentShader) {
+    if (vertexShader.shaderId == 0) {
+        vertexShader.compile();
+    }
 
-void CoreObject::attachTexture(const Texture &tex) { textures.push_back(tex); }
+    if (fragmentShader.shaderId == 0) {
+        fragmentShader.compile();
+    }
+
+    shaderProgram = ShaderProgram(vertexShader, fragmentShader);
+    shaderProgram.compile();
+}
+
+void CoreObject::renderColorWithTexture() {
+    useColor = true;
+    useTexture = true;
+}
+
+void CoreObject::renderOnlyColor() {
+    useColor = true;
+    useTexture = false;
+}
+
+void CoreObject::renderOnlyTexture() {
+    useColor = false;
+    useTexture = true;
+}
+
+void CoreObject::attachTexture(const Texture &tex) {
+    textures.push_back(tex);
+    useTexture = true;
+    useColor = false;
+}
+
+void CoreObject::setColor(const Color &color) {
+    for (auto &vertex : vertices) {
+        vertex.color = color;
+    }
+    useColor = true;
+    useTexture = false;
+    updateVertices();
+}
 
 void CoreObject::attachVertices(const std::vector<CoreVertex> &newVertices) {
     if (newVertices.empty()) {
@@ -79,6 +124,38 @@ void CoreObject::move(const Position3d &delta) {
 
 void CoreObject::rotate(const Rotation3d &delta) {
     setRotation(rotation + delta);
+}
+
+void CoreObject::lookAt(const Position3d &target, const Normal3d &up) {
+    glm::vec3 pos = position.toGlm();
+    glm::vec3 targetPos = target.toGlm();
+    glm::vec3 upVec = up.toGlm();
+
+    glm::vec3 forward = glm::normalize(targetPos - pos);
+
+    glm::vec3 right = glm::normalize(glm::cross(forward, upVec));
+
+    glm::vec3 realUp = glm::cross(right, forward);
+
+    glm::mat3 rotMatrix;
+    rotMatrix[0] = right;    // X-axis
+    rotMatrix[1] = realUp;   // Y-axis
+    rotMatrix[2] = -forward; // Z-axis (negative because OpenGL looks down -Z)
+
+    float pitch, yaw, roll;
+
+    pitch = glm::degrees(asin(glm::clamp(rotMatrix[2][1], -1.0f, 1.0f)));
+
+    if (abs(cos(glm::radians(pitch))) > 0.00001f) {
+        yaw = glm::degrees(atan2(-rotMatrix[2][0], rotMatrix[2][2]));
+        roll = glm::degrees(atan2(-rotMatrix[0][1], rotMatrix[1][1]));
+    } else {
+        yaw = glm::degrees(atan2(rotMatrix[1][0], rotMatrix[0][0]));
+        roll = 0.0f;
+    }
+
+    rotation = Rotation3d{roll, yaw, pitch};
+    updateModelMatrix();
 }
 
 void CoreObject::updateModelMatrix() {
@@ -156,10 +233,14 @@ void CoreObject::render() {
     shaderProgram.setUniformMat4f("view", view);
     shaderProgram.setUniformMat4f("projection", projection);
 
-    if (!textures.empty()) {
-        shaderProgram.setUniformBool("useTexture", true);
-        shaderProgram.setUniformBool("onlyTexture", onlyTexture);
+    shaderProgram.setUniform1i("useColor", useColor ? 1 : 0);
+    shaderProgram.setUniform1i("useTexture", useTexture ? 1 : 0);
 
+    if (!textures.empty() && useTexture &&
+        std::find(shaderProgram.capabilities.begin(),
+                  shaderProgram.capabilities.end(),
+                  ShaderCapability::Textures) !=
+            shaderProgram.capabilities.end()) {
         int count = std::min((int)textures.size(), 16);
         shaderProgram.setUniform1i("textureCount", count);
         GLint units[16];
@@ -169,9 +250,111 @@ void CoreObject::render() {
         glUniform1iv(glGetUniformLocation(shaderProgram.programId, "textures"),
                      count, units);
 
+        GLint textureTypes[16];
+        for (int i = 0; i < count; i++)
+            textureTypes[i] = static_cast<int>(textures[i].type);
+        glUniform1iv(
+            glGetUniformLocation(shaderProgram.programId, "textureTypes"),
+            count, textureTypes);
+
         for (int i = 0; i < count; i++) {
             glActiveTexture(GL_TEXTURE0 + i);
             glBindTexture(GL_TEXTURE_2D, textures[i].id);
+        }
+    }
+
+    if (std::find(shaderProgram.capabilities.begin(),
+                  shaderProgram.capabilities.end(),
+                  ShaderCapability::Lighting) !=
+        shaderProgram.capabilities.end()) {
+        Window *window = Window::mainWindow;
+        Scene *scene = window->getCurrentScene();
+
+        // Set ambient light
+        shaderProgram.setUniform4f(
+            "ambientLight.color", scene->ambientLight.color.r,
+            scene->ambientLight.color.g, scene->ambientLight.color.b, 1.0f);
+        shaderProgram.setUniform1f("ambientLight.intensity",
+                                   scene->ambientLight.intensity);
+
+        // Set camera position
+        shaderProgram.setUniform3f(
+            "cameraPosition", window->getCamera()->position.x,
+            window->getCamera()->position.y, window->getCamera()->position.z);
+
+        // Set material properties
+        shaderProgram.setUniform3f("material.ambient", material.ambient.r,
+                                   material.ambient.g, material.ambient.b);
+        shaderProgram.setUniform3f("material.diffuse", material.diffuse.r,
+                                   material.diffuse.g, material.diffuse.b);
+        shaderProgram.setUniform3f("material.specular", material.specular.r,
+                                   material.specular.g, material.specular.b);
+        shaderProgram.setUniform1f("material.shininess", material.shininess);
+
+        // Send directional lights
+
+        int dirLightCount = std::min((int)scene->directionalLights.size(), 256);
+        shaderProgram.setUniform1i("directionalLightCount", dirLightCount);
+
+        for (int i = 0; i < dirLightCount; i++) {
+            DirectionalLight *light = scene->directionalLights[i];
+            std::string baseName =
+                "directionalLights[" + std::to_string(i) + "]";
+            shaderProgram.setUniform3f(baseName + ".direction",
+                                       light->direction.x, light->direction.y,
+                                       light->direction.z);
+            shaderProgram.setUniform3f(baseName + ".diffuse", light->color.r,
+                                       light->color.g, light->color.b);
+            shaderProgram.setUniform3f(baseName + ".specular",
+                                       light->shineColor.r, light->shineColor.g,
+                                       light->shineColor.b);
+        }
+
+        // Send point lights
+
+        int pointLightCount = std::min((int)scene->pointLights.size(), 256);
+        shaderProgram.setUniform1i("pointLightCount", pointLightCount);
+
+        for (int i = 0; i < pointLightCount; i++) {
+            Light *light = scene->pointLights[i];
+            std::string baseName = "pointLights[" + std::to_string(i) + "]";
+            shaderProgram.setUniform3f(baseName + ".position",
+                                       light->position.x, light->position.y,
+                                       light->position.z);
+            shaderProgram.setUniform3f(baseName + ".diffuse", light->color.r,
+                                       light->color.g, light->color.b);
+            shaderProgram.setUniform3f(baseName + ".specular",
+                                       light->shineColor.r, light->shineColor.g,
+                                       light->shineColor.b);
+
+            PointLightConstants plc = light->calculateConstants();
+            shaderProgram.setUniform1f(baseName + ".constant", plc.constant);
+            shaderProgram.setUniform1f(baseName + ".linear", plc.linear);
+            shaderProgram.setUniform1f(baseName + ".quadratic", plc.quadratic);
+        }
+
+        // Send spotlights
+
+        int spotlightCount = std::min((int)scene->spotlights.size(), 256);
+        shaderProgram.setUniform1i("spotlightCount", spotlightCount);
+
+        for (int i = 0; i < spotlightCount; i++) {
+            Spotlight *light = scene->spotlights[i];
+            std::string baseName = "spotlights[" + std::to_string(i) + "]";
+            shaderProgram.setUniform3f(baseName + ".position",
+                                       light->position.x, light->position.y,
+                                       light->position.z);
+            shaderProgram.setUniform3f(baseName + ".direction",
+                                       light->direction.x, light->direction.y,
+                                       light->direction.z);
+            shaderProgram.setUniform3f(baseName + ".diffuse", light->color.r,
+                                       light->color.g, light->color.b);
+            shaderProgram.setUniform3f(baseName + ".specular",
+                                       light->shineColor.r, light->shineColor.g,
+                                       light->shineColor.b);
+            shaderProgram.setUniform1f(baseName + ".cutOff", light->cutOff);
+            shaderProgram.setUniform1f(baseName + ".outerCutOff",
+                                       light->outerCutoff);
         }
     }
 
@@ -201,4 +384,16 @@ CoreObject CoreObject::clone() const {
     newObject.initialize();
 
     return newObject;
+}
+
+void CoreObject::updateVertices() {
+    if (vbo == 0 || vertices.empty()) {
+        throw std::runtime_error(
+            "Cannot update vertices: VBO not initialized or empty vertex list");
+    }
+
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(CoreVertex),
+                    vertices.data());
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }

@@ -33,7 +33,16 @@ void Camera::setPosition(const Position3d &newPosition) {
     position = newPosition;
 }
 
-void Camera::lookAt(const Point3d &newTarget) { target = newTarget; }
+void Camera::lookAt(const Point3d &newTarget) {
+    target = newTarget;
+    glm::vec3 dir = glm::normalize(glm::vec3(newTarget.x - position.x,
+                                             newTarget.y - position.y,
+                                             newTarget.z - position.z));
+    pitch = glm::degrees(asin(dir.y));
+    yaw = glm::degrees(atan2(dir.z, dir.x));
+    targetPitch = pitch;
+    targetYaw = yaw;
+}
 
 void Camera::moveTo(Direction3d direction, float speed) {
     glm::vec3 camPos = glm::vec3(position.x, position.y, position.z);

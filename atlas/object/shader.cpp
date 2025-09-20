@@ -19,16 +19,26 @@ VertexShader VertexShader::fromDefaultShader(AtlasVertexShader shader) {
     case AtlasVertexShader::Debug: {
         vertexShader = VertexShader::fromSource(DEBUG_VERT);
         vertexShader.desiredAttributes = {0};
+        vertexShader.capabilities = {};
         break;
     }
     case AtlasVertexShader::Color: {
         vertexShader = VertexShader::fromSource(COLOR_VERT);
         vertexShader.desiredAttributes = {0, 1};
+        vertexShader.capabilities = {};
         break;
     }
     case AtlasVertexShader::Main: {
         vertexShader = VertexShader::fromSource(MAIN_VERT);
+        vertexShader.desiredAttributes = {0, 1, 2, 3};
+        vertexShader.capabilities = {ShaderCapability::Lighting,
+                                     ShaderCapability::Textures};
+        break;
+    }
+    case AtlasVertexShader::Texture: {
+        vertexShader = VertexShader::fromSource(TEXTURE_VERT);
         vertexShader.desiredAttributes = {0, 1, 2};
+        vertexShader.capabilities = {ShaderCapability::Textures};
         break;
     }
     default:
@@ -73,6 +83,8 @@ FragmentShader FragmentShader::fromDefaultShader(AtlasFragmentShader shader) {
         return FragmentShader::fromSource(COLOR_FRAG);
     case AtlasFragmentShader::Main:
         return FragmentShader::fromSource(MAIN_FRAG);
+    case AtlasFragmentShader::Texture:
+        return FragmentShader::fromSource(TEXTURE_FRAG);
     default:
         throw std::runtime_error("Unknown default fragment shader");
     }
@@ -118,6 +130,7 @@ void ShaderProgram::compile() {
     }
 
     desiredAttributes = vertexShader.desiredAttributes;
+    capabilities = vertexShader.capabilities;
 
     programId = glCreateProgram();
     glAttachShader(programId, vertexShader.shaderId);

@@ -38,7 +38,7 @@ find_package(glm REQUIRED)
 
 target_link_libraries(atlas PUBLIC OpenGL::GL glfw glm::glm)
 
-target_compile_definitions(atlas PRIVATE ATLAS_LIB)
+target_compile_definitions(atlas PRIVATE ATLAS_LIB GL_SILENT_DEPRECATION)
 
 file(GLOB_RECURSE TEST_SOURCES test/*.cpp)
 

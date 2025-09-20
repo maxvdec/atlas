@@ -11,6 +11,7 @@
 #define ATLAS_UNITS_H
 
 #include <glm/glm.hpp>
+#include <numbers>
 
 struct Position3d {
     double x;
@@ -37,10 +38,25 @@ struct Position3d {
         return glm::vec3(static_cast<float>(x), static_cast<float>(y),
                          static_cast<float>(z));
     }
+
+    inline Position3d normalized() const {
+        double length = std::sqrt(x * x + y * y + z * z);
+        if (length == 0)
+            return {0, 0, 0};
+        return {x / length, y / length, z / length};
+    }
+
+    inline static Position3d fromGlm(const glm::vec3 &vec) {
+        return {static_cast<double>(vec.x), static_cast<double>(vec.y),
+                static_cast<double>(vec.z)};
+    }
 };
 
 typedef Position3d Scale3d;
+typedef Position3d Size3d;
 typedef Position3d Point3d;
+typedef Position3d Normal3d;
+typedef Position3d Magnitude3d;
 
 struct Rotation3d {
     double pitch; // Rotation around the X-axis
@@ -66,6 +82,11 @@ struct Rotation3d {
     inline glm::vec3 toGlm() const {
         return glm::vec3(static_cast<float>(pitch), static_cast<float>(yaw),
                          static_cast<float>(roll));
+    }
+
+    inline static Rotation3d fromGlm(const glm::vec3 &vec) {
+        return {static_cast<double>(vec.x), static_cast<double>(vec.y),
+                static_cast<double>(vec.z)};
     }
 };
 
@@ -147,7 +168,30 @@ struct Position2d {
 };
 
 typedef Position2d Scale2d;
+typedef Position2d Size2d;
 typedef Position2d Point2d;
 typedef Position2d Movement2d;
+
+struct Radians {
+    double value;
+
+    Radians operator+(const Radians &other) const {
+        return {value + other.value};
+    }
+
+    Radians operator-(const Radians &other) const {
+        return {value - other.value};
+    }
+
+    Radians operator*(double scalar) const { return {value * scalar}; }
+
+    Radians operator/(double scalar) const { return {value / scalar}; }
+
+    inline float toFloat() const { return static_cast<float>(value); }
+
+    inline static Radians fromDegrees(double degrees) {
+        return {degrees * (std::numbers::pi) / 180.0};
+    }
+};
 
 #endif // ATLAS_UNITS_H

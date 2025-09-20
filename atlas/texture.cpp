@@ -14,12 +14,13 @@
 #include <glad/glad.h>
 
 Texture Texture::fromResourceName(const std::string &resourceName,
-                                  TextureParameters params, Color borderColor) {
+                                  TextureType type, TextureParameters params,
+                                  Color borderColor) {
     Resource resource = Workspace::get().getResource(resourceName);
-    return fromResource(resource, params, borderColor);
+    return fromResource(resource, type, params, borderColor);
 }
 
-Texture Texture::fromResource(const Resource &resource,
+Texture Texture::fromResource(const Resource &resource, TextureType type,
                               TextureParameters params, Color borderColor) {
     if (resource.type != ResourceType::Image) {
         throw std::runtime_error("Resource is not an image");
@@ -70,7 +71,7 @@ Texture Texture::fromResource(const Resource &resource,
 
     stbi_image_free(data);
 
-    Texture texture{resource, creationData, textureId, borderColor};
+    Texture texture{resource, creationData, textureId, type, borderColor};
     return texture;
 }
 

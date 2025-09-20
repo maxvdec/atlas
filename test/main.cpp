@@ -1,4 +1,5 @@
 #include "atlas/camera.h"
+#include "atlas/light.h"
 #include "atlas/object.h"
 #include "atlas/scene.h"
 #include "atlas/texture.h"
@@ -8,12 +9,14 @@
 #include <atlas/window.h>
 #include <cmath>
 #include <iostream>
+#include <memory>
 #include <vector>
 
 class MainScene : public Scene {
   public:
     CoreObject quadObject;
     CoreObject quadObject2;
+    Spotlight light;
     Camera camera;
 
     void update(Window &window) override {
@@ -32,36 +35,42 @@ class MainScene : public Scene {
     }
 
     void initialize(Window &window) override {
-        std::vector<CoreVertex> quad = {
-            {{0.5, 0.5, 0.0}, Color::red(), {1.0, 1.0}},
-            {{0.5, -0.5, 0.0}, Color::green(), {1.0, 0.0}},
-            {{-0.5, -0.5, 0.0}, Color::blue(), {0.0, 0.0}},
-            {{-0.5, 0.5, 0.0}, Color::white(), {0.0, 1.0}},
-        };
 
-        quadObject = CoreObject();
-        quadObject.attachVertices(quad);
-        quadObject.attachIndices({0, 1, 3, 1, 2, 3});
+        quadObject = createBox({0.5, 0.5, 0.5}, Color::red());
 
         Workspace::get().setRootPath(std::filesystem::path(TEST_PATH));
         Resource texture_resource = Workspace::get().createResource(
-            "resources/wall.jpg", "WallTexture", ResourceType::Image);
-        std::cout << "Image loaded " << texture_resource.path << std::endl;
+            "resources/container.png", "Container", ResourceType::Image);
+        Resource floor_texture = Workspace::get().createResource(
+            "resources/wall.jpg", "Floor", ResourceType::Image);
+        Resource specular_texture = Workspace::get().createResource(
+            "resources/container_specular.png", "SpecularTexture",
+            ResourceType::Image);
 
-        quadObject.move({0.0f, 0.3f, 0.0f});
-
-        quadObject2 = quadObject.clone();
-
-        quadObject2.move({0.0f, 0.3f, 10.0f});
+        quadObject.move({0.0f, 0.0f, 0.0f});
 
         camera = Camera();
-        camera.setPosition({0.0f, 0.0f, 5.0f});
+        camera.setPosition({3.0f, 2.0f, 2.0f});
+        camera.lookAt({0.0f, 0.0f, 0.0f});
         window.setCamera(&camera);
+
+        quadObject2 = createPlane({4.0f, 4.0f}, Color::brown());
 
         Texture texture = Texture::fromResource(texture_resource);
         quadObject.attachTexture(texture);
+        Texture specular =
+            Texture::fromResource(specular_texture, TextureType::Specular);
+        quadObject.attachTexture(specular);
+        quadObject2.move({0.0f, -0.5f, 0.0f});
+        quadObject2.attachTexture(Texture::fromResource(floor_texture));
         window.addObject(&quadObject);
         window.addObject(&quadObject2);
+
+        light = Spotlight({-1.0f, 1.0f, 0.0f}, {0.0f, -1.0f, 0.0f});
+        light.lookAt({0.0f, 0.0f, 0.0f});
+        light.createDebugObject();
+        light.addDebugObject(window);
+        this->addSpotlight(&light);
     }
 };
 
