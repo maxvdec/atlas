@@ -76,7 +76,9 @@ class MainScene : public Scene {
 
         renderTarget = RenderTarget::create(window);
         renderTarget.display(window);
-        window.addRenderTarget(renderTarget);
+        std::cout << "Render Target ID: " << renderTarget.object.get()->id
+                  << std::endl;
+        window.addRenderTarget(&renderTarget);
     }
 };
 

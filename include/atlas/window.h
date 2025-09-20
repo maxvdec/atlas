@@ -15,6 +15,7 @@
 #include "atlas/object.h"
 #include "atlas/scene.h"
 #include "atlas/texture.h"
+#include "atlas/units.h"
 #include <optional>
 #include <string>
 #include <tuple>
@@ -101,15 +102,20 @@ class Window {
 
     inline Scene *getCurrentScene() { return currentScene; }
     inline Camera *getCamera() { return camera; }
-    inline void addRenderTarget(RenderTarget target) {
-        renderTargets.push_back(target);
+    void addRenderTarget(RenderTarget *target);
+
+    inline Size2d getSize() {
+        int fbw, fbh;
+        glfwGetFramebufferSize(static_cast<GLFWwindow *>(windowRef), &fbw,
+                               &fbh);
+        return {static_cast<double>(fbw), static_cast<double>(fbh)};
     }
 
   private:
     CoreWindowReference windowRef;
     std::vector<Renderable *> renderables;
     std::vector<Renderable *> preferenceRenderables;
-    std::vector<RenderTarget> renderTargets;
+    std::vector<RenderTarget *> renderTargets;
 
     glm::mat4 calculateProjectionMatrix();
     Scene *currentScene = nullptr;
@@ -117,6 +123,9 @@ class Window {
     Camera *camera = nullptr;
     float lastMouseX;
     float lastMouseY;
+
+    float lastTime = 0.0f;
+    int frameCount = 0;
 };
 
 #endif // WINDOW_H

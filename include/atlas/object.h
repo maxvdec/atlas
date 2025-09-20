@@ -96,6 +96,8 @@ class CoreObject : public Renderable {
     inline void show() { isVisible = true; }
     inline void hide() { isVisible = false; }
 
+    Id id;
+
   private:
     BufferIndex vbo;
     BufferIndex vao;
@@ -109,6 +111,8 @@ class CoreObject : public Renderable {
     bool useTexture = false;
 
     bool isVisible = true;
+
+    friend class Window;
 
   public:
     void render() override;

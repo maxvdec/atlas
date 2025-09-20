@@ -120,6 +120,14 @@ void Window::run() {
     for (auto &obj : this->renderables) {
         obj->initialize();
     }
+    for (auto &obj : this->preferenceRenderables) {
+        obj->initialize();
+        CoreObject *objPtr = dynamic_cast<CoreObject *>(obj);
+        std::cout << "Preference Object ID: " << objPtr->id << std::endl;
+        std::cout << "VAO: " << objPtr->vao << std::endl;
+        std::cout << "VBO: " << objPtr->vbo << std::endl;
+        std::cout << "Texture ID: " << objPtr->textures[0].id << std::endl;
+    }
     GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
 
     glEnable(GL_DEPTH_TEST);
@@ -127,17 +135,29 @@ void Window::run() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
+    glCullFace(GL_FRONT);
+    glFrontFace(GL_CW);
 
     while (!glfwWindowShouldClose(window)) {
+        frameCount++;
+
+        // Update FPS
+        if (getTime() - lastTime >= 1.0f) {
+            std::string newTitle =
+                title + " - FPS: " + std::to_string(frameCount);
+            glfwSetWindowTitle(window, newTitle.c_str());
+            frameCount = 0;
+            lastTime = getTime();
+        }
+
         currentScene->update(*this);
 
         // Render to the targets
         for (auto &target : this->renderTargets) {
-            glBindFramebuffer(GL_FRAMEBUFFER, target.fbo);
-            glViewport(0, 0, target.texture.creationData.width,
-                       target.texture.creationData.height);
-            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+            glBindFramebuffer(GL_FRAMEBUFFER, target->fbo);
+            glViewport(0, 0, target->texture.creationData.width,
+                       target->texture.creationData.height);
+            glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             for (auto &obj : this->renderables) {
@@ -145,6 +165,7 @@ void Window::run() {
                 obj->setProjectionMatrix(calculateProjectionMatrix());
                 obj->render();
             }
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
         }
 
         // Render to the screen
@@ -156,13 +177,13 @@ void Window::run() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         if (this->renderTargets.size() > 0) {
-            glDisable(GL_DEPTH_TEST);
-
+            glm::mat4 identity = glm::mat4(1.0f);
             for (auto &obj : this->preferenceRenderables) {
+                obj->setViewMatrix(identity);
+                obj->setProjectionMatrix(identity);
                 obj->render();
             }
 
-            glEnable(GL_DEPTH_TEST);
         } else {
             for (auto &obj : this->renderables) {
                 obj->setViewMatrix(this->camera->calculateViewMatrix());
@@ -329,4 +350,8 @@ void Window::releaseMouse() {
 void Window::captureMouse() {
     GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+}
+
+void Window::addRenderTarget(RenderTarget *target) {
+    this->renderTargets.push_back(target);
 }

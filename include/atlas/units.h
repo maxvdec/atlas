@@ -12,6 +12,7 @@
 
 #include <glm/glm.hpp>
 #include <numbers>
+#include <ostream>
 
 struct Position3d {
     double x;
@@ -49,6 +50,12 @@ struct Position3d {
     inline static Position3d fromGlm(const glm::vec3 &vec) {
         return {static_cast<double>(vec.x), static_cast<double>(vec.y),
                 static_cast<double>(vec.z)};
+    }
+
+    inline friend std::ostream &operator<<(std::ostream &os,
+                                           const Position3d &p) {
+        os << "Position3d(" << p.x << ", " << p.y << ", " << p.z << ")";
+        return os;
     }
 };
 

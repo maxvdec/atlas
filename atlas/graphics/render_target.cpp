@@ -8,6 +8,7 @@
 */
 
 #include <glad/glad.h>
+#include <iostream>
 #include <vector>
 #include "atlas/core/shader.h"
 #include "atlas/object.h"
@@ -17,17 +18,21 @@
 
 RenderTarget RenderTarget::create(Window &window, RenderTargetType type) {
     Id fbo;
+    Id rbo;
     glGenFramebuffers(1, &fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
     Texture texture;
 
     if (type == RenderTargetType::Scene) {
+        int width = static_cast<int>(window.getSize().x);
+        int height = static_cast<int>(window.getSize().y);
+
         Id textureColorBuffer;
         glGenTextures(1, &textureColorBuffer);
         glBindTexture(GL_TEXTURE_2D, textureColorBuffer);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, window.width, window.height, 0,
-                     GL_RGB, GL_UNSIGNED_BYTE, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
+                     GL_UNSIGNED_BYTE, NULL);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glBindTexture(GL_TEXTURE_2D, 0);
@@ -37,22 +42,37 @@ RenderTarget RenderTarget::create(Window &window, RenderTargetType type) {
 
         texture.id = textureColorBuffer;
         texture.type = TextureType::Color;
-        texture.creationData =
-            TextureCreationData{window.width, window.height, 3};
+        texture.creationData = TextureCreationData{width, height, 3};
 
-        Id rbo;
         glGenRenderbuffers(1, &rbo);
         glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8,
-                              window.width, window.height);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width,
+                              height);
         glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
                                   GL_RENDERBUFFER, rbo);
 
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) !=
-            GL_FRAMEBUFFER_COMPLETE) {
-            throw std::runtime_error("Framebuffer is not complete!");
+        GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+        if (status != GL_FRAMEBUFFER_COMPLETE) {
+            switch (status) {
+            case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+                throw std::runtime_error(
+                    "Framebuffer incomplete: Attachment is NOT complete");
+            case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+                throw std::runtime_error(
+                    "Framebuffer incomplete: No image is attached to FBO");
+            case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
+                throw std::runtime_error("Framebuffer incomplete: Draw buffer");
+            case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
+                throw std::runtime_error("Framebuffer incomplete: Read buffer");
+            case GL_FRAMEBUFFER_UNSUPPORTED:
+                throw std::runtime_error("Framebuffer incomplete: Unsupported "
+                                         "by FBO implementation");
+            default:
+                throw std::runtime_error(
+                    "Framebuffer incomplete: Unknown error");
+            }
         }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -62,7 +82,7 @@ RenderTarget RenderTarget::create(Window &window, RenderTargetType type) {
 
     RenderTarget renderTarget;
     renderTarget.fbo = fbo;
-    renderTarget.rbo = 0;
+    renderTarget.rbo = rbo;
     renderTarget.texture = texture;
     renderTarget.type = type;
 
@@ -89,7 +109,15 @@ void RenderTarget::display(Window &window, float zindex) {
             FragmentShader::fromDefaultShader(AtlasFragmentShader::Fullscreen);
 
         obj.createAndAttachProgram(vertexShader, fragmentShader);
+
+        std::vector<Index> indices = {0, 1, 3, 1, 2, 3};
+
         obj.attachTexture(this->texture);
+        obj.attachVertices(vertices);
+        obj.attachIndices(indices);
+        obj.renderOnlyTexture();
+        obj.show();
+        obj.initialize();
         this->object = std::make_shared<CoreObject>(obj);
         window.addPreferencedObject(this->object.get());
     } else {
