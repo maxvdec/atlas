@@ -59,4 +59,22 @@ struct Texture {
     static void applyFilteringMode(TextureFilteringMode mode, bool isMinifying);
 };
 
+class Window;
+
+enum class RenderTargetType { Scene };
+
+class RenderTarget {
+  public:
+    RenderTarget() = default;
+
+    Texture texture;
+
+    static RenderTarget create(Window &window,
+                               RenderTargetType type = RenderTargetType::Scene);
+
+  private:
+    Id fbo = 0;
+    Id rbo = 0;
+};
+
 #endif // TEXTURE_H
