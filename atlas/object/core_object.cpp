@@ -259,19 +259,47 @@ void CoreObject::render() {
                                    material.specular.g, material.specular.b);
         shaderProgram.setUniform1f("material.shininess", material.shininess);
 
-        // Send the lights
-        Light *firstLightPtr = scene->lights.empty()
-                                   ? Light::create({0, 0, 0}).get()
-                                   : scene->lights[0];
-        Light &firstLight = *firstLightPtr;
-        shaderProgram.setUniform3f("light.position", firstLight.position.x,
-                                   firstLight.position.y,
-                                   firstLight.position.z);
-        shaderProgram.setUniform3f("light.diffuse", firstLight.color.r,
-                                   firstLight.color.g, firstLight.color.b);
-        shaderProgram.setUniform3f("light.specular", firstLight.shineColor.r,
-                                   firstLight.shineColor.g,
-                                   firstLight.shineColor.b);
+        // Send directional lights
+
+        int dirLightCount = std::min((int)scene->directionalLights.size(), 256);
+        shaderProgram.setUniform1i("directionalLightCount", dirLightCount);
+
+        for (int i = 0; i < dirLightCount; i++) {
+            DirectionalLight *light = scene->directionalLights[i];
+            std::string baseName =
+                "directionalLights[" + std::to_string(i) + "]";
+            shaderProgram.setUniform3f(baseName + ".direction",
+                                       light->direction.x, light->direction.y,
+                                       light->direction.z);
+            shaderProgram.setUniform3f(baseName + ".diffuse", light->color.r,
+                                       light->color.g, light->color.b);
+            shaderProgram.setUniform3f(baseName + ".specular",
+                                       light->shineColor.r, light->shineColor.g,
+                                       light->shineColor.b);
+        }
+
+        // Send point lights
+
+        int pointLightCount = std::min((int)scene->pointLights.size(), 256);
+        shaderProgram.setUniform1i("pointLightCount", pointLightCount);
+
+        for (int i = 0; i < pointLightCount; i++) {
+            Light *light = scene->pointLights[i];
+            std::string baseName = "pointLights[" + std::to_string(i) + "]";
+            shaderProgram.setUniform3f(baseName + ".position",
+                                       light->position.x, light->position.y,
+                                       light->position.z);
+            shaderProgram.setUniform3f(baseName + ".diffuse", light->color.r,
+                                       light->color.g, light->color.b);
+            shaderProgram.setUniform3f(baseName + ".specular",
+                                       light->shineColor.r, light->shineColor.g,
+                                       light->shineColor.b);
+
+            PointLightConstants plc = light->calculateConstants();
+            shaderProgram.setUniform1f(baseName + ".constant", plc.constant);
+            shaderProgram.setUniform1f(baseName + ".linear", plc.linear);
+            shaderProgram.setUniform1f(baseName + ".quadratic", plc.quadratic);
+        }
     }
 
     glBindVertexArray(vao);

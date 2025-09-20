@@ -27,10 +27,15 @@ class Scene {
 
     AmbientLight ambientLight = {{1.0f, 1.0f, 1.0f}, 0.1f};
 
-    inline void addLight(Light *light) { lights.push_back(light); }
+    void addDirectionalLight(DirectionalLight *light) {
+        directionalLights.push_back(light);
+    }
+
+    void addLight(Light *light) { pointLights.push_back(light); }
 
   private:
-    std::vector<Light *> lights;
+    std::vector<DirectionalLight *> directionalLights;
+    std::vector<Light *> pointLights;
 
     friend class CoreObject;
 };

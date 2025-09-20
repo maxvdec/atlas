@@ -37,6 +37,13 @@ struct Position3d {
         return glm::vec3(static_cast<float>(x), static_cast<float>(y),
                          static_cast<float>(z));
     }
+
+    inline Position3d normalized() const {
+        double length = std::sqrt(x * x + y * y + z * z);
+        if (length == 0)
+            return {0, 0, 0};
+        return {x / length, y / length, z / length};
+    }
 };
 
 typedef Position3d Scale3d;

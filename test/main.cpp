@@ -66,7 +66,7 @@ class MainScene : public Scene {
         window.addObject(&quadObject);
         window.addObject(&quadObject2);
 
-        light = Light({2.0f, 4.0f, 1.0f}, Color::white(), Color::white());
+        light = Light({-1.0f, 1.0f, -1.0f}, Color::white(), 1.0f);
         light.createDebugObject();
         light.addDebugObject(window);
         this->addLight(&light);
