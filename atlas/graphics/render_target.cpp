@@ -16,77 +16,40 @@
 #include "atlas/units.h"
 #include "atlas/window.h"
 
-RenderTarget RenderTarget::create(Window &window, RenderTargetType type) {
-    Id fbo;
-    Id rbo;
+RenderTarget::RenderTarget(Window &window, RenderTargetType type) {
+    Size2d size = window.getSize();
+
     glGenFramebuffers(1, &fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
-    Texture texture;
+    glGenTextures(1, &texture.id);
+    glBindTexture(GL_TEXTURE_2D, texture.id);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.width, size.height, 0, GL_RGBA,
+                 GL_UNSIGNED_BYTE, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
+                           texture.id, 0);
 
-    if (type == RenderTargetType::Scene) {
-        int width = static_cast<int>(window.getSize().x);
-        int height = static_cast<int>(window.getSize().y);
+    GLuint depthStencilRBO;
+    glGenRenderbuffers(1, &depthStencilRBO);
+    glBindRenderbuffer(GL_RENDERBUFFER, depthStencilRBO);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, size.width,
+                          size.height);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
+                              GL_RENDERBUFFER, depthStencilRBO);
 
-        Id textureColorBuffer;
-        glGenTextures(1, &textureColorBuffer);
-        glBindTexture(GL_TEXTURE_2D, textureColorBuffer);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
-                     GL_UNSIGNED_BYTE, NULL);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glBindTexture(GL_TEXTURE_2D, 0);
-
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                               GL_TEXTURE_2D, textureColorBuffer, 0);
-
-        texture.id = textureColorBuffer;
-        texture.type = TextureType::Color;
-        texture.creationData = TextureCreationData{width, height, 3};
-
-        glGenRenderbuffers(1, &rbo);
-        glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width,
-                              height);
-        glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
-                                  GL_RENDERBUFFER, rbo);
-
-        GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-        if (status != GL_FRAMEBUFFER_COMPLETE) {
-            switch (status) {
-            case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
-                throw std::runtime_error(
-                    "Framebuffer incomplete: Attachment is NOT complete");
-            case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
-                throw std::runtime_error(
-                    "Framebuffer incomplete: No image is attached to FBO");
-            case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
-                throw std::runtime_error("Framebuffer incomplete: Draw buffer");
-            case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
-                throw std::runtime_error("Framebuffer incomplete: Read buffer");
-            case GL_FRAMEBUFFER_UNSUPPORTED:
-                throw std::runtime_error("Framebuffer incomplete: Unsupported "
-                                         "by FBO implementation");
-            default:
-                throw std::runtime_error(
-                    "Framebuffer incomplete: Unknown error");
-            }
-        }
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    } else {
-        throw std::runtime_error("Unsupported render target type");
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        std::cerr << "Error: Framebuffer is not complete!" << std::endl;
     }
 
-    RenderTarget renderTarget;
-    renderTarget.fbo = fbo;
-    renderTarget.rbo = rbo;
-    renderTarget.texture = texture;
-    renderTarget.type = type;
+    texture.creationData.width = size.width;
+    texture.creationData.height = size.height;
+    texture.type = TextureType::Color;
 
-    return renderTarget;
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
 }
 
 void RenderTarget::display(Window &window, float zindex) {
@@ -119,7 +82,7 @@ void RenderTarget::display(Window &window, float zindex) {
         obj.show();
         obj.initialize();
         this->object = std::make_shared<CoreObject>(obj);
-        window.addPreferencedObject(this->object.get());
+        window.addPreferencedObject(this);
     } else {
         this->object->show();
     }
@@ -139,4 +102,31 @@ void RenderTarget::show() {
     } else {
         throw std::runtime_error("Render target object is null");
     }
+}
+
+void RenderTarget::render() {
+    if (!object || !object->isVisible) {
+        return;
+    }
+
+    CoreObject *obj = this->object.get();
+
+    glUseProgram(obj->shaderProgram.programId);
+
+    obj->shaderProgram.setUniform1i("Texture", 0);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture.id);
+
+    glDisable(GL_DEPTH_TEST);
+
+    glBindVertexArray(obj->vao);
+    if (!obj->indices.empty()) {
+        glDrawElements(GL_TRIANGLES, obj->indices.size(), GL_UNSIGNED_INT, 0);
+    } else {
+        glDrawArrays(GL_TRIANGLES, 0, obj->vertices.size());
+    }
+    glBindVertexArray(0);
+
+    glEnable(GL_DEPTH_TEST);
 }

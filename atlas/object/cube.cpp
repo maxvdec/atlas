@@ -65,8 +65,8 @@ CoreObject createBox(Size3d size, Color color) {
 }
 
 CoreObject createPlane(Size2d size, Color color) {
-    double w = size.x / 2.0;
-    double h = size.y / 2.0;
+    double w = size.width / 2.0;
+    double h = size.height / 2.0;
 
     std::vector<CoreVertex> vertices = {
         {{-w, -h, 0.0}, color, {0.0, 0.0}, {0.0f, 0.0f, 1.0f}},

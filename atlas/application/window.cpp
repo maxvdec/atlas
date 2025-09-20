@@ -122,11 +122,6 @@ void Window::run() {
     }
     for (auto &obj : this->preferenceRenderables) {
         obj->initialize();
-        CoreObject *objPtr = dynamic_cast<CoreObject *>(obj);
-        std::cout << "Preference Object ID: " << objPtr->id << std::endl;
-        std::cout << "VAO: " << objPtr->vao << std::endl;
-        std::cout << "VBO: " << objPtr->vbo << std::endl;
-        std::cout << "Texture ID: " << objPtr->textures[0].id << std::endl;
     }
     GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
 
@@ -139,6 +134,10 @@ void Window::run() {
     glFrontFace(GL_CW);
 
     while (!glfwWindowShouldClose(window)) {
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_FRONT);
+        glFrontFace(GL_CW);
+
         frameCount++;
 
         // Update FPS
@@ -157,7 +156,7 @@ void Window::run() {
             glBindFramebuffer(GL_FRAMEBUFFER, target->fbo);
             glViewport(0, 0, target->texture.creationData.width,
                        target->texture.creationData.height);
-            glClearColor(1.0f, 0.0f, 0.0f, 1.0f);
+            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             for (auto &obj : this->renderables) {
@@ -177,14 +176,12 @@ void Window::run() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         if (this->renderTargets.size() > 0) {
-            glm::mat4 identity = glm::mat4(1.0f);
+            glDisable(GL_CULL_FACE);
             for (auto &obj : this->preferenceRenderables) {
-                obj->setViewMatrix(identity);
-                obj->setProjectionMatrix(identity);
                 obj->render();
             }
-
         } else {
+            std::cout << "=== SCREEN PASS (NORMAL) ===" << std::endl;
             for (auto &obj : this->renderables) {
                 obj->setViewMatrix(this->camera->calculateViewMatrix());
                 obj->setProjectionMatrix(calculateProjectionMatrix());

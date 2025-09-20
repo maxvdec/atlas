@@ -21,10 +21,10 @@ in vec2 TexCoord;
 
 out vec4 FragColor;
 
-uniform sampler2D textures[16];
+uniform sampler2D Texture;
 
 void main() {
-    vec3 col = texture(textures[0], TexCoord).rgb;
+    vec3 col = texture(Texture, TexCoord).rgb;
     FragColor = vec4(col, 1.0);
 }
 
@@ -406,11 +406,12 @@ static const char* FULLSCREEN_VERT = R"(
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec4 aColor;
 layout (location = 2) in vec2 aTexCoord;
+layout (location = 3) in vec3 aNormal;
 
 out vec2 TexCoord;
 
 void main() {
-    gl_Position = vec4(aPos, 1.0);
+    gl_Position = vec4(aPos.xy, 0.0, 1.0);
     TexCoord = aTexCoord;
 }
 

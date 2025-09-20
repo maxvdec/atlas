@@ -10,7 +10,10 @@
 #ifndef ATLAS_OBJECT_H
 #define ATLAS_OBJECT_H
 
+#pragma once
+
 #include "atlas/core/shader.h"
+#include "atlas/core/renderable.h"
 #include "atlas/texture.h"
 #include <array>
 #include <atlas/units.h>
@@ -44,15 +47,6 @@ struct CoreVertex {
 
 typedef unsigned int BufferIndex;
 typedef unsigned int Index;
-
-class Renderable {
-  public:
-    virtual void render() = 0;
-    virtual void initialize() = 0;
-    virtual void setViewMatrix(const glm::mat4 &view) = 0;
-    virtual void setProjectionMatrix(const glm::mat4 &projection) = 0;
-    virtual ~Renderable() = default;
-};
 
 class CoreObject : public Renderable {
   public:
@@ -113,6 +107,7 @@ class CoreObject : public Renderable {
     bool isVisible = true;
 
     friend class Window;
+    friend class RenderTarget;
 
   public:
     void render() override;

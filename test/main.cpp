@@ -74,7 +74,7 @@ class MainScene : public Scene {
 
         this->addSpotlight(&light);
 
-        renderTarget = RenderTarget::create(window);
+        renderTarget = RenderTarget(window);
         renderTarget.display(window);
         std::cout << "Render Target ID: " << renderTarget.object.get()->id
                   << std::endl;
