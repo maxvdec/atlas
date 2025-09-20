@@ -19,6 +19,7 @@ class MainScene : public Scene {
     Spotlight light;
     Camera camera;
     RenderTarget renderTarget;
+    Skybox skybox;
 
     void update(Window &window) override {
         camera.update(window);
@@ -33,6 +34,25 @@ class MainScene : public Scene {
 
     void onMouseScroll(Window &window, Movement2d offset) override {
         camera.updateZoom(window, offset);
+    }
+
+    Cubemap createCubemap() {
+        Resource right = Workspace::get().createResource(
+            "resources/skybox/right.jpg", "Right", ResourceType::Image);
+        Resource left = Workspace::get().createResource(
+            "resources/skybox/left.jpg", "Left", ResourceType::Image);
+        Resource top = Workspace::get().createResource(
+            "resources/skybox/top.jpg", "Top", ResourceType::Image);
+        Resource bottom = Workspace::get().createResource(
+            "resources/skybox/bottom.jpg", "Bottom", ResourceType::Image);
+        Resource front = Workspace::get().createResource(
+            "resources/skybox/front.jpg", "Front", ResourceType::Image);
+        Resource back = Workspace::get().createResource(
+            "resources/skybox/back.jpg", "Back", ResourceType::Image);
+
+        ResourceGroup group;
+        group.resources = {right, left, top, bottom, front, back};
+        return Cubemap::fromResourceGroup(group);
     }
 
     void initialize(Window &window) override {
@@ -76,9 +96,12 @@ class MainScene : public Scene {
 
         renderTarget = RenderTarget(window);
         renderTarget.display(window);
-        std::cout << "Render Target ID: " << renderTarget.object.get()->id
-                  << std::endl;
         window.addRenderTarget(&renderTarget);
+
+        Cubemap cubemap = createCubemap();
+        skybox = Skybox();
+        skybox.cubemap = cubemap;
+        skybox.display(window);
     }
 };
 

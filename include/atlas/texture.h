@@ -10,6 +10,7 @@
 #ifndef TEXTURE_H
 #define TEXTURE_H
 
+#include <array>
 #pragma once
 
 #include "atlas/core/renderable.h"
@@ -40,7 +41,7 @@ struct TextureParameters {
     TextureFilteringMode magnifyingFilter = TextureFilteringMode::Linear;
 };
 
-enum class TextureType : int { Color = 0, Specular = 1 };
+enum class TextureType : int { Color = 0, Specular = 1, Cubemap = 2 };
 
 struct Texture {
     Resource resource;
@@ -61,6 +62,15 @@ struct Texture {
   private:
     static void applyWrappingMode(TextureWrappingMode mode, Id glAxis);
     static void applyFilteringMode(TextureFilteringMode mode, bool isMinifying);
+};
+
+struct Cubemap {
+    std::array<Resource, 6> resources;
+    TextureCreationData creationData;
+    Id id;
+    TextureType type = TextureType::Cubemap;
+
+    static Cubemap fromResourceGroup(ResourceGroup &resourceGroup);
 };
 
 class Window;
@@ -91,6 +101,29 @@ class RenderTarget : public Renderable {
     Id rbo = 0;
 
     friend class Window;
+};
+
+class Skybox : public Renderable {
+  public:
+    Skybox() = default;
+
+    Cubemap cubemap;
+
+    std::shared_ptr<CoreObject> object = nullptr;
+
+    void display(Window &window);
+    void hide();
+    void show();
+
+    void render() override;
+    void setViewMatrix(const glm::mat4 &view) override;
+    void setProjectionMatrix(const glm::mat4 &projection) override;
+
+  private:
+    friend class Window;
+
+    glm::mat4 view = glm::mat4(1.0f);
+    glm::mat4 projection = glm::mat4(1.0f);
 };
 
 #endif // TEXTURE_H

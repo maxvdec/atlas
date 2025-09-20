@@ -47,6 +47,12 @@ VertexShader VertexShader::fromDefaultShader(AtlasVertexShader shader) {
         vertexShader.capabilities = {ShaderCapability::Textures};
         break;
     }
+    case AtlasVertexShader::Skybox: {
+        vertexShader = VertexShader::fromSource(SKYBOX_VERT);
+        vertexShader.desiredAttributes = {0};
+        vertexShader.capabilities = {ShaderCapability::Textures};
+        break;
+    }
     default:
         throw std::runtime_error("Unknown default vertex shader");
     }
@@ -93,6 +99,8 @@ FragmentShader FragmentShader::fromDefaultShader(AtlasFragmentShader shader) {
         return FragmentShader::fromSource(TEXTURE_FRAG);
     case AtlasFragmentShader::Fullscreen:
         return FragmentShader::fromSource(FULLSCREEN_FRAG);
+    case AtlasFragmentShader::Skybox:
+        return FragmentShader::fromSource(SKYBOX_FRAG);
     default:
         throw std::runtime_error("Unknown default fragment shader");
     }

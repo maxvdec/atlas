@@ -8,10 +8,19 @@
 */
 
 #include "atlas/texture.h"
+#include "atlas/core/shader.h"
+#include "atlas/object.h"
+#include "atlas/window.h"
 #include "atlas/workspace.h"
+#include <algorithm>
+#include <array>
+#include <vector>
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
 #include <glad/glad.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 Texture Texture::fromResourceName(const std::string &resourceName,
                                   TextureType type, TextureParameters params,
@@ -120,4 +129,171 @@ void Texture::applyFilteringMode(TextureFilteringMode mode, bool isMinifying) {
             throw std::runtime_error("Unknown filtering mode");
         }
     }
+}
+
+Cubemap Cubemap::fromResourceGroup(ResourceGroup &group) {
+    if (group.resources.size() != 6) {
+        throw std::runtime_error("Cubemap requires exactly 6 resources");
+    }
+
+    Id textureId;
+    glGenTextures(1, &textureId);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, textureId);
+
+    int width = 0, height = 0, channels = 0;
+
+    for (size_t i = 0; i < 6; i++) {
+        Resource &resource = group.resources[i];
+        if (resource.type != ResourceType::Image) {
+            throw std::runtime_error("Resource is not an image: " +
+                                     resource.name);
+        }
+
+        int w, h, c;
+        stbi_set_flip_vertically_on_load(false);
+        unsigned char *data =
+            stbi_load(resource.path.string().c_str(), &w, &h, &c, 0);
+
+        if (!data) {
+            throw std::runtime_error("Failed to load image: " +
+                                     resource.path.string());
+        }
+
+        if (i == 0) {
+            width = w;
+            height = h;
+            channels = c;
+        } else {
+            if (w != width || h != height || c != channels) {
+                stbi_image_free(data);
+                throw std::runtime_error(
+                    "All cubemap images must have the same dimensions and "
+                    "channels");
+            }
+        }
+
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0,
+                     c == 4 ? GL_RGBA : (c == 3 ? GL_RGB : GL_RED), w, h, 0,
+                     c == 4 ? GL_RGBA : (c == 3 ? GL_RGB : GL_RED),
+                     GL_UNSIGNED_BYTE, data);
+
+        stbi_image_free(data);
+    }
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    TextureCreationData creationData{width, height, channels};
+    Cubemap cubemap;
+    cubemap.creationData = creationData;
+    cubemap.id = textureId;
+    std::array<Resource, 6> resources;
+    std::copy(group.resources.begin(), group.resources.end(),
+              resources.begin());
+    cubemap.resources = resources;
+    return cubemap;
+}
+
+void Skybox::display(Window &window) {
+    CoreObject obj;
+
+    std::vector<CoreVertex> vertices = {
+        // Positions (x, y, z)
+        CoreVertex({-1.0f, 1.0f, -1.0f}),  // 0
+        CoreVertex({-1.0f, -1.0f, -1.0f}), // 1
+        CoreVertex({1.0f, -1.0f, -1.0f}),  // 2
+        CoreVertex({1.0f, 1.0f, -1.0f}),   // 3
+        CoreVertex({-1.0f, 1.0f, 1.0f}),   // 4
+        CoreVertex({-1.0f, -1.0f, 1.0f}),  // 5
+        CoreVertex({1.0f, -1.0f, 1.0f}),   // 6
+        CoreVertex({1.0f, 1.0f, 1.0f})     // 7
+    };
+
+    std::vector<Index> indices = {// Back face
+                                  0, 1, 2, 2, 3, 0,
+                                  // Front face
+                                  4, 7, 6, 6, 5, 4,
+                                  // Left face
+                                  4, 5, 1, 1, 0, 4,
+                                  // Right face
+                                  3, 2, 6, 6, 7, 3,
+                                  // Bottom face
+                                  1, 5, 6, 6, 2, 1,
+                                  // Top face
+                                  4, 0, 3, 3, 7, 4};
+
+    obj.attachVertices(vertices);
+    obj.attachIndices(indices);
+
+    VertexShader vertexShader =
+        VertexShader::fromDefaultShader(AtlasVertexShader::Skybox);
+    FragmentShader fragmentShader =
+        FragmentShader::fromDefaultShader(AtlasFragmentShader::Skybox);
+
+    obj.createAndAttachProgram(vertexShader, fragmentShader);
+
+    obj.initialize();
+
+    this->object = std::make_shared<CoreObject>(obj);
+
+    window.addPreludeObject(this);
+}
+
+void Skybox::hide() {
+    if (object != nullptr) {
+        this->object->hide();
+    }
+}
+
+void Skybox::show() {
+    if (object != nullptr) {
+        this->object->show();
+    }
+}
+
+void Skybox::setViewMatrix(const glm::mat4 &view) {
+    this->view = glm::mat4(glm::mat3(view));
+    if (object != nullptr) {
+        object->setViewMatrix(this->view);
+    }
+}
+
+void Skybox::setProjectionMatrix(const glm::mat4 &projection) {
+    this->projection = projection;
+    if (object != nullptr) {
+        object->setProjectionMatrix(this->projection);
+    }
+}
+
+void Skybox::render() {
+    if (!object || !object->isVisible) {
+        return;
+    }
+
+    CoreObject *obj = this->object.get();
+
+    glDepthFunc(GL_LEQUAL);
+    glDepthMask(GL_FALSE);
+    glDisable(GL_CULL_FACE);
+
+    glUseProgram(obj->shaderProgram.programId);
+
+    obj->shaderProgram.setUniformMat4f("view", view);
+
+    obj->shaderProgram.setUniformMat4f("projection", projection);
+
+    obj->shaderProgram.setUniform1i("skybox", 0);
+
+    glBindVertexArray(obj->vao);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap.id);
+    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(obj->indices.size()),
+                   GL_UNSIGNED_INT, 0);
+    glBindVertexArray(0);
+    glDepthFunc(GL_LESS); // Set depth function back to default
+    glDepthMask(GL_TRUE);
+    glEnable(GL_CULL_FACE);
 }
