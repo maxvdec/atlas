@@ -231,4 +231,7 @@ void main() {
     vec3 finalColor = (ambient + lightContribution) * baseColor.rgb;
 
     FragColor = vec4(finalColor, baseColor.a);
+
+    if (FragColor.a < 0.1)
+        discard;
 }
