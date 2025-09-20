@@ -159,6 +159,12 @@ void Window::run() {
             glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+            for (auto &obj : this->firstRenderables) {
+                obj->setViewMatrix(this->camera->calculateViewMatrix());
+                obj->setProjectionMatrix(calculateProjectionMatrix());
+                obj->render();
+            }
+
             for (auto &obj : this->renderables) {
                 obj->setViewMatrix(this->camera->calculateViewMatrix());
                 obj->setProjectionMatrix(calculateProjectionMatrix());

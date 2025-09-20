@@ -85,6 +85,9 @@ class Window {
 
     void addObject(Renderable *object);
     void addPreferencedObject(Renderable *object);
+    inline void addPreludeObject(Renderable *object) {
+        firstRenderables.push_back(object);
+    }
 
     void setCamera(Camera *newCamera);
     void setScene(Scene *scene);
@@ -115,6 +118,7 @@ class Window {
     CoreWindowReference windowRef;
     std::vector<Renderable *> renderables;
     std::vector<Renderable *> preferenceRenderables;
+    std::vector<Renderable *> firstRenderables;
     std::vector<RenderTarget *> renderTargets;
 
     glm::mat4 calculateProjectionMatrix();

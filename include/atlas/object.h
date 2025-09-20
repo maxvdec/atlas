@@ -108,6 +108,7 @@ class CoreObject : public Renderable {
 
     friend class Window;
     friend class RenderTarget;
+    friend class Skybox;
 
   public:
     void render() override;
