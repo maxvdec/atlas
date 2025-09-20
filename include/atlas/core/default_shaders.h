@@ -152,8 +152,8 @@ vec3 calcDirectionalDiffuse(DirectionalLight light, vec3 norm) {
 
 vec3 calcDirectionalSpecular(DirectionalLight light, vec3 norm, vec3 viewDir, vec3 specColor, float shininess) {
     vec3 lightDir = normalize(-light.direction);
-    vec3 reflectDir = reflect(-lightDir, norm);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
+    vec3 halfwayDir = normalize(lightDir + viewDir);
+    float spec = pow(max(dot(Normal, halfwayDir), 0.0), shininess);
     return spec * specColor * light.specular;
 }
 
@@ -180,8 +180,8 @@ vec3 calcPointDiffuse(PointLight light, vec3 norm, vec3 fragPos) {
 
 vec3 calcPointSpecular(PointLight light, vec3 norm, vec3 fragPos, vec3 viewDir, vec3 specColor, float shininess) {
     vec3 lightDir = normalize(light.position - fragPos);
-    vec3 reflectDir = reflect(-lightDir, norm);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
+    vec3 halfwayDir = normalize(lightDir + viewDir);
+    float spec = pow(max(dot(Normal, halfwayDir), 0.0), shininess);
     return spec * specColor * light.specular;
 }
 
@@ -221,8 +221,8 @@ vec3 calcSpotDiffuse(SpotLight light, vec3 norm, vec3 fragPos) {
 
 vec3 calcSpotSpecular(SpotLight light, vec3 norm, vec3 fragPos, vec3 viewDir, vec3 specColor, float shininess) {
     vec3 lightDir = normalize(light.position - fragPos);
-    vec3 reflectDir = reflect(-lightDir, norm);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), shininess);
+    vec3 halfwayDir = normalize(lightDir + viewDir);
+    float spec = pow(max(dot(Normal, halfwayDir), 0.0), shininess);
     
     vec3 spotDirection = normalize(light.direction);
     float theta = dot(lightDir, -spotDirection);  
@@ -350,7 +350,8 @@ uniform mat4 view;
 void main()
 {
     TexCoords = aPos;
-    gl_Position = projection * view * vec4(aPos, 1.0);
+    vec4 pos = projection * view * vec4(aPos, 1.0);
+    gl_Position = pos.xyww; 
 }  
 
 )";

@@ -97,11 +97,6 @@ class MainScene : public Scene {
         renderTarget = RenderTarget(window);
         renderTarget.display(window);
         window.addRenderTarget(&renderTarget);
-
-        Cubemap cubemap = createCubemap();
-        skybox = Skybox();
-        skybox.cubemap = cubemap;
-        skybox.display(window);
     }
 };
 
