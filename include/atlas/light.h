@@ -82,7 +82,8 @@ struct Spotlight {
               const Color &shineColor = Color::white())
         : position(pos), color(color), shineColor(shineColor), direction(dir),
           cutOff(glm::cos(glm::radians(static_cast<double>(angle)))),
-          outerCutoff(glm::cos(glm::radians(static_cast<double>(angle)))) {}
+          outerCutoff(glm::cos(glm::radians(static_cast<double>(outerAngle)))) {
+    }
 
     void setColor(Color color);
 

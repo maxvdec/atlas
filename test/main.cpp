@@ -16,7 +16,7 @@ class MainScene : public Scene {
   public:
     CoreObject quadObject;
     CoreObject quadObject2;
-    Light light;
+    Spotlight light;
     Camera camera;
 
     void update(Window &window) override {
@@ -66,10 +66,11 @@ class MainScene : public Scene {
         window.addObject(&quadObject);
         window.addObject(&quadObject2);
 
-        light = Light({-1.0f, 1.0f, 0.0f}, Color::white());
+        light = Spotlight({-1.0f, 1.0f, 0.0f}, {0.0f, -1.0f, 0.0f});
+        light.lookAt({0.0f, 0.0f, 0.0f});
         light.createDebugObject();
         light.addDebugObject(window);
-        this->addLight(&light);
+        this->addSpotlight(&light);
     }
 };
 

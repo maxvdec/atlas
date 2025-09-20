@@ -165,11 +165,11 @@ vec3 calcSpotDiffuse(SpotLight light, vec3 norm, vec3 fragPos) {
     vec3 spotDirection = normalize(light.direction);
     float theta = dot(lightDir, -spotDirection); 
     
-    float epsilon = light.cutOff - light.outerCutOff;
-    float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
+    float intensity = smoothstep(light.outerCutOff, light.cutOff, theta);
     
     return diff * light.diffuse * intensity;
 }
+
 
 vec3 calcSpotSpecular(SpotLight light, vec3 norm, vec3 fragPos, vec3 viewDir, vec3 specColor, float shininess) {
     vec3 lightDir = normalize(light.position - fragPos);
@@ -179,11 +179,11 @@ vec3 calcSpotSpecular(SpotLight light, vec3 norm, vec3 fragPos, vec3 viewDir, ve
     vec3 spotDirection = normalize(light.direction);
     float theta = dot(lightDir, -spotDirection);  
     
-    float epsilon = light.cutOff - light.outerCutOff;
-    float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
+    float intensity = smoothstep(light.outerCutOff, light.cutOff, theta);
     
     return spec * specColor * light.specular * intensity;
 }
+
 
 float calcSpotAttenuation(SpotLight light, vec3 fragPos) {
     float distance = length(light.position - fragPos);
