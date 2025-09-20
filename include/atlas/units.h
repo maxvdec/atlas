@@ -12,6 +12,7 @@
 
 #include <glm/glm.hpp>
 #include <numbers>
+#include <ostream>
 
 struct Position3d {
     double x;
@@ -49,6 +50,12 @@ struct Position3d {
     inline static Position3d fromGlm(const glm::vec3 &vec) {
         return {static_cast<double>(vec.x), static_cast<double>(vec.y),
                 static_cast<double>(vec.z)};
+    }
+
+    inline friend std::ostream &operator<<(std::ostream &os,
+                                           const Position3d &p) {
+        os << "Position3d(" << p.x << ", " << p.y << ", " << p.z << ")";
+        return os;
     }
 };
 
@@ -168,7 +175,6 @@ struct Position2d {
 };
 
 typedef Position2d Scale2d;
-typedef Position2d Size2d;
 typedef Position2d Point2d;
 typedef Position2d Movement2d;
 
@@ -191,6 +197,31 @@ struct Radians {
 
     inline static Radians fromDegrees(double degrees) {
         return {degrees * (std::numbers::pi) / 180.0};
+    }
+};
+
+struct Size2d {
+    double width;
+    double height;
+
+    Size2d operator+(const Size2d &other) const {
+        return {width + other.width, height + other.height};
+    }
+
+    Size2d operator-(const Size2d &other) const {
+        return {width - other.width, height - other.height};
+    }
+
+    Size2d operator*(double scalar) const {
+        return {width * scalar, height * scalar};
+    }
+
+    Size2d operator/(double scalar) const {
+        return {width / scalar, height / scalar};
+    }
+
+    inline glm::vec2 toGlm() const {
+        return glm::vec2(static_cast<float>(width), static_cast<float>(height));
     }
 };
 

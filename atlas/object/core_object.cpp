@@ -14,6 +14,8 @@
 #include "atlas/window.h"
 #include <algorithm>
 #include <glad/glad.h>
+#include <iostream>
+#include <random>
 #include <vector>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -32,6 +34,11 @@ std::vector<LayoutDescriptor> CoreVertex::getLayoutDescriptors() {
 
 CoreObject::CoreObject() : vbo(0), vao(0) {
     shaderProgram = ShaderProgram::defaultProgram();
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<unsigned int> dist(0, UINT32_MAX);
+
+    id = dist(gen);
 }
 
 void CoreObject::attachProgram(const ShaderProgram &program) {
@@ -219,6 +226,11 @@ void CoreObject::initialize() {
 }
 
 void CoreObject::render() {
+    if (!isVisible) {
+        std::cout << "Object " << id << " is hidden, skipping render call."
+                  << std::endl;
+        return;
+    }
     if (shaderProgram.programId == 0) {
         throw std::runtime_error("Shader program not compiled");
     }

@@ -18,6 +18,7 @@ class MainScene : public Scene {
     CoreObject quadObject2;
     Spotlight light;
     Camera camera;
+    RenderTarget renderTarget;
 
     void update(Window &window) override {
         camera.update(window);
@@ -70,7 +71,14 @@ class MainScene : public Scene {
         light.lookAt({0.0f, 0.0f, 0.0f});
         light.createDebugObject();
         light.addDebugObject(window);
+
         this->addSpotlight(&light);
+
+        renderTarget = RenderTarget(window);
+        renderTarget.display(window);
+        std::cout << "Render Target ID: " << renderTarget.object.get()->id
+                  << std::endl;
+        window.addRenderTarget(&renderTarget);
     }
 };
 

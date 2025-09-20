@@ -10,8 +10,12 @@
 #ifndef TEXTURE_H
 #define TEXTURE_H
 
+#pragma once
+
+#include "atlas/core/renderable.h"
 #include "atlas/units.h"
 #include "atlas/workspace.h"
+#include <memory>
 #include <string>
 
 struct TextureCreationData {
@@ -57,6 +61,36 @@ struct Texture {
   private:
     static void applyWrappingMode(TextureWrappingMode mode, Id glAxis);
     static void applyFilteringMode(TextureFilteringMode mode, bool isMinifying);
+};
+
+class Window;
+class CoreObject;
+
+enum class RenderTargetType { Scene };
+
+class RenderTarget : public Renderable {
+  public:
+    RenderTarget() = default;
+
+    Texture texture;
+    RenderTargetType type;
+
+    RenderTarget(Window &window,
+                 RenderTargetType type = RenderTargetType::Scene);
+
+    void display(Window &window, float zindex = 0);
+    void hide();
+    void show();
+
+    std::shared_ptr<CoreObject> object = nullptr;
+
+    void render() override;
+
+  private:
+    Id fbo = 0;
+    Id rbo = 0;
+
+    friend class Window;
 };
 
 #endif // TEXTURE_H
