@@ -76,7 +76,7 @@ struct Cubemap {
 class Window;
 class CoreObject;
 
-enum class RenderTargetType { Scene };
+enum class RenderTargetType { Scene, Multisampled };
 
 class RenderTarget : public Renderable {
   public:
@@ -95,10 +95,12 @@ class RenderTarget : public Renderable {
     std::shared_ptr<CoreObject> object = nullptr;
 
     void render() override;
+    void resolve();
 
   private:
     Id fbo = 0;
     Id rbo = 0;
+    Id resolveFbo = 0;
 
     friend class Window;
 };

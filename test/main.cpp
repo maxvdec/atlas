@@ -94,7 +94,7 @@ class MainScene : public Scene {
 
         this->addSpotlight(&light);
 
-        renderTarget = RenderTarget(window);
+        renderTarget = RenderTarget(window, RenderTargetType::Multisampled);
         renderTarget.display(window);
         window.addRenderTarget(&renderTarget);
     }

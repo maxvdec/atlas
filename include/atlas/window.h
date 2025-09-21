@@ -34,6 +34,7 @@ struct WindowConfiguration {
     bool mouseCaptured = true;
     int posX = WINDOW_CENTERED;
     int posY = WINDOW_CENTERED;
+    bool multisampling = true;
     bool decorations = true;
     bool resizable = true;
     bool transparent = false;

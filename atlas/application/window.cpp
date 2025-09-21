@@ -35,6 +35,7 @@ Window::Window(WindowConfiguration config)
     glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER,
                    config.transparent ? GLFW_TRUE : GLFW_FALSE);
     glfwWindowHint(GLFW_FLOATING, config.alwaysOnTop ? GLFW_TRUE : GLFW_FALSE);
+    glfwWindowHint(GLFW_SAMPLES, config.multisampling ? 4 : 0);
 
     GLFWwindow *window =
         glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);

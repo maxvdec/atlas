@@ -18,38 +18,91 @@
 
 RenderTarget::RenderTarget(Window &window, RenderTargetType type) {
     Size2d size = window.getSize();
+    this->type = type;
 
-    glGenFramebuffers(1, &fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    if (type == RenderTargetType::Scene) {
+        glGenFramebuffers(1, &fbo);
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
-    glGenTextures(1, &texture.id);
-    glBindTexture(GL_TEXTURE_2D, texture.id);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.width, size.height, 0, GL_RGBA,
-                 GL_UNSIGNED_BYTE, nullptr);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
-                           texture.id, 0);
+        glGenTextures(1, &texture.id);
+        glBindTexture(GL_TEXTURE_2D, texture.id);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.width, size.height, 0,
+                     GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                               GL_TEXTURE_2D, texture.id, 0);
 
-    GLuint depthStencilRBO;
-    glGenRenderbuffers(1, &depthStencilRBO);
-    glBindRenderbuffer(GL_RENDERBUFFER, depthStencilRBO);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, size.width,
-                          size.height);
-    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
-                              GL_RENDERBUFFER, depthStencilRBO);
+        GLuint depthStencilRBO;
+        glGenRenderbuffers(1, &depthStencilRBO);
+        glBindRenderbuffer(GL_RENDERBUFFER, depthStencilRBO);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, size.width,
+                              size.height);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
+                                  GL_RENDERBUFFER, depthStencilRBO);
 
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-        std::cerr << "Error: Framebuffer is not complete!" << std::endl;
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) !=
+            GL_FRAMEBUFFER_COMPLETE) {
+            std::cerr << "Error: Framebuffer is not complete!" << std::endl;
+        }
+
+        texture.creationData.width = size.width;
+        texture.creationData.height = size.height;
+        texture.type = TextureType::Color;
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glBindRenderbuffer(GL_RENDERBUFFER, 0);
+    } else if (type == RenderTargetType::Multisampled) {
+        glGenFramebuffers(1, &fbo);
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+        GLuint msaaTex;
+        glGenTextures(1, &msaaTex);
+        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, msaaTex);
+        glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGBA8,
+                                size.width, size.height, GL_TRUE); // 4x MSAA
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                               GL_TEXTURE_2D_MULTISAMPLE, msaaTex, 0);
+
+        GLuint depthStencilRBO;
+        glGenRenderbuffers(1, &depthStencilRBO);
+        glBindRenderbuffer(GL_RENDERBUFFER, depthStencilRBO);
+        glRenderbufferStorageMultisample(
+            GL_RENDERBUFFER, 4, GL_DEPTH24_STENCIL8, size.width, size.height);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
+                                  GL_RENDERBUFFER, depthStencilRBO);
+
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) !=
+            GL_FRAMEBUFFER_COMPLETE) {
+            std::cerr << "Error: MSAA Framebuffer is not complete!"
+                      << std::endl;
+        }
+
+        glGenFramebuffers(1, &resolveFbo);
+        glBindFramebuffer(GL_FRAMEBUFFER, resolveFbo);
+
+        glGenTextures(1, &texture.id);
+        glBindTexture(GL_TEXTURE_2D, texture.id);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, size.width, size.height, 0,
+                     GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                               GL_TEXTURE_2D, texture.id, 0);
+
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) !=
+            GL_FRAMEBUFFER_COMPLETE) {
+            std::cerr << "Error: Resolve Framebuffer is not complete!"
+                      << std::endl;
+        }
+
+        texture.creationData.width = size.width;
+        texture.creationData.height = size.height;
+        texture.type = TextureType::Color;
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
-
-    texture.creationData.width = size.width;
-    texture.creationData.height = size.height;
-    texture.type = TextureType::Color;
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glBindRenderbuffer(GL_RENDERBUFFER, 0);
 }
 
 void RenderTarget::display(Window &window, float zindex) {
@@ -88,6 +141,20 @@ void RenderTarget::display(Window &window, float zindex) {
     }
 }
 
+void RenderTarget::resolve() {
+    if (type != RenderTargetType::Multisampled) {
+        return;
+    }
+
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, resolveFbo);
+    glBlitFramebuffer(0, 0, texture.creationData.width,
+                      texture.creationData.height, 0, 0,
+                      texture.creationData.width, texture.creationData.height,
+                      GL_COLOR_BUFFER_BIT, GL_NEAREST);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
 void RenderTarget::hide() {
     if (object != nullptr) {
         object->hide();
@@ -107,6 +174,10 @@ void RenderTarget::show() {
 void RenderTarget::render() {
     if (!object || !object->isVisible) {
         return;
+    }
+
+    if (type == RenderTargetType::Multisampled) {
+        resolve();
     }
 
     CoreObject *obj = this->object.get();
