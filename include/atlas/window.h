@@ -118,8 +118,6 @@ class Window {
         return {static_cast<double>(fbw), static_cast<double>(fbh)};
     }
 
-    void debugDisplayDepthMap();
-
     inline void activateDebug() { this->debug = true; }
     inline void deactivateDebug() { this->debug = false; }
 
@@ -129,10 +127,11 @@ class Window {
     std::vector<Renderable *> preferenceRenderables;
     std::vector<Renderable *> firstRenderables;
     std::vector<RenderTarget *> renderTargets;
-    std::shared_ptr<RenderTarget> shadowRenderTarget = nullptr;
 
     glm::mat4 calculateProjectionMatrix();
     Scene *currentScene = nullptr;
+
+    void renderLightsToShadowMaps();
 
     Camera *camera = nullptr;
     float lastMouseX;
@@ -140,8 +139,6 @@ class Window {
 
     float lastTime = 0.0f;
     int frameCount = 0;
-
-    void renderToShadow(CoreObject *object);
 
     ShaderProgram depthProgram;
 

@@ -41,6 +41,7 @@ class Scene {
     std::vector<Spotlight *> spotlights;
 
     friend class CoreObject;
+    friend class Window;
 };
 
 #endif // ATLAS_SCENE_H

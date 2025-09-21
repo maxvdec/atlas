@@ -103,9 +103,8 @@ class MainScene : public Scene {
         light.addDebugObject(window);
 
         this->addSpotlight(&light);
-
-        window.activateDebug();
-        window.debugDisplayDepthMap();
+        light.castShadows(window);
+        light.shadowRenderTarget->display(window);
 
         // renderTarget = RenderTarget(window, RenderTargetType::Multisampled);
         // renderTarget.display(window);

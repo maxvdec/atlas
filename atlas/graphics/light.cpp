@@ -10,6 +10,7 @@
 #include "atlas/light.h"
 #include "atlas/core/shader.h"
 #include "atlas/object.h"
+#include "atlas/texture.h"
 #include "atlas/window.h"
 
 void Light::createDebugObject() {
@@ -122,4 +123,20 @@ void Spotlight::lookAt(const Position3d &target) {
     this->direction = newDirection.normalized();
 
     updateDebugObjectRotation();
+}
+
+void Spotlight::castShadows(Window &window) {
+    if (this->shadowRenderTarget == nullptr) {
+        this->shadowRenderTarget =
+            new RenderTarget(window, RenderTargetType::Shadow);
+    }
+    this->doesCastShadows = true;
+}
+
+void DirectionalLight::castShadows(Window &window) {
+    if (this->shadowRenderTarget == nullptr) {
+        this->shadowRenderTarget =
+            new RenderTarget(window, RenderTargetType::Shadow);
+    }
+    this->doesCastShadows = true;
 }

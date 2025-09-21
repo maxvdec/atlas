@@ -107,8 +107,6 @@ Window::Window(WindowConfiguration config)
             }
         });
 
-    this->shadowRenderTarget =
-        std::make_shared<RenderTarget>(*this, RenderTargetType::Shadow);
     VertexShader vertexShader =
         VertexShader::fromDefaultShader(AtlasVertexShader::Depth);
     vertexShader.compile();
@@ -172,30 +170,7 @@ void Window::run() {
 
         currentScene->update(*this);
 
-        glViewport(0, 0, shadowRenderTarget->texture.creationData.width,
-                   shadowRenderTarget->texture.creationData.height);
-        glBindFramebuffer(GL_FRAMEBUFFER, shadowRenderTarget->fbo);
-        glClear(GL_DEPTH_BUFFER_BIT);
-        glDisable(GL_CULL_FACE);
-        for (auto &obj : this->renderables) {
-            if (obj->getShaderProgram() == std::nullopt) {
-                continue;
-            }
-            ShaderProgram program = obj->getShaderProgram().value();
-
-            obj->setShader(this->depthProgram);
-            float near_plane = 0.1f, far_plane = 10.f;
-            glm::mat4 lightProjection =
-                glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
-            glm::vec3 lightPos = glm::vec3(0.1f, 5.0f, 0.1f);
-            glm::vec3 lightTarget = glm::vec3(0.0f, 0.0f, 0.0f);
-            glm::mat4 lightView =
-                glm::lookAt(lightPos, lightTarget, glm::vec3(0.0f, 1.0f, 0.0f));
-            obj->setProjectionMatrix(lightProjection);
-            obj->setViewMatrix(lightView);
-            obj->render();
-            obj->setShader(program);
-        }
+        renderLightsToShadowMaps();
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glEnable(GL_CULL_FACE);
@@ -247,16 +222,6 @@ void Window::run() {
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-}
-
-void Window::debugDisplayDepthMap() {
-    if (this->shadowRenderTarget == nullptr) {
-        throw std::runtime_error("No shadow render target available");
-    }
-    if (!this->debug) {
-        return;
-    }
-    this->shadowRenderTarget->display(*this);
 }
 
 void Window::addObject(Renderable *obj) { this->renderables.push_back(obj); }
@@ -416,4 +381,69 @@ void Window::captureMouse() {
 
 void Window::addRenderTarget(RenderTarget *target) {
     this->renderTargets.push_back(target);
+}
+
+void Window::renderLightsToShadowMaps() {
+    for (auto &light : this->currentScene->directionalLights) {
+        if (light->doesCastShadows == false) {
+            continue;
+        }
+        RenderTarget *shadowRenderTarget = light->shadowRenderTarget;
+        glViewport(0, 0, shadowRenderTarget->texture.creationData.width,
+                   shadowRenderTarget->texture.creationData.height);
+        glBindFramebuffer(GL_FRAMEBUFFER, shadowRenderTarget->fbo);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        glDisable(GL_CULL_FACE);
+        for (auto &obj : this->renderables) {
+            if (obj->getShaderProgram() == std::nullopt) {
+                continue;
+            }
+            ShaderProgram program = obj->getShaderProgram().value();
+
+            obj->setShader(this->depthProgram);
+            float near_plane = 0.1f, far_plane = 10.f;
+            glm::mat4 lightProjection =
+                glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
+            glm::vec3 lightDir = glm::normalize(light->direction.toGlm());
+            glm::vec3 sceneCenter = glm::vec3(0.0f, 0.0f, 0.0f);
+            glm::vec3 lightPos = sceneCenter - lightDir * 10.0f;
+            glm::mat4 lightView =
+                glm::lookAt(lightPos, sceneCenter, glm::vec3(0.0f, 1.0f, 0.0f));
+            obj->setProjectionMatrix(lightProjection);
+            obj->setViewMatrix(lightView);
+            obj->render();
+            obj->setShader(program);
+        }
+    }
+
+    for (auto &light : this->currentScene->spotlights) {
+        if (light->doesCastShadows == false) {
+            continue;
+        }
+        RenderTarget *shadowRenderTarget = light->shadowRenderTarget;
+        glViewport(0, 0, shadowRenderTarget->texture.creationData.width,
+                   shadowRenderTarget->texture.creationData.height);
+        glBindFramebuffer(GL_FRAMEBUFFER, shadowRenderTarget->fbo);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        glDisable(GL_CULL_FACE);
+        for (auto &obj : this->renderables) {
+            if (obj->getShaderProgram() == std::nullopt) {
+                continue;
+            }
+            ShaderProgram program = obj->getShaderProgram().value();
+
+            obj->setShader(this->depthProgram);
+            float near_plane = 0.1f, far_plane = 100.f;
+            glm::mat4 lightProjection = glm::perspective(
+                light->outerCutoff * 2.0f, 1.0f, near_plane, far_plane);
+            glm::vec3 lightDir = glm::normalize(light->direction.toGlm());
+            glm::vec3 lightPos = light->position.toGlm();
+            glm::mat4 lightView = glm::lookAt(lightPos, lightPos + lightDir,
+                                              glm::vec3(0.0f, 1.0f, 0.0f));
+            obj->setProjectionMatrix(lightProjection);
+            obj->setViewMatrix(lightView);
+            obj->render();
+            obj->setShader(program);
+        }
+    }
 }

@@ -11,9 +11,11 @@
 #define ATLAS_LIGHT_H
 
 #include "atlas/object.h"
+#include "atlas/texture.h"
 #include "atlas/units.h"
 #include <cmath>
 #include <memory>
+#include <tuple>
 
 class Window;
 
@@ -66,6 +68,17 @@ class DirectionalLight {
         : direction(dir.normalized()), color(color), shineColor(shineColor) {}
 
     void setColor(Color color);
+
+    RenderTarget *shadowRenderTarget = nullptr;
+
+    void castShadows(Window &window);
+
+  private:
+    bool doesCastShadows = false;
+
+    std::tuple<glm::mat4, glm::mat4> calculateLightSpaceMatrix() const;
+
+    friend class Window;
 };
 
 struct Spotlight {
@@ -96,6 +109,17 @@ struct Spotlight {
 
     float cutOff;
     float outerCutoff;
+
+    RenderTarget *shadowRenderTarget = nullptr;
+
+    void castShadows(Window &window);
+
+  private:
+    bool doesCastShadows = true;
+
+    std::tuple<glm::mat4, glm::mat4> calculateLightSpaceMatrix() const;
+
+    friend class Window;
 };
 
 #endif // ATLAS_LIGHT_H
