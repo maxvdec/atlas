@@ -72,7 +72,8 @@ Texture Texture::fromResource(const Resource &resource, TextureType type,
     }
 
     glTexImage2D(GL_TEXTURE_2D, 0,
-                 channels == 4 ? GL_RGBA : (channels == 3 ? GL_RGB : GL_RED),
+                 channels == 4 ? GL_SRGB8_ALPHA8
+                               : (channels == 3 ? GL_SRGB8 : GL_R8),
                  width, height, 0,
                  channels == 4 ? GL_RGBA : (channels == 3 ? GL_RGB : GL_RED),
                  GL_UNSIGNED_BYTE, data);

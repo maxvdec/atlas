@@ -95,6 +95,10 @@ vec3 getSpecularColor() {
     return specColor;
 }
 
+vec4 applyGammaCorrection(vec4 color, float gamma) {
+    return vec4(pow(color.rgb, vec3(1.0 / gamma)), color.a);
+}
+
 // ----- Directional Light -----
 vec3 calcDirectionalDiffuse(DirectionalLight light, vec3 norm) {
     vec3 lightDir = normalize(-light.direction);  
