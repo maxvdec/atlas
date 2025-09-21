@@ -191,7 +191,7 @@ vec3 calcPointSpecular(PointLight light, vec3 norm, vec3 fragPos, vec3 viewDir, 
 
 float calcAttenuation(PointLight light, vec3 fragPos) {
     float distance = length(light.position - fragPos);
-    return 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));
+    return 1.0 / (light.constant + light.linear * distance + light.quadratic * distance);
 }
 
 vec3 calcAllPointLights(vec3 norm, vec3 fragPos, vec3 viewDir) {
@@ -239,7 +239,7 @@ vec3 calcSpotSpecular(SpotLight light, vec3 norm, vec3 fragPos, vec3 viewDir, ve
 
 float calcSpotAttenuation(SpotLight light, vec3 fragPos) {
     float distance = length(light.position - fragPos);
-    return 1.0 / (1.0 + 0.09 * distance + 0.032 * (distance * distance));
+    return 1.0 / (1.0 + 0.09 * distance + 0.032 * distance);
 }
 
 vec3 calcAllSpotLights(vec3 norm, vec3 fragPos, vec3 viewDir) {
