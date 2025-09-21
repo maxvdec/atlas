@@ -207,6 +207,12 @@ void Window::run() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         if (this->renderTargets.size() == 0) {
+            for (auto &obj : this->firstRenderables) {
+                obj->setViewMatrix(this->camera->calculateViewMatrix());
+                obj->setProjectionMatrix(calculateProjectionMatrix());
+                obj->render();
+            }
+
             for (auto &obj : this->renderables) {
                 obj->setViewMatrix(this->camera->calculateViewMatrix());
                 obj->setProjectionMatrix(calculateProjectionMatrix());
@@ -385,6 +391,8 @@ void Window::addRenderTarget(RenderTarget *target) {
 
 void Window::renderLightsToShadowMaps() {
 
+    std::vector<ShaderProgram> originalPrograms;
+
     for (auto &light : this->currentScene->directionalLights) {
         if (light->doesCastShadows == false) {
             continue;
@@ -393,25 +401,24 @@ void Window::renderLightsToShadowMaps() {
         glViewport(0, 0, shadowRenderTarget->texture.creationData.width,
                    shadowRenderTarget->texture.creationData.height);
         glBindFramebuffer(GL_FRAMEBUFFER, shadowRenderTarget->fbo);
+        glClearDepth(1.0);
         glClear(GL_DEPTH_BUFFER_BIT);
-        glDisable(GL_CULL_FACE);
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_FRONT);
         for (auto &obj : this->renderables) {
+            originalPrograms.push_back(obj->getShaderProgram().value());
             if (obj->getShaderProgram() == std::nullopt) {
                 continue;
             }
-            ShaderProgram program = obj->getShaderProgram().value();
-
             obj->setShader(this->depthProgram);
 
             std::tuple<glm::mat4, glm::mat4> lightSpace =
-                light->calculateLightSpaceMatrix({-50.0f, -50.0f, -50.0f},
-                                                 {50.0f, 50.0f, 50.0f});
+                light->calculateLightSpaceMatrix(this->renderables);
             glm::mat4 lightView = std::get<0>(lightSpace);
             glm::mat4 lightProjection = std::get<1>(lightSpace);
             obj->setProjectionMatrix(lightProjection);
             obj->setViewMatrix(lightView);
             obj->render();
-            obj->setShader(program);
         }
     }
 
@@ -423,15 +430,16 @@ void Window::renderLightsToShadowMaps() {
         glViewport(0, 0, shadowRenderTarget->texture.creationData.width,
                    shadowRenderTarget->texture.creationData.height);
         glBindFramebuffer(GL_FRAMEBUFFER, shadowRenderTarget->fbo);
+        glClearDepth(1.0);
         glClear(GL_DEPTH_BUFFER_BIT);
-        glDisable(GL_CULL_FACE);
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_FRONT);
         for (auto &obj : this->renderables) {
             if (obj->getShaderProgram() == std::nullopt) {
                 continue;
             }
             ShaderProgram program = obj->getShaderProgram().value();
 
-            obj->setShader(this->depthProgram);
             std::tuple<glm::mat4, glm::mat4> lightSpace =
                 light->calculateLightSpaceMatrix();
             glm::mat4 lightView = std::get<0>(lightSpace);
@@ -439,7 +447,13 @@ void Window::renderLightsToShadowMaps() {
             obj->setProjectionMatrix(lightProjection);
             obj->setViewMatrix(lightView);
             obj->render();
-            obj->setShader(program);
+        }
+    }
+
+    for (auto &renderable : this->renderables) {
+        if (renderable->getShaderProgram() != std::nullopt) {
+            renderable->setShader(originalPrograms.front());
+            originalPrograms.erase(originalPrograms.begin());
         }
     }
 }

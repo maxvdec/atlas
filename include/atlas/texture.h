@@ -45,7 +45,8 @@ enum class TextureType : int {
     Color = 0,
     Specular = 1,
     Cubemap = 2,
-    Depth = 3
+    Depth = 3,
+    DepthCube = 4
 };
 
 struct Texture {
@@ -81,7 +82,7 @@ struct Cubemap {
 class Window;
 class CoreObject;
 
-enum class RenderTargetType { Scene, Multisampled, Shadow };
+enum class RenderTargetType { Scene, Multisampled, Shadow, CubeShadow };
 
 class RenderTarget : public Renderable {
   public:
@@ -91,7 +92,8 @@ class RenderTarget : public Renderable {
     RenderTargetType type;
 
     RenderTarget(Window &window,
-                 RenderTargetType type = RenderTargetType::Scene);
+                 RenderTargetType type = RenderTargetType::Scene,
+                 int resolution = 1024);
 
     void display(Window &window, float zindex = 0);
     void hide();

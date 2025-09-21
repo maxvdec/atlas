@@ -132,6 +132,7 @@ class Window {
     Scene *currentScene = nullptr;
 
     void renderLightsToShadowMaps();
+    Size2d getFurthestPositions();
 
     Camera *camera = nullptr;
     float lastMouseX;

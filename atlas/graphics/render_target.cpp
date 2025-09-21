@@ -16,7 +16,8 @@
 #include "atlas/units.h"
 #include "atlas/window.h"
 
-RenderTarget::RenderTarget(Window &window, RenderTargetType type) {
+RenderTarget::RenderTarget(Window &window, RenderTargetType type,
+                           int resolution) {
     Size2d size = window.getSize();
     this->type = type;
 
@@ -106,7 +107,7 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type) {
         Id depthFBO;
         glGenFramebuffers(1, &depthFBO);
 
-        const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+        int SHADOW_WIDTH = resolution, SHADOW_HEIGHT = resolution;
 
         Id depthMap;
         glGenTextures(1, &depthMap);
@@ -134,6 +135,36 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type) {
         this->texture = texture;
         this->rbo = 0;
         this->resolveFbo = 0;
+    } else if (this->type == RenderTargetType::CubeShadow) {
+        Id depthFBO;
+        glGenFramebuffers(1, &depthFBO);
+
+        int SHADOW_WIDTH = resolution, SHADOW_HEIGHT = resolution;
+
+        Id depthCubemap;
+        glGenTextures(1, &depthCubemap);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
+        for (unsigned int i = 0; i < 6; ++i) {
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0,
+                         GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0,
+                         GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+        }
+
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S,
+                        GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T,
+                        GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R,
+                        GL_CLAMP_TO_EDGE);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
+        glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthCubemap,
+                             0);
+        glDrawBuffer(GL_NONE);
+        glReadBuffer(GL_NONE);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 }
 

@@ -397,8 +397,8 @@ void CoreObject::render() {
             shaderProgram.setUniform1i(baseName + ".textureIndex",
                                        boundTextures);
             std::tuple<glm::mat4, glm::mat4> lightSpace =
-                light->calculateLightSpaceMatrix({-50.0f, -50.0f, -50.0f},
-                                                 {50.0f, 50.0f, 50.0f});
+                light->calculateLightSpaceMatrix(
+                    Window::mainWindow->renderables);
             shaderProgram.setUniformMat4f(baseName + ".lightView",
                                           std::get<0>(lightSpace));
             shaderProgram.setUniformMat4f(baseName + ".lightProjection",

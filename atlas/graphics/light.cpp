@@ -12,9 +12,13 @@
 #include "atlas/object.h"
 #include "atlas/texture.h"
 #include "atlas/window.h"
+#include <iostream>
 #include <tuple>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <vector>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/string_cast.hpp>
 
 void Light::createDebugObject() {
     CoreObject sphere = createSphere(0.05f, 36, 18, this->color);
@@ -128,39 +132,108 @@ void Spotlight::lookAt(const Position3d &target) {
     updateDebugObjectRotation();
 }
 
-void Spotlight::castShadows(Window &window) {
+void Spotlight::castShadows(Window &window, int resolution) {
     if (this->shadowRenderTarget == nullptr) {
         this->shadowRenderTarget =
-            new RenderTarget(window, RenderTargetType::Shadow);
+            new RenderTarget(window, RenderTargetType::Shadow, resolution);
     }
     this->doesCastShadows = true;
 }
 
-void DirectionalLight::castShadows(Window &window) {
+void DirectionalLight::castShadows(Window &window, int resolution) {
     if (this->shadowRenderTarget == nullptr) {
         this->shadowRenderTarget =
-            new RenderTarget(window, RenderTargetType::Shadow);
+            new RenderTarget(window, RenderTargetType::Shadow, resolution);
     }
     this->doesCastShadows = true;
 }
 
-std::tuple<glm::mat4, glm::mat4>
-DirectionalLight::calculateLightSpaceMatrix(const glm::vec3 &sceneMin,
-                                            const glm::vec3 &sceneMax) const {
-    glm::vec3 sceneCenter = (sceneMin + sceneMax) * 0.5f;
-    glm::vec3 sceneSize = sceneMax - sceneMin;
-    float sceneRadius = glm::length(sceneSize) * 0.5f;
+std::tuple<glm::mat4, glm::mat4> DirectionalLight::calculateLightSpaceMatrix(
+    const std::vector<Renderable *> objects) const {
+
+    if (objects.empty()) {
+        glm::mat4 identity = glm::mat4(1.0f);
+        return {identity, identity};
+    }
+
+    glm::vec3 minPos(std::numeric_limits<float>::max());
+    glm::vec3 maxPos(std::numeric_limits<float>::lowest());
+
+    for (auto *obj : objects) {
+        glm::vec3 pos = obj->getPosition().toGlm();
+        glm::vec3 scale = obj->getScale().toGlm();
+
+        const auto &vertices = obj->getVertices();
+        if (vertices.empty())
+            continue;
+
+        glm::vec3 localMin(std::numeric_limits<float>::max());
+        glm::vec3 localMax(std::numeric_limits<float>::lowest());
+
+        for (const auto &vertex : vertices) {
+            glm::vec3 localPos = vertex.position.toGlm();
+            localMin = glm::min(localMin, localPos);
+            localMax = glm::max(localMax, localPos);
+        }
+
+        glm::vec3 scaledMin = localMin * scale;
+        glm::vec3 scaledMax = localMax * scale;
+        glm::vec3 worldMin = pos + scaledMin;
+        glm::vec3 worldMax = pos + scaledMax;
+
+        minPos = glm::min(minPos, worldMin);
+        maxPos = glm::max(maxPos, worldMax);
+    }
+
+    glm::vec3 padding(2.0f);
+    minPos -= padding;
+    maxPos += padding;
+
+    glm::vec3 center = (minPos + maxPos) * 0.5f;
+    glm::vec3 extent = maxPos - minPos;
 
     glm::vec3 lightDir = glm::normalize(direction.toGlm());
-    glm::vec3 lightPos = sceneCenter - lightDir * (sceneRadius + 10.0f);
 
-    float orthoSize = sceneRadius * 1.2f;
+    float sceneRadius = glm::length(extent) * 0.5f;
+    float lightDistance = sceneRadius + 50.0f;
+    glm::vec3 lightPos = center - lightDir * lightDistance;
+
+    glm::vec3 up =
+        glm::abs(lightDir.y) > 0.99f ? glm::vec3(0, 0, 1) : glm::vec3(0, 1, 0);
+    glm::mat4 lightView = glm::lookAt(lightPos, center, up);
+
+    std::vector<glm::vec3> corners = {glm::vec3(minPos.x, minPos.y, minPos.z),
+                                      glm::vec3(maxPos.x, minPos.y, minPos.z),
+                                      glm::vec3(minPos.x, maxPos.y, minPos.z),
+                                      glm::vec3(maxPos.x, maxPos.y, minPos.z),
+                                      glm::vec3(minPos.x, minPos.y, maxPos.z),
+                                      glm::vec3(maxPos.x, minPos.y, maxPos.z),
+                                      glm::vec3(minPos.x, maxPos.y, maxPos.z),
+                                      glm::vec3(maxPos.x, maxPos.y, maxPos.z)};
+
+    glm::vec3 lightSpaceMin(std::numeric_limits<float>::max());
+    glm::vec3 lightSpaceMax(std::numeric_limits<float>::lowest());
+
+    for (const auto &corner : corners) {
+        glm::vec4 lightSpaceCorner = lightView * glm::vec4(corner, 1.0f);
+        lightSpaceMin = glm::min(lightSpaceMin, glm::vec3(lightSpaceCorner));
+        lightSpaceMax = glm::max(lightSpaceMax, glm::vec3(lightSpaceCorner));
+    }
+
+    float left = lightSpaceMin.x;
+    float right = lightSpaceMax.x;
+    float bottom = lightSpaceMin.y;
+    float top = lightSpaceMax.y;
+    float near_plane = -lightSpaceMax.z - 10.0f;
+    float far_plane = -lightSpaceMin.z + 10.0f;
+
+    if (near_plane >= far_plane) {
+        near_plane = 0.1f;
+        far_plane = lightDistance * 2.0f;
+    }
+
     glm::mat4 lightProjection =
-        glm::ortho(-orthoSize, orthoSize, -orthoSize, orthoSize, 0.1f,
-                   sceneRadius * 2.0f + 20.0f);
-
-    glm::mat4 lightView =
-        glm::lookAt(lightPos, sceneCenter, glm::vec3(0.0f, 1.0f, 0.0f));
+        glm::ortho(left, right, bottom, top, near_plane, far_plane);
 
     return {lightView, lightProjection};
 }
@@ -174,4 +247,42 @@ std::tuple<glm::mat4, glm::mat4> Spotlight::calculateLightSpaceMatrix() const {
     glm::mat4 lightView =
         glm::lookAt(lightPos, lightPos + lightDir, glm::vec3(0.0f, 1.0f, 0.0f));
     return {lightView, lightProjection};
+}
+
+void Light::castShadows(Window &window, int resolution) {
+    if (this->shadowRenderTarget == nullptr) {
+        this->shadowRenderTarget =
+            new RenderTarget(window, RenderTargetType::CubeShadow, resolution);
+    }
+    this->doesCastShadows = true;
+}
+
+std::vector<glm::mat4> Light::calculateShadowTransforms() {
+    float aspect = (float)shadowRenderTarget->texture.creationData.width /
+                   (float)shadowRenderTarget->texture.creationData.height;
+    float near = 0.1f;
+    float far = this->distance;
+    glm::mat4 shadowProj =
+        glm::perspective(glm::radians(90.0f), aspect, near, far);
+    std::vector<glm::mat4> shadowTransforms;
+    glm::vec3 lightPos = this->position.toGlm();
+    shadowTransforms.push_back(
+        shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(1.0, 0.0, 0.0),
+                                 glm::vec3(0.0, -1.0, 0.0)));
+    shadowTransforms.push_back(
+        shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(-1.0, 0.0, 0.0),
+                                 glm::vec3(0.0, -1.0, 0.0)));
+    shadowTransforms.push_back(
+        shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0, 1.0, 0.0),
+                                 glm::vec3(0.0, 0.0, 1.0)));
+    shadowTransforms.push_back(
+        shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0, -1.0, 0.0),
+                                 glm::vec3(0.0, 0.0, -1.0)));
+    shadowTransforms.push_back(
+        shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0, 0.0, 1.0),
+                                 glm::vec3(0.0, -1.0, 0.0)));
+    shadowTransforms.push_back(
+        shadowProj * glm::lookAt(lightPos, lightPos + glm::vec3(0.0, 0.0, -1.0),
+                                 glm::vec3(0.0, -1.0, 0.0)));
+    return shadowTransforms;
 }

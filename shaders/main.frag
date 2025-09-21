@@ -229,11 +229,28 @@ float calculateShadow(ShadowParameters shadowParam, vec4 fragPosLightSpace) {
         return 0.0;
     }
     
-    float closestDepth = texture(textures[shadowParam.textureIndex], projCoords.xy).r;
     float currentDepth = projCoords.z;
     
-    float bias = 0.005;
-    float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
+    vec3 lightDir = normalize(-directionalLights[0].direction); 
+    vec3 normal = normalize(Normal);
+    float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
+    
+    float shadow = 0.0;
+    vec2 texelSize = 1.0 / textureSize(textures[shadowParam.textureIndex], 0);
+    
+    float distance = length(cameraPosition - FragPos);
+    int kernelSize = int(mix(1.0, 3.0, clamp(distance / 100.0, 0.0, 1.0)));
+    
+    int sampleCount = 0;
+    for(int x = -kernelSize; x <= kernelSize; ++x) {
+        for(int y = -kernelSize; y <= kernelSize; ++y) {
+            float pcfDepth = texture(textures[shadowParam.textureIndex], 
+                                   projCoords.xy + vec2(x, y) * texelSize).r; 
+            shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;        
+            sampleCount++;
+        }    
+    }
+    shadow /= float(sampleCount);
     
     return shadow;
 }

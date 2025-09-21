@@ -122,6 +122,14 @@ class CoreObject : public Renderable {
     inline void setShader(const ShaderProgram &shader) override {
         this->shaderProgram = shader;
     }
+
+    inline Position3d getPosition() const override { return position; }
+
+    inline std::vector<CoreVertex> getVertices() const override {
+        return vertices;
+    }
+
+    inline Size3d getScale() const override { return scale; }
 };
 
 CoreObject createBox(Size3d size, Color color = {1.0, 1.0, 1.0, 1.0});

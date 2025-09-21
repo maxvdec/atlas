@@ -32,6 +32,7 @@ class MainScene : public Scene {
             updateCamera = false;
             window.releaseMouse();
         }
+        quadObject.move({0.0f, sin(window.getTime()) * 0.008f, 0.0f});
     }
 
     void onMouseMove(Window &window, Movement2d movement) override {
@@ -97,14 +98,13 @@ class MainScene : public Scene {
         window.addObject(&quadObject);
         window.addObject(&quadObject2);
 
-        light = DirectionalLight({0.0f, -1.0f, 0.0f}, Color{1.0, 0.95, 0.85});
-
+        light = DirectionalLight({0.3f, -1.0f, 0.0f}, Color{1.0, 0.95, 0.85});
+        light.castShadows(window, 2048);
         this->addDirectionalLight(&light);
-        light.castShadows(window);
 
-        // renderTarget = RenderTarget(window, RenderTargetType::Multisampled);
-        // renderTarget.display(window);
-        // window.addRenderTarget(&renderTarget);
+        renderTarget = RenderTarget(window, RenderTargetType::Multisampled);
+        renderTarget.display(window);
+        window.addRenderTarget(&renderTarget);
     }
 };
 

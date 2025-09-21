@@ -11,8 +11,12 @@
 #define ATLAS_RENDERABLE_H
 
 #include "atlas/core/shader.h"
+#include "atlas/units.h"
 #include <glm/glm.hpp>
 #include <optional>
+#include <vector>
+
+struct CoreVertex;
 
 class Renderable {
   public:
@@ -24,6 +28,9 @@ class Renderable {
         return std::nullopt;
     };
     virtual void setShader(const ShaderProgram &shader) {};
+    virtual Position3d getPosition() const { return {0, 0, 0}; };
+    virtual std::vector<CoreVertex> getVertices() const { return {}; };
+    virtual Size3d getScale() const { return {1, 1, 1}; };
     virtual ~Renderable() = default;
 };
 
