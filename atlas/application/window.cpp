@@ -18,6 +18,8 @@
 #include <string>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/string_cast.hpp>
 #include <tuple>
 
 Window *Window::mainWindow = nullptr;
@@ -113,9 +115,10 @@ Window::Window(WindowConfiguration config)
     FragmentShader fragmentShader =
         FragmentShader::fromDefaultShader(AtlasFragmentShader::Empty);
     fragmentShader.compile();
-    ShaderProgram program;
+    ShaderProgram program = ShaderProgram();
     program.vertexShader = vertexShader;
     program.fragmentShader = fragmentShader;
+    program.compile();
     this->depthProgram = program;
 }
 
@@ -173,6 +176,7 @@ void Window::run() {
                    shadowRenderTarget->texture.creationData.height);
         glBindFramebuffer(GL_FRAMEBUFFER, shadowRenderTarget->fbo);
         glClear(GL_DEPTH_BUFFER_BIT);
+        glDisable(GL_CULL_FACE);
         for (auto &obj : this->renderables) {
             if (obj->getShaderProgram() == std::nullopt) {
                 continue;
@@ -180,20 +184,23 @@ void Window::run() {
             ShaderProgram program = obj->getShaderProgram().value();
 
             obj->setShader(this->depthProgram);
-            float near_plane = 1.0f, far_plane = 7.5f;
+            float near_plane = 0.1f, far_plane = 10.f;
             glm::mat4 lightProjection =
                 glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
-            glm::mat4 lightView = glm::lookAt(glm::vec3(-2.0f, 4.0f, -1.0f),
-                                              glm::vec3(0.0f, 0.0f, 0.0f),
-                                              glm::vec3(0.0f, 1.0f, 0.0f));
-            glm::mat4 lightSpaceMatrix = lightProjection * lightView;
-            obj->setProjectionMatrix(lightSpaceMatrix);
+            glm::vec3 lightPos = glm::vec3(0.1f, 5.0f, 0.1f);
+            glm::vec3 lightTarget = glm::vec3(0.0f, 0.0f, 0.0f);
+            glm::mat4 lightView =
+                glm::lookAt(lightPos, lightTarget, glm::vec3(0.0f, 1.0f, 0.0f));
+            obj->setProjectionMatrix(lightProjection);
+            obj->setViewMatrix(lightView);
             obj->render();
             obj->setShader(program);
         }
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_FRONT);
+        glFrontFace(GL_CW);
         // Render to the targets
         for (auto &target : this->renderTargets) {
             glBindFramebuffer(GL_FRAMEBUFFER, target->fbo);
