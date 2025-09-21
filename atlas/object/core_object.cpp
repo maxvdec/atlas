@@ -16,6 +16,7 @@
 #include <glad/glad.h>
 #include <iostream>
 #include <random>
+#include <string>
 #include <vector>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -246,6 +247,8 @@ void CoreObject::render() {
     shaderProgram.setUniform1i("useColor", useColor ? 1 : 0);
     shaderProgram.setUniform1i("useTexture", useTexture ? 1 : 0);
 
+    int boundTextures = 0;
+
     if (!textures.empty() && useTexture &&
         std::find(shaderProgram.capabilities.begin(),
                   shaderProgram.capabilities.end(),
@@ -270,6 +273,7 @@ void CoreObject::render() {
         for (int i = 0; i < count; i++) {
             glActiveTexture(GL_TEXTURE0 + i);
             glBindTexture(GL_TEXTURE_2D, textures[i].id);
+            boundTextures++;
         }
     }
 
@@ -368,6 +372,78 @@ void CoreObject::render() {
         }
     }
 
+    if (std::find(shaderProgram.capabilities.begin(),
+                  shaderProgram.capabilities.end(),
+                  ShaderCapability::Shadows) !=
+        shaderProgram.capabilities.end()) {
+        // Bind shadow maps
+        Scene *scene = Window::mainWindow->currentScene;
+
+        int boundParameters = 0;
+
+        // Cycle though directional lights
+        for (auto light : scene->directionalLights) {
+            if (!light->doesCastShadows) {
+                continue;
+            }
+            if (boundTextures >= 16) {
+                break;
+            }
+
+            glActiveTexture(GL_TEXTURE0 + boundTextures);
+            glBindTexture(GL_TEXTURE_2D, light->shadowRenderTarget->texture.id);
+            std::string baseName =
+                "shadowParams[" + std::to_string(boundParameters) + "]";
+            shaderProgram.setUniform1i(baseName + ".textureIndex",
+                                       boundTextures);
+            std::tuple<glm::mat4, glm::mat4> lightSpace =
+                light->calculateLightSpaceMatrix({-50.0f, -50.0f, -50.0f},
+                                                 {50.0f, 50.0f, 50.0f});
+            shaderProgram.setUniformMat4f(baseName + ".lightView",
+                                          std::get<0>(lightSpace));
+            shaderProgram.setUniformMat4f(baseName + ".lightProjection",
+                                          std::get<1>(lightSpace));
+
+            boundParameters++;
+            boundTextures++;
+        }
+
+        // Cycle though spotlights
+        for (auto light : scene->spotlights) {
+            if (!light->doesCastShadows) {
+                continue;
+            }
+            if (boundTextures >= 16) {
+                break;
+            }
+
+            glActiveTexture(GL_TEXTURE0 + boundTextures);
+            glBindTexture(GL_TEXTURE_2D, light->shadowRenderTarget->texture.id);
+            std::string baseName =
+                "shadowParams[" + std::to_string(boundParameters) + "]";
+            shaderProgram.setUniform1i(baseName + ".textureIndex",
+                                       boundTextures);
+            std::tuple<glm::mat4, glm::mat4> lightSpace =
+                light->calculateLightSpaceMatrix();
+            shaderProgram.setUniformMat4f(baseName + ".lightView",
+                                          std::get<0>(lightSpace));
+            shaderProgram.setUniformMat4f(baseName + ".lightProjection",
+                                          std::get<1>(lightSpace));
+
+            boundParameters++;
+            boundTextures++;
+        }
+
+        shaderProgram.setUniform1i("shadowParamCount", boundParameters);
+
+        GLint units[16];
+        for (int i = 0; i < boundTextures; i++)
+            units[i] = i;
+
+        glUniform1iv(glGetUniformLocation(shaderProgram.programId, "textures"),
+                     boundTextures, units);
+    }
+
     glBindVertexArray(vao);
     if (!indices.empty()) {
         glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
@@ -398,8 +474,8 @@ CoreObject CoreObject::clone() const {
 
 void CoreObject::updateVertices() {
     if (vbo == 0 || vertices.empty()) {
-        throw std::runtime_error(
-            "Cannot update vertices: VBO not initialized or empty vertex list");
+        throw std::runtime_error("Cannot update vertices: VBO not "
+                                 "initialized or empty vertex list");
     }
 
     glBindBuffer(GL_ARRAY_BUFFER, vbo);

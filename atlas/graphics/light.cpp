@@ -12,6 +12,9 @@
 #include "atlas/object.h"
 #include "atlas/texture.h"
 #include "atlas/window.h"
+#include <tuple>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 void Light::createDebugObject() {
     CoreObject sphere = createSphere(0.05f, 36, 18, this->color);
@@ -139,4 +142,36 @@ void DirectionalLight::castShadows(Window &window) {
             new RenderTarget(window, RenderTargetType::Shadow);
     }
     this->doesCastShadows = true;
+}
+
+std::tuple<glm::mat4, glm::mat4>
+DirectionalLight::calculateLightSpaceMatrix(const glm::vec3 &sceneMin,
+                                            const glm::vec3 &sceneMax) const {
+    glm::vec3 sceneCenter = (sceneMin + sceneMax) * 0.5f;
+    glm::vec3 sceneSize = sceneMax - sceneMin;
+    float sceneRadius = glm::length(sceneSize) * 0.5f;
+
+    glm::vec3 lightDir = glm::normalize(direction.toGlm());
+    glm::vec3 lightPos = sceneCenter - lightDir * (sceneRadius + 10.0f);
+
+    float orthoSize = sceneRadius * 1.2f;
+    glm::mat4 lightProjection =
+        glm::ortho(-orthoSize, orthoSize, -orthoSize, orthoSize, 0.1f,
+                   sceneRadius * 2.0f + 20.0f);
+
+    glm::mat4 lightView =
+        glm::lookAt(lightPos, sceneCenter, glm::vec3(0.0f, 1.0f, 0.0f));
+
+    return {lightView, lightProjection};
+}
+
+std::tuple<glm::mat4, glm::mat4> Spotlight::calculateLightSpaceMatrix() const {
+    float near_plane = 0.1f, far_plane = 100.f;
+    glm::mat4 lightProjection =
+        glm::perspective(outerCutoff * 2.0f, 1.0f, near_plane, far_plane);
+    glm::vec3 lightDir = glm::normalize(direction.toGlm());
+    glm::vec3 lightPos = position.toGlm();
+    glm::mat4 lightView =
+        glm::lookAt(lightPos, lightPos + lightDir, glm::vec3(0.0f, 1.0f, 0.0f));
+    return {lightView, lightProjection};
 }

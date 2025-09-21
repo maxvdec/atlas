@@ -49,6 +49,12 @@ struct SpotLight {
     vec3 specular;
 };
 
+struct ShadowParameters {
+    mat4 lightView;
+    mat4 lightProjection;
+    int textureIndex;
+};
+
 // ----- Uniforms -----
 uniform sampler2D textures[16];
 uniform int textureTypes[16];
@@ -65,6 +71,9 @@ uniform int pointLightCount;
 
 uniform SpotLight spotlights[32];
 uniform int spotlightCount;
+
+uniform ShadowParameters shadowParams[10];
+uniform int shadowParamCount;
 
 uniform vec3 cameraPosition;
 
@@ -209,6 +218,36 @@ vec3 calcAllSpotLights(vec3 norm, vec3 fragPos, vec3 viewDir) {
     return diffuseSum + specularSum;
 }
 
+// ----- Shadow Calculations -----
+float calculateShadow(ShadowParameters shadowParam, vec4 fragPosLightSpace) {
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    projCoords = projCoords * 0.5 + 0.5;
+    
+    if (projCoords.x < 0.0 || projCoords.x > 1.0 || 
+        projCoords.y < 0.0 || projCoords.y > 1.0 || 
+        projCoords.z > 1.0) {
+        return 0.0;
+    }
+    
+    float closestDepth = texture(textures[shadowParam.textureIndex], projCoords.xy).r;
+    float currentDepth = projCoords.z;
+    
+    float bias = 0.005;
+    float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
+    
+    return shadow;
+}
+
+float calculateAllShadows() {
+    float totalShadow = 0.0;
+    for (int i = 0; i < shadowParamCount; i++) {
+        vec4 fragPosLightSpace = shadowParams[i].lightProjection * shadowParams[i].lightView * vec4(FragPos, 1.0);
+        float shadow = calculateShadow(shadowParams[i], fragPosLightSpace);
+        totalShadow = max(totalShadow, shadow);
+    }
+    return totalShadow;
+}
+
 // ----- Main -----
 void main() {
     vec4 baseColor;
@@ -232,7 +271,9 @@ void main() {
 
     vec3 lightContribution = directionalLights + pointLights + spotLightsContrib;
 
-    vec3 finalColor = (ambient + lightContribution) * baseColor.rgb;
+    float shadow = calculateAllShadows();
+
+    vec3 finalColor = (ambient + (1.0 - shadow) * lightContribution) * baseColor.rgb;
 
     FragColor = vec4(finalColor, baseColor.a);
 

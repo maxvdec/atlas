@@ -76,9 +76,12 @@ class DirectionalLight {
   private:
     bool doesCastShadows = false;
 
-    std::tuple<glm::mat4, glm::mat4> calculateLightSpaceMatrix() const;
+    std::tuple<glm::mat4, glm::mat4>
+    calculateLightSpaceMatrix(const glm::vec3 &sceneMin,
+                              const glm::vec3 &sceneMax) const;
 
     friend class Window;
+    friend class CoreObject;
 };
 
 struct Spotlight {
@@ -120,6 +123,7 @@ struct Spotlight {
     std::tuple<glm::mat4, glm::mat4> calculateLightSpaceMatrix() const;
 
     friend class Window;
+    friend class CoreObject;
 };
 
 #endif // ATLAS_LIGHT_H

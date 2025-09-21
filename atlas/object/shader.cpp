@@ -32,7 +32,8 @@ VertexShader VertexShader::fromDefaultShader(AtlasVertexShader shader) {
         vertexShader = VertexShader::fromSource(MAIN_VERT);
         vertexShader.desiredAttributes = {0, 1, 2, 3};
         vertexShader.capabilities = {ShaderCapability::Lighting,
-                                     ShaderCapability::Textures};
+                                     ShaderCapability::Textures,
+                                     ShaderCapability::Shadows};
         break;
     }
     case AtlasVertexShader::Texture: {

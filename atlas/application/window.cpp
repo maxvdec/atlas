@@ -384,6 +384,7 @@ void Window::addRenderTarget(RenderTarget *target) {
 }
 
 void Window::renderLightsToShadowMaps() {
+
     for (auto &light : this->currentScene->directionalLights) {
         if (light->doesCastShadows == false) {
             continue;
@@ -401,14 +402,12 @@ void Window::renderLightsToShadowMaps() {
             ShaderProgram program = obj->getShaderProgram().value();
 
             obj->setShader(this->depthProgram);
-            float near_plane = 0.1f, far_plane = 10.f;
-            glm::mat4 lightProjection =
-                glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
-            glm::vec3 lightDir = glm::normalize(light->direction.toGlm());
-            glm::vec3 sceneCenter = glm::vec3(0.0f, 0.0f, 0.0f);
-            glm::vec3 lightPos = sceneCenter - lightDir * 10.0f;
-            glm::mat4 lightView =
-                glm::lookAt(lightPos, sceneCenter, glm::vec3(0.0f, 1.0f, 0.0f));
+
+            std::tuple<glm::mat4, glm::mat4> lightSpace =
+                light->calculateLightSpaceMatrix({-50.0f, -50.0f, -50.0f},
+                                                 {50.0f, 50.0f, 50.0f});
+            glm::mat4 lightView = std::get<0>(lightSpace);
+            glm::mat4 lightProjection = std::get<1>(lightSpace);
             obj->setProjectionMatrix(lightProjection);
             obj->setViewMatrix(lightView);
             obj->render();
@@ -433,13 +432,10 @@ void Window::renderLightsToShadowMaps() {
             ShaderProgram program = obj->getShaderProgram().value();
 
             obj->setShader(this->depthProgram);
-            float near_plane = 0.1f, far_plane = 100.f;
-            glm::mat4 lightProjection = glm::perspective(
-                light->outerCutoff * 2.0f, 1.0f, near_plane, far_plane);
-            glm::vec3 lightDir = glm::normalize(light->direction.toGlm());
-            glm::vec3 lightPos = light->position.toGlm();
-            glm::mat4 lightView = glm::lookAt(lightPos, lightPos + lightDir,
-                                              glm::vec3(0.0f, 1.0f, 0.0f));
+            std::tuple<glm::mat4, glm::mat4> lightSpace =
+                light->calculateLightSpaceMatrix();
+            glm::mat4 lightView = std::get<0>(lightSpace);
+            glm::mat4 lightProjection = std::get<1>(lightSpace);
             obj->setProjectionMatrix(lightProjection);
             obj->setViewMatrix(lightView);
             obj->render();

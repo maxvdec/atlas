@@ -31,7 +31,7 @@ enum class AtlasVertexShader {
     Depth,
 };
 
-enum class ShaderCapability { Lighting, Textures };
+enum class ShaderCapability { Lighting, Textures, Shadows };
 
 struct VertexShader {
     const char *source;

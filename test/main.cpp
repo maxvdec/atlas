@@ -18,7 +18,7 @@ class MainScene : public Scene {
   public:
     CoreObject quadObject;
     CoreObject quadObject2;
-    Spotlight light;
+    DirectionalLight light;
     Camera camera;
     RenderTarget renderTarget;
     Skybox skybox;
@@ -97,14 +97,10 @@ class MainScene : public Scene {
         window.addObject(&quadObject);
         window.addObject(&quadObject2);
 
-        light = Spotlight({-1.0f, 1.0f, 0.0f}, {0.0f, -1.0f, 0.0f});
-        light.lookAt({0.0f, 0.0f, 0.0f});
-        light.createDebugObject();
-        light.addDebugObject(window);
+        light = DirectionalLight({0.0f, -1.0f, 0.0f}, Color{1.0, 0.95, 0.85});
 
-        this->addSpotlight(&light);
+        this->addDirectionalLight(&light);
         light.castShadows(window);
-        light.shadowRenderTarget->display(window);
 
         // renderTarget = RenderTarget(window, RenderTargetType::Multisampled);
         // renderTarget.display(window);
