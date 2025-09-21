@@ -7,12 +7,14 @@
  Copyright (c) 2025 maxvdec
 */
 
+#include "atlas/core/shader.h"
 #include "atlas/object.h"
 #include "atlas/units.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <atlas/window.h>
 #include <iostream>
+#include <optional>
 #include <string>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -102,6 +104,19 @@ Window::Window(WindowConfiguration config)
                 window->currentScene->onMouseScroll(*window, offset);
             }
         });
+
+    this->shadowRenderTarget =
+        std::make_shared<RenderTarget>(*this, RenderTargetType::Shadow);
+    VertexShader vertexShader =
+        VertexShader::fromDefaultShader(AtlasVertexShader::Depth);
+    vertexShader.compile();
+    FragmentShader fragmentShader =
+        FragmentShader::fromDefaultShader(AtlasFragmentShader::Empty);
+    fragmentShader.compile();
+    ShaderProgram program;
+    program.vertexShader = vertexShader;
+    program.fragmentShader = fragmentShader;
+    this->depthProgram = program;
 }
 
 std::tuple<int, int> Window::getCursorPosition() {
@@ -154,6 +169,31 @@ void Window::run() {
 
         currentScene->update(*this);
 
+        glViewport(0, 0, shadowRenderTarget->texture.creationData.width,
+                   shadowRenderTarget->texture.creationData.height);
+        glBindFramebuffer(GL_FRAMEBUFFER, shadowRenderTarget->fbo);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        for (auto &obj : this->renderables) {
+            if (obj->getShaderProgram() == std::nullopt) {
+                continue;
+            }
+            ShaderProgram program = obj->getShaderProgram().value();
+
+            obj->setShader(this->depthProgram);
+            float near_plane = 1.0f, far_plane = 7.5f;
+            glm::mat4 lightProjection =
+                glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, near_plane, far_plane);
+            glm::mat4 lightView = glm::lookAt(glm::vec3(-2.0f, 4.0f, -1.0f),
+                                              glm::vec3(0.0f, 0.0f, 0.0f),
+                                              glm::vec3(0.0f, 1.0f, 0.0f));
+            glm::mat4 lightSpaceMatrix = lightProjection * lightView;
+            obj->setProjectionMatrix(lightSpaceMatrix);
+            obj->render();
+            obj->setShader(program);
+        }
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
         // Render to the targets
         for (auto &target : this->renderTargets) {
             glBindFramebuffer(GL_FRAMEBUFFER, target->fbo);
@@ -184,13 +224,7 @@ void Window::run() {
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        if (this->renderTargets.size() > 0) {
-            glDisable(GL_CULL_FACE);
-            for (auto &obj : this->preferenceRenderables) {
-                obj->render();
-            }
-        } else {
-            std::cout << "=== SCREEN PASS (NORMAL) ===" << std::endl;
+        if (this->renderTargets.size() == 0) {
             for (auto &obj : this->renderables) {
                 obj->setViewMatrix(this->camera->calculateViewMatrix());
                 obj->setProjectionMatrix(calculateProjectionMatrix());
@@ -198,9 +232,24 @@ void Window::run() {
             }
         }
 
+        glDisable(GL_CULL_FACE);
+        for (auto &obj : this->preferenceRenderables) {
+            obj->render();
+        }
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
+}
+
+void Window::debugDisplayDepthMap() {
+    if (this->shadowRenderTarget == nullptr) {
+        throw std::runtime_error("No shadow render target available");
+    }
+    if (!this->debug) {
+        return;
+    }
+    this->shadowRenderTarget->display(*this);
 }
 
 void Window::addObject(Renderable *obj) { this->renderables.push_back(obj); }

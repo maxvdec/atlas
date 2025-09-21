@@ -10,7 +10,9 @@
 #ifndef ATLAS_RENDERABLE_H
 #define ATLAS_RENDERABLE_H
 
+#include "atlas/core/shader.h"
 #include <glm/glm.hpp>
+#include <optional>
 
 class Renderable {
   public:
@@ -18,6 +20,10 @@ class Renderable {
     virtual void initialize() {};
     virtual void setViewMatrix(const glm::mat4 &view) {};
     virtual void setProjectionMatrix(const glm::mat4 &projection) {};
+    virtual std::optional<ShaderProgram> getShaderProgram() {
+        return std::nullopt;
+    };
+    virtual void setShader(const ShaderProgram &shader) {};
     virtual ~Renderable() = default;
 };
 

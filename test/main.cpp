@@ -12,6 +12,8 @@
 #include <memory>
 #include <vector>
 
+#define ATLAS_DEBUG
+
 class MainScene : public Scene {
   public:
     CoreObject quadObject;
@@ -20,19 +22,27 @@ class MainScene : public Scene {
     Camera camera;
     RenderTarget renderTarget;
     Skybox skybox;
+    bool updateCamera = true;
 
     void update(Window &window) override {
+        if (!updateCamera)
+            return;
         camera.update(window);
         if (window.isKeyPressed(Key::Escape)) {
+            updateCamera = false;
             window.releaseMouse();
         }
     }
 
     void onMouseMove(Window &window, Movement2d movement) override {
+        if (!updateCamera)
+            return;
         camera.updateLook(window, movement);
     }
 
     void onMouseScroll(Window &window, Movement2d offset) override {
+        if (!updateCamera)
+            return;
         camera.updateZoom(window, offset);
     }
 
@@ -94,9 +104,12 @@ class MainScene : public Scene {
 
         this->addSpotlight(&light);
 
-        renderTarget = RenderTarget(window, RenderTargetType::Multisampled);
-        renderTarget.display(window);
-        window.addRenderTarget(&renderTarget);
+        window.activateDebug();
+        window.debugDisplayDepthMap();
+
+        // renderTarget = RenderTarget(window, RenderTargetType::Multisampled);
+        // renderTarget.display(window);
+        // window.addRenderTarget(&renderTarget);
     }
 };
 

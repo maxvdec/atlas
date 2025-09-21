@@ -41,7 +41,12 @@ struct TextureParameters {
     TextureFilteringMode magnifyingFilter = TextureFilteringMode::Linear;
 };
 
-enum class TextureType : int { Color = 0, Specular = 1, Cubemap = 2 };
+enum class TextureType : int {
+    Color = 0,
+    Specular = 1,
+    Cubemap = 2,
+    Depth = 3
+};
 
 struct Texture {
     Resource resource;
@@ -76,7 +81,7 @@ struct Cubemap {
 class Window;
 class CoreObject;
 
-enum class RenderTargetType { Scene, Multisampled };
+enum class RenderTargetType { Scene, Multisampled, Shadow };
 
 class RenderTarget : public Renderable {
   public:

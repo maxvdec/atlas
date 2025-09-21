@@ -2,6 +2,19 @@
 #ifndef ATLAS_GENERATED_SHADERS_H
 #define ATLAS_GENERATED_SHADERS_H
 
+static const char* DEPTH_VERT = R"(
+#version 330 core
+layout (location = 0) in vec3 aPos;
+
+uniform mat4 projection; // the light space matrix
+uniform mat4 model;
+
+void main() {
+    gl_Position = projection * model * vec4(aPos, 1.0);
+}
+
+)";
+
 static const char* SKYBOX_FRAG = R"(
 #version 330 core
 out vec4 FragColor;
@@ -14,6 +27,13 @@ void main()
 {    
     FragColor = texture(skybox, TexCoords);
 }
+
+)";
+
+static const char* EMPTY_FRAG = R"(
+#version 330
+
+void main() {}
 
 )";
 
@@ -36,11 +56,20 @@ in vec2 TexCoord;
 
 out vec4 FragColor;
 
+const int TEXTURE_COLOR = 0;
+const int TEXTURE_DEPTH = 3;
+
 uniform sampler2D Texture;
+uniform int TextureType;
 
 void main() {
-    vec3 col = texture(Texture, TexCoord).rgb;
-    FragColor = vec4(col, 1.0);
+    if (TextureType == TEXTURE_COLOR) {
+        vec3 col = texture(Texture, TexCoord).rgb;
+        FragColor = vec4(col, 1.0);
+    } else if (TextureType == TEXTURE_DEPTH) {
+        float depth = texture(Texture, TexCoord).r;
+        FragColor = vec4(vec3(depth), 1.0);
+    }
 }
 
 )";

@@ -227,8 +227,6 @@ void CoreObject::initialize() {
 
 void CoreObject::render() {
     if (!isVisible) {
-        std::cout << "Object " << id << " is hidden, skipping render call."
-                  << std::endl;
         return;
     }
     if (shaderProgram.programId == 0) {

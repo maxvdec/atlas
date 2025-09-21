@@ -102,6 +102,38 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type) {
         texture.type = TextureType::Color;
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    } else if (this->type == RenderTargetType::Shadow) {
+        Id depthFBO;
+        glGenFramebuffers(1, &depthFBO);
+
+        const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+
+        Id depthMap;
+        glGenTextures(1, &depthMap);
+        glBindTexture(GL_TEXTURE_2D, depthMap);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH,
+                     SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                               GL_TEXTURE_2D, depthMap, 0);
+        glDrawBuffer(GL_NONE);
+        glReadBuffer(GL_NONE);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        Texture texture;
+        texture.id = depthMap;
+        texture.creationData = {SHADOW_WIDTH, SHADOW_HEIGHT, 1};
+        texture.type = TextureType::Depth;
+
+        this->fbo = depthFBO;
+        this->texture = texture;
+        this->rbo = 0;
+        this->resolveFbo = 0;
     }
 }
 
@@ -185,6 +217,8 @@ void RenderTarget::render() {
     glUseProgram(obj->shaderProgram.programId);
 
     obj->shaderProgram.setUniform1i("Texture", 0);
+    obj->shaderProgram.setUniform1i("TextureType",
+                                    static_cast<int>(texture.type));
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture.id);
