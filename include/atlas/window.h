@@ -121,6 +121,10 @@ class Window {
     inline void activateDebug() { this->debug = true; }
     inline void deactivateDebug() { this->debug = false; }
 
+    inline float getDeltaTime() { return this->deltaTime; }
+
+    float gravity = 9.81f;
+
   private:
     CoreWindowReference windowRef;
     std::vector<Renderable *> renderables;
@@ -139,7 +143,7 @@ class Window {
     float lastMouseY;
 
     float lastTime = 0.0f;
-    int frameCount = 0;
+    float deltaTime = 0.0f;
 
     ShaderProgram depthProgram;
 

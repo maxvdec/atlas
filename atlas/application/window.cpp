@@ -142,7 +142,6 @@ void Window::run() {
     }
     GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
 
-    // glEnable(GL_FRAMEBUFFER_SRGB);
     glEnable(GL_MULTISAMPLE);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
@@ -153,24 +152,22 @@ void Window::run() {
     glFrontFace(GL_CW);
 
     while (!glfwWindowShouldClose(window)) {
+        float currentTime = static_cast<float>(glfwGetTime());
+        this->deltaTime = currentTime - this->lastTime;
+        lastTime = currentTime;
+
         glEnable(GL_CULL_FACE);
         glCullFace(GL_FRONT);
         glFrontFace(GL_CW);
 
-        frameCount++;
-
-        // Update FPS
-        if (getTime() - lastTime >= 1.0f) {
-            std::string newTitle =
-                title + " - FPS: " + std::to_string(frameCount);
-            glfwSetWindowTitle(window, newTitle.c_str());
-            frameCount = 0;
-            lastTime = getTime();
-        }
-
         currentScene->update(*this);
 
         renderLightsToShadowMaps();
+
+        // Update the renderables
+        for (auto &obj : this->renderables) {
+            obj->update(*this);
+        }
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glEnable(GL_CULL_FACE);

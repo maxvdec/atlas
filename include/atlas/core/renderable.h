@@ -17,11 +17,13 @@
 #include <vector>
 
 struct CoreVertex;
+class Window;
 
 class Renderable {
   public:
     virtual void render() = 0;
     virtual void initialize() {};
+    virtual void update(Window &window) {};
     virtual void setViewMatrix(const glm::mat4 &view) {};
     virtual void setProjectionMatrix(const glm::mat4 &projection) {};
     virtual std::optional<ShaderProgram> getShaderProgram() {

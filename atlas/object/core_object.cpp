@@ -483,3 +483,22 @@ void CoreObject::updateVertices() {
                     vertices.data());
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
+
+void CoreObject::update(Window &window) {
+    if (!hasPhysics)
+        return;
+
+    this->body.orientation = this->rotation.toGlmQuat();
+    this->body.position = this->position;
+
+    this->body.update(window);
+
+    this->position = this->body.position;
+    this->rotation = Rotation3d::fromGlmQuat(this->body.orientation);
+    updateModelMatrix();
+}
+
+void CoreObject::setupPhysics(Body body) {
+    this->body = body;
+    this->hasPhysics = true;
+}

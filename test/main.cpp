@@ -62,7 +62,7 @@ class MainScene : public Scene {
 
     void initialize(Window &window) override {
         camera = Camera();
-        camera.setPosition({-1.0, 3.0, 0.0});
+        camera.setPosition({-5.0, 2.0, 0.0});
         camera.lookAt({0.0, 0.0, 0.0});
         window.setCamera(&camera);
 
@@ -72,14 +72,21 @@ class MainScene : public Scene {
         skybox.display(window);
 
         plane = createDebugSphere(5.0, 64, 64);
+        plane.body.invMass = 0.0f;
+
         plane.setPosition({0.25, -5.5, 0.0});
+
         plane2 = plane.clone();
         plane2.setPosition({-0.25, -5.5, 0.0});
+        plane.body.invMass = 0.0f;
+
         window.addObject(&plane);
         window.addObject(&plane2);
-        sphere = createDebugSphere(0.1);
-        sphere.setPosition({0.0, 0.5, 0.0});
+
+        sphere = createDebugSphere(0.1, 32, 32);
+        sphere.setPosition({0.0, 4, 0.0});
         sphere.setRotation({0.0, 90.0, 90.0});
+
         window.addObject(&sphere);
 
         Color sunWarm = Color::white();

@@ -28,17 +28,31 @@ add_custom_command(
     COMMENT "Packing shaders into shaders.h"
 )
 
-file(GLOB_RECURSE SOURCES atlas/*.cpp extern/*.c)
-
-add_library(atlas ${SOURCES} ${SHADER_OUTPUT_FILE})
+# Find packages
 
 find_package(OpenGL REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
 
-target_link_libraries(atlas PUBLIC OpenGL::GL glfw glm::glm)
+# Bezel library
+
+file(GLOB_RECURSE BEZEL_SOURCES bezel/*.cpp)
+
+add_library(bezel ${BEZEL_SOURCES})
+
+target_link_libraries(bezel PRIVATE glfw glm::glm)
+
+# Atlas library
+
+file(GLOB_RECURSE SOURCES atlas/*.cpp extern/*.c)
+
+add_library(atlas ${SOURCES} ${SHADER_OUTPUT_FILE})
+
+target_link_libraries(atlas PUBLIC OpenGL::GL glfw glm::glm bezel)
 
 target_compile_definitions(atlas PRIVATE ATLAS_LIB GL_SILENT_DEPRECATION)
+
+# Atlas test executable
 
 file(GLOB_RECURSE TEST_SOURCES test/*.cpp)
 
