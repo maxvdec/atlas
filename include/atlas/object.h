@@ -114,6 +114,22 @@ class CoreObject : public Renderable {
     void render() override;
     void setViewMatrix(const glm::mat4 &view) override;
     void setProjectionMatrix(const glm::mat4 &projection) override;
+
+    inline std::optional<ShaderProgram> getShaderProgram() override {
+        return this->shaderProgram;
+    }
+
+    inline void setShader(const ShaderProgram &shader) override {
+        this->shaderProgram = shader;
+    }
+
+    inline Position3d getPosition() const override { return position; }
+
+    inline std::vector<CoreVertex> getVertices() const override {
+        return vertices;
+    }
+
+    inline Size3d getScale() const override { return scale; }
 };
 
 CoreObject createBox(Size3d size, Color color = {1.0, 1.0, 1.0, 1.0});

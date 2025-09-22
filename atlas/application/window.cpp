@@ -7,15 +7,19 @@
  Copyright (c) 2025 maxvdec
 */
 
+#include "atlas/core/shader.h"
 #include "atlas/object.h"
 #include "atlas/units.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <atlas/window.h>
 #include <iostream>
+#include <optional>
 #include <string>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/string_cast.hpp>
 #include <tuple>
 
 Window *Window::mainWindow = nullptr;
@@ -102,6 +106,18 @@ Window::Window(WindowConfiguration config)
                 window->currentScene->onMouseScroll(*window, offset);
             }
         });
+
+    VertexShader vertexShader =
+        VertexShader::fromDefaultShader(AtlasVertexShader::Depth);
+    vertexShader.compile();
+    FragmentShader fragmentShader =
+        FragmentShader::fromDefaultShader(AtlasFragmentShader::Empty);
+    fragmentShader.compile();
+    ShaderProgram program = ShaderProgram();
+    program.vertexShader = vertexShader;
+    program.fragmentShader = fragmentShader;
+    program.compile();
+    this->depthProgram = program;
 }
 
 std::tuple<int, int> Window::getCursorPosition() {
@@ -154,6 +170,12 @@ void Window::run() {
 
         currentScene->update(*this);
 
+        renderLightsToShadowMaps();
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_FRONT);
+        glFrontFace(GL_CW);
         // Render to the targets
         for (auto &target : this->renderTargets) {
             glBindFramebuffer(GL_FRAMEBUFFER, target->fbo);
@@ -184,18 +206,23 @@ void Window::run() {
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        if (this->renderTargets.size() > 0) {
-            glDisable(GL_CULL_FACE);
-            for (auto &obj : this->preferenceRenderables) {
+        if (this->renderTargets.size() == 0) {
+            for (auto &obj : this->firstRenderables) {
+                obj->setViewMatrix(this->camera->calculateViewMatrix());
+                obj->setProjectionMatrix(calculateProjectionMatrix());
                 obj->render();
             }
-        } else {
-            std::cout << "=== SCREEN PASS (NORMAL) ===" << std::endl;
+
             for (auto &obj : this->renderables) {
                 obj->setViewMatrix(this->camera->calculateViewMatrix());
                 obj->setProjectionMatrix(calculateProjectionMatrix());
                 obj->render();
             }
+        }
+
+        glDisable(GL_CULL_FACE);
+        for (auto &obj : this->preferenceRenderables) {
+            obj->render();
         }
 
         glfwSwapBuffers(window);
@@ -360,4 +387,73 @@ void Window::captureMouse() {
 
 void Window::addRenderTarget(RenderTarget *target) {
     this->renderTargets.push_back(target);
+}
+
+void Window::renderLightsToShadowMaps() {
+
+    std::vector<ShaderProgram> originalPrograms;
+
+    for (auto &light : this->currentScene->directionalLights) {
+        if (light->doesCastShadows == false) {
+            continue;
+        }
+        RenderTarget *shadowRenderTarget = light->shadowRenderTarget;
+        glViewport(0, 0, shadowRenderTarget->texture.creationData.width,
+                   shadowRenderTarget->texture.creationData.height);
+        glBindFramebuffer(GL_FRAMEBUFFER, shadowRenderTarget->fbo);
+        glClearDepth(1.0);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_FRONT);
+        for (auto &obj : this->renderables) {
+            originalPrograms.push_back(obj->getShaderProgram().value());
+            if (obj->getShaderProgram() == std::nullopt) {
+                continue;
+            }
+            obj->setShader(this->depthProgram);
+
+            std::tuple<glm::mat4, glm::mat4> lightSpace =
+                light->calculateLightSpaceMatrix(this->renderables);
+            glm::mat4 lightView = std::get<0>(lightSpace);
+            glm::mat4 lightProjection = std::get<1>(lightSpace);
+            obj->setProjectionMatrix(lightProjection);
+            obj->setViewMatrix(lightView);
+            obj->render();
+        }
+    }
+
+    for (auto &light : this->currentScene->spotlights) {
+        if (light->doesCastShadows == false) {
+            continue;
+        }
+        RenderTarget *shadowRenderTarget = light->shadowRenderTarget;
+        glViewport(0, 0, shadowRenderTarget->texture.creationData.width,
+                   shadowRenderTarget->texture.creationData.height);
+        glBindFramebuffer(GL_FRAMEBUFFER, shadowRenderTarget->fbo);
+        glClearDepth(1.0);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_FRONT);
+        for (auto &obj : this->renderables) {
+            if (obj->getShaderProgram() == std::nullopt) {
+                continue;
+            }
+            ShaderProgram program = obj->getShaderProgram().value();
+
+            std::tuple<glm::mat4, glm::mat4> lightSpace =
+                light->calculateLightSpaceMatrix();
+            glm::mat4 lightView = std::get<0>(lightSpace);
+            glm::mat4 lightProjection = std::get<1>(lightSpace);
+            obj->setProjectionMatrix(lightProjection);
+            obj->setViewMatrix(lightView);
+            obj->render();
+        }
+    }
+
+    for (auto &renderable : this->renderables) {
+        if (renderable->getShaderProgram() != std::nullopt) {
+            renderable->setShader(originalPrograms.front());
+            originalPrograms.erase(originalPrograms.begin());
+        }
+    }
 }

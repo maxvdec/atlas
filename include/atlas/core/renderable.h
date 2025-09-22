@@ -10,7 +10,13 @@
 #ifndef ATLAS_RENDERABLE_H
 #define ATLAS_RENDERABLE_H
 
+#include "atlas/core/shader.h"
+#include "atlas/units.h"
 #include <glm/glm.hpp>
+#include <optional>
+#include <vector>
+
+struct CoreVertex;
 
 class Renderable {
   public:
@@ -18,6 +24,13 @@ class Renderable {
     virtual void initialize() {};
     virtual void setViewMatrix(const glm::mat4 &view) {};
     virtual void setProjectionMatrix(const glm::mat4 &projection) {};
+    virtual std::optional<ShaderProgram> getShaderProgram() {
+        return std::nullopt;
+    };
+    virtual void setShader(const ShaderProgram &shader) {};
+    virtual Position3d getPosition() const { return {0, 0, 0}; };
+    virtual std::vector<CoreVertex> getVertices() const { return {}; };
+    virtual Size3d getScale() const { return {1, 1, 1}; };
     virtual ~Renderable() = default;
 };
 

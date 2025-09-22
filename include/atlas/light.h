@@ -10,10 +10,14 @@
 #ifndef ATLAS_LIGHT_H
 #define ATLAS_LIGHT_H
 
+#include "atlas/core/renderable.h"
 #include "atlas/object.h"
+#include "atlas/texture.h"
 #include "atlas/units.h"
 #include <cmath>
 #include <memory>
+#include <tuple>
+#include <vector>
 
 class Window;
 
@@ -51,6 +55,18 @@ struct Light {
     PointLightConstants calculateConstants() const;
 
     float distance = 50.f;
+
+    void castShadows(Window &window, int resolution = 1024);
+
+    RenderTarget *shadowRenderTarget = nullptr;
+
+  private:
+    bool doesCastShadows = false;
+
+    std::vector<glm::mat4> calculateShadowTransforms();
+
+    friend class Window;
+    friend class CoreObject;
 };
 
 class DirectionalLight {
@@ -66,6 +82,19 @@ class DirectionalLight {
         : direction(dir.normalized()), color(color), shineColor(shineColor) {}
 
     void setColor(Color color);
+
+    RenderTarget *shadowRenderTarget = nullptr;
+
+    void castShadows(Window &window, int resolution = 2048);
+
+  private:
+    bool doesCastShadows = false;
+
+    std::tuple<glm::mat4, glm::mat4>
+    calculateLightSpaceMatrix(std::vector<Renderable *> renderable) const;
+
+    friend class Window;
+    friend class CoreObject;
 };
 
 struct Spotlight {
@@ -96,6 +125,18 @@ struct Spotlight {
 
     float cutOff;
     float outerCutoff;
+
+    RenderTarget *shadowRenderTarget = nullptr;
+
+    void castShadows(Window &window, int resolution = 1024);
+
+  private:
+    bool doesCastShadows = true;
+
+    std::tuple<glm::mat4, glm::mat4> calculateLightSpaceMatrix() const;
+
+    friend class Window;
+    friend class CoreObject;
 };
 
 #endif // ATLAS_LIGHT_H

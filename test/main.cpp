@@ -12,27 +12,38 @@
 #include <memory>
 #include <vector>
 
+#define ATLAS_DEBUG
+
 class MainScene : public Scene {
   public:
     CoreObject quadObject;
     CoreObject quadObject2;
-    Spotlight light;
+    DirectionalLight light;
     Camera camera;
     RenderTarget renderTarget;
     Skybox skybox;
+    bool updateCamera = true;
 
     void update(Window &window) override {
+        if (!updateCamera)
+            return;
         camera.update(window);
         if (window.isKeyPressed(Key::Escape)) {
+            updateCamera = false;
             window.releaseMouse();
         }
+        quadObject.move({0.0f, sin(window.getTime()) * 0.008f, 0.0f});
     }
 
     void onMouseMove(Window &window, Movement2d movement) override {
+        if (!updateCamera)
+            return;
         camera.updateLook(window, movement);
     }
 
     void onMouseScroll(Window &window, Movement2d offset) override {
+        if (!updateCamera)
+            return;
         camera.updateZoom(window, offset);
     }
 
@@ -87,12 +98,9 @@ class MainScene : public Scene {
         window.addObject(&quadObject);
         window.addObject(&quadObject2);
 
-        light = Spotlight({-1.0f, 1.0f, 0.0f}, {0.0f, -1.0f, 0.0f});
-        light.lookAt({0.0f, 0.0f, 0.0f});
-        light.createDebugObject();
-        light.addDebugObject(window);
-
-        this->addSpotlight(&light);
+        light = DirectionalLight({0.3f, -1.0f, 0.0f}, Color{1.0, 0.95, 0.85});
+        light.castShadows(window, 2048);
+        this->addDirectionalLight(&light);
 
         renderTarget = RenderTarget(window, RenderTargetType::Multisampled);
         renderTarget.display(window);

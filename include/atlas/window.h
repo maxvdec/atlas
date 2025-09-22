@@ -16,6 +16,7 @@
 #include "atlas/scene.h"
 #include "atlas/texture.h"
 #include "atlas/units.h"
+#include <memory>
 #include <optional>
 #include <string>
 #include <tuple>
@@ -68,6 +69,8 @@ class Monitor {
     CoreMonitorReference monitorRef;
 };
 
+class ShaderProgram;
+
 class Window {
   public:
     std::string title;
@@ -115,6 +118,9 @@ class Window {
         return {static_cast<double>(fbw), static_cast<double>(fbh)};
     }
 
+    inline void activateDebug() { this->debug = true; }
+    inline void deactivateDebug() { this->debug = false; }
+
   private:
     CoreWindowReference windowRef;
     std::vector<Renderable *> renderables;
@@ -125,12 +131,21 @@ class Window {
     glm::mat4 calculateProjectionMatrix();
     Scene *currentScene = nullptr;
 
+    void renderLightsToShadowMaps();
+    Size2d getFurthestPositions();
+
     Camera *camera = nullptr;
     float lastMouseX;
     float lastMouseY;
 
     float lastTime = 0.0f;
     int frameCount = 0;
+
+    ShaderProgram depthProgram;
+
+    bool debug = false;
+
+    friend class CoreObject;
 };
 
 #endif // WINDOW_H
