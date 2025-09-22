@@ -20,17 +20,17 @@ file(GLOB_RECURSE SHADER_SOURCES
     ${SHADER_INPUT_DIR}/*.glsl
 )
 
-add_custom_target(GenerateShadersHeader ALL
+add_custom_command(
+    OUTPUT ${SHADER_OUTPUT_FILE}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/include/atlas/core
     COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/pack_shaders.py ${SHADER_INPUT_DIR} ${SHADER_OUTPUT_FILE}
+    DEPENDS ${SHADER_SOURCES}
     COMMENT "Packing shaders into shaders.h"
-    VERBATIM
 )
-
 
 file(GLOB_RECURSE SOURCES atlas/*.cpp extern/*.c)
 
-add_library(atlas ${SOURCES})
+add_library(atlas ${SOURCES} ${SHADER_OUTPUT_FILE})
 
 find_package(OpenGL REQUIRED)
 find_package(glfw3 REQUIRED)

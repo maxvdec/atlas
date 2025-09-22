@@ -134,9 +134,13 @@ class CoreObject : public Renderable {
 
 CoreObject createBox(Size3d size, Color color = {1.0, 1.0, 1.0, 1.0});
 CoreObject createPlane(Size2d size, Color color = {1.0, 1.0, 1.0, 1.0});
+CoreObject createDebugPlane(Size2d size);
 CoreObject createPyramid(Size3d size, Color color = {1.0, 1.0, 1.0, 1.0});
 CoreObject createSphere(double radius, unsigned int sectorCount = 36,
                         unsigned int stackCount = 18,
                         Color color = {1.0, 1.0, 1.0, 1.0});
+
+CoreObject createDebugSphere(double radius, unsigned int sectorCount = 36,
+                             unsigned int stackCount = 18);
 
 #endif // ATLAS_OBJECT_H

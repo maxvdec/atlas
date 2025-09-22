@@ -16,95 +16,77 @@
 
 class MainScene : public Scene {
   public:
-    CoreObject quadObject;
-    CoreObject quadObject2;
-    DirectionalLight light;
-    Camera camera;
-    RenderTarget renderTarget;
+    bool doesUpdate = true;
     Skybox skybox;
-    bool updateCamera = true;
+    Camera camera;
+    CoreObject plane;
+    CoreObject plane2;
+    CoreObject sphere;
+    DirectionalLight dirLight;
 
     void update(Window &window) override {
-        if (!updateCamera)
+        if (!doesUpdate)
             return;
         camera.update(window);
         if (window.isKeyPressed(Key::Escape)) {
-            updateCamera = false;
             window.releaseMouse();
+            doesUpdate = false;
         }
-        quadObject.move({0.0f, sin(window.getTime()) * 0.008f, 0.0f});
     }
 
     void onMouseMove(Window &window, Movement2d movement) override {
-        if (!updateCamera)
+        if (!doesUpdate) {
             return;
+        }
         camera.updateLook(window, movement);
     }
 
-    void onMouseScroll(Window &window, Movement2d offset) override {
-        if (!updateCamera)
-            return;
-        camera.updateZoom(window, offset);
-    }
-
-    Cubemap createCubemap() {
+    Cubemap createSkyboxCubemap() {
         Resource right = Workspace::get().createResource(
-            "resources/skybox/right.jpg", "Right", ResourceType::Image);
+            "skybox/px.png", "RightSkybox", ResourceType::Image);
         Resource left = Workspace::get().createResource(
-            "resources/skybox/left.jpg", "Left", ResourceType::Image);
+            "skybox/nx.png", "LeftSkybox", ResourceType::Image);
         Resource top = Workspace::get().createResource(
-            "resources/skybox/top.jpg", "Top", ResourceType::Image);
+            "skybox/py.png", "TopSkybox", ResourceType::Image);
         Resource bottom = Workspace::get().createResource(
-            "resources/skybox/bottom.jpg", "Bottom", ResourceType::Image);
+            "skybox/ny.png", "BottomSkybox", ResourceType::Image);
         Resource front = Workspace::get().createResource(
-            "resources/skybox/front.jpg", "Front", ResourceType::Image);
+            "skybox/pz.png", "FrontSkybox", ResourceType::Image);
         Resource back = Workspace::get().createResource(
-            "resources/skybox/back.jpg", "Back", ResourceType::Image);
+            "skybox/nz.png", "BackSkybox", ResourceType::Image);
+        ResourceGroup group = Workspace::get().createResourceGroup(
+            "Skybox", {right, left, top, bottom, front, back});
 
-        ResourceGroup group;
-        group.resources = {right, left, top, bottom, front, back};
         return Cubemap::fromResourceGroup(group);
     }
 
     void initialize(Window &window) override {
-
-        quadObject = createBox({0.5, 0.5, 0.5}, Color::red());
-
-        Workspace::get().setRootPath(std::filesystem::path(TEST_PATH));
-        Resource texture_resource = Workspace::get().createResource(
-            "resources/container.png", "Container", ResourceType::Image);
-        Resource floor_texture = Workspace::get().createResource(
-            "resources/wall.jpg", "Floor", ResourceType::Image);
-        Resource specular_texture = Workspace::get().createResource(
-            "resources/container_specular.png", "SpecularTexture",
-            ResourceType::Image);
-
-        quadObject.move({0.0f, 0.0f, 0.0f});
-
         camera = Camera();
-        camera.setPosition({3.0f, 2.0f, 2.0f});
-        camera.lookAt({0.0f, 0.0f, 0.0f});
+        camera.setPosition({-1.0, 3.0, 0.0});
+        camera.lookAt({0.0, 0.0, 0.0});
         window.setCamera(&camera);
 
-        quadObject2 = createPlane({4.0f, 4.0f}, Color::brown());
+        Workspace::get().setRootPath(std::string(TEST_PATH) + "/resources/");
+        skybox = Skybox();
+        skybox.cubemap = createSkyboxCubemap();
+        skybox.display(window);
 
-        Texture texture = Texture::fromResource(texture_resource);
-        quadObject.attachTexture(texture);
-        Texture specular =
-            Texture::fromResource(specular_texture, TextureType::Specular);
-        quadObject.attachTexture(specular);
-        quadObject2.move({0.0f, -0.5f, 0.0f});
-        quadObject2.attachTexture(Texture::fromResource(floor_texture));
-        window.addObject(&quadObject);
-        window.addObject(&quadObject2);
+        plane = createDebugSphere(5.0, 64, 64);
+        plane.setPosition({0.25, -5.5, 0.0});
+        plane2 = plane.clone();
+        plane2.setPosition({-0.25, -5.5, 0.0});
+        window.addObject(&plane);
+        window.addObject(&plane2);
+        sphere = createDebugSphere(0.1);
+        sphere.setPosition({0.0, 0.5, 0.0});
+        sphere.setRotation({0.0, 90.0, 90.0});
+        window.addObject(&sphere);
 
-        light = DirectionalLight({0.3f, -1.0f, 0.0f}, Color{1.0, 0.95, 0.85});
-        light.castShadows(window, 2048);
-        this->addDirectionalLight(&light);
-
-        renderTarget = RenderTarget(window, RenderTargetType::Multisampled);
-        renderTarget.display(window);
-        window.addRenderTarget(&renderTarget);
+        Color sunWarm = Color::white();
+        dirLight = DirectionalLight({-0.75, -1.0, 0.0}, sunWarm);
+        dirLight.castShadows(window, 4096);
+        this->addDirectionalLight(&dirLight);
+        this->ambientLight.intensity = 0.3f;
     }
 };
 

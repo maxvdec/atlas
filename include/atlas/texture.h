@@ -49,6 +49,12 @@ enum class TextureType : int {
     DepthCube = 4
 };
 
+struct CheckerTile {
+    Color color1;
+    Color color2;
+    int checkSize;
+};
+
 struct Texture {
     Resource resource;
     TextureCreationData creationData;
@@ -64,6 +70,22 @@ struct Texture {
                                     TextureType type = TextureType::Color,
                                     TextureParameters params = {},
                                     Color borderColor = {0, 0, 0, 0});
+
+    static Texture createCheckerboard(int width, int height, int checkSize,
+                                      Color color1, Color color2,
+                                      TextureParameters params = {},
+                                      Color borderColor = {0, 0, 0, 0});
+
+    static Texture createDoubleCheckerboard(int width, int height,
+                                            int checkSizeBig,
+                                            int checkSizeSmall, Color color1,
+                                            Color color2, Color color3,
+                                            TextureParameters params = {},
+                                            Color borderColor = {0, 0, 0, 0});
+
+    static Texture createTiledCheckerboard(
+        int width, int height, const std::vector<CheckerTile> &tiles,
+        TextureParameters params = {}, Color borderColor = {0, 0, 0, 0});
 
   private:
     static void applyWrappingMode(TextureWrappingMode mode, Id glAxis);

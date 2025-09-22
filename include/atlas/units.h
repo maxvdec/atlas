@@ -115,6 +115,10 @@ struct Color {
         return {r * scalar, g * scalar, b * scalar, a * scalar};
     }
 
+    Color operator*(const Color &other) const {
+        return {r * other.r, g * other.g, b * other.b, a * other.a};
+    }
+
     Color operator/(double scalar) const {
         return {r / scalar, g / scalar, b / scalar, a / scalar};
     }
@@ -138,6 +142,13 @@ struct Color {
     static Color teal() { return {0.0, 0.5, 0.5, 1.0}; }
     static Color olive() { return {0.5, 0.5, 0.0, 1.0}; }
     static Color maroon() { return {0.5, 0.0, 0.0, 1.0}; }
+
+    static Color fromHex(unsigned int hexValue) {
+        double r = ((hexValue >> 16) & 0xFF) / 255.0;
+        double g = ((hexValue >> 8) & 0xFF) / 255.0;
+        double b = (hexValue & 0xFF) / 255.0;
+        return {r, g, b, 1.0};
+    }
 
     inline glm::vec4 toGlm() const {
         return glm::vec4(static_cast<float>(r), static_cast<float>(g),

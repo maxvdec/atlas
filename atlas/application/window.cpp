@@ -142,7 +142,7 @@ void Window::run() {
     }
     GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
 
-    glEnable(GL_FRAMEBUFFER_SRGB);
+    // glEnable(GL_FRAMEBUFFER_SRGB);
     glEnable(GL_MULTISAMPLE);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
@@ -391,12 +391,15 @@ void Window::addRenderTarget(RenderTarget *target) {
 
 void Window::renderLightsToShadowMaps() {
 
+    bool renderedShadows = false;
+
     std::vector<ShaderProgram> originalPrograms;
 
     for (auto &light : this->currentScene->directionalLights) {
         if (light->doesCastShadows == false) {
             continue;
         }
+        renderedShadows = true;
         RenderTarget *shadowRenderTarget = light->shadowRenderTarget;
         glViewport(0, 0, shadowRenderTarget->texture.creationData.width,
                    shadowRenderTarget->texture.creationData.height);
@@ -426,6 +429,7 @@ void Window::renderLightsToShadowMaps() {
         if (light->doesCastShadows == false) {
             continue;
         }
+        renderedShadows = true;
         RenderTarget *shadowRenderTarget = light->shadowRenderTarget;
         glViewport(0, 0, shadowRenderTarget->texture.creationData.width,
                    shadowRenderTarget->texture.creationData.height);
@@ -450,10 +454,13 @@ void Window::renderLightsToShadowMaps() {
         }
     }
 
+    if (!renderedShadows) {
+        return;
+    }
+
     for (auto &renderable : this->renderables) {
         if (renderable->getShaderProgram() != std::nullopt) {
             renderable->setShader(originalPrograms.front());
-            originalPrograms.erase(originalPrograms.begin());
         }
     }
 }

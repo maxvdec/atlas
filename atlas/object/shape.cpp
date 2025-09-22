@@ -8,7 +8,9 @@
 */
 
 #include "atlas/object.h"
+#include "atlas/texture.h"
 #include "atlas/units.h"
+#include <vector>
 
 CoreObject createBox(Size3d size, Color color) {
     double w = size.x / 2.0;
@@ -240,5 +242,49 @@ CoreObject createSphere(double radius, unsigned int sectorCount,
     sphere.attachVertices(vertices);
     sphere.attachIndices(indices);
     sphere.initialize();
+    return sphere;
+}
+
+CoreObject createDebugPlane(Size2d size) {
+    CoreObject plane = createPlane(size, Color::white());
+
+    Color whiteMultiplier = Color(1.0, 1.0, 1.0);
+    Color mediumMultiplier = Color(0.75, 0.75, 0.75);
+    Color darkMultiplier = Color(0.5, 0.5, 0.5);
+
+    Color blue = Color(0.5, 0.5, 1.0);
+
+    Texture checkerboard = Texture::createDoubleCheckerboard(
+        1024, 1024, 160, 20, blue * whiteMultiplier, blue * darkMultiplier,
+        blue * mediumMultiplier);
+
+    plane.attachTexture(checkerboard);
+    return plane;
+}
+
+CoreObject createDebugSphere(double radius, unsigned int sectorCount,
+                             unsigned int stackCount) {
+    CoreObject sphere = createSphere(radius, sectorCount, stackCount);
+
+    Color whiteMultiplier = Color(1.0, 1.0, 1.0);
+    Color mediumMultiplier = Color(0.75, 0.75, 0.75);
+    Color darkMultiplier = Color(0.5, 0.5, 0.5);
+
+    Color blue = Color(0.5, 0.5, 1.0);
+    Color red = Color(1.0, 0.5, 0.5);
+    Color green = Color(0.5, 1.0, 0.5);
+
+    std::vector<CheckerTile> tiles;
+    tiles.push_back(
+        CheckerTile{blue * whiteMultiplier, blue * whiteMultiplier, 80});
+    tiles.push_back(
+        CheckerTile{red * whiteMultiplier, red * whiteMultiplier, 80});
+    tiles.push_back(
+        CheckerTile{green * whiteMultiplier, green * whiteMultiplier, 80});
+
+    Texture checkerboard = Texture::createTiledCheckerboard(1024, 1024, tiles);
+
+    sphere.attachTexture(checkerboard);
+    sphere.material.specular = Color::white() * 0.5;
     return sphere;
 }
