@@ -111,11 +111,19 @@ void CoreObject::attachIndices(const std::vector<Index> &newIndices) {
 void CoreObject::setPosition(const Position3d &newPosition) {
     position = newPosition;
 
+    if (hasPhysics && body != nullptr) {
+        body->position = position;
+    }
+
     updateModelMatrix();
 }
 
 void CoreObject::setRotation(const Rotation3d &newRotation) {
     rotation = newRotation;
+
+    if (hasPhysics && body != nullptr) {
+        body->orientation = rotation.toGlmQuat();
+    }
 
     updateModelMatrix();
 }
@@ -396,13 +404,13 @@ void CoreObject::render() {
                 "shadowParams[" + std::to_string(boundParameters) + "]";
             shaderProgram.setUniform1i(baseName + ".textureIndex",
                                        boundTextures);
-            std::tuple<glm::mat4, glm::mat4> lightSpace =
-                light->calculateLightSpaceMatrix(
-                    Window::mainWindow->renderables);
+            ShadowParams shadowParams = light->calculateLightSpaceMatrix(
+                Window::mainWindow->renderables);
             shaderProgram.setUniformMat4f(baseName + ".lightView",
-                                          std::get<0>(lightSpace));
+                                          shadowParams.lightView);
             shaderProgram.setUniformMat4f(baseName + ".lightProjection",
-                                          std::get<1>(lightSpace));
+                                          shadowParams.lightProjection);
+            shaderProgram.setUniform1f(baseName + ".bias", shadowParams.bias);
 
             boundParameters++;
             boundTextures++;
@@ -488,17 +496,16 @@ void CoreObject::update(Window &window) {
     if (!hasPhysics)
         return;
 
-    this->body.orientation = this->rotation.toGlmQuat();
-    this->body.position = this->position;
+    this->body->update(window);
 
-    this->body.update(window);
-
-    this->position = this->body.position;
-    this->rotation = Rotation3d::fromGlmQuat(this->body.orientation);
+    this->position = this->body->position;
+    this->rotation = Rotation3d::fromGlmQuat(this->body->orientation);
     updateModelMatrix();
 }
 
 void CoreObject::setupPhysics(Body body) {
-    this->body = body;
+    this->body = std::make_shared<Body>(body);
+    this->body->position = this->position;
+    this->body->orientation = this->rotation.toGlmQuat();
     this->hasPhysics = true;
 }

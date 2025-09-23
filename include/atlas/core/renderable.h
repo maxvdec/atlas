@@ -33,6 +33,7 @@ class Renderable {
     virtual Position3d getPosition() const { return {0, 0, 0}; };
     virtual std::vector<CoreVertex> getVertices() const { return {}; };
     virtual Size3d getScale() const { return {1, 1, 1}; };
+    virtual bool canCastShadows() const { return false; };
     virtual ~Renderable() = default;
 };
 

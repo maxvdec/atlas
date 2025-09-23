@@ -20,7 +20,6 @@ class MainScene : public Scene {
     Skybox skybox;
     Camera camera;
     CoreObject plane;
-    CoreObject plane2;
     CoreObject sphere;
     DirectionalLight dirLight;
 
@@ -62,8 +61,8 @@ class MainScene : public Scene {
 
     void initialize(Window &window) override {
         camera = Camera();
-        camera.setPosition({-5.0, 2.0, 0.0});
-        camera.lookAt({0.0, 0.0, 0.0});
+        camera.setPosition({-2.0, 7.0, 0.0});
+        camera.lookAt({0.0, 5.0, 0.0});
         window.setCamera(&camera);
 
         Workspace::get().setRootPath(std::string(TEST_PATH) + "/resources/");
@@ -71,27 +70,37 @@ class MainScene : public Scene {
         skybox.cubemap = createSkyboxCubemap();
         skybox.display(window);
 
-        plane = createDebugSphere(5.0, 64, 64);
-        plane.body.invMass = 0.0f;
+        plane = createDebugSphere(5.0, 64, 128);
+        plane.body->invMass = 0.0f;
 
-        plane.setPosition({0.25, -5.5, 0.0});
+        plane.setPosition({0, 0.0, 0.0});
+        plane.castsShadows = false;
 
-        plane2 = plane.clone();
-        plane2.setPosition({-0.25, -5.5, 0.0});
-        plane.body.invMass = 0.0f;
+        Color whiteMultiplier = Color(1.0, 1.0, 1.0);
+        Color mediumMultiplier = Color(0.75, 0.75, 0.75);
+        Color darkMultiplier = Color(0.5, 0.5, 0.5);
+
+        Color blue = Color(0.5, 0.5, 1.0);
+
+        Texture checkerboard = Texture::createDoubleCheckerboard(
+            4096, 4096, 640, 80, blue * whiteMultiplier, blue * darkMultiplier,
+            blue * mediumMultiplier);
+
+        plane.attachTexture(checkerboard);
+        plane.body->elasticity = 0.5f;
 
         window.addObject(&plane);
-        window.addObject(&plane2);
 
-        sphere = createDebugSphere(0.1, 32, 32);
-        sphere.setPosition({0.0, 4, 0.0});
+        sphere = createDebugSphere(0.1, 64, 64);
+        sphere.setPosition({0.0, 7, 0.0});
         sphere.setRotation({0.0, 90.0, 90.0});
+        sphere.body->elasticity = 0.5f;
 
         window.addObject(&sphere);
 
         Color sunWarm = Color::white();
         dirLight = DirectionalLight({-0.75, -1.0, 0.0}, sunWarm);
-        dirLight.castShadows(window, 4096);
+        dirLight.castShadows(window, 8192);
         this->addDirectionalLight(&dirLight);
         this->ambientLight.intensity = 0.3f;
     }

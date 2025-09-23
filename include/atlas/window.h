@@ -16,6 +16,7 @@
 #include "atlas/scene.h"
 #include "atlas/texture.h"
 #include "atlas/units.h"
+#include "bezel/body.h"
 #include <memory>
 #include <optional>
 #include <string>
@@ -123,6 +124,8 @@ class Window {
 
     inline float getDeltaTime() { return this->deltaTime; }
 
+    std::vector<std::shared_ptr<Body>> getAllBodies();
+
     float gravity = 9.81f;
 
   private:
@@ -150,6 +153,8 @@ class Window {
     bool debug = false;
 
     friend class CoreObject;
+    friend class RenderTarget;
+    friend class DirectionalLight;
 };
 
 #endif // WINDOW_H

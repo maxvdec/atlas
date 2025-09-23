@@ -130,6 +130,7 @@ struct SpotLight {
 struct ShadowParameters {
     mat4 lightView;
     mat4 lightProjection;
+    float bias;
     int textureIndex;
 };
 
@@ -311,8 +312,9 @@ float calculateShadow(ShadowParameters shadowParam, vec4 fragPosLightSpace) {
     
     vec3 lightDir = normalize(-directionalLights[0].direction); 
     vec3 normal = normalize(Normal);
-    float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
-    
+    float biasValue = shadowParam.bias;
+    float bias = max(biasValue * (1.0 - dot(normal, lightDir)), biasValue);
+
     float shadow = 0.0;
     vec2 texelSize = 1.0 / textureSize(textures[shadowParam.textureIndex], 0);
     
@@ -331,6 +333,22 @@ float calculateShadow(ShadowParameters shadowParam, vec4 fragPosLightSpace) {
     shadow /= float(sampleCount);
     
     return shadow;
+}
+
+float calculateShadowRaw(ShadowParameters shadowParam, vec4 fragPosLightSpace) {
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    projCoords = projCoords * 0.5 + 0.5;
+
+    if (projCoords.x < 0.0 || projCoords.x > 1.0 || 
+        projCoords.y < 0.0 || projCoords.y > 1.0 || 
+        projCoords.z < 0.0 || projCoords.z > 1.0) {
+        return 0.0;
+    }
+
+    float currentDepth = projCoords.z;
+    float closestDepth = texture(textures[shadowParam.textureIndex], projCoords.xy).r;
+
+    return currentDepth > closestDepth ? 1.0 : 0.0;
 }
 
 float calculateAllShadows() {

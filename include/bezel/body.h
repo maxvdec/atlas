@@ -18,6 +18,25 @@
 
 class Window;
 
+struct IntersectionPoint {
+    glm::vec3 worldSpacePoint;
+    glm::vec3 modelSpacePoint;
+};
+
+class Body;
+
+struct Contact {
+    IntersectionPoint pointA;
+    IntersectionPoint pointB;
+
+    glm::vec3 normal;
+    float separationDistance;
+    float timeOfImpact;
+
+    std::shared_ptr<Body> bodyA;
+    std::shared_ptr<Body> bodyB;
+};
+
 class Body {
   public:
     Position3d position;
@@ -25,6 +44,7 @@ class Body {
     std::shared_ptr<Shape> shape;
     glm::vec3 linearVelocity = {0.0f, 0.0f, 0.0f};
     float invMass = 0.0f;
+    float elasticity = 0.5f;
 
     glm::vec3 getCenterOfMassWorldSpace() const;
     glm::vec3 getCenterOfMassModelSpace() const;
@@ -50,6 +70,14 @@ class Body {
     }
 
     void update(Window &window);
+
+    bool intersects(std::shared_ptr<Body> bodyA, std::shared_ptr<Body> bodyB,
+                    Contact &contact) const;
+
+    void resolveContact(Contact &contact);
+
+  private:
+    std::shared_ptr<Body> thisShared = nullptr;
 };
 
 #endif // ATLAS_BODY_H
