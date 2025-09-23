@@ -99,7 +99,7 @@ class CoreObject : public Renderable {
 
     Id id;
 
-    Body body;
+    std::shared_ptr<Body> body = nullptr;
 
   private:
     BufferIndex vbo;

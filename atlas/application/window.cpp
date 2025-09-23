@@ -10,14 +10,17 @@
 #include "atlas/core/shader.h"
 #include "atlas/object.h"
 #include "atlas/units.h"
+#include "bezel/body.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <atlas/window.h>
 #include <iostream>
+#include <memory>
 #include <optional>
 #include <string>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <vector>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
 #include <tuple>
@@ -460,4 +463,15 @@ void Window::renderLightsToShadowMaps() {
             renderable->setShader(originalPrograms.front());
         }
     }
+}
+
+std::vector<std::shared_ptr<Body>> Window::getAllBodies() {
+    std::vector<std::shared_ptr<Body>> bodies;
+    for (auto &obj : this->renderables) {
+        CoreObject *coreObj = dynamic_cast<CoreObject *>(obj);
+        if (coreObj != nullptr && coreObj->hasPhysics) {
+            bodies.push_back(coreObj->body);
+        }
+    }
+    return bodies;
 }

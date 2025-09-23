@@ -111,11 +111,19 @@ void CoreObject::attachIndices(const std::vector<Index> &newIndices) {
 void CoreObject::setPosition(const Position3d &newPosition) {
     position = newPosition;
 
+    if (hasPhysics && body != nullptr) {
+        body->position = position;
+    }
+
     updateModelMatrix();
 }
 
 void CoreObject::setRotation(const Rotation3d &newRotation) {
     rotation = newRotation;
+
+    if (hasPhysics && body != nullptr) {
+        body->orientation = rotation.toGlmQuat();
+    }
 
     updateModelMatrix();
 }
@@ -488,17 +496,16 @@ void CoreObject::update(Window &window) {
     if (!hasPhysics)
         return;
 
-    this->body.orientation = this->rotation.toGlmQuat();
-    this->body.position = this->position;
+    this->body->update(window);
 
-    this->body.update(window);
-
-    this->position = this->body.position;
-    this->rotation = Rotation3d::fromGlmQuat(this->body.orientation);
+    this->position = this->body->position;
+    this->rotation = Rotation3d::fromGlmQuat(this->body->orientation);
     updateModelMatrix();
 }
 
 void CoreObject::setupPhysics(Body body) {
-    this->body = body;
+    this->body = std::make_shared<Body>(body);
+    this->body->position = this->position;
+    this->body->orientation = this->rotation.toGlmQuat();
     this->hasPhysics = true;
 }

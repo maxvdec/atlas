@@ -50,6 +50,8 @@ class Body {
     }
 
     void update(Window &window);
+
+    bool intersects(const Body &other) const;
 };
 
 #endif // ATLAS_BODY_H
