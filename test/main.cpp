@@ -61,7 +61,7 @@ class MainScene : public Scene {
 
     void initialize(Window &window) override {
         camera = Camera();
-        camera.setPosition({-2.0, 12.0, 0.0});
+        camera.setPosition({-2.0, 7.0, 0.0});
         camera.lookAt({0.0, 0.0, 0.0});
         window.setCamera(&camera);
 
@@ -91,7 +91,7 @@ class MainScene : public Scene {
         window.addObject(&plane);
 
         sphere = createDebugSphere(0.1, 64, 64);
-        sphere.setPosition({0.0, 10, 0.0});
+        sphere.setPosition({0.0, 7, 0.0});
         sphere.setRotation({0.0, 90.0, 90.0});
 
         window.addObject(&sphere);

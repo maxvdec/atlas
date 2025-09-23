@@ -115,14 +115,39 @@ void Body::resolveContact(Contact &contact) {
     std::shared_ptr<Body> bodyA = contact.bodyA;
     std::shared_ptr<Body> bodyB = contact.bodyB;
 
-    bodyA->linearVelocity = {0.0f, 0.0f, 0.0f};
-    bodyB->linearVelocity = {0.0f, 0.0f, 0.0f};
+    const float invMassA = bodyA->invMass;
+    const float invMassB = bodyB->invMass;
 
-    float tA = bodyA->invMass / (bodyA->invMass + bodyB->invMass);
-    float tB = bodyB->invMass / (bodyA->invMass + bodyB->invMass);
+    glm::vec3 n = contact.normal;
+    glm::vec3 vab = bodyA->linearVelocity - bodyB->linearVelocity;
+    float impulseJ = -2.0f * glm::dot(vab, n) / (invMassA + invMassB);
+    glm::vec3 impulseJVec = impulseJ * n;
 
-    glm::vec3 ds =
-        contact.pointB.worldSpacePoint - contact.pointA.worldSpacePoint;
-    bodyA->position = bodyA->position + Position3d::fromGlm(ds) * tA;
-    bodyB->position = bodyB->position - Position3d::fromGlm(ds) * tB;
+    bodyA->applyLinearImpulse(impulseJVec * 1.0f);
+    bodyB->applyLinearImpulse(impulseJVec * -1.0f);
+
+    const Sphere *sphereA = dynamic_cast<const Sphere *>(this->shape.get());
+    const Sphere *sphereB = dynamic_cast<const Sphere *>(bodyB->shape.get());
+
+    glm::vec3 centerToCenter = bodyB->position.toGlm() - this->position.toGlm();
+    float distance = glm::length(centerToCenter);
+    float totalRadius = sphereA->radius + sphereB->radius;
+
+    if (distance < totalRadius) {
+        float penetrationDepth = totalRadius - distance;
+
+        float separationDistance = penetrationDepth + 0.001f;
+
+        glm::vec3 separationDirection = glm::normalize(centerToCenter);
+
+        float tA = bodyA->invMass / (bodyA->invMass + bodyB->invMass);
+        float tB = bodyB->invMass / (bodyA->invMass + bodyB->invMass);
+
+        bodyA->position =
+            bodyA->position -
+            Position3d::fromGlm(separationDirection * separationDistance * tA);
+        bodyB->position =
+            bodyB->position +
+            Position3d::fromGlm(separationDirection * separationDistance * tB);
+    }
 }
