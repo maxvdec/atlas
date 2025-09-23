@@ -118,9 +118,14 @@ void Body::resolveContact(Contact &contact) {
     const float invMassA = bodyA->invMass;
     const float invMassB = bodyB->invMass;
 
+    const float elasticityA = bodyA->elasticity;
+    const float elasticityB = bodyB->elasticity;
+    const float elasticity = elasticityA + elasticityB;
+
     glm::vec3 n = contact.normal;
     glm::vec3 vab = bodyA->linearVelocity - bodyB->linearVelocity;
-    float impulseJ = -2.0f * glm::dot(vab, n) / (invMassA + invMassB);
+    float impulseJ =
+        -(1.0f + elasticity) * glm::dot(vab, n) / (invMassA + invMassB);
     glm::vec3 impulseJVec = impulseJ * n;
 
     bodyA->applyLinearImpulse(impulseJVec * 1.0f);
