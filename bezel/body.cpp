@@ -70,10 +70,7 @@ void Body::update(Window &window) {
         }
     }
 
-    // Apply all linear velocity
-    glm::vec3 positionGlm = position.toGlm();
-    positionGlm += linearVelocity * deltaTime;
-    position = Position3d::fromGlm(positionGlm);
+    updatePhysics(deltaTime);
 }
 
 void Body::applyLinearImpulse(const glm::vec3 &impulse) {
@@ -93,6 +90,19 @@ void Body::applyAngularImpulse(const glm::vec3 &impulse) {
     if (glm::length(angularVelocity) > maxAngularSpeed) {
         angularVelocity = glm::normalize(angularVelocity) * maxAngularSpeed;
     }
+}
+
+void Body::applyImpulse(const glm::vec3 &point, const glm::vec3 &impulse) {
+    if (invMass == 0.0f) {
+        return; // Infinite mass, do nothing
+    }
+
+    applyLinearImpulse(impulse);
+
+    glm::vec3 position = getCenterOfMassWorldSpace();
+    glm::vec3 r = point - position;
+    glm::vec3 angularImpulse = glm::cross(r, impulse);
+    applyAngularImpulse(angularImpulse);
 }
 
 bool Body::intersects(std::shared_ptr<Body> body, std::shared_ptr<Body> other,
@@ -127,6 +137,9 @@ void Body::resolveContact(Contact &contact) {
     std::shared_ptr<Body> bodyA = contact.bodyA;
     std::shared_ptr<Body> bodyB = contact.bodyB;
 
+    glm::vec3 pointA = contact.pointA.worldSpacePoint;
+    glm::vec3 pointB = contact.pointB.worldSpacePoint;
+
     const float invMassA = bodyA->invMass;
     const float invMassB = bodyB->invMass;
 
@@ -134,14 +147,36 @@ void Body::resolveContact(Contact &contact) {
     const float elasticityB = bodyB->elasticity;
     const float elasticity = elasticityA + elasticityB;
 
+    glm::mat3 invWorldInertiaA = bodyA->getInverseInertiaTensorWorldSpace();
+    glm::mat3 invWorldInertiaB = bodyB->getInverseInertiaTensorWorldSpace();
+
     glm::vec3 n = contact.normal;
-    glm::vec3 vab = bodyA->linearVelocity - bodyB->linearVelocity;
-    float impulseJ =
-        -(1.0f + elasticity) * glm::dot(vab, n) / (invMassA + invMassB);
+
+    glm::vec3 ra = pointA - bodyA->getCenterOfMassWorldSpace();
+    glm::vec3 rb = pointB - bodyB->getCenterOfMassWorldSpace();
+
+    glm::vec3 angularJA =
+        glm::cross((invWorldInertiaA * glm::cross(ra, n)), ra);
+    glm::vec3 angularJB =
+        glm::cross((invWorldInertiaB * glm::cross(rb, n)), rb);
+    const float angularFactor = glm::dot(angularJA + angularJB, n);
+
+    // Get the worl space velocity of the contact points
+    glm::vec3 velA =
+        bodyA->linearVelocity + glm::cross(bodyA->angularVelocity, ra);
+    glm::vec3 velB =
+        bodyB->linearVelocity + glm::cross(bodyB->angularVelocity, rb);
+
+    glm::vec3 vab = velA - velB;
+
+    float impulseJ = (1.0f + elasticity) * glm::dot(vab, n) /
+                     (invMassA + invMassB + angularFactor);
     glm::vec3 impulseJVec = impulseJ * n;
 
-    bodyA->applyLinearImpulse(impulseJVec * 1.0f);
-    bodyB->applyLinearImpulse(impulseJVec * -1.0f);
+    bodyA->applyImpulse(pointA, -impulseJVec);
+    bodyB->applyImpulse(pointB, impulseJVec);
+
+    // Positional correction to avoid sinking
 
     const Sphere *sphereA = dynamic_cast<const Sphere *>(this->shape.get());
     const Sphere *sphereB = dynamic_cast<const Sphere *>(bodyB->shape.get());
@@ -180,4 +215,31 @@ glm::mat3 Body::getInverseInertiaTensorWorldSpace() const {
     glm::mat3 invInertiaTensor = glm::inverse(inertiaTensor) * invMass;
     glm::mat3 rotationMatrix = glm::mat3_cast(orientation);
     return rotationMatrix * invInertiaTensor * glm::transpose(rotationMatrix);
+}
+
+void Body::updatePhysics(double dt) {
+    glm::vec3 pos = this->position.toGlm() + linearVelocity * (float)dt;
+    this->position = Position3d::fromGlm(pos);
+
+    glm::vec3 positionCM = getCenterOfMassWorldSpace();
+    glm::vec3 cmToPos = this->position.toGlm() - positionCM;
+
+    glm::mat3 orientation = glm::mat3_cast(this->orientation);
+    glm::mat3 inertiaTensor = orientation * this->shape->getInertiaTensor() *
+                              glm::transpose(orientation);
+    glm::vec3 alpha =
+        glm::inverse(inertiaTensor) *
+        glm::cross(angularVelocity, inertiaTensor * angularVelocity);
+    angularVelocity += alpha * (float)dt;
+
+    glm::quat orientationQuat = glm::quat_cast(orientation);
+
+    glm::vec3 dAngle = angularVelocity * (float)dt;
+    float angle = glm::length(dAngle);
+    glm::vec3 axis = glm::normalize(dAngle);
+    glm::quat dq = glm::angleAxis(angle, axis);
+    orientationQuat = glm::normalize(dq * orientationQuat);
+
+    orientation = glm::mat3_cast(orientationQuat);
+    glm::vec3 newPos = positionCM + orientation * (dq * cmToPos);
 }

@@ -56,6 +56,7 @@ class Body {
     glm::mat3 getInverseInertiaTensorWorldSpace() const;
     glm::mat3 getInverseInertiaTensorBodySpace() const;
 
+    void applyImpulse(const glm::vec3 &point, const glm::vec3 &impulse);
     void applyLinearImpulse(const glm::vec3 &impulse);
     void applyAngularImpulse(const glm::vec3 &impulse);
 
@@ -83,6 +84,8 @@ class Body {
 
   private:
     std::shared_ptr<Body> thisShared = nullptr;
+
+    void updatePhysics(double dt);
 };
 
 #endif // ATLAS_BODY_H
