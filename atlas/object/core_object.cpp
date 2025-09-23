@@ -404,13 +404,13 @@ void CoreObject::render() {
                 "shadowParams[" + std::to_string(boundParameters) + "]";
             shaderProgram.setUniform1i(baseName + ".textureIndex",
                                        boundTextures);
-            std::tuple<glm::mat4, glm::mat4> lightSpace =
-                light->calculateLightSpaceMatrix(
-                    Window::mainWindow->renderables);
+            ShadowParams shadowParams = light->calculateLightSpaceMatrix(
+                Window::mainWindow->renderables);
             shaderProgram.setUniformMat4f(baseName + ".lightView",
-                                          std::get<0>(lightSpace));
+                                          shadowParams.lightView);
             shaderProgram.setUniformMat4f(baseName + ".lightProjection",
-                                          std::get<1>(lightSpace));
+                                          shadowParams.lightProjection);
+            shaderProgram.setUniform1f(baseName + ".bias", shadowParams.bias);
 
             boundParameters++;
             boundTextures++;

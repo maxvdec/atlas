@@ -101,6 +101,8 @@ class CoreObject : public Renderable {
 
     std::shared_ptr<Body> body = nullptr;
 
+    bool castsShadows = true;
+
   private:
     BufferIndex vbo;
     BufferIndex vao;
@@ -141,6 +143,8 @@ class CoreObject : public Renderable {
     }
 
     inline Size3d getScale() const override { return scale; }
+    inline bool canCastShadows() const override { return castsShadows; }
+
     void update(Window &window) override;
 };
 

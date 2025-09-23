@@ -8,6 +8,7 @@
 */
 
 #include "bezel/body.h"
+#include "atlas/units.h"
 #include "atlas/window.h"
 #include "bezel/shape.h"
 #include <iostream>
@@ -34,8 +35,15 @@ glm::vec3 Body::modelSpaceToWorldSpace(const glm::vec3 &point) const {
 }
 
 void Body::update(Window &window) {
-    std::cout << "Delta time: " << window.getDeltaTime() << " seconds\n";
-    std::cout << "Position: " << position << "\n";
+    if (thisShared == nullptr) {
+        for (const auto &body : window.getAllBodies()) {
+            if (body.get() == this) {
+                thisShared = body;
+                break;
+            }
+        }
+    }
+
     float gravity = window.gravity;
     glm::vec3 gravityVec = {0.0f, -gravity, 0.0f};
 
@@ -55,9 +63,10 @@ void Body::update(Window &window) {
             continue;
         }
 
-        if (this->intersects(*other)) {
-            other->linearVelocity = {0.0f, 0.0f, 0.0f};
-            this->linearVelocity = {0.0f, 0.0f, 0.0f};
+        Contact contact;
+
+        if (this->intersects(thisShared, other, contact)) {
+            resolveContact(contact);
         }
     }
 
@@ -74,15 +83,24 @@ void Body::applyLinearImpulse(const glm::vec3 &impulse) {
     linearVelocity += impulse * invMass;
 }
 
-bool Body::intersects(const Body &other) const {
-    if (this->shape == nullptr || other.shape == nullptr) {
+bool Body::intersects(std::shared_ptr<Body> body, std::shared_ptr<Body> other,
+                      Contact &contact) const {
+    if (this->shape == nullptr || other->shape == nullptr) {
         return false;
     }
+    contact.bodyA = body;
+    contact.bodyB = other;
 
-    glm::vec3 ab = other.position.toGlm() - this->position.toGlm();
+    glm::vec3 ab = other->position.toGlm() - this->position.toGlm();
+    contact.normal = glm::normalize(ab);
 
     const Sphere *sphereA = dynamic_cast<const Sphere *>(this->shape.get());
-    const Sphere *sphereB = dynamic_cast<const Sphere *>(other.shape.get());
+    const Sphere *sphereB = dynamic_cast<const Sphere *>(other->shape.get());
+
+    contact.pointA.worldSpacePoint =
+        this->position.toGlm() + contact.normal * sphereA->radius;
+    contact.pointB.worldSpacePoint =
+        other->position.toGlm() - contact.normal * sphereB->radius;
 
     float radiusAB = sphereA->radius + sphereB->radius;
     float lengthSquare = glm::dot(ab, ab);
@@ -91,4 +109,20 @@ bool Body::intersects(const Body &other) const {
     }
 
     return false;
+}
+
+void Body::resolveContact(Contact &contact) {
+    std::shared_ptr<Body> bodyA = contact.bodyA;
+    std::shared_ptr<Body> bodyB = contact.bodyB;
+
+    bodyA->linearVelocity = {0.0f, 0.0f, 0.0f};
+    bodyB->linearVelocity = {0.0f, 0.0f, 0.0f};
+
+    float tA = bodyA->invMass / (bodyA->invMass + bodyB->invMass);
+    float tB = bodyB->invMass / (bodyA->invMass + bodyB->invMass);
+
+    glm::vec3 ds =
+        contact.pointB.worldSpacePoint - contact.pointA.worldSpacePoint;
+    bodyA->position = bodyA->position + Position3d::fromGlm(ds) * tA;
+    bodyB->position = bodyB->position - Position3d::fromGlm(ds) * tB;
 }

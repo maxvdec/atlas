@@ -153,6 +153,8 @@ class Window {
     bool debug = false;
 
     friend class CoreObject;
+    friend class RenderTarget;
+    friend class DirectionalLight;
 };
 
 #endif // WINDOW_H

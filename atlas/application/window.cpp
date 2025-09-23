@@ -8,6 +8,7 @@
 */
 
 #include "atlas/core/shader.h"
+#include "atlas/light.h"
 #include "atlas/object.h"
 #include "atlas/units.h"
 #include "bezel/body.h"
@@ -159,6 +160,11 @@ void Window::run() {
         this->deltaTime = currentTime - this->lastTime;
         lastTime = currentTime;
 
+        // Update the renderables
+        for (auto &obj : this->renderables) {
+            obj->update(*this);
+        }
+
         glEnable(GL_CULL_FACE);
         glCullFace(GL_FRONT);
         glFrontFace(GL_CW);
@@ -166,11 +172,6 @@ void Window::run() {
         currentScene->update(*this);
 
         renderLightsToShadowMaps();
-
-        // Update the renderables
-        for (auto &obj : this->renderables) {
-            obj->update(*this);
-        }
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glEnable(GL_CULL_FACE);
@@ -408,17 +409,18 @@ void Window::renderLightsToShadowMaps() {
         glClear(GL_DEPTH_BUFFER_BIT);
         glEnable(GL_CULL_FACE);
         glCullFace(GL_FRONT);
+        ShadowParams lightParams =
+            light->calculateLightSpaceMatrix(this->renderables);
+        glm::mat4 lightView = lightParams.lightView;
+        glm::mat4 lightProjection = lightParams.lightProjection;
         for (auto &obj : this->renderables) {
             originalPrograms.push_back(obj->getShaderProgram().value());
-            if (obj->getShaderProgram() == std::nullopt) {
+            if (obj->getShaderProgram() == std::nullopt ||
+                !obj->canCastShadows()) {
                 continue;
             }
             obj->setShader(this->depthProgram);
 
-            std::tuple<glm::mat4, glm::mat4> lightSpace =
-                light->calculateLightSpaceMatrix(this->renderables);
-            glm::mat4 lightView = std::get<0>(lightSpace);
-            glm::mat4 lightProjection = std::get<1>(lightSpace);
             obj->setProjectionMatrix(lightProjection);
             obj->setViewMatrix(lightView);
             obj->render();
@@ -438,16 +440,17 @@ void Window::renderLightsToShadowMaps() {
         glClear(GL_DEPTH_BUFFER_BIT);
         glEnable(GL_CULL_FACE);
         glCullFace(GL_FRONT);
+        std::tuple<glm::mat4, glm::mat4> lightSpace =
+            light->calculateLightSpaceMatrix();
+        glm::mat4 lightView = std::get<0>(lightSpace);
+        glm::mat4 lightProjection = std::get<1>(lightSpace);
         for (auto &obj : this->renderables) {
-            if (obj->getShaderProgram() == std::nullopt) {
+            if (obj->getShaderProgram() == std::nullopt ||
+                !obj->canCastShadows()) {
                 continue;
             }
             ShaderProgram program = obj->getShaderProgram().value();
 
-            std::tuple<glm::mat4, glm::mat4> lightSpace =
-                light->calculateLightSpaceMatrix();
-            glm::mat4 lightView = std::get<0>(lightSpace);
-            glm::mat4 lightProjection = std::get<1>(lightSpace);
             obj->setProjectionMatrix(lightProjection);
             obj->setViewMatrix(lightView);
             obj->render();
