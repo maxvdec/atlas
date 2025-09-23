@@ -43,6 +43,7 @@ class Body {
     glm::quat orientation;
     std::shared_ptr<Shape> shape;
     glm::vec3 linearVelocity = {0.0f, 0.0f, 0.0f};
+    glm::vec3 angularVelocity = {0.0f, 0.0f, 0.0f};
     float invMass = 0.0f;
     float elasticity = 0.5f;
 
@@ -52,7 +53,11 @@ class Body {
     glm::vec3 worldSpaceToModelSpace(const glm::vec3 &point) const;
     glm::vec3 modelSpaceToWorldSpace(const glm::vec3 &point) const;
 
+    glm::mat3 getInverseInertiaTensorWorldSpace() const;
+    glm::mat3 getInverseInertiaTensorBodySpace() const;
+
     void applyLinearImpulse(const glm::vec3 &impulse);
+    void applyAngularImpulse(const glm::vec3 &impulse);
 
     inline void applyMass(float mass) {
         if (mass <= 0.0f) {

@@ -12,3 +12,8 @@
 Sphere::Sphere(float radius) : radius(radius) {
     this->centerOfMass = {0.0f, 0.0f, 0.0f};
 }
+
+glm::mat3 Sphere::getInertiaTensor() const {
+    float coeff = 2.0f * radius * radius / 5.0f;
+    return glm::mat3(coeff, 0.0f, 0.0f, 0.0f, coeff, 0.0f, 0.0f, 0.0f, coeff);
+}

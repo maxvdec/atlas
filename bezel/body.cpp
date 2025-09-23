@@ -83,6 +83,18 @@ void Body::applyLinearImpulse(const glm::vec3 &impulse) {
     linearVelocity += impulse * invMass;
 }
 
+void Body::applyAngularImpulse(const glm::vec3 &impulse) {
+    if (invMass == 0.0f) {
+        return; // Infinite mass, do nothing
+    }
+    angularVelocity += getInverseInertiaTensorWorldSpace() * impulse;
+
+    const float maxAngularSpeed = 30.0f;
+    if (glm::length(angularVelocity) > maxAngularSpeed) {
+        angularVelocity = glm::normalize(angularVelocity) * maxAngularSpeed;
+    }
+}
+
 bool Body::intersects(std::shared_ptr<Body> body, std::shared_ptr<Body> other,
                       Contact &contact) const {
     if (this->shape == nullptr || other->shape == nullptr) {
@@ -155,4 +167,17 @@ void Body::resolveContact(Contact &contact) {
             bodyB->position +
             Position3d::fromGlm(separationDirection * separationDistance * tB);
     }
+}
+
+glm::mat3 Body::getInverseInertiaTensorBodySpace() const {
+    glm::mat3 inertiaTensor = shape->getInertiaTensor();
+    glm::mat3 invInertiaTensor = glm::inverse(inertiaTensor) * invMass;
+    return invInertiaTensor;
+}
+
+glm::mat3 Body::getInverseInertiaTensorWorldSpace() const {
+    glm::mat3 inertiaTensor = shape->getInertiaTensor();
+    glm::mat3 invInertiaTensor = glm::inverse(inertiaTensor) * invMass;
+    glm::mat3 rotationMatrix = glm::mat3_cast(orientation);
+    return rotationMatrix * invInertiaTensor * glm::transpose(rotationMatrix);
 }
