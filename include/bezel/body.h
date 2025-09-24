@@ -35,6 +35,8 @@ struct Contact {
 
     std::shared_ptr<Body> bodyA;
     std::shared_ptr<Body> bodyB;
+
+    int compareTo(const Contact other) const;
 };
 
 class Body {
@@ -79,7 +81,7 @@ class Body {
     void update(Window &window);
 
     bool intersects(std::shared_ptr<Body> bodyA, std::shared_ptr<Body> bodyB,
-                    Contact &contact) const;
+                    Contact &contact, float dt) const;
 
     void resolveContact(Contact &contact);
 

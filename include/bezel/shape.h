@@ -36,4 +36,15 @@ class Sphere : public Shape {
     float radius;
 };
 
+namespace bezel {
+bool raySphere(const glm::vec3 &rayOrigin, const glm::vec3 &rayDirection,
+               const glm::vec3 &sphereCenter, const float sphereRadius,
+               float &t1, float &t2);
+bool sphereToSphereDynamic(const Sphere *sphereA, const Sphere *sphereB,
+                           const glm::vec3 &posA, const glm::vec3 &posB,
+                           const glm::vec3 &velA, const glm::vec3 &velB,
+                           const float dt, glm::vec3 &pointOnA,
+                           glm::vec3 &pointOnB, float &toi);
+} // namespace bezel
+
 #endif // ATLAS_SHAPE_H
