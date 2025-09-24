@@ -94,7 +94,7 @@ class MainScene : public Scene {
         sphere = createDebugSphere(0.1, 64, 64);
         sphere.setPosition({0.0, 7, 0.0});
         sphere.setRotation({0.0, 90.0, 90.0});
-        sphere.body->linearVelocity = {1.0, 0.0, 0.0};
+        sphere.body->linearVelocity = {0.3, 0.0, 0.0};
         sphere.body->invMass = 1.0f;
         sphere.body->friction = 0.8f;
 

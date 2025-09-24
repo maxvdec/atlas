@@ -11,12 +11,23 @@
 #include "atlas/units.h"
 #include "atlas/window.h"
 #include "bezel/shape.h"
+#include <algorithm>
 #include <iostream>
 #include <memory>
 #include <vector>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtx/norm.hpp>
+
+int Contact::compareTo(const Contact other) const {
+    if (this->timeOfImpact < other.timeOfImpact) {
+        return -1;
+    } else if (this->timeOfImpact > other.timeOfImpact) {
+        return 1;
+    } else {
+        return 0;
+    }
+}
 
 glm::vec3 Body::getCenterOfMassWorldSpace() const {
     return modelSpaceToWorldSpace(this->shape->getCenterOfMass());
@@ -46,36 +57,77 @@ void Body::update(Window &window) {
             }
         }
     }
-    // std::cout << "Updating body at position: " << position << std::endl;
-    // std::cout << "Rotation: " << glm::to_string(orientation) << std::endl;
 
-    float gravity = window.gravity;
-    glm::vec3 gravityVec = {0.0f, -gravity, 0.0f};
+    float dt = window.getDeltaTime();
+    dt = std::min(dt, 0.0333f);
 
-    float deltaTime = window.getDeltaTime();
-    deltaTime = std::min(deltaTime, 0.0333f);
-    float mass = getMass();
-    glm::vec3 gravityImpulse = gravityVec * deltaTime * mass;
-    applyLinearImpulse(gravityImpulse);
+    // Apply gravity
+    float mass = 1.0 / invMass;
+    glm::vec3 impulseGravity =
+        glm::vec3(0.0f, -window.gravity, 0.0f) * mass * dt;
+    applyLinearImpulse(impulseGravity);
 
     std::vector<std::shared_ptr<Body>> bodies = window.getAllBodies();
+
+    // Check contacts
+    int numContacts = 0;
+    const int maxContacts = bodies.size() * bodies.size();
+    std::vector<Contact> contacts;
+    contacts.reserve(maxContacts);
     for (const auto &other : bodies) {
         if (other.get() == this) {
             continue;
         }
 
-        if (other->invMass == 0.0f && this->invMass == 0.0f) {
+        if (invMass == 0.0f && other->invMass == 0.0f) {
             continue;
         }
 
         Contact contact;
-
-        if (this->intersects(thisShared, other, contact, deltaTime)) {
-            resolveContact(contact);
+        if (intersects(thisShared, other, contact, dt)) {
+            contacts.push_back(contact);
+            numContacts++;
+            if (numContacts >= maxContacts) {
+                break;
+            }
         }
     }
 
-    updatePhysics(deltaTime);
+    // Sort contacts by time of impact
+    if (numContacts > 1) {
+        std::sort(contacts.begin(), contacts.end(),
+                  [](const Contact &a, const Contact &b) {
+                      return a.compareTo(b) < 0;
+                  });
+    }
+
+    float accumulatedTime = 0.0f;
+    for (int i = 0; i < numContacts; i++) {
+        Contact &contact = contacts[i];
+        const float delta = contact.timeOfImpact - accumulatedTime;
+
+        std::shared_ptr<Body> bodyA = contact.bodyA;
+        std::shared_ptr<Body> bodyB = contact.bodyB;
+
+        if (bodyA->invMass == 0.0f && bodyB->invMass == 0.0f) {
+            continue;
+        }
+
+        for (int j = 0; j < bodies.size(); j++) {
+            bodies[j]->updatePhysics(delta);
+        }
+
+        resolveContact(contact);
+        accumulatedTime += delta;
+    }
+
+    // Update the positions for the rest of the frame
+    const float remainingTime = dt - accumulatedTime;
+    if (remainingTime > 0.0f) {
+        for (int i = 0; i < bodies.size(); i++) {
+            bodies[i]->updatePhysics(remainingTime);
+        }
+    }
 }
 
 void Body::applyLinearImpulse(const glm::vec3 &impulse) {
@@ -226,6 +278,10 @@ void Body::resolveContact(Contact &contact) {
 
     bodyA->applyImpulse(pointA, -impulseFriction);
     bodyB->applyImpulse(pointB, impulseFriction);
+
+    if (contact.timeOfImpact == 0.0f) {
+        return; // No positional correction needed
+    }
 
     // Positional correction to avoid sinking
 
