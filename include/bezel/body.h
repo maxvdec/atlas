@@ -45,7 +45,8 @@ class Body {
     glm::vec3 linearVelocity = {0.0f, 0.0f, 0.0f};
     glm::vec3 angularVelocity = {0.0f, 0.0f, 0.0f};
     float invMass = 0.0f;
-    float elasticity = 0.5f;
+    float elasticity = 0.0f;
+    float friction = 0.5f;
 
     glm::vec3 getCenterOfMassWorldSpace() const;
     glm::vec3 getCenterOfMassModelSpace() const;

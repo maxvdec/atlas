@@ -14,6 +14,9 @@
 #include <iostream>
 #include <memory>
 #include <vector>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/string_cast.hpp>
+#include <glm/gtx/norm.hpp>
 
 glm::vec3 Body::getCenterOfMassWorldSpace() const {
     return modelSpaceToWorldSpace(this->shape->getCenterOfMass());
@@ -43,6 +46,8 @@ void Body::update(Window &window) {
             }
         }
     }
+    // std::cout << "Updating body at position: " << position << std::endl;
+    // std::cout << "Rotation: " << glm::to_string(orientation) << std::endl;
 
     float gravity = window.gravity;
     glm::vec3 gravityVec = {0.0f, -gravity, 0.0f};
@@ -161,7 +166,7 @@ void Body::resolveContact(Contact &contact) {
         glm::cross((invWorldInertiaB * glm::cross(rb, n)), rb);
     const float angularFactor = glm::dot(angularJA + angularJB, n);
 
-    // Get the worl space velocity of the contact points
+    // Get the world space velocity of the contact points
     glm::vec3 velA =
         bodyA->linearVelocity + glm::cross(bodyA->angularVelocity, ra);
     glm::vec3 velB =
@@ -176,6 +181,31 @@ void Body::resolveContact(Contact &contact) {
     bodyA->applyImpulse(pointA, -impulseJVec);
     bodyB->applyImpulse(pointB, impulseJVec);
 
+    // Calculate the friction
+    float frictionA = bodyA->friction;
+    float frictionB = bodyB->friction;
+    float friction = frictionA * frictionB;
+
+    glm::vec3 velNorm = n * glm::dot(n, vab);
+    glm::vec3 velTangent = vab - velNorm;
+
+    glm::vec3 relativeVelTangent(0.0f);
+    if (glm::length2(velTangent) > 1e-8f) {
+        relativeVelTangent = glm::normalize(velTangent);
+    }
+
+    glm::vec3 inertiaA =
+        glm::cross((invWorldInertiaA * glm::cross(ra, relativeVelTangent)), ra);
+    glm::vec3 inertiaB =
+        glm::cross((invWorldInertiaB * glm::cross(rb, relativeVelTangent)), rb);
+    const float invInertia = glm::dot(inertiaA + inertiaB, relativeVelTangent);
+
+    float reducedMass = 1.0f / (invMassA + invMassB + invInertia);
+    glm::vec3 impulseFriction = velTangent * reducedMass * friction;
+
+    bodyA->applyImpulse(pointA, -impulseFriction);
+    bodyB->applyImpulse(pointB, impulseFriction);
+
     // Positional correction to avoid sinking
 
     const Sphere *sphereA = dynamic_cast<const Sphere *>(this->shape.get());
@@ -186,21 +216,22 @@ void Body::resolveContact(Contact &contact) {
     float totalRadius = sphereA->radius + sphereB->radius;
 
     if (distance < totalRadius) {
-        float penetrationDepth = totalRadius - distance;
-
-        float separationDistance = penetrationDepth + 0.001f;
-
-        glm::vec3 separationDirection = glm::normalize(centerToCenter);
-
         float tA = bodyA->invMass / (bodyA->invMass + bodyB->invMass);
         float tB = bodyB->invMass / (bodyA->invMass + bodyB->invMass);
 
+        const float percent = 0.2f; // correction strength
+        const float slop = 0.001f;  // small allowance
+        float penetrationDepth = totalRadius - distance;
+        float correction = std::max(penetrationDepth - slop, 0.0f) * percent;
+
+        glm::vec3 separationDirection = glm::normalize(centerToCenter);
+
         bodyA->position =
             bodyA->position -
-            Position3d::fromGlm(separationDirection * separationDistance * tA);
+            Position3d::fromGlm(separationDirection * correction * tA);
         bodyB->position =
             bodyB->position +
-            Position3d::fromGlm(separationDirection * separationDistance * tB);
+            Position3d::fromGlm(separationDirection * correction * tB);
     }
 }
 
@@ -218,6 +249,9 @@ glm::mat3 Body::getInverseInertiaTensorWorldSpace() const {
 }
 
 void Body::updatePhysics(double dt) {
+    if (invMass == 0.0f) {
+        return;
+    }
     glm::vec3 pos = this->position.toGlm() + linearVelocity * (float)dt;
     this->position = Position3d::fromGlm(pos);
 
@@ -236,10 +270,14 @@ void Body::updatePhysics(double dt) {
 
     glm::vec3 dAngle = angularVelocity * (float)dt;
     float angle = glm::length(dAngle);
-    glm::vec3 axis = glm::normalize(dAngle);
-    glm::quat dq = glm::angleAxis(angle, axis);
-    orientationQuat = glm::normalize(dq * orientationQuat);
 
-    orientation = glm::mat3_cast(orientationQuat);
-    glm::vec3 newPos = positionCM + orientation * (dq * cmToPos);
+    if (angle > 1e-6f) {
+        glm::vec3 axis = dAngle / angle; // Safe normalization
+        glm::quat dq = glm::angleAxis(angle, axis);
+        orientationQuat = glm::normalize(dq * orientationQuat);
+
+        this->orientation = orientationQuat;
+        glm::vec3 newPos = positionCM + orientation * (dq * cmToPos);
+        this->position = Position3d::fromGlm(newPos);
+    }
 }
