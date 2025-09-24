@@ -16,6 +16,7 @@
 #include "atlas/scene.h"
 #include "atlas/texture.h"
 #include "atlas/units.h"
+#include "bezel/body.h"
 #include <memory>
 #include <optional>
 #include <string>
@@ -121,6 +122,12 @@ class Window {
     inline void activateDebug() { this->debug = true; }
     inline void deactivateDebug() { this->debug = false; }
 
+    inline float getDeltaTime() { return this->deltaTime; }
+
+    std::vector<std::shared_ptr<Body>> getAllBodies();
+
+    float gravity = 9.81f;
+
   private:
     CoreWindowReference windowRef;
     std::vector<Renderable *> renderables;
@@ -139,13 +146,15 @@ class Window {
     float lastMouseY;
 
     float lastTime = 0.0f;
-    int frameCount = 0;
+    float deltaTime = 0.0f;
 
     ShaderProgram depthProgram;
 
     bool debug = false;
 
     friend class CoreObject;
+    friend class RenderTarget;
+    friend class DirectionalLight;
 };
 
 #endif // WINDOW_H

@@ -11,6 +11,7 @@
 #define ATLAS_UNITS_H
 
 #include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
 #include <numbers>
 #include <ostream>
 
@@ -89,6 +90,18 @@ struct Rotation3d {
     inline glm::vec3 toGlm() const {
         return glm::vec3(static_cast<float>(pitch), static_cast<float>(yaw),
                          static_cast<float>(roll));
+    }
+
+    inline glm::quat toGlmQuat() const {
+        glm::vec3 eulerAngles = toGlm();
+        glm::vec3 radians = glm::radians(eulerAngles);
+        return glm::quat(radians);
+    }
+
+    inline static Rotation3d fromGlmQuat(const glm::quat &quat) {
+        glm::vec3 euler = glm::degrees(glm::eulerAngles(quat));
+        return {static_cast<double>(euler.x), static_cast<double>(euler.y),
+                static_cast<double>(euler.z)};
     }
 
     inline static Rotation3d fromGlm(const glm::vec3 &vec) {

@@ -10,6 +10,9 @@
 #ifndef ATLAS_OBJECT_H
 #define ATLAS_OBJECT_H
 
+#include "bezel/body.h"
+#include "bezel/shape.h"
+#include <memory>
 #pragma once
 
 #include "atlas/core/shader.h"
@@ -47,6 +50,8 @@ struct CoreVertex {
 
 typedef unsigned int BufferIndex;
 typedef unsigned int Index;
+
+class Window;
 
 class CoreObject : public Renderable {
   public:
@@ -90,7 +95,13 @@ class CoreObject : public Renderable {
     inline void show() { isVisible = true; }
     inline void hide() { isVisible = false; }
 
+    void setupPhysics(Body body);
+
     Id id;
+
+    std::shared_ptr<Body> body = nullptr;
+
+    bool castsShadows = true;
 
   private:
     BufferIndex vbo;
@@ -105,6 +116,8 @@ class CoreObject : public Renderable {
     bool useTexture = false;
 
     bool isVisible = true;
+
+    bool hasPhysics = false;
 
     friend class Window;
     friend class RenderTarget;
@@ -130,6 +143,9 @@ class CoreObject : public Renderable {
     }
 
     inline Size3d getScale() const override { return scale; }
+    inline bool canCastShadows() const override { return castsShadows; }
+
+    void update(Window &window) override;
 };
 
 CoreObject createBox(Size3d size, Color color = {1.0, 1.0, 1.0, 1.0});

@@ -17,11 +17,13 @@
 #include <vector>
 
 struct CoreVertex;
+class Window;
 
 class Renderable {
   public:
     virtual void render() = 0;
     virtual void initialize() {};
+    virtual void update(Window &window) {};
     virtual void setViewMatrix(const glm::mat4 &view) {};
     virtual void setProjectionMatrix(const glm::mat4 &projection) {};
     virtual std::optional<ShaderProgram> getShaderProgram() {
@@ -31,6 +33,7 @@ class Renderable {
     virtual Position3d getPosition() const { return {0, 0, 0}; };
     virtual std::vector<CoreVertex> getVertices() const { return {}; };
     virtual Size3d getScale() const { return {1, 1, 1}; };
+    virtual bool canCastShadows() const { return false; };
     virtual ~Renderable() = default;
 };
 

@@ -10,6 +10,7 @@
 #ifndef ATLAS_LIGHT_H
 #define ATLAS_LIGHT_H
 
+#include "atlas/camera.h"
 #include "atlas/core/renderable.h"
 #include "atlas/object.h"
 #include "atlas/texture.h"
@@ -31,6 +32,12 @@ struct PointLightConstants {
     float constant;
     float linear;
     float quadratic;
+};
+
+struct ShadowParams {
+    glm::mat4 lightView;
+    glm::mat4 lightProjection;
+    float bias;
 };
 
 struct Light {
@@ -90,11 +97,15 @@ class DirectionalLight {
   private:
     bool doesCastShadows = false;
 
-    std::tuple<glm::mat4, glm::mat4>
+    ShadowParams
     calculateLightSpaceMatrix(std::vector<Renderable *> renderable) const;
 
     friend class Window;
     friend class CoreObject;
+
+  private:
+    std::vector<glm::vec4>
+    getCameraFrustumCornersWorldSpace(Camera *camera, Window *window) const;
 };
 
 struct Spotlight {

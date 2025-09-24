@@ -7,9 +7,12 @@
  Copyright (c) 2025 maxvdec
 */
 
+#include "bezel/shape.h"
 #include "atlas/object.h"
 #include "atlas/texture.h"
 #include "atlas/units.h"
+#include "bezel/body.h"
+#include <memory>
 #include <vector>
 
 CoreObject createBox(Size3d size, Color color) {
@@ -286,5 +289,13 @@ CoreObject createDebugSphere(double radius, unsigned int sectorCount,
 
     sphere.attachTexture(checkerboard);
     sphere.material.specular = Color::white() * 0.5;
+
+    Body body;
+    std::shared_ptr<Sphere> physicsSphere = std::make_shared<Sphere>(radius);
+    body.shape = physicsSphere;
+    body.invMass = 1.0f;
+
+    sphere.setupPhysics(body);
+
     return sphere;
 }

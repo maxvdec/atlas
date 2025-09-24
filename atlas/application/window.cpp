@@ -8,16 +8,20 @@
 */
 
 #include "atlas/core/shader.h"
+#include "atlas/light.h"
 #include "atlas/object.h"
 #include "atlas/units.h"
+#include "bezel/body.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <atlas/window.h>
 #include <iostream>
+#include <memory>
 #include <optional>
 #include <string>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <vector>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
 #include <tuple>
@@ -142,7 +146,6 @@ void Window::run() {
     }
     GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
 
-    // glEnable(GL_FRAMEBUFFER_SRGB);
     glEnable(GL_MULTISAMPLE);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
@@ -153,20 +156,18 @@ void Window::run() {
     glFrontFace(GL_CW);
 
     while (!glfwWindowShouldClose(window)) {
+        float currentTime = static_cast<float>(glfwGetTime());
+        this->deltaTime = currentTime - this->lastTime;
+        lastTime = currentTime;
+
+        // Update the renderables
+        for (auto &obj : this->renderables) {
+            obj->update(*this);
+        }
+
         glEnable(GL_CULL_FACE);
         glCullFace(GL_FRONT);
         glFrontFace(GL_CW);
-
-        frameCount++;
-
-        // Update FPS
-        if (getTime() - lastTime >= 1.0f) {
-            std::string newTitle =
-                title + " - FPS: " + std::to_string(frameCount);
-            glfwSetWindowTitle(window, newTitle.c_str());
-            frameCount = 0;
-            lastTime = getTime();
-        }
 
         currentScene->update(*this);
 
@@ -408,17 +409,18 @@ void Window::renderLightsToShadowMaps() {
         glClear(GL_DEPTH_BUFFER_BIT);
         glEnable(GL_CULL_FACE);
         glCullFace(GL_FRONT);
+        ShadowParams lightParams =
+            light->calculateLightSpaceMatrix(this->renderables);
+        glm::mat4 lightView = lightParams.lightView;
+        glm::mat4 lightProjection = lightParams.lightProjection;
         for (auto &obj : this->renderables) {
             originalPrograms.push_back(obj->getShaderProgram().value());
-            if (obj->getShaderProgram() == std::nullopt) {
+            if (obj->getShaderProgram() == std::nullopt ||
+                !obj->canCastShadows()) {
                 continue;
             }
             obj->setShader(this->depthProgram);
 
-            std::tuple<glm::mat4, glm::mat4> lightSpace =
-                light->calculateLightSpaceMatrix(this->renderables);
-            glm::mat4 lightView = std::get<0>(lightSpace);
-            glm::mat4 lightProjection = std::get<1>(lightSpace);
             obj->setProjectionMatrix(lightProjection);
             obj->setViewMatrix(lightView);
             obj->render();
@@ -438,16 +440,17 @@ void Window::renderLightsToShadowMaps() {
         glClear(GL_DEPTH_BUFFER_BIT);
         glEnable(GL_CULL_FACE);
         glCullFace(GL_FRONT);
+        std::tuple<glm::mat4, glm::mat4> lightSpace =
+            light->calculateLightSpaceMatrix();
+        glm::mat4 lightView = std::get<0>(lightSpace);
+        glm::mat4 lightProjection = std::get<1>(lightSpace);
         for (auto &obj : this->renderables) {
-            if (obj->getShaderProgram() == std::nullopt) {
+            if (obj->getShaderProgram() == std::nullopt ||
+                !obj->canCastShadows()) {
                 continue;
             }
             ShaderProgram program = obj->getShaderProgram().value();
 
-            std::tuple<glm::mat4, glm::mat4> lightSpace =
-                light->calculateLightSpaceMatrix();
-            glm::mat4 lightView = std::get<0>(lightSpace);
-            glm::mat4 lightProjection = std::get<1>(lightSpace);
             obj->setProjectionMatrix(lightProjection);
             obj->setViewMatrix(lightView);
             obj->render();
@@ -463,4 +466,15 @@ void Window::renderLightsToShadowMaps() {
             renderable->setShader(originalPrograms.front());
         }
     }
+}
+
+std::vector<std::shared_ptr<Body>> Window::getAllBodies() {
+    std::vector<std::shared_ptr<Body>> bodies;
+    for (auto &obj : this->renderables) {
+        CoreObject *coreObj = dynamic_cast<CoreObject *>(obj);
+        if (coreObj != nullptr && coreObj->hasPhysics) {
+            bodies.push_back(coreObj->body);
+        }
+    }
+    return bodies;
 }

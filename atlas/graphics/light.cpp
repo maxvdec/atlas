@@ -148,7 +148,7 @@ void DirectionalLight::castShadows(Window &window, int resolution) {
     this->doesCastShadows = true;
 }
 
-std::tuple<glm::mat4, glm::mat4> DirectionalLight::calculateLightSpaceMatrix(
+ShadowParams DirectionalLight::calculateLightSpaceMatrix(
     const std::vector<Renderable *> objects) const {
 
     if (objects.empty()) {
@@ -160,6 +160,8 @@ std::tuple<glm::mat4, glm::mat4> DirectionalLight::calculateLightSpaceMatrix(
     glm::vec3 maxPos(std::numeric_limits<float>::lowest());
 
     for (auto *obj : objects) {
+        if (!obj->canCastShadows())
+            continue;
         glm::vec3 pos = obj->getPosition().toGlm();
         glm::vec3 scale = obj->getScale().toGlm();
 
@@ -185,7 +187,7 @@ std::tuple<glm::mat4, glm::mat4> DirectionalLight::calculateLightSpaceMatrix(
         maxPos = glm::max(maxPos, worldMax);
     }
 
-    glm::vec3 padding(2.0f);
+    glm::vec3 padding(5.0f);
     minPos -= padding;
     maxPos += padding;
 
@@ -235,7 +237,9 @@ std::tuple<glm::mat4, glm::mat4> DirectionalLight::calculateLightSpaceMatrix(
     glm::mat4 lightProjection =
         glm::ortho(left, right, bottom, top, near_plane, far_plane);
 
-    return {lightView, lightProjection};
+    float bias = 0.0002f * glm::length(extent);
+
+    return {lightView, lightProjection, bias};
 }
 
 std::tuple<glm::mat4, glm::mat4> Spotlight::calculateLightSpaceMatrix() const {
