@@ -72,6 +72,7 @@ class MainScene : public Scene {
 
         plane = createDebugSphere(5.0, 64, 128);
         plane.body->invMass = 0.0f;
+        plane.body->friction = 0.8f;
 
         plane.setPosition({0, 0.0, 0.0});
         plane.castsShadows = false;
@@ -87,14 +88,15 @@ class MainScene : public Scene {
             blue * mediumMultiplier);
 
         plane.attachTexture(checkerboard);
-        plane.body->elasticity = 0.5f;
 
         window.addObject(&plane);
 
         sphere = createDebugSphere(0.1, 64, 64);
         sphere.setPosition({0.0, 7, 0.0});
         sphere.setRotation({0.0, 90.0, 90.0});
-        sphere.body->elasticity = 0.5f;
+        sphere.body->linearVelocity = {1.0, 0.0, 0.0};
+        sphere.body->invMass = 1.0f;
+        sphere.body->friction = 0.8f;
 
         window.addObject(&sphere);
 

@@ -20,6 +20,8 @@ class Shape {
 
     virtual glm::vec3 getCenterOfMass() const { return centerOfMass; }
 
+    virtual glm::mat3 getInertiaTensor() const = 0;
+
   protected:
     glm::vec3 centerOfMass = {0.0f, 0.0f, 0.0f};
 };
@@ -28,6 +30,8 @@ class Sphere : public Shape {
   public:
     Sphere(float radius);
     ShapeType getType() const override { return ShapeType::Sphere; }
+
+    glm::mat3 getInertiaTensor() const override;
 
     float radius;
 };
