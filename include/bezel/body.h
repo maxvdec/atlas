@@ -79,7 +79,7 @@ class Body {
     void update(Window &window);
 
     bool intersects(std::shared_ptr<Body> bodyA, std::shared_ptr<Body> bodyB,
-                    Contact &contact) const;
+                    Contact &contact, float dt) const;
 
     void resolveContact(Contact &contact);
 

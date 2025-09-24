@@ -70,7 +70,7 @@ void Body::update(Window &window) {
 
         Contact contact;
 
-        if (this->intersects(thisShared, other, contact)) {
+        if (this->intersects(thisShared, other, contact, deltaTime)) {
             resolveContact(contact);
         }
     }
@@ -111,28 +111,49 @@ void Body::applyImpulse(const glm::vec3 &point, const glm::vec3 &impulse) {
 }
 
 bool Body::intersects(std::shared_ptr<Body> body, std::shared_ptr<Body> other,
-                      Contact &contact) const {
+                      Contact &contact, float dt) const {
     if (this->shape == nullptr || other->shape == nullptr) {
         return false;
     }
     contact.bodyA = body;
     contact.bodyB = other;
 
-    glm::vec3 ab = other->position.toGlm() - this->position.toGlm();
-    contact.normal = glm::normalize(ab);
+    if (body->shape->getType() == Shape::ShapeType::Sphere &&
+        other->shape->getType() == Shape::ShapeType::Sphere) {
+        const Sphere *sphereA = dynamic_cast<const Sphere *>(body->shape.get());
+        const Sphere *sphereB =
+            dynamic_cast<const Sphere *>(other->shape.get());
 
-    const Sphere *sphereA = dynamic_cast<const Sphere *>(this->shape.get());
-    const Sphere *sphereB = dynamic_cast<const Sphere *>(other->shape.get());
+        glm::vec3 posA = body->position.toGlm();
+        glm::vec3 posB = other->position.toGlm();
 
-    contact.pointA.worldSpacePoint =
-        this->position.toGlm() + contact.normal * sphereA->radius;
-    contact.pointB.worldSpacePoint =
-        other->position.toGlm() - contact.normal * sphereB->radius;
+        glm::vec3 velA = body->linearVelocity;
+        glm::vec3 velB = other->linearVelocity;
 
-    float radiusAB = sphereA->radius + sphereB->radius;
-    float lengthSquare = glm::dot(ab, ab);
-    if (lengthSquare <= (radiusAB * radiusAB)) {
-        return true;
+        if (bezel::sphereToSphereDynamic(
+                sphereA, sphereB, posA, posB, velA, velB, dt,
+                contact.pointA.worldSpacePoint, contact.pointB.worldSpacePoint,
+                contact.timeOfImpact)) {
+            body->updatePhysics(contact.timeOfImpact);
+            other->updatePhysics(contact.timeOfImpact);
+
+            contact.pointA.modelSpacePoint =
+                body->worldSpaceToModelSpace(contact.pointA.worldSpacePoint);
+            contact.pointB.modelSpacePoint =
+                other->worldSpaceToModelSpace(contact.pointB.worldSpacePoint);
+
+            contact.normal = body->position.toGlm() - other->position.toGlm();
+            contact.normal = glm::normalize(contact.normal);
+
+            body->updatePhysics(-contact.timeOfImpact);
+            other->updatePhysics(-contact.timeOfImpact);
+
+            glm::vec3 ab =
+                contact.pointB.worldSpacePoint - contact.pointA.worldSpacePoint;
+            float r = glm::length(ab);
+            contact.separationDistance = r;
+            return true;
+        }
     }
 
     return false;
