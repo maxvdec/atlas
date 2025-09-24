@@ -106,3 +106,119 @@ Bounds Sphere::getBounds() const {
     bounds.expand(radiusVec);
     return bounds;
 }
+
+glm::vec3 Sphere::support(const glm::vec3 &dir, const glm::vec3 &pos,
+                          const glm::quat &orientation, float bias) const {
+
+    return pos + dir * (radius + bias);
+}
+
+Box::Box(std::vector<glm::vec3> points) { build(points); }
+
+void Box::build(const std::vector<glm::vec3> points) {
+    if (points.size() < 1) {
+        return;
+    }
+
+    bounds = Bounds();
+    bounds.expand(points, points.size());
+
+    vertices = {
+        glm::vec3(bounds.mins.x, bounds.mins.y, bounds.mins.z),
+        glm::vec3(bounds.maxs.x, bounds.mins.y, bounds.mins.z),
+        glm::vec3(bounds.maxs.x, bounds.maxs.y, bounds.mins.z),
+        glm::vec3(bounds.mins.x, bounds.maxs.y, bounds.mins.z),
+        glm::vec3(bounds.mins.x, bounds.mins.y, bounds.maxs.z),
+        glm::vec3(bounds.maxs.x, bounds.mins.y, bounds.maxs.z),
+        glm::vec3(bounds.maxs.x, bounds.maxs.y, bounds.maxs.z),
+        glm::vec3(bounds.mins.x, bounds.maxs.y, bounds.maxs.z),
+    };
+
+    centerOfMass = (bounds.mins + bounds.maxs) * 0.5f;
+}
+
+glm::mat3 Box::getInertiaTensor() const {
+    const float dx = bounds.maxs.x - bounds.mins.x;
+    const float dy = bounds.maxs.y - bounds.mins.y;
+    const float dz = bounds.maxs.z - bounds.mins.z;
+
+    glm::mat3 tensor;
+    tensor[0][0] = (dy * dy + dz * dz) / 12.0f;
+    tensor[1][1] = (dx * dx + dz * dz) / 12.0f;
+    tensor[2][2] = (dx * dx + dy * dy) / 12.0f;
+
+    glm::vec3 cm;
+    cm.x = (bounds.maxs.x + bounds.mins.x) * 0.5f;
+    cm.y = (bounds.maxs.y + bounds.mins.y) * 0.5f;
+    cm.z = (bounds.maxs.z + bounds.mins.z) * 0.5f;
+
+    const glm::vec3 R = glm::vec3(0.0f) - cm;
+    const float R2 = glm::length2(R);
+    glm::mat3 patTensor;
+    patTensor[0] = glm::vec3(R2 - R.x * R.x, -R.x * R.y, -R.x * R.z);
+    patTensor[1] = glm::vec3(-R.y * R.x, R2 - R.y * R.y, -R.y * R.z);
+    patTensor[2] = glm::vec3(-R.z * R.x, -R.z * R.y, R2 - R.z * R.z);
+
+    tensor += patTensor;
+    return tensor;
+}
+
+glm::vec3 Box::support(const glm::vec3 &dir, const glm::vec3 &pos,
+                       const glm::quat &orientation, float bias) const {
+    glm::vec3 maxPt = (orientation * vertices[0]) + pos;
+    float maxDist = glm::dot(maxPt, dir);
+
+    for (auto &v : vertices) {
+        glm::vec3 pt = (orientation * v) + pos;
+        float dist = glm::dot(pt, dir);
+
+        if (dist > maxDist) {
+            maxDist = dist;
+            maxPt = pt;
+        }
+    }
+
+    glm::vec3 norm = dir;
+    norm = glm::normalize(norm);
+    norm *= bias;
+
+    return maxPt + norm;
+}
+
+Bounds Box::getBounds(const glm::vec3 &pos,
+                      const glm::quat &orientation) const {
+    glm::vec3 corners[8];
+    corners[0] = glm::vec3(bounds.mins.x, bounds.mins.y, bounds.mins.z);
+    corners[1] = glm::vec3(bounds.mins.x, bounds.mins.y, bounds.maxs.z);
+    corners[2] = glm::vec3(bounds.mins.x, bounds.maxs.y, bounds.mins.z);
+    corners[3] = glm::vec3(bounds.mins.x, bounds.maxs.y, bounds.maxs.z);
+    corners[4] = glm::vec3(bounds.maxs.x, bounds.maxs.y, bounds.maxs.z);
+    corners[5] = glm::vec3(bounds.maxs.x, bounds.maxs.y, bounds.mins.z);
+    corners[6] = glm::vec3(bounds.maxs.x, bounds.mins.y, bounds.maxs.z);
+    corners[7] = glm::vec3(bounds.mins.x, bounds.maxs.y, bounds.maxs.z);
+
+    Bounds bounds;
+    for (int i = 0; i < 8; i++) {
+        corners[i] = orientation * corners[i] + pos;
+        bounds.expand(corners[i]);
+    }
+
+    return bounds;
+}
+
+Bounds Box::getBounds() const { return bounds; }
+
+float Box::fastestLinearSpeed(const glm::vec3 &angularVelocity,
+                              const glm::vec3 &dir) const {
+    float maxSpeed = 0.0f;
+    for (const auto &v : vertices) {
+        glm::vec3 r = v - centerOfMass;
+        glm::vec3 linearVel = glm::cross(angularVelocity, dir);
+        float speed = glm::dot(linearVel, dir);
+        if (speed > maxSpeed) {
+            maxSpeed = speed;
+        }
+    }
+
+    return maxSpeed;
+}

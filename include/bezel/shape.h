@@ -12,10 +12,11 @@
 
 #include "bezel/bounds.h"
 #include <glm/glm.hpp>
+#include <vector>
 
 class Shape {
   public:
-    enum class ShapeType { Sphere };
+    enum class ShapeType { Sphere, Box, Convex };
 
     virtual ShapeType getType() const = 0;
 
@@ -26,6 +27,17 @@ class Shape {
     virtual Bounds getBounds(const glm::vec3 &pos,
                              const glm::quat &orientation) const = 0;
     virtual Bounds getBounds() const = 0;
+
+    virtual glm::vec3 support(const glm::vec3 &dir, const glm::vec3 &pos,
+                              const glm::quat &orientation,
+                              float bias) const = 0;
+
+    virtual float fastestLinearSpeed(const glm::vec3 &linearVelocity,
+                                     const glm::vec3 &dir) const {
+        return 0.0f;
+    }
+
+    virtual void build(const std::vector<glm::vec3> points) {};
 
   protected:
     glm::vec3 centerOfMass = {0.0f, 0.0f, 0.0f};
@@ -42,7 +54,34 @@ class Sphere : public Shape {
                      const glm::quat &orientation) const override;
     Bounds getBounds() const override;
 
+    glm::vec3 support(const glm::vec3 &dir, const glm::vec3 &pos,
+                      const glm::quat &orientation, float bias) const override;
+
     float radius;
+};
+
+class Box : public Shape {
+  public:
+    explicit Box(std::vector<glm::vec3> points);
+
+    void build(const std::vector<glm::vec3> points) override;
+
+    glm::vec3 support(const glm::vec3 &dir, const glm::vec3 &pos,
+                      const glm::quat &orientation, float bias) const override;
+
+    glm::mat3 getInertiaTensor() const override;
+
+    Bounds getBounds(const glm::vec3 &pos,
+                     const glm::quat &orientation) const override;
+    Bounds getBounds() const override;
+
+    float fastestLinearSpeed(const glm::vec3 &linearVelocity,
+                             const glm::vec3 &dir) const override;
+
+    ShapeType getType() const override { return ShapeType::Box; }
+
+    std::vector<glm::vec3> vertices;
+    Bounds bounds;
 };
 
 namespace bezel {
