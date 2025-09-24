@@ -8,6 +8,7 @@
 */
 
 #include "bezel/shape.h"
+#include "bezel/bounds.h"
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/norm.hpp>
 
@@ -87,4 +88,21 @@ bool bezel::sphereToSphereDynamic(const Sphere *sphereA, const Sphere *sphereB,
     pointOnA = newPosA + ab * sphereA->radius;
     pointOnB = newPosB - ab * sphereB->radius;
     return true;
+}
+
+Bounds Sphere::getBounds(const glm::vec3 &pos,
+                         const glm::quat &orientation) const {
+    Bounds bounds;
+    glm::vec3 radiusVec(radius, radius, radius);
+    bounds.expand(pos - radiusVec);
+    bounds.expand(pos + radiusVec);
+    return bounds;
+}
+
+Bounds Sphere::getBounds() const {
+    Bounds bounds;
+    glm::vec3 radiusVec(radius, radius, radius);
+    bounds.expand(-radiusVec);
+    bounds.expand(radiusVec);
+    return bounds;
 }

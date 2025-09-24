@@ -7,8 +7,8 @@
  Copyright (c) 2025 maxvdec
 */
 
-#ifndef ATLAS_BODY_H
-#define ATLAS_BODY_H
+#ifndef BEZEL_BODY_H
+#define BEZEL_BODY_H
 
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -91,4 +91,10 @@ class Body {
     void updatePhysics(double dt);
 };
 
-#endif // ATLAS_BODY_H
+struct PseudoBody {
+    int id;
+    float value;
+    bool ismin;
+};
+
+#endif // BEZEL_BODY_H

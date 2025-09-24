@@ -7,9 +7,10 @@
  Copyright (c) 2025 maxvdec
 */
 
-#ifndef ATLAS_SHAPE_H
-#define ATLAS_SHAPE_H
+#ifndef BEZEL_SHAPE_H
+#define BEZEL_SHAPE_H
 
+#include "bezel/bounds.h"
 #include <glm/glm.hpp>
 
 class Shape {
@@ -22,16 +23,24 @@ class Shape {
 
     virtual glm::mat3 getInertiaTensor() const = 0;
 
+    virtual Bounds getBounds(const glm::vec3 &pos,
+                             const glm::quat &orientation) const = 0;
+    virtual Bounds getBounds() const = 0;
+
   protected:
     glm::vec3 centerOfMass = {0.0f, 0.0f, 0.0f};
 };
 
 class Sphere : public Shape {
   public:
-    Sphere(float radius);
+    explicit Sphere(float radius);
     ShapeType getType() const override { return ShapeType::Sphere; }
 
     glm::mat3 getInertiaTensor() const override;
+
+    Bounds getBounds(const glm::vec3 &pos,
+                     const glm::quat &orientation) const override;
+    Bounds getBounds() const override;
 
     float radius;
 };
@@ -47,4 +56,4 @@ bool sphereToSphereDynamic(const Sphere *sphereA, const Sphere *sphereB,
                            glm::vec3 &pointOnB, float &toi);
 } // namespace bezel
 
-#endif // ATLAS_SHAPE_H
+#endif // BEZEL_SHAPE_H

@@ -10,6 +10,7 @@
 #include "bezel/body.h"
 #include "atlas/units.h"
 #include "atlas/window.h"
+#include "bezel/bounds.h"
 #include "bezel/shape.h"
 #include <algorithm>
 #include <iostream>
@@ -69,64 +70,53 @@ void Body::update(Window &window) {
 
     std::vector<std::shared_ptr<Body>> bodies = window.getAllBodies();
 
-    // Check contacts
+    // Broadphase collision detection using Sweep and Prune
+    std::vector<CollisionPair> pairs;
+    bezel::broadPhase(bodies, pairs, dt);
+
+    // Narrowphase
+
     int numContacts = 0;
     const int maxContacts = bodies.size() * bodies.size();
-    std::vector<Contact> contacts;
-    contacts.reserve(maxContacts);
-    for (const auto &other : bodies) {
-        if (other.get() == this) {
-            continue;
-        }
+    std::vector<Contact> contacts(maxContacts);
+    for (int i = 0; i < pairs.size(); i++) {
+        CollisionPair pair = pairs[i];
+        std::shared_ptr<Body> bodyA = bodies[pair.a];
+        std::shared_ptr<Body> bodyB = bodies[pair.b];
 
-        if (invMass == 0.0f && other->invMass == 0.0f) {
-            continue;
+        if (bodyA->invMass == 0.0f && bodyB->invMass == 0.0f) {
+            continue; // Both bodies have infinite mass, skip
         }
 
         Contact contact;
-        if (intersects(thisShared, other, contact, dt)) {
-            contacts.push_back(contact);
+        if (intersects(bodyA, bodyB, contact, dt)) {
+            contacts[numContacts] = contact;
             numContacts++;
-            if (numContacts >= maxContacts) {
-                break;
-            }
         }
     }
 
-    // Sort contacts by time of impact
     if (numContacts > 1) {
-        std::sort(contacts.begin(), contacts.end(),
+        std::sort(contacts.begin(), contacts.begin() + numContacts,
                   [](const Contact &a, const Contact &b) {
-                      return a.compareTo(b) < 0;
+                      return a.timeOfImpact < b.timeOfImpact;
                   });
     }
+
+    // Integrate and resolve contacts
 
     float accumulatedTime = 0.0f;
     for (int i = 0; i < numContacts; i++) {
         Contact &contact = contacts[i];
-        const float delta = contact.timeOfImpact - accumulatedTime;
+        float dtContact = contact.timeOfImpact - accumulatedTime;
 
-        std::shared_ptr<Body> bodyA = contact.bodyA;
-        std::shared_ptr<Body> bodyB = contact.bodyB;
-
-        if (bodyA->invMass == 0.0f && bodyB->invMass == 0.0f) {
-            continue;
-        }
-
-        for (int j = 0; j < bodies.size(); j++) {
-            bodies[j]->updatePhysics(delta);
-        }
-
+        updatePhysics(dtContact);
         resolveContact(contact);
-        accumulatedTime += delta;
+        accumulatedTime += dtContact;
     }
 
-    // Update the positions for the rest of the frame
     const float remainingTime = dt - accumulatedTime;
     if (remainingTime > 0.0f) {
-        for (int i = 0; i < bodies.size(); i++) {
-            bodies[i]->updatePhysics(remainingTime);
-        }
+        updatePhysics(remainingTime);
     }
 }
 
@@ -194,8 +184,13 @@ bool Body::intersects(std::shared_ptr<Body> body, std::shared_ptr<Body> other,
             contact.pointB.modelSpacePoint =
                 other->worldSpaceToModelSpace(contact.pointB.worldSpacePoint);
 
-            contact.normal = body->position.toGlm() - other->position.toGlm();
-            contact.normal = glm::normalize(contact.normal);
+            glm::vec3 normalVec =
+                body->position.toGlm() - other->position.toGlm();
+            if (glm::length2(normalVec) < 1e-8f) {
+                contact.normal = glm::vec3(1.0f, 0.0f, 0.0f);
+            } else {
+                contact.normal = glm::normalize(normalVec);
+            }
 
             body->updatePhysics(-contact.timeOfImpact);
             other->updatePhysics(-contact.timeOfImpact);
@@ -239,7 +234,6 @@ void Body::resolveContact(Contact &contact) {
         glm::cross((invWorldInertiaB * glm::cross(rb, n)), rb);
     const float angularFactor = glm::dot(angularJA + angularJB, n);
 
-    // Get the world space velocity of the contact points
     glm::vec3 velA =
         bodyA->linearVelocity + glm::cross(bodyA->angularVelocity, ra);
     glm::vec3 velB =
@@ -247,8 +241,12 @@ void Body::resolveContact(Contact &contact) {
 
     glm::vec3 vab = velA - velB;
 
-    float impulseJ = (1.0f + elasticity) * glm::dot(vab, n) /
-                     (invMassA + invMassB + angularFactor);
+    const float denominator = invMassA + invMassB + angularFactor;
+    if (std::abs(denominator) < 1e-6f) {
+        return; // Skip resolution if denominator is too small
+    }
+
+    float impulseJ = (1.0f + elasticity) * glm::dot(vab, n) / denominator;
     glm::vec3 impulseJVec = impulseJ * n;
 
     bodyA->applyImpulse(pointA, -impulseJVec);
@@ -283,35 +281,48 @@ void Body::resolveContact(Contact &contact) {
         return; // No positional correction needed
     }
 
-    // Positional correction to avoid sinking
+    if (invMassA == 0.0f && invMassB == 0.0f) {
+        return;
+    }
 
-    const Sphere *sphereA = dynamic_cast<const Sphere *>(this->shape.get());
+    const Sphere *sphereA = dynamic_cast<const Sphere *>(bodyA->shape.get());
     const Sphere *sphereB = dynamic_cast<const Sphere *>(bodyB->shape.get());
 
-    glm::vec3 centerToCenter = bodyB->position.toGlm() - this->position.toGlm();
-    float distance = glm::length(centerToCenter);
-    float totalRadius = sphereA->radius + sphereB->radius;
+    if (sphereA && sphereB) {
+        glm::vec3 centerToCenter =
+            bodyB->position.toGlm() - bodyA->position.toGlm();
+        float distance = glm::length(centerToCenter);
+        float totalRadius = sphereA->radius + sphereB->radius;
 
-    if (distance < totalRadius) {
-        float tA = bodyA->invMass / (bodyA->invMass + bodyB->invMass);
-        float tB = bodyB->invMass / (bodyA->invMass + bodyB->invMass);
+        if (distance < totalRadius) {
+            float totalInvMass = invMassA + invMassB;
 
-        const float percent = 0.2f; // correction strength
-        const float slop = 0.001f;  // small allowance
-        float penetrationDepth = totalRadius - distance;
-        float correction = std::max(penetrationDepth - slop, 0.0f) * percent;
+            if (totalInvMass > 1e-8f) {
+                float tA = invMassA / totalInvMass;
+                float tB = invMassB / totalInvMass;
 
-        glm::vec3 separationDirection = glm::normalize(centerToCenter);
+                const float percent = 0.2f; // correction strength
+                const float slop = 0.001f;  // small allowance
+                float penetrationDepth = totalRadius - distance;
+                float correction =
+                    std::max(penetrationDepth - slop, 0.0f) * percent;
 
-        bodyA->position =
-            bodyA->position -
-            Position3d::fromGlm(separationDirection * correction * tA);
-        bodyB->position =
-            bodyB->position +
-            Position3d::fromGlm(separationDirection * correction * tB);
+                glm::vec3 separationDirection = glm::normalize(centerToCenter);
+
+                if (invMassA > 0.0f) {
+                    bodyA->position = bodyA->position -
+                                      Position3d::fromGlm(separationDirection *
+                                                          correction * tA);
+                }
+                if (invMassB > 0.0f) {
+                    bodyB->position = bodyB->position +
+                                      Position3d::fromGlm(separationDirection *
+                                                          correction * tB);
+                }
+            }
+        }
     }
 }
-
 glm::mat3 Body::getInverseInertiaTensorBodySpace() const {
     glm::mat3 inertiaTensor = shape->getInertiaTensor();
     glm::mat3 invInertiaTensor = glm::inverse(inertiaTensor) * invMass;
@@ -329,32 +340,65 @@ void Body::updatePhysics(double dt) {
     if (invMass == 0.0f) {
         return;
     }
+
     glm::vec3 pos = this->position.toGlm() + linearVelocity * (float)dt;
     this->position = Position3d::fromGlm(pos);
 
-    glm::vec3 positionCM = getCenterOfMassWorldSpace();
-    glm::vec3 cmToPos = this->position.toGlm() - positionCM;
+    if (glm::length2(angularVelocity) > 1e-12f) {
+        glm::mat3 orientation = glm::mat3_cast(this->orientation);
 
-    glm::mat3 orientation = glm::mat3_cast(this->orientation);
-    glm::mat3 inertiaTensor = orientation * this->shape->getInertiaTensor() *
-                              glm::transpose(orientation);
-    glm::vec3 alpha =
-        glm::inverse(inertiaTensor) *
-        glm::cross(angularVelocity, inertiaTensor * angularVelocity);
-    angularVelocity += alpha * (float)dt;
+        glm::mat3 inertiaTensor = orientation *
+                                  this->shape->getInertiaTensor() *
+                                  glm::transpose(orientation);
 
-    glm::quat orientationQuat = glm::quat_cast(orientation);
+        float det = glm::determinant(inertiaTensor);
+        if (std::abs(det) > 1e-12f) {
+            glm::vec3 L = inertiaTensor * angularVelocity;
+            glm::vec3 torque = glm::cross(angularVelocity, L);
+            glm::vec3 alpha = glm::inverse(inertiaTensor) * torque;
 
-    glm::vec3 dAngle = angularVelocity * (float)dt;
-    float angle = glm::length(dAngle);
+            angularVelocity += alpha * (float)dt;
 
-    if (angle > 1e-6f) {
-        glm::vec3 axis = dAngle / angle; // Safe normalization
-        glm::quat dq = glm::angleAxis(angle, axis);
-        orientationQuat = glm::normalize(dq * orientationQuat);
+            const float maxAngularSpeed = 30.0f;
+            if (glm::length2(angularVelocity) >
+                maxAngularSpeed * maxAngularSpeed) {
+                angularVelocity =
+                    glm::normalize(angularVelocity) * maxAngularSpeed;
+            }
+        }
 
-        this->orientation = orientationQuat;
-        glm::vec3 newPos = positionCM + orientation * (dq * cmToPos);
-        this->position = Position3d::fromGlm(newPos);
+        glm::vec3 dAngle = angularVelocity * (float)dt;
+        float angle = glm::length(dAngle);
+
+        if (angle > 1e-8f) {
+            glm::vec3 axis = dAngle / angle;
+            glm::quat dq = glm::angleAxis(angle, axis);
+
+            if (glm::length2(glm::vec4(dq.x, dq.y, dq.z, dq.w)) > 1e-12f &&
+                glm::length2(glm::vec4(this->orientation.x, this->orientation.y,
+                                       this->orientation.z,
+                                       this->orientation.w)) > 1e-12f) {
+
+                this->orientation = glm::normalize(dq * this->orientation);
+
+                if (!std::isfinite(this->orientation.x) ||
+                    !std::isfinite(this->orientation.y) ||
+                    !std::isfinite(this->orientation.z) ||
+                    !std::isfinite(this->orientation.w)) {
+                    this->orientation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+                    angularVelocity = glm::vec3(0.0f);
+                }
+            }
+        }
+    }
+
+    glm::vec3 finalPos = this->position.toGlm();
+    if (!std::isfinite(finalPos.x) || !std::isfinite(finalPos.y) ||
+        !std::isfinite(finalPos.z)) {
+        std::cerr << "ERROR: Invalid position detected! Resetting to origin."
+                  << std::endl;
+        this->position = Position3d::fromGlm(glm::vec3(0.0f, 5.0f, 0.0f));
+        this->linearVelocity = glm::vec3(0.0f);
+        this->angularVelocity = glm::vec3(0.0f);
     }
 }
