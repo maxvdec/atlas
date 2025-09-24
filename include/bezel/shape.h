@@ -75,13 +75,44 @@ class Box : public Shape {
                      const glm::quat &orientation) const override;
     Bounds getBounds() const override;
 
-    float fastestLinearSpeed(const glm::vec3 &linearVelocity,
+    float fastestLinearSpeed(const glm::vec3 &angularVelocity,
                              const glm::vec3 &dir) const override;
 
     ShapeType getType() const override { return ShapeType::Box; }
 
     std::vector<glm::vec3> vertices;
     Bounds bounds;
+};
+
+class Convex : public Shape {
+  public:
+    explicit Convex(std::vector<glm::vec3> points);
+
+    void build(const std::vector<glm::vec3> points) override;
+
+    glm::vec3 support(const glm::vec3 &dir, const glm::vec3 &pos,
+                      const glm::quat &orientation, float bias) const override;
+
+    glm::mat3 getInertiaTensor() const override;
+
+    Bounds getBounds(const glm::vec3 &pos,
+                     const glm::quat &orientation) const override;
+    Bounds getBounds() const override;
+
+    float fastestLinearSpeed(const glm::vec3 &angularVelocity,
+                             const glm::vec3 &dir) const override;
+
+    ShapeType getType() const override { return ShapeType::Convex; }
+
+    std::vector<glm::vec3> vertices;
+    Bounds bounds;
+    glm::mat3 inertiaTensor;
+};
+
+struct Triangle {
+    int a;
+    int b;
+    int c;
 };
 
 namespace bezel {
@@ -93,6 +124,24 @@ bool sphereToSphereDynamic(const Sphere *sphereA, const Sphere *sphereB,
                            const glm::vec3 &velA, const glm::vec3 &velB,
                            const float dt, glm::vec3 &pointOnA,
                            glm::vec3 &pointOnB, float &toi);
+
+// Shape related utilities
+
+int findFurthestPointInDirection(const std::vector<glm::vec3> &points,
+                                 const glm::vec3 &dir);
+float distanceFromLine(const glm::vec3 &a, const glm::vec3 &b,
+                       const glm::vec3 &pt);
+glm::vec3 findFurthestPointFromLine(const std::vector<glm::vec3> &points,
+                                    const glm::vec3 &a, const glm::vec3 &b);
+float distanceFromTriangle(const glm::vec3 &a, const glm::vec3 &b,
+                           const glm::vec3 &c, const glm::vec3 &pt);
+glm::vec3 findFurthestPointFromTriangle(const std::vector<glm::vec3> &points,
+                                        const glm::vec3 &a, const glm::vec3 &b,
+                                        const glm::vec3 &c);
+void computeTetrahedron(std::vector<glm::vec3> vert,
+                        std::vector<glm::vec3> &hullPts,
+                        std::vector<Triangle> &hullTris);
+
 } // namespace bezel
 
 #endif // BEZEL_SHAPE_H
