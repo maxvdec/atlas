@@ -33,6 +33,9 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [ ] Post-processing effects
 - [ ] Sky, atmosphere and weather system (Hydra)
 - [ ] Animation system (Mold)
+- [ ] Advanced materials and shaders
+- [ ] Instancing support
+- [ ] Optimizations and performance improvements
 
 ## Other features planned for the future
 
@@ -41,3 +44,6 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [ ] Vegetation and foliage system
 - [ ] Terrain generation and rendering (Terra)
 - [ ] Network support (Lasse)
+- [ ] Metal support
+- [ ] Vulkan support
+- [ ] Ray tracing rendering (Overflow)

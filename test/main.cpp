@@ -61,8 +61,8 @@ class MainScene : public Scene {
 
     void initialize(Window &window) override {
         camera = Camera();
-        camera.setPosition({-2.0, 7.0, 0.0});
-        camera.lookAt({0.0, 5.0, 0.0});
+        camera.setPosition({-2.0, 2.0, 0.0});
+        camera.lookAt({0.0, 0.2, 0.0});
         window.setCamera(&camera);
 
         Workspace::get().setRootPath(std::string(TEST_PATH) + "/resources/");
@@ -70,7 +70,7 @@ class MainScene : public Scene {
         skybox.cubemap = createSkyboxCubemap();
         skybox.display(window);
 
-        plane = createDebugSphere(5.0, 64, 128);
+        plane = createDebugBox({5.0, 0.1, 5.0});
         plane.body->invMass = 0.0f;
         plane.body->friction = 0.8f;
 
@@ -92,7 +92,7 @@ class MainScene : public Scene {
         window.addObject(&plane);
 
         sphere = createDebugSphere(0.1, 64, 64);
-        sphere.setPosition({0.0, 7, 0.0});
+        sphere.setPosition({0.0, 2.0, 0.0});
         sphere.setRotation({0.0, 90.0, 90.0});
         sphere.body->linearVelocity = {-0.3, 0.0, 0.0};
         sphere.body->invMass = 1.0f;
