@@ -175,6 +175,32 @@ glm::mat3 calculateInertiaTensor(const std::vector<glm::vec3> &pts,
                                  const std::vector<Triangle> &tris,
                                  const glm::vec3 &centerOfMass);
 
+glm::vec2 projectOn1D(const glm::vec3 &s1, const glm::vec3 &s2);
+int compareSigns(float a, float b);
+glm::vec3 projectOn2D(const glm::vec3 &s1, const glm::vec3 &s2,
+                      const glm::vec3 &s3);
+glm::vec4 projectOn3D(const glm::vec3 &s1, const glm::vec3 &s2,
+                      const glm::vec3 &s3, const glm::vec3 &s4);
+
+inline float takeCofactor(const glm::mat4 &m, int row, int col) {
+    glm::mat3 minor;
+    int r = 0;
+    for (int i = 0; i < 4; ++i) {
+        if (i == row)
+            continue;
+        int c = 0;
+        for (int j = 0; j < 4; ++j) {
+            if (j == col)
+                continue;
+            minor[r][c] = m[i][j];
+            ++c;
+        }
+        ++r;
+    }
+    float det = glm::determinant(minor);
+    return ((row + col) % 2 == 0 ? 1.0f : -1.0f) * det;
+}
+
 } // namespace bezel
 
 #endif // BEZEL_SHAPE_H
