@@ -115,6 +115,15 @@ struct Triangle {
     int c;
 };
 
+struct Edge {
+    int a;
+    int b;
+
+    inline bool operator==(const Edge &other) const {
+        return (a == other.a && b == other.b) || (a == other.b && b == other.a);
+    }
+};
+
 namespace bezel {
 bool raySphere(const glm::vec3 &rayOrigin, const glm::vec3 &rayDirection,
                const glm::vec3 &sphereCenter, const float sphereRadius,
@@ -141,6 +150,30 @@ glm::vec3 findFurthestPointFromTriangle(const std::vector<glm::vec3> &points,
 void computeTetrahedron(std::vector<glm::vec3> vert,
                         std::vector<glm::vec3> &hullPts,
                         std::vector<Triangle> &hullTris);
+void expandConvexHull(std::vector<glm::vec3> &hullPts,
+                      std::vector<Triangle> &hullTris,
+                      const std::vector<glm::vec3> &vertices);
+void removeInternalPoints(std::vector<glm::vec3> &hullPts,
+                          std::vector<Triangle> &hullTris,
+                          std::vector<glm::vec3> &checkPts);
+bool isEdgeUnique(const std::vector<Triangle> &triangles,
+                  const std::vector<int> &facingTris, const int ignoreTri,
+                  const Edge &edge);
+void addPoint(std::vector<glm::vec3> &hullPts, std::vector<Triangle> &hullTris,
+              const glm::vec3 &pt);
+void removeUnreferencedVertices(std::vector<glm::vec3> &hullPts,
+                                std::vector<Triangle> &hullTris);
+void buildConvexHull(std::vector<glm::vec3> points,
+                     std::vector<glm::vec3> &hullPts,
+                     std::vector<Triangle> &hullTris);
+
+bool isExternal(const std::vector<glm::vec3> &pts,
+                const std::vector<Triangle> &tris, const glm::vec3 &pt);
+glm::vec3 calculateCenterOfMass(const std::vector<glm::vec3> &pts,
+                                const std::vector<Triangle> &tris);
+glm::mat3 calculateInertiaTensor(const std::vector<glm::vec3> &pts,
+                                 const std::vector<Triangle> &tris,
+                                 const glm::vec3 &centerOfMass);
 
 } // namespace bezel
 
