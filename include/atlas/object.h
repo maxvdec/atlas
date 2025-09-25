@@ -149,6 +149,7 @@ class CoreObject : public Renderable {
 };
 
 CoreObject createBox(Size3d size, Color color = {1.0, 1.0, 1.0, 1.0});
+CoreObject createDebugBox(Size3d size);
 CoreObject createPlane(Size2d size, Color color = {1.0, 1.0, 1.0, 1.0});
 CoreObject createDebugPlane(Size2d size);
 CoreObject createPyramid(Size3d size, Color color = {1.0, 1.0, 1.0, 1.0});

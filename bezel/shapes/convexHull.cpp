@@ -7,6 +7,7 @@
  Copyright (c) 2025 maxvdec
 */
 
+#include "bezel/bounds.h"
 #include "bezel/shape.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -308,4 +309,81 @@ bool bezel::isExternal(const std::vector<glm::vec3> &pts,
         }
     }
     return isExternal;
+}
+
+glm::vec3 bezel::calculateCenterOfMass(const std::vector<glm::vec3> &pts,
+                                       const std::vector<Triangle> &tris) {
+    const int sampleCount = 100;
+
+    Bounds bounds;
+    bounds.expand(pts, pts.size());
+
+    glm::vec3 centerOfMass(0.0f);
+    const float dx = bounds.widthX() / sampleCount;
+    const float dy = bounds.widthY() / sampleCount;
+    const float dz = bounds.widthZ() / sampleCount;
+
+    int numSamples = 0;
+    for (float x = bounds.mins.x; x < bounds.maxs.x; x += dx) {
+        for (float y = bounds.mins.y; y < bounds.maxs.y; y += dy) {
+            for (float z = bounds.mins.z; z < bounds.maxs.z; z += dz) {
+                glm::vec3 pt(x, y, z);
+                if (isExternal(pts, tris, pt)) {
+                    continue;
+                }
+
+                centerOfMass += pt;
+                numSamples++;
+            }
+        }
+    }
+
+    centerOfMass /= (float)numSamples;
+    return centerOfMass;
+}
+
+glm::mat3 bezel::calculateInertiaTensor(const std::vector<glm::vec3> &pts,
+                                        const std::vector<Triangle> &tris,
+                                        const glm::vec3 &centerOfMass) {
+    const int sampleCount = 100;
+
+    Bounds bounds;
+    bounds.expand(pts, pts.size());
+
+    glm::mat3 tensor(0.0f);
+
+    const float dx = bounds.widthX() / sampleCount;
+    const float dy = bounds.widthY() / sampleCount;
+    const float dz = bounds.widthZ() / sampleCount;
+
+    int numSamples = 0;
+    for (float x = bounds.mins.x; x < bounds.maxs.x; x += dx) {
+        for (float y = bounds.mins.y; y < bounds.maxs.y; y += dy) {
+            for (float z = bounds.mins.z; z < bounds.maxs.z; z += dz) {
+                glm::vec3 pt(x, y, z);
+                if (isExternal(pts, tris, pt)) {
+                    continue;
+                }
+
+                pt -= centerOfMass;
+
+                tensor[0][0] += pt.y * pt.y + pt.z * pt.z;
+                tensor[1][1] += pt.z * pt.z + pt.x * pt.x;
+                tensor[2][2] += pt.x * pt.x + pt.y * pt.y;
+
+                tensor[0][1] += -1.0 * pt.x * pt.y;
+                tensor[0][2] += -1.0 * pt.x * pt.z;
+                tensor[1][2] += -1.0 * pt.y * pt.z;
+
+                tensor[1][0] = -1.0f * pt.x * pt.y;
+                tensor[2][0] = -1.0f * pt.x * pt.z;
+                tensor[2][1] = -1.0f * pt.y * pt.z;
+
+                numSamples++;
+            }
+        }
+    }
+
+    tensor /= (float)numSamples;
+    return tensor;
 }

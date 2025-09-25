@@ -11,6 +11,7 @@
 #include "bezel/shape.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <vector>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/norm.hpp>
 
@@ -48,4 +49,19 @@ float Convex::fastestLinearSpeed(const glm::vec3 &angularVelocity,
     }
 
     return maxSpeed;
+}
+
+void Convex::build(const std::vector<glm::vec3> points) {
+    this->vertices = points;
+
+    std::vector<glm::vec3> hullPoints;
+    std::vector<Triangle> triangles;
+    bezel::buildConvexHull(points, hullPoints, triangles);
+
+    bounds.clear();
+    bounds.expand(hullPoints, hullPoints.size());
+
+    centerOfMass = bezel::calculateCenterOfMass(hullPoints, triangles);
+    inertiaTensor =
+        bezel::calculateInertiaTensor(hullPoints, triangles, centerOfMass);
 }
