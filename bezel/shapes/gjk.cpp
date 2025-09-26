@@ -114,7 +114,8 @@ static int bezel::numValids(const glm::vec4 &lambdas) {
 }
 
 bool bezel::gjkIntersection(const std::shared_ptr<Body> bodyA,
-                            const std::shared_ptr<Body> bodyB) {
+                            const std::shared_ptr<Body> bodyB, const float bias,
+                            glm::vec3 &ptOnA, glm::vec3 &ptOnB) {
     const glm::vec3 origin(0.0);
 
     int numPts = 1;
@@ -159,5 +160,102 @@ bool bezel::gjkIntersection(const std::shared_ptr<Body> bodyA,
         doesContainOrigin = (numPts == 4);
     }
 
-    return doesContainOrigin;
+    if (!doesContainOrigin) {
+        return false;
+    }
+
+    if (numPts == 1) {
+        glm::vec3 searchDir = simplex[0].xyz * -1.0f;
+        Point newPt = bezel::support(bodyA, bodyB, searchDir, 0.0f);
+        simplex[numPts] = newPt;
+        numPts++;
+    }
+
+    if (numPts == 2) {
+        glm::vec3 ab = simplex[1].xyz - simplex[0].xyz;
+        glm::vec3 u, v;
+
+        bezel::takeOrtho(ab, u, v);
+        glm::vec3 newDir = u;
+        Point newPt = bezel::support(bodyA, bodyB, newDir, 0.0f);
+        simplex[numPts] = newPt;
+        numPts++;
+    }
+
+    if (numPts == 3) {
+        glm::vec3 ab = simplex[1].xyz - simplex[0].xyz;
+        glm::vec3 ac = simplex[2].xyz - simplex[0].xyz;
+        glm::vec3 norm = glm::cross(ab, ac);
+
+        glm::vec3 newDir = norm;
+        Point newPt = bezel::support(bodyA, bodyB, newDir, 0.0f);
+        simplex[numPts] = newPt;
+        numPts++;
+    }
+
+    glm::vec3 avg = glm::vec3(0.0f);
+    for (int i = 0; i < numPts; i++) {
+        avg += simplex[i].xyz;
+    }
+    avg /= 4.0f;
+
+    for (int i = 0; i < numPts; i++) {
+        Point &pt = simplex[i];
+
+        glm::vec3 dir = pt.xyz - avg;
+        dir = glm::normalize(dir);
+        pt.ptA += dir * bias;
+        pt.ptB += dir * bias;
+        pt.xyz = pt.ptA - pt.ptB;
+    }
+
+    epaExpand(bodyA, bodyB, bias, simplex, ptOnA, ptOnB);
+    return true;
+}
+
+void bezel::gjkClosestPoints(const std::shared_ptr<Body> bodyA,
+                             const std::shared_ptr<Body> bodyB,
+                             glm::vec3 &ptOnA, glm::vec3 &ptOnB) {
+    const glm::vec3 origin(0.0);
+
+    float closestDist = 1e10f;
+    const float bias = 0.0f;
+
+    int numPts = 1;
+    std::array<Point, 4> simplex;
+    simplex[0] =
+        bezel::support(bodyA, bodyB, glm::vec3(1.0f, 0.0f, 0.0f), bias);
+
+    glm::vec4 lambdas = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
+    glm::vec3 newDir = -simplex[0].xyz;
+
+    while (numPts < 4) {
+        Point newPt = bezel::support(bodyA, bodyB, newDir, bias);
+
+        if (hasPoint(simplex, newPt)) {
+            break;
+        }
+
+        simplex[numPts] = newPt;
+        numPts++;
+
+        bezel::simplexSignedVolumes(
+            std::vector<Point>(simplex.begin(), simplex.begin() + numPts),
+            newDir, lambdas);
+        bezel::sortValids(simplex, lambdas);
+        numPts = bezel::numValids(lambdas);
+
+        float dist = glm::length2(newDir);
+        if (dist >= closestDist) {
+            break;
+        }
+        closestDist = dist;
+    }
+
+    ptOnA = glm::vec3(0.0f);
+    ptOnB = glm::vec3(0.0f);
+    for (int i = 0; i < numPts; i++) {
+        ptOnA += simplex[i].ptA * lambdas[i];
+        ptOnB += simplex[i].ptB * lambdas[i];
+    }
 }

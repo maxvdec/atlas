@@ -13,6 +13,7 @@
 #include "bezel/bounds.h"
 #include <array>
 #include <glm/glm.hpp>
+#include <memory>
 #include <vector>
 
 class Shape {
@@ -223,6 +224,16 @@ inline float takeCofactor(const glm::mat4 &m, int row, int col) {
     return ((row + col) % 2 == 0 ? 1.0f : -1.0f) * det;
 }
 
+inline void takeOrtho(const glm::vec3 &ab, glm::vec3 &u, glm::vec3 &v) {
+    glm::vec3 n = glm::normalize(ab);
+
+    glm::vec3 helper =
+        (fabs(n.x) > 0.9f) ? glm::vec3(0, 1, 0) : glm::vec3(1, 0, 0);
+
+    u = glm::normalize(glm::cross(n, helper));
+    v = glm::normalize(glm::cross(n, u));
+}
+
 } // namespace bezel
 
 namespace bezel {
@@ -230,10 +241,37 @@ namespace bezel {
 bool simplexSignedVolumes(const std::vector<Point> &simplex, glm::vec3 &newDir,
                           glm::vec4 &lambdas);
 bool hasPoint(const std::array<Point, 4> &simplex, const Point &p);
+bool hasPoint(const glm::vec3 &w, const std::vector<Triangle> &triangles,
+              const std::vector<Point> &points);
 void sortValids(std::array<Point, 4> &simplex, glm::vec4 &lambdas);
 static int numValids(const glm::vec4 &lambdas);
 bool gjkIntersection(const std::shared_ptr<Body> bodyA,
-                     const std::shared_ptr<Body> bodyB);
+                     const std::shared_ptr<Body> bodyB, const float bias,
+                     glm::vec3 &ptOnA, glm::vec3 &ptOnB);
+void gjkClosestPoints(const std::shared_ptr<Body> bodyA,
+                      const std::shared_ptr<Body> bodyB, glm::vec3 &ptOnA,
+                      glm::vec3 &ptOnB);
+} // namespace bezel
+
+namespace bezel {
+// EPA functions
+glm::vec3 barycentricCoordinates(glm::vec3 &s1, glm::vec3 &s2, glm::vec3 &s3,
+                                 const glm::vec3 &pt);
+glm::vec3 normalDirection(const Triangle &tri,
+                          const std::vector<Point> &points);
+float signedDistanceToTriangle(const Triangle &tri, const glm::vec3 &pt,
+                               const std::vector<Point> &points);
+int closestTriangle(const std::vector<Triangle> &triangles,
+                    const std::vector<Point> &points);
+int removeTrianglesFacingPoint(const glm::vec3 &pt,
+                               std::vector<Triangle> &triangles,
+                               const std::vector<Point> &points);
+void findDanglingEdges(std::vector<Edge> &danglingEdges,
+                       const std::vector<Triangle> &triangles);
+float epaExpand(const std::shared_ptr<Body> bodyA,
+                const std::shared_ptr<Body> bodyB, const float bias,
+                const std::array<Point, 4> simplex, glm::vec3 &ptOnA,
+                glm::vec3 &ptOnB);
 } // namespace bezel
 
 #endif // BEZEL_SHAPE_H
