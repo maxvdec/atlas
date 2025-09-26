@@ -74,7 +74,7 @@ class MainScene : public Scene {
         plane = createDebugBox({5.0, 0.5f, 5.0});
         plane.body->invMass = 0.0f;
 
-        plane.setPosition({0, -5.5, 0.0});
+        plane.setPosition({0, 0.0, 0.0});
 
         Color whiteMultiplier = Color(1.0, 1.0, 1.0);
         Color mediumMultiplier = Color(0.75, 0.75, 0.75);
@@ -91,10 +91,8 @@ class MainScene : public Scene {
         window.addObject(&plane);
 
         sphere = createDebugSphere(0.1, 64, 64);
-        sphere.setPosition({0.0, 2, 0.0});
+        sphere.setPosition({0.0, 2, 0.0}); // Move sphere far away from plane
         sphere.setRotation({0.0, 90.0, 90.0});
-        sphere.body->applyLinearImpulse({0.1, 0.0, 0.0});
-
         window.addObject(&sphere);
 
         Color sunWarm = Color::white();
