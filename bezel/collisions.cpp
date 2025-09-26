@@ -80,9 +80,9 @@ bool bezel::sphereToSphereDynamic(const Sphere *sphereA, const Sphere *sphereB,
     return true;
 }
 
-bool Body::intersectsStatic(std::shared_ptr<Body> body,
-                            std::shared_ptr<Body> other,
-                            Contact &contact) const {
+bool Body::intersectsStatic(const std::shared_ptr<Body> &body,
+                            const std::shared_ptr<Body> &other,
+                            Contact &contact) {
     contact.bodyA = body;
     contact.bodyB = other;
     contact.timeOfImpact = 0.0f;
@@ -166,7 +166,7 @@ bool bezel::collisions::conservativeAdvance(std::shared_ptr<Body> bodyA,
     int numIters = 0;
 
     while (dt > 0.0f) {
-        bool didIntersect = bodyA->intersects(bodyA, bodyB, contact, dt);
+        bool didIntersect = Body::intersectsStatic(bodyA, bodyB, contact);
         if (didIntersect) {
             contact.timeOfImpact = toi;
             bodyA->updatePhysics(-toi);
@@ -212,9 +212,10 @@ bool bezel::collisions::conservativeAdvance(std::shared_ptr<Body> bodyA,
     return false;
 }
 
-bool Body::intersects(std::shared_ptr<Body> body, std::shared_ptr<Body> other,
-                      Contact &contact, float dt) const {
-    if (this->shape == nullptr || other->shape == nullptr) {
+bool Body::intersects(const std::shared_ptr<Body> &body,
+                      const std::shared_ptr<Body> &other, Contact &contact,
+                      float dt) {
+    if (body->shape == nullptr || other->shape == nullptr) {
         return false;
     }
     contact.bodyA = body;

@@ -80,10 +80,12 @@ class Body {
 
     void update(Window &window);
 
-    bool intersectsStatic(std::shared_ptr<Body> bodyA,
-                          std::shared_ptr<Body> bodyB, Contact &contact) const;
-    bool intersects(std::shared_ptr<Body> bodyA, std::shared_ptr<Body> bodyB,
-                    Contact &contact, float dt) const;
+    static bool intersectsStatic(const std::shared_ptr<Body> &bodyA,
+                                 const std::shared_ptr<Body> &bodyB,
+                                 Contact &contact);
+    static bool intersects(const std::shared_ptr<Body> &bodyA,
+                           const std::shared_ptr<Body> &bodyB, Contact &contact,
+                           float dt);
 
     void resolveContact(Contact &contact);
     void updatePhysics(double dt);

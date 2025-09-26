@@ -9,7 +9,6 @@
 
 #include "bezel/body.h"
 #include "bezel/shape.h"
-#include <new>
 #include <utility>
 #include <vector>
 #define GLM_ENABLE_EXPERIMENTAL

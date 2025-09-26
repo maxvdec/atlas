@@ -43,53 +43,6 @@ bool bezel::raySphere(const glm::vec3 &rayOrigin, const glm::vec3 &rayDirection,
     return true;
 }
 
-bool bezel::sphereToSphereDynamic(const Sphere *sphereA, const Sphere *sphereB,
-                                  const glm::vec3 &posA, const glm::vec3 &posB,
-                                  const glm::vec3 &velA, const glm::vec3 &velB,
-                                  const float dt, glm::vec3 &pointOnA,
-                                  glm::vec3 &pointOnB, float &toi) {
-    glm::vec3 relativeVelocity = velA - velB;
-
-    const glm::vec3 startPointA = posA;
-    const glm::vec3 endPointA = posA + relativeVelocity * dt;
-    glm::vec3 rayDir = endPointA - startPointA;
-
-    float t0 = 0;
-    float t1 = 0;
-    if (glm::length2(rayDir) < 1e-8f) {
-        glm::vec3 ab = posB - posA;
-        float radius = sphereA->radius + sphereB->radius + 0.001f;
-        if (glm::length2(ab) > radius * radius) {
-            return false;
-        }
-    } else if (!raySphere(posA, rayDir, posB, sphereA->radius + sphereB->radius,
-                          t0, t1)) {
-        return false;
-    }
-
-    t0 *= dt;
-    t1 *= dt;
-
-    if (t1 < 0.0f) {
-        return false;
-    }
-
-    toi = (t0 < 0.0f) ? 0.0f : t0;
-
-    if (toi > dt) {
-        return false;
-    }
-
-    glm::vec3 newPosA = posA + velA * toi;
-    glm::vec3 newPosB = posB + velB * toi;
-    glm::vec3 ab = newPosB - newPosA;
-    ab = glm::normalize(ab);
-
-    pointOnA = newPosA + ab * sphereA->radius;
-    pointOnB = newPosB - ab * sphereB->radius;
-    return true;
-}
-
 Bounds Sphere::getBounds(const glm::vec3 &pos,
                          const glm::quat &orientation) const {
     Bounds bounds;

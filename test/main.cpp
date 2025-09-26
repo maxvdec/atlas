@@ -62,7 +62,7 @@ class MainScene : public Scene {
 
     void initialize(Window &window) override {
         camera = Camera();
-        camera.setPosition({-5.0, 2.0, 0.0});
+        camera.setPosition({-5.0, 1.0, 0.0});
         camera.lookAt({0.0, 0.0, 0.0});
         window.setCamera(&camera);
 
@@ -71,7 +71,7 @@ class MainScene : public Scene {
         skybox.cubemap = createSkyboxCubemap();
         skybox.display(window);
 
-        plane = createDebugSphere(5.0, 64, 128);
+        plane = createDebugBox({5.0, 0.5f, 5.0});
         plane.body->invMass = 0.0f;
 
         plane.setPosition({0, -5.5, 0.0});
@@ -91,8 +91,9 @@ class MainScene : public Scene {
         window.addObject(&plane);
 
         sphere = createDebugSphere(0.1, 64, 64);
-        sphere.setPosition({0.0, 4, 0.0});
+        sphere.setPosition({0.0, 2, 0.0});
         sphere.setRotation({0.0, 90.0, 90.0});
+        sphere.body->applyLinearImpulse({0.1, 0.0, 0.0});
 
         window.addObject(&sphere);
 
