@@ -33,8 +33,56 @@ bool bezel::collisions::sphereToSphereStatic(
     return false;
 }
 
-bool Body::intersects(std::shared_ptr<Body> body, std::shared_ptr<Body> other,
-                      Contact &contact, float dt) const {
+bool bezel::sphereToSphereDynamic(const Sphere *sphereA, const Sphere *sphereB,
+                                  const glm::vec3 &posA, const glm::vec3 &posB,
+                                  const glm::vec3 &velA, const glm::vec3 &velB,
+                                  const float dt, glm::vec3 &pointOnA,
+                                  glm::vec3 &pointOnB, float &toi) {
+    glm::vec3 relativeVelocity = velA - velB;
+
+    const glm::vec3 startPointA = posA;
+    const glm::vec3 endPointA = posA + relativeVelocity * dt;
+    glm::vec3 rayDir = endPointA - startPointA;
+
+    float t0 = 0;
+    float t1 = 0;
+    if (glm::length2(rayDir) < 1e-8f) {
+        glm::vec3 ab = posB - posA;
+        float radius = sphereA->radius + sphereB->radius + 0.001f;
+        if (glm::length2(ab) > radius * radius) {
+            return false;
+        }
+    } else if (!raySphere(posA, rayDir, posB, sphereA->radius + sphereB->radius,
+                          t0, t1)) {
+        return false;
+    }
+
+    t0 *= dt;
+    t1 *= dt;
+
+    if (t1 < 0.0f) {
+        return false;
+    }
+
+    toi = (t0 < 0.0f) ? 0.0f : t0;
+
+    if (toi > dt) {
+        return false;
+    }
+
+    glm::vec3 newPosA = posA + velA * toi;
+    glm::vec3 newPosB = posB + velB * toi;
+    glm::vec3 ab = newPosB - newPosA;
+    ab = glm::normalize(ab);
+
+    pointOnA = newPosA + ab * sphereA->radius;
+    pointOnB = newPosB - ab * sphereB->radius;
+    return true;
+}
+
+bool Body::intersectsStatic(std::shared_ptr<Body> body,
+                            std::shared_ptr<Body> other,
+                            Contact &contact) const {
     contact.bodyA = body;
     contact.bodyB = other;
     contact.timeOfImpact = 0.0f;
@@ -102,6 +150,121 @@ bool Body::intersects(std::shared_ptr<Body> body, std::shared_ptr<Body> other,
         glm::vec3 ab = other->position.toGlm() - body->position.toGlm();
         float r = glm::length(ptOnA - ptOnB);
         contact.separationDistance = r;
+    }
+
+    return false;
+}
+
+bool bezel::collisions::conservativeAdvance(std::shared_ptr<Body> bodyA,
+                                            std::shared_ptr<Body> bodyB,
+                                            float dt, Contact &contact) {
+    contact.bodyA = bodyA;
+    contact.bodyB = bodyB;
+
+    float toi = 0.0f;
+
+    int numIters = 0;
+
+    while (dt > 0.0f) {
+        bool didIntersect = bodyA->intersects(bodyA, bodyB, contact, dt);
+        if (didIntersect) {
+            contact.timeOfImpact = toi;
+            bodyA->updatePhysics(-toi);
+            bodyB->updatePhysics(-toi);
+            return true;
+        }
+
+        numIters++;
+        if (numIters > 10) {
+            break;
+        }
+
+        glm::vec3 ab =
+            contact.pointB.worldSpacePoint - contact.pointA.worldSpacePoint;
+        ab = glm::normalize(ab);
+
+        glm::vec3 relativeVel = bodyA->linearVelocity - bodyB->linearVelocity;
+        float orthoSpeed = glm::dot(relativeVel, ab);
+
+        float angularSpeedA =
+            bodyA->shape->fastestLinearSpeed(bodyA->linearVelocity, ab);
+        float angularSpeedB =
+            bodyB->shape->fastestLinearSpeed(bodyB->linearVelocity, -ab);
+        orthoSpeed += angularSpeedA + angularSpeedB;
+        if (orthoSpeed <= 0.0f) {
+            break;
+        }
+
+        float timeToGo = contact.separationDistance / orthoSpeed;
+        if (timeToGo > dt) {
+            break;
+        }
+
+        dt -= timeToGo;
+        toi += timeToGo;
+
+        bodyA->updatePhysics(timeToGo);
+        bodyB->updatePhysics(timeToGo);
+    }
+
+    bodyA->updatePhysics(-toi);
+    bodyB->updatePhysics(-toi);
+    return false;
+}
+
+bool Body::intersects(std::shared_ptr<Body> body, std::shared_ptr<Body> other,
+                      Contact &contact, float dt) const {
+    if (this->shape == nullptr || other->shape == nullptr) {
+        return false;
+    }
+    contact.bodyA = body;
+    contact.bodyB = other;
+
+    if (body->shape->getType() == Shape::ShapeType::Sphere &&
+        other->shape->getType() == Shape::ShapeType::Sphere) {
+        const Sphere *sphereA = dynamic_cast<const Sphere *>(body->shape.get());
+        const Sphere *sphereB =
+            dynamic_cast<const Sphere *>(other->shape.get());
+
+        glm::vec3 posA = body->position.toGlm();
+        glm::vec3 posB = other->position.toGlm();
+
+        glm::vec3 velA = body->linearVelocity;
+        glm::vec3 velB = other->linearVelocity;
+
+        if (bezel::sphereToSphereDynamic(
+                sphereA, sphereB, posA, posB, velA, velB, dt,
+                contact.pointA.worldSpacePoint, contact.pointB.worldSpacePoint,
+                contact.timeOfImpact)) {
+            body->updatePhysics(contact.timeOfImpact);
+            other->updatePhysics(contact.timeOfImpact);
+
+            contact.pointA.modelSpacePoint =
+                body->worldSpaceToModelSpace(contact.pointA.worldSpacePoint);
+            contact.pointB.modelSpacePoint =
+                other->worldSpaceToModelSpace(contact.pointB.worldSpacePoint);
+
+            glm::vec3 normalVec =
+                body->position.toGlm() - other->position.toGlm();
+            if (glm::length2(normalVec) < 1e-8f) {
+                contact.normal = glm::vec3(1.0f, 0.0f, 0.0f);
+            } else {
+                contact.normal = glm::normalize(normalVec);
+            }
+
+            body->updatePhysics(-contact.timeOfImpact);
+            other->updatePhysics(-contact.timeOfImpact);
+
+            glm::vec3 ab =
+                contact.pointB.worldSpacePoint - contact.pointA.worldSpacePoint;
+            float r = glm::length(ab);
+            contact.separationDistance = r;
+            return true;
+        }
+    } else {
+        bool result =
+            bezel::collisions::conservativeAdvance(body, other, dt, contact);
+        return result;
     }
 
     return false;

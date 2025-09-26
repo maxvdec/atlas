@@ -80,15 +80,16 @@ class Body {
 
     void update(Window &window);
 
+    bool intersectsStatic(std::shared_ptr<Body> bodyA,
+                          std::shared_ptr<Body> bodyB, Contact &contact) const;
     bool intersects(std::shared_ptr<Body> bodyA, std::shared_ptr<Body> bodyB,
                     Contact &contact, float dt) const;
 
     void resolveContact(Contact &contact);
+    void updatePhysics(double dt);
 
   private:
     std::shared_ptr<Body> thisShared = nullptr;
-
-    void updatePhysics(double dt);
 };
 
 struct PseudoBody {
