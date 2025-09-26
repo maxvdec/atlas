@@ -402,3 +402,22 @@ void Body::updatePhysics(double dt) {
         this->angularVelocity = glm::vec3(0.0f);
     }
 }
+
+Point bezel::support(const std::shared_ptr<Body> bodyA,
+                     const std::shared_ptr<Body> bodyB, glm::vec3 dir,
+                     float bias) {
+    dir = glm::normalize(dir);
+
+    Point point;
+
+    point.ptA = bodyA->shape->support(dir, bodyA->position.toGlm(),
+                                      bodyA->orientation, bias);
+
+    dir *= -1.0f;
+
+    point.ptB = bodyB->shape->support(dir, bodyB->position.toGlm(),
+                                      bodyB->orientation, bias);
+
+    point.xyz = point.ptA - point.ptB;
+    return point;
+}

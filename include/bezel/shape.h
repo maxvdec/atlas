@@ -11,6 +11,7 @@
 #define BEZEL_SHAPE_H
 
 #include "bezel/bounds.h"
+#include <array>
 #include <glm/glm.hpp>
 #include <vector>
 
@@ -124,6 +125,27 @@ struct Edge {
     }
 };
 
+struct Point {
+    glm::vec3 xyz;
+    glm::vec3 ptA;
+    glm::vec3 ptB;
+
+    Point() : xyz(0.0f), ptA(0.0f), ptB(0.0f) {}
+
+    inline const Point &operator=(const Point &other) {
+        xyz = other.xyz;
+        ptA = other.ptA;
+        ptB = other.ptB;
+        return *this;
+    }
+
+    inline bool operator==(const Point &other) const {
+        return glm::all(glm::equal(xyz, other.xyz)) &&
+               glm::all(glm::equal(ptA, other.ptA)) &&
+               glm::all(glm::equal(ptB, other.ptB));
+    }
+};
+
 namespace bezel {
 bool raySphere(const glm::vec3 &rayOrigin, const glm::vec3 &rayDirection,
                const glm::vec3 &sphereCenter, const float sphereRadius,
@@ -201,6 +223,17 @@ inline float takeCofactor(const glm::mat4 &m, int row, int col) {
     return ((row + col) % 2 == 0 ? 1.0f : -1.0f) * det;
 }
 
+} // namespace bezel
+
+namespace bezel {
+// GJK functions
+bool simplexSignedVolumes(const std::vector<Point> &simplex, glm::vec3 &newDir,
+                          glm::vec4 &lambdas);
+bool hasPoint(const std::array<Point, 4> &simplex, const Point &p);
+void sortValids(std::array<Point, 4> &simplex, glm::vec4 &lambdas);
+static int numValids(const glm::vec4 &lambdas);
+bool gjkIntersection(const std::shared_ptr<Body> bodyA,
+                     const std::shared_ptr<Body> bodyB);
 } // namespace bezel
 
 #endif // BEZEL_SHAPE_H

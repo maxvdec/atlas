@@ -97,4 +97,9 @@ struct PseudoBody {
     bool ismin;
 };
 
+namespace bezel {
+Point support(const std::shared_ptr<Body> bodyA,
+              const std::shared_ptr<Body> bodyB, glm::vec3 dir, float bias);
+}
+
 #endif // BEZEL_BODY_H
