@@ -274,4 +274,10 @@ float epaExpand(const std::shared_ptr<Body> bodyA,
                 glm::vec3 &ptOnB);
 } // namespace bezel
 
+namespace bezel::collisions {
+bool sphereToSphereStatic(const Sphere *sphereA, const Sphere *sphereB,
+                          const glm::vec3 &posA, const glm::vec3 &posB,
+                          glm::vec3 &pointOnA, glm::vec3 &pointOnB);
+}
+
 #endif // BEZEL_SHAPE_H
