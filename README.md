@@ -31,7 +31,7 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [x] Lights
 - [x] Shadows (except for point lights)
 - [ ] Post-processing effects
-- [ ] Sky, atmosphere and weather system (Hydra)
+- [ ] Sky, atmosphere, weather and fluid simulation system (Hydra)
 - [ ] Animation system (Mold)
 - [ ] Advanced materials and shaders
 - [ ] Instancing support
@@ -48,3 +48,4 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [ ] Metal support
 - [ ] Vulkan support
 - [ ] Ray tracing rendering (Overflow)
+- [ ] Add 2d physics (Bezel 2D support)
