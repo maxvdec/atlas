@@ -9,6 +9,7 @@
 
 #include "bezel/body.h"
 #include "bezel/shape.h"
+#include <iostream>
 #include <memory>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/norm.hpp>
@@ -115,15 +116,20 @@ bool Body::intersectsStatic(const std::shared_ptr<Body> &body,
         glm::vec3 ptOnA;
         glm::vec3 ptOnB;
         const float bias = 0.001f;
+
         if (bezel::gjkIntersection(body, other, bias, ptOnA, ptOnB)) {
             glm::vec3 normal = ptOnB - ptOnA;
+            if (glm::length2(normal) < 1e-8f) {
+                glm::vec3 centerA = body->getCenterOfMassWorldSpace();
+                glm::vec3 centerB = other->getCenterOfMassWorldSpace();
+                normal = centerB - centerA;
+                if (glm::length2(normal) < 1e-8f) {
+                    normal = glm::vec3(0.0f, 1.0f, 0.0f);
+                }
+            }
             normal = glm::normalize(normal);
 
-            ptOnA -= normal * bias;
-            ptOnB += normal * bias;
-
             contact.normal = normal;
-
             contact.pointA.worldSpacePoint = ptOnA;
             contact.pointB.worldSpacePoint = ptOnB;
 
@@ -132,9 +138,8 @@ bool Body::intersectsStatic(const std::shared_ptr<Body> &body,
             contact.pointB.modelSpacePoint =
                 other->worldSpaceToModelSpace(contact.pointB.worldSpacePoint);
 
-            glm::vec3 ab = other->position.toGlm() - body->position.toGlm();
             float r = glm::length(ptOnA - ptOnB);
-            contact.separationDistance = -r;
+            contact.separationDistance = r;
             return true;
         }
 
@@ -147,9 +152,18 @@ bool Body::intersectsStatic(const std::shared_ptr<Body> &body,
         contact.pointB.modelSpacePoint =
             other->worldSpaceToModelSpace(contact.pointB.worldSpacePoint);
 
-        glm::vec3 ab = other->position.toGlm() - body->position.toGlm();
-        float r = glm::length(ptOnA - ptOnB);
-        contact.separationDistance = r;
+        glm::vec3 ab = ptOnB - ptOnA;
+        float distance = glm::length(ab);
+
+        if (distance > 1e-8f) {
+            contact.normal = ab / distance;
+        } else {
+            glm::vec3 centerA = body->getCenterOfMassWorldSpace();
+            glm::vec3 centerB = other->getCenterOfMassWorldSpace();
+            contact.normal = glm::normalize(centerB - centerA);
+        }
+
+        contact.separationDistance = distance;
     }
 
     return false;
@@ -187,9 +201,9 @@ bool bezel::collisions::conservativeAdvance(std::shared_ptr<Body> bodyA,
         float orthoSpeed = glm::dot(relativeVel, ab);
 
         float angularSpeedA =
-            bodyA->shape->fastestLinearSpeed(bodyA->linearVelocity, ab);
+            bodyA->shape->fastestLinearSpeed(bodyA->angularVelocity, ab);
         float angularSpeedB =
-            bodyB->shape->fastestLinearSpeed(bodyB->linearVelocity, -ab);
+            bodyB->shape->fastestLinearSpeed(bodyB->angularVelocity, -ab);
         orthoSpeed += angularSpeedA + angularSpeedB;
         if (orthoSpeed <= 0.0f) {
             break;

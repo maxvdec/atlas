@@ -224,14 +224,20 @@ inline float takeCofactor(const glm::mat4 &m, int row, int col) {
     return ((row + col) % 2 == 0 ? 1.0f : -1.0f) * det;
 }
 
-inline void takeOrtho(const glm::vec3 &ab, glm::vec3 &u, glm::vec3 &v) {
-    glm::vec3 n = glm::normalize(ab);
+inline void takeOrtho(const glm::vec3 &v, glm::vec3 &u, glm::vec3 &w) {
+    glm::vec3 n = glm::normalize(v);
 
-    glm::vec3 helper =
-        (fabs(n.x) > 0.9f) ? glm::vec3(0, 1, 0) : glm::vec3(1, 0, 0);
+    glm::vec3 axis;
+    if (std::abs(n.x) < std::abs(n.y) && std::abs(n.x) < std::abs(n.z)) {
+        axis = glm::vec3(1.0f, 0.0f, 0.0f);
+    } else if (std::abs(n.y) < std::abs(n.z)) {
+        axis = glm::vec3(0.0f, 1.0f, 0.0f);
+    } else {
+        axis = glm::vec3(0.0f, 0.0f, 1.0f);
+    }
 
-    u = glm::normalize(glm::cross(n, helper));
-    v = glm::normalize(glm::cross(n, u));
+    u = glm::normalize(glm::cross(n, axis));
+    w = glm::normalize(glm::cross(n, u));
 }
 
 } // namespace bezel

@@ -131,11 +131,12 @@ glm::vec3 Box::support(const glm::vec3 &dir, const glm::vec3 &pos,
         }
     }
 
-    glm::vec3 norm = dir;
-    norm = glm::normalize(norm);
-    norm *= bias;
+    if (bias != 0.0f) {
+        glm::vec3 norm = glm::normalize(dir);
+        maxPt += norm * bias;
+    }
 
-    return maxPt + norm;
+    return maxPt;
 }
 
 Bounds Box::getBounds(const glm::vec3 &pos,

@@ -10,9 +10,12 @@
 #include "bezel/body.h"
 #include "bezel/shape.h"
 #include <array>
+#include <iostream>
 #include <vector>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/norm.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtx/string_cast.hpp>
 
 bool bezel::simplexSignedVolumes(const std::vector<Point> &simplex,
                                  glm::vec3 &newDir, glm::vec4 &lambdasOut) {
@@ -78,17 +81,17 @@ bool bezel::hasPoint(const std::array<Point, 4> &simplex, const Point &p) {
 }
 
 void bezel::sortValids(std::array<Point, 4> &simplex, glm::vec4 &lambdas) {
+    const float epsilon = 1e-8f;
+
     bool valids[4];
     for (int i = 0; i < 4; i++) {
-        valids[i] = true;
-        if (lambdas[i] == 0.0f) {
-            valids[i] = false;
-        }
+        valids[i] = (std::abs(lambdas[i]) > epsilon);
     }
 
     glm::vec4 validLambdas(0.0f);
     int validCount = 0;
     std::array<Point, 4> validPoints;
+
     for (int i = 0; i < 4; i++) {
         if (valids[i]) {
             validPoints[validCount] = simplex[i];
@@ -98,15 +101,21 @@ void bezel::sortValids(std::array<Point, 4> &simplex, glm::vec4 &lambdas) {
     }
 
     for (int i = 0; i < 4; i++) {
+        simplex[i] = Point{};
+        lambdas[i] = 0.0f;
+    }
+
+    for (int i = 0; i < validCount; i++) {
         simplex[i] = validPoints[i];
         lambdas[i] = validLambdas[i];
     }
 }
 
-static int bezel::numValids(const glm::vec4 &lambdas) {
+int bezel::numValids(const glm::vec4 &lambdas) {
+    const float epsilon = 1e-8f;
     int num = 0;
     for (int i = 0; i < 4; i++) {
-        if (lambdas[i] != 0.0f) {
+        if (std::abs(lambdas[i]) > epsilon) {
             num++;
         }
     }
@@ -116,6 +125,7 @@ static int bezel::numValids(const glm::vec4 &lambdas) {
 bool bezel::gjkIntersection(const std::shared_ptr<Body> bodyA,
                             const std::shared_ptr<Body> bodyB, const float bias,
                             glm::vec3 &ptOnA, glm::vec3 &ptOnB) {
+
     const glm::vec3 origin(0.0);
 
     int numPts = 1;
@@ -123,10 +133,12 @@ bool bezel::gjkIntersection(const std::shared_ptr<Body> bodyA,
     simplex[0] =
         bezel::support(bodyA, bodyB, glm::vec3(1.0f, 0.0f, 0.0f), 0.0f);
 
-    float closestDist = 1e10f;
     bool doesContainOrigin = false;
     glm::vec3 newDir = -simplex[0].xyz;
-    while (!doesContainOrigin) {
+
+    int maxIterations = 64;
+    for (int iter = 0; iter < maxIterations && !doesContainOrigin; iter++) {
+
         Point newPt = bezel::support(bodyA, bodyB, newDir, 0.0f);
 
         if (hasPoint(simplex, newPt)) {
@@ -145,71 +157,23 @@ bool bezel::gjkIntersection(const std::shared_ptr<Body> bodyA,
         doesContainOrigin = bezel::simplexSignedVolumes(
             std::vector<Point>(simplex.begin(), simplex.begin() + numPts),
             newDir, lambdas);
+
         if (doesContainOrigin) {
             break;
         }
 
-        float dist = glm::length2(newDir);
-        if (dist >= closestDist) {
-            break;
-        }
-        closestDist = dist;
-
         bezel::sortValids(simplex, lambdas);
         numPts = bezel::numValids(lambdas);
-        doesContainOrigin = (numPts == 4);
+
+        if (numPts == 0) {
+            break;
+        }
     }
 
     if (!doesContainOrigin) {
         return false;
     }
 
-    if (numPts == 1) {
-        glm::vec3 searchDir = simplex[0].xyz * -1.0f;
-        Point newPt = bezel::support(bodyA, bodyB, searchDir, 0.0f);
-        simplex[numPts] = newPt;
-        numPts++;
-    }
-
-    if (numPts == 2) {
-        glm::vec3 ab = simplex[1].xyz - simplex[0].xyz;
-        glm::vec3 u, v;
-
-        bezel::takeOrtho(ab, u, v);
-        glm::vec3 newDir = u;
-        Point newPt = bezel::support(bodyA, bodyB, newDir, 0.0f);
-        simplex[numPts] = newPt;
-        numPts++;
-    }
-
-    if (numPts == 3) {
-        glm::vec3 ab = simplex[1].xyz - simplex[0].xyz;
-        glm::vec3 ac = simplex[2].xyz - simplex[0].xyz;
-        glm::vec3 norm = glm::cross(ab, ac);
-
-        glm::vec3 newDir = norm;
-        Point newPt = bezel::support(bodyA, bodyB, newDir, 0.0f);
-        simplex[numPts] = newPt;
-        numPts++;
-    }
-
-    glm::vec3 avg = glm::vec3(0.0f);
-    for (int i = 0; i < numPts; i++) {
-        avg += simplex[i].xyz;
-    }
-    avg /= 4.0f;
-
-    for (int i = 0; i < numPts; i++) {
-        Point &pt = simplex[i];
-
-        glm::vec3 dir = pt.xyz - avg;
-        dir = glm::normalize(dir);
-        pt.ptA += dir * bias;
-        pt.ptB += dir * bias;
-        pt.xyz = pt.ptA - pt.ptB;
-    }
-
-    epaExpand(bodyA, bodyB, bias, simplex, ptOnA, ptOnB);
     return true;
 }
 
