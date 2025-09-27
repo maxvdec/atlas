@@ -51,9 +51,6 @@ fn fetch_folder(
                     .get(download_url)
                     .header("User-Agent", "rust-client")
                     .send()?;
-                if !file.name.ends_with(".a") {
-                    continue;
-                }
                 let mut dest = fs::File::create(outdir.join(&file.name))?;
                 let bytes = response.bytes()?;
                 dest.write_all(&bytes)?;
@@ -108,6 +105,9 @@ fn fetch_all_assets(
             .get(&asset.download_url)
             .header("User-Agent", "rust-client")
             .send()?;
+        if !asset.name.ends_with(".a") {
+            continue;
+        }
         let mut dest = fs::File::create(outdir.join(&asset.name))?;
         let bytes = response.bytes()?;
         dest.write_all(&bytes)?;
