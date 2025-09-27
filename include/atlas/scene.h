@@ -13,7 +13,7 @@
 #include "atlas/light.h"
 #include "atlas/object.h"
 #include "atlas/units.h"
-#include <memory>
+#include "bezel/body.h"
 #include <vector>
 
 class Window;

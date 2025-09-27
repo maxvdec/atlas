@@ -84,14 +84,6 @@ void Body::update(Window &window) {
         std::shared_ptr<Body> bodyA = bodies[pair.a];
         std::shared_ptr<Body> bodyB = bodies[pair.b];
 
-        if (bodyA != this->thisShared && bodyB != this->thisShared) {
-            continue; // Only process contacts involving this body
-        }
-
-        if (bodyA->invMass == 0.0f && bodyB->invMass == 0.0f) {
-            continue; // Both bodies have infinite mass, skip
-        }
-
         Contact contact;
         if (intersects(bodyA, bodyB, contact, dt)) {
             bool isFreshCollision = contact.timeOfImpact > 1e-6f;

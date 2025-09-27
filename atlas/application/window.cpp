@@ -188,13 +188,13 @@ void Window::run() {
             for (auto &obj : this->firstRenderables) {
                 obj->setViewMatrix(this->camera->calculateViewMatrix());
                 obj->setProjectionMatrix(calculateProjectionMatrix());
-                obj->render();
+                obj->render(getDeltaTime());
             }
 
             for (auto &obj : this->renderables) {
                 obj->setViewMatrix(this->camera->calculateViewMatrix());
                 obj->setProjectionMatrix(calculateProjectionMatrix());
-                obj->render();
+                obj->render(getDeltaTime());
             }
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
         }
@@ -211,19 +211,19 @@ void Window::run() {
             for (auto &obj : this->firstRenderables) {
                 obj->setViewMatrix(this->camera->calculateViewMatrix());
                 obj->setProjectionMatrix(calculateProjectionMatrix());
-                obj->render();
+                obj->render(getDeltaTime());
             }
 
             for (auto &obj : this->renderables) {
                 obj->setViewMatrix(this->camera->calculateViewMatrix());
                 obj->setProjectionMatrix(calculateProjectionMatrix());
-                obj->render();
+                obj->render(getDeltaTime());
             }
         }
 
         glDisable(GL_CULL_FACE);
         for (auto &obj : this->preferenceRenderables) {
-            obj->render();
+            obj->render(getDeltaTime());
         }
 
         glfwSwapBuffers(window);
@@ -414,16 +414,17 @@ void Window::renderLightsToShadowMaps() {
         glm::mat4 lightView = lightParams.lightView;
         glm::mat4 lightProjection = lightParams.lightProjection;
         for (auto &obj : this->renderables) {
-            originalPrograms.push_back(obj->getShaderProgram().value());
             if (obj->getShaderProgram() == std::nullopt ||
                 !obj->canCastShadows()) {
                 continue;
             }
+            originalPrograms.push_back(obj->getShaderProgram().value());
+
             obj->setShader(this->depthProgram);
 
             obj->setProjectionMatrix(lightProjection);
             obj->setViewMatrix(lightView);
-            obj->render();
+            obj->render(getDeltaTime());
         }
     }
 
@@ -453,7 +454,7 @@ void Window::renderLightsToShadowMaps() {
 
             obj->setProjectionMatrix(lightProjection);
             obj->setViewMatrix(lightView);
-            obj->render();
+            obj->render(getDeltaTime());
         }
     }
 

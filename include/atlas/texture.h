@@ -123,7 +123,7 @@ class RenderTarget : public Renderable {
 
     std::shared_ptr<CoreObject> object = nullptr;
 
-    void render() override;
+    void render(float dt) override;
     void resolve();
 
   private:
@@ -146,7 +146,7 @@ class Skybox : public Renderable {
     void hide();
     void show();
 
-    void render() override;
+    void render(float dt) override;
     void setViewMatrix(const glm::mat4 &view) override;
     void setProjectionMatrix(const glm::mat4 &projection) override;
 
