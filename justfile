@@ -16,3 +16,6 @@ lint:
 frametest:
     just build
     timeout 2 ./bin/atlas_test
+
+cli:
+    cargo build

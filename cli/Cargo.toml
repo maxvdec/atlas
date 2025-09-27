@@ -1,0 +1,17 @@
+[package]
+name = "atlas-cli"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+clap = { version = "4.3", features = ["derive"] }
+reqwest = { version = "0.12", features = ["blocking", "json"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1", features = ["full"] }
+colored = "2.0"
+toml = "0.7"
+
+[[bin]]
+name = "atlas"
+path = "src/main.rs"

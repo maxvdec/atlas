@@ -36,7 +36,7 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [ ] Advanced materials and shaders
 - [ ] Instancing support
 - [ ] Optimizations and performance improvements
-- [ ] CLI for packing applications
+- [x] CLI for packing applications
 
 ## Other features planned for the future
 
