@@ -84,14 +84,23 @@ void Body::update(Window &window) {
         std::shared_ptr<Body> bodyA = bodies[pair.a];
         std::shared_ptr<Body> bodyB = bodies[pair.b];
 
+        if (bodyA != this->thisShared && bodyB != this->thisShared) {
+            continue; // Only process contacts involving this body
+        }
+
         if (bodyA->invMass == 0.0f && bodyB->invMass == 0.0f) {
             continue; // Both bodies have infinite mass, skip
         }
 
         Contact contact;
         if (intersects(bodyA, bodyB, contact, dt)) {
-            contacts[numContacts] = contact;
-            numContacts++;
+            bool isFreshCollision = contact.timeOfImpact > 1e-6f;
+            bool isSignificantPenetration =
+                contact.separationDistance < -0.0005f;
+            if (isSignificantPenetration || isFreshCollision) {
+                contacts[numContacts] = contact;
+                numContacts++;
+            }
         }
     }
 
@@ -152,174 +161,315 @@ void Body::applyImpulse(const glm::vec3 &point, const glm::vec3 &impulse) {
     applyAngularImpulse(angularImpulse);
 }
 
-bool Body::intersects(std::shared_ptr<Body> body, std::shared_ptr<Body> other,
-                      Contact &contact, float dt) const {
-    if (this->shape == nullptr || other->shape == nullptr) {
-        return false;
-    }
-    contact.bodyA = body;
-    contact.bodyB = other;
-
-    if (body->shape->getType() == Shape::ShapeType::Sphere &&
-        other->shape->getType() == Shape::ShapeType::Sphere) {
-        const Sphere *sphereA = dynamic_cast<const Sphere *>(body->shape.get());
-        const Sphere *sphereB =
-            dynamic_cast<const Sphere *>(other->shape.get());
-
-        glm::vec3 posA = body->position.toGlm();
-        glm::vec3 posB = other->position.toGlm();
-
-        glm::vec3 velA = body->linearVelocity;
-        glm::vec3 velB = other->linearVelocity;
-
-        if (bezel::sphereToSphereDynamic(
-                sphereA, sphereB, posA, posB, velA, velB, dt,
-                contact.pointA.worldSpacePoint, contact.pointB.worldSpacePoint,
-                contact.timeOfImpact)) {
-            body->updatePhysics(contact.timeOfImpact);
-            other->updatePhysics(contact.timeOfImpact);
-
-            contact.pointA.modelSpacePoint =
-                body->worldSpaceToModelSpace(contact.pointA.worldSpacePoint);
-            contact.pointB.modelSpacePoint =
-                other->worldSpaceToModelSpace(contact.pointB.worldSpacePoint);
-
-            glm::vec3 normalVec =
-                body->position.toGlm() - other->position.toGlm();
-            if (glm::length2(normalVec) < 1e-8f) {
-                contact.normal = glm::vec3(1.0f, 0.0f, 0.0f);
-            } else {
-                contact.normal = glm::normalize(normalVec);
-            }
-
-            body->updatePhysics(-contact.timeOfImpact);
-            other->updatePhysics(-contact.timeOfImpact);
-
-            glm::vec3 ab =
-                contact.pointB.worldSpacePoint - contact.pointA.worldSpacePoint;
-            float r = glm::length(ab);
-            contact.separationDistance = r;
-            return true;
-        }
-    }
-
-    return false;
-}
-
 void Body::resolveContact(Contact &contact) {
     std::shared_ptr<Body> bodyA = contact.bodyA;
     std::shared_ptr<Body> bodyB = contact.bodyB;
 
+    glm::vec3 n = contact.normal;
+
+    bool isSphereBox = (bodyA->shape->getType() == Shape::ShapeType::Sphere &&
+                        bodyB->shape->getType() == Shape::ShapeType::Box) ||
+                       (bodyB->shape->getType() == Shape::ShapeType::Sphere &&
+                        bodyA->shape->getType() == Shape::ShapeType::Box);
+
+    if (isSphereBox) {
+        float absX = std::abs(n.x);
+        float absY = std::abs(n.y);
+        float absZ = std::abs(n.z);
+
+        const float precision_threshold = 0.001f;
+
+        if (absY > absX && absY > absZ) {
+            if (absX < precision_threshold || absZ < precision_threshold) {
+                n = glm::vec3(0.0f, n.y > 0 ? 1.0f : -1.0f, 0.0f);
+            }
+        } else if (absX > absY && absX > absZ) {
+            if (absY < precision_threshold || absZ < precision_threshold) {
+                n = glm::vec3(n.x > 0 ? 1.0f : -1.0f, 0.0f, 0.0f);
+            }
+        } else {
+            if (absX < precision_threshold || absY < precision_threshold) {
+                n = glm::vec3(0.0f, 0.0f, n.z > 0 ? 1.0f : -1.0f);
+            }
+        }
+    }
+
+    contact.normal = n;
+
     glm::vec3 pointA = contact.pointA.worldSpacePoint;
     glm::vec3 pointB = contact.pointB.worldSpacePoint;
+
+    if (!std::isfinite(pointA.x) || !std::isfinite(pointA.y) ||
+        !std::isfinite(pointA.z) || !std::isfinite(pointB.x) ||
+        !std::isfinite(pointB.y) || !std::isfinite(pointB.z)) {
+        return;
+    }
 
     const float invMassA = bodyA->invMass;
     const float invMassB = bodyB->invMass;
 
     const float elasticityA = bodyA->elasticity;
     const float elasticityB = bodyB->elasticity;
-    const float elasticity = elasticityA + elasticityB;
+    const float elasticity = elasticityA * elasticityB;
 
     glm::mat3 invWorldInertiaA = bodyA->getInverseInertiaTensorWorldSpace();
     glm::mat3 invWorldInertiaB = bodyB->getInverseInertiaTensorWorldSpace();
 
-    glm::vec3 n = contact.normal;
+    if (!std::isfinite(n.x) || !std::isfinite(n.y) || !std::isfinite(n.z)) {
+        return;
+    }
+
+    if (glm::length2(n) < 1e-8f) {
+        return;
+    }
+
+    n = glm::normalize(n);
 
     glm::vec3 ra = pointA - bodyA->getCenterOfMassWorldSpace();
     glm::vec3 rb = pointB - bodyB->getCenterOfMassWorldSpace();
 
-    glm::vec3 angularJA =
-        glm::cross((invWorldInertiaA * glm::cross(ra, n)), ra);
-    glm::vec3 angularJB =
-        glm::cross((invWorldInertiaB * glm::cross(rb, n)), rb);
-    const float angularFactor = glm::dot(angularJA + angularJB, n);
+    glm::vec3 velA = bodyA->linearVelocity;
+    glm::vec3 velB = bodyB->linearVelocity;
 
-    glm::vec3 velA =
-        bodyA->linearVelocity + glm::cross(bodyA->angularVelocity, ra);
-    glm::vec3 velB =
-        bodyB->linearVelocity + glm::cross(bodyB->angularVelocity, rb);
-
-    glm::vec3 vab = velA - velB;
-
-    const float denominator = invMassA + invMassB + angularFactor;
-    if (std::abs(denominator) < 1e-6f) {
-        return; // Skip resolution if denominator is too small
+    if (invMassA > 0.0f) {
+        velA += glm::cross(bodyA->angularVelocity, ra);
+    }
+    if (invMassB > 0.0f) {
+        velB += glm::cross(bodyB->angularVelocity, rb);
     }
 
-    float impulseJ = (1.0f + elasticity) * glm::dot(vab, n) / denominator;
-    glm::vec3 impulseJVec = impulseJ * n;
+    glm::vec3 relativeVel = velA - velB;
+    float normalVel = glm::dot(relativeVel, n);
 
-    bodyA->applyImpulse(pointA, -impulseJVec);
-    bodyB->applyImpulse(pointB, impulseJVec);
+    bool isPenetrating = contact.separationDistance < -0.001f;
 
-    // Calculate the friction
-    float frictionA = bodyA->friction;
-    float frictionB = bodyB->friction;
-    float friction = frictionA * frictionB;
+    if (isPenetrating && contact.separationDistance < -0.01f) {
+        float totalInvMass = invMassA + invMassB;
+        if (totalInvMass > 1e-8f) {
+            const float percent = 0.05f;
+            const float slop = 0.01f;
+            float penetrationDepth = -contact.separationDistance;
 
-    glm::vec3 velNorm = n * glm::dot(n, vab);
-    glm::vec3 velTangent = vab - velNorm;
+            if (penetrationDepth > slop) {
+                float correction =
+                    (penetrationDepth - slop) * percent / totalInvMass;
+                glm::vec3 correctionVec = n * correction;
 
-    glm::vec3 relativeVelTangent(0.0f);
-    if (glm::length2(velTangent) > 1e-8f) {
-        relativeVelTangent = glm::normalize(velTangent);
+                if (std::isfinite(correctionVec.x) &&
+                    std::isfinite(correctionVec.y) &&
+                    std::isfinite(correctionVec.z)) {
+                    if (invMassA > 0.0f) {
+                        bodyA->position =
+                            bodyA->position +
+                            Position3d::fromGlm(correctionVec * invMassA);
+                    }
+                    if (invMassB > 0.0f) {
+                        bodyB->position =
+                            bodyB->position -
+                            Position3d::fromGlm(correctionVec * invMassB);
+                    }
+                }
+            }
+        }
     }
 
-    glm::vec3 inertiaA =
-        glm::cross((invWorldInertiaA * glm::cross(ra, relativeVelTangent)), ra);
-    glm::vec3 inertiaB =
-        glm::cross((invWorldInertiaB * glm::cross(rb, relativeVelTangent)), rb);
-    const float invInertia = glm::dot(inertiaA + inertiaB, relativeVelTangent);
+    bool isResting =
+        std::abs(normalVel) < 1.0f && contact.separationDistance > -0.05f;
 
-    float reducedMass = 1.0f / (invMassA + invMassB + invInertia);
-    glm::vec3 impulseFriction = velTangent * reducedMass * friction;
+    if (isResting) {
 
-    bodyA->applyImpulse(pointA, -impulseFriction);
-    bodyB->applyImpulse(pointB, impulseFriction);
+        if (normalVel < -0.01f) {
+            glm::vec3 angularJA = glm::vec3(0.0f);
+            glm::vec3 angularJB = glm::vec3(0.0f);
 
-    if (contact.timeOfImpact == 0.0f) {
-        return; // No positional correction needed
-    }
+            if (invMassA > 0.0f) {
+                angularJA =
+                    glm::cross((invWorldInertiaA * glm::cross(ra, n)), ra);
+            }
+            if (invMassB > 0.0f) {
+                angularJB =
+                    glm::cross((invWorldInertiaB * glm::cross(rb, n)), rb);
+            }
 
-    if (invMassA == 0.0f && invMassB == 0.0f) {
+            const float angularFactor = glm::dot(angularJA + angularJB, n);
+            const float denominator = invMassA + invMassB + angularFactor;
+
+            if (std::abs(denominator) > 1e-8f) {
+                float stabilizingImpulse = -normalVel / denominator;
+                glm::vec3 normalImpulse = stabilizingImpulse * n;
+
+                if (std::isfinite(normalImpulse.x) &&
+                    std::isfinite(normalImpulse.y) &&
+                    std::isfinite(normalImpulse.z)) {
+                    bodyA->applyImpulse(pointA, normalImpulse);
+                    bodyB->applyImpulse(pointB, -normalImpulse);
+                }
+            }
+        }
+
+        glm::vec3 tangentialVel = relativeVel - glm::dot(relativeVel, n) * n;
+        float tangentialSpeed = glm::length(tangentialVel);
+
+        if (tangentialSpeed > 0.01f) {
+            glm::vec3 frictionDir = tangentialVel / tangentialSpeed;
+
+            float frictionA = bodyA->friction;
+            float frictionB = bodyB->friction;
+            float combinedFriction = std::sqrt(frictionA * frictionB);
+
+            glm::vec3 frictionAngularJA = glm::vec3(0.0f);
+            glm::vec3 frictionAngularJB = glm::vec3(0.0f);
+
+            if (invMassA > 0.0f) {
+                frictionAngularJA = glm::cross(
+                    (invWorldInertiaA * glm::cross(ra, frictionDir)), ra);
+            }
+            if (invMassB > 0.0f) {
+                frictionAngularJB = glm::cross(
+                    (invWorldInertiaB * glm::cross(rb, frictionDir)), rb);
+            }
+
+            float frictionAngularFactor =
+                glm::dot(frictionAngularJA + frictionAngularJB, frictionDir);
+            float frictionDenominator =
+                invMassA + invMassB + frictionAngularFactor;
+
+            if (std::abs(frictionDenominator) > 1e-8f) {
+                if (combinedFriction >= 0.5f) {
+                    float frictionImpulseJ =
+                        -tangentialSpeed / frictionDenominator;
+                    glm::vec3 frictionImpulse = frictionImpulseJ * frictionDir;
+
+                    if (std::isfinite(frictionImpulse.x) &&
+                        std::isfinite(frictionImpulse.y) &&
+                        std::isfinite(frictionImpulse.z)) {
+                        bodyA->applyImpulse(pointA, frictionImpulse);
+                        bodyB->applyImpulse(pointB, -frictionImpulse);
+                    }
+                } else {
+                    float maxFriction = combinedFriction * 100.0f;
+                    float desiredFrictionImpulse =
+                        -tangentialSpeed / frictionDenominator;
+                    float frictionImpulseJ =
+                        std::max(-maxFriction,
+                                 std::min(maxFriction, desiredFrictionImpulse));
+
+                    glm::vec3 frictionImpulse = frictionImpulseJ * frictionDir;
+
+                    if (std::isfinite(frictionImpulse.x) &&
+                        std::isfinite(frictionImpulse.y) &&
+                        std::isfinite(frictionImpulse.z)) {
+                        bodyA->applyImpulse(pointA, frictionImpulse);
+                        bodyB->applyImpulse(pointB, -frictionImpulse);
+                    }
+                }
+            }
+        }
+
+        if (tangentialSpeed < 0.1f) {
+            const float dampingFactor = 0.95f;
+            if (invMassA > 0.0f) {
+                bodyA->linearVelocity *= dampingFactor;
+                bodyA->angularVelocity *= dampingFactor;
+            }
+            if (invMassB > 0.0f) {
+                bodyB->linearVelocity *= dampingFactor;
+                bodyB->angularVelocity *= dampingFactor;
+            }
+        }
+
         return;
     }
 
-    const Sphere *sphereA = dynamic_cast<const Sphere *>(bodyA->shape.get());
-    const Sphere *sphereB = dynamic_cast<const Sphere *>(bodyB->shape.get());
+    if (normalVel >= -0.01f) {
+        return;
+    }
 
-    if (sphereA && sphereB) {
-        glm::vec3 centerToCenter =
-            bodyB->position.toGlm() - bodyA->position.toGlm();
-        float distance = glm::length(centerToCenter);
-        float totalRadius = sphereA->radius + sphereB->radius;
+    glm::vec3 angularJA = glm::vec3(0.0f);
+    glm::vec3 angularJB = glm::vec3(0.0f);
 
-        if (distance < totalRadius) {
-            float totalInvMass = invMassA + invMassB;
+    if (invMassA > 0.0f) {
+        angularJA = glm::cross((invWorldInertiaA * glm::cross(ra, n)), ra);
+    }
+    if (invMassB > 0.0f) {
+        angularJB = glm::cross((invWorldInertiaB * glm::cross(rb, n)), rb);
+    }
 
-            if (totalInvMass > 1e-8f) {
-                float tA = invMassA / totalInvMass;
-                float tB = invMassB / totalInvMass;
+    const float angularFactor = glm::dot(angularJA + angularJB, n);
+    const float denominator = invMassA + invMassB + angularFactor;
 
-                const float percent = 0.2f; // correction strength
-                const float slop = 0.001f;  // small allowance
-                float penetrationDepth = totalRadius - distance;
-                float correction =
-                    std::max(penetrationDepth - slop, 0.0f) * percent;
+    if (std::abs(denominator) < 1e-8f) {
+        return;
+    }
 
-                glm::vec3 separationDirection = glm::normalize(centerToCenter);
+    float impulseJ = -(1.0f + elasticity) * normalVel / denominator;
 
-                if (invMassA > 0.0f) {
-                    bodyA->position = bodyA->position -
-                                      Position3d::fromGlm(separationDirection *
-                                                          correction * tA);
-                }
-                if (invMassB > 0.0f) {
-                    bodyB->position = bodyB->position +
-                                      Position3d::fromGlm(separationDirection *
-                                                          correction * tB);
-                }
+    const float maxImpulse = 1000.0f;
+    if (std::abs(impulseJ) > maxImpulse) {
+        impulseJ = (impulseJ > 0.0f) ? maxImpulse : -maxImpulse;
+    }
+
+    glm::vec3 normalImpulse = impulseJ * n;
+
+    if (!std::isfinite(normalImpulse.x) || !std::isfinite(normalImpulse.y) ||
+        !std::isfinite(normalImpulse.z)) {
+        return;
+    }
+
+    bodyA->applyImpulse(pointA, normalImpulse);
+    bodyB->applyImpulse(pointB, -normalImpulse);
+
+    glm::vec3 newVelA = bodyA->linearVelocity;
+    glm::vec3 newVelB = bodyB->linearVelocity;
+
+    if (invMassA > 0.0f) {
+        newVelA += glm::cross(bodyA->angularVelocity, ra);
+    }
+    if (invMassB > 0.0f) {
+        newVelB += glm::cross(bodyB->angularVelocity, rb);
+    }
+
+    glm::vec3 newRelativeVel = newVelA - newVelB;
+    glm::vec3 tangentialVel = newRelativeVel - glm::dot(newRelativeVel, n) * n;
+    float tangentialSpeed = glm::length(tangentialVel);
+
+    if (tangentialSpeed > 1e-6f) {
+        glm::vec3 frictionDir = tangentialVel / tangentialSpeed;
+
+        float frictionA = bodyA->friction;
+        float frictionB = bodyB->friction;
+        float combinedFriction = std::sqrt(frictionA * frictionB);
+
+        glm::vec3 frictionAngularJA = glm::vec3(0.0f);
+        glm::vec3 frictionAngularJB = glm::vec3(0.0f);
+
+        if (invMassA > 0.0f) {
+            frictionAngularJA = glm::cross(
+                (invWorldInertiaA * glm::cross(ra, frictionDir)), ra);
+        }
+        if (invMassB > 0.0f) {
+            frictionAngularJB = glm::cross(
+                (invWorldInertiaB * glm::cross(rb, frictionDir)), rb);
+        }
+
+        float frictionAngularFactor =
+            glm::dot(frictionAngularJA + frictionAngularJB, frictionDir);
+        float frictionDenominator = invMassA + invMassB + frictionAngularFactor;
+
+        if (std::abs(frictionDenominator) > 1e-8f) {
+            float frictionImpulseJ = -tangentialSpeed / frictionDenominator;
+
+            float maxFrictionImpulse = combinedFriction * std::abs(impulseJ);
+
+            if (std::abs(frictionImpulseJ) > maxFrictionImpulse) {
+                frictionImpulseJ = (frictionImpulseJ > 0.0f)
+                                       ? maxFrictionImpulse
+                                       : -maxFrictionImpulse;
             }
+
+            glm::vec3 frictionImpulse = frictionImpulseJ * frictionDir;
+            bodyA->applyImpulse(pointA, frictionImpulse);
+            bodyB->applyImpulse(pointB, -frictionImpulse);
         }
     }
 }
@@ -401,4 +551,23 @@ void Body::updatePhysics(double dt) {
         this->linearVelocity = glm::vec3(0.0f);
         this->angularVelocity = glm::vec3(0.0f);
     }
+}
+
+Point bezel::support(const std::shared_ptr<Body> bodyA,
+                     const std::shared_ptr<Body> bodyB, glm::vec3 dir,
+                     float bias) {
+    dir = glm::normalize(dir);
+
+    Point point;
+
+    point.ptA = bodyA->shape->support(dir, bodyA->position.toGlm(),
+                                      bodyA->orientation, bias);
+
+    dir *= -1.0f;
+
+    point.ptB = bodyB->shape->support(dir, bodyB->position.toGlm(),
+                                      bodyB->orientation, bias);
+
+    point.xyz = point.ptA - point.ptB;
+    return point;
 }

@@ -11,3 +11,5 @@ CMakeFiles
 .cache
 test/resources/skybox
 libbezel.a
+build
+.vscode

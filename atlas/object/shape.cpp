@@ -299,3 +299,46 @@ CoreObject createDebugSphere(double radius, unsigned int sectorCount,
 
     return sphere;
 }
+
+CoreObject createDebugBox(Size3d size) {
+    CoreObject box = createBox(size, Color::white());
+
+    Color whiteMultiplier = Color(1.0, 1.0, 1.0);
+    Color mediumMultiplier = Color(0.75, 0.75, 0.75);
+    Color darkMultiplier = Color(0.5, 0.5, 0.5);
+
+    Color blue = Color(0.5, 0.5, 1.0);
+    Color red = Color(1.0, 0.5, 0.5);
+    Color green = Color(0.5, 1.0, 0.5);
+
+    std::vector<CheckerTile> tiles;
+    tiles.push_back(
+        CheckerTile{blue * whiteMultiplier, blue * whiteMultiplier, 80});
+    tiles.push_back(
+        CheckerTile{red * whiteMultiplier, red * whiteMultiplier, 80});
+    tiles.push_back(
+        CheckerTile{green * whiteMultiplier, green * whiteMultiplier, 80});
+
+    Texture checkerboard = Texture::createTiledCheckerboard(1024, 1024, tiles);
+
+    box.attachTexture(checkerboard);
+    box.material.specular = Color::white() * 0.5;
+
+    std::vector<glm::vec3> corners = {{-size.x / 2, -size.y / 2, -size.z / 2},
+                                      {size.x / 2, -size.y / 2, -size.z / 2},
+                                      {size.x / 2, size.y / 2, -size.z / 2},
+                                      {-size.x / 2, size.y / 2, -size.z / 2},
+                                      {-size.x / 2, -size.y / 2, size.z / 2},
+                                      {size.x / 2, -size.y / 2, size.z / 2},
+                                      {size.x / 2, size.y / 2, size.z / 2},
+                                      {-size.x / 2, size.y / 2, size.z / 2}};
+
+    Body body;
+    std::shared_ptr<Box> physicsBox = std::make_shared<Box>(corners);
+    body.shape = physicsBox;
+    body.invMass = 1.0f;
+
+    box.setupPhysics(body);
+
+    return box;
+}

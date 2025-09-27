@@ -11,6 +11,7 @@
 #include <iostream>
 #include <memory>
 #include <vector>
+#include <bezel/shape.h>
 
 #define ATLAS_DEBUG
 
@@ -61,8 +62,8 @@ class MainScene : public Scene {
 
     void initialize(Window &window) override {
         camera = Camera();
-        camera.setPosition({-2.0, 7.0, 0.0});
-        camera.lookAt({0.0, 5.0, 0.0});
+        camera.setPosition({-5.0, 1.0, 0.0});
+        camera.lookAt({0.0, 0.0, 0.0});
         window.setCamera(&camera);
 
         Workspace::get().setRootPath(std::string(TEST_PATH) + "/resources/");
@@ -70,12 +71,11 @@ class MainScene : public Scene {
         skybox.cubemap = createSkyboxCubemap();
         skybox.display(window);
 
-        plane = createDebugSphere(5.0, 64, 128);
+        plane = createDebugBox({5.0, 0.5f, 5.0});
         plane.body->invMass = 0.0f;
-        plane.body->friction = 0.8f;
+        plane.body->friction = 0.5f;
 
         plane.setPosition({0, 0.0, 0.0});
-        plane.castsShadows = false;
 
         Color whiteMultiplier = Color(1.0, 1.0, 1.0);
         Color mediumMultiplier = Color(0.75, 0.75, 0.75);
@@ -92,17 +92,15 @@ class MainScene : public Scene {
         window.addObject(&plane);
 
         sphere = createDebugSphere(0.1, 64, 64);
-        sphere.setPosition({0.0, 7, 0.0});
+        sphere.setPosition({0.0, 2, 0.0}); // Move sphere far away from plane
         sphere.setRotation({0.0, 90.0, 90.0});
-        sphere.body->linearVelocity = {-0.3, 0.0, 0.0};
-        sphere.body->invMass = 1.0f;
-        sphere.body->friction = 0.8f;
-
+        sphere.body->linearVelocity = {2.0, 0.0, 0.0};
+        sphere.body->friction = 0.5f;
         window.addObject(&sphere);
 
         Color sunWarm = Color::white();
         dirLight = DirectionalLight({-0.75, -1.0, 0.0}, sunWarm);
-        dirLight.castShadows(window, 8192);
+        dirLight.castShadows(window, 4096);
         this->addDirectionalLight(&dirLight);
         this->ambientLight.intensity = 0.3f;
     }
