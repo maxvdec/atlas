@@ -13,6 +13,7 @@
 #include <memory>
 #include <vector>
 #include <bezel/shape.h>
+#include "finewave/test.h"
 
 #define ATLAS_DEBUG
 
@@ -143,6 +144,7 @@ class MainScene : public Scene {
 };
 
 int main() {
+    test_finewave();
     Window window({"My Window", 1600, 1200});
     MainScene scene;
     window.setScene(&scene);

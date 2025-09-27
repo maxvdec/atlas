@@ -42,13 +42,21 @@ add_library(bezel ${BEZEL_SOURCES})
 
 target_link_libraries(bezel PRIVATE glfw glm::glm)
 
+# Finewave library
+
+file(GLOB_RECURSE FINEWAVE_SOURCES finewave/*.cpp)
+
+add_library(finewave ${FINEWAVE_SOURCES})
+
+target_link_libraries(finewave PRIVATE glfw glm::glm)
+
 # Atlas library
 
 file(GLOB_RECURSE SOURCES atlas/*.cpp extern/*.c)
 
 add_library(atlas ${SOURCES} ${SHADER_OUTPUT_FILE})
 
-target_link_libraries(atlas PUBLIC OpenGL::GL glfw glm::glm bezel)
+target_link_libraries(atlas PUBLIC OpenGL::GL glfw glm::glm bezel finewave)
 
 target_compile_definitions(atlas PRIVATE ATLAS_LIB GL_SILENT_DEPRECATION)
 
