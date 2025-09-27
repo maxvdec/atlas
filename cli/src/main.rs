@@ -1,23 +1,21 @@
-use clap::{Parser, Subcommand};
+use atlas_cli::*;
+use clap::Parser;
 
 #[derive(Parser)]
 #[command(name = "atlas")]
-struct Cli {
+pub struct Cli {
     #[command(subcommand)]
     command: Commands,
 }
-
-#[derive(Subcommand)]
-enum Commands {
-    Create {
-        name: String,
-        path: Option<String>,
-        #[arg(default_value_t = String::from("latest"))]
-        version: String,
-    },
-    Pack {},
-}
-
 fn main() {
     let cli = Cli::parse();
+
+    match &cli.command {
+        Commands::Create { .. } => {
+            create::create(cli.command);
+        }
+        Commands::Pack { .. } => {
+            pack::pack(cli.command);
+        }
+    }
 }

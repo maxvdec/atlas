@@ -20,7 +20,7 @@ class Window;
 
 class Scene {
   public:
-    virtual void update(Window &window) = 0;
+    virtual void update(Window &window) {};
     virtual void initialize(Window &window) = 0;
     virtual void onMouseMove(Window &window, Movement2d movement) {}
     virtual void onMouseScroll(Window &window, Movement2d offset) {}
