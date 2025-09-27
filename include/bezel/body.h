@@ -10,6 +10,7 @@
 #ifndef BEZEL_BODY_H
 #define BEZEL_BODY_H
 
+#include <cmath>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <memory>
@@ -64,7 +65,7 @@ class Body {
     void applyAngularImpulse(const glm::vec3 &impulse);
 
     inline void applyMass(float mass) {
-        if (mass <= 0.0f) {
+        if (mass <= 0.0f || mass == INFINITY) {
             invMass = 0.0f; // Infinite mass
         } else {
             invMass = 1.0f / mass;

@@ -5,6 +5,7 @@
 #include "atlas/texture.h"
 #include "atlas/units.h"
 #include "atlas/workspace.h"
+#include "bezel/constraint.h"
 #include <atlas/input.h>
 #include <atlas/window.h>
 #include <cmath>
@@ -21,7 +22,9 @@ class MainScene : public Scene {
     Skybox skybox;
     Camera camera;
     CoreObject plane;
-    CoreObject sphere;
+    CoreObject boxA;
+    CoreObject boxB;
+    ConstraintDistance pendulumConstraint;
     DirectionalLight dirLight;
 
     void update(Window &window) override {
@@ -91,12 +94,25 @@ class MainScene : public Scene {
 
         window.addObject(&plane);
 
-        sphere = createDebugSphere(0.1, 64, 64);
-        sphere.setPosition({0.0, 2, 0.0}); // Move sphere far away from plane
-        sphere.setRotation({0.0, 90.0, 90.0});
-        sphere.body->linearVelocity = {2.0, 0.0, 0.0};
-        sphere.body->friction = 0.5f;
-        window.addObject(&sphere);
+        pendulumConstraint = ConstraintDistance();
+
+        boxA = createDebugBox({0.1, 0.1, 0.1});
+        boxA.body->applyMass(INFINITY);
+        boxA.setPosition({0.0, 1.0, 0.0});
+
+        pendulumConstraint.setAnchor(boxA.body);
+
+        window.addObject(&boxA);
+
+        boxB = createDebugBox({0.1, 0.1, 0.1});
+        boxB.body->applyMass(1.0f);
+        boxB.setPosition({0.0, 0.5, 0.0});
+
+        pendulumConstraint.setChild(boxB.body);
+
+        this->addConstraint(&pendulumConstraint);
+
+        window.addObject(&boxB);
 
         Color sunWarm = Color::white();
         dirLight = DirectionalLight({-0.75, -1.0, 0.0}, sunWarm);

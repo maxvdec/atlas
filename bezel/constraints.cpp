@@ -104,3 +104,50 @@ void Constraint::applyImpulses(const bezel::vecN &impulses) {
     bodyB->applyLinearImpulse(forceInternalB);
     bodyB->applyAngularImpulse(torqueInternalB);
 }
+
+void ConstraintDistance::preSolve(float dt) {
+    const glm::vec3 worldAnchorA = bodyA->modelSpaceToWorldSpace(anchorA);
+    const glm::vec3 worldAnchorB = bodyB->modelSpaceToWorldSpace(anchorB);
+
+    const glm::vec3 r = worldAnchorB - worldAnchorA;
+    const glm::vec3 ra = worldAnchorA - bodyA->getCenterOfMassWorldSpace();
+    const glm::vec3 rb = worldAnchorB - bodyB->getCenterOfMassWorldSpace();
+    const glm::vec3 a = worldAnchorA;
+    const glm::vec3 b = worldAnchorB;
+
+    jacobian.fill(0.0f);
+
+    glm::vec3 J1 = (a - b) * 2.0f;
+    jacobian.data[0][0] = J1.x;
+    jacobian.data[0][1] = J1.y;
+    jacobian.data[0][2] = J1.z;
+
+    glm::vec3 J2 = glm::cross(ra, J1);
+    jacobian.data[0][3] = J2.x;
+    jacobian.data[0][4] = J2.y;
+    jacobian.data[0][5] = J2.z;
+
+    glm::vec3 J3 = (b - a) * 2.0f;
+    jacobian.data[0][6] = J3.x;
+    jacobian.data[0][7] = J3.y;
+    jacobian.data[0][8] = J3.z;
+
+    glm::vec3 J4 = glm::cross(rb, J3);
+    jacobian.data[0][9] = J4.x;
+    jacobian.data[0][10] = J4.y;
+    jacobian.data[0][11] = J4.z;
+}
+
+void ConstraintDistance::solve() {
+    bezel::matMN jacobianTranspose = jacobian.transpose();
+
+    const bezel::vecN velocities = getVelocities();
+    const bezel::matMN invMassMatrix = getInverseMassMatrix();
+    const bezel::matMN J_W_Jt = jacobian * invMassMatrix * jacobianTranspose;
+    bezel::vecN rhs = jacobian * velocities * -1.0f;
+
+    const bezel::vecN lambda = bezel::lcpGaussSeidel(J_W_Jt, rhs);
+
+    const bezel::vecN impulses = jacobianTranspose * lambda;
+    applyImpulses(impulses);
+}

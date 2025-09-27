@@ -13,6 +13,7 @@
 #include "atlas/light.h"
 #include "atlas/object.h"
 #include "atlas/units.h"
+#include "bezel/constraint.h"
 #include <memory>
 #include <vector>
 
@@ -34,11 +35,15 @@ class Scene {
     void addLight(Light *light) { pointLights.push_back(light); }
 
     void addSpotlight(Spotlight *light) { spotlights.push_back(light); }
+    void addConstraint(Constraint *constraint) {
+        constraints.push_back(constraint);
+    }
 
   private:
     std::vector<DirectionalLight *> directionalLights;
     std::vector<Light *> pointLights;
     std::vector<Spotlight *> spotlights;
+    std::vector<Constraint *> constraints;
 
     friend class CoreObject;
     friend class Window;

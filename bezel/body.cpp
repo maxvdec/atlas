@@ -11,6 +11,7 @@
 #include "atlas/units.h"
 #include "atlas/window.h"
 #include "bezel/bounds.h"
+#include "bezel/constraint.h"
 #include "bezel/shape.h"
 #include <algorithm>
 #include <iostream>
@@ -109,6 +110,22 @@ void Body::update(Window &window) {
                   [](const Contact &a, const Contact &b) {
                       return a.timeOfImpact < b.timeOfImpact;
                   });
+    }
+
+    if (!window.solvedConstraints) {
+        window.solvedConstraints = true;
+        std::vector<Constraint *> constraints = window.getAllConstraints();
+        for (auto &constraint : constraints) {
+            constraint->preSolve(dt);
+        }
+
+        for (auto &constraint : constraints) {
+            constraint->solve();
+        }
+
+        for (auto &constraint : constraints) {
+            constraint->postSolve();
+        }
     }
 
     // Integrate and resolve contacts

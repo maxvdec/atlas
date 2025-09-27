@@ -156,6 +156,7 @@ void Window::run() {
     glFrontFace(GL_CW);
 
     while (!glfwWindowShouldClose(window)) {
+        this->solvedConstraints = false;
         float currentTime = static_cast<float>(glfwGetTime());
         this->deltaTime = currentTime - this->lastTime;
         lastTime = currentTime;
@@ -477,4 +478,15 @@ std::vector<std::shared_ptr<Body>> Window::getAllBodies() {
         }
     }
     return bodies;
+}
+
+std::vector<Constraint *> Window::getAllConstraints() {
+    std::vector<Constraint *> constraints;
+    if (this->currentScene == nullptr) {
+        return constraints;
+    }
+    for (auto &constraint : this->currentScene->constraints) {
+        constraints.push_back(constraint);
+    }
+    return constraints;
 }

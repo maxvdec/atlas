@@ -41,4 +41,32 @@ namespace bezel {
 vecN lcpGaussSeidel(const matN &A, const vecN &b);
 }
 
+class ConstraintDistance : public Constraint {
+  public:
+    ConstraintDistance() : Constraint(), jacobian(1, 12) {}
+
+    void preSolve(float dt) override;
+    void solve() override;
+
+    inline void setAnchor(std::shared_ptr<Body> body) {
+        this->anchor = body;
+        bodyA = body;
+        anchorA = body->worldSpaceToModelSpace(body->position.toGlm());
+    }
+
+    inline void setChild(std::shared_ptr<Body> body) {
+        if (this->anchor == nullptr) {
+            throw std::runtime_error(
+                "ConstraintDistance: Anchor body must be set before child "
+                "body.");
+        }
+        bodyB = body;
+        anchorB = body->worldSpaceToModelSpace(anchor->position.toGlm());
+    }
+
+  private:
+    bezel::matMN jacobian;
+    std::shared_ptr<Body> anchor = nullptr;
+};
+
 #endif // BEZEL_CONSTRAINT_H

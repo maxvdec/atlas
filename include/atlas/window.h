@@ -17,6 +17,7 @@
 #include "atlas/texture.h"
 #include "atlas/units.h"
 #include "bezel/body.h"
+#include "bezel/constraint.h"
 #include <memory>
 #include <optional>
 #include <string>
@@ -124,6 +125,7 @@ class Window {
 
     inline float getDeltaTime() { return this->deltaTime; }
 
+    std::vector<Constraint *> getAllConstraints();
     std::vector<std::shared_ptr<Body>> getAllBodies();
 
     float gravity = 9.81f;
@@ -151,10 +153,12 @@ class Window {
     ShaderProgram depthProgram;
 
     bool debug = false;
+    bool solvedConstraints = false;
 
     friend class CoreObject;
     friend class RenderTarget;
     friend class DirectionalLight;
+    friend class Body;
 };
 
 #endif // WINDOW_H

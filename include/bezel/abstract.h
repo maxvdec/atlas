@@ -279,7 +279,6 @@ inline const matN &matN::operator=(const matMN &other) {
     }
 
     dimensionNum = other.rows;
-    delete[] data;
     data = new vecN[dimensionNum];
     for (int i = 0; i < dimensionNum; i++) {
         data[i] = other.data[i];
