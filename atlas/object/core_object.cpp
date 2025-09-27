@@ -10,7 +10,6 @@
 #include "atlas/core/shader.h"
 #include "atlas/light.h"
 #include "atlas/object.h"
-#include "atlas/scene.h"
 #include "atlas/window.h"
 #include <algorithm>
 #include <glad/glad.h>
@@ -194,6 +193,9 @@ void CoreObject::updateModelMatrix() {
 }
 
 void CoreObject::initialize() {
+    for (auto &component : components) {
+        component->init();
+    }
     if (vertices.empty()) {
         throw std::runtime_error("No vertices attached to the object");
     }
@@ -234,7 +236,10 @@ void CoreObject::initialize() {
     glBindVertexArray(0);
 }
 
-void CoreObject::render() {
+void CoreObject::render(float dt) {
+    for (auto &component : components) {
+        component->update(dt);
+    }
     if (!isVisible) {
         return;
     }

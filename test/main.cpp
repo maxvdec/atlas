@@ -1,4 +1,5 @@
 #include "atlas/camera.h"
+#include "atlas/component.h"
 #include "atlas/light.h"
 #include "atlas/object.h"
 #include "atlas/scene.h"
@@ -15,6 +16,36 @@
 
 #define ATLAS_DEBUG
 
+class MyObject : public CompoundObject {
+  public:
+    CoreObject obj;
+    CoreObject obj2;
+
+    void init() override {
+        obj = createDebugBox({0.5, 0.5, 0.5});
+        obj.setPosition({-1.0, 1.0, 0.0});
+        obj.initialize();
+        obj.body->applyMass(INFINITY);
+        this->addObject(&obj);
+
+        obj2 = createDebugSphere(0.25, 32, 32);
+        obj2.setPosition({1.0, 1.0, 0.0});
+        obj2.initialize();
+        obj2.body->linearVelocity = {-1.0, 0.0, 0.0};
+        obj2.body->applyMass(INFINITY);
+        this->addObject(&obj2);
+    }
+};
+
+class MoveSin : public Component {
+  public:
+    void update(float dt) override {
+        float amplitude = 0.01f;
+        float position = amplitude * std::sin(glfwGetTime());
+        object->move({position, 0.0, 0.0});
+    }
+};
+
 class MainScene : public Scene {
   public:
     bool doesUpdate = true;
@@ -23,6 +54,7 @@ class MainScene : public Scene {
     CoreObject plane;
     CoreObject sphere;
     DirectionalLight dirLight;
+    MyObject myObject;
 
     void update(Window &window) override {
         if (!doesUpdate)
@@ -97,6 +129,10 @@ class MainScene : public Scene {
         sphere.body->linearVelocity = {2.0, 0.0, 0.0};
         sphere.body->friction = 0.5f;
         window.addObject(&sphere);
+
+        myObject = MyObject();
+        myObject.addComponent<MoveSin>();
+        window.addObject(&myObject);
 
         Color sunWarm = Color::white();
         dirLight = DirectionalLight({-0.75, -1.0, 0.0}, sunWarm);

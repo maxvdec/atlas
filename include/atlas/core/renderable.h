@@ -21,7 +21,7 @@ class Window;
 
 class Renderable {
   public:
-    virtual void render() = 0;
+    virtual void render(float dt) = 0;
     virtual void initialize() {};
     virtual void update(Window &window) {};
     virtual void setViewMatrix(const glm::mat4 &view) {};

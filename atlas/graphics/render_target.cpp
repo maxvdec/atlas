@@ -234,7 +234,7 @@ void RenderTarget::show() {
     }
 }
 
-void RenderTarget::render() {
+void RenderTarget::render(float dt) {
     if (!object || !object->isVisible) {
         return;
     }

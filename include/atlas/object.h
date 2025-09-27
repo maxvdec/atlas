@@ -10,9 +10,11 @@
 #ifndef ATLAS_OBJECT_H
 #define ATLAS_OBJECT_H
 
+#include "atlas/component.h"
 #include "bezel/body.h"
 #include "bezel/shape.h"
 #include <memory>
+#include <type_traits>
 #pragma once
 
 #include "atlas/core/shader.h"
@@ -53,7 +55,7 @@ typedef unsigned int Index;
 
 class Window;
 
-class CoreObject : public Renderable {
+class CoreObject : public GameObject {
   public:
     std::vector<CoreVertex> vertices;
     std::vector<Index> indices;
@@ -65,43 +67,51 @@ class CoreObject : public Renderable {
 
     void attachVertices(const std::vector<CoreVertex> &newVertices);
     void attachIndices(const std::vector<Index> &newIndices);
-    void attachProgram(const ShaderProgram &program);
+    void attachProgram(const ShaderProgram &program) override;
     void createAndAttachProgram(VertexShader &vertexShader,
-                                FragmentShader &fragmentShader);
-    void attachTexture(const Texture &texture);
+                                FragmentShader &fragmentShader) override;
+    void attachTexture(const Texture &texture) override;
     void initialize() override;
 
     void renderColorWithTexture();
     void renderOnlyColor();
     void renderOnlyTexture();
-    void setColor(const Color &color);
+    void setColor(const Color &color) override;
 
     Position3d position = {0.0, 0.0, 0.0};
     Rotation3d rotation = {0.0, 0.0, 0.0};
     Scale3d scale = {1.0, 1.0, 1.0};
 
-    void setPosition(const Position3d &newPosition);
-    void move(const Position3d &deltaPosition);
-    void setRotation(const Rotation3d &newRotation);
-    void lookAt(const Position3d &target, const Normal3d &up = {0.0, 1.0, 0.0});
-    void rotate(const Rotation3d &deltaRotation);
-    void setScale(const Scale3d &newScale);
+    void setPosition(const Position3d &newPosition) override;
+    void move(const Position3d &deltaPosition) override;
+    void setRotation(const Rotation3d &newRotation) override;
+    void lookAt(const Position3d &target,
+                const Normal3d &up = {0.0, 1.0, 0.0}) override;
+    void rotate(const Rotation3d &deltaRotation) override;
+    void setScale(const Scale3d &newScale) override;
 
     void updateModelMatrix();
     void updateVertices();
 
     CoreObject clone() const;
 
-    inline void show() { isVisible = true; }
-    inline void hide() { isVisible = false; }
+    inline void show() override { isVisible = true; }
+    inline void hide() override { isVisible = false; }
 
-    void setupPhysics(Body body);
+    void setupPhysics(Body body) override;
 
     Id id;
 
-    std::shared_ptr<Body> body = nullptr;
-
     bool castsShadows = true;
+
+    template <typename T>
+        requires std::is_base_of_v<Component, T>
+    void addComponent() {
+        std::shared_ptr<T> component = std::make_shared<T>();
+        component->object = this;
+        component->body = this->body.get();
+        components.push_back(component);
+    }
 
   private:
     BufferIndex vbo;
@@ -123,8 +133,10 @@ class CoreObject : public Renderable {
     friend class RenderTarget;
     friend class Skybox;
 
+    std::vector<std::shared_ptr<Component>> components;
+
   public:
-    void render() override;
+    void render(float dt) override;
     void setViewMatrix(const glm::mat4 &view) override;
     void setProjectionMatrix(const glm::mat4 &projection) override;
 
