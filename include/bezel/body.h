@@ -80,15 +80,18 @@ class Body {
 
     void update(Window &window);
 
-    bool intersects(std::shared_ptr<Body> bodyA, std::shared_ptr<Body> bodyB,
-                    Contact &contact, float dt) const;
+    static bool intersectsStatic(const std::shared_ptr<Body> &bodyA,
+                                 const std::shared_ptr<Body> &bodyB,
+                                 Contact &contact);
+    static bool intersects(const std::shared_ptr<Body> &bodyA,
+                           const std::shared_ptr<Body> &bodyB, Contact &contact,
+                           float dt);
 
     void resolveContact(Contact &contact);
+    void updatePhysics(double dt);
 
   private:
     std::shared_ptr<Body> thisShared = nullptr;
-
-    void updatePhysics(double dt);
 };
 
 struct PseudoBody {
@@ -96,5 +99,10 @@ struct PseudoBody {
     float value;
     bool ismin;
 };
+
+namespace bezel {
+Point support(const std::shared_ptr<Body> bodyA,
+              const std::shared_ptr<Body> bodyB, glm::vec3 dir, float bias);
+}
 
 #endif // BEZEL_BODY_H
