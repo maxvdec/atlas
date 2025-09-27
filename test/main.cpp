@@ -73,6 +73,7 @@ class MainScene : public Scene {
 
         plane = createDebugBox({5.0, 0.5f, 5.0});
         plane.body->invMass = 0.0f;
+        plane.body->friction = 0.5f;
 
         plane.setPosition({0, 0.0, 0.0});
 
@@ -93,6 +94,8 @@ class MainScene : public Scene {
         sphere = createDebugSphere(0.1, 64, 64);
         sphere.setPosition({0.0, 2, 0.0}); // Move sphere far away from plane
         sphere.setRotation({0.0, 90.0, 90.0});
+        sphere.body->linearVelocity = {2.0, 0.0, 0.0};
+        sphere.body->friction = 0.5f;
         window.addObject(&sphere);
 
         Color sunWarm = Color::white();

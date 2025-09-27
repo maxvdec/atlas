@@ -10,7 +10,6 @@
 #include "bezel/body.h"
 #include "bezel/shape.h"
 #include <array>
-#include <iostream>
 #include <vector>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/norm.hpp>
@@ -127,7 +126,6 @@ bool bezel::gjkIntersection(const std::shared_ptr<Body> bodyA,
                             glm::vec3 &ptOnA, glm::vec3 &ptOnB) {
 
     const glm::vec3 origin(0.0);
-
     int numPts = 1;
     std::array<Point, 4> simplex;
     simplex[0] =
@@ -138,7 +136,6 @@ bool bezel::gjkIntersection(const std::shared_ptr<Body> bodyA,
 
     int maxIterations = 64;
     for (int iter = 0; iter < maxIterations && !doesContainOrigin; iter++) {
-
         Point newPt = bezel::support(bodyA, bodyB, newDir, 0.0f);
 
         if (hasPoint(simplex, newPt)) {
@@ -174,6 +171,48 @@ bool bezel::gjkIntersection(const std::shared_ptr<Body> bodyA,
         return false;
     }
 
+    // Ensure we have a full tetrahedron for EPA
+    while (numPts < 4) {
+        glm::vec3 searchDir;
+
+        if (numPts == 1) {
+            searchDir = -simplex[0].xyz;
+        } else if (numPts == 2) {
+            glm::vec3 ab = simplex[1].xyz - simplex[0].xyz;
+            // Find perpendicular direction
+            glm::vec3 temp = (std::abs(ab.x) < 0.9f) ? glm::vec3(1, 0, 0)
+                                                     : glm::vec3(0, 1, 0);
+            searchDir = glm::normalize(glm::cross(ab, temp));
+        } else if (numPts == 3) {
+            glm::vec3 ab = simplex[1].xyz - simplex[0].xyz;
+            glm::vec3 ac = simplex[2].xyz - simplex[0].xyz;
+            searchDir = glm::normalize(glm::cross(ab, ac));
+        }
+
+        Point newPt = bezel::support(bodyA, bodyB, searchDir, 0.0f);
+
+        if (hasPoint(simplex, newPt)) {
+            // Try opposite direction
+            newPt = bezel::support(bodyA, bodyB, -searchDir, 0.0f);
+            if (hasPoint(simplex, newPt)) {
+                break;
+            }
+        }
+
+        simplex[numPts] = newPt;
+        numPts++;
+    }
+
+    // Call EPA if we have a complete tetrahedron
+    if (numPts == 4) {
+        float penetrationDepth =
+            bezel::epaExpand(bodyA, bodyB, bias, simplex, ptOnA, ptOnB);
+        return true;
+    }
+
+    // Fallback if we couldn't build a tetrahedron
+    ptOnA = simplex[0].ptA;
+    ptOnB = simplex[0].ptB;
     return true;
 }
 
