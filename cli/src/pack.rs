@@ -277,3 +277,93 @@ pub fn pack(cmd: Commands) {
 
     println!("{}", "Packing completed successfully.".italic().green());
 }
+
+pub fn run(cmd: Commands) {
+    clean();
+    println!(
+        "{}",
+        "Packing project for target machine.".italic().yellow()
+    );
+
+    let renderer: &str = "OpenGL";
+    println!(
+        "{} {}",
+        "Using renderer:".italic().cyan(),
+        renderer.bold().green()
+    );
+
+    let release = if let Commands::Pack { release } = cmd {
+        release != 0
+    } else {
+        false
+    };
+
+    let build_dir = Path::new("build");
+    if !build_dir.exists() {
+        std::fs::create_dir(build_dir).expect("Failed to create build directory");
+    }
+    run_cmake(build_dir, release);
+    println!("{}", "CMake build successful!".italic().green());
+
+    let current_machine = if cfg!(target_os = "windows") {
+        "windows"
+    } else if cfg!(target_os = "macos") {
+        "macos"
+    } else if cfg!(target_os = "linux") {
+        "linux"
+    } else {
+        "unknown"
+    };
+
+    let config_str = std::fs::read_to_string("atlas.toml").expect("Failed to read atlas.toml");
+    let config: Config = toml::from_str(&config_str).expect("Failed to parse atlas.toml");
+    if config.pack.supported_platforms != "all"
+        && !config
+            .pack
+            .supported_platforms
+            .split(',')
+            .any(|platform| platform.trim() == current_machine)
+    {
+        eprintln!(
+            "{}",
+            format!("Current platform '{current_machine}' is not supported for packing.")
+                .italic()
+                .red()
+        );
+    }
+
+    let built_files = std::fs::read_dir("build/bin").expect("Failed to read build directory");
+    let mut executable_path: std::path::PathBuf = std::path::PathBuf::new();
+    for path in built_files {
+        let path = path.expect("Failed to read file in build directory").path();
+        if path.is_file() {
+            executable_path = path;
+            println!(
+                "{} {}",
+                "Executable found at:".italic().cyan(),
+                executable_path.display().to_string().bold().green()
+            );
+            break;
+        } else {
+            continue;
+        }
+    }
+    if executable_path == std::path::PathBuf::new() {
+        eprintln!(
+            "{}",
+            "No executable found in build directory.".italic().red()
+        );
+        return;
+    }
+
+    let _ = Command::new("clean").status();
+
+    let status = Command::new(executable_path)
+        .status()
+        .expect("Failed to run the executable");
+    if !status.success() {
+        eprintln!("{}", "Application exited with an error.".italic().red());
+    } else {
+        println!("{}", "Application exited successfully.".italic().green());
+    }
+}

@@ -14,6 +14,10 @@ pub enum Commands {
         #[arg(default_value_t = 0, long, short)]
         release: u8,
     },
+    Run {
+        #[arg(default_value_t = 0, long, short)]
+        release: u8,
+    },
 }
 
 #[derive(serde::Deserialize)]

@@ -17,5 +17,6 @@ fn main() {
         Commands::Pack { .. } => {
             pack::pack(cli.command);
         }
+        Commands::Run { .. } => pack::run(cli.command),
     }
 }
