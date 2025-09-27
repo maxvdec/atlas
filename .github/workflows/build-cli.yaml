@@ -1,0 +1,14 @@
+name: Build and Test CLI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build_cli:
+    name: build_cli
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+      - run: cargo build --release
