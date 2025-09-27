@@ -25,7 +25,7 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [x] Physics engine integration (Bezel)
 - [ ] Audio support (Finewave)
 - [ ] Scripting support
-- [ ] Asset management
+- [x] Asset management
 - [ ] Documentation and examples
 - [ ] Particle system
 - [x] Lights
