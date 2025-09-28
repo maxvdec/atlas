@@ -33,8 +33,14 @@ add_custom_command(
 find_package(OpenGL REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
-
-# Bezel library
+if(APPLE)
+    set(OPENAL_LIB /opt/homebrew/opt/openal-soft/lib/libopenal.dylib)
+    set(OPENAL_INCLUDE /opt/homebrew/opt/openal-soft/include)
+else()
+    find_package(OpenAL REQUIRED)
+    set(OPENAL_LIB ${OPENAL_LIBRARY}
+        OPENAL_INCLUDE ${OPENAL_INCLUDE_DIR})
+endif()
 
 file(GLOB_RECURSE BEZEL_SOURCES bezel/*.cpp)
 
@@ -48,7 +54,7 @@ file(GLOB_RECURSE FINEWAVE_SOURCES finewave/*.cpp)
 
 add_library(finewave ${FINEWAVE_SOURCES})
 
-target_link_libraries(finewave PRIVATE glfw glm::glm)
+target_link_libraries(finewave PRIVATE glfw glm::glm ${OPENAL_LIB})
 
 # Atlas library
 
@@ -76,3 +82,4 @@ target_compile_definitions(atlas_test
 )
 
 include_directories(include extern)
+include_directories(${OPENAL_INCLUDE})

@@ -17,7 +17,7 @@
 
 namespace fs = std::filesystem;
 
-enum class ResourceType { File, Image, SpecularMap };
+enum class ResourceType { File, Image, SpecularMap, Audio };
 
 struct Resource {
     fs::path path;
