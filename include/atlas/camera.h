@@ -45,6 +45,18 @@ class Camera {
 
     glm::mat4 calculateViewMatrix() const;
 
+    inline Normal3d getFrontVector() const {
+        Normal3d front;
+        front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+        front.y = sin(glm::radians(pitch));
+        front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+        return Normal3d::fromGlm(glm::normalize(front.toGlm()));
+    }
+
+    inline Magnitude3d getVelocity() const {
+        return getFrontVector() * movementSpeed;
+    }
+
   private:
     float lastFrame;
 

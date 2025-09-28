@@ -17,3 +17,4 @@ Cargo.lock
 target
 cli/target
 cli/Cargo.lock
+libfinewave.a

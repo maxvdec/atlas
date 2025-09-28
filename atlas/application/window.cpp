@@ -12,6 +12,7 @@
 #include "atlas/object.h"
 #include "atlas/units.h"
 #include "bezel/body.h"
+#include "finewave/audio.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <atlas/window.h>
@@ -122,6 +123,12 @@ Window::Window(WindowConfiguration config)
     program.fragmentShader = fragmentShader;
     program.compile();
     this->depthProgram = program;
+
+    audioEngine = std::make_shared<AudioEngine>();
+    bool result = audioEngine->initialize();
+    if (!result) {
+        throw std::runtime_error("Failed to initialize audio engine");
+    }
 }
 
 std::tuple<int, int> Window::getCursorPosition() {
@@ -374,6 +381,12 @@ bool Window::isKeyPressed(Key key) {
     GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
     int state = glfwGetKey(window, static_cast<int>(key));
     return state == GLFW_PRESS || state == GLFW_REPEAT;
+}
+
+bool Window::isKeyClicked(Key key) {
+    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
+    int state = glfwGetKey(window, static_cast<int>(key));
+    return state == GLFW_PRESS;
 }
 
 void Window::releaseMouse() {

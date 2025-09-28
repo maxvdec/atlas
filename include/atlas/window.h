@@ -17,6 +17,7 @@
 #include "atlas/texture.h"
 #include "atlas/units.h"
 #include "bezel/body.h"
+#include "finewave/audio.h"
 #include <memory>
 #include <optional>
 #include <string>
@@ -100,6 +101,7 @@ class Window {
     float getTime();
 
     bool isKeyPressed(Key key);
+    bool isKeyClicked(Key key);
 
     void releaseMouse();
     void captureMouse();
@@ -127,6 +129,8 @@ class Window {
     std::vector<std::shared_ptr<Body>> getAllBodies();
 
     float gravity = 9.81f;
+
+    std::shared_ptr<AudioEngine> audioEngine;
 
   private:
     CoreWindowReference windowRef;
