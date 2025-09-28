@@ -88,18 +88,9 @@ void AudioSource::fromFile(Resource resource) {
     }
 }
 
-void AudioSource::play() {
-    alSourcePlay(id);
-    CHECK_AL_ERROR();
-}
-void AudioSource::pause() {
-    alSourcePause(id);
-    CHECK_AL_ERROR();
-}
-void AudioSource::stop() {
-    alSourceStop(id);
-    CHECK_AL_ERROR();
-}
+void AudioSource::play() { alSourcePlay(id); }
+void AudioSource::pause() { alSourcePause(id); }
+void AudioSource::stop() { alSourceStop(id); }
 
 void AudioSource::setLooping(bool loop) {
     alSourcei(id, AL_LOOPING, loop ? AL_TRUE : AL_FALSE);

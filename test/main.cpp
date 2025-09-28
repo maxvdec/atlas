@@ -48,10 +48,8 @@ class MoveSin : public Component {
             return;
         }
         player->setSource(Workspace::get().createResource(
-            "example.wav", "ExampleSound", ResourceType::Audio));
+            "exampleMP3.mp3", "ExampleSound", ResourceType::Audio));
         player->play();
-
-        std::cout << player->source->isPlaying() << std::endl;
     }
     void update(float dt) override {
         float amplitude = 0.01f;
