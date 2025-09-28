@@ -27,7 +27,7 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [ ] Scripting support
 - [x] Asset management
 - [ ] Documentation and examples **for alpha**
-- [ ] Particle system **for alpha**
+- [x] Particle system **for alpha**
 - [x] Lights
 - [x] Shadows (except for point lights)
 - [ ] Post-processing effects

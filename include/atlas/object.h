@@ -257,8 +257,10 @@ class ParticleEmitter : public GameObject {
 
     glm::mat4 projection = glm::mat4(1.0f);
     glm::mat4 view = glm::mat4(1.0f);
+    glm::mat4 model = glm::mat4(1.0f);
 
     Position3d position = {0.0, 0.0, 0.0};
+    std::optional<Position3d> firstCameraPosition = std::nullopt;
 
     void spawnParticle();
     void updateParticle(Particle &p, float deltaTime);

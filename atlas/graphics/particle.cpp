@@ -4,6 +4,7 @@
 // Created by Max Van den Eynde in 2025
 //
 
+#include "atlas/camera.h"
 #include "atlas/core/shader.h"
 #include "atlas/object.h"
 #include "atlas/units.h"
@@ -13,17 +14,15 @@
 #include <iostream>
 #include <random>
 
-// Quad vertex structure for billboard rendering
 struct QuadVertex {
-    float x, y, z; // Position
-    float u, v;    // Texture coordinates
+    float x, y, z;
+    float u, v;
 };
 
-// Instance data structure (matches shader layout)
 struct ParticleInstanceData {
-    float posX, posY, posZ;               // Position (location = 2)
-    float colorR, colorG, colorB, colorA; // Color (location = 3)
-    float size;                           // Size (location = 4)
+    float posX, posY, posZ;
+    float colorR, colorG, colorB, colorA;
+    float size;
 };
 
 ParticleEmitter::ParticleEmitter(unsigned int maxParticles)
@@ -46,79 +45,62 @@ ParticleEmitter::ParticleEmitter(unsigned int maxParticles)
 }
 
 void ParticleEmitter::initialize() {
-    // Create quad vertices (billboard quad from -0.5 to 0.5)
-    static const QuadVertex quadVertices[] = {
-        {-0.5f, -0.5f, 0.0f, 0.0f, 0.0f}, // Bottom-left
-        {0.5f, -0.5f, 0.0f, 1.0f, 0.0f},  // Bottom-right
-        {0.5f, 0.5f, 0.0f, 1.0f, 1.0f},   // Top-right
-        {-0.5f, 0.5f, 0.0f, 0.0f, 1.0f}   // Top-left
-    };
+    static const QuadVertex quadVertices[] = {{-0.5f, -0.5f, 0.0f, 0.0f, 0.0f},
+                                              {0.5f, -0.5f, 0.0f, 1.0f, 0.0f},
+                                              {0.5f, 0.5f, 0.0f, 1.0f, 1.0f},
+                                              {-0.5f, 0.5f, 0.0f, 0.0f, 1.0f}};
 
-    static const unsigned int indices[] = {
-        0, 1, 2, // First triangle
-        2, 3, 0  // Second triangle
-    };
+    static const unsigned int indices[] = {0, 1, 2, 2, 3, 0};
 
-    // Generate buffers
     unsigned int quadVBO, instanceVBO, EBO;
     glGenVertexArrays(1, &vao);
     glGenBuffers(1, &quadVBO);
     glGenBuffers(1, &instanceVBO);
     glGenBuffers(1, &EBO);
 
-    // Store instance VBO for later updates
     vbo = instanceVBO;
 
     glBindVertexArray(vao);
 
-    // Setup quad vertices (shared by all particles)
     glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices,
                  GL_STATIC_DRAW);
 
-    // Quad vertex position (location = 0)
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(QuadVertex),
                           (void *)0);
     glEnableVertexAttribArray(0);
 
-    // Quad texture coordinates (location = 1)
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(QuadVertex),
                           (void *)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
-    // Setup element buffer
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
                  GL_STATIC_DRAW);
 
-    // Setup instance buffer (particle data)
     glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
     glBufferData(GL_ARRAY_BUFFER, maxParticles * sizeof(ParticleInstanceData),
                  nullptr, GL_DYNAMIC_DRAW);
 
-    // Instance position (location = 2)
     glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE,
                           sizeof(ParticleInstanceData), (void *)0);
     glEnableVertexAttribArray(2);
-    glVertexAttribDivisor(2, 1); // One per instance
+    glVertexAttribDivisor(2, 1);
 
-    // Instance color (location = 3)
     glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE,
                           sizeof(ParticleInstanceData),
                           (void *)(3 * sizeof(float)));
     glEnableVertexAttribArray(3);
-    glVertexAttribDivisor(3, 1); // One per instance
+    glVertexAttribDivisor(3, 1);
 
-    // Instance size (location = 4)
     glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE,
                           sizeof(ParticleInstanceData),
                           (void *)(7 * sizeof(float)));
     glEnableVertexAttribArray(4);
-    glVertexAttribDivisor(4, 1); // One per instance
+    glVertexAttribDivisor(4, 1);
 
     glBindVertexArray(0);
 
-    // Create billboard shader program
     program = ShaderProgram::fromDefaultShaders(AtlasVertexShader::Particle,
                                                 AtlasFragmentShader::Particle);
 }
@@ -246,8 +228,23 @@ void ParticleEmitter::activateParticle(int index) {
     p.position = generateSpawnPosition();
     p.velocity = generateRandomVelocity();
     p.color = color;
-    p.life = settings.minLifetime +
-             (settings.maxLifetime - settings.minLifetime) * rand01(rng);
+
+    float baseLifetime =
+        settings.minLifetime +
+        (settings.maxLifetime - settings.minLifetime) * rand01(rng);
+
+    float heightMultiplier = 1.0f;
+    if (firstCameraPosition.has_value()) {
+        float currentCameraY = model[3][1];
+        float initialCameraY = firstCameraPosition->y;
+
+        float heightDifference = currentCameraY - initialCameraY;
+
+        heightMultiplier =
+            std::clamp(1.0f + heightDifference * 0.1f, 1.0f, 3.0f);
+    }
+
+    p.life = baseLifetime * heightMultiplier;
     p.maxLife = p.life;
     p.size =
         settings.minSize + (settings.maxSize - settings.minSize) * rand01(rng);
@@ -255,6 +252,13 @@ void ParticleEmitter::activateParticle(int index) {
 
 void ParticleEmitter::update(Window &window) {
     float dt = window.getDeltaTime();
+    Camera *cam = window.getCamera();
+    this->model = glm::translate(
+        glm::mat4(1.0f),
+        glm::vec3(cam->position.x, cam->position.y, cam->position.z));
+    if (!firstCameraPosition.has_value()) {
+        firstCameraPosition = cam->position;
+    }
 
     if (isEmitting && !hasEmittedOnce) {
         timeSinceLastEmission += dt;
@@ -280,12 +284,10 @@ void ParticleEmitter::update(Window &window) {
         }
     }
 
-    // Update all particles
     for (auto &p : particles) {
         updateParticle(p, dt);
     }
 
-    // Prepare instance data for GPU upload
     std::vector<ParticleInstanceData> instanceData;
     instanceData.reserve(maxParticles);
 
@@ -304,7 +306,6 @@ void ParticleEmitter::update(Window &window) {
         }
     }
 
-    // Update GPU buffer with active particles
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     if (!instanceData.empty()) {
         glBufferSubData(GL_ARRAY_BUFFER, 0,
@@ -321,12 +322,13 @@ void ParticleEmitter::render(float dt) {
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glDepthMask(GL_FALSE); // Don't write to depth buffer
+    glDepthMask(GL_FALSE);
 
     glUseProgram(this->program.programId);
 
     program.setUniformMat4f("view", this->view);
     program.setUniformMat4f("projection", this->projection);
+    program.setUniformMat4f("model", this->model);
     program.setUniform1i("useTexture", useTexture ? 1 : 0);
 
     program.setUniform1i(

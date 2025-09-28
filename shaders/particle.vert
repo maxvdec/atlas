@@ -11,6 +11,7 @@ layout(location = 4) in float particleSize; // Size in world units
 
 uniform mat4 view;
 uniform mat4 projection;
+uniform mat4 model;
 uniform bool isAmbient;
 
 out vec2 fragTexCoord;
@@ -24,7 +25,7 @@ void main() {
             viewParticlePos.xyz +
             vec3(quadVertex.x * particleSize, quadVertex.y * particleSize, 0.0);
 
-        gl_Position = projection * vec4(viewPosition, 1.0);
+        gl_Position = projection * model * vec4(viewPosition, 1.0);
     } else {
         vec3 cameraRight = vec3(view[0][0], view[1][0], view[2][0]);
         vec3 cameraUp = vec3(view[0][1], view[1][1], view[2][1]);
