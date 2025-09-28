@@ -51,8 +51,9 @@ class GameObject : public Renderable {
 
     template <typename T>
         requires std::is_base_of_v<Component, T>
-    void addComponent(T existing) {
-        std::shared_ptr<T> component = std::make_shared<T>(existing);
+    void addComponent(T &&existing) {
+        std::shared_ptr<T> component =
+            std::make_shared<T>(std::forward<T>(existing));
         component->object = this;
         component->body = this->body.get();
         components.push_back(component);

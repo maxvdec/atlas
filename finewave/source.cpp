@@ -42,19 +42,50 @@ const char *getALErrorStringSource(ALenum error) {
     }
 
 AudioSource::AudioSource() {
+    ALCcontext *context = alcGetCurrentContext();
+    if (!context) {
+        std::cerr << "No OpenAL context is current when creating AudioSource"
+                  << std::endl;
+        throw std::runtime_error(
+            "No OpenAL context is current when creating AudioSource");
+    }
+
     alGenSources(1, &id);
     CHECK_AL_ERROR();
+
+    if (!alIsSource(id)) {
+        std::cerr << "Failed to generate OpenAL source (ID: " << id << ")"
+                  << std::endl;
+        throw std::runtime_error("Failed to generate OpenAL source");
+    }
 }
 
 void AudioSource::setData(std::shared_ptr<AudioData> buffer) {
-    alSourcei(id, AL_BUFFER, buffer->getId());
+    if (!buffer) {
+        std::cerr << "AudioData buffer is null" << std::endl;
+        throw std::invalid_argument("AudioData buffer is null");
+    }
+
+    Id bufferId = buffer->getId();
+    if (!alIsBuffer(bufferId)) {
+        std::cerr << "Invalid OpenAL buffer ID: " << bufferId << std::endl;
+        throw std::runtime_error("Invalid OpenAL buffer ID");
+    }
+
+    alSourcei(id, AL_BUFFER, bufferId);
     CHECK_AL_ERROR();
 }
 
 void AudioSource::fromFile(Resource resource) {
-    auto audioData = AudioData::fromResource(resource);
-    setData(audioData);
-    CHECK_AL_ERROR();
+    try {
+        auto audioData = AudioData::fromResource(resource);
+        setData(audioData);
+        CHECK_AL_ERROR();
+    } catch (const std::exception &e) {
+        std::cerr << "Failed to load audio from file: " << e.what()
+                  << std::endl;
+        throw;
+    }
 }
 
 void AudioSource::play() {

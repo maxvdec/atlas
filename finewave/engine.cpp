@@ -98,6 +98,30 @@ bool AudioEngine::initialize() {
 
     CHECK_AL_ERROR();
 
+    const ALchar *version = alGetString(AL_VERSION);
+    const ALchar *vendor = alGetString(AL_VENDOR);
+    const ALchar *renderer = alGetString(AL_RENDERER);
+
+    if (version) {
+        std::cout << "OpenAL Version: " << version << std::endl;
+        std::cout << "OpenAL Vendor: " << (vendor ? vendor : "Unknown")
+                  << std::endl;
+        std::cout << "OpenAL Renderer: " << (renderer ? renderer : "Unknown")
+                  << std::endl;
+    } else {
+        std::cerr << "Failed to get OpenAL version - context may not be "
+                     "properly initialized"
+                  << std::endl;
+        return false;
+    }
+
+    alListener3f(AL_POSITION, 0.0f, 0.0f, 0.0f);
+    alListener3f(AL_VELOCITY, 0.0f, 0.0f, 0.0f);
+    ALfloat orientation[] = {0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f};
+    alListenerfv(AL_ORIENTATION, orientation);
+
+    CHECK_AL_ERROR();
+
     return true;
 }
 

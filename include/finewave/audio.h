@@ -31,6 +31,7 @@ class AudioEngine {
 class AudioData {
   public:
     static std::shared_ptr<AudioData> fromResource(Resource resource);
+    ~AudioData();
 
     inline Id getId() const { return id; }
 

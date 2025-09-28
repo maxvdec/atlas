@@ -99,15 +99,24 @@ std::shared_ptr<AudioData> AudioData::fromResource(Resource resource) {
 
     ALuint buffer;
     alGenBuffers(1, &buffer);
-    if (alIsBuffer(buffer) == AL_FALSE) {
+    CHECK_AL_ERROR();
+
+    if (!alIsBuffer(buffer)) {
+        std::cerr << "Failed to generate OpenAL buffer" << std::endl;
         throw std::runtime_error("Failed to generate OpenAL buffer");
     }
+
     alBufferData(buffer, format, data.data(), header.dataSize,
                  header.sampleRate);
-
     CHECK_AL_ERROR();
 
     auto audioData = std::make_shared<AudioData>();
     audioData->id = buffer;
     return audioData;
+}
+
+AudioData::~AudioData() {
+    if (alIsBuffer(id)) {
+        alDeleteBuffers(1, &id);
+    }
 }

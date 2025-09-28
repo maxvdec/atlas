@@ -51,7 +51,7 @@ class MoveSin : public Component {
             "example.wav", "ExampleSound", ResourceType::Audio));
         player->play();
 
-        std::cout << player->source.isPlaying() << std::endl;
+        std::cout << player->source->isPlaying() << std::endl;
     }
     void update(float dt) override {
         float amplitude = 0.01f;
@@ -146,7 +146,7 @@ class MainScene : public Scene {
 
         myObject = MyObject();
         myObject.addComponent<MoveSin>(MoveSin());
-        myObject.addComponent<AudioPlayer>(AudioPlayer());
+        myObject.addComponent<AudioPlayer>(std::move(AudioPlayer()));
         window.addObject(&myObject);
 
         Color sunWarm = Color::white();

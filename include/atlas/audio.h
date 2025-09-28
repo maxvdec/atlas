@@ -14,17 +14,70 @@
 #include "atlas/workspace.h"
 #include "finewave/audio.h"
 #include "finewave/effect.h"
+#include <memory>
 
 class AudioPlayer : public Component {
   public:
-    AudioPlayer() { source = AudioSource(); }
-    AudioSource source;
+    AudioPlayer() : sourceInitialized(false) {}
 
-    inline void init() override {}
-    inline void play() { source.play(); }
-    inline void pause() { source.pause(); }
-    inline void stop() { source.stop(); }
-    inline void setSource(Resource source) { this->source.fromFile(source); }
+    // Delete copy operations since unique_ptr is not copyable
+    AudioPlayer(const AudioPlayer &) = delete;
+    AudioPlayer &operator=(const AudioPlayer &) = delete;
+
+    // Add move operations
+    AudioPlayer(AudioPlayer &&other) noexcept
+        : source(std::move(other.source)),
+          sourceInitialized(other.sourceInitialized) {
+        other.sourceInitialized = false;
+    }
+
+    AudioPlayer &operator=(AudioPlayer &&other) noexcept {
+        if (this != &other) {
+            source = std::move(other.source);
+            sourceInitialized = other.sourceInitialized;
+            other.sourceInitialized = false;
+        }
+        return *this;
+    }
+
+    inline void init() override {
+        if (!sourceInitialized) {
+            source = std::make_unique<AudioSource>();
+            sourceInitialized = true;
+        }
+    }
+
+    inline void play() {
+        ensureSourceInitialized();
+        source->play();
+    }
+
+    inline void pause() {
+        ensureSourceInitialized();
+        source->pause();
+    }
+
+    inline void stop() {
+        ensureSourceInitialized();
+        source->stop();
+    }
+
+    inline void setSource(Resource sourceResource) {
+        ensureSourceInitialized();
+        source->fromFile(sourceResource);
+    }
+
+    std::unique_ptr<AudioSource> source;
+
+  private:
+    bool sourceInitialized;
+
+    inline void ensureSourceInitialized() {
+        if (!sourceInitialized) {
+            source = std::make_unique<AudioSource>();
+            sourceInitialized = true;
+        }
+    }
 };
 
 #endif // ATLAS_AUDIO_H
