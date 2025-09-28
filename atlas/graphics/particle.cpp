@@ -142,12 +142,60 @@ void ParticleEmitter::updateParticle(Particle &p, float deltaTime) {
 
     if (emissionType == ParticleEmissionType::Fountain) {
         p.velocity.y += settings.gravity * deltaTime;
+    } else if (emissionType == ParticleEmissionType::Ambient) {
+        p.velocity.y += settings.gravity * 0.1f * deltaTime;
+
+        float time = static_cast<float>(glfwGetTime());
+        p.velocity.x +=
+            sin(time * 1.0f + p.position.x * 0.1f) * 0.02f * deltaTime;
+        p.velocity.z +=
+            cos(time * 0.8f + p.position.z * 0.1f) * 0.02f * deltaTime;
     }
 
     p.position = p.position + p.velocity * deltaTime;
 
+    if (emissionType == ParticleEmissionType::Ambient) {
+        if (p.position.y < position.y - 15.0f ||
+            abs(p.position.x - position.x) > 25.0f ||
+            abs(p.position.z - position.z) > 25.0f) {
+            p.position = generateSpawnPosition();
+            p.velocity = generateRandomVelocity();
+            p.life = p.maxLife;
+        }
+    }
+
     float lifeRatio = p.life / p.maxLife;
     p.color.a = lifeRatio;
+}
+
+Position3d ParticleEmitter::generateSpawnPosition() {
+    static std::default_random_engine rng;
+    static std::uniform_real_distribution<float> rand01(0.0f, 1.0f);
+    static std::uniform_real_distribution<float> randAngle(0.0f,
+                                                           2.0f * 3.14159f);
+
+    if (emissionType == ParticleEmissionType::Ambient) {
+        Position3d spawnPos = position;
+
+        spawnPos.x += (rand01(rng) - 0.5f) * 20.0f;
+        spawnPos.z += (rand01(rng) - 0.5f) * 20.0f;
+        spawnPos.y += rand01(rng) * 5.0f + 5.0f;
+
+        return spawnPos;
+    }
+
+    if (spawnRadius <= 0.0f) {
+        return position;
+    }
+
+    float angle = randAngle(rng);
+    float radius = rand01(rng) * spawnRadius;
+
+    Position3d spawnPos = position;
+    spawnPos.x += cos(angle) * radius;
+    spawnPos.z += sin(angle) * radius;
+
+    return spawnPos;
 }
 
 Magnitude3d ParticleEmitter::generateRandomVelocity() {
@@ -164,11 +212,9 @@ Magnitude3d ParticleEmitter::generateRandomVelocity() {
         vel.x += spreadX;
         vel.z += spreadZ;
     } else if (emissionType == ParticleEmissionType::Ambient) {
-        float angle = randAngle(rng);
-        float elevation = (rand01(rng) - 0.5f) * 3.14159f;
-        vel.x = cos(angle) * cos(elevation);
-        vel.y = sin(elevation);
-        vel.z = sin(angle) * cos(elevation);
+        vel.x = (rand01(rng) - 0.5f) * 0.5f;
+        vel.y = -0.5f - rand01(rng) * 1.0f;
+        vel.z = (rand01(rng) - 0.5f) * 0.5f;
     }
 
     float speed = 1.0f + (rand01(rng) - 0.5f) * settings.speedVariation;
@@ -177,26 +223,6 @@ Magnitude3d ParticleEmitter::generateRandomVelocity() {
     vel.z *= speed;
 
     return vel;
-}
-
-Position3d ParticleEmitter::generateSpawnPosition() {
-    if (spawnRadius <= 0.0f) {
-        return position;
-    }
-
-    static std::default_random_engine rng;
-    static std::uniform_real_distribution<float> rand01(0.0f, 1.0f);
-    static std::uniform_real_distribution<float> randAngle(0.0f,
-                                                           2.0f * 3.14159f);
-
-    float angle = randAngle(rng);
-    float radius = rand01(rng) * spawnRadius;
-
-    Position3d spawnPos = position;
-    spawnPos.x += cos(angle) * radius;
-    spawnPos.z += sin(angle) * radius;
-
-    return spawnPos;
 }
 
 int ParticleEmitter::findInactiveParticle() {
@@ -299,10 +325,12 @@ void ParticleEmitter::render(float dt) {
 
     glUseProgram(this->program.programId);
 
-    // Set uniforms
     program.setUniformMat4f("view", this->view);
     program.setUniformMat4f("projection", this->projection);
     program.setUniform1i("useTexture", useTexture ? 1 : 0);
+
+    program.setUniform1i(
+        "isAmbient", (emissionType == ParticleEmissionType::Ambient) ? 1 : 0);
 
     if (useTexture) {
         glActiveTexture(GL_TEXTURE0);
@@ -310,13 +338,12 @@ void ParticleEmitter::render(float dt) {
         program.setUniform1i("particleTexture", 0);
     }
 
-    // Render billboards
     glBindVertexArray(vao);
     glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0,
                             activeParticleCount);
     glBindVertexArray(0);
 
-    glDepthMask(GL_TRUE); // Re-enable depth writing
+    glDepthMask(GL_TRUE);
     glDisable(GL_BLEND);
 }
 
@@ -344,6 +371,13 @@ void ParticleEmitter::move(const Position3d &deltaPosition) {
 }
 
 void ParticleEmitter::setEmissionType(ParticleEmissionType type) {
+    ParticleSettings settings;
+    settings.gravity = -1.0f;
+    settings.minSize = 0.04f;
+    settings.maxSize = 0.07f;
+    settings.minLifetime = 5.0f;
+    settings.maxLifetime = 10.0f;
+    setParticleSettings(settings);
     this->emissionType = type;
 }
 

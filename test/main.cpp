@@ -146,16 +146,11 @@ class MainScene : public Scene {
         myObject.addComponent<AudioPlayer>(std::move(AudioPlayer()));
         window.addObject(&myObject);
 
-        emitter = ParticleEmitter(1000);
-        emitter.setPosition({0.0, 0.5, 0.0});
+        emitter = ParticleEmitter(10000);
+        emitter.setPosition({0.0, 0.0, 0.0});
         emitter.startEmission();
-        emitter.setSpawnRate(500.0f);
+        emitter.setSpawnRate(10000.0f);
         emitter.setEmissionType(ParticleEmissionType::Ambient);
-        ParticleSettings settings;
-        settings.gravity = -2.0f;
-        settings.maxSize = 0.02f;
-        settings.minSize = 0.01f;
-        emitter.setParticleSettings(settings);
         window.addObject(&emitter);
 
         Color sunWarm = Color::white();
