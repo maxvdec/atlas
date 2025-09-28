@@ -25,6 +25,8 @@ class Component {
   public:
     virtual void init() {}
     virtual void update(float deltaTime) {}
+    virtual void setViewMatrix(const glm::mat4 &view) {}
+    virtual void setProjectionMatrix(const glm::mat4 &projection) {}
 
     Component() = default;
 

@@ -50,6 +50,23 @@ void main() {
 
 )";
 
+static const char* PARTICLE_FRAG = R"(
+#version 330 core
+
+in vec4 passColor;
+
+out vec4 FragColor;
+
+uniform sampler2D particleText;
+
+void main() {
+    vec2 uv = gl_PointCoord;
+    vec4 tex = texture(particleText, uv);
+    if (tex.a < 0.1) discard;
+    FragColor = tex * passColor;
+}
+)";
+
 static const char* FULLSCREEN_FRAG = R"(
 #version 330 core
 
@@ -426,6 +443,24 @@ void main() {
     FragColor = vec4(1.0, 0.0, 1.0, 1.0);
 }
 
+)";
+
+static const char* PARTICLE_VERT = R"(
+#version 330 core
+
+layout(location = 0) in vec3 inPosition;
+layout(location = 1) in vec4 inColor;
+layout(location = 2) in float inSize;
+
+out vec4 passColor;
+
+uniform mat4 viewProj;
+
+void main() {
+    gl_Position = viewProj * vec4(inPosition, 1.0);
+    gl_PointSize = inSize;
+    passColor = inColor;
+}
 )";
 
 static const char* COLOR_VERT = R"(

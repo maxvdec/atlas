@@ -467,10 +467,18 @@ void CoreObject::render(float dt) {
     glBindVertexArray(0);
 }
 
-void CoreObject::setViewMatrix(const glm::mat4 &view) { this->view = view; }
+void CoreObject::setViewMatrix(const glm::mat4 &view) {
+    this->view = view;
+    for (auto &component : components) {
+        component->setViewMatrix(view);
+    }
+}
 
 void CoreObject::setProjectionMatrix(const glm::mat4 &projection) {
     this->projection = projection;
+    for (auto &component : components) {
+        component->setProjectionMatrix(projection);
+    }
 }
 
 CoreObject CoreObject::clone() const {

@@ -12,7 +12,6 @@
 
 #include "atlas/component.h"
 #include "bezel/body.h"
-#include "bezel/shape.h"
 #include <memory>
 #include <type_traits>
 #pragma once
@@ -171,5 +170,31 @@ CoreObject createSphere(double radius, unsigned int sectorCount = 36,
 
 CoreObject createDebugSphere(double radius, unsigned int sectorCount = 36,
                              unsigned int stackCount = 18);
+struct Particle {
+    Position3d position;
+    Magnitude3d velocity;
+    Color color;
+    float life;
+    float size;
+};
+
+class ParticleEmitter : public Component {
+  public:
+    void init() override;
+    void update(float dt) override;
+    void setProjectionMatrix(const glm::mat4 &projection) override;
+    void setViewMatrix(const glm::mat4 &view) override;
+
+    ParticleEmitter(unsigned int maxParticles = 100);
+
+  private:
+    std::vector<Particle> particles;
+    unsigned int maxParticles;
+
+    Id vao, vbo;
+    ShaderProgram program;
+
+    void respawnParticle(Particle &p, const Position3d &emitterPos);
+};
 
 #endif // ATLAS_OBJECT_H
