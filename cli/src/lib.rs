@@ -7,6 +7,8 @@ pub enum Commands {
     Create {
         name: String,
         path: Option<String>,
+        #[arg(long, short)]
+        branch: Option<String>,
         #[arg(default_value_t = String::from("latest"))]
         version: String,
     },

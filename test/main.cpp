@@ -50,17 +50,23 @@ class MoveSin : public Component {
         player->setSource(Workspace::get().createResource(
             "exampleMP3.mp3", "ExampleSound", ResourceType::Audio));
         player->play();
+        player->setPosition({0.0, 0.0, 0.0});
+        player->useSpatialization();
     }
     void update(float dt) override {
         float amplitude = 0.01f;
         float position = amplitude * std::sin(glfwGetTime());
         object->move({position, 0.0, 0.0});
+        auto player = object->getComponent<AudioPlayer>();
+        std::cout << player->source->getPosition() << std::endl;
+        std::cout << player->source->getListenerPosition() << std::endl;
     }
 };
 
 class MainScene : public Scene {
   public:
     bool doesUpdate = true;
+    bool fall = false;
     Skybox skybox;
     Camera camera;
     CoreObject plane;
@@ -71,10 +77,16 @@ class MainScene : public Scene {
     void update(Window &window) override {
         if (!doesUpdate)
             return;
+
         camera.update(window);
         if (window.isKeyPressed(Key::Escape)) {
             window.releaseMouse();
             doesUpdate = false;
+        } else if (window.isKeyClicked(Key::Q)) {
+            fall = !fall;
+        }
+        if (fall) {
+            camera.position.y -= 10.f * window.getDeltaTime();
         }
     }
 

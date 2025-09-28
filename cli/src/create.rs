@@ -31,8 +31,9 @@ fn fetch_folder(
     repo: &str,
     path: &str,
     outdir: &Path,
+    branch: &str,
 ) -> Result<i32, Box<dyn std::error::Error>> {
-    let url = format!("https://api.github.com/repos/{owner}/{repo}/contents/{path}?ref=stable");
+    let url = format!("https://api.github.com/repos/{owner}/{repo}/contents/{path}?ref={branch}");
     let client = Client::new();
     let files: Vec<RemoteFile> = client
         .get(&url)
@@ -64,7 +65,7 @@ fn fetch_folder(
             }
         } else if file.file_type == "dir" {
             let subdir = outdir.join(&file.name);
-            downloaded_files += fetch_folder(owner, repo, &file.path, &subdir)?;
+            downloaded_files += fetch_folder(owner, repo, &file.path, &subdir, branch)?;
         }
     }
 
@@ -179,7 +180,10 @@ set_target_properties(atlas PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/lib
 add_library(bezel STATIC IMPORTED)
 set_target_properties(bezel PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/lib/libbezel.a)
 
-target_link_libraries(##PROJECTNAMELC## PRIVATE atlas bezel OpenGL::GL glfw glm::glm)
+add_library(finewave STATIC IMPORTED)
+set_target_properties(finewave PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/lib/libfinewave.a)
+
+target_link_libraries(##PROJECTNAMELC## PRIVATE atlas bezel OpenGL::GL glfw glm::glm finewave)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
@@ -208,6 +212,7 @@ pub fn create(cmd: Commands) {
         name,
         path,
         version,
+        branch,
     } = cmd
     {
         if version != "latest" {
@@ -236,7 +241,14 @@ pub fn create(cmd: Commands) {
 
         // Obtain the include files from the GitHub repository
         let outdir = Path::new(&project_path).join("lib/include");
-        match fetch_folder("maxvdec", "atlas", "include", &outdir) {
+        let mut pull_branch = "stable";
+        if version == "dev" {
+            pull_branch = "main";
+        }
+        if let Some(ref branch_name) = branch {
+            pull_branch = branch_name;
+        }
+        match fetch_folder("maxvdec", "atlas", "include", &outdir, pull_branch) {
             Ok(downloaded_files) => {
                 clear_previous_lines(downloaded_files as usize);
                 println!("{}", "Successfully fetched include files.".italic().cyan())
@@ -244,7 +256,7 @@ pub fn create(cmd: Commands) {
             Err(e) => eprintln!("Error fetching include files: {e}"),
         }
 
-        match fetch_folder("maxvdec", "atlas", "extern", &outdir) {
+        match fetch_folder("maxvdec", "atlas", "extern", &outdir, pull_branch) {
             Ok(downloaded_files) => {
                 clear_previous_lines(downloaded_files as usize);
                 println!(
