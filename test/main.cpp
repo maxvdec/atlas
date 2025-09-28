@@ -1,3 +1,4 @@
+#include "atlas/audio.h"
 #include "atlas/camera.h"
 #include "atlas/component.h"
 #include "atlas/light.h"
@@ -13,7 +14,7 @@
 #include <memory>
 #include <vector>
 #include <bezel/shape.h>
-#include "finewave/test.h"
+#include <finewave/audio.h>
 
 #define ATLAS_DEBUG
 
@@ -40,6 +41,18 @@ class MyObject : public CompoundObject {
 
 class MoveSin : public Component {
   public:
+    void init() override {
+        auto player = object->getComponent<AudioPlayer>();
+        if (player == nullptr) {
+            std::cerr << "AudioPlayer component not found!" << std::endl;
+            return;
+        }
+        player->setSource(Workspace::get().createResource(
+            "example.wav", "ExampleSound", ResourceType::Audio));
+        player->play();
+
+        std::cout << player->source.isPlaying() << std::endl;
+    }
     void update(float dt) override {
         float amplitude = 0.01f;
         float position = amplitude * std::sin(glfwGetTime());
@@ -132,7 +145,8 @@ class MainScene : public Scene {
         window.addObject(&sphere);
 
         myObject = MyObject();
-        myObject.addComponent<MoveSin>();
+        myObject.addComponent<MoveSin>(MoveSin());
+        myObject.addComponent<AudioPlayer>(AudioPlayer());
         window.addObject(&myObject);
 
         Color sunWarm = Color::white();
@@ -144,7 +158,6 @@ class MainScene : public Scene {
 };
 
 int main() {
-    test_finewave();
     Window window({"My Window", 1600, 1200});
     MainScene scene;
     window.setScene(&scene);

@@ -51,11 +51,23 @@ class GameObject : public Renderable {
 
     template <typename T>
         requires std::is_base_of_v<Component, T>
-    void addComponent() {
-        std::shared_ptr<T> component = std::make_shared<T>();
+    void addComponent(T existing) {
+        std::shared_ptr<T> component = std::make_shared<T>(existing);
         component->object = this;
         component->body = this->body.get();
         components.push_back(component);
+    }
+
+    template <typename T>
+        requires std::is_base_of_v<Component, T>
+    std::shared_ptr<T> getComponent() {
+        for (auto &component : components) {
+            std::shared_ptr<T> casted = std::dynamic_pointer_cast<T>(component);
+            if (casted != nullptr) {
+                return casted;
+            }
+        }
+        return nullptr;
     }
 
     std::shared_ptr<Body> body = nullptr;
