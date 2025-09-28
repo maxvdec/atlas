@@ -41,25 +41,11 @@ class MyObject : public CompoundObject {
 
 class MoveSin : public Component {
   public:
-    void init() override {
-        auto player = object->getComponent<AudioPlayer>();
-        if (player == nullptr) {
-            std::cerr << "AudioPlayer component not found!" << std::endl;
-            return;
-        }
-        player->setSource(Workspace::get().createResource(
-            "exampleMP3.mp3", "ExampleSound", ResourceType::Audio));
-        player->play();
-        player->setPosition({0.0, 0.0, 0.0});
-        player->useSpatialization();
-    }
+    void init() override {}
     void update(float dt) override {
         float amplitude = 0.01f;
         float position = amplitude * std::sin(glfwGetTime());
         object->move({position, 0.0, 0.0});
-        auto player = object->getComponent<AudioPlayer>();
-        std::cout << player->source->getPosition() << std::endl;
-        std::cout << player->source->getListenerPosition() << std::endl;
     }
 };
 
@@ -71,6 +57,7 @@ class MainScene : public Scene {
     Camera camera;
     CoreObject plane;
     CoreObject sphere;
+    ParticleEmitter emitter;
     DirectionalLight dirLight;
     MyObject myObject;
 
@@ -158,6 +145,11 @@ class MainScene : public Scene {
         myObject.addComponent<MoveSin>(MoveSin());
         myObject.addComponent<AudioPlayer>(std::move(AudioPlayer()));
         window.addObject(&myObject);
+
+        emitter = ParticleEmitter(1000);
+        emitter.setPosition({0.0, 0.5, 0.0});
+        emitter.emitOnce();
+        window.addObject(&emitter);
 
         Color sunWarm = Color::white();
         dirLight = DirectionalLight({-0.75, -1.0, 0.0}, sunWarm);

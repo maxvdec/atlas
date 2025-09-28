@@ -178,21 +178,50 @@ struct Particle {
     float size;
 };
 
-class ParticleEmitter : public Component {
+class ParticleEmitter : public GameObject {
   public:
-    void init() override;
-    void update(float dt) override;
+    void initialize() override;
+    void render(float dt) override;
+    void update(Window &window) override;
     void setProjectionMatrix(const glm::mat4 &projection) override;
     void setViewMatrix(const glm::mat4 &view) override;
 
     ParticleEmitter(unsigned int maxParticles = 100);
 
+    void attachTexture(const Texture &tex) override;
+    void setColor(const Color &color) override;
+    inline void enableTexture() { useTexture = true; };
+    inline void disableTexture() { useTexture = false; };
+    void setPosition(const Position3d &newPosition) override;
+    void move(const Position3d &deltaPosition) override;
+
+    inline Position3d getPosition() const override { return position; };
+    inline bool canCastShadows() const override { return false; };
+
+    inline void setSpawnRate(int rate) { spawnRate = rate; }
+    inline void emitOnce() { doesEmitOnce = true; }
+    inline void emitContinuously() { doesEmitOnce = false; }
+
+    int minSize = 16;
+    int maxSize = 32;
+
   private:
     std::vector<Particle> particles;
     unsigned int maxParticles;
+    int spawnRate = 10;
 
     Id vao, vbo;
     ShaderProgram program;
+    Texture texture;
+    Color color = Color::white();
+    bool useTexture = false;
+
+    glm::mat4 projection = glm::mat4(1.0f);
+    glm::mat4 view = glm::mat4(1.0f);
+
+    Position3d position = {0.0, 0.0, 0.0};
+    int emissions = 0;
+    bool doesEmitOnce = false;
 
     void respawnParticle(Particle &p, const Position3d &emitterPos);
 };
