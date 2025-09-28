@@ -50,6 +50,36 @@ void main() {
 
 )";
 
+static const char* PARTICLE_FRAG = R"(
+#version 330 core
+in vec2 fragTexCoord;
+in vec4 fragColor;
+out vec4 FragColor;
+uniform sampler2D particleTexture;
+uniform bool useTexture;
+
+void main() {
+    if (useTexture) {
+        vec4 texColor = texture(particleTexture, fragTexCoord);
+        if (texColor.a < 0.01) discard;
+        FragColor = texColor * fragColor;
+    } else {
+        vec2 center = vec2(0.5, 0.5);
+        float dist = distance(fragTexCoord, center);
+        
+        float alpha = 1.0 - smoothstep(0.3, 0.5, dist);
+        
+        FragColor = vec4(fragColor.rgb, fragColor.a * alpha);
+        
+        if (FragColor.a < 0.01) discard;
+    }
+}
+)";
+
+static const char* AMBIENT_PARTICLE_FRAG = R"(
+
+)";
+
 static const char* FULLSCREEN_FRAG = R"(
 #version 330 core
 
@@ -428,6 +458,51 @@ void main() {
 
 )";
 
+static const char* PARTICLE_VERT = R"(
+#version 330 core
+
+// Quad vertex attributes
+layout(location = 0) in vec3 quadVertex; // Local quad position (-0.5 to 0.5)
+layout(location = 1) in vec2 texCoord;   // Texture coordinates
+
+// Instance attributes (per particle)
+layout(location = 2) in vec3 particlePos;   // World position
+layout(location = 3) in vec4 particleColor; // Color and alpha
+layout(location = 4) in float particleSize; // Size in world units
+
+uniform mat4 view;
+uniform mat4 projection;
+uniform mat4 model;
+uniform bool isAmbient;
+
+out vec2 fragTexCoord;
+out vec4 fragColor;
+
+void main() {
+    if (isAmbient) {
+        vec4 viewParticlePos = view * vec4(particlePos, 1.0);
+
+        vec3 viewPosition =
+            viewParticlePos.xyz +
+            vec3(quadVertex.x * particleSize, quadVertex.y * particleSize, 0.0);
+
+        gl_Position = projection * model * vec4(viewPosition, 1.0);
+    } else {
+        vec3 cameraRight = vec3(view[0][0], view[1][0], view[2][0]);
+        vec3 cameraUp = vec3(view[0][1], view[1][1], view[2][1]);
+
+        vec3 worldPosition = particlePos +
+                             (quadVertex.x * cameraRight * particleSize) +
+                             (quadVertex.y * cameraUp * particleSize);
+
+        gl_Position = projection * view * vec4(worldPosition, 1.0);
+    }
+
+    fragTexCoord = texCoord;
+    fragColor = particleColor;
+}
+)";
+
 static const char* COLOR_VERT = R"(
 #version 330 core
 layout (location = 0) in vec3 aPos;
@@ -557,6 +632,10 @@ void main() {
     gl_Position = vec4(aPos.xy, 0.0, 1.0);
     TexCoord = aTexCoord;
 }
+
+)";
+
+static const char* AMBIENT_PARTICLE_VERT = R"(
 
 )";
 

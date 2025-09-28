@@ -29,6 +29,7 @@ enum class AtlasVertexShader {
     Fullscreen,
     Skybox,
     Depth,
+    Particle
 };
 
 enum class ShaderCapability { Lighting, Textures, Shadows };
@@ -54,6 +55,7 @@ enum class AtlasFragmentShader {
     Fullscreen,
     Skybox,
     Empty,
+    Particle
 };
 
 struct FragmentShader {
@@ -82,6 +84,8 @@ struct ShaderProgram {
     void compile();
 
     static ShaderProgram defaultProgram();
+    static ShaderProgram fromDefaultShaders(AtlasVertexShader vShader,
+                                            AtlasFragmentShader fShader);
 
     Id programId;
 

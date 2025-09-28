@@ -60,6 +60,12 @@ VertexShader VertexShader::fromDefaultShader(AtlasVertexShader shader) {
         vertexShader.capabilities = {};
         break;
     }
+    case AtlasVertexShader::Particle: {
+        vertexShader = VertexShader::fromSource(PARTICLE_VERT);
+        vertexShader.desiredAttributes = {};
+        vertexShader.capabilities = {ShaderCapability::Textures};
+        break;
+    }
     default:
         throw std::runtime_error("Unknown default vertex shader");
     }
@@ -110,6 +116,8 @@ FragmentShader FragmentShader::fromDefaultShader(AtlasFragmentShader shader) {
         return FragmentShader::fromSource(SKYBOX_FRAG);
     case AtlasFragmentShader::Empty:
         return FragmentShader::fromSource(EMPTY_FRAG);
+    case AtlasFragmentShader::Particle:
+        return FragmentShader::fromSource(PARTICLE_FRAG);
     default:
         throw std::runtime_error("Unknown default fragment shader");
     }
@@ -218,4 +226,17 @@ void ShaderProgram::setUniform1i(std::string name, int v0) {
 
 void ShaderProgram::setUniformBool(std::string name, bool value) {
     glUniform1i(glGetUniformLocation(programId, name.c_str()), (int)value);
+}
+
+ShaderProgram ShaderProgram::fromDefaultShaders(AtlasVertexShader vShader,
+                                                AtlasFragmentShader fShader) {
+    ShaderProgram program;
+    program.vertexShader = VertexShader::fromDefaultShader(vShader);
+    program.fragmentShader = FragmentShader::fromDefaultShader(fShader);
+    program.programId = 0;
+    program.desiredAttributes = program.vertexShader.desiredAttributes;
+    program.vertexShader.compile();
+    program.fragmentShader.compile();
+    program.compile();
+    return program;
 }
