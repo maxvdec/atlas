@@ -102,6 +102,7 @@ bool AudioEngine::initialize() {
 
     CHECK_AL_ERROR();
 
+    alDistanceModel(AL_INVERSE_DISTANCE_CLAMPED);
     return true;
 }
 
@@ -135,4 +136,10 @@ void AudioEngine::setListenerOrientation(Magnitude3d forward, Normal3d up) {
 
 void AudioEngine::setMasterVolume(float volume) {
     alListenerf(AL_GAIN, volume);
+}
+
+void AudioEngine::setListenerVelocity(Magnitude3d velocity) {
+    alListener3f(AL_VELOCITY, static_cast<ALfloat>(velocity.x),
+                 static_cast<ALfloat>(velocity.y),
+                 static_cast<ALfloat>(velocity.z));
 }

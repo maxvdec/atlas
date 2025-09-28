@@ -383,6 +383,12 @@ bool Window::isKeyPressed(Key key) {
     return state == GLFW_PRESS || state == GLFW_REPEAT;
 }
 
+bool Window::isKeyClicked(Key key) {
+    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
+    int state = glfwGetKey(window, static_cast<int>(key));
+    return state == GLFW_PRESS;
+}
+
 void Window::releaseMouse() {
     GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);

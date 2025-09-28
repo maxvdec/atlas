@@ -7,6 +7,7 @@
 // Copyright (c) 2025 Max Van den Eynde
 //
 
+#include "atlas/units.h"
 #include "finewave/audio.h"
 #include <AL/al.h>
 #include <AL/alc.h>
@@ -136,3 +137,29 @@ void AudioSource::disableSpatialization() {
 }
 
 AudioSource::~AudioSource() { alDeleteSources(1, &id); }
+
+Position3d AudioSource::getPosition() const {
+    Position3d pos;
+    ALfloat x;
+    ALfloat y;
+    ALfloat z;
+    alGetSource3f(id, AL_POSITION, &x, &y, &z);
+    return Position3d{x, y, z};
+};
+
+Position3d AudioSource::getListenerPosition() const {
+    Position3d pos;
+    ALfloat x;
+    ALfloat y;
+    ALfloat z;
+    alGetListener3f(AL_POSITION, &x, &y, &z);
+    return Position3d{x, y, z};
+};
+
+void AudioSource::useSpatialization() {
+    alSourcei(id, AL_SOURCE_RELATIVE, AL_FALSE);
+    alSourcei(id, AL_ROLLOFF_FACTOR, 1);
+    alSourcei(id, AL_REFERENCE_DISTANCE, 1);
+    alSourcei(id, AL_MAX_DISTANCE, 50);
+    alDistanceModel(AL_INVERSE_DISTANCE_CLAMPED);
+}
