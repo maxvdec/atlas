@@ -170,12 +170,30 @@ CoreObject createSphere(double radius, unsigned int sectorCount = 36,
 
 CoreObject createDebugSphere(double radius, unsigned int sectorCount = 36,
                              unsigned int stackCount = 18);
+enum class ParticleEmissionType {
+    Fountain, // Particles emit upward in a fountain-like pattern
+    Ambient   // Particles emit in all directions (snow, ambient effects)
+};
+
+struct ParticleSettings {
+    float minLifetime = 1.0f;
+    float maxLifetime = 3.0f;
+    float minSize = 0.02f;
+    float maxSize = 0.01f;
+    float fadeSpeed = 0.5f;
+    float gravity = -9.81f;
+    float spread = 1.0f;         // How much particles spread from the direction
+    float speedVariation = 1.0f; // Speed randomization factor
+};
+
 struct Particle {
     Position3d position;
     Magnitude3d velocity;
     Color color;
     float life;
+    float maxLife;
     float size;
+    bool active;
 };
 
 class ParticleEmitter : public GameObject {
@@ -192,23 +210,44 @@ class ParticleEmitter : public GameObject {
     void setColor(const Color &color) override;
     inline void enableTexture() { useTexture = true; };
     inline void disableTexture() { useTexture = false; };
+
     void setPosition(const Position3d &newPosition) override;
     void move(const Position3d &deltaPosition) override;
-
     inline Position3d getPosition() const override { return position; };
     inline bool canCastShadows() const override { return false; };
 
-    inline void setSpawnRate(int rate) { spawnRate = rate; }
-    inline void emitOnce() { doesEmitOnce = true; }
-    inline void emitContinuously() { doesEmitOnce = false; }
+    void setEmissionType(ParticleEmissionType type);
+    void setDirection(const Magnitude3d &dir);
+    void setSpawnRadius(float radius);
+    void setSpawnRate(float particlesPerSecond);
+    void setParticleSettings(const ParticleSettings &settings);
 
-    int minSize = 16;
-    int maxSize = 32;
+    void emitOnce();
+    void emitContinuously();
+    void startEmission();
+    void stopEmission();
+    void emitBurst(int count);
+
+    inline void setSpawnRate(int rate) {
+        setSpawnRate(static_cast<float>(rate));
+    }
 
   private:
     std::vector<Particle> particles;
     unsigned int maxParticles;
-    int spawnRate = 10;
+    unsigned int activeParticleCount = 0;
+
+    ParticleEmissionType emissionType = ParticleEmissionType::Fountain;
+    Magnitude3d direction = {0.0, 1.0, 0.0};
+    float spawnRadius = 0.1f;
+    float spawnRate = 10.0f;
+    ParticleSettings settings;
+
+    float timeSinceLastEmission = 0.0f;
+    bool isEmitting = true;
+    bool doesEmitOnce = false;
+    bool hasEmittedOnce = false;
+    int burstCount = 0;
 
     Id vao, vbo;
     ShaderProgram program;
@@ -220,10 +259,13 @@ class ParticleEmitter : public GameObject {
     glm::mat4 view = glm::mat4(1.0f);
 
     Position3d position = {0.0, 0.0, 0.0};
-    int emissions = 0;
-    bool doesEmitOnce = false;
 
-    void respawnParticle(Particle &p, const Position3d &emitterPos);
+    void spawnParticle();
+    void updateParticle(Particle &p, float deltaTime);
+    Magnitude3d generateRandomVelocity();
+    Position3d generateSpawnPosition();
+    int findInactiveParticle();
+    void activateParticle(int index);
 };
 
 #endif // ATLAS_OBJECT_H

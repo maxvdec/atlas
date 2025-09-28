@@ -52,23 +52,27 @@ void main() {
 
 static const char* PARTICLE_FRAG = R"(
 #version 330 core
-
-in vec4 passColor;
-
+in vec2 fragTexCoord;
+in vec4 fragColor;
 out vec4 FragColor;
-
-uniform sampler2D particleText;
+uniform sampler2D particleTexture;
 uniform bool useTexture;
 
 void main() {
-    if (!useTexture) {
-        FragColor = passColor;
-        return;
+    if (useTexture) {
+        vec4 texColor = texture(particleTexture, fragTexCoord);
+        if (texColor.a < 0.01) discard;
+        FragColor = texColor * fragColor;
+    } else {
+        vec2 center = vec2(0.5, 0.5);
+        float dist = distance(fragTexCoord, center);
+        
+        float alpha = 1.0 - smoothstep(0.3, 0.5, dist);
+        
+        FragColor = vec4(fragColor.rgb, fragColor.a * alpha);
+        
+        if (FragColor.a < 0.01) discard;
     }
-    vec2 uv = gl_PointCoord;
-    vec4 tex = texture(particleText, uv);
-    if (tex.a < 0.1) discard;
-    FragColor = tex * passColor;
 }
 )";
 
@@ -453,18 +457,32 @@ void main() {
 static const char* PARTICLE_VERT = R"(
 #version 330 core
 
-layout(location = 0) in vec3 inPosition;
-layout(location = 1) in vec4 inColor;
-layout(location = 2) in float inSize;
+layout(location = 0) in vec3 quadVertex;
+layout(location = 1) in vec2 texCoord;
 
-out vec4 passColor;
+layout(location = 2) in vec3 particlePos;
+layout(location = 3) in vec4 particleColor;
+layout(location = 4) in float particleSize;
 
-uniform mat4 viewProj;
+uniform mat4 view;
+uniform mat4 projection;
+
+out vec2 fragTexCoord;
+out vec4 fragColor;
 
 void main() {
-    gl_Position = viewProj * vec4(inPosition, 1.0);
-    gl_PointSize = inSize;
-    passColor = inColor;
+    vec3 cameraRight = vec3(view[0][0], view[1][0], view[2][0]);
+    vec3 cameraUp = vec3(view[0][1], view[1][1], view[2][1]);
+
+    vec3 worldPosition = particlePos +
+                         (quadVertex.x * cameraRight * particleSize) +
+                         (quadVertex.y * cameraUp * particleSize);
+
+    vec4 viewPos = view * vec4(worldPosition, 1.0);
+    gl_Position = projection * viewPos;
+
+    fragTexCoord = texCoord;
+    fragColor = particleColor;
 }
 )";
 
