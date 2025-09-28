@@ -20,14 +20,14 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [x] Basic window creation and management
 - [x] Input handling (keyboard, mouse)
 - [x] Basic rendering (shapes, textures)
-- [ ] Simple UI
+- [ ] Simple UI **for alpha**
 - [x] Scene management
 - [x] Physics engine integration (Bezel)
 - [x] Audio support (Finewave)
 - [ ] Scripting support
 - [x] Asset management
-- [ ] Documentation and examples
-- [ ] Particle system
+- [ ] Documentation and examples **for alpha**
+- [ ] Particle system **for alpha**
 - [x] Lights
 - [x] Shadows (except for point lights)
 - [ ] Post-processing effects
@@ -37,6 +37,8 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [ ] Instancing support
 - [ ] Optimizations and performance improvements
 - [x] CLI for packing applications
+- [ ] Runtime independent of final executable 
+- [ ] Scene packing
 
 ## Other features planned for the future
 
