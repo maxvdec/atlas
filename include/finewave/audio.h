@@ -23,6 +23,7 @@ class AudioEngine {
 
     void setListenerPosition(Position3d position);
     void setListenerOrientation(Magnitude3d forward, Normal3d up);
+    void setListenerVelocity(Magnitude3d velocity);
     void setMasterVolume(float volume);
 
     std::string deviceName;
@@ -63,6 +64,11 @@ class AudioSource {
 
     void disableSpatialization();
     void applyEffect(const AudioEffect &effect);
+
+    Position3d getPosition() const;
+    Position3d getListenerPosition() const;
+
+    void useSpatialization();
 
   private:
     Id id;

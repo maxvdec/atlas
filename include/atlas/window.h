@@ -101,6 +101,7 @@ class Window {
     float getTime();
 
     bool isKeyPressed(Key key);
+    bool isKeyClicked(Key key);
 
     void releaseMouse();
     void captureMouse();
