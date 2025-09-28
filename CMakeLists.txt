@@ -33,6 +33,7 @@ add_custom_command(
 find_package(OpenGL REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
+find_package(Freetype REQUIRED)
 if(APPLE)
     set(OPENAL_LIB /opt/homebrew/opt/openal-soft/lib/libopenal.dylib)
     set(OPENAL_INCLUDE /opt/homebrew/opt/openal-soft/include)
@@ -62,7 +63,7 @@ file(GLOB_RECURSE SOURCES atlas/*.cpp extern/*.c)
 
 add_library(atlas ${SOURCES} ${SHADER_OUTPUT_FILE})
 
-target_link_libraries(atlas PUBLIC OpenGL::GL glfw glm::glm bezel finewave)
+target_link_libraries(atlas PUBLIC OpenGL::GL glfw glm::glm bezel finewave Freetype::Freetype)
 
 target_compile_definitions(atlas PRIVATE ATLAS_LIB GL_SILENT_DEPRECATION)
 
