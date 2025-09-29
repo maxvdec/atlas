@@ -4,6 +4,7 @@
 #include "atlas/light.h"
 #include "atlas/object.h"
 #include "atlas/scene.h"
+#include "atlas/text.h"
 #include "atlas/texture.h"
 #include "atlas/units.h"
 #include "atlas/workspace.h"
@@ -158,6 +159,11 @@ class MainScene : public Scene {
         dirLight.castShadows(window, 4096);
         this->addDirectionalLight(&dirLight);
         this->ambientLight.intensity = 0.3f;
+
+        Resource someResource = Workspace::get().createResource(
+            "fonts/SomeFont.ttf", "SomeFont", ResourceType::Font);
+
+        Font someFont = Font::fromResource("SomeFont", someResource, 16);
     }
 };
 

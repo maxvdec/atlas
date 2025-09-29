@@ -63,7 +63,9 @@ file(GLOB_RECURSE SOURCES atlas/*.cpp extern/*.c)
 
 add_library(atlas ${SOURCES} ${SHADER_OUTPUT_FILE})
 
-target_link_libraries(atlas PUBLIC OpenGL::GL glfw glm::glm bezel finewave Freetype::Freetype)
+target_link_libraries(atlas PUBLIC OpenGL::GL glfw glm::glm bezel finewave ${FREETYPE_LIBRARIES})
+
+target_include_directories(atlas PRIVATE ${FREE_TYPE_INCLUDE_DIRS}/freetype2)
 
 target_compile_definitions(atlas PRIVATE ATLAS_LIB GL_SILENT_DEPRECATION)
 
