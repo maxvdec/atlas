@@ -10,6 +10,7 @@
 #include "atlas/component.h"
 #include "atlas/object.h"
 #include "atlas/units.h"
+#include "atlas/window.h"
 #include <vector>
 
 void CompoundObject::initialize() {
@@ -157,3 +158,5 @@ std::vector<CoreVertex> CompoundObject::getVertices() const {
     }
     return allVertices;
 }
+
+Window *Component::getWindow() { return Window::mainWindow; }

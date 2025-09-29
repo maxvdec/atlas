@@ -29,7 +29,8 @@ enum class AtlasVertexShader {
     Fullscreen,
     Skybox,
     Depth,
-    Particle
+    Particle,
+    Text,
 };
 
 enum class ShaderCapability { Lighting, Textures, Shadows };
@@ -55,7 +56,8 @@ enum class AtlasFragmentShader {
     Fullscreen,
     Skybox,
     Empty,
-    Particle
+    Particle,
+    Text,
 };
 
 struct FragmentShader {

@@ -317,6 +317,9 @@ void ParticleEmitter::update(Window &window) {
 }
 
 void ParticleEmitter::render(float dt) {
+    for (auto &component : components) {
+        component->update(dt);
+    }
     if (activeParticleCount == 0)
         return;
 

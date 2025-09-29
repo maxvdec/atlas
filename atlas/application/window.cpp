@@ -153,6 +153,8 @@ void Window::run() {
     }
     GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
 
+    this->lastTime = static_cast<float>(glfwGetTime());
+
     glEnable(GL_MULTISAMPLE);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
@@ -160,12 +162,27 @@ void Window::run() {
 
     glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT);
+
     glFrontFace(GL_CW);
+
+    float fpsAccumulator = 0.0f;
+    float fpsTimer = 0.0f;
+    int frameCount = 0;
+    this->framesPerSecond = 60.0f;
 
     while (!glfwWindowShouldClose(window)) {
         float currentTime = static_cast<float>(glfwGetTime());
         this->deltaTime = currentTime - this->lastTime;
         lastTime = currentTime;
+
+        fpsAccumulator += this->deltaTime;
+        frameCount++;
+
+        if (fpsAccumulator >= 1.0f) {
+            this->framesPerSecond = frameCount;
+            frameCount = 0;
+            fpsAccumulator = 0.0f;
+        }
 
         // Update the renderables
         for (auto &obj : this->renderables) {
