@@ -105,6 +105,19 @@ void main() {
 
 )";
 
+static const char* TEXT_VERT = R"(
+#version 330 core
+layout(location = 0) in vec4 vertex; // <vec2 pos, vec2 texture>
+out vec2 texCoords;
+
+uniform mat4 projection;
+
+void main() {
+    gl_Position = projection * vec4(vertex.xy, 0.0, 1.0);
+    texCoords = vertex.zw;
+}
+)";
+
 static const char* MAIN_FRAG = R"(
 #version 330 core
 out vec4 FragColor;
@@ -616,6 +629,21 @@ void main() {
     outColor = aColor;
 }
 
+)";
+
+static const char* TEXT_FRAG = R"(
+#version 330 core
+
+in vec2 texCoords;
+out vec4 color;
+
+uniform sampler2D text;
+uniform vec3 textColor;
+
+void main() {
+    vec4 sampled = vec4(1.0, 1.0, 1.0, texture(text, texCoords).r);
+    color = vec4(textColor, 1.0) * sampled;
+}
 )";
 
 static const char* FULLSCREEN_VERT = R"(

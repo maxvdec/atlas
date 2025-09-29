@@ -61,6 +61,7 @@ class MainScene : public Scene {
     ParticleEmitter emitter;
     DirectionalLight dirLight;
     MyObject myObject;
+    Text text;
 
     void update(Window &window) override {
         if (!doesUpdate)
@@ -161,9 +162,11 @@ class MainScene : public Scene {
         this->ambientLight.intensity = 0.3f;
 
         Resource someResource = Workspace::get().createResource(
-            "fonts/SomeFont.ttf", "SomeFont", ResourceType::Font);
+            "arial.ttf", "Arial", ResourceType::Font);
 
-        Font someFont = Font::fromResource("SomeFont", someResource, 16);
+        Font someFont = Font::fromResource("Arial", someResource, 16);
+        text = Text("Hello, World!", someFont, {10, 10}, Color::white());
+        window.addObject(&text);
     }
 };
 

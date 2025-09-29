@@ -10,6 +10,8 @@
 #ifndef ATLAS_TEXT_H
 #define ATLAS_TEXT_H
 
+#include "atlas/component.h"
+#include "atlas/core/shader.h"
 #include "atlas/units.h"
 #include "atlas/workspace.h"
 #include <map>
@@ -37,6 +39,26 @@ struct Font {
 
   private:
     static std::vector<Font> fonts;
+};
+
+class Text : public GameObject {
+  public:
+    std::string content;
+    Font font;
+    Position2d position;
+    Color color = Color::white();
+    Text() {};
+    Text(const std::string &text, const Font &font,
+         Position2d position = {0, 0}, const Color &color = Color::white())
+        : content(text), font(font), position(position), color(color) {}
+
+    void initialize() override;
+    void render(float dt) override;
+
+  private:
+    Id VAO, VBO;
+    glm::mat4 projection;
+    ShaderProgram shader;
 };
 
 #endif // ATLAS_TEXT_H
