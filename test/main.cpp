@@ -50,6 +50,14 @@ class MoveSin : public Component {
     }
 };
 
+class TextFPS : public TraitComponent<Text> {
+  public:
+    void updateComponent(Text *object) override {
+        int fps = static_cast<int>(getWindow()->getFramesPerSecond());
+        object->content = "FPS: " + std::to_string(fps);
+    }
+};
+
 class MainScene : public Scene {
   public:
     bool doesUpdate = true;
@@ -148,13 +156,6 @@ class MainScene : public Scene {
         myObject.addComponent<AudioPlayer>(std::move(AudioPlayer()));
         window.addObject(&myObject);
 
-        emitter = ParticleEmitter(10000);
-        emitter.setPosition({0.0, 0.0, 0.0});
-        emitter.startEmission();
-        emitter.setSpawnRate(10000.0f);
-        emitter.setEmissionType(ParticleEmissionType::Ambient);
-        window.addObject(&emitter);
-
         Color sunWarm = Color::white();
         dirLight = DirectionalLight({-0.75, -1.0, 0.0}, sunWarm);
         dirLight.castShadows(window, 4096);
@@ -164,8 +165,11 @@ class MainScene : public Scene {
         Resource someResource = Workspace::get().createResource(
             "arial.ttf", "Arial", ResourceType::Font);
 
-        Font someFont = Font::fromResource("Arial", someResource, 16);
-        text = Text("Hello, World!", someFont, {10, 10}, Color::white());
+        text =
+            Text("Hello, Atlas!", Font::fromResource("Arial", someResource, 24),
+                 {25.0, 25.0}, Color::white());
+
+        text.addTraitComponent<Text>(TextFPS());
         window.addObject(&text);
     }
 };

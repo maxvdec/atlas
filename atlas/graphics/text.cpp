@@ -27,7 +27,8 @@ Font Font::fromResource(const std::string &fontName, Resource resource,
                                  std::string(resource.path));
     }
 
-    FT_Set_Pixel_Sizes(face, 0, fontSize);
+    int dpi = 96;
+    FT_Set_Char_Size(face, 0, fontSize * 64, dpi, dpi);
 
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
@@ -39,10 +40,19 @@ Font Font::fromResource(const std::string &fontName, Resource resource,
             continue;
         }
 
+        if (face->glyph->bitmap.width == 0 || face->glyph->bitmap.rows == 0) {
+            Character character = {
+                0, Size2d(0, 0), Position2d(0, 0),
+                static_cast<unsigned int>(face->glyph->advance.x)};
+            font.atlas.insert(std::pair<char, Character>(c, character));
+            continue;
+        }
+
         unsigned int texture;
         glGenTextures(1, &texture);
         glBindTexture(GL_TEXTURE_2D, texture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, face->glyph->bitmap.width,
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, face->glyph->bitmap.width,
                      face->glyph->bitmap.rows, 0, GL_RED, GL_UNSIGNED_BYTE,
                      face->glyph->bitmap.buffer);
 
@@ -50,6 +60,9 @@ Font Font::fromResource(const std::string &fontName, Resource resource,
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
 
         Character character = {
             texture,
@@ -59,6 +72,8 @@ Font Font::fromResource(const std::string &fontName, Resource resource,
 
         font.atlas.insert(std::pair<char, Character>(c, character));
     }
+
+    glBindTexture(GL_TEXTURE_2D, 0);
 
     FT_Done_Face(face);
     FT_Done_FreeType(ft);
@@ -93,8 +108,12 @@ std::vector<Font> Font::fonts = {};
 
 void Text::initialize() {
     Window *window = Window::mainWindow;
-    projection = glm::ortho(0.0f, static_cast<float>(window->width), 0.0f,
-                            static_cast<float>(window->height));
+    int fbWidth, fbHeight;
+    glfwGetFramebufferSize(static_cast<GLFWwindow *>(window->windowRef),
+                           &fbWidth, &fbHeight);
+
+    projection = glm::ortho(0.0f, static_cast<float>(fbWidth),
+                            static_cast<float>(fbHeight), 0.0f);
 
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
@@ -111,37 +130,63 @@ void Text::initialize() {
 }
 
 void Text::render(float dt) {
+    for (auto &component : components) {
+        component->update(dt);
+    }
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDisable(GL_DEPTH_TEST);
+
     glUseProgram(shader.programId);
     shader.setUniform3f("textColor", color.r, color.g, color.b);
     shader.setUniformMat4f("projection", projection);
+    shader.setUniform1i("text", 0);
+
     glActiveTexture(GL_TEXTURE0);
     glBindVertexArray(VAO);
+
+    float scale = 2.0f;
+
+    float maxBearingY = 0;
+    for (const char &ch : content) {
+        Character character = font.atlas[ch];
+        if (character.bearing.y > maxBearingY) {
+            maxBearingY = character.bearing.y;
+        }
+    }
+
+    float x = position.x;
+    float y = position.y + maxBearingY * scale;
 
     std::string::const_iterator c;
     for (c = content.begin(); c != content.end(); c++) {
         Character ch = font.atlas[*c];
 
-        float xpos = position.x + ch.bearing.x * 1.0f;
-        float ypos = position.y - (ch.size.height - ch.bearing.y) * 1.0f;
+        float xpos = x + ch.bearing.x * scale;
+        float ypos = y - ch.bearing.y * scale;
 
-        float w = ch.size.width * 1.0f;
-        float h = ch.size.height * 1.0f;
+        float w = ch.size.width * scale;
+        float h = ch.size.height * scale;
 
         float vertices[6][4] = {
-            {xpos, ypos + h, 0.0f, 0.0f},    {xpos, ypos, 0.0f, 1.0f},
-            {xpos + w, ypos, 1.0f, 1.0f},
+            {xpos, ypos, 0.0f, 0.0f},         {xpos, ypos + h, 0.0f, 1.0f},
+            {xpos + w, ypos + h, 1.0f, 1.0f},
 
-            {xpos, ypos + h, 0.0f, 0.0f},    {xpos + w, ypos, 1.0f, 1.0f},
-            {xpos + w, ypos + h, 1.0f, 0.0f}};
+            {xpos, ypos, 0.0f, 0.0f},         {xpos + w, ypos + h, 1.0f, 1.0f},
+            {xpos + w, ypos, 1.0f, 0.0f}};
 
         glBindTexture(GL_TEXTURE_2D, ch.textureID);
         glBindBuffer(GL_ARRAY_BUFFER, VBO);
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
         glDrawArrays(GL_TRIANGLES, 0, 6);
-        position.x += (ch.advance >> 6) * 1.0f;
+
+        x += (ch.advance >> 6) * scale;
     }
 
     glBindVertexArray(0);
     glBindTexture(GL_TEXTURE_2D, 0);
+    glDisable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
 }

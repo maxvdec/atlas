@@ -125,6 +125,7 @@ class Window {
     inline void deactivateDebug() { this->debug = false; }
 
     inline float getDeltaTime() { return this->deltaTime; }
+    inline float getFramesPerSecond() { return this->framesPerSecond; }
 
     std::vector<std::shared_ptr<Body>> getAllBodies();
 
@@ -151,6 +152,7 @@ class Window {
 
     float lastTime = 0.0f;
     float deltaTime = 0.0f;
+    float framesPerSecond = 0.0f;
 
     ShaderProgram depthProgram;
 
@@ -159,6 +161,7 @@ class Window {
     friend class CoreObject;
     friend class RenderTarget;
     friend class DirectionalLight;
+    friend class Text;
 };
 
 #endif // WINDOW_H

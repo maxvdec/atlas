@@ -27,11 +27,29 @@ class Component {
     virtual void update(float deltaTime) {}
     virtual void setViewMatrix(const glm::mat4 &view) {}
     virtual void setProjectionMatrix(const glm::mat4 &projection) {}
+    Window *getWindow();
 
     Component() = default;
 
     GameObject *object = nullptr;
     Body *body = nullptr;
+};
+
+template <typename T>
+    requires std::is_base_of_v<GameObject, T>
+class TraitComponent : public Component {
+  public:
+    virtual void init() override {};
+    void update(float deltaTime) override {
+        if (typedObject != nullptr) {
+            updateComponent(typedObject);
+        }
+    }
+    virtual void updateComponent(T *object) {}
+    inline void setTypedObject(T *obj) { typedObject = obj; }
+
+  private:
+    T *typedObject = nullptr;
 };
 
 class GameObject : public Renderable {
@@ -58,6 +76,21 @@ class GameObject : public Renderable {
             std::make_shared<T>(std::forward<T>(existing));
         component->object = this;
         component->body = this->body.get();
+        components.push_back(component);
+    }
+
+    template <typename U, typename T>
+        requires std::is_base_of_v<TraitComponent<U>, T>
+    void addTraitComponent(T &&existing) {
+        if (static_cast<U *>(this) == nullptr) {
+            throw std::runtime_error(
+                "Cannot add TraitComponent to object that is not of the "
+                "correct type.");
+        }
+        existing.setTypedObject(static_cast<U *>(this));
+        std::shared_ptr<T> component =
+            std::make_shared<T>(std::forward<T>(existing));
+        component->object = this;
         components.push_back(component);
     }
 

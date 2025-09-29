@@ -13,6 +13,7 @@
 #include "atlas/component.h"
 #include "atlas/core/shader.h"
 #include "atlas/units.h"
+#include "atlas/window.h"
 #include "atlas/workspace.h"
 #include <map>
 #include <string>
