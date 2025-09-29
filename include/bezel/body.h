@@ -7,6 +7,8 @@
  Copyright (c) 2025 maxvdec
 */
 
+/// \ingroup library
+
 #ifndef BEZEL_BODY_H
 #define BEZEL_BODY_H
 
