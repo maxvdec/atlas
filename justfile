@@ -27,3 +27,7 @@ release:
 docs:
     cmake .
     doxygen Doxyfile
+
+run-docs:
+    just docs
+    python3 -m http.server 8000 --directory docs/html
