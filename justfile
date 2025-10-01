@@ -25,7 +25,11 @@ release:
     make -j8
 
 docs:
+    doxygen -w html header.html delete.html delete.css
+    rm delete.html delete.css
     cmake .
+    cp header.html _deps/doxygen-awesome-css-src/header.html
+    rm header.html
     doxygen Doxyfile
 
 run-docs:
