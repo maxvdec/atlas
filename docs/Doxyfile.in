@@ -1,6 +1,6 @@
 HTML_EXTRA_STYLESHEET  = @AWESOME_CSS_DIR@/doxygen-awesome.css
 PROJECT_NAME = "Atlas"
-INPUT = @CMAKE_SOURCE_DIR@/src @CMAKE_SOURCE_DIR@/include @CMAKE_SOURCE_DIR@/bezel @CMAKE_SOURCE_DIR@/finewave @CMAKE_SOURCE_DIR@/docs/pages
+INPUT = @CMAKE_SOURCE_DIR@/include @CMAKE_SOURCE_DIR@/docs/pages
 PROJECT_NUMBER = "Pre-Alpha 0.3.0"
 PROJECT_BREIF = "A Game Engine for what's to come"
 RECURSIVE = YES

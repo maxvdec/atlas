@@ -56,6 +56,25 @@ struct Contact {
     int compareTo(const Contact other) const;
 };
 
+/**
+ * @brief Class representing a physical body in a physics simulation. It
+ * includes methods for applying forces, detecting collisions, and updating the
+ * body's state.
+ * \subsection body-example Example
+ * ```cpp
+ * // Create a physics body
+ * auto body = std::make_shared<Body>();
+ * // Set the body's position
+ * body->position = {0.0, 0.0, 0.0};
+ * // Apply a mass of 2.0 units
+ * body->applyMass(2.0f);
+ * // Set the body's shape to a sphere with radius 1.0
+ * body->shape = std::make_shared<Sphere>(1.0f);
+ * // Set the body's elasticity and friction
+ * body->elasticity = 0.8f;
+ * body->friction = 0.5f;
+ * ```
+ */
 class Body {
   public:
     Position3d position;

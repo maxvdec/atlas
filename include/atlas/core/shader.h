@@ -196,6 +196,11 @@ enum class AtlasFragmentShader {
     Text,
 };
 
+/**
+ * @brief Structure representing a fragment shader, including its source code
+ * and its OpenGL ID.
+ *
+ */
 struct FragmentShader {
     /**
      * @brief The source code of the fragment shader.
@@ -230,6 +235,10 @@ struct FragmentShader {
     Id shaderId;
 };
 
+/**
+ * @brief Structure representing a layout descriptor for vertex attributes.
+ *
+ */
 struct LayoutDescriptor {
     /**
      * @brief The layout position of the attribute in the shader.

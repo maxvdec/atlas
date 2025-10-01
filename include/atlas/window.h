@@ -30,6 +30,11 @@ typedef void *CoreMonitorReference;
 constexpr int WINDOW_CENTERED = -1;
 constexpr int DEFAULT_ASPECT_RATIO = -1;
 
+/**
+ * @brief Structure representing the configuration options for creating a
+ * window.
+ *
+ */
 struct WindowConfiguration {
     std::string title;
     int width;
@@ -118,6 +123,30 @@ class Monitor {
 
 class ShaderProgram;
 
+/**
+ * @brief Structure representing a window in the application. This contains the
+ * main interface for interacting with the engine.
+ * \subsection window-example Example
+ * ```cpp
+ * // Create a window with specific configuration
+ * WindowConfiguration config;
+ * config.title = "My Game";
+ * config.width = 1280;
+ * config.height = 720;
+ * Window window(config);
+ * // Set up camera and scene
+ * Camera camera;
+ * Scene scene;
+ * window.setCamera(&camera);
+ * window.setScene(&scene);
+ * // Add objects to the scene
+ * CoreObject obj;
+ * scene.addObject(&obj);
+ * // Run the main window loop
+ * window.run();
+ * ```
+ *
+ */
 class Window {
   public:
     std::string title;
@@ -174,19 +203,25 @@ class Window {
     /**
      * @brief Adds a renderable object to the window.
      *
-     * @param object The renderable object to add.
+     * @param object The renderable object to add. \warning The object must be
+     * long-lived. This means that declaring it as a class property is a good
+     * idea.
      */
     void addObject(Renderable *object);
     /**
      * @brief Adds a renderable object with higher rendering priority.
      *
-     * @param object The renderable object to add with preference.
+     * @param object The renderable object to add with preference. \warning The
+     * object must be long-lived. This means that declaring it as a class
+     * property is a good idea.
      */
     void addPreferencedObject(Renderable *object);
     /**
      * @brief Adds a renderable object to be rendered first.
      *
-     * @param object The renderable object to add to the prelude.
+     * @param object The renderable object to add to the prelude. \warning The
+     * object must be long-lived. This means that declaring it as a class
+     * property is a good idea.
      */
     inline void addPreludeObject(Renderable *object) {
         firstRenderables.push_back(object);
@@ -195,7 +230,9 @@ class Window {
     /**
      * @brief Sets the camera for the window.
      *
-     * @param newCamera The camera to use for rendering.
+     * @param newCamera The camera to use for rendering. \warning The camera
+     * must be long-lived. This means that declaring it as a class property is
+     * a good idea.
      */
     void setCamera(Camera *newCamera);
     /**
