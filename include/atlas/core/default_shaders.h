@@ -1,8 +1,17 @@
+//
+// default_shaders.h
+// As part of the Atlas project
+// Created by Max Van den Eynde in 2025
+// --------------------------------------------------
+// Description: Generated shader source code definitions
+// Copyright (c) 2025 Max Van den Eynde
+//
+
 // This file contains packed shader source code.
 #ifndef ATLAS_GENERATED_SHADERS_H
 #define ATLAS_GENERATED_SHADERS_H
 
-static const char* DEPTH_VERT = R"(
+static const char *DEPTH_VERT = R"(
 #version 330 core
 layout (location = 0) in vec3 aPos;
 
@@ -16,7 +25,7 @@ void main() {
 
 )";
 
-static const char* SKYBOX_FRAG = R"(
+static const char *SKYBOX_FRAG = R"(
 #version 330 core
 out vec4 FragColor;
 
@@ -31,14 +40,14 @@ void main()
 
 )";
 
-static const char* EMPTY_FRAG = R"(
+static const char *EMPTY_FRAG = R"(
 #version 330
 
 void main() {}
 
 )";
 
-static const char* COLOR_FRAG = R"(
+static const char *COLOR_FRAG = R"(
 #version 330 core
 out vec4 FragColor;
 
@@ -50,7 +59,7 @@ void main() {
 
 )";
 
-static const char* PARTICLE_FRAG = R"(
+static const char *PARTICLE_FRAG = R"(
 #version 330 core
 in vec2 fragTexCoord;
 in vec4 fragColor;
@@ -76,11 +85,11 @@ void main() {
 }
 )";
 
-static const char* AMBIENT_PARTICLE_FRAG = R"(
+static const char *AMBIENT_PARTICLE_FRAG = R"(
 
 )";
 
-static const char* FULLSCREEN_FRAG = R"(
+static const char *FULLSCREEN_FRAG = R"(
 #version 330 core
 
 in vec2 TexCoord;
@@ -105,7 +114,7 @@ void main() {
 
 )";
 
-static const char* TEXT_VERT = R"(
+static const char *TEXT_VERT = R"(
 #version 330 core
 layout(location = 0) in vec4 vertex; // <vec2 pos, vec2 texture>
 out vec2 texCoords;
@@ -118,7 +127,7 @@ void main() {
 }
 )";
 
-static const char* MAIN_FRAG = R"(
+static const char *MAIN_FRAG = R"(
 #version 330 core
 out vec4 FragColor;
 
@@ -439,7 +448,7 @@ void main() {
 
 )";
 
-static const char* TEXTURE_VERT = R"(
+static const char *TEXTURE_VERT = R"(
 #version 330 core
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec4 aColor;
@@ -461,7 +470,7 @@ void main() {
 
 )";
 
-static const char* DEBUG_FRAG = R"(
+static const char *DEBUG_FRAG = R"(
 #version 330 core
 out vec4 FragColor;
 
@@ -471,7 +480,7 @@ void main() {
 
 )";
 
-static const char* PARTICLE_VERT = R"(
+static const char *PARTICLE_VERT = R"(
 #version 330 core
 
 // Quad vertex attributes
@@ -516,7 +525,7 @@ void main() {
 }
 )";
 
-static const char* COLOR_VERT = R"(
+static const char *COLOR_VERT = R"(
 #version 330 core
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec4 aColor;
@@ -536,7 +545,7 @@ void main()
 
 )";
 
-static const char* SKYBOX_VERT = R"(
+static const char *SKYBOX_VERT = R"(
 #version 330 core
 layout (location = 0) in vec3 aPos;
 
@@ -554,7 +563,7 @@ void main()
 
 )";
 
-static const char* DEBUG_VERT = R"(
+static const char *DEBUG_VERT = R"(
 #version 330 core
 layout (location = 0) in vec3 aPos;
 
@@ -564,7 +573,7 @@ void main() {
 
 )";
 
-static const char* TEXTURE_FRAG = R"(
+static const char *TEXTURE_FRAG = R"(
 #version 330 core
 out vec4 FragColor;
 
@@ -604,7 +613,7 @@ void main() {
 
 )";
 
-static const char* MAIN_VERT = R"(
+static const char *MAIN_VERT = R"(
 #version 330 core
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec4 aColor;
@@ -631,7 +640,7 @@ void main() {
 
 )";
 
-static const char* TEXT_FRAG = R"(
+static const char *TEXT_FRAG = R"(
 #version 330 core
 
 in vec2 texCoords;
@@ -646,7 +655,7 @@ void main() {
 }
 )";
 
-static const char* FULLSCREEN_VERT = R"(
+static const char *FULLSCREEN_VERT = R"(
 #version 330 core
 
 layout (location = 0) in vec3 aPos;
@@ -663,7 +672,7 @@ void main() {
 
 )";
 
-static const char* AMBIENT_PARTICLE_VERT = R"(
+static const char *AMBIENT_PARTICLE_VERT = R"(
 
 )";
 

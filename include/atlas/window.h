@@ -47,25 +47,70 @@ struct WindowConfiguration {
     int aspectRatioY = -1;
 };
 
+/**
+ * @brief Structure representing a video mode with resolution and refresh rate.
+ *
+ */
 struct VideoMode {
     int width;
     int height;
     int refreshRate;
 };
 
+/**
+ * @brief Class representing a monitor with video mode querying capabilities.
+ *
+ */
 class Monitor {
   public:
     int monitorID;
     bool primary;
 
+    /**
+     * @brief Queries all available video modes for this monitor.
+     *
+     * @return (std::vector<VideoMode>) Vector of available video modes.
+     */
     std::vector<VideoMode> queryVideoModes();
+    /**
+     * @brief Gets the current video mode of this monitor.
+     *
+     * @return (VideoMode) The current video mode.
+     */
     VideoMode getCurrentVideoMode();
 
+    /**
+     * @brief Gets the physical size of the monitor in millimeters.
+     *
+     * @return (std::tuple<int, int>) Width and height in millimeters.
+     */
     std::tuple<int, int> getPhysicalSize(); // in millimeters
+    /**
+     * @brief Gets the position of the monitor in the desktop coordinate system.
+     *
+     * @return (std::tuple<int, int>) X and Y position coordinates.
+     */
     std::tuple<int, int> getPosition();
+    /**
+     * @brief Gets the content scale factors for this monitor.
+     *
+     * @return (std::tuple<float, float>) Horizontal and vertical scale factors.
+     */
     std::tuple<float, float> getContentScale();
+    /**
+     * @brief Gets the human-readable name of this monitor.
+     *
+     * @return (std::string) The monitor name.
+     */
     std::string getName();
 
+    /**
+     * @brief Constructs a Monitor object.
+     *
+     * @param ref Core monitor reference.
+     * @param id Monitor ID.
+     * @param isPrimary Whether this is the primary monitor.
+     */
     Monitor(CoreMonitorReference ref, int id, bool isPrimary);
 
     CoreMonitorReference monitorRef;
@@ -79,41 +124,153 @@ class Window {
     int width;
     int height;
 
+    /**
+     * @brief Constructs a window with the specified configuration.
+     *
+     * @param config Window configuration settings.
+     */
     Window(WindowConfiguration config);
+    /**
+     * @brief Destructor for Window.
+     *
+     */
     ~Window();
 
+    /**
+     * @brief Starts the main window loop and begins rendering.
+     *
+     */
     void run();
+    /**
+     * @brief Closes the window and terminates the application.
+     *
+     */
     void close();
+    /**
+     * @brief Sets the window to fullscreen mode.
+     *
+     * @param enable True to enable fullscreen, false to disable.
+     */
     void setFullscreen(bool enable);
+    /**
+     * @brief Sets the window to fullscreen on a specific monitor.
+     *
+     * @param monitor The monitor to use for fullscreen.
+     */
     void setFullscreen(Monitor &monitor);
+    /**
+     * @brief Sets the window to windowed mode with new configuration.
+     *
+     * @param config New window configuration.
+     */
     void setWindowed(WindowConfiguration config);
+    /**
+     * @brief Enumerates all available monitors.
+     *
+     * @return (std::vector<Monitor>) Vector of available monitors.
+     */
     std::vector<Monitor> static enumerateMonitors();
 
+    /**
+     * @brief Adds a renderable object to the window.
+     *
+     * @param object The renderable object to add.
+     */
     void addObject(Renderable *object);
+    /**
+     * @brief Adds a renderable object with higher rendering priority.
+     *
+     * @param object The renderable object to add with preference.
+     */
     void addPreferencedObject(Renderable *object);
+    /**
+     * @brief Adds a renderable object to be rendered first.
+     *
+     * @param object The renderable object to add to the prelude.
+     */
     inline void addPreludeObject(Renderable *object) {
         firstRenderables.push_back(object);
     }
 
+    /**
+     * @brief Sets the camera for the window.
+     *
+     * @param newCamera The camera to use for rendering.
+     */
     void setCamera(Camera *newCamera);
+    /**
+     * @brief Sets the scene for the window.
+     *
+     * @param scene The scene to render.
+     */
     void setScene(Scene *scene);
 
+    /**
+     * @brief Gets the current time since window creation.
+     *
+     * @return (float) Time in seconds.
+     */
     float getTime();
 
+    /**
+     * @brief Checks if a key is currently pressed.
+     *
+     * @param key The key to check.
+     * @return (bool) True if the key is pressed, false otherwise.
+     */
     bool isKeyPressed(Key key);
+    /**
+     * @brief Checks if a key was clicked (pressed and released) this frame.
+     *
+     * @param key The key to check.
+     * @return (bool) True if the key was clicked, false otherwise.
+     */
     bool isKeyClicked(Key key);
 
+    /**
+     * @brief Releases mouse capture, allowing the cursor to move freely.
+     *
+     */
     void releaseMouse();
+    /**
+     * @brief Captures the mouse cursor for camera control.
+     *
+     */
     void captureMouse();
 
+    /**
+     * @brief Gets the current cursor position.
+     *
+     * @return (std::tuple<int, int>) X and Y cursor coordinates.
+     */
     std::tuple<int, int> getCursorPosition();
 
     static Window *mainWindow;
 
+    /**
+     * @brief Gets the current scene being rendered.
+     *
+     * @return (Scene*) Pointer to the current scene.
+     */
     inline Scene *getCurrentScene() { return currentScene; }
+    /**
+     * @brief Gets the current camera.
+     *
+     * @return (Camera*) Pointer to the current camera.
+     */
     inline Camera *getCamera() { return camera; }
+    /**
+     * @brief Adds a render target to the window.
+     *
+     * @param target The render target to add.
+     */
     void addRenderTarget(RenderTarget *target);
 
+    /**
+     * @brief Gets the framebuffer size of the window.
+     *
+     * @return (Size2d) The width and height of the framebuffer.
+     */
     inline Size2d getSize() {
         int fbw, fbh;
         glfwGetFramebufferSize(static_cast<GLFWwindow *>(windowRef), &fbw,
@@ -121,12 +278,36 @@ class Window {
         return {static_cast<double>(fbw), static_cast<double>(fbh)};
     }
 
+    /**
+     * @brief Activates debug mode for the window.
+     *
+     */
     inline void activateDebug() { this->debug = true; }
+    /**
+     * @brief Deactivates debug mode for the window.
+     *
+     */
     inline void deactivateDebug() { this->debug = false; }
 
+    /**
+     * @brief Gets the delta time between frames.
+     *
+     * @return (float) Delta time in seconds.
+     */
     inline float getDeltaTime() { return this->deltaTime; }
+    /**
+     * @brief Gets the current frames per second.
+     *
+     * @return (float) Frames per second value.
+     */
     inline float getFramesPerSecond() { return this->framesPerSecond; }
 
+    /**
+     * @brief Gets all physics bodies in the window.
+     *
+     * @return (std::vector<std::shared_ptr<Body>>) Vector of all physics
+     * bodies.
+     */
     std::vector<std::shared_ptr<Body>> getAllBodies();
 
     float gravity = 9.81f;

@@ -15,6 +15,11 @@
 #include <numbers>
 #include <ostream>
 
+/**
+ * @brief Structure representing a position in 3D space with double precision.
+ * Provides arithmetic operations and conversions to/from GLM types.
+ *
+ */
 struct Position3d {
     double x;
     double y;
@@ -60,12 +65,37 @@ struct Position3d {
     }
 };
 
+/**
+ * @brief Type alias for 3D scaling factors.
+ *
+ */
 typedef Position3d Scale3d;
+/**
+ * @brief Type alias for 3D size dimensions.
+ *
+ */
 typedef Position3d Size3d;
+/**
+ * @brief Type alias for 3D points.
+ *
+ */
 typedef Position3d Point3d;
+/**
+ * @brief Type alias for 3D normal vectors.
+ *
+ */
 typedef Position3d Normal3d;
+/**
+ * @brief Type alias for 3D magnitude vectors.
+ *
+ */
 typedef Position3d Magnitude3d;
 
+/**
+ * @brief Structure representing rotation in 3D space using Euler angles.
+ * Provides arithmetic operations and conversions to/from GLM quaternions.
+ *
+ */
 struct Rotation3d {
     double pitch; // Rotation around the X-axis
     double yaw;   // Rotation around the Y-axis
@@ -110,6 +140,11 @@ struct Rotation3d {
     }
 };
 
+/**
+ * @brief Structure representing an RGBA color with double precision.
+ * Provides arithmetic operations and common color constants.
+ *
+ */
 struct Color {
     double r;
     double g;
@@ -169,10 +204,23 @@ struct Color {
     }
 };
 
+/**
+ * @brief Type alias for OpenGL object identifiers.
+ *
+ */
 typedef unsigned int Id;
 
+/**
+ * @brief Enumeration of 3D directional constants.
+ *
+ */
 enum class Direction3d { Up, Down, Left, Right, Forward, Backward };
 
+/**
+ * @brief Structure representing a position in 2D space with double precision.
+ * Provides arithmetic operations and conversions to GLM types.
+ *
+ */
 struct Position2d {
     double x;
     double y;
@@ -198,10 +246,27 @@ struct Position2d {
     }
 };
 
+/**
+ * @brief Type alias for 2D scaling factors.
+ *
+ */
 typedef Position2d Scale2d;
+/**
+ * @brief Type alias for 2D points.
+ *
+ */
 typedef Position2d Point2d;
+/**
+ * @brief Type alias for 2D movement vectors.
+ *
+ */
 typedef Position2d Movement2d;
 
+/**
+ * @brief Structure representing angular measurements in radians.
+ * Provides arithmetic operations and conversion from degrees.
+ *
+ */
 struct Radians {
     double value;
 
@@ -224,6 +289,11 @@ struct Radians {
     }
 };
 
+/**
+ * @brief Structure representing 2D dimensions with width and height.
+ * Provides arithmetic operations and conversions to GLM types.
+ *
+ */
 struct Size2d {
     double width;
     double height;

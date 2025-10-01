@@ -17,21 +17,60 @@
 
 namespace fs = std::filesystem;
 
+/**
+ * @brief Enumeration of supported resource types in the workspace.
+ *
+ */
 enum class ResourceType { File, Image, SpecularMap, Audio, Font };
 
+/**
+ * @brief Structure representing a single resource in the workspace.
+ *
+ */
 struct Resource {
     fs::path path;
     std::string name;
     ResourceType type = ResourceType::File;
 };
 
+/**
+ * @brief Structure representing a collection of related resources.
+ *
+ */
 struct ResourceGroup {
     std::string groupName;
     std::vector<Resource> resources;
 
+    /**
+     * @brief Finds a resource by name within this group.
+     *
+     * @param name The name of the resource to find.
+     * @return (Resource) The found resource.
+     */
     Resource findResource(std::string name);
 };
 
+/**
+ * @brief Singleton class that manages all resources and resource groups in the
+ * application. Provides centralized access to assets like images, audio files,
+ * and other resources.
+ *
+ * \subsection workspace-example Example
+ * ```cpp
+ * // Get the workspace instance
+ * Workspace &workspace = Workspace::get();
+ * // Set the root path for resources
+ * workspace.setRootPath("assets/");
+ * // Create a resource
+ * Resource texture = workspace.createResource("textures/brick.png",
+ * "BrickTexture", ResourceType::Image);
+ * // Create a resource group
+ * std::vector<Resource> skyboxResources = {...};
+ * ResourceGroup skybox = workspace.createResourceGroup("Skybox",
+ * skyboxResources);
+ * ```
+ *
+ */
 class Workspace {
   public:
     static Workspace &get() {
@@ -42,17 +81,67 @@ class Workspace {
     Workspace(const Workspace &) = delete;
     Workspace &operator=(const Workspace &) = delete;
 
+    /**
+     * @brief Creates a new resource from a file path.
+     *
+     * @param path The filesystem path to the resource.
+     * @param name The name to assign to the resource.
+     * @param type The type of resource to create.
+     * @return (Resource) The created resource.
+     */
     Resource createResource(const fs::path &path, std::string name,
                             ResourceType type = ResourceType::File);
+    /**
+     * @brief Creates a new resource group containing multiple resources.
+     *
+     * @param groupName The name for the resource group.
+     * @param resources The vector of resources to include in the group.
+     * @return (ResourceGroup) The created resource group.
+     */
     ResourceGroup createResourceGroup(std::string groupName,
                                       const std::vector<Resource> &resources);
+    /**
+     * @brief Retrieves a resource by its name.
+     *
+     * @param name The name of the resource to retrieve.
+     * @return (Resource) The found resource.
+     */
     Resource getResource(std::string name);
+    /**
+     * @brief Gets all resources registered in the workspace.
+     *
+     * @return (std::vector<Resource>) Vector containing all resources.
+     */
     std::vector<Resource> getAllResources();
+    /**
+     * @brief Gets all resources of a specific type.
+     *
+     * @param type The type of resources to retrieve.
+     * @return (std::vector<Resource>) Vector containing resources of the
+     * specified type.
+     */
     std::vector<Resource> getResourcesByType(ResourceType type);
 
+    /**
+     * @brief Retrieves a resource group by its name.
+     *
+     * @param groupName The name of the resource group to retrieve.
+     * @return (ResourceGroup) The found resource group.
+     */
     ResourceGroup getResourceGroup(std::string groupName);
+    /**
+     * @brief Gets all resource groups registered in the workspace.
+     *
+     * @return (std::vector<ResourceGroup>) Vector containing all resource
+     * groups.
+     */
     std::vector<ResourceGroup> getAllResourceGroups();
 
+    /**
+     * @brief Sets the root path for the workspace.
+     *
+     * @param path The root filesystem path to set.
+     */
     inline void setRootPath(const fs::path &path) { rootPath = path; }
 
   private:
