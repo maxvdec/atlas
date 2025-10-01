@@ -1,11 +1,12 @@
-HTML_EXTRA_STYLESHEET  = @AWESOME_CSS_DIR@/doxygen-awesome.css @AWESOME_CSS_DIR@/doxygen-awesome-sidebar-only-darkmode-toggle.css @AWESOME_CSS_DIR@/doxygen-awesome-sidebar-only.css
-HTML_EXTRA_FILES = @AWESOME_CSS_DIR@/doxygen-awesome-darkmode-toggle.js @AWESOME_CSS_DIR@/doxygen-awesome-fragment-copy-button.js @AWESOME_CSS_DIR@/doxygen-awesome-paragraph-link.js @AWESOME_CSS_DIR@/doxygen-awesome-interactive-toc.js
-PAGE_OUTLINE_PANEL = NO
+HTML_EXTRA_STYLESHEET  = @AWESOME_CSS_DIR@/doxygen-awesome.css \
+                        @AWESOME_CSS_DIR@/doxygen-awesome-sidebar-only.css \
+                        @AWESOME_CSS_DIR@/doxygen-awesome-sidebar-only-darkmode-toggle.css
+HTML_EXTRA_FILES = @AWESOME_CSS_DIR@/doxygen-awesome-darkmode-toggle.js @AWESOME_CSS_DIR@/doxygen-awesome-fragment-copy-button.js @AWESOME_CSS_DIR@/doxygen-awesome-paragraph-link.js @AWESOME_CSS_DIR@/doxygen-awesome-interactive-toc.js @DOXYGEN_HTML_EXTRA_FILES@
 TREEVIEW_WIDTH = 335
 HTML_COPY_CLIPBOARD = NO
 HTML_HEADER = docs/header.html
 PROJECT_NAME = "Atlas"
-INPUT = @CMAKE_SOURCE_DIR@/include @CMAKE_SOURCE_DIR@/docs/pages
+INPUT = @CMAKE_SOURCE_DIR@/include @CMAKE_SOURCE_DIR@/docs/pages @CMAKE_SOURCE_DIR@/docs/pages/images
 PROJECT_NUMBER = "Pre-Alpha 0.3.0"
 PROJECT_BREIF = "A Game Engine for what's to come"
 RECURSIVE = YES
@@ -22,10 +23,11 @@ USE_MDFILE_AS_MAINPAGE = @CMAKE_SOURCE_DIR@/docs/pages/main.md
 EXTRACT_ALL = YES
 EXTRACT_PRIVATE = NO
 EXTRACT_STATIC = YES
-FULL_SIDEBAR = YES
 SEARCH_ENGINE = YES
 USE_MATHJAX = YES
 GENERATE_TREEVIEW = YES
 DISABLE_INDEX = NO
 FULL_SIDEBAR = NO
 HTML_COLORSTYLE = LIGHT
+PAGE_OUTLINE_PANEL = NO
+IMAGE_PATH = docs/images
