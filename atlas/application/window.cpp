@@ -16,7 +16,6 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <atlas/window.h>
-#include <iostream>
 #include <memory>
 #include <optional>
 #include <string>
@@ -139,9 +138,6 @@ std::tuple<int, int> Window::getCursorPosition() {
 }
 
 void Window::run() {
-    if (this->currentScene == nullptr) {
-        throw std::runtime_error("No scene set for the window");
-    }
     if (this->camera == nullptr) {
         this->camera = new Camera();
     }
@@ -171,6 +167,13 @@ void Window::run() {
     this->framesPerSecond = 60.0f;
 
     while (!glfwWindowShouldClose(window)) {
+        if (this->currentScene == nullptr) {
+            glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            glfwSwapBuffers(window);
+            glfwPollEvents();
+            continue;
+        }
         float currentTime = static_cast<float>(glfwGetTime());
         this->deltaTime = currentTime - this->lastTime;
         lastTime = currentTime;

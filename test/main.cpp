@@ -1,100 +1,54 @@
-#include "atlas/audio.h"
 #include "atlas/camera.h"
-#include "atlas/component.h"
 #include "atlas/light.h"
 #include "atlas/object.h"
 #include "atlas/scene.h"
 #include "atlas/text.h"
 #include "atlas/texture.h"
-#include "atlas/units.h"
+#include "atlas/window.h"
 #include "atlas/workspace.h"
-#include <atlas/input.h>
-#include <atlas/window.h>
-#include <cmath>
-#include <iostream>
-#include <memory>
-#include <vector>
-#include <bezel/shape.h>
-#include <finewave/audio.h>
+#include "atlas/component.h"
 
-#define ATLAS_DEBUG
+class SphereCube : public CompoundObject {
+    CoreObject sphere;
+    CoreObject cube;
 
-class MyObject : public CompoundObject {
   public:
-    CoreObject obj;
-    CoreObject obj2;
-
     void init() override {
-        obj = createDebugBox({0.5, 0.5, 0.5});
-        obj.setPosition({-1.0, 1.0, 0.0});
-        obj.initialize();
-        obj.body->applyMass(INFINITY);
-        this->addObject(&obj);
+        cube = createDebugBox({0.5f, 0.5f, 0.5f});
+        cube.setPosition({-1.0, 1.0, 0.0});
+        cube.initialize();
+        cube.body->applyMass(0); // Make it static
+        this->addObject(&cube);
 
-        obj2 = createDebugSphere(0.25, 32, 32);
-        obj2.setPosition({1.0, 1.0, 0.0});
-        obj2.initialize();
-        obj2.body->linearVelocity = {-1.0, 0.0, 0.0};
-        obj2.body->applyMass(INFINITY);
-        this->addObject(&obj2);
+        sphere = createDebugSphere(0.25f);
+        sphere.setPosition({1.0, 1.0, 0.0});
+        sphere.initialize();
+        sphere.body->applyMass(0); // Make it static
+        this->addObject(&sphere);
     }
 };
 
-class MoveSin : public Component {
+class HorizontalMover : public Component {
   public:
-    void init() override {}
-    void update(float dt) override {
+    void update(float deltaTime) override {
+        Window *window = Window::mainWindow;
         float amplitude = 0.01f;
-        float position = amplitude * std::sin(glfwGetTime());
-        object->move({position, 0.0, 0.0});
-    }
-};
-
-class TextFPS : public TraitComponent<Text> {
-  public:
-    void updateComponent(Text *object) override {
-        int fps = static_cast<int>(getWindow()->getFramesPerSecond());
-        object->content = "FPS: " + std::to_string(fps);
+        float position = amplitude * sin(window->getTime());
+        object->move({position, 0.0f, 0.0f});
     }
 };
 
 class MainScene : public Scene {
-  public:
-    bool doesUpdate = true;
-    bool fall = false;
+    CoreObject ground;
+    CoreObject ball;
+    DirectionalLight light;
     Skybox skybox;
     Camera camera;
-    CoreObject plane;
-    CoreObject sphere;
-    ParticleEmitter emitter;
-    DirectionalLight dirLight;
-    MyObject myObject;
-    Text text;
+    SphereCube sphereCube;
+    Text fpsText;
 
-    void update(Window &window) override {
-        if (!doesUpdate)
-            return;
-
-        camera.update(window);
-        if (window.isKeyPressed(Key::Escape)) {
-            window.releaseMouse();
-            doesUpdate = false;
-        } else if (window.isKeyClicked(Key::Q)) {
-            fall = !fall;
-        }
-        if (fall) {
-            camera.position.y -= 10.f * window.getDeltaTime();
-        }
-    }
-
-    void onMouseMove(Window &window, Movement2d movement) override {
-        if (!doesUpdate) {
-            return;
-        }
-        camera.updateLook(window, movement);
-    }
-
-    Cubemap createSkyboxCubemap() {
+  public:
+    Cubemap createCubemap() {
         Resource right = Workspace::get().createResource(
             "skybox/px.png", "RightSkybox", ResourceType::Image);
         Resource left = Workspace::get().createResource(
@@ -114,68 +68,55 @@ class MainScene : public Scene {
     }
 
     void initialize(Window &window) override {
+        Workspace::get().setRootPath(std::string(TEST_PATH) + "/resources/");
+
         camera = Camera();
-        camera.setPosition({-5.0, 1.0, 0.0});
-        camera.lookAt({0.0, 0.0, 0.0});
+        camera.setPosition({-5.0f, 1.0f, 2.0f});
+        camera.lookAt({0.0f, 0.0f, 0.0f});
         window.setCamera(&camera);
 
-        Workspace::get().setRootPath(std::string(TEST_PATH) + "/resources/");
-        skybox = Skybox();
-        skybox.cubemap = createSkyboxCubemap();
-        skybox.display(window);
-
-        plane = createDebugBox({5.0, 0.5f, 5.0});
-        plane.body->invMass = 0.0f;
-        plane.body->friction = 0.5f;
-
-        plane.setPosition({0, 0.0, 0.0});
-
-        Color whiteMultiplier = Color(1.0, 1.0, 1.0);
-        Color mediumMultiplier = Color(0.75, 0.75, 0.75);
-        Color darkMultiplier = Color(0.5, 0.5, 0.5);
-
-        Color blue = Color(0.5, 0.5, 1.0);
-
+        ground = createDebugBox({5.0f, 0.5f, 5.0f});
         Texture checkerboard = Texture::createDoubleCheckerboard(
-            4096, 4096, 640, 80, blue * whiteMultiplier, blue * darkMultiplier,
-            blue * mediumMultiplier);
+            4096, 4096, 640, 80, Color(0.5, 0.5, 1.0), Color(0.5, 0.5, 1.0),
+            Color(0.375, 0.375, 0.75));
+        ground.attachTexture(checkerboard);
+        ground.body->applyMass(0);
+        window.addObject(&ground);
 
-        plane.attachTexture(checkerboard);
+        ball = createDebugSphere(0.1);
+        ball.setPosition({0.0, 2.0, 0.0}); // Start above the ground
+        ball.body->linearVelocity = {2.0, 0.0, 0.0};
+        ball.body->friction = 0.5f;
+        window.addObject(&ball);
 
-        window.addObject(&plane);
+        sphereCube = SphereCube();
+        sphereCube.addComponent<HorizontalMover>(HorizontalMover());
+        window.addObject(&sphereCube);
 
-        sphere = createDebugSphere(0.1, 64, 64);
-        sphere.setPosition({0.0, 2, 0.0}); // Move sphere far away from plane
-        sphere.setRotation({0.0, 90.0, 90.0});
-        sphere.body->linearVelocity = {2.0, 0.0, 0.0};
-        sphere.body->friction = 0.5f;
-        window.addObject(&sphere);
-
-        myObject = MyObject();
-        myObject.addComponent<MoveSin>(MoveSin());
-        myObject.addComponent<AudioPlayer>(std::move(AudioPlayer()));
-        window.addObject(&myObject);
-
-        Color sunWarm = Color::white();
-        dirLight = DirectionalLight({-0.75, -1.0, 0.0}, sunWarm);
-        dirLight.castShadows(window, 4096);
-        this->addDirectionalLight(&dirLight);
-        this->ambientLight.intensity = 0.3f;
-
-        Resource someResource = Workspace::get().createResource(
+        Resource fontResource = Workspace::get().createResource(
             "arial.ttf", "Arial", ResourceType::Font);
 
-        text =
-            Text("Hello, Atlas!", Font::fromResource("Arial", someResource, 24),
-                 {25.0, 25.0}, Color::white());
+        fpsText = Text("FPS: 0", Font::fromResource("Arial", fontResource, 24),
+                       {25.0, 25.0}, Color::white());
 
-        text.addTraitComponent<Text>(TextFPS());
-        window.addObject(&text);
+        window.addObject(&fpsText);
+
+        light = DirectionalLight({-0.75f, -1.0f, 0.0}, Color::white());
+        this->addDirectionalLight(&light);
+
+        this->ambientLight.intensity = 0.3f;
+
+        skybox = Skybox();
+        skybox.cubemap = createCubemap();
+        skybox.display(window);
     }
 };
 
 int main() {
-    Window window({"My Window", 1600, 1200});
+    Window window({.title = "My Window",
+                   .width = 1600,
+                   .height = 1200,
+                   .mouseCaptured = false});
     MainScene scene;
     window.setScene(&scene);
     window.run();

@@ -16,7 +16,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(doxygen-awesome-css)
 FetchContent_GetProperties(doxygen-awesome-css SOURCE_DIR AWESOME_CSS_DIR)
 
-file(GLOB_RECURSE DOXYGEN_EXTRA_FILES_LIST "${CMAKE_CURRENT_SOURCE_DIR}/docs/resources/*")
+file(GLOB_RECURSE DOXYGEN_EXTRA_FILES_LIST "${CMAKE_CURRENT_SOURCE_DIR}/docs/pages/resources/*")
 string(REPLACE ";" " " DOXYGEN_HTML_EXTRA_FILES "${DOXYGEN_EXTRA_FILES_LIST}")
 
 set(DOXYFILE_IN ${CMAKE_CURRENT_SOURCE_DIR}/docs/Doxyfile.in)
