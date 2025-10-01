@@ -1,4 +1,4 @@
-name: Build and Test
+name: Deploy documentation
 
 on:
   push:
@@ -6,18 +6,21 @@ on:
       - stable
   pull_request:
 
+permissions:
+  contents: write
+
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v5
       - name: Install Dependencies
-        run: sudo apt-get install -y cmake doxygen graphviz
+        run: brew install cmake doxygen graphviz glfw glm openal-soft
       - name: Build doxygen
         run: |
           cmake .
           doxygen Doxyfile
-      - name: Build
+      - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}

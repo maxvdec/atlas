@@ -19,7 +19,6 @@
 #include "bezel/body.h"
 #include "finewave/audio.h"
 #include <memory>
-#include <optional>
 #include <string>
 #include <tuple>
 #include <vector>
