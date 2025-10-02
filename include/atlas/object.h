@@ -12,7 +12,9 @@
 
 #include "atlas/component.h"
 #include "bezel/body.h"
+#include <any>
 #include <memory>
+#include <string>
 #include <type_traits>
 #pragma once
 
@@ -714,6 +716,26 @@ class ParticleEmitter : public GameObject {
     Position3d generateSpawnPosition();
     int findInactiveParticle();
     void activateParticle(int index);
+};
+
+class Resource;
+class aiNode;
+class aiScene;
+class aiMesh;
+class Model {
+  public:
+    void fromResource(Resource resource);
+    inline GameObject *getObject() { return object.get(); }
+
+  private:
+    std::shared_ptr<CompoundObject> object;
+    std::string directory;
+
+    void loadModel(Resource resource);
+    void processNode(aiNode *node, const aiScene *scene);
+    CoreObject processMesh(aiMesh *mesh, const aiScene *scene);
+    std::vector<Texture> loadMaterialTextures(std::any *mat, std::any type,
+                                              const std::string &typeName);
 };
 
 #endif // ATLAS_OBJECT_H

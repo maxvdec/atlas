@@ -21,7 +21,7 @@ namespace fs = std::filesystem;
  * @brief Enumeration of supported resource types in the workspace.
  *
  */
-enum class ResourceType { File, Image, SpecularMap, Audio, Font };
+enum class ResourceType { File, Image, SpecularMap, Audio, Font, Model };
 
 /**
  * @brief Structure representing a single resource in the workspace.
