@@ -12,7 +12,7 @@ var searchData=
   ['leftshift_9',['LeftShift',['../input_8h.html#a9479d299e1852e6140dcca1f405868aba982621712db76f723b7bb88b631dc64d',1,'input.h']]],
   ['leftsuper_10',['LeftSuper',['../input_8h.html#a9479d299e1852e6140dcca1f405868aba4bd45bf12e08f60072b6962e9f7794c2',1,'input.h']]],
   ['life_11',['life',['../struct_particle.html#a1760a331eebb54cbdd6ca280439a36c8',1,'Particle']]],
-  ['light_12',['Light',['../struct_light.html',1,'Light'],['../struct_light.html#a705f837df8db28b0259a0edc1858492d',1,'Light::Light()']]],
+  ['light_12',['Light',['../tutorial.html#autotoc_md7',1,'Creating a Directional Light'],['../struct_light.html',1,'Light'],['../struct_light.html#a705f837df8db28b0259a0edc1858492d',1,'Light::Light()']]],
   ['light_2eh_13',['light.h',['../light_8h.html',1,'']]],
   ['lighting_14',['Lighting',['../shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcda2e4b97fde8cf63085ec969fcc7e490c0',1,'shader.h']]],
   ['lightprojection_15',['lightProjection',['../struct_shadow_params.html#a5bfa79aa373ac10c35c7c825bb8f39bd',1,'ShadowParams']]],

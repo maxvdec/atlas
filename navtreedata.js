@@ -25,6 +25,31 @@
 var NAVTREE =
 [
   [ "Atlas", "index.html", [
+    [ "Tutorial", "tutorial.html", [
+      [ "Installation", "tutorial.html#autotoc_md2", [
+        [ "Create a Project", "tutorial.html#autotoc_md3", null ]
+      ] ],
+      [ "Setting up the enviornment", "tutorial.html#autotoc_md4", [
+        [ "Creating a Window", "tutorial.html#autotoc_md5", null ],
+        [ "Creating a Scene", "tutorial.html#autotoc_md6", null ],
+        [ "Creating a Directional Light", "tutorial.html#autotoc_md7", null ],
+        [ "Adding the Skybox", "tutorial.html#autotoc_md8", [
+          [ "Building the Cubemap", "tutorial.html#autotoc_md9", null ],
+          [ "Building the Skybox", "tutorial.html#autotoc_md10", null ]
+        ] ],
+        [ "Adding a Camera", "tutorial.html#autotoc_md11", null ]
+      ] ],
+      [ "Setting up the scene", "tutorial.html#autotoc_md12", [
+        [ "Creating the ground", "tutorial.html#autotoc_md13", [
+          [ "Creating a texture", "tutorial.html#autotoc_md14", null ]
+        ] ],
+        [ "Creating a falling ball", "tutorial.html#autotoc_md15", null ]
+      ] ],
+      [ "Creating a compound object", "tutorial.html#autotoc_md16", null ],
+      [ "Creating a component", "tutorial.html#autotoc_md17", null ],
+      [ "Adding UI", "tutorial.html#autotoc_md18", null ],
+      [ "Conclusion", "tutorial.html#autotoc_md19", null ]
+    ] ],
     [ "Namespaces", "namespaces.html", [
       [ "Namespace List", "namespaces.html", "namespaces_dup" ],
       [ "Namespace Members", "namespacemembers.html", [

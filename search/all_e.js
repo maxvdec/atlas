@@ -1,7 +1,7 @@
 var searchData=
 [
   ['o_0',['O',['../input_8h.html#a9479d299e1852e6140dcca1f405868abaf186217753c37b9b9f958d906208506e',1,'input.h']]],
-  ['object_1',['object',['../class_compound_object.html#compound-object-example',1,'Example of a compound object'],['../class_component.html#a702063beef62c1319e2019fa1525f5bf',1,'Component::object'],['../class_render_target.html#a1ec7d8ec91e888599057ada1bd6dddc1',1,'RenderTarget::object'],['../class_skybox.html#a839c02e97d141c30f9f1e34275cf9f37',1,'Skybox::object']]],
+  ['object_1',['object',['../tutorial.html#autotoc_md16',1,'Creating a compound object'],['../class_compound_object.html#compound-object-example',1,'Example of a compound object'],['../class_component.html#a702063beef62c1319e2019fa1525f5bf',1,'Component::object'],['../class_render_target.html#a1ec7d8ec91e888599057ada1bd6dddc1',1,'RenderTarget::object'],['../class_skybox.html#a839c02e97d141c30f9f1e34275cf9f37',1,'Skybox::object']]],
   ['object_2eh_2',['object.h',['../object_8h.html',1,'']]],
   ['objects_3',['objects',['../class_compound_object.html#acd70ac00d566c102349df27c0c37744d',1,'CompoundObject']]],
   ['of_20a_20component_4',['Example of a component',['../class_component.html#example-component',1,'']]],
