@@ -7,6 +7,7 @@
 #include "atlas/window.h"
 #include "atlas/workspace.h"
 #include "atlas/component.h"
+#include <memory>
 
 class SphereCube : public CompoundObject {
     CoreObject sphere;
@@ -28,6 +29,14 @@ class SphereCube : public CompoundObject {
     }
 };
 
+class FPSTextUpdater : public TraitComponent<Text> {
+  public:
+    void updateComponent(Text *object) override {
+        int fps = static_cast<int>(getWindow()->getFramesPerSecond());
+        object->content = "FPS: " + std::to_string(fps);
+    }
+};
+
 class HorizontalMover : public Component {
   public:
     void update(float deltaTime) override {
@@ -46,8 +55,35 @@ class MainScene : public Scene {
     Camera camera;
     SphereCube sphereCube;
     Text fpsText;
+    Model backpack;
+
+    bool doesUpdate = true;
+    bool fall = false;
 
   public:
+    void update(Window &window) override {
+        if (!doesUpdate)
+            return;
+
+        camera.update(window);
+        if (window.isKeyPressed(Key::Escape)) {
+            window.releaseMouse();
+            doesUpdate = false;
+        } else if (window.isKeyClicked(Key::Q)) {
+            fall = !fall;
+        }
+        if (fall) {
+            camera.position.y -= 10.f * window.getDeltaTime();
+        }
+    }
+
+    void onMouseMove(Window &window, Movement2d movement) override {
+        if (!doesUpdate) {
+            return;
+        }
+        camera.updateLook(window, movement);
+    }
+
     Cubemap createCubemap() {
         Resource right = Workspace::get().createResource(
             "skybox/px.png", "RightSkybox", ResourceType::Image);
@@ -75,23 +111,13 @@ class MainScene : public Scene {
         camera.lookAt({0.0f, 0.0f, 0.0f});
         window.setCamera(&camera);
 
-        ground = createDebugBox({5.0f, 0.5f, 5.0f});
-        Texture checkerboard = Texture::createDoubleCheckerboard(
-            4096, 4096, 640, 80, Color(0.5, 0.5, 1.0), Color(0.5, 0.5, 1.0),
-            Color(0.375, 0.375, 0.75));
-        ground.attachTexture(checkerboard);
-        ground.body->applyMass(0);
-        window.addObject(&ground);
+        Resource backpackModel =
+            Workspace::get().createResource("backpack/Survival_BackPack_2.fbx",
+                                            "Backpack", ResourceType::Model);
+        backpack = Model();
+        backpack.fromResource(backpackModel);
 
-        ball = createDebugSphere(0.1);
-        ball.setPosition({0.0, 2.0, 0.0}); // Start above the ground
-        ball.body->linearVelocity = {2.0, 0.0, 0.0};
-        ball.body->friction = 0.5f;
-        window.addObject(&ball);
-
-        sphereCube = SphereCube();
-        sphereCube.addComponent<HorizontalMover>(HorizontalMover());
-        window.addObject(&sphereCube);
+        backpack.addToWindow(window);
 
         Resource fontResource = Workspace::get().createResource(
             "arial.ttf", "Arial", ResourceType::Font);
@@ -99,6 +125,7 @@ class MainScene : public Scene {
         fpsText = Text("FPS: 0", Font::fromResource("Arial", fontResource, 24),
                        {25.0, 25.0}, Color::white());
 
+        fpsText.addTraitComponent<Text>(FPSTextUpdater());
         window.addObject(&fpsText);
 
         light = DirectionalLight({-0.75f, -1.0f, 0.0}, Color::white());
@@ -116,7 +143,7 @@ int main() {
     Window window({.title = "My Window",
                    .width = 1600,
                    .height = 1200,
-                   .mouseCaptured = false});
+                   .mouseCaptured = true});
     MainScene scene;
     window.setScene(&scene);
     window.run();

@@ -722,19 +722,27 @@ class Resource;
 class aiNode;
 class aiScene;
 class aiMesh;
+class aiMaterial;
 class Model {
   public:
     void fromResource(Resource resource);
-    inline GameObject *getObject() { return object.get(); }
+    inline std::vector<std::shared_ptr<CoreObject>> getObjects() {
+        return objects;
+    }
+
+    void addToWindow(Window &window);
+
+    Model() = default;
 
   private:
-    std::shared_ptr<CompoundObject> object;
+    std::vector<std::shared_ptr<CoreObject>> objects;
     std::string directory;
 
     void loadModel(Resource resource);
-    void processNode(aiNode *node, const aiScene *scene);
+    void processNode(aiNode *node, const aiScene *scene,
+                     glm::mat4 parentTransform = glm::mat4(1.0f));
     CoreObject processMesh(aiMesh *mesh, const aiScene *scene);
-    std::vector<Texture> loadMaterialTextures(std::any *mat, std::any type,
+    std::vector<Texture> loadMaterialTextures(aiMaterial *mat, std::any type,
                                               const std::string &typeName);
 };
 

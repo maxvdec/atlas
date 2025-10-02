@@ -1,10 +1,10 @@
 /*
- cube.cpp
+ shape.cpp
  As part of the Atlas project
  Created by Max Van den Eynde in 2025
  --------------------------------------------------
- Description: Simple cube definition and helper function
- Copyright (c) 2025 maxvdec
+ Description: Shape creation functions
+ Copyright (c) 2025 Max Van den Eynde
 */
 
 #include "bezel/shape.h"
@@ -21,41 +21,41 @@ CoreObject createBox(Size3d size, Color color) {
     double d = size.z / 2.0;
 
     std::vector<CoreVertex> vertices = {
-        // Front face (normal 0,0,1)
+        // Front face (normal 0,0,1) - looking at +Z
         {{-w, -h, d}, color, {0.0, 0.0}, {0.0f, 0.0f, 1.0f}},
         {{w, -h, d}, color, {1.0, 0.0}, {0.0f, 0.0f, 1.0f}},
         {{w, h, d}, color, {1.0, 1.0}, {0.0f, 0.0f, 1.0f}},
         {{-w, h, d}, color, {0.0, 1.0}, {0.0f, 0.0f, 1.0f}},
 
-        // Back face (normal 0,0,-1)
+        // Back face (normal 0,0,-1) - looking at -Z
+        {{w, -h, -d}, color, {0.0, 0.0}, {0.0f, 0.0f, -1.0f}},
         {{-w, -h, -d}, color, {1.0, 0.0}, {0.0f, 0.0f, -1.0f}},
         {{-w, h, -d}, color, {1.0, 1.0}, {0.0f, 0.0f, -1.0f}},
         {{w, h, -d}, color, {0.0, 1.0}, {0.0f, 0.0f, -1.0f}},
-        {{w, -h, -d}, color, {0.0, 0.0}, {0.0f, 0.0f, -1.0f}},
 
-        // Left face (normal -1,0,0)
+        // Left face (normal -1,0,0) - looking at -X
         {{-w, -h, -d}, color, {0.0, 0.0}, {-1.0f, 0.0f, 0.0f}},
         {{-w, -h, d}, color, {1.0, 0.0}, {-1.0f, 0.0f, 0.0f}},
         {{-w, h, d}, color, {1.0, 1.0}, {-1.0f, 0.0f, 0.0f}},
         {{-w, h, -d}, color, {0.0, 1.0}, {-1.0f, 0.0f, 0.0f}},
 
-        // Right face (normal 1,0,0)
+        // Right face (normal 1,0,0) - looking at +X
+        {{w, -h, d}, color, {0.0, 0.0}, {1.0f, 0.0f, 0.0f}},
         {{w, -h, -d}, color, {1.0, 0.0}, {1.0f, 0.0f, 0.0f}},
         {{w, h, -d}, color, {1.0, 1.0}, {1.0f, 0.0f, 0.0f}},
         {{w, h, d}, color, {0.0, 1.0}, {1.0f, 0.0f, 0.0f}},
-        {{w, -h, d}, color, {0.0, 0.0}, {1.0f, 0.0f, 0.0f}},
 
-        // Top face (normal 0,1,0)
-        {{-w, h, -d}, color, {0.0, 1.0}, {0.0f, 1.0f, 0.0f}},
+        // Top face (normal 0,1,0) - looking at +Y
         {{-w, h, d}, color, {0.0, 0.0}, {0.0f, 1.0f, 0.0f}},
         {{w, h, d}, color, {1.0, 0.0}, {0.0f, 1.0f, 0.0f}},
         {{w, h, -d}, color, {1.0, 1.0}, {0.0f, 1.0f, 0.0f}},
+        {{-w, h, -d}, color, {0.0, 1.0}, {0.0f, 1.0f, 0.0f}},
 
-        // Bottom face (normal 0,-1,0)
-        {{-w, -h, -d}, color, {1.0, 1.0}, {0.0f, -1.0f, 0.0f}},
-        {{w, -h, -d}, color, {0.0, 1.0}, {0.0f, -1.0f, 0.0f}},
-        {{w, -h, d}, color, {0.0, 0.0}, {0.0f, -1.0f, 0.0f}},
-        {{-w, -h, d}, color, {1.0, 0.0}, {0.0f, -1.0f, 0.0f}},
+        // Bottom face (normal 0,-1,0) - looking at -Y
+        {{-w, -h, -d}, color, {0.0, 0.0}, {0.0f, -1.0f, 0.0f}},
+        {{w, -h, -d}, color, {1.0, 0.0}, {0.0f, -1.0f, 0.0f}},
+        {{w, -h, d}, color, {1.0, 1.0}, {0.0f, -1.0f, 0.0f}},
+        {{-w, -h, d}, color, {0.0, 1.0}, {0.0f, -1.0f, 0.0f}},
     };
 
     CoreObject box;
@@ -106,13 +106,13 @@ CoreObject createPyramid(Size3d size, Color color) {
     Position3d tl = Position3d::fromGlm(tlVec);
 
     std::vector<CoreVertex> vertices = {
-        // Base (normal down)
+        // Base (normal down) - reversed winding for CCW when viewed from below
         {bl, color, {0.0, 0.0}, Normal3d{0.0, -1.0, 0.0}},
-        {br, color, {1.0, 0.0}, Normal3d{0.0, -1.0, 0.0}},
-        {tr, color, {1.0, 1.0}, Normal3d{0.0, -1.0, 0.0}},
         {tl, color, {0.0, 1.0}, Normal3d{0.0, -1.0, 0.0}},
+        {tr, color, {1.0, 1.0}, Normal3d{0.0, -1.0, 0.0}},
+        {br, color, {1.0, 0.0}, Normal3d{0.0, -1.0, 0.0}},
 
-        // Side 1 (bl, br, apex)
+        // Side 1 (bl, br, apex) - front face
         {bl,
          color,
          {0.0, 0.0},
@@ -129,7 +129,7 @@ CoreObject createPyramid(Size3d size, Color color) {
          Normal3d::fromGlm(
              glm::normalize(glm::cross(brVec - blVec, apexVec - blVec)))},
 
-        // Side 2 (br, tr, apex)
+        // Side 2 (br, tr, apex) - right face
         {br,
          color,
          {0.0, 0.0},
@@ -146,7 +146,7 @@ CoreObject createPyramid(Size3d size, Color color) {
          Normal3d::fromGlm(
              glm::normalize(glm::cross(trVec - brVec, apexVec - brVec)))},
 
-        // Side 3 (tr, tl, apex)
+        // Side 3 (tr, tl, apex) - back face
         {tr,
          color,
          {0.0, 0.0},
@@ -163,7 +163,7 @@ CoreObject createPyramid(Size3d size, Color color) {
          Normal3d::fromGlm(
              glm::normalize(glm::cross(tlVec - trVec, apexVec - trVec)))},
 
-        // Side 4 (tl, bl, apex)
+        // Side 4 (tl, bl, apex) - left face
         {tl,
          color,
          {0.0, 0.0},

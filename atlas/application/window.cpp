@@ -156,11 +156,6 @@ void Window::run() {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_FRONT);
-
-    glFrontFace(GL_CW);
-
     float fpsAccumulator = 0.0f;
     float fpsTimer = 0.0f;
     int frameCount = 0;
@@ -192,18 +187,13 @@ void Window::run() {
             obj->update(*this);
         }
 
-        glEnable(GL_CULL_FACE);
-        glCullFace(GL_FRONT);
-        glFrontFace(GL_CW);
-
         currentScene->update(*this);
 
         renderLightsToShadowMaps();
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glEnable(GL_CULL_FACE);
-        glCullFace(GL_FRONT);
-        glFrontFace(GL_CW);
+        glDisable(GL_CULL_FACE);
+        glCullFace(GL_BACK);
         // Render to the targets
         for (auto &target : this->renderTargets) {
             glBindFramebuffer(GL_FRAMEBUFFER, target->fbo);
