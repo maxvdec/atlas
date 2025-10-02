@@ -732,6 +732,36 @@ class Model {
 
     void addToWindow(Window &window);
 
+    inline void move(const Position3d &deltaPosition) {
+        for (auto &obj : objects) {
+            obj->move(deltaPosition);
+        }
+    }
+
+    inline void setPosition(const Position3d &newPosition) {
+        for (auto &obj : objects) {
+            obj->setPosition(newPosition);
+        }
+    }
+
+    inline void setRotation(const Rotation3d &newRotation) {
+        for (auto &obj : objects) {
+            obj->setRotation(newRotation);
+        }
+    }
+
+    inline void attachTexture(const Texture &texture) {
+        for (auto &obj : objects) {
+            obj->attachTexture(texture);
+        }
+    }
+
+    inline void setScale(const Scale3d &newScale) {
+        for (auto &obj : objects) {
+            obj->setScale(newScale);
+        }
+    }
+
     Model() = default;
 
   private:

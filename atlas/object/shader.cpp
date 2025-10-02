@@ -192,16 +192,21 @@ void ShaderProgram::compile() {
 }
 
 ShaderProgram ShaderProgram::defaultProgram() {
-    ShaderProgram program;
-    program.vertexShader =
-        VertexShader::fromDefaultShader(AtlasVertexShader::DEFAULT_VERT_SHADER);
-    program.fragmentShader = FragmentShader::fromDefaultShader(
-        AtlasFragmentShader::DEFAULT_FRAG_SHADER);
-    program.programId = 0;
-    program.desiredAttributes = program.vertexShader.desiredAttributes;
-    program.vertexShader.compile();
-    program.fragmentShader.compile();
-    program.compile();
+    static ShaderProgram program;
+    static bool initialized = false;
+
+    if (!initialized) {
+        program.vertexShader = VertexShader::fromDefaultShader(
+            AtlasVertexShader::DEFAULT_VERT_SHADER);
+        program.fragmentShader = FragmentShader::fromDefaultShader(
+            AtlasFragmentShader::DEFAULT_FRAG_SHADER);
+        program.desiredAttributes = program.vertexShader.desiredAttributes;
+        program.vertexShader.compile();
+        program.fragmentShader.compile();
+        program.compile();
+        initialized = true;
+    }
+
     return program;
 }
 

@@ -7,6 +7,7 @@
 #include "atlas/window.h"
 #include "atlas/workspace.h"
 #include "atlas/component.h"
+#include <iostream>
 #include <memory>
 
 class SphereCube : public CompoundObject {
@@ -111,11 +112,16 @@ class MainScene : public Scene {
         camera.lookAt({0.0f, 0.0f, 0.0f});
         window.setCamera(&camera);
 
+        Resource backpackAlbedo = Workspace::get().createResource(
+            "backpack/1001_albedo.jpg", "BackpackAlbedo", ResourceType::Image);
+        Texture albedoTexture = Texture::fromResource(backpackAlbedo);
+
         Resource backpackModel =
             Workspace::get().createResource("backpack/Survival_BackPack_2.fbx",
                                             "Backpack", ResourceType::Model);
         backpack = Model();
         backpack.fromResource(backpackModel);
+        backpack.attachTexture(albedoTexture);
 
         backpack.addToWindow(window);
 
@@ -131,7 +137,7 @@ class MainScene : public Scene {
         light = DirectionalLight({-0.75f, -1.0f, 0.0}, Color::white());
         this->addDirectionalLight(&light);
 
-        this->ambientLight.intensity = 0.3f;
+        this->ambientLight.intensity = 1.0f;
 
         skybox = Skybox();
         skybox.cubemap = createCubemap();

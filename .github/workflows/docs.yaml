@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Install Dependencies
-        run: brew install cmake doxygen graphviz glfw glm openal-soft
+        run: brew install cmake doxygen graphviz glfw glm openal-soft assimp
       - name: Build doxygen
         run: |
           cmake .

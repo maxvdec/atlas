@@ -8,6 +8,7 @@
 //
 #include <any>
 #include <assimp/scene.h>
+#include "atlas/core/shader.h"
 #include "atlas/object.h"
 #include "atlas/texture.h"
 #include "atlas/units.h"
@@ -28,10 +29,10 @@ void Model::loadModel(Resource resource) {
     Assimp::Importer importer;
     if (resource.type != ResourceType::Model)
         return;
-    const aiScene *scene = importer.ReadFile(
-        resource.path.string(), aiProcess_Triangulate | aiProcess_FlipUVs |
-                                    aiProcess_MakeLeftHanded |
-                                    aiProcess_FlipWindingOrder);
+    const aiScene *scene =
+        importer.ReadFile(resource.path.string(),
+                          aiProcess_Triangulate | aiProcess_MakeLeftHanded |
+                              aiProcess_FlipWindingOrder);
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE ||
         !scene->mRootNode) {
@@ -77,6 +78,7 @@ void Model::processNode(aiNode *node, const aiScene *scene,
 
         obj->setPosition({position.x, position.y, position.z});
         obj->setRotation(Rotation3d::fromGlmQuat(rotation));
+        obj->setShader(ShaderProgram::defaultProgram());
         obj->initialize();
         this->objects.push_back(obj);
     }
@@ -141,6 +143,8 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, std::any type,
     for (unsigned int i = 0; i < material->GetTextureCount(textureType); i++) {
         aiString str;
         material->GetTexture(textureType, i, &str);
+        std::cout << "Loading texture: " << str.C_Str() << " of type "
+                  << typeName << std::endl;
         std::string filename = std::string(str.C_Str());
         std::string fullPath = directory + "/" + filename;
 
@@ -163,6 +167,7 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, std::any type,
 
 void Model::addToWindow(Window &window) {
     for (const auto &obj : objects) {
+
         window.addObject(obj.get());
     }
 }
