@@ -18,3 +18,7 @@ target
 cli/target
 cli/Cargo.lock
 libfinewave.a
+_deps
+docs/html
+docs/latex
+Doxyfile

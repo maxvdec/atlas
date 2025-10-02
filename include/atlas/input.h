@@ -13,6 +13,10 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
+/**
+ * @brief Enumeration of keyboard keys. Each key is a valid key in a keyboard.
+ *
+ */
 enum class Key : int {
     Unknown = GLFW_KEY_UNKNOWN,
     Space = GLFW_KEY_SPACE,
@@ -150,29 +154,132 @@ enum class MouseButton : int {
     Middle = GLFW_MOUSE_BUTTON_MIDDLE
 };
 
+/**
+ * @brief Structure representing mouse movement data. It is automatically
+ * handled and updated by the \ref Window class.
+ *
+ */
 struct MousePacket {
+    /**
+     * @brief The current x position of the mouse cursor.
+     *
+     */
     float xpos = 0.f;
+    /**
+     * @brief The current y position of the mouse cursor.
+     *
+     */
     float ypos = 0.f;
+    /**
+     * @brief The change in x position since the last update.
+     *
+     */
     float xoffset = 0.f;
+    /**
+     * @brief The change in y position since the last update.
+     *
+     */
     float yoffset = 0.f;
+    /**
+     * @brief Whether the pitch (y-axis rotation) is constrained to prevent
+     * the camera from flipping upside down.
+     *
+     */
     bool constrainPitch = true;
+    /**
+     * @brief Whether the mouse is being used for the first time.
+     *
+     */
     bool firstMouse = true;
 };
 
+/**
+ * @brief Structure representing mouse scroll data. It is automatically handled
+ * by the \ref Window class.
+ *
+ */
 struct MouseScrollPacket {
+    /**
+     * @brief The scroll offset in the x direction.
+     *
+     */
     float xoffset;
+    /**
+     * @brief The scroll offset in the y direction.
+     *
+     */
     float yoffset;
 };
 
+/**
+ * @brief Abstract class that declares some object that can recieve input and
+ * react to the changes in it.
+ * \subsection interactive-example Example
+ * ```cpp
+ * class PlayerController : public Interactive {
+ *  public:
+ *    void onKeyPress(Key key, float deltaTime) override {
+ *      if (key == Key::W) {
+ *        // Move forward
+ *      }
+ *    }
+ *    void onMouseMove(MousePacket data, float deltaTime) override {
+ *      // Look around based on mouse movement
+ *    }
+ * };
+ * ```
+ *
+ */
 class Interactive {
   public:
+    /**
+     * @brief Function that is called automatically when a key is pressed.
+     *
+     * @param key The key that was pressed.
+     * @param deltaTime The time elapsed since the last frame.
+     */
     virtual void onKeyPress(Key key, float deltaTime) {};
+    /**
+     * @brief Function that is called automatically when a key is released.
+     *
+     * @param key The key that was released.
+     * @param deltaTime The time elapsed since the last frame.
+     */
     virtual void onKeyRelease(Key key, float deltaTime) {};
+    /**
+     * @brief Function that is called automatically when the mouse is moved.
+     *
+     * @param data The mouse movement data. See \ref MousePacket.
+     * @param deltaTime The time elapsed since the last frame.
+     */
     virtual void onMouseMove(MousePacket data, float deltaTime) {};
+    /**
+     * @brief Function that is called automatically when a mouse button is
+     * pressed.
+     *
+     * @param button The mouse button that was pressed.
+     * @param deltaTime The time elapsed since the last frame.
+     */
     virtual void onMouseButtonPress(MouseButton button, float deltaTime) {};
+    /**
+     * @brief Function that is called automatically when the mouse is scrolled.
+     *
+     * @param data The mouse scroll data. See \ref MouseScrollPacket.
+     * @param deltaTime The time elapsed since the last frame.
+     */
     virtual void onMouseScroll(MouseScrollPacket data, float deltaTime) {};
+    /**
+     * @brief Function that is called automatically at each frame.
+     *
+     * @param deltaTime The time elapsed since the last frame.
+     */
     virtual void atEachFrame(float deltaTime) {};
 
+    /**
+     * @brief The last mouse data received. Updated automatically by the \ref
+     * Window class.
+     *
+     */
     MousePacket lastMouseData = MousePacket();
 };
 

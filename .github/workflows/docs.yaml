@@ -1,0 +1,28 @@
+name: Deploy documentation
+
+on:
+  push:
+    branches:
+      - stable
+  pull_request:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install Dependencies
+        run: brew install cmake doxygen graphviz glfw glm openal-soft
+      - name: Build doxygen
+        run: |
+          cmake .
+          doxygen Doxyfile
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs/html
+          publish_branch: gh-pages
