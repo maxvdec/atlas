@@ -347,43 +347,50 @@ $(function(){initNavTree('body_8h_source.html','',''); });
 <div class="line"><a id="l00218" name="l00218"></a><span class="lineno">  218</span> </div>
 <div class="line"><a id="l00219" name="l00219"></a><span class="lineno">  219</span>  <span class="keyword">private</span>:</div>
 <div class="line"><a id="l00220" name="l00220"></a><span class="lineno">  220</span>    std::shared_ptr&lt;Body&gt; thisShared = <span class="keyword">nullptr</span>;</div>
-<div class="line"><a id="l00221" name="l00221"></a><span class="lineno">  221</span>};</div>
+<div class="line"><a id="l00221" name="l00221"></a><span class="lineno">  221</span> </div>
+<div class="line"><a id="l00222" name="l00222"></a><span class="lineno">  222</span>    <span class="keywordtype">bool</span> isSleeping = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00223" name="l00223"></a><span class="lineno">  223</span>    <span class="keywordtype">float</span> sleepTimer = 0.0f;</div>
+<div class="line"><a id="l00224" name="l00224"></a><span class="lineno">  224</span> </div>
+<div class="line"><a id="l00225" name="l00225"></a><span class="lineno">  225</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">float</span> SLEEP_TIME_THRESHOLD = 0.5f;</div>
+<div class="line"><a id="l00226" name="l00226"></a><span class="lineno">  226</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">float</span> SLEEP_LINEAR_THRESHOLD = 0.05f;</div>
+<div class="line"><a id="l00227" name="l00227"></a><span class="lineno">  227</span>    <span class="keyword">static</span> <span class="keyword">constexpr</span> <span class="keywordtype">float</span> SLEEP_ANGULAR_THRESHOLD = 0.1f;</div>
+<div class="line"><a id="l00228" name="l00228"></a><span class="lineno">  228</span>};</div>
 </div>
-<div class="line"><a id="l00222" name="l00222"></a><span class="lineno">  222</span><span class="comment"></span> </div>
-<div class="line"><a id="l00223" name="l00223"></a><span class="lineno">  223</span><span class="comment">/**</span></div>
-<div class="line"><a id="l00224" name="l00224"></a><span class="lineno">  224</span><span class="comment"> * @brief Structure representing a pseudo body for collision detection</span></div>
-<div class="line"><a id="l00225" name="l00225"></a><span class="lineno">  225</span><span class="comment"> * algorithms.</span></div>
-<div class="line"><a id="l00226" name="l00226"></a><span class="lineno">  226</span><span class="comment"> *</span></div>
-<div class="line"><a id="l00227" name="l00227"></a><span class="lineno">  227</span><span class="comment"> */</span></div>
-<div class="foldopen" id="foldopen00228" data-start="{" data-end="};">
-<div class="line"><a id="l00228" name="l00228"></a><span class="lineno"><a class="line" href="struct_pseudo_body.html">  228</a></span><span class="keyword">struct </span><a class="code hl_struct" href="struct_pseudo_body.html">PseudoBody</a> {</div>
-<div class="line"><a id="l00229" name="l00229"></a><span class="lineno"><a class="line" href="struct_pseudo_body.html#a022ec12af9941f44f2513b20ebbc1d24">  229</a></span>    <span class="keywordtype">int</span> <a class="code hl_variable" href="struct_pseudo_body.html#a022ec12af9941f44f2513b20ebbc1d24">id</a>;</div>
-<div class="line"><a id="l00230" name="l00230"></a><span class="lineno"><a class="line" href="struct_pseudo_body.html#a10f7a0a031d7a834c586a950e0918347">  230</a></span>    <span class="keywordtype">float</span> <a class="code hl_variable" href="struct_pseudo_body.html#a10f7a0a031d7a834c586a950e0918347">value</a>;</div>
-<div class="line"><a id="l00231" name="l00231"></a><span class="lineno"><a class="line" href="struct_pseudo_body.html#ab897861b3dd99d7b98b89eaaaf1731d2">  231</a></span>    <span class="keywordtype">bool</span> <a class="code hl_variable" href="struct_pseudo_body.html#ab897861b3dd99d7b98b89eaaaf1731d2">ismin</a>;</div>
-<div class="line"><a id="l00232" name="l00232"></a><span class="lineno">  232</span>};</div>
+<div class="line"><a id="l00229" name="l00229"></a><span class="lineno">  229</span><span class="comment"></span> </div>
+<div class="line"><a id="l00230" name="l00230"></a><span class="lineno">  230</span><span class="comment">/**</span></div>
+<div class="line"><a id="l00231" name="l00231"></a><span class="lineno">  231</span><span class="comment"> * @brief Structure representing a pseudo body for collision detection</span></div>
+<div class="line"><a id="l00232" name="l00232"></a><span class="lineno">  232</span><span class="comment"> * algorithms.</span></div>
+<div class="line"><a id="l00233" name="l00233"></a><span class="lineno">  233</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00234" name="l00234"></a><span class="lineno">  234</span><span class="comment"> */</span></div>
+<div class="foldopen" id="foldopen00235" data-start="{" data-end="};">
+<div class="line"><a id="l00235" name="l00235"></a><span class="lineno"><a class="line" href="struct_pseudo_body.html">  235</a></span><span class="keyword">struct </span><a class="code hl_struct" href="struct_pseudo_body.html">PseudoBody</a> {</div>
+<div class="line"><a id="l00236" name="l00236"></a><span class="lineno"><a class="line" href="struct_pseudo_body.html#a022ec12af9941f44f2513b20ebbc1d24">  236</a></span>    <span class="keywordtype">int</span> <a class="code hl_variable" href="struct_pseudo_body.html#a022ec12af9941f44f2513b20ebbc1d24">id</a>;</div>
+<div class="line"><a id="l00237" name="l00237"></a><span class="lineno"><a class="line" href="struct_pseudo_body.html#a10f7a0a031d7a834c586a950e0918347">  237</a></span>    <span class="keywordtype">float</span> <a class="code hl_variable" href="struct_pseudo_body.html#a10f7a0a031d7a834c586a950e0918347">value</a>;</div>
+<div class="line"><a id="l00238" name="l00238"></a><span class="lineno"><a class="line" href="struct_pseudo_body.html#ab897861b3dd99d7b98b89eaaaf1731d2">  238</a></span>    <span class="keywordtype">bool</span> <a class="code hl_variable" href="struct_pseudo_body.html#ab897861b3dd99d7b98b89eaaaf1731d2">ismin</a>;</div>
+<div class="line"><a id="l00239" name="l00239"></a><span class="lineno">  239</span>};</div>
 </div>
-<div class="line"><a id="l00233" name="l00233"></a><span class="lineno">  233</span><span class="comment"></span> </div>
-<div class="line"><a id="l00234" name="l00234"></a><span class="lineno">  234</span><span class="comment">/**</span></div>
-<div class="line"><a id="l00235" name="l00235"></a><span class="lineno">  235</span><span class="comment"> * @brief Namespace containing physics utility functions.</span></div>
-<div class="line"><a id="l00236" name="l00236"></a><span class="lineno">  236</span><span class="comment"> *</span></div>
-<div class="line"><a id="l00237" name="l00237"></a><span class="lineno">  237</span><span class="comment"> */</span></div>
-<div class="foldopen" id="foldopen00238" data-start="{" data-end="}">
-<div class="line"><a id="l00238" name="l00238"></a><span class="lineno"><a class="line" href="namespacebezel.html">  238</a></span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespacebezel.html">bezel</a> {<span class="comment"></span></div>
-<div class="line"><a id="l00239" name="l00239"></a><span class="lineno">  239</span><span class="comment">/**</span></div>
-<div class="line"><a id="l00240" name="l00240"></a><span class="lineno">  240</span><span class="comment"> * @brief Computes support point for collision detection between two bodies.</span></div>
-<div class="line"><a id="l00241" name="l00241"></a><span class="lineno">  241</span><span class="comment"> *</span></div>
-<div class="line"><a id="l00242" name="l00242"></a><span class="lineno">  242</span><span class="comment"> * @param bodyA The first body.</span></div>
-<div class="line"><a id="l00243" name="l00243"></a><span class="lineno">  243</span><span class="comment"> * @param bodyB The second body.</span></div>
-<div class="line"><a id="l00244" name="l00244"></a><span class="lineno">  244</span><span class="comment"> * @param dir Direction vector for support calculation.</span></div>
-<div class="line"><a id="l00245" name="l00245"></a><span class="lineno">  245</span><span class="comment"> * @param bias Bias value for the calculation.</span></div>
-<div class="line"><a id="l00246" name="l00246"></a><span class="lineno">  246</span><span class="comment"> * @return (Point) The computed support point.</span></div>
-<div class="line"><a id="l00247" name="l00247"></a><span class="lineno">  247</span><span class="comment"> */</span></div>
-<div class="line"><a id="l00248" name="l00248"></a><span class="lineno"><a class="line" href="namespacebezel.html#afc80ee126c9ecce4cc93fa92b30a3078">  248</a></span><a class="code hl_struct" href="struct_point.html">Point</a> <a class="code hl_function" href="namespacebezel.html#afc80ee126c9ecce4cc93fa92b30a3078">support</a>(<span class="keyword">const</span> std::shared_ptr&lt;Body&gt; bodyA,</div>
-<div class="line"><a id="l00249" name="l00249"></a><span class="lineno">  249</span>              <span class="keyword">const</span> std::shared_ptr&lt;Body&gt; bodyB, glm::vec3 dir, <span class="keywordtype">float</span> bias);</div>
-<div class="line"><a id="l00250" name="l00250"></a><span class="lineno">  250</span>} <span class="comment">// namespace bezel</span></div>
+<div class="line"><a id="l00240" name="l00240"></a><span class="lineno">  240</span><span class="comment"></span> </div>
+<div class="line"><a id="l00241" name="l00241"></a><span class="lineno">  241</span><span class="comment">/**</span></div>
+<div class="line"><a id="l00242" name="l00242"></a><span class="lineno">  242</span><span class="comment"> * @brief Namespace containing physics utility functions.</span></div>
+<div class="line"><a id="l00243" name="l00243"></a><span class="lineno">  243</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00244" name="l00244"></a><span class="lineno">  244</span><span class="comment"> */</span></div>
+<div class="foldopen" id="foldopen00245" data-start="{" data-end="}">
+<div class="line"><a id="l00245" name="l00245"></a><span class="lineno"><a class="line" href="namespacebezel.html">  245</a></span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespacebezel.html">bezel</a> {<span class="comment"></span></div>
+<div class="line"><a id="l00246" name="l00246"></a><span class="lineno">  246</span><span class="comment">/**</span></div>
+<div class="line"><a id="l00247" name="l00247"></a><span class="lineno">  247</span><span class="comment"> * @brief Computes support point for collision detection between two bodies.</span></div>
+<div class="line"><a id="l00248" name="l00248"></a><span class="lineno">  248</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00249" name="l00249"></a><span class="lineno">  249</span><span class="comment"> * @param bodyA The first body.</span></div>
+<div class="line"><a id="l00250" name="l00250"></a><span class="lineno">  250</span><span class="comment"> * @param bodyB The second body.</span></div>
+<div class="line"><a id="l00251" name="l00251"></a><span class="lineno">  251</span><span class="comment"> * @param dir Direction vector for support calculation.</span></div>
+<div class="line"><a id="l00252" name="l00252"></a><span class="lineno">  252</span><span class="comment"> * @param bias Bias value for the calculation.</span></div>
+<div class="line"><a id="l00253" name="l00253"></a><span class="lineno">  253</span><span class="comment"> * @return (Point) The computed support point.</span></div>
+<div class="line"><a id="l00254" name="l00254"></a><span class="lineno">  254</span><span class="comment"> */</span></div>
+<div class="line"><a id="l00255" name="l00255"></a><span class="lineno"><a class="line" href="namespacebezel.html#afc80ee126c9ecce4cc93fa92b30a3078">  255</a></span><a class="code hl_struct" href="struct_point.html">Point</a> <a class="code hl_function" href="namespacebezel.html#afc80ee126c9ecce4cc93fa92b30a3078">support</a>(<span class="keyword">const</span> std::shared_ptr&lt;Body&gt; bodyA,</div>
+<div class="line"><a id="l00256" name="l00256"></a><span class="lineno">  256</span>              <span class="keyword">const</span> std::shared_ptr&lt;Body&gt; bodyB, glm::vec3 dir, <span class="keywordtype">float</span> bias);</div>
+<div class="line"><a id="l00257" name="l00257"></a><span class="lineno">  257</span>} <span class="comment">// namespace bezel</span></div>
 </div>
-<div class="line"><a id="l00251" name="l00251"></a><span class="lineno">  251</span> </div>
-<div class="line"><a id="l00252" name="l00252"></a><span class="lineno">  252</span><span class="preprocessor">#endif </span><span class="comment">// BEZEL_BODY_H</span></div>
+<div class="line"><a id="l00258" name="l00258"></a><span class="lineno">  258</span> </div>
+<div class="line"><a id="l00259" name="l00259"></a><span class="lineno">  259</span><span class="preprocessor">#endif </span><span class="comment">// BEZEL_BODY_H</span></div>
 <div class="ttc" id="aclass_body_html"><div class="ttname"><a href="class_body.html">Body</a></div><div class="ttdoc">Class representing a physical body in a physics simulation. It includes methods for applying forces,...</div><div class="ttdef"><b>Definition</b> <a href="#l00078">body.h:78</a></div></div>
 <div class="ttc" id="aclass_body_html_a0ce98992220d935309f1fff4526e686a"><div class="ttname"><a href="class_body.html#a0ce98992220d935309f1fff4526e686a">Body::modelSpaceToWorldSpace</a></div><div class="ttdeci">glm::vec3 modelSpaceToWorldSpace(const glm::vec3 &amp;point) const</div><div class="ttdoc">Converts a point from model space to world space.</div></div>
 <div class="ttc" id="aclass_body_html_a0f9983d1203d71a13990578b6f117799"><div class="ttname"><a href="class_body.html#a0f9983d1203d71a13990578b6f117799">Body::getInverseInertiaTensorBodySpace</a></div><div class="ttdeci">glm::mat3 getInverseInertiaTensorBodySpace() const</div><div class="ttdoc">Gets the inverse inertia tensor in body space.</div></div>
@@ -410,7 +417,7 @@ $(function(){initNavTree('body_8h_source.html','',''); });
 <div class="ttc" id="aclass_body_html_ae432a86b5bf37eb0d761c5d4451fc373"><div class="ttname"><a href="class_body.html#ae432a86b5bf37eb0d761c5d4451fc373">Body::updatePhysics</a></div><div class="ttdeci">void updatePhysics(double dt)</div><div class="ttdoc">Updates the physics simulation for this body.</div></div>
 <div class="ttc" id="aclass_body_html_af745d2d91e9d27b12d3c294eed73512d"><div class="ttname"><a href="class_body.html#af745d2d91e9d27b12d3c294eed73512d">Body::friction</a></div><div class="ttdeci">float friction</div><div class="ttdef"><b>Definition</b> <a href="#l00087">body.h:87</a></div></div>
 <div class="ttc" id="aclass_window_html"><div class="ttname"><a href="class_window.html">Window</a></div><div class="ttdoc">Structure representing a window in the application. This contains the main interface for interacting ...</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00149">window.h:149</a></div></div>
-<div class="ttc" id="anamespacebezel_html"><div class="ttname"><a href="namespacebezel.html">bezel</a></div><div class="ttdoc">Namespace containing physics utility functions.</div><div class="ttdef"><b>Definition</b> <a href="#l00238">body.h:238</a></div></div>
+<div class="ttc" id="anamespacebezel_html"><div class="ttname"><a href="namespacebezel.html">bezel</a></div><div class="ttdoc">Namespace containing physics utility functions.</div><div class="ttdef"><b>Definition</b> <a href="#l00245">body.h:245</a></div></div>
 <div class="ttc" id="anamespacebezel_html_afc80ee126c9ecce4cc93fa92b30a3078"><div class="ttname"><a href="namespacebezel.html#afc80ee126c9ecce4cc93fa92b30a3078">bezel::support</a></div><div class="ttdeci">Point support(const std::shared_ptr&lt; Body &gt; bodyA, const std::shared_ptr&lt; Body &gt; bodyB, glm::vec3 dir, float bias)</div><div class="ttdoc">Computes support point for collision detection between two bodies.</div></div>
 <div class="ttc" id="ashape_8h_html"><div class="ttname"><a href="shape_8h.html">shape.h</a></div></div>
 <div class="ttc" id="astruct_contact_html"><div class="ttname"><a href="struct_contact.html">Contact</a></div><div class="ttdoc">Structure representing a contact between two physics bodies.</div><div class="ttdef"><b>Definition</b> <a href="#l00039">body.h:39</a></div></div>
@@ -427,10 +434,10 @@ $(function(){initNavTree('body_8h_source.html','',''); });
 <div class="ttc" id="astruct_intersection_point_html_acffb6dba668c3fa1ee6f7b5a43fe1704"><div class="ttname"><a href="struct_intersection_point.html#acffb6dba668c3fa1ee6f7b5a43fe1704">IntersectionPoint::worldSpacePoint</a></div><div class="ttdeci">glm::vec3 worldSpacePoint</div><div class="ttdef"><b>Definition</b> <a href="#l00029">body.h:29</a></div></div>
 <div class="ttc" id="astruct_point_html"><div class="ttname"><a href="struct_point.html">Point</a></div><div class="ttdoc">Structure representing a point in 3D space with additional data for collision detection.</div><div class="ttdef"><b>Definition</b> <a href="shape_8h_source.html#l00174">shape.h:174</a></div></div>
 <div class="ttc" id="astruct_position3d_html"><div class="ttname"><a href="struct_position3d.html">Position3d</a></div><div class="ttdoc">Structure representing a position in 3D space with double precision. Provides arithmetic operations a...</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00023">units.h:23</a></div></div>
-<div class="ttc" id="astruct_pseudo_body_html"><div class="ttname"><a href="struct_pseudo_body.html">PseudoBody</a></div><div class="ttdoc">Structure representing a pseudo body for collision detection algorithms.</div><div class="ttdef"><b>Definition</b> <a href="#l00228">body.h:228</a></div></div>
-<div class="ttc" id="astruct_pseudo_body_html_a022ec12af9941f44f2513b20ebbc1d24"><div class="ttname"><a href="struct_pseudo_body.html#a022ec12af9941f44f2513b20ebbc1d24">PseudoBody::id</a></div><div class="ttdeci">int id</div><div class="ttdef"><b>Definition</b> <a href="#l00229">body.h:229</a></div></div>
-<div class="ttc" id="astruct_pseudo_body_html_a10f7a0a031d7a834c586a950e0918347"><div class="ttname"><a href="struct_pseudo_body.html#a10f7a0a031d7a834c586a950e0918347">PseudoBody::value</a></div><div class="ttdeci">float value</div><div class="ttdef"><b>Definition</b> <a href="#l00230">body.h:230</a></div></div>
-<div class="ttc" id="astruct_pseudo_body_html_ab897861b3dd99d7b98b89eaaaf1731d2"><div class="ttname"><a href="struct_pseudo_body.html#ab897861b3dd99d7b98b89eaaaf1731d2">PseudoBody::ismin</a></div><div class="ttdeci">bool ismin</div><div class="ttdef"><b>Definition</b> <a href="#l00231">body.h:231</a></div></div>
+<div class="ttc" id="astruct_pseudo_body_html"><div class="ttname"><a href="struct_pseudo_body.html">PseudoBody</a></div><div class="ttdoc">Structure representing a pseudo body for collision detection algorithms.</div><div class="ttdef"><b>Definition</b> <a href="#l00235">body.h:235</a></div></div>
+<div class="ttc" id="astruct_pseudo_body_html_a022ec12af9941f44f2513b20ebbc1d24"><div class="ttname"><a href="struct_pseudo_body.html#a022ec12af9941f44f2513b20ebbc1d24">PseudoBody::id</a></div><div class="ttdeci">int id</div><div class="ttdef"><b>Definition</b> <a href="#l00236">body.h:236</a></div></div>
+<div class="ttc" id="astruct_pseudo_body_html_a10f7a0a031d7a834c586a950e0918347"><div class="ttname"><a href="struct_pseudo_body.html#a10f7a0a031d7a834c586a950e0918347">PseudoBody::value</a></div><div class="ttdeci">float value</div><div class="ttdef"><b>Definition</b> <a href="#l00237">body.h:237</a></div></div>
+<div class="ttc" id="astruct_pseudo_body_html_ab897861b3dd99d7b98b89eaaaf1731d2"><div class="ttname"><a href="struct_pseudo_body.html#ab897861b3dd99d7b98b89eaaaf1731d2">PseudoBody::ismin</a></div><div class="ttdeci">bool ismin</div><div class="ttdef"><b>Definition</b> <a href="#l00238">body.h:238</a></div></div>
 <div class="ttc" id="aunits_8h_html"><div class="ttname"><a href="units_8h.html">units.h</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->

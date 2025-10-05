@@ -45,7 +45,7 @@ var searchData=
   ['getvertices_42',['getVertices',['../class_compound_object.html#a861e922b1025bb7bfa000ab858470185',1,'CompoundObject::getVertices()'],['../class_renderable.html#a699e0a52700234e195a44f7be4e4d531',1,'Renderable::getVertices()'],['../class_core_object.html#adac5522b978d9300dc27bc9233704533',1,'CoreObject::getVertices()']]],
   ['getwindow_43',['getWindow',['../class_component.html#a64a41360decf2e4b88ebf553fadb20e2',1,'Component']]],
   ['gjkclosestpoints_44',['gjkClosestPoints',['../namespacebezel.html#a305b1a58d3cec1603db15c436d3db399',1,'bezel']]],
-  ['gjkintersection_45',['gjkIntersection',['../namespacebezel.html#a7cc2875130bae2d97ac836a25dcdf14c',1,'bezel']]],
+  ['gjkintersection_45',['gjkIntersection',['../namespacebezel.html#a7e9d1e1426dfb7baf31d7c229884a2e0',1,'bezel']]],
   ['graveaccent_46',['GraveAccent',['../input_8h.html#a9479d299e1852e6140dcca1f405868aba45428446946e929576498c7f5d36f230',1,'input.h']]],
   ['gravity_47',['gravity',['../struct_particle_settings.html#a920c9377a44a8a7492a6fcc200173a45',1,'ParticleSettings::gravity'],['../class_window.html#a84bf9cade8239d6aa81287e05f2fcafb',1,'Window::gravity']]],
   ['gray_48',['gray',['../struct_color.html#aaef2f9d4914957f249ff647c84161d45',1,'Color']]],

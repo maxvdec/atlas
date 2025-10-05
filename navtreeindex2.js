@@ -248,6 +248,6 @@ var NAVTREEINDEX2 =
 "namespacebezel.html#a0808322f15f3829a4897c3bf15906cef":[1,0,0,16],
 "namespacebezel.html#a0aad5b1c6ca29629857f2ca49e0f84b9":[1,0,0,19],
 "namespacebezel.html#a11ee629e2162c4f0df27daf0d32fe12b":[1,0,0,3],
-"namespacebezel.html#a1412806f986bec2f27f72d7fc9048418":[1,0,0,14],
-"namespacebezel.html#a2dcc7b65199d4b5c74834caf177660af":[1,0,0,41]
+"namespacebezel.html#a2dcc7b65199d4b5c74834caf177660af":[1,0,0,41],
+"namespacebezel.html#a302569782e842ff805fac641ff8431da":[1,0,0,14]
 };

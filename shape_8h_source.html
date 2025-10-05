@@ -678,137 +678,138 @@ $(function(){initNavTree('shape_8h_source.html','',''); });
 <div class="line"><a id="l00532" name="l00532"></a><span class="lineno">  532</span><span class="comment"> * @param ptOnB Output closest point on body B.</span></div>
 <div class="line"><a id="l00533" name="l00533"></a><span class="lineno">  533</span><span class="comment"> * @return (bool) True if intersection detected, false otherwise.</span></div>
 <div class="line"><a id="l00534" name="l00534"></a><span class="lineno">  534</span><span class="comment"> */</span></div>
-<div class="line"><a id="l00535" name="l00535"></a><span class="lineno"><a class="line" href="namespacebezel.html#a7cc2875130bae2d97ac836a25dcdf14c">  535</a></span><span class="keywordtype">bool</span> <a class="code hl_function" href="namespacebezel.html#a7cc2875130bae2d97ac836a25dcdf14c">gjkIntersection</a>(<span class="keyword">const</span> std::shared_ptr&lt;Body&gt; bodyA,</div>
+<div class="line"><a id="l00535" name="l00535"></a><span class="lineno"><a class="line" href="namespacebezel.html#a7e9d1e1426dfb7baf31d7c229884a2e0">  535</a></span><span class="keywordtype">bool</span> <a class="code hl_function" href="namespacebezel.html#a7e9d1e1426dfb7baf31d7c229884a2e0">gjkIntersection</a>(<span class="keyword">const</span> std::shared_ptr&lt;Body&gt; bodyA,</div>
 <div class="line"><a id="l00536" name="l00536"></a><span class="lineno">  536</span>                     <span class="keyword">const</span> std::shared_ptr&lt;Body&gt; bodyB, <span class="keyword">const</span> <span class="keywordtype">float</span> bias,</div>
-<div class="line"><a id="l00537" name="l00537"></a><span class="lineno">  537</span>                     glm::vec3 &amp;ptOnA, glm::vec3 &amp;ptOnB);<span class="comment"></span></div>
-<div class="line"><a id="l00538" name="l00538"></a><span class="lineno">  538</span><span class="comment">/**</span></div>
-<div class="line"><a id="l00539" name="l00539"></a><span class="lineno">  539</span><span class="comment"> * @brief Finds closest points between two bodies using GJK.</span></div>
-<div class="line"><a id="l00540" name="l00540"></a><span class="lineno">  540</span><span class="comment"> *</span></div>
-<div class="line"><a id="l00541" name="l00541"></a><span class="lineno">  541</span><span class="comment"> * @param bodyA First body.</span></div>
-<div class="line"><a id="l00542" name="l00542"></a><span class="lineno">  542</span><span class="comment"> * @param bodyB Second body.</span></div>
-<div class="line"><a id="l00543" name="l00543"></a><span class="lineno">  543</span><span class="comment"> * @param ptOnA Output closest point on body A.</span></div>
-<div class="line"><a id="l00544" name="l00544"></a><span class="lineno">  544</span><span class="comment"> * @param ptOnB Output closest point on body B.</span></div>
-<div class="line"><a id="l00545" name="l00545"></a><span class="lineno">  545</span><span class="comment"> */</span></div>
-<div class="line"><a id="l00546" name="l00546"></a><span class="lineno"><a class="line" href="namespacebezel.html#a305b1a58d3cec1603db15c436d3db399">  546</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="namespacebezel.html#a305b1a58d3cec1603db15c436d3db399">gjkClosestPoints</a>(<span class="keyword">const</span> std::shared_ptr&lt;Body&gt; bodyA,</div>
-<div class="line"><a id="l00547" name="l00547"></a><span class="lineno">  547</span>                      <span class="keyword">const</span> std::shared_ptr&lt;Body&gt; bodyB, glm::vec3 &amp;ptOnA,</div>
-<div class="line"><a id="l00548" name="l00548"></a><span class="lineno">  548</span>                      glm::vec3 &amp;ptOnB);</div>
-<div class="line"><a id="l00549" name="l00549"></a><span class="lineno">  549</span>} <span class="comment">// namespace bezel</span></div>
-<div class="line"><a id="l00550" name="l00550"></a><span class="lineno">  550</span> </div>
-<div class="line"><a id="l00551" name="l00551"></a><span class="lineno">  551</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespacebezel.html">bezel</a> {</div>
-<div class="line"><a id="l00552" name="l00552"></a><span class="lineno">  552</span><span class="comment">// EPA functions</span><span class="comment"></span></div>
-<div class="line"><a id="l00553" name="l00553"></a><span class="lineno">  553</span><span class="comment">/**</span></div>
-<div class="line"><a id="l00554" name="l00554"></a><span class="lineno">  554</span><span class="comment"> * @brief Calculates barycentric coordinates for a point relative to a triangle.</span></div>
-<div class="line"><a id="l00555" name="l00555"></a><span class="lineno">  555</span><span class="comment"> *</span></div>
-<div class="line"><a id="l00556" name="l00556"></a><span class="lineno">  556</span><span class="comment"> * @param s1 First triangle vertex.</span></div>
-<div class="line"><a id="l00557" name="l00557"></a><span class="lineno">  557</span><span class="comment"> * @param s2 Second triangle vertex.</span></div>
-<div class="line"><a id="l00558" name="l00558"></a><span class="lineno">  558</span><span class="comment"> * @param s3 Third triangle vertex.</span></div>
-<div class="line"><a id="l00559" name="l00559"></a><span class="lineno">  559</span><span class="comment"> * @param pt Point to calculate coordinates for.</span></div>
-<div class="line"><a id="l00560" name="l00560"></a><span class="lineno">  560</span><span class="comment"> * @return (glm::vec3) Barycentric coordinates.</span></div>
-<div class="line"><a id="l00561" name="l00561"></a><span class="lineno">  561</span><span class="comment"> */</span></div>
-<div class="line"><a id="l00562" name="l00562"></a><span class="lineno"><a class="line" href="namespacebezel.html#a07bada85ca4efe10a1de746e385b0e6a">  562</a></span>glm::vec3 <a class="code hl_function" href="namespacebezel.html#a07bada85ca4efe10a1de746e385b0e6a">barycentricCoordinates</a>(glm::vec3 &amp;s1, glm::vec3 &amp;s2, glm::vec3 &amp;s3,</div>
-<div class="line"><a id="l00563" name="l00563"></a><span class="lineno">  563</span>                                 <span class="keyword">const</span> glm::vec3 &amp;pt);<span class="comment"></span></div>
-<div class="line"><a id="l00564" name="l00564"></a><span class="lineno">  564</span><span class="comment">/**</span></div>
-<div class="line"><a id="l00565" name="l00565"></a><span class="lineno">  565</span><span class="comment"> * @brief Computes the normal direction of a triangle.</span></div>
-<div class="line"><a id="l00566" name="l00566"></a><span class="lineno">  566</span><span class="comment"> *</span></div>
-<div class="line"><a id="l00567" name="l00567"></a><span class="lineno">  567</span><span class="comment"> * @param tri Triangle to compute normal for.</span></div>
-<div class="line"><a id="l00568" name="l00568"></a><span class="lineno">  568</span><span class="comment"> * @param points Points defining the triangle vertices.</span></div>
-<div class="line"><a id="l00569" name="l00569"></a><span class="lineno">  569</span><span class="comment"> * @return (glm::vec3) Normal direction vector.</span></div>
-<div class="line"><a id="l00570" name="l00570"></a><span class="lineno">  570</span><span class="comment"> */</span></div>
-<div class="line"><a id="l00571" name="l00571"></a><span class="lineno"><a class="line" href="namespacebezel.html#a97f934e1e485a23010282639c1df2c37">  571</a></span>glm::vec3 <a class="code hl_function" href="namespacebezel.html#a97f934e1e485a23010282639c1df2c37">normalDirection</a>(<span class="keyword">const</span> <a class="code hl_struct" href="struct_triangle.html">Triangle</a> &amp;tri,</div>
-<div class="line"><a id="l00572" name="l00572"></a><span class="lineno">  572</span>                          <span class="keyword">const</span> std::vector&lt;Point&gt; &amp;points);<span class="comment"></span></div>
-<div class="line"><a id="l00573" name="l00573"></a><span class="lineno">  573</span><span class="comment">/**</span></div>
-<div class="line"><a id="l00574" name="l00574"></a><span class="lineno">  574</span><span class="comment"> * @brief Calculates signed distance from a point to a triangle.</span></div>
-<div class="line"><a id="l00575" name="l00575"></a><span class="lineno">  575</span><span class="comment"> *</span></div>
-<div class="line"><a id="l00576" name="l00576"></a><span class="lineno">  576</span><span class="comment"> * @param tri Triangle to measure distance to.</span></div>
-<div class="line"><a id="l00577" name="l00577"></a><span class="lineno">  577</span><span class="comment"> * @param pt Point to measure distance from.</span></div>
-<div class="line"><a id="l00578" name="l00578"></a><span class="lineno">  578</span><span class="comment"> * @param points Points defining the triangle vertices.</span></div>
-<div class="line"><a id="l00579" name="l00579"></a><span class="lineno">  579</span><span class="comment"> * @return (float) Signed distance value.</span></div>
-<div class="line"><a id="l00580" name="l00580"></a><span class="lineno">  580</span><span class="comment"> */</span></div>
-<div class="line"><a id="l00581" name="l00581"></a><span class="lineno"><a class="line" href="namespacebezel.html#ad7940fee674aaf38535b1a5d5c494928">  581</a></span><span class="keywordtype">float</span> <a class="code hl_function" href="namespacebezel.html#ad7940fee674aaf38535b1a5d5c494928">signedDistanceToTriangle</a>(<span class="keyword">const</span> <a class="code hl_struct" href="struct_triangle.html">Triangle</a> &amp;tri, <span class="keyword">const</span> glm::vec3 &amp;pt,</div>
-<div class="line"><a id="l00582" name="l00582"></a><span class="lineno">  582</span>                               <span class="keyword">const</span> std::vector&lt;Point&gt; &amp;points);<span class="comment"></span></div>
-<div class="line"><a id="l00583" name="l00583"></a><span class="lineno">  583</span><span class="comment">/**</span></div>
-<div class="line"><a id="l00584" name="l00584"></a><span class="lineno">  584</span><span class="comment"> * @brief Finds the triangle closest to the origin.</span></div>
-<div class="line"><a id="l00585" name="l00585"></a><span class="lineno">  585</span><span class="comment"> *</span></div>
-<div class="line"><a id="l00586" name="l00586"></a><span class="lineno">  586</span><span class="comment"> * @param triangles Vector of triangles to search.</span></div>
-<div class="line"><a id="l00587" name="l00587"></a><span class="lineno">  587</span><span class="comment"> * @param points Points defining the triangle vertices.</span></div>
-<div class="line"><a id="l00588" name="l00588"></a><span class="lineno">  588</span><span class="comment"> * @return (int) Index of the closest triangle.</span></div>
-<div class="line"><a id="l00589" name="l00589"></a><span class="lineno">  589</span><span class="comment"> */</span></div>
-<div class="line"><a id="l00590" name="l00590"></a><span class="lineno"><a class="line" href="namespacebezel.html#af8877774f235c83bd99fa5719c446f08">  590</a></span><span class="keywordtype">int</span> <a class="code hl_function" href="namespacebezel.html#af8877774f235c83bd99fa5719c446f08">closestTriangle</a>(<span class="keyword">const</span> std::vector&lt;Triangle&gt; &amp;triangles,</div>
-<div class="line"><a id="l00591" name="l00591"></a><span class="lineno">  591</span>                    <span class="keyword">const</span> std::vector&lt;Point&gt; &amp;points);<span class="comment"></span></div>
-<div class="line"><a id="l00592" name="l00592"></a><span class="lineno">  592</span><span class="comment">/**</span></div>
-<div class="line"><a id="l00593" name="l00593"></a><span class="lineno">  593</span><span class="comment"> * @brief Removes triangles that face towards a given point.</span></div>
-<div class="line"><a id="l00594" name="l00594"></a><span class="lineno">  594</span><span class="comment"> *</span></div>
-<div class="line"><a id="l00595" name="l00595"></a><span class="lineno">  595</span><span class="comment"> * @param pt Point to test triangle facing.</span></div>
-<div class="line"><a id="l00596" name="l00596"></a><span class="lineno">  596</span><span class="comment"> * @param triangles Vector of triangles to filter.</span></div>
-<div class="line"><a id="l00597" name="l00597"></a><span class="lineno">  597</span><span class="comment"> * @param points Points defining the triangle vertices.</span></div>
-<div class="line"><a id="l00598" name="l00598"></a><span class="lineno">  598</span><span class="comment"> * @return (int) Number of triangles removed.</span></div>
-<div class="line"><a id="l00599" name="l00599"></a><span class="lineno">  599</span><span class="comment"> */</span></div>
-<div class="line"><a id="l00600" name="l00600"></a><span class="lineno"><a class="line" href="namespacebezel.html#ac75032f45d00c918736bf72b73bd1b6d">  600</a></span><span class="keywordtype">int</span> <a class="code hl_function" href="namespacebezel.html#ac75032f45d00c918736bf72b73bd1b6d">removeTrianglesFacingPoint</a>(<span class="keyword">const</span> glm::vec3 &amp;pt,</div>
-<div class="line"><a id="l00601" name="l00601"></a><span class="lineno">  601</span>                               std::vector&lt;Triangle&gt; &amp;triangles,</div>
-<div class="line"><a id="l00602" name="l00602"></a><span class="lineno">  602</span>                               <span class="keyword">const</span> std::vector&lt;Point&gt; &amp;points);<span class="comment"></span></div>
-<div class="line"><a id="l00603" name="l00603"></a><span class="lineno">  603</span><span class="comment">/**</span></div>
-<div class="line"><a id="l00604" name="l00604"></a><span class="lineno">  604</span><span class="comment"> * @brief Finds edges that are not shared between triangles.</span></div>
-<div class="line"><a id="l00605" name="l00605"></a><span class="lineno">  605</span><span class="comment"> *</span></div>
-<div class="line"><a id="l00606" name="l00606"></a><span class="lineno">  606</span><span class="comment"> * @param danglingEdges Output vector of dangling edges.</span></div>
-<div class="line"><a id="l00607" name="l00607"></a><span class="lineno">  607</span><span class="comment"> * @param triangles Vector of triangles to analyze.</span></div>
-<div class="line"><a id="l00608" name="l00608"></a><span class="lineno">  608</span><span class="comment"> */</span></div>
-<div class="line"><a id="l00609" name="l00609"></a><span class="lineno"><a class="line" href="namespacebezel.html#a0808322f15f3829a4897c3bf15906cef">  609</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="namespacebezel.html#a0808322f15f3829a4897c3bf15906cef">findDanglingEdges</a>(std::vector&lt;Edge&gt; &amp;danglingEdges,</div>
-<div class="line"><a id="l00610" name="l00610"></a><span class="lineno">  610</span>                       <span class="keyword">const</span> std::vector&lt;Triangle&gt; &amp;triangles);<span class="comment"></span></div>
-<div class="line"><a id="l00611" name="l00611"></a><span class="lineno">  611</span><span class="comment">/**</span></div>
-<div class="line"><a id="l00612" name="l00612"></a><span class="lineno">  612</span><span class="comment"> * @brief Expands collision detection using EPA algorithm.</span></div>
-<div class="line"><a id="l00613" name="l00613"></a><span class="lineno">  613</span><span class="comment"> *</span></div>
-<div class="line"><a id="l00614" name="l00614"></a><span class="lineno">  614</span><span class="comment"> * @param bodyA First body.</span></div>
-<div class="line"><a id="l00615" name="l00615"></a><span class="lineno">  615</span><span class="comment"> * @param bodyB Second body.</span></div>
-<div class="line"><a id="l00616" name="l00616"></a><span class="lineno">  616</span><span class="comment"> * @param bias Collision bias value.</span></div>
-<div class="line"><a id="l00617" name="l00617"></a><span class="lineno">  617</span><span class="comment"> * @param simplex Initial simplex from GJK.</span></div>
-<div class="line"><a id="l00618" name="l00618"></a><span class="lineno">  618</span><span class="comment"> * @param ptOnA Output closest point on body A.</span></div>
-<div class="line"><a id="l00619" name="l00619"></a><span class="lineno">  619</span><span class="comment"> * @param ptOnB Output closest point on body B.</span></div>
-<div class="line"><a id="l00620" name="l00620"></a><span class="lineno">  620</span><span class="comment"> * @return (float) Penetration depth.</span></div>
-<div class="line"><a id="l00621" name="l00621"></a><span class="lineno">  621</span><span class="comment"> */</span></div>
-<div class="line"><a id="l00622" name="l00622"></a><span class="lineno"><a class="line" href="namespacebezel.html#a1412806f986bec2f27f72d7fc9048418">  622</a></span><span class="keywordtype">float</span> <a class="code hl_function" href="namespacebezel.html#a1412806f986bec2f27f72d7fc9048418">epaExpand</a>(<span class="keyword">const</span> std::shared_ptr&lt;Body&gt; bodyA,</div>
-<div class="line"><a id="l00623" name="l00623"></a><span class="lineno">  623</span>                <span class="keyword">const</span> std::shared_ptr&lt;Body&gt; bodyB, <span class="keyword">const</span> <span class="keywordtype">float</span> bias,</div>
-<div class="line"><a id="l00624" name="l00624"></a><span class="lineno">  624</span>                <span class="keyword">const</span> std::array&lt;Point, 4&gt; simplex, glm::vec3 &amp;ptOnA,</div>
-<div class="line"><a id="l00625" name="l00625"></a><span class="lineno">  625</span>                glm::vec3 &amp;ptOnB);</div>
-<div class="line"><a id="l00626" name="l00626"></a><span class="lineno">  626</span>} <span class="comment">// namespace bezel</span></div>
-<div class="line"><a id="l00627" name="l00627"></a><span class="lineno">  627</span> </div>
-<div class="line"><a id="l00628" name="l00628"></a><span class="lineno">  628</span><span class="keyword">struct </span><a class="code hl_struct" href="struct_contact.html">Contact</a>;</div>
-<div class="line"><a id="l00629" name="l00629"></a><span class="lineno">  629</span><span class="comment"></span> </div>
-<div class="line"><a id="l00630" name="l00630"></a><span class="lineno">  630</span><span class="comment">/**</span></div>
-<div class="line"><a id="l00631" name="l00631"></a><span class="lineno">  631</span><span class="comment"> * @brief Namespace containing specific collision detection functions.</span></div>
-<div class="line"><a id="l00632" name="l00632"></a><span class="lineno">  632</span><span class="comment"> *</span></div>
-<div class="line"><a id="l00633" name="l00633"></a><span class="lineno">  633</span><span class="comment"> */</span></div>
-<div class="foldopen" id="foldopen00634" data-start="{" data-end="}">
-<div class="line"><a id="l00634" name="l00634"></a><span class="lineno"><a class="line" href="namespacebezel_1_1collisions.html">  634</a></span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespacebezel_1_1collisions.html">bezel::collisions</a> {<span class="comment"></span></div>
-<div class="line"><a id="l00635" name="l00635"></a><span class="lineno">  635</span><span class="comment">/**</span></div>
-<div class="line"><a id="l00636" name="l00636"></a><span class="lineno">  636</span><span class="comment"> * @brief Tests static collision between two spheres.</span></div>
-<div class="line"><a id="l00637" name="l00637"></a><span class="lineno">  637</span><span class="comment"> *</span></div>
-<div class="line"><a id="l00638" name="l00638"></a><span class="lineno">  638</span><span class="comment"> * @param sphereA First sphere.</span></div>
-<div class="line"><a id="l00639" name="l00639"></a><span class="lineno">  639</span><span class="comment"> * @param sphereB Second sphere.</span></div>
-<div class="line"><a id="l00640" name="l00640"></a><span class="lineno">  640</span><span class="comment"> * @param posA Position of first sphere.</span></div>
-<div class="line"><a id="l00641" name="l00641"></a><span class="lineno">  641</span><span class="comment"> * @param posB Position of second sphere.</span></div>
-<div class="line"><a id="l00642" name="l00642"></a><span class="lineno">  642</span><span class="comment"> * @param pointOnA Output contact point on first sphere.</span></div>
-<div class="line"><a id="l00643" name="l00643"></a><span class="lineno">  643</span><span class="comment"> * @param pointOnB Output contact point on second sphere.</span></div>
-<div class="line"><a id="l00644" name="l00644"></a><span class="lineno">  644</span><span class="comment"> * @return (bool) True if collision detected, false otherwise.</span></div>
-<div class="line"><a id="l00645" name="l00645"></a><span class="lineno">  645</span><span class="comment"> */</span></div>
-<div class="line"><a id="l00646" name="l00646"></a><span class="lineno"><a class="line" href="namespacebezel_1_1collisions.html#ac22c4b27897eefcbfdcc1513a545e1ab">  646</a></span><span class="keywordtype">bool</span> <a class="code hl_function" href="namespacebezel_1_1collisions.html#ac22c4b27897eefcbfdcc1513a545e1ab">sphereToSphereStatic</a>(<span class="keyword">const</span> <a class="code hl_class" href="class_sphere.html">Sphere</a> *sphereA, <span class="keyword">const</span> <a class="code hl_class" href="class_sphere.html">Sphere</a> *sphereB,</div>
-<div class="line"><a id="l00647" name="l00647"></a><span class="lineno">  647</span>                          <span class="keyword">const</span> glm::vec3 &amp;posA, <span class="keyword">const</span> glm::vec3 &amp;posB,</div>
-<div class="line"><a id="l00648" name="l00648"></a><span class="lineno">  648</span>                          glm::vec3 &amp;pointOnA, glm::vec3 &amp;pointOnB);<span class="comment"></span></div>
-<div class="line"><a id="l00649" name="l00649"></a><span class="lineno">  649</span><span class="comment">/**</span></div>
-<div class="line"><a id="l00650" name="l00650"></a><span class="lineno">  650</span><span class="comment"> * @brief Performs conservative advancement for continuous collision detection.</span></div>
-<div class="line"><a id="l00651" name="l00651"></a><span class="lineno">  651</span><span class="comment"> *</span></div>
-<div class="line"><a id="l00652" name="l00652"></a><span class="lineno">  652</span><span class="comment"> * @param bodyA First body.</span></div>
-<div class="line"><a id="l00653" name="l00653"></a><span class="lineno">  653</span><span class="comment"> * @param bodyB Second body.</span></div>
-<div class="line"><a id="l00654" name="l00654"></a><span class="lineno">  654</span><span class="comment"> * @param dt Delta time.</span></div>
-<div class="line"><a id="l00655" name="l00655"></a><span class="lineno">  655</span><span class="comment"> * @param contact Output contact information.</span></div>
-<div class="line"><a id="l00656" name="l00656"></a><span class="lineno">  656</span><span class="comment"> * @return (bool) True if collision will occur, false otherwise.</span></div>
-<div class="line"><a id="l00657" name="l00657"></a><span class="lineno">  657</span><span class="comment"> */</span></div>
-<div class="line"><a id="l00658" name="l00658"></a><span class="lineno"><a class="line" href="namespacebezel_1_1collisions.html#ad1a004088d7b990c836565793861e573">  658</a></span><span class="keywordtype">bool</span> <a class="code hl_function" href="namespacebezel_1_1collisions.html#ad1a004088d7b990c836565793861e573">conservativeAdvance</a>(std::shared_ptr&lt;Body&gt; bodyA,</div>
-<div class="line"><a id="l00659" name="l00659"></a><span class="lineno">  659</span>                         std::shared_ptr&lt;Body&gt; bodyB, <span class="keywordtype">float</span> dt,</div>
-<div class="line"><a id="l00660" name="l00660"></a><span class="lineno">  660</span>                         <a class="code hl_struct" href="struct_contact.html">Contact</a> &amp;contact);</div>
-<div class="line"><a id="l00661" name="l00661"></a><span class="lineno">  661</span>} <span class="comment">// namespace bezel::collisions</span></div>
+<div class="line"><a id="l00537" name="l00537"></a><span class="lineno">  537</span>                     glm::vec3 &amp;ptOnA, glm::vec3 &amp;ptOnB, glm::vec3 &amp;normalOut,</div>
+<div class="line"><a id="l00538" name="l00538"></a><span class="lineno">  538</span>                     <span class="keywordtype">float</span> &amp;penetrationDepthOut);<span class="comment"></span></div>
+<div class="line"><a id="l00539" name="l00539"></a><span class="lineno">  539</span><span class="comment">/**</span></div>
+<div class="line"><a id="l00540" name="l00540"></a><span class="lineno">  540</span><span class="comment"> * @brief Finds closest points between two bodies using GJK.</span></div>
+<div class="line"><a id="l00541" name="l00541"></a><span class="lineno">  541</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00542" name="l00542"></a><span class="lineno">  542</span><span class="comment"> * @param bodyA First body.</span></div>
+<div class="line"><a id="l00543" name="l00543"></a><span class="lineno">  543</span><span class="comment"> * @param bodyB Second body.</span></div>
+<div class="line"><a id="l00544" name="l00544"></a><span class="lineno">  544</span><span class="comment"> * @param ptOnA Output closest point on body A.</span></div>
+<div class="line"><a id="l00545" name="l00545"></a><span class="lineno">  545</span><span class="comment"> * @param ptOnB Output closest point on body B.</span></div>
+<div class="line"><a id="l00546" name="l00546"></a><span class="lineno">  546</span><span class="comment"> */</span></div>
+<div class="line"><a id="l00547" name="l00547"></a><span class="lineno"><a class="line" href="namespacebezel.html#a305b1a58d3cec1603db15c436d3db399">  547</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="namespacebezel.html#a305b1a58d3cec1603db15c436d3db399">gjkClosestPoints</a>(<span class="keyword">const</span> std::shared_ptr&lt;Body&gt; bodyA,</div>
+<div class="line"><a id="l00548" name="l00548"></a><span class="lineno">  548</span>                      <span class="keyword">const</span> std::shared_ptr&lt;Body&gt; bodyB, glm::vec3 &amp;ptOnA,</div>
+<div class="line"><a id="l00549" name="l00549"></a><span class="lineno">  549</span>                      glm::vec3 &amp;ptOnB);</div>
+<div class="line"><a id="l00550" name="l00550"></a><span class="lineno">  550</span>} <span class="comment">// namespace bezel</span></div>
+<div class="line"><a id="l00551" name="l00551"></a><span class="lineno">  551</span> </div>
+<div class="line"><a id="l00552" name="l00552"></a><span class="lineno">  552</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespacebezel.html">bezel</a> {</div>
+<div class="line"><a id="l00553" name="l00553"></a><span class="lineno">  553</span><span class="comment">// EPA functions</span><span class="comment"></span></div>
+<div class="line"><a id="l00554" name="l00554"></a><span class="lineno">  554</span><span class="comment">/**</span></div>
+<div class="line"><a id="l00555" name="l00555"></a><span class="lineno">  555</span><span class="comment"> * @brief Calculates barycentric coordinates for a point relative to a triangle.</span></div>
+<div class="line"><a id="l00556" name="l00556"></a><span class="lineno">  556</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00557" name="l00557"></a><span class="lineno">  557</span><span class="comment"> * @param s1 First triangle vertex.</span></div>
+<div class="line"><a id="l00558" name="l00558"></a><span class="lineno">  558</span><span class="comment"> * @param s2 Second triangle vertex.</span></div>
+<div class="line"><a id="l00559" name="l00559"></a><span class="lineno">  559</span><span class="comment"> * @param s3 Third triangle vertex.</span></div>
+<div class="line"><a id="l00560" name="l00560"></a><span class="lineno">  560</span><span class="comment"> * @param pt Point to calculate coordinates for.</span></div>
+<div class="line"><a id="l00561" name="l00561"></a><span class="lineno">  561</span><span class="comment"> * @return (glm::vec3) Barycentric coordinates.</span></div>
+<div class="line"><a id="l00562" name="l00562"></a><span class="lineno">  562</span><span class="comment"> */</span></div>
+<div class="line"><a id="l00563" name="l00563"></a><span class="lineno"><a class="line" href="namespacebezel.html#a07bada85ca4efe10a1de746e385b0e6a">  563</a></span>glm::vec3 <a class="code hl_function" href="namespacebezel.html#a07bada85ca4efe10a1de746e385b0e6a">barycentricCoordinates</a>(glm::vec3 &amp;s1, glm::vec3 &amp;s2, glm::vec3 &amp;s3,</div>
+<div class="line"><a id="l00564" name="l00564"></a><span class="lineno">  564</span>                                 <span class="keyword">const</span> glm::vec3 &amp;pt);<span class="comment"></span></div>
+<div class="line"><a id="l00565" name="l00565"></a><span class="lineno">  565</span><span class="comment">/**</span></div>
+<div class="line"><a id="l00566" name="l00566"></a><span class="lineno">  566</span><span class="comment"> * @brief Computes the normal direction of a triangle.</span></div>
+<div class="line"><a id="l00567" name="l00567"></a><span class="lineno">  567</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00568" name="l00568"></a><span class="lineno">  568</span><span class="comment"> * @param tri Triangle to compute normal for.</span></div>
+<div class="line"><a id="l00569" name="l00569"></a><span class="lineno">  569</span><span class="comment"> * @param points Points defining the triangle vertices.</span></div>
+<div class="line"><a id="l00570" name="l00570"></a><span class="lineno">  570</span><span class="comment"> * @return (glm::vec3) Normal direction vector.</span></div>
+<div class="line"><a id="l00571" name="l00571"></a><span class="lineno">  571</span><span class="comment"> */</span></div>
+<div class="line"><a id="l00572" name="l00572"></a><span class="lineno"><a class="line" href="namespacebezel.html#a97f934e1e485a23010282639c1df2c37">  572</a></span>glm::vec3 <a class="code hl_function" href="namespacebezel.html#a97f934e1e485a23010282639c1df2c37">normalDirection</a>(<span class="keyword">const</span> <a class="code hl_struct" href="struct_triangle.html">Triangle</a> &amp;tri,</div>
+<div class="line"><a id="l00573" name="l00573"></a><span class="lineno">  573</span>                          <span class="keyword">const</span> std::vector&lt;Point&gt; &amp;points);<span class="comment"></span></div>
+<div class="line"><a id="l00574" name="l00574"></a><span class="lineno">  574</span><span class="comment">/**</span></div>
+<div class="line"><a id="l00575" name="l00575"></a><span class="lineno">  575</span><span class="comment"> * @brief Calculates signed distance from a point to a triangle.</span></div>
+<div class="line"><a id="l00576" name="l00576"></a><span class="lineno">  576</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00577" name="l00577"></a><span class="lineno">  577</span><span class="comment"> * @param tri Triangle to measure distance to.</span></div>
+<div class="line"><a id="l00578" name="l00578"></a><span class="lineno">  578</span><span class="comment"> * @param pt Point to measure distance from.</span></div>
+<div class="line"><a id="l00579" name="l00579"></a><span class="lineno">  579</span><span class="comment"> * @param points Points defining the triangle vertices.</span></div>
+<div class="line"><a id="l00580" name="l00580"></a><span class="lineno">  580</span><span class="comment"> * @return (float) Signed distance value.</span></div>
+<div class="line"><a id="l00581" name="l00581"></a><span class="lineno">  581</span><span class="comment"> */</span></div>
+<div class="line"><a id="l00582" name="l00582"></a><span class="lineno"><a class="line" href="namespacebezel.html#ad7940fee674aaf38535b1a5d5c494928">  582</a></span><span class="keywordtype">float</span> <a class="code hl_function" href="namespacebezel.html#ad7940fee674aaf38535b1a5d5c494928">signedDistanceToTriangle</a>(<span class="keyword">const</span> <a class="code hl_struct" href="struct_triangle.html">Triangle</a> &amp;tri, <span class="keyword">const</span> glm::vec3 &amp;pt,</div>
+<div class="line"><a id="l00583" name="l00583"></a><span class="lineno">  583</span>                               <span class="keyword">const</span> std::vector&lt;Point&gt; &amp;points);<span class="comment"></span></div>
+<div class="line"><a id="l00584" name="l00584"></a><span class="lineno">  584</span><span class="comment">/**</span></div>
+<div class="line"><a id="l00585" name="l00585"></a><span class="lineno">  585</span><span class="comment"> * @brief Finds the triangle closest to the origin.</span></div>
+<div class="line"><a id="l00586" name="l00586"></a><span class="lineno">  586</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00587" name="l00587"></a><span class="lineno">  587</span><span class="comment"> * @param triangles Vector of triangles to search.</span></div>
+<div class="line"><a id="l00588" name="l00588"></a><span class="lineno">  588</span><span class="comment"> * @param points Points defining the triangle vertices.</span></div>
+<div class="line"><a id="l00589" name="l00589"></a><span class="lineno">  589</span><span class="comment"> * @return (int) Index of the closest triangle.</span></div>
+<div class="line"><a id="l00590" name="l00590"></a><span class="lineno">  590</span><span class="comment"> */</span></div>
+<div class="line"><a id="l00591" name="l00591"></a><span class="lineno"><a class="line" href="namespacebezel.html#af8877774f235c83bd99fa5719c446f08">  591</a></span><span class="keywordtype">int</span> <a class="code hl_function" href="namespacebezel.html#af8877774f235c83bd99fa5719c446f08">closestTriangle</a>(<span class="keyword">const</span> std::vector&lt;Triangle&gt; &amp;triangles,</div>
+<div class="line"><a id="l00592" name="l00592"></a><span class="lineno">  592</span>                    <span class="keyword">const</span> std::vector&lt;Point&gt; &amp;points);<span class="comment"></span></div>
+<div class="line"><a id="l00593" name="l00593"></a><span class="lineno">  593</span><span class="comment">/**</span></div>
+<div class="line"><a id="l00594" name="l00594"></a><span class="lineno">  594</span><span class="comment"> * @brief Removes triangles that face towards a given point.</span></div>
+<div class="line"><a id="l00595" name="l00595"></a><span class="lineno">  595</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00596" name="l00596"></a><span class="lineno">  596</span><span class="comment"> * @param pt Point to test triangle facing.</span></div>
+<div class="line"><a id="l00597" name="l00597"></a><span class="lineno">  597</span><span class="comment"> * @param triangles Vector of triangles to filter.</span></div>
+<div class="line"><a id="l00598" name="l00598"></a><span class="lineno">  598</span><span class="comment"> * @param points Points defining the triangle vertices.</span></div>
+<div class="line"><a id="l00599" name="l00599"></a><span class="lineno">  599</span><span class="comment"> * @return (int) Number of triangles removed.</span></div>
+<div class="line"><a id="l00600" name="l00600"></a><span class="lineno">  600</span><span class="comment"> */</span></div>
+<div class="line"><a id="l00601" name="l00601"></a><span class="lineno"><a class="line" href="namespacebezel.html#ac75032f45d00c918736bf72b73bd1b6d">  601</a></span><span class="keywordtype">int</span> <a class="code hl_function" href="namespacebezel.html#ac75032f45d00c918736bf72b73bd1b6d">removeTrianglesFacingPoint</a>(<span class="keyword">const</span> glm::vec3 &amp;pt,</div>
+<div class="line"><a id="l00602" name="l00602"></a><span class="lineno">  602</span>                               std::vector&lt;Triangle&gt; &amp;triangles,</div>
+<div class="line"><a id="l00603" name="l00603"></a><span class="lineno">  603</span>                               <span class="keyword">const</span> std::vector&lt;Point&gt; &amp;points);<span class="comment"></span></div>
+<div class="line"><a id="l00604" name="l00604"></a><span class="lineno">  604</span><span class="comment">/**</span></div>
+<div class="line"><a id="l00605" name="l00605"></a><span class="lineno">  605</span><span class="comment"> * @brief Finds edges that are not shared between triangles.</span></div>
+<div class="line"><a id="l00606" name="l00606"></a><span class="lineno">  606</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00607" name="l00607"></a><span class="lineno">  607</span><span class="comment"> * @param danglingEdges Output vector of dangling edges.</span></div>
+<div class="line"><a id="l00608" name="l00608"></a><span class="lineno">  608</span><span class="comment"> * @param triangles Vector of triangles to analyze.</span></div>
+<div class="line"><a id="l00609" name="l00609"></a><span class="lineno">  609</span><span class="comment"> */</span></div>
+<div class="line"><a id="l00610" name="l00610"></a><span class="lineno"><a class="line" href="namespacebezel.html#a0808322f15f3829a4897c3bf15906cef">  610</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="namespacebezel.html#a0808322f15f3829a4897c3bf15906cef">findDanglingEdges</a>(std::vector&lt;Edge&gt; &amp;danglingEdges,</div>
+<div class="line"><a id="l00611" name="l00611"></a><span class="lineno">  611</span>                       <span class="keyword">const</span> std::vector&lt;Triangle&gt; &amp;triangles);<span class="comment"></span></div>
+<div class="line"><a id="l00612" name="l00612"></a><span class="lineno">  612</span><span class="comment">/**</span></div>
+<div class="line"><a id="l00613" name="l00613"></a><span class="lineno">  613</span><span class="comment"> * @brief Expands collision detection using EPA algorithm.</span></div>
+<div class="line"><a id="l00614" name="l00614"></a><span class="lineno">  614</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00615" name="l00615"></a><span class="lineno">  615</span><span class="comment"> * @param bodyA First body.</span></div>
+<div class="line"><a id="l00616" name="l00616"></a><span class="lineno">  616</span><span class="comment"> * @param bodyB Second body.</span></div>
+<div class="line"><a id="l00617" name="l00617"></a><span class="lineno">  617</span><span class="comment"> * @param bias Collision bias value.</span></div>
+<div class="line"><a id="l00618" name="l00618"></a><span class="lineno">  618</span><span class="comment"> * @param simplex Initial simplex from GJK.</span></div>
+<div class="line"><a id="l00619" name="l00619"></a><span class="lineno">  619</span><span class="comment"> * @param ptOnA Output closest point on body A.</span></div>
+<div class="line"><a id="l00620" name="l00620"></a><span class="lineno">  620</span><span class="comment"> * @param ptOnB Output closest point on body B.</span></div>
+<div class="line"><a id="l00621" name="l00621"></a><span class="lineno">  621</span><span class="comment"> * @return (float) Penetration depth.</span></div>
+<div class="line"><a id="l00622" name="l00622"></a><span class="lineno">  622</span><span class="comment"> */</span></div>
+<div class="line"><a id="l00623" name="l00623"></a><span class="lineno"><a class="line" href="namespacebezel.html#a302569782e842ff805fac641ff8431da">  623</a></span><span class="keywordtype">float</span> <a class="code hl_function" href="namespacebezel.html#a302569782e842ff805fac641ff8431da">epaExpand</a>(<span class="keyword">const</span> std::shared_ptr&lt;Body&gt; bodyA,</div>
+<div class="line"><a id="l00624" name="l00624"></a><span class="lineno">  624</span>                <span class="keyword">const</span> std::shared_ptr&lt;Body&gt; bodyB, <span class="keyword">const</span> <span class="keywordtype">float</span> bias,</div>
+<div class="line"><a id="l00625" name="l00625"></a><span class="lineno">  625</span>                <span class="keyword">const</span> std::array&lt;Point, 4&gt; simplex, glm::vec3 &amp;ptOnA,</div>
+<div class="line"><a id="l00626" name="l00626"></a><span class="lineno">  626</span>                glm::vec3 &amp;ptOnB, glm::vec3 &amp;normalOut);</div>
+<div class="line"><a id="l00627" name="l00627"></a><span class="lineno">  627</span>} <span class="comment">// namespace bezel</span></div>
+<div class="line"><a id="l00628" name="l00628"></a><span class="lineno">  628</span> </div>
+<div class="line"><a id="l00629" name="l00629"></a><span class="lineno">  629</span><span class="keyword">struct </span><a class="code hl_struct" href="struct_contact.html">Contact</a>;</div>
+<div class="line"><a id="l00630" name="l00630"></a><span class="lineno">  630</span><span class="comment"></span> </div>
+<div class="line"><a id="l00631" name="l00631"></a><span class="lineno">  631</span><span class="comment">/**</span></div>
+<div class="line"><a id="l00632" name="l00632"></a><span class="lineno">  632</span><span class="comment"> * @brief Namespace containing specific collision detection functions.</span></div>
+<div class="line"><a id="l00633" name="l00633"></a><span class="lineno">  633</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00634" name="l00634"></a><span class="lineno">  634</span><span class="comment"> */</span></div>
+<div class="foldopen" id="foldopen00635" data-start="{" data-end="}">
+<div class="line"><a id="l00635" name="l00635"></a><span class="lineno"><a class="line" href="namespacebezel_1_1collisions.html">  635</a></span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespacebezel_1_1collisions.html">bezel::collisions</a> {<span class="comment"></span></div>
+<div class="line"><a id="l00636" name="l00636"></a><span class="lineno">  636</span><span class="comment">/**</span></div>
+<div class="line"><a id="l00637" name="l00637"></a><span class="lineno">  637</span><span class="comment"> * @brief Tests static collision between two spheres.</span></div>
+<div class="line"><a id="l00638" name="l00638"></a><span class="lineno">  638</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00639" name="l00639"></a><span class="lineno">  639</span><span class="comment"> * @param sphereA First sphere.</span></div>
+<div class="line"><a id="l00640" name="l00640"></a><span class="lineno">  640</span><span class="comment"> * @param sphereB Second sphere.</span></div>
+<div class="line"><a id="l00641" name="l00641"></a><span class="lineno">  641</span><span class="comment"> * @param posA Position of first sphere.</span></div>
+<div class="line"><a id="l00642" name="l00642"></a><span class="lineno">  642</span><span class="comment"> * @param posB Position of second sphere.</span></div>
+<div class="line"><a id="l00643" name="l00643"></a><span class="lineno">  643</span><span class="comment"> * @param pointOnA Output contact point on first sphere.</span></div>
+<div class="line"><a id="l00644" name="l00644"></a><span class="lineno">  644</span><span class="comment"> * @param pointOnB Output contact point on second sphere.</span></div>
+<div class="line"><a id="l00645" name="l00645"></a><span class="lineno">  645</span><span class="comment"> * @return (bool) True if collision detected, false otherwise.</span></div>
+<div class="line"><a id="l00646" name="l00646"></a><span class="lineno">  646</span><span class="comment"> */</span></div>
+<div class="line"><a id="l00647" name="l00647"></a><span class="lineno"><a class="line" href="namespacebezel_1_1collisions.html#ac22c4b27897eefcbfdcc1513a545e1ab">  647</a></span><span class="keywordtype">bool</span> <a class="code hl_function" href="namespacebezel_1_1collisions.html#ac22c4b27897eefcbfdcc1513a545e1ab">sphereToSphereStatic</a>(<span class="keyword">const</span> <a class="code hl_class" href="class_sphere.html">Sphere</a> *sphereA, <span class="keyword">const</span> <a class="code hl_class" href="class_sphere.html">Sphere</a> *sphereB,</div>
+<div class="line"><a id="l00648" name="l00648"></a><span class="lineno">  648</span>                          <span class="keyword">const</span> glm::vec3 &amp;posA, <span class="keyword">const</span> glm::vec3 &amp;posB,</div>
+<div class="line"><a id="l00649" name="l00649"></a><span class="lineno">  649</span>                          glm::vec3 &amp;pointOnA, glm::vec3 &amp;pointOnB);<span class="comment"></span></div>
+<div class="line"><a id="l00650" name="l00650"></a><span class="lineno">  650</span><span class="comment">/**</span></div>
+<div class="line"><a id="l00651" name="l00651"></a><span class="lineno">  651</span><span class="comment"> * @brief Performs conservative advancement for continuous collision detection.</span></div>
+<div class="line"><a id="l00652" name="l00652"></a><span class="lineno">  652</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00653" name="l00653"></a><span class="lineno">  653</span><span class="comment"> * @param bodyA First body.</span></div>
+<div class="line"><a id="l00654" name="l00654"></a><span class="lineno">  654</span><span class="comment"> * @param bodyB Second body.</span></div>
+<div class="line"><a id="l00655" name="l00655"></a><span class="lineno">  655</span><span class="comment"> * @param dt Delta time.</span></div>
+<div class="line"><a id="l00656" name="l00656"></a><span class="lineno">  656</span><span class="comment"> * @param contact Output contact information.</span></div>
+<div class="line"><a id="l00657" name="l00657"></a><span class="lineno">  657</span><span class="comment"> * @return (bool) True if collision will occur, false otherwise.</span></div>
+<div class="line"><a id="l00658" name="l00658"></a><span class="lineno">  658</span><span class="comment"> */</span></div>
+<div class="line"><a id="l00659" name="l00659"></a><span class="lineno"><a class="line" href="namespacebezel_1_1collisions.html#ad1a004088d7b990c836565793861e573">  659</a></span><span class="keywordtype">bool</span> <a class="code hl_function" href="namespacebezel_1_1collisions.html#ad1a004088d7b990c836565793861e573">conservativeAdvance</a>(std::shared_ptr&lt;Body&gt; bodyA,</div>
+<div class="line"><a id="l00660" name="l00660"></a><span class="lineno">  660</span>                         std::shared_ptr&lt;Body&gt; bodyB, <span class="keywordtype">float</span> dt,</div>
+<div class="line"><a id="l00661" name="l00661"></a><span class="lineno">  661</span>                         <a class="code hl_struct" href="struct_contact.html">Contact</a> &amp;contact);</div>
+<div class="line"><a id="l00662" name="l00662"></a><span class="lineno">  662</span>} <span class="comment">// namespace bezel::collisions</span></div>
 </div>
-<div class="line"><a id="l00662" name="l00662"></a><span class="lineno">  662</span> </div>
-<div class="line"><a id="l00663" name="l00663"></a><span class="lineno">  663</span><span class="preprocessor">#endif </span><span class="comment">// BEZEL_SHAPE_H</span></div>
+<div class="line"><a id="l00663" name="l00663"></a><span class="lineno">  663</span> </div>
+<div class="line"><a id="l00664" name="l00664"></a><span class="lineno">  664</span><span class="preprocessor">#endif </span><span class="comment">// BEZEL_SHAPE_H</span></div>
 <div class="ttc" id="abounds_8h_html"><div class="ttname"><a href="bounds_8h.html">bounds.h</a></div></div>
 <div class="ttc" id="aclass_bounds_html"><div class="ttname"><a href="class_bounds.html">Bounds</a></div><div class="ttdoc">Class representing an axis-aligned bounding box (AABB) used for collision detection....</div><div class="ttdef"><b>Definition</b> <a href="bounds_8h_source.html#l00023">bounds.h:23</a></div></div>
 <div class="ttc" id="aclass_box_html_a0ccb856b61ba6fa6b884a0bb786b9049"><div class="ttname"><a href="class_box.html#a0ccb856b61ba6fa6b884a0bb786b9049">Box::Box</a></div><div class="ttdeci">Box(std::vector&lt; glm::vec3 &gt; points)</div><div class="ttdoc">Constructs a box from a set of points.</div></div>
@@ -854,15 +855,15 @@ $(function(){initNavTree('shape_8h_source.html','',''); });
 <div class="ttc" id="aclass_sphere_html_ae6f42f0da6679a2f0b4a22681ccccf38"><div class="ttname"><a href="class_sphere.html#ae6f42f0da6679a2f0b4a22681ccccf38">Sphere::radius</a></div><div class="ttdeci">float radius</div><div class="ttdef"><b>Definition</b> <a href="#l00076">shape.h:76</a></div></div>
 <div class="ttc" id="aclass_sphere_html_af4e184f9d33922696fd79a042b789cc6"><div class="ttname"><a href="class_sphere.html#af4e184f9d33922696fd79a042b789cc6">Sphere::getInertiaTensor</a></div><div class="ttdeci">glm::mat3 getInertiaTensor() const override</div></div>
 <div class="ttc" id="aclass_sphere_html_afec42c7082346cc00a5a28ee9b4fcf87"><div class="ttname"><a href="class_sphere.html#afec42c7082346cc00a5a28ee9b4fcf87">Sphere::getType</a></div><div class="ttdeci">ShapeType getType() const override</div><div class="ttdef"><b>Definition</b> <a href="#l00065">shape.h:65</a></div></div>
-<div class="ttc" id="anamespacebezel_1_1collisions_html"><div class="ttname"><a href="namespacebezel_1_1collisions.html">bezel::collisions</a></div><div class="ttdoc">Namespace containing specific collision detection functions.</div><div class="ttdef"><b>Definition</b> <a href="#l00634">shape.h:634</a></div></div>
+<div class="ttc" id="anamespacebezel_1_1collisions_html"><div class="ttname"><a href="namespacebezel_1_1collisions.html">bezel::collisions</a></div><div class="ttdoc">Namespace containing specific collision detection functions.</div><div class="ttdef"><b>Definition</b> <a href="#l00635">shape.h:635</a></div></div>
 <div class="ttc" id="anamespacebezel_1_1collisions_html_ac22c4b27897eefcbfdcc1513a545e1ab"><div class="ttname"><a href="namespacebezel_1_1collisions.html#ac22c4b27897eefcbfdcc1513a545e1ab">bezel::collisions::sphereToSphereStatic</a></div><div class="ttdeci">bool sphereToSphereStatic(const Sphere *sphereA, const Sphere *sphereB, const glm::vec3 &amp;posA, const glm::vec3 &amp;posB, glm::vec3 &amp;pointOnA, glm::vec3 &amp;pointOnB)</div><div class="ttdoc">Tests static collision between two spheres.</div></div>
 <div class="ttc" id="anamespacebezel_1_1collisions_html_ad1a004088d7b990c836565793861e573"><div class="ttname"><a href="namespacebezel_1_1collisions.html#ad1a004088d7b990c836565793861e573">bezel::collisions::conservativeAdvance</a></div><div class="ttdeci">bool conservativeAdvance(std::shared_ptr&lt; Body &gt; bodyA, std::shared_ptr&lt; Body &gt; bodyB, float dt, Contact &amp;contact)</div><div class="ttdoc">Performs conservative advancement for continuous collision detection.</div></div>
-<div class="ttc" id="anamespacebezel_html"><div class="ttname"><a href="namespacebezel.html">bezel</a></div><div class="ttdoc">Namespace containing physics utility functions.</div><div class="ttdef"><b>Definition</b> <a href="body_8h_source.html#l00238">body.h:238</a></div></div>
+<div class="ttc" id="anamespacebezel_html"><div class="ttname"><a href="namespacebezel.html">bezel</a></div><div class="ttdoc">Namespace containing physics utility functions.</div><div class="ttdef"><b>Definition</b> <a href="body_8h_source.html#l00245">body.h:245</a></div></div>
 <div class="ttc" id="anamespacebezel_html_a0027696456cb0bc89fb9b97139c6d79c"><div class="ttname"><a href="namespacebezel.html#a0027696456cb0bc89fb9b97139c6d79c">bezel::isExternal</a></div><div class="ttdeci">bool isExternal(const std::vector&lt; glm::vec3 &gt; &amp;pts, const std::vector&lt; Triangle &gt; &amp;tris, const glm::vec3 &amp;pt)</div><div class="ttdoc">Checks if a point is external to a convex hull.</div></div>
 <div class="ttc" id="anamespacebezel_html_a07bada85ca4efe10a1de746e385b0e6a"><div class="ttname"><a href="namespacebezel.html#a07bada85ca4efe10a1de746e385b0e6a">bezel::barycentricCoordinates</a></div><div class="ttdeci">glm::vec3 barycentricCoordinates(glm::vec3 &amp;s1, glm::vec3 &amp;s2, glm::vec3 &amp;s3, const glm::vec3 &amp;pt)</div><div class="ttdoc">Calculates barycentric coordinates for a point relative to a triangle.</div></div>
 <div class="ttc" id="anamespacebezel_html_a0808322f15f3829a4897c3bf15906cef"><div class="ttname"><a href="namespacebezel.html#a0808322f15f3829a4897c3bf15906cef">bezel::findDanglingEdges</a></div><div class="ttdeci">void findDanglingEdges(std::vector&lt; Edge &gt; &amp;danglingEdges, const std::vector&lt; Triangle &gt; &amp;triangles)</div><div class="ttdoc">Finds edges that are not shared between triangles.</div></div>
 <div class="ttc" id="anamespacebezel_html_a0aad5b1c6ca29629857f2ca49e0f84b9"><div class="ttname"><a href="namespacebezel.html#a0aad5b1c6ca29629857f2ca49e0f84b9">bezel::findFurthestPointInDirection</a></div><div class="ttdeci">int findFurthestPointInDirection(const std::vector&lt; glm::vec3 &gt; &amp;points, const glm::vec3 &amp;dir)</div><div class="ttdoc">Finds the point furthest in a given direction.</div></div>
-<div class="ttc" id="anamespacebezel_html_a1412806f986bec2f27f72d7fc9048418"><div class="ttname"><a href="namespacebezel.html#a1412806f986bec2f27f72d7fc9048418">bezel::epaExpand</a></div><div class="ttdeci">float epaExpand(const std::shared_ptr&lt; Body &gt; bodyA, const std::shared_ptr&lt; Body &gt; bodyB, const float bias, const std::array&lt; Point, 4 &gt; simplex, glm::vec3 &amp;ptOnA, glm::vec3 &amp;ptOnB)</div><div class="ttdoc">Expands collision detection using EPA algorithm.</div></div>
+<div class="ttc" id="anamespacebezel_html_a302569782e842ff805fac641ff8431da"><div class="ttname"><a href="namespacebezel.html#a302569782e842ff805fac641ff8431da">bezel::epaExpand</a></div><div class="ttdeci">float epaExpand(const std::shared_ptr&lt; Body &gt; bodyA, const std::shared_ptr&lt; Body &gt; bodyB, const float bias, const std::array&lt; Point, 4 &gt; simplex, glm::vec3 &amp;ptOnA, glm::vec3 &amp;ptOnB, glm::vec3 &amp;normalOut)</div><div class="ttdoc">Expands collision detection using EPA algorithm.</div></div>
 <div class="ttc" id="anamespacebezel_html_a305b1a58d3cec1603db15c436d3db399"><div class="ttname"><a href="namespacebezel.html#a305b1a58d3cec1603db15c436d3db399">bezel::gjkClosestPoints</a></div><div class="ttdeci">void gjkClosestPoints(const std::shared_ptr&lt; Body &gt; bodyA, const std::shared_ptr&lt; Body &gt; bodyB, glm::vec3 &amp;ptOnA, glm::vec3 &amp;ptOnB)</div><div class="ttdoc">Finds closest points between two bodies using GJK.</div></div>
 <div class="ttc" id="anamespacebezel_html_a32c89abb640227ceb93aba33054b8de9"><div class="ttname"><a href="namespacebezel.html#a32c89abb640227ceb93aba33054b8de9">bezel::takeCofactor</a></div><div class="ttdeci">float takeCofactor(const glm::mat4 &amp;m, int row, int col)</div><div class="ttdoc">Computes a cofactor from a 4x4 matrix.</div><div class="ttdef"><b>Definition</b> <a href="#l00437">shape.h:437</a></div></div>
 <div class="ttc" id="anamespacebezel_html_a333bd47a0665d37b009806bcec4a3430"><div class="ttname"><a href="namespacebezel.html#a333bd47a0665d37b009806bcec4a3430">bezel::raySphere</a></div><div class="ttdeci">bool raySphere(const glm::vec3 &amp;rayOrigin, const glm::vec3 &amp;rayDirection, const glm::vec3 &amp;sphereCenter, const float sphereRadius, float &amp;t1, float &amp;t2)</div><div class="ttdoc">Tests intersection between a ray and a sphere.</div></div>
@@ -875,7 +876,7 @@ $(function(){initNavTree('shape_8h_source.html','',''); });
 <div class="ttc" id="anamespacebezel_html_a730ded0e3e44d4b61455eb816f9843e2"><div class="ttname"><a href="namespacebezel.html#a730ded0e3e44d4b61455eb816f9843e2">bezel::compareSigns</a></div><div class="ttdeci">int compareSigns(float a, float b)</div><div class="ttdoc">Compares the signs of two floating point values.</div></div>
 <div class="ttc" id="anamespacebezel_html_a75e9d076d6bac61a2dae5a371fa53cef"><div class="ttname"><a href="namespacebezel.html#a75e9d076d6bac61a2dae5a371fa53cef">bezel::projectOn2D</a></div><div class="ttdeci">glm::vec3 projectOn2D(const glm::vec3 &amp;s1, const glm::vec3 &amp;s2, const glm::vec3 &amp;s3)</div><div class="ttdoc">Projects points onto a 2D plane.</div></div>
 <div class="ttc" id="anamespacebezel_html_a77d836219f1bf00c051c91e41f597229"><div class="ttname"><a href="namespacebezel.html#a77d836219f1bf00c051c91e41f597229">bezel::numValids</a></div><div class="ttdeci">static int numValids(const glm::vec4 &amp;lambdas)</div><div class="ttdoc">Counts the number of valid lambda values.</div></div>
-<div class="ttc" id="anamespacebezel_html_a7cc2875130bae2d97ac836a25dcdf14c"><div class="ttname"><a href="namespacebezel.html#a7cc2875130bae2d97ac836a25dcdf14c">bezel::gjkIntersection</a></div><div class="ttdeci">bool gjkIntersection(const std::shared_ptr&lt; Body &gt; bodyA, const std::shared_ptr&lt; Body &gt; bodyB, const float bias, glm::vec3 &amp;ptOnA, glm::vec3 &amp;ptOnB)</div><div class="ttdoc">Performs GJK intersection test between two bodies.</div></div>
+<div class="ttc" id="anamespacebezel_html_a7e9d1e1426dfb7baf31d7c229884a2e0"><div class="ttname"><a href="namespacebezel.html#a7e9d1e1426dfb7baf31d7c229884a2e0">bezel::gjkIntersection</a></div><div class="ttdeci">bool gjkIntersection(const std::shared_ptr&lt; Body &gt; bodyA, const std::shared_ptr&lt; Body &gt; bodyB, const float bias, glm::vec3 &amp;ptOnA, glm::vec3 &amp;ptOnB, glm::vec3 &amp;normalOut, float &amp;penetrationDepthOut)</div><div class="ttdoc">Performs GJK intersection test between two bodies.</div></div>
 <div class="ttc" id="anamespacebezel_html_a8b8f024babba217ac75e0b118fa71968"><div class="ttname"><a href="namespacebezel.html#a8b8f024babba217ac75e0b118fa71968">bezel::computeTetrahedron</a></div><div class="ttdeci">void computeTetrahedron(std::vector&lt; glm::vec3 &gt; vert, std::vector&lt; glm::vec3 &gt; &amp;hullPts, std::vector&lt; Triangle &gt; &amp;hullTris)</div><div class="ttdoc">Computes an initial tetrahedron for convex hull construction.</div></div>
 <div class="ttc" id="anamespacebezel_html_a8ca5f642d5181061dc9921c21ea5cb50"><div class="ttname"><a href="namespacebezel.html#a8ca5f642d5181061dc9921c21ea5cb50">bezel::removeInternalPoints</a></div><div class="ttdeci">void removeInternalPoints(std::vector&lt; glm::vec3 &gt; &amp;hullPts, std::vector&lt; Triangle &gt; &amp;hullTris, std::vector&lt; glm::vec3 &gt; &amp;checkPts)</div><div class="ttdoc">Removes internal points from a convex hull.</div></div>
 <div class="ttc" id="anamespacebezel_html_a97d2a0d170ac93a2fea7898a0a9542bb"><div class="ttname"><a href="namespacebezel.html#a97d2a0d170ac93a2fea7898a0a9542bb">bezel::projectOn1D</a></div><div class="ttdeci">glm::vec2 projectOn1D(const glm::vec3 &amp;s1, const glm::vec3 &amp;s2)</div><div class="ttdoc">Projects points onto a 1D line.</div></div>

@@ -42,7 +42,7 @@ var searchData=
   ['getvertices_39',['getVertices',['../class_compound_object.html#a861e922b1025bb7bfa000ab858470185',1,'CompoundObject::getVertices()'],['../class_renderable.html#a699e0a52700234e195a44f7be4e4d531',1,'Renderable::getVertices()'],['../class_core_object.html#adac5522b978d9300dc27bc9233704533',1,'CoreObject::getVertices()']]],
   ['getwindow_40',['getWindow',['../class_component.html#a64a41360decf2e4b88ebf553fadb20e2',1,'Component']]],
   ['gjkclosestpoints_41',['gjkClosestPoints',['../namespacebezel.html#a305b1a58d3cec1603db15c436d3db399',1,'bezel']]],
-  ['gjkintersection_42',['gjkIntersection',['../namespacebezel.html#a7cc2875130bae2d97ac836a25dcdf14c',1,'bezel']]],
+  ['gjkintersection_42',['gjkIntersection',['../namespacebezel.html#a7e9d1e1426dfb7baf31d7c229884a2e0',1,'bezel']]],
   ['gray_43',['gray',['../struct_color.html#aaef2f9d4914957f249ff647c84161d45',1,'Color']]],
   ['green_44',['green',['../struct_color.html#ac506f80f2ec86bc439ff19c0f78063c7',1,'Color']]]
 ];

@@ -200,8 +200,8 @@ Functions</h2></td></tr>
 <tr class="memdesc:aa6c06b2ba27a99e7a57a0ad33b21a26b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sorts valid points in a simplex based on lambda values.  <br /></td></tr>
 <tr class="memitem:a77d836219f1bf00c051c91e41f597229" id="r_a77d836219f1bf00c051c91e41f597229"><td class="memItemLeft" align="right" valign="top">static int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a77d836219f1bf00c051c91e41f597229">numValids</a> (const glm::vec4 &amp;lambdas)</td></tr>
 <tr class="memdesc:a77d836219f1bf00c051c91e41f597229"><td class="mdescLeft">&#160;</td><td class="mdescRight">Counts the number of valid lambda values.  <br /></td></tr>
-<tr class="memitem:a7cc2875130bae2d97ac836a25dcdf14c" id="r_a7cc2875130bae2d97ac836a25dcdf14c"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7cc2875130bae2d97ac836a25dcdf14c">gjkIntersection</a> (const std::shared_ptr&lt; <a class="el" href="class_body.html">Body</a> &gt; bodyA, const std::shared_ptr&lt; <a class="el" href="class_body.html">Body</a> &gt; bodyB, const float bias, glm::vec3 &amp;ptOnA, glm::vec3 &amp;ptOnB)</td></tr>
-<tr class="memdesc:a7cc2875130bae2d97ac836a25dcdf14c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Performs GJK intersection test between two bodies.  <br /></td></tr>
+<tr class="memitem:a7e9d1e1426dfb7baf31d7c229884a2e0" id="r_a7e9d1e1426dfb7baf31d7c229884a2e0"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7e9d1e1426dfb7baf31d7c229884a2e0">gjkIntersection</a> (const std::shared_ptr&lt; <a class="el" href="class_body.html">Body</a> &gt; bodyA, const std::shared_ptr&lt; <a class="el" href="class_body.html">Body</a> &gt; bodyB, const float bias, glm::vec3 &amp;ptOnA, glm::vec3 &amp;ptOnB, glm::vec3 &amp;normalOut, float &amp;penetrationDepthOut)</td></tr>
+<tr class="memdesc:a7e9d1e1426dfb7baf31d7c229884a2e0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Performs GJK intersection test between two bodies.  <br /></td></tr>
 <tr class="memitem:a305b1a58d3cec1603db15c436d3db399" id="r_a305b1a58d3cec1603db15c436d3db399"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a305b1a58d3cec1603db15c436d3db399">gjkClosestPoints</a> (const std::shared_ptr&lt; <a class="el" href="class_body.html">Body</a> &gt; bodyA, const std::shared_ptr&lt; <a class="el" href="class_body.html">Body</a> &gt; bodyB, glm::vec3 &amp;ptOnA, glm::vec3 &amp;ptOnB)</td></tr>
 <tr class="memdesc:a305b1a58d3cec1603db15c436d3db399"><td class="mdescLeft">&#160;</td><td class="mdescRight">Finds closest points between two bodies using GJK.  <br /></td></tr>
 <tr class="memitem:a07bada85ca4efe10a1de746e385b0e6a" id="r_a07bada85ca4efe10a1de746e385b0e6a"><td class="memItemLeft" align="right" valign="top">glm::vec3&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a07bada85ca4efe10a1de746e385b0e6a">barycentricCoordinates</a> (glm::vec3 &amp;s1, glm::vec3 &amp;s2, glm::vec3 &amp;s3, const glm::vec3 &amp;pt)</td></tr>
@@ -216,8 +216,8 @@ Functions</h2></td></tr>
 <tr class="memdesc:ac75032f45d00c918736bf72b73bd1b6d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes triangles that face towards a given point.  <br /></td></tr>
 <tr class="memitem:a0808322f15f3829a4897c3bf15906cef" id="r_a0808322f15f3829a4897c3bf15906cef"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0808322f15f3829a4897c3bf15906cef">findDanglingEdges</a> (std::vector&lt; <a class="el" href="struct_edge.html">Edge</a> &gt; &amp;danglingEdges, const std::vector&lt; <a class="el" href="struct_triangle.html">Triangle</a> &gt; &amp;triangles)</td></tr>
 <tr class="memdesc:a0808322f15f3829a4897c3bf15906cef"><td class="mdescLeft">&#160;</td><td class="mdescRight">Finds edges that are not shared between triangles.  <br /></td></tr>
-<tr class="memitem:a1412806f986bec2f27f72d7fc9048418" id="r_a1412806f986bec2f27f72d7fc9048418"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1412806f986bec2f27f72d7fc9048418">epaExpand</a> (const std::shared_ptr&lt; <a class="el" href="class_body.html">Body</a> &gt; bodyA, const std::shared_ptr&lt; <a class="el" href="class_body.html">Body</a> &gt; bodyB, const float bias, const std::array&lt; <a class="el" href="struct_point.html">Point</a>, 4 &gt; simplex, glm::vec3 &amp;ptOnA, glm::vec3 &amp;ptOnB)</td></tr>
-<tr class="memdesc:a1412806f986bec2f27f72d7fc9048418"><td class="mdescLeft">&#160;</td><td class="mdescRight">Expands collision detection using EPA algorithm.  <br /></td></tr>
+<tr class="memitem:a302569782e842ff805fac641ff8431da" id="r_a302569782e842ff805fac641ff8431da"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a302569782e842ff805fac641ff8431da">epaExpand</a> (const std::shared_ptr&lt; <a class="el" href="class_body.html">Body</a> &gt; bodyA, const std::shared_ptr&lt; <a class="el" href="class_body.html">Body</a> &gt; bodyB, const float bias, const std::array&lt; <a class="el" href="struct_point.html">Point</a>, 4 &gt; simplex, glm::vec3 &amp;ptOnA, glm::vec3 &amp;ptOnB, glm::vec3 &amp;normalOut)</td></tr>
+<tr class="memdesc:a302569782e842ff805fac641ff8431da"><td class="mdescLeft">&#160;</td><td class="mdescRight">Expands collision detection using EPA algorithm.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Namespace containing physics utility functions. </p>
@@ -682,8 +682,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a1412806f986bec2f27f72d7fc9048418" name="a1412806f986bec2f27f72d7fc9048418"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1412806f986bec2f27f72d7fc9048418">&#9670;&#160;</a></span>epaExpand()</h2>
+<a id="a302569782e842ff805fac641ff8431da" name="a302569782e842ff805fac641ff8431da"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a302569782e842ff805fac641ff8431da">&#9670;&#160;</a></span>epaExpand()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -716,7 +716,12 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">glm::vec3 &amp;</td>          <td class="paramname"><span class="paramname"><em>ptOnB</em></span>&#160;)</td>
+          <td class="paramtype">glm::vec3 &amp;</td>          <td class="paramname"><span class="paramname"><em>ptOnB</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">glm::vec3 &amp;</td>          <td class="paramname"><span class="paramname"><em>normalOut</em></span>&#160;)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -956,8 +961,8 @@ Functions</h2></td></tr>
 
 </div>
 </div>
-<a id="a7cc2875130bae2d97ac836a25dcdf14c" name="a7cc2875130bae2d97ac836a25dcdf14c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a7cc2875130bae2d97ac836a25dcdf14c">&#9670;&#160;</a></span>gjkIntersection()</h2>
+<a id="a7e9d1e1426dfb7baf31d7c229884a2e0" name="a7e9d1e1426dfb7baf31d7c229884a2e0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7e9d1e1426dfb7baf31d7c229884a2e0">&#9670;&#160;</a></span>gjkIntersection()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -985,7 +990,17 @@ Functions</h2></td></tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">glm::vec3 &amp;</td>          <td class="paramname"><span class="paramname"><em>ptOnB</em></span>&#160;)</td>
+          <td class="paramtype">glm::vec3 &amp;</td>          <td class="paramname"><span class="paramname"><em>ptOnB</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">glm::vec3 &amp;</td>          <td class="paramname"><span class="paramname"><em>normalOut</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">float &amp;</td>          <td class="paramname"><span class="paramname"><em>penetrationDepthOut</em></span>&#160;)</td>
         </tr>
       </table>
 </div><div class="memdoc">
