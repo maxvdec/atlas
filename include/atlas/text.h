@@ -135,7 +135,7 @@ struct Font {
  * scene.addObject(&myText);
  * ```
  */
-class Text : public GameObject {
+class Text : public UIObject {
   public:
     /**
      * @brief The content of the text to render.

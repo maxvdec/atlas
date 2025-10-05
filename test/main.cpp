@@ -132,7 +132,7 @@ class MainScene : public Scene {
                        {25.0, 25.0}, Color::white());
 
         fpsText.addTraitComponent<Text>(FPSTextUpdater());
-        window.addObject(&fpsText);
+        window.addUIObject(&fpsText);
 
         light = DirectionalLight({-0.75f, -1.0f, 0.0}, Color::white());
         this->addDirectionalLight(&light);

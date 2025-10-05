@@ -20,7 +20,10 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [x] Basic window creation and management
 - [x] Input handling (keyboard, mouse)
 - [x] Basic rendering (shapes, textures)
-- [ ] Simple UI **for alpha**
+- [x] Simple UI **for alpha**
+- [ ] Editor UI
+- [ ] Editor application
+- [ ] Editor runtime
 - [x] Add mesh loading **for alpha**
 - [x] Scene management
 - [x] Physics engine integration (Bezel)
@@ -40,6 +43,15 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [x] CLI for packing applications
 - [ ] Runtime independent of final executable 
 - [ ] Scene packing
+- [ ] Add deferred rendering for better performance with many lights
+- [ ] Add PBR rendering
+- [ ] Add other texture supports (normal, roughness, metallic, ao, etc.)
+- [ ] Add HDR support
+- [ ] Add SSAO
+- [ ] Add cascaded shadow maps for directional lights
+- [ ] Add soft shadows
+- [ ] Add shadows for point lights
+- [ ] Add volumetric lighting
 
 ## Other features planned for the future
 
