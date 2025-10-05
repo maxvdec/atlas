@@ -1,4 +1,4 @@
-# Bezel 0.2.0 (Beta)
+# Bezel 1
 
 Bezel is a physics engine, the one used in Atlas. It is built with C++ and GLM for mathematics. It is designed to be fast, simple and easy to use.
 
