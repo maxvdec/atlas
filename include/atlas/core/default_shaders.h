@@ -1,17 +1,8 @@
-//
-// default_shaders.h
-// As part of the Atlas project
-// Created by Max Van den Eynde in 2025
-// --------------------------------------------------
-// Description: Generated shader source code definitions
-// Copyright (c) 2025 Max Van den Eynde
-//
-
 // This file contains packed shader source code.
 #ifndef ATLAS_GENERATED_SHADERS_H
 #define ATLAS_GENERATED_SHADERS_H
 
-static const char *DEPTH_VERT = R"(
+static const char* DEPTH_VERT = R"(
 #version 330 core
 layout (location = 0) in vec3 aPos;
 
@@ -25,7 +16,7 @@ void main() {
 
 )";
 
-static const char *SKYBOX_FRAG = R"(
+static const char* SKYBOX_FRAG = R"(
 #version 330 core
 out vec4 FragColor;
 
@@ -40,14 +31,14 @@ void main()
 
 )";
 
-static const char *EMPTY_FRAG = R"(
+static const char* EMPTY_FRAG = R"(
 #version 330
 
 void main() {}
 
 )";
 
-static const char *COLOR_FRAG = R"(
+static const char* COLOR_FRAG = R"(
 #version 330 core
 out vec4 FragColor;
 
@@ -59,7 +50,7 @@ void main() {
 
 )";
 
-static const char *PARTICLE_FRAG = R"(
+static const char* PARTICLE_FRAG = R"(
 #version 330 core
 in vec2 fragTexCoord;
 in vec4 fragColor;
@@ -85,11 +76,11 @@ void main() {
 }
 )";
 
-static const char *AMBIENT_PARTICLE_FRAG = R"(
+static const char* AMBIENT_PARTICLE_FRAG = R"(
 
 )";
 
-static const char *FULLSCREEN_FRAG = R"(
+static const char* FULLSCREEN_FRAG = R"(
 #version 330 core
 
 in vec2 TexCoord;
@@ -114,7 +105,7 @@ void main() {
 
 )";
 
-static const char *TEXT_VERT = R"(
+static const char* TEXT_VERT = R"(
 #version 330 core
 layout(location = 0) in vec4 vertex; // <vec2 pos, vec2 texture>
 out vec2 texCoords;
@@ -127,7 +118,7 @@ void main() {
 }
 )";
 
-static const char *MAIN_FRAG = R"(
+static const char* MAIN_FRAG = R"(
 #version 330 core
 out vec4 FragColor;
 
@@ -186,8 +177,22 @@ struct ShadowParameters {
     int textureIndex;
 };
 
+// ----- Textures -----
+uniform sampler2D texture1;
+uniform sampler2D texture2;
+uniform sampler2D texture3;
+uniform sampler2D texture4;
+uniform sampler2D texture5;
+uniform sampler2D texture6;
+uniform sampler2D texture7;
+uniform sampler2D texture8;
+uniform sampler2D texture9;
+uniform sampler2D texture10;
+uniform sampler2D texture11;
+uniform sampler2D texture12;
+uniform sampler2D texture13;
+
 // ----- Uniforms -----
-uniform sampler2D textures[16];
 uniform int textureTypes[16];
 uniform int textureCount;
 
@@ -217,13 +222,59 @@ vec4 enableTextures(int type) {
     int count = 0;
     for (int i = 0; i < textureCount; i++) {
         if (textureTypes[i] == type) { 
-            color += texture(textures[i], TexCoord);
-            count++;
+            if (i == 0) color += texture(texture1, TexCoord);
+            else if (i == 1) color += texture(texture2, TexCoord);
+            else if (i == 2) color += texture(texture3, TexCoord);
+            else if (i == 3) color += texture(texture4, TexCoord);
+            else if (i == 4) color += texture(texture5, TexCoord);
+            else if (i == 5) color += texture(texture6, TexCoord);
+            else if (i == 6) color += texture(texture7, TexCoord);
+            else if (i == 7) color += texture(texture8, TexCoord);
+            else if (i == 8) color += texture(texture9, TexCoord);
+            else if (i == 9) color += texture(texture10, TexCoord);
+            else if (i == 10) color += texture(texture11, TexCoord);
+            else if (i == 11) color += texture(texture12, TexCoord);
+            else if (i == 12) color += texture(texture13, TexCoord);
+            count++; 
         }
     }
     if (count > 0) color /= float(count);
     if (count == 0) return vec4(-1.0);
     return color;
+}
+
+vec2 getTextureDimensions(int textureIndex) {
+    if (textureIndex == 0) return vec2(textureSize(texture1, 0));
+    else if (textureIndex == 1) return vec2(textureSize(texture2, 0));
+    else if (textureIndex == 2) return vec2(textureSize(texture3, 0));
+    else if (textureIndex == 3) return vec2(textureSize(texture4, 0));
+    else if (textureIndex == 4) return vec2(textureSize(texture5, 0));
+    else if (textureIndex == 5) return vec2(textureSize(texture6, 0));
+    else if (textureIndex == 6) return vec2(textureSize(texture7, 0));
+    else if (textureIndex == 7) return vec2(textureSize(texture8, 0));
+    else if (textureIndex == 8) return vec2(textureSize(texture9, 0));
+    else if (textureIndex == 9) return vec2(textureSize(texture10, 0));
+    else if (textureIndex == 10) return vec2(textureSize(texture11, 0));
+    else if (textureIndex == 11) return vec2(textureSize(texture12, 0));
+    else if (textureIndex == 12) return vec2(textureSize(texture13, 0));
+    return vec2(0);
+}
+
+vec4 sampleTextureAt(int textureIndex, vec2 uv) {
+    if (textureIndex == 0) return texture(texture1, uv);
+    else if (textureIndex == 1) return texture(texture2, uv);
+    else if (textureIndex == 2) return texture(texture3, uv);
+    else if (textureIndex == 3) return texture(texture4, uv);
+    else if (textureIndex == 4) return texture(texture5, uv);
+    else if (textureIndex == 5) return texture(texture6, uv);
+    else if (textureIndex == 6) return texture(texture7, uv);
+    else if (textureIndex == 7) return texture(texture8, uv);
+    else if (textureIndex == 8) return texture(texture9, uv);
+    else if (textureIndex == 9) return texture(texture10, uv);
+    else if (textureIndex == 10) return texture(texture11, uv);
+    else if (textureIndex == 11) return texture(texture12, uv);
+    else if (textureIndex == 12) return texture(texture13, uv);
+    return vec4(0.0);
 }
 
 vec3 getSpecularColor() {
@@ -368,7 +419,7 @@ float calculateShadow(ShadowParameters shadowParam, vec4 fragPosLightSpace) {
     float bias = max(biasValue * (1.0 - dot(normal, lightDir)), biasValue);
 
     float shadow = 0.0;
-    vec2 texelSize = 1.0 / textureSize(textures[shadowParam.textureIndex], 0);
+    vec2 texelSize = 1.0 / getTextureDimensions(shadowParam.textureIndex);
     
     float distance = length(cameraPosition - FragPos);
     int kernelSize = int(mix(1.0, 3.0, clamp(distance / 100.0, 0.0, 1.0)));
@@ -376,7 +427,7 @@ float calculateShadow(ShadowParameters shadowParam, vec4 fragPosLightSpace) {
     int sampleCount = 0;
     for(int x = -kernelSize; x <= kernelSize; ++x) {
         for(int y = -kernelSize; y <= kernelSize; ++y) {
-            float pcfDepth = texture(textures[shadowParam.textureIndex], 
+            float pcfDepth = sampleTextureAt(shadowParam.textureIndex, 
                                    projCoords.xy + vec2(x, y) * texelSize).r; 
             shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;        
             sampleCount++;
@@ -398,7 +449,7 @@ float calculateShadowRaw(ShadowParameters shadowParam, vec4 fragPosLightSpace) {
     }
 
     float currentDepth = projCoords.z;
-    float closestDepth = texture(textures[shadowParam.textureIndex], projCoords.xy).r;
+    float closestDepth = sampleTextureAt(shadowParam.textureIndex, projCoords.xy).r;
 
     return currentDepth > closestDepth ? 1.0 : 0.0;
 }
@@ -448,7 +499,7 @@ void main() {
 
 )";
 
-static const char *TEXTURE_VERT = R"(
+static const char* TEXTURE_VERT = R"(
 #version 330 core
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec4 aColor;
@@ -470,7 +521,7 @@ void main() {
 
 )";
 
-static const char *DEBUG_FRAG = R"(
+static const char* DEBUG_FRAG = R"(
 #version 330 core
 out vec4 FragColor;
 
@@ -480,7 +531,7 @@ void main() {
 
 )";
 
-static const char *PARTICLE_VERT = R"(
+static const char* PARTICLE_VERT = R"(
 #version 330 core
 
 // Quad vertex attributes
@@ -525,7 +576,7 @@ void main() {
 }
 )";
 
-static const char *COLOR_VERT = R"(
+static const char* COLOR_VERT = R"(
 #version 330 core
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec4 aColor;
@@ -545,7 +596,7 @@ void main()
 
 )";
 
-static const char *SKYBOX_VERT = R"(
+static const char* SKYBOX_VERT = R"(
 #version 330 core
 layout (location = 0) in vec3 aPos;
 
@@ -563,7 +614,7 @@ void main()
 
 )";
 
-static const char *DEBUG_VERT = R"(
+static const char* DEBUG_VERT = R"(
 #version 330 core
 layout (location = 0) in vec3 aPos;
 
@@ -573,7 +624,7 @@ void main() {
 
 )";
 
-static const char *TEXTURE_FRAG = R"(
+static const char* TEXTURE_FRAG = R"(
 #version 330 core
 out vec4 FragColor;
 
@@ -613,7 +664,7 @@ void main() {
 
 )";
 
-static const char *MAIN_VERT = R"(
+static const char* MAIN_VERT = R"(
 #version 330 core
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec4 aColor;
@@ -640,7 +691,7 @@ void main() {
 
 )";
 
-static const char *TEXT_FRAG = R"(
+static const char* TEXT_FRAG = R"(
 #version 330 core
 
 in vec2 texCoords;
@@ -655,7 +706,7 @@ void main() {
 }
 )";
 
-static const char *FULLSCREEN_VERT = R"(
+static const char* FULLSCREEN_VERT = R"(
 #version 330 core
 
 layout (location = 0) in vec3 aPos;
@@ -672,7 +723,7 @@ void main() {
 
 )";
 
-static const char *AMBIENT_PARTICLE_VERT = R"(
+static const char* AMBIENT_PARTICLE_VERT = R"(
 
 )";
 

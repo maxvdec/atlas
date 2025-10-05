@@ -273,8 +273,10 @@ void CoreObject::render(float dt) {
         for (int i = 0; i < count; i++)
             units[i] = i;
 
-        glUniform1iv(glGetUniformLocation(shaderProgram.programId, "textures"),
-                     count, units);
+        for (int i = 0; i < count; i++) {
+            std::string uniformName = "texture" + std::to_string(i) + "";
+            shaderProgram.setUniform1i(uniformName, i);
+        }
 
         GLint textureTypes[16];
         for (int i = 0; i < count; i++)
