@@ -89,7 +89,7 @@ var NAVTREEINDEX =
 "class_echo.html#ae442275555d00229f69038b3d7dcccb5",
 "default__shaders_8h.html#abf125035e9211c1aefc4395a2243e65e",
 "namespacebezel.html#a305b1a58d3cec1603db15c436d3db399",
-"struct_position2d.html"
+"struct_point_light_constants.html#a9eff07ab25d2421d1fd68d596fba0511"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronization';

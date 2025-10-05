@@ -22,7 +22,9 @@ var texture_8h =
       [ "Specular", "texture_8h.html#a579bf435a05d45b75f553d37ebbb3225a39b0044dd8789d333e7794f359406740", null ],
       [ "Cubemap", "texture_8h.html#a579bf435a05d45b75f553d37ebbb3225a29b142520cd0349c9f7375be4aa848c0", null ],
       [ "Depth", "texture_8h.html#a579bf435a05d45b75f553d37ebbb3225a675056ad1441b6375b2c5abd48c27ef1", null ],
-      [ "DepthCube", "texture_8h.html#a579bf435a05d45b75f553d37ebbb3225a5bd62f0d243a561d11ee9330406ee7f6", null ]
+      [ "DepthCube", "texture_8h.html#a579bf435a05d45b75f553d37ebbb3225a5bd62f0d243a561d11ee9330406ee7f6", null ],
+      [ "Normal", "texture_8h.html#a579bf435a05d45b75f553d37ebbb3225a960b44c579bc2f6818d2daaf9e4c16f0", null ],
+      [ "Parallax", "texture_8h.html#a579bf435a05d45b75f553d37ebbb3225ac626285221f3850191ea3ce4b917779c", null ]
     ] ],
     [ "TextureWrappingMode", "texture_8h.html#a2b9a75ec8d4f3f3f2e9150d48d065141", [
       [ "Repeat", "texture_8h.html#a2b9a75ec8d4f3f3f2e9150d48d065141a7020426cfb0a204051be4b3053d2acc8", null ],

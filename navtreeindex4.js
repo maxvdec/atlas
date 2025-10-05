@@ -1,5 +1,7 @@
 var NAVTREEINDEX4 =
 {
+"struct_point_light_constants.html#a9eff07ab25d2421d1fd68d596fba0511":[2,0,41,2],
+"struct_point_light_constants.html#ad4813c3455228ef54e5f4108450720d6":[2,0,41,0],
 "struct_position2d.html":[2,0,42],
 "struct_position2d.html#a144f6aa4f4606db0e30962c050135e36":[2,0,42,1],
 "struct_position2d.html#a17d3d6f0734e0a07dd24d3e25dd0345f":[2,0,42,3],
@@ -170,6 +172,8 @@ var NAVTREEINDEX4 =
 "texture_8h.html#a579bf435a05d45b75f553d37ebbb3225a39b0044dd8789d333e7794f359406740":[3,0,1,0,9,9,1],
 "texture_8h.html#a579bf435a05d45b75f553d37ebbb3225a5bd62f0d243a561d11ee9330406ee7f6":[3,0,1,0,9,9,4],
 "texture_8h.html#a579bf435a05d45b75f553d37ebbb3225a675056ad1441b6375b2c5abd48c27ef1":[3,0,1,0,9,9,3],
+"texture_8h.html#a579bf435a05d45b75f553d37ebbb3225a960b44c579bc2f6818d2daaf9e4c16f0":[3,0,1,0,9,9,5],
+"texture_8h.html#a579bf435a05d45b75f553d37ebbb3225ac626285221f3850191ea3ce4b917779c":[3,0,1,0,9,9,6],
 "texture_8h.html#a579bf435a05d45b75f553d37ebbb3225acb5feb1b7314637725a2e73bdc9f7295":[3,0,1,0,9,9,0],
 "texture_8h.html#a639c740f69368f9fe25a4f7409a16384":[3,0,1,0,9,7],
 "texture_8h.html#a639c740f69368f9fe25a4f7409a16384a2da82a3c0f89c3328ed03785fbb6f3e8":[3,0,1,0,9,7,3],
