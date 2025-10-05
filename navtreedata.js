@@ -87,9 +87,9 @@ var NAVTREEINDEX =
 [
 "annotated.html",
 "class_game_object.html#a41b29fdd73be47db5835fc3822b6afa6",
-"functions_func_b.html",
-"namespacebezel.html#adf0c21df6db9a024caa808fed711f38a",
-"struct_resource.html"
+"functions.html",
+"namespacebezel.html#aa48ccc3245742682cf07e97b0e5b0d5d",
+"struct_pseudo_body.html#a10f7a0a031d7a834c586a950e0918347"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronization';

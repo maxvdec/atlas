@@ -6,6 +6,7 @@ var object_8h =
     [ "ParticleSettings", "struct_particle_settings.html", "struct_particle_settings" ],
     [ "Particle", "struct_particle.html", "struct_particle" ],
     [ "ParticleEmitter", "class_particle_emitter.html", "class_particle_emitter" ],
+    [ "Model", "class_model.html", "class_model" ],
     [ "BufferIndex", "object_8h.html#aeb26ea7f5543f044d6c033fcf9b06dcc", null ],
     [ "Index", "object_8h.html#ad53d6229d7ec28555a9c9c2fd9abf773", null ],
     [ "TextureCoordinate", "object_8h.html#a792b027205b8d852587fcb60390c137c", null ],

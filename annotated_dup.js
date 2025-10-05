@@ -33,6 +33,7 @@ var annotated_dup =
     [ "LayoutDescriptor", "struct_layout_descriptor.html", "struct_layout_descriptor" ],
     [ "Light", "struct_light.html", "struct_light" ],
     [ "Material", "struct_material.html", "struct_material" ],
+    [ "Model", "class_model.html", "class_model" ],
     [ "Monitor", "class_monitor.html", "class_monitor" ],
     [ "MousePacket", "struct_mouse_packet.html", "struct_mouse_packet" ],
     [ "MouseScrollPacket", "struct_mouse_scroll_packet.html", "struct_mouse_scroll_packet" ],

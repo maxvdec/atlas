@@ -244,7 +244,7 @@ Creating a Scene</h2>
 <div class="line">    window.<a class="code hl_function" href="class_window.html#ae137ec42ddc87d666d49661484410091">run</a>();</div>
 <div class="line">    <span class="keywordflow">return</span> 0;</div>
 <div class="line">}</div>
-<div class="ttc" id="aclass_core_object_html"><div class="ttname"><a href="class_core_object.html">CoreObject</a></div><div class="ttdoc">Represents a 3D object in the scene, including its geometry, material and every interaction with the ...</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00172">object.h:172</a></div></div>
+<div class="ttc" id="aclass_core_object_html"><div class="ttname"><a href="class_core_object.html">CoreObject</a></div><div class="ttdoc">Represents a 3D object in the scene, including its geometry, material and every interaction with the ...</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00174">object.h:174</a></div></div>
 <div class="ttc" id="aclass_core_object_html_a983e3a31e6bc75c91faee51758702dc3"><div class="ttname"><a href="class_core_object.html#a983e3a31e6bc75c91faee51758702dc3">CoreObject::rotate</a></div><div class="ttdeci">void rotate(const Rotation3d &amp;deltaRotation) override</div><div class="ttdoc">Rotates the object by a certain amount.</div></div>
 <div class="ttc" id="aclass_scene_html"><div class="ttname"><a href="class_scene.html">Scene</a></div><div class="ttdoc">Abstract class that represents a 3D scene. It contains all lights and objects that are going to be re...</div><div class="ttdef"><b>Definition</b> <a href="scene_8h_source.html#l00044">scene.h:44</a></div></div>
 <div class="ttc" id="aclass_scene_html_a9d87607c6e6a93d1bfef10ed1cfdc667"><div class="ttname"><a href="class_scene.html#a9d87607c6e6a93d1bfef10ed1cfdc667">Scene::initialize</a></div><div class="ttdeci">virtual void initialize(Window &amp;window)=0</div><div class="ttdoc">Function that initializes the scene. This method is called once by the Window class.</div></div>
@@ -571,7 +571,7 @@ Adding UI</h1>
 <div class="ttc" id="aclass_trait_component_html_a5dcb86c60e6c21af3bc0a2eabde32e65"><div class="ttname"><a href="class_trait_component.html#a5dcb86c60e6c21af3bc0a2eabde32e65">TraitComponent::updateComponent</a></div><div class="ttdeci">virtual void updateComponent(T *object)</div><div class="ttdoc">Updates the component with a typed reference to the GameObject it is bound to.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00129">component.h:129</a></div></div>
 <div class="ttc" id="aclass_window_html_a028584d54ccba5834bf12150a4ca6ffe"><div class="ttname"><a href="class_window.html#a028584d54ccba5834bf12150a4ca6ffe">Window::getFramesPerSecond</a></div><div class="ttdeci">float getFramesPerSecond()</div><div class="ttdoc">Gets the current frames per second.</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00339">window.h:339</a></div></div>
 </div><!-- fragment --><p>And we can now apply this component to our text object from our <span class="tt">initialize</span> function in our scene:</p>
-<div class="fragment"><div class="line">fpsText.<a class="code hl_function" href="class_game_object.html#adf2a97be4a33d502eae78cf35f0b943e">addTraitComponent</a>&lt;FPSTextUpdater&gt;(FPSTextUpdater());</div>
+<div class="fragment"><div class="line">fpsText.<a class="code hl_function" href="class_game_object.html#adf2a97be4a33d502eae78cf35f0b943e">addTraitComponent</a>&lt;<a class="code hl_class" href="class_text.html">Text</a>&gt;(FPSTextUpdater());</div>
 <div class="ttc" id="aclass_game_object_html_adf2a97be4a33d502eae78cf35f0b943e"><div class="ttname"><a href="class_game_object.html#adf2a97be4a33d502eae78cf35f0b943e">GameObject::addTraitComponent</a></div><div class="ttdeci">void addTraitComponent(T &amp;&amp;existing)</div><div class="ttdoc">Adds a trait component to the object. A trait component is a component that is tied to a specific typ...</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00257">component.h:257</a></div></div>
 </div><!-- fragment --><h1 class="doxsection"><a class="anchor" id="autotoc_md19"></a>
 Conclusion</h1>
@@ -603,6 +603,14 @@ Conclusion</h1>
 <div class="line">        sphere.<a class="code hl_function" href="class_core_object.html#a12d021716ccc8a72b2f38567579ecf10">initialize</a>();</div>
 <div class="line">        sphere.<a class="code hl_variable" href="class_game_object.html#af69e678688bfef2c0bba4aa78085c8a8">body</a>-&gt;applyMass(0); <span class="comment">// Make it static</span></div>
 <div class="line">        this-&gt;addObject(&amp;sphere);</div>
+<div class="line">    }</div>
+<div class="line">};</div>
+<div class="line"> </div>
+<div class="line"><span class="keyword">class </span>FPSTextUpdater : <span class="keyword">public</span> <a class="code hl_class" href="class_trait_component.html">TraitComponent</a>&lt;Text&gt; {</div>
+<div class="line">  <span class="keyword">public</span>:</div>
+<div class="line">    <span class="keywordtype">void</span> <a class="code hl_function" href="class_trait_component.html#a5dcb86c60e6c21af3bc0a2eabde32e65">updateComponent</a>(<a class="code hl_enumvalue" href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82a9dffbf69ffba8bc38bc4e01abf4b1675">Text</a> *<span class="keywordtype">object</span>)<span class="keyword"> override </span>{</div>
+<div class="line">        <span class="keywordtype">int</span> fps = <span class="keyword">static_cast&lt;</span><span class="keywordtype">int</span><span class="keyword">&gt;</span>(<a class="code hl_function" href="class_component.html#a64a41360decf2e4b88ebf553fadb20e2">getWindow</a>()-&gt;<a class="code hl_function" href="class_window.html#a028584d54ccba5834bf12150a4ca6ffe">getFramesPerSecond</a>());</div>
+<div class="line">        <span class="keywordtype">object</span>-&gt;content = <span class="stringliteral">&quot;FPS: &quot;</span> + std::to_string(fps);</div>
 <div class="line">    }</div>
 <div class="line">};</div>
 <div class="line"> </div>
@@ -677,6 +685,7 @@ Conclusion</h1>
 <div class="line">        fpsText = <a class="code hl_enumvalue" href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82a9dffbf69ffba8bc38bc4e01abf4b1675">Text</a>(<span class="stringliteral">&quot;FPS: 0&quot;</span>, <a class="code hl_function" href="struct_font.html#aa7480b6cce6947e2180384e9b7a80c0c">Font::fromResource</a>(<span class="stringliteral">&quot;Arial&quot;</span>, fontResource, 24),</div>
 <div class="line">                       {25.0, 25.0}, <a class="code hl_function" href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a>());</div>
 <div class="line"> </div>
+<div class="line">        fpsText.<a class="code hl_function" href="class_game_object.html#adf2a97be4a33d502eae78cf35f0b943e">addTraitComponent</a>&lt;<a class="code hl_enumvalue" href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82a9dffbf69ffba8bc38bc4e01abf4b1675">Text</a>&gt;(FPSTextUpdater());</div>
 <div class="line">        window.<a class="code hl_function" href="class_window.html#a884249b8d0ff2d1f1c1c0b3c2a2ca7ee">addObject</a>(&amp;fpsText);</div>
 <div class="line"> </div>
 <div class="line">        light = DirectionalLight({-0.75f, -1.0f, 0.0}, <a class="code hl_function" href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a>());</div>

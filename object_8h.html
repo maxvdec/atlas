@@ -125,7 +125,9 @@ $(function(){initNavTree('object_8h.html','',''); });
 <div class="contents">
 <div class="textblock"><code>#include &quot;<a class="el" href="component_8h_source.html">atlas/component.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="body_8h_source.html">bezel/body.h</a>&quot;</code><br />
+<code>#include &lt;any&gt;</code><br />
 <code>#include &lt;memory&gt;</code><br />
+<code>#include &lt;string&gt;</code><br />
 <code>#include &lt;type_traits&gt;</code><br />
 <code>#include &quot;<a class="el" href="shader_8h_source.html">atlas/core/shader.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="renderable_8h_source.html">atlas/core/renderable.h</a>&quot;</code><br />
@@ -152,6 +154,7 @@ Classes</h2></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Structure representing a single particle in a particle system.  <a href="struct_particle.html#details">More...</a><br /></td></tr>
 <tr class="memitem:ParticleEmitter" id="r_ParticleEmitter"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_particle_emitter.html">ParticleEmitter</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Class representing a particle emitter in the game. It emits and manages particles.  <a href="class_particle_emitter.html#details">More...</a><br /></td></tr>
+<tr class="memitem:Model" id="r_Model"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_model.html">Model</a></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-typedef-members" class="groupheader"><a id="typedef-members" name="typedef-members"></a>
 Typedefs</h2></td></tr>
@@ -201,7 +204,7 @@ Functions</h2></td></tr>
 
 <p>Represents a buffer index. </p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00126">126</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00128">128</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
 
 </div>
 </div>
@@ -219,7 +222,7 @@ Functions</h2></td></tr>
 
 <p>Represents an index in a buffer. </p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00131">131</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00133">133</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
 
 </div>
 </div>
@@ -237,7 +240,7 @@ Functions</h2></td></tr>
 
 <p>Alias that represents a texture coordinate in 2D space. </p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00033">33</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00035">35</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
 
 </div>
 </div>
@@ -270,21 +273,21 @@ Functions</h2></td></tr>
 </td></tr>
 </table>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00439">439</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  439</span>                                {<span class="comment"></span></div>
-<div class="line"><span class="lineno">  440</span><span class="comment">    /**</span></div>
-<div class="line"><span class="lineno">  441</span><span class="comment">     * @brief Emission type for fountain-like particle effects.</span></div>
-<div class="line"><span class="lineno">  442</span><span class="comment">     *</span></div>
-<div class="line"><span class="lineno">  443</span><span class="comment">     */</span></div>
-<div class="line"><span class="lineno">  444</span>    <a class="code hl_enumvalue" href="#a5d2a36527b762e139f0a5cefd66b3191a7941ce00c308ef62cd69af52664e9788">Fountain</a>,<span class="comment"></span></div>
-<div class="line"><span class="lineno">  445</span><span class="comment">    /**</span></div>
-<div class="line"><span class="lineno">  446</span><span class="comment">     * @brief Emission type for snow-like particle effects.</span></div>
-<div class="line"><span class="lineno">  447</span><span class="comment">     *</span></div>
-<div class="line"><span class="lineno">  448</span><span class="comment">     */</span></div>
-<div class="line"><span class="lineno">  449</span>    <a class="code hl_enumvalue" href="#a5d2a36527b762e139f0a5cefd66b3191aed8e37bad13d76c6dbeb58152440b41e">Ambient</a></div>
-<div class="line"><span class="lineno">  450</span>};</div>
-<div class="ttc" id="aobject_8h_html_a5d2a36527b762e139f0a5cefd66b3191a7941ce00c308ef62cd69af52664e9788"><div class="ttname"><a href="#a5d2a36527b762e139f0a5cefd66b3191a7941ce00c308ef62cd69af52664e9788">ParticleEmissionType::Fountain</a></div><div class="ttdeci">@ Fountain</div><div class="ttdoc">Emission type for fountain-like particle effects.</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00444">object.h:444</a></div></div>
-<div class="ttc" id="aobject_8h_html_a5d2a36527b762e139f0a5cefd66b3191aed8e37bad13d76c6dbeb58152440b41e"><div class="ttname"><a href="#a5d2a36527b762e139f0a5cefd66b3191aed8e37bad13d76c6dbeb58152440b41e">ParticleEmissionType::Ambient</a></div><div class="ttdeci">@ Ambient</div><div class="ttdoc">Emission type for snow-like particle effects.</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00449">object.h:449</a></div></div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00441">441</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  441</span>                                {<span class="comment"></span></div>
+<div class="line"><span class="lineno">  442</span><span class="comment">    /**</span></div>
+<div class="line"><span class="lineno">  443</span><span class="comment">     * @brief Emission type for fountain-like particle effects.</span></div>
+<div class="line"><span class="lineno">  444</span><span class="comment">     *</span></div>
+<div class="line"><span class="lineno">  445</span><span class="comment">     */</span></div>
+<div class="line"><span class="lineno">  446</span>    <a class="code hl_enumvalue" href="#a5d2a36527b762e139f0a5cefd66b3191a7941ce00c308ef62cd69af52664e9788">Fountain</a>,<span class="comment"></span></div>
+<div class="line"><span class="lineno">  447</span><span class="comment">    /**</span></div>
+<div class="line"><span class="lineno">  448</span><span class="comment">     * @brief Emission type for snow-like particle effects.</span></div>
+<div class="line"><span class="lineno">  449</span><span class="comment">     *</span></div>
+<div class="line"><span class="lineno">  450</span><span class="comment">     */</span></div>
+<div class="line"><span class="lineno">  451</span>    <a class="code hl_enumvalue" href="#a5d2a36527b762e139f0a5cefd66b3191aed8e37bad13d76c6dbeb58152440b41e">Ambient</a></div>
+<div class="line"><span class="lineno">  452</span>};</div>
+<div class="ttc" id="aobject_8h_html_a5d2a36527b762e139f0a5cefd66b3191a7941ce00c308ef62cd69af52664e9788"><div class="ttname"><a href="#a5d2a36527b762e139f0a5cefd66b3191a7941ce00c308ef62cd69af52664e9788">ParticleEmissionType::Fountain</a></div><div class="ttdeci">@ Fountain</div><div class="ttdoc">Emission type for fountain-like particle effects.</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00446">object.h:446</a></div></div>
+<div class="ttc" id="aobject_8h_html_a5d2a36527b762e139f0a5cefd66b3191aed8e37bad13d76c6dbeb58152440b41e"><div class="ttname"><a href="#a5d2a36527b762e139f0a5cefd66b3191aed8e37bad13d76c6dbeb58152440b41e">ParticleEmissionType::Ambient</a></div><div class="ttdeci">@ Ambient</div><div class="ttdoc">Emission type for snow-like particle effects.</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00451">object.h:451</a></div></div>
 </div><!-- fragment -->
 </div>
 </div>

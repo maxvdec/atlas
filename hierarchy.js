@@ -32,6 +32,7 @@ var hierarchy =
     [ "LayoutDescriptor", "struct_layout_descriptor.html", null ],
     [ "Light", "struct_light.html", null ],
     [ "Material", "struct_material.html", null ],
+    [ "Model", "class_model.html", null ],
     [ "Monitor", "class_monitor.html", null ],
     [ "MousePacket", "struct_mouse_packet.html", null ],
     [ "MouseScrollPacket", "struct_mouse_scroll_packet.html", null ],
