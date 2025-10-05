@@ -1,5 +1,12 @@
 var NAVTREEINDEX2 =
 {
+"dir_d44c64559bbebec7f509842c48db8b23.html":[3,0,1],
+"dir_ef3b2545113449f8f25e623a543d64e3.html":[3,0,0,0],
+"effect_8h.html":[3,0,1,2,1],
+"effect_8h_source.html":[3,0,1,2,1],
+"files.html":[3,0],
+"finewave_2audio_8h.html":[3,0,1,2,0],
+"finewave_2audio_8h_source.html":[3,0,1,2,0],
 "functions.html":[2,3,0],
 "functions.html":[2,3,0,0],
 "functions_b.html":[2,3,0,1],
@@ -242,12 +249,5 @@ var NAVTREEINDEX2 =
 "namespacebezel.html#a730ded0e3e44d4b61455eb816f9843e2":[1,0,0,10],
 "namespacebezel.html#a74244934d9413fece5cc0bd29b5213d5":[1,0,0,37],
 "namespacebezel.html#a75e9d076d6bac61a2dae5a371fa53cef":[1,0,0,29],
-"namespacebezel.html#a77d836219f1bf00c051c91e41f597229":[1,0,0,27],
-"namespacebezel.html#a7cc2875130bae2d97ac836a25dcdf14c":[1,0,0,21],
-"namespacebezel.html#a8b8f024babba217ac75e0b118fa71968":[1,0,0,11],
-"namespacebezel.html#a8ca5f642d5181061dc9921c21ea5cb50":[1,0,0,32],
-"namespacebezel.html#a97d2a0d170ac93a2fea7898a0a9542bb":[1,0,0,28],
-"namespacebezel.html#a97f934e1e485a23010282639c1df2c37":[1,0,0,26],
-"namespacebezel.html#a981738541d073c0a6a1a043a10b6e167":[1,0,0,15],
-"namespacebezel.html#a9e905e49ffbb30261540da623bee09ba":[1,0,0,22]
+"namespacebezel.html#a77d836219f1bf00c051c91e41f597229":[1,0,0,27]
 };

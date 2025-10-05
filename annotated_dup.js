@@ -66,6 +66,8 @@ var annotated_dup =
     [ "TextureParameters", "struct_texture_parameters.html", "struct_texture_parameters" ],
     [ "TraitComponent", "class_trait_component.html", "class_trait_component" ],
     [ "Triangle", "struct_triangle.html", "struct_triangle" ],
+    [ "UIObject", "class_u_i_object.html", null ],
+    [ "UIView", "class_u_i_view.html", "class_u_i_view" ],
     [ "VertexShader", "struct_vertex_shader.html", "struct_vertex_shader" ],
     [ "VideoMode", "struct_video_mode.html", "struct_video_mode" ],
     [ "Window", "class_window.html", "class_window" ],

@@ -7,6 +7,7 @@ var class_window =
     [ "addPreferencedObject", "class_window.html#a99712c4adeb4d4a1b9df61ed94c44655", null ],
     [ "addPreludeObject", "class_window.html#a0a0b2f9cf1148457729000dcdb258819", null ],
     [ "addRenderTarget", "class_window.html#a6ef4325c239298eae3df3141d14c93a7", null ],
+    [ "addUIObject", "class_window.html#af8ae14b934c6a7f5e661e0f47e6e91be", null ],
     [ "captureMouse", "class_window.html#af9987c317f1af799d198ddb0ecd9e72b", null ],
     [ "close", "class_window.html#a35055c04498121d39741bfcd5082705b", null ],
     [ "deactivateDebug", "class_window.html#a78e2681c90e6b058f135ca70e12eb2fe", null ],

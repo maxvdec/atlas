@@ -49,7 +49,10 @@ var hierarchy =
         [ "CompoundObject", "class_compound_object.html", null ],
         [ "CoreObject", "class_core_object.html", null ],
         [ "ParticleEmitter", "class_particle_emitter.html", null ],
-        [ "Text", "class_text.html", null ]
+        [ "UIObject", "class_u_i_object.html", [
+          [ "Text", "class_text.html", null ],
+          [ "UIView", "class_u_i_view.html", null ]
+        ] ]
       ] ],
       [ "RenderTarget", "class_render_target.html", null ],
       [ "Skybox", "class_skybox.html", null ]
