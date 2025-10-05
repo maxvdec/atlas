@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Pre-Alpha 0.3.0</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 1</span>
    </div>
   </td>
  </tr>
@@ -228,21 +228,26 @@ $(function(){initNavTree('scene_8h_source.html','',''); });
 <div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span><span class="comment">     * @param light The spotlight to add.</span></div>
 <div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span><span class="comment">     */</span></div>
 <div class="line"><a id="l00107" name="l00107"></a><span class="lineno"><a class="line" href="class_scene.html#a0711374dffe3e30acfcddd32c17b0cd7">  107</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_scene.html#a0711374dffe3e30acfcddd32c17b0cd7">addSpotlight</a>(<a class="code hl_struct" href="struct_spotlight.html">Spotlight</a> *light) { spotlights.push_back(light); }</div>
-<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span> </div>
-<div class="line"><a id="l00109" name="l00109"></a><span class="lineno"><a class="line" href="class_scene.html#acccf622706b4067fd6d313ebf4075f1a">  109</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_scene.html#acccf622706b4067fd6d313ebf4075f1a">setSkybox</a>(<a class="code hl_class" href="class_skybox.html">Skybox</a> *newSkybox) { skybox = newSkybox; }</div>
-<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span> </div>
-<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>  <span class="keyword">private</span>:</div>
-<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>    std::vector&lt;DirectionalLight *&gt; directionalLights;</div>
-<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>    std::vector&lt;Light *&gt; pointLights;</div>
-<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>    std::vector&lt;Spotlight *&gt; spotlights;</div>
-<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>    <a class="code hl_class" href="class_skybox.html">Skybox</a> *skybox = <span class="keyword">nullptr</span>;</div>
-<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span> </div>
-<div class="line"><a id="l00117" name="l00117"></a><span class="lineno"><a class="line" href="class_scene.html#ac9dbe2a378024e3a3c417b4cb50adbb3">  117</a></span>    <span class="keyword">friend</span> <span class="keyword">class </span><a class="code hl_friend" href="class_scene.html#ac9dbe2a378024e3a3c417b4cb50adbb3">CoreObject</a>;</div>
-<div class="line"><a id="l00118" name="l00118"></a><span class="lineno"><a class="line" href="class_scene.html#a553f958a25683445088050a69d3de8e9">  118</a></span>    <span class="keyword">friend</span> <span class="keyword">class </span><a class="code hl_friend" href="class_scene.html#a553f958a25683445088050a69d3de8e9">Window</a>;</div>
-<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>};</div>
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span><span class="comment"></span> </div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span><span class="comment">    /**</span></div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span><span class="comment">     * @brief Set the Skybox object</span></div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span><span class="comment">     *</span></div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span><span class="comment">     * @param newSkybox The new skybox to set.</span></div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span><span class="comment">     */</span></div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno"><a class="line" href="class_scene.html#acccf622706b4067fd6d313ebf4075f1a">  114</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_scene.html#acccf622706b4067fd6d313ebf4075f1a">setSkybox</a>(<a class="code hl_class" href="class_skybox.html">Skybox</a> *newSkybox) { skybox = newSkybox; }</div>
+<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span> </div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>  <span class="keyword">private</span>:</div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>    std::vector&lt;DirectionalLight *&gt; directionalLights;</div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>    std::vector&lt;Light *&gt; pointLights;</div>
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span>    std::vector&lt;Spotlight *&gt; spotlights;</div>
+<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>    <a class="code hl_class" href="class_skybox.html">Skybox</a> *skybox = <span class="keyword">nullptr</span>;</div>
+<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span> </div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno"><a class="line" href="class_scene.html#ac9dbe2a378024e3a3c417b4cb50adbb3">  122</a></span>    <span class="keyword">friend</span> <span class="keyword">class </span><a class="code hl_friend" href="class_scene.html#ac9dbe2a378024e3a3c417b4cb50adbb3">CoreObject</a>;</div>
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno"><a class="line" href="class_scene.html#a553f958a25683445088050a69d3de8e9">  123</a></span>    <span class="keyword">friend</span> <span class="keyword">class </span><a class="code hl_friend" href="class_scene.html#a553f958a25683445088050a69d3de8e9">Window</a>;</div>
+<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>};</div>
 </div>
-<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span> </div>
-<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span><span class="preprocessor">#endif </span><span class="comment">// ATLAS_SCENE_H</span></div>
+<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span> </div>
+<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span><span class="preprocessor">#endif </span><span class="comment">// ATLAS_SCENE_H</span></div>
 <div class="ttc" id="abody_8h_html"><div class="ttname"><a href="body_8h.html">body.h</a></div></div>
 <div class="ttc" id="aclass_directional_light_html"><div class="ttname"><a href="class_directional_light.html">DirectionalLight</a></div><div class="ttdoc">Structure representing a directional light in a scene. A directional light emits light in a specific ...</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00226">light.h:226</a></div></div>
 <div class="ttc" id="aclass_scene_html"><div class="ttname"><a href="class_scene.html">Scene</a></div><div class="ttdoc">Abstract class that represents a 3D scene. It contains all lights and objects that are going to be re...</div><div class="ttdef"><b>Definition</b> <a href="#l00045">scene.h:45</a></div></div>
@@ -250,13 +255,13 @@ $(function(){initNavTree('scene_8h_source.html','',''); });
 <div class="ttc" id="aclass_scene_html_a13b298b0c24c92929bf9850012980623"><div class="ttname"><a href="class_scene.html#a13b298b0c24c92929bf9850012980623">Scene::addLight</a></div><div class="ttdeci">void addLight(Light *light)</div><div class="ttdoc">Function that adds a point light to the scene.</div><div class="ttdef"><b>Definition</b> <a href="#l00099">scene.h:99</a></div></div>
 <div class="ttc" id="aclass_scene_html_a20d41770f3040ef7fa818e3df3c63f7b"><div class="ttname"><a href="class_scene.html#a20d41770f3040ef7fa818e3df3c63f7b">Scene::addDirectionalLight</a></div><div class="ttdeci">void addDirectionalLight(DirectionalLight *light)</div><div class="ttdoc">Function that adds a directional light to the scene.</div><div class="ttdef"><b>Definition</b> <a href="#l00088">scene.h:88</a></div></div>
 <div class="ttc" id="aclass_scene_html_a2936b4b44d5c6ad073e65986a529a9f4"><div class="ttname"><a href="class_scene.html#a2936b4b44d5c6ad073e65986a529a9f4">Scene::update</a></div><div class="ttdeci">virtual void update(Window &amp;window)</div><div class="ttdoc">Function that initializes the scene. This method is called every frame.</div><div class="ttdef"><b>Definition</b> <a href="#l00053">scene.h:53</a></div></div>
-<div class="ttc" id="aclass_scene_html_a553f958a25683445088050a69d3de8e9"><div class="ttname"><a href="class_scene.html#a553f958a25683445088050a69d3de8e9">Scene::Window</a></div><div class="ttdeci">friend class Window</div><div class="ttdef"><b>Definition</b> <a href="#l00118">scene.h:118</a></div></div>
+<div class="ttc" id="aclass_scene_html_a553f958a25683445088050a69d3de8e9"><div class="ttname"><a href="class_scene.html#a553f958a25683445088050a69d3de8e9">Scene::Window</a></div><div class="ttdeci">friend class Window</div><div class="ttdef"><b>Definition</b> <a href="#l00123">scene.h:123</a></div></div>
 <div class="ttc" id="aclass_scene_html_a614268b0862942317de098b251a02203"><div class="ttname"><a href="class_scene.html#a614268b0862942317de098b251a02203">Scene::onMouseScroll</a></div><div class="ttdeci">virtual void onMouseScroll(Window &amp;window, Movement2d offset)</div><div class="ttdoc">Function that handles mouse scroll events.</div><div class="ttdef"><b>Definition</b> <a href="#l00074">scene.h:74</a></div></div>
 <div class="ttc" id="aclass_scene_html_a989e70e7dc6a2130ddd134f1285b6301"><div class="ttname"><a href="class_scene.html#a989e70e7dc6a2130ddd134f1285b6301">Scene::onMouseMove</a></div><div class="ttdeci">virtual void onMouseMove(Window &amp;window, Movement2d movement)</div><div class="ttdoc">Function that handles mouse movement events.</div><div class="ttdef"><b>Definition</b> <a href="#l00067">scene.h:67</a></div></div>
 <div class="ttc" id="aclass_scene_html_a9d87607c6e6a93d1bfef10ed1cfdc667"><div class="ttname"><a href="class_scene.html#a9d87607c6e6a93d1bfef10ed1cfdc667">Scene::initialize</a></div><div class="ttdeci">virtual void initialize(Window &amp;window)=0</div><div class="ttdoc">Function that initializes the scene. This method is called once by the Window class.</div></div>
 <div class="ttc" id="aclass_scene_html_ab98cdab367b3b42b99028c5fe74577a7"><div class="ttname"><a href="class_scene.html#ab98cdab367b3b42b99028c5fe74577a7">Scene::ambientLight</a></div><div class="ttdeci">AmbientLight ambientLight</div><div class="ttdoc">The ambient light in the scene.</div><div class="ttdef"><b>Definition</b> <a href="#l00080">scene.h:80</a></div></div>
-<div class="ttc" id="aclass_scene_html_ac9dbe2a378024e3a3c417b4cb50adbb3"><div class="ttname"><a href="class_scene.html#ac9dbe2a378024e3a3c417b4cb50adbb3">Scene::CoreObject</a></div><div class="ttdeci">friend class CoreObject</div><div class="ttdef"><b>Definition</b> <a href="#l00117">scene.h:117</a></div></div>
-<div class="ttc" id="aclass_scene_html_acccf622706b4067fd6d313ebf4075f1a"><div class="ttname"><a href="class_scene.html#acccf622706b4067fd6d313ebf4075f1a">Scene::setSkybox</a></div><div class="ttdeci">void setSkybox(Skybox *newSkybox)</div><div class="ttdef"><b>Definition</b> <a href="#l00109">scene.h:109</a></div></div>
+<div class="ttc" id="aclass_scene_html_ac9dbe2a378024e3a3c417b4cb50adbb3"><div class="ttname"><a href="class_scene.html#ac9dbe2a378024e3a3c417b4cb50adbb3">Scene::CoreObject</a></div><div class="ttdeci">friend class CoreObject</div><div class="ttdef"><b>Definition</b> <a href="#l00122">scene.h:122</a></div></div>
+<div class="ttc" id="aclass_scene_html_acccf622706b4067fd6d313ebf4075f1a"><div class="ttname"><a href="class_scene.html#acccf622706b4067fd6d313ebf4075f1a">Scene::setSkybox</a></div><div class="ttdeci">void setSkybox(Skybox *newSkybox)</div><div class="ttdoc">Set the Skybox object.</div><div class="ttdef"><b>Definition</b> <a href="#l00114">scene.h:114</a></div></div>
 <div class="ttc" id="aclass_skybox_html"><div class="ttname"><a href="class_skybox.html">Skybox</a></div><div class="ttdoc">Class that represents a skybox, which is a large cube that surrounds the scene to introduce stunning ...</div><div class="ttdef"><b>Definition</b> <a href="texture_8h_source.html#l00372">texture.h:372</a></div></div>
 <div class="ttc" id="aclass_window_html"><div class="ttname"><a href="class_window.html">Window</a></div><div class="ttdoc">Structure representing a window in the application. This contains the main interface for interacting ...</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00149">window.h:149</a></div></div>
 <div class="ttc" id="alight_8h_html"><div class="ttname"><a href="light_8h.html">light.h</a></div></div>
