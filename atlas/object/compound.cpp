@@ -160,3 +160,24 @@ std::vector<CoreVertex> CompoundObject::getVertices() const {
 }
 
 Window *Component::getWindow() { return Window::mainWindow; }
+
+void UIView::setViewMatrix(const glm::mat4 &view) {
+    for (auto &obj : children) {
+        obj->setViewMatrix(view);
+    }
+}
+
+void UIView::setProjectionMatrix(const glm::mat4 &projection) {
+    for (auto &obj : children) {
+        obj->setProjectionMatrix(projection);
+    }
+}
+
+void UIView::render(float dt) {
+    for (auto &component : components) {
+        component->update(dt);
+    }
+    for (auto &obj : children) {
+        obj->render(dt);
+    }
+}

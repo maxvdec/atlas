@@ -371,4 +371,21 @@ class CompoundObject : public GameObject {
     inline void addObject(CoreObject *obj) { objects.push_back(obj); }
 };
 
+class UIObject : public GameObject {};
+
+class UIView : public UIObject {
+  public:
+    void render(float dt) override;
+    void setViewMatrix(const glm::mat4 &view) override;
+    void setProjectionMatrix(const glm::mat4 &projection) override;
+
+    inline void addChild(UIObject *child) { children.push_back(child); }
+
+  private:
+    glm::mat4 view = glm::mat4(1.0f);
+    glm::mat4 projection = glm::mat4(1.0f);
+
+    std::vector<UIObject *> children;
+};
+
 #endif // ATLAS_COMPONENT_H

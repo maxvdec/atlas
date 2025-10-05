@@ -226,6 +226,10 @@ class Window {
         firstRenderables.push_back(object);
     }
 
+    inline void addUIObject(Renderable *object) {
+        uiRenderables.push_back(object);
+    }
+
     /**
      * @brief Sets the camera for the window.
      *
@@ -355,6 +359,7 @@ class Window {
     std::vector<Renderable *> renderables;
     std::vector<Renderable *> preferenceRenderables;
     std::vector<Renderable *> firstRenderables;
+    std::vector<Renderable *> uiRenderables;
     std::vector<RenderTarget *> renderTargets;
 
     glm::mat4 calculateProjectionMatrix();

@@ -243,6 +243,12 @@ void Window::run() {
             obj->render(getDeltaTime());
         }
 
+        glDisable(GL_CULL_FACE);
+        glEnable(GL_BLEND);
+        for (auto &obj : this->uiRenderables) {
+            obj->render(getDeltaTime());
+        }
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
