@@ -16,6 +16,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <atlas/window.h>
+#include <iostream>
 #include <memory>
 #include <optional>
 #include <string>
@@ -147,6 +148,12 @@ void Window::run() {
     for (auto &obj : this->preferenceRenderables) {
         obj->initialize();
     }
+    for (auto &obj : this->firstRenderables) {
+        obj->initialize();
+    }
+    for (auto &obj : this->uiRenderables) {
+        obj->initialize();
+    }
     GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
 
     this->lastTime = static_cast<float>(glfwGetTime());
@@ -240,6 +247,8 @@ void Window::run() {
 
         glDisable(GL_CULL_FACE);
         for (auto &obj : this->preferenceRenderables) {
+            obj->setViewMatrix(this->camera->calculateViewMatrix());
+            obj->setProjectionMatrix(calculateProjectionMatrix());
             obj->render(getDeltaTime());
         }
 
@@ -424,6 +433,13 @@ void Window::renderLightsToShadowMaps() {
     bool renderedShadows = false;
 
     std::vector<ShaderProgram> originalPrograms;
+    for (auto &obj : this->renderables) {
+        if (obj->getShaderProgram() != std::nullopt) {
+            originalPrograms.push_back(obj->getShaderProgram().value());
+        } else {
+            originalPrograms.push_back(ShaderProgram()); // Placeholder
+        }
+    }
 
     for (auto &light : this->currentScene->directionalLights) {
         if (light->doesCastShadows == false) {
@@ -491,9 +507,11 @@ void Window::renderLightsToShadowMaps() {
         return;
     }
 
+    size_t i = 0;
     for (auto &renderable : this->renderables) {
-        if (renderable->getShaderProgram() != std::nullopt) {
-            renderable->setShader(originalPrograms.front());
+        if (renderable->getShaderProgram() != std::nullopt &&
+            i < originalPrograms.size()) {
+            renderable->setShader(originalPrograms[i++]);
         }
     }
 }
