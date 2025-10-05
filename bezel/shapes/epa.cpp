@@ -11,6 +11,7 @@
 #include "bezel/shape.h"
 #include <utility>
 #include <vector>
+#include <cmath>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/norm.hpp>
 #include <glm/glm.hpp>
@@ -221,7 +222,7 @@ void bezel::findDanglingEdges(std::vector<Edge> &danglingEdges,
 float bezel::epaExpand(const std::shared_ptr<Body> bodyA,
                        const std::shared_ptr<Body> bodyB, const float bias,
                        const std::array<Point, 4> simplex, glm::vec3 &ptOnA,
-                       glm::vec3 &ptOnB) {
+                       glm::vec3 &ptOnB, glm::vec3 &normalOut) {
     std::vector<Point> points;
     std::vector<Triangle> triangles;
     std::vector<Edge> danglingEdges;
@@ -318,5 +319,26 @@ float bezel::epaExpand(const std::shared_ptr<Body> bodyA,
     ptOnB = lambdas.x * ptA_b + lambdas.y * ptB_b + lambdas.z * ptC_b;
 
     glm::vec3 delta = ptOnB - ptOnA;
-    return glm::length(delta);
+    float depth = glm::length(delta);
+
+    glm::vec3 normal(0.0f);
+    if (depth > 1e-6f) {
+        normal = delta / depth;
+    } else {
+        normal = bezel::normalDirection(tri, points);
+        float signedDist =
+            bezel::signedDistanceToTriangle(tri, glm::vec3(0.0f), points);
+        depth = std::abs(signedDist);
+    }
+
+    glm::vec3 centerDelta =
+        bodyB->getCenterOfMassWorldSpace() - bodyA->getCenterOfMassWorldSpace();
+    if (glm::length2(centerDelta) > 1e-12f &&
+        glm::dot(normal, centerDelta) < 0.0f) {
+        normal = -normal;
+    }
+
+    normalOut = normal;
+    ptOnB = ptOnA + normal * depth;
+    return depth;
 }

@@ -136,14 +136,15 @@ class MainScene : public Scene {
             4096, 4096, 640, 80, blue * whiteMultiplier, blue * darkMultiplier,
             blue * mediumMultiplier);
 
-        ground = createDebugBox({5.0f, 0.1f, 5.0f});
-        ground.setPosition({0.0f, -0.1f, 0.0f});
+        ground = createDebugBox({5.0f, 0.5f, 5.0f});
+        ground.setPosition({0.0f, -0.6f, 0.0f});
         ground.body->applyMass(0); // Make it static
         ground.attachTexture(checkerboard);
         window.addObject(&ground);
 
         ball = createDebugBox({0.2f, 0.2f, 0.2f});
         ball.setPosition({0.0f, 2.0f, 0.0f});
+        ball.body->applyLinearImpulse({0.0f, 0.0f, -1.0f});
         ball.attachTexture(checkerboard);
         window.addObject(&ball);
 

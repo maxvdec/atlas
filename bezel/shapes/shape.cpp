@@ -11,6 +11,7 @@
 #include "bezel/bounds.h"
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/norm.hpp>
+#include <cmath>
 
 Sphere::Sphere(float radius) : radius(radius) {
     this->centerOfMass = {0.0f, 0.0f, 0.0f};
@@ -168,11 +169,16 @@ Bounds Box::getBounds() const { return bounds; }
 
 float Box::fastestLinearSpeed(const glm::vec3 &angularVelocity,
                               const glm::vec3 &dir) const {
+    if (glm::length2(dir) < 1e-12f) {
+        return 0.0f;
+    }
+
+    glm::vec3 dirNorm = glm::normalize(dir);
     float maxSpeed = 0.0f;
     for (const auto &v : vertices) {
         glm::vec3 r = v - centerOfMass;
-        glm::vec3 linearVel = glm::cross(angularVelocity, dir);
-        float speed = glm::dot(linearVel, dir);
+        glm::vec3 linearVel = glm::cross(angularVelocity, r);
+        float speed = std::abs(glm::dot(linearVel, dirNorm));
         if (speed > maxSpeed) {
             maxSpeed = speed;
         }

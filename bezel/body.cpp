@@ -104,16 +104,23 @@ void Body::update(Window &window) {
 
         Contact contact;
         if (intersects(bodyA, bodyB, contact, dt)) {
+            std::cout << "Contact between bodies at t=" << contact.timeOfImpact
+                      << "s, separation=" << contact.separationDistance
+                      << "m\n";
             glm::vec3 velA = bodyA->linearVelocity;
             glm::vec3 velB = bodyB->linearVelocity;
             glm::vec3 relVel = velA - velB;
             float normalVel = glm::dot(relVel, contact.normal);
 
-            bool isPenetrating = contact.separationDistance < -0.001f;
+            bool isPenetrating = contact.separationDistance <= 0.0f;
             bool isApproaching = normalVel < -0.01f;
-            bool isFreshCollision = contact.timeOfImpact > 1e-6f;
+            bool isNearContact =
+                contact.separationDistance < 0.05f; // Within 5cm
 
-            if (isPenetrating || (isApproaching && isFreshCollision)) {
+            if (isPenetrating || isApproaching || isNearContact) {
+                std::cout << "Adding contact: penetration=" << isPenetrating
+                          << ", approaching=" << isApproaching
+                          << ", near=" << isNearContact << "\n";
                 contacts[numContacts] = contact;
                 numContacts++;
             }
@@ -406,9 +413,8 @@ void Body::resolveContact(Contact &contact) {
             float frictionImpulseJ = -tangentialSpeed / frictionDenominator;
             float maxFrictionImpulse = combinedFriction * impulseJ;
 
-            frictionImpulseJ =
-                std::max(-maxFrictionImpulse,
-                         std::min(maxFrictionImpulse, frictionImpulseJ));
+            frictionImpulseJ = glm::clamp(frictionImpulseJ, -maxFrictionImpulse,
+                                          maxFrictionImpulse);
 
             glm::vec3 frictionImpulse = frictionImpulseJ * frictionDir;
 
@@ -421,10 +427,7 @@ void Body::resolveContact(Contact &contact) {
         }
     }
 
-    // ONLY apply direct position correction for SEVERE penetrations
-    // Small penetrations (< 1cm) are handled by Baumgarte only
     if (penetrationDepth > 0.01f) {
-        // Conservative: only correct 20% per frame to avoid oscillations
         float correctionAmount = penetrationDepth * 0.2f;
         glm::vec3 correction = n * correctionAmount;
 
