@@ -37,7 +37,6 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [ ] Post-processing effects **for alpha 2**
 - [ ] Sky, atmosphere, weather and fluid simulation system (Hydra)
 - [ ] Animation system (Mold)
-- [ ] Advanced materials and shaders **for alpha 2**
 - [ ] Instancing support **for alpha 2**
 - [ ] Optimizations and performance improvements
 - [x] CLI for packing applications
