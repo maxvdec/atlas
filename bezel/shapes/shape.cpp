@@ -11,6 +11,7 @@
 #include "bezel/bounds.h"
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/norm.hpp>
+#include <cmath>
 
 Sphere::Sphere(float radius) : radius(radius) {
     this->centerOfMass = {0.0f, 0.0f, 0.0f};
@@ -95,10 +96,12 @@ glm::mat3 Box::getInertiaTensor() const {
     const float dy = bounds.maxs.y - bounds.mins.y;
     const float dz = bounds.maxs.z - bounds.mins.z;
 
-    glm::mat3 tensor;
-    tensor[0][0] = (dy * dy + dz * dz) / 12.0f;
-    tensor[1][1] = (dx * dx + dz * dz) / 12.0f;
-    tensor[2][2] = (dx * dx + dy * dy) / 12.0f;
+    const float mass = 1.0f;
+
+    glm::mat3 tensor(0.0f);
+    tensor[0][0] = mass * (dy * dy + dz * dz) / 12.0f;
+    tensor[1][1] = mass * (dx * dx + dz * dz) / 12.0f;
+    tensor[2][2] = mass * (dx * dx + dy * dy) / 12.0f;
 
     glm::vec3 cm;
     cm.x = (bounds.maxs.x + bounds.mins.x) * 0.5f;
@@ -106,13 +109,15 @@ glm::mat3 Box::getInertiaTensor() const {
     cm.z = (bounds.maxs.z + bounds.mins.z) * 0.5f;
 
     const glm::vec3 R = glm::vec3(0.0f) - cm;
-    const float R2 = glm::length2(R);
-    glm::mat3 patTensor;
+    const float R2 = glm::dot(R, R);
+
+    glm::mat3 patTensor(0.0f);
     patTensor[0] = glm::vec3(R2 - R.x * R.x, -R.x * R.y, -R.x * R.z);
     patTensor[1] = glm::vec3(-R.y * R.x, R2 - R.y * R.y, -R.y * R.z);
     patTensor[2] = glm::vec3(-R.z * R.x, -R.z * R.y, R2 - R.z * R.z);
 
-    tensor += patTensor;
+    tensor += mass * patTensor;
+
     return tensor;
 }
 
@@ -164,11 +169,16 @@ Bounds Box::getBounds() const { return bounds; }
 
 float Box::fastestLinearSpeed(const glm::vec3 &angularVelocity,
                               const glm::vec3 &dir) const {
+    if (glm::length2(dir) < 1e-12f) {
+        return 0.0f;
+    }
+
+    glm::vec3 dirNorm = glm::normalize(dir);
     float maxSpeed = 0.0f;
     for (const auto &v : vertices) {
         glm::vec3 r = v - centerOfMass;
-        glm::vec3 linearVel = glm::cross(angularVelocity, dir);
-        float speed = glm::dot(linearVel, dir);
+        glm::vec3 linearVel = glm::cross(angularVelocity, r);
+        float speed = std::abs(glm::dot(linearVel, dirNorm));
         if (speed > maxSpeed) {
             maxSpeed = speed;
         }

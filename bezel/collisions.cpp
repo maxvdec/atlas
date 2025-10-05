@@ -9,6 +9,7 @@
 
 #include "bezel/body.h"
 #include "bezel/shape.h"
+#include <algorithm>
 #include <memory>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/norm.hpp>
@@ -171,11 +172,17 @@ bool Body::intersects(const std::shared_ptr<Body> &body,
                 other->worldSpaceToModelSpace(contact.pointB.worldSpacePoint);
 
             glm::vec3 normalVec =
-                body->position.toGlm() - other->position.toGlm();
+                other->position.toGlm() - body->position.toGlm();
             if (glm::length2(normalVec) < 1e-8f) {
                 contact.normal = glm::vec3(1.0f, 0.0f, 0.0f);
             } else {
                 contact.normal = glm::normalize(normalVec);
+            }
+
+            glm::vec3 centerDelta = body->getCenterOfMassWorldSpace() -
+                                    other->getCenterOfMassWorldSpace();
+            if (glm::dot(contact.normal, centerDelta) < 0.0f) {
+                contact.normal = -contact.normal;
             }
 
             body->updatePhysics(-contact.timeOfImpact);
@@ -183,7 +190,7 @@ bool Body::intersects(const std::shared_ptr<Body> &body,
 
             glm::vec3 ab =
                 contact.pointB.worldSpacePoint - contact.pointA.worldSpacePoint;
-            float r = glm::length(ab);
+            float r = glm::length(ab) - (sphereA->radius + sphereB->radius);
             contact.separationDistance = r;
             return true;
         }
@@ -207,7 +214,6 @@ bool Body::intersectsStatic(const std::shared_ptr<Body> &body,
         other->shape->getType() == Shape::ShapeType::Sphere) {
         auto sphereA = dynamic_cast<Sphere *>(body->shape.get());
         auto sphereB = dynamic_cast<Sphere *>(other->shape.get());
-
         glm::vec3 posA = body->position.toGlm();
         glm::vec3 posB = other->position.toGlm();
 
@@ -216,116 +222,131 @@ bool Body::intersectsStatic(const std::shared_ptr<Body> &body,
                 contact.pointB.worldSpacePoint)) {
             contact.normal = glm::normalize(posB - posA);
 
+            glm::vec3 centerDelta = body->getCenterOfMassWorldSpace() -
+                                    other->getCenterOfMassWorldSpace();
+            if (glm::dot(contact.normal, centerDelta) < 0.0f) {
+                contact.normal = -contact.normal;
+            }
             contact.pointA.modelSpacePoint =
                 body->worldSpaceToModelSpace(contact.pointA.worldSpacePoint);
             contact.pointB.modelSpacePoint =
                 other->worldSpaceToModelSpace(contact.pointB.worldSpacePoint);
-
             glm::vec3 ab =
                 contact.pointB.worldSpacePoint - contact.pointA.worldSpacePoint;
             float r = glm::length(ab) - (sphereA->radius + sphereB->radius);
             contact.separationDistance = r;
             return true;
         }
-    } else {
-        glm::vec3 ptOnA;
-        glm::vec3 ptOnB;
-        const float bias = 0.001f;
+        return false;
+    }
 
-        if (bezel::gjkIntersection(body, other, bias, ptOnA, ptOnB)) {
-            glm::vec3 normal = ptOnB - ptOnA;
-            if (glm::length2(normal) < 1e-8f) {
-                glm::vec3 centerA = body->getCenterOfMassWorldSpace();
-                glm::vec3 centerB = other->getCenterOfMassWorldSpace();
-                normal = centerB - centerA;
-                if (glm::length2(normal) < 1e-8f) {
-                    normal = glm::vec3(0.0f, 1.0f, 0.0f);
-                }
+    glm::vec3 ptOnA;
+    glm::vec3 ptOnB;
+    const float bias = 0.001f;
+
+    bool isBoxInvolved = (body->shape->getType() == Shape::ShapeType::Box ||
+                          other->shape->getType() == Shape::ShapeType::Box);
+
+    glm::vec3 gjkNormal(0.0f);
+    float penetrationDepth = 0.0f;
+
+    if (bezel::gjkIntersection(body, other, bias, ptOnA, ptOnB, gjkNormal,
+                               penetrationDepth)) {
+        glm::vec3 normal = gjkNormal;
+        if (glm::length2(normal) < 1e-12f) {
+            glm::vec3 centerDelta = other->getCenterOfMassWorldSpace() -
+                                    body->getCenterOfMassWorldSpace();
+            if (glm::length2(centerDelta) < 1e-12f) {
+                normal = glm::vec3(0.0f, 1.0f, 0.0f);
+            } else {
+                normal = glm::normalize(centerDelta);
             }
+        } else {
             normal = glm::normalize(normal);
-
-            // Force axis-aligned normals for sphere-box collisions
-            bool isSphereBox =
-                (body->shape->getType() == Shape::ShapeType::Sphere &&
-                 other->shape->getType() == Shape::ShapeType::Box) ||
-                (other->shape->getType() == Shape::ShapeType::Sphere &&
-                 body->shape->getType() == Shape::ShapeType::Box);
-
-            if (isSphereBox) {
-                float absX = std::abs(normal.x);
-                float absY = std::abs(normal.y);
-                float absZ = std::abs(normal.z);
-
-                if (absY > absX && absY > absZ) {
-                    normal = glm::vec3(0.0f, normal.y > 0 ? 1.0f : -1.0f, 0.0f);
-                } else if (absX > absY && absX > absZ) {
-                    normal = glm::vec3(normal.x > 0 ? 1.0f : -1.0f, 0.0f, 0.0f);
-                } else {
-                    normal = glm::vec3(0.0f, 0.0f, normal.z > 0 ? 1.0f : -1.0f);
-                }
-            }
-
-            contact.normal = normal;
-            contact.pointA.worldSpacePoint = ptOnA;
-            contact.pointB.worldSpacePoint = ptOnB;
-
-            contact.pointA.modelSpacePoint =
-                body->worldSpaceToModelSpace(contact.pointA.worldSpacePoint);
-            contact.pointB.modelSpacePoint =
-                other->worldSpaceToModelSpace(contact.pointB.worldSpacePoint);
-
-            float penetrationDepth = glm::length(ptOnA - ptOnB);
-            contact.separationDistance = -penetrationDepth;
-
-            return true;
         }
 
-        bezel::gjkClosestPoints(body, other, ptOnA, ptOnB);
+        // if (isBoxInvolved) {
+        //     float absX = std::abs(normal.x);
+        //     float absY = std::abs(normal.y);
+        //     float absZ = std::abs(normal.z);
+
+        //     const float snapThreshold = 0.95f;
+
+        //     if (absY > snapThreshold && absY > absX && absY > absZ) {
+        //         normal = glm::vec3(0.0f, normal.y > 0 ? 1.0f : -1.0f, 0.0f);
+        //     } else if (absX > snapThreshold && absX > absY && absX > absZ) {
+        //         normal = glm::vec3(normal.x > 0 ? 1.0f : -1.0f, 0.0f, 0.0f);
+        //     } else if (absZ > snapThreshold && absZ > absX && absZ > absY) {
+        //         normal = glm::vec3(0.0f, 0.0f, normal.z > 0 ? 1.0f : -1.0f);
+        //     }
+        // }
+
+        float depthOnNormal = std::abs(glm::dot(ptOnB - ptOnA, normal));
+        penetrationDepth = std::max(penetrationDepth, depthOnNormal);
+
+        contact.normal = normal;
         contact.pointA.worldSpacePoint = ptOnA;
         contact.pointB.worldSpacePoint = ptOnB;
-
         contact.pointA.modelSpacePoint =
             body->worldSpaceToModelSpace(contact.pointA.worldSpacePoint);
         contact.pointB.modelSpacePoint =
             other->worldSpaceToModelSpace(contact.pointB.worldSpacePoint);
 
-        glm::vec3 ab = ptOnB - ptOnA;
-        float distance = glm::length(ab);
+        contact.separationDistance = -penetrationDepth;
 
-        if (distance > 1e-8f) {
-            glm::vec3 normal = ab / distance;
-
-            // Same axis-alignment fix for non-penetrating case
-            bool isSphereBox =
-                (body->shape->getType() == Shape::ShapeType::Sphere &&
-                 other->shape->getType() == Shape::ShapeType::Box) ||
-                (other->shape->getType() == Shape::ShapeType::Sphere &&
-                 body->shape->getType() == Shape::ShapeType::Box);
-
-            if (isSphereBox) {
-                float absX = std::abs(normal.x);
-                float absY = std::abs(normal.y);
-                float absZ = std::abs(normal.z);
-
-                if (absY > absX && absY > absZ) {
-                    normal = glm::vec3(0.0f, normal.y > 0 ? 1.0f : -1.0f, 0.0f);
-                } else if (absX > absY && absX > absZ) {
-                    normal = glm::vec3(normal.x > 0 ? 1.0f : -1.0f, 0.0f, 0.0f);
-                } else {
-                    normal = glm::vec3(0.0f, 0.0f, normal.z > 0 ? 1.0f : -1.0f);
-                }
-            }
-
-            contact.normal = normal;
-        } else {
-            glm::vec3 centerA = body->getCenterOfMassWorldSpace();
-            glm::vec3 centerB = other->getCenterOfMassWorldSpace();
-            contact.normal = glm::normalize(centerB - centerA);
+        glm::vec3 centerDelta = body->getCenterOfMassWorldSpace() -
+                                other->getCenterOfMassWorldSpace();
+        if (glm::dot(contact.normal, centerDelta) < 0.0f) {
+            contact.normal = -contact.normal;
         }
 
-        // For non-penetrating objects, separation distance is positive
-        contact.separationDistance = distance;
+        return true;
     }
 
+    bezel::gjkClosestPoints(body, other, ptOnA, ptOnB);
+    contact.pointA.worldSpacePoint = ptOnA;
+    contact.pointB.worldSpacePoint = ptOnB;
+    contact.pointA.modelSpacePoint =
+        body->worldSpaceToModelSpace(contact.pointA.worldSpacePoint);
+    contact.pointB.modelSpacePoint =
+        other->worldSpaceToModelSpace(contact.pointB.worldSpacePoint);
+
+    glm::vec3 ab = ptOnB - ptOnA;
+    float distance = glm::length(ab);
+
+    if (distance > 1e-8f) {
+        glm::vec3 normal = ab / distance;
+
+        if (isBoxInvolved) {
+            float absX = std::abs(normal.x);
+            float absY = std::abs(normal.y);
+            float absZ = std::abs(normal.z);
+            const float snapThreshold = 0.95f;
+
+            if (absY > snapThreshold && absY > absX && absY > absZ) {
+                normal = glm::vec3(0.0f, normal.y > 0 ? 1.0f : -1.0f, 0.0f);
+            } else if (absX > snapThreshold && absX > absY && absX > absZ) {
+                normal = glm::vec3(normal.x > 0 ? 1.0f : -1.0f, 0.0f, 0.0f);
+            } else if (absZ > snapThreshold && absZ > absX && absZ > absY) {
+                normal = glm::vec3(0.0f, 0.0f, normal.z > 0 ? 1.0f : -1.0f);
+            }
+        }
+
+        contact.normal = normal;
+    } else {
+        glm::vec3 centerA = body->getCenterOfMassWorldSpace();
+        glm::vec3 centerB = other->getCenterOfMassWorldSpace();
+        glm::vec3 dir = centerB - centerA;
+        contact.normal = glm::length(dir) > 1e-8f ? glm::normalize(dir)
+                                                  : glm::vec3(0.0f, 1.0f, 0.0f);
+    }
+
+    glm::vec3 centerDelta =
+        body->getCenterOfMassWorldSpace() - other->getCenterOfMassWorldSpace();
+    if (glm::dot(contact.normal, centerDelta) < 0.0f) {
+        contact.normal = -contact.normal;
+    }
+
+    contact.separationDistance = distance;
     return false;
 }

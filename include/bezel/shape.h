@@ -534,7 +534,8 @@ static int numValids(const glm::vec4 &lambdas);
  */
 bool gjkIntersection(const std::shared_ptr<Body> bodyA,
                      const std::shared_ptr<Body> bodyB, const float bias,
-                     glm::vec3 &ptOnA, glm::vec3 &ptOnB);
+                     glm::vec3 &ptOnA, glm::vec3 &ptOnB, glm::vec3 &normalOut,
+                     float &penetrationDepthOut);
 /**
  * @brief Finds closest points between two bodies using GJK.
  *
@@ -622,7 +623,7 @@ void findDanglingEdges(std::vector<Edge> &danglingEdges,
 float epaExpand(const std::shared_ptr<Body> bodyA,
                 const std::shared_ptr<Body> bodyB, const float bias,
                 const std::array<Point, 4> simplex, glm::vec3 &ptOnA,
-                glm::vec3 &ptOnB);
+                glm::vec3 &ptOnB, glm::vec3 &normalOut);
 } // namespace bezel
 
 struct Contact;
