@@ -132,15 +132,16 @@ Inheritance diagram for Renderable:</div>
  <div class="center">
   <img src="class_renderable.png" usemap="#Renderable_map" alt=""/>
   <map id="Renderable_map" name="Renderable_map">
-<area href="class_game_object.html" title="Base class for all Game Objects. It extends from Renderable and it provides common functionality for ..." alt="GameObject" shape="rect" coords="178,56,287,80"/>
-<area href="class_render_target.html" title="Class that represents a render target, which is a texture in which a scene can be rendered...." alt="RenderTarget" shape="rect" coords="297,56,406,80"/>
-<area href="class_skybox.html" title="Class that represents a skybox, which is a large cube that surrounds the scene to introduce stunning ..." alt="Skybox" shape="rect" coords="416,56,525,80"/>
+<area href="class_game_object.html" title="Base class for all Game Objects. It extends from Renderable and it provides common functionality for ..." alt="GameObject" shape="rect" coords="238,56,347,80"/>
+<area href="class_render_target.html" title="Class that represents a render target, which is a texture in which a scene can be rendered...." alt="RenderTarget" shape="rect" coords="357,56,466,80"/>
+<area href="class_skybox.html" title="Class that represents a skybox, which is a large cube that surrounds the scene to introduce stunning ..." alt="Skybox" shape="rect" coords="476,56,585,80"/>
 <area href="class_compound_object.html" title="A Compound object is a GameObject that can be extended by the user to generate objects that encapsula..." alt="CompoundObject" shape="rect" coords="0,112,109,136"/>
 <area href="class_core_object.html" title="Represents a 3D object in the scene, including its geometry, material and every interaction with the ..." alt="CoreObject" shape="rect" coords="119,112,228,136"/>
-<area href="class_particle_emitter.html" title="Class representing a particle emitter in the game. It emits and manages particles." alt="ParticleEmitter" shape="rect" coords="238,112,347,136"/>
-<area href="class_u_i_object.html" alt="UIObject" shape="rect" coords="357,112,466,136"/>
-<area href="class_text.html" title="Represents a text object in the game world. It allows rendering of text with a specific font,..." alt="Text" shape="rect" coords="297,168,406,192"/>
-<area href="class_u_i_view.html" alt="UIView" shape="rect" coords="416,168,525,192"/>
+<area href="class_model.html" alt="Model" shape="rect" coords="238,112,347,136"/>
+<area href="class_particle_emitter.html" title="Class representing a particle emitter in the game. It emits and manages particles." alt="ParticleEmitter" shape="rect" coords="357,112,466,136"/>
+<area href="class_u_i_object.html" alt="UIObject" shape="rect" coords="476,112,585,136"/>
+<area href="class_text.html" title="Represents a text object in the game world. It allows rendering of text with a specific font,..." alt="Text" shape="rect" coords="416,168,525,192"/>
+<area href="class_u_i_view.html" alt="UIView" shape="rect" coords="535,168,644,192"/>
   </map>
 </div></div>
 <table class="memberdecls">
@@ -260,7 +261,7 @@ Public Member Functions</h2></td></tr>
 <p>Function to get the position of the object in 3D space. </p>
 <dl class="section return"><dt>Returns</dt><dd>The position of the object as a <a class="el" href="struct_position3d.html" title="Structure representing a position in 3D space with double precision. Provides arithmetic operations a...">Position3d</a> struct. </dd></dl>
 
-<p>Reimplemented in <a class="el" href="class_compound_object.html#a6197d3400c73d8aeaf7501eb952c6333">CompoundObject</a>, <a class="el" href="class_core_object.html#af516bbf869acc7d45e661005a834b93d">CoreObject</a>, and <a class="el" href="class_particle_emitter.html#a0a4c69870a82921e620a467f8264be1b">ParticleEmitter</a>.</p>
+<p>Reimplemented in <a class="el" href="class_compound_object.html#a6197d3400c73d8aeaf7501eb952c6333">CompoundObject</a>, <a class="el" href="class_core_object.html#af516bbf869acc7d45e661005a834b93d">CoreObject</a>, <a class="el" href="class_model.html#a773e85c486ebaf5e0f3afe9da3381212">Model</a>, and <a class="el" href="class_particle_emitter.html#a0a4c69870a82921e620a467f8264be1b">ParticleEmitter</a>.</p>
 
 <p class="definition">Definition at line <a class="el" href="renderable_8h_source.html#l00085">85</a> of file <a class="el" href="renderable_8h_source.html">renderable.h</a>.</p>
 <div class="fragment"><div class="line"><span class="lineno">   85</span>{ <span class="keywordflow">return</span> {0, 0, 0}; };</div>
@@ -326,7 +327,7 @@ Public Member Functions</h2></td></tr>
 <p>Function to get the current shader program used by the object. </p>
 <dl class="section return"><dt>Returns</dt><dd>An optional containing the shader program if set, or <code>std::nullopt</code> if not. </dd></dl>
 
-<p>Reimplemented in <a class="el" href="class_compound_object.html#a356df2f44be7d262eb96896994246082">CompoundObject</a>, and <a class="el" href="class_core_object.html#a6632190da26e6290e375b3f2cd4c9c75">CoreObject</a>.</p>
+<p>Reimplemented in <a class="el" href="class_compound_object.html#a356df2f44be7d262eb96896994246082">CompoundObject</a>, <a class="el" href="class_core_object.html#a6632190da26e6290e375b3f2cd4c9c75">CoreObject</a>, and <a class="el" href="class_model.html#ad26c5b613946c3c2ce2524484f56fc6e">Model</a>.</p>
 
 <p class="definition">Definition at line <a class="el" href="renderable_8h_source.html#l00070">70</a> of file <a class="el" href="renderable_8h_source.html">renderable.h</a>.</p>
 <div class="fragment"><div class="line"><span class="lineno">   70</span>                                                          {</div>
@@ -393,7 +394,7 @@ Public Member Functions</h2></td></tr>
 
 <p>Function to initialize the object. Can be overridden by derived. </p>
 
-<p>Reimplemented in <a class="el" href="class_compound_object.html#ae3bf373a10950faf4aadd63979e6372f">CompoundObject</a>, <a class="el" href="class_core_object.html#a12d021716ccc8a72b2f38567579ecf10">CoreObject</a>, <a class="el" href="class_particle_emitter.html#ae3c78db9b68fadecfcbe8e22a82bba41">ParticleEmitter</a>, and <a class="el" href="class_text.html#a7d09c32abc682f8827d9a407a4771036">Text</a>.</p>
+<p>Reimplemented in <a class="el" href="class_compound_object.html#ae3bf373a10950faf4aadd63979e6372f">CompoundObject</a>, <a class="el" href="class_core_object.html#a12d021716ccc8a72b2f38567579ecf10">CoreObject</a>, <a class="el" href="class_model.html#a5e3a76dda4214e2014b2964d4170f368">Model</a>, <a class="el" href="class_particle_emitter.html#ae3c78db9b68fadecfcbe8e22a82bba41">ParticleEmitter</a>, and <a class="el" href="class_text.html#a7d09c32abc682f8827d9a407a4771036">Text</a>.</p>
 
 <p class="definition">Definition at line <a class="el" href="renderable_8h_source.html#l00041">41</a> of file <a class="el" href="renderable_8h_source.html">renderable.h</a>.</p>
 <div class="fragment"><div class="line"><span class="lineno">   41</span>{};</div>
@@ -431,7 +432,7 @@ Public Member Functions</h2></td></tr>
   </dd>
 </dl>
 
-<p>Implemented in <a class="el" href="class_compound_object.html#aff31a61e249a732c293783f862c97bf5">CompoundObject</a>, <a class="el" href="class_core_object.html#a34aa2baa169667cb1a5d2c5fc755ae9c">CoreObject</a>, <a class="el" href="class_particle_emitter.html#afe658d35da0cdba391d4c841decf71e0">ParticleEmitter</a>, <a class="el" href="class_render_target.html#ab8adde0e39813bdf60f5b4e79dcd39e5">RenderTarget</a>, <a class="el" href="class_skybox.html#a00dc102234c9b5631df8d216c2852c54">Skybox</a>, <a class="el" href="class_text.html#a288b2f1d640ee871f950cf55c59c0878">Text</a>, and <a class="el" href="class_u_i_view.html#a3bcb58c5d5c251949966d6d8fddbd00e">UIView</a>.</p>
+<p>Implemented in <a class="el" href="class_compound_object.html#aff31a61e249a732c293783f862c97bf5">CompoundObject</a>, <a class="el" href="class_core_object.html#a34aa2baa169667cb1a5d2c5fc755ae9c">CoreObject</a>, <a class="el" href="class_model.html#a8b786b81d7e5f23fb2c985944bf0c93a">Model</a>, <a class="el" href="class_particle_emitter.html#afe658d35da0cdba391d4c841decf71e0">ParticleEmitter</a>, <a class="el" href="class_render_target.html#ab8adde0e39813bdf60f5b4e79dcd39e5">RenderTarget</a>, <a class="el" href="class_skybox.html#a00dc102234c9b5631df8d216c2852c54">Skybox</a>, <a class="el" href="class_text.html#a288b2f1d640ee871f950cf55c59c0878">Text</a>, and <a class="el" href="class_u_i_view.html#a3bcb58c5d5c251949966d6d8fddbd00e">UIView</a>.</p>
 
 </div>
 </div>
@@ -466,7 +467,7 @@ Public Member Functions</h2></td></tr>
   </dd>
 </dl>
 
-<p>Reimplemented in <a class="el" href="class_compound_object.html#aac8d17efbe766307e322e4da95c425dc">CompoundObject</a>, <a class="el" href="class_core_object.html#a9f6f1a397e126ef606125f4fd261f40d">CoreObject</a>, <a class="el" href="class_particle_emitter.html#a46a3bd7e0981249a61b6b6433df7e3bd">ParticleEmitter</a>, <a class="el" href="class_skybox.html#a83a3864abcb171c4f223a58d97575e54">Skybox</a>, and <a class="el" href="class_u_i_view.html#aa23733f2e111456cbeb74cba03bc259c">UIView</a>.</p>
+<p>Reimplemented in <a class="el" href="class_compound_object.html#aac8d17efbe766307e322e4da95c425dc">CompoundObject</a>, <a class="el" href="class_core_object.html#a9f6f1a397e126ef606125f4fd261f40d">CoreObject</a>, <a class="el" href="class_model.html#a778fb43b905eb3520d8b348eab82e89b">Model</a>, <a class="el" href="class_particle_emitter.html#a46a3bd7e0981249a61b6b6433df7e3bd">ParticleEmitter</a>, <a class="el" href="class_skybox.html#a83a3864abcb171c4f223a58d97575e54">Skybox</a>, and <a class="el" href="class_u_i_view.html#aa23733f2e111456cbeb74cba03bc259c">UIView</a>.</p>
 
 <p class="definition">Definition at line <a class="el" href="renderable_8h_source.html#l00063">63</a> of file <a class="el" href="renderable_8h_source.html">renderable.h</a>.</p>
 <div class="fragment"><div class="line"><span class="lineno">   63</span>{};</div>
@@ -504,7 +505,7 @@ Public Member Functions</h2></td></tr>
   </dd>
 </dl>
 
-<p>Reimplemented in <a class="el" href="class_compound_object.html#ae39a184cbb7e527f57a250678061ac05">CompoundObject</a>, and <a class="el" href="class_core_object.html#a65711de295580379eec5496df19007f4">CoreObject</a>.</p>
+<p>Reimplemented in <a class="el" href="class_compound_object.html#ae39a184cbb7e527f57a250678061ac05">CompoundObject</a>, <a class="el" href="class_core_object.html#a65711de295580379eec5496df19007f4">CoreObject</a>, and <a class="el" href="class_model.html#a24265caaaa9dee3e0598dd105b8296a3">Model</a>.</p>
 
 <p class="definition">Definition at line <a class="el" href="renderable_8h_source.html#l00079">79</a> of file <a class="el" href="renderable_8h_source.html">renderable.h</a>.</p>
 <div class="fragment"><div class="line"><span class="lineno">   79</span>{};</div>
@@ -542,7 +543,7 @@ Public Member Functions</h2></td></tr>
   </dd>
 </dl>
 
-<p>Reimplemented in <a class="el" href="class_compound_object.html#aca7a1eb53db643e28c4e886896c56a62">CompoundObject</a>, <a class="el" href="class_core_object.html#a11d7ee2d80f597b75ebc745fee83341f">CoreObject</a>, <a class="el" href="class_particle_emitter.html#a69bad006c8fb4611ad3bdd3df138af4b">ParticleEmitter</a>, <a class="el" href="class_skybox.html#afead5bf73c14712ac0654e5a3e3f35a6">Skybox</a>, and <a class="el" href="class_u_i_view.html#a206aba53465de15a282ef399630c7868">UIView</a>.</p>
+<p>Reimplemented in <a class="el" href="class_compound_object.html#aca7a1eb53db643e28c4e886896c56a62">CompoundObject</a>, <a class="el" href="class_core_object.html#a11d7ee2d80f597b75ebc745fee83341f">CoreObject</a>, <a class="el" href="class_model.html#ab1bc68ab2ef747780f89d5f2954ca05b">Model</a>, <a class="el" href="class_particle_emitter.html#a69bad006c8fb4611ad3bdd3df138af4b">ParticleEmitter</a>, <a class="el" href="class_skybox.html#afead5bf73c14712ac0654e5a3e3f35a6">Skybox</a>, and <a class="el" href="class_u_i_view.html#a206aba53465de15a282ef399630c7868">UIView</a>.</p>
 
 <p class="definition">Definition at line <a class="el" href="renderable_8h_source.html#l00056">56</a> of file <a class="el" href="renderable_8h_source.html">renderable.h</a>.</p>
 <div class="fragment"><div class="line"><span class="lineno">   56</span>{};</div>
@@ -581,7 +582,7 @@ Public Member Functions</h2></td></tr>
   </dd>
 </dl>
 
-<p>Reimplemented in <a class="el" href="class_compound_object.html#acbd09ebffe6374270415ca981a945624">CompoundObject</a>, <a class="el" href="class_core_object.html#a349d72e3e15473a290d52efea62271f9">CoreObject</a>, and <a class="el" href="class_particle_emitter.html#a10c124a8f860c367cd3e086e90701da0">ParticleEmitter</a>.</p>
+<p>Reimplemented in <a class="el" href="class_compound_object.html#acbd09ebffe6374270415ca981a945624">CompoundObject</a>, <a class="el" href="class_core_object.html#a349d72e3e15473a290d52efea62271f9">CoreObject</a>, <a class="el" href="class_model.html#a53186f31f04ff6f7977fabe72ce8eb3d">Model</a>, and <a class="el" href="class_particle_emitter.html#a10c124a8f860c367cd3e086e90701da0">ParticleEmitter</a>.</p>
 
 <p class="definition">Definition at line <a class="el" href="renderable_8h_source.html#l00049">49</a> of file <a class="el" href="renderable_8h_source.html">renderable.h</a>.</p>
 <div class="fragment"><div class="line"><span class="lineno">   49</span>{};</div>

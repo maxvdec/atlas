@@ -8,7 +8,7 @@ var searchData=
   ['indices_5',['indices',['../class_core_object.html#a7e537c011baa2daba8e6f7c33db7e143',1,'CoreObject']]],
   ['inertiatensor_6',['inertiaTensor',['../class_convex.html#a17d4bab01782f447105c789b5a1a8537',1,'Convex']]],
   ['init_7',['init',['../class_audio_player.html#a699d2d59e4ac863af92f59f78c2ff357',1,'AudioPlayer::init()'],['../class_component.html#a162f8cdc070537a71f2ad0b5e763b86f',1,'Component::init()'],['../class_trait_component.html#ade24889763ec0cf3892107cec2f95bcc',1,'TraitComponent::init()'],['../class_compound_object.html#ae606cb70c43eeba4f75e129f8969f703',1,'CompoundObject::init()']]],
-  ['initialize_8',['initialize',['../class_compound_object.html#ae3bf373a10950faf4aadd63979e6372f',1,'CompoundObject::initialize()'],['../class_renderable.html#aaa53405a3eb174752fce5e4a2fc8dca8',1,'Renderable::initialize()'],['../class_core_object.html#a12d021716ccc8a72b2f38567579ecf10',1,'CoreObject::initialize()'],['../class_particle_emitter.html#ae3c78db9b68fadecfcbe8e22a82bba41',1,'ParticleEmitter::initialize()'],['../class_scene.html#a9d87607c6e6a93d1bfef10ed1cfdc667',1,'Scene::initialize()'],['../class_text.html#a7d09c32abc682f8827d9a407a4771036',1,'Text::initialize()'],['../class_audio_engine.html#a146c25c0aca434a5b621af256f93dfc4',1,'AudioEngine::initialize()']]],
+  ['initialize_8',['initialize',['../class_compound_object.html#ae3bf373a10950faf4aadd63979e6372f',1,'CompoundObject::initialize()'],['../class_renderable.html#aaa53405a3eb174752fce5e4a2fc8dca8',1,'Renderable::initialize()'],['../class_core_object.html#a12d021716ccc8a72b2f38567579ecf10',1,'CoreObject::initialize()'],['../class_particle_emitter.html#ae3c78db9b68fadecfcbe8e22a82bba41',1,'ParticleEmitter::initialize()'],['../class_model.html#a5e3a76dda4214e2014b2964d4170f368',1,'Model::initialize()'],['../class_scene.html#a9d87607c6e6a93d1bfef10ed1cfdc667',1,'Scene::initialize()'],['../class_text.html#a7d09c32abc682f8827d9a407a4771036',1,'Text::initialize()'],['../class_audio_engine.html#a146c25c0aca434a5b621af256f93dfc4',1,'AudioEngine::initialize()']]],
   ['input_2eh_9',['input.h',['../input_8h.html',1,'']]],
   ['insert_10',['Insert',['../input_8h.html#a9479d299e1852e6140dcca1f405868abaa458be0f08b7e4ff3c0f633c100176c0',1,'input.h']]],
   ['installation_11',['Installation',['../tutorial.html#autotoc_md2',1,'']]],
@@ -23,5 +23,6 @@ var searchData=
   ['iskeyclicked_20',['isKeyClicked',['../class_window.html#a5d64d3322428400dd343895ccfeaeb0a',1,'Window']]],
   ['iskeypressed_21',['isKeyPressed',['../class_window.html#a934998dda7f1a9c513c47684753075fe',1,'Window']]],
   ['ismin_22',['ismin',['../struct_pseudo_body.html#ab897861b3dd99d7b98b89eaaaf1731d2',1,'PseudoBody']]],
-  ['isplaying_23',['isPlaying',['../class_audio_source.html#a218980b87a1b223b2e13bcb766567ad1',1,'AudioSource']]]
+  ['ismono_23',['isMono',['../class_audio_data.html#abacb6f98ee7bd4a62f1fd8d7385a4781',1,'AudioData']]],
+  ['isplaying_24',['isPlaying',['../class_audio_source.html#a218980b87a1b223b2e13bcb766567ad1',1,'AudioSource']]]
 ];

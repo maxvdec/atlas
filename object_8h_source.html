@@ -872,7 +872,7 @@ $(function(){initNavTree('object_8h_source.html','',''); });
 <div class="line"><a id="l00726" name="l00726"></a><span class="lineno">  726</span><span class="keyword">class </span>aiMesh;</div>
 <div class="line"><a id="l00727" name="l00727"></a><span class="lineno">  727</span><span class="keyword">class </span>aiMaterial;</div>
 <div class="foldopen" id="foldopen00728" data-start="{" data-end="};">
-<div class="line"><a id="l00728" name="l00728"></a><span class="lineno"><a class="line" href="class_model.html">  728</a></span><span class="keyword">class </span><a class="code hl_function" href="class_model.html#ab5bdabea36b1d1bee80151e2da913373">Model</a> {</div>
+<div class="line"><a id="l00728" name="l00728"></a><span class="lineno"><a class="line" href="class_model.html">  728</a></span><span class="keyword">class </span><a class="code hl_function" href="class_model.html#ab5bdabea36b1d1bee80151e2da913373">Model</a> : <span class="keyword">public</span> <a class="code hl_class" href="class_game_object.html">GameObject</a> {</div>
 <div class="line"><a id="l00729" name="l00729"></a><span class="lineno">  729</span>  <span class="keyword">public</span>:</div>
 <div class="line"><a id="l00730" name="l00730"></a><span class="lineno"><a class="line" href="class_model.html#a8a74c2ff2b6a5755c2ed913d7c6a88f4">  730</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_model.html#a8a74c2ff2b6a5755c2ed913d7c6a88f4">fromResource</a>(<a class="code hl_struct" href="struct_resource.html">Resource</a> resource);</div>
 <div class="foldopen" id="foldopen00731" data-start="{" data-end="}">
@@ -881,66 +881,136 @@ $(function(){initNavTree('object_8h_source.html','',''); });
 <div class="line"><a id="l00733" name="l00733"></a><span class="lineno">  733</span>    }</div>
 </div>
 <div class="line"><a id="l00734" name="l00734"></a><span class="lineno">  734</span> </div>
-<div class="line"><a id="l00735" name="l00735"></a><span class="lineno"><a class="line" href="class_model.html#acbee4a127e90841160090ee02229b430">  735</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_model.html#acbee4a127e90841160090ee02229b430">addToWindow</a>(<a class="code hl_class" href="class_window.html">Window</a> &amp;window);</div>
-<div class="line"><a id="l00736" name="l00736"></a><span class="lineno">  736</span> </div>
-<div class="foldopen" id="foldopen00737" data-start="{" data-end="}">
-<div class="line"><a id="l00737" name="l00737"></a><span class="lineno"><a class="line" href="class_model.html#af41844c4d31ac0fdb21c081f72ba32d6">  737</a></span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_model.html#af41844c4d31ac0fdb21c081f72ba32d6">move</a>(<span class="keyword">const</span> <a class="code hl_struct" href="struct_position3d.html">Position3d</a> &amp;deltaPosition) {</div>
-<div class="line"><a id="l00738" name="l00738"></a><span class="lineno">  738</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
-<div class="line"><a id="l00739" name="l00739"></a><span class="lineno">  739</span>            obj-&gt;move(deltaPosition);</div>
-<div class="line"><a id="l00740" name="l00740"></a><span class="lineno">  740</span>        }</div>
-<div class="line"><a id="l00741" name="l00741"></a><span class="lineno">  741</span>    }</div>
+<div class="foldopen" id="foldopen00735" data-start="{" data-end="}">
+<div class="line"><a id="l00735" name="l00735"></a><span class="lineno"><a class="line" href="class_model.html#aeb27cb91b9a787f06d8c8001169968bc">  735</a></span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_model.html#aeb27cb91b9a787f06d8c8001169968bc">move</a>(<span class="keyword">const</span> <a class="code hl_struct" href="struct_position3d.html">Position3d</a> &amp;deltaPosition)<span class="keyword"> override </span>{</div>
+<div class="line"><a id="l00736" name="l00736"></a><span class="lineno">  736</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><a id="l00737" name="l00737"></a><span class="lineno">  737</span>            obj-&gt;move(deltaPosition);</div>
+<div class="line"><a id="l00738" name="l00738"></a><span class="lineno">  738</span>        }</div>
+<div class="line"><a id="l00739" name="l00739"></a><span class="lineno">  739</span>    }</div>
 </div>
-<div class="line"><a id="l00742" name="l00742"></a><span class="lineno">  742</span> </div>
-<div class="foldopen" id="foldopen00743" data-start="{" data-end="}">
-<div class="line"><a id="l00743" name="l00743"></a><span class="lineno"><a class="line" href="class_model.html#a030975d05ad618b019536907683c937d">  743</a></span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_model.html#a030975d05ad618b019536907683c937d">setPosition</a>(<span class="keyword">const</span> <a class="code hl_struct" href="struct_position3d.html">Position3d</a> &amp;newPosition) {</div>
-<div class="line"><a id="l00744" name="l00744"></a><span class="lineno">  744</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
-<div class="line"><a id="l00745" name="l00745"></a><span class="lineno">  745</span>            obj-&gt;setPosition(newPosition);</div>
-<div class="line"><a id="l00746" name="l00746"></a><span class="lineno">  746</span>        }</div>
-<div class="line"><a id="l00747" name="l00747"></a><span class="lineno">  747</span>    }</div>
+<div class="line"><a id="l00740" name="l00740"></a><span class="lineno">  740</span> </div>
+<div class="foldopen" id="foldopen00741" data-start="{" data-end="}">
+<div class="line"><a id="l00741" name="l00741"></a><span class="lineno"><a class="line" href="class_model.html#a7cd6f92f17a58446c6b1d2ea70e2e0d5">  741</a></span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_model.html#a7cd6f92f17a58446c6b1d2ea70e2e0d5">setPosition</a>(<span class="keyword">const</span> <a class="code hl_struct" href="struct_position3d.html">Position3d</a> &amp;newPosition)<span class="keyword"> override </span>{</div>
+<div class="line"><a id="l00742" name="l00742"></a><span class="lineno">  742</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><a id="l00743" name="l00743"></a><span class="lineno">  743</span>            obj-&gt;setPosition(newPosition);</div>
+<div class="line"><a id="l00744" name="l00744"></a><span class="lineno">  744</span>        }</div>
+<div class="line"><a id="l00745" name="l00745"></a><span class="lineno">  745</span>    }</div>
 </div>
-<div class="line"><a id="l00748" name="l00748"></a><span class="lineno">  748</span> </div>
-<div class="foldopen" id="foldopen00749" data-start="{" data-end="}">
-<div class="line"><a id="l00749" name="l00749"></a><span class="lineno"><a class="line" href="class_model.html#a72c88fadb469e4bc11b54b337963c859">  749</a></span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_model.html#a72c88fadb469e4bc11b54b337963c859">setRotation</a>(<span class="keyword">const</span> <a class="code hl_struct" href="struct_rotation3d.html">Rotation3d</a> &amp;newRotation) {</div>
-<div class="line"><a id="l00750" name="l00750"></a><span class="lineno">  750</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
-<div class="line"><a id="l00751" name="l00751"></a><span class="lineno">  751</span>            obj-&gt;setRotation(newRotation);</div>
-<div class="line"><a id="l00752" name="l00752"></a><span class="lineno">  752</span>        }</div>
-<div class="line"><a id="l00753" name="l00753"></a><span class="lineno">  753</span>    }</div>
+<div class="line"><a id="l00746" name="l00746"></a><span class="lineno">  746</span> </div>
+<div class="foldopen" id="foldopen00747" data-start="{" data-end="}">
+<div class="line"><a id="l00747" name="l00747"></a><span class="lineno"><a class="line" href="class_model.html#a24148dc5603a0a2e3da010b89cbde5b8">  747</a></span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_model.html#a24148dc5603a0a2e3da010b89cbde5b8">setRotation</a>(<span class="keyword">const</span> <a class="code hl_struct" href="struct_rotation3d.html">Rotation3d</a> &amp;newRotation)<span class="keyword"> override </span>{</div>
+<div class="line"><a id="l00748" name="l00748"></a><span class="lineno">  748</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><a id="l00749" name="l00749"></a><span class="lineno">  749</span>            obj-&gt;setRotation(newRotation);</div>
+<div class="line"><a id="l00750" name="l00750"></a><span class="lineno">  750</span>        }</div>
+<div class="line"><a id="l00751" name="l00751"></a><span class="lineno">  751</span>    }</div>
 </div>
-<div class="line"><a id="l00754" name="l00754"></a><span class="lineno">  754</span> </div>
-<div class="foldopen" id="foldopen00755" data-start="{" data-end="}">
-<div class="line"><a id="l00755" name="l00755"></a><span class="lineno"><a class="line" href="class_model.html#a8c5ba009ee3e677813751c31a2b95c9d">  755</a></span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_model.html#a8c5ba009ee3e677813751c31a2b95c9d">attachTexture</a>(<span class="keyword">const</span> <a class="code hl_struct" href="struct_texture.html">Texture</a> &amp;texture) {</div>
-<div class="line"><a id="l00756" name="l00756"></a><span class="lineno">  756</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
-<div class="line"><a id="l00757" name="l00757"></a><span class="lineno">  757</span>            obj-&gt;attachTexture(texture);</div>
-<div class="line"><a id="l00758" name="l00758"></a><span class="lineno">  758</span>        }</div>
-<div class="line"><a id="l00759" name="l00759"></a><span class="lineno">  759</span>    }</div>
+<div class="line"><a id="l00752" name="l00752"></a><span class="lineno">  752</span> </div>
+<div class="foldopen" id="foldopen00753" data-start="{" data-end="}">
+<div class="line"><a id="l00753" name="l00753"></a><span class="lineno"><a class="line" href="class_model.html#abc49ca9b5823f177f421589cf447e913">  753</a></span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_model.html#abc49ca9b5823f177f421589cf447e913">attachTexture</a>(<span class="keyword">const</span> <a class="code hl_struct" href="struct_texture.html">Texture</a> &amp;texture)<span class="keyword"> override </span>{</div>
+<div class="line"><a id="l00754" name="l00754"></a><span class="lineno">  754</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><a id="l00755" name="l00755"></a><span class="lineno">  755</span>            obj-&gt;attachTexture(texture);</div>
+<div class="line"><a id="l00756" name="l00756"></a><span class="lineno">  756</span>        }</div>
+<div class="line"><a id="l00757" name="l00757"></a><span class="lineno">  757</span>    }</div>
 </div>
-<div class="line"><a id="l00760" name="l00760"></a><span class="lineno">  760</span> </div>
-<div class="foldopen" id="foldopen00761" data-start="{" data-end="}">
-<div class="line"><a id="l00761" name="l00761"></a><span class="lineno"><a class="line" href="class_model.html#a4c15571f5695e2983ba33062b034ad2b">  761</a></span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_model.html#a4c15571f5695e2983ba33062b034ad2b">setScale</a>(<span class="keyword">const</span> <a class="code hl_typedef" href="units_8h.html#a3b9b132cddb1dfe2ae572f230abe45f1">Scale3d</a> &amp;newScale) {</div>
-<div class="line"><a id="l00762" name="l00762"></a><span class="lineno">  762</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
-<div class="line"><a id="l00763" name="l00763"></a><span class="lineno">  763</span>            obj-&gt;setScale(newScale);</div>
-<div class="line"><a id="l00764" name="l00764"></a><span class="lineno">  764</span>        }</div>
-<div class="line"><a id="l00765" name="l00765"></a><span class="lineno">  765</span>    }</div>
+<div class="line"><a id="l00758" name="l00758"></a><span class="lineno">  758</span> </div>
+<div class="foldopen" id="foldopen00759" data-start="{" data-end="}">
+<div class="line"><a id="l00759" name="l00759"></a><span class="lineno"><a class="line" href="class_model.html#a9620da538736e7eea3b38c727cbe3571">  759</a></span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_model.html#a9620da538736e7eea3b38c727cbe3571">setScale</a>(<span class="keyword">const</span> <a class="code hl_typedef" href="units_8h.html#a3b9b132cddb1dfe2ae572f230abe45f1">Scale3d</a> &amp;newScale)<span class="keyword"> override </span>{</div>
+<div class="line"><a id="l00760" name="l00760"></a><span class="lineno">  760</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><a id="l00761" name="l00761"></a><span class="lineno">  761</span>            obj-&gt;setScale(newScale);</div>
+<div class="line"><a id="l00762" name="l00762"></a><span class="lineno">  762</span>        }</div>
+<div class="line"><a id="l00763" name="l00763"></a><span class="lineno">  763</span>    }</div>
 </div>
-<div class="line"><a id="l00766" name="l00766"></a><span class="lineno">  766</span> </div>
-<div class="line"><a id="l00767" name="l00767"></a><span class="lineno"><a class="line" href="class_model.html#ab5bdabea36b1d1bee80151e2da913373">  767</a></span>    <a class="code hl_function" href="class_model.html#ab5bdabea36b1d1bee80151e2da913373">Model</a>() = <span class="keywordflow">default</span>;</div>
-<div class="line"><a id="l00768" name="l00768"></a><span class="lineno">  768</span> </div>
-<div class="line"><a id="l00769" name="l00769"></a><span class="lineno"><a class="line" href="class_model.html#acb2e155d98ff0980bc40958bb5b79868">  769</a></span>    <a class="code hl_struct" href="struct_material.html">Material</a> <a class="code hl_variable" href="class_model.html#acb2e155d98ff0980bc40958bb5b79868">material</a>;</div>
+<div class="line"><a id="l00764" name="l00764"></a><span class="lineno">  764</span> </div>
+<div class="foldopen" id="foldopen00765" data-start="{" data-end="}">
+<div class="line"><a id="l00765" name="l00765"></a><span class="lineno"><a class="line" href="class_model.html#ab1bc68ab2ef747780f89d5f2954ca05b">  765</a></span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_model.html#ab1bc68ab2ef747780f89d5f2954ca05b">setViewMatrix</a>(<span class="keyword">const</span> glm::mat4 &amp;view)<span class="keyword"> override </span>{</div>
+<div class="line"><a id="l00766" name="l00766"></a><span class="lineno">  766</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><a id="l00767" name="l00767"></a><span class="lineno">  767</span>            obj-&gt;setViewMatrix(view);</div>
+<div class="line"><a id="l00768" name="l00768"></a><span class="lineno">  768</span>        }</div>
+<div class="line"><a id="l00769" name="l00769"></a><span class="lineno">  769</span>    }</div>
+</div>
 <div class="line"><a id="l00770" name="l00770"></a><span class="lineno">  770</span> </div>
-<div class="line"><a id="l00771" name="l00771"></a><span class="lineno">  771</span>  <span class="keyword">private</span>:</div>
-<div class="line"><a id="l00772" name="l00772"></a><span class="lineno">  772</span>    std::vector&lt;std::shared_ptr&lt;CoreObject&gt;&gt; objects;</div>
-<div class="line"><a id="l00773" name="l00773"></a><span class="lineno">  773</span>    std::string directory;</div>
-<div class="line"><a id="l00774" name="l00774"></a><span class="lineno">  774</span> </div>
-<div class="line"><a id="l00775" name="l00775"></a><span class="lineno">  775</span>    <span class="keywordtype">void</span> loadModel(<a class="code hl_struct" href="struct_resource.html">Resource</a> resource);</div>
-<div class="line"><a id="l00776" name="l00776"></a><span class="lineno">  776</span>    <span class="keywordtype">void</span> processNode(aiNode *node, <span class="keyword">const</span> aiScene *scene,</div>
-<div class="line"><a id="l00777" name="l00777"></a><span class="lineno">  777</span>                     glm::mat4 parentTransform = glm::mat4(1.0f));</div>
-<div class="line"><a id="l00778" name="l00778"></a><span class="lineno">  778</span>    <a class="code hl_class" href="class_core_object.html">CoreObject</a> processMesh(aiMesh *mesh, <span class="keyword">const</span> aiScene *scene);</div>
-<div class="line"><a id="l00779" name="l00779"></a><span class="lineno">  779</span>    std::vector&lt;Texture&gt; loadMaterialTextures(aiMaterial *mat, std::any type,</div>
-<div class="line"><a id="l00780" name="l00780"></a><span class="lineno">  780</span>                                              <span class="keyword">const</span> std::string &amp;typeName);</div>
-<div class="line"><a id="l00781" name="l00781"></a><span class="lineno">  781</span>};</div>
+<div class="foldopen" id="foldopen00771" data-start="{" data-end="}">
+<div class="line"><a id="l00771" name="l00771"></a><span class="lineno"><a class="line" href="class_model.html#a8b786b81d7e5f23fb2c985944bf0c93a">  771</a></span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_model.html#a8b786b81d7e5f23fb2c985944bf0c93a">render</a>(<span class="keywordtype">float</span> dt)<span class="keyword"> override </span>{</div>
+<div class="line"><a id="l00772" name="l00772"></a><span class="lineno">  772</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;component : <a class="code hl_variable" href="class_game_object.html#a545e4ed29df0e16304d46c73404c0ce6">components</a>) {</div>
+<div class="line"><a id="l00773" name="l00773"></a><span class="lineno">  773</span>            component-&gt;update(dt);</div>
+<div class="line"><a id="l00774" name="l00774"></a><span class="lineno">  774</span>        }</div>
+<div class="line"><a id="l00775" name="l00775"></a><span class="lineno">  775</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><a id="l00776" name="l00776"></a><span class="lineno">  776</span>            obj-&gt;render(dt);</div>
+<div class="line"><a id="l00777" name="l00777"></a><span class="lineno">  777</span>        }</div>
+<div class="line"><a id="l00778" name="l00778"></a><span class="lineno">  778</span>    }</div>
 </div>
-<div class="line"><a id="l00782" name="l00782"></a><span class="lineno">  782</span> </div>
-<div class="line"><a id="l00783" name="l00783"></a><span class="lineno">  783</span><span class="preprocessor">#endif </span><span class="comment">// ATLAS_OBJECT_H</span></div>
+<div class="line"><a id="l00779" name="l00779"></a><span class="lineno">  779</span> </div>
+<div class="foldopen" id="foldopen00780" data-start="{" data-end="}">
+<div class="line"><a id="l00780" name="l00780"></a><span class="lineno"><a class="line" href="class_model.html#a53186f31f04ff6f7977fabe72ce8eb3d">  780</a></span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_model.html#a53186f31f04ff6f7977fabe72ce8eb3d">update</a>(<a class="code hl_class" href="class_window.html">Window</a> &amp;window)<span class="keyword"> override </span>{</div>
+<div class="line"><a id="l00781" name="l00781"></a><span class="lineno">  781</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><a id="l00782" name="l00782"></a><span class="lineno">  782</span>            obj-&gt;update(window);</div>
+<div class="line"><a id="l00783" name="l00783"></a><span class="lineno">  783</span>        }</div>
+<div class="line"><a id="l00784" name="l00784"></a><span class="lineno">  784</span>    }</div>
+</div>
+<div class="line"><a id="l00785" name="l00785"></a><span class="lineno">  785</span> </div>
+<div class="foldopen" id="foldopen00786" data-start="{" data-end="}">
+<div class="line"><a id="l00786" name="l00786"></a><span class="lineno"><a class="line" href="class_model.html#a5e3a76dda4214e2014b2964d4170f368">  786</a></span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_model.html#a5e3a76dda4214e2014b2964d4170f368">initialize</a>()<span class="keyword"> override </span>{</div>
+<div class="line"><a id="l00787" name="l00787"></a><span class="lineno">  787</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;component : <a class="code hl_variable" href="class_game_object.html#a545e4ed29df0e16304d46c73404c0ce6">components</a>) {</div>
+<div class="line"><a id="l00788" name="l00788"></a><span class="lineno">  788</span>            component-&gt;init();</div>
+<div class="line"><a id="l00789" name="l00789"></a><span class="lineno">  789</span>        }</div>
+<div class="line"><a id="l00790" name="l00790"></a><span class="lineno">  790</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><a id="l00791" name="l00791"></a><span class="lineno">  791</span>            obj-&gt;initialize();</div>
+<div class="line"><a id="l00792" name="l00792"></a><span class="lineno">  792</span>        }</div>
+<div class="line"><a id="l00793" name="l00793"></a><span class="lineno">  793</span>    }</div>
+</div>
+<div class="line"><a id="l00794" name="l00794"></a><span class="lineno">  794</span> </div>
+<div class="foldopen" id="foldopen00795" data-start="{" data-end="}">
+<div class="line"><a id="l00795" name="l00795"></a><span class="lineno"><a class="line" href="class_model.html#a778fb43b905eb3520d8b348eab82e89b">  795</a></span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_model.html#a778fb43b905eb3520d8b348eab82e89b">setProjectionMatrix</a>(<span class="keyword">const</span> glm::mat4 &amp;projection)<span class="keyword"> override </span>{</div>
+<div class="line"><a id="l00796" name="l00796"></a><span class="lineno">  796</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><a id="l00797" name="l00797"></a><span class="lineno">  797</span>            obj-&gt;setProjectionMatrix(projection);</div>
+<div class="line"><a id="l00798" name="l00798"></a><span class="lineno">  798</span>        }</div>
+<div class="line"><a id="l00799" name="l00799"></a><span class="lineno">  799</span>    }</div>
+</div>
+<div class="line"><a id="l00800" name="l00800"></a><span class="lineno">  800</span> </div>
+<div class="foldopen" id="foldopen00801" data-start="{" data-end="}">
+<div class="line"><a id="l00801" name="l00801"></a><span class="lineno"><a class="line" href="class_model.html#a24265caaaa9dee3e0598dd105b8296a3">  801</a></span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_model.html#a24265caaaa9dee3e0598dd105b8296a3">setShader</a>(<span class="keyword">const</span> <a class="code hl_struct" href="struct_shader_program.html">ShaderProgram</a> &amp;shader)<span class="keyword"> override </span>{</div>
+<div class="line"><a id="l00802" name="l00802"></a><span class="lineno">  802</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><a id="l00803" name="l00803"></a><span class="lineno">  803</span>            obj-&gt;setShader(shader);</div>
+<div class="line"><a id="l00804" name="l00804"></a><span class="lineno">  804</span>        }</div>
+<div class="line"><a id="l00805" name="l00805"></a><span class="lineno">  805</span>    }</div>
+</div>
+<div class="line"><a id="l00806" name="l00806"></a><span class="lineno">  806</span> </div>
+<div class="foldopen" id="foldopen00807" data-start="{" data-end="}">
+<div class="line"><a id="l00807" name="l00807"></a><span class="lineno"><a class="line" href="class_model.html#ad26c5b613946c3c2ce2524484f56fc6e">  807</a></span>    <span class="keyword">inline</span> std::optional&lt;ShaderProgram&gt; <a class="code hl_function" href="class_model.html#ad26c5b613946c3c2ce2524484f56fc6e">getShaderProgram</a>()<span class="keyword"> override </span>{</div>
+<div class="line"><a id="l00808" name="l00808"></a><span class="lineno">  808</span>        <span class="keywordflow">if</span> (objects.empty()) {</div>
+<div class="line"><a id="l00809" name="l00809"></a><span class="lineno">  809</span>            <span class="keywordflow">throw</span> std::runtime_error(<span class="stringliteral">&quot;Model has no objects.&quot;</span>);</div>
+<div class="line"><a id="l00810" name="l00810"></a><span class="lineno">  810</span>        }</div>
+<div class="line"><a id="l00811" name="l00811"></a><span class="lineno">  811</span>        <span class="keywordflow">return</span> objects[0]-&gt;getShaderProgram().value();</div>
+<div class="line"><a id="l00812" name="l00812"></a><span class="lineno">  812</span>    }</div>
+</div>
+<div class="line"><a id="l00813" name="l00813"></a><span class="lineno">  813</span> </div>
+<div class="foldopen" id="foldopen00814" data-start="{" data-end="}">
+<div class="line"><a id="l00814" name="l00814"></a><span class="lineno"><a class="line" href="class_model.html#a773e85c486ebaf5e0f3afe9da3381212">  814</a></span>    <span class="keyword">inline</span> <a class="code hl_struct" href="struct_position3d.html">Position3d</a> <a class="code hl_function" href="class_model.html#a773e85c486ebaf5e0f3afe9da3381212">getPosition</a>()<span class="keyword"> const override </span>{</div>
+<div class="line"><a id="l00815" name="l00815"></a><span class="lineno">  815</span>        <span class="keywordflow">if</span> (objects.empty()) {</div>
+<div class="line"><a id="l00816" name="l00816"></a><span class="lineno">  816</span>            <span class="keywordflow">throw</span> std::runtime_error(<span class="stringliteral">&quot;Model has no objects.&quot;</span>);</div>
+<div class="line"><a id="l00817" name="l00817"></a><span class="lineno">  817</span>        }</div>
+<div class="line"><a id="l00818" name="l00818"></a><span class="lineno">  818</span>        <span class="keywordflow">return</span> objects[0]-&gt;getPosition();</div>
+<div class="line"><a id="l00819" name="l00819"></a><span class="lineno">  819</span>    }</div>
+</div>
+<div class="line"><a id="l00820" name="l00820"></a><span class="lineno">  820</span> </div>
+<div class="line"><a id="l00821" name="l00821"></a><span class="lineno"><a class="line" href="class_model.html#ab5bdabea36b1d1bee80151e2da913373">  821</a></span>    <a class="code hl_function" href="class_model.html#ab5bdabea36b1d1bee80151e2da913373">Model</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a id="l00822" name="l00822"></a><span class="lineno">  822</span> </div>
+<div class="line"><a id="l00823" name="l00823"></a><span class="lineno"><a class="line" href="class_model.html#acb2e155d98ff0980bc40958bb5b79868">  823</a></span>    <a class="code hl_struct" href="struct_material.html">Material</a> <a class="code hl_variable" href="class_model.html#acb2e155d98ff0980bc40958bb5b79868">material</a>;</div>
+<div class="line"><a id="l00824" name="l00824"></a><span class="lineno">  824</span> </div>
+<div class="line"><a id="l00825" name="l00825"></a><span class="lineno">  825</span>  <span class="keyword">private</span>:</div>
+<div class="line"><a id="l00826" name="l00826"></a><span class="lineno">  826</span>    std::vector&lt;std::shared_ptr&lt;CoreObject&gt;&gt; objects;</div>
+<div class="line"><a id="l00827" name="l00827"></a><span class="lineno">  827</span>    std::string directory;</div>
+<div class="line"><a id="l00828" name="l00828"></a><span class="lineno">  828</span> </div>
+<div class="line"><a id="l00829" name="l00829"></a><span class="lineno">  829</span>    <span class="keywordtype">void</span> loadModel(<a class="code hl_struct" href="struct_resource.html">Resource</a> resource);</div>
+<div class="line"><a id="l00830" name="l00830"></a><span class="lineno">  830</span>    <span class="keywordtype">void</span> processNode(aiNode *node, <span class="keyword">const</span> aiScene *scene,</div>
+<div class="line"><a id="l00831" name="l00831"></a><span class="lineno">  831</span>                     glm::mat4 parentTransform = glm::mat4(1.0f));</div>
+<div class="line"><a id="l00832" name="l00832"></a><span class="lineno">  832</span>    <a class="code hl_class" href="class_core_object.html">CoreObject</a> processMesh(aiMesh *mesh, <span class="keyword">const</span> aiScene *scene);</div>
+<div class="line"><a id="l00833" name="l00833"></a><span class="lineno">  833</span>    std::vector&lt;Texture&gt; loadMaterialTextures(aiMaterial *mat, std::any type,</div>
+<div class="line"><a id="l00834" name="l00834"></a><span class="lineno">  834</span>                                              <span class="keyword">const</span> std::string &amp;typeName);</div>
+<div class="line"><a id="l00835" name="l00835"></a><span class="lineno">  835</span>};</div>
+</div>
+<div class="line"><a id="l00836" name="l00836"></a><span class="lineno">  836</span> </div>
+<div class="line"><a id="l00837" name="l00837"></a><span class="lineno">  837</span><span class="preprocessor">#endif </span><span class="comment">// ATLAS_OBJECT_H</span></div>
 <div class="ttc" id="abody_8h_html"><div class="ttname"><a href="body_8h.html">body.h</a></div></div>
 <div class="ttc" id="aclass_body_html"><div class="ttname"><a href="class_body.html">Body</a></div><div class="ttdoc">Class representing a physical body in a physics simulation. It includes methods for applying forces,...</div><div class="ttdef"><b>Definition</b> <a href="body_8h_source.html#l00078">body.h:78</a></div></div>
 <div class="ttc" id="aclass_core_object_html"><div class="ttname"><a href="class_core_object.html">CoreObject</a></div><div class="ttdoc">Represents a 3D object in the scene, including its geometry, material and every interaction with the ...</div><div class="ttdef"><b>Definition</b> <a href="#l00176">object.h:176</a></div></div>
@@ -991,18 +1061,26 @@ $(function(){initNavTree('object_8h_source.html','',''); });
 <div class="ttc" id="aclass_core_object_html_aec2f2e3d24f9a78570c013018f0a850a"><div class="ttname"><a href="class_core_object.html#aec2f2e3d24f9a78570c013018f0a850a">CoreObject::castsShadows</a></div><div class="ttdeci">bool castsShadows</div><div class="ttdoc">Variable that determines if the object casts shadows.</div><div class="ttdef"><b>Definition</b> <a href="#l00304">object.h:304</a></div></div>
 <div class="ttc" id="aclass_core_object_html_af516bbf869acc7d45e661005a834b93d"><div class="ttname"><a href="class_core_object.html#af516bbf869acc7d45e661005a834b93d">CoreObject::getPosition</a></div><div class="ttdeci">Position3d getPosition() const override</div><div class="ttdoc">Function to get the position of the object in 3D space.</div><div class="ttdef"><b>Definition</b> <a href="#l00357">object.h:357</a></div></div>
 <div class="ttc" id="aclass_core_object_html_af91d0ad0985941edf65b8c3b24865c69"><div class="ttname"><a href="class_core_object.html#af91d0ad0985941edf65b8c3b24865c69">CoreObject::clone</a></div><div class="ttdeci">CoreObject clone() const</div><div class="ttdoc">Function that creates a copy of the object.</div></div>
-<div class="ttc" id="aclass_game_object_html"><div class="ttname"><a href="class_game_object.html">GameObject</a></div><div class="ttdoc">Base class for all Game Objects. It extends from Renderable and it provides common functionality for ...</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00145">component.h:145</a></div></div>
-<div class="ttc" id="aclass_game_object_html_af69e678688bfef2c0bba4aa78085c8a8"><div class="ttname"><a href="class_game_object.html#af69e678688bfef2c0bba4aa78085c8a8">GameObject::body</a></div><div class="ttdeci">std::shared_ptr&lt; Body &gt; body</div><div class="ttdoc">Gets the physics body associated with the object.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00294">component.h:294</a></div></div>
-<div class="ttc" id="aclass_model_html_a030975d05ad618b019536907683c937d"><div class="ttname"><a href="class_model.html#a030975d05ad618b019536907683c937d">Model::setPosition</a></div><div class="ttdeci">void setPosition(const Position3d &amp;newPosition)</div><div class="ttdef"><b>Definition</b> <a href="#l00743">object.h:743</a></div></div>
-<div class="ttc" id="aclass_model_html_a4c15571f5695e2983ba33062b034ad2b"><div class="ttname"><a href="class_model.html#a4c15571f5695e2983ba33062b034ad2b">Model::setScale</a></div><div class="ttdeci">void setScale(const Scale3d &amp;newScale)</div><div class="ttdef"><b>Definition</b> <a href="#l00761">object.h:761</a></div></div>
-<div class="ttc" id="aclass_model_html_a72c88fadb469e4bc11b54b337963c859"><div class="ttname"><a href="class_model.html#a72c88fadb469e4bc11b54b337963c859">Model::setRotation</a></div><div class="ttdeci">void setRotation(const Rotation3d &amp;newRotation)</div><div class="ttdef"><b>Definition</b> <a href="#l00749">object.h:749</a></div></div>
+<div class="ttc" id="aclass_game_object_html"><div class="ttname"><a href="class_game_object.html">GameObject</a></div><div class="ttdoc">Base class for all Game Objects. It extends from Renderable and it provides common functionality for ...</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00147">component.h:147</a></div></div>
+<div class="ttc" id="aclass_game_object_html_a545e4ed29df0e16304d46c73404c0ce6"><div class="ttname"><a href="class_game_object.html#a545e4ed29df0e16304d46c73404c0ce6">GameObject::components</a></div><div class="ttdeci">std::vector&lt; std::shared_ptr&lt; Component &gt; &gt; components</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00299">component.h:299</a></div></div>
+<div class="ttc" id="aclass_game_object_html_af69e678688bfef2c0bba4aa78085c8a8"><div class="ttname"><a href="class_game_object.html#af69e678688bfef2c0bba4aa78085c8a8">GameObject::body</a></div><div class="ttdeci">std::shared_ptr&lt; Body &gt; body</div><div class="ttdoc">Gets the physics body associated with the object.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00296">component.h:296</a></div></div>
+<div class="ttc" id="aclass_model_html_a24148dc5603a0a2e3da010b89cbde5b8"><div class="ttname"><a href="class_model.html#a24148dc5603a0a2e3da010b89cbde5b8">Model::setRotation</a></div><div class="ttdeci">void setRotation(const Rotation3d &amp;newRotation) override</div><div class="ttdoc">Sets the rotation of the object.</div><div class="ttdef"><b>Definition</b> <a href="#l00747">object.h:747</a></div></div>
+<div class="ttc" id="aclass_model_html_a24265caaaa9dee3e0598dd105b8296a3"><div class="ttname"><a href="class_model.html#a24265caaaa9dee3e0598dd105b8296a3">Model::setShader</a></div><div class="ttdeci">void setShader(const ShaderProgram &amp;shader) override</div><div class="ttdoc">Function to set the shader program for the object. Can be used to force an object to use a specific s...</div><div class="ttdef"><b>Definition</b> <a href="#l00801">object.h:801</a></div></div>
+<div class="ttc" id="aclass_model_html_a53186f31f04ff6f7977fabe72ce8eb3d"><div class="ttname"><a href="class_model.html#a53186f31f04ff6f7977fabe72ce8eb3d">Model::update</a></div><div class="ttdeci">void update(Window &amp;window) override</div><div class="ttdoc">Function to update the object each frame.</div><div class="ttdef"><b>Definition</b> <a href="#l00780">object.h:780</a></div></div>
+<div class="ttc" id="aclass_model_html_a5e3a76dda4214e2014b2964d4170f368"><div class="ttname"><a href="class_model.html#a5e3a76dda4214e2014b2964d4170f368">Model::initialize</a></div><div class="ttdeci">void initialize() override</div><div class="ttdoc">Function to initialize the object. Can be overridden by derived.</div><div class="ttdef"><b>Definition</b> <a href="#l00786">object.h:786</a></div></div>
+<div class="ttc" id="aclass_model_html_a773e85c486ebaf5e0f3afe9da3381212"><div class="ttname"><a href="class_model.html#a773e85c486ebaf5e0f3afe9da3381212">Model::getPosition</a></div><div class="ttdeci">Position3d getPosition() const override</div><div class="ttdoc">Function to get the position of the object in 3D space.</div><div class="ttdef"><b>Definition</b> <a href="#l00814">object.h:814</a></div></div>
+<div class="ttc" id="aclass_model_html_a778fb43b905eb3520d8b348eab82e89b"><div class="ttname"><a href="class_model.html#a778fb43b905eb3520d8b348eab82e89b">Model::setProjectionMatrix</a></div><div class="ttdeci">void setProjectionMatrix(const glm::mat4 &amp;projection) override</div><div class="ttdoc">Function to set the projection matrix for the object. Called from Window for internal purposes.</div><div class="ttdef"><b>Definition</b> <a href="#l00795">object.h:795</a></div></div>
+<div class="ttc" id="aclass_model_html_a7cd6f92f17a58446c6b1d2ea70e2e0d5"><div class="ttname"><a href="class_model.html#a7cd6f92f17a58446c6b1d2ea70e2e0d5">Model::setPosition</a></div><div class="ttdeci">void setPosition(const Position3d &amp;newPosition) override</div><div class="ttdoc">Sets the position of the object.</div><div class="ttdef"><b>Definition</b> <a href="#l00741">object.h:741</a></div></div>
 <div class="ttc" id="aclass_model_html_a8a74c2ff2b6a5755c2ed913d7c6a88f4"><div class="ttname"><a href="class_model.html#a8a74c2ff2b6a5755c2ed913d7c6a88f4">Model::fromResource</a></div><div class="ttdeci">void fromResource(Resource resource)</div></div>
-<div class="ttc" id="aclass_model_html_a8c5ba009ee3e677813751c31a2b95c9d"><div class="ttname"><a href="class_model.html#a8c5ba009ee3e677813751c31a2b95c9d">Model::attachTexture</a></div><div class="ttdeci">void attachTexture(const Texture &amp;texture)</div><div class="ttdef"><b>Definition</b> <a href="#l00755">object.h:755</a></div></div>
+<div class="ttc" id="aclass_model_html_a8b786b81d7e5f23fb2c985944bf0c93a"><div class="ttname"><a href="class_model.html#a8b786b81d7e5f23fb2c985944bf0c93a">Model::render</a></div><div class="ttdeci">void render(float dt) override</div><div class="ttdoc">Function to render the object. Must be implemented by derived classes.</div><div class="ttdef"><b>Definition</b> <a href="#l00771">object.h:771</a></div></div>
+<div class="ttc" id="aclass_model_html_a9620da538736e7eea3b38c727cbe3571"><div class="ttname"><a href="class_model.html#a9620da538736e7eea3b38c727cbe3571">Model::setScale</a></div><div class="ttdeci">void setScale(const Scale3d &amp;newScale) override</div><div class="ttdoc">Sets the scale of the object.</div><div class="ttdef"><b>Definition</b> <a href="#l00759">object.h:759</a></div></div>
+<div class="ttc" id="aclass_model_html_ab1bc68ab2ef747780f89d5f2954ca05b"><div class="ttname"><a href="class_model.html#ab1bc68ab2ef747780f89d5f2954ca05b">Model::setViewMatrix</a></div><div class="ttdeci">void setViewMatrix(const glm::mat4 &amp;view) override</div><div class="ttdoc">Function to set the view matrix for the object. Called from Window for internal purposes.</div><div class="ttdef"><b>Definition</b> <a href="#l00765">object.h:765</a></div></div>
 <div class="ttc" id="aclass_model_html_ab5bdabea36b1d1bee80151e2da913373"><div class="ttname"><a href="class_model.html#ab5bdabea36b1d1bee80151e2da913373">Model::Model</a></div><div class="ttdeci">Model()=default</div></div>
-<div class="ttc" id="aclass_model_html_acb2e155d98ff0980bc40958bb5b79868"><div class="ttname"><a href="class_model.html#acb2e155d98ff0980bc40958bb5b79868">Model::material</a></div><div class="ttdeci">Material material</div><div class="ttdef"><b>Definition</b> <a href="#l00769">object.h:769</a></div></div>
-<div class="ttc" id="aclass_model_html_acbee4a127e90841160090ee02229b430"><div class="ttname"><a href="class_model.html#acbee4a127e90841160090ee02229b430">Model::addToWindow</a></div><div class="ttdeci">void addToWindow(Window &amp;window)</div></div>
+<div class="ttc" id="aclass_model_html_abc49ca9b5823f177f421589cf447e913"><div class="ttname"><a href="class_model.html#abc49ca9b5823f177f421589cf447e913">Model::attachTexture</a></div><div class="ttdeci">void attachTexture(const Texture &amp;texture) override</div><div class="ttdoc">Attaches a texture to the object.</div><div class="ttdef"><b>Definition</b> <a href="#l00753">object.h:753</a></div></div>
+<div class="ttc" id="aclass_model_html_acb2e155d98ff0980bc40958bb5b79868"><div class="ttname"><a href="class_model.html#acb2e155d98ff0980bc40958bb5b79868">Model::material</a></div><div class="ttdeci">Material material</div><div class="ttdef"><b>Definition</b> <a href="#l00823">object.h:823</a></div></div>
+<div class="ttc" id="aclass_model_html_ad26c5b613946c3c2ce2524484f56fc6e"><div class="ttname"><a href="class_model.html#ad26c5b613946c3c2ce2524484f56fc6e">Model::getShaderProgram</a></div><div class="ttdeci">std::optional&lt; ShaderProgram &gt; getShaderProgram() override</div><div class="ttdoc">Function to get the current shader program used by the object.</div><div class="ttdef"><b>Definition</b> <a href="#l00807">object.h:807</a></div></div>
+<div class="ttc" id="aclass_model_html_aeb27cb91b9a787f06d8c8001169968bc"><div class="ttname"><a href="class_model.html#aeb27cb91b9a787f06d8c8001169968bc">Model::move</a></div><div class="ttdeci">void move(const Position3d &amp;deltaPosition) override</div><div class="ttdoc">Moves the object by a certain amount.</div><div class="ttdef"><b>Definition</b> <a href="#l00735">object.h:735</a></div></div>
 <div class="ttc" id="aclass_model_html_af2f4d13f48508e046f3b57e59ba420fb"><div class="ttname"><a href="class_model.html#af2f4d13f48508e046f3b57e59ba420fb">Model::getObjects</a></div><div class="ttdeci">std::vector&lt; std::shared_ptr&lt; CoreObject &gt; &gt; getObjects()</div><div class="ttdef"><b>Definition</b> <a href="#l00731">object.h:731</a></div></div>
-<div class="ttc" id="aclass_model_html_af41844c4d31ac0fdb21c081f72ba32d6"><div class="ttname"><a href="class_model.html#af41844c4d31ac0fdb21c081f72ba32d6">Model::move</a></div><div class="ttdeci">void move(const Position3d &amp;deltaPosition)</div><div class="ttdef"><b>Definition</b> <a href="#l00737">object.h:737</a></div></div>
 <div class="ttc" id="aclass_particle_emitter_html_a0a4c69870a82921e620a467f8264be1b"><div class="ttname"><a href="class_particle_emitter.html#a0a4c69870a82921e620a467f8264be1b">ParticleEmitter::getPosition</a></div><div class="ttdeci">Position3d getPosition() const override</div><div class="ttdoc">Function to get the position of the object in 3D space.</div><div class="ttdef"><b>Definition</b> <a href="#l00615">object.h:615</a></div></div>
 <div class="ttc" id="aclass_particle_emitter_html_a10c124a8f860c367cd3e086e90701da0"><div class="ttname"><a href="class_particle_emitter.html#a10c124a8f860c367cd3e086e90701da0">ParticleEmitter::update</a></div><div class="ttdeci">void update(Window &amp;window) override</div><div class="ttdoc">Function to update the object each frame.</div></div>
 <div class="ttc" id="aclass_particle_emitter_html_a152e95df28b2885262d5f5025d5f1497"><div class="ttname"><a href="class_particle_emitter.html#a152e95df28b2885262d5f5025d5f1497">ParticleEmitter::setColor</a></div><div class="ttdeci">void setColor(const Color &amp;color) override</div><div class="ttdoc">Sets the color of the object.</div></div>

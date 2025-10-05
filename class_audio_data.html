@@ -118,6 +118,8 @@ $(function(){initNavTree('class_audio_data.html','','class_audio_data-members');
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
+<a href="#pub-attribs">Public Attributes</a> &#124;
+<a href="#friends">Friends</a> &#124;
 <a href="class_audio_data-members.html">List of all members</a>  </div>
   <div class="headertitle"><div class="title">AudioData Class Reference</div></div>
 </div><!--header-->
@@ -137,13 +139,22 @@ Public Member Functions</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-static-methods" class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:aeefb77eb07ad8e916b45f8fc8a3bc926" id="r_aeefb77eb07ad8e916b45f8fc8a3bc926"><td class="memItemLeft" align="right" valign="top">static std::shared_ptr&lt; <a class="el" href="class_audio_data.html">AudioData</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aeefb77eb07ad8e916b45f8fc8a3bc926">fromResource</a> (<a class="el" href="struct_resource.html">Resource</a> resource)</td></tr>
+<tr class="memitem:aeefb77eb07ad8e916b45f8fc8a3bc926" id="r_aeefb77eb07ad8e916b45f8fc8a3bc926"><td class="memItemLeft" align="right" valign="top">static std::shared_ptr&lt; <a class="el" href="class_audio_data.html">AudioData</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aeefb77eb07ad8e916b45f8fc8a3bc926">fromResource</a> (<a class="el" href="struct_resource.html">Resource</a> <a class="el" href="#a0b2583df19d7446a8f4832410417058a">resource</a>)</td></tr>
 <tr class="memdesc:aeefb77eb07ad8e916b45f8fc8a3bc926"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates audio data from a resource file.  <br /></td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
+Public Attributes</h2></td></tr>
+<tr class="memitem:abacb6f98ee7bd4a62f1fd8d7385a4781" id="r_abacb6f98ee7bd4a62f1fd8d7385a4781"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#abacb6f98ee7bd4a62f1fd8d7385a4781">isMono</a> = false</td></tr>
+<tr class="memitem:a0b2583df19d7446a8f4832410417058a" id="r_a0b2583df19d7446a8f4832410417058a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_resource.html">Resource</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0b2583df19d7446a8f4832410417058a">resource</a></td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 id="header-friends" class="groupheader"><a id="friends" name="friends"></a>
+Friends</h2></td></tr>
+<tr class="memitem:a4c6a4b0d9827213876805011e3d9a751" id="r_a4c6a4b0d9827213876805011e3d9a751"><td class="memItemLeft" align="right" valign="top">class&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4c6a4b0d9827213876805011e3d9a751">AudioSource</a></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Class representing loaded audio data that can be played by <a class="el" href="class_audio_source.html" title="Class representing an audio source that can play audio data with 3D spatial positioning.">AudioSource</a> instances. </p>
 
-<p class="definition">Definition at line <a class="el" href="finewave_2audio_8h_source.html#l00072">72</a> of file <a class="el" href="finewave_2audio_8h_source.html">audio.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="finewave_2audio_8h_source.html#l00073">73</a> of file <a class="el" href="finewave_2audio_8h_source.html">audio.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="ad0344f0fc71a86083ea56dbc13908162" name="ad0344f0fc71a86083ea56dbc13908162"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ad0344f0fc71a86083ea56dbc13908162">&#9670;&#160;</a></span>~AudioData()</h2>
@@ -197,6 +208,8 @@ Static Public Member Functions</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>(std::shared_ptr&lt;AudioData&gt;) Shared pointer to the created audio data. </dd></dl>
 
+<p class="reference">References <a class="el" href="finewave_2audio_8h_source.html#l00098">resource</a>.</p>
+
 </div>
 </div>
 <a id="aceb85e5c71dbf33f438af85351edcb36" name="aceb85e5c71dbf33f438af85351edcb36"></a>
@@ -225,9 +238,69 @@ Static Public Member Functions</h2></td></tr>
 <p>Gets the internal ID of the audio data. </p>
 <dl class="section return"><dt>Returns</dt><dd>(<a class="el" href="units_8h.html#a5c9d258201f281b8ad0fb4385b7ef668" title="Type alias for OpenGL object identifiers.">Id</a>) The audio data ID. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="finewave_2audio_8h_source.html#l00093">93</a> of file <a class="el" href="finewave_2audio_8h_source.html">audio.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   93</span>{ <span class="keywordflow">return</span> id; }</div>
+<p class="definition">Definition at line <a class="el" href="finewave_2audio_8h_source.html#l00094">94</a> of file <a class="el" href="finewave_2audio_8h_source.html">audio.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   94</span>{ <span class="keywordflow">return</span> id; }</div>
 </div><!-- fragment -->
+</div>
+</div>
+<a name="doc-related-members" id="doc-related-members"></a><h2 id="header-doc-related-members" class="groupheader">Friends And Related Symbol Documentation</h2>
+<a id="a4c6a4b0d9827213876805011e3d9a751" name="a4c6a4b0d9827213876805011e3d9a751"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4c6a4b0d9827213876805011e3d9a751">&#9670;&#160;</a></span>AudioSource</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">friend class <a class="el" href="class_audio_source.html">AudioSource</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel friend">friend</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="finewave_2audio_8h_source.html#l00104">104</a> of file <a class="el" href="finewave_2audio_8h_source.html">audio.h</a>.</p>
+
+<p class="reference">References <a class="el" href="finewave_2audio_8h_source.html#l00104">AudioSource</a>.</p>
+
+</div>
+</div>
+<a name="doc-variable-members" id="doc-variable-members"></a><h2 id="header-doc-variable-members" class="groupheader">Member Data Documentation</h2>
+<a id="abacb6f98ee7bd4a62f1fd8d7385a4781" name="abacb6f98ee7bd4a62f1fd8d7385a4781"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abacb6f98ee7bd4a62f1fd8d7385a4781">&#9670;&#160;</a></span>isMono</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool AudioData::isMono = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="finewave_2audio_8h_source.html#l00096">96</a> of file <a class="el" href="finewave_2audio_8h_source.html">audio.h</a>.</p>
+
+</div>
+</div>
+<a id="a0b2583df19d7446a8f4832410417058a" name="a0b2583df19d7446a8f4832410417058a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0b2583df19d7446a8f4832410417058a">&#9670;&#160;</a></span>resource</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="struct_resource.html">Resource</a> AudioData::resource</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="finewave_2audio_8h_source.html#l00098">98</a> of file <a class="el" href="finewave_2audio_8h_source.html">audio.h</a>.</p>
+
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following file:<ul>

@@ -10,6 +10,9 @@ var NAVTREEINDEX0 =
 "camera_8h.html":[3,0,1,0,2],
 "camera_8h_source.html":[3,0,1,0,2],
 "class_audio_data.html":[2,0,1],
+"class_audio_data.html#a0b2583df19d7446a8f4832410417058a":[2,0,1,5],
+"class_audio_data.html#a4c6a4b0d9827213876805011e3d9a751":[2,0,1,3],
+"class_audio_data.html#abacb6f98ee7bd4a62f1fd8d7385a4781":[2,0,1,4],
 "class_audio_data.html#aceb85e5c71dbf33f438af85351edcb36":[2,0,1,2],
 "class_audio_data.html#ad0344f0fc71a86083ea56dbc13908162":[2,0,1,0],
 "class_audio_data.html#aeefb77eb07ad8e916b45f8fc8a3bc926":[2,0,1,1],
@@ -246,8 +249,5 @@ var NAVTREEINDEX0 =
 "class_echo.html#a5ab5a3fbc16963d9e8507c085656b1f7":[2,0,23,2],
 "class_echo.html#ababd42898feed0775f5234d53fe9bff1":[2,0,23,0],
 "class_echo.html#ad26cfe43f5038e39a86bb67f17b4dc34":[2,0,23,3],
-"class_echo.html#ad70fc54030cfbf5489788d5576ac127c":[2,0,23,4],
-"class_echo.html#ae442275555d00229f69038b3d7dcccb5":[2,0,23,1],
-"class_game_object.html":[2,0,27],
-"class_game_object.html#a06c5cc4f368665085126282bd4cd6185":[2,0,27,6]
+"class_echo.html#ad70fc54030cfbf5489788d5576ac127c":[2,0,23,4]
 };

@@ -32,7 +32,6 @@ var hierarchy =
     [ "LayoutDescriptor", "struct_layout_descriptor.html", null ],
     [ "Light", "struct_light.html", null ],
     [ "Material", "struct_material.html", null ],
-    [ "Model", "class_model.html", null ],
     [ "Monitor", "class_monitor.html", null ],
     [ "MousePacket", "struct_mouse_packet.html", null ],
     [ "MouseScrollPacket", "struct_mouse_scroll_packet.html", null ],
@@ -48,6 +47,7 @@ var hierarchy =
       [ "GameObject", "class_game_object.html", [
         [ "CompoundObject", "class_compound_object.html", null ],
         [ "CoreObject", "class_core_object.html", null ],
+        [ "Model", "class_model.html", null ],
         [ "ParticleEmitter", "class_particle_emitter.html", null ],
         [ "UIObject", "class_u_i_object.html", [
           [ "Text", "class_text.html", null ],
