@@ -15,6 +15,7 @@
 #include "finewave/effect.h"
 #include <memory>
 #include <string>
+#include <vector>
 
 /**
  * @brief Central audio engine that manages the audio system and global audio
@@ -92,8 +93,15 @@ class AudioData {
      */
     inline Id getId() const { return id; }
 
+    bool isMono = false;
+
+    Resource resource;
+
   private:
     Id id;
+    std::vector<char> data;
+    unsigned int sampleRate;
+    friend class AudioSource;
 };
 
 /**
@@ -233,6 +241,10 @@ class AudioSource {
 
   private:
     Id id;
+    Id monoId;
+    std::shared_ptr<AudioData> data;
+    std::shared_ptr<AudioData> monoData;
+    bool isSpatialized = false;
 };
 
 #endif // FINEWAVE_AUDIO_H

@@ -107,6 +107,9 @@ void Font::changeSize(int newSize) {
 std::vector<Font> Font::fonts = {};
 
 void Text::initialize() {
+    for (auto &component : components) {
+        component->init();
+    }
     Window *window = Window::mainWindow;
     int fbWidth, fbHeight;
     glfwGetFramebufferSize(static_cast<GLFWwindow *>(window->windowRef),

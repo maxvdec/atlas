@@ -725,43 +725,97 @@ class aiNode;
 class aiScene;
 class aiMesh;
 class aiMaterial;
-class Model {
+class Model : public GameObject {
   public:
     void fromResource(Resource resource);
     inline std::vector<std::shared_ptr<CoreObject>> getObjects() {
         return objects;
     }
 
-    void addToWindow(Window &window);
-
-    inline void move(const Position3d &deltaPosition) {
+    inline void move(const Position3d &deltaPosition) override {
         for (auto &obj : objects) {
             obj->move(deltaPosition);
         }
     }
 
-    inline void setPosition(const Position3d &newPosition) {
+    inline void setPosition(const Position3d &newPosition) override {
         for (auto &obj : objects) {
             obj->setPosition(newPosition);
         }
     }
 
-    inline void setRotation(const Rotation3d &newRotation) {
+    inline void setRotation(const Rotation3d &newRotation) override {
         for (auto &obj : objects) {
             obj->setRotation(newRotation);
         }
     }
 
-    inline void attachTexture(const Texture &texture) {
+    inline void attachTexture(const Texture &texture) override {
         for (auto &obj : objects) {
             obj->attachTexture(texture);
         }
     }
 
-    inline void setScale(const Scale3d &newScale) {
+    inline void setScale(const Scale3d &newScale) override {
         for (auto &obj : objects) {
             obj->setScale(newScale);
         }
+    }
+
+    inline void setViewMatrix(const glm::mat4 &view) override {
+        for (auto &obj : objects) {
+            obj->setViewMatrix(view);
+        }
+    }
+
+    inline void render(float dt) override {
+        for (auto &component : components) {
+            component->update(dt);
+        }
+        for (auto &obj : objects) {
+            obj->render(dt);
+        }
+    }
+
+    inline void update(Window &window) override {
+        for (auto &obj : objects) {
+            obj->update(window);
+        }
+    }
+
+    inline void initialize() override {
+        for (auto &component : components) {
+            component->init();
+        }
+        for (auto &obj : objects) {
+            obj->initialize();
+        }
+    }
+
+    inline void setProjectionMatrix(const glm::mat4 &projection) override {
+        for (auto &obj : objects) {
+            obj->setProjectionMatrix(projection);
+        }
+    }
+
+    inline void setShader(const ShaderProgram &shader) override {
+        for (auto &obj : objects) {
+            obj->setShader(shader);
+        }
+    }
+
+    inline std::optional<ShaderProgram> getShaderProgram() override {
+        if (objects.empty()) {
+            throw std::runtime_error("Model has no objects.");
+        }
+        return objects[0]->getShaderProgram().value();
+    }
+
+    inline Position3d getPosition() const override {
+        if (objects.empty()) {
+            throw std::runtime_error("Model has no objects.");
+        }
+        return objects[0]->getPosition();
     }
 
     Model() = default;

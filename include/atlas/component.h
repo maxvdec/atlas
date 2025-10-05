@@ -134,6 +134,8 @@ class TraitComponent : public Component {
      */
     inline void setTypedObject(T *obj) { typedObject = obj; }
 
+    inline T *getObject() { return typedObject; }
+
   private:
     T *typedObject = nullptr;
 };

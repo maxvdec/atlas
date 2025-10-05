@@ -139,6 +139,7 @@ class AudioPlayer : public Component {
      * @param dt The delta time since the last update.
      */
     inline void update(float dt) override {
+        ensureSourceInitialized();
         Window *window = Window::mainWindow;
         Camera *mainCamera = window->getCamera();
 
