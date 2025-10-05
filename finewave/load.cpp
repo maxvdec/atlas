@@ -71,6 +71,7 @@ const char *getALErrorString(ALenum error) {
     }
 
 std::shared_ptr<AudioData> AudioData::fromResource(Resource resource) {
+    bool isMono = false;
     CHECK_AL_ERROR();
     if (resource.type != ResourceType::Audio) {
         throw std::invalid_argument("Resource is not of type Audio");
@@ -100,8 +101,10 @@ std::shared_ptr<AudioData> AudioData::fromResource(Resource resource) {
         ALenum format;
         if (data.numChannels == 1) {
             format = AL_FORMAT_MONO16;
+            isMono = true;
         } else if (data.numChannels == 2) {
             format = AL_FORMAT_STEREO16;
+            isMono = false;
         } else {
             throw std::runtime_error("Unsupported number of channels: " +
                                      std::to_string(data.numChannels));
@@ -121,6 +124,14 @@ std::shared_ptr<AudioData> AudioData::fromResource(Resource resource) {
 
         auto audioData = std::make_shared<AudioData>();
         audioData->id = buffer;
+        audioData->isMono = isMono;
+        audioData->resource = resource;
+        std::vector<char> dataChar;
+        dataChar.resize(int16Samples.size() * sizeof(int16_t));
+        std::memcpy(dataChar.data(), int16Samples.data(),
+                    int16Samples.size() * sizeof(int16_t));
+        audioData->data = std::move(dataChar);
+        audioData->sampleRate = data.sampleRate;
         return audioData;
     }
 
@@ -146,6 +157,7 @@ std::shared_ptr<AudioData> AudioData::fromResource(Resource resource) {
     if (header.numChannels == 1) {
         format =
             (header.bitsPerSample == 8) ? AL_FORMAT_MONO8 : AL_FORMAT_MONO16;
+        isMono = true;
     } else if (header.numChannels == 2) {
         format = (header.bitsPerSample == 8) ? AL_FORMAT_STEREO8
                                              : AL_FORMAT_STEREO16;
@@ -169,6 +181,9 @@ std::shared_ptr<AudioData> AudioData::fromResource(Resource resource) {
 
     auto audioData = std::make_shared<AudioData>();
     audioData->id = buffer;
+    audioData->isMono = isMono;
+    audioData->data = std::move(data);
+    audioData->resource = resource;
     return audioData;
 }
 

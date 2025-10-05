@@ -1,7 +1,7 @@
 
 build:
     cmake .
-    make
+    make -j8
 
 run:
     just build

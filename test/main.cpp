@@ -7,6 +7,7 @@
 #include "atlas/window.h"
 #include "atlas/workspace.h"
 #include "atlas/component.h"
+#include "atlas/audio.h"
 #include <iostream>
 #include <memory>
 
@@ -45,6 +46,18 @@ class HorizontalMover : public Component {
         float amplitude = 0.01f;
         float position = amplitude * sin(window->getTime());
         object->move({position, 0.0f, 0.0f});
+    }
+};
+
+class BackpackAttach : public Component {
+  public:
+    void init() override {
+        auto player = this->object->getComponent<AudioPlayer>();
+        player->setSource(Workspace::get().createResource(
+            "exampleMP3.mp3", "ExampleAudio", ResourceType::Audio));
+        player->useSpatialization();
+        player->source->setLooping(true);
+        player->play();
     }
 };
 
@@ -123,7 +136,10 @@ class MainScene : public Scene {
         backpack.fromResource(backpackModel);
         backpack.attachTexture(albedoTexture);
 
-        backpack.addToWindow(window);
+        backpack.addComponent<BackpackAttach>(BackpackAttach());
+        backpack.addComponent<AudioPlayer>(AudioPlayer());
+
+        window.addObject(&backpack);
 
         Resource fontResource = Workspace::get().createResource(
             "arial.ttf", "Arial", ResourceType::Font);
