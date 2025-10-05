@@ -71,6 +71,7 @@ enum class TextureType : int {
     Depth = 3,
     DepthCube = 4,
     Normal = 5,
+    Parallax = 6
 };
 
 /**

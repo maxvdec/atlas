@@ -10,6 +10,9 @@ in mat3 TBN;
 const int TEXTURE_COLOR = 0;
 const int TEXTURE_SPECULAR = 1;
 const int TEXTURE_NORMAL = 5;
+const int TEXTURE_PARALLAX = 6;
+
+vec2 texCoord;
 
 // ----- Structures -----
 struct AmbientLight {
@@ -105,19 +108,19 @@ vec4 enableTextures(int type) {
     int count = 0;
     for (int i = 0; i < textureCount; i++) {
         if (textureTypes[i] == type) { 
-            if (i == 0) color += texture(texture1, TexCoord);
-            else if (i == 1) color += texture(texture2, TexCoord);
-            else if (i == 2) color += texture(texture3, TexCoord);
-            else if (i == 3) color += texture(texture4, TexCoord);
-            else if (i == 4) color += texture(texture5, TexCoord);
-            else if (i == 5) color += texture(texture6, TexCoord);
-            else if (i == 6) color += texture(texture7, TexCoord);
-            else if (i == 7) color += texture(texture8, TexCoord);
-            else if (i == 8) color += texture(texture9, TexCoord);
-            else if (i == 9) color += texture(texture10, TexCoord);
-            else if (i == 10) color += texture(texture11, TexCoord);
-            else if (i == 11) color += texture(texture12, TexCoord);
-            else if (i == 12) color += texture(texture13, TexCoord);
+            if (i == 0) color += texture(texture1, texCoord);
+            else if (i == 1) color += texture(texture2, texCoord);
+            else if (i == 2) color += texture(texture3, texCoord);
+            else if (i == 3) color += texture(texture4, texCoord);
+            else if (i == 4) color += texture(texture5, texCoord);
+            else if (i == 5) color += texture(texture6, texCoord);
+            else if (i == 6) color += texture(texture7, texCoord);
+            else if (i == 7) color += texture(texture8, texCoord);
+            else if (i == 8) color += texture(texture9, texCoord);
+            else if (i == 9) color += texture(texture10, texCoord);
+            else if (i == 10) color += texture(texture11, texCoord);
+            else if (i == 11) color += texture(texture12, texCoord);
+            else if (i == 12) color += texture(texture13, texCoord);
             count++; 
         }
     }
@@ -171,6 +174,42 @@ vec3 getSpecularColor() {
 
 vec4 applyGammaCorrection(vec4 color, float gamma) {
     return vec4(pow(color.rgb, vec3(1.0 / gamma)), color.a);
+}
+
+vec2 parallaxMapping(vec2 texCoords, vec3 viewDir) {
+    const float minLayers = 8.0;
+    const float maxLayers = 32.0;
+    float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), viewDir)));
+    float layerDepth = 1.0 / numLayers;
+    float currentLayerDepth = 0.0;
+
+    vec2 P = viewDir.xy * 0.1;
+    vec2 deltaTexCoords = P / numLayers;
+
+    vec2 currentTexCoords = texCoords;
+    int textureIndex = -1;
+    for (int i = 0; i < textureCount; i++) {
+        if (textureTypes[i] == TEXTURE_PARALLAX) {
+            textureIndex = i;
+            break;
+        }
+    }
+    if (textureIndex == -1) return texCoords;
+    float currentDepthMapValue = sampleTextureAt(textureIndex, currentTexCoords).r;
+
+    while (currentLayerDepth < currentDepthMapValue) {
+        currentTexCoords -= deltaTexCoords;
+        currentDepthMapValue = sampleTextureAt(textureIndex, currentTexCoords).r;
+        currentLayerDepth += layerDepth;
+    }
+
+    vec2 prevTexCoords = currentTexCoords + deltaTexCoords;
+    float afterDepth = currentDepthMapValue - currentLayerDepth;
+    float beforeDepth = sampleTextureAt(textureIndex, prevTexCoords).r - (currentLayerDepth - layerDepth);
+    float weight = afterDepth / (afterDepth - beforeDepth);
+    currentTexCoords = prevTexCoords * weight + currentTexCoords * (1.0 - weight);
+
+    return currentTexCoords;
 }
 
 // ----- Environment Mapping -----
@@ -356,7 +395,13 @@ float calculateAllShadows() {
 
 // ----- Main -----
 void main() {
+    texCoord = TexCoord;
     vec4 baseColor;
+
+    vec3 tangentViewDir = normalize((TBN * cameraPosition) - (TBN * FragPos));
+    texCoord = parallaxMapping(texCoord, tangentViewDir);
+    if(texCoord.x > 1.0 || texCoord.y > 1.0 || texCoord.x < 0.0 || texCoord.y < 0.0)
+        discard;
 
     if (useTexture && !useColor)
         baseColor = enableTextures(TEXTURE_COLOR);

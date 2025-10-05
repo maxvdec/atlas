@@ -131,6 +131,9 @@ in mat3 TBN;
 const int TEXTURE_COLOR = 0;
 const int TEXTURE_SPECULAR = 1;
 const int TEXTURE_NORMAL = 5;
+const int TEXTURE_PARALLAX = 6;
+
+vec2 texCoord;
 
 // ----- Structures -----
 struct AmbientLight {
@@ -226,19 +229,19 @@ vec4 enableTextures(int type) {
     int count = 0;
     for (int i = 0; i < textureCount; i++) {
         if (textureTypes[i] == type) { 
-            if (i == 0) color += texture(texture1, TexCoord);
-            else if (i == 1) color += texture(texture2, TexCoord);
-            else if (i == 2) color += texture(texture3, TexCoord);
-            else if (i == 3) color += texture(texture4, TexCoord);
-            else if (i == 4) color += texture(texture5, TexCoord);
-            else if (i == 5) color += texture(texture6, TexCoord);
-            else if (i == 6) color += texture(texture7, TexCoord);
-            else if (i == 7) color += texture(texture8, TexCoord);
-            else if (i == 8) color += texture(texture9, TexCoord);
-            else if (i == 9) color += texture(texture10, TexCoord);
-            else if (i == 10) color += texture(texture11, TexCoord);
-            else if (i == 11) color += texture(texture12, TexCoord);
-            else if (i == 12) color += texture(texture13, TexCoord);
+            if (i == 0) color += texture(texture1, texCoord);
+            else if (i == 1) color += texture(texture2, texCoord);
+            else if (i == 2) color += texture(texture3, texCoord);
+            else if (i == 3) color += texture(texture4, texCoord);
+            else if (i == 4) color += texture(texture5, texCoord);
+            else if (i == 5) color += texture(texture6, texCoord);
+            else if (i == 6) color += texture(texture7, texCoord);
+            else if (i == 7) color += texture(texture8, texCoord);
+            else if (i == 8) color += texture(texture9, texCoord);
+            else if (i == 9) color += texture(texture10, texCoord);
+            else if (i == 10) color += texture(texture11, texCoord);
+            else if (i == 11) color += texture(texture12, texCoord);
+            else if (i == 12) color += texture(texture13, texCoord);
             count++; 
         }
     }
@@ -294,6 +297,17 @@ vec4 applyGammaCorrection(vec4 color, float gamma) {
     return vec4(pow(color.rgb, vec3(1.0 / gamma)), color.a);
 }
 
+vec2 parallaxMapping(vec2 texCoords, vec3 viewDir) {
+    vec4 heightMap = enableTextures(TEXTURE_PARALLAX);
+    if (heightMap.r == -1.0 && heightMap.g == -1.0 && heightMap.b == -1.0) {
+        return texCoords;
+    }
+    
+    float height = heightMap.r; 
+    vec2 p = viewDir.xy / viewDir.z * (height * 0.1); 
+    return texCoords - p;
+}
+
 // ----- Environment Mapping -----
 vec4 getEnvironmentReflected(vec4 color) {
     vec3 I = normalize(FragPos - cameraPosition);
@@ -303,13 +317,13 @@ vec4 getEnvironmentReflected(vec4 color) {
 
 // ----- Directional Light -----
 vec3 calcDirectionalDiffuse(DirectionalLight light, vec3 norm) {
-    vec3 lightDir = TBN * normalize(-light.direction);  
+    vec3 lightDir = normalize(-light.direction);  
     float diff = max(dot(norm, lightDir), 0.0);
     return diff * light.diffuse;
 }
 
 vec3 calcDirectionalSpecular(DirectionalLight light, vec3 norm, vec3 viewDir, vec3 specColor, float shininess) {
-    vec3 lightDir = TBN * normalize(-light.direction);
+    vec3 lightDir = normalize(-light.direction);
     vec3 halfwayDir = normalize(lightDir + viewDir);
     float spec = pow(max(dot(Normal, halfwayDir), 0.0), shininess);
     return spec * specColor * light.specular;
@@ -331,13 +345,13 @@ vec3 calcAllDirectionalLights(vec3 norm, vec3 viewDir) {
 
 // ----- Point Light -----
 vec3 calcPointDiffuse(PointLight light, vec3 norm, vec3 fragPos) {
-    vec3 lightDir = TBN * normalize(light.position - fragPos);
+    vec3 lightDir = normalize(light.position - fragPos);
     float diff = max(dot(norm, lightDir), 0.0);
     return diff * light.diffuse;
 }
 
 vec3 calcPointSpecular(PointLight light, vec3 norm, vec3 fragPos, vec3 viewDir, vec3 specColor, float shininess) {
-    vec3 lightDir = TBN * normalize(light.position - fragPos);
+    vec3 lightDir = normalize(light.position - fragPos);
     vec3 halfwayDir = normalize(lightDir + viewDir);
     float spec = pow(max(dot(Normal, halfwayDir), 0.0), shininess);
     return spec * specColor * light.specular;
@@ -365,12 +379,12 @@ vec3 calcAllPointLights(vec3 norm, vec3 fragPos, vec3 viewDir) {
 
 // ----- Spot Light -----
 vec3 calcSpotDiffuse(SpotLight light, vec3 norm, vec3 fragPos) {
-    vec3 lightDir = TBN * normalize(light.position - fragPos);
+    vec3 lightDir = normalize(light.position - fragPos);
     float diff = max(dot(norm, lightDir), 0.0);
-
-    vec3 spotDirection = TBN * normalize(light.direction);
-    float theta = dot(lightDir, -spotDirection);
-
+    
+    vec3 spotDirection = normalize(light.direction);
+    float theta = dot(lightDir, -spotDirection); 
+    
     float intensity = smoothstep(light.outerCutOff, light.cutOff, theta);
     
     return diff * light.diffuse * intensity;
@@ -378,12 +392,12 @@ vec3 calcSpotDiffuse(SpotLight light, vec3 norm, vec3 fragPos) {
 
 
 vec3 calcSpotSpecular(SpotLight light, vec3 norm, vec3 fragPos, vec3 viewDir, vec3 specColor, float shininess) {
-    vec3 lightDir = TBN * normalize(light.position - fragPos);
+    vec3 lightDir = normalize(light.position - fragPos);
     vec3 halfwayDir = normalize(lightDir + viewDir);
     float spec = pow(max(dot(Normal, halfwayDir), 0.0), shininess);
-
-    vec3 spotDirection = TBN * normalize(light.direction);
-    float theta = dot(lightDir, -spotDirection);
+    
+    vec3 spotDirection = normalize(light.direction);
+    float theta = dot(lightDir, -spotDirection);  
     
     float intensity = smoothstep(light.outerCutOff, light.cutOff, theta);
     
@@ -424,7 +438,7 @@ float calculateShadow(ShadowParameters shadowParam, vec4 fragPosLightSpace) {
     
     float currentDepth = projCoords.z;
     
-    vec3 lightDir = TBN * normalize(-directionalLights[0].direction); 
+    vec3 lightDir = normalize(-directionalLights[0].direction); 
     vec3 normal = normalize(Normal);
     float biasValue = shadowParam.bias;
     float bias = max(biasValue * (1.0 - dot(normal, lightDir)), biasValue);
@@ -477,7 +491,11 @@ float calculateAllShadows() {
 
 // ----- Main -----
 void main() {
+    texCoord = TexCoord;
     vec4 baseColor;
+
+    vec3 tangentViewDir = normalize((TBN * cameraPosition) - (TBN * FragPos));
+    texCoord = parallaxMapping(texCoord, tangentViewDir);
 
     if (useTexture && !useColor)
         baseColor = enableTextures(TEXTURE_COLOR);
@@ -492,10 +510,11 @@ void main() {
     vec3 norm = vec3(0.0);
     if (normTexture.r != -1.0 || normTexture.g != -1.0 || normTexture.b != -1.0) {
         norm = normalize(normTexture.rgb * 2.0 - 1.0);
+        norm = normalize(TBN * norm);
     } else {
         norm = normalize(Normal);
     }
-    vec3 viewDir = TBN * normalize(cameraPosition - FragPos);
+    vec3 viewDir = normalize(cameraPosition - FragPos);
 
     vec3 ambient = ambientLight.color.rgb * ambientLight.intensity * material.ambient;
     vec3 directionalLights = calcAllDirectionalLights(norm, viewDir);
@@ -712,7 +731,7 @@ void main() {
     vec3 T = normalize(vec3(model * vec4(aTangent, 0.0)));
     vec3 B = normalize(vec3(model * vec4(aBitangent, 0.0)));
     vec3 N = normalize(vec3(model * vec4(aNormal, 0.0)));
-    TBN = transpose(mat3(T, B, N));
+    TBN = mat3(T, B, N);
 }
 
 )";
