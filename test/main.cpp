@@ -142,6 +142,7 @@ class MainScene : public Scene {
         skybox = Skybox();
         skybox.cubemap = createCubemap();
         skybox.display(window);
+        this->setSkybox(&skybox);
     }
 };
 

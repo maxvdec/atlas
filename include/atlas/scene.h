@@ -12,6 +12,7 @@
 
 #include "atlas/light.h"
 #include "atlas/object.h"
+#include "atlas/texture.h"
 #include "atlas/units.h"
 #include "bezel/body.h"
 #include <vector>
@@ -105,10 +106,13 @@ class Scene {
      */
     void addSpotlight(Spotlight *light) { spotlights.push_back(light); }
 
+    void setSkybox(Skybox *newSkybox) { skybox = newSkybox; }
+
   private:
     std::vector<DirectionalLight *> directionalLights;
     std::vector<Light *> pointLights;
     std::vector<Spotlight *> spotlights;
+    Skybox *skybox = nullptr;
 
     friend class CoreObject;
     friend class Window;

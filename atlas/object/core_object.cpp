@@ -319,6 +319,8 @@ void CoreObject::render(float dt) {
         shaderProgram.setUniform3f("material.specular", material.specular.r,
                                    material.specular.g, material.specular.b);
         shaderProgram.setUniform1f("material.shininess", material.shininess);
+        shaderProgram.setUniform1f("material.reflectivity",
+                                   material.reflectivity);
 
         // Send directional lights
 
@@ -457,6 +459,21 @@ void CoreObject::render(float dt) {
 
         glUniform1iv(glGetUniformLocation(shaderProgram.programId, "textures"),
                      boundTextures, units);
+    }
+
+    if (std::find(shaderProgram.capabilities.begin(),
+                  shaderProgram.capabilities.end(),
+                  ShaderCapability::EnvironmentMapping) !=
+        shaderProgram.capabilities.end()) {
+        // Bind skybox
+        Window *window = Window::mainWindow;
+        Scene *scene = window->getCurrentScene();
+        if (scene->skybox != nullptr) {
+            glActiveTexture(GL_TEXTURE0 + boundTextures);
+            glBindTexture(GL_TEXTURE_CUBE_MAP, scene->skybox->cubemap.id);
+            shaderProgram.setUniform1i("skybox", boundTextures);
+            boundTextures++;
+        }
     }
 
     glBindVertexArray(vao);

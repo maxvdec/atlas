@@ -91,7 +91,8 @@ enum class ShaderCapability {
      * @brief Capability for handling shadow mapping.
      *
      */
-    Shadows
+    Shadows,
+    EnvironmentMapping,
 };
 
 /**
