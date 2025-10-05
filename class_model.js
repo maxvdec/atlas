@@ -8,5 +8,6 @@ var class_model =
     [ "move", "class_model.html#af41844c4d31ac0fdb21c081f72ba32d6", null ],
     [ "setPosition", "class_model.html#a030975d05ad618b019536907683c937d", null ],
     [ "setRotation", "class_model.html#a72c88fadb469e4bc11b54b337963c859", null ],
-    [ "setScale", "class_model.html#a4c15571f5695e2983ba33062b034ad2b", null ]
+    [ "setScale", "class_model.html#a4c15571f5695e2983ba33062b034ad2b", null ],
+    [ "material", "class_model.html#acb2e155d98ff0980bc40958bb5b79868", null ]
 ];

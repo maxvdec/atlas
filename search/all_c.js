@@ -11,7 +11,7 @@ var searchData=
   ['mainwindow_8',['mainWindow',['../class_window.html#aa3c2a95cf2ce8cbbb668247f029b610c',1,'Window']]],
   ['maroon_9',['maroon',['../struct_color.html#abc75537b6b038fa31f92ec58c9dad9da',1,'Color']]],
   ['material_10',['Material',['../struct_material.html',1,'']]],
-  ['material_11',['material',['../class_core_object.html#a810697cd28669bc8ca9d853fd9bc1152',1,'CoreObject']]],
+  ['material_11',['material',['../class_core_object.html#a810697cd28669bc8ca9d853fd9bc1152',1,'CoreObject::material'],['../class_model.html#acb2e155d98ff0980bc40958bb5b79868',1,'Model::material']]],
   ['maxlife_12',['maxLife',['../struct_particle.html#a4e7cf3b8d4f8fc1e832623e56f3d6a8e',1,'Particle']]],
   ['maxlifetime_13',['maxLifetime',['../struct_particle_settings.html#ae16b0a8e33aac68fb2d45dc9cc35087e',1,'ParticleSettings']]],
   ['maxs_14',['maxs',['../class_bounds.html#a7af45ba8fd5a395da2b4bf3e126da868',1,'Bounds']]],

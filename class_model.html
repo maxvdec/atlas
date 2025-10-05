@@ -117,6 +117,7 @@ $(function(){initNavTree('class_model.html','','class_model-members'); });
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="class_model-members.html">List of all members</a>  </div>
   <div class="headertitle"><div class="title">Model Class Reference</div></div>
 </div><!--header-->
@@ -135,10 +136,14 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a8c5ba009ee3e677813751c31a2b95c9d" id="r_a8c5ba009ee3e677813751c31a2b95c9d"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8c5ba009ee3e677813751c31a2b95c9d">attachTexture</a> (const <a class="el" href="struct_texture.html">Texture</a> &amp;texture)</td></tr>
 <tr class="memitem:a4c15571f5695e2983ba33062b034ad2b" id="r_a4c15571f5695e2983ba33062b034ad2b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4c15571f5695e2983ba33062b034ad2b">setScale</a> (const <a class="el" href="units_8h.html#a3b9b132cddb1dfe2ae572f230abe45f1">Scale3d</a> &amp;newScale)</td></tr>
 <tr class="memitem:ab5bdabea36b1d1bee80151e2da913373" id="r_ab5bdabea36b1d1bee80151e2da913373"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab5bdabea36b1d1bee80151e2da913373">Model</a> ()=default</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
+Public Attributes</h2></td></tr>
+<tr class="memitem:acb2e155d98ff0980bc40958bb5b79868" id="r_acb2e155d98ff0980bc40958bb5b79868"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_material.html">Material</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#acb2e155d98ff0980bc40958bb5b79868">material</a></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock">
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00726">726</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00728">728</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="ab5bdabea36b1d1bee80151e2da913373" name="ab5bdabea36b1d1bee80151e2da913373"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab5bdabea36b1d1bee80151e2da913373">&#9670;&#160;</a></span>Model()</h2>
@@ -206,12 +211,12 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00753">753</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  753</span>                                                      {</div>
-<div class="line"><span class="lineno">  754</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
-<div class="line"><span class="lineno">  755</span>            obj-&gt;attachTexture(texture);</div>
-<div class="line"><span class="lineno">  756</span>        }</div>
-<div class="line"><span class="lineno">  757</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00755">755</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  755</span>                                                      {</div>
+<div class="line"><span class="lineno">  756</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><span class="lineno">  757</span>            obj-&gt;attachTexture(texture);</div>
+<div class="line"><span class="lineno">  758</span>        }</div>
+<div class="line"><span class="lineno">  759</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -255,10 +260,10 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00729">729</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  729</span>                                                             {</div>
-<div class="line"><span class="lineno">  730</span>        <span class="keywordflow">return</span> objects;</div>
-<div class="line"><span class="lineno">  731</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00731">731</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  731</span>                                                             {</div>
+<div class="line"><span class="lineno">  732</span>        <span class="keywordflow">return</span> objects;</div>
+<div class="line"><span class="lineno">  733</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -285,12 +290,12 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00735">735</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  735</span>                                                      {</div>
-<div class="line"><span class="lineno">  736</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
-<div class="line"><span class="lineno">  737</span>            obj-&gt;move(deltaPosition);</div>
-<div class="line"><span class="lineno">  738</span>        }</div>
-<div class="line"><span class="lineno">  739</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00737">737</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  737</span>                                                      {</div>
+<div class="line"><span class="lineno">  738</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><span class="lineno">  739</span>            obj-&gt;move(deltaPosition);</div>
+<div class="line"><span class="lineno">  740</span>        }</div>
+<div class="line"><span class="lineno">  741</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -317,12 +322,12 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00741">741</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  741</span>                                                           {</div>
-<div class="line"><span class="lineno">  742</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
-<div class="line"><span class="lineno">  743</span>            obj-&gt;setPosition(newPosition);</div>
-<div class="line"><span class="lineno">  744</span>        }</div>
-<div class="line"><span class="lineno">  745</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00743">743</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  743</span>                                                           {</div>
+<div class="line"><span class="lineno">  744</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><span class="lineno">  745</span>            obj-&gt;setPosition(newPosition);</div>
+<div class="line"><span class="lineno">  746</span>        }</div>
+<div class="line"><span class="lineno">  747</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -349,12 +354,12 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00747">747</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  747</span>                                                           {</div>
-<div class="line"><span class="lineno">  748</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
-<div class="line"><span class="lineno">  749</span>            obj-&gt;setRotation(newRotation);</div>
-<div class="line"><span class="lineno">  750</span>        }</div>
-<div class="line"><span class="lineno">  751</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00749">749</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  749</span>                                                           {</div>
+<div class="line"><span class="lineno">  750</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><span class="lineno">  751</span>            obj-&gt;setRotation(newRotation);</div>
+<div class="line"><span class="lineno">  752</span>        }</div>
+<div class="line"><span class="lineno">  753</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -381,13 +386,30 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00759">759</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  759</span>                                                  {</div>
-<div class="line"><span class="lineno">  760</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
-<div class="line"><span class="lineno">  761</span>            obj-&gt;setScale(newScale);</div>
-<div class="line"><span class="lineno">  762</span>        }</div>
-<div class="line"><span class="lineno">  763</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00761">761</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  761</span>                                                  {</div>
+<div class="line"><span class="lineno">  762</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><span class="lineno">  763</span>            obj-&gt;setScale(newScale);</div>
+<div class="line"><span class="lineno">  764</span>        }</div>
+<div class="line"><span class="lineno">  765</span>    }</div>
 </div><!-- fragment -->
+</div>
+</div>
+<a name="doc-variable-members" id="doc-variable-members"></a><h2 id="header-doc-variable-members" class="groupheader">Member Data Documentation</h2>
+<a id="acb2e155d98ff0980bc40958bb5b79868" name="acb2e155d98ff0980bc40958bb5b79868"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acb2e155d98ff0980bc40958bb5b79868">&#9670;&#160;</a></span>material</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="struct_material.html">Material</a> Model::material</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00769">769</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following file:<ul>

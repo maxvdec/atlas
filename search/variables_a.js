@@ -4,7 +4,7 @@ var searchData=
   ['main_5ffrag_1',['MAIN_FRAG',['../default__shaders_8h.html#a44e465e75eb67c9aaa0b6cf24688ce97',1,'default_shaders.h']]],
   ['main_5fvert_2',['MAIN_VERT',['../default__shaders_8h.html#a43a37aa39509166536b1a6ef3c32be54',1,'default_shaders.h']]],
   ['mainwindow_3',['mainWindow',['../class_window.html#aa3c2a95cf2ce8cbbb668247f029b610c',1,'Window']]],
-  ['material_4',['material',['../class_core_object.html#a810697cd28669bc8ca9d853fd9bc1152',1,'CoreObject']]],
+  ['material_4',['material',['../class_core_object.html#a810697cd28669bc8ca9d853fd9bc1152',1,'CoreObject::material'],['../class_model.html#acb2e155d98ff0980bc40958bb5b79868',1,'Model::material']]],
   ['maxlife_5',['maxLife',['../struct_particle.html#a4e7cf3b8d4f8fc1e832623e56f3d6a8e',1,'Particle']]],
   ['maxlifetime_6',['maxLifetime',['../struct_particle_settings.html#ae16b0a8e33aac68fb2d45dc9cc35087e',1,'ParticleSettings']]],
   ['maxs_7',['maxs',['../class_bounds.html#a7af45ba8fd5a395da2b4bf3e126da868',1,'Bounds']]],

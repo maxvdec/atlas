@@ -31,6 +31,7 @@ var shader_8h =
     [ "ShaderCapability", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcd", [
       [ "Lighting", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcda2e4b97fde8cf63085ec969fcc7e490c0", null ],
       [ "Textures", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcda536300d63028e7f16ba150566ecd3a5f", null ],
-      [ "Shadows", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcdadde98fa66ef8081029ffb8f24d643c89", null ]
+      [ "Shadows", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcdadde98fa66ef8081029ffb8f24d643c89", null ],
+      [ "EnvironmentMapping", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcdadb1098a034b7f5b862d0aef6b70d4f2d", null ]
     ] ]
 ];
