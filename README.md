@@ -45,16 +45,22 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [ ] Add deferred rendering for better performance with many lights **for alpha 2**
 - [ ] Add PBR rendering
 - [ ] Add other texture supports (normal, roughness, metallic, ao, etc.)
-- [ ] Add HDR support
+- [ ] Add HDR support **for alpha 2**
 - [ ] Add SSAO **for alpha 2**
 - [ ] Add cascaded shadow maps for directional lights
 - [ ] Add soft shadows **for alpha 2**
 - [ ] Add shadows for point lights **for alpha 2**
+- [ ] Add normal and parallax mapping **for alpha 2**
 - [ ] Handle better collisions with Bezel
 - [ ] Add support for constraints in Bezel
 - [ ] Add support for character controllers in Bezel
 - [ ] Add support for motors in Bezel
 - [ ] Add volumetric lighting
+- [ ] Add bloom for lights
+- [ ] Add terrain system
+- [ ] Add motion blur
+- [ ] Physically based bloom
+- [ ] Add area lights
 
 ## Other features planned for the future
 
