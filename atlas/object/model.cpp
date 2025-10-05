@@ -167,7 +167,7 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, std::any type,
 
 void Model::addToWindow(Window &window) {
     for (const auto &obj : objects) {
-
+        obj->material = this->material;
         window.addObject(obj.get());
     }
 }

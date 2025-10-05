@@ -64,6 +64,8 @@ struct Material {
      * than 0.
      */
     float shininess = 32.0f;
+
+    float reflectivity = 0.1f; // 0.0 = no reflection, 1.0 = full reflection
 };
 
 /**
@@ -763,6 +765,8 @@ class Model {
     }
 
     Model() = default;
+
+    Material material;
 
   private:
     std::vector<std::shared_ptr<CoreObject>> objects;

@@ -20,6 +20,7 @@ struct Material {
     vec3 diffuse;
     vec3 specular;
     float shininess;
+    float reflectivity;
 };
 
 struct DirectionalLight {
@@ -70,6 +71,7 @@ uniform sampler2D texture10;
 uniform sampler2D texture11;
 uniform sampler2D texture12;
 uniform sampler2D texture13;
+uniform samplerCube skybox;
 
 // ----- Uniforms -----
 uniform int textureTypes[16];
@@ -167,6 +169,13 @@ vec3 getSpecularColor() {
 
 vec4 applyGammaCorrection(vec4 color, float gamma) {
     return vec4(pow(color.rgb, vec3(1.0 / gamma)), color.a);
+}
+
+// ----- Environment Mapping -----
+vec4 getEnvironmentReflected(vec4 color) {
+    vec3 I = normalize(FragPos - cameraPosition);
+    vec3 R = reflect(I, normalize(Normal));
+    return mix(color, vec4(texture(skybox, R).rgb, 1.0), material.reflectivity);
 }
 
 // ----- Directional Light -----
@@ -371,6 +380,7 @@ void main() {
     vec3 finalColor = (ambient + (1.0 - shadow) * lightContribution) * baseColor.rgb;
 
     FragColor = vec4(finalColor, baseColor.a);
+    FragColor = getEnvironmentReflected(FragColor);
 
     if (FragColor.a < 0.1)
         discard;
