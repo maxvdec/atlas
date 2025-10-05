@@ -266,12 +266,6 @@ void Body::resolveContact(Contact &contact) {
     std::shared_ptr<Body> bodyA = contact.bodyA;
     std::shared_ptr<Body> bodyB = contact.bodyB;
 
-    if (bodyA->shape->getType() == Shape::ShapeType::Box &&
-        bodyB->shape->getType() == Shape::ShapeType::Box) {
-        bodyA->linearVelocity = glm::vec3(0.0f);
-        bodyB->linearVelocity = glm::vec3(0.0f);
-    }
-
     glm::vec3 n = contact.normal;
 
     float normalLength = glm::length(n);
@@ -295,6 +289,65 @@ void Body::resolveContact(Contact &contact) {
     const float totalInvMass = invMassA + invMassB;
 
     if (totalInvMass < 1e-8f) {
+        return;
+    }
+
+    bool isBoxBox = (bodyA->shape->getType() == Shape::ShapeType::Box &&
+                     bodyB->shape->getType() == Shape::ShapeType::Box);
+
+    if (isBoxBox) {
+        glm::vec3 ra = pointA - bodyA->getCenterOfMassWorldSpace();
+        glm::vec3 rb = pointB - bodyB->getCenterOfMassWorldSpace();
+
+        glm::vec3 velA = bodyA->linearVelocity;
+        glm::vec3 velB = bodyB->linearVelocity;
+
+        if (invMassA > 0.0f) {
+            velA += glm::cross(bodyA->angularVelocity, ra);
+        }
+        if (invMassB > 0.0f) {
+            velB += glm::cross(bodyB->angularVelocity, rb);
+        }
+
+        glm::vec3 relativeVel = velA - velB;
+        float normalVel = glm::dot(relativeVel, n);
+
+        if (normalVel >= 0.0f) {
+            return;
+        }
+
+        float restitution = 0.0f;
+        float impulseJ = -(1.0f + restitution) * normalVel / totalInvMass;
+
+        glm::vec3 impulse = impulseJ * n;
+
+        if (invMassA > 0.0f) {
+            bodyA->linearVelocity += impulse * invMassA;
+        }
+        if (invMassB > 0.0f) {
+            bodyB->linearVelocity -= impulse * invMassB;
+        }
+
+        glm::vec3 tangent = relativeVel - normalVel * n;
+        float tangentLength = glm::length(tangent);
+
+        if (tangentLength > 1e-6f) {
+            tangent /= tangentLength;
+
+            float frictionCoeff = std::sqrt(bodyA->friction * bodyB->friction);
+            float maxFriction = frictionCoeff * impulseJ;
+            float jt = -glm::dot(relativeVel, tangent) / totalInvMass;
+            jt = glm::clamp(jt, -maxFriction, maxFriction);
+            glm::vec3 frictionImpulse = jt * tangent;
+
+            if (invMassA > 0.0f) {
+                bodyA->linearVelocity -= frictionImpulse * invMassA;
+            }
+            if (invMassB > 0.0f) {
+                bodyB->linearVelocity += frictionImpulse * invMassB;
+            }
+        }
+
         return;
     }
 
@@ -325,13 +378,13 @@ void Body::resolveContact(Contact &contact) {
     float baumgarte = 0.0f;
 
     if (penetrationDepth > 0.0f) {
-        const float slop = 0.0001f;
+        const float slop = 0.0005f;
         const float maxCorrection = 0.2f;
 
         float correctionDepth = std::max(0.0f, penetrationDepth - slop);
         correctionDepth = std::min(correctionDepth, maxCorrection);
 
-        float baumgarteCoeff = 0.8f;
+        float baumgarteCoeff = 0.4f;
         baumgarte = baumgarteCoeff * correctionDepth;
     }
 
@@ -430,8 +483,8 @@ void Body::resolveContact(Contact &contact) {
         }
     }
 
-    if (penetrationDepth > 0.01f) {
-        float correctionAmount = penetrationDepth * 0.8f;
+    if (penetrationDepth > 0.005f) {
+        float correctionAmount = penetrationDepth * 0.5f;
         glm::vec3 correction = n * correctionAmount;
 
         if (invMassA > 0.0f && invMassB > 0.0f) {

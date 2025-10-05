@@ -140,17 +140,21 @@ class MainScene : public Scene {
         ground.setPosition({0.0f, -0.6f, 0.0f});
         ground.body->applyMass(0); // Make it static
         ground.attachTexture(checkerboard);
+        ground.body->friction = 0.0f;
         window.addObject(&ground);
 
         ball = createDebugBox({0.2f, 0.2f, 0.2f});
         ball.setPosition({0.0f, 2.0f, 0.0f});
         ball.body->applyLinearImpulse({0.0f, 0.0f, -1.0f});
         ball.attachTexture(checkerboard);
+        ball.body->friction = 1.0f;
         window.addObject(&ball);
 
         ball2 = createDebugSphere(0.1f);
         ball2.setPosition({1.0f, 2.0f, 0.0f});
+        ball2.body->applyLinearImpulse({0.0f, 0.0f, -1.0f});
         ball2.attachTexture(checkerboard);
+        ball2.body->friction = 1.0f;
         window.addObject(&ball2);
 
         Resource fontResource = Workspace::get().createResource(
