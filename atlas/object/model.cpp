@@ -29,10 +29,10 @@ void Model::loadModel(Resource resource) {
     Assimp::Importer importer;
     if (resource.type != ResourceType::Model)
         return;
-    const aiScene *scene =
-        importer.ReadFile(resource.path.string(),
-                          aiProcess_Triangulate | aiProcess_MakeLeftHanded |
-                              aiProcess_FlipWindingOrder);
+    const aiScene *scene = importer.ReadFile(
+        resource.path.string(),
+        aiProcess_Triangulate | aiProcess_MakeLeftHanded |
+            aiProcess_FlipWindingOrder | aiProcess_CalcTangentSpace);
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE ||
         !scene->mRootNode) {
@@ -108,6 +108,18 @@ CoreObject Model::processMesh(aiMesh *mesh, const aiScene *scene) {
                                         mesh->mTextureCoords[0][i].y};
         } else {
             vertex.textureCoordinate = {0.0f, 0.0f};
+        }
+        if (mesh->mTangents) {
+            vertex.tangent = {mesh->mTangents[i].x, mesh->mTangents[i].y,
+                              mesh->mTangents[i].z};
+        } else {
+            vertex.tangent = {0.0f, 0.0f, 0.0f};
+        }
+        if (mesh->mBitangents) {
+            vertex.bitangent = {mesh->mBitangents[i].x, mesh->mBitangents[i].y,
+                                mesh->mBitangents[i].z};
+        } else {
+            vertex.bitangent = {0.0f, 0.0f, 0.0f};
         }
         vertex.color = {1.0f, 1.0f, 1.0f, 1.0f};
         vertices.push_back(vertex);

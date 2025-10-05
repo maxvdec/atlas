@@ -126,9 +126,11 @@ in vec2 TexCoord;
 in vec4 outColor;
 in vec3 Normal;
 in vec3 FragPos;
+in mat3 TBN;
 
 const int TEXTURE_COLOR = 0;
 const int TEXTURE_SPECULAR = 1;
+const int TEXTURE_NORMAL = 5;
 
 // ----- Structures -----
 struct AmbientLight {
@@ -301,13 +303,13 @@ vec4 getEnvironmentReflected(vec4 color) {
 
 // ----- Directional Light -----
 vec3 calcDirectionalDiffuse(DirectionalLight light, vec3 norm) {
-    vec3 lightDir = normalize(-light.direction);  
+    vec3 lightDir = TBN * normalize(-light.direction);  
     float diff = max(dot(norm, lightDir), 0.0);
     return diff * light.diffuse;
 }
 
 vec3 calcDirectionalSpecular(DirectionalLight light, vec3 norm, vec3 viewDir, vec3 specColor, float shininess) {
-    vec3 lightDir = normalize(-light.direction);
+    vec3 lightDir = TBN * normalize(-light.direction);
     vec3 halfwayDir = normalize(lightDir + viewDir);
     float spec = pow(max(dot(Normal, halfwayDir), 0.0), shininess);
     return spec * specColor * light.specular;
@@ -329,13 +331,13 @@ vec3 calcAllDirectionalLights(vec3 norm, vec3 viewDir) {
 
 // ----- Point Light -----
 vec3 calcPointDiffuse(PointLight light, vec3 norm, vec3 fragPos) {
-    vec3 lightDir = normalize(light.position - fragPos);
+    vec3 lightDir = TBN * normalize(light.position - fragPos);
     float diff = max(dot(norm, lightDir), 0.0);
     return diff * light.diffuse;
 }
 
 vec3 calcPointSpecular(PointLight light, vec3 norm, vec3 fragPos, vec3 viewDir, vec3 specColor, float shininess) {
-    vec3 lightDir = normalize(light.position - fragPos);
+    vec3 lightDir = TBN * normalize(light.position - fragPos);
     vec3 halfwayDir = normalize(lightDir + viewDir);
     float spec = pow(max(dot(Normal, halfwayDir), 0.0), shininess);
     return spec * specColor * light.specular;
@@ -363,12 +365,12 @@ vec3 calcAllPointLights(vec3 norm, vec3 fragPos, vec3 viewDir) {
 
 // ----- Spot Light -----
 vec3 calcSpotDiffuse(SpotLight light, vec3 norm, vec3 fragPos) {
-    vec3 lightDir = normalize(light.position - fragPos);
+    vec3 lightDir = TBN * normalize(light.position - fragPos);
     float diff = max(dot(norm, lightDir), 0.0);
-    
-    vec3 spotDirection = normalize(light.direction);
-    float theta = dot(lightDir, -spotDirection); 
-    
+
+    vec3 spotDirection = TBN * normalize(light.direction);
+    float theta = dot(lightDir, -spotDirection);
+
     float intensity = smoothstep(light.outerCutOff, light.cutOff, theta);
     
     return diff * light.diffuse * intensity;
@@ -376,12 +378,12 @@ vec3 calcSpotDiffuse(SpotLight light, vec3 norm, vec3 fragPos) {
 
 
 vec3 calcSpotSpecular(SpotLight light, vec3 norm, vec3 fragPos, vec3 viewDir, vec3 specColor, float shininess) {
-    vec3 lightDir = normalize(light.position - fragPos);
+    vec3 lightDir = TBN * normalize(light.position - fragPos);
     vec3 halfwayDir = normalize(lightDir + viewDir);
     float spec = pow(max(dot(Normal, halfwayDir), 0.0), shininess);
-    
-    vec3 spotDirection = normalize(light.direction);
-    float theta = dot(lightDir, -spotDirection);  
+
+    vec3 spotDirection = TBN * normalize(light.direction);
+    float theta = dot(lightDir, -spotDirection);
     
     float intensity = smoothstep(light.outerCutOff, light.cutOff, theta);
     
@@ -422,7 +424,7 @@ float calculateShadow(ShadowParameters shadowParam, vec4 fragPosLightSpace) {
     
     float currentDepth = projCoords.z;
     
-    vec3 lightDir = normalize(-directionalLights[0].direction); 
+    vec3 lightDir = TBN * normalize(-directionalLights[0].direction); 
     vec3 normal = normalize(Normal);
     float biasValue = shadowParam.bias;
     float bias = max(biasValue * (1.0 - dot(normal, lightDir)), biasValue);
@@ -486,8 +488,14 @@ void main() {
     else
         baseColor = vec4(1.0);
 
-    vec3 norm = normalize(Normal);
-    vec3 viewDir = normalize(cameraPosition - FragPos);
+    vec4 normTexture = enableTextures(TEXTURE_NORMAL);
+    vec3 norm = vec3(0.0);
+    if (normTexture.r != -1.0 || normTexture.g != -1.0 || normTexture.b != -1.0) {
+        norm = normalize(normTexture.rgb * 2.0 - 1.0);
+    } else {
+        norm = normalize(Normal);
+    }
+    vec3 viewDir = TBN * normalize(cameraPosition - FragPos);
 
     vec3 ambient = ambientLight.color.rgb * ambientLight.intensity * material.ambient;
     vec3 directionalLights = calcAllDirectionalLights(norm, viewDir);
@@ -676,19 +684,22 @@ void main() {
 
 static const char* MAIN_VERT = R"(
 #version 330 core
-layout (location = 0) in vec3 aPos;
-layout (location = 1) in vec4 aColor;
-layout (location = 2) in vec2 aTexCoord;
-layout (location = 3) in vec3 aNormal;
+layout(location = 0) in vec3 aPos;
+layout(location = 1) in vec4 aColor;
+layout(location = 2) in vec2 aTexCoord;
+layout(location = 3) in vec3 aNormal;
+layout(location = 4) in vec3 aTangent;
+layout(location = 5) in vec3 aBitangent;
 
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 
 out vec4 outColor;
-out vec2 TexCoord; 
+out vec2 TexCoord;
 out vec3 Normal;
 out vec3 FragPos;
+out mat3 TBN;
 
 void main() {
     mat4 mvp = projection * view * model;
@@ -697,6 +708,11 @@ void main() {
     TexCoord = aTexCoord;
     Normal = mat3(transpose(inverse(model))) * aNormal;
     outColor = aColor;
+
+    vec3 T = normalize(vec3(model * vec4(aTangent, 0.0)));
+    vec3 B = normalize(vec3(model * vec4(aBitangent, 0.0)));
+    vec3 N = normalize(vec3(model * vec4(aNormal, 0.0)));
+    TBN = transpose(mat3(T, B, N));
 }
 
 )";

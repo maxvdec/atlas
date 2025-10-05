@@ -22,40 +22,162 @@ CoreObject createBox(Size3d size, Color color) {
 
     std::vector<CoreVertex> vertices = {
         // Front face (normal 0,0,1) - looking at +Z
-        {{-w, -h, d}, color, {0.0, 0.0}, {0.0f, 0.0f, 1.0f}},
-        {{w, -h, d}, color, {1.0, 0.0}, {0.0f, 0.0f, 1.0f}},
-        {{w, h, d}, color, {1.0, 1.0}, {0.0f, 0.0f, 1.0f}},
-        {{-w, h, d}, color, {0.0, 1.0}, {0.0f, 0.0f, 1.0f}},
+        {{-w, -h, d},
+         color,
+         {0.0, 0.0},
+         {0.0f, 0.0f, 1.0f},
+         {1.0f, 0.0f, 0.0f},
+         {0.0f, 1.0f, 0.0f}},
+
+        {{w, -h, d},
+         color,
+         {1.0, 0.0},
+         {0.0f, 0.0f, 1.0f},
+         {1.0f, 0.0f, 0.0f},
+         {0.0f, 1.0f, 0.0f}},
+
+        {{w, h, d},
+         color,
+         {1.0, 1.0},
+         {0.0f, 0.0f, 1.0f},
+         {1.0f, 0.0f, 0.0f},
+         {0.0f, 1.0f, 0.0f}},
+        {{-w, h, d},
+         color,
+         {0.0, 1.0},
+         {0.0f, 0.0f, 1.0f},
+         {1.0f, 0.0f, 0.0f},
+         {0.0f, 1.0f, 0.0f}},
 
         // Back face (normal 0,0,-1) - looking at -Z
-        {{w, -h, -d}, color, {0.0, 0.0}, {0.0f, 0.0f, -1.0f}},
-        {{-w, -h, -d}, color, {1.0, 0.0}, {0.0f, 0.0f, -1.0f}},
-        {{-w, h, -d}, color, {1.0, 1.0}, {0.0f, 0.0f, -1.0f}},
-        {{w, h, -d}, color, {0.0, 1.0}, {0.0f, 0.0f, -1.0f}},
+        {{w, -h, -d},
+         color,
+         {0.0, 0.0},
+         {0.0f, 0.0f, -1.0f},
+         {-1.0f, 0.0f, 0.0f},
+         {0.0f, 1.0f, 0.0f}},
+        {{-w, -h, -d},
+         color,
+         {1.0, 0.0},
+         {0.0f, 0.0f, -1.0f},
+         {-1.0f, 0.0f, 0.0f},
+         {0.0f, 1.0f, 0.0f}},
+        {{-w, h, -d},
+         color,
+         {1.0, 1.0},
+         {0.0f, 0.0f, -1.0f},
+         {-1.0f, 0.0f, 0.0f},
+         {0.0f, 1.0f, 0.0f}},
+        {{w, h, -d},
+         color,
+         {0.0, 1.0},
+         {0.0f, 0.0f, -1.0f},
+         {-1.0f, 0.0f, 0.0f},
+         {0.0f, 1.0f, 0.0f}},
 
         // Left face (normal -1,0,0) - looking at -X
-        {{-w, -h, -d}, color, {0.0, 0.0}, {-1.0f, 0.0f, 0.0f}},
-        {{-w, -h, d}, color, {1.0, 0.0}, {-1.0f, 0.0f, 0.0f}},
-        {{-w, h, d}, color, {1.0, 1.0}, {-1.0f, 0.0f, 0.0f}},
-        {{-w, h, -d}, color, {0.0, 1.0}, {-1.0f, 0.0f, 0.0f}},
+        {{-w, -h, -d},
+         color,
+         {0.0, 0.0},
+         {-1.0f, 0.0f, 0.0f},
+         {0.0f, 0.0f, 1.0f},
+         {0.0f, 1.0f, 0.0f}},
+        {{-w, -h, d},
+         color,
+         {1.0, 0.0},
+         {-1.0f, 0.0f, 0.0f},
+         {0.0f, 0.0f, 1.0f},
+         {0.0f, 1.0f, 0.0f}},
+        {{-w, h, d},
+         color,
+         {1.0, 1.0},
+         {-1.0f, 0.0f, 0.0f},
+         {0.0f, 0.0f, 1.0f},
+         {0.0f, 1.0f, 0.0f}},
+        {{-w, h, -d},
+         color,
+         {0.0, 1.0},
+         {-1.0f, 0.0f, 0.0f},
+         {0.0f, 0.0f, 1.0f},
+         {0.0f, 1.0f, 0.0f}},
 
         // Right face (normal 1,0,0) - looking at +X
-        {{w, -h, d}, color, {0.0, 0.0}, {1.0f, 0.0f, 0.0f}},
-        {{w, -h, -d}, color, {1.0, 0.0}, {1.0f, 0.0f, 0.0f}},
-        {{w, h, -d}, color, {1.0, 1.0}, {1.0f, 0.0f, 0.0f}},
-        {{w, h, d}, color, {0.0, 1.0}, {1.0f, 0.0f, 0.0f}},
+        {{w, -h, d},
+         color,
+         {0.0, 0.0},
+         {1.0f, 0.0f, 0.0f},
+         {0.0f, 0.0f, -1.0f},
+         {0.0f, 1.0f, 0.0f}},
+        {{w, -h, -d},
+         color,
+         {1.0, 0.0},
+         {1.0f, 0.0f, 0.0f},
+         {0.0f, 0.0f, -1.0f},
+         {0.0f, 1.0f, 0.0f}},
+        {{w, h, -d},
+         color,
+         {1.0, 1.0},
+         {1.0f, 0.0f, 0.0f},
+         {0.0f, 0.0f, -1.0f},
+         {0.0f, 1.0f, 0.0f}},
+        {{w, h, d},
+         color,
+         {0.0, 1.0},
+         {1.0f, 0.0f, 0.0f},
+         {0.0f, 0.0f, -1.0f},
+         {0.0f, 1.0f, 0.0f}},
 
         // Top face (normal 0,1,0) - looking at +Y
-        {{-w, h, d}, color, {0.0, 0.0}, {0.0f, 1.0f, 0.0f}},
-        {{w, h, d}, color, {1.0, 0.0}, {0.0f, 1.0f, 0.0f}},
-        {{w, h, -d}, color, {1.0, 1.0}, {0.0f, 1.0f, 0.0f}},
-        {{-w, h, -d}, color, {0.0, 1.0}, {0.0f, 1.0f, 0.0f}},
+        {{-w, h, d},
+         color,
+         {0.0, 0.0},
+         {0.0f, 1.0f, 0.0f},
+         {1.0f, 0.0f, 0.0f},
+         {0.0f, 0.0f, -1.0f}},
+        {{w, h, d},
+         color,
+         {1.0, 0.0},
+         {0.0f, 1.0f, 0.0f},
+         {1.0f, 0.0f, 0.0f},
+         {0.0f, 0.0f, -1.0f}},
+        {{w, h, -d},
+         color,
+         {1.0, 1.0},
+         {0.0f, 1.0f, 0.0f},
+         {1.0f, 0.0f, 0.0f},
+         {0.0f, 0.0f, -1.0f}},
+        {{-w, h, -d},
+         color,
+         {0.0, 1.0},
+         {0.0f, 1.0f, 0.0f},
+         {1.0f, 0.0f, 0.0f},
+         {0.0f, 0.0f, -1.0f}},
 
         // Bottom face (normal 0,-1,0) - looking at -Y
-        {{-w, -h, -d}, color, {0.0, 0.0}, {0.0f, -1.0f, 0.0f}},
-        {{w, -h, -d}, color, {1.0, 0.0}, {0.0f, -1.0f, 0.0f}},
-        {{w, -h, d}, color, {1.0, 1.0}, {0.0f, -1.0f, 0.0f}},
-        {{-w, -h, d}, color, {0.0, 1.0}, {0.0f, -1.0f, 0.0f}},
+        {{-w, -h, -d},
+         color,
+         {0.0, 0.0},
+         {0.0f, -1.0f, 0.0f},
+         {1.0f, 0.0f, 0.0f},
+         {0.0f, 0.0f, 1.0f}},
+        {{w, -h, -d},
+         color,
+         {1.0, 0.0},
+         {0.0f, -1.0f, 0.0f},
+         {1.0f, 0.0f, 0.0f},
+         {0.0f, 0.0f, 1.0f}},
+        {{w, -h, d},
+         color,
+         {1.0, 1.0},
+         {0.0f, -1.0f, 0.0f},
+         {1.0f, 0.0f, 0.0f},
+         {0.0f, 0.0f, 1.0f}},
+        {{-w, -h, d},
+         color,
+         {0.0, 1.0},
+         {0.0f, -1.0f, 0.0f},
+         {1.0f, 0.0f, 0.0f},
+         {0.0f, 0.0f, 1.0f}},
     };
 
     CoreObject box;
@@ -74,10 +196,30 @@ CoreObject createPlane(Size2d size, Color color) {
     double h = size.height / 2.0;
 
     std::vector<CoreVertex> vertices = {
-        {{-w, -h, 0.0}, color, {0.0, 0.0}, {0.0f, 0.0f, 1.0f}},
-        {{w, -h, 0.0}, color, {1.0, 0.0}, {0.0f, 0.0f, 1.0f}},
-        {{w, h, 0.0}, color, {1.0, 1.0}, {0.0f, 0.0f, 1.0f}},
-        {{-w, h, 0.0}, color, {0.0, 1.0}, {0.0f, 0.0f, 1.0f}},
+        {{-w, -h, 0.0},
+         color,
+         {0.0, 0.0},
+         {0.0f, 0.0f, 1.0f},
+         {1.0f, 0.0f, 0.0f},
+         {0.0f, 1.0f, 0.0f}},
+        {{w, -h, 0.0},
+         color,
+         {1.0, 0.0},
+         {0.0f, 0.0f, 1.0f},
+         {1.0f, 0.0f, 0.0f},
+         {0.0f, 1.0f, 0.0f}},
+        {{w, h, 0.0},
+         color,
+         {1.0, 1.0},
+         {0.0f, 0.0f, 1.0f},
+         {1.0f, 0.0f, 0.0f},
+         {0.0f, 1.0f, 0.0f}},
+        {{-w, h, 0.0},
+         color,
+         {0.0, 1.0},
+         {0.0f, 0.0f, 1.0f},
+         {1.0f, 0.0f, 0.0f},
+         {0.0f, 1.0f, 0.0f}},
     };
 
     CoreObject plane;
@@ -107,78 +249,146 @@ CoreObject createPyramid(Size3d size, Color color) {
 
     std::vector<CoreVertex> vertices = {
         // Base (normal down) - reversed winding for CCW when viewed from below
-        {bl, color, {0.0, 0.0}, Normal3d{0.0, -1.0, 0.0}},
-        {tl, color, {0.0, 1.0}, Normal3d{0.0, -1.0, 0.0}},
-        {tr, color, {1.0, 1.0}, Normal3d{0.0, -1.0, 0.0}},
-        {br, color, {1.0, 0.0}, Normal3d{0.0, -1.0, 0.0}},
+        {bl,
+         color,
+         {0.0, 0.0},
+         Normal3d{0.0, -1.0, 0.0},
+         Normal3d{1.0, 0.0, 0.0},
+         Normal3d{0.0, 0.0, 1.0}},
+        {tl,
+         color,
+         {0.0, 1.0},
+         Normal3d{0.0, -1.0, 0.0},
+         Normal3d{1.0, 0.0, 0.0},
+         Normal3d{0.0, 0.0, 1.0}},
+        {tr,
+         color,
+         {1.0, 1.0},
+         Normal3d{0.0, -1.0, 0.0},
+         Normal3d{1.0, 0.0, 0.0},
+         Normal3d{0.0, 0.0, 1.0}},
+        {br,
+         color,
+         {1.0, 0.0},
+         Normal3d{0.0, -1.0, 0.0},
+         Normal3d{1.0, 0.0, 0.0},
+         Normal3d{0.0, 0.0, 1.0}},
 
         // Side 1 (bl, br, apex) - front face
         {bl,
          color,
          {0.0, 0.0},
          Normal3d::fromGlm(
-             glm::normalize(glm::cross(brVec - blVec, apexVec - blVec)))},
+             glm::normalize(glm::cross(brVec - blVec, apexVec - blVec))),
+         Normal3d::fromGlm(glm::normalize(brVec - blVec)),
+         Normal3d::fromGlm(glm::normalize(glm::cross(
+             glm::normalize(glm::cross(brVec - blVec, apexVec - blVec)),
+             glm::normalize(brVec - blVec))))},
         {br,
          color,
          {1.0, 0.0},
          Normal3d::fromGlm(
-             glm::normalize(glm::cross(brVec - blVec, apexVec - blVec)))},
+             glm::normalize(glm::cross(brVec - blVec, apexVec - blVec))),
+         Normal3d::fromGlm(glm::normalize(brVec - blVec)),
+         Normal3d::fromGlm(glm::normalize(glm::cross(
+             glm::normalize(glm::cross(brVec - blVec, apexVec - blVec)),
+             glm::normalize(brVec - blVec))))},
         {apex,
          color,
          {0.5, 1.0},
          Normal3d::fromGlm(
-             glm::normalize(glm::cross(brVec - blVec, apexVec - blVec)))},
+             glm::normalize(glm::cross(brVec - blVec, apexVec - blVec))),
+         Normal3d::fromGlm(glm::normalize(brVec - blVec)),
+         Normal3d::fromGlm(glm::normalize(glm::cross(
+             glm::normalize(glm::cross(brVec - blVec, apexVec - blVec)),
+             glm::normalize(brVec - blVec))))},
 
         // Side 2 (br, tr, apex) - right face
         {br,
          color,
          {0.0, 0.0},
          Normal3d::fromGlm(
-             glm::normalize(glm::cross(trVec - brVec, apexVec - brVec)))},
+             glm::normalize(glm::cross(trVec - brVec, apexVec - brVec))),
+         Normal3d::fromGlm(glm::normalize(trVec - brVec)),
+         Normal3d::fromGlm(glm::normalize(glm::cross(
+             glm::normalize(glm::cross(trVec - brVec, apexVec - brVec)),
+             glm::normalize(trVec - brVec))))},
         {tr,
          color,
          {1.0, 0.0},
          Normal3d::fromGlm(
-             glm::normalize(glm::cross(trVec - brVec, apexVec - brVec)))},
+             glm::normalize(glm::cross(trVec - brVec, apexVec - brVec))),
+         Normal3d::fromGlm(glm::normalize(trVec - brVec)),
+         Normal3d::fromGlm(glm::normalize(glm::cross(
+             glm::normalize(glm::cross(trVec - brVec, apexVec - brVec)),
+             glm::normalize(trVec - brVec))))},
         {apex,
          color,
          {0.5, 1.0},
          Normal3d::fromGlm(
-             glm::normalize(glm::cross(trVec - brVec, apexVec - brVec)))},
+             glm::normalize(glm::cross(trVec - brVec, apexVec - brVec))),
+         Normal3d::fromGlm(glm::normalize(trVec - brVec)),
+         Normal3d::fromGlm(glm::normalize(glm::cross(
+             glm::normalize(glm::cross(trVec - brVec, apexVec - brVec)),
+             glm::normalize(trVec - brVec))))},
 
         // Side 3 (tr, tl, apex) - back face
         {tr,
          color,
          {0.0, 0.0},
          Normal3d::fromGlm(
-             glm::normalize(glm::cross(tlVec - trVec, apexVec - trVec)))},
+             glm::normalize(glm::cross(tlVec - trVec, apexVec - trVec))),
+         Normal3d::fromGlm(glm::normalize(tlVec - trVec)),
+         Normal3d::fromGlm(glm::normalize(glm::cross(
+             glm::normalize(glm::cross(tlVec - trVec, apexVec - trVec)),
+             glm::normalize(tlVec - trVec))))},
         {tl,
          color,
          {1.0, 0.0},
          Normal3d::fromGlm(
-             glm::normalize(glm::cross(tlVec - trVec, apexVec - trVec)))},
+             glm::normalize(glm::cross(tlVec - trVec, apexVec - trVec))),
+         Normal3d::fromGlm(glm::normalize(tlVec - trVec)),
+         Normal3d::fromGlm(glm::normalize(glm::cross(
+             glm::normalize(glm::cross(tlVec - trVec, apexVec - trVec)),
+             glm::normalize(tlVec - trVec))))},
         {apex,
          color,
          {0.5, 1.0},
          Normal3d::fromGlm(
-             glm::normalize(glm::cross(tlVec - trVec, apexVec - trVec)))},
+             glm::normalize(glm::cross(tlVec - trVec, apexVec - trVec))),
+         Normal3d::fromGlm(glm::normalize(tlVec - trVec)),
+         Normal3d::fromGlm(glm::normalize(glm::cross(
+             glm::normalize(glm::cross(tlVec - trVec, apexVec - trVec)),
+             glm::normalize(tlVec - trVec))))},
 
         // Side 4 (tl, bl, apex) - left face
         {tl,
          color,
          {0.0, 0.0},
          Normal3d::fromGlm(
-             glm::normalize(glm::cross(blVec - tlVec, apexVec - tlVec)))},
+             glm::normalize(glm::cross(blVec - tlVec, apexVec - tlVec))),
+         Normal3d::fromGlm(glm::normalize(blVec - tlVec)),
+         Normal3d::fromGlm(glm::normalize(glm::cross(
+             glm::normalize(glm::cross(blVec - tlVec, apexVec - tlVec)),
+             glm::normalize(blVec - tlVec))))},
         {bl,
          color,
          {1.0, 0.0},
          Normal3d::fromGlm(
-             glm::normalize(glm::cross(blVec - tlVec, apexVec - tlVec)))},
+             glm::normalize(glm::cross(blVec - tlVec, apexVec - tlVec))),
+         Normal3d::fromGlm(glm::normalize(blVec - tlVec)),
+         Normal3d::fromGlm(glm::normalize(glm::cross(
+             glm::normalize(glm::cross(blVec - tlVec, apexVec - tlVec)),
+             glm::normalize(blVec - tlVec))))},
         {apex,
          color,
          {0.5, 1.0},
          Normal3d::fromGlm(
-             glm::normalize(glm::cross(blVec - tlVec, apexVec - tlVec)))}};
+             glm::normalize(glm::cross(blVec - tlVec, apexVec - tlVec))),
+         Normal3d::fromGlm(glm::normalize(blVec - tlVec)),
+         Normal3d::fromGlm(glm::normalize(glm::cross(
+             glm::normalize(glm::cross(blVec - tlVec, apexVec - tlVec)),
+             glm::normalize(blVec - tlVec))))}};
 
     std::vector<unsigned int> indices = {0, 1, 2, 2,  3,  0,  4,  5,  6,
                                          7, 8, 9, 10, 11, 12, 13, 14, 15};
@@ -212,9 +422,20 @@ CoreObject createSphere(double radius, unsigned int sectorCount,
             glm::vec3 normal = glm::normalize(pos);
             glm::vec2 uv((float)j / sectorCount, (float)i / stackCount);
 
+            glm::vec3 tangent;
+            glm::vec3 bitangent;
+
+            tangent = glm::vec3(-sin(sectorAngle), cos(sectorAngle), 0.0f);
+            tangent = glm::normalize(tangent);
+
+            bitangent = glm::cross(normal, tangent);
+            bitangent = glm::normalize(bitangent);
+
             CoreVertex v;
             v.position = Position3d(pos.x, pos.y, pos.z);
             v.normal = Normal3d(normal.x, normal.y, normal.z);
+            v.tangent = Normal3d(tangent.x, tangent.y, tangent.z);
+            v.bitangent = Normal3d(bitangent.x, bitangent.y, bitangent.z);
             v.textureCoordinate = {uv.x, uv.y};
             v.color = color;
 

@@ -5,9 +5,11 @@ in vec2 TexCoord;
 in vec4 outColor;
 in vec3 Normal;
 in vec3 FragPos;
+in mat3 TBN;
 
 const int TEXTURE_COLOR = 0;
 const int TEXTURE_SPECULAR = 1;
+const int TEXTURE_NORMAL = 5;
 
 // ----- Structures -----
 struct AmbientLight {
@@ -365,7 +367,14 @@ void main() {
     else
         baseColor = vec4(1.0);
 
-    vec3 norm = normalize(Normal);
+    vec4 normTexture = enableTextures(TEXTURE_NORMAL);
+    vec3 norm = vec3(0.0);
+    if (normTexture.r != -1.0 || normTexture.g != -1.0 || normTexture.b != -1.0) {
+        norm = normalize(normTexture.rgb * 2.0 - 1.0);
+        norm = normalize(TBN * norm);
+    } else {
+        norm = normalize(Normal);
+    }
     vec3 viewDir = normalize(cameraPosition - FragPos);
 
     vec3 ambient = ambientLight.color.rgb * ambientLight.intensity * material.ambient;
