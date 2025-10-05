@@ -102,6 +102,9 @@ struct CoreVertex {
      */
     Normal3d normal = {0.0, 0.0, 0.0};
 
+    Normal3d tangent = {0.0, 0.0, 0.0};
+    Normal3d bitangent = {0.0, 0.0, 0.0};
+
     /**
      * @brief Function that constructs a new CoreVertex object.
      *
@@ -112,8 +115,10 @@ struct CoreVertex {
      */
     CoreVertex(Position3d pos = {0.0, 0.0, 0.0},
                Color col = {1.0, 1.0, 1.0, 1.0},
-               TextureCoordinate tex = {0.0, 0.0}, Normal3d n = {0.0, 0.0, 0.0})
-        : position(pos), color(col), textureCoordinate(tex), normal(n) {}
+               TextureCoordinate tex = {0.0, 0.0}, Normal3d n = {0.0, 0.0, 0.0},
+               Normal3d t = {0.0, 0.0, 0.0}, Normal3d b = {0.0, 0.0, 0.0})
+        : position(pos), color(col), textureCoordinate(tex), normal(n),
+          tangent(t), bitangent(b) {}
 
     /**
      * @brief Gets the layout descriptors for the CoreVertex structure.

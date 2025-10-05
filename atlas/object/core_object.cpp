@@ -29,7 +29,11 @@ std::vector<LayoutDescriptor> CoreVertex::getLayoutDescriptors() {
             {2, 2, GL_DOUBLE, GL_FALSE, sizeof(CoreVertex),
              offsetof(CoreVertex, textureCoordinate)},
             {3, 3, GL_DOUBLE, GL_FALSE, sizeof(CoreVertex),
-             offsetof(CoreVertex, normal)}};
+             offsetof(CoreVertex, normal)},
+            {4, 3, GL_DOUBLE, GL_FALSE, sizeof(CoreVertex),
+             offsetof(CoreVertex, tangent)},
+            {5, 3, GL_DOUBLE, GL_FALSE, sizeof(CoreVertex),
+             offsetof(CoreVertex, bitangent)}};
 }
 
 CoreObject::CoreObject() : vbo(0), vao(0) {
@@ -274,16 +278,17 @@ void CoreObject::render(float dt) {
             units[i] = i;
 
         for (int i = 0; i < count; i++) {
-            std::string uniformName = "texture" + std::to_string(i) + "";
+            std::string uniformName = "texture" + std::to_string(i + 1) + "";
             shaderProgram.setUniform1i(uniformName, i);
         }
 
         GLint textureTypes[16];
         for (int i = 0; i < count; i++)
             textureTypes[i] = static_cast<int>(textures[i].type);
-        glUniform1iv(
-            glGetUniformLocation(shaderProgram.programId, "textureTypes"),
-            count, textureTypes);
+        for (int i = 0; i < count; i++) {
+            std::string uniformName = "textureTypes[" + std::to_string(i) + "]";
+            shaderProgram.setUniform1i(uniformName, textureTypes[i]);
+        }
 
         for (int i = 0; i < count; i++) {
             glActiveTexture(GL_TEXTURE0 + i);

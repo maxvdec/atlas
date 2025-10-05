@@ -126,9 +126,14 @@ in vec2 TexCoord;
 in vec4 outColor;
 in vec3 Normal;
 in vec3 FragPos;
+in mat3 TBN;
 
 const int TEXTURE_COLOR = 0;
 const int TEXTURE_SPECULAR = 1;
+const int TEXTURE_NORMAL = 5;
+const int TEXTURE_PARALLAX = 6;
+
+vec2 texCoord;
 
 // ----- Structures -----
 struct AmbientLight {
@@ -224,19 +229,19 @@ vec4 enableTextures(int type) {
     int count = 0;
     for (int i = 0; i < textureCount; i++) {
         if (textureTypes[i] == type) { 
-            if (i == 0) color += texture(texture1, TexCoord);
-            else if (i == 1) color += texture(texture2, TexCoord);
-            else if (i == 2) color += texture(texture3, TexCoord);
-            else if (i == 3) color += texture(texture4, TexCoord);
-            else if (i == 4) color += texture(texture5, TexCoord);
-            else if (i == 5) color += texture(texture6, TexCoord);
-            else if (i == 6) color += texture(texture7, TexCoord);
-            else if (i == 7) color += texture(texture8, TexCoord);
-            else if (i == 8) color += texture(texture9, TexCoord);
-            else if (i == 9) color += texture(texture10, TexCoord);
-            else if (i == 10) color += texture(texture11, TexCoord);
-            else if (i == 11) color += texture(texture12, TexCoord);
-            else if (i == 12) color += texture(texture13, TexCoord);
+            if (i == 0) color += texture(texture1, texCoord);
+            else if (i == 1) color += texture(texture2, texCoord);
+            else if (i == 2) color += texture(texture3, texCoord);
+            else if (i == 3) color += texture(texture4, texCoord);
+            else if (i == 4) color += texture(texture5, texCoord);
+            else if (i == 5) color += texture(texture6, texCoord);
+            else if (i == 6) color += texture(texture7, texCoord);
+            else if (i == 7) color += texture(texture8, texCoord);
+            else if (i == 8) color += texture(texture9, texCoord);
+            else if (i == 9) color += texture(texture10, texCoord);
+            else if (i == 10) color += texture(texture11, texCoord);
+            else if (i == 11) color += texture(texture12, texCoord);
+            else if (i == 12) color += texture(texture13, texCoord);
             count++; 
         }
     }
@@ -290,6 +295,17 @@ vec3 getSpecularColor() {
 
 vec4 applyGammaCorrection(vec4 color, float gamma) {
     return vec4(pow(color.rgb, vec3(1.0 / gamma)), color.a);
+}
+
+vec2 parallaxMapping(vec2 texCoords, vec3 viewDir) {
+    vec4 heightMap = enableTextures(TEXTURE_PARALLAX);
+    if (heightMap.r == -1.0 && heightMap.g == -1.0 && heightMap.b == -1.0) {
+        return texCoords;
+    }
+    
+    float height = heightMap.r; 
+    vec2 p = viewDir.xy / viewDir.z * (height * 0.1); 
+    return texCoords - p;
 }
 
 // ----- Environment Mapping -----
@@ -475,7 +491,11 @@ float calculateAllShadows() {
 
 // ----- Main -----
 void main() {
+    texCoord = TexCoord;
     vec4 baseColor;
+
+    vec3 tangentViewDir = normalize((TBN * cameraPosition) - (TBN * FragPos));
+    texCoord = parallaxMapping(texCoord, tangentViewDir);
 
     if (useTexture && !useColor)
         baseColor = enableTextures(TEXTURE_COLOR);
@@ -486,7 +506,14 @@ void main() {
     else
         baseColor = vec4(1.0);
 
-    vec3 norm = normalize(Normal);
+    vec4 normTexture = enableTextures(TEXTURE_NORMAL);
+    vec3 norm = vec3(0.0);
+    if (normTexture.r != -1.0 || normTexture.g != -1.0 || normTexture.b != -1.0) {
+        norm = normalize(normTexture.rgb * 2.0 - 1.0);
+        norm = normalize(TBN * norm);
+    } else {
+        norm = normalize(Normal);
+    }
     vec3 viewDir = normalize(cameraPosition - FragPos);
 
     vec3 ambient = ambientLight.color.rgb * ambientLight.intensity * material.ambient;
@@ -676,19 +703,22 @@ void main() {
 
 static const char* MAIN_VERT = R"(
 #version 330 core
-layout (location = 0) in vec3 aPos;
-layout (location = 1) in vec4 aColor;
-layout (location = 2) in vec2 aTexCoord;
-layout (location = 3) in vec3 aNormal;
+layout(location = 0) in vec3 aPos;
+layout(location = 1) in vec4 aColor;
+layout(location = 2) in vec2 aTexCoord;
+layout(location = 3) in vec3 aNormal;
+layout(location = 4) in vec3 aTangent;
+layout(location = 5) in vec3 aBitangent;
 
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 
 out vec4 outColor;
-out vec2 TexCoord; 
+out vec2 TexCoord;
 out vec3 Normal;
 out vec3 FragPos;
+out mat3 TBN;
 
 void main() {
     mat4 mvp = projection * view * model;
@@ -697,6 +727,11 @@ void main() {
     TexCoord = aTexCoord;
     Normal = mat3(transpose(inverse(model))) * aNormal;
     outColor = aColor;
+
+    vec3 T = normalize(vec3(model * vec4(aTangent, 0.0)));
+    vec3 B = normalize(vec3(model * vec4(aBitangent, 0.0)));
+    vec3 N = normalize(vec3(model * vec4(aNormal, 0.0)));
+    TBN = mat3(T, B, N);
 }
 
 )";
