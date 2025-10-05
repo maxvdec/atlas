@@ -493,7 +493,7 @@ class FPSTextUpdater : public TraitComponent<Text> {
 And we can now apply this component to our text object from our `initialize` function in our scene:
 
 ```c++
-fpsText.addTraitComponent<FPSTextUpdater>(FPSTextUpdater());
+fpsText.addTraitComponent<Text>(FPSTextUpdater());
 ```
 
 ## Conclusion
@@ -528,6 +528,14 @@ class SphereCube : public CompoundObject {
         sphere.initialize();
         sphere.body->applyMass(0); // Make it static
         this->addObject(&sphere);
+    }
+};
+
+class FPSTextUpdater : public TraitComponent<Text> {
+  public:
+    void updateComponent(Text *object) override {
+        int fps = static_cast<int>(getWindow()->getFramesPerSecond());
+        object->content = "FPS: " + std::to_string(fps);
     }
 };
 
@@ -602,6 +610,7 @@ class MainScene : public Scene {
         fpsText = Text("FPS: 0", Font::fromResource("Arial", fontResource, 24),
                        {25.0, 25.0}, Color::white());
 
+        fpsText.addTraitComponent<Text>(FPSTextUpdater());
         window.addObject(&fpsText);
 
         light = DirectionalLight({-0.75f, -1.0f, 0.0}, Color::white());

@@ -12,6 +12,11 @@
 
 Resource Workspace::createResource(const fs::path &path, std::string name,
                                    ResourceType type) {
+    for (const auto &res : resources) {
+        if (res.name == name) {
+            return res;
+        }
+    }
     Resource res;
     if (rootPath && path.is_relative()) {
         res.path = rootPath.value() / path;

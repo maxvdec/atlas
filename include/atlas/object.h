@@ -12,7 +12,9 @@
 
 #include "atlas/component.h"
 #include "bezel/body.h"
+#include <any>
 #include <memory>
+#include <string>
 #include <type_traits>
 #pragma once
 
@@ -714,6 +716,64 @@ class ParticleEmitter : public GameObject {
     Position3d generateSpawnPosition();
     int findInactiveParticle();
     void activateParticle(int index);
+};
+
+class Resource;
+class aiNode;
+class aiScene;
+class aiMesh;
+class aiMaterial;
+class Model {
+  public:
+    void fromResource(Resource resource);
+    inline std::vector<std::shared_ptr<CoreObject>> getObjects() {
+        return objects;
+    }
+
+    void addToWindow(Window &window);
+
+    inline void move(const Position3d &deltaPosition) {
+        for (auto &obj : objects) {
+            obj->move(deltaPosition);
+        }
+    }
+
+    inline void setPosition(const Position3d &newPosition) {
+        for (auto &obj : objects) {
+            obj->setPosition(newPosition);
+        }
+    }
+
+    inline void setRotation(const Rotation3d &newRotation) {
+        for (auto &obj : objects) {
+            obj->setRotation(newRotation);
+        }
+    }
+
+    inline void attachTexture(const Texture &texture) {
+        for (auto &obj : objects) {
+            obj->attachTexture(texture);
+        }
+    }
+
+    inline void setScale(const Scale3d &newScale) {
+        for (auto &obj : objects) {
+            obj->setScale(newScale);
+        }
+    }
+
+    Model() = default;
+
+  private:
+    std::vector<std::shared_ptr<CoreObject>> objects;
+    std::string directory;
+
+    void loadModel(Resource resource);
+    void processNode(aiNode *node, const aiScene *scene,
+                     glm::mat4 parentTransform = glm::mat4(1.0f));
+    CoreObject processMesh(aiMesh *mesh, const aiScene *scene);
+    std::vector<Texture> loadMaterialTextures(aiMaterial *mat, std::any type,
+                                              const std::string &typeName);
 };
 
 #endif // ATLAS_OBJECT_H
