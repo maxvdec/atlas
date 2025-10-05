@@ -265,21 +265,21 @@ bool Body::intersectsStatic(const std::shared_ptr<Body> &body,
             normal = glm::normalize(normal);
         }
 
-        if (isBoxInvolved) {
-            float absX = std::abs(normal.x);
-            float absY = std::abs(normal.y);
-            float absZ = std::abs(normal.z);
+        // if (isBoxInvolved) {
+        //     float absX = std::abs(normal.x);
+        //     float absY = std::abs(normal.y);
+        //     float absZ = std::abs(normal.z);
 
-            const float snapThreshold = 0.95f;
+        //     const float snapThreshold = 0.95f;
 
-            if (absY > snapThreshold && absY > absX && absY > absZ) {
-                normal = glm::vec3(0.0f, normal.y > 0 ? 1.0f : -1.0f, 0.0f);
-            } else if (absX > snapThreshold && absX > absY && absX > absZ) {
-                normal = glm::vec3(normal.x > 0 ? 1.0f : -1.0f, 0.0f, 0.0f);
-            } else if (absZ > snapThreshold && absZ > absX && absZ > absY) {
-                normal = glm::vec3(0.0f, 0.0f, normal.z > 0 ? 1.0f : -1.0f);
-            }
-        }
+        //     if (absY > snapThreshold && absY > absX && absY > absZ) {
+        //         normal = glm::vec3(0.0f, normal.y > 0 ? 1.0f : -1.0f, 0.0f);
+        //     } else if (absX > snapThreshold && absX > absY && absX > absZ) {
+        //         normal = glm::vec3(normal.x > 0 ? 1.0f : -1.0f, 0.0f, 0.0f);
+        //     } else if (absZ > snapThreshold && absZ > absX && absZ > absY) {
+        //         normal = glm::vec3(0.0f, 0.0f, normal.z > 0 ? 1.0f : -1.0f);
+        //     }
+        // }
 
         float depthOnNormal = std::abs(glm::dot(ptOnB - ptOnA, normal));
         penetrationDepth = std::max(penetrationDepth, depthOnNormal);

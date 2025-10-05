@@ -266,6 +266,12 @@ void Body::resolveContact(Contact &contact) {
     std::shared_ptr<Body> bodyA = contact.bodyA;
     std::shared_ptr<Body> bodyB = contact.bodyB;
 
+    if (bodyA->shape->getType() == Shape::ShapeType::Box &&
+        bodyB->shape->getType() == Shape::ShapeType::Box) {
+        bodyA->linearVelocity = glm::vec3(0.0f);
+        bodyB->linearVelocity = glm::vec3(0.0f);
+    }
+
     glm::vec3 n = contact.normal;
 
     float normalLength = glm::length(n);
@@ -319,19 +325,16 @@ void Body::resolveContact(Contact &contact) {
     float baumgarte = 0.0f;
 
     if (penetrationDepth > 0.0f) {
-        // BALANCED approach: accept small penetrations, correct larger ones
-        const float slop = 0.002f; // 2mm tolerance
+        const float slop = 0.0001f;
         const float maxCorrection = 0.2f;
 
         float correctionDepth = std::max(0.0f, penetrationDepth - slop);
         correctionDepth = std::min(correctionDepth, maxCorrection);
 
-        // Moderate correction coefficient
-        float baumgarteCoeff = 0.25f;
+        float baumgarteCoeff = 0.8f;
         baumgarte = baumgarteCoeff * correctionDepth;
     }
 
-    // Skip if separating AND no significant penetration
     const float minRelativeVel = -0.0001f;
     if (normalVel >= minRelativeVel && penetrationDepth <= 0.001f) {
         return;
@@ -428,7 +431,7 @@ void Body::resolveContact(Contact &contact) {
     }
 
     if (penetrationDepth > 0.01f) {
-        float correctionAmount = penetrationDepth * 0.2f;
+        float correctionAmount = penetrationDepth * 0.8f;
         glm::vec3 correction = n * correctionAmount;
 
         if (invMassA > 0.0f && invMassB > 0.0f) {
