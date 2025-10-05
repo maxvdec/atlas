@@ -725,19 +725,61 @@ class aiNode;
 class aiScene;
 class aiMesh;
 class aiMaterial;
+/**
+ * @brief Class that represents a 3D model composed of multiple CoreObjects. It
+ * can be loaded from a resource file and manages its constituent objects.
+ * \subsection model-example Example
+    * ```cpp
+    * // Load a 3D model from a resource file
+    * Resource modelResource =
+ Workspace::get().createResource("path/to/model.obj");
+    * Model myModel;
+    * myModel.fromResource(modelResource);
+    * // Set the position of the model in the scene
+    * myModel.setPosition({0.0f, 0.0f, 0.0f});
+    * // Scale the model to twice its original size
+    * myModel.setScale({2.0f, 2.0f, 2.0f});
+    * // Rotate the model 45 degrees around the Y-axis
+    * myModel.setRotation({0.0f, 45.0f, 0.0f});
+    * // Add the model to the scene
+    * window.addObject(&myModel);
+    * ```
+ *
+ */
 class Model : public GameObject {
   public:
+    /**
+     * @brief Loads the model from a resource.
+     *
+     * @param resource The resource to load the model from.
+     */
     void fromResource(Resource resource);
+
+    /**
+     * @brief Gets the objects that make up the model.
+     *
+     * @return (std::vector<std::shared_ptr<CoreObject>>) The objects.
+     */
     inline std::vector<std::shared_ptr<CoreObject>> getObjects() {
         return objects;
     }
 
+    /**
+     * @brief Moves the model by a certain amount.
+     *
+     * @param deltaPosition The amount to move the model by.
+     */
     inline void move(const Position3d &deltaPosition) override {
         for (auto &obj : objects) {
             obj->move(deltaPosition);
         }
     }
 
+    /**
+     * @brief Set the Position object
+     *
+     * @param newPosition The new position to set.
+     */
     inline void setPosition(const Position3d &newPosition) override {
         for (auto &obj : objects) {
             obj->setPosition(newPosition);

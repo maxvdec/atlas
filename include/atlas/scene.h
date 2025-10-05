@@ -106,6 +106,11 @@ class Scene {
      */
     void addSpotlight(Spotlight *light) { spotlights.push_back(light); }
 
+    /**
+     * @brief Set the Skybox object
+     *
+     * @param newSkybox The new skybox to set.
+     */
     void setSkybox(Skybox *newSkybox) { skybox = newSkybox; }
 
   private:

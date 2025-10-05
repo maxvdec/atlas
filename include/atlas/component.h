@@ -373,8 +373,17 @@ class CompoundObject : public GameObject {
     inline void addObject(CoreObject *obj) { objects.push_back(obj); }
 };
 
+/**
+ * @brief A UIObject is a GameObject that is used for creating user interface
+ * elements.
+ *
+ */
 class UIObject : public GameObject {};
 
+/**
+ * @brief A conjunction of UI elements that share the same view and projection
+ *
+ */
 class UIView : public UIObject {
   public:
     void render(float dt) override;

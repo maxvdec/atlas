@@ -92,6 +92,10 @@ enum class ShaderCapability {
      *
      */
     Shadows,
+    /**
+     * @brief Capability for handling environment mapping (e.g., reflections).
+     *
+     */
     EnvironmentMapping,
 };
 
