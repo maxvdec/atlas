@@ -46,6 +46,26 @@ struct Position3d {
                          static_cast<float>(z));
     }
 
+    Position3d operator+(const glm::vec3 &vec) const {
+        return {x + vec.x, y + vec.y, z + vec.z};
+    }
+
+    Position3d operator-(const glm::vec3 &vec) const {
+        return {x - vec.x, y - vec.y, z - vec.z};
+    }
+
+    void operator+=(const Position3d &vec) {
+        x += vec.x;
+        y += vec.y;
+        z += vec.z;
+    }
+
+    void operator-=(const Position3d &vec) {
+        x -= vec.x;
+        y -= vec.y;
+        z -= vec.z;
+    }
+
     inline Position3d normalized() const {
         double length = std::sqrt(x * x + y * y + z * z);
         if (length == 0)

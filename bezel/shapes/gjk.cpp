@@ -123,7 +123,8 @@ int bezel::numValids(const glm::vec4 &lambdas) {
 
 bool bezel::gjkIntersection(const std::shared_ptr<Body> bodyA,
                             const std::shared_ptr<Body> bodyB, const float bias,
-                            glm::vec3 &ptOnA, glm::vec3 &ptOnB) {
+                            glm::vec3 &ptOnA, glm::vec3 &ptOnB,
+                            glm::vec3 &normalOut, float &penetrationDepthOut) {
 
     const glm::vec3 origin(0.0);
     int numPts = 1;
@@ -171,7 +172,6 @@ bool bezel::gjkIntersection(const std::shared_ptr<Body> bodyA,
         return false;
     }
 
-    // Ensure we have a full tetrahedron for EPA
     while (numPts < 4) {
         glm::vec3 searchDir;
 
@@ -179,7 +179,6 @@ bool bezel::gjkIntersection(const std::shared_ptr<Body> bodyA,
             searchDir = -simplex[0].xyz;
         } else if (numPts == 2) {
             glm::vec3 ab = simplex[1].xyz - simplex[0].xyz;
-            // Find perpendicular direction
             glm::vec3 temp = (std::abs(ab.x) < 0.9f) ? glm::vec3(1, 0, 0)
                                                      : glm::vec3(0, 1, 0);
             searchDir = glm::normalize(glm::cross(ab, temp));
@@ -192,7 +191,6 @@ bool bezel::gjkIntersection(const std::shared_ptr<Body> bodyA,
         Point newPt = bezel::support(bodyA, bodyB, searchDir, 0.0f);
 
         if (hasPoint(simplex, newPt)) {
-            // Try opposite direction
             newPt = bezel::support(bodyA, bodyB, -searchDir, 0.0f);
             if (hasPoint(simplex, newPt)) {
                 break;
@@ -203,16 +201,38 @@ bool bezel::gjkIntersection(const std::shared_ptr<Body> bodyA,
         numPts++;
     }
 
-    // Call EPA if we have a complete tetrahedron
     if (numPts == 4) {
-        float penetrationDepth =
-            bezel::epaExpand(bodyA, bodyB, bias, simplex, ptOnA, ptOnB);
+        glm::vec3 epaNormal(0.0f);
+        float penetrationDepth = bezel::epaExpand(bodyA, bodyB, bias, simplex,
+                                                  ptOnA, ptOnB, epaNormal);
+
+        if (glm::length2(epaNormal) > 1e-12f) {
+            normalOut = glm::normalize(epaNormal);
+        } else {
+            normalOut = glm::vec3(0.0f, 1.0f, 0.0f);
+        }
+
+        penetrationDepthOut = penetrationDepth;
         return true;
     }
 
-    // Fallback if we couldn't build a tetrahedron
     ptOnA = simplex[0].ptA;
     ptOnB = simplex[0].ptB;
+    glm::vec3 delta = ptOnB - ptOnA;
+    float depth = glm::length(delta);
+    if (depth > 1e-6f) {
+        normalOut = delta / depth;
+        penetrationDepthOut = depth;
+    } else {
+        glm::vec3 centerDelta = bodyB->getCenterOfMassWorldSpace() -
+                                bodyA->getCenterOfMassWorldSpace();
+        if (glm::length2(centerDelta) < 1e-12f) {
+            normalOut = glm::vec3(0.0f, 1.0f, 0.0f);
+        } else {
+            normalOut = glm::normalize(centerDelta);
+        }
+        penetrationDepthOut = 0.0f;
+    }
     return true;
 }
 

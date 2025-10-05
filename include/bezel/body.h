@@ -218,6 +218,13 @@ class Body {
 
   private:
     std::shared_ptr<Body> thisShared = nullptr;
+
+    bool isSleeping = false;
+    float sleepTimer = 0.0f;
+
+    static constexpr float SLEEP_TIME_THRESHOLD = 0.5f;
+    static constexpr float SLEEP_LINEAR_THRESHOLD = 0.05f;
+    static constexpr float SLEEP_ANGULAR_THRESHOLD = 0.1f;
 };
 
 /**

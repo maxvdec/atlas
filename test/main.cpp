@@ -64,6 +64,7 @@ class BackpackAttach : public Component {
 class MainScene : public Scene {
     CoreObject ground;
     CoreObject ball;
+    CoreObject ball2;
     DirectionalLight light;
     Skybox skybox;
     Camera camera;
@@ -125,21 +126,36 @@ class MainScene : public Scene {
         camera.lookAt({0.0f, 0.0f, 0.0f});
         window.setCamera(&camera);
 
-        Resource backpackAlbedo = Workspace::get().createResource(
-            "backpack/1001_albedo.jpg", "BackpackAlbedo", ResourceType::Image);
-        Texture albedoTexture = Texture::fromResource(backpackAlbedo);
+        Color whiteMultiplier = Color(1.0, 1.0, 1.0);
+        Color mediumMultiplier = Color(0.75, 0.75, 0.75);
+        Color darkMultiplier = Color(0.5, 0.5, 0.5);
 
-        Resource backpackModel =
-            Workspace::get().createResource("backpack/Survival_BackPack_2.fbx",
-                                            "Backpack", ResourceType::Model);
-        backpack = Model();
-        backpack.fromResource(backpackModel);
-        backpack.attachTexture(albedoTexture);
+        Color blue = Color(0.5, 0.5, 1.0);
 
-        backpack.addComponent<BackpackAttach>(BackpackAttach());
-        backpack.addComponent<AudioPlayer>(AudioPlayer());
+        Texture checkerboard = Texture::createDoubleCheckerboard(
+            4096, 4096, 640, 80, blue * whiteMultiplier, blue * darkMultiplier,
+            blue * mediumMultiplier);
 
-        window.addObject(&backpack);
+        ground = createDebugBox({5.0f, 0.5f, 5.0f});
+        ground.setPosition({0.0f, -0.6f, 0.0f});
+        ground.body->applyMass(0); // Make it static
+        ground.attachTexture(checkerboard);
+        ground.body->friction = 0.0f;
+        window.addObject(&ground);
+
+        ball = createDebugBox({0.2f, 0.2f, 0.2f});
+        ball.setPosition({0.0f, 2.0f, 0.0f});
+        ball.body->applyLinearImpulse({0.0f, 0.0f, -1.0f});
+        ball.attachTexture(checkerboard);
+        ball.body->friction = 1.0f;
+        window.addObject(&ball);
+
+        ball2 = createDebugSphere(0.1f);
+        ball2.setPosition({1.0f, 2.0f, 0.0f});
+        ball2.body->applyLinearImpulse({0.0f, 0.0f, -1.0f});
+        ball2.attachTexture(checkerboard);
+        ball2.body->friction = 1.0f;
+        window.addObject(&ball2);
 
         Resource fontResource = Workspace::get().createResource(
             "arial.ttf", "Arial", ResourceType::Font);
@@ -153,7 +169,7 @@ class MainScene : public Scene {
         light = DirectionalLight({-0.75f, -1.0f, 0.0}, Color::white());
         this->addDirectionalLight(&light);
 
-        this->ambientLight.intensity = 1.0f;
+        this->ambientLight.intensity = 0.3f;
 
         skybox = Skybox();
         skybox.cubemap = createCubemap();
