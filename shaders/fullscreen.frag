@@ -206,4 +206,7 @@ void main() {
             FragColor = applyColorCorrection(FragColor, cc);
         }
     }
+
+    const float gamma = 2.2;
+    FragColor = pow(FragColor, vec4(1.0 / gamma));
 }
