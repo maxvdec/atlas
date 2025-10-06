@@ -34,7 +34,7 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [x] Particle system
 - [x] Lights
 - [x] Shadows (except for point lights)
-- [ ] Post-processing effects **for alpha 2**
+- [x] Post-processing effects **for alpha 2**
 - [ ] Sky, atmosphere, weather and fluid simulation system (Hydra)
 - [ ] Animation system (Mold)
 - [ ] Instancing support **for alpha 2**
@@ -49,7 +49,7 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [ ] Add SSAO **for alpha 2**
 - [ ] Add cascaded shadow maps for directional lights
 - [ ] Add soft shadows **for alpha 2**
-- [ ] Add shadows for point lights **for alpha 2**
+- [x] Add shadows for point lights **for alpha 2**
 - [x] Add normal and parallax mapping **for alpha 2**
 - [ ] Handle better collisions with Bezel
 - [ ] Add support for constraints in Bezel

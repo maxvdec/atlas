@@ -13,6 +13,7 @@
 #include "atlas/core/renderable.h"
 #include "atlas/core/shader.h"
 #include "atlas/texture.h"
+#include "atlas/units.h"
 #include "bezel/body.h"
 #include <memory>
 #include <vector>
@@ -371,6 +372,10 @@ class CompoundObject : public GameObject {
      * This means that declaring it as a class property is a good idea.
      */
     inline void addObject(CoreObject *obj) { objects.push_back(obj); }
+
+  private:
+    Position3d position;
+    std::vector<Position3d> originalPositions;
 };
 
 /**

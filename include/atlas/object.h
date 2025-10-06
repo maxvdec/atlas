@@ -65,7 +65,7 @@ struct Material {
      */
     float shininess = 32.0f;
 
-    float reflectivity = 0.1f; // 0.0 = no reflection, 1.0 = full reflection
+    float reflectivity = 0.f; // 0.0 = no reflection, 1.0 = full reflection
 };
 
 /**

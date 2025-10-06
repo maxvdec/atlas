@@ -19,13 +19,13 @@ class SphereCube : public CompoundObject {
   public:
     void init() override {
         cube = createDebugBox({0.5f, 0.5f, 0.5f});
-        cube.setPosition({-1.0, 1.0, 0.0});
+        cube.setPosition({-1.0, cube.getPosition().y, 0.0});
         cube.initialize();
         cube.body->applyMass(0); // Make it static
         this->addObject(&cube);
 
         sphere = createDebugSphere(0.25f);
-        sphere.setPosition({1.0, 1.0, 0.0});
+        sphere.setPosition({1.0, sphere.getPosition().y, 0.0});
         sphere.initialize();
         sphere.body->applyMass(0); // Make it static
         this->addObject(&sphere);
@@ -66,7 +66,7 @@ class MainScene : public Scene {
     CoreObject ground;
     CoreObject ball;
     CoreObject ball2;
-    DirectionalLight light;
+    Light light;
     Skybox skybox;
     Camera camera;
     SphereCube sphereCube;
@@ -143,7 +143,16 @@ class MainScene : public Scene {
             Texture::fromResource(normalTexture, TextureType::Normal);
         backpack.attachTexture(color);
         backpack.attachTexture(normal);
-        window.addObject(&backpack);
+
+        sphereCube.setPosition({0.0, 1.0, 0.0});
+        window.addObject(&sphereCube);
+
+        ground = createBox({5.0f, 0.1f, 5.0f}, Color(0.3f, 0.8f, 0.3f));
+        ground.attachTexture(color);
+        ground.setPosition({0.0f, -0.1f, 0.0f});
+        window.addObject(&ground);
+
+        backpack.setPosition({0.0f, 0.2f, 0.0f});
 
         Resource fontResource = Workspace::get().createResource(
             "arial.ttf", "Arial", ResourceType::Font);
@@ -153,9 +162,6 @@ class MainScene : public Scene {
 
         fpsText.addTraitComponent<Text>(FPSTextUpdater());
         window.addUIObject(&fpsText);
-
-        light = DirectionalLight({-0.75f, -1.0f, 0.0}, Color::white());
-        this->addDirectionalLight(&light);
 
         this->ambientLight.intensity = 0.3f;
 
