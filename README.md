@@ -15,7 +15,7 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - The main renderer is Atlas. Atlas is the one in charge of the graphics rendering, input handling, window management and more.
 - The physics engine is Bezel. Bezel is a separate library that handles all the physics calculations and simulations.
 
-## Roadmap to Alpha
+## Roadmap to Beta
 
 - [x] Basic window creation and management
 - [x] Input handling (keyboard, mouse)
