@@ -6,6 +6,7 @@ out vec4 FragColor;
 
 const int TEXTURE_COLOR = 0;
 const int TEXTURE_DEPTH = 3;
+const int TEXTURE_CUBE_DEPTH = 4;
 
 const int EFFECT_INVERSION = 0;
 const int EFFECT_GRAYSCALE = 1;
@@ -14,37 +15,37 @@ const int EFFECT_BLUR = 3;
 const int EFFECT_EDGE_DETECTION = 4;
 const int EFFECT_COLOR_CORRECTION = 5;
 
-const float offset = 1.0 / 300.0; 
+const float offset = 1.0 / 300.0;
 
 vec4 sharpen(sampler2D image) {
     vec2 offsets[9] = vec2[](
-        vec2(-offset,  offset), // top-left
-        vec2( 0.0f,    offset), // top-center
-        vec2( offset,  offset), // top-right
-        vec2(-offset,  0.0f),   // center-left
-        vec2( 0.0f,    0.0f),   // center-center
-        vec2( offset,  0.0f),   // center-right
-        vec2(-offset, -offset), // bottom-left
-        vec2( 0.0f,   -offset), // bottom-center
-        vec2( offset, -offset)  // bottom-right    
-    );
+            vec2(-offset, offset), // top-left
+            vec2(0.0f, offset), // top-center
+            vec2(offset, offset), // top-right
+            vec2(-offset, 0.0f), // center-left
+            vec2(0.0f, 0.0f), // center-center
+            vec2(offset, 0.0f), // center-right
+            vec2(-offset, -offset), // bottom-left
+            vec2(0.0f, -offset), // bottom-center
+            vec2(offset, -offset) // bottom-right
+        );
 
     float kernel[9] = float[](
-        -1, -1, -1,
-        -1,  9, -1,
-        -1, -1, -1
-    );
+            -1, -1, -1,
+            -1, 9, -1,
+            -1, -1, -1
+        );
 
     vec3 sampleTex[9];
-    for(int i = 0; i < 9; i++) {
+    for (int i = 0; i < 9; i++) {
         sampleTex[i] = vec3(texture(image, TexCoord.st + offsets[i]));
     }
-    
+
     vec3 col = vec3(0.0);
-    for(int i = 0; i < 9; i++) {
+    for (int i = 0; i < 9; i++) {
         col += sampleTex[i] * kernel[i];
     }
-    
+
     return vec4(col, 1.0);
 }
 
@@ -70,37 +71,39 @@ vec4 blur(sampler2D image, float radius) {
 
 vec4 edgeDetection(sampler2D image) {
     vec2 offsets[9] = vec2[](
-        vec2(-offset,  offset), // top-left
-        vec2( 0.0f,    offset), // top-center
-        vec2( offset,  offset), // top-right
-        vec2(-offset,  0.0f),   // center-left
-        vec2( 0.0f,    0.0f),   // center-center
-        vec2( offset,  0.0f),   // center-right
-        vec2(-offset, -offset), // bottom-left
-        vec2( 0.0f,   -offset), // bottom-center
-        vec2( offset, -offset)  // bottom-right    
-    );
+            vec2(-offset, offset), // top-left
+            vec2(0.0f, offset), // top-center
+            vec2(offset, offset), // top-right
+            vec2(-offset, 0.0f), // center-left
+            vec2(0.0f, 0.0f), // center-center
+            vec2(offset, 0.0f), // center-right
+            vec2(-offset, -offset), // bottom-left
+            vec2(0.0f, -offset), // bottom-center
+            vec2(offset, -offset) // bottom-right
+        );
 
     float kernel[9] = float[](
-        1, 1, 1,
-        1, -8, 1,
-        1, 1, 1
-    );
+            1, 1, 1,
+            1, -8, 1,
+            1, 1, 1
+        );
 
     vec3 sampleTex[9];
-    for(int i = 0; i < 9; i++) {
+    for (int i = 0; i < 9; i++) {
         sampleTex[i] = vec3(texture(image, TexCoord.st + offsets[i]));
     }
-    
+
     vec3 col = vec3(0.0);
-    for(int i = 0; i < 9; i++) {
+    for (int i = 0; i < 9; i++) {
         col += sampleTex[i] * kernel[i];
     }
-    
+
     return vec4(col, 1.0);
 }
 
 uniform sampler2D Texture;
+uniform samplerCube cubeMap;
+uniform bool isCubeMap;
 uniform int TextureType;
 uniform int EffectCount;
 uniform int Effects[10];
@@ -147,6 +150,36 @@ void main() {
     } else if (TextureType == TEXTURE_DEPTH) {
         float depth = texture(Texture, TexCoord).r;
         FragColor = vec4(vec3(depth), 1.0);
+    } else if (TextureType == TEXTURE_CUBE_DEPTH) {
+        float face = floor(TexCoord.x * 6.0);
+        vec2 local = fract(vec2(TexCoord.x * 6.0, TexCoord.y));
+
+        float border = 0.002;
+        bool inVerticalBorder = (fract(TexCoord.x * 6.0) < border) || (fract(TexCoord.x * 6.0) > 1.0 - border);
+        bool inHorizontalBorder = (TexCoord.y < border) || (TexCoord.y > 1.0 - border);
+        if (inVerticalBorder || inHorizontalBorder) {
+            FragColor = vec4(0.2, 0.2, 0.2, 1.0);
+            return;
+        }
+        vec3 dir;
+        if (face == 0.0)
+            dir = vec3(1.0, -local.y * 2.0 + 1.0, -local.x * 2.0 + 1.0); // +X
+        else if (face == 1.0)
+            dir = vec3(-1.0, -local.y * 2.0 + 1.0, local.x * 2.0 - 1.0); // -X
+        else if (face == 2.0)
+            dir = vec3(local.x * 2.0 - 1.0, 1.0, local.y * 2.0 - 1.0); // +Y
+        else if (face == 3.0)
+            dir = vec3(local.x * 2.0 - 1.0, -1.0, -local.y * 2.0 + 1.0); // -Y
+        else if (face == 4.0)
+            dir = vec3(local.x * 2.0 - 1.0, -local.y * 2.0 + 1.0, 1.0); // +Z
+        else
+            dir = vec3(-local.x * 2.0 + 1.0, -local.y * 2.0 + 1.0, -1.0); // -Z
+
+        dir = normalize(dir);
+
+        float depth = texture(cubeMap, dir).r;
+
+        FragColor = vec4(vec3(depth), 1.0);
     }
 
     for (int i = 0; i < EffectCount; i++) {
@@ -157,7 +190,7 @@ void main() {
             FragColor = vec4(average, average, average, FragColor.a);
         } else if (Effects[i] == EFFECT_SHARPEN) {
             FragColor = sharpen(Texture);
-        } else if (Effects[i] == EFFECT_BLUR) { 
+        } else if (Effects[i] == EFFECT_BLUR) {
             float radius = EffectFloat1[i];
             FragColor = blur(Texture, radius);
         } else if (Effects[i] == EFFECT_EDGE_DETECTION) {

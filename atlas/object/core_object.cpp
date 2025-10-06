@@ -265,15 +265,16 @@ void CoreObject::render(float dt) {
     shaderProgram.setUniform1i("useTexture", useTexture ? 1 : 0);
 
     int boundTextures = 0;
+    int boundCubemaps = 0;
 
     if (!textures.empty() && useTexture &&
         std::find(shaderProgram.capabilities.begin(),
                   shaderProgram.capabilities.end(),
                   ShaderCapability::Textures) !=
             shaderProgram.capabilities.end()) {
-        int count = std::min((int)textures.size(), 16);
+        int count = std::min((int)textures.size(), 10);
         shaderProgram.setUniform1i("textureCount", count);
-        GLint units[16];
+        GLint units[10];
         for (int i = 0; i < count; i++)
             units[i] = i;
 
@@ -282,7 +283,16 @@ void CoreObject::render(float dt) {
             shaderProgram.setUniform1i(uniformName, i);
         }
 
-        GLint textureTypes[16];
+        GLint cubeMapUnits[5];
+        for (int i = 0; i < 5; i++)
+            cubeMapUnits[i] = 10 + i;
+        shaderProgram.setUniform1i("cubeMapCount", 5);
+        for (int i = 0; i < 5; i++) {
+            std::string uniformName = "cubeMap" + std::to_string(i + 1) + "";
+            shaderProgram.setUniform1i(uniformName, i + 10);
+        }
+
+        GLint textureTypes[10];
         for (int i = 0; i < count; i++)
             textureTypes[i] = static_cast<int>(textures[i].type);
         for (int i = 0; i < count; i++) {
@@ -398,6 +408,10 @@ void CoreObject::render(float dt) {
                   shaderProgram.capabilities.end(),
                   ShaderCapability::Shadows) !=
         shaderProgram.capabilities.end()) {
+        for (int i = 0; i < 5; i++) {
+            std::string uniformName = "cubeMap" + std::to_string(i + 1);
+            shaderProgram.setUniform1i(uniformName, i + 10);
+        }
         // Bind shadow maps
         Scene *scene = Window::mainWindow->currentScene;
 
@@ -425,6 +439,7 @@ void CoreObject::render(float dt) {
             shaderProgram.setUniformMat4f(baseName + ".lightProjection",
                                           shadowParams.lightProjection);
             shaderProgram.setUniform1f(baseName + ".bias", shadowParams.bias);
+            shaderProgram.setUniform1f(baseName + ".isPointLight", 0);
 
             boundParameters++;
             boundTextures++;
@@ -451,9 +466,37 @@ void CoreObject::render(float dt) {
                                           std::get<0>(lightSpace));
             shaderProgram.setUniformMat4f(baseName + ".lightProjection",
                                           std::get<1>(lightSpace));
+            shaderProgram.setUniform1f(baseName + ".bias", 0.005f);
+            shaderProgram.setUniform1f(baseName + ".isPointLight", 0);
 
             boundParameters++;
             boundTextures++;
+        }
+
+        for (auto light : scene->pointLights) {
+            if (!light->doesCastShadows) {
+                continue;
+            }
+            if (boundTextures + 6 >= 16) {
+                break;
+            }
+
+            glActiveTexture(GL_TEXTURE0 + 10 + boundCubemaps);
+
+            glBindTexture(GL_TEXTURE_CUBE_MAP,
+                          light->shadowRenderTarget->texture.id);
+            std::string baseName =
+                "shadowParams[" + std::to_string(boundParameters) + "]";
+            shaderProgram.setUniform1i(baseName + ".textureIndex",
+                                       boundCubemaps);
+            shaderProgram.setUniform1f(baseName + ".farPlane", light->distance);
+            shaderProgram.setUniform3f(baseName + ".lightPos",
+                                       light->position.x, light->position.y,
+                                       light->position.z);
+            shaderProgram.setUniform1i(baseName + ".isPointLight", 1);
+
+            boundParameters++;
+            boundTextures += 6;
         }
 
         shaderProgram.setUniform1i("shadowParamCount", boundParameters);

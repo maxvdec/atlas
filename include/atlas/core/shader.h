@@ -70,6 +70,7 @@ enum class AtlasVertexShader {
      *
      */
     Text,
+    PointLightShadow,
 };
 
 /**
@@ -199,6 +200,7 @@ enum class AtlasFragmentShader {
      *
      */
     Text,
+    PointLightShadow,
 };
 
 /**
@@ -229,6 +231,49 @@ struct FragmentShader {
     static FragmentShader fromSource(const char *source);
     /**
      * @brief Function to compile the fragment shader.
+     *
+     */
+    void compile();
+
+    /**
+     * @brief The desired vertex attributes for the shader.
+     *
+     */
+    Id shaderId;
+};
+
+enum class AtlasGeometryShader {
+    PointLightShadow,
+};
+
+/**
+ * @brief Structure representing a geometry shader, including its source code
+ * and its OpenGL ID.
+ *
+ */
+struct GeometryShader {
+    /**
+     * @brief The source code of the geometry shader.
+     *
+     */
+    const char *source;
+
+    /**
+     * @brief Creates a GeometryShader from a default shader.
+     *
+     * @param shader The type of default shader to create.
+     * @return The created GeometryShader instance.
+     */
+    static GeometryShader fromDefaultShader(AtlasGeometryShader shader);
+    /**
+     * @brief Creates a GeometryShader from custom source code.
+     *
+     * @param source The source code that the shader will contain.
+     * @return The created GeometryShader instance.
+     */
+    static GeometryShader fromSource(const char *source);
+    /**
+     * @brief Function to compile the geometry shader.
      *
      */
     void compile();
@@ -293,6 +338,8 @@ struct ShaderProgram {
      *
      */
     FragmentShader fragmentShader;
+
+    GeometryShader geometryShader;
 
     /**
      * @brief Compiles the shader program by linking the vertex and fragment

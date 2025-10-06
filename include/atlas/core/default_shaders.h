@@ -2,6 +2,17 @@
 #ifndef ATLAS_GENERATED_SHADERS_H
 #define ATLAS_GENERATED_SHADERS_H
 
+static const char* POINT_DEPTH_VERT = R"(
+#version 330 core
+layout (location = 0) in vec3 aPos;
+
+uniform mat4 model;
+
+void main() {
+    gl_Position = model * vec4(aPos, 1.0);
+}
+)";
+
 static const char* DEPTH_VERT = R"(
 #version 330 core
 layout (location = 0) in vec3 aPos;
@@ -89,6 +100,7 @@ out vec4 FragColor;
 
 const int TEXTURE_COLOR = 0;
 const int TEXTURE_DEPTH = 3;
+const int TEXTURE_CUBE_DEPTH = 4;
 
 const int EFFECT_INVERSION = 0;
 const int EFFECT_GRAYSCALE = 1;
@@ -97,37 +109,37 @@ const int EFFECT_BLUR = 3;
 const int EFFECT_EDGE_DETECTION = 4;
 const int EFFECT_COLOR_CORRECTION = 5;
 
-const float offset = 1.0 / 300.0; 
+const float offset = 1.0 / 300.0;
 
 vec4 sharpen(sampler2D image) {
     vec2 offsets[9] = vec2[](
-        vec2(-offset,  offset), // top-left
-        vec2( 0.0f,    offset), // top-center
-        vec2( offset,  offset), // top-right
-        vec2(-offset,  0.0f),   // center-left
-        vec2( 0.0f,    0.0f),   // center-center
-        vec2( offset,  0.0f),   // center-right
-        vec2(-offset, -offset), // bottom-left
-        vec2( 0.0f,   -offset), // bottom-center
-        vec2( offset, -offset)  // bottom-right    
-    );
+            vec2(-offset, offset), // top-left
+            vec2(0.0f, offset), // top-center
+            vec2(offset, offset), // top-right
+            vec2(-offset, 0.0f), // center-left
+            vec2(0.0f, 0.0f), // center-center
+            vec2(offset, 0.0f), // center-right
+            vec2(-offset, -offset), // bottom-left
+            vec2(0.0f, -offset), // bottom-center
+            vec2(offset, -offset) // bottom-right
+        );
 
     float kernel[9] = float[](
-        -1, -1, -1,
-        -1,  9, -1,
-        -1, -1, -1
-    );
+            -1, -1, -1,
+            -1, 9, -1,
+            -1, -1, -1
+        );
 
     vec3 sampleTex[9];
-    for(int i = 0; i < 9; i++) {
+    for (int i = 0; i < 9; i++) {
         sampleTex[i] = vec3(texture(image, TexCoord.st + offsets[i]));
     }
-    
+
     vec3 col = vec3(0.0);
-    for(int i = 0; i < 9; i++) {
+    for (int i = 0; i < 9; i++) {
         col += sampleTex[i] * kernel[i];
     }
-    
+
     return vec4(col, 1.0);
 }
 
@@ -153,37 +165,39 @@ vec4 blur(sampler2D image, float radius) {
 
 vec4 edgeDetection(sampler2D image) {
     vec2 offsets[9] = vec2[](
-        vec2(-offset,  offset), // top-left
-        vec2( 0.0f,    offset), // top-center
-        vec2( offset,  offset), // top-right
-        vec2(-offset,  0.0f),   // center-left
-        vec2( 0.0f,    0.0f),   // center-center
-        vec2( offset,  0.0f),   // center-right
-        vec2(-offset, -offset), // bottom-left
-        vec2( 0.0f,   -offset), // bottom-center
-        vec2( offset, -offset)  // bottom-right    
-    );
+            vec2(-offset, offset), // top-left
+            vec2(0.0f, offset), // top-center
+            vec2(offset, offset), // top-right
+            vec2(-offset, 0.0f), // center-left
+            vec2(0.0f, 0.0f), // center-center
+            vec2(offset, 0.0f), // center-right
+            vec2(-offset, -offset), // bottom-left
+            vec2(0.0f, -offset), // bottom-center
+            vec2(offset, -offset) // bottom-right
+        );
 
     float kernel[9] = float[](
-        1, 1, 1,
-        1, -8, 1,
-        1, 1, 1
-    );
+            1, 1, 1,
+            1, -8, 1,
+            1, 1, 1
+        );
 
     vec3 sampleTex[9];
-    for(int i = 0; i < 9; i++) {
+    for (int i = 0; i < 9; i++) {
         sampleTex[i] = vec3(texture(image, TexCoord.st + offsets[i]));
     }
-    
+
     vec3 col = vec3(0.0);
-    for(int i = 0; i < 9; i++) {
+    for (int i = 0; i < 9; i++) {
         col += sampleTex[i] * kernel[i];
     }
-    
+
     return vec4(col, 1.0);
 }
 
 uniform sampler2D Texture;
+uniform samplerCube cubeMap;
+uniform bool isCubeMap;
 uniform int TextureType;
 uniform int EffectCount;
 uniform int Effects[10];
@@ -230,6 +244,36 @@ void main() {
     } else if (TextureType == TEXTURE_DEPTH) {
         float depth = texture(Texture, TexCoord).r;
         FragColor = vec4(vec3(depth), 1.0);
+    } else if (TextureType == TEXTURE_CUBE_DEPTH) {
+        float face = floor(TexCoord.x * 6.0);
+        vec2 local = fract(vec2(TexCoord.x * 6.0, TexCoord.y));
+
+        float border = 0.002;
+        bool inVerticalBorder = (fract(TexCoord.x * 6.0) < border) || (fract(TexCoord.x * 6.0) > 1.0 - border);
+        bool inHorizontalBorder = (TexCoord.y < border) || (TexCoord.y > 1.0 - border);
+        if (inVerticalBorder || inHorizontalBorder) {
+            FragColor = vec4(0.2, 0.2, 0.2, 1.0);
+            return;
+        }
+        vec3 dir;
+        if (face == 0.0)
+            dir = vec3(1.0, -local.y * 2.0 + 1.0, -local.x * 2.0 + 1.0); // +X
+        else if (face == 1.0)
+            dir = vec3(-1.0, -local.y * 2.0 + 1.0, local.x * 2.0 - 1.0); // -X
+        else if (face == 2.0)
+            dir = vec3(local.x * 2.0 - 1.0, 1.0, local.y * 2.0 - 1.0); // +Y
+        else if (face == 3.0)
+            dir = vec3(local.x * 2.0 - 1.0, -1.0, -local.y * 2.0 + 1.0); // -Y
+        else if (face == 4.0)
+            dir = vec3(local.x * 2.0 - 1.0, -local.y * 2.0 + 1.0, 1.0); // +Z
+        else
+            dir = vec3(-local.x * 2.0 + 1.0, -local.y * 2.0 + 1.0, -1.0); // -Z
+
+        dir = normalize(dir);
+
+        float depth = texture(cubeMap, dir).r;
+
+        FragColor = vec4(vec3(depth), 1.0);
     }
 
     for (int i = 0; i < EffectCount; i++) {
@@ -240,7 +284,7 @@ void main() {
             FragColor = vec4(average, average, average, FragColor.a);
         } else if (Effects[i] == EFFECT_SHARPEN) {
             FragColor = sharpen(Texture);
-        } else if (Effects[i] == EFFECT_BLUR) { 
+        } else if (Effects[i] == EFFECT_BLUR) {
             float radius = EffectFloat1[i];
             FragColor = blur(Texture, radius);
         } else if (Effects[i] == EFFECT_EDGE_DETECTION) {
@@ -285,6 +329,7 @@ in mat3 TBN;
 
 const int TEXTURE_COLOR = 0;
 const int TEXTURE_SPECULAR = 1;
+const int TEXTURE_DEPTH_CUBE = 4;
 const int TEXTURE_NORMAL = 5;
 const int TEXTURE_PARALLAX = 6;
 
@@ -336,6 +381,9 @@ struct ShadowParameters {
     mat4 lightProjection;
     float bias;
     int textureIndex;
+    float farPlane;
+    vec3 lightPos;
+    bool isPointLight;
 };
 
 // ----- Textures -----
@@ -349,10 +397,12 @@ uniform sampler2D texture7;
 uniform sampler2D texture8;
 uniform sampler2D texture9;
 uniform sampler2D texture10;
-uniform sampler2D texture11;
-uniform sampler2D texture12;
-uniform sampler2D texture13;
 uniform samplerCube skybox;
+uniform samplerCube cubeMap1;
+uniform samplerCube cubeMap2;
+uniform samplerCube cubeMap3;
+uniform samplerCube cubeMap4;
+uniform samplerCube cubeMap5;
 
 // ----- Uniforms -----
 uniform int textureTypes[16];
@@ -394,15 +444,39 @@ vec4 enableTextures(int type) {
             else if (i == 7) color += texture(texture8, texCoord);
             else if (i == 8) color += texture(texture9, texCoord);
             else if (i == 9) color += texture(texture10, texCoord);
-            else if (i == 10) color += texture(texture11, texCoord);
-            else if (i == 11) color += texture(texture12, texCoord);
-            else if (i == 12) color += texture(texture13, texCoord);
             count++; 
         }
     }
     if (count > 0) color /= float(count);
     if (count == 0) return vec4(-1.0);
     return color;
+}
+
+vec4 enableCubeMaps(int type, vec3 direction) {
+    vec4 color = vec4(0.0);
+    int count = 0;
+    for (int i = 0; i < 8; i++) {
+        if (type == i + 10) { 
+            if (i == 0) color += texture(cubeMap1, direction);
+            else if (i == 1) color += texture(cubeMap2, direction);
+            else if (i == 2) color += texture(cubeMap3, direction);
+            else if (i == 3) color += texture(cubeMap4, direction);
+            else if (i == 4) color += texture(cubeMap5, direction);
+            count++; 
+        }
+    }
+    if (count > 0) color /= float(count);
+    if (count == 0) return vec4(-1.0);
+    return color;
+}
+
+vec4 sampleCubeTextureAt(int textureIndex, vec3 direction) {
+    if (textureIndex == 0) return texture(cubeMap1, direction);
+    else if (textureIndex == 1) return texture(cubeMap2, direction);
+    else if (textureIndex == 2) return texture(cubeMap3, direction);
+    else if (textureIndex == 3) return texture(cubeMap4, direction);
+    else if (textureIndex == 4) return texture(cubeMap5, direction);
+    return vec4(0.0);
 }
 
 vec2 getTextureDimensions(int textureIndex) {
@@ -416,9 +490,6 @@ vec2 getTextureDimensions(int textureIndex) {
     else if (textureIndex == 7) return vec2(textureSize(texture8, 0));
     else if (textureIndex == 8) return vec2(textureSize(texture9, 0));
     else if (textureIndex == 9) return vec2(textureSize(texture10, 0));
-    else if (textureIndex == 10) return vec2(textureSize(texture11, 0));
-    else if (textureIndex == 11) return vec2(textureSize(texture12, 0));
-    else if (textureIndex == 12) return vec2(textureSize(texture13, 0));
     return vec2(0);
 }
 
@@ -433,9 +504,6 @@ vec4 sampleTextureAt(int textureIndex, vec2 uv) {
     else if (textureIndex == 7) return texture(texture8, uv);
     else if (textureIndex == 8) return texture(texture9, uv);
     else if (textureIndex == 9) return texture(texture10, uv);
-    else if (textureIndex == 10) return texture(texture11, uv);
-    else if (textureIndex == 11) return texture(texture12, uv);
-    else if (textureIndex == 12) return texture(texture13, uv);
     return vec4(0.0);
 }
 
@@ -669,6 +737,29 @@ float calculateAllShadows() {
     return totalShadow;
 }
 
+float calculatePointShadow(ShadowParameters shadowParam, vec3 fragPos) {
+    vec3 fragToLight = fragPos - shadowParam.lightPos;
+    float closestDepth = sampleCubeTextureAt(shadowParam.textureIndex, fragToLight).r;
+    closestDepth *= shadowParam.farPlane;
+
+    float currentDepth = length(fragToLight);
+    float bias = 0.05; 
+    float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
+
+    return shadow;
+}
+
+float calculateAllPointShadows(vec3 fragPos) {
+    float totalShadow = 0.0;
+    for (int i = 0; i < shadowParamCount; i++) {
+        if (shadowParams[i].isPointLight) {
+            float shadow = calculatePointShadow(shadowParams[i], fragPos);
+            totalShadow = max(totalShadow, shadow);
+        }
+    }
+    return totalShadow;
+}
+
 // ----- Main -----
 void main() {
     texCoord = TexCoord;
@@ -699,15 +790,23 @@ void main() {
     vec3 viewDir = normalize(cameraPosition - FragPos);
 
     vec3 ambient = ambientLight.color.rgb * ambientLight.intensity * material.ambient;
-    vec3 directionalLights = calcAllDirectionalLights(norm, viewDir);
-    vec3 pointLights = calcAllPointLights(norm, FragPos, viewDir);
-    vec3 spotLightsContrib = calcAllSpotLights(norm, FragPos, viewDir);
+    float dirShadow = 0.0;
+    for (int i = 0; i < shadowParamCount; i++) {
+        if (!shadowParams[i].isPointLight) {
+            vec4 fragPosLightSpace = shadowParams[i].lightProjection * 
+                                     shadowParams[i].lightView * 
+                                     vec4(FragPos, 1.0);
+            dirShadow = max(dirShadow, calculateShadow(shadowParams[i], fragPosLightSpace));
+        }
+    }
+    
+    float pointShadow = calculateAllPointShadows(FragPos);
+    
+    vec3 directionalLights = calcAllDirectionalLights(norm, viewDir) * (1.0 - dirShadow);
+    vec3 pointLights = calcAllPointLights(norm, FragPos, viewDir) * (1.0 - pointShadow);
+    vec3 spotLightsContrib = calcAllSpotLights(norm, FragPos, viewDir);  
 
-    vec3 lightContribution = directionalLights + pointLights + spotLightsContrib;
-
-    float shadow = calculateAllShadows();
-
-    vec3 finalColor = (ambient + (1.0 - shadow) * lightContribution) * baseColor.rgb;
+    vec3 finalColor = (ambient + directionalLights + pointLights + spotLightsContrib) * baseColor.rgb;
 
     FragColor = vec4(finalColor, baseColor.a);
     FragColor = getEnvironmentReflected(FragColor);
@@ -795,6 +894,29 @@ void main() {
 }
 )";
 
+static const char* POINT_DEPTH_GEOM = R"(
+#version 330 core
+layout(triangles) in;
+layout(triangle_strip, max_vertices = 18) out;
+
+uniform mat4 shadowMatrices[6];
+
+out vec4 FragPos; // World space position
+
+void main() {
+    for (int face = 0; face < 6; face++) {
+        gl_Layer = face;
+        for (int i = 0; i < 3; i++) {
+            FragPos = gl_in[i].gl_Position; // This is world space (model * aPos)
+            gl_Position = shadowMatrices[face] * FragPos;
+            EmitVertex();
+        }
+        EndPrimitive();
+    }
+}
+
+)";
+
 static const char* COLOR_VERT = R"(
 #version 330 core
 layout (location = 0) in vec3 aPos;
@@ -831,6 +953,22 @@ void main()
     gl_Position = pos.xyww; 
 }  
 
+)";
+
+static const char* POINT_DEPTH_FRAG = R"(
+#version 330 core
+in vec4 FragPos;
+
+uniform vec3 lightPos;
+uniform float far_plane;
+
+void main() {
+    float lightDistance = length(FragPos.xyz - lightPos);
+    
+    lightDistance = lightDistance / far_plane;
+
+    gl_FragDepth = lightDistance;
+}
 )";
 
 static const char* DEBUG_VERT = R"(

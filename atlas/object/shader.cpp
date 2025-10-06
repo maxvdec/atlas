@@ -72,6 +72,12 @@ VertexShader VertexShader::fromDefaultShader(AtlasVertexShader shader) {
         vertexShader.capabilities = {ShaderCapability::Textures};
         break;
     }
+    case AtlasVertexShader::PointLightShadow: {
+        vertexShader = VertexShader::fromSource(POINT_DEPTH_VERT);
+        vertexShader.desiredAttributes = {0};
+        vertexShader.capabilities = {};
+        break;
+    }
     default:
         throw std::runtime_error("Unknown default vertex shader");
     }
@@ -126,6 +132,8 @@ FragmentShader FragmentShader::fromDefaultShader(AtlasFragmentShader shader) {
         return FragmentShader::fromSource(PARTICLE_FRAG);
     case AtlasFragmentShader::Text:
         return FragmentShader::fromSource(TEXT_FRAG);
+    case AtlasFragmentShader::PointLightShadow:
+        return FragmentShader::fromSource(POINT_DEPTH_FRAG);
     default:
         throw std::runtime_error("Unknown default fragment shader");
     }
@@ -157,6 +165,41 @@ void FragmentShader::compile() {
     }
 }
 
+GeometryShader GeometryShader::fromDefaultShader(AtlasGeometryShader shader) {
+    switch (shader) {
+    case AtlasGeometryShader::PointLightShadow:
+        return GeometryShader::fromSource(POINT_DEPTH_GEOM);
+    default:
+        throw std::runtime_error("Unknown default geometry shader");
+    }
+}
+
+GeometryShader GeometryShader::fromSource(const char *source) {
+    GeometryShader shader;
+    shader.source = source;
+    shader.shaderId = 0;
+    return shader;
+}
+
+void GeometryShader::compile() {
+    if (shaderId != 0) {
+        throw std::runtime_error("Geometry shader already compiled");
+    }
+
+    shaderId = glCreateShader(GL_GEOMETRY_SHADER);
+    glShaderSource(shaderId, 1, &source, nullptr);
+    glCompileShader(shaderId);
+
+    GLint success;
+    glGetShaderiv(shaderId, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        char infoLog[512];
+        glGetShaderInfoLog(shaderId, 512, nullptr, infoLog);
+        throw std::runtime_error(
+            std::string("Geometry shader compilation failed: ") + infoLog);
+    }
+}
+
 void ShaderProgram::compile() {
     if (programId != 0) {
         throw std::runtime_error("Shader program already compiled");
@@ -176,6 +219,9 @@ void ShaderProgram::compile() {
     programId = glCreateProgram();
     glAttachShader(programId, vertexShader.shaderId);
     glAttachShader(programId, fragmentShader.shaderId);
+    if (geometryShader.shaderId != 0) {
+        glAttachShader(programId, geometryShader.shaderId);
+    }
     glLinkProgram(programId);
 
     GLint success;

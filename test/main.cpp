@@ -144,11 +144,13 @@ class MainScene : public Scene {
         backpack.attachTexture(color);
         backpack.attachTexture(normal);
 
-        sphereCube.setPosition({0.0, 1.0, 0.0});
+        sphereCube.setPosition({0.0, 0.4, 0.0});
         window.addObject(&sphereCube);
 
         ground = createBox({5.0f, 0.1f, 5.0f}, Color(0.3f, 0.8f, 0.3f));
-        ground.attachTexture(color);
+        ground.attachTexture(
+            Texture::fromResource(Workspace::get().createResource(
+                "ground.jpg", "GroundTexture", ResourceType::Image)));
         ground.setPosition({0.0f, -0.1f, 0.0f});
         window.addObject(&ground);
 
@@ -163,6 +165,11 @@ class MainScene : public Scene {
         fpsText.addTraitComponent<Text>(FPSTextUpdater());
         window.addUIObject(&fpsText);
 
+        light = Light();
+        light.position = {0.0f, 5.0f, 0.0f};
+        light.castShadows(window);
+        this->addLight(&light);
+
         this->ambientLight.intensity = 0.3f;
 
         skybox = Skybox();
@@ -170,10 +177,10 @@ class MainScene : public Scene {
         skybox.display(window);
         this->setSkybox(&skybox);
 
-        frameBuffer = RenderTarget(window);
-        frameBuffer.addEffect(ColorCorrection::create());
-        frameBuffer.display(window);
-        window.addRenderTarget(&frameBuffer);
+        // frameBuffer = RenderTarget(window);
+        //  frameBuffer.addEffect(ColorCorrection::create());
+        //   frameBuffer.display(window);
+        //   window.addRenderTarget(&frameBuffer);
     }
 };
 
