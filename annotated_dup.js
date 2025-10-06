@@ -33,6 +33,7 @@ var annotated_dup =
     [ "Font", "struct_font.html", "struct_font" ],
     [ "FragmentShader", "struct_fragment_shader.html", "struct_fragment_shader" ],
     [ "GameObject", "class_game_object.html", "class_game_object" ],
+    [ "GeometryShader", "struct_geometry_shader.html", "struct_geometry_shader" ],
     [ "Grayscale", "class_grayscale.html", "class_grayscale" ],
     [ "Interactive", "class_interactive.html", "class_interactive" ],
     [ "IntersectionPoint", "struct_intersection_point.html", "struct_intersection_point" ],

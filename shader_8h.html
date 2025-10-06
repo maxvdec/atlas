@@ -136,6 +136,8 @@ Classes</h2></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Structure representing a vertex shader, including its source code,.  <a href="struct_vertex_shader.html#details">More...</a><br /></td></tr>
 <tr class="memitem:FragmentShader" id="r_FragmentShader"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_fragment_shader.html">FragmentShader</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Structure representing a fragment shader, including its source code and its OpenGL ID.  <a href="struct_fragment_shader.html#details">More...</a><br /></td></tr>
+<tr class="memitem:GeometryShader" id="r_GeometryShader"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_geometry_shader.html">GeometryShader</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Structure representing a geometry shader, including its source code and its OpenGL ID.  <a href="struct_geometry_shader.html#details">More...</a><br /></td></tr>
 <tr class="memitem:LayoutDescriptor" id="r_LayoutDescriptor"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_layout_descriptor.html">LayoutDescriptor</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Structure representing a layout descriptor for vertex attributes.  <a href="struct_layout_descriptor.html#details">More...</a><br /></td></tr>
 <tr class="memitem:ShaderProgram" id="r_ShaderProgram"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_shader_program.html">ShaderProgram</a></td></tr>
@@ -160,6 +162,7 @@ Enumerations</h2></td></tr>
 , <a class="el" href="#aed7a1c7a5976e4adb712d0a231dada82a5e9328c486b44b9a58bca20f7f2064f4">Particle</a>
 , <br />
 &#160;&#160;<a class="el" href="#aed7a1c7a5976e4adb712d0a231dada82a9dffbf69ffba8bc38bc4e01abf4b1675">Text</a>
+, <a class="el" href="#aed7a1c7a5976e4adb712d0a231dada82a05c5b39892533f0c0ad86b083b28ff6a">PointLightShadow</a>
 <br />
  }</td></tr>
 <tr class="memdesc:aed7a1c7a5976e4adb712d0a231dada82"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enumeration of default vertex shaders provided by the Atlas engine.  <a href="#aed7a1c7a5976e4adb712d0a231dada82">More...</a><br /></td></tr>
@@ -181,9 +184,12 @@ Enumerations</h2></td></tr>
 , <a class="el" href="#ae4b5ffebe5841702defe3060ebbe08d0a5e9328c486b44b9a58bca20f7f2064f4">Particle</a>
 , <br />
 &#160;&#160;<a class="el" href="#ae4b5ffebe5841702defe3060ebbe08d0a9dffbf69ffba8bc38bc4e01abf4b1675">Text</a>
+, <a class="el" href="#ae4b5ffebe5841702defe3060ebbe08d0a05c5b39892533f0c0ad86b083b28ff6a">PointLightShadow</a>
 <br />
  }</td></tr>
 <tr class="memdesc:ae4b5ffebe5841702defe3060ebbe08d0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enumeration of default fragment shaders provided by the Atlas engine.  <a href="#ae4b5ffebe5841702defe3060ebbe08d0">More...</a><br /></td></tr>
+<tr class="memitem:a17951fe51aaa5769ef603acf594dc0b5" id="r_a17951fe51aaa5769ef603acf594dc0b5"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a17951fe51aaa5769ef603acf594dc0b5">AtlasGeometryShader</a> { <a class="el" href="#a17951fe51aaa5769ef603acf594dc0b5a05c5b39892533f0c0ad86b083b28ff6a">PointLightShadow</a>
+ }</td></tr>
 </table>
 <a name="doc-define-members" id="doc-define-members"></a><h2 id="header-doc-define-members" class="groupheader">Macro Definition Documentation</h2>
 <a id="ae3dc3c5c789f2407bf2e7c2799bec14e" name="ae3dc3c5c789f2407bf2e7c2799bec14e"></a>
@@ -259,66 +265,100 @@ Enumerations</h2></td></tr>
 </td></tr>
 <tr><td class="fieldname"><a id="ae4b5ffebe5841702defe3060ebbe08d0a9dffbf69ffba8bc38bc4e01abf4b1675" name="ae4b5ffebe5841702defe3060ebbe08d0a9dffbf69ffba8bc38bc4e01abf4b1675"></a>Text&#160;</td><td class="fielddoc"><p>Fragment shader for rendering text. </p>
 </td></tr>
+<tr><td class="fieldname"><a id="ae4b5ffebe5841702defe3060ebbe08d0a05c5b39892533f0c0ad86b083b28ff6a" name="ae4b5ffebe5841702defe3060ebbe08d0a05c5b39892533f0c0ad86b083b28ff6a"></a>PointLightShadow&#160;</td><td class="fielddoc"></td></tr>
 </table>
 
-<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00155">155</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  155</span>                               {<span class="comment"></span></div>
-<div class="line"><span class="lineno">  156</span><span class="comment">    /**</span></div>
-<div class="line"><span class="lineno">  157</span><span class="comment">     * @brief Debug fragment shader that outputs a solid magenta color.</span></div>
-<div class="line"><span class="lineno">  158</span><span class="comment">     *</span></div>
-<div class="line"><span class="lineno">  159</span><span class="comment">     */</span></div>
-<div class="line"><span class="lineno">  160</span>    <a class="code hl_enumvalue" href="#ae4b5ffebe5841702defe3060ebbe08d0aa603905470e2a5b8c13e96b579ef0dba">Debug</a>,<span class="comment"></span></div>
-<div class="line"><span class="lineno">  161</span><span class="comment">    /**</span></div>
-<div class="line"><span class="lineno">  162</span><span class="comment">     * @brief Fragment shader for rendering solid colors.</span></div>
-<div class="line"><span class="lineno">  163</span><span class="comment">     *</span></div>
-<div class="line"><span class="lineno">  164</span><span class="comment">     */</span></div>
-<div class="line"><span class="lineno">  165</span>    <a class="code hl_enumvalue" href="#ae4b5ffebe5841702defe3060ebbe08d0acb5feb1b7314637725a2e73bdc9f7295">Color</a>,<span class="comment"></span></div>
-<div class="line"><span class="lineno">  166</span><span class="comment">    /**</span></div>
-<div class="line"><span class="lineno">  167</span><span class="comment">     * @brief Main fragment shader that supports lighting, textures, and</span></div>
-<div class="line"><span class="lineno">  168</span><span class="comment">     * normals.</span></div>
-<div class="line"><span class="lineno">  169</span><span class="comment">     *</span></div>
-<div class="line"><span class="lineno">  170</span><span class="comment">     */</span></div>
-<div class="line"><span class="lineno">  171</span>    <a class="code hl_enumvalue" href="#ae4b5ffebe5841702defe3060ebbe08d0aa02c83a7dbd96295beaefb72c2bee2de">Main</a>,<span class="comment"></span></div>
-<div class="line"><span class="lineno">  172</span><span class="comment">    /**</span></div>
-<div class="line"><span class="lineno">  173</span><span class="comment">     * @brief Fragment shader for rendering textured objects.</span></div>
-<div class="line"><span class="lineno">  174</span><span class="comment">     *</span></div>
-<div class="line"><span class="lineno">  175</span><span class="comment">     */</span></div>
-<div class="line"><span class="lineno">  176</span>    <a class="code hl_enumvalue" href="#ae4b5ffebe5841702defe3060ebbe08d0aa3e8ae43188ae76d38f414b2bdb0077b">Texture</a>,<span class="comment"></span></div>
-<div class="line"><span class="lineno">  177</span><span class="comment">    /**</span></div>
-<div class="line"><span class="lineno">  178</span><span class="comment">     * @brief Fragment shader for rendering fullscreen quads.</span></div>
-<div class="line"><span class="lineno">  179</span><span class="comment">     *</span></div>
-<div class="line"><span class="lineno">  180</span><span class="comment">     */</span></div>
-<div class="line"><span class="lineno">  181</span>    <a class="code hl_enumvalue" href="#ae4b5ffebe5841702defe3060ebbe08d0a0829ea6734059d66e6bf87096b215dc1">Fullscreen</a>,<span class="comment"></span></div>
-<div class="line"><span class="lineno">  182</span><span class="comment">    /**</span></div>
-<div class="line"><span class="lineno">  183</span><span class="comment">     * @brief Fragment shader for rendering skyboxes.</span></div>
-<div class="line"><span class="lineno">  184</span><span class="comment">     *</span></div>
-<div class="line"><span class="lineno">  185</span><span class="comment">     */</span></div>
-<div class="line"><span class="lineno">  186</span>    <a class="code hl_enumvalue" href="#ae4b5ffebe5841702defe3060ebbe08d0a63fbbc4fe17b5b4262ebe7c2921518ed">Skybox</a>,<span class="comment"></span></div>
-<div class="line"><span class="lineno">  187</span><span class="comment">    /**</span></div>
-<div class="line"><span class="lineno">  188</span><span class="comment">     * @brief Fragment shader for rendering empty objects.</span></div>
-<div class="line"><span class="lineno">  189</span><span class="comment">     *</span></div>
-<div class="line"><span class="lineno">  190</span><span class="comment">     */</span></div>
-<div class="line"><span class="lineno">  191</span>    <a class="code hl_enumvalue" href="#ae4b5ffebe5841702defe3060ebbe08d0ace2c8aed9c2fa0cfbed56cbda4d8bf07">Empty</a>,<span class="comment"></span></div>
-<div class="line"><span class="lineno">  192</span><span class="comment">    /**</span></div>
-<div class="line"><span class="lineno">  193</span><span class="comment">     * @brief Fragment shader for rendering particles.</span></div>
-<div class="line"><span class="lineno">  194</span><span class="comment">     *</span></div>
-<div class="line"><span class="lineno">  195</span><span class="comment">     */</span></div>
-<div class="line"><span class="lineno">  196</span>    <a class="code hl_enumvalue" href="#ae4b5ffebe5841702defe3060ebbe08d0a5e9328c486b44b9a58bca20f7f2064f4">Particle</a>,<span class="comment"></span></div>
-<div class="line"><span class="lineno">  197</span><span class="comment">    /**</span></div>
-<div class="line"><span class="lineno">  198</span><span class="comment">     * @brief Fragment shader for rendering text.</span></div>
-<div class="line"><span class="lineno">  199</span><span class="comment">     *</span></div>
-<div class="line"><span class="lineno">  200</span><span class="comment">     */</span></div>
-<div class="line"><span class="lineno">  201</span>    <a class="code hl_enumvalue" href="#ae4b5ffebe5841702defe3060ebbe08d0a9dffbf69ffba8bc38bc4e01abf4b1675">Text</a>,</div>
-<div class="line"><span class="lineno">  202</span>};</div>
-<div class="ttc" id="ashader_8h_html_ae4b5ffebe5841702defe3060ebbe08d0a0829ea6734059d66e6bf87096b215dc1"><div class="ttname"><a href="#ae4b5ffebe5841702defe3060ebbe08d0a0829ea6734059d66e6bf87096b215dc1">AtlasFragmentShader::Fullscreen</a></div><div class="ttdeci">@ Fullscreen</div><div class="ttdoc">Fragment shader for rendering fullscreen quads.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00181">shader.h:181</a></div></div>
-<div class="ttc" id="ashader_8h_html_ae4b5ffebe5841702defe3060ebbe08d0a5e9328c486b44b9a58bca20f7f2064f4"><div class="ttname"><a href="#ae4b5ffebe5841702defe3060ebbe08d0a5e9328c486b44b9a58bca20f7f2064f4">AtlasFragmentShader::Particle</a></div><div class="ttdeci">@ Particle</div><div class="ttdoc">Fragment shader for rendering particles.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00196">shader.h:196</a></div></div>
-<div class="ttc" id="ashader_8h_html_ae4b5ffebe5841702defe3060ebbe08d0a63fbbc4fe17b5b4262ebe7c2921518ed"><div class="ttname"><a href="#ae4b5ffebe5841702defe3060ebbe08d0a63fbbc4fe17b5b4262ebe7c2921518ed">AtlasFragmentShader::Skybox</a></div><div class="ttdeci">@ Skybox</div><div class="ttdoc">Fragment shader for rendering skyboxes.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00186">shader.h:186</a></div></div>
-<div class="ttc" id="ashader_8h_html_ae4b5ffebe5841702defe3060ebbe08d0a9dffbf69ffba8bc38bc4e01abf4b1675"><div class="ttname"><a href="#ae4b5ffebe5841702defe3060ebbe08d0a9dffbf69ffba8bc38bc4e01abf4b1675">AtlasFragmentShader::Text</a></div><div class="ttdeci">@ Text</div><div class="ttdoc">Fragment shader for rendering text.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00201">shader.h:201</a></div></div>
-<div class="ttc" id="ashader_8h_html_ae4b5ffebe5841702defe3060ebbe08d0aa02c83a7dbd96295beaefb72c2bee2de"><div class="ttname"><a href="#ae4b5ffebe5841702defe3060ebbe08d0aa02c83a7dbd96295beaefb72c2bee2de">AtlasFragmentShader::Main</a></div><div class="ttdeci">@ Main</div><div class="ttdoc">Main fragment shader that supports lighting, textures, and normals.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00171">shader.h:171</a></div></div>
-<div class="ttc" id="ashader_8h_html_ae4b5ffebe5841702defe3060ebbe08d0aa3e8ae43188ae76d38f414b2bdb0077b"><div class="ttname"><a href="#ae4b5ffebe5841702defe3060ebbe08d0aa3e8ae43188ae76d38f414b2bdb0077b">AtlasFragmentShader::Texture</a></div><div class="ttdeci">@ Texture</div><div class="ttdoc">Fragment shader for rendering textured objects.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00176">shader.h:176</a></div></div>
-<div class="ttc" id="ashader_8h_html_ae4b5ffebe5841702defe3060ebbe08d0aa603905470e2a5b8c13e96b579ef0dba"><div class="ttname"><a href="#ae4b5ffebe5841702defe3060ebbe08d0aa603905470e2a5b8c13e96b579ef0dba">AtlasFragmentShader::Debug</a></div><div class="ttdeci">@ Debug</div><div class="ttdoc">Debug fragment shader that outputs a solid magenta color.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00160">shader.h:160</a></div></div>
-<div class="ttc" id="ashader_8h_html_ae4b5ffebe5841702defe3060ebbe08d0acb5feb1b7314637725a2e73bdc9f7295"><div class="ttname"><a href="#ae4b5ffebe5841702defe3060ebbe08d0acb5feb1b7314637725a2e73bdc9f7295">AtlasFragmentShader::Color</a></div><div class="ttdeci">@ Color</div><div class="ttdoc">Fragment shader for rendering solid colors.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00165">shader.h:165</a></div></div>
-<div class="ttc" id="ashader_8h_html_ae4b5ffebe5841702defe3060ebbe08d0ace2c8aed9c2fa0cfbed56cbda4d8bf07"><div class="ttname"><a href="#ae4b5ffebe5841702defe3060ebbe08d0ace2c8aed9c2fa0cfbed56cbda4d8bf07">AtlasFragmentShader::Empty</a></div><div class="ttdeci">@ Empty</div><div class="ttdoc">Fragment shader for rendering empty objects.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00191">shader.h:191</a></div></div>
+<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00156">156</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  156</span>                               {<span class="comment"></span></div>
+<div class="line"><span class="lineno">  157</span><span class="comment">    /**</span></div>
+<div class="line"><span class="lineno">  158</span><span class="comment">     * @brief Debug fragment shader that outputs a solid magenta color.</span></div>
+<div class="line"><span class="lineno">  159</span><span class="comment">     *</span></div>
+<div class="line"><span class="lineno">  160</span><span class="comment">     */</span></div>
+<div class="line"><span class="lineno">  161</span>    <a class="code hl_enumvalue" href="#ae4b5ffebe5841702defe3060ebbe08d0aa603905470e2a5b8c13e96b579ef0dba">Debug</a>,<span class="comment"></span></div>
+<div class="line"><span class="lineno">  162</span><span class="comment">    /**</span></div>
+<div class="line"><span class="lineno">  163</span><span class="comment">     * @brief Fragment shader for rendering solid colors.</span></div>
+<div class="line"><span class="lineno">  164</span><span class="comment">     *</span></div>
+<div class="line"><span class="lineno">  165</span><span class="comment">     */</span></div>
+<div class="line"><span class="lineno">  166</span>    <a class="code hl_enumvalue" href="#ae4b5ffebe5841702defe3060ebbe08d0acb5feb1b7314637725a2e73bdc9f7295">Color</a>,<span class="comment"></span></div>
+<div class="line"><span class="lineno">  167</span><span class="comment">    /**</span></div>
+<div class="line"><span class="lineno">  168</span><span class="comment">     * @brief Main fragment shader that supports lighting, textures, and</span></div>
+<div class="line"><span class="lineno">  169</span><span class="comment">     * normals.</span></div>
+<div class="line"><span class="lineno">  170</span><span class="comment">     *</span></div>
+<div class="line"><span class="lineno">  171</span><span class="comment">     */</span></div>
+<div class="line"><span class="lineno">  172</span>    <a class="code hl_enumvalue" href="#ae4b5ffebe5841702defe3060ebbe08d0aa02c83a7dbd96295beaefb72c2bee2de">Main</a>,<span class="comment"></span></div>
+<div class="line"><span class="lineno">  173</span><span class="comment">    /**</span></div>
+<div class="line"><span class="lineno">  174</span><span class="comment">     * @brief Fragment shader for rendering textured objects.</span></div>
+<div class="line"><span class="lineno">  175</span><span class="comment">     *</span></div>
+<div class="line"><span class="lineno">  176</span><span class="comment">     */</span></div>
+<div class="line"><span class="lineno">  177</span>    <a class="code hl_enumvalue" href="#ae4b5ffebe5841702defe3060ebbe08d0aa3e8ae43188ae76d38f414b2bdb0077b">Texture</a>,<span class="comment"></span></div>
+<div class="line"><span class="lineno">  178</span><span class="comment">    /**</span></div>
+<div class="line"><span class="lineno">  179</span><span class="comment">     * @brief Fragment shader for rendering fullscreen quads.</span></div>
+<div class="line"><span class="lineno">  180</span><span class="comment">     *</span></div>
+<div class="line"><span class="lineno">  181</span><span class="comment">     */</span></div>
+<div class="line"><span class="lineno">  182</span>    <a class="code hl_enumvalue" href="#ae4b5ffebe5841702defe3060ebbe08d0a0829ea6734059d66e6bf87096b215dc1">Fullscreen</a>,<span class="comment"></span></div>
+<div class="line"><span class="lineno">  183</span><span class="comment">    /**</span></div>
+<div class="line"><span class="lineno">  184</span><span class="comment">     * @brief Fragment shader for rendering skyboxes.</span></div>
+<div class="line"><span class="lineno">  185</span><span class="comment">     *</span></div>
+<div class="line"><span class="lineno">  186</span><span class="comment">     */</span></div>
+<div class="line"><span class="lineno">  187</span>    <a class="code hl_enumvalue" href="#ae4b5ffebe5841702defe3060ebbe08d0a63fbbc4fe17b5b4262ebe7c2921518ed">Skybox</a>,<span class="comment"></span></div>
+<div class="line"><span class="lineno">  188</span><span class="comment">    /**</span></div>
+<div class="line"><span class="lineno">  189</span><span class="comment">     * @brief Fragment shader for rendering empty objects.</span></div>
+<div class="line"><span class="lineno">  190</span><span class="comment">     *</span></div>
+<div class="line"><span class="lineno">  191</span><span class="comment">     */</span></div>
+<div class="line"><span class="lineno">  192</span>    <a class="code hl_enumvalue" href="#ae4b5ffebe5841702defe3060ebbe08d0ace2c8aed9c2fa0cfbed56cbda4d8bf07">Empty</a>,<span class="comment"></span></div>
+<div class="line"><span class="lineno">  193</span><span class="comment">    /**</span></div>
+<div class="line"><span class="lineno">  194</span><span class="comment">     * @brief Fragment shader for rendering particles.</span></div>
+<div class="line"><span class="lineno">  195</span><span class="comment">     *</span></div>
+<div class="line"><span class="lineno">  196</span><span class="comment">     */</span></div>
+<div class="line"><span class="lineno">  197</span>    <a class="code hl_enumvalue" href="#ae4b5ffebe5841702defe3060ebbe08d0a5e9328c486b44b9a58bca20f7f2064f4">Particle</a>,<span class="comment"></span></div>
+<div class="line"><span class="lineno">  198</span><span class="comment">    /**</span></div>
+<div class="line"><span class="lineno">  199</span><span class="comment">     * @brief Fragment shader for rendering text.</span></div>
+<div class="line"><span class="lineno">  200</span><span class="comment">     *</span></div>
+<div class="line"><span class="lineno">  201</span><span class="comment">     */</span></div>
+<div class="line"><span class="lineno">  202</span>    <a class="code hl_enumvalue" href="#ae4b5ffebe5841702defe3060ebbe08d0a9dffbf69ffba8bc38bc4e01abf4b1675">Text</a>,</div>
+<div class="line"><span class="lineno">  203</span>    <a class="code hl_enumvalue" href="#ae4b5ffebe5841702defe3060ebbe08d0a05c5b39892533f0c0ad86b083b28ff6a">PointLightShadow</a>,</div>
+<div class="line"><span class="lineno">  204</span>};</div>
+<div class="ttc" id="ashader_8h_html_ae4b5ffebe5841702defe3060ebbe08d0a05c5b39892533f0c0ad86b083b28ff6a"><div class="ttname"><a href="#ae4b5ffebe5841702defe3060ebbe08d0a05c5b39892533f0c0ad86b083b28ff6a">AtlasFragmentShader::PointLightShadow</a></div><div class="ttdeci">@ PointLightShadow</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00203">shader.h:203</a></div></div>
+<div class="ttc" id="ashader_8h_html_ae4b5ffebe5841702defe3060ebbe08d0a0829ea6734059d66e6bf87096b215dc1"><div class="ttname"><a href="#ae4b5ffebe5841702defe3060ebbe08d0a0829ea6734059d66e6bf87096b215dc1">AtlasFragmentShader::Fullscreen</a></div><div class="ttdeci">@ Fullscreen</div><div class="ttdoc">Fragment shader for rendering fullscreen quads.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00182">shader.h:182</a></div></div>
+<div class="ttc" id="ashader_8h_html_ae4b5ffebe5841702defe3060ebbe08d0a5e9328c486b44b9a58bca20f7f2064f4"><div class="ttname"><a href="#ae4b5ffebe5841702defe3060ebbe08d0a5e9328c486b44b9a58bca20f7f2064f4">AtlasFragmentShader::Particle</a></div><div class="ttdeci">@ Particle</div><div class="ttdoc">Fragment shader for rendering particles.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00197">shader.h:197</a></div></div>
+<div class="ttc" id="ashader_8h_html_ae4b5ffebe5841702defe3060ebbe08d0a63fbbc4fe17b5b4262ebe7c2921518ed"><div class="ttname"><a href="#ae4b5ffebe5841702defe3060ebbe08d0a63fbbc4fe17b5b4262ebe7c2921518ed">AtlasFragmentShader::Skybox</a></div><div class="ttdeci">@ Skybox</div><div class="ttdoc">Fragment shader for rendering skyboxes.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00187">shader.h:187</a></div></div>
+<div class="ttc" id="ashader_8h_html_ae4b5ffebe5841702defe3060ebbe08d0a9dffbf69ffba8bc38bc4e01abf4b1675"><div class="ttname"><a href="#ae4b5ffebe5841702defe3060ebbe08d0a9dffbf69ffba8bc38bc4e01abf4b1675">AtlasFragmentShader::Text</a></div><div class="ttdeci">@ Text</div><div class="ttdoc">Fragment shader for rendering text.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00202">shader.h:202</a></div></div>
+<div class="ttc" id="ashader_8h_html_ae4b5ffebe5841702defe3060ebbe08d0aa02c83a7dbd96295beaefb72c2bee2de"><div class="ttname"><a href="#ae4b5ffebe5841702defe3060ebbe08d0aa02c83a7dbd96295beaefb72c2bee2de">AtlasFragmentShader::Main</a></div><div class="ttdeci">@ Main</div><div class="ttdoc">Main fragment shader that supports lighting, textures, and normals.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00172">shader.h:172</a></div></div>
+<div class="ttc" id="ashader_8h_html_ae4b5ffebe5841702defe3060ebbe08d0aa3e8ae43188ae76d38f414b2bdb0077b"><div class="ttname"><a href="#ae4b5ffebe5841702defe3060ebbe08d0aa3e8ae43188ae76d38f414b2bdb0077b">AtlasFragmentShader::Texture</a></div><div class="ttdeci">@ Texture</div><div class="ttdoc">Fragment shader for rendering textured objects.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00177">shader.h:177</a></div></div>
+<div class="ttc" id="ashader_8h_html_ae4b5ffebe5841702defe3060ebbe08d0aa603905470e2a5b8c13e96b579ef0dba"><div class="ttname"><a href="#ae4b5ffebe5841702defe3060ebbe08d0aa603905470e2a5b8c13e96b579ef0dba">AtlasFragmentShader::Debug</a></div><div class="ttdeci">@ Debug</div><div class="ttdoc">Debug fragment shader that outputs a solid magenta color.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00161">shader.h:161</a></div></div>
+<div class="ttc" id="ashader_8h_html_ae4b5ffebe5841702defe3060ebbe08d0acb5feb1b7314637725a2e73bdc9f7295"><div class="ttname"><a href="#ae4b5ffebe5841702defe3060ebbe08d0acb5feb1b7314637725a2e73bdc9f7295">AtlasFragmentShader::Color</a></div><div class="ttdeci">@ Color</div><div class="ttdoc">Fragment shader for rendering solid colors.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00166">shader.h:166</a></div></div>
+<div class="ttc" id="ashader_8h_html_ae4b5ffebe5841702defe3060ebbe08d0ace2c8aed9c2fa0cfbed56cbda4d8bf07"><div class="ttname"><a href="#ae4b5ffebe5841702defe3060ebbe08d0ace2c8aed9c2fa0cfbed56cbda4d8bf07">AtlasFragmentShader::Empty</a></div><div class="ttdeci">@ Empty</div><div class="ttdoc">Fragment shader for rendering empty objects.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00192">shader.h:192</a></div></div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="a17951fe51aaa5769ef603acf594dc0b5" name="a17951fe51aaa5769ef603acf594dc0b5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a17951fe51aaa5769ef603acf594dc0b5">&#9670;&#160;</a></span>AtlasGeometryShader</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum class <a class="el" href="#a17951fe51aaa5769ef603acf594dc0b5">AtlasGeometryShader</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel strong">strong</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a17951fe51aaa5769ef603acf594dc0b5a05c5b39892533f0c0ad86b083b28ff6a" name="a17951fe51aaa5769ef603acf594dc0b5a05c5b39892533f0c0ad86b083b28ff6a"></a>PointLightShadow&#160;</td><td class="fielddoc"></td></tr>
+</table>
+
+<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00245">245</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  245</span>                               {</div>
+<div class="line"><span class="lineno">  246</span>    <a class="code hl_enumvalue" href="#a17951fe51aaa5769ef603acf594dc0b5a05c5b39892533f0c0ad86b083b28ff6a">PointLightShadow</a>,</div>
+<div class="line"><span class="lineno">  247</span>};</div>
+<div class="ttc" id="ashader_8h_html_a17951fe51aaa5769ef603acf594dc0b5a05c5b39892533f0c0ad86b083b28ff6a"><div class="ttname"><a href="#a17951fe51aaa5769ef603acf594dc0b5a05c5b39892533f0c0ad86b083b28ff6a">AtlasGeometryShader::PointLightShadow</a></div><div class="ttdeci">@ PointLightShadow</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00246">shader.h:246</a></div></div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -362,6 +402,7 @@ Enumerations</h2></td></tr>
 </td></tr>
 <tr><td class="fieldname"><a id="aed7a1c7a5976e4adb712d0a231dada82a9dffbf69ffba8bc38bc4e01abf4b1675" name="aed7a1c7a5976e4adb712d0a231dada82a9dffbf69ffba8bc38bc4e01abf4b1675"></a>Text&#160;</td><td class="fielddoc"><p>Vertex shader for rendering text. </p>
 </td></tr>
+<tr><td class="fieldname"><a id="aed7a1c7a5976e4adb712d0a231dada82a05c5b39892533f0c0ad86b083b28ff6a" name="aed7a1c7a5976e4adb712d0a231dada82a05c5b39892533f0c0ad86b083b28ff6a"></a>PointLightShadow&#160;</td><td class="fielddoc"></td></tr>
 </table>
 
 <p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00027">27</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
@@ -411,7 +452,9 @@ Enumerations</h2></td></tr>
 <div class="line"><span class="lineno">   70</span><span class="comment">     *</span></div>
 <div class="line"><span class="lineno">   71</span><span class="comment">     */</span></div>
 <div class="line"><span class="lineno">   72</span>    <a class="code hl_enumvalue" href="#aed7a1c7a5976e4adb712d0a231dada82a9dffbf69ffba8bc38bc4e01abf4b1675">Text</a>,</div>
-<div class="line"><span class="lineno">   73</span>};</div>
+<div class="line"><span class="lineno">   73</span>    <a class="code hl_enumvalue" href="#aed7a1c7a5976e4adb712d0a231dada82a05c5b39892533f0c0ad86b083b28ff6a">PointLightShadow</a>,</div>
+<div class="line"><span class="lineno">   74</span>};</div>
+<div class="ttc" id="ashader_8h_html_aed7a1c7a5976e4adb712d0a231dada82a05c5b39892533f0c0ad86b083b28ff6a"><div class="ttname"><a href="#aed7a1c7a5976e4adb712d0a231dada82a05c5b39892533f0c0ad86b083b28ff6a">AtlasVertexShader::PointLightShadow</a></div><div class="ttdeci">@ PointLightShadow</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00073">shader.h:73</a></div></div>
 <div class="ttc" id="ashader_8h_html_aed7a1c7a5976e4adb712d0a231dada82a0829ea6734059d66e6bf87096b215dc1"><div class="ttname"><a href="#aed7a1c7a5976e4adb712d0a231dada82a0829ea6734059d66e6bf87096b215dc1">AtlasVertexShader::Fullscreen</a></div><div class="ttdeci">@ Fullscreen</div><div class="ttdoc">Vertex shader for rendering fullscreen quads.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00052">shader.h:52</a></div></div>
 <div class="ttc" id="ashader_8h_html_aed7a1c7a5976e4adb712d0a231dada82a5e9328c486b44b9a58bca20f7f2064f4"><div class="ttname"><a href="#aed7a1c7a5976e4adb712d0a231dada82a5e9328c486b44b9a58bca20f7f2064f4">AtlasVertexShader::Particle</a></div><div class="ttdeci">@ Particle</div><div class="ttdoc">Vertex shader for rendering particles.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00067">shader.h:67</a></div></div>
 <div class="ttc" id="ashader_8h_html_aed7a1c7a5976e4adb712d0a231dada82a63fbbc4fe17b5b4262ebe7c2921518ed"><div class="ttname"><a href="#aed7a1c7a5976e4adb712d0a231dada82a63fbbc4fe17b5b4262ebe7c2921518ed">AtlasVertexShader::Skybox</a></div><div class="ttdeci">@ Skybox</div><div class="ttdoc">Vertex shader for rendering skyboxes.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00057">shader.h:57</a></div></div>
@@ -456,33 +499,33 @@ Enumerations</h2></td></tr>
 </td></tr>
 </table>
 
-<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00079">79</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   79</span>                            {<span class="comment"></span></div>
-<div class="line"><span class="lineno">   80</span><span class="comment">    /**</span></div>
-<div class="line"><span class="lineno">   81</span><span class="comment">     * @brief Capability for handling lighting calculations.</span></div>
-<div class="line"><span class="lineno">   82</span><span class="comment">     *</span></div>
-<div class="line"><span class="lineno">   83</span><span class="comment">     */</span></div>
-<div class="line"><span class="lineno">   84</span>    <a class="code hl_enumvalue" href="#ad6dfc2a6ff142b1671ab89fca4fdbfcda2e4b97fde8cf63085ec969fcc7e490c0">Lighting</a>,<span class="comment"></span></div>
-<div class="line"><span class="lineno">   85</span><span class="comment">    /**</span></div>
-<div class="line"><span class="lineno">   86</span><span class="comment">     * @brief Capability for handling texture mapping.</span></div>
-<div class="line"><span class="lineno">   87</span><span class="comment">     *</span></div>
-<div class="line"><span class="lineno">   88</span><span class="comment">     */</span></div>
-<div class="line"><span class="lineno">   89</span>    <a class="code hl_enumvalue" href="#ad6dfc2a6ff142b1671ab89fca4fdbfcda536300d63028e7f16ba150566ecd3a5f">Textures</a>,<span class="comment"></span></div>
-<div class="line"><span class="lineno">   90</span><span class="comment">    /**</span></div>
-<div class="line"><span class="lineno">   91</span><span class="comment">     * @brief Capability for handling shadow mapping.</span></div>
-<div class="line"><span class="lineno">   92</span><span class="comment">     *</span></div>
-<div class="line"><span class="lineno">   93</span><span class="comment">     */</span></div>
-<div class="line"><span class="lineno">   94</span>    <a class="code hl_enumvalue" href="#ad6dfc2a6ff142b1671ab89fca4fdbfcdadde98fa66ef8081029ffb8f24d643c89">Shadows</a>,<span class="comment"></span></div>
-<div class="line"><span class="lineno">   95</span><span class="comment">    /**</span></div>
-<div class="line"><span class="lineno">   96</span><span class="comment">     * @brief Capability for handling environment mapping (e.g., reflections).</span></div>
-<div class="line"><span class="lineno">   97</span><span class="comment">     *</span></div>
-<div class="line"><span class="lineno">   98</span><span class="comment">     */</span></div>
-<div class="line"><span class="lineno">   99</span>    <a class="code hl_enumvalue" href="#ad6dfc2a6ff142b1671ab89fca4fdbfcdadb1098a034b7f5b862d0aef6b70d4f2d">EnvironmentMapping</a>,</div>
-<div class="line"><span class="lineno">  100</span>};</div>
-<div class="ttc" id="ashader_8h_html_ad6dfc2a6ff142b1671ab89fca4fdbfcda2e4b97fde8cf63085ec969fcc7e490c0"><div class="ttname"><a href="#ad6dfc2a6ff142b1671ab89fca4fdbfcda2e4b97fde8cf63085ec969fcc7e490c0">ShaderCapability::Lighting</a></div><div class="ttdeci">@ Lighting</div><div class="ttdoc">Capability for handling lighting calculations.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00084">shader.h:84</a></div></div>
-<div class="ttc" id="ashader_8h_html_ad6dfc2a6ff142b1671ab89fca4fdbfcda536300d63028e7f16ba150566ecd3a5f"><div class="ttname"><a href="#ad6dfc2a6ff142b1671ab89fca4fdbfcda536300d63028e7f16ba150566ecd3a5f">ShaderCapability::Textures</a></div><div class="ttdeci">@ Textures</div><div class="ttdoc">Capability for handling texture mapping.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00089">shader.h:89</a></div></div>
-<div class="ttc" id="ashader_8h_html_ad6dfc2a6ff142b1671ab89fca4fdbfcdadb1098a034b7f5b862d0aef6b70d4f2d"><div class="ttname"><a href="#ad6dfc2a6ff142b1671ab89fca4fdbfcdadb1098a034b7f5b862d0aef6b70d4f2d">ShaderCapability::EnvironmentMapping</a></div><div class="ttdeci">@ EnvironmentMapping</div><div class="ttdoc">Capability for handling environment mapping (e.g., reflections).</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00099">shader.h:99</a></div></div>
-<div class="ttc" id="ashader_8h_html_ad6dfc2a6ff142b1671ab89fca4fdbfcdadde98fa66ef8081029ffb8f24d643c89"><div class="ttname"><a href="#ad6dfc2a6ff142b1671ab89fca4fdbfcdadde98fa66ef8081029ffb8f24d643c89">ShaderCapability::Shadows</a></div><div class="ttdeci">@ Shadows</div><div class="ttdoc">Capability for handling shadow mapping.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00094">shader.h:94</a></div></div>
+<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00080">80</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   80</span>                            {<span class="comment"></span></div>
+<div class="line"><span class="lineno">   81</span><span class="comment">    /**</span></div>
+<div class="line"><span class="lineno">   82</span><span class="comment">     * @brief Capability for handling lighting calculations.</span></div>
+<div class="line"><span class="lineno">   83</span><span class="comment">     *</span></div>
+<div class="line"><span class="lineno">   84</span><span class="comment">     */</span></div>
+<div class="line"><span class="lineno">   85</span>    <a class="code hl_enumvalue" href="#ad6dfc2a6ff142b1671ab89fca4fdbfcda2e4b97fde8cf63085ec969fcc7e490c0">Lighting</a>,<span class="comment"></span></div>
+<div class="line"><span class="lineno">   86</span><span class="comment">    /**</span></div>
+<div class="line"><span class="lineno">   87</span><span class="comment">     * @brief Capability for handling texture mapping.</span></div>
+<div class="line"><span class="lineno">   88</span><span class="comment">     *</span></div>
+<div class="line"><span class="lineno">   89</span><span class="comment">     */</span></div>
+<div class="line"><span class="lineno">   90</span>    <a class="code hl_enumvalue" href="#ad6dfc2a6ff142b1671ab89fca4fdbfcda536300d63028e7f16ba150566ecd3a5f">Textures</a>,<span class="comment"></span></div>
+<div class="line"><span class="lineno">   91</span><span class="comment">    /**</span></div>
+<div class="line"><span class="lineno">   92</span><span class="comment">     * @brief Capability for handling shadow mapping.</span></div>
+<div class="line"><span class="lineno">   93</span><span class="comment">     *</span></div>
+<div class="line"><span class="lineno">   94</span><span class="comment">     */</span></div>
+<div class="line"><span class="lineno">   95</span>    <a class="code hl_enumvalue" href="#ad6dfc2a6ff142b1671ab89fca4fdbfcdadde98fa66ef8081029ffb8f24d643c89">Shadows</a>,<span class="comment"></span></div>
+<div class="line"><span class="lineno">   96</span><span class="comment">    /**</span></div>
+<div class="line"><span class="lineno">   97</span><span class="comment">     * @brief Capability for handling environment mapping (e.g., reflections).</span></div>
+<div class="line"><span class="lineno">   98</span><span class="comment">     *</span></div>
+<div class="line"><span class="lineno">   99</span><span class="comment">     */</span></div>
+<div class="line"><span class="lineno">  100</span>    <a class="code hl_enumvalue" href="#ad6dfc2a6ff142b1671ab89fca4fdbfcdadb1098a034b7f5b862d0aef6b70d4f2d">EnvironmentMapping</a>,</div>
+<div class="line"><span class="lineno">  101</span>};</div>
+<div class="ttc" id="ashader_8h_html_ad6dfc2a6ff142b1671ab89fca4fdbfcda2e4b97fde8cf63085ec969fcc7e490c0"><div class="ttname"><a href="#ad6dfc2a6ff142b1671ab89fca4fdbfcda2e4b97fde8cf63085ec969fcc7e490c0">ShaderCapability::Lighting</a></div><div class="ttdeci">@ Lighting</div><div class="ttdoc">Capability for handling lighting calculations.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00085">shader.h:85</a></div></div>
+<div class="ttc" id="ashader_8h_html_ad6dfc2a6ff142b1671ab89fca4fdbfcda536300d63028e7f16ba150566ecd3a5f"><div class="ttname"><a href="#ad6dfc2a6ff142b1671ab89fca4fdbfcda536300d63028e7f16ba150566ecd3a5f">ShaderCapability::Textures</a></div><div class="ttdeci">@ Textures</div><div class="ttdoc">Capability for handling texture mapping.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00090">shader.h:90</a></div></div>
+<div class="ttc" id="ashader_8h_html_ad6dfc2a6ff142b1671ab89fca4fdbfcdadb1098a034b7f5b862d0aef6b70d4f2d"><div class="ttname"><a href="#ad6dfc2a6ff142b1671ab89fca4fdbfcdadb1098a034b7f5b862d0aef6b70d4f2d">ShaderCapability::EnvironmentMapping</a></div><div class="ttdeci">@ EnvironmentMapping</div><div class="ttdoc">Capability for handling environment mapping (e.g., reflections).</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00100">shader.h:100</a></div></div>
+<div class="ttc" id="ashader_8h_html_ad6dfc2a6ff142b1671ab89fca4fdbfcdadde98fa66ef8081029ffb8f24d643c89"><div class="ttname"><a href="#ad6dfc2a6ff142b1671ab89fca4fdbfcdadde98fa66ef8081029ffb8f24d643c89">ShaderCapability::Shadows</a></div><div class="ttdeci">@ Shadows</div><div class="ttdoc">Capability for handling shadow mapping.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00095">shader.h:95</a></div></div>
 </div><!-- fragment -->
 </div>
 </div>

@@ -13,6 +13,7 @@ var struct_shader_program =
     [ "capabilities", "struct_shader_program.html#a17fcce46fffc48f5ddb5f5f71d052f1f", null ],
     [ "desiredAttributes", "struct_shader_program.html#a3d6198b12f2a30d592c85fb521690764", null ],
     [ "fragmentShader", "struct_shader_program.html#ad323a4a6510790ed89c14665b8b6a7a2", null ],
+    [ "geometryShader", "struct_shader_program.html#add4b24f760dce3ea09aa58b3ef4fe34c", null ],
     [ "programId", "struct_shader_program.html#ad9211f0d2de370252bec4a1f01e39b4a", null ],
     [ "vertexShader", "struct_shader_program.html#a1f13d77e34b4874d827b17379e7671ee", null ]
 ];

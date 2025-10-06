@@ -2,6 +2,7 @@ var shader_8h =
 [
     [ "VertexShader", "struct_vertex_shader.html", "struct_vertex_shader" ],
     [ "FragmentShader", "struct_fragment_shader.html", "struct_fragment_shader" ],
+    [ "GeometryShader", "struct_geometry_shader.html", "struct_geometry_shader" ],
     [ "LayoutDescriptor", "struct_layout_descriptor.html", "struct_layout_descriptor" ],
     [ "ShaderProgram", "struct_shader_program.html", "struct_shader_program" ],
     [ "DEFAULT_FRAG_SHADER", "shader_8h.html#ae3dc3c5c789f2407bf2e7c2799bec14e", null ],
@@ -15,7 +16,11 @@ var shader_8h =
       [ "Skybox", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a63fbbc4fe17b5b4262ebe7c2921518ed", null ],
       [ "Empty", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0ace2c8aed9c2fa0cfbed56cbda4d8bf07", null ],
       [ "Particle", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a5e9328c486b44b9a58bca20f7f2064f4", null ],
-      [ "Text", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a9dffbf69ffba8bc38bc4e01abf4b1675", null ]
+      [ "Text", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a9dffbf69ffba8bc38bc4e01abf4b1675", null ],
+      [ "PointLightShadow", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a05c5b39892533f0c0ad86b083b28ff6a", null ]
+    ] ],
+    [ "AtlasGeometryShader", "shader_8h.html#a17951fe51aaa5769ef603acf594dc0b5", [
+      [ "PointLightShadow", "shader_8h.html#a17951fe51aaa5769ef603acf594dc0b5a05c5b39892533f0c0ad86b083b28ff6a", null ]
     ] ],
     [ "AtlasVertexShader", "shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82", [
       [ "Debug", "shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82aa603905470e2a5b8c13e96b579ef0dba", null ],
@@ -26,7 +31,8 @@ var shader_8h =
       [ "Skybox", "shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82a63fbbc4fe17b5b4262ebe7c2921518ed", null ],
       [ "Depth", "shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82a675056ad1441b6375b2c5abd48c27ef1", null ],
       [ "Particle", "shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82a5e9328c486b44b9a58bca20f7f2064f4", null ],
-      [ "Text", "shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82a9dffbf69ffba8bc38bc4e01abf4b1675", null ]
+      [ "Text", "shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82a9dffbf69ffba8bc38bc4e01abf4b1675", null ],
+      [ "PointLightShadow", "shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82a05c5b39892533f0c0ad86b083b28ff6a", null ]
     ] ],
     [ "ShaderCapability", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcd", [
       [ "Lighting", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcda2e4b97fde8cf63085ec969fcc7e490c0", null ],
