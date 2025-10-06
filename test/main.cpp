@@ -1,4 +1,5 @@
 #include "atlas/camera.h"
+#include "atlas/effect.h"
 #include "atlas/light.h"
 #include "atlas/object.h"
 #include "atlas/scene.h"
@@ -71,6 +72,7 @@ class MainScene : public Scene {
     SphereCube sphereCube;
     Text fpsText;
     Model backpack;
+    RenderTarget frameBuffer;
 
     bool doesUpdate = true;
     bool fall = false;
@@ -161,6 +163,11 @@ class MainScene : public Scene {
         skybox.cubemap = createCubemap();
         skybox.display(window);
         this->setSkybox(&skybox);
+
+        frameBuffer = RenderTarget(window);
+        frameBuffer.addEffect(ColorCorrection::create());
+        frameBuffer.display(window);
+        window.addRenderTarget(&frameBuffer);
     }
 };
 
