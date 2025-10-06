@@ -93,6 +93,7 @@ const int TEXTURE_DEPTH = 3;
 const int EFFECT_INVERSION = 0;
 const int EFFECT_GRAYSCALE = 1;
 const int EFFECT_SHARPEN = 2;
+const int EFFECT_BLUR = 3;
 
 const float offset = 1.0 / 300.0; 
 
@@ -128,10 +129,35 @@ vec4 sharpen(sampler2D image) {
     return vec4(col, 1.0);
 }
 
+vec4 blur(sampler2D image, float radius) {
+    vec2 texelSize = 1.0 / textureSize(image, 0);
+    vec3 result = vec3(0.0);
+    float total = 0.0;
+
+    // Gaussian weights falloff
+    float sigma = radius * 0.5;
+    float twoSigmaSq = 2.0 * sigma * sigma;
+
+    // Horizontal blur
+    for (int x = -int(radius); x <= int(radius); x++) {
+        float weight = exp(-(x * x) / twoSigmaSq);
+        vec2 offset = vec2(x, 0.0) * texelSize;
+        result += texture(image, TexCoord + offset).rgb * weight;
+        total += weight;
+    }
+
+    // Normalize
+    result /= total;
+
+    return vec4(result, 1.0);
+}
+
+
 uniform sampler2D Texture;
 uniform int TextureType;
 uniform int EffectCount;
 uniform int Effects[10];
+uniform float EffectFloat1[10];
 
 void main() {
     if (TextureType == TEXTURE_COLOR) {
@@ -150,6 +176,9 @@ void main() {
             FragColor = vec4(average, average, average, FragColor.a);
         } else if (Effects[i] == EFFECT_SHARPEN) {
             FragColor = sharpen(Texture);
+        } else if (Effects[i] == EFFECT_BLUR) { 
+            float radius = EffectFloat1[i];
+            FragColor = blur(Texture, radius);
         }
     }
 }

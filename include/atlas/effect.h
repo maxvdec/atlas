@@ -12,13 +12,18 @@
 
 #include "atlas/core/shader.h"
 #include <memory>
-enum class RenderTargetEffect { Invert = 0, Grayscale = 1, Sharpen = 2 };
+enum class RenderTargetEffect {
+    Invert = 0,
+    Grayscale = 1,
+    Sharpen = 2,
+    Blur = 3
+};
 
 class Effect {
   public:
     RenderTargetEffect type;
     Effect(RenderTargetEffect t) : type(t) {}
-    virtual void applyToProgram(ShaderProgram &program) {};
+    virtual void applyToProgram(ShaderProgram &program, int index) {};
 };
 
 class Inversion : public Effect {
@@ -42,6 +47,20 @@ class Sharpen : public Effect {
     Sharpen() : Effect(RenderTargetEffect::Sharpen) {}
     static std::shared_ptr<Sharpen> create() {
         return std::make_shared<Sharpen>();
+    }
+};
+
+class Blur : public Effect {
+  public:
+    float magnitude = 16.0;
+    Blur(float magnitude = 16.0)
+        : Effect(RenderTargetEffect::Blur), magnitude(magnitude) {}
+    static std::shared_ptr<Blur> create(float magnitude = 16.0) {
+        return std::make_shared<Blur>(magnitude);
+    }
+    void applyToProgram(ShaderProgram &program, int index) override {
+        program.setUniform1f("EffectFloat1[" + std::to_string((int)index) + "]",
+                             magnitude);
     }
 };
 

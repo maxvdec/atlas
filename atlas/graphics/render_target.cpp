@@ -256,7 +256,7 @@ void RenderTarget::render(float dt) {
         std::string uniformName = "Effects[" + std::to_string(i) + "]";
         obj->shaderProgram.setUniform1i(uniformName,
                                         static_cast<int>(effects[i]->type));
-        effects[i]->applyToProgram(obj->shaderProgram);
+        effects[i]->applyToProgram(obj->shaderProgram, i);
     }
 
     glActiveTexture(GL_TEXTURE0);
