@@ -90,8 +90,12 @@ out vec4 FragColor;
 const int TEXTURE_COLOR = 0;
 const int TEXTURE_DEPTH = 3;
 
+const int EFFECT_INVERSION = 0;
+
 uniform sampler2D Texture;
 uniform int TextureType;
+uniform int EffectCount;
+uniform int Effects[10];
 
 void main() {
     if (TextureType == TEXTURE_COLOR) {
@@ -100,6 +104,12 @@ void main() {
     } else if (TextureType == TEXTURE_DEPTH) {
         float depth = texture(Texture, TexCoord).r;
         FragColor = vec4(vec3(depth), 1.0);
+    }
+
+    for (int i = 0; i < EffectCount; i++) {
+        if (Effects[i] == EFFECT_INVERSION) {
+            FragColor = vec4(1.0 - FragColor.rgb, FragColor.a);
+        }
     }
 }
 
@@ -298,14 +308,39 @@ vec4 applyGammaCorrection(vec4 color, float gamma) {
 }
 
 vec2 parallaxMapping(vec2 texCoords, vec3 viewDir) {
-    vec4 heightMap = enableTextures(TEXTURE_PARALLAX);
-    if (heightMap.r == -1.0 && heightMap.g == -1.0 && heightMap.b == -1.0) {
-        return texCoords;
+    const float minLayers = 8.0;
+    const float maxLayers = 32.0;
+    float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), viewDir)));
+    float layerDepth = 1.0 / numLayers;
+    float currentLayerDepth = 0.0;
+
+    vec2 P = viewDir.xy * 0.1;
+    vec2 deltaTexCoords = P / numLayers;
+
+    vec2 currentTexCoords = texCoords;
+    int textureIndex = -1;
+    for (int i = 0; i < textureCount; i++) {
+        if (textureTypes[i] == TEXTURE_PARALLAX) {
+            textureIndex = i;
+            break;
+        }
     }
-    
-    float height = heightMap.r; 
-    vec2 p = viewDir.xy / viewDir.z * (height * 0.1); 
-    return texCoords - p;
+    if (textureIndex == -1) return texCoords;
+    float currentDepthMapValue = sampleTextureAt(textureIndex, currentTexCoords).r;
+
+    while (currentLayerDepth < currentDepthMapValue) {
+        currentTexCoords -= deltaTexCoords;
+        currentDepthMapValue = sampleTextureAt(textureIndex, currentTexCoords).r;
+        currentLayerDepth += layerDepth;
+    }
+
+    vec2 prevTexCoords = currentTexCoords + deltaTexCoords;
+    float afterDepth = currentDepthMapValue - currentLayerDepth;
+    float beforeDepth = sampleTextureAt(textureIndex, prevTexCoords).r - (currentLayerDepth - layerDepth);
+    float weight = afterDepth / (afterDepth - beforeDepth);
+    currentTexCoords = prevTexCoords * weight + currentTexCoords * (1.0 - weight);
+
+    return currentTexCoords;
 }
 
 // ----- Environment Mapping -----
@@ -496,6 +531,8 @@ void main() {
 
     vec3 tangentViewDir = normalize((TBN * cameraPosition) - (TBN * FragPos));
     texCoord = parallaxMapping(texCoord, tangentViewDir);
+    if(texCoord.x > 1.0 || texCoord.y > 1.0 || texCoord.x < 0.0 || texCoord.y < 0.0)
+        discard;
 
     if (useTexture && !useColor)
         baseColor = enableTextures(TEXTURE_COLOR);

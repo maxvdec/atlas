@@ -250,6 +250,12 @@ void RenderTarget::render(float dt) {
     obj->shaderProgram.setUniform1i("Texture", 0);
     obj->shaderProgram.setUniform1i("TextureType",
                                     static_cast<int>(texture.type));
+    obj->shaderProgram.setUniform1i("EffectCount", effects.size());
+    for (int i = 0; i < effects.size(); i++) {
+        std::string uniformName = "Effects[" + std::to_string(i) + "]";
+        obj->shaderProgram.setUniform1i(uniformName,
+                                        static_cast<int>(effects[i]->type));
+    }
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture.id);
@@ -266,3 +272,5 @@ void RenderTarget::render(float dt) {
 
     glEnable(GL_DEPTH_TEST);
 }
+
+Inversion::Inversion() { type = RenderTargetEffect::Invert; }

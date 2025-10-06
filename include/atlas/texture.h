@@ -11,6 +11,7 @@
 #define TEXTURE_H
 
 #include <array>
+#include <vector>
 #pragma once
 
 #include "atlas/core/renderable.h"
@@ -268,6 +269,23 @@ class CoreObject;
  */
 enum class RenderTargetType { Scene, Multisampled, Shadow, CubeShadow };
 
+enum class RenderTargetEffect {
+    Invert = 0,
+};
+
+class Effect {
+  public:
+    RenderTargetEffect type;
+};
+
+class Inversion : public Effect {
+  public:
+    Inversion();
+    static std::shared_ptr<Inversion> create() {
+        return std::make_shared<Inversion>();
+    }
+};
+
 /**
  * @brief Class that represents a render target, which is a texture in which a
  * scene can be rendered. This is useful for applying post-processing effects or
@@ -343,10 +361,15 @@ class RenderTarget : public Renderable {
      */
     void resolve();
 
+    inline void addEffect(std::shared_ptr<Effect> effect) {
+        effects.push_back(effect);
+    }
+
   private:
     Id fbo = 0;
     Id rbo = 0;
     Id resolveFbo = 0;
+    std::vector<std::shared_ptr<Effect>> effects;
 
     friend class Window;
 };

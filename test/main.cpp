@@ -71,6 +71,7 @@ class MainScene : public Scene {
     SphereCube sphereCube;
     Text fpsText;
     Model backpack;
+    RenderTarget frameBuffer;
 
     bool doesUpdate = true;
     bool fall = false;
@@ -161,6 +162,11 @@ class MainScene : public Scene {
         skybox.cubemap = createCubemap();
         skybox.display(window);
         this->setSkybox(&skybox);
+
+        frameBuffer = RenderTarget(window);
+        frameBuffer.addEffect(Inversion::create());
+        frameBuffer.display(window);
+        window.addRenderTarget(&frameBuffer);
     }
 };
 
