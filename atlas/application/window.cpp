@@ -124,6 +124,22 @@ Window::Window(WindowConfiguration config)
     program.compile();
     this->depthProgram = program;
 
+    VertexShader pointVertexShader =
+        VertexShader::fromDefaultShader(AtlasVertexShader::PointLightShadow);
+    pointVertexShader.compile();
+    FragmentShader pointFragmentShader = FragmentShader::fromDefaultShader(
+        AtlasFragmentShader::PointLightShadow);
+    pointFragmentShader.compile();
+    GeometryShader geometryShader = GeometryShader::fromDefaultShader(
+        AtlasGeometryShader::PointLightShadow);
+    geometryShader.compile();
+    ShaderProgram pointProgram = ShaderProgram();
+    pointProgram.vertexShader = pointVertexShader;
+    pointProgram.fragmentShader = pointFragmentShader;
+    pointProgram.geometryShader = geometryShader;
+    pointProgram.compile();
+    this->pointDepthProgram = pointProgram;
+
     audioEngine = std::make_shared<AudioEngine>();
     bool result = audioEngine->initialize();
     if (!result) {
@@ -499,6 +515,46 @@ void Window::renderLightsToShadowMaps() {
 
             obj->setProjectionMatrix(lightProjection);
             obj->setViewMatrix(lightView);
+            obj->render(getDeltaTime());
+        }
+    }
+
+    for (auto &light : this->currentScene->pointLights) {
+        if (!light->doesCastShadows) {
+            continue;
+        }
+        renderedShadows = true;
+        RenderTarget *shadowRenderTarget = light->shadowRenderTarget;
+        glViewport(0, 0, shadowRenderTarget->texture.creationData.width,
+                   shadowRenderTarget->texture.creationData.height);
+        glBindFramebuffer(GL_FRAMEBUFFER, shadowRenderTarget->fbo);
+        glClearDepth(1.0);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_FRONT);
+
+        for (auto &obj : this->renderables) {
+            if (obj->getShaderProgram() == std::nullopt ||
+                !obj->canCastShadows()) {
+                continue;
+            }
+            std::vector<glm::mat4> shadowTransforms =
+                light->calculateShadowTransforms();
+
+            this->pointDepthProgram.setUniform3f("lightPos", light->position.x,
+                                                 light->position.y,
+                                                 light->position.z);
+            this->pointDepthProgram.setUniform1f("far_plane", light->distance);
+            for (size_t i = 0; i < shadowTransforms.size(); ++i) {
+                this->pointDepthProgram.setUniformMat4f(
+                    "shadowMatrices[" + std::to_string(i) + "]",
+                    shadowTransforms[i]);
+            }
+
+            obj->setProjectionMatrix(glm::mat4(1.0));
+            obj->setViewMatrix(glm::mat4(1.0));
+            obj->setShader(this->pointDepthProgram);
+
             obj->render(getDeltaTime());
         }
     }

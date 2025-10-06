@@ -9,6 +9,7 @@ in mat3 TBN;
 
 const int TEXTURE_COLOR = 0;
 const int TEXTURE_SPECULAR = 1;
+const int TEXTURE_DEPTH_CUBE = 4;
 const int TEXTURE_NORMAL = 5;
 const int TEXTURE_PARALLAX = 6;
 
@@ -29,17 +30,17 @@ struct Material {
 };
 
 struct DirectionalLight {
-    vec3 direction;  
+    vec3 direction;
     vec3 diffuse;
     vec3 specular;
 };
 
 struct PointLight {
     vec3 position;
-    
+
     vec3 diffuse;
     vec3 specular;
-    
+
     float constant;
     float linear;
     float quadratic;
@@ -60,6 +61,9 @@ struct ShadowParameters {
     mat4 lightProjection;
     float bias;
     int textureIndex;
+    float farPlane;
+    vec3 lightPos;
+    bool isPointLight;
 };
 
 // ----- Textures -----
@@ -73,10 +77,12 @@ uniform sampler2D texture7;
 uniform sampler2D texture8;
 uniform sampler2D texture9;
 uniform sampler2D texture10;
-uniform sampler2D texture11;
-uniform sampler2D texture12;
-uniform sampler2D texture13;
 uniform samplerCube skybox;
+uniform samplerCube cubeMap1;
+uniform samplerCube cubeMap2;
+uniform samplerCube cubeMap3;
+uniform samplerCube cubeMap4;
+uniform samplerCube cubeMap5;
 
 // ----- Uniforms -----
 uniform int textureTypes[16];
@@ -107,7 +113,7 @@ vec4 enableTextures(int type) {
     vec4 color = vec4(0.0);
     int count = 0;
     for (int i = 0; i < textureCount; i++) {
-        if (textureTypes[i] == type) { 
+        if (textureTypes[i] == type) {
             if (i == 0) color += texture(texture1, texCoord);
             else if (i == 1) color += texture(texture2, texCoord);
             else if (i == 2) color += texture(texture3, texCoord);
@@ -118,15 +124,39 @@ vec4 enableTextures(int type) {
             else if (i == 7) color += texture(texture8, texCoord);
             else if (i == 8) color += texture(texture9, texCoord);
             else if (i == 9) color += texture(texture10, texCoord);
-            else if (i == 10) color += texture(texture11, texCoord);
-            else if (i == 11) color += texture(texture12, texCoord);
-            else if (i == 12) color += texture(texture13, texCoord);
-            count++; 
+            count++;
         }
     }
     if (count > 0) color /= float(count);
     if (count == 0) return vec4(-1.0);
     return color;
+}
+
+vec4 enableCubeMaps(int type, vec3 direction) {
+    vec4 color = vec4(0.0);
+    int count = 0;
+    for (int i = 0; i < 8; i++) {
+        if (type == i + 10) {
+            if (i == 0) color += texture(cubeMap1, direction);
+            else if (i == 1) color += texture(cubeMap2, direction);
+            else if (i == 2) color += texture(cubeMap3, direction);
+            else if (i == 3) color += texture(cubeMap4, direction);
+            else if (i == 4) color += texture(cubeMap5, direction);
+            count++;
+        }
+    }
+    if (count > 0) color /= float(count);
+    if (count == 0) return vec4(-1.0);
+    return color;
+}
+
+vec4 sampleCubeTextureAt(int textureIndex, vec3 direction) {
+    if (textureIndex == 0) return texture(cubeMap1, direction);
+    else if (textureIndex == 1) return texture(cubeMap2, direction);
+    else if (textureIndex == 2) return texture(cubeMap3, direction);
+    else if (textureIndex == 3) return texture(cubeMap4, direction);
+    else if (textureIndex == 4) return texture(cubeMap5, direction);
+    return vec4(0.0);
 }
 
 vec2 getTextureDimensions(int textureIndex) {
@@ -140,9 +170,6 @@ vec2 getTextureDimensions(int textureIndex) {
     else if (textureIndex == 7) return vec2(textureSize(texture8, 0));
     else if (textureIndex == 8) return vec2(textureSize(texture9, 0));
     else if (textureIndex == 9) return vec2(textureSize(texture10, 0));
-    else if (textureIndex == 10) return vec2(textureSize(texture11, 0));
-    else if (textureIndex == 11) return vec2(textureSize(texture12, 0));
-    else if (textureIndex == 12) return vec2(textureSize(texture13, 0));
     return vec2(0);
 }
 
@@ -157,9 +184,6 @@ vec4 sampleTextureAt(int textureIndex, vec2 uv) {
     else if (textureIndex == 7) return texture(texture8, uv);
     else if (textureIndex == 8) return texture(texture9, uv);
     else if (textureIndex == 9) return texture(texture10, uv);
-    else if (textureIndex == 10) return texture(texture11, uv);
-    else if (textureIndex == 11) return texture(texture12, uv);
-    else if (textureIndex == 12) return texture(texture13, uv);
     return vec4(0.0);
 }
 
@@ -221,7 +245,7 @@ vec4 getEnvironmentReflected(vec4 color) {
 
 // ----- Directional Light -----
 vec3 calcDirectionalDiffuse(DirectionalLight light, vec3 norm) {
-    vec3 lightDir = normalize(-light.direction);  
+    vec3 lightDir = normalize(-light.direction);
     float diff = max(dot(norm, lightDir), 0.0);
     return diff * light.diffuse;
 }
@@ -276,7 +300,7 @@ vec3 calcAllPointLights(vec3 norm, vec3 fragPos, vec3 viewDir) {
         diffuseSum += calcPointDiffuse(pointLights[i], norm, fragPos) * attenuation;
         specularSum += calcPointSpecular(pointLights[i], norm, fragPos, viewDir, specColor, material.shininess) * attenuation;
     }
-    
+
     diffuseSum *= material.diffuse;
     return diffuseSum + specularSum;
 }
@@ -285,29 +309,27 @@ vec3 calcAllPointLights(vec3 norm, vec3 fragPos, vec3 viewDir) {
 vec3 calcSpotDiffuse(SpotLight light, vec3 norm, vec3 fragPos) {
     vec3 lightDir = normalize(light.position - fragPos);
     float diff = max(dot(norm, lightDir), 0.0);
-    
+
     vec3 spotDirection = normalize(light.direction);
-    float theta = dot(lightDir, -spotDirection); 
-    
+    float theta = dot(lightDir, -spotDirection);
+
     float intensity = smoothstep(light.outerCutOff, light.cutOff, theta);
-    
+
     return diff * light.diffuse * intensity;
 }
-
 
 vec3 calcSpotSpecular(SpotLight light, vec3 norm, vec3 fragPos, vec3 viewDir, vec3 specColor, float shininess) {
     vec3 lightDir = normalize(light.position - fragPos);
     vec3 halfwayDir = normalize(lightDir + viewDir);
     float spec = pow(max(dot(Normal, halfwayDir), 0.0), shininess);
-    
+
     vec3 spotDirection = normalize(light.direction);
-    float theta = dot(lightDir, -spotDirection);  
-    
+    float theta = dot(lightDir, -spotDirection);
+
     float intensity = smoothstep(light.outerCutOff, light.cutOff, theta);
-    
+
     return spec * specColor * light.specular * intensity;
 }
-
 
 float calcSpotAttenuation(SpotLight light, vec3 fragPos) {
     float distance = length(light.position - fragPos);
@@ -333,37 +355,37 @@ vec3 calcAllSpotLights(vec3 norm, vec3 fragPos, vec3 viewDir) {
 float calculateShadow(ShadowParameters shadowParam, vec4 fragPosLightSpace) {
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
     projCoords = projCoords * 0.5 + 0.5;
-    
-    if (projCoords.x < 0.0 || projCoords.x > 1.0 || 
-        projCoords.y < 0.0 || projCoords.y > 1.0 || 
-        projCoords.z > 1.0) {
+
+    if (projCoords.x < 0.0 || projCoords.x > 1.0 ||
+            projCoords.y < 0.0 || projCoords.y > 1.0 ||
+            projCoords.z > 1.0) {
         return 0.0;
     }
-    
+
     float currentDepth = projCoords.z;
-    
-    vec3 lightDir = normalize(-directionalLights[0].direction); 
+
+    vec3 lightDir = normalize(-directionalLights[0].direction);
     vec3 normal = normalize(Normal);
     float biasValue = shadowParam.bias;
     float bias = max(biasValue * (1.0 - dot(normal, lightDir)), biasValue);
 
     float shadow = 0.0;
     vec2 texelSize = 1.0 / getTextureDimensions(shadowParam.textureIndex);
-    
+
     float distance = length(cameraPosition - FragPos);
     int kernelSize = int(mix(1.0, 3.0, clamp(distance / 100.0, 0.0, 1.0)));
-    
+
     int sampleCount = 0;
-    for(int x = -kernelSize; x <= kernelSize; ++x) {
-        for(int y = -kernelSize; y <= kernelSize; ++y) {
-            float pcfDepth = sampleTextureAt(shadowParam.textureIndex, 
-                                   projCoords.xy + vec2(x, y) * texelSize).r; 
-            shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;        
+    for (int x = -kernelSize; x <= kernelSize; ++x) {
+        for (int y = -kernelSize; y <= kernelSize; ++y) {
+            float pcfDepth = sampleTextureAt(shadowParam.textureIndex,
+                    projCoords.xy + vec2(x, y) * texelSize).r;
+            shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
             sampleCount++;
-        }    
+        }
     }
     shadow /= float(sampleCount);
-    
+
     return shadow;
 }
 
@@ -371,9 +393,9 @@ float calculateShadowRaw(ShadowParameters shadowParam, vec4 fragPosLightSpace) {
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
     projCoords = projCoords * 0.5 + 0.5;
 
-    if (projCoords.x < 0.0 || projCoords.x > 1.0 || 
-        projCoords.y < 0.0 || projCoords.y > 1.0 || 
-        projCoords.z < 0.0 || projCoords.z > 1.0) {
+    if (projCoords.x < 0.0 || projCoords.x > 1.0 ||
+            projCoords.y < 0.0 || projCoords.y > 1.0 ||
+            projCoords.z < 0.0 || projCoords.z > 1.0) {
         return 0.0;
     }
 
@@ -393,6 +415,71 @@ float calculateAllShadows() {
     return totalShadow;
 }
 
+float calculatePointShadow(ShadowParameters shadowParam, vec3 fragPos)
+{
+    vec3 fragToLight = fragPos - shadowParam.lightPos;
+    float currentDepth = length(fragToLight);
+
+    float bias = 0.05;
+    float shadow = 0.0;
+
+    float diskRadius = (1.0 + (currentDepth / shadowParam.farPlane)) * 0.05;
+
+    const int samples = 54;
+    const vec3 sampleOffsetDirections[] = vec3[](
+            vec3(0.5381, 0.1856, -0.4319), vec3(0.1379, 0.2486, 0.4430),
+            vec3(0.3371, 0.5679, -0.0057), vec3(-0.6999, -0.0451, -0.0019),
+            vec3(0.0689, -0.1598, -0.8547), vec3(0.0560, 0.0069, -0.1843),
+            vec3(-0.0146, 0.1402, 0.0762), vec3(0.0100, -0.1924, -0.0344),
+            vec3(-0.3577, -0.5301, -0.4358), vec3(-0.3169, 0.1063, 0.0158),
+            vec3(0.0103, -0.5869, 0.0046), vec3(-0.0897, -0.4940, 0.3287),
+            vec3(0.7119, -0.0154, -0.0918), vec3(-0.0533, 0.0596, -0.5411),
+            vec3(0.0352, -0.0631, 0.5460), vec3(-0.4776, 0.2847, -0.0271),
+            vec3(-0.1120, 0.1234, -0.7446), vec3(-0.2130, -0.0782, -0.1379),
+            vec3(0.2944, -0.3112, -0.2645), vec3(-0.4564, 0.4175, -0.1843),
+            // remaining random-ish points
+            vec3(0.1234, -0.5678, 0.7890), vec3(-0.6789, 0.2345, -0.4567),
+            vec3(0.3456, -0.7890, 0.1234), vec3(-0.2345, 0.5678, -0.6789),
+            vec3(0.7890, 0.1234, 0.5678), vec3(-0.5678, -0.6789, 0.2345),
+            vec3(0.4567, 0.7890, -0.2345), vec3(-0.7890, 0.3456, -0.5678),
+            vec3(0.6789, -0.2345, 0.7890), vec3(-0.1234, 0.6789, -0.4567),
+            vec3(0.2345, -0.5678, 0.6789), vec3(-0.3456, 0.7890, -0.1234),
+            vec3(0.5678, 0.2345, -0.7890), vec3(-0.6789, -0.5678, 0.3456),
+            vec3(0.7890, -0.3456, 0.4567), vec3(-0.2345, 0.1234, -0.6789),
+            vec3(0.4567, 0.7890, -0.5678), vec3(-0.5678, 0.2345, 0.6789),
+            vec3(0.3456, -0.7890, -0.1234), vec3(-0.7890, 0.5678, -0.2345),
+            vec3(0.6789, -0.1234, 0.3456), vec3(-0.4567, 0.7890, 0.2345),
+            vec3(0.5678, -0.6789, 0.7890), vec3(-0.3456, 0.5678, -0.6789),
+            vec3(0.2345, -0.7890, 0.5678), vec3(-0.6789, 0.2345, -0.1234),
+            vec3(0.7890, -0.3456, -0.5678), vec3(-0.5678, 0.6789, 0.2345),
+            vec3(0.4567, -0.7890, 0.3456), vec3(-0.2345, 0.1234, -0.7890),
+            vec3(0.3456, -0.5678, 0.6789), vec3(-0.7890, 0.4567, -0.3456),
+            vec3(0.6789, -0.1234, -0.5678), vec3(-0.4567, 0.2345, 0.7890)
+        );
+
+    for (int i = 0; i < samples; ++i)
+    {
+        vec3 sampleDir = normalize(fragToLight + sampleOffsetDirections[i] * diskRadius);
+        float closestDepth = sampleCubeTextureAt(shadowParam.textureIndex, sampleDir).r * shadowParam.farPlane;
+        if (currentDepth - bias > closestDepth)
+            shadow += 1.0;
+    }
+
+    shadow /= float(samples);
+    return shadow;
+}
+
+float calculateAllPointShadows(vec3 fragPos) {
+    float totalShadow = 0.0;
+    for (int i = 0; i < shadowParamCount; i++) {
+        if (shadowParams[i].isPointLight) {
+            float shadow = calculatePointShadow(shadowParams[i], fragPos);
+            totalShadow = max(totalShadow, shadow);
+        }
+    }
+    return totalShadow;
+}
+
 // ----- Main -----
 void main() {
     texCoord = TexCoord;
@@ -400,7 +487,7 @@ void main() {
 
     vec3 tangentViewDir = normalize((TBN * cameraPosition) - (TBN * FragPos));
     texCoord = parallaxMapping(texCoord, tangentViewDir);
-    if(texCoord.x > 1.0 || texCoord.y > 1.0 || texCoord.x < 0.0 || texCoord.y < 0.0)
+    if (texCoord.x > 1.0 || texCoord.y > 1.0 || texCoord.x < 0.0 || texCoord.y < 0.0)
         discard;
 
     if (useTexture && !useColor)
@@ -423,15 +510,23 @@ void main() {
     vec3 viewDir = normalize(cameraPosition - FragPos);
 
     vec3 ambient = ambientLight.color.rgb * ambientLight.intensity * material.ambient;
-    vec3 directionalLights = calcAllDirectionalLights(norm, viewDir);
-    vec3 pointLights = calcAllPointLights(norm, FragPos, viewDir);
+    float dirShadow = 0.0;
+    for (int i = 0; i < shadowParamCount; i++) {
+        if (!shadowParams[i].isPointLight) {
+            vec4 fragPosLightSpace = shadowParams[i].lightProjection *
+                    shadowParams[i].lightView *
+                    vec4(FragPos, 1.0);
+            dirShadow = max(dirShadow, calculateShadow(shadowParams[i], fragPosLightSpace));
+        }
+    }
+
+    float pointShadow = calculateAllPointShadows(FragPos);
+
+    vec3 directionalLights = calcAllDirectionalLights(norm, viewDir) * (1.0 - dirShadow);
+    vec3 pointLights = calcAllPointLights(norm, FragPos, viewDir) * (1.0 - pointShadow);
     vec3 spotLightsContrib = calcAllSpotLights(norm, FragPos, viewDir);
 
-    vec3 lightContribution = directionalLights + pointLights + spotLightsContrib;
-
-    float shadow = calculateAllShadows();
-
-    vec3 finalColor = (ambient + (1.0 - shadow) * lightContribution) * baseColor.rgb;
+    vec3 finalColor = (ambient + directionalLights + pointLights + spotLightsContrib) * baseColor.rgb;
 
     FragColor = vec4(finalColor, baseColor.a);
     FragColor = getEnvironmentReflected(FragColor);

@@ -21,6 +21,15 @@ void CompoundObject::initialize() {
 }
 
 void CompoundObject::render(float dt) {
+    if (originalPositions.empty()) {
+        for (const auto &obj : objects) {
+            originalPositions.push_back(obj->getPosition());
+        }
+    }
+    for (size_t i = 0; i < objects.size(); ++i) {
+        Position3d newPos = originalPositions[i] + this->position;
+        objects[i]->setPosition(newPos);
+    }
     for (auto &component : components) {
         component->update(dt);
     }
@@ -94,15 +103,11 @@ bool CompoundObject::canCastShadows() const {
 }
 
 void CompoundObject::setPosition(const Position3d &newPosition) {
-    for (auto &obj : objects) {
-        obj->move(newPosition - obj->getPosition());
-    }
+    this->position = newPosition;
 }
 
 void CompoundObject::move(const Position3d &deltaPosition) {
-    for (auto &obj : objects) {
-        obj->move(deltaPosition);
-    }
+    this->position += deltaPosition;
 }
 
 void CompoundObject::setRotation(const Rotation3d &newRotation) {

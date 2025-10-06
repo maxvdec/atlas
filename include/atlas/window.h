@@ -377,6 +377,7 @@ class Window {
     float framesPerSecond = 0.0f;
 
     ShaderProgram depthProgram;
+    ShaderProgram pointDepthProgram;
 
     bool debug = false;
 

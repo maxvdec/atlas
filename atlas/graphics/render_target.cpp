@@ -166,6 +166,15 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
         glDrawBuffer(GL_NONE);
         glReadBuffer(GL_NONE);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        Texture texture;
+        texture.id = depthCubemap;
+        texture.creationData = {SHADOW_WIDTH, SHADOW_HEIGHT, 1};
+        texture.type = TextureType::DepthCube;
+        this->fbo = depthFBO;
+        this->texture = texture;
+        this->rbo = 0;
+        this->resolveFbo = 0;
     }
 }
 
@@ -259,10 +268,19 @@ void RenderTarget::render(float dt) {
         effects[i]->applyToProgram(obj->shaderProgram, i);
     }
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture.id);
+    if (texture.type == TextureType::DepthCube) {
+        glActiveTexture(GL_TEXTURE10);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, texture.id);
+        obj->shaderProgram.setUniform1i("cubeMap", 10);
+        obj->shaderProgram.setUniform1i("isCubeMap", 1);
+    } else {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture.id);
+        obj->shaderProgram.setUniform1i("isCubeMap", 0);
+    }
 
     glDisable(GL_DEPTH_TEST);
+    glDisable(GL_BLEND);
 
     glBindVertexArray(obj->vao);
     if (!obj->indices.empty()) {
