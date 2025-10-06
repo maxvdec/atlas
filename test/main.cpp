@@ -1,4 +1,5 @@
 #include "atlas/camera.h"
+#include "atlas/effect.h"
 #include "atlas/light.h"
 #include "atlas/object.h"
 #include "atlas/scene.h"
@@ -164,7 +165,7 @@ class MainScene : public Scene {
         this->setSkybox(&skybox);
 
         frameBuffer = RenderTarget(window);
-        frameBuffer.addEffect(Inversion::create());
+        frameBuffer.addEffect(Sharpen::create());
         frameBuffer.display(window);
         window.addRenderTarget(&frameBuffer);
     }

@@ -269,22 +269,7 @@ class CoreObject;
  */
 enum class RenderTargetType { Scene, Multisampled, Shadow, CubeShadow };
 
-enum class RenderTargetEffect {
-    Invert = 0,
-};
-
-class Effect {
-  public:
-    RenderTargetEffect type;
-};
-
-class Inversion : public Effect {
-  public:
-    Inversion();
-    static std::shared_ptr<Inversion> create() {
-        return std::make_shared<Inversion>();
-    }
-};
+class Effect;
 
 /**
  * @brief Class that represents a render target, which is a texture in which a

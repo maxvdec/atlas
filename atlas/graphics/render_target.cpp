@@ -11,6 +11,7 @@
 #include <iostream>
 #include <vector>
 #include "atlas/core/shader.h"
+#include "atlas/effect.h"
 #include "atlas/object.h"
 #include "atlas/texture.h"
 #include "atlas/units.h"
@@ -255,6 +256,7 @@ void RenderTarget::render(float dt) {
         std::string uniformName = "Effects[" + std::to_string(i) + "]";
         obj->shaderProgram.setUniform1i(uniformName,
                                         static_cast<int>(effects[i]->type));
+        effects[i]->applyToProgram(obj->shaderProgram);
     }
 
     glActiveTexture(GL_TEXTURE0);
@@ -272,5 +274,3 @@ void RenderTarget::render(float dt) {
 
     glEnable(GL_DEPTH_TEST);
 }
-
-Inversion::Inversion() { type = RenderTargetEffect::Invert; }
