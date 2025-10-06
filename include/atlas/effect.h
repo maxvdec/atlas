@@ -16,7 +16,8 @@ enum class RenderTargetEffect {
     Invert = 0,
     Grayscale = 1,
     Sharpen = 2,
-    Blur = 3
+    Blur = 3,
+    EdgeDetection = 4
 };
 
 class Effect {
@@ -61,6 +62,14 @@ class Blur : public Effect {
     void applyToProgram(ShaderProgram &program, int index) override {
         program.setUniform1f("EffectFloat1[" + std::to_string((int)index) + "]",
                              magnitude);
+    }
+};
+
+class EdgeDetection : public Effect {
+  public:
+    EdgeDetection() : Effect(RenderTargetEffect::EdgeDetection) {}
+    static std::shared_ptr<EdgeDetection> create() {
+        return std::make_shared<EdgeDetection>();
     }
 };
 

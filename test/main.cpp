@@ -165,7 +165,7 @@ class MainScene : public Scene {
         this->setSkybox(&skybox);
 
         frameBuffer = RenderTarget(window);
-        frameBuffer.addEffect(Blur::create());
+        frameBuffer.addEffect(EdgeDetection::create());
         frameBuffer.display(window);
         window.addRenderTarget(&frameBuffer);
     }
