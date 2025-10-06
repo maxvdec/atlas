@@ -17,7 +17,8 @@ enum class RenderTargetEffect {
     Grayscale = 1,
     Sharpen = 2,
     Blur = 3,
-    EdgeDetection = 4
+    EdgeDetection = 4,
+    ColorCorrection = 5
 };
 
 class Effect {
@@ -70,6 +71,41 @@ class EdgeDetection : public Effect {
     EdgeDetection() : Effect(RenderTargetEffect::EdgeDetection) {}
     static std::shared_ptr<EdgeDetection> create() {
         return std::make_shared<EdgeDetection>();
+    }
+};
+
+struct ColorCorrectionParameters {
+    float exposure = 0.0;
+    float contrast = 1.0;
+    float saturation = 1.0;
+    float gamma = 1.0;
+    float temperature = 0.0;
+    float tint = 0.0;
+};
+
+class ColorCorrection : public Effect {
+  public:
+    ColorCorrectionParameters params;
+
+    ColorCorrection(ColorCorrectionParameters p = {})
+        : Effect(RenderTargetEffect::ColorCorrection), params(p) {}
+    static std::shared_ptr<ColorCorrection>
+    create(ColorCorrectionParameters p = {}) {
+        return std::make_shared<ColorCorrection>(p);
+    }
+    void applyToProgram(ShaderProgram &program, int index) override {
+        program.setUniform1f("EffectFloat1[" + std::to_string((int)index) + "]",
+                             params.exposure);
+        program.setUniform1f("EffectFloat2[" + std::to_string((int)index) + "]",
+                             params.contrast);
+        program.setUniform1f("EffectFloat3[" + std::to_string((int)index) + "]",
+                             params.saturation);
+        program.setUniform1f("EffectFloat4[" + std::to_string((int)index) + "]",
+                             params.gamma);
+        program.setUniform1f("EffectFloat5[" + std::to_string((int)index) + "]",
+                             params.temperature);
+        program.setUniform1f("EffectFloat6[" + std::to_string((int)index) + "]",
+                             params.tint);
     }
 };
 

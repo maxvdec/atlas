@@ -12,6 +12,7 @@ const int EFFECT_GRAYSCALE = 1;
 const int EFFECT_SHARPEN = 2;
 const int EFFECT_BLUR = 3;
 const int EFFECT_EDGE_DETECTION = 4;
+const int EFFECT_COLOR_CORRECTION = 5;
 
 const float offset = 1.0 / 300.0; 
 
@@ -104,6 +105,40 @@ uniform int TextureType;
 uniform int EffectCount;
 uniform int Effects[10];
 uniform float EffectFloat1[10];
+uniform float EffectFloat2[10];
+uniform float EffectFloat3[10];
+uniform float EffectFloat4[10];
+uniform float EffectFloat5[10];
+uniform float EffectFloat6[10];
+
+struct ColorCorrection {
+    float exposure;
+    float contrast;
+    float saturation;
+    float gamma;
+    float temperature;
+    float tint;
+};
+
+vec4 applyColorCorrection(vec4 color, ColorCorrection cc) {
+    vec3 linearColor = color.rgb;
+
+    linearColor *= pow(2.0, cc.exposure);
+
+    linearColor = (linearColor - 0.5) * cc.contrast + 0.5;
+
+    linearColor.r += cc.temperature * 0.05;
+    linearColor.g += cc.tint * 0.05;
+
+    float luminance = dot(linearColor, vec3(0.2126, 0.7152, 0.0722));
+    linearColor = mix(vec3(luminance), linearColor, cc.saturation);
+
+    linearColor = clamp(linearColor, 0.0, 1.0);
+
+    linearColor = pow(linearColor, vec3(1.0 / cc.gamma));
+
+    return vec4(linearColor, color.a);
+}
 
 void main() {
     if (TextureType == TEXTURE_COLOR) {
@@ -127,6 +162,15 @@ void main() {
             FragColor = blur(Texture, radius);
         } else if (Effects[i] == EFFECT_EDGE_DETECTION) {
             FragColor = edgeDetection(Texture);
+        } else if (Effects[i] == EFFECT_COLOR_CORRECTION) {
+            ColorCorrection cc;
+            cc.exposure = EffectFloat1[i];
+            cc.contrast = EffectFloat2[i];
+            cc.saturation = EffectFloat3[i];
+            cc.gamma = EffectFloat4[i];
+            cc.temperature = EffectFloat5[i];
+            cc.tint = EffectFloat6[i];
+            FragColor = applyColorCorrection(FragColor, cc);
         }
     }
 }

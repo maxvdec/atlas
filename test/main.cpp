@@ -165,7 +165,7 @@ class MainScene : public Scene {
         this->setSkybox(&skybox);
 
         frameBuffer = RenderTarget(window);
-        frameBuffer.addEffect(EdgeDetection::create());
+        frameBuffer.addEffect(ColorCorrection::create());
         frameBuffer.display(window);
         window.addRenderTarget(&frameBuffer);
     }
