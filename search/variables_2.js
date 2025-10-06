@@ -15,7 +15,8 @@ var searchData=
   ['constant_12',['constant',['../struct_point_light_constants.html#ad4813c3455228ef54e5f4108450720d6',1,'PointLightConstants']]],
   ['constrainpitch_13',['constrainPitch',['../struct_mouse_packet.html#a96406d5e6c88f15d1cb533193356a120',1,'MousePacket']]],
   ['content_14',['content',['../class_text.html#a9336f13d0d4a26d41c2fd2e103ac5dde',1,'Text']]],
-  ['creationdata_15',['creationData',['../struct_texture.html#a7424dca65a18a64a794fd3996530b437',1,'Texture::creationData'],['../struct_cubemap.html#a69757fb707ae4ff02cc9cb1066d8e1d7',1,'Cubemap::creationData']]],
-  ['cubemap_16',['cubemap',['../class_skybox.html#ab91d72f29e949ef124b953be43ac4713',1,'Skybox']]],
-  ['cutoff_17',['cutOff',['../struct_spotlight.html#a25f32efd9b4ef48ba5218fffe279ce79',1,'Spotlight']]]
+  ['contrast_15',['contrast',['../struct_color_correction_parameters.html#a3b4da452ac1c1f0a52d78b93c795e387',1,'ColorCorrectionParameters']]],
+  ['creationdata_16',['creationData',['../struct_texture.html#a7424dca65a18a64a794fd3996530b437',1,'Texture::creationData'],['../struct_cubemap.html#a69757fb707ae4ff02cc9cb1066d8e1d7',1,'Cubemap::creationData']]],
+  ['cubemap_17',['cubemap',['../class_skybox.html#ab91d72f29e949ef124b953be43ac4713',1,'Skybox']]],
+  ['cutoff_18',['cutOff',['../struct_spotlight.html#a25f32efd9b4ef48ba5218fffe279ce79',1,'Spotlight']]]
 ];

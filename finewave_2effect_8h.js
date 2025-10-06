@@ -1,4 +1,4 @@
-var effect_8h =
+var finewave_2effect_8h =
 [
     [ "AudioEffect", "class_audio_effect.html", "class_audio_effect" ],
     [ "Reverb", "class_reverb.html", "class_reverb" ],

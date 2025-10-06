@@ -16,6 +16,7 @@ var hierarchy =
     [ "CheckerTile", "struct_checker_tile.html", null ],
     [ "CollisionPair", "struct_collision_pair.html", null ],
     [ "Color", "struct_color.html", null ],
+    [ "ColorCorrectionParameters", "struct_color_correction_parameters.html", null ],
     [ "Component", "class_component.html", [
       [ "AudioPlayer", "class_audio_player.html", null ],
       [ "TraitComponent< T >", "class_trait_component.html", null ]
@@ -25,6 +26,14 @@ var hierarchy =
     [ "Cubemap", "struct_cubemap.html", null ],
     [ "DirectionalLight", "class_directional_light.html", null ],
     [ "Edge", "struct_edge.html", null ],
+    [ "Effect", "class_effect.html", [
+      [ "Blur", "class_blur.html", null ],
+      [ "ColorCorrection", "class_color_correction.html", null ],
+      [ "EdgeDetection", "class_edge_detection.html", null ],
+      [ "Grayscale", "class_grayscale.html", null ],
+      [ "Inversion", "class_inversion.html", null ],
+      [ "Sharpen", "class_sharpen.html", null ]
+    ] ],
     [ "Font", "struct_font.html", null ],
     [ "FragmentShader", "struct_fragment_shader.html", null ],
     [ "Interactive", "class_interactive.html", null ],

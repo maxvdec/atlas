@@ -44,5 +44,6 @@ var searchData=
   ['gjkclosestpoints_41',['gjkClosestPoints',['../namespacebezel.html#a305b1a58d3cec1603db15c436d3db399',1,'bezel']]],
   ['gjkintersection_42',['gjkIntersection',['../namespacebezel.html#a7e9d1e1426dfb7baf31d7c229884a2e0',1,'bezel']]],
   ['gray_43',['gray',['../struct_color.html#aaef2f9d4914957f249ff647c84161d45',1,'Color']]],
-  ['green_44',['green',['../struct_color.html#ac506f80f2ec86bc439ff19c0f78063c7',1,'Color']]]
+  ['grayscale_44',['Grayscale',['../class_grayscale.html#a77b70a449f9215358c6378fdb8c4bf2a',1,'Grayscale']]],
+  ['green_45',['green',['../struct_color.html#ac506f80f2ec86bc439ff19c0f78063c7',1,'Color']]]
 ];

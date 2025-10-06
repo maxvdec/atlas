@@ -17,12 +17,14 @@ var searchData=
   ['intersectionpoint_14',['IntersectionPoint',['../struct_intersection_point.html',1,'']]],
   ['intersects_15',['intersects',['../class_body.html#ab3147e6b478c260baa5e2952192be958',1,'Body']]],
   ['intersectsstatic_16',['intersectsStatic',['../class_body.html#a2e76849877154f5baf350bad3b14a814',1,'Body']]],
-  ['invmass_17',['invMass',['../class_body.html#a4d999f83fe2f4fde24c48a152847e3f1',1,'Body']]],
-  ['isedgeunique_18',['isEdgeUnique',['../namespacebezel.html#a38ea744619e0b833fa4497ff996e5d1a',1,'bezel']]],
-  ['isexternal_19',['isExternal',['../namespacebezel.html#a0027696456cb0bc89fb9b97139c6d79c',1,'bezel']]],
-  ['iskeyclicked_20',['isKeyClicked',['../class_window.html#a5d64d3322428400dd343895ccfeaeb0a',1,'Window']]],
-  ['iskeypressed_21',['isKeyPressed',['../class_window.html#a934998dda7f1a9c513c47684753075fe',1,'Window']]],
-  ['ismin_22',['ismin',['../struct_pseudo_body.html#ab897861b3dd99d7b98b89eaaaf1731d2',1,'PseudoBody']]],
-  ['ismono_23',['isMono',['../class_audio_data.html#abacb6f98ee7bd4a62f1fd8d7385a4781',1,'AudioData']]],
-  ['isplaying_24',['isPlaying',['../class_audio_source.html#a218980b87a1b223b2e13bcb766567ad1',1,'AudioSource']]]
+  ['inversion_17',['Inversion',['../class_inversion.html',1,'Inversion'],['../class_inversion.html#ac4baef84181fee034862fce94d779f98',1,'Inversion::Inversion()']]],
+  ['invert_18',['Invert',['../atlas_2effect_8h.html#a75cf3454fba9ce206c0c748892dc9867a9b8958acb7be504bb5f55f17c0eea366',1,'effect.h']]],
+  ['invmass_19',['invMass',['../class_body.html#a4d999f83fe2f4fde24c48a152847e3f1',1,'Body']]],
+  ['isedgeunique_20',['isEdgeUnique',['../namespacebezel.html#a38ea744619e0b833fa4497ff996e5d1a',1,'bezel']]],
+  ['isexternal_21',['isExternal',['../namespacebezel.html#a0027696456cb0bc89fb9b97139c6d79c',1,'bezel']]],
+  ['iskeyclicked_22',['isKeyClicked',['../class_window.html#a5d64d3322428400dd343895ccfeaeb0a',1,'Window']]],
+  ['iskeypressed_23',['isKeyPressed',['../class_window.html#a934998dda7f1a9c513c47684753075fe',1,'Window']]],
+  ['ismin_24',['ismin',['../struct_pseudo_body.html#ab897861b3dd99d7b98b89eaaaf1731d2',1,'PseudoBody']]],
+  ['ismono_25',['isMono',['../class_audio_data.html#abacb6f98ee7bd4a62f1fd8d7385a4781',1,'AudioData']]],
+  ['isplaying_26',['isPlaying',['../class_audio_source.html#a218980b87a1b223b2e13bcb766567ad1',1,'AudioSource']]]
 ];
