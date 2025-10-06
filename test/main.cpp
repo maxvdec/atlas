@@ -167,7 +167,7 @@ class MainScene : public Scene {
 
         light = Light();
         light.position = {0.0f, 5.0f, 0.0f};
-        light.castShadows(window);
+        light.castShadows(window, 4096);
         this->addLight(&light);
 
         this->ambientLight.intensity = 0.3f;
