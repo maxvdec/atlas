@@ -111,17 +111,30 @@ const int EFFECT_COLOR_CORRECTION = 5;
 
 const float offset = 1.0 / 300.0;
 
+vec3 reinhardToneMapping(vec3 hdrColor) {
+    return hdrColor / (hdrColor + vec3(1.0));
+}
+
+vec3 acesToneMapping(vec3 color) {
+    float a = 2.51;
+    float b = 0.03;
+    float c = 2.43;
+    float d = 0.59;
+    float e = 0.14;
+    return clamp((color * (a * color + b)) / (color * (c * color + d) + e), 0.0, 1.0);
+}
+
 vec4 sharpen(sampler2D image) {
     vec2 offsets[9] = vec2[](
-            vec2(-offset, offset), // top-left
-            vec2(0.0f, offset), // top-center
-            vec2(offset, offset), // top-right
-            vec2(-offset, 0.0f), // center-left
-            vec2(0.0f, 0.0f), // center-center
-            vec2(offset, 0.0f), // center-right
-            vec2(-offset, -offset), // bottom-left
-            vec2(0.0f, -offset), // bottom-center
-            vec2(offset, -offset) // bottom-right
+            vec2(-offset, offset),
+            vec2(0.0f, offset),
+            vec2(offset, offset),
+            vec2(-offset, 0.0f),
+            vec2(0.0f, 0.0f),
+            vec2(offset, 0.0f),
+            vec2(-offset, -offset),
+            vec2(0.0f, -offset),
+            vec2(offset, -offset)
         );
 
     float kernel[9] = float[](
@@ -165,15 +178,15 @@ vec4 blur(sampler2D image, float radius) {
 
 vec4 edgeDetection(sampler2D image) {
     vec2 offsets[9] = vec2[](
-            vec2(-offset, offset), // top-left
-            vec2(0.0f, offset), // top-center
-            vec2(offset, offset), // top-right
-            vec2(-offset, 0.0f), // center-left
-            vec2(0.0f, 0.0f), // center-center
-            vec2(offset, 0.0f), // center-right
-            vec2(-offset, -offset), // bottom-left
-            vec2(0.0f, -offset), // bottom-center
-            vec2(offset, -offset) // bottom-right
+            vec2(-offset, offset),
+            vec2(0.0f, offset),
+            vec2(offset, offset),
+            vec2(-offset, 0.0f),
+            vec2(0.0f, 0.0f),
+            vec2(offset, 0.0f),
+            vec2(-offset, -offset),
+            vec2(0.0f, -offset),
+            vec2(offset, -offset)
         );
 
     float kernel[9] = float[](
@@ -220,6 +233,7 @@ struct ColorCorrection {
 vec4 applyColorCorrection(vec4 color, ColorCorrection cc) {
     vec3 linearColor = color.rgb;
 
+    // Apply exposure BEFORE tone mapping
     linearColor *= pow(2.0, cc.exposure);
 
     linearColor = (linearColor - 0.5) * cc.contrast + 0.5;
@@ -238,43 +252,9 @@ vec4 applyColorCorrection(vec4 color, ColorCorrection cc) {
 }
 
 void main() {
-    if (TextureType == TEXTURE_COLOR) {
-        vec3 col = texture(Texture, TexCoord).rgb;
-        FragColor = vec4(col, 1.0);
-    } else if (TextureType == TEXTURE_DEPTH) {
-        float depth = texture(Texture, TexCoord).r;
-        FragColor = vec4(vec3(depth), 1.0);
-    } else if (TextureType == TEXTURE_CUBE_DEPTH) {
-        float face = floor(TexCoord.x * 6.0);
-        vec2 local = fract(vec2(TexCoord.x * 6.0, TexCoord.y));
+    FragColor = texture(Texture, TexCoord);
 
-        float border = 0.002;
-        bool inVerticalBorder = (fract(TexCoord.x * 6.0) < border) || (fract(TexCoord.x * 6.0) > 1.0 - border);
-        bool inHorizontalBorder = (TexCoord.y < border) || (TexCoord.y > 1.0 - border);
-        if (inVerticalBorder || inHorizontalBorder) {
-            FragColor = vec4(0.2, 0.2, 0.2, 1.0);
-            return;
-        }
-        vec3 dir;
-        if (face == 0.0)
-            dir = vec3(1.0, -local.y * 2.0 + 1.0, -local.x * 2.0 + 1.0); // +X
-        else if (face == 1.0)
-            dir = vec3(-1.0, -local.y * 2.0 + 1.0, local.x * 2.0 - 1.0); // -X
-        else if (face == 2.0)
-            dir = vec3(local.x * 2.0 - 1.0, 1.0, local.y * 2.0 - 1.0); // +Y
-        else if (face == 3.0)
-            dir = vec3(local.x * 2.0 - 1.0, -1.0, -local.y * 2.0 + 1.0); // -Y
-        else if (face == 4.0)
-            dir = vec3(local.x * 2.0 - 1.0, -local.y * 2.0 + 1.0, 1.0); // +Z
-        else
-            dir = vec3(-local.x * 2.0 + 1.0, -local.y * 2.0 + 1.0, -1.0); // -Z
-
-        dir = normalize(dir);
-
-        float depth = texture(cubeMap, dir).r;
-
-        FragColor = vec4(vec3(depth), 1.0);
-    }
+    bool appliedColorCorrection = false;
 
     for (int i = 0; i < EffectCount; i++) {
         if (Effects[i] == EFFECT_INVERSION) {
@@ -298,11 +278,16 @@ void main() {
             cc.temperature = EffectFloat5[i];
             cc.tint = EffectFloat6[i];
             FragColor = applyColorCorrection(FragColor, cc);
+            appliedColorCorrection = true;
         }
     }
 
-    const float gamma = 2.2;
-    FragColor = pow(FragColor, vec4(1.0 / gamma));
+    FragColor.rgb = reinhardToneMapping(FragColor.rgb);
+
+    if (!appliedColorCorrection) {
+        const float gamma = 2.2;
+        FragColor = pow(FragColor, vec4(1.0 / gamma));
+    }
 }
 
 )";

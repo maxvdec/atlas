@@ -168,7 +168,7 @@ class MainScene : public Scene {
         light = Light();
         light.position = {0.0f, 5.0f, 0.0f};
         light.castShadows(window, 4096);
-        light.color = Color(200.0f, 200.0f, 200.0f);
+        light.color = Color(20.0f, 20.0f, 20.0f);
         this->addLight(&light);
 
         this->ambientLight.intensity = 0.3f;
@@ -179,7 +179,6 @@ class MainScene : public Scene {
         this->setSkybox(&skybox);
 
         frameBuffer = RenderTarget(window);
-        frameBuffer.addEffect(ColorCorrection::create());
         frameBuffer.display(window);
         window.addRenderTarget(&frameBuffer);
     }
