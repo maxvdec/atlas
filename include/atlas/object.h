@@ -28,6 +28,9 @@
 
 #include <glm/glm.hpp>
 
+class Scene;
+class Light;
+
 /**
  * @brief Alias that represents a texture coordinate in 2D space.
  *
@@ -213,6 +216,8 @@ class CoreObject : public GameObject {
      */
     CoreObject();
 
+    void makeEmissive(Scene *scene, Color emissionColor, float intensity);
+
     /**
      * @brief Function to attach vertices and update the object's vertex buffer.
      *
@@ -295,6 +300,8 @@ class CoreObject : public GameObject {
     inline void hide() override { isVisible = false; }
 
     void setupPhysics(Body body) override;
+
+    std::shared_ptr<Light> light = nullptr;
 
     /**
      * @brief The unique identifier for the object.

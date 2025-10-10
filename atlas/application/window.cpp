@@ -222,6 +222,11 @@ void Window::run() {
         // Render to the targets
         for (auto &target : this->renderTargets) {
             glBindFramebuffer(GL_FRAMEBUFFER, target->fbo);
+            if (target->brightTexture.id != 0) {
+                unsigned int attachments[2] = {GL_COLOR_ATTACHMENT0,
+                                               GL_COLOR_ATTACHMENT1};
+                glDrawBuffers(2, attachments);
+            }
             glViewport(0, 0, target->texture.creationData.width,
                        target->texture.creationData.height);
             glClearColor(0.0f, 0.0f, 0.0f, 1.0f);

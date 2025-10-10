@@ -26,14 +26,17 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
         glGenFramebuffers(1, &fbo);
         glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
-        glGenTextures(1, &texture.id);
-        glBindTexture(GL_TEXTURE_2D, texture.id);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, size.width, size.height, 0,
-                     GL_RGBA, GL_FLOAT, nullptr);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                               GL_TEXTURE_2D, texture.id, 0);
+        unsigned int colorTextures[2];
+        glGenTextures(2, colorTextures);
+        for (unsigned int i = 0; i < 2; i++) {
+            glBindTexture(GL_TEXTURE_2D, colorTextures[i]);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, size.width, size.height,
+                         0, GL_RGBA, GL_FLOAT, nullptr);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i,
+                                   GL_TEXTURE_2D, colorTextures[i], 0);
+        }
 
         GLenum drawBuf = GL_COLOR_ATTACHMENT0;
         glDrawBuffers(1, &drawBuf);
@@ -54,6 +57,12 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
         texture.creationData.width = size.width;
         texture.creationData.height = size.height;
         texture.type = TextureType::Color;
+        texture.id = colorTextures[0];
+
+        brightTexture.creationData.width = size.width;
+        brightTexture.creationData.height = size.height;
+        brightTexture.type = TextureType::Color;
+        brightTexture.id = colorTextures[1];
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glBindTexture(GL_TEXTURE_2D, 0);
@@ -307,9 +316,6 @@ void RenderTarget::render(float dt) {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glBindVertexArray(obj->vao);
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture.id);
 
     if (!obj->indices.empty()) {
         glDrawElements(GL_TRIANGLES, obj->indices.size(), GL_UNSIGNED_INT, 0);

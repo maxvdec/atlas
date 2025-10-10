@@ -589,3 +589,31 @@ void CoreObject::setupPhysics(Body body) {
     this->body->orientation = this->rotation.toGlmQuat();
     this->hasPhysics = true;
 }
+
+void CoreObject::makeEmissive(Scene *scene, Color emissionColor,
+                              float intensity) {
+    this->initialize();
+    if (light != nullptr) {
+        throw std::runtime_error("Object is already emissive");
+    }
+    light = std::make_shared<Light>();
+    light->color = emissionColor;
+    light->shineColor = emissionColor;
+    light->distance = intensity;
+    light->position = this->position;
+    light->distance = 10.0f;
+    light->doesCastShadows = false;
+
+    for (auto &vertex : vertices) {
+        vertex.color = emissionColor * intensity;
+    }
+    updateVertices();
+    useColor = true;
+    useTexture = false;
+
+    this->renderOnlyColor();
+    this->attachProgram(ShaderProgram::fromDefaultShaders(
+        AtlasVertexShader::Color, AtlasFragmentShader::Color));
+
+    scene->addLight(light.get());
+}

@@ -166,10 +166,10 @@ struct Rotation3d {
  *
  */
 struct Color {
-    double r;
-    double g;
-    double b;
-    double a;
+    double r = 1.0;
+    double g = 1.0;
+    double b = 1.0;
+    double a = 1.0;
 
     Color operator+(const Color &other) const {
         return {r + other.r, g + other.g, b + other.b, a + other.a};

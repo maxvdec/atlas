@@ -52,13 +52,12 @@ void main() {}
 static const char* COLOR_FRAG = R"(
 #version 330 core
 out vec4 FragColor;
-
 in vec4 vertexColor;
 
 void main() {
-    FragColor = vertexColor;
+    vec3 color = vertexColor.rgb / (vertexColor.rgb + vec3(1.0));
+    FragColor = vec4(color, vertexColor.a);
 }
-
 )";
 
 static const char* PARTICLE_FRAG = R"(
@@ -300,7 +299,8 @@ void main() {
 
 static const char* MAIN_FRAG = R"(
 #version 330 core
-out vec4 FragColor;
+layout (location = 0) out vec4 FragColor;
+layout (location = 1) out vec4 BrightColor;
 
 in vec2 TexCoord;
 in vec4 outColor;
@@ -813,10 +813,12 @@ void main() {
     else if (useTexture && useColor)
         baseColor = enableTextures(TEXTURE_COLOR) * outColor;
     else if (!useTexture && useColor)
-        baseColor = outColor;
+        baseColor = vec4(1.0, 0.0, 0.0, 1.0);
     else
         baseColor = vec4(1.0);
 
+    FragColor = baseColor;
+    
     vec4 normTexture = enableTextures(TEXTURE_NORMAL);
     vec3 norm = vec3(0.0);
     if (normTexture.r != -1.0 || normTexture.g != -1.0 || normTexture.b != -1.0) {
@@ -851,6 +853,12 @@ void main() {
 
     if (FragColor.a < 0.1)
         discard;
+
+    float brightness = dot(FragColor.rgb, vec3(0.2126, 0.7152, 0.0722));
+    if (brightness > 1.0)
+        BrightColor = vec4(FragColor.rgb, 1.0);
+    else
+        BrightColor = vec4(0.0, 0.0, 0.0, 1.0);
 
     FragColor.rgb = acesToneMapping(FragColor.rgb);
 }
@@ -959,8 +967,8 @@ void main() {
 
 static const char* COLOR_VERT = R"(
 #version 330 core
-layout (location = 0) in vec3 aPos;
-layout (location = 1) in vec4 aColor;
+layout(location = 0) in vec3 aPos;
+layout(location = 1) in vec4 aColor;
 
 out vec4 vertexColor;
 
@@ -968,8 +976,7 @@ uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 
-void main()
-{
+void main() {
     mat4 mvp = projection * view * model;
     gl_Position = mvp * vec4(aPos, 1.0);
     vertexColor = aColor;
