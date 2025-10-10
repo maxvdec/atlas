@@ -12,7 +12,10 @@
 
 #include "atlas/units.h"
 #include <cstddef>
+#include <map>
+#include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <glm/glm.hpp>
@@ -110,6 +113,10 @@ struct VertexShader {
      *
      */
     const char *source;
+
+    static std::map<AtlasVertexShader, VertexShader> vertexShaderCache;
+
+    std::optional<AtlasVertexShader> fromDefaultShaderType = std::nullopt;
 
     /**
      * @brief A function that creates a VertexShader from a default shader.
@@ -214,6 +221,10 @@ struct FragmentShader {
      *
      */
     const char *source;
+
+    static std::map<AtlasFragmentShader, FragmentShader> fragmentShaderCache;
+
+    std::optional<AtlasFragmentShader> fromDefaultShaderType = std::nullopt;
 
     /**
      * @brief Creates a FragmentShader from a default shader.
@@ -340,6 +351,10 @@ struct ShaderProgram {
     FragmentShader fragmentShader;
 
     GeometryShader geometryShader;
+
+    static std::map<std::pair<AtlasVertexShader, AtlasFragmentShader>,
+                    ShaderProgram>
+        shaderCache;
 
     /**
      * @brief Compiles the shader program by linking the vertex and fragment

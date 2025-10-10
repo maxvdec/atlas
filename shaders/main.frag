@@ -236,6 +236,23 @@ vec2 parallaxMapping(vec2 texCoords, vec3 viewDir) {
     return currentTexCoords;
 }
 
+vec3 reinhardToneMapping(vec3 hdrColor) {
+    vec3 color = vec3(1.0) - exp(-hdrColor * 1.0);
+    color = pow(color, vec3(1.0 / 2.2));
+    return color;
+}
+
+vec3 acesToneMapping(vec3 color) {
+    float a = 2.51;
+    float b = 0.03;
+    float c = 2.43;
+    float d = 0.59;
+    float e = 0.14;
+    color = (color * (a * color + b)) / (color * (c * color + d) + e);
+    color = pow(clamp(color, 0.0, 1.0), vec3(1.0 / 2.2));
+    return color;
+}
+
 // ----- Environment Mapping -----
 vec4 getEnvironmentReflected(vec4 color) {
     vec3 I = normalize(FragPos - cameraPosition);
@@ -533,4 +550,6 @@ void main() {
 
     if (FragColor.a < 0.1)
         discard;
+
+    FragColor.rgb = acesToneMapping(FragColor.rgb);
 }

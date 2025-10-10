@@ -292,8 +292,6 @@ void RenderTarget::render(float dt) {
 
     obj->shaderProgram.setUniform1i("TextureType",
                                     static_cast<int>(texture.type));
-    std::cout << "Texture type: " << static_cast<int>(texture.type)
-              << std::endl;
     obj->shaderProgram.setUniform1i("EffectCount", effects.size());
 
     for (int i = 0; i < effects.size(); i++) {
@@ -312,29 +310,6 @@ void RenderTarget::render(float dt) {
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture.id);
-
-    GLint currentProgram, currentVAO, currentTex;
-    glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
-    glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &currentVAO);
-    glActiveTexture(GL_TEXTURE0);
-    glGetIntegerv(GL_TEXTURE_BINDING_2D, &currentTex);
-
-    std::cout << "RenderTarget Debug:" << std::endl;
-    std::cout << "  Program: " << currentProgram
-              << " (expected: " << obj->shaderProgram.programId << ")"
-              << std::endl;
-    std::cout << "  VAO: " << currentVAO << " (expected: " << obj->vao << ")"
-              << std::endl;
-    std::cout << "  Texture: " << currentTex << " (expected: " << texture.id
-              << ")" << std::endl;
-
-    GLint texLoc =
-        glGetUniformLocation(obj->shaderProgram.programId, "Texture");
-    std::cout << "  Uniform 'Texture' location: " << texLoc << std::endl;
-    if (texLoc == -1) {
-        std::cerr << "  ERROR: Uniform 'Texture' not found in shader!"
-                  << std::endl;
-    }
 
     if (!obj->indices.empty()) {
         glDrawElements(GL_TRIANGLES, obj->indices.size(), GL_UNSIGNED_INT, 0);

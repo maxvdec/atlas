@@ -212,6 +212,8 @@ void Window::run() {
 
         currentScene->update(*this);
 
+        auto start = std::chrono::high_resolution_clock::now();
+
         renderLightsToShadowMaps();
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -236,15 +238,9 @@ void Window::run() {
                 obj->setProjectionMatrix(calculateProjectionMatrix());
                 obj->render(getDeltaTime());
             }
-            float pixel[4];
-            glReadPixels(0, 0, 1, 1, GL_RGBA, GL_FLOAT, pixel);
-            std::cout << "Center pixel: " << pixel[0] << ", " << pixel[1]
-                      << ", " << pixel[2] << ", " << pixel[3] << std::endl;
-            glFlush();
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            target->resolve();
         }
-
-        glFinish();
 
         // Render to the screen
         glBindFramebuffer(GL_FRAMEBUFFER, 0);

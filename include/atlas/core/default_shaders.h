@@ -110,9 +110,12 @@ const int EFFECT_EDGE_DETECTION = 4;
 const int EFFECT_COLOR_CORRECTION = 5;
 
 const float offset = 1.0 / 300.0;
+const float exposure = 1.0;
 
 vec3 reinhardToneMapping(vec3 hdrColor) {
-    return hdrColor / (hdrColor + vec3(1.0));
+    vec3 color = vec3(1.0) - exp(-hdrColor * 1.0);
+    color = pow(color, vec3(1.0 / 2.2));
+    return color;
 }
 
 vec3 acesToneMapping(vec3 color) {
@@ -233,7 +236,6 @@ struct ColorCorrection {
 vec4 applyColorCorrection(vec4 color, ColorCorrection cc) {
     vec3 linearColor = color.rgb;
 
-    // Apply exposure BEFORE tone mapping
     linearColor *= pow(2.0, cc.exposure);
 
     linearColor = (linearColor - 0.5) * cc.contrast + 0.5;
@@ -245,8 +247,6 @@ vec4 applyColorCorrection(vec4 color, ColorCorrection cc) {
     linearColor = mix(vec3(luminance), linearColor, cc.saturation);
 
     linearColor = clamp(linearColor, 0.0, 1.0);
-
-    linearColor = pow(linearColor, vec3(1.0 / cc.gamma));
 
     return vec4(linearColor, color.a);
 }
@@ -280,13 +280,6 @@ void main() {
             FragColor = applyColorCorrection(FragColor, cc);
             appliedColorCorrection = true;
         }
-    }
-
-    FragColor.rgb = reinhardToneMapping(FragColor.rgb);
-
-    if (!appliedColorCorrection) {
-        const float gamma = 2.2;
-        FragColor = pow(FragColor, vec4(1.0 / gamma));
     }
 }
 
@@ -542,6 +535,23 @@ vec2 parallaxMapping(vec2 texCoords, vec3 viewDir) {
     currentTexCoords = prevTexCoords * weight + currentTexCoords * (1.0 - weight);
 
     return currentTexCoords;
+}
+
+vec3 reinhardToneMapping(vec3 hdrColor) {
+    vec3 color = vec3(1.0) - exp(-hdrColor * 1.0);
+    color = pow(color, vec3(1.0 / 2.2));
+    return color;
+}
+
+vec3 acesToneMapping(vec3 color) {
+    float a = 2.51;
+    float b = 0.03;
+    float c = 2.43;
+    float d = 0.59;
+    float e = 0.14;
+    color = (color * (a * color + b)) / (color * (c * color + d) + e);
+    color = pow(clamp(color, 0.0, 1.0), vec3(1.0 / 2.2));
+    return color;
 }
 
 // ----- Environment Mapping -----
@@ -841,6 +851,8 @@ void main() {
 
     if (FragColor.a < 0.1)
         discard;
+
+    FragColor.rgb = acesToneMapping(FragColor.rgb);
 }
 
 )";

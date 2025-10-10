@@ -73,11 +73,9 @@ class Scene {
      */
     virtual void onMouseScroll(Window &window, Movement2d offset) {}
 
-    /**
-     * @brief The ambient light in the scene.
-     *
-     */
-    AmbientLight ambientLight = {{1.0f, 1.0f, 1.0f}, 0.1f};
+    void setAmbientIntensity(float intensity) {
+        this->ambientLight.intensity = intensity / 4;
+    }
 
     /**
      * @brief Function that adds a directional light to the scene. \warning The
@@ -118,6 +116,7 @@ class Scene {
     std::vector<Light *> pointLights;
     std::vector<Spotlight *> spotlights;
     Skybox *skybox = nullptr;
+    AmbientLight ambientLight = {{1.0f, 1.0f, 1.0f}, 1.0 / 4.0f};
 
     friend class CoreObject;
     friend class Window;
