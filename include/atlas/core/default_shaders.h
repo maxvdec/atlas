@@ -51,12 +51,14 @@ void main() {}
 
 static const char* COLOR_FRAG = R"(
 #version 330 core
-out vec4 FragColor;
+layout (location = 0) out vec4 FragColor;
+layout (location = 1) out vec4 BrightColor;
 in vec4 vertexColor;
 
 void main() {
     vec3 color = vertexColor.rgb / (vertexColor.rgb + vec3(1.0));
     FragColor = vec4(color, vertexColor.a);
+    BrightColor = vec4(color * 2.0, vertexColor.a);
 }
 )";
 
@@ -1000,6 +1002,40 @@ void main()
     gl_Position = pos.xyww; 
 }  
 
+)";
+
+static const char* GAUSSIAN_FRAG = R"(
+#version 330 core
+out vec4 FragColor;
+
+in vec2 TexCoord;
+
+uniform sampler2D image;
+
+uniform bool horizontal;
+uniform float weight[5] = float[](0.227027, 0.1945946, 0.1216216, 0.054054, 0.016216);
+
+void main() {
+    vec2 tex_offset = 1.0 / textureSize(image, 0); 
+    vec3 result = texture(image, TexCoord).rgb * weight[0];
+    if(horizontal)
+    {
+        for(int i = 1; i < 5; ++i)
+        {
+            result += texture(image, TexCoord + vec2(tex_offset.x * i, 0.0)).rgb * weight[i];
+            result += texture(image, TexCoord - vec2(tex_offset.x * i, 0.0)).rgb * weight[i];
+        }
+    }
+    else
+    {
+        for(int i = 1; i < 5; ++i)
+        {
+            result += texture(image, TexCoord + vec2(0.0, tex_offset.y * i)).rgb * weight[i];
+            result += texture(image, TexCoord - vec2(0.0, tex_offset.y * i)).rgb * weight[i];
+        }
+    }
+    FragColor = vec4(result, 1.0);
+}
 )";
 
 static const char* POINT_DEPTH_FRAG = R"(

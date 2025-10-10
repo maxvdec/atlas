@@ -208,6 +208,7 @@ enum class AtlasFragmentShader {
      */
     Text,
     PointLightShadow,
+    GaussianBlur,
 };
 
 /**

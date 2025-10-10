@@ -368,6 +368,8 @@ class Window {
     void renderLightsToShadowMaps();
     Size2d getFurthestPositions();
 
+    void renderPingpong(RenderTarget *target, float dt);
+
     Camera *camera = nullptr;
     float lastMouseX;
     float lastMouseY;
@@ -380,6 +382,9 @@ class Window {
     ShaderProgram pointDepthProgram;
 
     bool debug = false;
+
+    unsigned int pingpongFBOs[2] = {0, 0};
+    unsigned int pingpongBuffers[2] = {0, 0};
 
     friend class CoreObject;
     friend class RenderTarget;

@@ -285,7 +285,11 @@ void RenderTarget::render(float dt) {
 
     glBindVertexArray(0);
 
-    glUseProgram(obj->shaderProgram.programId);
+    GLuint currentProgram;
+    glGetIntegerv(GL_CURRENT_PROGRAM, (GLint *)&currentProgram);
+    if (currentProgram != obj->shaderProgram.programId) {
+        glUseProgram(obj->shaderProgram.programId);
+    }
 
     if (texture.type == TextureType::DepthCube) {
         glActiveTexture(GL_TEXTURE10);
@@ -294,7 +298,7 @@ void RenderTarget::render(float dt) {
         obj->shaderProgram.setUniform1i("isCubeMap", 1);
     } else {
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture.id);
+        glBindTexture(GL_TEXTURE_2D, brightTexture.id);
         obj->shaderProgram.setUniform1i("Texture", 0);
         obj->shaderProgram.setUniform1i("isCubeMap", 0);
     }

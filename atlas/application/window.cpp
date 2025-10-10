@@ -245,6 +245,7 @@ void Window::run() {
             }
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
             target->resolve();
+            this->renderPingpong(target, deltaTime);
         }
 
         // Render to the screen
@@ -589,4 +590,58 @@ std::vector<std::shared_ptr<Body>> Window::getAllBodies() {
         }
     }
     return bodies;
+}
+
+void Window::renderPingpong(RenderTarget *target, float dt) {
+    if (target->brightTexture.id == 0) {
+        return;
+    }
+
+    if (this->pingpongFBOs[0] == 0 || this->pingpongFBOs[1] == 0) {
+        glGenFramebuffers(2, this->pingpongFBOs);
+        glGenTextures(2, this->pingpongBuffers);
+
+        for (unsigned int i = 0; i < 2; i++) {
+            glBindFramebuffer(GL_FRAMEBUFFER, this->pingpongFBOs[i]);
+            glBindTexture(GL_TEXTURE_2D, this->pingpongBuffers[i]);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F,
+                         target->texture.creationData.width,
+                         target->texture.creationData.height, 0, GL_RGBA,
+                         GL_FLOAT, nullptr);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                                   GL_TEXTURE_2D, this->pingpongBuffers[i], 0);
+
+            if (glCheckFramebufferStatus(GL_FRAMEBUFFER) !=
+                GL_FRAMEBUFFER_COMPLETE) {
+                std::cerr << "Pingpong Framebuffer not complete!" << std::endl;
+            }
+        }
+    }
+
+    bool horizontal = true, firstIteration = true;
+    int amount = 10;
+    ShaderProgram blurShader = ShaderProgram::fromDefaultShaders(
+        AtlasVertexShader::Fullscreen, AtlasFragmentShader::GaussianBlur);
+    ShaderProgram targetProgram = target->object->getShaderProgram().value();
+    target->object->setShader(blurShader);
+    glUseProgram(blurShader.programId);
+    for (unsigned int i = 0; i < amount; i++) {
+        glBindFramebuffer(GL_FRAMEBUFFER, this->pingpongFBOs[horizontal]);
+        blurShader.setUniform1i("horizontal", horizontal);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, firstIteration
+                                         ? target->brightTexture.id
+                                         : this->pingpongBuffers[!horizontal]);
+        target->render(dt);
+        horizontal = !horizontal;
+        if (firstIteration) {
+            firstIteration = false;
+        }
+    }
+    target->object->setShader(targetProgram);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
