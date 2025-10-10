@@ -28,12 +28,15 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
 
         glGenTextures(1, &texture.id);
         glBindTexture(GL_TEXTURE_2D, texture.id);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.width, size.height, 0,
-                     GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, size.width, size.height, 0,
+                     GL_RGBA, GL_FLOAT, nullptr);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                                GL_TEXTURE_2D, texture.id, 0);
+
+        GLenum drawBuf = GL_COLOR_ATTACHMENT0;
+        glDrawBuffers(1, &drawBuf);
 
         GLuint depthStencilRBO;
         glGenRenderbuffers(1, &depthStencilRBO);
@@ -62,10 +65,13 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
         GLuint msaaTex;
         glGenTextures(1, &msaaTex);
         glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, msaaTex);
-        glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGBA8,
+        glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, 4, GL_RGBA16F,
                                 size.width, size.height, GL_TRUE); // 4x MSAA
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                                GL_TEXTURE_2D_MULTISAMPLE, msaaTex, 0);
+
+        GLenum msaaDrawBuf = GL_COLOR_ATTACHMENT0;
+        glDrawBuffers(1, &msaaDrawBuf);
 
         GLuint depthStencilRBO;
         glGenRenderbuffers(1, &depthStencilRBO);
@@ -86,12 +92,15 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
 
         glGenTextures(1, &texture.id);
         glBindTexture(GL_TEXTURE_2D, texture.id);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, size.width, size.height, 0,
-                     GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, size.width, size.height, 0,
+                     GL_RGBA, GL_FLOAT, nullptr);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                                GL_TEXTURE_2D, texture.id, 0);
+
+        GLenum resolveDrawBuf = GL_COLOR_ATTACHMENT0;
+        glDrawBuffers(1, &resolveDrawBuf);
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) !=
             GL_FRAMEBUFFER_COMPLETE) {
@@ -220,7 +229,9 @@ void RenderTarget::resolve() {
     }
 
     glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
+    glReadBuffer(GL_COLOR_ATTACHMENT0);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, resolveFbo);
+    glDrawBuffer(GL_COLOR_ATTACHMENT0);
     glBlitFramebuffer(0, 0, texture.creationData.width,
                       texture.creationData.height, 0, 0,
                       texture.creationData.width, texture.creationData.height,
@@ -255,18 +266,17 @@ void RenderTarget::render(float dt) {
 
     CoreObject *obj = this->object.get();
 
-    glUseProgram(obj->shaderProgram.programId);
-
-    obj->shaderProgram.setUniform1i("Texture", 0);
-    obj->shaderProgram.setUniform1i("TextureType",
-                                    static_cast<int>(texture.type));
-    obj->shaderProgram.setUniform1i("EffectCount", effects.size());
-    for (int i = 0; i < effects.size(); i++) {
-        std::string uniformName = "Effects[" + std::to_string(i) + "]";
-        obj->shaderProgram.setUniform1i(uniformName,
-                                        static_cast<int>(effects[i]->type));
-        effects[i]->applyToProgram(obj->shaderProgram, i);
+    for (int i = 0; i < 16; i++) {
+        glActiveTexture(GL_TEXTURE0 + i);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
     }
+
+    glActiveTexture(GL_TEXTURE0);
+
+    glBindVertexArray(0);
+
+    glUseProgram(obj->shaderProgram.programId);
 
     if (texture.type == TextureType::DepthCube) {
         glActiveTexture(GL_TEXTURE10);
@@ -276,18 +286,37 @@ void RenderTarget::render(float dt) {
     } else {
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, texture.id);
+        obj->shaderProgram.setUniform1i("Texture", 0);
         obj->shaderProgram.setUniform1i("isCubeMap", 0);
     }
 
+    obj->shaderProgram.setUniform1i("TextureType",
+                                    static_cast<int>(texture.type));
+    obj->shaderProgram.setUniform1i("EffectCount", effects.size());
+
+    for (int i = 0; i < effects.size(); i++) {
+        std::string uniformName = "Effects[" + std::to_string(i) + "]";
+        obj->shaderProgram.setUniform1i(uniformName,
+                                        static_cast<int>(effects[i]->type));
+        effects[i]->applyToProgram(obj->shaderProgram, i);
+    }
+
     glDisable(GL_DEPTH_TEST);
-    glDisable(GL_BLEND);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     glBindVertexArray(obj->vao);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture.id);
+
     if (!obj->indices.empty()) {
         glDrawElements(GL_TRIANGLES, obj->indices.size(), GL_UNSIGNED_INT, 0);
     } else {
         glDrawArrays(GL_TRIANGLES, 0, obj->vertices.size());
     }
+
     glBindVertexArray(0);
 
     glEnable(GL_DEPTH_TEST);

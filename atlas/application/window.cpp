@@ -212,6 +212,8 @@ void Window::run() {
 
         currentScene->update(*this);
 
+        auto start = std::chrono::high_resolution_clock::now();
+
         renderLightsToShadowMaps();
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -237,6 +239,7 @@ void Window::run() {
                 obj->render(getDeltaTime());
             }
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            target->resolve();
         }
 
         // Render to the screen

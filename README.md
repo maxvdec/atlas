@@ -24,13 +24,13 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [ ] Editor UI
 - [ ] Editor application
 - [ ] Editor runtime
-- [x] Add mesh loading 
+- [x] Add mesh loading
 - [x] Scene management
 - [x] Physics engine integration (Bezel)
 - [x] Audio support (Finewave)
 - [ ] Scripting support
 - [x] Asset management
-- [x] Documentation and examples 
+- [x] Documentation and examples
 - [x] Particle system
 - [x] Lights
 - [x] Shadows (except for point lights)
@@ -40,12 +40,12 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [ ] Instancing support **for alpha 2**
 - [ ] Optimizations and performance improvements
 - [x] CLI for packing applications
-- [ ] Runtime independent of final executable 
+- [ ] Runtime independent of final executable
 - [ ] Scene packing
 - [ ] Add deferred rendering for better performance with many lights **for alpha 2**
 - [ ] Add PBR rendering
 - [ ] Add other texture supports (normal, roughness, metallic, ao, etc.)
-- [ ] Add HDR support **for alpha 2**
+- [x] Add HDR support **for alpha 2**
 - [ ] Add SSAO **for alpha 2**
 - [ ] Add cascaded shadow maps for directional lights
 - [ ] Add soft shadows **for alpha 2**

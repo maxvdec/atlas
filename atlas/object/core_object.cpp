@@ -319,7 +319,7 @@ void CoreObject::render(float dt) {
             "ambientLight.color", scene->ambientLight.color.r,
             scene->ambientLight.color.g, scene->ambientLight.color.b, 1.0f);
         shaderProgram.setUniform1f("ambientLight.intensity",
-                                   scene->ambientLight.intensity);
+                                   scene->ambientLight.intensity / 4);
 
         // Set camera position
         shaderProgram.setUniform3f(

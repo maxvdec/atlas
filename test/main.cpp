@@ -166,21 +166,22 @@ class MainScene : public Scene {
         window.addUIObject(&fpsText);
 
         light = Light();
-        light.position = {0.0f, 5.0f, 0.0f};
+        light.position = {0.0f, 0.0f, 0.0f};
         light.castShadows(window, 4096);
+        light.distance = 1.0f;
+        light.color = Color(2.0f, 2.0f, 2.0f);
         this->addLight(&light);
 
-        this->ambientLight.intensity = 0.3f;
+        this->setAmbientIntensity(0.1f);
 
         skybox = Skybox();
         skybox.cubemap = createCubemap();
         skybox.display(window);
         this->setSkybox(&skybox);
 
-        // frameBuffer = RenderTarget(window);
-        //  frameBuffer.addEffect(ColorCorrection::create());
-        //   frameBuffer.display(window);
-        //   window.addRenderTarget(&frameBuffer);
+        frameBuffer = RenderTarget(window);
+        frameBuffer.display(window);
+        window.addRenderTarget(&frameBuffer);
     }
 };
 
