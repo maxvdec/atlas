@@ -7,10 +7,9 @@ var searchData=
   ['ambient_4',['ambient',['../struct_material.html#a5925c60fcc13940f3a04d168c7c89bc3',1,'Material']]],
   ['ambient_5fparticle_5ffrag_5',['AMBIENT_PARTICLE_FRAG',['../default__shaders_8h.html#a4d99d24f679e932c5bdad2ef143dae37',1,'default_shaders.h']]],
   ['ambient_5fparticle_5fvert_6',['AMBIENT_PARTICLE_VERT',['../default__shaders_8h.html#abf125035e9211c1aefc4395a2243e65e',1,'default_shaders.h']]],
-  ['ambientlight_7',['ambientLight',['../class_scene.html#ab98cdab367b3b42b99028c5fe74577a7',1,'Scene']]],
-  ['angularvelocity_8',['angularVelocity',['../class_body.html#a6f9bd0b59a4f9d8099079d3ff07b37b0',1,'Body']]],
-  ['aspectratiox_9',['aspectRatioX',['../struct_window_configuration.html#a45697805b5409de3b3ba16f8fd63e347',1,'WindowConfiguration']]],
-  ['aspectratioy_10',['aspectRatioY',['../struct_window_configuration.html#a4d9ab6af44609b23217808963ca0c1f5',1,'WindowConfiguration']]],
-  ['atlas_11',['atlas',['../struct_font.html#a55ce744ba518079323089dccdb0a3bdd',1,'Font']]],
-  ['audioengine_12',['audioEngine',['../class_window.html#a2133e2bb4562bcc491d091a640dcae88',1,'Window']]]
+  ['angularvelocity_7',['angularVelocity',['../class_body.html#a6f9bd0b59a4f9d8099079d3ff07b37b0',1,'Body']]],
+  ['aspectratiox_8',['aspectRatioX',['../struct_window_configuration.html#a45697805b5409de3b3ba16f8fd63e347',1,'WindowConfiguration']]],
+  ['aspectratioy_9',['aspectRatioY',['../struct_window_configuration.html#a4d9ab6af44609b23217808963ca0c1f5',1,'WindowConfiguration']]],
+  ['atlas_10',['atlas',['../struct_font.html#a55ce744ba518079323089dccdb0a3bdd',1,'Font']]],
+  ['audioengine_11',['audioEngine',['../class_window.html#a2133e2bb4562bcc491d091a640dcae88',1,'Window']]]
 ];

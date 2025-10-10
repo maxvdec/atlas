@@ -119,6 +119,7 @@ $(function(){initNavTree('struct_vertex_shader.html','','struct_vertex_shader-me
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
+<a href="#pub-static-attribs">Static Public Attributes</a> &#124;
 <a href="struct_vertex_shader-members.html">List of all members</a>  </div>
   <div class="headertitle"><div class="title">VertexShader Struct Reference</div></div>
 </div><!--header-->
@@ -145,17 +146,22 @@ Static Public Member Functions</h2></td></tr>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a186940a69ff3b946d67fe227728b7a96" id="r_a186940a69ff3b946d67fe227728b7a96"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a186940a69ff3b946d67fe227728b7a96">source</a></td></tr>
 <tr class="memdesc:a186940a69ff3b946d67fe227728b7a96"><td class="mdescLeft">&#160;</td><td class="mdescRight">The source code of the vertex shader.  <br /></td></tr>
+<tr class="memitem:a9af0bff0fd27f9077fe424e7703b454a" id="r_a9af0bff0fd27f9077fe424e7703b454a"><td class="memItemLeft" align="right" valign="top">std::optional&lt; <a class="el" href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82">AtlasVertexShader</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9af0bff0fd27f9077fe424e7703b454a">fromDefaultShaderType</a> = std::nullopt</td></tr>
 <tr class="memitem:aa07b8f046212ba235effca38c90269df" id="r_aa07b8f046212ba235effca38c90269df"><td class="memItemLeft" align="right" valign="top">std::vector&lt; uint32_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa07b8f046212ba235effca38c90269df">desiredAttributes</a></td></tr>
 <tr class="memdesc:aa07b8f046212ba235effca38c90269df"><td class="mdescLeft">&#160;</td><td class="mdescRight">The desired vertex attributes for the shader.  <br /></td></tr>
 <tr class="memitem:a6ebf85025d7e1fb437952aeaec3ce411" id="r_a6ebf85025d7e1fb437952aeaec3ce411"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcd">ShaderCapability</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a6ebf85025d7e1fb437952aeaec3ce411">capabilities</a></td></tr>
 <tr class="memdesc:a6ebf85025d7e1fb437952aeaec3ce411"><td class="mdescLeft">&#160;</td><td class="mdescRight">The capabilities of the shader.  <br /></td></tr>
 <tr class="memitem:a7f4f61da37bb52297791b071c91107f4" id="r_a7f4f61da37bb52297791b071c91107f4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="units_8h.html#a5c9d258201f281b8ad0fb4385b7ef668">Id</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7f4f61da37bb52297791b071c91107f4">shaderId</a></td></tr>
 <tr class="memdesc:a7f4f61da37bb52297791b071c91107f4"><td class="mdescLeft">&#160;</td><td class="mdescRight">The OpenGL ID of the compiled shader.  <br /></td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 id="header-pub-static-attribs" class="groupheader"><a id="pub-static-attribs" name="pub-static-attribs"></a>
+Static Public Attributes</h2></td></tr>
+<tr class="memitem:a86a7b493519917c63c40475d69b1f997" id="r_a86a7b493519917c63c40475d69b1f997"><td class="memItemLeft" align="right" valign="top">static std::map&lt; <a class="el" href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82">AtlasVertexShader</a>, <a class="el" href="struct_vertex_shader.html">VertexShader</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a86a7b493519917c63c40475d69b1f997">vertexShaderCache</a></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Structure representing a vertex shader, including its source code,. </p>
 
-<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00107">107</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00110">110</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
 <a id="a3a08d4972fc50ff41bec41611345847b" name="a3a08d4972fc50ff41bec41611345847b"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a3a08d4972fc50ff41bec41611345847b">&#9670;&#160;</a></span>compile()</h2>
@@ -242,7 +248,7 @@ Public Attributes</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>The created <a class="el" href="struct_vertex_shader.html" title="Structure representing a vertex shader, including its source code,.">VertexShader</a> instance. </dd></dl>
 
-<p class="reference">References <a class="el" href="shader_8h_source.html#l00112">source</a>.</p>
+<p class="reference">References <a class="el" href="shader_8h_source.html#l00115">source</a>.</p>
 
 </div>
 </div>
@@ -261,7 +267,7 @@ Public Attributes</h2></td></tr>
 
 <p>The capabilities of the shader. </p>
 
-<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00143">143</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00150">150</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
 
 </div>
 </div>
@@ -279,7 +285,23 @@ Public Attributes</h2></td></tr>
 
 <p>The desired vertex attributes for the shader. </p>
 
-<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00138">138</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00145">145</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
+
+</div>
+</div>
+<a id="a9af0bff0fd27f9077fe424e7703b454a" name="a9af0bff0fd27f9077fe424e7703b454a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9af0bff0fd27f9077fe424e7703b454a">&#9670;&#160;</a></span>fromDefaultShaderType</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::optional&lt;<a class="el" href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82">AtlasVertexShader</a>&gt; VertexShader::fromDefaultShaderType = std::nullopt</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00119">119</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
 
 </div>
 </div>
@@ -297,7 +319,7 @@ Public Attributes</h2></td></tr>
 
 <p>The OpenGL ID of the compiled shader. </p>
 
-<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00149">149</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00156">156</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
 
 </div>
 </div>
@@ -315,7 +337,31 @@ Public Attributes</h2></td></tr>
 
 <p>The source code of the vertex shader. </p>
 
-<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00112">112</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00115">115</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
+
+</div>
+</div>
+<a id="a86a7b493519917c63c40475d69b1f997" name="a86a7b493519917c63c40475d69b1f997"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a86a7b493519917c63c40475d69b1f997">&#9670;&#160;</a></span>vertexShaderCache</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::map&lt;<a class="el" href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82">AtlasVertexShader</a>, <a class="el" href="struct_vertex_shader.html">VertexShader</a>&gt; VertexShader::vertexShaderCache</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel static">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00117">117</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
 
 </div>
 </div>

@@ -227,10 +227,12 @@ var NAVTREEINDEX3 =
 "struct_font.html#aa7480b6cce6947e2180384e9b7a80c0c":[2,0,30,1],
 "struct_font.html#aad7fe43db0254eccdbdaa2bf4884a140":[2,0,30,6],
 "struct_fragment_shader.html":[2,0,31],
-"struct_fragment_shader.html#a01003b235b9335d2a79a3a314591b142":[2,0,31,3],
-"struct_fragment_shader.html#a42368e7fde628f9e59896fdcd8ff75da":[2,0,31,4],
+"struct_fragment_shader.html#a01003b235b9335d2a79a3a314591b142":[2,0,31,5],
+"struct_fragment_shader.html#a42368e7fde628f9e59896fdcd8ff75da":[2,0,31,6],
 "struct_fragment_shader.html#a8fb7912f2095245a0d01d73f7e492d28":[2,0,31,0],
 "struct_fragment_shader.html#a97e10ab34737f3b578133d716cb744d1":[2,0,31,2],
+"struct_fragment_shader.html#aa3adfe8e47d2e79ac37f01fa28a515ec":[2,0,31,3],
+"struct_fragment_shader.html#ac724be9e480e03a12a16b4eb4bfe5397":[2,0,31,4],
 "struct_fragment_shader.html#afc4673c59028e88f4b9ddbee9bf57383":[2,0,31,1],
 "struct_geometry_shader.html":[2,0,33],
 "struct_geometry_shader.html#a3dc9fd835db2224279533e2f746d978f":[2,0,33,1],
@@ -247,7 +249,5 @@ var NAVTREEINDEX3 =
 "struct_layout_descriptor.html#ac19f6be67e42f8b2cf98971ed4ae73a8":[2,0,38,4],
 "struct_layout_descriptor.html#ac857d18e7c022da576d5abd7c8dd4fed":[2,0,38,1],
 "struct_layout_descriptor.html#acbc4d2b0de323299b2cca4b0bd89d5e7":[2,0,38,2],
-"struct_layout_descriptor.html#af67b223d0ec56561c3075cc81b742544":[2,0,38,5],
-"struct_light.html":[2,0,39],
-"struct_light.html#a24c4613acc9b74cde2d48f703dce147f":[2,0,39,2]
+"struct_layout_descriptor.html#af67b223d0ec56561c3075cc81b742544":[2,0,38,5]
 };
