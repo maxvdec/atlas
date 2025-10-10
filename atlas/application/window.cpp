@@ -243,9 +243,8 @@ void Window::run() {
                 obj->setProjectionMatrix(calculateProjectionMatrix());
                 obj->render(getDeltaTime());
             }
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
-            target->resolve();
             this->renderPingpong(target, deltaTime);
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
         }
 
         // Render to the screen
@@ -597,6 +596,10 @@ void Window::renderPingpong(RenderTarget *target, float dt) {
         return;
     }
 
+    if (!target->object || !target->object->isVisible) {
+        return;
+    }
+
     if (this->pingpongFBOs[0] == 0 || this->pingpongFBOs[1] == 0) {
         glGenFramebuffers(2, this->pingpongFBOs);
         glGenTextures(2, this->pingpongBuffers);
@@ -629,14 +632,49 @@ void Window::renderPingpong(RenderTarget *target, float dt) {
     ShaderProgram targetProgram = target->object->getShaderProgram().value();
     target->object->setShader(blurShader);
     glUseProgram(blurShader.programId);
+    glDisable(GL_DEPTH_TEST);
+
+    glDisable(GL_BLEND);
+
+    glViewport(0, 0, target->texture.creationData.width,
+               target->texture.creationData.height);
+
     for (unsigned int i = 0; i < amount; i++) {
         glBindFramebuffer(GL_FRAMEBUFFER, this->pingpongFBOs[horizontal]);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        glUseProgram(blurShader.programId);
+
         blurShader.setUniform1i("horizontal", horizontal);
+        blurShader.setUniform1i("image", 0);
+
+        for (int j = 0; j < 16; j++) {
+            glActiveTexture(GL_TEXTURE0 + j);
+            glBindTexture(GL_TEXTURE_2D, 0);
+        }
+
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, firstIteration
                                          ? target->brightTexture.id
                                          : this->pingpongBuffers[!horizontal]);
-        target->render(dt);
+
+        glBindVertexArray(target->object->vao);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, target->object->ebo);
+
+        if (!target->object->indices.empty()) {
+            glDrawElements(GL_TRIANGLES, target->object->indices.size(),
+                           GL_UNSIGNED_INT, 0);
+        } else {
+            glDrawArrays(GL_TRIANGLES, 0, target->object->vertices.size());
+        }
+
+        GLenum error = glGetError();
+        if (error != GL_NO_ERROR) {
+            std::cerr << "OpenGL Error during pingpong blur: " << error
+                      << std::endl;
+        }
+
+        glBindVertexArray(0);
         horizontal = !horizontal;
         if (firstIteration) {
             firstIteration = false;
@@ -644,4 +682,15 @@ void Window::renderPingpong(RenderTarget *target, float dt) {
     }
     target->object->setShader(targetProgram);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glEnable(GL_DEPTH_TEST);
+
+    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
+    int fbWidth, fbHeight;
+    glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
+    glViewport(0, 0, fbWidth, fbHeight);
+
+    target->brightTexture.id = this->pingpongBuffers[!horizontal];
+    target->brightTexture.creationData = target->brightTexture.creationData;
+    target->brightTexture.type = TextureType::Color;
 }
