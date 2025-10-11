@@ -34,12 +34,17 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
                          0, GL_RGBA, GL_FLOAT, nullptr);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i,
                                    GL_TEXTURE_2D, colorTextures[i], 0);
         }
 
-        GLenum drawBuf = GL_COLOR_ATTACHMENT0;
-        glDrawBuffers(1, &drawBuf);
+        unsigned int attachments[2] = {GL_COLOR_ATTACHMENT0,
+                                       GL_COLOR_ATTACHMENT1};
+        glDrawBuffers(2, attachments);
 
         GLuint depthStencilRBO;
         glGenRenderbuffers(1, &depthStencilRBO);
