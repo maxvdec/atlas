@@ -171,6 +171,12 @@ FragmentShader FragmentShader::fromDefaultShader(AtlasFragmentShader shader) {
         fragmentShaderCache[shader] = fragmentShader;
         break;
     }
+    case AtlasFragmentShader::GaussianBlur: {
+        fragmentShader = FragmentShader::fromSource(GAUSSIAN_FRAG);
+        fragmentShader.fromDefaultShaderType = shader;
+        fragmentShaderCache[shader] = fragmentShader;
+        break;
+    }
     case AtlasFragmentShader::Texture: {
         fragmentShader = FragmentShader::fromSource(TEXTURE_FRAG);
         fragmentShader.fromDefaultShaderType = shader;

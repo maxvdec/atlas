@@ -118,6 +118,8 @@ vec4 edgeDetection(sampler2D image) {
 }
 
 uniform sampler2D Texture;
+uniform sampler2D BrightTexture;
+uniform int hasBrightTexture;
 uniform samplerCube cubeMap;
 uniform bool isCubeMap;
 uniform int TextureType;
@@ -158,23 +160,23 @@ vec4 applyColorCorrection(vec4 color, ColorCorrection cc) {
 }
 
 void main() {
-    FragColor = texture(Texture, TexCoord);
+    vec4 color = texture(Texture, TexCoord);
 
     bool appliedColorCorrection = false;
 
     for (int i = 0; i < EffectCount; i++) {
         if (Effects[i] == EFFECT_INVERSION) {
-            FragColor = vec4(1.0 - FragColor.rgb, FragColor.a);
+            color = vec4(1.0 - color.rgb, color.a);
         } else if (Effects[i] == EFFECT_GRAYSCALE) {
-            float average = 0.2126 * FragColor.r + 0.7152 * FragColor.g + 0.0722 * FragColor.b;
-            FragColor = vec4(average, average, average, FragColor.a);
+            float average = 0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b;
+            color = vec4(average, average, average, color.a);
         } else if (Effects[i] == EFFECT_SHARPEN) {
-            FragColor = sharpen(Texture);
+            color = sharpen(Texture);
         } else if (Effects[i] == EFFECT_BLUR) {
             float radius = EffectFloat1[i];
-            FragColor = blur(Texture, radius);
+            color = blur(Texture, radius);
         } else if (Effects[i] == EFFECT_EDGE_DETECTION) {
-            FragColor = edgeDetection(Texture);
+            color = edgeDetection(Texture);
         } else if (Effects[i] == EFFECT_COLOR_CORRECTION) {
             ColorCorrection cc;
             cc.exposure = EffectFloat1[i];
@@ -183,8 +185,16 @@ void main() {
             cc.gamma = EffectFloat4[i];
             cc.temperature = EffectFloat5[i];
             cc.tint = EffectFloat6[i];
-            FragColor = applyColorCorrection(FragColor, cc);
+            color = applyColorCorrection(color, cc);
             appliedColorCorrection = true;
         }
     }
+
+    vec4 hdrColor = color + texture(BrightTexture, TexCoord);
+
+    hdrColor.rgb = acesToneMapping(hdrColor.rgb);
+
+    FragColor = vec4(hdrColor.rgb, 1.0);
+
+    return; 
 }

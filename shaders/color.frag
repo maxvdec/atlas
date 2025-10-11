@@ -1,8 +1,12 @@
 #version 330 core
-out vec4 FragColor;
-
+layout (location = 0) out vec4 FragColor;
+layout (location = 1) out vec4 BrightColor;
 in vec4 vertexColor;
 
 void main() {
-    FragColor = vertexColor;
+    vec3 color = vertexColor.rgb / (vertexColor.rgb + vec3(1.0));
+    FragColor = vec4(color, vertexColor.a);
+    if (length(color) > 1.0) {
+        BrightColor = vec4(color, vertexColor.a);
+    }
 }

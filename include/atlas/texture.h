@@ -297,6 +297,8 @@ class RenderTarget : public Renderable {
      * output of the rendering process.
      */
     Texture texture;
+    Texture brightTexture;
+    Texture blurredTexture;
     /**
      * @brief The type of the render target.
      *

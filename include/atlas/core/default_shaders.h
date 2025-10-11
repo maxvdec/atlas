@@ -51,14 +51,17 @@ void main() {}
 
 static const char* COLOR_FRAG = R"(
 #version 330 core
-out vec4 FragColor;
-
+layout (location = 0) out vec4 FragColor;
+layout (location = 1) out vec4 BrightColor;
 in vec4 vertexColor;
 
 void main() {
-    FragColor = vertexColor;
+    vec3 color = vertexColor.rgb / (vertexColor.rgb + vec3(1.0));
+    FragColor = vec4(color, vertexColor.a);
+    if (length(color) > 1.0) {
+        BrightColor = vec4(color, vertexColor.a);
+    }
 }
-
 )";
 
 static const char* PARTICLE_FRAG = R"(
@@ -212,6 +215,8 @@ vec4 edgeDetection(sampler2D image) {
 }
 
 uniform sampler2D Texture;
+uniform sampler2D BrightTexture;
+uniform int hasBrightTexture;
 uniform samplerCube cubeMap;
 uniform bool isCubeMap;
 uniform int TextureType;
@@ -252,23 +257,23 @@ vec4 applyColorCorrection(vec4 color, ColorCorrection cc) {
 }
 
 void main() {
-    FragColor = texture(Texture, TexCoord);
+    vec4 color = texture(Texture, TexCoord);
 
     bool appliedColorCorrection = false;
 
     for (int i = 0; i < EffectCount; i++) {
         if (Effects[i] == EFFECT_INVERSION) {
-            FragColor = vec4(1.0 - FragColor.rgb, FragColor.a);
+            color = vec4(1.0 - color.rgb, color.a);
         } else if (Effects[i] == EFFECT_GRAYSCALE) {
-            float average = 0.2126 * FragColor.r + 0.7152 * FragColor.g + 0.0722 * FragColor.b;
-            FragColor = vec4(average, average, average, FragColor.a);
+            float average = 0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b;
+            color = vec4(average, average, average, color.a);
         } else if (Effects[i] == EFFECT_SHARPEN) {
-            FragColor = sharpen(Texture);
+            color = sharpen(Texture);
         } else if (Effects[i] == EFFECT_BLUR) {
             float radius = EffectFloat1[i];
-            FragColor = blur(Texture, radius);
+            color = blur(Texture, radius);
         } else if (Effects[i] == EFFECT_EDGE_DETECTION) {
-            FragColor = edgeDetection(Texture);
+            color = edgeDetection(Texture);
         } else if (Effects[i] == EFFECT_COLOR_CORRECTION) {
             ColorCorrection cc;
             cc.exposure = EffectFloat1[i];
@@ -277,10 +282,18 @@ void main() {
             cc.gamma = EffectFloat4[i];
             cc.temperature = EffectFloat5[i];
             cc.tint = EffectFloat6[i];
-            FragColor = applyColorCorrection(FragColor, cc);
+            color = applyColorCorrection(color, cc);
             appliedColorCorrection = true;
         }
     }
+
+    vec4 hdrColor = color + texture(BrightTexture, TexCoord);
+
+    hdrColor.rgb = acesToneMapping(hdrColor.rgb);
+
+    FragColor = vec4(hdrColor.rgb, 1.0);
+
+    return; 
 }
 
 )";
@@ -300,7 +313,8 @@ void main() {
 
 static const char* MAIN_FRAG = R"(
 #version 330 core
-out vec4 FragColor;
+layout (location = 0) out vec4 FragColor;
+layout (location = 1) out vec4 BrightColor;
 
 in vec2 TexCoord;
 in vec4 outColor;
@@ -813,10 +827,12 @@ void main() {
     else if (useTexture && useColor)
         baseColor = enableTextures(TEXTURE_COLOR) * outColor;
     else if (!useTexture && useColor)
-        baseColor = outColor;
+        baseColor = vec4(1.0, 0.0, 0.0, 1.0);
     else
         baseColor = vec4(1.0);
 
+    FragColor = baseColor;
+    
     vec4 normTexture = enableTextures(TEXTURE_NORMAL);
     vec3 norm = vec3(0.0);
     if (normTexture.r != -1.0 || normTexture.g != -1.0 || normTexture.b != -1.0) {
@@ -851,6 +867,12 @@ void main() {
 
     if (FragColor.a < 0.1)
         discard;
+
+    float brightness = dot(FragColor.rgb, vec3(0.2126, 0.7152, 0.0722));
+    if (brightness > 1.0)
+        BrightColor = vec4(FragColor.rgb, 1.0);
+    else
+        BrightColor = vec4(0.0, 0.0, 0.0, 1.0);
 
     FragColor.rgb = acesToneMapping(FragColor.rgb);
 }
@@ -959,8 +981,8 @@ void main() {
 
 static const char* COLOR_VERT = R"(
 #version 330 core
-layout (location = 0) in vec3 aPos;
-layout (location = 1) in vec4 aColor;
+layout(location = 0) in vec3 aPos;
+layout(location = 1) in vec4 aColor;
 
 out vec4 vertexColor;
 
@@ -968,8 +990,7 @@ uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 
-void main()
-{
+void main() {
     mat4 mvp = projection * view * model;
     gl_Position = mvp * vec4(aPos, 1.0);
     vertexColor = aColor;
@@ -993,6 +1014,41 @@ void main()
     gl_Position = pos.xyww; 
 }  
 
+)";
+
+static const char* GAUSSIAN_FRAG = R"(
+#version 330 core
+out vec4 FragColor;
+
+in vec2 TexCoord;
+
+uniform sampler2D image;
+
+uniform bool horizontal;
+uniform float weight[5] = float[](0.227027, 0.1945946, 0.1216216, 0.054054, 0.016216);
+uniform float radius = 1.0;
+
+void main() {
+    vec2 tex_offset = 1.0 / textureSize(image, 0) * radius; 
+    vec3 result = texture(image, TexCoord).rgb * weight[0];
+    if(horizontal)
+    {
+        for(int i = 1; i < 5; ++i)
+        {
+            result += texture(image, TexCoord + vec2(tex_offset.x * i, 0.0)).rgb * weight[i];
+            result += texture(image, TexCoord - vec2(tex_offset.x * i, 0.0)).rgb * weight[i];
+        }
+    }
+    else
+    {
+        for(int i = 1; i < 5; ++i)
+        {
+            result += texture(image, TexCoord + vec2(0.0, tex_offset.y * i)).rgb * weight[i];
+            result += texture(image, TexCoord - vec2(0.0, tex_offset.y * i)).rgb * weight[i];
+        }
+    }
+    FragColor = vec4(result, 1.0);
+}
 )";
 
 static const char* POINT_DEPTH_FRAG = R"(

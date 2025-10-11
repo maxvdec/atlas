@@ -69,6 +69,7 @@ class MainScene : public Scene {
     Light light;
     Skybox skybox;
     Camera camera;
+    CoreObject lightObject;
     SphereCube sphereCube;
     Text fpsText;
     Model backpack;
@@ -165,12 +166,10 @@ class MainScene : public Scene {
         fpsText.addTraitComponent<Text>(FPSTextUpdater());
         window.addUIObject(&fpsText);
 
-        light = Light();
-        light.position = {0.0f, 0.0f, 0.0f};
-        light.castShadows(window, 4096);
-        light.distance = 1.0f;
-        light.color = Color(2.0f, 2.0f, 2.0f);
-        this->addLight(&light);
+        lightObject = createBox({1.0f, 1.0f, 1.0f}, Color::yellow());
+        lightObject.setPosition({0.0f, 0.3f, 0.0f});
+        lightObject.makeEmissive(this, {5.0, 5.0, 5.0}, 2.0f);
+        window.addObject(&lightObject);
 
         this->setAmbientIntensity(0.1f);
 

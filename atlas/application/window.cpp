@@ -10,6 +10,7 @@
 #include "atlas/core/shader.h"
 #include "atlas/light.h"
 #include "atlas/object.h"
+#include "atlas/texture.h"
 #include "atlas/units.h"
 #include "bezel/body.h"
 #include "finewave/audio.h"
@@ -222,8 +223,13 @@ void Window::run() {
         // Render to the targets
         for (auto &target : this->renderTargets) {
             glBindFramebuffer(GL_FRAMEBUFFER, target->fbo);
-            glViewport(0, 0, target->texture.creationData.width,
-                       target->texture.creationData.height);
+            if (target->brightTexture.id != 0) {
+                unsigned int attachments[2] = {GL_COLOR_ATTACHMENT0,
+                                               GL_COLOR_ATTACHMENT1};
+                glDrawBuffers(2, attachments);
+            }
+            Size2d windowSize = getSize();
+            glViewport(0, 0, windowSize.width, windowSize.height);
             glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -239,7 +245,6 @@ void Window::run() {
                 obj->render(getDeltaTime());
             }
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
-            target->resolve();
         }
 
         // Render to the screen
@@ -266,6 +271,10 @@ void Window::run() {
 
         glDisable(GL_CULL_FACE);
         for (auto &obj : this->preferenceRenderables) {
+            RenderTarget *target = dynamic_cast<RenderTarget *>(obj);
+            if (target != nullptr && target->brightTexture.id != 0) {
+                this->renderPingpong(target, getDeltaTime());
+            }
             obj->setViewMatrix(this->camera->calculateViewMatrix());
             obj->setProjectionMatrix(calculateProjectionMatrix());
             obj->render(getDeltaTime());
@@ -584,4 +593,105 @@ std::vector<std::shared_ptr<Body>> Window::getAllBodies() {
         }
     }
     return bodies;
+}
+
+void Window::renderPingpong(RenderTarget *target, float dt) {
+    if (target->brightTexture.id == 0) {
+        return;
+    }
+
+    if (!target->object || !target->object->isVisible) {
+        return;
+    }
+
+    int blurWidth = target->brightTexture.creationData.width;
+    int blurHeight = target->brightTexture.creationData.height;
+
+    if (this->pingpongFBOs[0] == 0 || this->pingpongFBOs[1] == 0) {
+        glGenFramebuffers(2, this->pingpongFBOs);
+        glGenTextures(2, this->pingpongBuffers);
+
+        for (unsigned int i = 0; i < 2; i++) {
+            glBindFramebuffer(GL_FRAMEBUFFER, this->pingpongFBOs[i]);
+            glBindTexture(GL_TEXTURE_2D, this->pingpongBuffers[i]);
+            // Use bright texture dimensions (downscaled)
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, blurWidth, blurHeight, 0,
+                         GL_RGBA, GL_FLOAT, nullptr);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                                   GL_TEXTURE_2D, this->pingpongBuffers[i], 0);
+
+            if (glCheckFramebufferStatus(GL_FRAMEBUFFER) !=
+                GL_FRAMEBUFFER_COMPLETE) {
+                std::cerr << "Pingpong Framebuffer not complete!" << std::endl;
+            }
+        }
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    bool horizontal = true, firstIteration = true;
+    int amount = 10;
+    ShaderProgram blurShader = ShaderProgram::fromDefaultShaders(
+        AtlasVertexShader::Fullscreen, AtlasFragmentShader::GaussianBlur);
+    ShaderProgram targetProgram = target->object->getShaderProgram().value();
+    target->object->setShader(blurShader);
+
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_BLEND);
+
+    glViewport(0, 0, blurWidth, blurHeight);
+
+    for (unsigned int i = 0; i < amount; i++) {
+        glBindFramebuffer(GL_FRAMEBUFFER, this->pingpongFBOs[horizontal]);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        glUseProgram(blurShader.programId);
+
+        blurShader.setUniform1i("horizontal", horizontal ? 1 : 0);
+        blurShader.setUniform1f("radius", 2.5f);
+
+        glActiveTexture(GL_TEXTURE0);
+        GLuint textureToSample = firstIteration
+                                     ? target->brightTexture.id
+                                     : this->pingpongBuffers[!horizontal];
+        glBindTexture(GL_TEXTURE_2D, textureToSample);
+
+        blurShader.setUniform1i("image", 0);
+
+        glBindVertexArray(target->object->vao);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, target->object->ebo);
+
+        if (!target->object->indices.empty()) {
+            glDrawElements(GL_TRIANGLES, target->object->indices.size(),
+                           GL_UNSIGNED_INT, 0);
+        } else {
+            glDrawArrays(GL_TRIANGLES, 0, target->object->vertices.size());
+        }
+
+        glBindVertexArray(0);
+        horizontal = !horizontal;
+        firstIteration = false;
+    }
+
+    target->object->setShader(targetProgram);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    glEnable(GL_DEPTH_TEST);
+
+    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
+    int fbWidth, fbHeight;
+    glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
+    glViewport(0, 0, fbWidth, fbHeight);
+
+    target->blurredTexture = Texture();
+    target->blurredTexture.creationData.width =
+        target->brightTexture.creationData.width;
+    target->blurredTexture.creationData.height =
+        target->brightTexture.creationData.height;
+    target->blurredTexture.type = TextureType::Color;
+    target->blurredTexture.id = this->pingpongBuffers[!horizontal];
 }
