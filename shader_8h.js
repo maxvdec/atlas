@@ -17,7 +17,8 @@ var shader_8h =
       [ "Empty", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0ace2c8aed9c2fa0cfbed56cbda4d8bf07", null ],
       [ "Particle", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a5e9328c486b44b9a58bca20f7f2064f4", null ],
       [ "Text", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a9dffbf69ffba8bc38bc4e01abf4b1675", null ],
-      [ "PointLightShadow", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a05c5b39892533f0c0ad86b083b28ff6a", null ]
+      [ "PointLightShadow", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a05c5b39892533f0c0ad86b083b28ff6a", null ],
+      [ "GaussianBlur", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a4471a723be46b14fd252403c8db161ff", null ]
     ] ],
     [ "AtlasGeometryShader", "shader_8h.html#a17951fe51aaa5769ef603acf594dc0b5", [
       [ "PointLightShadow", "shader_8h.html#a17951fe51aaa5769ef603acf594dc0b5a05c5b39892533f0c0ad86b083b28ff6a", null ]

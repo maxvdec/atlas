@@ -141,6 +141,7 @@ Variables</h2></td></tr>
 <tr class="memitem:ad346966a531110057848a978cf65409d" id="r_ad346966a531110057848a978cf65409d"><td class="memItemLeft" align="right" valign="top">static const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad346966a531110057848a978cf65409d">POINT_DEPTH_GEOM</a></td></tr>
 <tr class="memitem:abd40d744c94aaf9963332aadd7b06466" id="r_abd40d744c94aaf9963332aadd7b06466"><td class="memItemLeft" align="right" valign="top">static const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#abd40d744c94aaf9963332aadd7b06466">COLOR_VERT</a></td></tr>
 <tr class="memitem:accb5b46bd2b12d12a056815764bc4501" id="r_accb5b46bd2b12d12a056815764bc4501"><td class="memItemLeft" align="right" valign="top">static const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#accb5b46bd2b12d12a056815764bc4501">SKYBOX_VERT</a></td></tr>
+<tr class="memitem:a07f0219170c57524bc8c2ca4d6e5f58a" id="r_a07f0219170c57524bc8c2ca4d6e5f58a"><td class="memItemLeft" align="right" valign="top">static const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a07f0219170c57524bc8c2ca4d6e5f58a">GAUSSIAN_FRAG</a></td></tr>
 <tr class="memitem:aee226ae18ed5464f74cd0abeb795fa84" id="r_aee226ae18ed5464f74cd0abeb795fa84"><td class="memItemLeft" align="right" valign="top">static const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aee226ae18ed5464f74cd0abeb795fa84">POINT_DEPTH_FRAG</a></td></tr>
 <tr class="memitem:a8aa02451898eb17af41dbd2d3b424679" id="r_a8aa02451898eb17af41dbd2d3b424679"><td class="memItemLeft" align="right" valign="top">static const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8aa02451898eb17af41dbd2d3b424679">DEBUG_VERT</a></td></tr>
 <tr class="memitem:a2a23d79d6134f3704a9a34ffa9bbbe40" id="r_a2a23d79d6134f3704a9a34ffa9bbbe40"><td class="memItemLeft" align="right" valign="top">static const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2a23d79d6134f3704a9a34ffa9bbbe40">TEXTURE_FRAG</a></td></tr>
@@ -173,7 +174,7 @@ Variables</h2></td></tr>
 <div class="line"><span class="stringliteral"></span> </div>
 <div class="line"><span class="stringliteral">)&quot;</span></div>
 </div><!-- fragment -->
-<p class="definition">Definition at line <a class="el" href="default__shaders_8h_source.html#l00090">90</a> of file <a class="el" href="default__shaders_8h_source.html">default_shaders.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="default__shaders_8h_source.html#l00093">93</a> of file <a class="el" href="default__shaders_8h_source.html">default_shaders.h</a>.</p>
 
 </div>
 </div>
@@ -200,7 +201,7 @@ Variables</h2></td></tr>
 <div class="line"><span class="stringliteral"></span> </div>
 <div class="line"><span class="stringliteral">)&quot;</span></div>
 </div><!-- fragment -->
-<p class="definition">Definition at line <a class="el" href="default__shaders_8h_source.html#l01131">1131</a> of file <a class="el" href="default__shaders_8h_source.html">default_shaders.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="default__shaders_8h_source.html#l01187">1187</a> of file <a class="el" href="default__shaders_8h_source.html">default_shaders.h</a>.</p>
 
 </div>
 </div>
@@ -225,14 +226,17 @@ Variables</h2></td></tr>
 </div><div class="memdoc">
 <b>Initial value:</b><div class="fragment"><div class="line">= R<span class="stringliteral">&quot;(</span></div>
 <div class="line"><span class="stringliteral">#version 330 core</span></div>
-<div class="line"><span class="stringliteral">out vec4 FragColor;</span></div>
-<div class="line"><span class="stringliteral"></span> </div>
+<div class="line"><span class="stringliteral">layout (location = 0) out vec4 FragColor;</span></div>
+<div class="line"><span class="stringliteral">layout (location = 1) out vec4 BrightColor;</span></div>
 <div class="line"><span class="stringliteral">in vec4 vertexColor;</span></div>
 <div class="line"><span class="stringliteral"></span> </div>
 <div class="line"><span class="stringliteral">void main() {</span></div>
-<div class="line"><span class="stringliteral">    FragColor = vertexColor;</span></div>
+<div class="line"><span class="stringliteral">    vec3 color = vertexColor.rgb / (vertexColor.rgb + vec3(1.0));</span></div>
+<div class="line"><span class="stringliteral">    FragColor = vec4(color, vertexColor.a);</span></div>
+<div class="line"><span class="stringliteral">    if (length(color) &gt; 1.0) {</span></div>
+<div class="line"><span class="stringliteral">        BrightColor = vec4(color, vertexColor.a);</span></div>
+<div class="line"><span class="stringliteral">    }</span></div>
 <div class="line"><span class="stringliteral">}</span></div>
-<div class="line"><span class="stringliteral"></span> </div>
 <div class="line"><span class="stringliteral">)&quot;</span></div>
 </div><!-- fragment -->
 <p class="definition">Definition at line <a class="el" href="default__shaders_8h_source.html#l00052">52</a> of file <a class="el" href="default__shaders_8h_source.html">default_shaders.h</a>.</p>
@@ -260,8 +264,8 @@ Variables</h2></td></tr>
 </div><div class="memdoc">
 <b>Initial value:</b><div class="fragment"><div class="line">= R<span class="stringliteral">&quot;(</span></div>
 <div class="line"><span class="stringliteral">#version 330 core</span></div>
-<div class="line"><span class="stringliteral">layout (location = 0) in vec3 aPos;</span></div>
-<div class="line"><span class="stringliteral">layout (location = 1) in vec4 aColor;</span></div>
+<div class="line"><span class="stringliteral">layout(location = 0) in vec3 aPos;</span></div>
+<div class="line"><span class="stringliteral">layout(location = 1) in vec4 aColor;</span></div>
 <div class="line"><span class="stringliteral"></span> </div>
 <div class="line"><span class="stringliteral">out vec4 vertexColor;</span></div>
 <div class="line"><span class="stringliteral"></span> </div>
@@ -269,8 +273,7 @@ Variables</h2></td></tr>
 <div class="line"><span class="stringliteral">uniform mat4 view;</span></div>
 <div class="line"><span class="stringliteral">uniform mat4 projection;</span></div>
 <div class="line"><span class="stringliteral"></span> </div>
-<div class="line"><span class="stringliteral">void main()</span></div>
-<div class="line"><span class="stringliteral">{</span></div>
+<div class="line"><span class="stringliteral">void main() {</span></div>
 <div class="line"><span class="stringliteral">    mat4 mvp = projection * view * model;</span></div>
 <div class="line"><span class="stringliteral">    gl_Position = mvp * vec4(aPos, 1.0);</span></div>
 <div class="line"><span class="stringliteral">    vertexColor = aColor;</span></div>
@@ -278,7 +281,7 @@ Variables</h2></td></tr>
 <div class="line"><span class="stringliteral"></span> </div>
 <div class="line"><span class="stringliteral">)&quot;</span></div>
 </div><!-- fragment -->
-<p class="definition">Definition at line <a class="el" href="default__shaders_8h_source.html#l00960">960</a> of file <a class="el" href="default__shaders_8h_source.html">default_shaders.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="default__shaders_8h_source.html#l00982">982</a> of file <a class="el" href="default__shaders_8h_source.html">default_shaders.h</a>.</p>
 
 </div>
 </div>
@@ -311,7 +314,7 @@ Variables</h2></td></tr>
 <div class="line"><span class="stringliteral"></span> </div>
 <div class="line"><span class="stringliteral">)&quot;</span></div>
 </div><!-- fragment -->
-<p class="definition">Definition at line <a class="el" href="default__shaders_8h_source.html#l00882">882</a> of file <a class="el" href="default__shaders_8h_source.html">default_shaders.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="default__shaders_8h_source.html#l00904">904</a> of file <a class="el" href="default__shaders_8h_source.html">default_shaders.h</a>.</p>
 
 </div>
 </div>
@@ -344,7 +347,7 @@ Variables</h2></td></tr>
 <div class="line"><span class="stringliteral"></span> </div>
 <div class="line"><span class="stringliteral">)&quot;</span></div>
 </div><!-- fragment -->
-<p class="definition">Definition at line <a class="el" href="default__shaders_8h_source.html#l01014">1014</a> of file <a class="el" href="default__shaders_8h_source.html">default_shaders.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="default__shaders_8h_source.html#l01070">1070</a> of file <a class="el" href="default__shaders_8h_source.html">default_shaders.h</a>.</p>
 
 </div>
 </div>
@@ -435,7 +438,7 @@ Variables</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="default__shaders_8h_source.html#l00094">94</a> of file <a class="el" href="default__shaders_8h_source.html">default_shaders.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="default__shaders_8h_source.html#l00097">97</a> of file <a class="el" href="default__shaders_8h_source.html">default_shaders.h</a>.</p>
 
 </div>
 </div>
@@ -475,7 +478,31 @@ Variables</h2></td></tr>
 <div class="line"><span class="stringliteral"></span> </div>
 <div class="line"><span class="stringliteral">)&quot;</span></div>
 </div><!-- fragment -->
-<p class="definition">Definition at line <a class="el" href="default__shaders_8h_source.html#l01114">1114</a> of file <a class="el" href="default__shaders_8h_source.html">default_shaders.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="default__shaders_8h_source.html#l01170">1170</a> of file <a class="el" href="default__shaders_8h_source.html">default_shaders.h</a>.</p>
+
+</div>
+</div>
+<a id="a07f0219170c57524bc8c2ca4d6e5f58a" name="a07f0219170c57524bc8c2ca4d6e5f58a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a07f0219170c57524bc8c2ca4d6e5f58a">&#9670;&#160;</a></span>GAUSSIAN_FRAG</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const char* GAUSSIAN_FRAG</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel static">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="default__shaders_8h_source.html#l01019">1019</a> of file <a class="el" href="default__shaders_8h_source.html">default_shaders.h</a>.</p>
 
 </div>
 </div>
@@ -499,7 +526,7 @@ Variables</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="default__shaders_8h_source.html#l00301">301</a> of file <a class="el" href="default__shaders_8h_source.html">default_shaders.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="default__shaders_8h_source.html#l00314">314</a> of file <a class="el" href="default__shaders_8h_source.html">default_shaders.h</a>.</p>
 
 </div>
 </div>
@@ -523,7 +550,7 @@ Variables</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="default__shaders_8h_source.html#l01064">1064</a> of file <a class="el" href="default__shaders_8h_source.html">default_shaders.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="default__shaders_8h_source.html#l01120">1120</a> of file <a class="el" href="default__shaders_8h_source.html">default_shaders.h</a>.</p>
 
 </div>
 </div>
@@ -572,7 +599,7 @@ Variables</h2></td></tr>
 <div class="line"><span class="stringliteral">}</span></div>
 <div class="line"><span class="stringliteral">)&quot;</span></div>
 </div><!-- fragment -->
-<p class="definition">Definition at line <a class="el" href="default__shaders_8h_source.html#l00064">64</a> of file <a class="el" href="default__shaders_8h_source.html">default_shaders.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="default__shaders_8h_source.html#l00067">67</a> of file <a class="el" href="default__shaders_8h_source.html">default_shaders.h</a>.</p>
 
 </div>
 </div>
@@ -596,7 +623,7 @@ Variables</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="default__shaders_8h_source.html#l00892">892</a> of file <a class="el" href="default__shaders_8h_source.html">default_shaders.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="default__shaders_8h_source.html#l00914">914</a> of file <a class="el" href="default__shaders_8h_source.html">default_shaders.h</a>.</p>
 
 </div>
 </div>
@@ -635,7 +662,7 @@ Variables</h2></td></tr>
 <div class="line"><span class="stringliteral">}</span></div>
 <div class="line"><span class="stringliteral">)&quot;</span></div>
 </div><!-- fragment -->
-<p class="definition">Definition at line <a class="el" href="default__shaders_8h_source.html#l00998">998</a> of file <a class="el" href="default__shaders_8h_source.html">default_shaders.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="default__shaders_8h_source.html#l01054">1054</a> of file <a class="el" href="default__shaders_8h_source.html">default_shaders.h</a>.</p>
 
 </div>
 </div>
@@ -681,7 +708,7 @@ Variables</h2></td></tr>
 <div class="line"><span class="stringliteral"></span> </div>
 <div class="line"><span class="stringliteral">)&quot;</span></div>
 </div><!-- fragment -->
-<p class="definition">Definition at line <a class="el" href="default__shaders_8h_source.html#l00937">937</a> of file <a class="el" href="default__shaders_8h_source.html">default_shaders.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="default__shaders_8h_source.html#l00959">959</a> of file <a class="el" href="default__shaders_8h_source.html">default_shaders.h</a>.</p>
 
 </div>
 </div>
@@ -794,7 +821,7 @@ Variables</h2></td></tr>
 <div class="line"><span class="stringliteral"></span> </div>
 <div class="line"><span class="stringliteral">)&quot;</span></div>
 </div><!-- fragment -->
-<p class="definition">Definition at line <a class="el" href="default__shaders_8h_source.html#l00980">980</a> of file <a class="el" href="default__shaders_8h_source.html">default_shaders.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="default__shaders_8h_source.html#l01001">1001</a> of file <a class="el" href="default__shaders_8h_source.html">default_shaders.h</a>.</p>
 
 </div>
 </div>
@@ -832,7 +859,7 @@ Variables</h2></td></tr>
 <div class="line"><span class="stringliteral">}</span></div>
 <div class="line"><span class="stringliteral">)&quot;</span></div>
 </div><!-- fragment -->
-<p class="definition">Definition at line <a class="el" href="default__shaders_8h_source.html#l01099">1099</a> of file <a class="el" href="default__shaders_8h_source.html">default_shaders.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="default__shaders_8h_source.html#l01155">1155</a> of file <a class="el" href="default__shaders_8h_source.html">default_shaders.h</a>.</p>
 
 </div>
 </div>
@@ -868,7 +895,7 @@ Variables</h2></td></tr>
 <div class="line"><span class="stringliteral">}</span></div>
 <div class="line"><span class="stringliteral">)&quot;</span></div>
 </div><!-- fragment -->
-<p class="definition">Definition at line <a class="el" href="default__shaders_8h_source.html#l00288">288</a> of file <a class="el" href="default__shaders_8h_source.html">default_shaders.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="default__shaders_8h_source.html#l00301">301</a> of file <a class="el" href="default__shaders_8h_source.html">default_shaders.h</a>.</p>
 
 </div>
 </div>
@@ -892,7 +919,7 @@ Variables</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="default__shaders_8h_source.html#l01024">1024</a> of file <a class="el" href="default__shaders_8h_source.html">default_shaders.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="default__shaders_8h_source.html#l01080">1080</a> of file <a class="el" href="default__shaders_8h_source.html">default_shaders.h</a>.</p>
 
 </div>
 </div>
@@ -937,7 +964,7 @@ Variables</h2></td></tr>
 <div class="line"><span class="stringliteral"></span> </div>
 <div class="line"><span class="stringliteral">)&quot;</span></div>
 </div><!-- fragment -->
-<p class="definition">Definition at line <a class="el" href="default__shaders_8h_source.html#l00860">860</a> of file <a class="el" href="default__shaders_8h_source.html">default_shaders.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="default__shaders_8h_source.html#l00882">882</a> of file <a class="el" href="default__shaders_8h_source.html">default_shaders.h</a>.</p>
 
 </div>
 </div>

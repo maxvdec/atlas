@@ -1,5 +1,11 @@
 var NAVTREEINDEX4 =
 {
+"struct_layout_descriptor.html#a20d2afc6d83235da2293245b6e3144ed":[2,0,38,0],
+"struct_layout_descriptor.html#a2ad04ebb60895504d80ffa863285dce4":[2,0,38,3],
+"struct_layout_descriptor.html#ac19f6be67e42f8b2cf98971ed4ae73a8":[2,0,38,4],
+"struct_layout_descriptor.html#ac857d18e7c022da576d5abd7c8dd4fed":[2,0,38,1],
+"struct_layout_descriptor.html#acbc4d2b0de323299b2cca4b0bd89d5e7":[2,0,38,2],
+"struct_layout_descriptor.html#af67b223d0ec56561c3075cc81b742544":[2,0,38,5],
 "struct_light.html":[2,0,39],
 "struct_light.html#a24c4613acc9b74cde2d48f703dce147f":[2,0,39,2],
 "struct_light.html#a45bc9d3d7d10feecc7b9042f00c54813":[2,0,39,12],
@@ -243,11 +249,5 @@ var NAVTREEINDEX4 =
 "texture_8h.html#a639c740f69368f9fe25a4f7409a16384a9ead0d38e06ec253ca0ecbf6ea56e59b":[3,0,1,0,10,7,0],
 "texture_8h.html#a639c740f69368f9fe25a4f7409a16384ae34a1815b3fff1ad8307cb98182f4481":[3,0,1,0,10,7,1],
 "texture_8h_source.html":[3,0,1,0,10],
-"tutorial.html":[0],
-"tutorial.html#autotoc_md10":[0,1,3,1],
-"tutorial.html#autotoc_md11":[0,1,4],
-"tutorial.html#autotoc_md12":[0,2],
-"tutorial.html#autotoc_md13":[0,2,0],
-"tutorial.html#autotoc_md14":[0,2,0,0],
-"tutorial.html#autotoc_md15":[0,2,1]
+"tutorial.html":[0]
 };

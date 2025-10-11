@@ -10,6 +10,7 @@ var default__shaders_8h =
     [ "EMPTY_FRAG", "default__shaders_8h.html#a27c1913deeb2fbc79724b5419e325305", null ],
     [ "FULLSCREEN_FRAG", "default__shaders_8h.html#ad296833bdb0c8209d00ae60404d63ccb", null ],
     [ "FULLSCREEN_VERT", "default__shaders_8h.html#a0ce5d8c68f5b7c88fac6151edc55a670", null ],
+    [ "GAUSSIAN_FRAG", "default__shaders_8h.html#a07f0219170c57524bc8c2ca4d6e5f58a", null ],
     [ "MAIN_FRAG", "default__shaders_8h.html#a44e465e75eb67c9aaa0b6cf24688ce97", null ],
     [ "MAIN_VERT", "default__shaders_8h.html#a43a37aa39509166536b1a6ef3c32be54", null ],
     [ "PARTICLE_FRAG", "default__shaders_8h.html#adbc40b4a97e5a3bf53b4b7128dfbdc9e", null ],
