@@ -96,6 +96,9 @@ class Camera {
      */
     bool useOrthographic = false;
 
+    float focusDepth = 20.f;
+    float focusRange = 10.0f;
+
     /**
      * @brief Move the camera by a delta in 3D space.
      *

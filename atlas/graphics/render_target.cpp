@@ -10,6 +10,7 @@
 #include <glad/glad.h>
 #include <iostream>
 #include <vector>
+#include "atlas/camera.h"
 #include "atlas/core/shader.h"
 #include "atlas/effect.h"
 #include "atlas/object.h"
@@ -46,13 +47,21 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
                                        GL_COLOR_ATTACHMENT1};
         glDrawBuffers(2, attachments);
 
-        GLuint depthStencilRBO;
-        glGenRenderbuffers(1, &depthStencilRBO);
-        glBindRenderbuffer(GL_RENDERBUFFER, depthStencilRBO);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, size.width,
-                              size.height);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
-                                  GL_RENDERBUFFER, depthStencilRBO);
+        GLuint depthTexture;
+        glGenTextures(1, &depthTexture);
+        glBindTexture(GL_TEXTURE_2D, depthTexture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, size.width,
+                     size.height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                               GL_TEXTURE_2D, depthTexture, 0);
+        this->depthTexture.id = depthTexture;
+        this->depthTexture.creationData.width = size.width;
+        this->depthTexture.creationData.height = size.height;
+        this->depthTexture.type = TextureType::Depth;
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) !=
             GL_FRAMEBUFFER_COMPLETE) {
@@ -238,6 +247,11 @@ void RenderTarget::display(Window &window, float zindex) {
 }
 
 void RenderTarget::resolve() {
+    glBindTexture(GL_TEXTURE_2D, this->texture.id);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                    GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     if (type != RenderTargetType::Multisampled) {
         return;
     }
@@ -296,6 +310,8 @@ void RenderTarget::render(float dt) {
         glUseProgram(obj->shaderProgram.programId);
     }
 
+    Camera *camera = Window::mainWindow->camera;
+
     if (texture.type == TextureType::DepthCube) {
         glActiveTexture(GL_TEXTURE10);
         glBindTexture(GL_TEXTURE_CUBE_MAP, texture.id);
@@ -312,6 +328,27 @@ void RenderTarget::render(float dt) {
         obj->shaderProgram.setUniform1i("BrightTexture", 1);
         obj->shaderProgram.setUniform1i("hasBrightTexture",
                                         brightTexture.id != 0 ? 1 : 0);
+
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, depthTexture.id);
+        obj->shaderProgram.setUniform1i("DepthTexture", 2);
+        if (!this->renderDepthOfView) {
+            obj->shaderProgram.setUniform1i("hasDepthTexture", 0);
+        } else {
+            obj->shaderProgram.setUniform1i("hasDepthTexture",
+                                            depthTexture.id != 0 ? 1 : 0);
+        }
+
+        obj->shaderProgram.setUniform1f("nearPlane", camera->nearClip);
+        obj->shaderProgram.setUniform1f("farPlane", camera->farClip);
+        obj->shaderProgram.setUniform1f("focusDepth", camera->focusDepth);
+        obj->shaderProgram.setUniform1f("focusRange", camera->focusRange);
+
+        int maxMipLevels = (int)std::floor(
+            std::log2(std::max(Window::mainWindow->getSize().width,
+                               Window::mainWindow->getSize().height)));
+
+        obj->shaderProgram.setUniform1i("maxMipLevel", maxMipLevels);
     }
 
     obj->shaderProgram.setUniform1i("TextureType",
