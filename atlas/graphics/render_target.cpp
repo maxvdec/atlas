@@ -207,6 +207,90 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
         this->texture = texture;
         this->rbo = 0;
         this->resolveFbo = 0;
+    } else if (this->type == RenderTargetType::GBuffer) {
+        glGenFramebuffers(1, &fbo);
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+        glGenTextures(1, &gPosition.id);
+        glBindTexture(GL_TEXTURE_2D, gPosition.id);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, size.width, size.height, 0,
+                     GL_RGBA, GL_FLOAT, nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                               GL_TEXTURE_2D, gPosition.id, 0);
+        gPosition.creationData.width = size.width;
+        gPosition.creationData.height = size.height;
+        gPosition.type = TextureType::Color;
+
+        glGenTextures(1, &gNormal.id);
+        glBindTexture(GL_TEXTURE_2D, gNormal.id);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, size.width, size.height, 0,
+                     GL_RGBA, GL_FLOAT, nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1,
+                               GL_TEXTURE_2D, gNormal.id, 0);
+        gNormal.creationData.width = size.width;
+        gNormal.creationData.height = size.height;
+        gNormal.type = TextureType::Color;
+
+        glGenTextures(1, &gAlbedoSpec.id);
+        glBindTexture(GL_TEXTURE_2D, gAlbedoSpec.id);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.width, size.height, 0,
+                     GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2,
+                               GL_TEXTURE_2D, gAlbedoSpec.id, 0);
+        gAlbedoSpec.creationData.width = size.width;
+        gAlbedoSpec.creationData.height = size.height;
+        gAlbedoSpec.type = TextureType::Color;
+
+        glGenTextures(1, &gMaterial.id);
+        glBindTexture(GL_TEXTURE_2D, gMaterial.id);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.width, size.height, 0,
+                     GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3,
+                               GL_TEXTURE_2D, gMaterial.id, 0);
+        gMaterial.creationData.width = size.width;
+        gMaterial.creationData.height = size.height;
+        gMaterial.type = TextureType::Color;
+
+        glGenTextures(1, &depthTexture.id);
+        glBindTexture(GL_TEXTURE_2D, depthTexture.id);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, size.width,
+                     size.height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                               GL_TEXTURE_2D, depthTexture.id, 0);
+        depthTexture.creationData.width = size.width;
+        depthTexture.creationData.height = size.height;
+        depthTexture.type = TextureType::Depth;
+
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) !=
+            GL_FRAMEBUFFER_COMPLETE) {
+            std::cerr << "Error: GBuffer Framebuffer is not complete!"
+                      << std::endl;
+        }
+
+        unsigned int attachments[4] = {
+            GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2,
+            GL_COLOR_ATTACHMENT3};
+        glDrawBuffers(4, attachments);
     }
 }
 

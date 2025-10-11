@@ -227,6 +227,14 @@ void Window::run() {
                 unsigned int attachments[2] = {GL_COLOR_ATTACHMENT0,
                                                GL_COLOR_ATTACHMENT1};
                 glDrawBuffers(2, attachments);
+            } else if (this->usesDeferred) {
+                unsigned int attachments[4] = {
+                    GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1,
+                    GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3};
+                glDrawBuffers(4, attachments);
+                this->deferredRendering();
+                target->resolve();
+                continue;
             }
             Size2d windowSize = getSize();
             glViewport(0, 0, windowSize.width, windowSize.height);
@@ -695,4 +703,12 @@ void Window::renderPingpong(RenderTarget *target, float dt) {
         target->brightTexture.creationData.height;
     target->blurredTexture.type = TextureType::Color;
     target->blurredTexture.id = this->pingpongBuffers[!horizontal];
+}
+
+void Window::useDeferredRendering() {
+    this->usesDeferred = true;
+    auto target = std::make_shared<RenderTarget>(
+        RenderTarget(*this, RenderTargetType::GBuffer));
+    target->initialize();
+    this->gBuffer = target;
 }

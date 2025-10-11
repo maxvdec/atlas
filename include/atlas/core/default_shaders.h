@@ -2,6 +2,19 @@
 #ifndef ATLAS_GENERATED_SHADERS_H
 #define ATLAS_GENERATED_SHADERS_H
 
+static const char* LIGHT_VERT = R"(
+#version 330 core
+layout(location = 0) in vec3 aPos;
+layout(location = 1) in vec2 aTexCoord;
+
+out vec2 TexCoord;
+
+void main() {
+    TexCoord = aTexCoord;
+    gl_Position = vec4(aPos, 1.0);
+}
+)";
+
 static const char* POINT_DEPTH_VERT = R"(
 #version 330 core
 layout (location = 0) in vec3 aPos;
@@ -10,6 +23,181 @@ uniform mat4 model;
 
 void main() {
     gl_Position = model * vec4(aPos, 1.0);
+}
+)";
+
+static const char* DEFERRED_FRAG = R"(
+#version 330 core
+layout (location = 0) out vec4 gPosition;
+layout (location = 1) out vec4 gNormal;
+layout (location = 2) out vec4 gAlbedoSpec;
+layout (location = 3) out vec4 gMaterial;
+
+in vec2 TexCoord;
+in vec4 outColor;
+in vec3 Normal;
+in vec3 FragPos;
+in mat3 TBN;
+
+const int TEXTURE_COLOR = 0;
+const int TEXTURE_SPECULAR = 1;
+const int TEXTURE_NORMAL = 5;
+const int TEXTURE_PARALLAX = 6;
+
+struct Material {
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+    float shininess;
+    float reflectivity;
+};
+
+// Textures
+uniform sampler2D texture1;
+uniform sampler2D texture2;
+uniform sampler2D texture3;
+uniform sampler2D texture4;
+uniform sampler2D texture5;
+uniform sampler2D texture6;
+uniform sampler2D texture7;
+uniform sampler2D texture8;
+uniform sampler2D texture9;
+uniform sampler2D texture10;
+
+// Uniforms
+uniform int textureTypes[16];
+uniform int textureCount;
+uniform Material material;
+uniform vec3 cameraPosition;
+uniform bool useTexture;
+uniform bool useColor;
+
+vec2 texCoord;
+
+vec4 enableTextures(int type) {
+    vec4 color = vec4(0.0);
+    int count = 0;
+    for (int i = 0; i < textureCount; i++) {
+        if (textureTypes[i] == type) {
+            if (i == 0) color += texture(texture1, texCoord);
+            else if (i == 1) color += texture(texture2, texCoord);
+            else if (i == 2) color += texture(texture3, texCoord);
+            else if (i == 3) color += texture(texture4, texCoord);
+            else if (i == 4) color += texture(texture5, texCoord);
+            else if (i == 5) color += texture(texture6, texCoord);
+            else if (i == 6) color += texture(texture7, texCoord);
+            else if (i == 7) color += texture(texture8, texCoord);
+            else if (i == 8) color += texture(texture9, texCoord);
+            else if (i == 9) color += texture(texture10, texCoord);
+            count++;
+        }
+    }
+    if (count > 0) color /= float(count);
+    if (count == 0) return vec4(-1.0);
+    return color;
+}
+
+vec4 sampleTextureAt(int textureIndex, vec2 uv) {
+    if (textureIndex == 0) return texture(texture1, uv);
+    else if (textureIndex == 1) return texture(texture2, uv);
+    else if (textureIndex == 2) return texture(texture3, uv);
+    else if (textureIndex == 3) return texture(texture4, uv);
+    else if (textureIndex == 4) return texture(texture5, uv);
+    else if (textureIndex == 5) return texture(texture6, uv);
+    else if (textureIndex == 6) return texture(texture7, uv);
+    else if (textureIndex == 7) return texture(texture8, uv);
+    else if (textureIndex == 8) return texture(texture9, uv);
+    else if (textureIndex == 9) return texture(texture10, uv);
+    return vec4(0.0);
+}
+
+vec2 parallaxMapping(vec2 texCoords, vec3 viewDir) {
+    const float minLayers = 8.0;
+    const float maxLayers = 32.0;
+    float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), viewDir)));
+    float layerDepth = 1.0 / numLayers;
+    float currentLayerDepth = 0.0;
+
+    vec2 P = viewDir.xy * 0.1;
+    vec2 deltaTexCoords = P / numLayers;
+
+    vec2 currentTexCoords = texCoords;
+    int textureIndex = -1;
+    for (int i = 0; i < textureCount; i++) {
+        if (textureTypes[i] == TEXTURE_PARALLAX) {
+            textureIndex = i;
+            break;
+        }
+    }
+    if (textureIndex == -1) return texCoords;
+    
+    float currentDepthMapValue = sampleTextureAt(textureIndex, currentTexCoords).r;
+
+    while (currentLayerDepth < currentDepthMapValue) {
+        currentTexCoords -= deltaTexCoords;
+        currentDepthMapValue = sampleTextureAt(textureIndex, currentTexCoords).r;
+        currentLayerDepth += layerDepth;
+    }
+
+    vec2 prevTexCoords = currentTexCoords + deltaTexCoords;
+    float afterDepth = currentDepthMapValue - currentLayerDepth;
+    float beforeDepth = sampleTextureAt(textureIndex, prevTexCoords).r - (currentLayerDepth - layerDepth);
+    float weight = afterDepth / (afterDepth - beforeDepth);
+    currentTexCoords = prevTexCoords * weight + currentTexCoords * (1.0 - weight);
+
+    return currentTexCoords;
+}
+
+void main() {
+    texCoord = TexCoord;
+    
+    vec3 tangentViewDir = normalize((TBN * cameraPosition) - (TBN * FragPos));
+    texCoord = parallaxMapping(texCoord, tangentViewDir);
+    
+    if (texCoord.x > 1.0 || texCoord.y > 1.0 || texCoord.x < 0.0 || texCoord.y < 0.0)
+        discard;
+    
+    vec4 baseColor;
+    if (useTexture && !useColor)
+        baseColor = enableTextures(TEXTURE_COLOR);
+    else if (useTexture && useColor)
+        baseColor = enableTextures(TEXTURE_COLOR) * outColor;
+    else if (!useTexture && useColor)
+        baseColor = outColor;
+    else
+        baseColor = vec4(1.0);
+    
+    if (baseColor.a < 0.1)
+        discard;
+    
+    vec4 normTexture = enableTextures(TEXTURE_NORMAL);
+    vec3 normal;
+    if (normTexture.r != -1.0 || normTexture.g != -1.0 || normTexture.b != -1.0) {
+        normal = normalize(normTexture.rgb * 2.0 - 1.0);
+        normal = normalize(TBN * normal);
+    } else {
+        normal = normalize(Normal);
+    }
+    
+    vec4 specTex = enableTextures(TEXTURE_SPECULAR);
+    vec3 specColor = material.specular;
+    if (specTex.r != -1.0 || specTex.g != -1.0 || specTex.b != -1.0) {
+        specColor *= specTex.rgb;
+    }
+    
+    gPosition = vec4(FragPos, gl_FragCoord.z);
+    
+    gNormal = vec4(normal, 1.0);
+    
+    float specIntensity = (specColor.r + specColor.g + specColor.b) / 3.0;
+    gAlbedoSpec = vec4(baseColor.rgb, specIntensity);
+    
+    gMaterial = vec4(
+        material.ambient.r,
+        material.diffuse.r,
+        material.shininess / 256.0,  
+        material.reflectivity
+    );
 }
 )";
 
@@ -1081,6 +1269,355 @@ void main() {
         }
     }
     FragColor = vec4(result, 1.0);
+}
+)";
+
+static const char* DEFERRED_VERT = R"(
+#version 330 core
+layout(location = 0) in vec3 aPos;
+layout(location = 1) in vec4 aColor;
+layout(location = 2) in vec2 aTexCoord;
+layout(location = 3) in vec3 aNormal;
+layout(location = 4) in vec3 aTangent;
+layout(location = 5) in vec3 aBitangent;
+
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+
+out vec4 outColor;
+out vec2 TexCoord;
+out vec3 Normal;
+out vec3 FragPos;
+out mat3 TBN;
+
+void main() {
+    vec4 worldPos = model * vec4(aPos, 1.0);
+    FragPos = worldPos.xyz;
+    gl_Position = projection * view * worldPos;
+
+    TexCoord = aTexCoord;
+    outColor = aColor;
+
+    mat3 normalMatrix = mat3(transpose(inverse(model)));
+    Normal = normalize(normalMatrix * aNormal);
+
+    vec3 T = normalize(normalMatrix * aTangent);
+    vec3 B = normalize(normalMatrix * aBitangent);
+    vec3 N = normalize(normalMatrix * aNormal);
+    TBN = mat3(T, B, N);
+}
+)";
+
+static const char* LIGHT_FRAG = R"(
+#version 330 core
+layout (location = 0) out vec4 FragColor;
+layout (location = 1) out vec4 BrightColor;
+
+in vec2 TexCoord;
+
+uniform sampler2D gPosition;
+uniform sampler2D gNormal;
+uniform sampler2D gAlbedoSpec;
+uniform sampler2D gMaterial;
+
+uniform sampler2D texture1;
+uniform sampler2D texture2;
+uniform sampler2D texture3;
+uniform sampler2D texture4;
+uniform sampler2D texture5;
+uniform samplerCube cubeMap1;
+uniform samplerCube cubeMap2;
+uniform samplerCube cubeMap3;
+uniform samplerCube cubeMap4;
+uniform samplerCube cubeMap5;
+uniform samplerCube skybox;
+
+struct AmbientLight {
+    vec4 color;
+    float intensity;
+};
+
+struct DirectionalLight {
+    vec3 direction;
+    vec3 diffuse;
+    vec3 specular;
+};
+
+struct PointLight {
+    vec3 position;
+    vec3 diffuse;
+    vec3 specular;
+    float constant;
+    float linear;
+    float quadratic;
+};
+
+struct SpotLight {
+    vec3 position;
+    vec3 direction;
+    float cutOff;
+    float outerCutOff;
+    vec3 diffuse;
+    vec3 specular;
+};
+
+struct ShadowParameters {
+    mat4 lightView;
+    mat4 lightProjection;
+    float bias;
+    int textureIndex;
+    float farPlane;
+    vec3 lightPos;
+    bool isPointLight;
+};
+
+uniform AmbientLight ambientLight;
+
+uniform DirectionalLight directionalLights[4];
+uniform int directionalLightCount;
+
+uniform PointLight pointLights[32];
+uniform int pointLightCount;
+
+uniform SpotLight spotlights[32];
+uniform int spotlightCount;
+
+uniform ShadowParameters shadowParams[10];
+uniform int shadowParamCount;
+
+uniform vec3 cameraPosition;
+
+vec4 sampleTextureAt(int textureIndex, vec2 uv) {
+    if (textureIndex == 0) return texture(texture1, uv);
+    else if (textureIndex == 1) return texture(texture2, uv);
+    else if (textureIndex == 2) return texture(texture3, uv);
+    else if (textureIndex == 3) return texture(texture4, uv);
+    else if (textureIndex == 4) return texture(texture5, uv);
+    return vec4(0.0);
+}
+
+vec4 sampleCubeTextureAt(int textureIndex, vec3 direction) {
+    if (textureIndex == 0) return texture(cubeMap1, direction);
+    else if (textureIndex == 1) return texture(cubeMap2, direction);
+    else if (textureIndex == 2) return texture(cubeMap3, direction);
+    else if (textureIndex == 3) return texture(cubeMap4, direction);
+    else if (textureIndex == 4) return texture(cubeMap5, direction);
+    return vec4(0.0);
+}
+
+vec2 getTextureDimensions(int textureIndex) {
+    if (textureIndex == 0) return vec2(textureSize(texture1, 0));
+    else if (textureIndex == 1) return vec2(textureSize(texture2, 0));
+    else if (textureIndex == 2) return vec2(textureSize(texture3, 0));
+    else if (textureIndex == 3) return vec2(textureSize(texture4, 0));
+    else if (textureIndex == 4) return vec2(textureSize(texture5, 0));
+    return vec2(0);
+}
+
+float calculateShadow(ShadowParameters shadowParam, vec3 fragPos, vec3 normal) {
+    vec4 fragPosLightSpace = shadowParam.lightProjection * shadowParam.lightView * vec4(fragPos, 1.0);
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    projCoords = projCoords * 0.5 + 0.5;
+
+    if (projCoords.x < 0.0 || projCoords.x > 1.0 ||
+        projCoords.y < 0.0 || projCoords.y > 1.0 ||
+        projCoords.z > 1.0) {
+        return 0.0;
+    }
+
+    float currentDepth = projCoords.z;
+
+    vec3 lightDir = normalize(-directionalLights[0].direction);
+    float biasValue = shadowParam.bias;
+    float bias = max(biasValue * (1.0 - dot(normal, lightDir)), biasValue);
+
+    float shadow = 0.0;
+    vec2 texelSize = 1.0 / getTextureDimensions(shadowParam.textureIndex);
+
+    float distance = length(cameraPosition - fragPos);
+    int kernelSize = int(mix(1.0, 3.0, clamp(distance / 100.0, 0.0, 1.0)));
+
+    int sampleCount = 0;
+    for (int x = -kernelSize; x <= kernelSize; ++x) {
+        for (int y = -kernelSize; y <= kernelSize; ++y) {
+            float pcfDepth = sampleTextureAt(shadowParam.textureIndex,
+                projCoords.xy + vec2(x, y) * texelSize).r;
+            shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
+            sampleCount++;
+        }
+    }
+    shadow /= float(sampleCount);
+
+    return shadow;
+}
+
+float calculatePointShadow(ShadowParameters shadowParam, vec3 fragPos) {
+    vec3 fragToLight = fragPos - shadowParam.lightPos;
+    float currentDepth = length(fragToLight);
+
+    float bias = 0.05;
+    float shadow = 0.0;
+    float diskRadius = (1.0 + (currentDepth / shadowParam.farPlane)) * 0.05;
+
+    const int samples = 20;
+    const vec3 sampleOffsetDirections[] = vec3[](
+        vec3(0.5381, 0.1856, -0.4319), vec3(0.1379, 0.2486, 0.4430),
+        vec3(0.3371, 0.5679, -0.0057), vec3(-0.6999, -0.0451, -0.0019),
+        vec3(0.0689, -0.1598, -0.8547), vec3(0.0560, 0.0069, -0.1843),
+        vec3(-0.0146, 0.1402, 0.0762), vec3(0.0100, -0.1924, -0.0344),
+        vec3(-0.3577, -0.5301, -0.4358), vec3(-0.3169, 0.1063, 0.0158),
+        vec3(0.0103, -0.5869, 0.0046), vec3(-0.0897, -0.4940, 0.3287),
+        vec3(0.7119, -0.0154, -0.0918), vec3(-0.0533, 0.0596, -0.5411),
+        vec3(0.0352, -0.0631, 0.5460), vec3(-0.4776, 0.2847, -0.0271),
+        vec3(-0.1120, 0.1234, -0.7446), vec3(-0.2130, -0.0782, -0.1379),
+        vec3(0.2944, -0.3112, -0.2645), vec3(-0.4564, 0.4175, -0.1843)
+    );
+
+    for (int i = 0; i < samples; ++i) {
+        vec3 sampleDir = normalize(fragToLight + sampleOffsetDirections[i] * diskRadius);
+        float closestDepth = sampleCubeTextureAt(shadowParam.textureIndex, sampleDir).r * shadowParam.farPlane;
+        if (currentDepth - bias > closestDepth)
+            shadow += 1.0;
+    }
+
+    shadow /= float(samples);
+    return shadow;
+}
+
+vec3 calcDirectionalLight(DirectionalLight light, vec3 normal, vec3 viewDir, vec3 diffuseMat, vec3 specColor, float shininess) {
+    vec3 lightDir = normalize(-light.direction);
+    
+    float diff = max(dot(normal, lightDir), 0.0);
+    vec3 diffuse = diff * light.diffuse * diffuseMat;
+    
+    vec3 halfwayDir = normalize(lightDir + viewDir);
+    float spec = pow(max(dot(normal, halfwayDir), 0.0), shininess);
+    vec3 specular = spec * specColor * light.specular;
+    
+    return diffuse + specular;
+}
+
+vec3 calcPointLight(PointLight light, vec3 fragPos, vec3 normal, vec3 viewDir, vec3 diffuseMat, vec3 specColor, float shininess) {
+    vec3 lightDir = normalize(light.position - fragPos);
+    
+    float diff = max(dot(normal, lightDir), 0.0);
+    vec3 diffuse = diff * light.diffuse * diffuseMat;
+    
+    vec3 halfwayDir = normalize(lightDir + viewDir);
+    float spec = pow(max(dot(normal, halfwayDir), 0.0), shininess);
+    vec3 specular = spec * specColor * light.specular;
+    
+    float distance = length(light.position - fragPos);
+    float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * distance * distance);
+    
+    return (diffuse + specular) * attenuation;
+}
+
+vec3 calcSpotLight(SpotLight light, vec3 fragPos, vec3 normal, vec3 viewDir, vec3 diffuseMat, vec3 specColor, float shininess) {
+    vec3 lightDir = normalize(light.position - fragPos);
+    
+    float diff = max(dot(normal, lightDir), 0.0);
+    vec3 diffuse = diff * light.diffuse * diffuseMat;
+    
+    vec3 halfwayDir = normalize(lightDir + viewDir);
+    float spec = pow(max(dot(normal, halfwayDir), 0.0), shininess);
+    vec3 specular = spec * specColor * light.specular;
+    
+    vec3 spotDirection = normalize(light.direction);
+    float theta = dot(lightDir, -spotDirection);
+    float intensity = smoothstep(light.outerCutOff, light.cutOff, theta);
+    
+    float distance = length(light.position - fragPos);
+    float attenuation = 1.0 / (1.0 + 0.09 * distance + 0.032 * distance * distance);
+    
+    return (diffuse + specular) * intensity * attenuation;
+}
+
+vec3 acesToneMapping(vec3 color) {
+    float a = 2.51;
+    float b = 0.03;
+    float c = 2.43;
+    float d = 0.59;
+    float e = 0.14;
+    color = (color * (a * color + b)) / (color * (c * color + d) + e);
+    color = pow(clamp(color, 0.0, 1.0), vec3(1.0 / 2.2));
+    return color;
+}
+
+void main() {
+    vec4 posDepth = texture(gPosition, TexCoord);
+    vec3 FragPos = posDepth.xyz;
+    
+    vec3 Normal = texture(gNormal, TexCoord).rgb;
+    
+    vec4 albedoSpec = texture(gAlbedoSpec, TexCoord);
+    vec3 Albedo = albedoSpec.rgb;
+    float SpecIntensity = albedoSpec.a;
+    
+    vec4 matData = texture(gMaterial, TexCoord);
+    float ambientFactor = matData.r;
+    float diffuseFactor = matData.g;
+    float shininess = matData.b * 256.0;
+    float reflectivity = matData.a;
+    
+    vec3 viewDir = normalize(cameraPosition - FragPos);
+    vec3 specColor = vec3(SpecIntensity);
+    
+    vec3 ambient = ambientLight.color.rgb * ambientLight.intensity * ambientFactor * Albedo;
+    
+    float dirShadow = 0.0;
+    for (int i = 0; i < shadowParamCount; i++) {
+        if (!shadowParams[i].isPointLight) {
+            dirShadow = max(dirShadow, calculateShadow(shadowParams[i], FragPos, Normal));
+        }
+    }
+    
+    float pointShadow = 0.0;
+    for (int i = 0; i < shadowParamCount; i++) {
+        if (shadowParams[i].isPointLight) {
+            pointShadow = max(pointShadow, calculatePointShadow(shadowParams[i], FragPos));
+        }
+    }
+    
+    vec3 directionalResult = vec3(0.0);
+    for (int i = 0; i < directionalLightCount; i++) {
+        directionalResult += calcDirectionalLight(directionalLights[i], Normal, viewDir, 
+            vec3(diffuseFactor), specColor, shininess);
+    }
+    directionalResult *= (1.0 - dirShadow);
+    
+    vec3 pointResult = vec3(0.0);
+    for (int i = 0; i < pointLightCount; i++) {
+        pointResult += calcPointLight(pointLights[i], FragPos, Normal, viewDir,
+            vec3(diffuseFactor), specColor, shininess);
+    }
+    pointResult *= (1.0 - pointShadow);
+    
+    vec3 spotResult = vec3(0.0);
+    for (int i = 0; i < spotlightCount; i++) {
+        spotResult += calcSpotLight(spotlights[i], FragPos, Normal, viewDir,
+            vec3(diffuseFactor), specColor, shininess);
+    }
+    
+    vec3 finalColor = (ambient + directionalResult + pointResult + spotResult) * Albedo;
+    
+    if (reflectivity > 0.0) {
+        vec3 I = normalize(FragPos - cameraPosition);
+        vec3 R = reflect(I, normalize(Normal));
+        vec3 envColor = texture(skybox, R).rgb;
+        finalColor = mix(finalColor, envColor, reflectivity);
+    }
+    
+    FragColor = vec4(finalColor, 1.0);
+    
+    float brightness = dot(FragColor.rgb, vec3(0.2126, 0.7152, 0.0722));
+    if (brightness > 1.0)
+        BrightColor = vec4(FragColor.rgb, 1.0);
+    else
+        BrightColor = vec4(0.0, 0.0, 0.0, 1.0);
+    
+    FragColor.rgb = acesToneMapping(FragColor.rgb);
 }
 )";
 
