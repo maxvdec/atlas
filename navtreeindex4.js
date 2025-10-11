@@ -1,5 +1,9 @@
 var NAVTREEINDEX4 =
 {
+"struct_intersection_point.html":[2,0,36],
+"struct_intersection_point.html#aae4cb4015b47f5e4adf8e9c2052bdc8e":[2,0,36,0],
+"struct_intersection_point.html#acffb6dba668c3fa1ee6f7b5a43fe1704":[2,0,36,1],
+"struct_layout_descriptor.html":[2,0,38],
 "struct_layout_descriptor.html#a20d2afc6d83235da2293245b6e3144ed":[2,0,38,0],
 "struct_layout_descriptor.html#a2ad04ebb60895504d80ffa863285dce4":[2,0,38,3],
 "struct_layout_descriptor.html#ac19f6be67e42f8b2cf98971ed4ae73a8":[2,0,38,4],
@@ -245,9 +249,5 @@ var NAVTREEINDEX4 =
 "texture_8h.html#a579bf435a05d45b75f553d37ebbb3225acb5feb1b7314637725a2e73bdc9f7295":[3,0,1,0,10,9,0],
 "texture_8h.html#a639c740f69368f9fe25a4f7409a16384":[3,0,1,0,10,7],
 "texture_8h.html#a639c740f69368f9fe25a4f7409a16384a2da82a3c0f89c3328ed03785fbb6f3e8":[3,0,1,0,10,7,3],
-"texture_8h.html#a639c740f69368f9fe25a4f7409a16384a3f39588bb19e28051d9aedfbb170025c":[3,0,1,0,10,7,2],
-"texture_8h.html#a639c740f69368f9fe25a4f7409a16384a9ead0d38e06ec253ca0ecbf6ea56e59b":[3,0,1,0,10,7,0],
-"texture_8h.html#a639c740f69368f9fe25a4f7409a16384ae34a1815b3fff1ad8307cb98182f4481":[3,0,1,0,10,7,1],
-"texture_8h_source.html":[3,0,1,0,10],
-"tutorial.html":[0]
+"texture_8h.html#a639c740f69368f9fe25a4f7409a16384a3f39588bb19e28051d9aedfbb170025c":[3,0,1,0,10,7,2]
 };

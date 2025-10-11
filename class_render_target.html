@@ -183,10 +183,13 @@ Public Attributes</h2></td></tr>
 <tr class="memdesc:aa0081ca6fcb83f64edf9be9820b5185e"><td class="mdescLeft">&#160;</td><td class="mdescRight">The texture associated with the render target. This will be the output of the rendering process.  <br /></td></tr>
 <tr class="memitem:a43f2585191d0499203e30b6f70e9b3cd" id="r_a43f2585191d0499203e30b6f70e9b3cd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_texture.html">Texture</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a43f2585191d0499203e30b6f70e9b3cd">brightTexture</a></td></tr>
 <tr class="memitem:aa621bfaf5ce2add2dc83b470d6b32c50" id="r_aa621bfaf5ce2add2dc83b470d6b32c50"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_texture.html">Texture</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa621bfaf5ce2add2dc83b470d6b32c50">blurredTexture</a></td></tr>
+<tr class="memitem:a066aebb220f1f3b50239bcb1b90bb2bd" id="r_a066aebb220f1f3b50239bcb1b90bb2bd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_texture.html">Texture</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a066aebb220f1f3b50239bcb1b90bb2bd">depthTexture</a></td></tr>
 <tr class="memitem:acbc5c695868ec18217c45cb8da705497" id="r_acbc5c695868ec18217c45cb8da705497"><td class="memItemLeft" align="right" valign="top"><a class="el" href="texture_8h.html#a639c740f69368f9fe25a4f7409a16384">RenderTargetType</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#acbc5c695868ec18217c45cb8da705497">type</a></td></tr>
 <tr class="memdesc:acbc5c695868ec18217c45cb8da705497"><td class="mdescLeft">&#160;</td><td class="mdescRight">The type of the render target.  <br /></td></tr>
 <tr class="memitem:a1ec7d8ec91e888599057ada1bd6dddc1" id="r_a1ec7d8ec91e888599057ada1bd6dddc1"><td class="memItemLeft" align="right" valign="top">std::shared_ptr&lt; <a class="el" href="class_core_object.html">CoreObject</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1ec7d8ec91e888599057ada1bd6dddc1">object</a> = nullptr</td></tr>
 <tr class="memdesc:a1ec7d8ec91e888599057ada1bd6dddc1"><td class="mdescLeft">&#160;</td><td class="mdescRight">The <a class="el" href="class_core_object.html" title="Represents a 3D object in the scene, including its geometry, material and every interaction with the ...">CoreObject</a> used to render the render target.  <br /></td></tr>
+<tr class="inherit_header pub_attribs_class_renderable"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pub_attribs_class_renderable')"><span class="dynarrow"><span class="arrowhead closed"></span></span>Public Attributes inherited from <a class="el" href="class_renderable.html">Renderable</a></td></tr>
+<tr class="memitem:a7cb09219e507e1c1395efced124e3b58 inherit pub_attribs_class_renderable" id="r_a7cb09219e507e1c1395efced124e3b58"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_renderable.html#a7cb09219e507e1c1395efced124e3b58">renderDepthOfView</a> = false</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-friends" class="groupheader"><a id="friends" name="friends"></a>
 Friends</h2></td></tr>
@@ -268,7 +271,7 @@ Example</h2>
   </dd>
 </dl>
 
-<p class="reference">References <a class="el" href="texture_8h_source.html#l00270">Scene</a>, <a class="el" href="texture_8h_source.html#l00306">type</a>, and <a class="el" href="texture_8h_source.html#l00361">Window</a>.</p>
+<p class="reference">References <a class="el" href="texture_8h_source.html#l00270">Scene</a>, <a class="el" href="texture_8h_source.html#l00307">type</a>, and <a class="el" href="texture_8h_source.html#l00362">Window</a>.</p>
 
 </div>
 </div>
@@ -296,10 +299,10 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00351">351</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  351</span>                                                        {</div>
-<div class="line"><span class="lineno">  352</span>        effects.push_back(effect);</div>
-<div class="line"><span class="lineno">  353</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00352">352</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  352</span>                                                        {</div>
+<div class="line"><span class="lineno">  353</span>        effects.push_back(effect);</div>
+<div class="line"><span class="lineno">  354</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -331,7 +334,7 @@ Example</h2>
   </dd>
 </dl>
 
-<p class="reference">References <a class="el" href="texture_8h_source.html#l00361">Window</a>.</p>
+<p class="reference">References <a class="el" href="texture_8h_source.html#l00362">Window</a>.</p>
 
 </div>
 </div>
@@ -448,9 +451,9 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00361">361</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00362">362</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 
-<p class="reference">References <a class="el" href="texture_8h_source.html#l00361">Window</a>.</p>
+<p class="reference">References <a class="el" href="texture_8h_source.html#l00362">Window</a>.</p>
 
 </div>
 </div>
@@ -487,6 +490,22 @@ Example</h2>
 
 </div>
 </div>
+<a id="a066aebb220f1f3b50239bcb1b90bb2bd" name="a066aebb220f1f3b50239bcb1b90bb2bd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a066aebb220f1f3b50239bcb1b90bb2bd">&#9670;&#160;</a></span>depthTexture</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="struct_texture.html">Texture</a> RenderTarget::depthTexture</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00302">302</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+
+</div>
+</div>
 <a id="a1ec7d8ec91e888599057ada1bd6dddc1" name="a1ec7d8ec91e888599057ada1bd6dddc1"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a1ec7d8ec91e888599057ada1bd6dddc1">&#9670;&#160;</a></span>object</h2>
 
@@ -501,7 +520,7 @@ Example</h2>
 
 <p>The <a class="el" href="class_core_object.html" title="Represents a 3D object in the scene, including its geometry, material and every interaction with the ...">CoreObject</a> used to render the render target. </p>
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00342">342</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00343">343</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 
 </div>
 </div>
@@ -537,7 +556,7 @@ Example</h2>
 
 <p>The type of the render target. </p>
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00306">306</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00307">307</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 
 </div>
 </div>

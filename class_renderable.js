@@ -11,5 +11,6 @@ var class_renderable =
     [ "setProjectionMatrix", "class_renderable.html#a0c865743cb1e0bbc44b754f9e1b50bb3", null ],
     [ "setShader", "class_renderable.html#a727f1bc86184e94bfcb8270d11812af8", null ],
     [ "setViewMatrix", "class_renderable.html#ae1b11967b98e6ba4393640652242083f", null ],
-    [ "update", "class_renderable.html#afb2aa3ad0ab8dcfc54088173ea7182cd", null ]
+    [ "update", "class_renderable.html#afb2aa3ad0ab8dcfc54088173ea7182cd", null ],
+    [ "renderDepthOfView", "class_renderable.html#a7cb09219e507e1c1395efced124e3b58", null ]
 ];

@@ -11,6 +11,7 @@ var class_render_target =
     [ "Window", "class_render_target.html#a553f958a25683445088050a69d3de8e9", null ],
     [ "blurredTexture", "class_render_target.html#aa621bfaf5ce2add2dc83b470d6b32c50", null ],
     [ "brightTexture", "class_render_target.html#a43f2585191d0499203e30b6f70e9b3cd", null ],
+    [ "depthTexture", "class_render_target.html#a066aebb220f1f3b50239bcb1b90bb2bd", null ],
     [ "object", "class_render_target.html#a1ec7d8ec91e888599057ada1bd6dddc1", null ],
     [ "texture", "class_render_target.html#aa0081ca6fcb83f64edf9be9820b5185e", null ],
     [ "type", "class_render_target.html#acbc5c695868ec18217c45cb8da705497", null ]

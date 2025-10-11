@@ -12,6 +12,8 @@ var class_camera =
     [ "updateLook", "class_camera.html#af505546c6d360a4af80c2bd14eeb1847", null ],
     [ "updateZoom", "class_camera.html#a05bf5f761a2366625b30c6b59c99ad80", null ],
     [ "farClip", "class_camera.html#ab7bbf72d618a91bd74a4c3122441713d", null ],
+    [ "focusDepth", "class_camera.html#a44e03a09e77aec3bd304ee91d90d9796", null ],
+    [ "focusRange", "class_camera.html#a2236862b31c3d0cfed474f0add3cc4b5", null ],
     [ "fov", "class_camera.html#aff7393c9cfbccd7e369091f00008da93", null ],
     [ "lookSmoothness", "class_camera.html#a38944fa801da05f22169475b83799e8e", null ],
     [ "mouseSensitivity", "class_camera.html#a374b33e654bf21d19230a82672bd3aac", null ],
