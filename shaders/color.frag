@@ -6,5 +6,7 @@ in vec4 vertexColor;
 void main() {
     vec3 color = vertexColor.rgb / (vertexColor.rgb + vec3(1.0));
     FragColor = vec4(color, vertexColor.a);
-    BrightColor = vec4(color * 2.0, vertexColor.a);
+    if (length(color) > 1.0) {
+        BrightColor = vec4(color, vertexColor.a);
+    }
 }

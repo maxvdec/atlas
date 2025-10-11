@@ -303,9 +303,15 @@ void RenderTarget::render(float dt) {
         obj->shaderProgram.setUniform1i("isCubeMap", 1);
     } else {
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, brightTexture.id);
+        glBindTexture(GL_TEXTURE_2D, texture.id);
         obj->shaderProgram.setUniform1i("Texture", 0);
         obj->shaderProgram.setUniform1i("isCubeMap", 0);
+
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, blurredTexture.id);
+        obj->shaderProgram.setUniform1i("BrightTexture", 1);
+        obj->shaderProgram.setUniform1i("hasBrightTexture",
+                                        brightTexture.id != 0 ? 1 : 0);
     }
 
     obj->shaderProgram.setUniform1i("TextureType",

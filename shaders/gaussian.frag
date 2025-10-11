@@ -7,13 +7,10 @@ uniform sampler2D image;
 
 uniform bool horizontal;
 uniform float weight[5] = float[](0.227027, 0.1945946, 0.1216216, 0.054054, 0.016216);
+uniform float radius = 1.0;
 
 void main() {
-    FragColor = vec4(1.0, 0.0, 0.0, 1.0);
-    return;
-    FragColor = texture(image, TexCoord);
-    return;
-    vec2 tex_offset = 1.0 / textureSize(image, 0); 
+    vec2 tex_offset = 1.0 / textureSize(image, 0) * radius; 
     vec3 result = texture(image, TexCoord).rgb * weight[0];
     if(horizontal)
     {
