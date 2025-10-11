@@ -112,6 +112,25 @@ VertexShader VertexShader::fromDefaultShader(AtlasVertexShader shader) {
         VertexShader::vertexShaderCache[shader] = vertexShader;
         break;
     }
+    case AtlasVertexShader::Deferred: {
+        vertexShader = VertexShader::fromSource(DEFERRED_VERT);
+        vertexShader.desiredAttributes = {0, 1, 2, 3, 4, 5};
+        vertexShader.capabilities = {ShaderCapability::Textures,
+                                     ShaderCapability::Deferred};
+        vertexShader.fromDefaultShaderType = shader;
+        VertexShader::vertexShaderCache[shader] = vertexShader;
+        break;
+    }
+    case AtlasVertexShader::Light: {
+        vertexShader = VertexShader::fromSource(LIGHT_VERT);
+        vertexShader.desiredAttributes = {0, 1};
+        vertexShader.capabilities = {ShaderCapability::Shadows,
+                                     ShaderCapability::Lighting,
+                                     ShaderCapability::EnvironmentMapping};
+        vertexShader.fromDefaultShaderType = shader;
+        VertexShader::vertexShaderCache[shader] = vertexShader;
+        break;
+    }
     default:
         throw std::runtime_error("Unknown default vertex shader");
     }
@@ -216,16 +235,17 @@ FragmentShader FragmentShader::fromDefaultShader(AtlasFragmentShader shader) {
     case AtlasFragmentShader::PointLightShadow: {
         fragmentShader = FragmentShader::fromSource(POINT_DEPTH_FRAG);
         fragmentShader.fromDefaultShaderType = shader;
-
+        fragmentShaderCache[shader] = fragmentShader;
+        break;
+    }
+    case AtlasFragmentShader::Deferred: {
+        fragmentShader = FragmentShader::fromSource(DEFERRED_FRAG);
         fragmentShader.fromDefaultShaderType = shader;
-        fragmentShader.fromDefaultShaderType = shader;
-        fragmentShader.fromDefaultShaderType = shader;
-
-        fragmentShader.fromDefaultShaderType = shader;
-        fragmentShader.fromDefaultShaderType = shader;
-        fragmentShader.fromDefaultShaderType = shader;
-        fragmentShader.fromDefaultShaderType = shader;
-        fragmentShader.fromDefaultShaderType = shader;
+        fragmentShaderCache[shader] = fragmentShader;
+        break;
+    }
+    case AtlasFragmentShader::Light: {
+        fragmentShader = FragmentShader::fromSource(LIGHT_FRAG);
         fragmentShader.fromDefaultShaderType = shader;
         fragmentShaderCache[shader] = fragmentShader;
         break;

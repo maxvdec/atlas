@@ -74,6 +74,8 @@ enum class AtlasVertexShader {
      */
     Text,
     PointLightShadow,
+    Light,
+    Deferred,
 };
 
 /**
@@ -101,6 +103,7 @@ enum class ShaderCapability {
      *
      */
     EnvironmentMapping,
+    Deferred,
 };
 
 /**
@@ -209,6 +212,8 @@ enum class AtlasFragmentShader {
     Text,
     PointLightShadow,
     GaussianBlur,
+    Light,
+    Deferred,
 };
 
 /**
