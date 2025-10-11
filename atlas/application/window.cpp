@@ -245,6 +245,7 @@ void Window::run() {
                 obj->render(getDeltaTime());
             }
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
+            target->resolve();
         }
 
         // Render to the screen

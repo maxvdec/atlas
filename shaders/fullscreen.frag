@@ -119,7 +119,9 @@ vec4 edgeDetection(sampler2D image) {
 
 uniform sampler2D Texture;
 uniform sampler2D BrightTexture;
+uniform sampler2D DepthTexture;
 uniform int hasBrightTexture;
+uniform int hasDepthTexture;
 uniform samplerCube cubeMap;
 uniform bool isCubeMap;
 uniform int TextureType;
@@ -131,6 +133,23 @@ uniform float EffectFloat3[10];
 uniform float EffectFloat4[10];
 uniform float EffectFloat5[10];
 uniform float EffectFloat6[10];
+
+uniform float nearPlane = 0.1;        
+uniform float farPlane = 100.0;
+
+uniform float focusDepth;
+uniform float focusRange;
+
+uniform int maxMipLevel;
+
+float LinearizeDepth(float depth) {
+    float z = depth * 2.0 - 1.0; 
+    float linear = (2.0 * nearPlane * farPlane) /
+                   (farPlane + nearPlane - z * (farPlane - nearPlane));
+    return linear / farPlane;
+}
+
+
 
 struct ColorCorrection {
     float exposure;
@@ -190,11 +209,25 @@ void main() {
         }
     }
 
+    if (hasDepthTexture == 1) {
+        float depthValue = texture(DepthTexture, TexCoord).r;
+        float linearDepth = LinearizeDepth(depthValue); 
+        float coc = clamp(abs(linearDepth - focusDepth) / focusRange, 0.0, 1.0);
+
+        float mip = coc * float(maxMipLevel) * 1.2;
+
+        vec3 blurred = textureLod(Texture, TexCoord, mip).rgb;
+        vec3 sharp = texture(Texture, TexCoord).rgb;
+
+        color = vec4(mix(sharp, blurred, coc), 1.0);
+    }
+
     vec4 hdrColor = color + texture(BrightTexture, TexCoord);
-
+    
     hdrColor.rgb = acesToneMapping(hdrColor.rgb);
-
+    
     FragColor = vec4(hdrColor.rgb, 1.0);
+
 
     return; 
 }

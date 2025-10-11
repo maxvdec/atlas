@@ -103,6 +103,8 @@ class Renderable {
      */
     virtual bool canCastShadows() const { return false; };
     virtual ~Renderable() = default;
+
+    bool renderDepthOfView = false;
 };
 
 #endif // ATLAS_RENDERABLE_H
