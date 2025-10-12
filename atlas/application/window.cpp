@@ -141,6 +141,11 @@ Window::Window(WindowConfiguration config)
     pointProgram.compile();
     this->pointDepthProgram = pointProgram;
 
+    this->deferredProgram = ShaderProgram::fromDefaultShaders(
+        AtlasVertexShader::Deferred, AtlasFragmentShader::Deferred);
+    this->lightProgram = ShaderProgram::fromDefaultShaders(
+        AtlasVertexShader::Light, AtlasFragmentShader::Light);
+
     audioEngine = std::make_shared<AudioEngine>();
     bool result = audioEngine->initialize();
     if (!result) {
@@ -232,7 +237,7 @@ void Window::run() {
                     GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1,
                     GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3};
                 glDrawBuffers(4, attachments);
-                this->deferredRendering();
+                this->deferredRendering(target);
                 target->resolve();
                 continue;
             }
@@ -711,4 +716,53 @@ void Window::useDeferredRendering() {
         RenderTarget(*this, RenderTargetType::GBuffer));
     target->initialize();
     this->gBuffer = target;
+}
+
+void Window::deferredRendering(RenderTarget *target) {
+    // Render to G-Buffer
+    std::vector<ShaderProgram> originalPrograms;
+    for (auto &obj : this->renderables) {
+        if (obj->getShaderProgram() != std::nullopt) {
+            originalPrograms.push_back(obj->getShaderProgram().value());
+        } else {
+            originalPrograms.push_back(ShaderProgram()); // Placeholder
+        }
+        obj->setShader(this->deferredProgram);
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, this->gBuffer->fbo);
+    unsigned int attachments[4] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1,
+                                   GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3};
+    glDrawBuffers(4, attachments);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    for (auto &obj : this->renderables) {
+        obj->setViewMatrix(this->camera->calculateViewMatrix());
+        obj->setProjectionMatrix(calculateProjectionMatrix());
+        obj->render(getDeltaTime());
+    }
+
+    // Light pass
+    glBindFramebuffer(GL_FRAMEBUFFER, target->fbo);
+    glClearColor(0.0f, 0.0f, 0.0, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glDisable(GL_CULL_FACE);
+
+    for (auto &obj : this->renderables) {
+        obj->setShader(this->lightProgram);
+        obj->setViewMatrix(this->camera->calculateViewMatrix());
+        obj->setProjectionMatrix(calculateProjectionMatrix());
+        obj->render(getDeltaTime());
+    }
+
+    // Restore original shaders
+    size_t i = 0;
+    for (auto &renderable : this->renderables) {
+        if (renderable->getShaderProgram() != std::nullopt &&
+            i < originalPrograms.size()) {
+            renderable->setShader(originalPrograms[i++]);
+        }
+    }
 }

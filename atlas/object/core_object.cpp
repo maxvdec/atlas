@@ -406,6 +406,34 @@ void CoreObject::render(float dt) {
 
     if (std::find(shaderProgram.capabilities.begin(),
                   shaderProgram.capabilities.end(),
+                  ShaderCapability::LightDeferred) !=
+        shaderProgram.capabilities.end()) {
+        // Bind G-Buffer textures
+        Window *window = Window::mainWindow;
+        RenderTarget *gBuffer = window->gBuffer.get();
+        glActiveTexture(GL_TEXTURE0 + boundTextures);
+        glBindTexture(GL_TEXTURE_2D, gBuffer->gPosition.id);
+        shaderProgram.setUniform1i("gPosition", boundTextures);
+        boundTextures++;
+
+        glActiveTexture(GL_TEXTURE0 + boundTextures);
+        glBindTexture(GL_TEXTURE_2D, gBuffer->gNormal.id);
+        shaderProgram.setUniform1i("gNormal", boundTextures);
+        boundTextures++;
+
+        glActiveTexture(GL_TEXTURE0 + boundTextures);
+        glBindTexture(GL_TEXTURE_2D, gBuffer->gAlbedoSpec.id);
+        shaderProgram.setUniform1i("gAlbedoSpec", boundTextures);
+        boundTextures++;
+
+        glActiveTexture(GL_TEXTURE0 + boundTextures);
+        glBindTexture(GL_TEXTURE_2D, gBuffer->gMaterial.id);
+        shaderProgram.setUniform1i("gMaterial", boundTextures);
+        boundTextures++;
+    }
+
+    if (std::find(shaderProgram.capabilities.begin(),
+                  shaderProgram.capabilities.end(),
                   ShaderCapability::Shadows) !=
         shaderProgram.capabilities.end()) {
         for (int i = 0; i < 5; i++) {

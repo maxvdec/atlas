@@ -181,6 +181,8 @@ class MainScene : public Scene {
         frameBuffer = RenderTarget(window);
         frameBuffer.display(window);
         window.addRenderTarget(&frameBuffer);
+
+        window.useDeferredRendering();
     }
 };
 

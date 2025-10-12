@@ -126,7 +126,8 @@ VertexShader VertexShader::fromDefaultShader(AtlasVertexShader shader) {
         vertexShader.desiredAttributes = {0, 1};
         vertexShader.capabilities = {ShaderCapability::Shadows,
                                      ShaderCapability::Lighting,
-                                     ShaderCapability::EnvironmentMapping};
+                                     ShaderCapability::EnvironmentMapping,
+                                     ShaderCapability::LightDeferred};
         vertexShader.fromDefaultShaderType = shader;
         VertexShader::vertexShaderCache[shader] = vertexShader;
         break;

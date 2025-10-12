@@ -375,7 +375,7 @@ class Window {
     Size2d getFurthestPositions();
 
     void renderPingpong(RenderTarget *target, float dt);
-    void deferredRendering();
+    void deferredRendering(RenderTarget *target);
 
     Camera *camera = nullptr;
     float lastMouseX;
@@ -387,6 +387,8 @@ class Window {
 
     ShaderProgram depthProgram;
     ShaderProgram pointDepthProgram;
+    ShaderProgram deferredProgram;
+    ShaderProgram lightProgram;
 
     bool debug = false;
 
