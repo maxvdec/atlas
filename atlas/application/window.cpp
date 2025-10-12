@@ -228,6 +228,11 @@ void Window::run() {
         glCullFace(GL_BACK);
         // Render to the targets
         for (auto &target : this->renderTargets) {
+            glDepthFunc(GL_LESS);
+            glDepthMask(GL_TRUE);
+            glEnable(GL_CULL_FACE);
+            glCullFace(GL_BACK);
+
             glBindFramebuffer(GL_FRAMEBUFFER, target->fbo);
             if (target->brightTexture.id != 0) {
                 unsigned int attachments[2] = {GL_COLOR_ATTACHMENT0,
@@ -236,28 +241,27 @@ void Window::run() {
             }
 
             if (this->usesDeferred) {
-                unsigned int attachments[4] = {
-                    GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1,
-                    GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3};
-                glDrawBuffers(4, attachments);
                 this->deferredRendering(target);
-                glBindFramebuffer(GL_READ_FRAMEBUFFER, gBuffer->fbo);
+
+                glBindFramebuffer(GL_READ_FRAMEBUFFER, this->gBuffer->fbo);
                 glBindFramebuffer(GL_DRAW_FRAMEBUFFER, target->fbo);
-                glBlitFramebuffer(0, 0, gBuffer->texture.creationData.width,
-                                  gBuffer->texture.creationData.height, 0, 0,
-                                  target->texture.creationData.width,
+                glBlitFramebuffer(0, 0,
+                                  this->gBuffer->gPosition.creationData.width,
+                                  this->gBuffer->gPosition.creationData.height,
+                                  0, 0, target->texture.creationData.width,
                                   target->texture.creationData.height,
                                   GL_DEPTH_BUFFER_BIT, GL_NEAREST);
-                glBindFramebuffer(GL_FRAMEBUFFER, target->fbo);
-
-                GLenum targetAttachments[2] = {GL_COLOR_ATTACHMENT0,
-                                               GL_COLOR_ATTACHMENT1};
+                glBindFramebuffer(GL_READ_FRAMEBUFFER, target->fbo);
+                unsigned int targetAttachments[2] = {GL_COLOR_ATTACHMENT0,
+                                                     GL_COLOR_ATTACHMENT1};
                 glDrawBuffers(2, targetAttachments);
 
                 glEnable(GL_DEPTH_TEST);
-                glDepthFunc(GL_LEQUAL);
+                glDepthFunc(GL_LESS);
+                glDepthMask(GL_TRUE);
                 glEnable(GL_CULL_FACE);
                 glCullFace(GL_BACK);
+
                 for (auto &obj : this->firstRenderables) {
                     obj->setViewMatrix(this->camera->calculateViewMatrix());
                     obj->setProjectionMatrix(calculateProjectionMatrix());
@@ -271,6 +275,7 @@ void Window::run() {
                         obj->render(getDeltaTime());
                     }
                 }
+
                 glBindFramebuffer(GL_FRAMEBUFFER, 0);
                 target->resolve();
                 continue;
@@ -748,7 +753,6 @@ void Window::useDeferredRendering() {
     this->usesDeferred = true;
     auto target = std::make_shared<RenderTarget>(
         RenderTarget(*this, RenderTargetType::GBuffer));
-    target->initialize();
     this->gBuffer = target;
 }
 
@@ -775,6 +779,9 @@ void Window::deferredRendering(RenderTarget *target) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+    glDepthMask(GL_TRUE);
     for (auto &obj : this->renderables) {
         if (obj->canUseDeferredRendering()) {
             obj->setViewMatrix(this->camera->calculateViewMatrix());
@@ -784,13 +791,17 @@ void Window::deferredRendering(RenderTarget *target) {
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, target->fbo);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     unsigned int targetAttachments[2] = {GL_COLOR_ATTACHMENT0,
                                          GL_COLOR_ATTACHMENT1};
     glDrawBuffers(2, targetAttachments);
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH_TEST);
+
+    glDepthMask(GL_FALSE);
 
     static Id quadVAO = 0;
     static Id quadVBO;
@@ -1018,6 +1029,10 @@ void Window::deferredRendering(RenderTarget *target) {
     glBindVertexArray(quadVAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
+
+    glDepthMask(GL_TRUE);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
