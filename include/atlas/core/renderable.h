@@ -103,6 +103,7 @@ class Renderable {
      */
     virtual bool canCastShadows() const { return false; };
     virtual ~Renderable() = default;
+    virtual bool canUseDeferredRendering() const { return true; };
 
     bool renderDepthOfView = false;
 };

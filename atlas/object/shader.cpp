@@ -51,7 +51,8 @@ VertexShader VertexShader::fromDefaultShader(AtlasVertexShader shader) {
         vertexShader.desiredAttributes = {0, 1, 2, 3};
         vertexShader.capabilities = {
             ShaderCapability::Lighting, ShaderCapability::Textures,
-            ShaderCapability::Shadows, ShaderCapability::EnvironmentMapping};
+            ShaderCapability::Shadows, ShaderCapability::EnvironmentMapping,
+            ShaderCapability::Material};
         vertexShader.fromDefaultShaderType = shader;
         VertexShader::vertexShaderCache[shader] = vertexShader;
         break;
@@ -115,8 +116,11 @@ VertexShader VertexShader::fromDefaultShader(AtlasVertexShader shader) {
     case AtlasVertexShader::Deferred: {
         vertexShader = VertexShader::fromSource(DEFERRED_VERT);
         vertexShader.desiredAttributes = {0, 1, 2, 3, 4, 5};
-        vertexShader.capabilities = {ShaderCapability::Textures,
-                                     ShaderCapability::Deferred};
+        vertexShader.capabilities = {
+            ShaderCapability::Textures,
+            ShaderCapability::Deferred,
+            ShaderCapability::Material,
+        };
         vertexShader.fromDefaultShaderType = shader;
         VertexShader::vertexShaderCache[shader] = vertexShader;
         break;

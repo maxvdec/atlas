@@ -164,9 +164,9 @@ void main() {
     gAlbedoSpec = vec4(baseColor.rgb, specIntensity);
     
     gMaterial = vec4(
-        material.ambient.r,
-        material.diffuse.r,
         material.shininess / 256.0,  
-        material.reflectivity
+        material.reflectivity,
+        0.0,  
+        1.0   
     );
 }

@@ -193,10 +193,10 @@ void main() {
     gAlbedoSpec = vec4(baseColor.rgb, specIntensity);
     
     gMaterial = vec4(
-        material.ambient.r,
-        material.diffuse.r,
         material.shininess / 256.0,  
-        material.reflectivity
+        material.reflectivity,
+        0.0,  
+        1.0   
     );
 }
 )";
@@ -1554,17 +1554,15 @@ void main() {
     vec4 albedoSpec = texture(gAlbedoSpec, TexCoord);
     vec3 Albedo = albedoSpec.rgb;
     float SpecIntensity = albedoSpec.a;
-    
+
     vec4 matData = texture(gMaterial, TexCoord);
-    float ambientFactor = matData.r;
-    float diffuseFactor = matData.g;
-    float shininess = matData.b * 256.0;
-    float reflectivity = matData.a;
+    float shininess = matData.a * 256.0;
+    float reflectivity = matData.b;
     
     vec3 viewDir = normalize(cameraPosition - FragPos);
     vec3 specColor = vec3(SpecIntensity);
     
-    vec3 ambient = ambientLight.color.rgb * ambientLight.intensity * ambientFactor * Albedo;
+    vec3 ambient = ambientLight.color.rgb * ambientLight.intensity * Albedo;
     
     float dirShadow = 0.0;
     for (int i = 0; i < shadowParamCount; i++) {
@@ -1583,24 +1581,24 @@ void main() {
     vec3 directionalResult = vec3(0.0);
     for (int i = 0; i < directionalLightCount; i++) {
         directionalResult += calcDirectionalLight(directionalLights[i], Normal, viewDir, 
-            vec3(diffuseFactor), specColor, shininess);
+            Albedo, specColor, shininess);  
     }
     directionalResult *= (1.0 - dirShadow);
-    
+
     vec3 pointResult = vec3(0.0);
     for (int i = 0; i < pointLightCount; i++) {
         pointResult += calcPointLight(pointLights[i], FragPos, Normal, viewDir,
-            vec3(diffuseFactor), specColor, shininess);
+            Albedo, specColor, shininess);  
     }
     pointResult *= (1.0 - pointShadow);
-    
+
     vec3 spotResult = vec3(0.0);
     for (int i = 0; i < spotlightCount; i++) {
         spotResult += calcSpotLight(spotlights[i], FragPos, Normal, viewDir,
-            vec3(diffuseFactor), specColor, shininess);
+            Albedo, specColor, shininess);  
     }
-    
-    vec3 finalColor = (ambient + directionalResult + pointResult + spotResult) * Albedo;
+
+    vec3 finalColor = ambient + directionalResult + pointResult + spotResult;
     
     if (reflectivity > 0.0) {
         vec3 I = normalize(FragPos - cameraPosition);
