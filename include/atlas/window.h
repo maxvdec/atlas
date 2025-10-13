@@ -383,6 +383,7 @@ class Window {
 
     void renderPingpong(RenderTarget *target, float dt);
     void deferredRendering(RenderTarget *target);
+    void renderSSAO(RenderTarget *target);
 
     Camera *camera = nullptr;
     float lastMouseX;
@@ -396,6 +397,7 @@ class Window {
     ShaderProgram pointDepthProgram;
     ShaderProgram deferredProgram;
     ShaderProgram lightProgram;
+    ShaderProgram ssaoProgram;
 
     bool debug = false;
 

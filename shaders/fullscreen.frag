@@ -179,6 +179,9 @@ vec4 applyColorCorrection(vec4 color, ColorCorrection cc) {
 }
 
 void main() {
+    float sample = texture(Texture, TexCoord).r;
+    FragColor = vec4(sample, sample, sample, 1.0);
+    return;
     vec4 color = texture(Texture, TexCoord);
 
     bool appliedColorCorrection = false;

@@ -44,34 +44,8 @@ void Window::deferredRendering(RenderTarget *target) {
         }
     }
 
-    glBindFramebuffer(GL_FRAMEBUFFER, this->ssaoBuffer->fbo);
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-    static Id ssaoVAO = 0;
-    static Id ssaoVBO;
-    if (ssaoVAO == 0) {
-        float quadVertices[] = {
-            // positions         // texCoords
-            -1.0f, 1.0f,  0.0f, 0.0f, 1.0f, // top-left
-            -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, // bottom-left
-            1.0f,  -1.0f, 0.0f, 1.0f, 0.0f, // bottom-right
-            -1.0f, 1.0f,  0.0f, 0.0f, 1.0f, // top-left
-            1.0f,  -1.0f, 0.0f, 1.0f, 0.0f, // bottom-right
-            1.0f,  1.0f,  0.0f, 1.0f, 1.0f  // top-right
-        };
-        glGenVertexArrays(1, &ssaoVAO);
-        glGenBuffers(1, &ssaoVBO);
-        glBindVertexArray(ssaoVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, ssaoVBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices,
-                     GL_STATIC_DRAW);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                              (void *)0);
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                              (void *)(3 * sizeof(float)));
-    }
+    this->renderSSAO(target);
+
     glUseProgram(this->deferredProgram.programId);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, this->gBuffer->gPosition.id);
