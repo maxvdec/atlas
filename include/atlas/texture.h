@@ -72,7 +72,9 @@ enum class TextureType : int {
     Depth = 3,
     DepthCube = 4,
     Normal = 5,
-    Parallax = 6
+    Parallax = 6,
+    SSAONoise = 7,
+    SSAO = 8,
 };
 
 /**
@@ -272,7 +274,8 @@ enum class RenderTargetType {
     Multisampled,
     Shadow,
     CubeShadow,
-    GBuffer
+    GBuffer,
+    SSAO,
 };
 
 class Effect;

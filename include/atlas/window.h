@@ -367,6 +367,13 @@ class Window {
     std::vector<RenderTarget *> renderTargets;
 
     std::shared_ptr<RenderTarget> gBuffer;
+    std::shared_ptr<RenderTarget> ssaoBuffer;
+
+    std::vector<glm::vec3> ssaoKernel;
+    std::vector<glm::vec3> ssaoNoise;
+    Texture noiseTexture;
+
+    void setupSSAO();
 
     glm::mat4 calculateProjectionMatrix();
     Scene *currentScene = nullptr;
