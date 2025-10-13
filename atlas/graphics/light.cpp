@@ -81,11 +81,16 @@ PointLightConstants Light::calculateConstants() const {
                 table[i].linear + t * (table[i + 1].linear - table[i].linear);
             float quadratic = table[i].quadratic +
                               t * (table[i + 1].quadratic - table[i].quadratic);
-            return {distance, constant, linear, quadratic};
+            float radius =
+                (-linear + sqrt(linear * linear -
+                                4 * quadratic *
+                                    (constant - (256.0f / 5.0f) * distance))) /
+                (2 * quadratic);
+            return {distance, constant, linear, quadratic, radius};
         }
     }
 
-    return {distance, 1.0f, 0.0f, 0.0f};
+    return {distance, 1.0f, 0.0f, 0.0f, 0.0f};
 }
 
 void Spotlight::createDebugObject() {

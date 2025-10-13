@@ -1351,6 +1351,7 @@ struct PointLight {
     float constant;
     float linear;
     float quadratic;
+    float radius;
 };
 
 struct SpotLight {
@@ -1587,6 +1588,8 @@ void main() {
 
     vec3 pointResult = vec3(0.0);
     for (int i = 0; i < pointLightCount; i++) {
+        float distance = length(pointLights[i].position - FragPos);
+        if (distance > pointLights[i].radius) continue;
         pointResult += calcPointLight(pointLights[i], FragPos, Normal, viewDir,
             Albedo, specColor, shininess);  
     }

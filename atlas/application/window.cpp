@@ -901,6 +901,7 @@ void Window::deferredRendering(RenderTarget *target) {
         shaderProgram.setUniform1f(baseName + ".constant", plc.constant);
         shaderProgram.setUniform1f(baseName + ".linear", plc.linear);
         shaderProgram.setUniform1f(baseName + ".quadratic", plc.quadratic);
+        shaderProgram.setUniform1f(baseName + ".radius", plc.radius);
     }
 
     // Send spotlights
