@@ -9,6 +9,7 @@
 
 #include "atlas/window.h"
 #include <glm/gtc/random.hpp>
+#include <iostream>
 #include <random>
 
 void Window::setupSSAO() {
@@ -49,7 +50,7 @@ void Window::setupSSAO() {
     noiseTexture.type = TextureType::SSAONoise;
 
     this->ssaoProgram = ShaderProgram::fromDefaultShaders(
-        AtlasVertexShader::Fullscreen, AtlasFragmentShader::SSAO);
+        AtlasVertexShader::Light, AtlasFragmentShader::SSAO);
 
     this->ssaoBuffer = std::make_shared<RenderTarget>(
         RenderTarget(*this, RenderTargetType::SSAO));
@@ -85,7 +86,19 @@ void Window::renderSSAO(RenderTarget *target) {
                               (void *)(3 * sizeof(float)));
     }
 
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, this->gBuffer->fbo);
+    glReadBuffer(GL_COLOR_ATTACHMENT1); // Normal buffer
+    float normalData[4];
+    glReadPixels(this->gBuffer->gNormal.creationData.width / 2,
+                 this->gBuffer->gNormal.creationData.height / 2, 1, 1, GL_RGBA,
+                 GL_FLOAT, normalData);
+    std::cout << "Center pixel normal: " << normalData[0] << ", "
+              << normalData[1] << ", " << normalData[2] << std::endl;
+
     glUseProgram(this->ssaoProgram.programId);
+    std::cout << "gPosition ID: " << this->gBuffer->gPosition.id << std::endl;
+    std::cout << "gNormal ID: " << this->gBuffer->gNormal.id << std::endl;
+    std::cout << "noiseTexture ID: " << this->noiseTexture.id << std::endl;
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, this->gBuffer->gPosition.id);
     this->ssaoProgram.setUniform1i("gPosition", 0);
@@ -103,6 +116,8 @@ void Window::renderSSAO(RenderTarget *target) {
     this->ssaoProgram.setUniform1i("kernelSize", 64);
     this->ssaoProgram.setUniformMat4f("projection",
                                       this->calculateProjectionMatrix());
+    this->ssaoProgram.setUniformMat4f("view",
+                                      getCamera()->calculateViewMatrix());
     glm::vec2 screenSize(target->texture.creationData.width,
                          target->texture.creationData.height);
     glm::vec2 noiseSize(4.0f, 4.0f);
@@ -112,5 +127,4 @@ void Window::renderSSAO(RenderTarget *target) {
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    this->ssaoBuffer->display(*this);
 }

@@ -44,21 +44,11 @@ void Window::deferredRendering(RenderTarget *target) {
         }
     }
 
-    this->renderSSAO(target);
+    this->gBuffer->resolve();
 
-    glUseProgram(this->deferredProgram.programId);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, this->gBuffer->gPosition.id);
-    this->deferredProgram.setUniform1i("gPosition", 0);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, this->gBuffer->gNormal.id);
-    this->deferredProgram.setUniform1i("gNormal", 1);
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, this->gBuffer->gAlbedoSpec.id);
-    this->deferredProgram.setUniform1i("gAlbedoSpec", 2);
-    glActiveTexture(GL_TEXTURE3);
-    glBindTexture(GL_TEXTURE_2D, this->gBuffer->gMaterial.id);
-    this->deferredProgram.setUniform1i("gMaterial", 3);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    this->renderSSAO(target);
 
     glBindFramebuffer(GL_FRAMEBUFFER, target->fbo);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);

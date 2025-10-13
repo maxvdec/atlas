@@ -145,7 +145,7 @@ class MainScene : public Scene {
         backpack.attachTexture(color);
         backpack.attachTexture(normal);
 
-        sphereCube.setPosition({0.0, 0.4, 0.0});
+        sphereCube.setPosition({0.0, 0.2, 0.0});
         window.addObject(&sphereCube);
 
         ground = createBox({5.0f, 0.1f, 5.0f}, Color(0.3f, 0.8f, 0.3f));

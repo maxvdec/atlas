@@ -882,6 +882,12 @@ class Model : public GameObject {
 
     Material material;
 
+    bool useDeferredRendering = true;
+
+    bool canUseDeferredRendering() const override {
+        return useDeferredRendering;
+    }
+
   private:
     std::vector<std::shared_ptr<CoreObject>> objects;
     std::string directory;
