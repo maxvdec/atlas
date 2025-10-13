@@ -208,6 +208,7 @@ requires std::is_base_of_v&lt;<a class="el" href="class_component.html">Componen
 <tr class="memitem:a54a97abc4b6fe3280505da3b587cba98 inherit pub_methods_class_renderable" id="r_a54a97abc4b6fe3280505da3b587cba98"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_renderable.html#a54a97abc4b6fe3280505da3b587cba98">canCastShadows</a> () const</td></tr>
 <tr class="memdesc:a54a97abc4b6fe3280505da3b587cba98 inherit pub_methods_class_renderable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to determine if the object can cast shadows. Can be overridden by derived classes.  <br /></td></tr>
 <tr class="memitem:a2103eed2f7f54bca8ba1001907b367a9 inherit pub_methods_class_renderable" id="r_a2103eed2f7f54bca8ba1001907b367a9"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_renderable.html#a2103eed2f7f54bca8ba1001907b367a9">~Renderable</a> ()=default</td></tr>
+<tr class="memitem:aa19d3c7b6144486766d45dbd3d0a08b8 inherit pub_methods_class_renderable" id="r_aa19d3c7b6144486766d45dbd3d0a08b8"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_renderable.html#aa19d3c7b6144486766d45dbd3d0a08b8">canUseDeferredRendering</a> () const</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -240,16 +241,16 @@ Example</h2>
 <div class="line">     myModel.<a class="code hl_function" href="#a24148dc5603a0a2e3da010b89cbde5b8">setRotation</a>({0.0f, 45.0f, 0.0f});</div>
 <div class="line">     <span class="comment">// Add the model to the scene</span></div>
 <div class="line">     window.addObject(&amp;myModel);</div>
-<div class="ttc" id="aclass_model_html_a24148dc5603a0a2e3da010b89cbde5b8"><div class="ttname"><a href="#a24148dc5603a0a2e3da010b89cbde5b8">Model::setRotation</a></div><div class="ttdeci">void setRotation(const Rotation3d &amp;newRotation) override</div><div class="ttdoc">Sets the rotation of the object.</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00801">object.h:801</a></div></div>
-<div class="ttc" id="aclass_model_html_a7cd6f92f17a58446c6b1d2ea70e2e0d5"><div class="ttname"><a href="#a7cd6f92f17a58446c6b1d2ea70e2e0d5">Model::setPosition</a></div><div class="ttdeci">void setPosition(const Position3d &amp;newPosition) override</div><div class="ttdoc">Set the Position object.</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00795">object.h:795</a></div></div>
+<div class="ttc" id="aclass_model_html_a24148dc5603a0a2e3da010b89cbde5b8"><div class="ttname"><a href="#a24148dc5603a0a2e3da010b89cbde5b8">Model::setRotation</a></div><div class="ttdeci">void setRotation(const Rotation3d &amp;newRotation) override</div><div class="ttdoc">Sets the rotation of the object.</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00807">object.h:807</a></div></div>
+<div class="ttc" id="aclass_model_html_a7cd6f92f17a58446c6b1d2ea70e2e0d5"><div class="ttname"><a href="#a7cd6f92f17a58446c6b1d2ea70e2e0d5">Model::setPosition</a></div><div class="ttdeci">void setPosition(const Position3d &amp;newPosition) override</div><div class="ttdoc">Set the Position object.</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00801">object.h:801</a></div></div>
 <div class="ttc" id="aclass_model_html_a8a74c2ff2b6a5755c2ed913d7c6a88f4"><div class="ttname"><a href="#a8a74c2ff2b6a5755c2ed913d7c6a88f4">Model::fromResource</a></div><div class="ttdeci">void fromResource(Resource resource)</div><div class="ttdoc">Loads the model from a resource.</div></div>
-<div class="ttc" id="aclass_model_html_a9620da538736e7eea3b38c727cbe3571"><div class="ttname"><a href="#a9620da538736e7eea3b38c727cbe3571">Model::setScale</a></div><div class="ttdeci">void setScale(const Scale3d &amp;newScale) override</div><div class="ttdoc">Sets the scale of the object.</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00813">object.h:813</a></div></div>
+<div class="ttc" id="aclass_model_html_a9620da538736e7eea3b38c727cbe3571"><div class="ttname"><a href="#a9620da538736e7eea3b38c727cbe3571">Model::setScale</a></div><div class="ttdeci">void setScale(const Scale3d &amp;newScale) override</div><div class="ttdoc">Sets the scale of the object.</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00819">object.h:819</a></div></div>
 <div class="ttc" id="aclass_model_html_ab5bdabea36b1d1bee80151e2da913373"><div class="ttname"><a href="#ab5bdabea36b1d1bee80151e2da913373">Model::Model</a></div><div class="ttdeci">Model()=default</div></div>
 <div class="ttc" id="aclass_workspace_html_a6eaca94e589851c29b2f66acf28599cb"><div class="ttname"><a href="class_workspace.html#a6eaca94e589851c29b2f66acf28599cb">Workspace::createResource</a></div><div class="ttdeci">Resource createResource(const fs::path &amp;path, std::string name, ResourceType type=ResourceType::File)</div><div class="ttdoc">Creates a new resource from a file path.</div></div>
 <div class="ttc" id="aclass_workspace_html_a8588fb898bffea4777ceffab7c2c7795"><div class="ttname"><a href="class_workspace.html#a8588fb898bffea4777ceffab7c2c7795">Workspace::get</a></div><div class="ttdeci">static Workspace &amp; get()</div><div class="ttdef"><b>Definition</b> <a href="workspace_8h_source.html#l00076">workspace.h:76</a></div></div>
 <div class="ttc" id="astruct_resource_html"><div class="ttname"><a href="struct_resource.html">Resource</a></div><div class="ttdoc">Structure representing a single resource in the workspace.</div><div class="ttdef"><b>Definition</b> <a href="workspace_8h_source.html#l00030">workspace.h:30</a></div></div>
 </div><!-- fragment --> 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00761">761</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00767">767</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="ab5bdabea36b1d1bee80151e2da913373" name="ab5bdabea36b1d1bee80151e2da913373"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab5bdabea36b1d1bee80151e2da913373">&#9670;&#160;</a></span>Model()</h2>
@@ -310,12 +311,12 @@ Example</h2>
 
 <p>Reimplemented from <a class="el" href="class_game_object.html#a7e28874d7a5c387330b97cf93671a3f8">GameObject</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00807">807</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  807</span>                                                               {</div>
-<div class="line"><span class="lineno">  808</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
-<div class="line"><span class="lineno">  809</span>            obj-&gt;attachTexture(texture);</div>
-<div class="line"><span class="lineno">  810</span>        }</div>
-<div class="line"><span class="lineno">  811</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00813">813</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  813</span>                                                               {</div>
+<div class="line"><span class="lineno">  814</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><span class="lineno">  815</span>            obj-&gt;attachTexture(texture);</div>
+<div class="line"><span class="lineno">  816</span>        }</div>
+<div class="line"><span class="lineno">  817</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -370,10 +371,10 @@ Example</h2>
 <p>Gets the objects that make up the model. </p>
 <dl class="section return"><dt>Returns</dt><dd>(std::vector&lt;std::shared_ptr&lt;CoreObject&gt;&gt;) The objects. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00775">775</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  775</span>                                                             {</div>
-<div class="line"><span class="lineno">  776</span>        <span class="keywordflow">return</span> objects;</div>
-<div class="line"><span class="lineno">  777</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00781">781</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  781</span>                                                             {</div>
+<div class="line"><span class="lineno">  782</span>        <span class="keywordflow">return</span> objects;</div>
+<div class="line"><span class="lineno">  783</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -405,13 +406,13 @@ Example</h2>
 
 <p>Reimplemented from <a class="el" href="class_renderable.html#a644269034ac58f64e47d88846c365cf4">Renderable</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00868">868</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  868</span>                                                   {</div>
-<div class="line"><span class="lineno">  869</span>        <span class="keywordflow">if</span> (objects.empty()) {</div>
-<div class="line"><span class="lineno">  870</span>            <span class="keywordflow">throw</span> std::runtime_error(<span class="stringliteral">&quot;Model has no objects.&quot;</span>);</div>
-<div class="line"><span class="lineno">  871</span>        }</div>
-<div class="line"><span class="lineno">  872</span>        <span class="keywordflow">return</span> objects[0]-&gt;getPosition();</div>
-<div class="line"><span class="lineno">  873</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00874">874</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  874</span>                                                   {</div>
+<div class="line"><span class="lineno">  875</span>        <span class="keywordflow">if</span> (objects.empty()) {</div>
+<div class="line"><span class="lineno">  876</span>            <span class="keywordflow">throw</span> std::runtime_error(<span class="stringliteral">&quot;Model has no objects.&quot;</span>);</div>
+<div class="line"><span class="lineno">  877</span>        }</div>
+<div class="line"><span class="lineno">  878</span>        <span class="keywordflow">return</span> objects[0]-&gt;getPosition();</div>
+<div class="line"><span class="lineno">  879</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -443,13 +444,13 @@ Example</h2>
 
 <p>Reimplemented from <a class="el" href="class_renderable.html#a0c0180d14588c6ed436cc7d153c9b22c">Renderable</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00861">861</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  861</span>                                                                  {</div>
-<div class="line"><span class="lineno">  862</span>        <span class="keywordflow">if</span> (objects.empty()) {</div>
-<div class="line"><span class="lineno">  863</span>            <span class="keywordflow">throw</span> std::runtime_error(<span class="stringliteral">&quot;Model has no objects.&quot;</span>);</div>
-<div class="line"><span class="lineno">  864</span>        }</div>
-<div class="line"><span class="lineno">  865</span>        <span class="keywordflow">return</span> objects[0]-&gt;getShaderProgram().value();</div>
-<div class="line"><span class="lineno">  866</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00867">867</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  867</span>                                                                  {</div>
+<div class="line"><span class="lineno">  868</span>        <span class="keywordflow">if</span> (objects.empty()) {</div>
+<div class="line"><span class="lineno">  869</span>            <span class="keywordflow">throw</span> std::runtime_error(<span class="stringliteral">&quot;Model has no objects.&quot;</span>);</div>
+<div class="line"><span class="lineno">  870</span>        }</div>
+<div class="line"><span class="lineno">  871</span>        <span class="keywordflow">return</span> objects[0]-&gt;getShaderProgram().value();</div>
+<div class="line"><span class="lineno">  872</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -480,15 +481,15 @@ Example</h2>
 
 <p>Reimplemented from <a class="el" href="class_renderable.html#aaa53405a3eb174752fce5e4a2fc8dca8">Renderable</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00840">840</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  840</span>                                      {</div>
-<div class="line"><span class="lineno">  841</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;component : <a class="code hl_variable" href="class_game_object.html#a545e4ed29df0e16304d46c73404c0ce6">components</a>) {</div>
-<div class="line"><span class="lineno">  842</span>            component-&gt;init();</div>
-<div class="line"><span class="lineno">  843</span>        }</div>
-<div class="line"><span class="lineno">  844</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
-<div class="line"><span class="lineno">  845</span>            obj-&gt;initialize();</div>
-<div class="line"><span class="lineno">  846</span>        }</div>
-<div class="line"><span class="lineno">  847</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00846">846</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  846</span>                                      {</div>
+<div class="line"><span class="lineno">  847</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;component : <a class="code hl_variable" href="class_game_object.html#a545e4ed29df0e16304d46c73404c0ce6">components</a>) {</div>
+<div class="line"><span class="lineno">  848</span>            component-&gt;init();</div>
+<div class="line"><span class="lineno">  849</span>        }</div>
+<div class="line"><span class="lineno">  850</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><span class="lineno">  851</span>            obj-&gt;initialize();</div>
+<div class="line"><span class="lineno">  852</span>        }</div>
+<div class="line"><span class="lineno">  853</span>    }</div>
 <div class="ttc" id="aclass_game_object_html_a545e4ed29df0e16304d46c73404c0ce6"><div class="ttname"><a href="class_game_object.html#a545e4ed29df0e16304d46c73404c0ce6">GameObject::components</a></div><div class="ttdeci">std::vector&lt; std::shared_ptr&lt; Component &gt; &gt; components</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00300">component.h:300</a></div></div>
 </div><!-- fragment -->
 <p class="reference">References <a class="el" href="component_8h_source.html#l00300">GameObject::components</a>.</p>
@@ -528,12 +529,12 @@ Example</h2>
 
 <p>Reimplemented from <a class="el" href="class_game_object.html#acaa8d8c46548f338987ebf9cd054b2b5">GameObject</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00784">784</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  784</span>                                                               {</div>
-<div class="line"><span class="lineno">  785</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
-<div class="line"><span class="lineno">  786</span>            obj-&gt;move(deltaPosition);</div>
-<div class="line"><span class="lineno">  787</span>        }</div>
-<div class="line"><span class="lineno">  788</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00790">790</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  790</span>                                                               {</div>
+<div class="line"><span class="lineno">  791</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><span class="lineno">  792</span>            obj-&gt;move(deltaPosition);</div>
+<div class="line"><span class="lineno">  793</span>        }</div>
+<div class="line"><span class="lineno">  794</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -570,15 +571,15 @@ Example</h2>
 
 <p>Implements <a class="el" href="class_renderable.html#ae9601ab8470cd46d45b1bec00d656c81">Renderable</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00825">825</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  825</span>                                          {</div>
-<div class="line"><span class="lineno">  826</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;component : <a class="code hl_variable" href="class_game_object.html#a545e4ed29df0e16304d46c73404c0ce6">components</a>) {</div>
-<div class="line"><span class="lineno">  827</span>            component-&gt;update(dt);</div>
-<div class="line"><span class="lineno">  828</span>        }</div>
-<div class="line"><span class="lineno">  829</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
-<div class="line"><span class="lineno">  830</span>            obj-&gt;render(dt);</div>
-<div class="line"><span class="lineno">  831</span>        }</div>
-<div class="line"><span class="lineno">  832</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00831">831</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  831</span>                                          {</div>
+<div class="line"><span class="lineno">  832</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;component : <a class="code hl_variable" href="class_game_object.html#a545e4ed29df0e16304d46c73404c0ce6">components</a>) {</div>
+<div class="line"><span class="lineno">  833</span>            component-&gt;update(dt);</div>
+<div class="line"><span class="lineno">  834</span>        }</div>
+<div class="line"><span class="lineno">  835</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><span class="lineno">  836</span>            obj-&gt;render(dt);</div>
+<div class="line"><span class="lineno">  837</span>        }</div>
+<div class="line"><span class="lineno">  838</span>    }</div>
 </div><!-- fragment -->
 <p class="reference">References <a class="el" href="component_8h_source.html#l00300">GameObject::components</a>.</p>
 
@@ -617,12 +618,12 @@ Example</h2>
 
 <p>Reimplemented from <a class="el" href="class_game_object.html#ac1a103e7a0c90dc1ea293b7d2fdb0634">GameObject</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00795">795</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  795</span>                                                                    {</div>
-<div class="line"><span class="lineno">  796</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
-<div class="line"><span class="lineno">  797</span>            obj-&gt;setPosition(newPosition);</div>
-<div class="line"><span class="lineno">  798</span>        }</div>
-<div class="line"><span class="lineno">  799</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00801">801</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  801</span>                                                                    {</div>
+<div class="line"><span class="lineno">  802</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><span class="lineno">  803</span>            obj-&gt;setPosition(newPosition);</div>
+<div class="line"><span class="lineno">  804</span>        }</div>
+<div class="line"><span class="lineno">  805</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -659,12 +660,12 @@ Example</h2>
 
 <p>Reimplemented from <a class="el" href="class_renderable.html#a0c865743cb1e0bbc44b754f9e1b50bb3">Renderable</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00849">849</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  849</span>                                                                        {</div>
-<div class="line"><span class="lineno">  850</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
-<div class="line"><span class="lineno">  851</span>            obj-&gt;setProjectionMatrix(projection);</div>
-<div class="line"><span class="lineno">  852</span>        }</div>
-<div class="line"><span class="lineno">  853</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00855">855</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  855</span>                                                                        {</div>
+<div class="line"><span class="lineno">  856</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><span class="lineno">  857</span>            obj-&gt;setProjectionMatrix(projection);</div>
+<div class="line"><span class="lineno">  858</span>        }</div>
+<div class="line"><span class="lineno">  859</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -701,12 +702,12 @@ Example</h2>
 
 <p>Reimplemented from <a class="el" href="class_game_object.html#a63d28fb59276d40d10cae25f05306451">GameObject</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00801">801</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  801</span>                                                                    {</div>
-<div class="line"><span class="lineno">  802</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
-<div class="line"><span class="lineno">  803</span>            obj-&gt;setRotation(newRotation);</div>
-<div class="line"><span class="lineno">  804</span>        }</div>
-<div class="line"><span class="lineno">  805</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00807">807</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  807</span>                                                                    {</div>
+<div class="line"><span class="lineno">  808</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><span class="lineno">  809</span>            obj-&gt;setRotation(newRotation);</div>
+<div class="line"><span class="lineno">  810</span>        }</div>
+<div class="line"><span class="lineno">  811</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -743,12 +744,12 @@ Example</h2>
 
 <p>Reimplemented from <a class="el" href="class_game_object.html#ab1d5418661030a841e752bdb462b1ebc">GameObject</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00813">813</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  813</span>                                                           {</div>
-<div class="line"><span class="lineno">  814</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
-<div class="line"><span class="lineno">  815</span>            obj-&gt;setScale(newScale);</div>
-<div class="line"><span class="lineno">  816</span>        }</div>
-<div class="line"><span class="lineno">  817</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00819">819</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  819</span>                                                           {</div>
+<div class="line"><span class="lineno">  820</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><span class="lineno">  821</span>            obj-&gt;setScale(newScale);</div>
+<div class="line"><span class="lineno">  822</span>        }</div>
+<div class="line"><span class="lineno">  823</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -785,12 +786,12 @@ Example</h2>
 
 <p>Reimplemented from <a class="el" href="class_renderable.html#a727f1bc86184e94bfcb8270d11812af8">Renderable</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00855">855</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  855</span>                                                                {</div>
-<div class="line"><span class="lineno">  856</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
-<div class="line"><span class="lineno">  857</span>            obj-&gt;setShader(shader);</div>
-<div class="line"><span class="lineno">  858</span>        }</div>
-<div class="line"><span class="lineno">  859</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00861">861</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  861</span>                                                                {</div>
+<div class="line"><span class="lineno">  862</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><span class="lineno">  863</span>            obj-&gt;setShader(shader);</div>
+<div class="line"><span class="lineno">  864</span>        }</div>
+<div class="line"><span class="lineno">  865</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -827,12 +828,12 @@ Example</h2>
 
 <p>Reimplemented from <a class="el" href="class_renderable.html#ae1b11967b98e6ba4393640652242083f">Renderable</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00819">819</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  819</span>                                                            {</div>
-<div class="line"><span class="lineno">  820</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
-<div class="line"><span class="lineno">  821</span>            obj-&gt;setViewMatrix(view);</div>
-<div class="line"><span class="lineno">  822</span>        }</div>
-<div class="line"><span class="lineno">  823</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00825">825</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  825</span>                                                            {</div>
+<div class="line"><span class="lineno">  826</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><span class="lineno">  827</span>            obj-&gt;setViewMatrix(view);</div>
+<div class="line"><span class="lineno">  828</span>        }</div>
+<div class="line"><span class="lineno">  829</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -870,12 +871,12 @@ Example</h2>
 
 <p>Reimplemented from <a class="el" href="class_renderable.html#afb2aa3ad0ab8dcfc54088173ea7182cd">Renderable</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00834">834</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  834</span>                                                {</div>
-<div class="line"><span class="lineno">  835</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
-<div class="line"><span class="lineno">  836</span>            obj-&gt;update(window);</div>
-<div class="line"><span class="lineno">  837</span>        }</div>
-<div class="line"><span class="lineno">  838</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00840">840</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  840</span>                                                {</div>
+<div class="line"><span class="lineno">  841</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><span class="lineno">  842</span>            obj-&gt;update(window);</div>
+<div class="line"><span class="lineno">  843</span>        }</div>
+<div class="line"><span class="lineno">  844</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -892,7 +893,7 @@ Example</h2>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00877">877</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00883">883</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
 
 </div>
 </div>

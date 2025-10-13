@@ -29,6 +29,7 @@ var class_window =
     [ "setFullscreen", "class_window.html#aafbcf94a1e73295dfae7c9cdba2e5dc3", null ],
     [ "setScene", "class_window.html#ac693d92bb6f52273932549cd121a5755", null ],
     [ "setWindowed", "class_window.html#a22f7d665b3554688a6d319b59913a5af", null ],
+    [ "useDeferredRendering", "class_window.html#adafb4dc8a3af7af838df8d2feba7086f", null ],
     [ "CoreObject", "class_window.html#ac9dbe2a378024e3a3c417b4cb50adbb3", null ],
     [ "DirectionalLight", "class_window.html#a7c2d49dc122804ba058a10c20e8d048d", null ],
     [ "RenderTarget", "class_window.html#aa5afc6f82b7b587ed5ada4d227ce32aa", null ],
@@ -38,5 +39,6 @@ var class_window =
     [ "height", "class_window.html#af0ac1732ca6b79a6f6b78aa344140514", null ],
     [ "mainWindow", "class_window.html#aa3c2a95cf2ce8cbbb668247f029b610c", null ],
     [ "title", "class_window.html#accc3e5364fced57c273820aa51410e12", null ],
+    [ "usesDeferred", "class_window.html#adc988f8bbe51cdd8dbbba10d8e15bf5c", null ],
     [ "width", "class_window.html#af5b1c436782cc9752d386493fbc5dc8c", null ]
 ];

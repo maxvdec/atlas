@@ -12,6 +12,10 @@ var class_render_target =
     [ "blurredTexture", "class_render_target.html#aa621bfaf5ce2add2dc83b470d6b32c50", null ],
     [ "brightTexture", "class_render_target.html#a43f2585191d0499203e30b6f70e9b3cd", null ],
     [ "depthTexture", "class_render_target.html#a066aebb220f1f3b50239bcb1b90bb2bd", null ],
+    [ "gAlbedoSpec", "class_render_target.html#ab767ae6bc48f80724f9490aebf1a9dd6", null ],
+    [ "gMaterial", "class_render_target.html#aaba8415726d19aac146c378b5c571243", null ],
+    [ "gNormal", "class_render_target.html#a9838f6c1c3ecf06a6910267b82b488fc", null ],
+    [ "gPosition", "class_render_target.html#a99a07837a6572cf73bf513bb1bff184d", null ],
     [ "object", "class_render_target.html#a1ec7d8ec91e888599057ada1bd6dddc1", null ],
     [ "texture", "class_render_target.html#aa0081ca6fcb83f64edf9be9820b5185e", null ],
     [ "type", "class_render_target.html#acbc5c695868ec18217c45cb8da705497", null ]

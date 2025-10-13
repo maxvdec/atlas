@@ -182,10 +182,10 @@ Example</h2>
 <div class="line">this-&gt;addPointLight(&amp;pointLight);</div>
 <div class="ttc" id="ashader_8h_html_aed7a1c7a5976e4adb712d0a231dada82acb5feb1b7314637725a2e73bdc9f7295"><div class="ttname"><a href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82acb5feb1b7314637725a2e73bdc9f7295">AtlasVertexShader::Color</a></div><div class="ttdeci">@ Color</div><div class="ttdoc">Vertex shader for rendering solid colors.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00040">shader.h:40</a></div></div>
 <div class="ttc" id="astruct_color_html_aad4699ae003d7a86b5edc5fccdbaf4c8"><div class="ttname"><a href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a></div><div class="ttdeci">static Color white()</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00194">units.h:194</a></div></div>
-<div class="ttc" id="astruct_light_html_a705f837df8db28b0259a0edc1858492d"><div class="ttname"><a href="#a705f837df8db28b0259a0edc1858492d">Light::Light</a></div><div class="ttdeci">Light(const Position3d &amp;pos={0.0f, 0.0f, 0.0f}, const Color &amp;color=Color::white(), float distance=50.f, const Color &amp;shineColor=Color::white())</div><div class="ttdoc">Function that constructs a new Light object.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00141">light.h:141</a></div></div>
-<div class="ttc" id="astruct_light_html_aebfa78420d5cf261be042325ff392b62"><div class="ttname"><a href="#aebfa78420d5cf261be042325ff392b62">Light::distance</a></div><div class="ttdeci">float distance</div><div class="ttdoc">Distance to which the light reaches.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00184">light.h:184</a></div></div>
+<div class="ttc" id="astruct_light_html_a705f837df8db28b0259a0edc1858492d"><div class="ttname"><a href="#a705f837df8db28b0259a0edc1858492d">Light::Light</a></div><div class="ttdeci">Light(const Position3d &amp;pos={0.0f, 0.0f, 0.0f}, const Color &amp;color=Color::white(), float distance=50.f, const Color &amp;shineColor=Color::white())</div><div class="ttdoc">Function that constructs a new Light object.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00142">light.h:142</a></div></div>
+<div class="ttc" id="astruct_light_html_aebfa78420d5cf261be042325ff392b62"><div class="ttname"><a href="#aebfa78420d5cf261be042325ff392b62">Light::distance</a></div><div class="ttdeci">float distance</div><div class="ttdoc">Distance to which the light reaches.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00185">light.h:185</a></div></div>
 </div><!-- fragment --> 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00114">114</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00115">115</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a705f837df8db28b0259a0edc1858492d" name="a705f837df8db28b0259a0edc1858492d"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a705f837df8db28b0259a0edc1858492d">&#9670;&#160;</a></span>Light()</h2>
@@ -235,15 +235,15 @@ Example</h2>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00141">141</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  141</span>                                  {0.0f, 0.0f, 0.0f},</div>
-<div class="line"><span class="lineno">  142</span>          <span class="keyword">const</span> <a class="code hl_enumvalue" href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82acb5feb1b7314637725a2e73bdc9f7295">Color</a> &amp;<a class="code hl_variable" href="#ad7a168d26aed1bf7cca1a8d8e6f8ada4">color</a> = <a class="code hl_function" href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a>(), <span class="keywordtype">float</span> <a class="code hl_variable" href="#aebfa78420d5cf261be042325ff392b62">distance</a> = 50.f,</div>
-<div class="line"><span class="lineno">  143</span>          <span class="keyword">const</span> <a class="code hl_enumvalue" href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82acb5feb1b7314637725a2e73bdc9f7295">Color</a> &amp;<a class="code hl_variable" href="#ad0986bcf54730dfe19fefcace47c3cc3">shineColor</a> = <a class="code hl_function" href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a>())</div>
-<div class="line"><span class="lineno">  144</span>        : <a class="code hl_variable" href="#ad1bbf10bd6b27da5ddb05399d863ab2b">position</a>(pos), <a class="code hl_variable" href="#ad7a168d26aed1bf7cca1a8d8e6f8ada4">color</a>(<a class="code hl_variable" href="#ad7a168d26aed1bf7cca1a8d8e6f8ada4">color</a>), <a class="code hl_variable" href="#ad0986bcf54730dfe19fefcace47c3cc3">shineColor</a>(<a class="code hl_variable" href="#ad0986bcf54730dfe19fefcace47c3cc3">shineColor</a>),</div>
-<div class="line"><span class="lineno">  145</span>          <a class="code hl_variable" href="#aebfa78420d5cf261be042325ff392b62">distance</a>(<a class="code hl_variable" href="#aebfa78420d5cf261be042325ff392b62">distance</a>) {}</div>
-<div class="ttc" id="astruct_light_html_ad0986bcf54730dfe19fefcace47c3cc3"><div class="ttname"><a href="#ad0986bcf54730dfe19fefcace47c3cc3">Light::shineColor</a></div><div class="ttdeci">Color shineColor</div><div class="ttdoc">The color that the light will use for specular highlights.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00130">light.h:130</a></div></div>
-<div class="ttc" id="astruct_light_html_ad1bbf10bd6b27da5ddb05399d863ab2b"><div class="ttname"><a href="#ad1bbf10bd6b27da5ddb05399d863ab2b">Light::position</a></div><div class="ttdeci">Position3d position</div><div class="ttdoc">The position of the light in 3D space.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00119">light.h:119</a></div></div>
-<div class="ttc" id="astruct_light_html_ad7a168d26aed1bf7cca1a8d8e6f8ada4"><div class="ttname"><a href="#ad7a168d26aed1bf7cca1a8d8e6f8ada4">Light::color</a></div><div class="ttdeci">Color color</div><div class="ttdoc">The color of the light.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00125">light.h:125</a></div></div>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00142">142</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  142</span>                                  {0.0f, 0.0f, 0.0f},</div>
+<div class="line"><span class="lineno">  143</span>          <span class="keyword">const</span> <a class="code hl_enumvalue" href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82acb5feb1b7314637725a2e73bdc9f7295">Color</a> &amp;<a class="code hl_variable" href="#ad7a168d26aed1bf7cca1a8d8e6f8ada4">color</a> = <a class="code hl_function" href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a>(), <span class="keywordtype">float</span> <a class="code hl_variable" href="#aebfa78420d5cf261be042325ff392b62">distance</a> = 50.f,</div>
+<div class="line"><span class="lineno">  144</span>          <span class="keyword">const</span> <a class="code hl_enumvalue" href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82acb5feb1b7314637725a2e73bdc9f7295">Color</a> &amp;<a class="code hl_variable" href="#ad0986bcf54730dfe19fefcace47c3cc3">shineColor</a> = <a class="code hl_function" href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a>())</div>
+<div class="line"><span class="lineno">  145</span>        : <a class="code hl_variable" href="#ad1bbf10bd6b27da5ddb05399d863ab2b">position</a>(pos), <a class="code hl_variable" href="#ad7a168d26aed1bf7cca1a8d8e6f8ada4">color</a>(<a class="code hl_variable" href="#ad7a168d26aed1bf7cca1a8d8e6f8ada4">color</a>), <a class="code hl_variable" href="#ad0986bcf54730dfe19fefcace47c3cc3">shineColor</a>(<a class="code hl_variable" href="#ad0986bcf54730dfe19fefcace47c3cc3">shineColor</a>),</div>
+<div class="line"><span class="lineno">  146</span>          <a class="code hl_variable" href="#aebfa78420d5cf261be042325ff392b62">distance</a>(<a class="code hl_variable" href="#aebfa78420d5cf261be042325ff392b62">distance</a>) {}</div>
+<div class="ttc" id="astruct_light_html_ad0986bcf54730dfe19fefcace47c3cc3"><div class="ttname"><a href="#ad0986bcf54730dfe19fefcace47c3cc3">Light::shineColor</a></div><div class="ttdeci">Color shineColor</div><div class="ttdoc">The color that the light will use for specular highlights.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00131">light.h:131</a></div></div>
+<div class="ttc" id="astruct_light_html_ad1bbf10bd6b27da5ddb05399d863ab2b"><div class="ttname"><a href="#ad1bbf10bd6b27da5ddb05399d863ab2b">Light::position</a></div><div class="ttdeci">Position3d position</div><div class="ttdoc">The position of the light in 3D space.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00120">light.h:120</a></div></div>
+<div class="ttc" id="astruct_light_html_ad7a168d26aed1bf7cca1a8d8e6f8ada4"><div class="ttname"><a href="#ad7a168d26aed1bf7cca1a8d8e6f8ada4">Light::color</a></div><div class="ttdeci">Color color</div><div class="ttdoc">The color of the light.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00126">light.h:126</a></div></div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -271,7 +271,7 @@ Example</h2>
   </dd>
 </dl>
 
-<p class="reference">References <a class="el" href="light_8h_source.html#l00205">Window</a>.</p>
+<p class="reference">References <a class="el" href="light_8h_source.html#l00206">Window</a>.</p>
 
 </div>
 </div>
@@ -323,7 +323,7 @@ Example</h2>
   </dd>
 </dl>
 
-<p class="reference">References <a class="el" href="light_8h_source.html#l00205">Window</a>.</p>
+<p class="reference">References <a class="el" href="light_8h_source.html#l00206">Window</a>.</p>
 
 </div>
 </div>
@@ -369,7 +369,7 @@ Example</h2>
   </dd>
 </dl>
 
-<p class="reference">References <a class="el" href="light_8h_source.html#l00125">color</a>.</p>
+<p class="reference">References <a class="el" href="light_8h_source.html#l00126">color</a>.</p>
 
 </div>
 </div>
@@ -394,9 +394,9 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00206">206</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00207">207</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 
-<p class="reference">References <a class="el" href="light_8h_source.html#l00206">CoreObject</a>.</p>
+<p class="reference">References <a class="el" href="light_8h_source.html#l00207">CoreObject</a>.</p>
 
 </div>
 </div>
@@ -420,9 +420,9 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00205">205</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00206">206</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 
-<p class="reference">References <a class="el" href="light_8h_source.html#l00205">Window</a>.</p>
+<p class="reference">References <a class="el" href="light_8h_source.html#l00206">Window</a>.</p>
 
 </div>
 </div>
@@ -441,7 +441,7 @@ Example</h2>
 
 <p>The color of the light. </p>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00125">125</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00126">126</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 
 </div>
 </div>
@@ -459,7 +459,7 @@ Example</h2>
 
 <p>The debug object that visualizes the light in the scene. </p>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00171">171</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00172">172</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 
 </div>
 </div>
@@ -477,7 +477,7 @@ Example</h2>
 
 <p>Distance to which the light reaches. </p>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00184">184</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00185">185</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 
 </div>
 </div>
@@ -495,8 +495,8 @@ Example</h2>
 
 <p>The position of the light in 3D space. </p>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00119">119</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  119</span>{0.0f, 0.0f, 0.0f};</div>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00120">120</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  120</span>{0.0f, 0.0f, 0.0f};</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -514,7 +514,7 @@ Example</h2>
 
 <p>The render target that holds the shadow map. </p>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00198">198</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00199">199</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 
 </div>
 </div>
@@ -532,7 +532,7 @@ Example</h2>
 
 <p>The color that the light will use for specular highlights. </p>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00130">130</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00131">131</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 
 </div>
 </div>

@@ -3,7 +3,7 @@ var searchData=
   ['r_0',['R',['../input_8h.html#a9479d299e1852e6140dcca1f405868abae1e1d3d40573127e9ee0480caf1283d6',1,'input.h']]],
   ['r_1',['r',['../struct_color.html#a12b28b8a60c6add344b485d12e1d2168',1,'Color']]],
   ['radians_2',['Radians',['../struct_radians.html',1,'']]],
-  ['radius_3',['radius',['../class_sphere.html#ae6f42f0da6679a2f0b4a22681ccccf38',1,'Sphere']]],
+  ['radius_3',['radius',['../struct_point_light_constants.html#a9c6a4d43f99919ad7d3cf864e6dd3e66',1,'PointLightConstants::radius'],['../class_sphere.html#ae6f42f0da6679a2f0b4a22681ccccf38',1,'Sphere::radius']]],
   ['raysphere_4',['raySphere',['../namespacebezel.html#a333bd47a0665d37b009806bcec4a3430',1,'bezel']]],
   ['red_5',['red',['../struct_color.html#aacbef2c60156c8c2bb422206d3d9c560',1,'Color']]],
   ['reflectivity_6',['reflectivity',['../struct_material.html#a8d977d0b7386da7e3ac6879f458d3f0f',1,'Material']]],

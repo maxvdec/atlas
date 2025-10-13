@@ -7,6 +7,7 @@ var class_core_object =
     [ "attachTexture", "class_core_object.html#a6a04b028500eb9c95e41886e2643672d", null ],
     [ "attachVertices", "class_core_object.html#a3222ec791dd601df41e0cd8758122c0a", null ],
     [ "canCastShadows", "class_core_object.html#a64c15d294b3cd28e4dc04a554ce9e9c0", null ],
+    [ "canUseDeferredRendering", "class_core_object.html#a208b0d662e76a457c2843dd392c6e140", null ],
     [ "clone", "class_core_object.html#af91d0ad0985941edf65b8c3b24865c69", null ],
     [ "createAndAttachProgram", "class_core_object.html#a37c765757eb08073b0441d2af04fa240", null ],
     [ "getPosition", "class_core_object.html#af516bbf869acc7d45e661005a834b93d", null ],
@@ -48,5 +49,6 @@ var class_core_object =
     [ "scale", "class_core_object.html#a72032f2bacd5d9e4f6867c556ba8230c", null ],
     [ "shaderProgram", "class_core_object.html#a531d7f43dbb94d78f679d7dc95313472", null ],
     [ "textures", "class_core_object.html#a6ee8e4de7ba86d212eafe6bb4b3ae4ea", null ],
+    [ "useDeferredRendering", "class_core_object.html#ade14d5e7085e4dad510471171f539789", null ],
     [ "vertices", "class_core_object.html#a306bf98e5b82e7ae7c5c73ec9a685428", null ]
 ];

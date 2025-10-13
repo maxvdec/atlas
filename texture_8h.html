@@ -172,10 +172,14 @@ Enumerations</h2></td></tr>
 <br />
  }</td></tr>
 <tr class="memdesc:a579bf435a05d45b75f553d37ebbb3225"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type that represents a texture ID.  <a href="#a579bf435a05d45b75f553d37ebbb3225">More...</a><br /></td></tr>
-<tr class="memitem:a639c740f69368f9fe25a4f7409a16384" id="r_a639c740f69368f9fe25a4f7409a16384"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a639c740f69368f9fe25a4f7409a16384">RenderTargetType</a> { <a class="el" href="#a639c740f69368f9fe25a4f7409a16384a9ead0d38e06ec253ca0ecbf6ea56e59b">Scene</a>
+<tr class="memitem:a639c740f69368f9fe25a4f7409a16384" id="r_a639c740f69368f9fe25a4f7409a16384"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a639c740f69368f9fe25a4f7409a16384">RenderTargetType</a> { <br />
+&#160;&#160;<a class="el" href="#a639c740f69368f9fe25a4f7409a16384a9ead0d38e06ec253ca0ecbf6ea56e59b">Scene</a>
 , <a class="el" href="#a639c740f69368f9fe25a4f7409a16384ae34a1815b3fff1ad8307cb98182f4481">Multisampled</a>
 , <a class="el" href="#a639c740f69368f9fe25a4f7409a16384a3f39588bb19e28051d9aedfbb170025c">Shadow</a>
 , <a class="el" href="#a639c740f69368f9fe25a4f7409a16384a2da82a3c0f89c3328ed03785fbb6f3e8">CubeShadow</a>
+, <br />
+&#160;&#160;<a class="el" href="#a639c740f69368f9fe25a4f7409a16384a628adbb6c98e56748110061187f57243">GBuffer</a>
+<br />
  }</td></tr>
 <tr class="memdesc:a639c740f69368f9fe25a4f7409a16384"><td class="mdescLeft">&#160;</td><td class="mdescRight">The type of the texture (<a class="el" href="class_render_target.html" title="Class that represents a render target, which is a texture in which a scene can be rendered....">RenderTarget</a>).  <a href="#a639c740f69368f9fe25a4f7409a16384">More...</a><br /></td></tr>
 </table>
@@ -206,14 +210,22 @@ Enumerations</h2></td></tr>
 <tr><td class="fieldname"><a id="a639c740f69368f9fe25a4f7409a16384ae34a1815b3fff1ad8307cb98182f4481" name="a639c740f69368f9fe25a4f7409a16384ae34a1815b3fff1ad8307cb98182f4481"></a>Multisampled&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="a639c740f69368f9fe25a4f7409a16384a3f39588bb19e28051d9aedfbb170025c" name="a639c740f69368f9fe25a4f7409a16384a3f39588bb19e28051d9aedfbb170025c"></a>Shadow&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="a639c740f69368f9fe25a4f7409a16384a2da82a3c0f89c3328ed03785fbb6f3e8" name="a639c740f69368f9fe25a4f7409a16384a2da82a3c0f89c3328ed03785fbb6f3e8"></a>CubeShadow&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a639c740f69368f9fe25a4f7409a16384a628adbb6c98e56748110061187f57243" name="a639c740f69368f9fe25a4f7409a16384a628adbb6c98e56748110061187f57243"></a>GBuffer&#160;</td><td class="fielddoc"></td></tr>
 </table>
 
 <p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00270">270</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  270</span>{ <a class="code hl_enumvalue" href="#a639c740f69368f9fe25a4f7409a16384a9ead0d38e06ec253ca0ecbf6ea56e59b">Scene</a>, <a class="code hl_enumvalue" href="#a639c740f69368f9fe25a4f7409a16384ae34a1815b3fff1ad8307cb98182f4481">Multisampled</a>, <a class="code hl_enumvalue" href="#a639c740f69368f9fe25a4f7409a16384a3f39588bb19e28051d9aedfbb170025c">Shadow</a>, <a class="code hl_enumvalue" href="#a639c740f69368f9fe25a4f7409a16384a2da82a3c0f89c3328ed03785fbb6f3e8">CubeShadow</a> };</div>
-<div class="ttc" id="atexture_8h_html_a639c740f69368f9fe25a4f7409a16384a2da82a3c0f89c3328ed03785fbb6f3e8"><div class="ttname"><a href="#a639c740f69368f9fe25a4f7409a16384a2da82a3c0f89c3328ed03785fbb6f3e8">RenderTargetType::CubeShadow</a></div><div class="ttdeci">@ CubeShadow</div><div class="ttdef"><b>Definition</b> <a href="texture_8h_source.html#l00270">texture.h:270</a></div></div>
-<div class="ttc" id="atexture_8h_html_a639c740f69368f9fe25a4f7409a16384a3f39588bb19e28051d9aedfbb170025c"><div class="ttname"><a href="#a639c740f69368f9fe25a4f7409a16384a3f39588bb19e28051d9aedfbb170025c">RenderTargetType::Shadow</a></div><div class="ttdeci">@ Shadow</div><div class="ttdef"><b>Definition</b> <a href="texture_8h_source.html#l00270">texture.h:270</a></div></div>
-<div class="ttc" id="atexture_8h_html_a639c740f69368f9fe25a4f7409a16384a9ead0d38e06ec253ca0ecbf6ea56e59b"><div class="ttname"><a href="#a639c740f69368f9fe25a4f7409a16384a9ead0d38e06ec253ca0ecbf6ea56e59b">RenderTargetType::Scene</a></div><div class="ttdeci">@ Scene</div><div class="ttdef"><b>Definition</b> <a href="texture_8h_source.html#l00270">texture.h:270</a></div></div>
-<div class="ttc" id="atexture_8h_html_a639c740f69368f9fe25a4f7409a16384ae34a1815b3fff1ad8307cb98182f4481"><div class="ttname"><a href="#a639c740f69368f9fe25a4f7409a16384ae34a1815b3fff1ad8307cb98182f4481">RenderTargetType::Multisampled</a></div><div class="ttdeci">@ Multisampled</div><div class="ttdef"><b>Definition</b> <a href="texture_8h_source.html#l00270">texture.h:270</a></div></div>
+<div class="fragment"><div class="line"><span class="lineno">  270</span>                            {</div>
+<div class="line"><span class="lineno">  271</span>    <a class="code hl_enumvalue" href="#a639c740f69368f9fe25a4f7409a16384a9ead0d38e06ec253ca0ecbf6ea56e59b">Scene</a>,</div>
+<div class="line"><span class="lineno">  272</span>    <a class="code hl_enumvalue" href="#a639c740f69368f9fe25a4f7409a16384ae34a1815b3fff1ad8307cb98182f4481">Multisampled</a>,</div>
+<div class="line"><span class="lineno">  273</span>    <a class="code hl_enumvalue" href="#a639c740f69368f9fe25a4f7409a16384a3f39588bb19e28051d9aedfbb170025c">Shadow</a>,</div>
+<div class="line"><span class="lineno">  274</span>    <a class="code hl_enumvalue" href="#a639c740f69368f9fe25a4f7409a16384a2da82a3c0f89c3328ed03785fbb6f3e8">CubeShadow</a>,</div>
+<div class="line"><span class="lineno">  275</span>    <a class="code hl_enumvalue" href="#a639c740f69368f9fe25a4f7409a16384a628adbb6c98e56748110061187f57243">GBuffer</a></div>
+<div class="line"><span class="lineno">  276</span>};</div>
+<div class="ttc" id="atexture_8h_html_a639c740f69368f9fe25a4f7409a16384a2da82a3c0f89c3328ed03785fbb6f3e8"><div class="ttname"><a href="#a639c740f69368f9fe25a4f7409a16384a2da82a3c0f89c3328ed03785fbb6f3e8">RenderTargetType::CubeShadow</a></div><div class="ttdeci">@ CubeShadow</div><div class="ttdef"><b>Definition</b> <a href="texture_8h_source.html#l00274">texture.h:274</a></div></div>
+<div class="ttc" id="atexture_8h_html_a639c740f69368f9fe25a4f7409a16384a3f39588bb19e28051d9aedfbb170025c"><div class="ttname"><a href="#a639c740f69368f9fe25a4f7409a16384a3f39588bb19e28051d9aedfbb170025c">RenderTargetType::Shadow</a></div><div class="ttdeci">@ Shadow</div><div class="ttdef"><b>Definition</b> <a href="texture_8h_source.html#l00273">texture.h:273</a></div></div>
+<div class="ttc" id="atexture_8h_html_a639c740f69368f9fe25a4f7409a16384a628adbb6c98e56748110061187f57243"><div class="ttname"><a href="#a639c740f69368f9fe25a4f7409a16384a628adbb6c98e56748110061187f57243">RenderTargetType::GBuffer</a></div><div class="ttdeci">@ GBuffer</div><div class="ttdef"><b>Definition</b> <a href="texture_8h_source.html#l00275">texture.h:275</a></div></div>
+<div class="ttc" id="atexture_8h_html_a639c740f69368f9fe25a4f7409a16384a9ead0d38e06ec253ca0ecbf6ea56e59b"><div class="ttname"><a href="#a639c740f69368f9fe25a4f7409a16384a9ead0d38e06ec253ca0ecbf6ea56e59b">RenderTargetType::Scene</a></div><div class="ttdeci">@ Scene</div><div class="ttdef"><b>Definition</b> <a href="texture_8h_source.html#l00271">texture.h:271</a></div></div>
+<div class="ttc" id="atexture_8h_html_a639c740f69368f9fe25a4f7409a16384ae34a1815b3fff1ad8307cb98182f4481"><div class="ttname"><a href="#a639c740f69368f9fe25a4f7409a16384ae34a1815b3fff1ad8307cb98182f4481">RenderTargetType::Multisampled</a></div><div class="ttdeci">@ Multisampled</div><div class="ttdef"><b>Definition</b> <a href="texture_8h_source.html#l00272">texture.h:272</a></div></div>
 </div><!-- fragment -->
 </div>
 </div>

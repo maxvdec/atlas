@@ -171,6 +171,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a54a97abc4b6fe3280505da3b587cba98" id="r_a54a97abc4b6fe3280505da3b587cba98"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a54a97abc4b6fe3280505da3b587cba98">canCastShadows</a> () const</td></tr>
 <tr class="memdesc:a54a97abc4b6fe3280505da3b587cba98"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to determine if the object can cast shadows. Can be overridden by derived classes.  <br /></td></tr>
 <tr class="memitem:a2103eed2f7f54bca8ba1001907b367a9" id="r_a2103eed2f7f54bca8ba1001907b367a9"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2103eed2f7f54bca8ba1001907b367a9">~Renderable</a> ()=default</td></tr>
+<tr class="memitem:aa19d3c7b6144486766d45dbd3d0a08b8" id="r_aa19d3c7b6144486766d45dbd3d0a08b8"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa19d3c7b6144486766d45dbd3d0a08b8">canUseDeferredRendering</a> () const</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -237,6 +238,36 @@ Public Attributes</h2></td></tr>
 
 <p class="definition">Definition at line <a class="el" href="renderable_8h_source.html#l00104">104</a> of file <a class="el" href="renderable_8h_source.html">renderable.h</a>.</p>
 <div class="fragment"><div class="line"><span class="lineno">  104</span>{ <span class="keywordflow">return</span> <span class="keyword">false</span>; };</div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="aa19d3c7b6144486766d45dbd3d0a08b8" name="aa19d3c7b6144486766d45dbd3d0a08b8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa19d3c7b6144486766d45dbd3d0a08b8">&#9670;&#160;</a></span>canUseDeferredRendering()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">virtual bool Renderable::canUseDeferredRendering </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span><span class="mlabel virtual">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Reimplemented in <a class="el" href="class_core_object.html#a208b0d662e76a457c2843dd392c6e140">CoreObject</a>.</p>
+
+<p class="definition">Definition at line <a class="el" href="renderable_8h_source.html#l00106">106</a> of file <a class="el" href="renderable_8h_source.html">renderable.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  106</span>{ <span class="keywordflow">return</span> <span class="keyword">true</span>; };</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -607,7 +638,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="renderable_8h_source.html#l00107">107</a> of file <a class="el" href="renderable_8h_source.html">renderable.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="renderable_8h_source.html#l00108">108</a> of file <a class="el" href="renderable_8h_source.html">renderable.h</a>.</p>
 
 </div>
 </div>

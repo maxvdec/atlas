@@ -18,7 +18,9 @@ var shader_8h =
       [ "Particle", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a5e9328c486b44b9a58bca20f7f2064f4", null ],
       [ "Text", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a9dffbf69ffba8bc38bc4e01abf4b1675", null ],
       [ "PointLightShadow", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a05c5b39892533f0c0ad86b083b28ff6a", null ],
-      [ "GaussianBlur", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a4471a723be46b14fd252403c8db161ff", null ]
+      [ "GaussianBlur", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a4471a723be46b14fd252403c8db161ff", null ],
+      [ "Light", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a9914a0ce04a7b7b6a8e39bec55064b82", null ],
+      [ "Deferred", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a4ed71db54748b36eeb398876b0c747ac", null ]
     ] ],
     [ "AtlasGeometryShader", "shader_8h.html#a17951fe51aaa5769ef603acf594dc0b5", [
       [ "PointLightShadow", "shader_8h.html#a17951fe51aaa5769ef603acf594dc0b5a05c5b39892533f0c0ad86b083b28ff6a", null ]
@@ -33,12 +35,17 @@ var shader_8h =
       [ "Depth", "shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82a675056ad1441b6375b2c5abd48c27ef1", null ],
       [ "Particle", "shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82a5e9328c486b44b9a58bca20f7f2064f4", null ],
       [ "Text", "shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82a9dffbf69ffba8bc38bc4e01abf4b1675", null ],
-      [ "PointLightShadow", "shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82a05c5b39892533f0c0ad86b083b28ff6a", null ]
+      [ "PointLightShadow", "shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82a05c5b39892533f0c0ad86b083b28ff6a", null ],
+      [ "Light", "shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82a9914a0ce04a7b7b6a8e39bec55064b82", null ],
+      [ "Deferred", "shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82a4ed71db54748b36eeb398876b0c747ac", null ]
     ] ],
     [ "ShaderCapability", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcd", [
       [ "Lighting", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcda2e4b97fde8cf63085ec969fcc7e490c0", null ],
       [ "Textures", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcda536300d63028e7f16ba150566ecd3a5f", null ],
       [ "Shadows", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcdadde98fa66ef8081029ffb8f24d643c89", null ],
-      [ "EnvironmentMapping", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcdadb1098a034b7f5b862d0aef6b70d4f2d", null ]
+      [ "EnvironmentMapping", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcdadb1098a034b7f5b862d0aef6b70d4f2d", null ],
+      [ "Deferred", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcda4ed71db54748b36eeb398876b0c747ac", null ],
+      [ "LightDeferred", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcda62e60907eeb7e4b927057202c2a3eaba", null ],
+      [ "Material", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcdad92a8333dd3ccb895cc65f7455b71206", null ]
     ] ]
 ];

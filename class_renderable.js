@@ -2,6 +2,7 @@ var class_renderable =
 [
     [ "~Renderable", "class_renderable.html#a2103eed2f7f54bca8ba1001907b367a9", null ],
     [ "canCastShadows", "class_renderable.html#a54a97abc4b6fe3280505da3b587cba98", null ],
+    [ "canUseDeferredRendering", "class_renderable.html#aa19d3c7b6144486766d45dbd3d0a08b8", null ],
     [ "getPosition", "class_renderable.html#a644269034ac58f64e47d88846c365cf4", null ],
     [ "getScale", "class_renderable.html#a98ddcdedf7f0c6d440be821c80d6ed12", null ],
     [ "getShaderProgram", "class_renderable.html#a0c0180d14588c6ed436cc7d153c9b22c", null ],

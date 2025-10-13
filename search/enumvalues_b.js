@@ -8,6 +8,8 @@ var searchData=
   ['leftcontrol_5',['LeftControl',['../input_8h.html#a9479d299e1852e6140dcca1f405868aba641642d3718d5db8994a79d51b43e88c',1,'input.h']]],
   ['leftshift_6',['LeftShift',['../input_8h.html#a9479d299e1852e6140dcca1f405868aba982621712db76f723b7bb88b631dc64d',1,'input.h']]],
   ['leftsuper_7',['LeftSuper',['../input_8h.html#a9479d299e1852e6140dcca1f405868aba4bd45bf12e08f60072b6962e9f7794c2',1,'input.h']]],
-  ['lighting_8',['Lighting',['../shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcda2e4b97fde8cf63085ec969fcc7e490c0',1,'shader.h']]],
-  ['linear_9',['Linear',['../texture_8h.html#a1c9c9d9944566343118d0de8faa720f3a32a843da6ea40ab3b17a3421ccdf671b',1,'texture.h']]]
+  ['light_8',['Light',['../shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82a9914a0ce04a7b7b6a8e39bec55064b82',1,'Light:&#160;shader.h'],['../shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a9914a0ce04a7b7b6a8e39bec55064b82',1,'Light:&#160;shader.h']]],
+  ['lightdeferred_9',['LightDeferred',['../shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcda62e60907eeb7e4b927057202c2a3eaba',1,'shader.h']]],
+  ['lighting_10',['Lighting',['../shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcda2e4b97fde8cf63085ec969fcc7e490c0',1,'shader.h']]],
+  ['linear_11',['Linear',['../texture_8h.html#a1c9c9d9944566343118d0de8faa720f3a32a843da6ea40ab3b17a3421ccdf671b',1,'texture.h']]]
 ];

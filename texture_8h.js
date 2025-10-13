@@ -11,7 +11,8 @@ var texture_8h =
       [ "Scene", "texture_8h.html#a639c740f69368f9fe25a4f7409a16384a9ead0d38e06ec253ca0ecbf6ea56e59b", null ],
       [ "Multisampled", "texture_8h.html#a639c740f69368f9fe25a4f7409a16384ae34a1815b3fff1ad8307cb98182f4481", null ],
       [ "Shadow", "texture_8h.html#a639c740f69368f9fe25a4f7409a16384a3f39588bb19e28051d9aedfbb170025c", null ],
-      [ "CubeShadow", "texture_8h.html#a639c740f69368f9fe25a4f7409a16384a2da82a3c0f89c3328ed03785fbb6f3e8", null ]
+      [ "CubeShadow", "texture_8h.html#a639c740f69368f9fe25a4f7409a16384a2da82a3c0f89c3328ed03785fbb6f3e8", null ],
+      [ "GBuffer", "texture_8h.html#a639c740f69368f9fe25a4f7409a16384a628adbb6c98e56748110061187f57243", null ]
     ] ],
     [ "TextureFilteringMode", "texture_8h.html#a1c9c9d9944566343118d0de8faa720f3", [
       [ "Nearest", "texture_8h.html#a1c9c9d9944566343118d0de8faa720f3a60494f02d440f316319dd0fad40ad007", null ],

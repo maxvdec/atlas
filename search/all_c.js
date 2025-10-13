@@ -12,7 +12,7 @@ var searchData=
   ['mainwindow_9',['mainWindow',['../class_window.html#aa3c2a95cf2ce8cbbb668247f029b610c',1,'Window']]],
   ['makeemissive_10',['makeEmissive',['../class_core_object.html#a1eff06ca3b4b95f9842b964b427a43cf',1,'CoreObject']]],
   ['maroon_11',['maroon',['../struct_color.html#abc75537b6b038fa31f92ec58c9dad9da',1,'Color']]],
-  ['material_12',['Material',['../struct_material.html',1,'']]],
+  ['material_12',['Material',['../struct_material.html',1,'Material'],['../shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcdad92a8333dd3ccb895cc65f7455b71206',1,'Material:&#160;shader.h']]],
   ['material_13',['material',['../class_core_object.html#a810697cd28669bc8ca9d853fd9bc1152',1,'CoreObject::material'],['../class_model.html#acb2e155d98ff0980bc40958bb5b79868',1,'Model::material']]],
   ['maxlife_14',['maxLife',['../struct_particle.html#a4e7cf3b8d4f8fc1e832623e56f3d6a8e',1,'Particle']]],
   ['maxlifetime_15',['maxLifetime',['../struct_particle_settings.html#ae16b0a8e33aac68fb2d45dc9cc35087e',1,'ParticleSettings']]],

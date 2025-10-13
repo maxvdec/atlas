@@ -188,6 +188,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a028584d54ccba5834bf12150a4ca6ffe"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets the current frames per second.  <br /></td></tr>
 <tr class="memitem:ad026cc1bd1b3f5019e7c011b4deca63e" id="r_ad026cc1bd1b3f5019e7c011b4deca63e"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::shared_ptr&lt; <a class="el" href="class_body.html">Body</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad026cc1bd1b3f5019e7c011b4deca63e">getAllBodies</a> ()</td></tr>
 <tr class="memdesc:ad026cc1bd1b3f5019e7c011b4deca63e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets all physics bodies in the window.  <br /></td></tr>
+<tr class="memitem:adafb4dc8a3af7af838df8d2feba7086f" id="r_adafb4dc8a3af7af838df8d2feba7086f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#adafb4dc8a3af7af838df8d2feba7086f">useDeferredRendering</a> ()</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-static-methods" class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
@@ -201,6 +202,7 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:af0ac1732ca6b79a6f6b78aa344140514" id="r_af0ac1732ca6b79a6f6b78aa344140514"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af0ac1732ca6b79a6f6b78aa344140514">height</a></td></tr>
 <tr class="memitem:a84bf9cade8239d6aa81287e05f2fcafb" id="r_a84bf9cade8239d6aa81287e05f2fcafb"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a84bf9cade8239d6aa81287e05f2fcafb">gravity</a> = 9.81f</td></tr>
 <tr class="memitem:a2133e2bb4562bcc491d091a640dcae88" id="r_a2133e2bb4562bcc491d091a640dcae88"><td class="memItemLeft" align="right" valign="top">std::shared_ptr&lt; <a class="el" href="class_audio_engine.html">AudioEngine</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2133e2bb4562bcc491d091a640dcae88">audioEngine</a></td></tr>
+<tr class="memitem:adc988f8bbe51cdd8dbbba10d8e15bf5c" id="r_adc988f8bbe51cdd8dbbba10d8e15bf5c"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#adc988f8bbe51cdd8dbbba10d8e15bf5c">usesDeferred</a> = false</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-static-attribs" class="groupheader"><a id="pub-static-attribs" name="pub-static-attribs"></a>
 Static Public Attributes</h2></td></tr>
@@ -236,7 +238,7 @@ Example</h2>
 <div class="ttc" id="aclass_camera_html"><div class="ttname"><a href="class_camera.html">Camera</a></div><div class="ttdoc">Class representing a camera in 3D space, capable of generating view and projection matrices....</div><div class="ttdef"><b>Definition</b> <a href="camera_8h_source.html#l00040">camera.h:40</a></div></div>
 <div class="ttc" id="aclass_scene_html"><div class="ttname"><a href="class_scene.html">Scene</a></div><div class="ttdoc">Abstract class that represents a 3D scene. It contains all lights and objects that are going to be re...</div><div class="ttdef"><b>Definition</b> <a href="scene_8h_source.html#l00045">scene.h:45</a></div></div>
 <div class="ttc" id="aclass_window_html_a4fad7ebbb042281a41828a13a1ef457f"><div class="ttname"><a href="#a4fad7ebbb042281a41828a13a1ef457f">Window::Window</a></div><div class="ttdeci">Window(WindowConfiguration config)</div><div class="ttdoc">Constructs a window with the specified configuration.</div></div>
-<div class="ttc" id="aclass_window_html_ac9dbe2a378024e3a3c417b4cb50adbb3"><div class="ttname"><a href="#ac9dbe2a378024e3a3c417b4cb50adbb3">Window::CoreObject</a></div><div class="ttdeci">friend class CoreObject</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00389">window.h:389</a></div></div>
+<div class="ttc" id="aclass_window_html_ac9dbe2a378024e3a3c417b4cb50adbb3"><div class="ttname"><a href="#ac9dbe2a378024e3a3c417b4cb50adbb3">Window::CoreObject</a></div><div class="ttdeci">friend class CoreObject</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00398">window.h:398</a></div></div>
 <div class="ttc" id="astruct_window_configuration_html"><div class="ttname"><a href="struct_window_configuration.html">WindowConfiguration</a></div><div class="ttdoc">Structure representing the configuration options for creating a window.</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00037">window.h:37</a></div></div>
 <div class="ttc" id="astruct_window_configuration_html_a4df560282200968d1957c90a801959be"><div class="ttname"><a href="struct_window_configuration.html#a4df560282200968d1957c90a801959be">WindowConfiguration::width</a></div><div class="ttdeci">int width</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00039">window.h:39</a></div></div>
 <div class="ttc" id="astruct_window_configuration_html_aa56b982e392a5e2c45854bdc86af277f"><div class="ttname"><a href="struct_window_configuration.html#aa56b982e392a5e2c45854bdc86af277f">WindowConfiguration::height</a></div><div class="ttdeci">int height</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00040">window.h:40</a></div></div>
@@ -433,7 +435,7 @@ Example</h2>
   </dd>
 </dl>
 
-<p class="reference">References <a class="el" href="window_8h_source.html#l00390">RenderTarget</a>.</p>
+<p class="reference">References <a class="el" href="window_8h_source.html#l00399">RenderTarget</a>.</p>
 
 </div>
 </div>
@@ -999,6 +1001,23 @@ Example</h2>
 
 </div>
 </div>
+<a id="adafb4dc8a3af7af838df8d2feba7086f" name="adafb4dc8a3af7af838df8d2feba7086f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adafb4dc8a3af7af838df8d2feba7086f">&#9670;&#160;</a></span>useDeferredRendering()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Window::useDeferredRendering </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a name="doc-related-members" id="doc-related-members"></a><h2 id="header-doc-related-members" class="groupheader">Friends And Related Symbol Documentation</h2>
 <a id="ac9dbe2a378024e3a3c417b4cb50adbb3" name="ac9dbe2a378024e3a3c417b4cb50adbb3"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ac9dbe2a378024e3a3c417b4cb50adbb3">&#9670;&#160;</a></span>CoreObject</h2>
@@ -1020,9 +1039,9 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00389">389</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00398">398</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
-<p class="reference">References <a class="el" href="window_8h_source.html#l00389">CoreObject</a>.</p>
+<p class="reference">References <a class="el" href="window_8h_source.html#l00398">CoreObject</a>.</p>
 
 </div>
 </div>
@@ -1046,9 +1065,9 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00391">391</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00400">400</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
-<p class="reference">References <a class="el" href="window_8h_source.html#l00391">DirectionalLight</a>.</p>
+<p class="reference">References <a class="el" href="window_8h_source.html#l00400">DirectionalLight</a>.</p>
 
 </div>
 </div>
@@ -1072,9 +1091,9 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00390">390</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00399">399</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
-<p class="reference">References <a class="el" href="window_8h_source.html#l00390">RenderTarget</a>.</p>
+<p class="reference">References <a class="el" href="window_8h_source.html#l00399">RenderTarget</a>.</p>
 
 </div>
 </div>
@@ -1098,9 +1117,9 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00392">392</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00401">401</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
-<p class="reference">References <a class="el" href="window_8h_source.html#l00392">Text</a>.</p>
+<p class="reference">References <a class="el" href="window_8h_source.html#l00401">Text</a>.</p>
 
 </div>
 </div>
@@ -1190,6 +1209,22 @@ Example</h2>
 </div><div class="memdoc">
 
 <p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00151">151</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+
+</div>
+</div>
+<a id="adc988f8bbe51cdd8dbbba10d8e15bf5c" name="adc988f8bbe51cdd8dbbba10d8e15bf5c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adc988f8bbe51cdd8dbbba10d8e15bf5c">&#9670;&#160;</a></span>usesDeferred</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool Window::usesDeferred = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00359">359</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>

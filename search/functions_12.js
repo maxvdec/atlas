@@ -9,5 +9,6 @@ var searchData=
   ['updatephysics_6',['updatePhysics',['../class_body.html#ae432a86b5bf37eb0d761c5d4451fc373',1,'Body']]],
   ['updatevertices_7',['updateVertices',['../class_core_object.html#a9de6dbb8dc1d791fcadc39bae6696eba',1,'CoreObject']]],
   ['updatezoom_8',['updateZoom',['../class_camera.html#a05bf5f761a2366625b30c6b59c99ad80',1,'Camera']]],
-  ['usespatialization_9',['useSpatialization',['../class_audio_player.html#a75710b41e16e5c45a3254539248aa89a',1,'AudioPlayer::useSpatialization()'],['../class_audio_source.html#a2701e31388497fe077d67f086ba13f8f',1,'AudioSource::useSpatialization()']]]
+  ['usedeferredrendering_9',['useDeferredRendering',['../class_window.html#adafb4dc8a3af7af838df8d2feba7086f',1,'Window']]],
+  ['usespatialization_10',['useSpatialization',['../class_audio_player.html#a75710b41e16e5c45a3254539248aa89a',1,'AudioPlayer::useSpatialization()'],['../class_audio_source.html#a2701e31388497fe077d67f086ba13f8f',1,'AudioSource::useSpatialization()']]]
 ];
