@@ -66,6 +66,7 @@ struct PointLightConstants {
      *
      */
     float quadratic;
+    float radius;
 };
 
 /**

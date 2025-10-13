@@ -331,6 +331,8 @@ class CoreObject : public GameObject {
         components.push_back(component);
     }
 
+    bool useDeferredRendering = true;
+
   private:
     BufferIndex vbo;
     BufferIndex vao;
@@ -376,6 +378,10 @@ class CoreObject : public GameObject {
     inline bool canCastShadows() const override { return castsShadows; }
 
     void update(Window &window) override;
+
+    bool canUseDeferredRendering() const override {
+        return useDeferredRendering;
+    }
 };
 
 /**

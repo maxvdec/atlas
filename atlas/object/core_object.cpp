@@ -309,6 +309,22 @@ void CoreObject::render(float dt) {
 
     if (std::find(shaderProgram.capabilities.begin(),
                   shaderProgram.capabilities.end(),
+                  ShaderCapability::Material) !=
+        shaderProgram.capabilities.end()) {
+        // Set material properties
+        shaderProgram.setUniform3f("material.ambient", material.ambient.r,
+                                   material.ambient.g, material.ambient.b);
+        shaderProgram.setUniform3f("material.diffuse", material.diffuse.r,
+                                   material.diffuse.g, material.diffuse.b);
+        shaderProgram.setUniform3f("material.specular", material.specular.r,
+                                   material.specular.g, material.specular.b);
+        shaderProgram.setUniform1f("material.shininess", material.shininess);
+        shaderProgram.setUniform1f("material.reflectivity",
+                                   material.reflectivity);
+    }
+
+    if (std::find(shaderProgram.capabilities.begin(),
+                  shaderProgram.capabilities.end(),
                   ShaderCapability::Lighting) !=
         shaderProgram.capabilities.end()) {
         Window *window = Window::mainWindow;
@@ -326,19 +342,7 @@ void CoreObject::render(float dt) {
             "cameraPosition", window->getCamera()->position.x,
             window->getCamera()->position.y, window->getCamera()->position.z);
 
-        // Set material properties
-        shaderProgram.setUniform3f("material.ambient", material.ambient.r,
-                                   material.ambient.g, material.ambient.b);
-        shaderProgram.setUniform3f("material.diffuse", material.diffuse.r,
-                                   material.diffuse.g, material.diffuse.b);
-        shaderProgram.setUniform3f("material.specular", material.specular.r,
-                                   material.specular.g, material.specular.b);
-        shaderProgram.setUniform1f("material.shininess", material.shininess);
-        shaderProgram.setUniform1f("material.reflectivity",
-                                   material.reflectivity);
-
         // Send directional lights
-
         int dirLightCount = std::min((int)scene->directionalLights.size(), 256);
         shaderProgram.setUniform1i("directionalLightCount", dirLightCount);
 
@@ -377,6 +381,7 @@ void CoreObject::render(float dt) {
             shaderProgram.setUniform1f(baseName + ".constant", plc.constant);
             shaderProgram.setUniform1f(baseName + ".linear", plc.linear);
             shaderProgram.setUniform1f(baseName + ".quadratic", plc.quadratic);
+            shaderProgram.setUniform1f(baseName + ".radius", plc.radius);
         }
 
         // Send spotlights
@@ -402,6 +407,34 @@ void CoreObject::render(float dt) {
             shaderProgram.setUniform1f(baseName + ".outerCutOff",
                                        light->outerCutoff);
         }
+    }
+
+    if (std::find(shaderProgram.capabilities.begin(),
+                  shaderProgram.capabilities.end(),
+                  ShaderCapability::LightDeferred) !=
+        shaderProgram.capabilities.end()) {
+        // Bind G-Buffer textures
+        Window *window = Window::mainWindow;
+        RenderTarget *gBuffer = window->gBuffer.get();
+        glActiveTexture(GL_TEXTURE0 + boundTextures);
+        glBindTexture(GL_TEXTURE_2D, gBuffer->gPosition.id);
+        shaderProgram.setUniform1i("gPosition", boundTextures);
+        boundTextures++;
+
+        glActiveTexture(GL_TEXTURE0 + boundTextures);
+        glBindTexture(GL_TEXTURE_2D, gBuffer->gNormal.id);
+        shaderProgram.setUniform1i("gNormal", boundTextures);
+        boundTextures++;
+
+        glActiveTexture(GL_TEXTURE0 + boundTextures);
+        glBindTexture(GL_TEXTURE_2D, gBuffer->gAlbedoSpec.id);
+        shaderProgram.setUniform1i("gAlbedoSpec", boundTextures);
+        boundTextures++;
+
+        glActiveTexture(GL_TEXTURE0 + boundTextures);
+        glBindTexture(GL_TEXTURE_2D, gBuffer->gMaterial.id);
+        shaderProgram.setUniform1i("gMaterial", boundTextures);
+        boundTextures++;
     }
 
     if (std::find(shaderProgram.capabilities.begin(),
@@ -603,6 +636,7 @@ void CoreObject::makeEmissive(Scene *scene, Color emissionColor,
     light->position = this->position;
     light->distance = 10.0f;
     light->doesCastShadows = false;
+    this->useDeferredRendering = false;
 
     for (auto &vertex : vertices) {
         vertex.color = emissionColor * intensity;

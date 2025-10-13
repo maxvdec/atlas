@@ -42,7 +42,7 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [x] CLI for packing applications
 - [ ] Runtime independent of final executable
 - [ ] Scene packing
-- [ ] Add deferred rendering for better performance with many lights **for alpha 2**
+- [x] Add deferred rendering for better performance with many lights **for alpha 2**
 - [ ] Add PBR rendering
 - [ ] Add other texture supports (normal, roughness, metallic, ao, etc.)
 - [x] Add HDR support **for alpha 2**

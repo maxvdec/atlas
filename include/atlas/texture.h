@@ -267,7 +267,13 @@ class CoreObject;
  * @brief The type of the texture (RenderTarget).
  *
  */
-enum class RenderTargetType { Scene, Multisampled, Shadow, CubeShadow };
+enum class RenderTargetType {
+    Scene,
+    Multisampled,
+    Shadow,
+    CubeShadow,
+    GBuffer
+};
 
 class Effect;
 
@@ -300,6 +306,11 @@ class RenderTarget : public Renderable {
     Texture brightTexture;
     Texture blurredTexture;
     Texture depthTexture;
+
+    Texture gPosition;
+    Texture gNormal;
+    Texture gAlbedoSpec;
+    Texture gMaterial;
     /**
      * @brief The type of the render target.
      *

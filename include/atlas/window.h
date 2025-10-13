@@ -354,6 +354,10 @@ class Window {
 
     std::shared_ptr<AudioEngine> audioEngine;
 
+    void useDeferredRendering();
+
+    bool usesDeferred = false;
+
   private:
     CoreWindowReference windowRef;
     std::vector<Renderable *> renderables;
@@ -362,6 +366,8 @@ class Window {
     std::vector<Renderable *> uiRenderables;
     std::vector<RenderTarget *> renderTargets;
 
+    std::shared_ptr<RenderTarget> gBuffer;
+
     glm::mat4 calculateProjectionMatrix();
     Scene *currentScene = nullptr;
 
@@ -369,6 +375,7 @@ class Window {
     Size2d getFurthestPositions();
 
     void renderPingpong(RenderTarget *target, float dt);
+    void deferredRendering(RenderTarget *target);
 
     Camera *camera = nullptr;
     float lastMouseX;
@@ -380,6 +387,8 @@ class Window {
 
     ShaderProgram depthProgram;
     ShaderProgram pointDepthProgram;
+    ShaderProgram deferredProgram;
+    ShaderProgram lightProgram;
 
     bool debug = false;
 
