@@ -255,6 +255,18 @@ FragmentShader FragmentShader::fromDefaultShader(AtlasFragmentShader shader) {
         fragmentShaderCache[shader] = fragmentShader;
         break;
     }
+    case AtlasFragmentShader::SSAO: {
+        fragmentShader = FragmentShader::fromSource(SSAO_FRAG);
+        fragmentShader.fromDefaultShaderType = shader;
+        fragmentShaderCache[shader] = fragmentShader;
+        break;
+    }
+    case AtlasFragmentShader::SSAOBlur: {
+        fragmentShader = FragmentShader::fromSource(SSAO_BLUR_FRAG);
+        fragmentShader.fromDefaultShaderType = shader;
+        fragmentShaderCache[shader] = fragmentShader;
+        break;
+    }
     default:
         throw std::runtime_error("Unknown default fragment shader");
     }

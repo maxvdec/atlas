@@ -188,7 +188,7 @@ void main() {
     gPosition = vec4(FragPos, gl_FragCoord.z);
     
     gNormal = vec4(normal, 1.0);
-    
+
     float specIntensity = (specColor.r + specColor.g + specColor.b) / 3.0;
     gAlbedoSpec = vec4(baseColor.rgb, specIntensity);
     
@@ -1122,6 +1122,27 @@ void main() {
 
 )";
 
+static const char* SSAO_BLUR_FRAG = R"(
+#version 330 core
+out float FragColor;
+
+in vec2 TexCoord;
+
+uniform sampler2D inSSAO;
+
+void main() {
+    vec2 texelSize = 1.0 / vec2(textureSize(inSSAO, 0));
+    float result = 0.0;
+    for (int x = -2; x <= 2; x++) {
+        for (int y = -2; y <= 2; y++) {
+            vec2 offset = vec2(float(x), float(y)) * texelSize;
+            result += texture(inSSAO, TexCoord + offset).r;
+        }
+    }
+    FragColor = result / (4.0 * 4.0);
+}
+)";
+
 static const char* DEBUG_FRAG = R"(
 #version 330 core
 out vec4 FragColor;
@@ -1309,6 +1330,74 @@ void main() {
 }
 )";
 
+static const char* SSAO_FRAG = R"(
+#version 330 core
+out float FragColor;
+in vec2 TexCoord;
+
+uniform sampler2D gPosition;   
+uniform sampler2D gNormal;
+uniform sampler2D texNoise;
+uniform vec3 samples[64];
+uniform mat4 projection;
+uniform mat4 view;
+uniform vec2 noiseScale;
+
+const int kernelSize = 64;
+const float radius = 0.5;
+const float bias = 0.025;
+
+void main() {
+    vec3 fragPosWorld = texture(gPosition, TexCoord).xyz;
+    vec3 normalWorld = texture(gNormal, TexCoord).rgb;
+    
+    if (length(normalWorld) < 0.001) {
+        FragColor = 0.0;
+        return;
+    }
+    
+    vec3 fragPos = (view * vec4(fragPosWorld, 1.0)).xyz;
+    vec3 normal = normalize((view * vec4(normalWorld, 0.0)).xyz);
+    
+    vec3 randomVec = normalize(texture(texNoise, TexCoord * noiseScale).xyz * 2.0 - 1.0);
+    vec3 tangent = normalize(randomVec - normal * dot(randomVec, normal));
+    vec3 bitangent = cross(normal, tangent);
+    mat3 TBN = mat3(tangent, bitangent, normal);
+    
+    float occlusion = 0.0;
+    int validSamples = 0;
+    
+    for (int i = 0; i < kernelSize; i++) {
+        vec3 samplePos = TBN * samples[i];
+        samplePos = fragPos + samplePos * radius;
+        
+        vec4 offset = projection * vec4(samplePos, 1.0);
+        offset.xyz /= offset.w;
+        offset.xy = offset.xy * 0.5 + 0.5;
+        
+        if (offset.x < 0.0 || offset.x > 1.0 || offset.y < 0.0 || offset.y > 1.0) {
+            continue;
+        }
+        
+        vec3 samplePosWorld = texture(gPosition, offset.xy).xyz;
+        float sampleDepth = (view * vec4(samplePosWorld, 1.0)).z;
+        
+        float rangeCheck = smoothstep(0.0, 1.0, radius / (abs(fragPos.z - sampleDepth) + 0.001));
+        
+        occlusion += (sampleDepth >= samplePos.z + bias ? 1.0 : 0.0) * rangeCheck;
+        validSamples++;
+    }
+    
+    if (validSamples > 0) {
+        occlusion = 1.0 - (occlusion / float(validSamples));
+    } else {
+        occlusion = 1.0;
+    }
+    
+    FragColor = pow(occlusion, 2.0);
+}
+)";
+
 static const char* LIGHT_FRAG = R"(
 #version 330 core
 layout (location = 0) out vec4 FragColor;
@@ -1320,6 +1409,7 @@ uniform sampler2D gPosition;
 uniform sampler2D gNormal;
 uniform sampler2D gAlbedoSpec;
 uniform sampler2D gMaterial;
+uniform sampler2D ssao;
 
 uniform sampler2D texture1;
 uniform sampler2D texture2;
@@ -1560,10 +1650,12 @@ void main() {
     float shininess = matData.a * 256.0;
     float reflectivity = matData.b;
     
+    float ambientOcclusion = texture(ssao, TexCoord).r;
+
     vec3 viewDir = normalize(cameraPosition - FragPos);
     vec3 specColor = vec3(SpecIntensity);
     
-    vec3 ambient = ambientLight.color.rgb * ambientLight.intensity * Albedo;
+    vec3 ambient = ambientLight.color.rgb * ambientLight.intensity * Albedo * ambientOcclusion;
     
     float dirShadow = 0.0;
     for (int i = 0; i < shadowParamCount; i++) {
@@ -1582,7 +1674,7 @@ void main() {
     vec3 directionalResult = vec3(0.0);
     for (int i = 0; i < directionalLightCount; i++) {
         directionalResult += calcDirectionalLight(directionalLights[i], Normal, viewDir, 
-            Albedo, specColor, shininess);  
+            Albedo, specColor, shininess); 
     }
     directionalResult *= (1.0 - dirShadow);
 
@@ -1591,14 +1683,14 @@ void main() {
         float distance = length(pointLights[i].position - FragPos);
         if (distance > pointLights[i].radius) continue;
         pointResult += calcPointLight(pointLights[i], FragPos, Normal, viewDir,
-            Albedo, specColor, shininess);  
+            Albedo, specColor, shininess);
     }
     pointResult *= (1.0 - pointShadow);
 
     vec3 spotResult = vec3(0.0);
     for (int i = 0; i < spotlightCount; i++) {
         spotResult += calcSpotLight(spotlights[i], FragPos, Normal, viewDir,
-            Albedo, specColor, shininess);  
+            Albedo, specColor, shininess);
     }
 
     vec3 finalColor = ambient + directionalResult + pointResult + spotResult;
@@ -1617,8 +1709,6 @@ void main() {
         BrightColor = vec4(FragColor.rgb, 1.0);
     else
         BrightColor = vec4(0.0, 0.0, 0.0, 1.0);
-    
-    FragColor.rgb = acesToneMapping(FragColor.rgb);
 }
 )";
 

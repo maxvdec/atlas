@@ -159,7 +159,7 @@ void main() {
     gPosition = vec4(FragPos, gl_FragCoord.z);
     
     gNormal = vec4(normal, 1.0);
-    
+
     float specIntensity = (specColor.r + specColor.g + specColor.b) / 3.0;
     gAlbedoSpec = vec4(baseColor.rgb, specIntensity);
     

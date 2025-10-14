@@ -291,6 +291,60 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
             GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2,
             GL_COLOR_ATTACHMENT3};
         glDrawBuffers(4, attachments);
+    } else if (this->type == RenderTargetType::SSAO) {
+        glGenFramebuffers(1, &fbo);
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+        glGenTextures(1, &texture.id);
+        glBindTexture(GL_TEXTURE_2D, texture.id);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, size.width, size.height, 0,
+                     GL_RED, GL_FLOAT, nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                               GL_TEXTURE_2D, texture.id, 0);
+
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) !=
+            GL_FRAMEBUFFER_COMPLETE) {
+            std::cerr << "Error: SSAO Framebuffer is not complete!"
+                      << std::endl;
+        }
+
+        texture.creationData.width = size.width;
+        texture.creationData.height = size.height;
+        texture.type = TextureType::SSAO;
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    } else if (this->type == RenderTargetType::SSAOBlur) {
+        glGenFramebuffers(1, &fbo);
+        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+        glGenTextures(1, &texture.id);
+        glBindTexture(GL_TEXTURE_2D, texture.id);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, size.width, size.height, 0,
+                     GL_RED, GL_FLOAT, nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                               GL_TEXTURE_2D, texture.id, 0);
+
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) !=
+            GL_FRAMEBUFFER_COMPLETE) {
+            std::cerr << "Error: SSAO Blur Framebuffer is not complete!"
+                      << std::endl;
+        }
+
+        texture.creationData.width = size.width;
+        texture.creationData.height = size.height;
+        texture.type = TextureType::SSAO;
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    } else {
+        throw std::runtime_error("Unknown render target type");
     }
 }
 
