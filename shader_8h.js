@@ -20,7 +20,9 @@ var shader_8h =
       [ "PointLightShadow", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a05c5b39892533f0c0ad86b083b28ff6a", null ],
       [ "GaussianBlur", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a4471a723be46b14fd252403c8db161ff", null ],
       [ "Light", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a9914a0ce04a7b7b6a8e39bec55064b82", null ],
-      [ "Deferred", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a4ed71db54748b36eeb398876b0c747ac", null ]
+      [ "Deferred", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a4ed71db54748b36eeb398876b0c747ac", null ],
+      [ "SSAO", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0ab07a387949b981d5726a46c61db885e9", null ],
+      [ "SSAOBlur", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a0cbd177f5587f49172adca66ce3041ce", null ]
     ] ],
     [ "AtlasGeometryShader", "shader_8h.html#a17951fe51aaa5769ef603acf594dc0b5", [
       [ "PointLightShadow", "shader_8h.html#a17951fe51aaa5769ef603acf594dc0b5a05c5b39892533f0c0ad86b083b28ff6a", null ]

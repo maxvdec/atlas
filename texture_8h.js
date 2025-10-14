@@ -12,7 +12,9 @@ var texture_8h =
       [ "Multisampled", "texture_8h.html#a639c740f69368f9fe25a4f7409a16384ae34a1815b3fff1ad8307cb98182f4481", null ],
       [ "Shadow", "texture_8h.html#a639c740f69368f9fe25a4f7409a16384a3f39588bb19e28051d9aedfbb170025c", null ],
       [ "CubeShadow", "texture_8h.html#a639c740f69368f9fe25a4f7409a16384a2da82a3c0f89c3328ed03785fbb6f3e8", null ],
-      [ "GBuffer", "texture_8h.html#a639c740f69368f9fe25a4f7409a16384a628adbb6c98e56748110061187f57243", null ]
+      [ "GBuffer", "texture_8h.html#a639c740f69368f9fe25a4f7409a16384a628adbb6c98e56748110061187f57243", null ],
+      [ "SSAO", "texture_8h.html#a639c740f69368f9fe25a4f7409a16384ab07a387949b981d5726a46c61db885e9", null ],
+      [ "SSAOBlur", "texture_8h.html#a639c740f69368f9fe25a4f7409a16384a0cbd177f5587f49172adca66ce3041ce", null ]
     ] ],
     [ "TextureFilteringMode", "texture_8h.html#a1c9c9d9944566343118d0de8faa720f3", [
       [ "Nearest", "texture_8h.html#a1c9c9d9944566343118d0de8faa720f3a60494f02d440f316319dd0fad40ad007", null ],
@@ -25,7 +27,9 @@ var texture_8h =
       [ "Depth", "texture_8h.html#a579bf435a05d45b75f553d37ebbb3225a675056ad1441b6375b2c5abd48c27ef1", null ],
       [ "DepthCube", "texture_8h.html#a579bf435a05d45b75f553d37ebbb3225a5bd62f0d243a561d11ee9330406ee7f6", null ],
       [ "Normal", "texture_8h.html#a579bf435a05d45b75f553d37ebbb3225a960b44c579bc2f6818d2daaf9e4c16f0", null ],
-      [ "Parallax", "texture_8h.html#a579bf435a05d45b75f553d37ebbb3225ac626285221f3850191ea3ce4b917779c", null ]
+      [ "Parallax", "texture_8h.html#a579bf435a05d45b75f553d37ebbb3225ac626285221f3850191ea3ce4b917779c", null ],
+      [ "SSAONoise", "texture_8h.html#a579bf435a05d45b75f553d37ebbb3225a74cd2b14850061d58e3fc9da302c4efe", null ],
+      [ "SSAO", "texture_8h.html#a579bf435a05d45b75f553d37ebbb3225ab07a387949b981d5726a46c61db885e9", null ]
     ] ],
     [ "TextureWrappingMode", "texture_8h.html#a2b9a75ec8d4f3f3f2e9150d48d065141", [
       [ "Repeat", "texture_8h.html#a2b9a75ec8d4f3f3f2e9150d48d065141a7020426cfb0a204051be4b3053d2acc8", null ],

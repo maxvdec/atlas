@@ -10,7 +10,7 @@ var searchData=
   ['camera_20control_7',['Example of camera control',['../class_camera.html#example-camera-control',1,'']]],
   ['camera_2eh_8',['camera.h',['../camera_8h.html',1,'']]],
   ['cancastshadows_9',['canCastShadows',['../class_compound_object.html#a1c28c8c1394e02e46cbc8200ad4dd9dd',1,'CompoundObject::canCastShadows()'],['../class_renderable.html#a54a97abc4b6fe3280505da3b587cba98',1,'Renderable::canCastShadows()'],['../class_core_object.html#a64c15d294b3cd28e4dc04a554ce9e9c0',1,'CoreObject::canCastShadows()'],['../class_particle_emitter.html#ab0a773a7d892d7347a815e7e497dd83b',1,'ParticleEmitter::canCastShadows()']]],
-  ['canusedeferredrendering_10',['canUseDeferredRendering',['../class_renderable.html#aa19d3c7b6144486766d45dbd3d0a08b8',1,'Renderable::canUseDeferredRendering()'],['../class_core_object.html#a208b0d662e76a457c2843dd392c6e140',1,'CoreObject::canUseDeferredRendering()']]],
+  ['canusedeferredrendering_10',['canUseDeferredRendering',['../class_renderable.html#aa19d3c7b6144486766d45dbd3d0a08b8',1,'Renderable::canUseDeferredRendering()'],['../class_core_object.html#a208b0d662e76a457c2843dd392c6e140',1,'CoreObject::canUseDeferredRendering()'],['../class_model.html#aa0bad24d1f9cebdf8bae997726337e43',1,'Model::canUseDeferredRendering()']]],
   ['capabilities_11',['capabilities',['../struct_vertex_shader.html#a6ebf85025d7e1fb437952aeaec3ce411',1,'VertexShader::capabilities'],['../struct_shader_program.html#a17fcce46fffc48f5ddb5f5f71d052f1f',1,'ShaderProgram::capabilities']]],
   ['capslock_12',['CapsLock',['../input_8h.html#a9479d299e1852e6140dcca1f405868aba8d0f4171170104d094d8b6d4f8bf49e6',1,'input.h']]],
   ['capturemouse_13',['captureMouse',['../class_window.html#af9987c317f1af799d198ddb0ecd9e72b',1,'Window']]],

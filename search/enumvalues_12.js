@@ -12,5 +12,8 @@ var searchData=
   ['space_9',['Space',['../input_8h.html#a9479d299e1852e6140dcca1f405868abad511f8439ecde36647437fbba67a4394',1,'input.h']]],
   ['specular_10',['Specular',['../texture_8h.html#a579bf435a05d45b75f553d37ebbb3225a39b0044dd8789d333e7794f359406740',1,'texture.h']]],
   ['specularmap_11',['SpecularMap',['../workspace_8h.html#a8571efa4409be32e28abf3ea74a0dbb1a7969ef3f5ea1411e8a3d82fcfd50f21f',1,'workspace.h']]],
-  ['sphere_12',['Sphere',['../class_shape.html#a4cb9bc6c74b4184257003c83a8d8d39eab7095f057db3fefa7325ad93a04e14fd',1,'Shape']]]
+  ['sphere_12',['Sphere',['../class_shape.html#a4cb9bc6c74b4184257003c83a8d8d39eab7095f057db3fefa7325ad93a04e14fd',1,'Shape']]],
+  ['ssao_13',['SSAO',['../shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0ab07a387949b981d5726a46c61db885e9',1,'SSAO:&#160;shader.h'],['../texture_8h.html#a579bf435a05d45b75f553d37ebbb3225ab07a387949b981d5726a46c61db885e9',1,'SSAO:&#160;texture.h'],['../texture_8h.html#a639c740f69368f9fe25a4f7409a16384ab07a387949b981d5726a46c61db885e9',1,'SSAO:&#160;texture.h']]],
+  ['ssaoblur_14',['SSAOBlur',['../shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a0cbd177f5587f49172adca66ce3041ce',1,'SSAOBlur:&#160;shader.h'],['../texture_8h.html#a639c740f69368f9fe25a4f7409a16384a0cbd177f5587f49172adca66ce3041ce',1,'SSAOBlur:&#160;texture.h']]],
+  ['ssaonoise_15',['SSAONoise',['../texture_8h.html#a579bf435a05d45b75f553d37ebbb3225a74cd2b14850061d58e3fc9da302c4efe',1,'texture.h']]]
 ];

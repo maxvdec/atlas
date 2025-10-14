@@ -17,5 +17,7 @@ var searchData=
   ['specular_14',['specular',['../struct_material.html#ae8fe63cefbd055a095c914ca50f925aa',1,'Material']]],
   ['speedvariation_15',['speedVariation',['../struct_particle_settings.html#a223d147b786d5ab7b1ce46dd8453e9aa',1,'ParticleSettings']]],
   ['spread_16',['spread',['../struct_particle_settings.html#a7fdda9807df7ee5c3e9a4c7ea957c20b',1,'ParticleSettings']]],
-  ['stride_17',['stride',['../struct_layout_descriptor.html#ac19f6be67e42f8b2cf98971ed4ae73a8',1,'LayoutDescriptor']]]
+  ['ssao_5fblur_5ffrag_17',['SSAO_BLUR_FRAG',['../default__shaders_8h.html#ae246351246e38222f7f020310ba18c96',1,'default_shaders.h']]],
+  ['ssao_5ffrag_18',['SSAO_FRAG',['../default__shaders_8h.html#ad0bc8276a246d872f0f11a408ede96a6',1,'default_shaders.h']]],
+  ['stride_19',['stride',['../struct_layout_descriptor.html#ac19f6be67e42f8b2cf98971ed4ae73a8',1,'LayoutDescriptor']]]
 ];

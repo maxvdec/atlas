@@ -171,6 +171,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a773e85c486ebaf5e0f3afe9da3381212" id="r_a773e85c486ebaf5e0f3afe9da3381212"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_position3d.html">Position3d</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a773e85c486ebaf5e0f3afe9da3381212">getPosition</a> () const override</td></tr>
 <tr class="memdesc:a773e85c486ebaf5e0f3afe9da3381212"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to get the position of the object in 3D space.  <br /></td></tr>
 <tr class="memitem:ab5bdabea36b1d1bee80151e2da913373" id="r_ab5bdabea36b1d1bee80151e2da913373"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab5bdabea36b1d1bee80151e2da913373">Model</a> ()=default</td></tr>
+<tr class="memitem:aa0bad24d1f9cebdf8bae997726337e43" id="r_aa0bad24d1f9cebdf8bae997726337e43"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa0bad24d1f9cebdf8bae997726337e43">canUseDeferredRendering</a> () const override</td></tr>
 <tr class="inherit_header pub_methods_class_game_object"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pub_methods_class_game_object')"><span class="dynarrow"><span class="arrowhead closed"></span></span>Public Member Functions inherited from <a class="el" href="class_game_object.html">GameObject</a></td></tr>
 <tr class="memitem:adc4f0b179efab23de2f5168c2067dd09 inherit pub_methods_class_game_object" id="r_adc4f0b179efab23de2f5168c2067dd09"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_game_object.html#adc4f0b179efab23de2f5168c2067dd09">attachProgram</a> (const <a class="el" href="struct_shader_program.html">ShaderProgram</a> &amp;program)</td></tr>
 <tr class="memdesc:adc4f0b179efab23de2f5168c2067dd09 inherit pub_methods_class_game_object"><td class="mdescLeft">&#160;</td><td class="mdescRight">Attaches a shader program to the object.  <br /></td></tr>
@@ -208,11 +209,11 @@ requires std::is_base_of_v&lt;<a class="el" href="class_component.html">Componen
 <tr class="memitem:a54a97abc4b6fe3280505da3b587cba98 inherit pub_methods_class_renderable" id="r_a54a97abc4b6fe3280505da3b587cba98"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_renderable.html#a54a97abc4b6fe3280505da3b587cba98">canCastShadows</a> () const</td></tr>
 <tr class="memdesc:a54a97abc4b6fe3280505da3b587cba98 inherit pub_methods_class_renderable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to determine if the object can cast shadows. Can be overridden by derived classes.  <br /></td></tr>
 <tr class="memitem:a2103eed2f7f54bca8ba1001907b367a9 inherit pub_methods_class_renderable" id="r_a2103eed2f7f54bca8ba1001907b367a9"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_renderable.html#a2103eed2f7f54bca8ba1001907b367a9">~Renderable</a> ()=default</td></tr>
-<tr class="memitem:aa19d3c7b6144486766d45dbd3d0a08b8 inherit pub_methods_class_renderable" id="r_aa19d3c7b6144486766d45dbd3d0a08b8"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_renderable.html#aa19d3c7b6144486766d45dbd3d0a08b8">canUseDeferredRendering</a> () const</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:acb2e155d98ff0980bc40958bb5b79868" id="r_acb2e155d98ff0980bc40958bb5b79868"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_material.html">Material</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#acb2e155d98ff0980bc40958bb5b79868">material</a></td></tr>
+<tr class="memitem:a4ed78d5a7b7f548a4b9c917c05e4924a" id="r_a4ed78d5a7b7f548a4b9c917c05e4924a"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4ed78d5a7b7f548a4b9c917c05e4924a">useDeferredRendering</a> = true</td></tr>
 <tr class="inherit_header pub_attribs_class_game_object"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pub_attribs_class_game_object')"><span class="dynarrow"><span class="arrowhead closed"></span></span>Public Attributes inherited from <a class="el" href="class_game_object.html">GameObject</a></td></tr>
 <tr class="memitem:af69e678688bfef2c0bba4aa78085c8a8 inherit pub_attribs_class_game_object" id="r_af69e678688bfef2c0bba4aa78085c8a8"><td class="memItemLeft" align="right" valign="top">std::shared_ptr&lt; <a class="el" href="class_body.html">Body</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_game_object.html#af69e678688bfef2c0bba4aa78085c8a8">body</a> = nullptr</td></tr>
 <tr class="memdesc:af69e678688bfef2c0bba4aa78085c8a8 inherit pub_attribs_class_game_object"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets the physics body associated with the object.  <br /></td></tr>
@@ -318,6 +319,41 @@ Example</h2>
 <div class="line"><span class="lineno">  816</span>        }</div>
 <div class="line"><span class="lineno">  817</span>    }</div>
 </div><!-- fragment -->
+</div>
+</div>
+<a id="aa0bad24d1f9cebdf8bae997726337e43" name="aa0bad24d1f9cebdf8bae997726337e43"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa0bad24d1f9cebdf8bae997726337e43">&#9670;&#160;</a></span>canUseDeferredRendering()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool Model::canUseDeferredRendering </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span><span class="mlabel override">override</span><span class="mlabel virtual">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Reimplemented from <a class="el" href="class_renderable.html#aa19d3c7b6144486766d45dbd3d0a08b8">Renderable</a>.</p>
+
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00887">887</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  887</span>                                                  {</div>
+<div class="line"><span class="lineno">  888</span>        <span class="keywordflow">return</span> <a class="code hl_variable" href="#a4ed78d5a7b7f548a4b9c917c05e4924a">useDeferredRendering</a>;</div>
+<div class="line"><span class="lineno">  889</span>    }</div>
+<div class="ttc" id="aclass_model_html_a4ed78d5a7b7f548a4b9c917c05e4924a"><div class="ttname"><a href="#a4ed78d5a7b7f548a4b9c917c05e4924a">Model::useDeferredRendering</a></div><div class="ttdeci">bool useDeferredRendering</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00885">object.h:885</a></div></div>
+</div><!-- fragment -->
+<p class="reference">References <a class="el" href="object_8h_source.html#l00885">useDeferredRendering</a>.</p>
+
 </div>
 </div>
 <a id="a8a74c2ff2b6a5755c2ed913d7c6a88f4" name="a8a74c2ff2b6a5755c2ed913d7c6a88f4"></a>
@@ -894,6 +930,22 @@ Example</h2>
 </div><div class="memdoc">
 
 <p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00883">883</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+
+</div>
+</div>
+<a id="a4ed78d5a7b7f548a4b9c917c05e4924a" name="a4ed78d5a7b7f548a4b9c917c05e4924a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4ed78d5a7b7f548a4b9c917c05e4924a">&#9670;&#160;</a></span>useDeferredRendering</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool Model::useDeferredRendering = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00885">885</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
 
 </div>
 </div>

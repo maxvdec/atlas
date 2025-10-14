@@ -18,7 +18,7 @@ var searchData=
   ['updatephysics_15',['updatePhysics',['../class_body.html#ae432a86b5bf37eb0d761c5d4451fc373',1,'Body']]],
   ['updatevertices_16',['updateVertices',['../class_core_object.html#a9de6dbb8dc1d791fcadc39bae6696eba',1,'CoreObject']]],
   ['updatezoom_17',['updateZoom',['../class_camera.html#a05bf5f761a2366625b30c6b59c99ad80',1,'Camera']]],
-  ['usedeferredrendering_18',['useDeferredRendering',['../class_core_object.html#ade14d5e7085e4dad510471171f539789',1,'CoreObject::useDeferredRendering'],['../class_window.html#adafb4dc8a3af7af838df8d2feba7086f',1,'Window::useDeferredRendering()']]],
+  ['usedeferredrendering_18',['useDeferredRendering',['../class_core_object.html#ade14d5e7085e4dad510471171f539789',1,'CoreObject::useDeferredRendering'],['../class_model.html#a4ed78d5a7b7f548a4b9c917c05e4924a',1,'Model::useDeferredRendering'],['../class_window.html#adafb4dc8a3af7af838df8d2feba7086f',1,'Window::useDeferredRendering()']]],
   ['useorthographic_19',['useOrthographic',['../class_camera.html#ae745080197fb197cbab0ae5bf257938c',1,'Camera']]],
   ['usesdeferred_20',['usesDeferred',['../class_window.html#adc988f8bbe51cdd8dbbba10d8e15bf5c',1,'Window']]],
   ['usespatialization_21',['useSpatialization',['../class_audio_player.html#a75710b41e16e5c45a3254539248aa89a',1,'AudioPlayer::useSpatialization()'],['../class_audio_source.html#a2701e31388497fe077d67f086ba13f8f',1,'AudioSource::useSpatialization()']]]

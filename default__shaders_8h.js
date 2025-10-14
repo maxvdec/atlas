@@ -24,6 +24,8 @@ var default__shaders_8h =
     [ "POINT_DEPTH_VERT", "default__shaders_8h.html#a8b6ccb83c67ae58ec1c69e87c40b2113", null ],
     [ "SKYBOX_FRAG", "default__shaders_8h.html#a8f6a623fa306218517b69dc65ff8733e", null ],
     [ "SKYBOX_VERT", "default__shaders_8h.html#accb5b46bd2b12d12a056815764bc4501", null ],
+    [ "SSAO_BLUR_FRAG", "default__shaders_8h.html#ae246351246e38222f7f020310ba18c96", null ],
+    [ "SSAO_FRAG", "default__shaders_8h.html#ad0bc8276a246d872f0f11a408ede96a6", null ],
     [ "TEXT_FRAG", "default__shaders_8h.html#a32efdd508699459df3d9c9bc49a580d3", null ],
     [ "TEXT_VERT", "default__shaders_8h.html#ae3a54503dd5f220b33f66e53739a24de", null ],
     [ "TEXTURE_FRAG", "default__shaders_8h.html#a2a23d79d6134f3704a9a34ffa9bbbe40", null ],

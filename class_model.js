@@ -2,6 +2,7 @@ var class_model =
 [
     [ "Model", "class_model.html#ab5bdabea36b1d1bee80151e2da913373", null ],
     [ "attachTexture", "class_model.html#abc49ca9b5823f177f421589cf447e913", null ],
+    [ "canUseDeferredRendering", "class_model.html#aa0bad24d1f9cebdf8bae997726337e43", null ],
     [ "fromResource", "class_model.html#a8a74c2ff2b6a5755c2ed913d7c6a88f4", null ],
     [ "getObjects", "class_model.html#af2f4d13f48508e046f3b57e59ba420fb", null ],
     [ "getPosition", "class_model.html#a773e85c486ebaf5e0f3afe9da3381212", null ],
@@ -16,5 +17,6 @@ var class_model =
     [ "setShader", "class_model.html#a24265caaaa9dee3e0598dd105b8296a3", null ],
     [ "setViewMatrix", "class_model.html#ab1bc68ab2ef747780f89d5f2954ca05b", null ],
     [ "update", "class_model.html#a53186f31f04ff6f7977fabe72ce8eb3d", null ],
-    [ "material", "class_model.html#acb2e155d98ff0980bc40958bb5b79868", null ]
+    [ "material", "class_model.html#acb2e155d98ff0980bc40958bb5b79868", null ],
+    [ "useDeferredRendering", "class_model.html#a4ed78d5a7b7f548a4b9c917c05e4924a", null ]
 ];
