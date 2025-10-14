@@ -368,6 +368,7 @@ class Window {
 
     std::shared_ptr<RenderTarget> gBuffer;
     std::shared_ptr<RenderTarget> ssaoBuffer;
+    std::shared_ptr<RenderTarget> ssaoBlurBuffer;
 
     std::vector<glm::vec3> ssaoKernel;
     std::vector<glm::vec3> ssaoNoise;
@@ -398,6 +399,7 @@ class Window {
     ShaderProgram deferredProgram;
     ShaderProgram lightProgram;
     ShaderProgram ssaoProgram;
+    ShaderProgram ssaoBlurProgram;
 
     bool debug = false;
 

@@ -8,6 +8,7 @@ uniform sampler2D gPosition;
 uniform sampler2D gNormal;
 uniform sampler2D gAlbedoSpec;
 uniform sampler2D gMaterial;
+uniform sampler2D ssao;
 
 uniform sampler2D texture1;
 uniform sampler2D texture2;
@@ -248,10 +249,12 @@ void main() {
     float shininess = matData.a * 256.0;
     float reflectivity = matData.b;
     
+    float ambientOcclusion = texture(ssao, TexCoord).r;
+
     vec3 viewDir = normalize(cameraPosition - FragPos);
     vec3 specColor = vec3(SpecIntensity);
     
-    vec3 ambient = ambientLight.color.rgb * ambientLight.intensity * Albedo;
+    vec3 ambient = ambientLight.color.rgb * ambientLight.intensity * Albedo * ambientOcclusion;
     
     float dirShadow = 0.0;
     for (int i = 0; i < shadowParamCount; i++) {
@@ -270,7 +273,7 @@ void main() {
     vec3 directionalResult = vec3(0.0);
     for (int i = 0; i < directionalLightCount; i++) {
         directionalResult += calcDirectionalLight(directionalLights[i], Normal, viewDir, 
-            Albedo, specColor, shininess);  
+            Albedo, specColor, shininess) * ambientOcclusion;  
     }
     directionalResult *= (1.0 - dirShadow);
 
@@ -279,14 +282,14 @@ void main() {
         float distance = length(pointLights[i].position - FragPos);
         if (distance > pointLights[i].radius) continue;
         pointResult += calcPointLight(pointLights[i], FragPos, Normal, viewDir,
-            Albedo, specColor, shininess);  
+            Albedo, specColor, shininess) * ambientOcclusion;  
     }
     pointResult *= (1.0 - pointShadow);
 
     vec3 spotResult = vec3(0.0);
     for (int i = 0; i < spotlightCount; i++) {
         spotResult += calcSpotLight(spotlights[i], FragPos, Normal, viewDir,
-            Albedo, specColor, shininess);  
+            Albedo, specColor, shininess) * ambientOcclusion;  
     }
 
     vec3 finalColor = ambient + directionalResult + pointResult + spotResult;
@@ -305,6 +308,4 @@ void main() {
         BrightColor = vec4(FragColor.rgb, 1.0);
     else
         BrightColor = vec4(0.0, 0.0, 0.0, 1.0);
-    
-    FragColor.rgb = acesToneMapping(FragColor.rgb);
 }

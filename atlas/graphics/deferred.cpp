@@ -106,6 +106,14 @@ void Window::deferredRendering(RenderTarget *target) {
     this->lightProgram.setUniform1i("gMaterial", 3);
 
     int boundTextures = 4;
+
+    if (this->ssaoBlurBuffer != nullptr) {
+        glActiveTexture(GL_TEXTURE4);
+        glBindTexture(GL_TEXTURE_2D, this->ssaoBlurBuffer->texture.id);
+        this->lightProgram.setUniform1i("ssao", 4);
+        boundTextures++;
+    }
+
     int boundCubemaps = 0;
 
     ShaderProgram shaderProgram = this->lightProgram;

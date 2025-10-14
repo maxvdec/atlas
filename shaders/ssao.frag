@@ -60,6 +60,6 @@ void main() {
     } else {
         occlusion = 1.0;
     }
-    
+
     FragColor = occlusion;
 }

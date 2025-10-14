@@ -276,6 +276,7 @@ enum class RenderTargetType {
     CubeShadow,
     GBuffer,
     SSAO,
+    SSAOBlur,
 };
 
 class Effect;

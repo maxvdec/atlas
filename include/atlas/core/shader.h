@@ -217,6 +217,7 @@ enum class AtlasFragmentShader {
     Light,
     Deferred,
     SSAO,
+    SSAOBlur,
 };
 
 /**

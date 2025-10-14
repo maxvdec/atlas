@@ -46,7 +46,7 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [ ] Add PBR rendering
 - [ ] Add other texture supports (normal, roughness, metallic, ao, etc.)
 - [x] Add HDR support **for alpha 2**
-- [ ] Add SSAO **for alpha 2**
+- [x] Add SSAO **for alpha 2**
 - [ ] Add cascaded shadow maps for directional lights
 - [ ] Add soft shadows **for alpha 2**
 - [x] Add shadows for point lights **for alpha 2**
