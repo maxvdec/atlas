@@ -45,16 +45,16 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [ ] Sky, atmosphere, weather and fluid simulation system (Hydra)
 - [ ] Animation system (Mold)
 - [x] Instancing support
-- [ ] Optimizations and performance improvements **for alpha 2.1**
+- [x] Optimizations and performance improvements
 - [x] CLI for packing applications
 - [ ] Runtime independent of final executable
 - [ ] Scene packing
 - [x] Add deferred rendering for better performance with many lights
-- [ ] Add PBR rendering
-- [ ] Add other texture supports (normal, roughness, metallic, ao, etc.)
+- [ ] Add PBR rendering **for alpha 3**
+- [ ] Add other texture supports (normal, roughness, metallic, ao, etc.) **for alpha 3**
 - [x] Add HDR support
 - [x] Add SSAO
-- [ ] Add cascaded shadow maps for directional lights
+- [ ] Add cascaded shadow maps for directional lights **for alpha 3**
 - [x] Add soft shadows
 - [x] Add shadows for point lights
 - [x] Add normal and parallax mapping
@@ -62,13 +62,13 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [ ] Add support for constraints in Bezel
 - [ ] Add support for character controllers in Bezel
 - [ ] Add support for motors in Bezel
-- [ ] Add volumetric lighting
+- [ ] Add volumetric lighting **for alpha 3**
 - [x] Add bloom for lights
 - [x] Add depth of field
-- [ ] Add terrain system
-- [ ] Add motion blur
-- [ ] Physically based bloom
-- [ ] Add area lights
+- [ ] Add terrain system (Aurora) **for alpha 3**
+- [ ] Add motion blur **for alpha 3**
+- [ ] Physically based bloom **for alpha 3**
+- [ ] Add area lights **for alpha 3**
 
 ## Other features planned for the future
 
