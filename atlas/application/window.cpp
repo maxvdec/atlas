@@ -48,6 +48,10 @@ Window::Window(WindowConfiguration config)
     glfwWindowHint(GLFW_FLOATING, config.alwaysOnTop ? GLFW_TRUE : GLFW_FALSE);
     glfwWindowHint(GLFW_SAMPLES, config.multisampling ? 4 : 0);
 
+#ifdef __APPLE__
+    glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_TRUE);
+#endif
+
     GLFWwindow *window =
         glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
     if (window == nullptr) {
