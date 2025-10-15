@@ -1,5 +1,12 @@
 # Atlas
 
+---
+![GitHub contributors](https://img.shields.io/github/contributors/maxvdec/atlas)
+![GitHub last commit](https://img.shields.io/github/last-commit/maxvdec/atlas)
+![Tests](https://github.com/maxvdec/atlas/actions/workflows/build.yml/badge.svg)
+![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/maxvdec/atlas)
+![GitHub Repo stars](https://img.shields.io/github/stars/maxvdec/atlas)
+
 Atlas is a Game Engine that uses the latest technologies to provide a fast, simple but powerful experience for developers.
 It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan and Metal in the future.
 
@@ -14,6 +21,7 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 
 - The main renderer is Atlas. Atlas is the one in charge of the graphics rendering, input handling, window management and more.
 - The physics engine is Bezel. Bezel is a separate library that handles all the physics calculations and simulations.
+- The audio engine is Finewave. Finewave is a separate library that handles all the audio playback and processing.
 
 ## Roadmap to Beta
 

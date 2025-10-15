@@ -387,6 +387,7 @@ class UIObject : public GameObject {};
 
 /**
  * @brief A conjunction of UI elements that share the same view and projection
+ * matrices. Acts as a container for organizing UI objects.
  *
  */
 class UIView : public UIObject {
@@ -395,6 +396,12 @@ class UIView : public UIObject {
     void setViewMatrix(const glm::mat4 &view) override;
     void setProjectionMatrix(const glm::mat4 &projection) override;
 
+    /**
+     * @brief Adds a child UI object to this view.
+     *
+     * @param child The UI object to add. \warning The object must be
+     * long-lived.
+     */
     inline void addChild(UIObject *child) { children.push_back(child); }
 
   private:

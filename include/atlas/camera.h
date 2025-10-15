@@ -96,7 +96,17 @@ class Camera {
      */
     bool useOrthographic = false;
 
+    /**
+     * @brief The depth value at which objects are in perfect focus for depth
+     * of field effects.
+     *
+     */
     float focusDepth = 20.f;
+    /**
+     * @brief The range around focusDepth where objects gradually transition
+     * from sharp to blurred.
+     *
+     */
     float focusRange = 10.0f;
 
     /**
