@@ -13,6 +13,7 @@
 #include <glad/glad.h>
 #include <map>
 #include <string>
+#include <thread>
 #include <utility>
 
 std::map<std::pair<AtlasVertexShader, AtlasFragmentShader>, ShaderProgram>
@@ -441,8 +442,18 @@ ShaderProgram ShaderProgram::fromDefaultShaders(AtlasVertexShader vShader,
     program.fragmentShader = FragmentShader::fromDefaultShader(fShader);
     program.programId = 0;
     program.desiredAttributes = program.vertexShader.desiredAttributes;
+
     program.vertexShader.compile();
     program.fragmentShader.compile();
+
+    // We need to wait a bit to ensure the GPU is ready for the next compilation
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+    if (program.vertexShader.shaderId == 0 ||
+        program.fragmentShader.shaderId == 0) {
+        throw std::runtime_error("Failed to compile default shaders");
+    }
+
     program.compile();
     return program;
 }

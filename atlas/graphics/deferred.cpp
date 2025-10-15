@@ -26,6 +26,7 @@ void Window::deferredRendering(RenderTarget *target) {
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, this->gBuffer->fbo);
+    glViewport(0, 0, this->gBuffer->getWidth(), this->gBuffer->getHeight());
     unsigned int attachments[4] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1,
                                    GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3};
     glDrawBuffers(4, attachments);
@@ -52,6 +53,7 @@ void Window::deferredRendering(RenderTarget *target) {
     this->renderSSAO(target);
 
     glBindFramebuffer(GL_FRAMEBUFFER, target->fbo);
+    glViewport(0, 0, target->getWidth(), target->getHeight());
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 

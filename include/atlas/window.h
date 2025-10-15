@@ -18,7 +18,9 @@
 #include "atlas/units.h"
 #include "bezel/body.h"
 #include "finewave/audio.h"
+#include <glm/vec3.hpp>
 #include <memory>
+#include <optional>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -50,6 +52,12 @@ struct WindowConfiguration {
      *
      */
     int height;
+    /**
+     * @brief Internal rendering resolution scale factor. Values below 1.0
+     * render at a lower resolution and upscale to the window, improving
+     * performance.
+     */
+    float renderScale = 0.75f;
     /**
      * @brief Whether the mouse cursor should be captured and hidden.
      *
@@ -108,6 +116,11 @@ struct WindowConfiguration {
      *
      */
     int aspectRatioY = -1;
+    /**
+     * @brief Resolution scale used specifically for SSAO passes. Lower values
+     * reduce quality but greatly boost performance.
+     */
+    float ssaoScale = 0.5f;
 };
 
 /**
@@ -465,6 +478,16 @@ class Window {
      */
     bool usesDeferred = false;
 
+    /**
+     * @brief Returns the active internal render scale.
+     */
+    inline float getRenderScale() const { return this->renderScale; }
+
+    /**
+     * @brief Returns the SSAO-specific render scale.
+     */
+    inline float getSSAORenderScale() const { return this->ssaoRenderScale; }
+
   private:
     CoreWindowReference windowRef;
     std::vector<Renderable *> renderables;
@@ -507,11 +530,33 @@ class Window {
     ShaderProgram lightProgram;
     ShaderProgram ssaoProgram;
     ShaderProgram ssaoBlurProgram;
+    ShaderProgram bloomBlurProgram;
 
     bool debug = false;
 
     unsigned int pingpongFBOs[2] = {0, 0};
     unsigned int pingpongBuffers[2] = {0, 0};
+    int pingpongWidth = 0;
+    int pingpongHeight = 0;
+
+    float renderScale = 0.75f;
+    float ssaoRenderScale = 0.5f;
+    unsigned int bloomBlurPasses = 4;
+    int ssaoKernelSize = 32;
+    float ssaoUpdateInterval = 1.0f / 45.0f;
+    float ssaoUpdateCooldown = 0.0f;
+    bool ssaoMapsDirty = true;
+    std::optional<Position3d> lastSSAOCameraPosition;
+    std::optional<Normal3d> lastSSAOCameraDirection;
+    float shadowUpdateInterval = 1.0f / 30.0f;
+    float shadowUpdateCooldown = 0.0f;
+    bool shadowMapsDirty = true;
+    std::optional<Position3d> lastShadowCameraPosition;
+    std::optional<Normal3d> lastShadowCameraDirection;
+    std::vector<glm::vec3> cachedDirectionalLightDirections;
+    std::vector<glm::vec3> cachedPointLightPositions;
+    std::vector<glm::vec3> cachedSpotlightPositions;
+    std::vector<glm::vec3> cachedSpotlightDirections;
 
     friend class CoreObject;
     friend class RenderTarget;

@@ -8,37 +8,42 @@
 //
 
 #include "atlas/window.h"
+#include <algorithm>
+#include <glm/geometric.hpp>
 #include <glm/gtc/random.hpp>
-#include <iostream>
 #include <random>
 
 void Window::setupSSAO() {
     std::uniform_real_distribution<float> randomFloats(0.0, 1.0);
     std::default_random_engine generator;
-    for (unsigned int i = 0; i < 64; ++i) {
+    this->ssaoKernel.clear();
+    this->ssaoKernel.reserve(this->ssaoKernelSize);
+    for (int i = 0; i < this->ssaoKernelSize; ++i) {
         glm::vec3 sample(randomFloats(generator) * 2.0 - 1.0,
                          randomFloats(generator) * 2.0 - 1.0,
                          randomFloats(generator));
         sample = glm::normalize(sample);
         sample *= randomFloats(generator);
-        float scale = static_cast<float>(i) / 64.0f;
+        float scale = static_cast<float>(i) /
+                      static_cast<float>(std::max(1, this->ssaoKernelSize));
         scale = 0.1f + 0.9f * (scale * scale);
         sample *= scale;
         ssaoKernel.push_back(sample);
     }
 
-    std::vector<glm::vec3> ssaoNoise;
+    this->ssaoNoise.clear();
+    this->ssaoNoise.reserve(16);
     for (unsigned int i = 0; i < 16; i++) {
         glm::vec3 noise(randomFloats(generator) * 2.0 - 1.0,
                         randomFloats(generator) * 2.0 - 1.0, 0.0f);
-        ssaoNoise.push_back(noise);
+        this->ssaoNoise.push_back(noise);
     }
 
     unsigned int noiseTextureID;
     glGenTextures(1, &noiseTextureID);
     glBindTexture(GL_TEXTURE_2D, noiseTextureID);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, 4, 4, 0, GL_RGB, GL_FLOAT,
-                 &ssaoNoise[0]);
+                 this->ssaoNoise.data());
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -58,10 +63,49 @@ void Window::setupSSAO() {
         RenderTarget(*this, RenderTargetType::SSAO));
     this->ssaoBlurBuffer = std::make_shared<RenderTarget>(
         RenderTarget(*this, RenderTargetType::SSAOBlur));
+    this->ssaoMapsDirty = true;
 }
 
 void Window::renderSSAO(RenderTarget *target) {
+    if (this->ssaoBuffer == nullptr || this->ssaoBlurBuffer == nullptr) {
+        return;
+    }
+
+    this->ssaoUpdateCooldown =
+        std::max(0.0f, this->ssaoUpdateCooldown - this->deltaTime);
+
+    bool cameraMoved = false;
+    if (this->camera != nullptr) {
+        glm::vec3 currentPos = this->camera->position.toGlm();
+        glm::vec3 currentDir = this->camera->getFrontVector().toGlm();
+
+        if (!this->lastSSAOCameraPosition.has_value() ||
+            !this->lastSSAOCameraDirection.has_value()) {
+            cameraMoved = true;
+        } else {
+            glm::vec3 lastPos = this->lastSSAOCameraPosition->toGlm();
+            glm::vec3 lastDir = this->lastSSAOCameraDirection->toGlm();
+            if (glm::length(currentPos - lastPos) > 0.15f ||
+                glm::length(currentDir - lastDir) > 0.015f) {
+                cameraMoved = true;
+            }
+        }
+    }
+
+    if (cameraMoved) {
+        this->ssaoMapsDirty = true;
+    }
+
+    if (!this->ssaoMapsDirty && this->ssaoUpdateCooldown > 0.0f) {
+        return;
+    }
+
+    this->ssaoMapsDirty = false;
+    this->ssaoUpdateCooldown = this->ssaoUpdateInterval;
+
     glBindFramebuffer(GL_FRAMEBUFFER, this->ssaoBuffer->fbo);
+    glViewport(0, 0, this->ssaoBuffer->getWidth(),
+               this->ssaoBuffer->getHeight());
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     static Id ssaoVAO = 0;
@@ -100,18 +144,19 @@ void Window::renderSSAO(RenderTarget *target) {
     glActiveTexture(GL_TEXTURE2);
     glBindTexture(GL_TEXTURE_2D, this->noiseTexture.id);
     this->ssaoProgram.setUniform1i("texNoise", 2);
-    for (unsigned int i = 0; i < 64; i++) {
+    for (size_t i = 0; i < this->ssaoKernel.size(); ++i) {
         this->ssaoProgram.setUniform3f("samples[" + std::to_string(i) + "]",
                                        ssaoKernel[i].x, ssaoKernel[i].y,
                                        ssaoKernel[i].z);
     }
-    this->ssaoProgram.setUniform1i("kernelSize", 64);
+    this->ssaoProgram.setUniform1i("kernelSize",
+                                   static_cast<int>(this->ssaoKernel.size()));
     this->ssaoProgram.setUniformMat4f("projection",
                                       this->calculateProjectionMatrix());
     this->ssaoProgram.setUniformMat4f("view",
                                       getCamera()->calculateViewMatrix());
-    glm::vec2 screenSize(target->texture.creationData.width,
-                         target->texture.creationData.height);
+    glm::vec2 screenSize(this->ssaoBuffer->getWidth(),
+                         this->ssaoBuffer->getHeight());
     glm::vec2 noiseSize(4.0f, 4.0f);
     this->ssaoProgram.setUniform2f("noiseScale", screenSize.x / noiseSize.x,
                                    screenSize.y / noiseSize.y);
@@ -121,6 +166,8 @@ void Window::renderSSAO(RenderTarget *target) {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     glBindFramebuffer(GL_FRAMEBUFFER, this->ssaoBlurBuffer->fbo);
+    glViewport(0, 0, this->ssaoBlurBuffer->getWidth(),
+               this->ssaoBlurBuffer->getHeight());
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
     glUseProgram(this->ssaoBlurProgram.programId);
@@ -131,4 +178,9 @@ void Window::renderSSAO(RenderTarget *target) {
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    if (this->camera != nullptr) {
+        this->lastSSAOCameraPosition = this->camera->position;
+        this->lastSSAOCameraDirection = this->camera->getFrontVector();
+    }
 }

@@ -410,6 +410,9 @@ class RenderTarget : public Renderable {
      */
     void resolve();
 
+    int getWidth() const;
+    int getHeight() const;
+
     /**
      * @brief Adds a post-processing effect to the render target.
      *

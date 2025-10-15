@@ -8,6 +8,7 @@
 */
 
 #include <glad/glad.h>
+#include <algorithm>
 #include <iostream>
 #include <vector>
 #include "atlas/camera.h"
@@ -23,8 +24,20 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
     GLFWwindow *glfwWindow = static_cast<GLFWwindow *>(window.windowRef);
     int fbWidth, fbHeight;
     glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
+
+    float targetScale = window.getRenderScale();
+    if (type == RenderTargetType::SSAO || type == RenderTargetType::SSAOBlur) {
+        targetScale = window.getSSAORenderScale();
+    }
+    targetScale = std::clamp(targetScale, 0.1f, 1.0f);
+
+    int scaledWidth = std::max(1, static_cast<int>(fbWidth * targetScale));
+    int scaledHeight = std::max(1, static_cast<int>(fbHeight * targetScale));
     Size2d size;
-    size = {static_cast<double>(fbWidth), static_cast<double>(fbHeight)};
+    size = {static_cast<double>(scaledWidth),
+            static_cast<double>(scaledHeight)};
+    const GLsizei width = static_cast<GLsizei>(scaledWidth);
+    const GLsizei height = static_cast<GLsizei>(scaledHeight);
     this->type = type;
 
     if (type == RenderTargetType::Scene) {
@@ -35,8 +48,8 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
         glGenTextures(2, colorTextures);
         for (unsigned int i = 0; i < 2; i++) {
             glBindTexture(GL_TEXTURE_2D, colorTextures[i]);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, size.width, size.height,
-                         0, GL_RGBA, GL_FLOAT, nullptr);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0,
+                         GL_RGBA, GL_FLOAT, nullptr);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
@@ -54,17 +67,17 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
         GLuint depthTexture;
         glGenTextures(1, &depthTexture);
         glBindTexture(GL_TEXTURE_2D, depthTexture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, size.width,
-                     size.height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, width, height, 0,
+                     GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
                                GL_TEXTURE_2D, depthTexture, 0);
         this->depthTexture.id = depthTexture;
-        this->depthTexture.creationData.width = size.width;
-        this->depthTexture.creationData.height = size.height;
+        this->depthTexture.creationData.width = scaledWidth;
+        this->depthTexture.creationData.height = scaledHeight;
         this->depthTexture.type = TextureType::Depth;
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) !=
@@ -72,13 +85,13 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
             std::cerr << "Error: Framebuffer is not complete!" << std::endl;
         }
 
-        texture.creationData.width = size.width;
-        texture.creationData.height = size.height;
+        texture.creationData.width = scaledWidth;
+        texture.creationData.height = scaledHeight;
         texture.type = TextureType::Color;
         texture.id = colorTextures[0];
 
-        brightTexture.creationData.width = size.width;
-        brightTexture.creationData.height = size.height;
+        brightTexture.creationData.width = scaledWidth;
+        brightTexture.creationData.height = scaledHeight;
         brightTexture.type = TextureType::Color;
         brightTexture.id = colorTextures[1];
 
@@ -96,8 +109,7 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
         for (unsigned int i = 0; i < 2; i++) {
             glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, colorTextures[i]);
             glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples,
-                                    GL_RGBA16F, size.width, size.height,
-                                    GL_TRUE);
+                                    GL_RGBA16F, width, height, GL_TRUE);
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i,
                                    GL_TEXTURE_2D_MULTISAMPLE, colorTextures[i],
                                    0);
@@ -110,8 +122,7 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
         glGenTextures(1, &depthTexture);
         glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, depthTexture);
         glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples,
-                                GL_DEPTH_COMPONENT24, size.width, size.height,
-                                GL_TRUE);
+                                GL_DEPTH_COMPONENT24, width, height, GL_TRUE);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
                                GL_TEXTURE_2D_MULTISAMPLE, depthTexture, 0);
 
@@ -122,18 +133,18 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
         }
 
         this->msTexture.id = colorTextures[0];
-        this->msTexture.creationData.width = size.width;
-        this->msTexture.creationData.height = size.height;
+        this->msTexture.creationData.width = scaledWidth;
+        this->msTexture.creationData.height = scaledHeight;
         this->msTexture.type = TextureType::Color;
 
         this->msBrightTexture.id = colorTextures[1];
-        this->msBrightTexture.creationData.width = size.width;
-        this->msBrightTexture.creationData.height = size.height;
+        this->msBrightTexture.creationData.width = scaledWidth;
+        this->msBrightTexture.creationData.height = scaledHeight;
         this->msBrightTexture.type = TextureType::Color;
 
         this->msDepthTexture.id = depthTexture;
-        this->msDepthTexture.creationData.width = size.width;
-        this->msDepthTexture.creationData.height = size.height;
+        this->msDepthTexture.creationData.width = scaledWidth;
+        this->msDepthTexture.creationData.height = scaledHeight;
         this->msDepthTexture.type = TextureType::Depth;
 
         glGenFramebuffers(1, &resolveFbo);
@@ -143,8 +154,8 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
         glGenTextures(2, resolvedColor);
         for (int i = 0; i < 2; i++) {
             glBindTexture(GL_TEXTURE_2D, resolvedColor[i]);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, size.width, size.height,
-                         0, GL_RGBA, GL_FLOAT, nullptr);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0,
+                         GL_RGBA, GL_FLOAT, nullptr);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -160,10 +171,10 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
         GLuint resolvedDepth;
         glGenTextures(1, &resolvedDepth);
         glBindTexture(GL_TEXTURE_2D, resolvedDepth);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, size.width,
-                     size.height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, width, height, 0,
+                     GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
                                GL_TEXTURE_2D, resolvedDepth, 0);
 
@@ -174,13 +185,13 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
         }
 
         texture.id = resolvedColor[0];
-        texture.creationData.width = size.width;
-        texture.creationData.height = size.height;
+        texture.creationData.width = scaledWidth;
+        texture.creationData.height = scaledHeight;
         texture.type = TextureType::Color;
 
         brightTexture.id = resolvedColor[1];
-        brightTexture.creationData.width = size.width;
-        brightTexture.creationData.height = size.height;
+        brightTexture.creationData.width = scaledWidth;
+        brightTexture.creationData.height = scaledHeight;
         brightTexture.type = TextureType::Color;
 
         depthTexture = resolvedDepth;
@@ -264,72 +275,72 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
 
         glGenTextures(1, &gPosition.id);
         glBindTexture(GL_TEXTURE_2D, gPosition.id);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, size.width, size.height, 0,
-                     GL_RGBA, GL_FLOAT, nullptr);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA,
+                     GL_FLOAT, nullptr);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                                GL_TEXTURE_2D, gPosition.id, 0);
-        gPosition.creationData.width = size.width;
-        gPosition.creationData.height = size.height;
+        gPosition.creationData.width = scaledWidth;
+        gPosition.creationData.height = scaledHeight;
         gPosition.type = TextureType::Color;
 
         glGenTextures(1, &gNormal.id);
         glBindTexture(GL_TEXTURE_2D, gNormal.id);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, size.width, size.height, 0,
-                     GL_RGBA, GL_FLOAT, nullptr);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA,
+                     GL_FLOAT, nullptr);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1,
                                GL_TEXTURE_2D, gNormal.id, 0);
-        gNormal.creationData.width = size.width;
-        gNormal.creationData.height = size.height;
+        gNormal.creationData.width = scaledWidth;
+        gNormal.creationData.height = scaledHeight;
         gNormal.type = TextureType::Color;
 
         glGenTextures(1, &gAlbedoSpec.id);
         glBindTexture(GL_TEXTURE_2D, gAlbedoSpec.id);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.width, size.height, 0,
-                     GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
+                     GL_UNSIGNED_BYTE, nullptr);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2,
                                GL_TEXTURE_2D, gAlbedoSpec.id, 0);
-        gAlbedoSpec.creationData.width = size.width;
-        gAlbedoSpec.creationData.height = size.height;
+        gAlbedoSpec.creationData.width = scaledWidth;
+        gAlbedoSpec.creationData.height = scaledHeight;
         gAlbedoSpec.type = TextureType::Color;
 
         glGenTextures(1, &gMaterial.id);
         glBindTexture(GL_TEXTURE_2D, gMaterial.id);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.width, size.height, 0,
-                     GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
+                     GL_UNSIGNED_BYTE, nullptr);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3,
                                GL_TEXTURE_2D, gMaterial.id, 0);
-        gMaterial.creationData.width = size.width;
-        gMaterial.creationData.height = size.height;
+        gMaterial.creationData.width = scaledWidth;
+        gMaterial.creationData.height = scaledHeight;
         gMaterial.type = TextureType::Color;
 
         glGenTextures(1, &depthTexture.id);
         glBindTexture(GL_TEXTURE_2D, depthTexture.id);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, size.width,
-                     size.height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, width, height, 0,
+                     GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
                                GL_TEXTURE_2D, depthTexture.id, 0);
-        depthTexture.creationData.width = size.width;
-        depthTexture.creationData.height = size.height;
+        depthTexture.creationData.width = scaledWidth;
+        depthTexture.creationData.height = scaledHeight;
         depthTexture.type = TextureType::Depth;
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) !=
@@ -348,8 +359,8 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
 
         glGenTextures(1, &texture.id);
         glBindTexture(GL_TEXTURE_2D, texture.id);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, size.width, size.height, 0,
-                     GL_RED, GL_FLOAT, nullptr);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED,
+                     GL_FLOAT, nullptr);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -363,8 +374,8 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
                       << std::endl;
         }
 
-        texture.creationData.width = size.width;
-        texture.creationData.height = size.height;
+        texture.creationData.width = scaledWidth;
+        texture.creationData.height = scaledHeight;
         texture.type = TextureType::SSAO;
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -374,8 +385,8 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
 
         glGenTextures(1, &texture.id);
         glBindTexture(GL_TEXTURE_2D, texture.id);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, size.width, size.height, 0,
-                     GL_RED, GL_FLOAT, nullptr);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED,
+                     GL_FLOAT, nullptr);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -389,8 +400,8 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
                       << std::endl;
         }
 
-        texture.creationData.width = size.width;
-        texture.creationData.height = size.height;
+        texture.creationData.width = scaledWidth;
+        texture.creationData.height = scaledHeight;
         texture.type = TextureType::SSAO;
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -456,11 +467,66 @@ void RenderTarget::resolve() {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
+    if (type != RenderTargetType::Scene &&
+        type != RenderTargetType::Multisampled) {
+        return;
+    }
+
     glBindTexture(GL_TEXTURE_2D, this->texture.id);
-    glGenerateMipmap(GL_TEXTURE_2D);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                    GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    if (this->texture.id != 0) {
+        glGenerateMipmap(GL_TEXTURE_2D);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                        GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    }
+}
+
+int RenderTarget::getWidth() const {
+    switch (type) {
+    case RenderTargetType::Multisampled:
+        return std::max(1, msTexture.creationData.width != 0
+                               ? msTexture.creationData.width
+                               : texture.creationData.width);
+    case RenderTargetType::GBuffer:
+        return std::max(1, gPosition.creationData.width);
+    default:
+        if (texture.creationData.width > 0) {
+            return texture.creationData.width;
+        }
+        if (type == RenderTargetType::Scene &&
+            brightTexture.creationData.width > 0) {
+            return brightTexture.creationData.width;
+        }
+        if (type == RenderTargetType::Scene &&
+            gMaterial.creationData.width > 0) {
+            return gMaterial.creationData.width;
+        }
+        return 1;
+    }
+}
+
+int RenderTarget::getHeight() const {
+    switch (type) {
+    case RenderTargetType::Multisampled:
+        return std::max(1, msTexture.creationData.height != 0
+                               ? msTexture.creationData.height
+                               : texture.creationData.height);
+    case RenderTargetType::GBuffer:
+        return std::max(1, gPosition.creationData.height);
+    default:
+        if (texture.creationData.height > 0) {
+            return texture.creationData.height;
+        }
+        if (type == RenderTargetType::Scene &&
+            brightTexture.creationData.height > 0) {
+            return brightTexture.creationData.height;
+        }
+        if (type == RenderTargetType::Scene &&
+            gMaterial.creationData.height > 0) {
+            return gMaterial.creationData.height;
+        }
+        return 1;
+    }
 }
 
 void RenderTarget::hide() {
