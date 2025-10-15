@@ -1,5 +1,8 @@
 var NAVTREEINDEX5 =
 {
+"struct_vertex_shader.html#a86a7b493519917c63c40475d69b1f997":[2,0,78,8],
+"struct_vertex_shader.html#a9af0bff0fd27f9077fe424e7703b454a":[2,0,78,5],
+"struct_vertex_shader.html#aa07b8f046212ba235effca38c90269df":[2,0,78,4],
 "struct_vertex_shader.html#acaf9bf36f512cdf2bfabbe1bf152d13d":[2,0,78,2],
 "struct_vertex_shader.html#aee30d849ca2b428f566b1447b082b4d8":[2,0,78,1],
 "struct_video_mode.html":[2,0,79],

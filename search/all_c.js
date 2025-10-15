@@ -41,6 +41,9 @@ var searchData=
   ['movement2d_38',['Movement2d',['../units_8h.html#a850e32afea691ea6f3975e6f7cec14d0',1,'units.h']]],
   ['movementspeed_39',['movementSpeed',['../class_camera.html#a03987cf3bbf312be16bb881939382d83',1,'Camera']]],
   ['moveto_40',['moveTo',['../class_camera.html#a302107bd77c00cce532343f666dfdeed',1,'Camera']]],
-  ['multisampled_41',['Multisampled',['../texture_8h.html#a639c740f69368f9fe25a4f7409a16384ae34a1815b3fff1ad8307cb98182f4481',1,'texture.h']]],
-  ['multisampling_42',['multisampling',['../struct_window_configuration.html#a194a2500a672a106506592f277adea41',1,'WindowConfiguration']]]
+  ['msbrighttexture_41',['msBrightTexture',['../class_render_target.html#a174ddff041855d5fa5621b584e0f3964',1,'RenderTarget']]],
+  ['msdepthtexture_42',['msDepthTexture',['../class_render_target.html#a3c6dbb5d63f05e0db8e4ccdc663319a9',1,'RenderTarget']]],
+  ['mstexture_43',['msTexture',['../class_render_target.html#adae5c8df5079c8a1e158117db03528f4',1,'RenderTarget']]],
+  ['multisampled_44',['Multisampled',['../texture_8h.html#a639c740f69368f9fe25a4f7409a16384ae34a1815b3fff1ad8307cb98182f4481',1,'texture.h']]],
+  ['multisampling_45',['multisampling',['../struct_window_configuration.html#a194a2500a672a106506592f277adea41',1,'WindowConfiguration']]]
 ];
