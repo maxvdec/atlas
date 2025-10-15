@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 2</span>
    </div>
   </td>
  </tr>
@@ -150,7 +150,9 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:abc2d2f54279470559c2774fc62a6593f" id="r_abc2d2f54279470559c2774fc62a6593f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="units_8h.html#abd755c400f9d4026ef36e03056829444">Normal3d</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#abc2d2f54279470559c2774fc62a6593f">normal</a> = {0.0, 0.0, 0.0}</td></tr>
 <tr class="memdesc:abc2d2f54279470559c2774fc62a6593f"><td class="mdescLeft">&#160;</td><td class="mdescRight">The normal vector of the vertex, used for lighting calculations.  <br /></td></tr>
 <tr class="memitem:a0c00c49953bedf8d4c8d10370fc15cbd" id="r_a0c00c49953bedf8d4c8d10370fc15cbd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="units_8h.html#abd755c400f9d4026ef36e03056829444">Normal3d</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0c00c49953bedf8d4c8d10370fc15cbd">tangent</a> = {0.0, 0.0, 0.0}</td></tr>
+<tr class="memdesc:a0c00c49953bedf8d4c8d10370fc15cbd"><td class="mdescLeft">&#160;</td><td class="mdescRight">The tangent vector of the vertex, used for normal mapping and parallax calculations.  <br /></td></tr>
 <tr class="memitem:a90dc10a37761100ca1182c3d722468f1" id="r_a90dc10a37761100ca1182c3d722468f1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="units_8h.html#abd755c400f9d4026ef36e03056829444">Normal3d</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a90dc10a37761100ca1182c3d722468f1">bitangent</a> = {0.0, 0.0, 0.0}</td></tr>
+<tr class="memdesc:a90dc10a37761100ca1182c3d722468f1"><td class="mdescLeft">&#160;</td><td class="mdescRight">The bitangent vector of the vertex, used for normal mapping and parallax calculations.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Structure representing a single vertex in 3D space, including position, color, texture coordinates, and normal vector. </p>
@@ -160,9 +162,9 @@ Example</h2>
 <div class="fragment"><div class="line"><span class="comment">// Create a vertex at position (1, 2, 3) with red color</span></div>
 <div class="line"><a class="code hl_function" href="#af857b1beb9f81b407c6b3ac239368a8f">CoreVertex</a> vertex({1.0, 2.0, 3.0}, {1.0, 0.0, 0.0, 1.0}, {0.5, 0.5}, {0.0,</div>
 <div class="line">0.0, 1.0});</div>
-<div class="ttc" id="astruct_core_vertex_html_af857b1beb9f81b407c6b3ac239368a8f"><div class="ttname"><a href="#af857b1beb9f81b407c6b3ac239368a8f">CoreVertex::CoreVertex</a></div><div class="ttdeci">CoreVertex(Position3d pos={0.0, 0.0, 0.0}, Color col={1.0, 1.0, 1.0, 1.0}, TextureCoordinate tex={0.0, 0.0}, Normal3d n={0.0, 0.0, 0.0}, Normal3d t={0.0, 0.0, 0.0}, Normal3d b={0.0, 0.0, 0.0})</div><div class="ttdoc">Function that constructs a new CoreVertex object.</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00119">object.h:119</a></div></div>
+<div class="ttc" id="astruct_core_vertex_html_af857b1beb9f81b407c6b3ac239368a8f"><div class="ttname"><a href="#af857b1beb9f81b407c6b3ac239368a8f">CoreVertex::CoreVertex</a></div><div class="ttdeci">CoreVertex(Position3d pos={0.0, 0.0, 0.0}, Color col={1.0, 1.0, 1.0, 1.0}, TextureCoordinate tex={0.0, 0.0}, Normal3d n={0.0, 0.0, 0.0}, Normal3d t={0.0, 0.0, 0.0}, Normal3d b={0.0, 0.0, 0.0})</div><div class="ttdoc">Function that constructs a new CoreVertex object.</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00134">object.h:134</a></div></div>
 </div><!-- fragment --> 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00086">86</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00091">91</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="af857b1beb9f81b407c6b3ac239368a8f" name="af857b1beb9f81b407c6b3ac239368a8f"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#af857b1beb9f81b407c6b3ac239368a8f">&#9670;&#160;</a></span>CoreVertex()</h2>
@@ -222,21 +224,21 @@ Example</h2>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00119">119</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  119</span>                                {0.0, 0.0, 0.0},</div>
-<div class="line"><span class="lineno">  120</span>               <a class="code hl_enumvalue" href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82acb5feb1b7314637725a2e73bdc9f7295">Color</a> col = {1.0, 1.0, 1.0, 1.0},</div>
-<div class="line"><span class="lineno">  121</span>               <a class="code hl_typedef" href="object_8h.html#a792b027205b8d852587fcb60390c137c">TextureCoordinate</a> tex = {0.0, 0.0}, <a class="code hl_typedef" href="units_8h.html#abd755c400f9d4026ef36e03056829444">Normal3d</a> n = {0.0, 0.0, 0.0},</div>
-<div class="line"><span class="lineno">  122</span>               <a class="code hl_typedef" href="units_8h.html#abd755c400f9d4026ef36e03056829444">Normal3d</a> t = {0.0, 0.0, 0.0}, <a class="code hl_typedef" href="units_8h.html#abd755c400f9d4026ef36e03056829444">Normal3d</a> b = {0.0, 0.0, 0.0})</div>
-<div class="line"><span class="lineno">  123</span>        : <a class="code hl_variable" href="#acde6bccd12e2eeed36d31fa4b2af9677">position</a>(pos), <a class="code hl_variable" href="#a7184ad591e8754a6de56414bf048fe13">color</a>(col), <a class="code hl_variable" href="#a9680e9b48f5db439f684436ea59ed5ea">textureCoordinate</a>(tex), <a class="code hl_variable" href="#abc2d2f54279470559c2774fc62a6593f">normal</a>(n),</div>
-<div class="line"><span class="lineno">  124</span>          <a class="code hl_variable" href="#a0c00c49953bedf8d4c8d10370fc15cbd">tangent</a>(t), <a class="code hl_variable" href="#a90dc10a37761100ca1182c3d722468f1">bitangent</a>(b) {}</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00134">134</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  134</span>                                {0.0, 0.0, 0.0},</div>
+<div class="line"><span class="lineno">  135</span>               <a class="code hl_enumvalue" href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82acb5feb1b7314637725a2e73bdc9f7295">Color</a> col = {1.0, 1.0, 1.0, 1.0},</div>
+<div class="line"><span class="lineno">  136</span>               <a class="code hl_typedef" href="object_8h.html#a792b027205b8d852587fcb60390c137c">TextureCoordinate</a> tex = {0.0, 0.0}, <a class="code hl_typedef" href="units_8h.html#abd755c400f9d4026ef36e03056829444">Normal3d</a> n = {0.0, 0.0, 0.0},</div>
+<div class="line"><span class="lineno">  137</span>               <a class="code hl_typedef" href="units_8h.html#abd755c400f9d4026ef36e03056829444">Normal3d</a> t = {0.0, 0.0, 0.0}, <a class="code hl_typedef" href="units_8h.html#abd755c400f9d4026ef36e03056829444">Normal3d</a> b = {0.0, 0.0, 0.0})</div>
+<div class="line"><span class="lineno">  138</span>        : <a class="code hl_variable" href="#acde6bccd12e2eeed36d31fa4b2af9677">position</a>(pos), <a class="code hl_variable" href="#a7184ad591e8754a6de56414bf048fe13">color</a>(col), <a class="code hl_variable" href="#a9680e9b48f5db439f684436ea59ed5ea">textureCoordinate</a>(tex), <a class="code hl_variable" href="#abc2d2f54279470559c2774fc62a6593f">normal</a>(n),</div>
+<div class="line"><span class="lineno">  139</span>          <a class="code hl_variable" href="#a0c00c49953bedf8d4c8d10370fc15cbd">tangent</a>(t), <a class="code hl_variable" href="#a90dc10a37761100ca1182c3d722468f1">bitangent</a>(b) {}</div>
 <div class="ttc" id="aobject_8h_html_a792b027205b8d852587fcb60390c137c"><div class="ttname"><a href="object_8h.html#a792b027205b8d852587fcb60390c137c">TextureCoordinate</a></div><div class="ttdeci">std::array&lt; double, 2 &gt; TextureCoordinate</div><div class="ttdoc">Alias that represents a texture coordinate in 2D space.</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00038">object.h:38</a></div></div>
 <div class="ttc" id="ashader_8h_html_aed7a1c7a5976e4adb712d0a231dada82acb5feb1b7314637725a2e73bdc9f7295"><div class="ttname"><a href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82acb5feb1b7314637725a2e73bdc9f7295">AtlasVertexShader::Color</a></div><div class="ttdeci">@ Color</div><div class="ttdoc">Vertex shader for rendering solid colors.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00040">shader.h:40</a></div></div>
-<div class="ttc" id="astruct_core_vertex_html_a0c00c49953bedf8d4c8d10370fc15cbd"><div class="ttname"><a href="#a0c00c49953bedf8d4c8d10370fc15cbd">CoreVertex::tangent</a></div><div class="ttdeci">Normal3d tangent</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00108">object.h:108</a></div></div>
-<div class="ttc" id="astruct_core_vertex_html_a7184ad591e8754a6de56414bf048fe13"><div class="ttname"><a href="#a7184ad591e8754a6de56414bf048fe13">CoreVertex::color</a></div><div class="ttdeci">Color color</div><div class="ttdoc">The color of the vertex.</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00096">object.h:96</a></div></div>
-<div class="ttc" id="astruct_core_vertex_html_a90dc10a37761100ca1182c3d722468f1"><div class="ttname"><a href="#a90dc10a37761100ca1182c3d722468f1">CoreVertex::bitangent</a></div><div class="ttdeci">Normal3d bitangent</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00109">object.h:109</a></div></div>
-<div class="ttc" id="astruct_core_vertex_html_a9680e9b48f5db439f684436ea59ed5ea"><div class="ttname"><a href="#a9680e9b48f5db439f684436ea59ed5ea">CoreVertex::textureCoordinate</a></div><div class="ttdeci">TextureCoordinate textureCoordinate</div><div class="ttdoc">The texture coordinates of the vertex.</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00101">object.h:101</a></div></div>
-<div class="ttc" id="astruct_core_vertex_html_abc2d2f54279470559c2774fc62a6593f"><div class="ttname"><a href="#abc2d2f54279470559c2774fc62a6593f">CoreVertex::normal</a></div><div class="ttdeci">Normal3d normal</div><div class="ttdoc">The normal vector of the vertex, used for lighting calculations.</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00106">object.h:106</a></div></div>
-<div class="ttc" id="astruct_core_vertex_html_acde6bccd12e2eeed36d31fa4b2af9677"><div class="ttname"><a href="#acde6bccd12e2eeed36d31fa4b2af9677">CoreVertex::position</a></div><div class="ttdeci">Position3d position</div><div class="ttdoc">The position of the vertex in 3D space.</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00091">object.h:91</a></div></div>
+<div class="ttc" id="astruct_core_vertex_html_a0c00c49953bedf8d4c8d10370fc15cbd"><div class="ttname"><a href="#a0c00c49953bedf8d4c8d10370fc15cbd">CoreVertex::tangent</a></div><div class="ttdeci">Normal3d tangent</div><div class="ttdoc">The tangent vector of the vertex, used for normal mapping and parallax calculations.</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00118">object.h:118</a></div></div>
+<div class="ttc" id="astruct_core_vertex_html_a7184ad591e8754a6de56414bf048fe13"><div class="ttname"><a href="#a7184ad591e8754a6de56414bf048fe13">CoreVertex::color</a></div><div class="ttdeci">Color color</div><div class="ttdoc">The color of the vertex.</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00101">object.h:101</a></div></div>
+<div class="ttc" id="astruct_core_vertex_html_a90dc10a37761100ca1182c3d722468f1"><div class="ttname"><a href="#a90dc10a37761100ca1182c3d722468f1">CoreVertex::bitangent</a></div><div class="ttdeci">Normal3d bitangent</div><div class="ttdoc">The bitangent vector of the vertex, used for normal mapping and parallax calculations.</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00124">object.h:124</a></div></div>
+<div class="ttc" id="astruct_core_vertex_html_a9680e9b48f5db439f684436ea59ed5ea"><div class="ttname"><a href="#a9680e9b48f5db439f684436ea59ed5ea">CoreVertex::textureCoordinate</a></div><div class="ttdeci">TextureCoordinate textureCoordinate</div><div class="ttdoc">The texture coordinates of the vertex.</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00106">object.h:106</a></div></div>
+<div class="ttc" id="astruct_core_vertex_html_abc2d2f54279470559c2774fc62a6593f"><div class="ttname"><a href="#abc2d2f54279470559c2774fc62a6593f">CoreVertex::normal</a></div><div class="ttdeci">Normal3d normal</div><div class="ttdoc">The normal vector of the vertex, used for lighting calculations.</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00111">object.h:111</a></div></div>
+<div class="ttc" id="astruct_core_vertex_html_acde6bccd12e2eeed36d31fa4b2af9677"><div class="ttname"><a href="#acde6bccd12e2eeed36d31fa4b2af9677">CoreVertex::position</a></div><div class="ttdeci">Position3d position</div><div class="ttdoc">The position of the vertex in 3D space.</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00096">object.h:96</a></div></div>
 <div class="ttc" id="aunits_8h_html_abd755c400f9d4026ef36e03056829444"><div class="ttname"><a href="units_8h.html#abd755c400f9d4026ef36e03056829444">Normal3d</a></div><div class="ttdeci">Position3d Normal3d</div><div class="ttdoc">Type alias for 3D normal vectors.</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00111">units.h:111</a></div></div>
 </div><!-- fragment -->
 </div>
@@ -283,8 +285,10 @@ Example</h2>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00109">109</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  109</span>{0.0, 0.0, 0.0};</div>
+<p>The bitangent vector of the vertex, used for normal mapping and parallax calculations. </p>
+
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00124">124</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  124</span>{0.0, 0.0, 0.0};</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -302,8 +306,8 @@ Example</h2>
 
 <p>The color of the vertex. </p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00096">96</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   96</span>{1.0, 1.0, 1.0, 1.0};</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00101">101</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  101</span>{1.0, 1.0, 1.0, 1.0};</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -321,8 +325,8 @@ Example</h2>
 
 <p>The normal vector of the vertex, used for lighting calculations. </p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00106">106</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  106</span>{0.0, 0.0, 0.0};</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00111">111</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  111</span>{0.0, 0.0, 0.0};</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -340,7 +344,7 @@ Example</h2>
 
 <p>The position of the vertex in 3D space. </p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00091">91</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00096">96</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
 
 </div>
 </div>
@@ -356,8 +360,10 @@ Example</h2>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00108">108</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  108</span>{0.0, 0.0, 0.0};</div>
+<p>The tangent vector of the vertex, used for normal mapping and parallax calculations. </p>
+
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00118">118</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  118</span>{0.0, 0.0, 0.0};</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -375,8 +381,8 @@ Example</h2>
 
 <p>The texture coordinates of the vertex. </p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00101">101</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  101</span>{0.0, 0.0};</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00106">106</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  106</span>{0.0, 0.0};</div>
 </div><!-- fragment -->
 </div>
 </div>

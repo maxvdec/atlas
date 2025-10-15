@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 2</span>
    </div>
   </td>
  </tr>
@@ -172,6 +172,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a54a97abc4b6fe3280505da3b587cba98 inherit pub_methods_class_renderable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to determine if the object can cast shadows. Can be overridden by derived classes.  <br /></td></tr>
 <tr class="memitem:a2103eed2f7f54bca8ba1001907b367a9 inherit pub_methods_class_renderable" id="r_a2103eed2f7f54bca8ba1001907b367a9"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_renderable.html#a2103eed2f7f54bca8ba1001907b367a9">~Renderable</a> ()=default</td></tr>
 <tr class="memitem:aa19d3c7b6144486766d45dbd3d0a08b8 inherit pub_methods_class_renderable" id="r_aa19d3c7b6144486766d45dbd3d0a08b8"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_renderable.html#aa19d3c7b6144486766d45dbd3d0a08b8">canUseDeferredRendering</a> () const</td></tr>
+<tr class="memdesc:aa19d3c7b6144486766d45dbd3d0a08b8 inherit pub_methods_class_renderable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to determine if the object can use deferred rendering.  <br /></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -181,6 +182,7 @@ Public Attributes</h2></td></tr>
 <tr class="memdesc:a839c02e97d141c30f9f1e34275cf9f37"><td class="mdescLeft">&#160;</td><td class="mdescRight">The <a class="el" href="class_core_object.html" title="Represents a 3D object in the scene, including its geometry, material and every interaction with the ...">CoreObject</a> used to render the skybox.  <br /></td></tr>
 <tr class="inherit_header pub_attribs_class_renderable"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pub_attribs_class_renderable')"><span class="dynarrow"><span class="arrowhead closed"></span></span>Public Attributes inherited from <a class="el" href="class_renderable.html">Renderable</a></td></tr>
 <tr class="memitem:a7cb09219e507e1c1395efced124e3b58 inherit pub_attribs_class_renderable" id="r_a7cb09219e507e1c1395efced124e3b58"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_renderable.html#a7cb09219e507e1c1395efced124e3b58">renderDepthOfView</a> = false</td></tr>
+<tr class="memdesc:a7cb09219e507e1c1395efced124e3b58 inherit pub_attribs_class_renderable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Whether the object should be included in depth of field calculations. When true, contributes to blur effects.  <br /></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-friends" class="groupheader"><a id="friends" name="friends"></a>
 Friends</h2></td></tr>
@@ -205,13 +207,13 @@ Example</h2>
 <div class="ttc" id="aclass_skybox_html_a0860e9aa6cbf872f3e37aecc632a66f8"><div class="ttname"><a href="#a0860e9aa6cbf872f3e37aecc632a66f8">Skybox::display</a></div><div class="ttdeci">void display(Window &amp;window)</div><div class="ttdoc">Displays the skybox in the window.</div></div>
 <div class="ttc" id="aclass_skybox_html_a1fa2b711ffc73c6cadaaf0073f7a31be"><div class="ttname"><a href="#a1fa2b711ffc73c6cadaaf0073f7a31be">Skybox::show</a></div><div class="ttdeci">void show()</div><div class="ttdoc">Shows the skybox in the window.</div></div>
 <div class="ttc" id="aclass_skybox_html_a2441bc54c326105f9c7e4331e3ec643d"><div class="ttname"><a href="#a2441bc54c326105f9c7e4331e3ec643d">Skybox::hide</a></div><div class="ttdeci">void hide()</div><div class="ttdoc">Hides the skybox from the window.</div></div>
-<div class="ttc" id="aclass_skybox_html_ab91d72f29e949ef124b953be43ac4713"><div class="ttname"><a href="#ab91d72f29e949ef124b953be43ac4713">Skybox::cubemap</a></div><div class="ttdeci">Cubemap cubemap</div><div class="ttdoc">The cubemap texture used for the skybox.</div><div class="ttdef"><b>Definition</b> <a href="texture_8h_source.html#l00412">texture.h:412</a></div></div>
+<div class="ttc" id="aclass_skybox_html_ab91d72f29e949ef124b953be43ac4713"><div class="ttname"><a href="#ab91d72f29e949ef124b953be43ac4713">Skybox::cubemap</a></div><div class="ttdeci">Cubemap cubemap</div><div class="ttdoc">The cubemap texture used for the skybox.</div><div class="ttdef"><b>Definition</b> <a href="texture_8h_source.html#l00459">texture.h:459</a></div></div>
 <div class="ttc" id="aclass_skybox_html_af90dc48c708b4682a4ef5e4f171c8f38"><div class="ttname"><a href="#af90dc48c708b4682a4ef5e4f171c8f38">Skybox::Skybox</a></div><div class="ttdeci">Skybox()=default</div></div>
 <div class="ttc" id="aclass_workspace_html_a8588fb898bffea4777ceffab7c2c7795"><div class="ttname"><a href="class_workspace.html#a8588fb898bffea4777ceffab7c2c7795">Workspace::get</a></div><div class="ttdeci">static Workspace &amp; get()</div><div class="ttdef"><b>Definition</b> <a href="workspace_8h_source.html#l00076">workspace.h:76</a></div></div>
 <div class="ttc" id="astruct_cubemap_html"><div class="ttname"><a href="struct_cubemap.html">Cubemap</a></div><div class="ttdoc">Structure that holds the data for a cubemap texture.</div><div class="ttdef"><b>Definition</b> <a href="texture_8h_source.html#l00233">texture.h:233</a></div></div>
 <div class="ttc" id="astruct_cubemap_html_ae5986bc2dbf885ead71ce672f7dd4137"><div class="ttname"><a href="struct_cubemap.html#ae5986bc2dbf885ead71ce672f7dd4137">Cubemap::fromResourceGroup</a></div><div class="ttdeci">static Cubemap fromResourceGroup(ResourceGroup &amp;resourceGroup)</div><div class="ttdoc">Creates a cubemap from a resource group.</div></div>
 </div><!-- fragment --> 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00404">404</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00451">451</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="af90dc48c708b4682a4ef5e4f171c8f38" name="af90dc48c708b4682a4ef5e4f171c8f38"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#af90dc48c708b4682a4ef5e4f171c8f38">&#9670;&#160;</a></span>Skybox()</h2>
@@ -262,7 +264,7 @@ Example</h2>
   </dd>
 </dl>
 
-<p class="reference">References <a class="el" href="texture_8h_source.html#l00442">Window</a>.</p>
+<p class="reference">References <a class="el" href="texture_8h_source.html#l00489">Window</a>.</p>
 
 </div>
 </div>
@@ -430,9 +432,9 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00442">442</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00489">489</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 
-<p class="reference">References <a class="el" href="texture_8h_source.html#l00442">Window</a>.</p>
+<p class="reference">References <a class="el" href="texture_8h_source.html#l00489">Window</a>.</p>
 
 </div>
 </div>
@@ -451,7 +453,7 @@ Example</h2>
 
 <p>The cubemap texture used for the skybox. </p>
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00412">412</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00459">459</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 
 </div>
 </div>
@@ -469,7 +471,7 @@ Example</h2>
 
 <p>The <a class="el" href="class_core_object.html" title="Represents a 3D object in the scene, including its geometry, material and every interaction with the ...">CoreObject</a> used to render the skybox. </p>
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00418">418</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00465">465</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 
 </div>
 </div>

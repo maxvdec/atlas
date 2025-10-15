@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 2</span>
    </div>
   </td>
  </tr>
@@ -141,7 +141,7 @@ Inheritance diagram for GameObject:</div>
 <area href="class_particle_emitter.html" title="Class representing a particle emitter in the game. It emits and manages particles." alt="ParticleEmitter" shape="rect" coords="357,112,466,136"/>
 <area href="class_u_i_object.html" title="A UIObject is a GameObject that is used for creating user interface elements." alt="UIObject" shape="rect" coords="476,112,585,136"/>
 <area href="class_text.html" title="Represents a text object in the game world. It allows rendering of text with a specific font,..." alt="Text" shape="rect" coords="416,168,525,192"/>
-<area href="class_u_i_view.html" title="A conjunction of UI elements that share the same view and projection." alt="UIView" shape="rect" coords="535,168,644,192"/>
+<area href="class_u_i_view.html" title="A conjunction of UI elements that share the same view and projection matrices. Acts as a container fo..." alt="UIView" shape="rect" coords="535,168,644,192"/>
   </map>
 </div></div>
 <table class="memberdecls">
@@ -210,6 +210,7 @@ requires std::is_base_of_v&lt;<a class="el" href="class_component.html">Componen
 <tr class="memdesc:a54a97abc4b6fe3280505da3b587cba98 inherit pub_methods_class_renderable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to determine if the object can cast shadows. Can be overridden by derived classes.  <br /></td></tr>
 <tr class="memitem:a2103eed2f7f54bca8ba1001907b367a9 inherit pub_methods_class_renderable" id="r_a2103eed2f7f54bca8ba1001907b367a9"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_renderable.html#a2103eed2f7f54bca8ba1001907b367a9">~Renderable</a> ()=default</td></tr>
 <tr class="memitem:aa19d3c7b6144486766d45dbd3d0a08b8 inherit pub_methods_class_renderable" id="r_aa19d3c7b6144486766d45dbd3d0a08b8"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_renderable.html#aa19d3c7b6144486766d45dbd3d0a08b8">canUseDeferredRendering</a> () const</td></tr>
+<tr class="memdesc:aa19d3c7b6144486766d45dbd3d0a08b8 inherit pub_methods_class_renderable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to determine if the object can use deferred rendering.  <br /></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -217,6 +218,7 @@ Public Attributes</h2></td></tr>
 <tr class="memdesc:af69e678688bfef2c0bba4aa78085c8a8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets the physics body associated with the object.  <br /></td></tr>
 <tr class="inherit_header pub_attribs_class_renderable"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pub_attribs_class_renderable')"><span class="dynarrow"><span class="arrowhead closed"></span></span>Public Attributes inherited from <a class="el" href="class_renderable.html">Renderable</a></td></tr>
 <tr class="memitem:a7cb09219e507e1c1395efced124e3b58 inherit pub_attribs_class_renderable" id="r_a7cb09219e507e1c1395efced124e3b58"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_renderable.html#a7cb09219e507e1c1395efced124e3b58">renderDepthOfView</a> = false</td></tr>
+<tr class="memdesc:a7cb09219e507e1c1395efced124e3b58 inherit pub_attribs_class_renderable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Whether the object should be included in depth of field calculations. When true, contributes to blur effects.  <br /></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pro-attribs" class="groupheader"><a id="pro-attribs" name="pro-attribs"></a>
 Protected Attributes</h2></td></tr>

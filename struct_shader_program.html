@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 2</span>
    </div>
   </td>
  </tr>
@@ -163,6 +163,7 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:ad323a4a6510790ed89c14665b8b6a7a2" id="r_ad323a4a6510790ed89c14665b8b6a7a2"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_fragment_shader.html">FragmentShader</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad323a4a6510790ed89c14665b8b6a7a2">fragmentShader</a></td></tr>
 <tr class="memdesc:ad323a4a6510790ed89c14665b8b6a7a2"><td class="mdescLeft">&#160;</td><td class="mdescRight">The fragment shader component of the shader program.  <br /></td></tr>
 <tr class="memitem:add4b24f760dce3ea09aa58b3ef4fe34c" id="r_add4b24f760dce3ea09aa58b3ef4fe34c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_geometry_shader.html">GeometryShader</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#add4b24f760dce3ea09aa58b3ef4fe34c">geometryShader</a></td></tr>
+<tr class="memdesc:add4b24f760dce3ea09aa58b3ef4fe34c"><td class="mdescLeft">&#160;</td><td class="mdescRight">The geometry shader component of the shader program (optional).  <br /></td></tr>
 <tr class="memitem:ad9211f0d2de370252bec4a1f01e39b4a" id="r_ad9211f0d2de370252bec4a1f01e39b4a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="units_8h.html#a5c9d258201f281b8ad0fb4385b7ef668">Id</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad9211f0d2de370252bec4a1f01e39b4a">programId</a></td></tr>
 <tr class="memdesc:ad9211f0d2de370252bec4a1f01e39b4a"><td class="mdescLeft">&#160;</td><td class="mdescRight">The OpenGL ID of the linked shader program.  <br /></td></tr>
 <tr class="memitem:a3d6198b12f2a30d592c85fb521690764" id="r_a3d6198b12f2a30d592c85fb521690764"><td class="memItemLeft" align="right" valign="top">std::vector&lt; uint32_t &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a3d6198b12f2a30d592c85fb521690764">desiredAttributes</a></td></tr>
@@ -173,11 +174,12 @@ Public Attributes</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 id="header-pub-static-attribs" class="groupheader"><a id="pub-static-attribs" name="pub-static-attribs"></a>
 Static Public Attributes</h2></td></tr>
 <tr class="memitem:a6ad95eb68ff91c4b78c799f093fd04eb" id="r_a6ad95eb68ff91c4b78c799f093fd04eb"><td class="memItemLeft" align="right" valign="top">static std::map&lt; std::pair&lt; <a class="el" href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82">AtlasVertexShader</a>, <a class="el" href="shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0">AtlasFragmentShader</a> &gt;, <a class="el" href="struct_shader_program.html">ShaderProgram</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a6ad95eb68ff91c4b78c799f093fd04eb">shaderCache</a></td></tr>
+<tr class="memdesc:a6ad95eb68ff91c4b78c799f093fd04eb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Static cache of compiled shader programs to avoid recompilation.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Structure representing a complete shader program, consisting of a vertex shader and a fragment shader. </p>
 
-<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00352">352</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00432">432</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
 <a id="a4c3bfd9a2f79df63282b58096ce986f3" name="a4c3bfd9a2f79df63282b58096ce986f3"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a4c3bfd9a2f79df63282b58096ce986f3">&#9670;&#160;</a></span>compile()</h2>
@@ -526,7 +528,7 @@ Static Public Attributes</h2></td></tr>
 
 <p>The capabilities of the shader program. Given by the union of the vertex and fragment shader capabilities. </p>
 
-<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00412">412</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00500">500</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
 
 </div>
 </div>
@@ -544,7 +546,7 @@ Static Public Attributes</h2></td></tr>
 
 <p>The desired vertex attributes for the shader program. </p>
 
-<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00405">405</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00493">493</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
 
 </div>
 </div>
@@ -562,7 +564,7 @@ Static Public Attributes</h2></td></tr>
 
 <p>The fragment shader component of the shader program. </p>
 
-<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00362">362</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00442">442</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
 
 </div>
 </div>
@@ -578,7 +580,9 @@ Static Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00364">364</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
+<p>The geometry shader component of the shader program (optional). </p>
+
+<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00448">448</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
 
 </div>
 </div>
@@ -596,7 +600,7 @@ Static Public Attributes</h2></td></tr>
 
 <p>The OpenGL ID of the linked shader program. </p>
 
-<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00399">399</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00487">487</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
 
 </div>
 </div>
@@ -620,7 +624,9 @@ Static Public Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00368">368</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
+<p>Static cache of compiled shader programs to avoid recompilation. </p>
+
+<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00456">456</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
 
 </div>
 </div>
@@ -638,7 +644,7 @@ Static Public Attributes</h2></td></tr>
 
 <p>The vertex shader component of the shader program. </p>
 
-<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00357">357</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00437">437</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
 
 </div>
 </div>

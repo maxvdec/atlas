@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 2</span>
    </div>
   </td>
  </tr>
@@ -134,7 +134,7 @@ Inheritance diagram for UIObject:</div>
 <area href="class_game_object.html" title="Base class for all Game Objects. It extends from Renderable and it provides common functionality for ..." alt="GameObject" shape="rect" coords="45,56,126,80"/>
 <area href="class_renderable.html" title="An abstract base class representing any object that can be rendered in a Window. Contains virtual met..." alt="Renderable" shape="rect" coords="45,0,126,24"/>
 <area href="class_text.html" title="Represents a text object in the game world. It allows rendering of text with a specific font,..." alt="Text" shape="rect" coords="0,168,81,192"/>
-<area href="class_u_i_view.html" title="A conjunction of UI elements that share the same view and projection." alt="UIView" shape="rect" coords="91,168,172,192"/>
+<area href="class_u_i_view.html" title="A conjunction of UI elements that share the same view and projection matrices. Acts as a container fo..." alt="UIView" shape="rect" coords="91,168,172,192"/>
   </map>
 </div></div>
 <table class="memberdecls">
@@ -204,11 +204,13 @@ requires std::is_base_of_v&lt;<a class="el" href="class_component.html">Componen
 <tr class="memdesc:a54a97abc4b6fe3280505da3b587cba98 inherit pub_methods_class_renderable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to determine if the object can cast shadows. Can be overridden by derived classes.  <br /></td></tr>
 <tr class="memitem:a2103eed2f7f54bca8ba1001907b367a9 inherit pub_methods_class_renderable" id="r_a2103eed2f7f54bca8ba1001907b367a9"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_renderable.html#a2103eed2f7f54bca8ba1001907b367a9">~Renderable</a> ()=default</td></tr>
 <tr class="memitem:aa19d3c7b6144486766d45dbd3d0a08b8 inherit pub_methods_class_renderable" id="r_aa19d3c7b6144486766d45dbd3d0a08b8"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_renderable.html#aa19d3c7b6144486766d45dbd3d0a08b8">canUseDeferredRendering</a> () const</td></tr>
+<tr class="memdesc:aa19d3c7b6144486766d45dbd3d0a08b8 inherit pub_methods_class_renderable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to determine if the object can use deferred rendering.  <br /></td></tr>
 <tr class="inherit_header pub_attribs_class_game_object"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pub_attribs_class_game_object')"><span class="dynarrow"><span class="arrowhead closed"></span></span>Public Attributes inherited from <a class="el" href="class_game_object.html">GameObject</a></td></tr>
 <tr class="memitem:af69e678688bfef2c0bba4aa78085c8a8 inherit pub_attribs_class_game_object" id="r_af69e678688bfef2c0bba4aa78085c8a8"><td class="memItemLeft" align="right" valign="top">std::shared_ptr&lt; <a class="el" href="class_body.html">Body</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_game_object.html#af69e678688bfef2c0bba4aa78085c8a8">body</a> = nullptr</td></tr>
 <tr class="memdesc:af69e678688bfef2c0bba4aa78085c8a8 inherit pub_attribs_class_game_object"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets the physics body associated with the object.  <br /></td></tr>
 <tr class="inherit_header pub_attribs_class_renderable"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pub_attribs_class_renderable')"><span class="dynarrow"><span class="arrowhead closed"></span></span>Public Attributes inherited from <a class="el" href="class_renderable.html">Renderable</a></td></tr>
 <tr class="memitem:a7cb09219e507e1c1395efced124e3b58 inherit pub_attribs_class_renderable" id="r_a7cb09219e507e1c1395efced124e3b58"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_renderable.html#a7cb09219e507e1c1395efced124e3b58">renderDepthOfView</a> = false</td></tr>
+<tr class="memdesc:a7cb09219e507e1c1395efced124e3b58 inherit pub_attribs_class_renderable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Whether the object should be included in depth of field calculations. When true, contributes to blur effects.  <br /></td></tr>
 <tr class="inherit_header pro_attribs_class_game_object"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pro_attribs_class_game_object')"><span class="dynarrow"><span class="arrowhead closed"></span></span>Protected Attributes inherited from <a class="el" href="class_game_object.html">GameObject</a></td></tr>
 <tr class="memitem:a545e4ed29df0e16304d46c73404c0ce6 inherit pro_attribs_class_game_object" id="r_a545e4ed29df0e16304d46c73404c0ce6"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::shared_ptr&lt; <a class="el" href="class_component.html">Component</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_game_object.html#a545e4ed29df0e16304d46c73404c0ce6">components</a></td></tr>
 </table>

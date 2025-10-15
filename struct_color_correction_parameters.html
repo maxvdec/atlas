@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 2</span>
    </div>
   </td>
  </tr>
@@ -122,20 +122,30 @@ $(function(){initNavTree('struct_color_correction_parameters.html','','struct_co
 </div><!--header-->
 <div class="contents">
 
+<p>Structure containing parameters for color correction post-processing. Allows fine-tuning of exposure, contrast, saturation, gamma, temperature, and tint.  
+ <a href="#details">More...</a></p>
+
 <p><code>#include &lt;<a class="el" href="atlas_2effect_8h_source.html">effect.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a0414e679ba62d139f6893f9751ab15b1" id="r_a0414e679ba62d139f6893f9751ab15b1"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0414e679ba62d139f6893f9751ab15b1">exposure</a> = 0.0</td></tr>
+<tr class="memdesc:a0414e679ba62d139f6893f9751ab15b1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Exposure adjustment. Positive values brighten, negative values darken.  <br /></td></tr>
 <tr class="memitem:a3b4da452ac1c1f0a52d78b93c795e387" id="r_a3b4da452ac1c1f0a52d78b93c795e387"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a3b4da452ac1c1f0a52d78b93c795e387">contrast</a> = 1.0</td></tr>
+<tr class="memdesc:a3b4da452ac1c1f0a52d78b93c795e387"><td class="mdescLeft">&#160;</td><td class="mdescRight">Contrast adjustment. Values &gt; 1.0 increase contrast, &lt; 1.0 decrease it.  <br /></td></tr>
 <tr class="memitem:aeb28bdbe89022c10e4f955c8c3a32d40" id="r_aeb28bdbe89022c10e4f955c8c3a32d40"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aeb28bdbe89022c10e4f955c8c3a32d40">saturation</a> = 1.0</td></tr>
+<tr class="memdesc:aeb28bdbe89022c10e4f955c8c3a32d40"><td class="mdescLeft">&#160;</td><td class="mdescRight">Saturation adjustment. 1.0 is normal, 0.0 is grayscale, &gt; 1.0 increases saturation.  <br /></td></tr>
 <tr class="memitem:aae8828aa969d1156860817fa53cb5c06" id="r_aae8828aa969d1156860817fa53cb5c06"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aae8828aa969d1156860817fa53cb5c06">gamma</a> = 1.0</td></tr>
+<tr class="memdesc:aae8828aa969d1156860817fa53cb5c06"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gamma correction value. Typically around 1.0 to 2.2.  <br /></td></tr>
 <tr class="memitem:a8d94b3c2cfa56170a68e054926233914" id="r_a8d94b3c2cfa56170a68e054926233914"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8d94b3c2cfa56170a68e054926233914">temperature</a> = 0.0</td></tr>
+<tr class="memdesc:a8d94b3c2cfa56170a68e054926233914"><td class="mdescLeft">&#160;</td><td class="mdescRight">Temperature adjustment. Positive values add warmth (red), negative values add coolness (blue).  <br /></td></tr>
 <tr class="memitem:a2824e7042554af5f1e948980f7201b04" id="r_a2824e7042554af5f1e948980f7201b04"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2824e7042554af5f1e948980f7201b04">tint</a> = 0.0</td></tr>
+<tr class="memdesc:a2824e7042554af5f1e948980f7201b04"><td class="mdescLeft">&#160;</td><td class="mdescRight">Tint adjustment. Positive values add green, negative values add magenta.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
-<div class="textblock">
-<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00077">77</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
+<div class="textblock"><p>Structure containing parameters for color correction post-processing. Allows fine-tuning of exposure, contrast, saturation, gamma, temperature, and tint. </p>
+
+<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00216">216</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
 </div><a name="doc-variable-members" id="doc-variable-members"></a><h2 id="header-doc-variable-members" class="groupheader">Member Data Documentation</h2>
 <a id="a3b4da452ac1c1f0a52d78b93c795e387" name="a3b4da452ac1c1f0a52d78b93c795e387"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a3b4da452ac1c1f0a52d78b93c795e387">&#9670;&#160;</a></span>contrast</h2>
@@ -149,7 +159,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00079">79</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
+<p>Contrast adjustment. Values &gt; 1.0 increase contrast, &lt; 1.0 decrease it. </p>
+
+<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00228">228</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
 
 </div>
 </div>
@@ -165,7 +177,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00078">78</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
+<p>Exposure adjustment. Positive values brighten, negative values darken. </p>
+
+<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00222">222</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
 
 </div>
 </div>
@@ -181,7 +195,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00081">81</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
+<p>Gamma correction value. Typically around 1.0 to 2.2. </p>
+
+<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00239">239</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
 
 </div>
 </div>
@@ -197,7 +213,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00080">80</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
+<p>Saturation adjustment. 1.0 is normal, 0.0 is grayscale, &gt; 1.0 increases saturation. </p>
+
+<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00234">234</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
 
 </div>
 </div>
@@ -213,7 +231,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00082">82</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
+<p>Temperature adjustment. Positive values add warmth (red), negative values add coolness (blue). </p>
+
+<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00245">245</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
 
 </div>
 </div>
@@ -229,7 +249,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00083">83</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
+<p>Tint adjustment. Positive values add green, negative values add magenta. </p>
+
+<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00251">251</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
 
 </div>
 </div>

@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 2</span>
    </div>
   </td>
  </tr>
@@ -147,17 +147,19 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a42368e7fde628f9e59896fdcd8ff75da" id="r_a42368e7fde628f9e59896fdcd8ff75da"><td class="memItemLeft" align="right" valign="top">const char *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a42368e7fde628f9e59896fdcd8ff75da">source</a></td></tr>
 <tr class="memdesc:a42368e7fde628f9e59896fdcd8ff75da"><td class="mdescLeft">&#160;</td><td class="mdescRight">The source code of the fragment shader.  <br /></td></tr>
 <tr class="memitem:ac724be9e480e03a12a16b4eb4bfe5397" id="r_ac724be9e480e03a12a16b4eb4bfe5397"><td class="memItemLeft" align="right" valign="top">std::optional&lt; <a class="el" href="shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0">AtlasFragmentShader</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac724be9e480e03a12a16b4eb4bfe5397">fromDefaultShaderType</a> = std::nullopt</td></tr>
+<tr class="memdesc:ac724be9e480e03a12a16b4eb4bfe5397"><td class="mdescLeft">&#160;</td><td class="mdescRight">If this shader was created from a default shader, stores which type it was.  <br /></td></tr>
 <tr class="memitem:a01003b235b9335d2a79a3a314591b142" id="r_a01003b235b9335d2a79a3a314591b142"><td class="memItemLeft" align="right" valign="top"><a class="el" href="units_8h.html#a5c9d258201f281b8ad0fb4385b7ef668">Id</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a01003b235b9335d2a79a3a314591b142">shaderId</a></td></tr>
 <tr class="memdesc:a01003b235b9335d2a79a3a314591b142"><td class="mdescLeft">&#160;</td><td class="mdescRight">The desired vertex attributes for the shader.  <br /></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-static-attribs" class="groupheader"><a id="pub-static-attribs" name="pub-static-attribs"></a>
 Static Public Attributes</h2></td></tr>
 <tr class="memitem:aa3adfe8e47d2e79ac37f01fa28a515ec" id="r_aa3adfe8e47d2e79ac37f01fa28a515ec"><td class="memItemLeft" align="right" valign="top">static std::map&lt; <a class="el" href="shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0">AtlasFragmentShader</a>, <a class="el" href="struct_fragment_shader.html">FragmentShader</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa3adfe8e47d2e79ac37f01fa28a515ec">fragmentShaderCache</a></td></tr>
+<tr class="memdesc:aa3adfe8e47d2e79ac37f01fa28a515ec"><td class="mdescLeft">&#160;</td><td class="mdescRight">Static cache of compiled fragment shaders to avoid recompilation.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Structure representing a fragment shader, including its source code and its OpenGL ID. </p>
 
-<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00229">229</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00292">292</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
 <a id="a8fb7912f2095245a0d01d73f7e492d28" name="a8fb7912f2095245a0d01d73f7e492d28"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a8fb7912f2095245a0d01d73f7e492d28">&#9670;&#160;</a></span>compile()</h2>
@@ -244,7 +246,7 @@ Static Public Attributes</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>The created <a class="el" href="struct_fragment_shader.html" title="Structure representing a fragment shader, including its source code and its OpenGL ID.">FragmentShader</a> instance. </dd></dl>
 
-<p class="reference">References <a class="el" href="shader_8h_source.html#l00234">source</a>.</p>
+<p class="reference">References <a class="el" href="shader_8h_source.html#l00297">source</a>.</p>
 
 </div>
 </div>
@@ -269,7 +271,9 @@ Static Public Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00236">236</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
+<p>Static cache of compiled fragment shaders to avoid recompilation. </p>
+
+<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00303">303</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
 
 </div>
 </div>
@@ -285,7 +289,9 @@ Static Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00238">238</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
+<p>If this shader was created from a default shader, stores which type it was. </p>
+
+<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00310">310</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
 
 </div>
 </div>
@@ -303,7 +309,7 @@ Static Public Attributes</h2></td></tr>
 
 <p>The desired vertex attributes for the shader. </p>
 
-<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00264">264</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00336">336</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
 
 </div>
 </div>
@@ -321,7 +327,7 @@ Static Public Attributes</h2></td></tr>
 
 <p>The source code of the fragment shader. </p>
 
-<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00234">234</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00297">297</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
 
 </div>
 </div>

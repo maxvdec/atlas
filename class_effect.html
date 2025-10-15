@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 2</span>
    </div>
   </td>
  </tr>
@@ -123,6 +123,9 @@ $(function(){initNavTree('class_effect.html','','class_effect-members'); });
 </div><!--header-->
 <div class="contents">
 
+<p>Base class for all post-processing effects that can be applied to a render target. Effects are applied via shader uniforms.  
+ <a href="#details">More...</a></p>
+
 <p><code>#include &lt;<a class="el" href="atlas_2effect_8h_source.html">effect.h</a>&gt;</code></p>
 <div class="dynheader">
 Inheritance diagram for Effect:</div>
@@ -130,27 +133,31 @@ Inheritance diagram for Effect:</div>
  <div class="center">
   <img src="class_effect.png" usemap="#Effect_map" alt=""/>
   <map id="Effect_map" name="Effect_map">
-<area href="class_blur.html" alt="Blur" shape="rect" coords="0,56,103,80"/>
-<area href="class_color_correction.html" alt="ColorCorrection" shape="rect" coords="113,56,216,80"/>
-<area href="class_edge_detection.html" alt="EdgeDetection" shape="rect" coords="226,56,329,80"/>
-<area href="class_grayscale.html" alt="Grayscale" shape="rect" coords="339,56,442,80"/>
-<area href="class_inversion.html" alt="Inversion" shape="rect" coords="452,56,555,80"/>
-<area href="class_sharpen.html" alt="Sharpen" shape="rect" coords="565,56,668,80"/>
+<area href="class_blur.html" title="Post-processing effect that applies a Gaussian blur to the rendered image. The blur magnitude can be ..." alt="Blur" shape="rect" coords="0,56,103,80"/>
+<area href="class_color_correction.html" title="Post-processing effect that applies comprehensive color correction to the rendered image,..." alt="ColorCorrection" shape="rect" coords="113,56,216,80"/>
+<area href="class_edge_detection.html" title="Post-processing effect that detects and highlights edges in the rendered image using an edge detectio..." alt="EdgeDetection" shape="rect" coords="226,56,329,80"/>
+<area href="class_grayscale.html" title="Post-processing effect that converts the rendered image to grayscale by calculating luminance." alt="Grayscale" shape="rect" coords="339,56,442,80"/>
+<area href="class_inversion.html" title="Post-processing effect that inverts all colors in the rendered image. White becomes black,..." alt="Inversion" shape="rect" coords="452,56,555,80"/>
+<area href="class_sharpen.html" title="Post-processing effect that applies a sharpening kernel to enhance edges and details in the rendered ..." alt="Sharpen" shape="rect" coords="565,56,668,80"/>
   </map>
 </div></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:aeda5516439f9e1c0f793cafc7ea6e898" id="r_aeda5516439f9e1c0f793cafc7ea6e898"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aeda5516439f9e1c0f793cafc7ea6e898">Effect</a> (<a class="el" href="atlas_2effect_8h.html#a75cf3454fba9ce206c0c748892dc9867">RenderTargetEffect</a> t)</td></tr>
+<tr class="memdesc:aeda5516439f9e1c0f793cafc7ea6e898"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs a new <a class="el" href="class_effect.html" title="Base class for all post-processing effects that can be applied to a render target....">Effect</a> object.  <br /></td></tr>
 <tr class="memitem:af243986ba49a2e7ea9a3dcd002f7fb63" id="r_af243986ba49a2e7ea9a3dcd002f7fb63"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af243986ba49a2e7ea9a3dcd002f7fb63">applyToProgram</a> (<a class="el" href="struct_shader_program.html">ShaderProgram</a> &amp;program, int index)</td></tr>
+<tr class="memdesc:af243986ba49a2e7ea9a3dcd002f7fb63"><td class="mdescLeft">&#160;</td><td class="mdescRight">Applies the effect's parameters to the shader program.  <br /></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a386f4d915f71aa8e5f177a221b8903da" id="r_a386f4d915f71aa8e5f177a221b8903da"><td class="memItemLeft" align="right" valign="top"><a class="el" href="atlas_2effect_8h.html#a75cf3454fba9ce206c0c748892dc9867">RenderTargetEffect</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a386f4d915f71aa8e5f177a221b8903da">type</a></td></tr>
+<tr class="memdesc:a386f4d915f71aa8e5f177a221b8903da"><td class="mdescLeft">&#160;</td><td class="mdescRight">The type of effect this instance represents.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
-<div class="textblock">
-<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00024">24</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
+<div class="textblock"><p>Base class for all post-processing effects that can be applied to a render target. Effects are applied via shader uniforms. </p>
+
+<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00059">59</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="aeda5516439f9e1c0f793cafc7ea6e898" name="aeda5516439f9e1c0f793cafc7ea6e898"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aeda5516439f9e1c0f793cafc7ea6e898">&#9670;&#160;</a></span>Effect()</h2>
@@ -175,11 +182,19 @@ Public Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00027">27</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   27</span>: <a class="code hl_variable" href="#a386f4d915f71aa8e5f177a221b8903da">type</a>(t) {}</div>
-<div class="ttc" id="aclass_effect_html_a386f4d915f71aa8e5f177a221b8903da"><div class="ttname"><a href="#a386f4d915f71aa8e5f177a221b8903da">Effect::type</a></div><div class="ttdeci">RenderTargetEffect type</div><div class="ttdef"><b>Definition</b> <a href="atlas_2effect_8h_source.html#l00026">effect.h:26</a></div></div>
+<p>Constructs a new <a class="el" href="class_effect.html" title="Base class for all post-processing effects that can be applied to a render target....">Effect</a> object. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">t</td><td>The type of effect. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00071">71</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   71</span>: <a class="code hl_variable" href="#a386f4d915f71aa8e5f177a221b8903da">type</a>(t) {}</div>
+<div class="ttc" id="aclass_effect_html_a386f4d915f71aa8e5f177a221b8903da"><div class="ttname"><a href="#a386f4d915f71aa8e5f177a221b8903da">Effect::type</a></div><div class="ttdeci">RenderTargetEffect type</div><div class="ttdoc">The type of effect this instance represents.</div><div class="ttdef"><b>Definition</b> <a href="atlas_2effect_8h_source.html#l00065">effect.h:65</a></div></div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="atlas_2effect_8h_source.html#l00026">type</a>.</p>
+<p class="reference">References <a class="el" href="atlas_2effect_8h_source.html#l00065">type</a>.</p>
 
 </div>
 </div>
@@ -211,10 +226,19 @@ Public Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
+<p>Applies the effect's parameters to the shader program. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">program</td><td>The shader program to apply the effect to. </td></tr>
+    <tr><td class="paramname">index</td><td>The index of the effect in the effect array. </td></tr>
+  </table>
+  </dd>
+</dl>
+
 <p>Reimplemented in <a class="el" href="class_blur.html#a14bc8c56a9e987bed5b6f5094f3b5fbf">Blur</a>, and <a class="el" href="class_color_correction.html#a4f3ee4341b7750d947d5f7ab7ead32c9">ColorCorrection</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00028">28</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   28</span>{};</div>
+<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00078">78</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   78</span>{};</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -231,7 +255,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00026">26</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
+<p>The type of effect this instance represents. </p>
+
+<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00065">65</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
 
 </div>
 </div>
