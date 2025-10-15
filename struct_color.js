@@ -17,6 +17,7 @@ var struct_color =
     [ "operator+", "struct_color.html#af120872d8445c917e04039f4921279d3", null ],
     [ "operator-", "struct_color.html#a185821340c57a5a560507331052a928d", null ],
     [ "operator/", "struct_color.html#acab1f0be09a8a7fb66285603ef074733", null ],
+    [ "operator==", "struct_color.html#ae4b5d5500c2ee028e3f7d92a4d098ee0", null ],
     [ "orange", "struct_color.html#a090b397b9550904617102f3e9ede5b0d", null ],
     [ "pink", "struct_color.html#ad59827d26560a708b1a5e73488faf050", null ],
     [ "purple", "struct_color.html#aeacba31b803aae6ff36f2c317873c68d", null ],

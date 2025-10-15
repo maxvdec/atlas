@@ -35,6 +35,7 @@ var annotated_dup =
     [ "GameObject", "class_game_object.html", "class_game_object" ],
     [ "GeometryShader", "struct_geometry_shader.html", "struct_geometry_shader" ],
     [ "Grayscale", "class_grayscale.html", "class_grayscale" ],
+    [ "Instance", "struct_instance.html", "struct_instance" ],
     [ "Interactive", "class_interactive.html", "class_interactive" ],
     [ "IntersectionPoint", "struct_intersection_point.html", "struct_intersection_point" ],
     [ "Inversion", "class_inversion.html", "class_inversion" ],

@@ -1,7 +1,5 @@
 var default__shaders_8h =
 [
-    [ "AMBIENT_PARTICLE_FRAG", "default__shaders_8h.html#a4d99d24f679e932c5bdad2ef143dae37", null ],
-    [ "AMBIENT_PARTICLE_VERT", "default__shaders_8h.html#abf125035e9211c1aefc4395a2243e65e", null ],
     [ "COLOR_FRAG", "default__shaders_8h.html#a56686808191d97f1d6a78ed6c8b3ad02", null ],
     [ "COLOR_VERT", "default__shaders_8h.html#abd40d744c94aaf9963332aadd7b06466", null ],
     [ "DEBUG_FRAG", "default__shaders_8h.html#ab61110f9533f7aaccfce61ce7b25da9b", null ],

@@ -37,6 +37,7 @@ var hierarchy =
     [ "Font", "struct_font.html", null ],
     [ "FragmentShader", "struct_fragment_shader.html", null ],
     [ "GeometryShader", "struct_geometry_shader.html", null ],
+    [ "Instance", "struct_instance.html", null ],
     [ "Interactive", "class_interactive.html", null ],
     [ "IntersectionPoint", "struct_intersection_point.html", null ],
     [ "LayoutDescriptor", "struct_layout_descriptor.html", null ],

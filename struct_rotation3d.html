@@ -134,6 +134,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a0c777fe84500e192caef587cd713bacb" id="r_a0c777fe84500e192caef587cd713bacb"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_rotation3d.html">Rotation3d</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0c777fe84500e192caef587cd713bacb">operator+</a> (const <a class="el" href="struct_rotation3d.html">Rotation3d</a> &amp;other) const</td></tr>
 <tr class="memitem:a2d725d24c6fab50ac56fd00ab346a699" id="r_a2d725d24c6fab50ac56fd00ab346a699"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_rotation3d.html">Rotation3d</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2d725d24c6fab50ac56fd00ab346a699">operator-</a> (const <a class="el" href="struct_rotation3d.html">Rotation3d</a> &amp;other) const</td></tr>
 <tr class="memitem:a833b1abd17be756e7f510aad520aee4a" id="r_a833b1abd17be756e7f510aad520aee4a"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_rotation3d.html">Rotation3d</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a833b1abd17be756e7f510aad520aee4a">operator*</a> (double scalar) const</td></tr>
+<tr class="memitem:ad21077424af12ecc4cf371f03379d3be" id="r_ad21077424af12ecc4cf371f03379d3be"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad21077424af12ecc4cf371f03379d3be">operator==</a> (const <a class="el" href="struct_rotation3d.html">Rotation3d</a> &amp;other) const</td></tr>
 <tr class="memitem:aacdd3333663800fc6f91ab7a28e932bd" id="r_aacdd3333663800fc6f91ab7a28e932bd"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_rotation3d.html">Rotation3d</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aacdd3333663800fc6f91ab7a28e932bd">operator/</a> (double scalar) const</td></tr>
 <tr class="memitem:a6d2a0e156488495c916738cb89b0bf49" id="r_a6d2a0e156488495c916738cb89b0bf49"><td class="memItemLeft" align="right" valign="top">glm::vec3&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a6d2a0e156488495c916738cb89b0bf49">toGlm</a> () const</td></tr>
 <tr class="memitem:a8b2e2d882dd836fd5b6b5fa6f494a4f2" id="r_a8b2e2d882dd836fd5b6b5fa6f494a4f2"><td class="memItemLeft" align="right" valign="top">glm::quat&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8b2e2d882dd836fd5b6b5fa6f494a4f2">toGlmQuat</a> () const</td></tr>
@@ -152,7 +153,7 @@ Public Attributes</h2></td></tr>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Structure representing rotation in 3D space using Euler angles. Provides arithmetic operations and conversions to/from GLM quaternions. </p>
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00119">119</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00123">123</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
 <a id="a2f42a660030160c71d076ddbeaa7ff3b" name="a2f42a660030160c71d076ddbeaa7ff3b"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a2f42a660030160c71d076ddbeaa7ff3b">&#9670;&#160;</a></span>fromGlm()</h2>
@@ -177,11 +178,11 @@ Public Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00157">157</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  157</span>                                                         {</div>
-<div class="line"><span class="lineno">  158</span>        <span class="keywordflow">return</span> {<span class="keyword">static_cast&lt;</span><span class="keywordtype">double</span><span class="keyword">&gt;</span>(vec.x), <span class="keyword">static_cast&lt;</span><span class="keywordtype">double</span><span class="keyword">&gt;</span>(vec.y),</div>
-<div class="line"><span class="lineno">  159</span>                <span class="keyword">static_cast&lt;</span><span class="keywordtype">double</span><span class="keyword">&gt;</span>(vec.z)};</div>
-<div class="line"><span class="lineno">  160</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00165">165</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  165</span>                                                         {</div>
+<div class="line"><span class="lineno">  166</span>        <span class="keywordflow">return</span> {<span class="keyword">static_cast&lt;</span><span class="keywordtype">double</span><span class="keyword">&gt;</span>(vec.x), <span class="keyword">static_cast&lt;</span><span class="keywordtype">double</span><span class="keyword">&gt;</span>(vec.y),</div>
+<div class="line"><span class="lineno">  167</span>                <span class="keyword">static_cast&lt;</span><span class="keywordtype">double</span><span class="keyword">&gt;</span>(vec.z)};</div>
+<div class="line"><span class="lineno">  168</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -208,12 +209,12 @@ Public Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00151">151</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  151</span>                                                              {</div>
-<div class="line"><span class="lineno">  152</span>        glm::vec3 euler = glm::degrees(glm::eulerAngles(quat));</div>
-<div class="line"><span class="lineno">  153</span>        <span class="keywordflow">return</span> {<span class="keyword">static_cast&lt;</span><span class="keywordtype">double</span><span class="keyword">&gt;</span>(euler.x), <span class="keyword">static_cast&lt;</span><span class="keywordtype">double</span><span class="keyword">&gt;</span>(euler.y),</div>
-<div class="line"><span class="lineno">  154</span>                <span class="keyword">static_cast&lt;</span><span class="keywordtype">double</span><span class="keyword">&gt;</span>(euler.z)};</div>
-<div class="line"><span class="lineno">  155</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00159">159</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  159</span>                                                              {</div>
+<div class="line"><span class="lineno">  160</span>        glm::vec3 euler = glm::degrees(glm::eulerAngles(quat));</div>
+<div class="line"><span class="lineno">  161</span>        <span class="keywordflow">return</span> {<span class="keyword">static_cast&lt;</span><span class="keywordtype">double</span><span class="keyword">&gt;</span>(euler.x), <span class="keyword">static_cast&lt;</span><span class="keywordtype">double</span><span class="keyword">&gt;</span>(euler.y),</div>
+<div class="line"><span class="lineno">  162</span>                <span class="keyword">static_cast&lt;</span><span class="keywordtype">double</span><span class="keyword">&gt;</span>(euler.z)};</div>
+<div class="line"><span class="lineno">  163</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -240,15 +241,15 @@ Public Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00132">132</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  132</span>                                              {</div>
-<div class="line"><span class="lineno">  133</span>        <span class="keywordflow">return</span> {<a class="code hl_variable" href="#a79034d61a144ac4a3f48000559ce7586">pitch</a> * scalar, <a class="code hl_variable" href="#a5c06ac897552725fef5fb70245b79da6">yaw</a> * scalar, <a class="code hl_variable" href="#a993b23a5ab584cae39120be2f30c534f">roll</a> * scalar};</div>
-<div class="line"><span class="lineno">  134</span>    }</div>
-<div class="ttc" id="astruct_rotation3d_html_a5c06ac897552725fef5fb70245b79da6"><div class="ttname"><a href="#a5c06ac897552725fef5fb70245b79da6">Rotation3d::yaw</a></div><div class="ttdeci">double yaw</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00121">units.h:121</a></div></div>
-<div class="ttc" id="astruct_rotation3d_html_a79034d61a144ac4a3f48000559ce7586"><div class="ttname"><a href="#a79034d61a144ac4a3f48000559ce7586">Rotation3d::pitch</a></div><div class="ttdeci">double pitch</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00120">units.h:120</a></div></div>
-<div class="ttc" id="astruct_rotation3d_html_a993b23a5ab584cae39120be2f30c534f"><div class="ttname"><a href="#a993b23a5ab584cae39120be2f30c534f">Rotation3d::roll</a></div><div class="ttdeci">double roll</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00122">units.h:122</a></div></div>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00136">136</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  136</span>                                              {</div>
+<div class="line"><span class="lineno">  137</span>        <span class="keywordflow">return</span> {<a class="code hl_variable" href="#a79034d61a144ac4a3f48000559ce7586">pitch</a> * scalar, <a class="code hl_variable" href="#a5c06ac897552725fef5fb70245b79da6">yaw</a> * scalar, <a class="code hl_variable" href="#a993b23a5ab584cae39120be2f30c534f">roll</a> * scalar};</div>
+<div class="line"><span class="lineno">  138</span>    }</div>
+<div class="ttc" id="astruct_rotation3d_html_a5c06ac897552725fef5fb70245b79da6"><div class="ttname"><a href="#a5c06ac897552725fef5fb70245b79da6">Rotation3d::yaw</a></div><div class="ttdeci">double yaw</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00125">units.h:125</a></div></div>
+<div class="ttc" id="astruct_rotation3d_html_a79034d61a144ac4a3f48000559ce7586"><div class="ttname"><a href="#a79034d61a144ac4a3f48000559ce7586">Rotation3d::pitch</a></div><div class="ttdeci">double pitch</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00124">units.h:124</a></div></div>
+<div class="ttc" id="astruct_rotation3d_html_a993b23a5ab584cae39120be2f30c534f"><div class="ttname"><a href="#a993b23a5ab584cae39120be2f30c534f">Rotation3d::roll</a></div><div class="ttdeci">double roll</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00126">units.h:126</a></div></div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="units_8h_source.html#l00120">pitch</a>, <a class="el" href="units_8h_source.html#l00122">roll</a>, and <a class="el" href="units_8h_source.html#l00121">yaw</a>.</p>
+<p class="reference">References <a class="el" href="units_8h_source.html#l00124">pitch</a>, <a class="el" href="units_8h_source.html#l00126">roll</a>, and <a class="el" href="units_8h_source.html#l00125">yaw</a>.</p>
 
 </div>
 </div>
@@ -275,12 +276,12 @@ Public Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00124">124</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  124</span>                                                        {</div>
-<div class="line"><span class="lineno">  125</span>        <span class="keywordflow">return</span> {<a class="code hl_variable" href="#a79034d61a144ac4a3f48000559ce7586">pitch</a> + other.<a class="code hl_variable" href="#a79034d61a144ac4a3f48000559ce7586">pitch</a>, <a class="code hl_variable" href="#a5c06ac897552725fef5fb70245b79da6">yaw</a> + other.<a class="code hl_variable" href="#a5c06ac897552725fef5fb70245b79da6">yaw</a>, <a class="code hl_variable" href="#a993b23a5ab584cae39120be2f30c534f">roll</a> + other.<a class="code hl_variable" href="#a993b23a5ab584cae39120be2f30c534f">roll</a>};</div>
-<div class="line"><span class="lineno">  126</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00128">128</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  128</span>                                                        {</div>
+<div class="line"><span class="lineno">  129</span>        <span class="keywordflow">return</span> {<a class="code hl_variable" href="#a79034d61a144ac4a3f48000559ce7586">pitch</a> + other.<a class="code hl_variable" href="#a79034d61a144ac4a3f48000559ce7586">pitch</a>, <a class="code hl_variable" href="#a5c06ac897552725fef5fb70245b79da6">yaw</a> + other.<a class="code hl_variable" href="#a5c06ac897552725fef5fb70245b79da6">yaw</a>, <a class="code hl_variable" href="#a993b23a5ab584cae39120be2f30c534f">roll</a> + other.<a class="code hl_variable" href="#a993b23a5ab584cae39120be2f30c534f">roll</a>};</div>
+<div class="line"><span class="lineno">  130</span>    }</div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="units_8h_source.html#l00120">pitch</a>, <a class="el" href="units_8h_source.html#l00122">roll</a>, and <a class="el" href="units_8h_source.html#l00121">yaw</a>.</p>
+<p class="reference">References <a class="el" href="units_8h_source.html#l00124">pitch</a>, <a class="el" href="units_8h_source.html#l00126">roll</a>, and <a class="el" href="units_8h_source.html#l00125">yaw</a>.</p>
 
 </div>
 </div>
@@ -307,12 +308,12 @@ Public Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00128">128</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  128</span>                                                        {</div>
-<div class="line"><span class="lineno">  129</span>        <span class="keywordflow">return</span> {<a class="code hl_variable" href="#a79034d61a144ac4a3f48000559ce7586">pitch</a> - other.<a class="code hl_variable" href="#a79034d61a144ac4a3f48000559ce7586">pitch</a>, <a class="code hl_variable" href="#a5c06ac897552725fef5fb70245b79da6">yaw</a> - other.<a class="code hl_variable" href="#a5c06ac897552725fef5fb70245b79da6">yaw</a>, <a class="code hl_variable" href="#a993b23a5ab584cae39120be2f30c534f">roll</a> - other.<a class="code hl_variable" href="#a993b23a5ab584cae39120be2f30c534f">roll</a>};</div>
-<div class="line"><span class="lineno">  130</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00132">132</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  132</span>                                                        {</div>
+<div class="line"><span class="lineno">  133</span>        <span class="keywordflow">return</span> {<a class="code hl_variable" href="#a79034d61a144ac4a3f48000559ce7586">pitch</a> - other.<a class="code hl_variable" href="#a79034d61a144ac4a3f48000559ce7586">pitch</a>, <a class="code hl_variable" href="#a5c06ac897552725fef5fb70245b79da6">yaw</a> - other.<a class="code hl_variable" href="#a5c06ac897552725fef5fb70245b79da6">yaw</a>, <a class="code hl_variable" href="#a993b23a5ab584cae39120be2f30c534f">roll</a> - other.<a class="code hl_variable" href="#a993b23a5ab584cae39120be2f30c534f">roll</a>};</div>
+<div class="line"><span class="lineno">  134</span>    }</div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="units_8h_source.html#l00120">pitch</a>, <a class="el" href="units_8h_source.html#l00122">roll</a>, and <a class="el" href="units_8h_source.html#l00121">yaw</a>.</p>
+<p class="reference">References <a class="el" href="units_8h_source.html#l00124">pitch</a>, <a class="el" href="units_8h_source.html#l00126">roll</a>, and <a class="el" href="units_8h_source.html#l00125">yaw</a>.</p>
 
 </div>
 </div>
@@ -339,12 +340,44 @@ Public Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00136">136</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  136</span>                                              {</div>
-<div class="line"><span class="lineno">  137</span>        <span class="keywordflow">return</span> {<a class="code hl_variable" href="#a79034d61a144ac4a3f48000559ce7586">pitch</a> / scalar, <a class="code hl_variable" href="#a5c06ac897552725fef5fb70245b79da6">yaw</a> / scalar, <a class="code hl_variable" href="#a993b23a5ab584cae39120be2f30c534f">roll</a> / scalar};</div>
-<div class="line"><span class="lineno">  138</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00144">144</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  144</span>                                              {</div>
+<div class="line"><span class="lineno">  145</span>        <span class="keywordflow">return</span> {<a class="code hl_variable" href="#a79034d61a144ac4a3f48000559ce7586">pitch</a> / scalar, <a class="code hl_variable" href="#a5c06ac897552725fef5fb70245b79da6">yaw</a> / scalar, <a class="code hl_variable" href="#a993b23a5ab584cae39120be2f30c534f">roll</a> / scalar};</div>
+<div class="line"><span class="lineno">  146</span>    }</div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="units_8h_source.html#l00120">pitch</a>, <a class="el" href="units_8h_source.html#l00122">roll</a>, and <a class="el" href="units_8h_source.html#l00121">yaw</a>.</p>
+<p class="reference">References <a class="el" href="units_8h_source.html#l00124">pitch</a>, <a class="el" href="units_8h_source.html#l00126">roll</a>, and <a class="el" href="units_8h_source.html#l00125">yaw</a>.</p>
+
+</div>
+</div>
+<a id="ad21077424af12ecc4cf371f03379d3be" name="ad21077424af12ecc4cf371f03379d3be"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad21077424af12ecc4cf371f03379d3be">&#9670;&#160;</a></span>operator==()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool Rotation3d::operator== </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="struct_rotation3d.html">Rotation3d</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>other</em></span></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00140">140</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  140</span>                                                   {</div>
+<div class="line"><span class="lineno">  141</span>        <span class="keywordflow">return</span> <a class="code hl_variable" href="#a79034d61a144ac4a3f48000559ce7586">pitch</a> == other.<a class="code hl_variable" href="#a79034d61a144ac4a3f48000559ce7586">pitch</a> &amp;&amp; <a class="code hl_variable" href="#a5c06ac897552725fef5fb70245b79da6">yaw</a> == other.<a class="code hl_variable" href="#a5c06ac897552725fef5fb70245b79da6">yaw</a> &amp;&amp; <a class="code hl_variable" href="#a993b23a5ab584cae39120be2f30c534f">roll</a> == other.<a class="code hl_variable" href="#a993b23a5ab584cae39120be2f30c534f">roll</a>;</div>
+<div class="line"><span class="lineno">  142</span>    }</div>
+</div><!-- fragment -->
+<p class="reference">References <a class="el" href="units_8h_source.html#l00124">pitch</a>, <a class="el" href="units_8h_source.html#l00126">roll</a>, and <a class="el" href="units_8h_source.html#l00125">yaw</a>.</p>
 
 </div>
 </div>
@@ -371,13 +404,13 @@ Public Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00140">140</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  140</span>                                 {</div>
-<div class="line"><span class="lineno">  141</span>        <span class="keywordflow">return</span> glm::vec3(<span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(<a class="code hl_variable" href="#a79034d61a144ac4a3f48000559ce7586">pitch</a>), <span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(<a class="code hl_variable" href="#a5c06ac897552725fef5fb70245b79da6">yaw</a>),</div>
-<div class="line"><span class="lineno">  142</span>                         <span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(<a class="code hl_variable" href="#a993b23a5ab584cae39120be2f30c534f">roll</a>));</div>
-<div class="line"><span class="lineno">  143</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00148">148</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  148</span>                                 {</div>
+<div class="line"><span class="lineno">  149</span>        <span class="keywordflow">return</span> glm::vec3(<span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(<a class="code hl_variable" href="#a79034d61a144ac4a3f48000559ce7586">pitch</a>), <span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(<a class="code hl_variable" href="#a5c06ac897552725fef5fb70245b79da6">yaw</a>),</div>
+<div class="line"><span class="lineno">  150</span>                         <span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(<a class="code hl_variable" href="#a993b23a5ab584cae39120be2f30c534f">roll</a>));</div>
+<div class="line"><span class="lineno">  151</span>    }</div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="units_8h_source.html#l00120">pitch</a>, <a class="el" href="units_8h_source.html#l00122">roll</a>, and <a class="el" href="units_8h_source.html#l00121">yaw</a>.</p>
+<p class="reference">References <a class="el" href="units_8h_source.html#l00124">pitch</a>, <a class="el" href="units_8h_source.html#l00126">roll</a>, and <a class="el" href="units_8h_source.html#l00125">yaw</a>.</p>
 
 </div>
 </div>
@@ -404,15 +437,15 @@ Public Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00145">145</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  145</span>                                     {</div>
-<div class="line"><span class="lineno">  146</span>        glm::vec3 eulerAngles = <a class="code hl_function" href="#a6d2a0e156488495c916738cb89b0bf49">toGlm</a>();</div>
-<div class="line"><span class="lineno">  147</span>        glm::vec3 radians = glm::radians(eulerAngles);</div>
-<div class="line"><span class="lineno">  148</span>        <span class="keywordflow">return</span> glm::quat(radians);</div>
-<div class="line"><span class="lineno">  149</span>    }</div>
-<div class="ttc" id="astruct_rotation3d_html_a6d2a0e156488495c916738cb89b0bf49"><div class="ttname"><a href="#a6d2a0e156488495c916738cb89b0bf49">Rotation3d::toGlm</a></div><div class="ttdeci">glm::vec3 toGlm() const</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00140">units.h:140</a></div></div>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00153">153</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  153</span>                                     {</div>
+<div class="line"><span class="lineno">  154</span>        glm::vec3 eulerAngles = <a class="code hl_function" href="#a6d2a0e156488495c916738cb89b0bf49">toGlm</a>();</div>
+<div class="line"><span class="lineno">  155</span>        glm::vec3 radians = glm::radians(eulerAngles);</div>
+<div class="line"><span class="lineno">  156</span>        <span class="keywordflow">return</span> glm::quat(radians);</div>
+<div class="line"><span class="lineno">  157</span>    }</div>
+<div class="ttc" id="astruct_rotation3d_html_a6d2a0e156488495c916738cb89b0bf49"><div class="ttname"><a href="#a6d2a0e156488495c916738cb89b0bf49">Rotation3d::toGlm</a></div><div class="ttdeci">glm::vec3 toGlm() const</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00148">units.h:148</a></div></div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="units_8h_source.html#l00140">toGlm()</a>.</p>
+<p class="reference">References <a class="el" href="units_8h_source.html#l00148">toGlm()</a>.</p>
 
 </div>
 </div>
@@ -429,7 +462,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00120">120</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00124">124</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
 
 </div>
 </div>
@@ -445,7 +478,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00122">122</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00126">126</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
 
 </div>
 </div>
@@ -461,7 +494,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00121">121</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00125">125</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
 
 </div>
 </div>

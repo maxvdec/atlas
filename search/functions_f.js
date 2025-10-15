@@ -14,6 +14,6 @@ var searchData=
   ['resolve_11',['resolve',['../class_render_target.html#a1ef0cea2d52d86d72bf8be6d44cf1497',1,'RenderTarget']]],
   ['resolvecontact_12',['resolveContact',['../class_body.html#abb1d67c280df44b00fe0287b95dce04f',1,'Body']]],
   ['reverb_13',['Reverb',['../class_reverb.html#a765b925557df7e43bf5ed275fc6950d1',1,'Reverb']]],
-  ['rotate_14',['rotate',['../class_game_object.html#a80eb49c1d0084c82e944ff254532278b',1,'GameObject::rotate()'],['../class_compound_object.html#a4210275b72af87578ac4f7fd900906cc',1,'CompoundObject::rotate()'],['../class_core_object.html#a983e3a31e6bc75c91faee51758702dc3',1,'CoreObject::rotate()']]],
+  ['rotate_14',['rotate',['../class_game_object.html#a80eb49c1d0084c82e944ff254532278b',1,'GameObject::rotate()'],['../class_compound_object.html#a4210275b72af87578ac4f7fd900906cc',1,'CompoundObject::rotate()'],['../struct_instance.html#a8090e4ba5483edf03271e57b7afcb612',1,'Instance::rotate()'],['../class_core_object.html#a983e3a31e6bc75c91faee51758702dc3',1,'CoreObject::rotate()']]],
   ['run_15',['run',['../class_window.html#ae137ec42ddc87d666d49661484410091',1,'Window']]]
 ];

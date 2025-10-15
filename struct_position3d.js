@@ -10,6 +10,7 @@ var struct_position3d =
     [ "operator-", "struct_position3d.html#ae0c5070d443bf148ba63f0c72e36a98e", null ],
     [ "operator-=", "struct_position3d.html#a2cbebaca549207396207becf4c73f6df", null ],
     [ "operator/", "struct_position3d.html#aad1d6d7a1bc4628ddf0db9aac20e1457", null ],
+    [ "operator==", "struct_position3d.html#a937cdb26c6267ec268a520433b466fad", null ],
     [ "toGlm", "struct_position3d.html#a9c6d05eb7dd87f5072bc3a1f6ebc29ba", null ],
     [ "operator<<", "struct_position3d.html#aa0911af2c4f16cbad898ec9e50bed990", null ],
     [ "x", "struct_position3d.html#af899929e630441ac87e42eeb367bc090", null ],

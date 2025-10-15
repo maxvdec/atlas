@@ -13,7 +13,7 @@ var searchData=
   ['updatecomponent_10',['updateComponent',['../class_trait_component.html#a5dcb86c60e6c21af3bc0a2eabde32e65',1,'TraitComponent']]],
   ['updatedebugobjectrotation_11',['updateDebugObjectRotation',['../struct_spotlight.html#a01295926427f5cdf2dd1bac3cf018972',1,'Spotlight']]],
   ['updatelook_12',['updateLook',['../class_camera.html#af505546c6d360a4af80c2bd14eeb1847',1,'Camera']]],
-  ['updatemodelmatrix_13',['updateModelMatrix',['../class_core_object.html#a0fb3920e11ed1f0c7989541eb320f536',1,'CoreObject']]],
+  ['updatemodelmatrix_13',['updateModelMatrix',['../struct_instance.html#ad63286948780a90c4e87fc86642c63e1',1,'Instance::updateModelMatrix()'],['../class_core_object.html#a0fb3920e11ed1f0c7989541eb320f536',1,'CoreObject::updateModelMatrix()']]],
   ['updateobjects_14',['updateObjects',['../class_compound_object.html#acf1f71aaebd2b73fa8da5e586d214484',1,'CompoundObject']]],
   ['updatephysics_15',['updatePhysics',['../class_body.html#ae432a86b5bf37eb0d761c5d4451fc373',1,'Body']]],
   ['updatevertices_16',['updateVertices',['../class_core_object.html#a9de6dbb8dc1d791fcadc39bae6696eba',1,'CoreObject']]],

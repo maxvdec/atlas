@@ -136,6 +136,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ae0c5070d443bf148ba63f0c72e36a98e" id="r_ae0c5070d443bf148ba63f0c72e36a98e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_position3d.html">Position3d</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae0c5070d443bf148ba63f0c72e36a98e">operator-</a> (const <a class="el" href="struct_position3d.html">Position3d</a> &amp;other) const</td></tr>
 <tr class="memitem:a219e5d9ff1a03aefd50d97725e566ede" id="r_a219e5d9ff1a03aefd50d97725e566ede"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_position3d.html">Position3d</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a219e5d9ff1a03aefd50d97725e566ede">operator*</a> (double scalar) const</td></tr>
 <tr class="memitem:aad1d6d7a1bc4628ddf0db9aac20e1457" id="r_aad1d6d7a1bc4628ddf0db9aac20e1457"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_position3d.html">Position3d</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aad1d6d7a1bc4628ddf0db9aac20e1457">operator/</a> (double scalar) const</td></tr>
+<tr class="memitem:a937cdb26c6267ec268a520433b466fad" id="r_a937cdb26c6267ec268a520433b466fad"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a937cdb26c6267ec268a520433b466fad">operator==</a> (const <a class="el" href="struct_position3d.html">Position3d</a> &amp;other) const</td></tr>
 <tr class="memitem:a9c6d05eb7dd87f5072bc3a1f6ebc29ba" id="r_a9c6d05eb7dd87f5072bc3a1f6ebc29ba"><td class="memItemLeft" align="right" valign="top">glm::vec3&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9c6d05eb7dd87f5072bc3a1f6ebc29ba">toGlm</a> () const</td></tr>
 <tr class="memitem:a5a60de8c9d2313c8086fbae18f4430a1" id="r_a5a60de8c9d2313c8086fbae18f4430a1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_position3d.html">Position3d</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5a60de8c9d2313c8086fbae18f4430a1">operator+</a> (const glm::vec3 &amp;vec) const</td></tr>
 <tr class="memitem:aa30da53132eff02ef812f36cd33d1e2f" id="r_aa30da53132eff02ef812f36cd33d1e2f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_position3d.html">Position3d</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa30da53132eff02ef812f36cd33d1e2f">operator-</a> (const glm::vec3 &amp;vec) const</td></tr>
@@ -185,11 +186,11 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00076">76</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   76</span>                                                         {</div>
-<div class="line"><span class="lineno">   77</span>        <span class="keywordflow">return</span> {<span class="keyword">static_cast&lt;</span><span class="keywordtype">double</span><span class="keyword">&gt;</span>(vec.x), <span class="keyword">static_cast&lt;</span><span class="keywordtype">double</span><span class="keyword">&gt;</span>(vec.y),</div>
-<div class="line"><span class="lineno">   78</span>                <span class="keyword">static_cast&lt;</span><span class="keywordtype">double</span><span class="keyword">&gt;</span>(vec.z)};</div>
-<div class="line"><span class="lineno">   79</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00080">80</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   80</span>                                                         {</div>
+<div class="line"><span class="lineno">   81</span>        <span class="keywordflow">return</span> {<span class="keyword">static_cast&lt;</span><span class="keywordtype">double</span><span class="keyword">&gt;</span>(vec.x), <span class="keyword">static_cast&lt;</span><span class="keywordtype">double</span><span class="keyword">&gt;</span>(vec.y),</div>
+<div class="line"><span class="lineno">   82</span>                <span class="keyword">static_cast&lt;</span><span class="keywordtype">double</span><span class="keyword">&gt;</span>(vec.z)};</div>
+<div class="line"><span class="lineno">   83</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -216,13 +217,13 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00069">69</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   69</span>                                         {</div>
-<div class="line"><span class="lineno">   70</span>        <span class="keywordtype">double</span> length = std::sqrt(<a class="code hl_variable" href="#af899929e630441ac87e42eeb367bc090">x</a> * <a class="code hl_variable" href="#af899929e630441ac87e42eeb367bc090">x</a> + <a class="code hl_variable" href="#a5ba53cfb9bfc34c187a96b160d3edcc0">y</a> * <a class="code hl_variable" href="#a5ba53cfb9bfc34c187a96b160d3edcc0">y</a> + <a class="code hl_variable" href="#ad380b8b757160b11dc6855a1556c0ef5">z</a> * <a class="code hl_variable" href="#ad380b8b757160b11dc6855a1556c0ef5">z</a>);</div>
-<div class="line"><span class="lineno">   71</span>        <span class="keywordflow">if</span> (length == 0)</div>
-<div class="line"><span class="lineno">   72</span>            <span class="keywordflow">return</span> {0, 0, 0};</div>
-<div class="line"><span class="lineno">   73</span>        <span class="keywordflow">return</span> {<a class="code hl_variable" href="#af899929e630441ac87e42eeb367bc090">x</a> / length, <a class="code hl_variable" href="#a5ba53cfb9bfc34c187a96b160d3edcc0">y</a> / length, <a class="code hl_variable" href="#ad380b8b757160b11dc6855a1556c0ef5">z</a> / length};</div>
-<div class="line"><span class="lineno">   74</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00073">73</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   73</span>                                         {</div>
+<div class="line"><span class="lineno">   74</span>        <span class="keywordtype">double</span> length = std::sqrt(<a class="code hl_variable" href="#af899929e630441ac87e42eeb367bc090">x</a> * <a class="code hl_variable" href="#af899929e630441ac87e42eeb367bc090">x</a> + <a class="code hl_variable" href="#a5ba53cfb9bfc34c187a96b160d3edcc0">y</a> * <a class="code hl_variable" href="#a5ba53cfb9bfc34c187a96b160d3edcc0">y</a> + <a class="code hl_variable" href="#ad380b8b757160b11dc6855a1556c0ef5">z</a> * <a class="code hl_variable" href="#ad380b8b757160b11dc6855a1556c0ef5">z</a>);</div>
+<div class="line"><span class="lineno">   75</span>        <span class="keywordflow">if</span> (length == 0)</div>
+<div class="line"><span class="lineno">   76</span>            <span class="keywordflow">return</span> {0, 0, 0};</div>
+<div class="line"><span class="lineno">   77</span>        <span class="keywordflow">return</span> {<a class="code hl_variable" href="#af899929e630441ac87e42eeb367bc090">x</a> / length, <a class="code hl_variable" href="#a5ba53cfb9bfc34c187a96b160d3edcc0">y</a> / length, <a class="code hl_variable" href="#ad380b8b757160b11dc6855a1556c0ef5">z</a> / length};</div>
+<div class="line"><span class="lineno">   78</span>    }</div>
 <div class="ttc" id="astruct_position3d_html_a5ba53cfb9bfc34c187a96b160d3edcc0"><div class="ttname"><a href="#a5ba53cfb9bfc34c187a96b160d3edcc0">Position3d::y</a></div><div class="ttdeci">double y</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00025">units.h:25</a></div></div>
 <div class="ttc" id="astruct_position3d_html_ad380b8b757160b11dc6855a1556c0ef5"><div class="ttname"><a href="#ad380b8b757160b11dc6855a1556c0ef5">Position3d::z</a></div><div class="ttdeci">double z</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00026">units.h:26</a></div></div>
 <div class="ttc" id="astruct_position3d_html_af899929e630441ac87e42eeb367bc090"><div class="ttname"><a href="#af899929e630441ac87e42eeb367bc090">Position3d::x</a></div><div class="ttdeci">double x</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00024">units.h:24</a></div></div>
@@ -286,10 +287,10 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00049">49</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   49</span>                                                   {</div>
-<div class="line"><span class="lineno">   50</span>        <span class="keywordflow">return</span> {<a class="code hl_variable" href="#af899929e630441ac87e42eeb367bc090">x</a> + vec.x, <a class="code hl_variable" href="#a5ba53cfb9bfc34c187a96b160d3edcc0">y</a> + vec.y, <a class="code hl_variable" href="#ad380b8b757160b11dc6855a1556c0ef5">z</a> + vec.z};</div>
-<div class="line"><span class="lineno">   51</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00053">53</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   53</span>                                                   {</div>
+<div class="line"><span class="lineno">   54</span>        <span class="keywordflow">return</span> {<a class="code hl_variable" href="#af899929e630441ac87e42eeb367bc090">x</a> + vec.x, <a class="code hl_variable" href="#a5ba53cfb9bfc34c187a96b160d3edcc0">y</a> + vec.y, <a class="code hl_variable" href="#ad380b8b757160b11dc6855a1556c0ef5">z</a> + vec.z};</div>
+<div class="line"><span class="lineno">   55</span>    }</div>
 </div><!-- fragment -->
 <p class="reference">References <a class="el" href="units_8h_source.html#l00024">x</a>, <a class="el" href="units_8h_source.html#l00025">y</a>, and <a class="el" href="units_8h_source.html#l00026">z</a>.</p>
 
@@ -350,12 +351,12 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00057">57</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   57</span>                                           {</div>
-<div class="line"><span class="lineno">   58</span>        <a class="code hl_variable" href="#af899929e630441ac87e42eeb367bc090">x</a> += vec.<a class="code hl_variable" href="#af899929e630441ac87e42eeb367bc090">x</a>;</div>
-<div class="line"><span class="lineno">   59</span>        <a class="code hl_variable" href="#a5ba53cfb9bfc34c187a96b160d3edcc0">y</a> += vec.<a class="code hl_variable" href="#a5ba53cfb9bfc34c187a96b160d3edcc0">y</a>;</div>
-<div class="line"><span class="lineno">   60</span>        <a class="code hl_variable" href="#ad380b8b757160b11dc6855a1556c0ef5">z</a> += vec.<a class="code hl_variable" href="#ad380b8b757160b11dc6855a1556c0ef5">z</a>;</div>
-<div class="line"><span class="lineno">   61</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00061">61</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   61</span>                                           {</div>
+<div class="line"><span class="lineno">   62</span>        <a class="code hl_variable" href="#af899929e630441ac87e42eeb367bc090">x</a> += vec.<a class="code hl_variable" href="#af899929e630441ac87e42eeb367bc090">x</a>;</div>
+<div class="line"><span class="lineno">   63</span>        <a class="code hl_variable" href="#a5ba53cfb9bfc34c187a96b160d3edcc0">y</a> += vec.<a class="code hl_variable" href="#a5ba53cfb9bfc34c187a96b160d3edcc0">y</a>;</div>
+<div class="line"><span class="lineno">   64</span>        <a class="code hl_variable" href="#ad380b8b757160b11dc6855a1556c0ef5">z</a> += vec.<a class="code hl_variable" href="#ad380b8b757160b11dc6855a1556c0ef5">z</a>;</div>
+<div class="line"><span class="lineno">   65</span>    }</div>
 </div><!-- fragment -->
 <p class="reference">References <a class="el" href="units_8h_source.html#l00024">x</a>, <a class="el" href="units_8h_source.html#l00025">y</a>, and <a class="el" href="units_8h_source.html#l00026">z</a>.</p>
 
@@ -384,10 +385,10 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00053">53</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   53</span>                                                   {</div>
-<div class="line"><span class="lineno">   54</span>        <span class="keywordflow">return</span> {<a class="code hl_variable" href="#af899929e630441ac87e42eeb367bc090">x</a> - vec.x, <a class="code hl_variable" href="#a5ba53cfb9bfc34c187a96b160d3edcc0">y</a> - vec.y, <a class="code hl_variable" href="#ad380b8b757160b11dc6855a1556c0ef5">z</a> - vec.z};</div>
-<div class="line"><span class="lineno">   55</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00057">57</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   57</span>                                                   {</div>
+<div class="line"><span class="lineno">   58</span>        <span class="keywordflow">return</span> {<a class="code hl_variable" href="#af899929e630441ac87e42eeb367bc090">x</a> - vec.x, <a class="code hl_variable" href="#a5ba53cfb9bfc34c187a96b160d3edcc0">y</a> - vec.y, <a class="code hl_variable" href="#ad380b8b757160b11dc6855a1556c0ef5">z</a> - vec.z};</div>
+<div class="line"><span class="lineno">   59</span>    }</div>
 </div><!-- fragment -->
 <p class="reference">References <a class="el" href="units_8h_source.html#l00024">x</a>, <a class="el" href="units_8h_source.html#l00025">y</a>, and <a class="el" href="units_8h_source.html#l00026">z</a>.</p>
 
@@ -448,12 +449,12 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00063">63</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   63</span>                                           {</div>
-<div class="line"><span class="lineno">   64</span>        <a class="code hl_variable" href="#af899929e630441ac87e42eeb367bc090">x</a> -= vec.<a class="code hl_variable" href="#af899929e630441ac87e42eeb367bc090">x</a>;</div>
-<div class="line"><span class="lineno">   65</span>        <a class="code hl_variable" href="#a5ba53cfb9bfc34c187a96b160d3edcc0">y</a> -= vec.<a class="code hl_variable" href="#a5ba53cfb9bfc34c187a96b160d3edcc0">y</a>;</div>
-<div class="line"><span class="lineno">   66</span>        <a class="code hl_variable" href="#ad380b8b757160b11dc6855a1556c0ef5">z</a> -= vec.<a class="code hl_variable" href="#ad380b8b757160b11dc6855a1556c0ef5">z</a>;</div>
-<div class="line"><span class="lineno">   67</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00067">67</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   67</span>                                           {</div>
+<div class="line"><span class="lineno">   68</span>        <a class="code hl_variable" href="#af899929e630441ac87e42eeb367bc090">x</a> -= vec.<a class="code hl_variable" href="#af899929e630441ac87e42eeb367bc090">x</a>;</div>
+<div class="line"><span class="lineno">   69</span>        <a class="code hl_variable" href="#a5ba53cfb9bfc34c187a96b160d3edcc0">y</a> -= vec.<a class="code hl_variable" href="#a5ba53cfb9bfc34c187a96b160d3edcc0">y</a>;</div>
+<div class="line"><span class="lineno">   70</span>        <a class="code hl_variable" href="#ad380b8b757160b11dc6855a1556c0ef5">z</a> -= vec.<a class="code hl_variable" href="#ad380b8b757160b11dc6855a1556c0ef5">z</a>;</div>
+<div class="line"><span class="lineno">   71</span>    }</div>
 </div><!-- fragment -->
 <p class="reference">References <a class="el" href="units_8h_source.html#l00024">x</a>, <a class="el" href="units_8h_source.html#l00025">y</a>, and <a class="el" href="units_8h_source.html#l00026">z</a>.</p>
 
@@ -491,6 +492,38 @@ Friends</h2></td></tr>
 
 </div>
 </div>
+<a id="a937cdb26c6267ec268a520433b466fad" name="a937cdb26c6267ec268a520433b466fad"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a937cdb26c6267ec268a520433b466fad">&#9670;&#160;</a></span>operator==()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool Position3d::operator== </td>
+          <td>(</td>
+          <td class="paramtype">const <a class="el" href="struct_position3d.html">Position3d</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>other</em></span></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00044">44</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   44</span>                                                   {</div>
+<div class="line"><span class="lineno">   45</span>        <span class="keywordflow">return</span> <a class="code hl_variable" href="#af899929e630441ac87e42eeb367bc090">x</a> == other.<a class="code hl_variable" href="#af899929e630441ac87e42eeb367bc090">x</a> &amp;&amp; <a class="code hl_variable" href="#a5ba53cfb9bfc34c187a96b160d3edcc0">y</a> == other.<a class="code hl_variable" href="#a5ba53cfb9bfc34c187a96b160d3edcc0">y</a> &amp;&amp; <a class="code hl_variable" href="#ad380b8b757160b11dc6855a1556c0ef5">z</a> == other.<a class="code hl_variable" href="#ad380b8b757160b11dc6855a1556c0ef5">z</a>;</div>
+<div class="line"><span class="lineno">   46</span>    }</div>
+</div><!-- fragment -->
+<p class="reference">References <a class="el" href="units_8h_source.html#l00024">x</a>, <a class="el" href="units_8h_source.html#l00025">y</a>, and <a class="el" href="units_8h_source.html#l00026">z</a>.</p>
+
+</div>
+</div>
 <a id="a9c6d05eb7dd87f5072bc3a1f6ebc29ba" name="a9c6d05eb7dd87f5072bc3a1f6ebc29ba"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a9c6d05eb7dd87f5072bc3a1f6ebc29ba">&#9670;&#160;</a></span>toGlm()</h2>
 
@@ -514,11 +547,11 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00044">44</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   44</span>                                 {</div>
-<div class="line"><span class="lineno">   45</span>        <span class="keywordflow">return</span> glm::vec3(<span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(<a class="code hl_variable" href="#af899929e630441ac87e42eeb367bc090">x</a>), <span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(<a class="code hl_variable" href="#a5ba53cfb9bfc34c187a96b160d3edcc0">y</a>),</div>
-<div class="line"><span class="lineno">   46</span>                         <span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(<a class="code hl_variable" href="#ad380b8b757160b11dc6855a1556c0ef5">z</a>));</div>
-<div class="line"><span class="lineno">   47</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00048">48</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   48</span>                                 {</div>
+<div class="line"><span class="lineno">   49</span>        <span class="keywordflow">return</span> glm::vec3(<span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(<a class="code hl_variable" href="#af899929e630441ac87e42eeb367bc090">x</a>), <span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(<a class="code hl_variable" href="#a5ba53cfb9bfc34c187a96b160d3edcc0">y</a>),</div>
+<div class="line"><span class="lineno">   50</span>                         <span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(<a class="code hl_variable" href="#ad380b8b757160b11dc6855a1556c0ef5">z</a>));</div>
+<div class="line"><span class="lineno">   51</span>    }</div>
 </div><!-- fragment -->
 <p class="reference">References <a class="el" href="units_8h_source.html#l00024">x</a>, <a class="el" href="units_8h_source.html#l00025">y</a>, and <a class="el" href="units_8h_source.html#l00026">z</a>.</p>
 
@@ -552,11 +585,11 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00081">81</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   82</span>                                                                {</div>
-<div class="line"><span class="lineno">   83</span>        os &lt;&lt; <span class="stringliteral">&quot;Position3d(&quot;</span> &lt;&lt; p.<a class="code hl_variable" href="#af899929e630441ac87e42eeb367bc090">x</a> &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; p.<a class="code hl_variable" href="#a5ba53cfb9bfc34c187a96b160d3edcc0">y</a> &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; p.<a class="code hl_variable" href="#ad380b8b757160b11dc6855a1556c0ef5">z</a> &lt;&lt; <span class="stringliteral">&quot;)&quot;</span>;</div>
-<div class="line"><span class="lineno">   84</span>        <span class="keywordflow">return</span> os;</div>
-<div class="line"><span class="lineno">   85</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00085">85</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   86</span>                                                                {</div>
+<div class="line"><span class="lineno">   87</span>        os &lt;&lt; <span class="stringliteral">&quot;Position3d(&quot;</span> &lt;&lt; p.<a class="code hl_variable" href="#af899929e630441ac87e42eeb367bc090">x</a> &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; p.<a class="code hl_variable" href="#a5ba53cfb9bfc34c187a96b160d3edcc0">y</a> &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; p.<a class="code hl_variable" href="#ad380b8b757160b11dc6855a1556c0ef5">z</a> &lt;&lt; <span class="stringliteral">&quot;)&quot;</span>;</div>
+<div class="line"><span class="lineno">   88</span>        <span class="keywordflow">return</span> os;</div>
+<div class="line"><span class="lineno">   89</span>    }</div>
 </div><!-- fragment -->
 <p class="reference">References <a class="el" href="units_8h_source.html#l00024">x</a>, <a class="el" href="units_8h_source.html#l00025">y</a>, and <a class="el" href="units_8h_source.html#l00026">z</a>.</p>
 

@@ -34,11 +34,12 @@ var searchData=
   ['createdebugplane_31',['createDebugPlane',['../object_8h.html#a19d2c24fcd7737ae62f7f7de0c0c8802',1,'object.h']]],
   ['createdebugsphere_32',['createDebugSphere',['../object_8h.html#a489ccddca865b97fafa117e23b4d0f1c',1,'object.h']]],
   ['createdoublecheckerboard_33',['createDoubleCheckerboard',['../struct_texture.html#a7ed0da17f706d1d687f753193558527f',1,'Texture']]],
-  ['createplane_34',['createPlane',['../object_8h.html#ab25daa18f85f489ecd187df3e9a96d7a',1,'object.h']]],
-  ['createpyramid_35',['createPyramid',['../object_8h.html#ace121fa39b9356a345857e8866e26cf4',1,'object.h']]],
-  ['createresource_36',['createResource',['../class_workspace.html#a6eaca94e589851c29b2f66acf28599cb',1,'Workspace']]],
-  ['createresourcegroup_37',['createResourceGroup',['../class_workspace.html#a5dd2cec99c67fa3b009d5b22f9c7a938',1,'Workspace']]],
-  ['createsphere_38',['createSphere',['../object_8h.html#a236d2a48ae63b8b7ece82bafa9838528',1,'object.h']]],
-  ['createtiledcheckerboard_39',['createTiledCheckerboard',['../struct_texture.html#a659f1c34d69196f97dbd9de980696d6a',1,'Texture']]],
-  ['cyan_40',['cyan',['../struct_color.html#a84d9274902df272ca9e9da8acf2acc34',1,'Color']]]
+  ['createinstance_34',['createInstance',['../class_core_object.html#a4e1e147afad5bc852d51723b91cf7e2d',1,'CoreObject']]],
+  ['createplane_35',['createPlane',['../object_8h.html#ab25daa18f85f489ecd187df3e9a96d7a',1,'object.h']]],
+  ['createpyramid_36',['createPyramid',['../object_8h.html#ace121fa39b9356a345857e8866e26cf4',1,'object.h']]],
+  ['createresource_37',['createResource',['../class_workspace.html#a6eaca94e589851c29b2f66acf28599cb',1,'Workspace']]],
+  ['createresourcegroup_38',['createResourceGroup',['../class_workspace.html#a5dd2cec99c67fa3b009d5b22f9c7a938',1,'Workspace']]],
+  ['createsphere_39',['createSphere',['../object_8h.html#a236d2a48ae63b8b7ece82bafa9838528',1,'object.h']]],
+  ['createtiledcheckerboard_40',['createTiledCheckerboard',['../struct_texture.html#a659f1c34d69196f97dbd9de980696d6a',1,'Texture']]],
+  ['cyan_41',['cyan',['../struct_color.html#a84d9274902df272ca9e9da8acf2acc34',1,'Color']]]
 ];

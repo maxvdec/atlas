@@ -48,6 +48,7 @@ var shader_8h =
       [ "EnvironmentMapping", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcdadb1098a034b7f5b862d0aef6b70d4f2d", null ],
       [ "Deferred", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcda4ed71db54748b36eeb398876b0c747ac", null ],
       [ "LightDeferred", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcda62e60907eeb7e4b927057202c2a3eaba", null ],
-      [ "Material", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcdad92a8333dd3ccb895cc65f7455b71206", null ]
+      [ "Material", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcdad92a8333dd3ccb895cc65f7455b71206", null ],
+      [ "Instances", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcda1c7d5bb21f0c351e584f3a4109ecdc76", null ]
     ] ]
 ];

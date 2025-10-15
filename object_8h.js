@@ -2,6 +2,7 @@ var object_8h =
 [
     [ "Material", "struct_material.html", "struct_material" ],
     [ "CoreVertex", "struct_core_vertex.html", "struct_core_vertex" ],
+    [ "Instance", "struct_instance.html", "struct_instance" ],
     [ "CoreObject", "class_core_object.html", "class_core_object" ],
     [ "ParticleSettings", "struct_particle_settings.html", "struct_particle_settings" ],
     [ "Particle", "struct_particle.html", "struct_particle" ],

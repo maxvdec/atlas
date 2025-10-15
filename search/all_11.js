@@ -39,8 +39,8 @@ var searchData=
   ['rightshift_36',['RightShift',['../input_8h.html#a9479d299e1852e6140dcca1f405868aba317d4a7487ee62605713987d4a037f83',1,'input.h']]],
   ['rightsuper_37',['RightSuper',['../input_8h.html#a9479d299e1852e6140dcca1f405868aba0cc5a9f113dc1147c8eeae2f0199f9f2',1,'input.h']]],
   ['roll_38',['roll',['../struct_rotation3d.html#a993b23a5ab584cae39120be2f30c534f',1,'Rotation3d']]],
-  ['rotate_39',['rotate',['../class_game_object.html#a80eb49c1d0084c82e944ff254532278b',1,'GameObject::rotate()'],['../class_compound_object.html#a4210275b72af87578ac4f7fd900906cc',1,'CompoundObject::rotate()'],['../class_core_object.html#a983e3a31e6bc75c91faee51758702dc3',1,'CoreObject::rotate(const Rotation3d &amp;deltaRotation) override']]],
-  ['rotation_40',['rotation',['../class_core_object.html#a7ebc137645d25de5365b893661973cd9',1,'CoreObject']]],
+  ['rotate_39',['rotate',['../class_game_object.html#a80eb49c1d0084c82e944ff254532278b',1,'GameObject::rotate()'],['../class_compound_object.html#a4210275b72af87578ac4f7fd900906cc',1,'CompoundObject::rotate()'],['../struct_instance.html#a8090e4ba5483edf03271e57b7afcb612',1,'Instance::rotate()'],['../class_core_object.html#a983e3a31e6bc75c91faee51758702dc3',1,'CoreObject::rotate()']]],
+  ['rotation_40',['rotation',['../struct_instance.html#a01a9049398c7873c47dcf5b7c24cf510',1,'Instance::rotation'],['../class_core_object.html#a7ebc137645d25de5365b893661973cd9',1,'CoreObject::rotation']]],
   ['rotation3d_41',['Rotation3d',['../struct_rotation3d.html',1,'']]],
   ['run_42',['run',['../class_window.html#ae137ec42ddc87d666d49661484410091',1,'Window']]]
 ];
