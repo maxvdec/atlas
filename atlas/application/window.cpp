@@ -22,6 +22,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <algorithm>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <vector>
@@ -150,6 +151,8 @@ Window::Window(WindowConfiguration config)
         AtlasVertexShader::Deferred, AtlasFragmentShader::Deferred);
     this->lightProgram = ShaderProgram::fromDefaultShaders(
         AtlasVertexShader::Light, AtlasFragmentShader::Light);
+    this->bloomBlurProgram = ShaderProgram::fromDefaultShaders(
+        AtlasVertexShader::Fullscreen, AtlasFragmentShader::GaussianBlur);
 
     this->setupSSAO();
 
@@ -435,6 +438,14 @@ std::vector<Monitor> Window::enumerateMonitors() {
 }
 
 Window::~Window() {
+    if (this->pingpongFBOs[0] != 0 || this->pingpongFBOs[1] != 0) {
+        glDeleteFramebuffers(2, this->pingpongFBOs);
+        glDeleteTextures(2, this->pingpongBuffers);
+        this->pingpongFBOs[0] = this->pingpongFBOs[1] = 0;
+        this->pingpongBuffers[0] = this->pingpongBuffers[1] = 0;
+        this->pingpongWidth = 0;
+        this->pingpongHeight = 0;
+    }
     GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
     glfwDestroyWindow(window);
     glfwTerminate();
@@ -663,17 +674,28 @@ void Window::renderPingpong(RenderTarget *target, float dt) {
         return;
     }
 
-    int blurWidth = target->brightTexture.creationData.width;
-    int blurHeight = target->brightTexture.creationData.height;
+    const int blurDownscaleFactor = 2;
+    int blurWidth = std::max(1, target->brightTexture.creationData.width /
+                                    blurDownscaleFactor);
+    int blurHeight = std::max(1, target->brightTexture.creationData.height /
+                                     blurDownscaleFactor);
 
-    if (this->pingpongFBOs[0] == 0 || this->pingpongFBOs[1] == 0) {
+    if (this->pingpongFBOs[0] == 0 || this->pingpongFBOs[1] == 0 ||
+        blurWidth != this->pingpongWidth ||
+        blurHeight != this->pingpongHeight) {
+        if (this->pingpongFBOs[0] != 0 || this->pingpongFBOs[1] != 0) {
+            glDeleteFramebuffers(2, this->pingpongFBOs);
+            glDeleteTextures(2, this->pingpongBuffers);
+        }
+
         glGenFramebuffers(2, this->pingpongFBOs);
         glGenTextures(2, this->pingpongBuffers);
+        this->pingpongWidth = blurWidth;
+        this->pingpongHeight = blurHeight;
 
         for (unsigned int i = 0; i < 2; i++) {
             glBindFramebuffer(GL_FRAMEBUFFER, this->pingpongFBOs[i]);
             glBindTexture(GL_TEXTURE_2D, this->pingpongBuffers[i]);
-            // Use bright texture dimensions (downscaled)
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, blurWidth, blurHeight, 0,
                          GL_RGBA, GL_FLOAT, nullptr);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -692,11 +714,17 @@ void Window::renderPingpong(RenderTarget *target, float dt) {
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    bool horizontal = true, firstIteration = true;
-    int amount = 10;
-    ShaderProgram blurShader = ShaderProgram::fromDefaultShaders(
-        AtlasVertexShader::Fullscreen, AtlasFragmentShader::GaussianBlur);
-    ShaderProgram targetProgram = target->object->getShaderProgram().value();
+    bool horizontal = true;
+    bool firstIteration = true;
+    constexpr unsigned int blurIterations = 6;
+
+    ShaderProgram &blurShader = this->bloomBlurProgram;
+    auto originalProgram = target->object->getShaderProgram();
+    if (!originalProgram.has_value()) {
+        return;
+    }
+
+    ShaderProgram targetProgram = originalProgram.value();
     target->object->setShader(blurShader);
 
     glDisable(GL_DEPTH_TEST);
@@ -704,25 +732,24 @@ void Window::renderPingpong(RenderTarget *target, float dt) {
 
     glViewport(0, 0, blurWidth, blurHeight);
 
-    for (unsigned int i = 0; i < amount; i++) {
+    glUseProgram(blurShader.programId);
+    blurShader.setUniform1f("radius", 2.5f);
+    blurShader.setUniform1i("image", 0);
+
+    glBindVertexArray(target->object->vao);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, target->object->ebo);
+
+    for (unsigned int i = 0; i < blurIterations; ++i) {
         glBindFramebuffer(GL_FRAMEBUFFER, this->pingpongFBOs[horizontal]);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glUseProgram(blurShader.programId);
-
         blurShader.setUniform1i("horizontal", horizontal ? 1 : 0);
-        blurShader.setUniform1f("radius", 2.5f);
 
         glActiveTexture(GL_TEXTURE0);
         GLuint textureToSample = firstIteration
                                      ? target->brightTexture.id
                                      : this->pingpongBuffers[!horizontal];
         glBindTexture(GL_TEXTURE_2D, textureToSample);
-
-        blurShader.setUniform1i("image", 0);
-
-        glBindVertexArray(target->object->vao);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, target->object->ebo);
 
         if (!target->object->indices.empty()) {
             glDrawElements(GL_TRIANGLES, target->object->indices.size(),
@@ -731,10 +758,12 @@ void Window::renderPingpong(RenderTarget *target, float dt) {
             glDrawArrays(GL_TRIANGLES, 0, target->object->vertices.size());
         }
 
-        glBindVertexArray(0);
         horizontal = !horizontal;
         firstIteration = false;
     }
+
+    glBindVertexArray(0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
     target->object->setShader(targetProgram);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -747,10 +776,8 @@ void Window::renderPingpong(RenderTarget *target, float dt) {
     glViewport(0, 0, fbWidth, fbHeight);
 
     target->blurredTexture = Texture();
-    target->blurredTexture.creationData.width =
-        target->brightTexture.creationData.width;
-    target->blurredTexture.creationData.height =
-        target->brightTexture.creationData.height;
+    target->blurredTexture.creationData.width = this->pingpongWidth;
+    target->blurredTexture.creationData.height = this->pingpongHeight;
     target->blurredTexture.type = TextureType::Color;
     target->blurredTexture.id = this->pingpongBuffers[!horizontal];
 }

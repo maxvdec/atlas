@@ -507,11 +507,14 @@ class Window {
     ShaderProgram lightProgram;
     ShaderProgram ssaoProgram;
     ShaderProgram ssaoBlurProgram;
+    ShaderProgram bloomBlurProgram;
 
     bool debug = false;
 
     unsigned int pingpongFBOs[2] = {0, 0};
     unsigned int pingpongBuffers[2] = {0, 0};
+    int pingpongWidth = 0;
+    int pingpongHeight = 0;
 
     friend class CoreObject;
     friend class RenderTarget;
