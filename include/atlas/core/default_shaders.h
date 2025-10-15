@@ -278,10 +278,6 @@ void main() {
 }
 )";
 
-static const char* AMBIENT_PARTICLE_FRAG = R"(
-
-)";
-
 static const char* FULLSCREEN_FRAG = R"(
 #version 330 core
 
@@ -1156,14 +1152,12 @@ void main() {
 static const char* PARTICLE_VERT = R"(
 #version 330 core
 
-// Quad vertex attributes
-layout(location = 0) in vec3 quadVertex; // Local quad position (-0.5 to 0.5)
-layout(location = 1) in vec2 texCoord;   // Texture coordinates
+layout(location = 0) in vec3 quadVertex;
+layout(location = 1) in vec2 texCoord;
 
-// Instance attributes (per particle)
-layout(location = 2) in vec3 particlePos;   // World position
-layout(location = 3) in vec4 particleColor; // Color and alpha
-layout(location = 4) in float particleSize; // Size in world units
+layout(location = 2) in vec3 particlePos;
+layout(location = 3) in vec4 particleColor;
+layout(location = 4) in float particleSize;
 
 uniform mat4 view;
 uniform mat4 projection;
@@ -1225,15 +1219,22 @@ static const char* COLOR_VERT = R"(
 #version 330 core
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec4 aColor;
+layout(location = 6) in mat4 instanceModel;
 
 out vec4 vertexColor;
 
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
+uniform bool isInstanced = true;
 
 void main() {
-    mat4 mvp = projection * view * model;
+    mat4 mvp;
+    if (isInstanced) {
+        mvp = projection * view * instanceModel;
+    } else {
+        mvp = projection * view * model;
+    }
     gl_Position = mvp * vec4(aPos, 1.0);
     vertexColor = aColor;
 }
@@ -1301,10 +1302,12 @@ layout(location = 2) in vec2 aTexCoord;
 layout(location = 3) in vec3 aNormal;
 layout(location = 4) in vec3 aTangent;
 layout(location = 5) in vec3 aBitangent;
+layout(location = 6) in mat4 instanceModel;
 
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
+uniform bool isInstanced = true;
 
 out vec4 outColor;
 out vec2 TexCoord;
@@ -1313,14 +1316,21 @@ out vec3 FragPos;
 out mat3 TBN;
 
 void main() {
-    vec4 worldPos = model * vec4(aPos, 1.0);
+    mat4 finalModel;
+    if (isInstanced) {
+        finalModel = instanceModel;
+    } else {
+        finalModel = model;
+    }
+
+    vec4 worldPos = finalModel * vec4(aPos, 1.0);
     FragPos = worldPos.xyz;
     gl_Position = projection * view * worldPos;
 
     TexCoord = aTexCoord;
     outColor = aColor;
 
-    mat3 normalMatrix = mat3(transpose(inverse(model)));
+    mat3 normalMatrix = mat3(transpose(inverse(finalModel)));
     Normal = normalize(normalMatrix * aNormal);
 
     vec3 T = normalize(normalMatrix * aTangent);
@@ -1393,8 +1403,8 @@ void main() {
     } else {
         occlusion = 1.0;
     }
-    
-    FragColor = pow(occlusion, 2.0);
+
+    FragColor = occlusion;
 }
 )";
 
@@ -1674,7 +1684,7 @@ void main() {
     vec3 directionalResult = vec3(0.0);
     for (int i = 0; i < directionalLightCount; i++) {
         directionalResult += calcDirectionalLight(directionalLights[i], Normal, viewDir, 
-            Albedo, specColor, shininess); 
+            Albedo, specColor, shininess) * ambientOcclusion;  
     }
     directionalResult *= (1.0 - dirShadow);
 
@@ -1683,14 +1693,14 @@ void main() {
         float distance = length(pointLights[i].position - FragPos);
         if (distance > pointLights[i].radius) continue;
         pointResult += calcPointLight(pointLights[i], FragPos, Normal, viewDir,
-            Albedo, specColor, shininess);
+            Albedo, specColor, shininess) * ambientOcclusion;  
     }
     pointResult *= (1.0 - pointShadow);
 
     vec3 spotResult = vec3(0.0);
     for (int i = 0; i < spotlightCount; i++) {
         spotResult += calcSpotLight(spotlights[i], FragPos, Normal, viewDir,
-            Albedo, specColor, shininess);
+            Albedo, specColor, shininess) * ambientOcclusion;  
     }
 
     vec3 finalColor = ambient + directionalResult + pointResult + spotResult;
@@ -1786,10 +1796,12 @@ layout(location = 2) in vec2 aTexCoord;
 layout(location = 3) in vec3 aNormal;
 layout(location = 4) in vec3 aTangent;
 layout(location = 5) in vec3 aBitangent;
+layout(location = 6) in mat4 instanceModel;
 
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
+uniform bool isInstanced = true;
 
 out vec4 outColor;
 out vec2 TexCoord;
@@ -1798,16 +1810,21 @@ out vec3 FragPos;
 out mat3 TBN;
 
 void main() {
-    mat4 mvp = projection * view * model;
+    mat4 mvp;
+    if (isInstanced) {
+        mvp = projection * view * instanceModel;
+    } else {
+        mvp = projection * view * model;
+    }
     gl_Position = mvp * vec4(aPos, 1.0);
-    FragPos = vec3(model * vec4(aPos, 1.0));
+    FragPos = vec3(instanceModel * vec4(aPos, 1.0));
     TexCoord = aTexCoord;
-    Normal = mat3(transpose(inverse(model))) * aNormal;
+    Normal = mat3(transpose(inverse(instanceModel))) * aNormal;
     outColor = aColor;
 
-    vec3 T = normalize(vec3(model * vec4(aTangent, 0.0)));
-    vec3 B = normalize(vec3(model * vec4(aBitangent, 0.0)));
-    vec3 N = normalize(vec3(model * vec4(aNormal, 0.0)));
+    vec3 T = normalize(vec3(instanceModel * vec4(aTangent, 0.0)));
+    vec3 B = normalize(vec3(instanceModel * vec4(aBitangent, 0.0)));
+    vec3 N = normalize(vec3(instanceModel * vec4(aNormal, 0.0)));
     TBN = mat3(T, B, N);
 }
 
@@ -1842,10 +1859,6 @@ void main() {
     gl_Position = vec4(aPos.xy, 0.0, 1.0);
     TexCoord = aTexCoord;
 }
-
-)";
-
-static const char* AMBIENT_PARTICLE_VERT = R"(
 
 )";
 

@@ -144,6 +144,30 @@ typedef unsigned int Index;
 
 class Window;
 
+struct Instance {
+    Position3d position = {0.0, 0.0, 0.0};
+    Rotation3d rotation = {0.0, 0.0, 0.0};
+    Scale3d scale = {1.0, 1.0, 1.0};
+
+  private:
+    glm::mat4 model = glm::mat4(1.0f);
+
+  public:
+    void updateModelMatrix();
+    glm::mat4 getModelMatrix() const { return model; }
+    void move(const Position3d &deltaPosition);
+    void setPosition(const Position3d &newPosition);
+    void setRotation(const Rotation3d &newRotation);
+    void rotate(const Rotation3d &deltaRotation);
+    void setScale(const Scale3d &newScale);
+    void scaleBy(const Scale3d &deltaScale);
+
+    bool operator==(const Instance &other) const {
+        return position == other.position && rotation == other.rotation &&
+               scale == other.scale;
+    }
+};
+
 /**
  * @brief Represents a 3D object in the scene, including its geometry, material
  * and every interaction with the scene that it can have. It inherits from \ref
@@ -209,6 +233,8 @@ class CoreObject : public GameObject {
      *
      */
     Material material = Material();
+
+    std::vector<Instance> instances;
 
     /**
      * @brief Function to construct a new CoreObject.
@@ -333,10 +359,25 @@ class CoreObject : public GameObject {
 
     bool useDeferredRendering = true;
 
+    inline Instance &createInstance() {
+        instances.emplace_back();
+        Instance &inst = instances.back();
+
+        inst.position = this->position;
+        inst.rotation = this->rotation;
+        inst.scale = this->scale;
+        inst.updateModelMatrix();
+
+        return inst;
+    }
+
   private:
     BufferIndex vbo;
     BufferIndex vao;
     BufferIndex ebo;
+    BufferIndex instanceVBO = 0;
+
+    std::vector<Instance> savedInstances;
 
     glm::mat4 model = glm::mat4(1.0f);
     glm::mat4 view = glm::mat4(1.0f);
@@ -354,6 +395,8 @@ class CoreObject : public GameObject {
     friend class Skybox;
 
     std::vector<std::shared_ptr<Component>> components;
+
+    void updateInstances();
 
   public:
     void render(float dt) override;

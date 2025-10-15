@@ -41,6 +41,10 @@ struct Position3d {
         return {x / scalar, y / scalar, z / scalar};
     }
 
+    bool operator==(const Position3d &other) const {
+        return x == other.x && y == other.y && z == other.z;
+    }
+
     inline glm::vec3 toGlm() const {
         return glm::vec3(static_cast<float>(x), static_cast<float>(y),
                          static_cast<float>(z));
@@ -133,6 +137,10 @@ struct Rotation3d {
         return {pitch * scalar, yaw * scalar, roll * scalar};
     }
 
+    bool operator==(const Rotation3d &other) const {
+        return pitch == other.pitch && yaw == other.yaw && roll == other.roll;
+    }
+
     Rotation3d operator/(double scalar) const {
         return {pitch / scalar, yaw / scalar, roll / scalar};
     }
@@ -189,6 +197,10 @@ struct Color {
 
     Color operator/(double scalar) const {
         return {r / scalar, g / scalar, b / scalar, a / scalar};
+    }
+
+    bool operator==(const Color &other) const {
+        return r == other.r && g == other.g && b == other.b && a == other.a;
     }
 
     static Color white() { return {1.0, 1.0, 1.0, 1.0}; }

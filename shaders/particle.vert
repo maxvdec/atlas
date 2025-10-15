@@ -1,13 +1,11 @@
 #version 330 core
 
-// Quad vertex attributes
-layout(location = 0) in vec3 quadVertex; // Local quad position (-0.5 to 0.5)
-layout(location = 1) in vec2 texCoord;   // Texture coordinates
+layout(location = 0) in vec3 quadVertex;
+layout(location = 1) in vec2 texCoord;
 
-// Instance attributes (per particle)
-layout(location = 2) in vec3 particlePos;   // World position
-layout(location = 3) in vec4 particleColor; // Color and alpha
-layout(location = 4) in float particleSize; // Size in world units
+layout(location = 2) in vec3 particlePos;
+layout(location = 3) in vec4 particleColor;
+layout(location = 4) in float particleSize;
 
 uniform mat4 view;
 uniform mat4 projection;

@@ -236,8 +236,29 @@ void CoreObject::initialize() {
         }
     }
 
+    if (!instances.empty()) {
+        std::vector<glm::mat4> modelMatrices;
+        for (auto &instance : instances) {
+            instance.updateModelMatrix();
+            modelMatrices.push_back(instance.getModelMatrix());
+        }
+
+        glGenBuffers(1, &instanceVBO);
+        glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+        glBufferData(GL_ARRAY_BUFFER, instances.size() * sizeof(glm::mat4),
+                     modelMatrices.data(), GL_STATIC_DRAW);
+
+        glBindVertexArray(vao);
+        std::size_t vec4Size = sizeof(glm::vec4);
+        for (unsigned int i = 0; i < 4; i++) {
+            glEnableVertexAttribArray(6 + i);
+            glVertexAttribPointer(6 + i, 4, GL_FLOAT, GL_FALSE,
+                                  sizeof(glm::mat4), (void *)(i * vec4Size));
+            glVertexAttribDivisor(6 + i, 1);
+        }
+    }
+
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
 }
 
 void CoreObject::render(float dt) {
@@ -557,7 +578,33 @@ void CoreObject::render(float dt) {
         }
     }
 
+    if (std::find(shaderProgram.capabilities.begin(),
+                  shaderProgram.capabilities.end(),
+                  ShaderCapability::Instances) !=
+            shaderProgram.capabilities.end() &&
+        !instances.empty()) {
+        if (this->instances != this->savedInstances) {
+            updateInstances();
+            this->savedInstances = this->instances;
+        }
+        // Update instance buffer data
+        glBindVertexArray(vao);
+        shaderProgram.setUniform1i("isInstanced", 1);
+
+        if (!indices.empty()) {
+            glDrawElementsInstanced(GL_TRIANGLES, indices.size(),
+                                    GL_UNSIGNED_INT, 0, instances.size());
+            glBindVertexArray(0);
+            return;
+        }
+        glDrawArraysInstanced(GL_TRIANGLES, 0, vertices.size(),
+                              instances.size());
+        glBindVertexArray(0);
+        return;
+    }
+
     glBindVertexArray(vao);
+    shaderProgram.setUniform1i("isInstanced", 0);
     if (!indices.empty()) {
         glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
@@ -650,4 +697,87 @@ void CoreObject::makeEmissive(Scene *scene, Color emissionColor,
         AtlasVertexShader::Color, AtlasFragmentShader::Color));
 
     scene->addLight(light.get());
+}
+
+void CoreObject::updateInstances() {
+    if (instances.empty()) {
+        return;
+    }
+
+    if (this->instanceVBO == 0) {
+        glGenBuffers(1, &instanceVBO);
+        glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+        glBufferData(GL_ARRAY_BUFFER, instances.size() * sizeof(glm::mat4),
+                     nullptr, GL_DYNAMIC_DRAW);
+        glBindVertexArray(vao);
+        std::size_t vec4Size = sizeof(glm::vec4);
+        for (unsigned int i = 0; i < 4; i++) {
+            glEnableVertexAttribArray(6 + i);
+            glVertexAttribPointer(6 + i, 4, GL_FLOAT, GL_FALSE,
+                                  sizeof(glm::mat4), (void *)(i * vec4Size));
+            glVertexAttribDivisor(6 + i, 1);
+        }
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glBindVertexArray(0);
+    }
+
+    std::vector<glm::mat4> modelMatrices;
+    modelMatrices.reserve(instances.size());
+
+    for (auto &instance : instances) {
+        instance.updateModelMatrix();
+        modelMatrices.push_back(instance.getModelMatrix());
+    }
+
+    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, instances.size() * sizeof(glm::mat4),
+                    modelMatrices.data());
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void Instance::updateModelMatrix() {
+    glm::mat4 scale_matrix = glm::scale(glm::mat4(1.0f), scale.toGlm());
+
+    glm::mat4 rotation_matrix = glm::mat4(1.0f);
+    rotation_matrix =
+        glm::rotate(rotation_matrix, glm::radians(float(rotation.roll)),
+                    glm::vec3(0, 0, 1));
+    rotation_matrix =
+        glm::rotate(rotation_matrix, glm::radians(float(rotation.pitch)),
+                    glm::vec3(1, 0, 0));
+    rotation_matrix = glm::rotate(
+        rotation_matrix, glm::radians(float(rotation.yaw)), glm::vec3(0, 1, 0));
+
+    glm::mat4 translation_matrix =
+        glm::translate(glm::mat4(1.0f), position.toGlm());
+
+    this->model = translation_matrix * rotation_matrix * scale_matrix;
+}
+
+void Instance::move(const Position3d &deltaPosition) {
+    setPosition(position + deltaPosition);
+}
+
+void Instance::setPosition(const Position3d &newPosition) {
+    position = newPosition;
+    updateModelMatrix();
+}
+
+void Instance::setRotation(const Rotation3d &newRotation) {
+    rotation = newRotation;
+    updateModelMatrix();
+}
+
+void Instance::rotate(const Rotation3d &deltaRotation) {
+    setRotation(rotation + deltaRotation);
+}
+
+void Instance::setScale(const Scale3d &newScale) {
+    scale = newScale;
+    updateModelMatrix();
+}
+
+void Instance::scaleBy(const Scale3d &deltaScale) {
+    setScale(Scale3d(scale.x * deltaScale.x, scale.y * deltaScale.y,
+                     scale.z * deltaScale.z));
 }

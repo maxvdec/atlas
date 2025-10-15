@@ -105,7 +105,8 @@ enum class ShaderCapability {
     EnvironmentMapping,
     Deferred,
     LightDeferred,
-    Material
+    Material,
+    Instances
 };
 
 /**
