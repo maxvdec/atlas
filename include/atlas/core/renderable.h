@@ -103,8 +103,19 @@ class Renderable {
      */
     virtual bool canCastShadows() const { return false; };
     virtual ~Renderable() = default;
+    /**
+     * @brief Function to determine if the object can use deferred rendering.
+     *
+     * @return (bool) True if the object supports deferred rendering, false
+     * otherwise.
+     */
     virtual bool canUseDeferredRendering() const { return true; };
 
+    /**
+     * @brief Whether the object should be included in depth of field
+     * calculations. When true, contributes to blur effects.
+     *
+     */
     bool renderDepthOfView = false;
 };
 

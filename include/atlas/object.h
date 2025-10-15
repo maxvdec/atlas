@@ -68,7 +68,12 @@ struct Material {
      */
     float shininess = 32.0f;
 
-    float reflectivity = 0.f; // 0.0 = no reflection, 1.0 = full reflection
+    /**
+     * @brief The reflectivity of the material. 0.0 means no reflection, 1.0
+     * means full mirror-like reflection.
+     *
+     */
+    float reflectivity = 0.f;
 };
 
 /**
@@ -105,7 +110,17 @@ struct CoreVertex {
      */
     Normal3d normal = {0.0, 0.0, 0.0};
 
+    /**
+     * @brief The tangent vector of the vertex, used for normal mapping and
+     * parallax calculations.
+     *
+     */
     Normal3d tangent = {0.0, 0.0, 0.0};
+    /**
+     * @brief The bitangent vector of the vertex, used for normal mapping and
+     * parallax calculations.
+     *
+     */
     Normal3d bitangent = {0.0, 0.0, 0.0};
 
     /**
@@ -144,24 +159,87 @@ typedef unsigned int Index;
 
 class Window;
 
+/**
+ * @brief Structure representing a single instance of an object for instanced
+ * rendering. Each instance has its own position, rotation, and scale.
+ *
+ */
 struct Instance {
+    /**
+     * @brief The position of this instance in 3D space.
+     *
+     */
     Position3d position = {0.0, 0.0, 0.0};
+    /**
+     * @brief The rotation of this instance in 3D space.
+     *
+     */
     Rotation3d rotation = {0.0, 0.0, 0.0};
+    /**
+     * @brief The scale of this instance in 3D space.
+     *
+     */
     Scale3d scale = {1.0, 1.0, 1.0};
 
   private:
     glm::mat4 model = glm::mat4(1.0f);
 
   public:
+    /**
+     * @brief Updates the model matrix based on the instance's position,
+     * rotation, and scale.
+     *
+     */
     void updateModelMatrix();
+    /**
+     * @brief Gets the current model matrix for this instance.
+     *
+     * @return (glm::mat4) The model matrix.
+     */
     glm::mat4 getModelMatrix() const { return model; }
+    /**
+     * @brief Moves the instance by a delta position.
+     *
+     * @param deltaPosition The amount to move by.
+     */
     void move(const Position3d &deltaPosition);
+    /**
+     * @brief Sets the position of the instance.
+     *
+     * @param newPosition The new position to set.
+     */
     void setPosition(const Position3d &newPosition);
+    /**
+     * @brief Sets the rotation of the instance.
+     *
+     * @param newRotation The new rotation to set.
+     */
     void setRotation(const Rotation3d &newRotation);
+    /**
+     * @brief Rotates the instance by a delta rotation.
+     *
+     * @param deltaRotation The amount to rotate by.
+     */
     void rotate(const Rotation3d &deltaRotation);
+    /**
+     * @brief Sets the scale of the instance.
+     *
+     * @param newScale The new scale to set.
+     */
     void setScale(const Scale3d &newScale);
+    /**
+     * @brief Scales the instance by a delta scale factor.
+     *
+     * @param deltaScale The scale factor to multiply by.
+     */
     void scaleBy(const Scale3d &deltaScale);
 
+    /**
+     * @brief Compares two instances for equality.
+     *
+     * @param other The other instance to compare with.
+     * @return (bool) True if instances are equal, false otherwise.
+     */
     bool operator==(const Instance &other) const {
         return position == other.position && rotation == other.rotation &&
                scale == other.scale;
@@ -234,6 +312,11 @@ class CoreObject : public GameObject {
      */
     Material material = Material();
 
+    /**
+     * @brief Vector of instances for instanced rendering. Multiple copies of
+     * the object can be rendered with different transforms efficiently.
+     *
+     */
     std::vector<Instance> instances;
 
     /**
@@ -242,6 +325,13 @@ class CoreObject : public GameObject {
      */
     CoreObject();
 
+    /**
+     * @brief Makes the object emissive by attaching a light to it.
+     *
+     * @param scene The scene to add the light to.
+     * @param emissionColor The color of the emitted light.
+     * @param intensity The intensity of the emitted light.
+     */
     void makeEmissive(Scene *scene, Color emissionColor, float intensity);
 
     /**
@@ -327,6 +417,11 @@ class CoreObject : public GameObject {
 
     void setupPhysics(Body body) override;
 
+    /**
+     * @brief The light attached to this object if it's emissive. Used for
+     * emissive objects created with makeEmissive().
+     *
+     */
     std::shared_ptr<Light> light = nullptr;
 
     /**
@@ -357,8 +452,18 @@ class CoreObject : public GameObject {
         components.push_back(component);
     }
 
+    /**
+     * @brief Whether the object should use deferred rendering. When false, the
+     * object is rendered in the forward rendering pass.
+     *
+     */
     bool useDeferredRendering = true;
 
+    /**
+     * @brief Creates and returns a new instance for instanced rendering.
+     *
+     * @return (Instance&) Reference to the newly created instance.
+     */
     inline Instance &createInstance() {
         instances.emplace_back();
         Instance &inst = instances.back();
@@ -923,10 +1028,24 @@ class Model : public GameObject {
 
     Model() = default;
 
+    /**
+     * @brief The material properties shared by all objects in the model.
+     *
+     */
     Material material;
 
+    /**
+     * @brief Whether the model should use deferred rendering. When false, the
+     * model is rendered in the forward rendering pass.
+     *
+     */
     bool useDeferredRendering = true;
 
+    /**
+     * @brief Checks if the model can use deferred rendering.
+     *
+     * @return (bool) True if deferred rendering is enabled, false otherwise.
+     */
     bool canUseDeferredRendering() const override {
         return useDeferredRendering;
     }

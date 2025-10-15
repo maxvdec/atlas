@@ -73,6 +73,12 @@ class Scene {
      */
     virtual void onMouseScroll(Window &window, Movement2d offset) {}
 
+    /**
+     * @brief Sets the intensity of the ambient light in the scene.
+     *
+     * @param intensity The desired ambient light intensity. This value is
+     * divided by 4 internally.
+     */
     void setAmbientIntensity(float intensity) {
         this->ambientLight.intensity = intensity / 4;
     }

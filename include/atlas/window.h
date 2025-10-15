@@ -35,19 +35,78 @@ constexpr int DEFAULT_ASPECT_RATIO = -1;
  *
  */
 struct WindowConfiguration {
+    /**
+     * @brief The title of the window.
+     *
+     */
     std::string title;
+    /**
+     * @brief The width of the window in pixels.
+     *
+     */
     int width;
+    /**
+     * @brief The height of the window in pixels.
+     *
+     */
     int height;
+    /**
+     * @brief Whether the mouse cursor should be captured and hidden.
+     *
+     */
     bool mouseCaptured = true;
+    /**
+     * @brief The X position of the window. Use WINDOW_CENTERED to center.
+     *
+     */
     int posX = WINDOW_CENTERED;
+    /**
+     * @brief The Y position of the window. Use WINDOW_CENTERED to center.
+     *
+     */
     int posY = WINDOW_CENTERED;
+    /**
+     * @brief Whether to enable multisampling anti-aliasing.
+     *
+     */
     bool multisampling = true;
+    /**
+     * @brief Whether the window should have decorations (title bar, borders).
+     *
+     */
     bool decorations = true;
+    /**
+     * @brief Whether the window can be resized by the user.
+     *
+     */
     bool resizable = true;
+    /**
+     * @brief Whether the window framebuffer should be transparent.
+     *
+     */
     bool transparent = false;
+    /**
+     * @brief Whether the window should always stay on top of other windows.
+     *
+     */
     bool alwaysOnTop = false;
+    /**
+     * @brief The opacity of the window. 1.0 is fully opaque, 0.0 is fully
+     * transparent.
+     *
+     */
     float opacity = 1.0f;
+    /**
+     * @brief The width component of the aspect ratio. Use -1 for no
+     * constraint.
+     *
+     */
     int aspectRatioX = -1;
+    /**
+     * @brief The height component of the aspect ratio. Use -1 for no
+     * constraint.
+     *
+     */
     int aspectRatioY = -1;
 };
 
@@ -67,7 +126,15 @@ struct VideoMode {
  */
 class Monitor {
   public:
+    /**
+     * @brief The unique identifier for this monitor.
+     *
+     */
     int monitorID;
+    /**
+     * @brief Whether this is the primary monitor.
+     *
+     */
     bool primary;
 
     /**
@@ -117,6 +184,10 @@ class Monitor {
      */
     Monitor(CoreMonitorReference ref, int id, bool isPrimary);
 
+    /**
+     * @brief Internal reference to the monitor object.
+     *
+     */
     CoreMonitorReference monitorRef;
 };
 
@@ -148,8 +219,20 @@ class ShaderProgram;
  */
 class Window {
   public:
+    /**
+     * @brief The title of the window displayed in the title bar.
+     *
+     */
     std::string title;
+    /**
+     * @brief The width of the window in pixels.
+     *
+     */
     int width;
+    /**
+     * @brief The height of the window in pixels.
+     *
+     */
     int height;
 
     /**
@@ -285,6 +368,11 @@ class Window {
      */
     std::tuple<int, int> getCursorPosition();
 
+    /**
+     * @brief Static pointer to the main window instance. Used for global
+     * access to the primary window.
+     *
+     */
     static Window *mainWindow;
 
     /**
@@ -350,12 +438,31 @@ class Window {
      */
     std::vector<std::shared_ptr<Body>> getAllBodies();
 
+    /**
+     * @brief The gravity constant applied to physics bodies. Default is 9.81
+     * m/s².
+     *
+     */
     float gravity = 9.81f;
 
+    /**
+     * @brief The audio engine instance for managing spatial audio. Shared
+     * across the window.
+     *
+     */
     std::shared_ptr<AudioEngine> audioEngine;
 
+    /**
+     * @brief Enables deferred rendering for the window. This allows for more
+     * advanced lighting and post-processing effects.
+     *
+     */
     void useDeferredRendering();
 
+    /**
+     * @brief Whether the window is using deferred rendering.
+     *
+     */
     bool usesDeferred = false;
 
   private:

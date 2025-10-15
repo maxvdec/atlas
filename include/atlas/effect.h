@@ -12,87 +12,298 @@
 
 #include "atlas/core/shader.h"
 #include <memory>
+
+/**
+ * @brief Enumeration of available post-processing effects that can be applied
+ * to render targets.
+ *
+ */
 enum class RenderTargetEffect {
+    /**
+     * @brief Inverts the colors of the rendered image.
+     *
+     */
     Invert = 0,
+    /**
+     * @brief Converts the rendered image to grayscale.
+     *
+     */
     Grayscale = 1,
+    /**
+     * @brief Applies a sharpening filter to enhance edges.
+     *
+     */
     Sharpen = 2,
+    /**
+     * @brief Applies a blur effect to the rendered image.
+     *
+     */
     Blur = 3,
+    /**
+     * @brief Detects and highlights edges in the rendered image.
+     *
+     */
     EdgeDetection = 4,
+    /**
+     * @brief Applies color correction adjustments like exposure and contrast.
+     *
+     */
     ColorCorrection = 5
 };
 
+/**
+ * @brief Base class for all post-processing effects that can be applied to a
+ * render target. Effects are applied via shader uniforms.
+ *
+ */
 class Effect {
   public:
+    /**
+     * @brief The type of effect this instance represents.
+     *
+     */
     RenderTargetEffect type;
+    /**
+     * @brief Constructs a new Effect object.
+     *
+     * @param t The type of effect.
+     */
     Effect(RenderTargetEffect t) : type(t) {}
+    /**
+     * @brief Applies the effect's parameters to the shader program.
+     *
+     * @param program The shader program to apply the effect to.
+     * @param index The index of the effect in the effect array.
+     */
     virtual void applyToProgram(ShaderProgram &program, int index) {};
 };
 
+/**
+ * @brief Post-processing effect that inverts all colors in the rendered image.
+ * White becomes black, red becomes cyan, etc.
+ *
+ */
 class Inversion : public Effect {
   public:
+    /**
+     * @brief Constructs a new Inversion effect.
+     *
+     */
     Inversion() : Effect(RenderTargetEffect::Invert) {}
+    /**
+     * @brief Creates a shared pointer to an Inversion effect.
+     *
+     * @return (std::shared_ptr<Inversion>) The created inversion effect.
+     */
     static std::shared_ptr<Inversion> create() {
         return std::make_shared<Inversion>();
     }
 };
 
+/**
+ * @brief Post-processing effect that converts the rendered image to grayscale
+ * by calculating luminance.
+ *
+ */
 class Grayscale : public Effect {
   public:
+    /**
+     * @brief Constructs a new Grayscale effect.
+     *
+     */
     Grayscale() : Effect(RenderTargetEffect::Grayscale) {}
+    /**
+     * @brief Creates a shared pointer to a Grayscale effect.
+     *
+     * @return (std::shared_ptr<Grayscale>) The created grayscale effect.
+     */
     static std::shared_ptr<Grayscale> create() {
         return std::make_shared<Grayscale>();
     }
 };
 
+/**
+ * @brief Post-processing effect that applies a sharpening kernel to enhance
+ * edges and details in the rendered image.
+ *
+ */
 class Sharpen : public Effect {
   public:
+    /**
+     * @brief Constructs a new Sharpen effect.
+     *
+     */
     Sharpen() : Effect(RenderTargetEffect::Sharpen) {}
+    /**
+     * @brief Creates a shared pointer to a Sharpen effect.
+     *
+     * @return (std::shared_ptr<Sharpen>) The created sharpen effect.
+     */
     static std::shared_ptr<Sharpen> create() {
         return std::make_shared<Sharpen>();
     }
 };
 
+/**
+ * @brief Post-processing effect that applies a Gaussian blur to the rendered
+ * image. The blur magnitude can be controlled.
+ *
+ */
 class Blur : public Effect {
   public:
+    /**
+     * @brief The magnitude (radius) of the blur effect.
+     *
+     */
     float magnitude = 16.0;
+    /**
+     * @brief Constructs a new Blur effect.
+     *
+     * @param magnitude The blur radius. Higher values create stronger blur.
+     */
     Blur(float magnitude = 16.0)
         : Effect(RenderTargetEffect::Blur), magnitude(magnitude) {}
+    /**
+     * @brief Creates a shared pointer to a Blur effect.
+     *
+     * @param magnitude The blur radius.
+     * @return (std::shared_ptr<Blur>) The created blur effect.
+     */
     static std::shared_ptr<Blur> create(float magnitude = 16.0) {
         return std::make_shared<Blur>(magnitude);
     }
+    /**
+     * @brief Applies the blur magnitude to the shader program.
+     *
+     * @param program The shader program to apply the effect to.
+     * @param index The index of the effect in the effect array.
+     */
     void applyToProgram(ShaderProgram &program, int index) override {
         program.setUniform1f("EffectFloat1[" + std::to_string((int)index) + "]",
                              magnitude);
     }
 };
 
+/**
+ * @brief Post-processing effect that detects and highlights edges in the
+ * rendered image using an edge detection kernel.
+ *
+ */
 class EdgeDetection : public Effect {
   public:
+    /**
+     * @brief Constructs a new EdgeDetection effect.
+     *
+     */
     EdgeDetection() : Effect(RenderTargetEffect::EdgeDetection) {}
+    /**
+     * @brief Creates a shared pointer to an EdgeDetection effect.
+     *
+     * @return (std::shared_ptr<EdgeDetection>) The created edge detection
+     * effect.
+     */
     static std::shared_ptr<EdgeDetection> create() {
         return std::make_shared<EdgeDetection>();
     }
 };
 
+/**
+ * @brief Structure containing parameters for color correction post-processing.
+ * Allows fine-tuning of exposure, contrast, saturation, gamma, temperature,
+ * and tint.
+ *
+ */
 struct ColorCorrectionParameters {
+    /**
+     * @brief Exposure adjustment. Positive values brighten, negative values
+     * darken.
+     *
+     */
     float exposure = 0.0;
+    /**
+     * @brief Contrast adjustment. Values > 1.0 increase contrast, < 1.0
+     * decrease it.
+     *
+     */
     float contrast = 1.0;
+    /**
+     * @brief Saturation adjustment. 1.0 is normal, 0.0 is grayscale, > 1.0
+     * increases saturation.
+     *
+     */
     float saturation = 1.0;
+    /**
+     * @brief Gamma correction value. Typically around 1.0 to 2.2.
+     *
+     */
     float gamma = 1.0;
+    /**
+     * @brief Temperature adjustment. Positive values add warmth (red),
+     * negative values add coolness (blue).
+     *
+     */
     float temperature = 0.0;
+    /**
+     * @brief Tint adjustment. Positive values add green, negative values add
+     * magenta.
+     *
+     */
     float tint = 0.0;
 };
 
+/**
+ * @brief Post-processing effect that applies comprehensive color correction to
+ * the rendered image, including exposure, contrast, saturation, and color
+ * temperature adjustments.
+ *
+ * \subsection color-correction-example Example
+ * ```cpp
+ * // Create a render target
+ * RenderTarget renderTarget(window);
+ * // Define color correction parameters
+ * ColorCorrectionParameters params;
+ * params.exposure = 0.5f;      // Increase brightness
+ * params.contrast = 1.2f;      // Increase contrast slightly
+ * params.saturation = 1.1f;    // Boost saturation
+ * params.temperature = 0.1f;   // Add warmth
+ * // Create and add the color correction effect
+ * auto colorCorrection = ColorCorrection::create(params);
+ * renderTarget.addEffect(colorCorrection);
+ * ```
+ *
+ */
 class ColorCorrection : public Effect {
   public:
+    /**
+     * @brief The color correction parameters to apply.
+     *
+     */
     ColorCorrectionParameters params;
 
+    /**
+     * @brief Constructs a new ColorCorrection effect.
+     *
+     * @param p The color correction parameters to use.
+     */
     ColorCorrection(ColorCorrectionParameters p = {})
         : Effect(RenderTargetEffect::ColorCorrection), params(p) {}
+    /**
+     * @brief Creates a shared pointer to a ColorCorrection effect.
+     *
+     * @param p The color correction parameters to use.
+     * @return (std::shared_ptr<ColorCorrection>) The created color correction
+     * effect.
+     */
     static std::shared_ptr<ColorCorrection>
     create(ColorCorrectionParameters p = {}) {
         return std::make_shared<ColorCorrection>(p);
     }
+    /**
+     * @brief Applies all color correction parameters to the shader program.
+     *
+     * @param program The shader program to apply the effect to.
+     * @param index The index of the effect in the effect array.
+     */
     void applyToProgram(ShaderProgram &program, int index) override {
         program.setUniform1f("EffectFloat1[" + std::to_string((int)index) + "]",
                              params.exposure);

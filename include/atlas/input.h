@@ -139,18 +139,71 @@ enum class Key : int {
     Menu = GLFW_KEY_MENU
 };
 
+/**
+ * @brief Enumeration of mouse buttons. Each button represents a physical mouse
+ * button that can be pressed.
+ *
+ */
 enum class MouseButton : int {
+    /**
+     * @brief Generic mouse button 1.
+     *
+     */
     Button1 = GLFW_MOUSE_BUTTON_1,
+    /**
+     * @brief Generic mouse button 2.
+     *
+     */
     Button2 = GLFW_MOUSE_BUTTON_2,
+    /**
+     * @brief Generic mouse button 3.
+     *
+     */
     Button3 = GLFW_MOUSE_BUTTON_3,
+    /**
+     * @brief Generic mouse button 4.
+     *
+     */
     Button4 = GLFW_MOUSE_BUTTON_4,
+    /**
+     * @brief Generic mouse button 5.
+     *
+     */
     Button5 = GLFW_MOUSE_BUTTON_5,
+    /**
+     * @brief Generic mouse button 6.
+     *
+     */
     Button6 = GLFW_MOUSE_BUTTON_6,
+    /**
+     * @brief Generic mouse button 7.
+     *
+     */
     Button7 = GLFW_MOUSE_BUTTON_7,
+    /**
+     * @brief Generic mouse button 8.
+     *
+     */
     Button8 = GLFW_MOUSE_BUTTON_8,
+    /**
+     * @brief The last valid mouse button.
+     *
+     */
     Last = GLFW_MOUSE_BUTTON_LAST,
+    /**
+     * @brief The left mouse button (primary button).
+     *
+     */
     Left = GLFW_MOUSE_BUTTON_LEFT,
+    /**
+     * @brief The right mouse button (secondary button).
+     *
+     */
     Right = GLFW_MOUSE_BUTTON_RIGHT,
+    /**
+     * @brief The middle mouse button (scroll wheel button).
+     *
+     */
     Middle = GLFW_MOUSE_BUTTON_MIDDLE
 };
 

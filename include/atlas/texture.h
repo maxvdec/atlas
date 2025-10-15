@@ -307,17 +307,58 @@ class RenderTarget : public Renderable {
      * output of the rendering process.
      */
     Texture texture;
+    /**
+     * @brief Texture containing bright areas for bloom effects.
+     *
+     */
     Texture brightTexture;
+    /**
+     * @brief Texture containing the blurred version for post-processing.
+     *
+     */
     Texture blurredTexture;
+    /**
+     * @brief Texture containing depth information for depth-based effects.
+     *
+     */
     Texture depthTexture;
 
+    /**
+     * @brief G-buffer texture for world-space positions (deferred rendering).
+     *
+     */
     Texture gPosition;
+    /**
+     * @brief G-buffer texture for normals (deferred rendering).
+     *
+     */
     Texture gNormal;
+    /**
+     * @brief G-buffer texture for albedo and specular intensity (deferred
+     * rendering).
+     *
+     */
     Texture gAlbedoSpec;
+    /**
+     * @brief G-buffer texture for material properties (deferred rendering).
+     *
+     */
     Texture gMaterial;
 
+    /**
+     * @brief Multisampled texture for anti-aliasing.
+     *
+     */
     Texture msTexture;
+    /**
+     * @brief Multisampled depth texture for anti-aliasing.
+     *
+     */
     Texture msDepthTexture;
+    /**
+     * @brief Multisampled bright texture for anti-aliasing.
+     *
+     */
     Texture msBrightTexture;
     /**
      * @brief The type of the render target.
@@ -363,11 +404,17 @@ class RenderTarget : public Renderable {
 
     void render(float dt) override;
     /**
-     * @brief Resolves the render target.
+     * @brief Resolves the render target by copying multisampled buffers to
+     * regular textures.
      *
      */
     void resolve();
 
+    /**
+     * @brief Adds a post-processing effect to the render target.
+     *
+     * @param effect The effect to add.
+     */
     inline void addEffect(std::shared_ptr<Effect> effect) {
         effects.push_back(effect);
     }

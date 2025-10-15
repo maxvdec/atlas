@@ -73,8 +73,20 @@ enum class AtlasVertexShader {
      *
      */
     Text,
+    /**
+     * @brief Vertex shader for rendering point light shadow maps.
+     *
+     */
     PointLightShadow,
+    /**
+     * @brief Vertex shader for rendering directional light shadows.
+     *
+     */
     Light,
+    /**
+     * @brief Vertex shader for rendering deferred shading.
+     *
+     */
     Deferred,
 };
 
@@ -103,9 +115,26 @@ enum class ShaderCapability {
      *
      */
     EnvironmentMapping,
+    /**
+     * @brief Capability for handling skeletal animations.
+     *
+     */
     Deferred,
+    /**
+     * @brief Capability for handling deferred rendering.
+     *
+     */
     LightDeferred,
+    /**
+     * @brief Capability for handling material properties.
+     *
+     */
     Material,
+    /**
+     * @brief Capability for handling instancing (rendering multiple objects
+     * with a single draw call).
+     *
+     */
     Instances
 };
 
@@ -120,8 +149,17 @@ struct VertexShader {
      */
     const char *source;
 
+    /**
+     * @brief Static cache of compiled vertex shaders to avoid recompilation.
+     *
+     */
     static std::map<AtlasVertexShader, VertexShader> vertexShaderCache;
 
+    /**
+     * @brief If this shader was created from a default shader, stores which
+     * type it was.
+     *
+     */
     std::optional<AtlasVertexShader> fromDefaultShaderType = std::nullopt;
 
     /**
@@ -213,11 +251,36 @@ enum class AtlasFragmentShader {
      *
      */
     Text,
+    /**
+     * @brief Fragment shader for rendering depth maps (used in shadow mapping).
+     *
+     */
     PointLightShadow,
+    /**
+     * @brief Fragment shader for applying a Gaussian blur effect.
+     *
+     */
     GaussianBlur,
+    /**
+     * @brief Main fragment shader for rendering lights in deferred rendering.
+     *
+     */
     Light,
+    /**
+     * @brief Main fragment shader for deferred rendering.
+     *
+     */
     Deferred,
+    /**
+     * @brief Fragment shader for rendering screen-space ambient occlusion
+     * (SSAO).
+     *
+     */
     SSAO,
+    /**
+     * @brief Fragment shader for blurring the SSAO texture.
+     *
+     */
     SSAOBlur,
 };
 
@@ -233,8 +296,17 @@ struct FragmentShader {
      */
     const char *source;
 
+    /**
+     * @brief Static cache of compiled fragment shaders to avoid recompilation.
+     *
+     */
     static std::map<AtlasFragmentShader, FragmentShader> fragmentShaderCache;
 
+    /**
+     * @brief If this shader was created from a default shader, stores which
+     * type it was.
+     *
+     */
     std::optional<AtlasFragmentShader> fromDefaultShaderType = std::nullopt;
 
     /**
@@ -264,7 +336,15 @@ struct FragmentShader {
     Id shaderId;
 };
 
+/**
+ * @brief Enumeration of default geometry shaders provided by the Atlas engine.
+ *
+ */
 enum class AtlasGeometryShader {
+    /**
+     * @brief Geometry shader for rendering point light shadow maps.
+     *
+     */
     PointLightShadow,
 };
 
@@ -361,8 +441,16 @@ struct ShaderProgram {
      */
     FragmentShader fragmentShader;
 
+    /**
+     * @brief The geometry shader component of the shader program (optional).
+     *
+     */
     GeometryShader geometryShader;
 
+    /**
+     * @brief Static cache of compiled shader programs to avoid recompilation.
+     *
+     */
     static std::map<std::pair<AtlasVertexShader, AtlasFragmentShader>,
                     ShaderProgram>
         shaderCache;
