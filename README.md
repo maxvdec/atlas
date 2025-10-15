@@ -1,9 +1,8 @@
 # Atlas
 
----
 ![GitHub contributors](https://img.shields.io/github/contributors/maxvdec/atlas)
 ![GitHub last commit](https://img.shields.io/github/last-commit/maxvdec/atlas)
-![Tests](https://github.com/maxvdec/atlas/actions/workflows/build.yml/badge.svg)
+![Tests](https://github.com/maxvdec/atlas/actions/workflows/build.yaml/badge.svg)
 ![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/maxvdec/atlas)
 ![GitHub Repo stars](https://img.shields.io/github/stars/maxvdec/atlas)
 
