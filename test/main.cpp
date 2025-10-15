@@ -24,6 +24,11 @@ class SphereCube : public CompoundObject {
         cube.body->applyMass(0); // Make it static
         this->addObject(&cube);
 
+        for (int i = 0; i < 6; i++) {
+            Instance &instance = cube.createInstance();
+            instance.move({0.0f, 0.6f * i, 0.0f});
+        }
+
         sphere = createDebugSphere(0.25f);
         sphere.setPosition({1.0, sphere.getPosition().y, 0.0});
         sphere.initialize();
@@ -169,6 +174,10 @@ class MainScene : public Scene {
         lightObject = createBox({1.0f, 1.0f, 1.0f}, Color::yellow());
         lightObject.setPosition({0.0f, 0.3f, 0.0f});
         lightObject.makeEmissive(this, {5.0, 5.0, 5.0}, 2.0f);
+        for (int i = 0; i < 4; i++) {
+            Instance &instance = lightObject.createInstance();
+            instance.move({0.0f, 1.1f * i, 0.0f});
+        }
         window.addObject(&lightObject);
 
         this->setAmbientIntensity(0.1f);
