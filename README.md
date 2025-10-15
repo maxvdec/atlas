@@ -41,30 +41,30 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [x] Particle system
 - [x] Lights
 - [x] Shadows (except for point lights)
-- [x] Post-processing effects **for alpha 2**
+- [x] Post-processing effects
 - [ ] Sky, atmosphere, weather and fluid simulation system (Hydra)
 - [ ] Animation system (Mold)
-- [x] Instancing support **for alpha 2**
-- [ ] Optimizations and performance improvements
+- [x] Instancing support
+- [ ] Optimizations and performance improvements **for alpha 2.1**
 - [x] CLI for packing applications
 - [ ] Runtime independent of final executable
 - [ ] Scene packing
-- [x] Add deferred rendering for better performance with many lights **for alpha 2**
+- [x] Add deferred rendering for better performance with many lights
 - [ ] Add PBR rendering
 - [ ] Add other texture supports (normal, roughness, metallic, ao, etc.)
-- [x] Add HDR support **for alpha 2**
-- [x] Add SSAO **for alpha 2**
+- [x] Add HDR support
+- [x] Add SSAO
 - [ ] Add cascaded shadow maps for directional lights
-- [x] Add soft shadows **for alpha 2**
-- [x] Add shadows for point lights **for alpha 2**
-- [x] Add normal and parallax mapping **for alpha 2**
+- [x] Add soft shadows
+- [x] Add shadows for point lights
+- [x] Add normal and parallax mapping
 - [ ] Handle better collisions with Bezel
 - [ ] Add support for constraints in Bezel
 - [ ] Add support for character controllers in Bezel
 - [ ] Add support for motors in Bezel
 - [ ] Add volumetric lighting
-- [x] Add bloom for lights **for alpha 2**
-- [x] Add depth of field **for alpha 2**
+- [x] Add bloom for lights
+- [x] Add depth of field
 - [ ] Add terrain system
 - [ ] Add motion blur
 - [ ] Physically based bloom
