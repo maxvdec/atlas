@@ -1,5 +1,9 @@
 var NAVTREEINDEX4 =
 {
+"struct_core_vertex.html#abc2d2f54279470559c2774fc62a6593f":[2,0,22,4],
+"struct_core_vertex.html#acde6bccd12e2eeed36d31fa4b2af9677":[2,0,22,5],
+"struct_core_vertex.html#af857b1beb9f81b407c6b3ac239368a8f":[2,0,22,0],
+"struct_cubemap.html":[2,0,23],
 "struct_cubemap.html#a1a2f4dd1ade28b0193b10f6512407655":[2,0,23,2],
 "struct_cubemap.html#a5fccaab17f7056ff6aa3df30af7281da":[2,0,23,4],
 "struct_cubemap.html#a69757fb707ae4ff02cc9cb1066d8e1d7":[2,0,23,1],
@@ -245,9 +249,5 @@ var NAVTREEINDEX4 =
 "struct_triangle.html#a21716fc2fbee90ddb3c2b1bc25e81590":[2,0,75,1],
 "struct_triangle.html#a9dd1e0dd08b2f7bbbb453063bacc7cf9":[2,0,75,2],
 "struct_triangle.html#aa1781b2e0265b3fef1d7aa02430a7821":[2,0,75,0],
-"struct_vertex_shader.html":[2,0,78],
-"struct_vertex_shader.html#a186940a69ff3b946d67fe227728b7a96":[2,0,78,7],
-"struct_vertex_shader.html#a3a08d4972fc50ff41bec41611345847b":[2,0,78,0],
-"struct_vertex_shader.html#a6ebf85025d7e1fb437952aeaec3ce411":[2,0,78,3],
-"struct_vertex_shader.html#a7f4f61da37bb52297791b071c91107f4":[2,0,78,6]
+"struct_vertex_shader.html":[2,0,78]
 };

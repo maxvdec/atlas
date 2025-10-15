@@ -108,10 +108,11 @@ var searchData=
   ['ssao_5ffrag_105',['SSAO_FRAG',['../default__shaders_8h.html#ad0bc8276a246d872f0f11a408ede96a6',1,'default_shaders.h']]],
   ['ssaoblur_106',['SSAOBlur',['../shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a0cbd177f5587f49172adca66ce3041ce',1,'SSAOBlur:&#160;shader.h'],['../texture_8h.html#a639c740f69368f9fe25a4f7409a16384a0cbd177f5587f49172adca66ce3041ce',1,'SSAOBlur:&#160;texture.h']]],
   ['ssaonoise_107',['SSAONoise',['../texture_8h.html#a579bf435a05d45b75f553d37ebbb3225a74cd2b14850061d58e3fc9da302c4efe',1,'texture.h']]],
-  ['startemission_108',['startEmission',['../class_particle_emitter.html#af1dbd2719498583e8b750540911d94ba',1,'ParticleEmitter']]],
-  ['stop_109',['stop',['../class_audio_player.html#a061331787895c48a1dd321aab4fb9c10',1,'AudioPlayer::stop()'],['../class_audio_source.html#ab3449cc8a764c0d15e9453d52610475e',1,'AudioSource::stop()']]],
-  ['stopemission_110',['stopEmission',['../class_particle_emitter.html#a9c55b3d6ed9e567faa5df22714505296',1,'ParticleEmitter']]],
-  ['stride_111',['stride',['../struct_layout_descriptor.html#ac19f6be67e42f8b2cf98971ed4ae73a8',1,'LayoutDescriptor']]],
-  ['support_112',['support',['../class_shape.html#aca400d93e5a501e378c1ec208dbb7a03',1,'Shape::support()'],['../class_sphere.html#a3fdf86b4ce5aa38eccf88b0f53abc8b2',1,'Sphere::support()'],['../class_box.html#ae0e6b8c07b080a953175763fcdfddb26',1,'Box::support()'],['../class_convex.html#a84c8e1bdea5369f73155b8b21bfe2ebc',1,'Convex::support()'],['../namespacebezel.html#afc80ee126c9ecce4cc93fa92b30a3078',1,'bezel::support(const std::shared_ptr&lt; Body &gt; bodyA, const std::shared_ptr&lt; Body &gt; bodyB, glm::vec3 dir, float bias)']]],
-  ['sweepandprune1d_113',['sweepAndPrune1d',['../namespacebezel.html#a2dcc7b65199d4b5c74834caf177660af',1,'bezel']]]
+  ['ssaoscale_108',['ssaoScale',['../struct_window_configuration.html#aaa60e63f1d44ce0ad68e70e3b5e88c7b',1,'WindowConfiguration']]],
+  ['startemission_109',['startEmission',['../class_particle_emitter.html#af1dbd2719498583e8b750540911d94ba',1,'ParticleEmitter']]],
+  ['stop_110',['stop',['../class_audio_player.html#a061331787895c48a1dd321aab4fb9c10',1,'AudioPlayer::stop()'],['../class_audio_source.html#ab3449cc8a764c0d15e9453d52610475e',1,'AudioSource::stop()']]],
+  ['stopemission_111',['stopEmission',['../class_particle_emitter.html#a9c55b3d6ed9e567faa5df22714505296',1,'ParticleEmitter']]],
+  ['stride_112',['stride',['../struct_layout_descriptor.html#ac19f6be67e42f8b2cf98971ed4ae73a8',1,'LayoutDescriptor']]],
+  ['support_113',['support',['../class_shape.html#aca400d93e5a501e378c1ec208dbb7a03',1,'Shape::support()'],['../class_sphere.html#a3fdf86b4ce5aa38eccf88b0f53abc8b2',1,'Sphere::support()'],['../class_box.html#ae0e6b8c07b080a953175763fcdfddb26',1,'Box::support()'],['../class_convex.html#a84c8e1bdea5369f73155b8b21bfe2ebc',1,'Convex::support()'],['../namespacebezel.html#afc80ee126c9ecce4cc93fa92b30a3078',1,'bezel::support(const std::shared_ptr&lt; Body &gt; bodyA, const std::shared_ptr&lt; Body &gt; bodyB, glm::vec3 dir, float bias)']]],
+  ['sweepandprune1d_114',['sweepAndPrune1d',['../namespacebezel.html#a2dcc7b65199d4b5c74834caf177660af',1,'bezel']]]
 ];

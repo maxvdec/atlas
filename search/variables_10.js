@@ -19,5 +19,6 @@ var searchData=
   ['spread_16',['spread',['../struct_particle_settings.html#a7fdda9807df7ee5c3e9a4c7ea957c20b',1,'ParticleSettings']]],
   ['ssao_5fblur_5ffrag_17',['SSAO_BLUR_FRAG',['../default__shaders_8h.html#ae246351246e38222f7f020310ba18c96',1,'default_shaders.h']]],
   ['ssao_5ffrag_18',['SSAO_FRAG',['../default__shaders_8h.html#ad0bc8276a246d872f0f11a408ede96a6',1,'default_shaders.h']]],
-  ['stride_19',['stride',['../struct_layout_descriptor.html#ac19f6be67e42f8b2cf98971ed4ae73a8',1,'LayoutDescriptor']]]
+  ['ssaoscale_19',['ssaoScale',['../struct_window_configuration.html#aaa60e63f1d44ce0ad68e70e3b5e88c7b',1,'WindowConfiguration']]],
+  ['stride_20',['stride',['../struct_layout_descriptor.html#ac19f6be67e42f8b2cf98971ed4ae73a8',1,'LayoutDescriptor']]]
 ];

@@ -10,7 +10,9 @@ var struct_window_configuration =
     [ "opacity", "struct_window_configuration.html#af603ed135d4e249a99add01471feacb2", null ],
     [ "posX", "struct_window_configuration.html#af82774e73872b7f9723a32317cc2c584", null ],
     [ "posY", "struct_window_configuration.html#a74135e5e43337d42165fef181311744d", null ],
+    [ "renderScale", "struct_window_configuration.html#a40e4e6ae5bb042ee9a14666e23db89d5", null ],
     [ "resizable", "struct_window_configuration.html#af285eb5158fa6a5667ce08fc32b1997d", null ],
+    [ "ssaoScale", "struct_window_configuration.html#aaa60e63f1d44ce0ad68e70e3b5e88c7b", null ],
     [ "title", "struct_window_configuration.html#abf7b5dd301a90c647a15b2e5168c7d66", null ],
     [ "transparent", "struct_window_configuration.html#a4358f8f89bce229f24da436af8bf963f", null ],
     [ "width", "struct_window_configuration.html#a4df560282200968d1957c90a801959be", null ]

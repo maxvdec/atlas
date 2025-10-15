@@ -135,6 +135,8 @@ Public Attributes</h2></td></tr>
 <tr class="memdesc:a4df560282200968d1957c90a801959be"><td class="mdescLeft">&#160;</td><td class="mdescRight">The width of the window in pixels.  <br /></td></tr>
 <tr class="memitem:aa56b982e392a5e2c45854bdc86af277f" id="r_aa56b982e392a5e2c45854bdc86af277f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa56b982e392a5e2c45854bdc86af277f">height</a></td></tr>
 <tr class="memdesc:aa56b982e392a5e2c45854bdc86af277f"><td class="mdescLeft">&#160;</td><td class="mdescRight">The height of the window in pixels.  <br /></td></tr>
+<tr class="memitem:a40e4e6ae5bb042ee9a14666e23db89d5" id="r_a40e4e6ae5bb042ee9a14666e23db89d5"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a40e4e6ae5bb042ee9a14666e23db89d5">renderScale</a> = 0.75f</td></tr>
+<tr class="memdesc:a40e4e6ae5bb042ee9a14666e23db89d5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Internal rendering resolution scale factor. Values below 1.0 render at a lower resolution and upscale to the window, improving performance.  <br /></td></tr>
 <tr class="memitem:a25db3fbd183275646f6062aa0f73db91" id="r_a25db3fbd183275646f6062aa0f73db91"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a25db3fbd183275646f6062aa0f73db91">mouseCaptured</a> = true</td></tr>
 <tr class="memdesc:a25db3fbd183275646f6062aa0f73db91"><td class="mdescLeft">&#160;</td><td class="mdescRight">Whether the mouse cursor should be captured and hidden.  <br /></td></tr>
 <tr class="memitem:af82774e73872b7f9723a32317cc2c584" id="r_af82774e73872b7f9723a32317cc2c584"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af82774e73872b7f9723a32317cc2c584">posX</a> = <a class="el" href="window_8h.html#ab807f56d82d66168c2b8f785c1df699f">WINDOW_CENTERED</a></td></tr>
@@ -157,11 +159,13 @@ Public Attributes</h2></td></tr>
 <tr class="memdesc:a45697805b5409de3b3ba16f8fd63e347"><td class="mdescLeft">&#160;</td><td class="mdescRight">The width component of the aspect ratio. Use -1 for no constraint.  <br /></td></tr>
 <tr class="memitem:a4d9ab6af44609b23217808963ca0c1f5" id="r_a4d9ab6af44609b23217808963ca0c1f5"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4d9ab6af44609b23217808963ca0c1f5">aspectRatioY</a> = -1</td></tr>
 <tr class="memdesc:a4d9ab6af44609b23217808963ca0c1f5"><td class="mdescLeft">&#160;</td><td class="mdescRight">The height component of the aspect ratio. Use -1 for no constraint.  <br /></td></tr>
+<tr class="memitem:aaa60e63f1d44ce0ad68e70e3b5e88c7b" id="r_aaa60e63f1d44ce0ad68e70e3b5e88c7b"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aaa60e63f1d44ce0ad68e70e3b5e88c7b">ssaoScale</a> = 0.5f</td></tr>
+<tr class="memdesc:aaa60e63f1d44ce0ad68e70e3b5e88c7b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resolution scale used specifically for SSAO passes. Lower values reduce quality but greatly boost performance.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Structure representing the configuration options for creating a window. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00037">37</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00039">39</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 </div><a name="doc-variable-members" id="doc-variable-members"></a><h2 id="header-doc-variable-members" class="groupheader">Member Data Documentation</h2>
 <a id="a097dc5b5aee3944a617487530393dd11" name="a097dc5b5aee3944a617487530393dd11"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a097dc5b5aee3944a617487530393dd11">&#9670;&#160;</a></span>alwaysOnTop</h2>
@@ -177,7 +181,7 @@ Public Attributes</h2></td></tr>
 
 <p>Whether the window should always stay on top of other windows. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00092">92</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00100">100</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -195,7 +199,7 @@ Public Attributes</h2></td></tr>
 
 <p>The width component of the aspect ratio. Use -1 for no constraint. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00104">104</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00112">112</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -213,7 +217,7 @@ Public Attributes</h2></td></tr>
 
 <p>The height component of the aspect ratio. Use -1 for no constraint. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00110">110</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00118">118</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -231,7 +235,7 @@ Public Attributes</h2></td></tr>
 
 <p>Whether the window should have decorations (title bar, borders). </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00077">77</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00085">85</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -249,7 +253,7 @@ Public Attributes</h2></td></tr>
 
 <p>The height of the window in pixels. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00052">52</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00054">54</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -267,7 +271,7 @@ Public Attributes</h2></td></tr>
 
 <p>Whether the mouse cursor should be captured and hidden. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00057">57</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00065">65</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -285,7 +289,7 @@ Public Attributes</h2></td></tr>
 
 <p>Whether to enable multisampling anti-aliasing. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00072">72</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00080">80</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -303,7 +307,7 @@ Public Attributes</h2></td></tr>
 
 <p>The opacity of the window. 1.0 is fully opaque, 0.0 is fully transparent. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00098">98</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00106">106</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -321,7 +325,7 @@ Public Attributes</h2></td></tr>
 
 <p>The X position of the window. Use WINDOW_CENTERED to center. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00062">62</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00070">70</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -339,7 +343,25 @@ Public Attributes</h2></td></tr>
 
 <p>The Y position of the window. Use WINDOW_CENTERED to center. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00067">67</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00075">75</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+
+</div>
+</div>
+<a id="a40e4e6ae5bb042ee9a14666e23db89d5" name="a40e4e6ae5bb042ee9a14666e23db89d5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a40e4e6ae5bb042ee9a14666e23db89d5">&#9670;&#160;</a></span>renderScale</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">float WindowConfiguration::renderScale = 0.75f</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Internal rendering resolution scale factor. Values below 1.0 render at a lower resolution and upscale to the window, improving performance. </p>
+
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00060">60</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -357,7 +379,25 @@ Public Attributes</h2></td></tr>
 
 <p>Whether the window can be resized by the user. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00082">82</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00090">90</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+
+</div>
+</div>
+<a id="aaa60e63f1d44ce0ad68e70e3b5e88c7b" name="aaa60e63f1d44ce0ad68e70e3b5e88c7b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aaa60e63f1d44ce0ad68e70e3b5e88c7b">&#9670;&#160;</a></span>ssaoScale</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">float WindowConfiguration::ssaoScale = 0.5f</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Resolution scale used specifically for SSAO passes. Lower values reduce quality but greatly boost performance. </p>
+
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00123">123</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -375,7 +415,7 @@ Public Attributes</h2></td></tr>
 
 <p>The title of the window. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00042">42</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00044">44</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -393,7 +433,7 @@ Public Attributes</h2></td></tr>
 
 <p>Whether the window framebuffer should be transparent. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00087">87</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00095">95</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -411,7 +451,7 @@ Public Attributes</h2></td></tr>
 
 <p>The width of the window in pixels. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00047">47</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00049">49</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
