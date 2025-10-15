@@ -18,6 +18,7 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <atlas/window.h>
+#include <cmath>
 #include <iostream>
 #include <memory>
 #include <optional>
@@ -87,12 +88,19 @@ Window::Window(WindowConfiguration config)
 
     this->windowRef = static_cast<CoreWindowReference>(window);
 
+    this->renderScale = std::clamp(config.renderScale, 0.5f, 1.0f);
+    this->ssaoRenderScale = std::clamp(config.ssaoScale, 0.25f, 1.0f);
+
     Window::mainWindow = this;
 
     glfwSetFramebufferSizeCallback(window, [](GLFWwindow *win, int w, int h) {
         int fbWidth, fbHeight;
         glfwGetFramebufferSize(win, &fbWidth, &fbHeight);
         glViewport(0, 0, fbWidth, fbHeight);
+        if (Window::mainWindow != nullptr) {
+            Window::mainWindow->shadowMapsDirty = true;
+            Window::mainWindow->ssaoMapsDirty = true;
+        }
     });
 
     lastMouseX = width / 2.0;
@@ -195,10 +203,7 @@ void Window::run() {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    float fpsAccumulator = 0.0f;
-    float fpsTimer = 0.0f;
-    int frameCount = 0;
-    this->framesPerSecond = 60.0f;
+    this->framesPerSecond = 0.0f;
 
     while (!glfwWindowShouldClose(window)) {
         if (this->currentScene == nullptr) {
@@ -212,13 +217,8 @@ void Window::run() {
         this->deltaTime = currentTime - this->lastTime;
         lastTime = currentTime;
 
-        fpsAccumulator += this->deltaTime;
-        frameCount++;
-
-        if (fpsAccumulator >= 1.0f) {
-            this->framesPerSecond = frameCount;
-            frameCount = 0;
-            fpsAccumulator = 0.0f;
+        if (this->deltaTime > 0.0f) {
+            this->framesPerSecond = 1.0f / this->deltaTime;
         }
 
         // Update the renderables
@@ -228,8 +228,6 @@ void Window::run() {
 
         currentScene->update(*this);
 
-        auto start = std::chrono::high_resolution_clock::now();
-
         renderLightsToShadowMaps();
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -237,12 +235,15 @@ void Window::run() {
         glCullFace(GL_BACK);
         // Render to the targets
         for (auto &target : this->renderTargets) {
+            int targetWidth = target->getWidth();
+            int targetHeight = target->getHeight();
             glDepthFunc(GL_LESS);
             glDepthMask(GL_TRUE);
             glEnable(GL_CULL_FACE);
             glCullFace(GL_BACK);
 
             glBindFramebuffer(GL_FRAMEBUFFER, target->fbo);
+            glViewport(0, 0, targetWidth, targetHeight);
             if (target->brightTexture.id != 0) {
                 unsigned int attachments[2] = {GL_COLOR_ATTACHMENT0,
                                                GL_COLOR_ATTACHMENT1};
@@ -254,12 +255,10 @@ void Window::run() {
 
                 glBindFramebuffer(GL_READ_FRAMEBUFFER, this->gBuffer->fbo);
                 glBindFramebuffer(GL_DRAW_FRAMEBUFFER, target->fbo);
-                glBlitFramebuffer(0, 0,
-                                  this->gBuffer->gPosition.creationData.width,
-                                  this->gBuffer->gPosition.creationData.height,
-                                  0, 0, target->texture.creationData.width,
-                                  target->texture.creationData.height,
-                                  GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+                glBlitFramebuffer(
+                    0, 0, this->gBuffer->gPosition.creationData.width,
+                    this->gBuffer->gPosition.creationData.height, 0, 0,
+                    targetWidth, targetHeight, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
                 glBindFramebuffer(GL_READ_FRAMEBUFFER, target->fbo);
                 unsigned int targetAttachments[2] = {GL_COLOR_ATTACHMENT0,
                                                      GL_COLOR_ATTACHMENT1};
@@ -289,8 +288,6 @@ void Window::run() {
                 target->resolve();
                 continue;
             }
-            Size2d windowSize = getSize();
-            glViewport(0, 0, windowSize.width, windowSize.height);
             glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -369,6 +366,18 @@ void Window::setCamera(Camera *newCamera) { this->camera = newCamera; }
 void Window::setScene(Scene *scene) {
     this->currentScene = scene;
     scene->initialize(*this);
+    this->shadowMapsDirty = true;
+    this->shadowUpdateCooldown = 0.0f;
+    this->lastShadowCameraPosition.reset();
+    this->lastShadowCameraDirection.reset();
+    this->cachedDirectionalLightDirections.clear();
+    this->cachedPointLightPositions.clear();
+    this->cachedSpotlightPositions.clear();
+    this->cachedSpotlightDirections.clear();
+    this->ssaoMapsDirty = true;
+    this->ssaoUpdateCooldown = 0.0f;
+    this->lastSSAOCameraPosition.reset();
+    this->lastSSAOCameraDirection.reset();
 }
 
 glm::mat4 Window::calculateProjectionMatrix() {
@@ -420,9 +429,13 @@ void Window::setWindowed(WindowConfiguration config) {
     GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
     int width = config.width;
     int height = config.height;
+    this->renderScale = std::clamp(config.renderScale, 0.5f, 1.0f);
+    this->ssaoRenderScale = std::clamp(config.ssaoScale, 0.25f, 1.0f);
     int posX = config.posX != WINDOW_CENTERED ? config.posX : 100;
     int posY = config.posY != WINDOW_CENTERED ? config.posY : 100;
     glfwSetWindowMonitor(window, nullptr, posX, posY, width, height, 0);
+    this->shadowMapsDirty = true;
+    this->ssaoMapsDirty = true;
 }
 
 std::vector<Monitor> Window::enumerateMonitors() {
@@ -527,6 +540,129 @@ void Window::addRenderTarget(RenderTarget *target) {
 }
 
 void Window::renderLightsToShadowMaps() {
+    if (this->currentScene == nullptr) {
+        return;
+    }
+
+    this->shadowUpdateCooldown =
+        std::max(0.0f, this->shadowUpdateCooldown - this->deltaTime);
+
+    bool cameraMoved = false;
+    if (this->camera != nullptr) {
+        glm::vec3 currentPos = this->camera->position.toGlm();
+        glm::vec3 currentDir = this->camera->getFrontVector().toGlm();
+        if (!this->lastShadowCameraPosition.has_value() ||
+            !this->lastShadowCameraDirection.has_value()) {
+            cameraMoved = true;
+        } else {
+            glm::vec3 lastPos = this->lastShadowCameraPosition->toGlm();
+            glm::vec3 lastDir = this->lastShadowCameraDirection->toGlm();
+            if (glm::length(currentPos - lastPos) > 0.25f) {
+                cameraMoved = true;
+            } else if (glm::length(currentDir - lastDir) > 0.02f) {
+                cameraMoved = true;
+            }
+        }
+    }
+
+    bool lightsChanged = false;
+    const float positionThreshold = 0.1f;
+    const float directionThreshold = 0.02f;
+
+    const auto &directionalLights = this->currentScene->directionalLights;
+    if (this->cachedDirectionalLightDirections.size() !=
+        directionalLights.size()) {
+        lightsChanged = true;
+    } else {
+        for (size_t i = 0; i < directionalLights.size(); ++i) {
+            if (directionalLights[i] == nullptr) {
+                if (glm::length(this->cachedDirectionalLightDirections[i]) >
+                    directionThreshold) {
+                    lightsChanged = true;
+                    break;
+                }
+                continue;
+            }
+            glm::vec3 dir = directionalLights[i]->direction.toGlm();
+            if (glm::length(dir - this->cachedDirectionalLightDirections[i]) >
+                directionThreshold) {
+                lightsChanged = true;
+                break;
+            }
+        }
+    }
+
+    const auto &pointLights = this->currentScene->pointLights;
+    if (!lightsChanged) {
+        if (this->cachedPointLightPositions.size() != pointLights.size()) {
+            lightsChanged = true;
+        } else {
+            for (size_t i = 0; i < pointLights.size(); ++i) {
+                if (pointLights[i] == nullptr) {
+                    if (glm::length(this->cachedPointLightPositions[i]) >
+                        positionThreshold) {
+                        lightsChanged = true;
+                        break;
+                    }
+                    continue;
+                }
+                glm::vec3 pos = pointLights[i]->position.toGlm();
+                if (glm::length(pos - this->cachedPointLightPositions[i]) >
+                    positionThreshold) {
+                    lightsChanged = true;
+                    break;
+                }
+            }
+        }
+    }
+
+    const auto &spotLights = this->currentScene->spotlights;
+    if (!lightsChanged) {
+        if (this->cachedSpotlightPositions.size() != spotLights.size() ||
+            this->cachedSpotlightDirections.size() != spotLights.size()) {
+            lightsChanged = true;
+        } else {
+            for (size_t i = 0; i < spotLights.size(); ++i) {
+                if (spotLights[i] == nullptr) {
+                    bool cachedPosNonZero =
+                        glm::length(this->cachedSpotlightPositions[i]) >
+                        positionThreshold;
+                    bool cachedDirNonZero =
+                        glm::length(this->cachedSpotlightDirections[i]) >
+                        directionThreshold;
+                    if (cachedPosNonZero || cachedDirNonZero) {
+                        lightsChanged = true;
+                        break;
+                    }
+                    continue;
+                }
+                glm::vec3 pos = spotLights[i]->position.toGlm();
+                glm::vec3 dir = spotLights[i]->direction.toGlm();
+                if (glm::length(pos - this->cachedSpotlightPositions[i]) >
+                        positionThreshold ||
+                    glm::length(dir - this->cachedSpotlightDirections[i]) >
+                        directionThreshold) {
+                    lightsChanged = true;
+                    break;
+                }
+            }
+        }
+    }
+
+    if (cameraMoved || lightsChanged) {
+        this->shadowMapsDirty = true;
+    }
+
+    if (!this->shadowMapsDirty) {
+        return;
+    }
+
+    if (this->shadowUpdateCooldown > 0.0f) {
+        return;
+    }
+
+    this->shadowMapsDirty = false;
+    this->shadowUpdateCooldown = this->shadowUpdateInterval;
 
     bool renderedShadows = false;
 
@@ -641,6 +777,47 @@ void Window::renderLightsToShadowMaps() {
         }
     }
 
+    if (this->camera != nullptr) {
+        this->lastShadowCameraPosition = this->camera->position;
+        this->lastShadowCameraDirection = this->camera->getFrontVector();
+    }
+
+    this->cachedDirectionalLightDirections.clear();
+    this->cachedDirectionalLightDirections.reserve(directionalLights.size());
+    for (auto *light : directionalLights) {
+        if (light == nullptr) {
+            this->cachedDirectionalLightDirections.emplace_back(0.0f, 0.0f,
+                                                                0.0f);
+            continue;
+        }
+        this->cachedDirectionalLightDirections.push_back(
+            light->direction.toGlm());
+    }
+
+    this->cachedPointLightPositions.clear();
+    this->cachedPointLightPositions.reserve(pointLights.size());
+    for (auto *light : pointLights) {
+        if (light == nullptr) {
+            this->cachedPointLightPositions.emplace_back(0.0f, 0.0f, 0.0f);
+            continue;
+        }
+        this->cachedPointLightPositions.push_back(light->position.toGlm());
+    }
+
+    this->cachedSpotlightPositions.clear();
+    this->cachedSpotlightDirections.clear();
+    this->cachedSpotlightPositions.reserve(spotLights.size());
+    this->cachedSpotlightDirections.reserve(spotLights.size());
+    for (auto *light : spotLights) {
+        if (light == nullptr) {
+            this->cachedSpotlightPositions.emplace_back(0.0f, 0.0f, 0.0f);
+            this->cachedSpotlightDirections.emplace_back(0.0f, 0.0f, 0.0f);
+            continue;
+        }
+        this->cachedSpotlightPositions.push_back(light->position.toGlm());
+        this->cachedSpotlightDirections.push_back(light->direction.toGlm());
+    }
+
     if (!renderedShadows) {
         return;
     }
@@ -716,7 +893,7 @@ void Window::renderPingpong(RenderTarget *target, float dt) {
 
     bool horizontal = true;
     bool firstIteration = true;
-    constexpr unsigned int blurIterations = 6;
+    const unsigned int blurIterations = std::max(1u, this->bloomBlurPasses);
 
     ShaderProgram &blurShader = this->bloomBlurProgram;
     auto originalProgram = target->object->getShaderProgram();
@@ -787,4 +964,5 @@ void Window::useDeferredRendering() {
     auto target = std::make_shared<RenderTarget>(
         RenderTarget(*this, RenderTargetType::GBuffer));
     this->gBuffer = target;
+    this->ssaoMapsDirty = true;
 }
