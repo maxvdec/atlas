@@ -48,6 +48,7 @@ void Window::deferredRendering(RenderTarget *target) {
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+    target->resolve();
     this->renderSSAO(target);
 
     glBindFramebuffer(GL_FRAMEBUFFER, target->fbo);

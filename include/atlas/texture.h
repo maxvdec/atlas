@@ -315,6 +315,10 @@ class RenderTarget : public Renderable {
     Texture gNormal;
     Texture gAlbedoSpec;
     Texture gMaterial;
+
+    Texture msTexture;
+    Texture msDepthTexture;
+    Texture msBrightTexture;
     /**
      * @brief The type of the render target.
      *

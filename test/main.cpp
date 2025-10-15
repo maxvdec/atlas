@@ -187,7 +187,7 @@ class MainScene : public Scene {
         skybox.display(window);
         this->setSkybox(&skybox);
 
-        frameBuffer = RenderTarget(window);
+        frameBuffer = RenderTarget(window, RenderTargetType::Multisampled);
         frameBuffer.display(window);
         window.addRenderTarget(&frameBuffer);
 
