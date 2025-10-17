@@ -176,9 +176,11 @@ class MainScene : public Scene {
             Instance &instance = lightObject.createInstance();
             instance.move({0.0f, 1.1f * i, 0.0f});
         }
+        window.addObject(&lightObject);
 
         ball = createDebugSphere(0.5f, 76, 76);
         ball.body->applyMass(0.0);
+        ball.move({1.5f, 0.0f, 0.0});
         ball.useDeferredRendering = false;
         window.addObject(&ball);
 
@@ -190,10 +192,8 @@ class MainScene : public Scene {
         this->setSkybox(&skybox);
 
         frameBuffer = RenderTarget(window, RenderTargetType::Multisampled);
-        frameBuffer.display(window);
         window.addRenderTarget(&frameBuffer);
-
-        window.useDeferredRendering();
+        frameBuffer.display(window);
     }
 };
 
