@@ -151,14 +151,12 @@ class MainScene : public Scene {
         backpack.attachTexture(normal);
 
         sphereCube.setPosition({0.0, 0.25, 0.0});
-        window.addObject(&sphereCube);
 
         ground = createBox({5.0f, 0.1f, 5.0f}, Color(0.3f, 0.8f, 0.3f));
         ground.attachTexture(
             Texture::fromResource(Workspace::get().createResource(
                 "ground.jpg", "GroundTexture", ResourceType::Image)));
         ground.setPosition({0.0f, -0.1f, 0.0f});
-        window.addObject(&ground);
 
         backpack.setPosition({0.0f, 0.2f, 0.0f});
 
@@ -178,7 +176,11 @@ class MainScene : public Scene {
             Instance &instance = lightObject.createInstance();
             instance.move({0.0f, 1.1f * i, 0.0f});
         }
-        window.addObject(&lightObject);
+
+        ball = createDebugSphere(0.5f, 76, 76);
+        ball.body->applyMass(0.0);
+        ball.useDeferredRendering = false;
+        window.addObject(&ball);
 
         this->setAmbientIntensity(0.1f);
 

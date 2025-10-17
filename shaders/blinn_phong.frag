@@ -13,9 +13,6 @@ const int TEXTURE_SPECULAR = 1;
 const int TEXTURE_DEPTH_CUBE = 4;
 const int TEXTURE_NORMAL = 5;
 const int TEXTURE_PARALLAX = 6;
-const int TEXTURE_METALLIC = 9;
-const int TEXTURE_ROUGHNESS = 10;
-const int TEXTURE_AO = 11;
 
 vec2 texCoord;
 
@@ -26,11 +23,11 @@ struct AmbientLight {
 };
 
 struct Material {
-    vec3 albedo;
-    float metallic;
-    float roughness;
-    float ao;
-    float reflectivity; 
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+    float shininess;
+    float reflectivity;
 };
 
 struct DirectionalLight {
@@ -193,7 +190,7 @@ vec4 sampleTextureAt(int textureIndex, vec2 uv) {
 
 vec3 getSpecularColor() {
     vec4 specTex = enableTextures(TEXTURE_SPECULAR);
-    vec3 specColor = material.albedo;
+    vec3 specColor = material.specular;
     if (specTex.r != -1.0 || specTex.g != -1.0 || specTex.b != -1.0) {
         specColor *= specTex.rgb;
     }
@@ -285,10 +282,10 @@ vec3 calcAllDirectionalLights(vec3 norm, vec3 viewDir) {
 
     for (int i = 0; i < directionalLightCount; i++) {
         diffuseSum += calcDirectionalDiffuse(directionalLights[i], norm);
-        specularSum += calcDirectionalSpecular(directionalLights[i], norm, viewDir, specColor, material.reflectivity);
+        specularSum += calcDirectionalSpecular(directionalLights[i], norm, viewDir, specColor, material.shininess);
     }
 
-    diffuseSum *= material.albedo;
+    diffuseSum *= material.diffuse;
     return diffuseSum + specularSum;
 }
 
@@ -319,10 +316,10 @@ vec3 calcAllPointLights(vec3 norm, vec3 fragPos, vec3 viewDir) {
     for (int i = 0; i < pointLightCount; i++) {
         float attenuation = calcAttenuation(pointLights[i], fragPos);
         diffuseSum += calcPointDiffuse(pointLights[i], norm, fragPos) * attenuation;
-        specularSum += calcPointSpecular(pointLights[i], norm, fragPos, viewDir, specColor, material.reflectivity) * attenuation;
+        specularSum += calcPointSpecular(pointLights[i], norm, fragPos, viewDir, specColor, material.shininess) * attenuation;
     }
 
-    diffuseSum *= material.albedo;
+    diffuseSum *= material.diffuse;
     return diffuseSum + specularSum;
 }
 
@@ -365,10 +362,10 @@ vec3 calcAllSpotLights(vec3 norm, vec3 fragPos, vec3 viewDir) {
     for (int i = 0; i < spotlightCount; i++) {
         float attenuation = calcSpotAttenuation(spotlights[i], fragPos);
         diffuseSum += calcSpotDiffuse(spotlights[i], norm, fragPos) * attenuation;
-        specularSum += calcSpotSpecular(spotlights[i], norm, fragPos, viewDir, specColor, material.reflectivity) * attenuation;
+        specularSum += calcSpotSpecular(spotlights[i], norm, fragPos, viewDir, specColor, material.shininess) * attenuation;
     }
 
-    diffuseSum *= material.albedo;
+    diffuseSum *= material.diffuse;
     return diffuseSum + specularSum;
 }
 
@@ -532,7 +529,7 @@ void main() {
     }
     vec3 viewDir = normalize(cameraPosition - FragPos);
 
-    vec3 ambient = ambientLight.color.rgb * ambientLight.intensity * material.albedo;
+    vec3 ambient = ambientLight.color.rgb * ambientLight.intensity * material.ambient;
     float dirShadow = 0.0;
     for (int i = 0; i < shadowParamCount; i++) {
         if (!shadowParams[i].isPointLight) {

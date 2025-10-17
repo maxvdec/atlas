@@ -333,13 +333,11 @@ void CoreObject::render(float dt) {
                   ShaderCapability::Material) !=
         shaderProgram.capabilities.end()) {
         // Set material properties
-        shaderProgram.setUniform3f("material.ambient", material.ambient.r,
-                                   material.ambient.g, material.ambient.b);
-        shaderProgram.setUniform3f("material.diffuse", material.diffuse.r,
-                                   material.diffuse.g, material.diffuse.b);
-        shaderProgram.setUniform3f("material.specular", material.specular.r,
-                                   material.specular.g, material.specular.b);
-        shaderProgram.setUniform1f("material.shininess", material.shininess);
+        shaderProgram.setUniform3f("material.albedo", material.albedo.r,
+                                   material.albedo.g, material.albedo.b);
+        shaderProgram.setUniform1f("material.metallic", material.metallic);
+        shaderProgram.setUniform1f("material.roughness", material.roughness);
+        shaderProgram.setUniform1f("material.ao", material.ao);
         shaderProgram.setUniform1f("material.reflectivity",
                                    material.reflectivity);
     }
