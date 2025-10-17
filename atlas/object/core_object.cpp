@@ -354,7 +354,7 @@ void CoreObject::render(float dt) {
             "ambientLight.color", scene->ambientLight.color.r,
             scene->ambientLight.color.g, scene->ambientLight.color.b, 1.0f);
         shaderProgram.setUniform1f("ambientLight.intensity",
-                                   scene->ambientLight.intensity / 4);
+                                   scene->ambientLight.intensity / 2.0f);
 
         // Set camera position
         shaderProgram.setUniform3f(
@@ -677,7 +677,6 @@ void CoreObject::makeEmissive(Scene *scene, Color emissionColor,
     light = std::make_shared<Light>();
     light->color = emissionColor;
     light->shineColor = emissionColor;
-    light->distance = intensity;
     light->position = this->position;
     light->distance = 10.0f;
     light->doesCastShadows = false;

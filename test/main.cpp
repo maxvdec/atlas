@@ -170,7 +170,7 @@ class MainScene : public Scene {
         window.addUIObject(&fpsText);
 
         lightObject = createBox({1.0f, 1.0f, 1.0f}, Color::yellow());
-        lightObject.setPosition({0.0f, 0.3f, 0.0f});
+        lightObject.setPosition({0.0f, 0.001f, 0.0f});
         lightObject.makeEmissive(this, {5.0, 5.0, 5.0}, 2.0f);
         for (int i = 0; i < 4; i++) {
             Instance &instance = lightObject.createInstance();
@@ -191,7 +191,7 @@ class MainScene : public Scene {
         skybox.display(window);
         this->setSkybox(&skybox);
 
-        frameBuffer = RenderTarget(window, RenderTargetType::Multisampled);
+        frameBuffer = RenderTarget(window);
         window.addRenderTarget(&frameBuffer);
         frameBuffer.display(window);
     }

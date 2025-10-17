@@ -45,9 +45,9 @@ typedef std::array<double, 2> TextureCoordinate;
 struct Material {
     Color albedo = {1.0, 1.0, 1.0, 1.0};
     float metallic = 0.0f;
-    float roughness = 1.0f;
+    float roughness = 0.5f;
     float ao = 1.0f;
-    float reflectivity = 0.5f;
+    float reflectivity = 0.0f;
 };
 
 /**

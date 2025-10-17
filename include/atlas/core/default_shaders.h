@@ -1475,6 +1475,27 @@ vec3 calculatePBR(vec3 N, vec3 V, vec3 L, vec3 F0, vec3 radiance, vec3 albedo, f
     return Lo;
 }
 
+vec3 calculatePBRWithAttenuation(vec3 N, vec3 V, vec3 L, vec3 F0, vec3 radianceAttenuated, vec3 albedo, float metallic, float roughness, float reflectivity) {
+    vec3 H = normalize(V + L);
+
+    float NDF = distributionGGX(N, H, roughness);
+    float G = geometrySmith(N, V, L, roughness);
+    vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);
+
+    vec3 kS = F;
+    vec3 kD = vec3(1.0) - kS;
+    kD *= 1.0 - metallic;
+
+    vec3 numerator = NDF * G * F;
+    float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001; 
+    vec3 specular = numerator / denominator;
+
+    float NdotL = max(dot(N, L), 0.0);
+    
+    vec3 Lo = (kD * albedo / 3.14159265 + specular) * radianceAttenuated * NdotL;
+    return Lo;
+}
+
 // ----- Directional Light -----
 vec3 calcAllDirectionalLights(vec3 N, vec3 V, vec3 albedo, float metallic, float roughness, vec3 F0, float reflectivity) {
     vec3 Lo = vec3(0.0);
@@ -1498,11 +1519,41 @@ float calcAttenuation(PointLight light, vec3 fragPos) {
 vec3 calcAllPointLights(vec3 fragPos, vec3 N, vec3 V, vec3 albedo, float metallic, float roughness, vec3 F0, float reflectivity) {
     vec3 Lo = vec3(0.0);
     for (int i = 0; i < pointLightCount; i++) {
+        // Calculate light direction vector
+        vec3 L = pointLights[i].position - fragPos;
+        float distance = length(L);
         
-        vec3 L = pointLights[i].position - fragPos;  
-        vec3 radiance = pointLights[i].diffuse;  
-
-        Lo += calculatePBR(N, V, L, F0, radiance, albedo, metallic, roughness, reflectivity);
+        // Prevent division by zero when light is at fragment position
+        distance = max(distance, 0.001);
+        
+        L = normalize(L);  // Now L is the normalized direction to the light
+        
+        // Calculate radiance with distance-based attenuation
+        vec3 radiance = pointLights[i].diffuse;
+        float attenuation = 1.0 / (distance * distance);
+        vec3 radianceAttenuated = radiance * attenuation;
+        
+        // Calculate half vector
+        vec3 H = normalize(V + L);
+        
+        // PBR calculations
+        float NDF = distributionGGX(N, H, roughness);
+        float G = geometrySmith(N, V, L, roughness);
+        vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);
+        
+        vec3 kS = F;
+        vec3 kD = vec3(1.0) - kS;
+        kD *= 1.0 - metallic;
+        
+        vec3 numerator = NDF * G * F;
+        float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001;
+        vec3 specular = numerator / denominator;
+        
+        // Lambert diffuse
+        float NdotL = max(dot(N, L), 0.0);
+        
+        // Combine and add to output
+        Lo += (kD * albedo / 3.14159265 + specular) * radianceAttenuated * NdotL;
     }
     return Lo;
 }
@@ -1666,16 +1717,20 @@ void main() {
     if (texCoord.x > 1.0 || texCoord.y > 1.0 || texCoord.x < 0.0 || texCoord.y < 0.0)
         discard;
     
-    vec4 normTexture = enableTextures(TEXTURE_NORMAL);
-    vec3 norm = vec3(0.0);
-    if (normTexture.r != -1.0 || normTexture.g != -1.0 || normTexture.b != -1.0) {
-        norm = normalize(normTexture.rgb * 2.0 - 1.0);
-        norm = normalize(TBN * norm);
+     vec4 normTexture = enableTextures(TEXTURE_NORMAL);
+    vec3 N;
+    
+    if (normTexture.r != -1.0 && normTexture.g != -1.0 && normTexture.b != -1.0) {
+        // We have a normal map, use TBN transformation
+        vec3 tangentNormal = normalize(normTexture.rgb * 2.0 - 1.0);
+        N = normalize(TBN * tangentNormal);
     } else {
-        norm = normalize(Normal);
+        // No normal map, use geometric normal directly
+        N = normalize(Normal);
     }
-        
-    vec3 N = normalize(norm);
+    
+    // Make absolutely sure the normal is normalized
+    N = normalize(N);
     vec3 V = normalize(cameraPosition - FragPos);
 
     vec3 albedo = material.albedo;
@@ -1705,34 +1760,45 @@ void main() {
     vec3 F0 = vec3(0.04);
     F0 = mix(F0, albedo, metallic);
 
+    // Calculate shadows only if shadow parameters exist
     float dirShadow = 0.0;
-    for (int i = 0; i < shadowParamCount; i++) {
-        if (!shadowParams[i].isPointLight) {
-            vec4 fragPosLightSpace = shadowParams[i].lightProjection *
-                    shadowParams[i].lightView *
-                    vec4(FragPos, 1.0);
-            dirShadow = max(dirShadow, calculateShadow(shadowParams[i], fragPosLightSpace));
+    float pointShadow = 0.0;
+    
+    if (shadowParamCount > 0) {
+        for (int i = 0; i < shadowParamCount; i++) {
+            if (!shadowParams[i].isPointLight) {
+                vec4 fragPosLightSpace = shadowParams[i].lightProjection *
+                        shadowParams[i].lightView *
+                        vec4(FragPos, 1.0);
+                dirShadow = max(dirShadow, calculateShadow(shadowParams[i], fragPosLightSpace));
+            } else {
+                pointShadow = max(pointShadow, calculatePointShadow(shadowParams[i], FragPos));
+            }
         }
     }
 
-    float pointShadow = calculateAllPointShadows(FragPos);
-    pointShadow = 0.0;
-
     float reflectivity = material.reflectivity;
-
     vec3 viewDir = normalize(cameraPosition - FragPos);
 
     vec3 lighting = vec3(0.0);
+    
     lighting += calcAllDirectionalLights(N, V, albedo, metallic, roughness, F0, reflectivity) * (1.0 - dirShadow);
-    lighting += calcAllPointLights(N, FragPos, V, albedo, metallic, roughness, F0, reflectivity) * (1.0 - pointShadow);
+    lighting += calcAllPointLights(FragPos, N, V, albedo, metallic, roughness, F0, reflectivity) * (1.0 - pointShadow);
     lighting += calcAllSpotLights(N, FragPos, V, viewDir, albedo, metallic, roughness, F0, reflectivity);
 
     vec3 ambient = albedo * ambientLight.intensity * ambientLight.color.rgb * ao;
     vec3 color = ambient + lighting;
+    
     FragColor = vec4(color, 1.0);
-    return;
+    
+    float brightness = dot(color, vec3(0.2126, 0.7152, 0.0722));
+    if(brightness > 1.0)
+        BrightColor = vec4(color, 1.0);
+    else
+        BrightColor = vec4(0.0, 0.0, 0.0, 1.0);
+    
+    FragColor.rgb = acesToneMapping(FragColor.rgb);
 }
-
 )";
 
 static const char* TEXTURE_VERT = R"(
@@ -2491,21 +2557,23 @@ out vec3 FragPos;
 out mat3 TBN;
 
 void main() {
-    mat4 mvp;
+    mat4 modelMatrix = model;
     if (isInstanced) {
-        mvp = projection * view * instanceModel;
-    } else {
-        mvp = projection * view * model;
+        modelMatrix = instanceModel;
     }
+
+    mat4 mvp = projection * view * modelMatrix;
     gl_Position = mvp * vec4(aPos, 1.0);
-    FragPos = vec3(instanceModel * vec4(aPos, 1.0));
+
+    FragPos = vec3(modelMatrix * vec4(aPos, 1.0));
     TexCoord = aTexCoord;
-    Normal = mat3(transpose(inverse(instanceModel))) * aNormal;
     outColor = aColor;
 
-    vec3 T = normalize(vec3(instanceModel * vec4(aTangent, 0.0)));
-    vec3 B = normalize(vec3(instanceModel * vec4(aBitangent, 0.0)));
-    vec3 N = normalize(vec3(instanceModel * vec4(aNormal, 0.0)));
+    mat3 normalMatrix = transpose(inverse(mat3(modelMatrix)));
+    Normal = normalize(normalMatrix * aNormal);
+    vec3 N = Normal;
+    vec3 T = normalize(normalMatrix * aTangent);
+    vec3 B = normalize(normalMatrix * aBitangent);
     TBN = mat3(T, B, N);
 }
 

@@ -122,7 +122,7 @@ class Scene {
     std::vector<Light *> pointLights;
     std::vector<Spotlight *> spotlights;
     Skybox *skybox = nullptr;
-    AmbientLight ambientLight = {{1.0f, 1.0f, 1.0f}, 1.0 / 4.0f};
+    AmbientLight ambientLight = {{1.0f, 1.0f, 1.0f, 1.0f}, 0.5f / 4};
 
     friend class CoreObject;
     friend class Window;
