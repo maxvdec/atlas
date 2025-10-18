@@ -14,16 +14,18 @@ const int TEXTURE_COLOR = 0;
 const int TEXTURE_SPECULAR = 1;
 const int TEXTURE_NORMAL = 5;
 const int TEXTURE_PARALLAX = 6;
+const int TEXTURE_METALLIC = 9;
+const int TEXTURE_ROUGHNESS = 10;
+const int TEXTURE_AO = 11;
 
 struct Material {
-    vec3 ambient;
-    vec3 diffuse;
-    vec3 specular;
-    float shininess;
+    vec3 albedo;
+    float metallic;
+    float roughness;
+    float ao;
     float reflectivity;
 };
 
-// Textures
 uniform sampler2D texture1;
 uniform sampler2D texture2;
 uniform sampler2D texture3;
@@ -35,7 +37,6 @@ uniform sampler2D texture8;
 uniform sampler2D texture9;
 uniform sampler2D texture10;
 
-// Uniforms
 uniform int textureTypes[16];
 uniform int textureCount;
 uniform Material material;
@@ -101,7 +102,7 @@ vec2 parallaxMapping(vec2 texCoords, vec3 viewDir) {
         }
     }
     if (textureIndex == -1) return texCoords;
-    
+
     float currentDepthMapValue = sampleTextureAt(textureIndex, currentTexCoords).r;
 
     while (currentLayerDepth < currentDepthMapValue) {
@@ -121,52 +122,69 @@ vec2 parallaxMapping(vec2 texCoords, vec3 viewDir) {
 
 void main() {
     texCoord = TexCoord;
-    
+
     vec3 tangentViewDir = normalize((TBN * cameraPosition) - (TBN * FragPos));
     texCoord = parallaxMapping(texCoord, tangentViewDir);
-    
+
     if (texCoord.x > 1.0 || texCoord.y > 1.0 || texCoord.x < 0.0 || texCoord.y < 0.0)
         discard;
-    
+
+    vec4 sampledColor = enableTextures(TEXTURE_COLOR);
+    bool hasColorTexture = sampledColor != vec4(-1.0);
+
     vec4 baseColor;
-    if (useTexture && !useColor)
-        baseColor = enableTextures(TEXTURE_COLOR);
-    else if (useTexture && useColor)
-        baseColor = enableTextures(TEXTURE_COLOR) * outColor;
-    else if (!useTexture && useColor)
+    if (useTexture && hasColorTexture) {
+        baseColor = hasColorTexture ? sampledColor : vec4(material.albedo, 1.0);
+        if (useColor) {
+            baseColor *= outColor;
+        }
+    } else if (useColor) {
         baseColor = outColor;
-    else
-        baseColor = vec4(1.0);
-    
+    } else {
+        baseColor = vec4(material.albedo, 1.0);
+    }
+
     if (baseColor.a < 0.1)
         discard;
-    
+
     vec4 normTexture = enableTextures(TEXTURE_NORMAL);
     vec3 normal;
-    if (normTexture.r != -1.0 || normTexture.g != -1.0 || normTexture.b != -1.0) {
-        normal = normalize(normTexture.rgb * 2.0 - 1.0);
-        normal = normalize(TBN * normal);
+    if (normTexture.r != -1.0 && normTexture.g != -1.0 && normTexture.b != -1.0) {
+        vec3 tangentNormal = normalize(normTexture.rgb * 2.0 - 1.0);
+        normal = normalize(TBN * tangentNormal);
     } else {
         normal = normalize(Normal);
     }
-    
-    vec4 specTex = enableTextures(TEXTURE_SPECULAR);
-    vec3 specColor = material.specular;
-    if (specTex.r != -1.0 || specTex.g != -1.0 || specTex.b != -1.0) {
-        specColor *= specTex.rgb;
-    }
-    
-    gPosition = vec4(FragPos, gl_FragCoord.z);
-    
-    gNormal = vec4(normal, 1.0);
 
-    float specIntensity = (specColor.r + specColor.g + specColor.b) / 3.0;
-    gAlbedoSpec = vec4(baseColor.rgb, specIntensity);
-    
-    gMaterial = vec4(
-        material.shininess / 256.0,  
-        material.reflectivity,
-        0.0,  
-        1.0   
-    );
+    vec3 albedo = baseColor.rgb;
+
+    float metallic = material.metallic;
+    vec4 metallicTex = enableTextures(TEXTURE_METALLIC);
+    if (metallicTex != vec4(-1.0)) {
+        metallic *= metallicTex.r;
+    }
+
+    float roughness = material.roughness;
+    vec4 roughnessTex = enableTextures(TEXTURE_ROUGHNESS);
+    if (roughnessTex != vec4(-1.0)) {
+        roughness *= roughnessTex.r;
+    }
+
+    float ao = material.ao;
+    vec4 aoTex = enableTextures(TEXTURE_AO);
+    if (aoTex != vec4(-1.0)) {
+        ao *= aoTex.r;
+    }
+
+    float reflectivity = material.reflectivity;
+
+    metallic = clamp(metallic, 0.0, 1.0);
+    roughness = clamp(roughness, 0.0, 1.0);
+    ao = clamp(ao, 0.0, 1.0);
+    reflectivity = clamp(reflectivity, 0.0, 1.0);
+
+    gPosition = vec4(FragPos, gl_FragCoord.z);
+    gNormal = vec4(normalize(normal), 1.0);
+    gAlbedoSpec = vec4(albedo, ao);
+    gMaterial = vec4(metallic, roughness, reflectivity, 1.0);
 }

@@ -181,7 +181,7 @@ class MainScene : public Scene {
         ball = createDebugSphere(0.5f, 76, 76);
         ball.body->applyMass(0.0);
         ball.move({1.5f, 0.0f, 0.0});
-        ball.useDeferredRendering = false;
+        ball.material.reflectivity = 1.f;
         window.addObject(&ball);
 
         this->setAmbientIntensity(0.1f);
@@ -196,6 +196,8 @@ class MainScene : public Scene {
         frameBuffer = RenderTarget(window);
         window.addRenderTarget(&frameBuffer);
         frameBuffer.display(window);
+
+        window.useDeferredRendering();
     }
 };
 
