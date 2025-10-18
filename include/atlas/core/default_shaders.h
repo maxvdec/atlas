@@ -3,7 +3,7 @@
 #define ATLAS_GENERATED_SHADERS_H
 
 static const char* LIGHT_VERT = R"(
-#version 330 core
+#version 410 core
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec2 aTexCoord;
 
@@ -16,7 +16,7 @@ void main() {
 )";
 
 static const char* POINT_DEPTH_VERT = R"(
-#version 330 core
+#version 410 core
 layout (location = 0) in vec3 aPos;
 
 uniform mat4 model;
@@ -27,7 +27,7 @@ void main() {
 )";
 
 static const char* TERRAIN_FRAG = R"(
-#version 330 core
+#version 410 core
 
 in vec3 FragPos;
 in float Height;
@@ -42,7 +42,7 @@ void main() {
 )";
 
 static const char* DEFERRED_FRAG = R"(
-#version 330 core
+#version 410 core
 layout (location = 0) out vec4 gPosition;
 layout (location = 1) out vec4 gNormal;
 layout (location = 2) out vec4 gAlbedoSpec;
@@ -235,7 +235,7 @@ void main() {
 )";
 
 static const char* DEPTH_VERT = R"(
-#version 330 core
+#version 410 core
 layout (location = 0) in vec3 aPos;
 
 uniform mat4 projection; // the light space matrix
@@ -249,7 +249,7 @@ void main() {
 )";
 
 static const char* SKYBOX_FRAG = R"(
-#version 330 core
+#version 410 core
 out vec4 FragColor;
 
 in vec3 TexCoords;
@@ -264,14 +264,14 @@ void main()
 )";
 
 static const char* EMPTY_FRAG = R"(
-#version 330
+#version 410 core
 
 void main() {}
 
 )";
 
 static const char* COLOR_FRAG = R"(
-#version 330 core
+#version 410 core
 layout (location = 0) out vec4 FragColor;
 layout (location = 1) out vec4 BrightColor;
 in vec4 vertexColor;
@@ -286,7 +286,7 @@ void main() {
 )";
 
 static const char* PARTICLE_FRAG = R"(
-#version 330 core
+#version 410 core
 in vec2 fragTexCoord;
 in vec4 fragColor;
 out vec4 FragColor;
@@ -312,7 +312,7 @@ void main() {
 )";
 
 static const char* BLINN_PHONG_FRAG = R"(
-#version 330 core
+#version 410 core
 layout (location = 0) out vec4 FragColor;
 layout (location = 1) out vec4 BrightColor;
 
@@ -880,7 +880,7 @@ void main() {
 )";
 
 static const char* FULLSCREEN_FRAG = R"(
-#version 330 core
+#version 410 core
 
 in vec2 TexCoord;
 
@@ -1168,7 +1168,7 @@ void main() {
 )";
 
 static const char* TEXT_VERT = R"(
-#version 330 core
+#version 410 core
 layout(location = 0) in vec4 vertex; // <vec2 pos, vec2 texture>
 out vec2 texCoords;
 
@@ -1181,7 +1181,7 @@ void main() {
 )";
 
 static const char* MAIN_FRAG = R"(
-#version 330 core
+#version 410 core
 layout (location = 0) out vec4 FragColor;
 layout (location = 1) out vec4 BrightColor;
 
@@ -1875,7 +1875,7 @@ void main() {
 )";
 
 static const char* TEXTURE_VERT = R"(
-#version 330 core
+#version 410 core
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec4 aColor;
 layout (location = 2) in vec2 aTexCoord;
@@ -1897,7 +1897,7 @@ void main() {
 )";
 
 static const char* SSAO_BLUR_FRAG = R"(
-#version 330 core
+#version 410 core
 out float FragColor;
 
 in vec2 TexCoord;
@@ -1918,7 +1918,7 @@ void main() {
 )";
 
 static const char* DEBUG_FRAG = R"(
-#version 330 core
+#version 410 core
 out vec4 FragColor;
 
 void main() {
@@ -1928,7 +1928,7 @@ void main() {
 )";
 
 static const char* PARTICLE_VERT = R"(
-#version 330 core
+#version 410 core
 
 layout(location = 0) in vec3 quadVertex;
 layout(location = 1) in vec2 texCoord;
@@ -1971,7 +1971,7 @@ void main() {
 )";
 
 static const char* POINT_DEPTH_GEOM = R"(
-#version 330 core
+#version 410 core
 layout(triangles) in;
 layout(triangle_strip, max_vertices = 18) out;
 
@@ -1994,7 +1994,7 @@ void main() {
 )";
 
 static const char* COLOR_VERT = R"(
-#version 330 core
+#version 410 core
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec4 aColor;
 layout(location = 6) in mat4 instanceModel;
@@ -2020,7 +2020,7 @@ void main() {
 )";
 
 static const char* SKYBOX_VERT = R"(
-#version 330 core
+#version 410 core
 layout (location = 0) in vec3 aPos;
 
 out vec3 TexCoords;
@@ -2038,7 +2038,7 @@ void main()
 )";
 
 static const char* GAUSSIAN_FRAG = R"(
-#version 330 core
+#version 410 core
 out vec4 FragColor;
 
 in vec2 TexCoord;
@@ -2073,7 +2073,7 @@ void main() {
 )";
 
 static const char* TERRAIN_VERT = R"(
-#version 330 core
+#version 410 core
 layout(location = 0) in vec3 aPos;
 
 uniform mat4 model;
@@ -2092,7 +2092,7 @@ void main() {
 )";
 
 static const char* DEFERRED_VERT = R"(
-#version 330 core
+#version 410 core
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec4 aColor;
 layout(location = 2) in vec2 aTexCoord;
@@ -2138,7 +2138,7 @@ void main() {
 )";
 
 static const char* BINN_PHONG_VERT = R"(
-#version 330 core
+#version 410 core
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec4 aColor;
 layout(location = 2) in vec2 aTexCoord;
@@ -2180,7 +2180,7 @@ void main() {
 )";
 
 static const char* SSAO_FRAG = R"(
-#version 330 core
+#version 410 core
 out float FragColor;
 in vec2 TexCoord;
 
@@ -2248,7 +2248,7 @@ void main() {
 )";
 
 static const char* LIGHT_FRAG = R"(
-#version 330 core
+#version 410 core
 layout (location = 0) out vec4 FragColor;
 layout (location = 1) out vec4 BrightColor;
 
@@ -2624,7 +2624,7 @@ void main() {
 )";
 
 static const char* POINT_DEPTH_FRAG = R"(
-#version 330 core
+#version 410 core
 in vec4 FragPos;
 
 uniform vec3 lightPos;
@@ -2640,7 +2640,7 @@ void main() {
 )";
 
 static const char* DEBUG_VERT = R"(
-#version 330 core
+#version 410 core
 layout (location = 0) in vec3 aPos;
 
 void main() {
@@ -2650,7 +2650,7 @@ void main() {
 )";
 
 static const char* TEXTURE_FRAG = R"(
-#version 330 core
+#version 410 core
 out vec4 FragColor;
 
 in vec2 TexCoord;
@@ -2690,7 +2690,7 @@ void main() {
 )";
 
 static const char* MAIN_VERT = R"(
-#version 330 core
+#version 410 core
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec4 aColor;
 layout(location = 2) in vec2 aTexCoord;
@@ -2734,7 +2734,7 @@ void main() {
 )";
 
 static const char* TEXT_FRAG = R"(
-#version 330 core
+#version 410 core
 
 in vec2 texCoords;
 out vec4 color;
@@ -2749,7 +2749,7 @@ void main() {
 )";
 
 static const char* FULLSCREEN_VERT = R"(
-#version 330 core
+#version 410 core
 
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec4 aColor;
