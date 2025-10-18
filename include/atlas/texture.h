@@ -77,7 +77,8 @@ enum class TextureType : int {
     SSAO = 8,
     Metallic = 9,
     Roughness = 10,
-    AO = 11
+    AO = 11,
+    HDR = 12
 };
 
 /**
@@ -254,6 +255,17 @@ struct Cubemap {
      *
      */
     TextureType type = TextureType::Cubemap;
+
+    /**
+     * @brief Average color sampled across the cubemap faces for ambient
+     * approximations.
+     */
+    Color averageColor = Color::white();
+
+    /**
+     * @brief Flag indicating whether averageColor contains sampled data.
+     */
+    bool hasAverageColor = false;
 
     /**
      * @brief Creates a cubemap from a resource group.

@@ -191,6 +191,8 @@ class MainScene : public Scene {
         skybox.display(window);
         this->setSkybox(&skybox);
 
+        this->setAutomaticAmbient(true);
+
         frameBuffer = RenderTarget(window);
         window.addRenderTarget(&frameBuffer);
         frameBuffer.display(window);

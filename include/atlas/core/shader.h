@@ -115,6 +115,7 @@ enum class ShaderCapability {
      *
      */
     EnvironmentMapping,
+    IBL,
     /**
      * @brief Capability for handling skeletal animations.
      *

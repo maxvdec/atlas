@@ -342,6 +342,19 @@ void CoreObject::render(float dt) {
                                    material.reflectivity);
     }
 
+    const bool shaderSupportsIbl =
+        std::find(shaderProgram.capabilities.begin(),
+                  shaderProgram.capabilities.end(),
+                  ShaderCapability::IBL) != shaderProgram.capabilities.end();
+
+    bool hasHdrEnvironment = std::any_of(
+        textures.begin(), textures.end(), [](const Texture &texture) {
+            return texture.type == TextureType::HDR;
+        });
+
+    const bool useIbl = shaderSupportsIbl && hasHdrEnvironment;
+    shaderProgram.setUniformBool("useIBL", useIbl);
+
     if (std::find(shaderProgram.capabilities.begin(),
                   shaderProgram.capabilities.end(),
                   ShaderCapability::Lighting) !=
@@ -350,11 +363,18 @@ void CoreObject::render(float dt) {
         Scene *scene = window->getCurrentScene();
 
         // Set ambient light
-        shaderProgram.setUniform4f(
-            "ambientLight.color", scene->ambientLight.color.r,
-            scene->ambientLight.color.g, scene->ambientLight.color.b, 1.0f);
+        Color ambientColor = scene->getAmbientColor();
+        float ambientIntensity = scene->getAmbientIntensity();
+        if (!useIbl && scene->isAutomaticAmbientEnabled()) {
+            ambientColor = scene->getAutomaticAmbientColor();
+            ambientIntensity = scene->getAutomaticAmbientIntensity();
+        }
+        shaderProgram.setUniform4f("ambientLight.color",
+                                   static_cast<float>(ambientColor.r),
+                                   static_cast<float>(ambientColor.g),
+                                   static_cast<float>(ambientColor.b), 1.0f);
         shaderProgram.setUniform1f("ambientLight.intensity",
-                                   scene->ambientLight.intensity / 2.0f);
+                                   ambientIntensity / 2.0f);
 
         // Set camera position
         shaderProgram.setUniform3f(

@@ -62,24 +62,55 @@ Texture Texture::fromResource(const Resource &resource, TextureType type,
 
     int width, height, channels;
     stbi_set_flip_vertically_on_load(true);
-    unsigned char *data = stbi_load(resource.path.string().c_str(), &width,
-                                    &height, &channels, 0);
-    TextureCreationData creationData{width, height, channels};
 
-    if (!data) {
-        throw std::runtime_error("Failed to load image: " +
-                                 resource.path.string());
+    TextureCreationData creationData{};
+
+    if (type == TextureType::HDR) {
+        float *data = stbi_loadf(resource.path.string().c_str(), &width,
+                                 &height, &channels, 0);
+        if (!data) {
+            throw std::runtime_error("Failed to load HDR image: " +
+                                     resource.path.string());
+        }
+
+        creationData = TextureCreationData{width, height, channels};
+
+        GLenum internalFormat = GL_RGB16F;
+        GLenum dataFormat = GL_RGB;
+        if (channels == 1) {
+            internalFormat = GL_R16F;
+            dataFormat = GL_RED;
+        } else if (channels == 4) {
+            internalFormat = GL_RGBA16F;
+            dataFormat = GL_RGBA;
+        }
+
+        glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0,
+                     dataFormat, GL_FLOAT, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        stbi_image_free(data);
+    } else {
+        unsigned char *data = stbi_load(resource.path.string().c_str(), &width,
+                                        &height, &channels, 0);
+        if (!data) {
+            throw std::runtime_error("Failed to load image: " +
+                                     resource.path.string());
+        }
+
+        creationData = TextureCreationData{width, height, channels};
+
+        glTexImage2D(GL_TEXTURE_2D, 0,
+                     channels == 4 ? GL_SRGB8_ALPHA8
+                                   : (channels == 3 ? GL_SRGB8 : GL_R8),
+                     width, height, 0,
+                     channels == 4 ? GL_RGBA
+                                   : (channels == 3 ? GL_RGB : GL_RED),
+                     GL_UNSIGNED_BYTE, data);
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        stbi_image_free(data);
     }
-
-    glTexImage2D(GL_TEXTURE_2D, 0,
-                 channels == 4 ? GL_SRGB8_ALPHA8
-                               : (channels == 3 ? GL_SRGB8 : GL_R8),
-                 width, height, 0,
-                 channels == 4 ? GL_RGBA : (channels == 3 ? GL_RGB : GL_RED),
-                 GL_UNSIGNED_BYTE, data);
-    glGenerateMipmap(GL_TEXTURE_2D);
-
-    stbi_image_free(data);
 
     Texture texture{resource, creationData, textureId, type, borderColor};
     return texture;
@@ -142,6 +173,8 @@ Cubemap Cubemap::fromResourceGroup(ResourceGroup &group) {
     glBindTexture(GL_TEXTURE_CUBE_MAP, textureId);
 
     int width = 0, height = 0, channels = 0;
+    glm::dvec3 accumulatedColor(0.0);
+    unsigned long long accumulatedPixels = 0;
 
     for (size_t i = 0; i < 6; i++) {
         Resource &resource = group.resources[i];
@@ -173,6 +206,29 @@ Cubemap Cubemap::fromResourceGroup(ResourceGroup &group) {
             }
         }
 
+        unsigned long long facePixelCount = static_cast<unsigned long long>(w) *
+                                            static_cast<unsigned long long>(h);
+        if (facePixelCount > 0) {
+            glm::dvec3 faceSum(0.0);
+            if (c >= 3) {
+                for (unsigned long long pixel = 0; pixel < facePixelCount;
+                     ++pixel) {
+                    unsigned char *pixelPtr = data + pixel * c;
+                    faceSum.x += pixelPtr[0];
+                    faceSum.y += pixelPtr[1];
+                    faceSum.z += pixelPtr[2];
+                }
+            } else if (c == 1) {
+                for (unsigned long long pixel = 0; pixel < facePixelCount;
+                     ++pixel) {
+                    unsigned char value = data[pixel];
+                    faceSum += glm::dvec3(value, value, value);
+                }
+            }
+            accumulatedColor += faceSum;
+            accumulatedPixels += facePixelCount;
+        }
+
         glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0,
                      c == 4 ? GL_RGBA : (c == 3 ? GL_RGB : GL_RED), w, h, 0,
                      c == 4 ? GL_RGBA : (c == 3 ? GL_RGB : GL_RED),
@@ -195,6 +251,12 @@ Cubemap Cubemap::fromResourceGroup(ResourceGroup &group) {
     std::copy(group.resources.begin(), group.resources.end(),
               resources.begin());
     cubemap.resources = resources;
+    if (accumulatedPixels > 0) {
+        glm::dvec3 normalized =
+            accumulatedColor / (static_cast<double>(accumulatedPixels) * 255.0);
+        cubemap.averageColor = {normalized.x, normalized.y, normalized.z, 1.0};
+        cubemap.hasAverageColor = true;
+    }
     return cubemap;
 }
 

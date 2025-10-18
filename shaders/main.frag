@@ -16,6 +16,9 @@ const int TEXTURE_PARALLAX = 6;
 const int TEXTURE_METALLIC = 9;
 const int TEXTURE_ROUGHNESS = 10;
 const int TEXTURE_AO = 11;
+const int TEXTURE_HDR_ENVIRONMENT = 12;
+
+const float PI = 3.14159265;
 
 vec2 texCoord;
 
@@ -111,6 +114,7 @@ uniform vec3 cameraPosition;
 
 uniform bool useTexture;
 uniform bool useColor;
+uniform bool useIBL;
 
 // ----- Helper Functions -----
 vec4 enableTextures(int type) {
@@ -202,6 +206,33 @@ vec3 getSpecularColor() {
 
 vec4 applyGammaCorrection(vec4 color, float gamma) {
     return vec4(pow(color.rgb, vec3(1.0 / gamma)), color.a);
+}
+
+vec2 directionToEquirect(vec3 direction) {
+    vec3 dir = normalize(direction);
+    float phi = atan(dir.z, dir.x);
+    float theta = acos(clamp(dir.y, -1.0, 1.0));
+    return vec2((phi + PI) / (2.0 * PI), theta / PI);
+}
+
+vec3 sampleHDRTexture(int textureIndex, vec3 direction) {
+    vec2 uv = directionToEquirect(direction);
+    return sampleTextureAt(textureIndex, uv).rgb;
+}
+
+vec3 sampleEnvironmentRadiance(vec3 direction) {
+    vec3 envColor = vec3(0.0);
+    int count = 0;
+    for (int i = 0; i < textureCount; i++) {
+        if (textureTypes[i] == TEXTURE_HDR_ENVIRONMENT) {
+            envColor += sampleHDRTexture(i, direction);
+            count++;
+        }
+    }
+    if (count == 0) {
+        return vec3(0.0);
+    }
+    return envColor / float(count);
 }
 
 vec2 parallaxMapping(vec2 texCoords, vec3 viewDir) {
@@ -369,24 +400,19 @@ float calcAttenuation(PointLight light, vec3 fragPos) {
 vec3 calcAllPointLights(vec3 fragPos, vec3 N, vec3 V, vec3 albedo, float metallic, float roughness, vec3 F0, float reflectivity) {
     vec3 Lo = vec3(0.0);
     for (int i = 0; i < pointLightCount; i++) {
-        // Calculate light direction vector
         vec3 L = pointLights[i].position - fragPos;
         float distance = length(L);
         
-        // Prevent division by zero when light is at fragment position
         distance = max(distance, 0.001);
         
-        L = normalize(L);  // Now L is the normalized direction to the light
+        L = normalize(L);  
         
-        // Calculate radiance with distance-based attenuation
         vec3 radiance = pointLights[i].diffuse;
         float attenuation = 1.0 / (distance * distance);
         vec3 radianceAttenuated = radiance * attenuation;
         
-        // Calculate half vector
         vec3 H = normalize(V + L);
         
-        // PBR calculations
         float NDF = distributionGGX(N, H, roughness);
         float G = geometrySmith(N, V, L, roughness);
         vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);
@@ -399,10 +425,8 @@ vec3 calcAllPointLights(vec3 fragPos, vec3 N, vec3 V, vec3 albedo, float metalli
         float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001;
         vec3 specular = numerator / denominator;
         
-        // Lambert diffuse
         float NdotL = max(dot(N, L), 0.0);
         
-        // Combine and add to output
         Lo += (kD * albedo / 3.14159265 + specular) * radianceAttenuated * NdotL;
     }
     return Lo;
@@ -571,15 +595,12 @@ void main() {
     vec3 N;
     
     if (normTexture.r != -1.0 && normTexture.g != -1.0 && normTexture.b != -1.0) {
-        // We have a normal map, use TBN transformation
         vec3 tangentNormal = normalize(normTexture.rgb * 2.0 - 1.0);
         N = normalize(TBN * tangentNormal);
     } else {
-        // No normal map, use geometric normal directly
         N = normalize(Normal);
     }
     
-    // Make absolutely sure the normal is normalized
     N = normalize(N);
     vec3 V = normalize(cameraPosition - FragPos);
 
@@ -610,7 +631,6 @@ void main() {
     vec3 F0 = vec3(0.04);
     F0 = mix(F0, albedo, metallic);
 
-    // Calculate shadows only if shadow parameters exist
     float dirShadow = 0.0;
     float pointShadow = 0.0;
     
@@ -637,7 +657,27 @@ void main() {
     lighting += calcAllSpotLights(N, FragPos, V, viewDir, albedo, metallic, roughness, F0, reflectivity);
 
     vec3 ambient = albedo * ambientLight.intensity * ambientLight.color.rgb * ao;
-    vec3 color = ambient + lighting;
+
+    vec3 iblContribution = vec3(0.0);
+    if (useIBL) {
+        vec3 irradiance = sampleEnvironmentRadiance(N);
+        vec3 diffuseIBL = irradiance * albedo;
+
+        vec3 reflection = reflect(-V, N);
+        vec3 specularEnv = sampleEnvironmentRadiance(reflection);
+
+        vec3 F = fresnelSchlick(max(dot(N, V), 0.0), F0);
+        vec3 kS = F;
+        vec3 kD = vec3(1.0) - kS;
+        kD *= 1.0 - metallic;
+
+        float roughnessAttenuation = mix(1.0, 0.15, clamp(roughness, 0.0, 1.0));
+        vec3 specularIBL = specularEnv * roughnessAttenuation;
+
+        iblContribution = (kD * diffuseIBL + kS * specularIBL) * ao;
+    }
+
+    vec3 color = ambient + lighting + iblContribution;
     
     FragColor = vec4(color, 1.0);
     
