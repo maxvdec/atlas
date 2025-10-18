@@ -197,6 +197,21 @@ class MainScene : public Scene {
 
         terrain = Terrain(heightmapResource);
         terrain.move({20.f, 0.0, 0.0});
+        Biome grasslandBiome =
+            Biome("Grassland", Color(0.1f, 0.8f, 0.1f, 1.0f));
+        grasslandBiome.condition = [](float height, float moisture,
+                                      float temperature) {
+            return height < 128.0f;
+        };
+        terrain.addBiome(grasslandBiome);
+
+        Biome mountainBiome = Biome("Mountain", Color(0.5f, 0.5f, 0.5f, 1.0f));
+        mountainBiome.condition = [](float height, float moisture,
+                                     float temperature) {
+            return height >= 128.0f;
+        };
+        terrain.addBiome(mountainBiome);
+        terrain.resolution = 100;
         window.addObject(&terrain);
 
         frameBuffer = RenderTarget(window);

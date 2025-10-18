@@ -49,6 +49,8 @@ void Terrain::initialize() {
         return;
     }
 
+    this->generateBiomes(data, height, width, nChannels);
+
     glGenTextures(1, &terrainTexture.id);
     glBindTexture(GL_TEXTURE_2D, terrainTexture.id);
     glTexImage2D(GL_TEXTURE_2D, 0,
@@ -61,7 +63,7 @@ void Terrain::initialize() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    rez = 20;
+    rez = resolution;
 
     for (unsigned int i = 0; i <= rez - 1; i++) {
         for (unsigned int j = 0; j <= rez - 1; j++) {
@@ -131,6 +133,34 @@ void Terrain::render(float dt) {
     terrainShader.setUniform1i("heightMap", 0);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, terrainTexture.id);
+    terrainShader.setUniform1i("biomesMap", 1);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, biomesTexture.id);
+
+    for (int i = 0; i < 12; i++) {
+        terrainShader.setUniform1i("texture" + std::to_string(i), i + 2);
+    }
+
+    for (int i = 0; i < biomes.size(); i++) {
+        Biome &biome = biomes[i];
+        if (biome.useTexture) {
+            terrainShader.setUniform1i(
+                "biomes[" + std::to_string(i) + "].useTexture", 1);
+            terrainShader.setUniform1i(
+                "biomes[" + std::to_string(i) + "].textureId", i + 2);
+            glActiveTexture(GL_TEXTURE2 + i);
+            glBindTexture(GL_TEXTURE_2D, biome.texture.id);
+        } else {
+            terrainShader.setUniform1i(
+                "biomes[" + std::to_string(i) + "].useTexture", 0);
+        }
+        std::string baseName = "biomes[" + std::to_string(i) + "]";
+        terrainShader.setUniform1i(baseName + ".id", i);
+        terrainShader.setUniform4f(baseName + ".tintColor", biomes[i].color.r,
+                                   biomes[i].color.g, biomes[i].color.b,
+                                   biomes[i].color.a);
+    }
+    terrainShader.setUniform1i("biomesCount", biomes.size());
 
     glDrawArrays(GL_PATCHES, 0, patch_count * rez * rez);
     glBindVertexArray(0);

@@ -10,6 +10,7 @@ uniform mat4 projection;
 in vec2 TextureCoord[];
 
 out float Height;
+out vec2 TexCoord;
 
 void main() {
     float u = gl_TessCoord.x;
@@ -42,4 +43,6 @@ void main() {
     position += normal * Height;
 
     gl_Position = projection * view * model * position;
+
+    TexCoord = texCoord;
 }

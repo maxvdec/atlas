@@ -13,15 +13,47 @@
 #include "atlas/component.h"
 #include "atlas/core/shader.h"
 #include "atlas/object.h"
+#include "atlas/texture.h"
 #include "atlas/units.h"
 #include "atlas/workspace.h"
+#include <cstdint>
+#include <functional>
+#include <string>
 #include <vector>
 
 typedef unsigned int BufferIndex;
+typedef std::function<bool(float, float, float)> BiomeFunction;
+
+class Biome {
+  public:
+    std::string name;
+    Texture texture;
+    Color color = {1.0, 1.0, 1.0, 1.0};
+
+    bool useTexture = false;
+
+    void attachTexture(const Texture &tex) {
+        this->texture = tex;
+        this->useTexture = true;
+    }
+
+    Biome(const std::string &biomeName = "",
+          const Texture &biomeTexture = Texture(),
+          const Color &biomeColor = Color())
+        : name(biomeName), texture(biomeTexture), color(biomeColor) {}
+
+    Biome(const std::string &biomeName = "", const Color &biomeColor = Color())
+        : name(biomeName), color(biomeColor) {}
+
+    BiomeFunction condition = [](float height, float moisture,
+                                 float temperature) { return false; };
+};
 
 class Terrain : public GameObject {
   public:
     Resource heightmap;
+    Texture moistureTexture;
+    Texture temperatureTexture;
 
     void render(float dt) override;
     void initialize() override;
@@ -34,15 +66,18 @@ class Terrain : public GameObject {
         this->projection = projection;
     };
 
+    void addBiome(const Biome &biome) { this->biomes.push_back(biome); };
+
     Terrain(Resource heightmapResource) : heightmap(heightmapResource) {};
     Terrain() = default;
 
-    int smoothness = 1;
-    int detail = 1;
+    unsigned int resolution = 20;
 
     Position3d position;
     Rotation3d rotation;
     Scale3d scale = {1.0, 1.0, 1.0};
+
+    std::vector<Biome> biomes;
 
     void setPosition(const Position3d &newPosition) override {
         this->position = newPosition;
@@ -81,16 +116,28 @@ class Terrain : public GameObject {
     ShaderProgram terrainShader;
 
     Texture terrainTexture;
+    Texture biomesTexture;
 
     glm::mat4 model = glm::mat4(1.0f);
     glm::mat4 view = glm::mat4(1.0f);
     glm::mat4 projection = glm::mat4(1.0f);
 
     std::vector<float> vertices;
-    std::vector<unsigned int> indices;
+    std::vector<uint8_t> moistureData;
+    std::vector<uint8_t> temperatureData;
 
     unsigned int patch_count;
     unsigned int rez;
+
+    void generateBiomes(unsigned char *heightmapData, int width, int height,
+                        int nChannels);
+    void generateMaps(unsigned char *heightmapData, int width, int height,
+                      int generationParameter, int nChannels);
 };
+
+namespace aurora {
+float computeSlope(const uint8_t *heightMap, int width, int height, int x,
+                   int y);
+}
 
 #endif // AURORA_TERRAIN_H

@@ -33,6 +33,7 @@ file(GLOB_RECURSE SHADER_SOURCES
     ${SHADER_INPUT_DIR}/*.glsl
     ${SHADER_INPUT_DIR}/*.geom
     ${SHADER_INPUT_DIR}/*.tesc
+    ${SHADER_INPUT_DIR}/*.tese
 )
 add_custom_command(
     OUTPUT ${SHADER_OUTPUT_FILE}
