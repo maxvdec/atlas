@@ -50,8 +50,8 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [ ] Runtime independent of final executable
 - [ ] Scene packing
 - [x] Add deferred rendering for better performance with many lights
-- [ ] Add PBR rendering **for alpha 3**
-- [ ] Add other texture supports (normal, roughness, metallic, ao, etc.) **for alpha 3**
+- [x] Add PBR rendering **for alpha 3**
+- [x] Add other texture supports (normal, roughness, metallic, ao, etc.) **for alpha 3**
 - [x] Add HDR support
 - [x] Add SSAO
 - [ ] Add cascaded shadow maps for directional lights **for alpha 3**

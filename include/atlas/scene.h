@@ -15,6 +15,7 @@
 #include "atlas/texture.h"
 #include "atlas/units.h"
 #include "bezel/body.h"
+#include <algorithm>
 #include <vector>
 
 class Window;
@@ -81,7 +82,50 @@ class Scene {
      */
     void setAmbientIntensity(float intensity) {
         this->ambientLight.intensity = intensity / 4;
+        if (automaticAmbient) {
+            updateAutomaticAmbientFromSkybox();
+        }
     }
+
+    /**
+     * @brief Enables or disables automatic ambient coloring derived from the
+     * scene's skybox.
+     */
+    void setAutomaticAmbient(bool enabled) {
+        automaticAmbient = enabled;
+        if (automaticAmbient) {
+            updateAutomaticAmbientFromSkybox();
+        }
+    }
+
+    /**
+     * @brief Returns whether automatic ambient sampling is enabled.
+     */
+    bool isAutomaticAmbientEnabled() const { return automaticAmbient; }
+
+    /**
+     * @brief Gets the ambient color computed from the skybox when automatic
+     * ambient is active.
+     */
+    Color getAutomaticAmbientColor() const { return automaticAmbientColor; }
+
+    /**
+     * @brief Gets the intensity derived from the skybox when automatic ambient
+     * is active.
+     */
+    float getAutomaticAmbientIntensity() const {
+        return automaticAmbientIntensity;
+    }
+
+    /**
+     * @brief Returns the manually configured ambient light color.
+     */
+    Color getAmbientColor() const { return ambientLight.color; }
+
+    /**
+     * @brief Returns the manually configured ambient intensity.
+     */
+    float getAmbientIntensity() const { return ambientLight.intensity; }
 
     /**
      * @brief Function that adds a directional light to the scene. \warning The
@@ -115,7 +159,12 @@ class Scene {
      *
      * @param newSkybox The new skybox to set.
      */
-    void setSkybox(Skybox *newSkybox) { skybox = newSkybox; }
+    void setSkybox(Skybox *newSkybox) {
+        skybox = newSkybox;
+        if (automaticAmbient) {
+            updateAutomaticAmbientFromSkybox();
+        }
+    }
 
   private:
     std::vector<DirectionalLight *> directionalLights;
@@ -123,6 +172,23 @@ class Scene {
     std::vector<Spotlight *> spotlights;
     Skybox *skybox = nullptr;
     AmbientLight ambientLight = {{1.0f, 1.0f, 1.0f, 1.0f}, 0.5f / 4};
+    bool automaticAmbient = false;
+    Color automaticAmbientColor = Color::white();
+    float automaticAmbientIntensity = ambientLight.intensity;
+
+    void updateAutomaticAmbientFromSkybox() {
+        if (skybox != nullptr && skybox->cubemap.hasAverageColor) {
+            automaticAmbientColor = skybox->cubemap.averageColor;
+            double luminance = 0.2126 * automaticAmbientColor.r +
+                               0.7152 * automaticAmbientColor.g +
+                               0.0722 * automaticAmbientColor.b;
+            automaticAmbientIntensity =
+                static_cast<float>(std::clamp(luminance, 0.0, 1.0));
+        } else {
+            automaticAmbientColor = ambientLight.color;
+            automaticAmbientIntensity = ambientLight.intensity;
+        }
+    }
 
     friend class CoreObject;
     friend class Window;

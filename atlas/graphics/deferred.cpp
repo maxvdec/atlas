@@ -126,12 +126,24 @@ void Window::deferredRendering(RenderTarget *target) {
                                getCamera()->position.y,
                                getCamera()->position.z);
 
+    const bool shaderSupportsIbl =
+        std::find(shaderProgram.capabilities.begin(),
+                  shaderProgram.capabilities.end(),
+                  ShaderCapability::IBL) != shaderProgram.capabilities.end();
+
     // Set ambient light
-    shaderProgram.setUniform4f(
-        "ambientLight.color", scene->ambientLight.color.r,
-        scene->ambientLight.color.g, scene->ambientLight.color.b, 1.0f);
+    Color ambientColor = scene->getAmbientColor();
+    float ambientIntensity = scene->getAmbientIntensity();
+    if (scene->isAutomaticAmbientEnabled()) {
+        ambientColor = scene->getAutomaticAmbientColor();
+        ambientIntensity = scene->getAutomaticAmbientIntensity();
+    }
+    shaderProgram.setUniform4f("ambientLight.color",
+                               static_cast<float>(ambientColor.r),
+                               static_cast<float>(ambientColor.g),
+                               static_cast<float>(ambientColor.b), 1.0f);
     shaderProgram.setUniform1f("ambientLight.intensity",
-                               scene->ambientLight.intensity);
+                               ambientIntensity / 2.0f);
 
     // Set camera position
     shaderProgram.setUniform3f("cameraPosition", getCamera()->position.x,
