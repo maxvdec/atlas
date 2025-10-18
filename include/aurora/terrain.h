@@ -21,8 +21,10 @@
 #include <string>
 #include <vector>
 
+class Biome;
+
 typedef unsigned int BufferIndex;
-typedef std::function<bool(float, float, float)> BiomeFunction;
+typedef std::function<void(Biome &)> BiomeFunction;
 
 class Biome {
   public:
@@ -37,6 +39,13 @@ class Biome {
         this->useTexture = true;
     }
 
+    float minHeight = -1.0f;
+    float maxHeight = -1.0f;
+    float minMoisture = -1.0f;
+    float maxMoisture = -1.0f;
+    float minTemperature = -1.0f;
+    float maxTemperature = -1.0f;
+
     Biome(const std::string &biomeName = "",
           const Texture &biomeTexture = Texture(),
           const Color &biomeColor = Color())
@@ -45,8 +54,7 @@ class Biome {
     Biome(const std::string &biomeName = "", const Color &biomeColor = Color())
         : name(biomeName), color(biomeColor) {}
 
-    BiomeFunction condition = [](float height, float moisture,
-                                 float temperature) { return false; };
+    BiomeFunction condition = [](Biome &thisBiome) { return; };
 };
 
 class Terrain : public GameObject {
@@ -117,6 +125,8 @@ class Terrain : public GameObject {
 
     Texture terrainTexture;
     Texture biomesTexture;
+    Texture moistureMapTexture;
+    Texture temperatureMapTexture;
 
     glm::mat4 model = glm::mat4(1.0f);
     glm::mat4 view = glm::mat4(1.0f);

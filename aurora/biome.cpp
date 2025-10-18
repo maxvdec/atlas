@@ -106,54 +106,24 @@ void Terrain::generateBiomes(unsigned char *heightmapData, int height,
         return;
     }
 
-    glGenTextures(1, &biomesTexture.id);
-    glBindTexture(GL_TEXTURE_2D, biomesTexture.id);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, width, height, 0, GL_RED,
-                 GL_UNSIGNED_BYTE, nullptr);
+    glGenTextures(1, &moistureTexture.id);
+    glBindTexture(GL_TEXTURE_2D, moistureTexture.id);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED,
+                 GL_UNSIGNED_BYTE, moistureData.data());
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    std::vector<uint8_t> biomeData(width * height);
-    for (int y = 0; y < height; ++y) {
-        for (int x = 0; x < width; ++x) {
-            int idx = x + y * width;
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glGenTextures(1, &temperatureTexture.id);
+    glBindTexture(GL_TEXTURE_2D, temperatureTexture.id);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED,
+                 GL_UNSIGNED_BYTE, temperatureData.data());
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-            uint8_t heightValue;
-            if (nChannels == 1) {
-                heightValue = heightmapData[idx];
-            } else if (nChannels >= 3) {
-                int r = heightmapData[idx * nChannels + 0];
-                int g = heightmapData[idx * nChannels + 1];
-                int b = heightmapData[idx * nChannels + 2];
-                heightValue = static_cast<uint8_t>((r + g + b) / 3);
-            }
-
-            uint8_t moisture = this->moistureData[idx];
-            uint8_t temperature = this->temperatureData[idx];
-
-            bool matched = false;
-            for (size_t j = 0; j < biomes.size(); ++j) {
-                const Biome &biome = biomes[j];
-                if (biome.condition(heightValue, moisture, temperature)) {
-                    biomeData[idx] =
-                        static_cast<uint8_t>((j + 1) * 255 / biomes.size());
-                    matched = true;
-                    break;
-                }
-            }
-
-            if (biomes.size() == 0) {
-                matched = false;
-            }
-
-            if (!matched) {
-                biomeData[idx] = 0;
-            }
-        }
+    for (auto &biome : biomes) {
+        biome.condition(biome);
     }
-
-    glBindTexture(GL_TEXTURE_2D, biomesTexture.id);
-    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RED,
-                    GL_UNSIGNED_BYTE, biomeData.data());
 }

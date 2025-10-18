@@ -133,12 +133,18 @@ void Terrain::render(float dt) {
     terrainShader.setUniform1i("heightMap", 0);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, terrainTexture.id);
-    terrainShader.setUniform1i("biomesMap", 1);
+    // terrainShader.setUniform1i("biomesMap", 1);
+    // glActiveTexture(GL_TEXTURE1);
+    // glBindTexture(GL_TEXTURE_2D, biomesTexture.id);
+    terrainShader.setUniform1i("moistureMap", 1);
     glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, biomesTexture.id);
+    glBindTexture(GL_TEXTURE_2D, moistureMapTexture.id);
+    terrainShader.setUniform1i("temperatureMap", 2);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, temperatureMapTexture.id);
 
     for (int i = 0; i < 12; i++) {
-        terrainShader.setUniform1i("texture" + std::to_string(i), i + 2);
+        terrainShader.setUniform1i("texture" + std::to_string(i), i + 3);
     }
 
     for (int i = 0; i < biomes.size(); i++) {
@@ -147,7 +153,7 @@ void Terrain::render(float dt) {
             terrainShader.setUniform1i(
                 "biomes[" + std::to_string(i) + "].useTexture", 1);
             terrainShader.setUniform1i(
-                "biomes[" + std::to_string(i) + "].textureId", i + 2);
+                "biomes[" + std::to_string(i) + "].textureId", i + 3);
             glActiveTexture(GL_TEXTURE2 + i);
             glBindTexture(GL_TEXTURE_2D, biome.texture.id);
         } else {
@@ -159,6 +165,18 @@ void Terrain::render(float dt) {
         terrainShader.setUniform4f(baseName + ".tintColor", biomes[i].color.r,
                                    biomes[i].color.g, biomes[i].color.b,
                                    biomes[i].color.a);
+        terrainShader.setUniform1f(baseName + ".minHeight",
+                                   biomes[i].minHeight);
+        terrainShader.setUniform1f(baseName + ".maxHeight",
+                                   biomes[i].maxHeight);
+        terrainShader.setUniform1f(baseName + ".minMoisture",
+                                   biomes[i].minMoisture);
+        terrainShader.setUniform1f(baseName + ".maxMoisture",
+                                   biomes[i].maxMoisture);
+        terrainShader.setUniform1f(baseName + ".minTemperature",
+                                   biomes[i].minTemperature);
+        terrainShader.setUniform1f(baseName + ".maxTemperature",
+                                   biomes[i].maxTemperature);
     }
     terrainShader.setUniform1i("biomesCount", biomes.size());
 

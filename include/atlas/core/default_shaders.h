@@ -2058,12 +2058,20 @@ in vec2 TexCoord;
 
 uniform sampler2D biomesMap;
 uniform sampler2D heightMap;
+uniform sampler2D moistureMap;
+uniform sampler2D temperatureMap;
 
 struct Biome {
     int id;
     vec4 tintColor;
     int useTexture;
     int textureId;
+    float minHeight;
+    float maxHeight;
+    float minMoisture;
+    float maxMoisture;
+    float minTemperature;
+    float maxTemperature;
 };
 
 uniform sampler2D texture0;
@@ -2084,6 +2092,18 @@ uniform int biomesCount;
 
 layout (location = 0) out vec4 FragColor;
 layout (location = 1) out vec4 BrightColor;
+
+// High-quality lighting parameters
+const vec3 sunDir = normalize(vec3(0.4, 0.8, 0.3));
+const vec3 sunColor = vec3(1.0, 0.98, 0.95);
+const vec3 skyColor = vec3(0.4, 0.5, 0.7);
+const vec3 bounceColor = vec3(0.3, 0.25, 0.2);
+
+const float ambientStrength = 0.25;
+const float diffuseStrength = 0.75;
+const float specularStrength = 0.15;
+const float shininess = 32.0;
+const float rimStrength = 0.3;
 
 vec4 sampleBiomeTexture(int biomeIdx, vec2 uv) {
     vec4 result = vec4(1.0, 0.0, 1.0, 1.0); 
@@ -2110,7 +2130,6 @@ vec4 getBiomeColor(int biomeIdx, vec2 uv) {
     }
     
     Biome b = biomes[biomeIdx];
-
     if (b.useTexture == 1) {
         vec4 texColor = sampleBiomeTexture(b.textureId, uv);
         return texColor;
@@ -2119,47 +2138,186 @@ vec4 getBiomeColor(int biomeIdx, vec2 uv) {
     }
 }
 
+// High-quality normal calculation using 9-tap filter
+vec3 calculateNormalHQ(sampler2D heightMap, vec2 texCoord, float texelSize, float heightScale) {
+    // Sample 9 points in a 3x3 grid
+    float h00 = texture(heightMap, texCoord + vec2(-texelSize, -texelSize)).r;
+    float h10 = texture(heightMap, texCoord + vec2(0.0, -texelSize)).r;
+    float h20 = texture(heightMap, texCoord + vec2(texelSize, -texelSize)).r;
+    
+    float h01 = texture(heightMap, texCoord + vec2(-texelSize, 0.0)).r;
+    float h11 = texture(heightMap, texCoord).r;
+    float h21 = texture(heightMap, texCoord + vec2(texelSize, 0.0)).r;
+    
+    float h02 = texture(heightMap, texCoord + vec2(-texelSize, texelSize)).r;
+    float h12 = texture(heightMap, texCoord + vec2(0.0, texelSize)).r;
+    float h22 = texture(heightMap, texCoord + vec2(texelSize, texelSize)).r;
+    
+    // Sobel filter for better edge detection
+    float dx = (h00 + 2.0*h01 + h02) - (h20 + 2.0*h21 + h22);
+    float dy = (h00 + 2.0*h10 + h20) - (h02 + 2.0*h12 + h22);
+    
+    vec3 normal = normalize(vec3(-dx * heightScale, 1.0, -dy * heightScale));
+    return normal;
+}
+
+// High-quality SSAO (Screen-Space Ambient Occlusion)
+float calculateSSAO(sampler2D heightMap, vec2 texCoord, float texelSize, float centerHeight) {
+    const int samples = 16;
+    const float radius = 4.0;
+    const float bias = 0.0001;
+    
+    float occlusion = 0.0;
+    
+    // Spiral sampling pattern for better distribution
+    for (int i = 0; i < samples; i++) {
+        float angle = float(i) * 2.399; // Golden angle
+        float dist = sqrt(float(i) / float(samples)) * radius;
+        
+        vec2 offset = vec2(cos(angle), sin(angle)) * dist * texelSize;
+        float sampleHeight = texture(heightMap, texCoord + offset).r;
+        
+        float heightDiff = centerHeight - sampleHeight;
+        float weight = 1.0 - smoothstep(0.0, radius * texelSize, length(offset));
+        
+        occlusion += max(0.0, heightDiff - bias) * weight;
+    }
+    
+    occlusion = 1.0 - clamp(occlusion / float(samples) * 15.0, 0.0, 0.85);
+    return occlusion;
+}
+
+// Slope-based shading for more dramatic terrain
+float calculateSlope(vec3 normal) {
+    return 1.0 - abs(dot(normal, vec3(0.0, 1.0, 0.0)));
+}
+
+// Height-based fog/atmospheric scattering
+vec3 applyAtmosphere(vec3 color, float height, float depth) {
+    float fogAmount = exp(-depth * 0.0015) * (1.0 - clamp(height / 200.0, 0.0, 0.8));
+    vec3 fogColor = mix(vec3(0.5, 0.6, 0.7), vec3(0.7, 0.8, 0.9), clamp(height / 100.0, 0.0, 1.0));
+    return mix(fogColor, color, fogAmount);
+}
+
+// Fresnel rim lighting for edges
+float calculateRimLight(vec3 normal, vec3 viewDir) {
+    float rim = 1.0 - max(dot(viewDir, normal), 0.0);
+    return pow(rim, 3.0);
+}
+
+// Shadow mapping approximation using heightmap
+float calculateShadow(sampler2D heightMap, vec2 texCoord, vec3 lightDir, float currentHeight, float texelSize) {
+    const int steps = 8;
+    const float maxDist = 0.02;
+    
+    vec2 rayStep = normalize(lightDir.xz) * texelSize * (maxDist / float(steps));
+    float shadow = 1.0;
+    
+    for (int i = 1; i <= steps; i++) {
+        vec2 sampleCoord = texCoord + rayStep * float(i);
+        float sampleHeight = texture(heightMap, sampleCoord).r;
+        float expectedHeight = currentHeight - float(i) * 0.005;
+        
+        if (sampleHeight > expectedHeight) {
+            shadow = 0.3;
+            break;
+        }
+    }
+    
+    return shadow;
+}
+
 void main() {
     if (biomesCount <= 0) {
         FragColor = vec4(vec3((Height + 16) / 64.0f), 1.0);
         return;
     }
     
-    float biomeData = texture(biomesMap, TexCoord).r;
+    float moisture = texture(moistureMap, TexCoord).r * 255;
+    float temperature = texture(temperatureMap, TexCoord).r * 255;
+    float currentHeight = texture(heightMap, TexCoord).r;
     
-    int biomeId = int(floor(biomeData * float(biomesCount)));
-    biomeId = clamp(biomeId, 0, biomesCount - 1);
+    vec4 baseColor = vec4(0.0);
     
-    vec2 texelSize = 1.0 / vec2(textureSize(biomesMap, 0));
-    float blendRadius = 3.0;
-    
-    vec4 color = vec4(0.0);
-    float totalWeight = 0.0;
-    
-    for (float dy = -blendRadius; dy <= blendRadius; dy += 1.0) {
-        for (float dx = -blendRadius; dx <= blendRadius; dx += 1.0) {
-            vec2 offset = vec2(dx, dy) * texelSize;
-            float neighborBiomeData = texture(biomesMap, TexCoord + offset).r;
-            int neighborBiomeId = int(floor(neighborBiomeData * float(biomesCount)));
-            neighborBiomeId = clamp(neighborBiomeId, 0, biomesCount - 1);
-            
-            float dist = length(vec2(dx, dy));
-            float weight = exp(-dist * dist / (blendRadius * blendRadius));
-            
-            vec4 biomeColor = getBiomeColor(neighborBiomeId, TexCoord);
-            
-            color += biomeColor * weight;
-            totalWeight += weight;
+    for (int i = 0; i < biomesCount; i++) {
+        Biome b = biomes[i];
+        bool heightInRange = (b.minHeight < 0.0f || Height * 255.0 >= b.minHeight) &&
+                           (b.maxHeight < 0.0f || Height * 255.0 < b.maxHeight);
+        bool moistureInRange = (b.minMoisture < 0.0f || moisture >= b.minMoisture) &&
+                               (b.maxMoisture < 0.0f || moisture < b.maxMoisture);
+        bool temperatureInRange = (b.minTemperature < 0.0f || temperature >= b.minTemperature) &&
+                                  (b.maxTemperature < 0.0f || temperature < b.maxTemperature);
+        
+        if (heightInRange && moistureInRange && temperatureInRange) {
+            baseColor = getBiomeColor(b.id, TexCoord * 10.0);
+            break;
         }
     }
     
-    if (totalWeight > 0.0) {
-        FragColor = color / totalWeight;
-    } else {
-        FragColor = vec4(0.0, 1.0, 0.0, 1.0); // Green error color
-    }
+    // High-quality lighting setup
+    float texelSize = 1.0 / 1024.0;
+    float heightScale = 25.0; // Adjust for terrain steepness sensitivity
     
-    BrightColor = vec4(0.0);
+    vec3 normal = calculateNormalHQ(heightMap, TexCoord, texelSize, heightScale);
+    vec3 viewDir = normalize(vec3(0.0, 1.0, 0.5)); // Approximate view direction
+    
+    // Diffuse lighting (sun)
+    float NdotL = max(dot(normal, sunDir), 0.0);
+    float diffuse = NdotL * diffuseStrength;
+    
+    // Specular highlights on steep slopes (wet rocks, etc.)
+    vec3 halfDir = normalize(sunDir + viewDir);
+    float spec = pow(max(dot(normal, halfDir), 0.0), shininess);
+    float slope = calculateSlope(normal);
+    float specular = spec * specularStrength * slope;
+    
+    // Sky ambient (blue from above)
+    float skyFactor = max(dot(normal, vec3(0.0, 1.0, 0.0)), 0.0);
+    vec3 skyAmbient = skyColor * skyFactor * 0.3;
+    
+    // Bounce light (warm from below)
+    float bounceFactor = max(dot(normal, vec3(0.0, -1.0, 0.0)), 0.0);
+    vec3 bounceLight = bounceColor * bounceFactor * 0.2;
+    
+    // Rim lighting for silhouettes
+    float rim = calculateRimLight(normal, viewDir);
+    vec3 rimLight = sunColor * rim * rimStrength;
+    
+    // High-quality ambient occlusion
+    float ao = calculateSSAO(heightMap, TexCoord, texelSize, currentHeight);
+    
+    // Soft shadows
+    float shadow = calculateShadow(heightMap, TexCoord, sunDir, currentHeight, texelSize);
+    
+    // Slope darkening for crevices
+    float slopeDarken = 1.0 - (slope * 0.3);
+    
+    // Combine all lighting
+    vec3 ambient = (skyAmbient + bounceLight) * ambientStrength;
+    vec3 lighting = ambient + (sunColor * diffuse * shadow) + rimLight;
+    lighting *= ao * slopeDarken;
+    
+    // Apply lighting to base color
+    vec3 finalColor = baseColor.rgb * lighting;
+    
+    // Add specular highlights on top
+    finalColor += sunColor * specular * shadow;
+    
+    // Atmospheric scattering
+    float depth = length(FragPos);
+    finalColor = applyAtmosphere(finalColor, Height * 255.0, depth);
+    
+    // Subtle color grading for more realistic look
+    finalColor = pow(finalColor, vec3(0.95)); // Slight contrast boost
+    
+    FragColor = vec4(finalColor, baseColor.a);
+    
+    // Bright areas for bloom (if you have post-processing)
+    float brightness = dot(finalColor, vec3(0.2126, 0.7152, 0.0722));
+    if(brightness > 1.0)
+        BrightColor = vec4(finalColor, 1.0);
+    else
+        BrightColor = vec4(0.0, 0.0, 0.0, 1.0);
 }
 )";
 
@@ -2177,6 +2335,7 @@ in vec2 TextureCoord[];
 
 out float Height;
 out vec2 TexCoord;
+out vec3 FragPos;
 
 void main() {
     float u = gl_TessCoord.x;
@@ -2211,6 +2370,8 @@ void main() {
     gl_Position = projection * view * model * position;
 
     TexCoord = texCoord;
+
+    FragPos = vec3(model * position);
 }
 )";
 

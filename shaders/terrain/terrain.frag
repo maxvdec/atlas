@@ -5,12 +5,20 @@ in vec2 TexCoord;
 
 uniform sampler2D biomesMap;
 uniform sampler2D heightMap;
+uniform sampler2D moistureMap;
+uniform sampler2D temperatureMap;
 
 struct Biome {
     int id;
     vec4 tintColor;
     int useTexture;
     int textureId;
+    float minHeight;
+    float maxHeight;
+    float minMoisture;
+    float maxMoisture;
+    float minTemperature;
+    float maxTemperature;
 };
 
 uniform sampler2D texture0;
@@ -31,6 +39,10 @@ uniform int biomesCount;
 
 layout (location = 0) out vec4 FragColor;
 layout (location = 1) out vec4 BrightColor;
+
+const vec3 lightDir = normalize(vec3(0.5, 1.0, 0.3)); 
+const float ambientStrength = 0.4; 
+const float diffuseStrength = 0.6; 
 
 vec4 sampleBiomeTexture(int biomeIdx, vec2 uv) {
     vec4 result = vec4(1.0, 0.0, 1.0, 1.0); 
@@ -57,7 +69,6 @@ vec4 getBiomeColor(int biomeIdx, vec2 uv) {
     }
     
     Biome b = biomes[biomeIdx];
-
     if (b.useTexture == 1) {
         vec4 texColor = sampleBiomeTexture(b.textureId, uv);
         return texColor;
@@ -66,45 +77,75 @@ vec4 getBiomeColor(int biomeIdx, vec2 uv) {
     }
 }
 
+vec3 calculateNormal(sampler2D heightMap, vec2 texCoord, float texelSize) {
+    float heightL = texture(heightMap, texCoord + vec2(-texelSize, 0.0)).r;
+    float heightR = texture(heightMap, texCoord + vec2(texelSize, 0.0)).r;
+    float heightD = texture(heightMap, texCoord + vec2(0.0, -texelSize)).r;
+    float heightU = texture(heightMap, texCoord + vec2(0.0, texelSize)).r;
+    
+    vec3 normal;
+    normal.x = (heightL - heightR);
+    normal.y = 2.0 * texelSize; 
+    normal.z = (heightD - heightU);
+    
+    return normalize(normal);
+}
+
+float calculateAO(sampler2D heightMap, vec2 texCoord, float texelSize) {
+    float centerHeight = texture(heightMap, texCoord).r;
+    float ao = 0.0;
+    int samples = 0;
+    
+    for (int x = -1; x <= 1; x++) {
+        for (int y = -1; y <= 1; y++) {
+            if (x == 0 && y == 0) continue;
+            vec2 offset = vec2(float(x), float(y)) * texelSize;
+            float sampleHeight = texture(heightMap, texCoord + offset).r;
+            ao += max(0.0, centerHeight - sampleHeight);
+            samples++;
+        }
+    }
+    
+    ao /= float(samples);
+    return 1.0 - clamp(ao * 8.0, 0.0, 0.7); 
+}
+
 void main() {
     if (biomesCount <= 0) {
         FragColor = vec4(vec3((Height + 16) / 64.0f), 1.0);
         return;
     }
     
-    float biomeData = texture(biomesMap, TexCoord).r;
+    float moisture = texture(moistureMap, TexCoord).r * 255;
+    float temperature = texture(temperatureMap, TexCoord).r * 255;
+    float height = texture(heightMap, TexCoord).r * 255;
     
-    int biomeId = int(floor(biomeData * float(biomesCount)));
-    biomeId = clamp(biomeId, 0, biomesCount - 1);
+    vec4 baseColor = vec4(0.0);
     
-    vec2 texelSize = 1.0 / vec2(textureSize(biomesMap, 0));
-    float blendRadius = 3.0;
-    
-    vec4 color = vec4(0.0);
-    float totalWeight = 0.0;
-    
-    for (float dy = -blendRadius; dy <= blendRadius; dy += 1.0) {
-        for (float dx = -blendRadius; dx <= blendRadius; dx += 1.0) {
-            vec2 offset = vec2(dx, dy) * texelSize;
-            float neighborBiomeData = texture(biomesMap, TexCoord + offset).r;
-            int neighborBiomeId = int(floor(neighborBiomeData * float(biomesCount)));
-            neighborBiomeId = clamp(neighborBiomeId, 0, biomesCount - 1);
-            
-            float dist = length(vec2(dx, dy));
-            float weight = exp(-dist * dist / (blendRadius * blendRadius));
-            
-            vec4 biomeColor = getBiomeColor(neighborBiomeId, TexCoord);
-            
-            color += biomeColor * weight;
-            totalWeight += weight;
+    for (int i = 0; i < biomesCount; i++) {
+        Biome b = biomes[i];
+        bool heightInRange = (b.minHeight < 0.0f || Height * 255.0 >= b.minHeight) &&
+                           (b.maxHeight < 0.0f || Height * 255.0 < b.maxHeight);
+        bool moistureInRange = (b.minMoisture < 0.0f || moisture >= b.minMoisture) &&
+                               (b.maxMoisture < 0.0f || moisture < b.maxMoisture);
+        bool temperatureInRange = (b.minTemperature < 0.0f || temperature >= b.minTemperature) &&
+                                  (b.maxTemperature < 0.0f || temperature < b.maxTemperature);
+        
+        if (heightInRange && moistureInRange && temperatureInRange) {
+            baseColor = getBiomeColor(b.id, TexCoord * 10.0);
+            break;
         }
     }
     
-    if (totalWeight > 0.0) {
-        FragColor = color / totalWeight;
-    } else {
-        FragColor = vec4(0.0, 1.0, 0.0, 1.0); // Green error color
-    }
+    float texelSize = 1.0 / textureSize(heightMap, 0).x; 
+    vec3 normal = calculateNormal(heightMap, TexCoord, texelSize);
     
-    BrightColor = vec4(0.0);
+    float diffuse = max(dot(normal, lightDir), 0.0);
+    
+    float ao = calculateAO(heightMap, TexCoord, texelSize * 2.0);
+    
+    float lighting = ambientStrength + diffuseStrength * diffuse;
+    lighting *= ao; 
+    
+    FragColor = vec4(baseColor.rgb * lighting, baseColor.a);
 }
