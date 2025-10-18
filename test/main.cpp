@@ -151,14 +151,12 @@ class MainScene : public Scene {
         backpack.attachTexture(normal);
 
         sphereCube.setPosition({0.0, 0.25, 0.0});
-        window.addObject(&sphereCube);
 
         ground = createBox({5.0f, 0.1f, 5.0f}, Color(0.3f, 0.8f, 0.3f));
         ground.attachTexture(
             Texture::fromResource(Workspace::get().createResource(
                 "ground.jpg", "GroundTexture", ResourceType::Image)));
         ground.setPosition({0.0f, -0.1f, 0.0f});
-        window.addObject(&ground);
 
         backpack.setPosition({0.0f, 0.2f, 0.0f});
 
@@ -172,13 +170,19 @@ class MainScene : public Scene {
         window.addUIObject(&fpsText);
 
         lightObject = createBox({1.0f, 1.0f, 1.0f}, Color::yellow());
-        lightObject.setPosition({0.0f, 0.3f, 0.0f});
+        lightObject.setPosition({0.0f, 0.001f, 0.0f});
         lightObject.makeEmissive(this, {5.0, 5.0, 5.0}, 2.0f);
         for (int i = 0; i < 4; i++) {
             Instance &instance = lightObject.createInstance();
             instance.move({0.0f, 1.1f * i, 0.0f});
         }
         window.addObject(&lightObject);
+
+        ball = createDebugSphere(0.5f, 76, 76);
+        ball.body->applyMass(0.0);
+        ball.move({1.5f, 0.0f, 0.0});
+        ball.useDeferredRendering = false;
+        window.addObject(&ball);
 
         this->setAmbientIntensity(0.1f);
 
@@ -187,11 +191,9 @@ class MainScene : public Scene {
         skybox.display(window);
         this->setSkybox(&skybox);
 
-        frameBuffer = RenderTarget(window, RenderTargetType::Multisampled);
-        frameBuffer.display(window);
+        frameBuffer = RenderTarget(window);
         window.addRenderTarget(&frameBuffer);
-
-        window.useDeferredRendering();
+        frameBuffer.display(window);
     }
 };
 

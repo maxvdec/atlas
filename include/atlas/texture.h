@@ -75,6 +75,9 @@ enum class TextureType : int {
     Parallax = 6,
     SSAONoise = 7,
     SSAO = 8,
+    Metallic = 9,
+    Roughness = 10,
+    AO = 11
 };
 
 /**

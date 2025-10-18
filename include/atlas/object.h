@@ -43,37 +43,11 @@ typedef std::array<double, 2> TextureCoordinate;
  *
  */
 struct Material {
-    /**
-     * @brief The ambient color of the material. This is the color that the
-     * material appears to be under ambient lighting.
-     *
-     */
-    Color ambient = Color::white();
-    /**
-     * @brief The diffuse color of the material. This is the color that the
-     * material appears to be under diffuse lighting.
-     *
-     */
-    Color diffuse = Color::white();
-    /**
-     * @brief The specular color of the material. This is the color that the
-     * material appears to be under specular lighting.
-     *
-     */
-    Color specular = Color::white();
-    /**
-     * @brief The shininess of the material. This determines the size and
-     * intensity of specular highlights. \warning The values must be greater
-     * than 0.
-     */
-    float shininess = 32.0f;
-
-    /**
-     * @brief The reflectivity of the material. 0.0 means no reflection, 1.0
-     * means full mirror-like reflection.
-     *
-     */
-    float reflectivity = 0.f;
+    Color albedo = {1.0, 1.0, 1.0, 1.0};
+    float metallic = 0.0f;
+    float roughness = 0.5f;
+    float ao = 1.0f;
+    float reflectivity = 0.0f;
 };
 
 /**

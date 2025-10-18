@@ -509,7 +509,7 @@ CoreObject createDebugSphere(double radius, unsigned int sectorCount,
     Texture checkerboard = Texture::createTiledCheckerboard(1024, 1024, tiles);
 
     sphere.attachTexture(checkerboard);
-    sphere.material.specular = Color::white() * 0.5;
+    sphere.material.albedo = Color::white() * 0.5;
 
     Body body;
     std::shared_ptr<Sphere> physicsSphere = std::make_shared<Sphere>(radius);
@@ -543,7 +543,7 @@ CoreObject createDebugBox(Size3d size) {
     Texture checkerboard = Texture::createTiledCheckerboard(1024, 1024, tiles);
 
     box.attachTexture(checkerboard);
-    box.material.specular = Color::white() * 0.5;
+    box.material.albedo = Color::white() * 0.5;
 
     std::vector<glm::vec3> corners = {{-size.x / 2, -size.y / 2, -size.z / 2},
                                       {size.x / 2, -size.y / 2, -size.z / 2},
