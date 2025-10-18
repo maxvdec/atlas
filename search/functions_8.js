@@ -5,9 +5,10 @@ var searchData=
   ['intersects_2',['intersects',['../class_body.html#ab3147e6b478c260baa5e2952192be958',1,'Body']]],
   ['intersectsstatic_3',['intersectsStatic',['../class_body.html#a2e76849877154f5baf350bad3b14a814',1,'Body']]],
   ['inversion_4',['Inversion',['../class_inversion.html#ac4baef84181fee034862fce94d779f98',1,'Inversion']]],
-  ['isedgeunique_5',['isEdgeUnique',['../namespacebezel.html#a38ea744619e0b833fa4497ff996e5d1a',1,'bezel']]],
-  ['isexternal_6',['isExternal',['../namespacebezel.html#a0027696456cb0bc89fb9b97139c6d79c',1,'bezel']]],
-  ['iskeyclicked_7',['isKeyClicked',['../class_window.html#a5d64d3322428400dd343895ccfeaeb0a',1,'Window']]],
-  ['iskeypressed_8',['isKeyPressed',['../class_window.html#a934998dda7f1a9c513c47684753075fe',1,'Window']]],
-  ['isplaying_9',['isPlaying',['../class_audio_source.html#a218980b87a1b223b2e13bcb766567ad1',1,'AudioSource']]]
+  ['isautomaticambientenabled_5',['isAutomaticAmbientEnabled',['../class_scene.html#ad8ef755ef8124f2b0fefb95926740052',1,'Scene']]],
+  ['isedgeunique_6',['isEdgeUnique',['../namespacebezel.html#a38ea744619e0b833fa4497ff996e5d1a',1,'bezel']]],
+  ['isexternal_7',['isExternal',['../namespacebezel.html#a0027696456cb0bc89fb9b97139c6d79c',1,'bezel']]],
+  ['iskeyclicked_8',['isKeyClicked',['../class_window.html#a5d64d3322428400dd343895ccfeaeb0a',1,'Window']]],
+  ['iskeypressed_9',['isKeyPressed',['../class_window.html#a934998dda7f1a9c513c47684753075fe',1,'Window']]],
+  ['isplaying_10',['isPlaying',['../class_audio_source.html#a218980b87a1b223b2e13bcb766567ad1',1,'AudioSource']]]
 ];

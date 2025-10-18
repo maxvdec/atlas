@@ -65,5 +65,6 @@ var searchData=
   ['audioengine_62',['AudioEngine',['../class_audio_engine.html',1,'']]],
   ['audioengine_63',['audioEngine',['../class_window.html#a2133e2bb4562bcc491d091a640dcae88',1,'Window']]],
   ['audioplayer_64',['AudioPlayer',['../class_audio_player.html',1,'AudioPlayer'],['../class_audio_player.html#aa0545193648596a6e541fe964f16f902',1,'AudioPlayer::AudioPlayer()'],['../class_audio_player.html#adefa6c3aec690ebebb69faa204527ef8',1,'AudioPlayer::AudioPlayer(const AudioPlayer &amp;)=delete'],['../class_audio_player.html#a53f0821bd4bdc4fb422751fabab9c294',1,'AudioPlayer::AudioPlayer(AudioPlayer &amp;&amp;other) noexcept']]],
-  ['audiosource_65',['AudioSource',['../class_audio_source.html',1,'AudioSource'],['../class_audio_data.html#a4c6a4b0d9827213876805011e3d9a751',1,'AudioData::AudioSource()'],['../class_audio_effect.html#a4c6a4b0d9827213876805011e3d9a751',1,'AudioEffect::AudioSource()'],['../class_audio_source.html#a58ad52e32668f022d45fa6239e56a85c',1,'AudioSource::AudioSource()']]]
+  ['audiosource_65',['AudioSource',['../class_audio_source.html',1,'AudioSource'],['../class_audio_data.html#a4c6a4b0d9827213876805011e3d9a751',1,'AudioData::AudioSource()'],['../class_audio_effect.html#a4c6a4b0d9827213876805011e3d9a751',1,'AudioEffect::AudioSource()'],['../class_audio_source.html#a58ad52e32668f022d45fa6239e56a85c',1,'AudioSource::AudioSource()']]],
+  ['averagecolor_66',['averageColor',['../struct_cubemap.html#a50b2c6343093573ff1a058918f63f514',1,'Cubemap']]]
 ];

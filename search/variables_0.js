@@ -10,5 +10,6 @@ var searchData=
   ['aspectratiox_7',['aspectRatioX',['../struct_window_configuration.html#a45697805b5409de3b3ba16f8fd63e347',1,'WindowConfiguration']]],
   ['aspectratioy_8',['aspectRatioY',['../struct_window_configuration.html#a4d9ab6af44609b23217808963ca0c1f5',1,'WindowConfiguration']]],
   ['atlas_9',['atlas',['../struct_font.html#a55ce744ba518079323089dccdb0a3bdd',1,'Font']]],
-  ['audioengine_10',['audioEngine',['../class_window.html#a2133e2bb4562bcc491d091a640dcae88',1,'Window']]]
+  ['audioengine_10',['audioEngine',['../class_window.html#a2133e2bb4562bcc491d091a640dcae88',1,'Window']]],
+  ['averagecolor_11',['averageColor',['../struct_cubemap.html#a50b2c6343093573ff1a058918f63f514',1,'Cubemap']]]
 ];
