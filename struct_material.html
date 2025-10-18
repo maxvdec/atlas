@@ -129,55 +129,63 @@ $(function(){initNavTree('struct_material.html','','struct_material-members'); }
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a5925c60fcc13940f3a04d168c7c89bc3" id="r_a5925c60fcc13940f3a04d168c7c89bc3"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_color.html">Color</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5925c60fcc13940f3a04d168c7c89bc3">ambient</a> = <a class="el" href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a>()</td></tr>
-<tr class="memdesc:a5925c60fcc13940f3a04d168c7c89bc3"><td class="mdescLeft">&#160;</td><td class="mdescRight">The ambient color of the material. This is the color that the material appears to be under ambient lighting.  <br /></td></tr>
-<tr class="memitem:aa7b50861655dd42ca5336f5eac2211b9" id="r_aa7b50861655dd42ca5336f5eac2211b9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_color.html">Color</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa7b50861655dd42ca5336f5eac2211b9">diffuse</a> = <a class="el" href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a>()</td></tr>
-<tr class="memdesc:aa7b50861655dd42ca5336f5eac2211b9"><td class="mdescLeft">&#160;</td><td class="mdescRight">The diffuse color of the material. This is the color that the material appears to be under diffuse lighting.  <br /></td></tr>
-<tr class="memitem:ae8fe63cefbd055a095c914ca50f925aa" id="r_ae8fe63cefbd055a095c914ca50f925aa"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_color.html">Color</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae8fe63cefbd055a095c914ca50f925aa">specular</a> = <a class="el" href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a>()</td></tr>
-<tr class="memdesc:ae8fe63cefbd055a095c914ca50f925aa"><td class="mdescLeft">&#160;</td><td class="mdescRight">The specular color of the material. This is the color that the material appears to be under specular lighting.  <br /></td></tr>
-<tr class="memitem:a9dc184c883ec135ace28c1917af3fe84" id="r_a9dc184c883ec135ace28c1917af3fe84"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9dc184c883ec135ace28c1917af3fe84">shininess</a> = 32.0f</td></tr>
-<tr class="memdesc:a9dc184c883ec135ace28c1917af3fe84"><td class="mdescLeft">&#160;</td><td class="mdescRight">The shininess of the material. This determines the size and intensity of specular highlights.  <br /></td></tr>
-<tr class="memitem:a8d977d0b7386da7e3ac6879f458d3f0f" id="r_a8d977d0b7386da7e3ac6879f458d3f0f"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8d977d0b7386da7e3ac6879f458d3f0f">reflectivity</a> = 0.f</td></tr>
-<tr class="memdesc:a8d977d0b7386da7e3ac6879f458d3f0f"><td class="mdescLeft">&#160;</td><td class="mdescRight">The reflectivity of the material. 0.0 means no reflection, 1.0 means full mirror-like reflection.  <br /></td></tr>
+<tr class="memitem:aa61df35ac281fa40c0745235494d4b19" id="r_aa61df35ac281fa40c0745235494d4b19"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_color.html">Color</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa61df35ac281fa40c0745235494d4b19">albedo</a> = {1.0, 1.0, 1.0, 1.0}</td></tr>
+<tr class="memitem:a97fc4551763505f23dac24a9901cee88" id="r_a97fc4551763505f23dac24a9901cee88"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a97fc4551763505f23dac24a9901cee88">metallic</a> = 0.0f</td></tr>
+<tr class="memitem:abbaeac8374986ca82670ff0d7749c566" id="r_abbaeac8374986ca82670ff0d7749c566"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#abbaeac8374986ca82670ff0d7749c566">roughness</a> = 0.5f</td></tr>
+<tr class="memitem:a0946dbf03359dc3cd8d32910045dc5d4" id="r_a0946dbf03359dc3cd8d32910045dc5d4"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0946dbf03359dc3cd8d32910045dc5d4">ao</a> = 1.0f</td></tr>
+<tr class="memitem:a8d977d0b7386da7e3ac6879f458d3f0f" id="r_a8d977d0b7386da7e3ac6879f458d3f0f"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8d977d0b7386da7e3ac6879f458d3f0f">reflectivity</a> = 0.0f</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Structure representing the material properties of an object. Based on Phong reflection model. </p>
 
 <p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00045">45</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
 </div><a name="doc-variable-members" id="doc-variable-members"></a><h2 id="header-doc-variable-members" class="groupheader">Member Data Documentation</h2>
-<a id="a5925c60fcc13940f3a04d168c7c89bc3" name="a5925c60fcc13940f3a04d168c7c89bc3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5925c60fcc13940f3a04d168c7c89bc3">&#9670;&#160;</a></span>ambient</h2>
+<a id="aa61df35ac281fa40c0745235494d4b19" name="aa61df35ac281fa40c0745235494d4b19"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa61df35ac281fa40c0745235494d4b19">&#9670;&#160;</a></span>albedo</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="struct_color.html">Color</a> Material::ambient = <a class="el" href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a>()</td>
+          <td class="memname"><a class="el" href="struct_color.html">Color</a> Material::albedo = {1.0, 1.0, 1.0, 1.0}</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>The ambient color of the material. This is the color that the material appears to be under ambient lighting. </p>
-
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00051">51</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00046">46</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   46</span>{1.0, 1.0, 1.0, 1.0};</div>
+</div><!-- fragment -->
 </div>
 </div>
-<a id="aa7b50861655dd42ca5336f5eac2211b9" name="aa7b50861655dd42ca5336f5eac2211b9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa7b50861655dd42ca5336f5eac2211b9">&#9670;&#160;</a></span>diffuse</h2>
+<a id="a0946dbf03359dc3cd8d32910045dc5d4" name="a0946dbf03359dc3cd8d32910045dc5d4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0946dbf03359dc3cd8d32910045dc5d4">&#9670;&#160;</a></span>ao</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="struct_color.html">Color</a> Material::diffuse = <a class="el" href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a>()</td>
+          <td class="memname">float Material::ao = 1.0f</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>The diffuse color of the material. This is the color that the material appears to be under diffuse lighting. </p>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00049">49</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00057">57</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+</div>
+</div>
+<a id="a97fc4551763505f23dac24a9901cee88" name="a97fc4551763505f23dac24a9901cee88"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a97fc4551763505f23dac24a9901cee88">&#9670;&#160;</a></span>metallic</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">float Material::metallic = 0.0f</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00047">47</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
 
 </div>
 </div>
@@ -188,51 +196,28 @@ Public Attributes</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">float Material::reflectivity = 0.f</td>
+          <td class="memname">float Material::reflectivity = 0.0f</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>The reflectivity of the material. 0.0 means no reflection, 1.0 means full mirror-like reflection. </p>
-
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00076">76</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00050">50</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
 
 </div>
 </div>
-<a id="a9dc184c883ec135ace28c1917af3fe84" name="a9dc184c883ec135ace28c1917af3fe84"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9dc184c883ec135ace28c1917af3fe84">&#9670;&#160;</a></span>shininess</h2>
+<a id="abbaeac8374986ca82670ff0d7749c566" name="abbaeac8374986ca82670ff0d7749c566"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abbaeac8374986ca82670ff0d7749c566">&#9670;&#160;</a></span>roughness</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">float Material::shininess = 32.0f</td>
+          <td class="memname">float Material::roughness = 0.5f</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>The shininess of the material. This determines the size and intensity of specular highlights. </p>
-<dl class="section warning"><dt>Warning</dt><dd>The values must be greater than 0. </dd></dl>
-
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00069">69</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-
-</div>
-</div>
-<a id="ae8fe63cefbd055a095c914ca50f925aa" name="ae8fe63cefbd055a095c914ca50f925aa"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae8fe63cefbd055a095c914ca50f925aa">&#9670;&#160;</a></span>specular</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="struct_color.html">Color</a> Material::specular = <a class="el" href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a>()</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>The specular color of the material. This is the color that the material appears to be under specular lighting. </p>
-
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00063">63</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00048">48</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
 
 </div>
 </div>

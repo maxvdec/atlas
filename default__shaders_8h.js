@@ -1,5 +1,7 @@
 var default__shaders_8h =
 [
+    [ "BINN_PHONG_VERT", "default__shaders_8h.html#ab88cb28a63dbaadc0417f3333f7d6994", null ],
+    [ "BLINN_PHONG_FRAG", "default__shaders_8h.html#ac9c5a1747c6e8231627d39aada2406d8", null ],
     [ "COLOR_FRAG", "default__shaders_8h.html#a56686808191d97f1d6a78ed6c8b3ad02", null ],
     [ "COLOR_VERT", "default__shaders_8h.html#abd40d744c94aaf9963332aadd7b06466", null ],
     [ "DEBUG_FRAG", "default__shaders_8h.html#ab61110f9533f7aaccfce61ce7b25da9b", null ],

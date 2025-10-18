@@ -11,7 +11,6 @@ var searchData=
   ['depthtexture_8',['depthTexture',['../class_render_target.html#a066aebb220f1f3b50239bcb1b90bb2bd',1,'RenderTarget']]],
   ['desiredattributes_9',['desiredAttributes',['../struct_vertex_shader.html#aa07b8f046212ba235effca38c90269df',1,'VertexShader::desiredAttributes'],['../struct_shader_program.html#a3d6198b12f2a30d592c85fb521690764',1,'ShaderProgram::desiredAttributes']]],
   ['devicename_10',['deviceName',['../class_audio_engine.html#ac71e034fcf3e3fad68fce2124d500c2e',1,'AudioEngine']]],
-  ['diffuse_11',['diffuse',['../struct_material.html#aa7b50861655dd42ca5336f5eac2211b9',1,'Material']]],
-  ['direction_12',['direction',['../class_directional_light.html#a67096230489c50468d6c081a7c894d99',1,'DirectionalLight::direction'],['../struct_spotlight.html#aeb10b51233ba3eb1933738e3ac8cfae6',1,'Spotlight::direction']]],
-  ['distance_13',['distance',['../struct_point_light_constants.html#a2e3361b40b8821bb48106b36703b4e1f',1,'PointLightConstants::distance'],['../struct_light.html#aebfa78420d5cf261be042325ff392b62',1,'Light::distance']]]
+  ['direction_11',['direction',['../class_directional_light.html#a67096230489c50468d6c081a7c894d99',1,'DirectionalLight::direction'],['../struct_spotlight.html#aeb10b51233ba3eb1933738e3ac8cfae6',1,'Spotlight::direction']]],
+  ['distance_12',['distance',['../struct_point_light_constants.html#a2e3361b40b8821bb48106b36703b4e1f',1,'PointLightConstants::distance'],['../struct_light.html#aebfa78420d5cf261be042325ff392b62',1,'Light::distance']]]
 ];

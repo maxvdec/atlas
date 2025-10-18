@@ -3,11 +3,12 @@ var searchData=
   ['a_0',['a',['../struct_color.html#a693d5fe08d58e91a8483639bcca6da3f',1,'Color::a'],['../struct_collision_pair.html#a42774adc74909268b2ba38eda0aa3a6b',1,'CollisionPair::a'],['../struct_triangle.html#aa1781b2e0265b3fef1d7aa02430a7821',1,'Triangle::a'],['../struct_edge.html#a768226912acc6e80c2ecb5f72c5b21e5',1,'Edge::a']]],
   ['active_1',['active',['../struct_particle.html#a73a4154dfbae2e2787ef72c1bee83413',1,'Particle']]],
   ['advance_2',['advance',['../struct_character.html#a782c09f2ac5412664ef5127882891568',1,'Character']]],
-  ['alwaysontop_3',['alwaysOnTop',['../struct_window_configuration.html#a097dc5b5aee3944a617487530393dd11',1,'WindowConfiguration']]],
-  ['ambient_4',['ambient',['../struct_material.html#a5925c60fcc13940f3a04d168c7c89bc3',1,'Material']]],
+  ['albedo_3',['albedo',['../struct_material.html#aa61df35ac281fa40c0745235494d4b19',1,'Material']]],
+  ['alwaysontop_4',['alwaysOnTop',['../struct_window_configuration.html#a097dc5b5aee3944a617487530393dd11',1,'WindowConfiguration']]],
   ['angularvelocity_5',['angularVelocity',['../class_body.html#a6f9bd0b59a4f9d8099079d3ff07b37b0',1,'Body']]],
-  ['aspectratiox_6',['aspectRatioX',['../struct_window_configuration.html#a45697805b5409de3b3ba16f8fd63e347',1,'WindowConfiguration']]],
-  ['aspectratioy_7',['aspectRatioY',['../struct_window_configuration.html#a4d9ab6af44609b23217808963ca0c1f5',1,'WindowConfiguration']]],
-  ['atlas_8',['atlas',['../struct_font.html#a55ce744ba518079323089dccdb0a3bdd',1,'Font']]],
-  ['audioengine_9',['audioEngine',['../class_window.html#a2133e2bb4562bcc491d091a640dcae88',1,'Window']]]
+  ['ao_6',['ao',['../struct_material.html#a0946dbf03359dc3cd8d32910045dc5d4',1,'Material']]],
+  ['aspectratiox_7',['aspectRatioX',['../struct_window_configuration.html#a45697805b5409de3b3ba16f8fd63e347',1,'WindowConfiguration']]],
+  ['aspectratioy_8',['aspectRatioY',['../struct_window_configuration.html#a4d9ab6af44609b23217808963ca0c1f5',1,'WindowConfiguration']]],
+  ['atlas_9',['atlas',['../struct_font.html#a55ce744ba518079323089dccdb0a3bdd',1,'Font']]],
+  ['audioengine_10',['audioEngine',['../class_window.html#a2133e2bb4562bcc491d091a640dcae88',1,'Window']]]
 ];

@@ -29,7 +29,10 @@ var texture_8h =
       [ "Normal", "texture_8h.html#a579bf435a05d45b75f553d37ebbb3225a960b44c579bc2f6818d2daaf9e4c16f0", null ],
       [ "Parallax", "texture_8h.html#a579bf435a05d45b75f553d37ebbb3225ac626285221f3850191ea3ce4b917779c", null ],
       [ "SSAONoise", "texture_8h.html#a579bf435a05d45b75f553d37ebbb3225a74cd2b14850061d58e3fc9da302c4efe", null ],
-      [ "SSAO", "texture_8h.html#a579bf435a05d45b75f553d37ebbb3225ab07a387949b981d5726a46c61db885e9", null ]
+      [ "SSAO", "texture_8h.html#a579bf435a05d45b75f553d37ebbb3225ab07a387949b981d5726a46c61db885e9", null ],
+      [ "Metallic", "texture_8h.html#a579bf435a05d45b75f553d37ebbb3225a19dce4a66f8f7b74a6ef0664a88a15dd", null ],
+      [ "Roughness", "texture_8h.html#a579bf435a05d45b75f553d37ebbb3225a767078b82d60bc9dfaec29326b0b7c06", null ],
+      [ "AO", "texture_8h.html#a579bf435a05d45b75f553d37ebbb3225a2c64c5cf613d8b9f4f7f3980d29aca10", null ]
     ] ],
     [ "TextureWrappingMode", "texture_8h.html#a2b9a75ec8d4f3f3f2e9150d48d065141", [
       [ "Repeat", "texture_8h.html#a2b9a75ec8d4f3f3f2e9150d48d065141a7020426cfb0a204051be4b3053d2acc8", null ],

@@ -7,5 +7,6 @@ var searchData=
   ['rightbracket_4',['RightBracket',['../input_8h.html#a9479d299e1852e6140dcca1f405868aba455364d8991395f71ef9ccc5cc449e5c',1,'input.h']]],
   ['rightcontrol_5',['RightControl',['../input_8h.html#a9479d299e1852e6140dcca1f405868aba857bb13bb233ca520283eb9886509b65',1,'input.h']]],
   ['rightshift_6',['RightShift',['../input_8h.html#a9479d299e1852e6140dcca1f405868aba317d4a7487ee62605713987d4a037f83',1,'input.h']]],
-  ['rightsuper_7',['RightSuper',['../input_8h.html#a9479d299e1852e6140dcca1f405868aba0cc5a9f113dc1147c8eeae2f0199f9f2',1,'input.h']]]
+  ['rightsuper_7',['RightSuper',['../input_8h.html#a9479d299e1852e6140dcca1f405868aba0cc5a9f113dc1147c8eeae2f0199f9f2',1,'input.h']]],
+  ['roughness_8',['Roughness',['../texture_8h.html#a579bf435a05d45b75f553d37ebbb3225a767078b82d60bc9dfaec29326b0b7c06',1,'texture.h']]]
 ];

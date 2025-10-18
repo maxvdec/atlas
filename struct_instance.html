@@ -161,7 +161,7 @@ Public Attributes</h2></td></tr>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Structure representing a single instance of an object for instanced rendering. Each instance has its own position, rotation, and scale. </p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00167">167</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00141">141</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
 <a id="af8b7c43175619f2c5306173dd70fd276" name="af8b7c43175619f2c5306173dd70fd276"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#af8b7c43175619f2c5306173dd70fd276">&#9670;&#160;</a></span>getModelMatrix()</h2>
@@ -189,8 +189,8 @@ Public Attributes</h2></td></tr>
 <p>Gets the current model matrix for this instance. </p>
 <dl class="section return"><dt>Returns</dt><dd>(glm::mat4) The model matrix. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00199">199</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  199</span>{ <span class="keywordflow">return</span> model; }</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00173">173</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  173</span>{ <span class="keywordflow">return</span> model; }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -251,16 +251,16 @@ Public Attributes</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>(bool) True if instances are equal, false otherwise. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00243">243</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  243</span>                                                 {</div>
-<div class="line"><span class="lineno">  244</span>        <span class="keywordflow">return</span> <a class="code hl_variable" href="#a92960b42c8508cfa6a2dc5f76c7e9cde">position</a> == other.<a class="code hl_variable" href="#a92960b42c8508cfa6a2dc5f76c7e9cde">position</a> &amp;&amp; <a class="code hl_variable" href="#a01a9049398c7873c47dcf5b7c24cf510">rotation</a> == other.<a class="code hl_variable" href="#a01a9049398c7873c47dcf5b7c24cf510">rotation</a> &amp;&amp;</div>
-<div class="line"><span class="lineno">  245</span>               <a class="code hl_variable" href="#af256ce109506eae0888d9ceca2729356">scale</a> == other.<a class="code hl_variable" href="#af256ce109506eae0888d9ceca2729356">scale</a>;</div>
-<div class="line"><span class="lineno">  246</span>    }</div>
-<div class="ttc" id="astruct_instance_html_a01a9049398c7873c47dcf5b7c24cf510"><div class="ttname"><a href="#a01a9049398c7873c47dcf5b7c24cf510">Instance::rotation</a></div><div class="ttdeci">Rotation3d rotation</div><div class="ttdoc">The rotation of this instance in 3D space.</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00177">object.h:177</a></div></div>
-<div class="ttc" id="astruct_instance_html_a92960b42c8508cfa6a2dc5f76c7e9cde"><div class="ttname"><a href="#a92960b42c8508cfa6a2dc5f76c7e9cde">Instance::position</a></div><div class="ttdeci">Position3d position</div><div class="ttdoc">The position of this instance in 3D space.</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00172">object.h:172</a></div></div>
-<div class="ttc" id="astruct_instance_html_af256ce109506eae0888d9ceca2729356"><div class="ttname"><a href="#af256ce109506eae0888d9ceca2729356">Instance::scale</a></div><div class="ttdeci">Scale3d scale</div><div class="ttdoc">The scale of this instance in 3D space.</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00182">object.h:182</a></div></div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00217">217</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  217</span>                                                 {</div>
+<div class="line"><span class="lineno">  218</span>        <span class="keywordflow">return</span> <a class="code hl_variable" href="#a92960b42c8508cfa6a2dc5f76c7e9cde">position</a> == other.<a class="code hl_variable" href="#a92960b42c8508cfa6a2dc5f76c7e9cde">position</a> &amp;&amp; <a class="code hl_variable" href="#a01a9049398c7873c47dcf5b7c24cf510">rotation</a> == other.<a class="code hl_variable" href="#a01a9049398c7873c47dcf5b7c24cf510">rotation</a> &amp;&amp;</div>
+<div class="line"><span class="lineno">  219</span>               <a class="code hl_variable" href="#af256ce109506eae0888d9ceca2729356">scale</a> == other.<a class="code hl_variable" href="#af256ce109506eae0888d9ceca2729356">scale</a>;</div>
+<div class="line"><span class="lineno">  220</span>    }</div>
+<div class="ttc" id="astruct_instance_html_a01a9049398c7873c47dcf5b7c24cf510"><div class="ttname"><a href="#a01a9049398c7873c47dcf5b7c24cf510">Instance::rotation</a></div><div class="ttdeci">Rotation3d rotation</div><div class="ttdoc">The rotation of this instance in 3D space.</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00151">object.h:151</a></div></div>
+<div class="ttc" id="astruct_instance_html_a92960b42c8508cfa6a2dc5f76c7e9cde"><div class="ttname"><a href="#a92960b42c8508cfa6a2dc5f76c7e9cde">Instance::position</a></div><div class="ttdeci">Position3d position</div><div class="ttdoc">The position of this instance in 3D space.</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00146">object.h:146</a></div></div>
+<div class="ttc" id="astruct_instance_html_af256ce109506eae0888d9ceca2729356"><div class="ttname"><a href="#af256ce109506eae0888d9ceca2729356">Instance::scale</a></div><div class="ttdeci">Scale3d scale</div><div class="ttdoc">The scale of this instance in 3D space.</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00156">object.h:156</a></div></div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="object_8h_source.html#l00172">position</a>, <a class="el" href="object_8h_source.html#l00177">rotation</a>, and <a class="el" href="object_8h_source.html#l00182">scale</a>.</p>
+<p class="reference">References <a class="el" href="object_8h_source.html#l00146">position</a>, <a class="el" href="object_8h_source.html#l00151">rotation</a>, and <a class="el" href="object_8h_source.html#l00156">scale</a>.</p>
 
 </div>
 </div>
@@ -423,8 +423,8 @@ Public Attributes</h2></td></tr>
 
 <p>The position of this instance in 3D space. </p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00172">172</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  172</span>{0.0, 0.0, 0.0};</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00146">146</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  146</span>{0.0, 0.0, 0.0};</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -442,8 +442,8 @@ Public Attributes</h2></td></tr>
 
 <p>The rotation of this instance in 3D space. </p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00177">177</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  177</span>{0.0, 0.0, 0.0};</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00151">151</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  151</span>{0.0, 0.0, 0.0};</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -461,8 +461,8 @@ Public Attributes</h2></td></tr>
 
 <p>The scale of this instance in 3D space. </p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00182">182</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  182</span>{1.0, 1.0, 1.0};</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00156">156</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  156</span>{1.0, 1.0, 1.0};</div>
 </div><!-- fragment -->
 </div>
 </div>

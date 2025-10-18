@@ -43,5 +43,7 @@ var searchData=
   ['rotate_40',['rotate',['../class_game_object.html#a80eb49c1d0084c82e944ff254532278b',1,'GameObject::rotate()'],['../class_compound_object.html#a4210275b72af87578ac4f7fd900906cc',1,'CompoundObject::rotate()'],['../struct_instance.html#a8090e4ba5483edf03271e57b7afcb612',1,'Instance::rotate()'],['../class_core_object.html#a983e3a31e6bc75c91faee51758702dc3',1,'CoreObject::rotate()']]],
   ['rotation_41',['rotation',['../struct_instance.html#a01a9049398c7873c47dcf5b7c24cf510',1,'Instance::rotation'],['../class_core_object.html#a7ebc137645d25de5365b893661973cd9',1,'CoreObject::rotation']]],
   ['rotation3d_42',['Rotation3d',['../struct_rotation3d.html',1,'']]],
-  ['run_43',['run',['../class_window.html#ae137ec42ddc87d666d49661484410091',1,'Window']]]
+  ['roughness_43',['Roughness',['../texture_8h.html#a579bf435a05d45b75f553d37ebbb3225a767078b82d60bc9dfaec29326b0b7c06',1,'texture.h']]],
+  ['roughness_44',['roughness',['../struct_material.html#abbaeac8374986ca82670ff0d7749c566',1,'Material']]],
+  ['run_45',['run',['../class_window.html#ae137ec42ddc87d666d49661484410091',1,'Window']]]
 ];

@@ -1,5 +1,7 @@
 var NAVTREEINDEX4 =
 {
+"struct_core_vertex.html#a9680e9b48f5db439f684436ea59ed5ea":[2,0,22,7],
+"struct_core_vertex.html#ab02504bba94d5fb8d33a34b880ba78cb":[2,0,22,1],
 "struct_core_vertex.html#abc2d2f54279470559c2774fc62a6593f":[2,0,22,4],
 "struct_core_vertex.html#acde6bccd12e2eeed36d31fa4b2af9677":[2,0,22,5],
 "struct_core_vertex.html#af857b1beb9f81b407c6b3ac239368a8f":[2,0,22,0],
@@ -74,11 +76,11 @@ var NAVTREEINDEX4 =
 "struct_light.html#ad7a168d26aed1bf7cca1a8d8e6f8ada4":[2,0,40,8],
 "struct_light.html#aebfa78420d5cf261be042325ff392b62":[2,0,40,10],
 "struct_material.html":[2,0,41],
-"struct_material.html#a5925c60fcc13940f3a04d168c7c89bc3":[2,0,41,0],
-"struct_material.html#a8d977d0b7386da7e3ac6879f458d3f0f":[2,0,41,2],
-"struct_material.html#a9dc184c883ec135ace28c1917af3fe84":[2,0,41,3],
-"struct_material.html#aa7b50861655dd42ca5336f5eac2211b9":[2,0,41,1],
-"struct_material.html#ae8fe63cefbd055a095c914ca50f925aa":[2,0,41,4],
+"struct_material.html#a0946dbf03359dc3cd8d32910045dc5d4":[2,0,41,1],
+"struct_material.html#a8d977d0b7386da7e3ac6879f458d3f0f":[2,0,41,3],
+"struct_material.html#a97fc4551763505f23dac24a9901cee88":[2,0,41,2],
+"struct_material.html#aa61df35ac281fa40c0745235494d4b19":[2,0,41,0],
+"struct_material.html#abbaeac8374986ca82670ff0d7749c566":[2,0,41,4],
 "struct_mouse_packet.html":[2,0,44],
 "struct_mouse_packet.html#a5aab87325030261a99dc38db26d6e7a4":[2,0,44,5],
 "struct_mouse_packet.html#a79bcd28ccfd1012ebec9cb3cd3c0449a":[2,0,44,3],
@@ -247,7 +249,5 @@ var NAVTREEINDEX4 =
 "struct_texture_parameters.html#ae236829ed1bf1004ee963acbb4fdf7e0":[2,0,73,0],
 "struct_triangle.html":[2,0,75],
 "struct_triangle.html#a21716fc2fbee90ddb3c2b1bc25e81590":[2,0,75,1],
-"struct_triangle.html#a9dd1e0dd08b2f7bbbb453063bacc7cf9":[2,0,75,2],
-"struct_triangle.html#aa1781b2e0265b3fef1d7aa02430a7821":[2,0,75,0],
-"struct_vertex_shader.html":[2,0,78]
+"struct_triangle.html#a9dd1e0dd08b2f7bbbb453063bacc7cf9":[2,0,75,2]
 };
