@@ -134,6 +134,7 @@ class MainScene : public Scene {
         camera = Camera();
         camera.setPosition({-5.0f, 1.0f, 2.0f});
         camera.lookAt({0.0f, 0.0f, 0.0f});
+        camera.farClip = 1000.f;
         window.setCamera(&camera);
 
         backpack = Model();
@@ -195,7 +196,7 @@ class MainScene : public Scene {
             "terrain/heightmap.png", "Heightmap", ResourceType::Image);
 
         terrain = Terrain(heightmapResource);
-        terrain.detail = 2;
+        terrain.move({20.f, 0.0, 0.0});
         window.addObject(&terrain);
 
         frameBuffer = RenderTarget(window);

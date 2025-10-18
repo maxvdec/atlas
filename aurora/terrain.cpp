@@ -24,9 +24,16 @@ void Terrain::initialize() {
         VertexShader::fromDefaultShader(AtlasVertexShader::Terrain);
     FragmentShader fragmentShader =
         FragmentShader::fromDefaultShader(AtlasFragmentShader::Terrain);
+    TessellationShader tescShader = TessellationShader::fromDefaultShader(
+        AtlasTessellationShader::TerrainControl);
+    TessellationShader teseShader = TessellationShader::fromDefaultShader(
+        AtlasTessellationShader::TerrainEvaluation);
     vertexShader.compile();
     fragmentShader.compile();
-    terrainShader = ShaderProgram(vertexShader, fragmentShader);
+    tescShader.compile();
+    teseShader.compile();
+    terrainShader = ShaderProgram(vertexShader, fragmentShader,
+                                  GeometryShader(), {tescShader, teseShader});
     terrainShader.compile();
 
     if (heightmap.type != ResourceType::Image) {
@@ -42,76 +49,53 @@ void Terrain::initialize() {
         return;
     }
 
-    int detailMult = std::max(1, detail);
-    int smoothStep = std::max(1, smoothness);
+    glGenTextures(1, &terrainTexture.id);
+    glBindTexture(GL_TEXTURE_2D, terrainTexture.id);
+    glTexImage2D(GL_TEXTURE_2D, 0,
+                 nChannels == 4 ? GL_RGBA : (nChannels == 3 ? GL_RGB : GL_RED),
+                 width, height, 0,
+                 nChannels == 4 ? GL_RGBA : (nChannels == 3 ? GL_RGB : GL_RED),
+                 GL_UNSIGNED_BYTE, data);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    int effectiveWidth = ((width - 1) * detailMult) / smoothStep + 1;
-    int effectiveHeight = ((height - 1) * detailMult) / smoothStep + 1;
+    rez = 20;
 
-    std::cout << "Heightmap dimensions: " << width << "x" << height
-              << std::endl;
-    std::cout << "Detail level: " << detailMult << "x" << std::endl;
-    std::cout << "Smoothness level: " << smoothStep << std::endl;
-    std::cout << "Effective dimensions: " << effectiveWidth << "x"
-              << effectiveHeight << std::endl;
+    for (unsigned int i = 0; i <= rez - 1; i++) {
+        for (unsigned int j = 0; j <= rez - 1; j++) {
+            vertices.push_back(-width / 2.0f + width * i / (float)rez);   // v.x
+            vertices.push_back(0.0f);                                     // v.y
+            vertices.push_back(-height / 2.0f + height * j / (float)rez); // v.z
+            vertices.push_back(i / (float)rez);                           // u
+            vertices.push_back(j / (float)rez);                           // v
 
-    vertices.reserve(effectiveWidth * effectiveHeight * 3);
-    float yScale = 64.0f / 256.0f;
-    float yShift = 16.0f;
+            vertices.push_back(-width / 2.0f +
+                               width * (i + 1) / (float)rez);             // v.x
+            vertices.push_back(0.0f);                                     // v.y
+            vertices.push_back(-height / 2.0f + height * j / (float)rez); // v.z
+            vertices.push_back((i + 1) / (float)rez);                     // u
+            vertices.push_back(j / (float)rez);                           // v
 
-    auto getHeight = [&](float fi, float fj) -> float {
-        int i0 = static_cast<int>(fi);
-        int j0 = static_cast<int>(fj);
-        int i1 = std::min(i0 + 1, height - 1);
-        int j1 = std::min(j0 + 1, width - 1);
+            vertices.push_back(-width / 2.0f + width * i / (float)rez); // v.x
+            vertices.push_back(0.0f);                                   // v.y
+            vertices.push_back(-height / 2.0f +
+                               height * (j + 1) / (float)rez); // v.z
+            vertices.push_back(i / (float)rez);                // u
+            vertices.push_back((j + 1) / (float)rez);          // v
 
-        float ti = fi - i0;
-        float tj = fj - j0;
-
-        unsigned char h00 = data[(i0 * width + j0) * nChannels];
-        unsigned char h10 = data[(i1 * width + j0) * nChannels];
-        unsigned char h01 = data[(i0 * width + j1) * nChannels];
-        unsigned char h11 = data[(i1 * width + j1) * nChannels];
-
-        float h0 = h00 * (1.0f - ti) + h10 * ti;
-        float h1 = h01 * (1.0f - ti) + h11 * ti;
-        float h = h0 * (1.0f - tj) + h1 * tj;
-
-        return h;
-    };
-
-    for (int i = 0; i < effectiveHeight; i++) {
-        for (int j = 0; j < effectiveWidth; j++) {
-            float heightmapI =
-                (i * smoothStep) / static_cast<float>(detailMult);
-            float heightmapJ =
-                (j * smoothStep) / static_cast<float>(detailMult);
-
-            heightmapI = std::min(heightmapI, static_cast<float>(height - 1));
-            heightmapJ = std::min(heightmapJ, static_cast<float>(width - 1));
-
-            float heightValue = getHeight(heightmapI, heightmapJ);
-
-            vertices.push_back(-height / 2.0f + heightmapI);
-            vertices.push_back(-(heightValue * yScale - yShift));
-            vertices.push_back(-width / 2.0f + heightmapJ);
+            vertices.push_back(-width / 2.0f +
+                               width * (i + 1) / (float)rez); // v.x
+            vertices.push_back(0.0f);                         // v.y
+            vertices.push_back(-height / 2.0f +
+                               height * (j + 1) / (float)rez); // v.z
+            vertices.push_back((i + 1) / (float)rez);          // u
+            vertices.push_back((j + 1) / (float)rez);          // v
         }
     }
+
     stbi_image_free(data);
-
-    indices.reserve((effectiveHeight - 1) * effectiveWidth * 2);
-    for (int i = 0; i < effectiveHeight - 1; i++) {
-        for (int j = 0; j < effectiveWidth; j++) {
-            indices.push_back((i + 1) * effectiveWidth + j);
-            indices.push_back(i * effectiveWidth + j);
-        }
-    }
-
-    strip_count = effectiveHeight - 1;
-    vertices_per_strip = effectiveWidth * 2;
-
-    std::cout << "Total vertices: " << vertices.size() / 3 << std::endl;
-    std::cout << "Total indices: " << indices.size() << std::endl;
 
     glGenVertexArrays(1, &this->vao);
     glBindVertexArray(this->vao);
@@ -121,13 +105,17 @@ void Terrain::initialize() {
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float),
                  vertices.data(), GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void *)0);
+    // Position attribute
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
+                          (void *)0);
     glEnableVertexAttribArray(0);
+    // Texture coord attribute
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
+                          (void *)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
 
-    glGenBuffers(1, &this->ebo);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, this->ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int),
-                 indices.data(), GL_STATIC_DRAW);
+    patch_count = 4;
+    glPatchParameteri(GL_PATCH_VERTICES, patch_count);
 
     glBindVertexArray(0);
 }
@@ -140,9 +128,29 @@ void Terrain::render(float dt) {
     terrainShader.setUniformMat4f("view", view);
     terrainShader.setUniformMat4f("projection", projection);
 
-    for (int strip = 0; strip < strip_count; ++strip) {
-        glDrawElements(
-            GL_TRIANGLE_STRIP, vertices_per_strip, GL_UNSIGNED_INT,
-            (void *)(sizeof(unsigned int) * strip * vertices_per_strip));
-    }
+    terrainShader.setUniform1i("heightMap", 0);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, terrainTexture.id);
+
+    glDrawArrays(GL_PATCHES, 0, patch_count * rez * rez);
+    glBindVertexArray(0);
+}
+
+void Terrain::updateModelMatrix() {
+    glm::mat4 scale_matrix = glm::scale(glm::mat4(1.0f), scale.toGlm());
+
+    glm::mat4 rotation_matrix = glm::mat4(1.0f);
+    rotation_matrix =
+        glm::rotate(rotation_matrix, glm::radians(float(rotation.roll)),
+                    glm::vec3(0, 0, 1));
+    rotation_matrix =
+        glm::rotate(rotation_matrix, glm::radians(float(rotation.pitch)),
+                    glm::vec3(1, 0, 0));
+    rotation_matrix = glm::rotate(
+        rotation_matrix, glm::radians(float(rotation.yaw)), glm::vec3(0, 1, 0));
+
+    glm::mat4 translation_matrix =
+        glm::translate(glm::mat4(1.0f), position.toGlm());
+
+    this->model = translation_matrix * rotation_matrix * scale_matrix;
 }

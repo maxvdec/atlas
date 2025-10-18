@@ -13,6 +13,7 @@
 #include "atlas/component.h"
 #include "atlas/core/shader.h"
 #include "atlas/object.h"
+#include "atlas/units.h"
 #include "atlas/workspace.h"
 #include <vector>
 
@@ -39,11 +40,47 @@ class Terrain : public GameObject {
     int smoothness = 1;
     int detail = 1;
 
+    Position3d position;
+    Rotation3d rotation;
+    Scale3d scale = {1.0, 1.0, 1.0};
+
+    void setPosition(const Position3d &newPosition) override {
+        this->position = newPosition;
+    };
+
+    void setRotation(const Rotation3d &newRotation) override {
+        this->rotation = newRotation;
+    };
+
+    void setScale(const Scale3d &newScale) override { this->scale = newScale; };
+
+    void move(const Position3d &deltaPosition) override {
+        this->position.x += deltaPosition.x;
+        this->position.y += deltaPosition.y;
+        this->position.z += deltaPosition.z;
+    };
+
+    void updateModelMatrix();
+
+    void scaleBy(const Scale3d &deltaScale) {
+        this->scale.x *= deltaScale.x;
+        this->scale.y *= deltaScale.y;
+        this->scale.z *= deltaScale.z;
+    };
+
+    void rotate(const Rotation3d &deltaRotation) override {
+        this->rotation.pitch += deltaRotation.pitch;
+        this->rotation.yaw += deltaRotation.yaw;
+        this->rotation.roll += deltaRotation.roll;
+    };
+
   private:
     BufferIndex vao = 0;
     BufferIndex vbo = 0;
     BufferIndex ebo = 0;
     ShaderProgram terrainShader;
+
+    Texture terrainTexture;
 
     glm::mat4 model = glm::mat4(1.0f);
     glm::mat4 view = glm::mat4(1.0f);
@@ -52,8 +89,8 @@ class Terrain : public GameObject {
     std::vector<float> vertices;
     std::vector<unsigned int> indices;
 
-    int strip_count;
-    int vertices_per_strip;
+    unsigned int patch_count;
+    unsigned int rez;
 };
 
 #endif // AURORA_TERRAIN_H
