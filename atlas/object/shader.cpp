@@ -136,6 +136,14 @@ VertexShader VertexShader::fromDefaultShader(AtlasVertexShader shader) {
         VertexShader::vertexShaderCache[shader] = vertexShader;
         break;
     }
+    case AtlasVertexShader::Terrain: {
+        vertexShader = VertexShader::fromSource(TERRAIN_VERT);
+        vertexShader.desiredAttributes = {};
+        vertexShader.capabilities = {};
+        vertexShader.fromDefaultShaderType = shader;
+        VertexShader::vertexShaderCache[shader] = vertexShader;
+        break;
+    }
     default:
         throw std::runtime_error("Unknown default vertex shader");
     }
@@ -263,6 +271,12 @@ FragmentShader FragmentShader::fromDefaultShader(AtlasFragmentShader shader) {
     }
     case AtlasFragmentShader::SSAOBlur: {
         fragmentShader = FragmentShader::fromSource(SSAO_BLUR_FRAG);
+        fragmentShader.fromDefaultShaderType = shader;
+        fragmentShaderCache[shader] = fragmentShader;
+        break;
+    }
+    case AtlasFragmentShader::Terrain: {
+        fragmentShader = FragmentShader::fromSource(TERRAIN_FRAG);
         fragmentShader.fromDefaultShaderType = shader;
         fragmentShaderCache[shader] = fragmentShader;
         break;

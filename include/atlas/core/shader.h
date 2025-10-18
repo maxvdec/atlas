@@ -88,6 +88,7 @@ enum class AtlasVertexShader {
      *
      */
     Deferred,
+    Terrain,
 };
 
 /**
@@ -136,7 +137,7 @@ enum class ShaderCapability {
      * with a single draw call).
      *
      */
-    Instances
+    Instances,
 };
 
 /**
@@ -283,6 +284,7 @@ enum class AtlasFragmentShader {
      *
      */
     SSAOBlur,
+    Terrain
 };
 
 /**

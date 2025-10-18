@@ -26,6 +26,21 @@ void main() {
 }
 )";
 
+static const char* TERRAIN_FRAG = R"(
+#version 330 core
+
+in vec3 FragPos;
+in float Height;
+
+layout (location = 0) out vec4 FragColor;
+layout (location = 1) out vec4 BrightColor;
+
+void main() {
+    float h = (Height + 16.0) / 32.0;
+    FragColor = vec4(h, h, h, 1.0);
+}
+)";
+
 static const char* DEFERRED_FRAG = R"(
 #version 330 core
 layout (location = 0) out vec4 gPosition;
@@ -2054,6 +2069,25 @@ void main() {
         }
     }
     FragColor = vec4(result, 1.0);
+}
+)";
+
+static const char* TERRAIN_VERT = R"(
+#version 330 core
+layout(location = 0) in vec3 aPos;
+
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+
+out vec3 FragPos;
+out float Height;
+
+void main() {
+    mat4 mvp = projection * view * model;
+    gl_Position = mvp * vec4(aPos, 1.0);
+    FragPos = vec3(model * vec4(aPos, 1.0));
+    Height = FragPos.y;
 }
 )";
 

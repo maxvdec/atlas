@@ -9,6 +9,7 @@
 #include "atlas/workspace.h"
 #include "atlas/component.h"
 #include "atlas/audio.h"
+#include "aurora/terrain.h"
 #include <iostream>
 #include <memory>
 
@@ -79,6 +80,7 @@ class MainScene : public Scene {
     Text fpsText;
     Model backpack;
     RenderTarget frameBuffer;
+    Terrain terrain;
 
     bool doesUpdate = true;
     bool fall = false;
@@ -176,28 +178,29 @@ class MainScene : public Scene {
             Instance &instance = lightObject.createInstance();
             instance.move({0.0f, 1.1f * i, 0.0f});
         }
-        window.addObject(&lightObject);
 
         ball = createDebugSphere(0.5f, 76, 76);
         ball.body->applyMass(0.0);
         ball.move({1.5f, 0.0f, 0.0});
         ball.material.reflectivity = 1.f;
-        window.addObject(&ball);
 
         this->setAmbientIntensity(0.1f);
 
         skybox = Skybox();
         skybox.cubemap = createCubemap();
-        skybox.display(window);
-        this->setSkybox(&skybox);
 
         this->setAutomaticAmbient(true);
 
-        frameBuffer = RenderTarget(window);
-        window.addRenderTarget(&frameBuffer);
-        frameBuffer.display(window);
+        Resource heightmapResource = Workspace::get().createResource(
+            "terrain/heightmap.png", "Heightmap", ResourceType::Image);
 
-        window.useDeferredRendering();
+        terrain = Terrain(heightmapResource);
+        terrain.detail = 2;
+        window.addObject(&terrain);
+
+        frameBuffer = RenderTarget(window);
+        // window.addRenderTarget(&frameBuffer);
+        // frameBuffer.display(window);
     }
 };
 

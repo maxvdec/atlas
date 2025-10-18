@@ -63,10 +63,15 @@ file(GLOB_RECURSE FINEWAVE_SOURCES finewave/*.cpp)
 add_library(finewave ${FINEWAVE_SOURCES})
 target_link_libraries(finewave PRIVATE glfw glm::glm ${OPENAL_LIB})
 
+# Aurora library
+file(GLOB_RECURSE AURORA_SOURCES aurora/*.cpp)
+add_library(aurora ${AURORA_SOURCES})
+target_link_libraries(aurora PRIVATE glm::glm glfw OpenGL::GL)
+
 # Atlas library
 file(GLOB_RECURSE SOURCES atlas/*.cpp extern/*.c)
 add_library(atlas ${SOURCES} ${SHADER_OUTPUT_FILE})
-target_link_libraries(atlas PUBLIC OpenGL::GL glfw glm::glm bezel finewave ${FREETYPE_LIBRARIES} assimp::assimp)
+target_link_libraries(atlas PUBLIC OpenGL::GL glfw glm::glm bezel finewave aurora ${FREETYPE_LIBRARIES} assimp::assimp)
 target_include_directories(atlas PRIVATE ${FREE_TYPE_INCLUDE_DIRS}/freetype2)
 target_compile_definitions(atlas PRIVATE ATLAS_LIB GL_SILENT_DEPRECATION)
 
