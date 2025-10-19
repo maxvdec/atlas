@@ -21,6 +21,7 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - The main renderer is Atlas. Atlas is the one in charge of the graphics rendering, input handling, window management and more.
 - The physics engine is Bezel. Bezel is a separate library that handles all the physics calculations and simulations.
 - The audio engine is Finewave. Finewave is a separate library that handles all the audio playback and processing.
+- The terrain system is Aurora. Aurora is a separate library that handles terrain generation and rendering.
 
 ## Roadmap to Beta
 
