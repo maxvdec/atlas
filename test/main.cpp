@@ -131,6 +131,10 @@ class MainScene : public Scene {
     }
 
     void initialize(Window &window) override {
+        Environment env;
+        env.fog.intensity = 0.0;
+        this->setEnvironment(env);
+
         Workspace::get().setRootPath(std::string(TEST_PATH) + "/resources/");
 
         camera = Camera();

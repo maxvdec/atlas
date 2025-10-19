@@ -614,6 +614,16 @@ void RenderTarget::render(float dt) {
                                Window::mainWindow->getSize().height)));
 
         obj->shaderProgram.setUniform1i("maxMipLevel", maxMipLevels);
+
+        Scene *scene = Window::mainWindow->getCurrentScene();
+        obj->shaderProgram.setUniform1f("environment.fogIntensity",
+                                        scene->environment.fog.intensity);
+        obj->shaderProgram.setUniform3f(
+            "environment.fogColor", scene->environment.fog.color.r,
+            scene->environment.fog.color.g, scene->environment.fog.color.b);
+        obj->shaderProgram.setUniformMat4f(
+            "invProjectionMatrix",
+            glm::inverse(Window::mainWindow->calculateProjectionMatrix()));
     }
 
     obj->shaderProgram.setUniform1i("TextureType",

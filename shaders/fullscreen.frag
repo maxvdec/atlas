@@ -134,7 +134,16 @@ uniform float EffectFloat4[10];
 uniform float EffectFloat5[10];
 uniform float EffectFloat6[10];
 
-uniform float nearPlane = 0.1;        
+struct Environment {
+    vec3 fogColor;
+    float fogIntensity;
+};
+
+uniform Environment environment;
+
+uniform mat4 invProjectionMatrix;
+
+uniform float nearPlane = 0.1;
 uniform float farPlane = 100.0;
 
 uniform float focusDepth;
@@ -143,57 +152,65 @@ uniform float focusRange;
 uniform int maxMipLevel;
 
 float LinearizeDepth(float depth) {
-    float z = depth * 2.0 - 1.0; 
+    float z = depth * 2.0 - 1.0;
     float linear = (2.0 * nearPlane * farPlane) /
-                   (farPlane + nearPlane - z * (farPlane - nearPlane));
+            (farPlane + nearPlane - z * (farPlane - nearPlane));
     return linear / farPlane;
+}
+
+vec3 reconstructViewPos(vec2 uv, float depth) {
+    float z = depth * 2.0 - 1.0;
+    vec4 clipPos = vec4(uv * 2.0 - 1.0, z, 1.0);
+    vec4 viewPos = invProjectionMatrix * clipPos;
+    viewPos /= viewPos.w;
+    return viewPos.xyz;
 }
 
 vec4 applyFXAA(sampler2D tex, vec2 texCoord) {
     vec2 texelSize = 1.0 / textureSize(tex, 0);
-    
+
     float FXAA_SPAN_MAX = 8.0;
-    float FXAA_REDUCE_MUL = 1.0/8.0;
-    float FXAA_REDUCE_MIN = 1.0/128.0;
-    
+    float FXAA_REDUCE_MUL = 1.0 / 8.0;
+    float FXAA_REDUCE_MIN = 1.0 / 128.0;
+
     vec3 rgbNW = texture(tex, texCoord + vec2(-1.0, -1.0) * texelSize).rgb;
     vec3 rgbNE = texture(tex, texCoord + vec2(1.0, -1.0) * texelSize).rgb;
     vec3 rgbSW = texture(tex, texCoord + vec2(-1.0, 1.0) * texelSize).rgb;
     vec3 rgbSE = texture(tex, texCoord + vec2(1.0, 1.0) * texelSize).rgb;
     vec3 rgbM = texture(tex, texCoord).rgb;
-    
+
     vec3 luma = vec3(0.299, 0.587, 0.114);
     float lumaNW = dot(rgbNW, luma);
     float lumaNE = dot(rgbNE, luma);
     float lumaSW = dot(rgbSW, luma);
     float lumaSE = dot(rgbSE, luma);
     float lumaM = dot(rgbM, luma);
-    
+
     float lumaMin = min(lumaM, min(min(lumaNW, lumaNE), min(lumaSW, lumaSE)));
     float lumaMax = max(lumaM, max(max(lumaNW, lumaNE), max(lumaSW, lumaSE)));
-    
+
     vec2 dir;
     dir.x = -((lumaNW + lumaNE) - (lumaSW + lumaSE));
     dir.y = ((lumaNW + lumaSW) - (lumaNE + lumaSE));
-    
-    float dirReduce = max((lumaNW + lumaNE + lumaSW + lumaSE) * 
-                         (0.25 * FXAA_REDUCE_MUL), FXAA_REDUCE_MIN);
-    
+
+    float dirReduce = max((lumaNW + lumaNE + lumaSW + lumaSE) *
+                (0.25 * FXAA_REDUCE_MUL), FXAA_REDUCE_MIN);
+
     float rcpDirMin = 1.0 / (min(abs(dir.x), abs(dir.y)) + dirReduce);
     dir = min(vec2(FXAA_SPAN_MAX, FXAA_SPAN_MAX),
-              max(vec2(-FXAA_SPAN_MAX, -FXAA_SPAN_MAX),
-              dir * rcpDirMin)) * texelSize;
-    
+            max(vec2(-FXAA_SPAN_MAX, -FXAA_SPAN_MAX),
+                dir * rcpDirMin)) * texelSize;
+
     vec3 rgbA = 0.5 * (
-        texture(tex, texCoord + dir * (1.0/3.0 - 0.5)).rgb +
-        texture(tex, texCoord + dir * (2.0/3.0 - 0.5)).rgb);
-    
+            texture(tex, texCoord + dir * (1.0 / 3.0 - 0.5)).rgb +
+                texture(tex, texCoord + dir * (2.0 / 3.0 - 0.5)).rgb);
+
     vec3 rgbB = rgbA * 0.5 + 0.25 * (
-        texture(tex, texCoord + dir * -0.5).rgb +
-        texture(tex, texCoord + dir * 0.5).rgb);
-    
+                texture(tex, texCoord + dir * -0.5).rgb +
+                    texture(tex, texCoord + dir * 0.5).rgb);
+
     float lumaB = dot(rgbB, luma);
-    
+
     if ((lumaB < lumaMin) || (lumaB > lumaMax)) {
         return vec4(rgbA, 1.0);
     } else {
@@ -230,9 +247,12 @@ vec4 applyColorCorrection(vec4 color, ColorCorrection cc) {
 
 void main() {
     vec4 color = texture(Texture, TexCoord);
+    float depth = texture(DepthTexture, TexCoord).r;
+    vec3 viewPos = reconstructViewPos(TexCoord, depth);
+    float distance = length(viewPos);
 
+    // Apply effects FIRST
     bool appliedColorCorrection = false;
-
     for (int i = 0; i < EffectCount; i++) {
         if (Effects[i] == EFFECT_INVERSION) {
             color = vec4(1.0 - color.rgb, color.a);
@@ -256,29 +276,26 @@ void main() {
             cc.tint = EffectFloat6[i];
             color = applyColorCorrection(color, cc);
             appliedColorCorrection = true;
-        } 
+        }
     }
+
     color = applyFXAA(Texture, TexCoord);
 
     if (hasDepthTexture == 1) {
         float depthValue = texture(DepthTexture, TexCoord).r;
-        float linearDepth = LinearizeDepth(depthValue); 
+        float linearDepth = LinearizeDepth(depthValue);
         float coc = clamp(abs(linearDepth - focusDepth) / focusRange, 0.0, 1.0);
-
         float mip = coc * float(maxMipLevel) * 1.2;
-
         vec3 blurred = textureLod(Texture, TexCoord, mip).rgb;
-        vec3 sharp = texture(Texture, TexCoord).rgb;
-
+        vec3 sharp = color.rgb;
         color = vec4(mix(sharp, blurred, coc), 1.0);
     }
 
     vec4 hdrColor = color + texture(BrightTexture, TexCoord);
-    
     hdrColor.rgb = acesToneMapping(hdrColor.rgb);
-    
-    FragColor = vec4(hdrColor.rgb, 1.0);
 
+    float fogFactor = 1.0 - exp(-distance * environment.fogIntensity);
+    vec3 finalColor = mix(hdrColor.rgb, environment.fogColor, fogFactor);
 
-    return; 
+    FragColor = vec4(finalColor, 1.0);
 }
