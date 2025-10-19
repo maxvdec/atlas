@@ -208,6 +208,31 @@ void Window::deferredRendering(RenderTarget *target) {
                                    light->outerCutoff);
     }
 
+    // Send area lights
+    int areaLightCount = std::min((int)scene->areaLights.size(), 256);
+    shaderProgram.setUniform1i("areaLightCount", areaLightCount);
+
+    for (int i = 0; i < areaLightCount; i++) {
+        AreaLight *light = scene->areaLights[i];
+        std::string baseName = "areaLights[" + std::to_string(i) + "]";
+        shaderProgram.setUniform3f(baseName + ".position", light->position.x,
+                                   light->position.y, light->position.z);
+        shaderProgram.setUniform3f(baseName + ".right", light->right.x,
+                                   light->right.y, light->right.z);
+        shaderProgram.setUniform3f(baseName + ".up", light->up.x, light->up.y,
+                                   light->up.z);
+        shaderProgram.setUniform2f(baseName + ".size",
+                                   static_cast<float>(light->size.width),
+                                   static_cast<float>(light->size.height));
+        shaderProgram.setUniform3f(baseName + ".diffuse", light->color.r,
+                                   light->color.g, light->color.b);
+        shaderProgram.setUniform3f(baseName + ".specular", light->shineColor.r,
+                                   light->shineColor.g, light->shineColor.b);
+        shaderProgram.setUniform1f(baseName + ".angle", light->angle);
+        shaderProgram.setUniform1i(baseName + ".castsBothSides",
+                                   light->castsBothSides ? 1 : 0);
+    }
+
     for (int i = 0; i < 5; i++) {
         std::string uniformName = "cubeMap" + std::to_string(i + 1);
         shaderProgram.setUniform1i(uniformName, i + 10);

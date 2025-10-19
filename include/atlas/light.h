@@ -15,6 +15,7 @@
 #include "atlas/object.h"
 #include "atlas/texture.h"
 #include "atlas/units.h"
+#include <glm/gtc/matrix_transform.hpp>
 #include <memory>
 #include <tuple>
 #include <vector>
@@ -427,6 +428,132 @@ struct Spotlight {
 
     friend class Window;
     friend class CoreObject;
+};
+
+/**
+ * @brief Rectangular area light with controllable emission angle and two-sided
+ * emission. The rectangle is defined by its center (position) and two oriented
+ * axes (right, up) and size (width, height). The plane normal is
+ * normalize(cross(right, up)).
+ */
+struct AreaLight {
+    /**
+     * @brief Center position of the rectangle.
+     */
+    Position3d position = {0.0, 0.0, 0.0};
+    /**
+     * @brief Oriented axis for width direction (normalized).
+     */
+    Magnitude3d right = {1.0, 0.0, 0.0};
+    /**
+     * @brief Oriented axis for height direction (normalized).
+     */
+    Magnitude3d up = {0.0, 1.0, 0.0};
+    /**
+     * @brief Width and height of the rectangle.
+     */
+    Size2d size = {1.0, 1.0};
+
+    /**
+     * @brief Diffuse/emissive color of the light.
+     */
+    Color color = Color::white();
+    /**
+     * @brief Specular highlight color for the light.
+     */
+    Color shineColor = Color::white();
+
+    /**
+     * @brief Emission cone half-angle in degrees around the plane normal.
+     * For example, 90 means a hemisphere emission relative to the plane normal.
+     */
+    float angle = 90.0f;
+
+    /**
+     * @brief If true, the light emits on both sides of the rectangle plane.
+     */
+    bool castsBothSides = false;
+
+    /**
+     * @brief Rotation tracking for the area light. Changing this and calling
+     * setRotation/rotate will update right/up consistently.
+     *
+     * Rotation order matches CoreObject (roll Z, then pitch X, then yaw Y).
+     */
+    Rotation3d rotation = {0.0, 0.0, 0.0};
+
+    /**
+     * @brief Compute the plane normal (normalize(cross(right, up))).
+     */
+    Magnitude3d getNormal() const {
+        glm::vec3 u = glm::normalize(right.toGlm());
+        glm::vec3 v = glm::normalize(up.toGlm());
+        glm::vec3 n = glm::normalize(glm::cross(u, v));
+        return Magnitude3d::fromGlm(n);
+    }
+
+    /**
+     * @brief Convenience to set diffuse color.
+     */
+    void setColor(Color c) { color = c; }
+
+    /**
+     * @brief Sets absolute rotation (in degrees) and updates right/up
+     * accordingly. Rotation is applied to a canonical frame (right=+X, up=+Y,
+     * normal=+Z) in the order: roll(Z), pitch(X), yaw(Y).
+     */
+    void setRotation(const Rotation3d &r) {
+        rotation = r;
+        updateAxesFromRotation();
+    }
+
+    /**
+     * @brief Applies a delta rotation (in degrees) and updates right/up.
+     */
+    void rotate(const Rotation3d &delta) {
+        rotation = rotation + delta;
+        updateAxesFromRotation();
+    }
+
+    /**
+     * @brief Debug helpers for visualizing the rectangle in the scene.
+     */
+    void createDebugObject();
+    void addDebugObject(Window &window);
+
+    /**
+     * @brief Optional debug object visualizing the area light.
+     */
+    std::shared_ptr<CoreObject> debugObject = nullptr;
+
+  private:
+    /**
+     * @brief Recompute right/up from the current rotation to keep a coherent
+     * frame.
+     */
+    void updateAxesFromRotation() {
+        // Canonical basis
+        glm::vec3 baseRight(1.0f, 0.0f, 0.0f);
+        glm::vec3 baseUp(0.0f, 1.0f, 0.0f);
+        // Construct rotation matrix (roll Z, then pitch X, then yaw Y)
+        glm::mat4 m(1.0f);
+        m = glm::rotate(m, glm::radians(static_cast<float>(rotation.roll)),
+                        glm::vec3(0, 0, 1));
+        m = glm::rotate(m, glm::radians(static_cast<float>(rotation.pitch)),
+                        glm::vec3(1, 0, 0));
+        m = glm::rotate(m, glm::radians(static_cast<float>(rotation.yaw)),
+                        glm::vec3(0, 1, 0));
+
+        glm::vec3 R = glm::normalize(glm::vec3(m * glm::vec4(baseRight, 0.0f)));
+        glm::vec3 U = glm::normalize(glm::vec3(m * glm::vec4(baseUp, 0.0f)));
+        // Orthonormalize to avoid drift
+        glm::vec3 N = glm::normalize(glm::cross(R, U));
+        R = glm::normalize(glm::cross(U, N));
+        U = glm::normalize(glm::cross(N, R));
+
+        right = Magnitude3d::fromGlm(R);
+        up = Magnitude3d::fromGlm(U);
+    }
 };
 
 #endif // ATLAS_LIGHT_H

@@ -292,8 +292,8 @@ void main() {
 
 static const char* MAIN_FRAG = R"(
 #version 410 core
-layout (location = 0) out vec4 FragColor;
-layout (location = 1) out vec4 BrightColor;
+layout(location = 0) out vec4 FragColor;
+layout(location = 1) out vec4 BrightColor;
 
 in vec2 TexCoord;
 in vec4 outColor;
@@ -326,7 +326,7 @@ struct Material {
     float metallic;
     float roughness;
     float ao;
-    float reflectivity; 
+    float reflectivity;
 };
 
 struct DirectionalLight {
@@ -354,6 +354,17 @@ struct SpotLight {
 
     vec3 diffuse;
     vec3 specular;
+};
+
+struct AreaLight {
+    vec3 position;
+    vec3 right;
+    vec3 up;
+    vec2 size;
+    vec3 diffuse;
+    vec3 specular;
+    float angle;
+    int castsBothSides;
 };
 
 struct ShadowParameters {
@@ -399,6 +410,9 @@ uniform int pointLightCount;
 
 uniform SpotLight spotlights[32];
 uniform int spotlightCount;
+
+uniform AreaLight areaLights[32];
+uniform int areaLightCount;
 
 uniform ShadowParameters shadowParams[10];
 uniform int shadowParamCount;
@@ -640,11 +654,11 @@ vec3 calculatePBR(vec3 N, vec3 V, vec3 L, vec3 F0, vec3 radiance, vec3 albedo, f
     kD *= 1.0 - metallic;
 
     vec3 numerator = NDF * G * F;
-    float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001; 
+    float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001;
     vec3 specular = numerator / denominator;
 
     float NdotL = max(dot(N, L), 0.0);
-    
+
     vec3 Lo = (kD * albedo / 3.14159265 + specular) * radianceAttenuated * NdotL;
     return Lo;
 }
@@ -661,11 +675,11 @@ vec3 calculatePBRWithAttenuation(vec3 N, vec3 V, vec3 L, vec3 F0, vec3 radianceA
     kD *= 1.0 - metallic;
 
     vec3 numerator = NDF * G * F;
-    float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001; 
+    float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001;
     vec3 specular = numerator / denominator;
 
     float NdotL = max(dot(N, L), 0.0);
-    
+
     vec3 Lo = (kD * albedo / 3.14159265 + specular) * radianceAttenuated * NdotL;
     return Lo;
 }
@@ -678,7 +692,6 @@ vec3 calcAllDirectionalLights(vec3 N, vec3 V, vec3 albedo, float metallic, float
         vec3 L = normalize(-directionalLights[i].direction);
         vec3 radiance = directionalLights[i].diffuse;
         Lo += calculatePBR(N, V, L, F0, radiance, albedo, metallic, roughness, reflectivity);
-        
     }
 
     return Lo;
@@ -695,31 +708,31 @@ vec3 calcAllPointLights(vec3 fragPos, vec3 N, vec3 V, vec3 albedo, float metalli
     for (int i = 0; i < pointLightCount; i++) {
         vec3 L = pointLights[i].position - fragPos;
         float distance = length(L);
-        
+
         distance = max(distance, 0.001);
-        
-        L = normalize(L);  
-        
+
+        L = normalize(L);
+
         vec3 radiance = pointLights[i].diffuse;
         float attenuation = 1.0 / (distance * distance);
         vec3 radianceAttenuated = radiance * attenuation;
-        
+
         vec3 H = normalize(V + L);
-        
+
         float NDF = distributionGGX(N, H, roughness);
         float G = geometrySmith(N, V, L, roughness);
         vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);
-        
+
         vec3 kS = F;
         vec3 kD = vec3(1.0) - kS;
         kD *= 1.0 - metallic;
-        
+
         vec3 numerator = NDF * G * F;
         float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.0001;
         vec3 specular = numerator / denominator;
-        
+
         float NdotL = max(dot(N, L), 0.0);
-        
+
         Lo += (kD * albedo / 3.14159265 + specular) * radianceAttenuated * NdotL;
     }
     return Lo;
@@ -883,17 +896,17 @@ void main() {
     texCoord = parallaxMapping(texCoord, tangentViewDir);
     if (texCoord.x > 1.0 || texCoord.y > 1.0 || texCoord.x < 0.0 || texCoord.y < 0.0)
         discard;
-    
-     vec4 normTexture = enableTextures(TEXTURE_NORMAL);
+
+    vec4 normTexture = enableTextures(TEXTURE_NORMAL);
     vec3 N;
-    
+
     if (normTexture.r != -1.0 && normTexture.g != -1.0 && normTexture.b != -1.0) {
         vec3 tangentNormal = normalize(normTexture.rgb * 2.0 - 1.0);
         N = normalize(TBN * tangentNormal);
     } else {
         N = normalize(Normal);
     }
-    
+
     N = normalize(N);
     vec3 V = normalize(cameraPosition - FragPos);
 
@@ -926,7 +939,7 @@ void main() {
 
     float dirShadow = 0.0;
     float pointShadow = 0.0;
-    
+
     if (shadowParamCount > 0) {
         for (int i = 0; i < shadowParamCount; i++) {
             if (!shadowParams[i].isPointLight) {
@@ -944,10 +957,53 @@ void main() {
     vec3 viewDir = normalize(cameraPosition - FragPos);
 
     vec3 lighting = vec3(0.0);
-    
+
     lighting += calcAllDirectionalLights(N, V, albedo, metallic, roughness, F0, reflectivity) * (1.0 - dirShadow);
     lighting += calcAllPointLights(FragPos, N, V, albedo, metallic, roughness, F0, reflectivity) * (1.0 - pointShadow);
     lighting += calcAllSpotLights(N, FragPos, V, viewDir, albedo, metallic, roughness, F0, reflectivity);
+
+    // Area lights (rectangular) approximation: project to closest point on rectangle, cosine emission and 1/r^2 attenuation
+    {
+        vec3 areaResult = vec3(0.0);
+        for (int i = 0; i < areaLightCount; ++i) {
+            vec3 P = areaLights[i].position;
+            vec3 R = normalize(areaLights[i].right);
+            vec3 U = normalize(areaLights[i].up);
+            vec2 halfSize = areaLights[i].size * 0.5;
+
+            vec3 toPoint = FragPos - P;
+            float s = clamp(dot(toPoint, R), -halfSize.x, halfSize.x);
+            float t = clamp(dot(toPoint, U), -halfSize.y, halfSize.y);
+            vec3 Q = P + R * s + U * t;
+
+            vec3 Lvec = Q - FragPos;
+            float dist = length(Lvec);
+            if (dist > 0.0001) {
+                vec3 L = Lvec / dist;
+                vec3 Nl = normalize(cross(R, U));
+                float ndotl = dot(Nl, -L);
+                float facing = (areaLights[i].castsBothSides != 0) ? abs(ndotl) : max(ndotl, 0.0);
+                float cosTheta = cos(radians(areaLights[i].angle));
+                if (facing >= cosTheta && facing > 0.0) {
+                    float attenuation = 1.0 / max(dist * dist, 0.0001);
+                    vec3 radiance = areaLights[i].diffuse * attenuation * facing;
+                    // Reuse PBR with pre-attenuated radiance
+                    vec3 H = normalize(V + L);
+                    float NDF = distributionGGX(N, H, roughness);
+                    float G = geometrySmith(N, V, L, roughness);
+                    vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);
+                    vec3 kS = F;
+                    vec3 kD = (vec3(1.0) - kS) * (1.0 - metallic);
+                    vec3 numerator = NDF * G * F;
+                    float denominator = max(4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0), 0.0001);
+                    vec3 specular = numerator / denominator;
+                    float NdotL = max(dot(N, L), 0.0);
+                    areaResult += (kD * albedo / PI + specular) * radiance * NdotL;
+                }
+            }
+        }
+        lighting += areaResult;
+    }
 
     vec3 ambient = albedo * ambientLight.intensity * ambientLight.color.rgb * ao;
 
@@ -971,17 +1027,18 @@ void main() {
     }
 
     vec3 color = ambient + lighting + iblContribution;
-    
+
     FragColor = vec4(color, 1.0);
-    
+
     float brightness = dot(color, vec3(0.2126, 0.7152, 0.0722));
-    if(brightness > 1.0)
+    if (brightness > 1.0)
         BrightColor = vec4(color, 1.0);
     else
         BrightColor = vec4(0.0, 0.0, 0.0, 1.0);
-    
+
     FragColor.rgb = acesToneMapping(FragColor.rgb);
 }
+
 )";
 
 static const char* MAIN_VERT = R"(
@@ -1487,8 +1544,8 @@ void main() {
 
 static const char* LIGHT_FRAG = R"(
 #version 410 core
-layout (location = 0) out vec4 FragColor;
-layout (location = 1) out vec4 BrightColor;
+layout(location = 0) out vec4 FragColor;
+layout(location = 1) out vec4 BrightColor;
 
 in vec2 TexCoord;
 
@@ -1540,6 +1597,17 @@ struct SpotLight {
     vec3 specular;
 };
 
+struct AreaLight {
+    vec3 position;
+    vec3 right;
+    vec3 up;
+    vec2 size;
+    vec3 diffuse;
+    vec3 specular;
+    float angle;
+    int castsBothSides;
+};
+
 struct ShadowParameters {
     mat4 lightView;
     mat4 lightProjection;
@@ -1557,6 +1625,8 @@ uniform PointLight pointLights[32];
 uniform int pointLightCount;
 uniform SpotLight spotlights[32];
 uniform int spotlightCount;
+uniform AreaLight areaLights[32];
+uniform int areaLightCount;
 uniform ShadowParameters shadowParams[10];
 uniform int shadowParamCount;
 uniform vec3 cameraPosition;
@@ -1632,8 +1702,8 @@ float calculateShadow(ShadowParameters shadowParam, vec3 fragPos, vec3 normal) {
     projCoords = projCoords * 0.5 + 0.5;
 
     if (projCoords.x < 0.0 || projCoords.x > 1.0 ||
-        projCoords.y < 0.0 || projCoords.y > 1.0 ||
-        projCoords.z > 1.0) {
+            projCoords.y < 0.0 || projCoords.y > 1.0 ||
+            projCoords.z > 1.0) {
         return 0.0;
     }
 
@@ -1653,7 +1723,7 @@ float calculateShadow(ShadowParameters shadowParam, vec3 fragPos, vec3 normal) {
     for (int x = -kernelSize; x <= kernelSize; ++x) {
         for (int y = -kernelSize; y <= kernelSize; ++y) {
             float pcfDepth = sampleTextureAt(shadowParam.textureIndex,
-                                             projCoords.xy + vec2(x, y) * texelSize).r;
+                    projCoords.xy + vec2(x, y) * texelSize).r;
             shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
             sampleCount++;
         }
@@ -1675,17 +1745,17 @@ float calculatePointShadow(ShadowParameters shadowParam, vec3 fragPos) {
 
     const int samples = 20;
     const vec3 sampleOffsetDirections[] = vec3[](
-        vec3(0.5381, 0.1856, -0.4319), vec3(0.1379, 0.2486, 0.4430),
-        vec3(0.3371, 0.5679, -0.0057), vec3(-0.6999, -0.0451, -0.0019),
-        vec3(0.0689, -0.1598, -0.8547), vec3(0.0560, 0.0069, -0.1843),
-        vec3(-0.0146, 0.1402, 0.0762), vec3(0.0100, -0.1924, -0.0344),
-        vec3(-0.3577, -0.5301, -0.4358), vec3(-0.3169, 0.1063, 0.0158),
-        vec3(0.0103, -0.5869, 0.0046), vec3(-0.0897, -0.4940, 0.3287),
-        vec3(0.7119, -0.0154, -0.0918), vec3(-0.0533, 0.0596, -0.5411),
-        vec3(0.0352, -0.0631, 0.5460), vec3(-0.4776, 0.2847, -0.0271),
-        vec3(-0.1120, 0.1234, -0.7446), vec3(-0.2130, -0.0782, -0.1379),
-        vec3(0.2944, -0.3112, -0.2645), vec3(-0.4564, 0.4175, -0.1843)
-    );
+            vec3(0.5381, 0.1856, -0.4319), vec3(0.1379, 0.2486, 0.4430),
+            vec3(0.3371, 0.5679, -0.0057), vec3(-0.6999, -0.0451, -0.0019),
+            vec3(0.0689, -0.1598, -0.8547), vec3(0.0560, 0.0069, -0.1843),
+            vec3(-0.0146, 0.1402, 0.0762), vec3(0.0100, -0.1924, -0.0344),
+            vec3(-0.3577, -0.5301, -0.4358), vec3(-0.3169, 0.1063, 0.0158),
+            vec3(0.0103, -0.5869, 0.0046), vec3(-0.0897, -0.4940, 0.3287),
+            vec3(0.7119, -0.0154, -0.0918), vec3(-0.0533, 0.0596, -0.5411),
+            vec3(0.0352, -0.0631, 0.5460), vec3(-0.4776, 0.2847, -0.0271),
+            vec3(-0.1120, 0.1234, -0.7446), vec3(-0.2130, -0.0782, -0.1379),
+            vec3(0.2944, -0.3112, -0.2645), vec3(-0.4564, 0.4175, -0.1843)
+        );
 
     for (int i = 0; i < samples; ++i) {
         vec3 sampleDir = normalize(fragToLight + sampleOffsetDirections[i] * diskRadius);
@@ -1733,7 +1803,7 @@ vec3 calcPointLight(PointLight light, vec3 fragPos, vec3 N, vec3 V, vec3 F0, vec
     }
     vec3 direction = normalize(L);
     float attenuation = 1.0 /
-        (light.constant + light.linear * distance + light.quadratic * distance * distance);
+            (light.constant + light.linear * distance + light.quadratic * distance * distance);
     vec3 radiance = light.diffuse * attenuation;
     return evaluateBRDF(direction, radiance, N, V, F0, albedo, metallic, roughness);
 }
@@ -1817,7 +1887,36 @@ void main() {
         spotResult += calcSpotLight(spotlights[i], FragPos, N, V, F0, albedo, metallic, roughness);
     }
 
-    vec3 lighting = (directionalResult + pointResult + spotResult) * lightingOcclusion;
+    vec3 areaResult = vec3(0.0);
+    for (int i = 0; i < areaLightCount; ++i) {
+        vec3 P = areaLights[i].position;
+        vec3 R = normalize(areaLights[i].right);
+        vec3 U = normalize(areaLights[i].up);
+        vec2 halfSize = areaLights[i].size * 0.5;
+
+        vec3 toPoint = FragPos - P;
+        float s = clamp(dot(toPoint, R), -halfSize.x, halfSize.x);
+        float t = clamp(dot(toPoint, U), -halfSize.y, halfSize.y);
+        vec3 Q = P + R * s + U * t;
+
+        vec3 Lvec = Q - FragPos;
+        float dist = length(Lvec);
+        if (dist > 0.0001) {
+            vec3 L = Lvec / dist;
+            vec3 Nl = normalize(cross(R, U));
+            float ndotl = dot(Nl, -L);
+
+            float facing = (areaLights[i].castsBothSides != 0) ? abs(ndotl) : max(ndotl, 0.0);
+            float cosTheta = cos(radians(areaLights[i].angle));
+
+            if (facing >= cosTheta && facing > 0.0) {
+                float attenuation = 1.0 / max(dist * dist, 0.0001);
+                vec3 radiance = areaLights[i].diffuse * attenuation * facing;
+                areaResult += evaluateBRDF(L, radiance, N, V, F0, albedo, metallic, roughness);
+            }
+        }
+    }
+    vec3 lighting = (directionalResult + pointResult + spotResult + areaResult) * lightingOcclusion;
 
     vec3 ambient = ambientLight.color.rgb * ambientLight.intensity * albedo * occlusion;
 
@@ -1859,6 +1958,7 @@ void main() {
 
     FragColor.rgb = acesToneMapping(FragColor.rgb);
 }
+
 )";
 
 static const char* COLOR_FRAG = R"(
