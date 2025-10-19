@@ -562,6 +562,7 @@ class Window {
     friend class RenderTarget;
     friend class DirectionalLight;
     friend class Text;
+    friend class Terrain;
 };
 
 #endif // WINDOW_H

@@ -286,6 +286,7 @@ class DirectionalLight {
 
     friend class Window;
     friend class CoreObject;
+    friend class Terrain;
 
   private:
     std::vector<glm::vec4>

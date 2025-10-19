@@ -9,6 +9,8 @@
 #include "atlas/workspace.h"
 #include "atlas/component.h"
 #include "atlas/audio.h"
+#include "aurora/procedural.h"
+#include "aurora/terrain.h"
 #include <iostream>
 #include <memory>
 
@@ -71,7 +73,7 @@ class MainScene : public Scene {
     CoreObject ground;
     CoreObject ball;
     CoreObject ball2;
-    Light light;
+    DirectionalLight light;
     Skybox skybox;
     Camera camera;
     CoreObject lightObject;
@@ -79,6 +81,7 @@ class MainScene : public Scene {
     Text fpsText;
     Model backpack;
     RenderTarget frameBuffer;
+    Terrain terrain;
 
     bool doesUpdate = true;
     bool fall = false;
@@ -132,6 +135,7 @@ class MainScene : public Scene {
         camera = Camera();
         camera.setPosition({-5.0f, 1.0f, 2.0f});
         camera.lookAt({0.0f, 0.0f, 0.0f});
+        camera.farClip = 1000.f;
         window.setCamera(&camera);
 
         backpack = Model();
@@ -176,13 +180,11 @@ class MainScene : public Scene {
             Instance &instance = lightObject.createInstance();
             instance.move({0.0f, 1.1f * i, 0.0f});
         }
-        window.addObject(&lightObject);
 
         ball = createDebugSphere(0.5f, 76, 76);
         ball.body->applyMass(0.0);
         ball.move({1.5f, 0.0f, 0.0});
         ball.material.reflectivity = 1.f;
-        window.addObject(&ball);
 
         this->setAmbientIntensity(0.1f);
 
@@ -191,13 +193,43 @@ class MainScene : public Scene {
         skybox.display(window);
         this->setSkybox(&skybox);
 
-        this->setAutomaticAmbient(true);
+        Resource heightmapResource = Workspace::get().createResource(
+            "terrain/heightmap.png", "Heightmap", ResourceType::Image);
+
+        CompoundGenerator compoundGen;
+        compoundGen.addGenerator(MountainGenerator(0.01f, 1.f, 5, 0.5f));
+
+        terrain = Terrain(heightmapResource);
+        terrain.move({20.f, 0.0, 0.0});
+        Biome grasslandBiome =
+            Biome("Grassland", Color(0.1f, 0.8f, 0.1f, 1.0f));
+        grasslandBiome.condition = [](Biome &biome) {
+            biome.maxHeight = 10.0f;
+        };
+        terrain.addBiome(grasslandBiome);
+
+        Biome mountainBiome = Biome("Mountain", Color(0.5f, 0.5f, 0.5f, 1.0f));
+        mountainBiome.condition = [](Biome &biome) {
+            biome.minHeight = 10.0f;
+            biome.maxHeight = 150.0f;
+        };
+        terrain.addBiome(mountainBiome);
+
+        Biome snowBiome = Biome("Snow", Color(4.0f, 4.0f, 4.0f, 4.0f));
+        snowBiome.condition = [](Biome &biome) { biome.minHeight = 150.0f; };
+        terrain.addBiome(snowBiome);
+        terrain.resolution = 100;
+        terrain.maxPeak = 100.f;
+        window.addObject(&terrain);
+
+        light = DirectionalLight({1.0f, -0.3f, 0.5f}, Color::white());
+        this->addDirectionalLight(&light);
+
+        this->setAmbientIntensity(0.1);
 
         frameBuffer = RenderTarget(window);
         window.addRenderTarget(&frameBuffer);
         frameBuffer.display(window);
-
-        window.useDeferredRendering();
     }
 };
 

@@ -192,6 +192,7 @@ class Scene {
 
     friend class CoreObject;
     friend class Window;
+    friend class Terrain;
 };
 
 #endif // ATLAS_SCENE_H

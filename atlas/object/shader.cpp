@@ -136,6 +136,14 @@ VertexShader VertexShader::fromDefaultShader(AtlasVertexShader shader) {
         VertexShader::vertexShaderCache[shader] = vertexShader;
         break;
     }
+    case AtlasVertexShader::Terrain: {
+        vertexShader = VertexShader::fromSource(TERRAIN_VERT);
+        vertexShader.desiredAttributes = {};
+        vertexShader.capabilities = {};
+        vertexShader.fromDefaultShaderType = shader;
+        VertexShader::vertexShaderCache[shader] = vertexShader;
+        break;
+    }
     default:
         throw std::runtime_error("Unknown default vertex shader");
     }
@@ -267,6 +275,12 @@ FragmentShader FragmentShader::fromDefaultShader(AtlasFragmentShader shader) {
         fragmentShaderCache[shader] = fragmentShader;
         break;
     }
+    case AtlasFragmentShader::Terrain: {
+        fragmentShader = FragmentShader::fromSource(TERRAIN_FRAG);
+        fragmentShader.fromDefaultShaderType = shader;
+        fragmentShaderCache[shader] = fragmentShader;
+        break;
+    }
     default:
         throw std::runtime_error("Unknown default fragment shader");
     }
@@ -334,6 +348,62 @@ void GeometryShader::compile() {
     }
 }
 
+TessellationShader
+TessellationShader::fromDefaultShader(AtlasTessellationShader shader) {
+    switch (shader) {
+    case AtlasTessellationShader::TerrainControl:
+        return TessellationShader::fromSource(TERRAIN_CONTROL_TESC,
+                                              TessellationShaderType::Control);
+    case AtlasTessellationShader::TerrainEvaluation:
+        return TessellationShader::fromSource(
+            TERRAIN_EVAL_TESE, TessellationShaderType::Evaluation);
+    default:
+        throw std::runtime_error("Unknown default tessellation shader");
+    }
+}
+
+TessellationShader TessellationShader::fromSource(const char *source,
+                                                  TessellationShaderType type) {
+    TessellationShader shader;
+    shader.source = source;
+    shader.type = type;
+    shader.shaderId = 0;
+    return shader;
+}
+
+void TessellationShader::compile() {
+    if (shaderId != 0) {
+        throw std::runtime_error("Tessellation shader already compiled");
+    }
+
+    GLenum shaderType;
+    switch (type) {
+    case TessellationShaderType::Control:
+        shaderType = GL_TESS_CONTROL_SHADER;
+        break;
+    case TessellationShaderType::Evaluation:
+        shaderType = GL_TESS_EVALUATION_SHADER;
+        break;
+    case TessellationShaderType::Primitive:
+        throw std::runtime_error("Primitive tessellation shader not supported");
+    default:
+        throw std::runtime_error("Unknown tessellation shader type");
+    }
+
+    shaderId = glCreateShader(shaderType);
+    glShaderSource(shaderId, 1, &source, nullptr);
+    glCompileShader(shaderId);
+
+    GLint success;
+    glGetShaderiv(shaderId, GL_COMPILE_STATUS, &success);
+    if (!success) {
+        char infoLog[512];
+        glGetShaderInfoLog(shaderId, 512, nullptr, infoLog);
+        throw std::runtime_error(
+            std::string("Tessellation shader compilation failed: ") + infoLog);
+    }
+}
+
 void ShaderProgram::compile() {
     if (programId != 0) {
         throw std::runtime_error("Shader program already compiled");
@@ -366,6 +436,11 @@ void ShaderProgram::compile() {
     glAttachShader(programId, fragmentShader.shaderId);
     if (geometryShader.shaderId != 0) {
         glAttachShader(programId, geometryShader.shaderId);
+    }
+    for (const auto &tessShader : tessellationShaders) {
+        if (tessShader.shaderId != 0) {
+            glAttachShader(programId, tessShader.shaderId);
+        }
     }
     glLinkProgram(programId);
 
@@ -436,11 +511,14 @@ void ShaderProgram::setUniformBool(std::string name, bool value) {
     glUniform1i(glGetUniformLocation(programId, name.c_str()), (int)value);
 }
 
-ShaderProgram ShaderProgram::fromDefaultShaders(AtlasVertexShader vShader,
-                                                AtlasFragmentShader fShader) {
+ShaderProgram ShaderProgram::fromDefaultShaders(
+    AtlasVertexShader vShader, AtlasFragmentShader fShader,
+    GeometryShader gShader, std::vector<TessellationShader> tShaders) {
     ShaderProgram program;
     program.vertexShader = VertexShader::fromDefaultShader(vShader);
     program.fragmentShader = FragmentShader::fromDefaultShader(fShader);
+    program.geometryShader = gShader;
+    program.tessellationShaders = tShaders;
     program.programId = 0;
     program.desiredAttributes = program.vertexShader.desiredAttributes;
 
