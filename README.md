@@ -55,7 +55,6 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [x] Add other texture supports (normal, roughness, metallic, ao, etc.) **for alpha 3**
 - [x] Add HDR support
 - [x] Add SSAO
-- [ ] Add cascaded shadow maps for directional lights **for alpha 3**
 - [x] Add soft shadows
 - [x] Add shadows for point lights
 - [x] Add normal and parallax mapping
