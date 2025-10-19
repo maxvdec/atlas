@@ -2304,11 +2304,7 @@ void main() {
     vec4 p1 = (p11 - p10) * u + p10;
     vec4 position = (p1 - p0) * v + p0;
 
-    if (isFromMap) {
-        position.y -= Height;
-    } else {
-        position.y += Height;
-    }
+    position.y += Height;
 
     gl_Position = projection * view * model * position;
 

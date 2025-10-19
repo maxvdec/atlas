@@ -66,6 +66,8 @@ class Terrain : public GameObject {
     Texture temperatureTexture;
     std::shared_ptr<TerrainGenerator> generator;
 
+    bool createdWithMap = false;
+
     int width = 0;
     int height = 0;
 
@@ -82,12 +84,13 @@ class Terrain : public GameObject {
 
     void addBiome(const Biome &biome) { this->biomes.push_back(biome); };
 
-    Terrain(Resource heightmapResource) : heightmap(heightmapResource) {};
+    Terrain(Resource heightmapResource)
+        : heightmap(heightmapResource), createdWithMap(true) {};
     template <typename T>
         requires std::is_base_of<TerrainGenerator, T>::value
     Terrain(T generator, int width = 512, int height = 512)
         : generator(std::make_shared<T>(generator)), width(width),
-          height(height){};
+          height(height), createdWithMap(false){};
     Terrain() = default;
 
     unsigned int resolution = 20;

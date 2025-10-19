@@ -43,7 +43,7 @@ void Terrain::initialize() {
     int width, height, nChannels;
     unsigned char *data = nullptr;
     std::vector<uint8_t> heightData = {};
-    if (this->heightmap.name != "" && generator == nullptr) {
+    if (createdWithMap) {
         if (heightmap.type != ResourceType::Image) {
             throw std::runtime_error("Heightmap resource is not an image");
         }
@@ -55,7 +55,7 @@ void Terrain::initialize() {
             std::cerr << "Failed to load heightmap!" << std::endl;
             return;
         }
-    } else if (generator != nullptr) {
+    } else if (!createdWithMap && generator != nullptr) {
         width = this->width;
         height = this->height;
         heightData.resize(width * height * 4);
@@ -174,7 +174,7 @@ void Terrain::render(float dt) {
 
     terrainShader.setUniform1f("maxPeak", maxPeak);
     terrainShader.setUniform1f("seaLevel", seaLevel);
-    terrainShader.setUniform1i("isFromMap", heightmap.name != "" ? 1 : 0);
+    terrainShader.setUniform1i("isFromMap", createdWithMap ? 1 : 0);
 
     terrainShader.setUniform1i("heightMap", 0);
     glActiveTexture(GL_TEXTURE0);

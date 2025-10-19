@@ -199,7 +199,7 @@ class MainScene : public Scene {
         CompoundGenerator compoundGen;
         compoundGen.addGenerator(MountainGenerator(0.01f, 1.f, 5, 0.5f));
 
-        terrain = Terrain(compoundGen, 512, 512);
+        terrain = Terrain(heightmapResource);
         terrain.move({20.f, 0.0, 0.0});
         Biome grasslandBiome =
             Biome("Grassland", Color(0.1f, 0.8f, 0.1f, 1.0f));
@@ -219,7 +219,7 @@ class MainScene : public Scene {
         snowBiome.condition = [](Biome &biome) { biome.minHeight = 150.0f; };
         terrain.addBiome(snowBiome);
         terrain.resolution = 100;
-        terrain.maxPeak = 20.f;
+        terrain.maxPeak = 100.f;
         window.addObject(&terrain);
 
         light = DirectionalLight({1.0f, -0.3f, 0.5f}, Color::white());
