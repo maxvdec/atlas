@@ -499,6 +499,7 @@ class Window {
     std::shared_ptr<RenderTarget> gBuffer;
     std::shared_ptr<RenderTarget> ssaoBuffer;
     std::shared_ptr<RenderTarget> ssaoBlurBuffer;
+    std::shared_ptr<RenderTarget> volumetricBuffer;
 
     std::vector<glm::vec3> ssaoKernel;
     std::vector<glm::vec3> ssaoNoise;
