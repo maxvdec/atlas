@@ -2106,12 +2106,11 @@ uniform bool hasLight = false;
 uniform bool useShadowMap = false;
 uniform vec3 lightDir = normalize(vec3(0.4, 1.0, 0.3));
 uniform vec3 viewDir  = normalize(vec3(0.0, 1.0, 1.0));
-uniform float ambientStrength = 0.6;  
+uniform float ambientStrength = 0.3;  
 const float diffuseStrength = 0.8;
-const float specularStrength = 0.15;
+const float specularStrength = 0.2;
 uniform float shadowBias = 0.005;
 
-// === Textures ===
 vec4 sampleBiomeTexture(int id, vec2 uv) {
     if (id == 0) return texture(texture0, uv);
     if (id == 1) return texture(texture1, uv);
@@ -2128,7 +2127,6 @@ vec4 sampleBiomeTexture(int id, vec2 uv) {
     return vec4(1,0,1,1);
 }
 
-// === Triplanar mapping ===
 vec4 triplanarBlend(int idx, vec3 normal, vec3 worldPos, float scale) {
     vec3 blend = abs(normal);
     blend = (blend - 0.2) * 7.0;
@@ -2142,7 +2140,6 @@ vec4 triplanarBlend(int idx, vec3 normal, vec3 worldPos, float scale) {
     return xProj * blend.x + yProj * blend.y + zProj * blend.z;
 }
 
-// === Normal from height ===
 vec3 calculateNormal(sampler2D heightMap, vec2 texCoord, float heightScale)
 {
     float h = texture(heightMap, texCoord).r * heightScale;
@@ -2154,13 +2151,10 @@ vec3 calculateNormal(sampler2D heightMap, vec2 texCoord, float heightScale)
     return n;
 }
 
-
-// === Smooth biome blend ===
 float smoothStepRange(float value, float minV, float maxV) {
     return smoothstep(minV, maxV, value);
 }
 
-// === Sharp shadow calculation ===
 float calculateShadow(vec4 fragPosLightSpace, vec3 normal) {
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
     projCoords = projCoords * 0.5 + 0.5;
@@ -2169,11 +2163,18 @@ float calculateShadow(vec4 fragPosLightSpace, vec3 normal) {
        projCoords.y < 0.0 || projCoords.y > 1.0)
         return 0.0;
     
-    float closestDepth = texture(shadowMap, projCoords.xy).r;
     float currentDepth = projCoords.z;
-    
     float bias = max(shadowBias * (1.0 - dot(normal, lightDir)), shadowBias * 0.1);
-    float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
+    
+    float shadow = 0.0;
+    vec2 texelSize = 1.0 / textureSize(shadowMap, 0);
+    for(int x = -1; x <= 1; ++x) {
+        for(int y = -1; y <= 1; ++y) {
+            float pcfDepth = texture(shadowMap, projCoords.xy + vec2(x, y) * texelSize).r;
+            shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
+        }
+    }
+    shadow /= 9.0;
     
     return shadow;
 }
@@ -2228,14 +2229,34 @@ void main() {
     baseColor.rgb *= detail;
 
     vec3 finalColor;
-
-    finalColor = ambientStrength * baseColor.rgb;
+    
     if (hasLight) {
-        finalColor = baseColor.rgb * directionalColor.rgb * (directionalIntensity - 0.2);
+        vec3 L = normalize(-lightDir);
+        vec3 N = normalize(normal);
+        vec3 V = normalize(viewDir);
+        
+        vec3 ambient = ambientStrength * baseColor.rgb;
+        
+        float diff = max(dot(N, L), 0.0);
+        vec3 diffuse = diffuseStrength * diff * directionalColor.rgb * directionalIntensity * baseColor.rgb;
+        
+        vec3 H = normalize(L + V);
+        float spec = pow(max(dot(N, H), 0.0), 32.0);
+        vec3 specular = specularStrength * spec * directionalColor.rgb * directionalIntensity;
+        
+        float shadow = 0.0;
+        if (useShadowMap) {
+            shadow = calculateShadow(FragPosLightSpace, N);
+        }
+        
+        finalColor = ambient + (1.0 - shadow) * (diffuse + specular);
+        
+    } else {
+        finalColor = ambientStrength * baseColor.rgb;
     }
+    
     FragColor = vec4(acesToneMapping(finalColor), 1.0);
     BrightColor = vec4(0.0);
-    return;
 }
 )";
 

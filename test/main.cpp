@@ -222,14 +222,14 @@ class MainScene : public Scene {
         terrain.maxPeak = 20.f;
         window.addObject(&terrain);
 
-        light = DirectionalLight({-0.3f, -1.0f, -1.0f}, Color::white());
+        light = DirectionalLight({1.0f, -0.3f, 0.5f}, Color::white());
         this->addDirectionalLight(&light);
 
         this->setAmbientIntensity(0.1);
 
         frameBuffer = RenderTarget(window);
-        // window.addRenderTarget(&frameBuffer);
-        // frameBuffer.display(window);
+        window.addRenderTarget(&frameBuffer);
+        frameBuffer.display(window);
     }
 };
 
