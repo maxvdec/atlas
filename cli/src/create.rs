@@ -199,7 +199,10 @@ set_target_properties(bezel PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/lib
 add_library(finewave STATIC IMPORTED)
 set_target_properties(finewave PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/lib/libfinewave.a)
 
-target_link_libraries(##PROJECTNAMELC## PRIVATE atlas bezel OpenGL::GL glfw glm::glm finewave ${OPENAL_LIB})
+add_library(aurora STATIC IMPORTED)
+set_target_properties(aurora PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/lib/libaurora.a)
+
+target_link_libraries(##PROJECTNAMELC## PRIVATE atlas bezel OpenGL::GL glfw glm::glm finewave aurora ${OPENAL_LIB})
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
