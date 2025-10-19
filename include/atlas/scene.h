@@ -19,6 +19,7 @@
 #include <vector>
 
 class Window;
+struct AreaLight;
 
 /**
  * @brief Abstract class that represents a 3D scene. It contains all lights and
@@ -153,6 +154,7 @@ class Scene {
      * @param light The spotlight to add.
      */
     void addSpotlight(Spotlight *light) { spotlights.push_back(light); }
+    void addAreaLight(AreaLight *light) { areaLights.push_back(light); }
 
     /**
      * @brief Set the Skybox object
@@ -170,6 +172,7 @@ class Scene {
     std::vector<DirectionalLight *> directionalLights;
     std::vector<Light *> pointLights;
     std::vector<Spotlight *> spotlights;
+    std::vector<AreaLight *> areaLights;
     Skybox *skybox = nullptr;
     AmbientLight ambientLight = {{1.0f, 1.0f, 1.0f, 1.0f}, 0.5f / 4};
     bool automaticAmbient = false;

@@ -295,3 +295,82 @@ std::vector<glm::mat4> Light::calculateShadowTransforms() {
                                  glm::vec3(0.0, -1.0, 0.0)));
     return shadowTransforms;
 }
+
+void AreaLight::createDebugObject() {
+    double w = this->size.width * 0.5;
+    double h = this->size.height * 0.5;
+
+    std::vector<CoreVertex> vertices = {
+        {{-w, -h, 0.0},
+         this->color,
+         {0.0, 0.0},
+         {0.0f, 0.0f, 1.0f},
+         {1.0f, 0.0f, 0.0f},
+         {0.0f, 1.0f, 0.0f}},
+        {{w, -h, 0.0},
+         this->color,
+         {1.0, 0.0},
+         {0.0f, 0.0f, 1.0f},
+         {1.0f, 0.0f, 0.0f},
+         {0.0f, 1.0f, 0.0f}},
+        {{w, h, 0.0},
+         this->color,
+         {1.0, 1.0},
+         {0.0f, 0.0f, 1.0f},
+         {1.0f, 0.0f, 0.0f},
+         {0.0f, 1.0f, 0.0f}},
+        {{-w, h, 0.0},
+         this->color,
+         {0.0, 1.0},
+         {0.0f, 0.0f, 1.0f},
+         {1.0f, 0.0f, 0.0f},
+         {0.0f, 1.0f, 0.0f}},
+    };
+
+    std::vector<Index> indices = {
+        // Front face (CCW)
+        0,
+        1,
+        2,
+        2,
+        3,
+        0,
+        // Back face (CW -> opposite winding)
+        0,
+        3,
+        2,
+        2,
+        1,
+        0,
+    };
+
+    CoreObject plane;
+    plane.attachVertices(vertices);
+    plane.attachIndices(indices);
+
+    glm::vec3 desiredRight = glm::normalize(this->right.toGlm());
+    glm::vec3 desiredUp = glm::normalize(this->up.toGlm());
+    glm::vec3 desiredNormal =
+        glm::normalize(glm::cross(desiredRight, desiredUp));
+
+    plane.setPosition(this->position);
+
+    glm::vec3 center = this->position.toGlm();
+    plane.lookAt(Position3d::fromGlm(center + desiredNormal),
+                 Position3d::fromGlm(desiredUp));
+
+    FragmentShader shader =
+        FragmentShader::fromDefaultShader(AtlasFragmentShader::Color);
+    VertexShader vShader =
+        VertexShader::fromDefaultShader(AtlasVertexShader::Color);
+    plane.createAndAttachProgram(vShader, shader);
+
+    this->debugObject = std::make_shared<CoreObject>(plane);
+}
+
+void AreaLight::addDebugObject(Window &window) {
+    if (this->debugObject == nullptr) {
+        this->createDebugObject();
+    }
+    window.addObject(this->debugObject.get());
+}
