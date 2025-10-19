@@ -72,7 +72,7 @@ class MainScene : public Scene {
     CoreObject ground;
     CoreObject ball;
     CoreObject ball2;
-    Light light;
+    DirectionalLight light;
     Skybox skybox;
     Camera camera;
     CoreObject lightObject;
@@ -189,8 +189,8 @@ class MainScene : public Scene {
 
         skybox = Skybox();
         skybox.cubemap = createCubemap();
-
-        this->setAutomaticAmbient(true);
+        skybox.display(window);
+        this->setSkybox(&skybox);
 
         Resource heightmapResource = Workspace::get().createResource(
             "terrain/heightmap.png", "Heightmap", ResourceType::Image);
@@ -211,6 +211,11 @@ class MainScene : public Scene {
         terrain.addBiome(mountainBiome);
         terrain.resolution = 100;
         window.addObject(&terrain);
+
+        light = DirectionalLight({-0.3f, -1.0f, -1.0f}, Color::white());
+        this->addDirectionalLight(&light);
+
+        this->setAmbientIntensity(0.1);
 
         frameBuffer = RenderTarget(window);
         // window.addRenderTarget(&frameBuffer);

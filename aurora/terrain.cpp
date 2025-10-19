@@ -7,7 +7,10 @@
 // Copyright (c) 2025 Max Van den Eynde
 //
 #include <glad/glad.h>
+#include "atlas/camera.h"
 #include "atlas/core/shader.h"
+#include "atlas/light.h"
+#include "atlas/window.h"
 #include "atlas/workspace.h"
 #include <aurora/terrain.h>
 #include <iostream>
@@ -54,14 +57,16 @@ void Terrain::initialize() {
     glGenTextures(1, &terrainTexture.id);
     glBindTexture(GL_TEXTURE_2D, terrainTexture.id);
     glTexImage2D(GL_TEXTURE_2D, 0,
-                 nChannels == 4 ? GL_RGBA : (nChannels == 3 ? GL_RGB : GL_RED),
+                 nChannels == 4 ? GL_RGBA : (nChannels == 3 ? GL_RGB : GL_R16F),
                  width, height, 0,
-                 nChannels == 4 ? GL_RGBA : (nChannels == 3 ? GL_RGB : GL_RED),
+                 nChannels == 4 ? GL_RGBA : (nChannels == 3 ? GL_RGB : GL_R16F),
                  GL_UNSIGNED_BYTE, data);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                    GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glGenerateMipmap(GL_TEXTURE_2D);
 
     rez = resolution;
 
@@ -123,6 +128,12 @@ void Terrain::initialize() {
 }
 
 void Terrain::render(float dt) {
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+    glDepthMask(GL_TRUE);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glFrontFace(GL_CW);
     glBindVertexArray(this->vao);
     glUseProgram(terrainShader.programId);
 
@@ -144,7 +155,7 @@ void Terrain::render(float dt) {
     glBindTexture(GL_TEXTURE_2D, temperatureMapTexture.id);
 
     for (int i = 0; i < 12; i++) {
-        terrainShader.setUniform1i("texture" + std::to_string(i), i + 3);
+        terrainShader.setUniform1i("texture" + std::to_string(i), i + 4);
     }
 
     for (int i = 0; i < biomes.size(); i++) {
@@ -153,8 +164,8 @@ void Terrain::render(float dt) {
             terrainShader.setUniform1i(
                 "biomes[" + std::to_string(i) + "].useTexture", 1);
             terrainShader.setUniform1i(
-                "biomes[" + std::to_string(i) + "].textureId", i + 3);
-            glActiveTexture(GL_TEXTURE2 + i);
+                "biomes[" + std::to_string(i) + "].textureId", i + 4);
+            glActiveTexture(GL_TEXTURE3 + i);
             glBindTexture(GL_TEXTURE_2D, biome.texture.id);
         } else {
             terrainShader.setUniform1i(
@@ -179,9 +190,54 @@ void Terrain::render(float dt) {
                                    biomes[i].maxTemperature);
     }
     terrainShader.setUniform1i("biomesCount", biomes.size());
+    bool hasShadow = false;
+    Window *mainWindow = Window::mainWindow;
+    for (auto dirLight : mainWindow->getCurrentScene()->directionalLights) {
+        terrainShader.setUniform3f("lightDir", dirLight->direction.x,
+                                   dirLight->direction.y,
+                                   dirLight->direction.z);
+        terrainShader.setUniform4f("directionalColor", dirLight->color.r,
+                                   dirLight->color.g, dirLight->color.b,
+                                   dirLight->color.a);
+        terrainShader.setUniform1f("directionalIntensity", dirLight->color.a);
+        if (!dirLight->doesCastShadows)
+            continue;
+        hasShadow = true;
+        terrainShader.setUniform1i("shadowMap", 3);
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, dirLight->shadowRenderTarget->texture.id);
+        ShadowParams shadowParams =
+            dirLight->calculateLightSpaceMatrix(mainWindow->renderables);
+        terrainShader.setUniformMat4f("lightViewProj",
+                                      shadowParams.lightProjection *
+                                          shadowParams.lightView);
+        terrainShader.setUniform1f("shadowBias", shadowParams.bias);
+    }
+
+    if (mainWindow->getCurrentScene()->directionalLights.size() > 0) {
+        terrainShader.setUniform1i("hasLight", 1);
+    } else {
+        terrainShader.setUniform1i("hasLight", 0);
+    }
+
+    if (!hasShadow) {
+        terrainShader.setUniform1i("useShadowMap", 0);
+    } else {
+        terrainShader.setUniform1i("useShadowMap", 1);
+    }
+
+    Camera *camera = mainWindow->getCamera();
+    terrainShader.setUniform3f("viewDir", camera->getFrontVector().x,
+                               camera->getFrontVector().y,
+                               camera->getFrontVector().z);
+    AmbientLight ambient = mainWindow->getCurrentScene()->ambientLight;
+    terrainShader.setUniform1f("ambientStrength", ambient.intensity * 4.0);
 
     glDrawArrays(GL_PATCHES, 0, patch_count * rez * rez);
     glBindVertexArray(0);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glFrontFace(GL_CCW);
 }
 
 void Terrain::updateModelMatrix() {

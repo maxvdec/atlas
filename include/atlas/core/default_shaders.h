@@ -2052,27 +2052,16 @@ void main() {
 
 static const char* TERRAIN_FRAG = R"(
 #version 410 core
+
 in vec3 FragPos;
 in float Height;
 in vec2 TexCoord;
+in vec4 FragPosLightSpace;  
 
-uniform sampler2D biomesMap;
 uniform sampler2D heightMap;
 uniform sampler2D moistureMap;
 uniform sampler2D temperatureMap;
-
-struct Biome {
-    int id;
-    vec4 tintColor;
-    int useTexture;
-    int textureId;
-    float minHeight;
-    float maxHeight;
-    float minMoisture;
-    float maxMoisture;
-    float minTemperature;
-    float maxTemperature;
-};
+uniform sampler2D shadowMap;  
 
 uniform sampler2D texture0;
 uniform sampler2D texture1;
@@ -2087,255 +2076,183 @@ uniform sampler2D texture9;
 uniform sampler2D texture10;
 uniform sampler2D texture11;
 
+uniform vec4 directionalColor;
+uniform float directionalIntensity;
+
+struct Biome {
+    int id;
+    vec4 tintColor;
+    int useTexture;
+    int textureId;
+    float minHeight;
+    float maxHeight;
+    float minMoisture;
+    float maxMoisture;
+    float minTemperature;
+    float maxTemperature;
+};
+
 uniform Biome biomes[12];
 uniform int biomesCount;
 
 layout (location = 0) out vec4 FragColor;
 layout (location = 1) out vec4 BrightColor;
 
-// High-quality lighting parameters
-const vec3 sunDir = normalize(vec3(0.4, 0.8, 0.3));
-const vec3 sunColor = vec3(1.0, 0.98, 0.95);
-const vec3 skyColor = vec3(0.4, 0.5, 0.7);
-const vec3 bounceColor = vec3(0.3, 0.25, 0.2);
-
-const float ambientStrength = 0.25;
-const float diffuseStrength = 0.75;
+uniform bool hasLight = false;
+uniform bool useShadowMap = false;
+uniform vec3 lightDir = normalize(vec3(0.4, 1.0, 0.3));
+uniform vec3 viewDir  = normalize(vec3(0.0, 1.0, 1.0));
+uniform float ambientStrength = 0.6;  
+const float diffuseStrength = 0.8;
 const float specularStrength = 0.15;
-const float shininess = 32.0;
-const float rimStrength = 0.3;
+uniform float shadowBias = 0.005;
 
-vec4 sampleBiomeTexture(int biomeIdx, vec2 uv) {
-    vec4 result = vec4(1.0, 0.0, 1.0, 1.0); 
-    
-    if (biomeIdx == 0) result = texture(texture0, uv);
-    if (biomeIdx == 1) result = texture(texture1, uv);
-    if (biomeIdx == 2) result = texture(texture2, uv);
-    if (biomeIdx == 3) result = texture(texture3, uv);
-    if (biomeIdx == 4) result = texture(texture4, uv);
-    if (biomeIdx == 5) result = texture(texture5, uv);
-    if (biomeIdx == 6) result = texture(texture6, uv);
-    if (biomeIdx == 7) result = texture(texture7, uv);
-    if (biomeIdx == 8) result = texture(texture8, uv);
-    if (biomeIdx == 9) result = texture(texture9, uv);
-    if (biomeIdx == 10) result = texture(texture10, uv);
-    if (biomeIdx == 11) result = texture(texture11, uv);
-    
-    return result;
+// === Textures ===
+vec4 sampleBiomeTexture(int id, vec2 uv) {
+    if (id == 0) return texture(texture0, uv);
+    if (id == 1) return texture(texture1, uv);
+    if (id == 2) return texture(texture2, uv);
+    if (id == 3) return texture(texture3, uv);
+    if (id == 4) return texture(texture4, uv);
+    if (id == 5) return texture(texture5, uv);
+    if (id == 6) return texture(texture6, uv);
+    if (id == 7) return texture(texture7, uv);
+    if (id == 8) return texture(texture8, uv);
+    if (id == 9) return texture(texture9, uv);
+    if (id == 10) return texture(texture10, uv);
+    if (id == 11) return texture(texture11, uv);
+    return vec4(1,0,1,1);
 }
 
-vec4 getBiomeColor(int biomeIdx, vec2 uv) {
-    if (biomeIdx < 0 || biomeIdx >= biomesCount) {
-        return vec4(1.0, 0.0, 0.0, 1.0); 
-    }
-    
-    Biome b = biomes[biomeIdx];
-    if (b.useTexture == 1) {
-        vec4 texColor = sampleBiomeTexture(b.textureId, uv);
-        return texColor;
-    } else {
-        return b.tintColor;
-    }
+// === Triplanar mapping ===
+vec4 triplanarBlend(int idx, vec3 normal, vec3 worldPos, float scale) {
+    vec3 blend = abs(normal);
+    blend = (blend - 0.2) * 7.0;
+    blend = clamp(blend, 0.0, 1.0);
+    blend /= (blend.x + blend.y + blend.z);
+
+    vec4 xProj = sampleBiomeTexture(idx, worldPos.yz * scale);
+    vec4 yProj = sampleBiomeTexture(idx, worldPos.xz * scale);
+    vec4 zProj = sampleBiomeTexture(idx, worldPos.xy * scale);
+
+    return xProj * blend.x + yProj * blend.y + zProj * blend.z;
 }
 
-// High-quality normal calculation using 9-tap filter
-vec3 calculateNormalHQ(sampler2D heightMap, vec2 texCoord, float texelSize, float heightScale) {
-    // Sample 9 points in a 3x3 grid
-    float h00 = texture(heightMap, texCoord + vec2(-texelSize, -texelSize)).r;
-    float h10 = texture(heightMap, texCoord + vec2(0.0, -texelSize)).r;
-    float h20 = texture(heightMap, texCoord + vec2(texelSize, -texelSize)).r;
-    
-    float h01 = texture(heightMap, texCoord + vec2(-texelSize, 0.0)).r;
-    float h11 = texture(heightMap, texCoord).r;
-    float h21 = texture(heightMap, texCoord + vec2(texelSize, 0.0)).r;
-    
-    float h02 = texture(heightMap, texCoord + vec2(-texelSize, texelSize)).r;
-    float h12 = texture(heightMap, texCoord + vec2(0.0, texelSize)).r;
-    float h22 = texture(heightMap, texCoord + vec2(texelSize, texelSize)).r;
-    
-    // Sobel filter for better edge detection
-    float dx = (h00 + 2.0*h01 + h02) - (h20 + 2.0*h21 + h22);
-    float dy = (h00 + 2.0*h10 + h20) - (h02 + 2.0*h12 + h22);
-    
-    vec3 normal = normalize(vec3(-dx * heightScale, 1.0, -dy * heightScale));
-    return normal;
+// === Normal from height ===
+vec3 calculateNormal(sampler2D heightMap, vec2 texCoord, float heightScale)
+{
+    float h = texture(heightMap, texCoord).r * heightScale;
+
+    // Derivatives in texture coordinate space
+    float dx = dFdx(h);
+    float dy = dFdy(h);
+
+    // Reconstruct normal from height derivatives
+    vec3 n = normalize(vec3(-dx, 1.0, -dy));
+    return n;
 }
 
-// High-quality SSAO (Screen-Space Ambient Occlusion)
-float calculateSSAO(sampler2D heightMap, vec2 texCoord, float texelSize, float centerHeight) {
-    const int samples = 16;
-    const float radius = 4.0;
-    const float bias = 0.0001;
-    
-    float occlusion = 0.0;
-    
-    // Spiral sampling pattern for better distribution
-    for (int i = 0; i < samples; i++) {
-        float angle = float(i) * 2.399; // Golden angle
-        float dist = sqrt(float(i) / float(samples)) * radius;
-        
-        vec2 offset = vec2(cos(angle), sin(angle)) * dist * texelSize;
-        float sampleHeight = texture(heightMap, texCoord + offset).r;
-        
-        float heightDiff = centerHeight - sampleHeight;
-        float weight = 1.0 - smoothstep(0.0, radius * texelSize, length(offset));
-        
-        occlusion += max(0.0, heightDiff - bias) * weight;
-    }
-    
-    occlusion = 1.0 - clamp(occlusion / float(samples) * 15.0, 0.0, 0.85);
-    return occlusion;
+
+// === Smooth biome blend ===
+float smoothStepRange(float value, float minV, float maxV) {
+    return smoothstep(minV, maxV, value);
 }
 
-// Slope-based shading for more dramatic terrain
-float calculateSlope(vec3 normal) {
-    return 1.0 - abs(dot(normal, vec3(0.0, 1.0, 0.0)));
-}
-
-// Height-based fog/atmospheric scattering
-vec3 applyAtmosphere(vec3 color, float height, float depth) {
-    float fogAmount = exp(-depth * 0.0015) * (1.0 - clamp(height / 200.0, 0.0, 0.8));
-    vec3 fogColor = mix(vec3(0.5, 0.6, 0.7), vec3(0.7, 0.8, 0.9), clamp(height / 100.0, 0.0, 1.0));
-    return mix(fogColor, color, fogAmount);
-}
-
-// Fresnel rim lighting for edges
-float calculateRimLight(vec3 normal, vec3 viewDir) {
-    float rim = 1.0 - max(dot(viewDir, normal), 0.0);
-    return pow(rim, 3.0);
-}
-
-// Shadow mapping approximation using heightmap
-float calculateShadow(sampler2D heightMap, vec2 texCoord, vec3 lightDir, float currentHeight, float texelSize) {
-    const int steps = 8;
-    const float maxDist = 0.02;
+// === Sharp shadow calculation ===
+float calculateShadow(vec4 fragPosLightSpace, vec3 normal) {
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    projCoords = projCoords * 0.5 + 0.5;
     
-    vec2 rayStep = normalize(lightDir.xz) * texelSize * (maxDist / float(steps));
-    float shadow = 1.0;
+    if(projCoords.z > 1.0 || projCoords.x < 0.0 || projCoords.x > 1.0 || 
+       projCoords.y < 0.0 || projCoords.y > 1.0)
+        return 0.0;
     
-    for (int i = 1; i <= steps; i++) {
-        vec2 sampleCoord = texCoord + rayStep * float(i);
-        float sampleHeight = texture(heightMap, sampleCoord).r;
-        float expectedHeight = currentHeight - float(i) * 0.005;
-        
-        if (sampleHeight > expectedHeight) {
-            shadow = 0.3;
-            break;
-        }
-    }
+    float closestDepth = texture(shadowMap, projCoords.xy).r;
+    float currentDepth = projCoords.z;
+    
+    float bias = max(shadowBias * (1.0 - dot(normal, lightDir)), shadowBias * 0.1);
+    float shadow = currentDepth - bias > closestDepth ? 1.0 : 0.0;
     
     return shadow;
 }
 
+vec3 acesToneMapping(vec3 color) {
+    const float a = 2.51;
+    const float b = 0.03;
+    const float c = 2.43;
+    const float d = 0.59;
+    const float e = 0.14;
+    return clamp((color * (a * color + b)) / (color * (c * color + d) + e), 0.0, 1.0);
+}
+
 void main() {
     if (biomesCount <= 0) {
-        FragColor = vec4(vec3((Height + 16) / 64.0f), 1.0);
+        FragColor = vec4(vec3((Height + 16.0) / 64.0), 1.0);
         return;
     }
-    
-    float moisture = texture(moistureMap, TexCoord).r * 255;
-    float temperature = texture(temperatureMap, TexCoord).r * 255;
-    float currentHeight = texture(heightMap, TexCoord).r;
-    
+
+    float h = texture(heightMap, TexCoord).r * 255.0;
+    float m = texture(moistureMap, TexCoord).r * 255.0;
+    float t = texture(temperatureMap, TexCoord).r * 255.0;
+
+    float texelSize = 1.0 / textureSize(heightMap, 0).x;
+    float heightScale = 64.0;
+    vec3 normal = calculateNormal(heightMap, TexCoord, heightScale);
+
+    // === BIOME BLENDING ===
     vec4 baseColor = vec4(0.0);
-    
+    float totalWeight = 0.0;
+
     for (int i = 0; i < biomesCount; i++) {
         Biome b = biomes[i];
-        bool heightInRange = (b.minHeight < 0.0f || Height * 255.0 >= b.minHeight) &&
-                           (b.maxHeight < 0.0f || Height * 255.0 < b.maxHeight);
-        bool moistureInRange = (b.minMoisture < 0.0f || moisture >= b.minMoisture) &&
-                               (b.maxMoisture < 0.0f || moisture < b.maxMoisture);
-        bool temperatureInRange = (b.minTemperature < 0.0f || temperature >= b.minTemperature) &&
-                                  (b.maxTemperature < 0.0f || temperature < b.maxTemperature);
-        
-        if (heightInRange && moistureInRange && temperatureInRange) {
-            baseColor = getBiomeColor(b.id, TexCoord * 10.0);
-            break;
+
+        float hW = (b.minHeight < 0.0 && b.maxHeight < 0.0) ? 1.0 : smoothStepRange(h, b.minHeight, b.maxHeight);
+        float mW = (b.minMoisture < 0.0 && b.maxMoisture < 0.0) ? 1.0 : smoothStepRange(m, b.minMoisture, b.maxMoisture);
+        float tW = (b.minTemperature < 0.0 && b.maxTemperature < 0.0) ? 1.0 : smoothStepRange(t, b.minTemperature, b.maxTemperature);
+
+        float weight = hW * mW * tW;
+        if (weight > 0.001) {
+            vec4 texColor = (b.useTexture == 1)
+                ? triplanarBlend(i, normal, FragPos, 0.1)
+                : b.tintColor;
+            baseColor += texColor * weight;
+            totalWeight += weight;
         }
     }
-    
-    // High-quality lighting setup
-    float texelSize = 1.0 / 1024.0;
-    float heightScale = 25.0; // Adjust for terrain steepness sensitivity
-    
-    vec3 normal = calculateNormalHQ(heightMap, TexCoord, texelSize, heightScale);
-    vec3 viewDir = normalize(vec3(0.0, 1.0, 0.5)); // Approximate view direction
-    
-    // Diffuse lighting (sun)
-    float NdotL = max(dot(normal, sunDir), 0.0);
-    float diffuse = NdotL * diffuseStrength;
-    
-    // Specular highlights on steep slopes (wet rocks, etc.)
-    vec3 halfDir = normalize(sunDir + viewDir);
-    float spec = pow(max(dot(normal, halfDir), 0.0), shininess);
-    float slope = calculateSlope(normal);
-    float specular = spec * specularStrength * slope;
-    
-    // Sky ambient (blue from above)
-    float skyFactor = max(dot(normal, vec3(0.0, 1.0, 0.0)), 0.0);
-    vec3 skyAmbient = skyColor * skyFactor * 0.3;
-    
-    // Bounce light (warm from below)
-    float bounceFactor = max(dot(normal, vec3(0.0, -1.0, 0.0)), 0.0);
-    vec3 bounceLight = bounceColor * bounceFactor * 0.2;
-    
-    // Rim lighting for silhouettes
-    float rim = calculateRimLight(normal, viewDir);
-    vec3 rimLight = sunColor * rim * rimStrength;
-    
-    // High-quality ambient occlusion
-    float ao = calculateSSAO(heightMap, TexCoord, texelSize, currentHeight);
-    
-    // Soft shadows
-    float shadow = calculateShadow(heightMap, TexCoord, sunDir, currentHeight, texelSize);
-    
-    // Slope darkening for crevices
-    float slopeDarken = 1.0 - (slope * 0.3);
-    
-    // Combine all lighting
-    vec3 ambient = (skyAmbient + bounceLight) * ambientStrength;
-    vec3 lighting = ambient + (sunColor * diffuse * shadow) + rimLight;
-    lighting *= ao * slopeDarken;
-    
-    // Apply lighting to base color
-    vec3 finalColor = baseColor.rgb * lighting;
-    
-    // Add specular highlights on top
-    finalColor += sunColor * specular * shadow;
-    
-    // Atmospheric scattering
-    float depth = length(FragPos);
-    finalColor = applyAtmosphere(finalColor, Height * 255.0, depth);
-    
-    // Subtle color grading for more realistic look
-    finalColor = pow(finalColor, vec3(0.95)); // Slight contrast boost
-    
-    FragColor = vec4(finalColor, baseColor.a);
-    
-    // Bright areas for bloom (if you have post-processing)
-    float brightness = dot(finalColor, vec3(0.2126, 0.7152, 0.0722));
-    if(brightness > 1.0)
-        BrightColor = vec4(finalColor, 1.0);
-    else
-        BrightColor = vec4(0.0, 0.0, 0.0, 1.0);
+
+    baseColor /= max(totalWeight, 0.001);
+
+    float detail = texture(heightMap, TexCoord * 64.0).r * 0.1 + 0.9;
+    baseColor.rgb *= detail;
+
+    vec3 finalColor;
+
+    finalColor = ambientStrength * baseColor.rgb;
+    if (hasLight) {
+        finalColor = baseColor.rgb * directionalColor.rgb * (directionalIntensity - 0.2);
+    }
+    FragColor = vec4(acesToneMapping(finalColor), 1.0);
+    BrightColor = vec4(0.0);
+    return;
 }
 )";
 
 static const char* TERRAIN_EVAL_TESE = R"(
 #version 410 core
-
 layout(quads, fractional_odd_spacing, ccw) in;
 
 uniform sampler2D heightMap;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
+uniform mat4 lightViewProj = mat4(1.0);
 
 in vec2 TextureCoord[];
 
 out float Height;
 out vec2 TexCoord;
 out vec3 FragPos;
+out vec4 FragPosLightSpace;
 
 void main() {
     float u = gl_TessCoord.x;
@@ -2350,28 +2267,24 @@ void main() {
     vec2 t1 = (t11 - t10) * u + t10;
     vec2 texCoord = (t1 - t0) * v + t0;
 
-    Height = -(texture(heightMap, texCoord).y * 64.0 - 16.0);
+    Height = -texture(heightMap, texCoord).r * 64.0 - 16.0;
 
     vec4 p00 = gl_in[0].gl_Position;
     vec4 p01 = gl_in[1].gl_Position;
     vec4 p10 = gl_in[2].gl_Position;
     vec4 p11 = gl_in[3].gl_Position;
 
-    vec4 uVec = p01 - p00;
-    vec4 vVec = p10 - p00;
-    vec4 normal = normalize(vec4(cross(vVec.xyz, uVec.xyz), 0.0));
-
     vec4 p0 = (p01 - p00) * u + p00;
     vec4 p1 = (p11 - p10) * u + p10;
     vec4 position = (p1 - p0) * v + p0;
 
-    position += normal * Height;
+    position.y += Height;
 
     gl_Position = projection * view * model * position;
 
     TexCoord = texCoord;
-
     FragPos = vec3(model * position);
+    FragPosLightSpace = lightViewProj * model * position;
 }
 )";
 
