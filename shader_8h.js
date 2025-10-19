@@ -3,6 +3,7 @@ var shader_8h =
     [ "VertexShader", "struct_vertex_shader.html", "struct_vertex_shader" ],
     [ "FragmentShader", "struct_fragment_shader.html", "struct_fragment_shader" ],
     [ "GeometryShader", "struct_geometry_shader.html", "struct_geometry_shader" ],
+    [ "TessellationShader", "class_tessellation_shader.html", "class_tessellation_shader" ],
     [ "LayoutDescriptor", "struct_layout_descriptor.html", "struct_layout_descriptor" ],
     [ "ShaderProgram", "struct_shader_program.html", "struct_shader_program" ],
     [ "DEFAULT_FRAG_SHADER", "shader_8h.html#ae3dc3c5c789f2407bf2e7c2799bec14e", null ],
@@ -22,10 +23,16 @@ var shader_8h =
       [ "Light", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a9914a0ce04a7b7b6a8e39bec55064b82", null ],
       [ "Deferred", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a4ed71db54748b36eeb398876b0c747ac", null ],
       [ "SSAO", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0ab07a387949b981d5726a46c61db885e9", null ],
-      [ "SSAOBlur", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a0cbd177f5587f49172adca66ce3041ce", null ]
+      [ "SSAOBlur", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a0cbd177f5587f49172adca66ce3041ce", null ],
+      [ "Terrain", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a4ccfea7a25fae3c1d31555f0856d2b42", null ]
     ] ],
     [ "AtlasGeometryShader", "shader_8h.html#a17951fe51aaa5769ef603acf594dc0b5", [
       [ "PointLightShadow", "shader_8h.html#a17951fe51aaa5769ef603acf594dc0b5a05c5b39892533f0c0ad86b083b28ff6a", null ]
+    ] ],
+    [ "AtlasTessellationShader", "shader_8h.html#ad3ab8cfdaed1615da5dbebb9a54062e7", [
+      [ "TerrainControl", "shader_8h.html#ad3ab8cfdaed1615da5dbebb9a54062e7a34fa222ae76525a12c32c39ad7597647", null ],
+      [ "TerrainEvaluation", "shader_8h.html#ad3ab8cfdaed1615da5dbebb9a54062e7a0c587a9b74bfcb3f62e40c621ea512b5", null ],
+      [ "TerrainPrimitive", "shader_8h.html#ad3ab8cfdaed1615da5dbebb9a54062e7a818b6eb091fdcb3274a065fcc66aed84", null ]
     ] ],
     [ "AtlasVertexShader", "shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82", [
       [ "Debug", "shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82aa603905470e2a5b8c13e96b579ef0dba", null ],
@@ -39,7 +46,8 @@ var shader_8h =
       [ "Text", "shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82a9dffbf69ffba8bc38bc4e01abf4b1675", null ],
       [ "PointLightShadow", "shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82a05c5b39892533f0c0ad86b083b28ff6a", null ],
       [ "Light", "shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82a9914a0ce04a7b7b6a8e39bec55064b82", null ],
-      [ "Deferred", "shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82a4ed71db54748b36eeb398876b0c747ac", null ]
+      [ "Deferred", "shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82a4ed71db54748b36eeb398876b0c747ac", null ],
+      [ "Terrain", "shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82a4ccfea7a25fae3c1d31555f0856d2b42", null ]
     ] ],
     [ "ShaderCapability", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcd", [
       [ "Lighting", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcda2e4b97fde8cf63085ec969fcc7e490c0", null ],
@@ -51,5 +59,10 @@ var shader_8h =
       [ "LightDeferred", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcda62e60907eeb7e4b927057202c2a3eaba", null ],
       [ "Material", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcdad92a8333dd3ccb895cc65f7455b71206", null ],
       [ "Instances", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcda1c7d5bb21f0c351e584f3a4109ecdc76", null ]
+    ] ],
+    [ "TessellationShaderType", "shader_8h.html#ab4defdfdbd8367100897f4e0fb2e1db9", [
+      [ "Control", "shader_8h.html#ab4defdfdbd8367100897f4e0fb2e1db9aa1595abbb4c3a326636dd178757cd6c1", null ],
+      [ "Evaluation", "shader_8h.html#ab4defdfdbd8367100897f4e0fb2e1db9ab74a43dbb36287ea86eb5b0c7b86e8e8", null ],
+      [ "Primitive", "shader_8h.html#ab4defdfdbd8367100897f4e0fb2e1db9a07ee3427562e4f1a5c9f2bfb17fd9eee", null ]
     ] ]
 ];

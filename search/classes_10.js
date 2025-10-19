@@ -1,6 +1,5 @@
 var searchData=
 [
-  ['window_0',['Window',['../class_window.html',1,'']]],
-  ['windowconfiguration_1',['WindowConfiguration',['../struct_window_configuration.html',1,'']]],
-  ['workspace_2',['Workspace',['../class_workspace.html',1,'']]]
+  ['uiobject_0',['UIObject',['../class_u_i_object.html',1,'']]],
+  ['uiview_1',['UIView',['../class_u_i_view.html',1,'']]]
 ];

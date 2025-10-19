@@ -134,14 +134,15 @@ Inheritance diagram for GameObject:</div>
  <div class="center">
   <img src="class_game_object.png" usemap="#GameObject_map" alt=""/>
   <map id="GameObject_map" name="GameObject_map">
-<area href="class_renderable.html" title="An abstract base class representing any object that can be rendered in a Window. Contains virtual met..." alt="Renderable" shape="rect" coords="238,0,347,24"/>
+<area href="class_renderable.html" title="An abstract base class representing any object that can be rendered in a Window. Contains virtual met..." alt="Renderable" shape="rect" coords="297,0,406,24"/>
 <area href="class_compound_object.html" title="A Compound object is a GameObject that can be extended by the user to generate objects that encapsula..." alt="CompoundObject" shape="rect" coords="0,112,109,136"/>
 <area href="class_core_object.html" title="Represents a 3D object in the scene, including its geometry, material and every interaction with the ..." alt="CoreObject" shape="rect" coords="119,112,228,136"/>
 <area href="class_model.html" title="Class that represents a 3D model composed of multiple CoreObjects. It can be loaded from a resource f..." alt="Model" shape="rect" coords="238,112,347,136"/>
 <area href="class_particle_emitter.html" title="Class representing a particle emitter in the game. It emits and manages particles." alt="ParticleEmitter" shape="rect" coords="357,112,466,136"/>
-<area href="class_u_i_object.html" title="A UIObject is a GameObject that is used for creating user interface elements." alt="UIObject" shape="rect" coords="476,112,585,136"/>
-<area href="class_text.html" title="Represents a text object in the game world. It allows rendering of text with a specific font,..." alt="Text" shape="rect" coords="416,168,525,192"/>
-<area href="class_u_i_view.html" title="A conjunction of UI elements that share the same view and projection matrices. Acts as a container fo..." alt="UIView" shape="rect" coords="535,168,644,192"/>
+<area href="class_terrain.html" alt="Terrain" shape="rect" coords="476,112,585,136"/>
+<area href="class_u_i_object.html" title="A UIObject is a GameObject that is used for creating user interface elements." alt="UIObject" shape="rect" coords="595,112,704,136"/>
+<area href="class_text.html" title="Represents a text object in the game world. It allows rendering of text with a specific font,..." alt="Text" shape="rect" coords="535,168,644,192"/>
+<area href="class_u_i_view.html" title="A conjunction of UI elements that share the same view and projection matrices. Acts as a container fo..." alt="UIView" shape="rect" coords="654,168,763,192"/>
   </map>
 </div></div>
 <table class="memberdecls">
@@ -621,7 +622,7 @@ requires std::is_base_of_v&lt;<a class="el" href="class_component.html">Componen
   </dd>
 </dl>
 
-<p>Reimplemented in <a class="el" href="class_compound_object.html#a512eb4315a038b423d94840bbbdf2c88">CompoundObject</a>, <a class="el" href="class_core_object.html#aa9caed62683a2eba3ed7b7b4141dcba2">CoreObject</a>, <a class="el" href="class_model.html#aeb27cb91b9a787f06d8c8001169968bc">Model</a>, and <a class="el" href="class_particle_emitter.html#ac3f87ddcbb7272315b1c06421add053b">ParticleEmitter</a>.</p>
+<p>Reimplemented in <a class="el" href="class_compound_object.html#a512eb4315a038b423d94840bbbdf2c88">CompoundObject</a>, <a class="el" href="class_core_object.html#aa9caed62683a2eba3ed7b7b4141dcba2">CoreObject</a>, <a class="el" href="class_model.html#aeb27cb91b9a787f06d8c8001169968bc">Model</a>, <a class="el" href="class_particle_emitter.html#ac3f87ddcbb7272315b1c06421add053b">ParticleEmitter</a>, and <a class="el" href="class_terrain.html#a2f3d6a1be68011a0925c4a7c84c4e722">Terrain</a>.</p>
 
 <p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00187">187</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
 <div class="fragment"><div class="line"><span class="lineno">  187</span>{};</div>
@@ -659,7 +660,7 @@ requires std::is_base_of_v&lt;<a class="el" href="class_component.html">Componen
   </dd>
 </dl>
 
-<p>Reimplemented in <a class="el" href="class_compound_object.html#a4210275b72af87578ac4f7fd900906cc">CompoundObject</a>, and <a class="el" href="class_core_object.html#a983e3a31e6bc75c91faee51758702dc3">CoreObject</a>.</p>
+<p>Reimplemented in <a class="el" href="class_compound_object.html#a4210275b72af87578ac4f7fd900906cc">CompoundObject</a>, <a class="el" href="class_core_object.html#a983e3a31e6bc75c91faee51758702dc3">CoreObject</a>, and <a class="el" href="class_terrain.html#a52cdfdd83cda1830924b3544560699dc">Terrain</a>.</p>
 
 <p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00206">206</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
 <div class="fragment"><div class="line"><span class="lineno">  206</span>{};</div>
@@ -735,7 +736,7 @@ requires std::is_base_of_v&lt;<a class="el" href="class_component.html">Componen
   </dd>
 </dl>
 
-<p>Reimplemented in <a class="el" href="class_compound_object.html#ad8216cabdb070850d649dbf8b9fc783c">CompoundObject</a>, <a class="el" href="class_core_object.html#a7971c9dca915ded12b99a2513a499ff8">CoreObject</a>, <a class="el" href="class_model.html#a7cd6f92f17a58446c6b1d2ea70e2e0d5">Model</a>, and <a class="el" href="class_particle_emitter.html#a206f52ef784767e8280450e8a831ee99">ParticleEmitter</a>.</p>
+<p>Reimplemented in <a class="el" href="class_compound_object.html#ad8216cabdb070850d649dbf8b9fc783c">CompoundObject</a>, <a class="el" href="class_core_object.html#a7971c9dca915ded12b99a2513a499ff8">CoreObject</a>, <a class="el" href="class_model.html#a7cd6f92f17a58446c6b1d2ea70e2e0d5">Model</a>, <a class="el" href="class_particle_emitter.html#a206f52ef784767e8280450e8a831ee99">ParticleEmitter</a>, and <a class="el" href="class_terrain.html#a96182e33afacd4c81e4b8551397ecef2">Terrain</a>.</p>
 
 <p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00181">181</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
 <div class="fragment"><div class="line"><span class="lineno">  181</span>{};</div>
@@ -773,7 +774,7 @@ requires std::is_base_of_v&lt;<a class="el" href="class_component.html">Componen
   </dd>
 </dl>
 
-<p>Reimplemented in <a class="el" href="class_compound_object.html#acabbba275d8064a3024305b2cbab3f13">CompoundObject</a>, <a class="el" href="class_core_object.html#a53372b4eb095ebb2f6042a1571135c84">CoreObject</a>, and <a class="el" href="class_model.html#a24148dc5603a0a2e3da010b89cbde5b8">Model</a>.</p>
+<p>Reimplemented in <a class="el" href="class_compound_object.html#acabbba275d8064a3024305b2cbab3f13">CompoundObject</a>, <a class="el" href="class_core_object.html#a53372b4eb095ebb2f6042a1571135c84">CoreObject</a>, <a class="el" href="class_model.html#a24148dc5603a0a2e3da010b89cbde5b8">Model</a>, and <a class="el" href="class_terrain.html#a94ef2476cda59b283b3ea04b6f9eb9f2">Terrain</a>.</p>
 
 <p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00193">193</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
 <div class="fragment"><div class="line"><span class="lineno">  193</span>{};</div>
@@ -811,7 +812,7 @@ requires std::is_base_of_v&lt;<a class="el" href="class_component.html">Componen
   </dd>
 </dl>
 
-<p>Reimplemented in <a class="el" href="class_compound_object.html#a9d8518bd15108ab12db57641e0c6135b">CompoundObject</a>, <a class="el" href="class_core_object.html#ab4ce2357ac8ce1053d0f5e7ea57cfdd4">CoreObject</a>, and <a class="el" href="class_model.html#a9620da538736e7eea3b38c727cbe3571">Model</a>.</p>
+<p>Reimplemented in <a class="el" href="class_compound_object.html#a9d8518bd15108ab12db57641e0c6135b">CompoundObject</a>, <a class="el" href="class_core_object.html#ab4ce2357ac8ce1053d0f5e7ea57cfdd4">CoreObject</a>, <a class="el" href="class_model.html#a9620da538736e7eea3b38c727cbe3571">Model</a>, and <a class="el" href="class_terrain.html#a35ba430a8b7f1050fc591aeb39ca62dc">Terrain</a>.</p>
 
 <p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00212">212</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
 <div class="fragment"><div class="line"><span class="lineno">  212</span>{};</div>

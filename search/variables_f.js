@@ -7,9 +7,10 @@ var searchData=
   ['renderdepthofview_4',['renderDepthOfView',['../class_renderable.html#a7cb09219e507e1c1395efced124e3b58',1,'Renderable']]],
   ['renderscale_5',['renderScale',['../struct_window_configuration.html#a40e4e6ae5bb042ee9a14666e23db89d5',1,'WindowConfiguration']]],
   ['resizable_6',['resizable',['../struct_window_configuration.html#af285eb5158fa6a5667ce08fc32b1997d',1,'WindowConfiguration']]],
-  ['resource_7',['resource',['../struct_font.html#a953d3ee33e7097789c7ee85748436b4c',1,'Font::resource'],['../struct_texture.html#a2c68086bd793696d36daf636f42ddb2f',1,'Texture::resource'],['../class_audio_data.html#a0b2583df19d7446a8f4832410417058a',1,'AudioData::resource']]],
-  ['resources_8',['resources',['../struct_cubemap.html#aa1dec168e6011ab57c051d77a897b90a',1,'Cubemap::resources'],['../struct_resource_group.html#a147e53b00ed6da7d2fb3d0f0534b8251',1,'ResourceGroup::resources']]],
-  ['roll_9',['roll',['../struct_rotation3d.html#a993b23a5ab584cae39120be2f30c534f',1,'Rotation3d']]],
-  ['rotation_10',['rotation',['../struct_instance.html#a01a9049398c7873c47dcf5b7c24cf510',1,'Instance::rotation'],['../class_core_object.html#a7ebc137645d25de5365b893661973cd9',1,'CoreObject::rotation']]],
-  ['roughness_11',['roughness',['../struct_material.html#abbaeac8374986ca82670ff0d7749c566',1,'Material']]]
+  ['resolution_7',['resolution',['../class_terrain.html#a4cf2708abb876159087cf9a88d51c547',1,'Terrain']]],
+  ['resource_8',['resource',['../struct_font.html#a953d3ee33e7097789c7ee85748436b4c',1,'Font::resource'],['../struct_texture.html#a2c68086bd793696d36daf636f42ddb2f',1,'Texture::resource'],['../class_audio_data.html#a0b2583df19d7446a8f4832410417058a',1,'AudioData::resource']]],
+  ['resources_9',['resources',['../struct_cubemap.html#aa1dec168e6011ab57c051d77a897b90a',1,'Cubemap::resources'],['../struct_resource_group.html#a147e53b00ed6da7d2fb3d0f0534b8251',1,'ResourceGroup::resources']]],
+  ['roll_10',['roll',['../struct_rotation3d.html#a993b23a5ab584cae39120be2f30c534f',1,'Rotation3d']]],
+  ['rotation_11',['rotation',['../struct_instance.html#a01a9049398c7873c47dcf5b7c24cf510',1,'Instance::rotation'],['../class_core_object.html#a7ebc137645d25de5365b893661973cd9',1,'CoreObject::rotation'],['../class_terrain.html#a5aa45ff1f10bb1d71fd8e8956037be93',1,'Terrain::rotation']]],
+  ['roughness_12',['roughness',['../struct_material.html#abbaeac8374986ca82670ff0d7749c566',1,'Material']]]
 ];

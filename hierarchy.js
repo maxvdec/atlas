@@ -9,6 +9,7 @@ var hierarchy =
     ] ],
     [ "AudioEngine", "class_audio_engine.html", null ],
     [ "AudioSource", "class_audio_source.html", null ],
+    [ "Biome", "class_biome.html", null ],
     [ "Body", "class_body.html", null ],
     [ "Bounds", "class_bounds.html", null ],
     [ "Camera", "class_camera.html", null ],
@@ -35,6 +36,7 @@ var hierarchy =
       [ "Sharpen", "class_sharpen.html", null ]
     ] ],
     [ "Font", "struct_font.html", null ],
+    [ "FractalNoise", "class_fractal_noise.html", null ],
     [ "FragmentShader", "struct_fragment_shader.html", null ],
     [ "GeometryShader", "struct_geometry_shader.html", null ],
     [ "Instance", "struct_instance.html", null ],
@@ -46,8 +48,10 @@ var hierarchy =
     [ "Monitor", "class_monitor.html", null ],
     [ "MousePacket", "struct_mouse_packet.html", null ],
     [ "MouseScrollPacket", "struct_mouse_scroll_packet.html", null ],
+    [ "Noise", "class_noise.html", null ],
     [ "Particle", "struct_particle.html", null ],
     [ "ParticleSettings", "struct_particle_settings.html", null ],
+    [ "PerlinNoise", "struct_perlin_noise.html", null ],
     [ "Point", "struct_point.html", null ],
     [ "PointLightConstants", "struct_point_light_constants.html", null ],
     [ "Position2d", "struct_position2d.html", null ],
@@ -60,6 +64,7 @@ var hierarchy =
         [ "CoreObject", "class_core_object.html", null ],
         [ "Model", "class_model.html", null ],
         [ "ParticleEmitter", "class_particle_emitter.html", null ],
+        [ "Terrain", "class_terrain.html", null ],
         [ "UIObject", "class_u_i_object.html", [
           [ "Text", "class_text.html", null ],
           [ "UIView", "class_u_i_view.html", null ]
@@ -79,8 +84,17 @@ var hierarchy =
       [ "Convex", "class_convex.html", null ],
       [ "Sphere", "class_sphere.html", null ]
     ] ],
+    [ "SimplexNoise", "class_simplex_noise.html", null ],
     [ "Size2d", "struct_size2d.html", null ],
     [ "Spotlight", "struct_spotlight.html", null ],
+    [ "TerrainGenerator", "class_terrain_generator.html", [
+      [ "CompoundGenerator", "class_compound_generator.html", null ],
+      [ "HillGenerator", "class_hill_generator.html", null ],
+      [ "IslandGenerator", "class_island_generator.html", null ],
+      [ "MountainGenerator", "class_mountain_generator.html", null ],
+      [ "PlainGenerator", "class_plain_generator.html", null ]
+    ] ],
+    [ "TessellationShader", "class_tessellation_shader.html", null ],
     [ "Texture", "struct_texture.html", null ],
     [ "TextureCreationData", "struct_texture_creation_data.html", null ],
     [ "TextureParameters", "struct_texture_parameters.html", null ],
@@ -89,5 +103,6 @@ var hierarchy =
     [ "VideoMode", "struct_video_mode.html", null ],
     [ "Window", "class_window.html", null ],
     [ "WindowConfiguration", "struct_window_configuration.html", null ],
-    [ "Workspace", "class_workspace.html", null ]
+    [ "Workspace", "class_workspace.html", null ],
+    [ "WorleyNoise", "class_worley_noise.html", null ]
 ];

@@ -16,5 +16,6 @@ var class_scene =
     [ "setSkybox", "class_scene.html#acccf622706b4067fd6d313ebf4075f1a", null ],
     [ "update", "class_scene.html#a2936b4b44d5c6ad073e65986a529a9f4", null ],
     [ "CoreObject", "class_scene.html#ac9dbe2a378024e3a3c417b4cb50adbb3", null ],
+    [ "Terrain", "class_scene.html#a8a16a8def173094d17ed062879646b6b", null ],
     [ "Window", "class_scene.html#a553f958a25683445088050a69d3de8e9", null ]
 ];

@@ -35,6 +35,7 @@ var class_window =
     [ "CoreObject", "class_window.html#ac9dbe2a378024e3a3c417b4cb50adbb3", null ],
     [ "DirectionalLight", "class_window.html#a7c2d49dc122804ba058a10c20e8d048d", null ],
     [ "RenderTarget", "class_window.html#aa5afc6f82b7b587ed5ada4d227ce32aa", null ],
+    [ "Terrain", "class_window.html#a8a16a8def173094d17ed062879646b6b", null ],
     [ "Text", "class_window.html#aee0ad1dafe471596e6d25530d9fbaf0c", null ],
     [ "audioEngine", "class_window.html#a2133e2bb4562bcc491d091a640dcae88", null ],
     [ "gravity", "class_window.html#a84bf9cade8239d6aa81287e05f2fcafb", null ],
