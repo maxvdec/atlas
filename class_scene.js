@@ -1,5 +1,6 @@
 var class_scene =
 [
+    [ "addAreaLight", "class_scene.html#a8444afc5763ff91124559e26ba2192ac", null ],
     [ "addDirectionalLight", "class_scene.html#a20d41770f3040ef7fa818e3df3c63f7b", null ],
     [ "addLight", "class_scene.html#a13b298b0c24c92929bf9850012980623", null ],
     [ "addSpotlight", "class_scene.html#a0711374dffe3e30acfcddd32c17b0cd7", null ],

@@ -125,6 +125,7 @@ $(function(){initNavTree('light_8h.html','',''); });
 <code>#include &quot;<a class="el" href="object_8h_source.html">atlas/object.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="texture_8h_source.html">atlas/texture.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="units_8h_source.html">atlas/units.h</a>&quot;</code><br />
+<code>#include &lt;glm/gtc/matrix_transform.hpp&gt;</code><br />
 <code>#include &lt;memory&gt;</code><br />
 <code>#include &lt;tuple&gt;</code><br />
 <code>#include &lt;vector&gt;</code><br />
@@ -145,6 +146,8 @@ Classes</h2></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Structure representing a directional light in a scene. A directional light emits light in a specific direction, simulating sunlight.  <a href="class_directional_light.html#details">More...</a><br /></td></tr>
 <tr class="memitem:Spotlight" id="r_Spotlight"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_spotlight.html">Spotlight</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Structure representing a spotlight in a scene. A spotlight emits light in a specific direction with a cone angle.  <a href="struct_spotlight.html#details">More...</a><br /></td></tr>
+<tr class="memitem:AreaLight" id="r_AreaLight"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_area_light.html">AreaLight</a></td></tr>
+<tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Rectangular area light with controllable emission angle and two-sided emission. The rectangle is defined by its center (position) and two oriented axes (right, up) and size (width, height). The plane normal is normalize(cross(right, up)).  <a href="struct_area_light.html#details">More...</a><br /></td></tr>
 </table>
 </div><!-- contents -->
 </div><!-- doc-content -->

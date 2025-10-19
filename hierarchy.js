@@ -1,6 +1,7 @@
 var hierarchy =
 [
     [ "AmbientLight", "struct_ambient_light.html", null ],
+    [ "AreaLight", "struct_area_light.html", null ],
     [ "AudioData", "class_audio_data.html", null ],
     [ "AudioEffect", "class_audio_effect.html", [
       [ "Distortion", "class_distortion.html", null ],

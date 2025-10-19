@@ -158,6 +158,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a13b298b0c24c92929bf9850012980623"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function that adds a point light to the scene.  <br /></td></tr>
 <tr class="memitem:a0711374dffe3e30acfcddd32c17b0cd7" id="r_a0711374dffe3e30acfcddd32c17b0cd7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0711374dffe3e30acfcddd32c17b0cd7">addSpotlight</a> (<a class="el" href="struct_spotlight.html">Spotlight</a> *light)</td></tr>
 <tr class="memdesc:a0711374dffe3e30acfcddd32c17b0cd7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function that adds a spotlight to the scene.  <br /></td></tr>
+<tr class="memitem:a8444afc5763ff91124559e26ba2192ac" id="r_a8444afc5763ff91124559e26ba2192ac"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8444afc5763ff91124559e26ba2192ac">addAreaLight</a> (<a class="el" href="struct_area_light.html">AreaLight</a> *light)</td></tr>
 <tr class="memitem:acccf622706b4067fd6d313ebf4075f1a" id="r_acccf622706b4067fd6d313ebf4075f1a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#acccf622706b4067fd6d313ebf4075f1a">setSkybox</a> (<a class="el" href="class_skybox.html">Skybox</a> *newSkybox)</td></tr>
 <tr class="memdesc:acccf622706b4067fd6d313ebf4075f1a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the <a class="el" href="class_skybox.html" title="Class that represents a skybox, which is a large cube that surrounds the scene to introduce stunning ...">Skybox</a> object.  <br /></td></tr>
 </table><table class="memberdecls">
@@ -184,16 +185,44 @@ Example</h2>
 <div class="line">     <span class="comment">// Handle mouse movement here</span></div>
 <div class="line">   }</div>
 <div class="line">};</div>
-<div class="ttc" id="aclass_scene_html"><div class="ttname"><a href="class_scene.html">Scene</a></div><div class="ttdoc">Abstract class that represents a 3D scene. It contains all lights and objects that are going to be re...</div><div class="ttdef"><b>Definition</b> <a href="scene_8h_source.html#l00046">scene.h:46</a></div></div>
-<div class="ttc" id="aclass_scene_html_a2936b4b44d5c6ad073e65986a529a9f4"><div class="ttname"><a href="#a2936b4b44d5c6ad073e65986a529a9f4">Scene::update</a></div><div class="ttdeci">virtual void update(Window &amp;window)</div><div class="ttdoc">Function that initializes the scene. This method is called every frame.</div><div class="ttdef"><b>Definition</b> <a href="scene_8h_source.html#l00054">scene.h:54</a></div></div>
-<div class="ttc" id="aclass_scene_html_a553f958a25683445088050a69d3de8e9"><div class="ttname"><a href="#a553f958a25683445088050a69d3de8e9">Scene::Window</a></div><div class="ttdeci">friend class Window</div><div class="ttdef"><b>Definition</b> <a href="scene_8h_source.html#l00194">scene.h:194</a></div></div>
-<div class="ttc" id="aclass_scene_html_a989e70e7dc6a2130ddd134f1285b6301"><div class="ttname"><a href="#a989e70e7dc6a2130ddd134f1285b6301">Scene::onMouseMove</a></div><div class="ttdeci">virtual void onMouseMove(Window &amp;window, Movement2d movement)</div><div class="ttdoc">Function that handles mouse movement events.</div><div class="ttdef"><b>Definition</b> <a href="scene_8h_source.html#l00068">scene.h:68</a></div></div>
+<div class="ttc" id="aclass_scene_html"><div class="ttname"><a href="class_scene.html">Scene</a></div><div class="ttdoc">Abstract class that represents a 3D scene. It contains all lights and objects that are going to be re...</div><div class="ttdef"><b>Definition</b> <a href="scene_8h_source.html#l00047">scene.h:47</a></div></div>
+<div class="ttc" id="aclass_scene_html_a2936b4b44d5c6ad073e65986a529a9f4"><div class="ttname"><a href="#a2936b4b44d5c6ad073e65986a529a9f4">Scene::update</a></div><div class="ttdeci">virtual void update(Window &amp;window)</div><div class="ttdoc">Function that initializes the scene. This method is called every frame.</div><div class="ttdef"><b>Definition</b> <a href="scene_8h_source.html#l00055">scene.h:55</a></div></div>
+<div class="ttc" id="aclass_scene_html_a553f958a25683445088050a69d3de8e9"><div class="ttname"><a href="#a553f958a25683445088050a69d3de8e9">Scene::Window</a></div><div class="ttdeci">friend class Window</div><div class="ttdef"><b>Definition</b> <a href="scene_8h_source.html#l00197">scene.h:197</a></div></div>
+<div class="ttc" id="aclass_scene_html_a989e70e7dc6a2130ddd134f1285b6301"><div class="ttname"><a href="#a989e70e7dc6a2130ddd134f1285b6301">Scene::onMouseMove</a></div><div class="ttdeci">virtual void onMouseMove(Window &amp;window, Movement2d movement)</div><div class="ttdoc">Function that handles mouse movement events.</div><div class="ttdef"><b>Definition</b> <a href="scene_8h_source.html#l00069">scene.h:69</a></div></div>
 <div class="ttc" id="aclass_scene_html_a9d87607c6e6a93d1bfef10ed1cfdc667"><div class="ttname"><a href="#a9d87607c6e6a93d1bfef10ed1cfdc667">Scene::initialize</a></div><div class="ttdeci">virtual void initialize(Window &amp;window)=0</div><div class="ttdoc">Function that initializes the scene. This method is called once by the Window class.</div></div>
 <div class="ttc" id="aclass_window_html"><div class="ttname"><a href="class_window.html">Window</a></div><div class="ttdoc">Structure representing a window in the application. This contains the main interface for interacting ...</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00233">window.h:233</a></div></div>
 <div class="ttc" id="aunits_8h_html_a850e32afea691ea6f3975e6f7cec14d0"><div class="ttname"><a href="units_8h.html#a850e32afea691ea6f3975e6f7cec14d0">Movement2d</a></div><div class="ttdeci">Position2d Movement2d</div><div class="ttdoc">Type alias for 2D movement vectors.</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00295">units.h:295</a></div></div>
 </div><!-- fragment --> 
-<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00046">46</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00047">47</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
+<a id="a8444afc5763ff91124559e26ba2192ac" name="a8444afc5763ff91124559e26ba2192ac"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8444afc5763ff91124559e26ba2192ac">&#9670;&#160;</a></span>addAreaLight()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Scene::addAreaLight </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="struct_area_light.html">AreaLight</a> *</td>          <td class="paramname"><span class="paramname"><em>light</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00157">157</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  157</span>{ areaLights.push_back(light); }</div>
+</div><!-- fragment -->
+</div>
+</div>
 <a id="a20d41770f3040ef7fa818e3df3c63f7b" name="a20d41770f3040ef7fa818e3df3c63f7b"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a20d41770f3040ef7fa818e3df3c63f7b">&#9670;&#160;</a></span>addDirectionalLight()</h2>
 
@@ -226,10 +255,10 @@ Example</h2>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00136">136</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  136</span>                                                      {</div>
-<div class="line"><span class="lineno">  137</span>        directionalLights.push_back(light);</div>
-<div class="line"><span class="lineno">  138</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00137">137</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  137</span>                                                      {</div>
+<div class="line"><span class="lineno">  138</span>        directionalLights.push_back(light);</div>
+<div class="line"><span class="lineno">  139</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -265,8 +294,8 @@ Example</h2>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00147">147</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  147</span>{ pointLights.push_back(light); }</div>
+<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00148">148</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  148</span>{ pointLights.push_back(light); }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -302,8 +331,8 @@ Example</h2>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00155">155</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  155</span>{ spotlights.push_back(light); }</div>
+<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00156">156</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  156</span>{ spotlights.push_back(light); }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -332,8 +361,8 @@ Example</h2>
 
 <p>Returns the manually configured ambient light color. </p>
 
-<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00123">123</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  123</span>{ <span class="keywordflow">return</span> ambientLight.color; }</div>
+<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00124">124</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  124</span>{ <span class="keywordflow">return</span> ambientLight.color; }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -362,8 +391,8 @@ Example</h2>
 
 <p>Returns the manually configured ambient intensity. </p>
 
-<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00128">128</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  128</span>{ <span class="keywordflow">return</span> ambientLight.intensity; }</div>
+<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00129">129</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  129</span>{ <span class="keywordflow">return</span> ambientLight.intensity; }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -392,8 +421,8 @@ Example</h2>
 
 <p>Gets the ambient color computed from the skybox when automatic ambient is active. </p>
 
-<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00110">110</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  110</span>{ <span class="keywordflow">return</span> automaticAmbientColor; }</div>
+<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00111">111</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  111</span>{ <span class="keywordflow">return</span> automaticAmbientColor; }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -422,10 +451,10 @@ Example</h2>
 
 <p>Gets the intensity derived from the skybox when automatic ambient is active. </p>
 
-<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00116">116</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  116</span>                                               {</div>
-<div class="line"><span class="lineno">  117</span>        <span class="keywordflow">return</span> automaticAmbientIntensity;</div>
-<div class="line"><span class="lineno">  118</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00117">117</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  117</span>                                               {</div>
+<div class="line"><span class="lineno">  118</span>        <span class="keywordflow">return</span> automaticAmbientIntensity;</div>
+<div class="line"><span class="lineno">  119</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -460,7 +489,7 @@ Example</h2>
   </dd>
 </dl>
 
-<p class="reference">References <a class="el" href="scene_8h_source.html#l00194">Window</a>.</p>
+<p class="reference">References <a class="el" href="scene_8h_source.html#l00197">Window</a>.</p>
 
 </div>
 </div>
@@ -489,8 +518,8 @@ Example</h2>
 
 <p>Returns whether automatic ambient sampling is enabled. </p>
 
-<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00104">104</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  104</span>{ <span class="keywordflow">return</span> automaticAmbient; }</div>
+<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00105">105</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  105</span>{ <span class="keywordflow">return</span> automaticAmbient; }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -530,10 +559,10 @@ Example</h2>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00068">68</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   68</span>{}</div>
+<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00069">69</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   69</span>{}</div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="scene_8h_source.html#l00194">Window</a>.</p>
+<p class="reference">References <a class="el" href="scene_8h_source.html#l00197">Window</a>.</p>
 
 </div>
 </div>
@@ -573,10 +602,10 @@ Example</h2>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00075">75</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   75</span>{}</div>
+<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00076">76</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   76</span>{}</div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="scene_8h_source.html#l00194">Window</a>.</p>
+<p class="reference">References <a class="el" href="scene_8h_source.html#l00197">Window</a>.</p>
 
 </div>
 </div>
@@ -611,13 +640,13 @@ Example</h2>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00083">83</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   83</span>                                              {</div>
-<div class="line"><span class="lineno">   84</span>        this-&gt;ambientLight.intensity = intensity / 4;</div>
-<div class="line"><span class="lineno">   85</span>        <span class="keywordflow">if</span> (automaticAmbient) {</div>
-<div class="line"><span class="lineno">   86</span>            updateAutomaticAmbientFromSkybox();</div>
-<div class="line"><span class="lineno">   87</span>        }</div>
-<div class="line"><span class="lineno">   88</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00084">84</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   84</span>                                              {</div>
+<div class="line"><span class="lineno">   85</span>        this-&gt;ambientLight.intensity = intensity / 4;</div>
+<div class="line"><span class="lineno">   86</span>        <span class="keywordflow">if</span> (automaticAmbient) {</div>
+<div class="line"><span class="lineno">   87</span>            updateAutomaticAmbientFromSkybox();</div>
+<div class="line"><span class="lineno">   88</span>        }</div>
+<div class="line"><span class="lineno">   89</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -646,13 +675,13 @@ Example</h2>
 
 <p>Enables or disables automatic ambient coloring derived from the scene's skybox. </p>
 
-<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00094">94</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   94</span>                                           {</div>
-<div class="line"><span class="lineno">   95</span>        automaticAmbient = enabled;</div>
-<div class="line"><span class="lineno">   96</span>        <span class="keywordflow">if</span> (automaticAmbient) {</div>
-<div class="line"><span class="lineno">   97</span>            updateAutomaticAmbientFromSkybox();</div>
-<div class="line"><span class="lineno">   98</span>        }</div>
-<div class="line"><span class="lineno">   99</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00095">95</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   95</span>                                           {</div>
+<div class="line"><span class="lineno">   96</span>        automaticAmbient = enabled;</div>
+<div class="line"><span class="lineno">   97</span>        <span class="keywordflow">if</span> (automaticAmbient) {</div>
+<div class="line"><span class="lineno">   98</span>            updateAutomaticAmbientFromSkybox();</div>
+<div class="line"><span class="lineno">   99</span>        }</div>
+<div class="line"><span class="lineno">  100</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -687,13 +716,13 @@ Example</h2>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00162">162</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  162</span>                                      {</div>
-<div class="line"><span class="lineno">  163</span>        skybox = newSkybox;</div>
-<div class="line"><span class="lineno">  164</span>        <span class="keywordflow">if</span> (automaticAmbient) {</div>
-<div class="line"><span class="lineno">  165</span>            updateAutomaticAmbientFromSkybox();</div>
-<div class="line"><span class="lineno">  166</span>        }</div>
-<div class="line"><span class="lineno">  167</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00164">164</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  164</span>                                      {</div>
+<div class="line"><span class="lineno">  165</span>        skybox = newSkybox;</div>
+<div class="line"><span class="lineno">  166</span>        <span class="keywordflow">if</span> (automaticAmbient) {</div>
+<div class="line"><span class="lineno">  167</span>            updateAutomaticAmbientFromSkybox();</div>
+<div class="line"><span class="lineno">  168</span>        }</div>
+<div class="line"><span class="lineno">  169</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -728,10 +757,10 @@ Example</h2>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00054">54</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   54</span>{};</div>
+<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00055">55</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   55</span>{};</div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="scene_8h_source.html#l00194">Window</a>.</p>
+<p class="reference">References <a class="el" href="scene_8h_source.html#l00197">Window</a>.</p>
 
 </div>
 </div>
@@ -756,9 +785,9 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00193">193</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00196">196</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
 
-<p class="reference">References <a class="el" href="scene_8h_source.html#l00193">CoreObject</a>.</p>
+<p class="reference">References <a class="el" href="scene_8h_source.html#l00196">CoreObject</a>.</p>
 
 </div>
 </div>
@@ -782,9 +811,9 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00195">195</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00198">198</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
 
-<p class="reference">References <a class="el" href="scene_8h_source.html#l00195">Terrain</a>.</p>
+<p class="reference">References <a class="el" href="scene_8h_source.html#l00198">Terrain</a>.</p>
 
 </div>
 </div>
@@ -808,9 +837,9 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00194">194</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00197">197</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
 
-<p class="reference">References <a class="el" href="scene_8h_source.html#l00194">Window</a>.</p>
+<p class="reference">References <a class="el" href="scene_8h_source.html#l00197">Window</a>.</p>
 
 </div>
 </div>

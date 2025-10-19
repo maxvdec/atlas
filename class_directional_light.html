@@ -167,11 +167,11 @@ Example</h2>
 <div class="line">dirLight.castShadows(window);</div>
 <div class="line"><span class="comment">// Add the light to the scene</span></div>
 <div class="line">this-&gt;addDirectionalLight(&amp;dirLight);</div>
-<div class="ttc" id="aclass_directional_light_html_a05bb433ce668e35039e3caa41e8f656f"><div class="ttname"><a href="#a05bb433ce668e35039e3caa41e8f656f">DirectionalLight::DirectionalLight</a></div><div class="ttdeci">DirectionalLight(const Magnitude3d &amp;dir={0.0f, -1.0f, 0.0f}, const Color &amp;color=Color::white(), const Color &amp;shineColor=Color::white())</div><div class="ttdoc">Function that constructs a new DirectionalLight object.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00255">light.h:255</a></div></div>
+<div class="ttc" id="aclass_directional_light_html_a05bb433ce668e35039e3caa41e8f656f"><div class="ttname"><a href="#a05bb433ce668e35039e3caa41e8f656f">DirectionalLight::DirectionalLight</a></div><div class="ttdeci">DirectionalLight(const Magnitude3d &amp;dir={0.0f, -1.0f, 0.0f}, const Color &amp;color=Color::white(), const Color &amp;shineColor=Color::white())</div><div class="ttdoc">Function that constructs a new DirectionalLight object.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00256">light.h:256</a></div></div>
 <div class="ttc" id="ashader_8h_html_aed7a1c7a5976e4adb712d0a231dada82acb5feb1b7314637725a2e73bdc9f7295"><div class="ttname"><a href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82acb5feb1b7314637725a2e73bdc9f7295">AtlasVertexShader::Color</a></div><div class="ttdeci">@ Color</div><div class="ttdoc">Vertex shader for rendering solid colors.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00040">shader.h:40</a></div></div>
 <div class="ttc" id="astruct_color_html_aad4699ae003d7a86b5edc5fccdbaf4c8"><div class="ttname"><a href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a></div><div class="ttdeci">static Color white()</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00206">units.h:206</a></div></div>
 </div><!-- fragment --> 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00227">227</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00228">228</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a05bb433ce668e35039e3caa41e8f656f" name="a05bb433ce668e35039e3caa41e8f656f"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a05bb433ce668e35039e3caa41e8f656f">&#9670;&#160;</a></span>DirectionalLight()</h2>
@@ -215,14 +215,14 @@ Example</h2>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00255">255</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  255</span>                                              {0.0f, -1.0f, 0.0f},</div>
-<div class="line"><span class="lineno">  256</span>                     <span class="keyword">const</span> <a class="code hl_enumvalue" href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82acb5feb1b7314637725a2e73bdc9f7295">Color</a> &amp;<a class="code hl_variable" href="#a5985579184d28736d2f528c583f61894">color</a> = <a class="code hl_function" href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a>(),</div>
-<div class="line"><span class="lineno">  257</span>                     <span class="keyword">const</span> <a class="code hl_enumvalue" href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82acb5feb1b7314637725a2e73bdc9f7295">Color</a> &amp;<a class="code hl_variable" href="#ab92a53d0086143e69fcd9bb431ba20cc">shineColor</a> = <a class="code hl_function" href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a>())</div>
-<div class="line"><span class="lineno">  258</span>        : <a class="code hl_variable" href="#a67096230489c50468d6c081a7c894d99">direction</a>(dir.normalized()), <a class="code hl_variable" href="#a5985579184d28736d2f528c583f61894">color</a>(<a class="code hl_variable" href="#a5985579184d28736d2f528c583f61894">color</a>), <a class="code hl_variable" href="#ab92a53d0086143e69fcd9bb431ba20cc">shineColor</a>(<a class="code hl_variable" href="#ab92a53d0086143e69fcd9bb431ba20cc">shineColor</a>) {}</div>
-<div class="ttc" id="aclass_directional_light_html_a5985579184d28736d2f528c583f61894"><div class="ttname"><a href="#a5985579184d28736d2f528c583f61894">DirectionalLight::color</a></div><div class="ttdeci">Color color</div><div class="ttdoc">The color of the light.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00240">light.h:240</a></div></div>
-<div class="ttc" id="aclass_directional_light_html_a67096230489c50468d6c081a7c894d99"><div class="ttname"><a href="#a67096230489c50468d6c081a7c894d99">DirectionalLight::direction</a></div><div class="ttdeci">Magnitude3d direction</div><div class="ttdoc">The direction in which the light is pointing. This should be a normalized vector.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00234">light.h:234</a></div></div>
-<div class="ttc" id="aclass_directional_light_html_ab92a53d0086143e69fcd9bb431ba20cc"><div class="ttname"><a href="#ab92a53d0086143e69fcd9bb431ba20cc">DirectionalLight::shineColor</a></div><div class="ttdeci">Color shineColor</div><div class="ttdoc">The color that the light will use for specular highlights.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00245">light.h:245</a></div></div>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00256">256</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  256</span>                                              {0.0f, -1.0f, 0.0f},</div>
+<div class="line"><span class="lineno">  257</span>                     <span class="keyword">const</span> <a class="code hl_enumvalue" href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82acb5feb1b7314637725a2e73bdc9f7295">Color</a> &amp;<a class="code hl_variable" href="#a5985579184d28736d2f528c583f61894">color</a> = <a class="code hl_function" href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a>(),</div>
+<div class="line"><span class="lineno">  258</span>                     <span class="keyword">const</span> <a class="code hl_enumvalue" href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82acb5feb1b7314637725a2e73bdc9f7295">Color</a> &amp;<a class="code hl_variable" href="#ab92a53d0086143e69fcd9bb431ba20cc">shineColor</a> = <a class="code hl_function" href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a>())</div>
+<div class="line"><span class="lineno">  259</span>        : <a class="code hl_variable" href="#a67096230489c50468d6c081a7c894d99">direction</a>(dir.normalized()), <a class="code hl_variable" href="#a5985579184d28736d2f528c583f61894">color</a>(<a class="code hl_variable" href="#a5985579184d28736d2f528c583f61894">color</a>), <a class="code hl_variable" href="#ab92a53d0086143e69fcd9bb431ba20cc">shineColor</a>(<a class="code hl_variable" href="#ab92a53d0086143e69fcd9bb431ba20cc">shineColor</a>) {}</div>
+<div class="ttc" id="aclass_directional_light_html_a5985579184d28736d2f528c583f61894"><div class="ttname"><a href="#a5985579184d28736d2f528c583f61894">DirectionalLight::color</a></div><div class="ttdeci">Color color</div><div class="ttdoc">The color of the light.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00241">light.h:241</a></div></div>
+<div class="ttc" id="aclass_directional_light_html_a67096230489c50468d6c081a7c894d99"><div class="ttname"><a href="#a67096230489c50468d6c081a7c894d99">DirectionalLight::direction</a></div><div class="ttdeci">Magnitude3d direction</div><div class="ttdoc">The direction in which the light is pointing. This should be a normalized vector.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00235">light.h:235</a></div></div>
+<div class="ttc" id="aclass_directional_light_html_ab92a53d0086143e69fcd9bb431ba20cc"><div class="ttname"><a href="#ab92a53d0086143e69fcd9bb431ba20cc">DirectionalLight::shineColor</a></div><div class="ttdeci">Color shineColor</div><div class="ttdoc">The color that the light will use for specular highlights.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00246">light.h:246</a></div></div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -255,7 +255,7 @@ Example</h2>
   </dd>
 </dl>
 
-<p class="reference">References <a class="el" href="light_8h_source.html#l00287">Window</a>.</p>
+<p class="reference">References <a class="el" href="light_8h_source.html#l00288">Window</a>.</p>
 
 </div>
 </div>
@@ -282,7 +282,7 @@ Example</h2>
   </dd>
 </dl>
 
-<p class="reference">References <a class="el" href="light_8h_source.html#l00240">color</a>.</p>
+<p class="reference">References <a class="el" href="light_8h_source.html#l00241">color</a>.</p>
 
 </div>
 </div>
@@ -307,9 +307,9 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00288">288</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00289">289</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 
-<p class="reference">References <a class="el" href="light_8h_source.html#l00288">CoreObject</a>.</p>
+<p class="reference">References <a class="el" href="light_8h_source.html#l00289">CoreObject</a>.</p>
 
 </div>
 </div>
@@ -333,9 +333,9 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00289">289</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00290">290</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 
-<p class="reference">References <a class="el" href="light_8h_source.html#l00289">Terrain</a>, and <a class="el" href="light_8h_source.html#l00287">Window</a>.</p>
+<p class="reference">References <a class="el" href="light_8h_source.html#l00290">Terrain</a>, and <a class="el" href="light_8h_source.html#l00288">Window</a>.</p>
 
 </div>
 </div>
@@ -359,9 +359,9 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00287">287</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00288">288</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 
-<p class="reference">References <a class="el" href="light_8h_source.html#l00287">Window</a>.</p>
+<p class="reference">References <a class="el" href="light_8h_source.html#l00288">Window</a>.</p>
 
 </div>
 </div>
@@ -380,7 +380,7 @@ Example</h2>
 
 <p>The color of the light. </p>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00240">240</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00241">241</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 
 </div>
 </div>
@@ -398,7 +398,7 @@ Example</h2>
 
 <p>The direction in which the light is pointing. This should be a normalized vector. </p>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00234">234</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00235">235</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 
 </div>
 </div>
@@ -416,7 +416,7 @@ Example</h2>
 
 <p>Object that holds the render target for shadow mapping. </p>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00271">271</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00272">272</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 
 </div>
 </div>
@@ -434,7 +434,7 @@ Example</h2>
 
 <p>The color that the light will use for specular highlights. </p>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00245">245</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00246">246</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 
 </div>
 </div>

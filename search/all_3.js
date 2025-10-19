@@ -5,7 +5,7 @@ var searchData=
   ['debug_2',['Debug',['../shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82aa603905470e2a5b8c13e96b579ef0dba',1,'Debug:&#160;shader.h'],['../shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0aa603905470e2a5b8c13e96b579ef0dba',1,'Debug:&#160;shader.h']]],
   ['debug_5ffrag_3',['DEBUG_FRAG',['../default__shaders_8h.html#ab61110f9533f7aaccfce61ce7b25da9b',1,'default_shaders.h']]],
   ['debug_5fvert_4',['DEBUG_VERT',['../default__shaders_8h.html#a8aa02451898eb17af41dbd2d3b424679',1,'default_shaders.h']]],
-  ['debugobject_5',['debugObject',['../struct_light.html#abe9a65b82bf6e067618ba7713582f2ed',1,'Light::debugObject'],['../struct_spotlight.html#aa485c4de548e3ad947834a566a4d3ebd',1,'Spotlight::debugObject']]],
+  ['debugobject_5',['debugObject',['../struct_light.html#abe9a65b82bf6e067618ba7713582f2ed',1,'Light::debugObject'],['../struct_spotlight.html#aa485c4de548e3ad947834a566a4d3ebd',1,'Spotlight::debugObject'],['../struct_area_light.html#a92d06c9d0e09b36c7bcf59ded1da534b',1,'AreaLight::debugObject']]],
   ['decorations_6',['decorations',['../struct_window_configuration.html#ab902bc7df9c88513f7917504b2531052',1,'WindowConfiguration']]],
   ['default_5faspect_5fratio_7',['DEFAULT_ASPECT_RATIO',['../window_8h.html#a29965d0c4680dc604a0214d5990a72f1',1,'window.h']]],
   ['default_5ffrag_5fshader_8',['DEFAULT_FRAG_SHADER',['../shader_8h.html#ae3dc3c5c789f2407bf2e7c2799bec14e',1,'shader.h']]],

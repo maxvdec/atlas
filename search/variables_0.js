@@ -5,11 +5,12 @@ var searchData=
   ['advance_2',['advance',['../struct_character.html#a782c09f2ac5412664ef5127882891568',1,'Character']]],
   ['albedo_3',['albedo',['../struct_material.html#aa61df35ac281fa40c0745235494d4b19',1,'Material']]],
   ['alwaysontop_4',['alwaysOnTop',['../struct_window_configuration.html#a097dc5b5aee3944a617487530393dd11',1,'WindowConfiguration']]],
-  ['angularvelocity_5',['angularVelocity',['../class_body.html#a6f9bd0b59a4f9d8099079d3ff07b37b0',1,'Body']]],
-  ['ao_6',['ao',['../struct_material.html#a0946dbf03359dc3cd8d32910045dc5d4',1,'Material']]],
-  ['aspectratiox_7',['aspectRatioX',['../struct_window_configuration.html#a45697805b5409de3b3ba16f8fd63e347',1,'WindowConfiguration']]],
-  ['aspectratioy_8',['aspectRatioY',['../struct_window_configuration.html#a4d9ab6af44609b23217808963ca0c1f5',1,'WindowConfiguration']]],
-  ['atlas_9',['atlas',['../struct_font.html#a55ce744ba518079323089dccdb0a3bdd',1,'Font']]],
-  ['audioengine_10',['audioEngine',['../class_window.html#a2133e2bb4562bcc491d091a640dcae88',1,'Window']]],
-  ['averagecolor_11',['averageColor',['../struct_cubemap.html#a50b2c6343093573ff1a058918f63f514',1,'Cubemap']]]
+  ['angle_5',['angle',['../struct_area_light.html#a55e92eab392d1c273a3172b24ba8fe07',1,'AreaLight']]],
+  ['angularvelocity_6',['angularVelocity',['../class_body.html#a6f9bd0b59a4f9d8099079d3ff07b37b0',1,'Body']]],
+  ['ao_7',['ao',['../struct_material.html#a0946dbf03359dc3cd8d32910045dc5d4',1,'Material']]],
+  ['aspectratiox_8',['aspectRatioX',['../struct_window_configuration.html#a45697805b5409de3b3ba16f8fd63e347',1,'WindowConfiguration']]],
+  ['aspectratioy_9',['aspectRatioY',['../struct_window_configuration.html#a4d9ab6af44609b23217808963ca0c1f5',1,'WindowConfiguration']]],
+  ['atlas_10',['atlas',['../struct_font.html#a55ce744ba518079323089dccdb0a3bdd',1,'Font']]],
+  ['audioengine_11',['audioEngine',['../class_window.html#a2133e2bb4562bcc491d091a640dcae88',1,'Window']]],
+  ['averagecolor_12',['averageColor',['../struct_cubemap.html#a50b2c6343093573ff1a058918f63f514',1,'Cubemap']]]
 ];

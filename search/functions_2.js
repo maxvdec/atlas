@@ -31,7 +31,7 @@ var searchData=
   ['createbox_28',['createBox',['../object_8h.html#af13bfa64d174c4166ed96e81d666f433',1,'object.h']]],
   ['createcheckerboard_29',['createCheckerboard',['../struct_texture.html#a99403f282f676041e01bf76216c62288',1,'Texture']]],
   ['createdebugbox_30',['createDebugBox',['../object_8h.html#a1438b4e812210046ec08146589d0df10',1,'object.h']]],
-  ['createdebugobject_31',['createDebugObject',['../struct_light.html#a95f4aa1289870145405765743e00645b',1,'Light::createDebugObject()'],['../struct_spotlight.html#a16acf8b80a179a48c711105292c80721',1,'Spotlight::createDebugObject()']]],
+  ['createdebugobject_31',['createDebugObject',['../struct_light.html#a95f4aa1289870145405765743e00645b',1,'Light::createDebugObject()'],['../struct_spotlight.html#a16acf8b80a179a48c711105292c80721',1,'Spotlight::createDebugObject()'],['../struct_area_light.html#afda077c24397d643aa6a2972a28caba2',1,'AreaLight::createDebugObject()']]],
   ['createdebugplane_32',['createDebugPlane',['../object_8h.html#a19d2c24fcd7737ae62f7f7de0c0c8802',1,'object.h']]],
   ['createdebugsphere_33',['createDebugSphere',['../object_8h.html#a489ccddca865b97fafa117e23b4d0f1c',1,'object.h']]],
   ['createdoublecheckerboard_34',['createDoubleCheckerboard',['../struct_texture.html#a7ed0da17f706d1d687f753193558527f',1,'Texture']]],

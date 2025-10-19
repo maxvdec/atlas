@@ -2,7 +2,7 @@ var searchData=
 [
   ['debug_5ffrag_0',['DEBUG_FRAG',['../default__shaders_8h.html#ab61110f9533f7aaccfce61ce7b25da9b',1,'default_shaders.h']]],
   ['debug_5fvert_1',['DEBUG_VERT',['../default__shaders_8h.html#a8aa02451898eb17af41dbd2d3b424679',1,'default_shaders.h']]],
-  ['debugobject_2',['debugObject',['../struct_light.html#abe9a65b82bf6e067618ba7713582f2ed',1,'Light::debugObject'],['../struct_spotlight.html#aa485c4de548e3ad947834a566a4d3ebd',1,'Spotlight::debugObject']]],
+  ['debugobject_2',['debugObject',['../struct_light.html#abe9a65b82bf6e067618ba7713582f2ed',1,'Light::debugObject'],['../struct_spotlight.html#aa485c4de548e3ad947834a566a4d3ebd',1,'Spotlight::debugObject'],['../struct_area_light.html#a92d06c9d0e09b36c7bcf59ded1da534b',1,'AreaLight::debugObject']]],
   ['decorations_3',['decorations',['../struct_window_configuration.html#ab902bc7df9c88513f7917504b2531052',1,'WindowConfiguration']]],
   ['default_5faspect_5fratio_4',['DEFAULT_ASPECT_RATIO',['../window_8h.html#a29965d0c4680dc604a0214d5990a72f1',1,'window.h']]],
   ['deferred_5ffrag_5',['DEFERRED_FRAG',['../default__shaders_8h.html#a3b9ee65bbed780cf1716fe8e098cdd27',1,'default_shaders.h']]],

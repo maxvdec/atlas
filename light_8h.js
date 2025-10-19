@@ -5,5 +5,6 @@ var light_8h =
     [ "ShadowParams", "struct_shadow_params.html", "struct_shadow_params" ],
     [ "Light", "struct_light.html", "struct_light" ],
     [ "DirectionalLight", "class_directional_light.html", "class_directional_light" ],
-    [ "Spotlight", "struct_spotlight.html", "struct_spotlight" ]
+    [ "Spotlight", "struct_spotlight.html", "struct_spotlight" ],
+    [ "AreaLight", "struct_area_light.html", "struct_area_light" ]
 ];
