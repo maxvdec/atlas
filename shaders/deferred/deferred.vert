@@ -19,22 +19,25 @@ out vec3 FragPos;
 out mat3 TBN;
 
 void main() {
-    mat4 modelMatrix = model;
+    mat4 finalModel;
     if (isInstanced) {
-        modelMatrix = instanceModel;
+        finalModel = instanceModel;
+    } else {
+        finalModel = model;
     }
 
-    mat4 mvp = projection * view * modelMatrix;
-    gl_Position = mvp * vec4(aPos, 1.0);
+    vec4 worldPos = finalModel * vec4(aPos, 1.0);
+    FragPos = worldPos.xyz;
+    gl_Position = projection * view * worldPos;
 
-    FragPos = vec3(modelMatrix * vec4(aPos, 1.0));
     TexCoord = aTexCoord;
     outColor = aColor;
 
-    mat3 normalMatrix = transpose(inverse(mat3(modelMatrix)));
+    mat3 normalMatrix = mat3(transpose(inverse(finalModel)));
     Normal = normalize(normalMatrix * aNormal);
-    vec3 N = Normal;
+
     vec3 T = normalize(normalMatrix * aTangent);
     vec3 B = normalize(normalMatrix * aBitangent);
+    vec3 N = normalize(normalMatrix * aNormal);
     TBN = mat3(T, B, N);
 }

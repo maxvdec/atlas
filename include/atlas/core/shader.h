@@ -88,6 +88,7 @@ enum class AtlasVertexShader {
      *
      */
     Deferred,
+    Terrain,
 };
 
 /**
@@ -136,7 +137,7 @@ enum class ShaderCapability {
      * with a single draw call).
      *
      */
-    Instances
+    Instances,
 };
 
 /**
@@ -283,6 +284,7 @@ enum class AtlasFragmentShader {
      *
      */
     SSAOBlur,
+    Terrain
 };
 
 /**
@@ -388,6 +390,58 @@ struct GeometryShader {
     Id shaderId;
 };
 
+enum class AtlasTessellationShader {
+    TerrainControl,
+    TerrainEvaluation,
+    TerrainPrimitive
+};
+
+enum class TessellationShaderType { Control, Evaluation, Primitive };
+
+class TessellationShader {
+  public:
+    /**
+     * @brief The source code of the tessellation shader.
+     *
+     */
+    const char *source;
+
+    /**
+     * @brief The type of the tessellation shader.
+     *
+     */
+    TessellationShaderType type;
+
+    /**
+     * @brief Creates a TessellationShader from a default shader.
+     *
+     * @param shader The type of default shader to create.
+     * @return The created TessellationShader instance.
+     */
+    static TessellationShader fromDefaultShader(AtlasTessellationShader shader);
+
+    /**
+     * @brief Creates a TessellationShader from custom source code.
+     *
+     * @param source The source code that the shader will contain.
+     * @return The created TessellationShader instance.
+     */
+    static TessellationShader fromSource(const char *source,
+                                         TessellationShaderType type);
+
+    /**
+     * @brief Function to compile the tessellation shader.
+     *
+     */
+    void compile();
+
+    /**
+     * @brief The OpenGL ID of the compiled shader.
+     *
+     */
+    Id shaderId;
+};
+
 /**
  * @brief Structure representing a layout descriptor for vertex attributes.
  *
@@ -449,6 +503,13 @@ struct ShaderProgram {
     GeometryShader geometryShader;
 
     /**
+     * @brief The tessellation shader component of the shader program
+     * (optional).
+     *
+     */
+    std::vector<TessellationShader> tessellationShaders;
+
+    /**
      * @brief Static cache of compiled shader programs to avoid recompilation.
      *
      */
@@ -478,8 +539,10 @@ struct ShaderProgram {
      * @param fShader The type of default fragment shader to use.
      * @return The created ShaderProgram instance.
      */
-    static ShaderProgram fromDefaultShaders(AtlasVertexShader vShader,
-                                            AtlasFragmentShader fShader);
+    static ShaderProgram
+    fromDefaultShaders(AtlasVertexShader vShader, AtlasFragmentShader fShader,
+                       GeometryShader gShader = GeometryShader(),
+                       std::vector<TessellationShader> tShaders = {});
 
     /**
      * @brief The OpenGL ID of the linked shader program.
