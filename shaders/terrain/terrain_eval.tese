@@ -6,6 +6,9 @@ uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 uniform mat4 lightViewProj = mat4(1.0);
+uniform float maxPeak = 48.0;
+uniform float seaLevel = 16.0;
+uniform bool isFromMap = false;
 
 in vec2 TextureCoord[];
 
@@ -27,7 +30,7 @@ void main() {
     vec2 t1 = (t11 - t10) * u + t10;
     vec2 texCoord = (t1 - t0) * v + t0;
 
-    Height = -texture(heightMap, texCoord).r * 64.0 - 16.0;
+    Height = texture(heightMap, texCoord).r * maxPeak - seaLevel;
 
     vec4 p00 = gl_in[0].gl_Position;
     vec4 p01 = gl_in[1].gl_Position;
@@ -38,7 +41,11 @@ void main() {
     vec4 p1 = (p11 - p10) * u + p10;
     vec4 position = (p1 - p0) * v + p0;
 
-    position.y += Height;
+    if (isFromMap) {
+        position.y -= Height;
+    } else {
+        position.y += Height;
+    }
 
     gl_Position = projection * view * model * position;
 

@@ -6,6 +6,7 @@
 // Description: Terrain functions implementation
 // Copyright (c) 2025 Max Van den Eynde
 //
+#include <cstdint>
 #include <glad/glad.h>
 #include "atlas/camera.h"
 #include "atlas/core/shader.h"
@@ -39,17 +40,43 @@ void Terrain::initialize() {
                                   GeometryShader(), {tescShader, teseShader});
     terrainShader.compile();
 
-    if (heightmap.type != ResourceType::Image) {
-        throw std::runtime_error("Heightmap resource is not an image");
-    }
-
     int width, height, nChannels;
-    stbi_set_flip_vertically_on_load(false);
-    unsigned char *data = stbi_load(heightmap.path.string().c_str(), &width,
-                                    &height, &nChannels, 0);
-    if (data == nullptr) {
-        std::cerr << "Failed to load heightmap!" << std::endl;
-        return;
+    unsigned char *data = nullptr;
+    std::vector<uint8_t> heightData = {};
+    if (this->heightmap.name != "" && generator == nullptr) {
+        if (heightmap.type != ResourceType::Image) {
+            throw std::runtime_error("Heightmap resource is not an image");
+        }
+
+        stbi_set_flip_vertically_on_load(false);
+        data = stbi_load(heightmap.path.string().c_str(), &width, &height,
+                         &nChannels, 0);
+        if (data == nullptr) {
+            std::cerr << "Failed to load heightmap!" << std::endl;
+            return;
+        }
+    } else if (generator != nullptr) {
+        width = this->width;
+        height = this->height;
+        heightData.resize(width * height * 4);
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                float heightValue = generator->generateHeight(x, y);
+                uint8_t heightByte = static_cast<uint8_t>(
+                    glm::clamp(heightValue * 255.f, 0.0f, 255.0f));
+
+                int index = (y * width + x) * 4;
+                heightData[index + 0] = heightByte; // R
+                heightData[index + 1] = heightByte; // G
+                heightData[index + 2] = heightByte; // B
+                heightData[index + 3] = 255;        // A
+            }
+        }
+        data = heightData.data();
+        nChannels = 4;
+    } else {
+        throw std::runtime_error(
+            "No heightmap resource or terrain generator provided");
     }
 
     this->generateBiomes(data, height, width, nChannels);
@@ -102,7 +129,11 @@ void Terrain::initialize() {
         }
     }
 
-    stbi_image_free(data);
+    if (generator == nullptr) {
+        stbi_image_free(data);
+    } else {
+        data = nullptr;
+    }
 
     glGenVertexArrays(1, &this->vao);
     glBindVertexArray(this->vao);
@@ -141,12 +172,13 @@ void Terrain::render(float dt) {
     terrainShader.setUniformMat4f("view", view);
     terrainShader.setUniformMat4f("projection", projection);
 
+    terrainShader.setUniform1f("maxPeak", maxPeak);
+    terrainShader.setUniform1f("seaLevel", seaLevel);
+    terrainShader.setUniform1i("isFromMap", heightmap.name != "" ? 1 : 0);
+
     terrainShader.setUniform1i("heightMap", 0);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, terrainTexture.id);
-    // terrainShader.setUniform1i("biomesMap", 1);
-    // glActiveTexture(GL_TEXTURE1);
-    // glBindTexture(GL_TEXTURE_2D, biomesTexture.id);
     terrainShader.setUniform1i("moistureMap", 1);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, moistureMapTexture.id);

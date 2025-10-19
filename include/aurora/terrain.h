@@ -16,8 +16,10 @@
 #include "atlas/texture.h"
 #include "atlas/units.h"
 #include "atlas/workspace.h"
+#include "aurora/procedural.h"
 #include <cstdint>
 #include <functional>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -62,6 +64,10 @@ class Terrain : public GameObject {
     Resource heightmap;
     Texture moistureTexture;
     Texture temperatureTexture;
+    std::shared_ptr<TerrainGenerator> generator;
+
+    int width = 0;
+    int height = 0;
 
     void render(float dt) override;
     void initialize() override;
@@ -77,6 +83,11 @@ class Terrain : public GameObject {
     void addBiome(const Biome &biome) { this->biomes.push_back(biome); };
 
     Terrain(Resource heightmapResource) : heightmap(heightmapResource) {};
+    template <typename T>
+        requires std::is_base_of<TerrainGenerator, T>::value
+    Terrain(T generator, int width = 512, int height = 512)
+        : generator(std::make_shared<T>(generator)), width(width),
+          height(height){};
     Terrain() = default;
 
     unsigned int resolution = 20;
@@ -116,6 +127,9 @@ class Terrain : public GameObject {
         this->rotation.yaw += deltaRotation.yaw;
         this->rotation.roll += deltaRotation.roll;
     };
+
+    float maxPeak = 48.f;
+    float seaLevel = 16.f;
 
   private:
     BufferIndex vao = 0;

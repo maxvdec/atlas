@@ -9,6 +9,7 @@
 #include "atlas/workspace.h"
 #include "atlas/component.h"
 #include "atlas/audio.h"
+#include "aurora/procedural.h"
 #include "aurora/terrain.h"
 #include <iostream>
 #include <memory>
@@ -195,21 +196,30 @@ class MainScene : public Scene {
         Resource heightmapResource = Workspace::get().createResource(
             "terrain/heightmap.png", "Heightmap", ResourceType::Image);
 
-        terrain = Terrain(heightmapResource);
+        CompoundGenerator compoundGen;
+        compoundGen.addGenerator(MountainGenerator(0.01f, 1.f, 5, 0.5f));
+
+        terrain = Terrain(compoundGen, 512, 512);
         terrain.move({20.f, 0.0, 0.0});
         Biome grasslandBiome =
             Biome("Grassland", Color(0.1f, 0.8f, 0.1f, 1.0f));
         grasslandBiome.condition = [](Biome &biome) {
-            biome.maxHeight = 128.0f;
+            biome.maxHeight = 10.0f;
         };
         terrain.addBiome(grasslandBiome);
 
         Biome mountainBiome = Biome("Mountain", Color(0.5f, 0.5f, 0.5f, 1.0f));
         mountainBiome.condition = [](Biome &biome) {
-            biome.minHeight = 128.0f;
+            biome.minHeight = 10.0f;
+            biome.maxHeight = 150.0f;
         };
         terrain.addBiome(mountainBiome);
+
+        Biome snowBiome = Biome("Snow", Color(4.0f, 4.0f, 4.0f, 4.0f));
+        snowBiome.condition = [](Biome &biome) { biome.minHeight = 150.0f; };
+        terrain.addBiome(snowBiome);
         terrain.resolution = 100;
+        terrain.maxPeak = 20.f;
         window.addObject(&terrain);
 
         light = DirectionalLight({-0.3f, -1.0f, -1.0f}, Color::white());

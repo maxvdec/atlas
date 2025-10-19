@@ -2076,6 +2076,10 @@ uniform sampler2D texture9;
 uniform sampler2D texture10;
 uniform sampler2D texture11;
 
+uniform float maxPeak;
+uniform float seaLevel;
+uniform bool isFromMap;
+
 uniform vec4 directionalColor;
 uniform float directionalIntensity;
 
@@ -2143,11 +2147,9 @@ vec3 calculateNormal(sampler2D heightMap, vec2 texCoord, float heightScale)
 {
     float h = texture(heightMap, texCoord).r * heightScale;
 
-    // Derivatives in texture coordinate space
     float dx = dFdx(h);
     float dy = dFdy(h);
 
-    // Reconstruct normal from height derivatives
     vec3 n = normalize(vec3(-dx, 1.0, -dy));
     return n;
 }
@@ -2187,11 +2189,11 @@ vec3 acesToneMapping(vec3 color) {
 
 void main() {
     if (biomesCount <= 0) {
-        FragColor = vec4(vec3((Height + 16.0) / 64.0), 1.0);
+        FragColor = vec4(vec3((Height + seaLevel) / maxPeak), 1.0);
         return;
     }
 
-    float h = texture(heightMap, TexCoord).r * 255.0;
+    float h = isFromMap ? texture(heightMap, TexCoord).r * 255.0 : (Height + seaLevel) / maxPeak * 255.0;
     float m = texture(moistureMap, TexCoord).r * 255.0;
     float t = texture(temperatureMap, TexCoord).r * 255.0;
 
@@ -2204,13 +2206,13 @@ void main() {
     float totalWeight = 0.0;
 
     for (int i = 0; i < biomesCount; i++) {
-        Biome b = biomes[i];
+        Biome b = biomes[i]; 
 
         float hW = (b.minHeight < 0.0 && b.maxHeight < 0.0) ? 1.0 : smoothStepRange(h, b.minHeight, b.maxHeight);
         float mW = (b.minMoisture < 0.0 && b.maxMoisture < 0.0) ? 1.0 : smoothStepRange(m, b.minMoisture, b.maxMoisture);
         float tW = (b.minTemperature < 0.0 && b.maxTemperature < 0.0) ? 1.0 : smoothStepRange(t, b.minTemperature, b.maxTemperature);
 
-        float weight = hW * mW * tW;
+        float weight = (1.0 - hW) * mW * tW;
         if (weight > 0.001) {
             vec4 texColor = (b.useTexture == 1)
                 ? triplanarBlend(i, normal, FragPos, 0.1)
@@ -2246,6 +2248,9 @@ uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 uniform mat4 lightViewProj = mat4(1.0);
+uniform float maxPeak = 48.0;
+uniform float seaLevel = 16.0;
+uniform bool isFromMap = false;
 
 in vec2 TextureCoord[];
 
@@ -2267,7 +2272,7 @@ void main() {
     vec2 t1 = (t11 - t10) * u + t10;
     vec2 texCoord = (t1 - t0) * v + t0;
 
-    Height = -texture(heightMap, texCoord).r * 64.0 - 16.0;
+    Height = texture(heightMap, texCoord).r * maxPeak - seaLevel;
 
     vec4 p00 = gl_in[0].gl_Position;
     vec4 p01 = gl_in[1].gl_Position;
@@ -2278,7 +2283,11 @@ void main() {
     vec4 p1 = (p11 - p10) * u + p10;
     vec4 position = (p1 - p0) * v + p0;
 
-    position.y += Height;
+    if (isFromMap) {
+        position.y -= Height;
+    } else {
+        position.y += Height;
+    }
 
     gl_Position = projection * view * model * position;
 
