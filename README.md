@@ -62,7 +62,7 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [ ] Add support for constraints in Bezel
 - [ ] Add support for character controllers in Bezel
 - [ ] Add support for motors in Bezel
-- [ ] Add volumetric lighting **for alpha 3**
+- [x] Add volumetric lighting **for alpha 3**
 - [x] Add bloom for lights
 - [x] Add depth of field
 - [x] Add terrain system (Aurora) **for alpha 3**
