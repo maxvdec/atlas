@@ -604,6 +604,12 @@ void RenderTarget::render(float dt) {
                                             depthTexture.id != 0 ? 1 : 0);
         }
 
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, volumetricLightTexture.id);
+        obj->shaderProgram.setUniform1i("VolumetricLightTexture", 3);
+        obj->shaderProgram.setUniform1i("hasVolumetricLightTexture",
+                                        volumetricLightTexture.id > 1 ? 1 : 0);
+
         obj->shaderProgram.setUniform1f("nearPlane", camera->nearClip);
         obj->shaderProgram.setUniform1f("farPlane", camera->farClip);
         obj->shaderProgram.setUniform1f("focusDepth", camera->focusDepth);
@@ -614,6 +620,16 @@ void RenderTarget::render(float dt) {
                                Window::mainWindow->getSize().height)));
 
         obj->shaderProgram.setUniform1i("maxMipLevel", maxMipLevels);
+
+        Scene *scene = Window::mainWindow->getCurrentScene();
+        obj->shaderProgram.setUniform1f("environment.fogIntensity",
+                                        scene->environment.fog.intensity);
+        obj->shaderProgram.setUniform3f(
+            "environment.fogColor", scene->environment.fog.color.r,
+            scene->environment.fog.color.g, scene->environment.fog.color.b);
+        obj->shaderProgram.setUniformMat4f(
+            "invProjectionMatrix",
+            glm::inverse(Window::mainWindow->calculateProjectionMatrix()));
     }
 
     obj->shaderProgram.setUniform1i("TextureType",

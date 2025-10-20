@@ -21,6 +21,24 @@
 class Window;
 struct AreaLight;
 
+struct Fog {
+    Color color = Color::white();
+    float intensity = 0.0f;
+};
+
+struct VolumetricLighting {
+    float density = 0.3f;
+    float weight = 0.01;
+    float decay = 0.95;
+    float exposure = 0.6f;
+};
+
+class Environment {
+  public:
+    Fog fog;
+    VolumetricLighting volumetricLighting;
+};
+
 /**
  * @brief Abstract class that represents a 3D scene. It contains all lights and
  * objects that are going to be rendered. It also provides methods for updating
@@ -168,7 +186,10 @@ class Scene {
         }
     }
 
+    void setEnvironment(Environment newEnv) { environment = newEnv; }
+
   private:
+    Environment environment;
     std::vector<DirectionalLight *> directionalLights;
     std::vector<Light *> pointLights;
     std::vector<Spotlight *> spotlights;
@@ -196,6 +217,7 @@ class Scene {
     friend class CoreObject;
     friend class Window;
     friend class Terrain;
+    friend class RenderTarget;
 };
 
 #endif // ATLAS_SCENE_H

@@ -161,6 +161,8 @@ Window::Window(WindowConfiguration config)
         AtlasVertexShader::Light, AtlasFragmentShader::Light);
     this->bloomBlurProgram = ShaderProgram::fromDefaultShaders(
         AtlasVertexShader::Fullscreen, AtlasFragmentShader::GaussianBlur);
+    this->volumetricProgram = ShaderProgram::fromDefaultShaders(
+        AtlasVertexShader::Volumetric, AtlasFragmentShader::Volumetric);
 
     this->setupSSAO();
 
@@ -964,5 +966,8 @@ void Window::useDeferredRendering() {
     auto target = std::make_shared<RenderTarget>(
         RenderTarget(*this, RenderTargetType::GBuffer));
     this->gBuffer = target;
+    auto volumetricTarget = std::make_shared<RenderTarget>(
+        RenderTarget(*this, RenderTargetType::Scene));
+    this->volumetricBuffer = volumetricTarget;
     this->ssaoMapsDirty = true;
 }

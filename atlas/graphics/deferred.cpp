@@ -7,8 +7,10 @@
 // Copyright (c) 2025 Max Van den Eynde
 //
 
+#include "atlas/light.h"
 #include "atlas/window.h"
 #include <glad/glad.h>
+#include <iostream>
 
 void Window::deferredRendering(RenderTarget *target) {
     // Render to G-Buffer
@@ -338,6 +340,56 @@ void Window::deferredRendering(RenderTarget *target) {
     glBindVertexArray(quadVAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);
+
+    if (dirLightCount > 0) {
+        if (!volumetricBuffer) {
+            volumetricBuffer =
+                std::make_shared<RenderTarget>(*this, RenderTargetType::Scene);
+        }
+
+        target->resolve();
+
+        glBindFramebuffer(GL_FRAMEBUFFER, volumetricBuffer->fbo);
+        glViewport(0, 0, volumetricBuffer->getWidth(),
+                   volumetricBuffer->getHeight());
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        glUseProgram(volumetricProgram.programId);
+
+        DirectionalLight *dirLight = scene->directionalLights[0];
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, target->texture.id);
+        volumetricProgram.setUniform1i("sceneTexture", 0);
+
+        volumetricProgram.setUniform1f(
+            "density", scene->environment.volumetricLighting.density);
+        volumetricProgram.setUniform1f(
+            "weight", scene->environment.volumetricLighting.weight);
+        volumetricProgram.setUniform1f(
+            "decay", scene->environment.volumetricLighting.decay);
+        volumetricProgram.setUniform1f(
+            "exposure", scene->environment.volumetricLighting.exposure);
+        volumetricProgram.setUniform3f("directionalLight.color",
+                                       dirLight->color.r, dirLight->color.g,
+                                       dirLight->color.b);
+        glm::vec3 lightPos = -dirLight->direction.toGlm() * 1000.f;
+        glm::vec4 clipSpace = calculateProjectionMatrix() *
+                              camera->calculateViewMatrix() *
+                              glm::vec4(lightPos, 1.0f);
+
+        glm::vec3 ndc = glm::vec3(clipSpace) / clipSpace.w;
+        glm::vec2 sunUV = (glm::vec2(ndc.x, ndc.y) + 1.0f) * 0.5f;
+
+        volumetricProgram.setUniform2f("sunPos", sunUV.x, sunUV.y);
+
+        glBindVertexArray(quadVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glBindVertexArray(0);
+    }
+
+    target->volumetricLightTexture = volumetricBuffer->texture;
 
     glDepthMask(GL_TRUE);
     glEnable(GL_DEPTH_TEST);

@@ -125,8 +125,10 @@ vec4 edgeDetection(sampler2D image) {
 uniform sampler2D Texture;
 uniform sampler2D BrightTexture;
 uniform sampler2D DepthTexture;
+uniform sampler2D VolumetricLightTexture;
 uniform int hasBrightTexture;
 uniform int hasDepthTexture;
+uniform int hasVolumetricLightTexture;
 uniform samplerCube cubeMap;
 uniform bool isCubeMap;
 uniform int TextureType;
@@ -139,7 +141,16 @@ uniform float EffectFloat4[10];
 uniform float EffectFloat5[10];
 uniform float EffectFloat6[10];
 
-uniform float nearPlane = 0.1;        
+struct Environment {
+    vec3 fogColor;
+    float fogIntensity;
+};
+
+uniform Environment environment;
+
+uniform mat4 invProjectionMatrix;
+
+uniform float nearPlane = 0.1;
 uniform float farPlane = 100.0;
 
 uniform float focusDepth;
@@ -148,57 +159,65 @@ uniform float focusRange;
 uniform int maxMipLevel;
 
 float LinearizeDepth(float depth) {
-    float z = depth * 2.0 - 1.0; 
+    float z = depth * 2.0 - 1.0;
     float linear = (2.0 * nearPlane * farPlane) /
-                   (farPlane + nearPlane - z * (farPlane - nearPlane));
+            (farPlane + nearPlane - z * (farPlane - nearPlane));
     return linear / farPlane;
+}
+
+vec3 reconstructViewPos(vec2 uv, float depth) {
+    float z = depth * 2.0 - 1.0;
+    vec4 clipPos = vec4(uv * 2.0 - 1.0, z, 1.0);
+    vec4 viewPos = invProjectionMatrix * clipPos;
+    viewPos /= viewPos.w;
+    return viewPos.xyz;
 }
 
 vec4 applyFXAA(sampler2D tex, vec2 texCoord) {
     vec2 texelSize = 1.0 / textureSize(tex, 0);
-    
+
     float FXAA_SPAN_MAX = 8.0;
-    float FXAA_REDUCE_MUL = 1.0/8.0;
-    float FXAA_REDUCE_MIN = 1.0/128.0;
-    
+    float FXAA_REDUCE_MUL = 1.0 / 8.0;
+    float FXAA_REDUCE_MIN = 1.0 / 128.0;
+
     vec3 rgbNW = texture(tex, texCoord + vec2(-1.0, -1.0) * texelSize).rgb;
     vec3 rgbNE = texture(tex, texCoord + vec2(1.0, -1.0) * texelSize).rgb;
     vec3 rgbSW = texture(tex, texCoord + vec2(-1.0, 1.0) * texelSize).rgb;
     vec3 rgbSE = texture(tex, texCoord + vec2(1.0, 1.0) * texelSize).rgb;
     vec3 rgbM = texture(tex, texCoord).rgb;
-    
+
     vec3 luma = vec3(0.299, 0.587, 0.114);
     float lumaNW = dot(rgbNW, luma);
     float lumaNE = dot(rgbNE, luma);
     float lumaSW = dot(rgbSW, luma);
     float lumaSE = dot(rgbSE, luma);
     float lumaM = dot(rgbM, luma);
-    
+
     float lumaMin = min(lumaM, min(min(lumaNW, lumaNE), min(lumaSW, lumaSE)));
     float lumaMax = max(lumaM, max(max(lumaNW, lumaNE), max(lumaSW, lumaSE)));
-    
+
     vec2 dir;
     dir.x = -((lumaNW + lumaNE) - (lumaSW + lumaSE));
     dir.y = ((lumaNW + lumaSW) - (lumaNE + lumaSE));
-    
-    float dirReduce = max((lumaNW + lumaNE + lumaSW + lumaSE) * 
-                         (0.25 * FXAA_REDUCE_MUL), FXAA_REDUCE_MIN);
-    
+
+    float dirReduce = max((lumaNW + lumaNE + lumaSW + lumaSE) *
+                (0.25 * FXAA_REDUCE_MUL), FXAA_REDUCE_MIN);
+
     float rcpDirMin = 1.0 / (min(abs(dir.x), abs(dir.y)) + dirReduce);
     dir = min(vec2(FXAA_SPAN_MAX, FXAA_SPAN_MAX),
-              max(vec2(-FXAA_SPAN_MAX, -FXAA_SPAN_MAX),
-              dir * rcpDirMin)) * texelSize;
-    
+            max(vec2(-FXAA_SPAN_MAX, -FXAA_SPAN_MAX),
+                dir * rcpDirMin)) * texelSize;
+
     vec3 rgbA = 0.5 * (
-        texture(tex, texCoord + dir * (1.0/3.0 - 0.5)).rgb +
-        texture(tex, texCoord + dir * (2.0/3.0 - 0.5)).rgb);
-    
+            texture(tex, texCoord + dir * (1.0 / 3.0 - 0.5)).rgb +
+                texture(tex, texCoord + dir * (2.0 / 3.0 - 0.5)).rgb);
+
     vec3 rgbB = rgbA * 0.5 + 0.25 * (
-        texture(tex, texCoord + dir * -0.5).rgb +
-        texture(tex, texCoord + dir * 0.5).rgb);
-    
+                texture(tex, texCoord + dir * -0.5).rgb +
+                    texture(tex, texCoord + dir * 0.5).rgb);
+
     float lumaB = dot(rgbB, luma);
-    
+
     if ((lumaB < lumaMin) || (lumaB > lumaMax)) {
         return vec4(rgbA, 1.0);
     } else {
@@ -235,9 +254,12 @@ vec4 applyColorCorrection(vec4 color, ColorCorrection cc) {
 
 void main() {
     vec4 color = texture(Texture, TexCoord);
+    float depth = texture(DepthTexture, TexCoord).r;
+    vec3 viewPos = reconstructViewPos(TexCoord, depth);
+    float distance = length(viewPos);
 
+    // Apply effects FIRST
     bool appliedColorCorrection = false;
-
     for (int i = 0; i < EffectCount; i++) {
         if (Effects[i] == EFFECT_INVERSION) {
             color = vec4(1.0 - color.rgb, color.a);
@@ -261,31 +283,34 @@ void main() {
             cc.tint = EffectFloat6[i];
             color = applyColorCorrection(color, cc);
             appliedColorCorrection = true;
-        } 
+        }
     }
+
     color = applyFXAA(Texture, TexCoord);
 
     if (hasDepthTexture == 1) {
         float depthValue = texture(DepthTexture, TexCoord).r;
-        float linearDepth = LinearizeDepth(depthValue); 
+        float linearDepth = LinearizeDepth(depthValue);
         float coc = clamp(abs(linearDepth - focusDepth) / focusRange, 0.0, 1.0);
-
         float mip = coc * float(maxMipLevel) * 1.2;
-
         vec3 blurred = textureLod(Texture, TexCoord, mip).rgb;
-        vec3 sharp = texture(Texture, TexCoord).rgb;
-
+        vec3 sharp = color.rgb;
         color = vec4(mix(sharp, blurred, coc), 1.0);
     }
 
     vec4 hdrColor = color + texture(BrightTexture, TexCoord);
-    
+    if (hasVolumetricLightTexture == 1) {
+        vec4 volumetricColor = texture(VolumetricLightTexture, TexCoord);
+        if (volumetricColor.r > 0.0 && volumetricColor.g > 0.0 && volumetricColor.b > 0.0)
+            hdrColor += volumetricColor;
+    }
+
     hdrColor.rgb = acesToneMapping(hdrColor.rgb);
-    
-    FragColor = vec4(hdrColor.rgb, 1.0);
 
+    float fogFactor = 1.0 - exp(-distance * environment.fogIntensity);
+    vec3 finalColor = mix(hdrColor.rgb, environment.fogColor, fogFactor);
 
-    return; 
+    FragColor = vec4(finalColor, 1.0);
 }
 
 )";
@@ -962,7 +987,6 @@ void main() {
     lighting += calcAllPointLights(FragPos, N, V, albedo, metallic, roughness, F0, reflectivity) * (1.0 - pointShadow);
     lighting += calcAllSpotLights(N, FragPos, V, viewDir, albedo, metallic, roughness, F0, reflectivity);
 
-    // Area lights (rectangular) approximation: project to closest point on rectangle, cosine emission and 1/r^2 attenuation
     {
         vec3 areaResult = vec3(0.0);
         for (int i = 0; i < areaLightCount; ++i) {
@@ -987,7 +1011,6 @@ void main() {
                 if (facing >= cosTheta && facing > 0.0) {
                     float attenuation = 1.0 / max(dist * dist, 0.0001);
                     vec3 radiance = areaLights[i].diffuse * attenuation * facing;
-                    // Reuse PBR with pre-attenuated radiance
                     vec3 H = normalize(V + L);
                     float NDF = distributionGGX(N, H, roughness);
                     float G = geometrySmith(N, V, L, roughness);
@@ -3176,6 +3199,83 @@ void main() {
     }
     FragColor = vec4(result, 1.0);
 }
+)";
+
+static const char* VOLUMETRIC_VERT = R"(
+#version 410 core
+
+layout(location = 0) in vec3 aPos;
+layout(location = 1) in vec2 aTexCoords;
+
+out vec2 TexCoords;
+
+void main() {
+    gl_Position = vec4(aPos, 1.0);
+    TexCoords = aTexCoords;
+}
+
+)";
+
+static const char* VOLUMETRIC_FRAG = R"(
+#version 410 core
+in vec2 TexCoords;
+out vec4 FragColor;
+
+uniform sampler2D sceneTexture;
+uniform vec2 sunPos;
+
+struct DirectionalLight {
+    vec3 color;
+};
+
+uniform DirectionalLight directionalLight;
+uniform float density;
+uniform float weight;
+uniform float decay;
+uniform float exposure;
+vec3 computeVolumetricLighting(vec2 uv) {
+    vec3 color = vec3(0.0);
+
+    vec2 deltaTexCoord = (sunPos - uv) * density;
+    vec2 coord = uv;
+    float illuminationDecay = 1.0;
+
+    const int NUM_SAMPLES = 100;
+
+    for (int i = 0; i < NUM_SAMPLES; i++) {
+        coord += deltaTexCoord;
+
+        if (coord.x < 0.0 || coord.x > 1.0 || coord.y < 0.0 || coord.y > 1.0) {
+            break;
+        }
+
+        vec3 sampled = texture(sceneTexture, coord).rgb;
+        float brightness = dot(sampled, vec3(0.299, 0.587, 0.114));
+
+        vec3 atmosphere = directionalLight.color * 0.02;
+
+        if (brightness > 0.5) {
+            atmosphere += sampled * 0.5;
+        }
+
+        atmosphere *= illuminationDecay * weight;
+        color += atmosphere;
+
+        illuminationDecay *= decay;
+    }
+
+    return color * 5.0;
+}
+
+void main() {
+    //vec4 sceneTex = texture(sceneTexture, TexCoords);
+    //FragColor = sceneTex;
+    //return;
+    vec3 rays = computeVolumetricLighting(TexCoords);
+
+    FragColor = vec4(rays, 1.0);
+}
+
 )";
 
 #endif // ATLAS_GENERATED_SHADERS_H

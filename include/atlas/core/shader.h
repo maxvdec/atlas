@@ -88,7 +88,12 @@ enum class AtlasVertexShader {
      *
      */
     Deferred,
+    /**
+     * @brief Vertex shader for rendering terrain.
+     *
+     */
     Terrain,
+    Volumetric,
 };
 
 /**
@@ -284,7 +289,8 @@ enum class AtlasFragmentShader {
      *
      */
     SSAOBlur,
-    Terrain
+    Terrain,
+    Volumetric
 };
 
 /**

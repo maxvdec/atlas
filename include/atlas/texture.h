@@ -376,6 +376,10 @@ class RenderTarget : public Renderable {
      */
     Texture msBrightTexture;
     /**
+     * @brief Texture for volumetric lighting.
+     */
+    Texture volumetricLightTexture;
+    /**
      * @brief The type of the render target.
      *
      */

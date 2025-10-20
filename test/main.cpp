@@ -131,6 +131,10 @@ class MainScene : public Scene {
     }
 
     void initialize(Window &window) override {
+        Environment env;
+        env.fog.intensity = 0.0;
+        this->setEnvironment(env);
+
         Workspace::get().setRootPath(std::string(TEST_PATH) + "/resources/");
 
         camera = Camera();
@@ -170,7 +174,7 @@ class MainScene : public Scene {
         areaLight.position = {0.0f, 2.0f, 0.0};
         areaLight.rotate({0.0f, 90.0f, 0.0f});
         areaLight.castsBothSides = true;
-        this->addAreaLight(&areaLight);
+        // this->addAreaLight(&areaLight);
         areaLight.createDebugObject();
         areaLight.addDebugObject(window);
 
@@ -193,7 +197,7 @@ class MainScene : public Scene {
 
         ball = createDebugSphere(0.5f, 76, 76);
         ball.body->applyMass(0.0);
-        ball.move({1.5f, 0.0f, 0.0});
+        ball.move({0.f, 1.0f, 1.5});
         ball.material.reflectivity = 1.f;
 
         this->setAmbientIntensity(0.1f);
@@ -232,12 +236,15 @@ class MainScene : public Scene {
         terrain.maxPeak = 100.f;
 
         light = DirectionalLight({1.0f, -0.3f, 0.5f}, Color::white());
+        this->addDirectionalLight(&light);
 
         this->setAmbientIntensity(0.1);
 
         frameBuffer = RenderTarget(window);
         window.addRenderTarget(&frameBuffer);
         frameBuffer.display(window);
+
+        window.useDeferredRendering();
     }
 };
 
