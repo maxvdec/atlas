@@ -604,6 +604,12 @@ void RenderTarget::render(float dt) {
                                             depthTexture.id != 0 ? 1 : 0);
         }
 
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, volumetricLightTexture.id);
+        obj->shaderProgram.setUniform1i("VolumetricLightTexture", 3);
+        obj->shaderProgram.setUniform1i("hasVolumetricLightTexture",
+                                        volumetricLightTexture.id > 1 ? 1 : 0);
+
         obj->shaderProgram.setUniform1f("nearPlane", camera->nearClip);
         obj->shaderProgram.setUniform1f("farPlane", camera->farClip);
         obj->shaderProgram.setUniform1f("focusDepth", camera->focusDepth);

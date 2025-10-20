@@ -120,8 +120,10 @@ vec4 edgeDetection(sampler2D image) {
 uniform sampler2D Texture;
 uniform sampler2D BrightTexture;
 uniform sampler2D DepthTexture;
+uniform sampler2D VolumetricLightTexture;
 uniform int hasBrightTexture;
 uniform int hasDepthTexture;
+uniform int hasVolumetricLightTexture;
 uniform samplerCube cubeMap;
 uniform bool isCubeMap;
 uniform int TextureType;
@@ -292,6 +294,12 @@ void main() {
     }
 
     vec4 hdrColor = color + texture(BrightTexture, TexCoord);
+    if (hasVolumetricLightTexture == 1) {
+        vec4 volumetricColor = texture(VolumetricLightTexture, TexCoord);
+
+        hdrColor += volumetricColor;
+    }
+
     hdrColor.rgb = acesToneMapping(hdrColor.rgb);
 
     float fogFactor = 1.0 - exp(-distance * environment.fogIntensity);

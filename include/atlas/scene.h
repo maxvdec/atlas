@@ -26,9 +26,17 @@ struct Fog {
     float intensity = 0.0f;
 };
 
+struct VolumetricLighting {
+    float density = 0.3f;
+    float weight = 0.01;
+    float decay = 0.95;
+    float exposure = 0.6f;
+};
+
 class Environment {
   public:
     Fog fog;
+    VolumetricLighting volumetricLighting;
 };
 
 /**

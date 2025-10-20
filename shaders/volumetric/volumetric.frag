@@ -1,5 +1,4 @@
 #version 410 core
-
 in vec2 TexCoords;
 out vec4 FragColor;
 
@@ -7,42 +6,47 @@ uniform sampler2D sceneTexture;
 uniform vec2 sunPos;
 
 struct DirectionalLight {
-    vec2 position;
     vec3 color;
 };
 
 uniform DirectionalLight directionalLight;
-
 uniform float density;
 uniform float weight;
 uniform float decay;
 uniform float exposure;
 
-float brightness(vec3 color) {
-    return dot(color, vec3(0.299, 0.587, 0.114));
-}
-
 vec3 computeVolumetricLighting(vec2 uv) {
     vec3 color = vec3(0.0);
+
     vec2 deltaTexCoord = (sunPos - uv) * density;
     vec2 coord = uv;
     float illuminationDecay = 1.0;
 
-    for (int i = 0; i < 100; i++) {
+    const int NUM_SAMPLES = 100;
+
+    for (int i = 0; i < NUM_SAMPLES; i++) {
         coord += deltaTexCoord;
-        vec3
-        sample = texture(sceneTexture, coord). rgb;
 
-if ( brightness(sample)> 1.0 ) {
-sample *= sunColor;
-}
+        if (coord.x < 0.0 || coord.x > 1.0 || coord.y < 0.0 || coord.y > 1.0) {
+            break;
+        }
 
-sample *= illuminationDecay * weight;
-color += sample;
-illuminationDecay *= decay;
-}
+        vec3 sampled = texture(sceneTexture, coord).rgb;
+        float brightness = dot(sampled, vec3(0.299, 0.587, 0.114));
 
-return color * exposure;
+        vec3 atmosphere = directionalLight.color * 0.02;
+
+        if (brightness > 0.5) {
+            atmosphere += sampled * 0.5;
+        }
+
+        atmosphere *= illuminationDecay * weight;
+        color += atmosphere;
+
+        illuminationDecay *= decay;
+    }
+
+    return color * 5.0;
 }
 
 void main() {
