@@ -5,7 +5,7 @@ var searchData=
   ['inertiatensor_2',['inertiaTensor',['../class_convex.html#a17d4bab01782f447105c789b5a1a8537',1,'Convex']]],
   ['initializedseed_3',['initializedSeed',['../class_noise.html#aa2a9eec8f83b902945f1632961b17c30',1,'Noise']]],
   ['instances_4',['instances',['../class_core_object.html#a96c2bccbb791934e24c4064bb7962cf9',1,'CoreObject']]],
-  ['intensity_5',['intensity',['../struct_ambient_light.html#aca3888612846c67aabc270e0a7c15958',1,'AmbientLight']]],
+  ['intensity_5',['intensity',['../struct_ambient_light.html#aca3888612846c67aabc270e0a7c15958',1,'AmbientLight::intensity'],['../struct_fog.html#aa8753de5b8fbad3adbbba40e60adf0b7',1,'Fog::intensity']]],
   ['invmass_6',['invMass',['../class_body.html#a4d999f83fe2f4fde24c48a152847e3f1',1,'Body']]],
   ['ismin_7',['ismin',['../struct_pseudo_body.html#ab897861b3dd99d7b98b89eaaaf1731d2',1,'PseudoBody']]],
   ['ismono_8',['isMono',['../class_audio_data.html#abacb6f98ee7bd4a62f1fd8d7385a4781',1,'AudioData']]]

@@ -24,7 +24,8 @@ var shader_8h =
       [ "Deferred", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a4ed71db54748b36eeb398876b0c747ac", null ],
       [ "SSAO", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0ab07a387949b981d5726a46c61db885e9", null ],
       [ "SSAOBlur", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a0cbd177f5587f49172adca66ce3041ce", null ],
-      [ "Terrain", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a4ccfea7a25fae3c1d31555f0856d2b42", null ]
+      [ "Terrain", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a4ccfea7a25fae3c1d31555f0856d2b42", null ],
+      [ "Volumetric", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a9cf1d34dfb281ccd7fe0a4796b5ebe2c", null ]
     ] ],
     [ "AtlasGeometryShader", "shader_8h.html#a17951fe51aaa5769ef603acf594dc0b5", [
       [ "PointLightShadow", "shader_8h.html#a17951fe51aaa5769ef603acf594dc0b5a05c5b39892533f0c0ad86b083b28ff6a", null ]
@@ -47,7 +48,8 @@ var shader_8h =
       [ "PointLightShadow", "shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82a05c5b39892533f0c0ad86b083b28ff6a", null ],
       [ "Light", "shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82a9914a0ce04a7b7b6a8e39bec55064b82", null ],
       [ "Deferred", "shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82a4ed71db54748b36eeb398876b0c747ac", null ],
-      [ "Terrain", "shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82a4ccfea7a25fae3c1d31555f0856d2b42", null ]
+      [ "Terrain", "shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82a4ccfea7a25fae3c1d31555f0856d2b42", null ],
+      [ "Volumetric", "shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82a9cf1d34dfb281ccd7fe0a4796b5ebe2c", null ]
     ] ],
     [ "ShaderCapability", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcd", [
       [ "Lighting", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcda2e4b97fde8cf63085ec969fcc7e490c0", null ],

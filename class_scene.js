@@ -14,9 +14,11 @@ var class_scene =
     [ "onMouseScroll", "class_scene.html#a614268b0862942317de098b251a02203", null ],
     [ "setAmbientIntensity", "class_scene.html#af3030c8822975300a2a249fd650cc5a9", null ],
     [ "setAutomaticAmbient", "class_scene.html#ad5bd815d4e8d0badfa4b7a72b844ad7c", null ],
+    [ "setEnvironment", "class_scene.html#aac1fb26dcd06bddab714956607d38380", null ],
     [ "setSkybox", "class_scene.html#acccf622706b4067fd6d313ebf4075f1a", null ],
     [ "update", "class_scene.html#a2936b4b44d5c6ad073e65986a529a9f4", null ],
     [ "CoreObject", "class_scene.html#ac9dbe2a378024e3a3c417b4cb50adbb3", null ],
+    [ "RenderTarget", "class_scene.html#aa5afc6f82b7b587ed5ada4d227ce32aa", null ],
     [ "Terrain", "class_scene.html#a8a16a8def173094d17ed062879646b6b", null ],
     [ "Window", "class_scene.html#a553f958a25683445088050a69d3de8e9", null ]
 ];

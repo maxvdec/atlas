@@ -33,5 +33,7 @@ var default__shaders_8h =
     [ "TEXT_FRAG", "default__shaders_8h.html#a32efdd508699459df3d9c9bc49a580d3", null ],
     [ "TEXT_VERT", "default__shaders_8h.html#ae3a54503dd5f220b33f66e53739a24de", null ],
     [ "TEXTURE_FRAG", "default__shaders_8h.html#a2a23d79d6134f3704a9a34ffa9bbbe40", null ],
-    [ "TEXTURE_VERT", "default__shaders_8h.html#afe0518cbb5ccd9b6f9a3e5f20dc04aa9", null ]
+    [ "TEXTURE_VERT", "default__shaders_8h.html#afe0518cbb5ccd9b6f9a3e5f20dc04aa9", null ],
+    [ "VOLUMETRIC_FRAG", "default__shaders_8h.html#aac56e41dba3af03619326b9c522e6ee4", null ],
+    [ "VOLUMETRIC_VERT", "default__shaders_8h.html#ad88f8cc860c904e7023437d9c36e6aa3", null ]
 ];

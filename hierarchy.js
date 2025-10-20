@@ -36,6 +36,8 @@ var hierarchy =
       [ "Inversion", "class_inversion.html", null ],
       [ "Sharpen", "class_sharpen.html", null ]
     ] ],
+    [ "Environment", "class_environment.html", null ],
+    [ "Fog", "struct_fog.html", null ],
     [ "Font", "struct_font.html", null ],
     [ "FractalNoise", "class_fractal_noise.html", null ],
     [ "FragmentShader", "struct_fragment_shader.html", null ],
@@ -102,6 +104,7 @@ var hierarchy =
     [ "Triangle", "struct_triangle.html", null ],
     [ "VertexShader", "struct_vertex_shader.html", null ],
     [ "VideoMode", "struct_video_mode.html", null ],
+    [ "VolumetricLighting", "struct_volumetric_lighting.html", null ],
     [ "Window", "class_window.html", null ],
     [ "WindowConfiguration", "struct_window_configuration.html", null ],
     [ "Workspace", "class_workspace.html", null ],

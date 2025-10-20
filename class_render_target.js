@@ -23,5 +23,6 @@ var class_render_target =
     [ "msTexture", "class_render_target.html#adae5c8df5079c8a1e158117db03528f4", null ],
     [ "object", "class_render_target.html#a1ec7d8ec91e888599057ada1bd6dddc1", null ],
     [ "texture", "class_render_target.html#aa0081ca6fcb83f64edf9be9820b5185e", null ],
-    [ "type", "class_render_target.html#acbc5c695868ec18217c45cb8da705497", null ]
+    [ "type", "class_render_target.html#acbc5c695868ec18217c45cb8da705497", null ],
+    [ "volumetricLightTexture", "class_render_target.html#a16c03fa82d5969a516b40eb70bad44f2", null ]
 ];

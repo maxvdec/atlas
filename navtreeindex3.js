@@ -1,5 +1,13 @@
 var NAVTREEINDEX3 =
 {
+"functions_u.html":[2,3,0,18],
+"functions_v.html":[2,3,0,19],
+"functions_vars.html":[2,3,2],
+"functions_vars.html":[2,3,2,0],
+"functions_vars_b.html":[2,3,2,1],
+"functions_vars_c.html":[2,3,2,2],
+"functions_vars_d.html":[2,3,2,3],
+"functions_vars_e.html":[2,3,2,4],
 "functions_vars_f.html":[2,3,2,5],
 "functions_vars_g.html":[2,3,2,6],
 "functions_vars_h.html":[2,3,2,7],
@@ -241,13 +249,5 @@ var NAVTREEINDEX3 =
 "procedural_8h_source.html":[3,0,1,1,0],
 "renderable_8h.html":[3,0,1,0,0,1],
 "renderable_8h_source.html":[3,0,1,0,0,1],
-"scene_8h.html":[3,0,1,0,8],
-"scene_8h_source.html":[3,0,1,0,8],
-"shader_8h.html":[3,0,1,0,0,2],
-"shader_8h.html#a17951fe51aaa5769ef603acf594dc0b5":[3,0,1,0,0,2,9],
-"shader_8h.html#a17951fe51aaa5769ef603acf594dc0b5a05c5b39892533f0c0ad86b083b28ff6a":[3,0,1,0,0,2,9,0],
-"shader_8h.html#ab4defdfdbd8367100897f4e0fb2e1db9":[3,0,1,0,0,2,13],
-"shader_8h.html#ab4defdfdbd8367100897f4e0fb2e1db9a07ee3427562e4f1a5c9f2bfb17fd9eee":[3,0,1,0,0,2,13,2],
-"shader_8h.html#ab4defdfdbd8367100897f4e0fb2e1db9aa1595abbb4c3a326636dd178757cd6c1":[3,0,1,0,0,2,13,0],
-"shader_8h.html#ab4defdfdbd8367100897f4e0fb2e1db9ab74a43dbb36287ea86eb5b0c7b86e8e8":[3,0,1,0,0,2,13,1]
+"scene_8h.html":[3,0,1,0,8]
 };

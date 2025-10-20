@@ -17,7 +17,7 @@ var searchData=
   ['instance_14',['Instance',['../struct_instance.html',1,'']]],
   ['instances_15',['Instances',['../shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcda1c7d5bb21f0c351e584f3a4109ecdc76',1,'shader.h']]],
   ['instances_16',['instances',['../class_core_object.html#a96c2bccbb791934e24c4064bb7962cf9',1,'CoreObject']]],
-  ['intensity_17',['intensity',['../struct_ambient_light.html#aca3888612846c67aabc270e0a7c15958',1,'AmbientLight']]],
+  ['intensity_17',['intensity',['../struct_ambient_light.html#aca3888612846c67aabc270e0a7c15958',1,'AmbientLight::intensity'],['../struct_fog.html#aa8753de5b8fbad3adbbba40e60adf0b7',1,'Fog::intensity']]],
   ['interactive_18',['Interactive',['../class_interactive.html',1,'']]],
   ['intersectionpoint_19',['IntersectionPoint',['../struct_intersection_point.html',1,'']]],
   ['intersects_20',['intersects',['../class_body.html#ab3147e6b478c260baa5e2952192be958',1,'Body']]],
