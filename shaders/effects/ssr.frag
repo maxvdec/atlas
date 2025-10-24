@@ -1,115 +1,264 @@
 #version 410 core
-layout (location = 0) out vec4 FragColor;
+out vec4 FragColor;
 
 in vec2 TexCoord;
 
-uniform sampler2D gPosition;   
-uniform sampler2D gNormal;
-uniform sampler2D gMaterial; // metallic, roughness, reflectivity
-
+uniform sampler2D gPosition;   // world-space position
+uniform sampler2D gNormal;     // world-space normal
+uniform sampler2D gMaterial;   // metallic, roughness, reflectivity
 uniform mat4 projection;
 uniform mat4 view;
+uniform vec3 cameraPosition;
 
-const float maxDistance = 8;
-const float resolution = 0.3;
-const int steps = 5;
-const float thickness = 0.5;
+const float kReflectivityThreshold = 0.02;
+const float kRayStartBias = 0.15;
+const float kThicknessMin = 0.01;
+const float kThicknessMax = 0.08;
+const float kStrideFactor = 0.02;
+const float kMinStride = 0.04;
+const float kMaxStride = 1.0;
+const float kMaxDistance = 160.0;
+const int kMaxMarchSteps = 96;
+const int kBinarySearchSteps = 6;
 
-void main() {
-    vec4 uv = vec4(0.0);
+vec3 fetchWorldPosition(vec2 uv)
+{
+	return texture(gPosition, uv).xyz;
+}
 
-    vec4 positionFrom = texture(gPosition, TexCoord);
-    vec4 mask = texture(gMaterial, TexCoord);
+vec3 fetchNormal(vec2 uv)
+{
+	return texture(gNormal, uv).xyz;
+}
 
-    if (positionFrom.w <= 0 || mask.b <= 0.0) { FragColor = uv; return; }
+vec3 fetchMaterial(vec2 uv)
+{
+	return texture(gMaterial, uv).xyz;
+}
 
-    vec3 unitPositionFrom = normalize(positionFrom.xyz);
-    vec3 normal = normalize(view * vec4(texture(gNormal, TexCoord).xyz, 0.0)).xyz;
-    vec3 pivot = normalize(reflect(unitPositionFrom, normal));
+vec3 toViewSpace(vec3 worldPos)
+{
+	return (view * vec4(worldPos, 1.0)).xyz;
+}
 
-    vec4 positionTo = positionFrom;
+bool projectToScreen(vec3 viewPos, out vec2 uv)
+{
+	vec4 clip = projection * vec4(viewPos, 1.0);
+	if (clip.w <= 0.0)
+	{
+		return false;
+	}
 
-    vec4 startView = vec4(positionFrom.xyz + (pivot * 0.0), 1.0);
-    vec4 endView = vec4(positionFrom.xyz + (pivot * maxDistance), 1.0);
-    
-    vec4 startFrag = projection * startView;
-    startFrag.xyz /= startFrag.w;
-    startFrag.xy = startFrag.xy * 0.5 + 0.5;
+	vec3 ndc = clip.xyz / clip.w;
+	if (ndc.z < -1.0 || ndc.z > 1.0)
+	{
+		return false;
+	}
 
-    vec4 endFrag = projection * endView;
-    endFrag.xyz /= endFrag.w;
-    endFrag.xy = endFrag.xy * 0.5 + 0.5;
+	uv = ndc.xy * 0.5 + 0.5;
+	return uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0;
+}
 
-    vec2 frag = startFrag.xy;
+float computeStride(vec3 positionVS)
+{
+    return clamp(abs(positionVS.z) * kStrideFactor, kMinStride, kMaxStride);
+}
 
-    float deltaX = endFrag.x - startFrag.x;
-    float deltaY = endFrag.y - startFrag.y;
-    float useX = abs(deltaX) > abs(deltaY) ? 1.0 : 0.0;
-    float delta = mix(abs(deltaY), abs(deltaX), useX) * clamp(resolution, 0.0, 1.0);
-    vec2 increment = vec2(deltaX, deltaY) / max(delta, 0.001);
+float computeThickness(vec3 sampleVS)
+{
+	float depth = abs(sampleVS.z);
+	return clamp(depth * 0.008, kThicknessMin, kThicknessMax);
+}
 
-    float search0 = 0;
-    float search1 = 0;
+bool isFrontFacing(vec3 normalWS, vec3 reflectionDirWS)
+{
+	return dot(normalWS, reflectionDirWS) < -0.05;
+}
 
-    int hit0 = 0;
-    int hit1 = 0;
+bool traceSSR(vec3 originVS, vec3 reflectionDirVS, vec3 reflectionDirWS, out vec2 hitUV)
+{
+	if (reflectionDirVS.z >= -0.001)
+	{
+		return false;
+	}
 
-    float viewDistance = startView.y;
-    float depth = thickness;
+	vec3 rayVS = originVS + reflectionDirVS * kRayStartBias;
+	vec3 previousRayVS = originVS;
 
-    int step = steps;
+	float traveled = kRayStartBias;
+	float previousDiff = 0.0;
+			bool hasPrevious = false;
 
-    float i = 0;
-    for (i = 0; i < int(delta); ++i) {
-        frag += increment;
-        uv.xy = frag;
-        positionTo = view * texture(gPosition, uv.xy);
+	for (int step = 0; step < kMaxMarchSteps; ++step)
+	{
+		if (traveled > kMaxDistance || rayVS.z >= 0.0)
+		{
+			break;
+		}
 
-        search1 = mix((frag.y - startFrag.y) / deltaY, (frag.x - startFrag.x) / deltaX, useX);
-        search1 = clamp(search1, 0.0, 1.0);
+		vec2 uv;
+		if (!projectToScreen(rayVS, uv))
+		{
+			break;
+		}
 
-        viewDistance = (startView.y * endView.y) / mix(startView.y, endView.y, search1);
-        depth = viewDistance - positionTo.y;
+		vec3 sampleNormal = fetchNormal(uv);
+		if (length(sampleNormal) < 0.1)
+		{
+			float strideSkip = computeStride(rayVS);
+			rayVS += reflectionDirVS * strideSkip;
+			traveled += strideSkip;
+			hasPrevious = false;
+			continue;
+		}
 
-        if (depth > 0 && depth < thickness) {
-            hit0 = 1;
-            break;
-        } else {
-            search0 = search1;
-        }
+		vec3 sampleWorld = fetchWorldPosition(uv);
+		vec3 sampleVS = toViewSpace(sampleWorld);
+		vec3 sampleNormalWS = normalize(sampleNormal);
 
-    }
-        
-    search1 = search0 + ((search1 - search0) * 0.5);
+		if (sampleVS.z >= 0.0)
+		{
+			float strideSkip = computeStride(rayVS);
+			rayVS += reflectionDirVS * strideSkip;
+			traveled += strideSkip;
+			hasPrevious = false;
+			continue;
+		}
 
-    step *= hit0;
+		if (!isFrontFacing(sampleNormalWS, reflectionDirWS))
+		{
+			float strideSkip = computeStride(rayVS);
+			rayVS += reflectionDirVS * strideSkip;
+			traveled += strideSkip;
+			hasPrevious = false;
+			continue;
+		}
 
-    for (i = 0; i < step; ++i) {
-        frag = mix(startFrag.xy, endFrag.xy, search1);
-        uv.xy = frag;
-        positionTo = view * texture(gPosition, uv.xy);
+		float diff = sampleVS.z - rayVS.z;
+		float thickness = computeThickness(sampleVS);
 
-        viewDistance = (startView.y * endView.y) / mix(startView.y, endView.y, search1);
-        depth = viewDistance - positionTo.y;
+		if (abs(diff) <= thickness)
+		{
+			hitUV = uv;
+			return true;
+		}
 
-        if (depth > 0 && depth < thickness) {
-            hit1 = 1;
-            break;
-        } else {
-            float temp = search1;
-            search1 = search0 + ((search1 - search0) * 0.5);
-            search0 = temp;
-        }
-    }
+		if (hasPrevious && diff > 0.0 && previousDiff < 0.0)
+		{
+			vec3 startVS = previousRayVS;
+			vec3 endVS = rayVS;
+			vec2 refinedUV = uv;
+			bool refined = false;
 
-    float visibility = hit1 * positionTo.w * (1 - max(dot(-unitPositionFrom, pivot), 0));
-    visibility *= (1 - (depth / thickness, 0, 1));
-    visibility *= (1 - clamp(length(positionTo - positionFrom) / maxDistance, 0.0, 1.0));
-    visibility *= (uv.x < 0 || uv.x > 1.0 || uv.y < 0 || uv.y > 1.0) ? 0.0 : 1.0;
+			for (int i = 0; i < kBinarySearchSteps; ++i)
+			{
+				vec3 midVS = mix(startVS, endVS, 0.5);
+				vec2 midUV;
 
-    visibility = clamp(visibility, 0.0, 1.0);
+				if (!projectToScreen(midVS, midUV))
+				{
+					refined = false;
+					break;
+				}
 
-    uv.ba = vec2(visibility);
+				vec3 midWorld = fetchWorldPosition(midUV);
+				vec3 midNormal = fetchNormal(midUV);
+				float midNormalLen = length(midNormal);
+				if (midNormalLen < 0.1)
+				{
+					refined = false;
+					break;
+				}
+				vec3 midNormalWS = midNormal / midNormalLen;
+				if (!isFrontFacing(midNormalWS, reflectionDirWS))
+				{
+					refined = false;
+					break;
+				}
+				vec3 midSampleVS = toViewSpace(midWorld);
+				float midDiff = midSampleVS.z - midVS.z;
+				float midThickness = computeThickness(midSampleVS);
 
-    FragColor = uv;
+				if (abs(midDiff) <= midThickness)
+				{
+					hitUV = midUV;
+					refined = true;
+					return true;
+				}
+
+				if (midDiff > 0.0)
+				{
+					endVS = midVS;
+					refinedUV = midUV;
+				}
+				else
+				{
+					startVS = midVS;
+				}
+			}
+
+			if (refined)
+			{
+				hitUV = refinedUV;
+				return true;
+			}
+
+			hasPrevious = false;
+			continue;
+		}
+
+		hasPrevious = true;
+		previousDiff = diff;
+		previousRayVS = rayVS;
+
+		float stride = computeStride(rayVS);
+		rayVS += reflectionDirVS * stride;
+		traveled += stride;
+	}
+
+	return false;
+}
+
+void main()
+{
+	vec3 material = fetchMaterial(TexCoord);
+	float reflectivity = clamp(material.z, 0.0, 1.0);
+
+	if (reflectivity <= kReflectivityThreshold)
+	{
+		FragColor = vec4(0.0);
+		return;
+	}
+
+	vec3 worldPos = fetchWorldPosition(TexCoord);
+	vec3 normalWS = normalize(fetchNormal(TexCoord));
+
+	if (length(normalWS) < 0.1)
+	{
+		FragColor = vec4(0.0);
+		return;
+	}
+
+	vec3 originVS = toViewSpace(worldPos);
+	vec3 viewDirVS = normalize(-originVS);
+	vec3 viewDirWS = normalize(cameraPosition - worldPos);
+	if (length(viewDirVS) < 1e-4 || length(viewDirWS) < 1e-4)
+	{
+		FragColor = vec4(0.0);
+		return;
+	}
+	vec3 reflectionDirWS = normalize(reflect(viewDirWS, normalWS));
+	vec3 reflectionDirVS = normalize(mat3(view) * reflectionDirWS);
+
+	vec2 hitUV;
+	bool hit = traceSSR(originVS, reflectionDirVS, reflectionDirWS, hitUV);
+
+	if (!hit)
+	{
+		FragColor = vec4(0.0);
+		return;
+	}
+
+	vec2 reversedUV = vec2(1.0) - hitUV;
+	FragColor = vec4(reversedUV, 1.0, reflectivity);
 }

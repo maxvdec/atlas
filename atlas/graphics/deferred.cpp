@@ -391,9 +391,55 @@ void Window::deferredRendering(RenderTarget *target) {
 
     target->volumetricLightTexture = volumetricBuffer->texture;
 
+    // Compute SSR here
+    glBindFramebuffer(GL_FRAMEBUFFER, this->ssrBuffer->fbo);
+    glViewport(0, 0, this->ssrBuffer->getWidth(), this->ssrBuffer->getHeight());
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glUseProgram(this->ssrProgram.programId);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, this->gBuffer->gPosition.id);
+    this->ssrProgram.setUniform1i("gPosition", 0);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, this->gBuffer->gNormal.id);
+    this->ssrProgram.setUniform1i("gNormal", 1);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, this->gBuffer->gMaterial.id);
+    this->ssrProgram.setUniform1i("gMaterial", 2);
+
+    this->ssrProgram.setUniformMat4f("projection", calculateProjectionMatrix());
+    this->ssrProgram.setUniformMat4f("view",
+                                     this->camera->calculateViewMatrix());
+    this->ssrProgram.setUniform3f("cameraPosition", getCamera()->position.x,
+                                  getCamera()->position.y,
+                                  getCamera()->position.z);
+
+    glBindVertexArray(quadVAO);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+    glBindVertexArray(0);
+
+    this->ssrBuffer->resolve();
+
+    target->reflectionsTexture = this->ssrBuffer->texture;
+
     glDepthMask(GL_TRUE);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+
+void Window::useDeferredRendering() {
+    this->usesDeferred = true;
+    auto target = std::make_shared<RenderTarget>(
+        RenderTarget(*this, RenderTargetType::GBuffer));
+    this->gBuffer = target;
+    auto volumetricTarget = std::make_shared<RenderTarget>(
+        RenderTarget(*this, RenderTargetType::Scene));
+    this->volumetricBuffer = volumetricTarget;
+    auto ssrTarget = std::make_shared<RenderTarget>(
+        RenderTarget(*this, RenderTargetType::Scene));
+    this->ssrBuffer = ssrTarget;
+    this->ssaoMapsDirty = true;
 }

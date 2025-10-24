@@ -610,6 +610,12 @@ void RenderTarget::render(float dt) {
         obj->shaderProgram.setUniform1i("hasVolumetricLightTexture",
                                         volumetricLightTexture.id > 1 ? 1 : 0);
 
+        glActiveTexture(GL_TEXTURE4);
+        glBindTexture(GL_TEXTURE_2D, reflectionsTexture.id);
+        obj->shaderProgram.setUniform1i("SSRTexture", 4);
+        obj->shaderProgram.setUniform1i("hasSSRTexture",
+                                        reflectionsTexture.id != 0 ? 1 : 0);
+
         obj->shaderProgram.setUniform1f("nearPlane", camera->nearClip);
         obj->shaderProgram.setUniform1f("farPlane", camera->farClip);
         obj->shaderProgram.setUniform1f("focusDepth", camera->focusDepth);

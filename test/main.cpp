@@ -34,6 +34,7 @@ class SphereCube : public CompoundObject {
         sphere = createDebugSphere(0.25f);
         sphere.setPosition({1.0, sphere.getPosition().y, 0.0});
         sphere.initialize();
+        sphere.material.reflectivity = 1.0f;
         sphere.body->applyMass(0); // Make it static
         this->addObject(&sphere);
     }
@@ -167,6 +168,7 @@ class MainScene : public Scene {
             Texture::fromResource(Workspace::get().createResource(
                 "ground.jpg", "GroundTexture", ResourceType::Image)));
         ground.setPosition({0.0f, -0.1f, 0.0f});
+        ground.material.reflectivity = 1.0f;
         window.addObject(&ground);
 
         backpack.setPosition({0.0f, 0.2f, 0.0f});

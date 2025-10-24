@@ -163,6 +163,8 @@ Window::Window(WindowConfiguration config)
         AtlasVertexShader::Fullscreen, AtlasFragmentShader::GaussianBlur);
     this->volumetricProgram = ShaderProgram::fromDefaultShaders(
         AtlasVertexShader::Volumetric, AtlasFragmentShader::Volumetric);
+    this->ssrProgram = ShaderProgram::fromDefaultShaders(
+        AtlasVertexShader::Light, AtlasFragmentShader::SSR);
 
     this->setupSSAO();
 
@@ -959,15 +961,4 @@ void Window::renderPingpong(RenderTarget *target, float dt) {
     target->blurredTexture.creationData.height = this->pingpongHeight;
     target->blurredTexture.type = TextureType::Color;
     target->blurredTexture.id = this->pingpongBuffers[!horizontal];
-}
-
-void Window::useDeferredRendering() {
-    this->usesDeferred = true;
-    auto target = std::make_shared<RenderTarget>(
-        RenderTarget(*this, RenderTargetType::GBuffer));
-    this->gBuffer = target;
-    auto volumetricTarget = std::make_shared<RenderTarget>(
-        RenderTarget(*this, RenderTargetType::Scene));
-    this->volumetricBuffer = volumetricTarget;
-    this->ssaoMapsDirty = true;
 }

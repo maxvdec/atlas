@@ -290,7 +290,8 @@ enum class AtlasFragmentShader {
      */
     SSAOBlur,
     Terrain,
-    Volumetric
+    Volumetric,
+    SSR
 };
 
 /**

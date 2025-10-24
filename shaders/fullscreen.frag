@@ -121,9 +121,11 @@ uniform sampler2D Texture;
 uniform sampler2D BrightTexture;
 uniform sampler2D DepthTexture;
 uniform sampler2D VolumetricLightTexture;
+uniform sampler2D SSRTexture;
 uniform int hasBrightTexture;
 uniform int hasDepthTexture;
 uniform int hasVolumetricLightTexture;
+uniform int hasSSRTexture;
 uniform samplerCube cubeMap;
 uniform bool isCubeMap;
 uniform int TextureType;
@@ -249,6 +251,16 @@ vec4 applyColorCorrection(vec4 color, ColorCorrection cc) {
 
 void main() {
     vec4 color = texture(Texture, TexCoord);
+    if (hasSSRTexture == 1) {
+        vec4 uv = texture(SSRTexture, TexCoord);
+        float visibility = uv.z;
+        if (visibility > 0.01) {
+            vec4 reflectedColor = texture(Texture, uv.xy);
+            color = mix(color, reflectedColor, visibility);
+        }
+    }
+    FragColor = color;
+    return;
     float depth = texture(DepthTexture, TexCoord).r;
     vec3 viewPos = reconstructViewPos(TexCoord, depth);
     float distance = length(viewPos);
