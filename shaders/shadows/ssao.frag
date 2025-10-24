@@ -24,7 +24,8 @@ void main() {
     }
     
     vec3 fragPos = (view * vec4(fragPosWorld, 1.0)).xyz;
-    vec3 normal = normalize((view * vec4(normalWorld, 0.0)).xyz);
+    mat3 normalMatrix = transpose(inverse(mat3(view)));
+    vec3 normal = normalize(normalMatrix * normalWorld);
     
     vec3 randomVec = normalize(texture(texNoise, TexCoord * noiseScale).xyz * 2.0 - 1.0);
     vec3 tangent = normalize(randomVec - normal * dot(randomVec, normal));

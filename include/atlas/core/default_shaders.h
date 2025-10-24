@@ -301,8 +301,8 @@ void main() {
     vec4 hdrColor = color + texture(BrightTexture, TexCoord);
     if (hasVolumetricLightTexture == 1) {
         vec4 volumetricColor = texture(VolumetricLightTexture, TexCoord);
-        if (volumetricColor.r > 0.0 && volumetricColor.g > 0.0 && volumetricColor.b > 0.0)
-            hdrColor += volumetricColor;
+
+        hdrColor += volumetricColor;
     }
 
     hdrColor.rgb = acesToneMapping(hdrColor.rgb);
@@ -1256,7 +1256,9 @@ void main() {
     }
     
     vec3 fragPos = (view * vec4(fragPosWorld, 1.0)).xyz;
-    vec3 normal = normalize((view * vec4(normalWorld, 0.0)).xyz);
+    mat3 normalMatrix = transpose(inverse(mat3(view)));
+    vec3 normal = normalize(normalMatrix * normalWorld);
+
     
     vec3 randomVec = normalize(texture(texNoise, TexCoord * noiseScale).xyz * 2.0 - 1.0);
     vec3 tangent = normalize(randomVec - normal * dot(randomVec, normal));
@@ -3233,6 +3235,7 @@ uniform float density;
 uniform float weight;
 uniform float decay;
 uniform float exposure;
+
 vec3 computeVolumetricLighting(vec2 uv) {
     vec3 color = vec3(0.0);
 
@@ -3268,9 +3271,6 @@ vec3 computeVolumetricLighting(vec2 uv) {
 }
 
 void main() {
-    //vec4 sceneTex = texture(sceneTexture, TexCoords);
-    //FragColor = sceneTex;
-    //return;
     vec3 rays = computeVolumetricLighting(TexCoords);
 
     FragColor = vec4(rays, 1.0);
