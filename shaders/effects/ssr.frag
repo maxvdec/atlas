@@ -57,6 +57,8 @@ void main() {
     float viewDistance = startView.y;
     float depth = thickness;
 
+    int step = steps;
+
     float i = 0;
     for (i = 0; i < int(delta); ++i) {
         frag += increment;
@@ -75,6 +77,39 @@ void main() {
         } else {
             search0 = search1;
         }
+
+    }
+        
+    search1 = search0 + ((search1 - search0) * 0.5);
+
+    step *= hit0;
+
+    for (i = 0; i < step; ++i) {
+        frag = mix(startFrag.xy, endFrag.xy, search1);
+        uv.xy = frag;
+        positionTo = view * texture(gPosition, uv.xy);
+
+        viewDistance = (startView.y * endView.y) / mix(startView.y, endView.y, search1);
+        depth = viewDistance - positionTo.y;
+
+        if (depth > 0 && depth < thickness) {
+            hit1 = 1;
+            break;
+        } else {
+            float temp = search1;
+            search1 = search0 + ((search1 - search0) * 0.5);
+            search0 = temp;
+        }
     }
 
+    float visibility = hit1 * positionTo.w * (1 - max(dot(-unitPositionFrom, pivot), 0));
+    visibility *= (1 - (depth / thickness, 0, 1));
+    visibility *= (1 - clamp(length(positionTo - positionFrom) / maxDistance, 0.0, 1.0));
+    visibility *= (uv.x < 0 || uv.x > 1.0 || uv.y < 0 || uv.y > 1.0) ? 0.0 : 1.0;
+
+    visibility = clamp(visibility, 0.0, 1.0);
+
+    uv.ba = vec2(visibility);
+
+    FragColor = uv;
 }
