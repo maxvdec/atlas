@@ -240,6 +240,7 @@ void Window::deferredRendering(RenderTarget *target) {
         shaderProgram.setUniform1i(uniformName, i + 10);
     }
 
+    int shadow2DSamplerIndex = 0;
     int boundParameters = 0;
 
     // Cycle though directional lights
@@ -251,13 +252,19 @@ void Window::deferredRendering(RenderTarget *target) {
             break;
         }
 
+        if (shadow2DSamplerIndex >= 5) {
+            break;
+        }
         glActiveTexture(GL_TEXTURE0 + boundTextures);
         glBindTexture(GL_TEXTURE_2D, light->shadowRenderTarget->texture.id);
         std::string baseName =
             "shadowParams[" + std::to_string(boundParameters) + "]";
-        shaderProgram.setUniform1i(baseName + ".textureIndex", boundTextures);
-        ShadowParams shadowParams =
-            light->calculateLightSpaceMatrix(Window::mainWindow->renderables);
+        shaderProgram.setUniform1i("texture" +
+                                       std::to_string(shadow2DSamplerIndex + 1),
+                                   boundTextures);
+        shaderProgram.setUniform1i(baseName + ".textureIndex",
+                                   shadow2DSamplerIndex);
+        ShadowParams shadowParams = light->lastShadowParams;
         shaderProgram.setUniformMat4f(baseName + ".lightView",
                                       shadowParams.lightView);
         shaderProgram.setUniformMat4f(baseName + ".lightProjection",
@@ -266,6 +273,7 @@ void Window::deferredRendering(RenderTarget *target) {
         shaderProgram.setUniform1f(baseName + ".isPointLight", 0);
 
         boundParameters++;
+        shadow2DSamplerIndex++;
         boundTextures++;
     }
 
@@ -278,21 +286,28 @@ void Window::deferredRendering(RenderTarget *target) {
             break;
         }
 
+        if (shadow2DSamplerIndex >= 5) {
+            break;
+        }
         glActiveTexture(GL_TEXTURE0 + boundTextures);
         glBindTexture(GL_TEXTURE_2D, light->shadowRenderTarget->texture.id);
         std::string baseName =
             "shadowParams[" + std::to_string(boundParameters) + "]";
-        shaderProgram.setUniform1i(baseName + ".textureIndex", boundTextures);
-        std::tuple<glm::mat4, glm::mat4> lightSpace =
-            light->calculateLightSpaceMatrix();
+        shaderProgram.setUniform1i("texture" +
+                                       std::to_string(shadow2DSamplerIndex + 1),
+                                   boundTextures);
+        shaderProgram.setUniform1i(baseName + ".textureIndex",
+                                   shadow2DSamplerIndex);
+        ShadowParams shadowParams = light->lastShadowParams;
         shaderProgram.setUniformMat4f(baseName + ".lightView",
-                                      std::get<0>(lightSpace));
+                                      shadowParams.lightView);
         shaderProgram.setUniformMat4f(baseName + ".lightProjection",
-                                      std::get<1>(lightSpace));
-        shaderProgram.setUniform1f(baseName + ".bias", 0.005f);
+                                      shadowParams.lightProjection);
+        shaderProgram.setUniform1f(baseName + ".bias", shadowParams.bias);
         shaderProgram.setUniform1f(baseName + ".isPointLight", 0);
 
         boundParameters++;
+        shadow2DSamplerIndex++;
         boundTextures++;
     }
 
@@ -300,14 +315,16 @@ void Window::deferredRendering(RenderTarget *target) {
         if (!light->doesCastShadows) {
             continue;
         }
-        if (boundTextures + 6 >= 16) {
+        // Reserve up to 5 cubemap units (cubeMap1..cubeMap5 bound to
+        // units 10..14)
+        if (boundCubemaps >= 5) {
             break;
         }
 
         glActiveTexture(GL_TEXTURE0 + 10 + boundCubemaps);
-
         glBindTexture(GL_TEXTURE_CUBE_MAP,
                       light->shadowRenderTarget->texture.id);
+
         std::string baseName =
             "shadowParams[" + std::to_string(boundParameters) + "]";
         shaderProgram.setUniform1i(baseName + ".textureIndex", boundCubemaps);
@@ -317,7 +334,7 @@ void Window::deferredRendering(RenderTarget *target) {
         shaderProgram.setUniform1i(baseName + ".isPointLight", 1);
 
         boundParameters++;
-        boundTextures += 6;
+        boundCubemaps++;
     }
 
     shaderProgram.setUniform1i("shadowParamCount", boundParameters);

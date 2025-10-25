@@ -164,15 +164,20 @@ float calculateShadow(ShadowParameters shadowParam, vec3 fragPos, vec3 normal) {
 
     float currentDepth = projCoords.z;
 
-    vec3 referenceDir = directionalLightCount > 0 ? normalize(-directionalLights[0].direction) : normal;
+    vec3 lightDirWorld = normalize((inverse(shadowParam.lightView) * vec4(0.0, 0.0, -1.0, 0.0)).xyz);
     float biasValue = shadowParam.bias;
-    float bias = max(biasValue * (1.0 - dot(normal, referenceDir)), biasValue);
+    float bias = max(biasValue * (1.0 - dot(normal, lightDirWorld)), biasValue);
 
     float shadow = 0.0;
     vec2 texelSize = 1.0 / getTextureDimensions(shadowParam.textureIndex);
 
     float distance = length(cameraPosition - fragPos);
-    int kernelSize = int(mix(1.0, 3.0, clamp(distance / 100.0, 0.0, 1.0)));
+    vec2 shadowMapSize = getTextureDimensions(shadowParam.textureIndex);
+    float avgDim = 0.5 * (shadowMapSize.x + shadowMapSize.y);
+    float resFactor = clamp(1024.0 / max(avgDim, 1.0), 0.75, 1.25);
+    float distFactor = clamp(distance / 300.0, 0.0, 1.0);
+    float desiredKernel = mix(1.0, 2.0, distFactor) * resFactor;
+    int kernelSize = int(clamp(floor(desiredKernel + 0.5), 1.0, 2.0));
 
     int sampleCount = 0;
     for (int x = -kernelSize; x <= kernelSize; ++x) {
@@ -304,9 +309,11 @@ void main() {
     float roughness = clamp(matData.g, 0.0, 1.0);
     float reflectivity = clamp(matData.b, 0.0, 1.0);
 
+    float linearDepth = texture(gPosition, TexCoord).w;
+    float vEps = max(0.0001, linearDepth * 1e-6);
     vec3 V = normalize(cameraPosition - FragPos);
-    if (length(V) < 0.0001) {
-        V = normalize(vec3(0.0, 0.0, 1.0));
+    if (length(V) < vEps) {
+        V = normalize(-N);
     }
 
     vec3 F0 = mix(vec3(0.04), albedo, metallic);

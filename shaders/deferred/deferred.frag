@@ -1,8 +1,8 @@
 #version 410 core
-layout (location = 0) out vec4 gPosition;
-layout (location = 1) out vec4 gNormal;
-layout (location = 2) out vec4 gAlbedoSpec;
-layout (location = 3) out vec4 gMaterial;
+layout(location = 0) out vec4 gPosition;
+layout(location = 1) out vec4 gNormal;
+layout(location = 2) out vec4 gAlbedoSpec;
+layout(location = 3) out vec4 gMaterial;
 
 in vec2 TexCoord;
 in vec4 outColor;
@@ -123,7 +123,7 @@ vec2 parallaxMapping(vec2 texCoords, vec3 viewDir) {
 void main() {
     texCoord = TexCoord;
 
-    vec3 tangentViewDir = normalize((TBN * cameraPosition) - (TBN * FragPos));
+    vec3 tangentViewDir = normalize(transpose(TBN) * (cameraPosition - FragPos));
     texCoord = parallaxMapping(texCoord, tangentViewDir);
 
     if (texCoord.x > 1.0 || texCoord.y > 1.0 || texCoord.x < 0.0 || texCoord.y < 0.0)
@@ -183,7 +183,8 @@ void main() {
     ao = clamp(ao, 0.0, 1.0);
     reflectivity = clamp(reflectivity, 0.0, 1.0);
 
-    gPosition = vec4(FragPos, gl_FragCoord.z);
+    float linearDepth = length(cameraPosition - FragPos);
+    gPosition = vec4(FragPos, linearDepth);
     gNormal = vec4(normalize(normal), 1.0);
     gAlbedoSpec = vec4(albedo, ao);
     gMaterial = vec4(metallic, roughness, reflectivity, 1.0);

@@ -694,12 +694,12 @@ void Window::renderLightsToShadowMaps() {
             light->calculateLightSpaceMatrix(this->renderables);
         glm::mat4 lightView = lightParams.lightView;
         glm::mat4 lightProjection = lightParams.lightProjection;
+        light->lastShadowParams = lightParams;
         for (auto &obj : this->renderables) {
             if (obj->getShaderProgram() == std::nullopt ||
                 !obj->canCastShadows()) {
                 continue;
             }
-            originalPrograms.push_back(obj->getShaderProgram().value());
 
             obj->setShader(this->depthProgram);
 
@@ -726,12 +726,18 @@ void Window::renderLightsToShadowMaps() {
             light->calculateLightSpaceMatrix();
         glm::mat4 lightView = std::get<0>(lightSpace);
         glm::mat4 lightProjection = std::get<1>(lightSpace);
+        ShadowParams cached;
+        cached.lightView = lightView;
+        cached.lightProjection = lightProjection;
+        cached.bias = 0.005f;
+        light->lastShadowParams = cached;
         for (auto &obj : this->renderables) {
             if (obj->getShaderProgram() == std::nullopt ||
                 !obj->canCastShadows()) {
                 continue;
             }
-            ShaderProgram program = obj->getShaderProgram().value();
+
+            obj->setShader(this->depthProgram);
 
             obj->setProjectionMatrix(lightProjection);
             obj->setViewMatrix(lightView);
@@ -765,6 +771,7 @@ void Window::renderLightsToShadowMaps() {
                                                  light->position.y,
                                                  light->position.z);
             this->pointDepthProgram.setUniform1f("far_plane", light->distance);
+            light->lastShadowParams.farPlane = light->distance;
             for (size_t i = 0; i < shadowTransforms.size(); ++i) {
                 this->pointDepthProgram.setUniformMat4f(
                     "shadowMatrices[" + std::to_string(i) + "]",
@@ -826,9 +833,11 @@ void Window::renderLightsToShadowMaps() {
 
     size_t i = 0;
     for (auto &renderable : this->renderables) {
-        if (renderable->getShaderProgram() != std::nullopt &&
-            i < originalPrograms.size()) {
-            renderable->setShader(originalPrograms[i++]);
+        if (i < originalPrograms.size()) {
+            if (originalPrograms[i].programId != 0) {
+                renderable->setShader(originalPrograms[i]);
+            }
+            i++;
         }
     }
 }

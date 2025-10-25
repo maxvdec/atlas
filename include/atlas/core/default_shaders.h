@@ -301,8 +301,8 @@ void main() {
     vec4 hdrColor = color + texture(BrightTexture, TexCoord);
     if (hasVolumetricLightTexture == 1) {
         vec4 volumetricColor = texture(VolumetricLightTexture, TexCoord);
-        if (volumetricColor.r > 0.0 && volumetricColor.g > 0.0 && volumetricColor.b > 0.0)
-            hdrColor += volumetricColor;
+
+        hdrColor += volumetricColor;
     }
 
     hdrColor.rgb = acesToneMapping(hdrColor.rgb);
@@ -1328,10 +1328,10 @@ void main() {
 
 static const char* DEFERRED_FRAG = R"(
 #version 410 core
-layout (location = 0) out vec4 gPosition;
-layout (location = 1) out vec4 gNormal;
-layout (location = 2) out vec4 gAlbedoSpec;
-layout (location = 3) out vec4 gMaterial;
+layout(location = 0) out vec4 gPosition;
+layout(location = 1) out vec4 gNormal;
+layout(location = 2) out vec4 gAlbedoSpec;
+layout(location = 3) out vec4 gMaterial;
 
 in vec2 TexCoord;
 in vec4 outColor;
@@ -1452,7 +1452,7 @@ vec2 parallaxMapping(vec2 texCoords, vec3 viewDir) {
 void main() {
     texCoord = TexCoord;
 
-    vec3 tangentViewDir = normalize((TBN * cameraPosition) - (TBN * FragPos));
+    vec3 tangentViewDir = normalize(transpose(TBN) * (cameraPosition - FragPos));
     texCoord = parallaxMapping(texCoord, tangentViewDir);
 
     if (texCoord.x > 1.0 || texCoord.y > 1.0 || texCoord.x < 0.0 || texCoord.y < 0.0)
@@ -1512,11 +1512,13 @@ void main() {
     ao = clamp(ao, 0.0, 1.0);
     reflectivity = clamp(reflectivity, 0.0, 1.0);
 
-    gPosition = vec4(FragPos, gl_FragCoord.z);
+    float linearDepth = length(cameraPosition - FragPos);
+    gPosition = vec4(FragPos, linearDepth);
     gNormal = vec4(normalize(normal), 1.0);
     gAlbedoSpec = vec4(albedo, ao);
     gMaterial = vec4(metallic, roughness, reflectivity, 1.0);
 }
+
 )";
 
 static const char* DEFERRED_VERT = R"(
@@ -1732,15 +1734,20 @@ float calculateShadow(ShadowParameters shadowParam, vec3 fragPos, vec3 normal) {
 
     float currentDepth = projCoords.z;
 
-    vec3 referenceDir = directionalLightCount > 0 ? normalize(-directionalLights[0].direction) : normal;
+    vec3 lightDirWorld = normalize((inverse(shadowParam.lightView) * vec4(0.0, 0.0, -1.0, 0.0)).xyz);
     float biasValue = shadowParam.bias;
-    float bias = max(biasValue * (1.0 - dot(normal, referenceDir)), biasValue);
+    float bias = max(biasValue * (1.0 - dot(normal, lightDirWorld)), biasValue);
 
     float shadow = 0.0;
     vec2 texelSize = 1.0 / getTextureDimensions(shadowParam.textureIndex);
 
     float distance = length(cameraPosition - fragPos);
-    int kernelSize = int(mix(1.0, 3.0, clamp(distance / 100.0, 0.0, 1.0)));
+    vec2 shadowMapSize = getTextureDimensions(shadowParam.textureIndex);
+    float avgDim = 0.5 * (shadowMapSize.x + shadowMapSize.y);
+    float resFactor = clamp(1024.0 / max(avgDim, 1.0), 0.75, 1.25);
+    float distFactor = clamp(distance / 300.0, 0.0, 1.0);
+    float desiredKernel = mix(1.0, 2.0, distFactor) * resFactor;
+    int kernelSize = int(clamp(floor(desiredKernel + 0.5), 1.0, 2.0));
 
     int sampleCount = 0;
     for (int x = -kernelSize; x <= kernelSize; ++x) {
@@ -1872,9 +1879,11 @@ void main() {
     float roughness = clamp(matData.g, 0.0, 1.0);
     float reflectivity = clamp(matData.b, 0.0, 1.0);
 
+    float linearDepth = texture(gPosition, TexCoord).w;
+    float vEps = max(0.0001, linearDepth * 1e-6);
     vec3 V = normalize(cameraPosition - FragPos);
-    if (length(V) < 0.0001) {
-        V = normalize(vec3(0.0, 0.0, 1.0));
+    if (length(V) < vEps) {
+        V = normalize(-N);
     }
 
     vec3 F0 = mix(vec3(0.04), albedo, metallic);
@@ -3233,6 +3242,7 @@ uniform float density;
 uniform float weight;
 uniform float decay;
 uniform float exposure;
+
 vec3 computeVolumetricLighting(vec2 uv) {
     vec3 color = vec3(0.0);
 
@@ -3268,9 +3278,6 @@ vec3 computeVolumetricLighting(vec2 uv) {
 }
 
 void main() {
-    //vec4 sceneTex = texture(sceneTexture, TexCoords);
-    //FragColor = sceneTex;
-    //return;
     vec3 rays = computeVolumetricLighting(TexCoords);
 
     FragColor = vec4(rays, 1.0);

@@ -91,6 +91,12 @@ struct ShadowParams {
      *
      */
     float bias;
+    /**
+     * @brief Far plane distance used for point light shadow mapping.
+     * This should match the far plane used when rendering the point light's
+     * shadow map.
+     */
+    float farPlane;
 };
 
 /**
@@ -198,6 +204,7 @@ struct Light {
      *
      */
     RenderTarget *shadowRenderTarget = nullptr;
+    ShadowParams lastShadowParams;
 
   private:
     bool doesCastShadows = false;
@@ -270,6 +277,12 @@ class DirectionalLight {
      *
      */
     RenderTarget *shadowRenderTarget = nullptr;
+    /**
+     * @brief Cached shadow parameters used when the shadow map was last
+     * rendered. Keeping this in sync with the shadow map avoids sampling
+     * mismatches when matrices change between updates.
+     */
+    ShadowParams lastShadowParams;
 
     /**
      * @brief Function that enables casting shadows from the light.
@@ -412,6 +425,12 @@ struct Spotlight {
      *
      */
     RenderTarget *shadowRenderTarget = nullptr;
+    /**
+     * @brief Cached shadow parameters used when the shadow map was last
+     * rendered. Keeping this in sync with the shadow map avoids sampling
+     * mismatches when matrices change between updates.
+     */
+    ShadowParams lastShadowParams;
 
     /**
      * @brief Function that enables casting shadows from the spotlight.
