@@ -610,6 +610,22 @@ void RenderTarget::render(float dt) {
         obj->shaderProgram.setUniform1i("hasVolumetricLightTexture",
                                         volumetricLightTexture.id > 1 ? 1 : 0);
 
+        glActiveTexture(GL_TEXTURE4);
+        glBindTexture(GL_TEXTURE_2D, gPosition.id);
+        obj->shaderProgram.setUniform1i("PositionTexture", 4);
+        obj->shaderProgram.setUniform1i("hasPositionTexture",
+                                        gPosition.id != 0 ? 1 : 0);
+
+        obj->shaderProgram.setUniformMat4f(
+            "projectionMatrix",
+            Window::mainWindow->calculateProjectionMatrix());
+
+        obj->shaderProgram.setUniformMat4f(
+            "viewMatrix",
+            Window::mainWindow->getCamera()->calculateViewMatrix());
+        obj->shaderProgram.setUniformMat4f("lastViewMatrix",
+                                           Window::mainWindow->lastViewMatrix);
+
         obj->shaderProgram.setUniform1f("nearPlane", camera->nearClip);
         obj->shaderProgram.setUniform1f("farPlane", camera->farClip);
         obj->shaderProgram.setUniform1f("focusDepth", camera->focusDepth);

@@ -407,6 +407,7 @@ void Window::deferredRendering(RenderTarget *target) {
     }
 
     target->volumetricLightTexture = volumetricBuffer->texture;
+    target->gPosition = gBuffer->gPosition;
 
     glDepthMask(GL_TRUE);
     glEnable(GL_DEPTH_TEST);

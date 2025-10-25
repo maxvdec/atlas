@@ -121,9 +121,11 @@ uniform sampler2D Texture;
 uniform sampler2D BrightTexture;
 uniform sampler2D DepthTexture;
 uniform sampler2D VolumetricLightTexture;
+uniform sampler2D PositionTexture;
 uniform int hasBrightTexture;
 uniform int hasDepthTexture;
 uniform int hasVolumetricLightTexture;
+uniform int hasPositionTexture;
 uniform samplerCube cubeMap;
 uniform bool isCubeMap;
 uniform int TextureType;
@@ -144,6 +146,9 @@ struct Environment {
 uniform Environment environment;
 
 uniform mat4 invProjectionMatrix;
+uniform mat4 projectionMatrix;
+uniform mat4 viewMatrix;
+uniform mat4 lastViewMatrix;
 
 uniform float nearPlane = 0.1;
 uniform float farPlane = 100.0;
