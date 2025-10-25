@@ -52,6 +52,8 @@ var annotated_dup =
     [ "Material", "struct_material.html", "struct_material" ],
     [ "Model", "class_model.html", "class_model" ],
     [ "Monitor", "class_monitor.html", "class_monitor" ],
+    [ "MotionBlur", "class_motion_blur.html", "class_motion_blur" ],
+    [ "MotionBlurParameters", "struct_motion_blur_parameters.html", "struct_motion_blur_parameters" ],
     [ "MountainGenerator", "class_mountain_generator.html", "class_mountain_generator" ],
     [ "MousePacket", "struct_mouse_packet.html", "struct_mouse_packet" ],
     [ "MouseScrollPacket", "struct_mouse_scroll_packet.html", "struct_mouse_scroll_packet" ],

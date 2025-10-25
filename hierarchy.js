@@ -34,6 +34,7 @@ var hierarchy =
       [ "EdgeDetection", "class_edge_detection.html", null ],
       [ "Grayscale", "class_grayscale.html", null ],
       [ "Inversion", "class_inversion.html", null ],
+      [ "MotionBlur", "class_motion_blur.html", null ],
       [ "Sharpen", "class_sharpen.html", null ]
     ] ],
     [ "Environment", "class_environment.html", null ],
@@ -49,6 +50,7 @@ var hierarchy =
     [ "Light", "struct_light.html", null ],
     [ "Material", "struct_material.html", null ],
     [ "Monitor", "class_monitor.html", null ],
+    [ "MotionBlurParameters", "struct_motion_blur_parameters.html", null ],
     [ "MousePacket", "struct_mouse_packet.html", null ],
     [ "MouseScrollPacket", "struct_mouse_scroll_packet.html", null ],
     [ "Noise", "class_noise.html", null ],
