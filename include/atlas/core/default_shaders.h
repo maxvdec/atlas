@@ -570,11 +570,13 @@ vec3 sampleEnvironmentRadiance(vec3 direction) {
 vec2 parallaxMapping(vec2 texCoords, vec3 viewDir) {
     const float minLayers = 8.0;
     const float maxLayers = 32.0;
-    float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), viewDir)));
+    vec3 v = normalize(viewDir);
+    float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), v)));
     float layerDepth = 1.0 / numLayers;
     float currentLayerDepth = 0.0;
 
-    vec2 P = viewDir.xy * 0.1;
+    const float heightScale = 0.04;
+    vec2 P = (v.xy / max(v.z, 0.05)) * heightScale;
     vec2 deltaTexCoords = P / numLayers;
 
     vec2 currentTexCoords = texCoords;
@@ -589,7 +591,7 @@ vec2 parallaxMapping(vec2 texCoords, vec3 viewDir) {
     float currentDepthMapValue = sampleTextureAt(textureIndex, currentTexCoords).r;
 
     while (currentLayerDepth < currentDepthMapValue) {
-        currentTexCoords -= deltaTexCoords;
+        currentTexCoords = clamp(currentTexCoords - deltaTexCoords, vec2(0.0), vec2(1.0));
         currentDepthMapValue = sampleTextureAt(textureIndex, currentTexCoords).r;
         currentLayerDepth += layerDepth;
     }
@@ -600,7 +602,7 @@ vec2 parallaxMapping(vec2 texCoords, vec3 viewDir) {
     float weight = afterDepth / (afterDepth - beforeDepth);
     currentTexCoords = prevTexCoords * weight + currentTexCoords * (1.0 - weight);
 
-    return currentTexCoords;
+    return clamp(currentTexCoords, vec2(0.0), vec2(1.0));
 }
 
 vec3 reinhardToneMapping(vec3 hdrColor) {
@@ -666,9 +668,6 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0) {
 
 vec3 calculatePBR(vec3 N, vec3 V, vec3 L, vec3 F0, vec3 radiance, vec3 albedo, float metallic, float roughness, float reflectivity) {
     vec3 H = normalize(V + L);
-    float distance = length(L);
-    float attenuation = 1.0 / (distance * distance);
-    vec3 radianceAttenuated = radiance * attenuation;
 
     float NDF = distributionGGX(N, H, roughness);
     float G = geometrySmith(N, V, L, roughness);
@@ -684,7 +683,7 @@ vec3 calculatePBR(vec3 N, vec3 V, vec3 L, vec3 F0, vec3 radiance, vec3 albedo, f
 
     float NdotL = max(dot(N, L), 0.0);
 
-    vec3 Lo = (kD * albedo / 3.14159265 + specular) * radianceAttenuated * NdotL;
+    vec3 Lo = (kD * albedo / 3.14159265 + specular) * radiance * NdotL;
     return Lo;
 }
 
@@ -739,7 +738,7 @@ vec3 calcAllPointLights(vec3 fragPos, vec3 N, vec3 V, vec3 albedo, float metalli
         L = normalize(L);
 
         vec3 radiance = pointLights[i].diffuse;
-        float attenuation = 1.0 / (distance * distance);
+        float attenuation = 1.0 / max(distance * distance, 0.01);
         vec3 radianceAttenuated = radiance * attenuation;
 
         vec3 H = normalize(V + L);
@@ -775,7 +774,8 @@ vec3 calcAllSpotLights(vec3 N, vec3 fragPos, vec3 L, vec3 viewDir, vec3 albedo, 
         float intensity = smoothstep(spotlights[i].outerCutOff, spotlights[i].cutOff, theta);
 
         float distance = length(spotlights[i].position - fragPos);
-        float attenuation = 1.0 / (1.0 + 0.09 * distance + 0.032 * distance);
+        distance = max(distance, 0.001);
+        float attenuation = 1.0 / max(distance * distance, 0.01);
 
         vec3 radiance = spotlights[i].diffuse * attenuation * intensity;
 
@@ -917,7 +917,7 @@ float calculateAllPointShadows(vec3 fragPos) {
 // ----- Main -----
 void main() {
     texCoord = TexCoord;
-    vec3 tangentViewDir = normalize((TBN * cameraPosition) - (TBN * FragPos));
+    vec3 tangentViewDir = normalize(transpose(TBN) * (cameraPosition - FragPos));
     texCoord = parallaxMapping(texCoord, tangentViewDir);
     if (texCoord.x > 1.0 || texCoord.y > 1.0 || texCoord.x < 0.0 || texCoord.y < 0.0)
         discard;
@@ -1736,7 +1736,9 @@ float calculateShadow(ShadowParameters shadowParam, vec3 fragPos, vec3 normal) {
 
     vec3 lightDirWorld = normalize((inverse(shadowParam.lightView) * vec4(0.0, 0.0, -1.0, 0.0)).xyz);
     float biasValue = shadowParam.bias;
-    float bias = max(biasValue * (1.0 - dot(normal, lightDirWorld)), biasValue);
+    float ndotl = max(dot(normal, lightDirWorld), 0.0);
+    float minBias = 0.0005;
+    float bias = max(biasValue * (1.0 - ndotl), minBias);
 
     float shadow = 0.0;
     vec2 texelSize = 1.0 / getTextureDimensions(shadowParam.textureIndex);
@@ -1745,18 +1747,35 @@ float calculateShadow(ShadowParameters shadowParam, vec3 fragPos, vec3 normal) {
     vec2 shadowMapSize = getTextureDimensions(shadowParam.textureIndex);
     float avgDim = 0.5 * (shadowMapSize.x + shadowMapSize.y);
     float resFactor = clamp(1024.0 / max(avgDim, 1.0), 0.75, 1.25);
-    float distFactor = clamp(distance / 300.0, 0.0, 1.0);
-    float desiredKernel = mix(1.0, 2.0, distFactor) * resFactor;
+    float distFactor = clamp(distance / 800.0, 0.0, 1.0);
+    float desiredKernel = mix(1.0, 1.5, distFactor) * resFactor;
     int kernelSize = int(clamp(floor(desiredKernel + 0.5), 1.0, 2.0));
 
+    // 12-tap rotated Poisson disk PCF for softer, less pixelated shadows
+    const vec2 poissonDisk[12] = vec2[](
+            vec2(-0.326, -0.406), vec2(-0.840, -0.074), vec2(-0.696, 0.457),
+            vec2(-0.203, 0.621), vec2(0.962, -0.195), vec2(0.473, -0.480),
+            vec2(0.519, 0.767), vec2(0.185, -0.893), vec2(0.507, 0.064),
+            vec2(0.896, 0.412), vec2(-0.322, -0.933), vec2(-0.792, -0.598)
+        );
+    float rand = fract(sin(dot(projCoords.xy, vec2(12.9898, 78.233))) * 43758.5453);
+    float angle = rand * 6.2831853;
+    float ca = cos(angle), sa = sin(angle);
+    mat2 rot = mat2(ca, -sa, sa, ca);
+
+    float texelRadius = mix(1.0, 3.0, distFactor) * resFactor;
+    vec2 filterRadius = texelSize * texelRadius;
+
     int sampleCount = 0;
-    for (int x = -kernelSize; x <= kernelSize; ++x) {
-        for (int y = -kernelSize; y <= kernelSize; ++y) {
-            float pcfDepth = sampleTextureAt(shadowParam.textureIndex,
-                    projCoords.xy + vec2(x, y) * texelSize).r;
-            shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
-            sampleCount++;
+    for (int i = 0; i < 12; ++i) {
+        vec2 offset = rot * poissonDisk[i] * filterRadius;
+        vec2 uv = projCoords.xy + offset;
+        if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
+            continue;
         }
+        float pcfDepth = sampleTextureAt(shadowParam.textureIndex, uv).r;
+        shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
+        sampleCount++;
     }
     if (sampleCount > 0) {
         shadow /= float(sampleCount);
@@ -1828,13 +1847,10 @@ vec3 calcDirectionalLight(DirectionalLight light, vec3 N, vec3 V, vec3 F0, vec3 
 vec3 calcPointLight(PointLight light, vec3 fragPos, vec3 N, vec3 V, vec3 F0, vec3 albedo, float metallic, float roughness) {
     vec3 L = light.position - fragPos;
     float distance = length(L);
-    if (distance > light.radius) {
-        return vec3(0.0);
-    }
-    vec3 direction = normalize(L);
-    float attenuation = 1.0 /
-            (light.constant + light.linear * distance + light.quadratic * distance * distance);
-    vec3 radiance = light.diffuse * attenuation;
+    vec3 direction = distance > 0.0 ? (L / distance) : vec3(0.0, 0.0, 1.0);
+    float attenuation = 1.0 / max(light.constant + light.linear * distance + light.quadratic * distance * distance, 0.0001);
+    float fade = 1.0 - smoothstep(light.radius * 0.9, light.radius, distance);
+    vec3 radiance = light.diffuse * attenuation * fade;
     return evaluateBRDF(direction, radiance, N, V, F0, albedo, metallic, roughness);
 }
 

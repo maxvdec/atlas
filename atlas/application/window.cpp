@@ -688,8 +688,10 @@ void Window::renderLightsToShadowMaps() {
         glBindFramebuffer(GL_FRAMEBUFFER, shadowRenderTarget->fbo);
         glClearDepth(1.0);
         glClear(GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_POLYGON_OFFSET_FILL);
+        glPolygonOffset(2.0f, 4.0f);
         glEnable(GL_CULL_FACE);
-        glCullFace(GL_FRONT);
+        glCullFace(GL_BACK);
         ShadowParams lightParams =
             light->calculateLightSpaceMatrix(this->renderables);
         glm::mat4 lightView = lightParams.lightView;
@@ -720,8 +722,10 @@ void Window::renderLightsToShadowMaps() {
         glBindFramebuffer(GL_FRAMEBUFFER, shadowRenderTarget->fbo);
         glClearDepth(1.0);
         glClear(GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_POLYGON_OFFSET_FILL);
+        glPolygonOffset(2.0f, 4.0f);
         glEnable(GL_CULL_FACE);
-        glCullFace(GL_FRONT);
+        glCullFace(GL_BACK);
         std::tuple<glm::mat4, glm::mat4> lightSpace =
             light->calculateLightSpaceMatrix();
         glm::mat4 lightView = std::get<0>(lightSpace);
@@ -756,8 +760,10 @@ void Window::renderLightsToShadowMaps() {
         glBindFramebuffer(GL_FRAMEBUFFER, shadowRenderTarget->fbo);
         glClearDepth(1.0);
         glClear(GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_POLYGON_OFFSET_FILL);
+        glPolygonOffset(2.0f, 4.0f);
         glEnable(GL_CULL_FACE);
-        glCullFace(GL_FRONT);
+        glCullFace(GL_BACK);
 
         for (auto &obj : this->renderables) {
             if (obj->getShaderProgram() == std::nullopt ||
@@ -827,6 +833,7 @@ void Window::renderLightsToShadowMaps() {
         this->cachedSpotlightDirections.push_back(light->direction.toGlm());
     }
 
+    glDisable(GL_POLYGON_OFFSET_FILL);
     if (!renderedShadows) {
         return;
     }
