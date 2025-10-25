@@ -11,6 +11,8 @@
 #include "bezel/bounds.h"
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/norm.hpp>
+#include <glm/gtx/transform.hpp>
+#include <glm/gtx/quaternion.hpp>
 #include <cmath>
 
 Sphere::Sphere(float radius) : radius(radius) {
@@ -123,7 +125,8 @@ glm::mat3 Box::getInertiaTensor() const {
 
 glm::vec3 Box::support(const glm::vec3 &dir, const glm::vec3 &pos,
                        const glm::quat &orientation, float bias) const {
-    glm::vec3 maxPt = (orientation * vertices[0]) + pos;
+    glm::vec3 maxPt = glm::rotate(orientation, vertices[0]) + pos;
+
     float maxDist = glm::dot(maxPt, dir);
 
     for (auto &v : vertices) {
