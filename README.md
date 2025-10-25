@@ -69,7 +69,16 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [ ] Add motion blur **for alpha 3**
 - [ ] Physically based bloom **for alpha 3**
 - [x] Add area lights **for alpha 3**
-- [ ] Screen-space reflections **for alpha 3**
+- [ ] Screen-space reflections
+- [ ] Add rim lighting **for alpha 3**
+- [ ] Add chromatic aberration **for alpha 3**
+- [ ] Add posterization **for alpha 3**
+- [ ] Add pixelization **for alpha 3**
+- [ ] Add dialation **for alpha 3**
+- [ ] Add film grain **for alpha 3**
+- [ ] Add LUT tables **for alpha 3**
+- [ ] Add foam and simple fluid rendering
+- [ ] Screen-space refractions
 
 ## Other features planned for the future
 
