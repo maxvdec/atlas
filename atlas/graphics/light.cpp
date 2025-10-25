@@ -364,6 +364,7 @@ void AreaLight::createDebugObject() {
     VertexShader vShader =
         VertexShader::fromDefaultShader(AtlasVertexShader::Color);
     plane.createAndAttachProgram(vShader, shader);
+    plane.useDeferredRendering = false;
 
     this->debugObject = std::make_shared<CoreObject>(plane);
 }

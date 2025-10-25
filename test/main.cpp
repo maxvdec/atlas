@@ -174,7 +174,7 @@ class MainScene : public Scene {
         areaLight.position = {0.0f, 2.0f, 0.0};
         areaLight.rotate({0.0f, 90.0f, 0.0f});
         areaLight.castsBothSides = true;
-        // this->addAreaLight(&areaLight);
+        this->addAreaLight(&areaLight);
         areaLight.createDebugObject();
         areaLight.addDebugObject(window);
 
@@ -236,6 +236,7 @@ class MainScene : public Scene {
         terrain.maxPeak = 100.f;
 
         light = DirectionalLight({1.0f, -0.3f, 0.5f}, Color::white());
+        light.castShadows(window);
         this->addDirectionalLight(&light);
 
         this->setAmbientIntensity(0.1);

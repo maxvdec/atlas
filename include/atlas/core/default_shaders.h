@@ -301,8 +301,8 @@ void main() {
     vec4 hdrColor = color + texture(BrightTexture, TexCoord);
     if (hasVolumetricLightTexture == 1) {
         vec4 volumetricColor = texture(VolumetricLightTexture, TexCoord);
-        if (volumetricColor.r > 0.0 && volumetricColor.g > 0.0 && volumetricColor.b > 0.0)
-            hdrColor += volumetricColor;
+
+        hdrColor += volumetricColor;
     }
 
     hdrColor.rgb = acesToneMapping(hdrColor.rgb);
@@ -570,11 +570,13 @@ vec3 sampleEnvironmentRadiance(vec3 direction) {
 vec2 parallaxMapping(vec2 texCoords, vec3 viewDir) {
     const float minLayers = 8.0;
     const float maxLayers = 32.0;
-    float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), viewDir)));
+    vec3 v = normalize(viewDir);
+    float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), v)));
     float layerDepth = 1.0 / numLayers;
     float currentLayerDepth = 0.0;
 
-    vec2 P = viewDir.xy * 0.1;
+    const float heightScale = 0.04;
+    vec2 P = (v.xy / max(v.z, 0.05)) * heightScale;
     vec2 deltaTexCoords = P / numLayers;
 
     vec2 currentTexCoords = texCoords;
@@ -589,7 +591,7 @@ vec2 parallaxMapping(vec2 texCoords, vec3 viewDir) {
     float currentDepthMapValue = sampleTextureAt(textureIndex, currentTexCoords).r;
 
     while (currentLayerDepth < currentDepthMapValue) {
-        currentTexCoords -= deltaTexCoords;
+        currentTexCoords = clamp(currentTexCoords - deltaTexCoords, vec2(0.0), vec2(1.0));
         currentDepthMapValue = sampleTextureAt(textureIndex, currentTexCoords).r;
         currentLayerDepth += layerDepth;
     }
@@ -600,7 +602,7 @@ vec2 parallaxMapping(vec2 texCoords, vec3 viewDir) {
     float weight = afterDepth / (afterDepth - beforeDepth);
     currentTexCoords = prevTexCoords * weight + currentTexCoords * (1.0 - weight);
 
-    return currentTexCoords;
+    return clamp(currentTexCoords, vec2(0.0), vec2(1.0));
 }
 
 vec3 reinhardToneMapping(vec3 hdrColor) {
@@ -666,9 +668,6 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0) {
 
 vec3 calculatePBR(vec3 N, vec3 V, vec3 L, vec3 F0, vec3 radiance, vec3 albedo, float metallic, float roughness, float reflectivity) {
     vec3 H = normalize(V + L);
-    float distance = length(L);
-    float attenuation = 1.0 / (distance * distance);
-    vec3 radianceAttenuated = radiance * attenuation;
 
     float NDF = distributionGGX(N, H, roughness);
     float G = geometrySmith(N, V, L, roughness);
@@ -684,7 +683,7 @@ vec3 calculatePBR(vec3 N, vec3 V, vec3 L, vec3 F0, vec3 radiance, vec3 albedo, f
 
     float NdotL = max(dot(N, L), 0.0);
 
-    vec3 Lo = (kD * albedo / 3.14159265 + specular) * radianceAttenuated * NdotL;
+    vec3 Lo = (kD * albedo / 3.14159265 + specular) * radiance * NdotL;
     return Lo;
 }
 
@@ -739,7 +738,7 @@ vec3 calcAllPointLights(vec3 fragPos, vec3 N, vec3 V, vec3 albedo, float metalli
         L = normalize(L);
 
         vec3 radiance = pointLights[i].diffuse;
-        float attenuation = 1.0 / (distance * distance);
+        float attenuation = 1.0 / max(distance * distance, 0.01);
         vec3 radianceAttenuated = radiance * attenuation;
 
         vec3 H = normalize(V + L);
@@ -775,7 +774,8 @@ vec3 calcAllSpotLights(vec3 N, vec3 fragPos, vec3 L, vec3 viewDir, vec3 albedo, 
         float intensity = smoothstep(spotlights[i].outerCutOff, spotlights[i].cutOff, theta);
 
         float distance = length(spotlights[i].position - fragPos);
-        float attenuation = 1.0 / (1.0 + 0.09 * distance + 0.032 * distance);
+        distance = max(distance, 0.001);
+        float attenuation = 1.0 / max(distance * distance, 0.01);
 
         vec3 radiance = spotlights[i].diffuse * attenuation * intensity;
 
@@ -917,7 +917,7 @@ float calculateAllPointShadows(vec3 fragPos) {
 // ----- Main -----
 void main() {
     texCoord = TexCoord;
-    vec3 tangentViewDir = normalize((TBN * cameraPosition) - (TBN * FragPos));
+    vec3 tangentViewDir = normalize(transpose(TBN) * (cameraPosition - FragPos));
     texCoord = parallaxMapping(texCoord, tangentViewDir);
     if (texCoord.x > 1.0 || texCoord.y > 1.0 || texCoord.x < 0.0 || texCoord.y < 0.0)
         discard;
@@ -1328,10 +1328,10 @@ void main() {
 
 static const char* DEFERRED_FRAG = R"(
 #version 410 core
-layout (location = 0) out vec4 gPosition;
-layout (location = 1) out vec4 gNormal;
-layout (location = 2) out vec4 gAlbedoSpec;
-layout (location = 3) out vec4 gMaterial;
+layout(location = 0) out vec4 gPosition;
+layout(location = 1) out vec4 gNormal;
+layout(location = 2) out vec4 gAlbedoSpec;
+layout(location = 3) out vec4 gMaterial;
 
 in vec2 TexCoord;
 in vec4 outColor;
@@ -1415,14 +1415,16 @@ vec4 sampleTextureAt(int textureIndex, vec2 uv) {
 vec2 parallaxMapping(vec2 texCoords, vec3 viewDir) {
     const float minLayers = 8.0;
     const float maxLayers = 32.0;
-    float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), viewDir)));
+    vec3 v = normalize(viewDir);
+    float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), v)));
     float layerDepth = 1.0 / numLayers;
     float currentLayerDepth = 0.0;
 
-    vec2 P = viewDir.xy * 0.1;
+    const float heightScale = 0.04;
+    vec2 P = (v.xy / max(v.z, 0.05)) * heightScale;
     vec2 deltaTexCoords = P / numLayers;
 
-    vec2 currentTexCoords = texCoords;
+    vec2 currentTexCoords = clamp(texCoords, vec2(0.0), vec2(1.0));
     int textureIndex = -1;
     for (int i = 0; i < textureCount; i++) {
         if (textureTypes[i] == TEXTURE_PARALLAX) {
@@ -1430,33 +1432,33 @@ vec2 parallaxMapping(vec2 texCoords, vec3 viewDir) {
             break;
         }
     }
-    if (textureIndex == -1) return texCoords;
+    if (textureIndex == -1) return currentTexCoords;
 
     float currentDepthMapValue = sampleTextureAt(textureIndex, currentTexCoords).r;
 
     while (currentLayerDepth < currentDepthMapValue) {
-        currentTexCoords -= deltaTexCoords;
+        currentTexCoords = clamp(currentTexCoords - deltaTexCoords, vec2(0.0), vec2(1.0));
         currentDepthMapValue = sampleTextureAt(textureIndex, currentTexCoords).r;
         currentLayerDepth += layerDepth;
     }
 
-    vec2 prevTexCoords = currentTexCoords + deltaTexCoords;
+    vec2 prevTexCoords = clamp(currentTexCoords + deltaTexCoords, vec2(0.0), vec2(1.0));
     float afterDepth = currentDepthMapValue - currentLayerDepth;
     float beforeDepth = sampleTextureAt(textureIndex, prevTexCoords).r - (currentLayerDepth - layerDepth);
-    float weight = afterDepth / (afterDepth - beforeDepth);
+    float denom = max(afterDepth - beforeDepth, 1e-4);
+    float weight = clamp(afterDepth / denom, 0.0, 1.0);
     currentTexCoords = prevTexCoords * weight + currentTexCoords * (1.0 - weight);
 
-    return currentTexCoords;
+    return clamp(currentTexCoords, vec2(0.0), vec2(1.0));
 }
 
 void main() {
     texCoord = TexCoord;
 
-    vec3 tangentViewDir = normalize((TBN * cameraPosition) - (TBN * FragPos));
+    vec3 tangentViewDir = normalize(transpose(TBN) * (cameraPosition - FragPos));
     texCoord = parallaxMapping(texCoord, tangentViewDir);
 
-    if (texCoord.x > 1.0 || texCoord.y > 1.0 || texCoord.x < 0.0 || texCoord.y < 0.0)
-        discard;
+    texCoord = clamp(texCoord, vec2(0.0), vec2(1.0));
 
     vec4 sampledColor = enableTextures(TEXTURE_COLOR);
     bool hasColorTexture = sampledColor != vec4(-1.0);
@@ -1512,11 +1514,26 @@ void main() {
     ao = clamp(ao, 0.0, 1.0);
     reflectivity = clamp(reflectivity, 0.0, 1.0);
 
-    gPosition = vec4(FragPos, gl_FragCoord.z);
-    gNormal = vec4(normalize(normal), 1.0);
-    gAlbedoSpec = vec4(albedo, ao);
+    float nonlinearDepth = gl_FragCoord.z;
+    gPosition = vec4(FragPos, nonlinearDepth);
+
+    // Sanitize and clamp normal to avoid NaN/Inf propagating into the G-Buffer
+    vec3 n = normalize(normal);
+    if (!all(equal(n, n)) || length(n) < 1e-4) {
+        n = normalize(Normal);
+    }
+    gNormal = vec4(n, 1.0);
+
+    // Clamp albedo into [0,1] and guard against NaNs
+    vec3 a = clamp(albedo, 0.0, 1.0);
+    if (!all(equal(a, a))) {
+        a = vec3(0.0);
+    }
+    gAlbedoSpec = vec4(a, ao);
+
     gMaterial = vec4(metallic, roughness, reflectivity, 1.0);
 }
+
 )";
 
 static const char* DEFERRED_VERT = R"(
@@ -1732,24 +1749,48 @@ float calculateShadow(ShadowParameters shadowParam, vec3 fragPos, vec3 normal) {
 
     float currentDepth = projCoords.z;
 
-    vec3 referenceDir = directionalLightCount > 0 ? normalize(-directionalLights[0].direction) : normal;
+    vec3 lightDirWorld = normalize((inverse(shadowParam.lightView) * vec4(0.0, 0.0, -1.0, 0.0)).xyz);
     float biasValue = shadowParam.bias;
-    float bias = max(biasValue * (1.0 - dot(normal, referenceDir)), biasValue);
+    float ndotl = max(dot(normal, lightDirWorld), 0.0);
+    float minBias = 0.0005;
+    float bias = max(biasValue * (1.0 - ndotl), minBias);
 
     float shadow = 0.0;
     vec2 texelSize = 1.0 / getTextureDimensions(shadowParam.textureIndex);
 
     float distance = length(cameraPosition - fragPos);
-    int kernelSize = int(mix(1.0, 3.0, clamp(distance / 100.0, 0.0, 1.0)));
+    vec2 shadowMapSize = getTextureDimensions(shadowParam.textureIndex);
+    float avgDim = 0.5 * (shadowMapSize.x + shadowMapSize.y);
+    float resFactor = clamp(1024.0 / max(avgDim, 1.0), 0.75, 1.25);
+    float distFactor = clamp(distance / 800.0, 0.0, 1.0);
+    float desiredKernel = mix(1.0, 1.5, distFactor) * resFactor;
+    int kernelSize = int(clamp(floor(desiredKernel + 0.5), 1.0, 2.0));
+
+    // 12-tap rotated Poisson disk PCF for softer, less pixelated shadows
+    const vec2 poissonDisk[12] = vec2[](
+            vec2(-0.326, -0.406), vec2(-0.840, -0.074), vec2(-0.696, 0.457),
+            vec2(-0.203, 0.621), vec2(0.962, -0.195), vec2(0.473, -0.480),
+            vec2(0.519, 0.767), vec2(0.185, -0.893), vec2(0.507, 0.064),
+            vec2(0.896, 0.412), vec2(-0.322, -0.933), vec2(-0.792, -0.598)
+        );
+    float rand = fract(sin(dot(projCoords.xy, vec2(12.9898, 78.233))) * 43758.5453);
+    float angle = rand * 6.2831853;
+    float ca = cos(angle), sa = sin(angle);
+    mat2 rot = mat2(ca, -sa, sa, ca);
+
+    float texelRadius = mix(1.0, 3.0, distFactor) * resFactor;
+    vec2 filterRadius = texelSize * texelRadius;
 
     int sampleCount = 0;
-    for (int x = -kernelSize; x <= kernelSize; ++x) {
-        for (int y = -kernelSize; y <= kernelSize; ++y) {
-            float pcfDepth = sampleTextureAt(shadowParam.textureIndex,
-                    projCoords.xy + vec2(x, y) * texelSize).r;
-            shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
-            sampleCount++;
+    for (int i = 0; i < 12; ++i) {
+        vec2 offset = rot * poissonDisk[i] * filterRadius;
+        vec2 uv = projCoords.xy + offset;
+        if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
+            continue;
         }
+        float pcfDepth = sampleTextureAt(shadowParam.textureIndex, uv).r;
+        shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
+        sampleCount++;
     }
     if (sampleCount > 0) {
         shadow /= float(sampleCount);
@@ -1821,13 +1862,10 @@ vec3 calcDirectionalLight(DirectionalLight light, vec3 N, vec3 V, vec3 F0, vec3 
 vec3 calcPointLight(PointLight light, vec3 fragPos, vec3 N, vec3 V, vec3 F0, vec3 albedo, float metallic, float roughness) {
     vec3 L = light.position - fragPos;
     float distance = length(L);
-    if (distance > light.radius) {
-        return vec3(0.0);
-    }
-    vec3 direction = normalize(L);
-    float attenuation = 1.0 /
-            (light.constant + light.linear * distance + light.quadratic * distance * distance);
-    vec3 radiance = light.diffuse * attenuation;
+    vec3 direction = distance > 0.0 ? (L / distance) : vec3(0.0, 0.0, 1.0);
+    float attenuation = 1.0 / max(light.constant + light.linear * distance + light.quadratic * distance * distance, 0.0001);
+    float fade = 1.0 - smoothstep(light.radius * 0.9, light.radius, distance);
+    vec3 radiance = light.diffuse * attenuation * fade;
     return evaluateBRDF(direction, radiance, N, V, F0, albedo, metallic, roughness);
 }
 
@@ -1872,16 +1910,15 @@ void main() {
     float roughness = clamp(matData.g, 0.0, 1.0);
     float reflectivity = clamp(matData.b, 0.0, 1.0);
 
-    vec3 V = normalize(cameraPosition - FragPos);
-    if (length(V) < 0.0001) {
-        V = normalize(vec3(0.0, 0.0, 1.0));
-    }
+    float viewDistance = max(length(cameraPosition - FragPos), 1e-6);
+    vec3 V = (cameraPosition - FragPos) / viewDistance;
 
     vec3 F0 = mix(vec3(0.04), albedo, metallic);
 
-    float ssaoFactor = texture(ssao, TexCoord).r;
-    float occlusion = clamp(ao * ssaoFactor, 0.0, 1.0);
-    float lightingOcclusion = clamp(ssaoFactor, 0.0, 1.0);
+    float ssaoFactor = clamp(texture(ssao, TexCoord).r, 0.0, 1.0);
+    float ssaoDesaturated = mix(1.0, ssaoFactor, 0.35);
+    float occlusion = clamp(ao * (0.2 + 0.8 * ssaoDesaturated), 0.0, 1.0);
+    float lightingOcclusion = clamp(ssaoDesaturated, 0.2, 1.0);
 
     float dirShadow = 0.0;
     float pointShadow = 0.0;
@@ -3233,6 +3270,7 @@ uniform float density;
 uniform float weight;
 uniform float decay;
 uniform float exposure;
+
 vec3 computeVolumetricLighting(vec2 uv) {
     vec3 color = vec3(0.0);
 
@@ -3268,9 +3306,6 @@ vec3 computeVolumetricLighting(vec2 uv) {
 }
 
 void main() {
-    //vec4 sceneTex = texture(sceneTexture, TexCoords);
-    //FragColor = sceneTex;
-    //return;
     vec3 rays = computeVolumetricLighting(TexCoords);
 
     FragColor = vec4(rays, 1.0);

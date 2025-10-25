@@ -252,11 +252,13 @@ vec3 sampleEnvironmentRadiance(vec3 direction) {
 vec2 parallaxMapping(vec2 texCoords, vec3 viewDir) {
     const float minLayers = 8.0;
     const float maxLayers = 32.0;
-    float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), viewDir)));
+    vec3 v = normalize(viewDir);
+    float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), v)));
     float layerDepth = 1.0 / numLayers;
     float currentLayerDepth = 0.0;
 
-    vec2 P = viewDir.xy * 0.1;
+    const float heightScale = 0.04;
+    vec2 P = (v.xy / max(v.z, 0.05)) * heightScale;
     vec2 deltaTexCoords = P / numLayers;
 
     vec2 currentTexCoords = texCoords;
@@ -271,7 +273,7 @@ vec2 parallaxMapping(vec2 texCoords, vec3 viewDir) {
     float currentDepthMapValue = sampleTextureAt(textureIndex, currentTexCoords).r;
 
     while (currentLayerDepth < currentDepthMapValue) {
-        currentTexCoords -= deltaTexCoords;
+        currentTexCoords = clamp(currentTexCoords - deltaTexCoords, vec2(0.0), vec2(1.0));
         currentDepthMapValue = sampleTextureAt(textureIndex, currentTexCoords).r;
         currentLayerDepth += layerDepth;
     }
@@ -282,7 +284,7 @@ vec2 parallaxMapping(vec2 texCoords, vec3 viewDir) {
     float weight = afterDepth / (afterDepth - beforeDepth);
     currentTexCoords = prevTexCoords * weight + currentTexCoords * (1.0 - weight);
 
-    return currentTexCoords;
+    return clamp(currentTexCoords, vec2(0.0), vec2(1.0));
 }
 
 vec3 reinhardToneMapping(vec3 hdrColor) {
@@ -348,9 +350,6 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0) {
 
 vec3 calculatePBR(vec3 N, vec3 V, vec3 L, vec3 F0, vec3 radiance, vec3 albedo, float metallic, float roughness, float reflectivity) {
     vec3 H = normalize(V + L);
-    float distance = length(L);
-    float attenuation = 1.0 / (distance * distance);
-    vec3 radianceAttenuated = radiance * attenuation;
 
     float NDF = distributionGGX(N, H, roughness);
     float G = geometrySmith(N, V, L, roughness);
@@ -366,7 +365,7 @@ vec3 calculatePBR(vec3 N, vec3 V, vec3 L, vec3 F0, vec3 radiance, vec3 albedo, f
 
     float NdotL = max(dot(N, L), 0.0);
 
-    vec3 Lo = (kD * albedo / 3.14159265 + specular) * radianceAttenuated * NdotL;
+    vec3 Lo = (kD * albedo / 3.14159265 + specular) * radiance * NdotL;
     return Lo;
 }
 
@@ -421,7 +420,7 @@ vec3 calcAllPointLights(vec3 fragPos, vec3 N, vec3 V, vec3 albedo, float metalli
         L = normalize(L);
 
         vec3 radiance = pointLights[i].diffuse;
-        float attenuation = 1.0 / (distance * distance);
+        float attenuation = 1.0 / max(distance * distance, 0.01);
         vec3 radianceAttenuated = radiance * attenuation;
 
         vec3 H = normalize(V + L);
@@ -457,7 +456,8 @@ vec3 calcAllSpotLights(vec3 N, vec3 fragPos, vec3 L, vec3 viewDir, vec3 albedo, 
         float intensity = smoothstep(spotlights[i].outerCutOff, spotlights[i].cutOff, theta);
 
         float distance = length(spotlights[i].position - fragPos);
-        float attenuation = 1.0 / (1.0 + 0.09 * distance + 0.032 * distance);
+        distance = max(distance, 0.001);
+        float attenuation = 1.0 / max(distance * distance, 0.01);
 
         vec3 radiance = spotlights[i].diffuse * attenuation * intensity;
 
@@ -599,7 +599,7 @@ float calculateAllPointShadows(vec3 fragPos) {
 // ----- Main -----
 void main() {
     texCoord = TexCoord;
-    vec3 tangentViewDir = normalize((TBN * cameraPosition) - (TBN * FragPos));
+    vec3 tangentViewDir = normalize(transpose(TBN) * (cameraPosition - FragPos));
     texCoord = parallaxMapping(texCoord, tangentViewDir);
     if (texCoord.x > 1.0 || texCoord.y > 1.0 || texCoord.x < 0.0 || texCoord.y < 0.0)
         discard;
