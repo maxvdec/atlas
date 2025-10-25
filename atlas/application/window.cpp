@@ -347,6 +347,8 @@ void Window::run() {
             obj->render(getDeltaTime());
         }
 
+        this->lastViewMatrix = this->camera->calculateViewMatrix();
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }

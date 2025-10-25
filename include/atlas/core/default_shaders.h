@@ -6,7 +6,6 @@ static const char* FULLSCREEN_FRAG = R"(
 #version 410 core
 
 in vec2 TexCoord;
-
 out vec4 FragColor;
 
 const int TEXTURE_COLOR = 0;
@@ -19,6 +18,7 @@ const int EFFECT_SHARPEN = 2;
 const int EFFECT_BLUR = 3;
 const int EFFECT_EDGE_DETECTION = 4;
 const int EFFECT_COLOR_CORRECTION = 5;
+const int EFFECT_MOTION_BLUR = 6;
 
 const float offset = 1.0 / 300.0;
 const float exposure = 1.0;
@@ -126,9 +126,11 @@ uniform sampler2D Texture;
 uniform sampler2D BrightTexture;
 uniform sampler2D DepthTexture;
 uniform sampler2D VolumetricLightTexture;
+uniform sampler2D PositionTexture;
 uniform int hasBrightTexture;
 uniform int hasDepthTexture;
 uniform int hasVolumetricLightTexture;
+uniform int hasPositionTexture;
 uniform samplerCube cubeMap;
 uniform bool isCubeMap;
 uniform int TextureType;
@@ -149,6 +151,9 @@ struct Environment {
 uniform Environment environment;
 
 uniform mat4 invProjectionMatrix;
+uniform mat4 projectionMatrix;
+uniform mat4 viewMatrix;
+uniform mat4 lastViewMatrix;
 
 uniform float nearPlane = 0.1;
 uniform float farPlane = 100.0;
@@ -252,14 +257,104 @@ vec4 applyColorCorrection(vec4 color, ColorCorrection cc) {
     return vec4(linearColor, color.a);
 }
 
+vec4 applyMotionBlur(vec2 texCoord, float size, float separation, vec4 color) {
+    vec4 fallbackColor = color;
+    if (hasBrightTexture == 1) {
+        fallbackColor += texture(BrightTexture, texCoord);
+    }
+    if (hasVolumetricLightTexture == 1) {
+        fallbackColor += texture(VolumetricLightTexture, texCoord);
+    }
+    if (size <= 0.0 || separation <= 0.0) {
+        return fallbackColor;
+    }
+    if (hasPositionTexture != 1) {
+        return fallbackColor;
+    }
+
+        vec4 worldPos = texture(PositionTexture, texCoord);
+        if (worldPos.a <= 0.0) {
+            return fallbackColor;
+        }
+    
+        vec3 viewSpacePos = (viewMatrix * worldPos).xyz;
+        float distanceToCamera = length(viewSpacePos);
+        
+        if (distanceToCamera < nearPlane * 2.0) {
+            return fallbackColor;
+        }
+    
+        vec4 currentClipPos = projectionMatrix * viewMatrix * worldPos;
+        currentClipPos.xyz /= currentClipPos.w;
+        vec2 currentUV = currentClipPos.xy * 0.5 + 0.5;
+    
+        vec4 prevClipPos = projectionMatrix * lastViewMatrix * worldPos;
+        prevClipPos.xyz /= prevClipPos.w;
+        vec2 prevUV = prevClipPos.xy * 0.5 + 0.5;
+    
+        vec2 velocity = (currentUV - prevUV) * separation;
+    
+        float maxVelocity = 0.1; 
+        if (length(velocity) > maxVelocity) {
+            velocity = normalize(velocity) * maxVelocity;
+        }
+    
+        if (length(velocity) < 0.0001) {
+            return fallbackColor;
+        }
+
+    vec4 result = vec4(0.0);
+    float totalWeight = 0.0;
+
+    int samples = int(size);
+    for (int i = -samples; i <= samples; i++) {
+        float t = float(i) / float(samples);
+        vec2 sampleCoord = texCoord + velocity * t;
+
+        if (sampleCoord.x >= 0.0 && sampleCoord.x <= 1.0 &&
+            sampleCoord.y >= 0.0 && sampleCoord.y <= 1.0) {
+            
+            vec4 sampled = texture(Texture, sampleCoord);
+            if (hasBrightTexture == 1) {
+                sampled += texture(BrightTexture, sampleCoord);
+            }
+            if (hasVolumetricLightTexture == 1) {
+                sampled += texture(VolumetricLightTexture, sampleCoord);
+            }
+
+            float weight = 1.0 - abs(t) * 0.5;
+            result += sampled * weight;
+            totalWeight += weight;
+        }
+    }
+
+    if (totalWeight > 0.0) {
+        result /= totalWeight;
+        return result;
+    }
+
+    return fallbackColor;
+}
+
 void main() {
     vec4 color = texture(Texture, TexCoord);
     float depth = texture(DepthTexture, TexCoord).r;
     vec3 viewPos = reconstructViewPos(TexCoord, depth);
     float distance = length(viewPos);
 
-    // Apply effects FIRST
-    bool appliedColorCorrection = false;
+    bool useMotionBlur = false;
+    float motionBlurSize = 0.0;
+    float motionBlurSeparation = 0.0;
+
+    for (int i = 0; i < EffectCount; i++) {
+        if (Effects[i] == EFFECT_MOTION_BLUR) {
+            useMotionBlur = true;
+            motionBlurSize = EffectFloat1[i];
+            motionBlurSeparation = EffectFloat2[i];
+            break;
+        }
+    }
+    
     for (int i = 0; i < EffectCount; i++) {
         if (Effects[i] == EFFECT_INVERSION) {
             color = vec4(1.0 - color.rgb, color.a);
@@ -282,7 +377,6 @@ void main() {
             cc.temperature = EffectFloat5[i];
             cc.tint = EffectFloat6[i];
             color = applyColorCorrection(color, cc);
-            appliedColorCorrection = true;
         }
     }
 
@@ -298,11 +392,30 @@ void main() {
         color = vec4(mix(sharp, blurred, coc), 1.0);
     }
 
-    vec4 hdrColor = color + texture(BrightTexture, TexCoord);
-    if (hasVolumetricLightTexture == 1) {
-        vec4 volumetricColor = texture(VolumetricLightTexture, TexCoord);
-
-        hdrColor += volumetricColor;
+    vec4 hdrColor;
+    if (useMotionBlur) {
+        vec4 motionBlurred = applyMotionBlur(TexCoord, motionBlurSize, motionBlurSeparation, color);
+        FragColor = motionBlurred;
+        return;
+        if (motionBlurred.a > 0.0 || length(motionBlurred.rgb) > 0.0) {
+            hdrColor = motionBlurred;
+        } else {
+            hdrColor = color;
+            if (hasBrightTexture == 1) {
+                hdrColor += texture(BrightTexture, TexCoord);
+            }
+            if (hasVolumetricLightTexture == 1) {
+                hdrColor += texture(VolumetricLightTexture, TexCoord);
+            }
+        }
+    } else {
+        hdrColor = color;
+        if (hasBrightTexture == 1) {
+            hdrColor += texture(BrightTexture, TexCoord);
+        }
+        if (hasVolumetricLightTexture == 1) {
+            hdrColor += texture(VolumetricLightTexture, TexCoord);
+        }
     }
 
     hdrColor.rgb = acesToneMapping(hdrColor.rgb);

@@ -509,6 +509,7 @@ class Window {
     void setupSSAO();
 
     glm::mat4 calculateProjectionMatrix();
+    glm::mat4 lastViewMatrix = glm::mat4(1.0f);
     Scene *currentScene = nullptr;
 
     void renderLightsToShadowMaps();

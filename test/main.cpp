@@ -48,11 +48,15 @@ class FPSTextUpdater : public TraitComponent<Text> {
 };
 
 class HorizontalMover : public Component {
+  private:
+    float phase = 0.0f;
+
   public:
     void update(float deltaTime) override {
-        Window *window = Window::mainWindow;
         float amplitude = 0.01f;
-        float position = amplitude * sin(window->getTime());
+        float frequency = 4.0f;
+        phase += deltaTime * frequency * 2.0f * M_PI;
+        float position = amplitude * sin(phase);
         object->move({position, 0.0f, 0.0f});
     }
 };
@@ -159,6 +163,7 @@ class MainScene : public Scene {
         backpack.attachTexture(color);
         backpack.attachTexture(normal);
 
+        sphereCube.addComponent<HorizontalMover>(HorizontalMover());
         sphereCube.setPosition({0.0, 0.25, 0.0});
         window.addObject(&sphereCube);
 
@@ -236,12 +241,13 @@ class MainScene : public Scene {
         terrain.maxPeak = 100.f;
 
         light = DirectionalLight({1.0f, -0.3f, 0.5f}, Color::white());
-        light.castShadows(window);
+        // light.castShadows(window, 4096);
         this->addDirectionalLight(&light);
 
         this->setAmbientIntensity(0.1);
 
         frameBuffer = RenderTarget(window);
+        frameBuffer.addEffect(MotionBlur::create({.separation = 0.5f}));
         window.addRenderTarget(&frameBuffer);
         frameBuffer.display(window);
 

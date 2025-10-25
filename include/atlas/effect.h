@@ -11,6 +11,7 @@
 #define ATLAS_EFFECT_H
 
 #include "atlas/core/shader.h"
+#include <iostream>
 #include <memory>
 
 /**
@@ -48,7 +49,8 @@ enum class RenderTargetEffect {
      * @brief Applies color correction adjustments like exposure and contrast.
      *
      */
-    ColorCorrection = 5
+    ColorCorrection = 5,
+    MotionBlur = 6,
 };
 
 /**
@@ -317,6 +319,39 @@ class ColorCorrection : public Effect {
                              params.temperature);
         program.setUniform1f("EffectFloat6[" + std::to_string((int)index) + "]",
                              params.tint);
+    }
+};
+
+struct MotionBlurParameters {
+    int size = 8;
+    float separation = 1.0;
+};
+
+class MotionBlur : public Effect {
+  public:
+    MotionBlur(MotionBlurParameters p = {})
+        : Effect(RenderTargetEffect::MotionBlur), params(p) {}
+    /**
+     * @brief Creates a shared pointer to a MotionBlur effect.
+     *
+     * @param p The motion blur parameters to use.
+     * @return (std::shared_ptr<MotionBlur>) The created motion blur effect.
+     */
+    static std::shared_ptr<MotionBlur> create(MotionBlurParameters p = {}) {
+        return std::make_shared<MotionBlur>(p);
+    }
+    MotionBlurParameters params;
+    /**
+     * @brief Applies all motion blur parameters to the shader program.
+     *
+     * @param program The shader program to apply the effect to.
+     * @param index The index of the effect in the effect array.
+     */
+    void applyToProgram(ShaderProgram &program, int index) override {
+        program.setUniform1f("EffectFloat1[" + std::to_string((int)index) + "]",
+                             params.size);
+        program.setUniform1f("EffectFloat2[" + std::to_string((int)index) + "]",
+                             params.separation);
     }
 };
 
