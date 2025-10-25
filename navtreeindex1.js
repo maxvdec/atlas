@@ -32,10 +32,11 @@ var NAVTREEINDEX1 =
 "class_directional_light.html#a64de3d48b64d3d3dc3ceba88551fde9b":[2,0,27,2],
 "class_directional_light.html#a67096230489c50468d6c081a7c894d99":[2,0,27,7],
 "class_directional_light.html#a8a16a8def173094d17ed062879646b6b":[2,0,27,4],
-"class_directional_light.html#aa08c2e3454e2ae2bc273d3b05e791225":[2,0,27,8],
-"class_directional_light.html#ab92a53d0086143e69fcd9bb431ba20cc":[2,0,27,9],
-"class_directional_light.html#ac3545ce4619f11a9d8f181ac50642148":[2,0,27,1],
+"class_directional_light.html#aa08c2e3454e2ae2bc273d3b05e791225":[2,0,27,9],
+"class_directional_light.html#ab28ef4b78b070c467ae7f1d598f985d4":[2,0,27,1],
+"class_directional_light.html#ab92a53d0086143e69fcd9bb431ba20cc":[2,0,27,10],
 "class_directional_light.html#ac9dbe2a378024e3a3c417b4cb50adbb3":[2,0,27,3],
+"class_directional_light.html#acd466392cbfa8a6538c59f47bd04cd75":[2,0,27,8],
 "class_distortion.html":[2,0,28],
 "class_distortion.html#a0330170a0adba0f3eea4a672b549e391":[2,0,28,2],
 "class_distortion.html#a73aa389be6332f74ad2aa5586c694623":[2,0,28,1],
@@ -248,6 +249,5 @@ var NAVTREEINDEX1 =
 "class_shape.html#a4cb9bc6c74b4184257003c83a8d8d39ea766cae017fab4bcc1d1e83fbb9af87c3":[2,0,76,0,2],
 "class_shape.html#a4cb9bc6c74b4184257003c83a8d8d39eab7095f057db3fefa7325ad93a04e14fd":[2,0,76,0,0],
 "class_shape.html#a5843b8523d0dac25818b031365dc1cd8":[2,0,76,3],
-"class_shape.html#a70fbd011007b13c474b031aaf38d0a4d":[2,0,76,5],
-"class_shape.html#a9a859eff4601d136d5312d67b4db4d29":[2,0,76,2]
+"class_shape.html#a70fbd011007b13c474b031aaf38d0a4d":[2,0,76,5]
 };

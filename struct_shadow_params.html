@@ -135,6 +135,8 @@ Public Attributes</h2></td></tr>
 <tr class="memdesc:a5bfa79aa373ac10c35c7c825bb8f39bd"><td class="mdescLeft">&#160;</td><td class="mdescRight">The projection matrix from the light's perspective.  <br /></td></tr>
 <tr class="memitem:aa8ce1c8c7e4fbd2febd8bf1dcd361766" id="r_aa8ce1c8c7e4fbd2febd8bf1dcd361766"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa8ce1c8c7e4fbd2febd8bf1dcd361766">bias</a></td></tr>
 <tr class="memdesc:aa8ce1c8c7e4fbd2febd8bf1dcd361766"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constant bias to prevent shadow acne. It decreases when the resolution increases.  <br /></td></tr>
+<tr class="memitem:a36e960733063be8b1cc6136f0b718ba3" id="r_a36e960733063be8b1cc6136f0b718ba3"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a36e960733063be8b1cc6136f0b718ba3">farPlane</a></td></tr>
+<tr class="memdesc:a36e960733063be8b1cc6136f0b718ba3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Far plane distance used for point light shadow mapping. This should match the far plane used when rendering the point light's shadow map.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Parameters that are submitted to a shadow shader to calculate shadows. </p>
@@ -156,6 +158,24 @@ Public Attributes</h2></td></tr>
 <p>Constant bias to prevent shadow acne. It decreases when the resolution increases. </p>
 
 <p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00093">93</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+
+</div>
+</div>
+<a id="a36e960733063be8b1cc6136f0b718ba3" name="a36e960733063be8b1cc6136f0b718ba3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a36e960733063be8b1cc6136f0b718ba3">&#9670;&#160;</a></span>farPlane</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">float ShadowParams::farPlane</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Far plane distance used for point light shadow mapping. This should match the far plane used when rendering the point light's shadow map. </p>
+
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00099">99</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 
 </div>
 </div>

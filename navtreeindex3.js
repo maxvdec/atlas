@@ -1,5 +1,6 @@
 var NAVTREEINDEX3 =
 {
+"functions_t.html":[2,3,0,17],
 "functions_u.html":[2,3,0,18],
 "functions_v.html":[2,3,0,19],
 "functions_vars.html":[2,3,2],
@@ -248,6 +249,5 @@ var NAVTREEINDEX3 =
 "procedural_8h.html":[3,0,1,1,0],
 "procedural_8h_source.html":[3,0,1,1,0],
 "renderable_8h.html":[3,0,1,0,0,1],
-"renderable_8h_source.html":[3,0,1,0,0,1],
-"scene_8h.html":[3,0,1,0,8]
+"renderable_8h_source.html":[3,0,1,0,0,1]
 };

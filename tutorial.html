@@ -283,7 +283,7 @@ Creating a Directional Light</h2>
 <div class="line">        this-&gt;addDirectionalLight(&amp;light);</div>
 <div class="line">    }</div>
 <div class="line">};</div>
-<div class="ttc" id="aclass_directional_light_html"><div class="ttname"><a href="class_directional_light.html">DirectionalLight</a></div><div class="ttdoc">Structure representing a directional light in a scene. A directional light emits light in a specific ...</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00228">light.h:228</a></div></div>
+<div class="ttc" id="aclass_directional_light_html"><div class="ttname"><a href="class_directional_light.html">DirectionalLight</a></div><div class="ttdoc">Structure representing a directional light in a scene. A directional light emits light in a specific ...</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00235">light.h:235</a></div></div>
 <div class="ttc" id="alight_8h_html"><div class="ttname"><a href="light_8h.html">light.h</a></div></div>
 <div class="ttc" id="astruct_color_html_aad4699ae003d7a86b5edc5fccdbaf4c8"><div class="ttname"><a href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a></div><div class="ttdeci">static Color white()</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00206">units.h:206</a></div></div>
 </div><!-- fragment --><p>When we run the scene now, we get a better result!</p>
@@ -458,8 +458,8 @@ Creating a falling ball</h2>
 <div class="ttc" id="aobject_8h_html_a489ccddca865b97fafa117e23b4d0f1c"><div class="ttname"><a href="object_8h.html#a489ccddca865b97fafa117e23b4d0f1c">createDebugSphere</a></div><div class="ttdeci">CoreObject createDebugSphere(double radius, unsigned int sectorCount=36, unsigned int stackCount=18)</div><div class="ttdoc">Function that creates a debug sphere CoreObject with the specified radius, sectorCount and stackCount...</div></div>
 </div><!-- fragment --><p>Adding this code, we get this result: <img src="fall-ball.png" alt="Falling Ball" class="inline"/></p>
 <p>But we miss something... the ball has no shadows! Let's add shadows to the directional light by adding this line under the initialization of the light:</p>
-<div class="fragment"><div class="line">light.<a class="code hl_function" href="class_directional_light.html#ac3545ce4619f11a9d8f181ac50642148">castShadows</a>(window, 4096); <span class="comment">// 4096 is the shadow map resolution</span></div>
-<div class="ttc" id="aclass_directional_light_html_ac3545ce4619f11a9d8f181ac50642148"><div class="ttname"><a href="class_directional_light.html#ac3545ce4619f11a9d8f181ac50642148">DirectionalLight::castShadows</a></div><div class="ttdeci">void castShadows(Window &amp;window, int resolution=2048)</div><div class="ttdoc">Function that enables casting shadows from the light.</div></div>
+<div class="fragment"><div class="line">light.<a class="code hl_function" href="class_directional_light.html#ab28ef4b78b070c467ae7f1d598f985d4">castShadows</a>(window, 4096); <span class="comment">// 4096 is the shadow map resolution</span></div>
+<div class="ttc" id="aclass_directional_light_html_ab28ef4b78b070c467ae7f1d598f985d4"><div class="ttname"><a href="class_directional_light.html#ab28ef4b78b070c467ae7f1d598f985d4">DirectionalLight::castShadows</a></div><div class="ttdeci">void castShadows(Window &amp;window, int resolution=4096)</div><div class="ttdoc">Function that enables casting shadows from the light.</div></div>
 </div><!-- fragment --><p>After this, we get this nice shadowed result: <img src="shadows.png" alt="Shadows" class="inline"/></p>
 <p>After this, we are ready to add our first compound object.</p>
 <h1 class="doxsection"><a class="anchor" id="autotoc_md16"></a>

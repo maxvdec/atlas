@@ -1,5 +1,6 @@
 var NAVTREEINDEX4 =
 {
+"scene_8h.html":[3,0,1,0,8],
 "scene_8h_source.html":[3,0,1,0,8],
 "shader_8h.html":[3,0,1,0,0,2],
 "shader_8h.html#a17951fe51aaa5769ef603acf594dc0b5":[3,0,1,0,0,2,9],
@@ -213,19 +214,20 @@ var NAVTREEINDEX4 =
 "struct_layout_descriptor.html#af67b223d0ec56561c3075cc81b742544":[2,0,47,5],
 "struct_light.html":[2,0,48],
 "struct_light.html#a24c4613acc9b74cde2d48f703dce147f":[2,0,48,2],
-"struct_light.html#a45bc9d3d7d10feecc7b9042f00c54813":[2,0,48,12],
+"struct_light.html#a45bc9d3d7d10feecc7b9042f00c54813":[2,0,48,13],
 "struct_light.html#a553f958a25683445088050a69d3de8e9":[2,0,48,7],
 "struct_light.html#a705f837df8db28b0259a0edc1858492d":[2,0,48,0],
 "struct_light.html#a7e11b67a959370fd2493be3ab024a3e6":[2,0,48,1],
 "struct_light.html#a95f4aa1289870145405765743e00645b":[2,0,48,4],
 "struct_light.html#ab3970922f291c1e2c2ba1bad199234f8":[2,0,48,5],
 "struct_light.html#abe9a65b82bf6e067618ba7713582f2ed":[2,0,48,9],
-"struct_light.html#ac5ca8844a9bcc19c4328bd4355ae72b1":[2,0,48,3],
 "struct_light.html#ac9dbe2a378024e3a3c417b4cb50adbb3":[2,0,48,6],
-"struct_light.html#ad0986bcf54730dfe19fefcace47c3cc3":[2,0,48,13],
-"struct_light.html#ad1bbf10bd6b27da5ddb05399d863ab2b":[2,0,48,11],
+"struct_light.html#ad0986bcf54730dfe19fefcace47c3cc3":[2,0,48,14],
+"struct_light.html#ad1bbf10bd6b27da5ddb05399d863ab2b":[2,0,48,12],
 "struct_light.html#ad7a168d26aed1bf7cca1a8d8e6f8ada4":[2,0,48,8],
+"struct_light.html#ae0aa784aa44058529266ad54fe24e776":[2,0,48,3],
 "struct_light.html#aebfa78420d5cf261be042325ff392b62":[2,0,48,10],
+"struct_light.html#afd46a921a3365c7a99cac658ac210308":[2,0,48,11],
 "struct_material.html":[2,0,49],
 "struct_material.html#a0946dbf03359dc3cd8d32910045dc5d4":[2,0,49,1],
 "struct_material.html#a8d977d0b7386da7e3ac6879f458d3f0f":[2,0,49,3],
@@ -247,7 +249,5 @@ var NAVTREEINDEX4 =
 "struct_particle.html#a4e7cf3b8d4f8fc1e832623e56f3d6a8e":[2,0,56,3],
 "struct_particle.html#a73a4154dfbae2e2787ef72c1bee83413":[2,0,56,0],
 "struct_particle.html#aa8889ea85b03d566d51dfd6ff668e840":[2,0,56,1],
-"struct_particle.html#aad08a7cb8108751b7a49ed65118873f9":[2,0,56,5],
-"struct_particle.html#ae77ee667f4089eb75b22b3e4c807bbae":[2,0,56,6],
-"struct_particle.html#afbd7964edf5e088d7a5887e59c730d1a":[2,0,56,4]
+"struct_particle.html#aad08a7cb8108751b7a49ed65118873f9":[2,0,56,5]
 };

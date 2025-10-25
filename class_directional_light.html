@@ -135,8 +135,8 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a05bb433ce668e35039e3caa41e8f656f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function that constructs a new <a class="el" href="class_directional_light.html" title="Structure representing a directional light in a scene. A directional light emits light in a specific ...">DirectionalLight</a> object.  <br /></td></tr>
 <tr class="memitem:a64de3d48b64d3d3dc3ceba88551fde9b" id="r_a64de3d48b64d3d3dc3ceba88551fde9b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a64de3d48b64d3d3dc3ceba88551fde9b">setColor</a> (<a class="el" href="struct_color.html">Color</a> <a class="el" href="#a5985579184d28736d2f528c583f61894">color</a>)</td></tr>
 <tr class="memdesc:a64de3d48b64d3d3dc3ceba88551fde9b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function that sets the color of the light.  <br /></td></tr>
-<tr class="memitem:ac3545ce4619f11a9d8f181ac50642148" id="r_ac3545ce4619f11a9d8f181ac50642148"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac3545ce4619f11a9d8f181ac50642148">castShadows</a> (<a class="el" href="class_window.html">Window</a> &amp;window, int resolution=2048)</td></tr>
-<tr class="memdesc:ac3545ce4619f11a9d8f181ac50642148"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function that enables casting shadows from the light.  <br /></td></tr>
+<tr class="memitem:ab28ef4b78b070c467ae7f1d598f985d4" id="r_ab28ef4b78b070c467ae7f1d598f985d4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab28ef4b78b070c467ae7f1d598f985d4">castShadows</a> (<a class="el" href="class_window.html">Window</a> &amp;window, int resolution=4096)</td></tr>
+<tr class="memdesc:ab28ef4b78b070c467ae7f1d598f985d4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function that enables casting shadows from the light.  <br /></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -148,6 +148,8 @@ Public Attributes</h2></td></tr>
 <tr class="memdesc:ab92a53d0086143e69fcd9bb431ba20cc"><td class="mdescLeft">&#160;</td><td class="mdescRight">The color that the light will use for specular highlights.  <br /></td></tr>
 <tr class="memitem:aa08c2e3454e2ae2bc273d3b05e791225" id="r_aa08c2e3454e2ae2bc273d3b05e791225"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_render_target.html">RenderTarget</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa08c2e3454e2ae2bc273d3b05e791225">shadowRenderTarget</a> = nullptr</td></tr>
 <tr class="memdesc:aa08c2e3454e2ae2bc273d3b05e791225"><td class="mdescLeft">&#160;</td><td class="mdescRight">Object that holds the render target for shadow mapping.  <br /></td></tr>
+<tr class="memitem:acd466392cbfa8a6538c59f47bd04cd75" id="r_acd466392cbfa8a6538c59f47bd04cd75"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_shadow_params.html">ShadowParams</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#acd466392cbfa8a6538c59f47bd04cd75">lastShadowParams</a></td></tr>
+<tr class="memdesc:acd466392cbfa8a6538c59f47bd04cd75"><td class="mdescLeft">&#160;</td><td class="mdescRight">Cached shadow parameters used when the shadow map was last rendered. Keeping this in sync with the shadow map avoids sampling mismatches when matrices change between updates.  <br /></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-friends" class="groupheader"><a id="friends" name="friends"></a>
 Friends</h2></td></tr>
@@ -167,11 +169,11 @@ Example</h2>
 <div class="line">dirLight.castShadows(window);</div>
 <div class="line"><span class="comment">// Add the light to the scene</span></div>
 <div class="line">this-&gt;addDirectionalLight(&amp;dirLight);</div>
-<div class="ttc" id="aclass_directional_light_html_a05bb433ce668e35039e3caa41e8f656f"><div class="ttname"><a href="#a05bb433ce668e35039e3caa41e8f656f">DirectionalLight::DirectionalLight</a></div><div class="ttdeci">DirectionalLight(const Magnitude3d &amp;dir={0.0f, -1.0f, 0.0f}, const Color &amp;color=Color::white(), const Color &amp;shineColor=Color::white())</div><div class="ttdoc">Function that constructs a new DirectionalLight object.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00256">light.h:256</a></div></div>
+<div class="ttc" id="aclass_directional_light_html_a05bb433ce668e35039e3caa41e8f656f"><div class="ttname"><a href="#a05bb433ce668e35039e3caa41e8f656f">DirectionalLight::DirectionalLight</a></div><div class="ttdeci">DirectionalLight(const Magnitude3d &amp;dir={0.0f, -1.0f, 0.0f}, const Color &amp;color=Color::white(), const Color &amp;shineColor=Color::white())</div><div class="ttdoc">Function that constructs a new DirectionalLight object.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00263">light.h:263</a></div></div>
 <div class="ttc" id="ashader_8h_html_aed7a1c7a5976e4adb712d0a231dada82acb5feb1b7314637725a2e73bdc9f7295"><div class="ttname"><a href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82acb5feb1b7314637725a2e73bdc9f7295">AtlasVertexShader::Color</a></div><div class="ttdeci">@ Color</div><div class="ttdoc">Vertex shader for rendering solid colors.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00040">shader.h:40</a></div></div>
 <div class="ttc" id="astruct_color_html_aad4699ae003d7a86b5edc5fccdbaf4c8"><div class="ttname"><a href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a></div><div class="ttdeci">static Color white()</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00206">units.h:206</a></div></div>
 </div><!-- fragment --> 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00228">228</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00235">235</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a05bb433ce668e35039e3caa41e8f656f" name="a05bb433ce668e35039e3caa41e8f656f"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a05bb433ce668e35039e3caa41e8f656f">&#9670;&#160;</a></span>DirectionalLight()</h2>
@@ -215,20 +217,20 @@ Example</h2>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00256">256</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  256</span>                                              {0.0f, -1.0f, 0.0f},</div>
-<div class="line"><span class="lineno">  257</span>                     <span class="keyword">const</span> <a class="code hl_enumvalue" href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82acb5feb1b7314637725a2e73bdc9f7295">Color</a> &amp;<a class="code hl_variable" href="#a5985579184d28736d2f528c583f61894">color</a> = <a class="code hl_function" href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a>(),</div>
-<div class="line"><span class="lineno">  258</span>                     <span class="keyword">const</span> <a class="code hl_enumvalue" href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82acb5feb1b7314637725a2e73bdc9f7295">Color</a> &amp;<a class="code hl_variable" href="#ab92a53d0086143e69fcd9bb431ba20cc">shineColor</a> = <a class="code hl_function" href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a>())</div>
-<div class="line"><span class="lineno">  259</span>        : <a class="code hl_variable" href="#a67096230489c50468d6c081a7c894d99">direction</a>(dir.normalized()), <a class="code hl_variable" href="#a5985579184d28736d2f528c583f61894">color</a>(<a class="code hl_variable" href="#a5985579184d28736d2f528c583f61894">color</a>), <a class="code hl_variable" href="#ab92a53d0086143e69fcd9bb431ba20cc">shineColor</a>(<a class="code hl_variable" href="#ab92a53d0086143e69fcd9bb431ba20cc">shineColor</a>) {}</div>
-<div class="ttc" id="aclass_directional_light_html_a5985579184d28736d2f528c583f61894"><div class="ttname"><a href="#a5985579184d28736d2f528c583f61894">DirectionalLight::color</a></div><div class="ttdeci">Color color</div><div class="ttdoc">The color of the light.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00241">light.h:241</a></div></div>
-<div class="ttc" id="aclass_directional_light_html_a67096230489c50468d6c081a7c894d99"><div class="ttname"><a href="#a67096230489c50468d6c081a7c894d99">DirectionalLight::direction</a></div><div class="ttdeci">Magnitude3d direction</div><div class="ttdoc">The direction in which the light is pointing. This should be a normalized vector.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00235">light.h:235</a></div></div>
-<div class="ttc" id="aclass_directional_light_html_ab92a53d0086143e69fcd9bb431ba20cc"><div class="ttname"><a href="#ab92a53d0086143e69fcd9bb431ba20cc">DirectionalLight::shineColor</a></div><div class="ttdeci">Color shineColor</div><div class="ttdoc">The color that the light will use for specular highlights.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00246">light.h:246</a></div></div>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00263">263</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  263</span>                                              {0.0f, -1.0f, 0.0f},</div>
+<div class="line"><span class="lineno">  264</span>                     <span class="keyword">const</span> <a class="code hl_enumvalue" href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82acb5feb1b7314637725a2e73bdc9f7295">Color</a> &amp;<a class="code hl_variable" href="#a5985579184d28736d2f528c583f61894">color</a> = <a class="code hl_function" href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a>(),</div>
+<div class="line"><span class="lineno">  265</span>                     <span class="keyword">const</span> <a class="code hl_enumvalue" href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82acb5feb1b7314637725a2e73bdc9f7295">Color</a> &amp;<a class="code hl_variable" href="#ab92a53d0086143e69fcd9bb431ba20cc">shineColor</a> = <a class="code hl_function" href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a>())</div>
+<div class="line"><span class="lineno">  266</span>        : <a class="code hl_variable" href="#a67096230489c50468d6c081a7c894d99">direction</a>(dir.normalized()), <a class="code hl_variable" href="#a5985579184d28736d2f528c583f61894">color</a>(<a class="code hl_variable" href="#a5985579184d28736d2f528c583f61894">color</a>), <a class="code hl_variable" href="#ab92a53d0086143e69fcd9bb431ba20cc">shineColor</a>(<a class="code hl_variable" href="#ab92a53d0086143e69fcd9bb431ba20cc">shineColor</a>) {}</div>
+<div class="ttc" id="aclass_directional_light_html_a5985579184d28736d2f528c583f61894"><div class="ttname"><a href="#a5985579184d28736d2f528c583f61894">DirectionalLight::color</a></div><div class="ttdeci">Color color</div><div class="ttdoc">The color of the light.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00248">light.h:248</a></div></div>
+<div class="ttc" id="aclass_directional_light_html_a67096230489c50468d6c081a7c894d99"><div class="ttname"><a href="#a67096230489c50468d6c081a7c894d99">DirectionalLight::direction</a></div><div class="ttdeci">Magnitude3d direction</div><div class="ttdoc">The direction in which the light is pointing. This should be a normalized vector.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00242">light.h:242</a></div></div>
+<div class="ttc" id="aclass_directional_light_html_ab92a53d0086143e69fcd9bb431ba20cc"><div class="ttname"><a href="#ab92a53d0086143e69fcd9bb431ba20cc">DirectionalLight::shineColor</a></div><div class="ttdeci">Color shineColor</div><div class="ttdoc">The color that the light will use for specular highlights.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00253">light.h:253</a></div></div>
 </div><!-- fragment -->
 </div>
 </div>
 <a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
-<a id="ac3545ce4619f11a9d8f181ac50642148" name="ac3545ce4619f11a9d8f181ac50642148"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ac3545ce4619f11a9d8f181ac50642148">&#9670;&#160;</a></span>castShadows()</h2>
+<a id="ab28ef4b78b070c467ae7f1d598f985d4" name="ab28ef4b78b070c467ae7f1d598f985d4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab28ef4b78b070c467ae7f1d598f985d4">&#9670;&#160;</a></span>castShadows()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -241,7 +243,7 @@ Example</h2>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>resolution</em></span><span class="paramdefsep"> = </span><span class="paramdefval">2048</span>&#160;)</td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>resolution</em></span><span class="paramdefsep"> = </span><span class="paramdefval">4096</span>&#160;)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -255,7 +257,7 @@ Example</h2>
   </dd>
 </dl>
 
-<p class="reference">References <a class="el" href="light_8h_source.html#l00288">Window</a>.</p>
+<p class="reference">References <a class="el" href="light_8h_source.html#l00301">Window</a>.</p>
 
 </div>
 </div>
@@ -282,7 +284,7 @@ Example</h2>
   </dd>
 </dl>
 
-<p class="reference">References <a class="el" href="light_8h_source.html#l00241">color</a>.</p>
+<p class="reference">References <a class="el" href="light_8h_source.html#l00248">color</a>.</p>
 
 </div>
 </div>
@@ -307,9 +309,9 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00289">289</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00302">302</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 
-<p class="reference">References <a class="el" href="light_8h_source.html#l00289">CoreObject</a>.</p>
+<p class="reference">References <a class="el" href="light_8h_source.html#l00302">CoreObject</a>.</p>
 
 </div>
 </div>
@@ -333,9 +335,9 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00290">290</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00303">303</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 
-<p class="reference">References <a class="el" href="light_8h_source.html#l00290">Terrain</a>, and <a class="el" href="light_8h_source.html#l00288">Window</a>.</p>
+<p class="reference">References <a class="el" href="light_8h_source.html#l00303">Terrain</a>, and <a class="el" href="light_8h_source.html#l00301">Window</a>.</p>
 
 </div>
 </div>
@@ -359,9 +361,9 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00288">288</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00301">301</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 
-<p class="reference">References <a class="el" href="light_8h_source.html#l00288">Window</a>.</p>
+<p class="reference">References <a class="el" href="light_8h_source.html#l00301">Window</a>.</p>
 
 </div>
 </div>
@@ -380,7 +382,7 @@ Example</h2>
 
 <p>The color of the light. </p>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00241">241</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00248">248</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 
 </div>
 </div>
@@ -398,7 +400,25 @@ Example</h2>
 
 <p>The direction in which the light is pointing. This should be a normalized vector. </p>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00235">235</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00242">242</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+
+</div>
+</div>
+<a id="acd466392cbfa8a6538c59f47bd04cd75" name="acd466392cbfa8a6538c59f47bd04cd75"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acd466392cbfa8a6538c59f47bd04cd75">&#9670;&#160;</a></span>lastShadowParams</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="struct_shadow_params.html">ShadowParams</a> DirectionalLight::lastShadowParams</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Cached shadow parameters used when the shadow map was last rendered. Keeping this in sync with the shadow map avoids sampling mismatches when matrices change between updates. </p>
+
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00285">285</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 
 </div>
 </div>
@@ -416,7 +436,7 @@ Example</h2>
 
 <p>Object that holds the render target for shadow mapping. </p>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00272">272</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00279">279</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 
 </div>
 </div>
@@ -434,7 +454,7 @@ Example</h2>
 
 <p>The color that the light will use for specular highlights. </p>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00246">246</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00253">253</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 
 </div>
 </div>
