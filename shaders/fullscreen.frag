@@ -267,24 +267,36 @@ vec4 applyMotionBlur(vec2 texCoord, float size, float separation, vec4 color) {
         return fallbackColor;
     }
 
-    vec4 worldPos = texture(PositionTexture, texCoord);
-    if (worldPos.a <= 0.0) {
-        return fallbackColor;
-    }
-
-    vec4 currentClipPos = projectionMatrix * viewMatrix * worldPos;
-    currentClipPos.xyz /= currentClipPos.w;
-    vec2 currentUV = currentClipPos.xy * 0.5 + 0.5;
-
-    vec4 prevClipPos = projectionMatrix * lastViewMatrix * worldPos;
-    prevClipPos.xyz /= prevClipPos.w;
-    vec2 prevUV = prevClipPos.xy * 0.5 + 0.5;
-
-    vec2 velocity = (currentUV - prevUV) * separation;
-
-    if (length(velocity) < 0.0001) {
-        return fallbackColor;
-    }
+        vec4 worldPos = texture(PositionTexture, texCoord);
+        if (worldPos.a <= 0.0) {
+            return fallbackColor;
+        }
+    
+        vec3 viewSpacePos = (viewMatrix * worldPos).xyz;
+        float distanceToCamera = length(viewSpacePos);
+        
+        if (distanceToCamera < nearPlane * 2.0) {
+            return fallbackColor;
+        }
+    
+        vec4 currentClipPos = projectionMatrix * viewMatrix * worldPos;
+        currentClipPos.xyz /= currentClipPos.w;
+        vec2 currentUV = currentClipPos.xy * 0.5 + 0.5;
+    
+        vec4 prevClipPos = projectionMatrix * lastViewMatrix * worldPos;
+        prevClipPos.xyz /= prevClipPos.w;
+        vec2 prevUV = prevClipPos.xy * 0.5 + 0.5;
+    
+        vec2 velocity = (currentUV - prevUV) * separation;
+    
+        float maxVelocity = 0.1; 
+        if (length(velocity) > maxVelocity) {
+            velocity = normalize(velocity) * maxVelocity;
+        }
+    
+        if (length(velocity) < 0.0001) {
+            return fallbackColor;
+        }
 
     vec4 result = vec4(0.0);
     float totalWeight = 0.0;
