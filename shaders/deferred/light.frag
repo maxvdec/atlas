@@ -325,18 +325,15 @@ void main() {
     float roughness = clamp(matData.g, 0.0, 1.0);
     float reflectivity = clamp(matData.b, 0.0, 1.0);
 
-    float linearDepth = texture(gPosition, TexCoord).w;
-    float vEps = max(0.0001, linearDepth * 1e-6);
-    vec3 V = normalize(cameraPosition - FragPos);
-    if (length(V) < vEps) {
-        V = normalize(-N);
-    }
+    float viewDistance = max(length(cameraPosition - FragPos), 1e-6);
+    vec3 V = (cameraPosition - FragPos) / viewDistance;
 
     vec3 F0 = mix(vec3(0.04), albedo, metallic);
 
-    float ssaoFactor = texture(ssao, TexCoord).r;
-    float occlusion = clamp(ao * ssaoFactor, 0.0, 1.0);
-    float lightingOcclusion = clamp(ssaoFactor, 0.0, 1.0);
+    float ssaoFactor = clamp(texture(ssao, TexCoord).r, 0.0, 1.0);
+    float ssaoDesaturated = mix(1.0, ssaoFactor, 0.35);
+    float occlusion = clamp(ao * (0.2 + 0.8 * ssaoDesaturated), 0.0, 1.0);
+    float lightingOcclusion = clamp(ssaoDesaturated, 0.2, 1.0);
 
     float dirShadow = 0.0;
     float pointShadow = 0.0;

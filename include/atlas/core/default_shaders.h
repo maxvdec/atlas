@@ -1415,14 +1415,16 @@ vec4 sampleTextureAt(int textureIndex, vec2 uv) {
 vec2 parallaxMapping(vec2 texCoords, vec3 viewDir) {
     const float minLayers = 8.0;
     const float maxLayers = 32.0;
-    float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), viewDir)));
+    vec3 v = normalize(viewDir);
+    float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), v)));
     float layerDepth = 1.0 / numLayers;
     float currentLayerDepth = 0.0;
 
-    vec2 P = viewDir.xy * 0.1;
+    const float heightScale = 0.04;
+    vec2 P = (v.xy / max(v.z, 0.05)) * heightScale;
     vec2 deltaTexCoords = P / numLayers;
 
-    vec2 currentTexCoords = texCoords;
+    vec2 currentTexCoords = clamp(texCoords, vec2(0.0), vec2(1.0));
     int textureIndex = -1;
     for (int i = 0; i < textureCount; i++) {
         if (textureTypes[i] == TEXTURE_PARALLAX) {
@@ -1430,23 +1432,24 @@ vec2 parallaxMapping(vec2 texCoords, vec3 viewDir) {
             break;
         }
     }
-    if (textureIndex == -1) return texCoords;
+    if (textureIndex == -1) return currentTexCoords;
 
     float currentDepthMapValue = sampleTextureAt(textureIndex, currentTexCoords).r;
 
     while (currentLayerDepth < currentDepthMapValue) {
-        currentTexCoords -= deltaTexCoords;
+        currentTexCoords = clamp(currentTexCoords - deltaTexCoords, vec2(0.0), vec2(1.0));
         currentDepthMapValue = sampleTextureAt(textureIndex, currentTexCoords).r;
         currentLayerDepth += layerDepth;
     }
 
-    vec2 prevTexCoords = currentTexCoords + deltaTexCoords;
+    vec2 prevTexCoords = clamp(currentTexCoords + deltaTexCoords, vec2(0.0), vec2(1.0));
     float afterDepth = currentDepthMapValue - currentLayerDepth;
     float beforeDepth = sampleTextureAt(textureIndex, prevTexCoords).r - (currentLayerDepth - layerDepth);
-    float weight = afterDepth / (afterDepth - beforeDepth);
+    float denom = max(afterDepth - beforeDepth, 1e-4);
+    float weight = clamp(afterDepth / denom, 0.0, 1.0);
     currentTexCoords = prevTexCoords * weight + currentTexCoords * (1.0 - weight);
 
-    return currentTexCoords;
+    return clamp(currentTexCoords, vec2(0.0), vec2(1.0));
 }
 
 void main() {
@@ -1455,8 +1458,7 @@ void main() {
     vec3 tangentViewDir = normalize(transpose(TBN) * (cameraPosition - FragPos));
     texCoord = parallaxMapping(texCoord, tangentViewDir);
 
-    if (texCoord.x > 1.0 || texCoord.y > 1.0 || texCoord.x < 0.0 || texCoord.y < 0.0)
-        discard;
+    texCoord = clamp(texCoord, vec2(0.0), vec2(1.0));
 
     vec4 sampledColor = enableTextures(TEXTURE_COLOR);
     bool hasColorTexture = sampledColor != vec4(-1.0);
@@ -1512,10 +1514,23 @@ void main() {
     ao = clamp(ao, 0.0, 1.0);
     reflectivity = clamp(reflectivity, 0.0, 1.0);
 
-    float linearDepth = length(cameraPosition - FragPos);
-    gPosition = vec4(FragPos, linearDepth);
-    gNormal = vec4(normalize(normal), 1.0);
-    gAlbedoSpec = vec4(albedo, ao);
+    float nonlinearDepth = gl_FragCoord.z;
+    gPosition = vec4(FragPos, nonlinearDepth);
+
+    // Sanitize and clamp normal to avoid NaN/Inf propagating into the G-Buffer
+    vec3 n = normalize(normal);
+    if (!all(equal(n, n)) || length(n) < 1e-4) {
+        n = normalize(Normal);
+    }
+    gNormal = vec4(n, 1.0);
+
+    // Clamp albedo into [0,1] and guard against NaNs
+    vec3 a = clamp(albedo, 0.0, 1.0);
+    if (!all(equal(a, a))) {
+        a = vec3(0.0);
+    }
+    gAlbedoSpec = vec4(a, ao);
+
     gMaterial = vec4(metallic, roughness, reflectivity, 1.0);
 }
 
@@ -1895,18 +1910,15 @@ void main() {
     float roughness = clamp(matData.g, 0.0, 1.0);
     float reflectivity = clamp(matData.b, 0.0, 1.0);
 
-    float linearDepth = texture(gPosition, TexCoord).w;
-    float vEps = max(0.0001, linearDepth * 1e-6);
-    vec3 V = normalize(cameraPosition - FragPos);
-    if (length(V) < vEps) {
-        V = normalize(-N);
-    }
+    float viewDistance = max(length(cameraPosition - FragPos), 1e-6);
+    vec3 V = (cameraPosition - FragPos) / viewDistance;
 
     vec3 F0 = mix(vec3(0.04), albedo, metallic);
 
-    float ssaoFactor = texture(ssao, TexCoord).r;
-    float occlusion = clamp(ao * ssaoFactor, 0.0, 1.0);
-    float lightingOcclusion = clamp(ssaoFactor, 0.0, 1.0);
+    float ssaoFactor = clamp(texture(ssao, TexCoord).r, 0.0, 1.0);
+    float ssaoDesaturated = mix(1.0, ssaoFactor, 0.35);
+    float occlusion = clamp(ao * (0.2 + 0.8 * ssaoDesaturated), 0.0, 1.0);
+    float lightingOcclusion = clamp(ssaoDesaturated, 0.2, 1.0);
 
     float dirShadow = 0.0;
     float pointShadow = 0.0;
