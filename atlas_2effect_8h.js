@@ -18,6 +18,8 @@ var atlas_2effect_8h =
     [ "Pixelation", "class_pixelation.html", "class_pixelation" ],
     [ "DilationParameters", "struct_dilation_parameters.html", "struct_dilation_parameters" ],
     [ "Dilation", "class_dilation.html", "class_dilation" ],
+    [ "FilmGrainParameters", "struct_film_grain_parameters.html", "struct_film_grain_parameters" ],
+    [ "FilmGrain", "class_film_grain.html", "class_film_grain" ],
     [ "RenderTargetEffect", "atlas_2effect_8h.html#a75cf3454fba9ce206c0c748892dc9867", [
       [ "Invert", "atlas_2effect_8h.html#a75cf3454fba9ce206c0c748892dc9867a9b8958acb7be504bb5f55f17c0eea366", null ],
       [ "Grayscale", "atlas_2effect_8h.html#a75cf3454fba9ce206c0c748892dc9867ad3f6975213fb5546d8486b54b025dbd7", null ],
@@ -29,6 +31,7 @@ var atlas_2effect_8h =
       [ "ChromaticAberration", "atlas_2effect_8h.html#a75cf3454fba9ce206c0c748892dc9867a7a76edc1634ddd649d2c8665442dc7fc", null ],
       [ "Posterization", "atlas_2effect_8h.html#a75cf3454fba9ce206c0c748892dc9867a82ff96dcdb3e8c63154ddca3076e41f8", null ],
       [ "Pixelation", "atlas_2effect_8h.html#a75cf3454fba9ce206c0c748892dc9867aa5a2669472a221db75ed3b53ae9fca8a", null ],
-      [ "Dilation", "atlas_2effect_8h.html#a75cf3454fba9ce206c0c748892dc9867a5a870896d32acca70f912a0c11edca66", null ]
+      [ "Dilation", "atlas_2effect_8h.html#a75cf3454fba9ce206c0c748892dc9867a5a870896d32acca70f912a0c11edca66", null ],
+      [ "FilmGrain", "atlas_2effect_8h.html#a75cf3454fba9ce206c0c748892dc9867ad83ba28f0127b67e14a4cc7d80a709b5", null ]
     ] ]
 ];

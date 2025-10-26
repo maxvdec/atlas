@@ -156,6 +156,8 @@ Classes</h2></td></tr>
 <tr class="memitem:Pixelation" id="r_Pixelation"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_pixelation.html">Pixelation</a></td></tr>
 <tr class="memitem:DilationParameters" id="r_DilationParameters"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_dilation_parameters.html">DilationParameters</a></td></tr>
 <tr class="memitem:Dilation" id="r_Dilation"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_dilation.html">Dilation</a></td></tr>
+<tr class="memitem:FilmGrainParameters" id="r_FilmGrainParameters"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_film_grain_parameters.html">FilmGrainParameters</a></td></tr>
+<tr class="memitem:FilmGrain" id="r_FilmGrain"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_film_grain.html">FilmGrain</a></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-enum-members" class="groupheader"><a id="enum-members" name="enum-members"></a>
 Enumerations</h2></td></tr>
@@ -173,6 +175,7 @@ Enumerations</h2></td></tr>
 &#160;&#160;<a class="el" href="#a75cf3454fba9ce206c0c748892dc9867a82ff96dcdb3e8c63154ddca3076e41f8">Posterization</a> = 8
 , <a class="el" href="#a75cf3454fba9ce206c0c748892dc9867aa5a2669472a221db75ed3b53ae9fca8a">Pixelation</a> = 9
 , <a class="el" href="#a75cf3454fba9ce206c0c748892dc9867a5a870896d32acca70f912a0c11edca66">Dilation</a> = 10
+, <a class="el" href="#a75cf3454fba9ce206c0c748892dc9867ad83ba28f0127b67e14a4cc7d80a709b5">FilmGrain</a> = 11
 <br />
  }</td></tr>
 <tr class="memdesc:a75cf3454fba9ce206c0c748892dc9867"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enumeration of available post-processing effects that can be applied to render targets.  <a href="#a75cf3454fba9ce206c0c748892dc9867">More...</a><br /></td></tr>
@@ -217,6 +220,7 @@ Enumerations</h2></td></tr>
 <tr><td class="fieldname"><a id="a75cf3454fba9ce206c0c748892dc9867a82ff96dcdb3e8c63154ddca3076e41f8" name="a75cf3454fba9ce206c0c748892dc9867a82ff96dcdb3e8c63154ddca3076e41f8"></a>Posterization&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="a75cf3454fba9ce206c0c748892dc9867aa5a2669472a221db75ed3b53ae9fca8a" name="a75cf3454fba9ce206c0c748892dc9867aa5a2669472a221db75ed3b53ae9fca8a"></a>Pixelation&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="a75cf3454fba9ce206c0c748892dc9867a5a870896d32acca70f912a0c11edca66" name="a75cf3454fba9ce206c0c748892dc9867a5a870896d32acca70f912a0c11edca66"></a>Dilation&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a75cf3454fba9ce206c0c748892dc9867ad83ba28f0127b67e14a4cc7d80a709b5" name="a75cf3454fba9ce206c0c748892dc9867ad83ba28f0127b67e14a4cc7d80a709b5"></a>FilmGrain&#160;</td><td class="fielddoc"></td></tr>
 </table>
 
 <p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00023">23</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
@@ -256,7 +260,8 @@ Enumerations</h2></td></tr>
 <div class="line"><span class="lineno">   56</span>    <a class="code hl_enumvalue" href="#a75cf3454fba9ce206c0c748892dc9867a82ff96dcdb3e8c63154ddca3076e41f8">Posterization</a> = 8,</div>
 <div class="line"><span class="lineno">   57</span>    <a class="code hl_enumvalue" href="#a75cf3454fba9ce206c0c748892dc9867aa5a2669472a221db75ed3b53ae9fca8a">Pixelation</a> = 9,</div>
 <div class="line"><span class="lineno">   58</span>    <a class="code hl_enumvalue" href="#a75cf3454fba9ce206c0c748892dc9867a5a870896d32acca70f912a0c11edca66">Dilation</a> = 10,</div>
-<div class="line"><span class="lineno">   59</span>};</div>
+<div class="line"><span class="lineno">   59</span>    <a class="code hl_enumvalue" href="#a75cf3454fba9ce206c0c748892dc9867ad83ba28f0127b67e14a4cc7d80a709b5">FilmGrain</a> = 11,</div>
+<div class="line"><span class="lineno">   60</span>};</div>
 <div class="ttc" id="aatlas_2effect_8h_html_a75cf3454fba9ce206c0c748892dc9867a1cdf47c16cbe271bf638c6f38a7bbcb5"><div class="ttname"><a href="#a75cf3454fba9ce206c0c748892dc9867a1cdf47c16cbe271bf638c6f38a7bbcb5">RenderTargetEffect::ColorCorrection</a></div><div class="ttdeci">@ ColorCorrection</div><div class="ttdoc">Applies color correction adjustments like exposure and contrast.</div><div class="ttdef"><b>Definition</b> <a href="atlas_2effect_8h_source.html#l00053">effect.h:53</a></div></div>
 <div class="ttc" id="aatlas_2effect_8h_html_a75cf3454fba9ce206c0c748892dc9867a556b763769d96726364eec5e37eb186c"><div class="ttname"><a href="#a75cf3454fba9ce206c0c748892dc9867a556b763769d96726364eec5e37eb186c">RenderTargetEffect::Sharpen</a></div><div class="ttdeci">@ Sharpen</div><div class="ttdoc">Applies a sharpening filter to enhance edges.</div><div class="ttdef"><b>Definition</b> <a href="atlas_2effect_8h_source.html#l00038">effect.h:38</a></div></div>
 <div class="ttc" id="aatlas_2effect_8h_html_a75cf3454fba9ce206c0c748892dc9867a5a870896d32acca70f912a0c11edca66"><div class="ttname"><a href="#a75cf3454fba9ce206c0c748892dc9867a5a870896d32acca70f912a0c11edca66">RenderTargetEffect::Dilation</a></div><div class="ttdeci">@ Dilation</div><div class="ttdef"><b>Definition</b> <a href="atlas_2effect_8h_source.html#l00058">effect.h:58</a></div></div>
@@ -267,6 +272,7 @@ Enumerations</h2></td></tr>
 <div class="ttc" id="aatlas_2effect_8h_html_a75cf3454fba9ce206c0c748892dc9867aa5a2669472a221db75ed3b53ae9fca8a"><div class="ttname"><a href="#a75cf3454fba9ce206c0c748892dc9867aa5a2669472a221db75ed3b53ae9fca8a">RenderTargetEffect::Pixelation</a></div><div class="ttdeci">@ Pixelation</div><div class="ttdef"><b>Definition</b> <a href="atlas_2effect_8h_source.html#l00057">effect.h:57</a></div></div>
 <div class="ttc" id="aatlas_2effect_8h_html_a75cf3454fba9ce206c0c748892dc9867ab15935fdee511a1c5fca66212410932b"><div class="ttname"><a href="#a75cf3454fba9ce206c0c748892dc9867ab15935fdee511a1c5fca66212410932b">RenderTargetEffect::EdgeDetection</a></div><div class="ttdeci">@ EdgeDetection</div><div class="ttdoc">Detects and highlights edges in the rendered image.</div><div class="ttdef"><b>Definition</b> <a href="atlas_2effect_8h_source.html#l00048">effect.h:48</a></div></div>
 <div class="ttc" id="aatlas_2effect_8h_html_a75cf3454fba9ce206c0c748892dc9867ad3f6975213fb5546d8486b54b025dbd7"><div class="ttname"><a href="#a75cf3454fba9ce206c0c748892dc9867ad3f6975213fb5546d8486b54b025dbd7">RenderTargetEffect::Grayscale</a></div><div class="ttdeci">@ Grayscale</div><div class="ttdoc">Converts the rendered image to grayscale.</div><div class="ttdef"><b>Definition</b> <a href="atlas_2effect_8h_source.html#l00033">effect.h:33</a></div></div>
+<div class="ttc" id="aatlas_2effect_8h_html_a75cf3454fba9ce206c0c748892dc9867ad83ba28f0127b67e14a4cc7d80a709b5"><div class="ttname"><a href="#a75cf3454fba9ce206c0c748892dc9867ad83ba28f0127b67e14a4cc7d80a709b5">RenderTargetEffect::FilmGrain</a></div><div class="ttdeci">@ FilmGrain</div><div class="ttdef"><b>Definition</b> <a href="atlas_2effect_8h_source.html#l00059">effect.h:59</a></div></div>
 <div class="ttc" id="aatlas_2effect_8h_html_a75cf3454fba9ce206c0c748892dc9867afe48233724644e35fefdd8e6600946a3"><div class="ttname"><a href="#a75cf3454fba9ce206c0c748892dc9867afe48233724644e35fefdd8e6600946a3">RenderTargetEffect::MotionBlur</a></div><div class="ttdeci">@ MotionBlur</div><div class="ttdef"><b>Definition</b> <a href="atlas_2effect_8h_source.html#l00054">effect.h:54</a></div></div>
 </div><!-- fragment -->
 </div>

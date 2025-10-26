@@ -40,6 +40,8 @@ var annotated_dup =
     [ "EdgeDetection", "class_edge_detection.html", "class_edge_detection" ],
     [ "Effect", "class_effect.html", "class_effect" ],
     [ "Environment", "class_environment.html", "class_environment" ],
+    [ "FilmGrain", "class_film_grain.html", "class_film_grain" ],
+    [ "FilmGrainParameters", "struct_film_grain_parameters.html", "struct_film_grain_parameters" ],
     [ "Fog", "struct_fog.html", "struct_fog" ],
     [ "Font", "struct_font.html", "struct_font" ],
     [ "FractalNoise", "class_fractal_noise.html", "class_fractal_noise" ],

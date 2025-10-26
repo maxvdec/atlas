@@ -38,6 +38,7 @@ var hierarchy =
       [ "ColorCorrection", "class_color_correction.html", null ],
       [ "Dilation", "class_dilation.html", null ],
       [ "EdgeDetection", "class_edge_detection.html", null ],
+      [ "FilmGrain", "class_film_grain.html", null ],
       [ "Grayscale", "class_grayscale.html", null ],
       [ "Inversion", "class_inversion.html", null ],
       [ "MotionBlur", "class_motion_blur.html", null ],
@@ -46,6 +47,7 @@ var hierarchy =
       [ "Sharpen", "class_sharpen.html", null ]
     ] ],
     [ "Environment", "class_environment.html", null ],
+    [ "FilmGrainParameters", "struct_film_grain_parameters.html", null ],
     [ "Fog", "struct_fog.html", null ],
     [ "Font", "struct_font.html", null ],
     [ "FractalNoise", "class_fractal_noise.html", null ],
