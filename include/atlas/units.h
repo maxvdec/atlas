@@ -293,6 +293,7 @@ typedef Position2d Point2d;
  *
  */
 typedef Position2d Movement2d;
+typedef Position2d Magnitude2d;
 
 /**
  * @brief Structure representing angular measurements in radians.

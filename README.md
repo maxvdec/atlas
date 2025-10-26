@@ -71,7 +71,7 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [x] Add area lights **for alpha 3**
 - [ ] Screen-space reflections
 - [x] Add rim lighting **for alpha 3**
-- [ ] Add chromatic aberration **for alpha 3**
+- [x] Add chromatic aberration **for alpha 3**
 - [ ] Add posterization **for alpha 3**
 - [ ] Add pixelization **for alpha 3**
 - [ ] Add dialation **for alpha 3**
