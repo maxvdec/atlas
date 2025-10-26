@@ -54,6 +54,7 @@ enum class RenderTargetEffect {
     MotionBlur = 6,
     ChromaticAberration = 7,
     Posterization = 8,
+    Pixelation = 9,
 };
 
 /**
@@ -430,6 +431,37 @@ class Posterization : public Effect {
     void applyToProgram(ShaderProgram &program, int index) override {
         program.setUniform1f("EffectFloat1[" + std::to_string((int)index) + "]",
                              params.levels);
+    }
+};
+
+struct PixelationParameters {
+    int pixelSize = 5;
+};
+
+class Pixelation : public Effect {
+  public:
+    Pixelation(PixelationParameters p = {})
+        : Effect(RenderTargetEffect::Pixelation), params(p) {}
+    /**
+     * @brief Creates a shared pointer to a Pixelation effect.
+     *
+     * @param p The pixelation parameters to use.
+     * @return (std::shared_ptr<Pixelation>) The created pixelation
+     * effect.
+     */
+    static std::shared_ptr<Pixelation> create(PixelationParameters p = {}) {
+        return std::make_shared<Pixelation>(p);
+    }
+    PixelationParameters params;
+    /**
+     * @brief Applies all pixelation parameters to the shader program.
+     *
+     * @param program The shader program to apply the effect to.
+     * @param index The index of the effect in the effect array.
+     */
+    void applyToProgram(ShaderProgram &program, int index) override {
+        program.setUniform1f("EffectFloat1[" + std::to_string((int)index) + "]",
+                             (float)params.pixelSize);
     }
 };
 
