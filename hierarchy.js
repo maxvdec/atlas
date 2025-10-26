@@ -83,6 +83,7 @@ var hierarchy =
     ] ],
     [ "Resource", "struct_resource.html", null ],
     [ "ResourceGroup", "struct_resource_group.html", null ],
+    [ "RimLight", "struct_rim_light.html", null ],
     [ "Rotation3d", "struct_rotation3d.html", null ],
     [ "Scene", "class_scene.html", null ],
     [ "ShaderProgram", "struct_shader_program.html", null ],

@@ -62,7 +62,8 @@ var shader_8h =
       [ "Deferred", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcda4ed71db54748b36eeb398876b0c747ac", null ],
       [ "LightDeferred", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcda62e60907eeb7e4b927057202c2a3eaba", null ],
       [ "Material", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcdad92a8333dd3ccb895cc65f7455b71206", null ],
-      [ "Instances", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcda1c7d5bb21f0c351e584f3a4109ecdc76", null ]
+      [ "Instances", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcda1c7d5bb21f0c351e584f3a4109ecdc76", null ],
+      [ "Environment", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcda0ba29c6a1afacf586b03a26162c72274", null ]
     ] ],
     [ "TessellationShaderType", "shader_8h.html#ab4defdfdbd8367100897f4e0fb2e1db9", [
       [ "Control", "shader_8h.html#ab4defdfdbd8367100897f4e0fb2e1db9aa1595abbb4c3a326636dd178757cd6c1", null ],

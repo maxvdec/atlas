@@ -77,6 +77,7 @@ var annotated_dup =
     [ "Resource", "struct_resource.html", "struct_resource" ],
     [ "ResourceGroup", "struct_resource_group.html", "struct_resource_group" ],
     [ "Reverb", "class_reverb.html", "class_reverb" ],
+    [ "RimLight", "struct_rim_light.html", "struct_rim_light" ],
     [ "Rotation3d", "struct_rotation3d.html", "struct_rotation3d" ],
     [ "Scene", "class_scene.html", "class_scene" ],
     [ "ShaderProgram", "struct_shader_program.html", "struct_shader_program" ],

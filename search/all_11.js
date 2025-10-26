@@ -42,11 +42,13 @@ var searchData=
   ['rightcontrol_39',['RightControl',['../input_8h.html#a9479d299e1852e6140dcca1f405868aba857bb13bb233ca520283eb9886509b65',1,'input.h']]],
   ['rightshift_40',['RightShift',['../input_8h.html#a9479d299e1852e6140dcca1f405868aba317d4a7487ee62605713987d4a037f83',1,'input.h']]],
   ['rightsuper_41',['RightSuper',['../input_8h.html#a9479d299e1852e6140dcca1f405868aba0cc5a9f113dc1147c8eeae2f0199f9f2',1,'input.h']]],
-  ['roll_42',['roll',['../struct_rotation3d.html#a993b23a5ab584cae39120be2f30c534f',1,'Rotation3d']]],
-  ['rotate_43',['rotate',['../class_game_object.html#a80eb49c1d0084c82e944ff254532278b',1,'GameObject::rotate()'],['../class_compound_object.html#a4210275b72af87578ac4f7fd900906cc',1,'CompoundObject::rotate()'],['../struct_area_light.html#a840a4adae7af277c639d93090516bb1d',1,'AreaLight::rotate()'],['../struct_instance.html#a8090e4ba5483edf03271e57b7afcb612',1,'Instance::rotate()'],['../class_core_object.html#a983e3a31e6bc75c91faee51758702dc3',1,'CoreObject::rotate()'],['../class_terrain.html#a52cdfdd83cda1830924b3544560699dc',1,'Terrain::rotate()']]],
-  ['rotation_44',['rotation',['../struct_area_light.html#aac8628e4f55d5f24295d220cb88d2c31',1,'AreaLight::rotation'],['../struct_instance.html#a01a9049398c7873c47dcf5b7c24cf510',1,'Instance::rotation'],['../class_core_object.html#a7ebc137645d25de5365b893661973cd9',1,'CoreObject::rotation'],['../class_terrain.html#a5aa45ff1f10bb1d71fd8e8956037be93',1,'Terrain::rotation']]],
-  ['rotation3d_45',['Rotation3d',['../struct_rotation3d.html',1,'']]],
-  ['roughness_46',['Roughness',['../texture_8h.html#a579bf435a05d45b75f553d37ebbb3225a767078b82d60bc9dfaec29326b0b7c06',1,'texture.h']]],
-  ['roughness_47',['roughness',['../struct_material.html#abbaeac8374986ca82670ff0d7749c566',1,'Material']]],
-  ['run_48',['run',['../class_window.html#ae137ec42ddc87d666d49661484410091',1,'Window']]]
+  ['rimlight_42',['RimLight',['../struct_rim_light.html',1,'']]],
+  ['rimlight_43',['rimLight',['../class_environment.html#ae29cf345fb1baf47c5ce89dccd100fae',1,'Environment']]],
+  ['roll_44',['roll',['../struct_rotation3d.html#a993b23a5ab584cae39120be2f30c534f',1,'Rotation3d']]],
+  ['rotate_45',['rotate',['../class_game_object.html#a80eb49c1d0084c82e944ff254532278b',1,'GameObject::rotate()'],['../class_compound_object.html#a4210275b72af87578ac4f7fd900906cc',1,'CompoundObject::rotate()'],['../struct_area_light.html#a840a4adae7af277c639d93090516bb1d',1,'AreaLight::rotate()'],['../struct_instance.html#a8090e4ba5483edf03271e57b7afcb612',1,'Instance::rotate()'],['../class_core_object.html#a983e3a31e6bc75c91faee51758702dc3',1,'CoreObject::rotate()'],['../class_terrain.html#a52cdfdd83cda1830924b3544560699dc',1,'Terrain::rotate()']]],
+  ['rotation_46',['rotation',['../struct_area_light.html#aac8628e4f55d5f24295d220cb88d2c31',1,'AreaLight::rotation'],['../struct_instance.html#a01a9049398c7873c47dcf5b7c24cf510',1,'Instance::rotation'],['../class_core_object.html#a7ebc137645d25de5365b893661973cd9',1,'CoreObject::rotation'],['../class_terrain.html#a5aa45ff1f10bb1d71fd8e8956037be93',1,'Terrain::rotation']]],
+  ['rotation3d_47',['Rotation3d',['../struct_rotation3d.html',1,'']]],
+  ['roughness_48',['Roughness',['../texture_8h.html#a579bf435a05d45b75f553d37ebbb3225a767078b82d60bc9dfaec29326b0b7c06',1,'texture.h']]],
+  ['roughness_49',['roughness',['../struct_material.html#abbaeac8374986ca82670ff0d7749c566',1,'Material']]],
+  ['run_50',['run',['../class_window.html#ae137ec42ddc87d666d49661484410091',1,'Window']]]
 ];

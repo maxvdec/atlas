@@ -11,7 +11,8 @@ var searchData=
   ['resource_8',['resource',['../struct_font.html#a953d3ee33e7097789c7ee85748436b4c',1,'Font::resource'],['../struct_texture.html#a2c68086bd793696d36daf636f42ddb2f',1,'Texture::resource'],['../class_audio_data.html#a0b2583df19d7446a8f4832410417058a',1,'AudioData::resource']]],
   ['resources_9',['resources',['../struct_cubemap.html#aa1dec168e6011ab57c051d77a897b90a',1,'Cubemap::resources'],['../struct_resource_group.html#a147e53b00ed6da7d2fb3d0f0534b8251',1,'ResourceGroup::resources']]],
   ['right_10',['right',['../struct_area_light.html#ad74cd37dfbb1ff4e498c1e56ca74ddf3',1,'AreaLight']]],
-  ['roll_11',['roll',['../struct_rotation3d.html#a993b23a5ab584cae39120be2f30c534f',1,'Rotation3d']]],
-  ['rotation_12',['rotation',['../struct_area_light.html#aac8628e4f55d5f24295d220cb88d2c31',1,'AreaLight::rotation'],['../struct_instance.html#a01a9049398c7873c47dcf5b7c24cf510',1,'Instance::rotation'],['../class_core_object.html#a7ebc137645d25de5365b893661973cd9',1,'CoreObject::rotation'],['../class_terrain.html#a5aa45ff1f10bb1d71fd8e8956037be93',1,'Terrain::rotation']]],
-  ['roughness_13',['roughness',['../struct_material.html#abbaeac8374986ca82670ff0d7749c566',1,'Material']]]
+  ['rimlight_11',['rimLight',['../class_environment.html#ae29cf345fb1baf47c5ce89dccd100fae',1,'Environment']]],
+  ['roll_12',['roll',['../struct_rotation3d.html#a993b23a5ab584cae39120be2f30c534f',1,'Rotation3d']]],
+  ['rotation_13',['rotation',['../struct_area_light.html#aac8628e4f55d5f24295d220cb88d2c31',1,'AreaLight::rotation'],['../struct_instance.html#a01a9049398c7873c47dcf5b7c24cf510',1,'Instance::rotation'],['../class_core_object.html#a7ebc137645d25de5365b893661973cd9',1,'CoreObject::rotation'],['../class_terrain.html#a5aa45ff1f10bb1d71fd8e8956037be93',1,'Terrain::rotation']]],
+  ['roughness_14',['roughness',['../struct_material.html#abbaeac8374986ca82670ff0d7749c566',1,'Material']]]
 ];
