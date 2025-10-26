@@ -135,6 +135,13 @@ class TraitComponent : public Component {
      */
     inline void setTypedObject(T *obj) { typedObject = obj; }
 
+    /**
+     * @brief Provides direct access to the specialized GameObject this trait
+     * decorates.
+     *
+     * @return (T*) Pointer to the typed object, or nullptr if the component
+     * has not been attached yet.
+     */
     inline T *getObject() { return typedObject; }
 
   private:
@@ -331,8 +338,16 @@ class CompoundObject : public GameObject {
      */
     std::vector<CoreObject *> objects;
 
+    /**
+     * @brief Bootstraps the compound object, initializing child objects and
+     * dispatching component hooks.
+     */
     virtual void initialize() override;
 
+    /**
+     * @brief Ticks the compound object, ensuring child objects stay
+     * synchronized before rendering.
+     */
     virtual void update(Window &window) override;
     /**
      * @brief Updates the objects within the compound object.
@@ -346,23 +361,86 @@ class CompoundObject : public GameObject {
      */
     virtual void init() {};
 
+    /**
+     * @brief Renders every child CoreObject that composes the compound
+     * structure.
+     */
     void render(float dt) override;
+    /**
+     * @brief Propagates the active view matrix to every child CoreObject.
+     */
     void setViewMatrix(const glm::mat4 &view) override;
+    /**
+     * @brief Propagates the active projection matrix to every child
+     * CoreObject.
+     */
     void setProjectionMatrix(const glm::mat4 &projection) override;
+    /**
+     * @brief Retrieves the shader program currently in use by the first
+     * underlying CoreObject.
+     */
     std::optional<ShaderProgram> getShaderProgram() override;
+    /**
+     * @brief Forces all child objects to use the provided shader program.
+     */
     void setShader(const ShaderProgram &shader) override;
+    /**
+     * @brief Obtains the position of the compound object based on its first
+     * child.
+     */
     Position3d getPosition() const override;
+    /**
+     * @brief Collects the vertices from the first child CoreObject for quick
+     * queries such as bounding-box generation.
+     */
     std::vector<CoreVertex> getVertices() const override;
+    /**
+     * @brief Reports the scale of the compound object, mirroring its first
+     * child object.
+     */
     Size3d getScale() const override;
+    /**
+     * @brief Indicates whether the compound object is eligible to cast
+     * shadows.
+     */
     bool canCastShadows() const override;
+    /**
+     * @brief Repositions the entire aggregate by offsetting all children the
+     * same amount.
+     */
     void setPosition(const Position3d &newPosition) override;
+    /**
+     * @brief Translates every child CoreObject by the supplied delta.
+     */
     void move(const Position3d &deltaPosition) override;
+    /**
+     * @brief Applies an absolute rotation to all children, maintaining their
+     * relative offsets.
+     */
     void setRotation(const Rotation3d &newRotation) override;
+    /**
+     * @brief Rotates every child CoreObject around its own origin.
+     */
     void lookAt(const Position3d &target, const Normal3d &up) override;
+    /**
+     * @brief Applies an incremental rotation to all children.
+     */
     void rotate(const Rotation3d &deltaRotation) override;
+    /**
+     * @brief Uniformly rescales the compound object across all children.
+     */
     void setScale(const Scale3d &newScale) override;
+    /**
+     * @brief Temporarily removes the aggregate from the render queue.
+     */
     void hide() override;
+    /**
+     * @brief Makes the aggregate renderable again after being hidden.
+     */
     void show() override;
+    /**
+     * @brief Configures a physics body shared between all child objects.
+     */
     void setupPhysics(Body body) override;
 
     /**
@@ -392,8 +470,18 @@ class UIObject : public GameObject {};
  */
 class UIView : public UIObject {
   public:
+    /**
+     * @brief Renders the view alongside all registered child UI objects in
+     * submission order.
+     */
     void render(float dt) override;
+    /**
+     * @brief Stores the view matrix used when rendering the UI hierarchy.
+     */
     void setViewMatrix(const glm::mat4 &view) override;
+    /**
+     * @brief Stores the projection matrix applied to all child UI objects.
+     */
     void setProjectionMatrix(const glm::mat4 &projection) override;
 
     /**

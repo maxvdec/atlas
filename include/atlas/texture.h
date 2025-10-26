@@ -26,8 +26,17 @@
  *
  */
 struct TextureCreationData {
+    /**
+     * @brief Width of the texture in pixels.
+     */
     int width = 0;
+    /**
+     * @brief Height of the texture in pixels.
+     */
     int height = 0;
+    /**
+     * @brief Number of color channels in the texture data.
+     */
     int channels = 0;
 };
 
@@ -38,9 +47,22 @@ struct TextureCreationData {
  *
  */
 enum class TextureWrappingMode {
+    /**
+     * @brief Repeats the texture infinitely in both directions.
+     */
     Repeat,
+    /**
+     * @brief Alternates the texture direction on every repeat for a mirrored
+     * look.
+     */
     MirroredRepeat,
+    /**
+     * @brief Clamps coordinates to the texture edge, stretching edge pixels.
+     */
     ClampToEdge,
+    /**
+     * @brief Uses a constant border color outside the [0,1] range.
+     */
     ClampToBorder
 };
 
@@ -49,16 +71,37 @@ enum class TextureWrappingMode {
  * textures are sampled when they are minified or magnified.
  *
  */
-enum class TextureFilteringMode { Nearest, Linear };
+enum class TextureFilteringMode {
+    /**
+     * @brief Picks the texel closest to the lookup coordinate.
+     */
+    Nearest,
+    /**
+     * @brief Linearly interpolates texels for smoother sampling.
+     */
+    Linear
+};
 
 /**
  * @brief Structure that holds the parameters for texture creation.
  *
  */
 struct TextureParameters {
+    /**
+     * @brief Wrapping mode for the horizontal (S) axis.
+     */
     TextureWrappingMode wrappingModeS = TextureWrappingMode::Repeat;
+    /**
+     * @brief Wrapping mode for the vertical (T) axis.
+     */
     TextureWrappingMode wrappingModeT = TextureWrappingMode::Repeat;
+    /**
+     * @brief Filter applied when the texture is minified.
+     */
     TextureFilteringMode minifyingFilter = TextureFilteringMode::Linear;
+    /**
+     * @brief Filter applied when the texture is magnified.
+     */
     TextureFilteringMode magnifyingFilter = TextureFilteringMode::Linear;
 };
 
@@ -422,6 +465,10 @@ class RenderTarget : public Renderable {
      */
     std::shared_ptr<CoreObject> object = nullptr;
 
+    /**
+     * @brief Renders the quad representing this render target, applying any
+     * queued post-processing effects.
+     */
     void render(float dt) override;
     /**
      * @brief Resolves the render target by copying multisampled buffers to
@@ -430,7 +477,13 @@ class RenderTarget : public Renderable {
      */
     void resolve();
 
+    /**
+     * @brief Width of the render target in pixels.
+     */
     int getWidth() const;
+    /**
+     * @brief Height of the render target in pixels.
+     */
     int getHeight() const;
 
     /**
@@ -504,8 +557,18 @@ class Skybox : public Renderable {
      */
     void show();
 
+    /**
+     * @brief Renders the skybox cube using the stored cubemap texture.
+     */
     void render(float dt) override;
+    /**
+     * @brief Updates the view matrix while removing translation for correct
+     * skybox rendering.
+     */
     void setViewMatrix(const glm::mat4 &view) override;
+    /**
+     * @brief Stores the projection matrix used for skybox rendering.
+     */
     void setProjectionMatrix(const glm::mat4 &projection) override;
 
   private:
@@ -521,16 +584,40 @@ struct BloomElement {
     Id textureId;
 };
 
+/**
+ * @brief Helper that manages downsample/upsample chains for bloom rendering.
+ */
 class BloomRenderTarget {
   public:
     BloomRenderTarget() = default;
     ~BloomRenderTarget() = default;
 
+    /**
+     * @brief Initializes the bloom chain with the desired resolution and mip
+     * length.
+     */
     void init(int width, int height, int chainLength = 5);
+    /**
+     * @brief Releases GPU resources associated with the bloom chain.
+     */
     void destroy();
+    /**
+     * @brief Binds the bloom FBO so that downsample passes can write results.
+     */
     void bindForWriting();
+    /**
+     * @brief Runs the full bloom blur and upsample pass using the source
+     * texture.
+     */
     void renderBloomTexture(unsigned int srcTexture, float filterRadius);
+    /**
+     * @brief Returns the bloom chain hierarchy for inspection or custom
+     * rendering.
+     */
     const std::vector<BloomElement> &getElements() const;
+    /**
+     * @brief Retrieves the final composite bloom texture.
+     */
     unsigned int getBloomTexture();
 
   private:

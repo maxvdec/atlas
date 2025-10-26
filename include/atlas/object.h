@@ -43,10 +43,25 @@ typedef std::array<double, 2> TextureCoordinate;
  *
  */
 struct Material {
+    /**
+     * @brief Base color contribution of the surface.
+     */
     Color albedo = {1.0, 1.0, 1.0, 1.0};
+    /**
+     * @brief Metallic factor controlling how conductive the material behaves.
+     */
     float metallic = 0.0f;
+    /**
+     * @brief Roughness factor influencing the spread of specular highlights.
+     */
     float roughness = 0.5f;
+    /**
+     * @brief Ambient occlusion term used to darken creases and cavities.
+     */
     float ao = 1.0f;
+    /**
+     * @brief Reflection blend factor when environment maps are available.
+     */
     float reflectivity = 0.0f;
 };
 
@@ -320,10 +335,24 @@ class CoreObject : public GameObject {
      * @param newIndices The indices to attach.
      */
     void attachIndices(const std::vector<Index> &newIndices);
+    /**
+     * @brief Binds an already compiled shader program for this object.
+     */
     void attachProgram(const ShaderProgram &program) override;
+    /**
+     * @brief Builds a shader program from the supplied vertex and fragment
+     * sources, then binds it.
+     */
     void createAndAttachProgram(VertexShader &vertexShader,
                                 FragmentShader &fragmentShader) override;
+    /**
+     * @brief Adds a texture to the object and makes it available during
+     * rendering.
+     */
     void attachTexture(const Texture &texture) override;
+    /**
+     * @brief Performs deferred setup of buffers, shaders, and state.
+     */
     void initialize() override;
 
     /**
@@ -341,6 +370,9 @@ class CoreObject : public GameObject {
      *
      */
     void renderOnlyTexture();
+    /**
+     * @brief Sets a solid color override that multiplies with textures.
+     */
     void setColor(const Color &color) override;
 
     /**
@@ -359,12 +391,31 @@ class CoreObject : public GameObject {
      */
     Scale3d scale = {1.0, 1.0, 1.0};
 
+    /**
+     * @brief Places the object at an absolute position in world space.
+     */
     void setPosition(const Position3d &newPosition) override;
+    /**
+     * @brief Moves the object relative to its current position.
+     */
     void move(const Position3d &deltaPosition) override;
+    /**
+     * @brief Assigns an absolute rotation to the object.
+     */
     void setRotation(const Rotation3d &newRotation) override;
+    /**
+     * @brief Rotates the object so its forward vector points towards a
+     * target.
+     */
     void lookAt(const Position3d &target,
                 const Normal3d &up = {0.0, 1.0, 0.0}) override;
+    /**
+     * @brief Applies an incremental rotation around the object's axes.
+     */
     void rotate(const Rotation3d &deltaRotation) override;
+    /**
+     * @brief Uniformly scales the object along each axis.
+     */
     void setScale(const Scale3d &newScale) override;
 
     /**
@@ -389,6 +440,10 @@ class CoreObject : public GameObject {
     inline void show() override { isVisible = true; }
     inline void hide() override { isVisible = false; }
 
+    /**
+     * @brief Attaches a physics body so the object can interact with the rigid
+     * body system.
+     */
     void setupPhysics(Body body) override;
 
     /**
@@ -499,6 +554,10 @@ class CoreObject : public GameObject {
     inline Size3d getScale() const override { return scale; }
     inline bool canCastShadows() const override { return castsShadows; }
 
+    /**
+     * @brief Performs per-frame updates such as component ticking or buffering
+     * synchronization.
+     */
     void update(Window &window) override;
 
     bool canUseDeferredRendering() const override {
@@ -723,10 +782,28 @@ struct Particle {
  */
 class ParticleEmitter : public GameObject {
   public:
+    /**
+     * @brief Allocates buffers and shader state necessary for particle
+     * simulation.
+     */
     void initialize() override;
+    /**
+     * @brief Renders all active particles with billboarding logic.
+     */
     void render(float dt) override;
+    /**
+     * @brief Updates particle lifetimes, spawns new particles, and applies
+     * forces.
+     */
     void update(Window &window) override;
+    /**
+     * @brief Updates the projection matrix used to align particles to the
+     * camera frustum.
+     */
     void setProjectionMatrix(const glm::mat4 &projection) override;
+    /**
+     * @brief Stores the view matrix so particles can face the camera.
+     */
     void setViewMatrix(const glm::mat4 &view) override;
 
     /**
@@ -737,7 +814,13 @@ class ParticleEmitter : public GameObject {
      */
     ParticleEmitter(unsigned int maxParticles = 100);
 
+    /**
+     * @brief Binds a sprite texture that will be used for each particle.
+     */
     void attachTexture(const Texture &tex) override;
+    /**
+     * @brief Sets a tint color that modulates the particle sprite.
+     */
     void setColor(const Color &color) override;
     /**
      * @brief Function that enables the use of a texture for the particles.
@@ -926,30 +1009,45 @@ class Model : public GameObject {
         }
     }
 
+    /**
+     * @brief Assigns an absolute rotation to every mesh in the model.
+     */
     inline void setRotation(const Rotation3d &newRotation) override {
         for (auto &obj : objects) {
             obj->setRotation(newRotation);
         }
     }
 
+    /**
+     * @brief Applies a texture to all contained CoreObjects.
+     */
     inline void attachTexture(const Texture &texture) override {
         for (auto &obj : objects) {
             obj->attachTexture(texture);
         }
     }
 
+    /**
+     * @brief Scales every mesh in the model uniformly.
+     */
     inline void setScale(const Scale3d &newScale) override {
         for (auto &obj : objects) {
             obj->setScale(newScale);
         }
     }
 
+    /**
+     * @brief Stores the current view matrix for every sub-object.
+     */
     inline void setViewMatrix(const glm::mat4 &view) override {
         for (auto &obj : objects) {
             obj->setViewMatrix(view);
         }
     }
 
+    /**
+     * @brief Renders each CoreObject that composes the model.
+     */
     inline void render(float dt) override {
         for (auto &component : components) {
             component->update(dt);
@@ -959,12 +1057,20 @@ class Model : public GameObject {
         }
     }
 
+    /**
+     * @brief Updates all underlying CoreObjects to keep transforms and
+     * animations synchronized.
+     */
     inline void update(Window &window) override {
         for (auto &obj : objects) {
             obj->update(window);
         }
     }
 
+    /**
+     * @brief Initializes every CoreObject and attached component within the
+     * model.
+     */
     inline void initialize() override {
         for (auto &component : components) {
             component->init();
@@ -974,18 +1080,27 @@ class Model : public GameObject {
         }
     }
 
+    /**
+     * @brief Sets the projection matrix for all meshes composing the model.
+     */
     inline void setProjectionMatrix(const glm::mat4 &projection) override {
         for (auto &obj : objects) {
             obj->setProjectionMatrix(projection);
         }
     }
 
+    /**
+     * @brief Forces every mesh to use the provided shader program.
+     */
     inline void setShader(const ShaderProgram &shader) override {
         for (auto &obj : objects) {
             obj->setShader(shader);
         }
     }
 
+    /**
+     * @brief Retrieves the shader program currently bound to the first mesh.
+     */
     inline std::optional<ShaderProgram> getShaderProgram() override {
         if (objects.empty()) {
             throw std::runtime_error("Model has no objects.");
@@ -993,6 +1108,9 @@ class Model : public GameObject {
         return objects[0]->getShaderProgram().value();
     }
 
+    /**
+     * @brief Returns the world-space position of the first mesh in the model.
+     */
     inline Position3d getPosition() const override {
         if (objects.empty()) {
             throw std::runtime_error("Model has no objects.");

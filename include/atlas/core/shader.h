@@ -93,6 +93,9 @@ enum class AtlasVertexShader {
      *
      */
     Terrain,
+    /**
+     * @brief Vertex shader tailored for volumetric light scattering passes.
+     */
     Volumetric,
 };
 
@@ -120,7 +123,13 @@ enum class ShaderCapability {
      * @brief Capability for handling environment mapping (e.g., reflections).
      *
      */
+    /**
+     * @brief Enables sampling of cube maps or HDR textures for reflections.
+     */
     EnvironmentMapping,
+    /**
+     * @brief Supports image-based lighting sampling and BRDF integration.
+     */
     IBL,
     /**
      * @brief Capability for handling skeletal animations.
@@ -130,6 +139,10 @@ enum class ShaderCapability {
     /**
      * @brief Capability for handling deferred rendering.
      *
+     */
+    /**
+     * @brief Indicates the shader participates in the lighting pass of deferred
+     * rendering.
      */
     LightDeferred,
     /**
@@ -143,6 +156,9 @@ enum class ShaderCapability {
      *
      */
     Instances,
+    /**
+     * @brief Provides access to environment parameters (fog, rim light, etc.).
+     */
     Environment,
 };
 
@@ -290,9 +306,21 @@ enum class AtlasFragmentShader {
      *
      */
     SSAOBlur,
+    /**
+     * @brief Fragment shader responsible for tessellated terrain shading.
+     */
     Terrain,
+    /**
+     * @brief Fragment shader used for volumetric lighting integration.
+     */
     Volumetric,
+    /**
+     * @brief Fragment shader that downsamples textures within bloom chains.
+     */
     Downsample,
+    /**
+     * @brief Fragment shader that upsamples and blends bloom textures.
+     */
     Upsample
 };
 
@@ -400,8 +428,17 @@ struct GeometryShader {
 };
 
 enum class AtlasTessellationShader {
+    /**
+     * @brief Control stage shader used for adaptive terrain tessellation.
+     */
     TerrainControl,
+    /**
+     * @brief Evaluation stage shader producing displaced terrain vertices.
+     */
     TerrainEvaluation,
+    /**
+     * @brief Primitive generation shader defining tessellated patch layout.
+     */
     TerrainPrimitive
 };
 
