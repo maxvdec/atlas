@@ -17,6 +17,7 @@ const int EFFECT_MOTION_BLUR = 6;
 const int EFFECT_CHROMATIC_ABERRATION = 7;
 const int EFFECT_POSTERIZATION = 8;
 const int EFFECT_PIXELATION = 9;
+const int EFFECT_DILATION = 10;
 
 const float offset = 1.0 / 300.0;
 const float exposure = 1.0;
@@ -183,6 +184,27 @@ vec4 sampleColor(vec2 uv) {
             vec2 pixelated = floor(uv / pixelSize) * pixelSize;
 
             return texture(Texture, pixelated);
+        } else if (Effects[i] == EFFECT_DILATION) {
+            float radius = EffectFloat1[i];
+            float separation = EffectFloat2[i];
+            vec2 texelSize = 1.0 / vec2(textureSize(Texture, 0));
+
+            vec3 maxColor = texture(Texture, uv).rgb;
+            int range = int(radius);
+            float radiusSq = radius * radius;
+
+            for (int x = -range; x <= range; x++) {
+                for (int y = -range; y <= range; y++) {
+                    float distSq = float(x * x + y * y);
+                    if (distSq <= radiusSq) {
+                        vec2 offset = vec2(float(x), float(y)) * texelSize * separation;
+                        vec3 sampled = texture(Texture, uv + offset).rgb;
+                        maxColor = max(maxColor, sampled);
+                    }
+                }
+            }
+
+            return vec4(maxColor, texture(Texture, uv).a);
         }
     }
 
@@ -211,10 +233,31 @@ vec4 sampleBright(vec2 uv) {
             vec2 pixelated = floor(uv / pixelSize) * pixelSize;
             vec4 color = texture(BrightTexture, pixelated);
             return color;
+        } else if (Effects[i] == EFFECT_DILATION) {
+            float radius = EffectFloat1[i];
+            float separation = EffectFloat2[i];
+            vec2 texelSize = 1.0 / vec2(textureSize(BrightTexture, 0));
+
+            vec3 maxColor = texture(BrightTexture, uv).rgb;
+            int range = int(radius);
+            float radiusSq = radius * radius;
+
+            for (int x = -range; x <= range; x++) {
+                for (int y = -range; y <= range; y++) {
+                    float distSq = float(x * x + y * y);
+                    if (distSq <= radiusSq) {
+                        vec2 offset = vec2(float(x), float(y)) * texelSize * separation;
+                        vec3 sampled = texture(BrightTexture, uv + offset).rgb;
+                        maxColor = max(maxColor, sampled);
+                    }
+                }
+            }
+
+            return vec4(maxColor, texture(BrightTexture, uv).a);
         }
     }
 
-    return texture(Texture, uv);
+    return texture(BrightTexture, uv);
 }
 
 float LinearizeDepth(float depth) {
