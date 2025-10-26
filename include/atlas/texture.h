@@ -10,6 +10,7 @@
 #ifndef TEXTURE_H
 #define TEXTURE_H
 
+#include "atlas/core/shader.h"
 #include <array>
 #include <vector>
 #pragma once
@@ -512,6 +513,42 @@ class Skybox : public Renderable {
 
     glm::mat4 view = glm::mat4(1.0f);
     glm::mat4 projection = glm::mat4(1.0f);
+};
+
+struct BloomElement {
+    glm::vec2 size;
+    glm::ivec2 intSize;
+    Id textureId;
+};
+
+class BloomRenderTarget {
+  public:
+    BloomRenderTarget() = default;
+    ~BloomRenderTarget() = default;
+
+    void init(int width, int height, int chainLength = 5);
+    void destroy();
+    void bindForWriting();
+    void renderBloomTexture(unsigned int srcTexture, float filterRadius);
+    const std::vector<BloomElement> &getElements() const;
+    unsigned int getBloomTexture();
+
+  private:
+    friend class Window;
+
+    void renderDownsamples(unsigned int srcTexture);
+    void renderUpsamples(float filterRadius);
+
+    std::vector<BloomElement> elements;
+    bool initialized = false;
+    Id fbo;
+    glm::ivec2 srcViewportSize;
+    glm::vec2 srcViewportSizef;
+    ShaderProgram downsampleProgram;
+    ShaderProgram upsampleProgram;
+
+    Id vao;
+    Id vbo;
 };
 
 #endif // TEXTURE_H

@@ -33,10 +33,16 @@ struct VolumetricLighting {
     float exposure = 0.6f;
 };
 
+struct LightBloom {
+    float radius = 0.5f;
+    int maxSamples = 5;
+};
+
 class Environment {
   public:
     Fog fog;
     VolumetricLighting volumetricLighting;
+    LightBloom lightBloom;
 };
 
 /**

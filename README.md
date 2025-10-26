@@ -67,7 +67,7 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [x] Add depth of field
 - [x] Add terrain system (Aurora) **for alpha 3**
 - [x] Add motion blur **for alpha 3**
-- [ ] Physically based bloom **for alpha 3**
+- [x] Physically based bloom **for alpha 3**
 - [x] Add area lights **for alpha 3**
 - [ ] Screen-space reflections
 - [ ] Add rim lighting **for alpha 3**

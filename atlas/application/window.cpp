@@ -334,7 +334,7 @@ void Window::run() {
         for (auto &obj : this->preferenceRenderables) {
             RenderTarget *target = dynamic_cast<RenderTarget *>(obj);
             if (target != nullptr && target->brightTexture.id != 0) {
-                this->renderPingpong(target, getDeltaTime());
+                this->renderPhysicalBloom(target);
             }
             obj->setViewMatrix(this->camera->calculateViewMatrix());
             obj->setProjectionMatrix(calculateProjectionMatrix());
@@ -988,4 +988,29 @@ void Window::useDeferredRendering() {
         RenderTarget(*this, RenderTargetType::Scene));
     this->volumetricBuffer = volumetricTarget;
     this->ssaoMapsDirty = true;
+}
+
+void Window::renderPhysicalBloom(RenderTarget *target) {
+    if (target->brightTexture.id == 0) {
+        return;
+    }
+
+    if (this->bloomBuffer == nullptr) {
+        this->bloomBuffer =
+            std::make_shared<BloomRenderTarget>(BloomRenderTarget());
+        int sizeX, sizeY;
+        glfwGetFramebufferSize((GLFWwindow *)this->windowRef, &sizeX, &sizeY);
+        this->bloomBuffer->init(
+            sizeX, sizeY, currentScene->environment.lightBloom.maxSamples);
+    }
+
+    this->bloomBuffer->renderBloomTexture(
+        target->brightTexture.id, currentScene->environment.lightBloom.radius);
+    target->blurredTexture = Texture();
+    target->blurredTexture.creationData.width =
+        this->bloomBuffer->srcViewportSizef.x;
+    target->blurredTexture.creationData.height =
+        this->bloomBuffer->srcViewportSizef.y;
+    target->blurredTexture.type = TextureType::Color;
+    target->blurredTexture.id = this->bloomBuffer->getBloomTexture();
 }
