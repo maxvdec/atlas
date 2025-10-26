@@ -28,8 +28,17 @@ enum class ResourceType { File, Image, SpecularMap, Audio, Font, Model };
  *
  */
 struct Resource {
+    /**
+     * @brief Filesystem path pointing to the asset on disk.
+     */
     fs::path path;
+    /**
+     * @brief Human readable name used to query the resource later.
+     */
     std::string name;
+    /**
+     * @brief Type tag describing how the resource should be interpreted.
+     */
     ResourceType type = ResourceType::File;
 };
 
@@ -38,7 +47,13 @@ struct Resource {
  *
  */
 struct ResourceGroup {
+    /**
+     * @brief Name that identifies the group for lookup purposes.
+     */
     std::string groupName;
+    /**
+     * @brief Resources that belong to this group.
+     */
     std::vector<Resource> resources;
 
     /**

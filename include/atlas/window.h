@@ -322,6 +322,9 @@ class Window {
         firstRenderables.push_back(object);
     }
 
+    /**
+     * @brief Registers a UI renderable so it is drawn after world geometry.
+     */
     inline void addUIObject(Renderable *object) {
         uiRenderables.push_back(object);
     }

@@ -67,6 +67,9 @@ struct PointLightConstants {
      *
      */
     float quadratic;
+    /**
+     * @brief Radius of influence derived from attenuation constants.
+     */
     float radius;
 };
 

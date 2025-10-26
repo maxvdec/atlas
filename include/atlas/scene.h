@@ -21,34 +21,95 @@
 class Window;
 struct AreaLight;
 
+/**
+ * @brief Parameters controlling exponential fog accumulation in the scene.
+ */
 struct Fog {
+    /**
+     * @brief Tint applied to the fog as fragments recede into the distance.
+     */
     Color color = Color::white();
+    /**
+     * @brief Density of the fog; larger values cause quicker fade-out.
+     */
     float intensity = 0.0f;
 };
 
+/**
+ * @brief Settings used when simulating volumetric light shafts.
+ */
 struct VolumetricLighting {
+    /**
+     * @brief Overall density of the participating medium.
+     */
     float density = 0.3f;
+    /**
+     * @brief Strength of each iterative sample along the ray march.
+     */
     float weight = 0.01;
+    /**
+     * @brief Damping factor applied per step to soften distant contributions.
+     */
     float decay = 0.95;
+    /**
+     * @brief Exposure applied after integrating scattered light.
+     */
     float exposure = 0.6f;
 };
 
+/**
+ * @brief Configuration values for bloom post-processing.
+ */
 struct LightBloom {
+    /**
+     * @brief Radius of the blur kernel applied to bright fragments.
+     */
     float radius = 0.5f;
+    /**
+     * @brief Maximum number of blur passes performed.
+     */
     int maxSamples = 5;
 };
 
+/**
+ * @brief Settings for rim lighting, accentuating silhouettes opposite the
+ * camera.
+ */
 struct RimLight {
+    /**
+     * @brief Strength of the rim contribution.
+     */
     float intensity = 0.0f;
+    /**
+     * @brief Color applied to the rim highlight.
+     */
     Color color = Color::white();
 };
 
+/**
+ * @brief Aggregates configurable environmental effects such as fog and bloom.
+ */
 class Environment {
   public:
+    /**
+     * @brief Fog parameters that softly blend distant geometry with the sky.
+     */
     Fog fog;
+    /**
+     * @brief Controls for volumetric light scattering.
+     */
     VolumetricLighting volumetricLighting;
+    /**
+     * @brief Configures bloom radii and blur passes.
+     */
     LightBloom lightBloom;
+    /**
+     * @brief Rim lighting intensity and tint.
+     */
     RimLight rimLight;
+    /**
+     * @brief Optional 3D lookup texture for color grading.
+     */
     Texture lookupTexture;
 };
 
@@ -185,6 +246,10 @@ class Scene {
      * @param light The spotlight to add.
      */
     void addSpotlight(Spotlight *light) { spotlights.push_back(light); }
+    /**
+     * @brief Adds an area light to the scene. \warning The light pointer must
+     * remain valid for the entire scene lifetime.
+     */
     void addAreaLight(AreaLight *light) { areaLights.push_back(light); }
 
     /**
@@ -199,6 +264,10 @@ class Scene {
         }
     }
 
+    /**
+     * @brief Overrides the environmental rendering configuration for the
+     * scene.
+     */
     void setEnvironment(Environment newEnv) { environment = newEnv; }
 
   private:

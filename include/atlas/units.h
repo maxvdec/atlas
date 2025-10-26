@@ -246,7 +246,32 @@ typedef unsigned int Id;
  * @brief Enumeration of 3D directional constants.
  *
  */
-enum class Direction3d { Up, Down, Left, Right, Forward, Backward };
+enum class Direction3d {
+    /**
+     * @brief Positive Y axis.
+     */
+    Up,
+    /**
+     * @brief Negative Y axis.
+     */
+    Down,
+    /**
+     * @brief Negative X axis.
+     */
+    Left,
+    /**
+     * @brief Positive X axis.
+     */
+    Right,
+    /**
+     * @brief Positive Z axis.
+     */
+    Forward,
+    /**
+     * @brief Negative Z axis.
+     */
+    Backward
+};
 
 /**
  * @brief Structure representing a position in 2D space with double precision.

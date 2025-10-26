@@ -175,8 +175,15 @@ class Text : public UIObject {
          Position2d position = {0, 0}, const Color &color = Color::white())
         : content(text), font(font), position(position), color(color) {}
 
+    /**
+     * @brief Prepares vertex buffers, shader state, and fonts for runtime use.
+     */
     void initialize() override;
 
+    /**
+     * @brief Renders the text glyphs to the screen honoring kerning and font
+     * metrics.
+     */
     void render(float dt) override;
 
   private:
