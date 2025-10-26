@@ -245,7 +245,7 @@ class MainScene : public Scene {
         // this->addDirectionalLight(&light);
 
         frameBuffer = RenderTarget(window);
-        frameBuffer.addEffect(Posterization::create({}));
+        frameBuffer.addEffect(Pixelation::create({.pixelSize = 15}));
         window.addRenderTarget(&frameBuffer);
         frameBuffer.display(window);
 
