@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 2.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 3</span>
    </div>
   </td>
  </tr>
@@ -141,49 +141,49 @@ Inheritance diagram for CompoundObject:</div>
 <tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:ae3bf373a10950faf4aadd63979e6372f" id="r_ae3bf373a10950faf4aadd63979e6372f"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae3bf373a10950faf4aadd63979e6372f">initialize</a> () override</td></tr>
-<tr class="memdesc:ae3bf373a10950faf4aadd63979e6372f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to initialize the object. Can be overridden by derived.  <br /></td></tr>
+<tr class="memdesc:ae3bf373a10950faf4aadd63979e6372f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Bootstraps the compound object, initializing child objects and dispatching component hooks.  <br /></td></tr>
 <tr class="memitem:acbd09ebffe6374270415ca981a945624" id="r_acbd09ebffe6374270415ca981a945624"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#acbd09ebffe6374270415ca981a945624">update</a> (<a class="el" href="class_window.html">Window</a> &amp;window) override</td></tr>
-<tr class="memdesc:acbd09ebffe6374270415ca981a945624"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to update the object each frame.  <br /></td></tr>
+<tr class="memdesc:acbd09ebffe6374270415ca981a945624"><td class="mdescLeft">&#160;</td><td class="mdescRight">Ticks the compound object, ensuring child objects stay synchronized before rendering.  <br /></td></tr>
 <tr class="memitem:acf1f71aaebd2b73fa8da5e586d214484" id="r_acf1f71aaebd2b73fa8da5e586d214484"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#acf1f71aaebd2b73fa8da5e586d214484">updateObjects</a> (<a class="el" href="class_window.html">Window</a> &amp;window)</td></tr>
 <tr class="memdesc:acf1f71aaebd2b73fa8da5e586d214484"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates the objects within the compound object.  <br /></td></tr>
 <tr class="memitem:ae606cb70c43eeba4f75e129f8969f703" id="r_ae606cb70c43eeba4f75e129f8969f703"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae606cb70c43eeba4f75e129f8969f703">init</a> ()</td></tr>
 <tr class="memdesc:ae606cb70c43eeba4f75e129f8969f703"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initializes the compound object.  <br /></td></tr>
 <tr class="memitem:aff31a61e249a732c293783f862c97bf5" id="r_aff31a61e249a732c293783f862c97bf5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aff31a61e249a732c293783f862c97bf5">render</a> (float dt) override</td></tr>
-<tr class="memdesc:aff31a61e249a732c293783f862c97bf5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to render the object. Must be implemented by derived classes.  <br /></td></tr>
+<tr class="memdesc:aff31a61e249a732c293783f862c97bf5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Renders every child <a class="el" href="class_core_object.html" title="Represents a 3D object in the scene, including its geometry, material and every interaction with the ...">CoreObject</a> that composes the compound structure.  <br /></td></tr>
 <tr class="memitem:aca7a1eb53db643e28c4e886896c56a62" id="r_aca7a1eb53db643e28c4e886896c56a62"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aca7a1eb53db643e28c4e886896c56a62">setViewMatrix</a> (const glm::mat4 &amp;view) override</td></tr>
-<tr class="memdesc:aca7a1eb53db643e28c4e886896c56a62"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to set the view matrix for the object. Called from <a class="el" href="class_window.html">Window</a> for internal purposes.  <br /></td></tr>
+<tr class="memdesc:aca7a1eb53db643e28c4e886896c56a62"><td class="mdescLeft">&#160;</td><td class="mdescRight">Propagates the active view matrix to every child <a class="el" href="class_core_object.html" title="Represents a 3D object in the scene, including its geometry, material and every interaction with the ...">CoreObject</a>.  <br /></td></tr>
 <tr class="memitem:aac8d17efbe766307e322e4da95c425dc" id="r_aac8d17efbe766307e322e4da95c425dc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aac8d17efbe766307e322e4da95c425dc">setProjectionMatrix</a> (const glm::mat4 &amp;projection) override</td></tr>
-<tr class="memdesc:aac8d17efbe766307e322e4da95c425dc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to set the projection matrix for the object. Called from <a class="el" href="class_window.html">Window</a> for internal purposes.  <br /></td></tr>
+<tr class="memdesc:aac8d17efbe766307e322e4da95c425dc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Propagates the active projection matrix to every child <a class="el" href="class_core_object.html" title="Represents a 3D object in the scene, including its geometry, material and every interaction with the ...">CoreObject</a>.  <br /></td></tr>
 <tr class="memitem:a356df2f44be7d262eb96896994246082" id="r_a356df2f44be7d262eb96896994246082"><td class="memItemLeft" align="right" valign="top">std::optional&lt; <a class="el" href="struct_shader_program.html">ShaderProgram</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a356df2f44be7d262eb96896994246082">getShaderProgram</a> () override</td></tr>
-<tr class="memdesc:a356df2f44be7d262eb96896994246082"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to get the current shader program used by the object.  <br /></td></tr>
+<tr class="memdesc:a356df2f44be7d262eb96896994246082"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves the shader program currently in use by the first underlying <a class="el" href="class_core_object.html" title="Represents a 3D object in the scene, including its geometry, material and every interaction with the ...">CoreObject</a>.  <br /></td></tr>
 <tr class="memitem:ae39a184cbb7e527f57a250678061ac05" id="r_ae39a184cbb7e527f57a250678061ac05"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae39a184cbb7e527f57a250678061ac05">setShader</a> (const <a class="el" href="struct_shader_program.html">ShaderProgram</a> &amp;shader) override</td></tr>
-<tr class="memdesc:ae39a184cbb7e527f57a250678061ac05"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to set the shader program for the object. Can be used to force an object to use a specific shader.  <br /></td></tr>
+<tr class="memdesc:ae39a184cbb7e527f57a250678061ac05"><td class="mdescLeft">&#160;</td><td class="mdescRight">Forces all child objects to use the provided shader program.  <br /></td></tr>
 <tr class="memitem:a6197d3400c73d8aeaf7501eb952c6333" id="r_a6197d3400c73d8aeaf7501eb952c6333"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_position3d.html">Position3d</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a6197d3400c73d8aeaf7501eb952c6333">getPosition</a> () const override</td></tr>
-<tr class="memdesc:a6197d3400c73d8aeaf7501eb952c6333"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to get the position of the object in 3D space.  <br /></td></tr>
+<tr class="memdesc:a6197d3400c73d8aeaf7501eb952c6333"><td class="mdescLeft">&#160;</td><td class="mdescRight">Obtains the position of the compound object based on its first child.  <br /></td></tr>
 <tr class="memitem:a861e922b1025bb7bfa000ab858470185" id="r_a861e922b1025bb7bfa000ab858470185"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="struct_core_vertex.html">CoreVertex</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a861e922b1025bb7bfa000ab858470185">getVertices</a> () const override</td></tr>
-<tr class="memdesc:a861e922b1025bb7bfa000ab858470185"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to get the vertices of the object in 3D space.  <br /></td></tr>
+<tr class="memdesc:a861e922b1025bb7bfa000ab858470185"><td class="mdescLeft">&#160;</td><td class="mdescRight">Collects the vertices from the first child <a class="el" href="class_core_object.html" title="Represents a 3D object in the scene, including its geometry, material and every interaction with the ...">CoreObject</a> for quick queries such as bounding-box generation.  <br /></td></tr>
 <tr class="memitem:ad506aaf4b387e22b7278581c26978838" id="r_ad506aaf4b387e22b7278581c26978838"><td class="memItemLeft" align="right" valign="top"><a class="el" href="units_8h.html#a1636071d291ee0954efc6d64eb8d94f1">Size3d</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad506aaf4b387e22b7278581c26978838">getScale</a> () const override</td></tr>
-<tr class="memdesc:ad506aaf4b387e22b7278581c26978838"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to get the scale of the object in 3D space.  <br /></td></tr>
+<tr class="memdesc:ad506aaf4b387e22b7278581c26978838"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reports the scale of the compound object, mirroring its first child object.  <br /></td></tr>
 <tr class="memitem:a1c28c8c1394e02e46cbc8200ad4dd9dd" id="r_a1c28c8c1394e02e46cbc8200ad4dd9dd"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1c28c8c1394e02e46cbc8200ad4dd9dd">canCastShadows</a> () const override</td></tr>
-<tr class="memdesc:a1c28c8c1394e02e46cbc8200ad4dd9dd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to determine if the object can cast shadows. Can be overridden by derived classes.  <br /></td></tr>
+<tr class="memdesc:a1c28c8c1394e02e46cbc8200ad4dd9dd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Indicates whether the compound object is eligible to cast shadows.  <br /></td></tr>
 <tr class="memitem:ad8216cabdb070850d649dbf8b9fc783c" id="r_ad8216cabdb070850d649dbf8b9fc783c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad8216cabdb070850d649dbf8b9fc783c">setPosition</a> (const <a class="el" href="struct_position3d.html">Position3d</a> &amp;newPosition) override</td></tr>
-<tr class="memdesc:ad8216cabdb070850d649dbf8b9fc783c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the position of the object.  <br /></td></tr>
+<tr class="memdesc:ad8216cabdb070850d649dbf8b9fc783c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Repositions the entire aggregate by offsetting all children the same amount.  <br /></td></tr>
 <tr class="memitem:a512eb4315a038b423d94840bbbdf2c88" id="r_a512eb4315a038b423d94840bbbdf2c88"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a512eb4315a038b423d94840bbbdf2c88">move</a> (const <a class="el" href="struct_position3d.html">Position3d</a> &amp;deltaPosition) override</td></tr>
-<tr class="memdesc:a512eb4315a038b423d94840bbbdf2c88"><td class="mdescLeft">&#160;</td><td class="mdescRight">Moves the object by a certain amount.  <br /></td></tr>
+<tr class="memdesc:a512eb4315a038b423d94840bbbdf2c88"><td class="mdescLeft">&#160;</td><td class="mdescRight">Translates every child <a class="el" href="class_core_object.html" title="Represents a 3D object in the scene, including its geometry, material and every interaction with the ...">CoreObject</a> by the supplied delta.  <br /></td></tr>
 <tr class="memitem:acabbba275d8064a3024305b2cbab3f13" id="r_acabbba275d8064a3024305b2cbab3f13"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#acabbba275d8064a3024305b2cbab3f13">setRotation</a> (const <a class="el" href="struct_rotation3d.html">Rotation3d</a> &amp;newRotation) override</td></tr>
-<tr class="memdesc:acabbba275d8064a3024305b2cbab3f13"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the rotation of the object.  <br /></td></tr>
+<tr class="memdesc:acabbba275d8064a3024305b2cbab3f13"><td class="mdescLeft">&#160;</td><td class="mdescRight">Applies an absolute rotation to all children, maintaining their relative offsets.  <br /></td></tr>
 <tr class="memitem:adfc06444ac6b75df91a53061daaefaec" id="r_adfc06444ac6b75df91a53061daaefaec"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#adfc06444ac6b75df91a53061daaefaec">lookAt</a> (const <a class="el" href="struct_position3d.html">Position3d</a> &amp;target, const <a class="el" href="units_8h.html#abd755c400f9d4026ef36e03056829444">Normal3d</a> &amp;up) override</td></tr>
-<tr class="memdesc:adfc06444ac6b75df91a53061daaefaec"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the object to look at a specific point in 3D space.  <br /></td></tr>
+<tr class="memdesc:adfc06444ac6b75df91a53061daaefaec"><td class="mdescLeft">&#160;</td><td class="mdescRight">Rotates every child <a class="el" href="class_core_object.html" title="Represents a 3D object in the scene, including its geometry, material and every interaction with the ...">CoreObject</a> around its own origin.  <br /></td></tr>
 <tr class="memitem:a4210275b72af87578ac4f7fd900906cc" id="r_a4210275b72af87578ac4f7fd900906cc"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4210275b72af87578ac4f7fd900906cc">rotate</a> (const <a class="el" href="struct_rotation3d.html">Rotation3d</a> &amp;deltaRotation) override</td></tr>
-<tr class="memdesc:a4210275b72af87578ac4f7fd900906cc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Rotates the object by a certain amount.  <br /></td></tr>
+<tr class="memdesc:a4210275b72af87578ac4f7fd900906cc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Applies an incremental rotation to all children.  <br /></td></tr>
 <tr class="memitem:a9d8518bd15108ab12db57641e0c6135b" id="r_a9d8518bd15108ab12db57641e0c6135b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9d8518bd15108ab12db57641e0c6135b">setScale</a> (const <a class="el" href="units_8h.html#a3b9b132cddb1dfe2ae572f230abe45f1">Scale3d</a> &amp;newScale) override</td></tr>
-<tr class="memdesc:a9d8518bd15108ab12db57641e0c6135b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the scale of the object.  <br /></td></tr>
+<tr class="memdesc:a9d8518bd15108ab12db57641e0c6135b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Uniformly rescales the compound object across all children.  <br /></td></tr>
 <tr class="memitem:a09510d32cd3dc14631dbb94e3c455ba3" id="r_a09510d32cd3dc14631dbb94e3c455ba3"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a09510d32cd3dc14631dbb94e3c455ba3">hide</a> () override</td></tr>
-<tr class="memdesc:a09510d32cd3dc14631dbb94e3c455ba3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Hides the object, making it invisible in the scene.  <br /></td></tr>
+<tr class="memdesc:a09510d32cd3dc14631dbb94e3c455ba3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Temporarily removes the aggregate from the render queue.  <br /></td></tr>
 <tr class="memitem:a57beb36cb3bcb119ab7c441cc992e8db" id="r_a57beb36cb3bcb119ab7c441cc992e8db"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a57beb36cb3bcb119ab7c441cc992e8db">show</a> () override</td></tr>
-<tr class="memdesc:a57beb36cb3bcb119ab7c441cc992e8db"><td class="mdescLeft">&#160;</td><td class="mdescRight">Shows the object, making it visible in the scene.  <br /></td></tr>
+<tr class="memdesc:a57beb36cb3bcb119ab7c441cc992e8db"><td class="mdescLeft">&#160;</td><td class="mdescRight">Makes the aggregate renderable again after being hidden.  <br /></td></tr>
 <tr class="memitem:a0eddade4b19e991c52c44471f00e3e75" id="r_a0eddade4b19e991c52c44471f00e3e75"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0eddade4b19e991c52c44471f00e3e75">setupPhysics</a> (<a class="el" href="class_body.html">Body</a> <a class="el" href="class_game_object.html#af69e678688bfef2c0bba4aa78085c8a8">body</a>) override</td></tr>
-<tr class="memdesc:a0eddade4b19e991c52c44471f00e3e75"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets up the physics body for the object.  <br /></td></tr>
+<tr class="memdesc:a0eddade4b19e991c52c44471f00e3e75"><td class="mdescLeft">&#160;</td><td class="mdescRight">Configures a physics body shared between all child objects.  <br /></td></tr>
 <tr class="memitem:ad8c5f34501bd048e751e84dedd79d7b6" id="r_ad8c5f34501bd048e751e84dedd79d7b6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad8c5f34501bd048e751e84dedd79d7b6">addObject</a> (<a class="el" href="class_core_object.html">CoreObject</a> *obj)</td></tr>
 <tr class="memdesc:ad8c5f34501bd048e751e84dedd79d7b6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a component to the object.  <br /></td></tr>
 <tr class="inherit_header pub_methods_class_game_object"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pub_methods_class_game_object')"><span class="dynarrow"><span class="arrowhead closed"></span></span>Public Member Functions inherited from <a class="el" href="class_game_object.html">GameObject</a></td></tr>
@@ -245,15 +245,15 @@ Example of a compound object</h2>
 <div class="line">     <span class="comment">// Update car-specific logic, e.g., movement</span></div>
 <div class="line">   }</div>
 <div class="line">};</div>
-<div class="ttc" id="aclass_compound_object_html"><div class="ttname"><a href="class_compound_object.html">CompoundObject</a></div><div class="ttdoc">A Compound object is a GameObject that can be extended by the user to generate objects that encapsula...</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00326">component.h:326</a></div></div>
-<div class="ttc" id="aclass_compound_object_html_acf1f71aaebd2b73fa8da5e586d214484"><div class="ttname"><a href="#acf1f71aaebd2b73fa8da5e586d214484">CompoundObject::updateObjects</a></div><div class="ttdeci">virtual void updateObjects(Window &amp;window)</div><div class="ttdoc">Updates the objects within the compound object.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00342">component.h:342</a></div></div>
-<div class="ttc" id="aclass_compound_object_html_ad8c5f34501bd048e751e84dedd79d7b6"><div class="ttname"><a href="#ad8c5f34501bd048e751e84dedd79d7b6">CompoundObject::addObject</a></div><div class="ttdeci">void addObject(CoreObject *obj)</div><div class="ttdoc">Adds a component to the object.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00374">component.h:374</a></div></div>
-<div class="ttc" id="aclass_compound_object_html_ae606cb70c43eeba4f75e129f8969f703"><div class="ttname"><a href="#ae606cb70c43eeba4f75e129f8969f703">CompoundObject::init</a></div><div class="ttdeci">virtual void init()</div><div class="ttdoc">Initializes the compound object.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00347">component.h:347</a></div></div>
-<div class="ttc" id="aclass_core_object_html"><div class="ttname"><a href="class_core_object.html">CoreObject</a></div><div class="ttdoc">Represents a 3D object in the scene, including its geometry, material and every interaction with the ...</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00260">object.h:260</a></div></div>
-<div class="ttc" id="aclass_game_object_html_af69e678688bfef2c0bba4aa78085c8a8"><div class="ttname"><a href="class_game_object.html#af69e678688bfef2c0bba4aa78085c8a8">GameObject::body</a></div><div class="ttdeci">std::shared_ptr&lt; Body &gt; body</div><div class="ttdoc">Gets the physics body associated with the object.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00297">component.h:297</a></div></div>
+<div class="ttc" id="aclass_compound_object_html"><div class="ttname"><a href="class_compound_object.html">CompoundObject</a></div><div class="ttdoc">A Compound object is a GameObject that can be extended by the user to generate objects that encapsula...</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00333">component.h:333</a></div></div>
+<div class="ttc" id="aclass_compound_object_html_acf1f71aaebd2b73fa8da5e586d214484"><div class="ttname"><a href="#acf1f71aaebd2b73fa8da5e586d214484">CompoundObject::updateObjects</a></div><div class="ttdeci">virtual void updateObjects(Window &amp;window)</div><div class="ttdoc">Updates the objects within the compound object.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00357">component.h:357</a></div></div>
+<div class="ttc" id="aclass_compound_object_html_ad8c5f34501bd048e751e84dedd79d7b6"><div class="ttname"><a href="#ad8c5f34501bd048e751e84dedd79d7b6">CompoundObject::addObject</a></div><div class="ttdeci">void addObject(CoreObject *obj)</div><div class="ttdoc">Adds a component to the object.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00452">component.h:452</a></div></div>
+<div class="ttc" id="aclass_compound_object_html_ae606cb70c43eeba4f75e129f8969f703"><div class="ttname"><a href="#ae606cb70c43eeba4f75e129f8969f703">CompoundObject::init</a></div><div class="ttdeci">virtual void init()</div><div class="ttdoc">Initializes the compound object.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00362">component.h:362</a></div></div>
+<div class="ttc" id="aclass_core_object_html"><div class="ttname"><a href="class_core_object.html">CoreObject</a></div><div class="ttdoc">Represents a 3D object in the scene, including its geometry, material and every interaction with the ...</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00275">object.h:275</a></div></div>
+<div class="ttc" id="aclass_game_object_html_af69e678688bfef2c0bba4aa78085c8a8"><div class="ttname"><a href="class_game_object.html#af69e678688bfef2c0bba4aa78085c8a8">GameObject::body</a></div><div class="ttdeci">std::shared_ptr&lt; Body &gt; body</div><div class="ttdoc">Gets the physics body associated with the object.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00304">component.h:304</a></div></div>
 <div class="ttc" id="aclass_window_html"><div class="ttname"><a href="class_window.html">Window</a></div><div class="ttdoc">Structure representing a window in the application. This contains the main interface for interacting ...</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00233">window.h:233</a></div></div>
 </div><!-- fragment --> 
-<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00326">326</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00333">333</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
 <a id="ad8c5f34501bd048e751e84dedd79d7b6" name="ad8c5f34501bd048e751e84dedd79d7b6"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ad8c5f34501bd048e751e84dedd79d7b6">&#9670;&#160;</a></span>addObject()</h2>
@@ -287,11 +287,11 @@ Example of a compound object</h2>
 </dl>
 <dl class="section warning"><dt>Warning</dt><dd>It must be long-lived. This means that declaring it as a class property is a good idea. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00374">374</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  374</span>{ <a class="code hl_variable" href="#acd70ac00d566c102349df27c0c37744d">objects</a>.push_back(obj); }</div>
-<div class="ttc" id="aclass_compound_object_html_acd70ac00d566c102349df27c0c37744d"><div class="ttname"><a href="#acd70ac00d566c102349df27c0c37744d">CompoundObject::objects</a></div><div class="ttdeci">std::vector&lt; CoreObject * &gt; objects</div><div class="ttdoc">The objects that make up the compound object.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00332">component.h:332</a></div></div>
+<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00452">452</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  452</span>{ <a class="code hl_variable" href="#acd70ac00d566c102349df27c0c37744d">objects</a>.push_back(obj); }</div>
+<div class="ttc" id="aclass_compound_object_html_acd70ac00d566c102349df27c0c37744d"><div class="ttname"><a href="#acd70ac00d566c102349df27c0c37744d">CompoundObject::objects</a></div><div class="ttdeci">std::vector&lt; CoreObject * &gt; objects</div><div class="ttdoc">The objects that make up the compound object.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00339">component.h:339</a></div></div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="component_8h_source.html#l00332">objects</a>.</p>
+<p class="reference">References <a class="el" href="component_8h_source.html#l00339">objects</a>.</p>
 
 </div>
 </div>
@@ -318,8 +318,7 @@ Example of a compound object</h2>
 </table>
 </div><div class="memdoc">
 
-<p>Function to determine if the object can cast shadows. Can be overridden by derived classes. </p>
-<dl class="section return"><dt>Returns</dt><dd>true if the object can cast shadows, false otherwise. </dd></dl>
+<p>Indicates whether the compound object is eligible to cast shadows. </p>
 
 <p>Reimplemented from <a class="el" href="class_renderable.html#a54a97abc4b6fe3280505da3b587cba98">Renderable</a>.</p>
 
@@ -348,8 +347,7 @@ Example of a compound object</h2>
 </table>
 </div><div class="memdoc">
 
-<p>Function to get the position of the object in 3D space. </p>
-<dl class="section return"><dt>Returns</dt><dd>The position of the object as a <a class="el" href="struct_position3d.html" title="Structure representing a position in 3D space with double precision. Provides arithmetic operations a...">Position3d</a> struct. </dd></dl>
+<p>Obtains the position of the compound object based on its first child. </p>
 
 <p>Reimplemented from <a class="el" href="class_renderable.html#a644269034ac58f64e47d88846c365cf4">Renderable</a>.</p>
 
@@ -378,8 +376,7 @@ Example of a compound object</h2>
 </table>
 </div><div class="memdoc">
 
-<p>Function to get the scale of the object in 3D space. </p>
-<dl class="section return"><dt>Returns</dt><dd>The scale of the object as a <a class="el" href="units_8h.html#a1636071d291ee0954efc6d64eb8d94f1" title="Type alias for 3D size dimensions.">Size3d</a> struct. </dd></dl>
+<p>Reports the scale of the compound object, mirroring its first child object. </p>
 
 <p>Reimplemented from <a class="el" href="class_renderable.html#a98ddcdedf7f0c6d440be821c80d6ed12">Renderable</a>.</p>
 
@@ -408,8 +405,7 @@ Example of a compound object</h2>
 </table>
 </div><div class="memdoc">
 
-<p>Function to get the current shader program used by the object. </p>
-<dl class="section return"><dt>Returns</dt><dd>An optional containing the shader program if set, or <code>std::nullopt</code> if not. </dd></dl>
+<p>Retrieves the shader program currently in use by the first underlying <a class="el" href="class_core_object.html" title="Represents a 3D object in the scene, including its geometry, material and every interaction with the ...">CoreObject</a>. </p>
 
 <p>Reimplemented from <a class="el" href="class_renderable.html#a0c0180d14588c6ed436cc7d153c9b22c">Renderable</a>.</p>
 
@@ -438,8 +434,7 @@ Example of a compound object</h2>
 </table>
 </div><div class="memdoc">
 
-<p>Function to get the vertices of the object in 3D space. </p>
-<dl class="section return"><dt>Returns</dt><dd>The vertices of the object as a vector of <a class="el" href="struct_core_vertex.html" title="Structure representing a single vertex in 3D space, including position, color, texture coordinates,...">CoreVertex</a> structs. </dd></dl>
+<p>Collects the vertices from the first child <a class="el" href="class_core_object.html" title="Represents a 3D object in the scene, including its geometry, material and every interaction with the ...">CoreObject</a> for quick queries such as bounding-box generation. </p>
 
 <p>Reimplemented from <a class="el" href="class_renderable.html#a699e0a52700234e195a44f7be4e4d531">Renderable</a>.</p>
 
@@ -468,7 +463,7 @@ Example of a compound object</h2>
 </table>
 </div><div class="memdoc">
 
-<p>Hides the object, making it invisible in the scene. </p>
+<p>Temporarily removes the aggregate from the render queue. </p>
 
 <p>Reimplemented from <a class="el" href="class_game_object.html#a06c5cc4f368665085126282bd4cd6185">GameObject</a>.</p>
 
@@ -499,8 +494,8 @@ Example of a compound object</h2>
 
 <p>Initializes the compound object. </p>
 
-<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00347">347</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  347</span>{};</div>
+<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00362">362</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  362</span>{};</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -527,7 +522,7 @@ Example of a compound object</h2>
 </table>
 </div><div class="memdoc">
 
-<p>Function to initialize the object. Can be overridden by derived. </p>
+<p>Bootstraps the compound object, initializing child objects and dispatching component hooks. </p>
 
 <p>Reimplemented from <a class="el" href="class_renderable.html#aaa53405a3eb174752fce5e4a2fc8dca8">Renderable</a>.</p>
 
@@ -560,14 +555,7 @@ Example of a compound object</h2>
 </table>
 </div><div class="memdoc">
 
-<p>Sets the object to look at a specific point in 3D space. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">target</td><td>The point to look at. </td></tr>
-    <tr><td class="paramname">up</td><td>The up vector to define the orientation. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Rotates every child <a class="el" href="class_core_object.html" title="Represents a 3D object in the scene, including its geometry, material and every interaction with the ...">CoreObject</a> around its own origin. </p>
 
 <p>Reimplemented from <a class="el" href="class_game_object.html#ade8c731bbc0de1e624089e5ddfc50d72">GameObject</a>.</p>
 
@@ -596,13 +584,7 @@ Example of a compound object</h2>
 </table>
 </div><div class="memdoc">
 
-<p>Moves the object by a certain amount. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">deltaPosition</td><td>The amount to move the object by. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Translates every child <a class="el" href="class_core_object.html" title="Represents a 3D object in the scene, including its geometry, material and every interaction with the ...">CoreObject</a> by the supplied delta. </p>
 
 <p>Reimplemented from <a class="el" href="class_game_object.html#acaa8d8c46548f338987ebf9cd054b2b5">GameObject</a>.</p>
 
@@ -631,13 +613,7 @@ Example of a compound object</h2>
 </table>
 </div><div class="memdoc">
 
-<p>Function to render the object. Must be implemented by derived classes. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">dt</td><td>Delta time since the last frame, useful for animations. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Renders every child <a class="el" href="class_core_object.html" title="Represents a 3D object in the scene, including its geometry, material and every interaction with the ...">CoreObject</a> that composes the compound structure. </p>
 
 <p>Implements <a class="el" href="class_renderable.html#ae9601ab8470cd46d45b1bec00d656c81">Renderable</a>.</p>
 
@@ -666,13 +642,7 @@ Example of a compound object</h2>
 </table>
 </div><div class="memdoc">
 
-<p>Rotates the object by a certain amount. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">deltaRotation</td><td>The amount to rotate the object by. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Applies an incremental rotation to all children. </p>
 
 <p>Reimplemented from <a class="el" href="class_game_object.html#a80eb49c1d0084c82e944ff254532278b">GameObject</a>.</p>
 
@@ -701,13 +671,7 @@ Example of a compound object</h2>
 </table>
 </div><div class="memdoc">
 
-<p>Sets the position of the object. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">newPosition</td><td>The new position to set. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Repositions the entire aggregate by offsetting all children the same amount. </p>
 
 <p>Reimplemented from <a class="el" href="class_game_object.html#ac1a103e7a0c90dc1ea293b7d2fdb0634">GameObject</a>.</p>
 
@@ -736,13 +700,7 @@ Example of a compound object</h2>
 </table>
 </div><div class="memdoc">
 
-<p>Function to set the projection matrix for the object. Called from <a class="el" href="class_window.html">Window</a> for internal purposes. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">projection</td><td>The projection matrix to set. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Propagates the active projection matrix to every child <a class="el" href="class_core_object.html" title="Represents a 3D object in the scene, including its geometry, material and every interaction with the ...">CoreObject</a>. </p>
 
 <p>Reimplemented from <a class="el" href="class_renderable.html#a0c865743cb1e0bbc44b754f9e1b50bb3">Renderable</a>.</p>
 
@@ -771,13 +729,7 @@ Example of a compound object</h2>
 </table>
 </div><div class="memdoc">
 
-<p>Sets the rotation of the object. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">newRotation</td><td>The new rotation to set. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Applies an absolute rotation to all children, maintaining their relative offsets. </p>
 
 <p>Reimplemented from <a class="el" href="class_game_object.html#a63d28fb59276d40d10cae25f05306451">GameObject</a>.</p>
 
@@ -806,13 +758,7 @@ Example of a compound object</h2>
 </table>
 </div><div class="memdoc">
 
-<p>Sets the scale of the object. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">newScale</td><td>The new scale of the object. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Uniformly rescales the compound object across all children. </p>
 
 <p>Reimplemented from <a class="el" href="class_game_object.html#ab1d5418661030a841e752bdb462b1ebc">GameObject</a>.</p>
 
@@ -841,13 +787,7 @@ Example of a compound object</h2>
 </table>
 </div><div class="memdoc">
 
-<p>Function to set the shader program for the object. Can be used to force an object to use a specific shader. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">shader</td><td>The shader program to set. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Forces all child objects to use the provided shader program. </p>
 
 <p>Reimplemented from <a class="el" href="class_renderable.html#a727f1bc86184e94bfcb8270d11812af8">Renderable</a>.</p>
 
@@ -876,17 +816,11 @@ Example of a compound object</h2>
 </table>
 </div><div class="memdoc">
 
-<p>Sets up the physics body for the object. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">body</td><td>The physics body to associate with the object. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Configures a physics body shared between all child objects. </p>
 
 <p>Reimplemented from <a class="el" href="class_game_object.html#a41b29fdd73be47db5835fc3822b6afa6">GameObject</a>.</p>
 
-<p class="reference">References <a class="el" href="component_8h_source.html#l00297">GameObject::body</a>.</p>
+<p class="reference">References <a class="el" href="component_8h_source.html#l00304">GameObject::body</a>.</p>
 
 </div>
 </div>
@@ -913,13 +847,7 @@ Example of a compound object</h2>
 </table>
 </div><div class="memdoc">
 
-<p>Function to set the view matrix for the object. Called from <a class="el" href="class_window.html">Window</a> for internal purposes. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">view</td><td>The view matrix to set. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Propagates the active view matrix to every child <a class="el" href="class_core_object.html" title="Represents a 3D object in the scene, including its geometry, material and every interaction with the ...">CoreObject</a>. </p>
 
 <p>Reimplemented from <a class="el" href="class_renderable.html#ae1b11967b98e6ba4393640652242083f">Renderable</a>.</p>
 
@@ -948,7 +876,7 @@ Example of a compound object</h2>
 </table>
 </div><div class="memdoc">
 
-<p>Shows the object, making it visible in the scene. </p>
+<p>Makes the aggregate renderable again after being hidden. </p>
 
 <p>Reimplemented from <a class="el" href="class_game_object.html#ac455da07f2d5e1d613d69fc00576f8f7">GameObject</a>.</p>
 
@@ -977,14 +905,7 @@ Example of a compound object</h2>
 </table>
 </div><div class="memdoc">
 
-<p>Function to update the object each frame. </p>
-<dl class="section warning"><dt>Warning</dt><dd>It runs before the rendering phase and it should only contain logic updates.</dd></dl>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">window</td><td>The window where the object is being rendered. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Ticks the compound object, ensuring child objects stay synchronized before rendering. </p>
 
 <p>Reimplemented from <a class="el" href="class_renderable.html#afb2aa3ad0ab8dcfc54088173ea7182cd">Renderable</a>.</p>
 
@@ -1021,8 +942,8 @@ Example of a compound object</h2>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00342">342</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  342</span>{};</div>
+<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00357">357</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  357</span>{};</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -1041,7 +962,7 @@ Example of a compound object</h2>
 
 <p>The objects that make up the compound object. </p>
 
-<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00332">332</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00339">339</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
 
 </div>
 </div>

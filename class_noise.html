@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 2.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 3</span>
    </div>
   </td>
  </tr>
@@ -123,14 +123,21 @@ $(function(){initNavTree('class_noise.html','','class_noise-members'); });
 </div><!--header-->
 <div class="contents">
 
+<p>Convenience namespace bundling the available noise algorithms.  
+ <a href="#details">More...</a></p>
+
 <p><code>#include &lt;<a class="el" href="procedural_8h_source.html">procedural.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-static-methods" class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
 <tr class="memitem:a3bd6289706dd9fd5c7d6f67e88cbf212" id="r_a3bd6289706dd9fd5c7d6f67e88cbf212"><td class="memItemLeft" align="right" valign="top">static float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a3bd6289706dd9fd5c7d6f67e88cbf212">perlin</a> (float x, float y)</td></tr>
+<tr class="memdesc:a3bd6289706dd9fd5c7d6f67e88cbf212"><td class="mdescLeft">&#160;</td><td class="mdescRight">Samples Perlin noise using the global seed when enabled.  <br /></td></tr>
 <tr class="memitem:a36d9dcdd5d6d4174c3168462e654110b" id="r_a36d9dcdd5d6d4174c3168462e654110b"><td class="memItemLeft" align="right" valign="top">static float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a36d9dcdd5d6d4174c3168462e654110b">simplex</a> (float x, float y)</td></tr>
+<tr class="memdesc:a36d9dcdd5d6d4174c3168462e654110b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Samples Simplex noise using the global seed when enabled.  <br /></td></tr>
 <tr class="memitem:a38beb9ad307c49b826290b6ad2f486cb" id="r_a38beb9ad307c49b826290b6ad2f486cb"><td class="memItemLeft" align="right" valign="top">static float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a38beb9ad307c49b826290b6ad2f486cb">worley</a> (float x, float y)</td></tr>
+<tr class="memdesc:a38beb9ad307c49b826290b6ad2f486cb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Samples Worley noise using the global seed when enabled.  <br /></td></tr>
 <tr class="memitem:abfef3a14874d85b2f297f63aad95a325" id="r_abfef3a14874d85b2f297f63aad95a325"><td class="memItemLeft" align="right" valign="top">static float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#abfef3a14874d85b2f297f63aad95a325">fractal</a> (float x, float y, int octaves, float persistence)</td></tr>
+<tr class="memdesc:abfef3a14874d85b2f297f63aad95a325"><td class="mdescLeft">&#160;</td><td class="mdescRight">Samples a fractal sum of Perlin noise with runtime parameters.  <br /></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-static-attribs" class="groupheader"><a id="pub-static-attribs" name="pub-static-attribs"></a>
 Static Public Attributes</h2></td></tr>
@@ -139,8 +146,9 @@ Static Public Attributes</h2></td></tr>
 <tr class="memitem:a5596e726507d685af8082eb83977c2c4" id="r_a5596e726507d685af8082eb83977c2c4"><td class="memItemLeft" align="right" valign="top">static bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5596e726507d685af8082eb83977c2c4">useSeed</a></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
-<div class="textblock">
-<p class="definition">Definition at line <a class="el" href="procedural_8h_source.html#l00067">67</a> of file <a class="el" href="procedural_8h_source.html">procedural.h</a>.</p>
+<div class="textblock"><p>Convenience namespace bundling the available noise algorithms. </p>
+
+<p class="definition">Definition at line <a class="el" href="procedural_8h_source.html#l00128">128</a> of file <a class="el" href="procedural_8h_source.html">procedural.h</a>.</p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
 <a id="abfef3a14874d85b2f297f63aad95a325" name="abfef3a14874d85b2f297f63aad95a325"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#abfef3a14874d85b2f297f63aad95a325">&#9670;&#160;</a></span>fractal()</h2>
@@ -179,6 +187,17 @@ Static Public Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
+<p>Samples a fractal sum of Perlin noise with runtime parameters. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">x</td><td>X coordinate to sample. </td></tr>
+    <tr><td class="paramname">y</td><td>Y coordinate to sample. </td></tr>
+    <tr><td class="paramname">octaves</td><td>Number of octaves to accumulate. </td></tr>
+    <tr><td class="paramname">persistence</td><td>Persistence factor per octave. </td></tr>
+  </table>
+  </dd>
+</dl>
+
 </div>
 </div>
 <a id="a3bd6289706dd9fd5c7d6f67e88cbf212" name="a3bd6289706dd9fd5c7d6f67e88cbf212"></a>
@@ -207,6 +226,8 @@ Static Public Attributes</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
+
+<p>Samples Perlin noise using the global seed when enabled. </p>
 
 </div>
 </div>
@@ -237,6 +258,8 @@ Static Public Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
+<p>Samples Simplex noise using the global seed when enabled. </p>
+
 </div>
 </div>
 <a id="a38beb9ad307c49b826290b6ad2f486cb" name="a38beb9ad307c49b826290b6ad2f486cb"></a>
@@ -266,6 +289,8 @@ Static Public Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
+<p>Samples Worley noise using the global seed when enabled. </p>
+
 </div>
 </div>
 <a name="doc-variable-members" id="doc-variable-members"></a><h2 id="header-doc-variable-members" class="groupheader">Member Data Documentation</h2>
@@ -289,7 +314,7 @@ Static Public Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="procedural_8h_source.html#l00075">75</a> of file <a class="el" href="procedural_8h_source.html">procedural.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="procedural_8h_source.html#l00153">153</a> of file <a class="el" href="procedural_8h_source.html">procedural.h</a>.</p>
 
 </div>
 </div>
@@ -313,7 +338,7 @@ Static Public Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="procedural_8h_source.html#l00074">74</a> of file <a class="el" href="procedural_8h_source.html">procedural.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="procedural_8h_source.html#l00152">152</a> of file <a class="el" href="procedural_8h_source.html">procedural.h</a>.</p>
 
 </div>
 </div>
@@ -337,7 +362,7 @@ Static Public Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="procedural_8h_source.html#l00076">76</a> of file <a class="el" href="procedural_8h_source.html">procedural.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="procedural_8h_source.html#l00154">154</a> of file <a class="el" href="procedural_8h_source.html">procedural.h</a>.</p>
 
 </div>
 </div>

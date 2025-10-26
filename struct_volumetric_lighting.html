@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 2.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 3</span>
    </div>
   </td>
  </tr>
@@ -122,18 +122,26 @@ $(function(){initNavTree('struct_volumetric_lighting.html','','struct_volumetric
 </div><!--header-->
 <div class="contents">
 
+<p>Settings used when simulating volumetric light shafts.  
+ <a href="#details">More...</a></p>
+
 <p><code>#include &lt;<a class="el" href="scene_8h_source.html">scene.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a2c8da3446cdac5d488af398fd8c4408e" id="r_a2c8da3446cdac5d488af398fd8c4408e"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2c8da3446cdac5d488af398fd8c4408e">density</a> = 0.3f</td></tr>
+<tr class="memdesc:a2c8da3446cdac5d488af398fd8c4408e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Overall density of the participating medium.  <br /></td></tr>
 <tr class="memitem:afc05594fff5f90455900b9f33104ab85" id="r_afc05594fff5f90455900b9f33104ab85"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#afc05594fff5f90455900b9f33104ab85">weight</a> = 0.01</td></tr>
+<tr class="memdesc:afc05594fff5f90455900b9f33104ab85"><td class="mdescLeft">&#160;</td><td class="mdescRight">Strength of each iterative sample along the ray march.  <br /></td></tr>
 <tr class="memitem:afc88d7cb582f00386a633bae28dd5b30" id="r_afc88d7cb582f00386a633bae28dd5b30"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#afc88d7cb582f00386a633bae28dd5b30">decay</a> = 0.95</td></tr>
+<tr class="memdesc:afc88d7cb582f00386a633bae28dd5b30"><td class="mdescLeft">&#160;</td><td class="mdescRight">Damping factor applied per step to soften distant contributions.  <br /></td></tr>
 <tr class="memitem:a1b5e818ef7140d16460d7d5b6f749020" id="r_a1b5e818ef7140d16460d7d5b6f749020"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1b5e818ef7140d16460d7d5b6f749020">exposure</a> = 0.6f</td></tr>
+<tr class="memdesc:a1b5e818ef7140d16460d7d5b6f749020"><td class="mdescLeft">&#160;</td><td class="mdescRight">Exposure applied after integrating scattered light.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
-<div class="textblock">
-<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00029">29</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
+<div class="textblock"><p>Settings used when simulating volumetric light shafts. </p>
+
+<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00041">41</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
 </div><a name="doc-variable-members" id="doc-variable-members"></a><h2 id="header-doc-variable-members" class="groupheader">Member Data Documentation</h2>
 <a id="afc88d7cb582f00386a633bae28dd5b30" name="afc88d7cb582f00386a633bae28dd5b30"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#afc88d7cb582f00386a633bae28dd5b30">&#9670;&#160;</a></span>decay</h2>
@@ -147,7 +155,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00032">32</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
+<p>Damping factor applied per step to soften distant contributions. </p>
+
+<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00053">53</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
 
 </div>
 </div>
@@ -163,7 +173,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00030">30</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
+<p>Overall density of the participating medium. </p>
+
+<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00045">45</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
 
 </div>
 </div>
@@ -179,7 +191,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00033">33</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
+<p>Exposure applied after integrating scattered light. </p>
+
+<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00057">57</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
 
 </div>
 </div>
@@ -195,7 +209,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00031">31</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
+<p>Strength of each iterative sample along the ray march. </p>
+
+<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00049">49</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
 
 </div>
 </div>

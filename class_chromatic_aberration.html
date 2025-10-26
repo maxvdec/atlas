@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 2.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 3</span>
    </div>
   </td>
  </tr>
@@ -124,6 +124,9 @@ $(function(){initNavTree('class_chromatic_aberration.html','','class_chromatic_a
 </div><!--header-->
 <div class="contents">
 
+<p>Post-processing effect that offsets color channels to emulate lens dispersion artifacts.  
+ <a href="#details">More...</a></p>
+
 <p><code>#include &lt;<a class="el" href="atlas_2effect_8h_source.html">effect.h</a>&gt;</code></p>
 <div class="dynheader">
 Inheritance diagram for ChromaticAberration:</div>
@@ -147,18 +150,20 @@ Public Member Functions</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 id="header-pub-static-methods" class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
 <tr class="memitem:a68cfbcf65a2809bd53d4a7e2418769d8" id="r_a68cfbcf65a2809bd53d4a7e2418769d8"><td class="memItemLeft" align="right" valign="top">static std::shared_ptr&lt; <a class="el" href="class_chromatic_aberration.html">ChromaticAberration</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a68cfbcf65a2809bd53d4a7e2418769d8">create</a> (<a class="el" href="struct_chromatic_aberration_parameters.html">ChromaticAberrationParameters</a> p={})</td></tr>
-<tr class="memdesc:a68cfbcf65a2809bd53d4a7e2418769d8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a shared pointer to a <a class="el" href="class_chromatic_aberration.html">ChromaticAberration</a> effect.  <br /></td></tr>
+<tr class="memdesc:a68cfbcf65a2809bd53d4a7e2418769d8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a shared pointer to a <a class="el" href="class_chromatic_aberration.html" title="Post-processing effect that offsets color channels to emulate lens dispersion artifacts.">ChromaticAberration</a> effect.  <br /></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a4b9adc562f6843357d2d038b7eaca338" id="r_a4b9adc562f6843357d2d038b7eaca338"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_chromatic_aberration_parameters.html">ChromaticAberrationParameters</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4b9adc562f6843357d2d038b7eaca338">params</a></td></tr>
+<tr class="memdesc:a4b9adc562f6843357d2d038b7eaca338"><td class="mdescLeft">&#160;</td><td class="mdescRight">Parameters currently driving the aberration offsets.  <br /></td></tr>
 <tr class="inherit_header pub_attribs_class_effect"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pub_attribs_class_effect')"><span class="dynarrow"><span class="arrowhead closed"></span></span>Public Attributes inherited from <a class="el" href="class_effect.html">Effect</a></td></tr>
 <tr class="memitem:a386f4d915f71aa8e5f177a221b8903da inherit pub_attribs_class_effect" id="r_a386f4d915f71aa8e5f177a221b8903da"><td class="memItemLeft" align="right" valign="top"><a class="el" href="atlas_2effect_8h.html#a75cf3454fba9ce206c0c748892dc9867">RenderTargetEffect</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_effect.html#a386f4d915f71aa8e5f177a221b8903da">type</a></td></tr>
 <tr class="memdesc:a386f4d915f71aa8e5f177a221b8903da inherit pub_attribs_class_effect"><td class="mdescLeft">&#160;</td><td class="mdescRight">The type of effect this instance represents.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
-<div class="textblock">
-<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00371">371</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
+<div class="textblock"><p>Post-processing effect that offsets color channels to emulate lens dispersion artifacts. </p>
+
+<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00436">436</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a57ed3b5bb68fd1c5845c280c1e27cbdd" name="a57ed3b5bb68fd1c5845c280c1e27cbdd"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a57ed3b5bb68fd1c5845c280c1e27cbdd">&#9670;&#160;</a></span>ChromaticAberration()</h2>
@@ -183,13 +188,13 @@ Public Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00373">373</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  373</span>                                                          {})</div>
-<div class="line"><span class="lineno">  374</span>        : <a class="code hl_function" href="class_effect.html#aeda5516439f9e1c0f793cafc7ea6e898">Effect</a>(<a class="code hl_enumeration" href="atlas_2effect_8h.html#a75cf3454fba9ce206c0c748892dc9867">RenderTargetEffect</a>::<a class="code hl_function" href="#a57ed3b5bb68fd1c5845c280c1e27cbdd">ChromaticAberration</a>), <a class="code hl_variable" href="#a4b9adc562f6843357d2d038b7eaca338">params</a>(p) {}</div>
+<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00438">438</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  438</span>                                                          {})</div>
+<div class="line"><span class="lineno">  439</span>        : <a class="code hl_function" href="class_effect.html#aeda5516439f9e1c0f793cafc7ea6e898">Effect</a>(<a class="code hl_enumeration" href="atlas_2effect_8h.html#a75cf3454fba9ce206c0c748892dc9867">RenderTargetEffect</a>::<a class="code hl_function" href="#a57ed3b5bb68fd1c5845c280c1e27cbdd">ChromaticAberration</a>), <a class="code hl_variable" href="#a4b9adc562f6843357d2d038b7eaca338">params</a>(p) {}</div>
 <div class="ttc" id="aatlas_2effect_8h_html_a75cf3454fba9ce206c0c748892dc9867"><div class="ttname"><a href="atlas_2effect_8h.html#a75cf3454fba9ce206c0c748892dc9867">RenderTargetEffect</a></div><div class="ttdeci">RenderTargetEffect</div><div class="ttdoc">Enumeration of available post-processing effects that can be applied to render targets.</div><div class="ttdef"><b>Definition</b> <a href="atlas_2effect_8h_source.html#l00023">effect.h:23</a></div></div>
-<div class="ttc" id="aclass_chromatic_aberration_html_a4b9adc562f6843357d2d038b7eaca338"><div class="ttname"><a href="#a4b9adc562f6843357d2d038b7eaca338">ChromaticAberration::params</a></div><div class="ttdeci">ChromaticAberrationParameters params</div><div class="ttdef"><b>Definition</b> <a href="atlas_2effect_8h_source.html#l00386">effect.h:386</a></div></div>
-<div class="ttc" id="aclass_chromatic_aberration_html_a57ed3b5bb68fd1c5845c280c1e27cbdd"><div class="ttname"><a href="#a57ed3b5bb68fd1c5845c280c1e27cbdd">ChromaticAberration::ChromaticAberration</a></div><div class="ttdeci">ChromaticAberration(ChromaticAberrationParameters p={})</div><div class="ttdef"><b>Definition</b> <a href="atlas_2effect_8h_source.html#l00373">effect.h:373</a></div></div>
-<div class="ttc" id="aclass_effect_html_aeda5516439f9e1c0f793cafc7ea6e898"><div class="ttname"><a href="class_effect.html#aeda5516439f9e1c0f793cafc7ea6e898">Effect::Effect</a></div><div class="ttdeci">Effect(RenderTargetEffect t)</div><div class="ttdoc">Constructs a new Effect object.</div><div class="ttdef"><b>Definition</b> <a href="atlas_2effect_8h_source.html#l00079">effect.h:79</a></div></div>
+<div class="ttc" id="aclass_chromatic_aberration_html_a4b9adc562f6843357d2d038b7eaca338"><div class="ttname"><a href="#a4b9adc562f6843357d2d038b7eaca338">ChromaticAberration::params</a></div><div class="ttdeci">ChromaticAberrationParameters params</div><div class="ttdoc">Parameters currently driving the aberration offsets.</div><div class="ttdef"><b>Definition</b> <a href="atlas_2effect_8h_source.html#l00454">effect.h:454</a></div></div>
+<div class="ttc" id="aclass_chromatic_aberration_html_a57ed3b5bb68fd1c5845c280c1e27cbdd"><div class="ttname"><a href="#a57ed3b5bb68fd1c5845c280c1e27cbdd">ChromaticAberration::ChromaticAberration</a></div><div class="ttdeci">ChromaticAberration(ChromaticAberrationParameters p={})</div><div class="ttdef"><b>Definition</b> <a href="atlas_2effect_8h_source.html#l00438">effect.h:438</a></div></div>
+<div class="ttc" id="aclass_effect_html_aeda5516439f9e1c0f793cafc7ea6e898"><div class="ttname"><a href="class_effect.html#aeda5516439f9e1c0f793cafc7ea6e898">Effect::Effect</a></div><div class="ttdeci">Effect(RenderTargetEffect t)</div><div class="ttdoc">Constructs a new Effect object.</div><div class="ttdef"><b>Definition</b> <a href="atlas_2effect_8h_source.html#l00100">effect.h:100</a></div></div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -232,22 +237,22 @@ Public Attributes</h2></td></tr>
 
 <p>Reimplemented from <a class="el" href="class_effect.html#af243986ba49a2e7ea9a3dcd002f7fb63">Effect</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00393">393</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  393</span>                                                                    {</div>
-<div class="line"><span class="lineno">  394</span>        program.<a class="code hl_function" href="struct_shader_program.html#ad3586861fab8ec713553764fee6fa0c1">setUniform1f</a>(<span class="stringliteral">&quot;EffectFloat1[&quot;</span> + std::to_string((<span class="keywordtype">int</span>)index) + <span class="stringliteral">&quot;]&quot;</span>,</div>
-<div class="line"><span class="lineno">  395</span>                             <a class="code hl_variable" href="#a4b9adc562f6843357d2d038b7eaca338">params</a>.red);</div>
-<div class="line"><span class="lineno">  396</span>        program.<a class="code hl_function" href="struct_shader_program.html#ad3586861fab8ec713553764fee6fa0c1">setUniform1f</a>(<span class="stringliteral">&quot;EffectFloat2[&quot;</span> + std::to_string((<span class="keywordtype">int</span>)index) + <span class="stringliteral">&quot;]&quot;</span>,</div>
-<div class="line"><span class="lineno">  397</span>                             <a class="code hl_variable" href="#a4b9adc562f6843357d2d038b7eaca338">params</a>.green);</div>
-<div class="line"><span class="lineno">  398</span>        program.<a class="code hl_function" href="struct_shader_program.html#ad3586861fab8ec713553764fee6fa0c1">setUniform1f</a>(<span class="stringliteral">&quot;EffectFloat3[&quot;</span> + std::to_string((<span class="keywordtype">int</span>)index) + <span class="stringliteral">&quot;]&quot;</span>,</div>
-<div class="line"><span class="lineno">  399</span>                             <a class="code hl_variable" href="#a4b9adc562f6843357d2d038b7eaca338">params</a>.blue);</div>
-<div class="line"><span class="lineno">  400</span>        program.<a class="code hl_function" href="struct_shader_program.html#ad3586861fab8ec713553764fee6fa0c1">setUniform1f</a>(<span class="stringliteral">&quot;EffectFloat4[&quot;</span> + std::to_string((<span class="keywordtype">int</span>)index) + <span class="stringliteral">&quot;]&quot;</span>,</div>
-<div class="line"><span class="lineno">  401</span>                             <a class="code hl_variable" href="#a4b9adc562f6843357d2d038b7eaca338">params</a>.direction.x);</div>
-<div class="line"><span class="lineno">  402</span>        program.<a class="code hl_function" href="struct_shader_program.html#ad3586861fab8ec713553764fee6fa0c1">setUniform1f</a>(<span class="stringliteral">&quot;EffectFloat5[&quot;</span> + std::to_string((<span class="keywordtype">int</span>)index) + <span class="stringliteral">&quot;]&quot;</span>,</div>
-<div class="line"><span class="lineno">  403</span>                             <a class="code hl_variable" href="#a4b9adc562f6843357d2d038b7eaca338">params</a>.direction.y);</div>
-<div class="line"><span class="lineno">  404</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00461">461</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  461</span>                                                                    {</div>
+<div class="line"><span class="lineno">  462</span>        program.<a class="code hl_function" href="struct_shader_program.html#ad3586861fab8ec713553764fee6fa0c1">setUniform1f</a>(<span class="stringliteral">&quot;EffectFloat1[&quot;</span> + std::to_string((<span class="keywordtype">int</span>)index) + <span class="stringliteral">&quot;]&quot;</span>,</div>
+<div class="line"><span class="lineno">  463</span>                             <a class="code hl_variable" href="#a4b9adc562f6843357d2d038b7eaca338">params</a>.red);</div>
+<div class="line"><span class="lineno">  464</span>        program.<a class="code hl_function" href="struct_shader_program.html#ad3586861fab8ec713553764fee6fa0c1">setUniform1f</a>(<span class="stringliteral">&quot;EffectFloat2[&quot;</span> + std::to_string((<span class="keywordtype">int</span>)index) + <span class="stringliteral">&quot;]&quot;</span>,</div>
+<div class="line"><span class="lineno">  465</span>                             <a class="code hl_variable" href="#a4b9adc562f6843357d2d038b7eaca338">params</a>.green);</div>
+<div class="line"><span class="lineno">  466</span>        program.<a class="code hl_function" href="struct_shader_program.html#ad3586861fab8ec713553764fee6fa0c1">setUniform1f</a>(<span class="stringliteral">&quot;EffectFloat3[&quot;</span> + std::to_string((<span class="keywordtype">int</span>)index) + <span class="stringliteral">&quot;]&quot;</span>,</div>
+<div class="line"><span class="lineno">  467</span>                             <a class="code hl_variable" href="#a4b9adc562f6843357d2d038b7eaca338">params</a>.blue);</div>
+<div class="line"><span class="lineno">  468</span>        program.<a class="code hl_function" href="struct_shader_program.html#ad3586861fab8ec713553764fee6fa0c1">setUniform1f</a>(<span class="stringliteral">&quot;EffectFloat4[&quot;</span> + std::to_string((<span class="keywordtype">int</span>)index) + <span class="stringliteral">&quot;]&quot;</span>,</div>
+<div class="line"><span class="lineno">  469</span>                             <a class="code hl_variable" href="#a4b9adc562f6843357d2d038b7eaca338">params</a>.direction.x);</div>
+<div class="line"><span class="lineno">  470</span>        program.<a class="code hl_function" href="struct_shader_program.html#ad3586861fab8ec713553764fee6fa0c1">setUniform1f</a>(<span class="stringliteral">&quot;EffectFloat5[&quot;</span> + std::to_string((<span class="keywordtype">int</span>)index) + <span class="stringliteral">&quot;]&quot;</span>,</div>
+<div class="line"><span class="lineno">  471</span>                             <a class="code hl_variable" href="#a4b9adc562f6843357d2d038b7eaca338">params</a>.direction.y);</div>
+<div class="line"><span class="lineno">  472</span>    }</div>
 <div class="ttc" id="astruct_shader_program_html_ad3586861fab8ec713553764fee6fa0c1"><div class="ttname"><a href="struct_shader_program.html#ad3586861fab8ec713553764fee6fa0c1">ShaderProgram::setUniform1f</a></div><div class="ttdeci">void setUniform1f(std::string name, float v0)</div><div class="ttdoc">Sets a float uniform variable in the shader program.</div></div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="atlas_2effect_8h_source.html#l00386">params</a>, and <a class="el" href="struct_shader_program.html#ad3586861fab8ec713553764fee6fa0c1">ShaderProgram::setUniform1f()</a>.</p>
+<p class="reference">References <a class="el" href="atlas_2effect_8h_source.html#l00454">params</a>, and <a class="el" href="struct_shader_program.html#ad3586861fab8ec713553764fee6fa0c1">ShaderProgram::setUniform1f()</a>.</p>
 
 </div>
 </div>
@@ -274,7 +279,7 @@ Public Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Creates a shared pointer to a <a class="el" href="class_chromatic_aberration.html">ChromaticAberration</a> effect. </p>
+<p>Creates a shared pointer to a <a class="el" href="class_chromatic_aberration.html" title="Post-processing effect that offsets color channels to emulate lens dispersion artifacts.">ChromaticAberration</a> effect. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">p</td><td>The chromatic aberration parameters to use. </td></tr>
@@ -283,10 +288,10 @@ Public Attributes</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>(std::shared_ptr&lt;ChromaticAberration&gt;) The created chromatic aberration effect. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00383">383</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  383</span>                                             {}) {</div>
-<div class="line"><span class="lineno">  384</span>        <span class="keywordflow">return</span> std::make_shared&lt;ChromaticAberration&gt;(p);</div>
-<div class="line"><span class="lineno">  385</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00448">448</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  448</span>                                             {}) {</div>
+<div class="line"><span class="lineno">  449</span>        <span class="keywordflow">return</span> std::make_shared&lt;ChromaticAberration&gt;(p);</div>
+<div class="line"><span class="lineno">  450</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -303,7 +308,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00386">386</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
+<p>Parameters currently driving the aberration offsets. </p>
+
+<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00454">454</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
 
 </div>
 </div>

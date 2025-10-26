@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 2.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 3</span>
    </div>
   </td>
  </tr>
@@ -122,16 +122,22 @@ $(function(){initNavTree('struct_perlin_noise.html','','struct_perlin_noise-memb
 </div><!--header-->
 <div class="contents">
 
+<p>Classic gradient-noise implementation used for soft terrain shapes.  
+ <a href="#details">More...</a></p>
+
 <p><code>#include &lt;<a class="el" href="procedural_8h_source.html">procedural.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:af5eca66a372d3ff89584383685b729ce" id="r_af5eca66a372d3ff89584383685b729ce"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af5eca66a372d3ff89584383685b729ce">PerlinNoise</a> (unsigned int seed=0)</td></tr>
+<tr class="memdesc:af5eca66a372d3ff89584383685b729ce"><td class="mdescLeft">&#160;</td><td class="mdescRight">Builds a noise generator with an optional deterministic seed.  <br /></td></tr>
 <tr class="memitem:a207f0d959b04d85d051b41956ae4245f" id="r_a207f0d959b04d85d051b41956ae4245f"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a207f0d959b04d85d051b41956ae4245f">noise</a> (float x, float y) const</td></tr>
+<tr class="memdesc:a207f0d959b04d85d051b41956ae4245f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Produces a coherent noise value for the provided coordinates.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
-<div class="textblock">
-<p class="definition">Definition at line <a class="el" href="procedural_8h_source.html#l00018">18</a> of file <a class="el" href="procedural_8h_source.html">procedural.h</a>.</p>
+<div class="textblock"><p>Classic gradient-noise implementation used for soft terrain shapes. </p>
+
+<p class="definition">Definition at line <a class="el" href="procedural_8h_source.html#l00022">22</a> of file <a class="el" href="procedural_8h_source.html">procedural.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="af5eca66a372d3ff89584383685b729ce" name="af5eca66a372d3ff89584383685b729ce"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#af5eca66a372d3ff89584383685b729ce">&#9670;&#160;</a></span>PerlinNoise()</h2>
@@ -147,6 +153,14 @@ Public Member Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>Builds a noise generator with an optional deterministic seed. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">seed</td><td>Seed value used to shuffle gradients. Defaults to random. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -169,6 +183,16 @@ Public Member Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>Produces a coherent noise value for the provided coordinates. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">x</td><td>X coordinate to sample. </td></tr>
+    <tr><td class="paramname">y</td><td>Y coordinate to sample. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Smoothed noise value in the range [-1, 1]. </dd></dl>
 
 </div>
 </div>

@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 2.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 3</span>
    </div>
   </td>
  </tr>
@@ -192,10 +192,10 @@ Example</h2>
 <div class="line">this-&gt;addSpotlight(&amp;spotLight);</div>
 <div class="ttc" id="ashader_8h_html_aed7a1c7a5976e4adb712d0a231dada82acb5feb1b7314637725a2e73bdc9f7295"><div class="ttname"><a href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82acb5feb1b7314637725a2e73bdc9f7295">AtlasVertexShader::Color</a></div><div class="ttdeci">@ Color</div><div class="ttdoc">Vertex shader for rendering solid colors.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00040">shader.h:40</a></div></div>
 <div class="ttc" id="astruct_color_html_aad4699ae003d7a86b5edc5fccdbaf4c8"><div class="ttname"><a href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a></div><div class="ttdeci">static Color white()</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00206">units.h:206</a></div></div>
-<div class="ttc" id="astruct_spotlight_html_a84062cc56c9c430ebbcfad72358c2c3b"><div class="ttname"><a href="#a84062cc56c9c430ebbcfad72358c2c3b">Spotlight::color</a></div><div class="ttdeci">Color color</div><div class="ttdoc">The color of the spotlight.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00347">light.h:347</a></div></div>
-<div class="ttc" id="astruct_spotlight_html_aa567fc073d5789d5408254bb40f81fcc"><div class="ttname"><a href="#aa567fc073d5789d5408254bb40f81fcc">Spotlight::Spotlight</a></div><div class="ttdeci">Spotlight(const Position3d &amp;pos={0.0f, 0.0f, 0.0f}, Magnitude3d dir={0.0f, -1.0f, 0.0f}, const Color &amp;color=Color::white(), const float angle=35.f, const float outerAngle=40.f, const Color &amp;shineColor=Color::white())</div><div class="ttdoc">Function that constructs a new Spotlight object.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00365">light.h:365</a></div></div>
+<div class="ttc" id="astruct_spotlight_html_a84062cc56c9c430ebbcfad72358c2c3b"><div class="ttname"><a href="#a84062cc56c9c430ebbcfad72358c2c3b">Spotlight::color</a></div><div class="ttdeci">Color color</div><div class="ttdoc">The color of the spotlight.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00350">light.h:350</a></div></div>
+<div class="ttc" id="astruct_spotlight_html_aa567fc073d5789d5408254bb40f81fcc"><div class="ttname"><a href="#aa567fc073d5789d5408254bb40f81fcc">Spotlight::Spotlight</a></div><div class="ttdeci">Spotlight(const Position3d &amp;pos={0.0f, 0.0f, 0.0f}, Magnitude3d dir={0.0f, -1.0f, 0.0f}, const Color &amp;color=Color::white(), const float angle=35.f, const float outerAngle=40.f, const Color &amp;shineColor=Color::white())</div><div class="ttdoc">Function that constructs a new Spotlight object.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00368">light.h:368</a></div></div>
 </div><!-- fragment --> 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00331">331</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00334">334</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="aa567fc073d5789d5408254bb40f81fcc" name="aa567fc073d5789d5408254bb40f81fcc"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aa567fc073d5789d5408254bb40f81fcc">&#9670;&#160;</a></span>Spotlight()</h2>
@@ -257,21 +257,21 @@ Example</h2>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00365">365</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  365</span>                                      {0.0f, 0.0f, 0.0f},</div>
-<div class="line"><span class="lineno">  366</span>              <a class="code hl_typedef" href="units_8h.html#af1efe03080186b94608ab2d50c060fe5">Magnitude3d</a> dir = {0.0f, -1.0f, 0.0f},</div>
-<div class="line"><span class="lineno">  367</span>              <span class="keyword">const</span> <a class="code hl_enumvalue" href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82acb5feb1b7314637725a2e73bdc9f7295">Color</a> &amp;<a class="code hl_variable" href="#a84062cc56c9c430ebbcfad72358c2c3b">color</a> = <a class="code hl_function" href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a>(), <span class="keyword">const</span> <span class="keywordtype">float</span> angle = 35.f,</div>
-<div class="line"><span class="lineno">  368</span>              <span class="keyword">const</span> <span class="keywordtype">float</span> outerAngle = 40.f,</div>
-<div class="line"><span class="lineno">  369</span>              <span class="keyword">const</span> <a class="code hl_enumvalue" href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82acb5feb1b7314637725a2e73bdc9f7295">Color</a> &amp;<a class="code hl_variable" href="#a843e9257823edd70d7f6eb914e80c3e2">shineColor</a> = <a class="code hl_function" href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a>())</div>
-<div class="line"><span class="lineno">  370</span>        : <a class="code hl_variable" href="#a76c95332e1fdf991ca0c183acc3e2e07">position</a>(pos), <a class="code hl_variable" href="#a84062cc56c9c430ebbcfad72358c2c3b">color</a>(<a class="code hl_variable" href="#a84062cc56c9c430ebbcfad72358c2c3b">color</a>), <a class="code hl_variable" href="#a843e9257823edd70d7f6eb914e80c3e2">shineColor</a>(<a class="code hl_variable" href="#a843e9257823edd70d7f6eb914e80c3e2">shineColor</a>), <a class="code hl_variable" href="#aeb10b51233ba3eb1933738e3ac8cfae6">direction</a>(dir),</div>
-<div class="line"><span class="lineno">  371</span>          <a class="code hl_variable" href="#a25f32efd9b4ef48ba5218fffe279ce79">cutOff</a>(glm::cos(glm::radians(static_cast&lt;double&gt;(angle)))),</div>
-<div class="line"><span class="lineno">  372</span>          <a class="code hl_variable" href="#a01229439116d8beeafc6b71b1b449abc">outerCutoff</a>(glm::cos(glm::radians(static_cast&lt;double&gt;(outerAngle)))) {</div>
-<div class="line"><span class="lineno">  373</span>    }</div>
-<div class="ttc" id="astruct_spotlight_html_a01229439116d8beeafc6b71b1b449abc"><div class="ttname"><a href="#a01229439116d8beeafc6b71b1b449abc">Spotlight::outerCutoff</a></div><div class="ttdeci">float outerCutoff</div><div class="ttdoc">The outer cone angle of the spotlight in degrees.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00421">light.h:421</a></div></div>
-<div class="ttc" id="astruct_spotlight_html_a25f32efd9b4ef48ba5218fffe279ce79"><div class="ttname"><a href="#a25f32efd9b4ef48ba5218fffe279ce79">Spotlight::cutOff</a></div><div class="ttdeci">float cutOff</div><div class="ttdoc">The inner cone angle of the spotlight in degrees.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00416">light.h:416</a></div></div>
-<div class="ttc" id="astruct_spotlight_html_a76c95332e1fdf991ca0c183acc3e2e07"><div class="ttname"><a href="#a76c95332e1fdf991ca0c183acc3e2e07">Spotlight::position</a></div><div class="ttdeci">Position3d position</div><div class="ttdoc">The position of the spotlight in 3D space.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00336">light.h:336</a></div></div>
-<div class="ttc" id="astruct_spotlight_html_a843e9257823edd70d7f6eb914e80c3e2"><div class="ttname"><a href="#a843e9257823edd70d7f6eb914e80c3e2">Spotlight::shineColor</a></div><div class="ttdeci">Color shineColor</div><div class="ttdoc">The color that the spotlight will use for specular highlights.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00352">light.h:352</a></div></div>
-<div class="ttc" id="astruct_spotlight_html_aeb10b51233ba3eb1933738e3ac8cfae6"><div class="ttname"><a href="#aeb10b51233ba3eb1933738e3ac8cfae6">Spotlight::direction</a></div><div class="ttdeci">Magnitude3d direction</div><div class="ttdoc">The direction in which the spotlight is pointing.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00341">light.h:341</a></div></div>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00368">368</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  368</span>                                      {0.0f, 0.0f, 0.0f},</div>
+<div class="line"><span class="lineno">  369</span>              <a class="code hl_typedef" href="units_8h.html#af1efe03080186b94608ab2d50c060fe5">Magnitude3d</a> dir = {0.0f, -1.0f, 0.0f},</div>
+<div class="line"><span class="lineno">  370</span>              <span class="keyword">const</span> <a class="code hl_enumvalue" href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82acb5feb1b7314637725a2e73bdc9f7295">Color</a> &amp;<a class="code hl_variable" href="#a84062cc56c9c430ebbcfad72358c2c3b">color</a> = <a class="code hl_function" href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a>(), <span class="keyword">const</span> <span class="keywordtype">float</span> angle = 35.f,</div>
+<div class="line"><span class="lineno">  371</span>              <span class="keyword">const</span> <span class="keywordtype">float</span> outerAngle = 40.f,</div>
+<div class="line"><span class="lineno">  372</span>              <span class="keyword">const</span> <a class="code hl_enumvalue" href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82acb5feb1b7314637725a2e73bdc9f7295">Color</a> &amp;<a class="code hl_variable" href="#a843e9257823edd70d7f6eb914e80c3e2">shineColor</a> = <a class="code hl_function" href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a>())</div>
+<div class="line"><span class="lineno">  373</span>        : <a class="code hl_variable" href="#a76c95332e1fdf991ca0c183acc3e2e07">position</a>(pos), <a class="code hl_variable" href="#a84062cc56c9c430ebbcfad72358c2c3b">color</a>(<a class="code hl_variable" href="#a84062cc56c9c430ebbcfad72358c2c3b">color</a>), <a class="code hl_variable" href="#a843e9257823edd70d7f6eb914e80c3e2">shineColor</a>(<a class="code hl_variable" href="#a843e9257823edd70d7f6eb914e80c3e2">shineColor</a>), <a class="code hl_variable" href="#aeb10b51233ba3eb1933738e3ac8cfae6">direction</a>(dir),</div>
+<div class="line"><span class="lineno">  374</span>          <a class="code hl_variable" href="#a25f32efd9b4ef48ba5218fffe279ce79">cutOff</a>(glm::cos(glm::radians(static_cast&lt;double&gt;(angle)))),</div>
+<div class="line"><span class="lineno">  375</span>          <a class="code hl_variable" href="#a01229439116d8beeafc6b71b1b449abc">outerCutoff</a>(glm::cos(glm::radians(static_cast&lt;double&gt;(outerAngle)))) {</div>
+<div class="line"><span class="lineno">  376</span>    }</div>
+<div class="ttc" id="astruct_spotlight_html_a01229439116d8beeafc6b71b1b449abc"><div class="ttname"><a href="#a01229439116d8beeafc6b71b1b449abc">Spotlight::outerCutoff</a></div><div class="ttdeci">float outerCutoff</div><div class="ttdoc">The outer cone angle of the spotlight in degrees.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00424">light.h:424</a></div></div>
+<div class="ttc" id="astruct_spotlight_html_a25f32efd9b4ef48ba5218fffe279ce79"><div class="ttname"><a href="#a25f32efd9b4ef48ba5218fffe279ce79">Spotlight::cutOff</a></div><div class="ttdeci">float cutOff</div><div class="ttdoc">The inner cone angle of the spotlight in degrees.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00419">light.h:419</a></div></div>
+<div class="ttc" id="astruct_spotlight_html_a76c95332e1fdf991ca0c183acc3e2e07"><div class="ttname"><a href="#a76c95332e1fdf991ca0c183acc3e2e07">Spotlight::position</a></div><div class="ttdeci">Position3d position</div><div class="ttdoc">The position of the spotlight in 3D space.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00339">light.h:339</a></div></div>
+<div class="ttc" id="astruct_spotlight_html_a843e9257823edd70d7f6eb914e80c3e2"><div class="ttname"><a href="#a843e9257823edd70d7f6eb914e80c3e2">Spotlight::shineColor</a></div><div class="ttdeci">Color shineColor</div><div class="ttdoc">The color that the spotlight will use for specular highlights.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00355">light.h:355</a></div></div>
+<div class="ttc" id="astruct_spotlight_html_aeb10b51233ba3eb1933738e3ac8cfae6"><div class="ttname"><a href="#aeb10b51233ba3eb1933738e3ac8cfae6">Spotlight::direction</a></div><div class="ttdeci">Magnitude3d direction</div><div class="ttdoc">The direction in which the spotlight is pointing.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00344">light.h:344</a></div></div>
 <div class="ttc" id="aunits_8h_html_af1efe03080186b94608ab2d50c060fe5"><div class="ttname"><a href="units_8h.html#af1efe03080186b94608ab2d50c060fe5">Magnitude3d</a></div><div class="ttdeci">Position3d Magnitude3d</div><div class="ttdoc">Type alias for 3D magnitude vectors.</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00116">units.h:116</a></div></div>
 </div><!-- fragment -->
 </div>
@@ -300,7 +300,7 @@ Example</h2>
   </dd>
 </dl>
 
-<p class="reference">References <a class="el" href="light_8h_source.html#l00448">Window</a>.</p>
+<p class="reference">References <a class="el" href="light_8h_source.html#l00451">Window</a>.</p>
 
 </div>
 </div>
@@ -332,7 +332,7 @@ Example</h2>
   </dd>
 </dl>
 
-<p class="reference">References <a class="el" href="light_8h_source.html#l00448">Window</a>.</p>
+<p class="reference">References <a class="el" href="light_8h_source.html#l00451">Window</a>.</p>
 
 </div>
 </div>
@@ -403,7 +403,7 @@ Example</h2>
   </dd>
 </dl>
 
-<p class="reference">References <a class="el" href="light_8h_source.html#l00347">color</a>.</p>
+<p class="reference">References <a class="el" href="light_8h_source.html#l00350">color</a>.</p>
 
 </div>
 </div>
@@ -447,9 +447,9 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00449">449</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00452">452</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 
-<p class="reference">References <a class="el" href="light_8h_source.html#l00449">CoreObject</a>.</p>
+<p class="reference">References <a class="el" href="light_8h_source.html#l00452">CoreObject</a>.</p>
 
 </div>
 </div>
@@ -473,9 +473,9 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00448">448</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00451">451</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 
-<p class="reference">References <a class="el" href="light_8h_source.html#l00448">Window</a>.</p>
+<p class="reference">References <a class="el" href="light_8h_source.html#l00451">Window</a>.</p>
 
 </div>
 </div>
@@ -494,7 +494,7 @@ Example</h2>
 
 <p>The color of the spotlight. </p>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00347">347</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00350">350</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 
 </div>
 </div>
@@ -512,7 +512,7 @@ Example</h2>
 
 <p>The inner cone angle of the spotlight in degrees. </p>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00416">416</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00419">419</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 
 </div>
 </div>
@@ -530,7 +530,7 @@ Example</h2>
 
 <p>The debug object that visualizes the spotlight in the scene. </p>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00410">410</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00413">413</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 
 </div>
 </div>
@@ -548,8 +548,8 @@ Example</h2>
 
 <p>The direction in which the spotlight is pointing. </p>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00341">341</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  341</span>{0.0f, -1.0f, 0.0f};</div>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00344">344</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  344</span>{0.0f, -1.0f, 0.0f};</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -567,7 +567,7 @@ Example</h2>
 
 <p>Cached shadow parameters used when the shadow map was last rendered. Keeping this in sync with the shadow map avoids sampling mismatches when matrices change between updates. </p>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00433">433</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00436">436</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 
 </div>
 </div>
@@ -585,7 +585,7 @@ Example</h2>
 
 <p>The outer cone angle of the spotlight in degrees. </p>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00421">421</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00424">424</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 
 </div>
 </div>
@@ -603,8 +603,8 @@ Example</h2>
 
 <p>The position of the spotlight in 3D space. </p>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00336">336</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  336</span>{0.0f, 0.0f, 0.0f};</div>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00339">339</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  339</span>{0.0f, 0.0f, 0.0f};</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -622,7 +622,7 @@ Example</h2>
 
 <p>The render target to which the spotlight casts shadows. </p>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00427">427</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00430">430</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 
 </div>
 </div>
@@ -640,7 +640,7 @@ Example</h2>
 
 <p>The color that the spotlight will use for specular highlights. </p>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00352">352</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00355">355</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 
 </div>
 </div>

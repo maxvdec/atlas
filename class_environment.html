@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 2.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 3</span>
    </div>
   </td>
  </tr>
@@ -122,19 +122,28 @@ $(function(){initNavTree('class_environment.html','','class_environment-members'
 </div><!--header-->
 <div class="contents">
 
+<p>Aggregates configurable environmental effects such as fog and bloom.  
+ <a href="#details">More...</a></p>
+
 <p><code>#include &lt;<a class="el" href="scene_8h_source.html">scene.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:ac8f14946937e23aef5942658a850dcbf" id="r_ac8f14946937e23aef5942658a850dcbf"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_fog.html">Fog</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac8f14946937e23aef5942658a850dcbf">fog</a></td></tr>
+<tr class="memdesc:ac8f14946937e23aef5942658a850dcbf"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="struct_fog.html" title="Parameters controlling exponential fog accumulation in the scene.">Fog</a> parameters that softly blend distant geometry with the sky.  <br /></td></tr>
 <tr class="memitem:a9b85231531334ac04d8d0306b13d5c09" id="r_a9b85231531334ac04d8d0306b13d5c09"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_volumetric_lighting.html">VolumetricLighting</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9b85231531334ac04d8d0306b13d5c09">volumetricLighting</a></td></tr>
+<tr class="memdesc:a9b85231531334ac04d8d0306b13d5c09"><td class="mdescLeft">&#160;</td><td class="mdescRight">Controls for volumetric light scattering.  <br /></td></tr>
 <tr class="memitem:a8230ab111323228a3ae41a6d9a2c8dd6" id="r_a8230ab111323228a3ae41a6d9a2c8dd6"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_light_bloom.html">LightBloom</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8230ab111323228a3ae41a6d9a2c8dd6">lightBloom</a></td></tr>
+<tr class="memdesc:a8230ab111323228a3ae41a6d9a2c8dd6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Configures bloom radii and blur passes.  <br /></td></tr>
 <tr class="memitem:ae29cf345fb1baf47c5ce89dccd100fae" id="r_ae29cf345fb1baf47c5ce89dccd100fae"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_rim_light.html">RimLight</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae29cf345fb1baf47c5ce89dccd100fae">rimLight</a></td></tr>
+<tr class="memdesc:ae29cf345fb1baf47c5ce89dccd100fae"><td class="mdescLeft">&#160;</td><td class="mdescRight">Rim lighting intensity and tint.  <br /></td></tr>
 <tr class="memitem:ac1e5e2fc8074a51f8777e6b7fd05c945" id="r_ac1e5e2fc8074a51f8777e6b7fd05c945"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_texture.html">Texture</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac1e5e2fc8074a51f8777e6b7fd05c945">lookupTexture</a></td></tr>
+<tr class="memdesc:ac1e5e2fc8074a51f8777e6b7fd05c945"><td class="mdescLeft">&#160;</td><td class="mdescRight">Optional 3D lookup texture for color grading.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
-<div class="textblock">
-<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00046">46</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
+<div class="textblock"><p>Aggregates configurable environmental effects such as fog and bloom. </p>
+
+<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00092">92</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
 </div><a name="doc-variable-members" id="doc-variable-members"></a><h2 id="header-doc-variable-members" class="groupheader">Member Data Documentation</h2>
 <a id="ac8f14946937e23aef5942658a850dcbf" name="ac8f14946937e23aef5942658a850dcbf"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ac8f14946937e23aef5942658a850dcbf">&#9670;&#160;</a></span>fog</h2>
@@ -148,7 +157,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00048">48</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
+<p><a class="el" href="struct_fog.html" title="Parameters controlling exponential fog accumulation in the scene.">Fog</a> parameters that softly blend distant geometry with the sky. </p>
+
+<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00097">97</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
 
 </div>
 </div>
@@ -164,7 +175,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00050">50</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
+<p>Configures bloom radii and blur passes. </p>
+
+<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00105">105</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
 
 </div>
 </div>
@@ -180,7 +193,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00052">52</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
+<p>Optional 3D lookup texture for color grading. </p>
+
+<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00113">113</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
 
 </div>
 </div>
@@ -196,7 +211,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00051">51</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
+<p>Rim lighting intensity and tint. </p>
+
+<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00109">109</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
 
 </div>
 </div>
@@ -212,7 +229,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00049">49</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
+<p>Controls for volumetric light scattering. </p>
+
+<p class="definition">Definition at line <a class="el" href="scene_8h_source.html#l00101">101</a> of file <a class="el" href="scene_8h_source.html">scene.h</a>.</p>
 
 </div>
 </div>

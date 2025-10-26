@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 2.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 3</span>
    </div>
   </td>
  </tr>
@@ -122,15 +122,20 @@ $(function(){initNavTree('class_simplex_noise.html','','class_simplex_noise-memb
 </div><!--header-->
 <div class="contents">
 
+<p>2D Simplex noise helper that delivers sharper ridges than Perlin.  
+ <a href="#details">More...</a></p>
+
 <p><code>#include &lt;<a class="el" href="procedural_8h_source.html">procedural.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-static-methods" class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
 <tr class="memitem:a91b944e9a4e76977a777e64a75727801" id="r_a91b944e9a4e76977a777e64a75727801"><td class="memItemLeft" align="right" valign="top">static float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a91b944e9a4e76977a777e64a75727801">noise</a> (float xin, float yin)</td></tr>
+<tr class="memdesc:a91b944e9a4e76977a777e64a75727801"><td class="mdescLeft">&#160;</td><td class="mdescRight">Computes Simplex noise for the supplied coordinates.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
-<div class="textblock">
-<p class="definition">Definition at line <a class="el" href="procedural_8h_source.html#l00034">34</a> of file <a class="el" href="procedural_8h_source.html">procedural.h</a>.</p>
+<div class="textblock"><p>2D Simplex noise helper that delivers sharper ridges than Perlin. </p>
+
+<p class="definition">Definition at line <a class="el" href="procedural_8h_source.html#l00053">53</a> of file <a class="el" href="procedural_8h_source.html">procedural.h</a>.</p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
 <a id="a91b944e9a4e76977a777e64a75727801" name="a91b944e9a4e76977a777e64a75727801"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a91b944e9a4e76977a777e64a75727801">&#9670;&#160;</a></span>noise()</h2>
@@ -158,6 +163,16 @@ Static Public Member Functions</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
+
+<p>Computes Simplex noise for the supplied coordinates. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">xin</td><td>X coordinate to sample. </td></tr>
+    <tr><td class="paramname">yin</td><td>Y coordinate to sample. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd><a class="el" href="class_noise.html" title="Convenience namespace bundling the available noise algorithms.">Noise</a> value roughly in the range [-1, 1]. </dd></dl>
 
 </div>
 </div>

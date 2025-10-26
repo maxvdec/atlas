@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 2.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 3</span>
    </div>
   </td>
  </tr>
@@ -147,6 +147,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a5df421dff0d30306020a9fb5576e3f1e" id="r_a5df421dff0d30306020a9fb5576e3f1e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5df421dff0d30306020a9fb5576e3f1e">setTypedObject</a> (<a class="el" href="input_8h.html#a9479d299e1852e6140dcca1f405868abab9ece18c950afbfa6b0fdbfa4ff731d3">T</a> *obj)</td></tr>
 <tr class="memdesc:a5df421dff0d30306020a9fb5576e3f1e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the typed object reference for the component.  <br /></td></tr>
 <tr class="memitem:af840971476aa0b56fe5051bd7557065f" id="r_af840971476aa0b56fe5051bd7557065f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="input_8h.html#a9479d299e1852e6140dcca1f405868abab9ece18c950afbfa6b0fdbfa4ff731d3">T</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af840971476aa0b56fe5051bd7557065f">getObject</a> ()</td></tr>
+<tr class="memdesc:af840971476aa0b56fe5051bd7557065f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Provides direct access to the specialized <a class="el" href="class_game_object.html" title="Base class for all Game Objects. It extends from Renderable and it provides common functionality for ...">GameObject</a> this trait decorates.  <br /></td></tr>
 <tr class="inherit_header pub_methods_class_component"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pub_methods_class_component')"><span class="dynarrow"><span class="arrowhead closed"></span></span>Public Member Functions inherited from <a class="el" href="class_component.html">Component</a></td></tr>
 <tr class="memitem:a686b5206d066d32955dcf151d113e667 inherit pub_methods_class_component" id="r_a686b5206d066d32955dcf151d113e667"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_component.html#a686b5206d066d32955dcf151d113e667">setViewMatrix</a> (const glm::mat4 &amp;view)</td></tr>
 <tr class="memdesc:a686b5206d066d32955dcf151d113e667 inherit pub_methods_class_component"><td class="mdescLeft">&#160;</td><td class="mdescRight">Performs changes when the <a class="el" href="class_game_object.html" title="Base class for all Game Objects. It extends from Renderable and it provides common functionality for ...">GameObject</a>'s view matrix is updated.  <br /></td></tr>
@@ -203,8 +204,11 @@ template&lt;typename <a class="el" href="input_8h.html#a9479d299e1852e6140dcca1f
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00138">138</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  138</span>{ <span class="keywordflow">return</span> typedObject; }</div>
+<p>Provides direct access to the specialized <a class="el" href="class_game_object.html" title="Base class for all Game Objects. It extends from Renderable and it provides common functionality for ...">GameObject</a> this trait decorates. </p>
+<dl class="section return"><dt>Returns</dt><dd>(T*) Pointer to the typed object, or nullptr if the component has not been attached yet. </dd></dl>
+
+<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00145">145</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  145</span>{ <span class="keywordflow">return</span> typedObject; }</div>
 </div><!-- fragment -->
 <p class="reference">References <a class="el" href="input_8h_source.html#l00059">T</a>.</p>
 

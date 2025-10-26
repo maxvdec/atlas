@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 2.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 3</span>
    </div>
   </td>
  </tr>
@@ -122,6 +122,9 @@ $(function(){initNavTree('class_terrain_generator.html','','class_terrain_genera
 </div><!--header-->
 <div class="contents">
 
+<p>Abstract interface that translates 2D coordinates into heights.  
+ <a href="#details">More...</a></p>
+
 <p><code>#include &lt;<a class="el" href="procedural_8h_source.html">procedural.h</a>&gt;</code></p>
 <div class="dynheader">
 Inheritance diagram for TerrainGenerator:</div>
@@ -129,11 +132,11 @@ Inheritance diagram for TerrainGenerator:</div>
  <div class="center">
   <img src="class_terrain_generator.png" usemap="#TerrainGenerator_map" alt=""/>
   <map id="TerrainGenerator_map" name="TerrainGenerator_map">
-<area href="class_compound_generator.html" alt="CompoundGenerator" shape="rect" coords="0,56,129,80"/>
-<area href="class_hill_generator.html" alt="HillGenerator" shape="rect" coords="139,56,268,80"/>
-<area href="class_island_generator.html" alt="IslandGenerator" shape="rect" coords="278,56,407,80"/>
-<area href="class_mountain_generator.html" alt="MountainGenerator" shape="rect" coords="417,56,546,80"/>
-<area href="class_plain_generator.html" alt="PlainGenerator" shape="rect" coords="556,56,685,80"/>
+<area href="class_compound_generator.html" title="Aggregates multiple terrain generators and sums their contributions." alt="CompoundGenerator" shape="rect" coords="0,56,129,80"/>
+<area href="class_hill_generator.html" title="Low-frequency noise generator used for rolling hills and plains." alt="HillGenerator" shape="rect" coords="139,56,268,80"/>
+<area href="class_island_generator.html" title="Worley-noise-based generator that mimics coastline islands." alt="IslandGenerator" shape="rect" coords="278,56,407,80"/>
+<area href="class_mountain_generator.html" title="Fractal noise generator that yields rugged mountainous features." alt="MountainGenerator" shape="rect" coords="417,56,546,80"/>
+<area href="class_plain_generator.html" title="Gentle noise generator producing subtle undulating plains." alt="PlainGenerator" shape="rect" coords="556,56,685,80"/>
   </map>
 </div></div>
 <table class="memberdecls">
@@ -141,11 +144,13 @@ Inheritance diagram for TerrainGenerator:</div>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a20b5eb12bfe5d5cb9e858c61ae0f09a0" id="r_a20b5eb12bfe5d5cb9e858c61ae0f09a0"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a20b5eb12bfe5d5cb9e858c61ae0f09a0">~TerrainGenerator</a> ()=default</td></tr>
 <tr class="memitem:a80ad336990a06e22160807615c880e70" id="r_a80ad336990a06e22160807615c880e70"><td class="memItemLeft" align="right" valign="top">virtual float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a80ad336990a06e22160807615c880e70">generateHeight</a> (float x, float y)=0</td></tr>
+<tr class="memdesc:a80ad336990a06e22160807615c880e70"><td class="mdescLeft">&#160;</td><td class="mdescRight">Evaluates the height of the terrain at the requested position.  <br /></td></tr>
 <tr class="memitem:a8a534a43c030f78682d85ee38fe5f0de" id="r_a8a534a43c030f78682d85ee38fe5f0de"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8a534a43c030f78682d85ee38fe5f0de">applyTo</a> (<a class="el" href="class_terrain.html">Terrain</a> &amp;terrain) const</td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
-<div class="textblock">
-<p class="definition">Definition at line <a class="el" href="procedural_8h_source.html#l00080">80</a> of file <a class="el" href="procedural_8h_source.html">procedural.h</a>.</p>
+<div class="textblock"><p>Abstract interface that translates 2D coordinates into heights. </p>
+
+<p class="definition">Definition at line <a class="el" href="procedural_8h_source.html#l00161">161</a> of file <a class="el" href="procedural_8h_source.html">procedural.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a20b5eb12bfe5d5cb9e858c61ae0f09a0" name="a20b5eb12bfe5d5cb9e858c61ae0f09a0"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a20b5eb12bfe5d5cb9e858c61ae0f09a0">&#9670;&#160;</a></span>~TerrainGenerator()</h2>
@@ -196,8 +201,8 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="procedural_8h_source.html#l00086">86</a> of file <a class="el" href="procedural_8h_source.html">procedural.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   86</span>{};</div>
+<p class="definition">Definition at line <a class="el" href="procedural_8h_source.html#l00174">174</a> of file <a class="el" href="procedural_8h_source.html">procedural.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  174</span>{};</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -227,6 +232,16 @@ Public Member Functions</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
+
+<p>Evaluates the height of the terrain at the requested position. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">x</td><td>X coordinate in world or heightmap space. </td></tr>
+    <tr><td class="paramname">y</td><td>Y coordinate in world or heightmap space. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Height value to assign to the terrain mesh. </dd></dl>
 
 <p>Implemented in <a class="el" href="class_compound_generator.html#aae88c2164a2111a0c4702fd213300010">CompoundGenerator</a>, <a class="el" href="class_hill_generator.html#a79c171ae4c09eda6ff481f1139e04e7e">HillGenerator</a>, <a class="el" href="class_island_generator.html#aad937fa6c922c0951b9f63ad8e0297e1">IslandGenerator</a>, <a class="el" href="class_mountain_generator.html#a3087d383b2c00a1912202027d892ca0f">MountainGenerator</a>, and <a class="el" href="class_plain_generator.html#a4ef7e95e99259753834deb5e11cc678f">PlainGenerator</a>.</p>
 

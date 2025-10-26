@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 2.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 3</span>
    </div>
   </td>
  </tr>
@@ -122,16 +122,22 @@ $(function(){initNavTree('class_worley_noise.html','','class_worley_noise-member
 </div><!--header-->
 <div class="contents">
 
+<p>Worley (cellular) noise generator used for island and crater shapes.  
+ <a href="#details">More...</a></p>
+
 <p><code>#include &lt;<a class="el" href="procedural_8h_source.html">procedural.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a1ff1fe05562ffd4dcbd13a07d2c79ad4" id="r_a1ff1fe05562ffd4dcbd13a07d2c79ad4"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1ff1fe05562ffd4dcbd13a07d2c79ad4">WorleyNoise</a> (int numPoints, unsigned int seed=0)</td></tr>
+<tr class="memdesc:a1ff1fe05562ffd4dcbd13a07d2c79ad4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a Worley noise generator with a desired feature count.  <br /></td></tr>
 <tr class="memitem:a43d855be0f8322ae815d89f8f478870e" id="r_a43d855be0f8322ae815d89f8f478870e"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a43d855be0f8322ae815d89f8f478870e">noise</a> (float x, float y) const</td></tr>
+<tr class="memdesc:a43d855be0f8322ae815d89f8f478870e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Samples the distance to the closest feature point.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
-<div class="textblock">
-<p class="definition">Definition at line <a class="el" href="procedural_8h_source.html#l00044">44</a> of file <a class="el" href="procedural_8h_source.html">procedural.h</a>.</p>
+<div class="textblock"><p>Worley (cellular) noise generator used for island and crater shapes. </p>
+
+<p class="definition">Definition at line <a class="el" href="procedural_8h_source.html#l00073">73</a> of file <a class="el" href="procedural_8h_source.html">procedural.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a1ff1fe05562ffd4dcbd13a07d2c79ad4" name="a1ff1fe05562ffd4dcbd13a07d2c79ad4"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a1ff1fe05562ffd4dcbd13a07d2c79ad4">&#9670;&#160;</a></span>WorleyNoise()</h2>
@@ -151,6 +157,15 @@ Public Member Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>Creates a Worley noise generator with a desired feature count. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">numPoints</td><td>Number of feature points to scatter. </td></tr>
+    <tr><td class="paramname">seed</td><td>Seed controlling point distribution. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -173,6 +188,16 @@ Public Member Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>Samples the distance to the closest feature point. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">x</td><td>X coordinate to sample. </td></tr>
+    <tr><td class="paramname">y</td><td>Y coordinate to sample. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Normalized cellular noise value. </dd></dl>
 
 </div>
 </div>

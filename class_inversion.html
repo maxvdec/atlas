@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 2.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 3</span>
    </div>
   </td>
  </tr>
@@ -161,7 +161,7 @@ Additional Inherited Members</h2></td></tr>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Post-processing effect that inverts all colors in the rendered image. White becomes black, red becomes cyan, etc. </p>
 
-<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00094">94</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00115">115</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="ac4baef84181fee034862fce94d779f98" name="ac4baef84181fee034862fce94d779f98"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ac4baef84181fee034862fce94d779f98">&#9670;&#160;</a></span>Inversion()</h2>
@@ -188,12 +188,12 @@ Additional Inherited Members</h2></td></tr>
 
 <p>Constructs a new <a class="el" href="class_inversion.html" title="Post-processing effect that inverts all colors in the rendered image. White becomes black,...">Inversion</a> effect. </p>
 
-<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00100">100</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  100</span>: <a class="code hl_function" href="class_effect.html#aeda5516439f9e1c0f793cafc7ea6e898">Effect</a>(<a class="code hl_enumvalue" href="atlas_2effect_8h.html#a75cf3454fba9ce206c0c748892dc9867a9b8958acb7be504bb5f55f17c0eea366">RenderTargetEffect::Invert</a>) {}</div>
+<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00121">121</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  121</span>: <a class="code hl_function" href="class_effect.html#aeda5516439f9e1c0f793cafc7ea6e898">Effect</a>(<a class="code hl_enumvalue" href="atlas_2effect_8h.html#a75cf3454fba9ce206c0c748892dc9867a9b8958acb7be504bb5f55f17c0eea366">RenderTargetEffect::Invert</a>) {}</div>
 <div class="ttc" id="aatlas_2effect_8h_html_a75cf3454fba9ce206c0c748892dc9867a9b8958acb7be504bb5f55f17c0eea366"><div class="ttname"><a href="atlas_2effect_8h.html#a75cf3454fba9ce206c0c748892dc9867a9b8958acb7be504bb5f55f17c0eea366">RenderTargetEffect::Invert</a></div><div class="ttdeci">@ Invert</div><div class="ttdoc">Inverts the colors of the rendered image.</div><div class="ttdef"><b>Definition</b> <a href="atlas_2effect_8h_source.html#l00028">effect.h:28</a></div></div>
-<div class="ttc" id="aclass_effect_html_aeda5516439f9e1c0f793cafc7ea6e898"><div class="ttname"><a href="class_effect.html#aeda5516439f9e1c0f793cafc7ea6e898">Effect::Effect</a></div><div class="ttdeci">Effect(RenderTargetEffect t)</div><div class="ttdoc">Constructs a new Effect object.</div><div class="ttdef"><b>Definition</b> <a href="atlas_2effect_8h_source.html#l00079">effect.h:79</a></div></div>
+<div class="ttc" id="aclass_effect_html_aeda5516439f9e1c0f793cafc7ea6e898"><div class="ttname"><a href="class_effect.html#aeda5516439f9e1c0f793cafc7ea6e898">Effect::Effect</a></div><div class="ttdeci">Effect(RenderTargetEffect t)</div><div class="ttdoc">Constructs a new Effect object.</div><div class="ttdef"><b>Definition</b> <a href="atlas_2effect_8h_source.html#l00100">effect.h:100</a></div></div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="atlas_2effect_8h_source.html#l00079">Effect::Effect()</a>, and <a class="el" href="atlas_2effect_8h_source.html#l00028">Invert</a>.</p>
+<p class="reference">References <a class="el" href="atlas_2effect_8h_source.html#l00100">Effect::Effect()</a>, and <a class="el" href="atlas_2effect_8h_source.html#l00028">Invert</a>.</p>
 
 </div>
 </div>
@@ -224,10 +224,10 @@ Additional Inherited Members</h2></td></tr>
 <p>Creates a shared pointer to an <a class="el" href="class_inversion.html" title="Post-processing effect that inverts all colors in the rendered image. White becomes black,...">Inversion</a> effect. </p>
 <dl class="section return"><dt>Returns</dt><dd>(std::shared_ptr&lt;Inversion&gt;) The created inversion effect. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00106">106</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  106</span>                                             {</div>
-<div class="line"><span class="lineno">  107</span>        <span class="keywordflow">return</span> std::make_shared&lt;Inversion&gt;();</div>
-<div class="line"><span class="lineno">  108</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00127">127</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  127</span>                                             {</div>
+<div class="line"><span class="lineno">  128</span>        <span class="keywordflow">return</span> std::make_shared&lt;Inversion&gt;();</div>
+<div class="line"><span class="lineno">  129</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>

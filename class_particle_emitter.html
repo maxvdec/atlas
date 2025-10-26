@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 2.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 3</span>
    </div>
   </td>
  </tr>
@@ -140,21 +140,21 @@ Inheritance diagram for ParticleEmitter:</div>
 <tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:ae3c78db9b68fadecfcbe8e22a82bba41" id="r_ae3c78db9b68fadecfcbe8e22a82bba41"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae3c78db9b68fadecfcbe8e22a82bba41">initialize</a> () override</td></tr>
-<tr class="memdesc:ae3c78db9b68fadecfcbe8e22a82bba41"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to initialize the object. Can be overridden by derived.  <br /></td></tr>
+<tr class="memdesc:ae3c78db9b68fadecfcbe8e22a82bba41"><td class="mdescLeft">&#160;</td><td class="mdescRight">Allocates buffers and shader state necessary for particle simulation.  <br /></td></tr>
 <tr class="memitem:afe658d35da0cdba391d4c841decf71e0" id="r_afe658d35da0cdba391d4c841decf71e0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#afe658d35da0cdba391d4c841decf71e0">render</a> (float dt) override</td></tr>
-<tr class="memdesc:afe658d35da0cdba391d4c841decf71e0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to render the object. Must be implemented by derived classes.  <br /></td></tr>
+<tr class="memdesc:afe658d35da0cdba391d4c841decf71e0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Renders all active particles with billboarding logic.  <br /></td></tr>
 <tr class="memitem:a10c124a8f860c367cd3e086e90701da0" id="r_a10c124a8f860c367cd3e086e90701da0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a10c124a8f860c367cd3e086e90701da0">update</a> (<a class="el" href="class_window.html">Window</a> &amp;window) override</td></tr>
-<tr class="memdesc:a10c124a8f860c367cd3e086e90701da0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to update the object each frame.  <br /></td></tr>
+<tr class="memdesc:a10c124a8f860c367cd3e086e90701da0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates particle lifetimes, spawns new particles, and applies forces.  <br /></td></tr>
 <tr class="memitem:a46a3bd7e0981249a61b6b6433df7e3bd" id="r_a46a3bd7e0981249a61b6b6433df7e3bd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a46a3bd7e0981249a61b6b6433df7e3bd">setProjectionMatrix</a> (const glm::mat4 &amp;projection) override</td></tr>
-<tr class="memdesc:a46a3bd7e0981249a61b6b6433df7e3bd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to set the projection matrix for the object. Called from <a class="el" href="class_window.html">Window</a> for internal purposes.  <br /></td></tr>
+<tr class="memdesc:a46a3bd7e0981249a61b6b6433df7e3bd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates the projection matrix used to align particles to the camera frustum.  <br /></td></tr>
 <tr class="memitem:a69bad006c8fb4611ad3bdd3df138af4b" id="r_a69bad006c8fb4611ad3bdd3df138af4b"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a69bad006c8fb4611ad3bdd3df138af4b">setViewMatrix</a> (const glm::mat4 &amp;view) override</td></tr>
-<tr class="memdesc:a69bad006c8fb4611ad3bdd3df138af4b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to set the view matrix for the object. Called from <a class="el" href="class_window.html">Window</a> for internal purposes.  <br /></td></tr>
+<tr class="memdesc:a69bad006c8fb4611ad3bdd3df138af4b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stores the view matrix so particles can face the camera.  <br /></td></tr>
 <tr class="memitem:acb6f3e714474c21f30600aa4b02fc2d5" id="r_acb6f3e714474c21f30600aa4b02fc2d5"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#acb6f3e714474c21f30600aa4b02fc2d5">ParticleEmitter</a> (unsigned int maxParticles=100)</td></tr>
 <tr class="memdesc:acb6f3e714474c21f30600aa4b02fc2d5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs a new <a class="el" href="class_particle_emitter.html" title="Class representing a particle emitter in the game. It emits and manages particles.">ParticleEmitter</a> object.  <br /></td></tr>
 <tr class="memitem:ad4d8472950cf0397702b92bcee6d25f2" id="r_ad4d8472950cf0397702b92bcee6d25f2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad4d8472950cf0397702b92bcee6d25f2">attachTexture</a> (const <a class="el" href="struct_texture.html">Texture</a> &amp;tex) override</td></tr>
-<tr class="memdesc:ad4d8472950cf0397702b92bcee6d25f2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Attaches a texture to the object.  <br /></td></tr>
+<tr class="memdesc:ad4d8472950cf0397702b92bcee6d25f2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Binds a sprite texture that will be used for each particle.  <br /></td></tr>
 <tr class="memitem:a152e95df28b2885262d5f5025d5f1497" id="r_a152e95df28b2885262d5f5025d5f1497"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a152e95df28b2885262d5f5025d5f1497">setColor</a> (const <a class="el" href="struct_color.html">Color</a> &amp;color) override</td></tr>
-<tr class="memdesc:a152e95df28b2885262d5f5025d5f1497"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the color of the object.  <br /></td></tr>
+<tr class="memdesc:a152e95df28b2885262d5f5025d5f1497"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets a tint color that modulates the particle sprite.  <br /></td></tr>
 <tr class="memitem:a80e4e373b9296ee5d9ed33822fec3b83" id="r_a80e4e373b9296ee5d9ed33822fec3b83"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a80e4e373b9296ee5d9ed33822fec3b83">enableTexture</a> ()</td></tr>
 <tr class="memdesc:a80e4e373b9296ee5d9ed33822fec3b83"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function that enables the use of a texture for the particles.  <br /></td></tr>
 <tr class="memitem:abf6e025b3ac0fee071e84c9ccf565aae" id="r_abf6e025b3ac0fee071e84c9ccf565aae"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#abf6e025b3ac0fee071e84c9ccf565aae">disableTexture</a> ()</td></tr>
@@ -278,10 +278,10 @@ Example</h2>
 <div class="line"><span class="comment">// Add the emitter to the scene</span></div>
 <div class="line">scene.addObject(&amp;emitter);</div>
 <div class="ttc" id="aclass_particle_emitter_html_acb6f3e714474c21f30600aa4b02fc2d5"><div class="ttname"><a href="#acb6f3e714474c21f30600aa4b02fc2d5">ParticleEmitter::ParticleEmitter</a></div><div class="ttdeci">ParticleEmitter(unsigned int maxParticles=100)</div><div class="ttdoc">Constructs a new ParticleEmitter object.</div></div>
-<div class="ttc" id="aobject_8h_html_a5d2a36527b762e139f0a5cefd66b3191a7941ce00c308ef62cd69af52664e9788"><div class="ttname"><a href="object_8h.html#a5d2a36527b762e139f0a5cefd66b3191a7941ce00c308ef62cd69af52664e9788">ParticleEmissionType::Fountain</a></div><div class="ttdeci">@ Fountain</div><div class="ttdoc">Emission type for fountain-like particle effects.</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00588">object.h:588</a></div></div>
+<div class="ttc" id="aobject_8h_html_a5d2a36527b762e139f0a5cefd66b3191a7941ce00c308ef62cd69af52664e9788"><div class="ttname"><a href="object_8h.html#a5d2a36527b762e139f0a5cefd66b3191a7941ce00c308ef62cd69af52664e9788">ParticleEmissionType::Fountain</a></div><div class="ttdeci">@ Fountain</div><div class="ttdoc">Emission type for fountain-like particle effects.</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00647">object.h:647</a></div></div>
 <div class="ttc" id="ashader_8h_html_aed7a1c7a5976e4adb712d0a231dada82aa3e8ae43188ae76d38f414b2bdb0077b"><div class="ttname"><a href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82aa3e8ae43188ae76d38f414b2bdb0077b">AtlasVertexShader::Texture</a></div><div class="ttdeci">@ Texture</div><div class="ttdoc">Vertex shader for rendering textured objects.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00050">shader.h:50</a></div></div>
 </div><!-- fragment --> 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00724">724</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00783">783</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="acb6f3e714474c21f30600aa4b02fc2d5" name="acb6f3e714474c21f30600aa4b02fc2d5"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#acb6f3e714474c21f30600aa4b02fc2d5">&#9670;&#160;</a></span>ParticleEmitter()</h2>
@@ -321,7 +321,7 @@ Example</h2>
         <tr>
           <td class="memname">void ParticleEmitter::attachTexture </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="struct_texture.html">Texture</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>texture</em></span></td><td>)</td>
+          <td class="paramtype">const <a class="el" href="struct_texture.html">Texture</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>tex</em></span></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -332,13 +332,7 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p>Attaches a texture to the object. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">texture</td><td>The texture to attach. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Binds a sprite texture that will be used for each particle. </p>
 
 <p>Reimplemented from <a class="el" href="class_game_object.html#a7e28874d7a5c387330b97cf93671a3f8">GameObject</a>.</p>
 
@@ -372,8 +366,8 @@ Example</h2>
 
 <p>Reimplemented from <a class="el" href="class_renderable.html#a54a97abc4b6fe3280505da3b587cba98">Renderable</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00756">756</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  756</span>{ <span class="keywordflow">return</span> <span class="keyword">false</span>; };</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00839">839</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  839</span>{ <span class="keywordflow">return</span> <span class="keyword">false</span>; };</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -402,8 +396,8 @@ Example</h2>
 
 <p>Function that disables the use of a texture for the particles. </p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00751">751</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  751</span>{ useTexture = <span class="keyword">false</span>; };</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00834">834</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  834</span>{ useTexture = <span class="keyword">false</span>; };</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -495,8 +489,8 @@ Example</h2>
 
 <p>Function that enables the use of a texture for the particles. </p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00746">746</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  746</span>{ useTexture = <span class="keyword">true</span>; };</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00829">829</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  829</span>{ useTexture = <span class="keyword">true</span>; };</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -528,8 +522,8 @@ Example</h2>
 
 <p>Reimplemented from <a class="el" href="class_renderable.html#a644269034ac58f64e47d88846c365cf4">Renderable</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00755">755</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  755</span>{ <span class="keywordflow">return</span> position; };</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00838">838</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  838</span>{ <span class="keywordflow">return</span> position; };</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -556,7 +550,7 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p>Function to initialize the object. Can be overridden by derived. </p>
+<p>Allocates buffers and shader state necessary for particle simulation. </p>
 
 <p>Reimplemented from <a class="el" href="class_renderable.html#aaa53405a3eb174752fce5e4a2fc8dca8">Renderable</a>.</p>
 
@@ -620,13 +614,7 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p>Function to render the object. Must be implemented by derived classes. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">dt</td><td>Delta time since the last frame, useful for animations. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Renders all active particles with billboarding logic. </p>
 
 <p>Implements <a class="el" href="class_renderable.html#ae9601ab8470cd46d45b1bec00d656c81">Renderable</a>.</p>
 
@@ -655,13 +643,7 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p>Sets the color of the object. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">color</td><td>The new color to set. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Sets a tint color that modulates the particle sprite. </p>
 
 <p>Reimplemented from <a class="el" href="class_game_object.html#acba5ac0698425dfe07de60e9e60432b5">GameObject</a>.</p>
 
@@ -800,13 +782,7 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p>Function to set the projection matrix for the object. Called from <a class="el" href="class_window.html">Window</a> for internal purposes. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">projection</td><td>The projection matrix to set. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Updates the projection matrix used to align particles to the camera frustum. </p>
 
 <p>Reimplemented from <a class="el" href="class_renderable.html#a0c865743cb1e0bbc44b754f9e1b50bb3">Renderable</a>.</p>
 
@@ -893,10 +869,10 @@ Example</h2>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00821">821</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  821</span>                                       {</div>
-<div class="line"><span class="lineno">  822</span>        <a class="code hl_function" href="#a7bac44e4712908099af3a76187ed908e">setSpawnRate</a>(<span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(rate));</div>
-<div class="line"><span class="lineno">  823</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00904">904</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  904</span>                                       {</div>
+<div class="line"><span class="lineno">  905</span>        <a class="code hl_function" href="#a7bac44e4712908099af3a76187ed908e">setSpawnRate</a>(<span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(rate));</div>
+<div class="line"><span class="lineno">  906</span>    }</div>
 <div class="ttc" id="aclass_particle_emitter_html_a7bac44e4712908099af3a76187ed908e"><div class="ttname"><a href="#a7bac44e4712908099af3a76187ed908e">ParticleEmitter::setSpawnRate</a></div><div class="ttdeci">void setSpawnRate(float particlesPerSecond)</div><div class="ttdoc">How much particles are spawned each second.</div></div>
 </div><!-- fragment -->
 <p class="reference">References <a class="el" href="#a7bac44e4712908099af3a76187ed908e">setSpawnRate()</a>.</p>
@@ -926,13 +902,7 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p>Function to set the view matrix for the object. Called from <a class="el" href="class_window.html">Window</a> for internal purposes. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">view</td><td>The view matrix to set. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Stores the view matrix so particles can face the camera. </p>
 
 <p>Reimplemented from <a class="el" href="class_renderable.html#ae1b11967b98e6ba4393640652242083f">Renderable</a>.</p>
 
@@ -999,14 +969,7 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p>Function to update the object each frame. </p>
-<dl class="section warning"><dt>Warning</dt><dd>It runs before the rendering phase and it should only contain logic updates.</dd></dl>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">window</td><td>The window where the object is being rendered. </td></tr>
-  </table>
-  </dd>
-</dl>
+<p>Updates particle lifetimes, spawns new particles, and applies forces. </p>
 
 <p>Reimplemented from <a class="el" href="class_renderable.html#afb2aa3ad0ab8dcfc54088173ea7182cd">Renderable</a>.</p>
 

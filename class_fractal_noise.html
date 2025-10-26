@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 2.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 3</span>
    </div>
   </td>
  </tr>
@@ -122,16 +122,22 @@ $(function(){initNavTree('class_fractal_noise.html','','class_fractal_noise-memb
 </div><!--header-->
 <div class="contents">
 
+<p>Fractal sums of Perlin noise used for more complex landscapes.  
+ <a href="#details">More...</a></p>
+
 <p><code>#include &lt;<a class="el" href="procedural_8h_source.html">procedural.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a3f736b09e65a00b60c5dc97ca36e821e" id="r_a3f736b09e65a00b60c5dc97ca36e821e"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a3f736b09e65a00b60c5dc97ca36e821e">FractalNoise</a> (int o, float p)</td></tr>
+<tr class="memdesc:a3f736b09e65a00b60c5dc97ca36e821e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Configures the octave count and persistence of the fractal.  <br /></td></tr>
 <tr class="memitem:a199b6403118e551fde28178be869fa86" id="r_a199b6403118e551fde28178be869fa86"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a199b6403118e551fde28178be869fa86">noise</a> (float x, float y) const</td></tr>
+<tr class="memdesc:a199b6403118e551fde28178be869fa86"><td class="mdescLeft">&#160;</td><td class="mdescRight">Samples compounded Perlin noise with the configured settings.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
-<div class="textblock">
-<p class="definition">Definition at line <a class="el" href="procedural_8h_source.html#l00055">55</a> of file <a class="el" href="procedural_8h_source.html">procedural.h</a>.</p>
+<div class="textblock"><p>Fractal sums of Perlin noise used for more complex landscapes. </p>
+
+<p class="definition">Definition at line <a class="el" href="procedural_8h_source.html#l00100">100</a> of file <a class="el" href="procedural_8h_source.html">procedural.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a3f736b09e65a00b60c5dc97ca36e821e" name="a3f736b09e65a00b60c5dc97ca36e821e"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a3f736b09e65a00b60c5dc97ca36e821e">&#9670;&#160;</a></span>FractalNoise()</h2>
@@ -151,6 +157,15 @@ Public Member Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>Configures the octave count and persistence of the fractal. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">o</td><td>Number of octaves to accumulate. </td></tr>
+    <tr><td class="paramname">p</td><td>Persistence factor applied per octave. </td></tr>
+  </table>
+  </dd>
+</dl>
 
 </div>
 </div>
@@ -173,6 +188,16 @@ Public Member Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>Samples compounded Perlin noise with the configured settings. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">x</td><td>X coordinate to sample. </td></tr>
+    <tr><td class="paramname">y</td><td>Y coordinate to sample. </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Fractal noise value. </dd></dl>
 
 </div>
 </div>

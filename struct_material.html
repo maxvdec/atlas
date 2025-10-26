@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 2.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 3</span>
    </div>
   </td>
  </tr>
@@ -130,10 +130,15 @@ $(function(){initNavTree('struct_material.html','','struct_material-members'); }
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:aa61df35ac281fa40c0745235494d4b19" id="r_aa61df35ac281fa40c0745235494d4b19"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_color.html">Color</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa61df35ac281fa40c0745235494d4b19">albedo</a> = {1.0, 1.0, 1.0, 1.0}</td></tr>
+<tr class="memdesc:aa61df35ac281fa40c0745235494d4b19"><td class="mdescLeft">&#160;</td><td class="mdescRight">Base color contribution of the surface.  <br /></td></tr>
 <tr class="memitem:a97fc4551763505f23dac24a9901cee88" id="r_a97fc4551763505f23dac24a9901cee88"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a97fc4551763505f23dac24a9901cee88">metallic</a> = 0.0f</td></tr>
+<tr class="memdesc:a97fc4551763505f23dac24a9901cee88"><td class="mdescLeft">&#160;</td><td class="mdescRight">Metallic factor controlling how conductive the material behaves.  <br /></td></tr>
 <tr class="memitem:abbaeac8374986ca82670ff0d7749c566" id="r_abbaeac8374986ca82670ff0d7749c566"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#abbaeac8374986ca82670ff0d7749c566">roughness</a> = 0.5f</td></tr>
+<tr class="memdesc:abbaeac8374986ca82670ff0d7749c566"><td class="mdescLeft">&#160;</td><td class="mdescRight">Roughness factor influencing the spread of specular highlights.  <br /></td></tr>
 <tr class="memitem:a0946dbf03359dc3cd8d32910045dc5d4" id="r_a0946dbf03359dc3cd8d32910045dc5d4"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0946dbf03359dc3cd8d32910045dc5d4">ao</a> = 1.0f</td></tr>
+<tr class="memdesc:a0946dbf03359dc3cd8d32910045dc5d4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Ambient occlusion term used to darken creases and cavities.  <br /></td></tr>
 <tr class="memitem:a8d977d0b7386da7e3ac6879f458d3f0f" id="r_a8d977d0b7386da7e3ac6879f458d3f0f"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8d977d0b7386da7e3ac6879f458d3f0f">reflectivity</a> = 0.0f</td></tr>
+<tr class="memdesc:a8d977d0b7386da7e3ac6879f458d3f0f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reflection blend factor when environment maps are available.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Structure representing the material properties of an object. Based on Phong reflection model. </p>
@@ -152,8 +157,10 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00046">46</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   46</span>{1.0, 1.0, 1.0, 1.0};</div>
+<p>Base color contribution of the surface. </p>
+
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00049">49</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   49</span>{1.0, 1.0, 1.0, 1.0};</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -169,7 +176,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00049">49</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<p>Ambient occlusion term used to darken creases and cavities. </p>
+
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00061">61</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
 
 </div>
 </div>
@@ -185,7 +194,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00047">47</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<p>Metallic factor controlling how conductive the material behaves. </p>
+
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00053">53</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
 
 </div>
 </div>
@@ -201,7 +212,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00050">50</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<p>Reflection blend factor when environment maps are available. </p>
+
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00065">65</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
 
 </div>
 </div>
@@ -217,7 +230,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00048">48</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<p>Roughness factor influencing the spread of specular highlights. </p>
+
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00057">57</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
 
 </div>
 </div>

@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 2.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 3</span>
    </div>
   </td>
  </tr>
@@ -124,6 +124,9 @@ $(function(){initNavTree('class_dilation.html','','class_dilation-members'); });
 </div><!--header-->
 <div class="contents">
 
+<p>Post-processing effect that expands bright fragments to create a blooming halo.  
+ <a href="#details">More...</a></p>
+
 <p><code>#include &lt;<a class="el" href="atlas_2effect_8h_source.html">effect.h</a>&gt;</code></p>
 <div class="dynheader">
 Inheritance diagram for Dilation:</div>
@@ -139,7 +142,7 @@ Inheritance diagram for Dilation:</div>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a58cdd07db05b61181f4067869291a691" id="r_a58cdd07db05b61181f4067869291a691"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a58cdd07db05b61181f4067869291a691">Dilation</a> (<a class="el" href="struct_dilation_parameters.html">DilationParameters</a> p={})</td></tr>
 <tr class="memitem:a089a2c8f26ec1f1316f3b33017e81073" id="r_a089a2c8f26ec1f1316f3b33017e81073"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a089a2c8f26ec1f1316f3b33017e81073">applyToProgram</a> (<a class="el" href="struct_shader_program.html">ShaderProgram</a> &amp;program, int index) override</td></tr>
-<tr class="memdesc:a089a2c8f26ec1f1316f3b33017e81073"><td class="mdescLeft">&#160;</td><td class="mdescRight">Applies all dialation parameters to the shader program.  <br /></td></tr>
+<tr class="memdesc:a089a2c8f26ec1f1316f3b33017e81073"><td class="mdescLeft">&#160;</td><td class="mdescRight">Applies all dilation parameters to the shader program.  <br /></td></tr>
 <tr class="inherit_header pub_methods_class_effect"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pub_methods_class_effect')"><span class="dynarrow"><span class="arrowhead closed"></span></span>Public Member Functions inherited from <a class="el" href="class_effect.html">Effect</a></td></tr>
 <tr class="memitem:aeda5516439f9e1c0f793cafc7ea6e898 inherit pub_methods_class_effect" id="r_aeda5516439f9e1c0f793cafc7ea6e898"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_effect.html#aeda5516439f9e1c0f793cafc7ea6e898">Effect</a> (<a class="el" href="atlas_2effect_8h.html#a75cf3454fba9ce206c0c748892dc9867">RenderTargetEffect</a> t)</td></tr>
 <tr class="memdesc:aeda5516439f9e1c0f793cafc7ea6e898 inherit pub_methods_class_effect"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs a new <a class="el" href="class_effect.html" title="Base class for all post-processing effects that can be applied to a render target....">Effect</a> object.  <br /></td></tr>
@@ -147,18 +150,20 @@ Public Member Functions</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 id="header-pub-static-methods" class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
 <tr class="memitem:aad305ae0f9d04f580cb82af5cd94fc7d" id="r_aad305ae0f9d04f580cb82af5cd94fc7d"><td class="memItemLeft" align="right" valign="top">static std::shared_ptr&lt; <a class="el" href="class_dilation.html">Dilation</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aad305ae0f9d04f580cb82af5cd94fc7d">create</a> (<a class="el" href="struct_dilation_parameters.html">DilationParameters</a> p={})</td></tr>
-<tr class="memdesc:aad305ae0f9d04f580cb82af5cd94fc7d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a shared pointer to a Dialation effect.  <br /></td></tr>
+<tr class="memdesc:aad305ae0f9d04f580cb82af5cd94fc7d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a shared pointer to a <a class="el" href="class_dilation.html" title="Post-processing effect that expands bright fragments to create a blooming halo.">Dilation</a> effect.  <br /></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:ab2a67f78b367d2d5217b307f04b8c337" id="r_ab2a67f78b367d2d5217b307f04b8c337"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_dilation_parameters.html">DilationParameters</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab2a67f78b367d2d5217b307f04b8c337">params</a></td></tr>
+<tr class="memdesc:ab2a67f78b367d2d5217b307f04b8c337"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="class_dilation.html" title="Post-processing effect that expands bright fragments to create a blooming halo.">Dilation</a> parameters guiding the sampling kernel.  <br /></td></tr>
 <tr class="inherit_header pub_attribs_class_effect"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pub_attribs_class_effect')"><span class="dynarrow"><span class="arrowhead closed"></span></span>Public Attributes inherited from <a class="el" href="class_effect.html">Effect</a></td></tr>
 <tr class="memitem:a386f4d915f71aa8e5f177a221b8903da inherit pub_attribs_class_effect" id="r_a386f4d915f71aa8e5f177a221b8903da"><td class="memItemLeft" align="right" valign="top"><a class="el" href="atlas_2effect_8h.html#a75cf3454fba9ce206c0c748892dc9867">RenderTargetEffect</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_effect.html#a386f4d915f71aa8e5f177a221b8903da">type</a></td></tr>
 <tr class="memdesc:a386f4d915f71aa8e5f177a221b8903da inherit pub_attribs_class_effect"><td class="mdescLeft">&#160;</td><td class="mdescRight">The type of effect this instance represents.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
-<div class="textblock">
-<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00475">475</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
+<div class="textblock"><p>Post-processing effect that expands bright fragments to create a blooming halo. </p>
+
+<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00584">584</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a58cdd07db05b61181f4067869291a691" name="a58cdd07db05b61181f4067869291a691"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a58cdd07db05b61181f4067869291a691">&#9670;&#160;</a></span>Dilation()</h2>
@@ -183,13 +188,13 @@ Public Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00477">477</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  477</span>                                    {})</div>
-<div class="line"><span class="lineno">  478</span>        : <a class="code hl_function" href="class_effect.html#aeda5516439f9e1c0f793cafc7ea6e898">Effect</a>(<a class="code hl_enumeration" href="atlas_2effect_8h.html#a75cf3454fba9ce206c0c748892dc9867">RenderTargetEffect</a>::<a class="code hl_function" href="#a58cdd07db05b61181f4067869291a691">Dilation</a>), <a class="code hl_variable" href="#ab2a67f78b367d2d5217b307f04b8c337">params</a>(p) {}</div>
+<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00586">586</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  586</span>                                    {})</div>
+<div class="line"><span class="lineno">  587</span>        : <a class="code hl_function" href="class_effect.html#aeda5516439f9e1c0f793cafc7ea6e898">Effect</a>(<a class="code hl_enumeration" href="atlas_2effect_8h.html#a75cf3454fba9ce206c0c748892dc9867">RenderTargetEffect</a>::<a class="code hl_function" href="#a58cdd07db05b61181f4067869291a691">Dilation</a>), <a class="code hl_variable" href="#ab2a67f78b367d2d5217b307f04b8c337">params</a>(p) {}</div>
 <div class="ttc" id="aatlas_2effect_8h_html_a75cf3454fba9ce206c0c748892dc9867"><div class="ttname"><a href="atlas_2effect_8h.html#a75cf3454fba9ce206c0c748892dc9867">RenderTargetEffect</a></div><div class="ttdeci">RenderTargetEffect</div><div class="ttdoc">Enumeration of available post-processing effects that can be applied to render targets.</div><div class="ttdef"><b>Definition</b> <a href="atlas_2effect_8h_source.html#l00023">effect.h:23</a></div></div>
-<div class="ttc" id="aclass_dilation_html_a58cdd07db05b61181f4067869291a691"><div class="ttname"><a href="#a58cdd07db05b61181f4067869291a691">Dilation::Dilation</a></div><div class="ttdeci">Dilation(DilationParameters p={})</div><div class="ttdef"><b>Definition</b> <a href="atlas_2effect_8h_source.html#l00477">effect.h:477</a></div></div>
-<div class="ttc" id="aclass_dilation_html_ab2a67f78b367d2d5217b307f04b8c337"><div class="ttname"><a href="#ab2a67f78b367d2d5217b307f04b8c337">Dilation::params</a></div><div class="ttdeci">DilationParameters params</div><div class="ttdef"><b>Definition</b> <a href="atlas_2effect_8h_source.html#l00489">effect.h:489</a></div></div>
-<div class="ttc" id="aclass_effect_html_aeda5516439f9e1c0f793cafc7ea6e898"><div class="ttname"><a href="class_effect.html#aeda5516439f9e1c0f793cafc7ea6e898">Effect::Effect</a></div><div class="ttdeci">Effect(RenderTargetEffect t)</div><div class="ttdoc">Constructs a new Effect object.</div><div class="ttdef"><b>Definition</b> <a href="atlas_2effect_8h_source.html#l00079">effect.h:79</a></div></div>
+<div class="ttc" id="aclass_dilation_html_a58cdd07db05b61181f4067869291a691"><div class="ttname"><a href="#a58cdd07db05b61181f4067869291a691">Dilation::Dilation</a></div><div class="ttdeci">Dilation(DilationParameters p={})</div><div class="ttdef"><b>Definition</b> <a href="atlas_2effect_8h_source.html#l00586">effect.h:586</a></div></div>
+<div class="ttc" id="aclass_dilation_html_ab2a67f78b367d2d5217b307f04b8c337"><div class="ttname"><a href="#ab2a67f78b367d2d5217b307f04b8c337">Dilation::params</a></div><div class="ttdeci">DilationParameters params</div><div class="ttdoc">Dilation parameters guiding the sampling kernel.</div><div class="ttdef"><b>Definition</b> <a href="atlas_2effect_8h_source.html#l00601">effect.h:601</a></div></div>
+<div class="ttc" id="aclass_effect_html_aeda5516439f9e1c0f793cafc7ea6e898"><div class="ttname"><a href="class_effect.html#aeda5516439f9e1c0f793cafc7ea6e898">Effect::Effect</a></div><div class="ttdeci">Effect(RenderTargetEffect t)</div><div class="ttdoc">Constructs a new Effect object.</div><div class="ttdef"><b>Definition</b> <a href="atlas_2effect_8h_source.html#l00100">effect.h:100</a></div></div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -221,7 +226,7 @@ Public Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Applies all dialation parameters to the shader program. </p>
+<p>Applies all dilation parameters to the shader program. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">program</td><td>The shader program to apply the effect to. </td></tr>
@@ -232,16 +237,16 @@ Public Attributes</h2></td></tr>
 
 <p>Reimplemented from <a class="el" href="class_effect.html#af243986ba49a2e7ea9a3dcd002f7fb63">Effect</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00496">496</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  496</span>                                                                    {</div>
-<div class="line"><span class="lineno">  497</span>        program.<a class="code hl_function" href="struct_shader_program.html#ad3586861fab8ec713553764fee6fa0c1">setUniform1f</a>(<span class="stringliteral">&quot;EffectFloat1[&quot;</span> + std::to_string((<span class="keywordtype">int</span>)index) + <span class="stringliteral">&quot;]&quot;</span>,</div>
-<div class="line"><span class="lineno">  498</span>                             (<span class="keywordtype">float</span>)<a class="code hl_variable" href="#ab2a67f78b367d2d5217b307f04b8c337">params</a>.size);</div>
-<div class="line"><span class="lineno">  499</span>        program.<a class="code hl_function" href="struct_shader_program.html#ad3586861fab8ec713553764fee6fa0c1">setUniform1f</a>(<span class="stringliteral">&quot;EffectFloat2[&quot;</span> + std::to_string((<span class="keywordtype">int</span>)index) + <span class="stringliteral">&quot;]&quot;</span>,</div>
-<div class="line"><span class="lineno">  500</span>                             <a class="code hl_variable" href="#ab2a67f78b367d2d5217b307f04b8c337">params</a>.separation);</div>
-<div class="line"><span class="lineno">  501</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00608">608</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  608</span>                                                                    {</div>
+<div class="line"><span class="lineno">  609</span>        program.<a class="code hl_function" href="struct_shader_program.html#ad3586861fab8ec713553764fee6fa0c1">setUniform1f</a>(<span class="stringliteral">&quot;EffectFloat1[&quot;</span> + std::to_string((<span class="keywordtype">int</span>)index) + <span class="stringliteral">&quot;]&quot;</span>,</div>
+<div class="line"><span class="lineno">  610</span>                             (<span class="keywordtype">float</span>)<a class="code hl_variable" href="#ab2a67f78b367d2d5217b307f04b8c337">params</a>.size);</div>
+<div class="line"><span class="lineno">  611</span>        program.<a class="code hl_function" href="struct_shader_program.html#ad3586861fab8ec713553764fee6fa0c1">setUniform1f</a>(<span class="stringliteral">&quot;EffectFloat2[&quot;</span> + std::to_string((<span class="keywordtype">int</span>)index) + <span class="stringliteral">&quot;]&quot;</span>,</div>
+<div class="line"><span class="lineno">  612</span>                             <a class="code hl_variable" href="#ab2a67f78b367d2d5217b307f04b8c337">params</a>.separation);</div>
+<div class="line"><span class="lineno">  613</span>    }</div>
 <div class="ttc" id="astruct_shader_program_html_ad3586861fab8ec713553764fee6fa0c1"><div class="ttname"><a href="struct_shader_program.html#ad3586861fab8ec713553764fee6fa0c1">ShaderProgram::setUniform1f</a></div><div class="ttdeci">void setUniform1f(std::string name, float v0)</div><div class="ttdoc">Sets a float uniform variable in the shader program.</div></div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="atlas_2effect_8h_source.html#l00489">params</a>, and <a class="el" href="struct_shader_program.html#ad3586861fab8ec713553764fee6fa0c1">ShaderProgram::setUniform1f()</a>.</p>
+<p class="reference">References <a class="el" href="atlas_2effect_8h_source.html#l00601">params</a>, and <a class="el" href="struct_shader_program.html#ad3586861fab8ec713553764fee6fa0c1">ShaderProgram::setUniform1f()</a>.</p>
 
 </div>
 </div>
@@ -268,19 +273,19 @@ Public Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>Creates a shared pointer to a Dialation effect. </p>
+<p>Creates a shared pointer to a <a class="el" href="class_dilation.html" title="Post-processing effect that expands bright fragments to create a blooming halo.">Dilation</a> effect. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">p</td><td>The dialation parameters to use. </td></tr>
+    <tr><td class="paramname">p</td><td>The dilation parameters to use. </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>(std::shared_ptr&lt;Dialation&gt;) The created dialation effect. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>(std::shared_ptr&lt;Dilation&gt;) The created dilation effect. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00486">486</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  486</span>                                                                 {}) {</div>
-<div class="line"><span class="lineno">  487</span>        <span class="keywordflow">return</span> std::make_shared&lt;Dilation&gt;(p);</div>
-<div class="line"><span class="lineno">  488</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00595">595</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  595</span>                                                                 {}) {</div>
+<div class="line"><span class="lineno">  596</span>        <span class="keywordflow">return</span> std::make_shared&lt;Dilation&gt;(p);</div>
+<div class="line"><span class="lineno">  597</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -297,7 +302,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00489">489</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
+<p><a class="el" href="class_dilation.html" title="Post-processing effect that expands bright fragments to create a blooming halo.">Dilation</a> parameters guiding the sampling kernel. </p>
+
+<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00601">601</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
 
 </div>
 </div>
