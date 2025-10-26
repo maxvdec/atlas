@@ -39,6 +39,7 @@ var hierarchy =
       [ "Grayscale", "class_grayscale.html", null ],
       [ "Inversion", "class_inversion.html", null ],
       [ "MotionBlur", "class_motion_blur.html", null ],
+      [ "Pixelation", "class_pixelation.html", null ],
       [ "Posterization", "class_posterization.html", null ],
       [ "Sharpen", "class_sharpen.html", null ]
     ] ],
@@ -63,6 +64,7 @@ var hierarchy =
     [ "Particle", "struct_particle.html", null ],
     [ "ParticleSettings", "struct_particle_settings.html", null ],
     [ "PerlinNoise", "struct_perlin_noise.html", null ],
+    [ "PixelationParameters", "struct_pixelation_parameters.html", null ],
     [ "Point", "struct_point.html", null ],
     [ "PointLightConstants", "struct_point_light_constants.html", null ],
     [ "Position2d", "struct_position2d.html", null ],

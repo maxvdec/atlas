@@ -140,8 +140,9 @@ Inheritance diagram for Effect:</div>
 <area href="class_grayscale.html" title="Post-processing effect that converts the rendered image to grayscale by calculating luminance." alt="Grayscale" shape="rect" coords="139,280,268,304"/>
 <area href="class_inversion.html" title="Post-processing effect that inverts all colors in the rendered image. White becomes black,..." alt="Inversion" shape="rect" coords="139,336,268,360"/>
 <area href="class_motion_blur.html" alt="MotionBlur" shape="rect" coords="139,392,268,416"/>
-<area href="class_posterization.html" alt="Posterization" shape="rect" coords="139,448,268,472"/>
-<area href="class_sharpen.html" title="Post-processing effect that applies a sharpening kernel to enhance edges and details in the rendered ..." alt="Sharpen" shape="rect" coords="139,504,268,528"/>
+<area href="class_pixelation.html" alt="Pixelation" shape="rect" coords="139,448,268,472"/>
+<area href="class_posterization.html" alt="Posterization" shape="rect" coords="139,504,268,528"/>
+<area href="class_sharpen.html" title="Post-processing effect that applies a sharpening kernel to enhance edges and details in the rendered ..." alt="Sharpen" shape="rect" coords="139,560,268,584"/>
   </map>
 </div></div>
 <table class="memberdecls">
@@ -160,7 +161,7 @@ Public Attributes</h2></td></tr>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Base class for all post-processing effects that can be applied to a render target. Effects are applied via shader uniforms. </p>
 
-<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00064">64</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00065">65</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="aeda5516439f9e1c0f793cafc7ea6e898" name="aeda5516439f9e1c0f793cafc7ea6e898"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aeda5516439f9e1c0f793cafc7ea6e898">&#9670;&#160;</a></span>Effect()</h2>
@@ -193,11 +194,11 @@ Public Attributes</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00076">76</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   76</span>: <a class="code hl_variable" href="#a386f4d915f71aa8e5f177a221b8903da">type</a>(t) {}</div>
-<div class="ttc" id="aclass_effect_html_a386f4d915f71aa8e5f177a221b8903da"><div class="ttname"><a href="#a386f4d915f71aa8e5f177a221b8903da">Effect::type</a></div><div class="ttdeci">RenderTargetEffect type</div><div class="ttdoc">The type of effect this instance represents.</div><div class="ttdef"><b>Definition</b> <a href="atlas_2effect_8h_source.html#l00070">effect.h:70</a></div></div>
+<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00077">77</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   77</span>: <a class="code hl_variable" href="#a386f4d915f71aa8e5f177a221b8903da">type</a>(t) {}</div>
+<div class="ttc" id="aclass_effect_html_a386f4d915f71aa8e5f177a221b8903da"><div class="ttname"><a href="#a386f4d915f71aa8e5f177a221b8903da">Effect::type</a></div><div class="ttdeci">RenderTargetEffect type</div><div class="ttdoc">The type of effect this instance represents.</div><div class="ttdef"><b>Definition</b> <a href="atlas_2effect_8h_source.html#l00071">effect.h:71</a></div></div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="atlas_2effect_8h_source.html#l00070">type</a>.</p>
+<p class="reference">References <a class="el" href="atlas_2effect_8h_source.html#l00071">type</a>.</p>
 
 </div>
 </div>
@@ -238,10 +239,10 @@ Public Attributes</h2></td></tr>
   </dd>
 </dl>
 
-<p>Reimplemented in <a class="el" href="class_blur.html#a14bc8c56a9e987bed5b6f5094f3b5fbf">Blur</a>, <a class="el" href="class_chromatic_aberration.html#a4d51362661bc7839e82d8bbbcf282d01">ChromaticAberration</a>, <a class="el" href="class_color_correction.html#a4f3ee4341b7750d947d5f7ab7ead32c9">ColorCorrection</a>, <a class="el" href="class_motion_blur.html#a12b61c5960aa5b3e2762dfb0f279c39c">MotionBlur</a>, and <a class="el" href="class_posterization.html#ae27f1349802a3c47bdd05a5719b9d58d">Posterization</a>.</p>
+<p>Reimplemented in <a class="el" href="class_blur.html#a14bc8c56a9e987bed5b6f5094f3b5fbf">Blur</a>, <a class="el" href="class_chromatic_aberration.html#a4d51362661bc7839e82d8bbbcf282d01">ChromaticAberration</a>, <a class="el" href="class_color_correction.html#a4f3ee4341b7750d947d5f7ab7ead32c9">ColorCorrection</a>, <a class="el" href="class_motion_blur.html#a12b61c5960aa5b3e2762dfb0f279c39c">MotionBlur</a>, <a class="el" href="class_pixelation.html#aec5233b43ff25d8d560d08e0e29dde5c">Pixelation</a>, and <a class="el" href="class_posterization.html#ae27f1349802a3c47bdd05a5719b9d58d">Posterization</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00083">83</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   83</span>{};</div>
+<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00084">84</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   84</span>{};</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -260,7 +261,7 @@ Public Attributes</h2></td></tr>
 
 <p>The type of effect this instance represents. </p>
 
-<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00070">70</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00071">71</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
 
 </div>
 </div>

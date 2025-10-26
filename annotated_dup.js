@@ -67,6 +67,8 @@ var annotated_dup =
     [ "ParticleEmitter", "class_particle_emitter.html", "class_particle_emitter" ],
     [ "ParticleSettings", "struct_particle_settings.html", "struct_particle_settings" ],
     [ "PerlinNoise", "struct_perlin_noise.html", "struct_perlin_noise" ],
+    [ "Pixelation", "class_pixelation.html", "class_pixelation" ],
+    [ "PixelationParameters", "struct_pixelation_parameters.html", "struct_pixelation_parameters" ],
     [ "PlainGenerator", "class_plain_generator.html", "class_plain_generator" ],
     [ "Point", "struct_point.html", "struct_point" ],
     [ "PointLightConstants", "struct_point_light_constants.html", "struct_point_light_constants" ],

@@ -14,6 +14,8 @@ var atlas_2effect_8h =
     [ "ChromaticAberration", "class_chromatic_aberration.html", "class_chromatic_aberration" ],
     [ "PosterizationParameters", "struct_posterization_parameters.html", "struct_posterization_parameters" ],
     [ "Posterization", "class_posterization.html", "class_posterization" ],
+    [ "PixelationParameters", "struct_pixelation_parameters.html", "struct_pixelation_parameters" ],
+    [ "Pixelation", "class_pixelation.html", "class_pixelation" ],
     [ "RenderTargetEffect", "atlas_2effect_8h.html#a75cf3454fba9ce206c0c748892dc9867", [
       [ "Invert", "atlas_2effect_8h.html#a75cf3454fba9ce206c0c748892dc9867a9b8958acb7be504bb5f55f17c0eea366", null ],
       [ "Grayscale", "atlas_2effect_8h.html#a75cf3454fba9ce206c0c748892dc9867ad3f6975213fb5546d8486b54b025dbd7", null ],
@@ -23,6 +25,7 @@ var atlas_2effect_8h =
       [ "ColorCorrection", "atlas_2effect_8h.html#a75cf3454fba9ce206c0c748892dc9867a1cdf47c16cbe271bf638c6f38a7bbcb5", null ],
       [ "MotionBlur", "atlas_2effect_8h.html#a75cf3454fba9ce206c0c748892dc9867afe48233724644e35fefdd8e6600946a3", null ],
       [ "ChromaticAberration", "atlas_2effect_8h.html#a75cf3454fba9ce206c0c748892dc9867a7a76edc1634ddd649d2c8665442dc7fc", null ],
-      [ "Posterization", "atlas_2effect_8h.html#a75cf3454fba9ce206c0c748892dc9867a82ff96dcdb3e8c63154ddca3076e41f8", null ]
+      [ "Posterization", "atlas_2effect_8h.html#a75cf3454fba9ce206c0c748892dc9867a82ff96dcdb3e8c63154ddca3076e41f8", null ],
+      [ "Pixelation", "atlas_2effect_8h.html#a75cf3454fba9ce206c0c748892dc9867aa5a2669472a221db75ed3b53ae9fca8a", null ]
     ] ]
 ];
