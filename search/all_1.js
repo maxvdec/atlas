@@ -21,7 +21,7 @@ var searchData=
   ['blinn_5fphong_5ffrag_18',['BLINN_PHONG_FRAG',['../default__shaders_8h.html#ac9c5a1747c6e8231627d39aada2406d8',1,'default_shaders.h']]],
   ['bloomelement_19',['BloomElement',['../struct_bloom_element.html',1,'']]],
   ['bloomrendertarget_20',['BloomRenderTarget',['../class_bloom_render_target.html',1,'BloomRenderTarget'],['../class_bloom_render_target.html#ac7468b812b0f099d6a87d6c1f67e13e9',1,'BloomRenderTarget::BloomRenderTarget()']]],
-  ['blue_21',['blue',['../struct_color.html#af0d455b2d0f2366422127f4e70cbd594',1,'Color']]],
+  ['blue_21',['blue',['../struct_chromatic_aberration_parameters.html#a1e9a5eb307bea786a23563942d6a23a8',1,'ChromaticAberrationParameters::blue'],['../struct_color.html#af0d455b2d0f2366422127f4e70cbd594',1,'Color::blue()']]],
   ['blur_22',['Blur',['../class_blur.html',1,'Blur'],['../class_blur.html#a238c403cc1e673d3a93d2e5fd76b5fac',1,'Blur::Blur()'],['../atlas_2effect_8h.html#a75cf3454fba9ce206c0c748892dc9867a8b52de510bc5497ac43abfe566be48ab',1,'Blur:&#160;effect.h']]],
   ['blurredtexture_23',['blurredTexture',['../class_render_target.html#aa621bfaf5ce2add2dc83b470d6b32c50',1,'RenderTarget']]],
   ['body_24',['Body',['../class_body.html',1,'']]],

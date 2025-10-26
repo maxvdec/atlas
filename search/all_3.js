@@ -25,7 +25,7 @@ var searchData=
   ['desiredattributes_22',['desiredAttributes',['../struct_vertex_shader.html#aa07b8f046212ba235effca38c90269df',1,'VertexShader::desiredAttributes'],['../struct_shader_program.html#a3d6198b12f2a30d592c85fb521690764',1,'ShaderProgram::desiredAttributes']]],
   ['destroy_23',['destroy',['../class_bloom_render_target.html#a43c1f8073611201cdf11c3889a5f1b71',1,'BloomRenderTarget']]],
   ['devicename_24',['deviceName',['../class_audio_engine.html#ac71e034fcf3e3fad68fce2124d500c2e',1,'AudioEngine']]],
-  ['direction_25',['direction',['../class_directional_light.html#a67096230489c50468d6c081a7c894d99',1,'DirectionalLight::direction'],['../struct_spotlight.html#aeb10b51233ba3eb1933738e3ac8cfae6',1,'Spotlight::direction']]],
+  ['direction_25',['direction',['../struct_chromatic_aberration_parameters.html#a1f9baa34843f5bc1e7e1248ee56f9d12',1,'ChromaticAberrationParameters::direction'],['../class_directional_light.html#a67096230489c50468d6c081a7c894d99',1,'DirectionalLight::direction'],['../struct_spotlight.html#aeb10b51233ba3eb1933738e3ac8cfae6',1,'Spotlight::direction']]],
   ['direction3d_26',['Direction3d',['../units_8h.html#ab8c8d5e469ffb9cf502ea12708d544f5',1,'units.h']]],
   ['directional_20light_27',['Creating a Directional Light',['../tutorial.html#autotoc_md7',1,'']]],
   ['directionallight_28',['DirectionalLight',['../class_directional_light.html',1,'DirectionalLight'],['../class_window.html#a7c2d49dc122804ba058a10c20e8d048d',1,'Window::DirectionalLight()'],['../class_directional_light.html#a05bb433ce668e35039e3caa41e8f656f',1,'DirectionalLight::DirectionalLight()']]],

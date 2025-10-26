@@ -133,13 +133,14 @@ Inheritance diagram for Effect:</div>
  <div class="center">
   <img src="class_effect.png" usemap="#Effect_map" alt=""/>
   <map id="Effect_map" name="Effect_map">
-<area href="class_blur.html" title="Post-processing effect that applies a Gaussian blur to the rendered image. The blur magnitude can be ..." alt="Blur" shape="rect" coords="0,56,103,80"/>
-<area href="class_color_correction.html" title="Post-processing effect that applies comprehensive color correction to the rendered image,..." alt="ColorCorrection" shape="rect" coords="113,56,216,80"/>
-<area href="class_edge_detection.html" title="Post-processing effect that detects and highlights edges in the rendered image using an edge detectio..." alt="EdgeDetection" shape="rect" coords="226,56,329,80"/>
-<area href="class_grayscale.html" title="Post-processing effect that converts the rendered image to grayscale by calculating luminance." alt="Grayscale" shape="rect" coords="339,56,442,80"/>
-<area href="class_inversion.html" title="Post-processing effect that inverts all colors in the rendered image. White becomes black,..." alt="Inversion" shape="rect" coords="452,56,555,80"/>
-<area href="class_motion_blur.html" alt="MotionBlur" shape="rect" coords="565,56,668,80"/>
-<area href="class_sharpen.html" title="Post-processing effect that applies a sharpening kernel to enhance edges and details in the rendered ..." alt="Sharpen" shape="rect" coords="678,56,781,80"/>
+<area href="class_blur.html" title="Post-processing effect that applies a Gaussian blur to the rendered image. The blur magnitude can be ..." alt="Blur" shape="rect" coords="139,56,268,80"/>
+<area href="class_chromatic_aberration.html" alt="ChromaticAberration" shape="rect" coords="139,112,268,136"/>
+<area href="class_color_correction.html" title="Post-processing effect that applies comprehensive color correction to the rendered image,..." alt="ColorCorrection" shape="rect" coords="139,168,268,192"/>
+<area href="class_edge_detection.html" title="Post-processing effect that detects and highlights edges in the rendered image using an edge detectio..." alt="EdgeDetection" shape="rect" coords="139,224,268,248"/>
+<area href="class_grayscale.html" title="Post-processing effect that converts the rendered image to grayscale by calculating luminance." alt="Grayscale" shape="rect" coords="139,280,268,304"/>
+<area href="class_inversion.html" title="Post-processing effect that inverts all colors in the rendered image. White becomes black,..." alt="Inversion" shape="rect" coords="139,336,268,360"/>
+<area href="class_motion_blur.html" alt="MotionBlur" shape="rect" coords="139,392,268,416"/>
+<area href="class_sharpen.html" title="Post-processing effect that applies a sharpening kernel to enhance edges and details in the rendered ..." alt="Sharpen" shape="rect" coords="139,448,268,472"/>
   </map>
 </div></div>
 <table class="memberdecls">
@@ -158,7 +159,7 @@ Public Attributes</h2></td></tr>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Base class for all post-processing effects that can be applied to a render target. Effects are applied via shader uniforms. </p>
 
-<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00061">61</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00063">63</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="aeda5516439f9e1c0f793cafc7ea6e898" name="aeda5516439f9e1c0f793cafc7ea6e898"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aeda5516439f9e1c0f793cafc7ea6e898">&#9670;&#160;</a></span>Effect()</h2>
@@ -191,11 +192,11 @@ Public Attributes</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00073">73</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   73</span>: <a class="code hl_variable" href="#a386f4d915f71aa8e5f177a221b8903da">type</a>(t) {}</div>
-<div class="ttc" id="aclass_effect_html_a386f4d915f71aa8e5f177a221b8903da"><div class="ttname"><a href="#a386f4d915f71aa8e5f177a221b8903da">Effect::type</a></div><div class="ttdeci">RenderTargetEffect type</div><div class="ttdoc">The type of effect this instance represents.</div><div class="ttdef"><b>Definition</b> <a href="atlas_2effect_8h_source.html#l00067">effect.h:67</a></div></div>
+<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00075">75</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   75</span>: <a class="code hl_variable" href="#a386f4d915f71aa8e5f177a221b8903da">type</a>(t) {}</div>
+<div class="ttc" id="aclass_effect_html_a386f4d915f71aa8e5f177a221b8903da"><div class="ttname"><a href="#a386f4d915f71aa8e5f177a221b8903da">Effect::type</a></div><div class="ttdeci">RenderTargetEffect type</div><div class="ttdoc">The type of effect this instance represents.</div><div class="ttdef"><b>Definition</b> <a href="atlas_2effect_8h_source.html#l00069">effect.h:69</a></div></div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="atlas_2effect_8h_source.html#l00067">type</a>.</p>
+<p class="reference">References <a class="el" href="atlas_2effect_8h_source.html#l00069">type</a>.</p>
 
 </div>
 </div>
@@ -236,10 +237,10 @@ Public Attributes</h2></td></tr>
   </dd>
 </dl>
 
-<p>Reimplemented in <a class="el" href="class_blur.html#a14bc8c56a9e987bed5b6f5094f3b5fbf">Blur</a>, <a class="el" href="class_color_correction.html#a4f3ee4341b7750d947d5f7ab7ead32c9">ColorCorrection</a>, and <a class="el" href="class_motion_blur.html#a12b61c5960aa5b3e2762dfb0f279c39c">MotionBlur</a>.</p>
+<p>Reimplemented in <a class="el" href="class_blur.html#a14bc8c56a9e987bed5b6f5094f3b5fbf">Blur</a>, <a class="el" href="class_chromatic_aberration.html#a4d51362661bc7839e82d8bbbcf282d01">ChromaticAberration</a>, <a class="el" href="class_color_correction.html#a4f3ee4341b7750d947d5f7ab7ead32c9">ColorCorrection</a>, and <a class="el" href="class_motion_blur.html#a12b61c5960aa5b3e2762dfb0f279c39c">MotionBlur</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00080">80</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   80</span>{};</div>
+<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00082">82</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   82</span>{};</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -258,7 +259,7 @@ Public Attributes</h2></td></tr>
 
 <p>The type of effect this instance represents. </p>
 
-<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00067">67</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00069">69</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
 
 </div>
 </div>

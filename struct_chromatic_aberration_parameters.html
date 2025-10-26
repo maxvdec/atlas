@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.14.0"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Atlas: MotionBlurParameters Struct Reference</title>
+<title>Atlas: ChromaticAberrationParameters Struct Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -89,7 +89,7 @@ $(function() {
   </div>
 </div>
 <script type="text/javascript">
-$(function(){initNavTree('struct_motion_blur_parameters.html','','struct_motion_blur_parameters-members'); });
+$(function(){initNavTree('struct_chromatic_aberration_parameters.html','','struct_chromatic_aberration_parameters-members'); });
 </script>
 <div id="container">
 <div id="doc-content">
@@ -117,8 +117,8 @@ $(function(){initNavTree('struct_motion_blur_parameters.html','','struct_motion_
 <div class="header">
   <div class="summary">
 <a href="#pub-attribs">Public Attributes</a> &#124;
-<a href="struct_motion_blur_parameters-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">MotionBlurParameters Struct Reference</div></div>
+<a href="struct_chromatic_aberration_parameters-members.html">List of all members</a>  </div>
+  <div class="headertitle"><div class="title">ChromaticAberrationParameters Struct Reference</div></div>
 </div><!--header-->
 <div class="contents">
 
@@ -126,42 +126,76 @@ $(function(){initNavTree('struct_motion_blur_parameters.html','','struct_motion_
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:afa5e5a78bf3b2c87efc54c5f626bb726" id="r_afa5e5a78bf3b2c87efc54c5f626bb726"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#afa5e5a78bf3b2c87efc54c5f626bb726">size</a> = 8</td></tr>
-<tr class="memitem:aced3d24975df102d318417c98b48fa80" id="r_aced3d24975df102d318417c98b48fa80"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aced3d24975df102d318417c98b48fa80">separation</a> = 1.0</td></tr>
+<tr class="memitem:a28e5f08629979677e9bcb31a244c52f8" id="r_a28e5f08629979677e9bcb31a244c52f8"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a28e5f08629979677e9bcb31a244c52f8">red</a> = 0.01</td></tr>
+<tr class="memitem:ab9c3d5bef2153bafa0b0b8aee6f6178f" id="r_ab9c3d5bef2153bafa0b0b8aee6f6178f"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab9c3d5bef2153bafa0b0b8aee6f6178f">green</a> = 0.006</td></tr>
+<tr class="memitem:a1e9a5eb307bea786a23563942d6a23a8" id="r_a1e9a5eb307bea786a23563942d6a23a8"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1e9a5eb307bea786a23563942d6a23a8">blue</a> = -0.006</td></tr>
+<tr class="memitem:a1f9baa34843f5bc1e7e1248ee56f9d12" id="r_a1f9baa34843f5bc1e7e1248ee56f9d12"><td class="memItemLeft" align="right" valign="top"><a class="el" href="units_8h.html#a21d9ea40a845ceda7b4377542173b58f">Magnitude2d</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1f9baa34843f5bc1e7e1248ee56f9d12">direction</a></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock">
-<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00327">327</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00360">360</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
 </div><a name="doc-variable-members" id="doc-variable-members"></a><h2 id="header-doc-variable-members" class="groupheader">Member Data Documentation</h2>
-<a id="aced3d24975df102d318417c98b48fa80" name="aced3d24975df102d318417c98b48fa80"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aced3d24975df102d318417c98b48fa80">&#9670;&#160;</a></span>separation</h2>
+<a id="a1e9a5eb307bea786a23563942d6a23a8" name="a1e9a5eb307bea786a23563942d6a23a8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1e9a5eb307bea786a23563942d6a23a8">&#9670;&#160;</a></span>blue</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">float MotionBlurParameters::separation = 1.0</td>
+          <td class="memname">float ChromaticAberrationParameters::blue = -0.006</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00329">329</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00363">363</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
 
 </div>
 </div>
-<a id="afa5e5a78bf3b2c87efc54c5f626bb726" name="afa5e5a78bf3b2c87efc54c5f626bb726"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afa5e5a78bf3b2c87efc54c5f626bb726">&#9670;&#160;</a></span>size</h2>
+<a id="a1f9baa34843f5bc1e7e1248ee56f9d12" name="a1f9baa34843f5bc1e7e1248ee56f9d12"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1f9baa34843f5bc1e7e1248ee56f9d12">&#9670;&#160;</a></span>direction</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">int MotionBlurParameters::size = 8</td>
+          <td class="memname"><a class="el" href="units_8h.html#a21d9ea40a845ceda7b4377542173b58f">Magnitude2d</a> ChromaticAberrationParameters::direction</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00328">328</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00364">364</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
+
+</div>
+</div>
+<a id="ab9c3d5bef2153bafa0b0b8aee6f6178f" name="ab9c3d5bef2153bafa0b0b8aee6f6178f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab9c3d5bef2153bafa0b0b8aee6f6178f">&#9670;&#160;</a></span>green</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">float ChromaticAberrationParameters::green = 0.006</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00362">362</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
+
+</div>
+</div>
+<a id="a28e5f08629979677e9bcb31a244c52f8" name="a28e5f08629979677e9bcb31a244c52f8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a28e5f08629979677e9bcb31a244c52f8">&#9670;&#160;</a></span>red</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">float ChromaticAberrationParameters::red = 0.01</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00361">361</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
 
 </div>
 </div>
@@ -174,7 +208,7 @@ Public Attributes</h2></td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a href="struct_motion_blur_parameters.html">MotionBlurParameters</a></li>
+    <li class="navelem"><a href="struct_chromatic_aberration_parameters.html">ChromaticAberrationParameters</a></li>
     <li class="footer">Generated by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.14.0 </li>
   </ul>
 </div>

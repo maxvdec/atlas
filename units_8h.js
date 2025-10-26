@@ -7,6 +7,7 @@ var units_8h =
     [ "Radians", "struct_radians.html", "struct_radians" ],
     [ "Size2d", "struct_size2d.html", "struct_size2d" ],
     [ "Id", "units_8h.html#a5c9d258201f281b8ad0fb4385b7ef668", null ],
+    [ "Magnitude2d", "units_8h.html#a21d9ea40a845ceda7b4377542173b58f", null ],
     [ "Magnitude3d", "units_8h.html#af1efe03080186b94608ab2d50c060fe5", null ],
     [ "Movement2d", "units_8h.html#a850e32afea691ea6f3975e6f7cec14d0", null ],
     [ "Normal3d", "units_8h.html#abd755c400f9d4026ef36e03056829444", null ],

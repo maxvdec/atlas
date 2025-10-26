@@ -10,5 +10,6 @@ var searchData=
   ['gnormal_7',['gNormal',['../class_render_target.html#a9838f6c1c3ecf06a6910267b82b488fc',1,'RenderTarget']]],
   ['gposition_8',['gPosition',['../class_render_target.html#a99a07837a6572cf73bf513bb1bff184d',1,'RenderTarget']]],
   ['gravity_9',['gravity',['../struct_particle_settings.html#a920c9377a44a8a7492a6fcc200173a45',1,'ParticleSettings::gravity'],['../class_window.html#a84bf9cade8239d6aa81287e05f2fcafb',1,'Window::gravity']]],
-  ['groupname_10',['groupName',['../struct_resource_group.html#a8bbe2ef4354c44337303a89d65c2e0fc',1,'ResourceGroup']]]
+  ['green_10',['green',['../struct_chromatic_aberration_parameters.html#ab9c3d5bef2153bafa0b0b8aee6f6178f',1,'ChromaticAberrationParameters']]],
+  ['groupname_11',['groupName',['../struct_resource_group.html#a8bbe2ef4354c44337303a89d65c2e0fc',1,'ResourceGroup']]]
 ];

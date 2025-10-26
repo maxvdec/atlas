@@ -5,7 +5,7 @@ var searchData=
   ['radians_2',['Radians',['../struct_radians.html',1,'']]],
   ['radius_3',['radius',['../struct_point_light_constants.html#a9c6a4d43f99919ad7d3cf864e6dd3e66',1,'PointLightConstants::radius'],['../struct_light_bloom.html#a165b93c57ba198bb5a5643594c1ead12',1,'LightBloom::radius'],['../class_sphere.html#ae6f42f0da6679a2f0b4a22681ccccf38',1,'Sphere::radius']]],
   ['raysphere_4',['raySphere',['../namespacebezel.html#a333bd47a0665d37b009806bcec4a3430',1,'bezel']]],
-  ['red_5',['red',['../struct_color.html#aacbef2c60156c8c2bb422206d3d9c560',1,'Color']]],
+  ['red_5',['red',['../struct_chromatic_aberration_parameters.html#a28e5f08629979677e9bcb31a244c52f8',1,'ChromaticAberrationParameters::red'],['../struct_color.html#aacbef2c60156c8c2bb422206d3d9c560',1,'Color::red()']]],
   ['reflectivity_6',['reflectivity',['../struct_material.html#a8d977d0b7386da7e3ac6879f458d3f0f',1,'Material']]],
   ['refreshrate_7',['refreshRate',['../struct_video_mode.html#a635022bd3a9dcbf3175d2a60f5bf35c5',1,'VideoMode']]],
   ['releasemouse_8',['releaseMouse',['../class_window.html#a82a904e9db9c0aa3e6e235da92a79ab4',1,'Window']]],

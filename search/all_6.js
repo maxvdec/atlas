@@ -74,7 +74,7 @@ var searchData=
   ['gravity_71',['gravity',['../struct_particle_settings.html#a920c9377a44a8a7492a6fcc200173a45',1,'ParticleSettings::gravity'],['../class_window.html#a84bf9cade8239d6aa81287e05f2fcafb',1,'Window::gravity']]],
   ['gray_72',['gray',['../struct_color.html#aaef2f9d4914957f249ff647c84161d45',1,'Color']]],
   ['grayscale_73',['Grayscale',['../class_grayscale.html',1,'Grayscale'],['../class_grayscale.html#a77b70a449f9215358c6378fdb8c4bf2a',1,'Grayscale::Grayscale()'],['../atlas_2effect_8h.html#a75cf3454fba9ce206c0c748892dc9867ad3f6975213fb5546d8486b54b025dbd7',1,'Grayscale:&#160;effect.h']]],
-  ['green_74',['green',['../struct_color.html#ac506f80f2ec86bc439ff19c0f78063c7',1,'Color']]],
+  ['green_74',['green',['../struct_chromatic_aberration_parameters.html#ab9c3d5bef2153bafa0b0b8aee6f6178f',1,'ChromaticAberrationParameters::green'],['../struct_color.html#ac506f80f2ec86bc439ff19c0f78063c7',1,'Color::green()']]],
   ['ground_75',['Creating the ground',['../tutorial.html#autotoc_md13',1,'']]],
   ['groupname_76',['groupName',['../struct_resource_group.html#a8bbe2ef4354c44337303a89d65c2e0fc',1,'ResourceGroup']]]
 ];

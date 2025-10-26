@@ -18,6 +18,7 @@ var hierarchy =
     [ "Camera", "class_camera.html", null ],
     [ "Character", "struct_character.html", null ],
     [ "CheckerTile", "struct_checker_tile.html", null ],
+    [ "ChromaticAberrationParameters", "struct_chromatic_aberration_parameters.html", null ],
     [ "CollisionPair", "struct_collision_pair.html", null ],
     [ "Color", "struct_color.html", null ],
     [ "ColorCorrectionParameters", "struct_color_correction_parameters.html", null ],
@@ -32,6 +33,7 @@ var hierarchy =
     [ "Edge", "struct_edge.html", null ],
     [ "Effect", "class_effect.html", [
       [ "Blur", "class_blur.html", null ],
+      [ "ChromaticAberration", "class_chromatic_aberration.html", null ],
       [ "ColorCorrection", "class_color_correction.html", null ],
       [ "EdgeDetection", "class_edge_detection.html", null ],
       [ "Grayscale", "class_grayscale.html", null ],

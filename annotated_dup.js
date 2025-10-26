@@ -17,6 +17,8 @@ var annotated_dup =
     [ "Camera", "class_camera.html", "class_camera" ],
     [ "Character", "struct_character.html", "struct_character" ],
     [ "CheckerTile", "struct_checker_tile.html", "struct_checker_tile" ],
+    [ "ChromaticAberration", "class_chromatic_aberration.html", "class_chromatic_aberration" ],
+    [ "ChromaticAberrationParameters", "struct_chromatic_aberration_parameters.html", "struct_chromatic_aberration_parameters" ],
     [ "CollisionPair", "struct_collision_pair.html", "struct_collision_pair" ],
     [ "Color", "struct_color.html", "struct_color" ],
     [ "ColorCorrection", "class_color_correction.html", "class_color_correction" ],

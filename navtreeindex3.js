@@ -1,5 +1,11 @@
 var NAVTREEINDEX3 =
 {
+"functions_func_i.html":[2,3,1,8],
+"functions_func_l.html":[2,3,1,9],
+"functions_func_m.html":[2,3,1,10],
+"functions_func_n.html":[2,3,1,11],
+"functions_func_o.html":[2,3,1,12],
+"functions_func_p.html":[2,3,1,13],
 "functions_func_q.html":[2,3,1,14],
 "functions_func_r.html":[2,3,1,15],
 "functions_func_s.html":[2,3,1,16],
@@ -243,11 +249,5 @@ var NAVTREEINDEX3 =
 "namespacebezel.html#ae1cbf7eb4d59b77ad1501263bd0bfe0a":[1,0,1,6],
 "namespacebezel.html#af8877774f235c83bd99fa5719c446f08":[1,0,1,8],
 "namespacebezel.html#afc80ee126c9ecce4cc93fa92b30a3078":[1,0,1,40],
-"namespacebezel.html#afe9eb92b3b8e819d49b93f4437db8ad9":[1,0,1,1],
-"namespacebezel_1_1collisions.html":[1,0,1,0],
-"namespacebezel_1_1collisions.html#ac22c4b27897eefcbfdcc1513a545e1ab":[1,0,1,0,1],
-"namespacebezel_1_1collisions.html#ad1a004088d7b990c836565793861e573":[1,0,1,0,0],
-"namespacemembers.html":[1,1,0],
-"namespacemembers_func.html":[1,1,1],
-"namespaces.html":[1,0]
+"namespacebezel.html#afe9eb92b3b8e819d49b93f4437db8ad9":[1,0,1,1]
 };
