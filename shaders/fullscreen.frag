@@ -18,6 +18,7 @@ const int EFFECT_CHROMATIC_ABERRATION = 7;
 const int EFFECT_POSTERIZATION = 8;
 const int EFFECT_PIXELATION = 9;
 const int EFFECT_DILATION = 10;
+const int EFFECT_FILM_GRAIN = 11;
 
 const float offset = 1.0 / 300.0;
 const float exposure = 1.0;
@@ -161,6 +162,7 @@ uniform float focusDepth;
 uniform float focusRange;
 
 uniform int maxMipLevel;
+uniform float deltaTime;
 
 vec4 sampleColor(vec2 uv) {
     for (int i = 0; i < EffectCount; i++) {
@@ -336,6 +338,16 @@ vec4 applyColorEffects(vec4 color) {
             float level = lowerDiff <= upperDiff ? lower : upper;
             float adjustment = level / grayscale;
             color = adjustment * color;
+        } else if (Effects[i] == EFFECT_FILM_GRAIN) {
+            float amount = EffectFloat1[i];
+            float toRadians = 3.14 / 180.0;
+            float randomIntensity = fract(10000 * sin((gl_FragCoord.x + gl_FragCoord.y * deltaTime) * toRadians));
+
+            float grain = (randomIntensity * 2.0 - 1.0) * amount;
+
+            color.rgb += grain;
+
+            color.rgb = clamp(color.rgb, 0.0, 1.0);
         }
     }
     return color;
@@ -501,6 +513,8 @@ void main() {
     }
 
     color = applyFXAA(Texture, TexCoord);
+
+    color = applyColorEffects(color);
 
     if (hasDepthTexture == 1) {
         float depthValue = texture(DepthTexture, TexCoord).r;
