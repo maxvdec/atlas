@@ -43,7 +43,9 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [x] Lights
 - [x] Shadows (except for point lights)
 - [x] Post-processing effects
-- [ ] Sky, atmosphere, weather and fluid simulation system (Hydra)
+- [ ] Sky, atmosphere, weather and fluid simulation system (Hydra) **for alpha 4**
+- [ ] Cloud system **for alpha 4**
+- [ ] Night-day cycle system **for alpha 4**
 - [ ] Animation system (Mold)
 - [x] Instancing support
 - [x] Optimizations and performance improvements
@@ -51,8 +53,8 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [ ] Runtime independent of final executable
 - [ ] Scene packing
 - [x] Add deferred rendering for better performance with many lights
-- [x] Add PBR rendering **for alpha 3**
-- [x] Add other texture supports (normal, roughness, metallic, ao, etc.) **for alpha 3**
+- [x] Add PBR rendering 
+- [x] Add other texture supports (normal, roughness, metallic, ao, etc.) 
 - [x] Add HDR support
 - [x] Add SSAO
 - [x] Add soft shadows
@@ -62,23 +64,23 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [ ] Add support for constraints in Bezel
 - [ ] Add support for character controllers in Bezel
 - [ ] Add support for motors in Bezel
-- [x] Add volumetric lighting **for alpha 3**
+- [x] Add volumetric lighting
 - [x] Add bloom for lights
 - [x] Add depth of field
-- [x] Add terrain system (Aurora) **for alpha 3**
-- [x] Add motion blur **for alpha 3**
-- [x] Physically based bloom **for alpha 3**
-- [x] Add area lights **for alpha 3**
-- [ ] Screen-space reflections
-- [x] Add rim lighting **for alpha 3**
-- [x] Add chromatic aberration **for alpha 3**
-- [x] Add posterization **for alpha 3**
-- [x] Add pixelization **for alpha 3**
-- [x] Add dilation **for alpha 3**
-- [x] Add film grain **for alpha 3**
-- [x] Add LUT tables **for alpha 3**
-- [ ] Add foam and simple fluid rendering
-- [ ] Screen-space refractions
+- [x] Add terrain system (Aurora) 
+- [x] Add motion blur 
+- [x] Physically based bloom 
+- [x] Add area lights 
+- [ ] Screen-space reflections **for alpha 4**
+- [x] Add rim lighting 
+- [x] Add chromatic aberration 
+- [x] Add posterization
+- [x] Add pixelization 
+- [x] Add dilation 
+- [x] Add film grain 
+- [x] Add LUT tables 
+- [ ] Add foam and simple fluid rendering **for alpha 4**
+- [ ] Screen-space refractions **for alpha 4**
 
 ## Other features planned for the future
 
