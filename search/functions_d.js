@@ -9,8 +9,9 @@ var searchData=
   ['play_6',['play',['../class_audio_player.html#ac39242f27a57be2a3f4515c61864dd91',1,'AudioPlayer::play()'],['../class_audio_source.html#a4b27391ad7ea7a98b16fd163fcd0deec',1,'AudioSource::play()']]],
   ['playfrom_7',['playFrom',['../class_audio_source.html#a1f6570f5cbaa6a53d2a9a2166f59d10e',1,'AudioSource']]],
   ['point_8',['Point',['../struct_point.html#ad92f2337b839a94ce97dcdb439b4325a',1,'Point']]],
-  ['projecton1d_9',['projectOn1D',['../namespacebezel.html#a97d2a0d170ac93a2fea7898a0a9542bb',1,'bezel']]],
-  ['projecton2d_10',['projectOn2D',['../namespacebezel.html#a75e9d076d6bac61a2dae5a371fa53cef',1,'bezel']]],
-  ['projecton3d_11',['projectOn3D',['../namespacebezel.html#a6e541a1f93a9c6ea9bb15c486ed5abe7',1,'bezel']]],
-  ['purple_12',['purple',['../struct_color.html#aeacba31b803aae6ff36f2c317873c68d',1,'Color']]]
+  ['posterization_9',['Posterization',['../class_posterization.html#a669511eb820b3720373f7fb750aeffe7',1,'Posterization']]],
+  ['projecton1d_10',['projectOn1D',['../namespacebezel.html#a97d2a0d170ac93a2fea7898a0a9542bb',1,'bezel']]],
+  ['projecton2d_11',['projectOn2D',['../namespacebezel.html#a75e9d076d6bac61a2dae5a371fa53cef',1,'bezel']]],
+  ['projecton3d_12',['projectOn3D',['../namespacebezel.html#a6e541a1f93a9c6ea9bb15c486ed5abe7',1,'bezel']]],
+  ['purple_13',['purple',['../struct_color.html#aeacba31b803aae6ff36f2c317873c68d',1,'Color']]]
 ];

@@ -39,6 +39,7 @@ var hierarchy =
       [ "Grayscale", "class_grayscale.html", null ],
       [ "Inversion", "class_inversion.html", null ],
       [ "MotionBlur", "class_motion_blur.html", null ],
+      [ "Posterization", "class_posterization.html", null ],
       [ "Sharpen", "class_sharpen.html", null ]
     ] ],
     [ "Environment", "class_environment.html", null ],
@@ -66,6 +67,7 @@ var hierarchy =
     [ "PointLightConstants", "struct_point_light_constants.html", null ],
     [ "Position2d", "struct_position2d.html", null ],
     [ "Position3d", "struct_position3d.html", null ],
+    [ "PosterizationParameters", "struct_posterization_parameters.html", null ],
     [ "PseudoBody", "struct_pseudo_body.html", null ],
     [ "Radians", "struct_radians.html", null ],
     [ "Renderable", "class_renderable.html", [

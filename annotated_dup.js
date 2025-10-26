@@ -72,6 +72,8 @@ var annotated_dup =
     [ "PointLightConstants", "struct_point_light_constants.html", "struct_point_light_constants" ],
     [ "Position2d", "struct_position2d.html", "struct_position2d" ],
     [ "Position3d", "struct_position3d.html", "struct_position3d" ],
+    [ "Posterization", "class_posterization.html", "class_posterization" ],
+    [ "PosterizationParameters", "struct_posterization_parameters.html", "struct_posterization_parameters" ],
     [ "PseudoBody", "struct_pseudo_body.html", "struct_pseudo_body" ],
     [ "Radians", "struct_radians.html", "struct_radians" ],
     [ "Renderable", "class_renderable.html", "class_renderable" ],

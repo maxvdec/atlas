@@ -9,5 +9,7 @@ var searchData=
   ['pointlightconstants_6',['PointLightConstants',['../struct_point_light_constants.html',1,'']]],
   ['position2d_7',['Position2d',['../struct_position2d.html',1,'']]],
   ['position3d_8',['Position3d',['../struct_position3d.html',1,'']]],
-  ['pseudobody_9',['PseudoBody',['../struct_pseudo_body.html',1,'']]]
+  ['posterization_9',['Posterization',['../class_posterization.html',1,'']]],
+  ['posterizationparameters_10',['PosterizationParameters',['../struct_posterization_parameters.html',1,'']]],
+  ['pseudobody_11',['PseudoBody',['../struct_pseudo_body.html',1,'']]]
 ];

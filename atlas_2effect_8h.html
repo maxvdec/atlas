@@ -150,6 +150,8 @@ Classes</h2></td></tr>
 <tr class="memitem:MotionBlur" id="r_MotionBlur"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_motion_blur.html">MotionBlur</a></td></tr>
 <tr class="memitem:ChromaticAberrationParameters" id="r_ChromaticAberrationParameters"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_chromatic_aberration_parameters.html">ChromaticAberrationParameters</a></td></tr>
 <tr class="memitem:ChromaticAberration" id="r_ChromaticAberration"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_chromatic_aberration.html">ChromaticAberration</a></td></tr>
+<tr class="memitem:PosterizationParameters" id="r_PosterizationParameters"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_posterization_parameters.html">PosterizationParameters</a></td></tr>
+<tr class="memitem:Posterization" id="r_Posterization"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_posterization.html">Posterization</a></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-enum-members" class="groupheader"><a id="enum-members" name="enum-members"></a>
 Enumerations</h2></td></tr>
@@ -163,6 +165,8 @@ Enumerations</h2></td></tr>
 , <a class="el" href="#a75cf3454fba9ce206c0c748892dc9867a1cdf47c16cbe271bf638c6f38a7bbcb5">ColorCorrection</a> = 5
 , <a class="el" href="#a75cf3454fba9ce206c0c748892dc9867afe48233724644e35fefdd8e6600946a3">MotionBlur</a> = 6
 , <a class="el" href="#a75cf3454fba9ce206c0c748892dc9867a7a76edc1634ddd649d2c8665442dc7fc">ChromaticAberration</a> = 7
+, <br />
+&#160;&#160;<a class="el" href="#a75cf3454fba9ce206c0c748892dc9867a82ff96dcdb3e8c63154ddca3076e41f8">Posterization</a> = 8
 <br />
  }</td></tr>
 <tr class="memdesc:a75cf3454fba9ce206c0c748892dc9867"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enumeration of available post-processing effects that can be applied to render targets.  <a href="#a75cf3454fba9ce206c0c748892dc9867">More...</a><br /></td></tr>
@@ -204,6 +208,7 @@ Enumerations</h2></td></tr>
 </td></tr>
 <tr><td class="fieldname"><a id="a75cf3454fba9ce206c0c748892dc9867afe48233724644e35fefdd8e6600946a3" name="a75cf3454fba9ce206c0c748892dc9867afe48233724644e35fefdd8e6600946a3"></a>MotionBlur&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="a75cf3454fba9ce206c0c748892dc9867a7a76edc1634ddd649d2c8665442dc7fc" name="a75cf3454fba9ce206c0c748892dc9867a7a76edc1634ddd649d2c8665442dc7fc"></a>ChromaticAberration&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a75cf3454fba9ce206c0c748892dc9867a82ff96dcdb3e8c63154ddca3076e41f8" name="a75cf3454fba9ce206c0c748892dc9867a82ff96dcdb3e8c63154ddca3076e41f8"></a>Posterization&#160;</td><td class="fielddoc"></td></tr>
 </table>
 
 <p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00023">23</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
@@ -240,10 +245,12 @@ Enumerations</h2></td></tr>
 <div class="line"><span class="lineno">   53</span>    <a class="code hl_enumvalue" href="#a75cf3454fba9ce206c0c748892dc9867a1cdf47c16cbe271bf638c6f38a7bbcb5">ColorCorrection</a> = 5,</div>
 <div class="line"><span class="lineno">   54</span>    <a class="code hl_enumvalue" href="#a75cf3454fba9ce206c0c748892dc9867afe48233724644e35fefdd8e6600946a3">MotionBlur</a> = 6,</div>
 <div class="line"><span class="lineno">   55</span>    <a class="code hl_enumvalue" href="#a75cf3454fba9ce206c0c748892dc9867a7a76edc1634ddd649d2c8665442dc7fc">ChromaticAberration</a> = 7,</div>
-<div class="line"><span class="lineno">   56</span>};</div>
+<div class="line"><span class="lineno">   56</span>    <a class="code hl_enumvalue" href="#a75cf3454fba9ce206c0c748892dc9867a82ff96dcdb3e8c63154ddca3076e41f8">Posterization</a> = 8,</div>
+<div class="line"><span class="lineno">   57</span>};</div>
 <div class="ttc" id="aatlas_2effect_8h_html_a75cf3454fba9ce206c0c748892dc9867a1cdf47c16cbe271bf638c6f38a7bbcb5"><div class="ttname"><a href="#a75cf3454fba9ce206c0c748892dc9867a1cdf47c16cbe271bf638c6f38a7bbcb5">RenderTargetEffect::ColorCorrection</a></div><div class="ttdeci">@ ColorCorrection</div><div class="ttdoc">Applies color correction adjustments like exposure and contrast.</div><div class="ttdef"><b>Definition</b> <a href="atlas_2effect_8h_source.html#l00053">effect.h:53</a></div></div>
 <div class="ttc" id="aatlas_2effect_8h_html_a75cf3454fba9ce206c0c748892dc9867a556b763769d96726364eec5e37eb186c"><div class="ttname"><a href="#a75cf3454fba9ce206c0c748892dc9867a556b763769d96726364eec5e37eb186c">RenderTargetEffect::Sharpen</a></div><div class="ttdeci">@ Sharpen</div><div class="ttdoc">Applies a sharpening filter to enhance edges.</div><div class="ttdef"><b>Definition</b> <a href="atlas_2effect_8h_source.html#l00038">effect.h:38</a></div></div>
 <div class="ttc" id="aatlas_2effect_8h_html_a75cf3454fba9ce206c0c748892dc9867a7a76edc1634ddd649d2c8665442dc7fc"><div class="ttname"><a href="#a75cf3454fba9ce206c0c748892dc9867a7a76edc1634ddd649d2c8665442dc7fc">RenderTargetEffect::ChromaticAberration</a></div><div class="ttdeci">@ ChromaticAberration</div><div class="ttdef"><b>Definition</b> <a href="atlas_2effect_8h_source.html#l00055">effect.h:55</a></div></div>
+<div class="ttc" id="aatlas_2effect_8h_html_a75cf3454fba9ce206c0c748892dc9867a82ff96dcdb3e8c63154ddca3076e41f8"><div class="ttname"><a href="#a75cf3454fba9ce206c0c748892dc9867a82ff96dcdb3e8c63154ddca3076e41f8">RenderTargetEffect::Posterization</a></div><div class="ttdeci">@ Posterization</div><div class="ttdef"><b>Definition</b> <a href="atlas_2effect_8h_source.html#l00056">effect.h:56</a></div></div>
 <div class="ttc" id="aatlas_2effect_8h_html_a75cf3454fba9ce206c0c748892dc9867a8b52de510bc5497ac43abfe566be48ab"><div class="ttname"><a href="#a75cf3454fba9ce206c0c748892dc9867a8b52de510bc5497ac43abfe566be48ab">RenderTargetEffect::Blur</a></div><div class="ttdeci">@ Blur</div><div class="ttdoc">Applies a blur effect to the rendered image.</div><div class="ttdef"><b>Definition</b> <a href="atlas_2effect_8h_source.html#l00043">effect.h:43</a></div></div>
 <div class="ttc" id="aatlas_2effect_8h_html_a75cf3454fba9ce206c0c748892dc9867a9b8958acb7be504bb5f55f17c0eea366"><div class="ttname"><a href="#a75cf3454fba9ce206c0c748892dc9867a9b8958acb7be504bb5f55f17c0eea366">RenderTargetEffect::Invert</a></div><div class="ttdeci">@ Invert</div><div class="ttdoc">Inverts the colors of the rendered image.</div><div class="ttdef"><b>Definition</b> <a href="atlas_2effect_8h_source.html#l00028">effect.h:28</a></div></div>
 <div class="ttc" id="aatlas_2effect_8h_html_a75cf3454fba9ce206c0c748892dc9867ab15935fdee511a1c5fca66212410932b"><div class="ttname"><a href="#a75cf3454fba9ce206c0c748892dc9867ab15935fdee511a1c5fca66212410932b">RenderTargetEffect::EdgeDetection</a></div><div class="ttdeci">@ EdgeDetection</div><div class="ttdoc">Detects and highlights edges in the rendered image.</div><div class="ttdef"><b>Definition</b> <a href="atlas_2effect_8h_source.html#l00048">effect.h:48</a></div></div>

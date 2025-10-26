@@ -1,5 +1,11 @@
 var NAVTREEINDEX4 =
 {
+"namespacebezel.html#ad7940fee674aaf38535b1a5d5c494928":[1,0,1,35],
+"namespacebezel.html#adf0c21df6db9a024caa808fed711f38a":[1,0,1,43],
+"namespacebezel.html#ae1cbf7eb4d59b77ad1501263bd0bfe0a":[1,0,1,6],
+"namespacebezel.html#af8877774f235c83bd99fa5719c446f08":[1,0,1,8],
+"namespacebezel.html#afc80ee126c9ecce4cc93fa92b30a3078":[1,0,1,40],
+"namespacebezel.html#afe9eb92b3b8e819d49b93f4437db8ad9":[1,0,1,1],
 "namespacebezel_1_1collisions.html":[1,0,1,0],
 "namespacebezel_1_1collisions.html#ac22c4b27897eefcbfdcc1513a545e1ab":[1,0,1,0,1],
 "namespacebezel_1_1collisions.html#ad1a004088d7b990c836565793861e573":[1,0,1,0,0],
@@ -243,11 +249,5 @@ var NAVTREEINDEX4 =
 "struct_intersection_point.html":[2,0,48],
 "struct_intersection_point.html#aae4cb4015b47f5e4adf8e9c2052bdc8e":[2,0,48,0],
 "struct_intersection_point.html#acffb6dba668c3fa1ee6f7b5a43fe1704":[2,0,48,1],
-"struct_layout_descriptor.html":[2,0,51],
-"struct_layout_descriptor.html#a20d2afc6d83235da2293245b6e3144ed":[2,0,51,0],
-"struct_layout_descriptor.html#a2ad04ebb60895504d80ffa863285dce4":[2,0,51,3],
-"struct_layout_descriptor.html#ac19f6be67e42f8b2cf98971ed4ae73a8":[2,0,51,4],
-"struct_layout_descriptor.html#ac857d18e7c022da576d5abd7c8dd4fed":[2,0,51,1],
-"struct_layout_descriptor.html#acbc4d2b0de323299b2cca4b0bd89d5e7":[2,0,51,2],
-"struct_layout_descriptor.html#af67b223d0ec56561c3075cc81b742544":[2,0,51,5]
+"struct_layout_descriptor.html":[2,0,51]
 };
