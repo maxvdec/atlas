@@ -70,7 +70,7 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [x] Physically based bloom **for alpha 3**
 - [x] Add area lights **for alpha 3**
 - [ ] Screen-space reflections
-- [ ] Add rim lighting **for alpha 3**
+- [x] Add rim lighting **for alpha 3**
 - [ ] Add chromatic aberration **for alpha 3**
 - [ ] Add posterization **for alpha 3**
 - [ ] Add pixelization **for alpha 3**

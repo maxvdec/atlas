@@ -205,7 +205,7 @@ class MainScene : public Scene {
         ball.move({0.f, 1.0f, 1.5});
         ball.material.reflectivity = 1.f;
 
-        this->setAmbientIntensity(0.1f);
+        this->setAmbientIntensity(0.0f);
 
         skybox = Skybox();
         skybox.cubemap = createCubemap();
@@ -242,9 +242,7 @@ class MainScene : public Scene {
 
         light = DirectionalLight({1.0f, -0.3f, 0.5f}, Color::white());
         // light.castShadows(window, 4096);
-        this->addDirectionalLight(&light);
-
-        this->setAmbientIntensity(0.1);
+        // this->addDirectionalLight(&light);
 
         frameBuffer = RenderTarget(window);
         frameBuffer.addEffect(MotionBlur::create({.separation = 0.5f}));

@@ -38,11 +38,17 @@ struct LightBloom {
     int maxSamples = 5;
 };
 
+struct RimLight {
+    float intensity = 0.0f;
+    Color color = Color::white();
+};
+
 class Environment {
   public:
     Fog fog;
     VolumetricLighting volumetricLighting;
     LightBloom lightBloom;
+    RimLight rimLight;
 };
 
 /**
@@ -108,7 +114,7 @@ class Scene {
     void setAmbientIntensity(float intensity) {
         this->ambientLight.intensity = intensity / 4;
         if (automaticAmbient) {
-            updateAutomaticAmbientFromSkybox();
+            automaticAmbient = false;
         }
     }
 
