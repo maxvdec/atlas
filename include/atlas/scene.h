@@ -49,6 +49,7 @@ class Environment {
     VolumetricLighting volumetricLighting;
     LightBloom lightBloom;
     RimLight rimLight;
+    Texture lookupTexture;
 };
 
 /**
