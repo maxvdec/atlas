@@ -30,5 +30,6 @@ var searchData=
   ['linear_27',['linear',['../struct_point_light_constants.html#a9eff07ab25d2421d1fd68d596fba0511',1,'PointLightConstants']]],
   ['linearvelocity_28',['linearVelocity',['../class_body.html#a4831e51fa63833e559bcf5a8dbae1c06',1,'Body']]],
   ['lookat_29',['lookAt',['../class_camera.html#a0cdce87ef38c320f3344f7bf00df7572',1,'Camera::lookAt()'],['../class_game_object.html#ade8c731bbc0de1e624089e5ddfc50d72',1,'GameObject::lookAt()'],['../class_compound_object.html#adfc06444ac6b75df91a53061daaefaec',1,'CompoundObject::lookAt()'],['../struct_spotlight.html#ad75293d085fe08a9290102292c40485c',1,'Spotlight::lookAt()'],['../class_core_object.html#a892f247b9df0170e11cdd576530d38e5',1,'CoreObject::lookAt()']]],
-  ['looksmoothness_30',['lookSmoothness',['../class_camera.html#a38944fa801da05f22169475b83799e8e',1,'Camera']]]
+  ['looksmoothness_30',['lookSmoothness',['../class_camera.html#a38944fa801da05f22169475b83799e8e',1,'Camera']]],
+  ['lookuptexture_31',['lookupTexture',['../class_environment.html#ac1e5e2fc8074a51f8777e6b7fd05c945',1,'Environment']]]
 ];

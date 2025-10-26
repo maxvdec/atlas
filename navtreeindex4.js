@@ -1,5 +1,6 @@
 var NAVTREEINDEX4 =
 {
+"namespacebezel.html#a74244934d9413fece5cc0bd29b5213d5":[1,0,1,37],
 "namespacebezel.html#a75e9d076d6bac61a2dae5a371fa53cef":[1,0,1,29],
 "namespacebezel.html#a77d836219f1bf00c051c91e41f597229":[1,0,1,27],
 "namespacebezel.html#a7e9d1e1426dfb7baf31d7c229884a2e0":[1,0,1,21],
@@ -248,6 +249,5 @@ var NAVTREEINDEX4 =
 "struct_fragment_shader.html#a8fb7912f2095245a0d01d73f7e492d28":[2,0,45,0],
 "struct_fragment_shader.html#a97e10ab34737f3b578133d716cb744d1":[2,0,45,2],
 "struct_fragment_shader.html#aa3adfe8e47d2e79ac37f01fa28a515ec":[2,0,45,3],
-"struct_fragment_shader.html#ac724be9e480e03a12a16b4eb4bfe5397":[2,0,45,4],
-"struct_fragment_shader.html#afc4673c59028e88f4b9ddbee9bf57383":[2,0,45,1]
+"struct_fragment_shader.html#ac724be9e480e03a12a16b4eb4bfe5397":[2,0,45,4]
 };

@@ -13,5 +13,6 @@ var searchData=
   ['lightview_10',['lightView',['../struct_shadow_params.html#aeaadb1369b3aa040c9465e6768e9aab3',1,'ShadowParams']]],
   ['linear_11',['linear',['../struct_point_light_constants.html#a9eff07ab25d2421d1fd68d596fba0511',1,'PointLightConstants']]],
   ['linearvelocity_12',['linearVelocity',['../class_body.html#a4831e51fa63833e559bcf5a8dbae1c06',1,'Body']]],
-  ['looksmoothness_13',['lookSmoothness',['../class_camera.html#a38944fa801da05f22169475b83799e8e',1,'Camera']]]
+  ['looksmoothness_13',['lookSmoothness',['../class_camera.html#a38944fa801da05f22169475b83799e8e',1,'Camera']]],
+  ['lookuptexture_14',['lookupTexture',['../class_environment.html#ac1e5e2fc8074a51f8777e6b7fd05c945',1,'Environment']]]
 ];

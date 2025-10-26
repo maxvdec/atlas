@@ -83,9 +83,10 @@ var NAVTREEINDEX1 =
 "class_effect.html#af243986ba49a2e7ea9a3dcd002f7fb63":[2,0,38,1],
 "class_environment.html":[2,0,39],
 "class_environment.html#a8230ab111323228a3ae41a6d9a2c8dd6":[2,0,39,1],
-"class_environment.html#a9b85231531334ac04d8d0306b13d5c09":[2,0,39,3],
+"class_environment.html#a9b85231531334ac04d8d0306b13d5c09":[2,0,39,4],
+"class_environment.html#ac1e5e2fc8074a51f8777e6b7fd05c945":[2,0,39,2],
 "class_environment.html#ac8f14946937e23aef5942658a850dcbf":[2,0,39,0],
-"class_environment.html#ae29cf345fb1baf47c5ce89dccd100fae":[2,0,39,2],
+"class_environment.html#ae29cf345fb1baf47c5ce89dccd100fae":[2,0,39,3],
 "class_film_grain.html":[2,0,40],
 "class_film_grain.html#ab8eeef263e41d675fcc1d4bc1e771aad":[2,0,40,3],
 "class_film_grain.html#ad6ce268be86a55aeeba49ccea165218a":[2,0,40,1],
@@ -248,6 +249,5 @@ var NAVTREEINDEX1 =
 "class_renderable.html":[2,0,82],
 "class_renderable.html#a0c0180d14588c6ed436cc7d153c9b22c":[2,0,82,5],
 "class_renderable.html#a0c865743cb1e0bbc44b754f9e1b50bb3":[2,0,82,9],
-"class_renderable.html#a2103eed2f7f54bca8ba1001907b367a9":[2,0,82,0],
-"class_renderable.html#a54a97abc4b6fe3280505da3b587cba98":[2,0,82,1]
+"class_renderable.html#a2103eed2f7f54bca8ba1001907b367a9":[2,0,82,0]
 };
