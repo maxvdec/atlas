@@ -11,6 +11,7 @@
 #define ATLAS_EFFECT_H
 
 #include "atlas/core/shader.h"
+#include "atlas/units.h"
 #include <iostream>
 #include <memory>
 
@@ -51,6 +52,7 @@ enum class RenderTargetEffect {
      */
     ColorCorrection = 5,
     MotionBlur = 6,
+    ChromaticAberration = 7,
 };
 
 /**
@@ -352,6 +354,49 @@ class MotionBlur : public Effect {
                              params.size);
         program.setUniform1f("EffectFloat2[" + std::to_string((int)index) + "]",
                              params.separation);
+    }
+};
+
+struct ChromaticAberrationParameters {
+    float red = 0.01;
+    float green = 0.006;
+    float blue = -0.006;
+    Magnitude2d direction;
+};
+
+class ChromaticAberration : public Effect {
+  public:
+    ChromaticAberration(ChromaticAberrationParameters p = {})
+        : Effect(RenderTargetEffect::ChromaticAberration), params(p) {}
+    /**
+     * @brief Creates a shared pointer to a ChromaticAberration effect.
+     *
+     * @param p The chromatic aberration parameters to use.
+     * @return (std::shared_ptr<ChromaticAberration>) The created chromatic
+     * aberration effect.
+     */
+    static std::shared_ptr<ChromaticAberration>
+    create(ChromaticAberrationParameters p = {}) {
+        return std::make_shared<ChromaticAberration>(p);
+    }
+    ChromaticAberrationParameters params;
+    /**
+     * @brief Applies all chromatic aberration parameters to the shader program.
+     *
+     * @param program The shader program to apply the effect to.
+     * @param index The index of the effect in the effect array.
+     */
+    void applyToProgram(ShaderProgram &program, int index) override {
+        program.setUniform1f("EffectFloat1[" + std::to_string((int)index) + "]",
+                             params.red);
+        program.setUniform1f("EffectFloat2[" + std::to_string((int)index) + "]",
+                             params.green);
+        program.setUniform1f("EffectFloat3[" + std::to_string((int)index) + "]",
+                             params.blue);
+        program.setUniform1f("EffectFloat4[" + std::to_string((int)index) + "]",
+                             params.direction.x);
+        program.setUniform1f("EffectFloat5[" + std::to_string((int)index) + "]",
+                             params.direction.y);
     }
 };
 

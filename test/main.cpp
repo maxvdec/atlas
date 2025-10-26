@@ -245,7 +245,6 @@ class MainScene : public Scene {
         // this->addDirectionalLight(&light);
 
         frameBuffer = RenderTarget(window);
-        frameBuffer.addEffect(MotionBlur::create({.separation = 0.5f}));
         window.addRenderTarget(&frameBuffer);
         frameBuffer.display(window);
 

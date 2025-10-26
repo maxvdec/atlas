@@ -19,6 +19,7 @@ const int EFFECT_BLUR = 3;
 const int EFFECT_EDGE_DETECTION = 4;
 const int EFFECT_COLOR_CORRECTION = 5;
 const int EFFECT_MOTION_BLUR = 6;
+const int EFFECT_CHROMATIC_ABERRATION = 7;
 
 const float offset = 1.0 / 300.0;
 const float exposure = 1.0;
@@ -178,18 +179,40 @@ vec3 reconstructViewPos(vec2 uv, float depth) {
     return viewPos.xyz;
 }
 
-vec4 applyFXAA(sampler2D tex, vec2 texCoord) {
+struct ChromaticAberrationSettings {
+    float redOffset;
+    float greenOffset;
+    float blueOffset;
+    vec2 focusPoint;
+    bool enabled;
+};
+
+vec4 sampleWithChromaticAberration(vec2 sampleCoord, ChromaticAberrationSettings settings) {
+    vec4 sampled;
+    if (settings.enabled == true) {
+        vec2 direction = sampleCoord - settings.focusPoint;
+        float red = texture(Texture, sampleCoord + (direction * settings.redOffset)).r;
+        float green = texture(Texture, sampleCoord + (direction * settings.greenOffset)).g;
+        vec2 blue = texture(Texture, sampleCoord + (direction * settings.blueOffset)).ba;
+        sampled = vec4(red, green, blue);
+    } else {
+        sampled = texture(Texture, sampleCoord);
+    }
+    return sampled;
+}
+
+vec4 applyFXAA(sampler2D tex, vec2 texCoord, ChromaticAberrationSettings chromaticSettings) {
     vec2 texelSize = 1.0 / textureSize(tex, 0);
 
     float FXAA_SPAN_MAX = 8.0;
     float FXAA_REDUCE_MUL = 1.0 / 8.0;
     float FXAA_REDUCE_MIN = 1.0 / 128.0;
 
-    vec3 rgbNW = texture(tex, texCoord + vec2(-1.0, -1.0) * texelSize).rgb;
-    vec3 rgbNE = texture(tex, texCoord + vec2(1.0, -1.0) * texelSize).rgb;
-    vec3 rgbSW = texture(tex, texCoord + vec2(-1.0, 1.0) * texelSize).rgb;
-    vec3 rgbSE = texture(tex, texCoord + vec2(1.0, 1.0) * texelSize).rgb;
-    vec3 rgbM = texture(tex, texCoord).rgb;
+    vec3 rgbNW = sampleWithChromaticAberration(texCoord + vec2(-1.0, -1.0) * texelSize, chromaticSettings).rgb;
+    vec3 rgbNE = sampleWithChromaticAberration(texCoord + vec2(1.0, -1.0) * texelSize, chromaticSettings).rgb;
+    vec3 rgbSW = sampleWithChromaticAberration(texCoord + vec2(-1.0, 1.0) * texelSize, chromaticSettings).rgb;
+    vec3 rgbSE = sampleWithChromaticAberration(texCoord + vec2(1.0, 1.0) * texelSize, chromaticSettings).rgb;
+    vec3 rgbM = sampleWithChromaticAberration(texCoord, chromaticSettings).rgb;
 
     vec3 luma = vec3(0.299, 0.587, 0.114);
     float lumaNW = dot(rgbNW, luma);
@@ -214,12 +237,12 @@ vec4 applyFXAA(sampler2D tex, vec2 texCoord) {
                 dir * rcpDirMin)) * texelSize;
 
     vec3 rgbA = 0.5 * (
-            texture(tex, texCoord + dir * (1.0 / 3.0 - 0.5)).rgb +
-                texture(tex, texCoord + dir * (2.0 / 3.0 - 0.5)).rgb);
+            sampleWithChromaticAberration(texCoord + dir * (1.0 / 3.0 - 0.5), chromaticSettings).rgb +
+                sampleWithChromaticAberration(texCoord + dir * (2.0 / 3.0 - 0.5), chromaticSettings).rgb);
 
     vec3 rgbB = rgbA * 0.5 + 0.25 * (
-                texture(tex, texCoord + dir * -0.5).rgb +
-                    texture(tex, texCoord + dir * 0.5).rgb);
+                sampleWithChromaticAberration(texCoord + dir * -0.5, chromaticSettings).rgb +
+                    sampleWithChromaticAberration(texCoord + dir * 0.5, chromaticSettings).rgb);
 
     float lumaB = dot(rgbB, luma);
 
@@ -257,7 +280,7 @@ vec4 applyColorCorrection(vec4 color, ColorCorrection cc) {
     return vec4(linearColor, color.a);
 }
 
-vec4 applyMotionBlur(vec2 texCoord, float size, float separation, vec4 color) {
+vec4 applyMotionBlur(vec2 texCoord, float size, float separation, vec4 color, ChromaticAberrationSettings chromaticAberrationSettings) {
     vec4 fallbackColor = color;
     if (hasBrightTexture == 1) {
         fallbackColor += texture(BrightTexture, texCoord);
@@ -272,36 +295,36 @@ vec4 applyMotionBlur(vec2 texCoord, float size, float separation, vec4 color) {
         return fallbackColor;
     }
 
-        vec4 worldPos = texture(PositionTexture, texCoord);
-        if (worldPos.a <= 0.0) {
-            return fallbackColor;
-        }
-    
-        vec3 viewSpacePos = (viewMatrix * worldPos).xyz;
-        float distanceToCamera = length(viewSpacePos);
-        
-        if (distanceToCamera < nearPlane * 2.0) {
-            return fallbackColor;
-        }
-    
-        vec4 currentClipPos = projectionMatrix * viewMatrix * worldPos;
-        currentClipPos.xyz /= currentClipPos.w;
-        vec2 currentUV = currentClipPos.xy * 0.5 + 0.5;
-    
-        vec4 prevClipPos = projectionMatrix * lastViewMatrix * worldPos;
-        prevClipPos.xyz /= prevClipPos.w;
-        vec2 prevUV = prevClipPos.xy * 0.5 + 0.5;
-    
-        vec2 velocity = (currentUV - prevUV) * separation;
-    
-        float maxVelocity = 0.1; 
-        if (length(velocity) > maxVelocity) {
-            velocity = normalize(velocity) * maxVelocity;
-        }
-    
-        if (length(velocity) < 0.0001) {
-            return fallbackColor;
-        }
+    vec4 worldPos = texture(PositionTexture, texCoord);
+    if (worldPos.a <= 0.0) {
+        return fallbackColor;
+    }
+
+    vec3 viewSpacePos = (viewMatrix * worldPos).xyz;
+    float distanceToCamera = length(viewSpacePos);
+
+    if (distanceToCamera < nearPlane * 2.0) {
+        return fallbackColor;
+    }
+
+    vec4 currentClipPos = projectionMatrix * viewMatrix * worldPos;
+    currentClipPos.xyz /= currentClipPos.w;
+    vec2 currentUV = currentClipPos.xy * 0.5 + 0.5;
+
+    vec4 prevClipPos = projectionMatrix * lastViewMatrix * worldPos;
+    prevClipPos.xyz /= prevClipPos.w;
+    vec2 prevUV = prevClipPos.xy * 0.5 + 0.5;
+
+    vec2 velocity = (currentUV - prevUV) * separation;
+
+    float maxVelocity = 0.1;
+    if (length(velocity) > maxVelocity) {
+        velocity = normalize(velocity) * maxVelocity;
+    }
+
+    if (length(velocity) < 0.0001) {
+        return fallbackColor;
+    }
 
     vec4 result = vec4(0.0);
     float totalWeight = 0.0;
@@ -312,9 +335,8 @@ vec4 applyMotionBlur(vec2 texCoord, float size, float separation, vec4 color) {
         vec2 sampleCoord = texCoord + velocity * t;
 
         if (sampleCoord.x >= 0.0 && sampleCoord.x <= 1.0 &&
-            sampleCoord.y >= 0.0 && sampleCoord.y <= 1.0) {
-            
-            vec4 sampled = texture(Texture, sampleCoord);
+                sampleCoord.y >= 0.0 && sampleCoord.y <= 1.0) {
+            vec4 sampled = sampleWithChromaticAberration(sampleCoord, chromaticAberrationSettings);
             if (hasBrightTexture == 1) {
                 sampled += texture(BrightTexture, sampleCoord);
             }
@@ -346,15 +368,23 @@ void main() {
     float motionBlurSize = 0.0;
     float motionBlurSeparation = 0.0;
 
+    ChromaticAberrationSettings chromaticAberrationSettings;
+    chromaticAberrationSettings.enabled = false;
+
     for (int i = 0; i < EffectCount; i++) {
         if (Effects[i] == EFFECT_MOTION_BLUR) {
             useMotionBlur = true;
             motionBlurSize = EffectFloat1[i];
             motionBlurSeparation = EffectFloat2[i];
-            break;
+        } else if (Effects[i] == EFFECT_CHROMATIC_ABERRATION) {
+            chromaticAberrationSettings.enabled = true;
+            chromaticAberrationSettings.redOffset = EffectFloat1[i];
+            chromaticAberrationSettings.greenOffset = EffectFloat2[i];
+            chromaticAberrationSettings.blueOffset = EffectFloat3[i];
+            chromaticAberrationSettings.focusPoint = vec2(EffectFloat4[i], EffectFloat5[i]);
         }
     }
-    
+
     for (int i = 0; i < EffectCount; i++) {
         if (Effects[i] == EFFECT_INVERSION) {
             color = vec4(1.0 - color.rgb, color.a);
@@ -380,7 +410,7 @@ void main() {
         }
     }
 
-    color = applyFXAA(Texture, TexCoord);
+    color = applyFXAA(Texture, TexCoord, chromaticAberrationSettings);
 
     if (hasDepthTexture == 1) {
         float depthValue = texture(DepthTexture, TexCoord).r;
@@ -394,20 +424,9 @@ void main() {
 
     vec4 hdrColor;
     if (useMotionBlur) {
-        vec4 motionBlurred = applyMotionBlur(TexCoord, motionBlurSize, motionBlurSeparation, color);
+        vec4 motionBlurred = applyMotionBlur(TexCoord, motionBlurSize, motionBlurSeparation, color, chromaticAberrationSettings);
         FragColor = motionBlurred;
         return;
-        if (motionBlurred.a > 0.0 || length(motionBlurred.rgb) > 0.0) {
-            hdrColor = motionBlurred;
-        } else {
-            hdrColor = color;
-            if (hasBrightTexture == 1) {
-                hdrColor += texture(BrightTexture, TexCoord);
-            }
-            if (hasVolumetricLightTexture == 1) {
-                hdrColor += texture(VolumetricLightTexture, TexCoord);
-            }
-        }
     } else {
         hdrColor = color;
         if (hasBrightTexture == 1) {
