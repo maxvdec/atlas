@@ -55,6 +55,7 @@ enum class RenderTargetEffect {
     ChromaticAberration = 7,
     Posterization = 8,
     Pixelation = 9,
+    Dilation = 10,
 };
 
 /**
@@ -462,6 +463,40 @@ class Pixelation : public Effect {
     void applyToProgram(ShaderProgram &program, int index) override {
         program.setUniform1f("EffectFloat1[" + std::to_string((int)index) + "]",
                              (float)params.pixelSize);
+    }
+};
+
+struct DilationParameters {
+    int size = 5.0;
+    float separation = 2.0;
+};
+
+class Dilation : public Effect {
+  public:
+    Dilation(DilationParameters p = {})
+        : Effect(RenderTargetEffect::Dilation), params(p) {}
+    /**
+     * @brief Creates a shared pointer to a Dialation effect.
+     *
+     * @param p The dialation parameters to use.
+     * @return (std::shared_ptr<Dialation>) The created dialation
+     * effect.
+     */
+    static std::shared_ptr<Dilation> create(DilationParameters p = {}) {
+        return std::make_shared<Dilation>(p);
+    }
+    DilationParameters params;
+    /**
+     * @brief Applies all dialation parameters to the shader program.
+     *
+     * @param program The shader program to apply the effect to.
+     * @param index The index of the effect in the effect array.
+     */
+    void applyToProgram(ShaderProgram &program, int index) override {
+        program.setUniform1f("EffectFloat1[" + std::to_string((int)index) + "]",
+                             (float)params.size);
+        program.setUniform1f("EffectFloat2[" + std::to_string((int)index) + "]",
+                             params.separation);
     }
 };
 

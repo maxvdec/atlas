@@ -73,8 +73,8 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [x] Add rim lighting **for alpha 3**
 - [x] Add chromatic aberration **for alpha 3**
 - [x] Add posterization **for alpha 3**
-- [ ] Add pixelization **for alpha 3**
-- [ ] Add dialation **for alpha 3**
+- [x] Add pixelization **for alpha 3**
+- [x] Add dilation **for alpha 3**
 - [ ] Add film grain **for alpha 3**
 - [ ] Add LUT tables **for alpha 3**
 - [ ] Add foam and simple fluid rendering
