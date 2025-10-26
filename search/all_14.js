@@ -19,11 +19,13 @@ var searchData=
   ['updatephysics_16',['updatePhysics',['../class_body.html#ae432a86b5bf37eb0d761c5d4451fc373',1,'Body']]],
   ['updatevertices_17',['updateVertices',['../class_core_object.html#a9de6dbb8dc1d791fcadc39bae6696eba',1,'CoreObject']]],
   ['updatezoom_18',['updateZoom',['../class_camera.html#a05bf5f761a2366625b30c6b59c99ad80',1,'Camera']]],
-  ['usedeferredrendering_19',['useDeferredRendering',['../class_core_object.html#ade14d5e7085e4dad510471171f539789',1,'CoreObject::useDeferredRendering'],['../class_model.html#a4ed78d5a7b7f548a4b9c917c05e4924a',1,'Model::useDeferredRendering'],['../class_window.html#adafb4dc8a3af7af838df8d2feba7086f',1,'Window::useDeferredRendering()']]],
-  ['useorthographic_20',['useOrthographic',['../class_camera.html#ae745080197fb197cbab0ae5bf257938c',1,'Camera']]],
-  ['usesdeferred_21',['usesDeferred',['../class_window.html#adc988f8bbe51cdd8dbbba10d8e15bf5c',1,'Window']]],
-  ['usesdeferredrendering_22',['usesDeferredRendering',['../class_terrain.html#ae406f72a61e43a11985a0cc8ea00a0a4',1,'Terrain']]],
-  ['useseed_23',['useSeed',['../class_noise.html#a5596e726507d685af8082eb83977c2c4',1,'Noise']]],
-  ['usespatialization_24',['useSpatialization',['../class_audio_player.html#a75710b41e16e5c45a3254539248aa89a',1,'AudioPlayer::useSpatialization()'],['../class_audio_source.html#a2701e31388497fe077d67f086ba13f8f',1,'AudioSource::useSpatialization()']]],
-  ['usetexture_25',['useTexture',['../class_biome.html#a189c358cbf3fae7a94fdee07e30aab91',1,'Biome']]]
+  ['upsample_19',['Upsample',['../shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a99dcdd41516bd056e9e0741df7445652',1,'shader.h']]],
+  ['upsample_5ffrag_20',['UPSAMPLE_FRAG',['../default__shaders_8h.html#ace1359c556e7f9f111498d2bb0d13be4',1,'default_shaders.h']]],
+  ['usedeferredrendering_21',['useDeferredRendering',['../class_core_object.html#ade14d5e7085e4dad510471171f539789',1,'CoreObject::useDeferredRendering'],['../class_model.html#a4ed78d5a7b7f548a4b9c917c05e4924a',1,'Model::useDeferredRendering'],['../class_window.html#adafb4dc8a3af7af838df8d2feba7086f',1,'Window::useDeferredRendering()']]],
+  ['useorthographic_22',['useOrthographic',['../class_camera.html#ae745080197fb197cbab0ae5bf257938c',1,'Camera']]],
+  ['usesdeferred_23',['usesDeferred',['../class_window.html#adc988f8bbe51cdd8dbbba10d8e15bf5c',1,'Window']]],
+  ['usesdeferredrendering_24',['usesDeferredRendering',['../class_terrain.html#ae406f72a61e43a11985a0cc8ea00a0a4',1,'Terrain']]],
+  ['useseed_25',['useSeed',['../class_noise.html#a5596e726507d685af8082eb83977c2c4',1,'Noise']]],
+  ['usespatialization_26',['useSpatialization',['../class_audio_player.html#a75710b41e16e5c45a3254539248aa89a',1,'AudioPlayer::useSpatialization()'],['../class_audio_source.html#a2701e31388497fe077d67f086ba13f8f',1,'AudioSource::useSpatialization()']]],
+  ['usetexture_27',['useTexture',['../class_biome.html#a189c358cbf3fae7a94fdee07e30aab91',1,'Biome']]]
 ];

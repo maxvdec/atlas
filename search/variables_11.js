@@ -16,10 +16,11 @@ var searchData=
   ['texture_5fvert_13',['TEXTURE_VERT',['../default__shaders_8h.html#afe0518cbb5ccd9b6f9a3e5f20dc04aa9',1,'default_shaders.h']]],
   ['texturecoordinate_14',['textureCoordinate',['../struct_core_vertex.html#a9680e9b48f5db439f684436ea59ed5ea',1,'CoreVertex']]],
   ['textureid_15',['textureID',['../struct_character.html#a8255d40d551f5852a1a2e1d7f1a510e9',1,'Character']]],
-  ['textures_16',['textures',['../class_core_object.html#a6ee8e4de7ba86d212eafe6bb4b3ae4ea',1,'CoreObject']]],
-  ['timeofimpact_17',['timeOfImpact',['../struct_contact.html#a81c72c90bbf627e1300b4051633a9668',1,'Contact']]],
-  ['tint_18',['tint',['../struct_color_correction_parameters.html#a2824e7042554af5f1e948980f7201b04',1,'ColorCorrectionParameters']]],
-  ['title_19',['title',['../struct_window_configuration.html#abf7b5dd301a90c647a15b2e5168c7d66',1,'WindowConfiguration::title'],['../class_window.html#accc3e5364fced57c273820aa51410e12',1,'Window::title']]],
-  ['transparent_20',['transparent',['../struct_window_configuration.html#a4358f8f89bce229f24da436af8bf963f',1,'WindowConfiguration']]],
-  ['type_21',['type',['../class_tessellation_shader.html#ac6a0841b94b22b3f6d183dde43ae2d03',1,'TessellationShader::type'],['../struct_layout_descriptor.html#af67b223d0ec56561c3075cc81b742544',1,'LayoutDescriptor::type'],['../class_effect.html#a386f4d915f71aa8e5f177a221b8903da',1,'Effect::type'],['../struct_texture.html#ad83ed086abaa805a606a5ccd433f505c',1,'Texture::type'],['../struct_cubemap.html#a5fccaab17f7056ff6aa3df30af7281da',1,'Cubemap::type'],['../class_render_target.html#acbc5c695868ec18217c45cb8da705497',1,'RenderTarget::type'],['../struct_resource.html#a477f2148b9a6e082d43bd839aaefc9d0',1,'Resource::type']]]
+  ['textureid_16',['textureId',['../struct_bloom_element.html#ab08bcf6f8a4e1b4f7fd8cc2bbdf63f02',1,'BloomElement']]],
+  ['textures_17',['textures',['../class_core_object.html#a6ee8e4de7ba86d212eafe6bb4b3ae4ea',1,'CoreObject']]],
+  ['timeofimpact_18',['timeOfImpact',['../struct_contact.html#a81c72c90bbf627e1300b4051633a9668',1,'Contact']]],
+  ['tint_19',['tint',['../struct_color_correction_parameters.html#a2824e7042554af5f1e948980f7201b04',1,'ColorCorrectionParameters']]],
+  ['title_20',['title',['../struct_window_configuration.html#abf7b5dd301a90c647a15b2e5168c7d66',1,'WindowConfiguration::title'],['../class_window.html#accc3e5364fced57c273820aa51410e12',1,'Window::title']]],
+  ['transparent_21',['transparent',['../struct_window_configuration.html#a4358f8f89bce229f24da436af8bf963f',1,'WindowConfiguration']]],
+  ['type_22',['type',['../class_tessellation_shader.html#ac6a0841b94b22b3f6d183dde43ae2d03',1,'TessellationShader::type'],['../struct_layout_descriptor.html#af67b223d0ec56561c3075cc81b742544',1,'LayoutDescriptor::type'],['../class_effect.html#a386f4d915f71aa8e5f177a221b8903da',1,'Effect::type'],['../struct_texture.html#ad83ed086abaa805a606a5ccd433f505c',1,'Texture::type'],['../struct_cubemap.html#a5fccaab17f7056ff6aa3df30af7281da',1,'Cubemap::type'],['../class_render_target.html#acbc5c695868ec18217c45cb8da705497',1,'RenderTarget::type'],['../struct_resource.html#a477f2148b9a6e082d43bd839aaefc9d0',1,'Resource::type']]]
 ];

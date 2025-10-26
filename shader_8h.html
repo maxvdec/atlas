@@ -212,6 +212,8 @@ Enumerations</h2></td></tr>
 , <a class="el" href="#ae4b5ffebe5841702defe3060ebbe08d0a4ccfea7a25fae3c1d31555f0856d2b42">Terrain</a>
 , <br />
 &#160;&#160;<a class="el" href="#ae4b5ffebe5841702defe3060ebbe08d0a9cf1d34dfb281ccd7fe0a4796b5ebe2c">Volumetric</a>
+, <a class="el" href="#ae4b5ffebe5841702defe3060ebbe08d0a5cf115d0e9094151d1df54187a5aebb8">Downsample</a>
+, <a class="el" href="#ae4b5ffebe5841702defe3060ebbe08d0a99dcdd41516bd056e9e0741df7445652">Upsample</a>
 <br />
  }</td></tr>
 <tr class="memdesc:ae4b5ffebe5841702defe3060ebbe08d0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enumeration of default fragment shaders provided by the Atlas engine.  <a href="#ae4b5ffebe5841702defe3060ebbe08d0">More...</a><br /></td></tr>
@@ -315,6 +317,8 @@ Enumerations</h2></td></tr>
 </td></tr>
 <tr><td class="fieldname"><a id="ae4b5ffebe5841702defe3060ebbe08d0a4ccfea7a25fae3c1d31555f0856d2b42" name="ae4b5ffebe5841702defe3060ebbe08d0a4ccfea7a25fae3c1d31555f0856d2b42"></a>Terrain&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="ae4b5ffebe5841702defe3060ebbe08d0a9cf1d34dfb281ccd7fe0a4796b5ebe2c" name="ae4b5ffebe5841702defe3060ebbe08d0a9cf1d34dfb281ccd7fe0a4796b5ebe2c"></a>Volumetric&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="ae4b5ffebe5841702defe3060ebbe08d0a5cf115d0e9094151d1df54187a5aebb8" name="ae4b5ffebe5841702defe3060ebbe08d0a5cf115d0e9094151d1df54187a5aebb8"></a>Downsample&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="ae4b5ffebe5841702defe3060ebbe08d0a99dcdd41516bd056e9e0741df7445652" name="ae4b5ffebe5841702defe3060ebbe08d0a99dcdd41516bd056e9e0741df7445652"></a>Upsample&#160;</td><td class="fielddoc"></td></tr>
 </table>
 
 <p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00214">214</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
@@ -397,17 +401,21 @@ Enumerations</h2></td></tr>
 <div class="line"><span class="lineno">  290</span><span class="comment">     */</span></div>
 <div class="line"><span class="lineno">  291</span>    <a class="code hl_enumvalue" href="#ae4b5ffebe5841702defe3060ebbe08d0a0cbd177f5587f49172adca66ce3041ce">SSAOBlur</a>,</div>
 <div class="line"><span class="lineno">  292</span>    <a class="code hl_enumvalue" href="#ae4b5ffebe5841702defe3060ebbe08d0a4ccfea7a25fae3c1d31555f0856d2b42">Terrain</a>,</div>
-<div class="line"><span class="lineno">  293</span>    <a class="code hl_enumvalue" href="#ae4b5ffebe5841702defe3060ebbe08d0a9cf1d34dfb281ccd7fe0a4796b5ebe2c">Volumetric</a></div>
-<div class="line"><span class="lineno">  294</span>};</div>
+<div class="line"><span class="lineno">  293</span>    <a class="code hl_enumvalue" href="#ae4b5ffebe5841702defe3060ebbe08d0a9cf1d34dfb281ccd7fe0a4796b5ebe2c">Volumetric</a>,</div>
+<div class="line"><span class="lineno">  294</span>    <a class="code hl_enumvalue" href="#ae4b5ffebe5841702defe3060ebbe08d0a5cf115d0e9094151d1df54187a5aebb8">Downsample</a>,</div>
+<div class="line"><span class="lineno">  295</span>    <a class="code hl_enumvalue" href="#ae4b5ffebe5841702defe3060ebbe08d0a99dcdd41516bd056e9e0741df7445652">Upsample</a></div>
+<div class="line"><span class="lineno">  296</span>};</div>
 <div class="ttc" id="ashader_8h_html_ae4b5ffebe5841702defe3060ebbe08d0a05c5b39892533f0c0ad86b083b28ff6a"><div class="ttname"><a href="#ae4b5ffebe5841702defe3060ebbe08d0a05c5b39892533f0c0ad86b083b28ff6a">AtlasFragmentShader::PointLightShadow</a></div><div class="ttdeci">@ PointLightShadow</div><div class="ttdoc">Fragment shader for rendering depth maps (used in shadow mapping).</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00265">shader.h:265</a></div></div>
 <div class="ttc" id="ashader_8h_html_ae4b5ffebe5841702defe3060ebbe08d0a0829ea6734059d66e6bf87096b215dc1"><div class="ttname"><a href="#ae4b5ffebe5841702defe3060ebbe08d0a0829ea6734059d66e6bf87096b215dc1">AtlasFragmentShader::Fullscreen</a></div><div class="ttdeci">@ Fullscreen</div><div class="ttdoc">Fragment shader for rendering fullscreen quads.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00240">shader.h:240</a></div></div>
 <div class="ttc" id="ashader_8h_html_ae4b5ffebe5841702defe3060ebbe08d0a0cbd177f5587f49172adca66ce3041ce"><div class="ttname"><a href="#ae4b5ffebe5841702defe3060ebbe08d0a0cbd177f5587f49172adca66ce3041ce">AtlasFragmentShader::SSAOBlur</a></div><div class="ttdeci">@ SSAOBlur</div><div class="ttdoc">Fragment shader for blurring the SSAO texture.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00291">shader.h:291</a></div></div>
 <div class="ttc" id="ashader_8h_html_ae4b5ffebe5841702defe3060ebbe08d0a4471a723be46b14fd252403c8db161ff"><div class="ttname"><a href="#ae4b5ffebe5841702defe3060ebbe08d0a4471a723be46b14fd252403c8db161ff">AtlasFragmentShader::GaussianBlur</a></div><div class="ttdeci">@ GaussianBlur</div><div class="ttdoc">Fragment shader for applying a Gaussian blur effect.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00270">shader.h:270</a></div></div>
 <div class="ttc" id="ashader_8h_html_ae4b5ffebe5841702defe3060ebbe08d0a4ccfea7a25fae3c1d31555f0856d2b42"><div class="ttname"><a href="#ae4b5ffebe5841702defe3060ebbe08d0a4ccfea7a25fae3c1d31555f0856d2b42">AtlasFragmentShader::Terrain</a></div><div class="ttdeci">@ Terrain</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00292">shader.h:292</a></div></div>
 <div class="ttc" id="ashader_8h_html_ae4b5ffebe5841702defe3060ebbe08d0a4ed71db54748b36eeb398876b0c747ac"><div class="ttname"><a href="#ae4b5ffebe5841702defe3060ebbe08d0a4ed71db54748b36eeb398876b0c747ac">AtlasFragmentShader::Deferred</a></div><div class="ttdeci">@ Deferred</div><div class="ttdoc">Main fragment shader for deferred rendering.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00280">shader.h:280</a></div></div>
+<div class="ttc" id="ashader_8h_html_ae4b5ffebe5841702defe3060ebbe08d0a5cf115d0e9094151d1df54187a5aebb8"><div class="ttname"><a href="#ae4b5ffebe5841702defe3060ebbe08d0a5cf115d0e9094151d1df54187a5aebb8">AtlasFragmentShader::Downsample</a></div><div class="ttdeci">@ Downsample</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00294">shader.h:294</a></div></div>
 <div class="ttc" id="ashader_8h_html_ae4b5ffebe5841702defe3060ebbe08d0a5e9328c486b44b9a58bca20f7f2064f4"><div class="ttname"><a href="#ae4b5ffebe5841702defe3060ebbe08d0a5e9328c486b44b9a58bca20f7f2064f4">AtlasFragmentShader::Particle</a></div><div class="ttdeci">@ Particle</div><div class="ttdoc">Fragment shader for rendering particles.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00255">shader.h:255</a></div></div>
 <div class="ttc" id="ashader_8h_html_ae4b5ffebe5841702defe3060ebbe08d0a63fbbc4fe17b5b4262ebe7c2921518ed"><div class="ttname"><a href="#ae4b5ffebe5841702defe3060ebbe08d0a63fbbc4fe17b5b4262ebe7c2921518ed">AtlasFragmentShader::Skybox</a></div><div class="ttdeci">@ Skybox</div><div class="ttdoc">Fragment shader for rendering skyboxes.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00245">shader.h:245</a></div></div>
 <div class="ttc" id="ashader_8h_html_ae4b5ffebe5841702defe3060ebbe08d0a9914a0ce04a7b7b6a8e39bec55064b82"><div class="ttname"><a href="#ae4b5ffebe5841702defe3060ebbe08d0a9914a0ce04a7b7b6a8e39bec55064b82">AtlasFragmentShader::Light</a></div><div class="ttdeci">@ Light</div><div class="ttdoc">Main fragment shader for rendering lights in deferred rendering.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00275">shader.h:275</a></div></div>
+<div class="ttc" id="ashader_8h_html_ae4b5ffebe5841702defe3060ebbe08d0a99dcdd41516bd056e9e0741df7445652"><div class="ttname"><a href="#ae4b5ffebe5841702defe3060ebbe08d0a99dcdd41516bd056e9e0741df7445652">AtlasFragmentShader::Upsample</a></div><div class="ttdeci">@ Upsample</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00295">shader.h:295</a></div></div>
 <div class="ttc" id="ashader_8h_html_ae4b5ffebe5841702defe3060ebbe08d0a9cf1d34dfb281ccd7fe0a4796b5ebe2c"><div class="ttname"><a href="#ae4b5ffebe5841702defe3060ebbe08d0a9cf1d34dfb281ccd7fe0a4796b5ebe2c">AtlasFragmentShader::Volumetric</a></div><div class="ttdeci">@ Volumetric</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00293">shader.h:293</a></div></div>
 <div class="ttc" id="ashader_8h_html_ae4b5ffebe5841702defe3060ebbe08d0a9dffbf69ffba8bc38bc4e01abf4b1675"><div class="ttname"><a href="#ae4b5ffebe5841702defe3060ebbe08d0a9dffbf69ffba8bc38bc4e01abf4b1675">AtlasFragmentShader::Text</a></div><div class="ttdeci">@ Text</div><div class="ttdoc">Fragment shader for rendering text.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00260">shader.h:260</a></div></div>
 <div class="ttc" id="ashader_8h_html_ae4b5ffebe5841702defe3060ebbe08d0aa02c83a7dbd96295beaefb72c2bee2de"><div class="ttname"><a href="#ae4b5ffebe5841702defe3060ebbe08d0aa02c83a7dbd96295beaefb72c2bee2de">AtlasFragmentShader::Main</a></div><div class="ttdeci">@ Main</div><div class="ttdoc">Main fragment shader that supports lighting, textures, and normals.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00230">shader.h:230</a></div></div>
@@ -445,15 +453,15 @@ Enumerations</h2></td></tr>
 </td></tr>
 </table>
 
-<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00352">352</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  352</span>                               {<span class="comment"></span></div>
-<div class="line"><span class="lineno">  353</span><span class="comment">    /**</span></div>
-<div class="line"><span class="lineno">  354</span><span class="comment">     * @brief Geometry shader for rendering point light shadow maps.</span></div>
-<div class="line"><span class="lineno">  355</span><span class="comment">     *</span></div>
-<div class="line"><span class="lineno">  356</span><span class="comment">     */</span></div>
-<div class="line"><span class="lineno">  357</span>    <a class="code hl_enumvalue" href="#a17951fe51aaa5769ef603acf594dc0b5a05c5b39892533f0c0ad86b083b28ff6a">PointLightShadow</a>,</div>
-<div class="line"><span class="lineno">  358</span>};</div>
-<div class="ttc" id="ashader_8h_html_a17951fe51aaa5769ef603acf594dc0b5a05c5b39892533f0c0ad86b083b28ff6a"><div class="ttname"><a href="#a17951fe51aaa5769ef603acf594dc0b5a05c5b39892533f0c0ad86b083b28ff6a">AtlasGeometryShader::PointLightShadow</a></div><div class="ttdeci">@ PointLightShadow</div><div class="ttdoc">Geometry shader for rendering point light shadow maps.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00357">shader.h:357</a></div></div>
+<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00354">354</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  354</span>                               {<span class="comment"></span></div>
+<div class="line"><span class="lineno">  355</span><span class="comment">    /**</span></div>
+<div class="line"><span class="lineno">  356</span><span class="comment">     * @brief Geometry shader for rendering point light shadow maps.</span></div>
+<div class="line"><span class="lineno">  357</span><span class="comment">     *</span></div>
+<div class="line"><span class="lineno">  358</span><span class="comment">     */</span></div>
+<div class="line"><span class="lineno">  359</span>    <a class="code hl_enumvalue" href="#a17951fe51aaa5769ef603acf594dc0b5a05c5b39892533f0c0ad86b083b28ff6a">PointLightShadow</a>,</div>
+<div class="line"><span class="lineno">  360</span>};</div>
+<div class="ttc" id="ashader_8h_html_a17951fe51aaa5769ef603acf594dc0b5a05c5b39892533f0c0ad86b083b28ff6a"><div class="ttname"><a href="#a17951fe51aaa5769ef603acf594dc0b5a05c5b39892533f0c0ad86b083b28ff6a">AtlasGeometryShader::PointLightShadow</a></div><div class="ttdeci">@ PointLightShadow</div><div class="ttdoc">Geometry shader for rendering point light shadow maps.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00359">shader.h:359</a></div></div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -482,15 +490,15 @@ Enumerations</h2></td></tr>
 <tr><td class="fieldname"><a id="ad3ab8cfdaed1615da5dbebb9a54062e7a818b6eb091fdcb3274a065fcc66aed84" name="ad3ab8cfdaed1615da5dbebb9a54062e7a818b6eb091fdcb3274a065fcc66aed84"></a>TerrainPrimitive&#160;</td><td class="fielddoc"></td></tr>
 </table>
 
-<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00399">399</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  399</span>                                   {</div>
-<div class="line"><span class="lineno">  400</span>    <a class="code hl_enumvalue" href="#ad3ab8cfdaed1615da5dbebb9a54062e7a34fa222ae76525a12c32c39ad7597647">TerrainControl</a>,</div>
-<div class="line"><span class="lineno">  401</span>    <a class="code hl_enumvalue" href="#ad3ab8cfdaed1615da5dbebb9a54062e7a0c587a9b74bfcb3f62e40c621ea512b5">TerrainEvaluation</a>,</div>
-<div class="line"><span class="lineno">  402</span>    <a class="code hl_enumvalue" href="#ad3ab8cfdaed1615da5dbebb9a54062e7a818b6eb091fdcb3274a065fcc66aed84">TerrainPrimitive</a></div>
-<div class="line"><span class="lineno">  403</span>};</div>
-<div class="ttc" id="ashader_8h_html_ad3ab8cfdaed1615da5dbebb9a54062e7a0c587a9b74bfcb3f62e40c621ea512b5"><div class="ttname"><a href="#ad3ab8cfdaed1615da5dbebb9a54062e7a0c587a9b74bfcb3f62e40c621ea512b5">AtlasTessellationShader::TerrainEvaluation</a></div><div class="ttdeci">@ TerrainEvaluation</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00401">shader.h:401</a></div></div>
-<div class="ttc" id="ashader_8h_html_ad3ab8cfdaed1615da5dbebb9a54062e7a34fa222ae76525a12c32c39ad7597647"><div class="ttname"><a href="#ad3ab8cfdaed1615da5dbebb9a54062e7a34fa222ae76525a12c32c39ad7597647">AtlasTessellationShader::TerrainControl</a></div><div class="ttdeci">@ TerrainControl</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00400">shader.h:400</a></div></div>
-<div class="ttc" id="ashader_8h_html_ad3ab8cfdaed1615da5dbebb9a54062e7a818b6eb091fdcb3274a065fcc66aed84"><div class="ttname"><a href="#ad3ab8cfdaed1615da5dbebb9a54062e7a818b6eb091fdcb3274a065fcc66aed84">AtlasTessellationShader::TerrainPrimitive</a></div><div class="ttdeci">@ TerrainPrimitive</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00402">shader.h:402</a></div></div>
+<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00401">401</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  401</span>                                   {</div>
+<div class="line"><span class="lineno">  402</span>    <a class="code hl_enumvalue" href="#ad3ab8cfdaed1615da5dbebb9a54062e7a34fa222ae76525a12c32c39ad7597647">TerrainControl</a>,</div>
+<div class="line"><span class="lineno">  403</span>    <a class="code hl_enumvalue" href="#ad3ab8cfdaed1615da5dbebb9a54062e7a0c587a9b74bfcb3f62e40c621ea512b5">TerrainEvaluation</a>,</div>
+<div class="line"><span class="lineno">  404</span>    <a class="code hl_enumvalue" href="#ad3ab8cfdaed1615da5dbebb9a54062e7a818b6eb091fdcb3274a065fcc66aed84">TerrainPrimitive</a></div>
+<div class="line"><span class="lineno">  405</span>};</div>
+<div class="ttc" id="ashader_8h_html_ad3ab8cfdaed1615da5dbebb9a54062e7a0c587a9b74bfcb3f62e40c621ea512b5"><div class="ttname"><a href="#ad3ab8cfdaed1615da5dbebb9a54062e7a0c587a9b74bfcb3f62e40c621ea512b5">AtlasTessellationShader::TerrainEvaluation</a></div><div class="ttdeci">@ TerrainEvaluation</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00403">shader.h:403</a></div></div>
+<div class="ttc" id="ashader_8h_html_ad3ab8cfdaed1615da5dbebb9a54062e7a34fa222ae76525a12c32c39ad7597647"><div class="ttname"><a href="#ad3ab8cfdaed1615da5dbebb9a54062e7a34fa222ae76525a12c32c39ad7597647">AtlasTessellationShader::TerrainControl</a></div><div class="ttdeci">@ TerrainControl</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00402">shader.h:402</a></div></div>
+<div class="ttc" id="ashader_8h_html_ad3ab8cfdaed1615da5dbebb9a54062e7a818b6eb091fdcb3274a065fcc66aed84"><div class="ttname"><a href="#ad3ab8cfdaed1615da5dbebb9a54062e7a818b6eb091fdcb3274a065fcc66aed84">AtlasTessellationShader::TerrainPrimitive</a></div><div class="ttdeci">@ TerrainPrimitive</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00404">shader.h:404</a></div></div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -754,11 +762,11 @@ Enumerations</h2></td></tr>
 <tr><td class="fieldname"><a id="ab4defdfdbd8367100897f4e0fb2e1db9a07ee3427562e4f1a5c9f2bfb17fd9eee" name="ab4defdfdbd8367100897f4e0fb2e1db9a07ee3427562e4f1a5c9f2bfb17fd9eee"></a>Primitive&#160;</td><td class="fielddoc"></td></tr>
 </table>
 
-<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00405">405</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  405</span>{ <a class="code hl_enumvalue" href="#ab4defdfdbd8367100897f4e0fb2e1db9aa1595abbb4c3a326636dd178757cd6c1">Control</a>, <a class="code hl_enumvalue" href="#ab4defdfdbd8367100897f4e0fb2e1db9ab74a43dbb36287ea86eb5b0c7b86e8e8">Evaluation</a>, <a class="code hl_enumvalue" href="#ab4defdfdbd8367100897f4e0fb2e1db9a07ee3427562e4f1a5c9f2bfb17fd9eee">Primitive</a> };</div>
-<div class="ttc" id="ashader_8h_html_ab4defdfdbd8367100897f4e0fb2e1db9a07ee3427562e4f1a5c9f2bfb17fd9eee"><div class="ttname"><a href="#ab4defdfdbd8367100897f4e0fb2e1db9a07ee3427562e4f1a5c9f2bfb17fd9eee">TessellationShaderType::Primitive</a></div><div class="ttdeci">@ Primitive</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00405">shader.h:405</a></div></div>
-<div class="ttc" id="ashader_8h_html_ab4defdfdbd8367100897f4e0fb2e1db9aa1595abbb4c3a326636dd178757cd6c1"><div class="ttname"><a href="#ab4defdfdbd8367100897f4e0fb2e1db9aa1595abbb4c3a326636dd178757cd6c1">TessellationShaderType::Control</a></div><div class="ttdeci">@ Control</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00405">shader.h:405</a></div></div>
-<div class="ttc" id="ashader_8h_html_ab4defdfdbd8367100897f4e0fb2e1db9ab74a43dbb36287ea86eb5b0c7b86e8e8"><div class="ttname"><a href="#ab4defdfdbd8367100897f4e0fb2e1db9ab74a43dbb36287ea86eb5b0c7b86e8e8">TessellationShaderType::Evaluation</a></div><div class="ttdeci">@ Evaluation</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00405">shader.h:405</a></div></div>
+<p class="definition">Definition at line <a class="el" href="shader_8h_source.html#l00407">407</a> of file <a class="el" href="shader_8h_source.html">shader.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  407</span>{ <a class="code hl_enumvalue" href="#ab4defdfdbd8367100897f4e0fb2e1db9aa1595abbb4c3a326636dd178757cd6c1">Control</a>, <a class="code hl_enumvalue" href="#ab4defdfdbd8367100897f4e0fb2e1db9ab74a43dbb36287ea86eb5b0c7b86e8e8">Evaluation</a>, <a class="code hl_enumvalue" href="#ab4defdfdbd8367100897f4e0fb2e1db9a07ee3427562e4f1a5c9f2bfb17fd9eee">Primitive</a> };</div>
+<div class="ttc" id="ashader_8h_html_ab4defdfdbd8367100897f4e0fb2e1db9a07ee3427562e4f1a5c9f2bfb17fd9eee"><div class="ttname"><a href="#ab4defdfdbd8367100897f4e0fb2e1db9a07ee3427562e4f1a5c9f2bfb17fd9eee">TessellationShaderType::Primitive</a></div><div class="ttdeci">@ Primitive</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00407">shader.h:407</a></div></div>
+<div class="ttc" id="ashader_8h_html_ab4defdfdbd8367100897f4e0fb2e1db9aa1595abbb4c3a326636dd178757cd6c1"><div class="ttname"><a href="#ab4defdfdbd8367100897f4e0fb2e1db9aa1595abbb4c3a326636dd178757cd6c1">TessellationShaderType::Control</a></div><div class="ttdeci">@ Control</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00407">shader.h:407</a></div></div>
+<div class="ttc" id="ashader_8h_html_ab4defdfdbd8367100897f4e0fb2e1db9ab74a43dbb36287ea86eb5b0c7b86e8e8"><div class="ttname"><a href="#ab4defdfdbd8367100897f4e0fb2e1db9ab74a43dbb36287ea86eb5b0c7b86e8e8">TessellationShaderType::Evaluation</a></div><div class="ttdeci">@ Evaluation</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00407">shader.h:407</a></div></div>
 </div><!-- fragment -->
 </div>
 </div>

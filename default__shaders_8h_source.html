@@ -3349,205 +3349,277 @@ $(function(){initNavTree('default__shaders_8h_source.html','',''); });
 <div class="line"><a id="l03229" name="l03229"></a><span class="lineno"> 3229</span><span class="stringliteral"></span> </div>
 <div class="line"><a id="l03230" name="l03230"></a><span class="lineno"> 3230</span><span class="stringliteral">)&quot;;</span></div>
 <div class="line"><a id="l03231" name="l03231"></a><span class="lineno"> 3231</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03232" name="l03232"></a><span class="lineno"><a class="line" href="default__shaders_8h.html#adbc40b4a97e5a3bf53b4b7128dfbdc9e"> 3232</a></span><span class="stringliteral"></span><span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">char</span>* <a class="code hl_variable" href="default__shaders_8h.html#adbc40b4a97e5a3bf53b4b7128dfbdc9e">PARTICLE_FRAG</a> = R<span class="stringliteral">&quot;(</span></div>
+<div class="line"><a id="l03232" name="l03232"></a><span class="lineno"><a class="line" href="default__shaders_8h.html#ace1359c556e7f9f111498d2bb0d13be4"> 3232</a></span><span class="stringliteral"></span><span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">char</span>* <a class="code hl_variable" href="default__shaders_8h.html#ace1359c556e7f9f111498d2bb0d13be4">UPSAMPLE_FRAG</a> = R<span class="stringliteral">&quot;(</span></div>
 <div class="line"><a id="l03233" name="l03233"></a><span class="lineno"> 3233</span><span class="stringliteral">#version 410 core</span></div>
-<div class="line"><a id="l03234" name="l03234"></a><span class="lineno"> 3234</span><span class="stringliteral">in vec2 fragTexCoord;</span></div>
-<div class="line"><a id="l03235" name="l03235"></a><span class="lineno"> 3235</span><span class="stringliteral">in vec4 fragColor;</span></div>
-<div class="line"><a id="l03236" name="l03236"></a><span class="lineno"> 3236</span><span class="stringliteral">out vec4 FragColor;</span></div>
-<div class="line"><a id="l03237" name="l03237"></a><span class="lineno"> 3237</span><span class="stringliteral">uniform sampler2D particleTexture;</span></div>
-<div class="line"><a id="l03238" name="l03238"></a><span class="lineno"> 3238</span><span class="stringliteral">uniform bool useTexture;</span></div>
+<div class="line"><a id="l03234" name="l03234"></a><span class="lineno"> 3234</span><span class="stringliteral">uniform sampler2D srcTexture;</span></div>
+<div class="line"><a id="l03235" name="l03235"></a><span class="lineno"> 3235</span><span class="stringliteral">uniform float filterRadius;</span></div>
+<div class="line"><a id="l03236" name="l03236"></a><span class="lineno"> 3236</span><span class="stringliteral">uniform vec2 srcResolution;</span></div>
+<div class="line"><a id="l03237" name="l03237"></a><span class="lineno"> 3237</span><span class="stringliteral">in vec2 TexCoord;</span></div>
+<div class="line"><a id="l03238" name="l03238"></a><span class="lineno"> 3238</span><span class="stringliteral">layout(location = 0) out vec3 upsample;</span></div>
 <div class="line"><a id="l03239" name="l03239"></a><span class="lineno"> 3239</span><span class="stringliteral"></span> </div>
 <div class="line"><a id="l03240" name="l03240"></a><span class="lineno"> 3240</span><span class="stringliteral">void main() {</span></div>
-<div class="line"><a id="l03241" name="l03241"></a><span class="lineno"> 3241</span><span class="stringliteral">    if (useTexture) {</span></div>
-<div class="line"><a id="l03242" name="l03242"></a><span class="lineno"> 3242</span><span class="stringliteral">        vec4 texColor = texture(particleTexture, fragTexCoord);</span></div>
-<div class="line"><a id="l03243" name="l03243"></a><span class="lineno"> 3243</span><span class="stringliteral">        if (texColor.a &lt; 0.01) discard;</span></div>
-<div class="line"><a id="l03244" name="l03244"></a><span class="lineno"> 3244</span><span class="stringliteral">        FragColor = texColor * fragColor;</span></div>
-<div class="line"><a id="l03245" name="l03245"></a><span class="lineno"> 3245</span><span class="stringliteral">    } else {</span></div>
-<div class="line"><a id="l03246" name="l03246"></a><span class="lineno"> 3246</span><span class="stringliteral">        vec2 center = vec2(0.5, 0.5);</span></div>
-<div class="line"><a id="l03247" name="l03247"></a><span class="lineno"> 3247</span><span class="stringliteral">        float dist = distance(fragTexCoord, center);</span></div>
-<div class="line"><a id="l03248" name="l03248"></a><span class="lineno"> 3248</span><span class="stringliteral">        </span></div>
-<div class="line"><a id="l03249" name="l03249"></a><span class="lineno"> 3249</span><span class="stringliteral">        float alpha = 1.0 - smoothstep(0.3, 0.5, dist);</span></div>
-<div class="line"><a id="l03250" name="l03250"></a><span class="lineno"> 3250</span><span class="stringliteral">        </span></div>
-<div class="line"><a id="l03251" name="l03251"></a><span class="lineno"> 3251</span><span class="stringliteral">        FragColor = vec4(fragColor.rgb, fragColor.a * alpha);</span></div>
-<div class="line"><a id="l03252" name="l03252"></a><span class="lineno"> 3252</span><span class="stringliteral">        </span></div>
-<div class="line"><a id="l03253" name="l03253"></a><span class="lineno"> 3253</span><span class="stringliteral">        if (FragColor.a &lt; 0.01) discard;</span></div>
-<div class="line"><a id="l03254" name="l03254"></a><span class="lineno"> 3254</span><span class="stringliteral">    }</span></div>
-<div class="line"><a id="l03255" name="l03255"></a><span class="lineno"> 3255</span><span class="stringliteral">}</span></div>
-<div class="line"><a id="l03256" name="l03256"></a><span class="lineno"> 3256</span><span class="stringliteral">)&quot;;</span></div>
-<div class="line"><a id="l03257" name="l03257"></a><span class="lineno"> 3257</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03258" name="l03258"></a><span class="lineno"><a class="line" href="default__shaders_8h.html#a88c8c32c6aa70e502d94dc3765a54a85"> 3258</a></span><span class="stringliteral"></span><span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">char</span>* <a class="code hl_variable" href="default__shaders_8h.html#a88c8c32c6aa70e502d94dc3765a54a85">PARTICLE_VERT</a> = R<span class="stringliteral">&quot;(</span></div>
-<div class="line"><a id="l03259" name="l03259"></a><span class="lineno"> 3259</span><span class="stringliteral">#version 410 core</span></div>
-<div class="line"><a id="l03260" name="l03260"></a><span class="lineno"> 3260</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03261" name="l03261"></a><span class="lineno"> 3261</span><span class="stringliteral">layout(location = 0) in vec3 quadVertex;</span></div>
-<div class="line"><a id="l03262" name="l03262"></a><span class="lineno"> 3262</span><span class="stringliteral">layout(location = 1) in vec2 texCoord;</span></div>
+<div class="line"><a id="l03241" name="l03241"></a><span class="lineno"> 3241</span><span class="stringliteral">    vec2 texelSize = 1.0 / srcResolution;</span></div>
+<div class="line"><a id="l03242" name="l03242"></a><span class="lineno"> 3242</span><span class="stringliteral">    float x = filterRadius * texelSize.x;</span></div>
+<div class="line"><a id="l03243" name="l03243"></a><span class="lineno"> 3243</span><span class="stringliteral">    float y = filterRadius * texelSize.y;</span></div>
+<div class="line"><a id="l03244" name="l03244"></a><span class="lineno"> 3244</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03245" name="l03245"></a><span class="lineno"> 3245</span><span class="stringliteral">    vec2 texCoord = TexCoord;</span></div>
+<div class="line"><a id="l03246" name="l03246"></a><span class="lineno"> 3246</span><span class="stringliteral">    vec3 a = texture(srcTexture, vec2(texCoord.x - x, texCoord.y + y)).rgb;</span></div>
+<div class="line"><a id="l03247" name="l03247"></a><span class="lineno"> 3247</span><span class="stringliteral">    vec3 b = texture(srcTexture, vec2(texCoord.x, texCoord.y + y)).rgb;</span></div>
+<div class="line"><a id="l03248" name="l03248"></a><span class="lineno"> 3248</span><span class="stringliteral">    vec3 c = texture(srcTexture, vec2(texCoord.x + x, texCoord.y + y)).rgb;</span></div>
+<div class="line"><a id="l03249" name="l03249"></a><span class="lineno"> 3249</span><span class="stringliteral">    vec3 d = texture(srcTexture, vec2(texCoord.x - x, texCoord.y)).rgb;</span></div>
+<div class="line"><a id="l03250" name="l03250"></a><span class="lineno"> 3250</span><span class="stringliteral">    vec3 e = texture(srcTexture, vec2(texCoord.x, texCoord.y)).rgb;</span></div>
+<div class="line"><a id="l03251" name="l03251"></a><span class="lineno"> 3251</span><span class="stringliteral">    vec3 f = texture(srcTexture, vec2(texCoord.x + x, texCoord.y)).rgb;</span></div>
+<div class="line"><a id="l03252" name="l03252"></a><span class="lineno"> 3252</span><span class="stringliteral">    vec3 g = texture(srcTexture, vec2(texCoord.x - x, texCoord.y - y)).rgb;</span></div>
+<div class="line"><a id="l03253" name="l03253"></a><span class="lineno"> 3253</span><span class="stringliteral">    vec3 h = texture(srcTexture, vec2(texCoord.x, texCoord.y - y)).rgb;</span></div>
+<div class="line"><a id="l03254" name="l03254"></a><span class="lineno"> 3254</span><span class="stringliteral">    vec3 i = texture(srcTexture, vec2(texCoord.x + x, texCoord.y - y)).rgb;</span></div>
+<div class="line"><a id="l03255" name="l03255"></a><span class="lineno"> 3255</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03256" name="l03256"></a><span class="lineno"> 3256</span><span class="stringliteral">    upsample = e * 4.0;</span></div>
+<div class="line"><a id="l03257" name="l03257"></a><span class="lineno"> 3257</span><span class="stringliteral">    upsample += (b + d + f + h) * 2.0;</span></div>
+<div class="line"><a id="l03258" name="l03258"></a><span class="lineno"> 3258</span><span class="stringliteral">    upsample += (a + c + g + i);</span></div>
+<div class="line"><a id="l03259" name="l03259"></a><span class="lineno"> 3259</span><span class="stringliteral">    upsample *= 1.0 / 16.0;</span></div>
+<div class="line"><a id="l03260" name="l03260"></a><span class="lineno"> 3260</span><span class="stringliteral">}</span></div>
+<div class="line"><a id="l03261" name="l03261"></a><span class="lineno"> 3261</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03262" name="l03262"></a><span class="lineno"> 3262</span><span class="stringliteral">)&quot;;</span></div>
 <div class="line"><a id="l03263" name="l03263"></a><span class="lineno"> 3263</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03264" name="l03264"></a><span class="lineno"> 3264</span><span class="stringliteral">layout(location = 2) in vec3 particlePos;</span></div>
-<div class="line"><a id="l03265" name="l03265"></a><span class="lineno"> 3265</span><span class="stringliteral">layout(location = 3) in vec4 particleColor;</span></div>
-<div class="line"><a id="l03266" name="l03266"></a><span class="lineno"> 3266</span><span class="stringliteral">layout(location = 4) in float particleSize;</span></div>
-<div class="line"><a id="l03267" name="l03267"></a><span class="lineno"> 3267</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03268" name="l03268"></a><span class="lineno"> 3268</span><span class="stringliteral">uniform mat4 view;</span></div>
-<div class="line"><a id="l03269" name="l03269"></a><span class="lineno"> 3269</span><span class="stringliteral">uniform mat4 projection;</span></div>
-<div class="line"><a id="l03270" name="l03270"></a><span class="lineno"> 3270</span><span class="stringliteral">uniform mat4 model;</span></div>
-<div class="line"><a id="l03271" name="l03271"></a><span class="lineno"> 3271</span><span class="stringliteral">uniform bool isAmbient;</span></div>
+<div class="line"><a id="l03264" name="l03264"></a><span class="lineno"><a class="line" href="default__shaders_8h.html#a97b3d1eef4d78c8c5f962286401216b9"> 3264</a></span><span class="stringliteral"></span><span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">char</span>* <a class="code hl_variable" href="default__shaders_8h.html#a97b3d1eef4d78c8c5f962286401216b9">DOWNSAMPLE_FRAG</a> = R<span class="stringliteral">&quot;(</span></div>
+<div class="line"><a id="l03265" name="l03265"></a><span class="lineno"> 3265</span><span class="stringliteral">#version 410 core</span></div>
+<div class="line"><a id="l03266" name="l03266"></a><span class="lineno"> 3266</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03267" name="l03267"></a><span class="lineno"> 3267</span><span class="stringliteral">uniform sampler2D srcTexture;</span></div>
+<div class="line"><a id="l03268" name="l03268"></a><span class="lineno"> 3268</span><span class="stringliteral">uniform vec2 srcResolution;</span></div>
+<div class="line"><a id="l03269" name="l03269"></a><span class="lineno"> 3269</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03270" name="l03270"></a><span class="lineno"> 3270</span><span class="stringliteral">in vec2 TexCoord;</span></div>
+<div class="line"><a id="l03271" name="l03271"></a><span class="lineno"> 3271</span><span class="stringliteral">layout(location = 0) out vec3 downsample;</span></div>
 <div class="line"><a id="l03272" name="l03272"></a><span class="lineno"> 3272</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03273" name="l03273"></a><span class="lineno"> 3273</span><span class="stringliteral">out vec2 fragTexCoord;</span></div>
-<div class="line"><a id="l03274" name="l03274"></a><span class="lineno"> 3274</span><span class="stringliteral">out vec4 fragColor;</span></div>
-<div class="line"><a id="l03275" name="l03275"></a><span class="lineno"> 3275</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03276" name="l03276"></a><span class="lineno"> 3276</span><span class="stringliteral">void main() {</span></div>
-<div class="line"><a id="l03277" name="l03277"></a><span class="lineno"> 3277</span><span class="stringliteral">    if (isAmbient) {</span></div>
-<div class="line"><a id="l03278" name="l03278"></a><span class="lineno"> 3278</span><span class="stringliteral">        vec4 viewParticlePos = view * vec4(particlePos, 1.0);</span></div>
-<div class="line"><a id="l03279" name="l03279"></a><span class="lineno"> 3279</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03280" name="l03280"></a><span class="lineno"> 3280</span><span class="stringliteral">        vec3 viewPosition =</span></div>
-<div class="line"><a id="l03281" name="l03281"></a><span class="lineno"> 3281</span><span class="stringliteral">            viewParticlePos.xyz +</span></div>
-<div class="line"><a id="l03282" name="l03282"></a><span class="lineno"> 3282</span><span class="stringliteral">            vec3(quadVertex.x * particleSize, quadVertex.y * particleSize, 0.0);</span></div>
-<div class="line"><a id="l03283" name="l03283"></a><span class="lineno"> 3283</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03284" name="l03284"></a><span class="lineno"> 3284</span><span class="stringliteral">        gl_Position = projection * model * vec4(viewPosition, 1.0);</span></div>
-<div class="line"><a id="l03285" name="l03285"></a><span class="lineno"> 3285</span><span class="stringliteral">    } else {</span></div>
-<div class="line"><a id="l03286" name="l03286"></a><span class="lineno"> 3286</span><span class="stringliteral">        vec3 cameraRight = vec3(view[0][0], view[1][0], view[2][0]);</span></div>
-<div class="line"><a id="l03287" name="l03287"></a><span class="lineno"> 3287</span><span class="stringliteral">        vec3 cameraUp = vec3(view[0][1], view[1][1], view[2][1]);</span></div>
-<div class="line"><a id="l03288" name="l03288"></a><span class="lineno"> 3288</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03289" name="l03289"></a><span class="lineno"> 3289</span><span class="stringliteral">        vec3 worldPosition = particlePos +</span></div>
-<div class="line"><a id="l03290" name="l03290"></a><span class="lineno"> 3290</span><span class="stringliteral">                             (quadVertex.x * cameraRight * particleSize) +</span></div>
-<div class="line"><a id="l03291" name="l03291"></a><span class="lineno"> 3291</span><span class="stringliteral">                             (quadVertex.y * cameraUp * particleSize);</span></div>
-<div class="line"><a id="l03292" name="l03292"></a><span class="lineno"> 3292</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03293" name="l03293"></a><span class="lineno"> 3293</span><span class="stringliteral">        gl_Position = projection * view * vec4(worldPosition, 1.0);</span></div>
-<div class="line"><a id="l03294" name="l03294"></a><span class="lineno"> 3294</span><span class="stringliteral">    }</span></div>
+<div class="line"><a id="l03273" name="l03273"></a><span class="lineno"> 3273</span><span class="stringliteral">void main() {</span></div>
+<div class="line"><a id="l03274" name="l03274"></a><span class="lineno"> 3274</span><span class="stringliteral">    vec2 srcTexelSize = 1.0 / srcResolution;</span></div>
+<div class="line"><a id="l03275" name="l03275"></a><span class="lineno"> 3275</span><span class="stringliteral">    float x = srcTexelSize.x;</span></div>
+<div class="line"><a id="l03276" name="l03276"></a><span class="lineno"> 3276</span><span class="stringliteral">    float y = srcTexelSize.y;</span></div>
+<div class="line"><a id="l03277" name="l03277"></a><span class="lineno"> 3277</span><span class="stringliteral">    vec2 texCoord = TexCoord;</span></div>
+<div class="line"><a id="l03278" name="l03278"></a><span class="lineno"> 3278</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03279" name="l03279"></a><span class="lineno"> 3279</span><span class="stringliteral">    vec3 a = texture(srcTexture, vec2(texCoord.x - 2 * x, texCoord.y + 2 * y)).rgb;</span></div>
+<div class="line"><a id="l03280" name="l03280"></a><span class="lineno"> 3280</span><span class="stringliteral">    vec3 b = texture(srcTexture, vec2(texCoord.x, texCoord.y + 2 * y)).rgb;</span></div>
+<div class="line"><a id="l03281" name="l03281"></a><span class="lineno"> 3281</span><span class="stringliteral">    vec3 c = texture(srcTexture, vec2(texCoord.x + 2 * x, texCoord.y + 2 * y)).rgb;</span></div>
+<div class="line"><a id="l03282" name="l03282"></a><span class="lineno"> 3282</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03283" name="l03283"></a><span class="lineno"> 3283</span><span class="stringliteral">    vec3 d = texture(srcTexture, vec2(texCoord.x - 2 * x, texCoord.y)).rgb;</span></div>
+<div class="line"><a id="l03284" name="l03284"></a><span class="lineno"> 3284</span><span class="stringliteral">    vec3 e = texture(srcTexture, vec2(texCoord.x, texCoord.y)).rgb;</span></div>
+<div class="line"><a id="l03285" name="l03285"></a><span class="lineno"> 3285</span><span class="stringliteral">    vec3 f = texture(srcTexture, vec2(texCoord.x + 2 * x, texCoord.y)).rgb;</span></div>
+<div class="line"><a id="l03286" name="l03286"></a><span class="lineno"> 3286</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03287" name="l03287"></a><span class="lineno"> 3287</span><span class="stringliteral">    vec3 g = texture(srcTexture, vec2(texCoord.x - 2 * x, texCoord.y - 2 * y)).rgb;</span></div>
+<div class="line"><a id="l03288" name="l03288"></a><span class="lineno"> 3288</span><span class="stringliteral">    vec3 h = texture(srcTexture, vec2(texCoord.x, texCoord.y - 2 * y)).rgb;</span></div>
+<div class="line"><a id="l03289" name="l03289"></a><span class="lineno"> 3289</span><span class="stringliteral">    vec3 i = texture(srcTexture, vec2(texCoord.x + 2 * x, texCoord.y - 2 * y)).rgb;</span></div>
+<div class="line"><a id="l03290" name="l03290"></a><span class="lineno"> 3290</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03291" name="l03291"></a><span class="lineno"> 3291</span><span class="stringliteral">    vec3 j = texture(srcTexture, vec2(texCoord.x - x, texCoord.y + y)).rgb;</span></div>
+<div class="line"><a id="l03292" name="l03292"></a><span class="lineno"> 3292</span><span class="stringliteral">    vec3 k = texture(srcTexture, vec2(texCoord.x + x, texCoord.y + y)).rgb;</span></div>
+<div class="line"><a id="l03293" name="l03293"></a><span class="lineno"> 3293</span><span class="stringliteral">    vec3 l = texture(srcTexture, vec2(texCoord.x - x, texCoord.y - y)).rgb;</span></div>
+<div class="line"><a id="l03294" name="l03294"></a><span class="lineno"> 3294</span><span class="stringliteral">    vec3 m = texture(srcTexture, vec2(texCoord.x + x, texCoord.y - y)).rgb;</span></div>
 <div class="line"><a id="l03295" name="l03295"></a><span class="lineno"> 3295</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03296" name="l03296"></a><span class="lineno"> 3296</span><span class="stringliteral">    fragTexCoord = texCoord;</span></div>
-<div class="line"><a id="l03297" name="l03297"></a><span class="lineno"> 3297</span><span class="stringliteral">    fragColor = particleColor;</span></div>
-<div class="line"><a id="l03298" name="l03298"></a><span class="lineno"> 3298</span><span class="stringliteral">}</span></div>
-<div class="line"><a id="l03299" name="l03299"></a><span class="lineno"> 3299</span><span class="stringliteral">)&quot;;</span></div>
-<div class="line"><a id="l03300" name="l03300"></a><span class="lineno"> 3300</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03301" name="l03301"></a><span class="lineno"><a class="line" href="default__shaders_8h.html#accb5b46bd2b12d12a056815764bc4501"> 3301</a></span><span class="stringliteral"></span><span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">char</span>* <a class="code hl_variable" href="default__shaders_8h.html#accb5b46bd2b12d12a056815764bc4501">SKYBOX_VERT</a> = R<span class="stringliteral">&quot;(</span></div>
-<div class="line"><a id="l03302" name="l03302"></a><span class="lineno"> 3302</span><span class="stringliteral">#version 410 core</span></div>
-<div class="line"><a id="l03303" name="l03303"></a><span class="lineno"> 3303</span><span class="stringliteral">layout (location = 0) in vec3 aPos;</span></div>
-<div class="line"><a id="l03304" name="l03304"></a><span class="lineno"> 3304</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03305" name="l03305"></a><span class="lineno"> 3305</span><span class="stringliteral">out vec3 TexCoords;</span></div>
-<div class="line"><a id="l03306" name="l03306"></a><span class="lineno"> 3306</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03307" name="l03307"></a><span class="lineno"> 3307</span><span class="stringliteral">uniform mat4 projection;</span></div>
-<div class="line"><a id="l03308" name="l03308"></a><span class="lineno"> 3308</span><span class="stringliteral">uniform mat4 view;</span></div>
-<div class="line"><a id="l03309" name="l03309"></a><span class="lineno"> 3309</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03310" name="l03310"></a><span class="lineno"> 3310</span><span class="stringliteral">void main()</span></div>
-<div class="line"><a id="l03311" name="l03311"></a><span class="lineno"> 3311</span><span class="stringliteral">{</span></div>
-<div class="line"><a id="l03312" name="l03312"></a><span class="lineno"> 3312</span><span class="stringliteral">    TexCoords = aPos;</span></div>
-<div class="line"><a id="l03313" name="l03313"></a><span class="lineno"> 3313</span><span class="stringliteral">    vec4 pos = projection * view * vec4(aPos, 1.0);</span></div>
-<div class="line"><a id="l03314" name="l03314"></a><span class="lineno"> 3314</span><span class="stringliteral">    gl_Position = pos.xyww; </span></div>
-<div class="line"><a id="l03315" name="l03315"></a><span class="lineno"> 3315</span><span class="stringliteral">}  </span></div>
-<div class="line"><a id="l03316" name="l03316"></a><span class="lineno"> 3316</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03317" name="l03317"></a><span class="lineno"> 3317</span><span class="stringliteral">)&quot;;</span></div>
-<div class="line"><a id="l03318" name="l03318"></a><span class="lineno"> 3318</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03319" name="l03319"></a><span class="lineno"><a class="line" href="default__shaders_8h.html#a07f0219170c57524bc8c2ca4d6e5f58a"> 3319</a></span><span class="stringliteral"></span><span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">char</span>* <a class="code hl_variable" href="default__shaders_8h.html#a07f0219170c57524bc8c2ca4d6e5f58a">GAUSSIAN_FRAG</a> = R<span class="stringliteral">&quot;(</span></div>
-<div class="line"><a id="l03320" name="l03320"></a><span class="lineno"> 3320</span><span class="stringliteral">#version 410 core</span></div>
-<div class="line"><a id="l03321" name="l03321"></a><span class="lineno"> 3321</span><span class="stringliteral">out vec4 FragColor;</span></div>
-<div class="line"><a id="l03322" name="l03322"></a><span class="lineno"> 3322</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03323" name="l03323"></a><span class="lineno"> 3323</span><span class="stringliteral">in vec2 TexCoord;</span></div>
-<div class="line"><a id="l03324" name="l03324"></a><span class="lineno"> 3324</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03325" name="l03325"></a><span class="lineno"> 3325</span><span class="stringliteral">uniform sampler2D image;</span></div>
-<div class="line"><a id="l03326" name="l03326"></a><span class="lineno"> 3326</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03327" name="l03327"></a><span class="lineno"> 3327</span><span class="stringliteral">uniform bool horizontal;</span></div>
-<div class="line"><a id="l03328" name="l03328"></a><span class="lineno"> 3328</span><span class="stringliteral">uniform float weight[5] = float[](0.227027, 0.1945946, 0.1216216, 0.054054, 0.016216);</span></div>
-<div class="line"><a id="l03329" name="l03329"></a><span class="lineno"> 3329</span><span class="stringliteral">uniform float radius = 1.0;</span></div>
-<div class="line"><a id="l03330" name="l03330"></a><span class="lineno"> 3330</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03331" name="l03331"></a><span class="lineno"> 3331</span><span class="stringliteral">void main() {</span></div>
-<div class="line"><a id="l03332" name="l03332"></a><span class="lineno"> 3332</span><span class="stringliteral">    vec2 tex_offset = 1.0 / textureSize(image, 0) * radius; </span></div>
-<div class="line"><a id="l03333" name="l03333"></a><span class="lineno"> 3333</span><span class="stringliteral">    vec3 result = texture(image, TexCoord).rgb * weight[0];</span></div>
-<div class="line"><a id="l03334" name="l03334"></a><span class="lineno"> 3334</span><span class="stringliteral">    if(horizontal)</span></div>
-<div class="line"><a id="l03335" name="l03335"></a><span class="lineno"> 3335</span><span class="stringliteral">    {</span></div>
-<div class="line"><a id="l03336" name="l03336"></a><span class="lineno"> 3336</span><span class="stringliteral">        for(int i = 1; i &lt; 5; ++i)</span></div>
-<div class="line"><a id="l03337" name="l03337"></a><span class="lineno"> 3337</span><span class="stringliteral">        {</span></div>
-<div class="line"><a id="l03338" name="l03338"></a><span class="lineno"> 3338</span><span class="stringliteral">            result += texture(image, TexCoord + vec2(tex_offset.x * i, 0.0)).rgb * weight[i];</span></div>
-<div class="line"><a id="l03339" name="l03339"></a><span class="lineno"> 3339</span><span class="stringliteral">            result += texture(image, TexCoord - vec2(tex_offset.x * i, 0.0)).rgb * weight[i];</span></div>
-<div class="line"><a id="l03340" name="l03340"></a><span class="lineno"> 3340</span><span class="stringliteral">        }</span></div>
-<div class="line"><a id="l03341" name="l03341"></a><span class="lineno"> 3341</span><span class="stringliteral">    }</span></div>
-<div class="line"><a id="l03342" name="l03342"></a><span class="lineno"> 3342</span><span class="stringliteral">    else</span></div>
-<div class="line"><a id="l03343" name="l03343"></a><span class="lineno"> 3343</span><span class="stringliteral">    {</span></div>
-<div class="line"><a id="l03344" name="l03344"></a><span class="lineno"> 3344</span><span class="stringliteral">        for(int i = 1; i &lt; 5; ++i)</span></div>
-<div class="line"><a id="l03345" name="l03345"></a><span class="lineno"> 3345</span><span class="stringliteral">        {</span></div>
-<div class="line"><a id="l03346" name="l03346"></a><span class="lineno"> 3346</span><span class="stringliteral">            result += texture(image, TexCoord + vec2(0.0, tex_offset.y * i)).rgb * weight[i];</span></div>
-<div class="line"><a id="l03347" name="l03347"></a><span class="lineno"> 3347</span><span class="stringliteral">            result += texture(image, TexCoord - vec2(0.0, tex_offset.y * i)).rgb * weight[i];</span></div>
-<div class="line"><a id="l03348" name="l03348"></a><span class="lineno"> 3348</span><span class="stringliteral">        }</span></div>
-<div class="line"><a id="l03349" name="l03349"></a><span class="lineno"> 3349</span><span class="stringliteral">    }</span></div>
-<div class="line"><a id="l03350" name="l03350"></a><span class="lineno"> 3350</span><span class="stringliteral">    FragColor = vec4(result, 1.0);</span></div>
-<div class="line"><a id="l03351" name="l03351"></a><span class="lineno"> 3351</span><span class="stringliteral">}</span></div>
-<div class="line"><a id="l03352" name="l03352"></a><span class="lineno"> 3352</span><span class="stringliteral">)&quot;;</span></div>
-<div class="line"><a id="l03353" name="l03353"></a><span class="lineno"> 3353</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03354" name="l03354"></a><span class="lineno"><a class="line" href="default__shaders_8h.html#ad88f8cc860c904e7023437d9c36e6aa3"> 3354</a></span><span class="stringliteral"></span><span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">char</span>* <a class="code hl_variable" href="default__shaders_8h.html#ad88f8cc860c904e7023437d9c36e6aa3">VOLUMETRIC_VERT</a> = R<span class="stringliteral">&quot;(</span></div>
-<div class="line"><a id="l03355" name="l03355"></a><span class="lineno"> 3355</span><span class="stringliteral">#version 410 core</span></div>
-<div class="line"><a id="l03356" name="l03356"></a><span class="lineno"> 3356</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03357" name="l03357"></a><span class="lineno"> 3357</span><span class="stringliteral">layout(location = 0) in vec3 aPos;</span></div>
-<div class="line"><a id="l03358" name="l03358"></a><span class="lineno"> 3358</span><span class="stringliteral">layout(location = 1) in vec2 aTexCoords;</span></div>
-<div class="line"><a id="l03359" name="l03359"></a><span class="lineno"> 3359</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03360" name="l03360"></a><span class="lineno"> 3360</span><span class="stringliteral">out vec2 TexCoords;</span></div>
-<div class="line"><a id="l03361" name="l03361"></a><span class="lineno"> 3361</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03362" name="l03362"></a><span class="lineno"> 3362</span><span class="stringliteral">void main() {</span></div>
-<div class="line"><a id="l03363" name="l03363"></a><span class="lineno"> 3363</span><span class="stringliteral">    gl_Position = vec4(aPos, 1.0);</span></div>
-<div class="line"><a id="l03364" name="l03364"></a><span class="lineno"> 3364</span><span class="stringliteral">    TexCoords = aTexCoords;</span></div>
-<div class="line"><a id="l03365" name="l03365"></a><span class="lineno"> 3365</span><span class="stringliteral">}</span></div>
-<div class="line"><a id="l03366" name="l03366"></a><span class="lineno"> 3366</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03367" name="l03367"></a><span class="lineno"> 3367</span><span class="stringliteral">)&quot;;</span></div>
-<div class="line"><a id="l03368" name="l03368"></a><span class="lineno"> 3368</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03369" name="l03369"></a><span class="lineno"><a class="line" href="default__shaders_8h.html#aac56e41dba3af03619326b9c522e6ee4"> 3369</a></span><span class="stringliteral"></span><span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">char</span>* <a class="code hl_variable" href="default__shaders_8h.html#aac56e41dba3af03619326b9c522e6ee4">VOLUMETRIC_FRAG</a> = R<span class="stringliteral">&quot;(</span></div>
-<div class="line"><a id="l03370" name="l03370"></a><span class="lineno"> 3370</span><span class="stringliteral">#version 410 core</span></div>
-<div class="line"><a id="l03371" name="l03371"></a><span class="lineno"> 3371</span><span class="stringliteral">in vec2 TexCoords;</span></div>
-<div class="line"><a id="l03372" name="l03372"></a><span class="lineno"> 3372</span><span class="stringliteral">out vec4 FragColor;</span></div>
-<div class="line"><a id="l03373" name="l03373"></a><span class="lineno"> 3373</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03374" name="l03374"></a><span class="lineno"> 3374</span><span class="stringliteral">uniform sampler2D sceneTexture;</span></div>
-<div class="line"><a id="l03375" name="l03375"></a><span class="lineno"> 3375</span><span class="stringliteral">uniform vec2 sunPos;</span></div>
+<div class="line"><a id="l03296" name="l03296"></a><span class="lineno"> 3296</span><span class="stringliteral">    downsample = e * 0.125;</span></div>
+<div class="line"><a id="l03297" name="l03297"></a><span class="lineno"> 3297</span><span class="stringliteral">    downsample += (a + c + g + i) * 0.03125;</span></div>
+<div class="line"><a id="l03298" name="l03298"></a><span class="lineno"> 3298</span><span class="stringliteral">    downsample += (b + d + f + h) * 0.0625;</span></div>
+<div class="line"><a id="l03299" name="l03299"></a><span class="lineno"> 3299</span><span class="stringliteral">    downsample += (j + k + l + m) * 0.125;</span></div>
+<div class="line"><a id="l03300" name="l03300"></a><span class="lineno"> 3300</span><span class="stringliteral">}</span></div>
+<div class="line"><a id="l03301" name="l03301"></a><span class="lineno"> 3301</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03302" name="l03302"></a><span class="lineno"> 3302</span><span class="stringliteral">)&quot;;</span></div>
+<div class="line"><a id="l03303" name="l03303"></a><span class="lineno"> 3303</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03304" name="l03304"></a><span class="lineno"><a class="line" href="default__shaders_8h.html#adbc40b4a97e5a3bf53b4b7128dfbdc9e"> 3304</a></span><span class="stringliteral"></span><span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">char</span>* <a class="code hl_variable" href="default__shaders_8h.html#adbc40b4a97e5a3bf53b4b7128dfbdc9e">PARTICLE_FRAG</a> = R<span class="stringliteral">&quot;(</span></div>
+<div class="line"><a id="l03305" name="l03305"></a><span class="lineno"> 3305</span><span class="stringliteral">#version 410 core</span></div>
+<div class="line"><a id="l03306" name="l03306"></a><span class="lineno"> 3306</span><span class="stringliteral">in vec2 fragTexCoord;</span></div>
+<div class="line"><a id="l03307" name="l03307"></a><span class="lineno"> 3307</span><span class="stringliteral">in vec4 fragColor;</span></div>
+<div class="line"><a id="l03308" name="l03308"></a><span class="lineno"> 3308</span><span class="stringliteral">out vec4 FragColor;</span></div>
+<div class="line"><a id="l03309" name="l03309"></a><span class="lineno"> 3309</span><span class="stringliteral">uniform sampler2D particleTexture;</span></div>
+<div class="line"><a id="l03310" name="l03310"></a><span class="lineno"> 3310</span><span class="stringliteral">uniform bool useTexture;</span></div>
+<div class="line"><a id="l03311" name="l03311"></a><span class="lineno"> 3311</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03312" name="l03312"></a><span class="lineno"> 3312</span><span class="stringliteral">void main() {</span></div>
+<div class="line"><a id="l03313" name="l03313"></a><span class="lineno"> 3313</span><span class="stringliteral">    if (useTexture) {</span></div>
+<div class="line"><a id="l03314" name="l03314"></a><span class="lineno"> 3314</span><span class="stringliteral">        vec4 texColor = texture(particleTexture, fragTexCoord);</span></div>
+<div class="line"><a id="l03315" name="l03315"></a><span class="lineno"> 3315</span><span class="stringliteral">        if (texColor.a &lt; 0.01) discard;</span></div>
+<div class="line"><a id="l03316" name="l03316"></a><span class="lineno"> 3316</span><span class="stringliteral">        FragColor = texColor * fragColor;</span></div>
+<div class="line"><a id="l03317" name="l03317"></a><span class="lineno"> 3317</span><span class="stringliteral">    } else {</span></div>
+<div class="line"><a id="l03318" name="l03318"></a><span class="lineno"> 3318</span><span class="stringliteral">        vec2 center = vec2(0.5, 0.5);</span></div>
+<div class="line"><a id="l03319" name="l03319"></a><span class="lineno"> 3319</span><span class="stringliteral">        float dist = distance(fragTexCoord, center);</span></div>
+<div class="line"><a id="l03320" name="l03320"></a><span class="lineno"> 3320</span><span class="stringliteral">        </span></div>
+<div class="line"><a id="l03321" name="l03321"></a><span class="lineno"> 3321</span><span class="stringliteral">        float alpha = 1.0 - smoothstep(0.3, 0.5, dist);</span></div>
+<div class="line"><a id="l03322" name="l03322"></a><span class="lineno"> 3322</span><span class="stringliteral">        </span></div>
+<div class="line"><a id="l03323" name="l03323"></a><span class="lineno"> 3323</span><span class="stringliteral">        FragColor = vec4(fragColor.rgb, fragColor.a * alpha);</span></div>
+<div class="line"><a id="l03324" name="l03324"></a><span class="lineno"> 3324</span><span class="stringliteral">        </span></div>
+<div class="line"><a id="l03325" name="l03325"></a><span class="lineno"> 3325</span><span class="stringliteral">        if (FragColor.a &lt; 0.01) discard;</span></div>
+<div class="line"><a id="l03326" name="l03326"></a><span class="lineno"> 3326</span><span class="stringliteral">    }</span></div>
+<div class="line"><a id="l03327" name="l03327"></a><span class="lineno"> 3327</span><span class="stringliteral">}</span></div>
+<div class="line"><a id="l03328" name="l03328"></a><span class="lineno"> 3328</span><span class="stringliteral">)&quot;;</span></div>
+<div class="line"><a id="l03329" name="l03329"></a><span class="lineno"> 3329</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03330" name="l03330"></a><span class="lineno"><a class="line" href="default__shaders_8h.html#a88c8c32c6aa70e502d94dc3765a54a85"> 3330</a></span><span class="stringliteral"></span><span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">char</span>* <a class="code hl_variable" href="default__shaders_8h.html#a88c8c32c6aa70e502d94dc3765a54a85">PARTICLE_VERT</a> = R<span class="stringliteral">&quot;(</span></div>
+<div class="line"><a id="l03331" name="l03331"></a><span class="lineno"> 3331</span><span class="stringliteral">#version 410 core</span></div>
+<div class="line"><a id="l03332" name="l03332"></a><span class="lineno"> 3332</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03333" name="l03333"></a><span class="lineno"> 3333</span><span class="stringliteral">layout(location = 0) in vec3 quadVertex;</span></div>
+<div class="line"><a id="l03334" name="l03334"></a><span class="lineno"> 3334</span><span class="stringliteral">layout(location = 1) in vec2 texCoord;</span></div>
+<div class="line"><a id="l03335" name="l03335"></a><span class="lineno"> 3335</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03336" name="l03336"></a><span class="lineno"> 3336</span><span class="stringliteral">layout(location = 2) in vec3 particlePos;</span></div>
+<div class="line"><a id="l03337" name="l03337"></a><span class="lineno"> 3337</span><span class="stringliteral">layout(location = 3) in vec4 particleColor;</span></div>
+<div class="line"><a id="l03338" name="l03338"></a><span class="lineno"> 3338</span><span class="stringliteral">layout(location = 4) in float particleSize;</span></div>
+<div class="line"><a id="l03339" name="l03339"></a><span class="lineno"> 3339</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03340" name="l03340"></a><span class="lineno"> 3340</span><span class="stringliteral">uniform mat4 view;</span></div>
+<div class="line"><a id="l03341" name="l03341"></a><span class="lineno"> 3341</span><span class="stringliteral">uniform mat4 projection;</span></div>
+<div class="line"><a id="l03342" name="l03342"></a><span class="lineno"> 3342</span><span class="stringliteral">uniform mat4 model;</span></div>
+<div class="line"><a id="l03343" name="l03343"></a><span class="lineno"> 3343</span><span class="stringliteral">uniform bool isAmbient;</span></div>
+<div class="line"><a id="l03344" name="l03344"></a><span class="lineno"> 3344</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03345" name="l03345"></a><span class="lineno"> 3345</span><span class="stringliteral">out vec2 fragTexCoord;</span></div>
+<div class="line"><a id="l03346" name="l03346"></a><span class="lineno"> 3346</span><span class="stringliteral">out vec4 fragColor;</span></div>
+<div class="line"><a id="l03347" name="l03347"></a><span class="lineno"> 3347</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03348" name="l03348"></a><span class="lineno"> 3348</span><span class="stringliteral">void main() {</span></div>
+<div class="line"><a id="l03349" name="l03349"></a><span class="lineno"> 3349</span><span class="stringliteral">    if (isAmbient) {</span></div>
+<div class="line"><a id="l03350" name="l03350"></a><span class="lineno"> 3350</span><span class="stringliteral">        vec4 viewParticlePos = view * vec4(particlePos, 1.0);</span></div>
+<div class="line"><a id="l03351" name="l03351"></a><span class="lineno"> 3351</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03352" name="l03352"></a><span class="lineno"> 3352</span><span class="stringliteral">        vec3 viewPosition =</span></div>
+<div class="line"><a id="l03353" name="l03353"></a><span class="lineno"> 3353</span><span class="stringliteral">            viewParticlePos.xyz +</span></div>
+<div class="line"><a id="l03354" name="l03354"></a><span class="lineno"> 3354</span><span class="stringliteral">            vec3(quadVertex.x * particleSize, quadVertex.y * particleSize, 0.0);</span></div>
+<div class="line"><a id="l03355" name="l03355"></a><span class="lineno"> 3355</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03356" name="l03356"></a><span class="lineno"> 3356</span><span class="stringliteral">        gl_Position = projection * model * vec4(viewPosition, 1.0);</span></div>
+<div class="line"><a id="l03357" name="l03357"></a><span class="lineno"> 3357</span><span class="stringliteral">    } else {</span></div>
+<div class="line"><a id="l03358" name="l03358"></a><span class="lineno"> 3358</span><span class="stringliteral">        vec3 cameraRight = vec3(view[0][0], view[1][0], view[2][0]);</span></div>
+<div class="line"><a id="l03359" name="l03359"></a><span class="lineno"> 3359</span><span class="stringliteral">        vec3 cameraUp = vec3(view[0][1], view[1][1], view[2][1]);</span></div>
+<div class="line"><a id="l03360" name="l03360"></a><span class="lineno"> 3360</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03361" name="l03361"></a><span class="lineno"> 3361</span><span class="stringliteral">        vec3 worldPosition = particlePos +</span></div>
+<div class="line"><a id="l03362" name="l03362"></a><span class="lineno"> 3362</span><span class="stringliteral">                             (quadVertex.x * cameraRight * particleSize) +</span></div>
+<div class="line"><a id="l03363" name="l03363"></a><span class="lineno"> 3363</span><span class="stringliteral">                             (quadVertex.y * cameraUp * particleSize);</span></div>
+<div class="line"><a id="l03364" name="l03364"></a><span class="lineno"> 3364</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03365" name="l03365"></a><span class="lineno"> 3365</span><span class="stringliteral">        gl_Position = projection * view * vec4(worldPosition, 1.0);</span></div>
+<div class="line"><a id="l03366" name="l03366"></a><span class="lineno"> 3366</span><span class="stringliteral">    }</span></div>
+<div class="line"><a id="l03367" name="l03367"></a><span class="lineno"> 3367</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03368" name="l03368"></a><span class="lineno"> 3368</span><span class="stringliteral">    fragTexCoord = texCoord;</span></div>
+<div class="line"><a id="l03369" name="l03369"></a><span class="lineno"> 3369</span><span class="stringliteral">    fragColor = particleColor;</span></div>
+<div class="line"><a id="l03370" name="l03370"></a><span class="lineno"> 3370</span><span class="stringliteral">}</span></div>
+<div class="line"><a id="l03371" name="l03371"></a><span class="lineno"> 3371</span><span class="stringliteral">)&quot;;</span></div>
+<div class="line"><a id="l03372" name="l03372"></a><span class="lineno"> 3372</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03373" name="l03373"></a><span class="lineno"><a class="line" href="default__shaders_8h.html#accb5b46bd2b12d12a056815764bc4501"> 3373</a></span><span class="stringliteral"></span><span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">char</span>* <a class="code hl_variable" href="default__shaders_8h.html#accb5b46bd2b12d12a056815764bc4501">SKYBOX_VERT</a> = R<span class="stringliteral">&quot;(</span></div>
+<div class="line"><a id="l03374" name="l03374"></a><span class="lineno"> 3374</span><span class="stringliteral">#version 410 core</span></div>
+<div class="line"><a id="l03375" name="l03375"></a><span class="lineno"> 3375</span><span class="stringliteral">layout (location = 0) in vec3 aPos;</span></div>
 <div class="line"><a id="l03376" name="l03376"></a><span class="lineno"> 3376</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03377" name="l03377"></a><span class="lineno"> 3377</span><span class="stringliteral">struct DirectionalLight {</span></div>
-<div class="line"><a id="l03378" name="l03378"></a><span class="lineno"> 3378</span><span class="stringliteral">    vec3 color;</span></div>
-<div class="line"><a id="l03379" name="l03379"></a><span class="lineno"> 3379</span><span class="stringliteral">};</span></div>
-<div class="line"><a id="l03380" name="l03380"></a><span class="lineno"> 3380</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03381" name="l03381"></a><span class="lineno"> 3381</span><span class="stringliteral">uniform DirectionalLight directionalLight;</span></div>
-<div class="line"><a id="l03382" name="l03382"></a><span class="lineno"> 3382</span><span class="stringliteral">uniform float density;</span></div>
-<div class="line"><a id="l03383" name="l03383"></a><span class="lineno"> 3383</span><span class="stringliteral">uniform float weight;</span></div>
-<div class="line"><a id="l03384" name="l03384"></a><span class="lineno"> 3384</span><span class="stringliteral">uniform float decay;</span></div>
-<div class="line"><a id="l03385" name="l03385"></a><span class="lineno"> 3385</span><span class="stringliteral">uniform float exposure;</span></div>
-<div class="line"><a id="l03386" name="l03386"></a><span class="lineno"> 3386</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03387" name="l03387"></a><span class="lineno"> 3387</span><span class="stringliteral">vec3 computeVolumetricLighting(vec2 uv) {</span></div>
-<div class="line"><a id="l03388" name="l03388"></a><span class="lineno"> 3388</span><span class="stringliteral">    vec3 color = vec3(0.0);</span></div>
-<div class="line"><a id="l03389" name="l03389"></a><span class="lineno"> 3389</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03390" name="l03390"></a><span class="lineno"> 3390</span><span class="stringliteral">    vec2 deltaTexCoord = (sunPos - uv) * density;</span></div>
-<div class="line"><a id="l03391" name="l03391"></a><span class="lineno"> 3391</span><span class="stringliteral">    vec2 coord = uv;</span></div>
-<div class="line"><a id="l03392" name="l03392"></a><span class="lineno"> 3392</span><span class="stringliteral">    float illuminationDecay = 1.0;</span></div>
-<div class="line"><a id="l03393" name="l03393"></a><span class="lineno"> 3393</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03394" name="l03394"></a><span class="lineno"> 3394</span><span class="stringliteral">    const int NUM_SAMPLES = 100;</span></div>
-<div class="line"><a id="l03395" name="l03395"></a><span class="lineno"> 3395</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03396" name="l03396"></a><span class="lineno"> 3396</span><span class="stringliteral">    for (int i = 0; i &lt; NUM_SAMPLES; i++) {</span></div>
-<div class="line"><a id="l03397" name="l03397"></a><span class="lineno"> 3397</span><span class="stringliteral">        coord += deltaTexCoord;</span></div>
+<div class="line"><a id="l03377" name="l03377"></a><span class="lineno"> 3377</span><span class="stringliteral">out vec3 TexCoords;</span></div>
+<div class="line"><a id="l03378" name="l03378"></a><span class="lineno"> 3378</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03379" name="l03379"></a><span class="lineno"> 3379</span><span class="stringliteral">uniform mat4 projection;</span></div>
+<div class="line"><a id="l03380" name="l03380"></a><span class="lineno"> 3380</span><span class="stringliteral">uniform mat4 view;</span></div>
+<div class="line"><a id="l03381" name="l03381"></a><span class="lineno"> 3381</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03382" name="l03382"></a><span class="lineno"> 3382</span><span class="stringliteral">void main()</span></div>
+<div class="line"><a id="l03383" name="l03383"></a><span class="lineno"> 3383</span><span class="stringliteral">{</span></div>
+<div class="line"><a id="l03384" name="l03384"></a><span class="lineno"> 3384</span><span class="stringliteral">    TexCoords = aPos;</span></div>
+<div class="line"><a id="l03385" name="l03385"></a><span class="lineno"> 3385</span><span class="stringliteral">    vec4 pos = projection * view * vec4(aPos, 1.0);</span></div>
+<div class="line"><a id="l03386" name="l03386"></a><span class="lineno"> 3386</span><span class="stringliteral">    gl_Position = pos.xyww; </span></div>
+<div class="line"><a id="l03387" name="l03387"></a><span class="lineno"> 3387</span><span class="stringliteral">}  </span></div>
+<div class="line"><a id="l03388" name="l03388"></a><span class="lineno"> 3388</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03389" name="l03389"></a><span class="lineno"> 3389</span><span class="stringliteral">)&quot;;</span></div>
+<div class="line"><a id="l03390" name="l03390"></a><span class="lineno"> 3390</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03391" name="l03391"></a><span class="lineno"><a class="line" href="default__shaders_8h.html#a07f0219170c57524bc8c2ca4d6e5f58a"> 3391</a></span><span class="stringliteral"></span><span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">char</span>* <a class="code hl_variable" href="default__shaders_8h.html#a07f0219170c57524bc8c2ca4d6e5f58a">GAUSSIAN_FRAG</a> = R<span class="stringliteral">&quot;(</span></div>
+<div class="line"><a id="l03392" name="l03392"></a><span class="lineno"> 3392</span><span class="stringliteral">#version 410 core</span></div>
+<div class="line"><a id="l03393" name="l03393"></a><span class="lineno"> 3393</span><span class="stringliteral">out vec4 FragColor;</span></div>
+<div class="line"><a id="l03394" name="l03394"></a><span class="lineno"> 3394</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03395" name="l03395"></a><span class="lineno"> 3395</span><span class="stringliteral">in vec2 TexCoord;</span></div>
+<div class="line"><a id="l03396" name="l03396"></a><span class="lineno"> 3396</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03397" name="l03397"></a><span class="lineno"> 3397</span><span class="stringliteral">uniform sampler2D image;</span></div>
 <div class="line"><a id="l03398" name="l03398"></a><span class="lineno"> 3398</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03399" name="l03399"></a><span class="lineno"> 3399</span><span class="stringliteral">        if (coord.x &lt; 0.0 || coord.x &gt; 1.0 || coord.y &lt; 0.0 || coord.y &gt; 1.0) {</span></div>
-<div class="line"><a id="l03400" name="l03400"></a><span class="lineno"> 3400</span><span class="stringliteral">            break;</span></div>
-<div class="line"><a id="l03401" name="l03401"></a><span class="lineno"> 3401</span><span class="stringliteral">        }</span></div>
+<div class="line"><a id="l03399" name="l03399"></a><span class="lineno"> 3399</span><span class="stringliteral">uniform bool horizontal;</span></div>
+<div class="line"><a id="l03400" name="l03400"></a><span class="lineno"> 3400</span><span class="stringliteral">uniform float weight[5] = float[](0.227027, 0.1945946, 0.1216216, 0.054054, 0.016216);</span></div>
+<div class="line"><a id="l03401" name="l03401"></a><span class="lineno"> 3401</span><span class="stringliteral">uniform float radius = 1.0;</span></div>
 <div class="line"><a id="l03402" name="l03402"></a><span class="lineno"> 3402</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03403" name="l03403"></a><span class="lineno"> 3403</span><span class="stringliteral">        vec3 sampled = texture(sceneTexture, coord).rgb;</span></div>
-<div class="line"><a id="l03404" name="l03404"></a><span class="lineno"> 3404</span><span class="stringliteral">        float brightness = dot(sampled, vec3(0.299, 0.587, 0.114));</span></div>
-<div class="line"><a id="l03405" name="l03405"></a><span class="lineno"> 3405</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03406" name="l03406"></a><span class="lineno"> 3406</span><span class="stringliteral">        vec3 atmosphere = directionalLight.color * 0.02;</span></div>
-<div class="line"><a id="l03407" name="l03407"></a><span class="lineno"> 3407</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03408" name="l03408"></a><span class="lineno"> 3408</span><span class="stringliteral">        if (brightness &gt; 0.5) {</span></div>
-<div class="line"><a id="l03409" name="l03409"></a><span class="lineno"> 3409</span><span class="stringliteral">            atmosphere += sampled * 0.5;</span></div>
-<div class="line"><a id="l03410" name="l03410"></a><span class="lineno"> 3410</span><span class="stringliteral">        }</span></div>
-<div class="line"><a id="l03411" name="l03411"></a><span class="lineno"> 3411</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03412" name="l03412"></a><span class="lineno"> 3412</span><span class="stringliteral">        atmosphere *= illuminationDecay * weight;</span></div>
-<div class="line"><a id="l03413" name="l03413"></a><span class="lineno"> 3413</span><span class="stringliteral">        color += atmosphere;</span></div>
-<div class="line"><a id="l03414" name="l03414"></a><span class="lineno"> 3414</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03415" name="l03415"></a><span class="lineno"> 3415</span><span class="stringliteral">        illuminationDecay *= decay;</span></div>
-<div class="line"><a id="l03416" name="l03416"></a><span class="lineno"> 3416</span><span class="stringliteral">    }</span></div>
-<div class="line"><a id="l03417" name="l03417"></a><span class="lineno"> 3417</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03418" name="l03418"></a><span class="lineno"> 3418</span><span class="stringliteral">    return color * 5.0;</span></div>
-<div class="line"><a id="l03419" name="l03419"></a><span class="lineno"> 3419</span><span class="stringliteral">}</span></div>
-<div class="line"><a id="l03420" name="l03420"></a><span class="lineno"> 3420</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03421" name="l03421"></a><span class="lineno"> 3421</span><span class="stringliteral">void main() {</span></div>
-<div class="line"><a id="l03422" name="l03422"></a><span class="lineno"> 3422</span><span class="stringliteral">    vec3 rays = computeVolumetricLighting(TexCoords);</span></div>
-<div class="line"><a id="l03423" name="l03423"></a><span class="lineno"> 3423</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03424" name="l03424"></a><span class="lineno"> 3424</span><span class="stringliteral">    FragColor = vec4(rays, 1.0);</span></div>
-<div class="line"><a id="l03425" name="l03425"></a><span class="lineno"> 3425</span><span class="stringliteral">}</span></div>
-<div class="line"><a id="l03426" name="l03426"></a><span class="lineno"> 3426</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03427" name="l03427"></a><span class="lineno"> 3427</span><span class="stringliteral">)&quot;;</span></div>
+<div class="line"><a id="l03403" name="l03403"></a><span class="lineno"> 3403</span><span class="stringliteral">void main() {</span></div>
+<div class="line"><a id="l03404" name="l03404"></a><span class="lineno"> 3404</span><span class="stringliteral">    vec2 tex_offset = 1.0 / textureSize(image, 0) * radius; </span></div>
+<div class="line"><a id="l03405" name="l03405"></a><span class="lineno"> 3405</span><span class="stringliteral">    vec3 result = texture(image, TexCoord).rgb * weight[0];</span></div>
+<div class="line"><a id="l03406" name="l03406"></a><span class="lineno"> 3406</span><span class="stringliteral">    if(horizontal)</span></div>
+<div class="line"><a id="l03407" name="l03407"></a><span class="lineno"> 3407</span><span class="stringliteral">    {</span></div>
+<div class="line"><a id="l03408" name="l03408"></a><span class="lineno"> 3408</span><span class="stringliteral">        for(int i = 1; i &lt; 5; ++i)</span></div>
+<div class="line"><a id="l03409" name="l03409"></a><span class="lineno"> 3409</span><span class="stringliteral">        {</span></div>
+<div class="line"><a id="l03410" name="l03410"></a><span class="lineno"> 3410</span><span class="stringliteral">            result += texture(image, TexCoord + vec2(tex_offset.x * i, 0.0)).rgb * weight[i];</span></div>
+<div class="line"><a id="l03411" name="l03411"></a><span class="lineno"> 3411</span><span class="stringliteral">            result += texture(image, TexCoord - vec2(tex_offset.x * i, 0.0)).rgb * weight[i];</span></div>
+<div class="line"><a id="l03412" name="l03412"></a><span class="lineno"> 3412</span><span class="stringliteral">        }</span></div>
+<div class="line"><a id="l03413" name="l03413"></a><span class="lineno"> 3413</span><span class="stringliteral">    }</span></div>
+<div class="line"><a id="l03414" name="l03414"></a><span class="lineno"> 3414</span><span class="stringliteral">    else</span></div>
+<div class="line"><a id="l03415" name="l03415"></a><span class="lineno"> 3415</span><span class="stringliteral">    {</span></div>
+<div class="line"><a id="l03416" name="l03416"></a><span class="lineno"> 3416</span><span class="stringliteral">        for(int i = 1; i &lt; 5; ++i)</span></div>
+<div class="line"><a id="l03417" name="l03417"></a><span class="lineno"> 3417</span><span class="stringliteral">        {</span></div>
+<div class="line"><a id="l03418" name="l03418"></a><span class="lineno"> 3418</span><span class="stringliteral">            result += texture(image, TexCoord + vec2(0.0, tex_offset.y * i)).rgb * weight[i];</span></div>
+<div class="line"><a id="l03419" name="l03419"></a><span class="lineno"> 3419</span><span class="stringliteral">            result += texture(image, TexCoord - vec2(0.0, tex_offset.y * i)).rgb * weight[i];</span></div>
+<div class="line"><a id="l03420" name="l03420"></a><span class="lineno"> 3420</span><span class="stringliteral">        }</span></div>
+<div class="line"><a id="l03421" name="l03421"></a><span class="lineno"> 3421</span><span class="stringliteral">    }</span></div>
+<div class="line"><a id="l03422" name="l03422"></a><span class="lineno"> 3422</span><span class="stringliteral">    FragColor = vec4(result, 1.0);</span></div>
+<div class="line"><a id="l03423" name="l03423"></a><span class="lineno"> 3423</span><span class="stringliteral">}</span></div>
+<div class="line"><a id="l03424" name="l03424"></a><span class="lineno"> 3424</span><span class="stringliteral">)&quot;;</span></div>
+<div class="line"><a id="l03425" name="l03425"></a><span class="lineno"> 3425</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03426" name="l03426"></a><span class="lineno"><a class="line" href="default__shaders_8h.html#ad88f8cc860c904e7023437d9c36e6aa3"> 3426</a></span><span class="stringliteral"></span><span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">char</span>* <a class="code hl_variable" href="default__shaders_8h.html#ad88f8cc860c904e7023437d9c36e6aa3">VOLUMETRIC_VERT</a> = R<span class="stringliteral">&quot;(</span></div>
+<div class="line"><a id="l03427" name="l03427"></a><span class="lineno"> 3427</span><span class="stringliteral">#version 410 core</span></div>
 <div class="line"><a id="l03428" name="l03428"></a><span class="lineno"> 3428</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l03429" name="l03429"></a><span class="lineno"> 3429</span><span class="stringliteral"></span><span class="preprocessor">#endif </span><span class="comment">// ATLAS_GENERATED_SHADERS_H</span></div>
-<div class="ttc" id="adefault__shaders_8h_html_a07f0219170c57524bc8c2ca4d6e5f58a"><div class="ttname"><a href="default__shaders_8h.html#a07f0219170c57524bc8c2ca4d6e5f58a">GAUSSIAN_FRAG</a></div><div class="ttdeci">static const char * GAUSSIAN_FRAG</div><div class="ttdef"><b>Definition</b> <a href="#l03319">default_shaders.h:3319</a></div></div>
+<div class="line"><a id="l03429" name="l03429"></a><span class="lineno"> 3429</span><span class="stringliteral">layout(location = 0) in vec3 aPos;</span></div>
+<div class="line"><a id="l03430" name="l03430"></a><span class="lineno"> 3430</span><span class="stringliteral">layout(location = 1) in vec2 aTexCoords;</span></div>
+<div class="line"><a id="l03431" name="l03431"></a><span class="lineno"> 3431</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03432" name="l03432"></a><span class="lineno"> 3432</span><span class="stringliteral">out vec2 TexCoords;</span></div>
+<div class="line"><a id="l03433" name="l03433"></a><span class="lineno"> 3433</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03434" name="l03434"></a><span class="lineno"> 3434</span><span class="stringliteral">void main() {</span></div>
+<div class="line"><a id="l03435" name="l03435"></a><span class="lineno"> 3435</span><span class="stringliteral">    gl_Position = vec4(aPos, 1.0);</span></div>
+<div class="line"><a id="l03436" name="l03436"></a><span class="lineno"> 3436</span><span class="stringliteral">    TexCoords = aTexCoords;</span></div>
+<div class="line"><a id="l03437" name="l03437"></a><span class="lineno"> 3437</span><span class="stringliteral">}</span></div>
+<div class="line"><a id="l03438" name="l03438"></a><span class="lineno"> 3438</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03439" name="l03439"></a><span class="lineno"> 3439</span><span class="stringliteral">)&quot;;</span></div>
+<div class="line"><a id="l03440" name="l03440"></a><span class="lineno"> 3440</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03441" name="l03441"></a><span class="lineno"><a class="line" href="default__shaders_8h.html#aac56e41dba3af03619326b9c522e6ee4"> 3441</a></span><span class="stringliteral"></span><span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">char</span>* <a class="code hl_variable" href="default__shaders_8h.html#aac56e41dba3af03619326b9c522e6ee4">VOLUMETRIC_FRAG</a> = R<span class="stringliteral">&quot;(</span></div>
+<div class="line"><a id="l03442" name="l03442"></a><span class="lineno"> 3442</span><span class="stringliteral">#version 410 core</span></div>
+<div class="line"><a id="l03443" name="l03443"></a><span class="lineno"> 3443</span><span class="stringliteral">in vec2 TexCoords;</span></div>
+<div class="line"><a id="l03444" name="l03444"></a><span class="lineno"> 3444</span><span class="stringliteral">out vec4 FragColor;</span></div>
+<div class="line"><a id="l03445" name="l03445"></a><span class="lineno"> 3445</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03446" name="l03446"></a><span class="lineno"> 3446</span><span class="stringliteral">uniform sampler2D sceneTexture;</span></div>
+<div class="line"><a id="l03447" name="l03447"></a><span class="lineno"> 3447</span><span class="stringliteral">uniform vec2 sunPos;</span></div>
+<div class="line"><a id="l03448" name="l03448"></a><span class="lineno"> 3448</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03449" name="l03449"></a><span class="lineno"> 3449</span><span class="stringliteral">struct DirectionalLight {</span></div>
+<div class="line"><a id="l03450" name="l03450"></a><span class="lineno"> 3450</span><span class="stringliteral">    vec3 color;</span></div>
+<div class="line"><a id="l03451" name="l03451"></a><span class="lineno"> 3451</span><span class="stringliteral">};</span></div>
+<div class="line"><a id="l03452" name="l03452"></a><span class="lineno"> 3452</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03453" name="l03453"></a><span class="lineno"> 3453</span><span class="stringliteral">uniform DirectionalLight directionalLight;</span></div>
+<div class="line"><a id="l03454" name="l03454"></a><span class="lineno"> 3454</span><span class="stringliteral">uniform float density;</span></div>
+<div class="line"><a id="l03455" name="l03455"></a><span class="lineno"> 3455</span><span class="stringliteral">uniform float weight;</span></div>
+<div class="line"><a id="l03456" name="l03456"></a><span class="lineno"> 3456</span><span class="stringliteral">uniform float decay;</span></div>
+<div class="line"><a id="l03457" name="l03457"></a><span class="lineno"> 3457</span><span class="stringliteral">uniform float exposure;</span></div>
+<div class="line"><a id="l03458" name="l03458"></a><span class="lineno"> 3458</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03459" name="l03459"></a><span class="lineno"> 3459</span><span class="stringliteral">vec3 computeVolumetricLighting(vec2 uv) {</span></div>
+<div class="line"><a id="l03460" name="l03460"></a><span class="lineno"> 3460</span><span class="stringliteral">    vec3 color = vec3(0.0);</span></div>
+<div class="line"><a id="l03461" name="l03461"></a><span class="lineno"> 3461</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03462" name="l03462"></a><span class="lineno"> 3462</span><span class="stringliteral">    vec2 deltaTexCoord = (sunPos - uv) * density;</span></div>
+<div class="line"><a id="l03463" name="l03463"></a><span class="lineno"> 3463</span><span class="stringliteral">    vec2 coord = uv;</span></div>
+<div class="line"><a id="l03464" name="l03464"></a><span class="lineno"> 3464</span><span class="stringliteral">    float illuminationDecay = 1.0;</span></div>
+<div class="line"><a id="l03465" name="l03465"></a><span class="lineno"> 3465</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03466" name="l03466"></a><span class="lineno"> 3466</span><span class="stringliteral">    const int NUM_SAMPLES = 100;</span></div>
+<div class="line"><a id="l03467" name="l03467"></a><span class="lineno"> 3467</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03468" name="l03468"></a><span class="lineno"> 3468</span><span class="stringliteral">    for (int i = 0; i &lt; NUM_SAMPLES; i++) {</span></div>
+<div class="line"><a id="l03469" name="l03469"></a><span class="lineno"> 3469</span><span class="stringliteral">        coord += deltaTexCoord;</span></div>
+<div class="line"><a id="l03470" name="l03470"></a><span class="lineno"> 3470</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03471" name="l03471"></a><span class="lineno"> 3471</span><span class="stringliteral">        if (coord.x &lt; 0.0 || coord.x &gt; 1.0 || coord.y &lt; 0.0 || coord.y &gt; 1.0) {</span></div>
+<div class="line"><a id="l03472" name="l03472"></a><span class="lineno"> 3472</span><span class="stringliteral">            break;</span></div>
+<div class="line"><a id="l03473" name="l03473"></a><span class="lineno"> 3473</span><span class="stringliteral">        }</span></div>
+<div class="line"><a id="l03474" name="l03474"></a><span class="lineno"> 3474</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03475" name="l03475"></a><span class="lineno"> 3475</span><span class="stringliteral">        vec3 sampled = texture(sceneTexture, coord).rgb;</span></div>
+<div class="line"><a id="l03476" name="l03476"></a><span class="lineno"> 3476</span><span class="stringliteral">        float brightness = dot(sampled, vec3(0.299, 0.587, 0.114));</span></div>
+<div class="line"><a id="l03477" name="l03477"></a><span class="lineno"> 3477</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03478" name="l03478"></a><span class="lineno"> 3478</span><span class="stringliteral">        vec3 atmosphere = directionalLight.color * 0.02;</span></div>
+<div class="line"><a id="l03479" name="l03479"></a><span class="lineno"> 3479</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03480" name="l03480"></a><span class="lineno"> 3480</span><span class="stringliteral">        if (brightness &gt; 0.5) {</span></div>
+<div class="line"><a id="l03481" name="l03481"></a><span class="lineno"> 3481</span><span class="stringliteral">            atmosphere += sampled * 0.5;</span></div>
+<div class="line"><a id="l03482" name="l03482"></a><span class="lineno"> 3482</span><span class="stringliteral">        }</span></div>
+<div class="line"><a id="l03483" name="l03483"></a><span class="lineno"> 3483</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03484" name="l03484"></a><span class="lineno"> 3484</span><span class="stringliteral">        atmosphere *= illuminationDecay * weight;</span></div>
+<div class="line"><a id="l03485" name="l03485"></a><span class="lineno"> 3485</span><span class="stringliteral">        color += atmosphere;</span></div>
+<div class="line"><a id="l03486" name="l03486"></a><span class="lineno"> 3486</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03487" name="l03487"></a><span class="lineno"> 3487</span><span class="stringliteral">        illuminationDecay *= decay;</span></div>
+<div class="line"><a id="l03488" name="l03488"></a><span class="lineno"> 3488</span><span class="stringliteral">    }</span></div>
+<div class="line"><a id="l03489" name="l03489"></a><span class="lineno"> 3489</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03490" name="l03490"></a><span class="lineno"> 3490</span><span class="stringliteral">    return color * 5.0;</span></div>
+<div class="line"><a id="l03491" name="l03491"></a><span class="lineno"> 3491</span><span class="stringliteral">}</span></div>
+<div class="line"><a id="l03492" name="l03492"></a><span class="lineno"> 3492</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03493" name="l03493"></a><span class="lineno"> 3493</span><span class="stringliteral">void main() {</span></div>
+<div class="line"><a id="l03494" name="l03494"></a><span class="lineno"> 3494</span><span class="stringliteral">    vec3 rays = computeVolumetricLighting(TexCoords);</span></div>
+<div class="line"><a id="l03495" name="l03495"></a><span class="lineno"> 3495</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03496" name="l03496"></a><span class="lineno"> 3496</span><span class="stringliteral">    FragColor = vec4(rays, 1.0);</span></div>
+<div class="line"><a id="l03497" name="l03497"></a><span class="lineno"> 3497</span><span class="stringliteral">}</span></div>
+<div class="line"><a id="l03498" name="l03498"></a><span class="lineno"> 3498</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03499" name="l03499"></a><span class="lineno"> 3499</span><span class="stringliteral">)&quot;;</span></div>
+<div class="line"><a id="l03500" name="l03500"></a><span class="lineno"> 3500</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l03501" name="l03501"></a><span class="lineno"> 3501</span><span class="stringliteral"></span><span class="preprocessor">#endif </span><span class="comment">// ATLAS_GENERATED_SHADERS_H</span></div>
+<div class="ttc" id="adefault__shaders_8h_html_a07f0219170c57524bc8c2ca4d6e5f58a"><div class="ttname"><a href="default__shaders_8h.html#a07f0219170c57524bc8c2ca4d6e5f58a">GAUSSIAN_FRAG</a></div><div class="ttdeci">static const char * GAUSSIAN_FRAG</div><div class="ttdef"><b>Definition</b> <a href="#l03391">default_shaders.h:3391</a></div></div>
 <div class="ttc" id="adefault__shaders_8h_html_a0ce5d8c68f5b7c88fac6151edc55a670"><div class="ttname"><a href="default__shaders_8h.html#a0ce5d8c68f5b7c88fac6151edc55a670">FULLSCREEN_VERT</a></div><div class="ttdeci">static const char * FULLSCREEN_VERT</div><div class="ttdef"><b>Definition</b> <a href="#l01224">default_shaders.h:1224</a></div></div>
 <div class="ttc" id="adefault__shaders_8h_html_a0dfe243a0d1dd1ce6c226e98ec70292c"><div class="ttname"><a href="default__shaders_8h.html#a0dfe243a0d1dd1ce6c226e98ec70292c">TERRAIN_FRAG</a></div><div class="ttdeci">static const char * TERRAIN_FRAG</div><div class="ttdef"><b>Definition</b> <a href="#l02326">default_shaders.h:2326</a></div></div>
 <div class="ttc" id="adefault__shaders_8h_html_a261f7e9b00026e82bbc6e2d24bcbda37"><div class="ttname"><a href="default__shaders_8h.html#a261f7e9b00026e82bbc6e2d24bcbda37">TERRAIN_EVAL_TESE</a></div><div class="ttdeci">static const char * TERRAIN_EVAL_TESE</div><div class="ttdef"><b>Definition</b> <a href="#l02536">default_shaders.h:2536</a></div></div>
@@ -3560,23 +3632,25 @@ $(function(){initNavTree('default__shaders_8h_source.html','',''); });
 <div class="ttc" id="adefault__shaders_8h_html_a43a37aa39509166536b1a6ef3c32be54"><div class="ttname"><a href="default__shaders_8h.html#a43a37aa39509166536b1a6ef3c32be54">MAIN_VERT</a></div><div class="ttdeci">static const char * MAIN_VERT</div><div class="ttdef"><b>Definition</b> <a href="#l01180">default_shaders.h:1180</a></div></div>
 <div class="ttc" id="adefault__shaders_8h_html_a44e465e75eb67c9aaa0b6cf24688ce97"><div class="ttname"><a href="default__shaders_8h.html#a44e465e75eb67c9aaa0b6cf24688ce97">MAIN_FRAG</a></div><div class="ttdeci">static const char * MAIN_FRAG</div><div class="ttdef"><b>Definition</b> <a href="#l00431">default_shaders.h:431</a></div></div>
 <div class="ttc" id="adefault__shaders_8h_html_a56686808191d97f1d6a78ed6c8b3ad02"><div class="ttname"><a href="default__shaders_8h.html#a56686808191d97f1d6a78ed6c8b3ad02">COLOR_FRAG</a></div><div class="ttdeci">static const char * COLOR_FRAG</div><div class="ttdef"><b>Definition</b> <a href="#l02137">default_shaders.h:2137</a></div></div>
-<div class="ttc" id="adefault__shaders_8h_html_a88c8c32c6aa70e502d94dc3765a54a85"><div class="ttname"><a href="default__shaders_8h.html#a88c8c32c6aa70e502d94dc3765a54a85">PARTICLE_VERT</a></div><div class="ttdeci">static const char * PARTICLE_VERT</div><div class="ttdef"><b>Definition</b> <a href="#l03258">default_shaders.h:3258</a></div></div>
+<div class="ttc" id="adefault__shaders_8h_html_a88c8c32c6aa70e502d94dc3765a54a85"><div class="ttname"><a href="default__shaders_8h.html#a88c8c32c6aa70e502d94dc3765a54a85">PARTICLE_VERT</a></div><div class="ttdeci">static const char * PARTICLE_VERT</div><div class="ttdef"><b>Definition</b> <a href="#l03330">default_shaders.h:3330</a></div></div>
 <div class="ttc" id="adefault__shaders_8h_html_a8aa02451898eb17af41dbd2d3b424679"><div class="ttname"><a href="default__shaders_8h.html#a8aa02451898eb17af41dbd2d3b424679">DEBUG_VERT</a></div><div class="ttdeci">static const char * DEBUG_VERT</div><div class="ttdef"><b>Definition</b> <a href="#l02210">default_shaders.h:2210</a></div></div>
 <div class="ttc" id="adefault__shaders_8h_html_a8b6ccb83c67ae58ec1c69e87c40b2113"><div class="ttname"><a href="default__shaders_8h.html#a8b6ccb83c67ae58ec1c69e87c40b2113">POINT_DEPTH_VERT</a></div><div class="ttdeci">static const char * POINT_DEPTH_VERT</div><div class="ttdef"><b>Definition</b> <a href="#l01269">default_shaders.h:1269</a></div></div>
 <div class="ttc" id="adefault__shaders_8h_html_a8f6a623fa306218517b69dc65ff8733e"><div class="ttname"><a href="default__shaders_8h.html#a8f6a623fa306218517b69dc65ff8733e">SKYBOX_FRAG</a></div><div class="ttdeci">static const char * SKYBOX_FRAG</div><div class="ttdef"><b>Definition</b> <a href="#l03217">default_shaders.h:3217</a></div></div>
-<div class="ttc" id="adefault__shaders_8h_html_aac56e41dba3af03619326b9c522e6ee4"><div class="ttname"><a href="default__shaders_8h.html#aac56e41dba3af03619326b9c522e6ee4">VOLUMETRIC_FRAG</a></div><div class="ttdeci">static const char * VOLUMETRIC_FRAG</div><div class="ttdef"><b>Definition</b> <a href="#l03369">default_shaders.h:3369</a></div></div>
+<div class="ttc" id="adefault__shaders_8h_html_a97b3d1eef4d78c8c5f962286401216b9"><div class="ttname"><a href="default__shaders_8h.html#a97b3d1eef4d78c8c5f962286401216b9">DOWNSAMPLE_FRAG</a></div><div class="ttdeci">static const char * DOWNSAMPLE_FRAG</div><div class="ttdef"><b>Definition</b> <a href="#l03264">default_shaders.h:3264</a></div></div>
+<div class="ttc" id="adefault__shaders_8h_html_aac56e41dba3af03619326b9c522e6ee4"><div class="ttname"><a href="default__shaders_8h.html#aac56e41dba3af03619326b9c522e6ee4">VOLUMETRIC_FRAG</a></div><div class="ttdeci">static const char * VOLUMETRIC_FRAG</div><div class="ttdef"><b>Definition</b> <a href="#l03441">default_shaders.h:3441</a></div></div>
 <div class="ttc" id="adefault__shaders_8h_html_ab61110f9533f7aaccfce61ce7b25da9b"><div class="ttname"><a href="default__shaders_8h.html#ab61110f9533f7aaccfce61ce7b25da9b">DEBUG_FRAG</a></div><div class="ttdeci">static const char * DEBUG_FRAG</div><div class="ttdef"><b>Definition</b> <a href="#l02174">default_shaders.h:2174</a></div></div>
 <div class="ttc" id="adefault__shaders_8h_html_ab88cb28a63dbaadc0417f3333f7d6994"><div class="ttname"><a href="default__shaders_8h.html#ab88cb28a63dbaadc0417f3333f7d6994">BINN_PHONG_VERT</a></div><div class="ttdeci">static const char * BINN_PHONG_VERT</div><div class="ttdef"><b>Definition</b> <a href="#l03175">default_shaders.h:3175</a></div></div>
 <div class="ttc" id="adefault__shaders_8h_html_abd40d744c94aaf9963332aadd7b06466"><div class="ttname"><a href="default__shaders_8h.html#abd40d744c94aaf9963332aadd7b06466">COLOR_VERT</a></div><div class="ttdeci">static const char * COLOR_VERT</div><div class="ttdef"><b>Definition</b> <a href="#l02184">default_shaders.h:2184</a></div></div>
 <div class="ttc" id="adefault__shaders_8h_html_ac9c5a1747c6e8231627d39aada2406d8"><div class="ttname"><a href="default__shaders_8h.html#ac9c5a1747c6e8231627d39aada2406d8">BLINN_PHONG_FRAG</a></div><div class="ttdeci">static const char * BLINN_PHONG_FRAG</div><div class="ttdef"><b>Definition</b> <a href="#l02607">default_shaders.h:2607</a></div></div>
-<div class="ttc" id="adefault__shaders_8h_html_accb5b46bd2b12d12a056815764bc4501"><div class="ttname"><a href="default__shaders_8h.html#accb5b46bd2b12d12a056815764bc4501">SKYBOX_VERT</a></div><div class="ttdeci">static const char * SKYBOX_VERT</div><div class="ttdef"><b>Definition</b> <a href="#l03301">default_shaders.h:3301</a></div></div>
+<div class="ttc" id="adefault__shaders_8h_html_accb5b46bd2b12d12a056815764bc4501"><div class="ttname"><a href="default__shaders_8h.html#accb5b46bd2b12d12a056815764bc4501">SKYBOX_VERT</a></div><div class="ttdeci">static const char * SKYBOX_VERT</div><div class="ttdef"><b>Definition</b> <a href="#l03373">default_shaders.h:3373</a></div></div>
 <div class="ttc" id="adefault__shaders_8h_html_acdb38d6b6f86cdca3289eea9b522708e"><div class="ttname"><a href="default__shaders_8h.html#acdb38d6b6f86cdca3289eea9b522708e">DEFERRED_VERT</a></div><div class="ttdeci">static const char * DEFERRED_VERT</div><div class="ttdef"><b>Definition</b> <a href="#l01652">default_shaders.h:1652</a></div></div>
+<div class="ttc" id="adefault__shaders_8h_html_ace1359c556e7f9f111498d2bb0d13be4"><div class="ttname"><a href="default__shaders_8h.html#ace1359c556e7f9f111498d2bb0d13be4">UPSAMPLE_FRAG</a></div><div class="ttdeci">static const char * UPSAMPLE_FRAG</div><div class="ttdef"><b>Definition</b> <a href="#l03232">default_shaders.h:3232</a></div></div>
 <div class="ttc" id="adefault__shaders_8h_html_ad0bc8276a246d872f0f11a408ede96a6"><div class="ttname"><a href="default__shaders_8h.html#ad0bc8276a246d872f0f11a408ede96a6">SSAO_FRAG</a></div><div class="ttdeci">static const char * SSAO_FRAG</div><div class="ttdef"><b>Definition</b> <a href="#l01345">default_shaders.h:1345</a></div></div>
 <div class="ttc" id="adefault__shaders_8h_html_ad296833bdb0c8209d00ae60404d63ccb"><div class="ttname"><a href="default__shaders_8h.html#ad296833bdb0c8209d00ae60404d63ccb">FULLSCREEN_FRAG</a></div><div class="ttdeci">static const char * FULLSCREEN_FRAG</div><div class="ttdef"><b>Definition</b> <a href="#l00005">default_shaders.h:5</a></div></div>
 <div class="ttc" id="adefault__shaders_8h_html_ad346966a531110057848a978cf65409d"><div class="ttname"><a href="default__shaders_8h.html#ad346966a531110057848a978cf65409d">POINT_DEPTH_GEOM</a></div><div class="ttdeci">static const char * POINT_DEPTH_GEOM</div><div class="ttdef"><b>Definition</b> <a href="#l01322">default_shaders.h:1322</a></div></div>
-<div class="ttc" id="adefault__shaders_8h_html_ad88f8cc860c904e7023437d9c36e6aa3"><div class="ttname"><a href="default__shaders_8h.html#ad88f8cc860c904e7023437d9c36e6aa3">VOLUMETRIC_VERT</a></div><div class="ttdeci">static const char * VOLUMETRIC_VERT</div><div class="ttdef"><b>Definition</b> <a href="#l03354">default_shaders.h:3354</a></div></div>
+<div class="ttc" id="adefault__shaders_8h_html_ad88f8cc860c904e7023437d9c36e6aa3"><div class="ttname"><a href="default__shaders_8h.html#ad88f8cc860c904e7023437d9c36e6aa3">VOLUMETRIC_VERT</a></div><div class="ttdeci">static const char * VOLUMETRIC_VERT</div><div class="ttdef"><b>Definition</b> <a href="#l03426">default_shaders.h:3426</a></div></div>
 <div class="ttc" id="adefault__shaders_8h_html_ad892c8de43e5c33bab942cb2edc249ec"><div class="ttname"><a href="default__shaders_8h.html#ad892c8de43e5c33bab942cb2edc249ec">DEPTH_VERT</a></div><div class="ttdeci">static const char * DEPTH_VERT</div><div class="ttdef"><b>Definition</b> <a href="#l01280">default_shaders.h:1280</a></div></div>
-<div class="ttc" id="adefault__shaders_8h_html_adbc40b4a97e5a3bf53b4b7128dfbdc9e"><div class="ttname"><a href="default__shaders_8h.html#adbc40b4a97e5a3bf53b4b7128dfbdc9e">PARTICLE_FRAG</a></div><div class="ttdeci">static const char * PARTICLE_FRAG</div><div class="ttdef"><b>Definition</b> <a href="#l03232">default_shaders.h:3232</a></div></div>
+<div class="ttc" id="adefault__shaders_8h_html_adbc40b4a97e5a3bf53b4b7128dfbdc9e"><div class="ttname"><a href="default__shaders_8h.html#adbc40b4a97e5a3bf53b4b7128dfbdc9e">PARTICLE_FRAG</a></div><div class="ttdeci">static const char * PARTICLE_FRAG</div><div class="ttdef"><b>Definition</b> <a href="#l03304">default_shaders.h:3304</a></div></div>
 <div class="ttc" id="adefault__shaders_8h_html_ade7b70d092756d95b874244c3fdb7165"><div class="ttname"><a href="default__shaders_8h.html#ade7b70d092756d95b874244c3fdb7165">TERRAIN_VERT</a></div><div class="ttdeci">static const char * TERRAIN_VERT</div><div class="ttdef"><b>Definition</b> <a href="#l02590">default_shaders.h:2590</a></div></div>
 <div class="ttc" id="adefault__shaders_8h_html_ae246351246e38222f7f020310ba18c96"><div class="ttname"><a href="default__shaders_8h.html#ae246351246e38222f7f020310ba18c96">SSAO_BLUR_FRAG</a></div><div class="ttdeci">static const char * SSAO_BLUR_FRAG</div><div class="ttdef"><b>Definition</b> <a href="#l01301">default_shaders.h:1301</a></div></div>
 <div class="ttc" id="adefault__shaders_8h_html_ae3a54503dd5f220b33f66e53739a24de"><div class="ttname"><a href="default__shaders_8h.html#ae3a54503dd5f220b33f66e53739a24de">TEXT_VERT</a></div><div class="ttdeci">static const char * TEXT_VERT</div><div class="ttdef"><b>Definition</b> <a href="#l01241">default_shaders.h:1241</a></div></div>

@@ -158,235 +158,244 @@ $(function(){initNavTree('scene_8h_source.html','',''); });
 </div>
 <div class="line"><a id="l00035" name="l00035"></a><span class="lineno">   35</span> </div>
 <div class="foldopen" id="foldopen00036" data-start="{" data-end="};">
-<div class="line"><a id="l00036" name="l00036"></a><span class="lineno"><a class="line" href="class_environment.html">   36</a></span><span class="keyword">class </span><a class="code hl_class" href="class_environment.html">Environment</a> {</div>
-<div class="line"><a id="l00037" name="l00037"></a><span class="lineno">   37</span>  <span class="keyword">public</span>:</div>
-<div class="line"><a id="l00038" name="l00038"></a><span class="lineno"><a class="line" href="class_environment.html#ac8f14946937e23aef5942658a850dcbf">   38</a></span>    <a class="code hl_struct" href="struct_fog.html">Fog</a> <a class="code hl_variable" href="class_environment.html#ac8f14946937e23aef5942658a850dcbf">fog</a>;</div>
-<div class="line"><a id="l00039" name="l00039"></a><span class="lineno"><a class="line" href="class_environment.html#a9b85231531334ac04d8d0306b13d5c09">   39</a></span>    <a class="code hl_struct" href="struct_volumetric_lighting.html">VolumetricLighting</a> <a class="code hl_variable" href="class_environment.html#a9b85231531334ac04d8d0306b13d5c09">volumetricLighting</a>;</div>
-<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span>};</div>
+<div class="line"><a id="l00036" name="l00036"></a><span class="lineno"><a class="line" href="struct_light_bloom.html">   36</a></span><span class="keyword">struct </span><a class="code hl_struct" href="struct_light_bloom.html">LightBloom</a> {</div>
+<div class="line"><a id="l00037" name="l00037"></a><span class="lineno"><a class="line" href="struct_light_bloom.html#a165b93c57ba198bb5a5643594c1ead12">   37</a></span>    <span class="keywordtype">float</span> <a class="code hl_variable" href="struct_light_bloom.html#a165b93c57ba198bb5a5643594c1ead12">radius</a> = 0.5f;</div>
+<div class="line"><a id="l00038" name="l00038"></a><span class="lineno"><a class="line" href="struct_light_bloom.html#a47bb8fd1bc291699e4a4dd745a5a9823">   38</a></span>    <span class="keywordtype">int</span> <a class="code hl_variable" href="struct_light_bloom.html#a47bb8fd1bc291699e4a4dd745a5a9823">maxSamples</a> = 5;</div>
+<div class="line"><a id="l00039" name="l00039"></a><span class="lineno">   39</span>};</div>
 </div>
-<div class="line"><a id="l00041" name="l00041"></a><span class="lineno">   41</span><span class="comment"></span> </div>
-<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span><span class="comment">/**</span></div>
-<div class="line"><a id="l00043" name="l00043"></a><span class="lineno">   43</span><span class="comment"> * @brief Abstract class that represents a 3D scene. It contains all lights and</span></div>
-<div class="line"><a id="l00044" name="l00044"></a><span class="lineno">   44</span><span class="comment"> * objects that are going to be rendered. It also provides methods for updating</span></div>
-<div class="line"><a id="l00045" name="l00045"></a><span class="lineno">   45</span><span class="comment"> * the scene and handling input events.</span></div>
-<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span><span class="comment"> * \subsection scene-example Example</span></div>
-<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span><span class="comment"> * ```cpp</span></div>
-<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span><span class="comment"> * class MyScene : public Scene {</span></div>
-<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span><span class="comment"> *  public:</span></div>
-<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span><span class="comment"> *    void initialize(Window &amp;window) override {</span></div>
-<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span><span class="comment"> *      // Initialize scene objects and lights here</span></div>
-<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span><span class="comment"> *    }</span></div>
-<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span><span class="comment"> *</span></div>
-<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span><span class="comment"> *    void update(Window &amp;window) override {</span></div>
-<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span><span class="comment"> *      // Update scene logic here</span></div>
-<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span><span class="comment"> *    }</span></div>
-<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span><span class="comment"> *   void onMouseMove(Window &amp;window, Movement2d movement) override {</span></div>
-<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span><span class="comment"> *      // Handle mouse movement here</span></div>
-<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span><span class="comment"> *    }</span></div>
-<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span><span class="comment"> * };</span></div>
-<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span><span class="comment"> *</span></div>
-<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span><span class="comment"> * ```</span></div>
-<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span><span class="comment"> *</span></div>
-<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span><span class="comment"> */</span></div>
-<div class="foldopen" id="foldopen00065" data-start="{" data-end="};">
-<div class="line"><a id="l00065" name="l00065"></a><span class="lineno"><a class="line" href="class_scene.html">   65</a></span><span class="keyword">class </span><a class="code hl_class" href="class_scene.html">Scene</a> {</div>
-<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span>  <span class="keyword">public</span>:<span class="comment"></span></div>
-<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span><span class="comment">     * @brief Function that initializes the scene. This method is called every</span></div>
-<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span><span class="comment">     * frame.</span></div>
-<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00071" name="l00071"></a><span class="lineno">   71</span><span class="comment">     * @param window The window in which the scene is going to be runned.</span></div>
-<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00073" name="l00073"></a><span class="lineno"><a class="line" href="class_scene.html#a2936b4b44d5c6ad073e65986a529a9f4">   73</a></span>    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_scene.html#a2936b4b44d5c6ad073e65986a529a9f4">update</a>(<a class="code hl_friend" href="class_scene.html#a553f958a25683445088050a69d3de8e9">Window</a> &amp;window) {};<span class="comment"></span></div>
-<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span><span class="comment">     * @brief Function that initializes the scene. This method is called once by</span></div>
-<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span><span class="comment">     * the \ref Window class.</span></div>
-<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span><span class="comment">     * @param window The window in which the scene is going to be runned.</span></div>
-<div class="line"><a id="l00079" name="l00079"></a><span class="lineno">   79</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00080" name="l00080"></a><span class="lineno"><a class="line" href="class_scene.html#a9d87607c6e6a93d1bfef10ed1cfdc667">   80</a></span>    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_scene.html#a9d87607c6e6a93d1bfef10ed1cfdc667">initialize</a>(<a class="code hl_friend" href="class_scene.html#a553f958a25683445088050a69d3de8e9">Window</a> &amp;window) = 0;<span class="comment"></span></div>
-<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span><span class="comment">     * @brief Function that handles mouse movement events.</span></div>
+<div class="line"><a id="l00040" name="l00040"></a><span class="lineno">   40</span> </div>
+<div class="foldopen" id="foldopen00041" data-start="{" data-end="};">
+<div class="line"><a id="l00041" name="l00041"></a><span class="lineno"><a class="line" href="class_environment.html">   41</a></span><span class="keyword">class </span><a class="code hl_class" href="class_environment.html">Environment</a> {</div>
+<div class="line"><a id="l00042" name="l00042"></a><span class="lineno">   42</span>  <span class="keyword">public</span>:</div>
+<div class="line"><a id="l00043" name="l00043"></a><span class="lineno"><a class="line" href="class_environment.html#ac8f14946937e23aef5942658a850dcbf">   43</a></span>    <a class="code hl_struct" href="struct_fog.html">Fog</a> <a class="code hl_variable" href="class_environment.html#ac8f14946937e23aef5942658a850dcbf">fog</a>;</div>
+<div class="line"><a id="l00044" name="l00044"></a><span class="lineno"><a class="line" href="class_environment.html#a9b85231531334ac04d8d0306b13d5c09">   44</a></span>    <a class="code hl_struct" href="struct_volumetric_lighting.html">VolumetricLighting</a> <a class="code hl_variable" href="class_environment.html#a9b85231531334ac04d8d0306b13d5c09">volumetricLighting</a>;</div>
+<div class="line"><a id="l00045" name="l00045"></a><span class="lineno"><a class="line" href="class_environment.html#a8230ab111323228a3ae41a6d9a2c8dd6">   45</a></span>    <a class="code hl_struct" href="struct_light_bloom.html">LightBloom</a> <a class="code hl_variable" href="class_environment.html#a8230ab111323228a3ae41a6d9a2c8dd6">lightBloom</a>;</div>
+<div class="line"><a id="l00046" name="l00046"></a><span class="lineno">   46</span>};</div>
+</div>
+<div class="line"><a id="l00047" name="l00047"></a><span class="lineno">   47</span><span class="comment"></span> </div>
+<div class="line"><a id="l00048" name="l00048"></a><span class="lineno">   48</span><span class="comment">/**</span></div>
+<div class="line"><a id="l00049" name="l00049"></a><span class="lineno">   49</span><span class="comment"> * @brief Abstract class that represents a 3D scene. It contains all lights and</span></div>
+<div class="line"><a id="l00050" name="l00050"></a><span class="lineno">   50</span><span class="comment"> * objects that are going to be rendered. It also provides methods for updating</span></div>
+<div class="line"><a id="l00051" name="l00051"></a><span class="lineno">   51</span><span class="comment"> * the scene and handling input events.</span></div>
+<div class="line"><a id="l00052" name="l00052"></a><span class="lineno">   52</span><span class="comment"> * \subsection scene-example Example</span></div>
+<div class="line"><a id="l00053" name="l00053"></a><span class="lineno">   53</span><span class="comment"> * ```cpp</span></div>
+<div class="line"><a id="l00054" name="l00054"></a><span class="lineno">   54</span><span class="comment"> * class MyScene : public Scene {</span></div>
+<div class="line"><a id="l00055" name="l00055"></a><span class="lineno">   55</span><span class="comment"> *  public:</span></div>
+<div class="line"><a id="l00056" name="l00056"></a><span class="lineno">   56</span><span class="comment"> *    void initialize(Window &amp;window) override {</span></div>
+<div class="line"><a id="l00057" name="l00057"></a><span class="lineno">   57</span><span class="comment"> *      // Initialize scene objects and lights here</span></div>
+<div class="line"><a id="l00058" name="l00058"></a><span class="lineno">   58</span><span class="comment"> *    }</span></div>
+<div class="line"><a id="l00059" name="l00059"></a><span class="lineno">   59</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00060" name="l00060"></a><span class="lineno">   60</span><span class="comment"> *    void update(Window &amp;window) override {</span></div>
+<div class="line"><a id="l00061" name="l00061"></a><span class="lineno">   61</span><span class="comment"> *      // Update scene logic here</span></div>
+<div class="line"><a id="l00062" name="l00062"></a><span class="lineno">   62</span><span class="comment"> *    }</span></div>
+<div class="line"><a id="l00063" name="l00063"></a><span class="lineno">   63</span><span class="comment"> *   void onMouseMove(Window &amp;window, Movement2d movement) override {</span></div>
+<div class="line"><a id="l00064" name="l00064"></a><span class="lineno">   64</span><span class="comment"> *      // Handle mouse movement here</span></div>
+<div class="line"><a id="l00065" name="l00065"></a><span class="lineno">   65</span><span class="comment"> *    }</span></div>
+<div class="line"><a id="l00066" name="l00066"></a><span class="lineno">   66</span><span class="comment"> * };</span></div>
+<div class="line"><a id="l00067" name="l00067"></a><span class="lineno">   67</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00068" name="l00068"></a><span class="lineno">   68</span><span class="comment"> * ```</span></div>
+<div class="line"><a id="l00069" name="l00069"></a><span class="lineno">   69</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00070" name="l00070"></a><span class="lineno">   70</span><span class="comment"> */</span></div>
+<div class="foldopen" id="foldopen00071" data-start="{" data-end="};">
+<div class="line"><a id="l00071" name="l00071"></a><span class="lineno"><a class="line" href="class_scene.html">   71</a></span><span class="keyword">class </span><a class="code hl_class" href="class_scene.html">Scene</a> {</div>
+<div class="line"><a id="l00072" name="l00072"></a><span class="lineno">   72</span>  <span class="keyword">public</span>:<span class="comment"></span></div>
+<div class="line"><a id="l00073" name="l00073"></a><span class="lineno">   73</span><span class="comment">    /**</span></div>
+<div class="line"><a id="l00074" name="l00074"></a><span class="lineno">   74</span><span class="comment">     * @brief Function that initializes the scene. This method is called every</span></div>
+<div class="line"><a id="l00075" name="l00075"></a><span class="lineno">   75</span><span class="comment">     * frame.</span></div>
+<div class="line"><a id="l00076" name="l00076"></a><span class="lineno">   76</span><span class="comment">     *</span></div>
+<div class="line"><a id="l00077" name="l00077"></a><span class="lineno">   77</span><span class="comment">     * @param window The window in which the scene is going to be runned.</span></div>
+<div class="line"><a id="l00078" name="l00078"></a><span class="lineno">   78</span><span class="comment">     */</span></div>
+<div class="line"><a id="l00079" name="l00079"></a><span class="lineno"><a class="line" href="class_scene.html#a2936b4b44d5c6ad073e65986a529a9f4">   79</a></span>    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_scene.html#a2936b4b44d5c6ad073e65986a529a9f4">update</a>(<a class="code hl_friend" href="class_scene.html#a553f958a25683445088050a69d3de8e9">Window</a> &amp;window) {};<span class="comment"></span></div>
+<div class="line"><a id="l00080" name="l00080"></a><span class="lineno">   80</span><span class="comment">    /**</span></div>
+<div class="line"><a id="l00081" name="l00081"></a><span class="lineno">   81</span><span class="comment">     * @brief Function that initializes the scene. This method is called once by</span></div>
+<div class="line"><a id="l00082" name="l00082"></a><span class="lineno">   82</span><span class="comment">     * the \ref Window class.</span></div>
 <div class="line"><a id="l00083" name="l00083"></a><span class="lineno">   83</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span><span class="comment">     * @param window  The window in which the scene is being rendered.</span></div>
-<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span><span class="comment">     * @param movement The movement delta.</span></div>
-<div class="line"><a id="l00086" name="l00086"></a><span class="lineno">   86</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00087" name="l00087"></a><span class="lineno"><a class="line" href="class_scene.html#a989e70e7dc6a2130ddd134f1285b6301">   87</a></span>    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_scene.html#a989e70e7dc6a2130ddd134f1285b6301">onMouseMove</a>(<a class="code hl_friend" href="class_scene.html#a553f958a25683445088050a69d3de8e9">Window</a> &amp;window, <a class="code hl_typedef" href="units_8h.html#a850e32afea691ea6f3975e6f7cec14d0">Movement2d</a> movement) {}<span class="comment"></span></div>
-<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span><span class="comment">     * @brief Function that handles mouse scroll events.</span></div>
-<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span><span class="comment">     * @param window The window in which the scene is being rendered.</span></div>
-<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span><span class="comment">     * @param offset The scroll offset.</span></div>
-<div class="line"><a id="l00093" name="l00093"></a><span class="lineno">   93</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00094" name="l00094"></a><span class="lineno"><a class="line" href="class_scene.html#a614268b0862942317de098b251a02203">   94</a></span>    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_scene.html#a614268b0862942317de098b251a02203">onMouseScroll</a>(<a class="code hl_friend" href="class_scene.html#a553f958a25683445088050a69d3de8e9">Window</a> &amp;window, <a class="code hl_typedef" href="units_8h.html#a850e32afea691ea6f3975e6f7cec14d0">Movement2d</a> offset) {}</div>
-<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span><span class="comment"></span> </div>
-<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span><span class="comment">     * @brief Sets the intensity of the ambient light in the scene.</span></div>
-<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span><span class="comment">     * @param intensity The desired ambient light intensity. This value is</span></div>
-<div class="line"><a id="l00100" name="l00100"></a><span class="lineno">  100</span><span class="comment">     * divided by 4 internally.</span></div>
-<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span><span class="comment">     */</span></div>
-<div class="foldopen" id="foldopen00102" data-start="{" data-end="}">
-<div class="line"><a id="l00102" name="l00102"></a><span class="lineno"><a class="line" href="class_scene.html#af3030c8822975300a2a249fd650cc5a9">  102</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_scene.html#af3030c8822975300a2a249fd650cc5a9">setAmbientIntensity</a>(<span class="keywordtype">float</span> intensity) {</div>
-<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span>        this-&gt;ambientLight.intensity = intensity / 4;</div>
-<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span>        <span class="keywordflow">if</span> (automaticAmbient) {</div>
-<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span>            updateAutomaticAmbientFromSkybox();</div>
-<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span>        }</div>
-<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span>    }</div>
+<div class="line"><a id="l00084" name="l00084"></a><span class="lineno">   84</span><span class="comment">     * @param window The window in which the scene is going to be runned.</span></div>
+<div class="line"><a id="l00085" name="l00085"></a><span class="lineno">   85</span><span class="comment">     */</span></div>
+<div class="line"><a id="l00086" name="l00086"></a><span class="lineno"><a class="line" href="class_scene.html#a9d87607c6e6a93d1bfef10ed1cfdc667">   86</a></span>    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_scene.html#a9d87607c6e6a93d1bfef10ed1cfdc667">initialize</a>(<a class="code hl_friend" href="class_scene.html#a553f958a25683445088050a69d3de8e9">Window</a> &amp;window) = 0;<span class="comment"></span></div>
+<div class="line"><a id="l00087" name="l00087"></a><span class="lineno">   87</span><span class="comment">    /**</span></div>
+<div class="line"><a id="l00088" name="l00088"></a><span class="lineno">   88</span><span class="comment">     * @brief Function that handles mouse movement events.</span></div>
+<div class="line"><a id="l00089" name="l00089"></a><span class="lineno">   89</span><span class="comment">     *</span></div>
+<div class="line"><a id="l00090" name="l00090"></a><span class="lineno">   90</span><span class="comment">     * @param window  The window in which the scene is being rendered.</span></div>
+<div class="line"><a id="l00091" name="l00091"></a><span class="lineno">   91</span><span class="comment">     * @param movement The movement delta.</span></div>
+<div class="line"><a id="l00092" name="l00092"></a><span class="lineno">   92</span><span class="comment">     */</span></div>
+<div class="line"><a id="l00093" name="l00093"></a><span class="lineno"><a class="line" href="class_scene.html#a989e70e7dc6a2130ddd134f1285b6301">   93</a></span>    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_scene.html#a989e70e7dc6a2130ddd134f1285b6301">onMouseMove</a>(<a class="code hl_friend" href="class_scene.html#a553f958a25683445088050a69d3de8e9">Window</a> &amp;window, <a class="code hl_typedef" href="units_8h.html#a850e32afea691ea6f3975e6f7cec14d0">Movement2d</a> movement) {}<span class="comment"></span></div>
+<div class="line"><a id="l00094" name="l00094"></a><span class="lineno">   94</span><span class="comment">    /**</span></div>
+<div class="line"><a id="l00095" name="l00095"></a><span class="lineno">   95</span><span class="comment">     * @brief Function that handles mouse scroll events.</span></div>
+<div class="line"><a id="l00096" name="l00096"></a><span class="lineno">   96</span><span class="comment">     *</span></div>
+<div class="line"><a id="l00097" name="l00097"></a><span class="lineno">   97</span><span class="comment">     * @param window The window in which the scene is being rendered.</span></div>
+<div class="line"><a id="l00098" name="l00098"></a><span class="lineno">   98</span><span class="comment">     * @param offset The scroll offset.</span></div>
+<div class="line"><a id="l00099" name="l00099"></a><span class="lineno">   99</span><span class="comment">     */</span></div>
+<div class="line"><a id="l00100" name="l00100"></a><span class="lineno"><a class="line" href="class_scene.html#a614268b0862942317de098b251a02203">  100</a></span>    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_scene.html#a614268b0862942317de098b251a02203">onMouseScroll</a>(<a class="code hl_friend" href="class_scene.html#a553f958a25683445088050a69d3de8e9">Window</a> &amp;window, <a class="code hl_typedef" href="units_8h.html#a850e32afea691ea6f3975e6f7cec14d0">Movement2d</a> offset) {}</div>
+<div class="line"><a id="l00101" name="l00101"></a><span class="lineno">  101</span><span class="comment"></span> </div>
+<div class="line"><a id="l00102" name="l00102"></a><span class="lineno">  102</span><span class="comment">    /**</span></div>
+<div class="line"><a id="l00103" name="l00103"></a><span class="lineno">  103</span><span class="comment">     * @brief Sets the intensity of the ambient light in the scene.</span></div>
+<div class="line"><a id="l00104" name="l00104"></a><span class="lineno">  104</span><span class="comment">     *</span></div>
+<div class="line"><a id="l00105" name="l00105"></a><span class="lineno">  105</span><span class="comment">     * @param intensity The desired ambient light intensity. This value is</span></div>
+<div class="line"><a id="l00106" name="l00106"></a><span class="lineno">  106</span><span class="comment">     * divided by 4 internally.</span></div>
+<div class="line"><a id="l00107" name="l00107"></a><span class="lineno">  107</span><span class="comment">     */</span></div>
+<div class="foldopen" id="foldopen00108" data-start="{" data-end="}">
+<div class="line"><a id="l00108" name="l00108"></a><span class="lineno"><a class="line" href="class_scene.html#af3030c8822975300a2a249fd650cc5a9">  108</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_scene.html#af3030c8822975300a2a249fd650cc5a9">setAmbientIntensity</a>(<span class="keywordtype">float</span> intensity) {</div>
+<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span>        this-&gt;ambientLight.intensity = intensity / 4;</div>
+<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span>        <span class="keywordflow">if</span> (automaticAmbient) {</div>
+<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span>            updateAutomaticAmbientFromSkybox();</div>
+<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span>        }</div>
+<div class="line"><a id="l00113" name="l00113"></a><span class="lineno">  113</span>    }</div>
 </div>
-<div class="line"><a id="l00108" name="l00108"></a><span class="lineno">  108</span><span class="comment"></span> </div>
-<div class="line"><a id="l00109" name="l00109"></a><span class="lineno">  109</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00110" name="l00110"></a><span class="lineno">  110</span><span class="comment">     * @brief Enables or disables automatic ambient coloring derived from the</span></div>
-<div class="line"><a id="l00111" name="l00111"></a><span class="lineno">  111</span><span class="comment">     * scene&#39;s skybox.</span></div>
-<div class="line"><a id="l00112" name="l00112"></a><span class="lineno">  112</span><span class="comment">     */</span></div>
-<div class="foldopen" id="foldopen00113" data-start="{" data-end="}">
-<div class="line"><a id="l00113" name="l00113"></a><span class="lineno"><a class="line" href="class_scene.html#ad5bd815d4e8d0badfa4b7a72b844ad7c">  113</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_scene.html#ad5bd815d4e8d0badfa4b7a72b844ad7c">setAutomaticAmbient</a>(<span class="keywordtype">bool</span> enabled) {</div>
-<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span>        automaticAmbient = enabled;</div>
-<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span>        <span class="keywordflow">if</span> (automaticAmbient) {</div>
-<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span>            updateAutomaticAmbientFromSkybox();</div>
-<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span>        }</div>
-<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span>    }</div>
+<div class="line"><a id="l00114" name="l00114"></a><span class="lineno">  114</span><span class="comment"></span> </div>
+<div class="line"><a id="l00115" name="l00115"></a><span class="lineno">  115</span><span class="comment">    /**</span></div>
+<div class="line"><a id="l00116" name="l00116"></a><span class="lineno">  116</span><span class="comment">     * @brief Enables or disables automatic ambient coloring derived from the</span></div>
+<div class="line"><a id="l00117" name="l00117"></a><span class="lineno">  117</span><span class="comment">     * scene&#39;s skybox.</span></div>
+<div class="line"><a id="l00118" name="l00118"></a><span class="lineno">  118</span><span class="comment">     */</span></div>
+<div class="foldopen" id="foldopen00119" data-start="{" data-end="}">
+<div class="line"><a id="l00119" name="l00119"></a><span class="lineno"><a class="line" href="class_scene.html#ad5bd815d4e8d0badfa4b7a72b844ad7c">  119</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_scene.html#ad5bd815d4e8d0badfa4b7a72b844ad7c">setAutomaticAmbient</a>(<span class="keywordtype">bool</span> enabled) {</div>
+<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span>        automaticAmbient = enabled;</div>
+<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span>        <span class="keywordflow">if</span> (automaticAmbient) {</div>
+<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span>            updateAutomaticAmbientFromSkybox();</div>
+<div class="line"><a id="l00123" name="l00123"></a><span class="lineno">  123</span>        }</div>
+<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span>    }</div>
 </div>
-<div class="line"><a id="l00119" name="l00119"></a><span class="lineno">  119</span><span class="comment"></span> </div>
-<div class="line"><a id="l00120" name="l00120"></a><span class="lineno">  120</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00121" name="l00121"></a><span class="lineno">  121</span><span class="comment">     * @brief Returns whether automatic ambient sampling is enabled.</span></div>
-<div class="line"><a id="l00122" name="l00122"></a><span class="lineno">  122</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00123" name="l00123"></a><span class="lineno"><a class="line" href="class_scene.html#ad8ef755ef8124f2b0fefb95926740052">  123</a></span>    <span class="keywordtype">bool</span> <a class="code hl_function" href="class_scene.html#ad8ef755ef8124f2b0fefb95926740052">isAutomaticAmbientEnabled</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> automaticAmbient; }</div>
-<div class="line"><a id="l00124" name="l00124"></a><span class="lineno">  124</span><span class="comment"></span> </div>
-<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span><span class="comment">     * @brief Gets the ambient color computed from the skybox when automatic</span></div>
-<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span><span class="comment">     * ambient is active.</span></div>
+<div class="line"><a id="l00125" name="l00125"></a><span class="lineno">  125</span><span class="comment"></span> </div>
+<div class="line"><a id="l00126" name="l00126"></a><span class="lineno">  126</span><span class="comment">    /**</span></div>
+<div class="line"><a id="l00127" name="l00127"></a><span class="lineno">  127</span><span class="comment">     * @brief Returns whether automatic ambient sampling is enabled.</span></div>
 <div class="line"><a id="l00128" name="l00128"></a><span class="lineno">  128</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00129" name="l00129"></a><span class="lineno"><a class="line" href="class_scene.html#a35ea9f3457ba80832a8823d088621246">  129</a></span>    <a class="code hl_struct" href="struct_color.html">Color</a> <a class="code hl_function" href="class_scene.html#a35ea9f3457ba80832a8823d088621246">getAutomaticAmbientColor</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> automaticAmbientColor; }</div>
+<div class="line"><a id="l00129" name="l00129"></a><span class="lineno"><a class="line" href="class_scene.html#ad8ef755ef8124f2b0fefb95926740052">  129</a></span>    <span class="keywordtype">bool</span> <a class="code hl_function" href="class_scene.html#ad8ef755ef8124f2b0fefb95926740052">isAutomaticAmbientEnabled</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> automaticAmbient; }</div>
 <div class="line"><a id="l00130" name="l00130"></a><span class="lineno">  130</span><span class="comment"></span> </div>
 <div class="line"><a id="l00131" name="l00131"></a><span class="lineno">  131</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span><span class="comment">     * @brief Gets the intensity derived from the skybox when automatic ambient</span></div>
-<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span><span class="comment">     * is active.</span></div>
+<div class="line"><a id="l00132" name="l00132"></a><span class="lineno">  132</span><span class="comment">     * @brief Gets the ambient color computed from the skybox when automatic</span></div>
+<div class="line"><a id="l00133" name="l00133"></a><span class="lineno">  133</span><span class="comment">     * ambient is active.</span></div>
 <div class="line"><a id="l00134" name="l00134"></a><span class="lineno">  134</span><span class="comment">     */</span></div>
-<div class="foldopen" id="foldopen00135" data-start="{" data-end="}">
-<div class="line"><a id="l00135" name="l00135"></a><span class="lineno"><a class="line" href="class_scene.html#a38145c09216f3e29dbf88e5cea5996ae">  135</a></span>    <span class="keywordtype">float</span> <a class="code hl_function" href="class_scene.html#a38145c09216f3e29dbf88e5cea5996ae">getAutomaticAmbientIntensity</a>()<span class="keyword"> const </span>{</div>
-<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span>        <span class="keywordflow">return</span> automaticAmbientIntensity;</div>
-<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span>    }</div>
+<div class="line"><a id="l00135" name="l00135"></a><span class="lineno"><a class="line" href="class_scene.html#a35ea9f3457ba80832a8823d088621246">  135</a></span>    <a class="code hl_struct" href="struct_color.html">Color</a> <a class="code hl_function" href="class_scene.html#a35ea9f3457ba80832a8823d088621246">getAutomaticAmbientColor</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> automaticAmbientColor; }</div>
+<div class="line"><a id="l00136" name="l00136"></a><span class="lineno">  136</span><span class="comment"></span> </div>
+<div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span><span class="comment">    /**</span></div>
+<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span><span class="comment">     * @brief Gets the intensity derived from the skybox when automatic ambient</span></div>
+<div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span><span class="comment">     * is active.</span></div>
+<div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span><span class="comment">     */</span></div>
+<div class="foldopen" id="foldopen00141" data-start="{" data-end="}">
+<div class="line"><a id="l00141" name="l00141"></a><span class="lineno"><a class="line" href="class_scene.html#a38145c09216f3e29dbf88e5cea5996ae">  141</a></span>    <span class="keywordtype">float</span> <a class="code hl_function" href="class_scene.html#a38145c09216f3e29dbf88e5cea5996ae">getAutomaticAmbientIntensity</a>()<span class="keyword"> const </span>{</div>
+<div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span>        <span class="keywordflow">return</span> automaticAmbientIntensity;</div>
+<div class="line"><a id="l00143" name="l00143"></a><span class="lineno">  143</span>    }</div>
 </div>
-<div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span><span class="comment"></span> </div>
-<div class="line"><a id="l00139" name="l00139"></a><span class="lineno">  139</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span><span class="comment">     * @brief Returns the manually configured ambient light color.</span></div>
-<div class="line"><a id="l00141" name="l00141"></a><span class="lineno">  141</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00142" name="l00142"></a><span class="lineno"><a class="line" href="class_scene.html#a9e2eae7fdc2f6536bfb39a55fcc2b5ae">  142</a></span>    <a class="code hl_struct" href="struct_color.html">Color</a> <a class="code hl_function" href="class_scene.html#a9e2eae7fdc2f6536bfb39a55fcc2b5ae">getAmbientColor</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> ambientLight.color; }</div>
-<div class="line"><a id="l00143" name="l00143"></a><span class="lineno">  143</span><span class="comment"></span> </div>
-<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span><span class="comment">     * @brief Returns the manually configured ambient intensity.</span></div>
-<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00147" name="l00147"></a><span class="lineno"><a class="line" href="class_scene.html#a120720cb85805ce92a5bd8ea647892ca">  147</a></span>    <span class="keywordtype">float</span> <a class="code hl_function" href="class_scene.html#a120720cb85805ce92a5bd8ea647892ca">getAmbientIntensity</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> ambientLight.intensity; }</div>
-<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span><span class="comment"></span> </div>
-<div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span><span class="comment">     * @brief Function that adds a directional light to the scene. \warning The</span></div>
-<div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span><span class="comment">     * light object must be valid during the entire scene lifetime.</span></div>
-<div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span><span class="comment">     * @param light The directional light to add.</span></div>
-<div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span><span class="comment">     */</span></div>
-<div class="foldopen" id="foldopen00155" data-start="{" data-end="}">
-<div class="line"><a id="l00155" name="l00155"></a><span class="lineno"><a class="line" href="class_scene.html#a20d41770f3040ef7fa818e3df3c63f7b">  155</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_scene.html#a20d41770f3040ef7fa818e3df3c63f7b">addDirectionalLight</a>(<a class="code hl_class" href="class_directional_light.html">DirectionalLight</a> *light) {</div>
-<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span>        directionalLights.push_back(light);</div>
-<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span>    }</div>
+<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span><span class="comment"></span> </div>
+<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span><span class="comment">    /**</span></div>
+<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span><span class="comment">     * @brief Returns the manually configured ambient light color.</span></div>
+<div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span><span class="comment">     */</span></div>
+<div class="line"><a id="l00148" name="l00148"></a><span class="lineno"><a class="line" href="class_scene.html#a9e2eae7fdc2f6536bfb39a55fcc2b5ae">  148</a></span>    <a class="code hl_struct" href="struct_color.html">Color</a> <a class="code hl_function" href="class_scene.html#a9e2eae7fdc2f6536bfb39a55fcc2b5ae">getAmbientColor</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> ambientLight.color; }</div>
+<div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span><span class="comment"></span> </div>
+<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span><span class="comment">    /**</span></div>
+<div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span><span class="comment">     * @brief Returns the manually configured ambient intensity.</span></div>
+<div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span><span class="comment">     */</span></div>
+<div class="line"><a id="l00153" name="l00153"></a><span class="lineno"><a class="line" href="class_scene.html#a120720cb85805ce92a5bd8ea647892ca">  153</a></span>    <span class="keywordtype">float</span> <a class="code hl_function" href="class_scene.html#a120720cb85805ce92a5bd8ea647892ca">getAmbientIntensity</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> ambientLight.intensity; }</div>
+<div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span><span class="comment"></span> </div>
+<div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span><span class="comment">    /**</span></div>
+<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span><span class="comment">     * @brief Function that adds a directional light to the scene. \warning The</span></div>
+<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span><span class="comment">     * light object must be valid during the entire scene lifetime.</span></div>
+<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span><span class="comment">     *</span></div>
+<div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span><span class="comment">     * @param light The directional light to add.</span></div>
+<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span><span class="comment">     */</span></div>
+<div class="foldopen" id="foldopen00161" data-start="{" data-end="}">
+<div class="line"><a id="l00161" name="l00161"></a><span class="lineno"><a class="line" href="class_scene.html#a20d41770f3040ef7fa818e3df3c63f7b">  161</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_scene.html#a20d41770f3040ef7fa818e3df3c63f7b">addDirectionalLight</a>(<a class="code hl_class" href="class_directional_light.html">DirectionalLight</a> *light) {</div>
+<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span>        directionalLights.push_back(light);</div>
+<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span>    }</div>
 </div>
-<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span><span class="comment"></span> </div>
-<div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span><span class="comment">     * @brief Function that adds a point light to the scene. \warning The light</span></div>
-<div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span><span class="comment">     * object must be valid during the entire scene lifetime.</span></div>
-<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span><span class="comment">     * @param light The point light to add.</span></div>
-<div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span> </div>
-<div class="line"><a id="l00166" name="l00166"></a><span class="lineno"><a class="line" href="class_scene.html#a13b298b0c24c92929bf9850012980623">  166</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_scene.html#a13b298b0c24c92929bf9850012980623">addLight</a>(<a class="code hl_struct" href="struct_light.html">Light</a> *light) { pointLights.push_back(light); }</div>
-<div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span><span class="comment"></span> </div>
-<div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span><span class="comment">     * @brief Function that adds a spotlight to the scene. \warning The light</span></div>
-<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span><span class="comment">     * object must be valid during the entire scene lifetime.</span></div>
-<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span><span class="comment">     * @param light The spotlight to add.</span></div>
-<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00174" name="l00174"></a><span class="lineno"><a class="line" href="class_scene.html#a0711374dffe3e30acfcddd32c17b0cd7">  174</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_scene.html#a0711374dffe3e30acfcddd32c17b0cd7">addSpotlight</a>(<a class="code hl_struct" href="struct_spotlight.html">Spotlight</a> *light) { spotlights.push_back(light); }</div>
-<div class="line"><a id="l00175" name="l00175"></a><span class="lineno"><a class="line" href="class_scene.html#a8444afc5763ff91124559e26ba2192ac">  175</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_scene.html#a8444afc5763ff91124559e26ba2192ac">addAreaLight</a>(<a class="code hl_struct" href="struct_area_light.html">AreaLight</a> *light) { areaLights.push_back(light); }</div>
-<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span><span class="comment"></span> </div>
-<div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00178" name="l00178"></a><span class="lineno">  178</span><span class="comment">     * @brief Set the Skybox object</span></div>
-<div class="line"><a id="l00179" name="l00179"></a><span class="lineno">  179</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00180" name="l00180"></a><span class="lineno">  180</span><span class="comment">     * @param newSkybox The new skybox to set.</span></div>
-<div class="line"><a id="l00181" name="l00181"></a><span class="lineno">  181</span><span class="comment">     */</span></div>
-<div class="foldopen" id="foldopen00182" data-start="{" data-end="}">
-<div class="line"><a id="l00182" name="l00182"></a><span class="lineno"><a class="line" href="class_scene.html#acccf622706b4067fd6d313ebf4075f1a">  182</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_scene.html#acccf622706b4067fd6d313ebf4075f1a">setSkybox</a>(<a class="code hl_class" href="class_skybox.html">Skybox</a> *newSkybox) {</div>
-<div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span>        skybox = newSkybox;</div>
-<div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span>        <span class="keywordflow">if</span> (automaticAmbient) {</div>
-<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span>            updateAutomaticAmbientFromSkybox();</div>
-<div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span>        }</div>
-<div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span>    }</div>
+<div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span><span class="comment"></span> </div>
+<div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span><span class="comment">    /**</span></div>
+<div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span><span class="comment">     * @brief Function that adds a point light to the scene. \warning The light</span></div>
+<div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span><span class="comment">     * object must be valid during the entire scene lifetime.</span></div>
+<div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span><span class="comment">     *</span></div>
+<div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span><span class="comment">     * @param light The point light to add.</span></div>
+<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span><span class="comment">     */</span></div>
+<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span> </div>
+<div class="line"><a id="l00172" name="l00172"></a><span class="lineno"><a class="line" href="class_scene.html#a13b298b0c24c92929bf9850012980623">  172</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_scene.html#a13b298b0c24c92929bf9850012980623">addLight</a>(<a class="code hl_struct" href="struct_light.html">Light</a> *light) { pointLights.push_back(light); }</div>
+<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span><span class="comment"></span> </div>
+<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span><span class="comment">    /**</span></div>
+<div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span><span class="comment">     * @brief Function that adds a spotlight to the scene. \warning The light</span></div>
+<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span><span class="comment">     * object must be valid during the entire scene lifetime.</span></div>
+<div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span><span class="comment">     *</span></div>
+<div class="line"><a id="l00178" name="l00178"></a><span class="lineno">  178</span><span class="comment">     * @param light The spotlight to add.</span></div>
+<div class="line"><a id="l00179" name="l00179"></a><span class="lineno">  179</span><span class="comment">     */</span></div>
+<div class="line"><a id="l00180" name="l00180"></a><span class="lineno"><a class="line" href="class_scene.html#a0711374dffe3e30acfcddd32c17b0cd7">  180</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_scene.html#a0711374dffe3e30acfcddd32c17b0cd7">addSpotlight</a>(<a class="code hl_struct" href="struct_spotlight.html">Spotlight</a> *light) { spotlights.push_back(light); }</div>
+<div class="line"><a id="l00181" name="l00181"></a><span class="lineno"><a class="line" href="class_scene.html#a8444afc5763ff91124559e26ba2192ac">  181</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_scene.html#a8444afc5763ff91124559e26ba2192ac">addAreaLight</a>(<a class="code hl_struct" href="struct_area_light.html">AreaLight</a> *light) { areaLights.push_back(light); }</div>
+<div class="line"><a id="l00182" name="l00182"></a><span class="lineno">  182</span><span class="comment"></span> </div>
+<div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span><span class="comment">    /**</span></div>
+<div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span><span class="comment">     * @brief Set the Skybox object</span></div>
+<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span><span class="comment">     *</span></div>
+<div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span><span class="comment">     * @param newSkybox The new skybox to set.</span></div>
+<div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span><span class="comment">     */</span></div>
+<div class="foldopen" id="foldopen00188" data-start="{" data-end="}">
+<div class="line"><a id="l00188" name="l00188"></a><span class="lineno"><a class="line" href="class_scene.html#acccf622706b4067fd6d313ebf4075f1a">  188</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_scene.html#acccf622706b4067fd6d313ebf4075f1a">setSkybox</a>(<a class="code hl_class" href="class_skybox.html">Skybox</a> *newSkybox) {</div>
+<div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span>        skybox = newSkybox;</div>
+<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span>        <span class="keywordflow">if</span> (automaticAmbient) {</div>
+<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span>            updateAutomaticAmbientFromSkybox();</div>
+<div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span>        }</div>
+<div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span>    }</div>
 </div>
-<div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span> </div>
-<div class="line"><a id="l00189" name="l00189"></a><span class="lineno"><a class="line" href="class_scene.html#aac1fb26dcd06bddab714956607d38380">  189</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_scene.html#aac1fb26dcd06bddab714956607d38380">setEnvironment</a>(<a class="code hl_class" href="class_environment.html">Environment</a> newEnv) { environment = newEnv; }</div>
-<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span> </div>
-<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span>  <span class="keyword">private</span>:</div>
-<div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span>    <a class="code hl_class" href="class_environment.html">Environment</a> environment;</div>
-<div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span>    std::vector&lt;DirectionalLight *&gt; directionalLights;</div>
-<div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span>    std::vector&lt;Light *&gt; pointLights;</div>
-<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span>    std::vector&lt;Spotlight *&gt; spotlights;</div>
-<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span>    std::vector&lt;AreaLight *&gt; areaLights;</div>
-<div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span>    <a class="code hl_class" href="class_skybox.html">Skybox</a> *skybox = <span class="keyword">nullptr</span>;</div>
-<div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span>    <a class="code hl_struct" href="struct_ambient_light.html">AmbientLight</a> ambientLight = {{1.0f, 1.0f, 1.0f, 1.0f}, 0.5f / 4};</div>
-<div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span>    <span class="keywordtype">bool</span> automaticAmbient = <span class="keyword">false</span>;</div>
-<div class="line"><a id="l00200" name="l00200"></a><span class="lineno">  200</span>    <a class="code hl_enumvalue" href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82acb5feb1b7314637725a2e73bdc9f7295">Color</a> automaticAmbientColor = <a class="code hl_function" href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a>();</div>
-<div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span>    <span class="keywordtype">float</span> automaticAmbientIntensity = ambientLight.intensity;</div>
-<div class="line"><a id="l00202" name="l00202"></a><span class="lineno">  202</span> </div>
-<div class="line"><a id="l00203" name="l00203"></a><span class="lineno">  203</span>    <span class="keywordtype">void</span> updateAutomaticAmbientFromSkybox() {</div>
-<div class="line"><a id="l00204" name="l00204"></a><span class="lineno">  204</span>        <span class="keywordflow">if</span> (skybox != <span class="keyword">nullptr</span> &amp;&amp; skybox-&gt;cubemap.hasAverageColor) {</div>
-<div class="line"><a id="l00205" name="l00205"></a><span class="lineno">  205</span>            automaticAmbientColor = skybox-&gt;cubemap.averageColor;</div>
-<div class="line"><a id="l00206" name="l00206"></a><span class="lineno">  206</span>            <span class="keywordtype">double</span> luminance = 0.2126 * automaticAmbientColor.r +</div>
-<div class="line"><a id="l00207" name="l00207"></a><span class="lineno">  207</span>                               0.7152 * automaticAmbientColor.g +</div>
-<div class="line"><a id="l00208" name="l00208"></a><span class="lineno">  208</span>                               0.0722 * automaticAmbientColor.b;</div>
-<div class="line"><a id="l00209" name="l00209"></a><span class="lineno">  209</span>            automaticAmbientIntensity =</div>
-<div class="line"><a id="l00210" name="l00210"></a><span class="lineno">  210</span>                <span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(std::clamp(luminance, 0.0, 1.0));</div>
-<div class="line"><a id="l00211" name="l00211"></a><span class="lineno">  211</span>        } <span class="keywordflow">else</span> {</div>
-<div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span>            automaticAmbientColor = ambientLight.color;</div>
-<div class="line"><a id="l00213" name="l00213"></a><span class="lineno">  213</span>            automaticAmbientIntensity = ambientLight.intensity;</div>
-<div class="line"><a id="l00214" name="l00214"></a><span class="lineno">  214</span>        }</div>
-<div class="line"><a id="l00215" name="l00215"></a><span class="lineno">  215</span>    }</div>
-<div class="line"><a id="l00216" name="l00216"></a><span class="lineno">  216</span> </div>
-<div class="line"><a id="l00217" name="l00217"></a><span class="lineno"><a class="line" href="class_scene.html#ac9dbe2a378024e3a3c417b4cb50adbb3">  217</a></span>    <span class="keyword">friend</span> <span class="keyword">class </span><a class="code hl_friend" href="class_scene.html#ac9dbe2a378024e3a3c417b4cb50adbb3">CoreObject</a>;</div>
-<div class="line"><a id="l00218" name="l00218"></a><span class="lineno"><a class="line" href="class_scene.html#a553f958a25683445088050a69d3de8e9">  218</a></span>    <span class="keyword">friend</span> <span class="keyword">class </span><a class="code hl_friend" href="class_scene.html#a553f958a25683445088050a69d3de8e9">Window</a>;</div>
-<div class="line"><a id="l00219" name="l00219"></a><span class="lineno"><a class="line" href="class_scene.html#a8a16a8def173094d17ed062879646b6b">  219</a></span>    <span class="keyword">friend</span> <span class="keyword">class </span><a class="code hl_friend" href="class_scene.html#a8a16a8def173094d17ed062879646b6b">Terrain</a>;</div>
-<div class="line"><a id="l00220" name="l00220"></a><span class="lineno"><a class="line" href="class_scene.html#aa5afc6f82b7b587ed5ada4d227ce32aa">  220</a></span>    <span class="keyword">friend</span> <span class="keyword">class </span><a class="code hl_friend" href="class_scene.html#aa5afc6f82b7b587ed5ada4d227ce32aa">RenderTarget</a>;</div>
-<div class="line"><a id="l00221" name="l00221"></a><span class="lineno">  221</span>};</div>
-</div>
+<div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span> </div>
+<div class="line"><a id="l00195" name="l00195"></a><span class="lineno"><a class="line" href="class_scene.html#aac1fb26dcd06bddab714956607d38380">  195</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_scene.html#aac1fb26dcd06bddab714956607d38380">setEnvironment</a>(<a class="code hl_class" href="class_environment.html">Environment</a> newEnv) { environment = newEnv; }</div>
+<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span> </div>
+<div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span>  <span class="keyword">private</span>:</div>
+<div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span>    <a class="code hl_class" href="class_environment.html">Environment</a> environment;</div>
+<div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span>    std::vector&lt;DirectionalLight *&gt; directionalLights;</div>
+<div class="line"><a id="l00200" name="l00200"></a><span class="lineno">  200</span>    std::vector&lt;Light *&gt; pointLights;</div>
+<div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span>    std::vector&lt;Spotlight *&gt; spotlights;</div>
+<div class="line"><a id="l00202" name="l00202"></a><span class="lineno">  202</span>    std::vector&lt;AreaLight *&gt; areaLights;</div>
+<div class="line"><a id="l00203" name="l00203"></a><span class="lineno">  203</span>    <a class="code hl_class" href="class_skybox.html">Skybox</a> *skybox = <span class="keyword">nullptr</span>;</div>
+<div class="line"><a id="l00204" name="l00204"></a><span class="lineno">  204</span>    <a class="code hl_struct" href="struct_ambient_light.html">AmbientLight</a> ambientLight = {{1.0f, 1.0f, 1.0f, 1.0f}, 0.5f / 4};</div>
+<div class="line"><a id="l00205" name="l00205"></a><span class="lineno">  205</span>    <span class="keywordtype">bool</span> automaticAmbient = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00206" name="l00206"></a><span class="lineno">  206</span>    <a class="code hl_enumvalue" href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82acb5feb1b7314637725a2e73bdc9f7295">Color</a> automaticAmbientColor = <a class="code hl_function" href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a>();</div>
+<div class="line"><a id="l00207" name="l00207"></a><span class="lineno">  207</span>    <span class="keywordtype">float</span> automaticAmbientIntensity = ambientLight.intensity;</div>
+<div class="line"><a id="l00208" name="l00208"></a><span class="lineno">  208</span> </div>
+<div class="line"><a id="l00209" name="l00209"></a><span class="lineno">  209</span>    <span class="keywordtype">void</span> updateAutomaticAmbientFromSkybox() {</div>
+<div class="line"><a id="l00210" name="l00210"></a><span class="lineno">  210</span>        <span class="keywordflow">if</span> (skybox != <span class="keyword">nullptr</span> &amp;&amp; skybox-&gt;cubemap.hasAverageColor) {</div>
+<div class="line"><a id="l00211" name="l00211"></a><span class="lineno">  211</span>            automaticAmbientColor = skybox-&gt;cubemap.averageColor;</div>
+<div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span>            <span class="keywordtype">double</span> luminance = 0.2126 * automaticAmbientColor.r +</div>
+<div class="line"><a id="l00213" name="l00213"></a><span class="lineno">  213</span>                               0.7152 * automaticAmbientColor.g +</div>
+<div class="line"><a id="l00214" name="l00214"></a><span class="lineno">  214</span>                               0.0722 * automaticAmbientColor.b;</div>
+<div class="line"><a id="l00215" name="l00215"></a><span class="lineno">  215</span>            automaticAmbientIntensity =</div>
+<div class="line"><a id="l00216" name="l00216"></a><span class="lineno">  216</span>                <span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(std::clamp(luminance, 0.0, 1.0));</div>
+<div class="line"><a id="l00217" name="l00217"></a><span class="lineno">  217</span>        } <span class="keywordflow">else</span> {</div>
+<div class="line"><a id="l00218" name="l00218"></a><span class="lineno">  218</span>            automaticAmbientColor = ambientLight.color;</div>
+<div class="line"><a id="l00219" name="l00219"></a><span class="lineno">  219</span>            automaticAmbientIntensity = ambientLight.intensity;</div>
+<div class="line"><a id="l00220" name="l00220"></a><span class="lineno">  220</span>        }</div>
+<div class="line"><a id="l00221" name="l00221"></a><span class="lineno">  221</span>    }</div>
 <div class="line"><a id="l00222" name="l00222"></a><span class="lineno">  222</span> </div>
-<div class="line"><a id="l00223" name="l00223"></a><span class="lineno">  223</span><span class="preprocessor">#endif </span><span class="comment">// ATLAS_SCENE_H</span></div>
+<div class="line"><a id="l00223" name="l00223"></a><span class="lineno"><a class="line" href="class_scene.html#ac9dbe2a378024e3a3c417b4cb50adbb3">  223</a></span>    <span class="keyword">friend</span> <span class="keyword">class </span><a class="code hl_friend" href="class_scene.html#ac9dbe2a378024e3a3c417b4cb50adbb3">CoreObject</a>;</div>
+<div class="line"><a id="l00224" name="l00224"></a><span class="lineno"><a class="line" href="class_scene.html#a553f958a25683445088050a69d3de8e9">  224</a></span>    <span class="keyword">friend</span> <span class="keyword">class </span><a class="code hl_friend" href="class_scene.html#a553f958a25683445088050a69d3de8e9">Window</a>;</div>
+<div class="line"><a id="l00225" name="l00225"></a><span class="lineno"><a class="line" href="class_scene.html#a8a16a8def173094d17ed062879646b6b">  225</a></span>    <span class="keyword">friend</span> <span class="keyword">class </span><a class="code hl_friend" href="class_scene.html#a8a16a8def173094d17ed062879646b6b">Terrain</a>;</div>
+<div class="line"><a id="l00226" name="l00226"></a><span class="lineno"><a class="line" href="class_scene.html#aa5afc6f82b7b587ed5ada4d227ce32aa">  226</a></span>    <span class="keyword">friend</span> <span class="keyword">class </span><a class="code hl_friend" href="class_scene.html#aa5afc6f82b7b587ed5ada4d227ce32aa">RenderTarget</a>;</div>
+<div class="line"><a id="l00227" name="l00227"></a><span class="lineno">  227</span>};</div>
+</div>
+<div class="line"><a id="l00228" name="l00228"></a><span class="lineno">  228</span> </div>
+<div class="line"><a id="l00229" name="l00229"></a><span class="lineno">  229</span><span class="preprocessor">#endif </span><span class="comment">// ATLAS_SCENE_H</span></div>
 <div class="ttc" id="abody_8h_html"><div class="ttname"><a href="body_8h.html">body.h</a></div></div>
 <div class="ttc" id="aclass_directional_light_html"><div class="ttname"><a href="class_directional_light.html">DirectionalLight</a></div><div class="ttdoc">Structure representing a directional light in a scene. A directional light emits light in a specific ...</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00235">light.h:235</a></div></div>
-<div class="ttc" id="aclass_environment_html"><div class="ttname"><a href="class_environment.html">Environment</a></div><div class="ttdef"><b>Definition</b> <a href="#l00036">scene.h:36</a></div></div>
-<div class="ttc" id="aclass_environment_html_a9b85231531334ac04d8d0306b13d5c09"><div class="ttname"><a href="class_environment.html#a9b85231531334ac04d8d0306b13d5c09">Environment::volumetricLighting</a></div><div class="ttdeci">VolumetricLighting volumetricLighting</div><div class="ttdef"><b>Definition</b> <a href="#l00039">scene.h:39</a></div></div>
-<div class="ttc" id="aclass_environment_html_ac8f14946937e23aef5942658a850dcbf"><div class="ttname"><a href="class_environment.html#ac8f14946937e23aef5942658a850dcbf">Environment::fog</a></div><div class="ttdeci">Fog fog</div><div class="ttdef"><b>Definition</b> <a href="#l00038">scene.h:38</a></div></div>
-<div class="ttc" id="aclass_scene_html"><div class="ttname"><a href="class_scene.html">Scene</a></div><div class="ttdoc">Abstract class that represents a 3D scene. It contains all lights and objects that are going to be re...</div><div class="ttdef"><b>Definition</b> <a href="#l00065">scene.h:65</a></div></div>
-<div class="ttc" id="aclass_scene_html_a0711374dffe3e30acfcddd32c17b0cd7"><div class="ttname"><a href="class_scene.html#a0711374dffe3e30acfcddd32c17b0cd7">Scene::addSpotlight</a></div><div class="ttdeci">void addSpotlight(Spotlight *light)</div><div class="ttdoc">Function that adds a spotlight to the scene.</div><div class="ttdef"><b>Definition</b> <a href="#l00174">scene.h:174</a></div></div>
-<div class="ttc" id="aclass_scene_html_a120720cb85805ce92a5bd8ea647892ca"><div class="ttname"><a href="class_scene.html#a120720cb85805ce92a5bd8ea647892ca">Scene::getAmbientIntensity</a></div><div class="ttdeci">float getAmbientIntensity() const</div><div class="ttdoc">Returns the manually configured ambient intensity.</div><div class="ttdef"><b>Definition</b> <a href="#l00147">scene.h:147</a></div></div>
-<div class="ttc" id="aclass_scene_html_a13b298b0c24c92929bf9850012980623"><div class="ttname"><a href="class_scene.html#a13b298b0c24c92929bf9850012980623">Scene::addLight</a></div><div class="ttdeci">void addLight(Light *light)</div><div class="ttdoc">Function that adds a point light to the scene.</div><div class="ttdef"><b>Definition</b> <a href="#l00166">scene.h:166</a></div></div>
-<div class="ttc" id="aclass_scene_html_a20d41770f3040ef7fa818e3df3c63f7b"><div class="ttname"><a href="class_scene.html#a20d41770f3040ef7fa818e3df3c63f7b">Scene::addDirectionalLight</a></div><div class="ttdeci">void addDirectionalLight(DirectionalLight *light)</div><div class="ttdoc">Function that adds a directional light to the scene.</div><div class="ttdef"><b>Definition</b> <a href="#l00155">scene.h:155</a></div></div>
-<div class="ttc" id="aclass_scene_html_a2936b4b44d5c6ad073e65986a529a9f4"><div class="ttname"><a href="class_scene.html#a2936b4b44d5c6ad073e65986a529a9f4">Scene::update</a></div><div class="ttdeci">virtual void update(Window &amp;window)</div><div class="ttdoc">Function that initializes the scene. This method is called every frame.</div><div class="ttdef"><b>Definition</b> <a href="#l00073">scene.h:73</a></div></div>
-<div class="ttc" id="aclass_scene_html_a35ea9f3457ba80832a8823d088621246"><div class="ttname"><a href="class_scene.html#a35ea9f3457ba80832a8823d088621246">Scene::getAutomaticAmbientColor</a></div><div class="ttdeci">Color getAutomaticAmbientColor() const</div><div class="ttdoc">Gets the ambient color computed from the skybox when automatic ambient is active.</div><div class="ttdef"><b>Definition</b> <a href="#l00129">scene.h:129</a></div></div>
-<div class="ttc" id="aclass_scene_html_a38145c09216f3e29dbf88e5cea5996ae"><div class="ttname"><a href="class_scene.html#a38145c09216f3e29dbf88e5cea5996ae">Scene::getAutomaticAmbientIntensity</a></div><div class="ttdeci">float getAutomaticAmbientIntensity() const</div><div class="ttdoc">Gets the intensity derived from the skybox when automatic ambient is active.</div><div class="ttdef"><b>Definition</b> <a href="#l00135">scene.h:135</a></div></div>
-<div class="ttc" id="aclass_scene_html_a553f958a25683445088050a69d3de8e9"><div class="ttname"><a href="class_scene.html#a553f958a25683445088050a69d3de8e9">Scene::Window</a></div><div class="ttdeci">friend class Window</div><div class="ttdef"><b>Definition</b> <a href="#l00218">scene.h:218</a></div></div>
-<div class="ttc" id="aclass_scene_html_a614268b0862942317de098b251a02203"><div class="ttname"><a href="class_scene.html#a614268b0862942317de098b251a02203">Scene::onMouseScroll</a></div><div class="ttdeci">virtual void onMouseScroll(Window &amp;window, Movement2d offset)</div><div class="ttdoc">Function that handles mouse scroll events.</div><div class="ttdef"><b>Definition</b> <a href="#l00094">scene.h:94</a></div></div>
-<div class="ttc" id="aclass_scene_html_a8444afc5763ff91124559e26ba2192ac"><div class="ttname"><a href="class_scene.html#a8444afc5763ff91124559e26ba2192ac">Scene::addAreaLight</a></div><div class="ttdeci">void addAreaLight(AreaLight *light)</div><div class="ttdef"><b>Definition</b> <a href="#l00175">scene.h:175</a></div></div>
-<div class="ttc" id="aclass_scene_html_a8a16a8def173094d17ed062879646b6b"><div class="ttname"><a href="class_scene.html#a8a16a8def173094d17ed062879646b6b">Scene::Terrain</a></div><div class="ttdeci">friend class Terrain</div><div class="ttdef"><b>Definition</b> <a href="#l00219">scene.h:219</a></div></div>
-<div class="ttc" id="aclass_scene_html_a989e70e7dc6a2130ddd134f1285b6301"><div class="ttname"><a href="class_scene.html#a989e70e7dc6a2130ddd134f1285b6301">Scene::onMouseMove</a></div><div class="ttdeci">virtual void onMouseMove(Window &amp;window, Movement2d movement)</div><div class="ttdoc">Function that handles mouse movement events.</div><div class="ttdef"><b>Definition</b> <a href="#l00087">scene.h:87</a></div></div>
+<div class="ttc" id="aclass_environment_html"><div class="ttname"><a href="class_environment.html">Environment</a></div><div class="ttdef"><b>Definition</b> <a href="#l00041">scene.h:41</a></div></div>
+<div class="ttc" id="aclass_environment_html_a8230ab111323228a3ae41a6d9a2c8dd6"><div class="ttname"><a href="class_environment.html#a8230ab111323228a3ae41a6d9a2c8dd6">Environment::lightBloom</a></div><div class="ttdeci">LightBloom lightBloom</div><div class="ttdef"><b>Definition</b> <a href="#l00045">scene.h:45</a></div></div>
+<div class="ttc" id="aclass_environment_html_a9b85231531334ac04d8d0306b13d5c09"><div class="ttname"><a href="class_environment.html#a9b85231531334ac04d8d0306b13d5c09">Environment::volumetricLighting</a></div><div class="ttdeci">VolumetricLighting volumetricLighting</div><div class="ttdef"><b>Definition</b> <a href="#l00044">scene.h:44</a></div></div>
+<div class="ttc" id="aclass_environment_html_ac8f14946937e23aef5942658a850dcbf"><div class="ttname"><a href="class_environment.html#ac8f14946937e23aef5942658a850dcbf">Environment::fog</a></div><div class="ttdeci">Fog fog</div><div class="ttdef"><b>Definition</b> <a href="#l00043">scene.h:43</a></div></div>
+<div class="ttc" id="aclass_scene_html"><div class="ttname"><a href="class_scene.html">Scene</a></div><div class="ttdoc">Abstract class that represents a 3D scene. It contains all lights and objects that are going to be re...</div><div class="ttdef"><b>Definition</b> <a href="#l00071">scene.h:71</a></div></div>
+<div class="ttc" id="aclass_scene_html_a0711374dffe3e30acfcddd32c17b0cd7"><div class="ttname"><a href="class_scene.html#a0711374dffe3e30acfcddd32c17b0cd7">Scene::addSpotlight</a></div><div class="ttdeci">void addSpotlight(Spotlight *light)</div><div class="ttdoc">Function that adds a spotlight to the scene.</div><div class="ttdef"><b>Definition</b> <a href="#l00180">scene.h:180</a></div></div>
+<div class="ttc" id="aclass_scene_html_a120720cb85805ce92a5bd8ea647892ca"><div class="ttname"><a href="class_scene.html#a120720cb85805ce92a5bd8ea647892ca">Scene::getAmbientIntensity</a></div><div class="ttdeci">float getAmbientIntensity() const</div><div class="ttdoc">Returns the manually configured ambient intensity.</div><div class="ttdef"><b>Definition</b> <a href="#l00153">scene.h:153</a></div></div>
+<div class="ttc" id="aclass_scene_html_a13b298b0c24c92929bf9850012980623"><div class="ttname"><a href="class_scene.html#a13b298b0c24c92929bf9850012980623">Scene::addLight</a></div><div class="ttdeci">void addLight(Light *light)</div><div class="ttdoc">Function that adds a point light to the scene.</div><div class="ttdef"><b>Definition</b> <a href="#l00172">scene.h:172</a></div></div>
+<div class="ttc" id="aclass_scene_html_a20d41770f3040ef7fa818e3df3c63f7b"><div class="ttname"><a href="class_scene.html#a20d41770f3040ef7fa818e3df3c63f7b">Scene::addDirectionalLight</a></div><div class="ttdeci">void addDirectionalLight(DirectionalLight *light)</div><div class="ttdoc">Function that adds a directional light to the scene.</div><div class="ttdef"><b>Definition</b> <a href="#l00161">scene.h:161</a></div></div>
+<div class="ttc" id="aclass_scene_html_a2936b4b44d5c6ad073e65986a529a9f4"><div class="ttname"><a href="class_scene.html#a2936b4b44d5c6ad073e65986a529a9f4">Scene::update</a></div><div class="ttdeci">virtual void update(Window &amp;window)</div><div class="ttdoc">Function that initializes the scene. This method is called every frame.</div><div class="ttdef"><b>Definition</b> <a href="#l00079">scene.h:79</a></div></div>
+<div class="ttc" id="aclass_scene_html_a35ea9f3457ba80832a8823d088621246"><div class="ttname"><a href="class_scene.html#a35ea9f3457ba80832a8823d088621246">Scene::getAutomaticAmbientColor</a></div><div class="ttdeci">Color getAutomaticAmbientColor() const</div><div class="ttdoc">Gets the ambient color computed from the skybox when automatic ambient is active.</div><div class="ttdef"><b>Definition</b> <a href="#l00135">scene.h:135</a></div></div>
+<div class="ttc" id="aclass_scene_html_a38145c09216f3e29dbf88e5cea5996ae"><div class="ttname"><a href="class_scene.html#a38145c09216f3e29dbf88e5cea5996ae">Scene::getAutomaticAmbientIntensity</a></div><div class="ttdeci">float getAutomaticAmbientIntensity() const</div><div class="ttdoc">Gets the intensity derived from the skybox when automatic ambient is active.</div><div class="ttdef"><b>Definition</b> <a href="#l00141">scene.h:141</a></div></div>
+<div class="ttc" id="aclass_scene_html_a553f958a25683445088050a69d3de8e9"><div class="ttname"><a href="class_scene.html#a553f958a25683445088050a69d3de8e9">Scene::Window</a></div><div class="ttdeci">friend class Window</div><div class="ttdef"><b>Definition</b> <a href="#l00224">scene.h:224</a></div></div>
+<div class="ttc" id="aclass_scene_html_a614268b0862942317de098b251a02203"><div class="ttname"><a href="class_scene.html#a614268b0862942317de098b251a02203">Scene::onMouseScroll</a></div><div class="ttdeci">virtual void onMouseScroll(Window &amp;window, Movement2d offset)</div><div class="ttdoc">Function that handles mouse scroll events.</div><div class="ttdef"><b>Definition</b> <a href="#l00100">scene.h:100</a></div></div>
+<div class="ttc" id="aclass_scene_html_a8444afc5763ff91124559e26ba2192ac"><div class="ttname"><a href="class_scene.html#a8444afc5763ff91124559e26ba2192ac">Scene::addAreaLight</a></div><div class="ttdeci">void addAreaLight(AreaLight *light)</div><div class="ttdef"><b>Definition</b> <a href="#l00181">scene.h:181</a></div></div>
+<div class="ttc" id="aclass_scene_html_a8a16a8def173094d17ed062879646b6b"><div class="ttname"><a href="class_scene.html#a8a16a8def173094d17ed062879646b6b">Scene::Terrain</a></div><div class="ttdeci">friend class Terrain</div><div class="ttdef"><b>Definition</b> <a href="#l00225">scene.h:225</a></div></div>
+<div class="ttc" id="aclass_scene_html_a989e70e7dc6a2130ddd134f1285b6301"><div class="ttname"><a href="class_scene.html#a989e70e7dc6a2130ddd134f1285b6301">Scene::onMouseMove</a></div><div class="ttdeci">virtual void onMouseMove(Window &amp;window, Movement2d movement)</div><div class="ttdoc">Function that handles mouse movement events.</div><div class="ttdef"><b>Definition</b> <a href="#l00093">scene.h:93</a></div></div>
 <div class="ttc" id="aclass_scene_html_a9d87607c6e6a93d1bfef10ed1cfdc667"><div class="ttname"><a href="class_scene.html#a9d87607c6e6a93d1bfef10ed1cfdc667">Scene::initialize</a></div><div class="ttdeci">virtual void initialize(Window &amp;window)=0</div><div class="ttdoc">Function that initializes the scene. This method is called once by the Window class.</div></div>
-<div class="ttc" id="aclass_scene_html_a9e2eae7fdc2f6536bfb39a55fcc2b5ae"><div class="ttname"><a href="class_scene.html#a9e2eae7fdc2f6536bfb39a55fcc2b5ae">Scene::getAmbientColor</a></div><div class="ttdeci">Color getAmbientColor() const</div><div class="ttdoc">Returns the manually configured ambient light color.</div><div class="ttdef"><b>Definition</b> <a href="#l00142">scene.h:142</a></div></div>
-<div class="ttc" id="aclass_scene_html_aa5afc6f82b7b587ed5ada4d227ce32aa"><div class="ttname"><a href="class_scene.html#aa5afc6f82b7b587ed5ada4d227ce32aa">Scene::RenderTarget</a></div><div class="ttdeci">friend class RenderTarget</div><div class="ttdef"><b>Definition</b> <a href="#l00220">scene.h:220</a></div></div>
-<div class="ttc" id="aclass_scene_html_aac1fb26dcd06bddab714956607d38380"><div class="ttname"><a href="class_scene.html#aac1fb26dcd06bddab714956607d38380">Scene::setEnvironment</a></div><div class="ttdeci">void setEnvironment(Environment newEnv)</div><div class="ttdef"><b>Definition</b> <a href="#l00189">scene.h:189</a></div></div>
-<div class="ttc" id="aclass_scene_html_ac9dbe2a378024e3a3c417b4cb50adbb3"><div class="ttname"><a href="class_scene.html#ac9dbe2a378024e3a3c417b4cb50adbb3">Scene::CoreObject</a></div><div class="ttdeci">friend class CoreObject</div><div class="ttdef"><b>Definition</b> <a href="#l00217">scene.h:217</a></div></div>
-<div class="ttc" id="aclass_scene_html_acccf622706b4067fd6d313ebf4075f1a"><div class="ttname"><a href="class_scene.html#acccf622706b4067fd6d313ebf4075f1a">Scene::setSkybox</a></div><div class="ttdeci">void setSkybox(Skybox *newSkybox)</div><div class="ttdoc">Set the Skybox object.</div><div class="ttdef"><b>Definition</b> <a href="#l00182">scene.h:182</a></div></div>
-<div class="ttc" id="aclass_scene_html_ad5bd815d4e8d0badfa4b7a72b844ad7c"><div class="ttname"><a href="class_scene.html#ad5bd815d4e8d0badfa4b7a72b844ad7c">Scene::setAutomaticAmbient</a></div><div class="ttdeci">void setAutomaticAmbient(bool enabled)</div><div class="ttdoc">Enables or disables automatic ambient coloring derived from the scene&#39;s skybox.</div><div class="ttdef"><b>Definition</b> <a href="#l00113">scene.h:113</a></div></div>
-<div class="ttc" id="aclass_scene_html_ad8ef755ef8124f2b0fefb95926740052"><div class="ttname"><a href="class_scene.html#ad8ef755ef8124f2b0fefb95926740052">Scene::isAutomaticAmbientEnabled</a></div><div class="ttdeci">bool isAutomaticAmbientEnabled() const</div><div class="ttdoc">Returns whether automatic ambient sampling is enabled.</div><div class="ttdef"><b>Definition</b> <a href="#l00123">scene.h:123</a></div></div>
-<div class="ttc" id="aclass_scene_html_af3030c8822975300a2a249fd650cc5a9"><div class="ttname"><a href="class_scene.html#af3030c8822975300a2a249fd650cc5a9">Scene::setAmbientIntensity</a></div><div class="ttdeci">void setAmbientIntensity(float intensity)</div><div class="ttdoc">Sets the intensity of the ambient light in the scene.</div><div class="ttdef"><b>Definition</b> <a href="#l00102">scene.h:102</a></div></div>
-<div class="ttc" id="aclass_skybox_html"><div class="ttname"><a href="class_skybox.html">Skybox</a></div><div class="ttdoc">Class that represents a skybox, which is a large cube that surrounds the scene to introduce stunning ...</div><div class="ttdef"><b>Definition</b> <a href="texture_8h_source.html#l00473">texture.h:473</a></div></div>
+<div class="ttc" id="aclass_scene_html_a9e2eae7fdc2f6536bfb39a55fcc2b5ae"><div class="ttname"><a href="class_scene.html#a9e2eae7fdc2f6536bfb39a55fcc2b5ae">Scene::getAmbientColor</a></div><div class="ttdeci">Color getAmbientColor() const</div><div class="ttdoc">Returns the manually configured ambient light color.</div><div class="ttdef"><b>Definition</b> <a href="#l00148">scene.h:148</a></div></div>
+<div class="ttc" id="aclass_scene_html_aa5afc6f82b7b587ed5ada4d227ce32aa"><div class="ttname"><a href="class_scene.html#aa5afc6f82b7b587ed5ada4d227ce32aa">Scene::RenderTarget</a></div><div class="ttdeci">friend class RenderTarget</div><div class="ttdef"><b>Definition</b> <a href="#l00226">scene.h:226</a></div></div>
+<div class="ttc" id="aclass_scene_html_aac1fb26dcd06bddab714956607d38380"><div class="ttname"><a href="class_scene.html#aac1fb26dcd06bddab714956607d38380">Scene::setEnvironment</a></div><div class="ttdeci">void setEnvironment(Environment newEnv)</div><div class="ttdef"><b>Definition</b> <a href="#l00195">scene.h:195</a></div></div>
+<div class="ttc" id="aclass_scene_html_ac9dbe2a378024e3a3c417b4cb50adbb3"><div class="ttname"><a href="class_scene.html#ac9dbe2a378024e3a3c417b4cb50adbb3">Scene::CoreObject</a></div><div class="ttdeci">friend class CoreObject</div><div class="ttdef"><b>Definition</b> <a href="#l00223">scene.h:223</a></div></div>
+<div class="ttc" id="aclass_scene_html_acccf622706b4067fd6d313ebf4075f1a"><div class="ttname"><a href="class_scene.html#acccf622706b4067fd6d313ebf4075f1a">Scene::setSkybox</a></div><div class="ttdeci">void setSkybox(Skybox *newSkybox)</div><div class="ttdoc">Set the Skybox object.</div><div class="ttdef"><b>Definition</b> <a href="#l00188">scene.h:188</a></div></div>
+<div class="ttc" id="aclass_scene_html_ad5bd815d4e8d0badfa4b7a72b844ad7c"><div class="ttname"><a href="class_scene.html#ad5bd815d4e8d0badfa4b7a72b844ad7c">Scene::setAutomaticAmbient</a></div><div class="ttdeci">void setAutomaticAmbient(bool enabled)</div><div class="ttdoc">Enables or disables automatic ambient coloring derived from the scene&#39;s skybox.</div><div class="ttdef"><b>Definition</b> <a href="#l00119">scene.h:119</a></div></div>
+<div class="ttc" id="aclass_scene_html_ad8ef755ef8124f2b0fefb95926740052"><div class="ttname"><a href="class_scene.html#ad8ef755ef8124f2b0fefb95926740052">Scene::isAutomaticAmbientEnabled</a></div><div class="ttdeci">bool isAutomaticAmbientEnabled() const</div><div class="ttdoc">Returns whether automatic ambient sampling is enabled.</div><div class="ttdef"><b>Definition</b> <a href="#l00129">scene.h:129</a></div></div>
+<div class="ttc" id="aclass_scene_html_af3030c8822975300a2a249fd650cc5a9"><div class="ttname"><a href="class_scene.html#af3030c8822975300a2a249fd650cc5a9">Scene::setAmbientIntensity</a></div><div class="ttdeci">void setAmbientIntensity(float intensity)</div><div class="ttdoc">Sets the intensity of the ambient light in the scene.</div><div class="ttdef"><b>Definition</b> <a href="#l00108">scene.h:108</a></div></div>
+<div class="ttc" id="aclass_skybox_html"><div class="ttname"><a href="class_skybox.html">Skybox</a></div><div class="ttdoc">Class that represents a skybox, which is a large cube that surrounds the scene to introduce stunning ...</div><div class="ttdef"><b>Definition</b> <a href="texture_8h_source.html#l00474">texture.h:474</a></div></div>
 <div class="ttc" id="aclass_window_html"><div class="ttname"><a href="class_window.html">Window</a></div><div class="ttdoc">Structure representing a window in the application. This contains the main interface for interacting ...</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00233">window.h:233</a></div></div>
 <div class="ttc" id="alight_8h_html"><div class="ttname"><a href="light_8h.html">light.h</a></div></div>
 <div class="ttc" id="aobject_8h_html"><div class="ttname"><a href="object_8h.html">object.h</a></div></div>
@@ -398,6 +407,9 @@ $(function(){initNavTree('scene_8h_source.html','',''); });
 <div class="ttc" id="astruct_fog_html"><div class="ttname"><a href="struct_fog.html">Fog</a></div><div class="ttdef"><b>Definition</b> <a href="#l00024">scene.h:24</a></div></div>
 <div class="ttc" id="astruct_fog_html_a1c09091aee65a073e50ae63570bf961e"><div class="ttname"><a href="struct_fog.html#a1c09091aee65a073e50ae63570bf961e">Fog::color</a></div><div class="ttdeci">Color color</div><div class="ttdef"><b>Definition</b> <a href="#l00025">scene.h:25</a></div></div>
 <div class="ttc" id="astruct_fog_html_aa8753de5b8fbad3adbbba40e60adf0b7"><div class="ttname"><a href="struct_fog.html#aa8753de5b8fbad3adbbba40e60adf0b7">Fog::intensity</a></div><div class="ttdeci">float intensity</div><div class="ttdef"><b>Definition</b> <a href="#l00026">scene.h:26</a></div></div>
+<div class="ttc" id="astruct_light_bloom_html"><div class="ttname"><a href="struct_light_bloom.html">LightBloom</a></div><div class="ttdef"><b>Definition</b> <a href="#l00036">scene.h:36</a></div></div>
+<div class="ttc" id="astruct_light_bloom_html_a165b93c57ba198bb5a5643594c1ead12"><div class="ttname"><a href="struct_light_bloom.html#a165b93c57ba198bb5a5643594c1ead12">LightBloom::radius</a></div><div class="ttdeci">float radius</div><div class="ttdef"><b>Definition</b> <a href="#l00037">scene.h:37</a></div></div>
+<div class="ttc" id="astruct_light_bloom_html_a47bb8fd1bc291699e4a4dd745a5a9823"><div class="ttname"><a href="struct_light_bloom.html#a47bb8fd1bc291699e4a4dd745a5a9823">LightBloom::maxSamples</a></div><div class="ttdeci">int maxSamples</div><div class="ttdef"><b>Definition</b> <a href="#l00038">scene.h:38</a></div></div>
 <div class="ttc" id="astruct_light_html"><div class="ttname"><a href="struct_light.html">Light</a></div><div class="ttdoc">Structure representing a point light in a scene. A point light emits light in all directions from a s...</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00122">light.h:122</a></div></div>
 <div class="ttc" id="astruct_spotlight_html"><div class="ttname"><a href="struct_spotlight.html">Spotlight</a></div><div class="ttdoc">Structure representing a spotlight in a scene. A spotlight emits light in a specific direction with a...</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00331">light.h:331</a></div></div>
 <div class="ttc" id="astruct_volumetric_lighting_html"><div class="ttname"><a href="struct_volumetric_lighting.html">VolumetricLighting</a></div><div class="ttdef"><b>Definition</b> <a href="#l00029">scene.h:29</a></div></div>

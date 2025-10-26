@@ -1,7 +1,7 @@
 var searchData=
 [
   ['r_0',['r',['../struct_color.html#a12b28b8a60c6add344b485d12e1d2168',1,'Color']]],
-  ['radius_1',['radius',['../struct_point_light_constants.html#a9c6a4d43f99919ad7d3cf864e6dd3e66',1,'PointLightConstants::radius'],['../class_sphere.html#ae6f42f0da6679a2f0b4a22681ccccf38',1,'Sphere::radius']]],
+  ['radius_1',['radius',['../struct_point_light_constants.html#a9c6a4d43f99919ad7d3cf864e6dd3e66',1,'PointLightConstants::radius'],['../struct_light_bloom.html#a165b93c57ba198bb5a5643594c1ead12',1,'LightBloom::radius'],['../class_sphere.html#ae6f42f0da6679a2f0b4a22681ccccf38',1,'Sphere::radius']]],
   ['reflectivity_2',['reflectivity',['../struct_material.html#a8d977d0b7386da7e3ac6879f458d3f0f',1,'Material']]],
   ['refreshrate_3',['refreshRate',['../struct_video_mode.html#a635022bd3a9dcbf3175d2a60f5bf35c5',1,'VideoMode']]],
   ['renderdepthofview_4',['renderDepthOfView',['../class_renderable.html#a7cb09219e507e1c1395efced124e3b58',1,'Renderable']]],

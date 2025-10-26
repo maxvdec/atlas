@@ -7,6 +7,8 @@ var texture_8h =
     [ "Cubemap", "struct_cubemap.html", "struct_cubemap" ],
     [ "RenderTarget", "class_render_target.html", "class_render_target" ],
     [ "Skybox", "class_skybox.html", "class_skybox" ],
+    [ "BloomElement", "struct_bloom_element.html", "struct_bloom_element" ],
+    [ "BloomRenderTarget", "class_bloom_render_target.html", "class_bloom_render_target" ],
     [ "RenderTargetType", "texture_8h.html#a639c740f69368f9fe25a4f7409a16384", [
       [ "Scene", "texture_8h.html#a639c740f69368f9fe25a4f7409a16384a9ead0d38e06ec253ca0ecbf6ea56e59b", null ],
       [ "Multisampled", "texture_8h.html#a639c740f69368f9fe25a4f7409a16384ae34a1815b3fff1ad8307cb98182f4481", null ],

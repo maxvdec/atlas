@@ -9,6 +9,7 @@ var default__shaders_8h =
     [ "DEFERRED_FRAG", "default__shaders_8h.html#a3b9ee65bbed780cf1716fe8e098cdd27", null ],
     [ "DEFERRED_VERT", "default__shaders_8h.html#acdb38d6b6f86cdca3289eea9b522708e", null ],
     [ "DEPTH_VERT", "default__shaders_8h.html#ad892c8de43e5c33bab942cb2edc249ec", null ],
+    [ "DOWNSAMPLE_FRAG", "default__shaders_8h.html#a97b3d1eef4d78c8c5f962286401216b9", null ],
     [ "EMPTY_FRAG", "default__shaders_8h.html#a27c1913deeb2fbc79724b5419e325305", null ],
     [ "FULLSCREEN_FRAG", "default__shaders_8h.html#ad296833bdb0c8209d00ae60404d63ccb", null ],
     [ "FULLSCREEN_VERT", "default__shaders_8h.html#a0ce5d8c68f5b7c88fac6151edc55a670", null ],
@@ -34,6 +35,7 @@ var default__shaders_8h =
     [ "TEXT_VERT", "default__shaders_8h.html#ae3a54503dd5f220b33f66e53739a24de", null ],
     [ "TEXTURE_FRAG", "default__shaders_8h.html#a2a23d79d6134f3704a9a34ffa9bbbe40", null ],
     [ "TEXTURE_VERT", "default__shaders_8h.html#afe0518cbb5ccd9b6f9a3e5f20dc04aa9", null ],
+    [ "UPSAMPLE_FRAG", "default__shaders_8h.html#ace1359c556e7f9f111498d2bb0d13be4", null ],
     [ "VOLUMETRIC_FRAG", "default__shaders_8h.html#aac56e41dba3af03619326b9c522e6ee4", null ],
     [ "VOLUMETRIC_VERT", "default__shaders_8h.html#ad88f8cc860c904e7023437d9c36e6aa3", null ]
 ];
