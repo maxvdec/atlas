@@ -188,14 +188,12 @@ void main() {
     float nonlinearDepth = gl_FragCoord.z;
     gPosition = vec4(FragPos, nonlinearDepth);
 
-    // Sanitize and clamp normal to avoid NaN/Inf propagating into the G-Buffer
     vec3 n = normalize(normal);
     if (!all(equal(n, n)) || length(n) < 1e-4) {
         n = normalize(Normal);
     }
     gNormal = vec4(n, 1.0);
 
-    // Clamp albedo into [0,1] and guard against NaNs
     vec3 a = clamp(albedo, 0.0, 1.0);
     if (!all(equal(a, a))) {
         a = vec3(0.0);

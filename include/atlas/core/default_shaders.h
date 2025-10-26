@@ -515,6 +515,11 @@ struct ShadowParameters {
     bool isPointLight;
 };
 
+struct Environment {
+    float rimLightIntensity;
+    vec3 rimLightColor;
+};
+
 // ----- Textures -----
 uniform sampler2D texture1;
 uniform sampler2D texture2;
@@ -560,6 +565,8 @@ uniform vec3 cameraPosition;
 uniform bool useTexture;
 uniform bool useColor;
 uniform bool useIBL;
+
+uniform Environment environment;
 
 // ----- Helper Functions -----
 vec4 enableTextures(int type) {
@@ -740,6 +747,36 @@ vec4 getEnvironmentReflected(vec4 color) {
     vec3 I = normalize(FragPos - cameraPosition);
     vec3 R = reflect(I, normalize(Normal));
     return mix(color, vec4(texture(skybox, R).rgb, 1.0), material.reflectivity);
+}
+
+// ----- Rim Light -----
+vec3 getRimLight(
+    vec3 fragPos,
+    vec3 N,
+    vec3 V,
+    vec3 F0,
+    vec3 albedo,
+    float metallic,
+    float roughness
+) {
+    N = normalize(N);
+    V = normalize(V);
+
+    float rim = pow(1.0 - max(dot(N, V), 0.0), 3.0);
+
+    rim *= mix(1.2, 0.3, roughness);
+
+    vec3 rimColor = mix(vec3(1.0), albedo, metallic) * environment.rimLightColor;
+    rimColor = mix(rimColor, F0, 0.5);
+
+    float rimIntensity = environment.rimLightIntensity;
+
+    vec3 rimLight = rimColor * rim * rimIntensity;
+
+    float dist = length(cameraPosition - fragPos);
+    rimLight /= (1.0 + dist * 0.1);
+
+    return rimLight;
 }
 
 // ----- PBR -----
@@ -1099,6 +1136,7 @@ void main() {
     lighting += calcAllDirectionalLights(N, V, albedo, metallic, roughness, F0, reflectivity) * (1.0 - dirShadow);
     lighting += calcAllPointLights(FragPos, N, V, albedo, metallic, roughness, F0, reflectivity) * (1.0 - pointShadow);
     lighting += calcAllSpotLights(N, FragPos, V, viewDir, albedo, metallic, roughness, F0, reflectivity);
+    lighting += getRimLight(FragPos, N, V, F0, albedo, metallic, roughness);
 
     {
         vec3 areaResult = vec3(0.0);
@@ -1630,14 +1668,12 @@ void main() {
     float nonlinearDepth = gl_FragCoord.z;
     gPosition = vec4(FragPos, nonlinearDepth);
 
-    // Sanitize and clamp normal to avoid NaN/Inf propagating into the G-Buffer
     vec3 n = normalize(normal);
     if (!all(equal(n, n)) || length(n) < 1e-4) {
         n = normalize(Normal);
     }
     gNormal = vec4(n, 1.0);
 
-    // Clamp albedo into [0,1] and guard against NaNs
     vec3 a = clamp(albedo, 0.0, 1.0);
     if (!all(equal(a, a))) {
         a = vec3(0.0);
@@ -1771,6 +1807,11 @@ struct ShadowParameters {
     bool isPointLight;
 };
 
+struct Environment {
+    float rimLightIntensity;
+    vec3 rimLightColor;
+};
+
 uniform AmbientLight ambientLight;
 uniform DirectionalLight directionalLights[4];
 uniform int directionalLightCount;
@@ -1784,6 +1825,8 @@ uniform ShadowParameters shadowParams[10];
 uniform int shadowParamCount;
 uniform vec3 cameraPosition;
 uniform bool useIBL;
+
+uniform Environment environment;
 
 const float PI = 3.14159265;
 
@@ -1879,7 +1922,6 @@ float calculateShadow(ShadowParameters shadowParam, vec3 fragPos, vec3 normal) {
     float desiredKernel = mix(1.0, 1.5, distFactor) * resFactor;
     int kernelSize = int(clamp(floor(desiredKernel + 0.5), 1.0, 2.0));
 
-    // 12-tap rotated Poisson disk PCF for softer, less pixelated shadows
     const vec2 poissonDisk[12] = vec2[](
             vec2(-0.326, -0.406), vec2(-0.840, -0.074), vec2(-0.696, 0.457),
             vec2(-0.203, 0.621), vec2(0.962, -0.195), vec2(0.473, -0.480),
@@ -2012,6 +2054,35 @@ vec3 acesToneMapping(vec3 color) {
     return color;
 }
 
+vec3 getRimLight(
+    vec3 fragPos,
+    vec3 N,
+    vec3 V,
+    vec3 F0,
+    vec3 albedo,
+    float metallic,
+    float roughness
+) {
+    N = normalize(N);
+    V = normalize(V);
+
+    float rim = pow(1.0 - max(dot(N, V), 0.0), 3.0);
+
+    rim *= mix(1.2, 0.3, roughness);
+
+    vec3 rimColor = mix(vec3(1.0), albedo, metallic) * environment.rimLightColor;
+    rimColor = mix(rimColor, F0, 0.5);
+
+    float rimIntensity = environment.rimLightIntensity;
+
+    vec3 rimLight = rimColor * rim * rimIntensity;
+
+    float dist = length(cameraPosition - fragPos);
+    rimLight /= (1.0 + dist * 0.1);
+
+    return rimLight;
+}
+
 void main() {
     vec3 FragPos = texture(gPosition, TexCoord).xyz;
     vec3 N = normalize(texture(gNormal, TexCoord).xyz);
@@ -2089,7 +2160,9 @@ void main() {
             }
         }
     }
-    vec3 lighting = (directionalResult + pointResult + spotResult + areaResult) * lightingOcclusion;
+
+    vec3 rimResult = getRimLight(FragPos, N, V, F0, albedo, metallic, roughness);
+    vec3 lighting = (directionalResult + pointResult + spotResult + areaResult + rimResult) * lightingOcclusion;
 
     vec3 ambient = ambientLight.color.rgb * ambientLight.intensity * albedo * occlusion;
 

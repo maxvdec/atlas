@@ -73,6 +73,11 @@ struct ShadowParameters {
     bool isPointLight;
 };
 
+struct Environment {
+    float rimLightIntensity;
+    vec3 rimLightColor;
+};
+
 uniform AmbientLight ambientLight;
 uniform DirectionalLight directionalLights[4];
 uniform int directionalLightCount;
@@ -86,6 +91,8 @@ uniform ShadowParameters shadowParams[10];
 uniform int shadowParamCount;
 uniform vec3 cameraPosition;
 uniform bool useIBL;
+
+uniform Environment environment;
 
 const float PI = 3.14159265;
 
@@ -181,7 +188,6 @@ float calculateShadow(ShadowParameters shadowParam, vec3 fragPos, vec3 normal) {
     float desiredKernel = mix(1.0, 1.5, distFactor) * resFactor;
     int kernelSize = int(clamp(floor(desiredKernel + 0.5), 1.0, 2.0));
 
-    // 12-tap rotated Poisson disk PCF for softer, less pixelated shadows
     const vec2 poissonDisk[12] = vec2[](
             vec2(-0.326, -0.406), vec2(-0.840, -0.074), vec2(-0.696, 0.457),
             vec2(-0.203, 0.621), vec2(0.962, -0.195), vec2(0.473, -0.480),
@@ -314,6 +320,35 @@ vec3 acesToneMapping(vec3 color) {
     return color;
 }
 
+vec3 getRimLight(
+    vec3 fragPos,
+    vec3 N,
+    vec3 V,
+    vec3 F0,
+    vec3 albedo,
+    float metallic,
+    float roughness
+) {
+    N = normalize(N);
+    V = normalize(V);
+
+    float rim = pow(1.0 - max(dot(N, V), 0.0), 3.0);
+
+    rim *= mix(1.2, 0.3, roughness);
+
+    vec3 rimColor = mix(vec3(1.0), albedo, metallic) * environment.rimLightColor;
+    rimColor = mix(rimColor, F0, 0.5);
+
+    float rimIntensity = environment.rimLightIntensity;
+
+    vec3 rimLight = rimColor * rim * rimIntensity;
+
+    float dist = length(cameraPosition - fragPos);
+    rimLight /= (1.0 + dist * 0.1);
+
+    return rimLight;
+}
+
 void main() {
     vec3 FragPos = texture(gPosition, TexCoord).xyz;
     vec3 N = normalize(texture(gNormal, TexCoord).xyz);
@@ -391,7 +426,9 @@ void main() {
             }
         }
     }
-    vec3 lighting = (directionalResult + pointResult + spotResult + areaResult) * lightingOcclusion;
+
+    vec3 rimResult = getRimLight(FragPos, N, V, F0, albedo, metallic, roughness);
+    vec3 lighting = (directionalResult + pointResult + spotResult + areaResult + rimResult) * lightingOcclusion;
 
     vec3 ambient = ambientLight.color.rgb * ambientLight.intensity * albedo * occlusion;
 

@@ -354,6 +354,15 @@ void Window::deferredRendering(RenderTarget *target) {
         boundTextures++;
     }
 
+    shaderProgram.setUniform1f(
+        "environment.rimLightIntensity",
+        Window::mainWindow->currentScene->environment.rimLight.intensity);
+    shaderProgram.setUniform3f(
+        "environment.rimLightColor",
+        Window::mainWindow->currentScene->environment.rimLight.color.r,
+        Window::mainWindow->currentScene->environment.rimLight.color.g,
+        Window::mainWindow->currentScene->environment.rimLight.color.b);
+
     glBindVertexArray(quadVAO);
     glDrawArrays(GL_TRIANGLES, 0, 6);
     glBindVertexArray(0);

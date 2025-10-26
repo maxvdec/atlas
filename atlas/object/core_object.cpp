@@ -633,6 +633,20 @@ void CoreObject::render(float dt) {
 
     if (std::find(shaderProgram.capabilities.begin(),
                   shaderProgram.capabilities.end(),
+                  ShaderCapability::Environment) !=
+        shaderProgram.capabilities.end()) {
+        Window *window = Window::mainWindow;
+        Scene *scene = window->getCurrentScene();
+        shaderProgram.setUniform1f("environment.rimLightIntensity",
+                                   scene->environment.rimLight.intensity);
+        shaderProgram.setUniform3f("environment.rimLightColor",
+                                   scene->environment.rimLight.color.r,
+                                   scene->environment.rimLight.color.g,
+                                   scene->environment.rimLight.color.b);
+    }
+
+    if (std::find(shaderProgram.capabilities.begin(),
+                  shaderProgram.capabilities.end(),
                   ShaderCapability::Instances) !=
             shaderProgram.capabilities.end() &&
         !instances.empty()) {

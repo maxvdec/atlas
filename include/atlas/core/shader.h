@@ -143,6 +143,7 @@ enum class ShaderCapability {
      *
      */
     Instances,
+    Environment,
 };
 
 /**
