@@ -15,6 +15,7 @@ const int EFFECT_EDGE_DETECTION = 4;
 const int EFFECT_COLOR_CORRECTION = 5;
 const int EFFECT_MOTION_BLUR = 6;
 const int EFFECT_CHROMATIC_ABERRATION = 7;
+const int EFFECT_POSTERIZATION = 8;
 
 const float offset = 1.0 / 300.0;
 const float exposure = 1.0;
@@ -182,6 +183,64 @@ struct ChromaticAberrationSettings {
     bool enabled;
 };
 
+struct ColorCorrection {
+    float exposure;
+    float contrast;
+    float saturation;
+    float gamma;
+    float temperature;
+    float tint;
+};
+
+vec4 applyColorCorrection(vec4 color, ColorCorrection cc) {
+    vec3 linearColor = color.rgb;
+
+    linearColor *= pow(2.0, cc.exposure);
+
+    linearColor = (linearColor - 0.5) * cc.contrast + 0.5;
+
+    linearColor.r += cc.temperature * 0.05;
+    linearColor.g += cc.tint * 0.05;
+
+    float luminance = dot(linearColor, vec3(0.2126, 0.7152, 0.0722));
+    linearColor = mix(vec3(luminance), linearColor, cc.saturation);
+
+    linearColor = clamp(linearColor, 0.0, 1.0);
+
+    return vec4(linearColor, color.a);
+}
+
+vec4 applyColorEffects(vec4 color) {
+    for (int i = 0; i < EffectCount; i++) {
+        if (Effects[i] == EFFECT_INVERSION) {
+            color = vec4(1.0 - color.rgb, color.a);
+        } else if (Effects[i] == EFFECT_GRAYSCALE) {
+            float average = 0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b;
+            color = vec4(average, average, average, color.a);
+        } else if (Effects[i] == EFFECT_COLOR_CORRECTION) {
+            ColorCorrection cc;
+            cc.exposure = EffectFloat1[i];
+            cc.contrast = EffectFloat2[i];
+            cc.saturation = EffectFloat3[i];
+            cc.gamma = EffectFloat4[i];
+            cc.temperature = EffectFloat5[i];
+            cc.tint = EffectFloat6[i];
+            color = applyColorCorrection(color, cc);
+        } else if (Effects[i] == EFFECT_POSTERIZATION) {
+            float levels = EffectFloat1[i];
+            float grayscale = max(color.r, max(color.g, color.b));
+            float lower = floor(grayscale * levels) / levels;
+            float lowerDiff = abs(grayscale - lower);
+            float upper = ceil(grayscale * levels) / levels;
+            float upperDiff = abs(upper - grayscale);
+            float level = lowerDiff <= upperDiff ? lower : upper;
+            float adjustment = level / grayscale;
+            color = adjustment * color;
+        }
+    }
+    return color;
+}
+
 vec4 sampleWithChromaticAberration(vec2 sampleCoord, ChromaticAberrationSettings settings) {
     vec4 sampled;
     if (settings.enabled == true) {
@@ -193,7 +252,7 @@ vec4 sampleWithChromaticAberration(vec2 sampleCoord, ChromaticAberrationSettings
     } else {
         sampled = texture(Texture, sampleCoord);
     }
-    return sampled;
+    return applyColorEffects(sampled);
 }
 
 vec4 applyFXAA(sampler2D tex, vec2 texCoord, ChromaticAberrationSettings chromaticSettings) {
@@ -246,33 +305,6 @@ vec4 applyFXAA(sampler2D tex, vec2 texCoord, ChromaticAberrationSettings chromat
     } else {
         return vec4(rgbB, 1.0);
     }
-}
-
-struct ColorCorrection {
-    float exposure;
-    float contrast;
-    float saturation;
-    float gamma;
-    float temperature;
-    float tint;
-};
-
-vec4 applyColorCorrection(vec4 color, ColorCorrection cc) {
-    vec3 linearColor = color.rgb;
-
-    linearColor *= pow(2.0, cc.exposure);
-
-    linearColor = (linearColor - 0.5) * cc.contrast + 0.5;
-
-    linearColor.r += cc.temperature * 0.05;
-    linearColor.g += cc.tint * 0.05;
-
-    float luminance = dot(linearColor, vec3(0.2126, 0.7152, 0.0722));
-    linearColor = mix(vec3(luminance), linearColor, cc.saturation);
-
-    linearColor = clamp(linearColor, 0.0, 1.0);
-
-    return vec4(linearColor, color.a);
 }
 
 vec4 applyMotionBlur(vec2 texCoord, float size, float separation, vec4 color, ChromaticAberrationSettings chromaticAberrationSettings) {
@@ -381,27 +413,13 @@ void main() {
     }
 
     for (int i = 0; i < EffectCount; i++) {
-        if (Effects[i] == EFFECT_INVERSION) {
-            color = vec4(1.0 - color.rgb, color.a);
-        } else if (Effects[i] == EFFECT_GRAYSCALE) {
-            float average = 0.2126 * color.r + 0.7152 * color.g + 0.0722 * color.b;
-            color = vec4(average, average, average, color.a);
-        } else if (Effects[i] == EFFECT_SHARPEN) {
+        if (Effects[i] == EFFECT_SHARPEN) {
             color = sharpen(Texture);
         } else if (Effects[i] == EFFECT_BLUR) {
             float radius = EffectFloat1[i];
             color = blur(Texture, radius);
         } else if (Effects[i] == EFFECT_EDGE_DETECTION) {
             color = edgeDetection(Texture);
-        } else if (Effects[i] == EFFECT_COLOR_CORRECTION) {
-            ColorCorrection cc;
-            cc.exposure = EffectFloat1[i];
-            cc.contrast = EffectFloat2[i];
-            cc.saturation = EffectFloat3[i];
-            cc.gamma = EffectFloat4[i];
-            cc.temperature = EffectFloat5[i];
-            cc.tint = EffectFloat6[i];
-            color = applyColorCorrection(color, cc);
         }
     }
 
@@ -412,7 +430,7 @@ void main() {
         float linearDepth = LinearizeDepth(depthValue);
         float coc = clamp(abs(linearDepth - focusDepth) / focusRange, 0.0, 1.0);
         float mip = coc * float(maxMipLevel) * 1.2;
-        vec3 blurred = textureLod(Texture, TexCoord, mip).rgb;
+        vec3 blurred = applyColorEffects(textureLod(Texture, TexCoord, mip)).rgb;
         vec3 sharp = color.rgb;
         color = vec4(mix(sharp, blurred, coc), 1.0);
     }

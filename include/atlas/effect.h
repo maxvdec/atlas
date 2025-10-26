@@ -53,6 +53,7 @@ enum class RenderTargetEffect {
     ColorCorrection = 5,
     MotionBlur = 6,
     ChromaticAberration = 7,
+    Posterization = 8,
 };
 
 /**
@@ -397,6 +398,38 @@ class ChromaticAberration : public Effect {
                              params.direction.x);
         program.setUniform1f("EffectFloat5[" + std::to_string((int)index) + "]",
                              params.direction.y);
+    }
+};
+
+struct PosterizationParameters {
+    float levels = 5.0f;
+};
+
+class Posterization : public Effect {
+  public:
+    Posterization(PosterizationParameters p = {})
+        : Effect(RenderTargetEffect::Posterization), params(p) {}
+    /**
+     * @brief Creates a shared pointer to a Posterization effect.
+     *
+     * @param p The posterization parameters to use.
+     * @return (std::shared_ptr<Posterization>) The created posterization
+     * effect.
+     */
+    static std::shared_ptr<Posterization>
+    create(PosterizationParameters p = {}) {
+        return std::make_shared<Posterization>(p);
+    }
+    PosterizationParameters params;
+    /**
+     * @brief Applies all posterization parameters to the shader program.
+     *
+     * @param program The shader program to apply the effect to.
+     * @param index The index of the effect in the effect array.
+     */
+    void applyToProgram(ShaderProgram &program, int index) override {
+        program.setUniform1f("EffectFloat1[" + std::to_string((int)index) + "]",
+                             params.levels);
     }
 };
 
