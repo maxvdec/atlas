@@ -31,6 +31,8 @@ var annotated_dup =
     [ "CoreObject", "class_core_object.html", "class_core_object" ],
     [ "CoreVertex", "struct_core_vertex.html", "struct_core_vertex" ],
     [ "Cubemap", "struct_cubemap.html", "struct_cubemap" ],
+    [ "Dilation", "class_dilation.html", "class_dilation" ],
+    [ "DilationParameters", "struct_dilation_parameters.html", "struct_dilation_parameters" ],
     [ "DirectionalLight", "class_directional_light.html", "class_directional_light" ],
     [ "Distortion", "class_distortion.html", "class_distortion" ],
     [ "Echo", "class_echo.html", "class_echo" ],
