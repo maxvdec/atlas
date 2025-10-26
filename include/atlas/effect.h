@@ -56,6 +56,7 @@ enum class RenderTargetEffect {
     Posterization = 8,
     Pixelation = 9,
     Dilation = 10,
+    FilmGrain = 11,
 };
 
 /**
@@ -497,6 +498,37 @@ class Dilation : public Effect {
                              (float)params.size);
         program.setUniform1f("EffectFloat2[" + std::to_string((int)index) + "]",
                              params.separation);
+    }
+};
+
+struct FilmGrainParameters {
+    float amount = 0.1;
+};
+
+class FilmGrain : public Effect {
+  public:
+    FilmGrain(FilmGrainParameters p = {})
+        : Effect(RenderTargetEffect::FilmGrain), params(p) {}
+    /**
+     * @brief Creates a shared pointer to a FilmGrain effect.
+     *
+     * @param p The film grain parameters to use.
+     * @return (std::shared_ptr<FilmGrain>) The created film grain
+     * effect.
+     */
+    static std::shared_ptr<FilmGrain> create(FilmGrainParameters p = {}) {
+        return std::make_shared<FilmGrain>(p);
+    }
+    FilmGrainParameters params;
+    /**
+     * @brief Applies all film grain parameters to the shader program.
+     *
+     * @param program The shader program to apply the effect to.
+     * @param index The index of the effect in the effect array.
+     */
+    void applyToProgram(ShaderProgram &program, int index) override {
+        program.setUniform1f("EffectFloat1[" + std::to_string((int)index) + "]",
+                             params.amount);
     }
 };
 

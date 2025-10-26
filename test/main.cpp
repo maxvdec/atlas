@@ -245,7 +245,7 @@ class MainScene : public Scene {
         // this->addDirectionalLight(&light);
 
         frameBuffer = RenderTarget(window);
-        frameBuffer.addEffect(Dilation::create());
+        frameBuffer.addEffect(FilmGrain::create());
         window.addRenderTarget(&frameBuffer);
         frameBuffer.display(window);
 

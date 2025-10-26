@@ -631,6 +631,8 @@ void RenderTarget::render(float dt) {
         obj->shaderProgram.setUniform1f("focusDepth", camera->focusDepth);
         obj->shaderProgram.setUniform1f("focusRange", camera->focusRange);
 
+        obj->shaderProgram.setUniform1f("deltaTime", dt);
+
         int maxMipLevels = (int)std::floor(
             std::log2(std::max(Window::mainWindow->getSize().width,
                                Window::mainWindow->getSize().height)));
