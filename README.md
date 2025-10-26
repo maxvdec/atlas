@@ -44,6 +44,8 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [x] Shadows (except for point lights)
 - [x] Post-processing effects
 - [ ] Sky, atmosphere, weather and fluid simulation system (Hydra) **for alpha 4**
+- [ ] Water rendering system **for alpha 4**
+- [ ] Weather system **for alpha 4**
 - [ ] Cloud system **for alpha 4**
 - [ ] Night-day cycle system **for alpha 4**
 - [ ] Animation system (Mold)
