@@ -501,6 +501,7 @@ class Window {
     std::shared_ptr<RenderTarget> ssaoBlurBuffer;
     std::shared_ptr<RenderTarget> volumetricBuffer;
     std::shared_ptr<RenderTarget> lightBuffer;
+    std::shared_ptr<BloomRenderTarget> bloomBuffer;
 
     std::vector<glm::vec3> ssaoKernel;
     std::vector<glm::vec3> ssaoNoise;
@@ -516,6 +517,7 @@ class Window {
     Size2d getFurthestPositions();
 
     void renderPingpong(RenderTarget *target, float dt);
+    void renderPhysicalBloom(RenderTarget *target);
     void deferredRendering(RenderTarget *target);
     void renderSSAO(RenderTarget *target);
 
