@@ -17,6 +17,7 @@
 #include "bezel/body.h"
 #include "hydra/atmosphere.h"
 #include <algorithm>
+#include <memory>
 #include <vector>
 
 class Window;
@@ -258,7 +259,7 @@ class Scene {
      *
      * @param newSkybox The new skybox to set.
      */
-    void setSkybox(Skybox *newSkybox) {
+    void setSkybox(std::shared_ptr<Skybox> newSkybox) {
         skybox = newSkybox;
         if (automaticAmbient) {
             updateAutomaticAmbientFromSkybox();
@@ -271,6 +272,10 @@ class Scene {
      */
     void setEnvironment(Environment newEnv) { environment = newEnv; }
 
+    void updateScene(float dt);
+
+    std::shared_ptr<Skybox> getSkybox() const { return skybox; }
+
     Atmosphere atmosphere;
 
   private:
@@ -279,7 +284,7 @@ class Scene {
     std::vector<Light *> pointLights;
     std::vector<Spotlight *> spotlights;
     std::vector<AreaLight *> areaLights;
-    Skybox *skybox = nullptr;
+    std::shared_ptr<Skybox> skybox = nullptr;
     AmbientLight ambientLight = {{1.0f, 1.0f, 1.0f, 1.0f}, 0.5f / 4};
     bool automaticAmbient = false;
     Color automaticAmbientColor = Color::white();

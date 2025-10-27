@@ -14,6 +14,7 @@
 #include "atlas/workspace.h"
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <vector>
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
@@ -257,6 +258,145 @@ Cubemap Cubemap::fromResourceGroup(ResourceGroup &group) {
         cubemap.averageColor = {normalized.x, normalized.y, normalized.z, 1.0};
         cubemap.hasAverageColor = true;
     }
+    return cubemap;
+}
+
+Cubemap Cubemap::fromColors(const std::array<Color, 6> &colors, int size) {
+    if (size <= 0) {
+        throw std::runtime_error("Cubemap size must be positive");
+    }
+
+    Id textureId;
+    glGenTextures(1, &textureId);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, textureId);
+
+    glm::dvec3 accumulatedColor(0.0);
+    unsigned long long accumulatedPixels = 0;
+
+    static const glm::vec3 faceNormals[6] = {
+        {1.0f, 0.0f, 0.0f},  {-1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f},
+        {0.0f, -1.0f, 0.0f}, {0.0f, 0.0f, 1.0f},  {0.0f, 0.0f, -1.0f}};
+
+    auto directionFromFace = [](int faceIndex, float u, float v) {
+        switch (faceIndex) {
+        case 0: // +X
+            return glm::normalize(glm::vec3(1.0f, -v, -u));
+        case 1: // -X
+            return glm::normalize(glm::vec3(-1.0f, -v, u));
+        case 2: // +Y
+            return glm::normalize(glm::vec3(u, 1.0f, v));
+        case 3: // -Y
+            return glm::normalize(glm::vec3(u, -1.0f, -v));
+        case 4: // +Z
+            return glm::normalize(glm::vec3(u, -v, 1.0f));
+        case 5: // -Z
+            return glm::normalize(glm::vec3(-u, -v, -1.0f));
+        default:
+            return glm::vec3(0.0f, 0.0f, 1.0f);
+        }
+    };
+
+    constexpr float weightExponent = 2.0f;
+    constexpr float weightEpsilon = 1e-5f;
+
+    for (size_t faceIndex = 0; faceIndex < 6; ++faceIndex) {
+        std::vector<unsigned char> faceData(static_cast<size_t>(size) *
+                                            static_cast<size_t>(size) * 4);
+
+        for (int y = 0; y < size; ++y) {
+            for (int x = 0; x < size; ++x) {
+                const int pixelIndex = (y * size + x) * 4;
+
+                const float u = (static_cast<float>(x) + 0.5f) /
+                                    static_cast<float>(size) * 2.0f -
+                                1.0f;
+                const float v = (static_cast<float>(y) + 0.5f) /
+                                    static_cast<float>(size) * 2.0f -
+                                1.0f;
+
+                glm::vec3 direction =
+                    directionFromFace(static_cast<int>(faceIndex), u, v);
+
+                float weights[6];
+                float totalWeight = 0.0f;
+                for (size_t neighbor = 0; neighbor < 6; ++neighbor) {
+                    float weight = glm::dot(direction, faceNormals[neighbor]);
+                    weight = std::max(0.0f, weight);
+                    if (weight > 0.0f) {
+                        weight = std::pow(weight, weightExponent);
+                    }
+                    weights[neighbor] = weight;
+                    totalWeight += weight;
+                }
+
+                glm::vec4 accumulated(0.0f);
+                if (totalWeight > weightEpsilon) {
+                    for (size_t neighbor = 0; neighbor < 6; ++neighbor) {
+                        if (weights[neighbor] <= 0.0f) {
+                            continue;
+                        }
+                        const float normalizedWeight =
+                            weights[neighbor] / totalWeight;
+                        const Color &sampleColor = colors[neighbor];
+                        accumulated +=
+                            glm::vec4(static_cast<float>(sampleColor.r),
+                                      static_cast<float>(sampleColor.g),
+                                      static_cast<float>(sampleColor.b),
+                                      static_cast<float>(sampleColor.a)) *
+                            normalizedWeight;
+                    }
+                } else {
+                    const Color &faceColor = colors[faceIndex];
+                    accumulated = glm::vec4(static_cast<float>(faceColor.r),
+                                            static_cast<float>(faceColor.g),
+                                            static_cast<float>(faceColor.b),
+                                            static_cast<float>(faceColor.a));
+                }
+
+                glm::vec3 finalColor = glm::clamp(
+                    glm::vec3(accumulated), glm::vec3(0.0f), glm::vec3(1.0f));
+                float finalAlpha = glm::clamp(accumulated.a, 0.0f, 1.0f);
+
+                faceData[pixelIndex + 0] =
+                    static_cast<unsigned char>(finalColor.r * 255.0f);
+                faceData[pixelIndex + 1] =
+                    static_cast<unsigned char>(finalColor.g * 255.0f);
+                faceData[pixelIndex + 2] =
+                    static_cast<unsigned char>(finalColor.b * 255.0f);
+                faceData[pixelIndex + 3] =
+                    static_cast<unsigned char>(finalAlpha * 255.0f);
+
+                accumulatedColor.x += finalColor.r;
+                accumulatedColor.y += finalColor.g;
+                accumulatedColor.z += finalColor.b;
+            }
+        }
+
+        accumulatedPixels += static_cast<unsigned long long>(size) *
+                             static_cast<unsigned long long>(size);
+
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + faceIndex, 0, GL_RGBA,
+                     size, size, 0, GL_RGBA, GL_UNSIGNED_BYTE, faceData.data());
+    }
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    TextureCreationData creationData{size, size, 4};
+    Cubemap cubemap;
+    cubemap.creationData = creationData;
+    cubemap.id = textureId;
+
+    if (accumulatedPixels > 0) {
+        glm::dvec3 normalized =
+            accumulatedColor / static_cast<double>(accumulatedPixels);
+        cubemap.averageColor = {normalized.x, normalized.y, normalized.z, 1.0};
+        cubemap.hasAverageColor = true;
+    }
+
     return cubemap;
 }
 

@@ -319,6 +319,8 @@ struct Cubemap {
      * @return (Cubemap) The created cubemap instance.
      */
     static Cubemap fromResourceGroup(ResourceGroup &resourceGroup);
+
+    static Cubemap fromColors(const std::array<Color, 6> &colors, int size);
 };
 
 class Window;
@@ -526,8 +528,12 @@ class RenderTarget : public Renderable {
  */
 class Skybox : public Renderable {
   public:
-    Skybox() = default;
-
+    static std::shared_ptr<Skybox> create(Cubemap cubemap, Window &window) {
+        auto skybox = std::make_shared<Skybox>();
+        skybox->cubemap = cubemap;
+        skybox->display(window);
+        return skybox;
+    }
     /**
      * @brief The cubemap texture used for the skybox.
      *
@@ -570,6 +576,8 @@ class Skybox : public Renderable {
      * @brief Stores the projection matrix used for skybox rendering.
      */
     void setProjectionMatrix(const glm::mat4 &projection) override;
+
+    Skybox() = default;
 
   private:
     friend class Window;
