@@ -321,6 +321,8 @@ struct Cubemap {
     static Cubemap fromResourceGroup(ResourceGroup &resourceGroup);
 
     static Cubemap fromColors(const std::array<Color, 6> &colors, int size);
+
+    void updateWithColors(const std::array<Color, 6> &colors);
 };
 
 class Window;
