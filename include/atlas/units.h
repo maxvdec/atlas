@@ -230,6 +230,14 @@ struct Color {
         return {r, g, b, 1.0};
     }
 
+    static Color mix(Color color1, Color color2, float ratio = 0.5) {
+        double r = color1.r * (1 - ratio) + color2.r * ratio;
+        double g = color1.g * (1 - ratio) + color2.g * ratio;
+        double b = color1.b * (1 - ratio) + color2.b * ratio;
+        double a = color1.a * (1 - ratio) + color2.a * ratio;
+        return {r, g, b, a};
+    }
+
     inline glm::vec4 toGlm() const {
         return glm::vec4(static_cast<float>(r), static_cast<float>(g),
                          static_cast<float>(b), static_cast<float>(a));

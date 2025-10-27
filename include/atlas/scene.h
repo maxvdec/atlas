@@ -15,6 +15,7 @@
 #include "atlas/texture.h"
 #include "atlas/units.h"
 #include "bezel/body.h"
+#include "hydra/atmosphere.h"
 #include <algorithm>
 #include <vector>
 
@@ -269,6 +270,8 @@ class Scene {
      * scene.
      */
     void setEnvironment(Environment newEnv) { environment = newEnv; }
+
+    Atmosphere atmosphere;
 
   private:
     Environment environment;

@@ -5,6 +5,7 @@
 #include "atlas/scene.h"
 #include "atlas/text.h"
 #include "atlas/texture.h"
+#include "atlas/units.h"
 #include "atlas/window.h"
 #include "atlas/workspace.h"
 #include "atlas/component.h"
@@ -106,6 +107,16 @@ class MainScene : public Scene {
         if (fall) {
             camera.position.y -= 10.f * window.getDeltaTime();
         }
+
+        Magnitude3d sunAngle = atmosphere.getSunAngle();
+        float radius = 5.0f;
+        Position3d sunPos = sunAngle * radius;
+        ball.setPosition(sunPos);
+
+        Magnitude3d moonAngle = atmosphere.getMoonAngle();
+        float moonRadius = 5.0f;
+        Position3d moonPos = moonAngle * moonRadius;
+        ball2.setPosition(moonPos);
     }
 
     void onMouseMove(Window &window, Movement2d movement) override {
@@ -165,7 +176,7 @@ class MainScene : public Scene {
 
         sphereCube.addComponent<HorizontalMover>(HorizontalMover());
         sphereCube.setPosition({0.0, 0.25, 0.0});
-        window.addObject(&sphereCube);
+        // window.addObject(&sphereCube);
 
         ground = createBox({5.0f, 0.1f, 5.0f}, Color(0.3f, 0.8f, 0.3f));
         ground.attachTexture(
@@ -202,8 +213,13 @@ class MainScene : public Scene {
 
         ball = createDebugSphere(0.5f, 76, 76);
         ball.body->applyMass(0.0);
-        ball.move({0.f, 1.0f, 1.5});
-        ball.material.reflectivity = 1.f;
+        ball.move({0.f, 1.0f, 5});
+        window.addObject(&ball);
+
+        ball2 = createDebugSphere(0.5f, 76, 76);
+        ball2.body->applyMass(0.0);
+        ball2.move({0.f, 1.0f, 5});
+        window.addObject(&ball2);
 
         this->setAmbientIntensity(0.0f);
 
@@ -249,6 +265,8 @@ class MainScene : public Scene {
         frameBuffer.display(window);
 
         window.useDeferredRendering();
+        atmosphere.enable();
+        atmosphere.secondsPerHour = 4.f;
     }
 };
 
