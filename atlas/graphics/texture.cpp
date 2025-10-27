@@ -15,22 +15,15 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
-#include <glad/glad.h>
-#include <glm/glm.hpp>
+#include <glm/gtc/constants.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 namespace {
-constexpr float kWeightExponent = 2.0f;
-constexpr float kWeightEpsilon = 1e-5f;
-
-static const glm::vec3 kCubemapFaceNormals[6] = {
-    {1.0f, 0.0f, 0.0f},  {-1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f},
-    {0.0f, -1.0f, 0.0f}, {0.0f, 0.0f, 1.0f},  {0.0f, 0.0f, -1.0f}};
 
 glm::vec3 cubemapDirectionFromFace(int faceIndex, float u, float v) {
     switch (faceIndex) {
@@ -66,6 +59,7 @@ const CubemapWeightCache &getCubemapWeightCache(int size) {
     CubemapWeightCache weightCache;
     weightCache.size = size;
     const size_t pixelCount = static_cast<size_t>(size) * size;
+    constexpr int horizonOrder[4] = {0, 4, 1, 5};
 
     for (int faceIndex = 0; faceIndex < 6; ++faceIndex) {
         std::vector<float> &faceWeights = weightCache.weights[faceIndex];
@@ -81,36 +75,65 @@ const CubemapWeightCache &getCubemapWeightCache(int size) {
                           1.0f;
 
                 glm::vec3 direction = cubemapDirectionFromFace(faceIndex, u, v);
+                float up = glm::clamp(direction.y, -1.0f, 1.0f);
+                float upPositive = glm::clamp(up, 0.0f, 1.0f);
+                float upNegative = glm::clamp(-up, 0.0f, 1.0f);
+                float horizonBase =
+                    glm::clamp(1.0f - std::fabs(up), 0.0f, 1.0f);
 
-                float weights[6];
+                float topFactor = std::pow(upPositive, 0.85f);
+                float bottomFactor = std::pow(upNegative, 0.85f);
+                float horizonFactor = std::pow(horizonBase, 0.65f);
+
+                float normalizationSum =
+                    topFactor + bottomFactor + horizonFactor;
+                if (normalizationSum <= 1e-6f) {
+                    horizonFactor = 1.0f;
+                    topFactor = 0.0f;
+                    bottomFactor = 0.0f;
+                    normalizationSum = 1.0f;
+                }
+
+                topFactor /= normalizationSum;
+                bottomFactor /= normalizationSum;
+                horizonFactor /= normalizationSum;
+
+                float angle = std::atan2(direction.z, direction.x);
+                if (angle < 0.0f) {
+                    angle += glm::two_pi<float>();
+                }
+                float scaled = angle / glm::two_pi<float>() * 4.0f;
+                float sectorFloat = std::floor(scaled);
+                int sector = static_cast<int>(sectorFloat) & 3;
+                float sectorT = scaled - sectorFloat;
+                float horizonInterp = glm::smoothstep(0.0f, 1.0f, sectorT);
+
+                float horizonWeights[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+                horizonWeights[sector] = (1.0f - horizonInterp) * horizonFactor;
+                horizonWeights[(sector + 1) & 3] +=
+                    horizonInterp * horizonFactor;
+
+                float colorWeights[6] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+                colorWeights[2] = topFactor;
+                colorWeights[3] = bottomFactor;
+                for (int h = 0; h < 4; ++h) {
+                    colorWeights[horizonOrder[h]] += horizonWeights[h];
+                }
+
                 float totalWeight = 0.0f;
-                for (size_t neighbor = 0; neighbor < 6; ++neighbor) {
-                    float weight =
-                        glm::dot(direction, kCubemapFaceNormals[neighbor]);
-                    weight = std::max(0.0f, weight);
-                    if (weight > 0.0f) {
-                        weight = std::pow(weight, kWeightExponent);
-                    }
-                    weights[neighbor] = weight;
+                for (float weight : colorWeights) {
                     totalWeight += weight;
                 }
+                float invTotal =
+                    totalWeight > 1e-6f ? 1.0f / totalWeight : 0.0f;
 
-                if (totalWeight <= kWeightEpsilon) {
-                    for (float &value : weights) {
-                        value = 0.0f;
-                    }
-                    weights[faceIndex] = 1.0f;
-                    totalWeight = 1.0f;
-                }
-
-                float normalization = 1.0f / totalWeight;
                 size_t pixelWeightIndex =
                     (static_cast<size_t>(y) * static_cast<size_t>(size) +
                      static_cast<size_t>(x)) *
                     6;
                 float *dest = faceWeights.data() + pixelWeightIndex;
                 for (size_t neighbor = 0; neighbor < 6; ++neighbor) {
-                    dest[neighbor] = weights[neighbor] * normalization;
+                    dest[neighbor] = colorWeights[neighbor] * invTotal;
                 }
             }
         }
