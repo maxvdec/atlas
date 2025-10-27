@@ -12,6 +12,7 @@ var searchData=
   ['aspectratiox_9',['aspectRatioX',['../struct_window_configuration.html#a45697805b5409de3b3ba16f8fd63e347',1,'WindowConfiguration']]],
   ['aspectratioy_10',['aspectRatioY',['../struct_window_configuration.html#a4d9ab6af44609b23217808963ca0c1f5',1,'WindowConfiguration']]],
   ['atlas_11',['atlas',['../struct_font.html#a55ce744ba518079323089dccdb0a3bdd',1,'Font']]],
-  ['audioengine_12',['audioEngine',['../class_window.html#a2133e2bb4562bcc491d091a640dcae88',1,'Window']]],
-  ['averagecolor_13',['averageColor',['../struct_cubemap.html#a50b2c6343093573ff1a058918f63f514',1,'Cubemap']]]
+  ['atmosphere_12',['atmosphere',['../class_scene.html#ad520f963a249356936b795d2d2a6706e',1,'Scene']]],
+  ['audioengine_13',['audioEngine',['../class_window.html#a2133e2bb4562bcc491d091a640dcae88',1,'Window']]],
+  ['averagecolor_14',['averageColor',['../struct_cubemap.html#a50b2c6343093573ff1a058918f63f514',1,'Cubemap']]]
 ];

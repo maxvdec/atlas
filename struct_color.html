@@ -161,6 +161,7 @@ Static Public Member Functions</h2></td></tr>
 <tr class="memitem:a6def3f549161bab580196c9cb7f7fb05" id="r_a6def3f549161bab580196c9cb7f7fb05"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="struct_color.html">Color</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a6def3f549161bab580196c9cb7f7fb05">olive</a> ()</td></tr>
 <tr class="memitem:abc75537b6b038fa31f92ec58c9dad9da" id="r_abc75537b6b038fa31f92ec58c9dad9da"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="struct_color.html">Color</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#abc75537b6b038fa31f92ec58c9dad9da">maroon</a> ()</td></tr>
 <tr class="memitem:a16d79e8b4c9e202f10f4378789e6ec95" id="r_a16d79e8b4c9e202f10f4378789e6ec95"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="struct_color.html">Color</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a16d79e8b4c9e202f10f4378789e6ec95">fromHex</a> (unsigned int hexValue)</td></tr>
+<tr class="memitem:acea9c48c8bb14300e959b68cacb10151" id="r_acea9c48c8bb14300e959b68cacb10151"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="struct_color.html">Color</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#acea9c48c8bb14300e959b68cacb10151">mix</a> (<a class="el" href="struct_color.html">Color</a> color1, <a class="el" href="struct_color.html">Color</a> color2, float ratio=0.5)</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -464,6 +465,52 @@ Public Attributes</h2></td></tr>
 </div><!-- fragment -->
 </div>
 </div>
+<a id="acea9c48c8bb14300e959b68cacb10151" name="acea9c48c8bb14300e959b68cacb10151"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acea9c48c8bb14300e959b68cacb10151">&#9670;&#160;</a></span>mix()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="struct_color.html">Color</a> Color::mix </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="struct_color.html">Color</a></td>          <td class="paramname"><span class="paramname"><em>color1</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype"><a class="el" href="struct_color.html">Color</a></td>          <td class="paramname"><span class="paramname"><em>color2</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">float</td>          <td class="paramname"><span class="paramname"><em>ratio</em></span><span class="paramdefsep"> = </span><span class="paramdefval">0.5</span>&#160;)</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span><span class="mlabel static">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00233">233</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  233</span>                                                                    {</div>
+<div class="line"><span class="lineno">  234</span>        <span class="keywordtype">double</span> <a class="code hl_variable" href="#a12b28b8a60c6add344b485d12e1d2168">r</a> = color1.<a class="code hl_variable" href="#a12b28b8a60c6add344b485d12e1d2168">r</a> * (1 - ratio) + color2.<a class="code hl_variable" href="#a12b28b8a60c6add344b485d12e1d2168">r</a> * ratio;</div>
+<div class="line"><span class="lineno">  235</span>        <span class="keywordtype">double</span> <a class="code hl_variable" href="#adcc846eae0491cee6a64f503044bca1b">g</a> = color1.<a class="code hl_variable" href="#adcc846eae0491cee6a64f503044bca1b">g</a> * (1 - ratio) + color2.<a class="code hl_variable" href="#adcc846eae0491cee6a64f503044bca1b">g</a> * ratio;</div>
+<div class="line"><span class="lineno">  236</span>        <span class="keywordtype">double</span> <a class="code hl_variable" href="#a37683f9d882695ac49f945d52158055a">b</a> = color1.<a class="code hl_variable" href="#a37683f9d882695ac49f945d52158055a">b</a> * (1 - ratio) + color2.<a class="code hl_variable" href="#a37683f9d882695ac49f945d52158055a">b</a> * ratio;</div>
+<div class="line"><span class="lineno">  237</span>        <span class="keywordtype">double</span> <a class="code hl_variable" href="#a693d5fe08d58e91a8483639bcca6da3f">a</a> = color1.<a class="code hl_variable" href="#a693d5fe08d58e91a8483639bcca6da3f">a</a> * (1 - ratio) + color2.<a class="code hl_variable" href="#a693d5fe08d58e91a8483639bcca6da3f">a</a> * ratio;</div>
+<div class="line"><span class="lineno">  238</span>        <span class="keywordflow">return</span> {<a class="code hl_variable" href="#a12b28b8a60c6add344b485d12e1d2168">r</a>, <a class="code hl_variable" href="#adcc846eae0491cee6a64f503044bca1b">g</a>, <a class="code hl_variable" href="#a37683f9d882695ac49f945d52158055a">b</a>, <a class="code hl_variable" href="#a693d5fe08d58e91a8483639bcca6da3f">a</a>};</div>
+<div class="line"><span class="lineno">  239</span>    }</div>
+<div class="ttc" id="astruct_color_html_a693d5fe08d58e91a8483639bcca6da3f"><div class="ttname"><a href="#a693d5fe08d58e91a8483639bcca6da3f">Color::a</a></div><div class="ttdeci">double a</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00180">units.h:180</a></div></div>
+</div><!-- fragment -->
+<p class="reference">References <a class="el" href="units_8h_source.html#l00180">a</a>, <a class="el" href="units_8h_source.html#l00179">b</a>, <a class="el" href="units_8h_source.html#l00178">g</a>, and <a class="el" href="units_8h_source.html#l00177">r</a>.</p>
+
+</div>
+</div>
 <a id="a1c406c19f8639a2f70decf6210e615fd" name="a1c406c19f8639a2f70decf6210e615fd"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a1c406c19f8639a2f70decf6210e615fd">&#9670;&#160;</a></span>navy()</h2>
 
@@ -547,7 +594,6 @@ Public Attributes</h2></td></tr>
 <div class="fragment"><div class="line"><span class="lineno">  194</span>                                              {</div>
 <div class="line"><span class="lineno">  195</span>        <span class="keywordflow">return</span> {<a class="code hl_variable" href="#a12b28b8a60c6add344b485d12e1d2168">r</a> * other.<a class="code hl_variable" href="#a12b28b8a60c6add344b485d12e1d2168">r</a>, <a class="code hl_variable" href="#adcc846eae0491cee6a64f503044bca1b">g</a> * other.<a class="code hl_variable" href="#adcc846eae0491cee6a64f503044bca1b">g</a>, <a class="code hl_variable" href="#a37683f9d882695ac49f945d52158055a">b</a> * other.<a class="code hl_variable" href="#a37683f9d882695ac49f945d52158055a">b</a>, <a class="code hl_variable" href="#a693d5fe08d58e91a8483639bcca6da3f">a</a> * other.<a class="code hl_variable" href="#a693d5fe08d58e91a8483639bcca6da3f">a</a>};</div>
 <div class="line"><span class="lineno">  196</span>    }</div>
-<div class="ttc" id="astruct_color_html_a693d5fe08d58e91a8483639bcca6da3f"><div class="ttname"><a href="#a693d5fe08d58e91a8483639bcca6da3f">Color::a</a></div><div class="ttdeci">double a</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00180">units.h:180</a></div></div>
 </div><!-- fragment -->
 <p class="reference">References <a class="el" href="units_8h_source.html#l00180">a</a>, <a class="el" href="units_8h_source.html#l00179">b</a>, <a class="el" href="units_8h_source.html#l00178">g</a>, and <a class="el" href="units_8h_source.html#l00177">r</a>.</p>
 
@@ -876,11 +922,11 @@ Public Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00233">233</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  233</span>                                 {</div>
-<div class="line"><span class="lineno">  234</span>        <span class="keywordflow">return</span> glm::vec4(<span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(<a class="code hl_variable" href="#a12b28b8a60c6add344b485d12e1d2168">r</a>), <span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(<a class="code hl_variable" href="#adcc846eae0491cee6a64f503044bca1b">g</a>),</div>
-<div class="line"><span class="lineno">  235</span>                         <span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(<a class="code hl_variable" href="#a37683f9d882695ac49f945d52158055a">b</a>), <span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(<a class="code hl_variable" href="#a693d5fe08d58e91a8483639bcca6da3f">a</a>));</div>
-<div class="line"><span class="lineno">  236</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00241">241</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  241</span>                                 {</div>
+<div class="line"><span class="lineno">  242</span>        <span class="keywordflow">return</span> glm::vec4(<span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(<a class="code hl_variable" href="#a12b28b8a60c6add344b485d12e1d2168">r</a>), <span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(<a class="code hl_variable" href="#adcc846eae0491cee6a64f503044bca1b">g</a>),</div>
+<div class="line"><span class="lineno">  243</span>                         <span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(<a class="code hl_variable" href="#a37683f9d882695ac49f945d52158055a">b</a>), <span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(<a class="code hl_variable" href="#a693d5fe08d58e91a8483639bcca6da3f">a</a>));</div>
+<div class="line"><span class="lineno">  244</span>    }</div>
 </div><!-- fragment -->
 <p class="reference">References <a class="el" href="units_8h_source.html#l00180">a</a>, <a class="el" href="units_8h_source.html#l00179">b</a>, <a class="el" href="units_8h_source.html#l00178">g</a>, and <a class="el" href="units_8h_source.html#l00177">r</a>.</p>
 

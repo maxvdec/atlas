@@ -2,6 +2,7 @@ var annotated_dup =
 [
     [ "AmbientLight", "struct_ambient_light.html", "struct_ambient_light" ],
     [ "AreaLight", "struct_area_light.html", "struct_area_light" ],
+    [ "Atmosphere", "class_atmosphere.html", "class_atmosphere" ],
     [ "AudioData", "class_audio_data.html", "class_audio_data" ],
     [ "AudioEffect", "class_audio_effect.html", "class_audio_effect" ],
     [ "AudioEngine", "class_audio_engine.html", "class_audio_engine" ],

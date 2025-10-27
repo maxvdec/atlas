@@ -116,6 +116,7 @@ $(function(){initNavTree('struct_cubemap.html','','struct_cubemap-members'); });
 
 <div class="header">
   <div class="summary">
+<a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="struct_cubemap-members.html">List of all members</a>  </div>
@@ -128,10 +129,15 @@ $(function(){initNavTree('struct_cubemap.html','','struct_cubemap-members'); });
 
 <p><code>#include &lt;<a class="el" href="texture_8h_source.html">texture.h</a>&gt;</code></p>
 <table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
+Public Member Functions</h2></td></tr>
+<tr class="memitem:a4fc11bc00551fb70691529c1b16bcdcf" id="r_a4fc11bc00551fb70691529c1b16bcdcf"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4fc11bc00551fb70691529c1b16bcdcf">updateWithColors</a> (const std::array&lt; <a class="el" href="struct_color.html">Color</a>, 6 &gt; &amp;colors)</td></tr>
+</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-static-methods" class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
 <tr class="memitem:ae5986bc2dbf885ead71ce672f7dd4137" id="r_ae5986bc2dbf885ead71ce672f7dd4137"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="struct_cubemap.html">Cubemap</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae5986bc2dbf885ead71ce672f7dd4137">fromResourceGroup</a> (<a class="el" href="struct_resource_group.html">ResourceGroup</a> &amp;resourceGroup)</td></tr>
 <tr class="memdesc:ae5986bc2dbf885ead71ce672f7dd4137"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a cubemap from a resource group.  <br /></td></tr>
+<tr class="memitem:a6e50b3412c0dbd04d9e32aec5e78b011" id="r_a6e50b3412c0dbd04d9e32aec5e78b011"><td class="memItemLeft" align="right" valign="top">static <a class="el" href="struct_cubemap.html">Cubemap</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a6e50b3412c0dbd04d9e32aec5e78b011">fromColors</a> (const std::array&lt; <a class="el" href="struct_color.html">Color</a>, 6 &gt; &amp;colors, int size)</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -153,6 +159,35 @@ Public Attributes</h2></td></tr>
 
 <p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00281">281</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
+<a id="a6e50b3412c0dbd04d9e32aec5e78b011" name="a6e50b3412c0dbd04d9e32aec5e78b011"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6e50b3412c0dbd04d9e32aec5e78b011">&#9670;&#160;</a></span>fromColors()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="struct_cubemap.html">Cubemap</a> Cubemap::fromColors </td>
+          <td>(</td>
+          <td class="paramtype">const std::array&lt; <a class="el" href="struct_color.html">Color</a>, 6 &gt; &amp;</td>          <td class="paramname"><span class="paramname"><em>colors</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>size</em></span>&#160;)</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel static">static</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="ae5986bc2dbf885ead71ce672f7dd4137" name="ae5986bc2dbf885ead71ce672f7dd4137"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ae5986bc2dbf885ead71ce672f7dd4137">&#9670;&#160;</a></span>fromResourceGroup()</h2>
 
@@ -184,6 +219,23 @@ Public Attributes</h2></td></tr>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>(<a class="el" href="struct_cubemap.html" title="Structure that holds the data for a cubemap texture.">Cubemap</a>) The created cubemap instance. </dd></dl>
+
+</div>
+</div>
+<a id="a4fc11bc00551fb70691529c1b16bcdcf" name="a4fc11bc00551fb70691529c1b16bcdcf"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4fc11bc00551fb70691529c1b16bcdcf">&#9670;&#160;</a></span>updateWithColors()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Cubemap::updateWithColors </td>
+          <td>(</td>
+          <td class="paramtype">const std::array&lt; <a class="el" href="struct_color.html">Color</a>, 6 &gt; &amp;</td>          <td class="paramname"><span class="paramname"><em>colors</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
 
 </div>
 </div>

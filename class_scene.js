@@ -8,6 +8,7 @@ var class_scene =
     [ "getAmbientIntensity", "class_scene.html#a120720cb85805ce92a5bd8ea647892ca", null ],
     [ "getAutomaticAmbientColor", "class_scene.html#a35ea9f3457ba80832a8823d088621246", null ],
     [ "getAutomaticAmbientIntensity", "class_scene.html#a38145c09216f3e29dbf88e5cea5996ae", null ],
+    [ "getSkybox", "class_scene.html#a454d4fddd81ca0b1b4016bc065cd653a", null ],
     [ "initialize", "class_scene.html#a9d87607c6e6a93d1bfef10ed1cfdc667", null ],
     [ "isAutomaticAmbientEnabled", "class_scene.html#ad8ef755ef8124f2b0fefb95926740052", null ],
     [ "onMouseMove", "class_scene.html#a989e70e7dc6a2130ddd134f1285b6301", null ],
@@ -15,10 +16,12 @@ var class_scene =
     [ "setAmbientIntensity", "class_scene.html#af3030c8822975300a2a249fd650cc5a9", null ],
     [ "setAutomaticAmbient", "class_scene.html#ad5bd815d4e8d0badfa4b7a72b844ad7c", null ],
     [ "setEnvironment", "class_scene.html#aac1fb26dcd06bddab714956607d38380", null ],
-    [ "setSkybox", "class_scene.html#acccf622706b4067fd6d313ebf4075f1a", null ],
+    [ "setSkybox", "class_scene.html#a1e662a79899620661eb5da75f5367a56", null ],
     [ "update", "class_scene.html#a2936b4b44d5c6ad073e65986a529a9f4", null ],
+    [ "updateScene", "class_scene.html#a42bb3556fb4ee5ab3b2b0c0087490f1a", null ],
     [ "CoreObject", "class_scene.html#ac9dbe2a378024e3a3c417b4cb50adbb3", null ],
     [ "RenderTarget", "class_scene.html#aa5afc6f82b7b587ed5ada4d227ce32aa", null ],
     [ "Terrain", "class_scene.html#a8a16a8def173094d17ed062879646b6b", null ],
-    [ "Window", "class_scene.html#a553f958a25683445088050a69d3de8e9", null ]
+    [ "Window", "class_scene.html#a553f958a25683445088050a69d3de8e9", null ],
+    [ "atmosphere", "class_scene.html#ad520f963a249356936b795d2d2a6706e", null ]
 ];

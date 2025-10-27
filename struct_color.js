@@ -10,6 +10,7 @@ var struct_color =
     [ "lime", "struct_color.html#a34898221fb64dae6c8fd48a582e5e9ec", null ],
     [ "magenta", "struct_color.html#a6b9bd0cbbb0e52f9004b8cb9efcadee5", null ],
     [ "maroon", "struct_color.html#abc75537b6b038fa31f92ec58c9dad9da", null ],
+    [ "mix", "struct_color.html#acea9c48c8bb14300e959b68cacb10151", null ],
     [ "navy", "struct_color.html#a1c406c19f8639a2f70decf6210e615fd", null ],
     [ "olive", "struct_color.html#a6def3f549161bab580196c9cb7f7fb05", null ],
     [ "operator*", "struct_color.html#a94c0d1e5b5e477d3354eab4b1c91bfb6", null ],
