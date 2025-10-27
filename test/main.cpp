@@ -79,7 +79,6 @@ class MainScene : public Scene {
     CoreObject ball;
     CoreObject ball2;
     DirectionalLight light;
-    Skybox skybox;
     Camera camera;
     CoreObject lightObject;
     SphereCube sphereCube;
@@ -221,12 +220,9 @@ class MainScene : public Scene {
         ball2.move({0.f, 1.0f, 5});
         window.addObject(&ball2);
 
-        this->setAmbientIntensity(0.0f);
+        this->setAmbientIntensity(1.0f);
 
-        skybox = Skybox();
-        skybox.cubemap = createCubemap();
-        skybox.display(window);
-        this->setSkybox(&skybox);
+        // this->setSkybox(Skybox::create(createCubemap(), window));
 
         Resource heightmapResource = Workspace::get().createResource(
             "terrain/heightmap.png", "Heightmap", ResourceType::Image);

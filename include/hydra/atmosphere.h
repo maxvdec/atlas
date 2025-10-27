@@ -10,8 +10,9 @@
 #ifndef HYDRA_ATMOSPHERE_H
 #define HYDRA_ATMOSPHERE_H
 
+#include "atlas/texture.h"
 #include "atlas/units.h"
-#include <optional>
+#include <array>
 
 class Atmosphere {
   public:
@@ -29,6 +30,15 @@ class Atmosphere {
 
     float getLightIntensity() const;
     Color getLightColor() const;
+
+    std::array<Color, 6> getSkyboxColors() const;
+    Cubemap createSkyCubemap(int size = 256) const;
+    void updateSkyCubemap(Cubemap &cubemap) const;
+
+  private:
+    mutable float lastSkyboxUpdateTime = -1.0f;
+    mutable bool skyboxCacheValid = false;
+    mutable std::array<Color, 6> lastSkyboxColors = {};
 };
 
 #endif // HYDRA_ATMOSPHERE_H
