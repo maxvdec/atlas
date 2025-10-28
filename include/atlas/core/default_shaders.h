@@ -132,10 +132,13 @@ uniform sampler2D BrightTexture;
 uniform sampler2D DepthTexture;
 uniform sampler2D VolumetricLightTexture;
 uniform sampler2D PositionTexture;
+uniform sampler2D LUTTexture;
 uniform int hasBrightTexture;
 uniform int hasDepthTexture;
 uniform int hasVolumetricLightTexture;
 uniform int hasPositionTexture;
+uniform int hasLUTTexture;
+uniform float lutSize;
 uniform samplerCube cubeMap;
 uniform bool isCubeMap;
 uniform int TextureType;
@@ -345,16 +348,31 @@ vec4 applyColorEffects(vec4 color) {
             color = adjustment * color;
         } else if (Effects[i] == EFFECT_FILM_GRAIN) {
             float amount = EffectFloat1[i];
-            float toRadians = 3.14 / 180.0;
-            float randomIntensity = fract(10000 * sin((gl_FragCoord.x + gl_FragCoord.y * deltaTime) * toRadians));
 
-            float grain = (randomIntensity * 2.0 - 1.0) * amount;
+            vec3 seed = vec3(gl_FragCoord.xy, deltaTime * 100.0);
 
-            color.rgb += grain;
+            vec3 noise;
+            float n;
 
+            n = dot(seed, vec3(12.9898, 78.233, 45.164));
+            noise.r = fract(sin(n) * 43758.5453);
+
+            n = dot(seed, vec3(93.989, 67.345, 12.989));
+            noise.g = fract(sin(n) * 28001.1234);
+
+            n = dot(seed, vec3(39.346, 11.135, 83.155));
+            noise.b = fract(sin(n) * 19283.4567);
+
+            vec3 grain = (noise - 0.5) * 2.0 * amount;
+
+            float luminance = dot(color.rgb, vec3(0.299, 0.587, 0.114));
+            float visibility = 1.0 - abs(luminance - 0.5) * 0.5;
+
+            color.rgb += grain * visibility;
             color.rgb = clamp(color.rgb, 0.0, 1.0);
         }
     }
+
     return color;
 }
 
@@ -488,6 +506,40 @@ vec4 applyMotionBlur(vec2 texCoord, float size, float separation, vec4 color) {
     return fallbackColor;
 }
 
+vec3 sampleLUT(vec3 rgb, float blueSlice, float sliceSize, float slicePixelOffset) {
+    float sliceY = floor(blueSlice / lutSize);
+    float sliceX = mod(blueSlice, lutSize);
+
+    vec2 uv;
+    uv.x = sliceX * sliceSize + slicePixelOffset + rgb.r * sliceSize;
+    uv.y = sliceY * sliceSize + slicePixelOffset + rgb.g * sliceSize;
+
+    return texture(LUTTexture, uv).rgb;
+}
+
+vec4 mapToLUT(vec4 color) {
+    if (hasLUTTexture != 1) {
+        return color;
+    }
+
+    float sliceSize = 1.0 / lutSize;
+    float slicePixelOffset = sliceSize * 0.5;
+
+    float blueIndex = color.b * (lutSize - 1.0);
+    float sliceLow = floor(blueIndex);
+    float sliceHigh = min(sliceLow + 1.0, lutSize - 1.0);
+    float t = blueIndex - sliceLow;
+
+ 
+
+vec3 lowColor = sampleLUT(color.rgb, sliceLow, sliceSize, slicePixelOffset);
+vec3 highColor = sampleLUT(color.rgb, sliceHigh, sliceSize, slicePixelOffset);
+
+vec3 finalRGB = mix(lowColor, highColor, t);
+
+return vec4(finalRGB, color.a);
+}
+
 void main() {
     vec4 color = sampleColor(TexCoord);
     float depth = texture(DepthTexture, TexCoord).r;
@@ -545,6 +597,8 @@ void main() {
             hdrColor += texture(VolumetricLightTexture, TexCoord);
         }
     }
+
+    hdrColor = mapToLUT(hdrColor);
 
     hdrColor.rgb = acesToneMapping(hdrColor.rgb);
 
@@ -3418,16 +3472,58 @@ void main() {
 static const char* SKYBOX_FRAG = R"(
 #version 410 core
 out vec4 FragColor;
-
 in vec3 TexCoords;
-
 uniform samplerCube skybox;
+uniform vec3 sunDirection;
+uniform vec4 sunColor;
+uniform vec3 moonDirection;
+uniform vec4 moonColor;
+uniform int hasDayNight;
 
 void main()
 {    
-    FragColor = texture(skybox, TexCoords);
+    vec3 dir = normalize(TexCoords);
+    
+    vec3 color = texture(skybox, TexCoords).rgb;
+    
+    if (hasDayNight == 1) {
+        if (sunDirection.y > -0.1) {
+            float sunSize = 0.9995;      
+            float sunGlowSize = 0.998;     
+            float sunIntensity = 5.0;
+            
+            vec3 normSunDir = normalize(sunDirection);
+            float sunDot = dot(dir, normSunDir);
+            
+            float sunDisk = smoothstep(sunSize - 0.0002, sunSize, sunDot);
+            
+            float sunGlow = smoothstep(sunGlowSize, sunSize, sunDot) * 
+                           (1.0 - sunDisk);
+            
+            color += sunColor.rgb * sunDisk * sunIntensity;
+            color += sunColor.rgb * sunGlow * 0.5;
+        }
+        
+        if (moonDirection.y > -0.1) {
+            float moonSize = 0.9996;       
+            float moonGlowSize = 0.9985;   
+            float moonIntensity = 1.5;
+            
+            vec3 normMoonDir = normalize(moonDirection);
+            float moonDot = dot(dir, normMoonDir);
+            
+            float moonDisk = smoothstep(moonSize - 0.0002, moonSize, moonDot);
+            
+            float moonGlow = smoothstep(moonGlowSize, moonSize, moonDot) * 
+                            (1.0 - moonDisk);
+            
+            color += moonColor.rgb * moonDisk * moonIntensity;
+            color += moonColor.rgb * moonGlow * 0.3;
+        }
+    }
+    
+    FragColor = vec4(color, 1.0);
 }
-
 )";
 
 static const char* UPSAMPLE_FRAG = R"(

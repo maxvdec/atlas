@@ -10,6 +10,7 @@
 #include "atlas/texture.h"
 #include "atlas/core/shader.h"
 #include "atlas/object.h"
+#include "atlas/units.h"
 #include "atlas/window.h"
 #include "atlas/workspace.h"
 #include <algorithm>
@@ -604,6 +605,33 @@ void Skybox::render(float dt) {
     obj->shaderProgram.setUniformMat4f("projection", projection);
 
     obj->shaderProgram.setUniform1i("skybox", 0);
+
+    if (!Window::mainWindow || !Window::mainWindow->getCurrentScene()) {
+        throw std::runtime_error(
+            "Skybox rendering requires a valid main window and scene");
+    }
+    if (Window::mainWindow->getCurrentScene()->atmosphere.enabled) {
+        Magnitude3d sunDirection =
+            Window::mainWindow->getCurrentScene()->atmosphere.getSunAngle();
+        Magnitude3d moonDirection =
+            Window::mainWindow->getCurrentScene()->atmosphere.getMoonAngle();
+        obj->shaderProgram.setUniform3f("sunDirection", sunDirection.x,
+                                        sunDirection.y, sunDirection.z);
+        obj->shaderProgram.setUniform3f("moonDirection", moonDirection.x,
+                                        moonDirection.y, moonDirection.z);
+
+        Color sunColor =
+            Window::mainWindow->getCurrentScene()->atmosphere.sunColor;
+        obj->shaderProgram.setUniform4f("sunColor", sunColor.r, sunColor.g,
+                                        sunColor.b, sunColor.a);
+        Color moonColor =
+            Window::mainWindow->getCurrentScene()->atmosphere.moonColor;
+        obj->shaderProgram.setUniform4f("moonColor", moonColor.r, moonColor.g,
+                                        moonColor.b, moonColor.a);
+        obj->shaderProgram.setUniform1i("hasDayNight", 1);
+    } else {
+        obj->shaderProgram.setUniform1i("hasDayNight", 0);
+    }
 
     glBindVertexArray(obj->vao);
     glActiveTexture(GL_TEXTURE0);

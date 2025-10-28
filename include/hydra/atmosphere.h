@@ -35,6 +35,9 @@ class Atmosphere {
     Cubemap createSkyCubemap(int size = 256) const;
     void updateSkyCubemap(Cubemap &cubemap) const;
 
+    Color sunColor = Color(1.0, 0.95, 0.8, 1.0);
+    Color moonColor = Color(0.5, 0.5, 0.8, 1.0);
+
   private:
     mutable float lastSkyboxUpdateTime = -1.0f;
     mutable bool skyboxCacheValid = false;
