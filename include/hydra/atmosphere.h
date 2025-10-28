@@ -45,6 +45,18 @@ class Atmosphere {
     float moonTintStrength = 0.8f;
     float starIntensity = 3.0f;
 
+    inline bool isDaytime() const {
+        Magnitude3d sunDir = getSunAngle();
+        return sunDir.y > 0.0f;
+    }
+
+    inline void setTime(float hours) {
+        if (hours > 0 && hours < 24)
+            timeOfDay = hours;
+    }
+
+    bool cycle = false;
+
   private:
     mutable float lastSkyboxUpdateTime = -1.0f;
     mutable bool skyboxCacheValid = false;

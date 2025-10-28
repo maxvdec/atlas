@@ -48,7 +48,7 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [ ] Weather system **for alpha 4**
 - [ ] Cloud system **for alpha 4**
 - [x] Night-day cycle system **for alpha 4**
-- [ ] Add sun, moon and stars rendering **for alpha 4**
+- [x] Add sun, moon and stars rendering **for alpha 4**
 - [ ] Animation system (Mold)
 - [x] Instancing support
 - [x] Optimizations and performance improvements

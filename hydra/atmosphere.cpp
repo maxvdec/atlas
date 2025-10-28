@@ -70,6 +70,9 @@ void Atmosphere::update(float dt) {
     if (!enabled)
         return;
 
+    if (!cycle)
+        return;
+
     timeOfDay += (dt / secondsPerHour);
     if (timeOfDay >= 24.0f) {
         timeOfDay -= 24.0f;
