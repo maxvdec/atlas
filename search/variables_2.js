@@ -21,5 +21,6 @@ var searchData=
   ['createdwithmap_18',['createdWithMap',['../class_terrain.html#a612d9f9b92cdaf4c897dc095d2a22bbb',1,'Terrain']]],
   ['creationdata_19',['creationData',['../struct_texture.html#a7424dca65a18a64a794fd3996530b437',1,'Texture::creationData'],['../struct_cubemap.html#a69757fb707ae4ff02cc9cb1066d8e1d7',1,'Cubemap::creationData']]],
   ['cubemap_20',['cubemap',['../class_skybox.html#ab91d72f29e949ef124b953be43ac4713',1,'Skybox']]],
-  ['cutoff_21',['cutOff',['../struct_spotlight.html#a25f32efd9b4ef48ba5218fffe279ce79',1,'Spotlight']]]
+  ['cutoff_21',['cutOff',['../struct_spotlight.html#a25f32efd9b4ef48ba5218fffe279ce79',1,'Spotlight']]],
+  ['cycle_22',['cycle',['../class_atmosphere.html#a16c91d6b211afd99795e46bfe4dfc53c',1,'Atmosphere']]]
 ];

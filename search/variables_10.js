@@ -22,5 +22,9 @@ var searchData=
   ['ssao_5fblur_5ffrag_19',['SSAO_BLUR_FRAG',['../default__shaders_8h.html#ae246351246e38222f7f020310ba18c96',1,'default_shaders.h']]],
   ['ssao_5ffrag_20',['SSAO_FRAG',['../default__shaders_8h.html#ad0bc8276a246d872f0f11a408ede96a6',1,'default_shaders.h']]],
   ['ssaoscale_21',['ssaoScale',['../struct_window_configuration.html#aaa60e63f1d44ce0ad68e70e3b5e88c7b',1,'WindowConfiguration']]],
-  ['stride_22',['stride',['../struct_layout_descriptor.html#ac19f6be67e42f8b2cf98971ed4ae73a8',1,'LayoutDescriptor']]]
+  ['starintensity_22',['starIntensity',['../class_atmosphere.html#a4b7416760b1a57b9c2a6a6a6e4c4eb55',1,'Atmosphere']]],
+  ['stride_23',['stride',['../struct_layout_descriptor.html#ac19f6be67e42f8b2cf98971ed4ae73a8',1,'LayoutDescriptor']]],
+  ['suncolor_24',['sunColor',['../class_atmosphere.html#a83c951ae806394b74a44b45273e71bcf',1,'Atmosphere']]],
+  ['sunsize_25',['sunSize',['../class_atmosphere.html#aaa19043543574a6038ccccef98a50975',1,'Atmosphere']]],
+  ['suntintstrength_26',['sunTintStrength',['../class_atmosphere.html#ac1044c382157b075a2d3b63b1643ceae',1,'Atmosphere']]]
 ];

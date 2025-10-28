@@ -1,5 +1,15 @@
 var NAVTREEINDEX6 =
 {
+"struct_spotlight.html#aeb10b51233ba3eb1933738e3ac8cfae6":[2,0,99,12],
+"struct_texture.html":[2,0,104],
+"struct_texture.html#a29875124ac62123b9d6840e38ce60920":[2,0,104,4],
+"struct_texture.html#a2c68086bd793696d36daf636f42ddb2f":[2,0,104,8],
+"struct_texture.html#a3c1486d98b03be4a8c3b92a48e7fe1b9":[2,0,104,5],
+"struct_texture.html#a6502c70add778b8df93a33f516d7d831":[2,0,104,3],
+"struct_texture.html#a659f1c34d69196f97dbd9de980696d6a":[2,0,104,2],
+"struct_texture.html#a6faee3eee64a8091460ec57033c4b3a6":[2,0,104,7],
+"struct_texture.html#a7424dca65a18a64a794fd3996530b437":[2,0,104,6],
+"struct_texture.html#a7ed0da17f706d1d687f753193558527f":[2,0,104,1],
 "struct_texture.html#a99403f282f676041e01bf76216c62288":[2,0,104,0],
 "struct_texture.html#ad83ed086abaa805a606a5ccd433f505c":[2,0,104,9],
 "struct_texture_creation_data.html":[2,0,105],

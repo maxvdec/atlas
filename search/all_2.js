@@ -101,5 +101,6 @@ var searchData=
   ['cubemap_98',['cubemap',['../class_skybox.html#ab91d72f29e949ef124b953be43ac4713',1,'Skybox']]],
   ['cubeshadow_99',['CubeShadow',['../texture_8h.html#a639c740f69368f9fe25a4f7409a16384a2da82a3c0f89c3328ed03785fbb6f3e8',1,'texture.h']]],
   ['cutoff_100',['cutOff',['../struct_spotlight.html#a25f32efd9b4ef48ba5218fffe279ce79',1,'Spotlight']]],
-  ['cyan_101',['cyan',['../struct_color.html#a84d9274902df272ca9e9da8acf2acc34',1,'Color']]]
+  ['cyan_101',['cyan',['../struct_color.html#a84d9274902df272ca9e9da8acf2acc34',1,'Color']]],
+  ['cycle_102',['cycle',['../class_atmosphere.html#a16c91d6b211afd99795e46bfe4dfc53c',1,'Atmosphere']]]
 ];

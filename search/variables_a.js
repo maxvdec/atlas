@@ -27,11 +27,14 @@ var searchData=
   ['moisturetexture_24',['moistureTexture',['../class_terrain.html#acc57bc9c934cdbd681ea1fa499a88a11',1,'Terrain']]],
   ['monitorid_25',['monitorID',['../class_monitor.html#aed849ac3966f466148afedae3b7f0430',1,'Monitor']]],
   ['monitorref_26',['monitorRef',['../class_monitor.html#ad228ad883bef513a7b27b22746748e76',1,'Monitor']]],
-  ['mousecaptured_27',['mouseCaptured',['../struct_window_configuration.html#a25db3fbd183275646f6062aa0f73db91',1,'WindowConfiguration']]],
-  ['mousesensitivity_28',['mouseSensitivity',['../class_camera.html#a374b33e654bf21d19230a82672bd3aac',1,'Camera']]],
-  ['movementspeed_29',['movementSpeed',['../class_camera.html#a03987cf3bbf312be16bb881939382d83',1,'Camera']]],
-  ['msbrighttexture_30',['msBrightTexture',['../class_render_target.html#a174ddff041855d5fa5621b584e0f3964',1,'RenderTarget']]],
-  ['msdepthtexture_31',['msDepthTexture',['../class_render_target.html#a3c6dbb5d63f05e0db8e4ccdc663319a9',1,'RenderTarget']]],
-  ['mstexture_32',['msTexture',['../class_render_target.html#adae5c8df5079c8a1e158117db03528f4',1,'RenderTarget']]],
-  ['multisampling_33',['multisampling',['../struct_window_configuration.html#a194a2500a672a106506592f277adea41',1,'WindowConfiguration']]]
+  ['mooncolor_27',['moonColor',['../class_atmosphere.html#ad45f4b1ef6697020a7727e1b265dd12f',1,'Atmosphere']]],
+  ['moonsize_28',['moonSize',['../class_atmosphere.html#a8ee8e705d9f0ec21210965bd46642e82',1,'Atmosphere']]],
+  ['moontintstrength_29',['moonTintStrength',['../class_atmosphere.html#aa649e2f6a60c96b3d2359bfe72caba7b',1,'Atmosphere']]],
+  ['mousecaptured_30',['mouseCaptured',['../struct_window_configuration.html#a25db3fbd183275646f6062aa0f73db91',1,'WindowConfiguration']]],
+  ['mousesensitivity_31',['mouseSensitivity',['../class_camera.html#a374b33e654bf21d19230a82672bd3aac',1,'Camera']]],
+  ['movementspeed_32',['movementSpeed',['../class_camera.html#a03987cf3bbf312be16bb881939382d83',1,'Camera']]],
+  ['msbrighttexture_33',['msBrightTexture',['../class_render_target.html#a174ddff041855d5fa5621b584e0f3964',1,'RenderTarget']]],
+  ['msdepthtexture_34',['msDepthTexture',['../class_render_target.html#a3c6dbb5d63f05e0db8e4ccdc663319a9',1,'RenderTarget']]],
+  ['mstexture_35',['msTexture',['../class_render_target.html#adae5c8df5079c8a1e158117db03528f4',1,'RenderTarget']]],
+  ['multisampling_36',['multisampling',['../struct_window_configuration.html#a194a2500a672a106506592f277adea41',1,'WindowConfiguration']]]
 ];

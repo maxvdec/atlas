@@ -6,10 +6,11 @@ var searchData=
   ['intersectsstatic_3',['intersectsStatic',['../class_body.html#a2e76849877154f5baf350bad3b14a814',1,'Body']]],
   ['inversion_4',['Inversion',['../class_inversion.html#ac4baef84181fee034862fce94d779f98',1,'Inversion']]],
   ['isautomaticambientenabled_5',['isAutomaticAmbientEnabled',['../class_scene.html#ad8ef755ef8124f2b0fefb95926740052',1,'Scene']]],
-  ['isedgeunique_6',['isEdgeUnique',['../namespacebezel.html#a38ea744619e0b833fa4497ff996e5d1a',1,'bezel']]],
-  ['isexternal_7',['isExternal',['../namespacebezel.html#a0027696456cb0bc89fb9b97139c6d79c',1,'bezel']]],
-  ['iskeyclicked_8',['isKeyClicked',['../class_window.html#a5d64d3322428400dd343895ccfeaeb0a',1,'Window']]],
-  ['iskeypressed_9',['isKeyPressed',['../class_window.html#a934998dda7f1a9c513c47684753075fe',1,'Window']]],
-  ['islandgenerator_10',['IslandGenerator',['../class_island_generator.html#a0155ca26330ae5cfec15f85630927ef3',1,'IslandGenerator']]],
-  ['isplaying_11',['isPlaying',['../class_audio_source.html#a218980b87a1b223b2e13bcb766567ad1',1,'AudioSource']]]
+  ['isdaytime_6',['isDaytime',['../class_atmosphere.html#ad70c49a701df6337ae75a3109babf2f8',1,'Atmosphere']]],
+  ['isedgeunique_7',['isEdgeUnique',['../namespacebezel.html#a38ea744619e0b833fa4497ff996e5d1a',1,'bezel']]],
+  ['isexternal_8',['isExternal',['../namespacebezel.html#a0027696456cb0bc89fb9b97139c6d79c',1,'bezel']]],
+  ['iskeyclicked_9',['isKeyClicked',['../class_window.html#a5d64d3322428400dd343895ccfeaeb0a',1,'Window']]],
+  ['iskeypressed_10',['isKeyPressed',['../class_window.html#a934998dda7f1a9c513c47684753075fe',1,'Window']]],
+  ['islandgenerator_11',['IslandGenerator',['../class_island_generator.html#a0155ca26330ae5cfec15f85630927ef3',1,'IslandGenerator']]],
+  ['isplaying_12',['isPlaying',['../class_audio_source.html#a218980b87a1b223b2e13bcb766567ad1',1,'AudioSource']]]
 ];

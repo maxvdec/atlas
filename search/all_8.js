@@ -27,12 +27,13 @@ var searchData=
   ['invert_24',['Invert',['../atlas_2effect_8h.html#a75cf3454fba9ce206c0c748892dc9867a9b8958acb7be504bb5f55f17c0eea366',1,'effect.h']]],
   ['invmass_25',['invMass',['../class_body.html#a4d999f83fe2f4fde24c48a152847e3f1',1,'Body']]],
   ['isautomaticambientenabled_26',['isAutomaticAmbientEnabled',['../class_scene.html#ad8ef755ef8124f2b0fefb95926740052',1,'Scene']]],
-  ['isedgeunique_27',['isEdgeUnique',['../namespacebezel.html#a38ea744619e0b833fa4497ff996e5d1a',1,'bezel']]],
-  ['isexternal_28',['isExternal',['../namespacebezel.html#a0027696456cb0bc89fb9b97139c6d79c',1,'bezel']]],
-  ['iskeyclicked_29',['isKeyClicked',['../class_window.html#a5d64d3322428400dd343895ccfeaeb0a',1,'Window']]],
-  ['iskeypressed_30',['isKeyPressed',['../class_window.html#a934998dda7f1a9c513c47684753075fe',1,'Window']]],
-  ['islandgenerator_31',['IslandGenerator',['../class_island_generator.html',1,'IslandGenerator'],['../class_island_generator.html#a0155ca26330ae5cfec15f85630927ef3',1,'IslandGenerator::IslandGenerator()']]],
-  ['ismin_32',['ismin',['../struct_pseudo_body.html#ab897861b3dd99d7b98b89eaaaf1731d2',1,'PseudoBody']]],
-  ['ismono_33',['isMono',['../class_audio_data.html#abacb6f98ee7bd4a62f1fd8d7385a4781',1,'AudioData']]],
-  ['isplaying_34',['isPlaying',['../class_audio_source.html#a218980b87a1b223b2e13bcb766567ad1',1,'AudioSource']]]
+  ['isdaytime_27',['isDaytime',['../class_atmosphere.html#ad70c49a701df6337ae75a3109babf2f8',1,'Atmosphere']]],
+  ['isedgeunique_28',['isEdgeUnique',['../namespacebezel.html#a38ea744619e0b833fa4497ff996e5d1a',1,'bezel']]],
+  ['isexternal_29',['isExternal',['../namespacebezel.html#a0027696456cb0bc89fb9b97139c6d79c',1,'bezel']]],
+  ['iskeyclicked_30',['isKeyClicked',['../class_window.html#a5d64d3322428400dd343895ccfeaeb0a',1,'Window']]],
+  ['iskeypressed_31',['isKeyPressed',['../class_window.html#a934998dda7f1a9c513c47684753075fe',1,'Window']]],
+  ['islandgenerator_32',['IslandGenerator',['../class_island_generator.html',1,'IslandGenerator'],['../class_island_generator.html#a0155ca26330ae5cfec15f85630927ef3',1,'IslandGenerator::IslandGenerator()']]],
+  ['ismin_33',['ismin',['../struct_pseudo_body.html#ab897861b3dd99d7b98b89eaaaf1731d2',1,'PseudoBody']]],
+  ['ismono_34',['isMono',['../class_audio_data.html#abacb6f98ee7bd4a62f1fd8d7385a4781',1,'AudioData']]],
+  ['isplaying_35',['isPlaying',['../class_audio_source.html#a218980b87a1b223b2e13bcb766567ad1',1,'AudioSource']]]
 ];

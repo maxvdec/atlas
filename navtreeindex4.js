@@ -1,5 +1,15 @@
 var NAVTREEINDEX4 =
 {
+"input_8h.html#a9479d299e1852e6140dcca1f405868abaf623e75af30e62bbd73d6df5b50bb7b5":[3,0,1,0,5,3,22],
+"input_8h.html#a9479d299e1852e6140dcca1f405868abaf64f4f750f097b4421a050c9d11d9c14":[3,0,1,0,5,3,8],
+"input_8h.html#a9479d299e1852e6140dcca1f405868abaf6c6379402dce27659f7cffee6bc1f00":[3,0,1,0,5,3,46],
+"input_8h.html#a9479d299e1852e6140dcca1f405868abafc335adb3d69d3d8270769e1923ea4dc":[3,0,1,0,5,3,87],
+"input_8h.html#a9479d299e1852e6140dcca1f405868abafe5c3684dce76cdd9f7f42430868aa74":[3,0,1,0,5,3,69],
+"input_8h.html#a9479d299e1852e6140dcca1f405868abaff44570aca8241914870afbc310cdb85":[3,0,1,0,5,3,28],
+"input_8h.html#a9479d299e1852e6140dcca1f405868abaffa5882d1ddcf903bf0d0dbc30bfc604":[3,0,1,0,5,3,84],
+"input_8h_source.html":[3,0,1,0,5],
+"light_8h.html":[3,0,1,0,6],
+"light_8h_source.html":[3,0,1,0,6],
 "namespaceaurora.html":[1,0,0],
 "namespaceaurora.html#af0d1a37a341c5cfa5d225a68a15ad829":[1,0,0,0],
 "namespacebezel.html":[1,0,1],
@@ -239,15 +249,5 @@ var NAVTREEINDEX4 =
 "struct_core_vertex.html#af857b1beb9f81b407c6b3ac239368a8f":[2,0,30,0],
 "struct_cubemap.html":[2,0,31],
 "struct_cubemap.html#a1a2f4dd1ade28b0193b10f6512407655":[2,0,31,6],
-"struct_cubemap.html#a4fc11bc00551fb70691529c1b16bcdcf":[2,0,31,2],
-"struct_cubemap.html#a50b2c6343093573ff1a058918f63f514":[2,0,31,3],
-"struct_cubemap.html#a5fccaab17f7056ff6aa3df30af7281da":[2,0,31,8],
-"struct_cubemap.html#a69757fb707ae4ff02cc9cb1066d8e1d7":[2,0,31,4],
-"struct_cubemap.html#a6e50b3412c0dbd04d9e32aec5e78b011":[2,0,31,0],
-"struct_cubemap.html#a7affb2275d8b626d11af5907d0b058cb":[2,0,31,5],
-"struct_cubemap.html#aa1dec168e6011ab57c051d77a897b90a":[2,0,31,7],
-"struct_cubemap.html#ae5986bc2dbf885ead71ce672f7dd4137":[2,0,31,1],
-"struct_dilation_parameters.html":[2,0,33],
-"struct_dilation_parameters.html#a767e78e400ce6a3f0b845818dea9d367":[2,0,33,0],
-"struct_dilation_parameters.html#ace48a43401dffcaf4d517529c71d0cd6":[2,0,33,1]
+"struct_cubemap.html#a4fc11bc00551fb70691529c1b16bcdcf":[2,0,31,2]
 };
