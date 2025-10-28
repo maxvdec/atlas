@@ -35,6 +35,28 @@ class Atmosphere {
     Cubemap createSkyCubemap(int size = 256) const;
     void updateSkyCubemap(Cubemap &cubemap) const;
 
+    Color sunColor = Color(1.0, 0.95, 0.8, 1.0);
+    Color moonColor = Color(0.5, 0.5, 0.8, 1.0);
+
+    float sunSize = 1.0f;
+    float moonSize = 1.0f;
+
+    float sunTintStrength = 0.3f;
+    float moonTintStrength = 0.8f;
+    float starIntensity = 3.0f;
+
+    inline bool isDaytime() const {
+        Magnitude3d sunDir = getSunAngle();
+        return sunDir.y > 0.0f;
+    }
+
+    inline void setTime(float hours) {
+        if (hours > 0 && hours < 24)
+            timeOfDay = hours;
+    }
+
+    bool cycle = false;
+
   private:
     mutable float lastSkyboxUpdateTime = -1.0f;
     mutable bool skyboxCacheValid = false;

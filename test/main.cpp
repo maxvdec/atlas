@@ -12,6 +12,7 @@
 #include "atlas/audio.h"
 #include "aurora/procedural.h"
 #include "aurora/terrain.h"
+#include "hydra/atmosphere.h"
 #include <iostream>
 #include <memory>
 
@@ -263,6 +264,8 @@ class MainScene : public Scene {
         window.useDeferredRendering();
         atmosphere.enable();
         atmosphere.secondsPerHour = 4.f;
+        atmosphere.moonColor =
+            Color(1.0f, 0.0f, 0.0f); // Set the moon color to red
     }
 };
 
