@@ -501,6 +501,17 @@ vec4 applyMotionBlur(vec2 texCoord, float size, float separation, vec4 color) {
     return fallbackColor;
 }
 
+vec3 sampleLUT(vec3 rgb, float blueSlice, float sliceSize, float slicePixelOffset) {
+    float sliceY = floor(blueSlice / lutSize);
+    float sliceX = mod(blueSlice, lutSize);
+
+    vec2 uv;
+    uv.x = sliceX * sliceSize + slicePixelOffset + rgb.r * sliceSize;
+    uv.y = sliceY * sliceSize + slicePixelOffset + rgb.g * sliceSize;
+
+    return texture(LUTTexture, uv).rgb;
+}
+
 vec4 mapToLUT(vec4 color) {
     if (hasLUTTexture != 1) {
         return color;
@@ -514,22 +525,10 @@ vec4 mapToLUT(vec4 color) {
     float sliceHigh = min(sliceLow + 1.0, lutSize - 1.0);
     float t = blueIndex - sliceLow;
 
-    vec3 sampleLUT
-    (vec3
-    rgb, float
-    blueSlice ) {
-float sliceY = floor(blueSlice / lutSize);
-float sliceX = mod(blueSlice, lutSize);
+ 
 
-vec2 uv;
-uv . x = sliceX * sliceSize + slicePixelOffset + rgb . r * sliceSize;
-uv . y = sliceY * sliceSize + slicePixelOffset + rgb . g * sliceSize;
-
-return texture(LUTTexture, uv). rgb;
-}
-
-vec3 lowColor = sampleLUT(color.rgb, sliceLow);
-vec3 highColor = sampleLUT(color.rgb, sliceHigh);
+vec3 lowColor = sampleLUT(color.rgb, sliceLow, sliceSize, slicePixelOffset);
+vec3 highColor = sampleLUT(color.rgb, sliceHigh, sliceSize, slicePixelOffset);
 
 vec3 finalRGB = mix(lowColor, highColor, t);
 

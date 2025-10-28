@@ -71,10 +71,14 @@ file(GLOB_RECURSE AURORA_SOURCES aurora/*.cpp)
 add_library(aurora ${AURORA_SOURCES})
 target_link_libraries(aurora PRIVATE glm::glm glfw OpenGL::GL)
 
+file(GLOB_RECURSE HYDRA_SOURCES hydra/*.cpp)
+add_library(hydra ${HYDRA_SOURCES})
+target_link_libraries(hydra PRIVATE glm::glm glfw OpenGL::GL)
+
 # Atlas library
 file(GLOB_RECURSE SOURCES atlas/*.cpp extern/*.c)
 add_library(atlas ${SOURCES} ${SHADER_OUTPUT_FILE})
-target_link_libraries(atlas PUBLIC OpenGL::GL glfw glm::glm bezel finewave aurora ${FREETYPE_LIBRARIES} assimp::assimp)
+target_link_libraries(atlas PUBLIC OpenGL::GL glfw glm::glm bezel finewave aurora hydra ${FREETYPE_LIBRARIES} assimp::assimp)
 target_include_directories(atlas PRIVATE ${FREE_TYPE_INCLUDE_DIRS}/freetype2)
 target_compile_definitions(atlas PRIVATE ATLAS_LIB GL_SILENT_DEPRECATION)
 

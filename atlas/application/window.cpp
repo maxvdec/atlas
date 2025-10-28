@@ -223,6 +223,8 @@ void Window::run() {
             this->framesPerSecond = 1.0f / this->deltaTime;
         }
 
+        currentScene->updateScene(this->deltaTime);
+
         // Update the renderables
         for (auto &obj : this->renderables) {
             obj->update(*this);

@@ -12,6 +12,7 @@ CMakeFiles
 test/resources/skybox
 libbezel.a
 libaurora.a
+libhydra.a
 build
 .vscode
 Cargo.lock
