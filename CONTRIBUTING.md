@@ -31,6 +31,8 @@ We assume you know how to fork a repo and get started with modifying Atlas. Besi
 After the prefix, put a short description. If you are working for a specific library, add the library prefix. Here's a list of them:
 * `bezel` is for **Bezel**
 * `finewave` is for **Finewave**
+* `aurora` is for **Aurora**
+* `hydra` is for **Hydra**
 
 For example, a branch fixing a bug in the rendering of Bezel, would be: `fix/bezel-rendering`. Thanks for keeping the repo clean and organized.
 
