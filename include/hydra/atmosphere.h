@@ -38,6 +38,12 @@ class Atmosphere {
     Color sunColor = Color(1.0, 0.95, 0.8, 1.0);
     Color moonColor = Color(0.5, 0.5, 0.8, 1.0);
 
+    float sunSize = 1.0f;
+    float moonSize = 1.0f;
+
+    float sunTintStrength = 0.3f;
+    float moonTintStrength = 0.8f;
+
   private:
     mutable float lastSkyboxUpdateTime = -1.0f;
     mutable bool skyboxCacheValid = false;

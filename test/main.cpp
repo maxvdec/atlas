@@ -12,6 +12,7 @@
 #include "atlas/audio.h"
 #include "aurora/procedural.h"
 #include "aurora/terrain.h"
+#include "hydra/atmosphere.h"
 #include <iostream>
 #include <memory>
 

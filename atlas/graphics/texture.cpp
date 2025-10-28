@@ -628,6 +628,19 @@ void Skybox::render(float dt) {
             Window::mainWindow->getCurrentScene()->atmosphere.moonColor;
         obj->shaderProgram.setUniform4f("moonColor", moonColor.r, moonColor.g,
                                         moonColor.b, moonColor.a);
+
+        obj->shaderProgram.setUniform1f(
+            "sunTintStrength",
+            Window::mainWindow->getCurrentScene()->atmosphere.sunTintStrength);
+        obj->shaderProgram.setUniform1f(
+            "moonTintStrength",
+            Window::mainWindow->getCurrentScene()->atmosphere.moonTintStrength);
+        obj->shaderProgram.setUniform1f(
+            "sunSizeMultiplier",
+            Window::mainWindow->getCurrentScene()->atmosphere.sunSize);
+        obj->shaderProgram.setUniform1f(
+            "moonSizeMultiplier",
+            Window::mainWindow->getCurrentScene()->atmosphere.moonSize);
         obj->shaderProgram.setUniform1i("hasDayNight", 1);
     } else {
         obj->shaderProgram.setUniform1i("hasDayNight", 0);
