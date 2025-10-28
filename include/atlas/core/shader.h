@@ -97,6 +97,8 @@ enum class AtlasVertexShader {
      * @brief Vertex shader tailored for volumetric light scattering passes.
      */
     Volumetric,
+    Fluid,
+    Basic,
 };
 
 /**
@@ -321,7 +323,9 @@ enum class AtlasFragmentShader {
     /**
      * @brief Fragment shader that upsamples and blends bloom textures.
      */
-    Upsample
+    Upsample,
+    Fluid,
+    Basic
 };
 
 /**

@@ -2389,6 +2389,60 @@ void main() {
 
 )";
 
+static const char* FLUID_VERT = R"(
+#version 410 core
+
+layout(location = 0) in vec3 aPos;
+
+out vec3 FragPos;
+
+uniform mat4 view;
+uniform mat4 projection;
+
+void main() {
+    gl_Position = projection * view * vec4(aPos, 1.0);
+
+    gl_PointSize = 10.0;
+    FragPos = aPos;
+}
+)";
+
+static const char* BASIC_VERT = R"(
+#version 410 core
+layout(location = 0) in vec3 aPos;
+
+uniform mat4 view;
+uniform mat4 projection;
+
+void main() { gl_Position = projection * view * vec4(aPos, 1.0); }
+)";
+
+static const char* BASIC_FRAG = R"(
+#version 410 core
+out vec4 FragColor;
+
+uniform vec4 color;
+
+void main() {
+    FragColor = color; 
+}
+)";
+
+static const char* FLUID_FRAG = R"(
+#version 410 core
+
+in vec3 FragPos;
+
+out vec4 FragColor;
+
+void main() {
+    vec2 coord = gl_PointCoord - 0.5;
+    float dist = length(coord);
+    float alpha = smoothstep(0.5, 0.45, dist);
+    FragColor = vec4(0.0, 0.3, 0.5, alpha); 
+}
+)";
+
 static const char* COLOR_FRAG = R"(
 #version 410 core
 layout (location = 0) out vec4 FragColor;
@@ -3486,14 +3540,12 @@ uniform float sunSizeMultiplier;
 uniform float moonSizeMultiplier;
 uniform float starDensity;
 
-// Optimized hash function
 float hash21(vec2 p) {
     p = fract(p * vec2(123.34, 456.21));
     p += dot(p, p + 45.32);
     return fract(p.x * p.y);
 }
 
-// Simplified noise - removed unnecessary smoothing
 float valueNoise(vec2 p) {
     vec2 i = floor(p);
     vec2 f = fract(p);
@@ -3507,20 +3559,17 @@ float valueNoise(vec2 p) {
     return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
 }
 
-// Reduced from 4 to 2 octaves for noise
 float layeredNoise(vec2 p) {
     float total = valueNoise(p) + valueNoise(p * 2.0) * 0.5;
     return total / 1.5;
 }
 
-// Optimized hash for stars
 float hash13(vec3 p) {
     p = fract(p * 443.897);
     p += dot(p, p.yzx + 19.19);
     return fract((p.x + p.y) * p.z);
 }
 
-// Heavily optimized star generation - reduced loop from 27 to 1 iteration
 vec3 generateStars(vec3 dir, float density, float nightFactor) {
     if (density <= 0.0 || nightFactor <= 0.0) {
         return vec3(0.0);
@@ -3530,7 +3579,6 @@ vec3 generateStars(vec3 dir, float density, float nightFactor) {
     vec3 cell = floor(starSpace);
     vec3 localPos = fract(starSpace);
     
-    // Only check current cell instead of 27 neighbors
     float rand = hash13(cell);
     
     if (rand < density * 0.3) {
@@ -3548,7 +3596,6 @@ vec3 generateStars(vec3 dir, float density, float nightFactor) {
         float twinkle = 0.8 + 0.2 * sin(hash13(cell + vec3(67.89, 1.23, 45.67)) * 100.0);
         star *= twinkle * nightFactor;
         
-        // Simplified color variation
         vec3 starColor = vec3(1.0);
         if (rand > 0.9) starColor = vec3(0.8, 0.9, 1.0);
         else if (rand > 0.8) starColor = vec3(1.0, 0.9, 0.8);
@@ -3559,27 +3606,22 @@ vec3 generateStars(vec3 dir, float density, float nightFactor) {
     return vec3(0.0);
 }
 
-// Optimized moon texture - reduced complexity and loop iterations
 vec3 generateMoonTexture(vec2 uv, float distanceFromCenter, vec3 tintColor) {
-    // Simplified rotation
     float angle = 0.5;
     float ca = cos(angle);
     float sa = sin(angle);
     uv = vec2(ca * uv.x - sa * uv.y, sa * uv.x + ca * uv.y);
     
-    // Reduced noise calls
     float largeFeatures = valueNoise(uv * 2.0);
     largeFeatures = smoothstep(0.3, 0.7, largeFeatures);
     
     float mediumCraters = valueNoise(uv * 8.0);
     
-    // Reduced crater loop from 9 to 4 iterations
     vec2 craterUV = uv * 6.0;
     vec2 craterCell = floor(craterUV);
     vec2 craterLocal = fract(craterUV);
     
     float craters = 1.0;
-    // Only check 4 nearest neighbors instead of 9
     for (int i = 0; i < 4; i++) {
         vec2 neighbor = vec2(float(i % 2), float(i / 2));
         vec2 cellPoint = craterCell + neighbor;
@@ -3600,7 +3642,6 @@ vec3 generateMoonTexture(vec2 uv, float distanceFromCenter, vec3 tintColor) {
     
     float intensity = mix(0.30, 0.75, surface);
     
-    // Simplified limb darkening
     float limb = 1.0 - smoothstep(0.6, 1.0, distanceFromCenter);
     intensity *= 0.4 + 0.6 * limb;
     intensity *= 1.3;
@@ -3622,14 +3663,12 @@ void main()
         
         float nightFactor = smoothstep(0.15, -0.2, sunDirection.y);
         
-        // Stars
         if (starDensity > 0.0) {
             color += generateStars(dir, starDensity, nightFactor);
         }
         
         float sunHorizonFade = smoothstep(-0.15, 0.05, sunDirection.y);
         
-        // Sun rendering
         if (sunDirection.y > -0.15) {
             float sizeAdjust = 1.0 - (sunSizeMultiplier - 1.0) * 0.001;
             float sunSize = 0.9995 * sizeAdjust;
@@ -3649,7 +3688,6 @@ void main()
         
         float moonHorizonFade = smoothstep(-0.15, 0.05, moonDirection.y);
         
-        // Moon rendering
         if (moonDirection.y > -0.15) {
             float sizeAdjust = 1.0 - (moonSizeMultiplier - 1.0) * 0.001;
             float moonSize = 0.9996 * sizeAdjust;
@@ -3688,7 +3726,6 @@ void main()
             color += moonColor.rgb * (moonGlow * 0.3 + moonHalo) * moonHorizonFade;
         }
         
-        // Sky tinting
         if (sunDirection.y > -0.1 && sunTintStrength > 0.0) {
             float sunSkyInfluence = smoothstep(0.7, 0.95, sunDot) * 
                                    smoothstep(-0.1, 0.2, sunDirection.y);

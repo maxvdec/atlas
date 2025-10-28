@@ -185,6 +185,10 @@ class Camera {
         return Normal3d::fromGlm(glm::normalize(front.toGlm()));
     }
 
+    inline Position3d getLookPosition() const {
+        return position + getFrontVector();
+    }
+
     /**
      * @brief Get the velocity of the camera based on its front vector and
      * movement speed.

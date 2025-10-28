@@ -269,7 +269,7 @@ class MainScene : public Scene {
     }
 };
 
-int main() {
+int mainUnused() {
     Window window({.title = "My Window",
                    .width = 1600,
                    .height = 1200,

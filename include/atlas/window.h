@@ -572,6 +572,7 @@ class Window {
     friend class DirectionalLight;
     friend class Text;
     friend class Terrain;
+    friend class Fluid;
 };
 
 #endif // WINDOW_H

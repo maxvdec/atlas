@@ -322,6 +322,10 @@ struct Cubemap {
 
     static Cubemap fromColors(const std::array<Color, 6> &colors, int size);
 
+    inline static Cubemap fromColor(Color color, int size) {
+        return fromColors({color, color, color, color, color, color}, size);
+    }
+
     void updateWithColors(const std::array<Color, 6> &colors);
 };
 
