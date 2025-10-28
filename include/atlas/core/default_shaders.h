@@ -3480,38 +3480,32 @@ uniform vec3 moonDirection;
 uniform vec4 moonColor;
 uniform int hasDayNight;
 
-// Configurable thresholds
 uniform float sunTintStrength;
 uniform float moonTintStrength;
 uniform float sunSizeMultiplier;
 uniform float moonSizeMultiplier;
+uniform float starDensity; 
 
-// Better hash function
 float hash21(vec2 p) {
     p = fract(p * vec2(123.34, 456.21));
     p += dot(p, p + 45.32);
     return fract(p.x * p.y);
 }
 
-// Value noise
 float valueNoise(vec2 p) {
     vec2 i = floor(p);
     vec2 f = fract(p);
     
-    // Smooth interpolation
     f = f * f * (3.0 - 2.0 * f);
     
-    // Get 4 corners
     float a = hash21(i);
     float b = hash21(i + vec2(1.0, 0.0));
     float c = hash21(i + vec2(0.0, 1.0));
     float d = hash21(i + vec2(1.0, 1.0));
     
-    // Bilinear interpolation
     return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
 }
 
-// Layered noise
 float layeredNoise(vec2 p) {
     float total = 0.0;
     float amplitude = 1.0;
@@ -3528,29 +3522,81 @@ float layeredNoise(vec2 p) {
     return total / maxValue;
 }
 
-// Generate moon texture with visible craters
+float hash13(vec3 p) {
+    p = fract(p * vec3(443.897, 441.423, 437.195));
+    p += dot(p, p.yzx + 19.19);
+    return fract((p.x + p.y) * p.z);
+}
+
+vec3 generateStars(vec3 dir, float density, float nightFactor) {
+    if (density <= 0.0 || nightFactor <= 0.0) {
+        return vec3(0.0);
+    }
+    
+    vec3 starSpace = dir * 50.0;
+    vec3 cell = floor(starSpace);
+    vec3 localPos = fract(starSpace);
+    
+    float stars = 0.0;
+    
+    for (int z = -1; z <= 1; z++) {
+        for (int y = -1; y <= 1; y++) {
+            for (int x = -1; x <= 1; x++) {
+                vec3 offset = vec3(float(x), float(y), float(z));
+                vec3 cellId = cell + offset;
+                
+                float rand = hash13(cellId);
+                
+                if (rand < density * 0.3) {
+                    float randX = hash13(cellId + vec3(12.34, 56.78, 90.12));
+                    float randY = hash13(cellId + vec3(23.45, 67.89, 1.23));
+                    float randZ = hash13(cellId + vec3(34.56, 78.90, 12.34));
+                    
+                    vec3 starPos = vec3(randX, randY, randZ);
+                    vec3 toStar = localPos - offset - starPos;
+                    float dist = length(toStar);
+                    
+                    float starSize = 0.02 + hash13(cellId + vec3(45.67, 89.01, 23.45)) * 0.03;
+                    float brightness = 0.5 + hash13(cellId + vec3(56.78, 90.12, 34.56)) * 0.5;
+                    
+                    float star = smoothstep(starSize, 0.0, dist) * brightness;
+                    
+                    float twinkle = 0.8 + 0.2 * sin(hash13(cellId + vec3(67.89, 1.23, 45.67)) * 100.0);
+                    star *= twinkle;
+                    
+                    stars += star;
+                }
+            }
+        }
+    }
+    
+    vec3 starColor = vec3(1.0);
+    float colorRand = hash13(cell);
+    if (colorRand > 0.9) {
+        starColor = vec3(0.8, 0.9, 1.0); 
+    } else if (colorRand > 0.8) {
+        starColor = vec3(1.0, 0.9, 0.8);
+    }
+    
+    return starColor * stars * nightFactor;
+}
+
 vec3 generateMoonTexture(vec2 uv, float distanceFromCenter, vec3 tintColor) {
-    // Rotate UV to make pattern less uniform
     float angle = 0.5;
     mat2 rot = mat2(cos(angle), -sin(angle), sin(angle), cos(angle));
     uv = rot * uv;
     
-    // Base grayscale values for lighting
     float baseValue = 0.75;
     float darkValue = 0.30;
     
-    // Large-scale features (maria - dark patches)
     float largeFeatures = layeredNoise(uv * 2.0);
     largeFeatures = smoothstep(0.3, 0.7, largeFeatures);
     
-    // Medium craters
     float mediumCraters = layeredNoise(uv * 8.0);
     mediumCraters = pow(mediumCraters, 1.5);
     
-    // Small details and texture
     float smallDetails = valueNoise(uv * 25.0);
     
-    // Create crater-like circular patterns
     vec2 craterUV = uv * 6.0;
     vec2 craterCell = floor(craterUV);
     vec2 craterLocal = fract(craterUV);
@@ -3561,15 +3607,12 @@ vec3 generateMoonTexture(vec2 uv, float distanceFromCenter, vec3 tintColor) {
             vec2 neighbor = vec2(float(x), float(y));
             vec2 cellPoint = craterCell + neighbor;
             
-            // Random crater center in this cell
             vec2 craterCenter = vec2(hash21(cellPoint), hash21(cellPoint + vec2(13.7, 27.3)));
             vec2 diff = craterLocal - neighbor - craterCenter;
             float dist = length(diff);
             
-            // Random crater size
             float craterSize = 0.15 + 0.25 * hash21(cellPoint + vec2(5.3, 9.7));
             
-            // Create crater depression
             if (dist < craterSize) {
                 float crater = smoothstep(craterSize, craterSize * 0.3, dist);
                 craters = min(craters, 1.0 - crater * 0.7);
@@ -3577,25 +3620,19 @@ vec3 generateMoonTexture(vec2 uv, float distanceFromCenter, vec3 tintColor) {
         }
     }
     
-    // Combine all layers
     float surface = largeFeatures * 0.4 + mediumCraters * 0.3 + smallDetails * 0.3;
     surface *= craters;
     
-    // Create grayscale intensity
     float intensity = mix(darkValue, baseValue, surface);
     
-    // Add subtle variation
     float colorVar = valueNoise(uv * 12.0);
     intensity += colorVar * 0.05;
     
-    // Limb darkening (edge darkening)
     float limb = 1.0 - smoothstep(0.6, 1.0, distanceFromCenter);
     intensity *= 0.4 + 0.6 * limb;
     
-    // Brightness boost for visibility
     intensity *= 1.3;
     
-    // Apply moon color tint to the grayscale texture
     vec3 moonSurface = tintColor * intensity;
     
     return clamp(moonSurface, 0.0, 1.0);
@@ -3613,9 +3650,15 @@ void main()
         float sunDot = dot(dir, normSunDir);
         float moonDot = dot(dir, normMoonDir);
         
+        float nightFactor = smoothstep(0.15, -0.2, sunDirection.y);
+        
+        if (starDensity > 0.0) {
+            vec3 stars = generateStars(dir, starDensity, nightFactor);
+            color += stars;
+        }
+        
         float sunHorizonFade = smoothstep(-0.15, 0.05, sunDirection.y);
         
-        // Sun rendering
         if (sunDirection.y > -0.15) {
             float baseSunSize = 0.9995;
             float baseSunGlowSize = 0.998;
@@ -3642,7 +3685,6 @@ void main()
         
         float moonHorizonFade = smoothstep(-0.15, 0.05, moonDirection.y);
         
-        // Moon rendering with texture
         if (moonDirection.y > -0.15) {
             float baseMoonSize = 0.9996;
             float baseMoonGlowSize = 0.9985;
@@ -3657,27 +3699,21 @@ void main()
             float moonDisk = smoothstep(moonSize - 0.0002, moonSize, moonDot);
             
             if (moonDisk > 0.01) {
-                // Create orthogonal basis for moon surface
                 vec3 up = abs(normMoonDir.y) < 0.999 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
                 vec3 right = normalize(cross(up, normMoonDir));
                 vec3 actualUp = cross(normMoonDir, right);
                 
-                // Project direction onto moon plane
                 vec3 relativeDir = dir - normMoonDir * moonDot;
                 float u = dot(relativeDir, right);
                 float v = dot(relativeDir, actualUp);
                 
-                // Distance from center (normalized)
                 float distFromCenter = length(vec2(u, v)) / sqrt(1.0 - moonSize * moonSize);
                 
                 if (distFromCenter < 1.0) {
-                    // Scale UV for texture detail
                     vec2 moonUV = vec2(u, v) * 200.0;
                     
-                    // Generate procedural moon texture with color tint
                     vec3 moonTexture = generateMoonTexture(moonUV, distFromCenter, moonColor.rgb);
                     
-                    // Apply texture
                     color += moonTexture * moonDisk * moonIntensity * moonHorizonFade;
                 } else {
                     color += moonColor.rgb * moonDisk * moonIntensity * moonHorizonFade;
@@ -3694,7 +3730,6 @@ void main()
             color += moonColor.rgb * moonHalo * moonHorizonFade;
         }
         
-        // Sky tinting
         if (sunDirection.y > -0.1 && sunTintStrength > 0.0) {
             float sunSkyInfluence = smoothstep(0.7, 0.95, sunDot) * 
                                    smoothstep(-0.1, 0.2, sunDirection.y);

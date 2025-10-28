@@ -641,6 +641,9 @@ void Skybox::render(float dt) {
         obj->shaderProgram.setUniform1f(
             "moonSizeMultiplier",
             Window::mainWindow->getCurrentScene()->atmosphere.moonSize);
+        obj->shaderProgram.setUniform1f(
+            "starDensity",
+            Window::mainWindow->getCurrentScene()->atmosphere.starIntensity);
         obj->shaderProgram.setUniform1i("hasDayNight", 1);
     } else {
         obj->shaderProgram.setUniform1i("hasDayNight", 0);

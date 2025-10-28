@@ -43,6 +43,7 @@ class Atmosphere {
 
     float sunTintStrength = 0.3f;
     float moonTintStrength = 0.8f;
+    float starIntensity = 3.0f;
 
   private:
     mutable float lastSkyboxUpdateTime = -1.0f;

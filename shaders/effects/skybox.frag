@@ -12,6 +12,7 @@ uniform float sunTintStrength;
 uniform float moonTintStrength;
 uniform float sunSizeMultiplier;
 uniform float moonSizeMultiplier;
+uniform float starDensity; 
 
 float hash21(vec2 p) {
     p = fract(p * vec2(123.34, 456.21));
@@ -47,6 +48,65 @@ float layeredNoise(vec2 p) {
     }
     
     return total / maxValue;
+}
+
+float hash13(vec3 p) {
+    p = fract(p * vec3(443.897, 441.423, 437.195));
+    p += dot(p, p.yzx + 19.19);
+    return fract((p.x + p.y) * p.z);
+}
+
+vec3 generateStars(vec3 dir, float density, float nightFactor) {
+    if (density <= 0.0 || nightFactor <= 0.0) {
+        return vec3(0.0);
+    }
+    
+    vec3 starSpace = dir * 50.0;
+    vec3 cell = floor(starSpace);
+    vec3 localPos = fract(starSpace);
+    
+    float stars = 0.0;
+    
+    for (int z = -1; z <= 1; z++) {
+        for (int y = -1; y <= 1; y++) {
+            for (int x = -1; x <= 1; x++) {
+                vec3 offset = vec3(float(x), float(y), float(z));
+                vec3 cellId = cell + offset;
+                
+                float rand = hash13(cellId);
+                
+                if (rand < density * 0.3) {
+                    float randX = hash13(cellId + vec3(12.34, 56.78, 90.12));
+                    float randY = hash13(cellId + vec3(23.45, 67.89, 1.23));
+                    float randZ = hash13(cellId + vec3(34.56, 78.90, 12.34));
+                    
+                    vec3 starPos = vec3(randX, randY, randZ);
+                    vec3 toStar = localPos - offset - starPos;
+                    float dist = length(toStar);
+                    
+                    float starSize = 0.02 + hash13(cellId + vec3(45.67, 89.01, 23.45)) * 0.03;
+                    float brightness = 0.5 + hash13(cellId + vec3(56.78, 90.12, 34.56)) * 0.5;
+                    
+                    float star = smoothstep(starSize, 0.0, dist) * brightness;
+                    
+                    float twinkle = 0.8 + 0.2 * sin(hash13(cellId + vec3(67.89, 1.23, 45.67)) * 100.0);
+                    star *= twinkle;
+                    
+                    stars += star;
+                }
+            }
+        }
+    }
+    
+    vec3 starColor = vec3(1.0);
+    float colorRand = hash13(cell);
+    if (colorRand > 0.9) {
+        starColor = vec3(0.8, 0.9, 1.0); 
+    } else if (colorRand > 0.8) {
+        starColor = vec3(1.0, 0.9, 0.8);
+    }
+    
+    return starColor * stars * nightFactor;
 }
 
 vec3 generateMoonTexture(vec2 uv, float distanceFromCenter, vec3 tintColor) {
@@ -117,6 +177,13 @@ void main()
         
         float sunDot = dot(dir, normSunDir);
         float moonDot = dot(dir, normMoonDir);
+        
+        float nightFactor = smoothstep(0.15, -0.2, sunDirection.y);
+        
+        if (starDensity > 0.0) {
+            vec3 stars = generateStars(dir, starDensity, nightFactor);
+            color += stars;
+        }
         
         float sunHorizonFade = smoothstep(-0.15, 0.05, sunDirection.y);
         
