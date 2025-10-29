@@ -98,6 +98,7 @@ enum class AtlasVertexShader {
      */
     Volumetric,
     Fluid,
+    RenderFluid,
     Basic,
 };
 
@@ -324,7 +325,7 @@ enum class AtlasFragmentShader {
      * @brief Fragment shader that upsamples and blends bloom textures.
      */
     Upsample,
-    Fluid,
+    RenderFluid,
     Basic
 };
 
@@ -390,6 +391,7 @@ enum class AtlasGeometryShader {
      *
      */
     PointLightShadow,
+    RenderFluid
 };
 
 /**
@@ -572,7 +574,7 @@ struct ShaderProgram {
      * shaders and destroyes the original shaders after linking.
      *
      */
-    void compile();
+    void compile(std::vector<std::string> transformVariables = {});
 
     /**
      * @brief Creates a default shader program with predefined vertex and
@@ -593,6 +595,11 @@ struct ShaderProgram {
     fromDefaultShaders(AtlasVertexShader vShader, AtlasFragmentShader fShader,
                        GeometryShader gShader = GeometryShader(),
                        std::vector<TessellationShader> tShaders = {});
+
+    static ShaderProgram
+    transformFromDefaultShader(AtlasVertexShader vShader,
+                               AtlasFragmentShader fShader,
+                               std::vector<std::string> transformVariables);
 
     /**
      * @brief The OpenGL ID of the linked shader program.

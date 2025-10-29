@@ -15,8 +15,18 @@
 #include "atlas/units.h"
 #include "atlas/window.h"
 
-struct FluidParticle {
+struct FluidParticleGPU {
     glm::vec3 position;
+    glm::vec3 velocity;
+    float density;
+    float mass;
+};
+
+struct FluidParticle {
+    Position3d position;
+    Magnitude3d velocity;
+    float density;
+    float mass;
 };
 
 class Fluid : public GameObject {
@@ -28,13 +38,21 @@ class Fluid : public GameObject {
     Size3d bounds = Size3d(10.0f, 10.0f, 0.0f);
     int numberParticles = 1000;
 
+    float gravity = 9.81f;
+
   private:
     Id vao = 0;
     Id vbo = 0;
 
+    Id transformedVAO = 0;
+    Id transformedVBO = 0;
+    Id tfo = 0;
+
     Id containerVAO = 0;
     Id containerVBO = 0;
     Id containerEBO = 0;
+
+    float particleSize = 0.1f;
 
     void resendParticles();
     void initializeContainer();
@@ -42,6 +60,7 @@ class Fluid : public GameObject {
 
     ShaderProgram fluidShader;
     ShaderProgram containerShader;
+    ShaderProgram transformShader;
     std::vector<FluidParticle> particles;
 };
 

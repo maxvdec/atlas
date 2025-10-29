@@ -160,6 +160,15 @@ VertexShader VertexShader::fromDefaultShader(AtlasVertexShader shader) {
         VertexShader::vertexShaderCache[shader] = vertexShader;
         break;
     }
+    case AtlasVertexShader::RenderFluid: {
+        vertexShader = VertexShader::fromSource(RENDERFLUID_VERT);
+        vertexShader.desiredAttributes = {0, 1, 2, 3};
+        vertexShader.capabilities = {ShaderCapability::Lighting,
+                                     ShaderCapability::Textures};
+        vertexShader.fromDefaultShaderType = shader;
+        VertexShader::vertexShaderCache[shader] = vertexShader;
+        break;
+    }
     case AtlasVertexShader::Basic: {
         vertexShader = VertexShader::fromSource(BASIC_VERT);
         vertexShader.desiredAttributes = {0};
@@ -323,8 +332,8 @@ FragmentShader FragmentShader::fromDefaultShader(AtlasFragmentShader shader) {
         fragmentShaderCache[shader] = fragmentShader;
         break;
     }
-    case AtlasFragmentShader::Fluid: {
-        fragmentShader = FragmentShader::fromSource(FLUID_FRAG);
+    case AtlasFragmentShader::RenderFluid: {
+        fragmentShader = FragmentShader::fromSource(RENDERFLUID_FRAG);
         fragmentShader.fromDefaultShaderType = shader;
         fragmentShaderCache[shader] = fragmentShader;
         break;
@@ -371,6 +380,8 @@ GeometryShader GeometryShader::fromDefaultShader(AtlasGeometryShader shader) {
     switch (shader) {
     case AtlasGeometryShader::PointLightShadow:
         return GeometryShader::fromSource(POINT_DEPTH_GEOM);
+    case AtlasGeometryShader::RenderFluid:
+        return GeometryShader::fromSource(RENDERFLUID_GEOM);
     default:
         throw std::runtime_error("Unknown default geometry shader");
     }
@@ -458,7 +469,7 @@ void TessellationShader::compile() {
     }
 }
 
-void ShaderProgram::compile() {
+void ShaderProgram::compile(std::vector<std::string> transformVariables) {
     if (programId != 0) {
         throw std::runtime_error("Shader program already compiled");
     }
@@ -495,6 +506,15 @@ void ShaderProgram::compile() {
         if (tessShader.shaderId != 0) {
             glAttachShader(programId, tessShader.shaderId);
         }
+    }
+    if (!transformVariables.empty()) {
+        std::vector<const char *> varyingsCStr;
+        for (const auto &var : transformVariables) {
+            varyingsCStr.push_back(var.c_str());
+        }
+        glTransformFeedbackVaryings(
+            programId, static_cast<GLsizei>(varyingsCStr.size()),
+            varyingsCStr.data(), GL_INTERLEAVED_ATTRIBS);
     }
     glLinkProgram(programId);
 
@@ -588,5 +608,31 @@ ShaderProgram ShaderProgram::fromDefaultShaders(
     }
 
     program.compile();
+    return program;
+}
+
+ShaderProgram ShaderProgram::transformFromDefaultShader(
+    AtlasVertexShader vShader, AtlasFragmentShader fShader,
+    std::vector<std::string> transformVariables) {
+    ShaderProgram program;
+    program.vertexShader = VertexShader::fromDefaultShader(vShader);
+    program.fragmentShader = FragmentShader::fromDefaultShader(fShader);
+    program.geometryShader = GeometryShader();
+    program.tessellationShaders = {};
+    program.programId = 0;
+    program.desiredAttributes = program.vertexShader.desiredAttributes;
+
+    program.vertexShader.compile();
+    program.fragmentShader.compile();
+
+    // We need to wait a bit to ensure the GPU is ready for the next compilation
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+    if (program.vertexShader.shaderId == 0 ||
+        program.fragmentShader.shaderId == 0) {
+        throw std::runtime_error("Failed to compile default shaders");
+    }
+
+    program.compile(transformVariables);
     return program;
 }

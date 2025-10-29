@@ -2389,22 +2389,176 @@ void main() {
 
 )";
 
-static const char* FLUID_VERT = R"(
+static const char* RENDERFLUID_GEOM = R"(
 #version 410 core
+layout(points) in;
+layout(triangle_strip, max_vertices = 4) out;
 
-layout(location = 0) in vec3 aPos;
+in vec3 outPosition[];
+in vec3 outVelocity[];
+in float outDensity[];
 
+out vec2 TexCoord;
 out vec3 FragPos;
+out vec3 Velocity;
+out float Density;
 
 uniform mat4 view;
 uniform mat4 projection;
+uniform float particleSize;
 
 void main() {
-    gl_Position = projection * view * vec4(aPos, 1.0);
+    vec3 worldPos = outPosition[0];
 
-    gl_PointSize = 10.0;
-    FragPos = aPos;
+    vec3 right = vec3(view[0][0], view[1][0], view[2][0]);
+    vec3 up = vec3(view[0][1], view[1][1], view[2][1]);
+
+    right *= particleSize;
+    up *= particleSize;
+
+    FragPos = worldPos;
+    Velocity = outVelocity[0];
+    Density = outDensity[0];
+
+    gl_Position = projection * view * vec4(worldPos - right - up, 1.0);
+    TexCoord = vec2(0.0, 0.0);
+    EmitVertex();
+
+    gl_Position = projection * view * vec4(worldPos + right - up, 1.0);
+    TexCoord = vec2(1.0, 0.0);
+    EmitVertex();
+
+    gl_Position = projection * view * vec4(worldPos - right + up, 1.0);
+    TexCoord = vec2(0.0, 1.0);
+    EmitVertex();
+
+    gl_Position = projection * view * vec4(worldPos + right + up, 1.0);
+    TexCoord = vec2(1.0, 1.0);
+    EmitVertex();
+
+    EndPrimitive();
 }
+
+)";
+
+static const char* RENDERFLUID_FRAG = R"(
+#version 410 core
+in vec2 TexCoord;
+in vec3 FragPos;
+in vec3 Velocity;
+in float Density;
+out vec4 FragColor;
+
+void main() {
+    vec2 coord = TexCoord - 0.5;
+    float dist = length(coord) * 2.0;
+    
+    // Discard fragments outside the circle
+    if (dist > 1.0) {
+        discard;
+    }
+    
+    float alpha = smoothstep(1.0, 0.7, dist);
+    
+    // Discard very transparent fragments
+    if (alpha < 0.01) {
+        discard;
+    }
+    
+    vec3 color = vec3(0.2, 0.6, 0.9);
+    FragColor = vec4(color * alpha, alpha);
+}
+)";
+
+static const char* FLUID_VERT = R"(
+#version 410 core
+
+layout(location = 0) in vec3 inPosition;
+layout(location = 1) in vec3 inVelocity;
+layout(location = 2) in float inDensity;
+layout(location = 3) in float inMass;
+
+out vec3 outPosition;
+out vec3 outVelocity;
+out float outDensity;
+out float outMass;
+
+uniform float dt;
+uniform float gravity;
+uniform vec3 bounds;
+uniform float particleSize;
+
+struct Movement {
+    vec3 position;
+    vec3 velocity;
+};
+
+struct Particle {
+    vec3 position;
+    vec3 velocity;
+    float density;
+    float mass;
+};
+
+Particle resolveCollisions(Particle particle) {
+    // Check against 0 and bounds directly
+    if (particle.position.x < particleSize) {
+        particle.position.x = particleSize;
+        particle.velocity.x *= -1.0;
+    }
+    if (particle.position.x > bounds.x - particleSize) {
+        particle.position.x = bounds.x - particleSize;
+        particle.velocity.x *= -1.0;
+    }
+
+    if (particle.position.y < particleSize) {
+        particle.position.y = particleSize;
+        particle.velocity.y *= -1.0;
+    }
+    if (particle.position.y > bounds.y - particleSize) {
+        particle.position.y = bounds.y - particleSize;
+        particle.velocity.y *= -1.0;
+    }
+
+    if (particle.position.z < particleSize) {
+        particle.position.z = particleSize;
+        particle.velocity.z *= -1.0;
+    }
+    if (particle.position.z > bounds.z - particleSize) {
+        particle.position.z = bounds.z - particleSize;
+        particle.velocity.z *= -1.0;
+    }
+
+    return particle;
+}
+
+void main() {
+    Particle p;
+    p.position = inPosition;
+    p.velocity = inVelocity;
+    p.density = inDensity;
+    p.mass = inMass;
+
+    outPosition = inPosition;
+    outVelocity = inVelocity;
+    outDensity = inDensity;
+    outMass = inMass;
+
+    // Apply gravity
+    p.velocity.y -= gravity * dt;
+
+    // Add velocity to position
+    p.position += p.velocity * dt;
+
+    // Check collisions
+    p = resolveCollisions(p);
+
+    outPosition = p.position;
+    outVelocity = p.velocity;
+    outDensity = p.density;
+    outMass = p.mass;
+}
+
 )";
 
 static const char* BASIC_VERT = R"(
@@ -2417,6 +2571,25 @@ uniform mat4 projection;
 void main() { gl_Position = projection * view * vec4(aPos, 1.0); }
 )";
 
+static const char* RENDERFLUID_VERT = R"(
+#version 410 core
+layout(location = 0) in vec3 aPos;
+layout(location = 1) in vec3 aVelocity;
+layout(location = 2) in float aDensity;
+layout(location = 3) in float aMass;
+
+out vec3 outPosition;
+out vec3 outVelocity;
+out float outDensity;
+
+void main() {
+    outPosition = aPos;
+    outVelocity = aVelocity;
+    outDensity = aDensity;
+}
+
+)";
+
 static const char* BASIC_FRAG = R"(
 #version 410 core
 out vec4 FragColor;
@@ -2425,21 +2598,6 @@ uniform vec4 color;
 
 void main() {
     FragColor = color; 
-}
-)";
-
-static const char* FLUID_FRAG = R"(
-#version 410 core
-
-in vec3 FragPos;
-
-out vec4 FragColor;
-
-void main() {
-    vec2 coord = gl_PointCoord - 0.5;
-    float dist = length(coord);
-    float alpha = smoothstep(0.5, 0.45, dist);
-    FragColor = vec4(0.0, 0.3, 0.5, alpha); 
 }
 )";
 
