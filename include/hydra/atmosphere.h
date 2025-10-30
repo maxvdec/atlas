@@ -10,9 +10,12 @@
 #ifndef HYDRA_ATMOSPHERE_H
 #define HYDRA_ATMOSPHERE_H
 
+#include "atlas/component.h"
+#include "atlas/input.h"
 #include "atlas/texture.h"
 #include "atlas/units.h"
 #include <array>
+#include <vector>
 
 class Atmosphere {
   public:
@@ -62,5 +65,32 @@ class Atmosphere {
     mutable bool skyboxCacheValid = false;
     mutable std::array<Color, 6> lastSkyboxColors = {};
 };
+
+class WorleyNoise3D {
+  public:
+    WorleyNoise3D(int frequency, int numberOfDivisions);
+    float getValue(float x, float y, float z) const;
+
+    Id get3dTexture(int res) const;
+    Id getDetailTexture(int res) const;
+    Id get3dTextureAtAllChannels(int res) const;
+
+  private:
+    int frequency;
+    int numberOfDivisions;
+    std::vector<glm::vec3> featurePoints;
+
+    void generateFeaturePoints();
+    float getWorleyNoise(float x, float y, float z, int octave) const;
+    std::vector<float> getClosestDistances(float x, float y, float z,
+                                           int count) const;
+    glm::ivec3 getGridCell(float x, float y, float z) const;
+    int getCellIndex(int cx, int cy, int cz) const;
+
+    Id createTexture3d(const std::vector<float> &data, int res, GLenum format,
+                       GLenum internalFormat) const;
+};
+
+class Clouds : public GameObject {};
 
 #endif // HYDRA_ATMOSPHERE_H
