@@ -67,8 +67,31 @@ const std::array<SkyKeyframe, 7> &skyKeyframes() {
 } // namespace
 
 void Atmosphere::update(float dt) {
+
     if (!enabled)
         return;
+
+    if (clouds) {
+        clouds->offset.x += clouds->wind.x * dt;
+        clouds->offset.y += clouds->wind.y * dt;
+        clouds->offset.z += clouds->wind.z * dt;
+
+        auto wrapComponent = [](double v) {
+            if (!std::isfinite(v)) {
+                return 0.0;
+            }
+            double wrapped = std::fmod(v, 1024.0);
+            if (wrapped < -512.0)
+                wrapped += 1024.0;
+            if (wrapped > 512.0)
+                wrapped -= 1024.0;
+            return wrapped;
+        };
+
+        clouds->offset.x = wrapComponent(clouds->offset.x);
+        clouds->offset.y = wrapComponent(clouds->offset.y);
+        clouds->offset.z = wrapComponent(clouds->offset.z);
+    }
 
     if (!cycle)
         return;
