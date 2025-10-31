@@ -266,7 +266,11 @@ class MainScene : public Scene {
         atmosphere.secondsPerHour = 4.f;
         atmosphere.moonColor =
             Color(1.0f, 0.0f, 0.0f); // Set the moon color to red
+        atmosphere.setTime(12.0);
         atmosphere.addClouds();
+        atmosphere.clouds->scale = 2.0f;
+        atmosphere.clouds->density = 0.3f;
+        atmosphere.clouds->densityMultiplier = 2.0f;
     }
 };
 

@@ -657,6 +657,23 @@ void RenderTarget::render(float dt) {
             const glm::vec3 cloudPos =
                 scene->atmosphere.clouds->position.toGlm();
 
+            glm::vec3 sunDir = scene->atmosphere.getSunAngle().toGlm();
+            float sunLength = glm::length(sunDir);
+            if (sunLength > 1e-3f) {
+                sunDir /= sunLength;
+            } else {
+                sunDir = glm::vec3(0.0f, 1.0f, 0.0f);
+            }
+
+            const Color &sunColor = scene->atmosphere.sunColor;
+            const float sunIntensity = scene->atmosphere.getLightIntensity();
+            const Color ambientColor = scene->getAmbientColor();
+            const float ambientIntensity = scene->getAmbientIntensity();
+            glm::vec3 ambient = glm::vec3(static_cast<float>(ambientColor.r),
+                                          static_cast<float>(ambientColor.g),
+                                          static_cast<float>(ambientColor.b)) *
+                                ambientIntensity;
+
             glActiveTexture(GL_TEXTURE15);
             glBindTexture(GL_TEXTURE_3D,
                           scene->atmosphere.clouds->getCloudTexture(128));
@@ -665,6 +682,25 @@ void RenderTarget::render(float dt) {
                                             cloudSize.y, cloudSize.z);
             obj->shaderProgram.setUniform3f("cloudPosition", cloudPos.x,
                                             cloudPos.y, cloudPos.z);
+            obj->shaderProgram.setUniform1f("cloudScale",
+                                            scene->atmosphere.clouds->scale);
+            obj->shaderProgram.setUniform3f("cloudOffset",
+                                            scene->atmosphere.clouds->offset.x,
+                                            scene->atmosphere.clouds->offset.y,
+                                            scene->atmosphere.clouds->offset.z);
+            obj->shaderProgram.setUniform1f("cloudDensityThreshold",
+                                            scene->atmosphere.clouds->density);
+            obj->shaderProgram.setUniform1f(
+                "cloudDensityMultiplier",
+                scene->atmosphere.clouds->densityMultiplier);
+            obj->shaderProgram.setUniform3f("sunDirection", sunDir.x, sunDir.y,
+                                            sunDir.z);
+            obj->shaderProgram.setUniform3f(
+                "sunColor", static_cast<float>(sunColor.r),
+                static_cast<float>(sunColor.g), static_cast<float>(sunColor.b));
+            obj->shaderProgram.setUniform1f("sunIntensity", sunIntensity);
+            obj->shaderProgram.setUniform3f("cloudAmbientColor", ambient.x,
+                                            ambient.y, ambient.z);
             obj->shaderProgram.setUniform1i("hasClouds", 1);
         } else {
             obj->shaderProgram.setUniform1i("hasClouds", 0);

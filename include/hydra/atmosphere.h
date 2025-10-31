@@ -49,8 +49,12 @@ class Clouds {
 
     Id getCloudTexture(int res) const;
 
-    Position3d position = {0.0f, 0.0f, 0.0f};
-    Size3d size = {0.5f, 0.5f, 0.5f};
+    Position3d position = {0.0f, 5.0f, 0.0f};
+    Size3d size = {10.0f, 3.0f, 10.0f};
+    float scale = 1.5f;
+    Position3d offset = {0.0f, 0.0f, 0.0f};
+    float density = 0.45f;
+    float densityMultiplier = 1.5f;
 
   private:
     WorleyNoise3D worleyNoise = WorleyNoise3D(4, 6);

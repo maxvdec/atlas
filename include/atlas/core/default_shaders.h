@@ -178,6 +178,14 @@ uniform sampler3D cloudsTexture;
 uniform vec3 cloudPosition;
 uniform vec3 cloudSize;
 uniform vec3 cameraPosition;
+uniform float cloudScale;
+uniform vec3 cloudOffset;
+uniform float cloudDensityThreshold;
+uniform float cloudDensityMultiplier;
+uniform vec3 sunDirection;
+uniform vec3 sunColor;
+uniform float sunIntensity;
+uniform vec3 cloudAmbientColor;
 uniform int hasClouds;
 
 vec4 sampleColor(vec2 uv) {
@@ -561,6 +569,86 @@ vec2 rayBoxDst(vec3 boundsMin, vec3 boundsMax, vec3 rayOrigin, vec3 rayDir) {
     return vec2(dstToContainer, dstInsideContainer);
 }
 
+float saturate(float v) { return clamp(v, 0.0, 1.0); }
+
+float hashNoise(vec3 p) {
+    return fract(sin(dot(p, vec3(12.9898, 78.233, 37.719))) * 43758.5453);
+}
+
+float henyeyGreenstein(float cosTheta, float g) {
+    const float PI = 3.14159265359;
+    float g2 = g * g;
+    float denom = pow(1.0 + g2 - 2.0 * g * cosTheta, 1.5);
+    return (1.0 - g2) / (4.0 * PI * max(denom, 1e-4));
+}
+
+float calculateCloudDensity(vec3 worldPos) {
+    vec3 halfExtents = max(cloudSize * 0.5, vec3(1e-4));
+    vec3 localPos = (worldPos - cloudPosition) / halfExtents;
+
+    if (any(lessThan(localPos, vec3(-1.0))) ||
+        any(greaterThan(localPos, vec3(1.0)))) {
+        return 0.0;
+    }
+
+    vec3 uvw = localPos * 0.5 + 0.5;
+    float scale = max(cloudScale, 0.001);
+    vec3 noiseCoord = fract(uvw * scale + cloudOffset);
+
+    vec4 shape = texture(cloudsTexture, noiseCoord);
+    float baseShape = shape.r;
+    float ridge = shape.g;
+    float turbulence = shape.b;
+    float combined = shape.a;
+
+    float shapeMix = mix(baseShape, combined, 0.35);
+    shapeMix = mix(shapeMix, ridge, 0.25);
+
+    float threshold = mix(0.15, 0.85, saturate(cloudDensityThreshold));
+    float density = shapeMix - threshold;
+    density = max(density, 0.0);
+    density = pow(density, mix(1.05, 1.6, saturate(turbulence)));
+    density *= mix(0.7, 1.3, saturate(turbulence));
+    density *= max(cloudDensityMultiplier, 0.0);
+
+    return density;
+}
+
+const int PRIMARY_STEPS = 64;
+const int LIGHT_STEPS = 6;
+const float CLOUD_ABSORPTION = 1.1;
+const float CLOUD_SCATTERING = 0.85;
+const float CLOUD_PHASE_G = 0.55;
+const float LIGHT_STEP_MULT = 1.6;
+
+float sampleSunTransmittance(vec3 worldPos, float stepSize) {
+    vec3 lightDir = -sunDirection;
+    float dirLength = length(lightDir);
+    if (dirLength < 1e-3) {
+        lightDir = vec3(0.0, 1.0, 0.0);
+    } else {
+        lightDir /= dirLength;
+    }
+
+    float maxDistance = length(cloudSize) * 1.5;
+    float travel = 0.0;
+    float attenuation = 1.0;
+    float lightStep = stepSize * 1.5;
+
+    for (int i = 0; i < LIGHT_STEPS && attenuation > 0.05; ++i) {
+        travel += lightStep;
+        if (travel > maxDistance)
+            break;
+
+        vec3 samplePos = worldPos + lightDir * travel;
+        float density = calculateCloudDensity(samplePos);
+        attenuation *= exp(-density * lightStep * CLOUD_ABSORPTION);
+        lightStep *= LIGHT_STEP_MULT;
+    }
+
+    return attenuation;
+}
+
 vec4 cloudRendering(vec4 inColor) {
     if (hasClouds != 1) {
         return inColor;
@@ -571,7 +659,6 @@ vec4 cloudRendering(vec4 inColor) {
                                : 1.0;
     bool depthAvailable = hasDepthTexture == 1 && nonLinearDepth < 1.0;
     float depthSample = depthAvailable ? nonLinearDepth : 1.0;
-
 
     vec3 rayOrigin = cameraPosition;
 
@@ -590,13 +677,66 @@ vec4 cloudRendering(vec4 inColor) {
 
     float distToContainer = rayBoxInfo.x;
     float distInContainer = rayBoxInfo.y;
-    bool hitBox = distInContainer > 0.0 && (distToContainer + 1e-4) < sceneDistance;
 
-    if (hitBox) {
-        return vec4(1.0, 0.0, 0.0, 1.0);
+    if (distInContainer <= 0.0) {
+        return inColor;
     }
 
-    return inColor;
+    float dstLimit = min(sceneDistance - distToContainer, distInContainer);
+    dstLimit = max(dstLimit, 0.0);
+    if (dstLimit <= 1e-4) {
+        return inColor;
+    }
+
+    float minStep = length(cloudSize) / 120.0;
+    float stepSize = max(dstLimit / float(PRIMARY_STEPS), minStep);
+
+    float jitter = hashNoise(vec3(TexCoord, time));
+    float travelled = jitter * stepSize;
+
+    vec3 accumulatedLight = vec3(0.0);
+    float transmittance = 1.0;
+
+    vec3 sunDir = sunDirection;
+    float sunLen = length(sunDir);
+    if (sunLen > 1e-3) {
+        sunDir /= sunLen;
+    } else {
+        sunDir = vec3(0.0, 1.0, 0.0);
+    }
+
+    for (int step = 0; step < PRIMARY_STEPS && travelled < dstLimit;
+         ++step) {
+        if (transmittance <= 0.01) {
+            break;
+        }
+
+        float current = distToContainer + travelled;
+        vec3 samplePos = rayOrigin + rayDir * current;
+
+        float density = calculateCloudDensity(samplePos);
+        if (density > 1e-4) {
+            float sampleWeight = density * stepSize;
+
+            float lightTrans = sampleSunTransmittance(samplePos, stepSize);
+            float cosTheta = clamp(dot(rayDir, -sunDir), -1.0, 1.0);
+            float phase = henyeyGreenstein(cosTheta, CLOUD_PHASE_G);
+
+            vec3 directLight = sunColor * sunIntensity * lightTrans * phase;
+            vec3 ambientLight = cloudAmbientColor;
+
+            vec3 lighting = (ambientLight * 0.35 + directLight) *
+                            sampleWeight * CLOUD_SCATTERING;
+
+            accumulatedLight += lighting * transmittance;
+            transmittance *= exp(-density * stepSize * CLOUD_ABSORPTION);
+        }
+
+        travelled += stepSize;
+    }
+
+    vec3 finalColor = inColor.rgb * transmittance + accumulatedLight;
+    return vec4(clamp(finalColor, 0.0, 1.0), inColor.a);
 }
 
 void main() {
