@@ -59,7 +59,7 @@ class Clouds {
     float scattering = 0.85f;
     float phase = 0.55f;
     float clusterStrength = 0.5f;
-    int primaryStepCount = 48;
+    int primaryStepCount = 12;
     int lightStepCount = 6;
     float lightStepMultiplier = 1.6f;
     float minStepLength = 0.05f;

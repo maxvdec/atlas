@@ -272,7 +272,7 @@ class MainScene : public Scene {
         atmosphere.clouds->density = 0.3f;
         atmosphere.clouds->densityMultiplier = 0.8f;
         atmosphere.clouds->absorption = 0.1;
-        atmosphere.clouds->primaryStepCount = 32;
+        atmosphere.clouds->primaryStepCount = 4;
         // atmosphere.clouds->clusterStrength = 0.8f;
         atmosphere.clouds->size = {30.0f, 10.0f, 30.0f};
         atmosphere.clouds->wind = {1.f, 0.0f, 0.02f};
