@@ -8,5 +8,6 @@ var searchData=
   ['workspace_5',['Workspace',['../class_workspace.html#a367513b6cde02b96086ccd2fc7e43f8a',1,'Workspace']]],
   ['worldspacetomodelspace_6',['worldSpaceToModelSpace',['../class_body.html#a44cee98c8d4b176ed3ac8918526df2f3',1,'Body']]],
   ['worley_7',['worley',['../class_noise.html#a38beb9ad307c49b826290b6ad2f486cb',1,'Noise']]],
-  ['worleynoise_8',['WorleyNoise',['../class_worley_noise.html#a1ff1fe05562ffd4dcbd13a07d2c79ad4',1,'WorleyNoise']]]
+  ['worleynoise_8',['WorleyNoise',['../class_worley_noise.html#a1ff1fe05562ffd4dcbd13a07d2c79ad4',1,'WorleyNoise']]],
+  ['worleynoise3d_9',['WorleyNoise3D',['../class_worley_noise3_d.html#a61890bb518ddbcfa539134c9546b3b37',1,'WorleyNoise3D']]]
 ];

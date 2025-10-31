@@ -20,6 +20,7 @@ var hierarchy =
     [ "Character", "struct_character.html", null ],
     [ "CheckerTile", "struct_checker_tile.html", null ],
     [ "ChromaticAberrationParameters", "struct_chromatic_aberration_parameters.html", null ],
+    [ "Clouds", "class_clouds.html", null ],
     [ "CollisionPair", "struct_collision_pair.html", null ],
     [ "Color", "struct_color.html", null ],
     [ "ColorCorrectionParameters", "struct_color_correction_parameters.html", null ],
@@ -125,5 +126,6 @@ var hierarchy =
     [ "Window", "class_window.html", null ],
     [ "WindowConfiguration", "struct_window_configuration.html", null ],
     [ "Workspace", "class_workspace.html", null ],
-    [ "WorleyNoise", "class_worley_noise.html", null ]
+    [ "WorleyNoise", "class_worley_noise.html", null ],
+    [ "WorleyNoise3D", "class_worley_noise3_d.html", null ]
 ];

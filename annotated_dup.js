@@ -20,6 +20,7 @@ var annotated_dup =
     [ "CheckerTile", "struct_checker_tile.html", "struct_checker_tile" ],
     [ "ChromaticAberration", "class_chromatic_aberration.html", "class_chromatic_aberration" ],
     [ "ChromaticAberrationParameters", "struct_chromatic_aberration_parameters.html", "struct_chromatic_aberration_parameters" ],
+    [ "Clouds", "class_clouds.html", "class_clouds" ],
     [ "CollisionPair", "struct_collision_pair.html", "struct_collision_pair" ],
     [ "Color", "struct_color.html", "struct_color" ],
     [ "ColorCorrection", "class_color_correction.html", "class_color_correction" ],
@@ -117,5 +118,6 @@ var annotated_dup =
     [ "Window", "class_window.html", "class_window" ],
     [ "WindowConfiguration", "struct_window_configuration.html", "struct_window_configuration" ],
     [ "Workspace", "class_workspace.html", "class_workspace" ],
-    [ "WorleyNoise", "class_worley_noise.html", "class_worley_noise" ]
+    [ "WorleyNoise", "class_worley_noise.html", "class_worley_noise" ],
+    [ "WorleyNoise3D", "class_worley_noise3_d.html", "class_worley_noise3_d" ]
 ];

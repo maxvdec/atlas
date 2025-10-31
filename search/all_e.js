@@ -8,7 +8,7 @@ var searchData=
   ['of_20a_20compound_20object_5',['Example of a compound object',['../class_compound_object.html#compound-object-example',1,'']]],
   ['of_20a_20coreobject_6',['Example of a CoreObject',['../class_core_object.html#core-object-example',1,'']]],
   ['of_20camera_20control_7',['Example of camera control',['../class_camera.html#example-camera-control',1,'']]],
-  ['offset_8',['offset',['../struct_layout_descriptor.html#acbc4d2b0de323299b2cca4b0bd89d5e7',1,'LayoutDescriptor']]],
+  ['offset_8',['offset',['../struct_layout_descriptor.html#acbc4d2b0de323299b2cca4b0bd89d5e7',1,'LayoutDescriptor::offset'],['../class_clouds.html#a89db40a15eb1f1168fbafad6c602d23b',1,'Clouds::offset']]],
   ['olive_9',['olive',['../struct_color.html#a6def3f549161bab580196c9cb7f7fb05',1,'Color']]],
   ['onkeypress_10',['onKeyPress',['../class_interactive.html#a14a1304885e42e3b777106c9e09fe226',1,'Interactive']]],
   ['onkeyrelease_11',['onKeyRelease',['../class_interactive.html#a7987c4b042c12a440efbeb9dd54e7d80',1,'Interactive']]],
