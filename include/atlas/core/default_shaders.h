@@ -161,6 +161,7 @@ uniform Environment environment;
 uniform mat4 invProjectionMatrix;
 uniform mat4 projectionMatrix;
 uniform mat4 viewMatrix;
+uniform mat4 invViewMatrix;
 uniform mat4 lastViewMatrix;
 
 uniform float nearPlane = 0.1;
@@ -171,6 +172,13 @@ uniform float focusRange;
 
 uniform int maxMipLevel;
 uniform float deltaTime;
+uniform float time;
+
+uniform sampler3D cloudsTexture;
+uniform vec3 cloudPosition;
+uniform vec3 cloudSize;
+uniform vec3 cameraPosition;
+uniform int hasClouds;
 
 vec4 sampleColor(vec2 uv) {
     for (int i = 0; i < EffectCount; i++) {
@@ -530,14 +538,65 @@ vec4 mapToLUT(vec4 color) {
     float sliceHigh = min(sliceLow + 1.0, lutSize - 1.0);
     float t = blueIndex - sliceLow;
 
- 
+    vec3 lowColor = sampleLUT(color.rgb, sliceLow, sliceSize, slicePixelOffset);
+    vec3 highColor = sampleLUT(color.rgb, sliceHigh, sliceSize, slicePixelOffset);
 
-vec3 lowColor = sampleLUT(color.rgb, sliceLow, sliceSize, slicePixelOffset);
-vec3 highColor = sampleLUT(color.rgb, sliceHigh, sliceSize, slicePixelOffset);
+    vec3 finalRGB = mix(lowColor, highColor, t);
 
-vec3 finalRGB = mix(lowColor, highColor, t);
+    return vec4(finalRGB, color.a);
+}
 
-return vec4(finalRGB, color.a);
+vec2 rayBoxDst(vec3 boundsMin, vec3 boundsMax, vec3 rayOrigin, vec3 rayDir) {
+    vec3 t0 = (boundsMin - rayOrigin) / rayDir;
+    vec3 t1 = (boundsMax - rayOrigin) / rayDir;
+    vec3 tMin = min(t0, t1);
+    vec3 tMax = max(t0, t1);
+
+    float dstA = max(max(tMin.x, tMin.y), tMin.z);
+    float dstB = min(tMax.x, min(tMax.y, tMax.z));
+
+    float dstToContainer = max(0.0, dstA);
+    float dstInsideContainer = max(0.0, dstB - dstToContainer);
+
+    return vec2(dstToContainer, dstInsideContainer);
+}
+
+vec4 cloudRendering(vec4 inColor) {
+    if (hasClouds != 1) {
+        return inColor;
+    }
+
+    float nonLinearDepth = hasDepthTexture == 1
+                               ? texture(DepthTexture, TexCoord).r
+                               : 1.0;
+    bool depthAvailable = hasDepthTexture == 1 && nonLinearDepth < 1.0;
+    float depthSample = depthAvailable ? nonLinearDepth : 1.0;
+
+
+    vec3 rayOrigin = cameraPosition;
+
+    vec4 clipSpace = vec4(TexCoord * 2.0 - 1.0, depthSample * 2.0 - 1.0, 1.0);
+    vec4 viewSpace = invProjectionMatrix * clipSpace;
+    viewSpace /= viewSpace.w;
+    vec3 worldPos = (invViewMatrix * vec4(viewSpace.xyz, 1.0)).xyz;
+
+    vec3 rayDir = normalize(worldPos - rayOrigin);
+
+    float sceneDistance = depthAvailable ? length(worldPos - rayOrigin) : 1e6;
+
+    vec3 boundsMin = cloudPosition - cloudSize * 0.5;
+    vec3 boundsMax = cloudPosition + cloudSize * 0.5;
+    vec2 rayBoxInfo = rayBoxDst(boundsMin, boundsMax, rayOrigin, rayDir);
+
+    float distToContainer = rayBoxInfo.x;
+    float distInContainer = rayBoxInfo.y;
+    bool hitBox = distInContainer > 0.0 && (distToContainer + 1e-4) < sceneDistance;
+
+    if (hitBox) {
+        return vec4(1.0, 0.0, 0.0, 1.0);
+    }
+
+    return inColor;
 }
 
 void main() {
@@ -570,6 +629,10 @@ void main() {
     }
 
     color = applyFXAA(Texture, TexCoord);
+    color = cloudRendering(color);
+
+    FragColor = color;
+    return;
 
     color = applyColorEffects(color);
 
@@ -599,6 +662,7 @@ void main() {
     }
 
     hdrColor = mapToLUT(hdrColor);
+    
 
     hdrColor.rgb = acesToneMapping(hdrColor.rgb);
 
@@ -3486,14 +3550,12 @@ uniform float sunSizeMultiplier;
 uniform float moonSizeMultiplier;
 uniform float starDensity;
 
-// Optimized hash function
 float hash21(vec2 p) {
     p = fract(p * vec2(123.34, 456.21));
     p += dot(p, p + 45.32);
     return fract(p.x * p.y);
 }
 
-// Simplified noise - removed unnecessary smoothing
 float valueNoise(vec2 p) {
     vec2 i = floor(p);
     vec2 f = fract(p);
@@ -3507,20 +3569,17 @@ float valueNoise(vec2 p) {
     return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
 }
 
-// Reduced from 4 to 2 octaves for noise
 float layeredNoise(vec2 p) {
     float total = valueNoise(p) + valueNoise(p * 2.0) * 0.5;
     return total / 1.5;
 }
 
-// Optimized hash for stars
 float hash13(vec3 p) {
     p = fract(p * 443.897);
     p += dot(p, p.yzx + 19.19);
     return fract((p.x + p.y) * p.z);
 }
 
-// Heavily optimized star generation - reduced loop from 27 to 1 iteration
 vec3 generateStars(vec3 dir, float density, float nightFactor) {
     if (density <= 0.0 || nightFactor <= 0.0) {
         return vec3(0.0);
@@ -3530,7 +3589,6 @@ vec3 generateStars(vec3 dir, float density, float nightFactor) {
     vec3 cell = floor(starSpace);
     vec3 localPos = fract(starSpace);
     
-    // Only check current cell instead of 27 neighbors
     float rand = hash13(cell);
     
     if (rand < density * 0.3) {
@@ -3548,7 +3606,6 @@ vec3 generateStars(vec3 dir, float density, float nightFactor) {
         float twinkle = 0.8 + 0.2 * sin(hash13(cell + vec3(67.89, 1.23, 45.67)) * 100.0);
         star *= twinkle * nightFactor;
         
-        // Simplified color variation
         vec3 starColor = vec3(1.0);
         if (rand > 0.9) starColor = vec3(0.8, 0.9, 1.0);
         else if (rand > 0.8) starColor = vec3(1.0, 0.9, 0.8);
@@ -3559,27 +3616,22 @@ vec3 generateStars(vec3 dir, float density, float nightFactor) {
     return vec3(0.0);
 }
 
-// Optimized moon texture - reduced complexity and loop iterations
 vec3 generateMoonTexture(vec2 uv, float distanceFromCenter, vec3 tintColor) {
-    // Simplified rotation
     float angle = 0.5;
     float ca = cos(angle);
     float sa = sin(angle);
     uv = vec2(ca * uv.x - sa * uv.y, sa * uv.x + ca * uv.y);
     
-    // Reduced noise calls
     float largeFeatures = valueNoise(uv * 2.0);
     largeFeatures = smoothstep(0.3, 0.7, largeFeatures);
     
     float mediumCraters = valueNoise(uv * 8.0);
     
-    // Reduced crater loop from 9 to 4 iterations
     vec2 craterUV = uv * 6.0;
     vec2 craterCell = floor(craterUV);
     vec2 craterLocal = fract(craterUV);
     
     float craters = 1.0;
-    // Only check 4 nearest neighbors instead of 9
     for (int i = 0; i < 4; i++) {
         vec2 neighbor = vec2(float(i % 2), float(i / 2));
         vec2 cellPoint = craterCell + neighbor;
@@ -3600,7 +3652,6 @@ vec3 generateMoonTexture(vec2 uv, float distanceFromCenter, vec3 tintColor) {
     
     float intensity = mix(0.30, 0.75, surface);
     
-    // Simplified limb darkening
     float limb = 1.0 - smoothstep(0.6, 1.0, distanceFromCenter);
     intensity *= 0.4 + 0.6 * limb;
     intensity *= 1.3;
@@ -3622,14 +3673,12 @@ void main()
         
         float nightFactor = smoothstep(0.15, -0.2, sunDirection.y);
         
-        // Stars
         if (starDensity > 0.0) {
             color += generateStars(dir, starDensity, nightFactor);
         }
         
         float sunHorizonFade = smoothstep(-0.15, 0.05, sunDirection.y);
         
-        // Sun rendering
         if (sunDirection.y > -0.15) {
             float sizeAdjust = 1.0 - (sunSizeMultiplier - 1.0) * 0.001;
             float sunSize = 0.9995 * sizeAdjust;
@@ -3649,7 +3698,6 @@ void main()
         
         float moonHorizonFade = smoothstep(-0.15, 0.05, moonDirection.y);
         
-        // Moon rendering
         if (moonDirection.y > -0.15) {
             float sizeAdjust = 1.0 - (moonSizeMultiplier - 1.0) * 0.001;
             float moonSize = 0.9996 * sizeAdjust;
@@ -3688,7 +3736,6 @@ void main()
             color += moonColor.rgb * (moonGlow * 0.3 + moonHalo) * moonHorizonFade;
         }
         
-        // Sky tinting
         if (sunDirection.y > -0.1 && sunTintStrength > 0.0) {
             float sunSkyInfluence = smoothstep(0.7, 0.95, sunDot) * 
                                    smoothstep(-0.1, 0.2, sunDirection.y);

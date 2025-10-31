@@ -156,6 +156,7 @@ uniform Environment environment;
 uniform mat4 invProjectionMatrix;
 uniform mat4 projectionMatrix;
 uniform mat4 viewMatrix;
+uniform mat4 invViewMatrix;
 uniform mat4 lastViewMatrix;
 
 uniform float nearPlane = 0.1;
@@ -166,6 +167,13 @@ uniform float focusRange;
 
 uniform int maxMipLevel;
 uniform float deltaTime;
+uniform float time;
+
+uniform sampler3D cloudsTexture;
+uniform vec3 cloudPosition;
+uniform vec3 cloudSize;
+uniform vec3 cameraPosition;
+uniform int hasClouds;
 
 vec4 sampleColor(vec2 uv) {
     for (int i = 0; i < EffectCount; i++) {
@@ -525,14 +533,65 @@ vec4 mapToLUT(vec4 color) {
     float sliceHigh = min(sliceLow + 1.0, lutSize - 1.0);
     float t = blueIndex - sliceLow;
 
- 
+    vec3 lowColor = sampleLUT(color.rgb, sliceLow, sliceSize, slicePixelOffset);
+    vec3 highColor = sampleLUT(color.rgb, sliceHigh, sliceSize, slicePixelOffset);
 
-vec3 lowColor = sampleLUT(color.rgb, sliceLow, sliceSize, slicePixelOffset);
-vec3 highColor = sampleLUT(color.rgb, sliceHigh, sliceSize, slicePixelOffset);
+    vec3 finalRGB = mix(lowColor, highColor, t);
 
-vec3 finalRGB = mix(lowColor, highColor, t);
+    return vec4(finalRGB, color.a);
+}
 
-return vec4(finalRGB, color.a);
+vec2 rayBoxDst(vec3 boundsMin, vec3 boundsMax, vec3 rayOrigin, vec3 rayDir) {
+    vec3 t0 = (boundsMin - rayOrigin) / rayDir;
+    vec3 t1 = (boundsMax - rayOrigin) / rayDir;
+    vec3 tMin = min(t0, t1);
+    vec3 tMax = max(t0, t1);
+
+    float dstA = max(max(tMin.x, tMin.y), tMin.z);
+    float dstB = min(tMax.x, min(tMax.y, tMax.z));
+
+    float dstToContainer = max(0.0, dstA);
+    float dstInsideContainer = max(0.0, dstB - dstToContainer);
+
+    return vec2(dstToContainer, dstInsideContainer);
+}
+
+vec4 cloudRendering(vec4 inColor) {
+    if (hasClouds != 1) {
+        return inColor;
+    }
+
+    float nonLinearDepth = hasDepthTexture == 1
+                               ? texture(DepthTexture, TexCoord).r
+                               : 1.0;
+    bool depthAvailable = hasDepthTexture == 1 && nonLinearDepth < 1.0;
+    float depthSample = depthAvailable ? nonLinearDepth : 1.0;
+
+
+    vec3 rayOrigin = cameraPosition;
+
+    vec4 clipSpace = vec4(TexCoord * 2.0 - 1.0, depthSample * 2.0 - 1.0, 1.0);
+    vec4 viewSpace = invProjectionMatrix * clipSpace;
+    viewSpace /= viewSpace.w;
+    vec3 worldPos = (invViewMatrix * vec4(viewSpace.xyz, 1.0)).xyz;
+
+    vec3 rayDir = normalize(worldPos - rayOrigin);
+
+    float sceneDistance = depthAvailable ? length(worldPos - rayOrigin) : 1e6;
+
+    vec3 boundsMin = cloudPosition - cloudSize * 0.5;
+    vec3 boundsMax = cloudPosition + cloudSize * 0.5;
+    vec2 rayBoxInfo = rayBoxDst(boundsMin, boundsMax, rayOrigin, rayDir);
+
+    float distToContainer = rayBoxInfo.x;
+    float distInContainer = rayBoxInfo.y;
+    bool hitBox = distInContainer > 0.0 && (distToContainer + 1e-4) < sceneDistance;
+
+    if (hitBox) {
+        return vec4(1.0, 0.0, 0.0, 1.0);
+    }
+
+    return inColor;
 }
 
 void main() {
@@ -565,6 +624,10 @@ void main() {
     }
 
     color = applyFXAA(Texture, TexCoord);
+    color = cloudRendering(color);
+
+    FragColor = color;
+    return;
 
     color = applyColorEffects(color);
 
@@ -594,6 +657,7 @@ void main() {
     }
 
     hdrColor = mapToLUT(hdrColor);
+    
 
     hdrColor.rgb = acesToneMapping(hdrColor.rgb);
 
