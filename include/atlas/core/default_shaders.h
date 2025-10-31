@@ -361,15 +361,17 @@ vec4 applyColorEffects(vec4 color) {
             cc.tint = EffectFloat6[i];
             color = applyColorCorrection(color, cc);
         } else if (Effects[i] == EFFECT_POSTERIZATION) {
-            float levels = EffectFloat1[i];
+            float levels = max(EffectFloat1[i], 1.0);
             float grayscale = max(color.r, max(color.g, color.b));
-            float lower = floor(grayscale * levels) / levels;
-            float lowerDiff = abs(grayscale - lower);
-            float upper = ceil(grayscale * levels) / levels;
-            float upperDiff = abs(upper - grayscale);
-            float level = lowerDiff <= upperDiff ? lower : upper;
-            float adjustment = level / grayscale;
-            color = adjustment * color;
+            if (grayscale > 1e-4) {
+                float lower = floor(grayscale * levels) / levels;
+                float lowerDiff = abs(grayscale - lower);
+                float upper = ceil(grayscale * levels) / levels;
+                float upperDiff = abs(upper - grayscale);
+                float level = lowerDiff <= upperDiff ? lower : upper;
+                float adjustment = level / max(grayscale, 1e-4);
+                color = adjustment * color;
+            }
         } else if (Effects[i] == EFFECT_FILM_GRAIN) {
             float amount = EffectFloat1[i];
 
@@ -604,37 +606,30 @@ float calculateCloudDensity(vec3 worldPos) {
     vec3 noiseCoord = fract(uvw * scale + cloudOffset);
 
     vec4 shape = texture(cloudsTexture, noiseCoord);
-    float baseShape = shape.r;
-    float ridge = shape.g;
-    float turbulence = shape.b;
-    float combined = shape.a;
-
+    
     float cluster = saturate(cloudClusterStrength);
 
     float lowerFade = smoothstep(-0.95, -0.6, localPos.y);
     float upperFade = 1.0 - smoothstep(0.35, 0.95, localPos.y);
-    float verticalMask = clamp(lowerFade * upperFade, 0.0, 1.0);
+    float verticalMask = lowerFade * upperFade;
 
     float coverageThreshold = mix(0.6, 0.28, cluster);
     float coverageSoftness = mix(0.22, 0.34, cluster);
-    float coverageNoise = mix(baseShape, combined, 0.4 + cluster * 0.35);
+    float coverageNoise = mix(shape.r, shape.a, 0.4 + cluster * 0.35);
     float coverage = smoothstep(coverageThreshold,
                                 coverageThreshold + coverageSoftness,
                                 coverageNoise);
     coverage = pow(coverage, mix(2.0, 0.7, cluster));
 
-    float detailPrimary = smoothstep(0.25, 0.75, ridge);
-    float detailSecondary = smoothstep(0.2, 0.9, combined);
-    float detail = mix(detailPrimary, detailSecondary, 0.55);
+    float detail = mix(smoothstep(0.25, 0.75, shape.g), 
+                       smoothstep(0.2, 0.9, shape.a), 0.55);
     detail = pow(detail, mix(1.6, 0.85, cluster));
 
-    float cavityNoise = smoothstep(0.22, 0.85, turbulence);
-    float gapStrength = mix(0.25, 0.7, cluster);
-    float gapMask = clamp(1.0 - cavityNoise * gapStrength, 0.0, 1.0);
+    float cavityNoise = smoothstep(0.22, 0.85, shape.b);
+    float gapMask = clamp(1.0 - cavityNoise * mix(0.25, 0.7, cluster), 0.0, 1.0);
 
     float density = coverage * mix(detail, 1.0, cluster * 0.35);
     density = max(density * gapMask * verticalMask - 0.02, 0.0);
-
     density *= max(cloudDensityMultiplier, 0.0);
 
     return density;
@@ -735,14 +730,26 @@ vec4 cloudRendering(vec4 inColor) {
             break;
         }
 
+        float remainingDistance = dstLimit - travelled;
+        if (remainingDistance <= 1e-5) {
+            break;
+        }
+
         float current = distToContainer + travelled;
         vec3 samplePos = rayOrigin + rayDir * current;
 
         float density = calculateCloudDensity(samplePos);
         if (density > 1e-4) {
-            float sampleWeight = density * stepSize;
+            float adaptiveStep = stepSize;
+            if (density < 0.02) {
+                adaptiveStep = stepSize * 2.5;
+            } else if (density < 0.05) {
+                adaptiveStep = stepSize * 1.6;
+            }
+            adaptiveStep = min(adaptiveStep, remainingDistance);
+            float sampleWeight = density * adaptiveStep;
 
-            float lightTrans = sampleSunTransmittance(samplePos, stepSize);
+            float lightTrans = sampleSunTransmittance(samplePos, adaptiveStep);
             float cosTheta = clamp(dot(rayDir, -sunDir), -1.0, 1.0);
             float phase = henyeyGreenstein(cosTheta, phaseG);
 
@@ -753,10 +760,14 @@ vec4 cloudRendering(vec4 inColor) {
                             sampleWeight * cloudScattering;
 
             accumulatedLight += lighting * transmittance;
-            transmittance *= exp(-density * stepSize * cloudAbsorption);
+            transmittance *= exp(-density * adaptiveStep * cloudAbsorption);
+            travelled += adaptiveStep;
+            continue;
         }
 
-        travelled += stepSize;
+        float emptyAdvance = min(stepSize * 2.25, remainingDistance);
+        float minAdvance = min(stepSize * 0.5, remainingDistance);
+        travelled += max(emptyAdvance, minAdvance);
     }
 
     vec3 finalColor = inColor.rgb * transmittance + accumulatedLight;
@@ -793,10 +804,6 @@ void main() {
     }
 
     color = applyFXAA(Texture, TexCoord);
-    color = cloudRendering(color);
-
-    FragColor = color;
-    return;
 
     color = applyColorEffects(color);
 
@@ -807,7 +814,9 @@ void main() {
         float mip = coc * float(maxMipLevel) * 1.2;
         vec3 blurred = applyColorEffects(textureLod(Texture, TexCoord, mip)).rgb;
         vec3 sharp = color.rgb;
-        color = vec4(mix(sharp, blurred, coc), 1.0);
+        color = cloudRendering(color);
+    } else {
+        color = cloudRendering(color);
     }
 
     vec4 hdrColor;
@@ -823,12 +832,14 @@ void main() {
         if (hasVolumetricLightTexture == 1) {
             hdrColor += texture(VolumetricLightTexture, TexCoord);
         }
+
     }
 
     hdrColor = mapToLUT(hdrColor);
     
 
     hdrColor.rgb = acesToneMapping(hdrColor.rgb);
+
 
     float fogFactor = 1.0 - exp(-distance * environment.fogIntensity);
     vec3 finalColor = mix(hdrColor.rgb, environment.fogColor, fogFactor);
