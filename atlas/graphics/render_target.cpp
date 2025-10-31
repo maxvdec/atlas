@@ -653,9 +653,10 @@ void RenderTarget::render(float dt) {
         // invProjectionMatrix already uploaded above; no need to resend here.
 
         if (scene->atmosphere.clouds) {
-            const glm::vec3 cloudSize = scene->atmosphere.clouds->size.toGlm();
-            const glm::vec3 cloudPos =
-                scene->atmosphere.clouds->position.toGlm();
+            const Clouds &cloudSettings = *scene->atmosphere.clouds;
+
+            const glm::vec3 cloudSize = cloudSettings.size.toGlm();
+            const glm::vec3 cloudPos = cloudSettings.position.toGlm();
 
             glm::vec3 sunDir = scene->atmosphere.getSunAngle().toGlm();
             float sunLength = glm::length(sunDir);
@@ -675,24 +676,36 @@ void RenderTarget::render(float dt) {
                                 ambientIntensity;
 
             glActiveTexture(GL_TEXTURE15);
-            glBindTexture(GL_TEXTURE_3D,
-                          scene->atmosphere.clouds->getCloudTexture(128));
+            glBindTexture(GL_TEXTURE_3D, cloudSettings.getCloudTexture(128));
             obj->shaderProgram.setUniform1i("cloudsTexture", 15);
             obj->shaderProgram.setUniform3f("cloudSize", cloudSize.x,
                                             cloudSize.y, cloudSize.z);
             obj->shaderProgram.setUniform3f("cloudPosition", cloudPos.x,
                                             cloudPos.y, cloudPos.z);
-            obj->shaderProgram.setUniform1f("cloudScale",
-                                            scene->atmosphere.clouds->scale);
-            obj->shaderProgram.setUniform3f("cloudOffset",
-                                            scene->atmosphere.clouds->offset.x,
-                                            scene->atmosphere.clouds->offset.y,
-                                            scene->atmosphere.clouds->offset.z);
+            obj->shaderProgram.setUniform1f("cloudScale", cloudSettings.scale);
+            obj->shaderProgram.setUniform3f(
+                "cloudOffset", cloudSettings.offset.x, cloudSettings.offset.y,
+                cloudSettings.offset.z);
             obj->shaderProgram.setUniform1f("cloudDensityThreshold",
-                                            scene->atmosphere.clouds->density);
-            obj->shaderProgram.setUniform1f(
-                "cloudDensityMultiplier",
-                scene->atmosphere.clouds->densityMultiplier);
+                                            cloudSettings.density);
+            obj->shaderProgram.setUniform1f("cloudDensityMultiplier",
+                                            cloudSettings.densityMultiplier);
+            obj->shaderProgram.setUniform1f("cloudAbsorption",
+                                            cloudSettings.absorption);
+            obj->shaderProgram.setUniform1f("cloudScattering",
+                                            cloudSettings.scattering);
+            obj->shaderProgram.setUniform1f("cloudPhaseG", cloudSettings.phase);
+            obj->shaderProgram.setUniform1f("cloudClusterStrength",
+                                            cloudSettings.clusterStrength);
+            obj->shaderProgram.setUniform1i(
+                "cloudPrimarySteps",
+                std::max(1, cloudSettings.primaryStepCount));
+            obj->shaderProgram.setUniform1i(
+                "cloudLightSteps", std::max(1, cloudSettings.lightStepCount));
+            obj->shaderProgram.setUniform1f("cloudLightStepMultiplier",
+                                            cloudSettings.lightStepMultiplier);
+            obj->shaderProgram.setUniform1f("cloudMinStepLength",
+                                            cloudSettings.minStepLength);
             obj->shaderProgram.setUniform3f("sunDirection", sunDir.x, sunDir.y,
                                             sunDir.z);
             obj->shaderProgram.setUniform3f(

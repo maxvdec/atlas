@@ -10,8 +10,6 @@
 #include "atlas/units.h"
 #include <hydra/atmosphere.h>
 
-Clouds::Clouds() {}
-
 Id Clouds::getCloudTexture(int res) const {
     if (cachedTextureId != 0 && cachedResolution == res) {
         return cachedTextureId;

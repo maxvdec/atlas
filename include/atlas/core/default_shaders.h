@@ -182,6 +182,14 @@ uniform float cloudScale;
 uniform vec3 cloudOffset;
 uniform float cloudDensityThreshold;
 uniform float cloudDensityMultiplier;
+uniform float cloudAbsorption;
+uniform float cloudScattering;
+uniform float cloudPhaseG;
+uniform float cloudClusterStrength;
+uniform int cloudPrimarySteps;
+uniform int cloudLightSteps;
+uniform float cloudLightStepMultiplier;
+uniform float cloudMinStepLength;
 uniform vec3 sunDirection;
 uniform vec3 sunColor;
 uniform float sunIntensity;
@@ -601,25 +609,36 @@ float calculateCloudDensity(vec3 worldPos) {
     float turbulence = shape.b;
     float combined = shape.a;
 
-    float shapeMix = mix(baseShape, combined, 0.35);
-    shapeMix = mix(shapeMix, ridge, 0.25);
+    float cluster = saturate(cloudClusterStrength);
 
-    float threshold = mix(0.15, 0.85, saturate(cloudDensityThreshold));
-    float density = shapeMix - threshold;
-    density = max(density, 0.0);
-    density = pow(density, mix(1.05, 1.6, saturate(turbulence)));
-    density *= mix(0.7, 1.3, saturate(turbulence));
+    float lowerFade = smoothstep(-0.95, -0.6, localPos.y);
+    float upperFade = 1.0 - smoothstep(0.35, 0.95, localPos.y);
+    float verticalMask = clamp(lowerFade * upperFade, 0.0, 1.0);
+
+    float coverageThreshold = mix(0.6, 0.28, cluster);
+    float coverageSoftness = mix(0.22, 0.34, cluster);
+    float coverageNoise = mix(baseShape, combined, 0.4 + cluster * 0.35);
+    float coverage = smoothstep(coverageThreshold,
+                                coverageThreshold + coverageSoftness,
+                                coverageNoise);
+    coverage = pow(coverage, mix(2.0, 0.7, cluster));
+
+    float detailPrimary = smoothstep(0.25, 0.75, ridge);
+    float detailSecondary = smoothstep(0.2, 0.9, combined);
+    float detail = mix(detailPrimary, detailSecondary, 0.55);
+    detail = pow(detail, mix(1.6, 0.85, cluster));
+
+    float cavityNoise = smoothstep(0.22, 0.85, turbulence);
+    float gapStrength = mix(0.25, 0.7, cluster);
+    float gapMask = clamp(1.0 - cavityNoise * gapStrength, 0.0, 1.0);
+
+    float density = coverage * mix(detail, 1.0, cluster * 0.35);
+    density = max(density * gapMask * verticalMask - 0.02, 0.0);
+
     density *= max(cloudDensityMultiplier, 0.0);
 
     return density;
 }
-
-const int PRIMARY_STEPS = 64;
-const int LIGHT_STEPS = 6;
-const float CLOUD_ABSORPTION = 1.1;
-const float CLOUD_SCATTERING = 0.85;
-const float CLOUD_PHASE_G = 0.55;
-const float LIGHT_STEP_MULT = 1.6;
 
 float sampleSunTransmittance(vec3 worldPos, float stepSize) {
     vec3 lightDir = -sunDirection;
@@ -633,17 +652,18 @@ float sampleSunTransmittance(vec3 worldPos, float stepSize) {
     float maxDistance = length(cloudSize) * 1.5;
     float travel = 0.0;
     float attenuation = 1.0;
-    float lightStep = stepSize * 1.5;
+    float lightStep = max(stepSize * cloudLightStepMultiplier, cloudMinStepLength);
 
-    for (int i = 0; i < LIGHT_STEPS && attenuation > 0.05; ++i) {
+    int steps = max(cloudLightSteps, 1);
+    for (int i = 0; i < steps && attenuation > 0.05; ++i) {
         travel += lightStep;
         if (travel > maxDistance)
             break;
 
         vec3 samplePos = worldPos + lightDir * travel;
         float density = calculateCloudDensity(samplePos);
-        attenuation *= exp(-density * lightStep * CLOUD_ABSORPTION);
-        lightStep *= LIGHT_STEP_MULT;
+        attenuation *= exp(-density * lightStep * cloudAbsorption);
+        lightStep = max(lightStep * cloudLightStepMultiplier, cloudMinStepLength);
     }
 
     return attenuation;
@@ -688,11 +708,13 @@ vec4 cloudRendering(vec4 inColor) {
         return inColor;
     }
 
-    float minStep = length(cloudSize) / 120.0;
-    float stepSize = max(dstLimit / float(PRIMARY_STEPS), minStep);
+    int steps = max(cloudPrimarySteps, 8);
+    float baseStep = dstLimit / float(steps);
+    float stepSize = max(baseStep, cloudMinStepLength);
 
-    float jitter = hashNoise(vec3(TexCoord, time));
-    float travelled = jitter * stepSize;
+    float jitter = hashNoise(vec3(TexCoord, time)) - 0.5;
+    float travelled = clamp(jitter, -0.35, 0.35) * stepSize;
+    travelled = max(travelled, 0.0);
 
     vec3 accumulatedLight = vec3(0.0);
     float transmittance = 1.0;
@@ -705,7 +727,9 @@ vec4 cloudRendering(vec4 inColor) {
         sunDir = vec3(0.0, 1.0, 0.0);
     }
 
-    for (int step = 0; step < PRIMARY_STEPS && travelled < dstLimit;
+    float phaseG = clamp(cloudPhaseG, -0.95, 0.95);
+
+    for (int step = 0; step < steps && travelled < dstLimit;
          ++step) {
         if (transmittance <= 0.01) {
             break;
@@ -720,16 +744,16 @@ vec4 cloudRendering(vec4 inColor) {
 
             float lightTrans = sampleSunTransmittance(samplePos, stepSize);
             float cosTheta = clamp(dot(rayDir, -sunDir), -1.0, 1.0);
-            float phase = henyeyGreenstein(cosTheta, CLOUD_PHASE_G);
+            float phase = henyeyGreenstein(cosTheta, phaseG);
 
             vec3 directLight = sunColor * sunIntensity * lightTrans * phase;
             vec3 ambientLight = cloudAmbientColor;
 
             vec3 lighting = (ambientLight * 0.35 + directLight) *
-                            sampleWeight * CLOUD_SCATTERING;
+                            sampleWeight * cloudScattering;
 
             accumulatedLight += lighting * transmittance;
-            transmittance *= exp(-density * stepSize * CLOUD_ABSORPTION);
+            transmittance *= exp(-density * stepSize * cloudAbsorption);
         }
 
         travelled += stepSize;

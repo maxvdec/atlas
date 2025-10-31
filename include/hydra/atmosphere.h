@@ -45,7 +45,7 @@ class WorleyNoise3D {
 
 class Clouds {
   public:
-    Clouds();
+    Clouds(int frequency, int divisions) : worleyNoise(frequency, divisions) {};
 
     Id getCloudTexture(int res) const;
 
@@ -55,6 +55,15 @@ class Clouds {
     Position3d offset = {0.0f, 0.0f, 0.0f};
     float density = 0.45f;
     float densityMultiplier = 1.5f;
+    float absorption = 1.1f;
+    float scattering = 0.85f;
+    float phase = 0.55f;
+    float clusterStrength = 0.5f;
+    int primaryStepCount = 48;
+    int lightStepCount = 6;
+    float lightStepMultiplier = 1.6f;
+    float minStepLength = 0.05f;
+    Magnitude3d wind = {0.02f, 0.0f, 0.01f};
 
   private:
     WorleyNoise3D worleyNoise = WorleyNoise3D(4, 6);
@@ -106,9 +115,9 @@ class Atmosphere {
             timeOfDay = hours;
     }
 
-    inline void addClouds() {
+    inline void addClouds(int frequency = 4, int divisions = 6) {
         if (!clouds) {
-            clouds = std::make_shared<Clouds>();
+            clouds = std::make_shared<Clouds>(Clouds(frequency, divisions));
         }
     }
 
