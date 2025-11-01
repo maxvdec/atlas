@@ -3041,6 +3041,50 @@ void main() {
 }
 )";
 
+static const char* FLUID_VERT = R"(
+#version 410 core
+layout(location = 0) in vec3 aPos;
+layout(location = 1) in vec4 aColor;
+layout(location = 2) in vec2 aTexCoord;
+layout(location = 3) in vec3 aNormal;
+layout(location = 4) in vec3 aTangent;
+layout(location = 5) in vec3 aBitangent;
+layout(location = 6) in mat4 instanceModel;
+
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+uniform bool isInstanced = true;
+
+out vec4 outColor;
+out vec2 TexCoord;
+out vec3 Normal;
+out vec3 FragPos;
+out mat3 TBN;
+
+void main() {
+    mat4 modelMatrix = model;
+    if (isInstanced) {
+        modelMatrix = instanceModel;
+    }
+
+    mat4 mvp = projection * view * modelMatrix;
+    gl_Position = mvp * vec4(aPos, 1.0);
+
+    FragPos = vec3(modelMatrix * vec4(aPos, 1.0));
+    TexCoord = aTexCoord;
+    outColor = aColor;
+
+    mat3 normalMatrix = transpose(inverse(mat3(modelMatrix)));
+    Normal = normalize(normalMatrix * aNormal);
+    vec3 N = Normal;
+    vec3 T = normalize(normalMatrix * aTangent);
+    vec3 B = normalize(normalMatrix * aBitangent);
+    TBN = mat3(T, B, N);
+}
+
+)";
+
 static const char* TERRAIN_EVAL_TESE = R"(
 #version 410 core
 layout(quads, fractional_odd_spacing, ccw) in;
@@ -3110,6 +3154,23 @@ void main() {
     gl_Position = vec4(aPos, 1.0);
     TexCoord = aTexCoord;
 }
+)";
+
+static const char* FLUID_FRAG = R"(
+#version 410 core
+layout(location = 0) out vec4 fragColor;
+layout(location = 1) out vec4 brightColor;
+
+in vec2 TexCoord;
+in vec3 FragPos;
+in vec3 Normal;
+in vec4 outColor;
+in mat3 TBN;
+
+void main() {
+    fragColor = vec4(1.0, 0.0, 0.0, 1.0);
+}
+
 )";
 
 static const char* BLINN_PHONG_FRAG = R"(

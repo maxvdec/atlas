@@ -13,6 +13,7 @@
 #include "aurora/procedural.h"
 #include "aurora/terrain.h"
 #include "hydra/atmosphere.h"
+#include "hydra/fluid.h"
 #include <iostream>
 #include <memory>
 
@@ -77,7 +78,7 @@ class BackpackAttach : public Component {
 
 class WaterPot : public CompoundObject {
     CoreObject pot;
-    CoreObject water;
+    Fluid water;
 
   public:
     void init() override {
@@ -95,10 +96,9 @@ class WaterPot : public CompoundObject {
         potUp.move({0.5f, 0.0f, 0.5f});
         this->addObject(&pot);
 
-        water = createBox({0.9f, 0.1f, 0.9f}, Color(0.2f, 0.4f, 0.8f, 1.0f));
-        water.setPosition({0.0f, 0.05f, 0.5f});
-        water.useDeferredRendering = false;
+        water = Fluid({0.9f, 0.9f});
         water.initialize();
+        water.setPosition({0.0f, 0.05f, 0.5f});
         this->addObject(&water);
     }
 };
@@ -198,7 +198,7 @@ class MainScene : public Scene {
         areaLight.position = {0.0f, 2.0f, 0.0};
         areaLight.rotate({0.0f, 90.0f, 0.0f});
         areaLight.castsBothSides = true;
-        //        this->addAreaLight(&areaLight);
+        this->addAreaLight(&areaLight);
         areaLight.createDebugObject();
         areaLight.addDebugObject(window);
 
@@ -260,7 +260,7 @@ class MainScene : public Scene {
         window.useDeferredRendering();
         atmosphere.enable();
         atmosphere.secondsPerHour = 4.f;
-        atmosphere.setTime(12.0);
+        atmosphere.setTime(0.0);
         atmosphere.cycle = false;
         atmosphere.useGlobalLight();
         atmosphere.castShadowsFromSunlight(4096);
