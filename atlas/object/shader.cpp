@@ -86,7 +86,7 @@ VertexShader VertexShader::fromDefaultShader(AtlasVertexShader shader) {
     case AtlasVertexShader::Depth: {
         vertexShader = VertexShader::fromSource(DEPTH_VERT);
         vertexShader.desiredAttributes = {0};
-        vertexShader.capabilities = {};
+        vertexShader.capabilities = {ShaderCapability::Instances};
         vertexShader.fromDefaultShaderType = shader;
         VertexShader::vertexShaderCache[shader] = vertexShader;
         break;
@@ -110,7 +110,7 @@ VertexShader VertexShader::fromDefaultShader(AtlasVertexShader shader) {
     case AtlasVertexShader::PointLightShadow: {
         vertexShader = VertexShader::fromSource(POINT_DEPTH_VERT);
         vertexShader.desiredAttributes = {0};
-        vertexShader.capabilities = {};
+        vertexShader.capabilities = {ShaderCapability::Instances};
         vertexShader.fromDefaultShaderType = shader;
         VertexShader::vertexShaderCache[shader] = vertexShader;
         break;
