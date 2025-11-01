@@ -133,16 +133,10 @@ void main() {
     vec4 sampledColor = enableTextures(TEXTURE_COLOR);
     bool hasColorTexture = sampledColor != vec4(-1.0);
 
-    vec4 baseColor;
-    if (useTexture && hasColorTexture) {
-        baseColor = hasColorTexture ? sampledColor : vec4(material.albedo, 1.0);
-        if (useColor) {
-            baseColor *= outColor;
-        }
-    } else if (useColor) {
-        baseColor = outColor;
-    } else {
-        baseColor = vec4(material.albedo, 1.0);
+    vec4 baseColor = vec4(material.albedo, 1.0);
+    vec4 albedoTex = enableTextures(TEXTURE_COLOR);
+    if (albedoTex != vec4(-1.0)) {
+        baseColor = albedoTex;
     }
 
     if (baseColor.a < 0.1)

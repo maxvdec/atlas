@@ -484,6 +484,12 @@ class CoreObject : public GameObject {
      */
     bool useDeferredRendering = true;
 
+    void disableDeferredRendering() {
+        useDeferredRendering = false;
+        this->shaderProgram = ShaderProgram::fromDefaultShaders(
+            AtlasVertexShader::Main, AtlasFragmentShader::Main);
+    }
+
     /**
      * @brief Creates and returns a new instance for instanced rendering.
      *
@@ -539,6 +545,7 @@ class CoreObject : public GameObject {
 
     inline void setShader(const ShaderProgram &shader) override {
         this->shaderProgram = shader;
+        this->initialize();
     }
 
     inline Position3d getPosition() const override { return position; }

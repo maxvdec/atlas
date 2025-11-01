@@ -2046,16 +2046,10 @@ void main() {
     vec4 sampledColor = enableTextures(TEXTURE_COLOR);
     bool hasColorTexture = sampledColor != vec4(-1.0);
 
-    vec4 baseColor;
-    if (useTexture && hasColorTexture) {
-        baseColor = hasColorTexture ? sampledColor : vec4(material.albedo, 1.0);
-        if (useColor) {
-            baseColor *= outColor;
-        }
-    } else if (useColor) {
-        baseColor = outColor;
-    } else {
-        baseColor = vec4(material.albedo, 1.0);
+    vec4 baseColor = vec4(material.albedo, 1.0);
+    vec4 albedoTex = enableTextures(TEXTURE_COLOR);
+    if (albedoTex != vec4(-1.0)) {
+        baseColor = albedoTex;
     }
 
     if (baseColor.a < 0.1)
@@ -3041,6 +3035,24 @@ void main() {
 }
 )";
 
+static const char* FLUID_VERT = R"(
+#version 410 core
+layout(location = 0) in vec3 aPos;
+layout(location = 1) in vec2 aTexCoord;
+
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+
+out vec2 TexCoord;
+
+void main() {
+    gl_Position = projection * view * model * vec4(aPos, 1.0);
+    TexCoord = aTexCoord;
+}
+
+)";
+
 static const char* TERRAIN_EVAL_TESE = R"(
 #version 410 core
 layout(quads, fractional_odd_spacing, ccw) in;
@@ -3110,6 +3122,19 @@ void main() {
     gl_Position = vec4(aPos, 1.0);
     TexCoord = aTexCoord;
 }
+)";
+
+static const char* FLUID_FRAG = R"(
+#version 410 core
+layout(location = 0) out vec4 fragColor;
+layout(location = 1) out vec4 brightColor;
+
+in vec2 TexCoord;
+
+void main() {
+    fragColor = vec4(1.0, 0.0, 0.0, 1.0);
+}
+
 )";
 
 static const char* BLINN_PHONG_FRAG = R"(

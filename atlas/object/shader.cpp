@@ -49,7 +49,7 @@ VertexShader VertexShader::fromDefaultShader(AtlasVertexShader shader) {
     }
     case AtlasVertexShader::Main: {
         vertexShader = VertexShader::fromSource(MAIN_VERT);
-        vertexShader.desiredAttributes = {0, 1, 2, 3};
+        vertexShader.desiredAttributes = {0, 1, 2, 3, 4, 5};
         vertexShader.capabilities = {
             ShaderCapability::Lighting,  ShaderCapability::Textures,
             ShaderCapability::Shadows,   ShaderCapability::EnvironmentMapping,
@@ -148,6 +148,15 @@ VertexShader VertexShader::fromDefaultShader(AtlasVertexShader shader) {
         vertexShader = VertexShader::fromSource(VOLUMETRIC_VERT);
         vertexShader.desiredAttributes = {};
         vertexShader.capabilities = {};
+        vertexShader.fromDefaultShaderType = shader;
+        VertexShader::vertexShaderCache[shader] = vertexShader;
+        break;
+    }
+    case AtlasVertexShader::Fluid: {
+        vertexShader = VertexShader::fromSource(FLUID_VERT);
+        vertexShader.desiredAttributes = {0, 1, 2, 3, 4, 5};
+        vertexShader.capabilities = {ShaderCapability::Fluid,
+                                     ShaderCapability::Instances};
         vertexShader.fromDefaultShaderType = shader;
         VertexShader::vertexShaderCache[shader] = vertexShader;
         break;
@@ -303,6 +312,12 @@ FragmentShader FragmentShader::fromDefaultShader(AtlasFragmentShader shader) {
     }
     case AtlasFragmentShader::Upsample: {
         fragmentShader = FragmentShader::fromSource(UPSAMPLE_FRAG);
+        fragmentShader.fromDefaultShaderType = shader;
+        fragmentShaderCache[shader] = fragmentShader;
+        break;
+    }
+    case AtlasFragmentShader::Fluid: {
+        fragmentShader = FragmentShader::fromSource(FLUID_FRAG);
         fragmentShader.fromDefaultShaderType = shader;
         fragmentShaderCache[shader] = fragmentShader;
         break;

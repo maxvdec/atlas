@@ -13,6 +13,7 @@
 #include "aurora/procedural.h"
 #include "aurora/terrain.h"
 #include "hydra/atmosphere.h"
+#include "hydra/fluid.h"
 #include <iostream>
 #include <memory>
 
@@ -77,12 +78,11 @@ class BackpackAttach : public Component {
 
 class WaterPot : public CompoundObject {
     CoreObject pot;
-    CoreObject water;
+    Fluid water;
 
   public:
     void init() override {
         pot = createBox({1.0, 0.25, 0.25}, Color(0.6f, 0.4f, 0.2f));
-        pot.initialize();
 
         Instance &potLeft = pot.createInstance();
         Instance &potRight = pot.createInstance();
@@ -93,11 +93,12 @@ class WaterPot : public CompoundObject {
         Instance &potUp = pot.createInstance();
         potUp.rotate({0.0, -90.0f, 0.0});
         potUp.move({0.5f, 0.0f, 0.5f});
+        pot.initialize();
         this->addObject(&pot);
 
-        water = createBox({0.9f, 0.1f, 0.9f}, Color(0.2f, 0.4f, 0.8f, 1.0f));
-        water.setPosition({0.0f, 0.05f, 0.5f});
-        water.useDeferredRendering = false;
+        water = Fluid();
+        water.create({0.9, 0.9}, Color::blue());
+        water.setPosition({0.0f, 1.0f, 0.0f});
         water.initialize();
         this->addObject(&water);
     }
@@ -198,7 +199,7 @@ class MainScene : public Scene {
         areaLight.position = {0.0f, 2.0f, 0.0};
         areaLight.rotate({0.0f, 90.0f, 0.0f});
         areaLight.castsBothSides = true;
-        //        this->addAreaLight(&areaLight);
+        this->addAreaLight(&areaLight);
         areaLight.createDebugObject();
         areaLight.addDebugObject(window);
 
@@ -260,7 +261,7 @@ class MainScene : public Scene {
         window.useDeferredRendering();
         atmosphere.enable();
         atmosphere.secondsPerHour = 4.f;
-        atmosphere.setTime(12.0);
+        atmosphere.setTime(0.0);
         atmosphere.cycle = false;
         atmosphere.useGlobalLight();
         atmosphere.castShadowsFromSunlight(4096);

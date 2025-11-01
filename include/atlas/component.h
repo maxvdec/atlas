@@ -336,7 +336,7 @@ class CompoundObject : public GameObject {
      * @brief The objects that make up the compound object.
      *
      */
-    std::vector<CoreObject *> objects;
+    std::vector<GameObject *> objects;
 
     /**
      * @brief Bootstraps the compound object, initializing child objects and
@@ -449,7 +449,16 @@ class CompoundObject : public GameObject {
      * @param obj The component instance to add. \warning It must be long-lived.
      * This means that declaring it as a class property is a good idea.
      */
-    inline void addObject(CoreObject *obj) { objects.push_back(obj); }
+    inline void addObject(GameObject *obj) { objects.push_back(obj); }
+
+    bool canUseDeferredRendering() const override {
+        for (auto &obj : objects) {
+            if (!obj->canUseDeferredRendering()) {
+                return false;
+            }
+        }
+        return true;
+    }
 
   private:
     Position3d position{0.0, 0.0, 0.0};
