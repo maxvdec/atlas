@@ -205,4 +205,11 @@ class Camera {
     float targetPitch = 0.0f;
 };
 
+struct ViewInformation {
+    Position3d position;
+    Position3d target;
+    float time;
+    float deltaTime;
+};
+
 #endif // CAMERA_H

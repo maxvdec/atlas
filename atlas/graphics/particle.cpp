@@ -9,10 +9,9 @@
 #include "atlas/object.h"
 #include "atlas/units.h"
 #include "atlas/window.h"
-#include <cwchar>
 #include <glad/glad.h>
-#include <iostream>
 #include <random>
+#include "atlas/particle.h"
 
 struct QuadVertex {
     float x, y, z;
@@ -133,6 +132,15 @@ void ParticleEmitter::updateParticle(Particle &p, float deltaTime) {
         p.velocity.z +=
             cos(time * 0.8f + p.position.z * 0.1f) * 0.02f * deltaTime;
     }
+
+    Magnitude3d windDirection = {0, 0, 0};
+    if (Window::mainWindow->getCurrentScene()->atmosphere.isEnabled()) {
+        windDirection = Window::mainWindow->getCurrentScene()->atmosphere.wind;
+    }
+
+    p.velocity.x += windDirection.x * deltaTime;
+    p.velocity.y += windDirection.y * deltaTime;
+    p.velocity.z += windDirection.z * deltaTime;
 
     p.position = p.position + p.velocity * deltaTime;
 

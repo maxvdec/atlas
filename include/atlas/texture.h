@@ -269,6 +269,14 @@ struct Texture {
         int width, int height, const std::vector<CheckerTile> &tiles,
         TextureParameters params = {}, Color borderColor = {0, 0, 0, 0});
 
+    /**
+     * @brief Creates a vertically stretched streak texture suited for rain
+     * particles.
+     */
+    static Texture createRainStreak(int width, int height,
+                                    TextureParameters params = {},
+                                    Color borderColor = {0, 0, 0, 0});
+
   private:
     static void applyWrappingMode(TextureWrappingMode mode, Id glAxis);
     static void applyFilteringMode(TextureFilteringMode mode, bool isMinifying);

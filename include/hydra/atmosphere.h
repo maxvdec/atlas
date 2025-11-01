@@ -10,18 +10,99 @@
 #ifndef HYDRA_ATMOSPHERE_H
 #define HYDRA_ATMOSPHERE_H
 
+#include "atlas/camera.h"
+#include "atlas/component.h"
+#include "atlas/input.h"
+#include "atlas/particle.h"
 #include "atlas/texture.h"
 #include "atlas/units.h"
 #include <array>
+#include <functional>
+#include <memory>
+#include <vector>
+
+class WorleyNoise3D {
+  public:
+    WorleyNoise3D(int frequency, int numberOfDivisions);
+    float getValue(float x, float y, float z) const;
+
+    Id get3dTexture(int res) const;
+    Id getDetailTexture(int res) const;
+    Id get3dTextureAtAllChannels(int res) const;
+
+  private:
+    int frequency;
+    int numberOfDivisions;
+    std::vector<glm::vec3> featurePoints;
+
+    void generateFeaturePoints();
+    float getWorleyNoise(float x, float y, float z, int octave) const;
+    std::vector<float> getClosestDistances(float x, float y, float z,
+                                           int count) const;
+    glm::ivec3 getGridCell(float x, float y, float z) const;
+    int getCellIndex(int cx, int cy, int cz) const;
+
+    Id createTexture3d(const std::vector<float> &data, int res, GLenum format,
+                       GLenum internalFormat) const;
+};
+
+class Clouds {
+  public:
+    Clouds(int frequency, int divisions) : worleyNoise(frequency, divisions) {};
+
+    Id getCloudTexture(int res) const;
+
+    Position3d position = {0.0f, 5.0f, 0.0f};
+    Size3d size = {10.0f, 3.0f, 10.0f};
+    float scale = 1.5f;
+    Position3d offset = {0.0f, 0.0f, 0.0f};
+    float density = 0.45f;
+    float densityMultiplier = 1.5f;
+    float absorption = 1.1f;
+    float scattering = 0.85f;
+    float phase = 0.55f;
+    float clusterStrength = 0.5f;
+    int primaryStepCount = 12;
+    int lightStepCount = 6;
+    float lightStepMultiplier = 1.6f;
+    float minStepLength = 0.05f;
+    Magnitude3d wind = {0.02f, 0.0f, 0.01f};
+
+  private:
+    WorleyNoise3D worleyNoise = WorleyNoise3D(4, 6);
+
+    mutable Id cachedTextureId = 0;
+    mutable int cachedResolution = 0;
+};
+
+enum class WeatherCondition { Clear, Rain, Snow, Storm };
+
+struct WeatherState {
+    WeatherCondition condition = WeatherCondition::Clear;
+    float intensity = 0.0f;
+    Magnitude3d wind = {0.0f, 0.0f, 0.0f};
+};
+
+typedef std::function<WeatherState(ViewInformation)> WeatherDelegate;
 
 class Atmosphere {
   public:
-    bool enabled = false;
-    float secondsPerHour = 60.f;
     float timeOfDay;
+    float secondsPerHour = 3600.0f;
+
+    Magnitude3d wind = {0.0f, 0.0f, 0.0f};
+
+    WeatherDelegate weatherDelegate = [](ViewInformation info) {
+        return WeatherState();
+    };
 
     void update(float dt);
     void enable() { enabled = true; }
+    void disable() { enabled = false; }
+    bool isEnabled() const { return enabled; }
+
+    void enableWeather() { weatherEnabled = true; }
+    void disableWeather() { weatherEnabled = false; }
 
     float getNormalizedTime() const;
 
@@ -30,6 +111,8 @@ class Atmosphere {
 
     float getLightIntensity() const;
     Color getLightColor() const;
+
+    std::shared_ptr<Clouds> clouds = nullptr;
 
     std::array<Color, 6> getSkyboxColors() const;
     Cubemap createSkyCubemap(int size = 256) const;
@@ -55,12 +138,25 @@ class Atmosphere {
             timeOfDay = hours;
     }
 
+    inline void addClouds(int frequency = 4, int divisions = 6) {
+        if (!clouds) {
+            clouds = std::make_shared<Clouds>(Clouds(frequency, divisions));
+            clouds->wind = this->wind;
+        }
+    }
+
     bool cycle = false;
 
   private:
+    WeatherState lastWeather;
+    bool enabled = false;
+    bool weatherEnabled = false;
     mutable float lastSkyboxUpdateTime = -1.0f;
     mutable bool skyboxCacheValid = false;
     mutable std::array<Color, 6> lastSkyboxColors = {};
+
+    std::shared_ptr<ParticleEmitter> rainEmitter = nullptr;
+    std::shared_ptr<ParticleEmitter> snowEmitter = nullptr;
 };
 
 #endif // HYDRA_ATMOSPHERE_H

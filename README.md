@@ -45,8 +45,9 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [x] Post-processing effects
 - [ ] Sky, atmosphere, weather and fluid simulation system (Hydra) **for alpha 4**
 - [ ] Water rendering system **for alpha 4**
-- [ ] Weather system **for alpha 4**
-- [ ] Cloud system **for alpha 4**
+- [x] Weather system **for alpha 4**
+- [x] Cloud system **for alpha 4**
+- [ ] Screen-space global illumination **for alpha 4**
 - [x] Night-day cycle system **for alpha 4**
 - [x] Add sun, moon and stars rendering **for alpha 4**
 - [ ] Animation system (Mold)
@@ -84,6 +85,9 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [x] Add LUT tables 
 - [ ] Add foam and simple fluid rendering **for alpha 4**
 - [ ] Screen-space refractions **for alpha 4**
+- [ ] Create opal for core rendering
+- [ ] Migrate the engine to use opal
+- [ ] Add Vulkan support through opal
 
 ## Other features planned for the future
 
@@ -93,6 +97,5 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [ ] Terrain generation and rendering (Terra)
 - [ ] Network support (Lasse)
 - [ ] Metal support
-- [ ] Vulkan support
 - [ ] Ray tracing rendering (Overflow)
 - [ ] Add 2d physics (Bezel 2D support)

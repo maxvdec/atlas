@@ -12,8 +12,12 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <iostream>
 
+#include "atlas/camera.h"
+#include "atlas/particle.h"
 #include "atlas/units.h"
+#include "atlas/window.h"
 
 namespace {
 struct SkyKeyframe {
@@ -67,8 +71,112 @@ const std::array<SkyKeyframe, 7> &skyKeyframes() {
 } // namespace
 
 void Atmosphere::update(float dt) {
+
     if (!enabled)
         return;
+
+    if (clouds) {
+        clouds->offset.x += clouds->wind.x * dt;
+        clouds->offset.y += clouds->wind.y * dt;
+        clouds->offset.z += clouds->wind.z * dt;
+
+        auto wrapComponent = [](double v) {
+            if (!std::isfinite(v)) {
+                return 0.0;
+            }
+            double wrapped = std::fmod(v, 1024.0);
+            if (wrapped < -512.0)
+                wrapped += 1024.0;
+            if (wrapped > 512.0)
+                wrapped -= 1024.0;
+            return wrapped;
+        };
+
+        clouds->offset.x = wrapComponent(clouds->offset.x);
+        clouds->offset.y = wrapComponent(clouds->offset.y);
+        clouds->offset.z = wrapComponent(clouds->offset.z);
+    }
+
+    if (weatherEnabled &&
+        (this->snowEmitter == nullptr || this->rainEmitter == nullptr)) {
+        this->snowEmitter = std::make_shared<ParticleEmitter>(1000);
+        this->snowEmitter->setEmissionType(ParticleEmissionType::Ambient);
+        this->snowEmitter->settings.minSize = 0.1f;
+        this->snowEmitter->settings.maxSize = 0.3f;
+        this->snowEmitter->settings.minLifetime = 10.0f;
+        this->snowEmitter->settings.maxLifetime = 20.0f;
+        this->snowEmitter->settings.gravity = -0.1f;
+
+        this->rainEmitter = std::make_shared<ParticleEmitter>(2000);
+        this->rainEmitter->setEmissionType(ParticleEmissionType::Ambient);
+        this->rainEmitter->settings.minSize = 0.05f;
+        this->rainEmitter->settings.maxSize = 0.1f;
+        this->rainEmitter->settings.minLifetime = 5.0f;
+        this->rainEmitter->settings.maxLifetime = 10.0f;
+        this->rainEmitter->settings.gravity = -9.81f;
+        this->rainEmitter->setColor(Color(0.5f, 0.5f, 1.0f, 0.7f));
+
+        TextureParameters rainParams;
+        rainParams.wrappingModeS = TextureWrappingMode::ClampToEdge;
+        rainParams.wrappingModeT = TextureWrappingMode::ClampToEdge;
+        rainParams.minifyingFilter = TextureFilteringMode::Linear;
+        rainParams.magnifyingFilter = TextureFilteringMode::Linear;
+        Texture rainTexture = Texture::createRainStreak(32, 128, rainParams);
+        this->rainEmitter->attachTexture(rainTexture);
+
+        this->rainEmitter->initialize();
+        this->snowEmitter->initialize();
+        Window::mainWindow->addObject(this->snowEmitter.get());
+        Window::mainWindow->addObject(this->rainEmitter.get());
+    }
+
+    if (weatherEnabled) {
+        ViewInformation info;
+        info.position = Window::mainWindow->getCamera()->position;
+        info.target = Window::mainWindow->getCamera()->getFrontVector() +
+                      Window::mainWindow->getCamera()->position;
+        info.time = Window::mainWindow->getTime();
+        info.deltaTime = dt;
+        WeatherState state = weatherDelegate(info);
+        if (state.condition != this->lastWeather.condition) {
+            std::cout << "Weather changed to ";
+            switch (state.condition) {
+            case WeatherCondition::Clear:
+                std::cout << "Clear";
+                break;
+            case WeatherCondition::Rain:
+                std::cout << "Rain";
+                break;
+            case WeatherCondition::Snow:
+                std::cout << "Snow";
+                break;
+            case WeatherCondition::Storm:
+                std::cout << "Storm";
+                break;
+            }
+            std::cout << " with intensity " << state.intensity << std::endl;
+        }
+
+        if (state.condition == WeatherCondition::Clear) {
+            this->snowEmitter->stopEmission();
+            this->rainEmitter->stopEmission();
+        } else if (state.condition == WeatherCondition::Snow) {
+            this->snowEmitter->startEmission();
+            this->rainEmitter->stopEmission();
+            this->snowEmitter->setSpawnRate(100.0f * state.intensity);
+        } else if (state.condition == WeatherCondition::Rain) {
+            this->rainEmitter->startEmission();
+            this->snowEmitter->stopEmission();
+            this->rainEmitter->setSpawnRate(20000.0f * state.intensity);
+        } else if (state.condition == WeatherCondition::Storm) {
+            this->rainEmitter->startEmission();
+            this->snowEmitter->stopEmission();
+            this->rainEmitter->setSpawnRate(400.0f * state.intensity);
+        }
+
+        this->wind = state.wind;
+        this->lastWeather = state;
+    }
 
     if (!cycle)
         return;
