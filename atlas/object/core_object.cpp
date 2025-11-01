@@ -118,7 +118,14 @@ void CoreObject::setPosition(const Position3d &newPosition) {
         body->position = position;
     }
 
-    updateModelMatrix();
+    if (!instances.empty()) {
+        for (auto &instance : instances) {
+            instance.position += newPosition;
+            instance.updateModelMatrix();
+        }
+    } else {
+        updateModelMatrix();
+    }
 }
 
 void CoreObject::setRotation(const Rotation3d &newRotation) {
@@ -128,13 +135,29 @@ void CoreObject::setRotation(const Rotation3d &newRotation) {
         body->orientation = rotation.toGlmQuat();
     }
 
+    if (!instances.empty()) {
+        for (auto &instance : instances) {
+            instance.rotation = instance.rotation + newRotation;
+            instance.updateModelMatrix();
+        }
+    } else {
+        updateModelMatrix();
+    }
+
     updateModelMatrix();
 }
 
 void CoreObject::setScale(const Scale3d &newScale) {
     scale = newScale;
 
-    updateModelMatrix();
+    if (!instances.empty()) {
+        for (auto &instance : instances) {
+            instance.scale += newScale;
+            instance.updateModelMatrix();
+        }
+    } else {
+        updateModelMatrix();
+    }
 }
 
 void CoreObject::move(const Position3d &delta) {

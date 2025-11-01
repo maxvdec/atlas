@@ -11,6 +11,7 @@
 #include "atlas/object.h"
 #include "atlas/units.h"
 #include "atlas/window.h"
+#include <iostream>
 #include <vector>
 
 void CompoundObject::initialize() {
@@ -26,9 +27,11 @@ void CompoundObject::render(float dt) {
             originalPositions.push_back(obj->getPosition());
         }
     }
-    for (size_t i = 0; i < objects.size(); ++i) {
-        Position3d newPos = originalPositions[i] + this->position;
-        objects[i]->setPosition(newPos);
+    if (changedPosition) {
+        for (size_t i = 0; i < objects.size(); ++i) {
+            objects[i]->setPosition(position + originalPositions[i]);
+        }
+        changedPosition = false;
     }
     for (auto &component : components) {
         component->update(dt);
@@ -86,10 +89,11 @@ void CompoundObject::update(Window &window) {
         Position3d position = obj->body->position;
         Rotation3d rotation = Rotation3d::fromGlmQuat(obj->body->orientation);
 
-        obj->setPosition(position);
-        obj->setRotation(rotation);
-        obj->setScale(this->getScale());
-        obj->updateModelMatrix();
+        if (changedPosition) {
+            std::cout << "Updating position of compound object child\n";
+            obj->setPosition(position + this->position);
+            changedPosition = false;
+        }
     }
 }
 
@@ -104,10 +108,12 @@ bool CompoundObject::canCastShadows() const {
 
 void CompoundObject::setPosition(const Position3d &newPosition) {
     this->position = newPosition;
+    changedPosition = true;
 }
 
 void CompoundObject::move(const Position3d &deltaPosition) {
     this->position += deltaPosition;
+    changedPosition = true;
 }
 
 void CompoundObject::setRotation(const Rotation3d &newRotation) {

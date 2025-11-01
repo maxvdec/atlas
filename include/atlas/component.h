@@ -452,8 +452,11 @@ class CompoundObject : public GameObject {
     inline void addObject(CoreObject *obj) { objects.push_back(obj); }
 
   private:
-    Position3d position;
+    Position3d position{0.0, 0.0, 0.0};
     std::vector<Position3d> originalPositions;
+    bool changedPosition = false;
+    bool changedRotation = false;
+    bool changedScale = false;
 };
 
 /**

@@ -75,6 +75,28 @@ class BackpackAttach : public Component {
     }
 };
 
+class WaterPot : public CompoundObject {
+    CoreObject pot;
+    CoreObject water;
+
+  public:
+    void init() override {
+        pot = createBox({1.0, 0.25, 0.25}, Color(0.6f, 0.4f, 0.2f));
+        pot.initialize();
+
+        Instance &potLeft = pot.createInstance();
+        Instance &potRight = pot.createInstance();
+        potRight.move({0.0f, 0.0f, 1.0f});
+        Instance &potDown = pot.createInstance();
+        potDown.rotate({0.0, 90.0f, 0.0});
+        potDown.move({-0.5f, 0.0f, 0.5f});
+        Instance &potUp = pot.createInstance();
+        potUp.rotate({0.0, -90.0f, 0.0});
+        potUp.move({0.5f, 0.0f, 0.5f});
+        this->addObject(&pot);
+    }
+};
+
 class MainScene : public Scene {
     CoreObject ground;
     CoreObject ball;
@@ -89,6 +111,7 @@ class MainScene : public Scene {
     Terrain terrain;
     AreaLight areaLight;
     ParticleEmitter emitter;
+    WaterPot waterPot;
 
     bool doesUpdate = true;
     bool fall = false;
@@ -159,26 +182,6 @@ class MainScene : public Scene {
         camera.farClip = 1000.f;
         window.setCamera(&camera);
 
-        backpack = Model();
-        Resource backpackResource = Workspace::get().createResource(
-            "backpack/Survival_BackPack_2.fbx", "BackpackModel",
-            ResourceType::Model);
-        backpack.fromResource(backpackResource);
-
-        Resource colorTexture = Workspace::get().createResource(
-            "backpack/1001_albedo.jpg", "BackpackColor", ResourceType::Image);
-        Resource normalTexture = Workspace::get().createResource(
-            "backpack/1001_normal.png", "BackpackNormal", ResourceType::Image);
-        Texture color = Texture::fromResource(colorTexture);
-        Texture normal =
-            Texture::fromResource(normalTexture, TextureType::Normal);
-        backpack.attachTexture(color);
-        backpack.attachTexture(normal);
-
-        sphereCube.addComponent<HorizontalMover>(HorizontalMover());
-        sphereCube.setPosition({0.0, 0.25, 0.0});
-        // window.addObject(&sphereCube);
-
         ground = createBox({5.0f, 0.1f, 5.0f}, Color(0.3f, 0.8f, 0.3f));
         ground.attachTexture(
             Texture::fromResource(Workspace::get().createResource(
@@ -186,12 +189,10 @@ class MainScene : public Scene {
         ground.setPosition({0.0f, -0.1f, 0.0f});
         window.addObject(&ground);
 
-        backpack.setPosition({0.0f, 0.2f, 0.0f});
-
         areaLight.position = {0.0f, 2.0f, 0.0};
         areaLight.rotate({0.0f, 90.0f, 0.0f});
         areaLight.castsBothSides = true;
-        this->addAreaLight(&areaLight);
+        //        this->addAreaLight(&areaLight);
         areaLight.createDebugObject();
         areaLight.addDebugObject(window);
 
@@ -204,27 +205,17 @@ class MainScene : public Scene {
         fpsText.addTraitComponent<Text>(FPSTextUpdater());
         window.addUIObject(&fpsText);
 
-        lightObject = createBox({1.0f, 1.0f, 1.0f}, Color::yellow());
-        lightObject.setPosition({0.0f, 0.001f, 0.0f});
-        // lightObject.makeEmissive(this, {5.0, 5.0, 5.0}, 2.0f);
-        for (int i = 0; i < 4; i++) {
-            Instance &instance = lightObject.createInstance();
-            instance.move({0.0f, 1.1f * i, 0.0f});
-        }
-
         ball = createDebugSphere(0.5f, 76, 76);
         ball.body->applyMass(0.0);
         ball.move({0.f, 1.0f, 5});
-        window.addObject(&ball);
 
         ball2 = createDebugSphere(0.5f, 76, 76);
         ball2.body->applyMass(0.0);
         ball2.move({0.f, 1.0f, 5});
-        window.addObject(&ball2);
 
-        this->setAmbientIntensity(1.0f);
-
-        // this->setSkybox(Skybox::create(createCubemap(), window));
+        waterPot = WaterPot();
+        waterPot.move({0.5, 0.10, 0.0f});
+        window.addObject(&waterPot);
 
         Resource heightmapResource = Workspace::get().createResource(
             "terrain/heightmap.png", "Heightmap", ResourceType::Image);
@@ -255,34 +246,18 @@ class MainScene : public Scene {
         terrain.maxPeak = 100.f;
 
         light = DirectionalLight({1.0f, -0.3f, 0.5f}, Color::white());
-        // light.castShadows(window, 4096);
-        // this->addDirectionalLight(&light);
 
         frameBuffer = RenderTarget(window);
         window.addRenderTarget(&frameBuffer);
         frameBuffer.display(window);
-
-        WeatherDelegate delegate = [](ViewInformation info) {
-            WeatherState state;
-            float time = info.time;
-            if ((time >= 6.0f && time < 9.0f) ||
-                (time >= 18.0f && time < 21.0f)) {
-                state.condition = WeatherCondition::Rain;
-                state.intensity = 0.5f;
-            } else {
-                state.condition = WeatherCondition::Clear;
-                state.intensity = 0.0f;
-            }
-            return state;
-        };
 
         window.useDeferredRendering();
         atmosphere.enable();
         atmosphere.secondsPerHour = 4.f;
         atmosphere.setTime(0.0);
         atmosphere.cycle = false;
-        atmosphere.weatherDelegate = delegate;
-        atmosphere.enableWeather();
+        atmosphere.useGlobalLight();
+        atmosphere.castShadowsFromSunlight(4096);
     }
 };
 
