@@ -9,11 +9,13 @@ var searchData=
   ['sharpen_6',['Sharpen',['../atlas_2effect_8h.html#a75cf3454fba9ce206c0c748892dc9867a556b763769d96726364eec5e37eb186c',1,'effect.h']]],
   ['skybox_7',['Skybox',['../shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82a63fbbc4fe17b5b4262ebe7c2921518ed',1,'Skybox:&#160;shader.h'],['../shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a63fbbc4fe17b5b4262ebe7c2921518ed',1,'Skybox:&#160;shader.h']]],
   ['slash_8',['Slash',['../input_8h.html#a9479d299e1852e6140dcca1f405868aba358cfe58715d680d9ab09f82e4010cbc',1,'input.h']]],
-  ['space_9',['Space',['../input_8h.html#a9479d299e1852e6140dcca1f405868abad511f8439ecde36647437fbba67a4394',1,'input.h']]],
-  ['specular_10',['Specular',['../texture_8h.html#a579bf435a05d45b75f553d37ebbb3225a39b0044dd8789d333e7794f359406740',1,'texture.h']]],
-  ['specularmap_11',['SpecularMap',['../workspace_8h.html#a8571efa4409be32e28abf3ea74a0dbb1a7969ef3f5ea1411e8a3d82fcfd50f21f',1,'workspace.h']]],
-  ['sphere_12',['Sphere',['../class_shape.html#a4cb9bc6c74b4184257003c83a8d8d39eab7095f057db3fefa7325ad93a04e14fd',1,'Shape']]],
-  ['ssao_13',['SSAO',['../shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0ab07a387949b981d5726a46c61db885e9',1,'SSAO:&#160;shader.h'],['../texture_8h.html#a579bf435a05d45b75f553d37ebbb3225ab07a387949b981d5726a46c61db885e9',1,'SSAO:&#160;texture.h'],['../texture_8h.html#a639c740f69368f9fe25a4f7409a16384ab07a387949b981d5726a46c61db885e9',1,'SSAO:&#160;texture.h']]],
-  ['ssaoblur_14',['SSAOBlur',['../shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a0cbd177f5587f49172adca66ce3041ce',1,'SSAOBlur:&#160;shader.h'],['../texture_8h.html#a639c740f69368f9fe25a4f7409a16384a0cbd177f5587f49172adca66ce3041ce',1,'SSAOBlur:&#160;texture.h']]],
-  ['ssaonoise_15',['SSAONoise',['../texture_8h.html#a579bf435a05d45b75f553d37ebbb3225a74cd2b14850061d58e3fc9da302c4efe',1,'texture.h']]]
+  ['snow_9',['Snow',['../atmosphere_8h.html#ad73deaf390ece3e96b7cd67785e8af1bab46d3c8ee8032551c011745d587705cc',1,'atmosphere.h']]],
+  ['space_10',['Space',['../input_8h.html#a9479d299e1852e6140dcca1f405868abad511f8439ecde36647437fbba67a4394',1,'input.h']]],
+  ['specular_11',['Specular',['../texture_8h.html#a579bf435a05d45b75f553d37ebbb3225a39b0044dd8789d333e7794f359406740',1,'texture.h']]],
+  ['specularmap_12',['SpecularMap',['../workspace_8h.html#a8571efa4409be32e28abf3ea74a0dbb1a7969ef3f5ea1411e8a3d82fcfd50f21f',1,'workspace.h']]],
+  ['sphere_13',['Sphere',['../class_shape.html#a4cb9bc6c74b4184257003c83a8d8d39eab7095f057db3fefa7325ad93a04e14fd',1,'Shape']]],
+  ['ssao_14',['SSAO',['../shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0ab07a387949b981d5726a46c61db885e9',1,'SSAO:&#160;shader.h'],['../texture_8h.html#a579bf435a05d45b75f553d37ebbb3225ab07a387949b981d5726a46c61db885e9',1,'SSAO:&#160;texture.h'],['../texture_8h.html#a639c740f69368f9fe25a4f7409a16384ab07a387949b981d5726a46c61db885e9',1,'SSAO:&#160;texture.h']]],
+  ['ssaoblur_15',['SSAOBlur',['../shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a0cbd177f5587f49172adca66ce3041ce',1,'SSAOBlur:&#160;shader.h'],['../texture_8h.html#a639c740f69368f9fe25a4f7409a16384a0cbd177f5587f49172adca66ce3041ce',1,'SSAOBlur:&#160;texture.h']]],
+  ['ssaonoise_16',['SSAONoise',['../texture_8h.html#a579bf435a05d45b75f553d37ebbb3225a74cd2b14850061d58e3fc9da302c4efe',1,'texture.h']]],
+  ['storm_17',['Storm',['../atmosphere_8h.html#ad73deaf390ece3e96b7cd67785e8af1bafdcf3cdc04f367257c92382e032b6293',1,'atmosphere.h']]]
 ];

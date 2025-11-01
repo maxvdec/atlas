@@ -2,7 +2,10 @@ var class_atmosphere =
 [
     [ "addClouds", "class_atmosphere.html#a676d29c101d17ef1f5f9dbb0312dab72", null ],
     [ "createSkyCubemap", "class_atmosphere.html#a0c2698b6c91ed2ef8018e7e34a04ef46", null ],
+    [ "disable", "class_atmosphere.html#a6ce1623e3b909cd943b2e19013b5f075", null ],
+    [ "disableWeather", "class_atmosphere.html#a644e0cee90fdf045ee3d448529eca38e", null ],
     [ "enable", "class_atmosphere.html#a9e06515dd2a9365cbd7df35c112e8622", null ],
+    [ "enableWeather", "class_atmosphere.html#a29ca17056da25c107dd71251eeea84f2", null ],
     [ "getLightColor", "class_atmosphere.html#aa8ee0090628c93b2821a429a8bbb863e", null ],
     [ "getLightIntensity", "class_atmosphere.html#a1bfcd7f9a27936dfec18af881b4cfca0", null ],
     [ "getMoonAngle", "class_atmosphere.html#a7216bbf130297092fa763bb8cbf1d73b", null ],
@@ -10,12 +13,12 @@ var class_atmosphere =
     [ "getSkyboxColors", "class_atmosphere.html#a5c3c7bcc17f290335c8c43681448876b", null ],
     [ "getSunAngle", "class_atmosphere.html#abfc9459823400a2a889117cf92b98e99", null ],
     [ "isDaytime", "class_atmosphere.html#ad70c49a701df6337ae75a3109babf2f8", null ],
+    [ "isEnabled", "class_atmosphere.html#a242e1d1de29454f162c1ff6984e223f1", null ],
     [ "setTime", "class_atmosphere.html#ae260646b46cbb83fc7517b1e5cecfd11", null ],
     [ "update", "class_atmosphere.html#ad55cf115cbc1272f8dcaad534442986f", null ],
     [ "updateSkyCubemap", "class_atmosphere.html#a6ae106b96211b5a753ac929daf84955f", null ],
     [ "clouds", "class_atmosphere.html#a4d8e1e509bee0d9b0133894a36c0aadf", null ],
     [ "cycle", "class_atmosphere.html#a16c91d6b211afd99795e46bfe4dfc53c", null ],
-    [ "enabled", "class_atmosphere.html#a5930703e39d2cade572b8c7b06e6f8e3", null ],
     [ "moonColor", "class_atmosphere.html#ad45f4b1ef6697020a7727e1b265dd12f", null ],
     [ "moonSize", "class_atmosphere.html#a8ee8e705d9f0ec21210965bd46642e82", null ],
     [ "moonTintStrength", "class_atmosphere.html#aa649e2f6a60c96b3d2359bfe72caba7b", null ],
@@ -24,5 +27,7 @@ var class_atmosphere =
     [ "sunColor", "class_atmosphere.html#a83c951ae806394b74a44b45273e71bcf", null ],
     [ "sunSize", "class_atmosphere.html#aaa19043543574a6038ccccef98a50975", null ],
     [ "sunTintStrength", "class_atmosphere.html#ac1044c382157b075a2d3b63b1643ceae", null ],
-    [ "timeOfDay", "class_atmosphere.html#af9d8fa6dea3a1eb9d95275a155b36f5f", null ]
+    [ "timeOfDay", "class_atmosphere.html#af9d8fa6dea3a1eb9d95275a155b36f5f", null ],
+    [ "weatherDelegate", "class_atmosphere.html#a0733736400004a7241f48940058e2c93", null ],
+    [ "wind", "class_atmosphere.html#a05f0844d725b9914aa13775b130a74f5", null ]
 ];

@@ -116,15 +116,20 @@ $(function(){initNavTree('atmosphere_8h.html','',''); });
 
 <div class="header">
   <div class="summary">
-<a href="#nested-classes">Classes</a>  </div>
+<a href="#nested-classes">Classes</a> &#124;
+<a href="#typedef-members">Typedefs</a> &#124;
+<a href="#enum-members">Enumerations</a>  </div>
   <div class="headertitle"><div class="title">atmosphere.h File Reference</div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><code>#include &quot;<a class="el" href="component_8h_source.html">atlas/component.h</a>&quot;</code><br />
+<div class="textblock"><code>#include &quot;<a class="el" href="camera_8h_source.html">atlas/camera.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="component_8h_source.html">atlas/component.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="input_8h_source.html">atlas/input.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="particle_8h_source.html">atlas/particle.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="texture_8h_source.html">atlas/texture.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="units_8h_source.html">atlas/units.h</a>&quot;</code><br />
 <code>#include &lt;array&gt;</code><br />
+<code>#include &lt;functional&gt;</code><br />
 <code>#include &lt;memory&gt;</code><br />
 <code>#include &lt;vector&gt;</code><br />
 </div>
@@ -134,8 +139,74 @@ $(function(){initNavTree('atmosphere_8h.html','',''); });
 Classes</h2></td></tr>
 <tr class="memitem:WorleyNoise3D" id="r_WorleyNoise3D"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_worley_noise3_d.html">WorleyNoise3D</a></td></tr>
 <tr class="memitem:Clouds" id="r_Clouds"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_clouds.html">Clouds</a></td></tr>
+<tr class="memitem:WeatherState" id="r_WeatherState"><td class="memItemLeft" align="right" valign="top">struct &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="struct_weather_state.html">WeatherState</a></td></tr>
 <tr class="memitem:Atmosphere" id="r_Atmosphere"><td class="memItemLeft" align="right" valign="top">class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_atmosphere.html">Atmosphere</a></td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 id="header-typedef-members" class="groupheader"><a id="typedef-members" name="typedef-members"></a>
+Typedefs</h2></td></tr>
+<tr class="memitem:afda69b918865d1f99888c30b91aa47c0" id="r_afda69b918865d1f99888c30b91aa47c0"><td class="memItemLeft" align="right" valign="top">typedef std::function&lt; <a class="el" href="struct_weather_state.html">WeatherState</a>(<a class="el" href="struct_view_information.html">ViewInformation</a>)&gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#afda69b918865d1f99888c30b91aa47c0">WeatherDelegate</a></td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 id="header-enum-members" class="groupheader"><a id="enum-members" name="enum-members"></a>
+Enumerations</h2></td></tr>
+<tr class="memitem:ad73deaf390ece3e96b7cd67785e8af1b" id="r_ad73deaf390ece3e96b7cd67785e8af1b"><td class="memItemLeft" align="right" valign="top">enum class &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad73deaf390ece3e96b7cd67785e8af1b">WeatherCondition</a> { <a class="el" href="#ad73deaf390ece3e96b7cd67785e8af1badc30bc0c7914db5918da4263fce93ad2">Clear</a>
+, <a class="el" href="#ad73deaf390ece3e96b7cd67785e8af1bade4eda51f409f7799a728d8725b340cd">Rain</a>
+, <a class="el" href="#ad73deaf390ece3e96b7cd67785e8af1bab46d3c8ee8032551c011745d587705cc">Snow</a>
+, <a class="el" href="#ad73deaf390ece3e96b7cd67785e8af1bafdcf3cdc04f367257c92382e032b6293">Storm</a>
+ }</td></tr>
 </table>
+<a name="doc-typedef-members" id="doc-typedef-members"></a><h2 id="header-doc-typedef-members" class="groupheader">Typedef Documentation</h2>
+<a id="afda69b918865d1f99888c30b91aa47c0" name="afda69b918865d1f99888c30b91aa47c0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afda69b918865d1f99888c30b91aa47c0">&#9670;&#160;</a></span>WeatherDelegate</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">typedef std::function&lt;<a class="el" href="struct_weather_state.html">WeatherState</a>(<a class="el" href="struct_view_information.html">ViewInformation</a>)&gt; <a class="el" href="#afda69b918865d1f99888c30b91aa47c0">WeatherDelegate</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00086">86</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+
+</div>
+</div>
+<a name="doc-enum-members" id="doc-enum-members"></a><h2 id="header-doc-enum-members" class="groupheader">Enumeration Type Documentation</h2>
+<a id="ad73deaf390ece3e96b7cd67785e8af1b" name="ad73deaf390ece3e96b7cd67785e8af1b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad73deaf390ece3e96b7cd67785e8af1b">&#9670;&#160;</a></span>WeatherCondition</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">enum class <a class="el" href="#ad73deaf390ece3e96b7cd67785e8af1b">WeatherCondition</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel strong">strong</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+<table class="fieldtable">
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="ad73deaf390ece3e96b7cd67785e8af1badc30bc0c7914db5918da4263fce93ad2" name="ad73deaf390ece3e96b7cd67785e8af1badc30bc0c7914db5918da4263fce93ad2"></a>Clear&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="ad73deaf390ece3e96b7cd67785e8af1bade4eda51f409f7799a728d8725b340cd" name="ad73deaf390ece3e96b7cd67785e8af1bade4eda51f409f7799a728d8725b340cd"></a>Rain&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="ad73deaf390ece3e96b7cd67785e8af1bab46d3c8ee8032551c011745d587705cc" name="ad73deaf390ece3e96b7cd67785e8af1bab46d3c8ee8032551c011745d587705cc"></a>Snow&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="ad73deaf390ece3e96b7cd67785e8af1bafdcf3cdc04f367257c92382e032b6293" name="ad73deaf390ece3e96b7cd67785e8af1bafdcf3cdc04f367257c92382e032b6293"></a>Storm&#160;</td><td class="fielddoc"></td></tr>
+</table>
+
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00078">78</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   78</span>{ <a class="code hl_enumvalue" href="#ad73deaf390ece3e96b7cd67785e8af1badc30bc0c7914db5918da4263fce93ad2">Clear</a>, <a class="code hl_enumvalue" href="#ad73deaf390ece3e96b7cd67785e8af1bade4eda51f409f7799a728d8725b340cd">Rain</a>, <a class="code hl_enumvalue" href="#ad73deaf390ece3e96b7cd67785e8af1bab46d3c8ee8032551c011745d587705cc">Snow</a>, <a class="code hl_enumvalue" href="#ad73deaf390ece3e96b7cd67785e8af1bafdcf3cdc04f367257c92382e032b6293">Storm</a> };</div>
+<div class="ttc" id="aatmosphere_8h_html_ad73deaf390ece3e96b7cd67785e8af1bab46d3c8ee8032551c011745d587705cc"><div class="ttname"><a href="#ad73deaf390ece3e96b7cd67785e8af1bab46d3c8ee8032551c011745d587705cc">WeatherCondition::Snow</a></div><div class="ttdeci">@ Snow</div><div class="ttdef"><b>Definition</b> <a href="atmosphere_8h_source.html#l00078">atmosphere.h:78</a></div></div>
+<div class="ttc" id="aatmosphere_8h_html_ad73deaf390ece3e96b7cd67785e8af1badc30bc0c7914db5918da4263fce93ad2"><div class="ttname"><a href="#ad73deaf390ece3e96b7cd67785e8af1badc30bc0c7914db5918da4263fce93ad2">WeatherCondition::Clear</a></div><div class="ttdeci">@ Clear</div><div class="ttdef"><b>Definition</b> <a href="atmosphere_8h_source.html#l00078">atmosphere.h:78</a></div></div>
+<div class="ttc" id="aatmosphere_8h_html_ad73deaf390ece3e96b7cd67785e8af1bade4eda51f409f7799a728d8725b340cd"><div class="ttname"><a href="#ad73deaf390ece3e96b7cd67785e8af1bade4eda51f409f7799a728d8725b340cd">WeatherCondition::Rain</a></div><div class="ttdeci">@ Rain</div><div class="ttdef"><b>Definition</b> <a href="atmosphere_8h_source.html#l00078">atmosphere.h:78</a></div></div>
+<div class="ttc" id="aatmosphere_8h_html_ad73deaf390ece3e96b7cd67785e8af1bafdcf3cdc04f367257c92382e032b6293"><div class="ttname"><a href="#ad73deaf390ece3e96b7cd67785e8af1bafdcf3cdc04f367257c92382e032b6293">WeatherCondition::Storm</a></div><div class="ttdeci">@ Storm</div><div class="ttdef"><b>Definition</b> <a href="atmosphere_8h_source.html#l00078">atmosphere.h:78</a></div></div>
+</div><!-- fragment -->
+</div>
+</div>
 </div><!-- contents -->
 </div><!-- doc-content -->
 </div><!-- container -->

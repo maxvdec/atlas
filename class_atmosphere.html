@@ -129,6 +129,10 @@ $(function(){initNavTree('class_atmosphere.html','','class_atmosphere-members');
 Public Member Functions</h2></td></tr>
 <tr class="memitem:ad55cf115cbc1272f8dcaad534442986f" id="r_ad55cf115cbc1272f8dcaad534442986f"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad55cf115cbc1272f8dcaad534442986f">update</a> (float dt)</td></tr>
 <tr class="memitem:a9e06515dd2a9365cbd7df35c112e8622" id="r_a9e06515dd2a9365cbd7df35c112e8622"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9e06515dd2a9365cbd7df35c112e8622">enable</a> ()</td></tr>
+<tr class="memitem:a6ce1623e3b909cd943b2e19013b5f075" id="r_a6ce1623e3b909cd943b2e19013b5f075"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a6ce1623e3b909cd943b2e19013b5f075">disable</a> ()</td></tr>
+<tr class="memitem:a242e1d1de29454f162c1ff6984e223f1" id="r_a242e1d1de29454f162c1ff6984e223f1"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a242e1d1de29454f162c1ff6984e223f1">isEnabled</a> () const</td></tr>
+<tr class="memitem:a29ca17056da25c107dd71251eeea84f2" id="r_a29ca17056da25c107dd71251eeea84f2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a29ca17056da25c107dd71251eeea84f2">enableWeather</a> ()</td></tr>
+<tr class="memitem:a644e0cee90fdf045ee3d448529eca38e" id="r_a644e0cee90fdf045ee3d448529eca38e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a644e0cee90fdf045ee3d448529eca38e">disableWeather</a> ()</td></tr>
 <tr class="memitem:add88afca44783bc164d41f61517d4599" id="r_add88afca44783bc164d41f61517d4599"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#add88afca44783bc164d41f61517d4599">getNormalizedTime</a> () const</td></tr>
 <tr class="memitem:abfc9459823400a2a889117cf92b98e99" id="r_abfc9459823400a2a889117cf92b98e99"><td class="memItemLeft" align="right" valign="top"><a class="el" href="units_8h.html#af1efe03080186b94608ab2d50c060fe5">Magnitude3d</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#abfc9459823400a2a889117cf92b98e99">getSunAngle</a> () const</td></tr>
 <tr class="memitem:a7216bbf130297092fa763bb8cbf1d73b" id="r_a7216bbf130297092fa763bb8cbf1d73b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="units_8h.html#af1efe03080186b94608ab2d50c060fe5">Magnitude3d</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7216bbf130297092fa763bb8cbf1d73b">getMoonAngle</a> () const</td></tr>
@@ -143,9 +147,10 @@ Public Member Functions</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a5930703e39d2cade572b8c7b06e6f8e3" id="r_a5930703e39d2cade572b8c7b06e6f8e3"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5930703e39d2cade572b8c7b06e6f8e3">enabled</a> = false</td></tr>
-<tr class="memitem:a73ee1de038bf4dba9675394e99dc39f4" id="r_a73ee1de038bf4dba9675394e99dc39f4"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a73ee1de038bf4dba9675394e99dc39f4">secondsPerHour</a> = 60.f</td></tr>
 <tr class="memitem:af9d8fa6dea3a1eb9d95275a155b36f5f" id="r_af9d8fa6dea3a1eb9d95275a155b36f5f"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af9d8fa6dea3a1eb9d95275a155b36f5f">timeOfDay</a></td></tr>
+<tr class="memitem:a73ee1de038bf4dba9675394e99dc39f4" id="r_a73ee1de038bf4dba9675394e99dc39f4"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a73ee1de038bf4dba9675394e99dc39f4">secondsPerHour</a> = 3600.0f</td></tr>
+<tr class="memitem:a05f0844d725b9914aa13775b130a74f5" id="r_a05f0844d725b9914aa13775b130a74f5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="units_8h.html#af1efe03080186b94608ab2d50c060fe5">Magnitude3d</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a05f0844d725b9914aa13775b130a74f5">wind</a> = {0.0f, 0.0f, 0.0f}</td></tr>
+<tr class="memitem:a0733736400004a7241f48940058e2c93" id="r_a0733736400004a7241f48940058e2c93"><td class="memItemLeft" align="right" valign="top"><a class="el" href="atmosphere_8h.html#afda69b918865d1f99888c30b91aa47c0">WeatherDelegate</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0733736400004a7241f48940058e2c93">weatherDelegate</a></td></tr>
 <tr class="memitem:a4d8e1e509bee0d9b0133894a36c0aadf" id="r_a4d8e1e509bee0d9b0133894a36c0aadf"><td class="memItemLeft" align="right" valign="top">std::shared_ptr&lt; <a class="el" href="class_clouds.html">Clouds</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4d8e1e509bee0d9b0133894a36c0aadf">clouds</a> = nullptr</td></tr>
 <tr class="memitem:a83c951ae806394b74a44b45273e71bcf" id="r_a83c951ae806394b74a44b45273e71bcf"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_color.html">Color</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a83c951ae806394b74a44b45273e71bcf">sunColor</a> = <a class="el" href="struct_color.html">Color</a>(1.0, 0.95, 0.8, 1.0)</td></tr>
 <tr class="memitem:ad45f4b1ef6697020a7727e1b265dd12f" id="r_ad45f4b1ef6697020a7727e1b265dd12f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_color.html">Color</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad45f4b1ef6697020a7727e1b265dd12f">moonColor</a> = <a class="el" href="struct_color.html">Color</a>(0.5, 0.5, 0.8, 1.0)</td></tr>
@@ -158,7 +163,7 @@ Public Attributes</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock">
-<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00075">75</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00088">88</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
 <a id="a676d29c101d17ef1f5f9dbb0312dab72" name="a676d29c101d17ef1f5f9dbb0312dab72"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a676d29c101d17ef1f5f9dbb0312dab72">&#9670;&#160;</a></span>addClouds()</h2>
@@ -187,15 +192,17 @@ Public Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00118">118</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  118</span>                                                                {</div>
-<div class="line"><span class="lineno">  119</span>        <span class="keywordflow">if</span> (!<a class="code hl_variable" href="#a4d8e1e509bee0d9b0133894a36c0aadf">clouds</a>) {</div>
-<div class="line"><span class="lineno">  120</span>            <a class="code hl_variable" href="#a4d8e1e509bee0d9b0133894a36c0aadf">clouds</a> = std::make_shared&lt;Clouds&gt;(Clouds(frequency, divisions));</div>
-<div class="line"><span class="lineno">  121</span>        }</div>
-<div class="line"><span class="lineno">  122</span>    }</div>
-<div class="ttc" id="aclass_atmosphere_html_a4d8e1e509bee0d9b0133894a36c0aadf"><div class="ttname"><a href="#a4d8e1e509bee0d9b0133894a36c0aadf">Atmosphere::clouds</a></div><div class="ttdeci">std::shared_ptr&lt; Clouds &gt; clouds</div><div class="ttdef"><b>Definition</b> <a href="atmosphere_8h_source.html#l00092">atmosphere.h:92</a></div></div>
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00141">141</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  141</span>                                                                {</div>
+<div class="line"><span class="lineno">  142</span>        <span class="keywordflow">if</span> (!<a class="code hl_variable" href="#a4d8e1e509bee0d9b0133894a36c0aadf">clouds</a>) {</div>
+<div class="line"><span class="lineno">  143</span>            <a class="code hl_variable" href="#a4d8e1e509bee0d9b0133894a36c0aadf">clouds</a> = std::make_shared&lt;Clouds&gt;(Clouds(frequency, divisions));</div>
+<div class="line"><span class="lineno">  144</span>            <a class="code hl_variable" href="#a4d8e1e509bee0d9b0133894a36c0aadf">clouds</a>-&gt;wind = this-&gt;<a class="code hl_variable" href="#a05f0844d725b9914aa13775b130a74f5">wind</a>;</div>
+<div class="line"><span class="lineno">  145</span>        }</div>
+<div class="line"><span class="lineno">  146</span>    }</div>
+<div class="ttc" id="aclass_atmosphere_html_a05f0844d725b9914aa13775b130a74f5"><div class="ttname"><a href="#a05f0844d725b9914aa13775b130a74f5">Atmosphere::wind</a></div><div class="ttdeci">Magnitude3d wind</div><div class="ttdef"><b>Definition</b> <a href="atmosphere_8h_source.html#l00093">atmosphere.h:93</a></div></div>
+<div class="ttc" id="aclass_atmosphere_html_a4d8e1e509bee0d9b0133894a36c0aadf"><div class="ttname"><a href="#a4d8e1e509bee0d9b0133894a36c0aadf">Atmosphere::clouds</a></div><div class="ttdeci">std::shared_ptr&lt; Clouds &gt; clouds</div><div class="ttdef"><b>Definition</b> <a href="atmosphere_8h_source.html#l00115">atmosphere.h:115</a></div></div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="atmosphere_8h_source.html#l00092">clouds</a>.</p>
+<p class="reference">References <a class="el" href="atmosphere_8h_source.html#l00115">clouds</a>.</p>
 
 </div>
 </div>
@@ -214,6 +221,62 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
+</div>
+</div>
+<a id="a6ce1623e3b909cd943b2e19013b5f075" name="a6ce1623e3b909cd943b2e19013b5f075"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6ce1623e3b909cd943b2e19013b5f075">&#9670;&#160;</a></span>disable()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Atmosphere::disable </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00101">101</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  101</span>{ enabled = <span class="keyword">false</span>; }</div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="a644e0cee90fdf045ee3d448529eca38e" name="a644e0cee90fdf045ee3d448529eca38e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a644e0cee90fdf045ee3d448529eca38e">&#9670;&#160;</a></span>disableWeather()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Atmosphere::disableWeather </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00105">105</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  105</span>{ weatherEnabled = <span class="keyword">false</span>; }</div>
+</div><!-- fragment -->
 </div>
 </div>
 <a id="a9e06515dd2a9365cbd7df35c112e8622" name="a9e06515dd2a9365cbd7df35c112e8622"></a>
@@ -239,12 +302,37 @@ Public Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00082">82</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   82</span>{ <a class="code hl_variable" href="#a5930703e39d2cade572b8c7b06e6f8e3">enabled</a> = <span class="keyword">true</span>; }</div>
-<div class="ttc" id="aclass_atmosphere_html_a5930703e39d2cade572b8c7b06e6f8e3"><div class="ttname"><a href="#a5930703e39d2cade572b8c7b06e6f8e3">Atmosphere::enabled</a></div><div class="ttdeci">bool enabled</div><div class="ttdef"><b>Definition</b> <a href="atmosphere_8h_source.html#l00077">atmosphere.h:77</a></div></div>
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00100">100</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  100</span>{ enabled = <span class="keyword">true</span>; }</div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="atmosphere_8h_source.html#l00077">enabled</a>.</p>
+</div>
+</div>
+<a id="a29ca17056da25c107dd71251eeea84f2" name="a29ca17056da25c107dd71251eeea84f2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a29ca17056da25c107dd71251eeea84f2">&#9670;&#160;</a></span>enableWeather()</h2>
 
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Atmosphere::enableWeather </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00104">104</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  104</span>{ weatherEnabled = <span class="keyword">true</span>; }</div>
+</div><!-- fragment -->
 </div>
 </div>
 <a id="aa8ee0090628c93b2821a429a8bbb863e" name="aa8ee0090628c93b2821a429a8bbb863e"></a>
@@ -372,17 +460,45 @@ Public Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00108">108</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  108</span>                                  {</div>
-<div class="line"><span class="lineno">  109</span>        <a class="code hl_typedef" href="units_8h.html#af1efe03080186b94608ab2d50c060fe5">Magnitude3d</a> sunDir = <a class="code hl_function" href="#abfc9459823400a2a889117cf92b98e99">getSunAngle</a>();</div>
-<div class="line"><span class="lineno">  110</span>        <span class="keywordflow">return</span> sunDir.<a class="code hl_variable" href="struct_position3d.html#a5ba53cfb9bfc34c187a96b160d3edcc0">y</a> &gt; 0.0f;</div>
-<div class="line"><span class="lineno">  111</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00131">131</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  131</span>                                  {</div>
+<div class="line"><span class="lineno">  132</span>        <a class="code hl_typedef" href="units_8h.html#af1efe03080186b94608ab2d50c060fe5">Magnitude3d</a> sunDir = <a class="code hl_function" href="#abfc9459823400a2a889117cf92b98e99">getSunAngle</a>();</div>
+<div class="line"><span class="lineno">  133</span>        <span class="keywordflow">return</span> sunDir.<a class="code hl_variable" href="struct_position3d.html#a5ba53cfb9bfc34c187a96b160d3edcc0">y</a> &gt; 0.0f;</div>
+<div class="line"><span class="lineno">  134</span>    }</div>
 <div class="ttc" id="aclass_atmosphere_html_abfc9459823400a2a889117cf92b98e99"><div class="ttname"><a href="#abfc9459823400a2a889117cf92b98e99">Atmosphere::getSunAngle</a></div><div class="ttdeci">Magnitude3d getSunAngle() const</div></div>
 <div class="ttc" id="astruct_position3d_html_a5ba53cfb9bfc34c187a96b160d3edcc0"><div class="ttname"><a href="struct_position3d.html#a5ba53cfb9bfc34c187a96b160d3edcc0">Position3d::y</a></div><div class="ttdeci">double y</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00025">units.h:25</a></div></div>
 <div class="ttc" id="aunits_8h_html_af1efe03080186b94608ab2d50c060fe5"><div class="ttname"><a href="units_8h.html#af1efe03080186b94608ab2d50c060fe5">Magnitude3d</a></div><div class="ttdeci">Position3d Magnitude3d</div><div class="ttdoc">Type alias for 3D magnitude vectors.</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00116">units.h:116</a></div></div>
 </div><!-- fragment -->
 <p class="reference">References <a class="el" href="#abfc9459823400a2a889117cf92b98e99">getSunAngle()</a>, and <a class="el" href="units_8h_source.html#l00025">Position3d::y</a>.</p>
 
+</div>
+</div>
+<a id="a242e1d1de29454f162c1ff6984e223f1" name="a242e1d1de29454f162c1ff6984e223f1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a242e1d1de29454f162c1ff6984e223f1">&#9670;&#160;</a></span>isEnabled()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool Atmosphere::isEnabled </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00102">102</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  102</span>{ <span class="keywordflow">return</span> enabled; }</div>
+</div><!-- fragment -->
 </div>
 </div>
 <a id="ae260646b46cbb83fc7517b1e5cecfd11" name="ae260646b46cbb83fc7517b1e5cecfd11"></a>
@@ -408,14 +524,14 @@ Public Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00113">113</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  113</span>                                     {</div>
-<div class="line"><span class="lineno">  114</span>        <span class="keywordflow">if</span> (hours &gt; 0 &amp;&amp; hours &lt; 24)</div>
-<div class="line"><span class="lineno">  115</span>            <a class="code hl_variable" href="#af9d8fa6dea3a1eb9d95275a155b36f5f">timeOfDay</a> = hours;</div>
-<div class="line"><span class="lineno">  116</span>    }</div>
-<div class="ttc" id="aclass_atmosphere_html_af9d8fa6dea3a1eb9d95275a155b36f5f"><div class="ttname"><a href="#af9d8fa6dea3a1eb9d95275a155b36f5f">Atmosphere::timeOfDay</a></div><div class="ttdeci">float timeOfDay</div><div class="ttdef"><b>Definition</b> <a href="atmosphere_8h_source.html#l00079">atmosphere.h:79</a></div></div>
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00136">136</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  136</span>                                     {</div>
+<div class="line"><span class="lineno">  137</span>        <span class="keywordflow">if</span> (hours &gt; 0 &amp;&amp; hours &lt; 24)</div>
+<div class="line"><span class="lineno">  138</span>            <a class="code hl_variable" href="#af9d8fa6dea3a1eb9d95275a155b36f5f">timeOfDay</a> = hours;</div>
+<div class="line"><span class="lineno">  139</span>    }</div>
+<div class="ttc" id="aclass_atmosphere_html_af9d8fa6dea3a1eb9d95275a155b36f5f"><div class="ttname"><a href="#af9d8fa6dea3a1eb9d95275a155b36f5f">Atmosphere::timeOfDay</a></div><div class="ttdeci">float timeOfDay</div><div class="ttdef"><b>Definition</b> <a href="atmosphere_8h_source.html#l00090">atmosphere.h:90</a></div></div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="atmosphere_8h_source.html#l00079">timeOfDay</a>.</p>
+<p class="reference">References <a class="el" href="atmosphere_8h_source.html#l00090">timeOfDay</a>.</p>
 
 </div>
 </div>
@@ -466,7 +582,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00092">92</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00115">115</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
 
 </div>
 </div>
@@ -482,23 +598,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00124">124</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
-
-</div>
-</div>
-<a id="a5930703e39d2cade572b8c7b06e6f8e3" name="a5930703e39d2cade572b8c7b06e6f8e3"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5930703e39d2cade572b8c7b06e6f8e3">&#9670;&#160;</a></span>enabled</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">bool Atmosphere::enabled = false</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00077">77</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00148">148</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
 
 </div>
 </div>
@@ -514,7 +614,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00099">99</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00122">122</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
 
 </div>
 </div>
@@ -530,7 +630,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00102">102</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00125">125</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
 
 </div>
 </div>
@@ -546,7 +646,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00105">105</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00128">128</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
 
 </div>
 </div>
@@ -557,12 +657,12 @@ Public Attributes</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">float Atmosphere::secondsPerHour = 60.f</td>
+          <td class="memname">float Atmosphere::secondsPerHour = 3600.0f</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00078">78</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00091">91</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
 
 </div>
 </div>
@@ -578,7 +678,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00106">106</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00129">129</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
 
 </div>
 </div>
@@ -594,7 +694,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00098">98</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00121">121</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
 
 </div>
 </div>
@@ -610,7 +710,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00101">101</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00124">124</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
 
 </div>
 </div>
@@ -626,7 +726,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00104">104</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00127">127</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
 
 </div>
 </div>
@@ -642,8 +742,49 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00079">79</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00090">90</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
 
+</div>
+</div>
+<a id="a0733736400004a7241f48940058e2c93" name="a0733736400004a7241f48940058e2c93"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0733736400004a7241f48940058e2c93">&#9670;&#160;</a></span>weatherDelegate</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="atmosphere_8h.html#afda69b918865d1f99888c30b91aa47c0">WeatherDelegate</a> Atmosphere::weatherDelegate</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<b>Initial value:</b><div class="fragment"><div class="line">= [](<a class="code hl_struct" href="struct_view_information.html">ViewInformation</a> info) {</div>
+<div class="line">        <span class="keywordflow">return</span> <a class="code hl_struct" href="struct_weather_state.html">WeatherState</a>();</div>
+<div class="line">    }</div>
+<div class="ttc" id="astruct_view_information_html"><div class="ttname"><a href="struct_view_information.html">ViewInformation</a></div><div class="ttdef"><b>Definition</b> <a href="camera_8h_source.html#l00208">camera.h:208</a></div></div>
+<div class="ttc" id="astruct_weather_state_html"><div class="ttname"><a href="struct_weather_state.html">WeatherState</a></div><div class="ttdef"><b>Definition</b> <a href="atmosphere_8h_source.html#l00080">atmosphere.h:80</a></div></div>
+</div><!-- fragment -->
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00095">95</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   95</span>                                                               {</div>
+<div class="line"><span class="lineno">   96</span>        <span class="keywordflow">return</span> WeatherState();</div>
+<div class="line"><span class="lineno">   97</span>    };</div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="a05f0844d725b9914aa13775b130a74f5" name="a05f0844d725b9914aa13775b130a74f5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a05f0844d725b9914aa13775b130a74f5">&#9670;&#160;</a></span>wind</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="units_8h.html#af1efe03080186b94608ab2d50c060fe5">Magnitude3d</a> Atmosphere::wind = {0.0f, 0.0f, 0.0f}</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00093">93</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   93</span>{0.0f, 0.0f, 0.0f};</div>
+</div><!-- fragment -->
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following file:<ul>

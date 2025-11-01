@@ -2,6 +2,7 @@ var struct_texture =
 [
     [ "createCheckerboard", "struct_texture.html#a99403f282f676041e01bf76216c62288", null ],
     [ "createDoubleCheckerboard", "struct_texture.html#a7ed0da17f706d1d687f753193558527f", null ],
+    [ "createRainStreak", "struct_texture.html#a9cccd586db9b1e308c164c10d162004e", null ],
     [ "createTiledCheckerboard", "struct_texture.html#a659f1c34d69196f97dbd9de980696d6a", null ],
     [ "fromResource", "struct_texture.html#a6502c70add778b8df93a33f516d7d831", null ],
     [ "fromResourceName", "struct_texture.html#a29875124ac62123b9d6840e38ce60920", null ],

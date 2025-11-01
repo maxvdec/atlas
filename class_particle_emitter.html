@@ -117,6 +117,7 @@ $(function(){initNavTree('class_particle_emitter.html','','class_particle_emitte
 <div class="header">
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="class_particle_emitter-members.html">List of all members</a>  </div>
   <div class="headertitle"><div class="title">ParticleEmitter Class Reference</div></div>
 </div><!--header-->
@@ -125,7 +126,7 @@ $(function(){initNavTree('class_particle_emitter.html','','class_particle_emitte
 <p>Class representing a particle emitter in the game. It emits and manages particles.  
  <a href="#details">More...</a></p>
 
-<p><code>#include &lt;<a class="el" href="object_8h_source.html">object.h</a>&gt;</code></p>
+<p><code>#include &lt;<a class="el" href="particle_8h_source.html">particle.h</a>&gt;</code></p>
 <div class="dynheader">
 Inheritance diagram for ParticleEmitter:</div>
 <div class="dyncontent">
@@ -167,7 +168,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a0a4c69870a82921e620a467f8264be1b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to get the position of the object in 3D space.  <br /></td></tr>
 <tr class="memitem:ab0a773a7d892d7347a815e7e497dd83b" id="r_ab0a773a7d892d7347a815e7e497dd83b"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab0a773a7d892d7347a815e7e497dd83b">canCastShadows</a> () const override</td></tr>
 <tr class="memdesc:ab0a773a7d892d7347a815e7e497dd83b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to determine if the object can cast shadows. Can be overridden by derived classes.  <br /></td></tr>
-<tr class="memitem:afa47fd3fc1fc5338fef9e04f05ae73a7" id="r_afa47fd3fc1fc5338fef9e04f05ae73a7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#afa47fd3fc1fc5338fef9e04f05ae73a7">setEmissionType</a> (<a class="el" href="object_8h.html#a5d2a36527b762e139f0a5cefd66b3191">ParticleEmissionType</a> type)</td></tr>
+<tr class="memitem:ac72bcb908dc6f2c12c4f68ed684c1d04" id="r_ac72bcb908dc6f2c12c4f68ed684c1d04"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac72bcb908dc6f2c12c4f68ed684c1d04">canUseDeferredRendering</a> () const override</td></tr>
+<tr class="memdesc:ac72bcb908dc6f2c12c4f68ed684c1d04"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to determine if the object can use deferred rendering.  <br /></td></tr>
+<tr class="memitem:afa47fd3fc1fc5338fef9e04f05ae73a7" id="r_afa47fd3fc1fc5338fef9e04f05ae73a7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#afa47fd3fc1fc5338fef9e04f05ae73a7">setEmissionType</a> (<a class="el" href="particle_8h.html#a5d2a36527b762e139f0a5cefd66b3191">ParticleEmissionType</a> type)</td></tr>
 <tr class="memdesc:afa47fd3fc1fc5338fef9e04f05ae73a7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function that sets the type of particle emission.  <br /></td></tr>
 <tr class="memitem:a56c9c5dc364ef087cd0d311aff2ed60a" id="r_a56c9c5dc364ef087cd0d311aff2ed60a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a56c9c5dc364ef087cd0d311aff2ed60a">setDirection</a> (const <a class="el" href="units_8h.html#af1efe03080186b94608ab2d50c060fe5">Magnitude3d</a> &amp;dir)</td></tr>
 <tr class="memdesc:a56c9c5dc364ef087cd0d311aff2ed60a"><td class="mdescLeft">&#160;</td><td class="mdescRight">The direction in which particles are emitted.  <br /></td></tr>
@@ -175,7 +178,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:ae285689b7606d6278cf9e82294780015"><td class="mdescLeft">&#160;</td><td class="mdescRight">The radius around the emitter from which particles are spawned.  <br /></td></tr>
 <tr class="memitem:a7bac44e4712908099af3a76187ed908e" id="r_a7bac44e4712908099af3a76187ed908e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7bac44e4712908099af3a76187ed908e">setSpawnRate</a> (float particlesPerSecond)</td></tr>
 <tr class="memdesc:a7bac44e4712908099af3a76187ed908e"><td class="mdescLeft">&#160;</td><td class="mdescRight">How much particles are spawned each second.  <br /></td></tr>
-<tr class="memitem:a80199623ad22b564bc573ebe45e4e610" id="r_a80199623ad22b564bc573ebe45e4e610"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a80199623ad22b564bc573ebe45e4e610">setParticleSettings</a> (const <a class="el" href="struct_particle_settings.html">ParticleSettings</a> &amp;settings)</td></tr>
+<tr class="memitem:a80199623ad22b564bc573ebe45e4e610" id="r_a80199623ad22b564bc573ebe45e4e610"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a80199623ad22b564bc573ebe45e4e610">setParticleSettings</a> (const <a class="el" href="struct_particle_settings.html">ParticleSettings</a> &amp;<a class="el" href="#a5c8da6c957e8457f4daeec394ea6a317">settings</a>)</td></tr>
 <tr class="memdesc:a80199623ad22b564bc573ebe45e4e610"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the settings for the particles.  <br /></td></tr>
 <tr class="memitem:a9068f50bd291a3dc3a85d35ff03274e4" id="r_a9068f50bd291a3dc3a85d35ff03274e4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9068f50bd291a3dc3a85d35ff03274e4">emitOnce</a> ()</td></tr>
 <tr class="memdesc:a9068f50bd291a3dc3a85d35ff03274e4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Emits particles once.  <br /></td></tr>
@@ -230,17 +233,20 @@ requires std::is_base_of_v&lt;<a class="el" href="class_component.html">Componen
 <tr class="memitem:a98ddcdedf7f0c6d440be821c80d6ed12 inherit pub_methods_class_renderable" id="r_a98ddcdedf7f0c6d440be821c80d6ed12"><td class="memItemLeft" align="right" valign="top">virtual <a class="el" href="units_8h.html#a1636071d291ee0954efc6d64eb8d94f1">Size3d</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_renderable.html#a98ddcdedf7f0c6d440be821c80d6ed12">getScale</a> () const</td></tr>
 <tr class="memdesc:a98ddcdedf7f0c6d440be821c80d6ed12 inherit pub_methods_class_renderable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to get the scale of the object in 3D space.  <br /></td></tr>
 <tr class="memitem:a2103eed2f7f54bca8ba1001907b367a9 inherit pub_methods_class_renderable" id="r_a2103eed2f7f54bca8ba1001907b367a9"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_renderable.html#a2103eed2f7f54bca8ba1001907b367a9">~Renderable</a> ()=default</td></tr>
-<tr class="memitem:aa19d3c7b6144486766d45dbd3d0a08b8 inherit pub_methods_class_renderable" id="r_aa19d3c7b6144486766d45dbd3d0a08b8"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_renderable.html#aa19d3c7b6144486766d45dbd3d0a08b8">canUseDeferredRendering</a> () const</td></tr>
-<tr class="memdesc:aa19d3c7b6144486766d45dbd3d0a08b8 inherit pub_methods_class_renderable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to determine if the object can use deferred rendering.  <br /></td></tr>
 </table><table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 id="header-inherited" class="groupheader"><a id="inherited" name="inherited"></a>
-Additional Inherited Members</h2></td></tr>
+<tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
+Public Attributes</h2></td></tr>
+<tr class="memitem:a5c8da6c957e8457f4daeec394ea6a317" id="r_a5c8da6c957e8457f4daeec394ea6a317"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_particle_settings.html">ParticleSettings</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a5c8da6c957e8457f4daeec394ea6a317">settings</a></td></tr>
+<tr class="memdesc:a5c8da6c957e8457f4daeec394ea6a317"><td class="mdescLeft">&#160;</td><td class="mdescRight">The settings used for particle behavior and appearance.  <br /></td></tr>
 <tr class="inherit_header pub_attribs_class_game_object"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pub_attribs_class_game_object')"><span class="dynarrow"><span class="arrowhead closed"></span></span>Public Attributes inherited from <a class="el" href="class_game_object.html">GameObject</a></td></tr>
 <tr class="memitem:af69e678688bfef2c0bba4aa78085c8a8 inherit pub_attribs_class_game_object" id="r_af69e678688bfef2c0bba4aa78085c8a8"><td class="memItemLeft" align="right" valign="top">std::shared_ptr&lt; <a class="el" href="class_body.html">Body</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_game_object.html#af69e678688bfef2c0bba4aa78085c8a8">body</a> = nullptr</td></tr>
 <tr class="memdesc:af69e678688bfef2c0bba4aa78085c8a8 inherit pub_attribs_class_game_object"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets the physics body associated with the object.  <br /></td></tr>
 <tr class="inherit_header pub_attribs_class_renderable"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pub_attribs_class_renderable')"><span class="dynarrow"><span class="arrowhead closed"></span></span>Public Attributes inherited from <a class="el" href="class_renderable.html">Renderable</a></td></tr>
 <tr class="memitem:a7cb09219e507e1c1395efced124e3b58 inherit pub_attribs_class_renderable" id="r_a7cb09219e507e1c1395efced124e3b58"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_renderable.html#a7cb09219e507e1c1395efced124e3b58">renderDepthOfView</a> = false</td></tr>
 <tr class="memdesc:a7cb09219e507e1c1395efced124e3b58 inherit pub_attribs_class_renderable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Whether the object should be included in depth of field calculations. When true, contributes to blur effects.  <br /></td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 id="header-inherited" class="groupheader"><a id="inherited" name="inherited"></a>
+Additional Inherited Members</h2></td></tr>
 <tr class="inherit_header pro_attribs_class_game_object"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pro_attribs_class_game_object')"><span class="dynarrow"><span class="arrowhead closed"></span></span>Protected Attributes inherited from <a class="el" href="class_game_object.html">GameObject</a></td></tr>
 <tr class="memitem:a545e4ed29df0e16304d46c73404c0ce6 inherit pro_attribs_class_game_object" id="r_a545e4ed29df0e16304d46c73404c0ce6"><td class="memItemLeft" align="right" valign="top">std::vector&lt; std::shared_ptr&lt; <a class="el" href="class_component.html">Component</a> &gt; &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_game_object.html#a545e4ed29df0e16304d46c73404c0ce6">components</a></td></tr>
 </table>
@@ -253,7 +259,7 @@ Example</h2>
 <div class="line"><span class="comment">// Set the position of the emitter</span></div>
 <div class="line">emitter.setPosition({0.0f, 0.0f, 0.0f});</div>
 <div class="line"><span class="comment">// Set the emission type to Fountain</span></div>
-<div class="line">emitter.setEmissionType(<a class="code hl_enumvalue" href="object_8h.html#a5d2a36527b762e139f0a5cefd66b3191a7941ce00c308ef62cd69af52664e9788">ParticleEmissionType::Fountain</a>);</div>
+<div class="line">emitter.setEmissionType(<a class="code hl_enumvalue" href="particle_8h.html#a5d2a36527b762e139f0a5cefd66b3191a7941ce00c308ef62cd69af52664e9788">ParticleEmissionType::Fountain</a>);</div>
 <div class="line"><span class="comment">// Set the direction of particle emission</span></div>
 <div class="line">emitter.setDirection({0.0f, 1.0f, 0.0f});</div>
 <div class="line"><span class="comment">// Set the spawn radius of particles</span></div>
@@ -261,27 +267,28 @@ Example</h2>
 <div class="line"><span class="comment">// Set the spawn rate to 20 particles per second</span></div>
 <div class="line">emitter.setSpawnRate(20.0f);</div>
 <div class="line"><span class="comment">// Define particle settings</span></div>
-<div class="line">ParticleSettings settings;</div>
-<div class="line">settings.minLifetime = 1.0f;</div>
-<div class="line">settings.maxLifetime = 3.0f;</div>
-<div class="line">settings.minSize = 0.05f;</div>
-<div class="line">settings.maxSize = 0.1f;</div>
-<div class="line">settings.fadeSpeed = 0.5f;</div>
-<div class="line">settings.gravity = -9.81f;</div>
-<div class="line">settings.spread = 1.0f;</div>
-<div class="line">settings.speedVariation = 0.5f;</div>
-<div class="line">emitter.setParticleSettings(settings);</div>
+<div class="line">ParticleSettings <a class="code hl_variable" href="#a5c8da6c957e8457f4daeec394ea6a317">settings</a>;</div>
+<div class="line"><a class="code hl_variable" href="#a5c8da6c957e8457f4daeec394ea6a317">settings</a>.minLifetime = 1.0f;</div>
+<div class="line"><a class="code hl_variable" href="#a5c8da6c957e8457f4daeec394ea6a317">settings</a>.maxLifetime = 3.0f;</div>
+<div class="line"><a class="code hl_variable" href="#a5c8da6c957e8457f4daeec394ea6a317">settings</a>.minSize = 0.05f;</div>
+<div class="line"><a class="code hl_variable" href="#a5c8da6c957e8457f4daeec394ea6a317">settings</a>.maxSize = 0.1f;</div>
+<div class="line"><a class="code hl_variable" href="#a5c8da6c957e8457f4daeec394ea6a317">settings</a>.fadeSpeed = 0.5f;</div>
+<div class="line"><a class="code hl_variable" href="#a5c8da6c957e8457f4daeec394ea6a317">settings</a>.gravity = -9.81f;</div>
+<div class="line"><a class="code hl_variable" href="#a5c8da6c957e8457f4daeec394ea6a317">settings</a>.spread = 1.0f;</div>
+<div class="line"><a class="code hl_variable" href="#a5c8da6c957e8457f4daeec394ea6a317">settings</a>.speedVariation = 0.5f;</div>
+<div class="line">emitter.setParticleSettings(<a class="code hl_variable" href="#a5c8da6c957e8457f4daeec394ea6a317">settings</a>);</div>
 <div class="line"><span class="comment">// Attach a texture to the particles</span></div>
 <div class="line"><a class="code hl_enumvalue" href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82aa3e8ae43188ae76d38f414b2bdb0077b">Texture</a> particleTexture(<span class="stringliteral">&quot;path/to/particle_texture.png&quot;</span>);</div>
 <div class="line">emitter.attachTexture(particleTexture);</div>
 <div class="line">emitter.enableTexture();</div>
 <div class="line"><span class="comment">// Add the emitter to the scene</span></div>
 <div class="line">scene.addObject(&amp;emitter);</div>
+<div class="ttc" id="aclass_particle_emitter_html_a5c8da6c957e8457f4daeec394ea6a317"><div class="ttname"><a href="#a5c8da6c957e8457f4daeec394ea6a317">ParticleEmitter::settings</a></div><div class="ttdeci">ParticleSettings settings</div><div class="ttdoc">The settings used for particle behavior and appearance.</div><div class="ttdef"><b>Definition</b> <a href="particle_8h_source.html#l00293">particle.h:293</a></div></div>
 <div class="ttc" id="aclass_particle_emitter_html_acb6f3e714474c21f30600aa4b02fc2d5"><div class="ttname"><a href="#acb6f3e714474c21f30600aa4b02fc2d5">ParticleEmitter::ParticleEmitter</a></div><div class="ttdeci">ParticleEmitter(unsigned int maxParticles=100)</div><div class="ttdoc">Constructs a new ParticleEmitter object.</div></div>
-<div class="ttc" id="aobject_8h_html_a5d2a36527b762e139f0a5cefd66b3191a7941ce00c308ef62cd69af52664e9788"><div class="ttname"><a href="object_8h.html#a5d2a36527b762e139f0a5cefd66b3191a7941ce00c308ef62cd69af52664e9788">ParticleEmissionType::Fountain</a></div><div class="ttdeci">@ Fountain</div><div class="ttdoc">Emission type for fountain-like particle effects.</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00647">object.h:647</a></div></div>
+<div class="ttc" id="aparticle_8h_html_a5d2a36527b762e139f0a5cefd66b3191a7941ce00c308ef62cd69af52664e9788"><div class="ttname"><a href="particle_8h.html#a5d2a36527b762e139f0a5cefd66b3191a7941ce00c308ef62cd69af52664e9788">ParticleEmissionType::Fountain</a></div><div class="ttdeci">@ Fountain</div><div class="ttdoc">Emission type for fountain-like particle effects.</div><div class="ttdef"><b>Definition</b> <a href="particle_8h_source.html#l00026">particle.h:26</a></div></div>
 <div class="ttc" id="ashader_8h_html_aed7a1c7a5976e4adb712d0a231dada82aa3e8ae43188ae76d38f414b2bdb0077b"><div class="ttname"><a href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82aa3e8ae43188ae76d38f414b2bdb0077b">AtlasVertexShader::Texture</a></div><div class="ttdeci">@ Texture</div><div class="ttdoc">Vertex shader for rendering textured objects.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00050">shader.h:50</a></div></div>
 </div><!-- fragment --> 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00783">783</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="particle_8h_source.html#l00162">162</a> of file <a class="el" href="particle_8h_source.html">particle.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="acb6f3e714474c21f30600aa4b02fc2d5" name="acb6f3e714474c21f30600aa4b02fc2d5"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#acb6f3e714474c21f30600aa4b02fc2d5">&#9670;&#160;</a></span>ParticleEmitter()</h2>
@@ -366,8 +373,41 @@ Example</h2>
 
 <p>Reimplemented from <a class="el" href="class_renderable.html#a54a97abc4b6fe3280505da3b587cba98">Renderable</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00839">839</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  839</span>{ <span class="keywordflow">return</span> <span class="keyword">false</span>; };</div>
+<p class="definition">Definition at line <a class="el" href="particle_8h_source.html#l00218">218</a> of file <a class="el" href="particle_8h_source.html">particle.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  218</span>{ <span class="keywordflow">return</span> <span class="keyword">false</span>; };</div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="ac72bcb908dc6f2c12c4f68ed684c1d04" name="ac72bcb908dc6f2c12c4f68ed684c1d04"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac72bcb908dc6f2c12c4f68ed684c1d04">&#9670;&#160;</a></span>canUseDeferredRendering()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool ParticleEmitter::canUseDeferredRendering </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span><span class="mlabel override">override</span><span class="mlabel virtual">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Function to determine if the object can use deferred rendering. </p>
+<dl class="section return"><dt>Returns</dt><dd>(bool) True if the object supports deferred rendering, false otherwise. </dd></dl>
+
+<p>Reimplemented from <a class="el" href="class_renderable.html#aa19d3c7b6144486766d45dbd3d0a08b8">Renderable</a>.</p>
+
+<p class="definition">Definition at line <a class="el" href="particle_8h_source.html#l00220">220</a> of file <a class="el" href="particle_8h_source.html">particle.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  220</span>{ <span class="keywordflow">return</span> <span class="keyword">false</span>; }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -396,8 +436,8 @@ Example</h2>
 
 <p>Function that disables the use of a texture for the particles. </p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00834">834</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  834</span>{ useTexture = <span class="keyword">false</span>; };</div>
+<p class="definition">Definition at line <a class="el" href="particle_8h_source.html#l00213">213</a> of file <a class="el" href="particle_8h_source.html">particle.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  213</span>{ useTexture = <span class="keyword">false</span>; };</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -489,8 +529,8 @@ Example</h2>
 
 <p>Function that enables the use of a texture for the particles. </p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00829">829</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  829</span>{ useTexture = <span class="keyword">true</span>; };</div>
+<p class="definition">Definition at line <a class="el" href="particle_8h_source.html#l00208">208</a> of file <a class="el" href="particle_8h_source.html">particle.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  208</span>{ useTexture = <span class="keyword">true</span>; };</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -522,8 +562,8 @@ Example</h2>
 
 <p>Reimplemented from <a class="el" href="class_renderable.html#a644269034ac58f64e47d88846c365cf4">Renderable</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00838">838</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  838</span>{ <span class="keywordflow">return</span> position; };</div>
+<p class="definition">Definition at line <a class="el" href="particle_8h_source.html#l00217">217</a> of file <a class="el" href="particle_8h_source.html">particle.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  217</span>{ <span class="keywordflow">return</span> position; };</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -683,7 +723,7 @@ Example</h2>
         <tr>
           <td class="memname">void ParticleEmitter::setEmissionType </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="object_8h.html#a5d2a36527b762e139f0a5cefd66b3191">ParticleEmissionType</a></td>          <td class="paramname"><span class="paramname"><em>type</em></span></td><td>)</td>
+          <td class="paramtype"><a class="el" href="particle_8h.html#a5d2a36527b762e139f0a5cefd66b3191">ParticleEmissionType</a></td>          <td class="paramname"><span class="paramname"><em>type</em></span></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -721,6 +761,8 @@ Example</h2>
   </table>
   </dd>
 </dl>
+
+<p class="reference">References <a class="el" href="particle_8h_source.html#l00293">settings</a>.</p>
 
 </div>
 </div>
@@ -869,10 +911,10 @@ Example</h2>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00904">904</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  904</span>                                       {</div>
-<div class="line"><span class="lineno">  905</span>        <a class="code hl_function" href="#a7bac44e4712908099af3a76187ed908e">setSpawnRate</a>(<span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(rate));</div>
-<div class="line"><span class="lineno">  906</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="particle_8h_source.html#l00285">285</a> of file <a class="el" href="particle_8h_source.html">particle.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  285</span>                                       {</div>
+<div class="line"><span class="lineno">  286</span>        <a class="code hl_function" href="#a7bac44e4712908099af3a76187ed908e">setSpawnRate</a>(<span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(rate));</div>
+<div class="line"><span class="lineno">  287</span>    }</div>
 <div class="ttc" id="aclass_particle_emitter_html_a7bac44e4712908099af3a76187ed908e"><div class="ttname"><a href="#a7bac44e4712908099af3a76187ed908e">ParticleEmitter::setSpawnRate</a></div><div class="ttdeci">void setSpawnRate(float particlesPerSecond)</div><div class="ttdoc">How much particles are spawned each second.</div></div>
 </div><!-- fragment -->
 <p class="reference">References <a class="el" href="#a7bac44e4712908099af3a76187ed908e">setSpawnRate()</a>.</p>
@@ -975,8 +1017,27 @@ Example</h2>
 
 </div>
 </div>
+<a name="doc-variable-members" id="doc-variable-members"></a><h2 id="header-doc-variable-members" class="groupheader">Member Data Documentation</h2>
+<a id="a5c8da6c957e8457f4daeec394ea6a317" name="a5c8da6c957e8457f4daeec394ea6a317"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5c8da6c957e8457f4daeec394ea6a317">&#9670;&#160;</a></span>settings</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="struct_particle_settings.html">ParticleSettings</a> ParticleEmitter::settings</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>The settings used for particle behavior and appearance. </p>
+
+<p class="definition">Definition at line <a class="el" href="particle_8h_source.html#l00293">293</a> of file <a class="el" href="particle_8h_source.html">particle.h</a>.</p>
+
+</div>
+</div>
 <hr/>The documentation for this class was generated from the following file:<ul>
-<li>include/atlas/<a class="el" href="object_8h_source.html">object.h</a></li>
+<li>include/atlas/<a class="el" href="particle_8h_source.html">particle.h</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

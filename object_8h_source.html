@@ -778,569 +778,251 @@ $(function(){initNavTree('object_8h_source.html','',''); });
 <div class="line"><a id="l00634" name="l00634"></a><span class="lineno">  634</span><span class="comment"> */</span></div>
 <div class="line"><a id="l00635" name="l00635"></a><span class="lineno"><a class="line" href="object_8h.html#a489ccddca865b97fafa117e23b4d0f1c">  635</a></span><a class="code hl_class" href="class_core_object.html">CoreObject</a> <a class="code hl_function" href="object_8h.html#a489ccddca865b97fafa117e23b4d0f1c">createDebugSphere</a>(<span class="keywordtype">double</span> radius, <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> sectorCount = 36,</div>
 <div class="line"><a id="l00636" name="l00636"></a><span class="lineno">  636</span>                             <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> stackCount = 18);</div>
-<div class="line"><a id="l00637" name="l00637"></a><span class="lineno">  637</span><span class="comment"></span> </div>
-<div class="line"><a id="l00638" name="l00638"></a><span class="lineno">  638</span><span class="comment">/**</span></div>
-<div class="line"><a id="l00639" name="l00639"></a><span class="lineno">  639</span><span class="comment"> * @brief Type that describes how particles are emitted.</span></div>
-<div class="line"><a id="l00640" name="l00640"></a><span class="lineno">  640</span><span class="comment"> *</span></div>
-<div class="line"><a id="l00641" name="l00641"></a><span class="lineno">  641</span><span class="comment"> */</span></div>
-<div class="foldopen" id="foldopen00642" data-start="{" data-end="};">
-<div class="line"><a id="l00642" name="l00642"></a><span class="lineno"><a class="line" href="object_8h.html#a5d2a36527b762e139f0a5cefd66b3191">  642</a></span><span class="keyword">enum class</span> <a class="code hl_enumeration" href="object_8h.html#a5d2a36527b762e139f0a5cefd66b3191">ParticleEmissionType</a> {<span class="comment"></span></div>
-<div class="line"><a id="l00643" name="l00643"></a><span class="lineno">  643</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00644" name="l00644"></a><span class="lineno">  644</span><span class="comment">     * @brief Emission type for fountain-like particle effects.</span></div>
-<div class="line"><a id="l00645" name="l00645"></a><span class="lineno">  645</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00646" name="l00646"></a><span class="lineno">  646</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00647" name="l00647"></a><span class="lineno"><a class="line" href="object_8h.html#a5d2a36527b762e139f0a5cefd66b3191a7941ce00c308ef62cd69af52664e9788">  647</a></span>    <a class="code hl_enumvalue" href="object_8h.html#a5d2a36527b762e139f0a5cefd66b3191a7941ce00c308ef62cd69af52664e9788">Fountain</a>,<span class="comment"></span></div>
-<div class="line"><a id="l00648" name="l00648"></a><span class="lineno">  648</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00649" name="l00649"></a><span class="lineno">  649</span><span class="comment">     * @brief Emission type for snow-like particle effects.</span></div>
-<div class="line"><a id="l00650" name="l00650"></a><span class="lineno">  650</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00651" name="l00651"></a><span class="lineno">  651</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00652" name="l00652"></a><span class="lineno"><a class="line" href="object_8h.html#a5d2a36527b762e139f0a5cefd66b3191aed8e37bad13d76c6dbeb58152440b41e">  652</a></span>    <a class="code hl_enumvalue" href="object_8h.html#a5d2a36527b762e139f0a5cefd66b3191aed8e37bad13d76c6dbeb58152440b41e">Ambient</a></div>
-<div class="line"><a id="l00653" name="l00653"></a><span class="lineno">  653</span>};</div>
+<div class="line"><a id="l00637" name="l00637"></a><span class="lineno">  637</span> </div>
+<div class="line"><a id="l00638" name="l00638"></a><span class="lineno">  638</span><span class="keyword">class </span><a class="code hl_struct" href="struct_resource.html">Resource</a>;</div>
+<div class="line"><a id="l00639" name="l00639"></a><span class="lineno">  639</span><span class="keyword">class </span>aiNode;</div>
+<div class="line"><a id="l00640" name="l00640"></a><span class="lineno">  640</span><span class="keyword">class </span>aiScene;</div>
+<div class="line"><a id="l00641" name="l00641"></a><span class="lineno">  641</span><span class="keyword">class </span>aiMesh;</div>
+<div class="line"><a id="l00642" name="l00642"></a><span class="lineno">  642</span><span class="keyword">class </span>aiMaterial;<span class="comment"></span></div>
+<div class="line"><a id="l00643" name="l00643"></a><span class="lineno">  643</span><span class="comment">/**</span></div>
+<div class="line"><a id="l00644" name="l00644"></a><span class="lineno">  644</span><span class="comment"> * @brief Class that represents a 3D model composed of multiple CoreObjects. It</span></div>
+<div class="line"><a id="l00645" name="l00645"></a><span class="lineno">  645</span><span class="comment"> * can be loaded from a resource file and manages its constituent objects.</span></div>
+<div class="line"><a id="l00646" name="l00646"></a><span class="lineno">  646</span><span class="comment"> * \subsection model-example Example</span></div>
+<div class="line"><a id="l00647" name="l00647"></a><span class="lineno">  647</span><span class="comment">    * ```cpp</span></div>
+<div class="line"><a id="l00648" name="l00648"></a><span class="lineno">  648</span><span class="comment">    * // Load a 3D model from a resource file</span></div>
+<div class="line"><a id="l00649" name="l00649"></a><span class="lineno">  649</span><span class="comment">    * Resource modelResource =</span></div>
+<div class="line"><a id="l00650" name="l00650"></a><span class="lineno">  650</span><span class="comment"> Workspace::get().createResource(&quot;path/to/model.obj&quot;);</span></div>
+<div class="line"><a id="l00651" name="l00651"></a><span class="lineno">  651</span><span class="comment">    * Model myModel;</span></div>
+<div class="line"><a id="l00652" name="l00652"></a><span class="lineno">  652</span><span class="comment">    * myModel.fromResource(modelResource);</span></div>
+<div class="line"><a id="l00653" name="l00653"></a><span class="lineno">  653</span><span class="comment">    * // Set the position of the model in the scene</span></div>
+<div class="line"><a id="l00654" name="l00654"></a><span class="lineno">  654</span><span class="comment">    * myModel.setPosition({0.0f, 0.0f, 0.0f});</span></div>
+<div class="line"><a id="l00655" name="l00655"></a><span class="lineno">  655</span><span class="comment">    * // Scale the model to twice its original size</span></div>
+<div class="line"><a id="l00656" name="l00656"></a><span class="lineno">  656</span><span class="comment">    * myModel.setScale({2.0f, 2.0f, 2.0f});</span></div>
+<div class="line"><a id="l00657" name="l00657"></a><span class="lineno">  657</span><span class="comment">    * // Rotate the model 45 degrees around the Y-axis</span></div>
+<div class="line"><a id="l00658" name="l00658"></a><span class="lineno">  658</span><span class="comment">    * myModel.setRotation({0.0f, 45.0f, 0.0f});</span></div>
+<div class="line"><a id="l00659" name="l00659"></a><span class="lineno">  659</span><span class="comment">    * // Add the model to the scene</span></div>
+<div class="line"><a id="l00660" name="l00660"></a><span class="lineno">  660</span><span class="comment">    * window.addObject(&amp;myModel);</span></div>
+<div class="line"><a id="l00661" name="l00661"></a><span class="lineno">  661</span><span class="comment">    * ```</span></div>
+<div class="line"><a id="l00662" name="l00662"></a><span class="lineno">  662</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00663" name="l00663"></a><span class="lineno">  663</span><span class="comment"> */</span></div>
+<div class="foldopen" id="foldopen00664" data-start="{" data-end="};">
+<div class="line"><a id="l00664" name="l00664"></a><span class="lineno"><a class="line" href="class_model.html">  664</a></span><span class="keyword">class </span><a class="code hl_function" href="class_model.html#ab5bdabea36b1d1bee80151e2da913373">Model</a> : <span class="keyword">public</span> <a class="code hl_class" href="class_game_object.html">GameObject</a> {</div>
+<div class="line"><a id="l00665" name="l00665"></a><span class="lineno">  665</span>  <span class="keyword">public</span>:<span class="comment"></span></div>
+<div class="line"><a id="l00666" name="l00666"></a><span class="lineno">  666</span><span class="comment">    /**</span></div>
+<div class="line"><a id="l00667" name="l00667"></a><span class="lineno">  667</span><span class="comment">     * @brief Loads the model from a resource.</span></div>
+<div class="line"><a id="l00668" name="l00668"></a><span class="lineno">  668</span><span class="comment">     *</span></div>
+<div class="line"><a id="l00669" name="l00669"></a><span class="lineno">  669</span><span class="comment">     * @param resource The resource to load the model from.</span></div>
+<div class="line"><a id="l00670" name="l00670"></a><span class="lineno">  670</span><span class="comment">     */</span></div>
+<div class="line"><a id="l00671" name="l00671"></a><span class="lineno"><a class="line" href="class_model.html#a8a74c2ff2b6a5755c2ed913d7c6a88f4">  671</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_model.html#a8a74c2ff2b6a5755c2ed913d7c6a88f4">fromResource</a>(<a class="code hl_struct" href="struct_resource.html">Resource</a> resource);</div>
+<div class="line"><a id="l00672" name="l00672"></a><span class="lineno">  672</span><span class="comment"></span> </div>
+<div class="line"><a id="l00673" name="l00673"></a><span class="lineno">  673</span><span class="comment">    /**</span></div>
+<div class="line"><a id="l00674" name="l00674"></a><span class="lineno">  674</span><span class="comment">     * @brief Gets the objects that make up the model.</span></div>
+<div class="line"><a id="l00675" name="l00675"></a><span class="lineno">  675</span><span class="comment">     *</span></div>
+<div class="line"><a id="l00676" name="l00676"></a><span class="lineno">  676</span><span class="comment">     * @return (std::vector&lt;std::shared_ptr&lt;CoreObject&gt;&gt;) The objects.</span></div>
+<div class="line"><a id="l00677" name="l00677"></a><span class="lineno">  677</span><span class="comment">     */</span></div>
+<div class="foldopen" id="foldopen00678" data-start="{" data-end="}">
+<div class="line"><a id="l00678" name="l00678"></a><span class="lineno"><a class="line" href="class_model.html#af2f4d13f48508e046f3b57e59ba420fb">  678</a></span>    <span class="keyword">inline</span> std::vector&lt;std::shared_ptr&lt;CoreObject&gt;&gt; <a class="code hl_function" href="class_model.html#af2f4d13f48508e046f3b57e59ba420fb">getObjects</a>() {</div>
+<div class="line"><a id="l00679" name="l00679"></a><span class="lineno">  679</span>        <span class="keywordflow">return</span> objects;</div>
+<div class="line"><a id="l00680" name="l00680"></a><span class="lineno">  680</span>    }</div>
 </div>
-<div class="line"><a id="l00654" name="l00654"></a><span class="lineno">  654</span><span class="comment"></span> </div>
-<div class="line"><a id="l00655" name="l00655"></a><span class="lineno">  655</span><span class="comment">/**</span></div>
-<div class="line"><a id="l00656" name="l00656"></a><span class="lineno">  656</span><span class="comment"> * @brief Structure representing settings for particle behavior and appearance.</span></div>
-<div class="line"><a id="l00657" name="l00657"></a><span class="lineno">  657</span><span class="comment"> *</span></div>
-<div class="line"><a id="l00658" name="l00658"></a><span class="lineno">  658</span><span class="comment"> */</span></div>
-<div class="foldopen" id="foldopen00659" data-start="{" data-end="};">
-<div class="line"><a id="l00659" name="l00659"></a><span class="lineno"><a class="line" href="struct_particle_settings.html">  659</a></span><span class="keyword">struct </span><a class="code hl_struct" href="struct_particle_settings.html">ParticleSettings</a> {<span class="comment"></span></div>
-<div class="line"><a id="l00660" name="l00660"></a><span class="lineno">  660</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00661" name="l00661"></a><span class="lineno">  661</span><span class="comment">     * @brief The minimum lifetime of a particle in seconds.</span></div>
-<div class="line"><a id="l00662" name="l00662"></a><span class="lineno">  662</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00663" name="l00663"></a><span class="lineno">  663</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00664" name="l00664"></a><span class="lineno"><a class="line" href="struct_particle_settings.html#ad0423f182ea204480c70c3b9e3be66dc">  664</a></span>    <span class="keywordtype">float</span> <a class="code hl_variable" href="struct_particle_settings.html#ad0423f182ea204480c70c3b9e3be66dc">minLifetime</a> = 1.0f;<span class="comment"></span></div>
-<div class="line"><a id="l00665" name="l00665"></a><span class="lineno">  665</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00666" name="l00666"></a><span class="lineno">  666</span><span class="comment">     * @brief The maximum lifetime of a particle in seconds.</span></div>
-<div class="line"><a id="l00667" name="l00667"></a><span class="lineno">  667</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00668" name="l00668"></a><span class="lineno">  668</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00669" name="l00669"></a><span class="lineno"><a class="line" href="struct_particle_settings.html#ae16b0a8e33aac68fb2d45dc9cc35087e">  669</a></span>    <span class="keywordtype">float</span> <a class="code hl_variable" href="struct_particle_settings.html#ae16b0a8e33aac68fb2d45dc9cc35087e">maxLifetime</a> = 3.0f;<span class="comment"></span></div>
-<div class="line"><a id="l00670" name="l00670"></a><span class="lineno">  670</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00671" name="l00671"></a><span class="lineno">  671</span><span class="comment">     * @brief The minimum size of a particle.</span></div>
-<div class="line"><a id="l00672" name="l00672"></a><span class="lineno">  672</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00673" name="l00673"></a><span class="lineno">  673</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00674" name="l00674"></a><span class="lineno"><a class="line" href="struct_particle_settings.html#a2ac622f2763dd753760b7db1b56edfc8">  674</a></span>    <span class="keywordtype">float</span> <a class="code hl_variable" href="struct_particle_settings.html#a2ac622f2763dd753760b7db1b56edfc8">minSize</a> = 0.02f;<span class="comment"></span></div>
-<div class="line"><a id="l00675" name="l00675"></a><span class="lineno">  675</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00676" name="l00676"></a><span class="lineno">  676</span><span class="comment">     * @brief The maximum size of a particle.</span></div>
-<div class="line"><a id="l00677" name="l00677"></a><span class="lineno">  677</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00678" name="l00678"></a><span class="lineno">  678</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00679" name="l00679"></a><span class="lineno"><a class="line" href="struct_particle_settings.html#a627e0122ee051b0ad687241bd8542bd4">  679</a></span>    <span class="keywordtype">float</span> <a class="code hl_variable" href="struct_particle_settings.html#a627e0122ee051b0ad687241bd8542bd4">maxSize</a> = 0.01f;<span class="comment"></span></div>
-<div class="line"><a id="l00680" name="l00680"></a><span class="lineno">  680</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00681" name="l00681"></a><span class="lineno">  681</span><span class="comment">     * @brief The speed at which a particle fades out.</span></div>
-<div class="line"><a id="l00682" name="l00682"></a><span class="lineno">  682</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00683" name="l00683"></a><span class="lineno">  683</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00684" name="l00684"></a><span class="lineno"><a class="line" href="struct_particle_settings.html#a1641aa659172b07bc491ca72a2b5c159">  684</a></span>    <span class="keywordtype">float</span> <a class="code hl_variable" href="struct_particle_settings.html#a1641aa659172b07bc491ca72a2b5c159">fadeSpeed</a> = 0.5f;<span class="comment"></span></div>
-<div class="line"><a id="l00685" name="l00685"></a><span class="lineno">  685</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00686" name="l00686"></a><span class="lineno">  686</span><span class="comment">     * @brief The gravitational force applied to particles.</span></div>
-<div class="line"><a id="l00687" name="l00687"></a><span class="lineno">  687</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00688" name="l00688"></a><span class="lineno">  688</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00689" name="l00689"></a><span class="lineno"><a class="line" href="struct_particle_settings.html#a920c9377a44a8a7492a6fcc200173a45">  689</a></span>    <span class="keywordtype">float</span> <a class="code hl_variable" href="struct_particle_settings.html#a920c9377a44a8a7492a6fcc200173a45">gravity</a> = -9.81f;<span class="comment"></span></div>
-<div class="line"><a id="l00690" name="l00690"></a><span class="lineno">  690</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00691" name="l00691"></a><span class="lineno">  691</span><span class="comment">     * @brief The spread of particles from the emitter.</span></div>
-<div class="line"><a id="l00692" name="l00692"></a><span class="lineno">  692</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00693" name="l00693"></a><span class="lineno">  693</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00694" name="l00694"></a><span class="lineno"><a class="line" href="struct_particle_settings.html#a7fdda9807df7ee5c3e9a4c7ea957c20b">  694</a></span>    <span class="keywordtype">float</span> <a class="code hl_variable" href="struct_particle_settings.html#a7fdda9807df7ee5c3e9a4c7ea957c20b">spread</a> = 1.0f;<span class="comment"></span></div>
-<div class="line"><a id="l00695" name="l00695"></a><span class="lineno">  695</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00696" name="l00696"></a><span class="lineno">  696</span><span class="comment">     * @brief The speed variation of particles. Is how much the speed is</span></div>
-<div class="line"><a id="l00697" name="l00697"></a><span class="lineno">  697</span><span class="comment">     * randomized.</span></div>
-<div class="line"><a id="l00698" name="l00698"></a><span class="lineno">  698</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00699" name="l00699"></a><span class="lineno">  699</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00700" name="l00700"></a><span class="lineno"><a class="line" href="struct_particle_settings.html#a223d147b786d5ab7b1ce46dd8453e9aa">  700</a></span>    <span class="keywordtype">float</span> <a class="code hl_variable" href="struct_particle_settings.html#a223d147b786d5ab7b1ce46dd8453e9aa">speedVariation</a> = 1.0f;</div>
-<div class="line"><a id="l00701" name="l00701"></a><span class="lineno">  701</span>};</div>
+<div class="line"><a id="l00681" name="l00681"></a><span class="lineno">  681</span><span class="comment"></span> </div>
+<div class="line"><a id="l00682" name="l00682"></a><span class="lineno">  682</span><span class="comment">    /**</span></div>
+<div class="line"><a id="l00683" name="l00683"></a><span class="lineno">  683</span><span class="comment">     * @brief Moves the model by a certain amount.</span></div>
+<div class="line"><a id="l00684" name="l00684"></a><span class="lineno">  684</span><span class="comment">     *</span></div>
+<div class="line"><a id="l00685" name="l00685"></a><span class="lineno">  685</span><span class="comment">     * @param deltaPosition The amount to move the model by.</span></div>
+<div class="line"><a id="l00686" name="l00686"></a><span class="lineno">  686</span><span class="comment">     */</span></div>
+<div class="foldopen" id="foldopen00687" data-start="{" data-end="}">
+<div class="line"><a id="l00687" name="l00687"></a><span class="lineno"><a class="line" href="class_model.html#aeb27cb91b9a787f06d8c8001169968bc">  687</a></span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_model.html#aeb27cb91b9a787f06d8c8001169968bc">move</a>(<span class="keyword">const</span> <a class="code hl_struct" href="struct_position3d.html">Position3d</a> &amp;deltaPosition)<span class="keyword"> override </span>{</div>
+<div class="line"><a id="l00688" name="l00688"></a><span class="lineno">  688</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><a id="l00689" name="l00689"></a><span class="lineno">  689</span>            obj-&gt;move(deltaPosition);</div>
+<div class="line"><a id="l00690" name="l00690"></a><span class="lineno">  690</span>        }</div>
+<div class="line"><a id="l00691" name="l00691"></a><span class="lineno">  691</span>    }</div>
 </div>
-<div class="line"><a id="l00702" name="l00702"></a><span class="lineno">  702</span><span class="comment"></span> </div>
-<div class="line"><a id="l00703" name="l00703"></a><span class="lineno">  703</span><span class="comment">/**</span></div>
-<div class="line"><a id="l00704" name="l00704"></a><span class="lineno">  704</span><span class="comment"> * @brief Structure representing a single particle in a particle system.</span></div>
-<div class="line"><a id="l00705" name="l00705"></a><span class="lineno">  705</span><span class="comment"> *</span></div>
-<div class="line"><a id="l00706" name="l00706"></a><span class="lineno">  706</span><span class="comment"> */</span></div>
-<div class="foldopen" id="foldopen00707" data-start="{" data-end="};">
-<div class="line"><a id="l00707" name="l00707"></a><span class="lineno"><a class="line" href="struct_particle.html">  707</a></span><span class="keyword">struct </span><a class="code hl_struct" href="struct_particle.html">Particle</a> {<span class="comment"></span></div>
-<div class="line"><a id="l00708" name="l00708"></a><span class="lineno">  708</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00709" name="l00709"></a><span class="lineno">  709</span><span class="comment">     * @brief The position of the particle in 3D space.</span></div>
-<div class="line"><a id="l00710" name="l00710"></a><span class="lineno">  710</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00711" name="l00711"></a><span class="lineno">  711</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00712" name="l00712"></a><span class="lineno"><a class="line" href="struct_particle.html#afbd7964edf5e088d7a5887e59c730d1a">  712</a></span>    <a class="code hl_struct" href="struct_position3d.html">Position3d</a> <a class="code hl_variable" href="struct_particle.html#afbd7964edf5e088d7a5887e59c730d1a">position</a>;<span class="comment"></span></div>
+<div class="line"><a id="l00692" name="l00692"></a><span class="lineno">  692</span><span class="comment"></span> </div>
+<div class="line"><a id="l00693" name="l00693"></a><span class="lineno">  693</span><span class="comment">    /**</span></div>
+<div class="line"><a id="l00694" name="l00694"></a><span class="lineno">  694</span><span class="comment">     * @brief Set the Position object</span></div>
+<div class="line"><a id="l00695" name="l00695"></a><span class="lineno">  695</span><span class="comment">     *</span></div>
+<div class="line"><a id="l00696" name="l00696"></a><span class="lineno">  696</span><span class="comment">     * @param newPosition The new position to set.</span></div>
+<div class="line"><a id="l00697" name="l00697"></a><span class="lineno">  697</span><span class="comment">     */</span></div>
+<div class="foldopen" id="foldopen00698" data-start="{" data-end="}">
+<div class="line"><a id="l00698" name="l00698"></a><span class="lineno"><a class="line" href="class_model.html#a7cd6f92f17a58446c6b1d2ea70e2e0d5">  698</a></span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_model.html#a7cd6f92f17a58446c6b1d2ea70e2e0d5">setPosition</a>(<span class="keyword">const</span> <a class="code hl_struct" href="struct_position3d.html">Position3d</a> &amp;newPosition)<span class="keyword"> override </span>{</div>
+<div class="line"><a id="l00699" name="l00699"></a><span class="lineno">  699</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><a id="l00700" name="l00700"></a><span class="lineno">  700</span>            obj-&gt;setPosition(newPosition);</div>
+<div class="line"><a id="l00701" name="l00701"></a><span class="lineno">  701</span>        }</div>
+<div class="line"><a id="l00702" name="l00702"></a><span class="lineno">  702</span>    }</div>
+</div>
+<div class="line"><a id="l00703" name="l00703"></a><span class="lineno">  703</span><span class="comment"></span> </div>
+<div class="line"><a id="l00704" name="l00704"></a><span class="lineno">  704</span><span class="comment">    /**</span></div>
+<div class="line"><a id="l00705" name="l00705"></a><span class="lineno">  705</span><span class="comment">     * @brief Assigns an absolute rotation to every mesh in the model.</span></div>
+<div class="line"><a id="l00706" name="l00706"></a><span class="lineno">  706</span><span class="comment">     */</span></div>
+<div class="foldopen" id="foldopen00707" data-start="{" data-end="}">
+<div class="line"><a id="l00707" name="l00707"></a><span class="lineno"><a class="line" href="class_model.html#a24148dc5603a0a2e3da010b89cbde5b8">  707</a></span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_model.html#a24148dc5603a0a2e3da010b89cbde5b8">setRotation</a>(<span class="keyword">const</span> <a class="code hl_struct" href="struct_rotation3d.html">Rotation3d</a> &amp;newRotation)<span class="keyword"> override </span>{</div>
+<div class="line"><a id="l00708" name="l00708"></a><span class="lineno">  708</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><a id="l00709" name="l00709"></a><span class="lineno">  709</span>            obj-&gt;setRotation(newRotation);</div>
+<div class="line"><a id="l00710" name="l00710"></a><span class="lineno">  710</span>        }</div>
+<div class="line"><a id="l00711" name="l00711"></a><span class="lineno">  711</span>    }</div>
+</div>
+<div class="line"><a id="l00712" name="l00712"></a><span class="lineno">  712</span><span class="comment"></span> </div>
 <div class="line"><a id="l00713" name="l00713"></a><span class="lineno">  713</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00714" name="l00714"></a><span class="lineno">  714</span><span class="comment">     * @brief The velocity of the particle in 3D space.</span></div>
-<div class="line"><a id="l00715" name="l00715"></a><span class="lineno">  715</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00716" name="l00716"></a><span class="lineno">  716</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00717" name="l00717"></a><span class="lineno"><a class="line" href="struct_particle.html#ae77ee667f4089eb75b22b3e4c807bbae">  717</a></span>    <a class="code hl_typedef" href="units_8h.html#af1efe03080186b94608ab2d50c060fe5">Magnitude3d</a> <a class="code hl_variable" href="struct_particle.html#ae77ee667f4089eb75b22b3e4c807bbae">velocity</a>;<span class="comment"></span></div>
-<div class="line"><a id="l00718" name="l00718"></a><span class="lineno">  718</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00719" name="l00719"></a><span class="lineno">  719</span><span class="comment">     * @brief The color that the particle will have.</span></div>
-<div class="line"><a id="l00720" name="l00720"></a><span class="lineno">  720</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00721" name="l00721"></a><span class="lineno">  721</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00722" name="l00722"></a><span class="lineno"><a class="line" href="struct_particle.html#aa8889ea85b03d566d51dfd6ff668e840">  722</a></span>    <a class="code hl_struct" href="struct_color.html">Color</a> <a class="code hl_variable" href="struct_particle.html#aa8889ea85b03d566d51dfd6ff668e840">color</a>;<span class="comment"></span></div>
-<div class="line"><a id="l00723" name="l00723"></a><span class="lineno">  723</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00724" name="l00724"></a><span class="lineno">  724</span><span class="comment">     * @brief The current life of the particle in seconds.</span></div>
-<div class="line"><a id="l00725" name="l00725"></a><span class="lineno">  725</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00726" name="l00726"></a><span class="lineno">  726</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00727" name="l00727"></a><span class="lineno"><a class="line" href="struct_particle.html#a1760a331eebb54cbdd6ca280439a36c8">  727</a></span>    <span class="keywordtype">float</span> <a class="code hl_variable" href="struct_particle.html#a1760a331eebb54cbdd6ca280439a36c8">life</a>;<span class="comment"></span></div>
-<div class="line"><a id="l00728" name="l00728"></a><span class="lineno">  728</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00729" name="l00729"></a><span class="lineno">  729</span><span class="comment">     * @brief The maximum life of the particle in seconds.</span></div>
-<div class="line"><a id="l00730" name="l00730"></a><span class="lineno">  730</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00731" name="l00731"></a><span class="lineno">  731</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00732" name="l00732"></a><span class="lineno"><a class="line" href="struct_particle.html#a4e7cf3b8d4f8fc1e832623e56f3d6a8e">  732</a></span>    <span class="keywordtype">float</span> <a class="code hl_variable" href="struct_particle.html#a4e7cf3b8d4f8fc1e832623e56f3d6a8e">maxLife</a>;<span class="comment"></span></div>
-<div class="line"><a id="l00733" name="l00733"></a><span class="lineno">  733</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00734" name="l00734"></a><span class="lineno">  734</span><span class="comment">     * @brief The scale the particle will have.</span></div>
-<div class="line"><a id="l00735" name="l00735"></a><span class="lineno">  735</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00736" name="l00736"></a><span class="lineno">  736</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00737" name="l00737"></a><span class="lineno"><a class="line" href="struct_particle.html#aad08a7cb8108751b7a49ed65118873f9">  737</a></span>    <span class="keywordtype">float</span> <a class="code hl_variable" href="struct_particle.html#aad08a7cb8108751b7a49ed65118873f9">size</a>;<span class="comment"></span></div>
-<div class="line"><a id="l00738" name="l00738"></a><span class="lineno">  738</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00739" name="l00739"></a><span class="lineno">  739</span><span class="comment">     * @brief Whether the particle is active or not.</span></div>
-<div class="line"><a id="l00740" name="l00740"></a><span class="lineno">  740</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00741" name="l00741"></a><span class="lineno">  741</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00742" name="l00742"></a><span class="lineno"><a class="line" href="struct_particle.html#a73a4154dfbae2e2787ef72c1bee83413">  742</a></span>    <span class="keywordtype">bool</span> <a class="code hl_variable" href="struct_particle.html#a73a4154dfbae2e2787ef72c1bee83413">active</a>;</div>
-<div class="line"><a id="l00743" name="l00743"></a><span class="lineno">  743</span>};</div>
+<div class="line"><a id="l00714" name="l00714"></a><span class="lineno">  714</span><span class="comment">     * @brief Applies a texture to all contained CoreObjects.</span></div>
+<div class="line"><a id="l00715" name="l00715"></a><span class="lineno">  715</span><span class="comment">     */</span></div>
+<div class="foldopen" id="foldopen00716" data-start="{" data-end="}">
+<div class="line"><a id="l00716" name="l00716"></a><span class="lineno"><a class="line" href="class_model.html#abc49ca9b5823f177f421589cf447e913">  716</a></span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_model.html#abc49ca9b5823f177f421589cf447e913">attachTexture</a>(<span class="keyword">const</span> <a class="code hl_struct" href="struct_texture.html">Texture</a> &amp;texture)<span class="keyword"> override </span>{</div>
+<div class="line"><a id="l00717" name="l00717"></a><span class="lineno">  717</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><a id="l00718" name="l00718"></a><span class="lineno">  718</span>            obj-&gt;attachTexture(texture);</div>
+<div class="line"><a id="l00719" name="l00719"></a><span class="lineno">  719</span>        }</div>
+<div class="line"><a id="l00720" name="l00720"></a><span class="lineno">  720</span>    }</div>
 </div>
-<div class="line"><a id="l00744" name="l00744"></a><span class="lineno">  744</span><span class="comment"></span> </div>
-<div class="line"><a id="l00745" name="l00745"></a><span class="lineno">  745</span><span class="comment">/**</span></div>
-<div class="line"><a id="l00746" name="l00746"></a><span class="lineno">  746</span><span class="comment"> * @brief Class representing a particle emitter in the game. It emits and</span></div>
-<div class="line"><a id="l00747" name="l00747"></a><span class="lineno">  747</span><span class="comment"> * manages particles.</span></div>
-<div class="line"><a id="l00748" name="l00748"></a><span class="lineno">  748</span><span class="comment"> *</span></div>
-<div class="line"><a id="l00749" name="l00749"></a><span class="lineno">  749</span><span class="comment"> * \subsection emitter-example Example</span></div>
-<div class="line"><a id="l00750" name="l00750"></a><span class="lineno">  750</span><span class="comment"> * ```cpp</span></div>
-<div class="line"><a id="l00751" name="l00751"></a><span class="lineno">  751</span><span class="comment"> * // Create a particle emitter with a maximum of 200 particles</span></div>
-<div class="line"><a id="l00752" name="l00752"></a><span class="lineno">  752</span><span class="comment"> * ParticleEmitter emitter(200);</span></div>
-<div class="line"><a id="l00753" name="l00753"></a><span class="lineno">  753</span><span class="comment"> * // Set the position of the emitter</span></div>
-<div class="line"><a id="l00754" name="l00754"></a><span class="lineno">  754</span><span class="comment"> * emitter.setPosition({0.0f, 0.0f, 0.0f});</span></div>
-<div class="line"><a id="l00755" name="l00755"></a><span class="lineno">  755</span><span class="comment"> * // Set the emission type to Fountain</span></div>
-<div class="line"><a id="l00756" name="l00756"></a><span class="lineno">  756</span><span class="comment"> * emitter.setEmissionType(ParticleEmissionType::Fountain);</span></div>
-<div class="line"><a id="l00757" name="l00757"></a><span class="lineno">  757</span><span class="comment"> * // Set the direction of particle emission</span></div>
-<div class="line"><a id="l00758" name="l00758"></a><span class="lineno">  758</span><span class="comment"> * emitter.setDirection({0.0f, 1.0f, 0.0f});</span></div>
-<div class="line"><a id="l00759" name="l00759"></a><span class="lineno">  759</span><span class="comment"> * // Set the spawn radius of particles</span></div>
-<div class="line"><a id="l00760" name="l00760"></a><span class="lineno">  760</span><span class="comment"> * emitter.setSpawnRadius(0.5f);</span></div>
-<div class="line"><a id="l00761" name="l00761"></a><span class="lineno">  761</span><span class="comment"> * // Set the spawn rate to 20 particles per second</span></div>
-<div class="line"><a id="l00762" name="l00762"></a><span class="lineno">  762</span><span class="comment"> * emitter.setSpawnRate(20.0f);</span></div>
-<div class="line"><a id="l00763" name="l00763"></a><span class="lineno">  763</span><span class="comment"> * // Define particle settings</span></div>
-<div class="line"><a id="l00764" name="l00764"></a><span class="lineno">  764</span><span class="comment"> * ParticleSettings settings;</span></div>
-<div class="line"><a id="l00765" name="l00765"></a><span class="lineno">  765</span><span class="comment"> * settings.minLifetime = 1.0f;</span></div>
-<div class="line"><a id="l00766" name="l00766"></a><span class="lineno">  766</span><span class="comment"> * settings.maxLifetime = 3.0f;</span></div>
-<div class="line"><a id="l00767" name="l00767"></a><span class="lineno">  767</span><span class="comment"> * settings.minSize = 0.05f;</span></div>
-<div class="line"><a id="l00768" name="l00768"></a><span class="lineno">  768</span><span class="comment"> * settings.maxSize = 0.1f;</span></div>
-<div class="line"><a id="l00769" name="l00769"></a><span class="lineno">  769</span><span class="comment"> * settings.fadeSpeed = 0.5f;</span></div>
-<div class="line"><a id="l00770" name="l00770"></a><span class="lineno">  770</span><span class="comment"> * settings.gravity = -9.81f;</span></div>
-<div class="line"><a id="l00771" name="l00771"></a><span class="lineno">  771</span><span class="comment"> * settings.spread = 1.0f;</span></div>
-<div class="line"><a id="l00772" name="l00772"></a><span class="lineno">  772</span><span class="comment"> * settings.speedVariation = 0.5f;</span></div>
-<div class="line"><a id="l00773" name="l00773"></a><span class="lineno">  773</span><span class="comment"> * emitter.setParticleSettings(settings);</span></div>
-<div class="line"><a id="l00774" name="l00774"></a><span class="lineno">  774</span><span class="comment"> * // Attach a texture to the particles</span></div>
-<div class="line"><a id="l00775" name="l00775"></a><span class="lineno">  775</span><span class="comment"> * Texture particleTexture(&quot;path/to/particle_texture.png&quot;);</span></div>
-<div class="line"><a id="l00776" name="l00776"></a><span class="lineno">  776</span><span class="comment"> * emitter.attachTexture(particleTexture);</span></div>
-<div class="line"><a id="l00777" name="l00777"></a><span class="lineno">  777</span><span class="comment"> * emitter.enableTexture();</span></div>
-<div class="line"><a id="l00778" name="l00778"></a><span class="lineno">  778</span><span class="comment"> * // Add the emitter to the scene</span></div>
-<div class="line"><a id="l00779" name="l00779"></a><span class="lineno">  779</span><span class="comment"> * scene.addObject(&amp;emitter);</span></div>
-<div class="line"><a id="l00780" name="l00780"></a><span class="lineno">  780</span><span class="comment"> * ```</span></div>
-<div class="line"><a id="l00781" name="l00781"></a><span class="lineno">  781</span><span class="comment"> *</span></div>
-<div class="line"><a id="l00782" name="l00782"></a><span class="lineno">  782</span><span class="comment"> */</span></div>
-<div class="foldopen" id="foldopen00783" data-start="{" data-end="};">
-<div class="line"><a id="l00783" name="l00783"></a><span class="lineno"><a class="line" href="class_particle_emitter.html">  783</a></span><span class="keyword">class </span><a class="code hl_function" href="class_particle_emitter.html#acb6f3e714474c21f30600aa4b02fc2d5">ParticleEmitter</a> : <span class="keyword">public</span> <a class="code hl_class" href="class_game_object.html">GameObject</a> {</div>
-<div class="line"><a id="l00784" name="l00784"></a><span class="lineno">  784</span>  <span class="keyword">public</span>:<span class="comment"></span></div>
-<div class="line"><a id="l00785" name="l00785"></a><span class="lineno">  785</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00786" name="l00786"></a><span class="lineno">  786</span><span class="comment">     * @brief Allocates buffers and shader state necessary for particle</span></div>
-<div class="line"><a id="l00787" name="l00787"></a><span class="lineno">  787</span><span class="comment">     * simulation.</span></div>
-<div class="line"><a id="l00788" name="l00788"></a><span class="lineno">  788</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00789" name="l00789"></a><span class="lineno"><a class="line" href="class_particle_emitter.html#ae3c78db9b68fadecfcbe8e22a82bba41">  789</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_particle_emitter.html#ae3c78db9b68fadecfcbe8e22a82bba41">initialize</a>() <span class="keyword">override</span>;<span class="comment"></span></div>
-<div class="line"><a id="l00790" name="l00790"></a><span class="lineno">  790</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00791" name="l00791"></a><span class="lineno">  791</span><span class="comment">     * @brief Renders all active particles with billboarding logic.</span></div>
-<div class="line"><a id="l00792" name="l00792"></a><span class="lineno">  792</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00793" name="l00793"></a><span class="lineno"><a class="line" href="class_particle_emitter.html#afe658d35da0cdba391d4c841decf71e0">  793</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_particle_emitter.html#afe658d35da0cdba391d4c841decf71e0">render</a>(<span class="keywordtype">float</span> dt) <span class="keyword">override</span>;<span class="comment"></span></div>
-<div class="line"><a id="l00794" name="l00794"></a><span class="lineno">  794</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00795" name="l00795"></a><span class="lineno">  795</span><span class="comment">     * @brief Updates particle lifetimes, spawns new particles, and applies</span></div>
-<div class="line"><a id="l00796" name="l00796"></a><span class="lineno">  796</span><span class="comment">     * forces.</span></div>
-<div class="line"><a id="l00797" name="l00797"></a><span class="lineno">  797</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00798" name="l00798"></a><span class="lineno"><a class="line" href="class_particle_emitter.html#a10c124a8f860c367cd3e086e90701da0">  798</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_particle_emitter.html#a10c124a8f860c367cd3e086e90701da0">update</a>(<a class="code hl_class" href="class_window.html">Window</a> &amp;window) <span class="keyword">override</span>;<span class="comment"></span></div>
-<div class="line"><a id="l00799" name="l00799"></a><span class="lineno">  799</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00800" name="l00800"></a><span class="lineno">  800</span><span class="comment">     * @brief Updates the projection matrix used to align particles to the</span></div>
-<div class="line"><a id="l00801" name="l00801"></a><span class="lineno">  801</span><span class="comment">     * camera frustum.</span></div>
-<div class="line"><a id="l00802" name="l00802"></a><span class="lineno">  802</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00803" name="l00803"></a><span class="lineno"><a class="line" href="class_particle_emitter.html#a46a3bd7e0981249a61b6b6433df7e3bd">  803</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_particle_emitter.html#a46a3bd7e0981249a61b6b6433df7e3bd">setProjectionMatrix</a>(<span class="keyword">const</span> glm::mat4 &amp;projection) <span class="keyword">override</span>;<span class="comment"></span></div>
-<div class="line"><a id="l00804" name="l00804"></a><span class="lineno">  804</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00805" name="l00805"></a><span class="lineno">  805</span><span class="comment">     * @brief Stores the view matrix so particles can face the camera.</span></div>
-<div class="line"><a id="l00806" name="l00806"></a><span class="lineno">  806</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00807" name="l00807"></a><span class="lineno"><a class="line" href="class_particle_emitter.html#a69bad006c8fb4611ad3bdd3df138af4b">  807</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_particle_emitter.html#a69bad006c8fb4611ad3bdd3df138af4b">setViewMatrix</a>(<span class="keyword">const</span> glm::mat4 &amp;view) <span class="keyword">override</span>;</div>
-<div class="line"><a id="l00808" name="l00808"></a><span class="lineno">  808</span><span class="comment"></span> </div>
-<div class="line"><a id="l00809" name="l00809"></a><span class="lineno">  809</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00810" name="l00810"></a><span class="lineno">  810</span><span class="comment">     * @brief Constructs a new ParticleEmitter object.</span></div>
-<div class="line"><a id="l00811" name="l00811"></a><span class="lineno">  811</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00812" name="l00812"></a><span class="lineno">  812</span><span class="comment">     * @param maxParticles The maximum number of particles the emitter can</span></div>
-<div class="line"><a id="l00813" name="l00813"></a><span class="lineno">  813</span><span class="comment">     * handle.</span></div>
-<div class="line"><a id="l00814" name="l00814"></a><span class="lineno">  814</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00815" name="l00815"></a><span class="lineno"><a class="line" href="class_particle_emitter.html#acb6f3e714474c21f30600aa4b02fc2d5">  815</a></span>    <a class="code hl_function" href="class_particle_emitter.html#acb6f3e714474c21f30600aa4b02fc2d5">ParticleEmitter</a>(<span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> maxParticles = 100);</div>
-<div class="line"><a id="l00816" name="l00816"></a><span class="lineno">  816</span><span class="comment"></span> </div>
-<div class="line"><a id="l00817" name="l00817"></a><span class="lineno">  817</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00818" name="l00818"></a><span class="lineno">  818</span><span class="comment">     * @brief Binds a sprite texture that will be used for each particle.</span></div>
-<div class="line"><a id="l00819" name="l00819"></a><span class="lineno">  819</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00820" name="l00820"></a><span class="lineno"><a class="line" href="class_particle_emitter.html#ad4d8472950cf0397702b92bcee6d25f2">  820</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_particle_emitter.html#ad4d8472950cf0397702b92bcee6d25f2">attachTexture</a>(<span class="keyword">const</span> <a class="code hl_struct" href="struct_texture.html">Texture</a> &amp;tex) <span class="keyword">override</span>;<span class="comment"></span></div>
+<div class="line"><a id="l00721" name="l00721"></a><span class="lineno">  721</span><span class="comment"></span> </div>
+<div class="line"><a id="l00722" name="l00722"></a><span class="lineno">  722</span><span class="comment">    /**</span></div>
+<div class="line"><a id="l00723" name="l00723"></a><span class="lineno">  723</span><span class="comment">     * @brief Scales every mesh in the model uniformly.</span></div>
+<div class="line"><a id="l00724" name="l00724"></a><span class="lineno">  724</span><span class="comment">     */</span></div>
+<div class="foldopen" id="foldopen00725" data-start="{" data-end="}">
+<div class="line"><a id="l00725" name="l00725"></a><span class="lineno"><a class="line" href="class_model.html#a9620da538736e7eea3b38c727cbe3571">  725</a></span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_model.html#a9620da538736e7eea3b38c727cbe3571">setScale</a>(<span class="keyword">const</span> <a class="code hl_typedef" href="units_8h.html#a3b9b132cddb1dfe2ae572f230abe45f1">Scale3d</a> &amp;newScale)<span class="keyword"> override </span>{</div>
+<div class="line"><a id="l00726" name="l00726"></a><span class="lineno">  726</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><a id="l00727" name="l00727"></a><span class="lineno">  727</span>            obj-&gt;setScale(newScale);</div>
+<div class="line"><a id="l00728" name="l00728"></a><span class="lineno">  728</span>        }</div>
+<div class="line"><a id="l00729" name="l00729"></a><span class="lineno">  729</span>    }</div>
+</div>
+<div class="line"><a id="l00730" name="l00730"></a><span class="lineno">  730</span><span class="comment"></span> </div>
+<div class="line"><a id="l00731" name="l00731"></a><span class="lineno">  731</span><span class="comment">    /**</span></div>
+<div class="line"><a id="l00732" name="l00732"></a><span class="lineno">  732</span><span class="comment">     * @brief Stores the current view matrix for every sub-object.</span></div>
+<div class="line"><a id="l00733" name="l00733"></a><span class="lineno">  733</span><span class="comment">     */</span></div>
+<div class="foldopen" id="foldopen00734" data-start="{" data-end="}">
+<div class="line"><a id="l00734" name="l00734"></a><span class="lineno"><a class="line" href="class_model.html#ab1bc68ab2ef747780f89d5f2954ca05b">  734</a></span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_model.html#ab1bc68ab2ef747780f89d5f2954ca05b">setViewMatrix</a>(<span class="keyword">const</span> glm::mat4 &amp;view)<span class="keyword"> override </span>{</div>
+<div class="line"><a id="l00735" name="l00735"></a><span class="lineno">  735</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><a id="l00736" name="l00736"></a><span class="lineno">  736</span>            obj-&gt;setViewMatrix(view);</div>
+<div class="line"><a id="l00737" name="l00737"></a><span class="lineno">  737</span>        }</div>
+<div class="line"><a id="l00738" name="l00738"></a><span class="lineno">  738</span>    }</div>
+</div>
+<div class="line"><a id="l00739" name="l00739"></a><span class="lineno">  739</span><span class="comment"></span> </div>
+<div class="line"><a id="l00740" name="l00740"></a><span class="lineno">  740</span><span class="comment">    /**</span></div>
+<div class="line"><a id="l00741" name="l00741"></a><span class="lineno">  741</span><span class="comment">     * @brief Renders each CoreObject that composes the model.</span></div>
+<div class="line"><a id="l00742" name="l00742"></a><span class="lineno">  742</span><span class="comment">     */</span></div>
+<div class="foldopen" id="foldopen00743" data-start="{" data-end="}">
+<div class="line"><a id="l00743" name="l00743"></a><span class="lineno"><a class="line" href="class_model.html#a8b786b81d7e5f23fb2c985944bf0c93a">  743</a></span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_model.html#a8b786b81d7e5f23fb2c985944bf0c93a">render</a>(<span class="keywordtype">float</span> dt)<span class="keyword"> override </span>{</div>
+<div class="line"><a id="l00744" name="l00744"></a><span class="lineno">  744</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;component : <a class="code hl_variable" href="class_game_object.html#a545e4ed29df0e16304d46c73404c0ce6">components</a>) {</div>
+<div class="line"><a id="l00745" name="l00745"></a><span class="lineno">  745</span>            component-&gt;update(dt);</div>
+<div class="line"><a id="l00746" name="l00746"></a><span class="lineno">  746</span>        }</div>
+<div class="line"><a id="l00747" name="l00747"></a><span class="lineno">  747</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><a id="l00748" name="l00748"></a><span class="lineno">  748</span>            obj-&gt;render(dt);</div>
+<div class="line"><a id="l00749" name="l00749"></a><span class="lineno">  749</span>        }</div>
+<div class="line"><a id="l00750" name="l00750"></a><span class="lineno">  750</span>    }</div>
+</div>
+<div class="line"><a id="l00751" name="l00751"></a><span class="lineno">  751</span><span class="comment"></span> </div>
+<div class="line"><a id="l00752" name="l00752"></a><span class="lineno">  752</span><span class="comment">    /**</span></div>
+<div class="line"><a id="l00753" name="l00753"></a><span class="lineno">  753</span><span class="comment">     * @brief Updates all underlying CoreObjects to keep transforms and</span></div>
+<div class="line"><a id="l00754" name="l00754"></a><span class="lineno">  754</span><span class="comment">     * animations synchronized.</span></div>
+<div class="line"><a id="l00755" name="l00755"></a><span class="lineno">  755</span><span class="comment">     */</span></div>
+<div class="foldopen" id="foldopen00756" data-start="{" data-end="}">
+<div class="line"><a id="l00756" name="l00756"></a><span class="lineno"><a class="line" href="class_model.html#a53186f31f04ff6f7977fabe72ce8eb3d">  756</a></span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_model.html#a53186f31f04ff6f7977fabe72ce8eb3d">update</a>(<a class="code hl_class" href="class_window.html">Window</a> &amp;window)<span class="keyword"> override </span>{</div>
+<div class="line"><a id="l00757" name="l00757"></a><span class="lineno">  757</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><a id="l00758" name="l00758"></a><span class="lineno">  758</span>            obj-&gt;update(window);</div>
+<div class="line"><a id="l00759" name="l00759"></a><span class="lineno">  759</span>        }</div>
+<div class="line"><a id="l00760" name="l00760"></a><span class="lineno">  760</span>    }</div>
+</div>
+<div class="line"><a id="l00761" name="l00761"></a><span class="lineno">  761</span><span class="comment"></span> </div>
+<div class="line"><a id="l00762" name="l00762"></a><span class="lineno">  762</span><span class="comment">    /**</span></div>
+<div class="line"><a id="l00763" name="l00763"></a><span class="lineno">  763</span><span class="comment">     * @brief Initializes every CoreObject and attached component within the</span></div>
+<div class="line"><a id="l00764" name="l00764"></a><span class="lineno">  764</span><span class="comment">     * model.</span></div>
+<div class="line"><a id="l00765" name="l00765"></a><span class="lineno">  765</span><span class="comment">     */</span></div>
+<div class="foldopen" id="foldopen00766" data-start="{" data-end="}">
+<div class="line"><a id="l00766" name="l00766"></a><span class="lineno"><a class="line" href="class_model.html#a5e3a76dda4214e2014b2964d4170f368">  766</a></span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_model.html#a5e3a76dda4214e2014b2964d4170f368">initialize</a>()<span class="keyword"> override </span>{</div>
+<div class="line"><a id="l00767" name="l00767"></a><span class="lineno">  767</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;component : <a class="code hl_variable" href="class_game_object.html#a545e4ed29df0e16304d46c73404c0ce6">components</a>) {</div>
+<div class="line"><a id="l00768" name="l00768"></a><span class="lineno">  768</span>            component-&gt;init();</div>
+<div class="line"><a id="l00769" name="l00769"></a><span class="lineno">  769</span>        }</div>
+<div class="line"><a id="l00770" name="l00770"></a><span class="lineno">  770</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><a id="l00771" name="l00771"></a><span class="lineno">  771</span>            obj-&gt;initialize();</div>
+<div class="line"><a id="l00772" name="l00772"></a><span class="lineno">  772</span>        }</div>
+<div class="line"><a id="l00773" name="l00773"></a><span class="lineno">  773</span>    }</div>
+</div>
+<div class="line"><a id="l00774" name="l00774"></a><span class="lineno">  774</span><span class="comment"></span> </div>
+<div class="line"><a id="l00775" name="l00775"></a><span class="lineno">  775</span><span class="comment">    /**</span></div>
+<div class="line"><a id="l00776" name="l00776"></a><span class="lineno">  776</span><span class="comment">     * @brief Sets the projection matrix for all meshes composing the model.</span></div>
+<div class="line"><a id="l00777" name="l00777"></a><span class="lineno">  777</span><span class="comment">     */</span></div>
+<div class="foldopen" id="foldopen00778" data-start="{" data-end="}">
+<div class="line"><a id="l00778" name="l00778"></a><span class="lineno"><a class="line" href="class_model.html#a778fb43b905eb3520d8b348eab82e89b">  778</a></span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_model.html#a778fb43b905eb3520d8b348eab82e89b">setProjectionMatrix</a>(<span class="keyword">const</span> glm::mat4 &amp;projection)<span class="keyword"> override </span>{</div>
+<div class="line"><a id="l00779" name="l00779"></a><span class="lineno">  779</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><a id="l00780" name="l00780"></a><span class="lineno">  780</span>            obj-&gt;setProjectionMatrix(projection);</div>
+<div class="line"><a id="l00781" name="l00781"></a><span class="lineno">  781</span>        }</div>
+<div class="line"><a id="l00782" name="l00782"></a><span class="lineno">  782</span>    }</div>
+</div>
+<div class="line"><a id="l00783" name="l00783"></a><span class="lineno">  783</span><span class="comment"></span> </div>
+<div class="line"><a id="l00784" name="l00784"></a><span class="lineno">  784</span><span class="comment">    /**</span></div>
+<div class="line"><a id="l00785" name="l00785"></a><span class="lineno">  785</span><span class="comment">     * @brief Forces every mesh to use the provided shader program.</span></div>
+<div class="line"><a id="l00786" name="l00786"></a><span class="lineno">  786</span><span class="comment">     */</span></div>
+<div class="foldopen" id="foldopen00787" data-start="{" data-end="}">
+<div class="line"><a id="l00787" name="l00787"></a><span class="lineno"><a class="line" href="class_model.html#a24265caaaa9dee3e0598dd105b8296a3">  787</a></span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_model.html#a24265caaaa9dee3e0598dd105b8296a3">setShader</a>(<span class="keyword">const</span> <a class="code hl_struct" href="struct_shader_program.html">ShaderProgram</a> &amp;shader)<span class="keyword"> override </span>{</div>
+<div class="line"><a id="l00788" name="l00788"></a><span class="lineno">  788</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><a id="l00789" name="l00789"></a><span class="lineno">  789</span>            obj-&gt;setShader(shader);</div>
+<div class="line"><a id="l00790" name="l00790"></a><span class="lineno">  790</span>        }</div>
+<div class="line"><a id="l00791" name="l00791"></a><span class="lineno">  791</span>    }</div>
+</div>
+<div class="line"><a id="l00792" name="l00792"></a><span class="lineno">  792</span><span class="comment"></span> </div>
+<div class="line"><a id="l00793" name="l00793"></a><span class="lineno">  793</span><span class="comment">    /**</span></div>
+<div class="line"><a id="l00794" name="l00794"></a><span class="lineno">  794</span><span class="comment">     * @brief Retrieves the shader program currently bound to the first mesh.</span></div>
+<div class="line"><a id="l00795" name="l00795"></a><span class="lineno">  795</span><span class="comment">     */</span></div>
+<div class="foldopen" id="foldopen00796" data-start="{" data-end="}">
+<div class="line"><a id="l00796" name="l00796"></a><span class="lineno"><a class="line" href="class_model.html#ad26c5b613946c3c2ce2524484f56fc6e">  796</a></span>    <span class="keyword">inline</span> std::optional&lt;ShaderProgram&gt; <a class="code hl_function" href="class_model.html#ad26c5b613946c3c2ce2524484f56fc6e">getShaderProgram</a>()<span class="keyword"> override </span>{</div>
+<div class="line"><a id="l00797" name="l00797"></a><span class="lineno">  797</span>        <span class="keywordflow">if</span> (objects.empty()) {</div>
+<div class="line"><a id="l00798" name="l00798"></a><span class="lineno">  798</span>            <span class="keywordflow">throw</span> std::runtime_error(<span class="stringliteral">&quot;Model has no objects.&quot;</span>);</div>
+<div class="line"><a id="l00799" name="l00799"></a><span class="lineno">  799</span>        }</div>
+<div class="line"><a id="l00800" name="l00800"></a><span class="lineno">  800</span>        <span class="keywordflow">return</span> objects[0]-&gt;getShaderProgram().value();</div>
+<div class="line"><a id="l00801" name="l00801"></a><span class="lineno">  801</span>    }</div>
+</div>
+<div class="line"><a id="l00802" name="l00802"></a><span class="lineno">  802</span><span class="comment"></span> </div>
+<div class="line"><a id="l00803" name="l00803"></a><span class="lineno">  803</span><span class="comment">    /**</span></div>
+<div class="line"><a id="l00804" name="l00804"></a><span class="lineno">  804</span><span class="comment">     * @brief Returns the world-space position of the first mesh in the model.</span></div>
+<div class="line"><a id="l00805" name="l00805"></a><span class="lineno">  805</span><span class="comment">     */</span></div>
+<div class="foldopen" id="foldopen00806" data-start="{" data-end="}">
+<div class="line"><a id="l00806" name="l00806"></a><span class="lineno"><a class="line" href="class_model.html#a773e85c486ebaf5e0f3afe9da3381212">  806</a></span>    <span class="keyword">inline</span> <a class="code hl_struct" href="struct_position3d.html">Position3d</a> <a class="code hl_function" href="class_model.html#a773e85c486ebaf5e0f3afe9da3381212">getPosition</a>()<span class="keyword"> const override </span>{</div>
+<div class="line"><a id="l00807" name="l00807"></a><span class="lineno">  807</span>        <span class="keywordflow">if</span> (objects.empty()) {</div>
+<div class="line"><a id="l00808" name="l00808"></a><span class="lineno">  808</span>            <span class="keywordflow">throw</span> std::runtime_error(<span class="stringliteral">&quot;Model has no objects.&quot;</span>);</div>
+<div class="line"><a id="l00809" name="l00809"></a><span class="lineno">  809</span>        }</div>
+<div class="line"><a id="l00810" name="l00810"></a><span class="lineno">  810</span>        <span class="keywordflow">return</span> objects[0]-&gt;getPosition();</div>
+<div class="line"><a id="l00811" name="l00811"></a><span class="lineno">  811</span>    }</div>
+</div>
+<div class="line"><a id="l00812" name="l00812"></a><span class="lineno">  812</span> </div>
+<div class="line"><a id="l00813" name="l00813"></a><span class="lineno"><a class="line" href="class_model.html#ab5bdabea36b1d1bee80151e2da913373">  813</a></span>    <a class="code hl_function" href="class_model.html#ab5bdabea36b1d1bee80151e2da913373">Model</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a id="l00814" name="l00814"></a><span class="lineno">  814</span><span class="comment"></span> </div>
+<div class="line"><a id="l00815" name="l00815"></a><span class="lineno">  815</span><span class="comment">    /**</span></div>
+<div class="line"><a id="l00816" name="l00816"></a><span class="lineno">  816</span><span class="comment">     * @brief The material properties shared by all objects in the model.</span></div>
+<div class="line"><a id="l00817" name="l00817"></a><span class="lineno">  817</span><span class="comment">     *</span></div>
+<div class="line"><a id="l00818" name="l00818"></a><span class="lineno">  818</span><span class="comment">     */</span></div>
+<div class="line"><a id="l00819" name="l00819"></a><span class="lineno"><a class="line" href="class_model.html#acb2e155d98ff0980bc40958bb5b79868">  819</a></span>    <a class="code hl_struct" href="struct_material.html">Material</a> <a class="code hl_variable" href="class_model.html#acb2e155d98ff0980bc40958bb5b79868">material</a>;</div>
+<div class="line"><a id="l00820" name="l00820"></a><span class="lineno">  820</span><span class="comment"></span> </div>
 <div class="line"><a id="l00821" name="l00821"></a><span class="lineno">  821</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00822" name="l00822"></a><span class="lineno">  822</span><span class="comment">     * @brief Sets a tint color that modulates the particle sprite.</span></div>
-<div class="line"><a id="l00823" name="l00823"></a><span class="lineno">  823</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00824" name="l00824"></a><span class="lineno"><a class="line" href="class_particle_emitter.html#a152e95df28b2885262d5f5025d5f1497">  824</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_particle_emitter.html#a152e95df28b2885262d5f5025d5f1497">setColor</a>(<span class="keyword">const</span> <a class="code hl_struct" href="struct_color.html">Color</a> &amp;color) <span class="keyword">override</span>;<span class="comment"></span></div>
-<div class="line"><a id="l00825" name="l00825"></a><span class="lineno">  825</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00826" name="l00826"></a><span class="lineno">  826</span><span class="comment">     * @brief Function that enables the use of a texture for the particles.</span></div>
-<div class="line"><a id="l00827" name="l00827"></a><span class="lineno">  827</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00828" name="l00828"></a><span class="lineno">  828</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00829" name="l00829"></a><span class="lineno"><a class="line" href="class_particle_emitter.html#a80e4e373b9296ee5d9ed33822fec3b83">  829</a></span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_particle_emitter.html#a80e4e373b9296ee5d9ed33822fec3b83">enableTexture</a>() { useTexture = <span class="keyword">true</span>; };<span class="comment"></span></div>
-<div class="line"><a id="l00830" name="l00830"></a><span class="lineno">  830</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00831" name="l00831"></a><span class="lineno">  831</span><span class="comment">     * @brief Function that disables the use of a texture for the particles.</span></div>
-<div class="line"><a id="l00832" name="l00832"></a><span class="lineno">  832</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00833" name="l00833"></a><span class="lineno">  833</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00834" name="l00834"></a><span class="lineno"><a class="line" href="class_particle_emitter.html#abf6e025b3ac0fee071e84c9ccf565aae">  834</a></span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_particle_emitter.html#abf6e025b3ac0fee071e84c9ccf565aae">disableTexture</a>() { useTexture = <span class="keyword">false</span>; };</div>
-<div class="line"><a id="l00835" name="l00835"></a><span class="lineno">  835</span> </div>
-<div class="line"><a id="l00836" name="l00836"></a><span class="lineno"><a class="line" href="class_particle_emitter.html#a206f52ef784767e8280450e8a831ee99">  836</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_particle_emitter.html#a206f52ef784767e8280450e8a831ee99">setPosition</a>(<span class="keyword">const</span> <a class="code hl_struct" href="struct_position3d.html">Position3d</a> &amp;newPosition) <span class="keyword">override</span>;</div>
-<div class="line"><a id="l00837" name="l00837"></a><span class="lineno"><a class="line" href="class_particle_emitter.html#ac3f87ddcbb7272315b1c06421add053b">  837</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_particle_emitter.html#ac3f87ddcbb7272315b1c06421add053b">move</a>(<span class="keyword">const</span> <a class="code hl_struct" href="struct_position3d.html">Position3d</a> &amp;deltaPosition) <span class="keyword">override</span>;</div>
-<div class="line"><a id="l00838" name="l00838"></a><span class="lineno"><a class="line" href="class_particle_emitter.html#a0a4c69870a82921e620a467f8264be1b">  838</a></span>    <span class="keyword">inline</span> <a class="code hl_struct" href="struct_position3d.html">Position3d</a> <a class="code hl_function" href="class_particle_emitter.html#a0a4c69870a82921e620a467f8264be1b">getPosition</a>()<span class="keyword"> const override </span>{ <span class="keywordflow">return</span> position; };</div>
-<div class="line"><a id="l00839" name="l00839"></a><span class="lineno"><a class="line" href="class_particle_emitter.html#ab0a773a7d892d7347a815e7e497dd83b">  839</a></span>    <span class="keyword">inline</span> <span class="keywordtype">bool</span> <a class="code hl_function" href="class_particle_emitter.html#ab0a773a7d892d7347a815e7e497dd83b">canCastShadows</a>()<span class="keyword"> const override </span>{ <span class="keywordflow">return</span> <span class="keyword">false</span>; };</div>
-<div class="line"><a id="l00840" name="l00840"></a><span class="lineno">  840</span><span class="comment"></span> </div>
-<div class="line"><a id="l00841" name="l00841"></a><span class="lineno">  841</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00842" name="l00842"></a><span class="lineno">  842</span><span class="comment">     * @brief Function that sets the type of particle emission.</span></div>
-<div class="line"><a id="l00843" name="l00843"></a><span class="lineno">  843</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00844" name="l00844"></a><span class="lineno">  844</span><span class="comment">     * @param type The type of particle emission.</span></div>
-<div class="line"><a id="l00845" name="l00845"></a><span class="lineno">  845</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00846" name="l00846"></a><span class="lineno"><a class="line" href="class_particle_emitter.html#afa47fd3fc1fc5338fef9e04f05ae73a7">  846</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_particle_emitter.html#afa47fd3fc1fc5338fef9e04f05ae73a7">setEmissionType</a>(<a class="code hl_enumeration" href="object_8h.html#a5d2a36527b762e139f0a5cefd66b3191">ParticleEmissionType</a> type);<span class="comment"></span></div>
-<div class="line"><a id="l00847" name="l00847"></a><span class="lineno">  847</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00848" name="l00848"></a><span class="lineno">  848</span><span class="comment">     * @brief The direction in which particles are emitted.</span></div>
-<div class="line"><a id="l00849" name="l00849"></a><span class="lineno">  849</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00850" name="l00850"></a><span class="lineno">  850</span><span class="comment">     * @param dir The direction vector.</span></div>
-<div class="line"><a id="l00851" name="l00851"></a><span class="lineno">  851</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00852" name="l00852"></a><span class="lineno"><a class="line" href="class_particle_emitter.html#a56c9c5dc364ef087cd0d311aff2ed60a">  852</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_particle_emitter.html#a56c9c5dc364ef087cd0d311aff2ed60a">setDirection</a>(<span class="keyword">const</span> <a class="code hl_typedef" href="units_8h.html#af1efe03080186b94608ab2d50c060fe5">Magnitude3d</a> &amp;dir);<span class="comment"></span></div>
-<div class="line"><a id="l00853" name="l00853"></a><span class="lineno">  853</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00854" name="l00854"></a><span class="lineno">  854</span><span class="comment">     * @brief The radius around the emitter from which particles are spawned.</span></div>
-<div class="line"><a id="l00855" name="l00855"></a><span class="lineno">  855</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00856" name="l00856"></a><span class="lineno">  856</span><span class="comment">     * @param radius The spawn radius.</span></div>
-<div class="line"><a id="l00857" name="l00857"></a><span class="lineno">  857</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00858" name="l00858"></a><span class="lineno"><a class="line" href="class_particle_emitter.html#ae285689b7606d6278cf9e82294780015">  858</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_particle_emitter.html#ae285689b7606d6278cf9e82294780015">setSpawnRadius</a>(<span class="keywordtype">float</span> radius);<span class="comment"></span></div>
-<div class="line"><a id="l00859" name="l00859"></a><span class="lineno">  859</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00860" name="l00860"></a><span class="lineno">  860</span><span class="comment">     * @brief How much particles are spawned each second.</span></div>
-<div class="line"><a id="l00861" name="l00861"></a><span class="lineno">  861</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00862" name="l00862"></a><span class="lineno">  862</span><span class="comment">     * @param particlesPerSecond The number of particles to spawn per second.</span></div>
-<div class="line"><a id="l00863" name="l00863"></a><span class="lineno">  863</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00864" name="l00864"></a><span class="lineno"><a class="line" href="class_particle_emitter.html#a7bac44e4712908099af3a76187ed908e">  864</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_particle_emitter.html#a7bac44e4712908099af3a76187ed908e">setSpawnRate</a>(<span class="keywordtype">float</span> particlesPerSecond);<span class="comment"></span></div>
-<div class="line"><a id="l00865" name="l00865"></a><span class="lineno">  865</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00866" name="l00866"></a><span class="lineno">  866</span><span class="comment">     * @brief Sets the settings for the particles.</span></div>
-<div class="line"><a id="l00867" name="l00867"></a><span class="lineno">  867</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00868" name="l00868"></a><span class="lineno">  868</span><span class="comment">     * @param settings The particle settings to apply.</span></div>
-<div class="line"><a id="l00869" name="l00869"></a><span class="lineno">  869</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00870" name="l00870"></a><span class="lineno"><a class="line" href="class_particle_emitter.html#a80199623ad22b564bc573ebe45e4e610">  870</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_particle_emitter.html#a80199623ad22b564bc573ebe45e4e610">setParticleSettings</a>(<span class="keyword">const</span> <a class="code hl_struct" href="struct_particle_settings.html">ParticleSettings</a> &amp;settings);</div>
-<div class="line"><a id="l00871" name="l00871"></a><span class="lineno">  871</span><span class="comment"></span> </div>
-<div class="line"><a id="l00872" name="l00872"></a><span class="lineno">  872</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00873" name="l00873"></a><span class="lineno">  873</span><span class="comment">     * @brief Emits particles once.</span></div>
-<div class="line"><a id="l00874" name="l00874"></a><span class="lineno">  874</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00875" name="l00875"></a><span class="lineno">  875</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00876" name="l00876"></a><span class="lineno"><a class="line" href="class_particle_emitter.html#a9068f50bd291a3dc3a85d35ff03274e4">  876</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_particle_emitter.html#a9068f50bd291a3dc3a85d35ff03274e4">emitOnce</a>();<span class="comment"></span></div>
-<div class="line"><a id="l00877" name="l00877"></a><span class="lineno">  877</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00878" name="l00878"></a><span class="lineno">  878</span><span class="comment">     * @brief Emits particles continuously.</span></div>
-<div class="line"><a id="l00879" name="l00879"></a><span class="lineno">  879</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00880" name="l00880"></a><span class="lineno">  880</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00881" name="l00881"></a><span class="lineno"><a class="line" href="class_particle_emitter.html#a31aeca0316daa73fbeef682d70f3ec2f">  881</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_particle_emitter.html#a31aeca0316daa73fbeef682d70f3ec2f">emitContinuously</a>();<span class="comment"></span></div>
-<div class="line"><a id="l00882" name="l00882"></a><span class="lineno">  882</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00883" name="l00883"></a><span class="lineno">  883</span><span class="comment">     * @brief Starts emitting particles.</span></div>
-<div class="line"><a id="l00884" name="l00884"></a><span class="lineno">  884</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00885" name="l00885"></a><span class="lineno">  885</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00886" name="l00886"></a><span class="lineno"><a class="line" href="class_particle_emitter.html#af1dbd2719498583e8b750540911d94ba">  886</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_particle_emitter.html#af1dbd2719498583e8b750540911d94ba">startEmission</a>();<span class="comment"></span></div>
-<div class="line"><a id="l00887" name="l00887"></a><span class="lineno">  887</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00888" name="l00888"></a><span class="lineno">  888</span><span class="comment">     * @brief Stops emitting particles.</span></div>
-<div class="line"><a id="l00889" name="l00889"></a><span class="lineno">  889</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00890" name="l00890"></a><span class="lineno">  890</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00891" name="l00891"></a><span class="lineno"><a class="line" href="class_particle_emitter.html#a9c55b3d6ed9e567faa5df22714505296">  891</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_particle_emitter.html#a9c55b3d6ed9e567faa5df22714505296">stopEmission</a>();<span class="comment"></span></div>
-<div class="line"><a id="l00892" name="l00892"></a><span class="lineno">  892</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00893" name="l00893"></a><span class="lineno">  893</span><span class="comment">     * @brief Emits a burst of particles.</span></div>
-<div class="line"><a id="l00894" name="l00894"></a><span class="lineno">  894</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00895" name="l00895"></a><span class="lineno">  895</span><span class="comment">     * @param count The number of particles to emit in the burst.</span></div>
-<div class="line"><a id="l00896" name="l00896"></a><span class="lineno">  896</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00897" name="l00897"></a><span class="lineno"><a class="line" href="class_particle_emitter.html#a746411c84dcb1a9e1824adcbdde5645c">  897</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_particle_emitter.html#a746411c84dcb1a9e1824adcbdde5645c">emitBurst</a>(<span class="keywordtype">int</span> count);</div>
-<div class="line"><a id="l00898" name="l00898"></a><span class="lineno">  898</span><span class="comment"></span> </div>
-<div class="line"><a id="l00899" name="l00899"></a><span class="lineno">  899</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00900" name="l00900"></a><span class="lineno">  900</span><span class="comment">     * @brief Sets the spawn rate for the particles.</span></div>
-<div class="line"><a id="l00901" name="l00901"></a><span class="lineno">  901</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00902" name="l00902"></a><span class="lineno">  902</span><span class="comment">     * @param rate The spawn rate in particles per second.</span></div>
-<div class="line"><a id="l00903" name="l00903"></a><span class="lineno">  903</span><span class="comment">     */</span></div>
-<div class="foldopen" id="foldopen00904" data-start="{" data-end="}">
-<div class="line"><a id="l00904" name="l00904"></a><span class="lineno"><a class="line" href="class_particle_emitter.html#a43626f6b8abe4ca1ea499067c709039e">  904</a></span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_particle_emitter.html#a43626f6b8abe4ca1ea499067c709039e">setSpawnRate</a>(<span class="keywordtype">int</span> rate) {</div>
-<div class="line"><a id="l00905" name="l00905"></a><span class="lineno">  905</span>        <a class="code hl_function" href="class_particle_emitter.html#a7bac44e4712908099af3a76187ed908e">setSpawnRate</a>(<span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(rate));</div>
-<div class="line"><a id="l00906" name="l00906"></a><span class="lineno">  906</span>    }</div>
+<div class="line"><a id="l00822" name="l00822"></a><span class="lineno">  822</span><span class="comment">     * @brief Whether the model should use deferred rendering. When false, the</span></div>
+<div class="line"><a id="l00823" name="l00823"></a><span class="lineno">  823</span><span class="comment">     * model is rendered in the forward rendering pass.</span></div>
+<div class="line"><a id="l00824" name="l00824"></a><span class="lineno">  824</span><span class="comment">     *</span></div>
+<div class="line"><a id="l00825" name="l00825"></a><span class="lineno">  825</span><span class="comment">     */</span></div>
+<div class="line"><a id="l00826" name="l00826"></a><span class="lineno"><a class="line" href="class_model.html#a4ed78d5a7b7f548a4b9c917c05e4924a">  826</a></span>    <span class="keywordtype">bool</span> <a class="code hl_variable" href="class_model.html#a4ed78d5a7b7f548a4b9c917c05e4924a">useDeferredRendering</a> = <span class="keyword">true</span>;</div>
+<div class="line"><a id="l00827" name="l00827"></a><span class="lineno">  827</span><span class="comment"></span> </div>
+<div class="line"><a id="l00828" name="l00828"></a><span class="lineno">  828</span><span class="comment">    /**</span></div>
+<div class="line"><a id="l00829" name="l00829"></a><span class="lineno">  829</span><span class="comment">     * @brief Checks if the model can use deferred rendering.</span></div>
+<div class="line"><a id="l00830" name="l00830"></a><span class="lineno">  830</span><span class="comment">     *</span></div>
+<div class="line"><a id="l00831" name="l00831"></a><span class="lineno">  831</span><span class="comment">     * @return (bool) True if deferred rendering is enabled, false otherwise.</span></div>
+<div class="line"><a id="l00832" name="l00832"></a><span class="lineno">  832</span><span class="comment">     */</span></div>
+<div class="foldopen" id="foldopen00833" data-start="{" data-end="}">
+<div class="line"><a id="l00833" name="l00833"></a><span class="lineno"><a class="line" href="class_model.html#aa0bad24d1f9cebdf8bae997726337e43">  833</a></span>    <span class="keywordtype">bool</span> <a class="code hl_function" href="class_model.html#aa0bad24d1f9cebdf8bae997726337e43">canUseDeferredRendering</a>()<span class="keyword"> const override </span>{</div>
+<div class="line"><a id="l00834" name="l00834"></a><span class="lineno">  834</span>        <span class="keywordflow">return</span> <a class="code hl_variable" href="class_model.html#a4ed78d5a7b7f548a4b9c917c05e4924a">useDeferredRendering</a>;</div>
+<div class="line"><a id="l00835" name="l00835"></a><span class="lineno">  835</span>    }</div>
 </div>
-<div class="line"><a id="l00907" name="l00907"></a><span class="lineno">  907</span> </div>
-<div class="line"><a id="l00908" name="l00908"></a><span class="lineno">  908</span>  <span class="keyword">private</span>:</div>
-<div class="line"><a id="l00909" name="l00909"></a><span class="lineno">  909</span>    std::vector&lt;Particle&gt; particles;</div>
-<div class="line"><a id="l00910" name="l00910"></a><span class="lineno">  910</span>    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> maxParticles;</div>
-<div class="line"><a id="l00911" name="l00911"></a><span class="lineno">  911</span>    <span class="keywordtype">unsigned</span> <span class="keywordtype">int</span> activeParticleCount = 0;</div>
-<div class="line"><a id="l00912" name="l00912"></a><span class="lineno">  912</span> </div>
-<div class="line"><a id="l00913" name="l00913"></a><span class="lineno">  913</span>    <a class="code hl_enumeration" href="object_8h.html#a5d2a36527b762e139f0a5cefd66b3191">ParticleEmissionType</a> emissionType = <a class="code hl_enumvalue" href="object_8h.html#a5d2a36527b762e139f0a5cefd66b3191a7941ce00c308ef62cd69af52664e9788">ParticleEmissionType::Fountain</a>;</div>
-<div class="line"><a id="l00914" name="l00914"></a><span class="lineno">  914</span>    <a class="code hl_typedef" href="units_8h.html#af1efe03080186b94608ab2d50c060fe5">Magnitude3d</a> direction = {0.0, 1.0, 0.0};</div>
-<div class="line"><a id="l00915" name="l00915"></a><span class="lineno">  915</span>    <span class="keywordtype">float</span> spawnRadius = 0.1f;</div>
-<div class="line"><a id="l00916" name="l00916"></a><span class="lineno">  916</span>    <span class="keywordtype">float</span> spawnRate = 10.0f;</div>
-<div class="line"><a id="l00917" name="l00917"></a><span class="lineno">  917</span>    ParticleSettings settings;</div>
-<div class="line"><a id="l00918" name="l00918"></a><span class="lineno">  918</span> </div>
-<div class="line"><a id="l00919" name="l00919"></a><span class="lineno">  919</span>    <span class="keywordtype">float</span> timeSinceLastEmission = 0.0f;</div>
-<div class="line"><a id="l00920" name="l00920"></a><span class="lineno">  920</span>    <span class="keywordtype">bool</span> isEmitting = <span class="keyword">true</span>;</div>
-<div class="line"><a id="l00921" name="l00921"></a><span class="lineno">  921</span>    <span class="keywordtype">bool</span> doesEmitOnce = <span class="keyword">false</span>;</div>
-<div class="line"><a id="l00922" name="l00922"></a><span class="lineno">  922</span>    <span class="keywordtype">bool</span> hasEmittedOnce = <span class="keyword">false</span>;</div>
-<div class="line"><a id="l00923" name="l00923"></a><span class="lineno">  923</span>    <span class="keywordtype">int</span> burstCount = 0;</div>
-<div class="line"><a id="l00924" name="l00924"></a><span class="lineno">  924</span> </div>
-<div class="line"><a id="l00925" name="l00925"></a><span class="lineno">  925</span>    <a class="code hl_typedef" href="units_8h.html#a5c9d258201f281b8ad0fb4385b7ef668">Id</a> vao, vbo;</div>
-<div class="line"><a id="l00926" name="l00926"></a><span class="lineno">  926</span>    ShaderProgram program;</div>
-<div class="line"><a id="l00927" name="l00927"></a><span class="lineno">  927</span>    <a class="code hl_enumvalue" href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82aa3e8ae43188ae76d38f414b2bdb0077b">Texture</a> texture;</div>
-<div class="line"><a id="l00928" name="l00928"></a><span class="lineno">  928</span>    <a class="code hl_enumvalue" href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82acb5feb1b7314637725a2e73bdc9f7295">Color</a> color = <a class="code hl_function" href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a>();</div>
-<div class="line"><a id="l00929" name="l00929"></a><span class="lineno">  929</span>    <span class="keywordtype">bool</span> useTexture = <span class="keyword">false</span>;</div>
-<div class="line"><a id="l00930" name="l00930"></a><span class="lineno">  930</span> </div>
-<div class="line"><a id="l00931" name="l00931"></a><span class="lineno">  931</span>    glm::mat4 projection = glm::mat4(1.0f);</div>
-<div class="line"><a id="l00932" name="l00932"></a><span class="lineno">  932</span>    glm::mat4 view = glm::mat4(1.0f);</div>
-<div class="line"><a id="l00933" name="l00933"></a><span class="lineno">  933</span>    glm::mat4 model = glm::mat4(1.0f);</div>
-<div class="line"><a id="l00934" name="l00934"></a><span class="lineno">  934</span> </div>
-<div class="line"><a id="l00935" name="l00935"></a><span class="lineno">  935</span>    Position3d position = {0.0, 0.0, 0.0};</div>
-<div class="line"><a id="l00936" name="l00936"></a><span class="lineno">  936</span>    std::optional&lt;Position3d&gt; firstCameraPosition = std::nullopt;</div>
-<div class="line"><a id="l00937" name="l00937"></a><span class="lineno">  937</span> </div>
-<div class="line"><a id="l00938" name="l00938"></a><span class="lineno">  938</span>    <span class="keywordtype">void</span> spawnParticle();</div>
-<div class="line"><a id="l00939" name="l00939"></a><span class="lineno">  939</span>    <span class="keywordtype">void</span> updateParticle(<a class="code hl_enumvalue" href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82a5e9328c486b44b9a58bca20f7f2064f4">Particle</a> &amp;p, <span class="keywordtype">float</span> deltaTime);</div>
-<div class="line"><a id="l00940" name="l00940"></a><span class="lineno">  940</span>    <a class="code hl_typedef" href="units_8h.html#af1efe03080186b94608ab2d50c060fe5">Magnitude3d</a> generateRandomVelocity();</div>
-<div class="line"><a id="l00941" name="l00941"></a><span class="lineno">  941</span>    Position3d generateSpawnPosition();</div>
-<div class="line"><a id="l00942" name="l00942"></a><span class="lineno">  942</span>    <span class="keywordtype">int</span> findInactiveParticle();</div>
-<div class="line"><a id="l00943" name="l00943"></a><span class="lineno">  943</span>    <span class="keywordtype">void</span> activateParticle(<span class="keywordtype">int</span> index);</div>
-<div class="line"><a id="l00944" name="l00944"></a><span class="lineno">  944</span>};</div>
+<div class="line"><a id="l00836" name="l00836"></a><span class="lineno">  836</span> </div>
+<div class="line"><a id="l00837" name="l00837"></a><span class="lineno">  837</span>  <span class="keyword">private</span>:</div>
+<div class="line"><a id="l00838" name="l00838"></a><span class="lineno">  838</span>    std::vector&lt;std::shared_ptr&lt;CoreObject&gt;&gt; objects;</div>
+<div class="line"><a id="l00839" name="l00839"></a><span class="lineno">  839</span>    std::string directory;</div>
+<div class="line"><a id="l00840" name="l00840"></a><span class="lineno">  840</span> </div>
+<div class="line"><a id="l00841" name="l00841"></a><span class="lineno">  841</span>    <span class="keywordtype">void</span> loadModel(<a class="code hl_struct" href="struct_resource.html">Resource</a> resource);</div>
+<div class="line"><a id="l00842" name="l00842"></a><span class="lineno">  842</span>    <span class="keywordtype">void</span> processNode(aiNode *node, <span class="keyword">const</span> aiScene *scene,</div>
+<div class="line"><a id="l00843" name="l00843"></a><span class="lineno">  843</span>                     glm::mat4 parentTransform = glm::mat4(1.0f));</div>
+<div class="line"><a id="l00844" name="l00844"></a><span class="lineno">  844</span>    <a class="code hl_class" href="class_core_object.html">CoreObject</a> processMesh(aiMesh *mesh, <span class="keyword">const</span> aiScene *scene);</div>
+<div class="line"><a id="l00845" name="l00845"></a><span class="lineno">  845</span>    std::vector&lt;Texture&gt; loadMaterialTextures(aiMaterial *mat, std::any type,</div>
+<div class="line"><a id="l00846" name="l00846"></a><span class="lineno">  846</span>                                              <span class="keyword">const</span> std::string &amp;typeName);</div>
+<div class="line"><a id="l00847" name="l00847"></a><span class="lineno">  847</span>};</div>
 </div>
-<div class="line"><a id="l00945" name="l00945"></a><span class="lineno">  945</span> </div>
-<div class="line"><a id="l00946" name="l00946"></a><span class="lineno">  946</span><span class="keyword">class </span><a class="code hl_struct" href="struct_resource.html">Resource</a>;</div>
-<div class="line"><a id="l00947" name="l00947"></a><span class="lineno">  947</span><span class="keyword">class </span>aiNode;</div>
-<div class="line"><a id="l00948" name="l00948"></a><span class="lineno">  948</span><span class="keyword">class </span>aiScene;</div>
-<div class="line"><a id="l00949" name="l00949"></a><span class="lineno">  949</span><span class="keyword">class </span>aiMesh;</div>
-<div class="line"><a id="l00950" name="l00950"></a><span class="lineno">  950</span><span class="keyword">class </span>aiMaterial;<span class="comment"></span></div>
-<div class="line"><a id="l00951" name="l00951"></a><span class="lineno">  951</span><span class="comment">/**</span></div>
-<div class="line"><a id="l00952" name="l00952"></a><span class="lineno">  952</span><span class="comment"> * @brief Class that represents a 3D model composed of multiple CoreObjects. It</span></div>
-<div class="line"><a id="l00953" name="l00953"></a><span class="lineno">  953</span><span class="comment"> * can be loaded from a resource file and manages its constituent objects.</span></div>
-<div class="line"><a id="l00954" name="l00954"></a><span class="lineno">  954</span><span class="comment"> * \subsection model-example Example</span></div>
-<div class="line"><a id="l00955" name="l00955"></a><span class="lineno">  955</span><span class="comment">    * ```cpp</span></div>
-<div class="line"><a id="l00956" name="l00956"></a><span class="lineno">  956</span><span class="comment">    * // Load a 3D model from a resource file</span></div>
-<div class="line"><a id="l00957" name="l00957"></a><span class="lineno">  957</span><span class="comment">    * Resource modelResource =</span></div>
-<div class="line"><a id="l00958" name="l00958"></a><span class="lineno">  958</span><span class="comment"> Workspace::get().createResource(&quot;path/to/model.obj&quot;);</span></div>
-<div class="line"><a id="l00959" name="l00959"></a><span class="lineno">  959</span><span class="comment">    * Model myModel;</span></div>
-<div class="line"><a id="l00960" name="l00960"></a><span class="lineno">  960</span><span class="comment">    * myModel.fromResource(modelResource);</span></div>
-<div class="line"><a id="l00961" name="l00961"></a><span class="lineno">  961</span><span class="comment">    * // Set the position of the model in the scene</span></div>
-<div class="line"><a id="l00962" name="l00962"></a><span class="lineno">  962</span><span class="comment">    * myModel.setPosition({0.0f, 0.0f, 0.0f});</span></div>
-<div class="line"><a id="l00963" name="l00963"></a><span class="lineno">  963</span><span class="comment">    * // Scale the model to twice its original size</span></div>
-<div class="line"><a id="l00964" name="l00964"></a><span class="lineno">  964</span><span class="comment">    * myModel.setScale({2.0f, 2.0f, 2.0f});</span></div>
-<div class="line"><a id="l00965" name="l00965"></a><span class="lineno">  965</span><span class="comment">    * // Rotate the model 45 degrees around the Y-axis</span></div>
-<div class="line"><a id="l00966" name="l00966"></a><span class="lineno">  966</span><span class="comment">    * myModel.setRotation({0.0f, 45.0f, 0.0f});</span></div>
-<div class="line"><a id="l00967" name="l00967"></a><span class="lineno">  967</span><span class="comment">    * // Add the model to the scene</span></div>
-<div class="line"><a id="l00968" name="l00968"></a><span class="lineno">  968</span><span class="comment">    * window.addObject(&amp;myModel);</span></div>
-<div class="line"><a id="l00969" name="l00969"></a><span class="lineno">  969</span><span class="comment">    * ```</span></div>
-<div class="line"><a id="l00970" name="l00970"></a><span class="lineno">  970</span><span class="comment"> *</span></div>
-<div class="line"><a id="l00971" name="l00971"></a><span class="lineno">  971</span><span class="comment"> */</span></div>
-<div class="foldopen" id="foldopen00972" data-start="{" data-end="};">
-<div class="line"><a id="l00972" name="l00972"></a><span class="lineno"><a class="line" href="class_model.html">  972</a></span><span class="keyword">class </span><a class="code hl_function" href="class_model.html#ab5bdabea36b1d1bee80151e2da913373">Model</a> : <span class="keyword">public</span> <a class="code hl_class" href="class_game_object.html">GameObject</a> {</div>
-<div class="line"><a id="l00973" name="l00973"></a><span class="lineno">  973</span>  <span class="keyword">public</span>:<span class="comment"></span></div>
-<div class="line"><a id="l00974" name="l00974"></a><span class="lineno">  974</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00975" name="l00975"></a><span class="lineno">  975</span><span class="comment">     * @brief Loads the model from a resource.</span></div>
-<div class="line"><a id="l00976" name="l00976"></a><span class="lineno">  976</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00977" name="l00977"></a><span class="lineno">  977</span><span class="comment">     * @param resource The resource to load the model from.</span></div>
-<div class="line"><a id="l00978" name="l00978"></a><span class="lineno">  978</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00979" name="l00979"></a><span class="lineno"><a class="line" href="class_model.html#a8a74c2ff2b6a5755c2ed913d7c6a88f4">  979</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_model.html#a8a74c2ff2b6a5755c2ed913d7c6a88f4">fromResource</a>(<a class="code hl_struct" href="struct_resource.html">Resource</a> resource);</div>
-<div class="line"><a id="l00980" name="l00980"></a><span class="lineno">  980</span><span class="comment"></span> </div>
-<div class="line"><a id="l00981" name="l00981"></a><span class="lineno">  981</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00982" name="l00982"></a><span class="lineno">  982</span><span class="comment">     * @brief Gets the objects that make up the model.</span></div>
-<div class="line"><a id="l00983" name="l00983"></a><span class="lineno">  983</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00984" name="l00984"></a><span class="lineno">  984</span><span class="comment">     * @return (std::vector&lt;std::shared_ptr&lt;CoreObject&gt;&gt;) The objects.</span></div>
-<div class="line"><a id="l00985" name="l00985"></a><span class="lineno">  985</span><span class="comment">     */</span></div>
-<div class="foldopen" id="foldopen00986" data-start="{" data-end="}">
-<div class="line"><a id="l00986" name="l00986"></a><span class="lineno"><a class="line" href="class_model.html#af2f4d13f48508e046f3b57e59ba420fb">  986</a></span>    <span class="keyword">inline</span> std::vector&lt;std::shared_ptr&lt;CoreObject&gt;&gt; <a class="code hl_function" href="class_model.html#af2f4d13f48508e046f3b57e59ba420fb">getObjects</a>() {</div>
-<div class="line"><a id="l00987" name="l00987"></a><span class="lineno">  987</span>        <span class="keywordflow">return</span> objects;</div>
-<div class="line"><a id="l00988" name="l00988"></a><span class="lineno">  988</span>    }</div>
-</div>
-<div class="line"><a id="l00989" name="l00989"></a><span class="lineno">  989</span><span class="comment"></span> </div>
-<div class="line"><a id="l00990" name="l00990"></a><span class="lineno">  990</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00991" name="l00991"></a><span class="lineno">  991</span><span class="comment">     * @brief Moves the model by a certain amount.</span></div>
-<div class="line"><a id="l00992" name="l00992"></a><span class="lineno">  992</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00993" name="l00993"></a><span class="lineno">  993</span><span class="comment">     * @param deltaPosition The amount to move the model by.</span></div>
-<div class="line"><a id="l00994" name="l00994"></a><span class="lineno">  994</span><span class="comment">     */</span></div>
-<div class="foldopen" id="foldopen00995" data-start="{" data-end="}">
-<div class="line"><a id="l00995" name="l00995"></a><span class="lineno"><a class="line" href="class_model.html#aeb27cb91b9a787f06d8c8001169968bc">  995</a></span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_model.html#aeb27cb91b9a787f06d8c8001169968bc">move</a>(<span class="keyword">const</span> <a class="code hl_struct" href="struct_position3d.html">Position3d</a> &amp;deltaPosition)<span class="keyword"> override </span>{</div>
-<div class="line"><a id="l00996" name="l00996"></a><span class="lineno">  996</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
-<div class="line"><a id="l00997" name="l00997"></a><span class="lineno">  997</span>            obj-&gt;move(deltaPosition);</div>
-<div class="line"><a id="l00998" name="l00998"></a><span class="lineno">  998</span>        }</div>
-<div class="line"><a id="l00999" name="l00999"></a><span class="lineno">  999</span>    }</div>
-</div>
-<div class="line"><a id="l01000" name="l01000"></a><span class="lineno"> 1000</span><span class="comment"></span> </div>
-<div class="line"><a id="l01001" name="l01001"></a><span class="lineno"> 1001</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l01002" name="l01002"></a><span class="lineno"> 1002</span><span class="comment">     * @brief Set the Position object</span></div>
-<div class="line"><a id="l01003" name="l01003"></a><span class="lineno"> 1003</span><span class="comment">     *</span></div>
-<div class="line"><a id="l01004" name="l01004"></a><span class="lineno"> 1004</span><span class="comment">     * @param newPosition The new position to set.</span></div>
-<div class="line"><a id="l01005" name="l01005"></a><span class="lineno"> 1005</span><span class="comment">     */</span></div>
-<div class="foldopen" id="foldopen01006" data-start="{" data-end="}">
-<div class="line"><a id="l01006" name="l01006"></a><span class="lineno"><a class="line" href="class_model.html#a7cd6f92f17a58446c6b1d2ea70e2e0d5"> 1006</a></span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_model.html#a7cd6f92f17a58446c6b1d2ea70e2e0d5">setPosition</a>(<span class="keyword">const</span> <a class="code hl_struct" href="struct_position3d.html">Position3d</a> &amp;newPosition)<span class="keyword"> override </span>{</div>
-<div class="line"><a id="l01007" name="l01007"></a><span class="lineno"> 1007</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
-<div class="line"><a id="l01008" name="l01008"></a><span class="lineno"> 1008</span>            obj-&gt;setPosition(newPosition);</div>
-<div class="line"><a id="l01009" name="l01009"></a><span class="lineno"> 1009</span>        }</div>
-<div class="line"><a id="l01010" name="l01010"></a><span class="lineno"> 1010</span>    }</div>
-</div>
-<div class="line"><a id="l01011" name="l01011"></a><span class="lineno"> 1011</span><span class="comment"></span> </div>
-<div class="line"><a id="l01012" name="l01012"></a><span class="lineno"> 1012</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l01013" name="l01013"></a><span class="lineno"> 1013</span><span class="comment">     * @brief Assigns an absolute rotation to every mesh in the model.</span></div>
-<div class="line"><a id="l01014" name="l01014"></a><span class="lineno"> 1014</span><span class="comment">     */</span></div>
-<div class="foldopen" id="foldopen01015" data-start="{" data-end="}">
-<div class="line"><a id="l01015" name="l01015"></a><span class="lineno"><a class="line" href="class_model.html#a24148dc5603a0a2e3da010b89cbde5b8"> 1015</a></span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_model.html#a24148dc5603a0a2e3da010b89cbde5b8">setRotation</a>(<span class="keyword">const</span> <a class="code hl_struct" href="struct_rotation3d.html">Rotation3d</a> &amp;newRotation)<span class="keyword"> override </span>{</div>
-<div class="line"><a id="l01016" name="l01016"></a><span class="lineno"> 1016</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
-<div class="line"><a id="l01017" name="l01017"></a><span class="lineno"> 1017</span>            obj-&gt;setRotation(newRotation);</div>
-<div class="line"><a id="l01018" name="l01018"></a><span class="lineno"> 1018</span>        }</div>
-<div class="line"><a id="l01019" name="l01019"></a><span class="lineno"> 1019</span>    }</div>
-</div>
-<div class="line"><a id="l01020" name="l01020"></a><span class="lineno"> 1020</span><span class="comment"></span> </div>
-<div class="line"><a id="l01021" name="l01021"></a><span class="lineno"> 1021</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l01022" name="l01022"></a><span class="lineno"> 1022</span><span class="comment">     * @brief Applies a texture to all contained CoreObjects.</span></div>
-<div class="line"><a id="l01023" name="l01023"></a><span class="lineno"> 1023</span><span class="comment">     */</span></div>
-<div class="foldopen" id="foldopen01024" data-start="{" data-end="}">
-<div class="line"><a id="l01024" name="l01024"></a><span class="lineno"><a class="line" href="class_model.html#abc49ca9b5823f177f421589cf447e913"> 1024</a></span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_model.html#abc49ca9b5823f177f421589cf447e913">attachTexture</a>(<span class="keyword">const</span> <a class="code hl_struct" href="struct_texture.html">Texture</a> &amp;texture)<span class="keyword"> override </span>{</div>
-<div class="line"><a id="l01025" name="l01025"></a><span class="lineno"> 1025</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
-<div class="line"><a id="l01026" name="l01026"></a><span class="lineno"> 1026</span>            obj-&gt;attachTexture(texture);</div>
-<div class="line"><a id="l01027" name="l01027"></a><span class="lineno"> 1027</span>        }</div>
-<div class="line"><a id="l01028" name="l01028"></a><span class="lineno"> 1028</span>    }</div>
-</div>
-<div class="line"><a id="l01029" name="l01029"></a><span class="lineno"> 1029</span><span class="comment"></span> </div>
-<div class="line"><a id="l01030" name="l01030"></a><span class="lineno"> 1030</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l01031" name="l01031"></a><span class="lineno"> 1031</span><span class="comment">     * @brief Scales every mesh in the model uniformly.</span></div>
-<div class="line"><a id="l01032" name="l01032"></a><span class="lineno"> 1032</span><span class="comment">     */</span></div>
-<div class="foldopen" id="foldopen01033" data-start="{" data-end="}">
-<div class="line"><a id="l01033" name="l01033"></a><span class="lineno"><a class="line" href="class_model.html#a9620da538736e7eea3b38c727cbe3571"> 1033</a></span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_model.html#a9620da538736e7eea3b38c727cbe3571">setScale</a>(<span class="keyword">const</span> <a class="code hl_typedef" href="units_8h.html#a3b9b132cddb1dfe2ae572f230abe45f1">Scale3d</a> &amp;newScale)<span class="keyword"> override </span>{</div>
-<div class="line"><a id="l01034" name="l01034"></a><span class="lineno"> 1034</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
-<div class="line"><a id="l01035" name="l01035"></a><span class="lineno"> 1035</span>            obj-&gt;setScale(newScale);</div>
-<div class="line"><a id="l01036" name="l01036"></a><span class="lineno"> 1036</span>        }</div>
-<div class="line"><a id="l01037" name="l01037"></a><span class="lineno"> 1037</span>    }</div>
-</div>
-<div class="line"><a id="l01038" name="l01038"></a><span class="lineno"> 1038</span><span class="comment"></span> </div>
-<div class="line"><a id="l01039" name="l01039"></a><span class="lineno"> 1039</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l01040" name="l01040"></a><span class="lineno"> 1040</span><span class="comment">     * @brief Stores the current view matrix for every sub-object.</span></div>
-<div class="line"><a id="l01041" name="l01041"></a><span class="lineno"> 1041</span><span class="comment">     */</span></div>
-<div class="foldopen" id="foldopen01042" data-start="{" data-end="}">
-<div class="line"><a id="l01042" name="l01042"></a><span class="lineno"><a class="line" href="class_model.html#ab1bc68ab2ef747780f89d5f2954ca05b"> 1042</a></span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_model.html#ab1bc68ab2ef747780f89d5f2954ca05b">setViewMatrix</a>(<span class="keyword">const</span> glm::mat4 &amp;view)<span class="keyword"> override </span>{</div>
-<div class="line"><a id="l01043" name="l01043"></a><span class="lineno"> 1043</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
-<div class="line"><a id="l01044" name="l01044"></a><span class="lineno"> 1044</span>            obj-&gt;setViewMatrix(view);</div>
-<div class="line"><a id="l01045" name="l01045"></a><span class="lineno"> 1045</span>        }</div>
-<div class="line"><a id="l01046" name="l01046"></a><span class="lineno"> 1046</span>    }</div>
-</div>
-<div class="line"><a id="l01047" name="l01047"></a><span class="lineno"> 1047</span><span class="comment"></span> </div>
-<div class="line"><a id="l01048" name="l01048"></a><span class="lineno"> 1048</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l01049" name="l01049"></a><span class="lineno"> 1049</span><span class="comment">     * @brief Renders each CoreObject that composes the model.</span></div>
-<div class="line"><a id="l01050" name="l01050"></a><span class="lineno"> 1050</span><span class="comment">     */</span></div>
-<div class="foldopen" id="foldopen01051" data-start="{" data-end="}">
-<div class="line"><a id="l01051" name="l01051"></a><span class="lineno"><a class="line" href="class_model.html#a8b786b81d7e5f23fb2c985944bf0c93a"> 1051</a></span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_model.html#a8b786b81d7e5f23fb2c985944bf0c93a">render</a>(<span class="keywordtype">float</span> dt)<span class="keyword"> override </span>{</div>
-<div class="line"><a id="l01052" name="l01052"></a><span class="lineno"> 1052</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;component : <a class="code hl_variable" href="class_game_object.html#a545e4ed29df0e16304d46c73404c0ce6">components</a>) {</div>
-<div class="line"><a id="l01053" name="l01053"></a><span class="lineno"> 1053</span>            component-&gt;update(dt);</div>
-<div class="line"><a id="l01054" name="l01054"></a><span class="lineno"> 1054</span>        }</div>
-<div class="line"><a id="l01055" name="l01055"></a><span class="lineno"> 1055</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
-<div class="line"><a id="l01056" name="l01056"></a><span class="lineno"> 1056</span>            obj-&gt;render(dt);</div>
-<div class="line"><a id="l01057" name="l01057"></a><span class="lineno"> 1057</span>        }</div>
-<div class="line"><a id="l01058" name="l01058"></a><span class="lineno"> 1058</span>    }</div>
-</div>
-<div class="line"><a id="l01059" name="l01059"></a><span class="lineno"> 1059</span><span class="comment"></span> </div>
-<div class="line"><a id="l01060" name="l01060"></a><span class="lineno"> 1060</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l01061" name="l01061"></a><span class="lineno"> 1061</span><span class="comment">     * @brief Updates all underlying CoreObjects to keep transforms and</span></div>
-<div class="line"><a id="l01062" name="l01062"></a><span class="lineno"> 1062</span><span class="comment">     * animations synchronized.</span></div>
-<div class="line"><a id="l01063" name="l01063"></a><span class="lineno"> 1063</span><span class="comment">     */</span></div>
-<div class="foldopen" id="foldopen01064" data-start="{" data-end="}">
-<div class="line"><a id="l01064" name="l01064"></a><span class="lineno"><a class="line" href="class_model.html#a53186f31f04ff6f7977fabe72ce8eb3d"> 1064</a></span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_model.html#a53186f31f04ff6f7977fabe72ce8eb3d">update</a>(<a class="code hl_class" href="class_window.html">Window</a> &amp;window)<span class="keyword"> override </span>{</div>
-<div class="line"><a id="l01065" name="l01065"></a><span class="lineno"> 1065</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
-<div class="line"><a id="l01066" name="l01066"></a><span class="lineno"> 1066</span>            obj-&gt;update(window);</div>
-<div class="line"><a id="l01067" name="l01067"></a><span class="lineno"> 1067</span>        }</div>
-<div class="line"><a id="l01068" name="l01068"></a><span class="lineno"> 1068</span>    }</div>
-</div>
-<div class="line"><a id="l01069" name="l01069"></a><span class="lineno"> 1069</span><span class="comment"></span> </div>
-<div class="line"><a id="l01070" name="l01070"></a><span class="lineno"> 1070</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l01071" name="l01071"></a><span class="lineno"> 1071</span><span class="comment">     * @brief Initializes every CoreObject and attached component within the</span></div>
-<div class="line"><a id="l01072" name="l01072"></a><span class="lineno"> 1072</span><span class="comment">     * model.</span></div>
-<div class="line"><a id="l01073" name="l01073"></a><span class="lineno"> 1073</span><span class="comment">     */</span></div>
-<div class="foldopen" id="foldopen01074" data-start="{" data-end="}">
-<div class="line"><a id="l01074" name="l01074"></a><span class="lineno"><a class="line" href="class_model.html#a5e3a76dda4214e2014b2964d4170f368"> 1074</a></span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_model.html#a5e3a76dda4214e2014b2964d4170f368">initialize</a>()<span class="keyword"> override </span>{</div>
-<div class="line"><a id="l01075" name="l01075"></a><span class="lineno"> 1075</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;component : <a class="code hl_variable" href="class_game_object.html#a545e4ed29df0e16304d46c73404c0ce6">components</a>) {</div>
-<div class="line"><a id="l01076" name="l01076"></a><span class="lineno"> 1076</span>            component-&gt;init();</div>
-<div class="line"><a id="l01077" name="l01077"></a><span class="lineno"> 1077</span>        }</div>
-<div class="line"><a id="l01078" name="l01078"></a><span class="lineno"> 1078</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
-<div class="line"><a id="l01079" name="l01079"></a><span class="lineno"> 1079</span>            obj-&gt;initialize();</div>
-<div class="line"><a id="l01080" name="l01080"></a><span class="lineno"> 1080</span>        }</div>
-<div class="line"><a id="l01081" name="l01081"></a><span class="lineno"> 1081</span>    }</div>
-</div>
-<div class="line"><a id="l01082" name="l01082"></a><span class="lineno"> 1082</span><span class="comment"></span> </div>
-<div class="line"><a id="l01083" name="l01083"></a><span class="lineno"> 1083</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l01084" name="l01084"></a><span class="lineno"> 1084</span><span class="comment">     * @brief Sets the projection matrix for all meshes composing the model.</span></div>
-<div class="line"><a id="l01085" name="l01085"></a><span class="lineno"> 1085</span><span class="comment">     */</span></div>
-<div class="foldopen" id="foldopen01086" data-start="{" data-end="}">
-<div class="line"><a id="l01086" name="l01086"></a><span class="lineno"><a class="line" href="class_model.html#a778fb43b905eb3520d8b348eab82e89b"> 1086</a></span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_model.html#a778fb43b905eb3520d8b348eab82e89b">setProjectionMatrix</a>(<span class="keyword">const</span> glm::mat4 &amp;projection)<span class="keyword"> override </span>{</div>
-<div class="line"><a id="l01087" name="l01087"></a><span class="lineno"> 1087</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
-<div class="line"><a id="l01088" name="l01088"></a><span class="lineno"> 1088</span>            obj-&gt;setProjectionMatrix(projection);</div>
-<div class="line"><a id="l01089" name="l01089"></a><span class="lineno"> 1089</span>        }</div>
-<div class="line"><a id="l01090" name="l01090"></a><span class="lineno"> 1090</span>    }</div>
-</div>
-<div class="line"><a id="l01091" name="l01091"></a><span class="lineno"> 1091</span><span class="comment"></span> </div>
-<div class="line"><a id="l01092" name="l01092"></a><span class="lineno"> 1092</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l01093" name="l01093"></a><span class="lineno"> 1093</span><span class="comment">     * @brief Forces every mesh to use the provided shader program.</span></div>
-<div class="line"><a id="l01094" name="l01094"></a><span class="lineno"> 1094</span><span class="comment">     */</span></div>
-<div class="foldopen" id="foldopen01095" data-start="{" data-end="}">
-<div class="line"><a id="l01095" name="l01095"></a><span class="lineno"><a class="line" href="class_model.html#a24265caaaa9dee3e0598dd105b8296a3"> 1095</a></span>    <span class="keyword">inline</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_model.html#a24265caaaa9dee3e0598dd105b8296a3">setShader</a>(<span class="keyword">const</span> <a class="code hl_struct" href="struct_shader_program.html">ShaderProgram</a> &amp;shader)<span class="keyword"> override </span>{</div>
-<div class="line"><a id="l01096" name="l01096"></a><span class="lineno"> 1096</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
-<div class="line"><a id="l01097" name="l01097"></a><span class="lineno"> 1097</span>            obj-&gt;setShader(shader);</div>
-<div class="line"><a id="l01098" name="l01098"></a><span class="lineno"> 1098</span>        }</div>
-<div class="line"><a id="l01099" name="l01099"></a><span class="lineno"> 1099</span>    }</div>
-</div>
-<div class="line"><a id="l01100" name="l01100"></a><span class="lineno"> 1100</span><span class="comment"></span> </div>
-<div class="line"><a id="l01101" name="l01101"></a><span class="lineno"> 1101</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l01102" name="l01102"></a><span class="lineno"> 1102</span><span class="comment">     * @brief Retrieves the shader program currently bound to the first mesh.</span></div>
-<div class="line"><a id="l01103" name="l01103"></a><span class="lineno"> 1103</span><span class="comment">     */</span></div>
-<div class="foldopen" id="foldopen01104" data-start="{" data-end="}">
-<div class="line"><a id="l01104" name="l01104"></a><span class="lineno"><a class="line" href="class_model.html#ad26c5b613946c3c2ce2524484f56fc6e"> 1104</a></span>    <span class="keyword">inline</span> std::optional&lt;ShaderProgram&gt; <a class="code hl_function" href="class_model.html#ad26c5b613946c3c2ce2524484f56fc6e">getShaderProgram</a>()<span class="keyword"> override </span>{</div>
-<div class="line"><a id="l01105" name="l01105"></a><span class="lineno"> 1105</span>        <span class="keywordflow">if</span> (objects.empty()) {</div>
-<div class="line"><a id="l01106" name="l01106"></a><span class="lineno"> 1106</span>            <span class="keywordflow">throw</span> std::runtime_error(<span class="stringliteral">&quot;Model has no objects.&quot;</span>);</div>
-<div class="line"><a id="l01107" name="l01107"></a><span class="lineno"> 1107</span>        }</div>
-<div class="line"><a id="l01108" name="l01108"></a><span class="lineno"> 1108</span>        <span class="keywordflow">return</span> objects[0]-&gt;getShaderProgram().value();</div>
-<div class="line"><a id="l01109" name="l01109"></a><span class="lineno"> 1109</span>    }</div>
-</div>
-<div class="line"><a id="l01110" name="l01110"></a><span class="lineno"> 1110</span><span class="comment"></span> </div>
-<div class="line"><a id="l01111" name="l01111"></a><span class="lineno"> 1111</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l01112" name="l01112"></a><span class="lineno"> 1112</span><span class="comment">     * @brief Returns the world-space position of the first mesh in the model.</span></div>
-<div class="line"><a id="l01113" name="l01113"></a><span class="lineno"> 1113</span><span class="comment">     */</span></div>
-<div class="foldopen" id="foldopen01114" data-start="{" data-end="}">
-<div class="line"><a id="l01114" name="l01114"></a><span class="lineno"><a class="line" href="class_model.html#a773e85c486ebaf5e0f3afe9da3381212"> 1114</a></span>    <span class="keyword">inline</span> <a class="code hl_struct" href="struct_position3d.html">Position3d</a> <a class="code hl_function" href="class_model.html#a773e85c486ebaf5e0f3afe9da3381212">getPosition</a>()<span class="keyword"> const override </span>{</div>
-<div class="line"><a id="l01115" name="l01115"></a><span class="lineno"> 1115</span>        <span class="keywordflow">if</span> (objects.empty()) {</div>
-<div class="line"><a id="l01116" name="l01116"></a><span class="lineno"> 1116</span>            <span class="keywordflow">throw</span> std::runtime_error(<span class="stringliteral">&quot;Model has no objects.&quot;</span>);</div>
-<div class="line"><a id="l01117" name="l01117"></a><span class="lineno"> 1117</span>        }</div>
-<div class="line"><a id="l01118" name="l01118"></a><span class="lineno"> 1118</span>        <span class="keywordflow">return</span> objects[0]-&gt;getPosition();</div>
-<div class="line"><a id="l01119" name="l01119"></a><span class="lineno"> 1119</span>    }</div>
-</div>
-<div class="line"><a id="l01120" name="l01120"></a><span class="lineno"> 1120</span> </div>
-<div class="line"><a id="l01121" name="l01121"></a><span class="lineno"><a class="line" href="class_model.html#ab5bdabea36b1d1bee80151e2da913373"> 1121</a></span>    <a class="code hl_function" href="class_model.html#ab5bdabea36b1d1bee80151e2da913373">Model</a>() = <span class="keywordflow">default</span>;</div>
-<div class="line"><a id="l01122" name="l01122"></a><span class="lineno"> 1122</span><span class="comment"></span> </div>
-<div class="line"><a id="l01123" name="l01123"></a><span class="lineno"> 1123</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l01124" name="l01124"></a><span class="lineno"> 1124</span><span class="comment">     * @brief The material properties shared by all objects in the model.</span></div>
-<div class="line"><a id="l01125" name="l01125"></a><span class="lineno"> 1125</span><span class="comment">     *</span></div>
-<div class="line"><a id="l01126" name="l01126"></a><span class="lineno"> 1126</span><span class="comment">     */</span></div>
-<div class="line"><a id="l01127" name="l01127"></a><span class="lineno"><a class="line" href="class_model.html#acb2e155d98ff0980bc40958bb5b79868"> 1127</a></span>    <a class="code hl_struct" href="struct_material.html">Material</a> <a class="code hl_variable" href="class_model.html#acb2e155d98ff0980bc40958bb5b79868">material</a>;</div>
-<div class="line"><a id="l01128" name="l01128"></a><span class="lineno"> 1128</span><span class="comment"></span> </div>
-<div class="line"><a id="l01129" name="l01129"></a><span class="lineno"> 1129</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l01130" name="l01130"></a><span class="lineno"> 1130</span><span class="comment">     * @brief Whether the model should use deferred rendering. When false, the</span></div>
-<div class="line"><a id="l01131" name="l01131"></a><span class="lineno"> 1131</span><span class="comment">     * model is rendered in the forward rendering pass.</span></div>
-<div class="line"><a id="l01132" name="l01132"></a><span class="lineno"> 1132</span><span class="comment">     *</span></div>
-<div class="line"><a id="l01133" name="l01133"></a><span class="lineno"> 1133</span><span class="comment">     */</span></div>
-<div class="line"><a id="l01134" name="l01134"></a><span class="lineno"><a class="line" href="class_model.html#a4ed78d5a7b7f548a4b9c917c05e4924a"> 1134</a></span>    <span class="keywordtype">bool</span> <a class="code hl_variable" href="class_model.html#a4ed78d5a7b7f548a4b9c917c05e4924a">useDeferredRendering</a> = <span class="keyword">true</span>;</div>
-<div class="line"><a id="l01135" name="l01135"></a><span class="lineno"> 1135</span><span class="comment"></span> </div>
-<div class="line"><a id="l01136" name="l01136"></a><span class="lineno"> 1136</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l01137" name="l01137"></a><span class="lineno"> 1137</span><span class="comment">     * @brief Checks if the model can use deferred rendering.</span></div>
-<div class="line"><a id="l01138" name="l01138"></a><span class="lineno"> 1138</span><span class="comment">     *</span></div>
-<div class="line"><a id="l01139" name="l01139"></a><span class="lineno"> 1139</span><span class="comment">     * @return (bool) True if deferred rendering is enabled, false otherwise.</span></div>
-<div class="line"><a id="l01140" name="l01140"></a><span class="lineno"> 1140</span><span class="comment">     */</span></div>
-<div class="foldopen" id="foldopen01141" data-start="{" data-end="}">
-<div class="line"><a id="l01141" name="l01141"></a><span class="lineno"><a class="line" href="class_model.html#aa0bad24d1f9cebdf8bae997726337e43"> 1141</a></span>    <span class="keywordtype">bool</span> <a class="code hl_function" href="class_model.html#aa0bad24d1f9cebdf8bae997726337e43">canUseDeferredRendering</a>()<span class="keyword"> const override </span>{</div>
-<div class="line"><a id="l01142" name="l01142"></a><span class="lineno"> 1142</span>        <span class="keywordflow">return</span> <a class="code hl_variable" href="class_model.html#a4ed78d5a7b7f548a4b9c917c05e4924a">useDeferredRendering</a>;</div>
-<div class="line"><a id="l01143" name="l01143"></a><span class="lineno"> 1143</span>    }</div>
-</div>
-<div class="line"><a id="l01144" name="l01144"></a><span class="lineno"> 1144</span> </div>
-<div class="line"><a id="l01145" name="l01145"></a><span class="lineno"> 1145</span>  <span class="keyword">private</span>:</div>
-<div class="line"><a id="l01146" name="l01146"></a><span class="lineno"> 1146</span>    std::vector&lt;std::shared_ptr&lt;CoreObject&gt;&gt; objects;</div>
-<div class="line"><a id="l01147" name="l01147"></a><span class="lineno"> 1147</span>    std::string directory;</div>
-<div class="line"><a id="l01148" name="l01148"></a><span class="lineno"> 1148</span> </div>
-<div class="line"><a id="l01149" name="l01149"></a><span class="lineno"> 1149</span>    <span class="keywordtype">void</span> loadModel(<a class="code hl_struct" href="struct_resource.html">Resource</a> resource);</div>
-<div class="line"><a id="l01150" name="l01150"></a><span class="lineno"> 1150</span>    <span class="keywordtype">void</span> processNode(aiNode *node, <span class="keyword">const</span> aiScene *scene,</div>
-<div class="line"><a id="l01151" name="l01151"></a><span class="lineno"> 1151</span>                     glm::mat4 parentTransform = glm::mat4(1.0f));</div>
-<div class="line"><a id="l01152" name="l01152"></a><span class="lineno"> 1152</span>    <a class="code hl_class" href="class_core_object.html">CoreObject</a> processMesh(aiMesh *mesh, <span class="keyword">const</span> aiScene *scene);</div>
-<div class="line"><a id="l01153" name="l01153"></a><span class="lineno"> 1153</span>    std::vector&lt;Texture&gt; loadMaterialTextures(aiMaterial *mat, std::any type,</div>
-<div class="line"><a id="l01154" name="l01154"></a><span class="lineno"> 1154</span>                                              <span class="keyword">const</span> std::string &amp;typeName);</div>
-<div class="line"><a id="l01155" name="l01155"></a><span class="lineno"> 1155</span>};</div>
-</div>
-<div class="line"><a id="l01156" name="l01156"></a><span class="lineno"> 1156</span> </div>
-<div class="line"><a id="l01157" name="l01157"></a><span class="lineno"> 1157</span><span class="preprocessor">#endif </span><span class="comment">// ATLAS_OBJECT_H</span></div>
+<div class="line"><a id="l00848" name="l00848"></a><span class="lineno">  848</span> </div>
+<div class="line"><a id="l00849" name="l00849"></a><span class="lineno">  849</span><span class="preprocessor">#endif </span><span class="comment">// ATLAS_OBJECT_H</span></div>
 <div class="ttc" id="abody_8h_html"><div class="ttname"><a href="body_8h.html">body.h</a></div></div>
 <div class="ttc" id="aclass_body_html"><div class="ttname"><a href="class_body.html">Body</a></div><div class="ttdoc">Class representing a physical body in a physics simulation. It includes methods for applying forces,...</div><div class="ttdef"><b>Definition</b> <a href="body_8h_source.html#l00078">body.h:78</a></div></div>
 <div class="ttc" id="aclass_core_object_html"><div class="ttname"><a href="class_core_object.html">CoreObject</a></div><div class="ttdoc">Represents a 3D object in the scene, including its geometry, material and every interaction with the ...</div><div class="ttdef"><b>Definition</b> <a href="#l00275">object.h:275</a></div></div>
@@ -1400,50 +1082,25 @@ $(function(){initNavTree('object_8h_source.html','',''); });
 <div class="ttc" id="aclass_game_object_html"><div class="ttname"><a href="class_game_object.html">GameObject</a></div><div class="ttdoc">Base class for all Game Objects. It extends from Renderable and it provides common functionality for ...</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00155">component.h:155</a></div></div>
 <div class="ttc" id="aclass_game_object_html_a545e4ed29df0e16304d46c73404c0ce6"><div class="ttname"><a href="class_game_object.html#a545e4ed29df0e16304d46c73404c0ce6">GameObject::components</a></div><div class="ttdeci">std::vector&lt; std::shared_ptr&lt; Component &gt; &gt; components</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00307">component.h:307</a></div></div>
 <div class="ttc" id="aclass_game_object_html_af69e678688bfef2c0bba4aa78085c8a8"><div class="ttname"><a href="class_game_object.html#af69e678688bfef2c0bba4aa78085c8a8">GameObject::body</a></div><div class="ttdeci">std::shared_ptr&lt; Body &gt; body</div><div class="ttdoc">Gets the physics body associated with the object.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00304">component.h:304</a></div></div>
-<div class="ttc" id="aclass_model_html_a24148dc5603a0a2e3da010b89cbde5b8"><div class="ttname"><a href="class_model.html#a24148dc5603a0a2e3da010b89cbde5b8">Model::setRotation</a></div><div class="ttdeci">void setRotation(const Rotation3d &amp;newRotation) override</div><div class="ttdoc">Assigns an absolute rotation to every mesh in the model.</div><div class="ttdef"><b>Definition</b> <a href="#l01015">object.h:1015</a></div></div>
-<div class="ttc" id="aclass_model_html_a24265caaaa9dee3e0598dd105b8296a3"><div class="ttname"><a href="class_model.html#a24265caaaa9dee3e0598dd105b8296a3">Model::setShader</a></div><div class="ttdeci">void setShader(const ShaderProgram &amp;shader) override</div><div class="ttdoc">Forces every mesh to use the provided shader program.</div><div class="ttdef"><b>Definition</b> <a href="#l01095">object.h:1095</a></div></div>
-<div class="ttc" id="aclass_model_html_a4ed78d5a7b7f548a4b9c917c05e4924a"><div class="ttname"><a href="class_model.html#a4ed78d5a7b7f548a4b9c917c05e4924a">Model::useDeferredRendering</a></div><div class="ttdeci">bool useDeferredRendering</div><div class="ttdoc">Whether the model should use deferred rendering. When false, the model is rendered in the forward ren...</div><div class="ttdef"><b>Definition</b> <a href="#l01134">object.h:1134</a></div></div>
-<div class="ttc" id="aclass_model_html_a53186f31f04ff6f7977fabe72ce8eb3d"><div class="ttname"><a href="class_model.html#a53186f31f04ff6f7977fabe72ce8eb3d">Model::update</a></div><div class="ttdeci">void update(Window &amp;window) override</div><div class="ttdoc">Updates all underlying CoreObjects to keep transforms and animations synchronized.</div><div class="ttdef"><b>Definition</b> <a href="#l01064">object.h:1064</a></div></div>
-<div class="ttc" id="aclass_model_html_a5e3a76dda4214e2014b2964d4170f368"><div class="ttname"><a href="class_model.html#a5e3a76dda4214e2014b2964d4170f368">Model::initialize</a></div><div class="ttdeci">void initialize() override</div><div class="ttdoc">Initializes every CoreObject and attached component within the model.</div><div class="ttdef"><b>Definition</b> <a href="#l01074">object.h:1074</a></div></div>
-<div class="ttc" id="aclass_model_html_a773e85c486ebaf5e0f3afe9da3381212"><div class="ttname"><a href="class_model.html#a773e85c486ebaf5e0f3afe9da3381212">Model::getPosition</a></div><div class="ttdeci">Position3d getPosition() const override</div><div class="ttdoc">Returns the world-space position of the first mesh in the model.</div><div class="ttdef"><b>Definition</b> <a href="#l01114">object.h:1114</a></div></div>
-<div class="ttc" id="aclass_model_html_a778fb43b905eb3520d8b348eab82e89b"><div class="ttname"><a href="class_model.html#a778fb43b905eb3520d8b348eab82e89b">Model::setProjectionMatrix</a></div><div class="ttdeci">void setProjectionMatrix(const glm::mat4 &amp;projection) override</div><div class="ttdoc">Sets the projection matrix for all meshes composing the model.</div><div class="ttdef"><b>Definition</b> <a href="#l01086">object.h:1086</a></div></div>
-<div class="ttc" id="aclass_model_html_a7cd6f92f17a58446c6b1d2ea70e2e0d5"><div class="ttname"><a href="class_model.html#a7cd6f92f17a58446c6b1d2ea70e2e0d5">Model::setPosition</a></div><div class="ttdeci">void setPosition(const Position3d &amp;newPosition) override</div><div class="ttdoc">Set the Position object.</div><div class="ttdef"><b>Definition</b> <a href="#l01006">object.h:1006</a></div></div>
+<div class="ttc" id="aclass_model_html_a24148dc5603a0a2e3da010b89cbde5b8"><div class="ttname"><a href="class_model.html#a24148dc5603a0a2e3da010b89cbde5b8">Model::setRotation</a></div><div class="ttdeci">void setRotation(const Rotation3d &amp;newRotation) override</div><div class="ttdoc">Assigns an absolute rotation to every mesh in the model.</div><div class="ttdef"><b>Definition</b> <a href="#l00707">object.h:707</a></div></div>
+<div class="ttc" id="aclass_model_html_a24265caaaa9dee3e0598dd105b8296a3"><div class="ttname"><a href="class_model.html#a24265caaaa9dee3e0598dd105b8296a3">Model::setShader</a></div><div class="ttdeci">void setShader(const ShaderProgram &amp;shader) override</div><div class="ttdoc">Forces every mesh to use the provided shader program.</div><div class="ttdef"><b>Definition</b> <a href="#l00787">object.h:787</a></div></div>
+<div class="ttc" id="aclass_model_html_a4ed78d5a7b7f548a4b9c917c05e4924a"><div class="ttname"><a href="class_model.html#a4ed78d5a7b7f548a4b9c917c05e4924a">Model::useDeferredRendering</a></div><div class="ttdeci">bool useDeferredRendering</div><div class="ttdoc">Whether the model should use deferred rendering. When false, the model is rendered in the forward ren...</div><div class="ttdef"><b>Definition</b> <a href="#l00826">object.h:826</a></div></div>
+<div class="ttc" id="aclass_model_html_a53186f31f04ff6f7977fabe72ce8eb3d"><div class="ttname"><a href="class_model.html#a53186f31f04ff6f7977fabe72ce8eb3d">Model::update</a></div><div class="ttdeci">void update(Window &amp;window) override</div><div class="ttdoc">Updates all underlying CoreObjects to keep transforms and animations synchronized.</div><div class="ttdef"><b>Definition</b> <a href="#l00756">object.h:756</a></div></div>
+<div class="ttc" id="aclass_model_html_a5e3a76dda4214e2014b2964d4170f368"><div class="ttname"><a href="class_model.html#a5e3a76dda4214e2014b2964d4170f368">Model::initialize</a></div><div class="ttdeci">void initialize() override</div><div class="ttdoc">Initializes every CoreObject and attached component within the model.</div><div class="ttdef"><b>Definition</b> <a href="#l00766">object.h:766</a></div></div>
+<div class="ttc" id="aclass_model_html_a773e85c486ebaf5e0f3afe9da3381212"><div class="ttname"><a href="class_model.html#a773e85c486ebaf5e0f3afe9da3381212">Model::getPosition</a></div><div class="ttdeci">Position3d getPosition() const override</div><div class="ttdoc">Returns the world-space position of the first mesh in the model.</div><div class="ttdef"><b>Definition</b> <a href="#l00806">object.h:806</a></div></div>
+<div class="ttc" id="aclass_model_html_a778fb43b905eb3520d8b348eab82e89b"><div class="ttname"><a href="class_model.html#a778fb43b905eb3520d8b348eab82e89b">Model::setProjectionMatrix</a></div><div class="ttdeci">void setProjectionMatrix(const glm::mat4 &amp;projection) override</div><div class="ttdoc">Sets the projection matrix for all meshes composing the model.</div><div class="ttdef"><b>Definition</b> <a href="#l00778">object.h:778</a></div></div>
+<div class="ttc" id="aclass_model_html_a7cd6f92f17a58446c6b1d2ea70e2e0d5"><div class="ttname"><a href="class_model.html#a7cd6f92f17a58446c6b1d2ea70e2e0d5">Model::setPosition</a></div><div class="ttdeci">void setPosition(const Position3d &amp;newPosition) override</div><div class="ttdoc">Set the Position object.</div><div class="ttdef"><b>Definition</b> <a href="#l00698">object.h:698</a></div></div>
 <div class="ttc" id="aclass_model_html_a8a74c2ff2b6a5755c2ed913d7c6a88f4"><div class="ttname"><a href="class_model.html#a8a74c2ff2b6a5755c2ed913d7c6a88f4">Model::fromResource</a></div><div class="ttdeci">void fromResource(Resource resource)</div><div class="ttdoc">Loads the model from a resource.</div></div>
-<div class="ttc" id="aclass_model_html_a8b786b81d7e5f23fb2c985944bf0c93a"><div class="ttname"><a href="class_model.html#a8b786b81d7e5f23fb2c985944bf0c93a">Model::render</a></div><div class="ttdeci">void render(float dt) override</div><div class="ttdoc">Renders each CoreObject that composes the model.</div><div class="ttdef"><b>Definition</b> <a href="#l01051">object.h:1051</a></div></div>
-<div class="ttc" id="aclass_model_html_a9620da538736e7eea3b38c727cbe3571"><div class="ttname"><a href="class_model.html#a9620da538736e7eea3b38c727cbe3571">Model::setScale</a></div><div class="ttdeci">void setScale(const Scale3d &amp;newScale) override</div><div class="ttdoc">Scales every mesh in the model uniformly.</div><div class="ttdef"><b>Definition</b> <a href="#l01033">object.h:1033</a></div></div>
-<div class="ttc" id="aclass_model_html_aa0bad24d1f9cebdf8bae997726337e43"><div class="ttname"><a href="class_model.html#aa0bad24d1f9cebdf8bae997726337e43">Model::canUseDeferredRendering</a></div><div class="ttdeci">bool canUseDeferredRendering() const override</div><div class="ttdoc">Checks if the model can use deferred rendering.</div><div class="ttdef"><b>Definition</b> <a href="#l01141">object.h:1141</a></div></div>
-<div class="ttc" id="aclass_model_html_ab1bc68ab2ef747780f89d5f2954ca05b"><div class="ttname"><a href="class_model.html#ab1bc68ab2ef747780f89d5f2954ca05b">Model::setViewMatrix</a></div><div class="ttdeci">void setViewMatrix(const glm::mat4 &amp;view) override</div><div class="ttdoc">Stores the current view matrix for every sub-object.</div><div class="ttdef"><b>Definition</b> <a href="#l01042">object.h:1042</a></div></div>
+<div class="ttc" id="aclass_model_html_a8b786b81d7e5f23fb2c985944bf0c93a"><div class="ttname"><a href="class_model.html#a8b786b81d7e5f23fb2c985944bf0c93a">Model::render</a></div><div class="ttdeci">void render(float dt) override</div><div class="ttdoc">Renders each CoreObject that composes the model.</div><div class="ttdef"><b>Definition</b> <a href="#l00743">object.h:743</a></div></div>
+<div class="ttc" id="aclass_model_html_a9620da538736e7eea3b38c727cbe3571"><div class="ttname"><a href="class_model.html#a9620da538736e7eea3b38c727cbe3571">Model::setScale</a></div><div class="ttdeci">void setScale(const Scale3d &amp;newScale) override</div><div class="ttdoc">Scales every mesh in the model uniformly.</div><div class="ttdef"><b>Definition</b> <a href="#l00725">object.h:725</a></div></div>
+<div class="ttc" id="aclass_model_html_aa0bad24d1f9cebdf8bae997726337e43"><div class="ttname"><a href="class_model.html#aa0bad24d1f9cebdf8bae997726337e43">Model::canUseDeferredRendering</a></div><div class="ttdeci">bool canUseDeferredRendering() const override</div><div class="ttdoc">Checks if the model can use deferred rendering.</div><div class="ttdef"><b>Definition</b> <a href="#l00833">object.h:833</a></div></div>
+<div class="ttc" id="aclass_model_html_ab1bc68ab2ef747780f89d5f2954ca05b"><div class="ttname"><a href="class_model.html#ab1bc68ab2ef747780f89d5f2954ca05b">Model::setViewMatrix</a></div><div class="ttdeci">void setViewMatrix(const glm::mat4 &amp;view) override</div><div class="ttdoc">Stores the current view matrix for every sub-object.</div><div class="ttdef"><b>Definition</b> <a href="#l00734">object.h:734</a></div></div>
 <div class="ttc" id="aclass_model_html_ab5bdabea36b1d1bee80151e2da913373"><div class="ttname"><a href="class_model.html#ab5bdabea36b1d1bee80151e2da913373">Model::Model</a></div><div class="ttdeci">Model()=default</div></div>
-<div class="ttc" id="aclass_model_html_abc49ca9b5823f177f421589cf447e913"><div class="ttname"><a href="class_model.html#abc49ca9b5823f177f421589cf447e913">Model::attachTexture</a></div><div class="ttdeci">void attachTexture(const Texture &amp;texture) override</div><div class="ttdoc">Applies a texture to all contained CoreObjects.</div><div class="ttdef"><b>Definition</b> <a href="#l01024">object.h:1024</a></div></div>
-<div class="ttc" id="aclass_model_html_acb2e155d98ff0980bc40958bb5b79868"><div class="ttname"><a href="class_model.html#acb2e155d98ff0980bc40958bb5b79868">Model::material</a></div><div class="ttdeci">Material material</div><div class="ttdoc">The material properties shared by all objects in the model.</div><div class="ttdef"><b>Definition</b> <a href="#l01127">object.h:1127</a></div></div>
-<div class="ttc" id="aclass_model_html_ad26c5b613946c3c2ce2524484f56fc6e"><div class="ttname"><a href="class_model.html#ad26c5b613946c3c2ce2524484f56fc6e">Model::getShaderProgram</a></div><div class="ttdeci">std::optional&lt; ShaderProgram &gt; getShaderProgram() override</div><div class="ttdoc">Retrieves the shader program currently bound to the first mesh.</div><div class="ttdef"><b>Definition</b> <a href="#l01104">object.h:1104</a></div></div>
-<div class="ttc" id="aclass_model_html_aeb27cb91b9a787f06d8c8001169968bc"><div class="ttname"><a href="class_model.html#aeb27cb91b9a787f06d8c8001169968bc">Model::move</a></div><div class="ttdeci">void move(const Position3d &amp;deltaPosition) override</div><div class="ttdoc">Moves the model by a certain amount.</div><div class="ttdef"><b>Definition</b> <a href="#l00995">object.h:995</a></div></div>
-<div class="ttc" id="aclass_model_html_af2f4d13f48508e046f3b57e59ba420fb"><div class="ttname"><a href="class_model.html#af2f4d13f48508e046f3b57e59ba420fb">Model::getObjects</a></div><div class="ttdeci">std::vector&lt; std::shared_ptr&lt; CoreObject &gt; &gt; getObjects()</div><div class="ttdoc">Gets the objects that make up the model.</div><div class="ttdef"><b>Definition</b> <a href="#l00986">object.h:986</a></div></div>
-<div class="ttc" id="aclass_particle_emitter_html_a0a4c69870a82921e620a467f8264be1b"><div class="ttname"><a href="class_particle_emitter.html#a0a4c69870a82921e620a467f8264be1b">ParticleEmitter::getPosition</a></div><div class="ttdeci">Position3d getPosition() const override</div><div class="ttdoc">Function to get the position of the object in 3D space.</div><div class="ttdef"><b>Definition</b> <a href="#l00838">object.h:838</a></div></div>
-<div class="ttc" id="aclass_particle_emitter_html_a10c124a8f860c367cd3e086e90701da0"><div class="ttname"><a href="class_particle_emitter.html#a10c124a8f860c367cd3e086e90701da0">ParticleEmitter::update</a></div><div class="ttdeci">void update(Window &amp;window) override</div><div class="ttdoc">Updates particle lifetimes, spawns new particles, and applies forces.</div></div>
-<div class="ttc" id="aclass_particle_emitter_html_a152e95df28b2885262d5f5025d5f1497"><div class="ttname"><a href="class_particle_emitter.html#a152e95df28b2885262d5f5025d5f1497">ParticleEmitter::setColor</a></div><div class="ttdeci">void setColor(const Color &amp;color) override</div><div class="ttdoc">Sets a tint color that modulates the particle sprite.</div></div>
-<div class="ttc" id="aclass_particle_emitter_html_a206f52ef784767e8280450e8a831ee99"><div class="ttname"><a href="class_particle_emitter.html#a206f52ef784767e8280450e8a831ee99">ParticleEmitter::setPosition</a></div><div class="ttdeci">void setPosition(const Position3d &amp;newPosition) override</div><div class="ttdoc">Sets the position of the object.</div></div>
-<div class="ttc" id="aclass_particle_emitter_html_a31aeca0316daa73fbeef682d70f3ec2f"><div class="ttname"><a href="class_particle_emitter.html#a31aeca0316daa73fbeef682d70f3ec2f">ParticleEmitter::emitContinuously</a></div><div class="ttdeci">void emitContinuously()</div><div class="ttdoc">Emits particles continuously.</div></div>
-<div class="ttc" id="aclass_particle_emitter_html_a43626f6b8abe4ca1ea499067c709039e"><div class="ttname"><a href="class_particle_emitter.html#a43626f6b8abe4ca1ea499067c709039e">ParticleEmitter::setSpawnRate</a></div><div class="ttdeci">void setSpawnRate(int rate)</div><div class="ttdoc">Sets the spawn rate for the particles.</div><div class="ttdef"><b>Definition</b> <a href="#l00904">object.h:904</a></div></div>
-<div class="ttc" id="aclass_particle_emitter_html_a46a3bd7e0981249a61b6b6433df7e3bd"><div class="ttname"><a href="class_particle_emitter.html#a46a3bd7e0981249a61b6b6433df7e3bd">ParticleEmitter::setProjectionMatrix</a></div><div class="ttdeci">void setProjectionMatrix(const glm::mat4 &amp;projection) override</div><div class="ttdoc">Updates the projection matrix used to align particles to the camera frustum.</div></div>
-<div class="ttc" id="aclass_particle_emitter_html_a56c9c5dc364ef087cd0d311aff2ed60a"><div class="ttname"><a href="class_particle_emitter.html#a56c9c5dc364ef087cd0d311aff2ed60a">ParticleEmitter::setDirection</a></div><div class="ttdeci">void setDirection(const Magnitude3d &amp;dir)</div><div class="ttdoc">The direction in which particles are emitted.</div></div>
-<div class="ttc" id="aclass_particle_emitter_html_a69bad006c8fb4611ad3bdd3df138af4b"><div class="ttname"><a href="class_particle_emitter.html#a69bad006c8fb4611ad3bdd3df138af4b">ParticleEmitter::setViewMatrix</a></div><div class="ttdeci">void setViewMatrix(const glm::mat4 &amp;view) override</div><div class="ttdoc">Stores the view matrix so particles can face the camera.</div></div>
-<div class="ttc" id="aclass_particle_emitter_html_a746411c84dcb1a9e1824adcbdde5645c"><div class="ttname"><a href="class_particle_emitter.html#a746411c84dcb1a9e1824adcbdde5645c">ParticleEmitter::emitBurst</a></div><div class="ttdeci">void emitBurst(int count)</div><div class="ttdoc">Emits a burst of particles.</div></div>
-<div class="ttc" id="aclass_particle_emitter_html_a7bac44e4712908099af3a76187ed908e"><div class="ttname"><a href="class_particle_emitter.html#a7bac44e4712908099af3a76187ed908e">ParticleEmitter::setSpawnRate</a></div><div class="ttdeci">void setSpawnRate(float particlesPerSecond)</div><div class="ttdoc">How much particles are spawned each second.</div></div>
-<div class="ttc" id="aclass_particle_emitter_html_a80199623ad22b564bc573ebe45e4e610"><div class="ttname"><a href="class_particle_emitter.html#a80199623ad22b564bc573ebe45e4e610">ParticleEmitter::setParticleSettings</a></div><div class="ttdeci">void setParticleSettings(const ParticleSettings &amp;settings)</div><div class="ttdoc">Sets the settings for the particles.</div></div>
-<div class="ttc" id="aclass_particle_emitter_html_a80e4e373b9296ee5d9ed33822fec3b83"><div class="ttname"><a href="class_particle_emitter.html#a80e4e373b9296ee5d9ed33822fec3b83">ParticleEmitter::enableTexture</a></div><div class="ttdeci">void enableTexture()</div><div class="ttdoc">Function that enables the use of a texture for the particles.</div><div class="ttdef"><b>Definition</b> <a href="#l00829">object.h:829</a></div></div>
-<div class="ttc" id="aclass_particle_emitter_html_a9068f50bd291a3dc3a85d35ff03274e4"><div class="ttname"><a href="class_particle_emitter.html#a9068f50bd291a3dc3a85d35ff03274e4">ParticleEmitter::emitOnce</a></div><div class="ttdeci">void emitOnce()</div><div class="ttdoc">Emits particles once.</div></div>
-<div class="ttc" id="aclass_particle_emitter_html_a9c55b3d6ed9e567faa5df22714505296"><div class="ttname"><a href="class_particle_emitter.html#a9c55b3d6ed9e567faa5df22714505296">ParticleEmitter::stopEmission</a></div><div class="ttdeci">void stopEmission()</div><div class="ttdoc">Stops emitting particles.</div></div>
-<div class="ttc" id="aclass_particle_emitter_html_ab0a773a7d892d7347a815e7e497dd83b"><div class="ttname"><a href="class_particle_emitter.html#ab0a773a7d892d7347a815e7e497dd83b">ParticleEmitter::canCastShadows</a></div><div class="ttdeci">bool canCastShadows() const override</div><div class="ttdoc">Function to determine if the object can cast shadows. Can be overridden by derived classes.</div><div class="ttdef"><b>Definition</b> <a href="#l00839">object.h:839</a></div></div>
-<div class="ttc" id="aclass_particle_emitter_html_abf6e025b3ac0fee071e84c9ccf565aae"><div class="ttname"><a href="class_particle_emitter.html#abf6e025b3ac0fee071e84c9ccf565aae">ParticleEmitter::disableTexture</a></div><div class="ttdeci">void disableTexture()</div><div class="ttdoc">Function that disables the use of a texture for the particles.</div><div class="ttdef"><b>Definition</b> <a href="#l00834">object.h:834</a></div></div>
-<div class="ttc" id="aclass_particle_emitter_html_ac3f87ddcbb7272315b1c06421add053b"><div class="ttname"><a href="class_particle_emitter.html#ac3f87ddcbb7272315b1c06421add053b">ParticleEmitter::move</a></div><div class="ttdeci">void move(const Position3d &amp;deltaPosition) override</div><div class="ttdoc">Moves the object by a certain amount.</div></div>
-<div class="ttc" id="aclass_particle_emitter_html_acb6f3e714474c21f30600aa4b02fc2d5"><div class="ttname"><a href="class_particle_emitter.html#acb6f3e714474c21f30600aa4b02fc2d5">ParticleEmitter::ParticleEmitter</a></div><div class="ttdeci">ParticleEmitter(unsigned int maxParticles=100)</div><div class="ttdoc">Constructs a new ParticleEmitter object.</div></div>
-<div class="ttc" id="aclass_particle_emitter_html_ad4d8472950cf0397702b92bcee6d25f2"><div class="ttname"><a href="class_particle_emitter.html#ad4d8472950cf0397702b92bcee6d25f2">ParticleEmitter::attachTexture</a></div><div class="ttdeci">void attachTexture(const Texture &amp;tex) override</div><div class="ttdoc">Binds a sprite texture that will be used for each particle.</div></div>
-<div class="ttc" id="aclass_particle_emitter_html_ae285689b7606d6278cf9e82294780015"><div class="ttname"><a href="class_particle_emitter.html#ae285689b7606d6278cf9e82294780015">ParticleEmitter::setSpawnRadius</a></div><div class="ttdeci">void setSpawnRadius(float radius)</div><div class="ttdoc">The radius around the emitter from which particles are spawned.</div></div>
-<div class="ttc" id="aclass_particle_emitter_html_ae3c78db9b68fadecfcbe8e22a82bba41"><div class="ttname"><a href="class_particle_emitter.html#ae3c78db9b68fadecfcbe8e22a82bba41">ParticleEmitter::initialize</a></div><div class="ttdeci">void initialize() override</div><div class="ttdoc">Allocates buffers and shader state necessary for particle simulation.</div></div>
-<div class="ttc" id="aclass_particle_emitter_html_af1dbd2719498583e8b750540911d94ba"><div class="ttname"><a href="class_particle_emitter.html#af1dbd2719498583e8b750540911d94ba">ParticleEmitter::startEmission</a></div><div class="ttdeci">void startEmission()</div><div class="ttdoc">Starts emitting particles.</div></div>
-<div class="ttc" id="aclass_particle_emitter_html_afa47fd3fc1fc5338fef9e04f05ae73a7"><div class="ttname"><a href="class_particle_emitter.html#afa47fd3fc1fc5338fef9e04f05ae73a7">ParticleEmitter::setEmissionType</a></div><div class="ttdeci">void setEmissionType(ParticleEmissionType type)</div><div class="ttdoc">Function that sets the type of particle emission.</div></div>
-<div class="ttc" id="aclass_particle_emitter_html_afe658d35da0cdba391d4c841decf71e0"><div class="ttname"><a href="class_particle_emitter.html#afe658d35da0cdba391d4c841decf71e0">ParticleEmitter::render</a></div><div class="ttdeci">void render(float dt) override</div><div class="ttdoc">Renders all active particles with billboarding logic.</div></div>
+<div class="ttc" id="aclass_model_html_abc49ca9b5823f177f421589cf447e913"><div class="ttname"><a href="class_model.html#abc49ca9b5823f177f421589cf447e913">Model::attachTexture</a></div><div class="ttdeci">void attachTexture(const Texture &amp;texture) override</div><div class="ttdoc">Applies a texture to all contained CoreObjects.</div><div class="ttdef"><b>Definition</b> <a href="#l00716">object.h:716</a></div></div>
+<div class="ttc" id="aclass_model_html_acb2e155d98ff0980bc40958bb5b79868"><div class="ttname"><a href="class_model.html#acb2e155d98ff0980bc40958bb5b79868">Model::material</a></div><div class="ttdeci">Material material</div><div class="ttdoc">The material properties shared by all objects in the model.</div><div class="ttdef"><b>Definition</b> <a href="#l00819">object.h:819</a></div></div>
+<div class="ttc" id="aclass_model_html_ad26c5b613946c3c2ce2524484f56fc6e"><div class="ttname"><a href="class_model.html#ad26c5b613946c3c2ce2524484f56fc6e">Model::getShaderProgram</a></div><div class="ttdeci">std::optional&lt; ShaderProgram &gt; getShaderProgram() override</div><div class="ttdoc">Retrieves the shader program currently bound to the first mesh.</div><div class="ttdef"><b>Definition</b> <a href="#l00796">object.h:796</a></div></div>
+<div class="ttc" id="aclass_model_html_aeb27cb91b9a787f06d8c8001169968bc"><div class="ttname"><a href="class_model.html#aeb27cb91b9a787f06d8c8001169968bc">Model::move</a></div><div class="ttdeci">void move(const Position3d &amp;deltaPosition) override</div><div class="ttdoc">Moves the model by a certain amount.</div><div class="ttdef"><b>Definition</b> <a href="#l00687">object.h:687</a></div></div>
+<div class="ttc" id="aclass_model_html_af2f4d13f48508e046f3b57e59ba420fb"><div class="ttname"><a href="class_model.html#af2f4d13f48508e046f3b57e59ba420fb">Model::getObjects</a></div><div class="ttdeci">std::vector&lt; std::shared_ptr&lt; CoreObject &gt; &gt; getObjects()</div><div class="ttdoc">Gets the objects that make up the model.</div><div class="ttdef"><b>Definition</b> <a href="#l00678">object.h:678</a></div></div>
 <div class="ttc" id="aclass_scene_html"><div class="ttname"><a href="class_scene.html">Scene</a></div><div class="ttdoc">Abstract class that represents a 3D scene. It contains all lights and objects that are going to be re...</div><div class="ttdef"><b>Definition</b> <a href="scene_8h_source.html#l00141">scene.h:141</a></div></div>
 <div class="ttc" id="aclass_window_html"><div class="ttname"><a href="class_window.html">Window</a></div><div class="ttdoc">Structure representing a window in the application. This contains the main interface for interacting ...</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00233">window.h:233</a></div></div>
 <div class="ttc" id="acomponent_8h_html"><div class="ttname"><a href="component_8h.html">component.h</a></div></div>
@@ -1452,9 +1109,6 @@ $(function(){initNavTree('object_8h_source.html','',''); });
 <div class="ttc" id="aobject_8h_html_a19d2c24fcd7737ae62f7f7de0c0c8802"><div class="ttname"><a href="object_8h.html#a19d2c24fcd7737ae62f7f7de0c0c8802">createDebugPlane</a></div><div class="ttdeci">CoreObject createDebugPlane(Size2d size)</div><div class="ttdoc">Function that creates a debug plane CoreObject with the specified size and attaches a default texture...</div></div>
 <div class="ttc" id="aobject_8h_html_a236d2a48ae63b8b7ece82bafa9838528"><div class="ttname"><a href="object_8h.html#a236d2a48ae63b8b7ece82bafa9838528">createSphere</a></div><div class="ttdeci">CoreObject createSphere(double radius, unsigned int sectorCount=36, unsigned int stackCount=18, Color color={1.0, 1.0, 1.0, 1.0})</div><div class="ttdoc">Function that creates a sphere CoreObject with the specified radius, sectorCount, stackCount and colo...</div></div>
 <div class="ttc" id="aobject_8h_html_a489ccddca865b97fafa117e23b4d0f1c"><div class="ttname"><a href="object_8h.html#a489ccddca865b97fafa117e23b4d0f1c">createDebugSphere</a></div><div class="ttdeci">CoreObject createDebugSphere(double radius, unsigned int sectorCount=36, unsigned int stackCount=18)</div><div class="ttdoc">Function that creates a debug sphere CoreObject with the specified radius, sectorCount and stackCount...</div></div>
-<div class="ttc" id="aobject_8h_html_a5d2a36527b762e139f0a5cefd66b3191"><div class="ttname"><a href="object_8h.html#a5d2a36527b762e139f0a5cefd66b3191">ParticleEmissionType</a></div><div class="ttdeci">ParticleEmissionType</div><div class="ttdoc">Type that describes how particles are emitted.</div><div class="ttdef"><b>Definition</b> <a href="#l00642">object.h:642</a></div></div>
-<div class="ttc" id="aobject_8h_html_a5d2a36527b762e139f0a5cefd66b3191a7941ce00c308ef62cd69af52664e9788"><div class="ttname"><a href="object_8h.html#a5d2a36527b762e139f0a5cefd66b3191a7941ce00c308ef62cd69af52664e9788">ParticleEmissionType::Fountain</a></div><div class="ttdeci">@ Fountain</div><div class="ttdoc">Emission type for fountain-like particle effects.</div><div class="ttdef"><b>Definition</b> <a href="#l00647">object.h:647</a></div></div>
-<div class="ttc" id="aobject_8h_html_a5d2a36527b762e139f0a5cefd66b3191aed8e37bad13d76c6dbeb58152440b41e"><div class="ttname"><a href="object_8h.html#a5d2a36527b762e139f0a5cefd66b3191aed8e37bad13d76c6dbeb58152440b41e">ParticleEmissionType::Ambient</a></div><div class="ttdeci">@ Ambient</div><div class="ttdoc">Emission type for snow-like particle effects.</div><div class="ttdef"><b>Definition</b> <a href="#l00652">object.h:652</a></div></div>
 <div class="ttc" id="aobject_8h_html_a792b027205b8d852587fcb60390c137c"><div class="ttname"><a href="object_8h.html#a792b027205b8d852587fcb60390c137c">TextureCoordinate</a></div><div class="ttdeci">std::array&lt; double, 2 &gt; TextureCoordinate</div><div class="ttdoc">Alias that represents a texture coordinate in 2D space.</div><div class="ttdef"><b>Definition</b> <a href="#l00038">object.h:38</a></div></div>
 <div class="ttc" id="aobject_8h_html_ab25daa18f85f489ecd187df3e9a96d7a"><div class="ttname"><a href="object_8h.html#ab25daa18f85f489ecd187df3e9a96d7a">createPlane</a></div><div class="ttdeci">CoreObject createPlane(Size2d size, Color color={1.0, 1.0, 1.0, 1.0})</div><div class="ttdoc">Function that creates a plane CoreObject with the specified size and color.</div></div>
 <div class="ttc" id="aobject_8h_html_ace121fa39b9356a345857e8866e26cf4"><div class="ttname"><a href="object_8h.html#ace121fa39b9356a345857e8866e26cf4">createPyramid</a></div><div class="ttdeci">CoreObject createPyramid(Size3d size, Color color={1.0, 1.0, 1.0, 1.0})</div><div class="ttdoc">Function that creates a pyramid CoreObject with the specified size and color.</div></div>
@@ -1464,11 +1118,7 @@ $(function(){initNavTree('object_8h_source.html','',''); });
 <div class="ttc" id="arenderable_8h_html"><div class="ttname"><a href="renderable_8h.html">renderable.h</a></div></div>
 <div class="ttc" id="ashader_8h_html"><div class="ttname"><a href="shader_8h.html">shader.h</a></div></div>
 <div class="ttc" id="ashader_8h_html_ad6dfc2a6ff142b1671ab89fca4fdbfcdad92a8333dd3ccb895cc65f7455b71206"><div class="ttname"><a href="shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcdad92a8333dd3ccb895cc65f7455b71206">ShaderCapability::Material</a></div><div class="ttdeci">@ Material</div><div class="ttdoc">Capability for handling material properties.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00152">shader.h:152</a></div></div>
-<div class="ttc" id="ashader_8h_html_aed7a1c7a5976e4adb712d0a231dada82a5e9328c486b44b9a58bca20f7f2064f4"><div class="ttname"><a href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82a5e9328c486b44b9a58bca20f7f2064f4">AtlasVertexShader::Particle</a></div><div class="ttdeci">@ Particle</div><div class="ttdoc">Vertex shader for rendering particles.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00070">shader.h:70</a></div></div>
-<div class="ttc" id="ashader_8h_html_aed7a1c7a5976e4adb712d0a231dada82aa3e8ae43188ae76d38f414b2bdb0077b"><div class="ttname"><a href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82aa3e8ae43188ae76d38f414b2bdb0077b">AtlasVertexShader::Texture</a></div><div class="ttdeci">@ Texture</div><div class="ttdoc">Vertex shader for rendering textured objects.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00050">shader.h:50</a></div></div>
-<div class="ttc" id="ashader_8h_html_aed7a1c7a5976e4adb712d0a231dada82acb5feb1b7314637725a2e73bdc9f7295"><div class="ttname"><a href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82acb5feb1b7314637725a2e73bdc9f7295">AtlasVertexShader::Color</a></div><div class="ttdeci">@ Color</div><div class="ttdoc">Vertex shader for rendering solid colors.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00040">shader.h:40</a></div></div>
 <div class="ttc" id="astruct_color_html"><div class="ttname"><a href="struct_color.html">Color</a></div><div class="ttdoc">Structure representing an RGBA color with double precision. Provides arithmetic operations and common...</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00176">units.h:176</a></div></div>
-<div class="ttc" id="astruct_color_html_aad4699ae003d7a86b5edc5fccdbaf4c8"><div class="ttname"><a href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a></div><div class="ttdeci">static Color white()</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00206">units.h:206</a></div></div>
 <div class="ttc" id="astruct_core_vertex_html_a0c00c49953bedf8d4c8d10370fc15cbd"><div class="ttname"><a href="struct_core_vertex.html#a0c00c49953bedf8d4c8d10370fc15cbd">CoreVertex::tangent</a></div><div class="ttdeci">Normal3d tangent</div><div class="ttdoc">The tangent vector of the vertex, used for normal mapping and parallax calculations.</div><div class="ttdef"><b>Definition</b> <a href="#l00107">object.h:107</a></div></div>
 <div class="ttc" id="astruct_core_vertex_html_a7184ad591e8754a6de56414bf048fe13"><div class="ttname"><a href="struct_core_vertex.html#a7184ad591e8754a6de56414bf048fe13">CoreVertex::color</a></div><div class="ttdeci">Color color</div><div class="ttdoc">The color of the vertex.</div><div class="ttdef"><b>Definition</b> <a href="#l00090">object.h:90</a></div></div>
 <div class="ttc" id="astruct_core_vertex_html_a90dc10a37761100ca1182c3d722468f1"><div class="ttname"><a href="struct_core_vertex.html#a90dc10a37761100ca1182c3d722468f1">CoreVertex::bitangent</a></div><div class="ttdeci">Normal3d bitangent</div><div class="ttdoc">The bitangent vector of the vertex, used for normal mapping and parallax calculations.</div><div class="ttdef"><b>Definition</b> <a href="#l00113">object.h:113</a></div></div>
@@ -1498,23 +1148,6 @@ $(function(){initNavTree('object_8h_source.html','',''); });
 <div class="ttc" id="astruct_material_html_a97fc4551763505f23dac24a9901cee88"><div class="ttname"><a href="struct_material.html#a97fc4551763505f23dac24a9901cee88">Material::metallic</a></div><div class="ttdeci">float metallic</div><div class="ttdoc">Metallic factor controlling how conductive the material behaves.</div><div class="ttdef"><b>Definition</b> <a href="#l00053">object.h:53</a></div></div>
 <div class="ttc" id="astruct_material_html_aa61df35ac281fa40c0745235494d4b19"><div class="ttname"><a href="struct_material.html#aa61df35ac281fa40c0745235494d4b19">Material::albedo</a></div><div class="ttdeci">Color albedo</div><div class="ttdoc">Base color contribution of the surface.</div><div class="ttdef"><b>Definition</b> <a href="#l00049">object.h:49</a></div></div>
 <div class="ttc" id="astruct_material_html_abbaeac8374986ca82670ff0d7749c566"><div class="ttname"><a href="struct_material.html#abbaeac8374986ca82670ff0d7749c566">Material::roughness</a></div><div class="ttdeci">float roughness</div><div class="ttdoc">Roughness factor influencing the spread of specular highlights.</div><div class="ttdef"><b>Definition</b> <a href="#l00057">object.h:57</a></div></div>
-<div class="ttc" id="astruct_particle_html"><div class="ttname"><a href="struct_particle.html">Particle</a></div><div class="ttdoc">Structure representing a single particle in a particle system.</div><div class="ttdef"><b>Definition</b> <a href="#l00707">object.h:707</a></div></div>
-<div class="ttc" id="astruct_particle_html_a1760a331eebb54cbdd6ca280439a36c8"><div class="ttname"><a href="struct_particle.html#a1760a331eebb54cbdd6ca280439a36c8">Particle::life</a></div><div class="ttdeci">float life</div><div class="ttdoc">The current life of the particle in seconds.</div><div class="ttdef"><b>Definition</b> <a href="#l00727">object.h:727</a></div></div>
-<div class="ttc" id="astruct_particle_html_a4e7cf3b8d4f8fc1e832623e56f3d6a8e"><div class="ttname"><a href="struct_particle.html#a4e7cf3b8d4f8fc1e832623e56f3d6a8e">Particle::maxLife</a></div><div class="ttdeci">float maxLife</div><div class="ttdoc">The maximum life of the particle in seconds.</div><div class="ttdef"><b>Definition</b> <a href="#l00732">object.h:732</a></div></div>
-<div class="ttc" id="astruct_particle_html_a73a4154dfbae2e2787ef72c1bee83413"><div class="ttname"><a href="struct_particle.html#a73a4154dfbae2e2787ef72c1bee83413">Particle::active</a></div><div class="ttdeci">bool active</div><div class="ttdoc">Whether the particle is active or not.</div><div class="ttdef"><b>Definition</b> <a href="#l00742">object.h:742</a></div></div>
-<div class="ttc" id="astruct_particle_html_aa8889ea85b03d566d51dfd6ff668e840"><div class="ttname"><a href="struct_particle.html#aa8889ea85b03d566d51dfd6ff668e840">Particle::color</a></div><div class="ttdeci">Color color</div><div class="ttdoc">The color that the particle will have.</div><div class="ttdef"><b>Definition</b> <a href="#l00722">object.h:722</a></div></div>
-<div class="ttc" id="astruct_particle_html_aad08a7cb8108751b7a49ed65118873f9"><div class="ttname"><a href="struct_particle.html#aad08a7cb8108751b7a49ed65118873f9">Particle::size</a></div><div class="ttdeci">float size</div><div class="ttdoc">The scale the particle will have.</div><div class="ttdef"><b>Definition</b> <a href="#l00737">object.h:737</a></div></div>
-<div class="ttc" id="astruct_particle_html_ae77ee667f4089eb75b22b3e4c807bbae"><div class="ttname"><a href="struct_particle.html#ae77ee667f4089eb75b22b3e4c807bbae">Particle::velocity</a></div><div class="ttdeci">Magnitude3d velocity</div><div class="ttdoc">The velocity of the particle in 3D space.</div><div class="ttdef"><b>Definition</b> <a href="#l00717">object.h:717</a></div></div>
-<div class="ttc" id="astruct_particle_html_afbd7964edf5e088d7a5887e59c730d1a"><div class="ttname"><a href="struct_particle.html#afbd7964edf5e088d7a5887e59c730d1a">Particle::position</a></div><div class="ttdeci">Position3d position</div><div class="ttdoc">The position of the particle in 3D space.</div><div class="ttdef"><b>Definition</b> <a href="#l00712">object.h:712</a></div></div>
-<div class="ttc" id="astruct_particle_settings_html"><div class="ttname"><a href="struct_particle_settings.html">ParticleSettings</a></div><div class="ttdoc">Structure representing settings for particle behavior and appearance.</div><div class="ttdef"><b>Definition</b> <a href="#l00659">object.h:659</a></div></div>
-<div class="ttc" id="astruct_particle_settings_html_a1641aa659172b07bc491ca72a2b5c159"><div class="ttname"><a href="struct_particle_settings.html#a1641aa659172b07bc491ca72a2b5c159">ParticleSettings::fadeSpeed</a></div><div class="ttdeci">float fadeSpeed</div><div class="ttdoc">The speed at which a particle fades out.</div><div class="ttdef"><b>Definition</b> <a href="#l00684">object.h:684</a></div></div>
-<div class="ttc" id="astruct_particle_settings_html_a223d147b786d5ab7b1ce46dd8453e9aa"><div class="ttname"><a href="struct_particle_settings.html#a223d147b786d5ab7b1ce46dd8453e9aa">ParticleSettings::speedVariation</a></div><div class="ttdeci">float speedVariation</div><div class="ttdoc">The speed variation of particles. Is how much the speed is randomized.</div><div class="ttdef"><b>Definition</b> <a href="#l00700">object.h:700</a></div></div>
-<div class="ttc" id="astruct_particle_settings_html_a2ac622f2763dd753760b7db1b56edfc8"><div class="ttname"><a href="struct_particle_settings.html#a2ac622f2763dd753760b7db1b56edfc8">ParticleSettings::minSize</a></div><div class="ttdeci">float minSize</div><div class="ttdoc">The minimum size of a particle.</div><div class="ttdef"><b>Definition</b> <a href="#l00674">object.h:674</a></div></div>
-<div class="ttc" id="astruct_particle_settings_html_a627e0122ee051b0ad687241bd8542bd4"><div class="ttname"><a href="struct_particle_settings.html#a627e0122ee051b0ad687241bd8542bd4">ParticleSettings::maxSize</a></div><div class="ttdeci">float maxSize</div><div class="ttdoc">The maximum size of a particle.</div><div class="ttdef"><b>Definition</b> <a href="#l00679">object.h:679</a></div></div>
-<div class="ttc" id="astruct_particle_settings_html_a7fdda9807df7ee5c3e9a4c7ea957c20b"><div class="ttname"><a href="struct_particle_settings.html#a7fdda9807df7ee5c3e9a4c7ea957c20b">ParticleSettings::spread</a></div><div class="ttdeci">float spread</div><div class="ttdoc">The spread of particles from the emitter.</div><div class="ttdef"><b>Definition</b> <a href="#l00694">object.h:694</a></div></div>
-<div class="ttc" id="astruct_particle_settings_html_a920c9377a44a8a7492a6fcc200173a45"><div class="ttname"><a href="struct_particle_settings.html#a920c9377a44a8a7492a6fcc200173a45">ParticleSettings::gravity</a></div><div class="ttdeci">float gravity</div><div class="ttdoc">The gravitational force applied to particles.</div><div class="ttdef"><b>Definition</b> <a href="#l00689">object.h:689</a></div></div>
-<div class="ttc" id="astruct_particle_settings_html_ad0423f182ea204480c70c3b9e3be66dc"><div class="ttname"><a href="struct_particle_settings.html#ad0423f182ea204480c70c3b9e3be66dc">ParticleSettings::minLifetime</a></div><div class="ttdeci">float minLifetime</div><div class="ttdoc">The minimum lifetime of a particle in seconds.</div><div class="ttdef"><b>Definition</b> <a href="#l00664">object.h:664</a></div></div>
-<div class="ttc" id="astruct_particle_settings_html_ae16b0a8e33aac68fb2d45dc9cc35087e"><div class="ttname"><a href="struct_particle_settings.html#ae16b0a8e33aac68fb2d45dc9cc35087e">ParticleSettings::maxLifetime</a></div><div class="ttdeci">float maxLifetime</div><div class="ttdoc">The maximum lifetime of a particle in seconds.</div><div class="ttdef"><b>Definition</b> <a href="#l00669">object.h:669</a></div></div>
 <div class="ttc" id="astruct_position3d_html"><div class="ttname"><a href="struct_position3d.html">Position3d</a></div><div class="ttdoc">Structure representing a position in 3D space with double precision. Provides arithmetic operations a...</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00023">units.h:23</a></div></div>
 <div class="ttc" id="astruct_resource_html"><div class="ttname"><a href="struct_resource.html">Resource</a></div><div class="ttdoc">Structure representing a single resource in the workspace.</div><div class="ttdef"><b>Definition</b> <a href="workspace_8h_source.html#l00030">workspace.h:30</a></div></div>
 <div class="ttc" id="astruct_rotation3d_html"><div class="ttname"><a href="struct_rotation3d.html">Rotation3d</a></div><div class="ttdoc">Structure representing rotation in 3D space using Euler angles. Provides arithmetic operations and co...</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00123">units.h:123</a></div></div>
@@ -1528,7 +1161,6 @@ $(function(){initNavTree('object_8h_source.html','',''); });
 <div class="ttc" id="aunits_8h_html_a3b9b132cddb1dfe2ae572f230abe45f1"><div class="ttname"><a href="units_8h.html#a3b9b132cddb1dfe2ae572f230abe45f1">Scale3d</a></div><div class="ttdeci">Position3d Scale3d</div><div class="ttdoc">Type alias for 3D scaling factors.</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00096">units.h:96</a></div></div>
 <div class="ttc" id="aunits_8h_html_a5c9d258201f281b8ad0fb4385b7ef668"><div class="ttname"><a href="units_8h.html#a5c9d258201f281b8ad0fb4385b7ef668">Id</a></div><div class="ttdeci">unsigned int Id</div><div class="ttdoc">Type alias for OpenGL object identifiers.</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00251">units.h:251</a></div></div>
 <div class="ttc" id="aunits_8h_html_abd755c400f9d4026ef36e03056829444"><div class="ttname"><a href="units_8h.html#abd755c400f9d4026ef36e03056829444">Normal3d</a></div><div class="ttdeci">Position3d Normal3d</div><div class="ttdoc">Type alias for 3D normal vectors.</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00111">units.h:111</a></div></div>
-<div class="ttc" id="aunits_8h_html_af1efe03080186b94608ab2d50c060fe5"><div class="ttname"><a href="units_8h.html#af1efe03080186b94608ab2d50c060fe5">Magnitude3d</a></div><div class="ttdeci">Position3d Magnitude3d</div><div class="ttdoc">Type alias for 3D magnitude vectors.</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00116">units.h:116</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 </div><!-- container -->

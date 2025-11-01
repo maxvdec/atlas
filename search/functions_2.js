@@ -6,7 +6,7 @@ var searchData=
   ['calculateviewmatrix_3',['calculateViewMatrix',['../class_camera.html#ac98b95e242207d3acc232b3829dd8820',1,'Camera']]],
   ['camera_4',['Camera',['../class_camera.html#a01f94c3543f56ede7af49dc778f19331',1,'Camera']]],
   ['cancastshadows_5',['canCastShadows',['../class_compound_object.html#a1c28c8c1394e02e46cbc8200ad4dd9dd',1,'CompoundObject::canCastShadows()'],['../class_renderable.html#a54a97abc4b6fe3280505da3b587cba98',1,'Renderable::canCastShadows()'],['../class_core_object.html#a64c15d294b3cd28e4dc04a554ce9e9c0',1,'CoreObject::canCastShadows()'],['../class_particle_emitter.html#ab0a773a7d892d7347a815e7e497dd83b',1,'ParticleEmitter::canCastShadows()']]],
-  ['canusedeferredrendering_6',['canUseDeferredRendering',['../class_renderable.html#aa19d3c7b6144486766d45dbd3d0a08b8',1,'Renderable::canUseDeferredRendering()'],['../class_core_object.html#a208b0d662e76a457c2843dd392c6e140',1,'CoreObject::canUseDeferredRendering()'],['../class_model.html#aa0bad24d1f9cebdf8bae997726337e43',1,'Model::canUseDeferredRendering()'],['../class_terrain.html#ae23b7b33d9b5d3b27f14718f5a1c2843',1,'Terrain::canUseDeferredRendering()']]],
+  ['canusedeferredrendering_6',['canUseDeferredRendering',['../class_renderable.html#aa19d3c7b6144486766d45dbd3d0a08b8',1,'Renderable::canUseDeferredRendering()'],['../class_core_object.html#a208b0d662e76a457c2843dd392c6e140',1,'CoreObject::canUseDeferredRendering()'],['../class_model.html#aa0bad24d1f9cebdf8bae997726337e43',1,'Model::canUseDeferredRendering()'],['../class_particle_emitter.html#ac72bcb908dc6f2c12c4f68ed684c1d04',1,'ParticleEmitter::canUseDeferredRendering()'],['../class_terrain.html#ae23b7b33d9b5d3b27f14718f5a1c2843',1,'Terrain::canUseDeferredRendering()']]],
   ['capturemouse_7',['captureMouse',['../class_window.html#af9987c317f1af799d198ddb0ecd9e72b',1,'Window']]],
   ['castshadows_8',['castShadows',['../struct_light.html#ae0aa784aa44058529266ad54fe24e776',1,'Light::castShadows()'],['../class_directional_light.html#ab28ef4b78b070c467ae7f1d598f985d4',1,'DirectionalLight::castShadows()'],['../struct_spotlight.html#aa4e2a1f2de5b55bbaa5c87cbe69507ca',1,'Spotlight::castShadows()']]],
   ['changesize_9',['changeSize',['../struct_font.html#a8635ed7b0d950015d2cc73236ecc0d9d',1,'Font']]],
@@ -40,10 +40,11 @@ var searchData=
   ['createinstance_37',['createInstance',['../class_core_object.html#a4e1e147afad5bc852d51723b91cf7e2d',1,'CoreObject']]],
   ['createplane_38',['createPlane',['../object_8h.html#ab25daa18f85f489ecd187df3e9a96d7a',1,'object.h']]],
   ['createpyramid_39',['createPyramid',['../object_8h.html#ace121fa39b9356a345857e8866e26cf4',1,'object.h']]],
-  ['createresource_40',['createResource',['../class_workspace.html#a6eaca94e589851c29b2f66acf28599cb',1,'Workspace']]],
-  ['createresourcegroup_41',['createResourceGroup',['../class_workspace.html#a5dd2cec99c67fa3b009d5b22f9c7a938',1,'Workspace']]],
-  ['createskycubemap_42',['createSkyCubemap',['../class_atmosphere.html#a0c2698b6c91ed2ef8018e7e34a04ef46',1,'Atmosphere']]],
-  ['createsphere_43',['createSphere',['../object_8h.html#a236d2a48ae63b8b7ece82bafa9838528',1,'object.h']]],
-  ['createtiledcheckerboard_44',['createTiledCheckerboard',['../struct_texture.html#a659f1c34d69196f97dbd9de980696d6a',1,'Texture']]],
-  ['cyan_45',['cyan',['../struct_color.html#a84d9274902df272ca9e9da8acf2acc34',1,'Color']]]
+  ['createrainstreak_40',['createRainStreak',['../struct_texture.html#a9cccd586db9b1e308c164c10d162004e',1,'Texture']]],
+  ['createresource_41',['createResource',['../class_workspace.html#a6eaca94e589851c29b2f66acf28599cb',1,'Workspace']]],
+  ['createresourcegroup_42',['createResourceGroup',['../class_workspace.html#a5dd2cec99c67fa3b009d5b22f9c7a938',1,'Workspace']]],
+  ['createskycubemap_43',['createSkyCubemap',['../class_atmosphere.html#a0c2698b6c91ed2ef8018e7e34a04ef46',1,'Atmosphere']]],
+  ['createsphere_44',['createSphere',['../object_8h.html#a236d2a48ae63b8b7ece82bafa9838528',1,'object.h']]],
+  ['createtiledcheckerboard_45',['createTiledCheckerboard',['../struct_texture.html#a659f1c34d69196f97dbd9de980696d6a',1,'Texture']]],
+  ['cyan_46',['cyan',['../struct_color.html#a84d9274902df272ca9e9da8acf2acc34',1,'Color']]]
 ];
