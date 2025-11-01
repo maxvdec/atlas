@@ -286,6 +286,12 @@ class ParticleEmitter : public GameObject {
         setSpawnRate(static_cast<float>(rate));
     }
 
+    /**
+     * @brief The settings used for particle behavior and appearance.
+     *
+     */
+    ParticleSettings settings;
+
   private:
     std::vector<Particle> particles;
     unsigned int maxParticles;
@@ -295,7 +301,6 @@ class ParticleEmitter : public GameObject {
     Magnitude3d direction = {0.0, 1.0, 0.0};
     float spawnRadius = 0.1f;
     float spawnRate = 10.0f;
-    ParticleSettings settings;
 
     float timeSinceLastEmission = 0.0f;
     bool isEmitting = true;

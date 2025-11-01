@@ -262,11 +262,27 @@ class MainScene : public Scene {
         window.addRenderTarget(&frameBuffer);
         frameBuffer.display(window);
 
+        WeatherDelegate delegate = [](ViewInformation info) {
+            WeatherState state;
+            float time = info.time;
+            if ((time >= 6.0f && time < 9.0f) ||
+                (time >= 18.0f && time < 21.0f)) {
+                state.condition = WeatherCondition::Rain;
+                state.intensity = 0.5f;
+            } else {
+                state.condition = WeatherCondition::Clear;
+                state.intensity = 0.0f;
+            }
+            return state;
+        };
+
         window.useDeferredRendering();
         atmosphere.enable();
         atmosphere.secondsPerHour = 4.f;
         atmosphere.setTime(0.0);
         atmosphere.cycle = false;
+        atmosphere.weatherDelegate = delegate;
+        atmosphere.enableWeather();
     }
 };
 

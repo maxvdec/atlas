@@ -15,7 +15,7 @@
 
 void Scene::updateScene(float dt) {
     atmosphere.update(dt);
-    if (atmosphere.enabled) {
+    if (atmosphere.isEnabled()) {
         constexpr int dynamicSkyResolution = 128;
 
         if (this->skybox == nullptr ||

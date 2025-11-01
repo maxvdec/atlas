@@ -9,6 +9,9 @@
 
 #include "atlas/texture.h"
 #include "atlas/units.h"
+#include <algorithm>
+#include <cmath>
+#include <stdexcept>
 #include <glad/glad.h>
 
 Texture Texture::createCheckerboard(int width, int height, int checkSize,
@@ -183,6 +186,76 @@ Texture Texture::createTiledCheckerboard(int width, int height,
     glGenerateMipmap(GL_TEXTURE_2D);
 
     TextureCreationData creationData{width, height, 3};
+    return Texture{Resource(), creationData, textureId, TextureType::Color,
+                   borderColor};
+}
+
+Texture Texture::createRainStreak(int width, int height,
+                                  TextureParameters params, Color borderColor) {
+    if (width <= 0 || height <= 0) {
+        throw std::runtime_error(
+            "Rain streak texture dimensions must be positive");
+    }
+
+    std::vector<unsigned char> data(width * height * 4, 0);
+
+    float center = (static_cast<float>(width) - 1.0f) * 0.5f;
+    float invHalfWidth = 1.0f / std::max(1.0f, center);
+
+    for (int y = 0; y < height; ++y) {
+        float v = static_cast<float>(y) / static_cast<float>(height - 1);
+        float taper = 1.0f - v;
+        float headGlow = std::exp(-v * 6.0f);
+
+        for (int x = 0; x < width; ++x) {
+            float offset = (static_cast<float>(x) - center) * invHalfWidth;
+            float radial = std::exp(-offset * offset * 12.0f);
+            float alpha = std::clamp(
+                radial * (0.25f + taper * 0.65f) + headGlow * 0.1f, 0.0f, 1.0f);
+
+            float brightness =
+                std::clamp(radial * 0.8f + headGlow * 0.2f, 0.0f, 1.0f);
+            float tint = 0.65f + 0.35f * headGlow;
+
+            int index = (y * width + x) * 4;
+            data[index + 0] = static_cast<unsigned char>(brightness * 180.0f);
+            data[index + 1] = static_cast<unsigned char>(brightness * 200.0f);
+            data[index + 2] = static_cast<unsigned char>(
+                std::clamp(tint * 255.0f, 0.0f, 255.0f));
+            data[index + 3] = static_cast<unsigned char>(alpha * 255.0f);
+        }
+    }
+
+    Id textureId;
+    glGenTextures(1, &textureId);
+    glBindTexture(GL_TEXTURE_2D, textureId);
+
+    Texture::applyWrappingMode(params.wrappingModeS, GL_TEXTURE_WRAP_S);
+    Texture::applyWrappingMode(params.wrappingModeT, GL_TEXTURE_WRAP_T);
+    Texture::applyFilteringMode(params.minifyingFilter, true);
+    Texture::applyFilteringMode(params.magnifyingFilter, false);
+
+    if (params.wrappingModeS == TextureWrappingMode::ClampToBorder ||
+        params.wrappingModeT == TextureWrappingMode::ClampToBorder) {
+        if (borderColor.r < 0 || borderColor.r > 1 || borderColor.g < 0 ||
+            borderColor.g > 1 || borderColor.b < 0 || borderColor.b > 1 ||
+            borderColor.a < 0 || borderColor.a > 1) {
+            throw std::runtime_error(
+                "Border color values must be between 0 and 1");
+        }
+        float borderColorArr[4] = {static_cast<float>(borderColor.r),
+                                   static_cast<float>(borderColor.g),
+                                   static_cast<float>(borderColor.b),
+                                   static_cast<float>(borderColor.a)};
+        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR,
+                         borderColorArr);
+    }
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
+                 GL_UNSIGNED_BYTE, data.data());
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    TextureCreationData creationData{width, height, 4};
     return Texture{Resource(), creationData, textureId, TextureType::Color,
                    borderColor};
 }

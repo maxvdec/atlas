@@ -134,7 +134,7 @@ void ParticleEmitter::updateParticle(Particle &p, float deltaTime) {
     }
 
     Magnitude3d windDirection = {0, 0, 0};
-    if (Window::mainWindow->getCurrentScene()->atmosphere.enabled) {
+    if (Window::mainWindow->getCurrentScene()->atmosphere.isEnabled()) {
         windDirection = Window::mainWindow->getCurrentScene()->atmosphere.wind;
     }
 
