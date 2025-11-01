@@ -1936,7 +1936,6 @@ struct Material {
     float metallic;
     float roughness;
     float ao;
-    float reflectivity;
 };
 
 uniform sampler2D texture1;
@@ -2091,12 +2090,9 @@ void main() {
         ao *= aoTex.r;
     }
 
-    float reflectivity = material.reflectivity;
-
     metallic = clamp(metallic, 0.0, 1.0);
     roughness = clamp(roughness, 0.0, 1.0);
     ao = clamp(ao, 0.0, 1.0);
-    reflectivity = clamp(reflectivity, 0.0, 1.0);
 
     float nonlinearDepth = gl_FragCoord.z;
     gPosition = vec4(FragPos, nonlinearDepth);
@@ -2113,7 +2109,7 @@ void main() {
     }
     gAlbedoSpec = vec4(a, ao);
 
-    gMaterial = vec4(metallic, roughness, reflectivity, 1.0);
+    gMaterial = vec4(metallic, roughness, ao, 1.0);
 }
 
 )";
@@ -2521,11 +2517,10 @@ void main() {
     vec3 N = normalize(texture(gNormal, TexCoord).xyz);
     vec4 albedoAo = texture(gAlbedoSpec, TexCoord);
     vec3 albedo = albedoAo.rgb;
-    float ao = clamp(albedoAo.a, 0.0, 1.0);
     vec4 matData = texture(gMaterial, TexCoord);
     float metallic = clamp(matData.r, 0.0, 1.0);
     float roughness = clamp(matData.g, 0.0, 1.0);
-    float reflectivity = clamp(matData.b, 0.0, 1.0);
+    float ao = clamp(matData.b, 0.0, 1.0);
 
     float viewDistance = max(length(cameraPosition - FragPos), 1e-6);
     vec3 V = (cameraPosition - FragPos) / viewDistance;
@@ -2619,11 +2614,18 @@ void main() {
 
     vec3 finalColor = ambient + lighting + iblContribution;
 
-    if (!useIBL && reflectivity > 0.0) {
+    if (!useIBL) {
         vec3 I = normalize(FragPos - cameraPosition);
-        vec3 R = reflect(I, N);
+        vec3 R = reflect(-I, N);
+
+        vec3 F = fresnelSchlick(max(dot(N, -I), 0.0), F0);
+        vec3 kS = F;
+        vec3 kD = (vec3(1.0) - kS) * (1.0 - metallic);
+
         vec3 envColor = texture(skybox, R).rgb;
-        finalColor = mix(finalColor, envColor, reflectivity);
+        vec3 reflection = envColor * kS;
+
+        finalColor = mix(finalColor, reflection, F0);
     }
 
     FragColor = vec4(finalColor, 1.0);

@@ -23,7 +23,6 @@ struct Material {
     float metallic;
     float roughness;
     float ao;
-    float reflectivity;
 };
 
 uniform sampler2D texture1;
@@ -178,12 +177,9 @@ void main() {
         ao *= aoTex.r;
     }
 
-    float reflectivity = material.reflectivity;
-
     metallic = clamp(metallic, 0.0, 1.0);
     roughness = clamp(roughness, 0.0, 1.0);
     ao = clamp(ao, 0.0, 1.0);
-    reflectivity = clamp(reflectivity, 0.0, 1.0);
 
     float nonlinearDepth = gl_FragCoord.z;
     gPosition = vec4(FragPos, nonlinearDepth);
@@ -200,5 +196,5 @@ void main() {
     }
     gAlbedoSpec = vec4(a, ao);
 
-    gMaterial = vec4(metallic, roughness, reflectivity, 1.0);
+    gMaterial = vec4(metallic, roughness, ao, 1.0);
 }

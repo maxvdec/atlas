@@ -14,9 +14,11 @@
 #include <algorithm>
 #include <glad/glad.h>
 #include <iostream>
+#include <limits>
 #include <random>
 #include <string>
 #include <vector>
+#include <cmath>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -112,6 +114,8 @@ void CoreObject::attachIndices(const std::vector<Index> &newIndices) {
 }
 
 void CoreObject::setPosition(const Position3d &newPosition) {
+    Position3d oldPosition = position;
+    Position3d delta = newPosition - oldPosition;
     position = newPosition;
 
     if (hasPhysics && body != nullptr) {
@@ -120,15 +124,17 @@ void CoreObject::setPosition(const Position3d &newPosition) {
 
     if (!instances.empty()) {
         for (auto &instance : instances) {
-            instance.position += newPosition;
+            instance.position += delta;
             instance.updateModelMatrix();
         }
-    } else {
-        updateModelMatrix();
     }
+
+    updateModelMatrix();
 }
 
 void CoreObject::setRotation(const Rotation3d &newRotation) {
+    Rotation3d oldRotation = rotation;
+    Rotation3d delta = newRotation - oldRotation;
     rotation = newRotation;
 
     if (hasPhysics && body != nullptr) {
@@ -137,27 +143,40 @@ void CoreObject::setRotation(const Rotation3d &newRotation) {
 
     if (!instances.empty()) {
         for (auto &instance : instances) {
-            instance.rotation = instance.rotation + newRotation;
+            instance.rotation = instance.rotation + delta;
             instance.updateModelMatrix();
         }
-    } else {
-        updateModelMatrix();
     }
 
     updateModelMatrix();
 }
 
 void CoreObject::setScale(const Scale3d &newScale) {
+    Scale3d oldScale = scale;
     scale = newScale;
 
     if (!instances.empty()) {
+        const auto computeFactor = [](double newValue, double oldValue) {
+            const double epsilon = std::numeric_limits<double>::epsilon();
+            if (std::abs(oldValue) <= epsilon) {
+                return newValue;
+            }
+            return newValue / oldValue;
+        };
+
+        double factorX = computeFactor(newScale.x, oldScale.x);
+        double factorY = computeFactor(newScale.y, oldScale.y);
+        double factorZ = computeFactor(newScale.z, oldScale.z);
+
         for (auto &instance : instances) {
-            instance.scale += newScale;
+            instance.scale = {instance.scale.x * factorX,
+                              instance.scale.y * factorY,
+                              instance.scale.z * factorZ};
             instance.updateModelMatrix();
         }
-    } else {
-        updateModelMatrix();
     }
+
+    updateModelMatrix();
 }
 
 void CoreObject::move(const Position3d &delta) {
@@ -361,8 +380,6 @@ void CoreObject::render(float dt) {
         shaderProgram.setUniform1f("material.metallic", material.metallic);
         shaderProgram.setUniform1f("material.roughness", material.roughness);
         shaderProgram.setUniform1f("material.ao", material.ao);
-        shaderProgram.setUniform1f("material.reflectivity",
-                                   material.reflectivity);
     }
 
     const bool shaderSupportsIbl =

@@ -94,6 +94,12 @@ class WaterPot : public CompoundObject {
         potUp.rotate({0.0, -90.0f, 0.0});
         potUp.move({0.5f, 0.0f, 0.5f});
         this->addObject(&pot);
+
+        water = createBox({0.9f, 0.1f, 0.9f}, Color(0.2f, 0.4f, 0.8f, 1.0f));
+        water.setPosition({0.0f, 0.05f, 0.5f});
+        water.useDeferredRendering = false;
+        water.initialize();
+        this->addObject(&water);
     }
 };
 
@@ -254,7 +260,7 @@ class MainScene : public Scene {
         window.useDeferredRendering();
         atmosphere.enable();
         atmosphere.secondsPerHour = 4.f;
-        atmosphere.setTime(0.0);
+        atmosphere.setTime(12.0);
         atmosphere.cycle = false;
         atmosphere.useGlobalLight();
         atmosphere.castShadowsFromSunlight(4096);

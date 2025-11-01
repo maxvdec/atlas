@@ -59,10 +59,6 @@ struct Material {
      * @brief Ambient occlusion term used to darken creases and cavities.
      */
     float ao = 1.0f;
-    /**
-     * @brief Reflection blend factor when environment maps are available.
-     */
-    float reflectivity = 0.0f;
 };
 
 /**
