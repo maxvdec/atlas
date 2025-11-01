@@ -461,7 +461,9 @@ class CompoundObject : public GameObject {
  * elements.
  *
  */
-class UIObject : public GameObject {};
+class UIObject : public GameObject {
+    bool canUseDeferredRendering() const override { return false; }
+};
 
 /**
  * @brief A conjunction of UI elements that share the same view and projection

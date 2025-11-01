@@ -78,6 +78,8 @@ class Atmosphere {
     float secondsPerHour = 60.f;
     float timeOfDay;
 
+    Magnitude3d wind = {0.0f, 0.0f, 0.0f};
+
     void update(float dt);
     void enable() { enabled = true; }
 
@@ -118,6 +120,7 @@ class Atmosphere {
     inline void addClouds(int frequency = 4, int divisions = 6) {
         if (!clouds) {
             clouds = std::make_shared<Clouds>(Clouds(frequency, divisions));
+            clouds->wind = this->wind;
         }
     }
 

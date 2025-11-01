@@ -1,5 +1,5 @@
 #include "atlas/camera.h"
-#include "atlas/effect.h"
+#include "atlas/particle.h"
 #include "atlas/light.h"
 #include "atlas/object.h"
 #include "atlas/scene.h"
@@ -88,6 +88,7 @@ class MainScene : public Scene {
     RenderTarget frameBuffer;
     Terrain terrain;
     AreaLight areaLight;
+    ParticleEmitter emitter;
 
     bool doesUpdate = true;
     bool fall = false;
@@ -264,18 +265,8 @@ class MainScene : public Scene {
         window.useDeferredRendering();
         atmosphere.enable();
         atmosphere.secondsPerHour = 4.f;
-        atmosphere.moonColor =
-            Color(1.0f, 0.0f, 0.0f); // Set the moon color to red
-        atmosphere.setTime(12.0);
-        atmosphere.addClouds(4, 2);
-        atmosphere.clouds->scale = 0.9f;
-        atmosphere.clouds->density = 0.3f;
-        atmosphere.clouds->densityMultiplier = 0.8f;
-        atmosphere.clouds->absorption = 0.1;
-        atmosphere.clouds->primaryStepCount = 4;
-        // atmosphere.clouds->clusterStrength = 0.8f;
-        atmosphere.clouds->size = {30.0f, 10.0f, 30.0f};
-        atmosphere.clouds->wind = {1.f, 0.0f, 0.02f};
+        atmosphere.setTime(0.0);
+        atmosphere.cycle = false;
     }
 };
 

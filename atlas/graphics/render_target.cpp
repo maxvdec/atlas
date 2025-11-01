@@ -716,6 +716,9 @@ void RenderTarget::render(float dt) {
                                             ambient.y, ambient.z);
             obj->shaderProgram.setUniform1i("hasClouds", 1);
         } else {
+            glActiveTexture(GL_TEXTURE15);
+            glBindTexture(GL_TEXTURE_3D, 0);
+            obj->shaderProgram.setUniform1i("cloudsTexture", 15);
             obj->shaderProgram.setUniform1i("hasClouds", 0);
         }
     }
