@@ -12,9 +12,11 @@
 
 #include "atlas/component.h"
 #include "atlas/core/shader.h"
+#include "atlas/texture.h"
 #include "atlas/units.h"
 #include <array>
 #include <glm/glm.hpp>
+#include <memory>
 
 class Window;
 
@@ -28,6 +30,12 @@ struct Fluid : GameObject {
     void initialize() override;
     void update(Window &window) override;
     void render(float dt) override;
+
+    /**
+     * @brief Triggers the generation of reflection and refraction render
+     * targets for the current frame.
+     */
+    void updateCapture(Window &window);
 
     void setViewMatrix(const glm::mat4 &view) override;
     void setProjectionMatrix(const glm::mat4 &projection) override;
@@ -77,6 +85,17 @@ struct Fluid : GameObject {
     std::array<FluidVertex, 4> vertices{};
     std::array<unsigned int, 6> indices{0, 1, 2, 0, 2, 3};
     bool isInitialized = false;
+
+    std::shared_ptr<RenderTarget> reflectionTarget;
+    std::shared_ptr<RenderTarget> refractionTarget;
+    bool captureDirty = true;
+
+    void ensureTargets(Window &window);
+    glm::vec4 calculateClipPlane() const;
+    glm::vec3 calculatePlaneNormal() const;
+    glm::vec3 calculatePlanePoint() const;
+
+    friend class Window;
 };
 
 #endif // HYDRA_FLUID_H

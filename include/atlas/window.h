@@ -19,6 +19,7 @@
 #include "bezel/body.h"
 #include "finewave/audio.h"
 #include <glm/vec3.hpp>
+#include <glm/vec4.hpp>
 #include <memory>
 #include <optional>
 #include <string>
@@ -205,6 +206,7 @@ class Monitor {
 };
 
 class ShaderProgram;
+class Fluid;
 
 /**
  * @brief Structure representing a window in the application. This contains the
@@ -328,6 +330,12 @@ class Window {
     inline void addUIObject(Renderable *object) {
         uiRenderables.push_back(object);
     }
+
+    /**
+     * @brief Adds a renderable to the late forward queue. Late forward
+     * renderables are evaluated after the main forward pass.
+     */
+    void addLateForwardObject(Renderable *object);
 
     /**
      * @brief Sets the camera for the window.
@@ -501,6 +509,8 @@ class Window {
     std::vector<Renderable *> preferenceRenderables;
     std::vector<Renderable *> firstRenderables;
     std::vector<Renderable *> uiRenderables;
+    std::vector<Renderable *> lateForwardRenderables;
+    std::vector<Fluid *> lateFluids;
     std::vector<RenderTarget *> renderTargets;
 
     std::shared_ptr<RenderTarget> gBuffer;
@@ -527,6 +537,9 @@ class Window {
     void renderPhysicalBloom(RenderTarget *target);
     void deferredRendering(RenderTarget *target);
     void renderSSAO(RenderTarget *target);
+    void updateFluidCaptures();
+    void captureFluidReflection(Fluid &fluid);
+    void captureFluidRefraction(Fluid &fluid);
 
     Camera *camera = nullptr;
     float lastMouseX;
@@ -546,6 +559,9 @@ class Window {
     ShaderProgram bloomBlurProgram;
 
     bool debug = false;
+
+    bool clipPlaneEnabled = false;
+    glm::vec4 clipPlaneEquation{0.0f};
 
     unsigned int pingpongFBOs[2] = {0, 0};
     unsigned int pingpongBuffers[2] = {0, 0};
@@ -576,6 +592,7 @@ class Window {
     friend class DirectionalLight;
     friend class Text;
     friend class Terrain;
+    friend class Fluid;
 };
 
 #endif // WINDOW_H

@@ -449,7 +449,18 @@ class CompoundObject : public GameObject {
      * @param obj The component instance to add. \warning It must be long-lived.
      * This means that declaring it as a class property is a good idea.
      */
-    inline void addObject(GameObject *obj) { objects.push_back(obj); }
+    inline void addObject(GameObject *obj) {
+        objects.push_back(obj);
+        if (obj != nullptr && obj->renderLateForward) {
+            lateForwardObjects.push_back(obj);
+        }
+    }
+
+    /**
+     * @brief Returns the late forward proxy renderable, if any children
+     * require late rendering.
+     */
+    Renderable *getLateRenderable();
 
     bool canUseDeferredRendering() const override {
         for (auto &obj : objects) {
@@ -461,11 +472,24 @@ class CompoundObject : public GameObject {
     }
 
   private:
+    class LateCompoundRenderable;
+
     Position3d position{0.0, 0.0, 0.0};
     std::vector<Position3d> originalPositions;
+    std::vector<GameObject *> lateForwardObjects;
+    std::shared_ptr<LateCompoundRenderable> lateRenderableProxy;
+    bool lateRenderableRegistered = false;
     bool changedPosition = false;
     bool changedRotation = false;
     bool changedScale = false;
+
+    void renderLate(float dt);
+    void updateLate(Window &window);
+    void setLateViewMatrix(const glm::mat4 &view);
+    void setLateProjectionMatrix(const glm::mat4 &projection);
+    std::optional<ShaderProgram> getLateShaderProgramInternal();
+    void setLateShader(const ShaderProgram &shader);
+    bool lateCanCastShadows() const;
 };
 
 /**

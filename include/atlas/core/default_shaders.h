@@ -3151,11 +3151,67 @@ uniform mat4 projection;
 uniform mat4 view;
 uniform mat4 invProjection;      
 uniform mat4 invView;
+uniform sampler2D reflectionTexture;
+uniform sampler2D refractionTexture;
 
 void main()
 {
-    vec4 sceneColor = texture(sceneTexture, TexCoord);
-    FragColor = sceneColor;
+    vec3 normal = normalize(WorldNormal);
+    vec3 viewDir = normalize(cameraPos - WorldPos);
+    
+    // Calculate screen-space coordinates
+    vec4 clipSpace = projection * view * vec4(WorldPos, 1.0);
+    vec3 ndc = clipSpace.xyz / clipSpace.w;
+    vec2 screenUV = ndc.xy * 0.5 + 0.5;
+    
+    // Wave distortion
+    vec2 waveOffset;
+    waveOffset.x = sin((TexCoord.x + time * 0.15) * 30.0);
+    waveOffset.y = cos((TexCoord.y - time * 0.2) * 35.0);
+    waveOffset *= 0.01;
+    
+    // Reflection UV (flipped vertically)
+    vec2 reflectionUV = screenUV;
+    reflectionUV.y = 1.0 - reflectionUV.y;  // Flip Y for reflection
+    reflectionUV += waveOffset * 0.6;
+    reflectionUV = clamp(reflectionUV, 0.002, 0.998);
+    
+    // Refraction UV (normal)
+    vec2 refractionUV = screenUV - waveOffset * 0.4;
+    refractionUV = clamp(refractionUV, 0.002, 0.998);
+    
+    // Sample textures
+    vec4 reflectionSample = texture(reflectionTexture, reflectionUV);
+    vec4 refractionSample = texture(refractionTexture, refractionUV);
+    
+    // Fallback to scene texture if reflection/refraction is black (unrendered areas)
+    if (length(reflectionSample.rgb) < 0.01) {
+        reflectionSample = texture(sceneTexture, screenUV);
+    }
+    if (length(refractionSample.rgb) < 0.01) {
+        refractionSample = texture(sceneTexture, screenUV);
+    }
+    
+    // Fresnel effect (more realistic range)
+    float fresnel = pow(1.0 - clamp(dot(normal, viewDir), 0.0, 1.0), 3.0);
+    fresnel = mix(0.02, 1.0, fresnel); // Min 2% reflection, max 100%
+    fresnel *= reflectionStrength;
+    
+    // Combine reflection and refraction FIRST
+    vec3 combined = mix(refractionSample.rgb, reflectionSample.rgb, fresnel);
+    
+    // Then tint with water color (much more subtle)
+    float waterTint = clamp(depthFade * 0.3, 0.0, 0.5); // Max 50% tint, scaled down
+    combined = mix(combined, waterColor.rgb, waterTint);
+    
+    // Alpha should be semi-transparent
+    float alpha = mix(0.7, 0.95, fresnel); // 70-95% opacity based on angle
+    
+    FragColor = vec4(combined, alpha);
+    
+    // Bloom/bright color output
+    float luminance = max(max(combined.r, combined.g), combined.b);
+    BrightColor = luminance > 1.0 ? vec4(combined, alpha) : vec4(0.0);
 }
 )";
 

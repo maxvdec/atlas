@@ -12,12 +12,16 @@
 #include "atlas/window.h"
 
 #include <cstddef>
+#include <algorithm>
+#include <memory>
 #include <stdexcept>
 
 #include <glad/glad.h>
+#include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
 
 Fluid::Fluid() : GameObject() {
+    renderLateForward = true;
     buildPlaneGeometry();
     updateModelMatrix();
 }
@@ -116,6 +120,26 @@ void Fluid::render(float dt) {
     glBindTexture(GL_TEXTURE_2D, Window::mainWindow->getGBuffer()->gNormal.id);
     fluidShader.setUniform1i("normalMap", 2);
 
+    if (reflectionTarget) {
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, reflectionTarget->texture.id);
+        fluidShader.setUniform1i("reflectionTexture", 3);
+    } else {
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, target->texture.id);
+        fluidShader.setUniform1i("reflectionTexture", 3);
+    }
+
+    if (refractionTarget) {
+        glActiveTexture(GL_TEXTURE4);
+        glBindTexture(GL_TEXTURE_2D, refractionTarget->texture.id);
+        fluidShader.setUniform1i("refractionTexture", 4);
+    } else {
+        glActiveTexture(GL_TEXTURE4);
+        glBindTexture(GL_TEXTURE_2D, target->texture.id);
+        fluidShader.setUniform1i("refractionTexture", 4);
+    }
+
     fluidShader.setUniform3f("cameraPos",
                              Window::mainWindow->getCamera()->position.x,
                              Window::mainWindow->getCamera()->position.y,
@@ -136,10 +160,27 @@ void Fluid::render(float dt) {
                    GL_UNSIGNED_INT, nullptr);
     glBindVertexArray(0);
 
+    glActiveTexture(GL_TEXTURE0);
+
     glEnable(GL_CULL_FACE);
+
+    captureDirty = true;
 }
 
 void Fluid::update(Window &window) { (void)window; }
+
+void Fluid::updateCapture(Window &window) {
+    ensureTargets(window);
+
+    if (!reflectionTarget || !refractionTarget) {
+        return;
+    }
+
+    window.captureFluidReflection(*this);
+    window.captureFluidRefraction(*this);
+
+    captureDirty = false;
+}
 
 void Fluid::setViewMatrix(const glm::mat4 &view) { viewMatrix = view; }
 
@@ -178,6 +219,59 @@ void Fluid::setExtent(const Size2d &ext) {
 }
 
 void Fluid::setWaterColor(const Color &newColor) { color = newColor; }
+
+void Fluid::ensureTargets(Window &window) {
+    auto refreshTarget = [&window](std::shared_ptr<RenderTarget> &target) {
+        GLFWwindow *glfwWindow = static_cast<GLFWwindow *>(window.windowRef);
+        int fbWidth = 0;
+        int fbHeight = 0;
+        glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
+        float scale = window.getRenderScale();
+        scale = std::clamp(scale, 0.1f, 1.0f);
+        int desiredWidth =
+            std::max(1, static_cast<int>(static_cast<float>(fbWidth) * scale));
+        int desiredHeight =
+            std::max(1, static_cast<int>(static_cast<float>(fbHeight) * scale));
+
+        auto needsResize = [&](const std::shared_ptr<RenderTarget> &ptr) {
+            if (!ptr) {
+                return true;
+            }
+            return ptr->texture.creationData.width != desiredWidth ||
+                   ptr->texture.creationData.height != desiredHeight;
+        };
+
+        if (needsResize(target)) {
+            target =
+                std::make_unique<RenderTarget>(window, RenderTargetType::Scene);
+        }
+    };
+
+    refreshTarget(reflectionTarget);
+    refreshTarget(refractionTarget);
+}
+
+glm::vec3 Fluid::calculatePlanePoint() const {
+    glm::vec4 worldPos = modelMatrix * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    return glm::vec3(worldPos);
+}
+
+glm::vec3 Fluid::calculatePlaneNormal() const {
+    glm::mat3 normalMatrix =
+        glm::transpose(glm::inverse(glm::mat3(modelMatrix)));
+    glm::vec3 normal = normalMatrix * glm::vec3(0.0f, 1.0f, 0.0f);
+    if (glm::length(normal) < 1e-5f) {
+        return glm::vec3(0.0f, 1.0f, 0.0f);
+    }
+    return glm::normalize(normal);
+}
+
+glm::vec4 Fluid::calculateClipPlane() const {
+    glm::vec3 normal = calculatePlaneNormal();
+    glm::vec3 point = calculatePlanePoint();
+    float d = -glm::dot(normal, point);
+    return glm::vec4(normal, d);
+}
 
 void Fluid::buildPlaneGeometry() {
     vertices = {

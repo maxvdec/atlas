@@ -117,6 +117,13 @@ class Renderable {
      *
      */
     bool renderDepthOfView = false;
+
+    /**
+     * @brief Whether the object must be moved to the late forward rendering
+     * pipeline. Objects flagged here are skipped during the primary forward
+     * pass and rendered only after all standard forward elements.
+     */
+    bool renderLateForward = false;
 };
 
 #endif // ATLAS_RENDERABLE_H
