@@ -499,8 +499,16 @@ class Window {
      */
     inline float getSSAORenderScale() const { return this->ssaoRenderScale; }
 
+    /**
+     * @brief Returns the lazily created deferred geometry buffer.
+     *
+     * @return (RenderTarget*) Pointer to the G-buffer contents.
+     */
     RenderTarget *getGBuffer() const { return gBuffer.get(); }
 
+    /**
+     * @brief Points to the render target currently bound for drawing.
+     */
     RenderTarget *currentRenderTarget = nullptr;
 
   private:
