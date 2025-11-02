@@ -14,6 +14,7 @@
 
 #include <cstddef>
 #include <algorithm>
+#include <iostream>
 #include <memory>
 #include <stdexcept>
 
@@ -94,6 +95,18 @@ void Fluid::initialize() {
 void Fluid::render(float dt) {
     if (!isInitialized) {
         initialize();
+    }
+
+    if (captureDirty) {
+        Window *window = Window::mainWindow;
+        if (window) {
+            ensureTargets(*window);
+            if (reflectionTarget && refractionTarget) {
+                window->captureFluidReflection(*this);
+                window->captureFluidRefraction(*this);
+                captureDirty = false;
+            }
+        }
     }
 
     glDisable(GL_CULL_FACE);
@@ -269,6 +282,15 @@ void Fluid::ensureTargets(Window &window) {
         if (needsResize(target)) {
             target =
                 std::make_unique<RenderTarget>(window, RenderTargetType::Scene);
+
+            GLint previousFBO;
+            glGetIntegerv(GL_FRAMEBUFFER_BINDING, &previousFBO);
+
+            glBindFramebuffer(GL_FRAMEBUFFER, target->fbo);
+            glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+            glBindFramebuffer(GL_FRAMEBUFFER, previousFBO);
         }
     };
 

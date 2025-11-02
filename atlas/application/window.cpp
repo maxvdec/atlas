@@ -302,8 +302,6 @@ void Window::run() {
                     }
                 }
 
-                updateFluidCaptures();
-
                 for (auto &obj : this->lateForwardRenderables) {
                     obj->setViewMatrix(this->camera->calculateViewMatrix());
                     obj->setProjectionMatrix(calculateProjectionMatrix());
@@ -1216,7 +1214,7 @@ void Window::captureFluidReflection(Fluid &fluid) {
 
     reflectionCamera.setPosition(Position3d::fromGlm(reflectedPos));
     reflectionCamera.lookAt(Position3d::fromGlm(reflectedTarget));
-    reflectionCamera.fov = originalCamera->fov;
+    reflectionCamera.fov = originalCamera->fov * 1.2f;
     reflectionCamera.nearClip = originalCamera->nearClip;
     reflectionCamera.farClip = originalCamera->farClip;
     reflectionCamera.useOrthographic = originalCamera->useOrthographic;
@@ -1259,8 +1257,9 @@ void Window::captureFluidReflection(Fluid &fluid) {
     glEnable(GL_DEPTH_TEST);
     glDepthMask(GL_TRUE);
     glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glCullFace(GL_FRONT);
+
+    glClearColor(fluid.color.r, fluid.color.g, fluid.color.b, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     currentRenderTarget = &target;
@@ -1270,6 +1269,7 @@ void Window::captureFluidReflection(Fluid &fluid) {
 
     auto renderQueue = [&](const std::vector<Renderable *> &queue,
                            bool skipLate) {
+        ShaderProgram oldProgram;
         for (auto *obj : queue) {
             if (obj == nullptr) {
                 continue;
@@ -1277,9 +1277,24 @@ void Window::captureFluidReflection(Fluid &fluid) {
             if (skipLate && obj->renderLateForward) {
                 continue;
             }
+            if (dynamic_cast<Fluid *>(obj) == &fluid) {
+                continue;
+            }
+            if (obj->canUseDeferredRendering()) {
+                oldProgram = obj->getShaderProgram().value();
+                std::cout << "For object with type: " << typeid(*obj).name()
+                          << " and ID: " << obj->getId()
+                          << " setting reflection shader." << std::endl;
+                obj->setShader(ShaderProgram::fromDefaultShaders(
+                    AtlasVertexShader::Main, AtlasFragmentShader::Main));
+            }
             obj->setViewMatrix(view);
             obj->setProjectionMatrix(projection);
             obj->render(getDeltaTime());
+
+            if (obj->canUseDeferredRendering()) {
+                obj->setShader(oldProgram);
+            }
         }
     };
 
@@ -1329,8 +1344,9 @@ void Window::captureFluidRefraction(Fluid &fluid) {
     glm::vec3 planePoint = fluid.calculatePlanePoint();
     glm::vec3 planeNormal = fluid.calculatePlaneNormal();
 
+    const float clipBias = 0.02f;
     glm::vec4 plane =
-        glm::vec4(-planeNormal, glm::dot(planeNormal, planePoint));
+        glm::vec4(planeNormal, -glm::dot(planeNormal, planePoint) - clipBias);
 
     bool clipBackup = clipPlaneEnabled;
     glm::vec4 clipEquationBackup = clipPlaneEquation;
@@ -1365,7 +1381,8 @@ void Window::captureFluidRefraction(Fluid &fluid) {
     glDepthMask(GL_TRUE);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+    glClearColor(1.0, 0.0, 1.0, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     currentRenderTarget = &target;
@@ -1375,6 +1392,7 @@ void Window::captureFluidRefraction(Fluid &fluid) {
 
     auto renderQueue = [&](const std::vector<Renderable *> &queue,
                            bool skipLate) {
+        ShaderProgram oldProgram;
         for (auto *obj : queue) {
             if (obj == nullptr) {
                 continue;
@@ -1382,9 +1400,24 @@ void Window::captureFluidRefraction(Fluid &fluid) {
             if (skipLate && obj->renderLateForward) {
                 continue;
             }
+            if (dynamic_cast<Fluid *>(obj) == &fluid) {
+                continue;
+            }
+            if (obj->canUseDeferredRendering()) {
+                oldProgram = obj->getShaderProgram().value();
+                std::cout << "For object with type: " << typeid(*obj).name()
+                          << " and ID: " << obj->getId()
+                          << " setting refraction shader." << std::endl;
+                obj->setShader(ShaderProgram::fromDefaultShaders(
+                    AtlasVertexShader::Main, AtlasFragmentShader::Main));
+            }
             obj->setViewMatrix(view);
             obj->setProjectionMatrix(projection);
             obj->render(getDeltaTime());
+
+            if (obj->canUseDeferredRendering()) {
+                obj->setShader(oldProgram);
+            }
         }
     };
 

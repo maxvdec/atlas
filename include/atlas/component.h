@@ -15,6 +15,7 @@
 #include "atlas/texture.h"
 #include "atlas/units.h"
 #include "bezel/body.h"
+#include <iostream>
 #include <memory>
 #include <vector>
 
@@ -462,14 +463,7 @@ class CompoundObject : public GameObject {
      */
     Renderable *getLateRenderable();
 
-    bool canUseDeferredRendering() const override {
-        for (auto &obj : objects) {
-            if (!obj->canUseDeferredRendering()) {
-                return false;
-            }
-        }
-        return true;
-    }
+    bool canUseDeferredRendering() override;
 
   private:
     class LateCompoundRenderable;
@@ -493,17 +487,17 @@ class CompoundObject : public GameObject {
 };
 
 /**
- * @brief A UIObject is a GameObject that is used for creating user interface
- * elements.
+ * @brief A UIObject is a GameObject that is used for creating user
+ * interface elements.
  *
  */
 class UIObject : public GameObject {
-    bool canUseDeferredRendering() const override { return false; }
+    bool canUseDeferredRendering() override { return false; }
 };
 
 /**
- * @brief A conjunction of UI elements that share the same view and projection
- * matrices. Acts as a container for organizing UI objects.
+ * @brief A conjunction of UI elements that share the same view and
+ * projection matrices. Acts as a container for organizing UI objects.
  *
  */
 class UIView : public UIObject {

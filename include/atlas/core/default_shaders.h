@@ -776,8 +776,6 @@ vec4 cloudRendering(vec4 inColor) {
 
 void main() {
     vec4 color = sampleColor(TexCoord);
-    FragColor = color;
-    return;
     float depth = texture(DepthTexture, TexCoord).r;
     vec3 viewPos = reconstructViewPos(TexCoord, depth);
     float distance = length(viewPos);
@@ -3208,49 +3206,48 @@ void main()
     // Reduce distortion strength for more stability
     vec2 reflectionUV = screenUV;
     reflectionUV.y = 1.0 - reflectionUV.y;  
-    reflectionUV += waveOffset * 0.3;  // Reduced from 0.6
+    reflectionUV += waveOffset * 0.3;
     
-    vec2 refractionUV = screenUV - waveOffset * 0.2;  // Reduced from 0.4
+    vec2 refractionUV = screenUV - waveOffset * 0.2;
     
-    // More aggressive clamping with larger safety border
+    // Check if UVs are in valid range BEFORE clamping
+    bool reflectionInBounds = (reflectionUV.x >= 0.0 && reflectionUV.x <= 1.0 && 
+                               reflectionUV.y >= 0.0 && reflectionUV.y <= 1.0);
+    bool refractionInBounds = (refractionUV.x >= 0.0 && refractionUV.x <= 1.0 && 
+                               refractionUV.y >= 0.0 && refractionUV.y <= 1.0);
+    
+    // Clamp UVs
     reflectionUV = clamp(reflectionUV, 0.05, 0.95);
     refractionUV = clamp(refractionUV, 0.05, 0.95);
     
-    // Calculate edge fade to blend out artifacts near texture borders
-    vec2 reflectionEdgeFade = smoothstep(0.0, 0.1, reflectionUV) * smoothstep(1.0, 0.9, reflectionUV);
+    // Calculate edge fade for smooth blending
+    vec2 reflectionEdgeFade = smoothstep(0.0, 0.15, reflectionUV) * smoothstep(1.0, 0.85, reflectionUV);
     float reflectionFadeFactor = reflectionEdgeFade.x * reflectionEdgeFade.y;
     
-    vec2 refractionEdgeFade = smoothstep(0.0, 0.1, refractionUV) * smoothstep(1.0, 0.9, refractionUV);
+    vec2 refractionEdgeFade = smoothstep(0.0, 0.15, refractionUV) * smoothstep(1.0, 0.85, refractionUV);
     float refractionFadeFactor = refractionEdgeFade.x * refractionEdgeFade.y;
     
-    // Sample textures
+    // Reduce fade if out of bounds
+    if (!reflectionInBounds) {
+        reflectionFadeFactor *= 0.3;
+    }
+    if (!refractionInBounds) {
+        refractionFadeFactor *= 0.3;
+    }
+    
     vec4 reflectionSample = texture(reflectionTexture, reflectionUV);
     vec4 refractionSample = texture(refractionTexture, refractionUV);
-    
-    // Better validity checks
-    bool validReflection = (reflectionUV.x >= 0.05 && reflectionUV.x <= 0.95 && 
-                            reflectionUV.y >= 0.05 && reflectionUV.y <= 0.95 &&
-                            length(reflectionSample.rgb) > 0.01);
-    
-    bool validRefraction = (refractionUV.x >= 0.05 && refractionUV.x <= 0.95 && 
-                            refractionUV.y >= 0.05 && refractionUV.y <= 0.95 &&
-                            length(refractionSample.rgb) > 0.01);
-    
-    // Fallback to scene texture for invalid samples
     vec4 sceneFallback = texture(sceneTexture, screenUV);
+    
+    bool validReflection = (length(reflectionSample.rgb) > 0.01);
+    bool validRefraction = (length(refractionSample.rgb) > 0.01);
     
     if (!validReflection) {
         reflectionSample = sceneFallback;
-        reflectionFadeFactor = 1.0;
     }
     if (!validRefraction) {
         refractionSample = sceneFallback;
-        refractionFadeFactor = 1.0;
     }
-    
-    // Blend with scene texture at edges to hide artifacts
-    reflectionSample = mix(sceneFallback, reflectionSample, reflectionFadeFactor);
-    refractionSample = mix(sceneFallback, refractionSample, refractionFadeFactor);
     
     float fresnel = pow(1.0 - clamp(dot(normal, viewDir), 0.0, 1.0), 3.0);
     fresnel = mix(0.02, 1.0, fresnel); 

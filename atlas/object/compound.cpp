@@ -35,7 +35,7 @@ class CompoundObject::LateCompoundRenderable : public Renderable {
         parent.setLateShader(shader);
     }
     bool canCastShadows() const override { return parent.lateCanCastShadows(); }
-    bool canUseDeferredRendering() const override { return false; }
+    bool canUseDeferredRendering() override { return false; }
 
   private:
     CompoundObject &parent;
@@ -111,6 +111,27 @@ void CompoundObject::setProjectionMatrix(const glm::mat4 &projection) {
     for (auto &obj : objects) {
         obj->setProjectionMatrix(projection);
     }
+}
+
+bool CompoundObject::canUseDeferredRendering() {
+    for (const auto &obj : objects) {
+        if (!obj->canUseDeferredRendering()) {
+            for (auto &obj : objects) {
+                if (CoreObject *coreObj = dynamic_cast<CoreObject *>(obj);
+                    coreObj != nullptr) {
+                    coreObj->useDeferredRendering = false;
+                }
+            }
+            return false;
+        }
+    }
+    for (auto &obj : objects) {
+        if (CoreObject *coreObj = dynamic_cast<CoreObject *>(obj);
+            coreObj != nullptr) {
+            coreObj->useDeferredRendering = true;
+        }
+    }
+    return true;
 }
 
 std::optional<ShaderProgram> CompoundObject::getShaderProgram() {

@@ -557,15 +557,15 @@ class CoreObject : public GameObject {
     inline Size3d getScale() const override { return scale; }
     inline bool canCastShadows() const override { return castsShadows; }
 
+    inline unsigned int getId() override { return id; }
+
     /**
      * @brief Performs per-frame updates such as component ticking or buffering
      * synchronization.
      */
     void update(Window &window) override;
 
-    bool canUseDeferredRendering() const override {
-        return useDeferredRendering;
-    }
+    bool canUseDeferredRendering() override { return useDeferredRendering; }
 };
 
 /**
@@ -833,9 +833,7 @@ class Model : public GameObject {
      *
      * @return (bool) True if deferred rendering is enabled, false otherwise.
      */
-    bool canUseDeferredRendering() const override {
-        return useDeferredRendering;
-    }
+    bool canUseDeferredRendering() override { return useDeferredRendering; }
 
   private:
     std::vector<std::shared_ptr<CoreObject>> objects;

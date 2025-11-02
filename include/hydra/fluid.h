@@ -53,7 +53,7 @@ struct Fluid : GameObject {
     Position3d getPosition() const override { return position; }
     Size3d getScale() const override { return scale; }
 
-    bool canUseDeferredRendering() const override { return false; }
+    bool canUseDeferredRendering() override { return false; }
 
     Texture normalTexture;
     Texture movementTexture;

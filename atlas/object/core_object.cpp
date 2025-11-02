@@ -330,11 +330,18 @@ void CoreObject::render(float dt) {
     int boundTextures = 0;
     int boundCubemaps = 0;
 
-    if (!textures.empty() && useTexture &&
+    const bool shaderSupportsTextures =
         std::find(shaderProgram.capabilities.begin(),
                   shaderProgram.capabilities.end(),
                   ShaderCapability::Textures) !=
-            shaderProgram.capabilities.end()) {
+        shaderProgram.capabilities.end();
+
+    if (shaderSupportsTextures) {
+        shaderProgram.setUniform1i("textureCount", 0);
+        shaderProgram.setUniform1i("cubeMapCount", 0);
+    }
+
+    if (!textures.empty() && useTexture && shaderSupportsTextures) {
         int count = std::min((int)textures.size(), 10);
         shaderProgram.setUniform1i("textureCount", count);
         GLint units[10];
