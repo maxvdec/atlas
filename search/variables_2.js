@@ -23,6 +23,7 @@ var searchData=
   ['createdwithmap_20',['createdWithMap',['../class_terrain.html#a612d9f9b92cdaf4c897dc095d2a22bbb',1,'Terrain']]],
   ['creationdata_21',['creationData',['../struct_texture.html#a7424dca65a18a64a794fd3996530b437',1,'Texture::creationData'],['../struct_cubemap.html#a69757fb707ae4ff02cc9cb1066d8e1d7',1,'Cubemap::creationData']]],
   ['cubemap_22',['cubemap',['../class_skybox.html#ab91d72f29e949ef124b953be43ac4713',1,'Skybox']]],
-  ['cutoff_23',['cutOff',['../struct_spotlight.html#a25f32efd9b4ef48ba5218fffe279ce79',1,'Spotlight']]],
-  ['cycle_24',['cycle',['../class_atmosphere.html#a16c91d6b211afd99795e46bfe4dfc53c',1,'Atmosphere']]]
+  ['currentrendertarget_23',['currentRenderTarget',['../class_window.html#a53afa1fac74e273d2f16cb62b174edca',1,'Window']]],
+  ['cutoff_24',['cutOff',['../struct_spotlight.html#a25f32efd9b4ef48ba5218fffe279ce79',1,'Spotlight']]],
+  ['cycle_25',['cycle',['../class_atmosphere.html#a16c91d6b211afd99795e46bfe4dfc53c',1,'Atmosphere']]]
 ];

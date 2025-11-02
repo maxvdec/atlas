@@ -82,6 +82,7 @@ var hierarchy =
       [ "GameObject", "class_game_object.html", [
         [ "CompoundObject", "class_compound_object.html", null ],
         [ "CoreObject", "class_core_object.html", null ],
+        [ "Fluid", "struct_fluid.html", null ],
         [ "Model", "class_model.html", null ],
         [ "ParticleEmitter", "class_particle_emitter.html", null ],
         [ "Terrain", "class_terrain.html", null ],

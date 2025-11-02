@@ -10,6 +10,7 @@ var class_render_target =
     [ "render", "class_render_target.html#ab8adde0e39813bdf60f5b4e79dcd39e5", null ],
     [ "resolve", "class_render_target.html#a1ef0cea2d52d86d72bf8be6d44cf1497", null ],
     [ "show", "class_render_target.html#aa65c40e4d8d0cfcdd38e5d96b1bf69bb", null ],
+    [ "Fluid", "class_render_target.html#aa55e290f23517187e1c55cbba8936fb7", null ],
     [ "Window", "class_render_target.html#a553f958a25683445088050a69d3de8e9", null ],
     [ "blurredTexture", "class_render_target.html#aa621bfaf5ce2add2dc83b470d6b32c50", null ],
     [ "brightTexture", "class_render_target.html#a43f2585191d0499203e30b6f70e9b3cd", null ],

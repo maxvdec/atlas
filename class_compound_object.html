@@ -184,8 +184,12 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a57beb36cb3bcb119ab7c441cc992e8db"><td class="mdescLeft">&#160;</td><td class="mdescRight">Makes the aggregate renderable again after being hidden.  <br /></td></tr>
 <tr class="memitem:a0eddade4b19e991c52c44471f00e3e75" id="r_a0eddade4b19e991c52c44471f00e3e75"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0eddade4b19e991c52c44471f00e3e75">setupPhysics</a> (<a class="el" href="class_body.html">Body</a> <a class="el" href="class_game_object.html#af69e678688bfef2c0bba4aa78085c8a8">body</a>) override</td></tr>
 <tr class="memdesc:a0eddade4b19e991c52c44471f00e3e75"><td class="mdescLeft">&#160;</td><td class="mdescRight">Configures a physics body shared between all child objects.  <br /></td></tr>
-<tr class="memitem:ad8c5f34501bd048e751e84dedd79d7b6" id="r_ad8c5f34501bd048e751e84dedd79d7b6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad8c5f34501bd048e751e84dedd79d7b6">addObject</a> (<a class="el" href="class_core_object.html">CoreObject</a> *obj)</td></tr>
-<tr class="memdesc:ad8c5f34501bd048e751e84dedd79d7b6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a component to the object.  <br /></td></tr>
+<tr class="memitem:a66cf249148e238c3b28b131dc353fe66" id="r_a66cf249148e238c3b28b131dc353fe66"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a66cf249148e238c3b28b131dc353fe66">addObject</a> (<a class="el" href="class_game_object.html">GameObject</a> *obj)</td></tr>
+<tr class="memdesc:a66cf249148e238c3b28b131dc353fe66"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a component to the object.  <br /></td></tr>
+<tr class="memitem:aa1ca7d68f744ab4fb6ae9337ec86f719" id="r_aa1ca7d68f744ab4fb6ae9337ec86f719"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_renderable.html">Renderable</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa1ca7d68f744ab4fb6ae9337ec86f719">getLateRenderable</a> ()</td></tr>
+<tr class="memdesc:aa1ca7d68f744ab4fb6ae9337ec86f719"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the late forward proxy renderable, if any children require late rendering.  <br /></td></tr>
+<tr class="memitem:ae09d473718d1018cf6f98c6d8a8a5ff3" id="r_ae09d473718d1018cf6f98c6d8a8a5ff3"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae09d473718d1018cf6f98c6d8a8a5ff3">canUseDeferredRendering</a> () override</td></tr>
+<tr class="memdesc:ae09d473718d1018cf6f98c6d8a8a5ff3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to determine if the object can use deferred rendering.  <br /></td></tr>
 <tr class="inherit_header pub_methods_class_game_object"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pub_methods_class_game_object')"><span class="dynarrow"><span class="arrowhead closed"></span></span>Public Member Functions inherited from <a class="el" href="class_game_object.html">GameObject</a></td></tr>
 <tr class="memitem:adc4f0b179efab23de2f5168c2067dd09 inherit pub_methods_class_game_object" id="r_adc4f0b179efab23de2f5168c2067dd09"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_game_object.html#adc4f0b179efab23de2f5168c2067dd09">attachProgram</a> (const <a class="el" href="struct_shader_program.html">ShaderProgram</a> &amp;program)</td></tr>
 <tr class="memdesc:adc4f0b179efab23de2f5168c2067dd09 inherit pub_methods_class_game_object"><td class="mdescLeft">&#160;</td><td class="mdescRight">Attaches a shader program to the object.  <br /></td></tr>
@@ -208,20 +212,21 @@ requires std::is_base_of_v&lt;<a class="el" href="class_component.html">Componen
 <tr class="memitem:adda27772216ef1c4c4ae65dfe264efb5 inherit pub_methods_class_game_object template"><td class="memItemLeft" align="right" valign="top">std::shared_ptr&lt; <a class="el" href="input_8h.html#a9479d299e1852e6140dcca1f405868abab9ece18c950afbfa6b0fdbfa4ff731d3">T</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_game_object.html#adda27772216ef1c4c4ae65dfe264efb5">getComponent</a> ()</td></tr>
 <tr class="memdesc:adda27772216ef1c4c4ae65dfe264efb5 inherit pub_methods_class_game_object"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets the first component that matches the specified type.  <br /></td></tr>
 <tr class="inherit_header pub_methods_class_renderable"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pub_methods_class_renderable')"><span class="dynarrow"><span class="arrowhead closed"></span></span>Public Member Functions inherited from <a class="el" href="class_renderable.html">Renderable</a></td></tr>
+<tr class="memitem:ac40a73fd7fb34a4f5757df3cac945a95 inherit pub_methods_class_renderable" id="r_ac40a73fd7fb34a4f5757df3cac945a95"><td class="memItemLeft" align="right" valign="top">virtual unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_renderable.html#ac40a73fd7fb34a4f5757df3cac945a95">getId</a> ()</td></tr>
 <tr class="memitem:a2103eed2f7f54bca8ba1001907b367a9 inherit pub_methods_class_renderable" id="r_a2103eed2f7f54bca8ba1001907b367a9"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_renderable.html#a2103eed2f7f54bca8ba1001907b367a9">~Renderable</a> ()=default</td></tr>
-<tr class="memitem:aa19d3c7b6144486766d45dbd3d0a08b8 inherit pub_methods_class_renderable" id="r_aa19d3c7b6144486766d45dbd3d0a08b8"><td class="memItemLeft" align="right" valign="top">virtual bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_renderable.html#aa19d3c7b6144486766d45dbd3d0a08b8">canUseDeferredRendering</a> () const</td></tr>
-<tr class="memdesc:aa19d3c7b6144486766d45dbd3d0a08b8 inherit pub_methods_class_renderable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to determine if the object can use deferred rendering.  <br /></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:acd70ac00d566c102349df27c0c37744d" id="r_acd70ac00d566c102349df27c0c37744d"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="class_core_object.html">CoreObject</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#acd70ac00d566c102349df27c0c37744d">objects</a></td></tr>
-<tr class="memdesc:acd70ac00d566c102349df27c0c37744d"><td class="mdescLeft">&#160;</td><td class="mdescRight">The objects that make up the compound object.  <br /></td></tr>
+<tr class="memitem:a3bf2527da20abdca0ae64d4d9793d215" id="r_a3bf2527da20abdca0ae64d4d9793d215"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="class_game_object.html">GameObject</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a3bf2527da20abdca0ae64d4d9793d215">objects</a></td></tr>
+<tr class="memdesc:a3bf2527da20abdca0ae64d4d9793d215"><td class="mdescLeft">&#160;</td><td class="mdescRight">The objects that make up the compound object.  <br /></td></tr>
 <tr class="inherit_header pub_attribs_class_game_object"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pub_attribs_class_game_object')"><span class="dynarrow"><span class="arrowhead closed"></span></span>Public Attributes inherited from <a class="el" href="class_game_object.html">GameObject</a></td></tr>
 <tr class="memitem:af69e678688bfef2c0bba4aa78085c8a8 inherit pub_attribs_class_game_object" id="r_af69e678688bfef2c0bba4aa78085c8a8"><td class="memItemLeft" align="right" valign="top">std::shared_ptr&lt; <a class="el" href="class_body.html">Body</a> &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_game_object.html#af69e678688bfef2c0bba4aa78085c8a8">body</a> = nullptr</td></tr>
 <tr class="memdesc:af69e678688bfef2c0bba4aa78085c8a8 inherit pub_attribs_class_game_object"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets the physics body associated with the object.  <br /></td></tr>
 <tr class="inherit_header pub_attribs_class_renderable"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pub_attribs_class_renderable')"><span class="dynarrow"><span class="arrowhead closed"></span></span>Public Attributes inherited from <a class="el" href="class_renderable.html">Renderable</a></td></tr>
 <tr class="memitem:a7cb09219e507e1c1395efced124e3b58 inherit pub_attribs_class_renderable" id="r_a7cb09219e507e1c1395efced124e3b58"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_renderable.html#a7cb09219e507e1c1395efced124e3b58">renderDepthOfView</a> = false</td></tr>
 <tr class="memdesc:a7cb09219e507e1c1395efced124e3b58 inherit pub_attribs_class_renderable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Whether the object should be included in depth of field calculations. When true, contributes to blur effects.  <br /></td></tr>
+<tr class="memitem:a0ab1fff21021a706629d466964950467 inherit pub_attribs_class_renderable" id="r_a0ab1fff21021a706629d466964950467"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_renderable.html#a0ab1fff21021a706629d466964950467">renderLateForward</a> = false</td></tr>
+<tr class="memdesc:a0ab1fff21021a706629d466964950467 inherit pub_attribs_class_renderable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Whether the object must be moved to the late forward rendering pipeline. Objects flagged here are skipped during the primary forward pass and rendered only after all standard forward elements.  <br /></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-inherited" class="groupheader"><a id="inherited" name="inherited"></a>
 Additional Inherited Members</h2></td></tr>
@@ -238,25 +243,25 @@ Example of a compound object</h2>
 <div class="line">     <span class="comment">// Create and add car body</span></div>
 <div class="line">     <a class="code hl_class" href="class_core_object.html">CoreObject</a> *<a class="code hl_variable" href="class_game_object.html#af69e678688bfef2c0bba4aa78085c8a8">body</a> = <span class="keyword">new</span> <a class="code hl_class" href="class_core_object.html">CoreObject</a>();</div>
 <div class="line">     <span class="comment">// Set up body properties...</span></div>
-<div class="line">     <a class="code hl_function" href="#ad8c5f34501bd048e751e84dedd79d7b6">addObject</a>(<a class="code hl_variable" href="class_game_object.html#af69e678688bfef2c0bba4aa78085c8a8">body</a>);</div>
+<div class="line">     <a class="code hl_function" href="#a66cf249148e238c3b28b131dc353fe66">addObject</a>(<a class="code hl_variable" href="class_game_object.html#af69e678688bfef2c0bba4aa78085c8a8">body</a>);</div>
 <div class="line">   }</div>
 <div class="line"> </div>
 <div class="line">   <span class="keywordtype">void</span> <a class="code hl_function" href="#acf1f71aaebd2b73fa8da5e586d214484">updateObjects</a>(<a class="code hl_class" href="class_window.html">Window</a> &amp;window)<span class="keyword"> override </span>{</div>
 <div class="line">     <span class="comment">// Update car-specific logic, e.g., movement</span></div>
 <div class="line">   }</div>
 <div class="line">};</div>
-<div class="ttc" id="aclass_compound_object_html"><div class="ttname"><a href="class_compound_object.html">CompoundObject</a></div><div class="ttdoc">A Compound object is a GameObject that can be extended by the user to generate objects that encapsula...</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00333">component.h:333</a></div></div>
-<div class="ttc" id="aclass_compound_object_html_acf1f71aaebd2b73fa8da5e586d214484"><div class="ttname"><a href="#acf1f71aaebd2b73fa8da5e586d214484">CompoundObject::updateObjects</a></div><div class="ttdeci">virtual void updateObjects(Window &amp;window)</div><div class="ttdoc">Updates the objects within the compound object.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00357">component.h:357</a></div></div>
-<div class="ttc" id="aclass_compound_object_html_ad8c5f34501bd048e751e84dedd79d7b6"><div class="ttname"><a href="#ad8c5f34501bd048e751e84dedd79d7b6">CompoundObject::addObject</a></div><div class="ttdeci">void addObject(CoreObject *obj)</div><div class="ttdoc">Adds a component to the object.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00452">component.h:452</a></div></div>
-<div class="ttc" id="aclass_compound_object_html_ae606cb70c43eeba4f75e129f8969f703"><div class="ttname"><a href="#ae606cb70c43eeba4f75e129f8969f703">CompoundObject::init</a></div><div class="ttdeci">virtual void init()</div><div class="ttdoc">Initializes the compound object.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00362">component.h:362</a></div></div>
-<div class="ttc" id="aclass_core_object_html"><div class="ttname"><a href="class_core_object.html">CoreObject</a></div><div class="ttdoc">Represents a 3D object in the scene, including its geometry, material and every interaction with the ...</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00275">object.h:275</a></div></div>
-<div class="ttc" id="aclass_game_object_html_af69e678688bfef2c0bba4aa78085c8a8"><div class="ttname"><a href="class_game_object.html#af69e678688bfef2c0bba4aa78085c8a8">GameObject::body</a></div><div class="ttdeci">std::shared_ptr&lt; Body &gt; body</div><div class="ttdoc">Gets the physics body associated with the object.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00304">component.h:304</a></div></div>
-<div class="ttc" id="aclass_window_html"><div class="ttname"><a href="class_window.html">Window</a></div><div class="ttdoc">Structure representing a window in the application. This contains the main interface for interacting ...</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00233">window.h:233</a></div></div>
+<div class="ttc" id="aclass_compound_object_html"><div class="ttname"><a href="class_compound_object.html">CompoundObject</a></div><div class="ttdoc">A Compound object is a GameObject that can be extended by the user to generate objects that encapsula...</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00334">component.h:334</a></div></div>
+<div class="ttc" id="aclass_compound_object_html_a66cf249148e238c3b28b131dc353fe66"><div class="ttname"><a href="#a66cf249148e238c3b28b131dc353fe66">CompoundObject::addObject</a></div><div class="ttdeci">void addObject(GameObject *obj)</div><div class="ttdoc">Adds a component to the object.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00453">component.h:453</a></div></div>
+<div class="ttc" id="aclass_compound_object_html_acf1f71aaebd2b73fa8da5e586d214484"><div class="ttname"><a href="#acf1f71aaebd2b73fa8da5e586d214484">CompoundObject::updateObjects</a></div><div class="ttdeci">virtual void updateObjects(Window &amp;window)</div><div class="ttdoc">Updates the objects within the compound object.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00358">component.h:358</a></div></div>
+<div class="ttc" id="aclass_compound_object_html_ae606cb70c43eeba4f75e129f8969f703"><div class="ttname"><a href="#ae606cb70c43eeba4f75e129f8969f703">CompoundObject::init</a></div><div class="ttdeci">virtual void init()</div><div class="ttdoc">Initializes the compound object.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00363">component.h:363</a></div></div>
+<div class="ttc" id="aclass_core_object_html"><div class="ttname"><a href="class_core_object.html">CoreObject</a></div><div class="ttdoc">Represents a 3D object in the scene, including its geometry, material and every interaction with the ...</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00271">object.h:271</a></div></div>
+<div class="ttc" id="aclass_game_object_html_af69e678688bfef2c0bba4aa78085c8a8"><div class="ttname"><a href="class_game_object.html#af69e678688bfef2c0bba4aa78085c8a8">GameObject::body</a></div><div class="ttdeci">std::shared_ptr&lt; Body &gt; body</div><div class="ttdoc">Gets the physics body associated with the object.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00305">component.h:305</a></div></div>
+<div class="ttc" id="aclass_window_html"><div class="ttname"><a href="class_window.html">Window</a></div><div class="ttdoc">Structure representing a window in the application. This contains the main interface for interacting ...</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00235">window.h:235</a></div></div>
 </div><!-- fragment --> 
-<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00333">333</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00334">334</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
-<a id="ad8c5f34501bd048e751e84dedd79d7b6" name="ad8c5f34501bd048e751e84dedd79d7b6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad8c5f34501bd048e751e84dedd79d7b6">&#9670;&#160;</a></span>addObject()</h2>
+<a id="a66cf249148e238c3b28b131dc353fe66" name="a66cf249148e238c3b28b131dc353fe66"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a66cf249148e238c3b28b131dc353fe66">&#9670;&#160;</a></span>addObject()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -267,7 +272,7 @@ Example of a compound object</h2>
         <tr>
           <td class="memname">void CompoundObject::addObject </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="class_core_object.html">CoreObject</a> *</td>          <td class="paramname"><span class="paramname"><em>obj</em></span></td><td>)</td>
+          <td class="paramtype"><a class="el" href="class_game_object.html">GameObject</a> *</td>          <td class="paramname"><span class="paramname"><em>obj</em></span></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -287,11 +292,17 @@ Example of a compound object</h2>
 </dl>
 <dl class="section warning"><dt>Warning</dt><dd>It must be long-lived. This means that declaring it as a class property is a good idea. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00452">452</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  452</span>{ <a class="code hl_variable" href="#acd70ac00d566c102349df27c0c37744d">objects</a>.push_back(obj); }</div>
-<div class="ttc" id="aclass_compound_object_html_acd70ac00d566c102349df27c0c37744d"><div class="ttname"><a href="#acd70ac00d566c102349df27c0c37744d">CompoundObject::objects</a></div><div class="ttdeci">std::vector&lt; CoreObject * &gt; objects</div><div class="ttdoc">The objects that make up the compound object.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00339">component.h:339</a></div></div>
+<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00453">453</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  453</span>                                           {</div>
+<div class="line"><span class="lineno">  454</span>        <a class="code hl_variable" href="#a3bf2527da20abdca0ae64d4d9793d215">objects</a>.push_back(obj);</div>
+<div class="line"><span class="lineno">  455</span>        <span class="keywordflow">if</span> (obj != <span class="keyword">nullptr</span> &amp;&amp; obj-&gt;<a class="code hl_variable" href="class_renderable.html#a0ab1fff21021a706629d466964950467">renderLateForward</a>) {</div>
+<div class="line"><span class="lineno">  456</span>            lateForwardObjects.push_back(obj);</div>
+<div class="line"><span class="lineno">  457</span>        }</div>
+<div class="line"><span class="lineno">  458</span>    }</div>
+<div class="ttc" id="aclass_compound_object_html_a3bf2527da20abdca0ae64d4d9793d215"><div class="ttname"><a href="#a3bf2527da20abdca0ae64d4d9793d215">CompoundObject::objects</a></div><div class="ttdeci">std::vector&lt; GameObject * &gt; objects</div><div class="ttdoc">The objects that make up the compound object.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00340">component.h:340</a></div></div>
+<div class="ttc" id="aclass_renderable_html_a0ab1fff21021a706629d466964950467"><div class="ttname"><a href="class_renderable.html#a0ab1fff21021a706629d466964950467">Renderable::renderLateForward</a></div><div class="ttdeci">bool renderLateForward</div><div class="ttdoc">Whether the object must be moved to the late forward rendering pipeline. Objects flagged here are ski...</div><div class="ttdef"><b>Definition</b> <a href="renderable_8h_source.html#l00128">renderable.h:128</a></div></div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="component_8h_source.html#l00339">objects</a>.</p>
+<p class="reference">References <a class="el" href="component_8h_source.html#l00340">objects</a>, and <a class="el" href="renderable_8h_source.html#l00128">Renderable::renderLateForward</a>.</p>
 
 </div>
 </div>
@@ -321,6 +332,55 @@ Example of a compound object</h2>
 <p>Indicates whether the compound object is eligible to cast shadows. </p>
 
 <p>Reimplemented from <a class="el" href="class_renderable.html#a54a97abc4b6fe3280505da3b587cba98">Renderable</a>.</p>
+
+</div>
+</div>
+<a id="ae09d473718d1018cf6f98c6d8a8a5ff3" name="ae09d473718d1018cf6f98c6d8a8a5ff3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae09d473718d1018cf6f98c6d8a8a5ff3">&#9670;&#160;</a></span>canUseDeferredRendering()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool CompoundObject::canUseDeferredRendering </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel override">override</span><span class="mlabel virtual">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Function to determine if the object can use deferred rendering. </p>
+<dl class="section return"><dt>Returns</dt><dd>(bool) True if the object supports deferred rendering, false otherwise. </dd></dl>
+
+<p>Reimplemented from <a class="el" href="class_renderable.html#a1427af9032f3e6c7f91f9b23948ee166">Renderable</a>.</p>
+
+</div>
+</div>
+<a id="aa1ca7d68f744ab4fb6ae9337ec86f719" name="aa1ca7d68f744ab4fb6ae9337ec86f719"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa1ca7d68f744ab4fb6ae9337ec86f719">&#9670;&#160;</a></span>getLateRenderable()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="class_renderable.html">Renderable</a> * CompoundObject::getLateRenderable </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Returns the late forward proxy renderable, if any children require late rendering. </p>
 
 </div>
 </div>
@@ -494,8 +554,8 @@ Example of a compound object</h2>
 
 <p>Initializes the compound object. </p>
 
-<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00362">362</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  362</span>{};</div>
+<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00363">363</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  363</span>{};</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -820,7 +880,7 @@ Example of a compound object</h2>
 
 <p>Reimplemented from <a class="el" href="class_game_object.html#a41b29fdd73be47db5835fc3822b6afa6">GameObject</a>.</p>
 
-<p class="reference">References <a class="el" href="component_8h_source.html#l00304">GameObject::body</a>.</p>
+<p class="reference">References <a class="el" href="component_8h_source.html#l00305">GameObject::body</a>.</p>
 
 </div>
 </div>
@@ -942,27 +1002,27 @@ Example of a compound object</h2>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00357">357</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  357</span>{};</div>
+<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00358">358</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  358</span>{};</div>
 </div><!-- fragment -->
 </div>
 </div>
 <a name="doc-variable-members" id="doc-variable-members"></a><h2 id="header-doc-variable-members" class="groupheader">Member Data Documentation</h2>
-<a id="acd70ac00d566c102349df27c0c37744d" name="acd70ac00d566c102349df27c0c37744d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#acd70ac00d566c102349df27c0c37744d">&#9670;&#160;</a></span>objects</h2>
+<a id="a3bf2527da20abdca0ae64d4d9793d215" name="a3bf2527da20abdca0ae64d4d9793d215"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3bf2527da20abdca0ae64d4d9793d215">&#9670;&#160;</a></span>objects</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">std::vector&lt;<a class="el" href="class_core_object.html">CoreObject</a> *&gt; CompoundObject::objects</td>
+          <td class="memname">std::vector&lt;<a class="el" href="class_game_object.html">GameObject</a> *&gt; CompoundObject::objects</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 <p>The objects that make up the compound object. </p>
 
-<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00339">339</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00340">340</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
 
 </div>
 </div>

@@ -27,7 +27,8 @@ var shader_8h =
       [ "Terrain", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a4ccfea7a25fae3c1d31555f0856d2b42", null ],
       [ "Volumetric", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a9cf1d34dfb281ccd7fe0a4796b5ebe2c", null ],
       [ "Downsample", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a5cf115d0e9094151d1df54187a5aebb8", null ],
-      [ "Upsample", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a99dcdd41516bd056e9e0741df7445652", null ]
+      [ "Upsample", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a99dcdd41516bd056e9e0741df7445652", null ],
+      [ "Fluid", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0ac2e7db5ac7ab74ea4bb9a7a89d251f3a", null ]
     ] ],
     [ "AtlasGeometryShader", "shader_8h.html#a17951fe51aaa5769ef603acf594dc0b5", [
       [ "PointLightShadow", "shader_8h.html#a17951fe51aaa5769ef603acf594dc0b5a05c5b39892533f0c0ad86b083b28ff6a", null ]
@@ -51,7 +52,8 @@ var shader_8h =
       [ "Light", "shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82a9914a0ce04a7b7b6a8e39bec55064b82", null ],
       [ "Deferred", "shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82a4ed71db54748b36eeb398876b0c747ac", null ],
       [ "Terrain", "shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82a4ccfea7a25fae3c1d31555f0856d2b42", null ],
-      [ "Volumetric", "shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82a9cf1d34dfb281ccd7fe0a4796b5ebe2c", null ]
+      [ "Volumetric", "shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82a9cf1d34dfb281ccd7fe0a4796b5ebe2c", null ],
+      [ "Fluid", "shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82ac2e7db5ac7ab74ea4bb9a7a89d251f3a", null ]
     ] ],
     [ "ShaderCapability", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcd", [
       [ "Lighting", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcda2e4b97fde8cf63085ec969fcc7e490c0", null ],
@@ -63,7 +65,8 @@ var shader_8h =
       [ "LightDeferred", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcda62e60907eeb7e4b927057202c2a3eaba", null ],
       [ "Material", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcdad92a8333dd3ccb895cc65f7455b71206", null ],
       [ "Instances", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcda1c7d5bb21f0c351e584f3a4109ecdc76", null ],
-      [ "Environment", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcda0ba29c6a1afacf586b03a26162c72274", null ]
+      [ "Environment", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcda0ba29c6a1afacf586b03a26162c72274", null ],
+      [ "Fluid", "shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcdac2e7db5ac7ab74ea4bb9a7a89d251f3a", null ]
     ] ],
     [ "TessellationShaderType", "shader_8h.html#ab4defdfdbd8367100897f4e0fb2e1db9", [
       [ "Control", "shader_8h.html#ab4defdfdbd8367100897f4e0fb2e1db9aa1595abbb4c3a326636dd178757cd6c1", null ],

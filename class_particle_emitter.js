@@ -3,7 +3,7 @@ var class_particle_emitter =
     [ "ParticleEmitter", "class_particle_emitter.html#acb6f3e714474c21f30600aa4b02fc2d5", null ],
     [ "attachTexture", "class_particle_emitter.html#ad4d8472950cf0397702b92bcee6d25f2", null ],
     [ "canCastShadows", "class_particle_emitter.html#ab0a773a7d892d7347a815e7e497dd83b", null ],
-    [ "canUseDeferredRendering", "class_particle_emitter.html#ac72bcb908dc6f2c12c4f68ed684c1d04", null ],
+    [ "canUseDeferredRendering", "class_particle_emitter.html#a1ebe45e716d49cf43d2815146e43e158", null ],
     [ "disableTexture", "class_particle_emitter.html#abf6e025b3ac0fee071e84c9ccf565aae", null ],
     [ "emitBurst", "class_particle_emitter.html#a746411c84dcb1a9e1824adcbdde5645c", null ],
     [ "emitContinuously", "class_particle_emitter.html#a31aeca0316daa73fbeef682d70f3ec2f", null ],

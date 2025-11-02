@@ -44,6 +44,7 @@ var annotated_dup =
     [ "Environment", "class_environment.html", "class_environment" ],
     [ "FilmGrain", "class_film_grain.html", "class_film_grain" ],
     [ "FilmGrainParameters", "struct_film_grain_parameters.html", "struct_film_grain_parameters" ],
+    [ "Fluid", "struct_fluid.html", "struct_fluid" ],
     [ "Fog", "struct_fog.html", "struct_fog" ],
     [ "Font", "struct_font.html", "struct_font" ],
     [ "FractalNoise", "class_fractal_noise.html", "class_fractal_noise" ],

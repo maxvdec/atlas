@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['light_2eh_0',['light.h',['../light_8h.html',1,'']]]
+  ['input_2eh_0',['input.h',['../input_8h.html',1,'']]]
 ];

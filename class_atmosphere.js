@@ -1,6 +1,7 @@
 var class_atmosphere =
 [
     [ "addClouds", "class_atmosphere.html#a676d29c101d17ef1f5f9dbb0312dab72", null ],
+    [ "castShadowsFromSunlight", "class_atmosphere.html#ab177d51ee80bbf185f8baa8d0f82e027", null ],
     [ "createSkyCubemap", "class_atmosphere.html#a0c2698b6c91ed2ef8018e7e34a04ef46", null ],
     [ "disable", "class_atmosphere.html#a6ce1623e3b909cd943b2e19013b5f075", null ],
     [ "disableWeather", "class_atmosphere.html#a644e0cee90fdf045ee3d448529eca38e", null ],
@@ -17,6 +18,7 @@ var class_atmosphere =
     [ "setTime", "class_atmosphere.html#ae260646b46cbb83fc7517b1e5cecfd11", null ],
     [ "update", "class_atmosphere.html#ad55cf115cbc1272f8dcaad534442986f", null ],
     [ "updateSkyCubemap", "class_atmosphere.html#a6ae106b96211b5a753ac929daf84955f", null ],
+    [ "useGlobalLight", "class_atmosphere.html#ad934c7f9e3c1e19c337033e755f364d8", null ],
     [ "clouds", "class_atmosphere.html#a4d8e1e509bee0d9b0133894a36c0aadf", null ],
     [ "cycle", "class_atmosphere.html#a16c91d6b211afd99795e46bfe4dfc53c", null ],
     [ "moonColor", "class_atmosphere.html#ad45f4b1ef6697020a7727e1b265dd12f", null ],

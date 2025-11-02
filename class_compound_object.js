@@ -1,7 +1,9 @@
 var class_compound_object =
 [
-    [ "addObject", "class_compound_object.html#ad8c5f34501bd048e751e84dedd79d7b6", null ],
+    [ "addObject", "class_compound_object.html#a66cf249148e238c3b28b131dc353fe66", null ],
     [ "canCastShadows", "class_compound_object.html#a1c28c8c1394e02e46cbc8200ad4dd9dd", null ],
+    [ "canUseDeferredRendering", "class_compound_object.html#ae09d473718d1018cf6f98c6d8a8a5ff3", null ],
+    [ "getLateRenderable", "class_compound_object.html#aa1ca7d68f744ab4fb6ae9337ec86f719", null ],
     [ "getPosition", "class_compound_object.html#a6197d3400c73d8aeaf7501eb952c6333", null ],
     [ "getScale", "class_compound_object.html#ad506aaf4b387e22b7278581c26978838", null ],
     [ "getShaderProgram", "class_compound_object.html#a356df2f44be7d262eb96896994246082", null ],
@@ -23,5 +25,5 @@ var class_compound_object =
     [ "show", "class_compound_object.html#a57beb36cb3bcb119ab7c441cc992e8db", null ],
     [ "update", "class_compound_object.html#acbd09ebffe6374270415ca981a945624", null ],
     [ "updateObjects", "class_compound_object.html#acf1f71aaebd2b73fa8da5e586d214484", null ],
-    [ "objects", "class_compound_object.html#acd70ac00d566c102349df27c0c37744d", null ]
+    [ "objects", "class_compound_object.html#a3bf2527da20abdca0ae64d4d9793d215", null ]
 ];

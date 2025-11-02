@@ -2,7 +2,7 @@ var class_model =
 [
     [ "Model", "class_model.html#ab5bdabea36b1d1bee80151e2da913373", null ],
     [ "attachTexture", "class_model.html#abc49ca9b5823f177f421589cf447e913", null ],
-    [ "canUseDeferredRendering", "class_model.html#aa0bad24d1f9cebdf8bae997726337e43", null ],
+    [ "canUseDeferredRendering", "class_model.html#a5de7005f4cc2280b14e942aa64506195", null ],
     [ "fromResource", "class_model.html#a8a74c2ff2b6a5755c2ed913d7c6a88f4", null ],
     [ "getObjects", "class_model.html#af2f4d13f48508e046f3b57e59ba420fb", null ],
     [ "getPosition", "class_model.html#a773e85c486ebaf5e0f3afe9da3381212", null ],

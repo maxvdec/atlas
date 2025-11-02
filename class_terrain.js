@@ -4,7 +4,7 @@ var class_terrain =
     [ "Terrain", "class_terrain.html#a81d1fa722833102a99c0c843b5c5f310", null ],
     [ "Terrain", "class_terrain.html#a1365bb2ebe90daa34181f33b16778afe", null ],
     [ "addBiome", "class_terrain.html#a406e98fc94c2640d4511e5c8337b60b9", null ],
-    [ "canUseDeferredRendering", "class_terrain.html#ae23b7b33d9b5d3b27f14718f5a1c2843", null ],
+    [ "canUseDeferredRendering", "class_terrain.html#aff56ffedcc1fc7eed7f5d332c240270b", null ],
     [ "initialize", "class_terrain.html#a2e2067f853bbe6384788cd7c19b5d681", null ],
     [ "move", "class_terrain.html#a2f3d6a1be68011a0925c4a7c84c4e722", null ],
     [ "render", "class_terrain.html#aa74a3e4f14db3852dfa2431be3d22c48", null ],

@@ -1,6 +1,7 @@
 var class_skybox =
 [
     [ "Skybox", "class_skybox.html#af90dc48c708b4682a4ef5e4f171c8f38", null ],
+    [ "canUseDeferredRendering", "class_skybox.html#a416acc72ebc93e24fa1944537c6f7dcd", null ],
     [ "create", "class_skybox.html#a987db38dfe17f815ade835da953246b1", null ],
     [ "display", "class_skybox.html#a0860e9aa6cbf872f3e37aecc632a66f8", null ],
     [ "hide", "class_skybox.html#a2441bc54c326105f9c7e4331e3ec643d", null ],

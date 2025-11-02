@@ -2,7 +2,8 @@ var class_renderable =
 [
     [ "~Renderable", "class_renderable.html#a2103eed2f7f54bca8ba1001907b367a9", null ],
     [ "canCastShadows", "class_renderable.html#a54a97abc4b6fe3280505da3b587cba98", null ],
-    [ "canUseDeferredRendering", "class_renderable.html#aa19d3c7b6144486766d45dbd3d0a08b8", null ],
+    [ "canUseDeferredRendering", "class_renderable.html#a1427af9032f3e6c7f91f9b23948ee166", null ],
+    [ "getId", "class_renderable.html#ac40a73fd7fb34a4f5757df3cac945a95", null ],
     [ "getPosition", "class_renderable.html#a644269034ac58f64e47d88846c365cf4", null ],
     [ "getScale", "class_renderable.html#a98ddcdedf7f0c6d440be821c80d6ed12", null ],
     [ "getShaderProgram", "class_renderable.html#a0c0180d14588c6ed436cc7d153c9b22c", null ],
@@ -13,5 +14,6 @@ var class_renderable =
     [ "setShader", "class_renderable.html#a727f1bc86184e94bfcb8270d11812af8", null ],
     [ "setViewMatrix", "class_renderable.html#ae1b11967b98e6ba4393640652242083f", null ],
     [ "update", "class_renderable.html#afb2aa3ad0ab8dcfc54088173ea7182cd", null ],
-    [ "renderDepthOfView", "class_renderable.html#a7cb09219e507e1c1395efced124e3b58", null ]
+    [ "renderDepthOfView", "class_renderable.html#a7cb09219e507e1c1395efced124e3b58", null ],
+    [ "renderLateForward", "class_renderable.html#a0ab1fff21021a706629d466964950467", null ]
 ];
