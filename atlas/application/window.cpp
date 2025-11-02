@@ -239,6 +239,7 @@ void Window::run() {
         glCullFace(GL_BACK);
         // Render to the targets
         for (auto &target : this->renderTargets) {
+            this->currentRenderTarget = target;
             int targetWidth = target->getWidth();
             int targetHeight = target->getHeight();
             glDepthFunc(GL_LESS);

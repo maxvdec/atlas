@@ -3039,16 +3039,21 @@ static const char* FLUID_VERT = R"(
 #version 410 core
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec2 aTexCoord;
+layout(location = 2) in vec3 aNormal;
 
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 
 out vec2 TexCoord;
+out vec3 WorldPos;
+out vec3 WorldNormal;
 
 void main() {
     gl_Position = projection * view * model * vec4(aPos, 1.0);
     TexCoord = aTexCoord;
+    WorldPos = vec3(model * vec4(aPos, 1.0));
+    WorldNormal = normalize(mat3(model) * aNormal);
 }
 
 )";
@@ -3126,15 +3131,32 @@ void main() {
 
 static const char* FLUID_FRAG = R"(
 #version 410 core
-layout(location = 0) out vec4 fragColor;
-layout(location = 1) out vec4 brightColor;
+layout(location = 0) out vec4 FragColor;
+layout(location = 1) out vec4 BrightColor;
 
 in vec2 TexCoord;
+in vec3 WorldPos;          
+in vec3 WorldNormal;      
 
-void main() {
-    fragColor = vec4(1.0, 0.0, 0.0, 1.0);
+uniform vec4 waterColor;         
+uniform sampler2D sceneTexture;  
+uniform sampler2D sceneDepth;    
+uniform sampler2D normalMap;     
+uniform vec3 cameraPos;           
+uniform float time;
+uniform float refractionStrength; 
+uniform float reflectionStrength; 
+uniform float depthFade;         
+uniform mat4 projection;
+uniform mat4 view;
+uniform mat4 invProjection;      
+uniform mat4 invView;
+
+void main()
+{
+    vec4 sceneColor = texture(sceneTexture, TexCoord);
+    FragColor = sceneColor;
 }
-
 )";
 
 static const char* BLINN_PHONG_FRAG = R"(

@@ -491,6 +491,10 @@ class Window {
      */
     inline float getSSAORenderScale() const { return this->ssaoRenderScale; }
 
+    RenderTarget *getGBuffer() const { return gBuffer.get(); }
+
+    RenderTarget *currentRenderTarget = nullptr;
+
   private:
     CoreWindowReference windowRef;
     std::vector<Renderable *> renderables;

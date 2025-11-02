@@ -98,7 +98,7 @@ class WaterPot : public CompoundObject {
 
         water = Fluid();
         water.create({0.9, 0.9}, Color::blue());
-        water.setPosition({0.0f, 1.0f, 0.0f});
+        water.setPosition({0.0f, 0.10f, 0.5f});
         water.initialize();
         this->addObject(&water);
     }

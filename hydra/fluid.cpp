@@ -8,6 +8,7 @@
 //
 
 #include "hydra/fluid.h"
+#include "atlas/texture.h"
 #include "atlas/window.h"
 
 #include <cstddef>
@@ -75,6 +76,11 @@ void Fluid::initialize() {
         1, 2, GL_FLOAT, GL_FALSE, sizeof(FluidVertex),
         reinterpret_cast<void *>(offsetof(FluidVertex, texCoord)));
 
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(
+        2, 3, GL_FLOAT, GL_FALSE, sizeof(FluidVertex),
+        reinterpret_cast<void *>(offsetof(FluidVertex, normal)));
+
     glBindVertexArray(0);
 
     isInitialized = true;
@@ -91,6 +97,39 @@ void Fluid::render(float dt) {
     fluidShader.setUniformMat4f("model", modelMatrix);
     fluidShader.setUniformMat4f("view", viewMatrix);
     fluidShader.setUniformMat4f("projection", projectionMatrix);
+    fluidShader.setUniform4f("waterColor", color.r, color.g, color.b, color.a);
+
+    RenderTarget *target = Window::mainWindow->currentRenderTarget;
+    if (target == nullptr) {
+        return;
+    }
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, target->texture.id);
+    fluidShader.setUniform1i("sceneTexture", 0);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, target->depthTexture.id);
+    fluidShader.setUniform1i("sceneDepth", 1);
+
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, Window::mainWindow->getGBuffer()->gNormal.id);
+    fluidShader.setUniform1i("normalMap", 2);
+
+    fluidShader.setUniform3f("cameraPos",
+                             Window::mainWindow->getCamera()->position.x,
+                             Window::mainWindow->getCamera()->position.y,
+                             Window::mainWindow->getCamera()->position.z);
+
+    fluidShader.setUniform3f("waterNormal", 0.0f, 1.0f, 0.0f);
+    fluidShader.setUniform1f("time", dt);
+    fluidShader.setUniform1f("refractionStrength", 0.5f);
+    fluidShader.setUniform1f("reflectionStrength", 0.5f);
+    fluidShader.setUniform1f("depthFade", 0.1f);
+
+    fluidShader.setUniformMat4f("invProjection",
+                                glm::inverse(projectionMatrix));
+    fluidShader.setUniformMat4f("invView", glm::inverse(viewMatrix));
 
     glBindVertexArray(vao);
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()),
@@ -141,10 +180,11 @@ void Fluid::setExtent(const Size2d &ext) {
 void Fluid::setWaterColor(const Color &newColor) { color = newColor; }
 
 void Fluid::buildPlaneGeometry() {
-    vertices = {FluidVertex{{-0.5f, 0.0f, -0.5f}, {0.0f, 0.0f}},
-                FluidVertex{{0.5f, 0.0f, -0.5f}, {1.0f, 0.0f}},
-                FluidVertex{{0.5f, 0.0f, 0.5f}, {1.0f, 1.0f}},
-                FluidVertex{{-0.5f, 0.0f, 0.5f}, {0.0f, 1.0f}}};
+    vertices = {
+        FluidVertex{{-0.5f, 0.0f, -0.5f}, {0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}},
+        FluidVertex{{0.5f, 0.0f, -0.5f}, {1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}},
+        FluidVertex{{0.5f, 0.0f, 0.5f}, {1.0f, 1.0f}, {0.0f, 1.0f, 0.0f}},
+        FluidVertex{{-0.5f, 0.0f, 0.5f}, {0.0f, 1.0f}, {0.0f, 1.0f, 0.0f}}};
 
     indices = {0, 1, 2, 0, 2, 3};
 }

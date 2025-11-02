@@ -42,12 +42,16 @@ struct Fluid : GameObject {
     void setWaveVelocity(float velocity) { waveVelocity = velocity; }
     void setWaterColor(const Color &color);
 
+    Position3d getPosition() const override { return position; }
+    Size3d getScale() const override { return scale; }
+
     bool canUseDeferredRendering() const override { return false; }
 
   private:
     struct FluidVertex {
         glm::vec3 position;
         glm::vec2 texCoord;
+        glm::vec3 normal;
     };
 
     void buildPlaneGeometry();
