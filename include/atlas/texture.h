@@ -435,6 +435,8 @@ class RenderTarget : public Renderable {
      * @brief Texture for volumetric lighting.
      */
     Texture volumetricLightTexture;
+    Texture ssrTexture;
+    Texture LUT;
     /**
      * @brief The type of the render target.
      *

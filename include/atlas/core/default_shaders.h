@@ -2,7 +2,7 @@
 #ifndef ATLAS_GENERATED_SHADERS_H
 #define ATLAS_GENERATED_SHADERS_H
 
-static const char* FULLSCREEN_FRAG = R"(
+static const char *FULLSCREEN_FRAG = R"(
 #version 410 core
 
 in vec2 TexCoord;
@@ -133,11 +133,13 @@ uniform sampler2D DepthTexture;
 uniform sampler2D VolumetricLightTexture;
 uniform sampler2D PositionTexture;
 uniform sampler2D LUTTexture;
+uniform sampler2D SSRTexture;
 uniform int hasBrightTexture;
 uniform int hasDepthTexture;
 uniform int hasVolumetricLightTexture;
 uniform int hasPositionTexture;
 uniform int hasLUTTexture;
+uniform int hasSSRTexture;
 uniform float lutSize;
 uniform samplerCube cubeMap;
 uniform bool isCubeMap;
@@ -462,6 +464,9 @@ vec4 applyMotionBlur(vec2 texCoord, float size, float separation, vec4 color) {
     if (hasVolumetricLightTexture == 1) {
         fallbackColor += texture(VolumetricLightTexture, texCoord);
     }
+    if (hasSSRTexture == 1) {
+        fallbackColor += texture(SSRTexture, texCoord);
+    }
     if (size <= 0.0 || separation <= 0.0) {
         return fallbackColor;
     }
@@ -516,6 +521,9 @@ vec4 applyMotionBlur(vec2 texCoord, float size, float separation, vec4 color) {
             }
             if (hasVolumetricLightTexture == 1) {
                 sampled += texture(VolumetricLightTexture, sampleCoord);
+            }
+            if (hasSSRTexture == 1) {
+                sampled += texture(SSRTexture, sampleCoord);
             }
 
             float weight = 1.0 - abs(t) * 0.5;
@@ -775,6 +783,9 @@ vec4 cloudRendering(vec4 inColor) {
 }
 
 void main() {
+    // vec4 ssrColor = texture(SSRTexture, TexCoord);
+    // FragColor = ssrColor;
+    // return;
     vec4 color = sampleColor(TexCoord);
     float depth = texture(DepthTexture, TexCoord).r;
     vec3 viewPos = reconstructViewPos(TexCoord, depth);
@@ -832,7 +843,9 @@ void main() {
         if (hasVolumetricLightTexture == 1) {
             hdrColor += texture(VolumetricLightTexture, TexCoord);
         }
-
+        if (hasSSRTexture == 1) {
+            hdrColor += texture(SSRTexture, TexCoord);
+        }
     }
 
     hdrColor = mapToLUT(hdrColor);
@@ -849,7 +862,7 @@ void main() {
 
 )";
 
-static const char* MAIN_FRAG = R"(
+static const char *MAIN_FRAG = R"(
 #version 410 core
 layout(location = 0) out vec4 FragColor;
 layout(location = 1) out vec4 BrightColor;
@@ -1636,7 +1649,7 @@ void main() {
 
 )";
 
-static const char* MAIN_VERT = R"(
+static const char *MAIN_VERT = R"(
 #version 410 core
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec4 aColor;
@@ -1680,7 +1693,7 @@ void main() {
 
 )";
 
-static const char* FULLSCREEN_VERT = R"(
+static const char *FULLSCREEN_VERT = R"(
 #version 410 core
 
 layout (location = 0) in vec3 aPos;
@@ -1697,7 +1710,7 @@ void main() {
 
 )";
 
-static const char* TEXT_VERT = R"(
+static const char *TEXT_VERT = R"(
 #version 410 core
 layout(location = 0) in vec4 vertex; // <vec2 pos, vec2 texture>
 out vec2 texCoords;
@@ -1710,7 +1723,7 @@ void main() {
 }
 )";
 
-static const char* TEXT_FRAG = R"(
+static const char *TEXT_FRAG = R"(
 #version 410 core
 
 in vec2 texCoords;
@@ -1725,7 +1738,7 @@ void main() {
 }
 )";
 
-static const char* POINT_DEPTH_VERT = R"(
+static const char *POINT_DEPTH_VERT = R"(
 #version 410 core
 layout(location = 0) in vec3 aPos;
 layout(location = 6) in mat4 instanceModel;
@@ -1742,7 +1755,7 @@ void main() {
 }
 )";
 
-static const char* DEPTH_VERT = R"(
+static const char *DEPTH_VERT = R"(
 #version 410 core
 layout(location = 0) in vec3 aPos;
 layout(location = 6) in mat4 instanceModel;
@@ -1762,14 +1775,14 @@ void main() {
 
 )";
 
-static const char* EMPTY_FRAG = R"(
+static const char *EMPTY_FRAG = R"(
 #version 410 core
 
 void main() {}
 
 )";
 
-static const char* SSAO_BLUR_FRAG = R"(
+static const char *SSAO_BLUR_FRAG = R"(
 #version 410 core
 out float FragColor;
 
@@ -1790,7 +1803,7 @@ void main() {
 }
 )";
 
-static const char* POINT_DEPTH_GEOM = R"(
+static const char *POINT_DEPTH_GEOM = R"(
 #version 410 core
 layout(triangles) in;
 layout(triangle_strip, max_vertices = 18) out;
@@ -1813,7 +1826,7 @@ void main() {
 
 )";
 
-static const char* SSAO_FRAG = R"(
+static const char *SSAO_FRAG = R"(
 #version 410 core
 out float FragColor;
 in vec2 TexCoord;
@@ -1881,7 +1894,7 @@ void main() {
 }
 )";
 
-static const char* POINT_DEPTH_FRAG = R"(
+static const char *POINT_DEPTH_FRAG = R"(
 #version 410 core
 in vec4 FragPos;
 
@@ -1897,7 +1910,7 @@ void main() {
 }
 )";
 
-static const char* LIGHT_VERT = R"(
+static const char *LIGHT_VERT = R"(
 #version 410 core
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec2 aTexCoord;
@@ -1910,7 +1923,7 @@ void main() {
 }
 )";
 
-static const char* DEFERRED_FRAG = R"(
+static const char *DEFERRED_FRAG = R"(
 #version 410 core
 layout(location = 0) out vec4 gPosition;
 layout(location = 1) out vec4 gNormal;
@@ -2108,7 +2121,7 @@ void main() {
 
 )";
 
-static const char* DEFERRED_VERT = R"(
+static const char *DEFERRED_VERT = R"(
 #version 410 core
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec4 aColor;
@@ -2154,7 +2167,7 @@ void main() {
 }
 )";
 
-static const char* LIGHT_FRAG = R"(
+static const char *LIGHT_FRAG = R"(
 #version 410 core
 layout(location = 0) out vec4 FragColor;
 layout(location = 1) out vec4 BrightColor;
@@ -2636,7 +2649,7 @@ void main() {
 
 )";
 
-static const char* COLOR_FRAG = R"(
+static const char *COLOR_FRAG = R"(
 #version 410 core
 layout (location = 0) out vec4 FragColor;
 layout (location = 1) out vec4 BrightColor;
@@ -2651,7 +2664,7 @@ void main() {
 }
 )";
 
-static const char* TEXTURE_VERT = R"(
+static const char *TEXTURE_VERT = R"(
 #version 410 core
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec4 aColor;
@@ -2673,7 +2686,7 @@ void main() {
 
 )";
 
-static const char* DEBUG_FRAG = R"(
+static const char *DEBUG_FRAG = R"(
 #version 410 core
 out vec4 FragColor;
 
@@ -2683,7 +2696,7 @@ void main() {
 
 )";
 
-static const char* COLOR_VERT = R"(
+static const char *COLOR_VERT = R"(
 #version 410 core
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec4 aColor;
@@ -2709,7 +2722,7 @@ void main() {
 
 )";
 
-static const char* DEBUG_VERT = R"(
+static const char *DEBUG_VERT = R"(
 #version 410 core
 layout (location = 0) in vec3 aPos;
 
@@ -2719,7 +2732,7 @@ void main() {
 
 )";
 
-static const char* TEXTURE_FRAG = R"(
+static const char *TEXTURE_FRAG = R"(
 #version 410 core
 out vec4 FragColor;
 
@@ -2759,7 +2772,7 @@ void main() {
 
 )";
 
-static const char* TERRAIN_CONTROL_TESC = R"(
+static const char *TERRAIN_CONTROL_TESC = R"(
 #version 410 core
 
 layout(vertices = 4) out;
@@ -2825,7 +2838,7 @@ void main() {
 }
 )";
 
-static const char* TERRAIN_FRAG = R"(
+static const char *TERRAIN_FRAG = R"(
 #version 410 core
 
 in vec3 FragPos;
@@ -3035,7 +3048,7 @@ void main() {
 }
 )";
 
-static const char* FLUID_VERT = R"(
+static const char *FLUID_VERT = R"(
 #version 410 core
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec2 aTexCoord;
@@ -3064,7 +3077,7 @@ void main() {
 
 )";
 
-static const char* TERRAIN_EVAL_TESE = R"(
+static const char *TERRAIN_EVAL_TESE = R"(
 #version 410 core
 layout(quads, fractional_odd_spacing, ccw) in;
 
@@ -3118,7 +3131,7 @@ void main() {
 }
 )";
 
-static const char* TERRAIN_VERT = R"(
+static const char *TERRAIN_VERT = R"(
 #version 410 core
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec2 aTexCoord;
@@ -3135,7 +3148,7 @@ void main() {
 }
 )";
 
-static const char* FLUID_FRAG = R"(
+static const char *FLUID_FRAG = R"(
 #version 410 core
 layout(location = 0) out vec4 FragColor;
 layout(location = 1) out vec4 BrightColor;
@@ -3322,7 +3335,7 @@ void main()
 }
 )";
 
-static const char* BLINN_PHONG_FRAG = R"(
+static const char *BLINN_PHONG_FRAG = R"(
 #version 410 core
 layout (location = 0) out vec4 FragColor;
 layout (location = 1) out vec4 BrightColor;
@@ -3890,7 +3903,7 @@ void main() {
 
 )";
 
-static const char* BINN_PHONG_VERT = R"(
+static const char *BINN_PHONG_VERT = R"(
 #version 410 core
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec4 aColor;
@@ -3932,7 +3945,7 @@ void main() {
 
 )";
 
-static const char* SKYBOX_FRAG = R"(
+static const char *SKYBOX_FRAG = R"(
 #version 410 core
 out vec4 FragColor;
 in vec3 TexCoords;
@@ -4166,7 +4179,7 @@ void main()
 }
 )";
 
-static const char* UPSAMPLE_FRAG = R"(
+static const char *UPSAMPLE_FRAG = R"(
 #version 410 core
 uniform sampler2D srcTexture;
 uniform float filterRadius;
@@ -4198,7 +4211,7 @@ void main() {
 
 )";
 
-static const char* DOWNSAMPLE_FRAG = R"(
+static const char *DOWNSAMPLE_FRAG = R"(
 #version 410 core
 
 uniform sampler2D srcTexture;
@@ -4238,7 +4251,7 @@ void main() {
 
 )";
 
-static const char* PARTICLE_FRAG = R"(
+static const char *PARTICLE_FRAG = R"(
 #version 410 core
 in vec2 fragTexCoord;
 in vec4 fragColor;
@@ -4264,7 +4277,7 @@ void main() {
 }
 )";
 
-static const char* PARTICLE_VERT = R"(
+static const char *PARTICLE_VERT = R"(
 #version 410 core
 
 layout(location = 0) in vec3 quadVertex;
@@ -4307,7 +4320,7 @@ void main() {
 }
 )";
 
-static const char* SKYBOX_VERT = R"(
+static const char *SKYBOX_VERT = R"(
 #version 410 core
 layout (location = 0) in vec3 aPos;
 
@@ -4325,7 +4338,7 @@ void main()
 
 )";
 
-static const char* GAUSSIAN_FRAG = R"(
+static const char *GAUSSIAN_FRAG = R"(
 #version 410 core
 out vec4 FragColor;
 
@@ -4360,7 +4373,276 @@ void main() {
 }
 )";
 
-static const char* VOLUMETRIC_VERT = R"(
+static const char *SSR_FRAG = R"(
+#version 410 core
+out vec4 FragColor;
+
+in vec2 TexCoord;
+
+uniform sampler2D gPosition;
+uniform sampler2D gNormal;
+uniform sampler2D gAlbedoSpec;
+uniform sampler2D gMaterial;
+uniform sampler2D sceneColor;  
+uniform sampler2D gDepth;     
+
+uniform mat4 projection;
+uniform mat4 view;
+uniform mat4 inverseProjection;
+uniform mat4 inverseView;
+uniform vec3 cameraPosition;
+
+uniform float maxDistance = 30.0;   
+uniform float resolution = 0.5;     
+uniform int steps = 64;            
+uniform float thickness = 2.0;      
+uniform float maxRoughness = 0.5;  
+
+const float PI = 3.14159265359;
+
+float LinearizeDepth(float depth, float near, float far) {
+    float z = depth * 2.0 - 1.0;
+    return (2.0 * near * far) / (far + near - z * (far - near));
+}
+
+float hash(vec2 p) {
+    vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+    p3 += dot(p3, p3.yzx + 33.33);
+    return fract((p3.x + p3.y) * p3.z);
+}
+
+vec3 fresnelSchlick(float cosTheta, vec3 F0) {
+    return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+}
+
+vec4 SSR(vec3 worldPos, vec3 normal, float roughness, float metallic, vec3 albedo) {
+    vec3 viewPos = (view * vec4(worldPos, 1.0)).xyz;
+    mat3 viewMat3 = mat3(view);
+    vec3 viewNormal = normalize(viewMat3 * normal);
+
+    if (!all(equal(viewNormal, viewNormal)) || length(viewNormal) < 1e-4) {
+        viewNormal = vec3(0.0, 0.0, 1.0);
+    }
+
+    vec3 viewDirection = normalize(-viewPos);
+    if (length(viewDirection) < 1e-4) {
+        return vec4(0.0);
+    }
+
+    vec3 viewReflect = normalize(reflect(viewDirection, viewNormal));
+
+    if (viewReflect.z >= 0.0) {
+        return vec4(0.0);
+    }
+
+    if (!all(equal(viewReflect, viewReflect)) || length(viewReflect) < 1e-4) {
+        return vec4(0.0);
+    }
+
+    vec3 rayOrigin = viewPos + viewNormal * 0.02;
+    vec3 rayDir = viewReflect;
+    
+    float stepSize = maxDistance / float(steps);
+    vec3 currentPos = rayOrigin;
+    
+    vec3 magic = vec3(0.06711056, 0.00583715, 52.9829189);
+    float jitter = fract(magic.z * fract(dot(gl_FragCoord.xy, magic.xy)));
+    currentPos += rayDir * stepSize * jitter;
+    
+    vec2 hitUV = vec2(-1.0);
+    float hitDepth = 0.0;
+    bool hit = false;
+    
+    vec3 lastPos = currentPos;
+    
+    for (int i = 0; i < steps; i++) {
+        float t = float(i) / float(steps);
+        float adaptiveStep = mix(0.3, 1.0, t);
+        currentPos += rayDir * stepSize * adaptiveStep;
+        
+        vec4 projectedPos = projection * vec4(currentPos, 1.0);
+        projectedPos.xyz /= projectedPos.w;
+        vec2 screenUV = projectedPos.xy * 0.5 + 0.5;
+        
+        if (screenUV.x < 0.0 || screenUV.x > 1.0 || 
+            screenUV.y < 0.0 || screenUV.y > 1.0) {
+            break;
+        }
+        
+        vec3 sampleWorldPos = texture(gPosition, screenUV).xyz;
+        vec3 sampleViewPos = (view * vec4(sampleWorldPos, 1.0)).xyz;
+        
+        float sampleDepth = -sampleViewPos.z;
+        float currentDepth = -currentPos.z;
+        
+        float depthDiff = sampleDepth - currentDepth;
+        
+        if (depthDiff > 0.0 && depthDiff < thickness) {
+            vec3 binarySearchStart = lastPos;
+            vec3 binarySearchEnd = currentPos;
+            
+            for (int j = 0; j < 8; j++) {  
+                vec3 midPoint = (binarySearchStart + binarySearchEnd) * 0.5;
+                
+                vec4 midProj = projection * vec4(midPoint, 1.0);
+                midProj.xyz /= midProj.w;
+                vec2 midUV = midProj.xy * 0.5 + 0.5;
+                
+                vec3 midSampleWorldPos = texture(gPosition, midUV).xyz;
+                vec3 midSampleViewPos = (view * vec4(midSampleWorldPos, 1.0)).xyz;
+                float midSampleDepth = -midSampleViewPos.z;  
+                float midCurrentDepth = -midPoint.z;        
+                
+                if (midCurrentDepth < midSampleDepth) {
+                    binarySearchStart = midPoint;
+                } else {
+                    binarySearchEnd = midPoint;
+                }
+            }
+            
+            vec4 finalProj = projection * vec4(binarySearchEnd, 1.0);
+            finalProj.xyz /= finalProj.w;
+            hitUV = finalProj.xy * 0.5 + 0.5;
+            hitDepth = length(currentPos - rayOrigin);
+            hit = true;
+            break;
+        }
+        
+        lastPos = currentPos;
+    }
+    
+    if (!hit) {
+        return vec4(0.0);
+    }
+    
+    float mipLevel = roughness * 5.0;
+    vec3 reflectionColor = textureLod(sceneColor, hitUV, mipLevel).rgb;
+    
+    vec2 edgeFade = smoothstep(0.0, 0.15, hitUV) * (1.0 - smoothstep(0.85, 1.0, hitUV));
+    float edgeFactor = edgeFade.x * edgeFade.y;
+    
+    float distanceFade = 1.0 - smoothstep(maxDistance * 0.5, maxDistance, hitDepth);
+    
+    float roughnessFade = 1.0 - smoothstep(0.0, maxRoughness, roughness);
+    
+    vec3 F0 = mix(vec3(0.04), albedo, metallic);
+    vec3 V = normalize(cameraPosition - worldPos);
+    float cosTheta = max(dot(normal, V), 0.0);
+    vec3 fresnel = fresnelSchlick(cosTheta, F0);
+    float fresnelFactor = (fresnel.r + fresnel.g + fresnel.b) / 3.0;
+    
+    float finalFade = edgeFactor * distanceFade * roughnessFade * fresnelFactor;
+    
+    return vec4(reflectionColor, finalFade);
+}
+
+void main() {
+    vec3 worldPos = texture(gPosition, TexCoord).xyz;
+    vec3 normal = normalize(texture(gNormal, TexCoord).xyz);
+    vec3 albedo = texture(gAlbedoSpec, TexCoord).rgb;
+    vec4 material = texture(gMaterial, TexCoord);
+    
+    float metallic = material.r;
+    float roughness = material.g;
+    
+    if (length(normal) < 0.001) {
+        FragColor = vec4(0.0, 0.0, 0.0, 0.0);
+        return;
+    }
+    
+    if (roughness > maxRoughness) {
+        FragColor = vec4(0.0, 0.0, 0.0, 0.0);
+        return;
+    }
+    
+    vec4 reflection = SSR(worldPos, normal, roughness, metallic, albedo);
+    
+    FragColor = reflection;
+}
+)";
+
+static const char *SSR_BLUR_FRAG = R"(
+#version 410 core
+out vec4 FragColor;
+
+in vec2 TexCoord;
+
+uniform sampler2D inSSR;
+uniform sampler2D gNormal;
+uniform sampler2D gPosition;
+
+const int KERNEL_RADIUS = 2;
+
+void main() {
+    vec4 centerSSR = texture(inSSR, TexCoord);
+    vec3 centerNormal = normalize(texture(gNormal, TexCoord).xyz);
+    if (!all(equal(centerNormal, centerNormal)) || length(centerNormal) < 1e-4) {
+        centerNormal = vec3(0.0, 0.0, 1.0);
+    }
+    float centerDepth = texture(gPosition, TexCoord).w;
+
+    vec3 colorSum = centerSSR.rgb * centerSSR.a;
+    float weightSum = max(centerSSR.a, 0.0);
+    float alphaSum = max(centerSSR.a, 0.0);
+    int contributingSamples = centerSSR.a > 0.0 ? 1 : 0;
+
+    vec2 texelSize = 1.0 / vec2(textureSize(inSSR, 0));
+
+    for (int x = -KERNEL_RADIUS; x <= KERNEL_RADIUS; ++x) {
+        for (int y = -KERNEL_RADIUS; y <= KERNEL_RADIUS; ++y) {
+            if (x == 0 && y == 0) {
+                continue;
+            }
+
+            vec2 offset = vec2(float(x), float(y)) * texelSize;
+            vec2 sampleCoord = TexCoord + offset;
+
+            vec4 sampleSSR = texture(inSSR, sampleCoord);
+            if (sampleSSR.a <= 0.0) {
+                continue;
+            }
+
+            vec3 sampleNormal = normalize(texture(gNormal, sampleCoord).xyz);
+            if (!all(equal(sampleNormal, sampleNormal)) ||
+                    length(sampleNormal) < 1e-4) {
+                continue;
+            }
+
+            float normalWeight = max(dot(centerNormal, sampleNormal), 0.0);
+            normalWeight = pow(normalWeight, 4.0);
+            if (normalWeight <= 1e-4) {
+                continue;
+            }
+
+            float sampleDepth = texture(gPosition, sampleCoord).w;
+            float depthDiff = abs(sampleDepth - centerDepth);
+            float depthWeight = exp(-depthDiff * 400.0);
+
+            float weight = sampleSSR.a * normalWeight * depthWeight;
+            if (weight <= 1e-4) {
+                continue;
+            }
+
+            colorSum += sampleSSR.rgb * weight;
+            weightSum += weight;
+            alphaSum += sampleSSR.a;
+            contributingSamples++;
+        }
+    }
+
+    if (weightSum > 1e-4) {
+        vec3 blurredColor = colorSum / weightSum;
+        float averagedAlpha = contributingSamples > 0
+                                   ? clamp(alphaSum / float(contributingSamples), 0.0, 1.0)
+                                   : centerSSR.a;
+        FragColor = vec4(blurredColor, max(averagedAlpha, centerSSR.a));
+    } else {
+        FragColor = centerSSR;
+    }
+}
+)";
+
+static const char *VOLUMETRIC_VERT = R"(
 #version 410 core
 
 layout(location = 0) in vec3 aPos;
@@ -4375,7 +4657,7 @@ void main() {
 
 )";
 
-static const char* VOLUMETRIC_FRAG = R"(
+static const char *VOLUMETRIC_FRAG = R"(
 #version 410 core
 in vec2 TexCoords;
 out vec4 FragColor;
