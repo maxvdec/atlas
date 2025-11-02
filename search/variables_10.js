@@ -24,9 +24,12 @@ var searchData=
   ['ssao_5fblur_5ffrag_21',['SSAO_BLUR_FRAG',['../default__shaders_8h.html#ae246351246e38222f7f020310ba18c96',1,'default_shaders.h']]],
   ['ssao_5ffrag_22',['SSAO_FRAG',['../default__shaders_8h.html#ad0bc8276a246d872f0f11a408ede96a6',1,'default_shaders.h']]],
   ['ssaoscale_23',['ssaoScale',['../struct_window_configuration.html#aaa60e63f1d44ce0ad68e70e3b5e88c7b',1,'WindowConfiguration']]],
-  ['starintensity_24',['starIntensity',['../class_atmosphere.html#a4b7416760b1a57b9c2a6a6a6e4c4eb55',1,'Atmosphere']]],
-  ['stride_25',['stride',['../struct_layout_descriptor.html#ac19f6be67e42f8b2cf98971ed4ae73a8',1,'LayoutDescriptor']]],
-  ['suncolor_26',['sunColor',['../class_atmosphere.html#a83c951ae806394b74a44b45273e71bcf',1,'Atmosphere']]],
-  ['sunsize_27',['sunSize',['../class_atmosphere.html#aaa19043543574a6038ccccef98a50975',1,'Atmosphere']]],
-  ['suntintstrength_28',['sunTintStrength',['../class_atmosphere.html#ac1044c382157b075a2d3b63b1643ceae',1,'Atmosphere']]]
+  ['ssr_5fblur_5ffrag_24',['SSR_BLUR_FRAG',['../default__shaders_8h.html#a9468b7d98396ad89026077ce080b1e58',1,'default_shaders.h']]],
+  ['ssr_5ffrag_25',['SSR_FRAG',['../default__shaders_8h.html#a243dd6ea801fa133a860a4c71b44ecf4',1,'default_shaders.h']]],
+  ['ssrtexture_26',['ssrTexture',['../class_render_target.html#a4019018a7a19c81087bc6a8778e9b74f',1,'RenderTarget']]],
+  ['starintensity_27',['starIntensity',['../class_atmosphere.html#a4b7416760b1a57b9c2a6a6a6e4c4eb55',1,'Atmosphere']]],
+  ['stride_28',['stride',['../struct_layout_descriptor.html#ac19f6be67e42f8b2cf98971ed4ae73a8',1,'LayoutDescriptor']]],
+  ['suncolor_29',['sunColor',['../class_atmosphere.html#a83c951ae806394b74a44b45273e71bcf',1,'Atmosphere']]],
+  ['sunsize_30',['sunSize',['../class_atmosphere.html#aaa19043543574a6038ccccef98a50975',1,'Atmosphere']]],
+  ['suntintstrength_31',['sunTintStrength',['../class_atmosphere.html#ac1044c382157b075a2d3b63b1643ceae',1,'Atmosphere']]]
 ];

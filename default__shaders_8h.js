@@ -29,6 +29,8 @@ var default__shaders_8h =
     [ "SKYBOX_VERT", "default__shaders_8h.html#accb5b46bd2b12d12a056815764bc4501", null ],
     [ "SSAO_BLUR_FRAG", "default__shaders_8h.html#ae246351246e38222f7f020310ba18c96", null ],
     [ "SSAO_FRAG", "default__shaders_8h.html#ad0bc8276a246d872f0f11a408ede96a6", null ],
+    [ "SSR_BLUR_FRAG", "default__shaders_8h.html#a9468b7d98396ad89026077ce080b1e58", null ],
+    [ "SSR_FRAG", "default__shaders_8h.html#a243dd6ea801fa133a860a4c71b44ecf4", null ],
     [ "TERRAIN_CONTROL_TESC", "default__shaders_8h.html#a3621a0a2bf9ff3e7fcc2ae3c6f69afde", null ],
     [ "TERRAIN_EVAL_TESE", "default__shaders_8h.html#a261f7e9b00026e82bbc6e2d24bcbda37", null ],
     [ "TERRAIN_FRAG", "default__shaders_8h.html#a0dfe243a0d1dd1ce6c226e98ec70292c", null ],

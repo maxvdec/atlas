@@ -19,10 +19,12 @@ var class_render_target =
     [ "gMaterial", "class_render_target.html#aaba8415726d19aac146c378b5c571243", null ],
     [ "gNormal", "class_render_target.html#a9838f6c1c3ecf06a6910267b82b488fc", null ],
     [ "gPosition", "class_render_target.html#a99a07837a6572cf73bf513bb1bff184d", null ],
+    [ "LUT", "class_render_target.html#aa95b1e18bed3c2ae201217681987653e", null ],
     [ "msBrightTexture", "class_render_target.html#a174ddff041855d5fa5621b584e0f3964", null ],
     [ "msDepthTexture", "class_render_target.html#a3c6dbb5d63f05e0db8e4ccdc663319a9", null ],
     [ "msTexture", "class_render_target.html#adae5c8df5079c8a1e158117db03528f4", null ],
     [ "object", "class_render_target.html#a1ec7d8ec91e888599057ada1bd6dddc1", null ],
+    [ "ssrTexture", "class_render_target.html#a4019018a7a19c81087bc6a8778e9b74f", null ],
     [ "texture", "class_render_target.html#aa0081ca6fcb83f64edf9be9820b5185e", null ],
     [ "type", "class_render_target.html#acbc5c695868ec18217c45cb8da705497", null ],
     [ "volumetricLightTexture", "class_render_target.html#a16c03fa82d5969a516b40eb70bad44f2", null ]

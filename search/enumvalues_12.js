@@ -17,5 +17,7 @@ var searchData=
   ['ssao_14',['SSAO',['../shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0ab07a387949b981d5726a46c61db885e9',1,'SSAO:&#160;shader.h'],['../texture_8h.html#a579bf435a05d45b75f553d37ebbb3225ab07a387949b981d5726a46c61db885e9',1,'SSAO:&#160;texture.h'],['../texture_8h.html#a639c740f69368f9fe25a4f7409a16384ab07a387949b981d5726a46c61db885e9',1,'SSAO:&#160;texture.h']]],
   ['ssaoblur_15',['SSAOBlur',['../shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a0cbd177f5587f49172adca66ce3041ce',1,'SSAOBlur:&#160;shader.h'],['../texture_8h.html#a639c740f69368f9fe25a4f7409a16384a0cbd177f5587f49172adca66ce3041ce',1,'SSAOBlur:&#160;texture.h']]],
   ['ssaonoise_16',['SSAONoise',['../texture_8h.html#a579bf435a05d45b75f553d37ebbb3225a74cd2b14850061d58e3fc9da302c4efe',1,'texture.h']]],
-  ['storm_17',['Storm',['../atmosphere_8h.html#ad73deaf390ece3e96b7cd67785e8af1bafdcf3cdc04f367257c92382e032b6293',1,'atmosphere.h']]]
+  ['ssr_17',['SSR',['../shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a1c16e694abe7b18f52484174b0aa3c87',1,'shader.h']]],
+  ['ssrblur_18',['SSRBlur',['../shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a4527432f2b2e1d43ef9dcf30deabce47',1,'shader.h']]],
+  ['storm_19',['Storm',['../atmosphere_8h.html#ad73deaf390ece3e96b7cd67785e8af1bafdcf3cdc04f367257c92382e032b6293',1,'atmosphere.h']]]
 ];
