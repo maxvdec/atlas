@@ -783,9 +783,9 @@ vec4 cloudRendering(vec4 inColor) {
 }
 
 void main() {
-    vec4 ssrColor = texture(SSRTexture, TexCoord);
-    FragColor = ssrColor;
-    return;
+    // vec4 ssrColor = texture(SSRTexture, TexCoord);
+    // FragColor = ssrColor;
+    // return;
     vec4 color = sampleColor(TexCoord);
     float depth = texture(DepthTexture, TexCoord).r;
     vec3 viewPos = reconstructViewPos(TexCoord, depth);
@@ -4383,8 +4383,8 @@ uniform sampler2D gPosition;
 uniform sampler2D gNormal;
 uniform sampler2D gAlbedoSpec;
 uniform sampler2D gMaterial;
-uniform sampler2D sceneColor;  // The rendered scene before SSR
-uniform sampler2D gDepth;      // Non-linear depth buffer
+uniform sampler2D sceneColor;  
+uniform sampler2D gDepth;     
 
 uniform mat4 projection;
 uniform mat4 view;
@@ -4392,92 +4392,83 @@ uniform mat4 inverseProjection;
 uniform mat4 inverseView;
 uniform vec3 cameraPosition;
 
-// SSR Parameters
-uniform float maxDistance = 50.0;      // Maximum ray march distance
-uniform float resolution = 0.3;        // Ray march step resolution
-uniform int steps = 30;                // Number of ray march steps
-uniform float thickness = 0.5;         // Thickness of objects for intersection
-uniform float maxRoughness = 0.5;      // Don't reflect on surfaces rougher than this
+uniform float maxDistance = 30.0;   
+uniform float resolution = 0.5;     
+uniform int steps = 64;            
+uniform float thickness = 2.0;      
+uniform float maxRoughness = 0.5;  
 
 const float PI = 3.14159265359;
 
-// Convert depth buffer value to linear depth
 float LinearizeDepth(float depth, float near, float far) {
     float z = depth * 2.0 - 1.0;
     return (2.0 * near * far) / (far + near - z * (far - near));
 }
 
-// Hash function for noise
 float hash(vec2 p) {
-    return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
+    vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+    p3 += dot(p3, p3.yzx + 33.33);
+    return fract((p3.x + p3.y) * p3.z);
 }
 
-// Fresnel-Schlick approximation
 vec3 fresnelSchlick(float cosTheta, vec3 F0) {
     return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
 }
 
-// Main SSR ray marching function
 vec4 SSR(vec3 worldPos, vec3 normal, vec3 viewDir, float roughness, float metallic, vec3 albedo) {
-    // Convert world space to view space
     vec3 viewPos = (view * vec4(worldPos, 1.0)).xyz;
     vec3 viewNormal = normalize((view * vec4(normal, 0.0)).xyz);
-    vec3 viewReflect = normalize(reflect(normalize(viewPos), viewNormal));
     
-    // Early exit if reflection points away from camera
+    vec3 viewDirection = normalize(viewPos);
+    vec3 viewReflect = normalize(reflect(viewDirection, viewNormal));
+    
     if (viewReflect.z > 0.0) {
         return vec4(0.0);
     }
     
-    // Calculate reflection direction in view space
-    vec3 rayOrigin = viewPos;
+    vec3 rayOrigin = viewPos + viewNormal * 0.01;
     vec3 rayDir = viewReflect;
     
-    // Ray march parameters
     float stepSize = maxDistance / float(steps);
     vec3 currentPos = rayOrigin;
     
-    // Add jitter to reduce banding
-    float jitter = hash(TexCoord + fract(viewPos.xy)) * 2.0 - 1.0;
-    currentPos += rayDir * stepSize * jitter * 0.5;
+    vec3 magic = vec3(0.06711056, 0.00583715, 52.9829189);
+    float jitter = fract(magic.z * fract(dot(gl_FragCoord.xy, magic.xy)));
+    currentPos += rayDir * stepSize * jitter;
     
     vec2 hitUV = vec2(-1.0);
     float hitDepth = 0.0;
     bool hit = false;
     
-    // Binary search parameters
     vec3 lastPos = currentPos;
     
-    // Ray march
     for (int i = 0; i < steps; i++) {
-        currentPos += rayDir * stepSize;
+        float t = float(i) / float(steps);
+        float adaptiveStep = mix(0.3, 1.0, t);
+        currentPos += rayDir * stepSize * adaptiveStep;
         
-        // Project to screen space
         vec4 projectedPos = projection * vec4(currentPos, 1.0);
         projectedPos.xyz /= projectedPos.w;
         vec2 screenUV = projectedPos.xy * 0.5 + 0.5;
         
-        // Check if we're outside screen bounds
         if (screenUV.x < 0.0 || screenUV.x > 1.0 || 
             screenUV.y < 0.0 || screenUV.y > 1.0) {
             break;
         }
         
-        // Sample depth at this screen position
         vec3 sampleWorldPos = texture(gPosition, screenUV).xyz;
         vec3 sampleViewPos = (view * vec4(sampleWorldPos, 1.0)).xyz;
-        float sampleDepth = sampleViewPos.z;
-        float currentDepth = currentPos.z;
         
-        // Check for intersection
-        float depthDiff = currentDepth - sampleDepth;
+        float sampleDepth = -sampleViewPos.z;
+        float currentDepth = -currentPos.z;
+        
+        float depthDiff = sampleDepth - currentDepth;
         
         if (depthDiff > 0.0 && depthDiff < thickness) {
-            // Binary search for more accurate hit point
             vec3 binarySearchStart = lastPos;
             vec3 binarySearchEnd = currentPos;
             
-            for (int j = 0; j < 4; j++) {
+            for (int j = 0; j < 8; j++) {  
                 vec3 midPoint = (binarySearchStart + binarySearchEnd) * 0.5;
                 
                 vec4 midProj = projection * vec4(midPoint, 1.0);
@@ -4486,16 +4477,16 @@ vec4 SSR(vec3 worldPos, vec3 normal, vec3 viewDir, float roughness, float metall
                 
                 vec3 midSampleWorldPos = texture(gPosition, midUV).xyz;
                 vec3 midSampleViewPos = (view * vec4(midSampleWorldPos, 1.0)).xyz;
-                float midSampleDepth = midSampleViewPos.z;
+                float midSampleDepth = -midSampleViewPos.z;  
+                float midCurrentDepth = -midPoint.z;        
                 
-                if (midPoint.z < midSampleDepth) {
+                if (midCurrentDepth < midSampleDepth) {
                     binarySearchStart = midPoint;
                 } else {
                     binarySearchEnd = midPoint;
                 }
             }
             
-            // Final hit position
             vec4 finalProj = projection * vec4(binarySearchEnd, 1.0);
             finalProj.xyz /= finalProj.w;
             hitUV = finalProj.xy * 0.5 + 0.5;
@@ -4511,57 +4502,28 @@ vec4 SSR(vec3 worldPos, vec3 normal, vec3 viewDir, float roughness, float metall
         return vec4(0.0);
     }
     
-    // Sample the reflection color
-    vec3 reflectionColor = texture(sceneColor, hitUV).rgb;
+    float mipLevel = roughness * 5.0;
+    vec3 reflectionColor = textureLod(sceneColor, hitUV, mipLevel).rgb;
     
-    // Fade at screen edges
-    vec2 edgeFade = smoothstep(0.0, 0.1, hitUV) * (1.0 - smoothstep(0.9, 1.0, hitUV));
+    vec2 edgeFade = smoothstep(0.0, 0.15, hitUV) * (1.0 - smoothstep(0.85, 1.0, hitUV));
     float edgeFactor = edgeFade.x * edgeFade.y;
     
-    // Fade with distance
     float distanceFade = 1.0 - smoothstep(maxDistance * 0.5, maxDistance, hitDepth);
     
-    // Fade with roughness
     float roughnessFade = 1.0 - smoothstep(0.0, maxRoughness, roughness);
     
-    // Calculate Fresnel
     vec3 F0 = mix(vec3(0.04), albedo, metallic);
     vec3 V = normalize(cameraPosition - worldPos);
     float cosTheta = max(dot(normal, V), 0.0);
     vec3 fresnel = fresnelSchlick(cosTheta, F0);
     float fresnelFactor = (fresnel.r + fresnel.g + fresnel.b) / 3.0;
     
-    // Combine all fade factors
     float finalFade = edgeFactor * distanceFade * roughnessFade * fresnelFactor;
-    
-    // Apply roughness blur (simple approximation)
-    if (roughness > 0.1) {
-        vec2 texelSize = 1.0 / textureSize(sceneColor, 0);
-        float blurRadius = roughness * 5.0;
-        vec3 blurredColor = vec3(0.0);
-        float totalWeight = 0.0;
-        
-        for (int x = -2; x <= 2; x++) {
-            for (int y = -2; y <= 2; y++) {
-                vec2 offset = vec2(float(x), float(y)) * texelSize * blurRadius;
-                vec2 sampleUV = hitUV + offset;
-                
-                if (sampleUV.x >= 0.0 && sampleUV.x <= 1.0 && 
-                    sampleUV.y >= 0.0 && sampleUV.y <= 1.0) {
-                    float weight = 1.0 - length(vec2(x, y)) / 3.0;
-                    blurredColor += texture(sceneColor, sampleUV).rgb * weight;
-                    totalWeight += weight;
-                }
-            }
-        }
-        reflectionColor = blurredColor / totalWeight;
-    }
     
     return vec4(reflectionColor, finalFade);
 }
 
 void main() {
-    // Sample G-buffer
     vec3 worldPos = texture(gPosition, TexCoord).xyz;
     vec3 normal = normalize(texture(gNormal, TexCoord).xyz);
     vec3 albedo = texture(gAlbedoSpec, TexCoord).rgb;
@@ -4570,22 +4532,18 @@ void main() {
     float metallic = material.r;
     float roughness = material.g;
     
-    // Skip if normal is invalid
     if (length(normal) < 0.001) {
         FragColor = vec4(0.0, 0.0, 0.0, 0.0);
         return;
     }
     
-    // Skip if roughness is too high
     if (roughness > maxRoughness) {
         FragColor = vec4(0.0, 0.0, 0.0, 0.0);
         return;
     }
     
-    // Calculate view direction
     vec3 viewDir = normalize(cameraPosition - worldPos);
     
-    // Perform SSR
     vec4 reflection = SSR(worldPos, normal, viewDir, roughness, metallic, albedo);
     
     FragColor = reflection;

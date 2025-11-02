@@ -416,7 +416,6 @@ void Window::deferredRendering(RenderTarget *target) {
     }
 
     if (this->ssrFramebuffer != nullptr) {
-        std::cout << "Rendering SSR pass" << std::endl;
         target->resolve();
 
         glBindFramebuffer(GL_FRAMEBUFFER, ssrFramebuffer->fbo);
@@ -448,15 +447,15 @@ void Window::deferredRendering(RenderTarget *target) {
         ssrProgram.setUniform1i("sceneColor", 4);
 
         glActiveTexture(GL_TEXTURE5);
-        glBindTexture(GL_TEXTURE_2D, target->depthTexture.id);
-        ssrProgram.setUniform1i("depthTexture", 5);
+        glBindTexture(GL_TEXTURE_2D, gBuffer->depthTexture.id);
+        ssrProgram.setUniform1i("gDepth", 5);
 
         const glm::mat4 projectionMatrix =
             Window::mainWindow->calculateProjectionMatrix();
         const glm::mat4 viewMatrix =
             Window::mainWindow->getCamera()->calculateViewMatrix();
-        ssrProgram.setUniformMat4f("projectionMatrix", projectionMatrix);
-        ssrProgram.setUniformMat4f("viewMatrix", viewMatrix);
+        ssrProgram.setUniformMat4f("projection", projectionMatrix);
+        ssrProgram.setUniformMat4f("view", viewMatrix);
         ssrProgram.setUniformMat4f("inverseView", glm::inverse(viewMatrix));
         ssrProgram.setUniformMat4f("inverseProjection",
                                    glm::inverse(projectionMatrix));

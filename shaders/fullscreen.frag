@@ -778,9 +778,6 @@ vec4 cloudRendering(vec4 inColor) {
 }
 
 void main() {
-    vec4 ssrColor = texture(SSRTexture, TexCoord);
-    FragColor = ssrColor;
-    return;
     vec4 color = sampleColor(TexCoord);
     float depth = texture(DepthTexture, TexCoord).r;
     vec3 viewPos = reconstructViewPos(TexCoord, depth);

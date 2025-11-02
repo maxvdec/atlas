@@ -325,6 +325,7 @@ enum class AtlasFragmentShader {
      */
     Upsample,
     Fluid,
+    SSR,
 };
 
 /**

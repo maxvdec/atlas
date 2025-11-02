@@ -661,7 +661,6 @@ void RenderTarget::render(float dt) {
         obj->shaderProgram.setUniform3f(
             "environment.fogColor", scene->environment.fog.color.r,
             scene->environment.fog.color.g, scene->environment.fog.color.b);
-        // invProjectionMatrix already uploaded above; no need to resend here.
 
         if (scene->atmosphere.clouds) {
             const Clouds &cloudSettings = *scene->atmosphere.clouds;

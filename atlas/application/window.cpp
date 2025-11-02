@@ -163,8 +163,8 @@ Window::Window(WindowConfiguration config)
         AtlasVertexShader::Fullscreen, AtlasFragmentShader::GaussianBlur);
     this->volumetricProgram = ShaderProgram::fromDefaultShaders(
         AtlasVertexShader::Volumetric, AtlasFragmentShader::Volumetric);
-    this->ssaoProgram = ShaderProgram::fromDefaultShaders(
-        AtlasVertexShader::Light, AtlasFragmentShader::SSAO);
+    this->ssrProgram = ShaderProgram::fromDefaultShaders(
+        AtlasVertexShader::Light, AtlasFragmentShader::SSR);
 
     this->setupSSAO();
 
