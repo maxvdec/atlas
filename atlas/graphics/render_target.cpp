@@ -612,6 +612,17 @@ void RenderTarget::render(float dt) {
         obj->shaderProgram.setUniform1i("hasPositionTexture",
                                         gPosition.id != 0 ? 1 : 0);
 
+        glActiveTexture(GL_TEXTURE5);
+        glBindTexture(GL_TEXTURE_2D, ssrTexture.id);
+        obj->shaderProgram.setUniform1i("SSRTexture", 5);
+        obj->shaderProgram.setUniform1i("hasSSRTexture",
+                                        ssrTexture.id != 0 ? 1 : 0);
+
+        glActiveTexture(GL_TEXTURE6);
+        glBindTexture(GL_TEXTURE_2D, LUT.id);
+        obj->shaderProgram.setUniform1i("LUTTexture", 6);
+        obj->shaderProgram.setUniform1i("hasLUTTexture", LUT.id != 0 ? 1 : 0);
+
         const glm::mat4 projectionMatrix =
             Window::mainWindow->calculateProjectionMatrix();
         const glm::mat4 viewMatrix =

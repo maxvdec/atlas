@@ -128,11 +128,13 @@ uniform sampler2D DepthTexture;
 uniform sampler2D VolumetricLightTexture;
 uniform sampler2D PositionTexture;
 uniform sampler2D LUTTexture;
+uniform sampler2D SSRTexture;
 uniform int hasBrightTexture;
 uniform int hasDepthTexture;
 uniform int hasVolumetricLightTexture;
 uniform int hasPositionTexture;
 uniform int hasLUTTexture;
+uniform int hasSSRTexture;
 uniform float lutSize;
 uniform samplerCube cubeMap;
 uniform bool isCubeMap;
@@ -457,6 +459,9 @@ vec4 applyMotionBlur(vec2 texCoord, float size, float separation, vec4 color) {
     if (hasVolumetricLightTexture == 1) {
         fallbackColor += texture(VolumetricLightTexture, texCoord);
     }
+    if (hasSSRTexture == 1) {
+        fallbackColor += texture(SSRTexture, texCoord);
+    }
     if (size <= 0.0 || separation <= 0.0) {
         return fallbackColor;
     }
@@ -511,6 +516,9 @@ vec4 applyMotionBlur(vec2 texCoord, float size, float separation, vec4 color) {
             }
             if (hasVolumetricLightTexture == 1) {
                 sampled += texture(VolumetricLightTexture, sampleCoord);
+            }
+            if (hasSSRTexture == 1) {
+                sampled += texture(SSRTexture, sampleCoord);
             }
 
             float weight = 1.0 - abs(t) * 0.5;
@@ -770,6 +778,9 @@ vec4 cloudRendering(vec4 inColor) {
 }
 
 void main() {
+    vec4 ssrColor = texture(SSRTexture, TexCoord);
+    FragColor = ssrColor;
+    return;
     vec4 color = sampleColor(TexCoord);
     float depth = texture(DepthTexture, TexCoord).r;
     vec3 viewPos = reconstructViewPos(TexCoord, depth);
@@ -827,7 +838,9 @@ void main() {
         if (hasVolumetricLightTexture == 1) {
             hdrColor += texture(VolumetricLightTexture, TexCoord);
         }
-
+        if (hasSSRTexture == 1) {
+            hdrColor += texture(SSRTexture, TexCoord);
+        }
     }
 
     hdrColor = mapToLUT(hdrColor);

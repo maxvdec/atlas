@@ -518,6 +518,7 @@ class Window {
     std::shared_ptr<RenderTarget> ssaoBlurBuffer;
     std::shared_ptr<RenderTarget> volumetricBuffer;
     std::shared_ptr<RenderTarget> lightBuffer;
+    std::shared_ptr<RenderTarget> ssrFramebuffer;
     std::shared_ptr<BloomRenderTarget> bloomBuffer;
 
     std::vector<glm::vec3> ssaoKernel;
@@ -557,6 +558,7 @@ class Window {
     ShaderProgram ssaoBlurProgram;
     ShaderProgram volumetricProgram;
     ShaderProgram bloomBlurProgram;
+    ShaderProgram ssrProgram;
 
     bool debug = false;
 

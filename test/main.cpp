@@ -148,16 +148,6 @@ class MainScene : public Scene {
         if (fall) {
             camera.position.y -= 10.f * window.getDeltaTime();
         }
-
-        Magnitude3d sunAngle = atmosphere.getSunAngle();
-        float radius = 5.0f;
-        Position3d sunPos = sunAngle * radius;
-        ball.setPosition(sunPos);
-
-        Magnitude3d moonAngle = atmosphere.getMoonAngle();
-        float moonRadius = 5.0f;
-        Position3d moonPos = moonAngle * moonRadius;
-        ball2.setPosition(moonPos);
     }
 
     void onMouseMove(Window &window, Movement2d movement) override {
@@ -224,15 +214,15 @@ class MainScene : public Scene {
 
         ball = createDebugSphere(0.5f, 76, 76);
         ball.body->applyMass(0.0);
-        ball.move({0.f, 1.0f, 5});
+        ball.material.metallic = 1.0f;
+        ball.material.roughness = 0.0f;
+        ball.move({0.f, 1.0f, 1.0});
+        window.addObject(&ball);
 
         ball2 = createDebugSphere(0.5f, 76, 76);
         ball2.body->applyMass(0.0);
-        ball2.move({0.f, 1.0f, 5});
-
-        waterPot = WaterPot();
-        waterPot.move({0.5, 0.10, 0.0f});
-        window.addObject(&waterPot);
+        ball2.move({0.f, 1.0f, -1.0});
+        window.addObject(&ball2);
 
         Resource heightmapResource = Workspace::get().createResource(
             "terrain/heightmap.png", "Heightmap", ResourceType::Image);
