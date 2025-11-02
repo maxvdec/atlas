@@ -415,7 +415,7 @@ void Window::deferredRendering(RenderTarget *target) {
         glBindVertexArray(0);
     }
 
-    if (this->ssrFramebuffer != nullptr) {
+    if (this->ssrFramebuffer != nullptr && useSSR) {
         target->resolve();
 
         glBindFramebuffer(GL_FRAMEBUFFER, ssrFramebuffer->fbo);

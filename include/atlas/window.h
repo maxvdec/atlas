@@ -561,6 +561,7 @@ class Window {
     ShaderProgram ssrProgram;
 
     bool debug = false;
+    bool useSSR = false;
 
     bool clipPlaneEnabled = false;
     glm::vec4 clipPlaneEquation{0.0f};

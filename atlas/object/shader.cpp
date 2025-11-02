@@ -322,6 +322,12 @@ FragmentShader FragmentShader::fromDefaultShader(AtlasFragmentShader shader) {
         fragmentShaderCache[shader] = fragmentShader;
         break;
     }
+    case AtlasFragmentShader::SSRBlur: {
+        fragmentShader = FragmentShader::fromSource(SSR_BLUR_FRAG);
+        fragmentShader.fromDefaultShaderType = shader;
+        fragmentShaderCache[shader] = fragmentShader;
+        break;
+    }
     case AtlasFragmentShader::SSR: {
         fragmentShader = FragmentShader::fromSource(SSR_FRAG);
         fragmentShader.fromDefaultShaderType = shader;

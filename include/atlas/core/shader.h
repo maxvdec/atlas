@@ -325,6 +325,10 @@ enum class AtlasFragmentShader {
      */
     Upsample,
     Fluid,
+    /**
+     * @brief Fragment shader for blurring screen-space reflections.
+     */
+    SSRBlur,
     SSR,
 };
 

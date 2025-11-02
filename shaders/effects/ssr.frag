@@ -39,18 +39,31 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0) {
     return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
 }
 
-vec4 SSR(vec3 worldPos, vec3 normal, vec3 viewDir, float roughness, float metallic, vec3 albedo) {
+vec4 SSR(vec3 worldPos, vec3 normal, float roughness, float metallic, vec3 albedo) {
     vec3 viewPos = (view * vec4(worldPos, 1.0)).xyz;
-    vec3 viewNormal = normalize((view * vec4(normal, 0.0)).xyz);
-    
-    vec3 viewDirection = normalize(viewPos);
-    vec3 viewReflect = normalize(reflect(viewDirection, viewNormal));
-    
-    if (viewReflect.z > 0.0) {
+    mat3 viewMat3 = mat3(view);
+    vec3 viewNormal = normalize(viewMat3 * normal);
+
+    if (!all(equal(viewNormal, viewNormal)) || length(viewNormal) < 1e-4) {
+        viewNormal = vec3(0.0, 0.0, 1.0);
+    }
+
+    vec3 viewDirection = normalize(-viewPos);
+    if (length(viewDirection) < 1e-4) {
         return vec4(0.0);
     }
-    
-    vec3 rayOrigin = viewPos + viewNormal * 0.01;
+
+    vec3 viewReflect = normalize(reflect(viewDirection, viewNormal));
+
+    if (viewReflect.z >= 0.0) {
+        return vec4(0.0);
+    }
+
+    if (!all(equal(viewReflect, viewReflect)) || length(viewReflect) < 1e-4) {
+        return vec4(0.0);
+    }
+
+    vec3 rayOrigin = viewPos + viewNormal * 0.02;
     vec3 rayDir = viewReflect;
     
     float stepSize = maxDistance / float(steps);
@@ -166,9 +179,7 @@ void main() {
         return;
     }
     
-    vec3 viewDir = normalize(cameraPosition - worldPos);
-    
-    vec4 reflection = SSR(worldPos, normal, viewDir, roughness, metallic, albedo);
+    vec4 reflection = SSR(worldPos, normal, roughness, metallic, albedo);
     
     FragColor = reflection;
 }
