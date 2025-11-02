@@ -89,6 +89,8 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [ ] Better website **for alpha 5**
 - [ ] More modern documentation **for alpha 5**
 - [ ] Examples and tutorials **for alpha 5**
+- [ ] Create the Hana shader language **for alpha 5**
+- [ ] Create the Hana LSP server **for alpha 5**
 
 ## Other features planned for the future
 
