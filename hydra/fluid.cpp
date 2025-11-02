@@ -87,6 +87,15 @@ void Fluid::initialize() {
         2, 3, GL_FLOAT, GL_FALSE, sizeof(FluidVertex),
         reinterpret_cast<void *>(offsetof(FluidVertex, normal)));
 
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(
+        3, 3, GL_FLOAT, GL_FALSE, sizeof(FluidVertex),
+        reinterpret_cast<void *>(offsetof(FluidVertex, tangent)));
+    glEnableVertexAttribArray(4);
+    glVertexAttribPointer(
+        4, 3, GL_FLOAT, GL_FALSE, sizeof(FluidVertex),
+        reinterpret_cast<void *>(offsetof(FluidVertex, bitangent)));
+
     glBindVertexArray(0);
 
     isInitialized = true;
@@ -321,11 +330,26 @@ glm::vec4 Fluid::calculateClipPlane() const {
 }
 
 void Fluid::buildPlaneGeometry() {
-    vertices = {
-        FluidVertex{{-0.5f, 0.0f, -0.5f}, {0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}},
-        FluidVertex{{0.5f, 0.0f, -0.5f}, {1.0f, 0.0f}, {0.0f, 1.0f, 0.0f}},
-        FluidVertex{{0.5f, 0.0f, 0.5f}, {1.0f, 1.0f}, {0.0f, 1.0f, 0.0f}},
-        FluidVertex{{-0.5f, 0.0f, 0.5f}, {0.0f, 1.0f}, {0.0f, 1.0f, 0.0f}}};
+    vertices = {FluidVertex{{-0.5f, 0.0f, -0.5f},
+                            {0.0f, 0.0f},
+                            {0.0f, 1.0f, 0.0f},
+                            {1.0f, 0.0f, 0.0f},
+                            {0.0f, 0.0f, 1.0f}},
+                FluidVertex{{0.5f, 0.0f, -0.5f},
+                            {1.0f, 0.0f},
+                            {0.0f, 1.0f, 0.0f},
+                            {1.0f, 0.0f, 0.0f},
+                            {0.0f, 0.0f, 1.0f}},
+                FluidVertex{{0.5f, 0.0f, 0.5f},
+                            {1.0f, 1.0f},
+                            {0.0f, 1.0f, 0.0f},
+                            {1.0f, 0.0f, 0.0f},
+                            {0.0f, 0.0f, 1.0f}},
+                FluidVertex{{-0.5f, 0.0f, 0.5f},
+                            {0.0f, 1.0f},
+                            {0.0f, 1.0f, 0.0f},
+                            {1.0f, 0.0f, 0.0f},
+                            {0.0f, 0.0f, 1.0f}}};
 
     indices = {0, 1, 2, 0, 2, 3};
 }

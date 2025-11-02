@@ -4,7 +4,9 @@ layout(location = 1) out vec4 BrightColor;
 
 in vec2 TexCoord;
 in vec3 WorldPos;          
-in vec3 WorldNormal;      
+in vec3 WorldNormal;
+in vec3 WorldTangent;
+in vec3 WorldBitangent;
 
 uniform vec4 waterColor;         
 uniform sampler2D sceneTexture;  
@@ -37,10 +39,17 @@ void main()
     vec3 ndc = clipSpace.xyz / clipSpace.w;
     vec2 screenUV = ndc.xy * 0.5 + 0.5;
     
+    float windStrength = length(windForce);
+    vec2 windDir = windStrength > 0.001 ? normalize(windForce.xy) : vec2(1.0, 0.0);
+    
+    float waveSpeed = 0.15 + windStrength * 0.3;  
+    float waveAmplitude = 0.01 + windStrength * 0.02;  
+    float waveFrequency = 30.0 + windStrength * 10.0; 
+    
     vec2 waveOffset;
-    waveOffset.x = sin((TexCoord.x + time * 0.15) * 30.0);
-    waveOffset.y = cos((TexCoord.y - time * 0.2) * 35.0);
-    waveOffset *= 0.01;
+    waveOffset.x = sin((TexCoord.x * windDir.x + time * waveSpeed) * waveFrequency);
+    waveOffset.y = cos((TexCoord.y * windDir.y - time * waveSpeed) * waveFrequency);
+    waveOffset *= waveAmplitude;
     
     vec2 flowOffset = vec2(0.0);
     if (hasMovementTexture == 1) {
@@ -50,52 +59,55 @@ void main()
         
         movementSample = movementSample * 2.0 - 1.0;
         
-        flowOffset = movementSample * length(windForce) * 0.15;
+        flowOffset = movementSample * windStrength * 0.15;
         
         waveOffset += flowOffset * 0.5;
     }
     
     if (hasNormalTexture == 1) {
-        vec2 normalUV1 = TexCoord * 5.0 + waveOffset * 10.0 + windForce.xy * time * 0.03;
-        vec2 normalUV2 = TexCoord * 3.0 - waveOffset * 8.0 - windForce.xy * time * 0.02;
+        vec3 T = normalize(WorldTangent);
+        vec3 B = normalize(WorldBitangent);
+        vec3 N = normalize(WorldNormal);
+        mat3 TBN = mat3(T, B, N);
+        
+        float normalSpeed = 0.03 + windStrength * 0.05; 
+        vec2 normalUV1 = TexCoord * 5.0 + waveOffset * 10.0 + windForce.xy * time * normalSpeed;
+        vec2 normalUV2 = TexCoord * 3.0 - waveOffset * 8.0 - windForce.xy * time * normalSpeed * 0.8;
         
         vec3 normalMap1 = texture(normalTexture, normalUV1).rgb;
         vec3 normalMap2 = texture(normalTexture, normalUV2).rgb;
         
-        normalMap1 = normalize(normalMap1 * 2.0 - 1.0);
-        normalMap2 = normalize(normalMap2 * 2.0 - 1.0);
+        normalMap1 = normalMap1 * 2.0 - 1.0;
+        normalMap2 = normalMap2 * 2.0 - 1.0;
         
         vec3 blendedNormal = normalize(normalMap1 + normalMap2);
         
-        float normalStrength = 0.5 + length(windForce) * 0.3;
-        normal = normalize(normal + blendedNormal * normalStrength);
+        vec3 worldSpaceNormal = normalize(TBN * blendedNormal);
+        
+        float normalStrength = 0.5 + windStrength * 0.3;
+        normal = normalize(mix(N, worldSpaceNormal, normalStrength));
     }
     
-    // Reduce distortion strength for more stability
     vec2 reflectionUV = screenUV;
     reflectionUV.y = 1.0 - reflectionUV.y;  
     reflectionUV += waveOffset * 0.3;
     
     vec2 refractionUV = screenUV - waveOffset * 0.2;
     
-    // Check if UVs are in valid range BEFORE clamping
     bool reflectionInBounds = (reflectionUV.x >= 0.0 && reflectionUV.x <= 1.0 && 
                                reflectionUV.y >= 0.0 && reflectionUV.y <= 1.0);
     bool refractionInBounds = (refractionUV.x >= 0.0 && refractionUV.x <= 1.0 && 
                                refractionUV.y >= 0.0 && refractionUV.y <= 1.0);
     
-    // Clamp UVs
     reflectionUV = clamp(reflectionUV, 0.05, 0.95);
     refractionUV = clamp(refractionUV, 0.05, 0.95);
     
-    // Calculate edge fade for smooth blending
     vec2 reflectionEdgeFade = smoothstep(0.0, 0.15, reflectionUV) * smoothstep(1.0, 0.85, reflectionUV);
     float reflectionFadeFactor = reflectionEdgeFade.x * reflectionEdgeFade.y;
     
     vec2 refractionEdgeFade = smoothstep(0.0, 0.15, refractionUV) * smoothstep(1.0, 0.85, refractionUV);
     float refractionFadeFactor = refractionEdgeFade.x * refractionEdgeFade.y;
     
-    // Reduce fade if out of bounds
     if (!reflectionInBounds) {
         reflectionFadeFactor *= 0.3;
     }
@@ -128,7 +140,6 @@ void main()
 
     float foamAmount = 0.0;
     if (hasMovementTexture == 1) {
-        float windStrength = length(windForce);
         float foamFactor = smoothstep(0.7, 1.0, length(flowOffset) * windStrength);
         foamAmount = foamFactor * 0.2;
         combined = mix(combined, vec3(1.0), foamAmount);
