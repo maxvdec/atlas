@@ -29,7 +29,6 @@ var shader_8h =
       [ "Downsample", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a5cf115d0e9094151d1df54187a5aebb8", null ],
       [ "Upsample", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a99dcdd41516bd056e9e0741df7445652", null ],
       [ "Fluid", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0ac2e7db5ac7ab74ea4bb9a7a89d251f3a", null ],
-      [ "SSRBlur", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a4527432f2b2e1d43ef9dcf30deabce47", null ],
       [ "SSR", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a1c16e694abe7b18f52484174b0aa3c87", null ]
     ] ],
     [ "AtlasGeometryShader", "shader_8h.html#a17951fe51aaa5769ef603acf594dc0b5", [

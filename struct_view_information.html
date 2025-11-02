@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 3</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 4</span>
    </div>
   </td>
  </tr>
@@ -122,18 +122,26 @@ $(function(){initNavTree('struct_view_information.html','','struct_view_informat
 </div><!--header-->
 <div class="contents">
 
+<p>Bundle of camera state values passed to systems that need view context (e.g., weather, atmosphere).  
+ <a href="#details">More...</a></p>
+
 <p><code>#include &lt;<a class="el" href="camera_8h_source.html">camera.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:aae65e639c7c885295f027b0756634c1c" id="r_aae65e639c7c885295f027b0756634c1c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_position3d.html">Position3d</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aae65e639c7c885295f027b0756634c1c">position</a></td></tr>
+<tr class="memdesc:aae65e639c7c885295f027b0756634c1c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Current world-space position of the observing camera.  <br /></td></tr>
 <tr class="memitem:a95e105a17c81e54e2a1f6b434bdb1024" id="r_a95e105a17c81e54e2a1f6b434bdb1024"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_position3d.html">Position3d</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a95e105a17c81e54e2a1f6b434bdb1024">target</a></td></tr>
+<tr class="memdesc:a95e105a17c81e54e2a1f6b434bdb1024"><td class="mdescLeft">&#160;</td><td class="mdescRight">World-space point the camera is tracking or looking at.  <br /></td></tr>
 <tr class="memitem:ab94cb37846524d29de8b37f66a75d6c9" id="r_ab94cb37846524d29de8b37f66a75d6c9"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab94cb37846524d29de8b37f66a75d6c9">time</a></td></tr>
+<tr class="memdesc:ab94cb37846524d29de8b37f66a75d6c9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Absolute engine time, typically measured in seconds.  <br /></td></tr>
 <tr class="memitem:a1c8f5d65e8a2eb0679d45e687b7e28a8" id="r_a1c8f5d65e8a2eb0679d45e687b7e28a8"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1c8f5d65e8a2eb0679d45e687b7e28a8">deltaTime</a></td></tr>
+<tr class="memdesc:a1c8f5d65e8a2eb0679d45e687b7e28a8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Time elapsed since the previous update.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
-<div class="textblock">
-<p class="definition">Definition at line <a class="el" href="camera_8h_source.html#l00208">208</a> of file <a class="el" href="camera_8h_source.html">camera.h</a>.</p>
+<div class="textblock"><p>Bundle of camera state values passed to systems that need view context (e.g., weather, atmosphere). </p>
+
+<p class="definition">Definition at line <a class="el" href="camera_8h_source.html#l00212">212</a> of file <a class="el" href="camera_8h_source.html">camera.h</a>.</p>
 </div><a name="doc-variable-members" id="doc-variable-members"></a><h2 id="header-doc-variable-members" class="groupheader">Member Data Documentation</h2>
 <a id="a1c8f5d65e8a2eb0679d45e687b7e28a8" name="a1c8f5d65e8a2eb0679d45e687b7e28a8"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a1c8f5d65e8a2eb0679d45e687b7e28a8">&#9670;&#160;</a></span>deltaTime</h2>
@@ -147,7 +155,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="camera_8h_source.html#l00212">212</a> of file <a class="el" href="camera_8h_source.html">camera.h</a>.</p>
+<p>Time elapsed since the previous update. </p>
+
+<p class="definition">Definition at line <a class="el" href="camera_8h_source.html#l00228">228</a> of file <a class="el" href="camera_8h_source.html">camera.h</a>.</p>
 
 </div>
 </div>
@@ -163,7 +173,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="camera_8h_source.html#l00209">209</a> of file <a class="el" href="camera_8h_source.html">camera.h</a>.</p>
+<p>Current world-space position of the observing camera. </p>
+
+<p class="definition">Definition at line <a class="el" href="camera_8h_source.html#l00216">216</a> of file <a class="el" href="camera_8h_source.html">camera.h</a>.</p>
 
 </div>
 </div>
@@ -179,7 +191,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="camera_8h_source.html#l00210">210</a> of file <a class="el" href="camera_8h_source.html">camera.h</a>.</p>
+<p>World-space point the camera is tracking or looking at. </p>
+
+<p class="definition">Definition at line <a class="el" href="camera_8h_source.html#l00220">220</a> of file <a class="el" href="camera_8h_source.html">camera.h</a>.</p>
 
 </div>
 </div>
@@ -195,7 +209,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="camera_8h_source.html#l00211">211</a> of file <a class="el" href="camera_8h_source.html">camera.h</a>.</p>
+<p>Absolute engine time, typically measured in seconds. </p>
+
+<p class="definition">Definition at line <a class="el" href="camera_8h_source.html#l00224">224</a> of file <a class="el" href="camera_8h_source.html">camera.h</a>.</p>
 
 </div>
 </div>

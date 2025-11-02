@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 3</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 4</span>
    </div>
   </td>
  </tr>
@@ -198,6 +198,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:aac9117a294cadfd7035c5d4bf0dc73f6" id="r_aac9117a294cadfd7035c5d4bf0dc73f6"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aac9117a294cadfd7035c5d4bf0dc73f6">getSSAORenderScale</a> () const</td></tr>
 <tr class="memdesc:aac9117a294cadfd7035c5d4bf0dc73f6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the SSAO-specific render scale.  <br /></td></tr>
 <tr class="memitem:aa14de47eea029b5670de01c53c956e6c" id="r_aa14de47eea029b5670de01c53c956e6c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_render_target.html">RenderTarget</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa14de47eea029b5670de01c53c956e6c">getGBuffer</a> () const</td></tr>
+<tr class="memdesc:aa14de47eea029b5670de01c53c956e6c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the lazily created deferred geometry buffer.  <br /></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-static-methods" class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
@@ -219,6 +220,7 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:adc988f8bbe51cdd8dbbba10d8e15bf5c" id="r_adc988f8bbe51cdd8dbbba10d8e15bf5c"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#adc988f8bbe51cdd8dbbba10d8e15bf5c">usesDeferred</a> = false</td></tr>
 <tr class="memdesc:adc988f8bbe51cdd8dbbba10d8e15bf5c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Whether the window is using deferred rendering.  <br /></td></tr>
 <tr class="memitem:a53afa1fac74e273d2f16cb62b174edca" id="r_a53afa1fac74e273d2f16cb62b174edca"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_render_target.html">RenderTarget</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a53afa1fac74e273d2f16cb62b174edca">currentRenderTarget</a> = nullptr</td></tr>
+<tr class="memdesc:a53afa1fac74e273d2f16cb62b174edca"><td class="mdescLeft">&#160;</td><td class="mdescRight">Points to the render target currently bound for drawing.  <br /></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-static-attribs" class="groupheader"><a id="pub-static-attribs" name="pub-static-attribs"></a>
 Static Public Attributes</h2></td></tr>
@@ -257,7 +259,7 @@ Example</h2>
 <div class="ttc" id="aclass_camera_html"><div class="ttname"><a href="class_camera.html">Camera</a></div><div class="ttdoc">Class representing a camera in 3D space, capable of generating view and projection matrices....</div><div class="ttdef"><b>Definition</b> <a href="camera_8h_source.html#l00040">camera.h:40</a></div></div>
 <div class="ttc" id="aclass_scene_html"><div class="ttname"><a href="class_scene.html">Scene</a></div><div class="ttdoc">Abstract class that represents a 3D scene. It contains all lights and objects that are going to be re...</div><div class="ttdef"><b>Definition</b> <a href="scene_8h_source.html#l00141">scene.h:141</a></div></div>
 <div class="ttc" id="aclass_window_html_a4fad7ebbb042281a41828a13a1ef457f"><div class="ttname"><a href="#a4fad7ebbb042281a41828a13a1ef457f">Window::Window</a></div><div class="ttdeci">Window(WindowConfiguration config)</div><div class="ttdoc">Constructs a window with the specified configuration.</div></div>
-<div class="ttc" id="aclass_window_html_ac9dbe2a378024e3a3c417b4cb50adbb3"><div class="ttname"><a href="#ac9dbe2a378024e3a3c417b4cb50adbb3">Window::CoreObject</a></div><div class="ttdeci">friend class CoreObject</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00593">window.h:593</a></div></div>
+<div class="ttc" id="aclass_window_html_ac9dbe2a378024e3a3c417b4cb50adbb3"><div class="ttname"><a href="#ac9dbe2a378024e3a3c417b4cb50adbb3">Window::CoreObject</a></div><div class="ttdeci">friend class CoreObject</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00601">window.h:601</a></div></div>
 <div class="ttc" id="astruct_window_configuration_html"><div class="ttname"><a href="struct_window_configuration.html">WindowConfiguration</a></div><div class="ttdoc">Structure representing the configuration options for creating a window.</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00040">window.h:40</a></div></div>
 <div class="ttc" id="astruct_window_configuration_html_a4df560282200968d1957c90a801959be"><div class="ttname"><a href="struct_window_configuration.html#a4df560282200968d1957c90a801959be">WindowConfiguration::width</a></div><div class="ttdeci">int width</div><div class="ttdoc">The width of the window in pixels.</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00050">window.h:50</a></div></div>
 <div class="ttc" id="astruct_window_configuration_html_aa56b982e392a5e2c45854bdc86af277f"><div class="ttname"><a href="struct_window_configuration.html#aa56b982e392a5e2c45854bdc86af277f">WindowConfiguration::height</a></div><div class="ttdeci">int height</div><div class="ttdoc">The height of the window in pixels.</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00055">window.h:55</a></div></div>
@@ -473,7 +475,7 @@ Example</h2>
   </dd>
 </dl>
 
-<p class="reference">References <a class="el" href="window_8h_source.html#l00594">RenderTarget</a>.</p>
+<p class="reference">References <a class="el" href="window_8h_source.html#l00602">RenderTarget</a>.</p>
 
 </div>
 </div>
@@ -792,10 +794,13 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00502">502</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  502</span>{ <span class="keywordflow">return</span> gBuffer.get(); }</div>
+<p>Returns the lazily created deferred geometry buffer. </p>
+<dl class="section return"><dt>Returns</dt><dd>(RenderTarget*) Pointer to the G-buffer contents. </dd></dl>
+
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00507">507</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  507</span>{ <span class="keywordflow">return</span> gBuffer.get(); }</div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="window_8h_source.html#l00594">RenderTarget</a>.</p>
+<p class="reference">References <a class="el" href="window_8h_source.html#l00602">RenderTarget</a>.</p>
 
 </div>
 </div>
@@ -1171,9 +1176,9 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00593">593</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00601">601</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
-<p class="reference">References <a class="el" href="window_8h_source.html#l00593">CoreObject</a>.</p>
+<p class="reference">References <a class="el" href="window_8h_source.html#l00601">CoreObject</a>.</p>
 
 </div>
 </div>
@@ -1197,9 +1202,9 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00595">595</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00603">603</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
-<p class="reference">References <a class="el" href="window_8h_source.html#l00595">DirectionalLight</a>.</p>
+<p class="reference">References <a class="el" href="window_8h_source.html#l00603">DirectionalLight</a>.</p>
 
 </div>
 </div>
@@ -1223,9 +1228,9 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00598">598</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00606">606</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
-<p class="reference">References <a class="el" href="window_8h_source.html#l00598">Fluid</a>.</p>
+<p class="reference">References <a class="el" href="window_8h_source.html#l00606">Fluid</a>.</p>
 
 </div>
 </div>
@@ -1249,9 +1254,9 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00594">594</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00602">602</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
-<p class="reference">References <a class="el" href="window_8h_source.html#l00594">RenderTarget</a>.</p>
+<p class="reference">References <a class="el" href="window_8h_source.html#l00602">RenderTarget</a>.</p>
 
 </div>
 </div>
@@ -1275,9 +1280,9 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00597">597</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00605">605</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
-<p class="reference">References <a class="el" href="window_8h_source.html#l00597">Terrain</a>.</p>
+<p class="reference">References <a class="el" href="window_8h_source.html#l00605">Terrain</a>.</p>
 
 </div>
 </div>
@@ -1301,9 +1306,9 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00596">596</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00604">604</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
-<p class="reference">References <a class="el" href="window_8h_source.html#l00596">Text</a>.</p>
+<p class="reference">References <a class="el" href="window_8h_source.html#l00604">Text</a>.</p>
 
 </div>
 </div>
@@ -1338,7 +1343,9 @@ Example</h2>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00504">504</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p>Points to the render target currently bound for drawing. </p>
+
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00512">512</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>

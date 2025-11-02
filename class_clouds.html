@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 3</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 4</span>
    </div>
   </td>
  </tr>
@@ -123,34 +123,55 @@ $(function(){initNavTree('class_clouds.html','','class_clouds-members'); });
 </div><!--header-->
 <div class="contents">
 
+<p>High-level volumetric cloud configuration using Worley noise.  
+ <a href="#details">More...</a></p>
+
 <p><code>#include &lt;<a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:af3736c176d64dc81a13c8eb7d59059fb" id="r_af3736c176d64dc81a13c8eb7d59059fb"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af3736c176d64dc81a13c8eb7d59059fb">Clouds</a> (int frequency, int divisions)</td></tr>
+<tr class="memdesc:af3736c176d64dc81a13c8eb7d59059fb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs a cloud generator with Worley noise presets.  <br /></td></tr>
 <tr class="memitem:a9f0655d7543e50611af8ced6bbae6ba8" id="r_a9f0655d7543e50611af8ced6bbae6ba8"><td class="memItemLeft" align="right" valign="top"><a class="el" href="units_8h.html#a5c9d258201f281b8ad0fb4385b7ef668">Id</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9f0655d7543e50611af8ced6bbae6ba8">getCloudTexture</a> (int res) const</td></tr>
+<tr class="memdesc:a9f0655d7543e50611af8ced6bbae6ba8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Builds a 3D procedural cloud texture at the requested resolution.  <br /></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a49470570cbd431711afb57c61d8110b4" id="r_a49470570cbd431711afb57c61d8110b4"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_position3d.html">Position3d</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a49470570cbd431711afb57c61d8110b4">position</a> = {0.0f, 5.0f, 0.0f}</td></tr>
+<tr class="memdesc:a49470570cbd431711afb57c61d8110b4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Center of the cloud volume in world space.  <br /></td></tr>
 <tr class="memitem:a491aee6eefd1152b1dd55c31f67127a9" id="r_a491aee6eefd1152b1dd55c31f67127a9"><td class="memItemLeft" align="right" valign="top"><a class="el" href="units_8h.html#a1636071d291ee0954efc6d64eb8d94f1">Size3d</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a491aee6eefd1152b1dd55c31f67127a9">size</a> = {10.0f, 3.0f, 10.0f}</td></tr>
+<tr class="memdesc:a491aee6eefd1152b1dd55c31f67127a9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Dimensions of the cloud volume.  <br /></td></tr>
 <tr class="memitem:aaaf98e7c088ca5dffb7a7dc2061a06f9" id="r_aaaf98e7c088ca5dffb7a7dc2061a06f9"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aaaf98e7c088ca5dffb7a7dc2061a06f9">scale</a> = 1.5f</td></tr>
+<tr class="memdesc:aaaf98e7c088ca5dffb7a7dc2061a06f9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Global scale factor applied during raymarching.  <br /></td></tr>
 <tr class="memitem:a89db40a15eb1f1168fbafad6c602d23b" id="r_a89db40a15eb1f1168fbafad6c602d23b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_position3d.html">Position3d</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a89db40a15eb1f1168fbafad6c602d23b">offset</a> = {0.0f, 0.0f, 0.0f}</td></tr>
+<tr class="memdesc:a89db40a15eb1f1168fbafad6c602d23b"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="struct_texture.html" title="Structure that holds the data for a texture. It is created from a resource.">Texture</a> offset applied to sample positions.  <br /></td></tr>
 <tr class="memitem:a9f74c4076ac49d81354f724bc3fb4c0e" id="r_a9f74c4076ac49d81354f724bc3fb4c0e"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9f74c4076ac49d81354f724bc3fb4c0e">density</a> = 0.45f</td></tr>
+<tr class="memdesc:a9f74c4076ac49d81354f724bc3fb4c0e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Base density threshold for cloud appearance.  <br /></td></tr>
 <tr class="memitem:a8daa40b2f03f6983f94328aa038a1e03" id="r_a8daa40b2f03f6983f94328aa038a1e03"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8daa40b2f03f6983f94328aa038a1e03">densityMultiplier</a> = 1.5f</td></tr>
+<tr class="memdesc:a8daa40b2f03f6983f94328aa038a1e03"><td class="mdescLeft">&#160;</td><td class="mdescRight">Multiplier applied to density when shaping cloud clusters.  <br /></td></tr>
 <tr class="memitem:ae1987c456c2759caa56de5cb55165134" id="r_ae1987c456c2759caa56de5cb55165134"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ae1987c456c2759caa56de5cb55165134">absorption</a> = 1.1f</td></tr>
+<tr class="memdesc:ae1987c456c2759caa56de5cb55165134"><td class="mdescLeft">&#160;</td><td class="mdescRight">Governs how much light is absorbed when traveling through clouds.  <br /></td></tr>
 <tr class="memitem:a1776f59b01458594d81034b573f585f4" id="r_a1776f59b01458594d81034b573f585f4"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1776f59b01458594d81034b573f585f4">scattering</a> = 0.85f</td></tr>
+<tr class="memdesc:a1776f59b01458594d81034b573f585f4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Controls forward/backward scattering intensity.  <br /></td></tr>
 <tr class="memitem:a7800e54874f54d9ab83f0e3a15df65e3" id="r_a7800e54874f54d9ab83f0e3a15df65e3"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a7800e54874f54d9ab83f0e3a15df65e3">phase</a> = 0.55f</td></tr>
+<tr class="memdesc:a7800e54874f54d9ab83f0e3a15df65e3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Phase function parameter used in lighting calculations.  <br /></td></tr>
 <tr class="memitem:ab4e74c421f1dc84dfc07411a1e9bf1cb" id="r_ab4e74c421f1dc84dfc07411a1e9bf1cb"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab4e74c421f1dc84dfc07411a1e9bf1cb">clusterStrength</a> = 0.5f</td></tr>
+<tr class="memdesc:ab4e74c421f1dc84dfc07411a1e9bf1cb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Strength of high-frequency clusters inside the volume.  <br /></td></tr>
 <tr class="memitem:a105ed79dc0725c3b287cdc20feeb1f5b" id="r_a105ed79dc0725c3b287cdc20feeb1f5b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a105ed79dc0725c3b287cdc20feeb1f5b">primaryStepCount</a> = 12</td></tr>
+<tr class="memdesc:a105ed79dc0725c3b287cdc20feeb1f5b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of primary raymarching steps per pixel.  <br /></td></tr>
 <tr class="memitem:a66c95c31865537191ab5a04c1233a519" id="r_a66c95c31865537191ab5a04c1233a519"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a66c95c31865537191ab5a04c1233a519">lightStepCount</a> = 6</td></tr>
+<tr class="memdesc:a66c95c31865537191ab5a04c1233a519"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of steps taken when computing lighting contributions.  <br /></td></tr>
 <tr class="memitem:ab966a27e7b075efcd9c762a395dbce3e" id="r_ab966a27e7b075efcd9c762a395dbce3e"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab966a27e7b075efcd9c762a395dbce3e">lightStepMultiplier</a> = 1.6f</td></tr>
+<tr class="memdesc:ab966a27e7b075efcd9c762a395dbce3e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Scales the distance between light steps.  <br /></td></tr>
 <tr class="memitem:a56a01c3b97eefd9ab3155eef82df996f" id="r_a56a01c3b97eefd9ab3155eef82df996f"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a56a01c3b97eefd9ab3155eef82df996f">minStepLength</a> = 0.05f</td></tr>
+<tr class="memdesc:a56a01c3b97eefd9ab3155eef82df996f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Minimum step length to avoid undersampling.  <br /></td></tr>
 <tr class="memitem:af17be5d7ad80994d01e1610c65d76a42" id="r_af17be5d7ad80994d01e1610c65d76a42"><td class="memItemLeft" align="right" valign="top"><a class="el" href="units_8h.html#af1efe03080186b94608ab2d50c060fe5">Magnitude3d</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af17be5d7ad80994d01e1610c65d76a42">wind</a> = {0.02f, 0.0f, 0.01f}</td></tr>
+<tr class="memdesc:af17be5d7ad80994d01e1610c65d76a42"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wind vector influencing cloud movement.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
-<div class="textblock">
-<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00050">50</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<div class="textblock"><p>High-level volumetric cloud configuration using Worley noise. </p>
+
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00075">75</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="af3736c176d64dc81a13c8eb7d59059fb" name="af3736c176d64dc81a13c8eb7d59059fb"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#af3736c176d64dc81a13c8eb7d59059fb">&#9670;&#160;</a></span>Clouds()</h2>
@@ -179,8 +200,10 @@ Public Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00052">52</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   52</span>: worleyNoise(frequency, divisions) {};</div>
+<p>Constructs a cloud generator with Worley noise presets. </p>
+
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00080">80</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   80</span>: worleyNoise(frequency, divisions) {};</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -200,6 +223,8 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
+<p>Builds a 3D procedural cloud texture at the requested resolution. </p>
+
 </div>
 </div>
 <a name="doc-variable-members" id="doc-variable-members"></a><h2 id="header-doc-variable-members" class="groupheader">Member Data Documentation</h2>
@@ -215,7 +240,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00062">62</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<p>Governs how much light is absorbed when traveling through clouds. </p>
+
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00114">114</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
 
 </div>
 </div>
@@ -231,7 +258,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00065">65</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<p>Strength of high-frequency clusters inside the volume. </p>
+
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00126">126</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
 
 </div>
 </div>
@@ -247,7 +276,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00060">60</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<p>Base density threshold for cloud appearance. </p>
+
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00106">106</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
 
 </div>
 </div>
@@ -263,7 +294,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00061">61</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<p>Multiplier applied to density when shaping cloud clusters. </p>
+
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00110">110</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
 
 </div>
 </div>
@@ -279,7 +312,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00067">67</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<p>Number of steps taken when computing lighting contributions. </p>
+
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00134">134</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
 
 </div>
 </div>
@@ -295,7 +330,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00068">68</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<p>Scales the distance between light steps. </p>
+
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00138">138</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
 
 </div>
 </div>
@@ -311,7 +348,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00069">69</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<p>Minimum step length to avoid undersampling. </p>
+
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00142">142</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
 
 </div>
 </div>
@@ -327,8 +366,10 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00059">59</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   59</span>{0.0f, 0.0f, 0.0f};</div>
+<p><a class="el" href="struct_texture.html" title="Structure that holds the data for a texture. It is created from a resource.">Texture</a> offset applied to sample positions. </p>
+
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00102">102</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  102</span>{0.0f, 0.0f, 0.0f};</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -344,7 +385,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00064">64</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<p>Phase function parameter used in lighting calculations. </p>
+
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00122">122</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
 
 </div>
 </div>
@@ -360,8 +403,10 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00056">56</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   56</span>{0.0f, 5.0f, 0.0f};</div>
+<p>Center of the cloud volume in world space. </p>
+
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00090">90</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   90</span>{0.0f, 5.0f, 0.0f};</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -377,7 +422,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00066">66</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<p>Number of primary raymarching steps per pixel. </p>
+
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00130">130</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
 
 </div>
 </div>
@@ -393,7 +440,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00058">58</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<p>Global scale factor applied during raymarching. </p>
+
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00098">98</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
 
 </div>
 </div>
@@ -409,7 +458,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00063">63</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<p>Controls forward/backward scattering intensity. </p>
+
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00118">118</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
 
 </div>
 </div>
@@ -425,8 +476,10 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00057">57</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   57</span>{10.0f, 3.0f, 10.0f};</div>
+<p>Dimensions of the cloud volume. </p>
+
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00094">94</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   94</span>{10.0f, 3.0f, 10.0f};</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -442,8 +495,10 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00070">70</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   70</span>{0.02f, 0.0f, 0.01f};</div>
+<p>Wind vector influencing cloud movement. </p>
+
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00146">146</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  146</span>{0.02f, 0.0f, 0.01f};</div>
 </div><!-- fragment -->
 </div>
 </div>

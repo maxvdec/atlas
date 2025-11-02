@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 3</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 4</span>
    </div>
   </td>
  </tr>
@@ -4535,309 +4535,217 @@ $(function(){initNavTree('default__shaders_8h_source.html','',''); });
 <div class="line"><a id="l04415" name="l04415"></a><span class="lineno"> 4415</span><span class="stringliteral">    return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);</span></div>
 <div class="line"><a id="l04416" name="l04416"></a><span class="lineno"> 4416</span><span class="stringliteral">}</span></div>
 <div class="line"><a id="l04417" name="l04417"></a><span class="lineno"> 4417</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04418" name="l04418"></a><span class="lineno"> 4418</span><span class="stringliteral">vec4 SSR(vec3 worldPos, vec3 normal, float roughness, float metallic, vec3 albedo) {</span></div>
+<div class="line"><a id="l04418" name="l04418"></a><span class="lineno"> 4418</span><span class="stringliteral">vec4 SSR(vec3 worldPos, vec3 normal, vec3 viewDir, float roughness, float metallic, vec3 albedo) {</span></div>
 <div class="line"><a id="l04419" name="l04419"></a><span class="lineno"> 4419</span><span class="stringliteral">    vec3 viewPos = (view * vec4(worldPos, 1.0)).xyz;</span></div>
-<div class="line"><a id="l04420" name="l04420"></a><span class="lineno"> 4420</span><span class="stringliteral">    mat3 viewMat3 = mat3(view);</span></div>
-<div class="line"><a id="l04421" name="l04421"></a><span class="lineno"> 4421</span><span class="stringliteral">    vec3 viewNormal = normalize(viewMat3 * normal);</span></div>
-<div class="line"><a id="l04422" name="l04422"></a><span class="lineno"> 4422</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04423" name="l04423"></a><span class="lineno"> 4423</span><span class="stringliteral">    if (!all(equal(viewNormal, viewNormal)) || length(viewNormal) &lt; 1e-4) {</span></div>
-<div class="line"><a id="l04424" name="l04424"></a><span class="lineno"> 4424</span><span class="stringliteral">        viewNormal = vec3(0.0, 0.0, 1.0);</span></div>
-<div class="line"><a id="l04425" name="l04425"></a><span class="lineno"> 4425</span><span class="stringliteral">    }</span></div>
-<div class="line"><a id="l04426" name="l04426"></a><span class="lineno"> 4426</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04427" name="l04427"></a><span class="lineno"> 4427</span><span class="stringliteral">    vec3 viewDirection = normalize(-viewPos);</span></div>
-<div class="line"><a id="l04428" name="l04428"></a><span class="lineno"> 4428</span><span class="stringliteral">    if (length(viewDirection) &lt; 1e-4) {</span></div>
-<div class="line"><a id="l04429" name="l04429"></a><span class="lineno"> 4429</span><span class="stringliteral">        return vec4(0.0);</span></div>
-<div class="line"><a id="l04430" name="l04430"></a><span class="lineno"> 4430</span><span class="stringliteral">    }</span></div>
-<div class="line"><a id="l04431" name="l04431"></a><span class="lineno"> 4431</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04432" name="l04432"></a><span class="lineno"> 4432</span><span class="stringliteral">    vec3 viewReflect = normalize(reflect(viewDirection, viewNormal));</span></div>
-<div class="line"><a id="l04433" name="l04433"></a><span class="lineno"> 4433</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04434" name="l04434"></a><span class="lineno"> 4434</span><span class="stringliteral">    if (viewReflect.z &gt;= 0.0) {</span></div>
-<div class="line"><a id="l04435" name="l04435"></a><span class="lineno"> 4435</span><span class="stringliteral">        return vec4(0.0);</span></div>
-<div class="line"><a id="l04436" name="l04436"></a><span class="lineno"> 4436</span><span class="stringliteral">    }</span></div>
-<div class="line"><a id="l04437" name="l04437"></a><span class="lineno"> 4437</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04438" name="l04438"></a><span class="lineno"> 4438</span><span class="stringliteral">    if (!all(equal(viewReflect, viewReflect)) || length(viewReflect) &lt; 1e-4) {</span></div>
-<div class="line"><a id="l04439" name="l04439"></a><span class="lineno"> 4439</span><span class="stringliteral">        return vec4(0.0);</span></div>
-<div class="line"><a id="l04440" name="l04440"></a><span class="lineno"> 4440</span><span class="stringliteral">    }</span></div>
-<div class="line"><a id="l04441" name="l04441"></a><span class="lineno"> 4441</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04442" name="l04442"></a><span class="lineno"> 4442</span><span class="stringliteral">    vec3 rayOrigin = viewPos + viewNormal * 0.02;</span></div>
-<div class="line"><a id="l04443" name="l04443"></a><span class="lineno"> 4443</span><span class="stringliteral">    vec3 rayDir = viewReflect;</span></div>
+<div class="line"><a id="l04420" name="l04420"></a><span class="lineno"> 4420</span><span class="stringliteral">    vec3 viewNormal = normalize((view * vec4(normal, 0.0)).xyz);</span></div>
+<div class="line"><a id="l04421" name="l04421"></a><span class="lineno"> 4421</span><span class="stringliteral">    </span></div>
+<div class="line"><a id="l04422" name="l04422"></a><span class="lineno"> 4422</span><span class="stringliteral">    vec3 viewDirection = normalize(viewPos);</span></div>
+<div class="line"><a id="l04423" name="l04423"></a><span class="lineno"> 4423</span><span class="stringliteral">    vec3 viewReflect = normalize(reflect(viewDirection, viewNormal));</span></div>
+<div class="line"><a id="l04424" name="l04424"></a><span class="lineno"> 4424</span><span class="stringliteral">    </span></div>
+<div class="line"><a id="l04425" name="l04425"></a><span class="lineno"> 4425</span><span class="stringliteral">    if (viewReflect.z &gt; 0.0) {</span></div>
+<div class="line"><a id="l04426" name="l04426"></a><span class="lineno"> 4426</span><span class="stringliteral">        return vec4(0.0);</span></div>
+<div class="line"><a id="l04427" name="l04427"></a><span class="lineno"> 4427</span><span class="stringliteral">    }</span></div>
+<div class="line"><a id="l04428" name="l04428"></a><span class="lineno"> 4428</span><span class="stringliteral">    </span></div>
+<div class="line"><a id="l04429" name="l04429"></a><span class="lineno"> 4429</span><span class="stringliteral">    vec3 rayOrigin = viewPos + viewNormal * 0.01;</span></div>
+<div class="line"><a id="l04430" name="l04430"></a><span class="lineno"> 4430</span><span class="stringliteral">    vec3 rayDir = viewReflect;</span></div>
+<div class="line"><a id="l04431" name="l04431"></a><span class="lineno"> 4431</span><span class="stringliteral">    </span></div>
+<div class="line"><a id="l04432" name="l04432"></a><span class="lineno"> 4432</span><span class="stringliteral">    float stepSize = maxDistance / float(steps);</span></div>
+<div class="line"><a id="l04433" name="l04433"></a><span class="lineno"> 4433</span><span class="stringliteral">    vec3 currentPos = rayOrigin;</span></div>
+<div class="line"><a id="l04434" name="l04434"></a><span class="lineno"> 4434</span><span class="stringliteral">    </span></div>
+<div class="line"><a id="l04435" name="l04435"></a><span class="lineno"> 4435</span><span class="stringliteral">    vec3 magic = vec3(0.06711056, 0.00583715, 52.9829189);</span></div>
+<div class="line"><a id="l04436" name="l04436"></a><span class="lineno"> 4436</span><span class="stringliteral">    float jitter = fract(magic.z * fract(dot(gl_FragCoord.xy, magic.xy)));</span></div>
+<div class="line"><a id="l04437" name="l04437"></a><span class="lineno"> 4437</span><span class="stringliteral">    currentPos += rayDir * stepSize * jitter;</span></div>
+<div class="line"><a id="l04438" name="l04438"></a><span class="lineno"> 4438</span><span class="stringliteral">    </span></div>
+<div class="line"><a id="l04439" name="l04439"></a><span class="lineno"> 4439</span><span class="stringliteral">    vec2 hitUV = vec2(-1.0);</span></div>
+<div class="line"><a id="l04440" name="l04440"></a><span class="lineno"> 4440</span><span class="stringliteral">    float hitDepth = 0.0;</span></div>
+<div class="line"><a id="l04441" name="l04441"></a><span class="lineno"> 4441</span><span class="stringliteral">    bool hit = false;</span></div>
+<div class="line"><a id="l04442" name="l04442"></a><span class="lineno"> 4442</span><span class="stringliteral">    </span></div>
+<div class="line"><a id="l04443" name="l04443"></a><span class="lineno"> 4443</span><span class="stringliteral">    vec3 lastPos = currentPos;</span></div>
 <div class="line"><a id="l04444" name="l04444"></a><span class="lineno"> 4444</span><span class="stringliteral">    </span></div>
-<div class="line"><a id="l04445" name="l04445"></a><span class="lineno"> 4445</span><span class="stringliteral">    float stepSize = maxDistance / float(steps);</span></div>
-<div class="line"><a id="l04446" name="l04446"></a><span class="lineno"> 4446</span><span class="stringliteral">    vec3 currentPos = rayOrigin;</span></div>
-<div class="line"><a id="l04447" name="l04447"></a><span class="lineno"> 4447</span><span class="stringliteral">    </span></div>
-<div class="line"><a id="l04448" name="l04448"></a><span class="lineno"> 4448</span><span class="stringliteral">    vec3 magic = vec3(0.06711056, 0.00583715, 52.9829189);</span></div>
-<div class="line"><a id="l04449" name="l04449"></a><span class="lineno"> 4449</span><span class="stringliteral">    float jitter = fract(magic.z * fract(dot(gl_FragCoord.xy, magic.xy)));</span></div>
-<div class="line"><a id="l04450" name="l04450"></a><span class="lineno"> 4450</span><span class="stringliteral">    currentPos += rayDir * stepSize * jitter;</span></div>
-<div class="line"><a id="l04451" name="l04451"></a><span class="lineno"> 4451</span><span class="stringliteral">    </span></div>
-<div class="line"><a id="l04452" name="l04452"></a><span class="lineno"> 4452</span><span class="stringliteral">    vec2 hitUV = vec2(-1.0);</span></div>
-<div class="line"><a id="l04453" name="l04453"></a><span class="lineno"> 4453</span><span class="stringliteral">    float hitDepth = 0.0;</span></div>
-<div class="line"><a id="l04454" name="l04454"></a><span class="lineno"> 4454</span><span class="stringliteral">    bool hit = false;</span></div>
-<div class="line"><a id="l04455" name="l04455"></a><span class="lineno"> 4455</span><span class="stringliteral">    </span></div>
-<div class="line"><a id="l04456" name="l04456"></a><span class="lineno"> 4456</span><span class="stringliteral">    vec3 lastPos = currentPos;</span></div>
-<div class="line"><a id="l04457" name="l04457"></a><span class="lineno"> 4457</span><span class="stringliteral">    </span></div>
-<div class="line"><a id="l04458" name="l04458"></a><span class="lineno"> 4458</span><span class="stringliteral">    for (int i = 0; i &lt; steps; i++) {</span></div>
-<div class="line"><a id="l04459" name="l04459"></a><span class="lineno"> 4459</span><span class="stringliteral">        float t = float(i) / float(steps);</span></div>
-<div class="line"><a id="l04460" name="l04460"></a><span class="lineno"> 4460</span><span class="stringliteral">        float adaptiveStep = mix(0.3, 1.0, t);</span></div>
-<div class="line"><a id="l04461" name="l04461"></a><span class="lineno"> 4461</span><span class="stringliteral">        currentPos += rayDir * stepSize * adaptiveStep;</span></div>
-<div class="line"><a id="l04462" name="l04462"></a><span class="lineno"> 4462</span><span class="stringliteral">        </span></div>
-<div class="line"><a id="l04463" name="l04463"></a><span class="lineno"> 4463</span><span class="stringliteral">        vec4 projectedPos = projection * vec4(currentPos, 1.0);</span></div>
-<div class="line"><a id="l04464" name="l04464"></a><span class="lineno"> 4464</span><span class="stringliteral">        projectedPos.xyz /= projectedPos.w;</span></div>
-<div class="line"><a id="l04465" name="l04465"></a><span class="lineno"> 4465</span><span class="stringliteral">        vec2 screenUV = projectedPos.xy * 0.5 + 0.5;</span></div>
+<div class="line"><a id="l04445" name="l04445"></a><span class="lineno"> 4445</span><span class="stringliteral">    for (int i = 0; i &lt; steps; i++) {</span></div>
+<div class="line"><a id="l04446" name="l04446"></a><span class="lineno"> 4446</span><span class="stringliteral">        float t = float(i) / float(steps);</span></div>
+<div class="line"><a id="l04447" name="l04447"></a><span class="lineno"> 4447</span><span class="stringliteral">        float adaptiveStep = mix(0.3, 1.0, t);</span></div>
+<div class="line"><a id="l04448" name="l04448"></a><span class="lineno"> 4448</span><span class="stringliteral">        currentPos += rayDir * stepSize * adaptiveStep;</span></div>
+<div class="line"><a id="l04449" name="l04449"></a><span class="lineno"> 4449</span><span class="stringliteral">        </span></div>
+<div class="line"><a id="l04450" name="l04450"></a><span class="lineno"> 4450</span><span class="stringliteral">        vec4 projectedPos = projection * vec4(currentPos, 1.0);</span></div>
+<div class="line"><a id="l04451" name="l04451"></a><span class="lineno"> 4451</span><span class="stringliteral">        projectedPos.xyz /= projectedPos.w;</span></div>
+<div class="line"><a id="l04452" name="l04452"></a><span class="lineno"> 4452</span><span class="stringliteral">        vec2 screenUV = projectedPos.xy * 0.5 + 0.5;</span></div>
+<div class="line"><a id="l04453" name="l04453"></a><span class="lineno"> 4453</span><span class="stringliteral">        </span></div>
+<div class="line"><a id="l04454" name="l04454"></a><span class="lineno"> 4454</span><span class="stringliteral">        if (screenUV.x &lt; 0.0 || screenUV.x &gt; 1.0 || </span></div>
+<div class="line"><a id="l04455" name="l04455"></a><span class="lineno"> 4455</span><span class="stringliteral">            screenUV.y &lt; 0.0 || screenUV.y &gt; 1.0) {</span></div>
+<div class="line"><a id="l04456" name="l04456"></a><span class="lineno"> 4456</span><span class="stringliteral">            break;</span></div>
+<div class="line"><a id="l04457" name="l04457"></a><span class="lineno"> 4457</span><span class="stringliteral">        }</span></div>
+<div class="line"><a id="l04458" name="l04458"></a><span class="lineno"> 4458</span><span class="stringliteral">        </span></div>
+<div class="line"><a id="l04459" name="l04459"></a><span class="lineno"> 4459</span><span class="stringliteral">        vec3 sampleWorldPos = texture(gPosition, screenUV).xyz;</span></div>
+<div class="line"><a id="l04460" name="l04460"></a><span class="lineno"> 4460</span><span class="stringliteral">        vec3 sampleViewPos = (view * vec4(sampleWorldPos, 1.0)).xyz;</span></div>
+<div class="line"><a id="l04461" name="l04461"></a><span class="lineno"> 4461</span><span class="stringliteral">        </span></div>
+<div class="line"><a id="l04462" name="l04462"></a><span class="lineno"> 4462</span><span class="stringliteral">        float sampleDepth = -sampleViewPos.z;</span></div>
+<div class="line"><a id="l04463" name="l04463"></a><span class="lineno"> 4463</span><span class="stringliteral">        float currentDepth = -currentPos.z;</span></div>
+<div class="line"><a id="l04464" name="l04464"></a><span class="lineno"> 4464</span><span class="stringliteral">        </span></div>
+<div class="line"><a id="l04465" name="l04465"></a><span class="lineno"> 4465</span><span class="stringliteral">        float depthDiff = sampleDepth - currentDepth;</span></div>
 <div class="line"><a id="l04466" name="l04466"></a><span class="lineno"> 4466</span><span class="stringliteral">        </span></div>
-<div class="line"><a id="l04467" name="l04467"></a><span class="lineno"> 4467</span><span class="stringliteral">        if (screenUV.x &lt; 0.0 || screenUV.x &gt; 1.0 || </span></div>
-<div class="line"><a id="l04468" name="l04468"></a><span class="lineno"> 4468</span><span class="stringliteral">            screenUV.y &lt; 0.0 || screenUV.y &gt; 1.0) {</span></div>
-<div class="line"><a id="l04469" name="l04469"></a><span class="lineno"> 4469</span><span class="stringliteral">            break;</span></div>
-<div class="line"><a id="l04470" name="l04470"></a><span class="lineno"> 4470</span><span class="stringliteral">        }</span></div>
-<div class="line"><a id="l04471" name="l04471"></a><span class="lineno"> 4471</span><span class="stringliteral">        </span></div>
-<div class="line"><a id="l04472" name="l04472"></a><span class="lineno"> 4472</span><span class="stringliteral">        vec3 sampleWorldPos = texture(gPosition, screenUV).xyz;</span></div>
-<div class="line"><a id="l04473" name="l04473"></a><span class="lineno"> 4473</span><span class="stringliteral">        vec3 sampleViewPos = (view * vec4(sampleWorldPos, 1.0)).xyz;</span></div>
-<div class="line"><a id="l04474" name="l04474"></a><span class="lineno"> 4474</span><span class="stringliteral">        </span></div>
-<div class="line"><a id="l04475" name="l04475"></a><span class="lineno"> 4475</span><span class="stringliteral">        float sampleDepth = -sampleViewPos.z;</span></div>
-<div class="line"><a id="l04476" name="l04476"></a><span class="lineno"> 4476</span><span class="stringliteral">        float currentDepth = -currentPos.z;</span></div>
-<div class="line"><a id="l04477" name="l04477"></a><span class="lineno"> 4477</span><span class="stringliteral">        </span></div>
-<div class="line"><a id="l04478" name="l04478"></a><span class="lineno"> 4478</span><span class="stringliteral">        float depthDiff = sampleDepth - currentDepth;</span></div>
-<div class="line"><a id="l04479" name="l04479"></a><span class="lineno"> 4479</span><span class="stringliteral">        </span></div>
-<div class="line"><a id="l04480" name="l04480"></a><span class="lineno"> 4480</span><span class="stringliteral">        if (depthDiff &gt; 0.0 &amp;&amp; depthDiff &lt; thickness) {</span></div>
-<div class="line"><a id="l04481" name="l04481"></a><span class="lineno"> 4481</span><span class="stringliteral">            vec3 binarySearchStart = lastPos;</span></div>
-<div class="line"><a id="l04482" name="l04482"></a><span class="lineno"> 4482</span><span class="stringliteral">            vec3 binarySearchEnd = currentPos;</span></div>
-<div class="line"><a id="l04483" name="l04483"></a><span class="lineno"> 4483</span><span class="stringliteral">            </span></div>
-<div class="line"><a id="l04484" name="l04484"></a><span class="lineno"> 4484</span><span class="stringliteral">            for (int j = 0; j &lt; 8; j++) {  </span></div>
-<div class="line"><a id="l04485" name="l04485"></a><span class="lineno"> 4485</span><span class="stringliteral">                vec3 midPoint = (binarySearchStart + binarySearchEnd) * 0.5;</span></div>
-<div class="line"><a id="l04486" name="l04486"></a><span class="lineno"> 4486</span><span class="stringliteral">                </span></div>
-<div class="line"><a id="l04487" name="l04487"></a><span class="lineno"> 4487</span><span class="stringliteral">                vec4 midProj = projection * vec4(midPoint, 1.0);</span></div>
-<div class="line"><a id="l04488" name="l04488"></a><span class="lineno"> 4488</span><span class="stringliteral">                midProj.xyz /= midProj.w;</span></div>
-<div class="line"><a id="l04489" name="l04489"></a><span class="lineno"> 4489</span><span class="stringliteral">                vec2 midUV = midProj.xy * 0.5 + 0.5;</span></div>
-<div class="line"><a id="l04490" name="l04490"></a><span class="lineno"> 4490</span><span class="stringliteral">                </span></div>
-<div class="line"><a id="l04491" name="l04491"></a><span class="lineno"> 4491</span><span class="stringliteral">                vec3 midSampleWorldPos = texture(gPosition, midUV).xyz;</span></div>
-<div class="line"><a id="l04492" name="l04492"></a><span class="lineno"> 4492</span><span class="stringliteral">                vec3 midSampleViewPos = (view * vec4(midSampleWorldPos, 1.0)).xyz;</span></div>
-<div class="line"><a id="l04493" name="l04493"></a><span class="lineno"> 4493</span><span class="stringliteral">                float midSampleDepth = -midSampleViewPos.z;  </span></div>
-<div class="line"><a id="l04494" name="l04494"></a><span class="lineno"> 4494</span><span class="stringliteral">                float midCurrentDepth = -midPoint.z;        </span></div>
-<div class="line"><a id="l04495" name="l04495"></a><span class="lineno"> 4495</span><span class="stringliteral">                </span></div>
-<div class="line"><a id="l04496" name="l04496"></a><span class="lineno"> 4496</span><span class="stringliteral">                if (midCurrentDepth &lt; midSampleDepth) {</span></div>
-<div class="line"><a id="l04497" name="l04497"></a><span class="lineno"> 4497</span><span class="stringliteral">                    binarySearchStart = midPoint;</span></div>
-<div class="line"><a id="l04498" name="l04498"></a><span class="lineno"> 4498</span><span class="stringliteral">                } else {</span></div>
-<div class="line"><a id="l04499" name="l04499"></a><span class="lineno"> 4499</span><span class="stringliteral">                    binarySearchEnd = midPoint;</span></div>
-<div class="line"><a id="l04500" name="l04500"></a><span class="lineno"> 4500</span><span class="stringliteral">                }</span></div>
-<div class="line"><a id="l04501" name="l04501"></a><span class="lineno"> 4501</span><span class="stringliteral">            }</span></div>
-<div class="line"><a id="l04502" name="l04502"></a><span class="lineno"> 4502</span><span class="stringliteral">            </span></div>
-<div class="line"><a id="l04503" name="l04503"></a><span class="lineno"> 4503</span><span class="stringliteral">            vec4 finalProj = projection * vec4(binarySearchEnd, 1.0);</span></div>
-<div class="line"><a id="l04504" name="l04504"></a><span class="lineno"> 4504</span><span class="stringliteral">            finalProj.xyz /= finalProj.w;</span></div>
-<div class="line"><a id="l04505" name="l04505"></a><span class="lineno"> 4505</span><span class="stringliteral">            hitUV = finalProj.xy * 0.5 + 0.5;</span></div>
-<div class="line"><a id="l04506" name="l04506"></a><span class="lineno"> 4506</span><span class="stringliteral">            hitDepth = length(currentPos - rayOrigin);</span></div>
-<div class="line"><a id="l04507" name="l04507"></a><span class="lineno"> 4507</span><span class="stringliteral">            hit = true;</span></div>
-<div class="line"><a id="l04508" name="l04508"></a><span class="lineno"> 4508</span><span class="stringliteral">            break;</span></div>
-<div class="line"><a id="l04509" name="l04509"></a><span class="lineno"> 4509</span><span class="stringliteral">        }</span></div>
-<div class="line"><a id="l04510" name="l04510"></a><span class="lineno"> 4510</span><span class="stringliteral">        </span></div>
-<div class="line"><a id="l04511" name="l04511"></a><span class="lineno"> 4511</span><span class="stringliteral">        lastPos = currentPos;</span></div>
-<div class="line"><a id="l04512" name="l04512"></a><span class="lineno"> 4512</span><span class="stringliteral">    }</span></div>
-<div class="line"><a id="l04513" name="l04513"></a><span class="lineno"> 4513</span><span class="stringliteral">    </span></div>
-<div class="line"><a id="l04514" name="l04514"></a><span class="lineno"> 4514</span><span class="stringliteral">    if (!hit) {</span></div>
-<div class="line"><a id="l04515" name="l04515"></a><span class="lineno"> 4515</span><span class="stringliteral">        return vec4(0.0);</span></div>
-<div class="line"><a id="l04516" name="l04516"></a><span class="lineno"> 4516</span><span class="stringliteral">    }</span></div>
-<div class="line"><a id="l04517" name="l04517"></a><span class="lineno"> 4517</span><span class="stringliteral">    </span></div>
-<div class="line"><a id="l04518" name="l04518"></a><span class="lineno"> 4518</span><span class="stringliteral">    float mipLevel = roughness * 5.0;</span></div>
-<div class="line"><a id="l04519" name="l04519"></a><span class="lineno"> 4519</span><span class="stringliteral">    vec3 reflectionColor = textureLod(sceneColor, hitUV, mipLevel).rgb;</span></div>
+<div class="line"><a id="l04467" name="l04467"></a><span class="lineno"> 4467</span><span class="stringliteral">        if (depthDiff &gt; 0.0 &amp;&amp; depthDiff &lt; thickness) {</span></div>
+<div class="line"><a id="l04468" name="l04468"></a><span class="lineno"> 4468</span><span class="stringliteral">            vec3 binarySearchStart = lastPos;</span></div>
+<div class="line"><a id="l04469" name="l04469"></a><span class="lineno"> 4469</span><span class="stringliteral">            vec3 binarySearchEnd = currentPos;</span></div>
+<div class="line"><a id="l04470" name="l04470"></a><span class="lineno"> 4470</span><span class="stringliteral">            </span></div>
+<div class="line"><a id="l04471" name="l04471"></a><span class="lineno"> 4471</span><span class="stringliteral">            for (int j = 0; j &lt; 8; j++) {  </span></div>
+<div class="line"><a id="l04472" name="l04472"></a><span class="lineno"> 4472</span><span class="stringliteral">                vec3 midPoint = (binarySearchStart + binarySearchEnd) * 0.5;</span></div>
+<div class="line"><a id="l04473" name="l04473"></a><span class="lineno"> 4473</span><span class="stringliteral">                </span></div>
+<div class="line"><a id="l04474" name="l04474"></a><span class="lineno"> 4474</span><span class="stringliteral">                vec4 midProj = projection * vec4(midPoint, 1.0);</span></div>
+<div class="line"><a id="l04475" name="l04475"></a><span class="lineno"> 4475</span><span class="stringliteral">                midProj.xyz /= midProj.w;</span></div>
+<div class="line"><a id="l04476" name="l04476"></a><span class="lineno"> 4476</span><span class="stringliteral">                vec2 midUV = midProj.xy * 0.5 + 0.5;</span></div>
+<div class="line"><a id="l04477" name="l04477"></a><span class="lineno"> 4477</span><span class="stringliteral">                </span></div>
+<div class="line"><a id="l04478" name="l04478"></a><span class="lineno"> 4478</span><span class="stringliteral">                vec3 midSampleWorldPos = texture(gPosition, midUV).xyz;</span></div>
+<div class="line"><a id="l04479" name="l04479"></a><span class="lineno"> 4479</span><span class="stringliteral">                vec3 midSampleViewPos = (view * vec4(midSampleWorldPos, 1.0)).xyz;</span></div>
+<div class="line"><a id="l04480" name="l04480"></a><span class="lineno"> 4480</span><span class="stringliteral">                float midSampleDepth = -midSampleViewPos.z;  </span></div>
+<div class="line"><a id="l04481" name="l04481"></a><span class="lineno"> 4481</span><span class="stringliteral">                float midCurrentDepth = -midPoint.z;        </span></div>
+<div class="line"><a id="l04482" name="l04482"></a><span class="lineno"> 4482</span><span class="stringliteral">                </span></div>
+<div class="line"><a id="l04483" name="l04483"></a><span class="lineno"> 4483</span><span class="stringliteral">                if (midCurrentDepth &lt; midSampleDepth) {</span></div>
+<div class="line"><a id="l04484" name="l04484"></a><span class="lineno"> 4484</span><span class="stringliteral">                    binarySearchStart = midPoint;</span></div>
+<div class="line"><a id="l04485" name="l04485"></a><span class="lineno"> 4485</span><span class="stringliteral">                } else {</span></div>
+<div class="line"><a id="l04486" name="l04486"></a><span class="lineno"> 4486</span><span class="stringliteral">                    binarySearchEnd = midPoint;</span></div>
+<div class="line"><a id="l04487" name="l04487"></a><span class="lineno"> 4487</span><span class="stringliteral">                }</span></div>
+<div class="line"><a id="l04488" name="l04488"></a><span class="lineno"> 4488</span><span class="stringliteral">            }</span></div>
+<div class="line"><a id="l04489" name="l04489"></a><span class="lineno"> 4489</span><span class="stringliteral">            </span></div>
+<div class="line"><a id="l04490" name="l04490"></a><span class="lineno"> 4490</span><span class="stringliteral">            vec4 finalProj = projection * vec4(binarySearchEnd, 1.0);</span></div>
+<div class="line"><a id="l04491" name="l04491"></a><span class="lineno"> 4491</span><span class="stringliteral">            finalProj.xyz /= finalProj.w;</span></div>
+<div class="line"><a id="l04492" name="l04492"></a><span class="lineno"> 4492</span><span class="stringliteral">            hitUV = finalProj.xy * 0.5 + 0.5;</span></div>
+<div class="line"><a id="l04493" name="l04493"></a><span class="lineno"> 4493</span><span class="stringliteral">            hitDepth = length(currentPos - rayOrigin);</span></div>
+<div class="line"><a id="l04494" name="l04494"></a><span class="lineno"> 4494</span><span class="stringliteral">            hit = true;</span></div>
+<div class="line"><a id="l04495" name="l04495"></a><span class="lineno"> 4495</span><span class="stringliteral">            break;</span></div>
+<div class="line"><a id="l04496" name="l04496"></a><span class="lineno"> 4496</span><span class="stringliteral">        }</span></div>
+<div class="line"><a id="l04497" name="l04497"></a><span class="lineno"> 4497</span><span class="stringliteral">        </span></div>
+<div class="line"><a id="l04498" name="l04498"></a><span class="lineno"> 4498</span><span class="stringliteral">        lastPos = currentPos;</span></div>
+<div class="line"><a id="l04499" name="l04499"></a><span class="lineno"> 4499</span><span class="stringliteral">    }</span></div>
+<div class="line"><a id="l04500" name="l04500"></a><span class="lineno"> 4500</span><span class="stringliteral">    </span></div>
+<div class="line"><a id="l04501" name="l04501"></a><span class="lineno"> 4501</span><span class="stringliteral">    if (!hit) {</span></div>
+<div class="line"><a id="l04502" name="l04502"></a><span class="lineno"> 4502</span><span class="stringliteral">        return vec4(0.0);</span></div>
+<div class="line"><a id="l04503" name="l04503"></a><span class="lineno"> 4503</span><span class="stringliteral">    }</span></div>
+<div class="line"><a id="l04504" name="l04504"></a><span class="lineno"> 4504</span><span class="stringliteral">    </span></div>
+<div class="line"><a id="l04505" name="l04505"></a><span class="lineno"> 4505</span><span class="stringliteral">    float mipLevel = roughness * 5.0;</span></div>
+<div class="line"><a id="l04506" name="l04506"></a><span class="lineno"> 4506</span><span class="stringliteral">    vec3 reflectionColor = textureLod(sceneColor, hitUV, mipLevel).rgb;</span></div>
+<div class="line"><a id="l04507" name="l04507"></a><span class="lineno"> 4507</span><span class="stringliteral">    </span></div>
+<div class="line"><a id="l04508" name="l04508"></a><span class="lineno"> 4508</span><span class="stringliteral">    vec2 edgeFade = smoothstep(0.0, 0.15, hitUV) * (1.0 - smoothstep(0.85, 1.0, hitUV));</span></div>
+<div class="line"><a id="l04509" name="l04509"></a><span class="lineno"> 4509</span><span class="stringliteral">    float edgeFactor = edgeFade.x * edgeFade.y;</span></div>
+<div class="line"><a id="l04510" name="l04510"></a><span class="lineno"> 4510</span><span class="stringliteral">    </span></div>
+<div class="line"><a id="l04511" name="l04511"></a><span class="lineno"> 4511</span><span class="stringliteral">    float distanceFade = 1.0 - smoothstep(maxDistance * 0.5, maxDistance, hitDepth);</span></div>
+<div class="line"><a id="l04512" name="l04512"></a><span class="lineno"> 4512</span><span class="stringliteral">    </span></div>
+<div class="line"><a id="l04513" name="l04513"></a><span class="lineno"> 4513</span><span class="stringliteral">    float roughnessFade = 1.0 - smoothstep(0.0, maxRoughness, roughness);</span></div>
+<div class="line"><a id="l04514" name="l04514"></a><span class="lineno"> 4514</span><span class="stringliteral">    </span></div>
+<div class="line"><a id="l04515" name="l04515"></a><span class="lineno"> 4515</span><span class="stringliteral">    vec3 F0 = mix(vec3(0.04), albedo, metallic);</span></div>
+<div class="line"><a id="l04516" name="l04516"></a><span class="lineno"> 4516</span><span class="stringliteral">    vec3 V = normalize(cameraPosition - worldPos);</span></div>
+<div class="line"><a id="l04517" name="l04517"></a><span class="lineno"> 4517</span><span class="stringliteral">    float cosTheta = max(dot(normal, V), 0.0);</span></div>
+<div class="line"><a id="l04518" name="l04518"></a><span class="lineno"> 4518</span><span class="stringliteral">    vec3 fresnel = fresnelSchlick(cosTheta, F0);</span></div>
+<div class="line"><a id="l04519" name="l04519"></a><span class="lineno"> 4519</span><span class="stringliteral">    float fresnelFactor = (fresnel.r + fresnel.g + fresnel.b) / 3.0;</span></div>
 <div class="line"><a id="l04520" name="l04520"></a><span class="lineno"> 4520</span><span class="stringliteral">    </span></div>
-<div class="line"><a id="l04521" name="l04521"></a><span class="lineno"> 4521</span><span class="stringliteral">    vec2 edgeFade = smoothstep(0.0, 0.15, hitUV) * (1.0 - smoothstep(0.85, 1.0, hitUV));</span></div>
-<div class="line"><a id="l04522" name="l04522"></a><span class="lineno"> 4522</span><span class="stringliteral">    float edgeFactor = edgeFade.x * edgeFade.y;</span></div>
-<div class="line"><a id="l04523" name="l04523"></a><span class="lineno"> 4523</span><span class="stringliteral">    </span></div>
-<div class="line"><a id="l04524" name="l04524"></a><span class="lineno"> 4524</span><span class="stringliteral">    float distanceFade = 1.0 - smoothstep(maxDistance * 0.5, maxDistance, hitDepth);</span></div>
-<div class="line"><a id="l04525" name="l04525"></a><span class="lineno"> 4525</span><span class="stringliteral">    </span></div>
-<div class="line"><a id="l04526" name="l04526"></a><span class="lineno"> 4526</span><span class="stringliteral">    float roughnessFade = 1.0 - smoothstep(0.0, maxRoughness, roughness);</span></div>
-<div class="line"><a id="l04527" name="l04527"></a><span class="lineno"> 4527</span><span class="stringliteral">    </span></div>
-<div class="line"><a id="l04528" name="l04528"></a><span class="lineno"> 4528</span><span class="stringliteral">    vec3 F0 = mix(vec3(0.04), albedo, metallic);</span></div>
-<div class="line"><a id="l04529" name="l04529"></a><span class="lineno"> 4529</span><span class="stringliteral">    vec3 V = normalize(cameraPosition - worldPos);</span></div>
-<div class="line"><a id="l04530" name="l04530"></a><span class="lineno"> 4530</span><span class="stringliteral">    float cosTheta = max(dot(normal, V), 0.0);</span></div>
-<div class="line"><a id="l04531" name="l04531"></a><span class="lineno"> 4531</span><span class="stringliteral">    vec3 fresnel = fresnelSchlick(cosTheta, F0);</span></div>
-<div class="line"><a id="l04532" name="l04532"></a><span class="lineno"> 4532</span><span class="stringliteral">    float fresnelFactor = (fresnel.r + fresnel.g + fresnel.b) / 3.0;</span></div>
-<div class="line"><a id="l04533" name="l04533"></a><span class="lineno"> 4533</span><span class="stringliteral">    </span></div>
-<div class="line"><a id="l04534" name="l04534"></a><span class="lineno"> 4534</span><span class="stringliteral">    float finalFade = edgeFactor * distanceFade * roughnessFade * fresnelFactor;</span></div>
-<div class="line"><a id="l04535" name="l04535"></a><span class="lineno"> 4535</span><span class="stringliteral">    </span></div>
-<div class="line"><a id="l04536" name="l04536"></a><span class="lineno"> 4536</span><span class="stringliteral">    return vec4(reflectionColor, finalFade);</span></div>
-<div class="line"><a id="l04537" name="l04537"></a><span class="lineno"> 4537</span><span class="stringliteral">}</span></div>
-<div class="line"><a id="l04538" name="l04538"></a><span class="lineno"> 4538</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04539" name="l04539"></a><span class="lineno"> 4539</span><span class="stringliteral">void main() {</span></div>
-<div class="line"><a id="l04540" name="l04540"></a><span class="lineno"> 4540</span><span class="stringliteral">    vec3 worldPos = texture(gPosition, TexCoord).xyz;</span></div>
-<div class="line"><a id="l04541" name="l04541"></a><span class="lineno"> 4541</span><span class="stringliteral">    vec3 normal = normalize(texture(gNormal, TexCoord).xyz);</span></div>
-<div class="line"><a id="l04542" name="l04542"></a><span class="lineno"> 4542</span><span class="stringliteral">    vec3 albedo = texture(gAlbedoSpec, TexCoord).rgb;</span></div>
-<div class="line"><a id="l04543" name="l04543"></a><span class="lineno"> 4543</span><span class="stringliteral">    vec4 material = texture(gMaterial, TexCoord);</span></div>
+<div class="line"><a id="l04521" name="l04521"></a><span class="lineno"> 4521</span><span class="stringliteral">    float finalFade = edgeFactor * distanceFade * roughnessFade * fresnelFactor;</span></div>
+<div class="line"><a id="l04522" name="l04522"></a><span class="lineno"> 4522</span><span class="stringliteral">    </span></div>
+<div class="line"><a id="l04523" name="l04523"></a><span class="lineno"> 4523</span><span class="stringliteral">    return vec4(reflectionColor, finalFade);</span></div>
+<div class="line"><a id="l04524" name="l04524"></a><span class="lineno"> 4524</span><span class="stringliteral">}</span></div>
+<div class="line"><a id="l04525" name="l04525"></a><span class="lineno"> 4525</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l04526" name="l04526"></a><span class="lineno"> 4526</span><span class="stringliteral">void main() {</span></div>
+<div class="line"><a id="l04527" name="l04527"></a><span class="lineno"> 4527</span><span class="stringliteral">    vec3 worldPos = texture(gPosition, TexCoord).xyz;</span></div>
+<div class="line"><a id="l04528" name="l04528"></a><span class="lineno"> 4528</span><span class="stringliteral">    vec3 normal = normalize(texture(gNormal, TexCoord).xyz);</span></div>
+<div class="line"><a id="l04529" name="l04529"></a><span class="lineno"> 4529</span><span class="stringliteral">    vec3 albedo = texture(gAlbedoSpec, TexCoord).rgb;</span></div>
+<div class="line"><a id="l04530" name="l04530"></a><span class="lineno"> 4530</span><span class="stringliteral">    vec4 material = texture(gMaterial, TexCoord);</span></div>
+<div class="line"><a id="l04531" name="l04531"></a><span class="lineno"> 4531</span><span class="stringliteral">    </span></div>
+<div class="line"><a id="l04532" name="l04532"></a><span class="lineno"> 4532</span><span class="stringliteral">    float metallic = material.r;</span></div>
+<div class="line"><a id="l04533" name="l04533"></a><span class="lineno"> 4533</span><span class="stringliteral">    float roughness = material.g;</span></div>
+<div class="line"><a id="l04534" name="l04534"></a><span class="lineno"> 4534</span><span class="stringliteral">    </span></div>
+<div class="line"><a id="l04535" name="l04535"></a><span class="lineno"> 4535</span><span class="stringliteral">    if (length(normal) &lt; 0.001) {</span></div>
+<div class="line"><a id="l04536" name="l04536"></a><span class="lineno"> 4536</span><span class="stringliteral">        FragColor = vec4(0.0, 0.0, 0.0, 0.0);</span></div>
+<div class="line"><a id="l04537" name="l04537"></a><span class="lineno"> 4537</span><span class="stringliteral">        return;</span></div>
+<div class="line"><a id="l04538" name="l04538"></a><span class="lineno"> 4538</span><span class="stringliteral">    }</span></div>
+<div class="line"><a id="l04539" name="l04539"></a><span class="lineno"> 4539</span><span class="stringliteral">    </span></div>
+<div class="line"><a id="l04540" name="l04540"></a><span class="lineno"> 4540</span><span class="stringliteral">    if (roughness &gt; maxRoughness) {</span></div>
+<div class="line"><a id="l04541" name="l04541"></a><span class="lineno"> 4541</span><span class="stringliteral">        FragColor = vec4(0.0, 0.0, 0.0, 0.0);</span></div>
+<div class="line"><a id="l04542" name="l04542"></a><span class="lineno"> 4542</span><span class="stringliteral">        return;</span></div>
+<div class="line"><a id="l04543" name="l04543"></a><span class="lineno"> 4543</span><span class="stringliteral">    }</span></div>
 <div class="line"><a id="l04544" name="l04544"></a><span class="lineno"> 4544</span><span class="stringliteral">    </span></div>
-<div class="line"><a id="l04545" name="l04545"></a><span class="lineno"> 4545</span><span class="stringliteral">    float metallic = material.r;</span></div>
-<div class="line"><a id="l04546" name="l04546"></a><span class="lineno"> 4546</span><span class="stringliteral">    float roughness = material.g;</span></div>
-<div class="line"><a id="l04547" name="l04547"></a><span class="lineno"> 4547</span><span class="stringliteral">    </span></div>
-<div class="line"><a id="l04548" name="l04548"></a><span class="lineno"> 4548</span><span class="stringliteral">    if (length(normal) &lt; 0.001) {</span></div>
-<div class="line"><a id="l04549" name="l04549"></a><span class="lineno"> 4549</span><span class="stringliteral">        FragColor = vec4(0.0, 0.0, 0.0, 0.0);</span></div>
-<div class="line"><a id="l04550" name="l04550"></a><span class="lineno"> 4550</span><span class="stringliteral">        return;</span></div>
-<div class="line"><a id="l04551" name="l04551"></a><span class="lineno"> 4551</span><span class="stringliteral">    }</span></div>
-<div class="line"><a id="l04552" name="l04552"></a><span class="lineno"> 4552</span><span class="stringliteral">    </span></div>
-<div class="line"><a id="l04553" name="l04553"></a><span class="lineno"> 4553</span><span class="stringliteral">    if (roughness &gt; maxRoughness) {</span></div>
-<div class="line"><a id="l04554" name="l04554"></a><span class="lineno"> 4554</span><span class="stringliteral">        FragColor = vec4(0.0, 0.0, 0.0, 0.0);</span></div>
-<div class="line"><a id="l04555" name="l04555"></a><span class="lineno"> 4555</span><span class="stringliteral">        return;</span></div>
-<div class="line"><a id="l04556" name="l04556"></a><span class="lineno"> 4556</span><span class="stringliteral">    }</span></div>
-<div class="line"><a id="l04557" name="l04557"></a><span class="lineno"> 4557</span><span class="stringliteral">    </span></div>
-<div class="line"><a id="l04558" name="l04558"></a><span class="lineno"> 4558</span><span class="stringliteral">    vec4 reflection = SSR(worldPos, normal, roughness, metallic, albedo);</span></div>
-<div class="line"><a id="l04559" name="l04559"></a><span class="lineno"> 4559</span><span class="stringliteral">    </span></div>
-<div class="line"><a id="l04560" name="l04560"></a><span class="lineno"> 4560</span><span class="stringliteral">    FragColor = reflection;</span></div>
-<div class="line"><a id="l04561" name="l04561"></a><span class="lineno"> 4561</span><span class="stringliteral">}</span></div>
-<div class="line"><a id="l04562" name="l04562"></a><span class="lineno"> 4562</span><span class="stringliteral">)&quot;;</span></div>
-<div class="line"><a id="l04563" name="l04563"></a><span class="lineno"> 4563</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04564" name="l04564"></a><span class="lineno"><a class="line" href="default__shaders_8h.html#a9468b7d98396ad89026077ce080b1e58"> 4564</a></span><span class="stringliteral"></span><span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">char</span> *<a class="code hl_variable" href="default__shaders_8h.html#a9468b7d98396ad89026077ce080b1e58">SSR_BLUR_FRAG</a> = R<span class="stringliteral">&quot;(</span></div>
-<div class="line"><a id="l04565" name="l04565"></a><span class="lineno"> 4565</span><span class="stringliteral">#version 410 core</span></div>
-<div class="line"><a id="l04566" name="l04566"></a><span class="lineno"> 4566</span><span class="stringliteral">out vec4 FragColor;</span></div>
+<div class="line"><a id="l04545" name="l04545"></a><span class="lineno"> 4545</span><span class="stringliteral">    vec3 viewDir = normalize(cameraPosition - worldPos);</span></div>
+<div class="line"><a id="l04546" name="l04546"></a><span class="lineno"> 4546</span><span class="stringliteral">    </span></div>
+<div class="line"><a id="l04547" name="l04547"></a><span class="lineno"> 4547</span><span class="stringliteral">    vec4 reflection = SSR(worldPos, normal, viewDir, roughness, metallic, albedo);</span></div>
+<div class="line"><a id="l04548" name="l04548"></a><span class="lineno"> 4548</span><span class="stringliteral">    </span></div>
+<div class="line"><a id="l04549" name="l04549"></a><span class="lineno"> 4549</span><span class="stringliteral">    FragColor = reflection;</span></div>
+<div class="line"><a id="l04550" name="l04550"></a><span class="lineno"> 4550</span><span class="stringliteral">}</span></div>
+<div class="line"><a id="l04551" name="l04551"></a><span class="lineno"> 4551</span><span class="stringliteral">)&quot;;</span></div>
+<div class="line"><a id="l04552" name="l04552"></a><span class="lineno"> 4552</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l04553" name="l04553"></a><span class="lineno"><a class="line" href="default__shaders_8h.html#ad88f8cc860c904e7023437d9c36e6aa3"> 4553</a></span><span class="stringliteral"></span><span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">char</span> *<a class="code hl_variable" href="default__shaders_8h.html#ad88f8cc860c904e7023437d9c36e6aa3">VOLUMETRIC_VERT</a> = R<span class="stringliteral">&quot;(</span></div>
+<div class="line"><a id="l04554" name="l04554"></a><span class="lineno"> 4554</span><span class="stringliteral">#version 410 core</span></div>
+<div class="line"><a id="l04555" name="l04555"></a><span class="lineno"> 4555</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l04556" name="l04556"></a><span class="lineno"> 4556</span><span class="stringliteral">layout(location = 0) in vec3 aPos;</span></div>
+<div class="line"><a id="l04557" name="l04557"></a><span class="lineno"> 4557</span><span class="stringliteral">layout(location = 1) in vec2 aTexCoords;</span></div>
+<div class="line"><a id="l04558" name="l04558"></a><span class="lineno"> 4558</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l04559" name="l04559"></a><span class="lineno"> 4559</span><span class="stringliteral">out vec2 TexCoords;</span></div>
+<div class="line"><a id="l04560" name="l04560"></a><span class="lineno"> 4560</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l04561" name="l04561"></a><span class="lineno"> 4561</span><span class="stringliteral">void main() {</span></div>
+<div class="line"><a id="l04562" name="l04562"></a><span class="lineno"> 4562</span><span class="stringliteral">    gl_Position = vec4(aPos, 1.0);</span></div>
+<div class="line"><a id="l04563" name="l04563"></a><span class="lineno"> 4563</span><span class="stringliteral">    TexCoords = aTexCoords;</span></div>
+<div class="line"><a id="l04564" name="l04564"></a><span class="lineno"> 4564</span><span class="stringliteral">}</span></div>
+<div class="line"><a id="l04565" name="l04565"></a><span class="lineno"> 4565</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l04566" name="l04566"></a><span class="lineno"> 4566</span><span class="stringliteral">)&quot;;</span></div>
 <div class="line"><a id="l04567" name="l04567"></a><span class="lineno"> 4567</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04568" name="l04568"></a><span class="lineno"> 4568</span><span class="stringliteral">in vec2 TexCoord;</span></div>
-<div class="line"><a id="l04569" name="l04569"></a><span class="lineno"> 4569</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04570" name="l04570"></a><span class="lineno"> 4570</span><span class="stringliteral">uniform sampler2D inSSR;</span></div>
-<div class="line"><a id="l04571" name="l04571"></a><span class="lineno"> 4571</span><span class="stringliteral">uniform sampler2D gNormal;</span></div>
-<div class="line"><a id="l04572" name="l04572"></a><span class="lineno"> 4572</span><span class="stringliteral">uniform sampler2D gPosition;</span></div>
-<div class="line"><a id="l04573" name="l04573"></a><span class="lineno"> 4573</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04574" name="l04574"></a><span class="lineno"> 4574</span><span class="stringliteral">const int KERNEL_RADIUS = 2;</span></div>
+<div class="line"><a id="l04568" name="l04568"></a><span class="lineno"><a class="line" href="default__shaders_8h.html#aac56e41dba3af03619326b9c522e6ee4"> 4568</a></span><span class="stringliteral"></span><span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">char</span> *<a class="code hl_variable" href="default__shaders_8h.html#aac56e41dba3af03619326b9c522e6ee4">VOLUMETRIC_FRAG</a> = R<span class="stringliteral">&quot;(</span></div>
+<div class="line"><a id="l04569" name="l04569"></a><span class="lineno"> 4569</span><span class="stringliteral">#version 410 core</span></div>
+<div class="line"><a id="l04570" name="l04570"></a><span class="lineno"> 4570</span><span class="stringliteral">in vec2 TexCoords;</span></div>
+<div class="line"><a id="l04571" name="l04571"></a><span class="lineno"> 4571</span><span class="stringliteral">out vec4 FragColor;</span></div>
+<div class="line"><a id="l04572" name="l04572"></a><span class="lineno"> 4572</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l04573" name="l04573"></a><span class="lineno"> 4573</span><span class="stringliteral">uniform sampler2D sceneTexture;</span></div>
+<div class="line"><a id="l04574" name="l04574"></a><span class="lineno"> 4574</span><span class="stringliteral">uniform vec2 sunPos;</span></div>
 <div class="line"><a id="l04575" name="l04575"></a><span class="lineno"> 4575</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04576" name="l04576"></a><span class="lineno"> 4576</span><span class="stringliteral">void main() {</span></div>
-<div class="line"><a id="l04577" name="l04577"></a><span class="lineno"> 4577</span><span class="stringliteral">    vec4 centerSSR = texture(inSSR, TexCoord);</span></div>
-<div class="line"><a id="l04578" name="l04578"></a><span class="lineno"> 4578</span><span class="stringliteral">    vec3 centerNormal = normalize(texture(gNormal, TexCoord).xyz);</span></div>
-<div class="line"><a id="l04579" name="l04579"></a><span class="lineno"> 4579</span><span class="stringliteral">    if (!all(equal(centerNormal, centerNormal)) || length(centerNormal) &lt; 1e-4) {</span></div>
-<div class="line"><a id="l04580" name="l04580"></a><span class="lineno"> 4580</span><span class="stringliteral">        centerNormal = vec3(0.0, 0.0, 1.0);</span></div>
-<div class="line"><a id="l04581" name="l04581"></a><span class="lineno"> 4581</span><span class="stringliteral">    }</span></div>
-<div class="line"><a id="l04582" name="l04582"></a><span class="lineno"> 4582</span><span class="stringliteral">    float centerDepth = texture(gPosition, TexCoord).w;</span></div>
-<div class="line"><a id="l04583" name="l04583"></a><span class="lineno"> 4583</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04584" name="l04584"></a><span class="lineno"> 4584</span><span class="stringliteral">    vec3 colorSum = centerSSR.rgb * centerSSR.a;</span></div>
-<div class="line"><a id="l04585" name="l04585"></a><span class="lineno"> 4585</span><span class="stringliteral">    float weightSum = max(centerSSR.a, 0.0);</span></div>
-<div class="line"><a id="l04586" name="l04586"></a><span class="lineno"> 4586</span><span class="stringliteral">    float alphaSum = max(centerSSR.a, 0.0);</span></div>
-<div class="line"><a id="l04587" name="l04587"></a><span class="lineno"> 4587</span><span class="stringliteral">    int contributingSamples = centerSSR.a &gt; 0.0 ? 1 : 0;</span></div>
+<div class="line"><a id="l04576" name="l04576"></a><span class="lineno"> 4576</span><span class="stringliteral">struct DirectionalLight {</span></div>
+<div class="line"><a id="l04577" name="l04577"></a><span class="lineno"> 4577</span><span class="stringliteral">    vec3 color;</span></div>
+<div class="line"><a id="l04578" name="l04578"></a><span class="lineno"> 4578</span><span class="stringliteral">};</span></div>
+<div class="line"><a id="l04579" name="l04579"></a><span class="lineno"> 4579</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l04580" name="l04580"></a><span class="lineno"> 4580</span><span class="stringliteral">uniform DirectionalLight directionalLight;</span></div>
+<div class="line"><a id="l04581" name="l04581"></a><span class="lineno"> 4581</span><span class="stringliteral">uniform float density;</span></div>
+<div class="line"><a id="l04582" name="l04582"></a><span class="lineno"> 4582</span><span class="stringliteral">uniform float weight;</span></div>
+<div class="line"><a id="l04583" name="l04583"></a><span class="lineno"> 4583</span><span class="stringliteral">uniform float decay;</span></div>
+<div class="line"><a id="l04584" name="l04584"></a><span class="lineno"> 4584</span><span class="stringliteral">uniform float exposure;</span></div>
+<div class="line"><a id="l04585" name="l04585"></a><span class="lineno"> 4585</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l04586" name="l04586"></a><span class="lineno"> 4586</span><span class="stringliteral">vec3 computeVolumetricLighting(vec2 uv) {</span></div>
+<div class="line"><a id="l04587" name="l04587"></a><span class="lineno"> 4587</span><span class="stringliteral">    vec3 color = vec3(0.0);</span></div>
 <div class="line"><a id="l04588" name="l04588"></a><span class="lineno"> 4588</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04589" name="l04589"></a><span class="lineno"> 4589</span><span class="stringliteral">    vec2 texelSize = 1.0 / vec2(textureSize(inSSR, 0));</span></div>
-<div class="line"><a id="l04590" name="l04590"></a><span class="lineno"> 4590</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04591" name="l04591"></a><span class="lineno"> 4591</span><span class="stringliteral">    for (int x = -KERNEL_RADIUS; x &lt;= KERNEL_RADIUS; ++x) {</span></div>
-<div class="line"><a id="l04592" name="l04592"></a><span class="lineno"> 4592</span><span class="stringliteral">        for (int y = -KERNEL_RADIUS; y &lt;= KERNEL_RADIUS; ++y) {</span></div>
-<div class="line"><a id="l04593" name="l04593"></a><span class="lineno"> 4593</span><span class="stringliteral">            if (x == 0 &amp;&amp; y == 0) {</span></div>
-<div class="line"><a id="l04594" name="l04594"></a><span class="lineno"> 4594</span><span class="stringliteral">                continue;</span></div>
-<div class="line"><a id="l04595" name="l04595"></a><span class="lineno"> 4595</span><span class="stringliteral">            }</span></div>
-<div class="line"><a id="l04596" name="l04596"></a><span class="lineno"> 4596</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04597" name="l04597"></a><span class="lineno"> 4597</span><span class="stringliteral">            vec2 offset = vec2(float(x), float(y)) * texelSize;</span></div>
-<div class="line"><a id="l04598" name="l04598"></a><span class="lineno"> 4598</span><span class="stringliteral">            vec2 sampleCoord = TexCoord + offset;</span></div>
-<div class="line"><a id="l04599" name="l04599"></a><span class="lineno"> 4599</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04600" name="l04600"></a><span class="lineno"> 4600</span><span class="stringliteral">            vec4 sampleSSR = texture(inSSR, sampleCoord);</span></div>
-<div class="line"><a id="l04601" name="l04601"></a><span class="lineno"> 4601</span><span class="stringliteral">            if (sampleSSR.a &lt;= 0.0) {</span></div>
-<div class="line"><a id="l04602" name="l04602"></a><span class="lineno"> 4602</span><span class="stringliteral">                continue;</span></div>
-<div class="line"><a id="l04603" name="l04603"></a><span class="lineno"> 4603</span><span class="stringliteral">            }</span></div>
+<div class="line"><a id="l04589" name="l04589"></a><span class="lineno"> 4589</span><span class="stringliteral">    vec2 deltaTexCoord = (sunPos - uv) * density;</span></div>
+<div class="line"><a id="l04590" name="l04590"></a><span class="lineno"> 4590</span><span class="stringliteral">    vec2 coord = uv;</span></div>
+<div class="line"><a id="l04591" name="l04591"></a><span class="lineno"> 4591</span><span class="stringliteral">    float illuminationDecay = 1.0;</span></div>
+<div class="line"><a id="l04592" name="l04592"></a><span class="lineno"> 4592</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l04593" name="l04593"></a><span class="lineno"> 4593</span><span class="stringliteral">    const int NUM_SAMPLES = 100;</span></div>
+<div class="line"><a id="l04594" name="l04594"></a><span class="lineno"> 4594</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l04595" name="l04595"></a><span class="lineno"> 4595</span><span class="stringliteral">    for (int i = 0; i &lt; NUM_SAMPLES; i++) {</span></div>
+<div class="line"><a id="l04596" name="l04596"></a><span class="lineno"> 4596</span><span class="stringliteral">        coord += deltaTexCoord;</span></div>
+<div class="line"><a id="l04597" name="l04597"></a><span class="lineno"> 4597</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l04598" name="l04598"></a><span class="lineno"> 4598</span><span class="stringliteral">        if (coord.x &lt; 0.0 || coord.x &gt; 1.0 || coord.y &lt; 0.0 || coord.y &gt; 1.0) {</span></div>
+<div class="line"><a id="l04599" name="l04599"></a><span class="lineno"> 4599</span><span class="stringliteral">            break;</span></div>
+<div class="line"><a id="l04600" name="l04600"></a><span class="lineno"> 4600</span><span class="stringliteral">        }</span></div>
+<div class="line"><a id="l04601" name="l04601"></a><span class="lineno"> 4601</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l04602" name="l04602"></a><span class="lineno"> 4602</span><span class="stringliteral">        vec3 sampled = texture(sceneTexture, coord).rgb;</span></div>
+<div class="line"><a id="l04603" name="l04603"></a><span class="lineno"> 4603</span><span class="stringliteral">        float brightness = dot(sampled, vec3(0.299, 0.587, 0.114));</span></div>
 <div class="line"><a id="l04604" name="l04604"></a><span class="lineno"> 4604</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04605" name="l04605"></a><span class="lineno"> 4605</span><span class="stringliteral">            vec3 sampleNormal = normalize(texture(gNormal, sampleCoord).xyz);</span></div>
-<div class="line"><a id="l04606" name="l04606"></a><span class="lineno"> 4606</span><span class="stringliteral">            if (!all(equal(sampleNormal, sampleNormal)) ||</span></div>
-<div class="line"><a id="l04607" name="l04607"></a><span class="lineno"> 4607</span><span class="stringliteral">                    length(sampleNormal) &lt; 1e-4) {</span></div>
-<div class="line"><a id="l04608" name="l04608"></a><span class="lineno"> 4608</span><span class="stringliteral">                continue;</span></div>
-<div class="line"><a id="l04609" name="l04609"></a><span class="lineno"> 4609</span><span class="stringliteral">            }</span></div>
+<div class="line"><a id="l04605" name="l04605"></a><span class="lineno"> 4605</span><span class="stringliteral">        vec3 atmosphere = directionalLight.color * 0.02;</span></div>
+<div class="line"><a id="l04606" name="l04606"></a><span class="lineno"> 4606</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l04607" name="l04607"></a><span class="lineno"> 4607</span><span class="stringliteral">        if (brightness &gt; 0.5) {</span></div>
+<div class="line"><a id="l04608" name="l04608"></a><span class="lineno"> 4608</span><span class="stringliteral">            atmosphere += sampled * 0.5;</span></div>
+<div class="line"><a id="l04609" name="l04609"></a><span class="lineno"> 4609</span><span class="stringliteral">        }</span></div>
 <div class="line"><a id="l04610" name="l04610"></a><span class="lineno"> 4610</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04611" name="l04611"></a><span class="lineno"> 4611</span><span class="stringliteral">            float normalWeight = max(dot(centerNormal, sampleNormal), 0.0);</span></div>
-<div class="line"><a id="l04612" name="l04612"></a><span class="lineno"> 4612</span><span class="stringliteral">            normalWeight = pow(normalWeight, 4.0);</span></div>
-<div class="line"><a id="l04613" name="l04613"></a><span class="lineno"> 4613</span><span class="stringliteral">            if (normalWeight &lt;= 1e-4) {</span></div>
-<div class="line"><a id="l04614" name="l04614"></a><span class="lineno"> 4614</span><span class="stringliteral">                continue;</span></div>
-<div class="line"><a id="l04615" name="l04615"></a><span class="lineno"> 4615</span><span class="stringliteral">            }</span></div>
+<div class="line"><a id="l04611" name="l04611"></a><span class="lineno"> 4611</span><span class="stringliteral">        atmosphere *= illuminationDecay * weight;</span></div>
+<div class="line"><a id="l04612" name="l04612"></a><span class="lineno"> 4612</span><span class="stringliteral">        color += atmosphere;</span></div>
+<div class="line"><a id="l04613" name="l04613"></a><span class="lineno"> 4613</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l04614" name="l04614"></a><span class="lineno"> 4614</span><span class="stringliteral">        illuminationDecay *= decay;</span></div>
+<div class="line"><a id="l04615" name="l04615"></a><span class="lineno"> 4615</span><span class="stringliteral">    }</span></div>
 <div class="line"><a id="l04616" name="l04616"></a><span class="lineno"> 4616</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04617" name="l04617"></a><span class="lineno"> 4617</span><span class="stringliteral">            float sampleDepth = texture(gPosition, sampleCoord).w;</span></div>
-<div class="line"><a id="l04618" name="l04618"></a><span class="lineno"> 4618</span><span class="stringliteral">            float depthDiff = abs(sampleDepth - centerDepth);</span></div>
-<div class="line"><a id="l04619" name="l04619"></a><span class="lineno"> 4619</span><span class="stringliteral">            float depthWeight = exp(-depthDiff * 400.0);</span></div>
-<div class="line"><a id="l04620" name="l04620"></a><span class="lineno"> 4620</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04621" name="l04621"></a><span class="lineno"> 4621</span><span class="stringliteral">            float weight = sampleSSR.a * normalWeight * depthWeight;</span></div>
-<div class="line"><a id="l04622" name="l04622"></a><span class="lineno"> 4622</span><span class="stringliteral">            if (weight &lt;= 1e-4) {</span></div>
-<div class="line"><a id="l04623" name="l04623"></a><span class="lineno"> 4623</span><span class="stringliteral">                continue;</span></div>
-<div class="line"><a id="l04624" name="l04624"></a><span class="lineno"> 4624</span><span class="stringliteral">            }</span></div>
+<div class="line"><a id="l04617" name="l04617"></a><span class="lineno"> 4617</span><span class="stringliteral">    return color * 5.0;</span></div>
+<div class="line"><a id="l04618" name="l04618"></a><span class="lineno"> 4618</span><span class="stringliteral">}</span></div>
+<div class="line"><a id="l04619" name="l04619"></a><span class="lineno"> 4619</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l04620" name="l04620"></a><span class="lineno"> 4620</span><span class="stringliteral">void main() {</span></div>
+<div class="line"><a id="l04621" name="l04621"></a><span class="lineno"> 4621</span><span class="stringliteral">    vec3 rays = computeVolumetricLighting(TexCoords);</span></div>
+<div class="line"><a id="l04622" name="l04622"></a><span class="lineno"> 4622</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l04623" name="l04623"></a><span class="lineno"> 4623</span><span class="stringliteral">    FragColor = vec4(rays, 1.0);</span></div>
+<div class="line"><a id="l04624" name="l04624"></a><span class="lineno"> 4624</span><span class="stringliteral">}</span></div>
 <div class="line"><a id="l04625" name="l04625"></a><span class="lineno"> 4625</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04626" name="l04626"></a><span class="lineno"> 4626</span><span class="stringliteral">            colorSum += sampleSSR.rgb * weight;</span></div>
-<div class="line"><a id="l04627" name="l04627"></a><span class="lineno"> 4627</span><span class="stringliteral">            weightSum += weight;</span></div>
-<div class="line"><a id="l04628" name="l04628"></a><span class="lineno"> 4628</span><span class="stringliteral">            alphaSum += sampleSSR.a;</span></div>
-<div class="line"><a id="l04629" name="l04629"></a><span class="lineno"> 4629</span><span class="stringliteral">            contributingSamples++;</span></div>
-<div class="line"><a id="l04630" name="l04630"></a><span class="lineno"> 4630</span><span class="stringliteral">        }</span></div>
-<div class="line"><a id="l04631" name="l04631"></a><span class="lineno"> 4631</span><span class="stringliteral">    }</span></div>
-<div class="line"><a id="l04632" name="l04632"></a><span class="lineno"> 4632</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04633" name="l04633"></a><span class="lineno"> 4633</span><span class="stringliteral">    if (weightSum &gt; 1e-4) {</span></div>
-<div class="line"><a id="l04634" name="l04634"></a><span class="lineno"> 4634</span><span class="stringliteral">        vec3 blurredColor = colorSum / weightSum;</span></div>
-<div class="line"><a id="l04635" name="l04635"></a><span class="lineno"> 4635</span><span class="stringliteral">        float averagedAlpha = contributingSamples &gt; 0</span></div>
-<div class="line"><a id="l04636" name="l04636"></a><span class="lineno"> 4636</span><span class="stringliteral">                                   ? clamp(alphaSum / float(contributingSamples), 0.0, 1.0)</span></div>
-<div class="line"><a id="l04637" name="l04637"></a><span class="lineno"> 4637</span><span class="stringliteral">                                   : centerSSR.a;</span></div>
-<div class="line"><a id="l04638" name="l04638"></a><span class="lineno"> 4638</span><span class="stringliteral">        FragColor = vec4(blurredColor, max(averagedAlpha, centerSSR.a));</span></div>
-<div class="line"><a id="l04639" name="l04639"></a><span class="lineno"> 4639</span><span class="stringliteral">    } else {</span></div>
-<div class="line"><a id="l04640" name="l04640"></a><span class="lineno"> 4640</span><span class="stringliteral">        FragColor = centerSSR;</span></div>
-<div class="line"><a id="l04641" name="l04641"></a><span class="lineno"> 4641</span><span class="stringliteral">    }</span></div>
-<div class="line"><a id="l04642" name="l04642"></a><span class="lineno"> 4642</span><span class="stringliteral">}</span></div>
-<div class="line"><a id="l04643" name="l04643"></a><span class="lineno"> 4643</span><span class="stringliteral">)&quot;;</span></div>
-<div class="line"><a id="l04644" name="l04644"></a><span class="lineno"> 4644</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04645" name="l04645"></a><span class="lineno"><a class="line" href="default__shaders_8h.html#ad88f8cc860c904e7023437d9c36e6aa3"> 4645</a></span><span class="stringliteral"></span><span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">char</span> *<a class="code hl_variable" href="default__shaders_8h.html#ad88f8cc860c904e7023437d9c36e6aa3">VOLUMETRIC_VERT</a> = R<span class="stringliteral">&quot;(</span></div>
-<div class="line"><a id="l04646" name="l04646"></a><span class="lineno"> 4646</span><span class="stringliteral">#version 410 core</span></div>
-<div class="line"><a id="l04647" name="l04647"></a><span class="lineno"> 4647</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04648" name="l04648"></a><span class="lineno"> 4648</span><span class="stringliteral">layout(location = 0) in vec3 aPos;</span></div>
-<div class="line"><a id="l04649" name="l04649"></a><span class="lineno"> 4649</span><span class="stringliteral">layout(location = 1) in vec2 aTexCoords;</span></div>
-<div class="line"><a id="l04650" name="l04650"></a><span class="lineno"> 4650</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04651" name="l04651"></a><span class="lineno"> 4651</span><span class="stringliteral">out vec2 TexCoords;</span></div>
-<div class="line"><a id="l04652" name="l04652"></a><span class="lineno"> 4652</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04653" name="l04653"></a><span class="lineno"> 4653</span><span class="stringliteral">void main() {</span></div>
-<div class="line"><a id="l04654" name="l04654"></a><span class="lineno"> 4654</span><span class="stringliteral">    gl_Position = vec4(aPos, 1.0);</span></div>
-<div class="line"><a id="l04655" name="l04655"></a><span class="lineno"> 4655</span><span class="stringliteral">    TexCoords = aTexCoords;</span></div>
-<div class="line"><a id="l04656" name="l04656"></a><span class="lineno"> 4656</span><span class="stringliteral">}</span></div>
-<div class="line"><a id="l04657" name="l04657"></a><span class="lineno"> 4657</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04658" name="l04658"></a><span class="lineno"> 4658</span><span class="stringliteral">)&quot;;</span></div>
-<div class="line"><a id="l04659" name="l04659"></a><span class="lineno"> 4659</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04660" name="l04660"></a><span class="lineno"><a class="line" href="default__shaders_8h.html#aac56e41dba3af03619326b9c522e6ee4"> 4660</a></span><span class="stringliteral"></span><span class="keyword">static</span> <span class="keyword">const</span> <span class="keywordtype">char</span> *<a class="code hl_variable" href="default__shaders_8h.html#aac56e41dba3af03619326b9c522e6ee4">VOLUMETRIC_FRAG</a> = R<span class="stringliteral">&quot;(</span></div>
-<div class="line"><a id="l04661" name="l04661"></a><span class="lineno"> 4661</span><span class="stringliteral">#version 410 core</span></div>
-<div class="line"><a id="l04662" name="l04662"></a><span class="lineno"> 4662</span><span class="stringliteral">in vec2 TexCoords;</span></div>
-<div class="line"><a id="l04663" name="l04663"></a><span class="lineno"> 4663</span><span class="stringliteral">out vec4 FragColor;</span></div>
-<div class="line"><a id="l04664" name="l04664"></a><span class="lineno"> 4664</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04665" name="l04665"></a><span class="lineno"> 4665</span><span class="stringliteral">uniform sampler2D sceneTexture;</span></div>
-<div class="line"><a id="l04666" name="l04666"></a><span class="lineno"> 4666</span><span class="stringliteral">uniform vec2 sunPos;</span></div>
-<div class="line"><a id="l04667" name="l04667"></a><span class="lineno"> 4667</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04668" name="l04668"></a><span class="lineno"> 4668</span><span class="stringliteral">struct DirectionalLight {</span></div>
-<div class="line"><a id="l04669" name="l04669"></a><span class="lineno"> 4669</span><span class="stringliteral">    vec3 color;</span></div>
-<div class="line"><a id="l04670" name="l04670"></a><span class="lineno"> 4670</span><span class="stringliteral">};</span></div>
-<div class="line"><a id="l04671" name="l04671"></a><span class="lineno"> 4671</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04672" name="l04672"></a><span class="lineno"> 4672</span><span class="stringliteral">uniform DirectionalLight directionalLight;</span></div>
-<div class="line"><a id="l04673" name="l04673"></a><span class="lineno"> 4673</span><span class="stringliteral">uniform float density;</span></div>
-<div class="line"><a id="l04674" name="l04674"></a><span class="lineno"> 4674</span><span class="stringliteral">uniform float weight;</span></div>
-<div class="line"><a id="l04675" name="l04675"></a><span class="lineno"> 4675</span><span class="stringliteral">uniform float decay;</span></div>
-<div class="line"><a id="l04676" name="l04676"></a><span class="lineno"> 4676</span><span class="stringliteral">uniform float exposure;</span></div>
-<div class="line"><a id="l04677" name="l04677"></a><span class="lineno"> 4677</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04678" name="l04678"></a><span class="lineno"> 4678</span><span class="stringliteral">vec3 computeVolumetricLighting(vec2 uv) {</span></div>
-<div class="line"><a id="l04679" name="l04679"></a><span class="lineno"> 4679</span><span class="stringliteral">    vec3 color = vec3(0.0);</span></div>
-<div class="line"><a id="l04680" name="l04680"></a><span class="lineno"> 4680</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04681" name="l04681"></a><span class="lineno"> 4681</span><span class="stringliteral">    vec2 deltaTexCoord = (sunPos - uv) * density;</span></div>
-<div class="line"><a id="l04682" name="l04682"></a><span class="lineno"> 4682</span><span class="stringliteral">    vec2 coord = uv;</span></div>
-<div class="line"><a id="l04683" name="l04683"></a><span class="lineno"> 4683</span><span class="stringliteral">    float illuminationDecay = 1.0;</span></div>
-<div class="line"><a id="l04684" name="l04684"></a><span class="lineno"> 4684</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04685" name="l04685"></a><span class="lineno"> 4685</span><span class="stringliteral">    const int NUM_SAMPLES = 100;</span></div>
-<div class="line"><a id="l04686" name="l04686"></a><span class="lineno"> 4686</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04687" name="l04687"></a><span class="lineno"> 4687</span><span class="stringliteral">    for (int i = 0; i &lt; NUM_SAMPLES; i++) {</span></div>
-<div class="line"><a id="l04688" name="l04688"></a><span class="lineno"> 4688</span><span class="stringliteral">        coord += deltaTexCoord;</span></div>
-<div class="line"><a id="l04689" name="l04689"></a><span class="lineno"> 4689</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04690" name="l04690"></a><span class="lineno"> 4690</span><span class="stringliteral">        if (coord.x &lt; 0.0 || coord.x &gt; 1.0 || coord.y &lt; 0.0 || coord.y &gt; 1.0) {</span></div>
-<div class="line"><a id="l04691" name="l04691"></a><span class="lineno"> 4691</span><span class="stringliteral">            break;</span></div>
-<div class="line"><a id="l04692" name="l04692"></a><span class="lineno"> 4692</span><span class="stringliteral">        }</span></div>
-<div class="line"><a id="l04693" name="l04693"></a><span class="lineno"> 4693</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04694" name="l04694"></a><span class="lineno"> 4694</span><span class="stringliteral">        vec3 sampled = texture(sceneTexture, coord).rgb;</span></div>
-<div class="line"><a id="l04695" name="l04695"></a><span class="lineno"> 4695</span><span class="stringliteral">        float brightness = dot(sampled, vec3(0.299, 0.587, 0.114));</span></div>
-<div class="line"><a id="l04696" name="l04696"></a><span class="lineno"> 4696</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04697" name="l04697"></a><span class="lineno"> 4697</span><span class="stringliteral">        vec3 atmosphere = directionalLight.color * 0.02;</span></div>
-<div class="line"><a id="l04698" name="l04698"></a><span class="lineno"> 4698</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04699" name="l04699"></a><span class="lineno"> 4699</span><span class="stringliteral">        if (brightness &gt; 0.5) {</span></div>
-<div class="line"><a id="l04700" name="l04700"></a><span class="lineno"> 4700</span><span class="stringliteral">            atmosphere += sampled * 0.5;</span></div>
-<div class="line"><a id="l04701" name="l04701"></a><span class="lineno"> 4701</span><span class="stringliteral">        }</span></div>
-<div class="line"><a id="l04702" name="l04702"></a><span class="lineno"> 4702</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04703" name="l04703"></a><span class="lineno"> 4703</span><span class="stringliteral">        atmosphere *= illuminationDecay * weight;</span></div>
-<div class="line"><a id="l04704" name="l04704"></a><span class="lineno"> 4704</span><span class="stringliteral">        color += atmosphere;</span></div>
-<div class="line"><a id="l04705" name="l04705"></a><span class="lineno"> 4705</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04706" name="l04706"></a><span class="lineno"> 4706</span><span class="stringliteral">        illuminationDecay *= decay;</span></div>
-<div class="line"><a id="l04707" name="l04707"></a><span class="lineno"> 4707</span><span class="stringliteral">    }</span></div>
-<div class="line"><a id="l04708" name="l04708"></a><span class="lineno"> 4708</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04709" name="l04709"></a><span class="lineno"> 4709</span><span class="stringliteral">    return color * 5.0;</span></div>
-<div class="line"><a id="l04710" name="l04710"></a><span class="lineno"> 4710</span><span class="stringliteral">}</span></div>
-<div class="line"><a id="l04711" name="l04711"></a><span class="lineno"> 4711</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04712" name="l04712"></a><span class="lineno"> 4712</span><span class="stringliteral">void main() {</span></div>
-<div class="line"><a id="l04713" name="l04713"></a><span class="lineno"> 4713</span><span class="stringliteral">    vec3 rays = computeVolumetricLighting(TexCoords);</span></div>
-<div class="line"><a id="l04714" name="l04714"></a><span class="lineno"> 4714</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04715" name="l04715"></a><span class="lineno"> 4715</span><span class="stringliteral">    FragColor = vec4(rays, 1.0);</span></div>
-<div class="line"><a id="l04716" name="l04716"></a><span class="lineno"> 4716</span><span class="stringliteral">}</span></div>
-<div class="line"><a id="l04717" name="l04717"></a><span class="lineno"> 4717</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04718" name="l04718"></a><span class="lineno"> 4718</span><span class="stringliteral">)&quot;;</span></div>
-<div class="line"><a id="l04719" name="l04719"></a><span class="lineno"> 4719</span><span class="stringliteral"></span> </div>
-<div class="line"><a id="l04720" name="l04720"></a><span class="lineno"> 4720</span><span class="stringliteral"></span><span class="preprocessor">#endif </span><span class="comment">// ATLAS_GENERATED_SHADERS_H</span></div>
+<div class="line"><a id="l04626" name="l04626"></a><span class="lineno"> 4626</span><span class="stringliteral">)&quot;;</span></div>
+<div class="line"><a id="l04627" name="l04627"></a><span class="lineno"> 4627</span><span class="stringliteral"></span> </div>
+<div class="line"><a id="l04628" name="l04628"></a><span class="lineno"> 4628</span><span class="stringliteral"></span><span class="preprocessor">#endif </span><span class="comment">// ATLAS_GENERATED_SHADERS_H</span></div>
 <div class="ttc" id="adefault__shaders_8h_html_a07f0219170c57524bc8c2ca4d6e5f58a"><div class="ttname"><a href="default__shaders_8h.html#a07f0219170c57524bc8c2ca4d6e5f58a">GAUSSIAN_FRAG</a></div><div class="ttdeci">static const char * GAUSSIAN_FRAG</div><div class="ttdef"><b>Definition</b> <a href="#l04341">default_shaders.h:4341</a></div></div>
 <div class="ttc" id="adefault__shaders_8h_html_a0ce5d8c68f5b7c88fac6151edc55a670"><div class="ttname"><a href="default__shaders_8h.html#a0ce5d8c68f5b7c88fac6151edc55a670">FULLSCREEN_VERT</a></div><div class="ttdeci">static const char * FULLSCREEN_VERT</div><div class="ttdef"><b>Definition</b> <a href="#l01696">default_shaders.h:1696</a></div></div>
 <div class="ttc" id="adefault__shaders_8h_html_a0dfe243a0d1dd1ce6c226e98ec70292c"><div class="ttname"><a href="default__shaders_8h.html#a0dfe243a0d1dd1ce6c226e98ec70292c">TERRAIN_FRAG</a></div><div class="ttdeci">static const char * TERRAIN_FRAG</div><div class="ttdef"><b>Definition</b> <a href="#l02841">default_shaders.h:2841</a></div></div>
@@ -4857,9 +4765,8 @@ $(function(){initNavTree('default__shaders_8h_source.html','',''); });
 <div class="ttc" id="adefault__shaders_8h_html_a8aa02451898eb17af41dbd2d3b424679"><div class="ttname"><a href="default__shaders_8h.html#a8aa02451898eb17af41dbd2d3b424679">DEBUG_VERT</a></div><div class="ttdeci">static const char * DEBUG_VERT</div><div class="ttdef"><b>Definition</b> <a href="#l02725">default_shaders.h:2725</a></div></div>
 <div class="ttc" id="adefault__shaders_8h_html_a8b6ccb83c67ae58ec1c69e87c40b2113"><div class="ttname"><a href="default__shaders_8h.html#a8b6ccb83c67ae58ec1c69e87c40b2113">POINT_DEPTH_VERT</a></div><div class="ttdeci">static const char * POINT_DEPTH_VERT</div><div class="ttdef"><b>Definition</b> <a href="#l01741">default_shaders.h:1741</a></div></div>
 <div class="ttc" id="adefault__shaders_8h_html_a8f6a623fa306218517b69dc65ff8733e"><div class="ttname"><a href="default__shaders_8h.html#a8f6a623fa306218517b69dc65ff8733e">SKYBOX_FRAG</a></div><div class="ttdeci">static const char * SKYBOX_FRAG</div><div class="ttdef"><b>Definition</b> <a href="#l03948">default_shaders.h:3948</a></div></div>
-<div class="ttc" id="adefault__shaders_8h_html_a9468b7d98396ad89026077ce080b1e58"><div class="ttname"><a href="default__shaders_8h.html#a9468b7d98396ad89026077ce080b1e58">SSR_BLUR_FRAG</a></div><div class="ttdeci">static const char * SSR_BLUR_FRAG</div><div class="ttdef"><b>Definition</b> <a href="#l04564">default_shaders.h:4564</a></div></div>
 <div class="ttc" id="adefault__shaders_8h_html_a97b3d1eef4d78c8c5f962286401216b9"><div class="ttname"><a href="default__shaders_8h.html#a97b3d1eef4d78c8c5f962286401216b9">DOWNSAMPLE_FRAG</a></div><div class="ttdeci">static const char * DOWNSAMPLE_FRAG</div><div class="ttdef"><b>Definition</b> <a href="#l04214">default_shaders.h:4214</a></div></div>
-<div class="ttc" id="adefault__shaders_8h_html_aac56e41dba3af03619326b9c522e6ee4"><div class="ttname"><a href="default__shaders_8h.html#aac56e41dba3af03619326b9c522e6ee4">VOLUMETRIC_FRAG</a></div><div class="ttdeci">static const char * VOLUMETRIC_FRAG</div><div class="ttdef"><b>Definition</b> <a href="#l04660">default_shaders.h:4660</a></div></div>
+<div class="ttc" id="adefault__shaders_8h_html_aac56e41dba3af03619326b9c522e6ee4"><div class="ttname"><a href="default__shaders_8h.html#aac56e41dba3af03619326b9c522e6ee4">VOLUMETRIC_FRAG</a></div><div class="ttdeci">static const char * VOLUMETRIC_FRAG</div><div class="ttdef"><b>Definition</b> <a href="#l04568">default_shaders.h:4568</a></div></div>
 <div class="ttc" id="adefault__shaders_8h_html_ab61110f9533f7aaccfce61ce7b25da9b"><div class="ttname"><a href="default__shaders_8h.html#ab61110f9533f7aaccfce61ce7b25da9b">DEBUG_FRAG</a></div><div class="ttdeci">static const char * DEBUG_FRAG</div><div class="ttdef"><b>Definition</b> <a href="#l02689">default_shaders.h:2689</a></div></div>
 <div class="ttc" id="adefault__shaders_8h_html_ab88cb28a63dbaadc0417f3333f7d6994"><div class="ttname"><a href="default__shaders_8h.html#ab88cb28a63dbaadc0417f3333f7d6994">BINN_PHONG_VERT</a></div><div class="ttdeci">static const char * BINN_PHONG_VERT</div><div class="ttdef"><b>Definition</b> <a href="#l03906">default_shaders.h:3906</a></div></div>
 <div class="ttc" id="adefault__shaders_8h_html_abd40d744c94aaf9963332aadd7b06466"><div class="ttname"><a href="default__shaders_8h.html#abd40d744c94aaf9963332aadd7b06466">COLOR_VERT</a></div><div class="ttdeci">static const char * COLOR_VERT</div><div class="ttdef"><b>Definition</b> <a href="#l02699">default_shaders.h:2699</a></div></div>
@@ -4870,7 +4777,7 @@ $(function(){initNavTree('default__shaders_8h_source.html','',''); });
 <div class="ttc" id="adefault__shaders_8h_html_ad0bc8276a246d872f0f11a408ede96a6"><div class="ttname"><a href="default__shaders_8h.html#ad0bc8276a246d872f0f11a408ede96a6">SSAO_FRAG</a></div><div class="ttdeci">static const char * SSAO_FRAG</div><div class="ttdef"><b>Definition</b> <a href="#l01829">default_shaders.h:1829</a></div></div>
 <div class="ttc" id="adefault__shaders_8h_html_ad296833bdb0c8209d00ae60404d63ccb"><div class="ttname"><a href="default__shaders_8h.html#ad296833bdb0c8209d00ae60404d63ccb">FULLSCREEN_FRAG</a></div><div class="ttdeci">static const char * FULLSCREEN_FRAG</div><div class="ttdef"><b>Definition</b> <a href="#l00005">default_shaders.h:5</a></div></div>
 <div class="ttc" id="adefault__shaders_8h_html_ad346966a531110057848a978cf65409d"><div class="ttname"><a href="default__shaders_8h.html#ad346966a531110057848a978cf65409d">POINT_DEPTH_GEOM</a></div><div class="ttdeci">static const char * POINT_DEPTH_GEOM</div><div class="ttdef"><b>Definition</b> <a href="#l01806">default_shaders.h:1806</a></div></div>
-<div class="ttc" id="adefault__shaders_8h_html_ad88f8cc860c904e7023437d9c36e6aa3"><div class="ttname"><a href="default__shaders_8h.html#ad88f8cc860c904e7023437d9c36e6aa3">VOLUMETRIC_VERT</a></div><div class="ttdeci">static const char * VOLUMETRIC_VERT</div><div class="ttdef"><b>Definition</b> <a href="#l04645">default_shaders.h:4645</a></div></div>
+<div class="ttc" id="adefault__shaders_8h_html_ad88f8cc860c904e7023437d9c36e6aa3"><div class="ttname"><a href="default__shaders_8h.html#ad88f8cc860c904e7023437d9c36e6aa3">VOLUMETRIC_VERT</a></div><div class="ttdeci">static const char * VOLUMETRIC_VERT</div><div class="ttdef"><b>Definition</b> <a href="#l04553">default_shaders.h:4553</a></div></div>
 <div class="ttc" id="adefault__shaders_8h_html_ad892c8de43e5c33bab942cb2edc249ec"><div class="ttname"><a href="default__shaders_8h.html#ad892c8de43e5c33bab942cb2edc249ec">DEPTH_VERT</a></div><div class="ttdeci">static const char * DEPTH_VERT</div><div class="ttdef"><b>Definition</b> <a href="#l01758">default_shaders.h:1758</a></div></div>
 <div class="ttc" id="adefault__shaders_8h_html_adbc40b4a97e5a3bf53b4b7128dfbdc9e"><div class="ttname"><a href="default__shaders_8h.html#adbc40b4a97e5a3bf53b4b7128dfbdc9e">PARTICLE_FRAG</a></div><div class="ttdeci">static const char * PARTICLE_FRAG</div><div class="ttdef"><b>Definition</b> <a href="#l04254">default_shaders.h:4254</a></div></div>
 <div class="ttc" id="adefault__shaders_8h_html_add7670795ba8dd905c528e80bab1431d"><div class="ttname"><a href="default__shaders_8h.html#add7670795ba8dd905c528e80bab1431d">FLUID_VERT</a></div><div class="ttdeci">static const char * FLUID_VERT</div><div class="ttdef"><b>Definition</b> <a href="#l03051">default_shaders.h:3051</a></div></div>

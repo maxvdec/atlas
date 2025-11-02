@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 3</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 4</span>
    </div>
   </td>
  </tr>
@@ -122,17 +122,24 @@ $(function(){initNavTree('struct_weather_state.html','','struct_weather_state-me
 </div><!--header-->
 <div class="contents">
 
+<p>Summary of the current atmospheric weather state.  
+ <a href="#details">More...</a></p>
+
 <p><code>#include &lt;<a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a797f1df9e1323fb0dc2f442adc2ad306" id="r_a797f1df9e1323fb0dc2f442adc2ad306"><td class="memItemLeft" align="right" valign="top"><a class="el" href="atmosphere_8h.html#ad73deaf390ece3e96b7cd67785e8af1b">WeatherCondition</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a797f1df9e1323fb0dc2f442adc2ad306">condition</a> = <a class="el" href="atmosphere_8h.html#ad73deaf390ece3e96b7cd67785e8af1badc30bc0c7914db5918da4263fce93ad2">WeatherCondition::Clear</a></td></tr>
+<tr class="memdesc:a797f1df9e1323fb0dc2f442adc2ad306"><td class="mdescLeft">&#160;</td><td class="mdescRight">Dominant weather pattern.  <br /></td></tr>
 <tr class="memitem:a55db49324118f6c4cc1e4a7c57568014" id="r_a55db49324118f6c4cc1e4a7c57568014"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a55db49324118f6c4cc1e4a7c57568014">intensity</a> = 0.0f</td></tr>
+<tr class="memdesc:a55db49324118f6c4cc1e4a7c57568014"><td class="mdescLeft">&#160;</td><td class="mdescRight">Strength of the active weather effect (0-1).  <br /></td></tr>
 <tr class="memitem:a9e18cee9b9d91c0149956b9e81ed8f2c" id="r_a9e18cee9b9d91c0149956b9e81ed8f2c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="units_8h.html#af1efe03080186b94608ab2d50c060fe5">Magnitude3d</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9e18cee9b9d91c0149956b9e81ed8f2c">wind</a> = {0.0f, 0.0f, 0.0f}</td></tr>
+<tr class="memdesc:a9e18cee9b9d91c0149956b9e81ed8f2c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Resulting wind vector affecting particles and clouds.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
-<div class="textblock">
-<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00081">81</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<div class="textblock"><p>Summary of the current atmospheric weather state. </p>
+
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00163">163</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
 </div><a name="doc-variable-members" id="doc-variable-members"></a><h2 id="header-doc-variable-members" class="groupheader">Member Data Documentation</h2>
 <a id="a797f1df9e1323fb0dc2f442adc2ad306" name="a797f1df9e1323fb0dc2f442adc2ad306"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a797f1df9e1323fb0dc2f442adc2ad306">&#9670;&#160;</a></span>condition</h2>
@@ -146,7 +153,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00082">82</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<p>Dominant weather pattern. </p>
+
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00167">167</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
 
 </div>
 </div>
@@ -162,7 +171,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00083">83</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<p>Strength of the active weather effect (0-1). </p>
+
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00171">171</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
 
 </div>
 </div>
@@ -178,8 +189,10 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00084">84</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   84</span>{0.0f, 0.0f, 0.0f};</div>
+<p>Resulting wind vector affecting particles and clouds. </p>
+
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00175">175</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  175</span>{0.0f, 0.0f, 0.0f};</div>
 </div><!-- fragment -->
 </div>
 </div>

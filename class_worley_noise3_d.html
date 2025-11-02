@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 3</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 4</span>
    </div>
   </td>
  </tr>
@@ -122,19 +122,28 @@ $(function(){initNavTree('class_worley_noise3_d.html','','class_worley_noise3_d-
 </div><!--header-->
 <div class="contents">
 
+<p>Utility that procedurally generates 3D Worley noise textures for cloud rendering.  
+ <a href="#details">More...</a></p>
+
 <p><code>#include &lt;<a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a61890bb518ddbcfa539134c9546b3b37" id="r_a61890bb518ddbcfa539134c9546b3b37"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a61890bb518ddbcfa539134c9546b3b37">WorleyNoise3D</a> (int frequency, int numberOfDivisions)</td></tr>
+<tr class="memdesc:a61890bb518ddbcfa539134c9546b3b37"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a Worley noise generator.  <br /></td></tr>
 <tr class="memitem:af44a3b160aaf49863bb90abe9c18166c" id="r_af44a3b160aaf49863bb90abe9c18166c"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#af44a3b160aaf49863bb90abe9c18166c">getValue</a> (float x, float y, float z) const</td></tr>
+<tr class="memdesc:af44a3b160aaf49863bb90abe9c18166c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Samples the noise field at a position.  <br /></td></tr>
 <tr class="memitem:a8ef26ffe999a34bf0242d550f8666bab" id="r_a8ef26ffe999a34bf0242d550f8666bab"><td class="memItemLeft" align="right" valign="top"><a class="el" href="units_8h.html#a5c9d258201f281b8ad0fb4385b7ef668">Id</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a8ef26ffe999a34bf0242d550f8666bab">get3dTexture</a> (int res) const</td></tr>
+<tr class="memdesc:a8ef26ffe999a34bf0242d550f8666bab"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates or retrieves a 3D noise texture with RGB packed channels.  <br /></td></tr>
 <tr class="memitem:a218b9a22fb2e639fd7864f2438f41cee" id="r_a218b9a22fb2e639fd7864f2438f41cee"><td class="memItemLeft" align="right" valign="top"><a class="el" href="units_8h.html#a5c9d258201f281b8ad0fb4385b7ef668">Id</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a218b9a22fb2e639fd7864f2438f41cee">getDetailTexture</a> (int res) const</td></tr>
+<tr class="memdesc:a218b9a22fb2e639fd7864f2438f41cee"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a detail layer texture for modulating primary noise.  <br /></td></tr>
 <tr class="memitem:aa015972705580c7b2b2d59437436fd87" id="r_aa015972705580c7b2b2d59437436fd87"><td class="memItemLeft" align="right" valign="top"><a class="el" href="units_8h.html#a5c9d258201f281b8ad0fb4385b7ef668">Id</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa015972705580c7b2b2d59437436fd87">get3dTextureAtAllChannels</a> (int res) const</td></tr>
+<tr class="memdesc:aa015972705580c7b2b2d59437436fd87"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a monochrome texture replicated across every channel.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
-<div class="textblock">
-<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00025">25</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
+<div class="textblock"><p>Utility that procedurally generates 3D Worley noise textures for cloud rendering. </p>
+
+<p class="definition">Definition at line <a class="el" href="atmosphere_8h_source.html#l00029">29</a> of file <a class="el" href="atmosphere_8h_source.html">atmosphere.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a61890bb518ddbcfa539134c9546b3b37" name="a61890bb518ddbcfa539134c9546b3b37"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a61890bb518ddbcfa539134c9546b3b37">&#9670;&#160;</a></span>WorleyNoise3D()</h2>
@@ -155,6 +164,15 @@ Public Member Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
+<p>Creates a Worley noise generator. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">frequency</td><td>Number of feature points per unit space. </td></tr>
+    <tr><td class="paramname">numberOfDivisions</td><td>Octave divisions contributing to turbulence. </td></tr>
+  </table>
+  </dd>
+</dl>
+
 </div>
 </div>
 <a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
@@ -173,6 +191,8 @@ Public Member Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
+<p>Creates or retrieves a 3D noise texture with RGB packed channels. </p>
+
 </div>
 </div>
 <a id="aa015972705580c7b2b2d59437436fd87" name="aa015972705580c7b2b2d59437436fd87"></a>
@@ -190,6 +210,8 @@ Public Member Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
+<p>Creates a monochrome texture replicated across every channel. </p>
+
 </div>
 </div>
 <a id="a218b9a22fb2e639fd7864f2438f41cee" name="a218b9a22fb2e639fd7864f2438f41cee"></a>
@@ -206,6 +228,8 @@ Public Member Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>Returns a detail layer texture for modulating primary noise. </p>
 
 </div>
 </div>
@@ -232,6 +256,8 @@ Public Member Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>Samples the noise field at a position. </p>
 
 </div>
 </div>
