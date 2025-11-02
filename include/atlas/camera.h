@@ -205,10 +205,26 @@ class Camera {
     float targetPitch = 0.0f;
 };
 
+/**
+ * @brief Bundle of camera state values passed to systems that need view
+ * context (e.g., weather, atmosphere).
+ */
 struct ViewInformation {
+    /**
+     * @brief Current world-space position of the observing camera.
+     */
     Position3d position;
+    /**
+     * @brief World-space point the camera is tracking or looking at.
+     */
     Position3d target;
+    /**
+     * @brief Absolute engine time, typically measured in seconds.
+     */
     float time;
+    /**
+     * @brief Time elapsed since the previous update.
+     */
     float deltaTime;
 };
 

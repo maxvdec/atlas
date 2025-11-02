@@ -484,6 +484,10 @@ class CoreObject : public GameObject {
      */
     bool useDeferredRendering = true;
 
+    /**
+     * @brief Switches the object to forward rendering by binding default
+     * shaders.
+     */
     void disableDeferredRendering() {
         useDeferredRendering = false;
         this->shaderProgram = ShaderProgram::fromDefaultShaders(
@@ -535,28 +539,63 @@ class CoreObject : public GameObject {
     void updateInstances();
 
   public:
+    /**
+     * @brief Draws the object for the current frame.
+     *
+     * @param dt Time delta provided by the window loop.
+     */
     void render(float dt) override;
+    /**
+     * @brief Uploads the active view matrix used for transforming vertices to
+     * camera space.
+     */
     void setViewMatrix(const glm::mat4 &view) override;
+    /**
+     * @brief Uploads the projection matrix that maps camera space to clip
+     * space.
+     */
     void setProjectionMatrix(const glm::mat4 &projection) override;
 
+    /**
+     * @brief Returns the currently bound shader program, if any.
+     */
     inline std::optional<ShaderProgram> getShaderProgram() override {
         return this->shaderProgram;
     }
 
+    /**
+     * @brief Replaces the object's shader program and reinitializes buffers as
+     * needed.
+     */
     inline void setShader(const ShaderProgram &shader) override {
         this->shaderProgram = shader;
         this->initialize();
     }
 
+    /**
+     * @brief Gets the world-space position of the object.
+     */
     inline Position3d getPosition() const override { return position; }
 
+    /**
+     * @brief Returns a copy of the object's vertex collection.
+     */
     inline std::vector<CoreVertex> getVertices() const override {
         return vertices;
     }
 
+    /**
+     * @brief Gets the current non-uniform scale applied to the object.
+     */
     inline Size3d getScale() const override { return scale; }
+    /**
+     * @brief Reports whether the object is configured to cast shadows.
+     */
     inline bool canCastShadows() const override { return castsShadows; }
 
+    /**
+     * @brief Returns the unique identifier associated with this object.
+     */
     inline unsigned int getId() override { return id; }
 
     /**
@@ -565,6 +604,10 @@ class CoreObject : public GameObject {
      */
     void update(Window &window) override;
 
+    /**
+     * @brief Indicates whether the object is eligible for the deferred
+     * rendering pipeline.
+     */
     bool canUseDeferredRendering() override { return useDeferredRendering; }
 };
 
