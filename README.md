@@ -22,6 +22,7 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - The physics engine is Bezel. Bezel is a separate library that handles all the physics calculations and simulations.
 - The audio engine is Finewave. Finewave is a separate library that handles all the audio playback and processing.
 - The terrain system is Aurora. Aurora is a separate library that handles terrain generation and rendering.
+- The environment system is Hydra. Hydra is a separate library that handles sky, atmosphere, weather and fluid simulation.
 
 ## Roadmap to Beta
 
