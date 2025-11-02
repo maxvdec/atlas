@@ -22,6 +22,7 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - The physics engine is Bezel. Bezel is a separate library that handles all the physics calculations and simulations.
 - The audio engine is Finewave. Finewave is a separate library that handles all the audio playback and processing.
 - The terrain system is Aurora. Aurora is a separate library that handles terrain generation and rendering.
+- The environment system is Hydra. Hydra is a separate library that handles sky, atmosphere, weather and fluid simulation.
 
 ## Roadmap to Beta
 
@@ -43,7 +44,13 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [x] Lights
 - [x] Shadows (except for point lights)
 - [x] Post-processing effects
-- [ ] Sky, atmosphere, weather and fluid simulation system (Hydra)
+- [x] Sky, atmosphere, weather and fluid simulation system (Hydra) **for alpha 4**
+- [x] Water rendering system **for alpha 4**
+- [x] Weather system **for alpha 4**
+- [x] Cloud system **for alpha 4**
+- [x] Screen-space global illumination **for alpha 4**
+- [x] Night-day cycle system **for alpha 4**
+- [x] Add sun, moon and stars rendering **for alpha 4**
 - [ ] Animation system (Mold)
 - [x] Instancing support
 - [x] Optimizations and performance improvements
@@ -51,8 +58,8 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [ ] Runtime independent of final executable
 - [ ] Scene packing
 - [x] Add deferred rendering for better performance with many lights
-- [x] Add PBR rendering **for alpha 3**
-- [x] Add other texture supports (normal, roughness, metallic, ao, etc.) **for alpha 3**
+- [x] Add PBR rendering 
+- [x] Add other texture supports (normal, roughness, metallic, ao, etc.) 
 - [x] Add HDR support
 - [x] Add SSAO
 - [x] Add soft shadows
@@ -62,23 +69,26 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [ ] Add support for constraints in Bezel
 - [ ] Add support for character controllers in Bezel
 - [ ] Add support for motors in Bezel
-- [x] Add volumetric lighting **for alpha 3**
+- [x] Add volumetric lighting
 - [x] Add bloom for lights
 - [x] Add depth of field
-- [x] Add terrain system (Aurora) **for alpha 3**
-- [x] Add motion blur **for alpha 3**
-- [x] Physically based bloom **for alpha 3**
-- [x] Add area lights **for alpha 3**
-- [ ] Screen-space reflections
-- [x] Add rim lighting **for alpha 3**
-- [x] Add chromatic aberration **for alpha 3**
-- [x] Add posterization **for alpha 3**
-- [x] Add pixelization **for alpha 3**
-- [x] Add dilation **for alpha 3**
-- [x] Add film grain **for alpha 3**
-- [x] Add LUT tables **for alpha 3**
-- [ ] Add foam and simple fluid rendering
-- [ ] Screen-space refractions
+- [x] Add terrain system (Aurora) 
+- [x] Add motion blur 
+- [x] Physically based bloom 
+- [x] Add area lights 
+- [x] Screen-space reflections **for alpha 4**
+- [x] Add rim lighting 
+- [x] Add chromatic aberration 
+- [x] Add posterization
+- [x] Add pixelization 
+- [x] Add dilation 
+- [x] Add film grain 
+- [x] Add LUT tables 
+- [x] Add foam and simple fluid rendering **for alpha 4**
+- [x] Screen-space refractions **for alpha 4**
+- [ ] Create opal for core rendering
+- [ ] Migrate the engine to use opal
+- [ ] Add Vulkan support through opal
 
 ## Other features planned for the future
 
@@ -88,6 +98,5 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [ ] Terrain generation and rendering (Terra)
 - [ ] Network support (Lasse)
 - [ ] Metal support
-- [ ] Vulkan support
 - [ ] Ray tracing rendering (Overflow)
 - [ ] Add 2d physics (Bezel 2D support)

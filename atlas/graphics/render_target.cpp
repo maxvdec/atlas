@@ -597,12 +597,8 @@ void RenderTarget::render(float dt) {
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, depthTexture.id);
         obj->shaderProgram.setUniform1i("DepthTexture", 2);
-        if (!this->renderDepthOfView) {
-            obj->shaderProgram.setUniform1i("hasDepthTexture", 0);
-        } else {
-            obj->shaderProgram.setUniform1i("hasDepthTexture",
-                                            depthTexture.id != 0 ? 1 : 0);
-        }
+        const bool hasDepth = depthTexture.id != 0;
+        obj->shaderProgram.setUniform1i("hasDepthTexture", hasDepth ? 1 : 0);
 
         glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_2D, volumetricLightTexture.id);
@@ -616,15 +612,34 @@ void RenderTarget::render(float dt) {
         obj->shaderProgram.setUniform1i("hasPositionTexture",
                                         gPosition.id != 0 ? 1 : 0);
 
-        obj->shaderProgram.setUniformMat4f(
-            "projectionMatrix",
-            Window::mainWindow->calculateProjectionMatrix());
+        glActiveTexture(GL_TEXTURE5);
+        glBindTexture(GL_TEXTURE_2D, ssrTexture.id);
+        obj->shaderProgram.setUniform1i("SSRTexture", 5);
+        obj->shaderProgram.setUniform1i("hasSSRTexture",
+                                        ssrTexture.id != 0 ? 1 : 0);
 
-        obj->shaderProgram.setUniformMat4f(
-            "viewMatrix",
-            Window::mainWindow->getCamera()->calculateViewMatrix());
+        glActiveTexture(GL_TEXTURE6);
+        glBindTexture(GL_TEXTURE_2D, LUT.id);
+        obj->shaderProgram.setUniform1i("LUTTexture", 6);
+        obj->shaderProgram.setUniform1i("hasLUTTexture", LUT.id != 0 ? 1 : 0);
+
+        const glm::mat4 projectionMatrix =
+            Window::mainWindow->calculateProjectionMatrix();
+        const glm::mat4 viewMatrix =
+            Window::mainWindow->getCamera()->calculateViewMatrix();
+
+        obj->shaderProgram.setUniformMat4f("projectionMatrix",
+                                           projectionMatrix);
+        obj->shaderProgram.setUniformMat4f("invProjectionMatrix",
+                                           glm::inverse(projectionMatrix));
+
+        obj->shaderProgram.setUniformMat4f("viewMatrix", viewMatrix);
+        obj->shaderProgram.setUniformMat4f("invViewMatrix",
+                                           glm::inverse(viewMatrix));
         obj->shaderProgram.setUniformMat4f("lastViewMatrix",
                                            Window::mainWindow->lastViewMatrix);
+        obj->shaderProgram.setUniform3f("cameraPosition", camera->position.x,
+                                        camera->position.y, camera->position.z);
 
         obj->shaderProgram.setUniform1f("nearPlane", camera->nearClip);
         obj->shaderProgram.setUniform1f("farPlane", camera->farClip);
@@ -632,6 +647,7 @@ void RenderTarget::render(float dt) {
         obj->shaderProgram.setUniform1f("focusRange", camera->focusRange);
 
         obj->shaderProgram.setUniform1f("deltaTime", dt);
+        obj->shaderProgram.setUniform1f("time", Window::mainWindow->getTime());
 
         int maxMipLevels = (int)std::floor(
             std::log2(std::max(Window::mainWindow->getSize().width,
@@ -645,9 +661,76 @@ void RenderTarget::render(float dt) {
         obj->shaderProgram.setUniform3f(
             "environment.fogColor", scene->environment.fog.color.r,
             scene->environment.fog.color.g, scene->environment.fog.color.b);
-        obj->shaderProgram.setUniformMat4f(
-            "invProjectionMatrix",
-            glm::inverse(Window::mainWindow->calculateProjectionMatrix()));
+
+        if (scene->atmosphere.clouds) {
+            const Clouds &cloudSettings = *scene->atmosphere.clouds;
+
+            const glm::vec3 cloudSize = cloudSettings.size.toGlm();
+            const glm::vec3 cloudPos = cloudSettings.position.toGlm();
+
+            glm::vec3 sunDir = scene->atmosphere.getSunAngle().toGlm();
+            float sunLength = glm::length(sunDir);
+            if (sunLength > 1e-3f) {
+                sunDir /= sunLength;
+            } else {
+                sunDir = glm::vec3(0.0f, 1.0f, 0.0f);
+            }
+
+            const Color &sunColor = scene->atmosphere.sunColor;
+            const float sunIntensity = scene->atmosphere.getLightIntensity();
+            const Color ambientColor = scene->getAmbientColor();
+            const float ambientIntensity = scene->getAmbientIntensity();
+            glm::vec3 ambient = glm::vec3(static_cast<float>(ambientColor.r),
+                                          static_cast<float>(ambientColor.g),
+                                          static_cast<float>(ambientColor.b)) *
+                                ambientIntensity;
+
+            glActiveTexture(GL_TEXTURE15);
+            glBindTexture(GL_TEXTURE_3D, cloudSettings.getCloudTexture(128));
+            obj->shaderProgram.setUniform1i("cloudsTexture", 15);
+            obj->shaderProgram.setUniform3f("cloudSize", cloudSize.x,
+                                            cloudSize.y, cloudSize.z);
+            obj->shaderProgram.setUniform3f("cloudPosition", cloudPos.x,
+                                            cloudPos.y, cloudPos.z);
+            obj->shaderProgram.setUniform1f("cloudScale", cloudSettings.scale);
+            obj->shaderProgram.setUniform3f(
+                "cloudOffset", cloudSettings.offset.x, cloudSettings.offset.y,
+                cloudSettings.offset.z);
+            obj->shaderProgram.setUniform1f("cloudDensityThreshold",
+                                            cloudSettings.density);
+            obj->shaderProgram.setUniform1f("cloudDensityMultiplier",
+                                            cloudSettings.densityMultiplier);
+            obj->shaderProgram.setUniform1f("cloudAbsorption",
+                                            cloudSettings.absorption);
+            obj->shaderProgram.setUniform1f("cloudScattering",
+                                            cloudSettings.scattering);
+            obj->shaderProgram.setUniform1f("cloudPhaseG", cloudSettings.phase);
+            obj->shaderProgram.setUniform1f("cloudClusterStrength",
+                                            cloudSettings.clusterStrength);
+            obj->shaderProgram.setUniform1i(
+                "cloudPrimarySteps",
+                std::max(1, cloudSettings.primaryStepCount));
+            obj->shaderProgram.setUniform1i(
+                "cloudLightSteps", std::max(1, cloudSettings.lightStepCount));
+            obj->shaderProgram.setUniform1f("cloudLightStepMultiplier",
+                                            cloudSettings.lightStepMultiplier);
+            obj->shaderProgram.setUniform1f("cloudMinStepLength",
+                                            cloudSettings.minStepLength);
+            obj->shaderProgram.setUniform3f("sunDirection", sunDir.x, sunDir.y,
+                                            sunDir.z);
+            obj->shaderProgram.setUniform3f(
+                "sunColor", static_cast<float>(sunColor.r),
+                static_cast<float>(sunColor.g), static_cast<float>(sunColor.b));
+            obj->shaderProgram.setUniform1f("sunIntensity", sunIntensity);
+            obj->shaderProgram.setUniform3f("cloudAmbientColor", ambient.x,
+                                            ambient.y, ambient.z);
+            obj->shaderProgram.setUniform1i("hasClouds", 1);
+        } else {
+            glActiveTexture(GL_TEXTURE15);
+            glBindTexture(GL_TEXTURE_3D, 0);
+            obj->shaderProgram.setUniform1i("cloudsTexture", 15);
+            obj->shaderProgram.setUniform1i("hasClouds", 0);
+        }
     }
 
     obj->shaderProgram.setUniform1i("TextureType",

@@ -11,12 +11,61 @@
 #include "atlas/object.h"
 #include "atlas/units.h"
 #include "atlas/window.h"
+#include <iostream>
+#include <memory>
 #include <vector>
+
+class CompoundObject::LateCompoundRenderable : public Renderable {
+  public:
+    explicit LateCompoundRenderable(CompoundObject &owner) : parent(owner) {}
+
+    void render(float dt) override { parent.renderLate(dt); }
+    void initialize() override {}
+    void update(Window &window) override { parent.updateLate(window); }
+    void setViewMatrix(const glm::mat4 &view) override {
+        parent.setLateViewMatrix(view);
+    }
+    void setProjectionMatrix(const glm::mat4 &projection) override {
+        parent.setLateProjectionMatrix(projection);
+    }
+    std::optional<ShaderProgram> getShaderProgram() override {
+        return parent.getLateShaderProgramInternal();
+    }
+    void setShader(const ShaderProgram &shader) override {
+        parent.setLateShader(shader);
+    }
+    bool canCastShadows() const override { return parent.lateCanCastShadows(); }
+    bool canUseDeferredRendering() override { return false; }
+
+  private:
+    CompoundObject &parent;
+};
+
+Renderable *CompoundObject::getLateRenderable() {
+    if (lateForwardObjects.empty()) {
+        return nullptr;
+    }
+    if (!lateRenderableProxy) {
+        lateRenderableProxy = std::make_unique<LateCompoundRenderable>(*this);
+    }
+    return lateRenderableProxy.get();
+}
 
 void CompoundObject::initialize() {
     init();
     for (auto &component : components) {
         component->init();
+    }
+
+    if (!lateForwardObjects.empty() && !lateRenderableRegistered) {
+        if (!lateRenderableProxy) {
+            lateRenderableProxy =
+                std::make_unique<LateCompoundRenderable>(*this);
+        }
+        if (Window::mainWindow != nullptr) {
+            Window::mainWindow->addLateForwardObject(lateRenderableProxy.get());
+            lateRenderableRegistered = true;
+        }
     }
 }
 
@@ -26,14 +75,28 @@ void CompoundObject::render(float dt) {
             originalPositions.push_back(obj->getPosition());
         }
     }
-    for (size_t i = 0; i < objects.size(); ++i) {
-        Position3d newPos = originalPositions[i] + this->position;
-        objects[i]->setPosition(newPos);
+    if (changedPosition) {
+        for (size_t i = 0; i < objects.size(); ++i) {
+            objects[i]->setPosition(position + originalPositions[i]);
+        }
+        changedPosition = false;
     }
     for (auto &component : components) {
         component->update(dt);
     }
     for (auto &obj : objects) {
+        if (obj != nullptr && obj->renderLateForward) {
+            continue;
+        }
+        obj->render(dt);
+    }
+}
+
+void CompoundObject::renderLate(float dt) {
+    for (auto *obj : lateForwardObjects) {
+        if (obj == nullptr) {
+            continue;
+        }
         obj->render(dt);
     }
 }
@@ -50,11 +113,35 @@ void CompoundObject::setProjectionMatrix(const glm::mat4 &projection) {
     }
 }
 
-std::optional<ShaderProgram> CompoundObject::getShaderProgram() {
-    if (objects.empty()) {
-        return std::nullopt;
+bool CompoundObject::canUseDeferredRendering() {
+    for (const auto &obj : objects) {
+        if (!obj->canUseDeferredRendering()) {
+            for (auto &obj : objects) {
+                if (CoreObject *coreObj = dynamic_cast<CoreObject *>(obj);
+                    coreObj != nullptr) {
+                    coreObj->useDeferredRendering = false;
+                }
+            }
+            return false;
+        }
     }
-    return objects[0]->getShaderProgram();
+    for (auto &obj : objects) {
+        if (CoreObject *coreObj = dynamic_cast<CoreObject *>(obj);
+            coreObj != nullptr) {
+            coreObj->useDeferredRendering = true;
+        }
+    }
+    return true;
+}
+
+std::optional<ShaderProgram> CompoundObject::getShaderProgram() {
+    if (!objects.empty()) {
+        auto shader = objects[0]->getShaderProgram();
+        if (shader.has_value()) {
+            return shader;
+        }
+    }
+    return getLateShaderProgramInternal();
 }
 
 void CompoundObject::setShader(const ShaderProgram &shader) {
@@ -65,6 +152,9 @@ void CompoundObject::setShader(const ShaderProgram &shader) {
 
 Position3d CompoundObject::getPosition() const {
     if (objects.empty()) {
+        if (!lateForwardObjects.empty() && lateForwardObjects[0] != nullptr) {
+            return lateForwardObjects[0]->getPosition();
+        }
         return {0, 0, 0};
     }
     return objects[0]->getPosition();
@@ -72,6 +162,9 @@ Position3d CompoundObject::getPosition() const {
 
 Size3d CompoundObject::getScale() const {
     if (objects.empty()) {
+        if (!lateForwardObjects.empty() && lateForwardObjects[0] != nullptr) {
+            return lateForwardObjects[0]->getScale();
+        }
         return {1, 1, 1};
     }
     return objects[0]->getScale();
@@ -86,10 +179,11 @@ void CompoundObject::update(Window &window) {
         Position3d position = obj->body->position;
         Rotation3d rotation = Rotation3d::fromGlmQuat(obj->body->orientation);
 
-        obj->setPosition(position);
-        obj->setRotation(rotation);
-        obj->setScale(this->getScale());
-        obj->updateModelMatrix();
+        if (changedPosition) {
+            std::cout << "Updating position of compound object child\n";
+            obj->setPosition(position + this->position);
+            changedPosition = false;
+        }
     }
 }
 
@@ -104,10 +198,12 @@ bool CompoundObject::canCastShadows() const {
 
 void CompoundObject::setPosition(const Position3d &newPosition) {
     this->position = newPosition;
+    changedPosition = true;
 }
 
 void CompoundObject::move(const Position3d &deltaPosition) {
     this->position += deltaPosition;
+    changedPosition = true;
 }
 
 void CompoundObject::setRotation(const Rotation3d &newRotation) {
@@ -162,6 +258,57 @@ std::vector<CoreVertex> CompoundObject::getVertices() const {
                            objVertices.end());
     }
     return allVertices;
+}
+
+void CompoundObject::updateLate(Window &window) { (void)window; }
+
+void CompoundObject::setLateViewMatrix(const glm::mat4 &view) {
+    for (auto *obj : lateForwardObjects) {
+        if (obj == nullptr) {
+            continue;
+        }
+        obj->setViewMatrix(view);
+    }
+}
+
+void CompoundObject::setLateProjectionMatrix(const glm::mat4 &projection) {
+    for (auto *obj : lateForwardObjects) {
+        if (obj == nullptr) {
+            continue;
+        }
+        obj->setProjectionMatrix(projection);
+    }
+}
+
+std::optional<ShaderProgram> CompoundObject::getLateShaderProgramInternal() {
+    for (auto *obj : lateForwardObjects) {
+        if (obj == nullptr) {
+            continue;
+        }
+        auto program = obj->getShaderProgram();
+        if (program.has_value()) {
+            return program;
+        }
+    }
+    return std::nullopt;
+}
+
+void CompoundObject::setLateShader(const ShaderProgram &shader) {
+    for (auto *obj : lateForwardObjects) {
+        if (obj == nullptr) {
+            continue;
+        }
+        obj->setShader(shader);
+    }
+}
+
+bool CompoundObject::lateCanCastShadows() const {
+    for (auto *obj : lateForwardObjects) {
+        if (obj != nullptr && obj->canCastShadows()) {
+            return true;
+        }
+    }
+    return false;
 }
 
 Window *Component::getWindow() { return Window::mainWindow; }

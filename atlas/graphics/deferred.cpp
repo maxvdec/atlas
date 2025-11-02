@@ -415,7 +415,60 @@ void Window::deferredRendering(RenderTarget *target) {
         glBindVertexArray(0);
     }
 
+    if (this->ssrFramebuffer != nullptr && useSSR) {
+        target->resolve();
+
+        glBindFramebuffer(GL_FRAMEBUFFER, ssrFramebuffer->fbo);
+        glViewport(0, 0, ssrFramebuffer->getWidth(),
+                   ssrFramebuffer->getHeight());
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        glUseProgram(ssrProgram.programId);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, gBuffer->gPosition.id);
+        ssrProgram.setUniform1i("gPosition", 0);
+
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, gBuffer->gNormal.id);
+        ssrProgram.setUniform1i("gNormal", 1);
+
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, gBuffer->gAlbedoSpec.id);
+        ssrProgram.setUniform1i("gAlbedoSpec", 2);
+
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, gBuffer->gMaterial.id);
+        ssrProgram.setUniform1i("gMaterial", 3);
+
+        glActiveTexture(GL_TEXTURE4);
+        glBindTexture(GL_TEXTURE_2D, target->texture.id);
+        ssrProgram.setUniform1i("sceneColor", 4);
+
+        glActiveTexture(GL_TEXTURE5);
+        glBindTexture(GL_TEXTURE_2D, gBuffer->depthTexture.id);
+        ssrProgram.setUniform1i("gDepth", 5);
+
+        const glm::mat4 projectionMatrix =
+            Window::mainWindow->calculateProjectionMatrix();
+        const glm::mat4 viewMatrix =
+            Window::mainWindow->getCamera()->calculateViewMatrix();
+        ssrProgram.setUniformMat4f("projection", projectionMatrix);
+        ssrProgram.setUniformMat4f("view", viewMatrix);
+        ssrProgram.setUniformMat4f("inverseView", glm::inverse(viewMatrix));
+        ssrProgram.setUniformMat4f("inverseProjection",
+                                   glm::inverse(projectionMatrix));
+        ssrProgram.setUniform3f("cameraPosition", camera->position.x,
+                                camera->position.y, camera->position.z);
+
+        glBindVertexArray(quadVAO);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+        glBindVertexArray(0);
+    }
+
     target->volumetricLightTexture = volumetricBuffer->texture;
+    target->ssrTexture = ssrFramebuffer->texture;
     target->gPosition = gBuffer->gPosition;
 
     glDepthMask(GL_TRUE);

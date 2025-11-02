@@ -2,7 +2,7 @@
 #ifndef ATLAS_GENERATED_SHADERS_H
 #define ATLAS_GENERATED_SHADERS_H
 
-static const char* FULLSCREEN_FRAG = R"(
+static const char *FULLSCREEN_FRAG = R"(
 #version 410 core
 
 in vec2 TexCoord;
@@ -132,10 +132,15 @@ uniform sampler2D BrightTexture;
 uniform sampler2D DepthTexture;
 uniform sampler2D VolumetricLightTexture;
 uniform sampler2D PositionTexture;
+uniform sampler2D LUTTexture;
+uniform sampler2D SSRTexture;
 uniform int hasBrightTexture;
 uniform int hasDepthTexture;
 uniform int hasVolumetricLightTexture;
 uniform int hasPositionTexture;
+uniform int hasLUTTexture;
+uniform int hasSSRTexture;
+uniform float lutSize;
 uniform samplerCube cubeMap;
 uniform bool isCubeMap;
 uniform int TextureType;
@@ -158,6 +163,7 @@ uniform Environment environment;
 uniform mat4 invProjectionMatrix;
 uniform mat4 projectionMatrix;
 uniform mat4 viewMatrix;
+uniform mat4 invViewMatrix;
 uniform mat4 lastViewMatrix;
 
 uniform float nearPlane = 0.1;
@@ -168,6 +174,29 @@ uniform float focusRange;
 
 uniform int maxMipLevel;
 uniform float deltaTime;
+uniform float time;
+
+uniform sampler3D cloudsTexture;
+uniform vec3 cloudPosition;
+uniform vec3 cloudSize;
+uniform vec3 cameraPosition;
+uniform float cloudScale;
+uniform vec3 cloudOffset;
+uniform float cloudDensityThreshold;
+uniform float cloudDensityMultiplier;
+uniform float cloudAbsorption;
+uniform float cloudScattering;
+uniform float cloudPhaseG;
+uniform float cloudClusterStrength;
+uniform int cloudPrimarySteps;
+uniform int cloudLightSteps;
+uniform float cloudLightStepMultiplier;
+uniform float cloudMinStepLength;
+uniform vec3 sunDirection;
+uniform vec3 sunColor;
+uniform float sunIntensity;
+uniform vec3 cloudAmbientColor;
+uniform int hasClouds;
 
 vec4 sampleColor(vec2 uv) {
     for (int i = 0; i < EffectCount; i++) {
@@ -334,27 +363,44 @@ vec4 applyColorEffects(vec4 color) {
             cc.tint = EffectFloat6[i];
             color = applyColorCorrection(color, cc);
         } else if (Effects[i] == EFFECT_POSTERIZATION) {
-            float levels = EffectFloat1[i];
+            float levels = max(EffectFloat1[i], 1.0);
             float grayscale = max(color.r, max(color.g, color.b));
-            float lower = floor(grayscale * levels) / levels;
-            float lowerDiff = abs(grayscale - lower);
-            float upper = ceil(grayscale * levels) / levels;
-            float upperDiff = abs(upper - grayscale);
-            float level = lowerDiff <= upperDiff ? lower : upper;
-            float adjustment = level / grayscale;
-            color = adjustment * color;
+            if (grayscale > 1e-4) {
+                float lower = floor(grayscale * levels) / levels;
+                float lowerDiff = abs(grayscale - lower);
+                float upper = ceil(grayscale * levels) / levels;
+                float upperDiff = abs(upper - grayscale);
+                float level = lowerDiff <= upperDiff ? lower : upper;
+                float adjustment = level / max(grayscale, 1e-4);
+                color = adjustment * color;
+            }
         } else if (Effects[i] == EFFECT_FILM_GRAIN) {
             float amount = EffectFloat1[i];
-            float toRadians = 3.14 / 180.0;
-            float randomIntensity = fract(10000 * sin((gl_FragCoord.x + gl_FragCoord.y * deltaTime) * toRadians));
 
-            float grain = (randomIntensity * 2.0 - 1.0) * amount;
+            vec3 seed = vec3(gl_FragCoord.xy, deltaTime * 100.0);
 
-            color.rgb += grain;
+            vec3 noise;
+            float n;
 
+            n = dot(seed, vec3(12.9898, 78.233, 45.164));
+            noise.r = fract(sin(n) * 43758.5453);
+
+            n = dot(seed, vec3(93.989, 67.345, 12.989));
+            noise.g = fract(sin(n) * 28001.1234);
+
+            n = dot(seed, vec3(39.346, 11.135, 83.155));
+            noise.b = fract(sin(n) * 19283.4567);
+
+            vec3 grain = (noise - 0.5) * 2.0 * amount;
+
+            float luminance = dot(color.rgb, vec3(0.299, 0.587, 0.114));
+            float visibility = 1.0 - abs(luminance - 0.5) * 0.5;
+
+            color.rgb += grain * visibility;
             color.rgb = clamp(color.rgb, 0.0, 1.0);
         }
     }
+
     return color;
 }
 
@@ -418,6 +464,9 @@ vec4 applyMotionBlur(vec2 texCoord, float size, float separation, vec4 color) {
     if (hasVolumetricLightTexture == 1) {
         fallbackColor += texture(VolumetricLightTexture, texCoord);
     }
+    if (hasSSRTexture == 1) {
+        fallbackColor += texture(SSRTexture, texCoord);
+    }
     if (size <= 0.0 || separation <= 0.0) {
         return fallbackColor;
     }
@@ -473,6 +522,9 @@ vec4 applyMotionBlur(vec2 texCoord, float size, float separation, vec4 color) {
             if (hasVolumetricLightTexture == 1) {
                 sampled += texture(VolumetricLightTexture, sampleCoord);
             }
+            if (hasSSRTexture == 1) {
+                sampled += texture(SSRTexture, sampleCoord);
+            }
 
             float weight = 1.0 - abs(t) * 0.5;
             result += sampled * weight;
@@ -488,7 +540,252 @@ vec4 applyMotionBlur(vec2 texCoord, float size, float separation, vec4 color) {
     return fallbackColor;
 }
 
+vec3 sampleLUT(vec3 rgb, float blueSlice, float sliceSize, float slicePixelOffset) {
+    float sliceY = floor(blueSlice / lutSize);
+    float sliceX = mod(blueSlice, lutSize);
+
+    vec2 uv;
+    uv.x = sliceX * sliceSize + slicePixelOffset + rgb.r * sliceSize;
+    uv.y = sliceY * sliceSize + slicePixelOffset + rgb.g * sliceSize;
+
+    return texture(LUTTexture, uv).rgb;
+}
+
+vec4 mapToLUT(vec4 color) {
+    if (hasLUTTexture != 1) {
+        return color;
+    }
+
+    float sliceSize = 1.0 / lutSize;
+    float slicePixelOffset = sliceSize * 0.5;
+
+    float blueIndex = color.b * (lutSize - 1.0);
+    float sliceLow = floor(blueIndex);
+    float sliceHigh = min(sliceLow + 1.0, lutSize - 1.0);
+    float t = blueIndex - sliceLow;
+
+    vec3 lowColor = sampleLUT(color.rgb, sliceLow, sliceSize, slicePixelOffset);
+    vec3 highColor = sampleLUT(color.rgb, sliceHigh, sliceSize, slicePixelOffset);
+
+    vec3 finalRGB = mix(lowColor, highColor, t);
+
+    return vec4(finalRGB, color.a);
+}
+
+vec2 rayBoxDst(vec3 boundsMin, vec3 boundsMax, vec3 rayOrigin, vec3 rayDir) {
+    vec3 t0 = (boundsMin - rayOrigin) / rayDir;
+    vec3 t1 = (boundsMax - rayOrigin) / rayDir;
+    vec3 tMin = min(t0, t1);
+    vec3 tMax = max(t0, t1);
+
+    float dstA = max(max(tMin.x, tMin.y), tMin.z);
+    float dstB = min(tMax.x, min(tMax.y, tMax.z));
+
+    float dstToContainer = max(0.0, dstA);
+    float dstInsideContainer = max(0.0, dstB - dstToContainer);
+
+    return vec2(dstToContainer, dstInsideContainer);
+}
+
+float saturate(float v) { return clamp(v, 0.0, 1.0); }
+
+float hashNoise(vec3 p) {
+    return fract(sin(dot(p, vec3(12.9898, 78.233, 37.719))) * 43758.5453);
+}
+
+float henyeyGreenstein(float cosTheta, float g) {
+    const float PI = 3.14159265359;
+    float g2 = g * g;
+    float denom = pow(1.0 + g2 - 2.0 * g * cosTheta, 1.5);
+    return (1.0 - g2) / (4.0 * PI * max(denom, 1e-4));
+}
+
+float calculateCloudDensity(vec3 worldPos) {
+    vec3 halfExtents = max(cloudSize * 0.5, vec3(1e-4));
+    vec3 localPos = (worldPos - cloudPosition) / halfExtents;
+
+    if (any(lessThan(localPos, vec3(-1.0))) ||
+        any(greaterThan(localPos, vec3(1.0)))) {
+        return 0.0;
+    }
+
+    vec3 uvw = localPos * 0.5 + 0.5;
+    float scale = max(cloudScale, 0.001);
+    vec3 noiseCoord = fract(uvw * scale + cloudOffset);
+
+    vec4 shape = texture(cloudsTexture, noiseCoord);
+    
+    float cluster = saturate(cloudClusterStrength);
+
+    float lowerFade = smoothstep(-0.95, -0.6, localPos.y);
+    float upperFade = 1.0 - smoothstep(0.35, 0.95, localPos.y);
+    float verticalMask = lowerFade * upperFade;
+
+    float coverageThreshold = mix(0.6, 0.28, cluster);
+    float coverageSoftness = mix(0.22, 0.34, cluster);
+    float coverageNoise = mix(shape.r, shape.a, 0.4 + cluster * 0.35);
+    float coverage = smoothstep(coverageThreshold,
+                                coverageThreshold + coverageSoftness,
+                                coverageNoise);
+    coverage = pow(coverage, mix(2.0, 0.7, cluster));
+
+    float detail = mix(smoothstep(0.25, 0.75, shape.g), 
+                       smoothstep(0.2, 0.9, shape.a), 0.55);
+    detail = pow(detail, mix(1.6, 0.85, cluster));
+
+    float cavityNoise = smoothstep(0.22, 0.85, shape.b);
+    float gapMask = clamp(1.0 - cavityNoise * mix(0.25, 0.7, cluster), 0.0, 1.0);
+
+    float density = coverage * mix(detail, 1.0, cluster * 0.35);
+    density = max(density * gapMask * verticalMask - 0.02, 0.0);
+    density *= max(cloudDensityMultiplier, 0.0);
+
+    return density;
+}
+
+float sampleSunTransmittance(vec3 worldPos, float stepSize) {
+    vec3 lightDir = -sunDirection;
+    float dirLength = length(lightDir);
+    if (dirLength < 1e-3) {
+        lightDir = vec3(0.0, 1.0, 0.0);
+    } else {
+        lightDir /= dirLength;
+    }
+
+    float maxDistance = length(cloudSize) * 1.5;
+    float travel = 0.0;
+    float attenuation = 1.0;
+    float lightStep = max(stepSize * cloudLightStepMultiplier, cloudMinStepLength);
+
+    int steps = max(cloudLightSteps, 1);
+    for (int i = 0; i < steps && attenuation > 0.05; ++i) {
+        travel += lightStep;
+        if (travel > maxDistance)
+            break;
+
+        vec3 samplePos = worldPos + lightDir * travel;
+        float density = calculateCloudDensity(samplePos);
+        attenuation *= exp(-density * lightStep * cloudAbsorption);
+        lightStep = max(lightStep * cloudLightStepMultiplier, cloudMinStepLength);
+    }
+
+    return attenuation;
+}
+
+vec4 cloudRendering(vec4 inColor) {
+    if (hasClouds != 1) {
+        return inColor;
+    }
+
+    float nonLinearDepth = hasDepthTexture == 1
+                               ? texture(DepthTexture, TexCoord).r
+                               : 1.0;
+    bool depthAvailable = hasDepthTexture == 1 && nonLinearDepth < 1.0;
+    float depthSample = depthAvailable ? nonLinearDepth : 1.0;
+
+    vec3 rayOrigin = cameraPosition;
+
+    vec4 clipSpace = vec4(TexCoord * 2.0 - 1.0, depthSample * 2.0 - 1.0, 1.0);
+    vec4 viewSpace = invProjectionMatrix * clipSpace;
+    viewSpace /= viewSpace.w;
+    vec3 worldPos = (invViewMatrix * vec4(viewSpace.xyz, 1.0)).xyz;
+
+    vec3 rayDir = normalize(worldPos - rayOrigin);
+
+    float sceneDistance = depthAvailable ? length(worldPos - rayOrigin) : 1e6;
+
+    vec3 boundsMin = cloudPosition - cloudSize * 0.5;
+    vec3 boundsMax = cloudPosition + cloudSize * 0.5;
+    vec2 rayBoxInfo = rayBoxDst(boundsMin, boundsMax, rayOrigin, rayDir);
+
+    float distToContainer = rayBoxInfo.x;
+    float distInContainer = rayBoxInfo.y;
+
+    if (distInContainer <= 0.0) {
+        return inColor;
+    }
+
+    float dstLimit = min(sceneDistance - distToContainer, distInContainer);
+    dstLimit = max(dstLimit, 0.0);
+    if (dstLimit <= 1e-4) {
+        return inColor;
+    }
+
+    int steps = max(cloudPrimarySteps, 8);
+    float baseStep = dstLimit / float(steps);
+    float stepSize = max(baseStep, cloudMinStepLength);
+
+    float jitter = hashNoise(vec3(TexCoord, time)) - 0.5;
+    float travelled = clamp(jitter, -0.35, 0.35) * stepSize;
+    travelled = max(travelled, 0.0);
+
+    vec3 accumulatedLight = vec3(0.0);
+    float transmittance = 1.0;
+
+    vec3 sunDir = sunDirection;
+    float sunLen = length(sunDir);
+    if (sunLen > 1e-3) {
+        sunDir /= sunLen;
+    } else {
+        sunDir = vec3(0.0, 1.0, 0.0);
+    }
+
+    float phaseG = clamp(cloudPhaseG, -0.95, 0.95);
+
+    for (int step = 0; step < steps && travelled < dstLimit;
+         ++step) {
+        if (transmittance <= 0.01) {
+            break;
+        }
+
+        float remainingDistance = dstLimit - travelled;
+        if (remainingDistance <= 1e-5) {
+            break;
+        }
+
+        float current = distToContainer + travelled;
+        vec3 samplePos = rayOrigin + rayDir * current;
+
+        float density = calculateCloudDensity(samplePos);
+        if (density > 1e-4) {
+            float adaptiveStep = stepSize;
+            if (density < 0.02) {
+                adaptiveStep = stepSize * 2.5;
+            } else if (density < 0.05) {
+                adaptiveStep = stepSize * 1.6;
+            }
+            adaptiveStep = min(adaptiveStep, remainingDistance);
+            float sampleWeight = density * adaptiveStep;
+
+            float lightTrans = sampleSunTransmittance(samplePos, adaptiveStep);
+            float cosTheta = clamp(dot(rayDir, -sunDir), -1.0, 1.0);
+            float phase = henyeyGreenstein(cosTheta, phaseG);
+
+            vec3 directLight = sunColor * sunIntensity * lightTrans * phase;
+            vec3 ambientLight = cloudAmbientColor;
+
+            vec3 lighting = (ambientLight * 0.35 + directLight) *
+                            sampleWeight * cloudScattering;
+
+            accumulatedLight += lighting * transmittance;
+            transmittance *= exp(-density * adaptiveStep * cloudAbsorption);
+            travelled += adaptiveStep;
+            continue;
+        }
+
+        float emptyAdvance = min(stepSize * 2.25, remainingDistance);
+        float minAdvance = min(stepSize * 0.5, remainingDistance);
+        travelled += max(emptyAdvance, minAdvance);
+    }
+
+    vec3 finalColor = inColor.rgb * transmittance + accumulatedLight;
+    return vec4(clamp(finalColor, 0.0, 1.0), inColor.a);
+}
+
 void main() {
+    // vec4 ssrColor = texture(SSRTexture, TexCoord);
+    // FragColor = ssrColor;
+    // return;
     vec4 color = sampleColor(TexCoord);
     float depth = texture(DepthTexture, TexCoord).r;
     vec3 viewPos = reconstructViewPos(TexCoord, depth);
@@ -528,7 +825,9 @@ void main() {
         float mip = coc * float(maxMipLevel) * 1.2;
         vec3 blurred = applyColorEffects(textureLod(Texture, TexCoord, mip)).rgb;
         vec3 sharp = color.rgb;
-        color = vec4(mix(sharp, blurred, coc), 1.0);
+        color = cloudRendering(color);
+    } else {
+        color = cloudRendering(color);
     }
 
     vec4 hdrColor;
@@ -544,9 +843,16 @@ void main() {
         if (hasVolumetricLightTexture == 1) {
             hdrColor += texture(VolumetricLightTexture, TexCoord);
         }
+        if (hasSSRTexture == 1) {
+            hdrColor += texture(SSRTexture, TexCoord);
+        }
     }
 
+    hdrColor = mapToLUT(hdrColor);
+    
+
     hdrColor.rgb = acesToneMapping(hdrColor.rgb);
+
 
     float fogFactor = 1.0 - exp(-distance * environment.fogIntensity);
     vec3 finalColor = mix(hdrColor.rgb, environment.fogColor, fogFactor);
@@ -556,7 +862,7 @@ void main() {
 
 )";
 
-static const char* MAIN_FRAG = R"(
+static const char *MAIN_FRAG = R"(
 #version 410 core
 layout(location = 0) out vec4 FragColor;
 layout(location = 1) out vec4 BrightColor;
@@ -1343,7 +1649,7 @@ void main() {
 
 )";
 
-static const char* MAIN_VERT = R"(
+static const char *MAIN_VERT = R"(
 #version 410 core
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec4 aColor;
@@ -1387,7 +1693,7 @@ void main() {
 
 )";
 
-static const char* FULLSCREEN_VERT = R"(
+static const char *FULLSCREEN_VERT = R"(
 #version 410 core
 
 layout (location = 0) in vec3 aPos;
@@ -1404,7 +1710,7 @@ void main() {
 
 )";
 
-static const char* TEXT_VERT = R"(
+static const char *TEXT_VERT = R"(
 #version 410 core
 layout(location = 0) in vec4 vertex; // <vec2 pos, vec2 texture>
 out vec2 texCoords;
@@ -1417,7 +1723,7 @@ void main() {
 }
 )";
 
-static const char* TEXT_FRAG = R"(
+static const char *TEXT_FRAG = R"(
 #version 410 core
 
 in vec2 texCoords;
@@ -1432,39 +1738,51 @@ void main() {
 }
 )";
 
-static const char* POINT_DEPTH_VERT = R"(
+static const char *POINT_DEPTH_VERT = R"(
 #version 410 core
-layout (location = 0) in vec3 aPos;
+layout(location = 0) in vec3 aPos;
+layout(location = 6) in mat4 instanceModel;
 
 uniform mat4 model;
+uniform bool isInstanced = true;
 
 void main() {
-    gl_Position = model * vec4(aPos, 1.0);
+    if (isInstanced) {
+        gl_Position = model * instanceModel * vec4(aPos, 1.0);
+    } else {
+        gl_Position = model * vec4(aPos, 1.0);
+    }
 }
 )";
 
-static const char* DEPTH_VERT = R"(
+static const char *DEPTH_VERT = R"(
 #version 410 core
-layout (location = 0) in vec3 aPos;
+layout(location = 0) in vec3 aPos;
+layout(location = 6) in mat4 instanceModel;
 
 uniform mat4 projection; // the light space matrix
 uniform mat4 view;
 uniform mat4 model;
+uniform bool isInstanced = true;
 
 void main() {
-    gl_Position = projection * view * model * vec4(aPos, 1.0);
+    if (isInstanced) {
+        gl_Position = projection * view * instanceModel * vec4(aPos, 1.0);
+    } else {
+        gl_Position = projection * view * model * vec4(aPos, 1.0);
+    }
 }
 
 )";
 
-static const char* EMPTY_FRAG = R"(
+static const char *EMPTY_FRAG = R"(
 #version 410 core
 
 void main() {}
 
 )";
 
-static const char* SSAO_BLUR_FRAG = R"(
+static const char *SSAO_BLUR_FRAG = R"(
 #version 410 core
 out float FragColor;
 
@@ -1485,7 +1803,7 @@ void main() {
 }
 )";
 
-static const char* POINT_DEPTH_GEOM = R"(
+static const char *POINT_DEPTH_GEOM = R"(
 #version 410 core
 layout(triangles) in;
 layout(triangle_strip, max_vertices = 18) out;
@@ -1508,7 +1826,7 @@ void main() {
 
 )";
 
-static const char* SSAO_FRAG = R"(
+static const char *SSAO_FRAG = R"(
 #version 410 core
 out float FragColor;
 in vec2 TexCoord;
@@ -1576,7 +1894,7 @@ void main() {
 }
 )";
 
-static const char* POINT_DEPTH_FRAG = R"(
+static const char *POINT_DEPTH_FRAG = R"(
 #version 410 core
 in vec4 FragPos;
 
@@ -1592,7 +1910,7 @@ void main() {
 }
 )";
 
-static const char* LIGHT_VERT = R"(
+static const char *LIGHT_VERT = R"(
 #version 410 core
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec2 aTexCoord;
@@ -1605,7 +1923,7 @@ void main() {
 }
 )";
 
-static const char* DEFERRED_FRAG = R"(
+static const char *DEFERRED_FRAG = R"(
 #version 410 core
 layout(location = 0) out vec4 gPosition;
 layout(location = 1) out vec4 gNormal;
@@ -1631,7 +1949,6 @@ struct Material {
     float metallic;
     float roughness;
     float ao;
-    float reflectivity;
 };
 
 uniform sampler2D texture1;
@@ -1742,16 +2059,10 @@ void main() {
     vec4 sampledColor = enableTextures(TEXTURE_COLOR);
     bool hasColorTexture = sampledColor != vec4(-1.0);
 
-    vec4 baseColor;
-    if (useTexture && hasColorTexture) {
-        baseColor = hasColorTexture ? sampledColor : vec4(material.albedo, 1.0);
-        if (useColor) {
-            baseColor *= outColor;
-        }
-    } else if (useColor) {
-        baseColor = outColor;
-    } else {
-        baseColor = vec4(material.albedo, 1.0);
+    vec4 baseColor = vec4(material.albedo, 1.0);
+    vec4 albedoTex = enableTextures(TEXTURE_COLOR);
+    if (albedoTex != vec4(-1.0)) {
+        baseColor = albedoTex;
     }
 
     if (baseColor.a < 0.1)
@@ -1786,12 +2097,9 @@ void main() {
         ao *= aoTex.r;
     }
 
-    float reflectivity = material.reflectivity;
-
     metallic = clamp(metallic, 0.0, 1.0);
     roughness = clamp(roughness, 0.0, 1.0);
     ao = clamp(ao, 0.0, 1.0);
-    reflectivity = clamp(reflectivity, 0.0, 1.0);
 
     float nonlinearDepth = gl_FragCoord.z;
     gPosition = vec4(FragPos, nonlinearDepth);
@@ -1808,12 +2116,12 @@ void main() {
     }
     gAlbedoSpec = vec4(a, ao);
 
-    gMaterial = vec4(metallic, roughness, reflectivity, 1.0);
+    gMaterial = vec4(metallic, roughness, ao, 1.0);
 }
 
 )";
 
-static const char* DEFERRED_VERT = R"(
+static const char *DEFERRED_VERT = R"(
 #version 410 core
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec4 aColor;
@@ -1859,7 +2167,7 @@ void main() {
 }
 )";
 
-static const char* LIGHT_FRAG = R"(
+static const char *LIGHT_FRAG = R"(
 #version 410 core
 layout(location = 0) out vec4 FragColor;
 layout(location = 1) out vec4 BrightColor;
@@ -2216,11 +2524,10 @@ void main() {
     vec3 N = normalize(texture(gNormal, TexCoord).xyz);
     vec4 albedoAo = texture(gAlbedoSpec, TexCoord);
     vec3 albedo = albedoAo.rgb;
-    float ao = clamp(albedoAo.a, 0.0, 1.0);
     vec4 matData = texture(gMaterial, TexCoord);
     float metallic = clamp(matData.r, 0.0, 1.0);
     float roughness = clamp(matData.g, 0.0, 1.0);
-    float reflectivity = clamp(matData.b, 0.0, 1.0);
+    float ao = clamp(matData.b, 0.0, 1.0);
 
     float viewDistance = max(length(cameraPosition - FragPos), 1e-6);
     vec3 V = (cameraPosition - FragPos) / viewDistance;
@@ -2314,11 +2621,18 @@ void main() {
 
     vec3 finalColor = ambient + lighting + iblContribution;
 
-    if (!useIBL && reflectivity > 0.0) {
+    if (!useIBL) {
         vec3 I = normalize(FragPos - cameraPosition);
-        vec3 R = reflect(I, N);
+        vec3 R = reflect(-I, N);
+
+        vec3 F = fresnelSchlick(max(dot(N, -I), 0.0), F0);
+        vec3 kS = F;
+        vec3 kD = (vec3(1.0) - kS) * (1.0 - metallic);
+
         vec3 envColor = texture(skybox, R).rgb;
-        finalColor = mix(finalColor, envColor, reflectivity);
+        vec3 reflection = envColor * kS;
+
+        finalColor = mix(finalColor, reflection, F0);
     }
 
     FragColor = vec4(finalColor, 1.0);
@@ -2335,7 +2649,7 @@ void main() {
 
 )";
 
-static const char* COLOR_FRAG = R"(
+static const char *COLOR_FRAG = R"(
 #version 410 core
 layout (location = 0) out vec4 FragColor;
 layout (location = 1) out vec4 BrightColor;
@@ -2350,7 +2664,7 @@ void main() {
 }
 )";
 
-static const char* TEXTURE_VERT = R"(
+static const char *TEXTURE_VERT = R"(
 #version 410 core
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec4 aColor;
@@ -2372,7 +2686,7 @@ void main() {
 
 )";
 
-static const char* DEBUG_FRAG = R"(
+static const char *DEBUG_FRAG = R"(
 #version 410 core
 out vec4 FragColor;
 
@@ -2382,7 +2696,7 @@ void main() {
 
 )";
 
-static const char* COLOR_VERT = R"(
+static const char *COLOR_VERT = R"(
 #version 410 core
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec4 aColor;
@@ -2408,7 +2722,7 @@ void main() {
 
 )";
 
-static const char* DEBUG_VERT = R"(
+static const char *DEBUG_VERT = R"(
 #version 410 core
 layout (location = 0) in vec3 aPos;
 
@@ -2418,7 +2732,7 @@ void main() {
 
 )";
 
-static const char* TEXTURE_FRAG = R"(
+static const char *TEXTURE_FRAG = R"(
 #version 410 core
 out vec4 FragColor;
 
@@ -2458,7 +2772,7 @@ void main() {
 
 )";
 
-static const char* TERRAIN_CONTROL_TESC = R"(
+static const char *TERRAIN_CONTROL_TESC = R"(
 #version 410 core
 
 layout(vertices = 4) out;
@@ -2524,7 +2838,7 @@ void main() {
 }
 )";
 
-static const char* TERRAIN_FRAG = R"(
+static const char *TERRAIN_FRAG = R"(
 #version 410 core
 
 in vec3 FragPos;
@@ -2734,7 +3048,36 @@ void main() {
 }
 )";
 
-static const char* TERRAIN_EVAL_TESE = R"(
+static const char *FLUID_VERT = R"(
+#version 410 core
+layout(location = 0) in vec3 aPos;
+layout(location = 1) in vec2 aTexCoord;
+layout(location = 2) in vec3 aNormal;
+layout(location = 3) in vec3 aTangent;
+layout(location = 4) in vec3 aBitangent;
+
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+
+out vec2 TexCoord;
+out vec3 WorldPos;
+out vec3 WorldNormal;
+out vec3 WorldTangent;
+out vec3 WorldBitangent;
+
+void main() {
+    gl_Position = projection * view * model * vec4(aPos, 1.0);
+    TexCoord = aTexCoord;
+    WorldPos = vec3(model * vec4(aPos, 1.0));
+    WorldNormal = normalize(mat3(model) * aNormal);
+    WorldTangent = normalize(mat3(model) * aTangent);
+    WorldBitangent = normalize(mat3(model) * aBitangent);
+}
+
+)";
+
+static const char *TERRAIN_EVAL_TESE = R"(
 #version 410 core
 layout(quads, fractional_odd_spacing, ccw) in;
 
@@ -2788,7 +3131,7 @@ void main() {
 }
 )";
 
-static const char* TERRAIN_VERT = R"(
+static const char *TERRAIN_VERT = R"(
 #version 410 core
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec2 aTexCoord;
@@ -2805,7 +3148,194 @@ void main() {
 }
 )";
 
-static const char* BLINN_PHONG_FRAG = R"(
+static const char *FLUID_FRAG = R"(
+#version 410 core
+layout(location = 0) out vec4 FragColor;
+layout(location = 1) out vec4 BrightColor;
+
+in vec2 TexCoord;
+in vec3 WorldPos;          
+in vec3 WorldNormal;
+in vec3 WorldTangent;
+in vec3 WorldBitangent;
+
+uniform vec4 waterColor;         
+uniform sampler2D sceneTexture;  
+uniform sampler2D sceneDepth;    
+uniform vec3 cameraPos;           
+uniform float time;
+uniform float refractionStrength; 
+uniform float reflectionStrength; 
+uniform float depthFade;         
+uniform mat4 projection;
+uniform mat4 view;
+uniform mat4 invProjection;      
+uniform mat4 invView;
+uniform sampler2D reflectionTexture;
+uniform sampler2D refractionTexture;
+uniform vec3 lightDirection;
+uniform vec3 lightColor;
+uniform sampler2D movementTexture;
+uniform sampler2D normalTexture;
+uniform int hasNormalTexture;
+uniform int hasMovementTexture;
+uniform vec3 windForce;
+
+void main()
+{
+    vec3 normal = normalize(WorldNormal);
+    vec3 viewDir = normalize(cameraPos - WorldPos);
+    
+    vec4 clipSpace = projection * view * vec4(WorldPos, 1.0);
+    vec3 ndc = clipSpace.xyz / clipSpace.w;
+    vec2 screenUV = ndc.xy * 0.5 + 0.5;
+    
+    float windStrength = length(windForce);
+    vec2 windDir = windStrength > 0.001 ? normalize(windForce.xy) : vec2(1.0, 0.0);
+    
+    float waveSpeed = 0.15 + windStrength * 0.3;  
+    float waveAmplitude = 0.01 + windStrength * 0.02;  
+    float waveFrequency = 30.0 + windStrength * 10.0; 
+    
+    vec2 waveOffset;
+    waveOffset.x = sin((TexCoord.x * windDir.x + time * waveSpeed) * waveFrequency);
+    waveOffset.y = cos((TexCoord.y * windDir.y - time * waveSpeed) * waveFrequency);
+    waveOffset *= waveAmplitude;
+    
+    vec2 flowOffset = vec2(0.0);
+    if (hasMovementTexture == 1) {
+        vec2 windUV = windForce.xy * time * 0.05;
+        vec2 movementUV = TexCoord * 2.0 + windUV;
+        vec2 movementSample = texture(movementTexture, movementUV).rg;
+        
+        movementSample = movementSample * 2.0 - 1.0;
+        
+        flowOffset = movementSample * windStrength * 0.15;
+        
+        waveOffset += flowOffset * 0.5;
+    }
+    
+    if (hasNormalTexture == 1) {
+        vec3 T = normalize(WorldTangent);
+        vec3 B = normalize(WorldBitangent);
+        vec3 N = normalize(WorldNormal);
+        mat3 TBN = mat3(T, B, N);
+        
+        float normalSpeed = 0.03 + windStrength * 0.05; 
+        vec2 normalUV1 = TexCoord * 5.0 + waveOffset * 10.0 + windForce.xy * time * normalSpeed;
+        vec2 normalUV2 = TexCoord * 3.0 - waveOffset * 8.0 - windForce.xy * time * normalSpeed * 0.8;
+        
+        vec3 normalMap1 = texture(normalTexture, normalUV1).rgb;
+        vec3 normalMap2 = texture(normalTexture, normalUV2).rgb;
+        
+        normalMap1 = normalMap1 * 2.0 - 1.0;
+        normalMap2 = normalMap2 * 2.0 - 1.0;
+        
+        vec3 blendedNormal = normalize(normalMap1 + normalMap2);
+        
+        vec3 worldSpaceNormal = normalize(TBN * blendedNormal);
+        
+        float normalStrength = 0.5 + windStrength * 0.3;
+        normal = normalize(mix(N, worldSpaceNormal, normalStrength));
+    }
+    
+    vec2 reflectionUV = screenUV;
+    reflectionUV.y = 1.0 - reflectionUV.y;  
+    reflectionUV += waveOffset * 0.3;
+    
+    vec2 refractionUV = screenUV - waveOffset * 0.2;
+    
+    bool reflectionInBounds = (reflectionUV.x >= 0.0 && reflectionUV.x <= 1.0 && 
+                               reflectionUV.y >= 0.0 && reflectionUV.y <= 1.0);
+    bool refractionInBounds = (refractionUV.x >= 0.0 && refractionUV.x <= 1.0 && 
+                               refractionUV.y >= 0.0 && refractionUV.y <= 1.0);
+    
+    reflectionUV = clamp(reflectionUV, 0.05, 0.95);
+    refractionUV = clamp(refractionUV, 0.05, 0.95);
+    
+    vec2 reflectionEdgeFade = smoothstep(0.0, 0.15, reflectionUV) * smoothstep(1.0, 0.85, reflectionUV);
+    float reflectionFadeFactor = reflectionEdgeFade.x * reflectionEdgeFade.y;
+    
+    vec2 refractionEdgeFade = smoothstep(0.0, 0.15, refractionUV) * smoothstep(1.0, 0.85, refractionUV);
+    float refractionFadeFactor = refractionEdgeFade.x * refractionEdgeFade.y;
+    
+    if (!reflectionInBounds) {
+        reflectionFadeFactor *= 0.3;
+    }
+    if (!refractionInBounds) {
+        refractionFadeFactor *= 0.3;
+    }
+    
+    vec4 reflectionSample = texture(reflectionTexture, reflectionUV);
+    vec4 refractionSample = texture(refractionTexture, refractionUV);
+    vec4 sceneFallback = texture(sceneTexture, screenUV);
+    
+    bool validReflection = (length(reflectionSample.rgb) > 0.01);
+    bool validRefraction = (length(refractionSample.rgb) > 0.01);
+    
+    if (!validReflection) {
+        reflectionSample = sceneFallback;
+    }
+    if (!validRefraction) {
+        refractionSample = sceneFallback;
+    }
+    
+    float fresnel = pow(1.0 - clamp(dot(normal, viewDir), 0.0, 1.0), 3.0);
+    fresnel = mix(0.02, 1.0, fresnel); 
+    fresnel *= reflectionStrength;
+    
+    vec3 combined = mix(refractionSample.rgb, reflectionSample.rgb, fresnel);
+    
+    float waterTint = clamp(depthFade * 0.3, 0.0, 0.5); 
+    combined = mix(combined, waterColor.rgb, waterTint);
+
+    float foamAmount = 0.0;
+    if (hasMovementTexture == 1) {
+        float foamFactor = smoothstep(0.7, 1.0, length(flowOffset) * windStrength);
+        foamAmount = foamFactor * 0.2;
+        combined = mix(combined, vec3(1.0), foamAmount);
+    }
+    
+    vec3 lightDir = normalize(-lightDirection);
+    
+    float diffuse = max(dot(normal, lightDir), 0.0);
+    diffuse = diffuse * 0.3; 
+    
+    vec3 halfDir = normalize(lightDir + viewDir);
+    float specAngle = max(dot(normal, halfDir), 0.0);
+    float specular = pow(specAngle, 128.0); 
+    
+    specular *= (fresnel * 0.5 + 0.5);
+    
+    float waveVariation = sin(TexCoord.x * 50.0 + time * 2.0) * 0.5 + 0.5;
+    waveVariation *= cos(TexCoord.y * 50.0 - time * 1.5) * 0.5 + 0.5;
+    specular *= (0.7 + waveVariation * 0.3);
+    
+    vec3 lighting = lightColor * (diffuse + specular * 2.0);
+    combined += lighting;
+    
+    vec3 specularHighlight = lightColor * specular * 2.5;
+    
+    specularHighlight += vec3(foamAmount * 2.0);
+    
+    float alpha = mix(0.7, 0.95, fresnel);
+    
+    FragColor = vec4(combined, alpha);
+    
+    float luminance = max(max(combined.r, combined.g), combined.b);
+    vec3 bloomColor = vec3(0.0);
+    
+    if (luminance > 1.0) {
+        bloomColor = combined - 1.0;
+    }
+    
+    bloomColor += specularHighlight;
+
+    BrightColor = vec4(bloomColor, alpha);
+}
+)";
+
+static const char *BLINN_PHONG_FRAG = R"(
 #version 410 core
 layout (location = 0) out vec4 FragColor;
 layout (location = 1) out vec4 BrightColor;
@@ -3373,7 +3903,7 @@ void main() {
 
 )";
 
-static const char* BINN_PHONG_VERT = R"(
+static const char *BINN_PHONG_VERT = R"(
 #version 410 core
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec4 aColor;
@@ -3415,22 +3945,241 @@ void main() {
 
 )";
 
-static const char* SKYBOX_FRAG = R"(
+static const char *SKYBOX_FRAG = R"(
 #version 410 core
 out vec4 FragColor;
-
 in vec3 TexCoords;
-
 uniform samplerCube skybox;
+uniform vec3 sunDirection;
+uniform vec4 sunColor;
+uniform vec3 moonDirection;
+uniform vec4 moonColor;
+uniform int hasDayNight;
+
+uniform float sunTintStrength;
+uniform float moonTintStrength;
+uniform float sunSizeMultiplier;
+uniform float moonSizeMultiplier;
+uniform float starDensity;
+
+float hash21(vec2 p) {
+    p = fract(p * vec2(123.34, 456.21));
+    p += dot(p, p + 45.32);
+    return fract(p.x * p.y);
+}
+
+float valueNoise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    
+    float a = hash21(i);
+    float b = hash21(i + vec2(1.0, 0.0));
+    float c = hash21(i + vec2(0.0, 1.0));
+    float d = hash21(i + vec2(1.0, 1.0));
+    
+    return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+}
+
+float layeredNoise(vec2 p) {
+    float total = valueNoise(p) + valueNoise(p * 2.0) * 0.5;
+    return total / 1.5;
+}
+
+float hash13(vec3 p) {
+    p = fract(p * 443.897);
+    p += dot(p, p.yzx + 19.19);
+    return fract((p.x + p.y) * p.z);
+}
+
+vec3 generateStars(vec3 dir, float density, float nightFactor) {
+    if (density <= 0.0 || nightFactor <= 0.0) {
+        return vec3(0.0);
+    }
+    
+    vec3 starSpace = dir * 50.0;
+    vec3 cell = floor(starSpace);
+    vec3 localPos = fract(starSpace);
+    
+    float rand = hash13(cell);
+    
+    if (rand < density * 0.3) {
+        float randX = hash13(cell + vec3(12.34, 56.78, 90.12));
+        float randY = hash13(cell + vec3(23.45, 67.89, 1.23));
+        float randZ = hash13(cell + vec3(34.56, 78.90, 12.34));
+        
+        vec3 starPos = vec3(randX, randY, randZ);
+        float dist = length(localPos - starPos);
+        
+        float starSize = 0.02 + hash13(cell + vec3(45.67, 89.01, 23.45)) * 0.03;
+        float brightness = 0.5 + hash13(cell + vec3(56.78, 90.12, 34.56)) * 0.5;
+        
+        float star = smoothstep(starSize, 0.0, dist) * brightness;
+        float twinkle = 0.8 + 0.2 * sin(hash13(cell + vec3(67.89, 1.23, 45.67)) * 100.0);
+        star *= twinkle * nightFactor;
+        
+        vec3 starColor = vec3(1.0);
+        if (rand > 0.9) starColor = vec3(0.8, 0.9, 1.0);
+        else if (rand > 0.8) starColor = vec3(1.0, 0.9, 0.8);
+        
+        return starColor * star;
+    }
+    
+    return vec3(0.0);
+}
+
+vec3 generateMoonTexture(vec2 uv, float distanceFromCenter, vec3 tintColor) {
+    float angle = 0.5;
+    float ca = cos(angle);
+    float sa = sin(angle);
+    uv = vec2(ca * uv.x - sa * uv.y, sa * uv.x + ca * uv.y);
+    
+    float largeFeatures = valueNoise(uv * 2.0);
+    largeFeatures = smoothstep(0.3, 0.7, largeFeatures);
+    
+    float mediumCraters = valueNoise(uv * 8.0);
+    
+    vec2 craterUV = uv * 6.0;
+    vec2 craterCell = floor(craterUV);
+    vec2 craterLocal = fract(craterUV);
+    
+    float craters = 1.0;
+    for (int i = 0; i < 4; i++) {
+        vec2 neighbor = vec2(float(i % 2), float(i / 2));
+        vec2 cellPoint = craterCell + neighbor;
+        
+        vec2 craterCenter = vec2(hash21(cellPoint), hash21(cellPoint + vec2(13.7, 27.3)));
+        float dist = length(craterLocal - neighbor - craterCenter);
+        
+        float craterSize = 0.15 + 0.25 * hash21(cellPoint + vec2(5.3, 9.7));
+        
+        if (dist < craterSize) {
+            float crater = smoothstep(craterSize, craterSize * 0.3, dist);
+            craters = min(craters, 1.0 - crater * 0.7);
+        }
+    }
+    
+    float surface = largeFeatures * 0.5 + mediumCraters * 0.5;
+    surface *= craters;
+    
+    float intensity = mix(0.30, 0.75, surface);
+    
+    float limb = 1.0 - smoothstep(0.6, 1.0, distanceFromCenter);
+    intensity *= 0.4 + 0.6 * limb;
+    intensity *= 1.3;
+    
+    return clamp(tintColor * intensity, 0.0, 1.0);
+}
 
 void main()
 {    
-    FragColor = texture(skybox, TexCoords);
+    vec3 dir = normalize(TexCoords);
+    vec3 color = texture(skybox, TexCoords).rgb;
+    
+    if (hasDayNight == 1) {
+        vec3 normSunDir = normalize(sunDirection);
+        vec3 normMoonDir = normalize(moonDirection);
+        
+        float sunDot = dot(dir, normSunDir);
+        float moonDot = dot(dir, normMoonDir);
+        
+        float nightFactor = smoothstep(0.15, -0.2, sunDirection.y);
+        
+        if (starDensity > 0.0) {
+            color += generateStars(dir, starDensity, nightFactor);
+        }
+        
+        float sunHorizonFade = smoothstep(-0.15, 0.05, sunDirection.y);
+        
+        if (sunDirection.y > -0.15) {
+            float sizeAdjust = 1.0 - (sunSizeMultiplier - 1.0) * 0.001;
+            float sunSize = 0.9995 * sizeAdjust;
+            float sunGlowSize = 0.998 * (1.0 - (sunSizeMultiplier - 1.0) * 0.003);
+            float sunHaloSize = 0.99 * (1.0 - (sunSizeMultiplier - 1.0) * 0.015);
+            
+            float sunDisk = smoothstep(sunSize - 0.0002, sunSize, sunDot);
+            float sunGlow = smoothstep(sunGlowSize, sunSize, sunDot) * (1.0 - sunDisk);
+            float sunHalo = smoothstep(sunHaloSize, sunSize, sunDot) * 
+                           (1.0 - smoothstep(sunSize, sunGlowSize, sunDot));
+            
+            float horizonBoost = smoothstep(0.1, -0.05, sunDirection.y) * 2.0;
+            sunHalo *= (0.3 + horizonBoost);
+            
+            color += sunColor.rgb * (sunDisk * 5.0 + sunGlow * 0.5 + sunHalo) * sunHorizonFade;
+        }
+        
+        float moonHorizonFade = smoothstep(-0.15, 0.05, moonDirection.y);
+        
+        if (moonDirection.y > -0.15) {
+            float sizeAdjust = 1.0 - (moonSizeMultiplier - 1.0) * 0.001;
+            float moonSize = 0.9996 * sizeAdjust;
+            float moonGlowSize = 0.9985 * (1.0 - (moonSizeMultiplier - 1.0) * 0.003);
+            float moonHaloSize = 0.992 * (1.0 - (moonSizeMultiplier - 1.0) * 0.015);
+            
+            float moonDisk = smoothstep(moonSize - 0.0002, moonSize, moonDot);
+            
+            if (moonDisk > 0.01) {
+                vec3 up = abs(normMoonDir.y) < 0.999 ? vec3(0.0, 1.0, 0.0) : vec3(1.0, 0.0, 0.0);
+                vec3 right = normalize(cross(up, normMoonDir));
+                vec3 actualUp = cross(normMoonDir, right);
+                
+                vec3 relativeDir = dir - normMoonDir * moonDot;
+                float u = dot(relativeDir, right);
+                float v = dot(relativeDir, actualUp);
+                
+                float distFromCenter = length(vec2(u, v)) / sqrt(1.0 - moonSize * moonSize);
+                
+                if (distFromCenter < 1.0) {
+                    vec2 moonUV = vec2(u, v) * 200.0;
+                    vec3 moonTexture = generateMoonTexture(moonUV, distFromCenter, moonColor.rgb);
+                    color += moonTexture * moonDisk * 1.5 * moonHorizonFade;
+                } else {
+                    color += moonColor.rgb * moonDisk * 1.5 * moonHorizonFade;
+                }
+            }
+            
+            float moonGlow = smoothstep(moonGlowSize, moonSize, moonDot) * (1.0 - moonDisk);
+            float moonHalo = smoothstep(moonHaloSize, moonSize, moonDot) * 
+                            (1.0 - smoothstep(moonSize, moonGlowSize, moonDot));
+            
+            float moonHorizonBoost = smoothstep(0.1, -0.05, moonDirection.y) * 2.0;
+            moonHalo *= (0.2 + moonHorizonBoost);
+            
+            color += moonColor.rgb * (moonGlow * 0.3 + moonHalo) * moonHorizonFade;
+        }
+        
+        if (sunDirection.y > -0.1 && sunTintStrength > 0.0) {
+            float sunSkyInfluence = smoothstep(0.7, 0.95, sunDot) * 
+                                   smoothstep(-0.1, 0.2, sunDirection.y);
+            color = mix(color, color * sunColor.rgb, sunSkyInfluence * 0.3 * sunTintStrength);
+            
+            float sunProximity = smoothstep(0.3, 0.8, sunDot) * 
+                               smoothstep(-0.1, 0.3, sunDirection.y);
+            color += sunColor.rgb * sunProximity * 0.15 * sunTintStrength;
+            
+            float globalSunTint = smoothstep(-0.1, 0.5, sunDirection.y);
+            color = mix(color, sunColor.rgb, globalSunTint * sunTintStrength * 0.08);
+        }
+        
+        if (moonDirection.y > -0.1 && moonTintStrength > 0.0) {
+            float moonSkyInfluence = smoothstep(0.8, 0.95, moonDot) * 
+                                    smoothstep(-0.1, 0.2, moonDirection.y);
+            color = mix(color, color * moonColor.rgb, moonSkyInfluence * 0.2 * moonTintStrength);
+            
+            float moonProximity = smoothstep(0.5, 0.85, moonDot) * 
+                                smoothstep(-0.1, 0.3, moonDirection.y);
+            color += moonColor.rgb * moonProximity * 0.08 * moonTintStrength;
+            
+            float globalMoonTint = smoothstep(-0.1, 0.5, moonDirection.y);
+            color = mix(color, moonColor.rgb, globalMoonTint * moonTintStrength * 0.05);
+        }
+    }
+    
+    FragColor = vec4(color, 1.0);
 }
-
 )";
 
-static const char* UPSAMPLE_FRAG = R"(
+static const char *UPSAMPLE_FRAG = R"(
 #version 410 core
 uniform sampler2D srcTexture;
 uniform float filterRadius;
@@ -3462,7 +4211,7 @@ void main() {
 
 )";
 
-static const char* DOWNSAMPLE_FRAG = R"(
+static const char *DOWNSAMPLE_FRAG = R"(
 #version 410 core
 
 uniform sampler2D srcTexture;
@@ -3502,7 +4251,7 @@ void main() {
 
 )";
 
-static const char* PARTICLE_FRAG = R"(
+static const char *PARTICLE_FRAG = R"(
 #version 410 core
 in vec2 fragTexCoord;
 in vec4 fragColor;
@@ -3528,7 +4277,7 @@ void main() {
 }
 )";
 
-static const char* PARTICLE_VERT = R"(
+static const char *PARTICLE_VERT = R"(
 #version 410 core
 
 layout(location = 0) in vec3 quadVertex;
@@ -3571,7 +4320,7 @@ void main() {
 }
 )";
 
-static const char* SKYBOX_VERT = R"(
+static const char *SKYBOX_VERT = R"(
 #version 410 core
 layout (location = 0) in vec3 aPos;
 
@@ -3589,7 +4338,7 @@ void main()
 
 )";
 
-static const char* GAUSSIAN_FRAG = R"(
+static const char *GAUSSIAN_FRAG = R"(
 #version 410 core
 out vec4 FragColor;
 
@@ -3624,7 +4373,184 @@ void main() {
 }
 )";
 
-static const char* VOLUMETRIC_VERT = R"(
+static const char *SSR_FRAG = R"(
+#version 410 core
+out vec4 FragColor;
+
+in vec2 TexCoord;
+
+uniform sampler2D gPosition;
+uniform sampler2D gNormal;
+uniform sampler2D gAlbedoSpec;
+uniform sampler2D gMaterial;
+uniform sampler2D sceneColor;  
+uniform sampler2D gDepth;     
+
+uniform mat4 projection;
+uniform mat4 view;
+uniform mat4 inverseProjection;
+uniform mat4 inverseView;
+uniform vec3 cameraPosition;
+
+uniform float maxDistance = 30.0;   
+uniform float resolution = 0.5;     
+uniform int steps = 64;            
+uniform float thickness = 2.0;      
+uniform float maxRoughness = 0.5;  
+
+const float PI = 3.14159265359;
+
+float LinearizeDepth(float depth, float near, float far) {
+    float z = depth * 2.0 - 1.0;
+    return (2.0 * near * far) / (far + near - z * (far - near));
+}
+
+float hash(vec2 p) {
+    vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+    p3 += dot(p3, p3.yzx + 33.33);
+    return fract((p3.x + p3.y) * p3.z);
+}
+
+vec3 fresnelSchlick(float cosTheta, vec3 F0) {
+    return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+}
+
+vec4 SSR(vec3 worldPos, vec3 normal, vec3 viewDir, float roughness, float metallic, vec3 albedo) {
+    vec3 viewPos = (view * vec4(worldPos, 1.0)).xyz;
+    vec3 viewNormal = normalize((view * vec4(normal, 0.0)).xyz);
+    
+    vec3 viewDirection = normalize(viewPos);
+    vec3 viewReflect = normalize(reflect(viewDirection, viewNormal));
+    
+    if (viewReflect.z > 0.0) {
+        return vec4(0.0);
+    }
+    
+    vec3 rayOrigin = viewPos + viewNormal * 0.01;
+    vec3 rayDir = viewReflect;
+    
+    float stepSize = maxDistance / float(steps);
+    vec3 currentPos = rayOrigin;
+    
+    vec3 magic = vec3(0.06711056, 0.00583715, 52.9829189);
+    float jitter = fract(magic.z * fract(dot(gl_FragCoord.xy, magic.xy)));
+    currentPos += rayDir * stepSize * jitter;
+    
+    vec2 hitUV = vec2(-1.0);
+    float hitDepth = 0.0;
+    bool hit = false;
+    
+    vec3 lastPos = currentPos;
+    
+    for (int i = 0; i < steps; i++) {
+        float t = float(i) / float(steps);
+        float adaptiveStep = mix(0.3, 1.0, t);
+        currentPos += rayDir * stepSize * adaptiveStep;
+        
+        vec4 projectedPos = projection * vec4(currentPos, 1.0);
+        projectedPos.xyz /= projectedPos.w;
+        vec2 screenUV = projectedPos.xy * 0.5 + 0.5;
+        
+        if (screenUV.x < 0.0 || screenUV.x > 1.0 || 
+            screenUV.y < 0.0 || screenUV.y > 1.0) {
+            break;
+        }
+        
+        vec3 sampleWorldPos = texture(gPosition, screenUV).xyz;
+        vec3 sampleViewPos = (view * vec4(sampleWorldPos, 1.0)).xyz;
+        
+        float sampleDepth = -sampleViewPos.z;
+        float currentDepth = -currentPos.z;
+        
+        float depthDiff = sampleDepth - currentDepth;
+        
+        if (depthDiff > 0.0 && depthDiff < thickness) {
+            vec3 binarySearchStart = lastPos;
+            vec3 binarySearchEnd = currentPos;
+            
+            for (int j = 0; j < 8; j++) {  
+                vec3 midPoint = (binarySearchStart + binarySearchEnd) * 0.5;
+                
+                vec4 midProj = projection * vec4(midPoint, 1.0);
+                midProj.xyz /= midProj.w;
+                vec2 midUV = midProj.xy * 0.5 + 0.5;
+                
+                vec3 midSampleWorldPos = texture(gPosition, midUV).xyz;
+                vec3 midSampleViewPos = (view * vec4(midSampleWorldPos, 1.0)).xyz;
+                float midSampleDepth = -midSampleViewPos.z;  
+                float midCurrentDepth = -midPoint.z;        
+                
+                if (midCurrentDepth < midSampleDepth) {
+                    binarySearchStart = midPoint;
+                } else {
+                    binarySearchEnd = midPoint;
+                }
+            }
+            
+            vec4 finalProj = projection * vec4(binarySearchEnd, 1.0);
+            finalProj.xyz /= finalProj.w;
+            hitUV = finalProj.xy * 0.5 + 0.5;
+            hitDepth = length(currentPos - rayOrigin);
+            hit = true;
+            break;
+        }
+        
+        lastPos = currentPos;
+    }
+    
+    if (!hit) {
+        return vec4(0.0);
+    }
+    
+    float mipLevel = roughness * 5.0;
+    vec3 reflectionColor = textureLod(sceneColor, hitUV, mipLevel).rgb;
+    
+    vec2 edgeFade = smoothstep(0.0, 0.15, hitUV) * (1.0 - smoothstep(0.85, 1.0, hitUV));
+    float edgeFactor = edgeFade.x * edgeFade.y;
+    
+    float distanceFade = 1.0 - smoothstep(maxDistance * 0.5, maxDistance, hitDepth);
+    
+    float roughnessFade = 1.0 - smoothstep(0.0, maxRoughness, roughness);
+    
+    vec3 F0 = mix(vec3(0.04), albedo, metallic);
+    vec3 V = normalize(cameraPosition - worldPos);
+    float cosTheta = max(dot(normal, V), 0.0);
+    vec3 fresnel = fresnelSchlick(cosTheta, F0);
+    float fresnelFactor = (fresnel.r + fresnel.g + fresnel.b) / 3.0;
+    
+    float finalFade = edgeFactor * distanceFade * roughnessFade * fresnelFactor;
+    
+    return vec4(reflectionColor, finalFade);
+}
+
+void main() {
+    vec3 worldPos = texture(gPosition, TexCoord).xyz;
+    vec3 normal = normalize(texture(gNormal, TexCoord).xyz);
+    vec3 albedo = texture(gAlbedoSpec, TexCoord).rgb;
+    vec4 material = texture(gMaterial, TexCoord);
+    
+    float metallic = material.r;
+    float roughness = material.g;
+    
+    if (length(normal) < 0.001) {
+        FragColor = vec4(0.0, 0.0, 0.0, 0.0);
+        return;
+    }
+    
+    if (roughness > maxRoughness) {
+        FragColor = vec4(0.0, 0.0, 0.0, 0.0);
+        return;
+    }
+    
+    vec3 viewDir = normalize(cameraPosition - worldPos);
+    
+    vec4 reflection = SSR(worldPos, normal, viewDir, roughness, metallic, albedo);
+    
+    FragColor = reflection;
+}
+)";
+
+static const char *VOLUMETRIC_VERT = R"(
 #version 410 core
 
 layout(location = 0) in vec3 aPos;
@@ -3639,7 +4565,7 @@ void main() {
 
 )";
 
-static const char* VOLUMETRIC_FRAG = R"(
+static const char *VOLUMETRIC_FRAG = R"(
 #version 410 core
 in vec2 TexCoords;
 out vec4 FragColor;

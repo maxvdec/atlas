@@ -191,7 +191,7 @@ class Terrain : public GameObject {
     /**
      * @brief Terrains render forward-only regardless of the window setting.
      */
-    bool canUseDeferredRendering() const override { return false; }
+    bool canUseDeferredRendering() override { return false; }
 
     /**
      * @brief Stores the view matrix used for terrain rendering.

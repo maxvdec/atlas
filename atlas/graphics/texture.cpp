@@ -10,17 +10,193 @@
 #include "atlas/texture.h"
 #include "atlas/core/shader.h"
 #include "atlas/object.h"
+#include "atlas/units.h"
 #include "atlas/window.h"
 #include "atlas/workspace.h"
 #include <algorithm>
 #include <array>
+#include <cmath>
+#include <unordered_map>
 #include <vector>
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb/stb_image.h"
-#include <glad/glad.h>
-#include <glm/glm.hpp>
+#include <glm/gtc/constants.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
+namespace {
+
+glm::vec3 cubemapDirectionFromFace(int faceIndex, float u, float v) {
+    switch (faceIndex) {
+    case 0:
+        return glm::normalize(glm::vec3(1.0f, -v, -u));
+    case 1:
+        return glm::normalize(glm::vec3(-1.0f, -v, u));
+    case 2:
+        return glm::normalize(glm::vec3(u, 1.0f, v));
+    case 3:
+        return glm::normalize(glm::vec3(u, -1.0f, -v));
+    case 4:
+        return glm::normalize(glm::vec3(u, -v, 1.0f));
+    case 5:
+        return glm::normalize(glm::vec3(-u, -v, -1.0f));
+    default:
+        return glm::vec3(0.0f, 0.0f, 1.0f);
+    }
+}
+
+struct CubemapWeightCache {
+    int size = 0;
+    std::array<std::vector<float>, 6> weights;
+};
+
+const CubemapWeightCache &getCubemapWeightCache(int size) {
+    static std::unordered_map<int, CubemapWeightCache> cache;
+    auto it = cache.find(size);
+    if (it != cache.end()) {
+        return it->second;
+    }
+
+    CubemapWeightCache weightCache;
+    weightCache.size = size;
+    const size_t pixelCount = static_cast<size_t>(size) * size;
+    constexpr int horizonOrder[4] = {0, 4, 1, 5};
+
+    for (int faceIndex = 0; faceIndex < 6; ++faceIndex) {
+        std::vector<float> &faceWeights = weightCache.weights[faceIndex];
+        faceWeights.resize(pixelCount * 6);
+
+        for (int y = 0; y < size; ++y) {
+            for (int x = 0; x < size; ++x) {
+                float u = (static_cast<float>(x) + 0.5f) /
+                              static_cast<float>(size) * 2.0f -
+                          1.0f;
+                float v = (static_cast<float>(y) + 0.5f) /
+                              static_cast<float>(size) * 2.0f -
+                          1.0f;
+
+                glm::vec3 direction = cubemapDirectionFromFace(faceIndex, u, v);
+                float up = glm::clamp(direction.y, -1.0f, 1.0f);
+                float upPositive = glm::clamp(up, 0.0f, 1.0f);
+                float upNegative = glm::clamp(-up, 0.0f, 1.0f);
+                float horizonBase =
+                    glm::clamp(1.0f - std::fabs(up), 0.0f, 1.0f);
+
+                float topFactor = std::pow(upPositive, 0.85f);
+                float bottomFactor = std::pow(upNegative, 0.85f);
+                float horizonFactor = std::pow(horizonBase, 0.65f);
+
+                float normalizationSum =
+                    topFactor + bottomFactor + horizonFactor;
+                if (normalizationSum <= 1e-6f) {
+                    horizonFactor = 1.0f;
+                    topFactor = 0.0f;
+                    bottomFactor = 0.0f;
+                    normalizationSum = 1.0f;
+                }
+
+                topFactor /= normalizationSum;
+                bottomFactor /= normalizationSum;
+                horizonFactor /= normalizationSum;
+
+                float angle = std::atan2(direction.z, direction.x);
+                if (angle < 0.0f) {
+                    angle += glm::two_pi<float>();
+                }
+                float scaled = angle / glm::two_pi<float>() * 4.0f;
+                float sectorFloat = std::floor(scaled);
+                int sector = static_cast<int>(sectorFloat) & 3;
+                float sectorT = scaled - sectorFloat;
+                float horizonInterp = glm::smoothstep(0.0f, 1.0f, sectorT);
+
+                float horizonWeights[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+                horizonWeights[sector] = (1.0f - horizonInterp) * horizonFactor;
+                horizonWeights[(sector + 1) & 3] +=
+                    horizonInterp * horizonFactor;
+
+                float colorWeights[6] = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+                colorWeights[2] = topFactor;
+                colorWeights[3] = bottomFactor;
+                for (int h = 0; h < 4; ++h) {
+                    colorWeights[horizonOrder[h]] += horizonWeights[h];
+                }
+
+                float totalWeight = 0.0f;
+                for (float weight : colorWeights) {
+                    totalWeight += weight;
+                }
+                float invTotal =
+                    totalWeight > 1e-6f ? 1.0f / totalWeight : 0.0f;
+
+                size_t pixelWeightIndex =
+                    (static_cast<size_t>(y) * static_cast<size_t>(size) +
+                     static_cast<size_t>(x)) *
+                    6;
+                float *dest = faceWeights.data() + pixelWeightIndex;
+                for (size_t neighbor = 0; neighbor < 6; ++neighbor) {
+                    dest[neighbor] = colorWeights[neighbor] * invTotal;
+                }
+            }
+        }
+    }
+
+    auto inserted = cache.emplace(size, std::move(weightCache));
+    return inserted.first->second;
+}
+
+void cubemapFillFaceData(const std::array<Color, 6> &colors, int faceIndex,
+                         int size, std::vector<unsigned char> &faceData,
+                         glm::dvec3 &accumulatedColor) {
+    const auto &weightCache = getCubemapWeightCache(size);
+    const std::vector<float> &faceWeights = weightCache.weights[faceIndex];
+    const size_t pixelCount =
+        static_cast<size_t>(size) * static_cast<size_t>(size);
+
+    if (faceData.size() != pixelCount * 4) {
+        faceData.resize(pixelCount * 4);
+    }
+
+    for (int y = 0; y < size; ++y) {
+        for (int x = 0; x < size; ++x) {
+            const size_t pixelIndex = (static_cast<size_t>(y) * size + x);
+            const float *weights = faceWeights.data() + pixelIndex * 6;
+
+            glm::vec3 finalColor(0.0f);
+            float finalAlpha = 0.0f;
+
+            for (size_t neighbor = 0; neighbor < 6; ++neighbor) {
+                float weight = weights[neighbor];
+                if (weight <= 0.0f) {
+                    continue;
+                }
+                const Color &sample = colors[neighbor];
+                finalColor.r += static_cast<float>(sample.r) * weight;
+                finalColor.g += static_cast<float>(sample.g) * weight;
+                finalColor.b += static_cast<float>(sample.b) * weight;
+                finalAlpha += static_cast<float>(sample.a) * weight;
+            }
+
+            finalColor =
+                glm::clamp(finalColor, glm::vec3(0.0f), glm::vec3(1.0f));
+            finalAlpha = glm::clamp(finalAlpha, 0.0f, 1.0f);
+
+            size_t byteIndex = pixelIndex * 4;
+            faceData[byteIndex + 0] =
+                static_cast<unsigned char>(finalColor.r * 255.0f);
+            faceData[byteIndex + 1] =
+                static_cast<unsigned char>(finalColor.g * 255.0f);
+            faceData[byteIndex + 2] =
+                static_cast<unsigned char>(finalColor.b * 255.0f);
+            faceData[byteIndex + 3] =
+                static_cast<unsigned char>(finalAlpha * 255.0f);
+
+            accumulatedColor.x += finalColor.r;
+            accumulatedColor.y += finalColor.g;
+            accumulatedColor.z += finalColor.b;
+        }
+    }
+}
+} // namespace
 
 Texture Texture::fromResourceName(const std::string &resourceName,
                                   TextureType type, TextureParameters params,
@@ -260,6 +436,86 @@ Cubemap Cubemap::fromResourceGroup(ResourceGroup &group) {
     return cubemap;
 }
 
+Cubemap Cubemap::fromColors(const std::array<Color, 6> &colors, int size) {
+    if (size <= 0) {
+        throw std::runtime_error("Cubemap size must be positive");
+    }
+
+    Id textureId;
+    glGenTextures(1, &textureId);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, textureId);
+
+    glm::dvec3 accumulatedColor(0.0);
+    unsigned long long accumulatedPixels = 0;
+    std::vector<unsigned char> faceData;
+    for (int faceIndex = 0; faceIndex < 6; ++faceIndex) {
+        cubemapFillFaceData(colors, faceIndex, size, faceData,
+                            accumulatedColor);
+
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + faceIndex, 0, GL_RGBA,
+                     size, size, 0, GL_RGBA, GL_UNSIGNED_BYTE, faceData.data());
+
+        accumulatedPixels += static_cast<unsigned long long>(size) *
+                             static_cast<unsigned long long>(size);
+    }
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    TextureCreationData creationData{size, size, 4};
+    Cubemap cubemap;
+    cubemap.creationData = creationData;
+    cubemap.id = textureId;
+
+    if (accumulatedPixels > 0) {
+        glm::dvec3 normalized =
+            accumulatedColor / static_cast<double>(accumulatedPixels);
+        cubemap.averageColor = {normalized.x, normalized.y, normalized.z, 1.0};
+        cubemap.hasAverageColor = true;
+    }
+
+    return cubemap;
+}
+
+void Cubemap::updateWithColors(const std::array<Color, 6> &colors) {
+    if (id == 0) {
+        throw std::runtime_error("Cubemap is not initialized");
+    }
+    if (creationData.width <= 0 || creationData.height <= 0) {
+        throw std::runtime_error("Cubemap has invalid dimensions for update");
+    }
+
+    int size = creationData.width;
+    glBindTexture(GL_TEXTURE_CUBE_MAP, id);
+
+    glm::dvec3 accumulatedColor(0.0);
+    unsigned long long accumulatedPixels = 0;
+    std::vector<unsigned char> faceData;
+
+    for (int faceIndex = 0; faceIndex < 6; ++faceIndex) {
+        cubemapFillFaceData(colors, faceIndex, size, faceData,
+                            accumulatedColor);
+
+        glTexSubImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + faceIndex, 0, 0, 0,
+                        size, size, GL_RGBA, GL_UNSIGNED_BYTE, faceData.data());
+
+        accumulatedPixels += static_cast<unsigned long long>(size) *
+                             static_cast<unsigned long long>(size);
+    }
+
+    if (accumulatedPixels > 0) {
+        glm::dvec3 normalized =
+            accumulatedColor / static_cast<double>(accumulatedPixels);
+        averageColor = {normalized.x, normalized.y, normalized.z, 1.0};
+        hasAverageColor = true;
+    } else {
+        hasAverageColor = false;
+    }
+}
+
 void Skybox::display(Window &window) {
     CoreObject obj;
 
@@ -349,6 +605,49 @@ void Skybox::render(float dt) {
     obj->shaderProgram.setUniformMat4f("projection", projection);
 
     obj->shaderProgram.setUniform1i("skybox", 0);
+
+    if (!Window::mainWindow || !Window::mainWindow->getCurrentScene()) {
+        throw std::runtime_error(
+            "Skybox rendering requires a valid main window and scene");
+    }
+    if (Window::mainWindow->getCurrentScene()->atmosphere.isEnabled()) {
+        Magnitude3d sunDirection =
+            Window::mainWindow->getCurrentScene()->atmosphere.getSunAngle();
+        Magnitude3d moonDirection =
+            Window::mainWindow->getCurrentScene()->atmosphere.getMoonAngle();
+        obj->shaderProgram.setUniform3f("sunDirection", sunDirection.x,
+                                        sunDirection.y, sunDirection.z);
+        obj->shaderProgram.setUniform3f("moonDirection", moonDirection.x,
+                                        moonDirection.y, moonDirection.z);
+
+        Color sunColor =
+            Window::mainWindow->getCurrentScene()->atmosphere.sunColor;
+        obj->shaderProgram.setUniform4f("sunColor", sunColor.r, sunColor.g,
+                                        sunColor.b, sunColor.a);
+        Color moonColor =
+            Window::mainWindow->getCurrentScene()->atmosphere.moonColor;
+        obj->shaderProgram.setUniform4f("moonColor", moonColor.r, moonColor.g,
+                                        moonColor.b, moonColor.a);
+
+        obj->shaderProgram.setUniform1f(
+            "sunTintStrength",
+            Window::mainWindow->getCurrentScene()->atmosphere.sunTintStrength);
+        obj->shaderProgram.setUniform1f(
+            "moonTintStrength",
+            Window::mainWindow->getCurrentScene()->atmosphere.moonTintStrength);
+        obj->shaderProgram.setUniform1f(
+            "sunSizeMultiplier",
+            Window::mainWindow->getCurrentScene()->atmosphere.sunSize);
+        obj->shaderProgram.setUniform1f(
+            "moonSizeMultiplier",
+            Window::mainWindow->getCurrentScene()->atmosphere.moonSize);
+        obj->shaderProgram.setUniform1f(
+            "starDensity",
+            Window::mainWindow->getCurrentScene()->atmosphere.starIntensity);
+        obj->shaderProgram.setUniform1i("hasDayNight", 1);
+    } else {
+        obj->shaderProgram.setUniform1i("hasDayNight", 0);
+    }
 
     glBindVertexArray(obj->vao);
     glActiveTexture(GL_TEXTURE0);
