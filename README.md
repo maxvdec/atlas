@@ -44,13 +44,13 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [x] Lights
 - [x] Shadows (except for point lights)
 - [x] Post-processing effects
-- [x] Sky, atmosphere, weather and fluid simulation system (Hydra) **for alpha 4**
-- [x] Water rendering system **for alpha 4**
-- [x] Weather system **for alpha 4**
-- [x] Cloud system **for alpha 4**
-- [x] Screen-space global illumination **for alpha 4**
-- [x] Night-day cycle system **for alpha 4**
-- [x] Add sun, moon and stars rendering **for alpha 4**
+- [x] Sky, atmosphere, weather and fluid simulation system (Hydra) 
+- [x] Water rendering system
+- [x] Weather system 
+- [x] Cloud system 
+- [x] Screen-space global illumination
+- [x] Night-day cycle system
+- [x] Add sun, moon and stars rendering 
 - [ ] Animation system (Mold)
 - [x] Instancing support
 - [x] Optimizations and performance improvements
@@ -65,10 +65,6 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [x] Add soft shadows
 - [x] Add shadows for point lights
 - [x] Add normal and parallax mapping
-- [ ] Handle better collisions with Bezel
-- [ ] Add support for constraints in Bezel
-- [ ] Add support for character controllers in Bezel
-- [ ] Add support for motors in Bezel
 - [x] Add volumetric lighting
 - [x] Add bloom for lights
 - [x] Add depth of field
@@ -76,7 +72,7 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [x] Add motion blur 
 - [x] Physically based bloom 
 - [x] Add area lights 
-- [x] Screen-space reflections **for alpha 4**
+- [x] Screen-space reflections 
 - [x] Add rim lighting 
 - [x] Add chromatic aberration 
 - [x] Add posterization
@@ -84,11 +80,15 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - [x] Add dilation 
 - [x] Add film grain 
 - [x] Add LUT tables 
-- [x] Add foam and simple fluid rendering **for alpha 4**
-- [x] Screen-space refractions **for alpha 4**
-- [ ] Create opal for core rendering
-- [ ] Migrate the engine to use opal
-- [ ] Add Vulkan support through opal
+- [x] Add foam and simple fluid rendering 
+- [x] Screen-space refractions 
+- [ ] Create opal for core rendering **for alpha 5**
+- [ ] Migrate the engine to use opal **for alpha 5**
+- [ ] Add Vulkan support through opal **for alpha 5**
+- [ ] Add Jolt Physics instead of Bezel **for alpha 5**
+- [ ] Better website **for alpha 5**
+- [ ] More modern documentation **for alpha 5**
+- [ ] Examples and tutorials **for alpha 5**
 
 ## Other features planned for the future
 
