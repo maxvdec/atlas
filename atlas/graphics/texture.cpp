@@ -610,7 +610,7 @@ void Skybox::render(float dt) {
         throw std::runtime_error(
             "Skybox rendering requires a valid main window and scene");
     }
-    if (Window::mainWindow->getCurrentScene()->atmosphere.enabled) {
+    if (Window::mainWindow->getCurrentScene()->atmosphere.isEnabled()) {
         Magnitude3d sunDirection =
             Window::mainWindow->getCurrentScene()->atmosphere.getSunAngle();
         Magnitude3d moonDirection =

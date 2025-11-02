@@ -1,5 +1,5 @@
 #include "atlas/camera.h"
-#include "atlas/effect.h"
+#include "atlas/particle.h"
 #include "atlas/light.h"
 #include "atlas/object.h"
 #include "atlas/scene.h"
@@ -13,6 +13,7 @@
 #include "aurora/procedural.h"
 #include "aurora/terrain.h"
 #include "hydra/atmosphere.h"
+#include "hydra/fluid.h"
 #include <iostream>
 #include <memory>
 
@@ -75,6 +76,44 @@ class BackpackAttach : public Component {
     }
 };
 
+class WaterPot : public CompoundObject {
+    CoreObject pot;
+    Fluid water;
+
+  public:
+    void init() override {
+        pot = createBox({1.0, 0.25, 0.25}, Color(0.6f, 0.4f, 0.2f));
+
+        Instance &potLeft = pot.createInstance();
+        Instance &potRight = pot.createInstance();
+        potRight.move({0.0f, 0.0f, 1.0f});
+        Instance &potDown = pot.createInstance();
+        potDown.rotate({0.0, 90.0f, 0.0});
+        potDown.move({-0.5f, 0.0f, 0.5f});
+        Instance &potUp = pot.createInstance();
+        potUp.rotate({0.0, -90.0f, 0.0});
+        potUp.move({0.5f, 0.0f, 0.5f});
+        pot.initialize();
+        this->addObject(&pot);
+
+        Texture waterDUDV =
+            Texture::fromResource(Workspace::get().createResource(
+                "water_dudv.png", "WaterDUDV", ResourceType::Image));
+
+        Texture waterNormal =
+            Texture::fromResource(Workspace::get().createResource(
+                "water_normal.png", "WaterNormal", ResourceType::Image));
+
+        water = Fluid();
+        water.create({0.9, 0.9}, Color::blue());
+        water.setPosition({0.0f, 0.10f, 0.5f});
+        water.movementTexture = waterDUDV;
+        water.normalTexture = waterNormal;
+        water.initialize();
+        this->addObject(&water);
+    }
+};
+
 class MainScene : public Scene {
     CoreObject ground;
     CoreObject ball;
@@ -88,6 +127,8 @@ class MainScene : public Scene {
     RenderTarget frameBuffer;
     Terrain terrain;
     AreaLight areaLight;
+    ParticleEmitter emitter;
+    WaterPot waterPot;
 
     bool doesUpdate = true;
     bool fall = false;
@@ -107,16 +148,6 @@ class MainScene : public Scene {
         if (fall) {
             camera.position.y -= 10.f * window.getDeltaTime();
         }
-
-        Magnitude3d sunAngle = atmosphere.getSunAngle();
-        float radius = 5.0f;
-        Position3d sunPos = sunAngle * radius;
-        ball.setPosition(sunPos);
-
-        Magnitude3d moonAngle = atmosphere.getMoonAngle();
-        float moonRadius = 5.0f;
-        Position3d moonPos = moonAngle * moonRadius;
-        ball2.setPosition(moonPos);
     }
 
     void onMouseMove(Window &window, Movement2d movement) override {
@@ -158,34 +189,12 @@ class MainScene : public Scene {
         camera.farClip = 1000.f;
         window.setCamera(&camera);
 
-        backpack = Model();
-        Resource backpackResource = Workspace::get().createResource(
-            "backpack/Survival_BackPack_2.fbx", "BackpackModel",
-            ResourceType::Model);
-        backpack.fromResource(backpackResource);
-
-        Resource colorTexture = Workspace::get().createResource(
-            "backpack/1001_albedo.jpg", "BackpackColor", ResourceType::Image);
-        Resource normalTexture = Workspace::get().createResource(
-            "backpack/1001_normal.png", "BackpackNormal", ResourceType::Image);
-        Texture color = Texture::fromResource(colorTexture);
-        Texture normal =
-            Texture::fromResource(normalTexture, TextureType::Normal);
-        backpack.attachTexture(color);
-        backpack.attachTexture(normal);
-
-        sphereCube.addComponent<HorizontalMover>(HorizontalMover());
-        sphereCube.setPosition({0.0, 0.25, 0.0});
-        // window.addObject(&sphereCube);
-
         ground = createBox({5.0f, 0.1f, 5.0f}, Color(0.3f, 0.8f, 0.3f));
         ground.attachTexture(
             Texture::fromResource(Workspace::get().createResource(
                 "ground.jpg", "GroundTexture", ResourceType::Image)));
         ground.setPosition({0.0f, -0.1f, 0.0f});
         window.addObject(&ground);
-
-        backpack.setPosition({0.0f, 0.2f, 0.0f});
 
         areaLight.position = {0.0f, 2.0f, 0.0};
         areaLight.rotate({0.0f, 90.0f, 0.0f});
@@ -203,27 +212,17 @@ class MainScene : public Scene {
         fpsText.addTraitComponent<Text>(FPSTextUpdater());
         window.addUIObject(&fpsText);
 
-        lightObject = createBox({1.0f, 1.0f, 1.0f}, Color::yellow());
-        lightObject.setPosition({0.0f, 0.001f, 0.0f});
-        // lightObject.makeEmissive(this, {5.0, 5.0, 5.0}, 2.0f);
-        for (int i = 0; i < 4; i++) {
-            Instance &instance = lightObject.createInstance();
-            instance.move({0.0f, 1.1f * i, 0.0f});
-        }
-
         ball = createDebugSphere(0.5f, 76, 76);
         ball.body->applyMass(0.0);
-        ball.move({0.f, 1.0f, 5});
+        ball.material.metallic = 1.0f;
+        ball.material.roughness = 0.0f;
+        ball.move({0.f, 1.0f, 1.0});
         window.addObject(&ball);
 
         ball2 = createDebugSphere(0.5f, 76, 76);
         ball2.body->applyMass(0.0);
-        ball2.move({0.f, 1.0f, 5});
+        ball2.move({0.f, 1.0f, -1.0});
         window.addObject(&ball2);
-
-        this->setAmbientIntensity(1.0f);
-
-        // this->setSkybox(Skybox::create(createCubemap(), window));
 
         Resource heightmapResource = Workspace::get().createResource(
             "terrain/heightmap.png", "Heightmap", ResourceType::Image);
@@ -254,8 +253,6 @@ class MainScene : public Scene {
         terrain.maxPeak = 100.f;
 
         light = DirectionalLight({1.0f, -0.3f, 0.5f}, Color::white());
-        // light.castShadows(window, 4096);
-        // this->addDirectionalLight(&light);
 
         frameBuffer = RenderTarget(window);
         window.addRenderTarget(&frameBuffer);
@@ -264,18 +261,11 @@ class MainScene : public Scene {
         window.useDeferredRendering();
         atmosphere.enable();
         atmosphere.secondsPerHour = 4.f;
-        atmosphere.moonColor =
-            Color(1.0f, 0.0f, 0.0f); // Set the moon color to red
         atmosphere.setTime(12.0);
-        atmosphere.addClouds(4, 2);
-        atmosphere.clouds->scale = 0.9f;
-        atmosphere.clouds->density = 0.3f;
-        atmosphere.clouds->densityMultiplier = 0.8f;
-        atmosphere.clouds->absorption = 0.1;
-        atmosphere.clouds->primaryStepCount = 4;
-        // atmosphere.clouds->clusterStrength = 0.8f;
-        atmosphere.clouds->size = {30.0f, 10.0f, 30.0f};
-        atmosphere.clouds->wind = {1.f, 0.0f, 0.02f};
+        atmosphere.cycle = false;
+        atmosphere.useGlobalLight();
+        atmosphere.wind = {0.1f, 0.0f, 0.0f};
+        atmosphere.castShadowsFromSunlight(4096);
     }
 };
 

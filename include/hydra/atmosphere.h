@@ -10,11 +10,15 @@
 #ifndef HYDRA_ATMOSPHERE_H
 #define HYDRA_ATMOSPHERE_H
 
+#include "atlas/camera.h"
 #include "atlas/component.h"
 #include "atlas/input.h"
+#include "atlas/light.h"
+#include "atlas/particle.h"
 #include "atlas/texture.h"
 #include "atlas/units.h"
 #include <array>
+#include <functional>
 #include <memory>
 #include <vector>
 
@@ -72,14 +76,34 @@ class Clouds {
     mutable int cachedResolution = 0;
 };
 
+enum class WeatherCondition { Clear, Rain, Snow, Storm };
+
+struct WeatherState {
+    WeatherCondition condition = WeatherCondition::Clear;
+    float intensity = 0.0f;
+    Magnitude3d wind = {0.0f, 0.0f, 0.0f};
+};
+
+typedef std::function<WeatherState(ViewInformation)> WeatherDelegate;
+
 class Atmosphere {
   public:
-    bool enabled = false;
-    float secondsPerHour = 60.f;
     float timeOfDay;
+    float secondsPerHour = 3600.0f;
+
+    Magnitude3d wind = {0.0f, 0.0f, 0.0f};
+
+    WeatherDelegate weatherDelegate = [](ViewInformation info) {
+        return WeatherState();
+    };
 
     void update(float dt);
     void enable() { enabled = true; }
+    void disable() { enabled = false; }
+    bool isEnabled() const { return enabled; }
+
+    void enableWeather() { weatherEnabled = true; }
+    void disableWeather() { weatherEnabled = false; }
 
     float getNormalizedTime() const;
 
@@ -94,6 +118,9 @@ class Atmosphere {
     std::array<Color, 6> getSkyboxColors() const;
     Cubemap createSkyCubemap(int size = 256) const;
     void updateSkyCubemap(Cubemap &cubemap) const;
+
+    void castShadowsFromSunlight(int res) const;
+    void useGlobalLight();
 
     Color sunColor = Color(1.0, 0.95, 0.8, 1.0);
     Color moonColor = Color(0.5, 0.5, 0.8, 1.0);
@@ -118,15 +145,23 @@ class Atmosphere {
     inline void addClouds(int frequency = 4, int divisions = 6) {
         if (!clouds) {
             clouds = std::make_shared<Clouds>(Clouds(frequency, divisions));
+            clouds->wind = this->wind;
         }
     }
 
     bool cycle = false;
 
   private:
+    WeatherState lastWeather;
+    bool enabled = false;
+    bool weatherEnabled = false;
     mutable float lastSkyboxUpdateTime = -1.0f;
     mutable bool skyboxCacheValid = false;
     mutable std::array<Color, 6> lastSkyboxColors = {};
+
+    std::shared_ptr<DirectionalLight> mainLight = nullptr;
+    std::shared_ptr<ParticleEmitter> rainEmitter = nullptr;
+    std::shared_ptr<ParticleEmitter> snowEmitter = nullptr;
 };
 
 #endif // HYDRA_ATMOSPHERE_H

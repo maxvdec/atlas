@@ -23,7 +23,6 @@ struct Material {
     float metallic;
     float roughness;
     float ao;
-    float reflectivity;
 };
 
 uniform sampler2D texture1;
@@ -134,16 +133,10 @@ void main() {
     vec4 sampledColor = enableTextures(TEXTURE_COLOR);
     bool hasColorTexture = sampledColor != vec4(-1.0);
 
-    vec4 baseColor;
-    if (useTexture && hasColorTexture) {
-        baseColor = hasColorTexture ? sampledColor : vec4(material.albedo, 1.0);
-        if (useColor) {
-            baseColor *= outColor;
-        }
-    } else if (useColor) {
-        baseColor = outColor;
-    } else {
-        baseColor = vec4(material.albedo, 1.0);
+    vec4 baseColor = vec4(material.albedo, 1.0);
+    vec4 albedoTex = enableTextures(TEXTURE_COLOR);
+    if (albedoTex != vec4(-1.0)) {
+        baseColor = albedoTex;
     }
 
     if (baseColor.a < 0.1)
@@ -178,12 +171,9 @@ void main() {
         ao *= aoTex.r;
     }
 
-    float reflectivity = material.reflectivity;
-
     metallic = clamp(metallic, 0.0, 1.0);
     roughness = clamp(roughness, 0.0, 1.0);
     ao = clamp(ao, 0.0, 1.0);
-    reflectivity = clamp(reflectivity, 0.0, 1.0);
 
     float nonlinearDepth = gl_FragCoord.z;
     gPosition = vec4(FragPos, nonlinearDepth);
@@ -200,5 +190,5 @@ void main() {
     }
     gAlbedoSpec = vec4(a, ao);
 
-    gMaterial = vec4(metallic, roughness, reflectivity, 1.0);
+    gMaterial = vec4(metallic, roughness, ao, 1.0);
 }

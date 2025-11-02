@@ -229,6 +229,7 @@ class Scene {
      * @param light The directional light to add.
      */
     void addDirectionalLight(DirectionalLight *light) {
+        directionalLights.clear();
         directionalLights.push_back(light);
     }
 
@@ -308,6 +309,7 @@ class Scene {
     friend class Window;
     friend class Terrain;
     friend class RenderTarget;
+    friend class Fluid;
 };
 
 #endif // ATLAS_SCENE_H

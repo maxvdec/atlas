@@ -612,6 +612,17 @@ void RenderTarget::render(float dt) {
         obj->shaderProgram.setUniform1i("hasPositionTexture",
                                         gPosition.id != 0 ? 1 : 0);
 
+        glActiveTexture(GL_TEXTURE5);
+        glBindTexture(GL_TEXTURE_2D, ssrTexture.id);
+        obj->shaderProgram.setUniform1i("SSRTexture", 5);
+        obj->shaderProgram.setUniform1i("hasSSRTexture",
+                                        ssrTexture.id != 0 ? 1 : 0);
+
+        glActiveTexture(GL_TEXTURE6);
+        glBindTexture(GL_TEXTURE_2D, LUT.id);
+        obj->shaderProgram.setUniform1i("LUTTexture", 6);
+        obj->shaderProgram.setUniform1i("hasLUTTexture", LUT.id != 0 ? 1 : 0);
+
         const glm::mat4 projectionMatrix =
             Window::mainWindow->calculateProjectionMatrix();
         const glm::mat4 viewMatrix =
@@ -650,7 +661,6 @@ void RenderTarget::render(float dt) {
         obj->shaderProgram.setUniform3f(
             "environment.fogColor", scene->environment.fog.color.r,
             scene->environment.fog.color.g, scene->environment.fog.color.b);
-        // invProjectionMatrix already uploaded above; no need to resend here.
 
         if (scene->atmosphere.clouds) {
             const Clouds &cloudSettings = *scene->atmosphere.clouds;
@@ -716,6 +726,9 @@ void RenderTarget::render(float dt) {
                                             ambient.y, ambient.z);
             obj->shaderProgram.setUniform1i("hasClouds", 1);
         } else {
+            glActiveTexture(GL_TEXTURE15);
+            glBindTexture(GL_TEXTURE_3D, 0);
+            obj->shaderProgram.setUniform1i("cloudsTexture", 15);
             obj->shaderProgram.setUniform1i("hasClouds", 0);
         }
     }

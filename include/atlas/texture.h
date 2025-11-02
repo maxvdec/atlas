@@ -269,6 +269,14 @@ struct Texture {
         int width, int height, const std::vector<CheckerTile> &tiles,
         TextureParameters params = {}, Color borderColor = {0, 0, 0, 0});
 
+    /**
+     * @brief Creates a vertically stretched streak texture suited for rain
+     * particles.
+     */
+    static Texture createRainStreak(int width, int height,
+                                    TextureParameters params = {},
+                                    Color borderColor = {0, 0, 0, 0});
+
   private:
     static void applyWrappingMode(TextureWrappingMode mode, Id glAxis);
     static void applyFilteringMode(TextureFilteringMode mode, bool isMinifying);
@@ -427,6 +435,8 @@ class RenderTarget : public Renderable {
      * @brief Texture for volumetric lighting.
      */
     Texture volumetricLightTexture;
+    Texture ssrTexture;
+    Texture LUT;
     /**
      * @brief The type of the render target.
      *
@@ -506,6 +516,7 @@ class RenderTarget : public Renderable {
     std::vector<std::shared_ptr<Effect>> effects;
 
     friend class Window;
+    friend class Fluid;
 };
 
 /**
@@ -578,6 +589,8 @@ class Skybox : public Renderable {
      * @brief Stores the projection matrix used for skybox rendering.
      */
     void setProjectionMatrix(const glm::mat4 &projection) override;
+
+    bool canUseDeferredRendering() override { return false; }
 
     Skybox() = default;
 

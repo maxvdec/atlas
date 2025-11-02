@@ -188,6 +188,7 @@ CoreObject createBox(Size3d size, Color color) {
                        12, 13, 14, 14, 15, 12,   // Right face
                        16, 17, 18, 18, 19, 16,   // Top face
                        20, 21, 22, 22, 23, 20}); // Bottom face
+    box.material.albedo = color;
     return box;
 }
 
@@ -226,6 +227,7 @@ CoreObject createPlane(Size2d size, Color color) {
     plane.attachVertices(vertices);
     plane.attachIndices({0, 1, 2, 2, 3, 0});
     plane.rotate({-90.0, 0.0, 0.0});
+    plane.material.albedo = color;
     return plane;
 }
 
@@ -396,6 +398,7 @@ CoreObject createPyramid(Size3d size, Color color) {
     CoreObject pyramid;
     pyramid.attachVertices(vertices);
     pyramid.attachIndices(indices);
+    pyramid.material.albedo = color;
 
     return pyramid;
 }
@@ -465,6 +468,7 @@ CoreObject createSphere(double radius, unsigned int sectorCount,
     CoreObject sphere;
     sphere.attachVertices(vertices);
     sphere.attachIndices(indices);
+    sphere.material.albedo = color;
     sphere.initialize();
     return sphere;
 }
