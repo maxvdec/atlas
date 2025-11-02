@@ -3141,7 +3141,6 @@ in vec3 WorldNormal;
 uniform vec4 waterColor;         
 uniform sampler2D sceneTexture;  
 uniform sampler2D sceneDepth;    
-uniform sampler2D normalMap;     
 uniform vec3 cameraPos;           
 uniform float time;
 uniform float refractionStrength; 
@@ -3153,38 +3152,68 @@ uniform mat4 invProjection;
 uniform mat4 invView;
 uniform sampler2D reflectionTexture;
 uniform sampler2D refractionTexture;
+uniform vec3 lightDirection;
+uniform vec3 lightColor;
+uniform sampler2D movementTexture;
+uniform sampler2D normalTexture;
+uniform int hasNormalTexture;
+uniform int hasMovementTexture;
+uniform vec3 windForce;
 
 void main()
 {
     vec3 normal = normalize(WorldNormal);
     vec3 viewDir = normalize(cameraPos - WorldPos);
     
-    // Calculate screen-space coordinates
     vec4 clipSpace = projection * view * vec4(WorldPos, 1.0);
     vec3 ndc = clipSpace.xyz / clipSpace.w;
     vec2 screenUV = ndc.xy * 0.5 + 0.5;
     
-    // Wave distortion
     vec2 waveOffset;
     waveOffset.x = sin((TexCoord.x + time * 0.15) * 30.0);
     waveOffset.y = cos((TexCoord.y - time * 0.2) * 35.0);
     waveOffset *= 0.01;
     
-    // Reflection UV (flipped vertically)
+    vec2 flowOffset = vec2(0.0);
+    if (hasMovementTexture == 1) {
+        vec2 windUV = windForce.xy * time * 0.05;
+        vec2 movementUV = TexCoord * 2.0 + windUV;
+        vec2 movementSample = texture(movementTexture, movementUV).rg;
+        
+        movementSample = movementSample * 2.0 - 1.0;
+        
+        flowOffset = movementSample * length(windForce) * 0.15;
+        
+        waveOffset += flowOffset * 0.5;
+    }
+    
+    if (hasNormalTexture == 1) {
+        vec2 normalUV1 = TexCoord * 5.0 + waveOffset * 10.0 + windForce.xy * time * 0.03;
+        vec2 normalUV2 = TexCoord * 3.0 - waveOffset * 8.0 - windForce.xy * time * 0.02;
+        
+        vec3 normalMap1 = texture(normalTexture, normalUV1).rgb;
+        vec3 normalMap2 = texture(normalTexture, normalUV2).rgb;
+        
+        normalMap1 = normalize(normalMap1 * 2.0 - 1.0);
+        normalMap2 = normalize(normalMap2 * 2.0 - 1.0);
+        
+        vec3 blendedNormal = normalize(normalMap1 + normalMap2);
+        
+        float normalStrength = 0.5 + length(windForce) * 0.3;
+        normal = normalize(normal + blendedNormal * normalStrength);
+    }
+    
     vec2 reflectionUV = screenUV;
-    reflectionUV.y = 1.0 - reflectionUV.y;  // Flip Y for reflection
+    reflectionUV.y = 1.0 - reflectionUV.y;  
     reflectionUV += waveOffset * 0.6;
     reflectionUV = clamp(reflectionUV, 0.002, 0.998);
     
-    // Refraction UV (normal)
     vec2 refractionUV = screenUV - waveOffset * 0.4;
     refractionUV = clamp(refractionUV, 0.002, 0.998);
     
-    // Sample textures
     vec4 reflectionSample = texture(reflectionTexture, reflectionUV);
     vec4 refractionSample = texture(refractionTexture, refractionUV);
     
-    // Fallback to scene texture if reflection/refraction is black (unrendered areas)
     if (length(reflectionSample.rgb) < 0.01) {
         reflectionSample = texture(sceneTexture, screenUV);
     }
@@ -3192,26 +3221,59 @@ void main()
         refractionSample = texture(sceneTexture, screenUV);
     }
     
-    // Fresnel effect (more realistic range)
     float fresnel = pow(1.0 - clamp(dot(normal, viewDir), 0.0, 1.0), 3.0);
-    fresnel = mix(0.02, 1.0, fresnel); // Min 2% reflection, max 100%
+    fresnel = mix(0.02, 1.0, fresnel); 
     fresnel *= reflectionStrength;
     
-    // Combine reflection and refraction FIRST
     vec3 combined = mix(refractionSample.rgb, reflectionSample.rgb, fresnel);
     
-    // Then tint with water color (much more subtle)
-    float waterTint = clamp(depthFade * 0.3, 0.0, 0.5); // Max 50% tint, scaled down
+    float waterTint = clamp(depthFade * 0.3, 0.0, 0.5); 
     combined = mix(combined, waterColor.rgb, waterTint);
+
+    float foamAmount = 0.0;
+    if (hasMovementTexture == 1) {
+        float windStrength = length(windForce);
+        float foamFactor = smoothstep(0.7, 1.0, length(flowOffset) * windStrength);
+        foamAmount = foamFactor * 0.2;
+        combined = mix(combined, vec3(1.0), foamAmount);
+    }
     
-    // Alpha should be semi-transparent
-    float alpha = mix(0.7, 0.95, fresnel); // 70-95% opacity based on angle
+    vec3 lightDir = normalize(-lightDirection);
+    
+    float diffuse = max(dot(normal, lightDir), 0.0);
+    diffuse = diffuse * 0.3; 
+    
+    vec3 halfDir = normalize(lightDir + viewDir);
+    float specAngle = max(dot(normal, halfDir), 0.0);
+    float specular = pow(specAngle, 128.0); 
+    
+    specular *= (fresnel * 0.5 + 0.5);
+    
+    float waveVariation = sin(TexCoord.x * 50.0 + time * 2.0) * 0.5 + 0.5;
+    waveVariation *= cos(TexCoord.y * 50.0 - time * 1.5) * 0.5 + 0.5;
+    specular *= (0.7 + waveVariation * 0.3);
+    
+    vec3 lighting = lightColor * (diffuse + specular * 2.0);
+    combined += lighting;
+    
+    vec3 specularHighlight = lightColor * specular * 2.5;
+    
+    specularHighlight += vec3(foamAmount * 2.0);
+    
+    float alpha = mix(0.7, 0.95, fresnel);
     
     FragColor = vec4(combined, alpha);
     
-    // Bloom/bright color output
     float luminance = max(max(combined.r, combined.g), combined.b);
-    BrightColor = luminance > 1.0 ? vec4(combined, alpha) : vec4(0.0);
+    vec3 bloomColor = vec3(0.0);
+    
+    if (luminance > 1.0) {
+        bloomColor = combined - 1.0;
+    }
+    
+    bloomColor += specularHighlight;
+    
+    BrightColor = vec4(bloomColor, alpha);
 }
 )";
 

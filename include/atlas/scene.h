@@ -309,6 +309,7 @@ class Scene {
     friend class Window;
     friend class Terrain;
     friend class RenderTarget;
+    friend class Fluid;
 };
 
 #endif // ATLAS_SCENE_H

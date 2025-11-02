@@ -96,9 +96,19 @@ class WaterPot : public CompoundObject {
         pot.initialize();
         this->addObject(&pot);
 
+        Texture waterDUDV =
+            Texture::fromResource(Workspace::get().createResource(
+                "water_dudv.png", "WaterDUDV", ResourceType::Image));
+
+        Texture waterNormal =
+            Texture::fromResource(Workspace::get().createResource(
+                "water_normal.png", "WaterNormal", ResourceType::Image));
+
         water = Fluid();
         water.create({0.9, 0.9}, Color::blue());
         water.setPosition({0.0f, 0.10f, 0.5f});
+        water.movementTexture = waterDUDV;
+        water.normalTexture = waterNormal;
         water.initialize();
         this->addObject(&water);
     }
@@ -261,9 +271,10 @@ class MainScene : public Scene {
         window.useDeferredRendering();
         atmosphere.enable();
         atmosphere.secondsPerHour = 4.f;
-        atmosphere.setTime(0.0);
+        atmosphere.setTime(12.0);
         atmosphere.cycle = false;
         atmosphere.useGlobalLight();
+        atmosphere.wind = {0.1f, 0.0f, 0.0f};
         atmosphere.castShadowsFromSunlight(4096);
     }
 };

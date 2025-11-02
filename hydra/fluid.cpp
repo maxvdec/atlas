@@ -8,6 +8,7 @@
 //
 
 #include "hydra/fluid.h"
+#include "atlas/light.h"
 #include "atlas/texture.h"
 #include "atlas/window.h"
 
@@ -116,10 +117,6 @@ void Fluid::render(float dt) {
     glBindTexture(GL_TEXTURE_2D, target->depthTexture.id);
     fluidShader.setUniform1i("sceneDepth", 1);
 
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, Window::mainWindow->getGBuffer()->gNormal.id);
-    fluidShader.setUniform1i("normalMap", 2);
-
     if (reflectionTarget) {
         glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_2D, reflectionTarget->texture.id);
@@ -140,6 +137,20 @@ void Fluid::render(float dt) {
         fluidShader.setUniform1i("refractionTexture", 4);
     }
 
+    fluidShader.setUniform1i("movementTexture", 5);
+    glActiveTexture(GL_TEXTURE5);
+    glBindTexture(GL_TEXTURE_2D, movementTexture.id);
+    if (movementTexture.id == 0) {
+        fluidShader.setUniform1i("hasMovementTexture", 0);
+    } else {
+        fluidShader.setUniform1i("hasMovementTexture", 1);
+    }
+
+    fluidShader.setUniform1i("normalTexture", 6);
+    glActiveTexture(GL_TEXTURE6);
+    glBindTexture(GL_TEXTURE_2D, normalTexture.id);
+    fluidShader.setUniform1i("hasNormalTexture", normalTexture.id != 0);
+
     fluidShader.setUniform3f("cameraPos",
                              Window::mainWindow->getCamera()->position.x,
                              Window::mainWindow->getCamera()->position.y,
@@ -150,6 +161,20 @@ void Fluid::render(float dt) {
     fluidShader.setUniform1f("refractionStrength", 0.5f);
     fluidShader.setUniform1f("reflectionStrength", 0.5f);
     fluidShader.setUniform1f("depthFade", 0.1f);
+
+    DirectionalLight *primaryLight =
+        Window::mainWindow->getCurrentScene()->directionalLights[0];
+
+    fluidShader.setUniform3f("lightDirection", primaryLight->direction.x,
+                             primaryLight->direction.y,
+                             primaryLight->direction.z);
+
+    fluidShader.setUniform3f("lightColor", primaryLight->color.r,
+                             primaryLight->color.g, primaryLight->color.b);
+    fluidShader.setUniform3f(
+        "windForce", Window::mainWindow->getCurrentScene()->atmosphere.wind.x,
+        Window::mainWindow->getCurrentScene()->atmosphere.wind.y,
+        Window::mainWindow->getCurrentScene()->atmosphere.wind.z);
 
     fluidShader.setUniformMat4f("invProjection",
                                 glm::inverse(projectionMatrix));

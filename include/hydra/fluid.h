@@ -55,6 +55,9 @@ struct Fluid : GameObject {
 
     bool canUseDeferredRendering() const override { return false; }
 
+    Texture normalTexture;
+    Texture movementTexture;
+
   private:
     struct FluidVertex {
         glm::vec3 position;
