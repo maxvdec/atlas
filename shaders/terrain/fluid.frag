@@ -73,21 +73,43 @@ void main()
     
     vec2 reflectionUV = screenUV;
     reflectionUV.y = 1.0 - reflectionUV.y;  
-    reflectionUV += waveOffset * 0.6;
-    reflectionUV = clamp(reflectionUV, 0.002, 0.998);
+    reflectionUV += waveOffset * 0.3;  
     
-    vec2 refractionUV = screenUV - waveOffset * 0.4;
-    refractionUV = clamp(refractionUV, 0.002, 0.998);
+    vec2 refractionUV = screenUV - waveOffset * 0.2; 
+    
+    reflectionUV = clamp(reflectionUV, 0.05, 0.95);
+    refractionUV = clamp(refractionUV, 0.05, 0.95);
+    
+    vec2 reflectionEdgeFade = smoothstep(0.0, 0.1, reflectionUV) * smoothstep(1.0, 0.9, reflectionUV);
+    float reflectionFadeFactor = reflectionEdgeFade.x * reflectionEdgeFade.y;
+    
+    vec2 refractionEdgeFade = smoothstep(0.0, 0.1, refractionUV) * smoothstep(1.0, 0.9, refractionUV);
+    float refractionFadeFactor = refractionEdgeFade.x * refractionEdgeFade.y;
     
     vec4 reflectionSample = texture(reflectionTexture, reflectionUV);
     vec4 refractionSample = texture(refractionTexture, refractionUV);
     
-    if (length(reflectionSample.rgb) < 0.01) {
-        reflectionSample = texture(sceneTexture, screenUV);
+    bool validReflection = (reflectionUV.x >= 0.05 && reflectionUV.x <= 0.95 && 
+                            reflectionUV.y >= 0.05 && reflectionUV.y <= 0.95 &&
+                            length(reflectionSample.rgb) > 0.01);
+    
+    bool validRefraction = (refractionUV.x >= 0.05 && refractionUV.x <= 0.95 && 
+                            refractionUV.y >= 0.05 && refractionUV.y <= 0.95 &&
+                            length(refractionSample.rgb) > 0.01);
+    
+    vec4 sceneFallback = texture(sceneTexture, screenUV);
+    
+    if (!validReflection) {
+        reflectionSample = sceneFallback;
+        reflectionFadeFactor = 1.0;
     }
-    if (length(refractionSample.rgb) < 0.01) {
-        refractionSample = texture(sceneTexture, screenUV);
+    if (!validRefraction) {
+        refractionSample = sceneFallback;
+        refractionFadeFactor = 1.0;
     }
+    
+    reflectionSample = mix(sceneFallback, reflectionSample, reflectionFadeFactor);
+    refractionSample = mix(sceneFallback, refractionSample, refractionFadeFactor);
     
     float fresnel = pow(1.0 - clamp(dot(normal, viewDir), 0.0, 1.0), 3.0);
     fresnel = mix(0.02, 1.0, fresnel); 
@@ -140,6 +162,6 @@ void main()
     }
     
     bloomColor += specularHighlight;
-    
+
     BrightColor = vec4(bloomColor, alpha);
 }
