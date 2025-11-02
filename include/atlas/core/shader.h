@@ -97,6 +97,7 @@ enum class AtlasVertexShader {
      * @brief Vertex shader tailored for volumetric light scattering passes.
      */
     Volumetric,
+    Fluid,
 };
 
 /**
@@ -160,6 +161,7 @@ enum class ShaderCapability {
      * @brief Provides access to environment parameters (fog, rim light, etc.).
      */
     Environment,
+    Fluid,
 };
 
 /**
@@ -321,7 +323,8 @@ enum class AtlasFragmentShader {
     /**
      * @brief Fragment shader that upsamples and blends bloom textures.
      */
-    Upsample
+    Upsample,
+    Fluid,
 };
 
 /**

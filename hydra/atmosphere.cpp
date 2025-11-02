@@ -181,10 +181,41 @@ void Atmosphere::update(float dt) {
     if (!cycle)
         return;
 
+    if (mainLight) {
+        mainLight->direction = getSunAngle();
+        mainLight->color = Color(getLightColor().r, getLightColor().g,
+                                 getLightColor().b, getLightIntensity());
+        Window::mainWindow->getCurrentScene()->setAmbientIntensity(
+            getLightIntensity());
+    }
+
     timeOfDay += (dt / secondsPerHour);
     if (timeOfDay >= 24.0f) {
         timeOfDay -= 24.0f;
     }
+}
+
+void Atmosphere::castShadowsFromSunlight(int res) const {
+    if (!mainLight) {
+        return;
+    }
+    mainLight->castShadows(*Window::mainWindow, res);
+}
+
+void Atmosphere::useGlobalLight() {
+    mainLight = std::make_shared<DirectionalLight>(
+        getSunAngle().y > 0.0 ? getSunAngle() * -1.0f : getSunAngle(),
+        getSunAngle().y > 0.0f ? sunColor : moonColor);
+
+    float amplifiedIntensity = glm::mix(0.0f, 1.2f, getLightIntensity());
+    mainLight->color =
+        Color(getLightColor().r * amplifiedIntensity,
+              getLightColor().g * amplifiedIntensity,
+              getLightColor().b * amplifiedIntensity, amplifiedIntensity);
+
+    Window::mainWindow->getCurrentScene()->addDirectionalLight(mainLight.get());
+    Window::mainWindow->getCurrentScene()->setAmbientIntensity(
+        getLightIntensity());
 }
 
 float Atmosphere::getNormalizedTime() const {

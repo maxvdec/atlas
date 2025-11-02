@@ -13,12 +13,12 @@
 #include "atlas/scene.h"
 #include "atlas/texture.h"
 #include "atlas/units.h"
+#include "hydra/fluid.h"
 #include "bezel/body.h"
 #include "finewave/audio.h"
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <atlas/window.h>
-#include <cmath>
 #include <iostream>
 #include <memory>
 #include <optional>
@@ -193,6 +193,9 @@ void Window::run() {
     for (auto &obj : this->firstRenderables) {
         obj->initialize();
     }
+    for (auto &obj : this->lateForwardRenderables) {
+        obj->initialize();
+    }
     for (auto &obj : this->uiRenderables) {
         obj->initialize();
     }
@@ -227,6 +230,13 @@ void Window::run() {
 
         // Update the renderables
         for (auto &obj : this->renderables) {
+            if (obj->renderLateForward) {
+                continue;
+            }
+            obj->update(*this);
+        }
+
+        for (auto &obj : this->lateForwardRenderables) {
             obj->update(*this);
         }
 
@@ -239,6 +249,7 @@ void Window::run() {
         glCullFace(GL_BACK);
         // Render to the targets
         for (auto &target : this->renderTargets) {
+            this->currentRenderTarget = target;
             int targetWidth = target->getWidth();
             int targetHeight = target->getHeight();
             glDepthFunc(GL_LESS);
@@ -281,11 +292,20 @@ void Window::run() {
                 }
 
                 for (auto &obj : this->renderables) {
+                    if (obj->renderLateForward) {
+                        continue;
+                    }
                     if (!obj->canUseDeferredRendering()) {
                         obj->setViewMatrix(this->camera->calculateViewMatrix());
                         obj->setProjectionMatrix(calculateProjectionMatrix());
                         obj->render(getDeltaTime());
                     }
+                }
+
+                for (auto &obj : this->lateForwardRenderables) {
+                    obj->setViewMatrix(this->camera->calculateViewMatrix());
+                    obj->setProjectionMatrix(calculateProjectionMatrix());
+                    obj->render(getDeltaTime());
                 }
 
                 glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -302,6 +322,15 @@ void Window::run() {
             }
 
             for (auto &obj : this->renderables) {
+                if (obj->renderLateForward) {
+                    continue;
+                }
+                obj->setViewMatrix(this->camera->calculateViewMatrix());
+                obj->setProjectionMatrix(calculateProjectionMatrix());
+                obj->render(getDeltaTime());
+            }
+            updateFluidCaptures();
+            for (auto &obj : this->lateForwardRenderables) {
                 obj->setViewMatrix(this->camera->calculateViewMatrix());
                 obj->setProjectionMatrix(calculateProjectionMatrix());
                 obj->render(getDeltaTime());
@@ -326,6 +355,17 @@ void Window::run() {
             }
 
             for (auto &obj : this->renderables) {
+                if (obj->renderLateForward) {
+                    continue;
+                }
+                obj->setViewMatrix(this->camera->calculateViewMatrix());
+                obj->setProjectionMatrix(calculateProjectionMatrix());
+                obj->render(getDeltaTime());
+            }
+
+            updateFluidCaptures();
+
+            for (auto &obj : this->lateForwardRenderables) {
                 obj->setViewMatrix(this->camera->calculateViewMatrix());
                 obj->setProjectionMatrix(calculateProjectionMatrix());
                 obj->render(getDeltaTime());
@@ -356,7 +396,35 @@ void Window::run() {
     }
 }
 
-void Window::addObject(Renderable *obj) { this->renderables.push_back(obj); }
+void Window::addObject(Renderable *obj) {
+    if (obj == nullptr) {
+        return;
+    }
+
+    this->renderables.push_back(obj);
+
+    if (obj->renderLateForward) {
+        addLateForwardObject(obj);
+    }
+}
+
+void Window::addLateForwardObject(Renderable *object) {
+    if (object == nullptr) {
+        return;
+    }
+
+    if (std::find(lateForwardRenderables.begin(), lateForwardRenderables.end(),
+                  object) == lateForwardRenderables.end()) {
+        lateForwardRenderables.push_back(object);
+
+        if (auto *fluid = dynamic_cast<Fluid *>(object)) {
+            if (std::find(lateFluids.begin(), lateFluids.end(), fluid) ==
+                lateFluids.end()) {
+                lateFluids.push_back(fluid);
+            }
+        }
+    }
+}
 
 void Window::addPreferencedObject(Renderable *obj) {
     this->preferenceRenderables.push_back(obj);
@@ -681,6 +749,31 @@ void Window::renderLightsToShadowMaps() {
         }
     }
 
+    std::vector<ShaderProgram> originalLatePrograms;
+    for (auto &obj : this->lateForwardRenderables) {
+        if (obj->getShaderProgram() != std::nullopt) {
+            originalLatePrograms.push_back(obj->getShaderProgram().value());
+        } else {
+            originalLatePrograms.push_back(ShaderProgram());
+        }
+    }
+
+    auto gatherShadowCasters = [this]() {
+        std::vector<Renderable *> casters;
+        casters.reserve(this->renderables.size() +
+                        this->lateForwardRenderables.size());
+        for (auto &obj : this->renderables) {
+            if (obj->renderLateForward) {
+                continue;
+            }
+            casters.push_back(obj);
+        }
+        for (auto &obj : this->lateForwardRenderables) {
+            casters.push_back(obj);
+        }
+        return casters;
+    };
+
     for (auto &light : this->currentScene->directionalLights) {
         if (light->doesCastShadows == false) {
             continue;
@@ -697,11 +790,14 @@ void Window::renderLightsToShadowMaps() {
         glEnable(GL_CULL_FACE);
         glCullFace(GL_BACK);
         ShadowParams lightParams =
-            light->calculateLightSpaceMatrix(this->renderables);
+            light->calculateLightSpaceMatrix(gatherShadowCasters());
         glm::mat4 lightView = lightParams.lightView;
         glm::mat4 lightProjection = lightParams.lightProjection;
         light->lastShadowParams = lightParams;
         for (auto &obj : this->renderables) {
+            if (obj->renderLateForward) {
+                continue;
+            }
             if (obj->getShaderProgram() == std::nullopt ||
                 !obj->canCastShadows()) {
                 continue;
@@ -709,6 +805,18 @@ void Window::renderLightsToShadowMaps() {
 
             obj->setShader(this->depthProgram);
 
+            obj->setProjectionMatrix(lightProjection);
+            obj->setViewMatrix(lightView);
+            obj->render(getDeltaTime());
+        }
+
+        for (auto &obj : this->lateForwardRenderables) {
+            if (obj->getShaderProgram() == std::nullopt ||
+                !obj->canCastShadows()) {
+                continue;
+            }
+
+            obj->setShader(this->depthProgram);
             obj->setProjectionMatrix(lightProjection);
             obj->setViewMatrix(lightView);
             obj->render(getDeltaTime());
@@ -740,6 +848,9 @@ void Window::renderLightsToShadowMaps() {
         cached.bias = 0.005f;
         light->lastShadowParams = cached;
         for (auto &obj : this->renderables) {
+            if (obj->renderLateForward) {
+                continue;
+            }
             if (obj->getShaderProgram() == std::nullopt ||
                 !obj->canCastShadows()) {
                 continue;
@@ -747,6 +858,18 @@ void Window::renderLightsToShadowMaps() {
 
             obj->setShader(this->depthProgram);
 
+            obj->setProjectionMatrix(lightProjection);
+            obj->setViewMatrix(lightView);
+            obj->render(getDeltaTime());
+        }
+
+        for (auto &obj : this->lateForwardRenderables) {
+            if (obj->getShaderProgram() == std::nullopt ||
+                !obj->canCastShadows()) {
+                continue;
+            }
+
+            obj->setShader(this->depthProgram);
             obj->setProjectionMatrix(lightProjection);
             obj->setViewMatrix(lightView);
             obj->render(getDeltaTime());
@@ -770,6 +893,35 @@ void Window::renderLightsToShadowMaps() {
         glCullFace(GL_BACK);
 
         for (auto &obj : this->renderables) {
+            if (obj->renderLateForward) {
+                continue;
+            }
+            if (obj->getShaderProgram() == std::nullopt ||
+                !obj->canCastShadows()) {
+                continue;
+            }
+            std::vector<glm::mat4> shadowTransforms =
+                light->calculateShadowTransforms();
+
+            this->pointDepthProgram.setUniform3f("lightPos", light->position.x,
+                                                 light->position.y,
+                                                 light->position.z);
+            this->pointDepthProgram.setUniform1f("far_plane", light->distance);
+            light->lastShadowParams.farPlane = light->distance;
+            for (size_t i = 0; i < shadowTransforms.size(); ++i) {
+                this->pointDepthProgram.setUniformMat4f(
+                    "shadowMatrices[" + std::to_string(i) + "]",
+                    shadowTransforms[i]);
+            }
+
+            obj->setProjectionMatrix(glm::mat4(1.0));
+            obj->setViewMatrix(glm::mat4(1.0));
+            obj->setShader(this->pointDepthProgram);
+
+            obj->render(getDeltaTime());
+        }
+
+        for (auto &obj : this->lateForwardRenderables) {
             if (obj->getShaderProgram() == std::nullopt ||
                 !obj->canCastShadows()) {
                 continue;
@@ -849,6 +1001,16 @@ void Window::renderLightsToShadowMaps() {
                 renderable->setShader(originalPrograms[i]);
             }
             i++;
+        }
+    }
+
+    size_t j = 0;
+    for (auto &renderable : this->lateForwardRenderables) {
+        if (j < originalLatePrograms.size()) {
+            if (originalLatePrograms[j].programId != 0) {
+                renderable->setShader(originalLatePrograms[j]);
+            }
+            j++;
         }
     }
 }
@@ -1015,4 +1177,280 @@ void Window::renderPhysicalBloom(RenderTarget *target) {
         this->bloomBuffer->srcViewportSizef.y;
     target->blurredTexture.type = TextureType::Color;
     target->blurredTexture.id = this->bloomBuffer->getBloomTexture();
+}
+
+void Window::updateFluidCaptures() {
+    for (auto *fluid : lateFluids) {
+        if (fluid == nullptr) {
+            continue;
+        }
+        if (fluid->captureDirty) {
+            fluid->updateCapture(*this);
+        }
+    }
+}
+
+void Window::captureFluidReflection(Fluid &fluid) {
+    if (!fluid.reflectionTarget) {
+        return;
+    }
+
+    RenderTarget &target = *fluid.reflectionTarget;
+
+    Camera *originalCamera = this->camera;
+    Camera reflectionCamera = *originalCamera;
+
+    glm::vec3 planePoint = fluid.calculatePlanePoint();
+    glm::vec3 planeNormal = fluid.calculatePlaneNormal();
+
+    glm::vec3 cameraPos = originalCamera->position.toGlm();
+    float distance = glm::dot(planeNormal, cameraPos - planePoint);
+    glm::vec3 reflectedPos = cameraPos - 2.0f * distance * planeNormal;
+
+    glm::vec3 front = originalCamera->getFrontVector().toGlm();
+    glm::vec3 reflectedDir =
+        front - 2.0f * glm::dot(front, planeNormal) * planeNormal;
+    glm::vec3 reflectedTarget = reflectedPos + reflectedDir;
+
+    reflectionCamera.setPosition(Position3d::fromGlm(reflectedPos));
+    reflectionCamera.lookAt(Position3d::fromGlm(reflectedTarget));
+    reflectionCamera.fov = originalCamera->fov * 1.2f;
+    reflectionCamera.nearClip = originalCamera->nearClip;
+    reflectionCamera.farClip = originalCamera->farClip;
+    reflectionCamera.useOrthographic = originalCamera->useOrthographic;
+    reflectionCamera.orthographicSize = originalCamera->orthographicSize;
+
+    Camera *cameraBackup = this->camera;
+    this->camera = &reflectionCamera;
+
+    glm::vec4 plane = fluid.calculateClipPlane();
+    bool clipBackup = clipPlaneEnabled;
+    glm::vec4 clipEquationBackup = clipPlaneEquation;
+    clipPlaneEnabled = true;
+    clipPlaneEquation = plane;
+    glEnable(GL_CLIP_DISTANCE0);
+
+    RenderTarget *previousTarget = currentRenderTarget;
+
+    GLint previousFbo = 0;
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &previousFbo);
+
+    GLint previousViewport[4];
+    glGetIntegerv(GL_VIEWPORT, previousViewport);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, target.fbo);
+    glViewport(0, 0, target.getWidth(), target.getHeight());
+    unsigned int attachments[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+    glDrawBuffers(2, attachments);
+
+    GLboolean depthTestEnabled = glIsEnabled(GL_DEPTH_TEST);
+    GLboolean blendEnabled = glIsEnabled(GL_BLEND);
+    GLboolean cullEnabled = glIsEnabled(GL_CULL_FACE);
+    GLint previousCullFaceMode = GL_BACK;
+    glGetIntegerv(GL_CULL_FACE_MODE, &previousCullFaceMode);
+    GLboolean previousDepthMask = GL_TRUE;
+    glGetBooleanv(GL_DEPTH_WRITEMASK, &previousDepthMask);
+    GLfloat previousClearColor[4];
+    glGetFloatv(GL_COLOR_CLEAR_VALUE, previousClearColor);
+
+    glDisable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
+    glDepthMask(GL_TRUE);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_FRONT);
+
+    glClearColor(fluid.color.r, fluid.color.g, fluid.color.b, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    currentRenderTarget = &target;
+
+    glm::mat4 view = this->camera->calculateViewMatrix();
+    glm::mat4 projection = calculateProjectionMatrix();
+
+    auto renderQueue = [&](const std::vector<Renderable *> &queue,
+                           bool skipLate) {
+        ShaderProgram oldProgram;
+        for (auto *obj : queue) {
+            if (obj == nullptr) {
+                continue;
+            }
+            if (skipLate && obj->renderLateForward) {
+                continue;
+            }
+            if (dynamic_cast<Fluid *>(obj) == &fluid) {
+                continue;
+            }
+            if (obj->canUseDeferredRendering()) {
+                oldProgram = obj->getShaderProgram().value();
+                std::cout << "For object with type: " << typeid(*obj).name()
+                          << " and ID: " << obj->getId()
+                          << " setting reflection shader." << std::endl;
+                obj->setShader(ShaderProgram::fromDefaultShaders(
+                    AtlasVertexShader::Main, AtlasFragmentShader::Main));
+            }
+            obj->setViewMatrix(view);
+            obj->setProjectionMatrix(projection);
+            obj->render(getDeltaTime());
+
+            if (obj->canUseDeferredRendering()) {
+                obj->setShader(oldProgram);
+            }
+        }
+    };
+
+    renderQueue(firstRenderables, false);
+    renderQueue(renderables, true);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, previousFbo);
+    glViewport(previousViewport[0], previousViewport[1], previousViewport[2],
+               previousViewport[3]);
+    currentRenderTarget = previousTarget;
+
+    clipPlaneEnabled = clipBackup;
+    clipPlaneEquation = clipEquationBackup;
+    if (clipBackup) {
+        glEnable(GL_CLIP_DISTANCE0);
+    } else {
+        glDisable(GL_CLIP_DISTANCE0);
+    }
+
+    if (!cullEnabled) {
+        glDisable(GL_CULL_FACE);
+    } else {
+        glEnable(GL_CULL_FACE);
+        glCullFace(previousCullFaceMode);
+    }
+
+    glDepthMask(previousDepthMask);
+    if (!depthTestEnabled) {
+        glDisable(GL_DEPTH_TEST);
+    }
+    if (blendEnabled) {
+        glEnable(GL_BLEND);
+    }
+    glClearColor(previousClearColor[0], previousClearColor[1],
+                 previousClearColor[2], previousClearColor[3]);
+
+    this->camera = cameraBackup;
+}
+
+void Window::captureFluidRefraction(Fluid &fluid) {
+    if (!fluid.refractionTarget) {
+        return;
+    }
+
+    RenderTarget &target = *fluid.refractionTarget;
+
+    glm::vec3 planePoint = fluid.calculatePlanePoint();
+    glm::vec3 planeNormal = fluid.calculatePlaneNormal();
+
+    const float clipBias = 0.02f;
+    glm::vec4 plane =
+        glm::vec4(planeNormal, -glm::dot(planeNormal, planePoint) - clipBias);
+
+    bool clipBackup = clipPlaneEnabled;
+    glm::vec4 clipEquationBackup = clipPlaneEquation;
+    clipPlaneEnabled = true;
+    clipPlaneEquation = plane;
+    glEnable(GL_CLIP_DISTANCE0);
+
+    RenderTarget *previousTarget = currentRenderTarget;
+    GLint previousFbo = 0;
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &previousFbo);
+
+    GLint previousViewport[4];
+    glGetIntegerv(GL_VIEWPORT, previousViewport);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, target.fbo);
+    glViewport(0, 0, target.getWidth(), target.getHeight());
+    unsigned int attachments[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+    glDrawBuffers(2, attachments);
+
+    GLboolean depthTestEnabled = glIsEnabled(GL_DEPTH_TEST);
+    GLboolean blendEnabled = glIsEnabled(GL_BLEND);
+    GLboolean cullEnabled = glIsEnabled(GL_CULL_FACE);
+    GLint previousCullFaceMode = GL_BACK;
+    glGetIntegerv(GL_CULL_FACE_MODE, &previousCullFaceMode);
+    GLboolean previousDepthMask = GL_TRUE;
+    glGetBooleanv(GL_DEPTH_WRITEMASK, &previousDepthMask);
+    GLfloat previousClearColor[4];
+    glGetFloatv(GL_COLOR_CLEAR_VALUE, previousClearColor);
+
+    glDisable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
+    glDepthMask(GL_TRUE);
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+
+    glClearColor(1.0, 0.0, 1.0, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    currentRenderTarget = &target;
+
+    glm::mat4 view = this->camera->calculateViewMatrix();
+    glm::mat4 projection = calculateProjectionMatrix();
+
+    auto renderQueue = [&](const std::vector<Renderable *> &queue,
+                           bool skipLate) {
+        ShaderProgram oldProgram;
+        for (auto *obj : queue) {
+            if (obj == nullptr) {
+                continue;
+            }
+            if (skipLate && obj->renderLateForward) {
+                continue;
+            }
+            if (dynamic_cast<Fluid *>(obj) == &fluid) {
+                continue;
+            }
+            if (obj->canUseDeferredRendering()) {
+                oldProgram = obj->getShaderProgram().value();
+                std::cout << "For object with type: " << typeid(*obj).name()
+                          << " and ID: " << obj->getId()
+                          << " setting refraction shader." << std::endl;
+                obj->setShader(ShaderProgram::fromDefaultShaders(
+                    AtlasVertexShader::Main, AtlasFragmentShader::Main));
+            }
+            obj->setViewMatrix(view);
+            obj->setProjectionMatrix(projection);
+            obj->render(getDeltaTime());
+
+            if (obj->canUseDeferredRendering()) {
+                obj->setShader(oldProgram);
+            }
+        }
+    };
+
+    renderQueue(firstRenderables, false);
+    renderQueue(renderables, true);
+
+    glBindFramebuffer(GL_FRAMEBUFFER, previousFbo);
+    glViewport(previousViewport[0], previousViewport[1], previousViewport[2],
+               previousViewport[3]);
+    currentRenderTarget = previousTarget;
+
+    clipPlaneEnabled = clipBackup;
+    clipPlaneEquation = clipEquationBackup;
+    if (clipBackup) {
+        glEnable(GL_CLIP_DISTANCE0);
+    } else {
+        glDisable(GL_CLIP_DISTANCE0);
+    }
+
+    if (!cullEnabled) {
+        glDisable(GL_CULL_FACE);
+    } else {
+        glEnable(GL_CULL_FACE);
+        glCullFace(previousCullFaceMode);
+    }
+
+    glDepthMask(previousDepthMask);
+    if (!depthTestEnabled) {
+        glDisable(GL_DEPTH_TEST);
+    }
+    if (blendEnabled) {
+        glEnable(GL_BLEND);
+    }
+    glClearColor(previousClearColor[0], previousClearColor[1],
+                 previousClearColor[2], previousClearColor[3]);
 }

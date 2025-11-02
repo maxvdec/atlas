@@ -514,6 +514,7 @@ class RenderTarget : public Renderable {
     std::vector<std::shared_ptr<Effect>> effects;
 
     friend class Window;
+    friend class Fluid;
 };
 
 /**
@@ -586,6 +587,8 @@ class Skybox : public Renderable {
      * @brief Stores the projection matrix used for skybox rendering.
      */
     void setProjectionMatrix(const glm::mat4 &projection) override;
+
+    bool canUseDeferredRendering() override { return false; }
 
     Skybox() = default;
 

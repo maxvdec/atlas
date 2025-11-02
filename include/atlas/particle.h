@@ -217,7 +217,7 @@ class ParticleEmitter : public GameObject {
     inline Position3d getPosition() const override { return position; };
     inline bool canCastShadows() const override { return false; };
 
-    bool canUseDeferredRendering() const override { return false; }
+    bool canUseDeferredRendering() override { return false; }
 
     /**
      * @brief Function that sets the type of particle emission.

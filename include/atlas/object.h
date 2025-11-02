@@ -59,10 +59,6 @@ struct Material {
      * @brief Ambient occlusion term used to darken creases and cavities.
      */
     float ao = 1.0f;
-    /**
-     * @brief Reflection blend factor when environment maps are available.
-     */
-    float reflectivity = 0.0f;
 };
 
 /**
@@ -488,6 +484,12 @@ class CoreObject : public GameObject {
      */
     bool useDeferredRendering = true;
 
+    void disableDeferredRendering() {
+        useDeferredRendering = false;
+        this->shaderProgram = ShaderProgram::fromDefaultShaders(
+            AtlasVertexShader::Main, AtlasFragmentShader::Main);
+    }
+
     /**
      * @brief Creates and returns a new instance for instanced rendering.
      *
@@ -543,6 +545,7 @@ class CoreObject : public GameObject {
 
     inline void setShader(const ShaderProgram &shader) override {
         this->shaderProgram = shader;
+        this->initialize();
     }
 
     inline Position3d getPosition() const override { return position; }
@@ -554,15 +557,15 @@ class CoreObject : public GameObject {
     inline Size3d getScale() const override { return scale; }
     inline bool canCastShadows() const override { return castsShadows; }
 
+    inline unsigned int getId() override { return id; }
+
     /**
      * @brief Performs per-frame updates such as component ticking or buffering
      * synchronization.
      */
     void update(Window &window) override;
 
-    bool canUseDeferredRendering() const override {
-        return useDeferredRendering;
-    }
+    bool canUseDeferredRendering() override { return useDeferredRendering; }
 };
 
 /**
@@ -830,9 +833,7 @@ class Model : public GameObject {
      *
      * @return (bool) True if deferred rendering is enabled, false otherwise.
      */
-    bool canUseDeferredRendering() const override {
-        return useDeferredRendering;
-    }
+    bool canUseDeferredRendering() override { return useDeferredRendering; }
 
   private:
     std::vector<std::shared_ptr<CoreObject>> objects;

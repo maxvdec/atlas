@@ -15,6 +15,7 @@
 #include "atlas/texture.h"
 #include "atlas/units.h"
 #include "bezel/body.h"
+#include <iostream>
 #include <memory>
 #include <vector>
 
@@ -336,7 +337,7 @@ class CompoundObject : public GameObject {
      * @brief The objects that make up the compound object.
      *
      */
-    std::vector<CoreObject *> objects;
+    std::vector<GameObject *> objects;
 
     /**
      * @brief Bootstraps the compound object, initializing child objects and
@@ -449,25 +450,54 @@ class CompoundObject : public GameObject {
      * @param obj The component instance to add. \warning It must be long-lived.
      * This means that declaring it as a class property is a good idea.
      */
-    inline void addObject(CoreObject *obj) { objects.push_back(obj); }
+    inline void addObject(GameObject *obj) {
+        objects.push_back(obj);
+        if (obj != nullptr && obj->renderLateForward) {
+            lateForwardObjects.push_back(obj);
+        }
+    }
+
+    /**
+     * @brief Returns the late forward proxy renderable, if any children
+     * require late rendering.
+     */
+    Renderable *getLateRenderable();
+
+    bool canUseDeferredRendering() override;
 
   private:
-    Position3d position;
+    class LateCompoundRenderable;
+
+    Position3d position{0.0, 0.0, 0.0};
     std::vector<Position3d> originalPositions;
+    std::vector<GameObject *> lateForwardObjects;
+    std::shared_ptr<LateCompoundRenderable> lateRenderableProxy;
+    bool lateRenderableRegistered = false;
+    bool changedPosition = false;
+    bool changedRotation = false;
+    bool changedScale = false;
+
+    void renderLate(float dt);
+    void updateLate(Window &window);
+    void setLateViewMatrix(const glm::mat4 &view);
+    void setLateProjectionMatrix(const glm::mat4 &projection);
+    std::optional<ShaderProgram> getLateShaderProgramInternal();
+    void setLateShader(const ShaderProgram &shader);
+    bool lateCanCastShadows() const;
 };
 
 /**
- * @brief A UIObject is a GameObject that is used for creating user interface
- * elements.
+ * @brief A UIObject is a GameObject that is used for creating user
+ * interface elements.
  *
  */
 class UIObject : public GameObject {
-    bool canUseDeferredRendering() const override { return false; }
+    bool canUseDeferredRendering() override { return false; }
 };
 
 /**
- * @brief A conjunction of UI elements that share the same view and projection
- * matrices. Acts as a container for organizing UI objects.
+ * @brief A conjunction of UI elements that share the same view and
+ * projection matrices. Acts as a container for organizing UI objects.
  *
  */
 class UIView : public UIObject {

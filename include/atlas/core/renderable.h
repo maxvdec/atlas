@@ -39,6 +39,8 @@ class Renderable {
      *
      */
     virtual void initialize() {};
+
+    virtual unsigned int getId() { return 0; };
     /**
      * @brief Function to update the object each frame.
      * \warning It runs before the rendering phase and it should only contain
@@ -109,7 +111,7 @@ class Renderable {
      * @return (bool) True if the object supports deferred rendering, false
      * otherwise.
      */
-    virtual bool canUseDeferredRendering() const { return true; };
+    virtual bool canUseDeferredRendering() { return true; };
 
     /**
      * @brief Whether the object should be included in depth of field
@@ -117,6 +119,13 @@ class Renderable {
      *
      */
     bool renderDepthOfView = false;
+
+    /**
+     * @brief Whether the object must be moved to the late forward rendering
+     * pipeline. Objects flagged here are skipped during the primary forward
+     * pass and rendered only after all standard forward elements.
+     */
+    bool renderLateForward = false;
 };
 
 #endif // ATLAS_RENDERABLE_H

@@ -13,6 +13,7 @@
 #include "atlas/camera.h"
 #include "atlas/component.h"
 #include "atlas/input.h"
+#include "atlas/light.h"
 #include "atlas/particle.h"
 #include "atlas/texture.h"
 #include "atlas/units.h"
@@ -118,6 +119,9 @@ class Atmosphere {
     Cubemap createSkyCubemap(int size = 256) const;
     void updateSkyCubemap(Cubemap &cubemap) const;
 
+    void castShadowsFromSunlight(int res) const;
+    void useGlobalLight();
+
     Color sunColor = Color(1.0, 0.95, 0.8, 1.0);
     Color moonColor = Color(0.5, 0.5, 0.8, 1.0);
 
@@ -155,6 +159,7 @@ class Atmosphere {
     mutable bool skyboxCacheValid = false;
     mutable std::array<Color, 6> lastSkyboxColors = {};
 
+    std::shared_ptr<DirectionalLight> mainLight = nullptr;
     std::shared_ptr<ParticleEmitter> rainEmitter = nullptr;
     std::shared_ptr<ParticleEmitter> snowEmitter = nullptr;
 };
