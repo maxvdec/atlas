@@ -130,13 +130,21 @@ impl Parser {
                         pending_translatable.clear();
                     }
 
-                    let mut module_name = String::new();
+                    let mut module_tokens: Vec<String> = Vec::new();
                     while let Some(next_token) = self.advance() {
                         if next_token.typ == TokenType::Semicolon {
                             break;
                         }
-                        module_name.push_str(&next_token.content);
+                        if (next_token.typ == TokenType::Keyword
+                            || next_token.typ == TokenType::Builtin)
+                            && !module_tokens.is_empty()
+                        {
+                            self.current -= 1;
+                            break;
+                        }
+                        module_tokens.push(next_token.content.clone());
                     }
+                    let module_name = module_tokens.join("");
                     expresssions.push(Box::new(UseExpression {
                         module: module_name,
                     }));
@@ -219,11 +227,25 @@ impl Parser {
                         "Expected '{' to start function body.".to_string(),
                     );
                     let mut body_expressions: Vec<String> = Vec::new();
+                    let mut brace_depth = 1usize;
                     while let Some(next_token) = self.advance() {
-                        if next_token.typ == TokenType::RightBrace {
-                            break;
+                        match next_token.typ {
+                            TokenType::LeftBrace => {
+                                brace_depth += 1;
+                                body_expressions.push(next_token.content.clone());
+                            }
+                            TokenType::RightBrace => {
+                                brace_depth = brace_depth.saturating_sub(1);
+                                if brace_depth == 0 {
+                                    break;
+                                }
+                                body_expressions.push(next_token.content.clone());
+                            }
+                            TokenType::Builtin => {
+                                body_expressions.push(format!("@{}", next_token.content));
+                            }
+                            _ => body_expressions.push(next_token.content.clone()),
                         }
-                        body_expressions.push(next_token.content.clone());
                     }
 
                     expresssions.push(Box::new(FunctionExpression {
