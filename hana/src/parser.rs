@@ -12,8 +12,8 @@ pub trait Expression: Debug {
 
 #[derive(Debug, Clone)]
 pub struct Builtin {
-    name: String,
-    args: Vec<Token>,
+    pub name: String,
+    pub args: Vec<Token>,
 }
 
 impl Expression for Builtin {
@@ -24,7 +24,7 @@ impl Expression for Builtin {
 
 #[derive(Debug, Clone)]
 pub struct UseExpression {
-    module: String,
+    pub module: String,
 }
 
 impl Expression for UseExpression {
@@ -35,7 +35,7 @@ impl Expression for UseExpression {
 
 #[derive(Debug, Clone)]
 pub struct TranslatableExpression {
-    expressions: Vec<String>,
+    pub expressions: Vec<String>,
 }
 
 impl Expression for TranslatableExpression {
@@ -46,16 +46,16 @@ impl Expression for TranslatableExpression {
 
 #[derive(Debug, Clone)]
 pub struct TypedVariable {
-    var_type: String,
-    name: String,
+    pub var_type: String,
+    pub name: String,
 }
 
 #[derive(Debug, Clone)]
 pub struct FunctionExpression {
-    name: String,
-    args: Vec<TypedVariable>,
-    return_type: String,
-    body: TranslatableExpression,
+    pub name: String,
+    pub args: Vec<TypedVariable>,
+    pub return_type: String,
+    pub body: TranslatableExpression,
 }
 
 impl Expression for FunctionExpression {
