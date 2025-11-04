@@ -41,10 +41,12 @@ fn isKeyword(s: &str) -> bool {
     )
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Token {
-    typ: TokenType,
-    content: String,
+    pub typ: TokenType,
+    pub content: String,
+    pub start: usize,
+    pub end: usize,
 }
 
 pub struct Tokenizer {
@@ -121,6 +123,8 @@ impl Tokenizer {
                     tokens.push(Token {
                         typ: TokenType::Plus,
                         content: ch.to_string(),
+                        start: self.current - 1,
+                        end: self.current - 1,
                     });
                     continue;
                 }
@@ -128,6 +132,8 @@ impl Tokenizer {
                     tokens.push(Token {
                         typ: TokenType::Minus,
                         content: ch.to_string(),
+                        start: self.current - 1,
+                        end: self.current - 1,
                     });
                     continue;
                 }
@@ -135,6 +141,8 @@ impl Tokenizer {
                     tokens.push(Token {
                         typ: TokenType::Asterisk,
                         content: ch.to_string(),
+                        start: self.current - 1,
+                        end: self.current - 1,
                     });
                     continue;
                 }
@@ -142,6 +150,8 @@ impl Tokenizer {
                     tokens.push(Token {
                         typ: TokenType::Slash,
                         content: ch.to_string(),
+                        start: self.current - 1,
+                        end: self.current - 1,
                     });
                     continue;
                 }
@@ -149,6 +159,8 @@ impl Tokenizer {
                     tokens.push(Token {
                         typ: TokenType::LeftParen,
                         content: ch.to_string(),
+                        start: self.current - 1,
+                        end: self.current - 1,
                     });
                     continue;
                 }
@@ -156,6 +168,8 @@ impl Tokenizer {
                     tokens.push(Token {
                         typ: TokenType::RightParen,
                         content: ch.to_string(),
+                        start: self.current - 1,
+                        end: self.current - 1,
                     });
                     continue;
                 }
@@ -163,6 +177,8 @@ impl Tokenizer {
                     tokens.push(Token {
                         typ: TokenType::LeftBrace,
                         content: ch.to_string(),
+                        start: self.current - 1,
+                        end: self.current - 1,
                     });
                     continue;
                 }
@@ -170,6 +186,8 @@ impl Tokenizer {
                     tokens.push(Token {
                         typ: TokenType::RightBrace,
                         content: ch.to_string(),
+                        start: self.current - 1,
+                        end: self.current - 1,
                     });
                     continue;
                 }
@@ -177,6 +195,8 @@ impl Tokenizer {
                     tokens.push(Token {
                         typ: TokenType::Comma,
                         content: ch.to_string(),
+                        start: self.current - 1,
+                        end: self.current - 1,
                     });
                     continue;
                 }
@@ -184,14 +204,19 @@ impl Tokenizer {
                     tokens.push(Token {
                         typ: TokenType::Semicolon,
                         content: ch.to_string(),
+                        start: self.current - 1,
+                        end: self.current - 1,
                     });
                     continue;
                 }
                 '"' => {
                     let string_content = self.advance_until('"');
+                    let start = self.current - string_content.len() - 1;
                     tokens.push(Token {
                         typ: TokenType::String,
                         content: string_content,
+                        start,
+                        end: self.current - 1,
                     });
                     continue;
                 }
@@ -199,6 +224,8 @@ impl Tokenizer {
                     tokens.push(Token {
                         typ: TokenType::LessThan,
                         content: ch.to_string(),
+                        start: self.current - 1,
+                        end: self.current - 1,
                     });
                     continue;
                 }
@@ -206,6 +233,8 @@ impl Tokenizer {
                     tokens.push(Token {
                         typ: TokenType::GreaterThan,
                         content: ch.to_string(),
+                        start: self.current - 1,
+                        end: self.current - 1,
                     });
                     continue;
                 }
@@ -213,6 +242,8 @@ impl Tokenizer {
                     tokens.push(Token {
                         typ: TokenType::Equal,
                         content: ch.to_string(),
+                        start: self.current - 1,
+                        end: self.current - 1,
                     });
                     continue;
                 }
@@ -220,6 +251,8 @@ impl Tokenizer {
                     tokens.push(Token {
                         typ: TokenType::Bang,
                         content: ch.to_string(),
+                        start: self.current - 1,
+                        end: self.current - 1,
                     });
                     continue;
                 }
@@ -230,6 +263,8 @@ impl Tokenizer {
                             tokens.push(Token {
                                 typ: TokenType::And,
                                 content: "&&".to_string(),
+                                start: self.current - 2,
+                                end: self.current - 1,
                             });
                             continue;
                         } else {
@@ -248,6 +283,8 @@ impl Tokenizer {
                             tokens.push(Token {
                                 typ: TokenType::Or,
                                 content: "||".to_string(),
+                                start: self.current - 2,
+                                end: self.current - 1,
                             });
                             continue;
                         } else {
@@ -263,6 +300,8 @@ impl Tokenizer {
                     tokens.push(Token {
                         typ: TokenType::Colon,
                         content: ch.to_string(),
+                        start: self.current - 1,
+                        end: self.current - 1,
                     });
                     continue;
                 }
@@ -270,6 +309,8 @@ impl Tokenizer {
                     tokens.push(Token {
                         typ: TokenType::Dot,
                         content: ch.to_string(),
+                        start: self.current - 1,
+                        end: self.current - 1,
                     });
                     continue;
                 }
@@ -277,6 +318,8 @@ impl Tokenizer {
                     tokens.push(Token {
                         typ: TokenType::LeftBracket,
                         content: ch.to_string(),
+                        start: self.current - 1,
+                        end: self.current - 1,
                     });
                     continue;
                 }
@@ -284,6 +327,8 @@ impl Tokenizer {
                     tokens.push(Token {
                         typ: TokenType::RightBracket,
                         content: ch.to_string(),
+                        start: self.current - 1,
+                        end: self.current - 1,
                     });
                     continue;
                 }
@@ -302,7 +347,9 @@ impl Tokenizer {
                 }
                 tokens.push(Token {
                     typ: TokenType::Number,
-                    content: number_content,
+                    content: number_content.clone(),
+                    start: self.current - number_content.len(),
+                    end: self.current - 1,
                 });
                 continue;
             }
@@ -324,7 +371,9 @@ impl Tokenizer {
                 };
                 tokens.push(Token {
                     typ: token_type,
-                    content: identifier_content,
+                    content: identifier_content.clone(),
+                    start: self.current - identifier_content.len(),
+                    end: self.current - 1,
                 });
                 continue;
             }
@@ -341,7 +390,9 @@ impl Tokenizer {
                 }
                 tokens.push(Token {
                     typ: TokenType::Builtin,
-                    content: builtin_content,
+                    content: builtin_content.clone(),
+                    start: self.current - builtin_content.len() - 1,
+                    end: self.current - 1,
                 });
                 continue;
             }
