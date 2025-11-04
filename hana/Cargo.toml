@@ -1,0 +1,13 @@
+[package]
+name = "hana"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+colored = "2.0"
+toml = "0.7"
+clap = { version = "4.3", features = ["derive"] }
+
+[[bin]]
+name = "hana"
+path = "src/main.rs"
