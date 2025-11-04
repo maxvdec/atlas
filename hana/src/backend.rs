@@ -1,10 +1,8 @@
-use std::result;
-
 use crate::parser::{
-    Builtin, Expression, FunctionExpression, Parser, TranslatableExpression, UseExpression,
+    Builtin, Expression, FunctionExpression, TranslatableExpression, UseExpression,
 };
 
-#[derive(PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum Stage {
     Vertex,
     Fragment,
@@ -29,6 +27,7 @@ pub trait Backend {
     fn run_builtin(&mut self, builtin: &Builtin) -> (String, Stage);
     fn run_use(&mut self, use_expr: &UseExpression) -> String;
     fn run_function(&mut self, func: &FunctionExpression) -> String;
+    fn finalize(&mut self, _outputs: &mut Vec<(String, Stage)>) {}
 }
 
 pub fn compile(
@@ -84,6 +83,8 @@ pub fn compile(
             }
         }
     }
+
+    backend.finalize(&mut output);
 
     output
 }

@@ -34,7 +34,7 @@ pub enum TokenType {
     EOF,
 }
 
-fn isKeyword(s: &str) -> bool {
+fn is_keyword(s: &str) -> bool {
     matches!(
         s,
         "if" | "else" | "while" | "for" | "return" | "func" | "const" | "struct" | "use"
@@ -364,7 +364,7 @@ impl Tokenizer {
                         break;
                     }
                 }
-                let token_type = if isKeyword(&identifier_content) {
+                let token_type = if is_keyword(&identifier_content) {
                     TokenType::Keyword
                 } else {
                     TokenType::Identifier

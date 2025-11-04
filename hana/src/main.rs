@@ -57,8 +57,8 @@ fn main() {
             let mut parser = hana::parser::Parser::new(source.clone());
             let expressions = parser.parse();
 
-            let backend: Box<dyn hana::backend::Backend> = match api.as_str() {
-                "opengl" => Box::new(hana::opengl::OpenGLBackend {}),
+            let mut backend: Box<dyn hana::backend::Backend> = match api.as_str() {
+                "opengl" => Box::new(hana::opengl::OpenGLBackend::new()),
                 _ => {
                     eprintln!(
                         "Error: Unsupported API '{}'. Supported APIs are 'opengl' and 'vulkan'.",
@@ -68,7 +68,7 @@ fn main() {
                 }
             };
 
-            let compiled_code = hana::backend::compile(&expressions, backend.as_ref());
+            let compiled_code = hana::backend::compile(&expressions, backend.as_mut());
             println!("{:#?}", compiled_code);
         }
     }
