@@ -11,6 +11,7 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     Tokenize { input: String },
+    Parse { input: String },
 }
 
 fn main() {
@@ -26,6 +27,16 @@ fn main() {
             let source = std::fs::read_to_string(input).unwrap();
             let mut tokenizer = hana::tokens::Tokenizer::new(source.clone());
             println!("{:?}", tokenizer.tokenize());
+        }
+        Commands::Parse { input } => {
+            let file_exists = std::path::Path::new(input).exists();
+            if !file_exists {
+                eprintln!("Error: File '{}' does not exist.", input);
+                std::process::exit(1);
+            }
+            let source = std::fs::read_to_string(input).unwrap();
+            let mut parser = hana::parser::Parser::new(source.clone());
+            println!("{:#?}", parser.parse());
         }
     }
 }
