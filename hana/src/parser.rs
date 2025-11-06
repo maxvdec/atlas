@@ -1,3 +1,4 @@
+use std::any::Any;
 use std::fmt::Debug;
 
 use crate::{
@@ -5,45 +6,63 @@ use crate::{
     tokens::{Token, TokenType, Tokenizer},
 };
 
-pub trait Expression: Debug {}
+pub trait Expression: Debug {
+    fn as_any(&self) -> &dyn Any;
+}
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Builtin {
-    name: String,
-    args: Vec<Token>,
+    pub name: String,
+    pub args: Vec<Token>,
 }
 
-impl Expression for Builtin {}
+impl Expression for Builtin {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct UseExpression {
-    module: String,
+    pub module: String,
 }
 
-impl Expression for UseExpression {}
+impl Expression for UseExpression {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TranslatableExpression {
-    expressions: Vec<String>,
+    pub expressions: Vec<String>,
 }
 
-impl Expression for TranslatableExpression {}
+impl Expression for TranslatableExpression {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct TypedVariable {
-    var_type: String,
-    name: String,
+    pub var_type: String,
+    pub name: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct FunctionExpression {
-    name: String,
-    args: Vec<TypedVariable>,
-    return_type: String,
-    body: TranslatableExpression,
+    pub name: String,
+    pub args: Vec<TypedVariable>,
+    pub return_type: String,
+    pub body: TranslatableExpression,
 }
 
-impl Expression for FunctionExpression {}
+impl Expression for FunctionExpression {
+    fn as_any(&self) -> &dyn Any {
+        self
+    }
+}
 
 pub struct Parser {
     tokens: Vec<Token>,
@@ -111,15 +130,131 @@ impl Parser {
                         pending_translatable.clear();
                     }
 
-                    let mut module_name = String::new();
+                    let mut module_tokens: Vec<String> = Vec::new();
                     while let Some(next_token) = self.advance() {
                         if next_token.typ == TokenType::Semicolon {
                             break;
                         }
-                        module_name.push_str(&next_token.content);
+                        if (next_token.typ == TokenType::Keyword
+                            || next_token.typ == TokenType::Builtin)
+                            && !module_tokens.is_empty()
+                        {
+                            self.current -= 1;
+                            break;
+                        }
+                        module_tokens.push(next_token.content.clone());
                     }
+                    let module_name = module_tokens.join("");
                     expresssions.push(Box::new(UseExpression {
                         module: module_name,
+                    }));
+                }
+                TokenType::Keyword if token.content == "func" => {
+                    if !pending_translatable.is_empty() {
+                        expresssions.push(Box::new(TranslatableExpression {
+                            expressions: pending_translatable.clone(),
+                        }));
+                        pending_translatable.clear();
+                    }
+
+                    // Parse function name
+                    let func_name_token = self.expect(
+                        TokenType::Identifier,
+                        "Expected function name after 'func' keyword.".to_string(),
+                    );
+                    let func_name = if let Some(t) = func_name_token {
+                        t.content.clone()
+                    } else {
+                        continue;
+                    };
+
+                    // Parse arguments
+                    self.expect(
+                        TokenType::LeftParen,
+                        "Expected '(' after function name.".to_string(),
+                    );
+                    let mut args: Vec<TypedVariable> = Vec::new();
+                    while let Some(next_token) = self.advance() {
+                        if next_token.typ == TokenType::RightParen {
+                            break;
+                        }
+                        if next_token.typ == TokenType::Comma {
+                            continue;
+                        }
+                        // Expect type
+                        let var_type = next_token.content.clone();
+                        // Expect name
+                        let var_name_token = self.expect(
+                            TokenType::Identifier,
+                            "Expected variable name in function arguments.".to_string(),
+                        );
+                        let var_name = if let Some(t) = var_name_token {
+                            t.content.clone()
+                        } else {
+                            continue;
+                        };
+                        args.push(TypedVariable {
+                            var_type,
+                            name: var_name,
+                        });
+                    }
+
+                    // Expect return type
+                    self.expect(
+                        TokenType::Minus,
+                        "Expected '->' after function arguments.".to_string(),
+                    );
+                    self.expect(
+                        TokenType::GreaterThan,
+                        "Expected '->' after function arguments.".to_string(),
+                    );
+
+                    let return_type = if let Some(t) = self.next() {
+                        if t.typ == TokenType::Identifier {
+                            let content = t.content.clone();
+                            self.advance();
+                            content
+                        } else {
+                            "void".to_string()
+                        }
+                    } else {
+                        "void".to_string()
+                    };
+
+                    // Expect function body
+                    self.expect(
+                        TokenType::LeftBrace,
+                        "Expected '{' to start function body.".to_string(),
+                    );
+                    let mut body_expressions: Vec<String> = Vec::new();
+                    let mut brace_depth = 1usize;
+                    while let Some(next_token) = self.advance() {
+                        match next_token.typ {
+                            TokenType::LeftBrace => {
+                                brace_depth += 1;
+                                body_expressions.push(next_token.content.clone());
+                            }
+                            TokenType::RightBrace => {
+                                brace_depth = brace_depth.saturating_sub(1);
+                                if brace_depth == 0 {
+                                    break;
+                                }
+                                body_expressions.push(next_token.content.clone());
+                            }
+                            TokenType::Builtin => {
+                                body_expressions.push(format!("@{}", next_token.content));
+                            }
+                            _ => body_expressions.push(next_token.content.clone()),
+                        }
+                    }
+
+                    expresssions.push(Box::new(FunctionExpression {
+                        name: func_name,
+                        args,
+                        return_type,
+                        body: TranslatableExpression {
+                            expressions: body_expressions,
+                        },
                     }));
                 }
                 TokenType::Builtin => {
