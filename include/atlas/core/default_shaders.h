@@ -2,7 +2,7 @@
 #ifndef ATLAS_GENERATED_SHADERS_H
 #define ATLAS_GENERATED_SHADERS_H
 
-static const char *FULLSCREEN_FRAG = R"(
+static const char* FULLSCREEN_FRAG = R"(
 #version 410 core
 
 in vec2 TexCoord;
@@ -783,9 +783,6 @@ vec4 cloudRendering(vec4 inColor) {
 }
 
 void main() {
-    // vec4 ssrColor = texture(SSRTexture, TexCoord);
-    // FragColor = ssrColor;
-    // return;
     vec4 color = sampleColor(TexCoord);
     float depth = texture(DepthTexture, TexCoord).r;
     vec3 viewPos = reconstructViewPos(TexCoord, depth);
@@ -862,7 +859,7 @@ void main() {
 
 )";
 
-static const char *MAIN_FRAG = R"(
+static const char* MAIN_FRAG = R"(
 #version 410 core
 layout(location = 0) out vec4 FragColor;
 layout(location = 1) out vec4 BrightColor;
@@ -1649,7 +1646,7 @@ void main() {
 
 )";
 
-static const char *MAIN_VERT = R"(
+static const char* MAIN_VERT = R"(
 #version 410 core
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec4 aColor;
@@ -1693,7 +1690,7 @@ void main() {
 
 )";
 
-static const char *FULLSCREEN_VERT = R"(
+static const char* FULLSCREEN_VERT = R"(
 #version 410 core
 
 layout (location = 0) in vec3 aPos;
@@ -1710,7 +1707,7 @@ void main() {
 
 )";
 
-static const char *TEXT_VERT = R"(
+static const char* TEXT_VERT = R"(
 #version 410 core
 layout(location = 0) in vec4 vertex; // <vec2 pos, vec2 texture>
 out vec2 texCoords;
@@ -1723,7 +1720,7 @@ void main() {
 }
 )";
 
-static const char *TEXT_FRAG = R"(
+static const char* TEXT_FRAG = R"(
 #version 410 core
 
 in vec2 texCoords;
@@ -1738,7 +1735,7 @@ void main() {
 }
 )";
 
-static const char *POINT_DEPTH_VERT = R"(
+static const char* POINT_DEPTH_VERT = R"(
 #version 410 core
 layout(location = 0) in vec3 aPos;
 layout(location = 6) in mat4 instanceModel;
@@ -1755,7 +1752,7 @@ void main() {
 }
 )";
 
-static const char *DEPTH_VERT = R"(
+static const char* DEPTH_VERT = R"(
 #version 410 core
 layout(location = 0) in vec3 aPos;
 layout(location = 6) in mat4 instanceModel;
@@ -1775,14 +1772,14 @@ void main() {
 
 )";
 
-static const char *EMPTY_FRAG = R"(
+static const char* EMPTY_FRAG = R"(
 #version 410 core
 
 void main() {}
 
 )";
 
-static const char *SSAO_BLUR_FRAG = R"(
+static const char* SSAO_BLUR_FRAG = R"(
 #version 410 core
 out float FragColor;
 
@@ -1803,7 +1800,7 @@ void main() {
 }
 )";
 
-static const char *POINT_DEPTH_GEOM = R"(
+static const char* POINT_DEPTH_GEOM = R"(
 #version 410 core
 layout(triangles) in;
 layout(triangle_strip, max_vertices = 18) out;
@@ -1826,7 +1823,7 @@ void main() {
 
 )";
 
-static const char *SSAO_FRAG = R"(
+static const char* SSAO_FRAG = R"(
 #version 410 core
 out float FragColor;
 in vec2 TexCoord;
@@ -1894,7 +1891,7 @@ void main() {
 }
 )";
 
-static const char *POINT_DEPTH_FRAG = R"(
+static const char* POINT_DEPTH_FRAG = R"(
 #version 410 core
 in vec4 FragPos;
 
@@ -1910,7 +1907,7 @@ void main() {
 }
 )";
 
-static const char *LIGHT_VERT = R"(
+static const char* LIGHT_VERT = R"(
 #version 410 core
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec2 aTexCoord;
@@ -1923,7 +1920,7 @@ void main() {
 }
 )";
 
-static const char *DEFERRED_FRAG = R"(
+static const char* DEFERRED_FRAG = R"(
 #version 410 core
 layout(location = 0) out vec4 gPosition;
 layout(location = 1) out vec4 gNormal;
@@ -2121,7 +2118,7 @@ void main() {
 
 )";
 
-static const char *DEFERRED_VERT = R"(
+static const char* DEFERRED_VERT = R"(
 #version 410 core
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec4 aColor;
@@ -2167,7 +2164,7 @@ void main() {
 }
 )";
 
-static const char *LIGHT_FRAG = R"(
+static const char* LIGHT_FRAG = R"(
 #version 410 core
 layout(location = 0) out vec4 FragColor;
 layout(location = 1) out vec4 BrightColor;
@@ -2649,7 +2646,7 @@ void main() {
 
 )";
 
-static const char *COLOR_FRAG = R"(
+static const char* COLOR_FRAG = R"(
 #version 410 core
 layout (location = 0) out vec4 FragColor;
 layout (location = 1) out vec4 BrightColor;
@@ -2664,7 +2661,7 @@ void main() {
 }
 )";
 
-static const char *TEXTURE_VERT = R"(
+static const char* TEXTURE_VERT = R"(
 #version 410 core
 layout (location = 0) in vec3 aPos;
 layout (location = 1) in vec4 aColor;
@@ -2686,7 +2683,7 @@ void main() {
 
 )";
 
-static const char *DEBUG_FRAG = R"(
+static const char* DEBUG_FRAG = R"(
 #version 410 core
 out vec4 FragColor;
 
@@ -2696,7 +2693,7 @@ void main() {
 
 )";
 
-static const char *COLOR_VERT = R"(
+static const char* COLOR_VERT = R"(
 #version 410 core
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec4 aColor;
@@ -2722,7 +2719,7 @@ void main() {
 
 )";
 
-static const char *DEBUG_VERT = R"(
+static const char* DEBUG_VERT = R"(
 #version 410 core
 layout (location = 0) in vec3 aPos;
 
@@ -2732,7 +2729,7 @@ void main() {
 
 )";
 
-static const char *TEXTURE_FRAG = R"(
+static const char* TEXTURE_FRAG = R"(
 #version 410 core
 out vec4 FragColor;
 
@@ -2772,7 +2769,7 @@ void main() {
 
 )";
 
-static const char *TERRAIN_CONTROL_TESC = R"(
+static const char* TERRAIN_CONTROL_TESC = R"(
 #version 410 core
 
 layout(vertices = 4) out;
@@ -2838,7 +2835,7 @@ void main() {
 }
 )";
 
-static const char *TERRAIN_FRAG = R"(
+static const char* TERRAIN_FRAG = R"(
 #version 410 core
 
 in vec3 FragPos;
@@ -3048,7 +3045,7 @@ void main() {
 }
 )";
 
-static const char *FLUID_VERT = R"(
+static const char* FLUID_VERT = R"(
 #version 410 core
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec2 aTexCoord;
@@ -3077,7 +3074,7 @@ void main() {
 
 )";
 
-static const char *TERRAIN_EVAL_TESE = R"(
+static const char* TERRAIN_EVAL_TESE = R"(
 #version 410 core
 layout(quads, fractional_odd_spacing, ccw) in;
 
@@ -3131,7 +3128,7 @@ void main() {
 }
 )";
 
-static const char *TERRAIN_VERT = R"(
+static const char* TERRAIN_VERT = R"(
 #version 410 core
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec2 aTexCoord;
@@ -3148,7 +3145,7 @@ void main() {
 }
 )";
 
-static const char *FLUID_FRAG = R"(
+static const char* FLUID_FRAG = R"(
 #version 410 core
 layout(location = 0) out vec4 FragColor;
 layout(location = 1) out vec4 BrightColor;
@@ -3335,7 +3332,7 @@ void main()
 }
 )";
 
-static const char *BLINN_PHONG_FRAG = R"(
+static const char* BLINN_PHONG_FRAG = R"(
 #version 410 core
 layout (location = 0) out vec4 FragColor;
 layout (location = 1) out vec4 BrightColor;
@@ -3903,7 +3900,7 @@ void main() {
 
 )";
 
-static const char *BINN_PHONG_VERT = R"(
+static const char* BINN_PHONG_VERT = R"(
 #version 410 core
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec4 aColor;
@@ -3945,7 +3942,7 @@ void main() {
 
 )";
 
-static const char *SKYBOX_FRAG = R"(
+static const char* SKYBOX_FRAG = R"(
 #version 410 core
 out vec4 FragColor;
 in vec3 TexCoords;
@@ -4179,7 +4176,7 @@ void main()
 }
 )";
 
-static const char *UPSAMPLE_FRAG = R"(
+static const char* UPSAMPLE_FRAG = R"(
 #version 410 core
 uniform sampler2D srcTexture;
 uniform float filterRadius;
@@ -4211,7 +4208,7 @@ void main() {
 
 )";
 
-static const char *DOWNSAMPLE_FRAG = R"(
+static const char* DOWNSAMPLE_FRAG = R"(
 #version 410 core
 
 uniform sampler2D srcTexture;
@@ -4251,7 +4248,7 @@ void main() {
 
 )";
 
-static const char *PARTICLE_FRAG = R"(
+static const char* PARTICLE_FRAG = R"(
 #version 410 core
 in vec2 fragTexCoord;
 in vec4 fragColor;
@@ -4277,7 +4274,7 @@ void main() {
 }
 )";
 
-static const char *PARTICLE_VERT = R"(
+static const char* PARTICLE_VERT = R"(
 #version 410 core
 
 layout(location = 0) in vec3 quadVertex;
@@ -4320,7 +4317,7 @@ void main() {
 }
 )";
 
-static const char *SKYBOX_VERT = R"(
+static const char* SKYBOX_VERT = R"(
 #version 410 core
 layout (location = 0) in vec3 aPos;
 
@@ -4338,7 +4335,7 @@ void main()
 
 )";
 
-static const char *GAUSSIAN_FRAG = R"(
+static const char* GAUSSIAN_FRAG = R"(
 #version 410 core
 out vec4 FragColor;
 
@@ -4373,7 +4370,11 @@ void main() {
 }
 )";
 
-static const char *SSR_FRAG = R"(
+static const char* SSR_BLUR_FRAG = R"(
+
+)";
+
+static const char* SSR_FRAG = R"(
 #version 410 core
 out vec4 FragColor;
 
@@ -4550,7 +4551,7 @@ void main() {
 }
 )";
 
-static const char *VOLUMETRIC_VERT = R"(
+static const char* VOLUMETRIC_VERT = R"(
 #version 410 core
 
 layout(location = 0) in vec3 aPos;
@@ -4565,7 +4566,7 @@ void main() {
 
 )";
 
-static const char *VOLUMETRIC_FRAG = R"(
+static const char* VOLUMETRIC_FRAG = R"(
 #version 410 core
 in vec2 TexCoords;
 out vec4 FragColor;
