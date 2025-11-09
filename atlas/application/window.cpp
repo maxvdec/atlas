@@ -173,6 +173,14 @@ Window::Window(WindowConfiguration config)
     if (!result) {
         throw std::runtime_error("Failed to initialize audio engine");
     }
+
+    GLint maxVerts, maxIndices, maxAttribs;
+    glGetIntegerv(GL_MAX_ELEMENTS_VERTICES, &maxVerts);
+    glGetIntegerv(GL_MAX_ELEMENTS_INDICES, &maxIndices);
+    glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxAttribs);
+    std::cout << "Max vertices: " << maxVerts << std::endl;
+    std::cout << "Max indices: " << maxIndices << std::endl;
+    std::cout << "Max vertex attribs: " << maxAttribs << std::endl;
 }
 
 std::tuple<int, int> Window::getCursorPosition() {

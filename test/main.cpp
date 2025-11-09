@@ -129,6 +129,7 @@ class MainScene : public Scene {
     AreaLight areaLight;
     ParticleEmitter emitter;
     WaterPot waterPot;
+    Model sponza;
 
     bool doesUpdate = true;
     bool fall = false;
@@ -189,82 +190,24 @@ class MainScene : public Scene {
         camera.farClip = 1000.f;
         window.setCamera(&camera);
 
-        ground = createBox({5.0f, 0.1f, 5.0f}, Color(0.3f, 0.8f, 0.3f));
-        ground.attachTexture(
-            Texture::fromResource(Workspace::get().createResource(
-                "ground.jpg", "GroundTexture", ResourceType::Image)));
-        ground.setPosition({0.0f, -0.1f, 0.0f});
-        window.addObject(&ground);
+        sponza = Model();
+        sponza.fromResource(Workspace::get().createResource(
+            "sponza.obj", "SponzaModel", ResourceType::Model));
+        sponza.setScale({0.01f, 0.01f, 0.01f});
 
-        areaLight.position = {0.0f, 2.0f, 0.0};
-        areaLight.rotate({0.0f, 90.0f, 0.0f});
-        areaLight.castsBothSides = true;
-        this->addAreaLight(&areaLight);
-        areaLight.createDebugObject();
-        areaLight.addDebugObject(window);
+        sponza.material.albedo = Color(1.0, 0.0, 0.0, 1.0);
 
-        Resource fontResource = Workspace::get().createResource(
-            "arial.ttf", "Arial", ResourceType::Font);
+        this->setAmbientIntensity(0.2f);
 
-        fpsText = Text("FPS: 0", Font::fromResource("Arial", fontResource, 24),
-                       {25.0, 25.0}, Color::white());
-
-        fpsText.addTraitComponent<Text>(FPSTextUpdater());
-        window.addUIObject(&fpsText);
-
-        ball = createDebugSphere(0.5f, 76, 76);
-        ball.body->applyMass(0.0);
-        ball.material.metallic = 1.0f;
-        ball.material.roughness = 0.0f;
-        ball.move({0.f, 1.0f, 1.0});
-        window.addObject(&ball);
-
-        ball2 = createDebugSphere(0.5f, 76, 76);
-        ball2.body->applyMass(0.0);
-        ball2.move({0.f, 1.0f, -1.0});
-        window.addObject(&ball2);
-
-        Resource heightmapResource = Workspace::get().createResource(
-            "terrain/heightmap.png", "Heightmap", ResourceType::Image);
-
-        CompoundGenerator compoundGen;
-        compoundGen.addGenerator(MountainGenerator(0.01f, 1.f, 5, 0.5f));
-
-        terrain = Terrain(heightmapResource);
-        terrain.move({20.f, 0.0, 0.0});
-        Biome grasslandBiome =
-            Biome("Grassland", Color(0.1f, 0.8f, 0.1f, 1.0f));
-        grasslandBiome.condition = [](Biome &biome) {
-            biome.maxHeight = 10.0f;
-        };
-        terrain.addBiome(grasslandBiome);
-
-        Biome mountainBiome = Biome("Mountain", Color(0.5f, 0.5f, 0.5f, 1.0f));
-        mountainBiome.condition = [](Biome &biome) {
-            biome.minHeight = 10.0f;
-            biome.maxHeight = 150.0f;
-        };
-        terrain.addBiome(mountainBiome);
-
-        Biome snowBiome = Biome("Snow", Color(4.0f, 4.0f, 4.0f, 4.0f));
-        snowBiome.condition = [](Biome &biome) { biome.minHeight = 150.0f; };
-        terrain.addBiome(snowBiome);
-        terrain.resolution = 100;
-        terrain.maxPeak = 100.f;
-
-        light = DirectionalLight({1.0f, -0.3f, 0.5f}, Color::white());
-
-        frameBuffer = RenderTarget(window);
-        window.addRenderTarget(&frameBuffer);
-        frameBuffer.display(window);
+        window.addObject(&sponza);
 
         window.useDeferredRendering();
         atmosphere.enable();
         atmosphere.secondsPerHour = 4.f;
-        atmosphere.setTime(12.0);
+        atmosphere.setTime(17);
         atmosphere.cycle = false;
         atmosphere.useGlobalLight();
-        atmosphere.wind = {0.1f, 0.0f, 0.0f};
+
         atmosphere.castShadowsFromSunlight(4096);
     }
 };

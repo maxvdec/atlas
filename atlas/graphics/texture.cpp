@@ -207,7 +207,8 @@ Texture Texture::fromResourceName(const std::string &resourceName,
 
 Texture Texture::fromResource(const Resource &resource, TextureType type,
                               TextureParameters params, Color borderColor) {
-    if (resource.type != ResourceType::Image) {
+    if (resource.type != ResourceType::Image &&
+        resource.type != ResourceType::SpecularMap) {
         throw std::runtime_error("Resource is not an image");
     }
 

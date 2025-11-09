@@ -636,10 +636,21 @@ float calculateAllPointShadows(vec3 fragPos) {
 // ----- Main -----
 void main() {
     texCoord = TexCoord;
-    vec3 tangentViewDir = normalize(transpose(TBN) * (cameraPosition - FragPos));
-    texCoord = parallaxMapping(texCoord, tangentViewDir);
-    if (texCoord.x > 1.0 || texCoord.y > 1.0 || texCoord.x < 0.0 || texCoord.y < 0.0)
-        discard;
+
+    bool hasParallaxMap = false;
+    for (int i = 0; i < textureCount; i++) {
+        if (textureTypes[i] == TEXTURE_PARALLAX) {
+            hasParallaxMap = true;
+            break;
+        }
+    }
+
+    if (hasParallaxMap) {
+        vec3 tangentViewDir = normalize(transpose(TBN) * (cameraPosition - FragPos));
+        texCoord = parallaxMapping(texCoord, tangentViewDir);
+        if (texCoord.x > 1.0 || texCoord.y > 1.0 || texCoord.x < 0.0 || texCoord.y < 0.0)
+            discard;
+    }
 
     vec4 normTexture = enableTextures(TEXTURE_NORMAL);
     vec3 N;

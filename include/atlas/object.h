@@ -13,6 +13,7 @@
 #include "atlas/component.h"
 #include "bezel/body.h"
 #include <any>
+#include <iostream>
 #include <memory>
 #include <string>
 #include <type_traits>
@@ -885,7 +886,8 @@ class Model : public GameObject {
     void loadModel(Resource resource);
     void processNode(aiNode *node, const aiScene *scene,
                      glm::mat4 parentTransform = glm::mat4(1.0f));
-    CoreObject processMesh(aiMesh *mesh, const aiScene *scene);
+    CoreObject processMesh(aiMesh *mesh, const aiScene *scene,
+                           const glm::mat4 &transform);
     std::vector<Texture> loadMaterialTextures(aiMaterial *mat, std::any type,
                                               const std::string &typeName);
 };

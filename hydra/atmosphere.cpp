@@ -182,7 +182,7 @@ void Atmosphere::update(float dt) {
         return;
 
     if (mainLight) {
-        mainLight->direction = getSunAngle();
+        mainLight->direction = getSunAngle() * -1.0f;
         mainLight->color = Color(getLightColor().r, getLightColor().g,
                                  getLightColor().b, getLightIntensity());
         Window::mainWindow->getCurrentScene()->setAmbientIntensity(
