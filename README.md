@@ -9,12 +9,19 @@
 Atlas is a Game Engine that uses the latest technologies to provide a fast, simple but powerful experience for developers.
 It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan and Metal in the future.
 
+![Atlas Screenshot](example.png)
+
 ## Features
 
 - Cross-platform support (Windows, macOS, Linux)
 - Fast graphics rendering with OpenGL
 - Simple and intuitive API
 - Physics engine (Bezel)
+- Audio engine (Finewave)
+- Terrain system (Aurora)
+- Environment system (Hydra)
+- Asset management
+- Intuitive C++ scripting mode
 
 ## Engine Architecture
 
@@ -24,82 +31,31 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - The terrain system is Aurora. Aurora is a separate library that handles terrain generation and rendering.
 - The environment system is Hydra. Hydra is a separate library that handles sky, atmosphere, weather and fluid simulation.
 
-## Roadmap to Beta
+## Getting the Engine
 
-- [x] Basic window creation and management
-- [x] Input handling (keyboard, mouse)
-- [x] Basic rendering (shapes, textures)
-- [x] Simple UI
-- [ ] Editor UI
-- [ ] Editor application
-- [ ] Editor runtime
-- [x] Add mesh loading
-- [x] Scene management
-- [x] Physics engine integration (Bezel)
-- [x] Audio support (Finewave)
-- [ ] Scripting support
-- [x] Asset management
-- [x] Documentation and examples
-- [x] Particle system
-- [x] Lights
-- [x] Shadows (except for point lights)
-- [x] Post-processing effects
-- [x] Sky, atmosphere, weather and fluid simulation system (Hydra) 
-- [x] Water rendering system
-- [x] Weather system 
-- [x] Cloud system 
-- [x] Screen-space global illumination
-- [x] Night-day cycle system
-- [x] Add sun, moon and stars rendering 
-- [ ] Animation system (Mold)
-- [x] Instancing support
-- [x] Optimizations and performance improvements
-- [x] CLI for packing applications
-- [ ] Runtime independent of final executable
-- [ ] Scene packing
-- [x] Add deferred rendering for better performance with many lights
-- [x] Add PBR rendering 
-- [x] Add other texture supports (normal, roughness, metallic, ao, etc.) 
-- [x] Add HDR support
-- [x] Add SSAO
-- [x] Add soft shadows
-- [x] Add shadows for point lights
-- [x] Add normal and parallax mapping
-- [x] Add volumetric lighting
-- [x] Add bloom for lights
-- [x] Add depth of field
-- [x] Add terrain system (Aurora) 
-- [x] Add motion blur 
-- [x] Physically based bloom 
-- [x] Add area lights 
-- [x] Screen-space reflections 
-- [x] Add rim lighting 
-- [x] Add chromatic aberration 
-- [x] Add posterization
-- [x] Add pixelization 
-- [x] Add dilation 
-- [x] Add film grain 
-- [x] Add LUT tables 
-- [x] Add foam and simple fluid rendering 
-- [x] Screen-space refractions 
-- [ ] Create opal for core rendering **for alpha 5**
-- [ ] Migrate the engine to use opal **for alpha 5**
-- [ ] Add Vulkan support through opal **for alpha 5**
-- [ ] Add Jolt Physics instead of Bezel **for alpha 5**
-- [ ] Better website **for alpha 5**
-- [ ] More modern documentation **for alpha 5**
-- [ ] Examples and tutorials **for alpha 5**
-- [ ] Create the Hana shader language **for alpha 5**
-- [ ] Create syntax highlighting for Hana **for alpha 5**
-- [ ] Move shaders to hana **for alpha 5**
+Go to the releases page [here](https://github.com/maxvdec/atlas/releases) to download the latest version of Atlas. Then you can follow the instructions in the documentation to get started.
 
-## Other features planned for the future
+```bash
+atlas create myProject
+```
 
-- [ ] AI system (Adverse)
-- [ ] UI library (Graphite)
-- [ ] Vegetation and foliage system
-- [ ] Terrain generation and rendering (Terra)
-- [ ] Network support (Lasse)
-- [ ] Metal support
-- [ ] Ray tracing rendering (Overflow)
-- [ ] Add 2d physics (Bezel 2D support)
+## Building from Source
+
+To build the engine from source, you will need to have CMake and a C++ compiler installed on your system. Then you can clone the repository and build the engine using the following commands:
+
+```bash
+git clone https://github.com/maxvdec/atlas.git
+cd atlas
+mkdir build
+cd build
+cmake ..
+make
+```
+
+You can then run the engine using the following command:
+
+```bash
+./Atlas
+```
+
+Be sure to check the documentation for more detailed instructions on building and running the engine.

@@ -204,7 +204,7 @@ class MainScene : public Scene {
         window.useDeferredRendering();
         atmosphere.enable();
         atmosphere.secondsPerHour = 4.f;
-        atmosphere.setTime(17);
+        atmosphere.setTime(12);
         atmosphere.cycle = false;
         atmosphere.useGlobalLight();
 
