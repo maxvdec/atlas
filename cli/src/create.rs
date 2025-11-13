@@ -141,6 +141,9 @@ public:
     CoreObject cube;
     Camera camera;
 
+    /// Get Started with Atlas by modifying this file.
+    /// This example creates a window with a camera and a cube in the center.
+    /// You can modify this file to create your own application.
     void initialize(Window& window) override {
         camera = Camera();
         window.setCamera(&camera);
@@ -148,7 +151,7 @@ public:
         cube = createBox({1.0, 1.0, 1.0});
         window.addObject(&cube);
 
-        this->ambientLight.intensity = 0.5;
+        this->setAmbientIntensity(0.2f);
     }
 
 };
@@ -174,6 +177,7 @@ project(##PROJECTNAME##)
 find_package(OpenGL REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
+find_package(Assimp REQUIRED)
 if(APPLE)
     set(OPENAL_LIB /opt/homebrew/opt/openal-soft/lib/libopenal.dylib)
     set(OPENAL_INCLUDE /opt/homebrew/opt/openal-soft/include)
@@ -205,7 +209,7 @@ set_target_properties(aurora PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/li
 add_library(hydra STATIC IMPORTED)
 set_target_properties(hydra PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/lib/libhydra.a)
 
-target_link_libraries(##PROJECTNAMELC## PRIVATE atlas bezel OpenGL::GL glfw glm::glm finewave aurora hydra ${OPENAL_LIB})
+target_link_libraries(##PROJECTNAMELC## PRIVATE atlas bezel OpenGL::GL glfw glm::glm finewave aurora hydra ${OPENAL_LIB} assimp::assimp)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
