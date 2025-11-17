@@ -14,7 +14,6 @@
 
 #include <cstddef>
 #include <algorithm>
-#include <iostream>
 #include <memory>
 #include <stdexcept>
 
@@ -261,7 +260,7 @@ void Fluid::setScale(const Scale3d &newScale) {
 
 void Fluid::setExtent(const Size2d &ext) {
     extent = ext;
-    extentScale = {ext.width, 1.0, ext.height};
+    extentScale = {ext.width, 1.0f, ext.height};
     updateModelMatrix();
 }
 

@@ -13,7 +13,6 @@
 #include "atlas/input.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/glm.hpp>
-#include <iostream>
 
 glm::mat4 Camera::calculateViewMatrix() const {
     glm::vec3 camPos(position.x, position.y, position.z);
@@ -112,7 +111,7 @@ void Camera::update(Window &window) {
               camPos.z + camFront.z};
 }
 
-void Camera::updateLook(Window &window, Movement2d movement) {
+void Camera::updateLook(Window &, Movement2d movement) {
     float xoffset = movement.x * mouseSensitivity;
     float yoffset = movement.y * mouseSensitivity;
 
@@ -136,7 +135,7 @@ void Camera::updateLook(Window &window, Movement2d movement) {
     target = {position.x + front.x, position.y + front.y, position.z + front.z};
 }
 
-void Camera::updateZoom(Window &window, Movement2d offset) {
+void Camera::updateZoom(Window &, Movement2d offset) {
     if (!useOrthographic) {
         fov -= offset.y;
         if (fov < 1.0f)

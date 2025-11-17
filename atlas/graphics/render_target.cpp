@@ -7,13 +7,14 @@
  Copyright (c) 2025 maxvdec
 */
 
+#include <cstddef>
 #include <glad/glad.h>
 #include <algorithm>
 #include <iostream>
 #include <vector>
 #include "atlas/camera.h"
 #include "atlas/core/shader.h"
-#include "atlas/effect.h"
+#include "atlas/effect.h" // IWYU pragma: keep
 #include "atlas/object.h"
 #include "atlas/texture.h"
 #include "atlas/units.h"
@@ -34,8 +35,7 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
     int scaledWidth = std::max(1, static_cast<int>(fbWidth * targetScale));
     int scaledHeight = std::max(1, static_cast<int>(fbHeight * targetScale));
     Size2d size;
-    size = {static_cast<double>(scaledWidth),
-            static_cast<double>(scaledHeight)};
+    size = {static_cast<float>(scaledWidth), static_cast<float>(scaledHeight)};
     const GLsizei width = static_cast<GLsizei>(scaledWidth);
     const GLsizei height = static_cast<GLsizei>(scaledHeight);
     this->type = type;
@@ -448,8 +448,8 @@ void RenderTarget::display(Window &window, float zindex) {
 
 void RenderTarget::resolve() {
     if (type == RenderTargetType::Multisampled) {
-        Size2d size = {static_cast<double>(texture.creationData.width),
-                       static_cast<double>(texture.creationData.height)};
+        Size2d size = {static_cast<float>(texture.creationData.width),
+                       static_cast<float>(texture.creationData.height)};
 
         glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, resolveFbo);
@@ -737,7 +737,7 @@ void RenderTarget::render(float dt) {
                                     static_cast<int>(texture.type));
     obj->shaderProgram.setUniform1i("EffectCount", effects.size());
 
-    for (int i = 0; i < effects.size(); i++) {
+    for (size_t i = 0; i < effects.size(); i++) {
         std::string uniformName = "Effects[" + std::to_string(i) + "]";
         obj->shaderProgram.setUniform1i(uniformName,
                                         static_cast<int>(effects[i]->type));

@@ -13,6 +13,7 @@
 #include "bezel/bounds.h"
 #include "bezel/shape.h"
 #include <algorithm>
+#include <cstddef>
 #include <iostream>
 #include <memory>
 #include <vector>
@@ -97,7 +98,7 @@ void Body::update(Window &window) {
     const int maxContacts = bodies.size() * bodies.size();
     std::vector<Contact> contacts(maxContacts);
 
-    for (int i = 0; i < pairs.size(); i++) {
+    for (size_t i = 0; i < pairs.size(); i++) {
         CollisionPair pair = pairs[i];
         std::shared_ptr<Body> bodyA = bodies[pair.a];
         std::shared_ptr<Body> bodyB = bodies[pair.b];
@@ -513,8 +514,6 @@ glm::mat3 Body::getInverseInertiaTensorWorldSpace() const {
     }
 
     glm::mat3 inertiaTensor = shape->getInertiaTensor();
-
-    float det = glm::determinant(inertiaTensor);
 
     glm::mat3 invInertiaTensor = glm::inverse(inertiaTensor) * invMass;
 

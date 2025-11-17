@@ -239,8 +239,6 @@ bool bezel::gjkIntersection(const std::shared_ptr<Body> bodyA,
 void bezel::gjkClosestPoints(const std::shared_ptr<Body> bodyA,
                              const std::shared_ptr<Body> bodyB,
                              glm::vec3 &ptOnA, glm::vec3 &ptOnB) {
-    const glm::vec3 origin(0.0);
-
     float closestDist = 1e10f;
     const float bias = 0.0f;
 

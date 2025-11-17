@@ -93,7 +93,7 @@ Window::Window(WindowConfiguration config)
 
     Window::mainWindow = this;
 
-    glfwSetFramebufferSizeCallback(window, [](GLFWwindow *win, int w, int h) {
+    glfwSetFramebufferSizeCallback(window, [](GLFWwindow *win, int, int) {
         int fbWidth, fbHeight;
         glfwGetFramebufferSize(win, &fbWidth, &fbHeight);
         glViewport(0, 0, fbWidth, fbHeight);
@@ -107,21 +107,21 @@ Window::Window(WindowConfiguration config)
     lastMouseY = height / 2.0;
 
     glfwSetCursorPosCallback(
-        window, [](GLFWwindow *win, double xpos, double ypos) {
+        window, [](GLFWwindow *, double xpos, double ypos) {
             Window *window = Window::mainWindow;
-            Position2d movement = {xpos - window->lastMouseX,
-                                   window->lastMouseY - ypos};
+            Position2d movement = {(float)xpos - window->lastMouseX,
+                                   window->lastMouseY - (float)ypos};
             if (window->currentScene != nullptr) {
                 window->currentScene->onMouseMove(*window, movement);
             }
-            window->lastMouseX = xpos;
-            window->lastMouseY = ypos;
+            window->lastMouseX = (float)xpos;
+            window->lastMouseY = (float)ypos;
         });
 
     glfwSetScrollCallback(
-        window, [](GLFWwindow *win, double xoffset, double yoffset) {
+        window, [](GLFWwindow *, double xoffset, double yoffset) {
             Window *window = Window::mainWindow;
-            Position2d offset = {xoffset, yoffset};
+            Position2d offset = {(float)xoffset, (float)yoffset};
             if (window->currentScene != nullptr) {
                 window->currentScene->onMouseScroll(*window, offset);
             }
@@ -549,7 +549,7 @@ Window::~Window() {
 }
 
 Monitor::Monitor(CoreMonitorReference ref, int id, bool isPrimary)
-    : monitorRef(ref), monitorID(id), primary(isPrimary) {}
+    : monitorID(id), primary(isPrimary), monitorRef(ref) {}
 
 std::vector<VideoMode> Monitor::queryVideoModes() {
     GLFWmonitor *glfwMonitor = static_cast<GLFWmonitor *>(this->monitorRef);
@@ -1036,7 +1036,7 @@ std::vector<std::shared_ptr<Body>> Window::getAllBodies() {
     return bodies;
 }
 
-void Window::renderPingpong(RenderTarget *target, float dt) {
+void Window::renderPingpong(RenderTarget *target) {
     if (target->brightTexture.id == 0) {
         return;
     }

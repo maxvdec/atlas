@@ -13,6 +13,9 @@ clangd:
 lint:
    find atlas test \( -name '*.cpp' -o -name '*.h' \) -print0 | xargs -0 clang-format --dry-run --Werror
 
+clean:
+    rm -rf CMakeFiles CMakeCache.txt cmake_install.cmake Makefile bin
+
 frametest:
     just build
     timeout 2 ./bin/atlas_test

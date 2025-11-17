@@ -55,8 +55,6 @@ bool AudioEngine::initialize() {
         return false;
     }
 
-    const ALCchar *extensions = alcGetString(device, ALC_EXTENSIONS);
-
     ALCcontext *context = alcCreateContext(device, nullptr);
     if (context == nullptr) {
         alcCloseDevice(device);

@@ -25,6 +25,12 @@ struct Position3d {
     float y;
     float z;
 
+    Position3d() : x(0.0f), y(0.0f), z(0.0f) {}
+    Position3d(float x, float y, float z) : x(x), y(y), z(z) {}
+    Position3d(double x, double y, double z)
+        : x(static_cast<float>(x)), y(static_cast<float>(y)),
+          z(static_cast<float>(z)) {}
+
     Position3d operator+(const Position3d &other) const {
         return {x + other.x, y + other.y, z + other.z};
     }
@@ -70,7 +76,7 @@ struct Position3d {
     inline Position3d normalized() const {
         float length = std::sqrt(x * x + y * y + z * z);
         if (length == 0)
-            return {0, 0, 0};
+            return {};
         return {x / length, y / length, z / length};
     }
 
@@ -120,6 +126,15 @@ struct Rotation3d {
     float pitch; // Rotation around the X-axis
     float yaw;   // Rotation around the Y-axis
     float roll;  // Rotation around the Z-axis
+
+    Rotation3d() : pitch(0.0f), yaw(0.0f), roll(0.0f) {}
+
+    Rotation3d(float pitch, float yaw, float roll)
+        : pitch(pitch), yaw(yaw), roll(roll) {}
+
+    Rotation3d(double pitch, double yaw, double roll)
+        : pitch(static_cast<float>(pitch)), yaw(static_cast<float>(yaw)),
+          roll(static_cast<float>(roll)) {}
 
     Rotation3d operator+(const Rotation3d &other) const {
         return {pitch + other.pitch, yaw + other.yaw, roll + other.roll};

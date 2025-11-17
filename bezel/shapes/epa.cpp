@@ -9,6 +9,7 @@
 
 #include "bezel/body.h"
 #include "bezel/shape.h"
+#include <cstddef>
 #include <utility>
 #include <vector>
 #include <cmath>
@@ -99,7 +100,7 @@ int bezel::closestTriangle(const std::vector<Triangle> &triangles,
     float minDistSqr = 1e10f;
 
     int idx = -1;
-    for (int i = 0; i < triangles.size(); i++) {
+    for (size_t i = 0; i < triangles.size(); i++) {
         const Triangle &tri = triangles[i];
 
         float dist =
@@ -119,7 +120,7 @@ bool bezel::hasPoint(const glm::vec3 &w, const std::vector<Triangle> &triangles,
     const float epsilon = 1e-6f;
     glm::vec3 delta;
 
-    for (int i = 0; i < triangles.size(); i++) {
+    for (size_t i = 0; i < triangles.size(); i++) {
         const Triangle &tri = triangles[i];
 
         delta = w - points[tri.a].xyz;
@@ -144,7 +145,7 @@ int bezel::removeTrianglesFacingPoint(const glm::vec3 &pt,
                                       std::vector<Triangle> &triangles,
                                       const std::vector<Point> &points) {
     int numRemoved = 0;
-    for (int i = 0; i < triangles.size(); i++) {
+    for (size_t i = 0; i < triangles.size(); i++) {
         const Triangle &tri = triangles[i];
 
         float dist = bezel::signedDistanceToTriangle(tri, pt, points);
@@ -161,7 +162,7 @@ void bezel::findDanglingEdges(std::vector<Edge> &danglingEdges,
                               const std::vector<Triangle> &triangles) {
     danglingEdges.clear();
 
-    for (int i = 0; i < triangles.size(); i++) {
+    for (size_t i = 0; i < triangles.size(); i++) {
         const Triangle &tri = triangles[i];
 
         Edge edges[3];
@@ -179,7 +180,7 @@ void bezel::findDanglingEdges(std::vector<Edge> &danglingEdges,
         counts[1] = 0;
         counts[2] = 0;
 
-        for (int j = 0; j < triangles.size(); j++) {
+        for (size_t j = 0; j < triangles.size(); j++) {
             if (i == j) {
                 continue;
             }
@@ -284,7 +285,7 @@ float bezel::epaExpand(const std::shared_ptr<Body> bodyA,
             break;
         }
 
-        for (int i = 0; i < danglingEdges.size(); i++) {
+        for (size_t i = 0; i < danglingEdges.size(); i++) {
             const Edge &edge = danglingEdges[i];
             Triangle tri;
             tri.a = newIdx;

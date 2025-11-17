@@ -10,7 +10,6 @@
 #include "atlas/light.h"
 #include "atlas/window.h"
 #include <glad/glad.h>
-#include <iostream>
 
 void Window::deferredRendering(RenderTarget *target) {
     // Render to G-Buffer
@@ -127,11 +126,6 @@ void Window::deferredRendering(RenderTarget *target) {
     shaderProgram.setUniform3f("cameraPosition", getCamera()->position.x,
                                getCamera()->position.y,
                                getCamera()->position.z);
-
-    const bool shaderSupportsIbl =
-        std::find(shaderProgram.capabilities.begin(),
-                  shaderProgram.capabilities.end(),
-                  ShaderCapability::IBL) != shaderProgram.capabilities.end();
 
     // Set ambient light
     Color ambientColor = scene->getAmbientColor();

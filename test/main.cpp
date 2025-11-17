@@ -14,7 +14,6 @@
 #include "aurora/terrain.h"
 #include "hydra/atmosphere.h"
 #include "hydra/fluid.h"
-#include <iostream>
 #include <memory>
 
 class SphereCube : public CompoundObject {
@@ -24,7 +23,7 @@ class SphereCube : public CompoundObject {
   public:
     void init() override {
         cube = createDebugBox({0.5f, 0.5f, 0.5f});
-        cube.setPosition({-1.0, cube.getPosition().y, 0.0});
+        cube.setPosition({-1.0f, cube.getPosition().y, 0.0f});
         cube.initialize();
         cube.body->applyMass(0); // Make it static
         this->addObject(&cube);
@@ -35,7 +34,7 @@ class SphereCube : public CompoundObject {
         }
 
         sphere = createDebugSphere(0.25f);
-        sphere.setPosition({1.0, sphere.getPosition().y, 0.0});
+        sphere.setPosition({1.0f, sphere.getPosition().y, 0.0f});
         sphere.initialize();
         sphere.body->applyMass(0); // Make it static
         this->addObject(&sphere);
@@ -82,16 +81,15 @@ class WaterPot : public CompoundObject {
 
   public:
     void init() override {
-        pot = createBox({1.0, 0.25, 0.25}, Color(0.6f, 0.4f, 0.2f));
+        pot = createBox({1.0f, 0.25f, 0.25f}, Color(0.6f, 0.4f, 0.2f));
 
-        Instance &potLeft = pot.createInstance();
         Instance &potRight = pot.createInstance();
         potRight.move({0.0f, 0.0f, 1.0f});
         Instance &potDown = pot.createInstance();
-        potDown.rotate({0.0, 90.0f, 0.0});
+        potDown.rotate({0.0f, 90.0f, 0.0f});
         potDown.move({-0.5f, 0.0f, 0.5f});
         Instance &potUp = pot.createInstance();
-        potUp.rotate({0.0, -90.0f, 0.0});
+        potUp.rotate({0.0f, -90.0f, 0.0f});
         potUp.move({0.5f, 0.0f, 0.5f});
         pot.initialize();
         this->addObject(&pot);

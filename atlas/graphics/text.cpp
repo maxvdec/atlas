@@ -9,7 +9,7 @@
 
 #include "atlas/text.h"
 #include "atlas/window.h"
-#include "ft2build.h"
+#include "ft2build.h" // IWYU pragma: keep
 #include <iostream>
 #include FT_FREETYPE_H
 #include <glad/glad.h>

@@ -370,7 +370,7 @@ struct Spotlight {
               const Color &color = Color::white(), const float angle = 35.f,
               const float outerAngle = 40.f,
               const Color &shineColor = Color::white())
-        : position(pos), color(color), shineColor(shineColor), direction(dir),
+        : position(pos), direction(dir), color(color), shineColor(shineColor),
           cutOff(glm::cos(glm::radians(static_cast<double>(angle)))),
           outerCutoff(glm::cos(glm::radians(static_cast<double>(outerAngle)))) {
     }

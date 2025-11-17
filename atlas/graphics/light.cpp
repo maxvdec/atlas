@@ -12,7 +12,6 @@
 #include "atlas/object.h"
 #include "atlas/texture.h"
 #include "atlas/window.h"
-#include <iostream>
 #include <tuple>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -63,11 +62,11 @@ PointLightConstants Light::calculateConstants() const {
 
     if (distance <= table[0].distance) {
         return {distance, table[0].constant, table[0].linear,
-                table[0].quadratic};
+                table[0].quadratic, 0.0f};
     }
     if (distance >= table[n - 1].distance) {
         return {distance, table[n - 1].constant, table[n - 1].linear,
-                table[n - 1].quadratic};
+                table[n - 1].quadratic, 0.0f};
     }
 
     for (int i = 0; i < n - 1; i++) {
@@ -158,7 +157,7 @@ ShadowParams DirectionalLight::calculateLightSpaceMatrix(
 
     if (objects.empty()) {
         glm::mat4 identity = glm::mat4(1.0f);
-        return {identity, identity};
+        return {identity, identity, 0.0f, 0.0f};
     }
 
     glm::vec3 minPos(std::numeric_limits<float>::max());
@@ -244,7 +243,7 @@ ShadowParams DirectionalLight::calculateLightSpaceMatrix(
 
     float bias = 0.0002f * glm::length(extent);
 
-    return {lightView, lightProjection, bias};
+    return {lightView, lightProjection, bias, 0.0f};
 }
 
 std::tuple<glm::mat4, glm::mat4> Spotlight::calculateLightSpaceMatrix() const {

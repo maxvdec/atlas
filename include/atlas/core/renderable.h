@@ -48,21 +48,22 @@ class Renderable {
      *
      * @param window The window where the object is being rendered.
      */
-    virtual void update(Window &window) {};
+    virtual void update([[maybe_unused]] Window &window) {};
     /**
      * @brief Function to set the view matrix for the object. Called from \ref
      * Window for internal purposes.
      *
      * @param view The view matrix to set.
      */
-    virtual void setViewMatrix(const glm::mat4 &view) {};
+    virtual void setViewMatrix([[maybe_unused]] const glm::mat4 &view) {};
     /**
      * @brief Function to set the projection matrix for the object. Called from
      * \ref Window for internal purposes.
      *
      * @param projection The projection matrix to set.
      */
-    virtual void setProjectionMatrix(const glm::mat4 &projection) {};
+    virtual void
+    setProjectionMatrix([[maybe_unused]] const glm::mat4 &projection) {};
     /**
      * @brief Function to get the current shader program used by the object.
      *
@@ -78,13 +79,13 @@ class Renderable {
      *
      * @param shader The shader program to set.
      */
-    virtual void setShader(const ShaderProgram &shader) {};
+    virtual void setShader([[maybe_unused]] const ShaderProgram &shader) {};
     /**
      * @brief Function to get the position of the object in 3D space.
      *
      * @return The position of the object as a Position3d struct.
      */
-    virtual Position3d getPosition() const { return {0, 0, 0}; };
+    virtual Position3d getPosition() const { return {0.0f, 0.0f, 0.0f}; };
     /**
      * @brief Function to get the vertices of the object in 3D space.
      *
@@ -96,7 +97,7 @@ class Renderable {
      *
      * @return The scale of the object as a Size3d struct.
      */
-    virtual Size3d getScale() const { return {1, 1, 1}; };
+    virtual Size3d getScale() const { return {1.0f, 1.0f, 1.0f}; };
     /**
      * @brief Function to determine if the object can cast shadows. Can be
      * overridden by derived classes.

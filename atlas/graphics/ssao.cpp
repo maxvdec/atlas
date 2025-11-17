@@ -66,7 +66,7 @@ void Window::setupSSAO() {
     this->ssaoMapsDirty = true;
 }
 
-void Window::renderSSAO(RenderTarget *target) {
+void Window::renderSSAO() {
     if (this->ssaoBuffer == nullptr || this->ssaoBlurBuffer == nullptr) {
         return;
     }

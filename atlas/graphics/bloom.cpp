@@ -10,8 +10,8 @@
 #include "atlas/core/shader.h"
 #include <atlas/texture.h>
 #include <climits>
+#include <cstddef>
 #include <glad/glad.h>
-#include <ranges>
 #include <vector>
 
 void BloomRenderTarget::init(int width, int height, int chainLength) {
@@ -24,13 +24,13 @@ void BloomRenderTarget::init(int width, int height, int chainLength) {
 
     glm::vec2 mipSize((float)width, (float)height);
     glm::ivec2 mipIntSize((int)width, (int)height);
-    if (width > (unsigned int)INT_MAX || height > (unsigned int)INT_MAX)
+    if (width > INT_MAX || height > INT_MAX)
         throw std::runtime_error("Texture dimensions exceed maximum allowed");
 
     this->srcViewportSize = mipIntSize;
     this->srcViewportSizef = mipSize;
 
-    for (unsigned int i = 0; i < chainLength; i++) {
+    for (int i = 0; i < chainLength; i++) {
         BloomElement element;
         mipSize *= 0.5f;
         mipIntSize /= 2;
@@ -94,7 +94,7 @@ void BloomRenderTarget::init(int width, int height, int chainLength) {
 }
 
 void BloomRenderTarget::destroy() {
-    for (int i = 0; i < elements.size(); i++) {
+    for (size_t i = 0; i < elements.size(); i++) {
         glDeleteTextures(1, &elements[i].textureId);
         elements[i].textureId = 0;
     }
@@ -131,7 +131,7 @@ void BloomRenderTarget::renderDownsamples(unsigned int srcTexture) {
     glBindTexture(GL_TEXTURE_2D, srcTexture);
     downsampleProgram.setUniform1i("srcTexture", 0);
 
-    for (int i = 0; i < elements.size(); i++) {
+    for (size_t i = 0; i < elements.size(); i++) {
         const BloomElement &element = elements[i];
         glViewport(0, 0, element.size.x, element.size.y);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,

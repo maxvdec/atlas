@@ -202,7 +202,7 @@ class Atmosphere {
     /**
      * @brief User-provided callback to derive weather conditions per frame.
      */
-    WeatherDelegate weatherDelegate = [](ViewInformation info) {
+    WeatherDelegate weatherDelegate = [](ViewInformation) {
         return WeatherState();
     };
 

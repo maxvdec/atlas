@@ -10,8 +10,6 @@
 #ifndef AURORA_PROCEDURAL_H
 #define AURORA_PROCEDURAL_H
 
-#include <cmath>
-#include <iostream>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -171,7 +169,7 @@ class TerrainGenerator {
      */
     virtual float generateHeight(float x, float y) = 0;
 
-    virtual void applyTo(Terrain &terrain) const {};
+    virtual void applyTo(Terrain &) const {};
 };
 
 /**
@@ -238,7 +236,7 @@ class PlainGenerator : public TerrainGenerator {
 
   public:
     PlainGenerator(float scale = 0.02f, float amplitude = 2.0f)
-        : scale(scale), amplitude(amplitude) {}
+        : amplitude(amplitude), scale(scale) {}
 
     /**
      * @brief Returns low-amplitude Perlin noise suited for flat regions.
@@ -256,12 +254,10 @@ class IslandGenerator : public TerrainGenerator {
   private:
     int numFeatures;
     float scale;
-    float amplitude;
 
   public:
-    IslandGenerator(int numFeatures = 10, float scale = 0.01f,
-                    float amplitude = 30.0f)
-        : numFeatures(numFeatures), scale(scale), amplitude(amplitude) {}
+    IslandGenerator(int numFeatures = 10, float scale = 0.01f)
+        : numFeatures(numFeatures), scale(scale) {}
 
     /**
      * @brief Produces island-style plateaus using cellular noise.

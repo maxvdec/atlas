@@ -3,7 +3,6 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/norm.hpp>
 #include <glm/glm.hpp>
-#include <iostream>
 #include <glm/gtx/string_cast.hpp>
 
 glm::vec2 bezel::projectOn1D(const glm::vec3 &s1, const glm::vec3 &s2) {

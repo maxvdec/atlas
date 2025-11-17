@@ -39,12 +39,12 @@ class Shape {
                               const glm::quat &orientation,
                               float bias) const = 0;
 
-    virtual float fastestLinearSpeed(const glm::vec3 &linearVelocity,
-                                     const glm::vec3 &dir) const {
+    virtual float fastestLinearSpeed(const glm::vec3 &,
+                                     const glm::vec3 &) const {
         return 0.0f;
     }
 
-    virtual void build(const std::vector<glm::vec3> points) {};
+    virtual void build(const std::vector<glm::vec3>) {};
 
   protected:
     glm::vec3 centerOfMass = {0.0f, 0.0f, 0.0f};
@@ -515,13 +515,6 @@ bool hasPoint(const glm::vec3 &w, const std::vector<Triangle> &triangles,
  * @param lambdas Barycentric coordinates for sorting.
  */
 void sortValids(std::array<Point, 4> &simplex, glm::vec4 &lambdas);
-/**
- * @brief Counts the number of valid lambda values.
- *
- * @param lambdas Barycentric coordinates to count.
- * @return (int) Number of valid values.
- */
-static int numValids(const glm::vec4 &lambdas);
 /**
  * @brief Performs GJK intersection test between two bodies.
  *

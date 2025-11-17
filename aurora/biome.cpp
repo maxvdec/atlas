@@ -12,7 +12,6 @@
 #include <algorithm>
 #include <cstdint>
 #include <cstdlib>
-#include <iostream>
 #include <sys/types.h>
 #include <vector>
 #include <glad/glad.h>
@@ -34,7 +33,6 @@ float aurora::computeSlope(const uint8_t *heightMap, int width, int height,
 
 void Terrain::generateMaps(unsigned char *heightmapData, int height, int width,
                            int generationParameter, int nChannels) {
-    const float waterLevel = 64.0f;
     const float maxHeight = 255.0f;
 
     for (int y = 0; y < height; ++y) {

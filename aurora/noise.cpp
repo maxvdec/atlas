@@ -10,7 +10,6 @@
 #include "aurora/procedural.h"
 #include <cmath>
 #include <cstdlib>
-#include <iostream>
 #include <random>
 #include <vector>
 
@@ -111,7 +110,6 @@ float SimplexNoise::noise(float xin, float yin) {
     float y2 = y0 - 1.0f + 2.0f * G2;
 
     int ii = i & 255;
-    int jj = j & 255;
 
     float t0 = 0.5f - x0 * x0 - y0 * y0;
     float n0 = t0 < 0 ? 0.0f : pow(t0, 4) * dot(grad3[ii % 12], x0, y0);

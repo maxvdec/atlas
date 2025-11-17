@@ -6,6 +6,7 @@
 // Description: Terrain functions implementation
 // Copyright (c) 2025 Max Van den Eynde
 //
+#include <cstddef>
 #include <cstdint>
 #include <glad/glad.h>
 #include "atlas/camera.h"
@@ -158,7 +159,7 @@ void Terrain::initialize() {
     glBindVertexArray(0);
 }
 
-void Terrain::render(float dt) {
+void Terrain::render(float) {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
     glDepthMask(GL_TRUE);
@@ -190,7 +191,7 @@ void Terrain::render(float dt) {
         terrainShader.setUniform1i("texture" + std::to_string(i), i + 4);
     }
 
-    for (int i = 0; i < biomes.size(); i++) {
+    for (size_t i = 0; i < biomes.size(); i++) {
         Biome &biome = biomes[i];
         if (biome.useTexture) {
             terrainShader.setUniform1i(
