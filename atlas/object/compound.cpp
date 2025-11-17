@@ -155,7 +155,7 @@ Position3d CompoundObject::getPosition() const {
         if (!lateForwardObjects.empty() && lateForwardObjects[0] != nullptr) {
             return lateForwardObjects[0]->getPosition();
         }
-        return {0, 0, 0};
+        return Position3d{0.0, 0.0, 0.0};
     }
     return objects[0]->getPosition();
 }
@@ -165,7 +165,7 @@ Size3d CompoundObject::getScale() const {
         if (!lateForwardObjects.empty() && lateForwardObjects[0] != nullptr) {
             return lateForwardObjects[0]->getScale();
         }
-        return {1, 1, 1};
+        return Size3d{1.0, 1.0, 1.0};
     }
     return objects[0]->getScale();
 }
@@ -177,7 +177,6 @@ void CompoundObject::update(Window &window) {
             continue;
         obj->body->update(window);
         Position3d position = obj->body->position;
-        Rotation3d rotation = Rotation3d::fromGlmQuat(obj->body->orientation);
 
         if (changedPosition) {
             std::cout << "Updating position of compound object child\n";

@@ -9,7 +9,6 @@
 
 #include "atlas/core/shader.h"
 #include "atlas/core/default_shaders.h"
-#include "atlas/units.h"
 #include <glad/glad.h>
 #include <map>
 #include <string>

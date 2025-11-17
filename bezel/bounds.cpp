@@ -10,6 +10,7 @@
 #include "bezel/body.h"
 #include "bezel/bounds.h"
 #include <algorithm>
+#include <cstddef>
 #include <cstdlib>
 #include <memory>
 #include <vector>
@@ -77,7 +78,7 @@ void bezel::sortBodiesForBounds(std::vector<std::shared_ptr<Body>> bodies,
     glm::vec3 axis = glm::vec3(1.0f, 1.0f, 1.0f);
     axis = glm::normalize(axis);
 
-    for (int i = 0; i < bodies.size(); i++) {
+    for (size_t i = 0; i < bodies.size(); i++) {
         const std::shared_ptr<Body> body = bodies[i];
         Bounds bounds =
             body->shape->getBounds(body->position.toGlm(), body->orientation);
@@ -108,7 +109,7 @@ void bezel::buildPairs(std::vector<CollisionPair> &pairs,
                        std::vector<PseudoBody> &bodies) {
     pairs.clear();
 
-    for (int i = 0; i < bodies.size(); i++) {
+    for (size_t i = 0; i < bodies.size(); i++) {
         PseudoBody &a = bodies[i];
         if (!a.ismin) {
             continue;
@@ -117,7 +118,7 @@ void bezel::buildPairs(std::vector<CollisionPair> &pairs,
         CollisionPair pair;
         pair.a = a.id;
 
-        for (int j = i + 1; j < bodies.size(); j++) {
+        for (size_t j = i + 1; j < bodies.size(); j++) {
             PseudoBody &b = bodies[j];
             if (b.id == a.id) {
                 break;

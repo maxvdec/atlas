@@ -125,7 +125,7 @@ class Biome {
     /**
      * @brief Optional hook executed before the biome is rasterized.
      */
-    BiomeFunction condition = [](Biome &thisBiome) { return; };
+    BiomeFunction condition = [](Biome &) { return; };
 };
 
 /**
@@ -226,8 +226,8 @@ class Terrain : public GameObject {
     template <typename T>
         requires std::is_base_of<TerrainGenerator, T>::value
     Terrain(T generator, int width = 512, int height = 512)
-        : generator(std::make_shared<T>(generator)), width(width),
-          height(height), createdWithMap(false){};
+        : generator(std::make_shared<T>(generator)), createdWithMap(false),
+          width(width), height(height){};
     Terrain() = default;
 
     /**

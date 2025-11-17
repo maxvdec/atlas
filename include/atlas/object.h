@@ -13,7 +13,6 @@
 #include "atlas/component.h"
 #include "bezel/body.h"
 #include <any>
-#include <iostream>
 #include <memory>
 #include <string>
 #include <type_traits>
@@ -30,7 +29,7 @@
 #include <glm/glm.hpp>
 
 class Scene;
-class Light;
+struct Light;
 
 /**
  * @brief Alias that represents a texture coordinate in 2D space.
@@ -682,7 +681,7 @@ CoreObject createSphere(double radius, unsigned int sectorCount = 36,
 CoreObject createDebugSphere(double radius, unsigned int sectorCount = 36,
                              unsigned int stackCount = 18);
 
-class Resource;
+struct Resource;
 class aiNode;
 class aiScene;
 class aiMesh;

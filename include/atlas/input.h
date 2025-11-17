@@ -291,21 +291,24 @@ class Interactive {
      * @param key The key that was pressed.
      * @param deltaTime The time elapsed since the last frame.
      */
-    virtual void onKeyPress(Key key, float deltaTime) {};
+    virtual void onKeyPress([[maybe_unused]] Key key,
+                            [[maybe_unused]] float deltaTime) {};
     /**
      * @brief Function that is called automatically when a key is released.
      *
      * @param key The key that was released.
      * @param deltaTime The time elapsed since the last frame.
      */
-    virtual void onKeyRelease(Key key, float deltaTime) {};
+    virtual void onKeyRelease([[maybe_unused]] Key key,
+                              [[maybe_unused]] float deltaTime) {};
     /**
      * @brief Function that is called automatically when the mouse is moved.
      *
      * @param data The mouse movement data. See \ref MousePacket.
      * @param deltaTime The time elapsed since the last frame.
      */
-    virtual void onMouseMove(MousePacket data, float deltaTime) {};
+    virtual void onMouseMove([[maybe_unused]] MousePacket data,
+                             [[maybe_unused]] float deltaTime) {};
     /**
      * @brief Function that is called automatically when a mouse button is
      * pressed.
@@ -313,20 +316,22 @@ class Interactive {
      * @param button The mouse button that was pressed.
      * @param deltaTime The time elapsed since the last frame.
      */
-    virtual void onMouseButtonPress(MouseButton button, float deltaTime) {};
+    virtual void onMouseButtonPress([[maybe_unused]] MouseButton button,
+                                    [[maybe_unused]] float deltaTime) {};
     /**
      * @brief Function that is called automatically when the mouse is scrolled.
      *
      * @param data The mouse scroll data. See \ref MouseScrollPacket.
      * @param deltaTime The time elapsed since the last frame.
      */
-    virtual void onMouseScroll(MouseScrollPacket data, float deltaTime) {};
+    virtual void onMouseScroll([[maybe_unused]] MouseScrollPacket data,
+                               [[maybe_unused]] float deltaTime) {};
     /**
      * @brief Function that is called automatically at each frame.
      *
      * @param deltaTime The time elapsed since the last frame.
      */
-    virtual void atEachFrame(float deltaTime) {};
+    virtual void atEachFrame([[maybe_unused]] float deltaTime) {};
 
     /**
      * @brief The last mouse data received. Updated automatically by the \ref

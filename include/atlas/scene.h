@@ -146,7 +146,7 @@ class Scene {
      *
      * @param window The window in which the scene is going to be runned.
      */
-    virtual void update(Window &window) {};
+    virtual void update([[maybe_unused]] Window &window) {};
     /**
      * @brief Function that initializes the scene. This method is called once by
      * the \ref Window class.
@@ -160,14 +160,16 @@ class Scene {
      * @param window  The window in which the scene is being rendered.
      * @param movement The movement delta.
      */
-    virtual void onMouseMove(Window &window, Movement2d movement) {}
+    virtual void onMouseMove([[maybe_unused]] Window &window,
+                             [[maybe_unused]] Movement2d movement) {}
     /**
      * @brief Function that handles mouse scroll events.
      *
      * @param window The window in which the scene is being rendered.
      * @param offset The scroll offset.
      */
-    virtual void onMouseScroll(Window &window, Movement2d offset) {}
+    virtual void onMouseScroll([[maybe_unused]] Window &window,
+                               [[maybe_unused]] Movement2d offset) {}
 
     /**
      * @brief Sets the intensity of the ambient light in the scene.
@@ -309,7 +311,7 @@ class Scene {
     friend class Window;
     friend class Terrain;
     friend class RenderTarget;
-    friend class Fluid;
+    friend struct Fluid;
 };
 
 #endif // ATLAS_SCENE_H

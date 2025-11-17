@@ -15,7 +15,6 @@
 #include "atlas/texture.h"
 #include "atlas/units.h"
 #include "bezel/body.h"
-#include <iostream>
 #include <memory>
 #include <vector>
 
@@ -55,20 +54,21 @@ class Component {
      *
      * @param deltaTime The time elapsed since the last frame.
      */
-    virtual void update(float deltaTime) {}
+    virtual void update([[maybe_unused]] float deltaTime) {}
     /**
      * @brief Performs changes when the GameObject's view matrix is updated.
      *
      * @param view The new view matrix.
      */
-    virtual void setViewMatrix(const glm::mat4 &view) {}
+    virtual void setViewMatrix([[maybe_unused]] const glm::mat4 &view) {}
     /**
      * @brief Performs changes when the GameObject's projection matrix is
      * updated.
      *
      * @param projection The new projection matrix.
      */
-    virtual void setProjectionMatrix(const glm::mat4 &projection) {}
+    virtual void
+    setProjectionMatrix([[maybe_unused]] const glm::mat4 &projection) {}
     /**
      * @brief Gets the window associated with the component's GameObject.
      *
@@ -117,7 +117,7 @@ class TraitComponent : public Component {
      *
      * @param deltaTime The time elapsed since the last frame.
      */
-    void update(float deltaTime) override {
+    void update([[maybe_unused]] float deltaTime) override {
         if (typedObject != nullptr) {
             updateComponent(typedObject);
         }
@@ -128,13 +128,13 @@ class TraitComponent : public Component {
      *
      * @param object A pointer to the typed GameObject.
      */
-    virtual void updateComponent(T *object) {}
+    virtual void updateComponent([[maybe_unused]] T *object) {}
     /**
      * @brief Sets the typed object reference for the component.
      *
      * @param obj A pointer to the typed GameObject.
      */
-    inline void setTypedObject(T *obj) { typedObject = obj; }
+    inline void setTypedObject([[maybe_unused]] T *obj) { typedObject = obj; }
 
     /**
      * @brief Provides direct access to the specialized GameObject this trait
@@ -160,64 +160,67 @@ class GameObject : public Renderable {
      *
      * @param program
      */
-    virtual void attachProgram(const ShaderProgram &program) {};
+    virtual void attachProgram([[maybe_unused]] const ShaderProgram &program) {
+    };
     /**
      * @brief Creates and attaches a shader program to the object.
      *
      * @param vertexShader The vertex shader for the program
      * @param fragmentShader The fragment shader for the program
      */
-    virtual void createAndAttachProgram(VertexShader &vertexShader,
-                                        FragmentShader &fragmentShader) {};
+    virtual void
+    createAndAttachProgram([[maybe_unused]] VertexShader &vertexShader,
+                           [[maybe_unused]] FragmentShader &fragmentShader) {};
     /**
      * @brief Attaches a texture to the object.
      *
      * @param texture The texture to attach.
      */
-    virtual void attachTexture(const Texture &texture) {};
+    virtual void attachTexture([[maybe_unused]] const Texture &texture) {};
     /**
      * @brief Sets the color of the object.
      *
      * @param color The new color to set.
      */
-    virtual void setColor(const Color &color) {};
+    virtual void setColor([[maybe_unused]] const Color &color) {};
     /**
      * @brief Sets the position of the object.
      *
      * @param newPosition The new position to set.
      */
-    virtual void setPosition(const Position3d &newPosition) {};
+    virtual void setPosition([[maybe_unused]] const Position3d &newPosition) {};
     /**
      * @brief Moves the object by a certain amount.
      *
      * @param deltaPosition The amount to move the object by.
      */
-    virtual void move(const Position3d &deltaPosition) {};
+    virtual void move([[maybe_unused]] const Position3d &deltaPosition) {};
     /**
      * @brief Sets the rotation of the object.
      *
      * @param newRotation The new rotation to set.
      */
-    virtual void setRotation(const Rotation3d &newRotation) {};
+    virtual void setRotation([[maybe_unused]] const Rotation3d &newRotation) {};
     /**
      * @brief Sets the object to look at a specific point in 3D space.
      *
      * @param target The point to look at.
      * @param up The up vector to define the orientation.
      */
-    virtual void lookAt(const Position3d &target, const Normal3d &up) {};
+    virtual void lookAt([[maybe_unused]] const Position3d &target,
+                        [[maybe_unused]] const Normal3d &up) {};
     /**
      * @brief Rotates the object by a certain amount.
      *
      * @param deltaRotation The amount to rotate the object by.
      */
-    virtual void rotate(const Rotation3d &deltaRotation) {};
+    virtual void rotate([[maybe_unused]] const Rotation3d &deltaRotation) {};
     /**
      * @brief Sets the scale of the object.
      *
      * @param newScale The new scale of the object.
      */
-    virtual void setScale(const Scale3d &newScale) {};
+    virtual void setScale([[maybe_unused]] const Scale3d &newScale) {};
     /**
      * @brief Hides the object, making it invisible in the scene.
      *
@@ -233,7 +236,7 @@ class GameObject : public Renderable {
      *
      * @param body The physics body to associate with the object.
      */
-    virtual void setupPhysics(Body body) {};
+    virtual void setupPhysics([[maybe_unused]] Body body) {};
 
     /**
      * @brief Adds a component to the object.
@@ -355,7 +358,7 @@ class CompoundObject : public GameObject {
      *
      * @param window The window where the objects are being rendered.
      */
-    virtual void updateObjects(Window &window) {};
+    virtual void updateObjects([[maybe_unused]] Window &window) {};
     /**
      * @brief Initializes the compound object.
      *
@@ -474,8 +477,6 @@ class CompoundObject : public GameObject {
     std::shared_ptr<LateCompoundRenderable> lateRenderableProxy;
     bool lateRenderableRegistered = false;
     bool changedPosition = false;
-    bool changedRotation = false;
-    bool changedScale = false;
 
     void renderLate(float dt);
     void updateLate(Window &window);
@@ -525,9 +526,6 @@ class UIView : public UIObject {
     inline void addChild(UIObject *child) { children.push_back(child); }
 
   private:
-    glm::mat4 view = glm::mat4(1.0f);
-    glm::mat4 projection = glm::mat4(1.0f);
-
     std::vector<UIObject *> children;
 };
 

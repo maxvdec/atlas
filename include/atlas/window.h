@@ -205,8 +205,8 @@ class Monitor {
     CoreMonitorReference monitorRef;
 };
 
-class ShaderProgram;
-class Fluid;
+struct ShaderProgram;
+struct Fluid;
 
 /**
  * @brief Structure representing a window in the application. This contains the
@@ -427,7 +427,7 @@ class Window {
         int fbw, fbh;
         glfwGetFramebufferSize(static_cast<GLFWwindow *>(windowRef), &fbw,
                                &fbh);
-        return {static_cast<double>(fbw), static_cast<double>(fbh)};
+        return {static_cast<float>(fbw), static_cast<float>(fbh)};
     }
 
     /**
@@ -542,10 +542,11 @@ class Window {
     void renderLightsToShadowMaps();
     Size2d getFurthestPositions();
 
-    void renderPingpong(RenderTarget *target, float dt);
+    [[maybe_unused]]
+    void renderPingpong(RenderTarget *target);
     void renderPhysicalBloom(RenderTarget *target);
     void deferredRendering(RenderTarget *target);
-    void renderSSAO(RenderTarget *target);
+    void renderSSAO();
     void updateFluidCaptures();
     void captureFluidReflection(Fluid &fluid);
     void captureFluidRefraction(Fluid &fluid);
@@ -603,7 +604,7 @@ class Window {
     friend class DirectionalLight;
     friend class Text;
     friend class Terrain;
-    friend class Fluid;
+    friend struct Fluid;
 };
 
 #endif // WINDOW_H

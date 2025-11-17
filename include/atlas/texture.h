@@ -516,7 +516,7 @@ class RenderTarget : public Renderable {
     std::vector<std::shared_ptr<Effect>> effects;
 
     friend class Window;
-    friend class Fluid;
+    friend struct Fluid;
 };
 
 /**

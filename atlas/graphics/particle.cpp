@@ -9,6 +9,7 @@
 #include "atlas/object.h"
 #include "atlas/units.h"
 #include "atlas/window.h"
+#include <cstddef>
 #include <glad/glad.h>
 #include <random>
 #include "atlas/particle.h"
@@ -26,7 +27,7 @@ struct ParticleInstanceData {
 
 ParticleEmitter::ParticleEmitter(unsigned int maxParticles)
     : maxParticles(maxParticles), vao(0), vbo(0), program({}), texture({}) {
-    particles.resize(maxParticles);
+    particles.reserve(maxParticles);
     this->useTexture = false;
     this->emissionType = ParticleEmissionType::Fountain;
     this->direction = {0.0, 1.0, 0.0};
@@ -133,7 +134,7 @@ void ParticleEmitter::updateParticle(Particle &p, float deltaTime) {
             cos(time * 0.8f + p.position.z * 0.1f) * 0.02f * deltaTime;
     }
 
-    Magnitude3d windDirection = {0, 0, 0};
+    Magnitude3d windDirection = Magnitude3d{0.0f, 0.0f, 0.0f};
     if (Window::mainWindow->getCurrentScene()->atmosphere.isEnabled()) {
         windDirection = Window::mainWindow->getCurrentScene()->atmosphere.wind;
     }
@@ -216,7 +217,7 @@ Magnitude3d ParticleEmitter::generateRandomVelocity() {
 }
 
 int ParticleEmitter::findInactiveParticle() {
-    for (int i = 0; i < particles.size(); ++i) {
+    for (size_t i = 0; i < particles.size(); ++i) {
         if (!particles[i].active) {
             return i;
         }
@@ -225,7 +226,7 @@ int ParticleEmitter::findInactiveParticle() {
 }
 
 void ParticleEmitter::activateParticle(int index) {
-    if (index < 0 || index >= particles.size())
+    if (index < 0 || index >= static_cast<int>(particles.size()))
         return;
 
     static std::default_random_engine rng;
@@ -285,7 +286,7 @@ void ParticleEmitter::update(Window &window) {
                 timeSinceLastEmission -= emissionInterval;
             }
         } else if (doesEmitOnce && !hasEmittedOnce) {
-            for (int i = 0; i < maxParticles / 2; ++i) {
+            for (size_t i = 0; i < maxParticles / 2; ++i) {
                 spawnParticle();
             }
             hasEmittedOnce = true;

@@ -8,7 +8,6 @@
 */
 
 #include "atlas/workspace.h"
-#include <iostream>
 
 Resource Workspace::createResource(const fs::path &path, std::string name,
                                    ResourceType type) {

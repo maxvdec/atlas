@@ -9,6 +9,7 @@
 
 #include "bezel/bounds.h"
 #include "bezel/shape.h"
+#include <cstddef>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <vector>
@@ -20,7 +21,7 @@ int bezel::findFurthestPointInDirection(const std::vector<glm::vec3> &points,
                                         const glm::vec3 &dir) {
     int maxIdx = 0;
     float maxDist = glm::dot(points[0], dir);
-    for (int i = 1; i < points.size(); i++) {
+    for (size_t i = 1; i < points.size(); i++) {
         const glm::vec3 &v = points[i];
         float dist = glm::dot(v, dir);
         if (dist > maxDist) {
@@ -47,7 +48,7 @@ glm::vec3 bezel::findFurthestPointFromLine(const std::vector<glm::vec3> &points,
                                            const glm::vec3 &b) {
     int maxIdx = 0;
     float maxDist = distanceFromLine(a, b, points[0]);
-    for (int i = 1; i < points.size(); i++) {
+    for (size_t i = 1; i < points.size(); i++) {
         float dist = distanceFromLine(a, b, points[i]);
         if (dist > maxDist) {
             maxDist = dist;
@@ -75,7 +76,7 @@ bezel::findFurthestPointFromTriangle(const std::vector<glm::vec3> &points,
                                      const glm::vec3 &c) {
     int maxIdx = 0;
     float maxDist = std::abs(distanceFromTriangle(a, b, c, points[0]));
-    for (int i = 1; i < points.size(); i++) {
+    for (size_t i = 1; i < points.size(); i++) {
         float dist = std::abs(distanceFromTriangle(a, b, c, points[i]));
         if (dist > maxDist) {
             maxDist = dist;
@@ -144,7 +145,7 @@ void bezel::expandConvexHull(std::vector<glm::vec3> &hullPts,
 void bezel::removeInternalPoints(std::vector<glm::vec3> &hullPts,
                                  std::vector<Triangle> &hullTris,
                                  std::vector<glm::vec3> &checkPts) {
-    for (int i = 0; i < checkPts.size(); i++) {
+    for (size_t i = 0; i < checkPts.size(); i++) {
         const glm::vec3 &pt = checkPts[i];
 
         bool isExternal = false;
@@ -166,11 +167,11 @@ void bezel::removeInternalPoints(std::vector<glm::vec3> &hullPts,
         }
     }
 
-    for (int i = 0; i < checkPts.size(); i++) {
+    for (size_t i = 0; i < checkPts.size(); i++) {
         const glm::vec3 &pt = checkPts[i];
 
         bool isTooClose = false;
-        for (int j = 0; j < hullPts.size(); j++) {
+        for (size_t j = 0; j < hullPts.size(); j++) {
             glm::vec3 hullPt = hullPts[j];
             glm::vec3 ray = hullPt - pt;
             if (glm::length2(ray) < 1e-6f) {
@@ -211,7 +212,7 @@ bool bezel::isEdgeUnique(const std::vector<Triangle> &triangles,
 void bezel::addPoint(std::vector<glm::vec3> &hullPts,
                      std::vector<Triangle> &hullTris, const glm::vec3 &pt) {
     std::vector<int> facingTris;
-    for (int i = 0; i < hullTris.size(); i++) {
+    for (size_t i = 0; i < hullTris.size(); i++) {
         const Triangle &tri = hullTris[i];
         const glm::vec3 &a = hullPts[tri.a];
         const glm::vec3 &b = hullPts[tri.b];
@@ -224,7 +225,7 @@ void bezel::addPoint(std::vector<glm::vec3> &hullPts,
     }
 
     std::vector<Edge> uniqueEdges;
-    for (int i = 0; i < facingTris.size(); i++) {
+    for (size_t i = 0; i < facingTris.size(); i++) {
         const Triangle &tri = hullTris[facingTris[i]];
         Edge e1 = {tri.a, tri.b};
         Edge e2 = {tri.b, tri.c};
@@ -237,7 +238,7 @@ void bezel::addPoint(std::vector<glm::vec3> &hullPts,
         }
     }
 
-    for (int i = 0; i < uniqueEdges.size(); i++) {
+    for (size_t i = 0; i < uniqueEdges.size(); i++) {
         hullTris.erase(hullTris.begin() + facingTris[i]);
     }
 
@@ -252,7 +253,7 @@ void bezel::addPoint(std::vector<glm::vec3> &hullPts,
 
 void bezel::removeUnreferencedVertices(std::vector<glm::vec3> &hullPts,
                                        std::vector<Triangle> &hullTris) {
-    for (int i = 0; i < hullPts.size(); i++) {
+    for (int i = 0; i < (int)hullPts.size(); i++) {
         bool isUsed = false;
         for (const auto &tri : hullTris) {
             if (tri.a == i || tri.b == i || tri.c == i) {
@@ -265,7 +266,7 @@ void bezel::removeUnreferencedVertices(std::vector<glm::vec3> &hullPts,
             continue;
         }
 
-        for (int j = 0; j < hullTris.size(); j++) {
+        for (int j = 0; j < (int)hullTris.size(); j++) {
             Triangle &tri = hullTris[j];
             if (tri.a > i) {
                 tri.a--;

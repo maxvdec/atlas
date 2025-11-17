@@ -495,8 +495,6 @@ CoreObject createDebugSphere(double radius, unsigned int sectorCount,
     CoreObject sphere = createSphere(radius, sectorCount, stackCount);
 
     Color whiteMultiplier = Color(1.0, 1.0, 1.0);
-    Color mediumMultiplier = Color(0.75, 0.75, 0.75);
-    Color darkMultiplier = Color(0.5, 0.5, 0.5);
 
     Color blue = Color(0.5, 0.5, 1.0);
     Color red = Color(1.0, 0.5, 0.5);
@@ -529,8 +527,6 @@ CoreObject createDebugBox(Size3d size) {
     CoreObject box = createBox(size, Color::white());
 
     Color whiteMultiplier = Color(1.0, 1.0, 1.0);
-    Color mediumMultiplier = Color(0.75, 0.75, 0.75);
-    Color darkMultiplier = Color(0.5, 0.5, 0.5);
 
     Color blue = Color(0.5, 0.5, 1.0);
     Color red = Color(1.0, 0.5, 0.5);

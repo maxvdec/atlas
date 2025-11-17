@@ -431,7 +431,9 @@ Cubemap Cubemap::fromResourceGroup(ResourceGroup &group) {
     if (accumulatedPixels > 0) {
         glm::dvec3 normalized =
             accumulatedColor / (static_cast<double>(accumulatedPixels) * 255.0);
-        cubemap.averageColor = {normalized.x, normalized.y, normalized.z, 1.0};
+        cubemap.averageColor = {static_cast<float>(normalized.x),
+                                static_cast<float>(normalized.y),
+                                static_cast<float>(normalized.z), 1.0f};
         cubemap.hasAverageColor = true;
     }
     return cubemap;
@@ -474,7 +476,9 @@ Cubemap Cubemap::fromColors(const std::array<Color, 6> &colors, int size) {
     if (accumulatedPixels > 0) {
         glm::dvec3 normalized =
             accumulatedColor / static_cast<double>(accumulatedPixels);
-        cubemap.averageColor = {normalized.x, normalized.y, normalized.z, 1.0};
+        cubemap.averageColor = {static_cast<float>(normalized.x),
+                                static_cast<float>(normalized.y),
+                                static_cast<float>(normalized.z), 1.0f};
         cubemap.hasAverageColor = true;
     }
 
@@ -510,7 +514,9 @@ void Cubemap::updateWithColors(const std::array<Color, 6> &colors) {
     if (accumulatedPixels > 0) {
         glm::dvec3 normalized =
             accumulatedColor / static_cast<double>(accumulatedPixels);
-        averageColor = {normalized.x, normalized.y, normalized.z, 1.0};
+        averageColor = {static_cast<float>(normalized.x),
+                        static_cast<float>(normalized.y),
+                        static_cast<float>(normalized.z), 1.0f};
         hasAverageColor = true;
     } else {
         hasAverageColor = false;
@@ -588,7 +594,7 @@ void Skybox::setProjectionMatrix(const glm::mat4 &projection) {
     }
 }
 
-void Skybox::render(float dt) {
+void Skybox::render(float) {
     if (!object || !object->isVisible) {
         return;
     }
