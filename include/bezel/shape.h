@@ -46,6 +46,8 @@ class Shape {
 
     virtual void build(const std::vector<glm::vec3>) {};
 
+    virtual ~Shape() = default;
+
   protected:
     glm::vec3 centerOfMass = {0.0f, 0.0f, 0.0f};
 };
@@ -177,6 +179,9 @@ struct Point {
     glm::vec3 ptB;
 
     Point() : xyz(0.0f), ptA(0.0f), ptB(0.0f) {}
+
+    Point(const Point &other)
+        : xyz(other.xyz), ptA(other.ptA), ptB(other.ptB) {}
 
     inline const Point &operator=(const Point &other) {
         xyz = other.xyz;
@@ -508,6 +513,14 @@ bool hasPoint(const std::array<Point, 4> &simplex, const Point &p);
  */
 bool hasPoint(const glm::vec3 &w, const std::vector<Triangle> &triangles,
               const std::vector<Point> &points);
+
+/**
+ * @brief Counts the number of valid points in a simplex based on lambda values.
+ *
+ * @param lambdas Barycentric coordinates.
+ * @return (int) Number of valid points.
+ */
+int numValids(const glm::vec4 &lambdas);
 /**
  * @brief Sorts valid points in a simplex based on lambda values.
  *

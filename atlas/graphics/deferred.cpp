@@ -51,7 +51,7 @@ void Window::deferredRendering(RenderTarget *target) {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     target->resolve();
-    this->renderSSAO(target);
+    this->renderSSAO();
 
     glBindFramebuffer(GL_FRAMEBUFFER, target->fbo);
     glViewport(0, 0, target->getWidth(), target->getHeight());

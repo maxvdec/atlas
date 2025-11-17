@@ -126,7 +126,7 @@ float SimplexNoise::noise(float xin, float yin) {
 WorleyNoise::WorleyNoise(int numPoints, unsigned int seed)
     : numPoints(numPoints) {
     std::srand(seed);
-    for (int i = 0; i < numPoints; i++) {
+    for (int i = 0; i < this->numPoints; i++) {
         float x = static_cast<float>(std::rand()) / RAND_MAX;
         float y = static_cast<float>(std::rand()) / RAND_MAX;
         featurePoints.emplace_back(x, y);

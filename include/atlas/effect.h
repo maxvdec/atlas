@@ -105,6 +105,8 @@ class Effect {
      */
     virtual void applyToProgram([[maybe_unused]] ShaderProgram &program,
                                 [[maybe_unused]] int index) {};
+
+    virtual ~Effect() = default;
 };
 
 /**

@@ -477,8 +477,6 @@ class CompoundObject : public GameObject {
     std::shared_ptr<LateCompoundRenderable> lateRenderableProxy;
     bool lateRenderableRegistered = false;
     bool changedPosition = false;
-    bool changedRotation = false;
-    bool changedScale = false;
 
     void renderLate(float dt);
     void updateLate(Window &window);
@@ -528,9 +526,6 @@ class UIView : public UIObject {
     inline void addChild(UIObject *child) { children.push_back(child); }
 
   private:
-    glm::mat4 view = glm::mat4(1.0f);
-    glm::mat4 projection = glm::mat4(1.0f);
-
     std::vector<UIObject *> children;
 };
 
