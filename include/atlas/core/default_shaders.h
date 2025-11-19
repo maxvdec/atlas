@@ -2,6 +2,23 @@
 #ifndef ATLAS_GENERATED_SHADERS_H
 #define ATLAS_GENERATED_SHADERS_H
 
+static const char* FULLSCREEN_VERT = R"(
+#version 410 core
+
+layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec4 aColor;
+layout (location = 2) in vec2 aTexCoord;
+layout (location = 3) in vec3 aNormal;
+
+out vec2 TexCoord;
+
+void main() {
+    gl_Position = vec4(aPos.xy, 0.0, 1.0);
+    TexCoord = aTexCoord;
+}
+
+)";
+
 static const char* FULLSCREEN_FRAG = R"(
 #version 410 core
 
@@ -859,6 +876,50 @@ void main() {
 
 )";
 
+static const char* MAIN_VERT = R"(
+#version 410 core
+layout(location = 0) in vec3 aPos;
+layout(location = 1) in vec4 aColor;
+layout(location = 2) in vec2 aTexCoord;
+layout(location = 3) in vec3 aNormal;
+layout(location = 4) in vec3 aTangent;
+layout(location = 5) in vec3 aBitangent;
+layout(location = 6) in mat4 instanceModel;
+
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+uniform bool isInstanced = true;
+
+out vec4 outColor;
+out vec2 TexCoord;
+out vec3 Normal;
+out vec3 FragPos;
+out mat3 TBN;
+
+void main() {
+    mat4 modelMatrix = model;
+    if (isInstanced) {
+        modelMatrix = instanceModel;
+    }
+
+    mat4 mvp = projection * view * modelMatrix;
+    gl_Position = mvp * vec4(aPos, 1.0);
+
+    FragPos = vec3(modelMatrix * vec4(aPos, 1.0));
+    TexCoord = aTexCoord;
+    outColor = aColor;
+
+    mat3 normalMatrix = transpose(inverse(mat3(modelMatrix)));
+    Normal = normalize(normalMatrix * aNormal);
+    vec3 N = Normal;
+    vec3 T = normalize(normalMatrix * aTangent);
+    vec3 B = normalize(normalMatrix * aBitangent);
+    TBN = mat3(T, B, N);
+}
+
+)";
+
 static const char* MAIN_FRAG = R"(
 #version 410 core
 layout(location = 0) out vec4 FragColor;
@@ -1657,183 +1718,6 @@ void main() {
 
 )";
 
-static const char* MAIN_VERT = R"(
-#version 410 core
-layout(location = 0) in vec3 aPos;
-layout(location = 1) in vec4 aColor;
-layout(location = 2) in vec2 aTexCoord;
-layout(location = 3) in vec3 aNormal;
-layout(location = 4) in vec3 aTangent;
-layout(location = 5) in vec3 aBitangent;
-layout(location = 6) in mat4 instanceModel;
-
-uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
-uniform bool isInstanced = true;
-
-out vec4 outColor;
-out vec2 TexCoord;
-out vec3 Normal;
-out vec3 FragPos;
-out mat3 TBN;
-
-void main() {
-    mat4 modelMatrix = model;
-    if (isInstanced) {
-        modelMatrix = instanceModel;
-    }
-
-    mat4 mvp = projection * view * modelMatrix;
-    gl_Position = mvp * vec4(aPos, 1.0);
-
-    FragPos = vec3(modelMatrix * vec4(aPos, 1.0));
-    TexCoord = aTexCoord;
-    outColor = aColor;
-
-    mat3 normalMatrix = transpose(inverse(mat3(modelMatrix)));
-    Normal = normalize(normalMatrix * aNormal);
-    vec3 N = Normal;
-    vec3 T = normalize(normalMatrix * aTangent);
-    vec3 B = normalize(normalMatrix * aBitangent);
-    TBN = mat3(T, B, N);
-}
-
-)";
-
-static const char* FULLSCREEN_VERT = R"(
-#version 410 core
-
-layout (location = 0) in vec3 aPos;
-layout (location = 1) in vec4 aColor;
-layout (location = 2) in vec2 aTexCoord;
-layout (location = 3) in vec3 aNormal;
-
-out vec2 TexCoord;
-
-void main() {
-    gl_Position = vec4(aPos.xy, 0.0, 1.0);
-    TexCoord = aTexCoord;
-}
-
-)";
-
-static const char* TEXT_VERT = R"(
-#version 410 core
-layout(location = 0) in vec4 vertex; // <vec2 pos, vec2 texture>
-out vec2 texCoords;
-
-uniform mat4 projection;
-
-void main() {
-    gl_Position = projection * vec4(vertex.xy, 0.0, 1.0);
-    texCoords = vertex.zw;
-}
-)";
-
-static const char* TEXT_FRAG = R"(
-#version 410 core
-
-in vec2 texCoords;
-out vec4 color;
-
-uniform sampler2D text;
-uniform vec3 textColor;
-
-void main() {
-    vec4 sampled = vec4(1.0, 1.0, 1.0, texture(text, texCoords).r);
-    color = vec4(textColor, 1.0) * sampled;
-}
-)";
-
-static const char* POINT_DEPTH_VERT = R"(
-#version 410 core
-layout(location = 0) in vec3 aPos;
-layout(location = 6) in mat4 instanceModel;
-
-uniform mat4 model;
-uniform bool isInstanced = true;
-
-void main() {
-    if (isInstanced) {
-        gl_Position = model * instanceModel * vec4(aPos, 1.0);
-    } else {
-        gl_Position = model * vec4(aPos, 1.0);
-    }
-}
-)";
-
-static const char* DEPTH_VERT = R"(
-#version 410 core
-layout(location = 0) in vec3 aPos;
-layout(location = 6) in mat4 instanceModel;
-
-uniform mat4 projection; // the light space matrix
-uniform mat4 view;
-uniform mat4 model;
-uniform bool isInstanced = true;
-
-void main() {
-    if (isInstanced) {
-        gl_Position = projection * view * instanceModel * vec4(aPos, 1.0);
-    } else {
-        gl_Position = projection * view * model * vec4(aPos, 1.0);
-    }
-}
-
-)";
-
-static const char* EMPTY_FRAG = R"(
-#version 410 core
-
-void main() {}
-
-)";
-
-static const char* SSAO_BLUR_FRAG = R"(
-#version 410 core
-out float FragColor;
-
-in vec2 TexCoord;
-
-uniform sampler2D inSSAO;
-
-void main() {
-    vec2 texelSize = 1.0 / vec2(textureSize(inSSAO, 0));
-    float result = 0.0;
-    for (int x = -2; x <= 2; x++) {
-        for (int y = -2; y <= 2; y++) {
-            vec2 offset = vec2(float(x), float(y)) * texelSize;
-            result += texture(inSSAO, TexCoord + offset).r;
-        }
-    }
-    FragColor = result / (4.0 * 4.0);
-}
-)";
-
-static const char* POINT_DEPTH_GEOM = R"(
-#version 410 core
-layout(triangles) in;
-layout(triangle_strip, max_vertices = 18) out;
-
-uniform mat4 shadowMatrices[6];
-
-out vec4 FragPos;
-
-void main() {
-    for (int face = 0; face < 6; face++) {
-        gl_Layer = face;
-        for (int i = 0; i < 3; i++) {
-            FragPos = gl_in[i].gl_Position;
-            gl_Position = shadowMatrices[face] * FragPos;
-            EmitVertex();
-        }
-        EndPrimitive();
-    }
-}
-
-)";
-
 static const char* SSAO_FRAG = R"(
 #version 410 core
 out float FragColor;
@@ -1902,6 +1786,29 @@ void main() {
 }
 )";
 
+static const char* POINT_DEPTH_GEOM = R"(
+#version 410 core
+layout(triangles) in;
+layout(triangle_strip, max_vertices = 18) out;
+
+uniform mat4 shadowMatrices[6];
+
+out vec4 FragPos;
+
+void main() {
+    for (int face = 0; face < 6; face++) {
+        gl_Layer = face;
+        for (int i = 0; i < 3; i++) {
+            FragPos = gl_in[i].gl_Position;
+            gl_Position = shadowMatrices[face] * FragPos;
+            EmitVertex();
+        }
+        EndPrimitive();
+    }
+}
+
+)";
+
 static const char* POINT_DEPTH_FRAG = R"(
 #version 410 core
 in vec4 FragPos;
@@ -1918,864 +1825,311 @@ void main() {
 }
 )";
 
-static const char* LIGHT_VERT = R"(
+static const char* DEPTH_VERT = R"(
 #version 410 core
 layout(location = 0) in vec3 aPos;
-layout(location = 1) in vec2 aTexCoord;
+layout(location = 6) in mat4 instanceModel;
 
-out vec2 TexCoord;
-
-void main() {
-    TexCoord = aTexCoord;
-    gl_Position = vec4(aPos, 1.0);
-}
-)";
-
-static const char* DEFERRED_FRAG = R"(
-#version 410 core
-layout(location = 0) out vec4 gPosition;
-layout(location = 1) out vec4 gNormal;
-layout(location = 2) out vec4 gAlbedoSpec;
-layout(location = 3) out vec4 gMaterial;
-
-in vec2 TexCoord;
-in vec4 outColor;
-in vec3 Normal;
-in vec3 FragPos;
-in mat3 TBN;
-
-const int TEXTURE_COLOR = 0;
-const int TEXTURE_SPECULAR = 1;
-const int TEXTURE_NORMAL = 5;
-const int TEXTURE_PARALLAX = 6;
-const int TEXTURE_METALLIC = 9;
-const int TEXTURE_ROUGHNESS = 10;
-const int TEXTURE_AO = 11;
-
-struct Material {
-    vec3 albedo;
-    float metallic;
-    float roughness;
-    float ao;
-};
-
-uniform sampler2D texture1;
-uniform sampler2D texture2;
-uniform sampler2D texture3;
-uniform sampler2D texture4;
-uniform sampler2D texture5;
-uniform sampler2D texture6;
-uniform sampler2D texture7;
-uniform sampler2D texture8;
-uniform sampler2D texture9;
-uniform sampler2D texture10;
-
-uniform int textureTypes[16];
-uniform int textureCount;
-uniform Material material;
-uniform vec3 cameraPosition;
-uniform bool useTexture;
-uniform bool useColor;
-
-vec2 texCoord;
-
-vec4 enableTextures(int type) {
-    vec4 color = vec4(0.0);
-    int count = 0;
-    for (int i = 0; i < textureCount; i++) {
-        if (textureTypes[i] == type) {
-            if (i == 0) color += texture(texture1, texCoord);
-            else if (i == 1) color += texture(texture2, texCoord);
-            else if (i == 2) color += texture(texture3, texCoord);
-            else if (i == 3) color += texture(texture4, texCoord);
-            else if (i == 4) color += texture(texture5, texCoord);
-            else if (i == 5) color += texture(texture6, texCoord);
-            else if (i == 6) color += texture(texture7, texCoord);
-            else if (i == 7) color += texture(texture8, texCoord);
-            else if (i == 8) color += texture(texture9, texCoord);
-            else if (i == 9) color += texture(texture10, texCoord);
-            count++;
-        }
-    }
-    if (count > 0) color /= float(count);
-    if (count == 0) return vec4(-1.0);
-    return color;
-}
-
-vec4 sampleTextureAt(int textureIndex, vec2 uv) {
-    if (textureIndex == 0) return texture(texture1, uv);
-    else if (textureIndex == 1) return texture(texture2, uv);
-    else if (textureIndex == 2) return texture(texture3, uv);
-    else if (textureIndex == 3) return texture(texture4, uv);
-    else if (textureIndex == 4) return texture(texture5, uv);
-    else if (textureIndex == 5) return texture(texture6, uv);
-    else if (textureIndex == 6) return texture(texture7, uv);
-    else if (textureIndex == 7) return texture(texture8, uv);
-    else if (textureIndex == 8) return texture(texture9, uv);
-    else if (textureIndex == 9) return texture(texture10, uv);
-    return vec4(0.0);
-}
-
-vec2 parallaxMapping(vec2 texCoords, vec3 viewDir) {
-    const float minLayers = 8.0;
-    const float maxLayers = 32.0;
-    vec3 v = normalize(viewDir);
-    float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), v)));
-    float layerDepth = 1.0 / numLayers;
-    float currentLayerDepth = 0.0;
-
-    const float heightScale = 0.04;
-    vec2 P = (v.xy / max(v.z, 0.05)) * heightScale;
-    vec2 deltaTexCoords = P / numLayers;
-
-    vec2 currentTexCoords = clamp(texCoords, vec2(0.0), vec2(1.0));
-    int textureIndex = -1;
-    for (int i = 0; i < textureCount; i++) {
-        if (textureTypes[i] == TEXTURE_PARALLAX) {
-            textureIndex = i;
-            break;
-        }
-    }
-    if (textureIndex == -1) return currentTexCoords;
-
-    float currentDepthMapValue = sampleTextureAt(textureIndex, currentTexCoords).r;
-
-    while (currentLayerDepth < currentDepthMapValue) {
-        currentTexCoords = clamp(currentTexCoords - deltaTexCoords, vec2(0.0), vec2(1.0));
-        currentDepthMapValue = sampleTextureAt(textureIndex, currentTexCoords).r;
-        currentLayerDepth += layerDepth;
-    }
-
-    vec2 prevTexCoords = clamp(currentTexCoords + deltaTexCoords, vec2(0.0), vec2(1.0));
-    float afterDepth = currentDepthMapValue - currentLayerDepth;
-    float beforeDepth = sampleTextureAt(textureIndex, prevTexCoords).r - (currentLayerDepth - layerDepth);
-    float denom = max(afterDepth - beforeDepth, 1e-4);
-    float weight = clamp(afterDepth / denom, 0.0, 1.0);
-    currentTexCoords = prevTexCoords * weight + currentTexCoords * (1.0 - weight);
-
-    return clamp(currentTexCoords, vec2(0.0), vec2(1.0));
-}
+uniform mat4 projection; // the light space matrix
+uniform mat4 view;
+uniform mat4 model;
+uniform bool isInstanced = true;
 
 void main() {
-    texCoord = TexCoord;
-
-    vec3 tangentViewDir = normalize(transpose(TBN) * (cameraPosition - FragPos));
-    texCoord = parallaxMapping(texCoord, tangentViewDir);
-
-    texCoord = clamp(texCoord, vec2(0.0), vec2(1.0));
-
-    vec4 sampledColor = enableTextures(TEXTURE_COLOR);
-    bool hasColorTexture = sampledColor != vec4(-1.0);
-
-    vec4 baseColor = vec4(material.albedo, 1.0);
-    vec4 albedoTex = enableTextures(TEXTURE_COLOR);
-    if (albedoTex != vec4(-1.0)) {
-        baseColor = albedoTex;
-    }
-
-    if (baseColor.a < 0.1)
-        discard;
-
-    vec4 normTexture = enableTextures(TEXTURE_NORMAL);
-    vec3 normal;
-    if (normTexture.r != -1.0 && normTexture.g != -1.0 && normTexture.b != -1.0) {
-        vec3 tangentNormal = normalize(normTexture.rgb * 2.0 - 1.0);
-        normal = normalize(TBN * tangentNormal);
+    if (isInstanced) {
+        gl_Position = projection * view * instanceModel * vec4(aPos, 1.0);
     } else {
-        normal = normalize(Normal);
+        gl_Position = projection * view * model * vec4(aPos, 1.0);
     }
-
-    vec3 albedo = baseColor.rgb;
-
-    float metallic = material.metallic;
-    vec4 metallicTex = enableTextures(TEXTURE_METALLIC);
-    if (metallicTex != vec4(-1.0)) {
-        metallic *= metallicTex.r;
-    }
-
-    float roughness = material.roughness;
-    vec4 roughnessTex = enableTextures(TEXTURE_ROUGHNESS);
-    if (roughnessTex != vec4(-1.0)) {
-        roughness *= roughnessTex.r;
-    }
-
-    float ao = material.ao;
-    vec4 aoTex = enableTextures(TEXTURE_AO);
-    if (aoTex != vec4(-1.0)) {
-        ao *= aoTex.r;
-    }
-
-    metallic = clamp(metallic, 0.0, 1.0);
-    roughness = clamp(roughness, 0.0, 1.0);
-    ao = clamp(ao, 0.0, 1.0);
-
-    float nonlinearDepth = gl_FragCoord.z;
-    gPosition = vec4(FragPos, nonlinearDepth);
-
-    vec3 n = normalize(normal);
-    if (!all(equal(n, n)) || length(n) < 1e-4) {
-        n = normalize(Normal);
-    }
-    gNormal = vec4(n, 1.0);
-
-    vec3 a = clamp(albedo, 0.0, 1.0);
-    if (!all(equal(a, a))) {
-        a = vec3(0.0);
-    }
-    gAlbedoSpec = vec4(a, ao);
-
-    gMaterial = vec4(metallic, roughness, ao, 1.0);
 }
 
 )";
 
-static const char* DEFERRED_VERT = R"(
+static const char* POINT_DEPTH_VERT = R"(
 #version 410 core
 layout(location = 0) in vec3 aPos;
-layout(location = 1) in vec4 aColor;
-layout(location = 2) in vec2 aTexCoord;
-layout(location = 3) in vec3 aNormal;
-layout(location = 4) in vec3 aTangent;
-layout(location = 5) in vec3 aBitangent;
 layout(location = 6) in mat4 instanceModel;
 
 uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
 uniform bool isInstanced = true;
 
-out vec4 outColor;
-out vec2 TexCoord;
-out vec3 Normal;
-out vec3 FragPos;
-out mat3 TBN;
-
 void main() {
-    mat4 finalModel;
     if (isInstanced) {
-        finalModel = instanceModel;
+        gl_Position = model * instanceModel * vec4(aPos, 1.0);
     } else {
-        finalModel = model;
+        gl_Position = model * vec4(aPos, 1.0);
     }
-
-    vec4 worldPos = finalModel * vec4(aPos, 1.0);
-    FragPos = worldPos.xyz;
-    gl_Position = projection * view * worldPos;
-
-    TexCoord = aTexCoord;
-    outColor = aColor;
-
-    mat3 normalMatrix = mat3(transpose(inverse(finalModel)));
-    Normal = normalize(normalMatrix * aNormal);
-
-    vec3 T = normalize(normalMatrix * aTangent);
-    vec3 B = normalize(normalMatrix * aBitangent);
-    vec3 N = normalize(normalMatrix * aNormal);
-    TBN = mat3(T, B, N);
 }
 )";
 
-static const char* LIGHT_FRAG = R"(
+static const char* SSAO_BLUR_FRAG = R"(
+#version 410 core
+out float FragColor;
+
+in vec2 TexCoord;
+
+uniform sampler2D inSSAO;
+
+void main() {
+    vec2 texelSize = 1.0 / vec2(textureSize(inSSAO, 0));
+    float result = 0.0;
+    for (int x = -2; x <= 2; x++) {
+        for (int y = -2; y <= 2; y++) {
+            vec2 offset = vec2(float(x), float(y)) * texelSize;
+            result += texture(inSSAO, TexCoord + offset).r;
+        }
+    }
+    FragColor = result / (4.0 * 4.0);
+}
+)";
+
+static const char* EMPTY_FRAG = R"(
+#version 410 core
+
+void main() {}
+
+)";
+
+static const char* TEXT_FRAG = R"(
+#version 410 core
+
+in vec2 texCoords;
+out vec4 color;
+
+uniform sampler2D text;
+uniform vec3 textColor;
+
+void main() {
+    vec4 sampled = vec4(1.0, 1.0, 1.0, texture(text, texCoords).r);
+    color = vec4(textColor, 1.0) * sampled;
+}
+)";
+
+static const char* TEXT_VERT = R"(
+#version 410 core
+layout(location = 0) in vec4 vertex; // <vec2 pos, vec2 texture>
+out vec2 texCoords;
+
+uniform mat4 projection;
+
+void main() {
+    gl_Position = projection * vec4(vertex.xy, 0.0, 1.0);
+    texCoords = vertex.zw;
+}
+)";
+
+static const char* FLUID_FRAG = R"(
 #version 410 core
 layout(location = 0) out vec4 FragColor;
 layout(location = 1) out vec4 BrightColor;
 
 in vec2 TexCoord;
-
-uniform sampler2D gPosition;
-uniform sampler2D gNormal;
-uniform sampler2D gAlbedoSpec;
-uniform sampler2D gMaterial;
-uniform sampler2D ssao;
-
-uniform sampler2D texture1;
-uniform sampler2D texture2;
-uniform sampler2D texture3;
-uniform sampler2D texture4;
-uniform sampler2D texture5;
-uniform samplerCube cubeMap1;
-uniform samplerCube cubeMap2;
-uniform samplerCube cubeMap3;
-uniform samplerCube cubeMap4;
-uniform samplerCube cubeMap5;
-uniform samplerCube skybox;
-
-struct AmbientLight {
-    vec4 color;
-    float intensity;
-};
-
-struct DirectionalLight {
-    vec3 direction;
-    vec3 diffuse;
-    vec3 specular;
-};
-
-struct PointLight {
-    vec3 position;
-    vec3 diffuse;
-    vec3 specular;
-    float constant;
-    float linear;
-    float quadratic;
-    float radius;
-};
-
-struct SpotLight {
-    vec3 position;
-    vec3 direction;
-    float cutOff;
-    float outerCutOff;
-    vec3 diffuse;
-    vec3 specular;
-};
-
-struct AreaLight {
-    vec3 position;
-    vec3 right;
-    vec3 up;
-    vec2 size;
-    vec3 diffuse;
-    vec3 specular;
-    float angle;
-    int castsBothSides;
-};
-
-struct ShadowParameters {
-    mat4 lightView;
-    mat4 lightProjection;
-    float bias;
-    int textureIndex;
-    float farPlane;
-    vec3 lightPos;
-    bool isPointLight;
-};
-
-struct Environment {
-    float rimLightIntensity;
-    vec3 rimLightColor;
-};
-
-uniform AmbientLight ambientLight;
-uniform DirectionalLight directionalLights[4];
-uniform int directionalLightCount;
-uniform PointLight pointLights[32];
-uniform int pointLightCount;
-uniform SpotLight spotlights[32];
-uniform int spotlightCount;
-uniform AreaLight areaLights[32];
-uniform int areaLightCount;
-uniform ShadowParameters shadowParams[10];
-uniform int shadowParamCount;
-uniform vec3 cameraPosition;
-uniform bool useIBL;
-
-uniform Environment environment;
-
-const float PI = 3.14159265;
-
-vec4 sampleTextureAt(int textureIndex, vec2 uv) {
-    if (textureIndex == 0) return texture(texture1, uv);
-    else if (textureIndex == 1) return texture(texture2, uv);
-    else if (textureIndex == 2) return texture(texture3, uv);
-    else if (textureIndex == 3) return texture(texture4, uv);
-    else if (textureIndex == 4) return texture(texture5, uv);
-    return vec4(0.0);
-}
-
-vec4 sampleCubeTextureAt(int textureIndex, vec3 direction) {
-    if (textureIndex == 0) return texture(cubeMap1, direction);
-    else if (textureIndex == 1) return texture(cubeMap2, direction);
-    else if (textureIndex == 2) return texture(cubeMap3, direction);
-    else if (textureIndex == 3) return texture(cubeMap4, direction);
-    else if (textureIndex == 4) return texture(cubeMap5, direction);
-    return vec4(0.0);
-}
-
-vec2 getTextureDimensions(int textureIndex) {
-    if (textureIndex == 0) return vec2(textureSize(texture1, 0));
-    else if (textureIndex == 1) return vec2(textureSize(texture2, 0));
-    else if (textureIndex == 2) return vec2(textureSize(texture3, 0));
-    else if (textureIndex == 3) return vec2(textureSize(texture4, 0));
-    else if (textureIndex == 4) return vec2(textureSize(texture5, 0));
-    return vec2(0);
-}
-
-float distributionGGX(vec3 N, vec3 H, float roughness) {
-    float a = roughness * roughness;
-    float a2 = a * a;
-    float NdotH = max(dot(N, H), 0.0);
-    float NdotH2 = NdotH * NdotH;
-
-    float num = a2;
-    float denom = (NdotH2 * (a2 - 1.0) + 1.0);
-    denom = PI * denom * denom;
-
-    return num / max(denom, 0.0001);
-}
-
-float geometrySchlickGGX(float NdotV, float roughness) {
-    float r = roughness + 1.0;
-    float k = (r * r) / 8.0;
-
-    float num = NdotV;
-    float denom = NdotV * (1.0 - k) + k;
-
-    return num / max(denom, 0.0001);
-}
-
-float geometrySmith(vec3 N, vec3 V, vec3 L, float roughness) {
-    float NdotV = max(dot(N, V), 0.0);
-    float NdotL = max(dot(N, L), 0.0);
-    float ggx2 = geometrySchlickGGX(NdotV, roughness);
-    float ggx1 = geometrySchlickGGX(NdotL, roughness);
-    return ggx1 * ggx2;
-}
-
-vec3 fresnelSchlick(float cosTheta, vec3 F0) {
-    return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
-}
-
-float calculateShadow(ShadowParameters shadowParam, vec3 fragPos, vec3 normal) {
-    vec4 fragPosLightSpace = shadowParam.lightProjection * shadowParam.lightView * vec4(fragPos, 1.0);
-    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
-    projCoords = projCoords * 0.5 + 0.5;
-
-    if (projCoords.x < 0.0 || projCoords.x > 1.0 ||
-            projCoords.y < 0.0 || projCoords.y > 1.0 ||
-            projCoords.z > 1.0) {
-        return 0.0;
-    }
-
-    float currentDepth = projCoords.z;
-
-    vec3 lightDirWorld = normalize((inverse(shadowParam.lightView) * vec4(0.0, 0.0, -1.0, 0.0)).xyz);
-    float biasValue = shadowParam.bias;
-    float ndotl = max(dot(normal, lightDirWorld), 0.0);
-    float minBias = 0.0005;
-    float bias = max(biasValue * (1.0 - ndotl), minBias);
-
-    float shadow = 0.0;
-    vec2 texelSize = 1.0 / getTextureDimensions(shadowParam.textureIndex);
-
-    float distance = length(cameraPosition - fragPos);
-    vec2 shadowMapSize = getTextureDimensions(shadowParam.textureIndex);
-    float avgDim = 0.5 * (shadowMapSize.x + shadowMapSize.y);
-    float resFactor = clamp(1024.0 / max(avgDim, 1.0), 0.75, 1.25);
-    float distFactor = clamp(distance / 800.0, 0.0, 1.0);
-    float desiredKernel = mix(1.0, 1.5, distFactor) * resFactor;
-    int kernelSize = int(clamp(floor(desiredKernel + 0.5), 1.0, 2.0));
-
-    const vec2 poissonDisk[12] = vec2[](
-            vec2(-0.326, -0.406), vec2(-0.840, -0.074), vec2(-0.696, 0.457),
-            vec2(-0.203, 0.621), vec2(0.962, -0.195), vec2(0.473, -0.480),
-            vec2(0.519, 0.767), vec2(0.185, -0.893), vec2(0.507, 0.064),
-            vec2(0.896, 0.412), vec2(-0.322, -0.933), vec2(-0.792, -0.598)
-        );
-    float rand = fract(sin(dot(projCoords.xy, vec2(12.9898, 78.233))) * 43758.5453);
-    float angle = rand * 6.2831853;
-    float ca = cos(angle), sa = sin(angle);
-    mat2 rot = mat2(ca, -sa, sa, ca);
-
-    float texelRadius = mix(1.0, 3.0, distFactor) * resFactor;
-    vec2 filterRadius = texelSize * texelRadius;
-
-    int sampleCount = 0;
-    for (int i = 0; i < 12; ++i) {
-        vec2 offset = rot * poissonDisk[i] * filterRadius;
-        vec2 uv = projCoords.xy + offset;
-        if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
-            continue;
-        }
-        float pcfDepth = sampleTextureAt(shadowParam.textureIndex, uv).r;
-        shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
-        sampleCount++;
-    }
-    if (sampleCount > 0) {
-        shadow /= float(sampleCount);
-    }
-
-    return shadow;
-}
-
-float calculatePointShadow(ShadowParameters shadowParam, vec3 fragPos) {
-    vec3 fragToLight = fragPos - shadowParam.lightPos;
-    float currentDepth = length(fragToLight);
-
-    float bias = 0.05;
-    float shadow = 0.0;
-    float diskRadius = (1.0 + (currentDepth / shadowParam.farPlane)) * 0.05;
-
-    const int samples = 20;
-    const vec3 sampleOffsetDirections[] = vec3[](
-            vec3(0.5381, 0.1856, -0.4319), vec3(0.1379, 0.2486, 0.4430),
-            vec3(0.3371, 0.5679, -0.0057), vec3(-0.6999, -0.0451, -0.0019),
-            vec3(0.0689, -0.1598, -0.8547), vec3(0.0560, 0.0069, -0.1843),
-            vec3(-0.0146, 0.1402, 0.0762), vec3(0.0100, -0.1924, -0.0344),
-            vec3(-0.3577, -0.5301, -0.4358), vec3(-0.3169, 0.1063, 0.0158),
-            vec3(0.0103, -0.5869, 0.0046), vec3(-0.0897, -0.4940, 0.3287),
-            vec3(0.7119, -0.0154, -0.0918), vec3(-0.0533, 0.0596, -0.5411),
-            vec3(0.0352, -0.0631, 0.5460), vec3(-0.4776, 0.2847, -0.0271),
-            vec3(-0.1120, 0.1234, -0.7446), vec3(-0.2130, -0.0782, -0.1379),
-            vec3(0.2944, -0.3112, -0.2645), vec3(-0.4564, 0.4175, -0.1843)
-        );
-
-    for (int i = 0; i < samples; ++i) {
-        vec3 sampleDir = normalize(fragToLight + sampleOffsetDirections[i] * diskRadius);
-        float closestDepth = sampleCubeTextureAt(shadowParam.textureIndex, sampleDir).r * shadowParam.farPlane;
-        if (currentDepth - bias > closestDepth) {
-            shadow += 1.0;
-        }
-    }
-
-    shadow /= float(samples);
-    return shadow;
-}
-
-vec3 evaluateBRDF(vec3 L, vec3 radiance, vec3 N, vec3 V, vec3 F0, vec3 albedo, float metallic, float roughness) {
-    vec3 H = normalize(V + L);
-
-    float NDF = distributionGGX(N, H, roughness);
-    float G = geometrySmith(N, V, L, roughness);
-    vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);
-
-    vec3 kS = F;
-    vec3 kD = (vec3(1.0) - kS) * (1.0 - metallic);
-
-    float NdotV = max(dot(N, V), 0.0);
-    float NdotL = max(dot(N, L), 0.0);
-
-    vec3 numerator = NDF * G * F;
-    float denominator = max(4.0 * NdotV * NdotL, 0.0001);
-    vec3 specular = numerator / denominator;
-
-    return (kD * albedo / PI + specular) * radiance * NdotL;
-}
-
-vec3 calcDirectionalLight(DirectionalLight light, vec3 N, vec3 V, vec3 F0, vec3 albedo, float metallic, float roughness) {
-    vec3 L = normalize(-light.direction);
-    vec3 radiance = light.diffuse;
-    return evaluateBRDF(L, radiance, N, V, F0, albedo, metallic, roughness);
-}
-
-vec3 calcPointLight(PointLight light, vec3 fragPos, vec3 N, vec3 V, vec3 F0, vec3 albedo, float metallic, float roughness) {
-    vec3 L = light.position - fragPos;
-    float distance = length(L);
-    vec3 direction = distance > 0.0 ? (L / distance) : vec3(0.0, 0.0, 1.0);
-    float attenuation = 1.0 / max(light.constant + light.linear * distance + light.quadratic * distance * distance, 0.0001);
-    float fade = 1.0 - smoothstep(light.radius * 0.9, light.radius, distance);
-    vec3 radiance = light.diffuse * attenuation * fade;
-    return evaluateBRDF(direction, radiance, N, V, F0, albedo, metallic, roughness);
-}
-
-vec3 calcSpotLight(SpotLight light, vec3 fragPos, vec3 N, vec3 V, vec3 F0, vec3 albedo, float metallic, float roughness) {
-    vec3 L = light.position - fragPos;
-    float distance = length(L);
-    vec3 direction = normalize(L);
-
-    vec3 spotDirection = normalize(light.direction);
-    float theta = dot(direction, -spotDirection);
-    float epsilon = max(light.cutOff - light.outerCutOff, 0.0001);
-    float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
-
-    float attenuation = 1.0 / (1.0 + 0.09 * distance + 0.032 * distance * distance);
-    vec3 radiance = light.diffuse * attenuation * intensity;
-    return evaluateBRDF(direction, radiance, N, V, F0, albedo, metallic, roughness);
-}
-
-vec3 sampleEnvironmentRadiance(vec3 direction) {
-    return texture(skybox, direction).rgb;
-}
-
-vec3 acesToneMapping(vec3 color) {
-    float a = 2.51;
-    float b = 0.03;
-    float c = 2.43;
-    float d = 0.59;
-    float e = 0.14;
-    color = (color * (a * color + b)) / (color * (c * color + d) + e);
-    color = pow(clamp(color, 0.0, 1.0), vec3(1.0 / 2.2));
-    return color;
-}
-
-vec3 getRimLight(
-    vec3 fragPos,
-    vec3 N,
-    vec3 V,
-    vec3 F0,
-    vec3 albedo,
-    float metallic,
-    float roughness
-) {
-    N = normalize(N);
-    V = normalize(V);
-
-    float rim = pow(1.0 - max(dot(N, V), 0.0), 3.0);
-
-    rim *= mix(1.2, 0.3, roughness);
-
-    vec3 rimColor = mix(vec3(1.0), albedo, metallic) * environment.rimLightColor;
-    rimColor = mix(rimColor, F0, 0.5);
-
-    float rimIntensity = environment.rimLightIntensity;
-
-    vec3 rimLight = rimColor * rim * rimIntensity;
-
-    float dist = length(cameraPosition - fragPos);
-    rimLight /= (1.0 + dist * 0.1);
-
-    return rimLight;
-}
-
-void main() {
-    vec3 FragPos = texture(gPosition, TexCoord).xyz;
-    vec3 N = normalize(texture(gNormal, TexCoord).xyz);
-    vec4 albedoAo = texture(gAlbedoSpec, TexCoord);
-    vec3 albedo = albedoAo.rgb;
-    vec4 matData = texture(gMaterial, TexCoord);
-    float metallic = clamp(matData.r, 0.0, 1.0);
-    float roughness = clamp(matData.g, 0.0, 1.0);
-    float ao = clamp(matData.b, 0.0, 1.0);
-
-    float viewDistance = max(length(cameraPosition - FragPos), 1e-6);
-    vec3 V = (cameraPosition - FragPos) / viewDistance;
-
-    vec3 F0 = mix(vec3(0.04), albedo, metallic);
-
-    float ssaoFactor = clamp(texture(ssao, TexCoord).r, 0.0, 1.0);
-    float ssaoDesaturated = mix(1.0, ssaoFactor, 0.35);
-    float occlusion = clamp(ao * (0.2 + 0.8 * ssaoDesaturated), 0.0, 1.0);
-    float lightingOcclusion = clamp(ssaoDesaturated, 0.2, 1.0);
-
-    float dirShadow = 0.0;
-    float pointShadow = 0.0;
-    for (int i = 0; i < shadowParamCount; ++i) {
-        if (shadowParams[i].isPointLight) {
-            pointShadow = max(pointShadow, calculatePointShadow(shadowParams[i], FragPos));
-        } else {
-            dirShadow = max(dirShadow, calculateShadow(shadowParams[i], FragPos, N));
-        }
-    }
-
-    vec3 directionalResult = vec3(0.0);
-    for (int i = 0; i < directionalLightCount; ++i) {
-        directionalResult += calcDirectionalLight(directionalLights[i], N, V, F0, albedo, metallic, roughness);
-    }
-    directionalResult *= (1.0 - dirShadow);
-
-    vec3 pointResult = vec3(0.0);
-    for (int i = 0; i < pointLightCount; ++i) {
-        pointResult += calcPointLight(pointLights[i], FragPos, N, V, F0, albedo, metallic, roughness);
-    }
-    pointResult *= (1.0 - pointShadow);
-
-    vec3 spotResult = vec3(0.0);
-    for (int i = 0; i < spotlightCount; ++i) {
-        spotResult += calcSpotLight(spotlights[i], FragPos, N, V, F0, albedo, metallic, roughness);
-    }
-
-    vec3 areaResult = vec3(0.0);
-    for (int i = 0; i < areaLightCount; ++i) {
-        vec3 P = areaLights[i].position;
-        vec3 R = normalize(areaLights[i].right);
-        vec3 U = normalize(areaLights[i].up);
-        vec2 halfSize = areaLights[i].size * 0.5;
-
-        vec3 toPoint = FragPos - P;
-        float s = clamp(dot(toPoint, R), -halfSize.x, halfSize.x);
-        float t = clamp(dot(toPoint, U), -halfSize.y, halfSize.y);
-        vec3 Q = P + R * s + U * t;
-
-        vec3 Lvec = Q - FragPos;
-        float dist = length(Lvec);
-        if (dist > 0.0001) {
-            vec3 L = Lvec / dist;
-            vec3 Nl = normalize(cross(R, U));
-            float ndotl = dot(Nl, -L);
-
-            float facing = (areaLights[i].castsBothSides != 0) ? abs(ndotl) : max(ndotl, 0.0);
-            float cosTheta = cos(radians(areaLights[i].angle));
-
-            if (facing >= cosTheta && facing > 0.0) {
-                float attenuation = 1.0 / max(dist * dist, 0.0001);
-                vec3 radiance = areaLights[i].diffuse * attenuation * facing;
-                areaResult += evaluateBRDF(L, radiance, N, V, F0, albedo, metallic, roughness);
-            }
-        }
-    }
-
-    vec3 rimResult = getRimLight(FragPos, N, V, F0, albedo, metallic, roughness);
-    vec3 lighting = (directionalResult + pointResult + spotResult + areaResult + rimResult) * lightingOcclusion;
-
-    vec3 ambient = ambientLight.color.rgb * ambientLight.intensity * albedo * occlusion;
-
-    vec3 iblContribution = vec3(0.0);
-    if (useIBL) {
-        vec3 irradiance = sampleEnvironmentRadiance(N);
-        vec3 diffuseIBL = irradiance * albedo;
-
-        vec3 reflection = reflect(-V, N);
-        vec3 specularEnv = sampleEnvironmentRadiance(reflection);
-
-        vec3 F = fresnelSchlick(max(dot(N, V), 0.0), F0);
-        vec3 kS = F;
-        vec3 kD = (vec3(1.0) - kS) * (1.0 - metallic);
-
-        float roughnessAttenuation = mix(1.0, 0.15, clamp(roughness, 0.0, 1.0));
-        vec3 specularIBL = specularEnv * roughnessAttenuation;
-
-        iblContribution = (kD * diffuseIBL + kS * specularIBL) * occlusion;
-    }
-
-    vec3 finalColor = ambient + lighting + iblContribution;
-
-    if (!useIBL) {
-        vec3 I = normalize(FragPos - cameraPosition);
-        vec3 R = reflect(-I, N);
-
-        vec3 F = fresnelSchlick(max(dot(N, -I), 0.0), F0);
-        vec3 kS = F;
-        vec3 kD = (vec3(1.0) - kS) * (1.0 - metallic);
-
-        vec3 envColor = texture(skybox, R).rgb;
-        vec3 reflection = envColor * kS;
-
-        finalColor = mix(finalColor, reflection, F0);
-    }
-
-    FragColor = vec4(finalColor, 1.0);
-
-    float brightness = dot(FragColor.rgb, vec3(0.2126, 0.7152, 0.0722));
-    if (brightness > 1.0) {
-        BrightColor = vec4(FragColor.rgb, 1.0);
-    } else {
-        BrightColor = vec4(0.0, 0.0, 0.0, 1.0);
-    }
-
-    FragColor.rgb = acesToneMapping(FragColor.rgb);
-}
-
-)";
-
-static const char* COLOR_FRAG = R"(
-#version 410 core
-layout (location = 0) out vec4 FragColor;
-layout (location = 1) out vec4 BrightColor;
-in vec4 vertexColor;
-
-void main() {
-    vec3 color = vertexColor.rgb / (vertexColor.rgb + vec3(1.0));
-    FragColor = vec4(color, vertexColor.a);
-    if (length(color) > 1.0) {
-        BrightColor = vec4(color, vertexColor.a);
-    }
-}
-)";
-
-static const char* TEXTURE_VERT = R"(
-#version 410 core
-layout (location = 0) in vec3 aPos;
-layout (location = 1) in vec4 aColor;
-layout (location = 2) in vec2 aTexCoord;
-
-uniform mat4 model;
-uniform mat4 view;
+in vec3 WorldPos;          
+in vec3 WorldNormal;
+in vec3 WorldTangent;
+in vec3 WorldBitangent;
+
+uniform vec4 waterColor;         
+uniform sampler2D sceneTexture;  
+uniform sampler2D sceneDepth;    
+uniform vec3 cameraPos;           
+uniform float time;
+uniform float refractionStrength; 
+uniform float reflectionStrength; 
+uniform float depthFade;         
 uniform mat4 projection;
+uniform mat4 view;
+uniform mat4 invProjection;      
+uniform mat4 invView;
+uniform sampler2D reflectionTexture;
+uniform sampler2D refractionTexture;
+uniform vec3 lightDirection;
+uniform vec3 lightColor;
+uniform sampler2D movementTexture;
+uniform sampler2D normalTexture;
+uniform int hasNormalTexture;
+uniform int hasMovementTexture;
+uniform vec3 windForce;
 
-out vec4 outColor;
-out vec2 TexCoord; 
+void main()
+{
+    vec3 normal = normalize(WorldNormal);
+    vec3 viewDir = normalize(cameraPos - WorldPos);
+    
+    vec4 clipSpace = projection * view * vec4(WorldPos, 1.0);
+    vec3 ndc = clipSpace.xyz / clipSpace.w;
+    vec2 screenUV = ndc.xy * 0.5 + 0.5;
+    
+    float windStrength = length(windForce);
+    vec2 windDir = windStrength > 0.001 ? normalize(windForce.xy) : vec2(1.0, 0.0);
+    
+    float waveSpeed = 0.15 + windStrength * 0.3;  
+    float waveAmplitude = 0.01 + windStrength * 0.02;  
+    float waveFrequency = 30.0 + windStrength * 10.0; 
+    
+    vec2 waveOffset;
+    waveOffset.x = sin((TexCoord.x * windDir.x + time * waveSpeed) * waveFrequency);
+    waveOffset.y = cos((TexCoord.y * windDir.y - time * waveSpeed) * waveFrequency);
+    waveOffset *= waveAmplitude;
+    
+    vec2 flowOffset = vec2(0.0);
+    if (hasMovementTexture == 1) {
+        vec2 windUV = windForce.xy * time * 0.05;
+        vec2 movementUV = TexCoord * 2.0 + windUV;
+        vec2 movementSample = texture(movementTexture, movementUV).rg;
+        
+        movementSample = movementSample * 2.0 - 1.0;
+        
+        flowOffset = movementSample * windStrength * 0.15;
+        
+        waveOffset += flowOffset * 0.5;
+    }
+    
+    if (hasNormalTexture == 1) {
+        vec3 T = normalize(WorldTangent);
+        vec3 B = normalize(WorldBitangent);
+        vec3 N = normalize(WorldNormal);
+        mat3 TBN = mat3(T, B, N);
+        
+        float normalSpeed = 0.03 + windStrength * 0.05; 
+        vec2 normalUV1 = TexCoord * 5.0 + waveOffset * 10.0 + windForce.xy * time * normalSpeed;
+        vec2 normalUV2 = TexCoord * 3.0 - waveOffset * 8.0 - windForce.xy * time * normalSpeed * 0.8;
+        
+        vec3 normalMap1 = texture(normalTexture, normalUV1).rgb;
+        vec3 normalMap2 = texture(normalTexture, normalUV2).rgb;
+        
+        normalMap1 = normalMap1 * 2.0 - 1.0;
+        normalMap2 = normalMap2 * 2.0 - 1.0;
+        
+        vec3 blendedNormal = normalize(normalMap1 + normalMap2);
+        
+        vec3 worldSpaceNormal = normalize(TBN * blendedNormal);
+        
+        float normalStrength = 0.5 + windStrength * 0.3;
+        normal = normalize(mix(N, worldSpaceNormal, normalStrength));
+    }
+    
+    vec2 reflectionUV = screenUV;
+    reflectionUV.y = 1.0 - reflectionUV.y;  
+    reflectionUV += waveOffset * 0.3;
+    
+    vec2 refractionUV = screenUV - waveOffset * 0.2;
+    
+    bool reflectionInBounds = (reflectionUV.x >= 0.0 && reflectionUV.x <= 1.0 && 
+                               reflectionUV.y >= 0.0 && reflectionUV.y <= 1.0);
+    bool refractionInBounds = (refractionUV.x >= 0.0 && refractionUV.x <= 1.0 && 
+                               refractionUV.y >= 0.0 && refractionUV.y <= 1.0);
+    
+    reflectionUV = clamp(reflectionUV, 0.05, 0.95);
+    refractionUV = clamp(refractionUV, 0.05, 0.95);
+    
+    vec2 reflectionEdgeFade = smoothstep(0.0, 0.15, reflectionUV) * smoothstep(1.0, 0.85, reflectionUV);
+    float reflectionFadeFactor = reflectionEdgeFade.x * reflectionEdgeFade.y;
+    
+    vec2 refractionEdgeFade = smoothstep(0.0, 0.15, refractionUV) * smoothstep(1.0, 0.85, refractionUV);
+    float refractionFadeFactor = refractionEdgeFade.x * refractionEdgeFade.y;
+    
+    if (!reflectionInBounds) {
+        reflectionFadeFactor *= 0.3;
+    }
+    if (!refractionInBounds) {
+        refractionFadeFactor *= 0.3;
+    }
+    
+    vec4 reflectionSample = texture(reflectionTexture, reflectionUV);
+    vec4 refractionSample = texture(refractionTexture, refractionUV);
+    vec4 sceneFallback = texture(sceneTexture, screenUV);
+    
+    bool validReflection = (length(reflectionSample.rgb) > 0.01);
+    bool validRefraction = (length(refractionSample.rgb) > 0.01);
+    
+    if (!validReflection) {
+        reflectionSample = sceneFallback;
+    }
+    if (!validRefraction) {
+        refractionSample = sceneFallback;
+    }
+    
+    float fresnel = pow(1.0 - clamp(dot(normal, viewDir), 0.0, 1.0), 3.0);
+    fresnel = mix(0.02, 1.0, fresnel); 
+    fresnel *= reflectionStrength;
+    
+    vec3 combined = mix(refractionSample.rgb, reflectionSample.rgb, fresnel);
+    
+    float waterTint = clamp(depthFade * 0.3, 0.0, 0.5); 
+    combined = mix(combined, waterColor.rgb, waterTint);
 
-void main() {
-    mat4 mvp = projection * view * model;
-    gl_Position = mvp * vec4(aPos, 1.0);
-    TexCoord = aTexCoord;
-    outColor = aColor;
+    float foamAmount = 0.0;
+    if (hasMovementTexture == 1) {
+        float foamFactor = smoothstep(0.7, 1.0, length(flowOffset) * windStrength);
+        foamAmount = foamFactor * 0.2;
+        combined = mix(combined, vec3(1.0), foamAmount);
+    }
+    
+    vec3 lightDir = normalize(-lightDirection);
+    
+    float diffuse = max(dot(normal, lightDir), 0.0);
+    diffuse = diffuse * 0.3; 
+    
+    vec3 halfDir = normalize(lightDir + viewDir);
+    float specAngle = max(dot(normal, halfDir), 0.0);
+    float specular = pow(specAngle, 128.0); 
+    
+    specular *= (fresnel * 0.5 + 0.5);
+    
+    float waveVariation = sin(TexCoord.x * 50.0 + time * 2.0) * 0.5 + 0.5;
+    waveVariation *= cos(TexCoord.y * 50.0 - time * 1.5) * 0.5 + 0.5;
+    specular *= (0.7 + waveVariation * 0.3);
+    
+    vec3 lighting = lightColor * (diffuse + specular * 2.0);
+    combined += lighting;
+    
+    vec3 specularHighlight = lightColor * specular * 2.5;
+    
+    specularHighlight += vec3(foamAmount * 2.0);
+    
+    float alpha = mix(0.7, 0.95, fresnel);
+    
+    FragColor = vec4(combined, alpha);
+    
+    float luminance = max(max(combined.r, combined.g), combined.b);
+    vec3 bloomColor = vec3(0.0);
+    
+    if (luminance > 1.0) {
+        bloomColor = combined - 1.0;
+    }
+    
+    bloomColor += specularHighlight;
+
+    BrightColor = vec4(bloomColor, alpha);
 }
-
 )";
 
-static const char* DEBUG_FRAG = R"(
-#version 410 core
-out vec4 FragColor;
-
-void main() {
-    FragColor = vec4(1.0, 0.0, 1.0, 1.0);
-}
-
-)";
-
-static const char* COLOR_VERT = R"(
+static const char* FLUID_VERT = R"(
 #version 410 core
 layout(location = 0) in vec3 aPos;
-layout(location = 1) in vec4 aColor;
-layout(location = 6) in mat4 instanceModel;
-
-out vec4 vertexColor;
+layout(location = 1) in vec2 aTexCoord;
+layout(location = 2) in vec3 aNormal;
+layout(location = 3) in vec3 aTangent;
+layout(location = 4) in vec3 aBitangent;
 
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
-uniform bool isInstanced = true;
+
+out vec2 TexCoord;
+out vec3 WorldPos;
+out vec3 WorldNormal;
+out vec3 WorldTangent;
+out vec3 WorldBitangent;
 
 void main() {
-    mat4 mvp;
-    if (isInstanced) {
-        mvp = projection * view * instanceModel;
-    } else {
-        mvp = projection * view * model;
-    }
-    gl_Position = mvp * vec4(aPos, 1.0);
-    vertexColor = aColor;
-}
-
-)";
-
-static const char* DEBUG_VERT = R"(
-#version 410 core
-layout (location = 0) in vec3 aPos;
-
-void main() {
-    gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
-}
-
-)";
-
-static const char* TEXTURE_FRAG = R"(
-#version 410 core
-out vec4 FragColor;
-
-in vec2 TexCoord;
-in vec4 outColor;
-
-uniform sampler2D textures[16];
-
-uniform bool useTexture;
-uniform bool onlyTexture;
-uniform int textureCount;
-
-vec4 calculateAllTextures() {
-    vec4 color = vec4(0.0);
-
-    for (int i = 0; i <= textureCount; i++) {
-        color += texture(textures[i], TexCoord);
-    }
-
-    color /= float(textureCount + 1); 
-
-    return color;
-}
-
-void main() {
-    if (onlyTexture) {
-        FragColor = calculateAllTextures(); 
-        return;
-    }
-
-    if (useTexture) {
-        FragColor = calculateAllTextures() * outColor;
-    } else {
-        FragColor = outColor;
-    }
+    gl_Position = projection * view * model * vec4(aPos, 1.0);
+    TexCoord = aTexCoord;
+    WorldPos = vec3(model * vec4(aPos, 1.0));
+    WorldNormal = normalize(mat3(model) * aNormal);
+    WorldTangent = normalize(mat3(model) * aTangent);
+    WorldBitangent = normalize(mat3(model) * aBitangent);
 }
 
 )";
@@ -3056,33 +2410,21 @@ void main() {
 }
 )";
 
-static const char* FLUID_VERT = R"(
+static const char* TERRAIN_VERT = R"(
 #version 410 core
 layout(location = 0) in vec3 aPos;
 layout(location = 1) in vec2 aTexCoord;
-layout(location = 2) in vec3 aNormal;
-layout(location = 3) in vec3 aTangent;
-layout(location = 4) in vec3 aBitangent;
 
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 
 out vec2 TexCoord;
-out vec3 WorldPos;
-out vec3 WorldNormal;
-out vec3 WorldTangent;
-out vec3 WorldBitangent;
 
 void main() {
-    gl_Position = projection * view * model * vec4(aPos, 1.0);
+    gl_Position = vec4(aPos, 1.0);
     TexCoord = aTexCoord;
-    WorldPos = vec3(model * vec4(aPos, 1.0));
-    WorldNormal = normalize(mat3(model) * aNormal);
-    WorldTangent = normalize(mat3(model) * aTangent);
-    WorldBitangent = normalize(mat3(model) * aBitangent);
 }
-
 )";
 
 static const char* TERRAIN_EVAL_TESE = R"(
@@ -3136,210 +2478,6 @@ void main() {
     TexCoord = texCoord;
     FragPos = vec3(model * position);
     FragPosLightSpace = lightViewProj * model * position;
-}
-)";
-
-static const char* TERRAIN_VERT = R"(
-#version 410 core
-layout(location = 0) in vec3 aPos;
-layout(location = 1) in vec2 aTexCoord;
-
-uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
-
-out vec2 TexCoord;
-
-void main() {
-    gl_Position = vec4(aPos, 1.0);
-    TexCoord = aTexCoord;
-}
-)";
-
-static const char* FLUID_FRAG = R"(
-#version 410 core
-layout(location = 0) out vec4 FragColor;
-layout(location = 1) out vec4 BrightColor;
-
-in vec2 TexCoord;
-in vec3 WorldPos;          
-in vec3 WorldNormal;
-in vec3 WorldTangent;
-in vec3 WorldBitangent;
-
-uniform vec4 waterColor;         
-uniform sampler2D sceneTexture;  
-uniform sampler2D sceneDepth;    
-uniform vec3 cameraPos;           
-uniform float time;
-uniform float refractionStrength; 
-uniform float reflectionStrength; 
-uniform float depthFade;         
-uniform mat4 projection;
-uniform mat4 view;
-uniform mat4 invProjection;      
-uniform mat4 invView;
-uniform sampler2D reflectionTexture;
-uniform sampler2D refractionTexture;
-uniform vec3 lightDirection;
-uniform vec3 lightColor;
-uniform sampler2D movementTexture;
-uniform sampler2D normalTexture;
-uniform int hasNormalTexture;
-uniform int hasMovementTexture;
-uniform vec3 windForce;
-
-void main()
-{
-    vec3 normal = normalize(WorldNormal);
-    vec3 viewDir = normalize(cameraPos - WorldPos);
-    
-    vec4 clipSpace = projection * view * vec4(WorldPos, 1.0);
-    vec3 ndc = clipSpace.xyz / clipSpace.w;
-    vec2 screenUV = ndc.xy * 0.5 + 0.5;
-    
-    float windStrength = length(windForce);
-    vec2 windDir = windStrength > 0.001 ? normalize(windForce.xy) : vec2(1.0, 0.0);
-    
-    float waveSpeed = 0.15 + windStrength * 0.3;  
-    float waveAmplitude = 0.01 + windStrength * 0.02;  
-    float waveFrequency = 30.0 + windStrength * 10.0; 
-    
-    vec2 waveOffset;
-    waveOffset.x = sin((TexCoord.x * windDir.x + time * waveSpeed) * waveFrequency);
-    waveOffset.y = cos((TexCoord.y * windDir.y - time * waveSpeed) * waveFrequency);
-    waveOffset *= waveAmplitude;
-    
-    vec2 flowOffset = vec2(0.0);
-    if (hasMovementTexture == 1) {
-        vec2 windUV = windForce.xy * time * 0.05;
-        vec2 movementUV = TexCoord * 2.0 + windUV;
-        vec2 movementSample = texture(movementTexture, movementUV).rg;
-        
-        movementSample = movementSample * 2.0 - 1.0;
-        
-        flowOffset = movementSample * windStrength * 0.15;
-        
-        waveOffset += flowOffset * 0.5;
-    }
-    
-    if (hasNormalTexture == 1) {
-        vec3 T = normalize(WorldTangent);
-        vec3 B = normalize(WorldBitangent);
-        vec3 N = normalize(WorldNormal);
-        mat3 TBN = mat3(T, B, N);
-        
-        float normalSpeed = 0.03 + windStrength * 0.05; 
-        vec2 normalUV1 = TexCoord * 5.0 + waveOffset * 10.0 + windForce.xy * time * normalSpeed;
-        vec2 normalUV2 = TexCoord * 3.0 - waveOffset * 8.0 - windForce.xy * time * normalSpeed * 0.8;
-        
-        vec3 normalMap1 = texture(normalTexture, normalUV1).rgb;
-        vec3 normalMap2 = texture(normalTexture, normalUV2).rgb;
-        
-        normalMap1 = normalMap1 * 2.0 - 1.0;
-        normalMap2 = normalMap2 * 2.0 - 1.0;
-        
-        vec3 blendedNormal = normalize(normalMap1 + normalMap2);
-        
-        vec3 worldSpaceNormal = normalize(TBN * blendedNormal);
-        
-        float normalStrength = 0.5 + windStrength * 0.3;
-        normal = normalize(mix(N, worldSpaceNormal, normalStrength));
-    }
-    
-    vec2 reflectionUV = screenUV;
-    reflectionUV.y = 1.0 - reflectionUV.y;  
-    reflectionUV += waveOffset * 0.3;
-    
-    vec2 refractionUV = screenUV - waveOffset * 0.2;
-    
-    bool reflectionInBounds = (reflectionUV.x >= 0.0 && reflectionUV.x <= 1.0 && 
-                               reflectionUV.y >= 0.0 && reflectionUV.y <= 1.0);
-    bool refractionInBounds = (refractionUV.x >= 0.0 && refractionUV.x <= 1.0 && 
-                               refractionUV.y >= 0.0 && refractionUV.y <= 1.0);
-    
-    reflectionUV = clamp(reflectionUV, 0.05, 0.95);
-    refractionUV = clamp(refractionUV, 0.05, 0.95);
-    
-    vec2 reflectionEdgeFade = smoothstep(0.0, 0.15, reflectionUV) * smoothstep(1.0, 0.85, reflectionUV);
-    float reflectionFadeFactor = reflectionEdgeFade.x * reflectionEdgeFade.y;
-    
-    vec2 refractionEdgeFade = smoothstep(0.0, 0.15, refractionUV) * smoothstep(1.0, 0.85, refractionUV);
-    float refractionFadeFactor = refractionEdgeFade.x * refractionEdgeFade.y;
-    
-    if (!reflectionInBounds) {
-        reflectionFadeFactor *= 0.3;
-    }
-    if (!refractionInBounds) {
-        refractionFadeFactor *= 0.3;
-    }
-    
-    vec4 reflectionSample = texture(reflectionTexture, reflectionUV);
-    vec4 refractionSample = texture(refractionTexture, refractionUV);
-    vec4 sceneFallback = texture(sceneTexture, screenUV);
-    
-    bool validReflection = (length(reflectionSample.rgb) > 0.01);
-    bool validRefraction = (length(refractionSample.rgb) > 0.01);
-    
-    if (!validReflection) {
-        reflectionSample = sceneFallback;
-    }
-    if (!validRefraction) {
-        refractionSample = sceneFallback;
-    }
-    
-    float fresnel = pow(1.0 - clamp(dot(normal, viewDir), 0.0, 1.0), 3.0);
-    fresnel = mix(0.02, 1.0, fresnel); 
-    fresnel *= reflectionStrength;
-    
-    vec3 combined = mix(refractionSample.rgb, reflectionSample.rgb, fresnel);
-    
-    float waterTint = clamp(depthFade * 0.3, 0.0, 0.5); 
-    combined = mix(combined, waterColor.rgb, waterTint);
-
-    float foamAmount = 0.0;
-    if (hasMovementTexture == 1) {
-        float foamFactor = smoothstep(0.7, 1.0, length(flowOffset) * windStrength);
-        foamAmount = foamFactor * 0.2;
-        combined = mix(combined, vec3(1.0), foamAmount);
-    }
-    
-    vec3 lightDir = normalize(-lightDirection);
-    
-    float diffuse = max(dot(normal, lightDir), 0.0);
-    diffuse = diffuse * 0.3; 
-    
-    vec3 halfDir = normalize(lightDir + viewDir);
-    float specAngle = max(dot(normal, halfDir), 0.0);
-    float specular = pow(specAngle, 128.0); 
-    
-    specular *= (fresnel * 0.5 + 0.5);
-    
-    float waveVariation = sin(TexCoord.x * 50.0 + time * 2.0) * 0.5 + 0.5;
-    waveVariation *= cos(TexCoord.y * 50.0 - time * 1.5) * 0.5 + 0.5;
-    specular *= (0.7 + waveVariation * 0.3);
-    
-    vec3 lighting = lightColor * (diffuse + specular * 2.0);
-    combined += lighting;
-    
-    vec3 specularHighlight = lightColor * specular * 2.5;
-    
-    specularHighlight += vec3(foamAmount * 2.0);
-    
-    float alpha = mix(0.7, 0.95, fresnel);
-    
-    FragColor = vec4(combined, alpha);
-    
-    float luminance = max(max(combined.r, combined.g), combined.b);
-    vec3 bloomColor = vec3(0.0);
-    
-    if (luminance > 1.0) {
-        bloomColor = combined - 1.0;
-    }
-    
-    bloomColor += specularHighlight;
-
-    BrightColor = vec4(bloomColor, alpha);
 }
 )";
 
@@ -3953,6 +3091,1048 @@ void main() {
 
 )";
 
+static const char* DEFERRED_VERT = R"(
+#version 410 core
+layout(location = 0) in vec3 aPos;
+layout(location = 1) in vec4 aColor;
+layout(location = 2) in vec2 aTexCoord;
+layout(location = 3) in vec3 aNormal;
+layout(location = 4) in vec3 aTangent;
+layout(location = 5) in vec3 aBitangent;
+layout(location = 6) in mat4 instanceModel;
+
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+uniform bool isInstanced = true;
+
+out vec4 outColor;
+out vec2 TexCoord;
+out vec3 Normal;
+out vec3 FragPos;
+out mat3 TBN;
+
+void main() {
+    mat4 finalModel;
+    if (isInstanced) {
+        finalModel = instanceModel;
+    } else {
+        finalModel = model;
+    }
+
+    vec4 worldPos = finalModel * vec4(aPos, 1.0);
+    FragPos = worldPos.xyz;
+    gl_Position = projection * view * worldPos;
+
+    TexCoord = aTexCoord;
+    outColor = aColor;
+
+    mat3 normalMatrix = mat3(transpose(inverse(finalModel)));
+    Normal = normalize(normalMatrix * aNormal);
+
+    vec3 T = normalize(normalMatrix * aTangent);
+    vec3 B = normalize(normalMatrix * aBitangent);
+    vec3 N = normalize(normalMatrix * aNormal);
+    TBN = mat3(T, B, N);
+}
+)";
+
+static const char* LIGHT_VERT = R"(
+#version 410 core
+layout(location = 0) in vec3 aPos;
+layout(location = 1) in vec2 aTexCoord;
+
+out vec2 TexCoord;
+
+void main() {
+    TexCoord = aTexCoord;
+    gl_Position = vec4(aPos, 1.0);
+}
+)";
+
+static const char* DEFERRED_FRAG = R"(
+#version 410 core
+layout(location = 0) out vec4 gPosition;
+layout(location = 1) out vec4 gNormal;
+layout(location = 2) out vec4 gAlbedoSpec;
+layout(location = 3) out vec4 gMaterial;
+
+in vec2 TexCoord;
+in vec4 outColor;
+in vec3 Normal;
+in vec3 FragPos;
+in mat3 TBN;
+
+const int TEXTURE_COLOR = 0;
+const int TEXTURE_SPECULAR = 1;
+const int TEXTURE_NORMAL = 5;
+const int TEXTURE_PARALLAX = 6;
+const int TEXTURE_METALLIC = 9;
+const int TEXTURE_ROUGHNESS = 10;
+const int TEXTURE_AO = 11;
+
+struct Material {
+    vec3 albedo;
+    float metallic;
+    float roughness;
+    float ao;
+};
+
+uniform sampler2D texture1;
+uniform sampler2D texture2;
+uniform sampler2D texture3;
+uniform sampler2D texture4;
+uniform sampler2D texture5;
+uniform sampler2D texture6;
+uniform sampler2D texture7;
+uniform sampler2D texture8;
+uniform sampler2D texture9;
+uniform sampler2D texture10;
+
+uniform int textureTypes[16];
+uniform int textureCount;
+uniform Material material;
+uniform vec3 cameraPosition;
+uniform bool useTexture;
+uniform bool useColor;
+
+vec2 texCoord;
+
+vec4 enableTextures(int type) {
+    vec4 color = vec4(0.0);
+    int count = 0;
+    for (int i = 0; i < textureCount; i++) {
+        if (textureTypes[i] == type) {
+            if (i == 0) color += texture(texture1, texCoord);
+            else if (i == 1) color += texture(texture2, texCoord);
+            else if (i == 2) color += texture(texture3, texCoord);
+            else if (i == 3) color += texture(texture4, texCoord);
+            else if (i == 4) color += texture(texture5, texCoord);
+            else if (i == 5) color += texture(texture6, texCoord);
+            else if (i == 6) color += texture(texture7, texCoord);
+            else if (i == 7) color += texture(texture8, texCoord);
+            else if (i == 8) color += texture(texture9, texCoord);
+            else if (i == 9) color += texture(texture10, texCoord);
+            count++;
+        }
+    }
+    if (count > 0) color /= float(count);
+    if (count == 0) return vec4(-1.0);
+    return color;
+}
+
+vec4 sampleTextureAt(int textureIndex, vec2 uv) {
+    if (textureIndex == 0) return texture(texture1, uv);
+    else if (textureIndex == 1) return texture(texture2, uv);
+    else if (textureIndex == 2) return texture(texture3, uv);
+    else if (textureIndex == 3) return texture(texture4, uv);
+    else if (textureIndex == 4) return texture(texture5, uv);
+    else if (textureIndex == 5) return texture(texture6, uv);
+    else if (textureIndex == 6) return texture(texture7, uv);
+    else if (textureIndex == 7) return texture(texture8, uv);
+    else if (textureIndex == 8) return texture(texture9, uv);
+    else if (textureIndex == 9) return texture(texture10, uv);
+    return vec4(0.0);
+}
+
+vec2 parallaxMapping(vec2 texCoords, vec3 viewDir) {
+    const float minLayers = 8.0;
+    const float maxLayers = 32.0;
+    vec3 v = normalize(viewDir);
+    float numLayers = mix(maxLayers, minLayers, abs(dot(vec3(0.0, 0.0, 1.0), v)));
+    float layerDepth = 1.0 / numLayers;
+    float currentLayerDepth = 0.0;
+
+    const float heightScale = 0.04;
+    vec2 P = (v.xy / max(v.z, 0.05)) * heightScale;
+    vec2 deltaTexCoords = P / numLayers;
+
+    vec2 currentTexCoords = clamp(texCoords, vec2(0.0), vec2(1.0));
+    int textureIndex = -1;
+    for (int i = 0; i < textureCount; i++) {
+        if (textureTypes[i] == TEXTURE_PARALLAX) {
+            textureIndex = i;
+            break;
+        }
+    }
+    if (textureIndex == -1) return currentTexCoords;
+
+    float currentDepthMapValue = sampleTextureAt(textureIndex, currentTexCoords).r;
+
+    while (currentLayerDepth < currentDepthMapValue) {
+        currentTexCoords = clamp(currentTexCoords - deltaTexCoords, vec2(0.0), vec2(1.0));
+        currentDepthMapValue = sampleTextureAt(textureIndex, currentTexCoords).r;
+        currentLayerDepth += layerDepth;
+    }
+
+    vec2 prevTexCoords = clamp(currentTexCoords + deltaTexCoords, vec2(0.0), vec2(1.0));
+    float afterDepth = currentDepthMapValue - currentLayerDepth;
+    float beforeDepth = sampleTextureAt(textureIndex, prevTexCoords).r - (currentLayerDepth - layerDepth);
+    float denom = max(afterDepth - beforeDepth, 1e-4);
+    float weight = clamp(afterDepth / denom, 0.0, 1.0);
+    currentTexCoords = prevTexCoords * weight + currentTexCoords * (1.0 - weight);
+
+    return clamp(currentTexCoords, vec2(0.0), vec2(1.0));
+}
+
+void main() {
+    texCoord = TexCoord;
+
+    vec3 tangentViewDir = normalize(transpose(TBN) * (cameraPosition - FragPos));
+    texCoord = parallaxMapping(texCoord, tangentViewDir);
+
+    texCoord = clamp(texCoord, vec2(0.0), vec2(1.0));
+
+    vec4 sampledColor = enableTextures(TEXTURE_COLOR);
+    bool hasColorTexture = sampledColor != vec4(-1.0);
+
+    vec4 baseColor = vec4(material.albedo, 1.0);
+    vec4 albedoTex = enableTextures(TEXTURE_COLOR);
+    if (albedoTex != vec4(-1.0)) {
+        baseColor = albedoTex;
+    }
+
+    if (baseColor.a < 0.1)
+        discard;
+
+    vec4 normTexture = enableTextures(TEXTURE_NORMAL);
+    vec3 normal;
+    if (normTexture.r != -1.0 && normTexture.g != -1.0 && normTexture.b != -1.0) {
+        vec3 tangentNormal = normalize(normTexture.rgb * 2.0 - 1.0);
+        normal = normalize(TBN * tangentNormal);
+    } else {
+        normal = normalize(Normal);
+    }
+
+    vec3 albedo = baseColor.rgb;
+
+    float metallic = material.metallic;
+    vec4 metallicTex = enableTextures(TEXTURE_METALLIC);
+    if (metallicTex != vec4(-1.0)) {
+        metallic *= metallicTex.r;
+    }
+
+    float roughness = material.roughness;
+    vec4 roughnessTex = enableTextures(TEXTURE_ROUGHNESS);
+    if (roughnessTex != vec4(-1.0)) {
+        roughness *= roughnessTex.r;
+    }
+
+    float ao = material.ao;
+    vec4 aoTex = enableTextures(TEXTURE_AO);
+    if (aoTex != vec4(-1.0)) {
+        ao *= aoTex.r;
+    }
+
+    metallic = clamp(metallic, 0.0, 1.0);
+    roughness = clamp(roughness, 0.0, 1.0);
+    ao = clamp(ao, 0.0, 1.0);
+
+    float nonlinearDepth = gl_FragCoord.z;
+    gPosition = vec4(FragPos, nonlinearDepth);
+
+    vec3 n = normalize(normal);
+    if (!all(equal(n, n)) || length(n) < 1e-4) {
+        n = normalize(Normal);
+    }
+    gNormal = vec4(n, 1.0);
+
+    vec3 a = clamp(albedo, 0.0, 1.0);
+    if (!all(equal(a, a))) {
+        a = vec3(0.0);
+    }
+    gAlbedoSpec = vec4(a, ao);
+
+    gMaterial = vec4(metallic, roughness, ao, 1.0);
+}
+
+)";
+
+static const char* LIGHT_FRAG = R"(
+#version 410 core
+layout(location = 0) out vec4 FragColor;
+layout(location = 1) out vec4 BrightColor;
+
+in vec2 TexCoord;
+
+uniform sampler2D gPosition;
+uniform sampler2D gNormal;
+uniform sampler2D gAlbedoSpec;
+uniform sampler2D gMaterial;
+uniform sampler2D ssao;
+
+uniform sampler2D texture1;
+uniform sampler2D texture2;
+uniform sampler2D texture3;
+uniform sampler2D texture4;
+uniform sampler2D texture5;
+uniform samplerCube cubeMap1;
+uniform samplerCube cubeMap2;
+uniform samplerCube cubeMap3;
+uniform samplerCube cubeMap4;
+uniform samplerCube cubeMap5;
+uniform samplerCube skybox;
+
+struct AmbientLight {
+    vec4 color;
+    float intensity;
+};
+
+struct DirectionalLight {
+    vec3 direction;
+    vec3 diffuse;
+    vec3 specular;
+};
+
+struct PointLight {
+    vec3 position;
+    vec3 diffuse;
+    vec3 specular;
+    float constant;
+    float linear;
+    float quadratic;
+    float radius;
+};
+
+struct SpotLight {
+    vec3 position;
+    vec3 direction;
+    float cutOff;
+    float outerCutOff;
+    vec3 diffuse;
+    vec3 specular;
+};
+
+struct AreaLight {
+    vec3 position;
+    vec3 right;
+    vec3 up;
+    vec2 size;
+    vec3 diffuse;
+    vec3 specular;
+    float angle;
+    int castsBothSides;
+};
+
+struct ShadowParameters {
+    mat4 lightView;
+    mat4 lightProjection;
+    float bias;
+    int textureIndex;
+    float farPlane;
+    vec3 lightPos;
+    bool isPointLight;
+};
+
+struct Environment {
+    float rimLightIntensity;
+    vec3 rimLightColor;
+};
+
+uniform AmbientLight ambientLight;
+uniform DirectionalLight directionalLights[4];
+uniform int directionalLightCount;
+uniform PointLight pointLights[32];
+uniform int pointLightCount;
+uniform SpotLight spotlights[32];
+uniform int spotlightCount;
+uniform AreaLight areaLights[32];
+uniform int areaLightCount;
+uniform ShadowParameters shadowParams[10];
+uniform int shadowParamCount;
+uniform vec3 cameraPosition;
+uniform bool useIBL;
+
+uniform Environment environment;
+
+const float PI = 3.14159265;
+
+vec4 sampleTextureAt(int textureIndex, vec2 uv) {
+    if (textureIndex == 0) return texture(texture1, uv);
+    else if (textureIndex == 1) return texture(texture2, uv);
+    else if (textureIndex == 2) return texture(texture3, uv);
+    else if (textureIndex == 3) return texture(texture4, uv);
+    else if (textureIndex == 4) return texture(texture5, uv);
+    return vec4(0.0);
+}
+
+vec4 sampleCubeTextureAt(int textureIndex, vec3 direction) {
+    if (textureIndex == 0) return texture(cubeMap1, direction);
+    else if (textureIndex == 1) return texture(cubeMap2, direction);
+    else if (textureIndex == 2) return texture(cubeMap3, direction);
+    else if (textureIndex == 3) return texture(cubeMap4, direction);
+    else if (textureIndex == 4) return texture(cubeMap5, direction);
+    return vec4(0.0);
+}
+
+vec2 getTextureDimensions(int textureIndex) {
+    if (textureIndex == 0) return vec2(textureSize(texture1, 0));
+    else if (textureIndex == 1) return vec2(textureSize(texture2, 0));
+    else if (textureIndex == 2) return vec2(textureSize(texture3, 0));
+    else if (textureIndex == 3) return vec2(textureSize(texture4, 0));
+    else if (textureIndex == 4) return vec2(textureSize(texture5, 0));
+    return vec2(0);
+}
+
+float distributionGGX(vec3 N, vec3 H, float roughness) {
+    float a = roughness * roughness;
+    float a2 = a * a;
+    float NdotH = max(dot(N, H), 0.0);
+    float NdotH2 = NdotH * NdotH;
+
+    float num = a2;
+    float denom = (NdotH2 * (a2 - 1.0) + 1.0);
+    denom = PI * denom * denom;
+
+    return num / max(denom, 0.0001);
+}
+
+float geometrySchlickGGX(float NdotV, float roughness) {
+    float r = roughness + 1.0;
+    float k = (r * r) / 8.0;
+
+    float num = NdotV;
+    float denom = NdotV * (1.0 - k) + k;
+
+    return num / max(denom, 0.0001);
+}
+
+float geometrySmith(vec3 N, vec3 V, vec3 L, float roughness) {
+    float NdotV = max(dot(N, V), 0.0);
+    float NdotL = max(dot(N, L), 0.0);
+    float ggx2 = geometrySchlickGGX(NdotV, roughness);
+    float ggx1 = geometrySchlickGGX(NdotL, roughness);
+    return ggx1 * ggx2;
+}
+
+vec3 fresnelSchlick(float cosTheta, vec3 F0) {
+    return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+}
+
+float calculateShadow(ShadowParameters shadowParam, vec3 fragPos, vec3 normal) {
+    vec4 fragPosLightSpace = shadowParam.lightProjection * shadowParam.lightView * vec4(fragPos, 1.0);
+    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    projCoords = projCoords * 0.5 + 0.5;
+
+    if (projCoords.x < 0.0 || projCoords.x > 1.0 ||
+            projCoords.y < 0.0 || projCoords.y > 1.0 ||
+            projCoords.z > 1.0) {
+        return 0.0;
+    }
+
+    float currentDepth = projCoords.z;
+
+    vec3 lightDirWorld = normalize((inverse(shadowParam.lightView) * vec4(0.0, 0.0, -1.0, 0.0)).xyz);
+    float biasValue = shadowParam.bias;
+    float ndotl = max(dot(normal, lightDirWorld), 0.0);
+    float minBias = 0.0005;
+    float bias = max(biasValue * (1.0 - ndotl), minBias);
+
+    float shadow = 0.0;
+    vec2 texelSize = 1.0 / getTextureDimensions(shadowParam.textureIndex);
+
+    float distance = length(cameraPosition - fragPos);
+    vec2 shadowMapSize = getTextureDimensions(shadowParam.textureIndex);
+    float avgDim = 0.5 * (shadowMapSize.x + shadowMapSize.y);
+    float resFactor = clamp(1024.0 / max(avgDim, 1.0), 0.75, 1.25);
+    float distFactor = clamp(distance / 800.0, 0.0, 1.0);
+    float desiredKernel = mix(1.0, 1.5, distFactor) * resFactor;
+    int kernelSize = int(clamp(floor(desiredKernel + 0.5), 1.0, 2.0));
+
+    const vec2 poissonDisk[12] = vec2[](
+            vec2(-0.326, -0.406), vec2(-0.840, -0.074), vec2(-0.696, 0.457),
+            vec2(-0.203, 0.621), vec2(0.962, -0.195), vec2(0.473, -0.480),
+            vec2(0.519, 0.767), vec2(0.185, -0.893), vec2(0.507, 0.064),
+            vec2(0.896, 0.412), vec2(-0.322, -0.933), vec2(-0.792, -0.598)
+        );
+    float rand = fract(sin(dot(projCoords.xy, vec2(12.9898, 78.233))) * 43758.5453);
+    float angle = rand * 6.2831853;
+    float ca = cos(angle), sa = sin(angle);
+    mat2 rot = mat2(ca, -sa, sa, ca);
+
+    float texelRadius = mix(1.0, 3.0, distFactor) * resFactor;
+    vec2 filterRadius = texelSize * texelRadius;
+
+    int sampleCount = 0;
+    for (int i = 0; i < 12; ++i) {
+        vec2 offset = rot * poissonDisk[i] * filterRadius;
+        vec2 uv = projCoords.xy + offset;
+        if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
+            continue;
+        }
+        float pcfDepth = sampleTextureAt(shadowParam.textureIndex, uv).r;
+        shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
+        sampleCount++;
+    }
+    if (sampleCount > 0) {
+        shadow /= float(sampleCount);
+    }
+
+    return shadow;
+}
+
+float calculatePointShadow(ShadowParameters shadowParam, vec3 fragPos) {
+    vec3 fragToLight = fragPos - shadowParam.lightPos;
+    float currentDepth = length(fragToLight);
+
+    float bias = 0.05;
+    float shadow = 0.0;
+    float diskRadius = (1.0 + (currentDepth / shadowParam.farPlane)) * 0.05;
+
+    const int samples = 20;
+    const vec3 sampleOffsetDirections[] = vec3[](
+            vec3(0.5381, 0.1856, -0.4319), vec3(0.1379, 0.2486, 0.4430),
+            vec3(0.3371, 0.5679, -0.0057), vec3(-0.6999, -0.0451, -0.0019),
+            vec3(0.0689, -0.1598, -0.8547), vec3(0.0560, 0.0069, -0.1843),
+            vec3(-0.0146, 0.1402, 0.0762), vec3(0.0100, -0.1924, -0.0344),
+            vec3(-0.3577, -0.5301, -0.4358), vec3(-0.3169, 0.1063, 0.0158),
+            vec3(0.0103, -0.5869, 0.0046), vec3(-0.0897, -0.4940, 0.3287),
+            vec3(0.7119, -0.0154, -0.0918), vec3(-0.0533, 0.0596, -0.5411),
+            vec3(0.0352, -0.0631, 0.5460), vec3(-0.4776, 0.2847, -0.0271),
+            vec3(-0.1120, 0.1234, -0.7446), vec3(-0.2130, -0.0782, -0.1379),
+            vec3(0.2944, -0.3112, -0.2645), vec3(-0.4564, 0.4175, -0.1843)
+        );
+
+    for (int i = 0; i < samples; ++i) {
+        vec3 sampleDir = normalize(fragToLight + sampleOffsetDirections[i] * diskRadius);
+        float closestDepth = sampleCubeTextureAt(shadowParam.textureIndex, sampleDir).r * shadowParam.farPlane;
+        if (currentDepth - bias > closestDepth) {
+            shadow += 1.0;
+        }
+    }
+
+    shadow /= float(samples);
+    return shadow;
+}
+
+vec3 evaluateBRDF(vec3 L, vec3 radiance, vec3 N, vec3 V, vec3 F0, vec3 albedo, float metallic, float roughness) {
+    vec3 H = normalize(V + L);
+
+    float NDF = distributionGGX(N, H, roughness);
+    float G = geometrySmith(N, V, L, roughness);
+    vec3 F = fresnelSchlick(max(dot(H, V), 0.0), F0);
+
+    vec3 kS = F;
+    vec3 kD = (vec3(1.0) - kS) * (1.0 - metallic);
+
+    float NdotV = max(dot(N, V), 0.0);
+    float NdotL = max(dot(N, L), 0.0);
+
+    vec3 numerator = NDF * G * F;
+    float denominator = max(4.0 * NdotV * NdotL, 0.0001);
+    vec3 specular = numerator / denominator;
+
+    return (kD * albedo / PI + specular) * radiance * NdotL;
+}
+
+vec3 calcDirectionalLight(DirectionalLight light, vec3 N, vec3 V, vec3 F0, vec3 albedo, float metallic, float roughness) {
+    vec3 L = normalize(-light.direction);
+    vec3 radiance = light.diffuse;
+    return evaluateBRDF(L, radiance, N, V, F0, albedo, metallic, roughness);
+}
+
+vec3 calcPointLight(PointLight light, vec3 fragPos, vec3 N, vec3 V, vec3 F0, vec3 albedo, float metallic, float roughness) {
+    vec3 L = light.position - fragPos;
+    float distance = length(L);
+    vec3 direction = distance > 0.0 ? (L / distance) : vec3(0.0, 0.0, 1.0);
+    float attenuation = 1.0 / max(light.constant + light.linear * distance + light.quadratic * distance * distance, 0.0001);
+    float fade = 1.0 - smoothstep(light.radius * 0.9, light.radius, distance);
+    vec3 radiance = light.diffuse * attenuation * fade;
+    return evaluateBRDF(direction, radiance, N, V, F0, albedo, metallic, roughness);
+}
+
+vec3 calcSpotLight(SpotLight light, vec3 fragPos, vec3 N, vec3 V, vec3 F0, vec3 albedo, float metallic, float roughness) {
+    vec3 L = light.position - fragPos;
+    float distance = length(L);
+    vec3 direction = normalize(L);
+
+    vec3 spotDirection = normalize(light.direction);
+    float theta = dot(direction, -spotDirection);
+    float epsilon = max(light.cutOff - light.outerCutOff, 0.0001);
+    float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
+
+    float attenuation = 1.0 / (1.0 + 0.09 * distance + 0.032 * distance * distance);
+    vec3 radiance = light.diffuse * attenuation * intensity;
+    return evaluateBRDF(direction, radiance, N, V, F0, albedo, metallic, roughness);
+}
+
+vec3 sampleEnvironmentRadiance(vec3 direction) {
+    return texture(skybox, direction).rgb;
+}
+
+vec3 acesToneMapping(vec3 color) {
+    float a = 2.51;
+    float b = 0.03;
+    float c = 2.43;
+    float d = 0.59;
+    float e = 0.14;
+    color = (color * (a * color + b)) / (color * (c * color + d) + e);
+    color = pow(clamp(color, 0.0, 1.0), vec3(1.0 / 2.2));
+    return color;
+}
+
+vec3 getRimLight(
+    vec3 fragPos,
+    vec3 N,
+    vec3 V,
+    vec3 F0,
+    vec3 albedo,
+    float metallic,
+    float roughness
+) {
+    N = normalize(N);
+    V = normalize(V);
+
+    float rim = pow(1.0 - max(dot(N, V), 0.0), 3.0);
+
+    rim *= mix(1.2, 0.3, roughness);
+
+    vec3 rimColor = mix(vec3(1.0), albedo, metallic) * environment.rimLightColor;
+    rimColor = mix(rimColor, F0, 0.5);
+
+    float rimIntensity = environment.rimLightIntensity;
+
+    vec3 rimLight = rimColor * rim * rimIntensity;
+
+    float dist = length(cameraPosition - fragPos);
+    rimLight /= (1.0 + dist * 0.1);
+
+    return rimLight;
+}
+
+void main() {
+    vec3 FragPos = texture(gPosition, TexCoord).xyz;
+    vec3 N = normalize(texture(gNormal, TexCoord).xyz);
+    vec4 albedoAo = texture(gAlbedoSpec, TexCoord);
+    vec3 albedo = albedoAo.rgb;
+    vec4 matData = texture(gMaterial, TexCoord);
+    float metallic = clamp(matData.r, 0.0, 1.0);
+    float roughness = clamp(matData.g, 0.0, 1.0);
+    float ao = clamp(matData.b, 0.0, 1.0);
+
+    float viewDistance = max(length(cameraPosition - FragPos), 1e-6);
+    vec3 V = (cameraPosition - FragPos) / viewDistance;
+
+    vec3 F0 = mix(vec3(0.04), albedo, metallic);
+
+    float ssaoFactor = clamp(texture(ssao, TexCoord).r, 0.0, 1.0);
+    float ssaoDesaturated = mix(1.0, ssaoFactor, 0.35);
+    float occlusion = clamp(ao * (0.2 + 0.8 * ssaoDesaturated), 0.0, 1.0);
+    float lightingOcclusion = clamp(ssaoDesaturated, 0.2, 1.0);
+
+    float dirShadow = 0.0;
+    float pointShadow = 0.0;
+    for (int i = 0; i < shadowParamCount; ++i) {
+        if (shadowParams[i].isPointLight) {
+            pointShadow = max(pointShadow, calculatePointShadow(shadowParams[i], FragPos));
+        } else {
+            dirShadow = max(dirShadow, calculateShadow(shadowParams[i], FragPos, N));
+        }
+    }
+
+    vec3 directionalResult = vec3(0.0);
+    for (int i = 0; i < directionalLightCount; ++i) {
+        directionalResult += calcDirectionalLight(directionalLights[i], N, V, F0, albedo, metallic, roughness);
+    }
+    directionalResult *= (1.0 - dirShadow);
+
+    vec3 pointResult = vec3(0.0);
+    for (int i = 0; i < pointLightCount; ++i) {
+        pointResult += calcPointLight(pointLights[i], FragPos, N, V, F0, albedo, metallic, roughness);
+    }
+    pointResult *= (1.0 - pointShadow);
+
+    vec3 spotResult = vec3(0.0);
+    for (int i = 0; i < spotlightCount; ++i) {
+        spotResult += calcSpotLight(spotlights[i], FragPos, N, V, F0, albedo, metallic, roughness);
+    }
+
+    vec3 areaResult = vec3(0.0);
+    for (int i = 0; i < areaLightCount; ++i) {
+        vec3 P = areaLights[i].position;
+        vec3 R = normalize(areaLights[i].right);
+        vec3 U = normalize(areaLights[i].up);
+        vec2 halfSize = areaLights[i].size * 0.5;
+
+        vec3 toPoint = FragPos - P;
+        float s = clamp(dot(toPoint, R), -halfSize.x, halfSize.x);
+        float t = clamp(dot(toPoint, U), -halfSize.y, halfSize.y);
+        vec3 Q = P + R * s + U * t;
+
+        vec3 Lvec = Q - FragPos;
+        float dist = length(Lvec);
+        if (dist > 0.0001) {
+            vec3 L = Lvec / dist;
+            vec3 Nl = normalize(cross(R, U));
+            float ndotl = dot(Nl, -L);
+
+            float facing = (areaLights[i].castsBothSides != 0) ? abs(ndotl) : max(ndotl, 0.0);
+            float cosTheta = cos(radians(areaLights[i].angle));
+
+            if (facing >= cosTheta && facing > 0.0) {
+                float attenuation = 1.0 / max(dist * dist, 0.0001);
+                vec3 radiance = areaLights[i].diffuse * attenuation * facing;
+                areaResult += evaluateBRDF(L, radiance, N, V, F0, albedo, metallic, roughness);
+            }
+        }
+    }
+
+    vec3 rimResult = getRimLight(FragPos, N, V, F0, albedo, metallic, roughness);
+    vec3 lighting = (directionalResult + pointResult + spotResult + areaResult + rimResult) * lightingOcclusion;
+
+    vec3 ambient = ambientLight.color.rgb * ambientLight.intensity * albedo * occlusion;
+
+    vec3 iblContribution = vec3(0.0);
+    if (useIBL) {
+        vec3 irradiance = sampleEnvironmentRadiance(N);
+        vec3 diffuseIBL = irradiance * albedo;
+
+        vec3 reflection = reflect(-V, N);
+        vec3 specularEnv = sampleEnvironmentRadiance(reflection);
+
+        vec3 F = fresnelSchlick(max(dot(N, V), 0.0), F0);
+        vec3 kS = F;
+        vec3 kD = (vec3(1.0) - kS) * (1.0 - metallic);
+
+        float roughnessAttenuation = mix(1.0, 0.15, clamp(roughness, 0.0, 1.0));
+        vec3 specularIBL = specularEnv * roughnessAttenuation;
+
+        iblContribution = (kD * diffuseIBL + kS * specularIBL) * occlusion;
+    }
+
+    vec3 finalColor = ambient + lighting + iblContribution;
+
+    if (!useIBL) {
+        vec3 I = normalize(FragPos - cameraPosition);
+        vec3 R = reflect(-I, N);
+
+        vec3 F = fresnelSchlick(max(dot(N, -I), 0.0), F0);
+        vec3 kS = F;
+        vec3 kD = (vec3(1.0) - kS) * (1.0 - metallic);
+
+        vec3 envColor = texture(skybox, R).rgb;
+        vec3 reflection = envColor * kS;
+
+        finalColor = mix(finalColor, reflection, F0);
+    }
+
+    FragColor = vec4(finalColor, 1.0);
+
+    float brightness = dot(FragColor.rgb, vec3(0.2126, 0.7152, 0.0722));
+    if (brightness > 1.0) {
+        BrightColor = vec4(FragColor.rgb, 1.0);
+    } else {
+        BrightColor = vec4(0.0, 0.0, 0.0, 1.0);
+    }
+
+    FragColor.rgb = acesToneMapping(FragColor.rgb);
+}
+
+)";
+
+static const char* SSR_BLUR_FRAG = R"(
+
+)";
+
+static const char* SKYBOX_VERT = R"(
+#version 410 core
+layout (location = 0) in vec3 aPos;
+
+out vec3 TexCoords;
+
+uniform mat4 projection;
+uniform mat4 view;
+
+void main()
+{
+    TexCoords = aPos;
+    vec4 pos = projection * view * vec4(aPos, 1.0);
+    gl_Position = pos.xyww; 
+}  
+
+)";
+
+static const char* SSR_FRAG = R"(
+#version 410 core
+out vec4 FragColor;
+
+in vec2 TexCoord;
+
+uniform sampler2D gPosition;
+uniform sampler2D gNormal;
+uniform sampler2D gAlbedoSpec;
+uniform sampler2D gMaterial;
+uniform sampler2D sceneColor;  
+uniform sampler2D gDepth;     
+
+uniform mat4 projection;
+uniform mat4 view;
+uniform mat4 inverseProjection;
+uniform mat4 inverseView;
+uniform vec3 cameraPosition;
+
+uniform float maxDistance = 30.0;   
+uniform float resolution = 0.5;     
+uniform int steps = 64;            
+uniform float thickness = 2.0;      
+uniform float maxRoughness = 0.5;  
+
+const float PI = 3.14159265359;
+
+float LinearizeDepth(float depth, float near, float far) {
+    float z = depth * 2.0 - 1.0;
+    return (2.0 * near * far) / (far + near - z * (far - near));
+}
+
+float hash(vec2 p) {
+    vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+    p3 += dot(p3, p3.yzx + 33.33);
+    return fract((p3.x + p3.y) * p3.z);
+}
+
+vec3 fresnelSchlick(float cosTheta, vec3 F0) {
+    return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
+}
+
+vec4 SSR(vec3 worldPos, vec3 normal, vec3 viewDir, float roughness, float metallic, vec3 albedo) {
+    vec3 viewPos = (view * vec4(worldPos, 1.0)).xyz;
+    vec3 viewNormal = normalize((view * vec4(normal, 0.0)).xyz);
+    
+    vec3 viewDirection = normalize(viewPos);
+    vec3 viewReflect = normalize(reflect(viewDirection, viewNormal));
+    
+    if (viewReflect.z > 0.0) {
+        return vec4(0.0);
+    }
+    
+    vec3 rayOrigin = viewPos + viewNormal * 0.01;
+    vec3 rayDir = viewReflect;
+    
+    float stepSize = maxDistance / float(steps);
+    vec3 currentPos = rayOrigin;
+    
+    vec3 magic = vec3(0.06711056, 0.00583715, 52.9829189);
+    float jitter = fract(magic.z * fract(dot(gl_FragCoord.xy, magic.xy)));
+    currentPos += rayDir * stepSize * jitter;
+    
+    vec2 hitUV = vec2(-1.0);
+    float hitDepth = 0.0;
+    bool hit = false;
+    
+    vec3 lastPos = currentPos;
+    
+    for (int i = 0; i < steps; i++) {
+        float t = float(i) / float(steps);
+        float adaptiveStep = mix(0.3, 1.0, t);
+        currentPos += rayDir * stepSize * adaptiveStep;
+        
+        vec4 projectedPos = projection * vec4(currentPos, 1.0);
+        projectedPos.xyz /= projectedPos.w;
+        vec2 screenUV = projectedPos.xy * 0.5 + 0.5;
+        
+        if (screenUV.x < 0.0 || screenUV.x > 1.0 || 
+            screenUV.y < 0.0 || screenUV.y > 1.0) {
+            break;
+        }
+        
+        vec3 sampleWorldPos = texture(gPosition, screenUV).xyz;
+        vec3 sampleViewPos = (view * vec4(sampleWorldPos, 1.0)).xyz;
+        
+        float sampleDepth = -sampleViewPos.z;
+        float currentDepth = -currentPos.z;
+        
+        float depthDiff = sampleDepth - currentDepth;
+        
+        if (depthDiff > 0.0 && depthDiff < thickness) {
+            vec3 binarySearchStart = lastPos;
+            vec3 binarySearchEnd = currentPos;
+            
+            for (int j = 0; j < 8; j++) {  
+                vec3 midPoint = (binarySearchStart + binarySearchEnd) * 0.5;
+                
+                vec4 midProj = projection * vec4(midPoint, 1.0);
+                midProj.xyz /= midProj.w;
+                vec2 midUV = midProj.xy * 0.5 + 0.5;
+                
+                vec3 midSampleWorldPos = texture(gPosition, midUV).xyz;
+                vec3 midSampleViewPos = (view * vec4(midSampleWorldPos, 1.0)).xyz;
+                float midSampleDepth = -midSampleViewPos.z;  
+                float midCurrentDepth = -midPoint.z;        
+                
+                if (midCurrentDepth < midSampleDepth) {
+                    binarySearchStart = midPoint;
+                } else {
+                    binarySearchEnd = midPoint;
+                }
+            }
+            
+            vec4 finalProj = projection * vec4(binarySearchEnd, 1.0);
+            finalProj.xyz /= finalProj.w;
+            hitUV = finalProj.xy * 0.5 + 0.5;
+            hitDepth = length(currentPos - rayOrigin);
+            hit = true;
+            break;
+        }
+        
+        lastPos = currentPos;
+    }
+    
+    if (!hit) {
+        return vec4(0.0);
+    }
+    
+    float mipLevel = roughness * 5.0;
+    vec3 reflectionColor = textureLod(sceneColor, hitUV, mipLevel).rgb;
+    
+    vec2 edgeFade = smoothstep(0.0, 0.15, hitUV) * (1.0 - smoothstep(0.85, 1.0, hitUV));
+    float edgeFactor = edgeFade.x * edgeFade.y;
+    
+    float distanceFade = 1.0 - smoothstep(maxDistance * 0.5, maxDistance, hitDepth);
+    
+    float roughnessFade = 1.0 - smoothstep(0.0, maxRoughness, roughness);
+    
+    vec3 F0 = mix(vec3(0.04), albedo, metallic);
+    vec3 V = normalize(cameraPosition - worldPos);
+    float cosTheta = max(dot(normal, V), 0.0);
+    vec3 fresnel = fresnelSchlick(cosTheta, F0);
+    float fresnelFactor = (fresnel.r + fresnel.g + fresnel.b) / 3.0;
+    
+    float finalFade = edgeFactor * distanceFade * roughnessFade * fresnelFactor;
+    
+    return vec4(reflectionColor, finalFade);
+}
+
+void main() {
+    vec3 worldPos = texture(gPosition, TexCoord).xyz;
+    vec3 normal = normalize(texture(gNormal, TexCoord).xyz);
+    vec3 albedo = texture(gAlbedoSpec, TexCoord).rgb;
+    vec4 material = texture(gMaterial, TexCoord);
+    
+    float metallic = material.r;
+    float roughness = material.g;
+    
+    if (length(normal) < 0.001) {
+        FragColor = vec4(0.0, 0.0, 0.0, 0.0);
+        return;
+    }
+    
+    if (roughness > maxRoughness) {
+        FragColor = vec4(0.0, 0.0, 0.0, 0.0);
+        return;
+    }
+    
+    vec3 viewDir = normalize(cameraPosition - worldPos);
+    
+    vec4 reflection = SSR(worldPos, normal, viewDir, roughness, metallic, albedo);
+    
+    FragColor = reflection;
+}
+)";
+
+static const char* PARTICLE_FRAG = R"(
+#version 410 core
+in vec2 fragTexCoord;
+in vec4 fragColor;
+out vec4 FragColor;
+uniform sampler2D particleTexture;
+uniform bool useTexture;
+
+void main() {
+    if (useTexture) {
+        vec4 texColor = texture(particleTexture, fragTexCoord);
+        if (texColor.a < 0.01) discard;
+        FragColor = texColor * fragColor;
+    } else {
+        vec2 center = vec2(0.5, 0.5);
+        float dist = distance(fragTexCoord, center);
+        
+        float alpha = 1.0 - smoothstep(0.3, 0.5, dist);
+        
+        FragColor = vec4(fragColor.rgb, fragColor.a * alpha);
+        
+        if (FragColor.a < 0.01) discard;
+    }
+}
+)";
+
+static const char* PARTICLE_VERT = R"(
+#version 410 core
+
+layout(location = 0) in vec3 quadVertex;
+layout(location = 1) in vec2 texCoord;
+
+layout(location = 2) in vec3 particlePos;
+layout(location = 3) in vec4 particleColor;
+layout(location = 4) in float particleSize;
+
+uniform mat4 view;
+uniform mat4 projection;
+uniform mat4 model;
+uniform bool isAmbient;
+
+out vec2 fragTexCoord;
+out vec4 fragColor;
+
+void main() {
+    if (isAmbient) {
+        vec4 viewParticlePos = view * vec4(particlePos, 1.0);
+
+        vec3 viewPosition =
+            viewParticlePos.xyz +
+            vec3(quadVertex.x * particleSize, quadVertex.y * particleSize, 0.0);
+
+        gl_Position = projection * model * vec4(viewPosition, 1.0);
+    } else {
+        vec3 cameraRight = vec3(view[0][0], view[1][0], view[2][0]);
+        vec3 cameraUp = vec3(view[0][1], view[1][1], view[2][1]);
+
+        vec3 worldPosition = particlePos +
+                             (quadVertex.x * cameraRight * particleSize) +
+                             (quadVertex.y * cameraUp * particleSize);
+
+        gl_Position = projection * view * vec4(worldPosition, 1.0);
+    }
+
+    fragTexCoord = texCoord;
+    fragColor = particleColor;
+}
+)";
+
+static const char* GAUSSIAN_FRAG = R"(
+#version 410 core
+out vec4 FragColor;
+
+in vec2 TexCoord;
+
+uniform sampler2D image;
+
+uniform bool horizontal;
+uniform float weight[5] = float[](0.227027, 0.1945946, 0.1216216, 0.054054, 0.016216);
+uniform float radius = 1.0;
+
+void main() {
+    vec2 tex_offset = 1.0 / textureSize(image, 0) * radius; 
+    vec3 result = texture(image, TexCoord).rgb * weight[0];
+    if(horizontal)
+    {
+        for(int i = 1; i < 5; ++i)
+        {
+            result += texture(image, TexCoord + vec2(tex_offset.x * i, 0.0)).rgb * weight[i];
+            result += texture(image, TexCoord - vec2(tex_offset.x * i, 0.0)).rgb * weight[i];
+        }
+    }
+    else
+    {
+        for(int i = 1; i < 5; ++i)
+        {
+            result += texture(image, TexCoord + vec2(0.0, tex_offset.y * i)).rgb * weight[i];
+            result += texture(image, TexCoord - vec2(0.0, tex_offset.y * i)).rgb * weight[i];
+        }
+    }
+    FragColor = vec4(result, 1.0);
+}
+)";
+
 static const char* SKYBOX_FRAG = R"(
 #version 410 core
 out vec4 FragColor;
@@ -4259,309 +4439,6 @@ void main() {
 
 )";
 
-static const char* PARTICLE_FRAG = R"(
-#version 410 core
-in vec2 fragTexCoord;
-in vec4 fragColor;
-out vec4 FragColor;
-uniform sampler2D particleTexture;
-uniform bool useTexture;
-
-void main() {
-    if (useTexture) {
-        vec4 texColor = texture(particleTexture, fragTexCoord);
-        if (texColor.a < 0.01) discard;
-        FragColor = texColor * fragColor;
-    } else {
-        vec2 center = vec2(0.5, 0.5);
-        float dist = distance(fragTexCoord, center);
-        
-        float alpha = 1.0 - smoothstep(0.3, 0.5, dist);
-        
-        FragColor = vec4(fragColor.rgb, fragColor.a * alpha);
-        
-        if (FragColor.a < 0.01) discard;
-    }
-}
-)";
-
-static const char* PARTICLE_VERT = R"(
-#version 410 core
-
-layout(location = 0) in vec3 quadVertex;
-layout(location = 1) in vec2 texCoord;
-
-layout(location = 2) in vec3 particlePos;
-layout(location = 3) in vec4 particleColor;
-layout(location = 4) in float particleSize;
-
-uniform mat4 view;
-uniform mat4 projection;
-uniform mat4 model;
-uniform bool isAmbient;
-
-out vec2 fragTexCoord;
-out vec4 fragColor;
-
-void main() {
-    if (isAmbient) {
-        vec4 viewParticlePos = view * vec4(particlePos, 1.0);
-
-        vec3 viewPosition =
-            viewParticlePos.xyz +
-            vec3(quadVertex.x * particleSize, quadVertex.y * particleSize, 0.0);
-
-        gl_Position = projection * model * vec4(viewPosition, 1.0);
-    } else {
-        vec3 cameraRight = vec3(view[0][0], view[1][0], view[2][0]);
-        vec3 cameraUp = vec3(view[0][1], view[1][1], view[2][1]);
-
-        vec3 worldPosition = particlePos +
-                             (quadVertex.x * cameraRight * particleSize) +
-                             (quadVertex.y * cameraUp * particleSize);
-
-        gl_Position = projection * view * vec4(worldPosition, 1.0);
-    }
-
-    fragTexCoord = texCoord;
-    fragColor = particleColor;
-}
-)";
-
-static const char* SKYBOX_VERT = R"(
-#version 410 core
-layout (location = 0) in vec3 aPos;
-
-out vec3 TexCoords;
-
-uniform mat4 projection;
-uniform mat4 view;
-
-void main()
-{
-    TexCoords = aPos;
-    vec4 pos = projection * view * vec4(aPos, 1.0);
-    gl_Position = pos.xyww; 
-}  
-
-)";
-
-static const char* GAUSSIAN_FRAG = R"(
-#version 410 core
-out vec4 FragColor;
-
-in vec2 TexCoord;
-
-uniform sampler2D image;
-
-uniform bool horizontal;
-uniform float weight[5] = float[](0.227027, 0.1945946, 0.1216216, 0.054054, 0.016216);
-uniform float radius = 1.0;
-
-void main() {
-    vec2 tex_offset = 1.0 / textureSize(image, 0) * radius; 
-    vec3 result = texture(image, TexCoord).rgb * weight[0];
-    if(horizontal)
-    {
-        for(int i = 1; i < 5; ++i)
-        {
-            result += texture(image, TexCoord + vec2(tex_offset.x * i, 0.0)).rgb * weight[i];
-            result += texture(image, TexCoord - vec2(tex_offset.x * i, 0.0)).rgb * weight[i];
-        }
-    }
-    else
-    {
-        for(int i = 1; i < 5; ++i)
-        {
-            result += texture(image, TexCoord + vec2(0.0, tex_offset.y * i)).rgb * weight[i];
-            result += texture(image, TexCoord - vec2(0.0, tex_offset.y * i)).rgb * weight[i];
-        }
-    }
-    FragColor = vec4(result, 1.0);
-}
-)";
-
-static const char* SSR_BLUR_FRAG = R"(
-
-)";
-
-static const char* SSR_FRAG = R"(
-#version 410 core
-out vec4 FragColor;
-
-in vec2 TexCoord;
-
-uniform sampler2D gPosition;
-uniform sampler2D gNormal;
-uniform sampler2D gAlbedoSpec;
-uniform sampler2D gMaterial;
-uniform sampler2D sceneColor;  
-uniform sampler2D gDepth;     
-
-uniform mat4 projection;
-uniform mat4 view;
-uniform mat4 inverseProjection;
-uniform mat4 inverseView;
-uniform vec3 cameraPosition;
-
-uniform float maxDistance = 30.0;   
-uniform float resolution = 0.5;     
-uniform int steps = 64;            
-uniform float thickness = 2.0;      
-uniform float maxRoughness = 0.5;  
-
-const float PI = 3.14159265359;
-
-float LinearizeDepth(float depth, float near, float far) {
-    float z = depth * 2.0 - 1.0;
-    return (2.0 * near * far) / (far + near - z * (far - near));
-}
-
-float hash(vec2 p) {
-    vec3 p3 = fract(vec3(p.xyx) * 0.1031);
-    p3 += dot(p3, p3.yzx + 33.33);
-    return fract((p3.x + p3.y) * p3.z);
-}
-
-vec3 fresnelSchlick(float cosTheta, vec3 F0) {
-    return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
-}
-
-vec4 SSR(vec3 worldPos, vec3 normal, vec3 viewDir, float roughness, float metallic, vec3 albedo) {
-    vec3 viewPos = (view * vec4(worldPos, 1.0)).xyz;
-    vec3 viewNormal = normalize((view * vec4(normal, 0.0)).xyz);
-    
-    vec3 viewDirection = normalize(viewPos);
-    vec3 viewReflect = normalize(reflect(viewDirection, viewNormal));
-    
-    if (viewReflect.z > 0.0) {
-        return vec4(0.0);
-    }
-    
-    vec3 rayOrigin = viewPos + viewNormal * 0.01;
-    vec3 rayDir = viewReflect;
-    
-    float stepSize = maxDistance / float(steps);
-    vec3 currentPos = rayOrigin;
-    
-    vec3 magic = vec3(0.06711056, 0.00583715, 52.9829189);
-    float jitter = fract(magic.z * fract(dot(gl_FragCoord.xy, magic.xy)));
-    currentPos += rayDir * stepSize * jitter;
-    
-    vec2 hitUV = vec2(-1.0);
-    float hitDepth = 0.0;
-    bool hit = false;
-    
-    vec3 lastPos = currentPos;
-    
-    for (int i = 0; i < steps; i++) {
-        float t = float(i) / float(steps);
-        float adaptiveStep = mix(0.3, 1.0, t);
-        currentPos += rayDir * stepSize * adaptiveStep;
-        
-        vec4 projectedPos = projection * vec4(currentPos, 1.0);
-        projectedPos.xyz /= projectedPos.w;
-        vec2 screenUV = projectedPos.xy * 0.5 + 0.5;
-        
-        if (screenUV.x < 0.0 || screenUV.x > 1.0 || 
-            screenUV.y < 0.0 || screenUV.y > 1.0) {
-            break;
-        }
-        
-        vec3 sampleWorldPos = texture(gPosition, screenUV).xyz;
-        vec3 sampleViewPos = (view * vec4(sampleWorldPos, 1.0)).xyz;
-        
-        float sampleDepth = -sampleViewPos.z;
-        float currentDepth = -currentPos.z;
-        
-        float depthDiff = sampleDepth - currentDepth;
-        
-        if (depthDiff > 0.0 && depthDiff < thickness) {
-            vec3 binarySearchStart = lastPos;
-            vec3 binarySearchEnd = currentPos;
-            
-            for (int j = 0; j < 8; j++) {  
-                vec3 midPoint = (binarySearchStart + binarySearchEnd) * 0.5;
-                
-                vec4 midProj = projection * vec4(midPoint, 1.0);
-                midProj.xyz /= midProj.w;
-                vec2 midUV = midProj.xy * 0.5 + 0.5;
-                
-                vec3 midSampleWorldPos = texture(gPosition, midUV).xyz;
-                vec3 midSampleViewPos = (view * vec4(midSampleWorldPos, 1.0)).xyz;
-                float midSampleDepth = -midSampleViewPos.z;  
-                float midCurrentDepth = -midPoint.z;        
-                
-                if (midCurrentDepth < midSampleDepth) {
-                    binarySearchStart = midPoint;
-                } else {
-                    binarySearchEnd = midPoint;
-                }
-            }
-            
-            vec4 finalProj = projection * vec4(binarySearchEnd, 1.0);
-            finalProj.xyz /= finalProj.w;
-            hitUV = finalProj.xy * 0.5 + 0.5;
-            hitDepth = length(currentPos - rayOrigin);
-            hit = true;
-            break;
-        }
-        
-        lastPos = currentPos;
-    }
-    
-    if (!hit) {
-        return vec4(0.0);
-    }
-    
-    float mipLevel = roughness * 5.0;
-    vec3 reflectionColor = textureLod(sceneColor, hitUV, mipLevel).rgb;
-    
-    vec2 edgeFade = smoothstep(0.0, 0.15, hitUV) * (1.0 - smoothstep(0.85, 1.0, hitUV));
-    float edgeFactor = edgeFade.x * edgeFade.y;
-    
-    float distanceFade = 1.0 - smoothstep(maxDistance * 0.5, maxDistance, hitDepth);
-    
-    float roughnessFade = 1.0 - smoothstep(0.0, maxRoughness, roughness);
-    
-    vec3 F0 = mix(vec3(0.04), albedo, metallic);
-    vec3 V = normalize(cameraPosition - worldPos);
-    float cosTheta = max(dot(normal, V), 0.0);
-    vec3 fresnel = fresnelSchlick(cosTheta, F0);
-    float fresnelFactor = (fresnel.r + fresnel.g + fresnel.b) / 3.0;
-    
-    float finalFade = edgeFactor * distanceFade * roughnessFade * fresnelFactor;
-    
-    return vec4(reflectionColor, finalFade);
-}
-
-void main() {
-    vec3 worldPos = texture(gPosition, TexCoord).xyz;
-    vec3 normal = normalize(texture(gNormal, TexCoord).xyz);
-    vec3 albedo = texture(gAlbedoSpec, TexCoord).rgb;
-    vec4 material = texture(gMaterial, TexCoord);
-    
-    float metallic = material.r;
-    float roughness = material.g;
-    
-    if (length(normal) < 0.001) {
-        FragColor = vec4(0.0, 0.0, 0.0, 0.0);
-        return;
-    }
-    
-    if (roughness > maxRoughness) {
-        FragColor = vec4(0.0, 0.0, 0.0, 0.0);
-        return;
-    }
-    
-    vec3 viewDir = normalize(cameraPosition - worldPos);
-    
-    vec4 reflection = SSR(worldPos, normal, viewDir, roughness, metallic, albedo);
-    
-    FragColor = reflection;
-}
-)";
-
 static const char* VOLUMETRIC_VERT = R"(
 #version 410 core
 
@@ -4633,6 +4510,129 @@ void main() {
     vec3 rays = computeVolumetricLighting(TexCoords);
 
     FragColor = vec4(rays, 1.0);
+}
+
+)";
+
+static const char* TEXTURE_VERT = R"(
+#version 410 core
+layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec4 aColor;
+layout (location = 2) in vec2 aTexCoord;
+
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+
+out vec4 outColor;
+out vec2 TexCoord; 
+
+void main() {
+    mat4 mvp = projection * view * model;
+    gl_Position = mvp * vec4(aPos, 1.0);
+    TexCoord = aTexCoord;
+    outColor = aColor;
+}
+
+)";
+
+static const char* DEBUG_VERT = R"(
+#version 410 core
+layout (location = 0) in vec3 aPos;
+
+void main() {
+    gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
+}
+
+)";
+
+static const char* DEBUG_FRAG = R"(
+#version 410 core
+out vec4 FragColor;
+
+void main() {
+    FragColor = vec4(1.0, 0.0, 1.0, 1.0);
+}
+
+)";
+
+static const char* TEXTURE_FRAG = R"(
+#version 410 core
+out vec4 FragColor;
+
+in vec2 TexCoord;
+in vec4 outColor;
+
+uniform sampler2D textures[16];
+
+uniform bool useTexture;
+uniform bool onlyTexture;
+uniform int textureCount;
+
+vec4 calculateAllTextures() {
+    vec4 color = vec4(0.0);
+
+    for (int i = 0; i <= textureCount; i++) {
+        color += texture(textures[i], TexCoord);
+    }
+
+    color /= float(textureCount + 1); 
+
+    return color;
+}
+
+void main() {
+    if (onlyTexture) {
+        FragColor = calculateAllTextures(); 
+        return;
+    }
+
+    if (useTexture) {
+        FragColor = calculateAllTextures() * outColor;
+    } else {
+        FragColor = outColor;
+    }
+}
+
+)";
+
+static const char* COLOR_FRAG = R"(
+#version 410 core
+layout (location = 0) out vec4 FragColor;
+layout (location = 1) out vec4 BrightColor;
+in vec4 vertexColor;
+
+void main() {
+    vec3 color = vertexColor.rgb / (vertexColor.rgb + vec3(1.0));
+    FragColor = vec4(color, vertexColor.a);
+    if (length(color) > 1.0) {
+        BrightColor = vec4(color, vertexColor.a);
+    }
+}
+)";
+
+static const char* COLOR_VERT = R"(
+#version 410 core
+layout(location = 0) in vec3 aPos;
+layout(location = 1) in vec4 aColor;
+layout(location = 6) in mat4 instanceModel;
+
+out vec4 vertexColor;
+
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+uniform bool isInstanced = true;
+
+void main() {
+    mat4 mvp;
+    if (isInstanced) {
+        mvp = projection * view * instanceModel;
+    } else {
+        mvp = projection * view * model;
+    }
+    gl_Position = mvp * vec4(aPos, 1.0);
+    vertexColor = aColor;
 }
 
 )";

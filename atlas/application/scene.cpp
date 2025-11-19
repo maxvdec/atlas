@@ -12,6 +12,10 @@
 #include "atlas/window.h"
 #include <algorithm>
 #include <array>
+#include "atlas/core/renderable.h"
+#include "atlas/object.h"
+
+std::vector<CoreVertex> Renderable::getVertices() const { return {}; }
 
 void Scene::updateScene(float dt) {
     atmosphere.update(dt);

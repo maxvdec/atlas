@@ -51,7 +51,11 @@ add_custom_command(
 find_package(OpenGL REQUIRED)
 find_package(glm REQUIRED)
 find_package(Freetype REQUIRED)
-find_package(Assimp REQUIRED)
+if (LINUX)
+    find_package(assimp REQUIRED)
+else()
+    find_package(Assimp REQUIRED)
+endif()
 find_package(glfw3 REQUIRED)
 
 if(APPLE)

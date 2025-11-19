@@ -13,6 +13,7 @@
 #include <memory>
 #include <utility>
 #include <vector>
+#include <glm/glm.hpp>
 
 /**
  * @brief Classic gradient-noise implementation used for soft terrain shapes.
@@ -265,7 +266,7 @@ class IslandGenerator : public TerrainGenerator {
     float generateHeight(float x, float y) override {
         WorleyNoise worley(numFeatures);
         float noise = worley.noise(x * scale, y * scale);
-        return std::clamp(noise, 0.0f, 1.0f);
+        return glm::clamp(noise, 0.0f, 1.0f);
     }
 };
 
