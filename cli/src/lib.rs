@@ -1,4 +1,5 @@
 pub mod create;
+pub mod lsp;
 pub mod pack;
 use clap::Subcommand;
 
@@ -20,6 +21,7 @@ pub enum Commands {
         #[arg(default_value_t = 0, long, short)]
         release: u8,
     },
+    LSP {},
 }
 
 #[derive(serde::Deserialize)]

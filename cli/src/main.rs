@@ -18,5 +18,8 @@ fn main() {
             pack::pack(cli.command);
         }
         Commands::Run { .. } => pack::run(cli.command),
+        Commands::LSP {} => {
+            lsp::lsp();
+        }
     }
 }

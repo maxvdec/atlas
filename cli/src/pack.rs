@@ -110,7 +110,6 @@ pub fn pack(cmd: Commands) {
         std::fs::create_dir(build_dir).expect("Failed to create build directory");
     }
     run_cmake(build_dir, release);
-    println!("{}", "CMake build successful!".italic().green());
 
     let current_machine = if cfg!(target_os = "windows") {
         "windows"
@@ -303,7 +302,6 @@ pub fn run(cmd: Commands) {
         std::fs::create_dir(build_dir).expect("Failed to create build directory");
     }
     run_cmake(build_dir, release);
-    println!("{}", "CMake build successful!".italic().green());
 
     let current_machine = if cfg!(target_os = "windows") {
         "windows"
