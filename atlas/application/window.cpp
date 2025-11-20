@@ -30,42 +30,32 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
 #include <tuple>
+#include <opal/opal.h>
+
+using namespace opal;
 
 Window *Window::mainWindow = nullptr;
 
 Window::Window(WindowConfiguration config)
     : title(config.title), width(config.width), height(config.height) {
-    if (!glfwInit()) {
-        throw std::runtime_error("Failed to initialize GLFW");
-    }
+    auto context = Context::create();
 
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 1);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    glfwWindowHint(GLFW_DECORATED, config.decorations ? GLFW_TRUE : GLFW_FALSE);
-    glfwWindowHint(GLFW_RESIZABLE, config.resizable ? GLFW_TRUE : GLFW_FALSE);
-    glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER,
-                   config.transparent ? GLFW_TRUE : GLFW_FALSE);
-    glfwWindowHint(GLFW_FLOATING, config.alwaysOnTop ? GLFW_TRUE : GLFW_FALSE);
-    glfwWindowHint(GLFW_SAMPLES, config.multisampling ? 4 : 0);
+    context->setFlag(GLFW_DECORATED, config.decorations);
+    context->setFlag(GLFW_RESIZABLE, config.resizable);
+    context->setFlag(GLFW_TRANSPARENT_FRAMEBUFFER, config.transparent);
+    context->setFlag(GLFW_FLOATING, config.alwaysOnTop);
+    context->setFlag(GLFW_SAMPLES, config.multisampling ? 4 : 0);
 
 #ifdef __APPLE__
-    glfwWindowHint(GLFW_COCOA_RETINA_FRAMEBUFFER, GLFW_TRUE);
+    context->setFlag(GLFW_COCOA_RETINA_FRAMEBUFFER, true);
 #endif
 
-    GLFWwindow *window =
-        glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
-    if (window == nullptr) {
-        glfwTerminate();
-        throw std::runtime_error("Failed to create GLFW window");
-    }
+    GLFWwindow *window = context->makeWindow(
+        config.width, config.height, config.title.c_str(), nullptr, nullptr);
 
-    glfwMakeContextCurrent(window);
+    context->makeCurrent();
 
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        throw std::runtime_error("Failed to initialize GLAD");
-    }
+    auto device = Device::acquire(context);
 
     glfwSetWindowOpacity(window, config.opacity);
     glfwSetInputMode(window, GLFW_CURSOR,
@@ -173,14 +163,6 @@ Window::Window(WindowConfiguration config)
     if (!result) {
         throw std::runtime_error("Failed to initialize audio engine");
     }
-
-    GLint maxVerts, maxIndices, maxAttribs;
-    glGetIntegerv(GL_MAX_ELEMENTS_VERTICES, &maxVerts);
-    glGetIntegerv(GL_MAX_ELEMENTS_INDICES, &maxIndices);
-    glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxAttribs);
-    std::cout << "Max vertices: " << maxVerts << std::endl;
-    std::cout << "Max indices: " << maxIndices << std::endl;
-    std::cout << "Max vertex attribs: " << maxAttribs << std::endl;
 }
 
 std::tuple<int, int> Window::getCursorPosition() {
