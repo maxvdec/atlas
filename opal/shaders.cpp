@@ -38,9 +38,10 @@ std::shared_ptr<Shader> Shader::createFromSource(const char *source,
     uint shaderId = glCreateShader(shaderType);
     glShaderSource(shaderId, 1, &source, nullptr);
 
-    Shader shader;
-    shader.shaderID = shaderId;
-    return std::make_shared<Shader>(shader);
+    auto shader = std::make_shared<Shader>();
+    shader->shaderID = shaderId;
+    shader->type = type;
+    return shader;
 
 #else
     throw std::runtime_error("Shader creation not implemented for this API");
@@ -77,9 +78,10 @@ void Shader::getShaderLog(char *logBuffer, size_t bufferSize) const {
 std::shared_ptr<ShaderProgram> ShaderProgram::create() {
 #ifdef OPENGL
     uint programId = glCreateProgram();
-    ShaderProgram program;
-    program.programID = programId;
-    return std::make_shared<ShaderProgram>(program);
+    auto program = std::make_shared<ShaderProgram>();
+    program->programID = programId;
+    program->attachedShaders = {};
+    return program;
 #else
     throw std::runtime_error(
         "Shader program creation not implemented for this API");

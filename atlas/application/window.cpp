@@ -16,8 +16,6 @@
 #include "hydra/fluid.h"
 #include "bezel/body.h"
 #include "finewave/audio.h"
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
 #include <atlas/window.h>
 #include <iostream>
 #include <memory>
@@ -32,13 +30,11 @@
 #include <tuple>
 #include <opal/opal.h>
 
-using namespace opal;
-
 Window *Window::mainWindow = nullptr;
 
 Window::Window(WindowConfiguration config)
     : title(config.title), width(config.width), height(config.height) {
-    auto context = Context::create();
+    auto context = opal::Context::create();
 
     context->setFlag(GLFW_DECORATED, config.decorations);
     context->setFlag(GLFW_RESIZABLE, config.resizable);
@@ -55,7 +51,7 @@ Window::Window(WindowConfiguration config)
 
     context->makeCurrent();
 
-    auto device = Device::acquire(context);
+    auto device = opal::Device::acquire(context);
 
     glfwSetWindowOpacity(window, config.opacity);
     glfwSetInputMode(window, GLFW_CURSOR,

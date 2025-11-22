@@ -9,6 +9,7 @@
 
 #include "atlas/core/shader.h"
 #include "atlas/core/default_shaders.h"
+#include "opal/opal.h"
 #include <glad/glad.h>
 #include <map>
 #include <string>
@@ -180,18 +181,19 @@ void VertexShader::compile() {
         throw std::runtime_error("Vertex shader already compiled");
     }
 
-    shaderId = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(shaderId, 1, &source, nullptr);
-    glCompileShader(shaderId);
+    shader = opal::Shader::createFromSource(source, opal::ShaderType::Vertex);
 
-    GLint success;
-    glGetShaderiv(shaderId, GL_COMPILE_STATUS, &success);
+    shader->compile();
+
+    bool success = shader->getShaderStatus();
     if (!success) {
         char infoLog[512];
-        glGetShaderInfoLog(shaderId, 512, nullptr, infoLog);
+        shader->getShaderLog(infoLog, sizeof(infoLog));
         throw std::runtime_error(
             std::string("Vertex shader compilation failed: ") + infoLog);
     }
+
+    this->shaderId = shader->shaderID;
 }
 
 FragmentShader FragmentShader::fromDefaultShader(AtlasFragmentShader shader) {
@@ -345,18 +347,19 @@ void FragmentShader::compile() {
         throw std::runtime_error("Fragment shader already compiled");
     }
 
-    shaderId = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(shaderId, 1, &source, nullptr);
-    glCompileShader(shaderId);
+    shader = opal::Shader::createFromSource(source, opal::ShaderType::Fragment);
 
-    GLint success;
-    glGetShaderiv(shaderId, GL_COMPILE_STATUS, &success);
+    shader->compile();
+
+    bool success = shader->getShaderStatus();
     if (!success) {
         char infoLog[512];
-        glGetShaderInfoLog(shaderId, 512, nullptr, infoLog);
+        shader->getShaderLog(infoLog, sizeof(infoLog));
         throw std::runtime_error(
             std::string("Fragment shader compilation failed: ") + infoLog);
     }
+
+    this->shaderId = shader->shaderID;
 }
 
 GeometryShader GeometryShader::fromDefaultShader(AtlasGeometryShader shader) {
@@ -380,18 +383,19 @@ void GeometryShader::compile() {
         throw std::runtime_error("Geometry shader already compiled");
     }
 
-    shaderId = glCreateShader(GL_GEOMETRY_SHADER);
-    glShaderSource(shaderId, 1, &source, nullptr);
-    glCompileShader(shaderId);
+    shader = opal::Shader::createFromSource(source, opal::ShaderType::Geometry);
 
-    GLint success;
-    glGetShaderiv(shaderId, GL_COMPILE_STATUS, &success);
+    shader->compile();
+    bool success = shader->getShaderStatus();
+
     if (!success) {
         char infoLog[512];
-        glGetShaderInfoLog(shaderId, 512, nullptr, infoLog);
+        shader->getShaderLog(infoLog, sizeof(infoLog));
         throw std::runtime_error(
             std::string("Geometry shader compilation failed: ") + infoLog);
     }
+
+    this->shaderId = shader->shaderID;
 }
 
 TessellationShader
@@ -422,13 +426,13 @@ void TessellationShader::compile() {
         throw std::runtime_error("Tessellation shader already compiled");
     }
 
-    GLenum shaderType;
+    opal::ShaderType shaderType;
     switch (type) {
     case TessellationShaderType::Control:
-        shaderType = GL_TESS_CONTROL_SHADER;
+        shaderType = opal::ShaderType::TessellationControl;
         break;
     case TessellationShaderType::Evaluation:
-        shaderType = GL_TESS_EVALUATION_SHADER;
+        shaderType = opal::ShaderType::TessellationEvaluation;
         break;
     case TessellationShaderType::Primitive:
         throw std::runtime_error("Primitive tessellation shader not supported");
@@ -436,18 +440,19 @@ void TessellationShader::compile() {
         throw std::runtime_error("Unknown tessellation shader type");
     }
 
-    shaderId = glCreateShader(shaderType);
-    glShaderSource(shaderId, 1, &source, nullptr);
-    glCompileShader(shaderId);
+    shader = opal::Shader::createFromSource(source, shaderType);
 
-    GLint success;
-    glGetShaderiv(shaderId, GL_COMPILE_STATUS, &success);
+    shader->compile();
+
+    bool success = shader->getShaderStatus();
     if (!success) {
         char infoLog[512];
-        glGetShaderInfoLog(shaderId, 512, nullptr, infoLog);
+        shader->getShaderLog(infoLog, sizeof(infoLog));
         throw std::runtime_error(
             std::string("Tessellation shader compilation failed: ") + infoLog);
     }
+
+    this->shaderId = shader->shaderID;
 }
 
 void ShaderProgram::compile() {
@@ -477,24 +482,25 @@ void ShaderProgram::compile() {
     desiredAttributes = vertexShader.desiredAttributes;
     capabilities = vertexShader.capabilities;
 
-    programId = glCreateProgram();
-    glAttachShader(programId, vertexShader.shaderId);
-    glAttachShader(programId, fragmentShader.shaderId);
+    this->shader = opal::ShaderProgram::create();
+
+    this->shader->attachShader(vertexShader.shader);
+    this->shader->attachShader(fragmentShader.shader);
     if (geometryShader.shaderId != 0) {
-        glAttachShader(programId, geometryShader.shaderId);
+        this->shader->attachShader(geometryShader.shader);
     }
     for (const auto &tessShader : tessellationShaders) {
         if (tessShader.shaderId != 0) {
-            glAttachShader(programId, tessShader.shaderId);
+            this->shader->attachShader(tessShader.shader);
         }
     }
-    glLinkProgram(programId);
+    this->shader->link();
+    this->programId = this->shader->programID;
 
-    GLint success;
-    glGetProgramiv(programId, GL_LINK_STATUS, &success);
+    bool success = this->shader->getProgramStatus();
     if (!success) {
         char infoLog[512];
-        glGetProgramInfoLog(programId, 512, nullptr, infoLog);
+        this->shader->getProgramLog(infoLog, sizeof(infoLog));
         throw std::runtime_error(
             std::string("Shader program linking failed: ") + infoLog);
     }

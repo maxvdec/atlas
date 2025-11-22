@@ -13,10 +13,12 @@
 #include "atlas/units.h"
 #include <cstddef>
 #include <map>
+#include <memory>
 #include <optional>
 #include <string>
 #include <utility>
 #include <vector>
+#include <opal/opal.h>
 
 #include <glm/glm.hpp>
 
@@ -219,10 +221,8 @@ struct VertexShader {
      */
     std::vector<ShaderCapability> capabilities;
 
-    /**
-     * @brief The OpenGL ID of the compiled shader.
-     *
-     */
+    std::shared_ptr<opal::Shader> shader;
+
     Id shaderId;
 };
 
@@ -378,6 +378,8 @@ struct FragmentShader {
      *
      */
     Id shaderId;
+
+    std::shared_ptr<opal::Shader> shader;
 };
 
 /**
@@ -429,6 +431,8 @@ struct GeometryShader {
      *
      */
     Id shaderId;
+
+    std::shared_ptr<opal::Shader> shader;
 };
 
 enum class AtlasTessellationShader {
@@ -490,6 +494,8 @@ class TessellationShader {
      *
      */
     Id shaderId;
+
+    std::shared_ptr<opal::Shader> shader;
 };
 
 /**
@@ -599,6 +605,8 @@ struct ShaderProgram {
      *
      */
     Id programId;
+
+    std::shared_ptr<opal::ShaderProgram> shader;
 
     /**
      * @brief The desired vertex attributes for the shader program.

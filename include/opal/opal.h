@@ -11,6 +11,7 @@
 #define OPAL_H
 
 #include <memory>
+#include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <sys/types.h>
 #include <vector>
@@ -68,6 +69,7 @@ class Shader {
     void getShaderLog(char *logBuffer, size_t bufferSize) const;
 
     uint shaderID;
+    ShaderType type;
 
   private:
 #ifdef OPENGL
