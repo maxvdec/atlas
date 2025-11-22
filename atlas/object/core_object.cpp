@@ -23,17 +23,17 @@
 #include <glm/gtc/type_ptr.hpp>
 
 std::vector<LayoutDescriptor> CoreVertex::getLayoutDescriptors() {
-    return {{0, 3, GL_DOUBLE, GL_FALSE, sizeof(CoreVertex),
+    return {{0, 3, GL_FLOAT, GL_FALSE, sizeof(CoreVertex),
              offsetof(CoreVertex, position)},
-            {1, 4, GL_DOUBLE, GL_FALSE, sizeof(CoreVertex),
+            {1, 4, GL_FLOAT, GL_FALSE, sizeof(CoreVertex),
              offsetof(CoreVertex, color)},
             {2, 2, GL_DOUBLE, GL_FALSE, sizeof(CoreVertex),
              offsetof(CoreVertex, textureCoordinate)},
-            {3, 3, GL_DOUBLE, GL_FALSE, sizeof(CoreVertex),
+            {3, 3, GL_FLOAT, GL_FALSE, sizeof(CoreVertex),
              offsetof(CoreVertex, normal)},
-            {4, 3, GL_DOUBLE, GL_FALSE, sizeof(CoreVertex),
+            {4, 3, GL_FLOAT, GL_FALSE, sizeof(CoreVertex),
              offsetof(CoreVertex, tangent)},
-            {5, 3, GL_DOUBLE, GL_FALSE, sizeof(CoreVertex),
+            {5, 3, GL_FLOAT, GL_FALSE, sizeof(CoreVertex),
              offsetof(CoreVertex, bitangent)}};
 }
 
