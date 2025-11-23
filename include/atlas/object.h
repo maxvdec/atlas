@@ -282,6 +282,7 @@ class CoreObject : public GameObject {
      *
      */
     std::vector<Index> indices;
+    ShaderProgram shaderProgram;
     /**
      * @brief The textures applied to the object.
      *
@@ -348,6 +349,8 @@ class CoreObject : public GameObject {
      * @brief Performs deferred setup of buffers, shaders, and state.
      */
     void initialize() override;
+
+    void refreshPipeline();
 
     /**
      * @brief Function to render the object with color and texture.

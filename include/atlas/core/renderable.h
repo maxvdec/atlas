@@ -14,6 +14,7 @@
 #include "atlas/units.h"
 #include "opal/opal.h"
 #include <glm/glm.hpp>
+#include <memory>
 #include <optional>
 #include <vector>
 
@@ -34,7 +35,7 @@ class Renderable {
      *
      * @param dt Delta time since the last frame, useful for animations.
      */
-    virtual void render(float dt) = 0;
+    virtual void render(float dt, bool updatePipeline = false) = 0;
     /**
      * @brief Function to initialize the object. Can be overridden by derived.
      *
@@ -65,12 +66,12 @@ class Renderable {
      */
     virtual void
     setProjectionMatrix([[maybe_unused]] const glm::mat4 &projection) {};
-    virtual std::optional<opal::Pipeline> getPipeline() {
+    virtual std::optional<std::shared_ptr<opal::Pipeline>> getPipeline() {
         return std::nullopt;
     };
 
-    virtual void setPipeline([[maybe_unused]] const opal::Pipeline &pipeline) {
-    };
+    virtual void
+    setPipeline([[maybe_unused]] std::shared_ptr<opal::Pipeline> &pipeline) {};
     /**
      * @brief Function to get the position of the object in 3D space.
      *

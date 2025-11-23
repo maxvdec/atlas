@@ -503,6 +503,7 @@ class TessellationShader {
  *
  */
 struct LayoutDescriptor {
+    std::string name;
     /**
      * @brief The layout position of the attribute in the shader.
      *
@@ -517,7 +518,7 @@ struct LayoutDescriptor {
      * @brief The OpenGL data type of the attribute (e.g., GL_FLOAT).
      *
      */
-    unsigned int type;
+    opal::VertexAttributeType type;
     /**
      * @brief Whether the attribute data should be normalized.
      *

@@ -11,6 +11,7 @@
 #define WINDOW_H
 
 #include "atlas/camera.h"
+#include "atlas/core/renderable.h"
 #include "atlas/input.h"
 #include "atlas/object.h"
 #include "atlas/scene.h"
@@ -18,6 +19,7 @@
 #include "atlas/units.h"
 #include "bezel/body.h"
 #include "finewave/audio.h"
+#include "opal/opal.h"
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 #include <memory>
@@ -511,6 +513,21 @@ class Window {
      */
     RenderTarget *currentRenderTarget = nullptr;
 
+    opal::BlendFunc dstBlend = opal::BlendFunc::DstAlpha;
+    opal::BlendFunc srcBlend = opal::BlendFunc::OneMinusSrcAlpha;
+    opal::FrontFace frontFace = opal::FrontFace::CounterClockwise;
+    opal::CullMode cullMode = opal::CullMode::Back;
+    opal::CompareOp depthCompareOp = opal::CompareOp::Less;
+    opal::RasterizerMode rasterizerMode = opal::RasterizerMode::Fill;
+    opal::PrimitiveStyle primitiveStyle = opal::PrimitiveStyle::Triangles;
+    bool useDepth = true;
+    bool useBlending = true;
+    bool writeDepth = true;
+    int viewportX = 0;
+    int viewportY = 0;
+    int viewportWidth = 0;
+    int viewportHeight = 0;
+
   private:
     CoreWindowReference windowRef;
     std::vector<Renderable *> renderables;
@@ -598,6 +615,9 @@ class Window {
     std::vector<glm::vec3> cachedPointLightPositions;
     std::vector<glm::vec3> cachedSpotlightPositions;
     std::vector<glm::vec3> cachedSpotlightDirections;
+
+    void prepareDefaultPipeline(Renderable *renderable, int fbWidth,
+                                int fbHeight);
 
     friend class CoreObject;
     friend class RenderTarget;

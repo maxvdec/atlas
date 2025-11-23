@@ -11,6 +11,7 @@
 #include "atlas/light.h"
 #include "atlas/object.h"
 #include "atlas/window.h"
+#include "opal/opal.h"
 #include <algorithm>
 #include <glad/glad.h>
 #include <limits>
@@ -23,18 +24,19 @@
 #include <glm/gtc/type_ptr.hpp>
 
 std::vector<LayoutDescriptor> CoreVertex::getLayoutDescriptors() {
-    return {{0, 3, GL_FLOAT, GL_FALSE, sizeof(CoreVertex),
-             offsetof(CoreVertex, position)},
-            {1, 4, GL_FLOAT, GL_FALSE, sizeof(CoreVertex),
-             offsetof(CoreVertex, color)},
-            {2, 2, GL_DOUBLE, GL_FALSE, sizeof(CoreVertex),
+    return {{"position", 0, 3, opal::VertexAttributeType::Float, false,
+             sizeof(CoreVertex), offsetof(CoreVertex, position)},
+            {"color", 1, 4, opal::VertexAttributeType::Float, false,
+             sizeof(CoreVertex), offsetof(CoreVertex, color)},
+            {"textureCoordinates", 2, 2, opal::VertexAttributeType::Double,
+             false, sizeof(CoreVertex),
              offsetof(CoreVertex, textureCoordinate)},
-            {3, 3, GL_FLOAT, GL_FALSE, sizeof(CoreVertex),
-             offsetof(CoreVertex, normal)},
-            {4, 3, GL_FLOAT, GL_FALSE, sizeof(CoreVertex),
-             offsetof(CoreVertex, tangent)},
-            {5, 3, GL_FLOAT, GL_FALSE, sizeof(CoreVertex),
-             offsetof(CoreVertex, bitangent)}};
+            {"normal", 3, 3, opal::VertexAttributeType::Float, false,
+             sizeof(CoreVertex), offsetof(CoreVertex, normal)},
+            {"tangent", 4, 3, opal::VertexAttributeType::Float, false,
+             sizeof(CoreVertex), offsetof(CoreVertex, tangent)},
+            {"bitangent", 5, 3, opal::VertexAttributeType::Float, false,
+             sizeof(CoreVertex), offsetof(CoreVertex, bitangent)}};
 }
 
 CoreObject::CoreObject() : vbo(0), vao(0) {
@@ -51,6 +53,7 @@ void CoreObject::attachProgram(const ShaderProgram &program) {
     if (shaderProgram.programId == 0) {
         shaderProgram.compile();
     }
+    this->refreshPipeline();
 }
 
 void CoreObject::createAndAttachProgram(VertexShader &vertexShader,
@@ -65,6 +68,7 @@ void CoreObject::createAndAttachProgram(VertexShader &vertexShader,
 
     shaderProgram = ShaderProgram(vertexShader, fragmentShader);
     shaderProgram.compile();
+    this->refreshPipeline();
 }
 
 void CoreObject::renderColorWithTexture() {
@@ -257,6 +261,8 @@ void CoreObject::initialize() {
                      indices.data(), GL_STATIC_DRAW);
     }
 
+    this->pipeline = opal::Pipeline::create();
+
     std::vector<LayoutDescriptor> layoutDescriptors =
         CoreVertex::getLayoutDescriptors();
 
@@ -267,15 +273,17 @@ void CoreObject::initialize() {
         }
     }
 
+    std::vector<opal::VertexAttribute> vertexAttributes;
+    opal::VertexBinding vertexBinding;
+
     for (const auto &attr : layoutDescriptors) {
-        if (std::find(activeLocations.begin(), activeLocations.end(),
-                      attr.layoutPos) != activeLocations.end()) {
-            glEnableVertexAttribArray(attr.layoutPos);
-            glVertexAttribPointer(attr.layoutPos, attr.size, attr.type,
-                                  attr.normalized, attr.stride,
-                                  (void *)attr.offset);
-        }
+        vertexAttributes.push_back(opal::VertexAttribute{
+            attr.name, attr.type, (uint)attr.offset, (uint)attr.layoutPos,
+            attr.normalized, (uint)attr.size});
     }
+
+    vertexBinding = opal::VertexBinding{(uint)layoutDescriptors[0].stride,
+                                        opal::VertexBindingInputRate::Vertex};
 
     if (!instances.empty()) {
         std::vector<glm::mat4> modelMatrices;
@@ -292,12 +300,16 @@ void CoreObject::initialize() {
         glBindVertexArray(vao);
         std::size_t vec4Size = sizeof(glm::vec4);
         for (unsigned int i = 0; i < 4; i++) {
-            glEnableVertexAttribArray(6 + i);
-            glVertexAttribPointer(6 + i, 4, GL_FLOAT, GL_FALSE,
-                                  sizeof(glm::mat4), (void *)(i * vec4Size));
-            glVertexAttribDivisor(6 + i, 1);
+            vertexAttributes.push_back(opal::VertexAttribute{
+                "instanceModel" + std::to_string(i),
+                opal::VertexAttributeType::Float, (uint)i * (uint)vec4Size,
+                6 + i, false, 4});
         }
+        vertexBinding.stride += sizeof(glm::mat4);
+        vertexBinding.inputRate = opal::VertexBindingInputRate::Instance;
     }
+
+    this->pipeline->setVertexAttributes(vertexAttributes, vertexBinding);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }

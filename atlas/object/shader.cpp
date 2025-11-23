@@ -592,13 +592,12 @@ ShaderProgram ShaderProgram::fromDefaultShaders(
 
 std::shared_ptr<opal::Pipeline> ShaderProgram::requestPipeline(
     std::shared_ptr<opal::Pipeline> unbuiltPipeline) {
+    unbuiltPipeline->setShaderProgram(this->shader);
     for (auto &existingPipeline : pipelines) {
         if (existingPipeline == unbuiltPipeline) {
             return existingPipeline;
         }
     }
-
-    unbuiltPipeline->setShaderProgram(this->shader);
 
     unbuiltPipeline->build();
 
