@@ -34,6 +34,9 @@ class Renderable {
      * classes.
      *
      * @param dt Delta time since the last frame, useful for animations.
+     * @param updatePipeline When true, the renderable should rebuild or fetch
+     * the graphics pipeline to reflect the window's current state before
+     * drawing. When false, the previously prepared pipeline may be reused.
      */
     virtual void render(float dt, bool updatePipeline = false) = 0;
     /**
@@ -72,6 +75,19 @@ class Renderable {
 
     virtual void
     setPipeline([[maybe_unused]] std::shared_ptr<opal::Pipeline> &pipeline) {};
+
+    /**
+     * @brief Returns the currently bound shader program, if any.
+     */
+    virtual std::optional<ShaderProgram> getShaderProgram() {
+        return std::nullopt;
+    };
+
+    /**
+     * @brief Replaces the shader program bound to the renderable.
+     */
+    virtual void
+    setShader([[maybe_unused]] const ShaderProgram &shaderProgram) {};
     /**
      * @brief Function to get the position of the object in 3D space.
      *

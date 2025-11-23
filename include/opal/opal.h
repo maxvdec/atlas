@@ -199,6 +199,8 @@ class Pipeline {
 
     bool operator==(std::shared_ptr<Pipeline> pipeline) const;
 
+    std::shared_ptr<ShaderProgram> shaderProgram;
+
   private:
     PrimitiveStyle primitiveStyle;
     RasterizerMode rasterizerMode;
@@ -209,8 +211,6 @@ class Pipeline {
     BlendFunc blendDstFactor = BlendFunc::Zero;
     bool depthTestEnabled = false;
     CompareOp depthCompareOp = CompareOp::Less;
-
-    std::shared_ptr<ShaderProgram> shaderProgram;
 
     std::vector<VertexAttribute> vertexAttributes;
     VertexBinding vertexBinding;

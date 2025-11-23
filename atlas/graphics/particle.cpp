@@ -325,7 +325,8 @@ void ParticleEmitter::update(Window &window) {
     activeParticleCount = instanceData.size();
 }
 
-void ParticleEmitter::render(float dt) {
+void ParticleEmitter::render(float dt, bool updatePipeline) {
+    (void)updatePipeline;
     for (auto &component : components) {
         component->update(dt);
     }

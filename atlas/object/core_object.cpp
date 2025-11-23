@@ -14,6 +14,7 @@
 #include "opal/opal.h"
 #include <algorithm>
 #include <glad/glad.h>
+#include <iostream>
 #include <limits>
 #include <random>
 #include <string>
@@ -314,7 +315,51 @@ void CoreObject::initialize() {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void CoreObject::render(float dt) {
+std::optional<std::shared_ptr<opal::Pipeline>> CoreObject::getPipeline() {
+    if (this->pipeline == nullptr) {
+        return std::nullopt;
+    }
+    return this->pipeline;
+}
+
+void CoreObject::setPipeline(std::shared_ptr<opal::Pipeline> &newPipeline) {
+    this->pipeline = newPipeline;
+}
+
+void CoreObject::refreshPipeline() {
+    if (Window::mainWindow == nullptr) {
+        return;
+    }
+
+    if (this->pipeline == nullptr) {
+        this->pipeline = opal::Pipeline::create();
+    }
+
+    Window &window = *Window::mainWindow;
+
+    int viewportWidth = window.viewportWidth;
+    int viewportHeight = window.viewportHeight;
+    if (viewportWidth == 0 || viewportHeight == 0) {
+        Size2d size = window.getSize();
+        viewportWidth = static_cast<int>(size.width);
+        viewportHeight = static_cast<int>(size.height);
+    }
+
+    this->pipeline->setViewport(window.viewportX, window.viewportY,
+                                viewportWidth, viewportHeight);
+    this->pipeline->setPrimitiveStyle(window.primitiveStyle);
+    this->pipeline->setRasterizerMode(window.rasterizerMode);
+    this->pipeline->setCullMode(window.cullMode);
+    this->pipeline->setFrontFace(window.frontFace);
+    this->pipeline->enableDepthTest(window.useDepth);
+    this->pipeline->setDepthCompareOp(window.depthCompareOp);
+    this->pipeline->enableBlending(window.useBlending);
+    this->pipeline->setBlendFunc(window.srcBlend, window.dstBlend);
+
+    this->pipeline = this->shaderProgram.requestPipeline(this->pipeline);
+}
+
+void CoreObject::render(float dt, bool updatePipeline) {
     for (auto &component : components) {
         component->update(dt);
     }
@@ -325,10 +370,18 @@ void CoreObject::render(float dt) {
         throw std::runtime_error("Shader program not compiled");
     }
 
-    int currentProgram;
-    glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
-    if (static_cast<Id>(currentProgram) != shaderProgram.programId) {
-        glUseProgram(shaderProgram.programId);
+    if (updatePipeline || this->pipeline == nullptr) {
+        this->refreshPipeline();
+    }
+
+    if (this->pipeline != nullptr) {
+        this->pipeline->bind();
+    } else {
+        int currentProgram;
+        glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
+        if (static_cast<Id>(currentProgram) != shaderProgram.programId) {
+            glUseProgram(shaderProgram.programId);
+        }
     }
 
     shaderProgram.setUniformMat4f("model", model);

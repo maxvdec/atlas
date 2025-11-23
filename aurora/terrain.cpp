@@ -159,7 +159,8 @@ void Terrain::initialize() {
     glBindVertexArray(0);
 }
 
-void Terrain::render(float) {
+void Terrain::render(float, bool updatePipeline) {
+    (void)updatePipeline;
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
     glDepthMask(GL_TRUE);

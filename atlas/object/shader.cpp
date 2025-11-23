@@ -11,6 +11,7 @@
 #include "atlas/core/default_shaders.h"
 #include "opal/opal.h"
 #include <glad/glad.h>
+#include <iostream>
 #include <map>
 #include <memory>
 #include <string>
@@ -594,10 +595,13 @@ std::shared_ptr<opal::Pipeline> ShaderProgram::requestPipeline(
     std::shared_ptr<opal::Pipeline> unbuiltPipeline) {
     unbuiltPipeline->setShaderProgram(this->shader);
     for (auto &existingPipeline : pipelines) {
-        if (existingPipeline == unbuiltPipeline) {
+        if (*existingPipeline == unbuiltPipeline) {
             return existingPipeline;
         }
     }
+
+    std::cout << "Building new pipeline for shader program ID: "
+              << this->programId << std::endl;
 
     unbuiltPipeline->build();
 

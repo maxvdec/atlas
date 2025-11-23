@@ -100,11 +100,12 @@ void Fluid::initialize() {
     isInitialized = true;
 }
 
-void Fluid::render(float dt) {
+void Fluid::render(float dt, bool updatePipeline) {
     if (!isInitialized) {
         initialize();
     }
 
+    (void)updatePipeline;
     if (captureDirty) {
         Window *window = Window::mainWindow;
         if (window) {
