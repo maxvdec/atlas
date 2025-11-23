@@ -14,7 +14,6 @@
 #include "opal/opal.h"
 #include <algorithm>
 #include <glad/glad.h>
-#include <iostream>
 #include <limits>
 #include <random>
 #include <string>
