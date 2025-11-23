@@ -606,7 +606,11 @@ struct ShaderProgram {
      */
     Id programId;
 
+    std::shared_ptr<opal::Pipeline>
+    requestPipeline(std::shared_ptr<opal::Pipeline> unbuiltPipeline);
+
     std::shared_ptr<opal::ShaderProgram> shader;
+    std::vector<std::shared_ptr<opal::Pipeline>> pipelines;
 
     /**
      * @brief The desired vertex attributes for the shader program.

@@ -12,6 +12,7 @@
 #include "opal/opal.h"
 #include <glad/glad.h>
 #include <map>
+#include <memory>
 #include <string>
 #include <thread>
 #include <utility>
@@ -587,4 +588,21 @@ ShaderProgram ShaderProgram::fromDefaultShaders(
 
     program.compile();
     return program;
+}
+
+std::shared_ptr<opal::Pipeline> ShaderProgram::requestPipeline(
+    std::shared_ptr<opal::Pipeline> unbuiltPipeline) {
+    for (auto &existingPipeline : pipelines) {
+        if (existingPipeline == unbuiltPipeline) {
+            return existingPipeline;
+        }
+    }
+
+    unbuiltPipeline->setShaderProgram(this->shader);
+
+    unbuiltPipeline->build();
+
+    pipelines.push_back(unbuiltPipeline);
+
+    return unbuiltPipeline;
 }

@@ -12,6 +12,7 @@
 
 #include "atlas/core/shader.h"
 #include "atlas/units.h"
+#include "opal/opal.h"
 #include <glm/glm.hpp>
 #include <optional>
 #include <vector>
@@ -64,22 +65,12 @@ class Renderable {
      */
     virtual void
     setProjectionMatrix([[maybe_unused]] const glm::mat4 &projection) {};
-    /**
-     * @brief Function to get the current shader program used by the object.
-     *
-     * @return An optional containing the shader program if set, or \c
-     * std::nullopt if not.
-     */
-    virtual std::optional<ShaderProgram> getShaderProgram() {
+    virtual std::optional<opal::Pipeline> getPipeline() {
         return std::nullopt;
     };
-    /**
-     * @brief Function to set the shader program for the object. Can be used to
-     * force an object to use a specific shader.
-     *
-     * @param shader The shader program to set.
-     */
-    virtual void setShader([[maybe_unused]] const ShaderProgram &shader) {};
+
+    virtual void setPipeline([[maybe_unused]] const opal::Pipeline &pipeline) {
+    };
     /**
      * @brief Function to get the position of the object in 3D space.
      *

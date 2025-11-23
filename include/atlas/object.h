@@ -12,6 +12,7 @@
 
 #include "atlas/component.h"
 #include "bezel/body.h"
+#include "opal/opal.h"
 #include <any>
 #include <memory>
 #include <string>
@@ -282,11 +283,6 @@ class CoreObject : public GameObject {
      */
     std::vector<Index> indices;
     /**
-     * @brief The shader program used by the object.
-     *
-     */
-    ShaderProgram shaderProgram;
-    /**
      * @brief The textures applied to the object.
      *
      */
@@ -309,6 +305,8 @@ class CoreObject : public GameObject {
      *
      */
     CoreObject();
+
+    std::shared_ptr<opal::Pipeline> pipeline;
 
     /**
      * @brief Makes the object emissive by attaching a light to it.
