@@ -539,6 +539,7 @@ class Window {
     std::vector<Renderable *> lateForwardRenderables;
     std::vector<Fluid *> lateFluids;
     std::vector<RenderTarget *> renderTargets;
+    std::unique_ptr<RenderTarget> screenRenderTarget;
 
     std::shared_ptr<RenderTarget> gBuffer;
     std::shared_ptr<RenderTarget> ssaoBuffer;
@@ -572,6 +573,7 @@ class Window {
     void markPipelineStateDirty();
     bool shouldRefreshPipeline(Renderable *renderable);
     void setViewportState(int x, int y, int width, int height);
+    void updateBackbufferTarget(int width, int height);
 
     template <typename T> void updatePipelineStateField(T &field, T value) {
         if (field != value) {

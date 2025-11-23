@@ -14,6 +14,7 @@
 #include "opal/opal.h"
 #include <algorithm>
 #include <glad/glad.h>
+#include <iostream>
 #include <limits>
 #include <random>
 #include <string>
@@ -369,6 +370,8 @@ void CoreObject::render(float dt, bool updatePipeline) {
         throw std::runtime_error("Shader program not compiled");
     }
 
+    std::cout << "Object with Id " << id << " should update the pipeline: "
+              << (updatePipeline ? "true" : "false") << std::endl;
     if (updatePipeline || this->pipeline == nullptr) {
         this->refreshPipeline();
     }

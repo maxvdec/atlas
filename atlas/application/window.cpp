@@ -336,7 +336,9 @@ void Window::run() {
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        if (this->renderTargets.size() == 0) {
+        if (this->renderTargets.empty()) {
+            updateBackbufferTarget(fbWidth, fbHeight);
+            this->currentRenderTarget = this->screenRenderTarget.get();
             for (auto &obj : this->firstRenderables) {
                 obj->setViewMatrix(this->camera->calculateViewMatrix());
                 obj->setProjectionMatrix(calculateProjectionMatrix());
@@ -359,6 +361,8 @@ void Window::run() {
                 obj->setProjectionMatrix(calculateProjectionMatrix());
                 obj->render(getDeltaTime(), shouldRefreshPipeline(obj));
             }
+        } else {
+            this->currentRenderTarget = nullptr;
         }
 
         updatePipelineStateField(this->cullMode, opal::CullMode::None);
@@ -1522,4 +1526,19 @@ void Window::setViewportState(int x, int y, int width, int height) {
     updatePipelineStateField(this->viewportY, y);
     updatePipelineStateField(this->viewportWidth, width);
     updatePipelineStateField(this->viewportHeight, height);
+}
+
+void Window::updateBackbufferTarget(int width, int height) {
+    if (!this->screenRenderTarget) {
+        this->screenRenderTarget = std::make_unique<RenderTarget>();
+        this->screenRenderTarget->type = RenderTargetType::Scene;
+    }
+
+    RenderTarget &target = *this->screenRenderTarget;
+    target.texture.creationData.width = width;
+    target.texture.creationData.height = height;
+    target.depthTexture.creationData.width = width;
+    target.depthTexture.creationData.height = height;
+    target.type = RenderTargetType::Scene;
+    target.fbo = 0;
 }
