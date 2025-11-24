@@ -48,9 +48,12 @@ class Context {
     GLFWwindow *window = nullptr;
 };
 
+class CommandBuffer;
+
 class Device {
   public:
     static std::shared_ptr<Device> acquire(std::shared_ptr<Context> context);
+    static std::shared_ptr<CommandBuffer> acquireCommandBuffer();
 };
 
 enum class ShaderType {
@@ -292,6 +295,31 @@ struct DrawingState {
         const std::vector<VertexAttributeBinding> &bindings) const;
 
     uint index;
+};
+
+class CommandBuffer {
+  public:
+    void begin();
+    void end();
+    void submit();
+
+    // The different commands
+    void bindPipeline(std::shared_ptr<Pipeline> pipeline);
+    void unbindPipeline();
+    void bindDrawingState(std::shared_ptr<DrawingState> drawingState);
+    void unbindDrawingState();
+    void draw(uint vertexCount, uint instanceCount = 1, uint firstVertex = 0,
+              [[maybe_unused]] uint firstInstance = 0);
+    void drawIndexed(uint indexCount, uint instanceCount = 1,
+                     uint firstIndex = 0, int vertexOffset = 0,
+                     uint firstInstance = 0);
+
+    void clearColor(float r, float g, float b, float a);
+    void clearDepth(float depth);
+
+  private:
+    std::shared_ptr<Pipeline> boundPipeline = nullptr;
+    std::shared_ptr<DrawingState> boundDrawingState = nullptr;
 };
 
 } // namespace opal

@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <glad/glad.h>
 #include <limits>
+#include <memory>
 #include <random>
 #include <string>
 #include <vector>
@@ -375,7 +376,9 @@ void CoreObject::refreshPipeline() {
     this->pipeline = this->shaderProgram.requestPipeline(this->pipeline);
 }
 
-void CoreObject::render(float dt, bool updatePipeline) {
+void CoreObject::render(float dt,
+                        std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                        bool updatePipeline) {
     for (auto &component : components) {
         component->update(dt);
     }
@@ -782,30 +785,35 @@ void CoreObject::render(float dt, bool updatePipeline) {
             this->savedInstances = this->instances;
         }
         // Update instance buffer data
-        vao->bind();
         shaderProgram.setUniform1i("isInstanced", 1);
 
         if (!indices.empty()) {
-            glDrawElementsInstanced(GL_TRIANGLES, indices.size(),
-                                    GL_UNSIGNED_INT, 0, instances.size());
-            vao->unbind();
+            commandBuffer->bindDrawingState(vao);
+            commandBuffer->bindPipeline(this->pipeline);
+            commandBuffer->drawIndexed(indices.size(), instances.size(), 0, 0,
+                                       0);
+            commandBuffer->unbindDrawingState();
             return;
         }
-        glDrawArraysInstanced(GL_TRIANGLES, 0, vertices.size(),
-                              instances.size());
-        vao->unbind();
+        commandBuffer->bindDrawingState(vao);
+        commandBuffer->bindPipeline(this->pipeline);
+        commandBuffer->draw(vertices.size(), instances.size(), 0, 0);
+        commandBuffer->unbindDrawingState();
         return;
     }
 
-    vao->bind();
     shaderProgram.setUniform1i("isInstanced", 0);
     if (!indices.empty()) {
-        glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
-        vao->unbind();
+        commandBuffer->bindDrawingState(vao);
+        commandBuffer->bindPipeline(this->pipeline);
+        commandBuffer->drawIndexed(indices.size(), 1, 0, 0, 0);
+        commandBuffer->unbindDrawingState();
         return;
     }
-    glDrawArrays(GL_TRIANGLES, 0, vertices.size());
-    vao->unbind();
+    commandBuffer->bindDrawingState(vao);
+    commandBuffer->bindPipeline(this->pipeline);
+    commandBuffer->draw(vertices.size(), 1, 0, 0);
+    commandBuffer->unbindDrawingState();
 }
 
 void CoreObject::setViewMatrix(const glm::mat4 &view) {

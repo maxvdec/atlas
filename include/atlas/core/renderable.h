@@ -38,7 +38,9 @@ class Renderable {
      * the graphics pipeline to reflect the window's current state before
      * drawing. When false, the previously prepared pipeline may be reused.
      */
-    virtual void render(float dt, bool updatePipeline = false) = 0;
+    virtual void render(float dt,
+                        std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                        bool updatePipeline = false) = 0;
     /**
      * @brief Function to initialize the object. Can be overridden by derived.
      *
