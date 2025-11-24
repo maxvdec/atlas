@@ -545,10 +545,16 @@ void RenderTarget::show() {
     }
 }
 
-void RenderTarget::render(float dt, bool updatePipeline) {
+void RenderTarget::render(float dt,
+                          std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                          bool updatePipeline) {
     (void)updatePipeline;
     if (!object || !object->isVisible) {
         return;
+    }
+    if (commandBuffer == nullptr) {
+        throw std::runtime_error(
+            "RenderTarget::render requires a valid command buffer");
     }
 
     CoreObject *obj = this->object.get();
@@ -560,10 +566,6 @@ void RenderTarget::render(float dt, bool updatePipeline) {
     }
 
     glActiveTexture(GL_TEXTURE0);
-
-    if (obj->vao != nullptr) {
-        obj->vao->unbind();
-    }
 
     GLuint currentProgram;
     glGetIntegerv(GL_CURRENT_PROGRAM, (GLint *)&currentProgram);
@@ -752,15 +754,15 @@ void RenderTarget::render(float dt, bool updatePipeline) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    obj->vao->bind();
-
+    commandBuffer->bindDrawingState(obj->vao);
     if (!obj->indices.empty()) {
-        glDrawElements(GL_TRIANGLES, obj->indices.size(), GL_UNSIGNED_INT, 0);
+        commandBuffer->drawIndexed(
+            static_cast<unsigned int>(obj->indices.size()), 1, 0, 0, 0);
     } else {
-        glDrawArrays(GL_TRIANGLES, 0, obj->vertices.size());
+        commandBuffer->draw(static_cast<unsigned int>(obj->vertices.size()), 1,
+                            0, 0);
     }
-
-    obj->vao->unbind();
+    commandBuffer->unbindDrawingState();
 
     glEnable(GL_DEPTH_TEST);
 }

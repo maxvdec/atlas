@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <memory>
 #include <stdexcept>
+#include <string>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -27,17 +28,7 @@ Fluid::Fluid() : GameObject() {
     updateModelMatrix();
 }
 
-Fluid::~Fluid() {
-    if (vao != 0) {
-        glDeleteVertexArrays(1, &vao);
-    }
-    if (vbo != 0) {
-        glDeleteBuffers(1, &vbo);
-    }
-    if (ebo != 0) {
-        glDeleteBuffers(1, &ebo);
-    }
-}
+Fluid::~Fluid() = default;
 
 void Fluid::create(Size2d extent, Color color) {
     this->color = color;
@@ -55,64 +46,61 @@ void Fluid::initialize() {
         return;
     }
 
-    if (vao == 0) {
-        glGenVertexArrays(1, &vao);
-        glGenBuffers(1, &vbo);
-        glGenBuffers(1, &ebo);
-    }
+    vertexBuffer = opal::Buffer::create(opal::BufferUsage::VertexBuffer,
+                                        sizeof(vertices), vertices.data());
+    indexBuffer = opal::Buffer::create(opal::BufferUsage::IndexArray,
+                                       sizeof(indices), indices.data());
 
-    glBindVertexArray(vao);
+    drawingState = opal::DrawingState::create(vertexBuffer, indexBuffer);
+    drawingState->setBuffers(vertexBuffer, indexBuffer);
 
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(FluidVertex),
-                 vertices.data(), GL_STATIC_DRAW);
+    const unsigned int stride = static_cast<unsigned int>(sizeof(FluidVertex));
+    std::vector<opal::VertexAttributeBinding> bindings;
+    bindings.reserve(5);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int),
-                 indices.data(), GL_STATIC_DRAW);
+    auto makeBinding = [&](const char *name, unsigned int location,
+                           unsigned int size, size_t offset) {
+        opal::VertexAttribute attribute{std::string(name),
+                                        opal::VertexAttributeType::Float,
+                                        static_cast<unsigned int>(offset),
+                                        location,
+                                        false,
+                                        size,
+                                        stride,
+                                        opal::VertexBindingInputRate::Vertex,
+                                        0};
+        bindings.push_back({attribute, vertexBuffer});
+    };
 
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(
-        0, 3, GL_FLOAT, GL_FALSE, sizeof(FluidVertex),
-        reinterpret_cast<void *>(offsetof(FluidVertex, position)));
+    makeBinding("position", 0, 3, offsetof(FluidVertex, position));
+    makeBinding("texCoord", 1, 2, offsetof(FluidVertex, texCoord));
+    makeBinding("normal", 2, 3, offsetof(FluidVertex, normal));
+    makeBinding("tangent", 3, 3, offsetof(FluidVertex, tangent));
+    makeBinding("bitangent", 4, 3, offsetof(FluidVertex, bitangent));
 
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(
-        1, 2, GL_FLOAT, GL_FALSE, sizeof(FluidVertex),
-        reinterpret_cast<void *>(offsetof(FluidVertex, texCoord)));
-
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(
-        2, 3, GL_FLOAT, GL_FALSE, sizeof(FluidVertex),
-        reinterpret_cast<void *>(offsetof(FluidVertex, normal)));
-
-    glEnableVertexAttribArray(3);
-    glVertexAttribPointer(
-        3, 3, GL_FLOAT, GL_FALSE, sizeof(FluidVertex),
-        reinterpret_cast<void *>(offsetof(FluidVertex, tangent)));
-    glEnableVertexAttribArray(4);
-    glVertexAttribPointer(
-        4, 3, GL_FLOAT, GL_FALSE, sizeof(FluidVertex),
-        reinterpret_cast<void *>(offsetof(FluidVertex, bitangent)));
-
-    glBindVertexArray(0);
+    drawingState->configureAttributes(bindings);
 
     isInitialized = true;
 }
 
-void Fluid::render(float dt, bool updatePipeline) {
+void Fluid::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                   bool updatePipeline) {
     if (!isInitialized) {
         initialize();
     }
 
     (void)updatePipeline;
+    if (commandBuffer == nullptr) {
+        throw std::runtime_error(
+            "Fluid::render requires a valid command buffer");
+    }
     if (captureDirty) {
         Window *window = Window::mainWindow;
         if (window) {
             ensureTargets(*window);
             if (reflectionTarget && refractionTarget) {
-                window->captureFluidReflection(*this);
-                window->captureFluidRefraction(*this);
+                window->captureFluidReflection(*this, commandBuffer);
+                window->captureFluidRefraction(*this, commandBuffer);
                 captureDirty = false;
             }
         }
@@ -202,10 +190,10 @@ void Fluid::render(float dt, bool updatePipeline) {
                                 glm::inverse(projectionMatrix));
     fluidShader.setUniformMat4f("invView", glm::inverse(viewMatrix));
 
-    glBindVertexArray(vao);
-    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()),
-                   GL_UNSIGNED_INT, nullptr);
-    glBindVertexArray(0);
+    commandBuffer->bindDrawingState(drawingState);
+    commandBuffer->drawIndexed(static_cast<unsigned int>(indices.size()), 1, 0,
+                               0, 0);
+    commandBuffer->unbindDrawingState();
 
     glActiveTexture(GL_TEXTURE0);
 
@@ -216,15 +204,16 @@ void Fluid::render(float dt, bool updatePipeline) {
 
 void Fluid::update(Window &window) { (void)window; }
 
-void Fluid::updateCapture(Window &window) {
+void Fluid::updateCapture(Window &window,
+                          std::shared_ptr<opal::CommandBuffer> commandBuffer) {
     ensureTargets(window);
 
     if (!reflectionTarget || !refractionTarget) {
         return;
     }
 
-    window.captureFluidReflection(*this);
-    window.captureFluidRefraction(*this);
+    window.captureFluidReflection(*this, commandBuffer);
+    window.captureFluidRefraction(*this, commandBuffer);
 
     captureDirty = false;
 }

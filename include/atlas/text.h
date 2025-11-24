@@ -185,7 +185,8 @@ class Text : public UIObject {
      * @brief Renders the text glyphs to the screen honoring kerning and font
      * metrics.
      */
-    void render(float dt, bool updatePipeline = false) override;
+    void render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                bool updatePipeline = false) override;
 
   private:
     std::shared_ptr<opal::DrawingState> vao = nullptr;

@@ -171,7 +171,8 @@ class ParticleEmitter : public GameObject {
     /**
      * @brief Renders all active particles with billboarding logic.
      */
-    void render(float dt, bool updatePipeline = false) override;
+    void render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                bool updatePipeline = false) override;
     /**
      * @brief Updates particle lifetimes, spawns new particles, and applies
      * forces.

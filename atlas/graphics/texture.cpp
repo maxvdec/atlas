@@ -594,9 +594,14 @@ void Skybox::setProjectionMatrix(const glm::mat4 &projection) {
     }
 }
 
-void Skybox::render(float, bool) {
+void Skybox::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                    bool) {
     if (!object || !object->isVisible) {
         return;
+    }
+    if (commandBuffer == nullptr) {
+        throw std::runtime_error(
+            "Skybox::render requires a valid command buffer");
     }
 
     CoreObject *obj = this->object.get();
@@ -656,12 +661,12 @@ void Skybox::render(float, bool) {
         obj->shaderProgram.setUniform1i("hasDayNight", 0);
     }
 
-    obj->vao->bind();
+    commandBuffer->bindDrawingState(obj->vao);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap.id);
-    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(obj->indices.size()),
-                   GL_UNSIGNED_INT, 0);
-    obj->vao->unbind();
+    commandBuffer->drawIndexed(static_cast<unsigned int>(obj->indices.size()),
+                               1, 0, 0, 0);
+    commandBuffer->unbindDrawingState();
     glDepthFunc(GL_LESS); // Set depth function back to default
     glDepthMask(GL_TRUE);
     glEnable(GL_CULL_FACE);

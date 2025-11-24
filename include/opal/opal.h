@@ -54,6 +54,8 @@ class Device {
   public:
     static std::shared_ptr<Device> acquire(std::shared_ptr<Context> context);
     static std::shared_ptr<CommandBuffer> acquireCommandBuffer();
+
+    void submitCommandBuffer(std::shared_ptr<CommandBuffer> commandBuffer);
 };
 
 enum class ShaderType {
@@ -301,7 +303,6 @@ class CommandBuffer {
   public:
     void begin();
     void end();
-    void submit();
 
     // The different commands
     void bindPipeline(std::shared_ptr<Pipeline> pipeline);

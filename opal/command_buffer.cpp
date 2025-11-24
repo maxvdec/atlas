@@ -17,9 +17,11 @@ std::shared_ptr<CommandBuffer> Device::acquireCommandBuffer() {
     return commandBuffer;
 }
 
+void Device::submitCommandBuffer(
+    [[maybe_unused]] std::shared_ptr<CommandBuffer> commandBuffer) {}
+
 void CommandBuffer::begin() {}
 void CommandBuffer::end() {}
-void CommandBuffer::submit() {}
 
 void CommandBuffer::bindPipeline(std::shared_ptr<Pipeline> pipeline) {
     boundPipeline = pipeline;

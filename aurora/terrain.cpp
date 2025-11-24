@@ -159,7 +159,9 @@ void Terrain::initialize() {
     glBindVertexArray(0);
 }
 
-void Terrain::render(float, bool updatePipeline) {
+void Terrain::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                     bool updatePipeline) {
+    (void)commandBuffer;
     (void)updatePipeline;
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);

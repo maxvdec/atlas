@@ -14,7 +14,14 @@
 #include <memory>
 #include <vector>
 
-void Window::deferredRendering(RenderTarget *target) {
+void Window::deferredRendering(
+    RenderTarget *target, std::shared_ptr<opal::CommandBuffer> commandBuffer) {
+    if (commandBuffer == nullptr) {
+        commandBuffer = this->activeCommandBuffer;
+    }
+    if (commandBuffer == nullptr) {
+        return;
+    }
     // Render to G-Buffer
     std::vector<std::shared_ptr<opal::Pipeline>> originalPipelines;
     auto deferredPipeline = opal::Pipeline::create();
@@ -48,7 +55,7 @@ void Window::deferredRendering(RenderTarget *target) {
             obj->setViewMatrix(this->camera->calculateViewMatrix());
             obj->setProjectionMatrix(calculateProjectionMatrix());
             obj->setPipeline(deferredPipeline);
-            obj->render(getDeltaTime());
+            obj->render(getDeltaTime(), commandBuffer, false);
         }
     }
 

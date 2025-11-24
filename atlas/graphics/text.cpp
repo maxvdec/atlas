@@ -142,10 +142,15 @@ void Text::initialize() {
                                                AtlasFragmentShader::Text);
 }
 
-void Text::render(float dt, bool updatePipeline) {
+void Text::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                  bool updatePipeline) {
     (void)updatePipeline;
     for (auto &component : components) {
         component->update(dt);
+    }
+    if (commandBuffer == nullptr) {
+        throw std::runtime_error(
+            "Text::render requires a valid command buffer");
     }
 
     glEnable(GL_BLEND);
@@ -158,7 +163,7 @@ void Text::render(float dt, bool updatePipeline) {
     shader.setUniform1i("text", 0);
 
     glActiveTexture(GL_TEXTURE0);
-    vao->bind();
+    commandBuffer->bindDrawingState(vao);
 
     float scale = 2.0f;
 
@@ -194,12 +199,12 @@ void Text::render(float dt, bool updatePipeline) {
         vertexBuffer->bind();
         vertexBuffer->updateData(0, sizeof(vertices), vertices);
         vertexBuffer->unbind();
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        commandBuffer->draw(6, 1, 0, 0);
 
         x += (ch.advance >> 6) * scale;
     }
 
-    vao->unbind();
+    commandBuffer->unbindDrawingState();
     glBindTexture(GL_TEXTURE_2D, 0);
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);

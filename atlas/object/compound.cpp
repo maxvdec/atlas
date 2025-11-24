@@ -21,8 +21,9 @@ class CompoundObject::LateCompoundRenderable : public Renderable {
   public:
     explicit LateCompoundRenderable(CompoundObject &owner) : parent(owner) {}
 
-    void render(float dt, bool updatePipeline) override {
-        parent.renderLate(dt, updatePipeline);
+    void render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                bool updatePipeline) override {
+        parent.renderLate(dt, commandBuffer, updatePipeline);
     }
     void initialize() override {}
     void update(Window &window) override { parent.updateLate(window); }
@@ -73,7 +74,9 @@ void CompoundObject::initialize() {
     }
 }
 
-void CompoundObject::render(float dt, bool updatePipeline) {
+void CompoundObject::render(float dt,
+                            std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                            bool updatePipeline) {
     if (originalPositions.empty()) {
         for (const auto &obj : objects) {
             originalPositions.push_back(obj->getPosition());
@@ -88,20 +91,30 @@ void CompoundObject::render(float dt, bool updatePipeline) {
     for (auto &component : components) {
         component->update(dt);
     }
+    if (commandBuffer == nullptr) {
+        throw std::runtime_error(
+            "CompoundObject::render requires a valid command buffer");
+    }
     for (auto &obj : objects) {
         if (obj != nullptr && obj->renderLateForward) {
             continue;
         }
-        obj->render(dt, updatePipeline);
+        obj->render(dt, commandBuffer, updatePipeline);
     }
 }
 
-void CompoundObject::renderLate(float dt, bool updatePipeline) {
+void CompoundObject::renderLate(
+    float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
+    bool updatePipeline) {
+    if (commandBuffer == nullptr) {
+        throw std::runtime_error(
+            "CompoundObject::renderLate requires a valid command buffer");
+    }
     for (auto *obj : lateForwardObjects) {
         if (obj == nullptr) {
             continue;
         }
-        obj->render(dt, updatePipeline);
+        obj->render(dt, commandBuffer, updatePipeline);
     }
 }
 
@@ -329,11 +342,17 @@ void UIView::setProjectionMatrix(const glm::mat4 &projection) {
     }
 }
 
-void UIView::render(float dt, bool updatePipeline) {
+void UIView::render(float dt,
+                    std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                    bool updatePipeline) {
     for (auto &component : components) {
         component->update(dt);
     }
+    if (commandBuffer == nullptr) {
+        throw std::runtime_error(
+            "UIView::render requires a valid command buffer");
+    }
     for (auto &obj : children) {
-        obj->render(dt, updatePipeline);
+        obj->render(dt, commandBuffer, updatePipeline);
     }
 }

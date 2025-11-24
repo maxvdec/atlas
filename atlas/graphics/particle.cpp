@@ -347,13 +347,19 @@ void ParticleEmitter::update(Window &window) {
     activeParticleCount = instanceData.size();
 }
 
-void ParticleEmitter::render(float dt, bool updatePipeline) {
+void ParticleEmitter::render(float dt,
+                             std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                             bool updatePipeline) {
     (void)updatePipeline;
     for (auto &component : components) {
         component->update(dt);
     }
     if (activeParticleCount == 0)
         return;
+    if (commandBuffer == nullptr) {
+        throw std::runtime_error(
+            "ParticleEmitter::render requires a valid command buffer");
+    }
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -375,10 +381,9 @@ void ParticleEmitter::render(float dt, bool updatePipeline) {
         program.setUniform1i("particleTexture", 0);
     }
 
-    vao->bind();
-    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0,
-                            activeParticleCount);
-    vao->unbind();
+    commandBuffer->bindDrawingState(vao);
+    commandBuffer->drawIndexed(6, activeParticleCount, 0, 0, 0);
+    commandBuffer->unbindDrawingState();
 
     glDepthMask(GL_TRUE);
     glDisable(GL_BLEND);
