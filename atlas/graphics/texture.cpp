@@ -656,7 +656,7 @@ void Skybox::render(float, bool) {
         obj->shaderProgram.setUniform1i("hasDayNight", 0);
     }
 
-    glBindVertexArray(obj->vao);
+    obj->vao->bind();
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap.id);
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(obj->indices.size()),

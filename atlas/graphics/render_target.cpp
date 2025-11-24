@@ -750,7 +750,7 @@ void RenderTarget::render(float dt, bool updatePipeline) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    glBindVertexArray(obj->vao);
+    obj->vao->bind();
 
     if (!obj->indices.empty()) {
         glDrawElements(GL_TRIANGLES, obj->indices.size(), GL_UNSIGNED_INT, 0);
@@ -758,7 +758,7 @@ void RenderTarget::render(float dt, bool updatePipeline) {
         glDrawArrays(GL_TRIANGLES, 0, obj->vertices.size());
     }
 
-    glBindVertexArray(0);
+    obj->vao->unbind();
 
     glEnable(GL_DEPTH_TEST);
 }

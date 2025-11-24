@@ -14,7 +14,6 @@
 #include "opal/opal.h"
 #include <algorithm>
 #include <glad/glad.h>
-#include <iostream>
 #include <limits>
 #include <random>
 #include <string>
@@ -41,7 +40,7 @@ std::vector<LayoutDescriptor> CoreVertex::getLayoutDescriptors() {
              sizeof(CoreVertex), offsetof(CoreVertex, bitangent)}};
 }
 
-CoreObject::CoreObject() : vbo(0), vao(0) {
+CoreObject::CoreObject() : vao(nullptr), vbo(nullptr), ebo(nullptr) {
     shaderProgram = ShaderProgram::defaultProgram();
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -108,13 +107,16 @@ void CoreObject::attachVertices(const std::vector<CoreVertex> &newVertices) {
     }
 
     vertices = newVertices;
-    glGenVertexArrays(1, &vao);
-    glGenBuffers(1, &vbo);
+    vao = opal::DrawingState::create(nullptr);
+    vbo = opal::Buffer::create(opal::BufferUsage::VertexBuffer,
+                               vertices.size() * sizeof(CoreVertex),
+                               vertices.data());
 }
 
 void CoreObject::attachIndices(const std::vector<Index> &newIndices) {
     indices = newIndices;
-    glGenBuffers(1, &ebo);
+    ebo = opal::Buffer::create(opal::BufferUsage::IndexArray,
+                               indices.size() * sizeof(Index), indices.data());
 }
 
 void CoreObject::setPosition(const Position3d &newPosition) {
@@ -250,16 +252,18 @@ void CoreObject::initialize() {
         throw std::runtime_error("No vertices attached to the object");
     }
 
-    glBindVertexArray(vao);
+    vao = opal::DrawingState::create(nullptr);
 
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(CoreVertex),
-                 vertices.data(), GL_STATIC_DRAW);
+    vao->bind();
+
+    vbo = opal::Buffer::create(opal::BufferUsage::VertexBuffer,
+                               vertices.size() * sizeof(CoreVertex),
+                               vertices.data());
 
     if (!indices.empty()) {
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(Index),
-                     indices.data(), GL_STATIC_DRAW);
+        ebo = opal::Buffer::create(opal::BufferUsage::IndexArray,
+                                   indices.size() * sizeof(Index),
+                                   indices.data());
     }
 
     this->pipeline = opal::Pipeline::create();
@@ -309,8 +313,8 @@ void CoreObject::initialize() {
         }
     };
 
-    glBindVertexArray(vao);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    vao->bind();
+    vbo->bind();
     for (const auto &attr : vertexAttributes) {
         glEnableVertexAttribArray(attr.location);
         glVertexAttribPointer(attr.location, attr.size, toGLType(attr.type),
@@ -327,13 +331,12 @@ void CoreObject::initialize() {
             modelMatrices.push_back(instance.getModelMatrix());
         }
 
-        glGenBuffers(1, &instanceVBO);
-        glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-        glBufferData(GL_ARRAY_BUFFER, instances.size() * sizeof(glm::mat4),
-                     modelMatrices.data(), GL_STATIC_DRAW);
+        instanceVBO = opal::Buffer::create(opal::BufferUsage::GeneralPurpose,
+                                           instances.size() * sizeof(glm::mat4),
+                                           modelMatrices.data());
 
-        glBindVertexArray(vao);
-        glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+        vao->bind();
+        instanceVBO->bind();
         std::size_t vec4Size = sizeof(glm::vec4);
         for (unsigned int i = 0; i < 4; i++) {
             glEnableVertexAttribArray(6 + i);
@@ -346,8 +349,7 @@ void CoreObject::initialize() {
 
     this->pipeline->setVertexAttributes(vertexAttributes, vertexBinding);
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+    vao->unbind();
 }
 
 std::optional<std::shared_ptr<opal::Pipeline>> CoreObject::getPipeline() {
@@ -801,7 +803,7 @@ void CoreObject::render(float dt, bool updatePipeline) {
             this->savedInstances = this->instances;
         }
         // Update instance buffer data
-        glBindVertexArray(vao);
+        vao->bind();
         shaderProgram.setUniform1i("isInstanced", 1);
 
         if (!indices.empty()) {
@@ -816,7 +818,7 @@ void CoreObject::render(float dt, bool updatePipeline) {
         return;
     }
 
-    glBindVertexArray(vao);
+    vao->bind();
     shaderProgram.setUniform1i("isInstanced", 0);
     if (!indices.empty()) {
         glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
@@ -844,9 +846,9 @@ void CoreObject::setProjectionMatrix(const glm::mat4 &projection) {
 CoreObject CoreObject::clone() const {
     CoreObject newObject = *this;
 
-    glGenVertexArrays(1, &newObject.vao);
-    glGenBuffers(1, &newObject.vbo);
-    glGenBuffers(1, &newObject.ebo);
+    newObject.vao = nullptr;
+    newObject.vbo = nullptr;
+    newObject.ebo = nullptr;
 
     newObject.initialize();
 
@@ -859,10 +861,9 @@ void CoreObject::updateVertices() {
                                  "initialized or empty vertex list");
     }
 
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(CoreVertex),
-                    vertices.data());
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    vbo->bind();
+    vbo->updateData(0, vertices.size() * sizeof(CoreVertex), vertices.data());
+    vbo->unbind();
 }
 
 void CoreObject::update(Window &window) {
@@ -917,11 +918,10 @@ void CoreObject::updateInstances() {
     }
 
     if (this->instanceVBO == 0) {
-        glGenBuffers(1, &instanceVBO);
-        glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-        glBufferData(GL_ARRAY_BUFFER, instances.size() * sizeof(glm::mat4),
-                     nullptr, GL_DYNAMIC_DRAW);
-        glBindVertexArray(vao);
+        instanceVBO =
+            opal::Buffer::create(opal::BufferUsage::GeneralPurpose,
+                                 instances.size() * sizeof(glm::mat4), nullptr);
+        vao->bind();
         std::size_t vec4Size = sizeof(glm::vec4);
         for (unsigned int i = 0; i < 4; i++) {
             glEnableVertexAttribArray(6 + i);
@@ -929,8 +929,7 @@ void CoreObject::updateInstances() {
                                   sizeof(glm::mat4), (void *)(i * vec4Size));
             glVertexAttribDivisor(6 + i, 1);
         }
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glBindVertexArray(0);
+        vao->unbind();
     }
 
     std::vector<glm::mat4> modelMatrices;
@@ -941,10 +940,10 @@ void CoreObject::updateInstances() {
         modelMatrices.push_back(instance.getModelMatrix());
     }
 
-    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, instances.size() * sizeof(glm::mat4),
-                    modelMatrices.data());
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    instanceVBO->bind();
+    instanceVBO->updateData(0, instances.size() * sizeof(glm::mat4),
+                            modelMatrices.data());
+    instanceVBO->unbind();
 }
 
 void Instance::updateModelMatrix() {

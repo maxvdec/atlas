@@ -1102,8 +1102,8 @@ void Window::renderPingpong(RenderTarget *target) {
     blurShader.setUniform1f("radius", 2.5f);
     blurShader.setUniform1i("image", 0);
 
-    glBindVertexArray(target->object->vao);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, target->object->ebo);
+    target->object->vao->bind();
+    target->object->ebo->bind();
 
     for (unsigned int i = 0; i < blurIterations; ++i) {
         glBindFramebuffer(GL_FRAMEBUFFER, this->pingpongFBOs[horizontal]);

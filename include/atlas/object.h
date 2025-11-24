@@ -516,10 +516,10 @@ class CoreObject : public GameObject {
     }
 
   private:
-    BufferIndex vbo;
-    BufferIndex vao;
-    BufferIndex ebo;
-    BufferIndex instanceVBO = 0;
+    std::shared_ptr<opal::DrawingState> vao;
+    std::shared_ptr<opal::Buffer> vbo;
+    std::shared_ptr<opal::Buffer> ebo;
+    std::shared_ptr<opal::Buffer> instanceVBO;
 
     std::vector<Instance> savedInstances;
 
