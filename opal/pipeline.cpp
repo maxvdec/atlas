@@ -305,4 +305,61 @@ bool Pipeline::operator==(std::shared_ptr<Pipeline> pipeline) const {
     return true;
 }
 
+void Pipeline::setUniform1f(const std::string &name, float v0) {
+#ifdef OPENGL
+    glUniform1f(
+        glGetUniformLocation(this->shaderProgram->programID, name.c_str()), v0);
+#endif
+}
+
+void Pipeline::setUniformMat4f(const std::string &name,
+                               const glm::mat4 &matrix) {
+#ifdef OPENGL
+    glUniformMatrix4fv(
+        glGetUniformLocation(this->shaderProgram->programID, name.c_str()), 1,
+        GL_FALSE, &matrix[0][0]);
+#endif
+}
+
+void Pipeline::setUniform3f(const std::string &name, float v0, float v1,
+                            float v2) {
+#ifdef OPENGL
+    glUniform3f(
+        glGetUniformLocation(this->shaderProgram->programID, name.c_str()), v0,
+        v1, v2);
+#endif
+}
+
+void Pipeline::setUniform1i(const std::string &name, int v0) {
+#ifdef OPENGL
+    glUniform1i(
+        glGetUniformLocation(this->shaderProgram->programID, name.c_str()), v0);
+#endif
+}
+
+void Pipeline::setUniformBool(const std::string &name, bool value) {
+#ifdef OPENGL
+    glUniform1i(
+        glGetUniformLocation(this->shaderProgram->programID, name.c_str()),
+        (int)value);
+#endif
+}
+
+void Pipeline::setUniform4f(const std::string &name, float v0, float v1,
+                            float v2, float v3) {
+#ifdef OPENGL
+    glUniform4f(
+        glGetUniformLocation(this->shaderProgram->programID, name.c_str()), v0,
+        v1, v2, v3);
+#endif
+}
+
+void Pipeline::setUniform2f(const std::string &name, float v0, float v1) {
+#ifdef OPENGL
+    glUniform2f(
+        glGetUniformLocation(this->shaderProgram->programID, name.c_str()), v0,
+        v1);
+#endif
+}
+
 } // namespace opal

@@ -10,12 +10,14 @@
 #ifndef OPAL_H
 #define OPAL_H
 
+#include <cstddef>
 #include <memory>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <string>
 #include <sys/types.h>
 #include <vector>
+#include <glm/glm.hpp>
 
 namespace opal {
 
@@ -190,9 +192,6 @@ class Pipeline {
     void enableBlending(bool enabled);
     void setBlendFunc(BlendFunc srcFactor, BlendFunc dstFactor);
 
-    template <typename T>
-    void setUniform(const std::string &name, const T &value);
-
     void build();
 
     void bind();
@@ -200,6 +199,15 @@ class Pipeline {
     bool operator==(std::shared_ptr<Pipeline> pipeline) const;
 
     std::shared_ptr<ShaderProgram> shaderProgram;
+
+    void setUniform3f(const std::string &name, float v0, float v1, float v2);
+    void setUniform1i(const std::string &name, int v0);
+    void setUniformMat4f(const std::string &name, const glm::mat4 &matrix);
+    void setUniform1f(const std::string &name, float v0);
+    void setUniformBool(const std::string &name, bool value);
+    void setUniform2f(const std::string &name, float v0, float v1);
+    void setUniform4f(const std::string &name, float v0, float v1, float v2,
+                      float v3);
 
   private:
     PrimitiveStyle primitiveStyle;
@@ -227,6 +235,51 @@ class Pipeline {
     uint getGLCullMode(CullMode mode) const;
     uint getGLFrontFace(FrontFace face) const;
     uint getGLVertexAttributeType(VertexAttributeType type) const;
+};
+
+enum class BufferUsage {
+    VertexBuffer,
+    IndexArray,
+    GeneralPurpose,
+    UniformBuffer,
+    ShaderRead,
+    ShaderReadWrite
+};
+
+enum class MemoryUsageType { GPUOnly, CPUToGPU, GPUToCPU };
+
+class Buffer {
+  public:
+    static std::shared_ptr<Buffer>
+    create(BufferUsage usage, size_t size, const void *data = nullptr,
+           MemoryUsageType memoryUsage = MemoryUsageType::GPUOnly);
+
+    void updateData(size_t offset, size_t size, const void *data);
+
+    void bind() const;
+    void unbind() const;
+
+    uint bufferID;
+
+    BufferUsage usage;
+    MemoryUsageType memoryUsage;
+};
+
+struct DrawingState {
+    std::shared_ptr<Buffer> vertexBuffer = nullptr;
+    std::shared_ptr<Buffer> indexBuffer = nullptr;
+
+    static std::shared_ptr<DrawingState>
+    create(std::shared_ptr<Buffer> vertexBuffer,
+           std::shared_ptr<Buffer> indexBuffer = nullptr);
+
+    void setBuffers(std::shared_ptr<Buffer> vertexBuffer,
+                    std::shared_ptr<Buffer> indexBuffer = nullptr);
+
+    void bind() const;
+    void unbind() const;
+
+    uint index;
 };
 
 } // namespace opal
