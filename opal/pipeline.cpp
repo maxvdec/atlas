@@ -91,7 +91,7 @@ void Pipeline::setBlendFunc(BlendFunc srcFactor, BlendFunc dstFactor) {
 #endif
 }
 
-uint Pipeline::getGLBlendFactor(BlendFunc func) {
+uint Pipeline::getGLBlendFactor(BlendFunc func) const {
     switch (func) {
     case BlendFunc::Zero:
         return GL_ZERO;
@@ -118,7 +118,7 @@ uint Pipeline::getGLBlendFactor(BlendFunc func) {
     }
 }
 
-uint Pipeline::getGLCompareOp(CompareOp op) {
+uint Pipeline::getGLCompareOp(CompareOp op) const {
     switch (op) {
     case CompareOp::Never:
         return GL_NEVER;
@@ -141,7 +141,7 @@ uint Pipeline::getGLCompareOp(CompareOp op) {
     }
 }
 
-uint Pipeline::getGLPrimitiveStyle(PrimitiveStyle style) {
+uint Pipeline::getGLPrimitiveStyle(PrimitiveStyle style) const {
     switch (style) {
     case PrimitiveStyle::Points:
         return GL_POINTS;
@@ -160,7 +160,7 @@ uint Pipeline::getGLPrimitiveStyle(PrimitiveStyle style) {
     }
 }
 
-uint Pipeline::getGLRasterizerMode(RasterizerMode mode) {
+uint Pipeline::getGLRasterizerMode(RasterizerMode mode) const {
     switch (mode) {
     case RasterizerMode::Fill:
         return GL_FILL;
@@ -173,7 +173,7 @@ uint Pipeline::getGLRasterizerMode(RasterizerMode mode) {
     }
 }
 
-uint Pipeline::getGLCullMode(CullMode mode) {
+uint Pipeline::getGLCullMode(CullMode mode) const {
     switch (mode) {
     case CullMode::None:
         return 0;
@@ -188,7 +188,7 @@ uint Pipeline::getGLCullMode(CullMode mode) {
     }
 }
 
-uint Pipeline::getGLFrontFace(FrontFace face) {
+uint Pipeline::getGLFrontFace(FrontFace face) const {
     switch (face) {
     case FrontFace::Clockwise:
         return GL_CW;
@@ -199,7 +199,7 @@ uint Pipeline::getGLFrontFace(FrontFace face) {
     }
 }
 
-uint Pipeline::getGLVertexAttributeType(VertexAttributeType type) {
+uint Pipeline::getGLVertexAttributeType(VertexAttributeType type) const {
     switch (type) {
     case VertexAttributeType::Float:
         return GL_FLOAT;
@@ -222,20 +222,7 @@ uint Pipeline::getGLVertexAttributeType(VertexAttributeType type) {
 
 void Pipeline::build() {
 #ifdef OPENGL
-    glUseProgram(this->shaderProgram->programID);
-    for (const auto &attr : this->vertexAttributes) {
-        glEnableVertexAttribArray(attr.location);
-        glVertexAttribPointer(
-            attr.location, attr.size, this->getGLVertexAttributeType(attr.type),
-            attr.normalized ? GL_TRUE : GL_FALSE, this->vertexBinding.stride,
-            (void *)(uintptr_t)(attr.offset));
-
-        if (this->vertexBinding.inputRate == VertexBindingInputRate::Instance) {
-            glVertexAttribDivisor(attr.location, 1);
-        } else {
-            glVertexAttribDivisor(attr.location, 0);
-        }
-    }
+    (void)this; // Vertex layout applied explicitly per VAO.
 #endif
 }
 

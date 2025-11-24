@@ -220,13 +220,13 @@ class Pipeline {
     int viewportWidth = 800;
     int viewportHeight = 600;
 
-    uint getGLBlendFactor(BlendFunc factor);
-    uint getGLCompareOp(CompareOp op);
-    uint getGLPrimitiveStyle(PrimitiveStyle style);
-    uint getGLRasterizerMode(RasterizerMode mode);
-    uint getGLCullMode(CullMode mode);
-    uint getGLFrontFace(FrontFace face);
-    uint getGLVertexAttributeType(VertexAttributeType type);
+    uint getGLBlendFactor(BlendFunc factor) const;
+    uint getGLCompareOp(CompareOp op) const;
+    uint getGLPrimitiveStyle(PrimitiveStyle style) const;
+    uint getGLRasterizerMode(RasterizerMode mode) const;
+    uint getGLCullMode(CullMode mode) const;
+    uint getGLFrontFace(FrontFace face) const;
+    uint getGLVertexAttributeType(VertexAttributeType type) const;
 };
 
 } // namespace opal

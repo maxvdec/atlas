@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 #include <cmath>
+#include <cstdint>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -29,7 +30,7 @@ std::vector<LayoutDescriptor> CoreVertex::getLayoutDescriptors() {
              sizeof(CoreVertex), offsetof(CoreVertex, position)},
             {"color", 1, 4, opal::VertexAttributeType::Float, false,
              sizeof(CoreVertex), offsetof(CoreVertex, color)},
-            {"textureCoordinates", 2, 2, opal::VertexAttributeType::Double,
+            {"textureCoordinates", 2, 2, opal::VertexAttributeType::Float,
              false, sizeof(CoreVertex),
              offsetof(CoreVertex, textureCoordinate)},
             {"normal", 3, 3, opal::VertexAttributeType::Float, false,
@@ -99,7 +100,6 @@ void CoreObject::setColor(const Color &color) {
     }
     useColor = true;
     useTexture = false;
-    updateVertices();
 }
 
 void CoreObject::attachVertices(const std::vector<CoreVertex> &newVertices) {
@@ -286,6 +286,40 @@ void CoreObject::initialize() {
     vertexBinding = opal::VertexBinding{(uint)layoutDescriptors[0].stride,
                                         opal::VertexBindingInputRate::Vertex};
 
+    auto toGLType = [](opal::VertexAttributeType type) -> GLenum {
+        switch (type) {
+        case opal::VertexAttributeType::Float:
+            return GL_FLOAT;
+        case opal::VertexAttributeType::Double:
+            return GL_DOUBLE;
+        case opal::VertexAttributeType::Int:
+            return GL_INT;
+        case opal::VertexAttributeType::UnsignedInt:
+            return GL_UNSIGNED_INT;
+        case opal::VertexAttributeType::Short:
+            return GL_SHORT;
+        case opal::VertexAttributeType::UnsignedShort:
+            return GL_UNSIGNED_SHORT;
+        case opal::VertexAttributeType::Byte:
+            return GL_BYTE;
+        case opal::VertexAttributeType::UnsignedByte:
+            return GL_UNSIGNED_BYTE;
+        default:
+            return GL_FLOAT;
+        }
+    };
+
+    glBindVertexArray(vao);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    for (const auto &attr : vertexAttributes) {
+        glEnableVertexAttribArray(attr.location);
+        glVertexAttribPointer(attr.location, attr.size, toGLType(attr.type),
+                              attr.normalized ? GL_TRUE : GL_FALSE,
+                              vertexBinding.stride,
+                              (void *)(uintptr_t)(attr.offset));
+        glVertexAttribDivisor(attr.location, 0);
+    }
+
     if (!instances.empty()) {
         std::vector<glm::mat4> modelMatrices;
         for (auto &instance : instances) {
@@ -299,20 +333,21 @@ void CoreObject::initialize() {
                      modelMatrices.data(), GL_STATIC_DRAW);
 
         glBindVertexArray(vao);
+        glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
         std::size_t vec4Size = sizeof(glm::vec4);
         for (unsigned int i = 0; i < 4; i++) {
-            vertexAttributes.push_back(opal::VertexAttribute{
-                "instanceModel" + std::to_string(i),
-                opal::VertexAttributeType::Float, (uint)i * (uint)vec4Size,
-                6 + i, false, 4});
+            glEnableVertexAttribArray(6 + i);
+            glVertexAttribPointer(6 + i, 4, GL_FLOAT, GL_FALSE,
+                                  sizeof(glm::mat4),
+                                  (void *)(uintptr_t)(i * vec4Size));
+            glVertexAttribDivisor(6 + i, 1);
         }
-        vertexBinding.stride += sizeof(glm::mat4);
-        vertexBinding.inputRate = opal::VertexBindingInputRate::Instance;
     }
 
     this->pipeline->setVertexAttributes(vertexAttributes, vertexBinding);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 }
 
 std::optional<std::shared_ptr<opal::Pipeline>> CoreObject::getPipeline() {
@@ -370,8 +405,6 @@ void CoreObject::render(float dt, bool updatePipeline) {
         throw std::runtime_error("Shader program not compiled");
     }
 
-    std::cout << "Object with Id " << id << " should update the pipeline: "
-              << (updatePipeline ? "true" : "false") << std::endl;
     if (updatePipeline || this->pipeline == nullptr) {
         this->refreshPipeline();
     }

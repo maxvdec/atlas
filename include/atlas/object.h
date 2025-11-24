@@ -36,7 +36,7 @@ struct Light;
  * @brief Alias that represents a texture coordinate in 2D space.
  *
  */
-typedef std::array<double, 2> TextureCoordinate;
+typedef std::array<float, 2> TextureCoordinate;
 
 /**
  * @brief Structure representing the material properties of an object. Based on
