@@ -107,16 +107,10 @@ void CoreObject::attachVertices(const std::vector<CoreVertex> &newVertices) {
     }
 
     vertices = newVertices;
-    vao = opal::DrawingState::create(nullptr);
-    vbo = opal::Buffer::create(opal::BufferUsage::VertexBuffer,
-                               vertices.size() * sizeof(CoreVertex),
-                               vertices.data());
 }
 
 void CoreObject::attachIndices(const std::vector<Index> &newIndices) {
     indices = newIndices;
-    ebo = opal::Buffer::create(opal::BufferUsage::IndexArray,
-                               indices.size() * sizeof(Index), indices.data());
 }
 
 void CoreObject::setPosition(const Position3d &newPosition) {
@@ -252,18 +246,22 @@ void CoreObject::initialize() {
         throw std::runtime_error("No vertices attached to the object");
     }
 
-    vao = opal::DrawingState::create(nullptr);
+    if (vao == nullptr) {
+        vao = opal::DrawingState::create(nullptr);
+    }
 
     vao->bind();
 
     vbo = opal::Buffer::create(opal::BufferUsage::VertexBuffer,
                                vertices.size() * sizeof(CoreVertex),
                                vertices.data());
+    vbo->bind();
 
     if (!indices.empty()) {
         ebo = opal::Buffer::create(opal::BufferUsage::IndexArray,
                                    indices.size() * sizeof(Index),
                                    indices.data());
+        ebo->bind();
     }
 
     this->pipeline = opal::Pipeline::create();
@@ -323,6 +321,7 @@ void CoreObject::initialize() {
                               (void *)(uintptr_t)(attr.offset));
         glVertexAttribDivisor(attr.location, 0);
     }
+    vbo->unbind();
 
     if (!instances.empty()) {
         std::vector<glm::mat4> modelMatrices;
@@ -345,6 +344,7 @@ void CoreObject::initialize() {
                                   (void *)(uintptr_t)(i * vec4Size));
             glVertexAttribDivisor(6 + i, 1);
         }
+        instanceVBO->unbind();
     }
 
     this->pipeline->setVertexAttributes(vertexAttributes, vertexBinding);
@@ -809,12 +809,12 @@ void CoreObject::render(float dt, bool updatePipeline) {
         if (!indices.empty()) {
             glDrawElementsInstanced(GL_TRIANGLES, indices.size(),
                                     GL_UNSIGNED_INT, 0, instances.size());
-            glBindVertexArray(0);
+            vao->unbind();
             return;
         }
         glDrawArraysInstanced(GL_TRIANGLES, 0, vertices.size(),
                               instances.size());
-        glBindVertexArray(0);
+        vao->unbind();
         return;
     }
 
@@ -822,11 +822,11 @@ void CoreObject::render(float dt, bool updatePipeline) {
     shaderProgram.setUniform1i("isInstanced", 0);
     if (!indices.empty()) {
         glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
-        glBindVertexArray(0);
+        vao->unbind();
         return;
     }
     glDrawArrays(GL_TRIANGLES, 0, vertices.size());
-    glBindVertexArray(0);
+    vao->unbind();
 }
 
 void CoreObject::setViewMatrix(const glm::mat4 &view) {
@@ -849,6 +849,7 @@ CoreObject CoreObject::clone() const {
     newObject.vao = nullptr;
     newObject.vbo = nullptr;
     newObject.ebo = nullptr;
+    newObject.instanceVBO = nullptr;
 
     newObject.initialize();
 
@@ -856,7 +857,7 @@ CoreObject CoreObject::clone() const {
 }
 
 void CoreObject::updateVertices() {
-    if (vbo == 0 || vertices.empty()) {
+    if (vbo == nullptr || vertices.empty()) {
         throw std::runtime_error("Cannot update vertices: VBO not "
                                  "initialized or empty vertex list");
     }
@@ -917,7 +918,7 @@ void CoreObject::updateInstances() {
         return;
     }
 
-    if (this->instanceVBO == 0) {
+    if (this->instanceVBO == nullptr) {
         instanceVBO =
             opal::Buffer::create(opal::BufferUsage::GeneralPurpose,
                                  instances.size() * sizeof(glm::mat4), nullptr);

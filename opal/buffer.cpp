@@ -182,13 +182,13 @@ void DrawingState::bind() const {
 
 void DrawingState::unbind() const {
 #ifdef OPENGL
+    glBindVertexArray(0);
     if (indexBuffer) {
         indexBuffer->unbind();
     }
     if (vertexBuffer) {
         vertexBuffer->unbind();
     }
-    glBindVertexArray(0);
 #endif
 }
 
