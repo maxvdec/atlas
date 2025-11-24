@@ -545,7 +545,8 @@ void RenderTarget::show() {
     }
 }
 
-void RenderTarget::render(float dt) {
+void RenderTarget::render(float dt, bool updatePipeline) {
+    (void)updatePipeline;
     if (!object || !object->isVisible) {
         return;
     }

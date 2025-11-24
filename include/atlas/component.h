@@ -15,6 +15,7 @@
 #include "atlas/texture.h"
 #include "atlas/units.h"
 #include "bezel/body.h"
+#include "opal/opal.h"
 #include <memory>
 #include <vector>
 
@@ -369,7 +370,7 @@ class CompoundObject : public GameObject {
      * @brief Renders every child CoreObject that composes the compound
      * structure.
      */
-    void render(float dt) override;
+    void render(float dt, bool updatePipeline = false) override;
     /**
      * @brief Propagates the active view matrix to every child CoreObject.
      */
@@ -383,11 +384,11 @@ class CompoundObject : public GameObject {
      * @brief Retrieves the shader program currently in use by the first
      * underlying CoreObject.
      */
-    std::optional<ShaderProgram> getShaderProgram() override;
+    std::optional<std::shared_ptr<opal::Pipeline>> getPipeline() override;
     /**
      * @brief Forces all child objects to use the provided shader program.
      */
-    void setShader(const ShaderProgram &shader) override;
+    void setPipeline(std::shared_ptr<opal::Pipeline> &pipeline) override;
     /**
      * @brief Obtains the position of the compound object based on its first
      * child.
@@ -478,12 +479,13 @@ class CompoundObject : public GameObject {
     bool lateRenderableRegistered = false;
     bool changedPosition = false;
 
-    void renderLate(float dt);
+    void renderLate(float dt, bool updatePipeline);
     void updateLate(Window &window);
     void setLateViewMatrix(const glm::mat4 &view);
     void setLateProjectionMatrix(const glm::mat4 &projection);
-    std::optional<ShaderProgram> getLateShaderProgramInternal();
-    void setLateShader(const ShaderProgram &shader);
+    std::optional<std::shared_ptr<opal::Pipeline>>
+    getLateShaderPipelineInternal();
+    void setLatePipeline(std::shared_ptr<opal::Pipeline> pipeline);
     bool lateCanCastShadows() const;
 };
 
@@ -507,7 +509,7 @@ class UIView : public UIObject {
      * @brief Renders the view alongside all registered child UI objects in
      * submission order.
      */
-    void render(float dt) override;
+    void render(float dt, bool updatePipeline = false) override;
     /**
      * @brief Stores the view matrix used when rendering the UI hierarchy.
      */

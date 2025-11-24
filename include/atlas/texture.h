@@ -483,7 +483,7 @@ class RenderTarget : public Renderable {
      * @brief Renders the quad representing this render target, applying any
      * queued post-processing effects.
      */
-    void render(float dt) override;
+    void render(float dt, bool updatePipeline = false) override;
     /**
      * @brief Resolves the render target by copying multisampled buffers to
      * regular textures.
@@ -579,7 +579,7 @@ class Skybox : public Renderable {
     /**
      * @brief Renders the skybox cube using the stored cubemap texture.
      */
-    void render(float dt) override;
+    void render(float dt, bool updatePipeline = false) override;
     /**
      * @brief Updates the view matrix while removing translation for correct
      * skybox rendering.

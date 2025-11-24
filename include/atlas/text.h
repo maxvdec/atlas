@@ -184,7 +184,7 @@ class Text : public UIObject {
      * @brief Renders the text glyphs to the screen honoring kerning and font
      * metrics.
      */
-    void render(float dt) override;
+    void render(float dt, bool updatePipeline = false) override;
 
   private:
     Id VAO, VBO;

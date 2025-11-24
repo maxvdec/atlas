@@ -14,6 +14,7 @@
 #include "atlas/units.h"
 #include "atlas/window.h"
 #include "atlas/workspace.h"
+#include "opal/opal.h"
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <iostream>
@@ -84,7 +85,9 @@ void Model::processNode(aiNode *node, const aiScene *scene,
         aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
         auto obj = std::make_shared<CoreObject>(
             processMesh(mesh, scene, nodeTransform));
-        obj->setShader(ShaderProgram::defaultProgram());
+        auto pipeline = opal::Pipeline::create();
+        pipeline = ShaderProgram::defaultProgram().requestPipeline(pipeline);
+        obj->setPipeline(pipeline);
         obj->initialize();
         this->objects.push_back(obj);
     }

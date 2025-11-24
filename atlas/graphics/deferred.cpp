@@ -9,39 +9,44 @@
 
 #include "atlas/light.h"
 #include "atlas/window.h"
+#include "opal/opal.h"
 #include <glad/glad.h>
+#include <memory>
 
 void Window::deferredRendering(RenderTarget *target) {
     // Render to G-Buffer
-    std::vector<ShaderProgram> originalPrograms;
+    std::vector<std::shared_ptr<opal::Pipeline>> originalPipelines;
+    auto deferredPipeline = opal::Pipeline::create();
     for (auto &obj : this->renderables) {
         if (!obj->canUseDeferredRendering()) {
             continue;
         }
-        if (obj->getShaderProgram() != std::nullopt) {
-            originalPrograms.push_back(obj->getShaderProgram().value());
+        if (obj->getPipeline() != std::nullopt) {
+            originalPipelines.push_back(obj->getPipeline().value());
         } else {
-            originalPrograms.push_back(ShaderProgram());
+            originalPipelines.push_back(opal::Pipeline::create());
         }
-        obj->setShader(this->deferredProgram);
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, this->gBuffer->fbo);
     glViewport(0, 0, this->gBuffer->getWidth(), this->gBuffer->getHeight());
+    deferredPipeline->setViewport(0, 0, this->gBuffer->getWidth(),
+                                  this->gBuffer->getHeight());
     unsigned int attachments[4] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1,
                                    GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3};
     glDrawBuffers(4, attachments);
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
+    deferredPipeline->setCullMode(opal::CullMode::Back);
+    deferredPipeline->enableDepthTest(true);
+    deferredPipeline->setDepthCompareOp(opal::CompareOp::Less);
     glDepthMask(GL_TRUE);
+    deferredPipeline = this->deferredProgram.requestPipeline(deferredPipeline);
     for (auto &obj : this->renderables) {
         if (obj->canUseDeferredRendering()) {
             obj->setViewMatrix(this->camera->calculateViewMatrix());
             obj->setProjectionMatrix(calculateProjectionMatrix());
+            obj->setPipeline(deferredPipeline);
             obj->render(getDeltaTime());
         }
     }

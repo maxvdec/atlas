@@ -11,30 +11,34 @@
 #include "atlas/light.h"
 #include "atlas/object.h"
 #include "atlas/window.h"
+#include "opal/opal.h"
 #include <algorithm>
 #include <glad/glad.h>
+#include <iostream>
 #include <limits>
 #include <random>
 #include <string>
 #include <vector>
 #include <cmath>
+#include <cstdint>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 std::vector<LayoutDescriptor> CoreVertex::getLayoutDescriptors() {
-    return {{0, 3, GL_FLOAT, GL_FALSE, sizeof(CoreVertex),
-             offsetof(CoreVertex, position)},
-            {1, 4, GL_FLOAT, GL_FALSE, sizeof(CoreVertex),
-             offsetof(CoreVertex, color)},
-            {2, 2, GL_DOUBLE, GL_FALSE, sizeof(CoreVertex),
+    return {{"position", 0, 3, opal::VertexAttributeType::Float, false,
+             sizeof(CoreVertex), offsetof(CoreVertex, position)},
+            {"color", 1, 4, opal::VertexAttributeType::Float, false,
+             sizeof(CoreVertex), offsetof(CoreVertex, color)},
+            {"textureCoordinates", 2, 2, opal::VertexAttributeType::Float,
+             false, sizeof(CoreVertex),
              offsetof(CoreVertex, textureCoordinate)},
-            {3, 3, GL_FLOAT, GL_FALSE, sizeof(CoreVertex),
-             offsetof(CoreVertex, normal)},
-            {4, 3, GL_FLOAT, GL_FALSE, sizeof(CoreVertex),
-             offsetof(CoreVertex, tangent)},
-            {5, 3, GL_FLOAT, GL_FALSE, sizeof(CoreVertex),
-             offsetof(CoreVertex, bitangent)}};
+            {"normal", 3, 3, opal::VertexAttributeType::Float, false,
+             sizeof(CoreVertex), offsetof(CoreVertex, normal)},
+            {"tangent", 4, 3, opal::VertexAttributeType::Float, false,
+             sizeof(CoreVertex), offsetof(CoreVertex, tangent)},
+            {"bitangent", 5, 3, opal::VertexAttributeType::Float, false,
+             sizeof(CoreVertex), offsetof(CoreVertex, bitangent)}};
 }
 
 CoreObject::CoreObject() : vbo(0), vao(0) {
@@ -51,6 +55,7 @@ void CoreObject::attachProgram(const ShaderProgram &program) {
     if (shaderProgram.programId == 0) {
         shaderProgram.compile();
     }
+    this->refreshPipeline();
 }
 
 void CoreObject::createAndAttachProgram(VertexShader &vertexShader,
@@ -65,6 +70,7 @@ void CoreObject::createAndAttachProgram(VertexShader &vertexShader,
 
     shaderProgram = ShaderProgram(vertexShader, fragmentShader);
     shaderProgram.compile();
+    this->refreshPipeline();
 }
 
 void CoreObject::renderColorWithTexture() {
@@ -94,7 +100,6 @@ void CoreObject::setColor(const Color &color) {
     }
     useColor = true;
     useTexture = false;
-    updateVertices();
 }
 
 void CoreObject::attachVertices(const std::vector<CoreVertex> &newVertices) {
@@ -257,6 +262,8 @@ void CoreObject::initialize() {
                      indices.data(), GL_STATIC_DRAW);
     }
 
+    this->pipeline = opal::Pipeline::create();
+
     std::vector<LayoutDescriptor> layoutDescriptors =
         CoreVertex::getLayoutDescriptors();
 
@@ -267,14 +274,50 @@ void CoreObject::initialize() {
         }
     }
 
+    std::vector<opal::VertexAttribute> vertexAttributes;
+    opal::VertexBinding vertexBinding;
+
     for (const auto &attr : layoutDescriptors) {
-        if (std::find(activeLocations.begin(), activeLocations.end(),
-                      attr.layoutPos) != activeLocations.end()) {
-            glEnableVertexAttribArray(attr.layoutPos);
-            glVertexAttribPointer(attr.layoutPos, attr.size, attr.type,
-                                  attr.normalized, attr.stride,
-                                  (void *)attr.offset);
+        vertexAttributes.push_back(opal::VertexAttribute{
+            attr.name, attr.type, (uint)attr.offset, (uint)attr.layoutPos,
+            attr.normalized, (uint)attr.size});
+    }
+
+    vertexBinding = opal::VertexBinding{(uint)layoutDescriptors[0].stride,
+                                        opal::VertexBindingInputRate::Vertex};
+
+    auto toGLType = [](opal::VertexAttributeType type) -> GLenum {
+        switch (type) {
+        case opal::VertexAttributeType::Float:
+            return GL_FLOAT;
+        case opal::VertexAttributeType::Double:
+            return GL_DOUBLE;
+        case opal::VertexAttributeType::Int:
+            return GL_INT;
+        case opal::VertexAttributeType::UnsignedInt:
+            return GL_UNSIGNED_INT;
+        case opal::VertexAttributeType::Short:
+            return GL_SHORT;
+        case opal::VertexAttributeType::UnsignedShort:
+            return GL_UNSIGNED_SHORT;
+        case opal::VertexAttributeType::Byte:
+            return GL_BYTE;
+        case opal::VertexAttributeType::UnsignedByte:
+            return GL_UNSIGNED_BYTE;
+        default:
+            return GL_FLOAT;
         }
+    };
+
+    glBindVertexArray(vao);
+    glBindBuffer(GL_ARRAY_BUFFER, vbo);
+    for (const auto &attr : vertexAttributes) {
+        glEnableVertexAttribArray(attr.location);
+        glVertexAttribPointer(attr.location, attr.size, toGLType(attr.type),
+                              attr.normalized ? GL_TRUE : GL_FALSE,
+                              vertexBinding.stride,
+                              (void *)(uintptr_t)(attr.offset));
+        glVertexAttribDivisor(attr.location, 0);
     }
 
     if (!instances.empty()) {
@@ -290,19 +333,68 @@ void CoreObject::initialize() {
                      modelMatrices.data(), GL_STATIC_DRAW);
 
         glBindVertexArray(vao);
+        glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
         std::size_t vec4Size = sizeof(glm::vec4);
         for (unsigned int i = 0; i < 4; i++) {
             glEnableVertexAttribArray(6 + i);
             glVertexAttribPointer(6 + i, 4, GL_FLOAT, GL_FALSE,
-                                  sizeof(glm::mat4), (void *)(i * vec4Size));
+                                  sizeof(glm::mat4),
+                                  (void *)(uintptr_t)(i * vec4Size));
             glVertexAttribDivisor(6 + i, 1);
         }
     }
 
+    this->pipeline->setVertexAttributes(vertexAttributes, vertexBinding);
+
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 }
 
-void CoreObject::render(float dt) {
+std::optional<std::shared_ptr<opal::Pipeline>> CoreObject::getPipeline() {
+    if (this->pipeline == nullptr) {
+        return std::nullopt;
+    }
+    return this->pipeline;
+}
+
+void CoreObject::setPipeline(std::shared_ptr<opal::Pipeline> &newPipeline) {
+    this->pipeline = newPipeline;
+}
+
+void CoreObject::refreshPipeline() {
+    if (Window::mainWindow == nullptr) {
+        return;
+    }
+
+    if (this->pipeline == nullptr) {
+        this->pipeline = opal::Pipeline::create();
+    }
+
+    Window &window = *Window::mainWindow;
+
+    int viewportWidth = window.viewportWidth;
+    int viewportHeight = window.viewportHeight;
+    if (viewportWidth == 0 || viewportHeight == 0) {
+        Size2d size = window.getSize();
+        viewportWidth = static_cast<int>(size.width);
+        viewportHeight = static_cast<int>(size.height);
+    }
+
+    this->pipeline->setViewport(window.viewportX, window.viewportY,
+                                viewportWidth, viewportHeight);
+    this->pipeline->setPrimitiveStyle(window.primitiveStyle);
+    this->pipeline->setRasterizerMode(window.rasterizerMode);
+    this->pipeline->setCullMode(window.cullMode);
+    this->pipeline->setFrontFace(window.frontFace);
+    this->pipeline->enableDepthTest(window.useDepth);
+    this->pipeline->setDepthCompareOp(window.depthCompareOp);
+    this->pipeline->enableBlending(window.useBlending);
+    this->pipeline->setBlendFunc(window.srcBlend, window.dstBlend);
+
+    this->pipeline = this->shaderProgram.requestPipeline(this->pipeline);
+}
+
+void CoreObject::render(float dt, bool updatePipeline) {
     for (auto &component : components) {
         component->update(dt);
     }
@@ -313,10 +405,18 @@ void CoreObject::render(float dt) {
         throw std::runtime_error("Shader program not compiled");
     }
 
-    int currentProgram;
-    glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
-    if (static_cast<Id>(currentProgram) != shaderProgram.programId) {
-        glUseProgram(shaderProgram.programId);
+    if (updatePipeline || this->pipeline == nullptr) {
+        this->refreshPipeline();
+    }
+
+    if (this->pipeline != nullptr) {
+        this->pipeline->bind();
+    } else {
+        int currentProgram;
+        glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
+        if (static_cast<Id>(currentProgram) != shaderProgram.programId) {
+            glUseProgram(shaderProgram.programId);
+        }
     }
 
     shaderProgram.setUniformMat4f("model", model);

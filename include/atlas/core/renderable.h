@@ -12,7 +12,9 @@
 
 #include "atlas/core/shader.h"
 #include "atlas/units.h"
+#include "opal/opal.h"
 #include <glm/glm.hpp>
+#include <memory>
 #include <optional>
 #include <vector>
 
@@ -32,8 +34,11 @@ class Renderable {
      * classes.
      *
      * @param dt Delta time since the last frame, useful for animations.
+     * @param updatePipeline When true, the renderable should rebuild or fetch
+     * the graphics pipeline to reflect the window's current state before
+     * drawing. When false, the previously prepared pipeline may be reused.
      */
-    virtual void render(float dt) = 0;
+    virtual void render(float dt, bool updatePipeline = false) = 0;
     /**
      * @brief Function to initialize the object. Can be overridden by derived.
      *
@@ -64,22 +69,25 @@ class Renderable {
      */
     virtual void
     setProjectionMatrix([[maybe_unused]] const glm::mat4 &projection) {};
+    virtual std::optional<std::shared_ptr<opal::Pipeline>> getPipeline() {
+        return std::nullopt;
+    };
+
+    virtual void
+    setPipeline([[maybe_unused]] std::shared_ptr<opal::Pipeline> &pipeline) {};
+
     /**
-     * @brief Function to get the current shader program used by the object.
-     *
-     * @return An optional containing the shader program if set, or \c
-     * std::nullopt if not.
+     * @brief Returns the currently bound shader program, if any.
      */
     virtual std::optional<ShaderProgram> getShaderProgram() {
         return std::nullopt;
     };
+
     /**
-     * @brief Function to set the shader program for the object. Can be used to
-     * force an object to use a specific shader.
-     *
-     * @param shader The shader program to set.
+     * @brief Replaces the shader program bound to the renderable.
      */
-    virtual void setShader([[maybe_unused]] const ShaderProgram &shader) {};
+    virtual void
+    setShader([[maybe_unused]] const ShaderProgram &shaderProgram) {};
     /**
      * @brief Function to get the position of the object in 3D space.
      *

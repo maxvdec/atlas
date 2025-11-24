@@ -594,7 +594,7 @@ void Skybox::setProjectionMatrix(const glm::mat4 &projection) {
     }
 }
 
-void Skybox::render(float) {
+void Skybox::render(float, bool) {
     if (!object || !object->isVisible) {
         return;
     }

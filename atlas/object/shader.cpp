@@ -9,12 +9,16 @@
 
 #include "atlas/core/shader.h"
 #include "atlas/core/default_shaders.h"
+#include "atlas/object.h"
 #include "opal/opal.h"
 #include <glad/glad.h>
+#include <iostream>
 #include <map>
+#include <memory>
 #include <string>
 #include <thread>
 #include <utility>
+#include <vector>
 
 std::map<std::pair<AtlasVertexShader, AtlasFragmentShader>, ShaderProgram>
     ShaderProgram::shaderCache = {};
@@ -587,4 +591,47 @@ ShaderProgram ShaderProgram::fromDefaultShaders(
 
     program.compile();
     return program;
+}
+
+std::shared_ptr<opal::Pipeline> ShaderProgram::requestPipeline(
+    std::shared_ptr<opal::Pipeline> unbuiltPipeline) {
+    unbuiltPipeline->setShaderProgram(this->shader);
+    std::vector<LayoutDescriptor> layoutDescriptors =
+        CoreVertex::getLayoutDescriptors();
+
+    std::vector<GLuint> activeLocations = this->desiredAttributes;
+    if (activeLocations.empty()) {
+        for (const auto &attr : layoutDescriptors) {
+            activeLocations.push_back(attr.layoutPos);
+        }
+    }
+
+    std::vector<opal::VertexAttribute> vertexAttributes;
+    opal::VertexBinding vertexBinding;
+
+    for (const auto &attr : layoutDescriptors) {
+        vertexAttributes.push_back(opal::VertexAttribute{
+            attr.name, attr.type, (uint)attr.offset, (uint)attr.layoutPos,
+            attr.normalized, (uint)attr.size});
+    }
+
+    vertexBinding = opal::VertexBinding{(uint)layoutDescriptors[0].stride,
+                                        opal::VertexBindingInputRate::Vertex};
+
+    unbuiltPipeline->setVertexAttributes(vertexAttributes, vertexBinding);
+
+    for (auto &existingPipeline : pipelines) {
+        if (*existingPipeline == unbuiltPipeline) {
+            return existingPipeline;
+        }
+    }
+
+    std::cout << "Building new pipeline for shader program ID: "
+              << this->programId << std::endl;
+
+    unbuiltPipeline->build();
+
+    pipelines.push_back(unbuiltPipeline);
+
+    return unbuiltPipeline;
 }

@@ -13,6 +13,7 @@
 #include <memory>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <string>
 #include <sys/types.h>
 #include <vector>
 
@@ -90,6 +91,142 @@ class ShaderProgram {
 
     uint programID;
     std::vector<std::shared_ptr<Shader>> attachedShaders;
+};
+
+enum class VertexAttributeType {
+    Float,
+    Double,
+    Int,
+    UnsignedInt,
+    Short,
+    UnsignedShort,
+    Byte,
+    UnsignedByte
+};
+
+enum class PrimitiveStyle {
+    Points,
+    Lines,
+    LineStrip,
+    Triangles,
+    TriangleStrip,
+    TriangleFan
+};
+
+enum class RasterizerMode { Fill, Line, Point };
+
+enum class VertexBindingInputRate { Vertex, Instance };
+
+enum class CullMode { None, Front, Back, FrontAndBack };
+
+enum class FrontFace { Clockwise, CounterClockwise };
+
+enum class CompareOp {
+    Never,
+    Less,
+    Equal,
+    LessEqual,
+    Greater,
+    NotEqual,
+    GreaterEqual,
+    Always
+};
+
+enum class BlendFunc {
+    Zero,
+    One,
+    SrcColor,
+    OneMinusSrcColor,
+    DstColor,
+    OneMinusDstColor,
+    SrcAlpha,
+    OneMinusSrcAlpha,
+    DstAlpha,
+    OneMinusDstAlpha
+};
+
+struct VertexAttribute {
+    std::string name;
+    VertexAttributeType type;
+    uint offset;
+    uint location;
+    bool normalized = false;
+    uint size;
+
+    inline bool operator==(const VertexAttribute &other) const {
+        return name == other.name && type == other.type &&
+               offset == other.offset && location == other.location &&
+               normalized == other.normalized && size == other.size;
+    }
+};
+
+struct VertexBinding {
+    uint stride;
+    VertexBindingInputRate inputRate;
+};
+
+class Pipeline {
+  public:
+    static std::shared_ptr<Pipeline> create();
+
+    void setShaderProgram(std::shared_ptr<ShaderProgram> program);
+
+    void setVertexAttributes(const std::vector<VertexAttribute> &attributes,
+                             const VertexBinding &binding);
+
+    void setPrimitiveStyle(PrimitiveStyle style);
+
+    void setViewport(int x, int y, int width, int height);
+
+    void setRasterizerMode(RasterizerMode mode);
+
+    void setCullMode(CullMode mode);
+
+    void setFrontFace(FrontFace face);
+
+    void enableDepthTest(bool enabled);
+    void setDepthCompareOp(CompareOp op);
+
+    void enableBlending(bool enabled);
+    void setBlendFunc(BlendFunc srcFactor, BlendFunc dstFactor);
+
+    template <typename T>
+    void setUniform(const std::string &name, const T &value);
+
+    void build();
+
+    void bind();
+
+    bool operator==(std::shared_ptr<Pipeline> pipeline) const;
+
+    std::shared_ptr<ShaderProgram> shaderProgram;
+
+  private:
+    PrimitiveStyle primitiveStyle;
+    RasterizerMode rasterizerMode;
+    CullMode cullMode;
+    FrontFace frontFace;
+    bool blendingEnabled = false;
+    BlendFunc blendSrcFactor = BlendFunc::One;
+    BlendFunc blendDstFactor = BlendFunc::Zero;
+    bool depthTestEnabled = false;
+    CompareOp depthCompareOp = CompareOp::Less;
+
+    std::vector<VertexAttribute> vertexAttributes;
+    VertexBinding vertexBinding;
+
+    int viewportX = 0;
+    int viewportY = 0;
+    int viewportWidth = 800;
+    int viewportHeight = 600;
+
+    uint getGLBlendFactor(BlendFunc factor) const;
+    uint getGLCompareOp(CompareOp op) const;
+    uint getGLPrimitiveStyle(PrimitiveStyle style) const;
+    uint getGLRasterizerMode(RasterizerMode mode) const;
+    uint getGLCullMode(CullMode mode) const;
+    uint getGLFrontFace(FrontFace face) const;
+    uint getGLVertexAttributeType(VertexAttributeType type) const;
 };
 
 } // namespace opal

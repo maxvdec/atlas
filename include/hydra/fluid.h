@@ -54,7 +54,7 @@ struct Fluid : GameObject {
     /**
      * @brief Draws the water surface and applies screen-space effects.
      */
-    void render(float dt) override;
+    void render(float dt, bool updatePipeline = false) override;
 
     /**
      * @brief Triggers the generation of reflection and refraction render

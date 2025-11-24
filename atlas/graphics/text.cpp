@@ -132,7 +132,8 @@ void Text::initialize() {
                                                AtlasFragmentShader::Text);
 }
 
-void Text::render(float dt) {
+void Text::render(float dt, bool updatePipeline) {
+    (void)updatePipeline;
     for (auto &component : components) {
         component->update(dt);
     }

@@ -11,6 +11,7 @@
 #define WINDOW_H
 
 #include "atlas/camera.h"
+#include "atlas/core/renderable.h"
 #include "atlas/input.h"
 #include "atlas/object.h"
 #include "atlas/scene.h"
@@ -18,12 +19,15 @@
 #include "atlas/units.h"
 #include "bezel/body.h"
 #include "finewave/audio.h"
+#include "opal/opal.h"
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
 #include <tuple>
+#include <unordered_map>
 #include <vector>
 
 typedef void *CoreWindowReference;
@@ -511,6 +515,21 @@ class Window {
      */
     RenderTarget *currentRenderTarget = nullptr;
 
+    opal::BlendFunc dstBlend = opal::BlendFunc::DstAlpha;
+    opal::BlendFunc srcBlend = opal::BlendFunc::OneMinusSrcAlpha;
+    opal::FrontFace frontFace = opal::FrontFace::CounterClockwise;
+    opal::CullMode cullMode = opal::CullMode::Back;
+    opal::CompareOp depthCompareOp = opal::CompareOp::Less;
+    opal::RasterizerMode rasterizerMode = opal::RasterizerMode::Fill;
+    opal::PrimitiveStyle primitiveStyle = opal::PrimitiveStyle::Triangles;
+    bool useDepth = true;
+    bool useBlending = true;
+    bool writeDepth = true;
+    int viewportX = 0;
+    int viewportY = 0;
+    int viewportWidth = 0;
+    int viewportHeight = 0;
+
   private:
     CoreWindowReference windowRef;
     std::vector<Renderable *> renderables;
@@ -520,6 +539,7 @@ class Window {
     std::vector<Renderable *> lateForwardRenderables;
     std::vector<Fluid *> lateFluids;
     std::vector<RenderTarget *> renderTargets;
+    std::unique_ptr<RenderTarget> screenRenderTarget;
 
     std::shared_ptr<RenderTarget> gBuffer;
     std::shared_ptr<RenderTarget> ssaoBuffer;
@@ -550,6 +570,17 @@ class Window {
     void updateFluidCaptures();
     void captureFluidReflection(Fluid &fluid);
     void captureFluidRefraction(Fluid &fluid);
+    void markPipelineStateDirty();
+    bool shouldRefreshPipeline(Renderable *renderable);
+    void setViewportState(int x, int y, int width, int height);
+    void updateBackbufferTarget(int width, int height);
+
+    template <typename T> void updatePipelineStateField(T &field, T value) {
+        if (field != value) {
+            field = value;
+            markPipelineStateDirty();
+        }
+    }
 
     Camera *camera = nullptr;
     float lastMouseX;
@@ -598,6 +629,12 @@ class Window {
     std::vector<glm::vec3> cachedPointLightPositions;
     std::vector<glm::vec3> cachedSpotlightPositions;
     std::vector<glm::vec3> cachedSpotlightDirections;
+
+    void prepareDefaultPipeline(Renderable *renderable, int fbWidth,
+                                int fbHeight);
+
+    uint64_t pipelineStateVersion = 1;
+    std::unordered_map<Renderable *, uint64_t> renderablePipelineVersions;
 
     friend class CoreObject;
     friend class RenderTarget;

@@ -169,7 +169,7 @@ class ParticleEmitter : public GameObject {
     /**
      * @brief Renders all active particles with billboarding logic.
      */
-    void render(float dt) override;
+    void render(float dt, bool updatePipeline = false) override;
     /**
      * @brief Updates particle lifetimes, spawns new particles, and applies
      * forces.

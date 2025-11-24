@@ -12,6 +12,7 @@
 
 #include "atlas/component.h"
 #include "bezel/body.h"
+#include "opal/opal.h"
 #include <any>
 #include <memory>
 #include <string>
@@ -35,7 +36,7 @@ struct Light;
  * @brief Alias that represents a texture coordinate in 2D space.
  *
  */
-typedef std::array<double, 2> TextureCoordinate;
+typedef std::array<float, 2> TextureCoordinate;
 
 /**
  * @brief Structure representing the material properties of an object. Based on
@@ -281,10 +282,6 @@ class CoreObject : public GameObject {
      *
      */
     std::vector<Index> indices;
-    /**
-     * @brief The shader program used by the object.
-     *
-     */
     ShaderProgram shaderProgram;
     /**
      * @brief The textures applied to the object.
@@ -309,6 +306,8 @@ class CoreObject : public GameObject {
      *
      */
     CoreObject();
+
+    std::shared_ptr<opal::Pipeline> pipeline;
 
     /**
      * @brief Makes the object emissive by attaching a light to it.
@@ -350,6 +349,11 @@ class CoreObject : public GameObject {
      * @brief Performs deferred setup of buffers, shaders, and state.
      */
     void initialize() override;
+
+    void refreshPipeline();
+
+    std::optional<std::shared_ptr<opal::Pipeline>> getPipeline() override;
+    void setPipeline(std::shared_ptr<opal::Pipeline> &pipeline) override;
 
     /**
      * @brief Function to render the object with color and texture.
@@ -544,7 +548,7 @@ class CoreObject : public GameObject {
      *
      * @param dt Time delta provided by the window loop.
      */
-    void render(float dt) override;
+    void render(float dt, bool updatePipeline = false) override;
     /**
      * @brief Uploads the active view matrix used for transforming vertices to
      * camera space.
@@ -555,22 +559,6 @@ class CoreObject : public GameObject {
      * space.
      */
     void setProjectionMatrix(const glm::mat4 &projection) override;
-
-    /**
-     * @brief Returns the currently bound shader program, if any.
-     */
-    inline std::optional<ShaderProgram> getShaderProgram() override {
-        return this->shaderProgram;
-    }
-
-    /**
-     * @brief Replaces the object's shader program and reinitializes buffers as
-     * needed.
-     */
-    inline void setShader(const ShaderProgram &shader) override {
-        this->shaderProgram = shader;
-        this->initialize();
-    }
 
     /**
      * @brief Gets the world-space position of the object.
@@ -786,12 +774,12 @@ class Model : public GameObject {
     /**
      * @brief Renders each CoreObject that composes the model.
      */
-    inline void render(float dt) override {
+    inline void render(float dt, bool updatePipeline = false) override {
         for (auto &component : components) {
             component->update(dt);
         }
         for (auto &obj : objects) {
-            obj->render(dt);
+            obj->render(dt, updatePipeline);
         }
     }
 
@@ -828,22 +816,24 @@ class Model : public GameObject {
     }
 
     /**
-     * @brief Forces every mesh to use the provided shader program.
+     * @brief Forces every mesh to use the provided pipeline.
      */
-    inline void setShader(const ShaderProgram &shader) override {
+    void setPipeline(std::shared_ptr<opal::Pipeline> &pipeline) override {
         for (auto &obj : objects) {
-            obj->setShader(shader);
+            obj->setPipeline(pipeline);
         }
     }
 
     /**
      * @brief Retrieves the shader program currently bound to the first mesh.
      */
-    inline std::optional<ShaderProgram> getShaderProgram() override {
+
+    inline std::optional<std::shared_ptr<opal::Pipeline>>
+    getPipeline() override {
         if (objects.empty()) {
-            throw std::runtime_error("Model has no objects.");
+            return std::nullopt;
         }
-        return objects[0]->getShaderProgram().value();
+        return objects[0]->getPipeline();
     }
 
     /**

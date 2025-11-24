@@ -192,9 +192,10 @@ void Window::run() {
     this->lastTime = static_cast<float>(glfwGetTime());
 
     glEnable(GL_MULTISAMPLE);
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    updatePipelineStateField(this->useDepth, true);
+    updatePipelineStateField(this->useBlending, true);
+    updatePipelineStateField(this->srcBlend, opal::BlendFunc::SrcAlpha);
+    updatePipelineStateField(this->dstBlend, opal::BlendFunc::OneMinusSrcAlpha);
 
     this->framesPerSecond = 0.0f;
 
@@ -233,20 +234,20 @@ void Window::run() {
         renderLightsToShadowMaps();
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glDisable(GL_CULL_FACE);
-        glCullFace(GL_BACK);
+        updatePipelineStateField(this->cullMode, opal::CullMode::None);
+        updatePipelineStateField(this->cullMode, opal::CullMode::Back);
         // Render to the targets
         for (auto &target : this->renderTargets) {
             this->currentRenderTarget = target;
             int targetWidth = target->getWidth();
             int targetHeight = target->getHeight();
-            glDepthFunc(GL_LESS);
-            glDepthMask(GL_TRUE);
-            glEnable(GL_CULL_FACE);
-            glCullFace(GL_BACK);
+            updatePipelineStateField(this->depthCompareOp,
+                                     opal::CompareOp::Less);
+            updatePipelineStateField(this->writeDepth, true);
+            updatePipelineStateField(this->cullMode, opal::CullMode::Back);
 
             glBindFramebuffer(GL_FRAMEBUFFER, target->fbo);
-            glViewport(0, 0, targetWidth, targetHeight);
+            setViewportState(0, 0, targetWidth, targetHeight);
             if (target->brightTexture.id != 0) {
                 unsigned int attachments[2] = {GL_COLOR_ATTACHMENT0,
                                                GL_COLOR_ATTACHMENT1};
@@ -267,16 +268,16 @@ void Window::run() {
                                                      GL_COLOR_ATTACHMENT1};
                 glDrawBuffers(2, targetAttachments);
 
-                glEnable(GL_DEPTH_TEST);
-                glDepthFunc(GL_LESS);
-                glDepthMask(GL_TRUE);
-                glEnable(GL_CULL_FACE);
-                glCullFace(GL_BACK);
+                updatePipelineStateField(this->useDepth, true);
+                updatePipelineStateField(this->depthCompareOp,
+                                         opal::CompareOp::Less);
+                updatePipelineStateField(this->writeDepth, true);
+                updatePipelineStateField(this->cullMode, opal::CullMode::Back);
 
                 for (auto &obj : this->firstRenderables) {
                     obj->setViewMatrix(this->camera->calculateViewMatrix());
                     obj->setProjectionMatrix(calculateProjectionMatrix());
-                    obj->render(getDeltaTime());
+                    obj->render(getDeltaTime(), shouldRefreshPipeline(obj));
                 }
 
                 for (auto &obj : this->renderables) {
@@ -286,14 +287,14 @@ void Window::run() {
                     if (!obj->canUseDeferredRendering()) {
                         obj->setViewMatrix(this->camera->calculateViewMatrix());
                         obj->setProjectionMatrix(calculateProjectionMatrix());
-                        obj->render(getDeltaTime());
+                        obj->render(getDeltaTime(), shouldRefreshPipeline(obj));
                     }
                 }
 
                 for (auto &obj : this->lateForwardRenderables) {
                     obj->setViewMatrix(this->camera->calculateViewMatrix());
                     obj->setProjectionMatrix(calculateProjectionMatrix());
-                    obj->render(getDeltaTime());
+                    obj->render(getDeltaTime(), shouldRefreshPipeline(obj));
                 }
 
                 glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -306,7 +307,7 @@ void Window::run() {
             for (auto &obj : this->firstRenderables) {
                 obj->setViewMatrix(this->camera->calculateViewMatrix());
                 obj->setProjectionMatrix(calculateProjectionMatrix());
-                obj->render(getDeltaTime());
+                obj->render(getDeltaTime(), shouldRefreshPipeline(obj));
             }
 
             for (auto &obj : this->renderables) {
@@ -315,13 +316,13 @@ void Window::run() {
                 }
                 obj->setViewMatrix(this->camera->calculateViewMatrix());
                 obj->setProjectionMatrix(calculateProjectionMatrix());
-                obj->render(getDeltaTime());
+                obj->render(getDeltaTime(), shouldRefreshPipeline(obj));
             }
             updateFluidCaptures();
             for (auto &obj : this->lateForwardRenderables) {
                 obj->setViewMatrix(this->camera->calculateViewMatrix());
                 obj->setProjectionMatrix(calculateProjectionMatrix());
-                obj->render(getDeltaTime());
+                obj->render(getDeltaTime(), shouldRefreshPipeline(obj));
             }
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
             target->resolve();
@@ -331,15 +332,17 @@ void Window::run() {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         int fbWidth, fbHeight;
         glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
-        glViewport(0, 0, fbWidth, fbHeight);
+        setViewportState(0, 0, fbWidth, fbHeight);
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        if (this->renderTargets.size() == 0) {
+        if (this->renderTargets.empty()) {
+            updateBackbufferTarget(fbWidth, fbHeight);
+            this->currentRenderTarget = this->screenRenderTarget.get();
             for (auto &obj : this->firstRenderables) {
                 obj->setViewMatrix(this->camera->calculateViewMatrix());
                 obj->setProjectionMatrix(calculateProjectionMatrix());
-                obj->render(getDeltaTime());
+                obj->render(getDeltaTime(), shouldRefreshPipeline(obj));
             }
 
             for (auto &obj : this->renderables) {
@@ -348,7 +351,7 @@ void Window::run() {
                 }
                 obj->setViewMatrix(this->camera->calculateViewMatrix());
                 obj->setProjectionMatrix(calculateProjectionMatrix());
-                obj->render(getDeltaTime());
+                obj->render(getDeltaTime(), shouldRefreshPipeline(obj));
             }
 
             updateFluidCaptures();
@@ -356,11 +359,13 @@ void Window::run() {
             for (auto &obj : this->lateForwardRenderables) {
                 obj->setViewMatrix(this->camera->calculateViewMatrix());
                 obj->setProjectionMatrix(calculateProjectionMatrix());
-                obj->render(getDeltaTime());
+                obj->render(getDeltaTime(), shouldRefreshPipeline(obj));
             }
+        } else {
+            this->currentRenderTarget = nullptr;
         }
 
-        glDisable(GL_CULL_FACE);
+        updatePipelineStateField(this->cullMode, opal::CullMode::None);
         for (auto &obj : this->preferenceRenderables) {
             RenderTarget *target = dynamic_cast<RenderTarget *>(obj);
             if (target != nullptr && target->brightTexture.id != 0) {
@@ -368,13 +373,13 @@ void Window::run() {
             }
             obj->setViewMatrix(this->camera->calculateViewMatrix());
             obj->setProjectionMatrix(calculateProjectionMatrix());
-            obj->render(getDeltaTime());
+            obj->render(getDeltaTime(), shouldRefreshPipeline(obj));
         }
 
-        glDisable(GL_CULL_FACE);
-        glEnable(GL_BLEND);
+        updatePipelineStateField(this->cullMode, opal::CullMode::Back);
+        updatePipelineStateField(this->useBlending, true);
         for (auto &obj : this->uiRenderables) {
-            obj->render(getDeltaTime());
+            obj->render(getDeltaTime(), shouldRefreshPipeline(obj));
         }
 
         this->lastViewMatrix = this->camera->calculateViewMatrix();
@@ -392,7 +397,7 @@ void Window::addObject(Renderable *obj) {
     this->renderables.push_back(obj);
 
     if (obj->renderLateForward) {
-        addLateForwardObject(obj);
+        this->addLateForwardObject(obj);
     }
 }
 
@@ -404,12 +409,12 @@ void Window::addLateForwardObject(Renderable *object) {
     if (std::find(lateForwardRenderables.begin(), lateForwardRenderables.end(),
                   object) == lateForwardRenderables.end()) {
         lateForwardRenderables.push_back(object);
+    }
 
-        if (auto *fluid = dynamic_cast<Fluid *>(object)) {
-            if (std::find(lateFluids.begin(), lateFluids.end(), fluid) ==
-                lateFluids.end()) {
-                lateFluids.push_back(fluid);
-            }
+    if (auto *fluid = dynamic_cast<Fluid *>(object)) {
+        if (std::find(lateFluids.begin(), lateFluids.end(), fluid) ==
+            lateFluids.end()) {
+            lateFluids.push_back(fluid);
         }
     }
 }
@@ -728,21 +733,21 @@ void Window::renderLightsToShadowMaps() {
 
     bool renderedShadows = false;
 
-    std::vector<ShaderProgram> originalPrograms;
+    std::vector<std::shared_ptr<opal::Pipeline>> originalPipelines;
     for (auto &obj : this->renderables) {
-        if (obj->getShaderProgram() != std::nullopt) {
-            originalPrograms.push_back(obj->getShaderProgram().value());
+        if (obj->getPipeline() != std::nullopt) {
+            originalPipelines.push_back(obj->getPipeline().value());
         } else {
-            originalPrograms.push_back(ShaderProgram()); // Placeholder
+            originalPipelines.push_back(opal::Pipeline::create());
         }
     }
 
-    std::vector<ShaderProgram> originalLatePrograms;
+    std::vector<std::shared_ptr<opal::Pipeline>> originalLatePipelines;
     for (auto &obj : this->lateForwardRenderables) {
-        if (obj->getShaderProgram() != std::nullopt) {
-            originalLatePrograms.push_back(obj->getShaderProgram().value());
+        if (obj->getPipeline() != std::nullopt) {
+            originalLatePipelines.push_back(obj->getPipeline().value());
         } else {
-            originalLatePrograms.push_back(ShaderProgram());
+            originalLatePipelines.push_back(opal::Pipeline::create());
         }
     }
 
@@ -762,21 +767,27 @@ void Window::renderLightsToShadowMaps() {
         return casters;
     };
 
+    std::shared_ptr<opal::Pipeline> depthPipeline = opal::Pipeline::create();
+
     for (auto &light : this->currentScene->directionalLights) {
         if (light->doesCastShadows == false) {
             continue;
         }
         renderedShadows = true;
         RenderTarget *shadowRenderTarget = light->shadowRenderTarget;
-        glViewport(0, 0, shadowRenderTarget->texture.creationData.width,
-                   shadowRenderTarget->texture.creationData.height);
+
+        depthPipeline->setViewport(
+            0, 0, shadowRenderTarget->texture.creationData.width,
+            shadowRenderTarget->texture.creationData.height);
+        depthPipeline->setCullMode(opal::CullMode::Back);
+
+        depthPipeline = this->depthProgram.requestPipeline(depthPipeline);
+
         glBindFramebuffer(GL_FRAMEBUFFER, shadowRenderTarget->fbo);
         glClearDepth(1.0);
         glClear(GL_DEPTH_BUFFER_BIT);
         glEnable(GL_POLYGON_OFFSET_FILL);
         glPolygonOffset(2.0f, 4.0f);
-        glEnable(GL_CULL_FACE);
-        glCullFace(GL_BACK);
         ShadowParams lightParams =
             light->calculateLightSpaceMatrix(gatherShadowCasters());
         glm::mat4 lightView = lightParams.lightView;
@@ -786,30 +797,31 @@ void Window::renderLightsToShadowMaps() {
             if (obj->renderLateForward) {
                 continue;
             }
-            if (obj->getShaderProgram() == std::nullopt ||
-                !obj->canCastShadows()) {
+            if (obj->getPipeline() == std::nullopt || !obj->canCastShadows()) {
                 continue;
             }
 
-            obj->setShader(this->depthProgram);
+            obj->setPipeline(depthPipeline);
 
             obj->setProjectionMatrix(lightProjection);
             obj->setViewMatrix(lightView);
-            obj->render(getDeltaTime());
+            obj->render(getDeltaTime(), false);
         }
 
         for (auto &obj : this->lateForwardRenderables) {
-            if (obj->getShaderProgram() == std::nullopt ||
-                !obj->canCastShadows()) {
+            if (obj->getPipeline() == std::nullopt || !obj->canCastShadows()) {
                 continue;
             }
 
-            obj->setShader(this->depthProgram);
+            obj->setPipeline(depthPipeline);
             obj->setProjectionMatrix(lightProjection);
             obj->setViewMatrix(lightView);
-            obj->render(getDeltaTime());
+            obj->render(getDeltaTime(), false);
         }
     }
+
+    std::shared_ptr<opal::Pipeline> spotlightsPipeline =
+        opal::Pipeline::create();
 
     for (auto &light : this->currentScene->spotlights) {
         if (light->doesCastShadows == false) {
@@ -817,15 +829,18 @@ void Window::renderLightsToShadowMaps() {
         }
         renderedShadows = true;
         RenderTarget *shadowRenderTarget = light->shadowRenderTarget;
-        glViewport(0, 0, shadowRenderTarget->texture.creationData.width,
-                   shadowRenderTarget->texture.creationData.height);
+        spotlightsPipeline->setViewport(
+            0, 0, shadowRenderTarget->texture.creationData.width,
+            shadowRenderTarget->texture.creationData.height);
+        spotlightsPipeline->setCullMode(opal::CullMode::Back);
+        spotlightsPipeline =
+            this->depthProgram.requestPipeline(spotlightsPipeline);
+
         glBindFramebuffer(GL_FRAMEBUFFER, shadowRenderTarget->fbo);
         glClearDepth(1.0);
         glClear(GL_DEPTH_BUFFER_BIT);
         glEnable(GL_POLYGON_OFFSET_FILL);
         glPolygonOffset(2.0f, 4.0f);
-        glEnable(GL_CULL_FACE);
-        glCullFace(GL_BACK);
         std::tuple<glm::mat4, glm::mat4> lightSpace =
             light->calculateLightSpaceMatrix();
         glm::mat4 lightView = std::get<0>(lightSpace);
@@ -839,30 +854,31 @@ void Window::renderLightsToShadowMaps() {
             if (obj->renderLateForward) {
                 continue;
             }
-            if (obj->getShaderProgram() == std::nullopt ||
-                !obj->canCastShadows()) {
+            if (obj->getPipeline() == std::nullopt || !obj->canCastShadows()) {
                 continue;
             }
 
-            obj->setShader(this->depthProgram);
+            obj->setPipeline(depthPipeline);
 
             obj->setProjectionMatrix(lightProjection);
             obj->setViewMatrix(lightView);
-            obj->render(getDeltaTime());
+            obj->render(getDeltaTime(), false);
         }
 
         for (auto &obj : this->lateForwardRenderables) {
-            if (obj->getShaderProgram() == std::nullopt ||
-                !obj->canCastShadows()) {
+            if (obj->getPipeline() == std::nullopt || !obj->canCastShadows()) {
                 continue;
             }
 
-            obj->setShader(this->depthProgram);
+            obj->setPipeline(depthPipeline);
             obj->setProjectionMatrix(lightProjection);
             obj->setViewMatrix(lightView);
-            obj->render(getDeltaTime());
+            obj->render(getDeltaTime(), false);
         }
     }
+
+    std::shared_ptr<opal::Pipeline> pointLightPipeline =
+        opal::Pipeline::create();
 
     for (auto &light : this->currentScene->pointLights) {
         if (!light->doesCastShadows) {
@@ -870,22 +886,24 @@ void Window::renderLightsToShadowMaps() {
         }
         renderedShadows = true;
         RenderTarget *shadowRenderTarget = light->shadowRenderTarget;
-        glViewport(0, 0, shadowRenderTarget->texture.creationData.width,
-                   shadowRenderTarget->texture.creationData.height);
+        pointLightPipeline->setViewport(
+            0, 0, shadowRenderTarget->texture.creationData.width,
+            shadowRenderTarget->texture.creationData.height);
+        pointLightPipeline->setCullMode(opal::CullMode::Back);
+        pointLightPipeline =
+            this->pointDepthProgram.requestPipeline(pointLightPipeline);
+
         glBindFramebuffer(GL_FRAMEBUFFER, shadowRenderTarget->fbo);
         glClearDepth(1.0);
         glClear(GL_DEPTH_BUFFER_BIT);
         glEnable(GL_POLYGON_OFFSET_FILL);
         glPolygonOffset(2.0f, 4.0f);
-        glEnable(GL_CULL_FACE);
-        glCullFace(GL_BACK);
 
         for (auto &obj : this->renderables) {
             if (obj->renderLateForward) {
                 continue;
             }
-            if (obj->getShaderProgram() == std::nullopt ||
-                !obj->canCastShadows()) {
+            if (obj->getPipeline() == std::nullopt || !obj->canCastShadows()) {
                 continue;
             }
             std::vector<glm::mat4> shadowTransforms =
@@ -904,14 +922,13 @@ void Window::renderLightsToShadowMaps() {
 
             obj->setProjectionMatrix(glm::mat4(1.0));
             obj->setViewMatrix(glm::mat4(1.0));
-            obj->setShader(this->pointDepthProgram);
+            obj->setPipeline(pointLightPipeline);
 
-            obj->render(getDeltaTime());
+            obj->render(getDeltaTime(), false);
         }
 
         for (auto &obj : this->lateForwardRenderables) {
-            if (obj->getShaderProgram() == std::nullopt ||
-                !obj->canCastShadows()) {
+            if (obj->getPipeline() == std::nullopt || !obj->canCastShadows()) {
                 continue;
             }
             std::vector<glm::mat4> shadowTransforms =
@@ -930,9 +947,9 @@ void Window::renderLightsToShadowMaps() {
 
             obj->setProjectionMatrix(glm::mat4(1.0));
             obj->setViewMatrix(glm::mat4(1.0));
-            obj->setShader(this->pointDepthProgram);
+            obj->setPipeline(pointLightPipeline);
 
-            obj->render(getDeltaTime());
+            obj->render(getDeltaTime(), false);
         }
     }
 
@@ -984,20 +1001,16 @@ void Window::renderLightsToShadowMaps() {
 
     size_t i = 0;
     for (auto &renderable : this->renderables) {
-        if (i < originalPrograms.size()) {
-            if (originalPrograms[i].programId != 0) {
-                renderable->setShader(originalPrograms[i]);
-            }
+        if (i < originalPipelines.size()) {
+            renderable->setPipeline(originalPipelines[i]);
             i++;
         }
     }
 
     size_t j = 0;
     for (auto &renderable : this->lateForwardRenderables) {
-        if (j < originalLatePrograms.size()) {
-            if (originalLatePrograms[j].programId != 0) {
-                renderable->setShader(originalLatePrograms[j]);
-            }
+        if (j < originalLatePipelines.size()) {
+            renderable->setPipeline(originalLatePipelines[j]);
             j++;
         }
     }
@@ -1068,18 +1081,22 @@ void Window::renderPingpong(RenderTarget *target) {
     const unsigned int blurIterations = std::max(1u, this->bloomBlurPasses);
 
     ShaderProgram &blurShader = this->bloomBlurProgram;
-    auto originalProgram = target->object->getShaderProgram();
-    if (!originalProgram.has_value()) {
+    auto originalPipeline = target->object->getPipeline();
+    if (!originalPipeline.has_value()) {
         return;
     }
 
-    ShaderProgram targetProgram = originalProgram.value();
-    target->object->setShader(blurShader);
+    auto targetProgram = originalPipeline.value();
 
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_BLEND);
+    auto blurPipeline = opal::Pipeline::create();
 
-    glViewport(0, 0, blurWidth, blurHeight);
+    blurPipeline->setViewport(0, 0, blurWidth, blurHeight);
+    blurPipeline->enableDepthTest(false);
+    blurPipeline->enableBlending(false);
+
+    blurPipeline = this->bloomBlurProgram.requestPipeline(blurPipeline);
+
+    target->setPipeline(blurPipeline);
 
     glUseProgram(blurShader.programId);
     blurShader.setUniform1f("radius", 2.5f);
@@ -1114,7 +1131,7 @@ void Window::renderPingpong(RenderTarget *target) {
     glBindVertexArray(0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
-    target->object->setShader(targetProgram);
+    target->object->setPipeline(targetProgram);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     glEnable(GL_DEPTH_TEST);
@@ -1230,7 +1247,10 @@ void Window::captureFluidReflection(Fluid &fluid) {
     glGetIntegerv(GL_VIEWPORT, previousViewport);
 
     glBindFramebuffer(GL_FRAMEBUFFER, target.fbo);
+    auto pipeline = opal::Pipeline::create();
+
     glViewport(0, 0, target.getWidth(), target.getHeight());
+    setViewportState(0, 0, target.getWidth(), target.getHeight());
     unsigned int attachments[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
     glDrawBuffers(2, attachments);
 
@@ -1244,11 +1264,23 @@ void Window::captureFluidReflection(Fluid &fluid) {
     GLfloat previousClearColor[4];
     glGetFloatv(GL_COLOR_CLEAR_VALUE, previousClearColor);
 
+    const bool previousUseDepth = this->useDepth;
+    const bool previousWriteDepth = this->writeDepth;
+    const bool previousUseBlending = this->useBlending;
+    const opal::CullMode previousCullMode = this->cullMode;
+    const opal::CompareOp previousDepthCompare = this->depthCompareOp;
+
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
     glDepthMask(GL_TRUE);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT);
+
+    updatePipelineStateField(this->useBlending, false);
+    updatePipelineStateField(this->useDepth, true);
+    updatePipelineStateField(this->writeDepth, true);
+    updatePipelineStateField(this->cullMode, opal::CullMode::Front);
+    updatePipelineStateField(this->depthCompareOp, opal::CompareOp::Less);
 
     glClearColor(fluid.color.r, fluid.color.g, fluid.color.b, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -1281,7 +1313,7 @@ void Window::captureFluidReflection(Fluid &fluid) {
             }
             obj->setViewMatrix(view);
             obj->setProjectionMatrix(projection);
-            obj->render(getDeltaTime());
+            obj->render(getDeltaTime(), shouldRefreshPipeline(obj));
 
             if (obj->canUseDeferredRendering()) {
                 obj->setShader(oldProgram);
@@ -1295,6 +1327,8 @@ void Window::captureFluidReflection(Fluid &fluid) {
     glBindFramebuffer(GL_FRAMEBUFFER, previousFbo);
     glViewport(previousViewport[0], previousViewport[1], previousViewport[2],
                previousViewport[3]);
+    setViewportState(previousViewport[0], previousViewport[1],
+                     previousViewport[2], previousViewport[3]);
     currentRenderTarget = previousTarget;
 
     clipPlaneEnabled = clipBackup;
@@ -1321,6 +1355,12 @@ void Window::captureFluidReflection(Fluid &fluid) {
     }
     glClearColor(previousClearColor[0], previousClearColor[1],
                  previousClearColor[2], previousClearColor[3]);
+
+    updatePipelineStateField(this->useBlending, previousUseBlending);
+    updatePipelineStateField(this->useDepth, previousUseDepth);
+    updatePipelineStateField(this->writeDepth, previousWriteDepth);
+    updatePipelineStateField(this->cullMode, previousCullMode);
+    updatePipelineStateField(this->depthCompareOp, previousDepthCompare);
 
     this->camera = cameraBackup;
 }
@@ -1354,6 +1394,7 @@ void Window::captureFluidRefraction(Fluid &fluid) {
 
     glBindFramebuffer(GL_FRAMEBUFFER, target.fbo);
     glViewport(0, 0, target.getWidth(), target.getHeight());
+    setViewportState(0, 0, target.getWidth(), target.getHeight());
     unsigned int attachments[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
     glDrawBuffers(2, attachments);
 
@@ -1367,11 +1408,23 @@ void Window::captureFluidRefraction(Fluid &fluid) {
     GLfloat previousClearColor[4];
     glGetFloatv(GL_COLOR_CLEAR_VALUE, previousClearColor);
 
+    const bool previousUseDepth = this->useDepth;
+    const bool previousWriteDepth = this->writeDepth;
+    const bool previousUseBlending = this->useBlending;
+    const opal::CullMode previousCullMode = this->cullMode;
+    const opal::CompareOp previousDepthCompare = this->depthCompareOp;
+
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
     glDepthMask(GL_TRUE);
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
+
+    updatePipelineStateField(this->useBlending, false);
+    updatePipelineStateField(this->useDepth, true);
+    updatePipelineStateField(this->writeDepth, true);
+    updatePipelineStateField(this->cullMode, opal::CullMode::Back);
+    updatePipelineStateField(this->depthCompareOp, opal::CompareOp::Less);
 
     glClearColor(1.0, 0.0, 1.0, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -1404,7 +1457,7 @@ void Window::captureFluidRefraction(Fluid &fluid) {
             }
             obj->setViewMatrix(view);
             obj->setProjectionMatrix(projection);
-            obj->render(getDeltaTime());
+            obj->render(getDeltaTime(), shouldRefreshPipeline(obj));
 
             if (obj->canUseDeferredRendering()) {
                 obj->setShader(oldProgram);
@@ -1418,6 +1471,8 @@ void Window::captureFluidRefraction(Fluid &fluid) {
     glBindFramebuffer(GL_FRAMEBUFFER, previousFbo);
     glViewport(previousViewport[0], previousViewport[1], previousViewport[2],
                previousViewport[3]);
+    setViewportState(previousViewport[0], previousViewport[1],
+                     previousViewport[2], previousViewport[3]);
     currentRenderTarget = previousTarget;
 
     clipPlaneEnabled = clipBackup;
@@ -1444,4 +1499,46 @@ void Window::captureFluidRefraction(Fluid &fluid) {
     }
     glClearColor(previousClearColor[0], previousClearColor[1],
                  previousClearColor[2], previousClearColor[3]);
+
+    updatePipelineStateField(this->useBlending, previousUseBlending);
+    updatePipelineStateField(this->useDepth, previousUseDepth);
+    updatePipelineStateField(this->writeDepth, previousWriteDepth);
+    updatePipelineStateField(this->cullMode, previousCullMode);
+    updatePipelineStateField(this->depthCompareOp, previousDepthCompare);
+}
+
+void Window::markPipelineStateDirty() { ++pipelineStateVersion; }
+
+bool Window::shouldRefreshPipeline(Renderable *renderable) {
+    if (renderable == nullptr) {
+        return false;
+    }
+    auto &version = renderablePipelineVersions[renderable];
+    if (version != pipelineStateVersion) {
+        version = pipelineStateVersion;
+        return true;
+    }
+    return false;
+}
+
+void Window::setViewportState(int x, int y, int width, int height) {
+    updatePipelineStateField(this->viewportX, x);
+    updatePipelineStateField(this->viewportY, y);
+    updatePipelineStateField(this->viewportWidth, width);
+    updatePipelineStateField(this->viewportHeight, height);
+}
+
+void Window::updateBackbufferTarget(int width, int height) {
+    if (!this->screenRenderTarget) {
+        this->screenRenderTarget = std::make_unique<RenderTarget>();
+        this->screenRenderTarget->type = RenderTargetType::Scene;
+    }
+
+    RenderTarget &target = *this->screenRenderTarget;
+    target.texture.creationData.width = width;
+    target.texture.creationData.height = height;
+    target.depthTexture.creationData.width = width;
+    target.depthTexture.creationData.height = height;
+    target.type = RenderTargetType::Scene;
+    target.fbo = 0;
 }
