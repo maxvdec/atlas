@@ -12,6 +12,7 @@
 #include "opal/opal.h"
 #include <glad/glad.h>
 #include <memory>
+#include <vector>
 
 void Window::deferredRendering(RenderTarget *target) {
     // Render to G-Buffer
@@ -72,9 +73,9 @@ void Window::deferredRendering(RenderTarget *target) {
 
     glDepthMask(GL_FALSE);
 
-    static Id quadVAO = 0;
-    static Id quadVBO;
-    if (quadVAO == 0) {
+    static std::shared_ptr<opal::DrawingState> quadState = nullptr;
+    static std::shared_ptr<opal::Buffer> quadBuffer = nullptr;
+    if (quadState == nullptr) {
         float quadVertices[] = {
             // positions         // texCoords
             -1.0f, 1.0f,  0.0f, 0.0f, 1.0f, // top-left
@@ -86,18 +87,33 @@ void Window::deferredRendering(RenderTarget *target) {
             1.0f,  1.0f,  0.0f, 1.0f, 1.0f  // top-right
         };
 
-        glGenVertexArrays(1, &quadVAO);
-        glGenBuffers(1, &quadVBO);
-        glBindVertexArray(quadVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices,
-                     GL_STATIC_DRAW);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                              (void *)0);
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                              (void *)(3 * sizeof(float)));
+        quadBuffer = opal::Buffer::create(opal::BufferUsage::VertexBuffer,
+                                          sizeof(quadVertices), quadVertices);
+        quadState = opal::DrawingState::create(quadBuffer);
+        quadState->setBuffers(quadBuffer, nullptr);
+
+        opal::VertexAttribute positionAttr{"deferredPosition",
+                                           opal::VertexAttributeType::Float,
+                                           0,
+                                           0,
+                                           false,
+                                           3,
+                                           static_cast<uint>(5 * sizeof(float)),
+                                           opal::VertexBindingInputRate::Vertex,
+                                           0};
+        opal::VertexAttribute uvAttr{"deferredUV",
+                                     opal::VertexAttributeType::Float,
+                                     static_cast<uint>(3 * sizeof(float)),
+                                     1,
+                                     false,
+                                     2,
+                                     static_cast<uint>(5 * sizeof(float)),
+                                     opal::VertexBindingInputRate::Vertex,
+                                     0};
+
+        std::vector<opal::VertexAttributeBinding> bindings = {
+            {positionAttr, quadBuffer}, {uvAttr, quadBuffer}};
+        quadState->configureAttributes(bindings);
     }
 
     glUseProgram(this->lightProgram.programId);
@@ -362,9 +378,9 @@ void Window::deferredRendering(RenderTarget *target) {
         Window::mainWindow->currentScene->environment.rimLight.color.g,
         Window::mainWindow->currentScene->environment.rimLight.color.b);
 
-    glBindVertexArray(quadVAO);
+    quadState->bind();
     glDrawArrays(GL_TRIANGLES, 0, 6);
-    glBindVertexArray(0);
+    quadState->unbind();
 
     if (dirLightCount > 0) {
         if (!volumetricBuffer) {
@@ -409,9 +425,9 @@ void Window::deferredRendering(RenderTarget *target) {
 
         volumetricProgram.setUniform2f("sunPos", sunUV.x, sunUV.y);
 
-        glBindVertexArray(quadVAO);
+        quadState->bind();
         glDrawArrays(GL_TRIANGLES, 0, 6);
-        glBindVertexArray(0);
+        quadState->unbind();
     }
 
     if (this->ssrFramebuffer != nullptr && useSSR) {
@@ -461,9 +477,9 @@ void Window::deferredRendering(RenderTarget *target) {
         ssrProgram.setUniform3f("cameraPosition", camera->position.x,
                                 camera->position.y, camera->position.z);
 
-        glBindVertexArray(quadVAO);
+        quadState->bind();
         glDrawArrays(GL_TRIANGLES, 0, 6);
-        glBindVertexArray(0);
+        quadState->unbind();
     }
 
     target->volumetricLightTexture = volumetricBuffer->texture;

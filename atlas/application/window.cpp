@@ -1128,8 +1128,7 @@ void Window::renderPingpong(RenderTarget *target) {
         firstIteration = false;
     }
 
-    glBindVertexArray(0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    target->object->vao->unbind();
 
     target->object->setPipeline(targetProgram);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);

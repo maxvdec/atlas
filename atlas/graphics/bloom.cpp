@@ -13,6 +13,7 @@
 #include <cstddef>
 #include <glad/glad.h>
 #include <vector>
+#include "opal/opal.h"
 
 void BloomRenderTarget::init(int width, int height, int chainLength) {
     if (initialized)
@@ -66,7 +67,7 @@ void BloomRenderTarget::init(int width, int height, int chainLength) {
     upsampleProgram = ShaderProgram::fromDefaultShaders(
         AtlasVertexShader::Light, AtlasFragmentShader::Upsample);
 
-    if (vao == 0) {
+    if (quadState == nullptr) {
         float quadVertices[] = {
             // positions         // texCoords
             -1.0f, 1.0f,  0.0f, 0.0f, 1.0f, // top-left
@@ -78,18 +79,33 @@ void BloomRenderTarget::init(int width, int height, int chainLength) {
             1.0f,  1.0f,  0.0f, 1.0f, 1.0f  // top-right
         };
 
-        glGenVertexArrays(1, &vao);
-        glGenBuffers(1, &vbo);
-        glBindVertexArray(vao);
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices,
-                     GL_STATIC_DRAW);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                              (void *)0);
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                              (void *)(3 * sizeof(float)));
+        quadBuffer = opal::Buffer::create(opal::BufferUsage::VertexBuffer,
+                                          sizeof(quadVertices), quadVertices);
+        quadState = opal::DrawingState::create(quadBuffer);
+        quadState->setBuffers(quadBuffer, nullptr);
+
+        opal::VertexAttribute positionAttr{"bloomPosition",
+                                           opal::VertexAttributeType::Float,
+                                           0,
+                                           0,
+                                           false,
+                                           3,
+                                           static_cast<uint>(5 * sizeof(float)),
+                                           opal::VertexBindingInputRate::Vertex,
+                                           0};
+        opal::VertexAttribute uvAttr{"bloomUV",
+                                     opal::VertexAttributeType::Float,
+                                     static_cast<uint>(3 * sizeof(float)),
+                                     1,
+                                     false,
+                                     2,
+                                     static_cast<uint>(5 * sizeof(float)),
+                                     opal::VertexBindingInputRate::Vertex,
+                                     0};
+
+        std::vector<opal::VertexAttributeBinding> bindings = {
+            {positionAttr, quadBuffer}, {uvAttr, quadBuffer}};
+        quadState->configureAttributes(bindings);
     }
 }
 
@@ -137,9 +153,9 @@ void BloomRenderTarget::renderDownsamples(unsigned int srcTexture) {
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                                GL_TEXTURE_2D, element.textureId, 0);
 
-        glBindVertexArray(vao);
+        quadState->bind();
         glDrawArrays(GL_TRIANGLES, 0, 6);
-        glBindVertexArray(0);
+        quadState->unbind();
 
         downsampleProgram.setUniform2f("srcResolution", element.size.x,
                                        element.size.y);
@@ -170,9 +186,9 @@ void BloomRenderTarget::renderUpsamples(float filterRadius) {
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
                                GL_TEXTURE_2D, nextElement.textureId, 0);
 
-        glBindVertexArray(vao);
+        quadState->bind();
         glDrawArrays(GL_TRIANGLES, 0, 6);
-        glBindVertexArray(0);
+        quadState->unbind();
     }
 
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);

@@ -12,6 +12,8 @@
 #include <glm/geometric.hpp>
 #include <glm/gtc/random.hpp>
 #include <random>
+#include <vector>
+#include "opal/opal.h"
 
 void Window::setupSSAO() {
     std::uniform_real_distribution<float> randomFloats(0.0, 1.0);
@@ -108,9 +110,9 @@ void Window::renderSSAO() {
                this->ssaoBuffer->getHeight());
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
-    static Id ssaoVAO = 0;
-    static Id ssaoVBO;
-    if (ssaoVAO == 0) {
+    static std::shared_ptr<opal::DrawingState> ssaoState = nullptr;
+    static std::shared_ptr<opal::Buffer> ssaoBuffer = nullptr;
+    if (ssaoState == nullptr) {
         float quadVertices[] = {
             // positions         // texCoords
             -1.0f, 1.0f,  0.0f, 0.0f, 1.0f, // top-left
@@ -120,18 +122,33 @@ void Window::renderSSAO() {
             1.0f,  -1.0f, 0.0f, 1.0f, 0.0f, // bottom-right
             1.0f,  1.0f,  0.0f, 1.0f, 1.0f  // top-right
         };
-        glGenVertexArrays(1, &ssaoVAO);
-        glGenBuffers(1, &ssaoVBO);
-        glBindVertexArray(ssaoVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, ssaoVBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices,
-                     GL_STATIC_DRAW);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                              (void *)0);
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                              (void *)(3 * sizeof(float)));
+        ssaoBuffer = opal::Buffer::create(opal::BufferUsage::VertexBuffer,
+                                          sizeof(quadVertices), quadVertices);
+        ssaoState = opal::DrawingState::create(ssaoBuffer);
+        ssaoState->setBuffers(ssaoBuffer, nullptr);
+
+        opal::VertexAttribute positionAttr{"ssaoPosition",
+                                           opal::VertexAttributeType::Float,
+                                           0,
+                                           0,
+                                           false,
+                                           3,
+                                           static_cast<uint>(5 * sizeof(float)),
+                                           opal::VertexBindingInputRate::Vertex,
+                                           0};
+        opal::VertexAttribute uvAttr{"ssaoUV",
+                                     opal::VertexAttributeType::Float,
+                                     static_cast<uint>(3 * sizeof(float)),
+                                     1,
+                                     false,
+                                     2,
+                                     static_cast<uint>(5 * sizeof(float)),
+                                     opal::VertexBindingInputRate::Vertex,
+                                     0};
+
+        std::vector<opal::VertexAttributeBinding> bindings = {
+            {positionAttr, ssaoBuffer}, {uvAttr, ssaoBuffer}};
+        ssaoState->configureAttributes(bindings);
     }
 
     glUseProgram(this->ssaoProgram.programId);
@@ -160,9 +177,9 @@ void Window::renderSSAO() {
     glm::vec2 noiseSize(4.0f, 4.0f);
     this->ssaoProgram.setUniform2f("noiseScale", screenSize.x / noiseSize.x,
                                    screenSize.y / noiseSize.y);
-    glBindVertexArray(ssaoVAO);
+    ssaoState->bind();
     glDrawArrays(GL_TRIANGLES, 0, 6);
-    glBindVertexArray(0);
+    ssaoState->unbind();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     glBindFramebuffer(GL_FRAMEBUFFER, this->ssaoBlurBuffer->fbo);
@@ -174,9 +191,9 @@ void Window::renderSSAO() {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, this->ssaoBuffer->texture.id);
     this->ssaoBlurProgram.setUniform1i("inSSAO", 0);
-    glBindVertexArray(ssaoVAO);
+    ssaoState->bind();
     glDrawArrays(GL_TRIANGLES, 0, 6);
-    glBindVertexArray(0);
+    ssaoState->unbind();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     if (this->camera != nullptr) {

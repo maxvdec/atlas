@@ -18,6 +18,7 @@
 #include "atlas/core/renderable.h"
 #include "atlas/units.h"
 #include "atlas/workspace.h"
+#include "opal/opal.h"
 #include <memory>
 #include <string>
 
@@ -657,8 +658,8 @@ class BloomRenderTarget {
     ShaderProgram downsampleProgram;
     ShaderProgram upsampleProgram;
 
-    Id vao;
-    Id vbo;
+    std::shared_ptr<opal::DrawingState> quadState = nullptr;
+    std::shared_ptr<opal::Buffer> quadBuffer = nullptr;
 };
 
 #endif // TEXTURE_H

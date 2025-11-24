@@ -154,11 +154,16 @@ struct VertexAttribute {
     uint location;
     bool normalized = false;
     uint size;
+    uint stride;
+    VertexBindingInputRate inputRate = VertexBindingInputRate::Vertex;
+    uint divisor = 0;
 
     inline bool operator==(const VertexAttribute &other) const {
         return name == other.name && type == other.type &&
                offset == other.offset && location == other.location &&
-               normalized == other.normalized && size == other.size;
+               normalized == other.normalized && size == other.size &&
+               stride == other.stride && inputRate == other.inputRate &&
+               divisor == other.divisor;
     }
 };
 
@@ -265,6 +270,11 @@ class Buffer {
     MemoryUsageType memoryUsage;
 };
 
+struct VertexAttributeBinding {
+    VertexAttribute attribute;
+    std::shared_ptr<Buffer> sourceBuffer = nullptr;
+};
+
 struct DrawingState {
     std::shared_ptr<Buffer> vertexBuffer = nullptr;
     std::shared_ptr<Buffer> indexBuffer = nullptr;
@@ -278,6 +288,8 @@ struct DrawingState {
 
     void bind() const;
     void unbind() const;
+    void configureAttributes(
+        const std::vector<VertexAttributeBinding> &bindings) const;
 
     uint index;
 };

@@ -661,7 +661,7 @@ void Skybox::render(float, bool) {
     glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap.id);
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(obj->indices.size()),
                    GL_UNSIGNED_INT, 0);
-    glBindVertexArray(0);
+    obj->vao->unbind();
     glDepthFunc(GL_LESS); // Set depth function back to default
     glDepthMask(GL_TRUE);
     glEnable(GL_CULL_FACE);

@@ -561,7 +561,9 @@ void RenderTarget::render(float dt, bool updatePipeline) {
 
     glActiveTexture(GL_TEXTURE0);
 
-    glBindVertexArray(0);
+    if (obj->vao != nullptr) {
+        obj->vao->unbind();
+    }
 
     GLuint currentProgram;
     glGetIntegerv(GL_CURRENT_PROGRAM, (GLint *)&currentProgram);

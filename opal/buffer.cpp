@@ -10,8 +10,36 @@
 #include <memory>
 #include <opal/opal.h>
 #include <stdexcept>
+#include <string>
 
 namespace opal {
+
+namespace {
+
+uint getGLVertexAttributeType(VertexAttributeType type) {
+    switch (type) {
+    case VertexAttributeType::Float:
+        return GL_FLOAT;
+    case VertexAttributeType::Double:
+        return GL_DOUBLE;
+    case VertexAttributeType::Int:
+        return GL_INT;
+    case VertexAttributeType::UnsignedInt:
+        return GL_UNSIGNED_INT;
+    case VertexAttributeType::Short:
+        return GL_SHORT;
+    case VertexAttributeType::UnsignedShort:
+        return GL_UNSIGNED_SHORT;
+    case VertexAttributeType::Byte:
+        return GL_BYTE;
+    case VertexAttributeType::UnsignedByte:
+        return GL_UNSIGNED_BYTE;
+    default:
+        return GL_FLOAT;
+    }
+}
+
+} // namespace
 
 std::shared_ptr<Buffer> Buffer::create(BufferUsage usage, size_t size,
                                        const void *data,
@@ -189,6 +217,48 @@ void DrawingState::unbind() const {
     if (vertexBuffer) {
         vertexBuffer->unbind();
     }
+#endif
+}
+
+void DrawingState::configureAttributes(
+    const std::vector<VertexAttributeBinding> &bindings) const {
+#ifdef OPENGL
+    if (bindings.empty()) {
+        return;
+    }
+
+    glBindVertexArray(index);
+
+    for (const auto &binding : bindings) {
+        auto buffer =
+            binding.sourceBuffer ? binding.sourceBuffer : vertexBuffer;
+        if (buffer == nullptr) {
+            throw std::runtime_error("No vertex buffer bound for attribute '" +
+                                     binding.attribute.name + "'.");
+        }
+
+        buffer->bind();
+        glEnableVertexAttribArray(binding.attribute.location);
+        glVertexAttribPointer(binding.attribute.location,
+                              binding.attribute.size,
+                              getGLVertexAttributeType(binding.attribute.type),
+                              binding.attribute.normalized ? GL_TRUE : GL_FALSE,
+                              binding.attribute.stride,
+                              reinterpret_cast<void *>(static_cast<uintptr_t>(
+                                  binding.attribute.offset)));
+
+        unsigned int divisor = binding.attribute.divisor;
+        if (binding.attribute.inputRate == VertexBindingInputRate::Instance) {
+            divisor = divisor == 0 ? 1 : divisor;
+        }
+        glVertexAttribDivisor(binding.attribute.location, divisor);
+
+        if (binding.sourceBuffer) {
+            binding.sourceBuffer->unbind();
+        }
+    }
+
+    glBindVertexArray(0);
 #endif
 }
 

@@ -16,6 +16,7 @@
 #include "atlas/window.h"
 #include "atlas/workspace.h"
 #include <map>
+#include "opal/opal.h"
 #include <string>
 #include <vector>
 
@@ -187,7 +188,8 @@ class Text : public UIObject {
     void render(float dt, bool updatePipeline = false) override;
 
   private:
-    Id VAO, VBO;
+    std::shared_ptr<opal::DrawingState> vao = nullptr;
+    std::shared_ptr<opal::Buffer> vertexBuffer = nullptr;
     glm::mat4 projection;
     ShaderProgram shader;
 };

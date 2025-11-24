@@ -24,6 +24,30 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+namespace {
+
+std::vector<opal::VertexAttributeBinding>
+makeInstanceAttributeBindings(const std::shared_ptr<opal::Buffer> &buffer) {
+    std::vector<opal::VertexAttributeBinding> bindings;
+    bindings.reserve(4);
+    std::size_t vec4Size = sizeof(glm::vec4);
+    for (unsigned int i = 0; i < 4; ++i) {
+        opal::VertexAttribute attribute{"instanceModel" + std::to_string(i),
+                                        opal::VertexAttributeType::Float,
+                                        static_cast<uint>(i * vec4Size),
+                                        static_cast<uint>(6 + i),
+                                        false,
+                                        4,
+                                        static_cast<uint>(sizeof(glm::mat4)),
+                                        opal::VertexBindingInputRate::Instance,
+                                        1};
+        bindings.push_back({attribute, buffer});
+    }
+    return bindings;
+}
+
+} // namespace
+
 std::vector<LayoutDescriptor> CoreVertex::getLayoutDescriptors() {
     return {{"position", 0, 3, opal::VertexAttributeType::Float, false,
              sizeof(CoreVertex), offsetof(CoreVertex, position)},
@@ -250,78 +274,43 @@ void CoreObject::initialize() {
         vao = opal::DrawingState::create(nullptr);
     }
 
-    vao->bind();
-
     vbo = opal::Buffer::create(opal::BufferUsage::VertexBuffer,
                                vertices.size() * sizeof(CoreVertex),
                                vertices.data());
-    vbo->bind();
 
     if (!indices.empty()) {
         ebo = opal::Buffer::create(opal::BufferUsage::IndexArray,
                                    indices.size() * sizeof(Index),
                                    indices.data());
-        ebo->bind();
     }
+
+    vao->setBuffers(vbo, ebo);
 
     this->pipeline = opal::Pipeline::create();
 
     std::vector<LayoutDescriptor> layoutDescriptors =
         CoreVertex::getLayoutDescriptors();
 
-    std::vector<GLuint> activeLocations = shaderProgram.desiredAttributes;
-    if (activeLocations.empty()) {
-        for (const auto &attr : layoutDescriptors) {
-            activeLocations.push_back(attr.layoutPos);
-        }
-    }
-
     std::vector<opal::VertexAttribute> vertexAttributes;
     opal::VertexBinding vertexBinding;
 
     for (const auto &attr : layoutDescriptors) {
         vertexAttributes.push_back(opal::VertexAttribute{
-            attr.name, attr.type, (uint)attr.offset, (uint)attr.layoutPos,
-            attr.normalized, (uint)attr.size});
+            attr.name, attr.type, static_cast<uint>(attr.offset),
+            static_cast<uint>(attr.layoutPos), attr.normalized,
+            static_cast<uint>(attr.size), static_cast<uint>(attr.stride),
+            opal::VertexBindingInputRate::Vertex, 0});
     }
 
     vertexBinding = opal::VertexBinding{(uint)layoutDescriptors[0].stride,
                                         opal::VertexBindingInputRate::Vertex};
 
-    auto toGLType = [](opal::VertexAttributeType type) -> GLenum {
-        switch (type) {
-        case opal::VertexAttributeType::Float:
-            return GL_FLOAT;
-        case opal::VertexAttributeType::Double:
-            return GL_DOUBLE;
-        case opal::VertexAttributeType::Int:
-            return GL_INT;
-        case opal::VertexAttributeType::UnsignedInt:
-            return GL_UNSIGNED_INT;
-        case opal::VertexAttributeType::Short:
-            return GL_SHORT;
-        case opal::VertexAttributeType::UnsignedShort:
-            return GL_UNSIGNED_SHORT;
-        case opal::VertexAttributeType::Byte:
-            return GL_BYTE;
-        case opal::VertexAttributeType::UnsignedByte:
-            return GL_UNSIGNED_BYTE;
-        default:
-            return GL_FLOAT;
-        }
-    };
-
-    vao->bind();
-    vbo->bind();
-    for (const auto &attr : vertexAttributes) {
-        glEnableVertexAttribArray(attr.location);
-        glVertexAttribPointer(attr.location, attr.size, toGLType(attr.type),
-                              attr.normalized ? GL_TRUE : GL_FALSE,
-                              vertexBinding.stride,
-                              (void *)(uintptr_t)(attr.offset));
-        glVertexAttribDivisor(attr.location, 0);
+    std::vector<opal::VertexAttributeBinding> attributeBindings;
+    attributeBindings.reserve(vertexAttributes.size());
+    for (const auto &attribute : vertexAttributes) {
+        attributeBindings.push_back({attribute, vbo});
     }
-    vbo->unbind();
+    vao->configureAttributes(attributeBindings);
 
     if (!instances.empty()) {
         std::vector<glm::mat4> modelMatrices;
@@ -333,18 +322,8 @@ void CoreObject::initialize() {
         instanceVBO = opal::Buffer::create(opal::BufferUsage::GeneralPurpose,
                                            instances.size() * sizeof(glm::mat4),
                                            modelMatrices.data());
-
-        vao->bind();
-        instanceVBO->bind();
-        std::size_t vec4Size = sizeof(glm::vec4);
-        for (unsigned int i = 0; i < 4; i++) {
-            glEnableVertexAttribArray(6 + i);
-            glVertexAttribPointer(6 + i, 4, GL_FLOAT, GL_FALSE,
-                                  sizeof(glm::mat4),
-                                  (void *)(uintptr_t)(i * vec4Size));
-            glVertexAttribDivisor(6 + i, 1);
-        }
-        instanceVBO->unbind();
+        auto instanceBindings = makeInstanceAttributeBindings(instanceVBO);
+        vao->configureAttributes(instanceBindings);
     }
 
     this->pipeline->setVertexAttributes(vertexAttributes, vertexBinding);
@@ -922,15 +901,8 @@ void CoreObject::updateInstances() {
         instanceVBO =
             opal::Buffer::create(opal::BufferUsage::GeneralPurpose,
                                  instances.size() * sizeof(glm::mat4), nullptr);
-        vao->bind();
-        std::size_t vec4Size = sizeof(glm::vec4);
-        for (unsigned int i = 0; i < 4; i++) {
-            glEnableVertexAttribArray(6 + i);
-            glVertexAttribPointer(6 + i, 4, GL_FLOAT, GL_FALSE,
-                                  sizeof(glm::mat4), (void *)(i * vec4Size));
-            glVertexAttribDivisor(6 + i, 1);
-        }
-        vao->unbind();
+        auto instanceBindings = makeInstanceAttributeBindings(instanceVBO);
+        vao->configureAttributes(instanceBindings);
     }
 
     std::vector<glm::mat4> modelMatrices;
