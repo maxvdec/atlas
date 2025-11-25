@@ -58,6 +58,58 @@ class Device {
     void submitCommandBuffer(std::shared_ptr<CommandBuffer> commandBuffer);
 };
 
+enum class TextureType { Texture2D, TextureCubeMap, Texture3D, Texture2DArray };
+enum class TextureFormat {
+    Rgba8,
+    Rgb8,
+    Rgba16F,
+    Rgb16F,
+    Depth24Stencil8,
+    Depth32F,
+    Red8,
+    Red16F
+};
+
+enum class TextureWrapMode {
+    Repeat,
+    MirroredRepeat,
+    ClampToEdge,
+    ClampToBorder
+};
+enum class TextureFilterMode {
+    Nearest,
+    Linear,
+    NearestMipmapNearest,
+    LinearMipmapLinear
+};
+
+class Texture {
+  public:
+    static std::shared_ptr<Texture>
+    create(TextureType type, TextureFormat format, int width, int height,
+           const void *data = nullptr, uint mipLevels = 1);
+
+    void updateFace(int faceIndex, const void *data, int width, int height);
+    void updateData3D(const void *data, int width, int height, int depth);
+
+    void generateMipmaps(uint levels);
+    void setWrapMode(TextureWrapMode mode);
+    void setFilterMode(TextureFilterMode minFilter,
+                       TextureFilterMode magFilter);
+
+    uint textureID;
+    TextureType type;
+    TextureFormat format;
+    int width;
+    int height;
+
+  private:
+    friend class Pipeline;
+
+    uint glType = 0;
+    uint glFormat = 0;
+};
+
 enum class ShaderType {
     Vertex,
     Fragment,
@@ -218,6 +270,8 @@ class Pipeline {
     void setUniform2f(const std::string &name, float v0, float v1);
     void setUniform4f(const std::string &name, float v0, float v1, float v2,
                       float v3);
+    void bindTexture(const std::string &name, std::shared_ptr<Texture> texture,
+                     int unit);
 
   private:
     PrimitiveStyle primitiveStyle;
