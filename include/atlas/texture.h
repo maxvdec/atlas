@@ -18,6 +18,7 @@
 #include "atlas/core/renderable.h"
 #include "atlas/units.h"
 #include "atlas/workspace.h"
+#include "opal/opal.h"
 #include <memory>
 #include <string>
 
@@ -483,7 +484,8 @@ class RenderTarget : public Renderable {
      * @brief Renders the quad representing this render target, applying any
      * queued post-processing effects.
      */
-    void render(float dt, bool updatePipeline = false) override;
+    void render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                bool updatePipeline = false) override;
     /**
      * @brief Resolves the render target by copying multisampled buffers to
      * regular textures.
@@ -579,7 +581,8 @@ class Skybox : public Renderable {
     /**
      * @brief Renders the skybox cube using the stored cubemap texture.
      */
-    void render(float dt, bool updatePipeline = false) override;
+    void render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                bool updatePipeline = false) override;
     /**
      * @brief Updates the view matrix while removing translation for correct
      * skybox rendering.
@@ -657,8 +660,8 @@ class BloomRenderTarget {
     ShaderProgram downsampleProgram;
     ShaderProgram upsampleProgram;
 
-    Id vao;
-    Id vbo;
+    std::shared_ptr<opal::DrawingState> quadState = nullptr;
+    std::shared_ptr<opal::Buffer> quadBuffer = nullptr;
 };
 
 #endif // TEXTURE_H

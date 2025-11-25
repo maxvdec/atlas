@@ -13,6 +13,7 @@
 #include <iostream>
 #include FT_FREETYPE_H
 #include <glad/glad.h>
+#include <vector>
 
 Font Font::fromResource(const std::string &fontName, Resource resource,
                         int fontSize) {
@@ -118,24 +119,38 @@ void Text::initialize() {
     projection = glm::ortho(0.0f, static_cast<float>(fbWidth),
                             static_cast<float>(fbHeight), 0.0f);
 
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, NULL, GL_DYNAMIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+    vertexBuffer = opal::Buffer::create(opal::BufferUsage::VertexBuffer,
+                                        sizeof(float) * 6 * 4, nullptr,
+                                        opal::MemoryUsageType::CPUToGPU);
+    vao = opal::DrawingState::create(vertexBuffer);
+    vao->setBuffers(vertexBuffer, nullptr);
+
+    opal::VertexAttribute textAttribute{"textVertex",
+                                        opal::VertexAttributeType::Float,
+                                        0,
+                                        0,
+                                        false,
+                                        4,
+                                        static_cast<uint>(4 * sizeof(float)),
+                                        opal::VertexBindingInputRate::Vertex,
+                                        0};
+    std::vector<opal::VertexAttributeBinding> bindings = {
+        {textAttribute, vertexBuffer}};
+    vao->configureAttributes(bindings);
 
     shader = ShaderProgram::fromDefaultShaders(AtlasVertexShader::Text,
                                                AtlasFragmentShader::Text);
 }
 
-void Text::render(float dt, bool updatePipeline) {
+void Text::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                  bool updatePipeline) {
     (void)updatePipeline;
     for (auto &component : components) {
         component->update(dt);
+    }
+    if (commandBuffer == nullptr) {
+        throw std::runtime_error(
+            "Text::render requires a valid command buffer");
     }
 
     glEnable(GL_BLEND);
@@ -148,7 +163,7 @@ void Text::render(float dt, bool updatePipeline) {
     shader.setUniform1i("text", 0);
 
     glActiveTexture(GL_TEXTURE0);
-    glBindVertexArray(VAO);
+    commandBuffer->bindDrawingState(vao);
 
     float scale = 2.0f;
 
@@ -181,15 +196,15 @@ void Text::render(float dt, bool updatePipeline) {
             {xpos + w, ypos, 1.0f, 0.0f}};
 
         glBindTexture(GL_TEXTURE_2D, ch.textureID);
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        vertexBuffer->bind();
+        vertexBuffer->updateData(0, sizeof(vertices), vertices);
+        vertexBuffer->unbind();
+        commandBuffer->draw(6, 1, 0, 0);
 
         x += (ch.advance >> 6) * scale;
     }
 
-    glBindVertexArray(0);
+    commandBuffer->unbindDrawingState();
     glBindTexture(GL_TEXTURE_2D, 0);
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);

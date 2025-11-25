@@ -370,7 +370,8 @@ class CompoundObject : public GameObject {
      * @brief Renders every child CoreObject that composes the compound
      * structure.
      */
-    void render(float dt, bool updatePipeline = false) override;
+    void render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                bool updatePipeline = false) override;
     /**
      * @brief Propagates the active view matrix to every child CoreObject.
      */
@@ -479,7 +480,9 @@ class CompoundObject : public GameObject {
     bool lateRenderableRegistered = false;
     bool changedPosition = false;
 
-    void renderLate(float dt, bool updatePipeline);
+    void renderLate(float dt,
+                    std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                    bool updatePipeline);
     void updateLate(Window &window);
     void setLateViewMatrix(const glm::mat4 &view);
     void setLateProjectionMatrix(const glm::mat4 &projection);
@@ -509,7 +512,8 @@ class UIView : public UIObject {
      * @brief Renders the view alongside all registered child UI objects in
      * submission order.
      */
-    void render(float dt, bool updatePipeline = false) override;
+    void render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                bool updatePipeline = false) override;
     /**
      * @brief Stores the view matrix used when rendering the UI hierarchy.
      */

@@ -14,8 +14,8 @@
 #include "opal/opal.h"
 #include <algorithm>
 #include <glad/glad.h>
-#include <iostream>
 #include <limits>
+#include <memory>
 #include <random>
 #include <string>
 #include <vector>
@@ -24,6 +24,30 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
+namespace {
+
+std::vector<opal::VertexAttributeBinding>
+makeInstanceAttributeBindings(const std::shared_ptr<opal::Buffer> &buffer) {
+    std::vector<opal::VertexAttributeBinding> bindings;
+    bindings.reserve(4);
+    std::size_t vec4Size = sizeof(glm::vec4);
+    for (unsigned int i = 0; i < 4; ++i) {
+        opal::VertexAttribute attribute{"instanceModel" + std::to_string(i),
+                                        opal::VertexAttributeType::Float,
+                                        static_cast<uint>(i * vec4Size),
+                                        static_cast<uint>(6 + i),
+                                        false,
+                                        4,
+                                        static_cast<uint>(sizeof(glm::mat4)),
+                                        opal::VertexBindingInputRate::Instance,
+                                        1};
+        bindings.push_back({attribute, buffer});
+    }
+    return bindings;
+}
+
+} // namespace
 
 std::vector<LayoutDescriptor> CoreVertex::getLayoutDescriptors() {
     return {{"position", 0, 3, opal::VertexAttributeType::Float, false,
@@ -41,7 +65,7 @@ std::vector<LayoutDescriptor> CoreVertex::getLayoutDescriptors() {
              sizeof(CoreVertex), offsetof(CoreVertex, bitangent)}};
 }
 
-CoreObject::CoreObject() : vbo(0), vao(0) {
+CoreObject::CoreObject() : vao(nullptr), vbo(nullptr), ebo(nullptr) {
     shaderProgram = ShaderProgram::defaultProgram();
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -108,13 +132,10 @@ void CoreObject::attachVertices(const std::vector<CoreVertex> &newVertices) {
     }
 
     vertices = newVertices;
-    glGenVertexArrays(1, &vao);
-    glGenBuffers(1, &vbo);
 }
 
 void CoreObject::attachIndices(const std::vector<Index> &newIndices) {
     indices = newIndices;
-    glGenBuffers(1, &ebo);
 }
 
 void CoreObject::setPosition(const Position3d &newPosition) {
@@ -250,75 +271,47 @@ void CoreObject::initialize() {
         throw std::runtime_error("No vertices attached to the object");
     }
 
-    glBindVertexArray(vao);
+    if (vao == nullptr) {
+        vao = opal::DrawingState::create(nullptr);
+    }
 
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(CoreVertex),
-                 vertices.data(), GL_STATIC_DRAW);
+    vbo = opal::Buffer::create(opal::BufferUsage::VertexBuffer,
+                               vertices.size() * sizeof(CoreVertex),
+                               vertices.data());
 
     if (!indices.empty()) {
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(Index),
-                     indices.data(), GL_STATIC_DRAW);
+        ebo = opal::Buffer::create(opal::BufferUsage::IndexArray,
+                                   indices.size() * sizeof(Index),
+                                   indices.data());
     }
+
+    vao->setBuffers(vbo, ebo);
 
     this->pipeline = opal::Pipeline::create();
 
     std::vector<LayoutDescriptor> layoutDescriptors =
         CoreVertex::getLayoutDescriptors();
 
-    std::vector<GLuint> activeLocations = shaderProgram.desiredAttributes;
-    if (activeLocations.empty()) {
-        for (const auto &attr : layoutDescriptors) {
-            activeLocations.push_back(attr.layoutPos);
-        }
-    }
-
     std::vector<opal::VertexAttribute> vertexAttributes;
     opal::VertexBinding vertexBinding;
 
     for (const auto &attr : layoutDescriptors) {
         vertexAttributes.push_back(opal::VertexAttribute{
-            attr.name, attr.type, (uint)attr.offset, (uint)attr.layoutPos,
-            attr.normalized, (uint)attr.size});
+            attr.name, attr.type, static_cast<uint>(attr.offset),
+            static_cast<uint>(attr.layoutPos), attr.normalized,
+            static_cast<uint>(attr.size), static_cast<uint>(attr.stride),
+            opal::VertexBindingInputRate::Vertex, 0});
     }
 
     vertexBinding = opal::VertexBinding{(uint)layoutDescriptors[0].stride,
                                         opal::VertexBindingInputRate::Vertex};
 
-    auto toGLType = [](opal::VertexAttributeType type) -> GLenum {
-        switch (type) {
-        case opal::VertexAttributeType::Float:
-            return GL_FLOAT;
-        case opal::VertexAttributeType::Double:
-            return GL_DOUBLE;
-        case opal::VertexAttributeType::Int:
-            return GL_INT;
-        case opal::VertexAttributeType::UnsignedInt:
-            return GL_UNSIGNED_INT;
-        case opal::VertexAttributeType::Short:
-            return GL_SHORT;
-        case opal::VertexAttributeType::UnsignedShort:
-            return GL_UNSIGNED_SHORT;
-        case opal::VertexAttributeType::Byte:
-            return GL_BYTE;
-        case opal::VertexAttributeType::UnsignedByte:
-            return GL_UNSIGNED_BYTE;
-        default:
-            return GL_FLOAT;
-        }
-    };
-
-    glBindVertexArray(vao);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    for (const auto &attr : vertexAttributes) {
-        glEnableVertexAttribArray(attr.location);
-        glVertexAttribPointer(attr.location, attr.size, toGLType(attr.type),
-                              attr.normalized ? GL_TRUE : GL_FALSE,
-                              vertexBinding.stride,
-                              (void *)(uintptr_t)(attr.offset));
-        glVertexAttribDivisor(attr.location, 0);
+    std::vector<opal::VertexAttributeBinding> attributeBindings;
+    attributeBindings.reserve(vertexAttributes.size());
+    for (const auto &attribute : vertexAttributes) {
+        attributeBindings.push_back({attribute, vbo});
     }
+    vao->configureAttributes(attributeBindings);
 
     if (!instances.empty()) {
         std::vector<glm::mat4> modelMatrices;
@@ -327,27 +320,16 @@ void CoreObject::initialize() {
             modelMatrices.push_back(instance.getModelMatrix());
         }
 
-        glGenBuffers(1, &instanceVBO);
-        glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-        glBufferData(GL_ARRAY_BUFFER, instances.size() * sizeof(glm::mat4),
-                     modelMatrices.data(), GL_STATIC_DRAW);
-
-        glBindVertexArray(vao);
-        glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-        std::size_t vec4Size = sizeof(glm::vec4);
-        for (unsigned int i = 0; i < 4; i++) {
-            glEnableVertexAttribArray(6 + i);
-            glVertexAttribPointer(6 + i, 4, GL_FLOAT, GL_FALSE,
-                                  sizeof(glm::mat4),
-                                  (void *)(uintptr_t)(i * vec4Size));
-            glVertexAttribDivisor(6 + i, 1);
-        }
+        instanceVBO = opal::Buffer::create(opal::BufferUsage::GeneralPurpose,
+                                           instances.size() * sizeof(glm::mat4),
+                                           modelMatrices.data());
+        auto instanceBindings = makeInstanceAttributeBindings(instanceVBO);
+        vao->configureAttributes(instanceBindings);
     }
 
     this->pipeline->setVertexAttributes(vertexAttributes, vertexBinding);
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+    vao->unbind();
 }
 
 std::optional<std::shared_ptr<opal::Pipeline>> CoreObject::getPipeline() {
@@ -394,7 +376,9 @@ void CoreObject::refreshPipeline() {
     this->pipeline = this->shaderProgram.requestPipeline(this->pipeline);
 }
 
-void CoreObject::render(float dt, bool updatePipeline) {
+void CoreObject::render(float dt,
+                        std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                        bool updatePipeline) {
     for (auto &component : components) {
         component->update(dt);
     }
@@ -801,30 +785,35 @@ void CoreObject::render(float dt, bool updatePipeline) {
             this->savedInstances = this->instances;
         }
         // Update instance buffer data
-        glBindVertexArray(vao);
         shaderProgram.setUniform1i("isInstanced", 1);
 
         if (!indices.empty()) {
-            glDrawElementsInstanced(GL_TRIANGLES, indices.size(),
-                                    GL_UNSIGNED_INT, 0, instances.size());
-            glBindVertexArray(0);
+            commandBuffer->bindDrawingState(vao);
+            commandBuffer->bindPipeline(this->pipeline);
+            commandBuffer->drawIndexed(indices.size(), instances.size(), 0, 0,
+                                       0);
+            commandBuffer->unbindDrawingState();
             return;
         }
-        glDrawArraysInstanced(GL_TRIANGLES, 0, vertices.size(),
-                              instances.size());
-        glBindVertexArray(0);
+        commandBuffer->bindDrawingState(vao);
+        commandBuffer->bindPipeline(this->pipeline);
+        commandBuffer->draw(vertices.size(), instances.size(), 0, 0);
+        commandBuffer->unbindDrawingState();
         return;
     }
 
-    glBindVertexArray(vao);
     shaderProgram.setUniform1i("isInstanced", 0);
     if (!indices.empty()) {
-        glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
-        glBindVertexArray(0);
+        commandBuffer->bindDrawingState(vao);
+        commandBuffer->bindPipeline(this->pipeline);
+        commandBuffer->drawIndexed(indices.size(), 1, 0, 0, 0);
+        commandBuffer->unbindDrawingState();
         return;
     }
-    glDrawArrays(GL_TRIANGLES, 0, vertices.size());
-    glBindVertexArray(0);
+    commandBuffer->bindDrawingState(vao);
+    commandBuffer->bindPipeline(this->pipeline);
+    commandBuffer->draw(vertices.size(), 1, 0, 0);
+    commandBuffer->unbindDrawingState();
 }
 
 void CoreObject::setViewMatrix(const glm::mat4 &view) {
@@ -844,9 +833,10 @@ void CoreObject::setProjectionMatrix(const glm::mat4 &projection) {
 CoreObject CoreObject::clone() const {
     CoreObject newObject = *this;
 
-    glGenVertexArrays(1, &newObject.vao);
-    glGenBuffers(1, &newObject.vbo);
-    glGenBuffers(1, &newObject.ebo);
+    newObject.vao = nullptr;
+    newObject.vbo = nullptr;
+    newObject.ebo = nullptr;
+    newObject.instanceVBO = nullptr;
 
     newObject.initialize();
 
@@ -854,15 +844,14 @@ CoreObject CoreObject::clone() const {
 }
 
 void CoreObject::updateVertices() {
-    if (vbo == 0 || vertices.empty()) {
+    if (vbo == nullptr || vertices.empty()) {
         throw std::runtime_error("Cannot update vertices: VBO not "
                                  "initialized or empty vertex list");
     }
 
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(CoreVertex),
-                    vertices.data());
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    vbo->bind();
+    vbo->updateData(0, vertices.size() * sizeof(CoreVertex), vertices.data());
+    vbo->unbind();
 }
 
 void CoreObject::update(Window &window) {
@@ -916,21 +905,12 @@ void CoreObject::updateInstances() {
         return;
     }
 
-    if (this->instanceVBO == 0) {
-        glGenBuffers(1, &instanceVBO);
-        glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-        glBufferData(GL_ARRAY_BUFFER, instances.size() * sizeof(glm::mat4),
-                     nullptr, GL_DYNAMIC_DRAW);
-        glBindVertexArray(vao);
-        std::size_t vec4Size = sizeof(glm::vec4);
-        for (unsigned int i = 0; i < 4; i++) {
-            glEnableVertexAttribArray(6 + i);
-            glVertexAttribPointer(6 + i, 4, GL_FLOAT, GL_FALSE,
-                                  sizeof(glm::mat4), (void *)(i * vec4Size));
-            glVertexAttribDivisor(6 + i, 1);
-        }
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glBindVertexArray(0);
+    if (this->instanceVBO == nullptr) {
+        instanceVBO =
+            opal::Buffer::create(opal::BufferUsage::GeneralPurpose,
+                                 instances.size() * sizeof(glm::mat4), nullptr);
+        auto instanceBindings = makeInstanceAttributeBindings(instanceVBO);
+        vao->configureAttributes(instanceBindings);
     }
 
     std::vector<glm::mat4> modelMatrices;
@@ -941,10 +921,10 @@ void CoreObject::updateInstances() {
         modelMatrices.push_back(instance.getModelMatrix());
     }
 
-    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, instances.size() * sizeof(glm::mat4),
-                    modelMatrices.data());
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    instanceVBO->bind();
+    instanceVBO->updateData(0, instances.size() * sizeof(glm::mat4),
+                            modelMatrices.data());
+    instanceVBO->unbind();
 }
 
 void Instance::updateModelMatrix() {

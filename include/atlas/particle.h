@@ -13,6 +13,8 @@
 #include "atlas/component.h"
 #include "atlas/core/shader.h"
 #include "atlas/texture.h"
+#include "opal/opal.h"
+#include <optional>
 
 /**
  * @brief Type that describes how particles are emitted.
@@ -169,7 +171,8 @@ class ParticleEmitter : public GameObject {
     /**
      * @brief Renders all active particles with billboarding logic.
      */
-    void render(float dt, bool updatePipeline = false) override;
+    void render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                bool updatePipeline = false) override;
     /**
      * @brief Updates particle lifetimes, spawns new particles, and applies
      * forces.
@@ -308,7 +311,10 @@ class ParticleEmitter : public GameObject {
     bool hasEmittedOnce = false;
     int burstCount = 0;
 
-    Id vao, vbo;
+    std::shared_ptr<opal::DrawingState> vao = nullptr;
+    std::shared_ptr<opal::Buffer> quadBuffer = nullptr;
+    std::shared_ptr<opal::Buffer> instanceBuffer = nullptr;
+    std::shared_ptr<opal::Buffer> indexBuffer = nullptr;
     ShaderProgram program;
     Texture texture;
     Color color = Color::white();

@@ -178,7 +178,8 @@ class Terrain : public GameObject {
     /**
      * @brief Renders the terrain patches.
      */
-    void render(float dt, bool updatePipeline = false) override;
+    void render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                bool updatePipeline = false) override;
     /**
      * @brief Builds buffers, materials, and generator data.
      */

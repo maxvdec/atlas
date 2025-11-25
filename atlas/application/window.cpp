@@ -51,7 +51,7 @@ Window::Window(WindowConfiguration config)
 
     context->makeCurrent();
 
-    auto device = opal::Device::acquire(context);
+    device = opal::Device::acquire(context);
 
     glfwSetWindowOpacity(window, config.opacity);
     glfwSetInputMode(window, GLFW_CURSOR,
@@ -189,6 +189,9 @@ void Window::run() {
     }
     GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
 
+    auto commandBuffer = device->acquireCommandBuffer();
+    this->activeCommandBuffer = commandBuffer;
+
     this->lastTime = static_cast<float>(glfwGetTime());
 
     glEnable(GL_MULTISAMPLE);
@@ -207,6 +210,7 @@ void Window::run() {
             glfwPollEvents();
             continue;
         }
+        commandBuffer->begin();
         float currentTime = static_cast<float>(glfwGetTime());
         this->deltaTime = currentTime - this->lastTime;
         lastTime = currentTime;
@@ -231,7 +235,7 @@ void Window::run() {
 
         currentScene->update(*this);
 
-        renderLightsToShadowMaps();
+        renderLightsToShadowMaps(commandBuffer);
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         updatePipelineStateField(this->cullMode, opal::CullMode::None);
@@ -255,7 +259,7 @@ void Window::run() {
             }
 
             if (this->usesDeferred) {
-                this->deferredRendering(target);
+                this->deferredRendering(target, commandBuffer);
 
                 glBindFramebuffer(GL_READ_FRAMEBUFFER, this->gBuffer->fbo);
                 glBindFramebuffer(GL_DRAW_FRAMEBUFFER, target->fbo);
@@ -277,7 +281,8 @@ void Window::run() {
                 for (auto &obj : this->firstRenderables) {
                     obj->setViewMatrix(this->camera->calculateViewMatrix());
                     obj->setProjectionMatrix(calculateProjectionMatrix());
-                    obj->render(getDeltaTime(), shouldRefreshPipeline(obj));
+                    obj->render(getDeltaTime(), commandBuffer,
+                                shouldRefreshPipeline(obj));
                 }
 
                 for (auto &obj : this->renderables) {
@@ -287,14 +292,16 @@ void Window::run() {
                     if (!obj->canUseDeferredRendering()) {
                         obj->setViewMatrix(this->camera->calculateViewMatrix());
                         obj->setProjectionMatrix(calculateProjectionMatrix());
-                        obj->render(getDeltaTime(), shouldRefreshPipeline(obj));
+                        obj->render(getDeltaTime(), commandBuffer,
+                                    shouldRefreshPipeline(obj));
                     }
                 }
 
                 for (auto &obj : this->lateForwardRenderables) {
                     obj->setViewMatrix(this->camera->calculateViewMatrix());
                     obj->setProjectionMatrix(calculateProjectionMatrix());
-                    obj->render(getDeltaTime(), shouldRefreshPipeline(obj));
+                    obj->render(getDeltaTime(), commandBuffer,
+                                shouldRefreshPipeline(obj));
                 }
 
                 glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -307,7 +314,8 @@ void Window::run() {
             for (auto &obj : this->firstRenderables) {
                 obj->setViewMatrix(this->camera->calculateViewMatrix());
                 obj->setProjectionMatrix(calculateProjectionMatrix());
-                obj->render(getDeltaTime(), shouldRefreshPipeline(obj));
+                obj->render(getDeltaTime(), commandBuffer,
+                            shouldRefreshPipeline(obj));
             }
 
             for (auto &obj : this->renderables) {
@@ -316,13 +324,15 @@ void Window::run() {
                 }
                 obj->setViewMatrix(this->camera->calculateViewMatrix());
                 obj->setProjectionMatrix(calculateProjectionMatrix());
-                obj->render(getDeltaTime(), shouldRefreshPipeline(obj));
+                obj->render(getDeltaTime(), commandBuffer,
+                            shouldRefreshPipeline(obj));
             }
-            updateFluidCaptures();
+            updateFluidCaptures(commandBuffer);
             for (auto &obj : this->lateForwardRenderables) {
                 obj->setViewMatrix(this->camera->calculateViewMatrix());
                 obj->setProjectionMatrix(calculateProjectionMatrix());
-                obj->render(getDeltaTime(), shouldRefreshPipeline(obj));
+                obj->render(getDeltaTime(), commandBuffer,
+                            shouldRefreshPipeline(obj));
             }
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
             target->resolve();
@@ -342,7 +352,8 @@ void Window::run() {
             for (auto &obj : this->firstRenderables) {
                 obj->setViewMatrix(this->camera->calculateViewMatrix());
                 obj->setProjectionMatrix(calculateProjectionMatrix());
-                obj->render(getDeltaTime(), shouldRefreshPipeline(obj));
+                obj->render(getDeltaTime(), commandBuffer,
+                            shouldRefreshPipeline(obj));
             }
 
             for (auto &obj : this->renderables) {
@@ -351,15 +362,17 @@ void Window::run() {
                 }
                 obj->setViewMatrix(this->camera->calculateViewMatrix());
                 obj->setProjectionMatrix(calculateProjectionMatrix());
-                obj->render(getDeltaTime(), shouldRefreshPipeline(obj));
+                obj->render(getDeltaTime(), commandBuffer,
+                            shouldRefreshPipeline(obj));
             }
 
-            updateFluidCaptures();
+            updateFluidCaptures(commandBuffer);
 
             for (auto &obj : this->lateForwardRenderables) {
                 obj->setViewMatrix(this->camera->calculateViewMatrix());
                 obj->setProjectionMatrix(calculateProjectionMatrix());
-                obj->render(getDeltaTime(), shouldRefreshPipeline(obj));
+                obj->render(getDeltaTime(), commandBuffer,
+                            shouldRefreshPipeline(obj));
             }
         } else {
             this->currentRenderTarget = nullptr;
@@ -373,16 +386,21 @@ void Window::run() {
             }
             obj->setViewMatrix(this->camera->calculateViewMatrix());
             obj->setProjectionMatrix(calculateProjectionMatrix());
-            obj->render(getDeltaTime(), shouldRefreshPipeline(obj));
+            obj->render(getDeltaTime(), commandBuffer,
+                        shouldRefreshPipeline(obj));
         }
 
         updatePipelineStateField(this->cullMode, opal::CullMode::Back);
         updatePipelineStateField(this->useBlending, true);
         for (auto &obj : this->uiRenderables) {
-            obj->render(getDeltaTime(), shouldRefreshPipeline(obj));
+            obj->render(getDeltaTime(), commandBuffer,
+                        shouldRefreshPipeline(obj));
         }
 
         this->lastViewMatrix = this->camera->calculateViewMatrix();
+
+        commandBuffer->end();
+        device->submitCommandBuffer(commandBuffer);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -606,8 +624,16 @@ void Window::addRenderTarget(RenderTarget *target) {
     this->renderTargets.push_back(target);
 }
 
-void Window::renderLightsToShadowMaps() {
+void Window::renderLightsToShadowMaps(
+    std::shared_ptr<opal::CommandBuffer> commandBuffer) {
     if (this->currentScene == nullptr) {
+        return;
+    }
+
+    if (commandBuffer == nullptr) {
+        commandBuffer = this->activeCommandBuffer;
+    }
+    if (commandBuffer == nullptr) {
         return;
     }
 
@@ -805,7 +831,7 @@ void Window::renderLightsToShadowMaps() {
 
             obj->setProjectionMatrix(lightProjection);
             obj->setViewMatrix(lightView);
-            obj->render(getDeltaTime(), false);
+            obj->render(getDeltaTime(), commandBuffer, false);
         }
 
         for (auto &obj : this->lateForwardRenderables) {
@@ -816,7 +842,7 @@ void Window::renderLightsToShadowMaps() {
             obj->setPipeline(depthPipeline);
             obj->setProjectionMatrix(lightProjection);
             obj->setViewMatrix(lightView);
-            obj->render(getDeltaTime(), false);
+            obj->render(getDeltaTime(), commandBuffer, false);
         }
     }
 
@@ -862,7 +888,7 @@ void Window::renderLightsToShadowMaps() {
 
             obj->setProjectionMatrix(lightProjection);
             obj->setViewMatrix(lightView);
-            obj->render(getDeltaTime(), false);
+            obj->render(getDeltaTime(), commandBuffer, false);
         }
 
         for (auto &obj : this->lateForwardRenderables) {
@@ -873,7 +899,7 @@ void Window::renderLightsToShadowMaps() {
             obj->setPipeline(depthPipeline);
             obj->setProjectionMatrix(lightProjection);
             obj->setViewMatrix(lightView);
-            obj->render(getDeltaTime(), false);
+            obj->render(getDeltaTime(), commandBuffer, false);
         }
     }
 
@@ -924,7 +950,7 @@ void Window::renderLightsToShadowMaps() {
             obj->setViewMatrix(glm::mat4(1.0));
             obj->setPipeline(pointLightPipeline);
 
-            obj->render(getDeltaTime(), false);
+            obj->render(getDeltaTime(), commandBuffer, false);
         }
 
         for (auto &obj : this->lateForwardRenderables) {
@@ -949,7 +975,7 @@ void Window::renderLightsToShadowMaps() {
             obj->setViewMatrix(glm::mat4(1.0));
             obj->setPipeline(pointLightPipeline);
 
-            obj->render(getDeltaTime(), false);
+            obj->render(getDeltaTime(), commandBuffer, false);
         }
     }
 
@@ -1102,8 +1128,8 @@ void Window::renderPingpong(RenderTarget *target) {
     blurShader.setUniform1f("radius", 2.5f);
     blurShader.setUniform1i("image", 0);
 
-    glBindVertexArray(target->object->vao);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, target->object->ebo);
+    target->object->vao->bind();
+    target->object->ebo->bind();
 
     for (unsigned int i = 0; i < blurIterations; ++i) {
         glBindFramebuffer(GL_FRAMEBUFFER, this->pingpongFBOs[horizontal]);
@@ -1128,8 +1154,7 @@ void Window::renderPingpong(RenderTarget *target) {
         firstIteration = false;
     }
 
-    glBindVertexArray(0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    target->object->vao->unbind();
 
     target->object->setPipeline(targetProgram);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -1187,19 +1212,34 @@ void Window::renderPhysicalBloom(RenderTarget *target) {
     target->blurredTexture.id = this->bloomBuffer->getBloomTexture();
 }
 
-void Window::updateFluidCaptures() {
+void Window::updateFluidCaptures(
+    std::shared_ptr<opal::CommandBuffer> commandBuffer) {
+    if (commandBuffer == nullptr) {
+        commandBuffer = this->activeCommandBuffer;
+    }
+    if (commandBuffer == nullptr) {
+        return;
+    }
     for (auto *fluid : lateFluids) {
         if (fluid == nullptr) {
             continue;
         }
         if (fluid->captureDirty) {
-            fluid->updateCapture(*this);
+            fluid->updateCapture(*this, commandBuffer);
         }
     }
 }
 
-void Window::captureFluidReflection(Fluid &fluid) {
+void Window::captureFluidReflection(
+    Fluid &fluid, std::shared_ptr<opal::CommandBuffer> commandBuffer) {
     if (!fluid.reflectionTarget) {
+        return;
+    }
+
+    if (commandBuffer == nullptr) {
+        commandBuffer = this->activeCommandBuffer;
+    }
+    if (commandBuffer == nullptr) {
         return;
     }
 
@@ -1313,7 +1353,8 @@ void Window::captureFluidReflection(Fluid &fluid) {
             }
             obj->setViewMatrix(view);
             obj->setProjectionMatrix(projection);
-            obj->render(getDeltaTime(), shouldRefreshPipeline(obj));
+            obj->render(getDeltaTime(), commandBuffer,
+                        shouldRefreshPipeline(obj));
 
             if (obj->canUseDeferredRendering()) {
                 obj->setShader(oldProgram);
@@ -1365,8 +1406,16 @@ void Window::captureFluidReflection(Fluid &fluid) {
     this->camera = cameraBackup;
 }
 
-void Window::captureFluidRefraction(Fluid &fluid) {
+void Window::captureFluidRefraction(
+    Fluid &fluid, std::shared_ptr<opal::CommandBuffer> commandBuffer) {
     if (!fluid.refractionTarget) {
+        return;
+    }
+
+    if (commandBuffer == nullptr) {
+        commandBuffer = this->activeCommandBuffer;
+    }
+    if (commandBuffer == nullptr) {
         return;
     }
 
@@ -1457,7 +1506,8 @@ void Window::captureFluidRefraction(Fluid &fluid) {
             }
             obj->setViewMatrix(view);
             obj->setProjectionMatrix(projection);
-            obj->render(getDeltaTime(), shouldRefreshPipeline(obj));
+            obj->render(getDeltaTime(), commandBuffer,
+                        shouldRefreshPipeline(obj));
 
             if (obj->canUseDeferredRendering()) {
                 obj->setShader(oldProgram);

@@ -516,10 +516,10 @@ class CoreObject : public GameObject {
     }
 
   private:
-    BufferIndex vbo;
-    BufferIndex vao;
-    BufferIndex ebo;
-    BufferIndex instanceVBO = 0;
+    std::shared_ptr<opal::DrawingState> vao;
+    std::shared_ptr<opal::Buffer> vbo;
+    std::shared_ptr<opal::Buffer> ebo;
+    std::shared_ptr<opal::Buffer> instanceVBO;
 
     std::vector<Instance> savedInstances;
 
@@ -548,7 +548,8 @@ class CoreObject : public GameObject {
      *
      * @param dt Time delta provided by the window loop.
      */
-    void render(float dt, bool updatePipeline = false) override;
+    void render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                bool updatePipeline = false) override;
     /**
      * @brief Uploads the active view matrix used for transforming vertices to
      * camera space.
@@ -774,12 +775,14 @@ class Model : public GameObject {
     /**
      * @brief Renders each CoreObject that composes the model.
      */
-    inline void render(float dt, bool updatePipeline = false) override {
+    inline void render(float dt,
+                       std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                       bool updatePipeline = false) override {
         for (auto &component : components) {
             component->update(dt);
         }
         for (auto &obj : objects) {
-            obj->render(dt, updatePipeline);
+            obj->render(dt, commandBuffer, updatePipeline);
         }
     }
 

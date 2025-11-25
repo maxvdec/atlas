@@ -14,6 +14,7 @@
 #include "atlas/core/shader.h"
 #include "atlas/texture.h"
 #include "atlas/units.h"
+#include "opal/opal.h"
 #include <array>
 #include <glm/glm.hpp>
 #include <memory>
@@ -54,13 +55,16 @@ struct Fluid : GameObject {
     /**
      * @brief Draws the water surface and applies screen-space effects.
      */
-    void render(float dt, bool updatePipeline = false) override;
+    void render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                bool updatePipeline = false) override;
 
     /**
      * @brief Triggers the generation of reflection and refraction render
      * targets for the current frame.
      */
-    void updateCapture(Window &window);
+    void
+    updateCapture(Window &window,
+                  std::shared_ptr<opal::CommandBuffer> commandBuffer = nullptr);
 
     /**
      * @brief Stores the camera view matrix for shader consumption.
@@ -150,9 +154,9 @@ struct Fluid : GameObject {
     Color color{1.0, 0.0, 0.0, 1.0};
     ShaderProgram fluidShader;
 
-    unsigned int vao = 0;
-    unsigned int vbo = 0;
-    unsigned int ebo = 0;
+    std::shared_ptr<opal::DrawingState> drawingState = nullptr;
+    std::shared_ptr<opal::Buffer> vertexBuffer = nullptr;
+    std::shared_ptr<opal::Buffer> indexBuffer = nullptr;
 
     glm::mat4 modelMatrix{1.0f};
     glm::mat4 viewMatrix{1.0f};

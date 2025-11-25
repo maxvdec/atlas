@@ -531,6 +531,8 @@ class Window {
     int viewportHeight = 0;
 
   private:
+    std::shared_ptr<opal::Device> device;
+    std::shared_ptr<opal::CommandBuffer> activeCommandBuffer = nullptr;
     CoreWindowReference windowRef;
     std::vector<Renderable *> renderables;
     std::vector<Renderable *> preferenceRenderables;
@@ -559,17 +561,25 @@ class Window {
     glm::mat4 lastViewMatrix = glm::mat4(1.0f);
     Scene *currentScene = nullptr;
 
-    void renderLightsToShadowMaps();
+    void renderLightsToShadowMaps(
+        std::shared_ptr<opal::CommandBuffer> commandBuffer = nullptr);
     Size2d getFurthestPositions();
 
     [[maybe_unused]]
     void renderPingpong(RenderTarget *target);
     void renderPhysicalBloom(RenderTarget *target);
-    void deferredRendering(RenderTarget *target);
+    void deferredRendering(
+        RenderTarget *target,
+        std::shared_ptr<opal::CommandBuffer> commandBuffer = nullptr);
     void renderSSAO();
-    void updateFluidCaptures();
-    void captureFluidReflection(Fluid &fluid);
-    void captureFluidRefraction(Fluid &fluid);
+    void updateFluidCaptures(
+        std::shared_ptr<opal::CommandBuffer> commandBuffer = nullptr);
+    void captureFluidReflection(
+        Fluid &fluid,
+        std::shared_ptr<opal::CommandBuffer> commandBuffer = nullptr);
+    void captureFluidRefraction(
+        Fluid &fluid,
+        std::shared_ptr<opal::CommandBuffer> commandBuffer = nullptr);
     void markPipelineStateDirty();
     bool shouldRefreshPipeline(Renderable *renderable);
     void setViewportState(int x, int y, int width, int height);

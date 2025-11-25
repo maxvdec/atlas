@@ -611,8 +611,10 @@ std::shared_ptr<opal::Pipeline> ShaderProgram::requestPipeline(
 
     for (const auto &attr : layoutDescriptors) {
         vertexAttributes.push_back(opal::VertexAttribute{
-            attr.name, attr.type, (uint)attr.offset, (uint)attr.layoutPos,
-            attr.normalized, (uint)attr.size});
+            attr.name, attr.type, static_cast<uint>(attr.offset),
+            static_cast<uint>(attr.layoutPos), attr.normalized,
+            static_cast<uint>(attr.size), static_cast<uint>(attr.stride),
+            opal::VertexBindingInputRate::Vertex, 0});
     }
 
     vertexBinding = opal::VertexBinding{(uint)layoutDescriptors[0].stride,
