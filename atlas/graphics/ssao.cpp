@@ -41,17 +41,16 @@ void Window::setupSSAO() {
         this->ssaoNoise.push_back(noise);
     }
 
-    unsigned int noiseTextureID;
-    glGenTextures(1, &noiseTextureID);
-    glBindTexture(GL_TEXTURE_2D, noiseTextureID);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, 4, 4, 0, GL_RGB, GL_FLOAT,
-                 this->ssaoNoise.data());
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-    noiseTexture.id = noiseTextureID;
+    noiseTexture.texture = opal::Texture::create(
+        opal::TextureType::Texture2D, opal::TextureFormat::Rgb16F, 4, 4,
+        opal::TextureDataFormat::Rgb, this->ssaoNoise.data(), 1);
+    noiseTexture.texture->setFilterMode(opal::TextureFilterMode::Nearest,
+                                        opal::TextureFilterMode::Nearest);
+    noiseTexture.texture->setWrapMode(opal::TextureAxis::S,
+                                      opal::TextureWrapMode::Repeat);
+    noiseTexture.texture->setWrapMode(opal::TextureAxis::T,
+                                      opal::TextureWrapMode::Repeat);
+    noiseTexture.id = noiseTexture.texture->textureID;
     noiseTexture.creationData.width = 4;
     noiseTexture.creationData.height = 4;
     noiseTexture.type = TextureType::SSAONoise;

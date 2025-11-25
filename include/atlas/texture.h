@@ -309,6 +309,11 @@ struct Cubemap {
      */
     Id id;
     /**
+     * @brief The opal texture object.
+     *
+     */
+    std::shared_ptr<opal::Texture> texture;
+    /**
      * @brief The type of the texture (Cubemap).
      *
      */
@@ -613,6 +618,7 @@ struct BloomElement {
     glm::vec2 size;
     glm::ivec2 intSize;
     Id textureId;
+    std::shared_ptr<opal::Texture> texture;
 };
 
 /**
