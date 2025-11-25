@@ -616,7 +616,7 @@ void Skybox::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
 
     CoreObject *obj = this->object.get();
 
-    commandBuffer->bindPipeline(obj->pipeline);
+    glUseProgram(obj->shaderProgram.programId);
 
     glDepthFunc(GL_LEQUAL);
     glDepthMask(GL_FALSE);
@@ -672,7 +672,6 @@ void Skybox::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
     }
 
     commandBuffer->bindDrawingState(obj->vao);
-    commandBuffer->bindPipeline(obj->pipeline);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap.id);
     commandBuffer->drawIndexed(static_cast<unsigned int>(obj->indices.size()),
