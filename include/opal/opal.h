@@ -61,7 +61,9 @@ class Device {
 enum class TextureType { Texture2D, TextureCubeMap, Texture3D, Texture2DArray };
 enum class TextureFormat {
     Rgba8,
+    sRgba8,
     Rgb8,
+    sRgb8,
     Rgba16F,
     Rgb16F,
     Depth24Stencil8,
@@ -83,17 +85,29 @@ enum class TextureFilterMode {
     LinearMipmapLinear
 };
 
+enum class TextureAxis { S, T, R };
+
+enum class TextureDataFormat { Rgba, Rgb, Red, Bgr, Bgra };
+
 class Texture {
   public:
     static std::shared_ptr<Texture>
     create(TextureType type, TextureFormat format, int width, int height,
+           TextureDataFormat dataFormat = TextureDataFormat::Rgba,
            const void *data = nullptr, uint mipLevels = 1);
 
-    void updateFace(int faceIndex, const void *data, int width, int height);
-    void updateData3D(const void *data, int width, int height, int depth);
+    void updateFace(int faceIndex, const void *data, int width, int height,
+                    TextureDataFormat dataFormat = TextureDataFormat::Rgba);
+    void updateData3D(const void *data, int width, int height, int depth,
+                      TextureDataFormat dataFormat = TextureDataFormat::Rgba);
+    void updateData(const void *data, int width, int height,
+                    TextureDataFormat dataFormat = TextureDataFormat::Rgba);
+    void changeFormat(TextureFormat newFormat);
+    void changeBorderColor(const glm::vec4 &borderColor);
 
     void generateMipmaps(uint levels);
-    void setWrapMode(TextureWrapMode mode);
+    void automaticallyGenerateMipmaps();
+    void setWrapMode(TextureAxis axis, TextureWrapMode mode);
     void setFilterMode(TextureFilterMode minFilter,
                        TextureFilterMode magFilter);
 

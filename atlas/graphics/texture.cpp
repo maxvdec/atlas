@@ -13,9 +13,11 @@
 #include "atlas/units.h"
 #include "atlas/window.h"
 #include "atlas/workspace.h"
+#include "opal/opal.h"
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <memory>
 #include <unordered_map>
 #include <vector>
 #define STB_IMAGE_IMPLEMENTATION
@@ -212,15 +214,16 @@ Texture Texture::fromResource(const Resource &resource, TextureType type,
         throw std::runtime_error("Resource is not an image");
     }
 
-    Id textureId;
-    glGenTextures(1, &textureId);
-    glBindTexture(GL_TEXTURE_2D, textureId);
+    std::shared_ptr<opal::Texture> opalTexture;
+    opalTexture = opal::Texture::create(opal::TextureType::Texture2D,
+                                        opal::TextureFormat::Rgba8, 0, 0);
 
-    Texture::applyWrappingMode(params.wrappingModeS, GL_TEXTURE_WRAP_S);
-    Texture::applyWrappingMode(params.wrappingModeT, GL_TEXTURE_WRAP_T);
-    Texture::applyFilteringMode(params.minifyingFilter, true);
-    Texture::applyFilteringMode(params.magnifyingFilter, false);
-
+    Texture::applyWrappingMode(params.wrappingModeS, opal::TextureAxis::S,
+                               opalTexture);
+    Texture::applyWrappingMode(params.wrappingModeT, opal::TextureAxis::T,
+                               opalTexture);
+    Texture::applyFilteringModes(params.minifyingFilter,
+                                 params.magnifyingFilter, opalTexture);
     if (params.wrappingModeS == TextureWrappingMode::ClampToBorder ||
         params.wrappingModeT == TextureWrappingMode::ClampToBorder) {
         if (borderColor.r < 0 || borderColor.r > 1 || borderColor.g < 0 ||
@@ -229,12 +232,8 @@ Texture Texture::fromResource(const Resource &resource, TextureType type,
             throw std::runtime_error(
                 "Border color values must be between 0 and 1");
         }
-        float borderColorArr[4] = {static_cast<float>(borderColor.r),
-                                   static_cast<float>(borderColor.g),
-                                   static_cast<float>(borderColor.b),
-                                   static_cast<float>(borderColor.a)};
-        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR,
-                         borderColorArr);
+
+        opalTexture->changeBorderColor(borderColor.toGlm());
     }
 
     int width, height, channels;
@@ -252,19 +251,19 @@ Texture Texture::fromResource(const Resource &resource, TextureType type,
 
         creationData = TextureCreationData{width, height, channels};
 
-        GLenum internalFormat = GL_RGB16F;
-        GLenum dataFormat = GL_RGB;
+        opal::TextureFormat internalFormat = opal::TextureFormat::Rgb16F;
+        opal::TextureDataFormat dataFormat = opal::TextureDataFormat::Rgba;
         if (channels == 1) {
-            internalFormat = GL_R16F;
-            dataFormat = GL_RED;
+            internalFormat = opal::TextureFormat::Red16F;
+            dataFormat = opal::TextureDataFormat::Red;
         } else if (channels == 4) {
-            internalFormat = GL_RGBA16F;
-            dataFormat = GL_RGBA;
+            internalFormat = opal::TextureFormat::Rgba16F;
+            dataFormat = opal::TextureDataFormat::Rgba;
         }
 
-        glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0,
-                     dataFormat, GL_FLOAT, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
+        opalTexture->changeFormat(internalFormat);
+        opalTexture->updateData(data, width, height, dataFormat);
+        opalTexture->automaticallyGenerateMipmaps();
 
         stbi_image_free(data);
     } else {
@@ -277,67 +276,78 @@ Texture Texture::fromResource(const Resource &resource, TextureType type,
 
         creationData = TextureCreationData{width, height, channels};
 
-        glTexImage2D(GL_TEXTURE_2D, 0,
-                     channels == 4 ? GL_SRGB8_ALPHA8
-                                   : (channels == 3 ? GL_SRGB8 : GL_R8),
-                     width, height, 0,
-                     channels == 4 ? GL_RGBA
-                                   : (channels == 3 ? GL_RGB : GL_RED),
-                     GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
+        opalTexture->changeFormat(
+            channels == 4 ? opal::TextureFormat::sRgba8
+                          : (channels == 3 ? opal::TextureFormat::sRgb8
+                                           : opal::TextureFormat::Red8));
+
+        opal::TextureDataFormat dataFormat = opal::TextureDataFormat::Rgba;
+        if (channels == 1) {
+            dataFormat = opal::TextureDataFormat::Red;
+        } else if (channels == 3) {
+            dataFormat = opal::TextureDataFormat::Rgb;
+        }
+        opalTexture->updateData(data, width, height, dataFormat);
+        opalTexture->automaticallyGenerateMipmaps();
 
         stbi_image_free(data);
     }
 
-    Texture texture{resource, creationData, textureId, type, borderColor};
+    Texture texture{resource,    creationData, opalTexture->textureID,
+                    opalTexture, type,         borderColor};
     return texture;
 }
 
-void Texture::applyWrappingMode(TextureWrappingMode mode, Id glAxis) {
+void Texture::applyWrappingMode(TextureWrappingMode mode,
+                                opal::TextureAxis axis,
+                                std::shared_ptr<opal::Texture> texture) {
     switch (mode) {
     case TextureWrappingMode::Repeat:
-        glTexParameteri(GL_TEXTURE_2D, glAxis, GL_REPEAT);
+        texture->setWrapMode(axis, opal::TextureWrapMode::Repeat);
         break;
     case TextureWrappingMode::MirroredRepeat:
-        glTexParameteri(GL_TEXTURE_2D, glAxis, GL_MIRRORED_REPEAT);
+        texture->setWrapMode(axis, opal::TextureWrapMode::MirroredRepeat);
         break;
     case TextureWrappingMode::ClampToEdge:
-        glTexParameteri(GL_TEXTURE_2D, glAxis, GL_CLAMP_TO_EDGE);
+        texture->setWrapMode(axis, opal::TextureWrapMode::ClampToEdge);
         break;
     case TextureWrappingMode::ClampToBorder:
-        glTexParameteri(GL_TEXTURE_2D, glAxis, GL_CLAMP_TO_BORDER);
+        texture->setWrapMode(axis, opal::TextureWrapMode::ClampToBorder);
         break;
     default:
         throw std::runtime_error("Unknown wrapping mode");
     }
 }
 
-void Texture::applyFilteringMode(TextureFilteringMode mode, bool isMinifying) {
-    if (isMinifying) {
-        switch (mode) {
-        case TextureFilteringMode::Nearest:
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                            GL_NEAREST_MIPMAP_NEAREST);
-            break;
-        case TextureFilteringMode::Linear:
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                            GL_LINEAR_MIPMAP_LINEAR);
-            break;
-        default:
-            throw std::runtime_error("Unknown filtering mode");
-        }
-    } else {
-        switch (mode) {
-        case TextureFilteringMode::Nearest:
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            break;
-        case TextureFilteringMode::Linear:
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            break;
-        default:
-            throw std::runtime_error("Unknown filtering mode");
-        }
+void Texture::applyFilteringModes(TextureFilteringMode minMode,
+                                  TextureFilteringMode magMode,
+                                  std::shared_ptr<opal::Texture> texture) {
+    opal::TextureFilterMode opalMinMode;
+    opal::TextureFilterMode opalMagMode;
+
+    switch (minMode) {
+    case TextureFilteringMode::Nearest:
+        opalMinMode = opal::TextureFilterMode::Nearest;
+        break;
+    case TextureFilteringMode::Linear:
+        opalMinMode = opal::TextureFilterMode::Linear;
+        break;
+    default:
+        throw std::runtime_error("Unknown minifying filter mode");
     }
+
+    switch (magMode) {
+    case TextureFilteringMode::Nearest:
+        opalMagMode = opal::TextureFilterMode::Nearest;
+        break;
+    case TextureFilteringMode::Linear:
+        opalMagMode = opal::TextureFilterMode::Linear;
+        break;
+    default:
+        throw std::runtime_error("Unknown magnifying filter mode");
+    }
+
+    texture->setFilterMode(opalMinMode, opalMagMode);
 }
 
 Cubemap Cubemap::fromResourceGroup(ResourceGroup &group) {
@@ -606,11 +616,11 @@ void Skybox::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
 
     CoreObject *obj = this->object.get();
 
+    commandBuffer->bindPipeline(obj->pipeline);
+
     glDepthFunc(GL_LEQUAL);
     glDepthMask(GL_FALSE);
     glDisable(GL_CULL_FACE);
-
-    glUseProgram(obj->shaderProgram.programId);
 
     obj->shaderProgram.setUniformMat4f("view", view);
 
@@ -662,6 +672,7 @@ void Skybox::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
     }
 
     commandBuffer->bindDrawingState(obj->vao);
+    commandBuffer->bindPipeline(obj->pipeline);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap.id);
     commandBuffer->drawIndexed(static_cast<unsigned int>(obj->indices.size()),

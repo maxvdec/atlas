@@ -175,6 +175,7 @@ struct Texture {
      *
      */
     Id id;
+    std::shared_ptr<opal::Texture> texture;
     /**
      * @brief The type of the texture (e.g., Color, Specular, Cubemap).
      *
@@ -279,8 +280,12 @@ struct Texture {
                                     Color borderColor = {0, 0, 0, 0});
 
   private:
-    static void applyWrappingMode(TextureWrappingMode mode, Id glAxis);
-    static void applyFilteringMode(TextureFilteringMode mode, bool isMinifying);
+    static void applyWrappingMode(TextureWrappingMode mode,
+                                  opal::TextureAxis axis,
+                                  std::shared_ptr<opal::Texture> texture);
+    static void applyFilteringModes(TextureFilteringMode minMode,
+                                    TextureFilteringMode magMode,
+                                    std::shared_ptr<opal::Texture> texture);
 };
 
 /**
