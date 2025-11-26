@@ -9,6 +9,7 @@
 
 #include "opal/opal.h"
 #include <memory>
+#include <stdexcept>
 #include <vector>
 
 namespace opal {
@@ -228,6 +229,11 @@ void Pipeline::build() {
 
 void Pipeline::bind() {
 #ifdef OPENGL
+    if (this->shaderProgram == nullptr) {
+        throw std::runtime_error(
+            "Pipeline::bind() called but no shader program is set. "
+            "Call setShaderProgram() or refreshPipeline() first.");
+    }
     glUseProgram(this->shaderProgram->programID);
 
     glViewport(this->viewportX, this->viewportY, this->viewportWidth,

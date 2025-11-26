@@ -288,7 +288,9 @@ void CoreObject::initialize() {
 
     vao->setBuffers(vbo, ebo);
 
-    this->pipeline = opal::Pipeline::create();
+    if (this->pipeline == nullptr) {
+        this->pipeline = opal::Pipeline::create();
+    }
 
     std::vector<LayoutDescriptor> layoutDescriptors =
         CoreVertex::getLayoutDescriptors();
@@ -816,6 +818,8 @@ CoreObject CoreObject::clone() const {
     newObject.vbo = nullptr;
     newObject.ebo = nullptr;
     newObject.instanceVBO = nullptr;
+    newObject.shaderProgram = this->shaderProgram;
+    newObject.pipeline = this->pipeline;
 
     newObject.initialize();
 
