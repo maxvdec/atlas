@@ -31,7 +31,8 @@ constexpr GLenum glDataFormatTable[] = {
 };
 
 constexpr GLenum glTextureTypeTable[] = {GL_TEXTURE_2D, GL_TEXTURE_CUBE_MAP,
-                                         GL_TEXTURE_3D, GL_TEXTURE_2D_ARRAY};
+                                         GL_TEXTURE_3D, GL_TEXTURE_2D_ARRAY,
+                                         GL_TEXTURE_2D_MULTISAMPLE};
 
 constexpr GLenum glWrapModeTable[] = {GL_REPEAT, GL_MIRRORED_REPEAT,
                                       GL_CLAMP_TO_EDGE, GL_CLAMP_TO_BORDER};
@@ -253,6 +254,66 @@ void Pipeline::bindTextureCubemap(const std::string &name, uint textureId,
     glBindTexture(GL_TEXTURE_CUBE_MAP, textureId);
     int location = glGetUniformLocation(shaderProgram->programID, name.c_str());
     glUniform1i(location, unit);
+#endif
+}
+
+std::shared_ptr<Texture> Texture::createMultisampled(TextureFormat format,
+                                                     int width, int height,
+                                                     int samples) {
+#ifdef OPENGL
+    auto texture = std::make_shared<Texture>();
+    texture->type = TextureType::Texture2DMultisample;
+    texture->format = format;
+    texture->width = width;
+    texture->height = height;
+    texture->samples = samples;
+
+    const GLenum glFormat = getGLInternalFormat(format);
+    texture->glType = GL_TEXTURE_2D_MULTISAMPLE;
+    texture->glFormat = glFormat;
+
+    glGenTextures(1, &texture->textureID);
+    glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, texture->textureID);
+    glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, glFormat, width,
+                            height, GL_TRUE);
+
+    return texture;
+#else
+    return nullptr;
+#endif
+}
+
+std::shared_ptr<Texture> Texture::createDepthCubemap(TextureFormat format,
+                                                     int resolution) {
+#ifdef OPENGL
+    auto texture = std::make_shared<Texture>();
+    texture->type = TextureType::TextureCubeMap;
+    texture->format = format;
+    texture->width = resolution;
+    texture->height = resolution;
+
+    const GLenum glFormat = getGLInternalFormat(format);
+    texture->glType = GL_TEXTURE_CUBE_MAP;
+    texture->glFormat = glFormat;
+
+    glGenTextures(1, &texture->textureID);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, texture->textureID);
+
+    for (unsigned int i = 0; i < 6; ++i) {
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, glFormat,
+                     resolution, resolution, 0, GL_DEPTH_COMPONENT, GL_FLOAT,
+                     nullptr);
+    }
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    return texture;
+#else
+    return nullptr;
 #endif
 }
 

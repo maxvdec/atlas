@@ -36,7 +36,8 @@ void Window::deferredRendering(
         }
     }
 
-    glBindFramebuffer(GL_FRAMEBUFFER, this->gBuffer->fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER,
+                      this->gBuffer->getFramebuffer()->framebufferID);
     glViewport(0, 0, this->gBuffer->getWidth(), this->gBuffer->getHeight());
     deferredPipeline->setViewport(0, 0, this->gBuffer->getWidth(),
                                   this->gBuffer->getHeight());
@@ -66,7 +67,7 @@ void Window::deferredRendering(
     target->resolve();
     this->renderSSAO();
 
-    glBindFramebuffer(GL_FRAMEBUFFER, target->fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, target->getFramebuffer()->framebufferID);
     glViewport(0, 0, target->getWidth(), target->getHeight());
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -388,7 +389,8 @@ void Window::deferredRendering(
 
         target->resolve();
 
-        glBindFramebuffer(GL_FRAMEBUFFER, volumetricBuffer->fbo);
+        glBindFramebuffer(GL_FRAMEBUFFER,
+                          volumetricBuffer->getFramebuffer()->framebufferID);
         glViewport(0, 0, volumetricBuffer->getWidth(),
                    volumetricBuffer->getHeight());
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -437,7 +439,8 @@ void Window::deferredRendering(
     if (this->ssrFramebuffer != nullptr && useSSR) {
         target->resolve();
 
-        glBindFramebuffer(GL_FRAMEBUFFER, ssrFramebuffer->fbo);
+        glBindFramebuffer(GL_FRAMEBUFFER,
+                          ssrFramebuffer->getFramebuffer()->framebufferID);
         glViewport(0, 0, ssrFramebuffer->getWidth(),
                    ssrFramebuffer->getHeight());
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);

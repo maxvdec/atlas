@@ -12,6 +12,14 @@
 
 namespace opal {
 
+std::shared_ptr<RenderPass> RenderPass::create() {
+    return std::make_shared<RenderPass>();
+}
+
+void RenderPass::setFramebuffer(std::shared_ptr<Framebuffer> framebuffer) {
+    this->framebuffer = framebuffer;
+}
+
 std::shared_ptr<Framebuffer> Framebuffer::create(int width, int height) {
     auto framebuffer = std::make_shared<Framebuffer>();
     framebuffer->width = width;
@@ -48,6 +56,56 @@ void Framebuffer::addAttachment(const Attachment &attachment) {
     glFramebufferTexture2D(GL_FRAMEBUFFER, attachmentType,
                            attachment.texture->glType,
                            attachment.texture->textureID, 0);
+    attachments.push_back(attachment);
+#endif
+}
+
+void Framebuffer::attachCubemap(std::shared_ptr<Texture> texture,
+                                Attachment::Type attachmentType) {
+#ifdef OPENGL
+    glBindFramebuffer(GL_FRAMEBUFFER, framebufferID);
+    GLenum glAttachmentType;
+    switch (attachmentType) {
+    case Attachment::Type::Depth:
+        glAttachmentType = GL_DEPTH_ATTACHMENT;
+        break;
+    case Attachment::Type::Color:
+        glAttachmentType =
+            GL_COLOR_ATTACHMENT0 + static_cast<GLenum>(attachments.size());
+        break;
+    default:
+        glAttachmentType = GL_DEPTH_ATTACHMENT;
+        break;
+    }
+    // Use glFramebufferTexture for cubemaps (attaches all 6 faces)
+    glFramebufferTexture(GL_FRAMEBUFFER, glAttachmentType, texture->textureID,
+                         0);
+
+    Attachment att;
+    att.type = attachmentType;
+    att.texture = texture;
+    attachments.push_back(att);
+#endif
+}
+
+void Framebuffer::disableColorBuffer() {
+#ifdef OPENGL
+    glBindFramebuffer(GL_FRAMEBUFFER, framebufferID);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+    colorBufferDisabled = true;
+#endif
+}
+
+void Framebuffer::setViewport() {
+#ifdef OPENGL
+    glViewport(0, 0, width, height);
+#endif
+}
+
+void Framebuffer::setViewport(int x, int y, int viewWidth, int viewHeight) {
+#ifdef OPENGL
+    glViewport(x, y, viewWidth, viewHeight);
 #endif
 }
 
@@ -64,12 +122,15 @@ bool Framebuffer::getStatus() const {
 void Framebuffer::bind() {
 #ifdef OPENGL
     glBindFramebuffer(GL_FRAMEBUFFER, framebufferID);
-    if (attachments.size() > 0) {
+    if (colorBufferDisabled) {
+        glDrawBuffer(GL_NONE);
+        glReadBuffer(GL_NONE);
+    } else if (attachments.size() > 0) {
         std::vector<GLenum> drawBuffers;
         for (size_t i = 0; i < attachments.size(); ++i) {
             if (attachments[i].type == Attachment::Type::Color) {
                 drawBuffers.push_back(GL_COLOR_ATTACHMENT0 +
-                                      static_cast<GLenum>(i));
+                                      static_cast<GLenum>(drawBuffers.size()));
             }
         }
         if (drawBuffers.empty()) {
@@ -108,6 +169,33 @@ ResolveAction::create(std::shared_ptr<Framebuffer> source,
     auto action = std::make_shared<ResolveAction>();
     action->source = source;
     action->destination = destination;
+    action->colorAttachmentIndex = -1;
+    action->resolveColor = true;
+    action->resolveDepth = true;
+    return action;
+}
+
+std::shared_ptr<ResolveAction> ResolveAction::createForColorAttachment(
+    std::shared_ptr<Framebuffer> source,
+    std::shared_ptr<Framebuffer> destination, int colorAttachmentIndex) {
+    auto action = std::make_shared<ResolveAction>();
+    action->source = source;
+    action->destination = destination;
+    action->colorAttachmentIndex = colorAttachmentIndex;
+    action->resolveColor = true;
+    action->resolveDepth = false;
+    return action;
+}
+
+std::shared_ptr<ResolveAction>
+ResolveAction::createForDepth(std::shared_ptr<Framebuffer> source,
+                              std::shared_ptr<Framebuffer> destination) {
+    auto action = std::make_shared<ResolveAction>();
+    action->source = source;
+    action->destination = destination;
+    action->colorAttachmentIndex = -1;
+    action->resolveColor = false;
+    action->resolveDepth = true;
     return action;
 }
 
@@ -115,9 +203,32 @@ void CommandBuffer::performResolve(std::shared_ptr<ResolveAction> action) {
 #ifdef OPENGL
     glBindFramebuffer(GL_READ_FRAMEBUFFER, action->source->framebufferID);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, action->destination->framebufferID);
-    glBlitFramebuffer(0, 0, action->source->width, action->source->height, 0, 0,
-                      action->destination->width, action->destination->height,
-                      GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+
+    GLbitfield mask = 0;
+
+    if (action->resolveColor) {
+        if (action->colorAttachmentIndex >= 0) {
+            // Resolve specific color attachment
+            glReadBuffer(GL_COLOR_ATTACHMENT0 + action->colorAttachmentIndex);
+            glDrawBuffer(GL_COLOR_ATTACHMENT0 + action->colorAttachmentIndex);
+            mask |= GL_COLOR_BUFFER_BIT;
+        } else {
+            // Resolve all color attachments
+            mask |= GL_COLOR_BUFFER_BIT;
+        }
+    }
+
+    if (action->resolveDepth) {
+        mask |= GL_DEPTH_BUFFER_BIT;
+    }
+
+    if (mask != 0) {
+        glBlitFramebuffer(0, 0, action->source->width, action->source->height,
+                          0, 0, action->destination->width,
+                          action->destination->height, mask, GL_NEAREST);
+    }
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 #endif
 }
 

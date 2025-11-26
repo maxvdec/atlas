@@ -76,4 +76,13 @@ Device::acquire([[maybe_unused]] std::shared_ptr<Context> context) {
 #endif
 }
 
+std::shared_ptr<Framebuffer> Device::getDefaultFramebuffer() {
+    // Return a framebuffer that represents the default (screen) framebuffer
+    auto fb = std::make_shared<Framebuffer>();
+    fb->framebufferID = 0; // Default framebuffer ID is 0
+    fb->width = 0;
+    fb->height = 0;
+    return fb;
+}
+
 } // namespace opal

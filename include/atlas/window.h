@@ -22,6 +22,7 @@
 #include "opal/opal.h"
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
+#include <array>
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -616,8 +617,8 @@ class Window {
     bool clipPlaneEnabled = false;
     glm::vec4 clipPlaneEquation{0.0f};
 
-    unsigned int pingpongFBOs[2] = {0, 0};
-    unsigned int pingpongBuffers[2] = {0, 0};
+    std::array<std::shared_ptr<opal::Framebuffer>, 2> pingpongFramebuffers;
+    std::array<std::shared_ptr<opal::Texture>, 2> pingpongTextures;
     int pingpongWidth = 0;
     int pingpongHeight = 0;
 

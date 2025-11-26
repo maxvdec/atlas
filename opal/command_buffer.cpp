@@ -17,6 +17,12 @@ std::shared_ptr<CommandBuffer> Device::acquireCommandBuffer() {
     return commandBuffer;
 }
 
+void CommandBuffer::start() {
+    // Reset state for a new command recording session
+    boundPipeline = nullptr;
+    boundDrawingState = nullptr;
+}
+
 void Device::submitCommandBuffer(
     [[maybe_unused]] std::shared_ptr<CommandBuffer> commandBuffer) {}
 
