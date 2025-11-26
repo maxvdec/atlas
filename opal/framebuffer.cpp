@@ -122,7 +122,10 @@ bool Framebuffer::getStatus() const {
 void Framebuffer::bind() {
 #ifdef OPENGL
     glBindFramebuffer(GL_FRAMEBUFFER, framebufferID);
-    if (colorBufferDisabled) {
+    if (framebufferID == 0) {
+        // Default framebuffer - draw to back buffer
+        glDrawBuffer(GL_BACK);
+    } else if (colorBufferDisabled) {
         glDrawBuffer(GL_NONE);
         glReadBuffer(GL_NONE);
     } else if (attachments.size() > 0) {
