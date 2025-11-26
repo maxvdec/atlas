@@ -263,4 +263,24 @@ void Pipeline::bindTexture(const std::string &name,
 #endif
 }
 
+void Pipeline::bindTexture2D(const std::string &name, uint textureId,
+                             int unit) {
+#ifdef OPENGL
+    glActiveTexture(GL_TEXTURE0 + unit);
+    glBindTexture(GL_TEXTURE_2D, textureId);
+    int location = glGetUniformLocation(shaderProgram->programID, name.c_str());
+    glUniform1i(location, unit);
+#endif
+}
+
+void Pipeline::bindTextureCubemap(const std::string &name, uint textureId,
+                                  int unit) {
+#ifdef OPENGL
+    glActiveTexture(GL_TEXTURE0 + unit);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, textureId);
+    int location = glGetUniformLocation(shaderProgram->programID, name.c_str());
+    glUniform1i(location, unit);
+#endif
+}
+
 } // namespace opal

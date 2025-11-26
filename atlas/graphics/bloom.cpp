@@ -143,13 +143,17 @@ unsigned int BloomRenderTarget::getBloomTexture() {
 }
 
 void BloomRenderTarget::renderDownsamples(unsigned int srcTexture) {
-    glUseProgram(downsampleProgram.programId);
-    downsampleProgram.setUniform2f("srcResolution", srcViewportSizef.x,
-                                   srcViewportSizef.y);
+    // Get or create pipeline for downsample
+    static std::shared_ptr<opal::Pipeline> downsamplePipeline = nullptr;
+    if (downsamplePipeline == nullptr) {
+        downsamplePipeline = opal::Pipeline::create();
+    }
+    downsamplePipeline = downsampleProgram.requestPipeline(downsamplePipeline);
+    downsamplePipeline->bind();
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, srcTexture);
-    downsampleProgram.setUniform1i("srcTexture", 0);
+    downsamplePipeline->setUniform2f("srcResolution", srcViewportSizef.x,
+                                     srcViewportSizef.y);
+    downsamplePipeline->bindTexture2D("srcTexture", srcTexture, 0);
 
     for (size_t i = 0; i < elements.size(); i++) {
         const BloomElement &element = elements[i];
@@ -161,15 +165,22 @@ void BloomRenderTarget::renderDownsamples(unsigned int srcTexture) {
         glDrawArrays(GL_TRIANGLES, 0, 6);
         quadState->unbind();
 
-        downsampleProgram.setUniform2f("srcResolution", element.size.x,
-                                       element.size.y);
-        glBindTexture(GL_TEXTURE_2D, element.textureId);
+        downsamplePipeline->setUniform2f("srcResolution", element.size.x,
+                                         element.size.y);
+        downsamplePipeline->bindTexture2D("srcTexture", element.textureId, 0);
     }
 }
 
 void BloomRenderTarget::renderUpsamples(float filterRadius) {
-    glUseProgram(upsampleProgram.programId);
-    upsampleProgram.setUniform1f("filterRadius", filterRadius);
+    // Get or create pipeline for upsample
+    static std::shared_ptr<opal::Pipeline> upsamplePipeline = nullptr;
+    if (upsamplePipeline == nullptr) {
+        upsamplePipeline = opal::Pipeline::create();
+    }
+    upsamplePipeline = upsampleProgram.requestPipeline(upsamplePipeline);
+    upsamplePipeline->bind();
+
+    upsamplePipeline->setUniform1f("filterRadius", filterRadius);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE);
@@ -179,12 +190,9 @@ void BloomRenderTarget::renderUpsamples(float filterRadius) {
         const BloomElement &element = elements[i];
         const BloomElement &nextElement = elements[i - 1];
 
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, element.textureId);
-        upsampleProgram.setUniform1i("srcTexture", 0);
-
-        upsampleProgram.setUniform2f("srcResolution", element.size.x,
-                                     element.size.y);
+        upsamplePipeline->bindTexture2D("srcTexture", element.textureId, 0);
+        upsamplePipeline->setUniform2f("srcResolution", element.size.x,
+                                       element.size.y);
 
         glViewport(0, 0, nextElement.size.x, nextElement.size.y);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,

@@ -108,87 +108,81 @@ void Fluid::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
 
     glDisable(GL_CULL_FACE);
 
-    glUseProgram(fluidShader.programId);
-    fluidShader.setUniformMat4f("model", modelMatrix);
-    fluidShader.setUniformMat4f("view", viewMatrix);
-    fluidShader.setUniformMat4f("projection", projectionMatrix);
-    fluidShader.setUniform4f("waterColor", color.r, color.g, color.b, color.a);
+    static std::shared_ptr<opal::Pipeline> fluidPipeline = nullptr;
+    if (fluidPipeline == nullptr) {
+        fluidPipeline = opal::Pipeline::create();
+    }
+    fluidPipeline = fluidShader.requestPipeline(fluidPipeline);
+    fluidPipeline->bind();
+
+    fluidPipeline->setUniformMat4f("model", modelMatrix);
+    fluidPipeline->setUniformMat4f("view", viewMatrix);
+    fluidPipeline->setUniformMat4f("projection", projectionMatrix);
+    fluidPipeline->setUniform4f("waterColor", color.r, color.g, color.b,
+                                color.a);
 
     RenderTarget *target = Window::mainWindow->currentRenderTarget;
     if (target == nullptr) {
         return;
     }
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, target->texture.id);
-    fluidShader.setUniform1i("sceneTexture", 0);
-
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, target->depthTexture.id);
-    fluidShader.setUniform1i("sceneDepth", 1);
+    fluidPipeline->bindTexture2D("sceneTexture", target->texture.id, 0);
+    fluidPipeline->bindTexture2D("sceneDepth", target->depthTexture.id, 1);
 
     if (reflectionTarget) {
-        glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, reflectionTarget->texture.id);
-        fluidShader.setUniform1i("reflectionTexture", 3);
+        fluidPipeline->bindTexture2D("reflectionTexture",
+                                     reflectionTarget->texture.id, 3);
     } else {
-        glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, target->texture.id);
-        fluidShader.setUniform1i("reflectionTexture", 3);
+        fluidPipeline->bindTexture2D("reflectionTexture", target->texture.id,
+                                     3);
     }
 
     if (refractionTarget) {
-        glActiveTexture(GL_TEXTURE4);
-        glBindTexture(GL_TEXTURE_2D, refractionTarget->texture.id);
-        fluidShader.setUniform1i("refractionTexture", 4);
+        fluidPipeline->bindTexture2D("refractionTexture",
+                                     refractionTarget->texture.id, 4);
     } else {
-        glActiveTexture(GL_TEXTURE4);
-        glBindTexture(GL_TEXTURE_2D, target->texture.id);
-        fluidShader.setUniform1i("refractionTexture", 4);
+        fluidPipeline->bindTexture2D("refractionTexture", target->texture.id,
+                                     4);
     }
 
-    fluidShader.setUniform1i("movementTexture", 5);
-    glActiveTexture(GL_TEXTURE5);
-    glBindTexture(GL_TEXTURE_2D, movementTexture.id);
+    fluidPipeline->bindTexture2D("movementTexture", movementTexture.id, 5);
     if (movementTexture.id == 0) {
-        fluidShader.setUniform1i("hasMovementTexture", 0);
+        fluidPipeline->setUniform1i("hasMovementTexture", 0);
     } else {
-        fluidShader.setUniform1i("hasMovementTexture", 1);
+        fluidPipeline->setUniform1i("hasMovementTexture", 1);
     }
 
-    fluidShader.setUniform1i("normalTexture", 6);
-    glActiveTexture(GL_TEXTURE6);
-    glBindTexture(GL_TEXTURE_2D, normalTexture.id);
-    fluidShader.setUniform1i("hasNormalTexture", normalTexture.id != 0);
+    fluidPipeline->bindTexture2D("normalTexture", normalTexture.id, 6);
+    fluidPipeline->setUniform1i("hasNormalTexture", normalTexture.id != 0);
 
-    fluidShader.setUniform3f("cameraPos",
-                             Window::mainWindow->getCamera()->position.x,
-                             Window::mainWindow->getCamera()->position.y,
-                             Window::mainWindow->getCamera()->position.z);
+    fluidPipeline->setUniform3f("cameraPos",
+                                Window::mainWindow->getCamera()->position.x,
+                                Window::mainWindow->getCamera()->position.y,
+                                Window::mainWindow->getCamera()->position.z);
 
-    fluidShader.setUniform3f("waterNormal", 0.0f, 1.0f, 0.0f);
-    fluidShader.setUniform1f("time", dt);
-    fluidShader.setUniform1f("refractionStrength", 0.5f);
-    fluidShader.setUniform1f("reflectionStrength", 0.5f);
-    fluidShader.setUniform1f("depthFade", 0.1f);
+    fluidPipeline->setUniform3f("waterNormal", 0.0f, 1.0f, 0.0f);
+    fluidPipeline->setUniform1f("time", dt);
+    fluidPipeline->setUniform1f("refractionStrength", 0.5f);
+    fluidPipeline->setUniform1f("reflectionStrength", 0.5f);
+    fluidPipeline->setUniform1f("depthFade", 0.1f);
 
     DirectionalLight *primaryLight =
         Window::mainWindow->getCurrentScene()->directionalLights[0];
 
-    fluidShader.setUniform3f("lightDirection", primaryLight->direction.x,
-                             primaryLight->direction.y,
-                             primaryLight->direction.z);
+    fluidPipeline->setUniform3f("lightDirection", primaryLight->direction.x,
+                                primaryLight->direction.y,
+                                primaryLight->direction.z);
 
-    fluidShader.setUniform3f("lightColor", primaryLight->color.r,
-                             primaryLight->color.g, primaryLight->color.b);
-    fluidShader.setUniform3f(
+    fluidPipeline->setUniform3f("lightColor", primaryLight->color.r,
+                                primaryLight->color.g, primaryLight->color.b);
+    fluidPipeline->setUniform3f(
         "windForce", Window::mainWindow->getCurrentScene()->atmosphere.wind.x,
         Window::mainWindow->getCurrentScene()->atmosphere.wind.y,
         Window::mainWindow->getCurrentScene()->atmosphere.wind.z);
 
-    fluidShader.setUniformMat4f("invProjection",
-                                glm::inverse(projectionMatrix));
-    fluidShader.setUniformMat4f("invView", glm::inverse(viewMatrix));
+    fluidPipeline->setUniformMat4f("invProjection",
+                                   glm::inverse(projectionMatrix));
+    fluidPipeline->setUniformMat4f("invView", glm::inverse(viewMatrix));
 
     commandBuffer->bindDrawingState(drawingState);
     commandBuffer->drawIndexed(static_cast<unsigned int>(indices.size()), 1, 0,

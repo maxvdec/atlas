@@ -397,19 +397,16 @@ void CoreObject::render(float dt,
     if (this->pipeline != nullptr) {
         this->pipeline->bind();
     } else {
-        int currentProgram;
-        glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
-        if (static_cast<Id>(currentProgram) != shaderProgram.programId) {
-            glUseProgram(shaderProgram.programId);
-        }
+        throw std::runtime_error(
+            "Pipeline not created - call refreshPipeline() first");
     }
 
-    shaderProgram.setUniformMat4f("model", model);
-    shaderProgram.setUniformMat4f("view", view);
-    shaderProgram.setUniformMat4f("projection", projection);
+    this->pipeline->setUniformMat4f("model", model);
+    this->pipeline->setUniformMat4f("view", view);
+    this->pipeline->setUniformMat4f("projection", projection);
 
-    shaderProgram.setUniform1i("useColor", useColor ? 1 : 0);
-    shaderProgram.setUniform1i("useTexture", useTexture ? 1 : 0);
+    this->pipeline->setUniform1i("useColor", useColor ? 1 : 0);
+    this->pipeline->setUniform1i("useTexture", useTexture ? 1 : 0);
 
     int boundTextures = 0;
     int boundCubemaps = 0;
@@ -421,43 +418,30 @@ void CoreObject::render(float dt,
         shaderProgram.capabilities.end();
 
     if (shaderSupportsTextures) {
-        shaderProgram.setUniform1i("textureCount", 0);
-        shaderProgram.setUniform1i("cubeMapCount", 0);
+        this->pipeline->setUniform1i("textureCount", 0);
+        this->pipeline->setUniform1i("cubeMapCount", 0);
     }
 
     if (!textures.empty() && useTexture && shaderSupportsTextures) {
         int count = std::min((int)textures.size(), 10);
-        shaderProgram.setUniform1i("textureCount", count);
-        GLint units[10];
-        for (int i = 0; i < count; i++)
-            units[i] = i;
+        this->pipeline->setUniform1i("textureCount", count);
 
         for (int i = 0; i < count; i++) {
             std::string uniformName = "texture" + std::to_string(i + 1) + "";
-            shaderProgram.setUniform1i(uniformName, i);
+            this->pipeline->bindTexture2D(uniformName, textures[i].id, i);
+            boundTextures++;
         }
 
-        GLint cubeMapUnits[5];
-        for (int i = 0; i < 5; i++)
-            cubeMapUnits[i] = 10 + i;
-        shaderProgram.setUniform1i("cubeMapCount", 5);
+        this->pipeline->setUniform1i("cubeMapCount", 5);
         for (int i = 0; i < 5; i++) {
             std::string uniformName = "cubeMap" + std::to_string(i + 1) + "";
-            shaderProgram.setUniform1i(uniformName, i + 10);
+            this->pipeline->setUniform1i(uniformName, i + 10);
         }
 
-        GLint textureTypes[10];
-        for (int i = 0; i < count; i++)
-            textureTypes[i] = static_cast<int>(textures[i].type);
         for (int i = 0; i < count; i++) {
             std::string uniformName = "textureTypes[" + std::to_string(i) + "]";
-            shaderProgram.setUniform1i(uniformName, textureTypes[i]);
-        }
-
-        for (int i = 0; i < count; i++) {
-            glActiveTexture(GL_TEXTURE0 + i);
-            glBindTexture(GL_TEXTURE_2D, textures[i].id);
-            boundTextures++;
+            this->pipeline->setUniform1i(uniformName,
+                                         static_cast<int>(textures[i].type));
         }
     }
 
@@ -466,11 +450,11 @@ void CoreObject::render(float dt,
                   ShaderCapability::Material) !=
         shaderProgram.capabilities.end()) {
         // Set material properties
-        shaderProgram.setUniform3f("material.albedo", material.albedo.r,
-                                   material.albedo.g, material.albedo.b);
-        shaderProgram.setUniform1f("material.metallic", material.metallic);
-        shaderProgram.setUniform1f("material.roughness", material.roughness);
-        shaderProgram.setUniform1f("material.ao", material.ao);
+        this->pipeline->setUniform3f("material.albedo", material.albedo.r,
+                                     material.albedo.g, material.albedo.b);
+        this->pipeline->setUniform1f("material.metallic", material.metallic);
+        this->pipeline->setUniform1f("material.roughness", material.roughness);
+        this->pipeline->setUniform1f("material.ao", material.ao);
     }
 
     const bool shaderSupportsIbl =
@@ -484,7 +468,7 @@ void CoreObject::render(float dt,
         });
 
     const bool useIbl = shaderSupportsIbl && hasHdrEnvironment;
-    shaderProgram.setUniformBool("useIBL", useIbl);
+    this->pipeline->setUniformBool("useIBL", useIbl);
 
     if (std::find(shaderProgram.capabilities.begin(),
                   shaderProgram.capabilities.end(),
@@ -500,117 +484,118 @@ void CoreObject::render(float dt,
             ambientColor = scene->getAutomaticAmbientColor();
             ambientIntensity = scene->getAutomaticAmbientIntensity();
         }
-        shaderProgram.setUniform4f("ambientLight.color",
-                                   static_cast<float>(ambientColor.r),
-                                   static_cast<float>(ambientColor.g),
-                                   static_cast<float>(ambientColor.b), 1.0f);
-        shaderProgram.setUniform1f("ambientLight.intensity",
-                                   ambientIntensity / 2.0f);
+        this->pipeline->setUniform4f("ambientLight.color",
+                                     static_cast<float>(ambientColor.r),
+                                     static_cast<float>(ambientColor.g),
+                                     static_cast<float>(ambientColor.b), 1.0f);
+        this->pipeline->setUniform1f("ambientLight.intensity",
+                                     ambientIntensity / 2.0f);
 
         // Set camera position
-        shaderProgram.setUniform3f(
+        this->pipeline->setUniform3f(
             "cameraPosition", window->getCamera()->position.x,
             window->getCamera()->position.y, window->getCamera()->position.z);
 
         // Send directional lights
         int dirLightCount = std::min((int)scene->directionalLights.size(), 256);
-        shaderProgram.setUniform1i("directionalLightCount", dirLightCount);
+        this->pipeline->setUniform1i("directionalLightCount", dirLightCount);
 
         for (int i = 0; i < dirLightCount; i++) {
             DirectionalLight *light = scene->directionalLights[i];
             std::string baseName =
                 "directionalLights[" + std::to_string(i) + "]";
-            shaderProgram.setUniform3f(baseName + ".direction",
-                                       light->direction.x, light->direction.y,
-                                       light->direction.z);
-            shaderProgram.setUniform3f(baseName + ".diffuse", light->color.r,
-                                       light->color.g, light->color.b);
-            shaderProgram.setUniform3f(baseName + ".specular",
-                                       light->shineColor.r, light->shineColor.g,
-                                       light->shineColor.b);
+            this->pipeline->setUniform3f(baseName + ".direction",
+                                         light->direction.x, light->direction.y,
+                                         light->direction.z);
+            this->pipeline->setUniform3f(baseName + ".diffuse", light->color.r,
+                                         light->color.g, light->color.b);
+            this->pipeline->setUniform3f(
+                baseName + ".specular", light->shineColor.r,
+                light->shineColor.g, light->shineColor.b);
         }
 
         // Send point lights
 
         int pointLightCount = std::min((int)scene->pointLights.size(), 256);
-        shaderProgram.setUniform1i("pointLightCount", pointLightCount);
+        this->pipeline->setUniform1i("pointLightCount", pointLightCount);
 
         for (int i = 0; i < pointLightCount; i++) {
             Light *light = scene->pointLights[i];
             std::string baseName = "pointLights[" + std::to_string(i) + "]";
-            shaderProgram.setUniform3f(baseName + ".position",
-                                       light->position.x, light->position.y,
-                                       light->position.z);
-            shaderProgram.setUniform3f(baseName + ".diffuse", light->color.r,
-                                       light->color.g, light->color.b);
-            shaderProgram.setUniform3f(baseName + ".specular",
-                                       light->shineColor.r, light->shineColor.g,
-                                       light->shineColor.b);
+            this->pipeline->setUniform3f(baseName + ".position",
+                                         light->position.x, light->position.y,
+                                         light->position.z);
+            this->pipeline->setUniform3f(baseName + ".diffuse", light->color.r,
+                                         light->color.g, light->color.b);
+            this->pipeline->setUniform3f(
+                baseName + ".specular", light->shineColor.r,
+                light->shineColor.g, light->shineColor.b);
 
             PointLightConstants plc = light->calculateConstants();
-            shaderProgram.setUniform1f(baseName + ".constant", plc.constant);
-            shaderProgram.setUniform1f(baseName + ".linear", plc.linear);
-            shaderProgram.setUniform1f(baseName + ".quadratic", plc.quadratic);
-            shaderProgram.setUniform1f(baseName + ".radius", plc.radius);
+            this->pipeline->setUniform1f(baseName + ".constant", plc.constant);
+            this->pipeline->setUniform1f(baseName + ".linear", plc.linear);
+            this->pipeline->setUniform1f(baseName + ".quadratic",
+                                         plc.quadratic);
+            this->pipeline->setUniform1f(baseName + ".radius", plc.radius);
         }
 
         // Send spotlights
 
         int spotlightCount = std::min((int)scene->spotlights.size(), 256);
-        shaderProgram.setUniform1i("spotlightCount", spotlightCount);
+        this->pipeline->setUniform1i("spotlightCount", spotlightCount);
 
         for (int i = 0; i < spotlightCount; i++) {
             Spotlight *light = scene->spotlights[i];
             std::string baseName = "spotlights[" + std::to_string(i) + "]";
-            shaderProgram.setUniform3f(baseName + ".position",
-                                       light->position.x, light->position.y,
-                                       light->position.z);
-            shaderProgram.setUniform3f(baseName + ".direction",
-                                       light->direction.x, light->direction.y,
-                                       light->direction.z);
-            shaderProgram.setUniform3f(baseName + ".diffuse", light->color.r,
-                                       light->color.g, light->color.b);
-            shaderProgram.setUniform3f(baseName + ".specular",
-                                       light->shineColor.r, light->shineColor.g,
-                                       light->shineColor.b);
-            shaderProgram.setUniform1f(baseName + ".cutOff", light->cutOff);
-            shaderProgram.setUniform1f(baseName + ".outerCutOff",
-                                       light->outerCutoff);
+            this->pipeline->setUniform3f(baseName + ".position",
+                                         light->position.x, light->position.y,
+                                         light->position.z);
+            this->pipeline->setUniform3f(baseName + ".direction",
+                                         light->direction.x, light->direction.y,
+                                         light->direction.z);
+            this->pipeline->setUniform3f(baseName + ".diffuse", light->color.r,
+                                         light->color.g, light->color.b);
+            this->pipeline->setUniform3f(
+                baseName + ".specular", light->shineColor.r,
+                light->shineColor.g, light->shineColor.b);
+            this->pipeline->setUniform1f(baseName + ".cutOff", light->cutOff);
+            this->pipeline->setUniform1f(baseName + ".outerCutOff",
+                                         light->outerCutoff);
         }
 
         // Send area lights
 
         int areaLightCount = std::min((int)scene->areaLights.size(), 256);
-        shaderProgram.setUniform1i("areaLightCount", areaLightCount);
+        this->pipeline->setUniform1i("areaLightCount", areaLightCount);
 
         for (int i = 0; i < areaLightCount; i++) {
             AreaLight *light = scene->areaLights[i];
             std::string baseName = "areaLights[" + std::to_string(i) + "]";
 
-            shaderProgram.setUniform3f(baseName + ".position",
-                                       light->position.x, light->position.y,
-                                       light->position.z);
+            this->pipeline->setUniform3f(baseName + ".position",
+                                         light->position.x, light->position.y,
+                                         light->position.z);
 
-            shaderProgram.setUniform3f(baseName + ".right", light->right.x,
-                                       light->right.y, light->right.z);
+            this->pipeline->setUniform3f(baseName + ".right", light->right.x,
+                                         light->right.y, light->right.z);
 
-            shaderProgram.setUniform3f(baseName + ".up", light->up.x,
-                                       light->up.y, light->up.z);
+            this->pipeline->setUniform3f(baseName + ".up", light->up.x,
+                                         light->up.y, light->up.z);
 
-            shaderProgram.setUniform2f(baseName + ".size",
-                                       static_cast<float>(light->size.width),
-                                       static_cast<float>(light->size.height));
+            this->pipeline->setUniform2f(
+                baseName + ".size", static_cast<float>(light->size.width),
+                static_cast<float>(light->size.height));
 
-            shaderProgram.setUniform3f(baseName + ".diffuse", light->color.r,
-                                       light->color.g, light->color.b);
+            this->pipeline->setUniform3f(baseName + ".diffuse", light->color.r,
+                                         light->color.g, light->color.b);
 
-            shaderProgram.setUniform3f(baseName + ".specular",
-                                       light->shineColor.r, light->shineColor.g,
-                                       light->shineColor.b);
+            this->pipeline->setUniform3f(
+                baseName + ".specular", light->shineColor.r,
+                light->shineColor.g, light->shineColor.b);
 
-            shaderProgram.setUniform1f(baseName + ".angle", light->angle);
-            shaderProgram.setUniform1i(baseName + ".castsBothSides",
-                                       light->castsBothSides ? 1 : 0);
+            this->pipeline->setUniform1f(baseName + ".angle", light->angle);
+            this->pipeline->setUniform1i(baseName + ".castsBothSides",
+                                         light->castsBothSides ? 1 : 0);
         }
     }
 
@@ -621,24 +606,20 @@ void CoreObject::render(float dt,
         // Bind G-Buffer textures
         Window *window = Window::mainWindow;
         RenderTarget *gBuffer = window->gBuffer.get();
-        glActiveTexture(GL_TEXTURE0 + boundTextures);
-        glBindTexture(GL_TEXTURE_2D, gBuffer->gPosition.id);
-        shaderProgram.setUniform1i("gPosition", boundTextures);
+        this->pipeline->bindTexture2D("gPosition", gBuffer->gPosition.id,
+                                      boundTextures);
         boundTextures++;
 
-        glActiveTexture(GL_TEXTURE0 + boundTextures);
-        glBindTexture(GL_TEXTURE_2D, gBuffer->gNormal.id);
-        shaderProgram.setUniform1i("gNormal", boundTextures);
+        this->pipeline->bindTexture2D("gNormal", gBuffer->gNormal.id,
+                                      boundTextures);
         boundTextures++;
 
-        glActiveTexture(GL_TEXTURE0 + boundTextures);
-        glBindTexture(GL_TEXTURE_2D, gBuffer->gAlbedoSpec.id);
-        shaderProgram.setUniform1i("gAlbedoSpec", boundTextures);
+        this->pipeline->bindTexture2D("gAlbedoSpec", gBuffer->gAlbedoSpec.id,
+                                      boundTextures);
         boundTextures++;
 
-        glActiveTexture(GL_TEXTURE0 + boundTextures);
-        glBindTexture(GL_TEXTURE_2D, gBuffer->gMaterial.id);
-        shaderProgram.setUniform1i("gMaterial", boundTextures);
+        this->pipeline->bindTexture2D("gMaterial", gBuffer->gMaterial.id,
+                                      boundTextures);
         boundTextures++;
     }
 
@@ -648,7 +629,7 @@ void CoreObject::render(float dt,
         shaderProgram.capabilities.end()) {
         for (int i = 0; i < 5; i++) {
             std::string uniformName = "cubeMap" + std::to_string(i + 1);
-            shaderProgram.setUniform1i(uniformName, i + 10);
+            this->pipeline->setUniform1i(uniformName, i + 10);
         }
         // Bind shadow maps
         Scene *scene = Window::mainWindow->currentScene;
@@ -664,20 +645,19 @@ void CoreObject::render(float dt,
                 break;
             }
 
-            glActiveTexture(GL_TEXTURE0 + boundTextures);
-            glBindTexture(GL_TEXTURE_2D, light->shadowRenderTarget->texture.id);
             std::string baseName =
                 "shadowParams[" + std::to_string(boundParameters) + "]";
-            shaderProgram.setUniform1i(baseName + ".textureIndex",
-                                       boundTextures);
+            this->pipeline->bindTexture2D(baseName + ".textureIndex",
+                                          light->shadowRenderTarget->texture.id,
+                                          boundTextures);
             ShadowParams shadowParams = light->calculateLightSpaceMatrix(
                 Window::mainWindow->renderables);
-            shaderProgram.setUniformMat4f(baseName + ".lightView",
-                                          shadowParams.lightView);
-            shaderProgram.setUniformMat4f(baseName + ".lightProjection",
-                                          shadowParams.lightProjection);
-            shaderProgram.setUniform1f(baseName + ".bias", shadowParams.bias);
-            shaderProgram.setUniform1f(baseName + ".isPointLight", 0);
+            this->pipeline->setUniformMat4f(baseName + ".lightView",
+                                            shadowParams.lightView);
+            this->pipeline->setUniformMat4f(baseName + ".lightProjection",
+                                            shadowParams.lightProjection);
+            this->pipeline->setUniform1f(baseName + ".bias", shadowParams.bias);
+            this->pipeline->setUniform1f(baseName + ".isPointLight", 0);
 
             boundParameters++;
             boundTextures++;
@@ -692,20 +672,19 @@ void CoreObject::render(float dt,
                 break;
             }
 
-            glActiveTexture(GL_TEXTURE0 + boundTextures);
-            glBindTexture(GL_TEXTURE_2D, light->shadowRenderTarget->texture.id);
             std::string baseName =
                 "shadowParams[" + std::to_string(boundParameters) + "]";
-            shaderProgram.setUniform1i(baseName + ".textureIndex",
-                                       boundTextures);
+            this->pipeline->bindTexture2D(baseName + ".textureIndex",
+                                          light->shadowRenderTarget->texture.id,
+                                          boundTextures);
             std::tuple<glm::mat4, glm::mat4> lightSpace =
                 light->calculateLightSpaceMatrix();
-            shaderProgram.setUniformMat4f(baseName + ".lightView",
-                                          std::get<0>(lightSpace));
-            shaderProgram.setUniformMat4f(baseName + ".lightProjection",
-                                          std::get<1>(lightSpace));
-            shaderProgram.setUniform1f(baseName + ".bias", 0.005f);
-            shaderProgram.setUniform1f(baseName + ".isPointLight", 0);
+            this->pipeline->setUniformMat4f(baseName + ".lightView",
+                                            std::get<0>(lightSpace));
+            this->pipeline->setUniformMat4f(baseName + ".lightProjection",
+                                            std::get<1>(lightSpace));
+            this->pipeline->setUniform1f(baseName + ".bias", 0.005f);
+            this->pipeline->setUniform1f(baseName + ".isPointLight", 0);
 
             boundParameters++;
             boundTextures++;
@@ -719,32 +698,32 @@ void CoreObject::render(float dt,
                 break;
             }
 
-            glActiveTexture(GL_TEXTURE0 + 10 + boundCubemaps);
-
-            glBindTexture(GL_TEXTURE_CUBE_MAP,
-                          light->shadowRenderTarget->texture.id);
             std::string baseName =
                 "shadowParams[" + std::to_string(boundParameters) + "]";
-            shaderProgram.setUniform1i(baseName + ".textureIndex",
-                                       boundCubemaps);
-            shaderProgram.setUniform1f(baseName + ".farPlane", light->distance);
-            shaderProgram.setUniform3f(baseName + ".lightPos",
-                                       light->position.x, light->position.y,
-                                       light->position.z);
-            shaderProgram.setUniform1i(baseName + ".isPointLight", 1);
+            this->pipeline->bindTextureCubemap(
+                baseName + ".textureIndex",
+                light->shadowRenderTarget->texture.id, 10 + boundCubemaps);
+            this->pipeline->setUniform1i(baseName + ".textureIndex",
+                                         boundCubemaps);
+            this->pipeline->setUniform1f(baseName + ".farPlane",
+                                         light->distance);
+            this->pipeline->setUniform3f(baseName + ".lightPos",
+                                         light->position.x, light->position.y,
+                                         light->position.z);
+            this->pipeline->setUniform1i(baseName + ".isPointLight", 1);
 
             boundParameters++;
+            boundCubemaps++;
             boundTextures += 6;
         }
 
-        shaderProgram.setUniform1i("shadowParamCount", boundParameters);
+        this->pipeline->setUniform1i("shadowParamCount", boundParameters);
 
-        GLint units[16];
-        for (int i = 0; i < boundTextures; i++)
-            units[i] = i;
-
-        glUniform1iv(glGetUniformLocation(shaderProgram.programId, "textures"),
-                     boundTextures, units);
+        // Set texture units array using pipeline
+        for (int i = 0; i < boundTextures && i < 16; i++) {
+            std::string uniformName = "textures[" + std::to_string(i) + "]";
+            this->pipeline->setUniform1i(uniformName, i);
+        }
     }
 
     if (std::find(shaderProgram.capabilities.begin(),
@@ -755,9 +734,8 @@ void CoreObject::render(float dt,
         Window *window = Window::mainWindow;
         Scene *scene = window->getCurrentScene();
         if (scene->skybox != nullptr) {
-            glActiveTexture(GL_TEXTURE0 + boundTextures);
-            glBindTexture(GL_TEXTURE_CUBE_MAP, scene->skybox->cubemap.id);
-            shaderProgram.setUniform1i("skybox", boundTextures);
+            this->pipeline->bindTextureCubemap(
+                "skybox", scene->skybox->cubemap.id, boundTextures);
             boundTextures++;
         }
     }
@@ -768,12 +746,12 @@ void CoreObject::render(float dt,
         shaderProgram.capabilities.end()) {
         Window *window = Window::mainWindow;
         Scene *scene = window->getCurrentScene();
-        shaderProgram.setUniform1f("environment.rimLightIntensity",
-                                   scene->environment.rimLight.intensity);
-        shaderProgram.setUniform3f("environment.rimLightColor",
-                                   scene->environment.rimLight.color.r,
-                                   scene->environment.rimLight.color.g,
-                                   scene->environment.rimLight.color.b);
+        this->pipeline->setUniform1f("environment.rimLightIntensity",
+                                     scene->environment.rimLight.intensity);
+        this->pipeline->setUniform3f("environment.rimLightColor",
+                                     scene->environment.rimLight.color.r,
+                                     scene->environment.rimLight.color.g,
+                                     scene->environment.rimLight.color.b);
     }
 
     if (std::find(shaderProgram.capabilities.begin(),
@@ -786,7 +764,7 @@ void CoreObject::render(float dt,
             this->savedInstances = this->instances;
         }
         // Update instance buffer data
-        shaderProgram.setUniform1i("isInstanced", 1);
+        this->pipeline->setUniform1i("isInstanced", 1);
 
         if (!indices.empty()) {
             commandBuffer->bindDrawingState(vao);
@@ -803,7 +781,7 @@ void CoreObject::render(float dt,
         return;
     }
 
-    shaderProgram.setUniform1i("isInstanced", 0);
+    this->pipeline->setUniform1i("isInstanced", 0);
     if (!indices.empty()) {
         commandBuffer->bindDrawingState(vao);
         commandBuffer->bindPipeline(this->pipeline);

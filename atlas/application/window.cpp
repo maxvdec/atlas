@@ -1106,7 +1106,6 @@ void Window::renderPingpong(RenderTarget *target) {
     bool firstIteration = true;
     const unsigned int blurIterations = std::max(1u, this->bloomBlurPasses);
 
-    ShaderProgram &blurShader = this->bloomBlurProgram;
     auto originalPipeline = target->object->getPipeline();
     if (!originalPipeline.has_value()) {
         return;
@@ -1124,9 +1123,9 @@ void Window::renderPingpong(RenderTarget *target) {
 
     target->setPipeline(blurPipeline);
 
-    glUseProgram(blurShader.programId);
-    blurShader.setUniform1f("radius", 2.5f);
-    blurShader.setUniform1i("image", 0);
+    blurPipeline->bind();
+    blurPipeline->setUniform1f("radius", 2.5f);
+    blurPipeline->setUniform1i("image", 0);
 
     target->object->vao->bind();
     target->object->ebo->bind();
@@ -1135,13 +1134,13 @@ void Window::renderPingpong(RenderTarget *target) {
         glBindFramebuffer(GL_FRAMEBUFFER, this->pingpongFBOs[horizontal]);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        blurShader.setUniform1i("horizontal", horizontal ? 1 : 0);
+        blurPipeline->setUniform1i("horizontal", horizontal ? 1 : 0);
 
-        glActiveTexture(GL_TEXTURE0);
-        GLuint textureToSample = firstIteration
-                                     ? target->brightTexture.id
-                                     : this->pingpongBuffers[!horizontal];
-        glBindTexture(GL_TEXTURE_2D, textureToSample);
+        blurPipeline->bindTexture2D("image",
+                                    firstIteration
+                                        ? target->brightTexture.id
+                                        : this->pingpongBuffers[!horizontal],
+                                    0);
 
         if (!target->object->indices.empty()) {
             glDrawElements(GL_TRIANGLES, target->object->indices.size(),

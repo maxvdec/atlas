@@ -152,12 +152,17 @@ void Text::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDisable(GL_DEPTH_TEST);
 
-    glUseProgram(shader.programId);
-    shader.setUniform3f("textColor", color.r, color.g, color.b);
-    shader.setUniformMat4f("projection", projection);
-    shader.setUniform1i("text", 0);
+    // Get or create pipeline for text
+    static std::shared_ptr<opal::Pipeline> textPipeline = nullptr;
+    if (textPipeline == nullptr) {
+        textPipeline = opal::Pipeline::create();
+    }
+    textPipeline = shader.requestPipeline(textPipeline);
+    textPipeline->bind();
 
-    glActiveTexture(GL_TEXTURE0);
+    textPipeline->setUniform3f("textColor", color.r, color.g, color.b);
+    textPipeline->setUniformMat4f("projection", projection);
+
     commandBuffer->bindDrawingState(vao);
 
     float scale = 2.0f;
@@ -190,7 +195,7 @@ void Text::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
             {xpos, ypos, 0.0f, 0.0f},         {xpos + w, ypos + h, 1.0f, 1.0f},
             {xpos + w, ypos, 1.0f, 0.0f}};
 
-        glBindTexture(GL_TEXTURE_2D, ch.textureID);
+        textPipeline->bindTexture2D("text", ch.textureID, 0);
         vertexBuffer->bind();
         vertexBuffer->updateData(0, sizeof(vertices), vertices);
         vertexBuffer->unbind();
@@ -200,7 +205,6 @@ void Text::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
     }
 
     commandBuffer->unbindDrawingState();
-    glBindTexture(GL_TEXTURE_2D, 0);
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
 }

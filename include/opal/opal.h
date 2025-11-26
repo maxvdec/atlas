@@ -294,6 +294,8 @@ class Pipeline {
                       float v3);
     void bindTexture(const std::string &name, std::shared_ptr<Texture> texture,
                      int unit);
+    void bindTexture2D(const std::string &name, uint textureId, int unit);
+    void bindTextureCubemap(const std::string &name, uint textureId, int unit);
 
   private:
     PrimitiveStyle primitiveStyle;

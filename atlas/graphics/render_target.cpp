@@ -567,103 +567,92 @@ void RenderTarget::render(float dt,
 
     glActiveTexture(GL_TEXTURE0);
 
-    GLuint currentProgram;
-    glGetIntegerv(GL_CURRENT_PROGRAM, (GLint *)&currentProgram);
-    if (currentProgram != obj->shaderProgram.programId) {
-        glUseProgram(obj->shaderProgram.programId);
+    static std::shared_ptr<opal::Pipeline> renderTargetPipeline = nullptr;
+    if (renderTargetPipeline == nullptr) {
+        renderTargetPipeline = opal::Pipeline::create();
     }
+    renderTargetPipeline =
+        obj->shaderProgram.requestPipeline(renderTargetPipeline);
+    renderTargetPipeline->bind();
 
     Camera *camera = Window::mainWindow->camera;
 
     if (texture.type == TextureType::DepthCube) {
-        glActiveTexture(GL_TEXTURE10);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, texture.id);
-        obj->shaderProgram.setUniform1i("cubeMap", 10);
-        obj->shaderProgram.setUniform1i("isCubeMap", 1);
+        renderTargetPipeline->bindTextureCubemap("cubeMap", texture.id, 10);
+        renderTargetPipeline->setUniform1i("isCubeMap", 1);
     } else {
         if (texture.id == 0) {
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, gMaterial.id);
-            obj->shaderProgram.setUniform1i("Texture", 0);
-            obj->shaderProgram.setUniform1i("isCubeMap", 0);
+            renderTargetPipeline->bindTexture2D("Texture", gMaterial.id, 0);
+            renderTargetPipeline->setUniform1i("isCubeMap", 0);
         } else {
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, texture.id);
-            obj->shaderProgram.setUniform1i("Texture", 0);
-            obj->shaderProgram.setUniform1i("isCubeMap", 0);
+            renderTargetPipeline->bindTexture2D("Texture", texture.id, 0);
+            renderTargetPipeline->setUniform1i("isCubeMap", 0);
         }
 
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, blurredTexture.id);
-        obj->shaderProgram.setUniform1i("BrightTexture", 1);
-        obj->shaderProgram.setUniform1i("hasBrightTexture",
-                                        brightTexture.id != 0 ? 1 : 0);
+        renderTargetPipeline->bindTexture2D("BrightTexture", blurredTexture.id,
+                                            1);
+        renderTargetPipeline->setUniform1i("hasBrightTexture",
+                                           brightTexture.id != 0 ? 1 : 0);
 
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, depthTexture.id);
-        obj->shaderProgram.setUniform1i("DepthTexture", 2);
+        renderTargetPipeline->bindTexture2D("DepthTexture", depthTexture.id, 2);
         const bool hasDepth = depthTexture.id != 0;
-        obj->shaderProgram.setUniform1i("hasDepthTexture", hasDepth ? 1 : 0);
+        renderTargetPipeline->setUniform1i("hasDepthTexture", hasDepth ? 1 : 0);
 
-        glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, volumetricLightTexture.id);
-        obj->shaderProgram.setUniform1i("VolumetricLightTexture", 3);
-        obj->shaderProgram.setUniform1i("hasVolumetricLightTexture",
-                                        volumetricLightTexture.id > 1 ? 1 : 0);
+        renderTargetPipeline->bindTexture2D("VolumetricLightTexture",
+                                            volumetricLightTexture.id, 3);
+        renderTargetPipeline->setUniform1i(
+            "hasVolumetricLightTexture", volumetricLightTexture.id > 1 ? 1 : 0);
 
-        glActiveTexture(GL_TEXTURE4);
-        glBindTexture(GL_TEXTURE_2D, gPosition.id);
-        obj->shaderProgram.setUniform1i("PositionTexture", 4);
-        obj->shaderProgram.setUniform1i("hasPositionTexture",
-                                        gPosition.id != 0 ? 1 : 0);
+        renderTargetPipeline->bindTexture2D("PositionTexture", gPosition.id, 4);
+        renderTargetPipeline->setUniform1i("hasPositionTexture",
+                                           gPosition.id != 0 ? 1 : 0);
 
-        glActiveTexture(GL_TEXTURE5);
-        glBindTexture(GL_TEXTURE_2D, ssrTexture.id);
-        obj->shaderProgram.setUniform1i("SSRTexture", 5);
-        obj->shaderProgram.setUniform1i("hasSSRTexture",
-                                        ssrTexture.id != 0 ? 1 : 0);
+        renderTargetPipeline->bindTexture2D("SSRTexture", ssrTexture.id, 5);
+        renderTargetPipeline->setUniform1i("hasSSRTexture",
+                                           ssrTexture.id != 0 ? 1 : 0);
 
-        glActiveTexture(GL_TEXTURE6);
-        glBindTexture(GL_TEXTURE_2D, LUT.id);
-        obj->shaderProgram.setUniform1i("LUTTexture", 6);
-        obj->shaderProgram.setUniform1i("hasLUTTexture", LUT.id != 0 ? 1 : 0);
+        renderTargetPipeline->bindTexture2D("LUTTexture", LUT.id, 6);
+        renderTargetPipeline->setUniform1i("hasLUTTexture",
+                                           LUT.id != 0 ? 1 : 0);
 
         const glm::mat4 projectionMatrix =
             Window::mainWindow->calculateProjectionMatrix();
         const glm::mat4 viewMatrix =
             Window::mainWindow->getCamera()->calculateViewMatrix();
 
-        obj->shaderProgram.setUniformMat4f("projectionMatrix",
-                                           projectionMatrix);
-        obj->shaderProgram.setUniformMat4f("invProjectionMatrix",
-                                           glm::inverse(projectionMatrix));
+        renderTargetPipeline->setUniformMat4f("projectionMatrix",
+                                              projectionMatrix);
+        renderTargetPipeline->setUniformMat4f("invProjectionMatrix",
+                                              glm::inverse(projectionMatrix));
 
-        obj->shaderProgram.setUniformMat4f("viewMatrix", viewMatrix);
-        obj->shaderProgram.setUniformMat4f("invViewMatrix",
-                                           glm::inverse(viewMatrix));
-        obj->shaderProgram.setUniformMat4f("lastViewMatrix",
-                                           Window::mainWindow->lastViewMatrix);
-        obj->shaderProgram.setUniform3f("cameraPosition", camera->position.x,
-                                        camera->position.y, camera->position.z);
+        renderTargetPipeline->setUniformMat4f("viewMatrix", viewMatrix);
+        renderTargetPipeline->setUniformMat4f("invViewMatrix",
+                                              glm::inverse(viewMatrix));
+        renderTargetPipeline->setUniformMat4f(
+            "lastViewMatrix", Window::mainWindow->lastViewMatrix);
+        renderTargetPipeline->setUniform3f("cameraPosition", camera->position.x,
+                                           camera->position.y,
+                                           camera->position.z);
 
-        obj->shaderProgram.setUniform1f("nearPlane", camera->nearClip);
-        obj->shaderProgram.setUniform1f("farPlane", camera->farClip);
-        obj->shaderProgram.setUniform1f("focusDepth", camera->focusDepth);
-        obj->shaderProgram.setUniform1f("focusRange", camera->focusRange);
+        renderTargetPipeline->setUniform1f("nearPlane", camera->nearClip);
+        renderTargetPipeline->setUniform1f("farPlane", camera->farClip);
+        renderTargetPipeline->setUniform1f("focusDepth", camera->focusDepth);
+        renderTargetPipeline->setUniform1f("focusRange", camera->focusRange);
 
-        obj->shaderProgram.setUniform1f("deltaTime", dt);
-        obj->shaderProgram.setUniform1f("time", Window::mainWindow->getTime());
+        renderTargetPipeline->setUniform1f("deltaTime", dt);
+        renderTargetPipeline->setUniform1f("time",
+                                           Window::mainWindow->getTime());
 
         int maxMipLevels = (int)std::floor(
             std::log2(std::max(Window::mainWindow->getSize().width,
                                Window::mainWindow->getSize().height)));
 
-        obj->shaderProgram.setUniform1i("maxMipLevel", maxMipLevels);
+        renderTargetPipeline->setUniform1i("maxMipLevel", maxMipLevels);
 
         Scene *scene = Window::mainWindow->getCurrentScene();
-        obj->shaderProgram.setUniform1f("environment.fogIntensity",
-                                        scene->environment.fog.intensity);
-        obj->shaderProgram.setUniform3f(
+        renderTargetPipeline->setUniform1f("environment.fogIntensity",
+                                           scene->environment.fog.intensity);
+        renderTargetPipeline->setUniform3f(
             "environment.fogColor", scene->environment.fog.color.r,
             scene->environment.fog.color.g, scene->environment.fog.color.b);
 
@@ -692,60 +681,62 @@ void RenderTarget::render(float dt,
 
             glActiveTexture(GL_TEXTURE15);
             glBindTexture(GL_TEXTURE_3D, cloudSettings.getCloudTexture(128));
-            obj->shaderProgram.setUniform1i("cloudsTexture", 15);
-            obj->shaderProgram.setUniform3f("cloudSize", cloudSize.x,
-                                            cloudSize.y, cloudSize.z);
-            obj->shaderProgram.setUniform3f("cloudPosition", cloudPos.x,
-                                            cloudPos.y, cloudPos.z);
-            obj->shaderProgram.setUniform1f("cloudScale", cloudSettings.scale);
-            obj->shaderProgram.setUniform3f(
+            renderTargetPipeline->setUniform1i("cloudsTexture", 15);
+            renderTargetPipeline->setUniform3f("cloudSize", cloudSize.x,
+                                               cloudSize.y, cloudSize.z);
+            renderTargetPipeline->setUniform3f("cloudPosition", cloudPos.x,
+                                               cloudPos.y, cloudPos.z);
+            renderTargetPipeline->setUniform1f("cloudScale",
+                                               cloudSettings.scale);
+            renderTargetPipeline->setUniform3f(
                 "cloudOffset", cloudSettings.offset.x, cloudSettings.offset.y,
                 cloudSettings.offset.z);
-            obj->shaderProgram.setUniform1f("cloudDensityThreshold",
-                                            cloudSettings.density);
-            obj->shaderProgram.setUniform1f("cloudDensityMultiplier",
-                                            cloudSettings.densityMultiplier);
-            obj->shaderProgram.setUniform1f("cloudAbsorption",
-                                            cloudSettings.absorption);
-            obj->shaderProgram.setUniform1f("cloudScattering",
-                                            cloudSettings.scattering);
-            obj->shaderProgram.setUniform1f("cloudPhaseG", cloudSettings.phase);
-            obj->shaderProgram.setUniform1f("cloudClusterStrength",
-                                            cloudSettings.clusterStrength);
-            obj->shaderProgram.setUniform1i(
+            renderTargetPipeline->setUniform1f("cloudDensityThreshold",
+                                               cloudSettings.density);
+            renderTargetPipeline->setUniform1f("cloudDensityMultiplier",
+                                               cloudSettings.densityMultiplier);
+            renderTargetPipeline->setUniform1f("cloudAbsorption",
+                                               cloudSettings.absorption);
+            renderTargetPipeline->setUniform1f("cloudScattering",
+                                               cloudSettings.scattering);
+            renderTargetPipeline->setUniform1f("cloudPhaseG",
+                                               cloudSettings.phase);
+            renderTargetPipeline->setUniform1f("cloudClusterStrength",
+                                               cloudSettings.clusterStrength);
+            renderTargetPipeline->setUniform1i(
                 "cloudPrimarySteps",
                 std::max(1, cloudSettings.primaryStepCount));
-            obj->shaderProgram.setUniform1i(
+            renderTargetPipeline->setUniform1i(
                 "cloudLightSteps", std::max(1, cloudSettings.lightStepCount));
-            obj->shaderProgram.setUniform1f("cloudLightStepMultiplier",
-                                            cloudSettings.lightStepMultiplier);
-            obj->shaderProgram.setUniform1f("cloudMinStepLength",
-                                            cloudSettings.minStepLength);
-            obj->shaderProgram.setUniform3f("sunDirection", sunDir.x, sunDir.y,
-                                            sunDir.z);
-            obj->shaderProgram.setUniform3f(
+            renderTargetPipeline->setUniform1f(
+                "cloudLightStepMultiplier", cloudSettings.lightStepMultiplier);
+            renderTargetPipeline->setUniform1f("cloudMinStepLength",
+                                               cloudSettings.minStepLength);
+            renderTargetPipeline->setUniform3f("sunDirection", sunDir.x,
+                                               sunDir.y, sunDir.z);
+            renderTargetPipeline->setUniform3f(
                 "sunColor", static_cast<float>(sunColor.r),
                 static_cast<float>(sunColor.g), static_cast<float>(sunColor.b));
-            obj->shaderProgram.setUniform1f("sunIntensity", sunIntensity);
-            obj->shaderProgram.setUniform3f("cloudAmbientColor", ambient.x,
-                                            ambient.y, ambient.z);
-            obj->shaderProgram.setUniform1i("hasClouds", 1);
+            renderTargetPipeline->setUniform1f("sunIntensity", sunIntensity);
+            renderTargetPipeline->setUniform3f("cloudAmbientColor", ambient.x,
+                                               ambient.y, ambient.z);
+            renderTargetPipeline->setUniform1i("hasClouds", 1);
         } else {
             glActiveTexture(GL_TEXTURE15);
             glBindTexture(GL_TEXTURE_3D, 0);
-            obj->shaderProgram.setUniform1i("cloudsTexture", 15);
-            obj->shaderProgram.setUniform1i("hasClouds", 0);
+            renderTargetPipeline->setUniform1i("cloudsTexture", 15);
+            renderTargetPipeline->setUniform1i("hasClouds", 0);
         }
     }
 
-    obj->shaderProgram.setUniform1i("TextureType",
-                                    static_cast<int>(texture.type));
-    obj->shaderProgram.setUniform1i("EffectCount", effects.size());
+    renderTargetPipeline->setUniform1i("TextureType",
+                                       static_cast<int>(texture.type));
+    renderTargetPipeline->setUniform1i("EffectCount", effects.size());
 
     for (size_t i = 0; i < effects.size(); i++) {
         std::string uniformName = "Effects[" + std::to_string(i) + "]";
-        obj->shaderProgram.setUniform1i(uniformName,
-                                        static_cast<int>(effects[i]->type));
+        renderTargetPipeline->setUniform1i(uniformName,
+                                           static_cast<int>(effects[i]->type));
         effects[i]->applyToProgram(obj->shaderProgram, i);
     }
 

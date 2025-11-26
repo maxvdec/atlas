@@ -365,20 +365,24 @@ void ParticleEmitter::render(float dt,
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDepthMask(GL_FALSE);
 
-    glUseProgram(this->program.programId);
+    // Get or create pipeline
+    static std::shared_ptr<opal::Pipeline> particlePipeline = nullptr;
+    if (particlePipeline == nullptr) {
+        particlePipeline = opal::Pipeline::create();
+    }
+    particlePipeline = this->program.requestPipeline(particlePipeline);
+    particlePipeline->bind();
 
-    program.setUniformMat4f("view", this->view);
-    program.setUniformMat4f("projection", this->projection);
-    program.setUniformMat4f("model", this->model);
-    program.setUniform1i("useTexture", useTexture ? 1 : 0);
+    particlePipeline->setUniformMat4f("view", this->view);
+    particlePipeline->setUniformMat4f("projection", this->projection);
+    particlePipeline->setUniformMat4f("model", this->model);
+    particlePipeline->setUniform1i("useTexture", useTexture ? 1 : 0);
 
-    program.setUniform1i(
+    particlePipeline->setUniform1i(
         "isAmbient", (emissionType == ParticleEmissionType::Ambient) ? 1 : 0);
 
     if (useTexture) {
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture.id);
-        program.setUniform1i("particleTexture", 0);
+        particlePipeline->bindTexture2D("particleTexture", texture.id, 0);
     }
 
     commandBuffer->bindDrawingState(vao);

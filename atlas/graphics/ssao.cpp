@@ -150,32 +150,32 @@ void Window::renderSSAO() {
         ssaoState->configureAttributes(bindings);
     }
 
-    glUseProgram(this->ssaoProgram.programId);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, this->gBuffer->gPosition.id);
-    this->ssaoProgram.setUniform1i("gPosition", 0);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, this->gBuffer->gNormal.id);
-    this->ssaoProgram.setUniform1i("gNormal", 1);
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, this->noiseTexture.id);
-    this->ssaoProgram.setUniform1i("texNoise", 2);
-    for (size_t i = 0; i < this->ssaoKernel.size(); ++i) {
-        this->ssaoProgram.setUniform3f("samples[" + std::to_string(i) + "]",
-                                       ssaoKernel[i].x, ssaoKernel[i].y,
-                                       ssaoKernel[i].z);
+    // Get or create pipeline for SSAO
+    static std::shared_ptr<opal::Pipeline> ssaoPipeline = nullptr;
+    if (ssaoPipeline == nullptr) {
+        ssaoPipeline = opal::Pipeline::create();
     }
-    this->ssaoProgram.setUniform1i("kernelSize",
-                                   static_cast<int>(this->ssaoKernel.size()));
-    this->ssaoProgram.setUniformMat4f("projection",
-                                      this->calculateProjectionMatrix());
-    this->ssaoProgram.setUniformMat4f("view",
-                                      getCamera()->calculateViewMatrix());
+    ssaoPipeline = this->ssaoProgram.requestPipeline(ssaoPipeline);
+    ssaoPipeline->bind();
+
+    ssaoPipeline->bindTexture2D("gPosition", this->gBuffer->gPosition.id, 0);
+    ssaoPipeline->bindTexture2D("gNormal", this->gBuffer->gNormal.id, 1);
+    ssaoPipeline->bindTexture2D("texNoise", this->noiseTexture.id, 2);
+    for (size_t i = 0; i < this->ssaoKernel.size(); ++i) {
+        ssaoPipeline->setUniform3f("samples[" + std::to_string(i) + "]",
+                                   ssaoKernel[i].x, ssaoKernel[i].y,
+                                   ssaoKernel[i].z);
+    }
+    ssaoPipeline->setUniform1i("kernelSize",
+                               static_cast<int>(this->ssaoKernel.size()));
+    ssaoPipeline->setUniformMat4f("projection",
+                                  this->calculateProjectionMatrix());
+    ssaoPipeline->setUniformMat4f("view", getCamera()->calculateViewMatrix());
     glm::vec2 screenSize(this->ssaoBuffer->getWidth(),
                          this->ssaoBuffer->getHeight());
     glm::vec2 noiseSize(4.0f, 4.0f);
-    this->ssaoProgram.setUniform2f("noiseScale", screenSize.x / noiseSize.x,
-                                   screenSize.y / noiseSize.y);
+    ssaoPipeline->setUniform2f("noiseScale", screenSize.x / noiseSize.x,
+                               screenSize.y / noiseSize.y);
     ssaoState->bind();
     glDrawArrays(GL_TRIANGLES, 0, 6);
     ssaoState->unbind();
@@ -186,10 +186,16 @@ void Window::renderSSAO() {
                this->ssaoBlurBuffer->getHeight());
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
-    glUseProgram(this->ssaoBlurProgram.programId);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, this->ssaoBuffer->texture.id);
-    this->ssaoBlurProgram.setUniform1i("inSSAO", 0);
+
+    // Get or create pipeline for SSAO blur
+    static std::shared_ptr<opal::Pipeline> ssaoBlurPipeline = nullptr;
+    if (ssaoBlurPipeline == nullptr) {
+        ssaoBlurPipeline = opal::Pipeline::create();
+    }
+    ssaoBlurPipeline = this->ssaoBlurProgram.requestPipeline(ssaoBlurPipeline);
+    ssaoBlurPipeline->bind();
+
+    ssaoBlurPipeline->bindTexture2D("inSSAO", this->ssaoBuffer->texture.id, 0);
     ssaoState->bind();
     glDrawArrays(GL_TRIANGLES, 0, 6);
     ssaoState->unbind();

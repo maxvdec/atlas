@@ -660,17 +660,20 @@ void Skybox::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
 
     CoreObject *obj = this->object.get();
 
-    glUseProgram(obj->shaderProgram.programId);
+    // Get or create pipeline for skybox
+    if (obj->getPipeline() == std::nullopt) {
+        obj->refreshPipeline();
+    }
+    auto pipeline = obj->getPipeline().value();
+    pipeline->bind();
 
     glDepthFunc(GL_LEQUAL);
     glDepthMask(GL_FALSE);
     glDisable(GL_CULL_FACE);
 
-    obj->shaderProgram.setUniformMat4f("view", view);
-
-    obj->shaderProgram.setUniformMat4f("projection", projection);
-
-    obj->shaderProgram.setUniform1i("skybox", 0);
+    pipeline->setUniformMat4f("view", view);
+    pipeline->setUniformMat4f("projection", projection);
+    pipeline->bindTextureCubemap("skybox", cubemap.id, 0);
 
     if (!Window::mainWindow || !Window::mainWindow->getCurrentScene()) {
         throw std::runtime_error(
@@ -681,43 +684,41 @@ void Skybox::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
             Window::mainWindow->getCurrentScene()->atmosphere.getSunAngle();
         Magnitude3d moonDirection =
             Window::mainWindow->getCurrentScene()->atmosphere.getMoonAngle();
-        obj->shaderProgram.setUniform3f("sunDirection", sunDirection.x,
-                                        sunDirection.y, sunDirection.z);
-        obj->shaderProgram.setUniform3f("moonDirection", moonDirection.x,
-                                        moonDirection.y, moonDirection.z);
+        pipeline->setUniform3f("sunDirection", sunDirection.x, sunDirection.y,
+                               sunDirection.z);
+        pipeline->setUniform3f("moonDirection", moonDirection.x,
+                               moonDirection.y, moonDirection.z);
 
         Color sunColor =
             Window::mainWindow->getCurrentScene()->atmosphere.sunColor;
-        obj->shaderProgram.setUniform4f("sunColor", sunColor.r, sunColor.g,
-                                        sunColor.b, sunColor.a);
+        pipeline->setUniform4f("sunColor", sunColor.r, sunColor.g, sunColor.b,
+                               sunColor.a);
         Color moonColor =
             Window::mainWindow->getCurrentScene()->atmosphere.moonColor;
-        obj->shaderProgram.setUniform4f("moonColor", moonColor.r, moonColor.g,
-                                        moonColor.b, moonColor.a);
+        pipeline->setUniform4f("moonColor", moonColor.r, moonColor.g,
+                               moonColor.b, moonColor.a);
 
-        obj->shaderProgram.setUniform1f(
+        pipeline->setUniform1f(
             "sunTintStrength",
             Window::mainWindow->getCurrentScene()->atmosphere.sunTintStrength);
-        obj->shaderProgram.setUniform1f(
+        pipeline->setUniform1f(
             "moonTintStrength",
             Window::mainWindow->getCurrentScene()->atmosphere.moonTintStrength);
-        obj->shaderProgram.setUniform1f(
+        pipeline->setUniform1f(
             "sunSizeMultiplier",
             Window::mainWindow->getCurrentScene()->atmosphere.sunSize);
-        obj->shaderProgram.setUniform1f(
+        pipeline->setUniform1f(
             "moonSizeMultiplier",
             Window::mainWindow->getCurrentScene()->atmosphere.moonSize);
-        obj->shaderProgram.setUniform1f(
+        pipeline->setUniform1f(
             "starDensity",
             Window::mainWindow->getCurrentScene()->atmosphere.starIntensity);
-        obj->shaderProgram.setUniform1i("hasDayNight", 1);
+        pipeline->setUniform1i("hasDayNight", 1);
     } else {
-        obj->shaderProgram.setUniform1i("hasDayNight", 0);
+        pipeline->setUniform1i("hasDayNight", 0);
     }
 
     commandBuffer->bindDrawingState(obj->vao);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap.id);
     commandBuffer->drawIndexed(static_cast<unsigned int>(obj->indices.size()),
                                1, 0, 0, 0);
     commandBuffer->unbindDrawingState();
