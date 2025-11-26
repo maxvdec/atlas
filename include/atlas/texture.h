@@ -522,9 +522,9 @@ class RenderTarget : public Renderable {
     }
 
   private:
-    Id fbo = 0;
-    Id rbo = 0;
-    Id resolveFbo = 0;
+    std::shared_ptr<opal::Framebuffer> fb = nullptr;
+    std::shared_ptr<opal::DepthStencilBuffer> renderbuffer = nullptr;
+    std::shared_ptr<opal::Framebuffer> msFb = nullptr;
     std::vector<std::shared_ptr<Effect>> effects;
 
     friend class Window;

@@ -14,48 +14,30 @@ namespace opal {
 
 namespace {
 
-// Cached format conversion lookup tables for O(1) access
-constexpr GLenum glInternalFormatTable[] = {
-    GL_RGBA8,              // Rgba8
-    GL_SRGB8_ALPHA8,       // sRgba8
-    GL_RGB8,               // Rgb8
-    GL_SRGB8,              // sRgb8
-    GL_RGBA16F,            // Rgba16F
-    GL_RGB16F,             // Rgb16F
-    GL_DEPTH24_STENCIL8,   // Depth24Stencil8
-    GL_DEPTH_COMPONENT32F, // Depth32F
-    GL_R8,                 // Red8
-    GL_R16F                // Red16F
-};
+constexpr GLenum glInternalFormatTable[] = {GL_RGBA8,
+                                            GL_SRGB8_ALPHA8,
+                                            GL_RGB8,
+                                            GL_SRGB8,
+                                            GL_RGBA16F,
+                                            GL_RGB16F,
+                                            GL_DEPTH24_STENCIL8,
+                                            GL_DEPTH_COMPONENT24,
+                                            GL_DEPTH_COMPONENT32F,
+                                            GL_R8,
+                                            GL_R16F};
 
 constexpr GLenum glDataFormatTable[] = {
-    GL_RGBA, // Rgba
-    GL_RGB,  // Rgb
-    GL_RED,  // Red
-    GL_BGR,  // Bgr
-    GL_BGRA  // Bgra
+    GL_RGBA, GL_RGB, GL_RED, GL_BGR, GL_BGRA, GL_DEPTH_COMPONENT,
 };
 
-constexpr GLenum glTextureTypeTable[] = {
-    GL_TEXTURE_2D,       // Texture2D
-    GL_TEXTURE_CUBE_MAP, // TextureCubeMap
-    GL_TEXTURE_3D,       // Texture3D
-    GL_TEXTURE_2D_ARRAY  // Texture2DArray
-};
+constexpr GLenum glTextureTypeTable[] = {GL_TEXTURE_2D, GL_TEXTURE_CUBE_MAP,
+                                         GL_TEXTURE_3D, GL_TEXTURE_2D_ARRAY};
 
-constexpr GLenum glWrapModeTable[] = {
-    GL_REPEAT,          // Repeat
-    GL_MIRRORED_REPEAT, // MirroredRepeat
-    GL_CLAMP_TO_EDGE,   // ClampToEdge
-    GL_CLAMP_TO_BORDER  // ClampToBorder
-};
+constexpr GLenum glWrapModeTable[] = {GL_REPEAT, GL_MIRRORED_REPEAT,
+                                      GL_CLAMP_TO_EDGE, GL_CLAMP_TO_BORDER};
 
 constexpr GLenum glFilterModeTable[] = {
-    GL_NEAREST,                // Nearest
-    GL_LINEAR,                 // Linear
-    GL_NEAREST_MIPMAP_NEAREST, // NearestMipmapNearest
-    GL_LINEAR_MIPMAP_LINEAR    // LinearMipmapLinear
-};
+    GL_NEAREST, GL_LINEAR, GL_NEAREST_MIPMAP_NEAREST, GL_LINEAR_MIPMAP_LINEAR};
 
 inline GLenum getGLInternalFormat(TextureFormat format) {
     return glInternalFormatTable[static_cast<int>(format)];
@@ -77,7 +59,7 @@ inline GLenum getGLFilterMode(TextureFilterMode mode) {
     return glFilterModeTable[static_cast<int>(mode)];
 }
 
-} // anonymous namespace
+} // namespace
 
 std::shared_ptr<Texture> Texture::create(TextureType type, TextureFormat format,
                                          int width, int height,
@@ -101,7 +83,6 @@ std::shared_ptr<Texture> Texture::create(TextureType type, TextureFormat format,
     glBindTexture(textureType, texture->textureID);
 
     if (textureType == GL_TEXTURE_2D && width > 0 && height > 0) {
-        // Determine data type based on format (float for HDR formats)
         GLenum dataType = GL_UNSIGNED_BYTE;
         if (format == TextureFormat::Rgba16F ||
             format == TextureFormat::Rgb16F ||
@@ -114,13 +95,11 @@ std::shared_ptr<Texture> Texture::create(TextureType type, TextureFormat format,
             glGenerateMipmap(textureType);
         }
     } else if (textureType == GL_TEXTURE_CUBE_MAP && width > 0 && height > 0) {
-        // Pre-allocate all 6 faces for cubemap
         for (int i = 0; i < 6; ++i) {
             glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, glFormat, width,
                          height, 0, glDataFmt, GL_UNSIGNED_BYTE, nullptr);
         }
     }
-    // Texture remains bound for subsequent parameter setup
     return texture;
 #endif
 }
@@ -128,7 +107,6 @@ std::shared_ptr<Texture> Texture::create(TextureType type, TextureFormat format,
 void Texture::updateFace(int faceIndex, const void *data, int width, int height,
                          TextureDataFormat dataFormat) {
 #ifdef OPENGL
-    // Use glTexSubImage2D when dimensions match (faster than glTexImage2D)
     const GLenum glDataFmt = getGLDataFormat(dataFormat);
     glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
     if (this->width == width && this->height == height) {
@@ -155,14 +133,12 @@ void Texture::updateData(const void *data, int width, int height,
                          TextureDataFormat dataFormat) {
 #ifdef OPENGL
     const GLenum glDataFmt = getGLDataFormat(dataFormat);
-    // Determine data type based on internal format
     GLenum dataType = GL_UNSIGNED_BYTE;
     if (format == TextureFormat::Rgba16F || format == TextureFormat::Rgb16F ||
         format == TextureFormat::Red16F) {
         dataType = GL_FLOAT;
     }
     glBindTexture(GL_TEXTURE_2D, textureID);
-    // Use glTexSubImage2D if dimensions match (faster)
     if (this->width == width && this->height == height) {
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, glDataFmt,
                         dataType, data);
@@ -198,7 +174,6 @@ void Texture::automaticallyGenerateMipmaps() {
 
 void Texture::setWrapMode(TextureAxis axis, TextureWrapMode mode) {
 #ifdef OPENGL
-    // Texture should already be bound from create() or previous call
     glBindTexture(this->glType, textureID);
     const GLenum glMode = getGLWrapMode(mode);
     static constexpr GLenum axisTable[] = {GL_TEXTURE_WRAP_S, GL_TEXTURE_WRAP_T,
@@ -229,7 +204,6 @@ void Texture::setParameters(TextureWrapMode wrapS, TextureWrapMode wrapT,
                             TextureFilterMode minFilter,
                             TextureFilterMode magFilter) {
 #ifdef OPENGL
-    // Single bind, set all parameters at once
     glBindTexture(this->glType, textureID);
     glTexParameteri(glType, GL_TEXTURE_WRAP_S, getGLWrapMode(wrapS));
     glTexParameteri(glType, GL_TEXTURE_WRAP_T, getGLWrapMode(wrapT));
@@ -243,7 +217,6 @@ void Texture::setParameters3D(TextureWrapMode wrapS, TextureWrapMode wrapT,
                               TextureFilterMode minFilter,
                               TextureFilterMode magFilter) {
 #ifdef OPENGL
-    // Single bind, set all parameters at once for 3D/cubemap textures
     glBindTexture(this->glType, textureID);
     glTexParameteri(glType, GL_TEXTURE_WRAP_S, getGLWrapMode(wrapS));
     glTexParameteri(glType, GL_TEXTURE_WRAP_T, getGLWrapMode(wrapT));

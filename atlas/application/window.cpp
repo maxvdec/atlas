@@ -202,6 +202,10 @@ void Window::run() {
 
     this->framesPerSecond = 0.0f;
 
+    auto defaultFramebuffer = device->getDefaultFramebuffer();
+    auto renderPass = opal::RenderPass::create();
+    renderPass->setFramebuffer(defaultFramebuffer);
+
     while (!glfwWindowShouldClose(window)) {
         if (this->currentScene == nullptr) {
             glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -210,7 +214,9 @@ void Window::run() {
             glfwPollEvents();
             continue;
         }
-        commandBuffer->begin();
+
+        commandBuffer->start();
+        commandBuffer->beginPass(renderPass);
         float currentTime = static_cast<float>(glfwGetTime());
         this->deltaTime = currentTime - this->lastTime;
         lastTime = currentTime;
@@ -237,7 +243,6 @@ void Window::run() {
 
         renderLightsToShadowMaps(commandBuffer);
 
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
         updatePipelineStateField(this->cullMode, opal::CullMode::None);
         updatePipelineStateField(this->cullMode, opal::CullMode::Back);
         // Render to the targets
@@ -399,7 +404,7 @@ void Window::run() {
 
         this->lastViewMatrix = this->camera->calculateViewMatrix();
 
-        commandBuffer->end();
+        commandBuffer->endPass();
         device->submitCommandBuffer(commandBuffer);
 
         glfwSwapBuffers(window);

@@ -20,8 +20,26 @@ std::shared_ptr<CommandBuffer> Device::acquireCommandBuffer() {
 void Device::submitCommandBuffer(
     [[maybe_unused]] std::shared_ptr<CommandBuffer> commandBuffer) {}
 
-void CommandBuffer::begin() {}
-void CommandBuffer::end() {}
+void CommandBuffer::beginPass(
+    [[maybe_unused]] std::shared_ptr<RenderPass> renderPass) {
+    if (renderPass != nullptr) {
+        renderPass->framebuffer->bind();
+    }
+}
+
+void CommandBuffer::beginSampled(
+    [[maybe_unused]] std::shared_ptr<Framebuffer> readFramebuffer,
+    [[maybe_unused]] std::shared_ptr<Framebuffer> writeFramebuffer) {
+    if (writeFramebuffer != nullptr) {
+        writeFramebuffer->bindForDraw();
+    }
+    if (readFramebuffer != nullptr) {
+        readFramebuffer->bindForRead();
+    }
+}
+
+void CommandBuffer::endPass() {}
+void CommandBuffer::commit() {}
 
 void CommandBuffer::bindPipeline(std::shared_ptr<Pipeline> pipeline) {
     pipeline->bind();
