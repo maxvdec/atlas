@@ -58,6 +58,80 @@ class Device {
     void submitCommandBuffer(std::shared_ptr<CommandBuffer> commandBuffer);
 };
 
+enum class TextureType { Texture2D, TextureCubeMap, Texture3D, Texture2DArray };
+enum class TextureFormat {
+    Rgba8,
+    sRgba8,
+    Rgb8,
+    sRgb8,
+    Rgba16F,
+    Rgb16F,
+    Depth24Stencil8,
+    Depth32F,
+    Red8,
+    Red16F
+};
+
+enum class TextureWrapMode {
+    Repeat,
+    MirroredRepeat,
+    ClampToEdge,
+    ClampToBorder
+};
+enum class TextureFilterMode {
+    Nearest,
+    Linear,
+    NearestMipmapNearest,
+    LinearMipmapLinear
+};
+
+enum class TextureAxis { S, T, R };
+
+enum class TextureDataFormat { Rgba, Rgb, Red, Bgr, Bgra };
+
+class Texture {
+  public:
+    static std::shared_ptr<Texture>
+    create(TextureType type, TextureFormat format, int width, int height,
+           TextureDataFormat dataFormat = TextureDataFormat::Rgba,
+           const void *data = nullptr, uint mipLevels = 1);
+
+    void updateFace(int faceIndex, const void *data, int width, int height,
+                    TextureDataFormat dataFormat = TextureDataFormat::Rgba);
+    void updateData3D(const void *data, int width, int height, int depth,
+                      TextureDataFormat dataFormat = TextureDataFormat::Rgba);
+    void updateData(const void *data, int width, int height,
+                    TextureDataFormat dataFormat = TextureDataFormat::Rgba);
+    void changeFormat(TextureFormat newFormat);
+    void changeBorderColor(const glm::vec4 &borderColor);
+
+    void generateMipmaps(uint levels);
+    void automaticallyGenerateMipmaps();
+    void setWrapMode(TextureAxis axis, TextureWrapMode mode);
+    void setFilterMode(TextureFilterMode minFilter,
+                       TextureFilterMode magFilter);
+
+    // Batch parameter setter - sets all common parameters in one bind
+    void setParameters(TextureWrapMode wrapS, TextureWrapMode wrapT,
+                       TextureFilterMode minFilter,
+                       TextureFilterMode magFilter);
+    void setParameters3D(TextureWrapMode wrapS, TextureWrapMode wrapT,
+                         TextureWrapMode wrapR, TextureFilterMode minFilter,
+                         TextureFilterMode magFilter);
+
+    uint textureID;
+    TextureType type;
+    TextureFormat format;
+    int width;
+    int height;
+
+  private:
+    friend class Pipeline;
+
+    uint glType = 0;
+    uint glFormat = 0;
+};
+
 enum class ShaderType {
     Vertex,
     Fragment,
@@ -218,6 +292,8 @@ class Pipeline {
     void setUniform2f(const std::string &name, float v0, float v1);
     void setUniform4f(const std::string &name, float v0, float v1, float v2,
                       float v3);
+    void bindTexture(const std::string &name, std::shared_ptr<Texture> texture,
+                     int unit);
 
   private:
     PrimitiveStyle primitiveStyle;

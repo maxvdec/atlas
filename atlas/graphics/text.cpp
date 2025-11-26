@@ -9,6 +9,7 @@
 
 #include "atlas/text.h"
 #include "atlas/window.h"
+#include "opal/opal.h"
 #include "ft2build.h" // IWYU pragma: keep
 #include <iostream>
 #include FT_FREETYPE_H
@@ -43,38 +44,32 @@ Font Font::fromResource(const std::string &fontName, Resource resource,
 
         if (face->glyph->bitmap.width == 0 || face->glyph->bitmap.rows == 0) {
             Character character = {
-                0, Size2d(0, 0), Position2d(0, 0),
+                0, nullptr, Size2d(0, 0), Position2d(0, 0),
                 static_cast<unsigned int>(face->glyph->advance.x)};
             font.atlas.insert(std::pair<char, Character>(c, character));
             continue;
         }
 
-        unsigned int texture;
-        glGenTextures(1, &texture);
-        glBindTexture(GL_TEXTURE_2D, texture);
+        // Create texture with data in one call, texture remains bound
+        auto opalTexture = opal::Texture::create(
+            opal::TextureType::Texture2D, opal::TextureFormat::Red8,
+            face->glyph->bitmap.width, face->glyph->bitmap.rows,
+            opal::TextureDataFormat::Red, face->glyph->bitmap.buffer, 1);
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, face->glyph->bitmap.width,
-                     face->glyph->bitmap.rows, 0, GL_RED, GL_UNSIGNED_BYTE,
-                     face->glyph->bitmap.buffer);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+        // Set all parameters in one batched call (single bind)
+        opalTexture->setParameters(opal::TextureWrapMode::ClampToEdge,
+                                   opal::TextureWrapMode::ClampToEdge,
+                                   opal::TextureFilterMode::Linear,
+                                   opal::TextureFilterMode::Linear);
 
         Character character = {
-            texture,
+            opalTexture->textureID, opalTexture,
             Size2d(face->glyph->bitmap.width, face->glyph->bitmap.rows),
             Position2d(face->glyph->bitmap_left, face->glyph->bitmap_top),
             static_cast<unsigned int>(face->glyph->advance.x)};
 
         font.atlas.insert(std::pair<char, Character>(c, character));
     }
-
-    glBindTexture(GL_TEXTURE_2D, 0);
 
     FT_Done_Face(face);
     FT_Done_FreeType(ft);

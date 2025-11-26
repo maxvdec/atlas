@@ -24,6 +24,7 @@ void CommandBuffer::begin() {}
 void CommandBuffer::end() {}
 
 void CommandBuffer::bindPipeline(std::shared_ptr<Pipeline> pipeline) {
+    pipeline->bind();
     boundPipeline = pipeline;
 }
 

@@ -31,6 +31,11 @@ struct Character {
      */
     unsigned int textureID;
     /**
+     * @brief The opal texture object.
+     *
+     */
+    std::shared_ptr<opal::Texture> texture;
+    /**
      * @brief The size of the glyph.
      *
      */

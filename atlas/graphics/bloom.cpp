@@ -38,14 +38,18 @@ void BloomRenderTarget::init(int width, int height, int chainLength) {
         element.size = mipSize;
         element.intSize = mipIntSize;
 
-        glGenTextures(1, &element.textureId);
-        glBindTexture(GL_TEXTURE_2D, element.textureId);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_R11F_G11F_B10F, element.intSize.x,
-                     element.intSize.y, 0, GL_RGB, GL_FLOAT, nullptr);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        auto opalTexture = opal::Texture::create(
+            opal::TextureType::Texture2D, opal::TextureFormat::Rgb16F,
+            element.intSize.x, element.intSize.y);
+        opalTexture->setFilterMode(opal::TextureFilterMode::Linear,
+                                   opal::TextureFilterMode::Linear);
+        opalTexture->setWrapMode(opal::TextureAxis::S,
+                                 opal::TextureWrapMode::ClampToEdge);
+        opalTexture->setWrapMode(opal::TextureAxis::T,
+                                 opal::TextureWrapMode::ClampToEdge);
+
+        element.textureId = opalTexture->textureID;
+        element.texture = opalTexture;
 
         this->elements.push_back(element);
     }
