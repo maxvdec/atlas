@@ -65,7 +65,7 @@ Texture Texture::createCheckerboard(int width, int height, int checkSize,
 
     TextureCreationData creationData{width, height, 3};
 
-    return Texture{Resource(),    creationData, opalTexture->textureID,
+    return Texture{Resource(),  creationData,       opalTexture->textureID,
                    opalTexture, TextureType::Color, borderColor};
 }
 
@@ -123,7 +123,7 @@ Texture Texture::createDoubleCheckerboard(
 
     TextureCreationData creationData{width, height, 3};
 
-    return Texture{Resource(),    creationData, opalTexture->textureID,
+    return Texture{Resource(),  creationData,       opalTexture->textureID,
                    opalTexture, TextureType::Color, borderColor};
 }
 
@@ -186,7 +186,7 @@ Texture Texture::createTiledCheckerboard(int width, int height,
     opalTexture->automaticallyGenerateMipmaps();
 
     TextureCreationData creationData{width, height, 3};
-    return Texture{Resource(),    creationData, opalTexture->textureID,
+    return Texture{Resource(),  creationData,       opalTexture->textureID,
                    opalTexture, TextureType::Color, borderColor};
 }
 
@@ -251,6 +251,6 @@ Texture Texture::createRainStreak(int width, int height,
     opalTexture->automaticallyGenerateMipmaps();
 
     TextureCreationData creationData{width, height, 4};
-    return Texture{Resource(),    creationData, opalTexture->textureID,
+    return Texture{Resource(),  creationData,       opalTexture->textureID,
                    opalTexture, TextureType::Color, borderColor};
 }

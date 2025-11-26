@@ -17,6 +17,7 @@
 #include <memory>
 #include <string>
 #include <type_traits>
+#include <unordered_map>
 #pragma once
 
 #include "atlas/core/shader.h"
@@ -877,11 +878,15 @@ class Model : public GameObject {
 
     void loadModel(Resource resource);
     void processNode(aiNode *node, const aiScene *scene,
-                     glm::mat4 parentTransform = glm::mat4(1.0f));
-    CoreObject processMesh(aiMesh *mesh, const aiScene *scene,
-                           const glm::mat4 &transform);
-    std::vector<Texture> loadMaterialTextures(aiMaterial *mat, std::any type,
-                                              const std::string &typeName);
+                     glm::mat4 parentTransform,
+                     std::shared_ptr<opal::Pipeline> sharedPipeline,
+                     std::unordered_map<std::string, Texture> &textureCache);
+    CoreObject
+    processMesh(aiMesh *mesh, const aiScene *scene, const glm::mat4 &transform,
+                std::unordered_map<std::string, Texture> &textureCache);
+    std::vector<Texture> loadMaterialTextures(
+        aiMaterial *mat, std::any type, const std::string &typeName,
+        std::unordered_map<std::string, Texture> &textureCache);
 };
 
 #endif // ATLAS_OBJECT_H

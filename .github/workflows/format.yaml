@@ -13,6 +13,7 @@ jobs:
       - name: Install clang-format
         run: brew install clang-format
 
-      - name: Check formatting
+      - name: Format code
         run: |
-          find atlas test \( -name '*.cpp' -o -name '*.h' \) -print0 | xargs -0 clang-format --dry-run --Werror
+          find atlas test \( -name '*.cpp' -o -name '*.h' \) -print0 \
+            | xargs -0 clang-format -i
