@@ -214,32 +214,11 @@ Texture Texture::fromResource(const Resource &resource, TextureType type,
         throw std::runtime_error("Resource is not an image");
     }
 
-    std::shared_ptr<opal::Texture> opalTexture;
-    opalTexture = opal::Texture::create(opal::TextureType::Texture2D,
-                                        opal::TextureFormat::Rgba8, 0, 0);
-
-    Texture::applyWrappingMode(params.wrappingModeS, opal::TextureAxis::S,
-                               opalTexture);
-    Texture::applyWrappingMode(params.wrappingModeT, opal::TextureAxis::T,
-                               opalTexture);
-    Texture::applyFilteringModes(params.minifyingFilter,
-                                 params.magnifyingFilter, opalTexture);
-    if (params.wrappingModeS == TextureWrappingMode::ClampToBorder ||
-        params.wrappingModeT == TextureWrappingMode::ClampToBorder) {
-        if (borderColor.r < 0 || borderColor.r > 1 || borderColor.g < 0 ||
-            borderColor.g > 1 || borderColor.b < 0 || borderColor.b > 1 ||
-            borderColor.a < 0 || borderColor.a > 1) {
-            throw std::runtime_error(
-                "Border color values must be between 0 and 1");
-        }
-
-        opalTexture->changeBorderColor(borderColor.toGlm());
-    }
-
     int width, height, channels;
     stbi_set_flip_vertically_on_load(true);
 
     TextureCreationData creationData{};
+    std::shared_ptr<opal::Texture> opalTexture;
 
     if (type == TextureType::HDR) {
         float *data = stbi_loadf(resource.path.string().c_str(), &width,
@@ -252,7 +231,7 @@ Texture Texture::fromResource(const Resource &resource, TextureType type,
         creationData = TextureCreationData{width, height, channels};
 
         opal::TextureFormat internalFormat = opal::TextureFormat::Rgb16F;
-        opal::TextureDataFormat dataFormat = opal::TextureDataFormat::Rgba;
+        opal::TextureDataFormat dataFormat = opal::TextureDataFormat::Rgb;
         if (channels == 1) {
             internalFormat = opal::TextureFormat::Red16F;
             dataFormat = opal::TextureDataFormat::Red;
@@ -261,10 +240,10 @@ Texture Texture::fromResource(const Resource &resource, TextureType type,
             dataFormat = opal::TextureDataFormat::Rgba;
         }
 
-        opalTexture->changeFormat(internalFormat);
-        opalTexture->updateData(data, width, height, dataFormat);
-        opalTexture->automaticallyGenerateMipmaps();
-
+        // Create with correct format and data in one call
+        opalTexture =
+            opal::Texture::create(opal::TextureType::Texture2D, internalFormat,
+                                  width, height, dataFormat, data, 1);
         stbi_image_free(data);
     } else {
         unsigned char *data = stbi_load(resource.path.string().c_str(), &width,
@@ -276,22 +255,53 @@ Texture Texture::fromResource(const Resource &resource, TextureType type,
 
         creationData = TextureCreationData{width, height, channels};
 
-        opalTexture->changeFormat(
+        opal::TextureFormat internalFormat =
             channels == 4 ? opal::TextureFormat::sRgba8
                           : (channels == 3 ? opal::TextureFormat::sRgb8
-                                           : opal::TextureFormat::Red8));
+                                           : opal::TextureFormat::Red8);
+        opal::TextureDataFormat dataFormat =
+            channels == 4 ? opal::TextureDataFormat::Rgba
+                          : (channels == 3 ? opal::TextureDataFormat::Rgb
+                                           : opal::TextureDataFormat::Red);
 
-        opal::TextureDataFormat dataFormat = opal::TextureDataFormat::Rgba;
-        if (channels == 1) {
-            dataFormat = opal::TextureDataFormat::Red;
-        } else if (channels == 3) {
-            dataFormat = opal::TextureDataFormat::Rgb;
-        }
-        opalTexture->updateData(data, width, height, dataFormat);
-        opalTexture->automaticallyGenerateMipmaps();
-
+        // Create with correct format and data in one call
+        opalTexture =
+            opal::Texture::create(opal::TextureType::Texture2D, internalFormat,
+                                  width, height, dataFormat, data, 1);
         stbi_image_free(data);
     }
+
+    // Set all texture parameters in one batched call (single bind)
+    auto toOpalWrap = [](TextureWrappingMode m) -> opal::TextureWrapMode {
+        switch (m) {
+        case TextureWrappingMode::Repeat:
+            return opal::TextureWrapMode::Repeat;
+        case TextureWrappingMode::MirroredRepeat:
+            return opal::TextureWrapMode::MirroredRepeat;
+        case TextureWrappingMode::ClampToEdge:
+            return opal::TextureWrapMode::ClampToEdge;
+        case TextureWrappingMode::ClampToBorder:
+            return opal::TextureWrapMode::ClampToBorder;
+        default:
+            return opal::TextureWrapMode::Repeat;
+        }
+    };
+    auto toOpalFilter = [](TextureFilteringMode m) -> opal::TextureFilterMode {
+        return m == TextureFilteringMode::Nearest
+                   ? opal::TextureFilterMode::Nearest
+                   : opal::TextureFilterMode::Linear;
+    };
+    opalTexture->setParameters(toOpalWrap(params.wrappingModeS),
+                               toOpalWrap(params.wrappingModeT),
+                               toOpalFilter(params.minifyingFilter),
+                               toOpalFilter(params.magnifyingFilter));
+
+    if (params.wrappingModeS == TextureWrappingMode::ClampToBorder ||
+        params.wrappingModeT == TextureWrappingMode::ClampToBorder) {
+        opalTexture->changeBorderColor(borderColor.toGlm());
+    }
+
+    opalTexture->automaticallyGenerateMipmaps();
 
     Texture texture{resource,    creationData, opalTexture->textureID,
                     opalTexture, type,         borderColor};
@@ -360,19 +370,13 @@ Cubemap Cubemap::fromResourceGroup(ResourceGroup &group) {
     unsigned long long accumulatedPixels = 0;
 
     // First pass: determine dimensions and format from first image
-    {
-        int w, h, c;
-        stbi_set_flip_vertically_on_load(false);
-        unsigned char *data =
-            stbi_load(group.resources[0].path.string().c_str(), &w, &h, &c, 0);
-        if (!data) {
-            throw std::runtime_error("Failed to load image: " +
-                                     group.resources[0].path.string());
-        }
-        width = w;
-        height = h;
-        channels = c;
-        stbi_image_free(data);
+    stbi_set_flip_vertically_on_load(false);
+    unsigned char *firstData =
+        stbi_load(group.resources[0].path.string().c_str(), &width, &height,
+                  &channels, 0);
+    if (!firstData) {
+        throw std::runtime_error("Failed to load image: " +
+                                 group.resources[0].path.string());
     }
 
     opal::TextureFormat format =
@@ -384,10 +388,40 @@ Cubemap Cubemap::fromResourceGroup(ResourceGroup &group) {
                       : (channels == 3 ? opal::TextureDataFormat::Rgb
                                        : opal::TextureDataFormat::Red);
 
+    // Create cubemap with pre-allocated faces
     auto opalTexture = opal::Texture::create(opal::TextureType::TextureCubeMap,
                                              format, width, height);
 
-    for (size_t i = 0; i < 6; i++) {
+    // Process first face (already loaded)
+    {
+        unsigned long long facePixelCount =
+            static_cast<unsigned long long>(width) *
+            static_cast<unsigned long long>(height);
+        if (facePixelCount > 0 && channels >= 1) {
+            glm::dvec3 faceSum(0.0);
+            if (channels >= 3) {
+                for (unsigned long long pixel = 0; pixel < facePixelCount;
+                     ++pixel) {
+                    unsigned char *p = firstData + pixel * channels;
+                    faceSum.x += p[0];
+                    faceSum.y += p[1];
+                    faceSum.z += p[2];
+                }
+            } else {
+                for (unsigned long long pixel = 0; pixel < facePixelCount;
+                     ++pixel) {
+                    faceSum += glm::dvec3(firstData[pixel]);
+                }
+            }
+            accumulatedColor += faceSum;
+            accumulatedPixels += facePixelCount;
+        }
+        opalTexture->updateFace(0, firstData, width, height, dataFormat);
+        stbi_image_free(firstData);
+    }
+
+    // Process remaining 5 faces
+    for (size_t i = 1; i < 6; i++) {
         Resource &resource = group.resources[i];
         if (resource.type != ResourceType::Image) {
             throw std::runtime_error("Resource is not an image: " +
@@ -395,20 +429,16 @@ Cubemap Cubemap::fromResourceGroup(ResourceGroup &group) {
         }
 
         int w, h, c;
-        stbi_set_flip_vertically_on_load(false);
         unsigned char *data =
             stbi_load(resource.path.string().c_str(), &w, &h, &c, 0);
-
         if (!data) {
             throw std::runtime_error("Failed to load image: " +
                                      resource.path.string());
         }
-
         if (w != width || h != height || c != channels) {
             stbi_image_free(data);
-            throw std::runtime_error(
-                "All cubemap images must have the same dimensions and "
-                "channels");
+            throw std::runtime_error("All cubemap images must have the same "
+                                     "dimensions and channels");
         }
 
         unsigned long long facePixelCount = static_cast<unsigned long long>(w) *
@@ -418,16 +448,15 @@ Cubemap Cubemap::fromResourceGroup(ResourceGroup &group) {
             if (c >= 3) {
                 for (unsigned long long pixel = 0; pixel < facePixelCount;
                      ++pixel) {
-                    unsigned char *pixelPtr = data + pixel * c;
-                    faceSum.x += pixelPtr[0];
-                    faceSum.y += pixelPtr[1];
-                    faceSum.z += pixelPtr[2];
+                    unsigned char *p = data + pixel * c;
+                    faceSum.x += p[0];
+                    faceSum.y += p[1];
+                    faceSum.z += p[2];
                 }
             } else if (c == 1) {
                 for (unsigned long long pixel = 0; pixel < facePixelCount;
                      ++pixel) {
-                    unsigned char value = data[pixel];
-                    faceSum += glm::dvec3(value, value, value);
+                    faceSum += glm::dvec3(data[pixel]);
                 }
             }
             accumulatedColor += faceSum;
@@ -435,18 +464,14 @@ Cubemap Cubemap::fromResourceGroup(ResourceGroup &group) {
         }
 
         opalTexture->updateFace(static_cast<int>(i), data, w, h, dataFormat);
-
         stbi_image_free(data);
     }
 
-    opalTexture->setFilterMode(opal::TextureFilterMode::Linear,
-                               opal::TextureFilterMode::Linear);
-    opalTexture->setWrapMode(opal::TextureAxis::S,
-                             opal::TextureWrapMode::ClampToEdge);
-    opalTexture->setWrapMode(opal::TextureAxis::T,
-                             opal::TextureWrapMode::ClampToEdge);
-    opalTexture->setWrapMode(opal::TextureAxis::R,
-                             opal::TextureWrapMode::ClampToEdge);
+    // Set all parameters in one batched call (single bind for cubemap)
+    opalTexture->setParameters3D(
+        opal::TextureWrapMode::ClampToEdge, opal::TextureWrapMode::ClampToEdge,
+        opal::TextureWrapMode::ClampToEdge, opal::TextureFilterMode::Linear,
+        opal::TextureFilterMode::Linear);
 
     TextureCreationData creationData{width, height, channels};
     Cubemap cubemap;
@@ -491,14 +516,11 @@ Cubemap Cubemap::fromColors(const std::array<Color, 6> &colors, int size) {
                              static_cast<unsigned long long>(size);
     }
 
-    opalTexture->setFilterMode(opal::TextureFilterMode::Linear,
-                               opal::TextureFilterMode::Linear);
-    opalTexture->setWrapMode(opal::TextureAxis::S,
-                             opal::TextureWrapMode::ClampToEdge);
-    opalTexture->setWrapMode(opal::TextureAxis::T,
-                             opal::TextureWrapMode::ClampToEdge);
-    opalTexture->setWrapMode(opal::TextureAxis::R,
-                             opal::TextureWrapMode::ClampToEdge);
+    // Set all parameters in one batched call
+    opalTexture->setParameters3D(
+        opal::TextureWrapMode::ClampToEdge, opal::TextureWrapMode::ClampToEdge,
+        opal::TextureWrapMode::ClampToEdge, opal::TextureFilterMode::Linear,
+        opal::TextureFilterMode::Linear);
 
     TextureCreationData creationData{size, size, 4};
     Cubemap cubemap;

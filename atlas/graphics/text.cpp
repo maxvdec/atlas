@@ -50,16 +50,16 @@ Font Font::fromResource(const std::string &fontName, Resource resource,
             continue;
         }
 
+        // Create texture with data in one call, texture remains bound
         auto opalTexture = opal::Texture::create(
             opal::TextureType::Texture2D, opal::TextureFormat::Red8,
             face->glyph->bitmap.width, face->glyph->bitmap.rows,
             opal::TextureDataFormat::Red, face->glyph->bitmap.buffer, 1);
 
-        opalTexture->setWrapMode(opal::TextureAxis::S,
-                                 opal::TextureWrapMode::ClampToEdge);
-        opalTexture->setWrapMode(opal::TextureAxis::T,
-                                 opal::TextureWrapMode::ClampToEdge);
-        opalTexture->setFilterMode(opal::TextureFilterMode::Linear,
+        // Set all parameters in one batched call (single bind)
+        opalTexture->setParameters(opal::TextureWrapMode::ClampToEdge,
+                                   opal::TextureWrapMode::ClampToEdge,
+                                   opal::TextureFilterMode::Linear,
                                    opal::TextureFilterMode::Linear);
 
         Character character = {
@@ -70,8 +70,6 @@ Font Font::fromResource(const std::string &fontName, Resource resource,
 
         font.atlas.insert(std::pair<char, Character>(c, character));
     }
-
-    glBindTexture(GL_TEXTURE_2D, 0);
 
     FT_Done_Face(face);
     FT_Done_FreeType(ft);

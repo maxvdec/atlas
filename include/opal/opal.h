@@ -111,6 +111,14 @@ class Texture {
     void setFilterMode(TextureFilterMode minFilter,
                        TextureFilterMode magFilter);
 
+    // Batch parameter setter - sets all common parameters in one bind
+    void setParameters(TextureWrapMode wrapS, TextureWrapMode wrapT,
+                       TextureFilterMode minFilter,
+                       TextureFilterMode magFilter);
+    void setParameters3D(TextureWrapMode wrapS, TextureWrapMode wrapT,
+                         TextureWrapMode wrapR, TextureFilterMode minFilter,
+                         TextureFilterMode magFilter);
+
     uint textureID;
     TextureType type;
     TextureFormat format;
