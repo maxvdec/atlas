@@ -307,9 +307,15 @@ class Pipeline {
 
     void enableDepthTest(bool enabled);
     void setDepthCompareOp(CompareOp op);
+    void enableDepthWrite(bool enabled);
 
     void enableBlending(bool enabled);
     void setBlendFunc(BlendFunc srcFactor, BlendFunc dstFactor);
+
+    void enableMultisampling(bool enabled);
+    void enablePolygonOffset(bool enabled);
+    void setPolygonOffset(float factor, float units);
+    void enableClipDistance(int index, bool enabled);
 
     void build();
 
@@ -341,7 +347,13 @@ class Pipeline {
     BlendFunc blendSrcFactor = BlendFunc::One;
     BlendFunc blendDstFactor = BlendFunc::Zero;
     bool depthTestEnabled = false;
+    bool depthWriteEnabled = true;
     CompareOp depthCompareOp = CompareOp::Less;
+    bool multisamplingEnabled = false;
+    bool polygonOffsetEnabled = false;
+    float polygonOffsetFactor = 0.0f;
+    float polygonOffsetUnits = 0.0f;
+    std::vector<int> enabledClipDistances;
 
     std::vector<VertexAttribute> vertexAttributes;
     VertexBinding vertexBinding;
@@ -471,6 +483,12 @@ class Framebuffer {
     void bindForRead();
     void bindForDraw();
 
+    /**
+     * @brief Sets which color attachments to draw to.
+     * @param attachmentCount Number of color attachments to enable (0-N).
+     */
+    void setDrawBuffers(int attachmentCount);
+
     bool getStatus() const;
 
     uint framebufferID;
@@ -530,6 +548,7 @@ class CommandBuffer {
     void beginPass(std::shared_ptr<RenderPass> renderPass);
     void beginSampled(std::shared_ptr<Framebuffer> readFramebuffer,
                       std::shared_ptr<Framebuffer> writeFramebuffer);
+    void cancelPass();
     void endPass();
     void commit();
 
@@ -547,6 +566,7 @@ class CommandBuffer {
 
     void clearColor(float r, float g, float b, float a);
     void clearDepth(float depth);
+    void clear(float r, float g, float b, float a, float depth);
 
   private:
     std::shared_ptr<Pipeline> boundPipeline = nullptr;

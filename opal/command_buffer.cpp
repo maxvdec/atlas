@@ -33,6 +33,8 @@ void CommandBuffer::beginPass(
     }
 }
 
+void CommandBuffer::cancelPass() {}
+
 void CommandBuffer::beginSampled(
     [[maybe_unused]] std::shared_ptr<Framebuffer> readFramebuffer,
     [[maybe_unused]] std::shared_ptr<Framebuffer> writeFramebuffer) {

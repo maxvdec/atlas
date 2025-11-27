@@ -166,6 +166,21 @@ void Framebuffer::bindForDraw() {
 #endif
 }
 
+void Framebuffer::setDrawBuffers(int attachmentCount) {
+#ifdef OPENGL
+    if (attachmentCount <= 0) {
+        glDrawBuffer(GL_NONE);
+        return;
+    }
+    std::vector<GLenum> drawBuffers;
+    drawBuffers.reserve(attachmentCount);
+    for (int i = 0; i < attachmentCount; ++i) {
+        drawBuffers.push_back(GL_COLOR_ATTACHMENT0 + i);
+    }
+    glDrawBuffers(attachmentCount, drawBuffers.data());
+#endif
+}
+
 std::shared_ptr<ResolveAction>
 ResolveAction::create(std::shared_ptr<Framebuffer> source,
                       std::shared_ptr<Framebuffer> destination) {

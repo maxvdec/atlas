@@ -194,7 +194,7 @@ void Window::run() {
 
     this->lastTime = static_cast<float>(glfwGetTime());
 
-    glEnable(GL_MULTISAMPLE);
+    updatePipelineStateField(useMultisampling, true);
     updatePipelineStateField(this->useDepth, true);
     updatePipelineStateField(this->useBlending, true);
     updatePipelineStateField(this->srcBlend, opal::BlendFunc::SrcAlpha);
@@ -208,15 +208,18 @@ void Window::run() {
 
     while (!glfwWindowShouldClose(window)) {
         if (this->currentScene == nullptr) {
-            glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            commandBuffer->start();
+            commandBuffer->beginPass(renderPass);
+            commandBuffer->clearColor(0.1f, 0.1f, 0.1f, 1.0f);
+            commandBuffer->clearDepth(1.0);
             glfwSwapBuffers(window);
             glfwPollEvents();
+            commandBuffer->endPass();
+            commandBuffer->commit();
             continue;
         }
 
         commandBuffer->start();
-        commandBuffer->beginPass(renderPass);
         float currentTime = static_cast<float>(glfwGetTime());
         this->deltaTime = currentTime - this->lastTime;
         lastTime = currentTime;
@@ -248,34 +251,27 @@ void Window::run() {
         // Render to the targets
         for (auto &target : this->renderTargets) {
             this->currentRenderTarget = target;
-            int targetWidth = target->getWidth();
-            int targetHeight = target->getHeight();
             updatePipelineStateField(this->depthCompareOp,
                                      opal::CompareOp::Less);
             updatePipelineStateField(this->writeDepth, true);
             updatePipelineStateField(this->cullMode, opal::CullMode::Back);
 
-            target->bind();
-            setViewportState(0, 0, targetWidth, targetHeight);
+            auto renderPass = opal::RenderPass::create();
+            renderPass->setFramebuffer(target->getFramebuffer());
+            commandBuffer->beginPass(renderPass);
             if (target->brightTexture.id != 0) {
-                unsigned int attachments[2] = {GL_COLOR_ATTACHMENT0,
-                                               GL_COLOR_ATTACHMENT1};
-                glDrawBuffers(2, attachments);
+                target->getFramebuffer()->setDrawBuffers(2);
             }
 
             if (this->usesDeferred) {
                 this->deferredRendering(target, commandBuffer);
 
-                this->gBuffer->getFramebuffer()->bindForRead();
-                target->getFramebuffer()->bindForDraw();
-                glBlitFramebuffer(
-                    0, 0, this->gBuffer->gPosition.creationData.width,
-                    this->gBuffer->gPosition.creationData.height, 0, 0,
-                    targetWidth, targetHeight, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+                auto resolveCommand = opal::ResolveAction::create(
+                    this->gBuffer->getFramebuffer(), target->getFramebuffer());
+                commandBuffer->performResolve(resolveCommand);
+
                 target->getFramebuffer()->bindForRead();
-                unsigned int targetAttachments[2] = {GL_COLOR_ATTACHMENT0,
-                                                     GL_COLOR_ATTACHMENT1};
-                glDrawBuffers(2, targetAttachments);
+                target->getFramebuffer()->setDrawBuffers(2);
 
                 updatePipelineStateField(this->useDepth, true);
                 updatePipelineStateField(this->depthCompareOp,
@@ -309,12 +305,12 @@ void Window::run() {
                                 shouldRefreshPipeline(obj));
                 }
 
-                glBindFramebuffer(GL_FRAMEBUFFER, 0);
+                commandBuffer->endPass();
                 target->resolve();
                 continue;
             }
-            glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            commandBuffer->clearColor(0.0f, 0.0f, 0.0f, 1.0f);
+            commandBuffer->clearDepth(1.0f);
 
             for (auto &obj : this->firstRenderables) {
                 obj->setViewMatrix(this->camera->calculateViewMatrix());
@@ -339,17 +335,18 @@ void Window::run() {
                 obj->render(getDeltaTime(), commandBuffer,
                             shouldRefreshPipeline(obj));
             }
-            glBindFramebuffer(GL_FRAMEBUFFER, 0);
             target->resolve();
+
+            commandBuffer->endPass();
         }
 
         // Render to the screen
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        commandBuffer->beginPass(renderPass);
         int fbWidth, fbHeight;
         glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
         setViewportState(0, 0, fbWidth, fbHeight);
-        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        commandBuffer->clearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        commandBuffer->clearDepth(1.0f);
 
         if (this->renderTargets.empty()) {
             updateBackbufferTarget(fbWidth, fbHeight);
@@ -815,8 +812,7 @@ void Window::renderLightsToShadowMaps(
         depthPipeline = this->depthProgram.requestPipeline(depthPipeline);
 
         shadowRenderTarget->bind();
-        glClearDepth(1.0);
-        glClear(GL_DEPTH_BUFFER_BIT);
+        commandBuffer->clearDepth(1.0f);
         glEnable(GL_POLYGON_OFFSET_FILL);
         glPolygonOffset(2.0f, 4.0f);
         ShadowParams lightParams =

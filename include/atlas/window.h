@@ -526,6 +526,7 @@ class Window {
     bool useDepth = true;
     bool useBlending = true;
     bool writeDepth = true;
+    bool useMultisampling = true;
     int viewportX = 0;
     int viewportY = 0;
     int viewportWidth = 0;
