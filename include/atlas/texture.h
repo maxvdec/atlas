@@ -521,10 +521,32 @@ class RenderTarget : public Renderable {
         effects.push_back(effect);
     }
 
+    /**
+     * @brief Binds this render target's framebuffer for rendering.
+     */
+    void bind();
+
+    /**
+     * @brief Unbinds the framebuffer (binds the default framebuffer).
+     */
+    void unbind();
+
+    /**
+     * @brief Returns the primary framebuffer for this render target.
+     * @return The framebuffer, or nullptr if not created.
+     */
+    std::shared_ptr<opal::Framebuffer> getFramebuffer() const;
+
+    /**
+     * @brief Returns the resolve framebuffer for multisampled targets.
+     * @return The resolve framebuffer, or nullptr if not applicable.
+     */
+    std::shared_ptr<opal::Framebuffer> getResolveFramebuffer() const;
+
   private:
-    Id fbo = 0;
-    Id rbo = 0;
-    Id resolveFbo = 0;
+    std::shared_ptr<opal::Framebuffer> fb = nullptr;
+    std::shared_ptr<opal::Framebuffer> resolveFb = nullptr;
+    std::shared_ptr<opal::DepthStencilBuffer> renderbuffer = nullptr;
     std::vector<std::shared_ptr<Effect>> effects;
 
     friend class Window;

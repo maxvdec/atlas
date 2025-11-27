@@ -202,6 +202,10 @@ void Window::run() {
 
     this->framesPerSecond = 0.0f;
 
+    auto defaultFramebuffer = device->getDefaultFramebuffer();
+    auto renderPass = opal::RenderPass::create();
+    renderPass->setFramebuffer(defaultFramebuffer);
+
     while (!glfwWindowShouldClose(window)) {
         if (this->currentScene == nullptr) {
             glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -210,7 +214,9 @@ void Window::run() {
             glfwPollEvents();
             continue;
         }
-        commandBuffer->begin();
+
+        commandBuffer->start();
+        commandBuffer->beginPass(renderPass);
         float currentTime = static_cast<float>(glfwGetTime());
         this->deltaTime = currentTime - this->lastTime;
         lastTime = currentTime;
@@ -237,7 +243,6 @@ void Window::run() {
 
         renderLightsToShadowMaps(commandBuffer);
 
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
         updatePipelineStateField(this->cullMode, opal::CullMode::None);
         updatePipelineStateField(this->cullMode, opal::CullMode::Back);
         // Render to the targets
@@ -250,7 +255,7 @@ void Window::run() {
             updatePipelineStateField(this->writeDepth, true);
             updatePipelineStateField(this->cullMode, opal::CullMode::Back);
 
-            glBindFramebuffer(GL_FRAMEBUFFER, target->fbo);
+            target->bind();
             setViewportState(0, 0, targetWidth, targetHeight);
             if (target->brightTexture.id != 0) {
                 unsigned int attachments[2] = {GL_COLOR_ATTACHMENT0,
@@ -261,13 +266,13 @@ void Window::run() {
             if (this->usesDeferred) {
                 this->deferredRendering(target, commandBuffer);
 
-                glBindFramebuffer(GL_READ_FRAMEBUFFER, this->gBuffer->fbo);
-                glBindFramebuffer(GL_DRAW_FRAMEBUFFER, target->fbo);
+                this->gBuffer->getFramebuffer()->bindForRead();
+                target->getFramebuffer()->bindForDraw();
                 glBlitFramebuffer(
                     0, 0, this->gBuffer->gPosition.creationData.width,
                     this->gBuffer->gPosition.creationData.height, 0, 0,
                     targetWidth, targetHeight, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
-                glBindFramebuffer(GL_READ_FRAMEBUFFER, target->fbo);
+                target->getFramebuffer()->bindForRead();
                 unsigned int targetAttachments[2] = {GL_COLOR_ATTACHMENT0,
                                                      GL_COLOR_ATTACHMENT1};
                 glDrawBuffers(2, targetAttachments);
@@ -399,7 +404,7 @@ void Window::run() {
 
         this->lastViewMatrix = this->camera->calculateViewMatrix();
 
-        commandBuffer->end();
+        commandBuffer->endPass();
         device->submitCommandBuffer(commandBuffer);
 
         glfwSwapBuffers(window);
@@ -536,14 +541,14 @@ std::vector<Monitor> Window::enumerateMonitors() {
 }
 
 Window::~Window() {
-    if (this->pingpongFBOs[0] != 0 || this->pingpongFBOs[1] != 0) {
-        glDeleteFramebuffers(2, this->pingpongFBOs);
-        glDeleteTextures(2, this->pingpongBuffers);
-        this->pingpongFBOs[0] = this->pingpongFBOs[1] = 0;
-        this->pingpongBuffers[0] = this->pingpongBuffers[1] = 0;
-        this->pingpongWidth = 0;
-        this->pingpongHeight = 0;
-    }
+    // Release opal framebuffers and textures (shared_ptr handles cleanup)
+    this->pingpongFramebuffers[0] = nullptr;
+    this->pingpongFramebuffers[1] = nullptr;
+    this->pingpongTextures[0] = nullptr;
+    this->pingpongTextures[1] = nullptr;
+    this->pingpongWidth = 0;
+    this->pingpongHeight = 0;
+
     GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
     glfwDestroyWindow(window);
     glfwTerminate();
@@ -809,7 +814,7 @@ void Window::renderLightsToShadowMaps(
 
         depthPipeline = this->depthProgram.requestPipeline(depthPipeline);
 
-        glBindFramebuffer(GL_FRAMEBUFFER, shadowRenderTarget->fbo);
+        shadowRenderTarget->bind();
         glClearDepth(1.0);
         glClear(GL_DEPTH_BUFFER_BIT);
         glEnable(GL_POLYGON_OFFSET_FILL);
@@ -862,7 +867,7 @@ void Window::renderLightsToShadowMaps(
         spotlightsPipeline =
             this->depthProgram.requestPipeline(spotlightsPipeline);
 
-        glBindFramebuffer(GL_FRAMEBUFFER, shadowRenderTarget->fbo);
+        shadowRenderTarget->bind();
         glClearDepth(1.0);
         glClear(GL_DEPTH_BUFFER_BIT);
         glEnable(GL_POLYGON_OFFSET_FILL);
@@ -919,7 +924,7 @@ void Window::renderLightsToShadowMaps(
         pointLightPipeline =
             this->pointDepthProgram.requestPipeline(pointLightPipeline);
 
-        glBindFramebuffer(GL_FRAMEBUFFER, shadowRenderTarget->fbo);
+        shadowRenderTarget->bind();
         glClearDepth(1.0);
         glClear(GL_DEPTH_BUFFER_BIT);
         glEnable(GL_POLYGON_OFFSET_FILL);
@@ -1068,35 +1073,43 @@ void Window::renderPingpong(RenderTarget *target) {
     int blurHeight = std::max(1, target->brightTexture.creationData.height /
                                      blurDownscaleFactor);
 
-    if (this->pingpongFBOs[0] == 0 || this->pingpongFBOs[1] == 0 ||
+    if (this->pingpongFramebuffers[0] == nullptr ||
+        this->pingpongFramebuffers[1] == nullptr ||
         blurWidth != this->pingpongWidth ||
         blurHeight != this->pingpongHeight) {
-        if (this->pingpongFBOs[0] != 0 || this->pingpongFBOs[1] != 0) {
-            glDeleteFramebuffers(2, this->pingpongFBOs);
-            glDeleteTextures(2, this->pingpongBuffers);
-        }
+        // Release old resources (opal handles cleanup through shared_ptr)
+        this->pingpongFramebuffers[0] = nullptr;
+        this->pingpongFramebuffers[1] = nullptr;
+        this->pingpongTextures[0] = nullptr;
+        this->pingpongTextures[1] = nullptr;
 
-        glGenFramebuffers(2, this->pingpongFBOs);
-        glGenTextures(2, this->pingpongBuffers);
         this->pingpongWidth = blurWidth;
         this->pingpongHeight = blurHeight;
 
         for (unsigned int i = 0; i < 2; i++) {
-            glBindFramebuffer(GL_FRAMEBUFFER, this->pingpongFBOs[i]);
-            glBindTexture(GL_TEXTURE_2D, this->pingpongBuffers[i]);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, blurWidth, blurHeight, 0,
-                         GL_RGBA, GL_FLOAT, nullptr);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                                   GL_TEXTURE_2D, this->pingpongBuffers[i], 0);
+            auto texture = opal::Texture::create(
+                opal::TextureType::Texture2D, opal::TextureFormat::Rgba16F,
+                blurWidth, blurHeight, opal::TextureDataFormat::Rgba, nullptr,
+                1);
+            texture->setFilterMode(opal::TextureFilterMode::Linear,
+                                   opal::TextureFilterMode::Linear);
+            texture->setWrapMode(opal::TextureAxis::S,
+                                 opal::TextureWrapMode::ClampToEdge);
+            texture->setWrapMode(opal::TextureAxis::T,
+                                 opal::TextureWrapMode::ClampToEdge);
 
-            if (glCheckFramebufferStatus(GL_FRAMEBUFFER) !=
-                GL_FRAMEBUFFER_COMPLETE) {
+            auto framebuffer = opal::Framebuffer::create(blurWidth, blurHeight);
+            opal::Attachment colorAttachment;
+            colorAttachment.texture = texture;
+            colorAttachment.type = opal::Attachment::Type::Color;
+            framebuffer->addAttachment(colorAttachment);
+
+            if (!framebuffer->getStatus()) {
                 std::cerr << "Pingpong Framebuffer not complete!" << std::endl;
             }
+
+            this->pingpongFramebuffers[i] = framebuffer;
+            this->pingpongTextures[i] = texture;
         }
     }
 
@@ -1131,16 +1144,16 @@ void Window::renderPingpong(RenderTarget *target) {
     target->object->ebo->bind();
 
     for (unsigned int i = 0; i < blurIterations; ++i) {
-        glBindFramebuffer(GL_FRAMEBUFFER, this->pingpongFBOs[horizontal]);
+        this->pingpongFramebuffers[horizontal]->bind();
         glClear(GL_COLOR_BUFFER_BIT);
 
         blurPipeline->setUniform1i("horizontal", horizontal ? 1 : 0);
 
-        blurPipeline->bindTexture2D("image",
-                                    firstIteration
-                                        ? target->brightTexture.id
-                                        : this->pingpongBuffers[!horizontal],
-                                    0);
+        blurPipeline->bindTexture2D(
+            "image",
+            firstIteration ? target->brightTexture.id
+                           : this->pingpongTextures[!horizontal]->textureID,
+            0);
 
         if (!target->object->indices.empty()) {
             glDrawElements(GL_TRIANGLES, target->object->indices.size(),
@@ -1169,7 +1182,8 @@ void Window::renderPingpong(RenderTarget *target) {
     target->blurredTexture.creationData.width = this->pingpongWidth;
     target->blurredTexture.creationData.height = this->pingpongHeight;
     target->blurredTexture.type = TextureType::Color;
-    target->blurredTexture.id = this->pingpongBuffers[!horizontal];
+    target->blurredTexture.id = this->pingpongTextures[!horizontal]->textureID;
+    target->blurredTexture.texture = this->pingpongTextures[!horizontal];
 }
 
 void Window::useDeferredRendering() {
@@ -1285,7 +1299,7 @@ void Window::captureFluidReflection(
     GLint previousViewport[4];
     glGetIntegerv(GL_VIEWPORT, previousViewport);
 
-    glBindFramebuffer(GL_FRAMEBUFFER, target.fbo);
+    target.bind();
     auto pipeline = opal::Pipeline::create();
 
     glViewport(0, 0, target.getWidth(), target.getHeight());
@@ -1440,7 +1454,7 @@ void Window::captureFluidRefraction(
     GLint previousViewport[4];
     glGetIntegerv(GL_VIEWPORT, previousViewport);
 
-    glBindFramebuffer(GL_FRAMEBUFFER, target.fbo);
+    target.bind();
     glViewport(0, 0, target.getWidth(), target.getHeight());
     setViewportState(0, 0, target.getWidth(), target.getHeight());
     unsigned int attachments[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
@@ -1589,5 +1603,6 @@ void Window::updateBackbufferTarget(int width, int height) {
     target.depthTexture.creationData.width = width;
     target.depthTexture.creationData.height = height;
     target.type = RenderTargetType::Scene;
-    target.fbo = 0;
+    // Note: screenRenderTarget represents the default framebuffer (0),
+    // so fb remains nullptr. bind() will handle this appropriately.
 }

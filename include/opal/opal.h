@@ -49,6 +49,7 @@ class Context {
 };
 
 class CommandBuffer;
+class Framebuffer;
 
 class Device {
   public:
@@ -56,9 +57,16 @@ class Device {
     static std::shared_ptr<CommandBuffer> acquireCommandBuffer();
 
     void submitCommandBuffer(std::shared_ptr<CommandBuffer> commandBuffer);
+    std::shared_ptr<Framebuffer> getDefaultFramebuffer();
 };
 
-enum class TextureType { Texture2D, TextureCubeMap, Texture3D, Texture2DArray };
+enum class TextureType {
+    Texture2D,
+    TextureCubeMap,
+    Texture3D,
+    Texture2DArray,
+    Texture2DMultisample
+};
 enum class TextureFormat {
     Rgba8,
     sRgba8,
@@ -67,6 +75,7 @@ enum class TextureFormat {
     Rgba16F,
     Rgb16F,
     Depth24Stencil8,
+    DepthComponent24,
     Depth32F,
     Red8,
     Red16F
@@ -87,7 +96,7 @@ enum class TextureFilterMode {
 
 enum class TextureAxis { S, T, R };
 
-enum class TextureDataFormat { Rgba, Rgb, Red, Bgr, Bgra };
+enum class TextureDataFormat { Rgba, Rgb, Red, Bgr, Bgra, DepthComponent };
 
 class Texture {
   public:
@@ -95,6 +104,29 @@ class Texture {
     create(TextureType type, TextureFormat format, int width, int height,
            TextureDataFormat dataFormat = TextureDataFormat::Rgba,
            const void *data = nullptr, uint mipLevels = 1);
+
+    /**
+     * @brief Creates a multisampled texture for use with multisampled
+     * framebuffers.
+     * @param format The texture format.
+     * @param width Width in pixels.
+     * @param height Height in pixels.
+     * @param samples Number of samples (typically 2, 4, 8, or 16).
+     * @return A shared pointer to the created multisampled texture.
+     */
+    static std::shared_ptr<Texture> createMultisampled(TextureFormat format,
+                                                       int width, int height,
+                                                       int samples = 4);
+
+    /**
+     * @brief Creates a depth cubemap texture for omnidirectional shadow
+     * mapping.
+     * @param format The depth format (should be DepthComponent24 or Depth32F).
+     * @param resolution The resolution of each face (width = height).
+     * @return A shared pointer to the created depth cubemap texture.
+     */
+    static std::shared_ptr<Texture> createDepthCubemap(TextureFormat format,
+                                                       int resolution);
 
     void updateFace(int faceIndex, const void *data, int width, int height,
                     TextureDataFormat dataFormat = TextureDataFormat::Rgba);
@@ -124,9 +156,12 @@ class Texture {
     TextureFormat format;
     int width;
     int height;
+    int samples = 1; // For multisampled textures
 
   private:
     friend class Pipeline;
+    friend class CommandBuffer;
+    friend class Framebuffer;
 
     uint glType = 0;
     uint glFormat = 0;
@@ -377,10 +412,126 @@ struct DrawingState {
     uint index;
 };
 
+class Attachment {
+  public:
+    enum class Type { Color, Depth, Stencil, DepthStencil };
+
+    Type type;
+
+    std::shared_ptr<Texture> texture;
+};
+
+class DepthStencilBuffer {
+  public:
+    static std::shared_ptr<DepthStencilBuffer>
+    create(int width, int height,
+           TextureFormat format = TextureFormat::Depth24Stencil8);
+
+    std::shared_ptr<Texture> texture;
+
+    uint renderbufferID;
+};
+
+class Framebuffer {
+  public:
+    static std::shared_ptr<Framebuffer> create(int width, int height);
+
+    void addAttachment(const Attachment &attachment);
+    void attachDepthStencilBuffer(
+        std::shared_ptr<DepthStencilBuffer> depthStencilBuffer);
+
+    /**
+     * @brief Attaches a cubemap texture to this framebuffer for omnidirectional
+     * rendering (e.g., point light shadows).
+     * @param texture The cubemap texture to attach.
+     * @param attachmentType The attachment type (typically Depth for shadows).
+     */
+    void attachCubemap(std::shared_ptr<Texture> texture,
+                       Attachment::Type attachmentType);
+
+    /**
+     * @brief Disables color buffer read/write for depth-only rendering.
+     * Used for shadow map generation.
+     */
+    void disableColorBuffer();
+
+    /**
+     * @brief Sets the viewport to match this framebuffer's dimensions.
+     */
+    void setViewport();
+
+    /**
+     * @brief Sets the viewport to a custom size.
+     */
+    void setViewport(int x, int y, int viewWidth, int viewHeight);
+
+    void bind();
+    void unbind();
+
+    void bindForRead();
+    void bindForDraw();
+
+    bool getStatus() const;
+
+    uint framebufferID;
+
+    int width;
+    int height;
+    std::vector<Attachment> attachments;
+
+  private:
+    bool colorBufferDisabled = false;
+};
+
+class RenderPass {
+  public:
+    static std::shared_ptr<RenderPass> create();
+
+    void setFramebuffer(std::shared_ptr<Framebuffer> framebuffer);
+
+    std::shared_ptr<Framebuffer> framebuffer;
+};
+
+class ResolveAction {
+  public:
+    static std::shared_ptr<ResolveAction>
+    create(std::shared_ptr<Framebuffer> source,
+           std::shared_ptr<Framebuffer> destination);
+
+    /**
+     * @brief Creates a resolve action for a specific color attachment.
+     * @param source The source (multisampled) framebuffer.
+     * @param destination The destination (regular) framebuffer.
+     * @param colorAttachmentIndex The index of the color attachment to resolve.
+     * @return A shared pointer to the resolve action.
+     */
+    static std::shared_ptr<ResolveAction>
+    createForColorAttachment(std::shared_ptr<Framebuffer> source,
+                             std::shared_ptr<Framebuffer> destination,
+                             int colorAttachmentIndex);
+
+    /**
+     * @brief Creates a resolve action for the depth buffer only.
+     */
+    static std::shared_ptr<ResolveAction>
+    createForDepth(std::shared_ptr<Framebuffer> source,
+                   std::shared_ptr<Framebuffer> destination);
+
+    std::shared_ptr<Framebuffer> source;
+    std::shared_ptr<Framebuffer> destination;
+    int colorAttachmentIndex = -1; // -1 means all color attachments
+    bool resolveDepth = true;
+    bool resolveColor = true;
+};
+
 class CommandBuffer {
   public:
-    void begin();
-    void end();
+    void start();
+    void beginPass(std::shared_ptr<RenderPass> renderPass);
+    void beginSampled(std::shared_ptr<Framebuffer> readFramebuffer,
+                      std::shared_ptr<Framebuffer> writeFramebuffer);
+    void endPass();
+    void commit();
 
     // The different commands
     void bindPipeline(std::shared_ptr<Pipeline> pipeline);
@@ -392,6 +543,7 @@ class CommandBuffer {
     void drawIndexed(uint indexCount, uint instanceCount = 1,
                      uint firstIndex = 0, int vertexOffset = 0,
                      uint firstInstance = 0);
+    void performResolve(std::shared_ptr<ResolveAction> resolveAction);
 
     void clearColor(float r, float g, float b, float a);
     void clearDepth(float depth);

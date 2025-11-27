@@ -278,7 +278,7 @@ void Fluid::ensureTargets(Window &window) {
             GLint previousFBO;
             glGetIntegerv(GL_FRAMEBUFFER_BINDING, &previousFBO);
 
-            glBindFramebuffer(GL_FRAMEBUFFER, target->fbo);
+            target->bind();
             glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 

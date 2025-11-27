@@ -104,11 +104,9 @@ void Window::renderSSAO() {
     this->ssaoMapsDirty = false;
     this->ssaoUpdateCooldown = this->ssaoUpdateInterval;
 
-    glBindFramebuffer(GL_FRAMEBUFFER, this->ssaoBuffer->fbo);
-    glViewport(0, 0, this->ssaoBuffer->getWidth(),
-               this->ssaoBuffer->getHeight());
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    this->ssaoBuffer->bind();
+    auto ssaoCommandBuffer = opal::Device::acquireCommandBuffer();
+    ssaoCommandBuffer->clearColor(1.0f, 1.0f, 1.0f, 1.0f);
     static std::shared_ptr<opal::DrawingState> ssaoState = nullptr;
     static std::shared_ptr<opal::Buffer> ssaoBuffer = nullptr;
     if (ssaoState == nullptr) {
@@ -179,13 +177,10 @@ void Window::renderSSAO() {
     ssaoState->bind();
     glDrawArrays(GL_TRIANGLES, 0, 6);
     ssaoState->unbind();
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    this->ssaoBuffer->unbind();
 
-    glBindFramebuffer(GL_FRAMEBUFFER, this->ssaoBlurBuffer->fbo);
-    glViewport(0, 0, this->ssaoBlurBuffer->getWidth(),
-               this->ssaoBlurBuffer->getHeight());
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    this->ssaoBlurBuffer->bind();
+    ssaoCommandBuffer->clearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
     // Get or create pipeline for SSAO blur
     static std::shared_ptr<opal::Pipeline> ssaoBlurPipeline = nullptr;
@@ -199,7 +194,7 @@ void Window::renderSSAO() {
     ssaoState->bind();
     glDrawArrays(GL_TRIANGLES, 0, 6);
     ssaoState->unbind();
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    this->ssaoBlurBuffer->unbind();
 
     if (this->camera != nullptr) {
         this->lastSSAOCameraPosition = this->camera->position;
