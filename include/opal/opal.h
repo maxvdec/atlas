@@ -548,7 +548,6 @@ class CommandBuffer {
     void beginPass(std::shared_ptr<RenderPass> renderPass);
     void beginSampled(std::shared_ptr<Framebuffer> readFramebuffer,
                       std::shared_ptr<Framebuffer> writeFramebuffer);
-    void cancelPass();
     void endPass();
     void commit();
 

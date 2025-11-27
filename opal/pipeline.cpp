@@ -8,6 +8,7 @@
 //
 
 #include "opal/opal.h"
+#include <algorithm>
 #include <memory>
 #include <stdexcept>
 #include <vector>
@@ -79,6 +80,12 @@ void Pipeline::setDepthCompareOp(CompareOp op) {
 #endif
 }
 
+void Pipeline::enableDepthWrite(bool enabled) {
+#ifdef OPENGL
+    this->depthWriteEnabled = enabled;
+#endif
+}
+
 void Pipeline::enableBlending(bool enabled) {
 #ifdef OPENGL
     this->blendingEnabled = enabled;
@@ -89,6 +96,43 @@ void Pipeline::setBlendFunc(BlendFunc srcFactor, BlendFunc dstFactor) {
 #ifdef OPENGL
     this->blendSrcFactor = srcFactor;
     this->blendDstFactor = dstFactor;
+#endif
+}
+
+void Pipeline::enableMultisampling(bool enabled) {
+#ifdef OPENGL
+    this->multisamplingEnabled = enabled;
+#endif
+}
+
+void Pipeline::enablePolygonOffset(bool enabled) {
+#ifdef OPENGL
+    this->polygonOffsetEnabled = enabled;
+#endif
+}
+
+void Pipeline::setPolygonOffset(float factor, float units) {
+#ifdef OPENGL
+    this->polygonOffsetFactor = factor;
+    this->polygonOffsetUnits = units;
+#endif
+}
+
+void Pipeline::enableClipDistance(int index, bool enabled) {
+#ifdef OPENGL
+    if (enabled) {
+        if (std::find(this->enabledClipDistances.begin(),
+                      this->enabledClipDistances.end(),
+                      index) == this->enabledClipDistances.end()) {
+            this->enabledClipDistances.push_back(index);
+        }
+    } else {
+        auto it = std::find(this->enabledClipDistances.begin(),
+                            this->enabledClipDistances.end(), index);
+        if (it != this->enabledClipDistances.end()) {
+            this->enabledClipDistances.erase(it);
+        }
+    }
 #endif
 }
 
@@ -258,12 +302,39 @@ void Pipeline::bind() {
         glDisable(GL_DEPTH_TEST);
     }
 
+    glDepthMask(this->depthWriteEnabled ? GL_TRUE : GL_FALSE);
+
     if (this->blendingEnabled) {
         glEnable(GL_BLEND);
         glBlendFunc(this->getGLBlendFactor(this->blendSrcFactor),
                     this->getGLBlendFactor(this->blendDstFactor));
     } else {
         glDisable(GL_BLEND);
+    }
+
+    if (this->multisamplingEnabled) {
+        glEnable(GL_MULTISAMPLE);
+    } else {
+        glDisable(GL_MULTISAMPLE);
+    }
+
+    if (this->polygonOffsetEnabled) {
+        glEnable(GL_POLYGON_OFFSET_FILL);
+        glPolygonOffset(this->polygonOffsetFactor, this->polygonOffsetUnits);
+    } else {
+        glDisable(GL_POLYGON_OFFSET_FILL);
+    }
+
+    // Handle clip distances (up to 8 supported)
+    for (int i = 0; i < 8; ++i) {
+        bool shouldEnable = std::find(this->enabledClipDistances.begin(),
+                                      this->enabledClipDistances.end(),
+                                      i) != this->enabledClipDistances.end();
+        if (shouldEnable) {
+            glEnable(GL_CLIP_DISTANCE0 + i);
+        } else {
+            glDisable(GL_CLIP_DISTANCE0 + i);
+        }
     }
 #endif
 }

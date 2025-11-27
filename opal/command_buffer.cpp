@@ -33,8 +33,6 @@ void CommandBuffer::beginPass(
     }
 }
 
-void CommandBuffer::cancelPass() {}
-
 void CommandBuffer::beginSampled(
     [[maybe_unused]] std::shared_ptr<Framebuffer> readFramebuffer,
     [[maybe_unused]] std::shared_ptr<Framebuffer> writeFramebuffer) {
@@ -105,6 +103,14 @@ void CommandBuffer::clearDepth(float depth) {
 #ifdef OPENGL
     glClearDepth(depth);
     glClear(GL_DEPTH_BUFFER_BIT);
+#endif
+}
+
+void CommandBuffer::clear(float r, float g, float b, float a, float depth) {
+#ifdef OPENGL
+    glClearColor(r, g, b, a);
+    glClearDepth(depth);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 #endif
 }
 
