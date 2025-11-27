@@ -687,7 +687,7 @@ class BloomRenderTarget {
 
     std::vector<BloomElement> elements;
     bool initialized = false;
-    Id fbo;
+    std::shared_ptr<opal::Framebuffer> framebuffer;
     glm::ivec2 srcViewportSize;
     glm::vec2 srcViewportSizef;
     ShaderProgram downsampleProgram;

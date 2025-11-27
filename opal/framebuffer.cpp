@@ -32,6 +32,30 @@ std::shared_ptr<Framebuffer> Framebuffer::create(int width, int height) {
     return framebuffer;
 }
 
+std::shared_ptr<Framebuffer> Framebuffer::create() {
+    auto framebuffer = std::make_shared<Framebuffer>();
+    framebuffer->width = 0;
+    framebuffer->height = 0;
+
+#ifdef OPENGL
+    glGenFramebuffers(1, &framebuffer->framebufferID);
+#endif
+
+    return framebuffer;
+}
+
+void Framebuffer::attachTexture(std::shared_ptr<Texture> texture,
+                                int attachmentIndex) {
+#ifdef OPENGL
+    glBindFramebuffer(GL_FRAMEBUFFER, framebufferID);
+    GLenum attachmentType =
+        GL_COLOR_ATTACHMENT0 + static_cast<GLenum>(attachmentIndex);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, attachmentType, texture->glType,
+                           texture->textureID, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#endif
+}
+
 void Framebuffer::addAttachment(const Attachment &attachment) {
 #ifdef OPENGL
     glBindFramebuffer(GL_FRAMEBUFFER, framebufferID);

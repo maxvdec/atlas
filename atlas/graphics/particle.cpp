@@ -361,16 +361,16 @@ void ParticleEmitter::render(float dt,
             "ParticleEmitter::render requires a valid command buffer");
     }
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glDepthMask(GL_FALSE);
-
     // Get or create pipeline
     static std::shared_ptr<opal::Pipeline> particlePipeline = nullptr;
     if (particlePipeline == nullptr) {
         particlePipeline = opal::Pipeline::create();
     }
     particlePipeline = this->program.requestPipeline(particlePipeline);
+    particlePipeline->enableBlending(true);
+    particlePipeline->setBlendFunc(opal::BlendFunc::SrcAlpha,
+                                   opal::BlendFunc::OneMinusSrcAlpha);
+    particlePipeline->enableDepthWrite(false);
     particlePipeline->bind();
 
     particlePipeline->setUniformMat4f("view", this->view);
@@ -389,8 +389,9 @@ void ParticleEmitter::render(float dt,
     commandBuffer->drawIndexed(6, activeParticleCount, 0, 0, 0);
     commandBuffer->unbindDrawingState();
 
-    glDepthMask(GL_TRUE);
-    glDisable(GL_BLEND);
+    particlePipeline->enableDepthWrite(true);
+    particlePipeline->enableBlending(false);
+    particlePipeline->bind();
 }
 
 void ParticleEmitter::setProjectionMatrix(const glm::mat4 &projection) {

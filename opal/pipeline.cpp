@@ -99,6 +99,12 @@ void Pipeline::setBlendFunc(BlendFunc srcFactor, BlendFunc dstFactor) {
 #endif
 }
 
+void Pipeline::setBlendEquation(BlendEquation equation) {
+#ifdef OPENGL
+    this->blendEquation = equation;
+#endif
+}
+
 void Pipeline::enableMultisampling(bool enabled) {
 #ifdef OPENGL
     this->multisamplingEnabled = enabled;
@@ -160,6 +166,23 @@ uint Pipeline::getGLBlendFactor(BlendFunc func) const {
         return GL_ONE_MINUS_DST_ALPHA;
     default:
         return GL_ONE;
+    }
+}
+
+uint Pipeline::getGLBlendEquation(BlendEquation equation) const {
+    switch (equation) {
+    case BlendEquation::Add:
+        return GL_FUNC_ADD;
+    case BlendEquation::Subtract:
+        return GL_FUNC_SUBTRACT;
+    case BlendEquation::ReverseSubtract:
+        return GL_FUNC_REVERSE_SUBTRACT;
+    case BlendEquation::Min:
+        return GL_MIN;
+    case BlendEquation::Max:
+        return GL_MAX;
+    default:
+        return GL_FUNC_ADD;
     }
 }
 
@@ -308,6 +331,7 @@ void Pipeline::bind() {
         glEnable(GL_BLEND);
         glBlendFunc(this->getGLBlendFactor(this->blendSrcFactor),
                     this->getGLBlendFactor(this->blendDstFactor));
+        glBlendEquation(this->getGLBlendEquation(this->blendEquation));
     } else {
         glDisable(GL_BLEND);
     }

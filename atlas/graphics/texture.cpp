@@ -665,11 +665,10 @@ void Skybox::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
         obj->refreshPipeline();
     }
     auto pipeline = obj->getPipeline().value();
+    pipeline->setDepthCompareOp(opal::CompareOp::LessEqual);
+    pipeline->enableDepthWrite(false);
+    pipeline->setCullMode(opal::CullMode::None);
     pipeline->bind();
-
-    glDepthFunc(GL_LEQUAL);
-    glDepthMask(GL_FALSE);
-    glDisable(GL_CULL_FACE);
 
     pipeline->setUniformMat4f("view", view);
     pipeline->setUniformMat4f("projection", projection);
@@ -722,7 +721,8 @@ void Skybox::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
     commandBuffer->drawIndexed(static_cast<unsigned int>(obj->indices.size()),
                                1, 0, 0, 0);
     commandBuffer->unbindDrawingState();
-    glDepthFunc(GL_LESS); // Set depth function back to default
-    glDepthMask(GL_TRUE);
-    glEnable(GL_CULL_FACE);
+    pipeline->setDepthCompareOp(opal::CompareOp::Less);
+    pipeline->enableDepthWrite(true);
+    pipeline->setCullMode(opal::CullMode::Back);
+    pipeline->bind();
 }

@@ -9,6 +9,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <glad/glad.h>
+#include "opal/opal.h"
 #include "atlas/camera.h"
 #include "atlas/core/shader.h"
 #include "atlas/light.h"
@@ -22,9 +23,6 @@
 #include <glm/gtx/string_cast.hpp>
 
 void Terrain::initialize() {
-    while (glGetError() != GL_NO_ERROR) {
-    }
-
     VertexShader vertexShader =
         VertexShader::fromDefaultShader(AtlasVertexShader::Terrain);
     FragmentShader fragmentShader =
@@ -82,19 +80,26 @@ void Terrain::initialize() {
 
     this->generateBiomes(data, height, width, nChannels);
 
-    glGenTextures(1, &terrainTexture.id);
-    glBindTexture(GL_TEXTURE_2D, terrainTexture.id);
-    glTexImage2D(GL_TEXTURE_2D, 0,
-                 nChannels == 4 ? GL_RGBA : (nChannels == 3 ? GL_RGB : GL_R16F),
-                 width, height, 0,
-                 nChannels == 4 ? GL_RGBA : (nChannels == 3 ? GL_RGB : GL_R16F),
-                 GL_UNSIGNED_BYTE, data);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                    GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glGenerateMipmap(GL_TEXTURE_2D);
+    opal::TextureFormat texFormat =
+        nChannels == 4 ? opal::TextureFormat::Rgba8
+                       : (nChannels == 3 ? opal::TextureFormat::Rgb8
+                                         : opal::TextureFormat::Rgb16F);
+    opal::TextureDataFormat dataFormat =
+        nChannels == 4 ? opal::TextureDataFormat::Rgba
+                       : (nChannels == 3 ? opal::TextureDataFormat::Rgb
+                                         : opal::TextureDataFormat::Red);
+    terrainTexture.texture =
+        opal::Texture::create(opal::TextureType::Texture2D, texFormat, width,
+                              height, dataFormat, data, 1);
+    terrainTexture.texture->setWrapMode(opal::TextureAxis::S,
+                                        opal::TextureWrapMode::Repeat);
+    terrainTexture.texture->setWrapMode(opal::TextureAxis::T,
+                                        opal::TextureWrapMode::Repeat);
+    terrainTexture.texture->setFilterMode(
+        opal::TextureFilterMode::LinearMipmapLinear,
+        opal::TextureFilterMode::Linear);
+    terrainTexture.texture->automaticallyGenerateMipmaps();
+    terrainTexture.id = terrainTexture.texture->textureID;
 
     rez = resolution;
 
@@ -170,12 +175,11 @@ void Terrain::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
     }
     terrainPipeline = terrainShader.requestPipeline(terrainPipeline);
 
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
-    glDepthMask(GL_TRUE);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-    glFrontFace(GL_CW);
+    terrainPipeline->enableDepthTest(true);
+    terrainPipeline->setDepthCompareOp(opal::CompareOp::Less);
+    terrainPipeline->enableDepthWrite(true);
+    terrainPipeline->setCullMode(opal::CullMode::Back);
+    terrainPipeline->setFrontFace(opal::FrontFace::Clockwise);
     glBindVertexArray(this->vao);
     terrainPipeline->bind();
 
@@ -271,11 +275,14 @@ void Terrain::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
     AmbientLight ambient = mainWindow->getCurrentScene()->ambientLight;
     terrainPipeline->setUniform1f("ambientStrength", ambient.intensity * 4.0);
 
+    // Note: GL_PATCHES draw call is OpenGL-specific for tessellation
     glDrawArrays(GL_PATCHES, 0, patch_count * rez * rez);
     glBindVertexArray(0);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-    glFrontFace(GL_CCW);
+
+    // Restore default state via pipeline
+    terrainPipeline->setCullMode(opal::CullMode::Back);
+    terrainPipeline->setFrontFace(opal::FrontFace::CounterClockwise);
+    terrainPipeline->bind();
 }
 
 void Terrain::updateModelMatrix() {

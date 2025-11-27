@@ -128,6 +128,21 @@ class Texture {
     static std::shared_ptr<Texture> createDepthCubemap(TextureFormat format,
                                                        int resolution);
 
+    /**
+     * @brief Creates a 3D texture with optional initial data.
+     * @param format The texture format.
+     * @param width Width in pixels.
+     * @param height Height in pixels.
+     * @param depth Depth in pixels.
+     * @param dataFormat The data format.
+     * @param data Optional pointer to initial data (float data).
+     * @return A shared pointer to the created 3D texture.
+     */
+    static std::shared_ptr<Texture>
+    create3D(TextureFormat format, int width, int height, int depth,
+             TextureDataFormat dataFormat = TextureDataFormat::Rgba,
+             const void *data = nullptr);
+
     void updateFace(int faceIndex, const void *data, int width, int height,
                     TextureDataFormat dataFormat = TextureDataFormat::Rgba);
     void updateData3D(const void *data, int width, int height, int depth,
@@ -136,6 +151,14 @@ class Texture {
                     TextureDataFormat dataFormat = TextureDataFormat::Rgba);
     void changeFormat(TextureFormat newFormat);
     void changeBorderColor(const glm::vec4 &borderColor);
+
+    /**
+     * @brief Reads texture data from the GPU into a buffer.
+     * @param buffer Pre-allocated buffer to store the data.
+     * @param dataFormat The format to read the data in.
+     */
+    void readData(void *buffer,
+                  TextureDataFormat dataFormat = TextureDataFormat::Rgba);
 
     void generateMipmaps(uint levels);
     void automaticallyGenerateMipmaps();
@@ -261,6 +284,8 @@ enum class BlendFunc {
     OneMinusDstAlpha
 };
 
+enum class BlendEquation { Add, Subtract, ReverseSubtract, Min, Max };
+
 struct VertexAttribute {
     std::string name;
     VertexAttributeType type;
@@ -311,6 +336,7 @@ class Pipeline {
 
     void enableBlending(bool enabled);
     void setBlendFunc(BlendFunc srcFactor, BlendFunc dstFactor);
+    void setBlendEquation(BlendEquation equation);
 
     void enableMultisampling(bool enabled);
     void enablePolygonOffset(bool enabled);
@@ -336,6 +362,7 @@ class Pipeline {
     void bindTexture(const std::string &name, std::shared_ptr<Texture> texture,
                      int unit);
     void bindTexture2D(const std::string &name, uint textureId, int unit);
+    void bindTexture3D(const std::string &name, uint textureId, int unit);
     void bindTextureCubemap(const std::string &name, uint textureId, int unit);
 
   private:
@@ -346,6 +373,7 @@ class Pipeline {
     bool blendingEnabled = false;
     BlendFunc blendSrcFactor = BlendFunc::One;
     BlendFunc blendDstFactor = BlendFunc::Zero;
+    BlendEquation blendEquation = BlendEquation::Add;
     bool depthTestEnabled = false;
     bool depthWriteEnabled = true;
     CompareOp depthCompareOp = CompareOp::Less;
@@ -364,6 +392,7 @@ class Pipeline {
     int viewportHeight = 600;
 
     uint getGLBlendFactor(BlendFunc factor) const;
+    uint getGLBlendEquation(BlendEquation equation) const;
     uint getGLCompareOp(CompareOp op) const;
     uint getGLPrimitiveStyle(PrimitiveStyle style) const;
     uint getGLRasterizerMode(RasterizerMode mode) const;
@@ -447,10 +476,20 @@ class DepthStencilBuffer {
 class Framebuffer {
   public:
     static std::shared_ptr<Framebuffer> create(int width, int height);
+    static std::shared_ptr<Framebuffer> create();
 
     void addAttachment(const Attachment &attachment);
     void attachDepthStencilBuffer(
         std::shared_ptr<DepthStencilBuffer> depthStencilBuffer);
+
+    /**
+     * @brief Attaches a texture to this framebuffer at the specified color
+     * attachment.
+     * @param texture The texture to attach.
+     * @param attachmentIndex The color attachment index (0 =
+     * GL_COLOR_ATTACHMENT0, etc.)
+     */
+    void attachTexture(std::shared_ptr<Texture> texture, int attachmentIndex);
 
     /**
      * @brief Attaches a cubemap texture to this framebuffer for omnidirectional

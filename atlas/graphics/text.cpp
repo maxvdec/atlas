@@ -13,7 +13,6 @@
 #include "ft2build.h" // IWYU pragma: keep
 #include <iostream>
 #include FT_FREETYPE_H
-#include <glad/glad.h>
 #include <vector>
 
 Font Font::fromResource(const std::string &fontName, Resource resource,
@@ -31,8 +30,6 @@ Font Font::fromResource(const std::string &fontName, Resource resource,
 
     int dpi = 96;
     FT_Set_Char_Size(face, 0, fontSize * 64, dpi, dpi);
-
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
     Font font;
 
@@ -148,16 +145,16 @@ void Text::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
             "Text::render requires a valid command buffer");
     }
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glDisable(GL_DEPTH_TEST);
-
     // Get or create pipeline for text
     static std::shared_ptr<opal::Pipeline> textPipeline = nullptr;
     if (textPipeline == nullptr) {
         textPipeline = opal::Pipeline::create();
     }
     textPipeline = shader.requestPipeline(textPipeline);
+    textPipeline->enableBlending(true);
+    textPipeline->setBlendFunc(opal::BlendFunc::SrcAlpha,
+                               opal::BlendFunc::OneMinusSrcAlpha);
+    textPipeline->enableDepthTest(false);
     textPipeline->bind();
 
     textPipeline->setUniform3f("textColor", color.r, color.g, color.b);
@@ -205,6 +202,7 @@ void Text::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
     }
 
     commandBuffer->unbindDrawingState();
-    glDisable(GL_BLEND);
-    glEnable(GL_DEPTH_TEST);
+    textPipeline->enableBlending(false);
+    textPipeline->enableDepthTest(true);
+    textPipeline->bind();
 }

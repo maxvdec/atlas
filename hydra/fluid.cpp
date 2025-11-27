@@ -11,6 +11,7 @@
 #include "atlas/light.h"
 #include "atlas/texture.h"
 #include "atlas/window.h"
+#include "opal/opal.h"
 
 #include <cstddef>
 #include <algorithm>
@@ -106,12 +107,11 @@ void Fluid::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
         }
     }
 
-    glDisable(GL_CULL_FACE);
-
     static std::shared_ptr<opal::Pipeline> fluidPipeline = nullptr;
     if (fluidPipeline == nullptr) {
         fluidPipeline = opal::Pipeline::create();
     }
+    fluidPipeline->setCullMode(opal::CullMode::None);
     fluidPipeline = fluidShader.requestPipeline(fluidPipeline);
     fluidPipeline->bind();
 
@@ -189,9 +189,8 @@ void Fluid::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
                                0, 0);
     commandBuffer->unbindDrawingState();
 
-    glActiveTexture(GL_TEXTURE0);
-
-    glEnable(GL_CULL_FACE);
+    fluidPipeline->setCullMode(opal::CullMode::Back);
+    fluidPipeline->bind();
 
     captureDirty = true;
 }
@@ -275,14 +274,10 @@ void Fluid::ensureTargets(Window &window) {
             target =
                 std::make_unique<RenderTarget>(window, RenderTargetType::Scene);
 
-            GLint previousFBO;
-            glGetIntegerv(GL_FRAMEBUFFER_BINDING, &previousFBO);
-
+            auto commandBuffer = opal::Device::acquireCommandBuffer();
             target->bind();
-            glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-            glBindFramebuffer(GL_FRAMEBUFFER, previousFBO);
+            commandBuffer->clear(0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+            target->unbind();
         }
     };
 
