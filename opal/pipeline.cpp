@@ -8,6 +8,7 @@
 //
 
 #include "opal/opal.h"
+#include <algorithm>
 #include <memory>
 #include <stdexcept>
 #include <vector>
@@ -37,6 +38,12 @@ void Pipeline::setVertexAttributes(
 void Pipeline::setPrimitiveStyle(PrimitiveStyle style) {
 #ifdef OPENGL
     this->primitiveStyle = style;
+#endif
+}
+
+void Pipeline::setPatchVertices(int count) {
+#ifdef OPENGL
+    this->patchVertices = count;
 #endif
 }
 
@@ -79,6 +86,12 @@ void Pipeline::setDepthCompareOp(CompareOp op) {
 #endif
 }
 
+void Pipeline::enableDepthWrite(bool enabled) {
+#ifdef OPENGL
+    this->depthWriteEnabled = enabled;
+#endif
+}
+
 void Pipeline::enableBlending(bool enabled) {
 #ifdef OPENGL
     this->blendingEnabled = enabled;
@@ -89,6 +102,49 @@ void Pipeline::setBlendFunc(BlendFunc srcFactor, BlendFunc dstFactor) {
 #ifdef OPENGL
     this->blendSrcFactor = srcFactor;
     this->blendDstFactor = dstFactor;
+#endif
+}
+
+void Pipeline::setBlendEquation(BlendEquation equation) {
+#ifdef OPENGL
+    this->blendEquation = equation;
+#endif
+}
+
+void Pipeline::enableMultisampling(bool enabled) {
+#ifdef OPENGL
+    this->multisamplingEnabled = enabled;
+#endif
+}
+
+void Pipeline::enablePolygonOffset(bool enabled) {
+#ifdef OPENGL
+    this->polygonOffsetEnabled = enabled;
+#endif
+}
+
+void Pipeline::setPolygonOffset(float factor, float units) {
+#ifdef OPENGL
+    this->polygonOffsetFactor = factor;
+    this->polygonOffsetUnits = units;
+#endif
+}
+
+void Pipeline::enableClipDistance(int index, bool enabled) {
+#ifdef OPENGL
+    if (enabled) {
+        if (std::find(this->enabledClipDistances.begin(),
+                      this->enabledClipDistances.end(),
+                      index) == this->enabledClipDistances.end()) {
+            this->enabledClipDistances.push_back(index);
+        }
+    } else {
+        auto it = std::find(this->enabledClipDistances.begin(),
+                            this->enabledClipDistances.end(), index);
+        if (it != this->enabledClipDistances.end()) {
+            this->enabledClipDistances.erase(it);
+        }
+    }
 #endif
 }
 
@@ -116,6 +172,23 @@ uint Pipeline::getGLBlendFactor(BlendFunc func) const {
         return GL_ONE_MINUS_DST_ALPHA;
     default:
         return GL_ONE;
+    }
+}
+
+uint Pipeline::getGLBlendEquation(BlendEquation equation) const {
+    switch (equation) {
+    case BlendEquation::Add:
+        return GL_FUNC_ADD;
+    case BlendEquation::Subtract:
+        return GL_FUNC_SUBTRACT;
+    case BlendEquation::ReverseSubtract:
+        return GL_FUNC_REVERSE_SUBTRACT;
+    case BlendEquation::Min:
+        return GL_MIN;
+    case BlendEquation::Max:
+        return GL_MAX;
+    default:
+        return GL_FUNC_ADD;
     }
 }
 
@@ -156,6 +229,8 @@ uint Pipeline::getGLPrimitiveStyle(PrimitiveStyle style) const {
         return GL_TRIANGLE_STRIP;
     case PrimitiveStyle::TriangleFan:
         return GL_TRIANGLE_FAN;
+    case PrimitiveStyle::Patches:
+        return GL_PATCHES;
     default:
         return GL_TRIANGLES;
     }
@@ -258,12 +333,40 @@ void Pipeline::bind() {
         glDisable(GL_DEPTH_TEST);
     }
 
+    glDepthMask(this->depthWriteEnabled ? GL_TRUE : GL_FALSE);
+
     if (this->blendingEnabled) {
         glEnable(GL_BLEND);
         glBlendFunc(this->getGLBlendFactor(this->blendSrcFactor),
                     this->getGLBlendFactor(this->blendDstFactor));
+        glBlendEquation(this->getGLBlendEquation(this->blendEquation));
     } else {
         glDisable(GL_BLEND);
+    }
+
+    if (this->multisamplingEnabled) {
+        glEnable(GL_MULTISAMPLE);
+    } else {
+        glDisable(GL_MULTISAMPLE);
+    }
+
+    if (this->polygonOffsetEnabled) {
+        glEnable(GL_POLYGON_OFFSET_FILL);
+        glPolygonOffset(this->polygonOffsetFactor, this->polygonOffsetUnits);
+    } else {
+        glDisable(GL_POLYGON_OFFSET_FILL);
+    }
+
+    // Handle clip distances (up to 8 supported)
+    for (int i = 0; i < 8; ++i) {
+        bool shouldEnable = std::find(this->enabledClipDistances.begin(),
+                                      this->enabledClipDistances.end(),
+                                      i) != this->enabledClipDistances.end();
+        if (shouldEnable) {
+            glEnable(GL_CLIP_DISTANCE0 + i);
+        } else {
+            glDisable(GL_CLIP_DISTANCE0 + i);
+        }
     }
 #endif
 }

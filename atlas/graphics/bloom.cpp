@@ -8,6 +8,7 @@
 */
 
 #include "atlas/core/shader.h"
+#include "atlas/window.h"
 #include <atlas/texture.h>
 #include <climits>
 #include <cstddef>
@@ -20,8 +21,7 @@ void BloomRenderTarget::init(int width, int height, int chainLength) {
         return;
     initialized = true;
 
-    glGenFramebuffers(1, &fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    this->framebuffer = opal::Framebuffer::create();
 
     glm::vec2 mipSize((float)width, (float)height);
     glm::ivec2 mipIntSize((int)width, (int)height);
@@ -54,17 +54,10 @@ void BloomRenderTarget::init(int width, int height, int chainLength) {
         this->elements.push_back(element);
     }
 
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
-                           elements[0].textureId, 0);
+    this->framebuffer->attachTexture(elements[0].texture, 0);
+    this->framebuffer->setDrawBuffers(1);
 
-    unsigned int attachments[1] = {GL_COLOR_ATTACHMENT0};
-    glDrawBuffers(1, attachments);
-
-    int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    if (status != GL_FRAMEBUFFER_COMPLETE)
-        throw std::runtime_error("Framebuffer incomplete");
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    this->framebuffer->unbind();
 
     downsampleProgram = ShaderProgram::fromDefaultShaders(
         AtlasVertexShader::Light, AtlasFragmentShader::Downsample);
@@ -115,11 +108,10 @@ void BloomRenderTarget::init(int width, int height, int chainLength) {
 
 void BloomRenderTarget::destroy() {
     for (size_t i = 0; i < elements.size(); i++) {
-        glDeleteTextures(1, &elements[i].textureId);
         elements[i].textureId = 0;
+        elements[i].texture = nullptr;
     }
-    glDeleteFramebuffers(1, &fbo);
-    fbo = 0;
+    this->framebuffer = nullptr;
     initialized = false;
 }
 
@@ -134,8 +126,9 @@ void BloomRenderTarget::renderBloomTexture(unsigned int srcTexture,
     this->renderDownsamples(srcTexture);
     this->renderUpsamples(filterRadius);
 
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glViewport(0, 0, srcViewportSize.x, srcViewportSize.y);
+    this->framebuffer->unbind();
+    Window::mainWindow->getDevice()->getDefaultFramebuffer()->setViewport(
+        0, 0, srcViewportSize.x, srcViewportSize.y);
 }
 
 unsigned int BloomRenderTarget::getBloomTexture() {
@@ -155,15 +148,16 @@ void BloomRenderTarget::renderDownsamples(unsigned int srcTexture) {
                                      srcViewportSizef.y);
     downsamplePipeline->bindTexture2D("srcTexture", srcTexture, 0);
 
+    auto commandBuffer = opal::Device::acquireCommandBuffer();
+
     for (size_t i = 0; i < elements.size(); i++) {
         const BloomElement &element = elements[i];
-        glViewport(0, 0, element.size.x, element.size.y);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                               GL_TEXTURE_2D, element.textureId, 0);
+        this->framebuffer->setViewport(0, 0, element.size.x, element.size.y);
+        this->framebuffer->attachTexture(element.texture, 0);
 
-        quadState->bind();
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-        quadState->unbind();
+        commandBuffer->bindDrawingState(quadState);
+        commandBuffer->draw(6, 1, 0, 0);
+        commandBuffer->unbindDrawingState();
 
         downsamplePipeline->setUniform2f("srcResolution", element.size.x,
                                          element.size.y);
@@ -178,13 +172,14 @@ void BloomRenderTarget::renderUpsamples(float filterRadius) {
         upsamplePipeline = opal::Pipeline::create();
     }
     upsamplePipeline = upsampleProgram.requestPipeline(upsamplePipeline);
+    upsamplePipeline->enableBlending(true);
+    upsamplePipeline->setBlendFunc(opal::BlendFunc::One, opal::BlendFunc::One);
+    upsamplePipeline->setBlendEquation(opal::BlendEquation::Add);
     upsamplePipeline->bind();
 
     upsamplePipeline->setUniform1f("filterRadius", filterRadius);
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_ONE, GL_ONE);
-    glBlendEquation(GL_FUNC_ADD);
+    auto commandBuffer = opal::Device::acquireCommandBuffer();
 
     for (int i = elements.size() - 1; i > 0; i--) {
         const BloomElement &element = elements[i];
@@ -194,19 +189,19 @@ void BloomRenderTarget::renderUpsamples(float filterRadius) {
         upsamplePipeline->setUniform2f("srcResolution", element.size.x,
                                        element.size.y);
 
-        glViewport(0, 0, nextElement.size.x, nextElement.size.y);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                               GL_TEXTURE_2D, nextElement.textureId, 0);
+        this->framebuffer->setViewport(0, 0, nextElement.size.x,
+                                       nextElement.size.y);
+        this->framebuffer->attachTexture(nextElement.texture, 0);
 
-        quadState->bind();
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-        quadState->unbind();
+        commandBuffer->bindDrawingState(quadState);
+        commandBuffer->draw(6, 1, 0, 0);
+        commandBuffer->unbindDrawingState();
     }
 
-    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-    glDisable(GL_BLEND);
+    upsamplePipeline->setBlendFunc(opal::BlendFunc::One,
+                                   opal::BlendFunc::OneMinusSrcAlpha);
+    upsamplePipeline->enableBlending(false);
+    upsamplePipeline->bind();
 }
 
-void BloomRenderTarget::bindForWriting() {
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-}
+void BloomRenderTarget::bindForWriting() { this->framebuffer->bind(); }

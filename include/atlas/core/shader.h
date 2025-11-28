@@ -614,6 +614,12 @@ struct ShaderProgram {
     std::vector<std::shared_ptr<opal::Pipeline>> pipelines;
 
     /**
+     * @brief The last pipeline that was requested from this shader program.
+     * Used for setting uniforms when called directly on ShaderProgram.
+     */
+    std::shared_ptr<opal::Pipeline> currentPipeline;
+
+    /**
      * @brief The desired vertex attributes for the shader program.
      *
      */

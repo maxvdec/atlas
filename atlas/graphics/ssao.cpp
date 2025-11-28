@@ -175,7 +175,7 @@ void Window::renderSSAO() {
     ssaoPipeline->setUniform2f("noiseScale", screenSize.x / noiseSize.x,
                                screenSize.y / noiseSize.y);
     ssaoState->bind();
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    ssaoCommandBuffer->draw(6, 1, 0, 0);
     ssaoState->unbind();
     this->ssaoBuffer->unbind();
 
@@ -192,7 +192,7 @@ void Window::renderSSAO() {
 
     ssaoBlurPipeline->bindTexture2D("inSSAO", this->ssaoBuffer->texture.id, 0);
     ssaoState->bind();
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    ssaoCommandBuffer->draw(6, 1, 0, 0);
     ssaoState->unbind();
     this->ssaoBlurBuffer->unbind();
 

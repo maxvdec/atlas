@@ -510,9 +510,11 @@ void RenderTarget::bind() {
         fb->setViewport();
     } else {
         // Default framebuffer
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glViewport(0, 0, texture.creationData.width,
-                   texture.creationData.height);
+        auto defaultFb =
+            Window::mainWindow->getDevice()->getDefaultFramebuffer();
+        defaultFb->bind();
+        defaultFb->setViewport(0, 0, texture.creationData.width,
+                               texture.creationData.height);
     }
 }
 
@@ -608,13 +610,8 @@ void RenderTarget::render(float dt,
 
     CoreObject *obj = this->object.get();
 
-    for (int i = 0; i < 16; i++) {
-        glActiveTexture(GL_TEXTURE0 + i);
-        glBindTexture(GL_TEXTURE_2D, 0);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-    }
-
-    glActiveTexture(GL_TEXTURE0);
+    // Note: Texture bindings are managed by the pipeline - no need to clear
+    // them manually
 
     static std::shared_ptr<opal::Pipeline> renderTargetPipeline = nullptr;
     if (renderTargetPipeline == nullptr) {
@@ -728,9 +725,8 @@ void RenderTarget::render(float dt,
                                           static_cast<float>(ambientColor.b)) *
                                 ambientIntensity;
 
-            glActiveTexture(GL_TEXTURE15);
-            glBindTexture(GL_TEXTURE_3D, cloudSettings.getCloudTexture(128));
-            renderTargetPipeline->setUniform1i("cloudsTexture", 15);
+            renderTargetPipeline->bindTexture3D(
+                "cloudsTexture", cloudSettings.getCloudTexture(128), 15);
             renderTargetPipeline->setUniform3f("cloudSize", cloudSize.x,
                                                cloudSize.y, cloudSize.z);
             renderTargetPipeline->setUniform3f("cloudPosition", cloudPos.x,
@@ -771,9 +767,7 @@ void RenderTarget::render(float dt,
                                                ambient.y, ambient.z);
             renderTargetPipeline->setUniform1i("hasClouds", 1);
         } else {
-            glActiveTexture(GL_TEXTURE15);
-            glBindTexture(GL_TEXTURE_3D, 0);
-            renderTargetPipeline->setUniform1i("cloudsTexture", 15);
+            renderTargetPipeline->bindTexture3D("cloudsTexture", 0, 15);
             renderTargetPipeline->setUniform1i("hasClouds", 0);
         }
     }
@@ -789,10 +783,11 @@ void RenderTarget::render(float dt,
         effects[i]->applyToProgram(obj->shaderProgram, i);
     }
 
-    glDisable(GL_DEPTH_TEST);
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    renderTargetPipeline->enableDepthTest(false);
+    renderTargetPipeline->enableBlending(true);
+    renderTargetPipeline->setBlendFunc(opal::BlendFunc::SrcAlpha,
+                                       opal::BlendFunc::OneMinusSrcAlpha);
+    renderTargetPipeline->bind();
 
     commandBuffer->bindDrawingState(obj->vao);
     if (!obj->indices.empty()) {
@@ -804,5 +799,6 @@ void RenderTarget::render(float dt,
     }
     commandBuffer->unbindDrawingState();
 
-    glEnable(GL_DEPTH_TEST);
+    renderTargetPipeline->enableDepthTest(true);
+    renderTargetPipeline->bind();
 }

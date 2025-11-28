@@ -36,20 +36,18 @@ void Window::deferredRendering(
         }
     }
 
-    glBindFramebuffer(GL_FRAMEBUFFER,
-                      this->gBuffer->getFramebuffer()->framebufferID);
-    glViewport(0, 0, this->gBuffer->getWidth(), this->gBuffer->getHeight());
+    this->gBuffer->bind();
+    this->gBuffer->getFramebuffer()->setViewport(
+        0, 0, this->gBuffer->getWidth(), this->gBuffer->getHeight());
     deferredPipeline->setViewport(0, 0, this->gBuffer->getWidth(),
                                   this->gBuffer->getHeight());
-    unsigned int attachments[4] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1,
-                                   GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3};
-    glDrawBuffers(4, attachments);
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    this->gBuffer->getFramebuffer()->setDrawBuffers(4);
+    auto gBufferCmd = opal::Device::acquireCommandBuffer();
+    gBufferCmd->clear(0.0f, 0.0f, 0.0f, 1.0f, 1.0f);
     deferredPipeline->setCullMode(opal::CullMode::Back);
     deferredPipeline->enableDepthTest(true);
     deferredPipeline->setDepthCompareOp(opal::CompareOp::Less);
-    glDepthMask(GL_TRUE);
+    deferredPipeline->enableDepthWrite(true);
     deferredPipeline = this->deferredProgram.requestPipeline(deferredPipeline);
     for (auto &obj : this->renderables) {
         if (obj->canUseDeferredRendering()) {
@@ -62,24 +60,24 @@ void Window::deferredRendering(
 
     this->gBuffer->resolve();
 
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    this->gBuffer->unbind();
 
     target->resolve();
     this->renderSSAO();
 
-    glBindFramebuffer(GL_FRAMEBUFFER, target->getFramebuffer()->framebufferID);
-    glViewport(0, 0, target->getWidth(), target->getHeight());
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    target->bind();
+    target->getFramebuffer()->setViewport(0, 0, target->getWidth(),
+                                          target->getHeight());
+    auto lightCmd = opal::Device::acquireCommandBuffer();
+    lightCmd->clear(0.0f, 0.0f, 0.0f, 1.0f, 1.0f);
 
-    unsigned int targetAttachments[2] = {GL_COLOR_ATTACHMENT0,
-                                         GL_COLOR_ATTACHMENT1};
-    glDrawBuffers(2, targetAttachments);
+    target->getFramebuffer()->setDrawBuffers(2);
 
-    glDisable(GL_CULL_FACE);
-    glDisable(GL_DEPTH_TEST);
-
-    glDepthMask(GL_FALSE);
+    auto lightPassPipeline = opal::Pipeline::create();
+    lightPassPipeline->setCullMode(opal::CullMode::None);
+    lightPassPipeline->enableDepthTest(false);
+    lightPassPipeline->enableDepthWrite(false);
+    lightPassPipeline->bind();
 
     static std::shared_ptr<opal::DrawingState> quadState = nullptr;
     static std::shared_ptr<opal::Buffer> quadBuffer = nullptr;
@@ -378,7 +376,7 @@ void Window::deferredRendering(
         Window::mainWindow->currentScene->environment.rimLight.color.b);
 
     quadState->bind();
-    glDrawArrays(GL_TRIANGLES, 0, 6);
+    lightCmd->draw(6, 1, 0, 0);
     quadState->unbind();
 
     if (dirLightCount > 0) {
@@ -389,12 +387,11 @@ void Window::deferredRendering(
 
         target->resolve();
 
-        glBindFramebuffer(GL_FRAMEBUFFER,
-                          volumetricBuffer->getFramebuffer()->framebufferID);
-        glViewport(0, 0, volumetricBuffer->getWidth(),
-                   volumetricBuffer->getHeight());
-        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        volumetricBuffer->bind();
+        volumetricBuffer->getFramebuffer()->setViewport(
+            0, 0, volumetricBuffer->getWidth(), volumetricBuffer->getHeight());
+        auto volCmd = opal::Device::acquireCommandBuffer();
+        volCmd->clearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
         // Create volumetric pipeline
         static std::shared_ptr<opal::Pipeline> volumetricPipeline = nullptr;
@@ -432,19 +429,18 @@ void Window::deferredRendering(
         volumetricPipeline->setUniform2f("sunPos", sunUV.x, sunUV.y);
 
         quadState->bind();
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        volCmd->draw(6, 1, 0, 0);
         quadState->unbind();
     }
 
     if (this->ssrFramebuffer != nullptr && useSSR) {
         target->resolve();
 
-        glBindFramebuffer(GL_FRAMEBUFFER,
-                          ssrFramebuffer->getFramebuffer()->framebufferID);
-        glViewport(0, 0, ssrFramebuffer->getWidth(),
-                   ssrFramebuffer->getHeight());
-        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        ssrFramebuffer->bind();
+        ssrFramebuffer->getFramebuffer()->setViewport(
+            0, 0, ssrFramebuffer->getWidth(), ssrFramebuffer->getHeight());
+        auto ssrCmd = opal::Device::acquireCommandBuffer();
+        ssrCmd->clearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
         // Create SSR pipeline
         static std::shared_ptr<opal::Pipeline> ssrPipeline = nullptr;
@@ -474,7 +470,7 @@ void Window::deferredRendering(
                                   camera->position.y, camera->position.z);
 
         quadState->bind();
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        ssrCmd->draw(6, 1, 0, 0);
         quadState->unbind();
     }
 
@@ -482,9 +478,11 @@ void Window::deferredRendering(
     target->ssrTexture = ssrFramebuffer->texture;
     target->gPosition = gBuffer->gPosition;
 
-    glDepthMask(GL_TRUE);
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
+    auto finalPipeline = opal::Pipeline::create();
+    finalPipeline->enableDepthWrite(true);
+    finalPipeline->enableDepthTest(true);
+    finalPipeline->setDepthCompareOp(opal::CompareOp::Less);
+    finalPipeline->bind();
 
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    this->device->getDefaultFramebuffer()->bind();
 }

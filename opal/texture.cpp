@@ -80,6 +80,14 @@ std::shared_ptr<Texture> Texture::create(TextureType type, TextureFormat format,
     texture->glType = textureType;
     texture->glFormat = glFormat;
 
+    // For single-channel textures, save and set unpack alignment to 1
+    GLint previousAlignment = 4;
+    bool needsAlignmentFix = (dataFormat == TextureDataFormat::Red);
+    if (needsAlignmentFix) {
+        glGetIntegerv(GL_UNPACK_ALIGNMENT, &previousAlignment);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    }
+
     glGenTextures(1, &texture->textureID);
     glBindTexture(textureType, texture->textureID);
 
@@ -101,6 +109,12 @@ std::shared_ptr<Texture> Texture::create(TextureType type, TextureFormat format,
                          height, 0, glDataFmt, GL_UNSIGNED_BYTE, nullptr);
         }
     }
+
+    // Restore previous alignment
+    if (needsAlignmentFix) {
+        glPixelStorei(GL_UNPACK_ALIGNMENT, previousAlignment);
+    }
+
     return texture;
 #endif
 }
@@ -156,6 +170,33 @@ void Texture::changeFormat(TextureFormat newFormat) {
 #ifdef OPENGL
     this->format = newFormat;
     this->glFormat = getGLInternalFormat(newFormat);
+#endif
+}
+
+void Texture::readData(void *buffer, TextureDataFormat dataFormat) {
+#ifdef OPENGL
+    glBindTexture(this->glType, textureID);
+    GLenum glDataFormat;
+    GLenum glDataType = GL_UNSIGNED_BYTE;
+    switch (dataFormat) {
+    case TextureDataFormat::Rgba:
+        glDataFormat = GL_RGBA;
+        break;
+    case TextureDataFormat::Rgb:
+        glDataFormat = GL_RGB;
+        break;
+    case TextureDataFormat::Red:
+        glDataFormat = GL_RED;
+        break;
+    case TextureDataFormat::DepthComponent:
+        glDataFormat = GL_DEPTH_COMPONENT;
+        glDataType = GL_FLOAT;
+        break;
+    default:
+        glDataFormat = GL_RGBA;
+        break;
+    }
+    glGetTexImage(this->glType, 0, glDataFormat, glDataType, buffer);
 #endif
 }
 
@@ -247,6 +288,16 @@ void Pipeline::bindTexture2D(const std::string &name, uint textureId,
 #endif
 }
 
+void Pipeline::bindTexture3D(const std::string &name, uint textureId,
+                             int unit) {
+#ifdef OPENGL
+    glActiveTexture(GL_TEXTURE0 + unit);
+    glBindTexture(GL_TEXTURE_3D, textureId);
+    int location = glGetUniformLocation(shaderProgram->programID, name.c_str());
+    glUniform1i(location, unit);
+#endif
+}
+
 void Pipeline::bindTextureCubemap(const std::string &name, uint textureId,
                                   int unit) {
 #ifdef OPENGL
@@ -310,6 +361,52 @@ std::shared_ptr<Texture> Texture::createDepthCubemap(TextureFormat format,
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    return texture;
+#else
+    return nullptr;
+#endif
+}
+
+std::shared_ptr<Texture> Texture::create3D(TextureFormat format, int width,
+                                           int height, int depth,
+                                           TextureDataFormat dataFormat,
+                                           const void *data) {
+#ifdef OPENGL
+    auto texture = std::make_shared<Texture>();
+    texture->type = TextureType::Texture3D;
+    texture->format = format;
+    texture->width = width;
+    texture->height = height;
+
+    const GLenum glFormat = getGLInternalFormat(format);
+    const GLenum glDataFmt = getGLDataFormat(dataFormat);
+    texture->glType = GL_TEXTURE_3D;
+    texture->glFormat = glFormat;
+
+    // Determine data type based on format
+    GLenum dataType = GL_UNSIGNED_BYTE;
+    if (format == TextureFormat::Rgba16F || format == TextureFormat::Rgb16F ||
+        format == TextureFormat::Red16F) {
+        dataType = GL_FLOAT;
+    }
+
+    // Save and restore previous state
+    GLint previousAlignment = 0;
+    glGetIntegerv(GL_UNPACK_ALIGNMENT, &previousAlignment);
+    GLint previousTexture = 0;
+    glGetIntegerv(GL_TEXTURE_BINDING_3D, &previousTexture);
+
+    glGenTextures(1, &texture->textureID);
+    glBindTexture(GL_TEXTURE_3D, texture->textureID);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+    glTexImage3D(GL_TEXTURE_3D, 0, glFormat, width, height, depth, 0, glDataFmt,
+                 dataType, data);
+
+    // Restore previous state
+    glBindTexture(GL_TEXTURE_3D, previousTexture);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, previousAlignment);
 
     return texture;
 #else

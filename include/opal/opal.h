@@ -128,6 +128,21 @@ class Texture {
     static std::shared_ptr<Texture> createDepthCubemap(TextureFormat format,
                                                        int resolution);
 
+    /**
+     * @brief Creates a 3D texture with optional initial data.
+     * @param format The texture format.
+     * @param width Width in pixels.
+     * @param height Height in pixels.
+     * @param depth Depth in pixels.
+     * @param dataFormat The data format.
+     * @param data Optional pointer to initial data (float data).
+     * @return A shared pointer to the created 3D texture.
+     */
+    static std::shared_ptr<Texture>
+    create3D(TextureFormat format, int width, int height, int depth,
+             TextureDataFormat dataFormat = TextureDataFormat::Rgba,
+             const void *data = nullptr);
+
     void updateFace(int faceIndex, const void *data, int width, int height,
                     TextureDataFormat dataFormat = TextureDataFormat::Rgba);
     void updateData3D(const void *data, int width, int height, int depth,
@@ -136,6 +151,14 @@ class Texture {
                     TextureDataFormat dataFormat = TextureDataFormat::Rgba);
     void changeFormat(TextureFormat newFormat);
     void changeBorderColor(const glm::vec4 &borderColor);
+
+    /**
+     * @brief Reads texture data from the GPU into a buffer.
+     * @param buffer Pre-allocated buffer to store the data.
+     * @param dataFormat The format to read the data in.
+     */
+    void readData(void *buffer,
+                  TextureDataFormat dataFormat = TextureDataFormat::Rgba);
 
     void generateMipmaps(uint levels);
     void automaticallyGenerateMipmaps();
@@ -226,7 +249,8 @@ enum class PrimitiveStyle {
     LineStrip,
     Triangles,
     TriangleStrip,
-    TriangleFan
+    TriangleFan,
+    Patches // For tessellation shaders
 };
 
 enum class RasterizerMode { Fill, Line, Point };
@@ -260,6 +284,8 @@ enum class BlendFunc {
     DstAlpha,
     OneMinusDstAlpha
 };
+
+enum class BlendEquation { Add, Subtract, ReverseSubtract, Min, Max };
 
 struct VertexAttribute {
     std::string name;
@@ -297,6 +323,19 @@ class Pipeline {
 
     void setPrimitiveStyle(PrimitiveStyle style);
 
+    /**
+     * @brief Sets the number of control points per patch for tessellation.
+     * @param count Number of vertices per patch (e.g., 4 for quad patches).
+     * Must be called before using PrimitiveStyle::Patches.
+     */
+    void setPatchVertices(int count);
+
+    /**
+     * @brief Gets the number of control points per patch for tessellation.
+     * @return The patch vertex count.
+     */
+    int getPatchVertices() const { return patchVertices; }
+
     void setViewport(int x, int y, int width, int height);
 
     void setRasterizerMode(RasterizerMode mode);
@@ -307,9 +346,16 @@ class Pipeline {
 
     void enableDepthTest(bool enabled);
     void setDepthCompareOp(CompareOp op);
+    void enableDepthWrite(bool enabled);
 
     void enableBlending(bool enabled);
     void setBlendFunc(BlendFunc srcFactor, BlendFunc dstFactor);
+    void setBlendEquation(BlendEquation equation);
+
+    void enableMultisampling(bool enabled);
+    void enablePolygonOffset(bool enabled);
+    void setPolygonOffset(float factor, float units);
+    void enableClipDistance(int index, bool enabled);
 
     void build();
 
@@ -330,18 +376,27 @@ class Pipeline {
     void bindTexture(const std::string &name, std::shared_ptr<Texture> texture,
                      int unit);
     void bindTexture2D(const std::string &name, uint textureId, int unit);
+    void bindTexture3D(const std::string &name, uint textureId, int unit);
     void bindTextureCubemap(const std::string &name, uint textureId, int unit);
 
   private:
-    PrimitiveStyle primitiveStyle;
+    PrimitiveStyle primitiveStyle = PrimitiveStyle::Triangles;
+    int patchVertices = 4; // Default patch size for tessellation
     RasterizerMode rasterizerMode;
     CullMode cullMode;
     FrontFace frontFace;
     bool blendingEnabled = false;
     BlendFunc blendSrcFactor = BlendFunc::One;
     BlendFunc blendDstFactor = BlendFunc::Zero;
+    BlendEquation blendEquation = BlendEquation::Add;
     bool depthTestEnabled = false;
+    bool depthWriteEnabled = true;
     CompareOp depthCompareOp = CompareOp::Less;
+    bool multisamplingEnabled = false;
+    bool polygonOffsetEnabled = false;
+    float polygonOffsetFactor = 0.0f;
+    float polygonOffsetUnits = 0.0f;
+    std::vector<int> enabledClipDistances;
 
     std::vector<VertexAttribute> vertexAttributes;
     VertexBinding vertexBinding;
@@ -352,6 +407,7 @@ class Pipeline {
     int viewportHeight = 600;
 
     uint getGLBlendFactor(BlendFunc factor) const;
+    uint getGLBlendEquation(BlendEquation equation) const;
     uint getGLCompareOp(CompareOp op) const;
     uint getGLPrimitiveStyle(PrimitiveStyle style) const;
     uint getGLRasterizerMode(RasterizerMode mode) const;
@@ -435,10 +491,20 @@ class DepthStencilBuffer {
 class Framebuffer {
   public:
     static std::shared_ptr<Framebuffer> create(int width, int height);
+    static std::shared_ptr<Framebuffer> create();
 
     void addAttachment(const Attachment &attachment);
     void attachDepthStencilBuffer(
         std::shared_ptr<DepthStencilBuffer> depthStencilBuffer);
+
+    /**
+     * @brief Attaches a texture to this framebuffer at the specified color
+     * attachment.
+     * @param texture The texture to attach.
+     * @param attachmentIndex The color attachment index (0 =
+     * GL_COLOR_ATTACHMENT0, etc.)
+     */
+    void attachTexture(std::shared_ptr<Texture> texture, int attachmentIndex);
 
     /**
      * @brief Attaches a cubemap texture to this framebuffer for omnidirectional
@@ -470,6 +536,12 @@ class Framebuffer {
 
     void bindForRead();
     void bindForDraw();
+
+    /**
+     * @brief Sets which color attachments to draw to.
+     * @param attachmentCount Number of color attachments to enable (0-N).
+     */
+    void setDrawBuffers(int attachmentCount);
 
     bool getStatus() const;
 
@@ -543,10 +615,18 @@ class CommandBuffer {
     void drawIndexed(uint indexCount, uint instanceCount = 1,
                      uint firstIndex = 0, int vertexOffset = 0,
                      uint firstInstance = 0);
+    /**
+     * @brief Draws using tessellation patches.
+     * @param vertexCount Number of vertices to draw.
+     * @param firstVertex Starting vertex offset.
+     * Requires Pipeline with PrimitiveStyle::Patches and setPatchVertices().
+     */
+    void drawPatches(uint vertexCount, uint firstVertex = 0);
     void performResolve(std::shared_ptr<ResolveAction> resolveAction);
 
     void clearColor(float r, float g, float b, float a);
     void clearDepth(float depth);
+    void clear(float r, float g, float b, float a, float depth);
 
   private:
     std::shared_ptr<Pipeline> boundPipeline = nullptr;

@@ -375,6 +375,7 @@ void CoreObject::refreshPipeline() {
     this->pipeline->setDepthCompareOp(window.depthCompareOp);
     this->pipeline->enableBlending(window.useBlending);
     this->pipeline->setBlendFunc(window.srcBlend, window.dstBlend);
+    this->pipeline->enableMultisampling(window.useMultisampling);
 
     this->pipeline = this->shaderProgram.requestPipeline(this->pipeline);
 }
