@@ -8,19 +8,20 @@
 */
 
 #include "atlas/core/shader.h"
+#include "atlas/window.h"
 #include <atlas/texture.h>
 #include <climits>
 #include <cstddef>
 #include <glad/glad.h>
 #include <vector>
+#include "opal/opal.h"
 
 void BloomRenderTarget::init(int width, int height, int chainLength) {
     if (initialized)
         return;
     initialized = true;
 
-    glGenFramebuffers(1, &fbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    this->framebuffer = opal::Framebuffer::create();
 
     glm::vec2 mipSize((float)width, (float)height);
     glm::ivec2 mipIntSize((int)width, (int)height);
@@ -37,36 +38,33 @@ void BloomRenderTarget::init(int width, int height, int chainLength) {
         element.size = mipSize;
         element.intSize = mipIntSize;
 
-        glGenTextures(1, &element.textureId);
-        glBindTexture(GL_TEXTURE_2D, element.textureId);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_R11F_G11F_B10F, element.intSize.x,
-                     element.intSize.y, 0, GL_RGB, GL_FLOAT, nullptr);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        auto opalTexture = opal::Texture::create(
+            opal::TextureType::Texture2D, opal::TextureFormat::Rgb16F,
+            element.intSize.x, element.intSize.y);
+        opalTexture->setFilterMode(opal::TextureFilterMode::Linear,
+                                   opal::TextureFilterMode::Linear);
+        opalTexture->setWrapMode(opal::TextureAxis::S,
+                                 opal::TextureWrapMode::ClampToEdge);
+        opalTexture->setWrapMode(opal::TextureAxis::T,
+                                 opal::TextureWrapMode::ClampToEdge);
+
+        element.textureId = opalTexture->textureID;
+        element.texture = opalTexture;
 
         this->elements.push_back(element);
     }
 
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D,
-                           elements[0].textureId, 0);
+    this->framebuffer->attachTexture(elements[0].texture, 0);
+    this->framebuffer->setDrawBuffers(1);
 
-    unsigned int attachments[1] = {GL_COLOR_ATTACHMENT0};
-    glDrawBuffers(1, attachments);
-
-    int status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    if (status != GL_FRAMEBUFFER_COMPLETE)
-        throw std::runtime_error("Framebuffer incomplete");
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    this->framebuffer->unbind();
 
     downsampleProgram = ShaderProgram::fromDefaultShaders(
         AtlasVertexShader::Light, AtlasFragmentShader::Downsample);
     upsampleProgram = ShaderProgram::fromDefaultShaders(
         AtlasVertexShader::Light, AtlasFragmentShader::Upsample);
 
-    if (vao == 0) {
+    if (quadState == nullptr) {
         float quadVertices[] = {
             // positions         // texCoords
             -1.0f, 1.0f,  0.0f, 0.0f, 1.0f, // top-left
@@ -78,28 +76,42 @@ void BloomRenderTarget::init(int width, int height, int chainLength) {
             1.0f,  1.0f,  0.0f, 1.0f, 1.0f  // top-right
         };
 
-        glGenVertexArrays(1, &vao);
-        glGenBuffers(1, &vbo);
-        glBindVertexArray(vao);
-        glBindBuffer(GL_ARRAY_BUFFER, vbo);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices,
-                     GL_STATIC_DRAW);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                              (void *)0);
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                              (void *)(3 * sizeof(float)));
+        quadBuffer = opal::Buffer::create(opal::BufferUsage::VertexBuffer,
+                                          sizeof(quadVertices), quadVertices);
+        quadState = opal::DrawingState::create(quadBuffer);
+        quadState->setBuffers(quadBuffer, nullptr);
+
+        opal::VertexAttribute positionAttr{"bloomPosition",
+                                           opal::VertexAttributeType::Float,
+                                           0,
+                                           0,
+                                           false,
+                                           3,
+                                           static_cast<uint>(5 * sizeof(float)),
+                                           opal::VertexBindingInputRate::Vertex,
+                                           0};
+        opal::VertexAttribute uvAttr{"bloomUV",
+                                     opal::VertexAttributeType::Float,
+                                     static_cast<uint>(3 * sizeof(float)),
+                                     1,
+                                     false,
+                                     2,
+                                     static_cast<uint>(5 * sizeof(float)),
+                                     opal::VertexBindingInputRate::Vertex,
+                                     0};
+
+        std::vector<opal::VertexAttributeBinding> bindings = {
+            {positionAttr, quadBuffer}, {uvAttr, quadBuffer}};
+        quadState->configureAttributes(bindings);
     }
 }
 
 void BloomRenderTarget::destroy() {
     for (size_t i = 0; i < elements.size(); i++) {
-        glDeleteTextures(1, &elements[i].textureId);
         elements[i].textureId = 0;
+        elements[i].texture = nullptr;
     }
-    glDeleteFramebuffers(1, &fbo);
-    fbo = 0;
+    this->framebuffer = nullptr;
     initialized = false;
 }
 
@@ -114,8 +126,9 @@ void BloomRenderTarget::renderBloomTexture(unsigned int srcTexture,
     this->renderDownsamples(srcTexture);
     this->renderUpsamples(filterRadius);
 
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glViewport(0, 0, srcViewportSize.x, srcViewportSize.y);
+    this->framebuffer->unbind();
+    Window::mainWindow->getDevice()->getDefaultFramebuffer()->setViewport(
+        0, 0, srcViewportSize.x, srcViewportSize.y);
 }
 
 unsigned int BloomRenderTarget::getBloomTexture() {
@@ -123,62 +136,72 @@ unsigned int BloomRenderTarget::getBloomTexture() {
 }
 
 void BloomRenderTarget::renderDownsamples(unsigned int srcTexture) {
-    glUseProgram(downsampleProgram.programId);
-    downsampleProgram.setUniform2f("srcResolution", srcViewportSizef.x,
-                                   srcViewportSizef.y);
+    // Get or create pipeline for downsample
+    static std::shared_ptr<opal::Pipeline> downsamplePipeline = nullptr;
+    if (downsamplePipeline == nullptr) {
+        downsamplePipeline = opal::Pipeline::create();
+    }
+    downsamplePipeline = downsampleProgram.requestPipeline(downsamplePipeline);
+    downsamplePipeline->bind();
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, srcTexture);
-    downsampleProgram.setUniform1i("srcTexture", 0);
+    downsamplePipeline->setUniform2f("srcResolution", srcViewportSizef.x,
+                                     srcViewportSizef.y);
+    downsamplePipeline->bindTexture2D("srcTexture", srcTexture, 0);
+
+    auto commandBuffer = opal::Device::acquireCommandBuffer();
 
     for (size_t i = 0; i < elements.size(); i++) {
         const BloomElement &element = elements[i];
-        glViewport(0, 0, element.size.x, element.size.y);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                               GL_TEXTURE_2D, element.textureId, 0);
+        this->framebuffer->setViewport(0, 0, element.size.x, element.size.y);
+        this->framebuffer->attachTexture(element.texture, 0);
 
-        glBindVertexArray(vao);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-        glBindVertexArray(0);
+        commandBuffer->bindDrawingState(quadState);
+        commandBuffer->draw(6, 1, 0, 0);
+        commandBuffer->unbindDrawingState();
 
-        downsampleProgram.setUniform2f("srcResolution", element.size.x,
-                                       element.size.y);
-        glBindTexture(GL_TEXTURE_2D, element.textureId);
+        downsamplePipeline->setUniform2f("srcResolution", element.size.x,
+                                         element.size.y);
+        downsamplePipeline->bindTexture2D("srcTexture", element.textureId, 0);
     }
 }
 
 void BloomRenderTarget::renderUpsamples(float filterRadius) {
-    glUseProgram(upsampleProgram.programId);
-    upsampleProgram.setUniform1f("filterRadius", filterRadius);
+    // Get or create pipeline for upsample
+    static std::shared_ptr<opal::Pipeline> upsamplePipeline = nullptr;
+    if (upsamplePipeline == nullptr) {
+        upsamplePipeline = opal::Pipeline::create();
+    }
+    upsamplePipeline = upsampleProgram.requestPipeline(upsamplePipeline);
+    upsamplePipeline->enableBlending(true);
+    upsamplePipeline->setBlendFunc(opal::BlendFunc::One, opal::BlendFunc::One);
+    upsamplePipeline->setBlendEquation(opal::BlendEquation::Add);
+    upsamplePipeline->bind();
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_ONE, GL_ONE);
-    glBlendEquation(GL_FUNC_ADD);
+    upsamplePipeline->setUniform1f("filterRadius", filterRadius);
+
+    auto commandBuffer = opal::Device::acquireCommandBuffer();
 
     for (int i = elements.size() - 1; i > 0; i--) {
         const BloomElement &element = elements[i];
         const BloomElement &nextElement = elements[i - 1];
 
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, element.textureId);
-        upsampleProgram.setUniform1i("srcTexture", 0);
+        upsamplePipeline->bindTexture2D("srcTexture", element.textureId, 0);
+        upsamplePipeline->setUniform2f("srcResolution", element.size.x,
+                                       element.size.y);
 
-        upsampleProgram.setUniform2f("srcResolution", element.size.x,
-                                     element.size.y);
+        this->framebuffer->setViewport(0, 0, nextElement.size.x,
+                                       nextElement.size.y);
+        this->framebuffer->attachTexture(nextElement.texture, 0);
 
-        glViewport(0, 0, nextElement.size.x, nextElement.size.y);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                               GL_TEXTURE_2D, nextElement.textureId, 0);
-
-        glBindVertexArray(vao);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-        glBindVertexArray(0);
+        commandBuffer->bindDrawingState(quadState);
+        commandBuffer->draw(6, 1, 0, 0);
+        commandBuffer->unbindDrawingState();
     }
 
-    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-    glDisable(GL_BLEND);
+    upsamplePipeline->setBlendFunc(opal::BlendFunc::One,
+                                   opal::BlendFunc::OneMinusSrcAlpha);
+    upsamplePipeline->enableBlending(false);
+    upsamplePipeline->bind();
 }
 
-void BloomRenderTarget::bindForWriting() {
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-}
+void BloomRenderTarget::bindForWriting() { this->framebuffer->bind(); }

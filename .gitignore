@@ -13,6 +13,7 @@ test/resources/skybox
 libbezel.a
 libaurora.a
 libhydra.a
+lib/*
 build
 .vscode
 Cargo.lock

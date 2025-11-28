@@ -65,8 +65,7 @@ class WorleyNoise3D {
     glm::ivec3 getGridCell(float x, float y, float z) const;
     int getCellIndex(int cx, int cy, int cz) const;
 
-    Id createTexture3d(const std::vector<float> &data, int res, GLenum format,
-                       GLenum internalFormat) const;
+    Id createTexture3d(const std::vector<float> &data, int res) const;
 };
 
 /**

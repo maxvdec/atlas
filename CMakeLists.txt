@@ -14,6 +14,8 @@ else()
     add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
+add_definitions(-DOPENGL)
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -73,6 +75,7 @@ file(GLOB_RECURSE AURORA_SOURCES aurora/*.cpp)
 file(GLOB_RECURSE HYDRA_SOURCES hydra/*.cpp)
 file(GLOB_RECURSE ATLAS_SOURCES atlas/*.cpp extern/*.c)
 file(GLOB_RECURSE TEST_SOURCES test/*.cpp)
+file(GLOB_RECURSE OPAL_SOURCES opal/*.cpp)
 
 add_library(bezel ${BEZEL_SOURCES})
 target_link_libraries(bezel PRIVATE glfw glm::glm)
@@ -80,6 +83,9 @@ target_link_libraries(bezel PRIVATE glfw glm::glm)
 add_library(finewave ${FINEWAVE_SOURCES})
 target_link_libraries(finewave PRIVATE glfw glm::glm ${OPENAL_LIB})
 target_include_directories(finewave PRIVATE ${OPENAL_INCLUDE})
+
+add_library(opal ${OPAL_SOURCES})
+target_link_libraries(opal PRIVATE glm::glm glfw OpenGL::GL)
 
 add_library(aurora ${AURORA_SOURCES})
 target_link_libraries(aurora PRIVATE glm::glm glfw OpenGL::GL) 
@@ -97,6 +103,7 @@ target_link_libraries(atlas
         finewave
         aurora
         hydra
+        opal
         ${FREETYPE_LIBRARIES}
         assimp::assimp
 )

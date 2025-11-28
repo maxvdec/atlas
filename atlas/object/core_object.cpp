@@ -11,33 +11,62 @@
 #include "atlas/light.h"
 #include "atlas/object.h"
 #include "atlas/window.h"
+#include "opal/opal.h"
 #include <algorithm>
 #include <glad/glad.h>
+#include <iostream>
 #include <limits>
+#include <memory>
 #include <random>
 #include <string>
 #include <vector>
 #include <cmath>
+#include <cstdint>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-std::vector<LayoutDescriptor> CoreVertex::getLayoutDescriptors() {
-    return {{0, 3, GL_FLOAT, GL_FALSE, sizeof(CoreVertex),
-             offsetof(CoreVertex, position)},
-            {1, 4, GL_FLOAT, GL_FALSE, sizeof(CoreVertex),
-             offsetof(CoreVertex, color)},
-            {2, 2, GL_DOUBLE, GL_FALSE, sizeof(CoreVertex),
-             offsetof(CoreVertex, textureCoordinate)},
-            {3, 3, GL_FLOAT, GL_FALSE, sizeof(CoreVertex),
-             offsetof(CoreVertex, normal)},
-            {4, 3, GL_FLOAT, GL_FALSE, sizeof(CoreVertex),
-             offsetof(CoreVertex, tangent)},
-            {5, 3, GL_FLOAT, GL_FALSE, sizeof(CoreVertex),
-             offsetof(CoreVertex, bitangent)}};
+namespace {
+
+std::vector<opal::VertexAttributeBinding>
+makeInstanceAttributeBindings(const std::shared_ptr<opal::Buffer> &buffer) {
+    std::vector<opal::VertexAttributeBinding> bindings;
+    bindings.reserve(4);
+    std::size_t vec4Size = sizeof(glm::vec4);
+    for (unsigned int i = 0; i < 4; ++i) {
+        opal::VertexAttribute attribute{"instanceModel" + std::to_string(i),
+                                        opal::VertexAttributeType::Float,
+                                        static_cast<uint>(i * vec4Size),
+                                        static_cast<uint>(6 + i),
+                                        false,
+                                        4,
+                                        static_cast<uint>(sizeof(glm::mat4)),
+                                        opal::VertexBindingInputRate::Instance,
+                                        1};
+        bindings.push_back({attribute, buffer});
+    }
+    return bindings;
 }
 
-CoreObject::CoreObject() : vbo(0), vao(0) {
+} // namespace
+
+std::vector<LayoutDescriptor> CoreVertex::getLayoutDescriptors() {
+    return {{"position", 0, 3, opal::VertexAttributeType::Float, false,
+             sizeof(CoreVertex), offsetof(CoreVertex, position)},
+            {"color", 1, 4, opal::VertexAttributeType::Float, false,
+             sizeof(CoreVertex), offsetof(CoreVertex, color)},
+            {"textureCoordinates", 2, 2, opal::VertexAttributeType::Float,
+             false, sizeof(CoreVertex),
+             offsetof(CoreVertex, textureCoordinate)},
+            {"normal", 3, 3, opal::VertexAttributeType::Float, false,
+             sizeof(CoreVertex), offsetof(CoreVertex, normal)},
+            {"tangent", 4, 3, opal::VertexAttributeType::Float, false,
+             sizeof(CoreVertex), offsetof(CoreVertex, tangent)},
+            {"bitangent", 5, 3, opal::VertexAttributeType::Float, false,
+             sizeof(CoreVertex), offsetof(CoreVertex, bitangent)}};
+}
+
+CoreObject::CoreObject() : vao(nullptr), vbo(nullptr), ebo(nullptr) {
     shaderProgram = ShaderProgram::defaultProgram();
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -51,6 +80,7 @@ void CoreObject::attachProgram(const ShaderProgram &program) {
     if (shaderProgram.programId == 0) {
         shaderProgram.compile();
     }
+    this->refreshPipeline();
 }
 
 void CoreObject::createAndAttachProgram(VertexShader &vertexShader,
@@ -65,6 +95,7 @@ void CoreObject::createAndAttachProgram(VertexShader &vertexShader,
 
     shaderProgram = ShaderProgram(vertexShader, fragmentShader);
     shaderProgram.compile();
+    this->refreshPipeline();
 }
 
 void CoreObject::renderColorWithTexture() {
@@ -94,7 +125,6 @@ void CoreObject::setColor(const Color &color) {
     }
     useColor = true;
     useTexture = false;
-    updateVertices();
 }
 
 void CoreObject::attachVertices(const std::vector<CoreVertex> &newVertices) {
@@ -103,13 +133,10 @@ void CoreObject::attachVertices(const std::vector<CoreVertex> &newVertices) {
     }
 
     vertices = newVertices;
-    glGenVertexArrays(1, &vao);
-    glGenBuffers(1, &vbo);
 }
 
 void CoreObject::attachIndices(const std::vector<Index> &newIndices) {
     indices = newIndices;
-    glGenBuffers(1, &ebo);
 }
 
 void CoreObject::setPosition(const Position3d &newPosition) {
@@ -245,37 +272,49 @@ void CoreObject::initialize() {
         throw std::runtime_error("No vertices attached to the object");
     }
 
-    glBindVertexArray(vao);
+    if (vao == nullptr) {
+        vao = opal::DrawingState::create(nullptr);
+    }
 
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(CoreVertex),
-                 vertices.data(), GL_STATIC_DRAW);
+    vbo = opal::Buffer::create(opal::BufferUsage::VertexBuffer,
+                               vertices.size() * sizeof(CoreVertex),
+                               vertices.data());
 
     if (!indices.empty()) {
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(Index),
-                     indices.data(), GL_STATIC_DRAW);
+        ebo = opal::Buffer::create(opal::BufferUsage::IndexArray,
+                                   indices.size() * sizeof(Index),
+                                   indices.data());
+    }
+
+    vao->setBuffers(vbo, ebo);
+
+    if (this->pipeline == nullptr) {
+        this->pipeline = opal::Pipeline::create();
     }
 
     std::vector<LayoutDescriptor> layoutDescriptors =
         CoreVertex::getLayoutDescriptors();
 
-    std::vector<GLuint> activeLocations = shaderProgram.desiredAttributes;
-    if (activeLocations.empty()) {
-        for (const auto &attr : layoutDescriptors) {
-            activeLocations.push_back(attr.layoutPos);
-        }
-    }
+    std::vector<opal::VertexAttribute> vertexAttributes;
+    opal::VertexBinding vertexBinding;
 
     for (const auto &attr : layoutDescriptors) {
-        if (std::find(activeLocations.begin(), activeLocations.end(),
-                      attr.layoutPos) != activeLocations.end()) {
-            glEnableVertexAttribArray(attr.layoutPos);
-            glVertexAttribPointer(attr.layoutPos, attr.size, attr.type,
-                                  attr.normalized, attr.stride,
-                                  (void *)attr.offset);
-        }
+        vertexAttributes.push_back(opal::VertexAttribute{
+            attr.name, attr.type, static_cast<uint>(attr.offset),
+            static_cast<uint>(attr.layoutPos), attr.normalized,
+            static_cast<uint>(attr.size), static_cast<uint>(attr.stride),
+            opal::VertexBindingInputRate::Vertex, 0});
     }
+
+    vertexBinding = opal::VertexBinding{(uint)layoutDescriptors[0].stride,
+                                        opal::VertexBindingInputRate::Vertex};
+
+    std::vector<opal::VertexAttributeBinding> attributeBindings;
+    attributeBindings.reserve(vertexAttributes.size());
+    for (const auto &attribute : vertexAttributes) {
+        attributeBindings.push_back({attribute, vbo});
+    }
+    vao->configureAttributes(attributeBindings);
 
     if (!instances.empty()) {
         std::vector<glm::mat4> modelMatrices;
@@ -284,25 +323,66 @@ void CoreObject::initialize() {
             modelMatrices.push_back(instance.getModelMatrix());
         }
 
-        glGenBuffers(1, &instanceVBO);
-        glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-        glBufferData(GL_ARRAY_BUFFER, instances.size() * sizeof(glm::mat4),
-                     modelMatrices.data(), GL_STATIC_DRAW);
-
-        glBindVertexArray(vao);
-        std::size_t vec4Size = sizeof(glm::vec4);
-        for (unsigned int i = 0; i < 4; i++) {
-            glEnableVertexAttribArray(6 + i);
-            glVertexAttribPointer(6 + i, 4, GL_FLOAT, GL_FALSE,
-                                  sizeof(glm::mat4), (void *)(i * vec4Size));
-            glVertexAttribDivisor(6 + i, 1);
-        }
+        instanceVBO = opal::Buffer::create(opal::BufferUsage::GeneralPurpose,
+                                           instances.size() * sizeof(glm::mat4),
+                                           modelMatrices.data());
+        auto instanceBindings = makeInstanceAttributeBindings(instanceVBO);
+        vao->configureAttributes(instanceBindings);
     }
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    this->pipeline->setVertexAttributes(vertexAttributes, vertexBinding);
+
+    vao->unbind();
 }
 
-void CoreObject::render(float dt) {
+std::optional<std::shared_ptr<opal::Pipeline>> CoreObject::getPipeline() {
+    if (this->pipeline == nullptr) {
+        return std::nullopt;
+    }
+    return this->pipeline;
+}
+
+void CoreObject::setPipeline(std::shared_ptr<opal::Pipeline> &newPipeline) {
+    this->pipeline = newPipeline;
+}
+
+void CoreObject::refreshPipeline() {
+    if (Window::mainWindow == nullptr) {
+        return;
+    }
+
+    if (this->pipeline == nullptr) {
+        this->pipeline = opal::Pipeline::create();
+    }
+
+    Window &window = *Window::mainWindow;
+
+    int viewportWidth = window.viewportWidth;
+    int viewportHeight = window.viewportHeight;
+    if (viewportWidth == 0 || viewportHeight == 0) {
+        Size2d size = window.getSize();
+        viewportWidth = static_cast<int>(size.width);
+        viewportHeight = static_cast<int>(size.height);
+    }
+
+    this->pipeline->setViewport(window.viewportX, window.viewportY,
+                                viewportWidth, viewportHeight);
+    this->pipeline->setPrimitiveStyle(window.primitiveStyle);
+    this->pipeline->setRasterizerMode(window.rasterizerMode);
+    this->pipeline->setCullMode(window.cullMode);
+    this->pipeline->setFrontFace(window.frontFace);
+    this->pipeline->enableDepthTest(window.useDepth);
+    this->pipeline->setDepthCompareOp(window.depthCompareOp);
+    this->pipeline->enableBlending(window.useBlending);
+    this->pipeline->setBlendFunc(window.srcBlend, window.dstBlend);
+    this->pipeline->enableMultisampling(window.useMultisampling);
+
+    this->pipeline = this->shaderProgram.requestPipeline(this->pipeline);
+}
+
+void CoreObject::render(float dt,
+                        std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                        bool updatePipeline) {
     for (auto &component : components) {
         component->update(dt);
     }
@@ -313,18 +393,23 @@ void CoreObject::render(float dt) {
         throw std::runtime_error("Shader program not compiled");
     }
 
-    int currentProgram;
-    glGetIntegerv(GL_CURRENT_PROGRAM, &currentProgram);
-    if (static_cast<Id>(currentProgram) != shaderProgram.programId) {
-        glUseProgram(shaderProgram.programId);
+    if (updatePipeline || this->pipeline == nullptr) {
+        this->refreshPipeline();
     }
 
-    shaderProgram.setUniformMat4f("model", model);
-    shaderProgram.setUniformMat4f("view", view);
-    shaderProgram.setUniformMat4f("projection", projection);
+    if (this->pipeline != nullptr) {
+        this->pipeline->bind();
+    } else {
+        throw std::runtime_error(
+            "Pipeline not created - call refreshPipeline() first");
+    }
 
-    shaderProgram.setUniform1i("useColor", useColor ? 1 : 0);
-    shaderProgram.setUniform1i("useTexture", useTexture ? 1 : 0);
+    this->pipeline->setUniformMat4f("model", model);
+    this->pipeline->setUniformMat4f("view", view);
+    this->pipeline->setUniformMat4f("projection", projection);
+
+    this->pipeline->setUniform1i("useColor", useColor ? 1 : 0);
+    this->pipeline->setUniform1i("useTexture", useTexture ? 1 : 0);
 
     int boundTextures = 0;
     int boundCubemaps = 0;
@@ -336,43 +421,30 @@ void CoreObject::render(float dt) {
         shaderProgram.capabilities.end();
 
     if (shaderSupportsTextures) {
-        shaderProgram.setUniform1i("textureCount", 0);
-        shaderProgram.setUniform1i("cubeMapCount", 0);
+        this->pipeline->setUniform1i("textureCount", 0);
+        this->pipeline->setUniform1i("cubeMapCount", 0);
     }
 
     if (!textures.empty() && useTexture && shaderSupportsTextures) {
         int count = std::min((int)textures.size(), 10);
-        shaderProgram.setUniform1i("textureCount", count);
-        GLint units[10];
-        for (int i = 0; i < count; i++)
-            units[i] = i;
+        this->pipeline->setUniform1i("textureCount", count);
 
         for (int i = 0; i < count; i++) {
             std::string uniformName = "texture" + std::to_string(i + 1) + "";
-            shaderProgram.setUniform1i(uniformName, i);
+            this->pipeline->bindTexture2D(uniformName, textures[i].id, i);
+            boundTextures++;
         }
 
-        GLint cubeMapUnits[5];
-        for (int i = 0; i < 5; i++)
-            cubeMapUnits[i] = 10 + i;
-        shaderProgram.setUniform1i("cubeMapCount", 5);
+        this->pipeline->setUniform1i("cubeMapCount", 5);
         for (int i = 0; i < 5; i++) {
             std::string uniformName = "cubeMap" + std::to_string(i + 1) + "";
-            shaderProgram.setUniform1i(uniformName, i + 10);
+            this->pipeline->setUniform1i(uniformName, i + 10);
         }
 
-        GLint textureTypes[10];
-        for (int i = 0; i < count; i++)
-            textureTypes[i] = static_cast<int>(textures[i].type);
         for (int i = 0; i < count; i++) {
             std::string uniformName = "textureTypes[" + std::to_string(i) + "]";
-            shaderProgram.setUniform1i(uniformName, textureTypes[i]);
-        }
-
-        for (int i = 0; i < count; i++) {
-            glActiveTexture(GL_TEXTURE0 + i);
-            glBindTexture(GL_TEXTURE_2D, textures[i].id);
-            boundTextures++;
+            this->pipeline->setUniform1i(uniformName,
+                                         static_cast<int>(textures[i].type));
         }
     }
 
@@ -381,11 +453,11 @@ void CoreObject::render(float dt) {
                   ShaderCapability::Material) !=
         shaderProgram.capabilities.end()) {
         // Set material properties
-        shaderProgram.setUniform3f("material.albedo", material.albedo.r,
-                                   material.albedo.g, material.albedo.b);
-        shaderProgram.setUniform1f("material.metallic", material.metallic);
-        shaderProgram.setUniform1f("material.roughness", material.roughness);
-        shaderProgram.setUniform1f("material.ao", material.ao);
+        this->pipeline->setUniform3f("material.albedo", material.albedo.r,
+                                     material.albedo.g, material.albedo.b);
+        this->pipeline->setUniform1f("material.metallic", material.metallic);
+        this->pipeline->setUniform1f("material.roughness", material.roughness);
+        this->pipeline->setUniform1f("material.ao", material.ao);
     }
 
     const bool shaderSupportsIbl =
@@ -399,7 +471,7 @@ void CoreObject::render(float dt) {
         });
 
     const bool useIbl = shaderSupportsIbl && hasHdrEnvironment;
-    shaderProgram.setUniformBool("useIBL", useIbl);
+    this->pipeline->setUniformBool("useIBL", useIbl);
 
     if (std::find(shaderProgram.capabilities.begin(),
                   shaderProgram.capabilities.end(),
@@ -415,117 +487,118 @@ void CoreObject::render(float dt) {
             ambientColor = scene->getAutomaticAmbientColor();
             ambientIntensity = scene->getAutomaticAmbientIntensity();
         }
-        shaderProgram.setUniform4f("ambientLight.color",
-                                   static_cast<float>(ambientColor.r),
-                                   static_cast<float>(ambientColor.g),
-                                   static_cast<float>(ambientColor.b), 1.0f);
-        shaderProgram.setUniform1f("ambientLight.intensity",
-                                   ambientIntensity / 2.0f);
+        this->pipeline->setUniform4f("ambientLight.color",
+                                     static_cast<float>(ambientColor.r),
+                                     static_cast<float>(ambientColor.g),
+                                     static_cast<float>(ambientColor.b), 1.0f);
+        this->pipeline->setUniform1f("ambientLight.intensity",
+                                     ambientIntensity / 2.0f);
 
         // Set camera position
-        shaderProgram.setUniform3f(
+        this->pipeline->setUniform3f(
             "cameraPosition", window->getCamera()->position.x,
             window->getCamera()->position.y, window->getCamera()->position.z);
 
         // Send directional lights
         int dirLightCount = std::min((int)scene->directionalLights.size(), 256);
-        shaderProgram.setUniform1i("directionalLightCount", dirLightCount);
+        this->pipeline->setUniform1i("directionalLightCount", dirLightCount);
 
         for (int i = 0; i < dirLightCount; i++) {
             DirectionalLight *light = scene->directionalLights[i];
             std::string baseName =
                 "directionalLights[" + std::to_string(i) + "]";
-            shaderProgram.setUniform3f(baseName + ".direction",
-                                       light->direction.x, light->direction.y,
-                                       light->direction.z);
-            shaderProgram.setUniform3f(baseName + ".diffuse", light->color.r,
-                                       light->color.g, light->color.b);
-            shaderProgram.setUniform3f(baseName + ".specular",
-                                       light->shineColor.r, light->shineColor.g,
-                                       light->shineColor.b);
+            this->pipeline->setUniform3f(baseName + ".direction",
+                                         light->direction.x, light->direction.y,
+                                         light->direction.z);
+            this->pipeline->setUniform3f(baseName + ".diffuse", light->color.r,
+                                         light->color.g, light->color.b);
+            this->pipeline->setUniform3f(
+                baseName + ".specular", light->shineColor.r,
+                light->shineColor.g, light->shineColor.b);
         }
 
         // Send point lights
 
         int pointLightCount = std::min((int)scene->pointLights.size(), 256);
-        shaderProgram.setUniform1i("pointLightCount", pointLightCount);
+        this->pipeline->setUniform1i("pointLightCount", pointLightCount);
 
         for (int i = 0; i < pointLightCount; i++) {
             Light *light = scene->pointLights[i];
             std::string baseName = "pointLights[" + std::to_string(i) + "]";
-            shaderProgram.setUniform3f(baseName + ".position",
-                                       light->position.x, light->position.y,
-                                       light->position.z);
-            shaderProgram.setUniform3f(baseName + ".diffuse", light->color.r,
-                                       light->color.g, light->color.b);
-            shaderProgram.setUniform3f(baseName + ".specular",
-                                       light->shineColor.r, light->shineColor.g,
-                                       light->shineColor.b);
+            this->pipeline->setUniform3f(baseName + ".position",
+                                         light->position.x, light->position.y,
+                                         light->position.z);
+            this->pipeline->setUniform3f(baseName + ".diffuse", light->color.r,
+                                         light->color.g, light->color.b);
+            this->pipeline->setUniform3f(
+                baseName + ".specular", light->shineColor.r,
+                light->shineColor.g, light->shineColor.b);
 
             PointLightConstants plc = light->calculateConstants();
-            shaderProgram.setUniform1f(baseName + ".constant", plc.constant);
-            shaderProgram.setUniform1f(baseName + ".linear", plc.linear);
-            shaderProgram.setUniform1f(baseName + ".quadratic", plc.quadratic);
-            shaderProgram.setUniform1f(baseName + ".radius", plc.radius);
+            this->pipeline->setUniform1f(baseName + ".constant", plc.constant);
+            this->pipeline->setUniform1f(baseName + ".linear", plc.linear);
+            this->pipeline->setUniform1f(baseName + ".quadratic",
+                                         plc.quadratic);
+            this->pipeline->setUniform1f(baseName + ".radius", plc.radius);
         }
 
         // Send spotlights
 
         int spotlightCount = std::min((int)scene->spotlights.size(), 256);
-        shaderProgram.setUniform1i("spotlightCount", spotlightCount);
+        this->pipeline->setUniform1i("spotlightCount", spotlightCount);
 
         for (int i = 0; i < spotlightCount; i++) {
             Spotlight *light = scene->spotlights[i];
             std::string baseName = "spotlights[" + std::to_string(i) + "]";
-            shaderProgram.setUniform3f(baseName + ".position",
-                                       light->position.x, light->position.y,
-                                       light->position.z);
-            shaderProgram.setUniform3f(baseName + ".direction",
-                                       light->direction.x, light->direction.y,
-                                       light->direction.z);
-            shaderProgram.setUniform3f(baseName + ".diffuse", light->color.r,
-                                       light->color.g, light->color.b);
-            shaderProgram.setUniform3f(baseName + ".specular",
-                                       light->shineColor.r, light->shineColor.g,
-                                       light->shineColor.b);
-            shaderProgram.setUniform1f(baseName + ".cutOff", light->cutOff);
-            shaderProgram.setUniform1f(baseName + ".outerCutOff",
-                                       light->outerCutoff);
+            this->pipeline->setUniform3f(baseName + ".position",
+                                         light->position.x, light->position.y,
+                                         light->position.z);
+            this->pipeline->setUniform3f(baseName + ".direction",
+                                         light->direction.x, light->direction.y,
+                                         light->direction.z);
+            this->pipeline->setUniform3f(baseName + ".diffuse", light->color.r,
+                                         light->color.g, light->color.b);
+            this->pipeline->setUniform3f(
+                baseName + ".specular", light->shineColor.r,
+                light->shineColor.g, light->shineColor.b);
+            this->pipeline->setUniform1f(baseName + ".cutOff", light->cutOff);
+            this->pipeline->setUniform1f(baseName + ".outerCutOff",
+                                         light->outerCutoff);
         }
 
         // Send area lights
 
         int areaLightCount = std::min((int)scene->areaLights.size(), 256);
-        shaderProgram.setUniform1i("areaLightCount", areaLightCount);
+        this->pipeline->setUniform1i("areaLightCount", areaLightCount);
 
         for (int i = 0; i < areaLightCount; i++) {
             AreaLight *light = scene->areaLights[i];
             std::string baseName = "areaLights[" + std::to_string(i) + "]";
 
-            shaderProgram.setUniform3f(baseName + ".position",
-                                       light->position.x, light->position.y,
-                                       light->position.z);
+            this->pipeline->setUniform3f(baseName + ".position",
+                                         light->position.x, light->position.y,
+                                         light->position.z);
 
-            shaderProgram.setUniform3f(baseName + ".right", light->right.x,
-                                       light->right.y, light->right.z);
+            this->pipeline->setUniform3f(baseName + ".right", light->right.x,
+                                         light->right.y, light->right.z);
 
-            shaderProgram.setUniform3f(baseName + ".up", light->up.x,
-                                       light->up.y, light->up.z);
+            this->pipeline->setUniform3f(baseName + ".up", light->up.x,
+                                         light->up.y, light->up.z);
 
-            shaderProgram.setUniform2f(baseName + ".size",
-                                       static_cast<float>(light->size.width),
-                                       static_cast<float>(light->size.height));
+            this->pipeline->setUniform2f(
+                baseName + ".size", static_cast<float>(light->size.width),
+                static_cast<float>(light->size.height));
 
-            shaderProgram.setUniform3f(baseName + ".diffuse", light->color.r,
-                                       light->color.g, light->color.b);
+            this->pipeline->setUniform3f(baseName + ".diffuse", light->color.r,
+                                         light->color.g, light->color.b);
 
-            shaderProgram.setUniform3f(baseName + ".specular",
-                                       light->shineColor.r, light->shineColor.g,
-                                       light->shineColor.b);
+            this->pipeline->setUniform3f(
+                baseName + ".specular", light->shineColor.r,
+                light->shineColor.g, light->shineColor.b);
 
-            shaderProgram.setUniform1f(baseName + ".angle", light->angle);
-            shaderProgram.setUniform1i(baseName + ".castsBothSides",
-                                       light->castsBothSides ? 1 : 0);
+            this->pipeline->setUniform1f(baseName + ".angle", light->angle);
+            this->pipeline->setUniform1i(baseName + ".castsBothSides",
+                                         light->castsBothSides ? 1 : 0);
         }
     }
 
@@ -536,24 +609,20 @@ void CoreObject::render(float dt) {
         // Bind G-Buffer textures
         Window *window = Window::mainWindow;
         RenderTarget *gBuffer = window->gBuffer.get();
-        glActiveTexture(GL_TEXTURE0 + boundTextures);
-        glBindTexture(GL_TEXTURE_2D, gBuffer->gPosition.id);
-        shaderProgram.setUniform1i("gPosition", boundTextures);
+        this->pipeline->bindTexture2D("gPosition", gBuffer->gPosition.id,
+                                      boundTextures);
         boundTextures++;
 
-        glActiveTexture(GL_TEXTURE0 + boundTextures);
-        glBindTexture(GL_TEXTURE_2D, gBuffer->gNormal.id);
-        shaderProgram.setUniform1i("gNormal", boundTextures);
+        this->pipeline->bindTexture2D("gNormal", gBuffer->gNormal.id,
+                                      boundTextures);
         boundTextures++;
 
-        glActiveTexture(GL_TEXTURE0 + boundTextures);
-        glBindTexture(GL_TEXTURE_2D, gBuffer->gAlbedoSpec.id);
-        shaderProgram.setUniform1i("gAlbedoSpec", boundTextures);
+        this->pipeline->bindTexture2D("gAlbedoSpec", gBuffer->gAlbedoSpec.id,
+                                      boundTextures);
         boundTextures++;
 
-        glActiveTexture(GL_TEXTURE0 + boundTextures);
-        glBindTexture(GL_TEXTURE_2D, gBuffer->gMaterial.id);
-        shaderProgram.setUniform1i("gMaterial", boundTextures);
+        this->pipeline->bindTexture2D("gMaterial", gBuffer->gMaterial.id,
+                                      boundTextures);
         boundTextures++;
     }
 
@@ -563,7 +632,7 @@ void CoreObject::render(float dt) {
         shaderProgram.capabilities.end()) {
         for (int i = 0; i < 5; i++) {
             std::string uniformName = "cubeMap" + std::to_string(i + 1);
-            shaderProgram.setUniform1i(uniformName, i + 10);
+            this->pipeline->setUniform1i(uniformName, i + 10);
         }
         // Bind shadow maps
         Scene *scene = Window::mainWindow->currentScene;
@@ -579,20 +648,19 @@ void CoreObject::render(float dt) {
                 break;
             }
 
-            glActiveTexture(GL_TEXTURE0 + boundTextures);
-            glBindTexture(GL_TEXTURE_2D, light->shadowRenderTarget->texture.id);
             std::string baseName =
                 "shadowParams[" + std::to_string(boundParameters) + "]";
-            shaderProgram.setUniform1i(baseName + ".textureIndex",
-                                       boundTextures);
+            this->pipeline->bindTexture2D(baseName + ".textureIndex",
+                                          light->shadowRenderTarget->texture.id,
+                                          boundTextures);
             ShadowParams shadowParams = light->calculateLightSpaceMatrix(
                 Window::mainWindow->renderables);
-            shaderProgram.setUniformMat4f(baseName + ".lightView",
-                                          shadowParams.lightView);
-            shaderProgram.setUniformMat4f(baseName + ".lightProjection",
-                                          shadowParams.lightProjection);
-            shaderProgram.setUniform1f(baseName + ".bias", shadowParams.bias);
-            shaderProgram.setUniform1f(baseName + ".isPointLight", 0);
+            this->pipeline->setUniformMat4f(baseName + ".lightView",
+                                            shadowParams.lightView);
+            this->pipeline->setUniformMat4f(baseName + ".lightProjection",
+                                            shadowParams.lightProjection);
+            this->pipeline->setUniform1f(baseName + ".bias", shadowParams.bias);
+            this->pipeline->setUniform1f(baseName + ".isPointLight", 0);
 
             boundParameters++;
             boundTextures++;
@@ -607,20 +675,19 @@ void CoreObject::render(float dt) {
                 break;
             }
 
-            glActiveTexture(GL_TEXTURE0 + boundTextures);
-            glBindTexture(GL_TEXTURE_2D, light->shadowRenderTarget->texture.id);
             std::string baseName =
                 "shadowParams[" + std::to_string(boundParameters) + "]";
-            shaderProgram.setUniform1i(baseName + ".textureIndex",
-                                       boundTextures);
+            this->pipeline->bindTexture2D(baseName + ".textureIndex",
+                                          light->shadowRenderTarget->texture.id,
+                                          boundTextures);
             std::tuple<glm::mat4, glm::mat4> lightSpace =
                 light->calculateLightSpaceMatrix();
-            shaderProgram.setUniformMat4f(baseName + ".lightView",
-                                          std::get<0>(lightSpace));
-            shaderProgram.setUniformMat4f(baseName + ".lightProjection",
-                                          std::get<1>(lightSpace));
-            shaderProgram.setUniform1f(baseName + ".bias", 0.005f);
-            shaderProgram.setUniform1f(baseName + ".isPointLight", 0);
+            this->pipeline->setUniformMat4f(baseName + ".lightView",
+                                            std::get<0>(lightSpace));
+            this->pipeline->setUniformMat4f(baseName + ".lightProjection",
+                                            std::get<1>(lightSpace));
+            this->pipeline->setUniform1f(baseName + ".bias", 0.005f);
+            this->pipeline->setUniform1f(baseName + ".isPointLight", 0);
 
             boundParameters++;
             boundTextures++;
@@ -634,32 +701,32 @@ void CoreObject::render(float dt) {
                 break;
             }
 
-            glActiveTexture(GL_TEXTURE0 + 10 + boundCubemaps);
-
-            glBindTexture(GL_TEXTURE_CUBE_MAP,
-                          light->shadowRenderTarget->texture.id);
             std::string baseName =
                 "shadowParams[" + std::to_string(boundParameters) + "]";
-            shaderProgram.setUniform1i(baseName + ".textureIndex",
-                                       boundCubemaps);
-            shaderProgram.setUniform1f(baseName + ".farPlane", light->distance);
-            shaderProgram.setUniform3f(baseName + ".lightPos",
-                                       light->position.x, light->position.y,
-                                       light->position.z);
-            shaderProgram.setUniform1i(baseName + ".isPointLight", 1);
+            this->pipeline->bindTextureCubemap(
+                baseName + ".textureIndex",
+                light->shadowRenderTarget->texture.id, 10 + boundCubemaps);
+            this->pipeline->setUniform1i(baseName + ".textureIndex",
+                                         boundCubemaps);
+            this->pipeline->setUniform1f(baseName + ".farPlane",
+                                         light->distance);
+            this->pipeline->setUniform3f(baseName + ".lightPos",
+                                         light->position.x, light->position.y,
+                                         light->position.z);
+            this->pipeline->setUniform1i(baseName + ".isPointLight", 1);
 
             boundParameters++;
+            boundCubemaps++;
             boundTextures += 6;
         }
 
-        shaderProgram.setUniform1i("shadowParamCount", boundParameters);
+        this->pipeline->setUniform1i("shadowParamCount", boundParameters);
 
-        GLint units[16];
-        for (int i = 0; i < boundTextures; i++)
-            units[i] = i;
-
-        glUniform1iv(glGetUniformLocation(shaderProgram.programId, "textures"),
-                     boundTextures, units);
+        // Set texture units array using pipeline
+        for (int i = 0; i < boundTextures && i < 16; i++) {
+            std::string uniformName = "textures[" + std::to_string(i) + "]";
+            this->pipeline->setUniform1i(uniformName, i);
+        }
     }
 
     if (std::find(shaderProgram.capabilities.begin(),
@@ -670,9 +737,8 @@ void CoreObject::render(float dt) {
         Window *window = Window::mainWindow;
         Scene *scene = window->getCurrentScene();
         if (scene->skybox != nullptr) {
-            glActiveTexture(GL_TEXTURE0 + boundTextures);
-            glBindTexture(GL_TEXTURE_CUBE_MAP, scene->skybox->cubemap.id);
-            shaderProgram.setUniform1i("skybox", boundTextures);
+            this->pipeline->bindTextureCubemap(
+                "skybox", scene->skybox->cubemap.id, boundTextures);
             boundTextures++;
         }
     }
@@ -683,12 +749,12 @@ void CoreObject::render(float dt) {
         shaderProgram.capabilities.end()) {
         Window *window = Window::mainWindow;
         Scene *scene = window->getCurrentScene();
-        shaderProgram.setUniform1f("environment.rimLightIntensity",
-                                   scene->environment.rimLight.intensity);
-        shaderProgram.setUniform3f("environment.rimLightColor",
-                                   scene->environment.rimLight.color.r,
-                                   scene->environment.rimLight.color.g,
-                                   scene->environment.rimLight.color.b);
+        this->pipeline->setUniform1f("environment.rimLightIntensity",
+                                     scene->environment.rimLight.intensity);
+        this->pipeline->setUniform3f("environment.rimLightColor",
+                                     scene->environment.rimLight.color.r,
+                                     scene->environment.rimLight.color.g,
+                                     scene->environment.rimLight.color.b);
     }
 
     if (std::find(shaderProgram.capabilities.begin(),
@@ -701,30 +767,35 @@ void CoreObject::render(float dt) {
             this->savedInstances = this->instances;
         }
         // Update instance buffer data
-        glBindVertexArray(vao);
-        shaderProgram.setUniform1i("isInstanced", 1);
+        this->pipeline->setUniform1i("isInstanced", 1);
 
         if (!indices.empty()) {
-            glDrawElementsInstanced(GL_TRIANGLES, indices.size(),
-                                    GL_UNSIGNED_INT, 0, instances.size());
-            glBindVertexArray(0);
+            commandBuffer->bindDrawingState(vao);
+            commandBuffer->bindPipeline(this->pipeline);
+            commandBuffer->drawIndexed(indices.size(), instances.size(), 0, 0,
+                                       0);
+            commandBuffer->unbindDrawingState();
             return;
         }
-        glDrawArraysInstanced(GL_TRIANGLES, 0, vertices.size(),
-                              instances.size());
-        glBindVertexArray(0);
+        commandBuffer->bindDrawingState(vao);
+        commandBuffer->bindPipeline(this->pipeline);
+        commandBuffer->draw(vertices.size(), instances.size(), 0, 0);
+        commandBuffer->unbindDrawingState();
         return;
     }
 
-    glBindVertexArray(vao);
-    shaderProgram.setUniform1i("isInstanced", 0);
+    this->pipeline->setUniform1i("isInstanced", 0);
     if (!indices.empty()) {
-        glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
-        glBindVertexArray(0);
+        commandBuffer->bindDrawingState(vao);
+        commandBuffer->bindPipeline(this->pipeline);
+        commandBuffer->drawIndexed(indices.size(), 1, 0, 0, 0);
+        commandBuffer->unbindDrawingState();
         return;
     }
-    glDrawArrays(GL_TRIANGLES, 0, vertices.size());
-    glBindVertexArray(0);
+    commandBuffer->bindDrawingState(vao);
+    commandBuffer->bindPipeline(this->pipeline);
+    commandBuffer->draw(vertices.size(), 1, 0, 0);
+    commandBuffer->unbindDrawingState();
 }
 
 void CoreObject::setViewMatrix(const glm::mat4 &view) {
@@ -744,9 +815,12 @@ void CoreObject::setProjectionMatrix(const glm::mat4 &projection) {
 CoreObject CoreObject::clone() const {
     CoreObject newObject = *this;
 
-    glGenVertexArrays(1, &newObject.vao);
-    glGenBuffers(1, &newObject.vbo);
-    glGenBuffers(1, &newObject.ebo);
+    newObject.vao = nullptr;
+    newObject.vbo = nullptr;
+    newObject.ebo = nullptr;
+    newObject.instanceVBO = nullptr;
+    newObject.shaderProgram = this->shaderProgram;
+    newObject.pipeline = this->pipeline;
 
     newObject.initialize();
 
@@ -754,15 +828,14 @@ CoreObject CoreObject::clone() const {
 }
 
 void CoreObject::updateVertices() {
-    if (vbo == 0 || vertices.empty()) {
+    if (vbo == nullptr || vertices.empty()) {
         throw std::runtime_error("Cannot update vertices: VBO not "
                                  "initialized or empty vertex list");
     }
 
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, vertices.size() * sizeof(CoreVertex),
-                    vertices.data());
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    vbo->bind();
+    vbo->updateData(0, vertices.size() * sizeof(CoreVertex), vertices.data());
+    vbo->unbind();
 }
 
 void CoreObject::update(Window &window) {
@@ -816,21 +889,12 @@ void CoreObject::updateInstances() {
         return;
     }
 
-    if (this->instanceVBO == 0) {
-        glGenBuffers(1, &instanceVBO);
-        glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-        glBufferData(GL_ARRAY_BUFFER, instances.size() * sizeof(glm::mat4),
-                     nullptr, GL_DYNAMIC_DRAW);
-        glBindVertexArray(vao);
-        std::size_t vec4Size = sizeof(glm::vec4);
-        for (unsigned int i = 0; i < 4; i++) {
-            glEnableVertexAttribArray(6 + i);
-            glVertexAttribPointer(6 + i, 4, GL_FLOAT, GL_FALSE,
-                                  sizeof(glm::mat4), (void *)(i * vec4Size));
-            glVertexAttribDivisor(6 + i, 1);
-        }
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glBindVertexArray(0);
+    if (this->instanceVBO == nullptr) {
+        instanceVBO =
+            opal::Buffer::create(opal::BufferUsage::GeneralPurpose,
+                                 instances.size() * sizeof(glm::mat4), nullptr);
+        auto instanceBindings = makeInstanceAttributeBindings(instanceVBO);
+        vao->configureAttributes(instanceBindings);
     }
 
     std::vector<glm::mat4> modelMatrices;
@@ -841,10 +905,10 @@ void CoreObject::updateInstances() {
         modelMatrices.push_back(instance.getModelMatrix());
     }
 
-    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, instances.size() * sizeof(glm::mat4),
-                    modelMatrices.data());
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    instanceVBO->bind();
+    instanceVBO->updateData(0, instances.size() * sizeof(glm::mat4),
+                            modelMatrices.data());
+    instanceVBO->unbind();
 }
 
 void Instance::updateModelMatrix() {

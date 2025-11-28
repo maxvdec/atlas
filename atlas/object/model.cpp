@@ -14,11 +14,13 @@
 #include "atlas/units.h"
 #include "atlas/window.h"
 #include "atlas/workspace.h"
+#include "opal/opal.h"
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
+#include <unordered_map>
 #include <vector>
 
 #include <glm/glm.hpp>
@@ -49,7 +51,16 @@ void Model::loadModel(Resource resource) {
     }
     directory = resource.path.parent_path().string();
 
-    processNode(scene->mRootNode, scene);
+    // Create a single shared pipeline for all meshes in this model
+    auto sharedPipeline = opal::Pipeline::create();
+    sharedPipeline =
+        ShaderProgram::defaultProgram().requestPipeline(sharedPipeline);
+
+    // Texture cache to avoid loading the same texture multiple times
+    std::unordered_map<std::string, Texture> textureCache;
+
+    processNode(scene->mRootNode, scene, glm::mat4(1.0f), sharedPipeline,
+                textureCache);
 
     std::cout << "Created model from resource: " << resource.name << " with "
               << objects.size() << " objects." << std::endl;
@@ -61,6 +72,7 @@ void Model::loadModel(Resource resource) {
 
     std::cout << "Model loaded successfully." << std::endl;
     std::cout << "Meshes: " << scene->mNumMeshes << std::endl;
+    std::cout << "Unique textures loaded: " << textureCache.size() << std::endl;
 
     size_t totalVertices = 0;
     size_t totalTriangles = 0;
@@ -75,30 +87,38 @@ void Model::loadModel(Resource resource) {
     std::cout << "Total Triangles: " << totalTriangles << std::endl;
 }
 
-void Model::processNode(aiNode *node, const aiScene *scene,
-                        glm::mat4 parentTransform) {
+void Model::processNode(
+    aiNode *node, const aiScene *scene, glm::mat4 parentTransform,
+    std::shared_ptr<opal::Pipeline> sharedPipeline,
+    std::unordered_map<std::string, Texture> &textureCache) {
     glm::mat4 nodeTransform =
         parentTransform * glm::make_mat4(&node->mTransformation.a1);
 
     for (unsigned int i = 0; i < node->mNumMeshes; i++) {
         aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
         auto obj = std::make_shared<CoreObject>(
-            processMesh(mesh, scene, nodeTransform));
-        obj->setShader(ShaderProgram::defaultProgram());
+            processMesh(mesh, scene, nodeTransform, textureCache));
+        // Reuse the shared pipeline instead of creating a new one per mesh
+        obj->setPipeline(sharedPipeline);
         obj->initialize();
         this->objects.push_back(obj);
     }
 
     for (unsigned int i = 0; i < node->mNumChildren; i++) {
-        processNode(node->mChildren[i], scene, nodeTransform);
+        processNode(node->mChildren[i], scene, nodeTransform, sharedPipeline,
+                    textureCache);
     }
 }
 
-CoreObject Model::processMesh(aiMesh *mesh, const aiScene *scene,
-                              const glm::mat4 &transform) {
+CoreObject
+Model::processMesh(aiMesh *mesh, const aiScene *scene,
+                   const glm::mat4 &transform,
+                   std::unordered_map<std::string, Texture> &textureCache) {
     CoreObject object;
     std::vector<CoreVertex> vertices;
     std::vector<unsigned int> indices;
+
+    vertices.reserve(mesh->mNumVertices);
 
     for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
         glm::vec4 pos =
@@ -162,6 +182,13 @@ CoreObject Model::processMesh(aiMesh *mesh, const aiScene *scene,
     }
 
     // ---------- Indices ----------
+    // Pre-calculate total indices for reservation
+    size_t totalIndices = 0;
+    for (unsigned int i = 0; i < mesh->mNumFaces; i++) {
+        totalIndices += mesh->mFaces[i].mNumIndices;
+    }
+    indices.reserve(totalIndices);
+
     for (unsigned int i = 0; i < mesh->mNumFaces; i++) {
         const aiFace &face = mesh->mFaces[i];
         for (unsigned int j = 0; j < face.mNumIndices; j++)
@@ -172,21 +199,25 @@ CoreObject Model::processMesh(aiMesh *mesh, const aiScene *scene,
     if (mesh->mMaterialIndex >= 0) {
         aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
 
-        auto diffuseMaps = loadMaterialTextures(
-            material, std::any(aiTextureType_DIFFUSE), "texture_diffuse");
+        auto diffuseMaps =
+            loadMaterialTextures(material, std::any(aiTextureType_DIFFUSE),
+                                 "texture_diffuse", textureCache);
         textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
 
-        auto specularMaps = loadMaterialTextures(
-            material, std::any(aiTextureType_SPECULAR), "texture_specular");
+        auto specularMaps =
+            loadMaterialTextures(material, std::any(aiTextureType_SPECULAR),
+                                 "texture_specular", textureCache);
         textures.insert(textures.end(), specularMaps.begin(),
                         specularMaps.end());
 
-        auto normalMaps = loadMaterialTextures(
-            material, std::any(aiTextureType_NORMALS), "texture_normal");
+        auto normalMaps =
+            loadMaterialTextures(material, std::any(aiTextureType_NORMALS),
+                                 "texture_normal", textureCache);
         textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
 
-        auto heightMaps = loadMaterialTextures(
-            material, std::any(aiTextureType_HEIGHT), "texture_height");
+        auto heightMaps =
+            loadMaterialTextures(material, std::any(aiTextureType_HEIGHT),
+                                 "texture_height", textureCache);
         textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
     }
 
@@ -201,18 +232,27 @@ CoreObject Model::processMesh(aiMesh *mesh, const aiScene *scene,
     return object;
 }
 
-std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, std::any type,
-                                                 const std::string &typeName) {
+std::vector<Texture> Model::loadMaterialTextures(
+    aiMaterial *mat, std::any type, const std::string &typeName,
+    std::unordered_map<std::string, Texture> &textureCache) {
     aiMaterial *material = mat;
     aiTextureType textureType = std::any_cast<aiTextureType>(type);
     std::vector<Texture> textures;
     for (unsigned int i = 0; i < material->GetTextureCount(textureType); i++) {
         aiString str;
         material->GetTexture(textureType, i, &str);
-        std::cout << "Loading texture: " << str.C_Str() << " of type "
-                  << typeName << std::endl;
         std::string filename = std::string(str.C_Str());
         std::string fullPath = directory + "/" + filename;
+
+        // Check if texture is already cached
+        auto cacheIt = textureCache.find(fullPath);
+        if (cacheIt != textureCache.end()) {
+            textures.push_back(cacheIt->second);
+            continue;
+        }
+
+        std::cout << "Loading texture: " << str.C_Str() << " of type "
+                  << typeName << std::endl;
 
         ResourceType resType = ResourceType::Image;
         if (typeName == "texture_specular") {
@@ -220,17 +260,19 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, std::any type,
         }
         Resource resource =
             Workspace::get().createResource(fullPath, filename, resType);
-        TextureType textureType = TextureType::Color;
+        TextureType texType = TextureType::Color;
         if (typeName == "texture_specular") {
-            textureType = TextureType::Specular;
+            texType = TextureType::Specular;
         } else if (typeName == "texture_normal") {
-            textureType = TextureType::Normal;
+            texType = TextureType::Normal;
         } else if (typeName == "texture_height") {
-            textureType = TextureType::Parallax;
+            texType = TextureType::Parallax;
         }
 
         try {
-            textures.push_back(Texture::fromResource(resource, textureType));
+            Texture loadedTexture = Texture::fromResource(resource, texType);
+            textureCache[fullPath] = loadedTexture;
+            textures.push_back(loadedTexture);
         } catch (const std::exception &ex) {
             std::cerr << "Failed to load texture '" << filename
                       << "': " << ex.what() << std::endl;

@@ -26,7 +26,8 @@ struct ParticleInstanceData {
 };
 
 ParticleEmitter::ParticleEmitter(unsigned int maxParticles)
-    : maxParticles(maxParticles), vao(0), vbo(0), program({}), texture({}) {
+    : maxParticles(maxParticles), vao(nullptr), quadBuffer(nullptr),
+      instanceBuffer(nullptr), indexBuffer(nullptr), program({}), texture({}) {
     particles.reserve(maxParticles);
     this->useTexture = false;
     this->emissionType = ParticleEmissionType::Fountain;
@@ -52,54 +53,74 @@ void ParticleEmitter::initialize() {
 
     static const unsigned int indices[] = {0, 1, 2, 2, 3, 0};
 
-    unsigned int quadVBO, instanceVBO, EBO;
-    glGenVertexArrays(1, &vao);
-    glGenBuffers(1, &quadVBO);
-    glGenBuffers(1, &instanceVBO);
-    glGenBuffers(1, &EBO);
+    quadBuffer = opal::Buffer::create(opal::BufferUsage::VertexBuffer,
+                                      sizeof(quadVertices), quadVertices);
+    indexBuffer = opal::Buffer::create(opal::BufferUsage::IndexArray,
+                                       sizeof(indices), indices);
+    instanceBuffer =
+        opal::Buffer::create(opal::BufferUsage::GeneralPurpose,
+                             maxParticles * sizeof(ParticleInstanceData),
+                             nullptr, opal::MemoryUsageType::CPUToGPU);
 
-    vbo = instanceVBO;
+    vao = opal::DrawingState::create(quadBuffer, indexBuffer);
+    vao->setBuffers(quadBuffer, indexBuffer);
 
-    glBindVertexArray(vao);
+    opal::VertexAttribute positionAttr{"particlePosition",
+                                       opal::VertexAttributeType::Float,
+                                       0,
+                                       0,
+                                       false,
+                                       3,
+                                       static_cast<uint>(sizeof(QuadVertex)),
+                                       opal::VertexBindingInputRate::Vertex,
+                                       0};
+    opal::VertexAttribute uvAttr{"particleUV",
+                                 opal::VertexAttributeType::Float,
+                                 static_cast<uint>(3 * sizeof(float)),
+                                 1,
+                                 false,
+                                 2,
+                                 static_cast<uint>(sizeof(QuadVertex)),
+                                 opal::VertexBindingInputRate::Vertex,
+                                 0};
+    opal::VertexAttribute instancePos{
+        "instancePosition",
+        opal::VertexAttributeType::Float,
+        0,
+        2,
+        false,
+        3,
+        static_cast<uint>(sizeof(ParticleInstanceData)),
+        opal::VertexBindingInputRate::Instance,
+        1};
+    opal::VertexAttribute instanceColor{
+        "instanceColor",
+        opal::VertexAttributeType::Float,
+        static_cast<uint>(3 * sizeof(float)),
+        3,
+        false,
+        4,
+        static_cast<uint>(sizeof(ParticleInstanceData)),
+        opal::VertexBindingInputRate::Instance,
+        1};
+    opal::VertexAttribute instanceSize{
+        "instanceSize",
+        opal::VertexAttributeType::Float,
+        static_cast<uint>(7 * sizeof(float)),
+        4,
+        false,
+        1,
+        static_cast<uint>(sizeof(ParticleInstanceData)),
+        opal::VertexBindingInputRate::Instance,
+        1};
 
-    glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), quadVertices,
-                 GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(QuadVertex),
-                          (void *)0);
-    glEnableVertexAttribArray(0);
-
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(QuadVertex),
-                          (void *)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
-                 GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-    glBufferData(GL_ARRAY_BUFFER, maxParticles * sizeof(ParticleInstanceData),
-                 nullptr, GL_DYNAMIC_DRAW);
-
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE,
-                          sizeof(ParticleInstanceData), (void *)0);
-    glEnableVertexAttribArray(2);
-    glVertexAttribDivisor(2, 1);
-
-    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE,
-                          sizeof(ParticleInstanceData),
-                          (void *)(3 * sizeof(float)));
-    glEnableVertexAttribArray(3);
-    glVertexAttribDivisor(3, 1);
-
-    glVertexAttribPointer(4, 1, GL_FLOAT, GL_FALSE,
-                          sizeof(ParticleInstanceData),
-                          (void *)(7 * sizeof(float)));
-    glEnableVertexAttribArray(4);
-    glVertexAttribDivisor(4, 1);
-
-    glBindVertexArray(0);
+    std::vector<opal::VertexAttributeBinding> bindings = {
+        {positionAttr, quadBuffer},
+        {uvAttr, quadBuffer},
+        {instancePos, instanceBuffer},
+        {instanceColor, instanceBuffer},
+        {instanceSize, instanceBuffer}};
+    vao->configureAttributes(bindings);
 
     program = ShaderProgram::fromDefaultShaders(AtlasVertexShader::Particle,
                                                 AtlasFragmentShader::Particle);
@@ -315,50 +336,62 @@ void ParticleEmitter::update(Window &window) {
         }
     }
 
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    if (!instanceData.empty()) {
-        glBufferSubData(GL_ARRAY_BUFFER, 0,
-                        instanceData.size() * sizeof(ParticleInstanceData),
-                        instanceData.data());
+    if (instanceBuffer != nullptr && !instanceData.empty()) {
+        instanceBuffer->bind();
+        instanceBuffer->updateData(
+            0, instanceData.size() * sizeof(ParticleInstanceData),
+            instanceData.data());
+        instanceBuffer->unbind();
     }
 
     activeParticleCount = instanceData.size();
 }
 
-void ParticleEmitter::render(float dt) {
+void ParticleEmitter::render(float dt,
+                             std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                             bool updatePipeline) {
+    (void)updatePipeline;
     for (auto &component : components) {
         component->update(dt);
     }
     if (activeParticleCount == 0)
         return;
+    if (commandBuffer == nullptr) {
+        throw std::runtime_error(
+            "ParticleEmitter::render requires a valid command buffer");
+    }
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glDepthMask(GL_FALSE);
+    // Get or create pipeline
+    static std::shared_ptr<opal::Pipeline> particlePipeline = nullptr;
+    if (particlePipeline == nullptr) {
+        particlePipeline = opal::Pipeline::create();
+    }
+    particlePipeline = this->program.requestPipeline(particlePipeline);
+    particlePipeline->enableBlending(true);
+    particlePipeline->setBlendFunc(opal::BlendFunc::SrcAlpha,
+                                   opal::BlendFunc::OneMinusSrcAlpha);
+    particlePipeline->enableDepthWrite(false);
+    particlePipeline->bind();
 
-    glUseProgram(this->program.programId);
+    particlePipeline->setUniformMat4f("view", this->view);
+    particlePipeline->setUniformMat4f("projection", this->projection);
+    particlePipeline->setUniformMat4f("model", this->model);
+    particlePipeline->setUniform1i("useTexture", useTexture ? 1 : 0);
 
-    program.setUniformMat4f("view", this->view);
-    program.setUniformMat4f("projection", this->projection);
-    program.setUniformMat4f("model", this->model);
-    program.setUniform1i("useTexture", useTexture ? 1 : 0);
-
-    program.setUniform1i(
+    particlePipeline->setUniform1i(
         "isAmbient", (emissionType == ParticleEmissionType::Ambient) ? 1 : 0);
 
     if (useTexture) {
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture.id);
-        program.setUniform1i("particleTexture", 0);
+        particlePipeline->bindTexture2D("particleTexture", texture.id, 0);
     }
 
-    glBindVertexArray(vao);
-    glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0,
-                            activeParticleCount);
-    glBindVertexArray(0);
+    commandBuffer->bindDrawingState(vao);
+    commandBuffer->drawIndexed(6, activeParticleCount, 0, 0, 0);
+    commandBuffer->unbindDrawingState();
 
-    glDepthMask(GL_TRUE);
-    glDisable(GL_BLEND);
+    particlePipeline->enableDepthWrite(true);
+    particlePipeline->enableBlending(false);
+    particlePipeline->bind();
 }
 
 void ParticleEmitter::setProjectionMatrix(const glm::mat4 &projection) {

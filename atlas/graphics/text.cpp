@@ -9,10 +9,11 @@
 
 #include "atlas/text.h"
 #include "atlas/window.h"
+#include "opal/opal.h"
 #include "ft2build.h" // IWYU pragma: keep
 #include <iostream>
 #include FT_FREETYPE_H
-#include <glad/glad.h>
+#include <vector>
 
 Font Font::fromResource(const std::string &fontName, Resource resource,
                         int fontSize) {
@@ -30,8 +31,6 @@ Font Font::fromResource(const std::string &fontName, Resource resource,
     int dpi = 96;
     FT_Set_Char_Size(face, 0, fontSize * 64, dpi, dpi);
 
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
     Font font;
 
     for (unsigned char c = 0; c < 128; c++) {
@@ -42,38 +41,32 @@ Font Font::fromResource(const std::string &fontName, Resource resource,
 
         if (face->glyph->bitmap.width == 0 || face->glyph->bitmap.rows == 0) {
             Character character = {
-                0, Size2d(0, 0), Position2d(0, 0),
+                0, nullptr, Size2d(0, 0), Position2d(0, 0),
                 static_cast<unsigned int>(face->glyph->advance.x)};
             font.atlas.insert(std::pair<char, Character>(c, character));
             continue;
         }
 
-        unsigned int texture;
-        glGenTextures(1, &texture);
-        glBindTexture(GL_TEXTURE_2D, texture);
+        // Create texture with data in one call, texture remains bound
+        auto opalTexture = opal::Texture::create(
+            opal::TextureType::Texture2D, opal::TextureFormat::Red8,
+            face->glyph->bitmap.width, face->glyph->bitmap.rows,
+            opal::TextureDataFormat::Red, face->glyph->bitmap.buffer, 1);
 
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_R8, face->glyph->bitmap.width,
-                     face->glyph->bitmap.rows, 0, GL_RED, GL_UNSIGNED_BYTE,
-                     face->glyph->bitmap.buffer);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+        // Set all parameters in one batched call (single bind)
+        opalTexture->setParameters(opal::TextureWrapMode::ClampToEdge,
+                                   opal::TextureWrapMode::ClampToEdge,
+                                   opal::TextureFilterMode::Linear,
+                                   opal::TextureFilterMode::Linear);
 
         Character character = {
-            texture,
+            opalTexture->textureID, opalTexture,
             Size2d(face->glyph->bitmap.width, face->glyph->bitmap.rows),
             Position2d(face->glyph->bitmap_left, face->glyph->bitmap_top),
             static_cast<unsigned int>(face->glyph->advance.x)};
 
         font.atlas.insert(std::pair<char, Character>(c, character));
     }
-
-    glBindTexture(GL_TEXTURE_2D, 0);
 
     FT_Done_Face(face);
     FT_Done_FreeType(ft);
@@ -118,36 +111,56 @@ void Text::initialize() {
     projection = glm::ortho(0.0f, static_cast<float>(fbWidth),
                             static_cast<float>(fbHeight), 0.0f);
 
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 6 * 4, NULL, GL_DYNAMIC_DRAW);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 4 * sizeof(float), 0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+    vertexBuffer = opal::Buffer::create(opal::BufferUsage::VertexBuffer,
+                                        sizeof(float) * 6 * 4, nullptr,
+                                        opal::MemoryUsageType::CPUToGPU);
+    vao = opal::DrawingState::create(vertexBuffer);
+    vao->setBuffers(vertexBuffer, nullptr);
+
+    opal::VertexAttribute textAttribute{"textVertex",
+                                        opal::VertexAttributeType::Float,
+                                        0,
+                                        0,
+                                        false,
+                                        4,
+                                        static_cast<uint>(4 * sizeof(float)),
+                                        opal::VertexBindingInputRate::Vertex,
+                                        0};
+    std::vector<opal::VertexAttributeBinding> bindings = {
+        {textAttribute, vertexBuffer}};
+    vao->configureAttributes(bindings);
 
     shader = ShaderProgram::fromDefaultShaders(AtlasVertexShader::Text,
                                                AtlasFragmentShader::Text);
 }
 
-void Text::render(float dt) {
+void Text::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                  bool updatePipeline) {
+    (void)updatePipeline;
     for (auto &component : components) {
         component->update(dt);
     }
+    if (commandBuffer == nullptr) {
+        throw std::runtime_error(
+            "Text::render requires a valid command buffer");
+    }
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glDisable(GL_DEPTH_TEST);
+    // Get or create pipeline for text
+    static std::shared_ptr<opal::Pipeline> textPipeline = nullptr;
+    if (textPipeline == nullptr) {
+        textPipeline = opal::Pipeline::create();
+    }
+    textPipeline = shader.requestPipeline(textPipeline);
+    textPipeline->enableBlending(true);
+    textPipeline->setBlendFunc(opal::BlendFunc::SrcAlpha,
+                               opal::BlendFunc::OneMinusSrcAlpha);
+    textPipeline->enableDepthTest(false);
+    textPipeline->bind();
 
-    glUseProgram(shader.programId);
-    shader.setUniform3f("textColor", color.r, color.g, color.b);
-    shader.setUniformMat4f("projection", projection);
-    shader.setUniform1i("text", 0);
+    textPipeline->setUniform3f("textColor", color.r, color.g, color.b);
+    textPipeline->setUniformMat4f("projection", projection);
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindVertexArray(VAO);
+    commandBuffer->bindDrawingState(vao);
 
     float scale = 2.0f;
 
@@ -179,17 +192,17 @@ void Text::render(float dt) {
             {xpos, ypos, 0.0f, 0.0f},         {xpos + w, ypos + h, 1.0f, 1.0f},
             {xpos + w, ypos, 1.0f, 0.0f}};
 
-        glBindTexture(GL_TEXTURE_2D, ch.textureID);
-        glBindBuffer(GL_ARRAY_BUFFER, VBO);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
+        textPipeline->bindTexture2D("text", ch.textureID, 0);
+        vertexBuffer->bind();
+        vertexBuffer->updateData(0, sizeof(vertices), vertices);
+        vertexBuffer->unbind();
+        commandBuffer->draw(6, 1, 0, 0);
 
         x += (ch.advance >> 6) * scale;
     }
 
-    glBindVertexArray(0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glDisable(GL_BLEND);
-    glEnable(GL_DEPTH_TEST);
+    commandBuffer->unbindDrawingState();
+    textPipeline->enableBlending(false);
+    textPipeline->enableDepthTest(true);
+    textPipeline->bind();
 }

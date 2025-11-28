@@ -1,0 +1,132 @@
+//
+// command_buffer.cpp
+// As part of the Atlas project
+// Created by Max Van den Eynde in 2025
+// --------------------------------------------------
+// Description: The Command Buffer implementation for drawing commands
+// Copyright (c) 2025 maxvdec
+//
+
+#include <memory>
+#include <opal/opal.h>
+
+namespace opal {
+
+std::shared_ptr<CommandBuffer> Device::acquireCommandBuffer() {
+    auto commandBuffer = std::make_shared<CommandBuffer>();
+    return commandBuffer;
+}
+
+void CommandBuffer::start() {
+    // Reset state for a new command recording session
+    boundPipeline = nullptr;
+    boundDrawingState = nullptr;
+}
+
+void Device::submitCommandBuffer(
+    [[maybe_unused]] std::shared_ptr<CommandBuffer> commandBuffer) {}
+
+void CommandBuffer::beginPass(
+    [[maybe_unused]] std::shared_ptr<RenderPass> renderPass) {
+    if (renderPass != nullptr) {
+        renderPass->framebuffer->bind();
+    }
+}
+
+void CommandBuffer::beginSampled(
+    [[maybe_unused]] std::shared_ptr<Framebuffer> readFramebuffer,
+    [[maybe_unused]] std::shared_ptr<Framebuffer> writeFramebuffer) {
+    if (writeFramebuffer != nullptr) {
+        writeFramebuffer->bindForDraw();
+    }
+    if (readFramebuffer != nullptr) {
+        readFramebuffer->bindForRead();
+    }
+}
+
+void CommandBuffer::endPass() {}
+void CommandBuffer::commit() {}
+
+void CommandBuffer::bindPipeline(std::shared_ptr<Pipeline> pipeline) {
+    pipeline->bind();
+    boundPipeline = pipeline;
+}
+
+void CommandBuffer::unbindPipeline() { boundPipeline = nullptr; }
+
+void CommandBuffer::bindDrawingState(
+    std::shared_ptr<DrawingState> drawingState) {
+    boundDrawingState = drawingState;
+}
+
+void CommandBuffer::unbindDrawingState() { boundDrawingState = nullptr; }
+
+void CommandBuffer::draw(uint vertexCount, uint instanceCount, uint firstVertex,
+                         [[maybe_unused]] uint firstInstance) {
+#ifdef OPENGL
+    if (boundDrawingState != nullptr) {
+        boundDrawingState->bind();
+    }
+    glDrawArraysInstanced(GL_TRIANGLES, firstVertex, vertexCount,
+                          instanceCount);
+    if (boundDrawingState != nullptr) {
+        boundDrawingState->unbind();
+    }
+#endif
+}
+
+void CommandBuffer::drawIndexed(uint indexCount, uint instanceCount,
+                                uint firstIndex,
+                                [[maybe_unused]] int vertexOffset,
+                                [[maybe_unused]] uint firstInstance) {
+#ifdef OPENGL
+    if (boundDrawingState != nullptr) {
+        boundDrawingState->bind();
+    }
+    glDrawElementsInstanced(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT,
+                            (void *)(uintptr_t)(firstIndex * sizeof(uint)),
+                            instanceCount);
+    if (boundDrawingState != nullptr) {
+        boundDrawingState->unbind();
+    }
+#endif
+}
+
+void CommandBuffer::drawPatches(uint vertexCount, uint firstVertex) {
+#ifdef OPENGL
+    if (boundDrawingState != nullptr) {
+        boundDrawingState->bind();
+    }
+    if (boundPipeline != nullptr) {
+        glPatchParameteri(GL_PATCH_VERTICES, boundPipeline->getPatchVertices());
+    }
+    glDrawArrays(GL_PATCHES, firstVertex, vertexCount);
+    if (boundDrawingState != nullptr) {
+        boundDrawingState->unbind();
+    }
+#endif
+}
+
+void CommandBuffer::clearColor(float r, float g, float b, float a) {
+#ifdef OPENGL
+    glClearColor(r, g, b, a);
+    glClear(GL_COLOR_BUFFER_BIT);
+#endif
+}
+
+void CommandBuffer::clearDepth(float depth) {
+#ifdef OPENGL
+    glClearDepth(depth);
+    glClear(GL_DEPTH_BUFFER_BIT);
+#endif
+}
+
+void CommandBuffer::clear(float r, float g, float b, float a, float depth) {
+#ifdef OPENGL
+    glClearColor(r, g, b, a);
+    glClearDepth(depth);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+#endif
+}
+
+} // namespace opal

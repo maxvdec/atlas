@@ -9,11 +9,16 @@
 
 #include "atlas/core/shader.h"
 #include "atlas/core/default_shaders.h"
+#include "atlas/object.h"
+#include "opal/opal.h"
 #include <glad/glad.h>
+#include <iostream>
 #include <map>
+#include <memory>
 #include <string>
 #include <thread>
 #include <utility>
+#include <vector>
 
 std::map<std::pair<AtlasVertexShader, AtlasFragmentShader>, ShaderProgram>
     ShaderProgram::shaderCache = {};
@@ -180,18 +185,19 @@ void VertexShader::compile() {
         throw std::runtime_error("Vertex shader already compiled");
     }
 
-    shaderId = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(shaderId, 1, &source, nullptr);
-    glCompileShader(shaderId);
+    shader = opal::Shader::createFromSource(source, opal::ShaderType::Vertex);
 
-    GLint success;
-    glGetShaderiv(shaderId, GL_COMPILE_STATUS, &success);
+    shader->compile();
+
+    bool success = shader->getShaderStatus();
     if (!success) {
         char infoLog[512];
-        glGetShaderInfoLog(shaderId, 512, nullptr, infoLog);
+        shader->getShaderLog(infoLog, sizeof(infoLog));
         throw std::runtime_error(
             std::string("Vertex shader compilation failed: ") + infoLog);
     }
+
+    this->shaderId = shader->shaderID;
 }
 
 FragmentShader FragmentShader::fromDefaultShader(AtlasFragmentShader shader) {
@@ -345,18 +351,19 @@ void FragmentShader::compile() {
         throw std::runtime_error("Fragment shader already compiled");
     }
 
-    shaderId = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(shaderId, 1, &source, nullptr);
-    glCompileShader(shaderId);
+    shader = opal::Shader::createFromSource(source, opal::ShaderType::Fragment);
 
-    GLint success;
-    glGetShaderiv(shaderId, GL_COMPILE_STATUS, &success);
+    shader->compile();
+
+    bool success = shader->getShaderStatus();
     if (!success) {
         char infoLog[512];
-        glGetShaderInfoLog(shaderId, 512, nullptr, infoLog);
+        shader->getShaderLog(infoLog, sizeof(infoLog));
         throw std::runtime_error(
             std::string("Fragment shader compilation failed: ") + infoLog);
     }
+
+    this->shaderId = shader->shaderID;
 }
 
 GeometryShader GeometryShader::fromDefaultShader(AtlasGeometryShader shader) {
@@ -380,18 +387,19 @@ void GeometryShader::compile() {
         throw std::runtime_error("Geometry shader already compiled");
     }
 
-    shaderId = glCreateShader(GL_GEOMETRY_SHADER);
-    glShaderSource(shaderId, 1, &source, nullptr);
-    glCompileShader(shaderId);
+    shader = opal::Shader::createFromSource(source, opal::ShaderType::Geometry);
 
-    GLint success;
-    glGetShaderiv(shaderId, GL_COMPILE_STATUS, &success);
+    shader->compile();
+    bool success = shader->getShaderStatus();
+
     if (!success) {
         char infoLog[512];
-        glGetShaderInfoLog(shaderId, 512, nullptr, infoLog);
+        shader->getShaderLog(infoLog, sizeof(infoLog));
         throw std::runtime_error(
             std::string("Geometry shader compilation failed: ") + infoLog);
     }
+
+    this->shaderId = shader->shaderID;
 }
 
 TessellationShader
@@ -422,13 +430,13 @@ void TessellationShader::compile() {
         throw std::runtime_error("Tessellation shader already compiled");
     }
 
-    GLenum shaderType;
+    opal::ShaderType shaderType;
     switch (type) {
     case TessellationShaderType::Control:
-        shaderType = GL_TESS_CONTROL_SHADER;
+        shaderType = opal::ShaderType::TessellationControl;
         break;
     case TessellationShaderType::Evaluation:
-        shaderType = GL_TESS_EVALUATION_SHADER;
+        shaderType = opal::ShaderType::TessellationEvaluation;
         break;
     case TessellationShaderType::Primitive:
         throw std::runtime_error("Primitive tessellation shader not supported");
@@ -436,18 +444,19 @@ void TessellationShader::compile() {
         throw std::runtime_error("Unknown tessellation shader type");
     }
 
-    shaderId = glCreateShader(shaderType);
-    glShaderSource(shaderId, 1, &source, nullptr);
-    glCompileShader(shaderId);
+    shader = opal::Shader::createFromSource(source, shaderType);
 
-    GLint success;
-    glGetShaderiv(shaderId, GL_COMPILE_STATUS, &success);
+    shader->compile();
+
+    bool success = shader->getShaderStatus();
     if (!success) {
         char infoLog[512];
-        glGetShaderInfoLog(shaderId, 512, nullptr, infoLog);
+        shader->getShaderLog(infoLog, sizeof(infoLog));
         throw std::runtime_error(
             std::string("Tessellation shader compilation failed: ") + infoLog);
     }
+
+    this->shaderId = shader->shaderID;
 }
 
 void ShaderProgram::compile() {
@@ -477,24 +486,25 @@ void ShaderProgram::compile() {
     desiredAttributes = vertexShader.desiredAttributes;
     capabilities = vertexShader.capabilities;
 
-    programId = glCreateProgram();
-    glAttachShader(programId, vertexShader.shaderId);
-    glAttachShader(programId, fragmentShader.shaderId);
+    this->shader = opal::ShaderProgram::create();
+
+    this->shader->attachShader(vertexShader.shader);
+    this->shader->attachShader(fragmentShader.shader);
     if (geometryShader.shaderId != 0) {
-        glAttachShader(programId, geometryShader.shaderId);
+        this->shader->attachShader(geometryShader.shader);
     }
     for (const auto &tessShader : tessellationShaders) {
         if (tessShader.shaderId != 0) {
-            glAttachShader(programId, tessShader.shaderId);
+            this->shader->attachShader(tessShader.shader);
         }
     }
-    glLinkProgram(programId);
+    this->shader->link();
+    this->programId = this->shader->programID;
 
-    GLint success;
-    glGetProgramiv(programId, GL_LINK_STATUS, &success);
+    bool success = this->shader->getProgramStatus();
     if (!success) {
         char infoLog[512];
-        glGetProgramInfoLog(programId, 512, nullptr, infoLog);
+        this->shader->getProgramLog(infoLog, sizeof(infoLog));
         throw std::runtime_error(
             std::string("Shader program linking failed: ") + infoLog);
     }
@@ -528,33 +538,46 @@ ShaderProgram ShaderProgram::defaultProgram() {
 
 void ShaderProgram::setUniform4f(std::string name, float v0, float v1, float v2,
                                  float v3) {
-    glUniform4f(glGetUniformLocation(programId, name.c_str()), v0, v1, v2, v3);
+    if (currentPipeline) {
+        currentPipeline->setUniform4f(name, v0, v1, v2, v3);
+    }
 }
 
 void ShaderProgram::setUniform3f(std::string name, float v0, float v1,
                                  float v2) {
-    glUniform3f(glGetUniformLocation(programId, name.c_str()), v0, v1, v2);
+    if (currentPipeline) {
+        currentPipeline->setUniform3f(name, v0, v1, v2);
+    }
 }
 
 void ShaderProgram::setUniform2f(std::string name, float v0, float v1) {
-    glUniform2f(glGetUniformLocation(programId, name.c_str()), v0, v1);
+    if (currentPipeline) {
+        currentPipeline->setUniform2f(name, v0, v1);
+    }
 }
 
 void ShaderProgram::setUniform1f(std::string name, float v0) {
-    glUniform1f(glGetUniformLocation(programId, name.c_str()), v0);
+    if (currentPipeline) {
+        currentPipeline->setUniform1f(name, v0);
+    }
 }
 
 void ShaderProgram::setUniformMat4f(std::string name, const glm::mat4 &matrix) {
-    glUniformMatrix4fv(glGetUniformLocation(programId, name.c_str()), 1,
-                       GL_FALSE, &matrix[0][0]);
+    if (currentPipeline) {
+        currentPipeline->setUniformMat4f(name, matrix);
+    }
 }
 
 void ShaderProgram::setUniform1i(std::string name, int v0) {
-    glUniform1i(glGetUniformLocation(programId, name.c_str()), v0);
+    if (currentPipeline) {
+        currentPipeline->setUniform1i(name, v0);
+    }
 }
 
 void ShaderProgram::setUniformBool(std::string name, bool value) {
-    glUniform1i(glGetUniformLocation(programId, name.c_str()), (int)value);
+    if (currentPipeline) {
+        currentPipeline->setUniformBool(name, value);
+    }
 }
 
 ShaderProgram ShaderProgram::fromDefaultShaders(
@@ -581,4 +604,51 @@ ShaderProgram ShaderProgram::fromDefaultShaders(
 
     program.compile();
     return program;
+}
+
+std::shared_ptr<opal::Pipeline> ShaderProgram::requestPipeline(
+    std::shared_ptr<opal::Pipeline> unbuiltPipeline) {
+    unbuiltPipeline->setShaderProgram(this->shader);
+    std::vector<LayoutDescriptor> layoutDescriptors =
+        CoreVertex::getLayoutDescriptors();
+
+    std::vector<GLuint> activeLocations = this->desiredAttributes;
+    if (activeLocations.empty()) {
+        for (const auto &attr : layoutDescriptors) {
+            activeLocations.push_back(attr.layoutPos);
+        }
+    }
+
+    std::vector<opal::VertexAttribute> vertexAttributes;
+    opal::VertexBinding vertexBinding;
+
+    for (const auto &attr : layoutDescriptors) {
+        vertexAttributes.push_back(opal::VertexAttribute{
+            attr.name, attr.type, static_cast<uint>(attr.offset),
+            static_cast<uint>(attr.layoutPos), attr.normalized,
+            static_cast<uint>(attr.size), static_cast<uint>(attr.stride),
+            opal::VertexBindingInputRate::Vertex, 0});
+    }
+
+    vertexBinding = opal::VertexBinding{(uint)layoutDescriptors[0].stride,
+                                        opal::VertexBindingInputRate::Vertex};
+
+    unbuiltPipeline->setVertexAttributes(vertexAttributes, vertexBinding);
+
+    for (auto &existingPipeline : pipelines) {
+        if (*existingPipeline == unbuiltPipeline) {
+            currentPipeline = existingPipeline;
+            return existingPipeline;
+        }
+    }
+
+    std::cout << "Building new pipeline for shader program ID: "
+              << this->programId << std::endl;
+
+    unbuiltPipeline->build();
+
+    pipelines.push_back(unbuiltPipeline);
+    currentPipeline = unbuiltPipeline;
+
+    return unbuiltPipeline;
 }

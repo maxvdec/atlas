@@ -17,6 +17,7 @@
 #include "atlas/units.h"
 #include "atlas/workspace.h"
 #include "aurora/procedural.h"
+#include "opal/opal.h"
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -178,7 +179,8 @@ class Terrain : public GameObject {
     /**
      * @brief Renders the terrain patches.
      */
-    void render(float dt) override;
+    void render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                bool updatePipeline = false) override;
     /**
      * @brief Builds buffers, materials, and generator data.
      */
@@ -314,9 +316,8 @@ class Terrain : public GameObject {
     float seaLevel = 16.f;
 
   private:
-    BufferIndex vao = 0;
-    BufferIndex vbo = 0;
-    BufferIndex ebo = 0;
+    std::shared_ptr<opal::DrawingState> drawingState;
+    std::shared_ptr<opal::Buffer> vertexBuffer;
     ShaderProgram terrainShader;
 
     Texture terrainTexture;

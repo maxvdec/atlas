@@ -13,10 +13,12 @@
 #include "atlas/units.h"
 #include <cstddef>
 #include <map>
+#include <memory>
 #include <optional>
 #include <string>
 #include <utility>
 #include <vector>
+#include <opal/opal.h>
 
 #include <glm/glm.hpp>
 
@@ -219,10 +221,8 @@ struct VertexShader {
      */
     std::vector<ShaderCapability> capabilities;
 
-    /**
-     * @brief The OpenGL ID of the compiled shader.
-     *
-     */
+    std::shared_ptr<opal::Shader> shader;
+
     Id shaderId;
 };
 
@@ -378,6 +378,8 @@ struct FragmentShader {
      *
      */
     Id shaderId;
+
+    std::shared_ptr<opal::Shader> shader;
 };
 
 /**
@@ -429,6 +431,8 @@ struct GeometryShader {
      *
      */
     Id shaderId;
+
+    std::shared_ptr<opal::Shader> shader;
 };
 
 enum class AtlasTessellationShader {
@@ -490,6 +494,8 @@ class TessellationShader {
      *
      */
     Id shaderId;
+
+    std::shared_ptr<opal::Shader> shader;
 };
 
 /**
@@ -497,6 +503,7 @@ class TessellationShader {
  *
  */
 struct LayoutDescriptor {
+    std::string name;
     /**
      * @brief The layout position of the attribute in the shader.
      *
@@ -511,7 +518,7 @@ struct LayoutDescriptor {
      * @brief The OpenGL data type of the attribute (e.g., GL_FLOAT).
      *
      */
-    unsigned int type;
+    opal::VertexAttributeType type;
     /**
      * @brief Whether the attribute data should be normalized.
      *
@@ -599,6 +606,18 @@ struct ShaderProgram {
      *
      */
     Id programId;
+
+    std::shared_ptr<opal::Pipeline>
+    requestPipeline(std::shared_ptr<opal::Pipeline> unbuiltPipeline);
+
+    std::shared_ptr<opal::ShaderProgram> shader;
+    std::vector<std::shared_ptr<opal::Pipeline>> pipelines;
+
+    /**
+     * @brief The last pipeline that was requested from this shader program.
+     * Used for setting uniforms when called directly on ShaderProgram.
+     */
+    std::shared_ptr<opal::Pipeline> currentPipeline;
 
     /**
      * @brief The desired vertex attributes for the shader program.

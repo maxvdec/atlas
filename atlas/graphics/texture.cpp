@@ -13,9 +13,11 @@
 #include "atlas/units.h"
 #include "atlas/window.h"
 #include "atlas/workspace.h"
+#include "opal/opal.h"
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <memory>
 #include <unordered_map>
 #include <vector>
 #define STB_IMAGE_IMPLEMENTATION
@@ -212,35 +214,11 @@ Texture Texture::fromResource(const Resource &resource, TextureType type,
         throw std::runtime_error("Resource is not an image");
     }
 
-    Id textureId;
-    glGenTextures(1, &textureId);
-    glBindTexture(GL_TEXTURE_2D, textureId);
-
-    Texture::applyWrappingMode(params.wrappingModeS, GL_TEXTURE_WRAP_S);
-    Texture::applyWrappingMode(params.wrappingModeT, GL_TEXTURE_WRAP_T);
-    Texture::applyFilteringMode(params.minifyingFilter, true);
-    Texture::applyFilteringMode(params.magnifyingFilter, false);
-
-    if (params.wrappingModeS == TextureWrappingMode::ClampToBorder ||
-        params.wrappingModeT == TextureWrappingMode::ClampToBorder) {
-        if (borderColor.r < 0 || borderColor.r > 1 || borderColor.g < 0 ||
-            borderColor.g > 1 || borderColor.b < 0 || borderColor.b > 1 ||
-            borderColor.a < 0 || borderColor.a > 1) {
-            throw std::runtime_error(
-                "Border color values must be between 0 and 1");
-        }
-        float borderColorArr[4] = {static_cast<float>(borderColor.r),
-                                   static_cast<float>(borderColor.g),
-                                   static_cast<float>(borderColor.b),
-                                   static_cast<float>(borderColor.a)};
-        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR,
-                         borderColorArr);
-    }
-
     int width, height, channels;
     stbi_set_flip_vertically_on_load(true);
 
     TextureCreationData creationData{};
+    std::shared_ptr<opal::Texture> opalTexture;
 
     if (type == TextureType::HDR) {
         float *data = stbi_loadf(resource.path.string().c_str(), &width,
@@ -252,20 +230,20 @@ Texture Texture::fromResource(const Resource &resource, TextureType type,
 
         creationData = TextureCreationData{width, height, channels};
 
-        GLenum internalFormat = GL_RGB16F;
-        GLenum dataFormat = GL_RGB;
+        opal::TextureFormat internalFormat = opal::TextureFormat::Rgb16F;
+        opal::TextureDataFormat dataFormat = opal::TextureDataFormat::Rgb;
         if (channels == 1) {
-            internalFormat = GL_R16F;
-            dataFormat = GL_RED;
+            internalFormat = opal::TextureFormat::Red16F;
+            dataFormat = opal::TextureDataFormat::Red;
         } else if (channels == 4) {
-            internalFormat = GL_RGBA16F;
-            dataFormat = GL_RGBA;
+            internalFormat = opal::TextureFormat::Rgba16F;
+            dataFormat = opal::TextureDataFormat::Rgba;
         }
 
-        glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0,
-                     dataFormat, GL_FLOAT, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-
+        // Create with correct format and data in one call
+        opalTexture =
+            opal::Texture::create(opal::TextureType::Texture2D, internalFormat,
+                                  width, height, dataFormat, data, 1);
         stbi_image_free(data);
     } else {
         unsigned char *data = stbi_load(resource.path.string().c_str(), &width,
@@ -277,67 +255,109 @@ Texture Texture::fromResource(const Resource &resource, TextureType type,
 
         creationData = TextureCreationData{width, height, channels};
 
-        glTexImage2D(GL_TEXTURE_2D, 0,
-                     channels == 4 ? GL_SRGB8_ALPHA8
-                                   : (channels == 3 ? GL_SRGB8 : GL_R8),
-                     width, height, 0,
-                     channels == 4 ? GL_RGBA
-                                   : (channels == 3 ? GL_RGB : GL_RED),
-                     GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
+        opal::TextureFormat internalFormat =
+            channels == 4 ? opal::TextureFormat::sRgba8
+                          : (channels == 3 ? opal::TextureFormat::sRgb8
+                                           : opal::TextureFormat::Red8);
+        opal::TextureDataFormat dataFormat =
+            channels == 4 ? opal::TextureDataFormat::Rgba
+                          : (channels == 3 ? opal::TextureDataFormat::Rgb
+                                           : opal::TextureDataFormat::Red);
 
+        // Create with correct format and data in one call
+        opalTexture =
+            opal::Texture::create(opal::TextureType::Texture2D, internalFormat,
+                                  width, height, dataFormat, data, 1);
         stbi_image_free(data);
     }
 
-    Texture texture{resource, creationData, textureId, type, borderColor};
+    // Set all texture parameters in one batched call (single bind)
+    auto toOpalWrap = [](TextureWrappingMode m) -> opal::TextureWrapMode {
+        switch (m) {
+        case TextureWrappingMode::Repeat:
+            return opal::TextureWrapMode::Repeat;
+        case TextureWrappingMode::MirroredRepeat:
+            return opal::TextureWrapMode::MirroredRepeat;
+        case TextureWrappingMode::ClampToEdge:
+            return opal::TextureWrapMode::ClampToEdge;
+        case TextureWrappingMode::ClampToBorder:
+            return opal::TextureWrapMode::ClampToBorder;
+        default:
+            return opal::TextureWrapMode::Repeat;
+        }
+    };
+    auto toOpalFilter = [](TextureFilteringMode m) -> opal::TextureFilterMode {
+        return m == TextureFilteringMode::Nearest
+                   ? opal::TextureFilterMode::Nearest
+                   : opal::TextureFilterMode::Linear;
+    };
+    opalTexture->setParameters(toOpalWrap(params.wrappingModeS),
+                               toOpalWrap(params.wrappingModeT),
+                               toOpalFilter(params.minifyingFilter),
+                               toOpalFilter(params.magnifyingFilter));
+
+    if (params.wrappingModeS == TextureWrappingMode::ClampToBorder ||
+        params.wrappingModeT == TextureWrappingMode::ClampToBorder) {
+        opalTexture->changeBorderColor(borderColor.toGlm());
+    }
+
+    opalTexture->automaticallyGenerateMipmaps();
+
+    Texture texture{resource,    creationData, opalTexture->textureID,
+                    opalTexture, type,         borderColor};
     return texture;
 }
 
-void Texture::applyWrappingMode(TextureWrappingMode mode, Id glAxis) {
+void Texture::applyWrappingMode(TextureWrappingMode mode,
+                                opal::TextureAxis axis,
+                                std::shared_ptr<opal::Texture> texture) {
     switch (mode) {
     case TextureWrappingMode::Repeat:
-        glTexParameteri(GL_TEXTURE_2D, glAxis, GL_REPEAT);
+        texture->setWrapMode(axis, opal::TextureWrapMode::Repeat);
         break;
     case TextureWrappingMode::MirroredRepeat:
-        glTexParameteri(GL_TEXTURE_2D, glAxis, GL_MIRRORED_REPEAT);
+        texture->setWrapMode(axis, opal::TextureWrapMode::MirroredRepeat);
         break;
     case TextureWrappingMode::ClampToEdge:
-        glTexParameteri(GL_TEXTURE_2D, glAxis, GL_CLAMP_TO_EDGE);
+        texture->setWrapMode(axis, opal::TextureWrapMode::ClampToEdge);
         break;
     case TextureWrappingMode::ClampToBorder:
-        glTexParameteri(GL_TEXTURE_2D, glAxis, GL_CLAMP_TO_BORDER);
+        texture->setWrapMode(axis, opal::TextureWrapMode::ClampToBorder);
         break;
     default:
         throw std::runtime_error("Unknown wrapping mode");
     }
 }
 
-void Texture::applyFilteringMode(TextureFilteringMode mode, bool isMinifying) {
-    if (isMinifying) {
-        switch (mode) {
-        case TextureFilteringMode::Nearest:
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                            GL_NEAREST_MIPMAP_NEAREST);
-            break;
-        case TextureFilteringMode::Linear:
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                            GL_LINEAR_MIPMAP_LINEAR);
-            break;
-        default:
-            throw std::runtime_error("Unknown filtering mode");
-        }
-    } else {
-        switch (mode) {
-        case TextureFilteringMode::Nearest:
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            break;
-        case TextureFilteringMode::Linear:
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            break;
-        default:
-            throw std::runtime_error("Unknown filtering mode");
-        }
+void Texture::applyFilteringModes(TextureFilteringMode minMode,
+                                  TextureFilteringMode magMode,
+                                  std::shared_ptr<opal::Texture> texture) {
+    opal::TextureFilterMode opalMinMode;
+    opal::TextureFilterMode opalMagMode;
+
+    switch (minMode) {
+    case TextureFilteringMode::Nearest:
+        opalMinMode = opal::TextureFilterMode::Nearest;
+        break;
+    case TextureFilteringMode::Linear:
+        opalMinMode = opal::TextureFilterMode::Linear;
+        break;
+    default:
+        throw std::runtime_error("Unknown minifying filter mode");
     }
+
+    switch (magMode) {
+    case TextureFilteringMode::Nearest:
+        opalMagMode = opal::TextureFilterMode::Nearest;
+        break;
+    case TextureFilteringMode::Linear:
+        opalMagMode = opal::TextureFilterMode::Linear;
+        break;
+    default:
+        throw std::runtime_error("Unknown magnifying filter mode");
+    }
+
+    texture->setFilterMode(opalMinMode, opalMagMode);
 }
 
 Cubemap Cubemap::fromResourceGroup(ResourceGroup &group) {
@@ -345,15 +365,63 @@ Cubemap Cubemap::fromResourceGroup(ResourceGroup &group) {
         throw std::runtime_error("Cubemap requires exactly 6 resources");
     }
 
-    Id textureId;
-    glGenTextures(1, &textureId);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, textureId);
-
     int width = 0, height = 0, channels = 0;
     glm::dvec3 accumulatedColor(0.0);
     unsigned long long accumulatedPixels = 0;
 
-    for (size_t i = 0; i < 6; i++) {
+    // First pass: determine dimensions and format from first image
+    stbi_set_flip_vertically_on_load(false);
+    unsigned char *firstData =
+        stbi_load(group.resources[0].path.string().c_str(), &width, &height,
+                  &channels, 0);
+    if (!firstData) {
+        throw std::runtime_error("Failed to load image: " +
+                                 group.resources[0].path.string());
+    }
+
+    opal::TextureFormat format =
+        channels == 4 ? opal::TextureFormat::Rgba8
+                      : (channels == 3 ? opal::TextureFormat::Rgb8
+                                       : opal::TextureFormat::Red8);
+    opal::TextureDataFormat dataFormat =
+        channels == 4 ? opal::TextureDataFormat::Rgba
+                      : (channels == 3 ? opal::TextureDataFormat::Rgb
+                                       : opal::TextureDataFormat::Red);
+
+    // Create cubemap with pre-allocated faces
+    auto opalTexture = opal::Texture::create(opal::TextureType::TextureCubeMap,
+                                             format, width, height);
+
+    // Process first face (already loaded)
+    {
+        unsigned long long facePixelCount =
+            static_cast<unsigned long long>(width) *
+            static_cast<unsigned long long>(height);
+        if (facePixelCount > 0 && channels >= 1) {
+            glm::dvec3 faceSum(0.0);
+            if (channels >= 3) {
+                for (unsigned long long pixel = 0; pixel < facePixelCount;
+                     ++pixel) {
+                    unsigned char *p = firstData + pixel * channels;
+                    faceSum.x += p[0];
+                    faceSum.y += p[1];
+                    faceSum.z += p[2];
+                }
+            } else {
+                for (unsigned long long pixel = 0; pixel < facePixelCount;
+                     ++pixel) {
+                    faceSum += glm::dvec3(firstData[pixel]);
+                }
+            }
+            accumulatedColor += faceSum;
+            accumulatedPixels += facePixelCount;
+        }
+        opalTexture->updateFace(0, firstData, width, height, dataFormat);
+        stbi_image_free(firstData);
+    }
+
+    // Process remaining 5 faces
+    for (size_t i = 1; i < 6; i++) {
         Resource &resource = group.resources[i];
         if (resource.type != ResourceType::Image) {
             throw std::runtime_error("Resource is not an image: " +
@@ -361,26 +429,16 @@ Cubemap Cubemap::fromResourceGroup(ResourceGroup &group) {
         }
 
         int w, h, c;
-        stbi_set_flip_vertically_on_load(false);
         unsigned char *data =
             stbi_load(resource.path.string().c_str(), &w, &h, &c, 0);
-
         if (!data) {
             throw std::runtime_error("Failed to load image: " +
                                      resource.path.string());
         }
-
-        if (i == 0) {
-            width = w;
-            height = h;
-            channels = c;
-        } else {
-            if (w != width || h != height || c != channels) {
-                stbi_image_free(data);
-                throw std::runtime_error(
-                    "All cubemap images must have the same dimensions and "
-                    "channels");
-            }
+        if (w != width || h != height || c != channels) {
+            stbi_image_free(data);
+            throw std::runtime_error("All cubemap images must have the same "
+                                     "dimensions and channels");
         }
 
         unsigned long long facePixelCount = static_cast<unsigned long long>(w) *
@@ -390,40 +448,36 @@ Cubemap Cubemap::fromResourceGroup(ResourceGroup &group) {
             if (c >= 3) {
                 for (unsigned long long pixel = 0; pixel < facePixelCount;
                      ++pixel) {
-                    unsigned char *pixelPtr = data + pixel * c;
-                    faceSum.x += pixelPtr[0];
-                    faceSum.y += pixelPtr[1];
-                    faceSum.z += pixelPtr[2];
+                    unsigned char *p = data + pixel * c;
+                    faceSum.x += p[0];
+                    faceSum.y += p[1];
+                    faceSum.z += p[2];
                 }
             } else if (c == 1) {
                 for (unsigned long long pixel = 0; pixel < facePixelCount;
                      ++pixel) {
-                    unsigned char value = data[pixel];
-                    faceSum += glm::dvec3(value, value, value);
+                    faceSum += glm::dvec3(data[pixel]);
                 }
             }
             accumulatedColor += faceSum;
             accumulatedPixels += facePixelCount;
         }
 
-        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0,
-                     c == 4 ? GL_RGBA : (c == 3 ? GL_RGB : GL_RED), w, h, 0,
-                     c == 4 ? GL_RGBA : (c == 3 ? GL_RGB : GL_RED),
-                     GL_UNSIGNED_BYTE, data);
-
+        opalTexture->updateFace(static_cast<int>(i), data, w, h, dataFormat);
         stbi_image_free(data);
     }
 
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    // Set all parameters in one batched call (single bind for cubemap)
+    opalTexture->setParameters3D(
+        opal::TextureWrapMode::ClampToEdge, opal::TextureWrapMode::ClampToEdge,
+        opal::TextureWrapMode::ClampToEdge, opal::TextureFilterMode::Linear,
+        opal::TextureFilterMode::Linear);
 
     TextureCreationData creationData{width, height, channels};
     Cubemap cubemap;
     cubemap.creationData = creationData;
-    cubemap.id = textureId;
+    cubemap.id = opalTexture->textureID;
+    cubemap.texture = opalTexture;
     std::array<Resource, 6> resources;
     std::copy(group.resources.begin(), group.resources.end(),
               resources.begin());
@@ -444,9 +498,9 @@ Cubemap Cubemap::fromColors(const std::array<Color, 6> &colors, int size) {
         throw std::runtime_error("Cubemap size must be positive");
     }
 
-    Id textureId;
-    glGenTextures(1, &textureId);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, textureId);
+    auto opalTexture =
+        opal::Texture::create(opal::TextureType::TextureCubeMap,
+                              opal::TextureFormat::Rgba8, size, size);
 
     glm::dvec3 accumulatedColor(0.0);
     unsigned long long accumulatedPixels = 0;
@@ -455,23 +509,24 @@ Cubemap Cubemap::fromColors(const std::array<Color, 6> &colors, int size) {
         cubemapFillFaceData(colors, faceIndex, size, faceData,
                             accumulatedColor);
 
-        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + faceIndex, 0, GL_RGBA,
-                     size, size, 0, GL_RGBA, GL_UNSIGNED_BYTE, faceData.data());
+        opalTexture->updateFace(faceIndex, faceData.data(), size, size,
+                                opal::TextureDataFormat::Rgba);
 
         accumulatedPixels += static_cast<unsigned long long>(size) *
                              static_cast<unsigned long long>(size);
     }
 
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    // Set all parameters in one batched call
+    opalTexture->setParameters3D(
+        opal::TextureWrapMode::ClampToEdge, opal::TextureWrapMode::ClampToEdge,
+        opal::TextureWrapMode::ClampToEdge, opal::TextureFilterMode::Linear,
+        opal::TextureFilterMode::Linear);
 
     TextureCreationData creationData{size, size, 4};
     Cubemap cubemap;
     cubemap.creationData = creationData;
-    cubemap.id = textureId;
+    cubemap.id = opalTexture->textureID;
+    cubemap.texture = opalTexture;
 
     if (accumulatedPixels > 0) {
         glm::dvec3 normalized =
@@ -486,7 +541,7 @@ Cubemap Cubemap::fromColors(const std::array<Color, 6> &colors, int size) {
 }
 
 void Cubemap::updateWithColors(const std::array<Color, 6> &colors) {
-    if (id == 0) {
+    if (id == 0 || texture == nullptr) {
         throw std::runtime_error("Cubemap is not initialized");
     }
     if (creationData.width <= 0 || creationData.height <= 0) {
@@ -494,7 +549,6 @@ void Cubemap::updateWithColors(const std::array<Color, 6> &colors) {
     }
 
     int size = creationData.width;
-    glBindTexture(GL_TEXTURE_CUBE_MAP, id);
 
     glm::dvec3 accumulatedColor(0.0);
     unsigned long long accumulatedPixels = 0;
@@ -504,8 +558,8 @@ void Cubemap::updateWithColors(const std::array<Color, 6> &colors) {
         cubemapFillFaceData(colors, faceIndex, size, faceData,
                             accumulatedColor);
 
-        glTexSubImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + faceIndex, 0, 0, 0,
-                        size, size, GL_RGBA, GL_UNSIGNED_BYTE, faceData.data());
+        texture->updateFace(faceIndex, faceData.data(), size, size,
+                            opal::TextureDataFormat::Rgba);
 
         accumulatedPixels += static_cast<unsigned long long>(size) *
                              static_cast<unsigned long long>(size);
@@ -594,24 +648,31 @@ void Skybox::setProjectionMatrix(const glm::mat4 &projection) {
     }
 }
 
-void Skybox::render(float) {
+void Skybox::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                    bool) {
     if (!object || !object->isVisible) {
         return;
+    }
+    if (commandBuffer == nullptr) {
+        throw std::runtime_error(
+            "Skybox::render requires a valid command buffer");
     }
 
     CoreObject *obj = this->object.get();
 
-    glDepthFunc(GL_LEQUAL);
-    glDepthMask(GL_FALSE);
-    glDisable(GL_CULL_FACE);
+    // Get or create pipeline for skybox
+    if (obj->getPipeline() == std::nullopt) {
+        obj->refreshPipeline();
+    }
+    auto pipeline = obj->getPipeline().value();
+    pipeline->setDepthCompareOp(opal::CompareOp::LessEqual);
+    pipeline->enableDepthWrite(false);
+    pipeline->setCullMode(opal::CullMode::None);
+    pipeline->bind();
 
-    glUseProgram(obj->shaderProgram.programId);
-
-    obj->shaderProgram.setUniformMat4f("view", view);
-
-    obj->shaderProgram.setUniformMat4f("projection", projection);
-
-    obj->shaderProgram.setUniform1i("skybox", 0);
+    pipeline->setUniformMat4f("view", view);
+    pipeline->setUniformMat4f("projection", projection);
+    pipeline->bindTextureCubemap("skybox", cubemap.id, 0);
 
     if (!Window::mainWindow || !Window::mainWindow->getCurrentScene()) {
         throw std::runtime_error(
@@ -622,47 +683,46 @@ void Skybox::render(float) {
             Window::mainWindow->getCurrentScene()->atmosphere.getSunAngle();
         Magnitude3d moonDirection =
             Window::mainWindow->getCurrentScene()->atmosphere.getMoonAngle();
-        obj->shaderProgram.setUniform3f("sunDirection", sunDirection.x,
-                                        sunDirection.y, sunDirection.z);
-        obj->shaderProgram.setUniform3f("moonDirection", moonDirection.x,
-                                        moonDirection.y, moonDirection.z);
+        pipeline->setUniform3f("sunDirection", sunDirection.x, sunDirection.y,
+                               sunDirection.z);
+        pipeline->setUniform3f("moonDirection", moonDirection.x,
+                               moonDirection.y, moonDirection.z);
 
         Color sunColor =
             Window::mainWindow->getCurrentScene()->atmosphere.sunColor;
-        obj->shaderProgram.setUniform4f("sunColor", sunColor.r, sunColor.g,
-                                        sunColor.b, sunColor.a);
+        pipeline->setUniform4f("sunColor", sunColor.r, sunColor.g, sunColor.b,
+                               sunColor.a);
         Color moonColor =
             Window::mainWindow->getCurrentScene()->atmosphere.moonColor;
-        obj->shaderProgram.setUniform4f("moonColor", moonColor.r, moonColor.g,
-                                        moonColor.b, moonColor.a);
+        pipeline->setUniform4f("moonColor", moonColor.r, moonColor.g,
+                               moonColor.b, moonColor.a);
 
-        obj->shaderProgram.setUniform1f(
+        pipeline->setUniform1f(
             "sunTintStrength",
             Window::mainWindow->getCurrentScene()->atmosphere.sunTintStrength);
-        obj->shaderProgram.setUniform1f(
+        pipeline->setUniform1f(
             "moonTintStrength",
             Window::mainWindow->getCurrentScene()->atmosphere.moonTintStrength);
-        obj->shaderProgram.setUniform1f(
+        pipeline->setUniform1f(
             "sunSizeMultiplier",
             Window::mainWindow->getCurrentScene()->atmosphere.sunSize);
-        obj->shaderProgram.setUniform1f(
+        pipeline->setUniform1f(
             "moonSizeMultiplier",
             Window::mainWindow->getCurrentScene()->atmosphere.moonSize);
-        obj->shaderProgram.setUniform1f(
+        pipeline->setUniform1f(
             "starDensity",
             Window::mainWindow->getCurrentScene()->atmosphere.starIntensity);
-        obj->shaderProgram.setUniform1i("hasDayNight", 1);
+        pipeline->setUniform1i("hasDayNight", 1);
     } else {
-        obj->shaderProgram.setUniform1i("hasDayNight", 0);
+        pipeline->setUniform1i("hasDayNight", 0);
     }
 
-    glBindVertexArray(obj->vao);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap.id);
-    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(obj->indices.size()),
-                   GL_UNSIGNED_INT, 0);
-    glBindVertexArray(0);
-    glDepthFunc(GL_LESS); // Set depth function back to default
-    glDepthMask(GL_TRUE);
-    glEnable(GL_CULL_FACE);
+    commandBuffer->bindDrawingState(obj->vao);
+    commandBuffer->drawIndexed(static_cast<unsigned int>(obj->indices.size()),
+                               1, 0, 0, 0);
+    commandBuffer->unbindDrawingState();
+    pipeline->setDepthCompareOp(opal::CompareOp::Less);
+    pipeline->enableDepthWrite(true);
+    pipeline->setCullMode(opal::CullMode::Back);
+    pipeline->bind();
 }

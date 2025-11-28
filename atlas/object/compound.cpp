@@ -11,15 +11,20 @@
 #include "atlas/object.h"
 #include "atlas/units.h"
 #include "atlas/window.h"
+#include "opal/opal.h"
 #include <iostream>
 #include <memory>
+#include <optional>
 #include <vector>
 
 class CompoundObject::LateCompoundRenderable : public Renderable {
   public:
     explicit LateCompoundRenderable(CompoundObject &owner) : parent(owner) {}
 
-    void render(float dt) override { parent.renderLate(dt); }
+    void render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                bool updatePipeline) override {
+        parent.renderLate(dt, commandBuffer, updatePipeline);
+    }
     void initialize() override {}
     void update(Window &window) override { parent.updateLate(window); }
     void setViewMatrix(const glm::mat4 &view) override {
@@ -28,11 +33,11 @@ class CompoundObject::LateCompoundRenderable : public Renderable {
     void setProjectionMatrix(const glm::mat4 &projection) override {
         parent.setLateProjectionMatrix(projection);
     }
-    std::optional<ShaderProgram> getShaderProgram() override {
-        return parent.getLateShaderProgramInternal();
+    std::optional<std::shared_ptr<opal::Pipeline>> getPipeline() override {
+        return parent.getLateShaderPipelineInternal();
     }
-    void setShader(const ShaderProgram &shader) override {
-        parent.setLateShader(shader);
+    void setPipeline(std::shared_ptr<opal::Pipeline> &pipeline) override {
+        parent.setLatePipeline(pipeline);
     }
     bool canCastShadows() const override { return parent.lateCanCastShadows(); }
     bool canUseDeferredRendering() override { return false; }
@@ -69,7 +74,9 @@ void CompoundObject::initialize() {
     }
 }
 
-void CompoundObject::render(float dt) {
+void CompoundObject::render(float dt,
+                            std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                            bool updatePipeline) {
     if (originalPositions.empty()) {
         for (const auto &obj : objects) {
             originalPositions.push_back(obj->getPosition());
@@ -84,20 +91,30 @@ void CompoundObject::render(float dt) {
     for (auto &component : components) {
         component->update(dt);
     }
+    if (commandBuffer == nullptr) {
+        throw std::runtime_error(
+            "CompoundObject::render requires a valid command buffer");
+    }
     for (auto &obj : objects) {
         if (obj != nullptr && obj->renderLateForward) {
             continue;
         }
-        obj->render(dt);
+        obj->render(dt, commandBuffer, updatePipeline);
     }
 }
 
-void CompoundObject::renderLate(float dt) {
+void CompoundObject::renderLate(
+    float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
+    bool updatePipeline) {
+    if (commandBuffer == nullptr) {
+        throw std::runtime_error(
+            "CompoundObject::renderLate requires a valid command buffer");
+    }
     for (auto *obj : lateForwardObjects) {
         if (obj == nullptr) {
             continue;
         }
-        obj->render(dt);
+        obj->render(dt, commandBuffer, updatePipeline);
     }
 }
 
@@ -134,19 +151,19 @@ bool CompoundObject::canUseDeferredRendering() {
     return true;
 }
 
-std::optional<ShaderProgram> CompoundObject::getShaderProgram() {
+std::optional<std::shared_ptr<opal::Pipeline>> CompoundObject::getPipeline() {
     if (!objects.empty()) {
-        auto shader = objects[0]->getShaderProgram();
+        auto shader = objects[0]->getPipeline();
         if (shader.has_value()) {
             return shader;
         }
     }
-    return getLateShaderProgramInternal();
+    return getLateShaderPipelineInternal();
 }
 
-void CompoundObject::setShader(const ShaderProgram &shader) {
+void CompoundObject::setPipeline(std::shared_ptr<opal::Pipeline> &shader) {
     for (auto &obj : objects) {
-        obj->setShader(shader);
+        obj->setPipeline(shader);
     }
 }
 
@@ -279,12 +296,13 @@ void CompoundObject::setLateProjectionMatrix(const glm::mat4 &projection) {
     }
 }
 
-std::optional<ShaderProgram> CompoundObject::getLateShaderProgramInternal() {
+std::optional<std::shared_ptr<opal::Pipeline>>
+CompoundObject::getLateShaderPipelineInternal() {
     for (auto *obj : lateForwardObjects) {
         if (obj == nullptr) {
             continue;
         }
-        auto program = obj->getShaderProgram();
+        auto program = obj->getPipeline();
         if (program.has_value()) {
             return program;
         }
@@ -292,12 +310,12 @@ std::optional<ShaderProgram> CompoundObject::getLateShaderProgramInternal() {
     return std::nullopt;
 }
 
-void CompoundObject::setLateShader(const ShaderProgram &shader) {
+void CompoundObject::setLatePipeline(std::shared_ptr<opal::Pipeline> shader) {
     for (auto *obj : lateForwardObjects) {
         if (obj == nullptr) {
             continue;
         }
-        obj->setShader(shader);
+        obj->setPipeline(shader);
     }
 }
 
@@ -324,11 +342,17 @@ void UIView::setProjectionMatrix(const glm::mat4 &projection) {
     }
 }
 
-void UIView::render(float dt) {
+void UIView::render(float dt,
+                    std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                    bool updatePipeline) {
     for (auto &component : components) {
         component->update(dt);
     }
+    if (commandBuffer == nullptr) {
+        throw std::runtime_error(
+            "UIView::render requires a valid command buffer");
+    }
     for (auto &obj : children) {
-        obj->render(dt);
+        obj->render(dt, commandBuffer, updatePipeline);
     }
 }
