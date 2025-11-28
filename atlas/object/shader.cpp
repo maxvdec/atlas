@@ -538,33 +538,46 @@ ShaderProgram ShaderProgram::defaultProgram() {
 
 void ShaderProgram::setUniform4f(std::string name, float v0, float v1, float v2,
                                  float v3) {
-    glUniform4f(glGetUniformLocation(programId, name.c_str()), v0, v1, v2, v3);
+    if (currentPipeline) {
+        currentPipeline->setUniform4f(name, v0, v1, v2, v3);
+    }
 }
 
 void ShaderProgram::setUniform3f(std::string name, float v0, float v1,
                                  float v2) {
-    glUniform3f(glGetUniformLocation(programId, name.c_str()), v0, v1, v2);
+    if (currentPipeline) {
+        currentPipeline->setUniform3f(name, v0, v1, v2);
+    }
 }
 
 void ShaderProgram::setUniform2f(std::string name, float v0, float v1) {
-    glUniform2f(glGetUniformLocation(programId, name.c_str()), v0, v1);
+    if (currentPipeline) {
+        currentPipeline->setUniform2f(name, v0, v1);
+    }
 }
 
 void ShaderProgram::setUniform1f(std::string name, float v0) {
-    glUniform1f(glGetUniformLocation(programId, name.c_str()), v0);
+    if (currentPipeline) {
+        currentPipeline->setUniform1f(name, v0);
+    }
 }
 
 void ShaderProgram::setUniformMat4f(std::string name, const glm::mat4 &matrix) {
-    glUniformMatrix4fv(glGetUniformLocation(programId, name.c_str()), 1,
-                       GL_FALSE, &matrix[0][0]);
+    if (currentPipeline) {
+        currentPipeline->setUniformMat4f(name, matrix);
+    }
 }
 
 void ShaderProgram::setUniform1i(std::string name, int v0) {
-    glUniform1i(glGetUniformLocation(programId, name.c_str()), v0);
+    if (currentPipeline) {
+        currentPipeline->setUniform1i(name, v0);
+    }
 }
 
 void ShaderProgram::setUniformBool(std::string name, bool value) {
-    glUniform1i(glGetUniformLocation(programId, name.c_str()), (int)value);
+    if (currentPipeline) {
+        currentPipeline->setUniformBool(name, value);
+    }
 }
 
 ShaderProgram ShaderProgram::fromDefaultShaders(
@@ -624,6 +637,7 @@ std::shared_ptr<opal::Pipeline> ShaderProgram::requestPipeline(
 
     for (auto &existingPipeline : pipelines) {
         if (*existingPipeline == unbuiltPipeline) {
+            currentPipeline = existingPipeline;
             return existingPipeline;
         }
     }
@@ -634,6 +648,7 @@ std::shared_ptr<opal::Pipeline> ShaderProgram::requestPipeline(
     unbuiltPipeline->build();
 
     pipelines.push_back(unbuiltPipeline);
+    currentPipeline = unbuiltPipeline;
 
     return unbuiltPipeline;
 }

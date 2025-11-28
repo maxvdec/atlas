@@ -935,15 +935,15 @@ void Window::renderLightsToShadowMaps(
             std::vector<glm::mat4> shadowTransforms =
                 light->calculateShadowTransforms();
 
-            this->pointDepthProgram.setUniform3f("lightPos", light->position.x,
-                                                 light->position.y,
-                                                 light->position.z);
-            this->pointDepthProgram.setUniform1f("far_plane", light->distance);
+            pointLightPipeline->setUniform3f("lightPos", light->position.x,
+                                             light->position.y,
+                                             light->position.z);
+            pointLightPipeline->setUniform1f("far_plane", light->distance);
             light->lastShadowParams.farPlane = light->distance;
             for (size_t i = 0; i < shadowTransforms.size(); ++i) {
-                this->pointDepthProgram.setUniformMat4f(
-                    "shadowMatrices[" + std::to_string(i) + "]",
-                    shadowTransforms[i]);
+                pointLightPipeline->setUniformMat4f("shadowMatrices[" +
+                                                        std::to_string(i) + "]",
+                                                    shadowTransforms[i]);
             }
 
             obj->setProjectionMatrix(glm::mat4(1.0));
@@ -960,15 +960,15 @@ void Window::renderLightsToShadowMaps(
             std::vector<glm::mat4> shadowTransforms =
                 light->calculateShadowTransforms();
 
-            this->pointDepthProgram.setUniform3f("lightPos", light->position.x,
-                                                 light->position.y,
-                                                 light->position.z);
-            this->pointDepthProgram.setUniform1f("far_plane", light->distance);
+            pointLightPipeline->setUniform3f("lightPos", light->position.x,
+                                             light->position.y,
+                                             light->position.z);
+            pointLightPipeline->setUniform1f("far_plane", light->distance);
             light->lastShadowParams.farPlane = light->distance;
             for (size_t i = 0; i < shadowTransforms.size(); ++i) {
-                this->pointDepthProgram.setUniformMat4f(
-                    "shadowMatrices[" + std::to_string(i) + "]",
-                    shadowTransforms[i]);
+                pointLightPipeline->setUniformMat4f("shadowMatrices[" +
+                                                        std::to_string(i) + "]",
+                                                    shadowTransforms[i]);
             }
 
             obj->setProjectionMatrix(glm::mat4(1.0));
