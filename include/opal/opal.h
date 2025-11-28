@@ -249,7 +249,8 @@ enum class PrimitiveStyle {
     LineStrip,
     Triangles,
     TriangleStrip,
-    TriangleFan
+    TriangleFan,
+    Patches // For tessellation shaders
 };
 
 enum class RasterizerMode { Fill, Line, Point };
@@ -322,6 +323,19 @@ class Pipeline {
 
     void setPrimitiveStyle(PrimitiveStyle style);
 
+    /**
+     * @brief Sets the number of control points per patch for tessellation.
+     * @param count Number of vertices per patch (e.g., 4 for quad patches).
+     * Must be called before using PrimitiveStyle::Patches.
+     */
+    void setPatchVertices(int count);
+
+    /**
+     * @brief Gets the number of control points per patch for tessellation.
+     * @return The patch vertex count.
+     */
+    int getPatchVertices() const { return patchVertices; }
+
     void setViewport(int x, int y, int width, int height);
 
     void setRasterizerMode(RasterizerMode mode);
@@ -366,7 +380,8 @@ class Pipeline {
     void bindTextureCubemap(const std::string &name, uint textureId, int unit);
 
   private:
-    PrimitiveStyle primitiveStyle;
+    PrimitiveStyle primitiveStyle = PrimitiveStyle::Triangles;
+    int patchVertices = 4; // Default patch size for tessellation
     RasterizerMode rasterizerMode;
     CullMode cullMode;
     FrontFace frontFace;
@@ -600,6 +615,13 @@ class CommandBuffer {
     void drawIndexed(uint indexCount, uint instanceCount = 1,
                      uint firstIndex = 0, int vertexOffset = 0,
                      uint firstInstance = 0);
+    /**
+     * @brief Draws using tessellation patches.
+     * @param vertexCount Number of vertices to draw.
+     * @param firstVertex Starting vertex offset.
+     * Requires Pipeline with PrimitiveStyle::Patches and setPatchVertices().
+     */
+    void drawPatches(uint vertexCount, uint firstVertex = 0);
     void performResolve(std::shared_ptr<ResolveAction> resolveAction);
 
     void clearColor(float r, float g, float b, float a);

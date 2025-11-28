@@ -41,6 +41,12 @@ void Pipeline::setPrimitiveStyle(PrimitiveStyle style) {
 #endif
 }
 
+void Pipeline::setPatchVertices(int count) {
+#ifdef OPENGL
+    this->patchVertices = count;
+#endif
+}
+
 void Pipeline::setViewport(int x, int y, int width, int height) {
 #ifdef OPENGL
     this->viewportX = x;
@@ -223,6 +229,8 @@ uint Pipeline::getGLPrimitiveStyle(PrimitiveStyle style) const {
         return GL_TRIANGLE_STRIP;
     case PrimitiveStyle::TriangleFan:
         return GL_TRIANGLE_FAN;
+    case PrimitiveStyle::Patches:
+        return GL_PATCHES;
     default:
         return GL_TRIANGLES;
     }

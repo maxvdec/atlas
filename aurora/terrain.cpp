@@ -8,7 +8,6 @@
 //
 #include <cstddef>
 #include <cstdint>
-#include <glad/glad.h>
 #include "opal/opal.h"
 #include "atlas/camera.h"
 #include "atlas/core/shader.h"
@@ -141,32 +140,30 @@ void Terrain::initialize() {
         data = nullptr;
     }
 
-    glGenVertexArrays(1, &this->vao);
-    glBindVertexArray(this->vao);
+    // Create vertex buffer with opal
+    vertexBuffer = opal::Buffer::create(
+        opal::BufferUsage::VertexBuffer, vertices.size() * sizeof(float),
+        vertices.data(), opal::MemoryUsageType::GPUOnly);
 
-    glGenBuffers(1, &this->vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, this->vbo);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float),
-                 vertices.data(), GL_STATIC_DRAW);
+    // Create drawing state (VAO equivalent)
+    drawingState = opal::DrawingState::create(vertexBuffer, nullptr);
 
-    // Position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                          (void *)0);
-    glEnableVertexAttribArray(0);
-    // Texture coord attribute
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                          (void *)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
+    // Configure vertex attributes
+    std::vector<opal::VertexAttributeBinding> attributeBindings = {
+        {opal::VertexAttribute{"position", opal::VertexAttributeType::Float, 0,
+                               0, false, 3, 5 * sizeof(float)},
+         vertexBuffer},
+        {opal::VertexAttribute{"texCoord", opal::VertexAttributeType::Float,
+                               3 * sizeof(float), 1, false, 2,
+                               5 * sizeof(float)},
+         vertexBuffer}};
+    drawingState->configureAttributes(attributeBindings);
 
     patch_count = 4;
-    glPatchParameteri(GL_PATCH_VERTICES, patch_count);
-
-    glBindVertexArray(0);
 }
 
 void Terrain::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
                      bool updatePipeline) {
-    (void)commandBuffer;
     (void)updatePipeline;
 
     static std::shared_ptr<opal::Pipeline> terrainPipeline = nullptr;
@@ -180,8 +177,12 @@ void Terrain::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
     terrainPipeline->enableDepthWrite(true);
     terrainPipeline->setCullMode(opal::CullMode::Back);
     terrainPipeline->setFrontFace(opal::FrontFace::Clockwise);
-    glBindVertexArray(this->vao);
+    terrainPipeline->setPrimitiveStyle(opal::PrimitiveStyle::Patches);
+    terrainPipeline->setPatchVertices(patch_count);
     terrainPipeline->bind();
+
+    // Bind drawing state (VAO equivalent)
+    commandBuffer->bindDrawingState(drawingState);
 
     terrainPipeline->setUniformMat4f("model", model);
     terrainPipeline->setUniformMat4f("view", view);
@@ -275,9 +276,9 @@ void Terrain::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
     AmbientLight ambient = mainWindow->getCurrentScene()->ambientLight;
     terrainPipeline->setUniform1f("ambientStrength", ambient.intensity * 4.0);
 
-    // Note: GL_PATCHES draw call is OpenGL-specific for tessellation
-    glDrawArrays(GL_PATCHES, 0, patch_count * rez * rez);
-    glBindVertexArray(0);
+    // Draw tessellation patches using opal command buffer
+    commandBuffer->drawPatches(patch_count * rez * rez, 0);
+    commandBuffer->unbindDrawingState();
 
     // Restore default state via pipeline
     terrainPipeline->setCullMode(opal::CullMode::Back);

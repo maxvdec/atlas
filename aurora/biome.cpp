@@ -15,7 +15,6 @@
 #include <cstdlib>
 #include <sys/types.h>
 #include <vector>
-#include <glad/glad.h>
 
 float aurora::computeSlope(const uint8_t *heightMap, int width, int height,
                            int x, int y) {

@@ -92,6 +92,21 @@ void CommandBuffer::drawIndexed(uint indexCount, uint instanceCount,
 #endif
 }
 
+void CommandBuffer::drawPatches(uint vertexCount, uint firstVertex) {
+#ifdef OPENGL
+    if (boundDrawingState != nullptr) {
+        boundDrawingState->bind();
+    }
+    if (boundPipeline != nullptr) {
+        glPatchParameteri(GL_PATCH_VERTICES, boundPipeline->getPatchVertices());
+    }
+    glDrawArrays(GL_PATCHES, firstVertex, vertexCount);
+    if (boundDrawingState != nullptr) {
+        boundDrawingState->unbind();
+    }
+#endif
+}
+
 void CommandBuffer::clearColor(float r, float g, float b, float a) {
 #ifdef OPENGL
     glClearColor(r, g, b, a);
