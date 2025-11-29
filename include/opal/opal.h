@@ -77,6 +77,13 @@ class Context {
 class CommandBuffer;
 class Framebuffer;
 
+#ifdef VULKAN
+struct ImageCollection {
+    std::vector<VkImage> images;
+    std::vector<VkImageView> imageViews;
+};
+#endif
+
 class Device {
   public:
     static std::shared_ptr<Device> acquire(std::shared_ptr<Context> context);
@@ -86,10 +93,15 @@ class Device {
     std::shared_ptr<Framebuffer> getDefaultFramebuffer();
 
 #ifdef VULKAN
-    VkDevice logicalDevice;
-    VkPhysicalDevice physicalDevice;
-    VkQueue graphicsQueue;
-    VkQueue presentQueue;
+    VkDevice logicalDevice = VK_NULL_HANDLE;
+    VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+    VkQueue graphicsQueue = VK_NULL_HANDLE;
+    VkQueue presentQueue = VK_NULL_HANDLE;
+
+    VkSwapchainKHR swapChain = VK_NULL_HANDLE;
+    ImageCollection swapChainImages;
+    VkExtent2D swapChainExtent;
+    VkFormat swapChainImageFormat;
 
     struct QueueFamilyIndices {
         std::optional<uint32_t> graphicsFamily;
@@ -105,6 +117,26 @@ class Device {
     void createLogicalDevice(std::shared_ptr<Context> context);
     QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device,
                                          VkSurfaceKHR surface);
+
+    struct SwapChainSupportDetails {
+        VkSurfaceCapabilitiesKHR capabilities;
+        std::vector<VkSurfaceFormatKHR> formats;
+        std::vector<VkPresentModeKHR> presentModes;
+    };
+
+    SwapChainSupportDetails
+    querySwapChainSupport(VkPhysicalDevice device,
+                          std::shared_ptr<Context> context);
+    void createSwapChain(std::shared_ptr<Context> context);
+    bool supportsDeviceExtension(VkPhysicalDevice device,
+                                 const char *extension);
+
+    VkSurfaceFormatKHR chooseSwapSurfaceFormat(
+        const std::vector<VkSurfaceFormatKHR> &availableFormats);
+    VkPresentModeKHR chooseSwapPresentMode(
+        const std::vector<VkPresentModeKHR> &availablePresentModes);
+    VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities,
+                                GLFWwindow *window);
 #endif
 };
 

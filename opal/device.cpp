@@ -86,6 +86,8 @@ Device::acquire([[maybe_unused]] std::shared_ptr<Context> context) {
 #else
     auto device = std::make_shared<Device>();
     device->pickPhysicalDevice(std::move(context));
+    device->createLogicalDevice(std::move(context));
+    device->createSwapChain(std::move(context));
     return device;
 #endif
 }

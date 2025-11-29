@@ -19,9 +19,31 @@ bool Device::deviceMeetsRequirements(VkPhysicalDevice device) {
     vkGetPhysicalDeviceProperties(device, &deviceProperties);
     VkPhysicalDeviceFeatures deviceFeatures;
     vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
+
+    if (!this->supportsDeviceExtension(device,
+                                       VK_KHR_SWAPCHAIN_EXTENSION_NAME)) {
+        return false;
+    }
+
     return deviceProperties.deviceType ==
                VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU &&
            deviceFeatures.geometryShader;
+}
+
+bool Device::supportsDeviceExtension(VkPhysicalDevice device,
+                                     const char *extension) {
+    uint32_t extensionCount;
+    vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount,
+                                         nullptr);
+    std::vector<VkExtensionProperties> availableExtensions(extensionCount);
+    vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount,
+                                         availableExtensions.data());
+    for (const auto &ext : availableExtensions) {
+        if (strcmp(ext.extensionName, extension) == 0) {
+            return true;
+        }
+    }
+    return false;
 }
 
 void Device::pickPhysicalDevice(std::shared_ptr<Context> context) {
@@ -99,7 +121,14 @@ void Device::createLogicalDevice(std::shared_ptr<Context> context) {
     createInfo.queueCreateInfoCount =
         static_cast<uint32_t>(queueCreateInfos.size());
     createInfo.pEnabledFeatures = &deviceFeatures;
-    createInfo.enabledExtensionCount = 0;
+
+    const std::vector<const char *> deviceExtensions = {
+        VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+
+    createInfo.enabledExtensionCount =
+        static_cast<uint32_t>(deviceExtensions.size());
+    createInfo.ppEnabledExtensionNames = deviceExtensions.data();
+
     if (context->config.createValidationLayers) {
         createInfo.enabledLayerCount = 1;
         const char *validationLayerName = "VK_LAYER_KHRONOS_validation";
