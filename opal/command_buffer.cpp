@@ -61,8 +61,8 @@ void CommandBuffer::bindDrawingState(
 
 void CommandBuffer::unbindDrawingState() { boundDrawingState = nullptr; }
 
-void CommandBuffer::draw(uint vertexCount, uint instanceCount, uint firstVertex,
-                         [[maybe_unused]] uint firstInstance) {
+auto CommandBuffer::draw(uint vertexCount, uint instanceCount, uint firstVertex,
+                         [[maybe_unused]] uint firstInstance)-> void {
 #ifdef OPENGL
     if (boundDrawingState != nullptr) {
         boundDrawingState->bind();

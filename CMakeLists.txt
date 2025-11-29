@@ -14,7 +14,7 @@ else()
     add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-add_definitions(-DOPENGL)
+option(BACKEND_OPENGL "Enable OpenGL backend" OFF)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -50,7 +50,14 @@ add_custom_command(
     COMMENT "Packing shaders into shaders.h"
 )
 
-find_package(OpenGL REQUIRED)
+if(BACKEND_OPENGL)
+    find_package(OpenGL REQUIRED)
+else()
+    find_package(Vulkan REQUIRED)
+    message(STATUS "Found Vulkan SDK at ${Vulkan_LIBRARY}")
+    message(STATUS "Found Vulkan Libraries at ${Vulkan_INCLUDE_DIRS}")
+endif()
+
 find_package(glm REQUIRED)
 find_package(Freetype REQUIRED)
 find_package(Assimp REQUIRED)
@@ -85,18 +92,35 @@ target_link_libraries(finewave PRIVATE glfw glm::glm ${OPENAL_LIB})
 target_include_directories(finewave PRIVATE ${OPENAL_INCLUDE})
 
 add_library(opal ${OPAL_SOURCES})
-target_link_libraries(opal PRIVATE glm::glm glfw OpenGL::GL)
+target_link_libraries(opal PRIVATE glm::glm glfw)
+
+if (BACKEND_OPENGL)
+    target_link_libraries(opal PRIVATE OpenGL::GL)
+else()
+    target_link_libraries(opal PRIVATE Vulkan::Vulkan)
+endif()
 
 add_library(aurora ${AURORA_SOURCES})
-target_link_libraries(aurora PRIVATE glm::glm glfw OpenGL::GL) 
+target_link_libraries(aurora PRIVATE glm::glm glfw)
+
+if (BACKEND_OPENGL)
+    target_link_libraries(aurora PRIVATE OpenGL::GL)
+else()
+    target_link_libraries(aurora PRIVATE Vulkan::Vulkan)
+endif()
 
 add_library(hydra ${HYDRA_SOURCES})
-target_link_libraries(hydra PRIVATE glm::glm glfw OpenGL::GL)
+target_link_libraries(hydra PRIVATE glm::glm glfw)
+
+if (BACKEND_OPENGL)
+    target_link_libraries(hydra PRIVATE OpenGL::GL)
+else()
+    target_link_libraries(hydra PRIVATE Vulkan::Vulkan)
+endif()
 
 add_library(atlas ${ATLAS_SOURCES} ${SHADER_OUTPUT_FILE})
 target_link_libraries(atlas
     PUBLIC
-        OpenGL::GL
         glfw
         glm::glm
         bezel
@@ -107,6 +131,22 @@ target_link_libraries(atlas
         ${FREETYPE_LIBRARIES}
         assimp::assimp
 )
+
+if(BACKEND_OPENGL)
+    message(STATUS "Building using OpenGL backend")
+    target_compile_definitions(atlas PRIVATE OPENGL)
+    target_link_libraries(atlas PRIVATE OpenGL::GL)
+else()
+    message(STATUS "Building using Vulkan backend")
+    target_compile_definitions(atlas PRIVATE VULKAN)
+    target_link_libraries(atlas PRIVATE Vulkan::Vulkan)
+
+    if(APPLE)
+        message(STATUS "Configuring MoltenVK for macOS")
+        target_compile_definitions(atlas PRIVATE VK_USE_PLATFORM_MACOS_MVK)
+    endif()
+endif()
+
 target_include_directories(atlas PRIVATE ${FREETYPE_INCLUDE_DIRS}/freetype2)
 target_compile_definitions(atlas PRIVATE ATLAS_LIB GL_SILENT_DEPRECATION)
 
@@ -122,7 +162,11 @@ if(WIN32)
     target_compile_definitions(atlas PRIVATE _CRT_SECURE_NO_WARNINGS NOMINMAX)
     target_link_libraries(atlas PRIVATE opengl32)
 elseif(APPLE)
-    target_link_libraries(atlas PRIVATE "-framework OpenGL" "-framework Cocoa" "-framework IOKit")
+    if(BACKEND_OPENGL)
+        target_link_libraries(atlas PRIVATE "-framework OpenGL" "-framework Cocoa" "-framework IOKit")
+    else()
+        target_link_libraries(atlas PRIVATE "-framework Cocoa" "-framework IOKit" "-framework QuartzCore")
+    endif()
 elseif(UNIX)
     target_link_libraries(atlas PRIVATE dl pthread)
 endif()
