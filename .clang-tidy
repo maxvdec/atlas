@@ -1,15 +1,15 @@
-Checks: >
+Checks: |
   bugprone-*,
   -bugprone-easily-swappable-parameters,
   -bugprone-exception-escape,
   -bugprone-implicit-widening-of-multiplication-result,
   -bugprone-narrowing-conversions,
   -bugprone-unchecked-optional-access,
-  
+
   cert-*,
   -cert-err58-cpp,
   -cert-dcl21-cpp,
-  
+
   cppcoreguidelines-*,
   -cppcoreguidelines-avoid-c-arrays,
   -cppcoreguidelines-avoid-const-or-ref-data-members,
@@ -28,17 +28,17 @@ Checks: >
   -cppcoreguidelines-pro-type-union-access,
   -cppcoreguidelines-pro-type-vararg,
   -cppcoreguidelines-special-member-functions,
-  
+
   modernize-*,
   -modernize-avoid-c-arrays,
   -modernize-return-braced-init-list,
   -modernize-use-nodiscard,
   -modernize-use-trailing-return-type,
-  
+
   performance-*,
   -performance-avoid-endl,
   -performance-enum-size,
-  
+
   readability-*,
   -readability-braces-around-statements,
   -readability-else-after-return,
@@ -53,6 +53,6 @@ Checks: >
   -readability-named-parameter,
   -readability-redundant-access-specifiers,
 
-WarningsAsErrors: ''
-HeaderFilterRegex: ''
+WarningsAsErrors: ""
+HeaderFilterRegex: ""
 FormatStyle: none

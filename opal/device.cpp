@@ -23,6 +23,9 @@ std::shared_ptr<Context> Context::create(ContextConfiguration config) {
 
 #ifdef VULKAN
     context->createInstance();
+    if (config.createValidationLayers) {
+        context->setupMessenger();
+    }
 #endif
 
     if (config.useOpenGL) {

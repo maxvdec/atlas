@@ -33,6 +33,7 @@ struct ContextConfiguration {
     OpenGLProfile profile = OpenGLProfile::Core;
     std::string applicationName;
     std::string applicationVersion;
+    bool createValidationLayers = true;
 };
 
 class Context {
@@ -55,7 +56,18 @@ class Context {
 
 #ifdef VULKAN
     void createInstance();
+    void setupMessenger();
+    std::vector<const char *> getExtensions();
+
+    static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
+        VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+        VkDebugUtilsMessageTypeFlagsEXT,
+        const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void *);
+
+    bool hasValidationLayer();
+
     VkInstance instance = VK_NULL_HANDLE;
+    VkDebugUtilsMessengerEXT debugMessenger = VK_NULL_HANDLE;
 #endif
 };
 
