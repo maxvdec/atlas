@@ -18,6 +18,13 @@ std::shared_ptr<Context> Context::create(ContextConfiguration config) {
         throw std::runtime_error("Failed to initialize GLFW");
     }
 
+    auto context = std::make_shared<Context>();
+    context->config = config;
+
+#ifdef VULKAN
+    context->createInstance();
+#endif
+
     if (config.useOpenGL) {
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, config.majorVersion);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, config.minorVersion);
@@ -30,7 +37,6 @@ std::shared_ptr<Context> Context::create(ContextConfiguration config) {
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     }
 
-    auto context = std::make_shared<Context>();
     return context;
 }
 

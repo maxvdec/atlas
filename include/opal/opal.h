@@ -18,6 +18,9 @@
 #include <sys/types.h>
 #include <vector>
 #include <glm/glm.hpp>
+#ifdef VULKAN
+#include <vulkan/vulkan.hpp>
+#endif
 
 namespace opal {
 
@@ -28,6 +31,8 @@ struct ContextConfiguration {
     int majorVersion = 4;
     int minorVersion = 1;
     OpenGLProfile profile = OpenGLProfile::Core;
+    std::string applicationName;
+    std::string applicationVersion;
 };
 
 class Context {
@@ -46,6 +51,12 @@ class Context {
 
   private:
     GLFWwindow *window = nullptr;
+    ContextConfiguration config;
+
+#ifdef VULKAN
+    void createInstance();
+    VkInstance instance = VK_NULL_HANDLE;
+#endif
 };
 
 class CommandBuffer;
@@ -174,11 +185,11 @@ class Texture {
                          TextureWrapMode wrapR, TextureFilterMode minFilter,
                          TextureFilterMode magFilter);
 
-    uint textureID;
-    TextureType type;
-    TextureFormat format;
-    int width;
-    int height;
+    uint textureID = 0;
+    TextureType type = TextureType::Texture2D;
+    TextureFormat format = TextureFormat::Rgba8;
+    int width = 0;
+    int height = 0;
     int samples = 1; // For multisampled textures
 
   private:
