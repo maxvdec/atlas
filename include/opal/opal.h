@@ -11,9 +11,11 @@
 #define OPAL_H
 
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <optional>
 #include <string>
 #include <sys/types.h>
 #include <vector>
@@ -50,7 +52,6 @@ class Context {
 
     void makeCurrent();
 
-  private:
     GLFWwindow *window = nullptr;
     ContextConfiguration config;
 
@@ -81,6 +82,21 @@ class Device {
 
     void submitCommandBuffer(std::shared_ptr<CommandBuffer> commandBuffer);
     std::shared_ptr<Framebuffer> getDefaultFramebuffer();
+
+#ifdef VULKAN
+    VkDevice logicalDevice;
+    VkPhysicalDevice physicalDevice;
+
+    struct QueueFamilyIndices {
+        std::optional<uint32_t> graphicsFamily;
+
+        bool isComplete() { return graphicsFamily.has_value(); }
+    };
+
+    bool deviceMeetsRequirements(VkPhysicalDevice device);
+    void pickPhysicalDevice(std::shared_ptr<Context> context);
+    QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
+#endif
 };
 
 enum class TextureType {

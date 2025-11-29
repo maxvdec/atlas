@@ -10,6 +10,7 @@
 #include "opal/opal.h"
 #include <memory>
 #include <stdexcept>
+#include <utility>
 
 namespace opal {
 
@@ -81,6 +82,7 @@ Device::acquire([[maybe_unused]] std::shared_ptr<Context> context) {
     return device;
 #else
     auto device = std::make_shared<Device>();
+    device->pickPhysicalDevice(std::move(context));
     return device;
 #endif
 }
