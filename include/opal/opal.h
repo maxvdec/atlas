@@ -95,6 +95,7 @@ class Device {
 
     bool deviceMeetsRequirements(VkPhysicalDevice device);
     void pickPhysicalDevice(std::shared_ptr<Context> context);
+    void createLogicalDevice(std::shared_ptr<Context> context);
     QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
 #endif
 };

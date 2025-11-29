@@ -80,6 +80,41 @@ Device::QueueFamilyIndices Device::findQueueFamilies(VkPhysicalDevice device) {
     return indices;
 }
 
+void Device::createLogicalDevice(std::shared_ptr<Context> context) {
+    QueueFamilyIndices indices = findQueueFamilies(this->physicalDevice);
+
+    VkDeviceQueueCreateInfo queueCreateInfo = {};
+    queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+    queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
+    queueCreateInfo.queueCount = 1;
+
+    float queuePriority = 1.0f;
+    queueCreateInfo.pQueuePriorities = &queuePriority;
+
+    VkPhysicalDeviceFeatures deviceFeatures = {};
+
+    VkDeviceCreateInfo createInfo = {};
+    createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+    createInfo.pQueueCreateInfos = &queueCreateInfo;
+    createInfo.queueCreateInfoCount = 1;
+    createInfo.pEnabledFeatures = &deviceFeatures;
+
+    createInfo.enabledExtensionCount = 0;
+
+    if (context->config.createValidationLayers) {
+        createInfo.enabledLayerCount = 1;
+        const char *validationLayerName = "VK_LAYER_KHRONOS_validation";
+        createInfo.ppEnabledLayerNames = &validationLayerName;
+    } else {
+        createInfo.enabledLayerCount = 0;
+    }
+
+    if (vkCreateDevice(this->physicalDevice, &createInfo, nullptr,
+                       &this->logicalDevice) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to create logical device!");
+    }
+}
+
 } // namespace opal
 
 #endif
