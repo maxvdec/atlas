@@ -11,7 +11,8 @@
 #include <vector>
 #ifdef VULKAN
 #include <opal/opal.h>
-#include <vulkan/vulkan.hpp>
+#include <vulkan/vulkan.h>
+#define GLFW_INCLUDE_VULKAN
 #include <glfw/glfw3.h>
 
 namespace opal {
@@ -172,6 +173,13 @@ void Context::setupMessenger() {
         }
     } else {
         throw std::runtime_error("Failed to set up debug messenger for Vulkan");
+    }
+}
+
+void Context::setupSurface() {
+    if (glfwCreateWindowSurface(this->instance, this->window, nullptr,
+                                &this->surface) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to create window surface!");
     }
 }
 

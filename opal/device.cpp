@@ -62,6 +62,9 @@ GLFWwindow *Context::makeWindow(int width, int height, const char *title,
     if (this->window == nullptr) {
         throw std::runtime_error("Failed to create GLFW window");
     }
+#ifdef VULKAN
+    this->setupSurface();
+#endif
     return this->window;
 }
 

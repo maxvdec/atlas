@@ -10,6 +10,9 @@
 #ifndef OPAL_H
 #define OPAL_H
 
+#ifdef VULKAN
+#include <vulkan/vulkan.hpp>
+#endif
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -20,9 +23,6 @@
 #include <sys/types.h>
 #include <vector>
 #include <glm/glm.hpp>
-#ifdef VULKAN
-#include <vulkan/vulkan.hpp>
-#endif
 
 namespace opal {
 
@@ -58,6 +58,7 @@ class Context {
 #ifdef VULKAN
     void createInstance();
     void setupMessenger();
+    void setupSurface();
     std::vector<const char *> getExtensions();
 
     static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
@@ -69,6 +70,7 @@ class Context {
 
     VkInstance instance = VK_NULL_HANDLE;
     VkDebugUtilsMessengerEXT debugMessenger = VK_NULL_HANDLE;
+    VkSurfaceKHR surface = VK_NULL_HANDLE;
 #endif
 };
 
@@ -86,17 +88,23 @@ class Device {
 #ifdef VULKAN
     VkDevice logicalDevice;
     VkPhysicalDevice physicalDevice;
+    VkQueue graphicsQueue;
+    VkQueue presentQueue;
 
     struct QueueFamilyIndices {
         std::optional<uint32_t> graphicsFamily;
+        std::optional<uint32_t> presentFamily;
 
-        bool isComplete() { return graphicsFamily.has_value(); }
+        bool isComplete() {
+            return graphicsFamily.has_value() && presentFamily.has_value();
+        }
     };
 
     bool deviceMeetsRequirements(VkPhysicalDevice device);
     void pickPhysicalDevice(std::shared_ptr<Context> context);
     void createLogicalDevice(std::shared_ptr<Context> context);
-    QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
+    QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device,
+                                         VkSurfaceKHR surface);
 #endif
 };
 
