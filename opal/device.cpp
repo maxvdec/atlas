@@ -10,6 +10,7 @@
 #include "opal/opal.h"
 #include <memory>
 #include <stdexcept>
+#include <utility>
 
 namespace opal {
 
@@ -17,6 +18,16 @@ std::shared_ptr<Context> Context::create(ContextConfiguration config) {
     if (!glfwInit()) {
         throw std::runtime_error("Failed to initialize GLFW");
     }
+
+    auto context = std::make_shared<Context>();
+    context->config = config;
+
+#ifdef VULKAN
+    context->createInstance();
+    if (config.createValidationLayers) {
+        context->setupMessenger();
+    }
+#endif
 
     if (config.useOpenGL) {
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, config.majorVersion);
@@ -30,7 +41,6 @@ std::shared_ptr<Context> Context::create(ContextConfiguration config) {
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
     }
 
-    auto context = std::make_shared<Context>();
     return context;
 }
 
@@ -52,6 +62,9 @@ GLFWwindow *Context::makeWindow(int width, int height, const char *title,
     if (this->window == nullptr) {
         throw std::runtime_error("Failed to create GLFW window");
     }
+#ifdef VULKAN
+    this->setupSurface();
+#endif
     return this->window;
 }
 
@@ -72,6 +85,7 @@ Device::acquire([[maybe_unused]] std::shared_ptr<Context> context) {
     return device;
 #else
     auto device = std::make_shared<Device>();
+    device->pickPhysicalDevice(std::move(context));
     return device;
 #endif
 }

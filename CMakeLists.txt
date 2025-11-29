@@ -98,6 +98,7 @@ if (BACKEND_OPENGL)
     target_link_libraries(opal PRIVATE OpenGL::GL)
 else()
     target_link_libraries(opal PRIVATE Vulkan::Vulkan)
+    target_compile_definitions(opal PRIVATE VULKAN)
 endif()
 
 add_library(aurora ${AURORA_SOURCES})
@@ -134,11 +135,11 @@ target_link_libraries(atlas
 
 if(BACKEND_OPENGL)
     message(STATUS "Building using OpenGL backend")
-    target_compile_definitions(atlas PRIVATE OPENGL)
+    add_definitions(-DOPENGL)
     target_link_libraries(atlas PRIVATE OpenGL::GL)
 else()
     message(STATUS "Building using Vulkan backend")
-    target_compile_definitions(atlas PRIVATE VULKAN)
+    add_definitions(-DVULKAN)
     target_link_libraries(atlas PRIVATE Vulkan::Vulkan)
 
     if(APPLE)

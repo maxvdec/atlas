@@ -13,6 +13,7 @@
 
 namespace opal {
 
+#ifdef OPENGL
 uint Shader::getGLShaderType(ShaderType type) {
     switch (type) {
     case ShaderType::Vertex:
@@ -29,6 +30,7 @@ uint Shader::getGLShaderType(ShaderType type) {
         throw std::runtime_error("Unknown shader type");
     }
 }
+#endif
 
 std::shared_ptr<Shader> Shader::createFromSource(const char *source,
                                                  ShaderType type) {

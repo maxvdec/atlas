@@ -160,6 +160,14 @@ Window::Window(WindowConfiguration config)
     if (!result) {
         throw std::runtime_error("Failed to initialize audio engine");
     }
+
+    std::cout << "Atlas Engine" << std::endl;
+    std::cout << "Alpha 5 Version" << std::endl;
+#ifdef OPENGL
+    std::cout << "Using OpenGL Backend" << std::endl;
+#else
+    std::cout << "Using Vulkan Backend" << std::endl;
+#endif
 }
 
 std::tuple<int, int> Window::getCursorPosition() {

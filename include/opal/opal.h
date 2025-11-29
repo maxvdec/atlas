@@ -10,10 +10,15 @@
 #ifndef OPAL_H
 #define OPAL_H
 
+#ifdef VULKAN
+#include <vulkan/vulkan.hpp>
+#endif
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <optional>
 #include <string>
 #include <sys/types.h>
 #include <vector>
@@ -28,6 +33,9 @@ struct ContextConfiguration {
     int majorVersion = 4;
     int minorVersion = 1;
     OpenGLProfile profile = OpenGLProfile::Core;
+    std::string applicationName;
+    std::string applicationVersion;
+    bool createValidationLayers = true;
 };
 
 class Context {
@@ -44,8 +52,26 @@ class Context {
 
     void makeCurrent();
 
-  private:
     GLFWwindow *window = nullptr;
+    ContextConfiguration config;
+
+#ifdef VULKAN
+    void createInstance();
+    void setupMessenger();
+    void setupSurface();
+    std::vector<const char *> getExtensions();
+
+    static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
+        VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+        VkDebugUtilsMessageTypeFlagsEXT,
+        const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void *);
+
+    bool hasValidationLayer();
+
+    VkInstance instance = VK_NULL_HANDLE;
+    VkDebugUtilsMessengerEXT debugMessenger = VK_NULL_HANDLE;
+    VkSurfaceKHR surface = VK_NULL_HANDLE;
+#endif
 };
 
 class CommandBuffer;
@@ -58,6 +84,28 @@ class Device {
 
     void submitCommandBuffer(std::shared_ptr<CommandBuffer> commandBuffer);
     std::shared_ptr<Framebuffer> getDefaultFramebuffer();
+
+#ifdef VULKAN
+    VkDevice logicalDevice;
+    VkPhysicalDevice physicalDevice;
+    VkQueue graphicsQueue;
+    VkQueue presentQueue;
+
+    struct QueueFamilyIndices {
+        std::optional<uint32_t> graphicsFamily;
+        std::optional<uint32_t> presentFamily;
+
+        bool isComplete() {
+            return graphicsFamily.has_value() && presentFamily.has_value();
+        }
+    };
+
+    bool deviceMeetsRequirements(VkPhysicalDevice device);
+    void pickPhysicalDevice(std::shared_ptr<Context> context);
+    void createLogicalDevice(std::shared_ptr<Context> context);
+    QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device,
+                                         VkSurfaceKHR surface);
+#endif
 };
 
 enum class TextureType {
@@ -174,11 +222,11 @@ class Texture {
                          TextureWrapMode wrapR, TextureFilterMode minFilter,
                          TextureFilterMode magFilter);
 
-    uint textureID;
-    TextureType type;
-    TextureFormat format;
-    int width;
-    int height;
+    uint textureID = 0;
+    TextureType type = TextureType::Texture2D;
+    TextureFormat format = TextureFormat::Rgba8;
+    int width = 0;
+    int height = 0;
     int samples = 1; // For multisampled textures
 
   private:
