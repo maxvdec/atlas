@@ -438,6 +438,8 @@ class Pipeline {
 
     void setFrontFace(FrontFace face);
 
+    void setLineWidth(float width) { lineWidth = width; }
+
     void enableDepthTest(bool enabled);
     void setDepthCompareOp(CompareOp op);
     void enableDepthWrite(bool enabled);
@@ -473,6 +475,23 @@ class Pipeline {
     void bindTexture3D(const std::string &name, uint textureId, int unit);
     void bindTextureCubemap(const std::string &name, uint textureId, int unit);
 
+#ifdef VULKAN
+    VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
+    VkPipelineDynamicStateCreateInfo dynamicState;
+    VkPipelineVertexInputStateCreateInfo vertexInputInfo;
+    VkPipelineInputAssemblyStateCreateInfo inputAssembly;
+    VkPipelineViewportStateCreateInfo viewportState;
+    VkPipelineRasterizationStateCreateInfo rasterizer;
+    VkPipelineMultisampleStateCreateInfo multisampling;
+    VkPipelineDepthStencilStateCreateInfo depthStencil;
+    VkPipelineColorBlendStateCreateInfo colorBlending;
+    VkFormat getFormat(VertexAttributeType type, uint size,
+                       bool normalized) const;
+    void buildPipelineLayout();
+#endif
+
+    bool multisamplingEnabled = false;
+
   private:
     PrimitiveStyle primitiveStyle = PrimitiveStyle::Triangles;
     int patchVertices = 4; // Default patch size for tessellation
@@ -486,10 +505,10 @@ class Pipeline {
     bool depthTestEnabled = false;
     bool depthWriteEnabled = true;
     CompareOp depthCompareOp = CompareOp::Less;
-    bool multisamplingEnabled = false;
     bool polygonOffsetEnabled = false;
     float polygonOffsetFactor = 0.0f;
     float polygonOffsetUnits = 0.0f;
+    float lineWidth = 1.0f;
     std::vector<int> enabledClipDistances;
 
     std::vector<VertexAttribute> vertexAttributes;
@@ -569,6 +588,11 @@ class Attachment {
     Type type;
 
     std::shared_ptr<Texture> texture;
+
+    bool operator==(const Attachment &other) const {
+        return type == other.type && texture->type == other.texture->type &&
+               texture->format == other.texture->format;
+    }
 };
 
 class DepthStencilBuffer {
@@ -649,6 +673,21 @@ class Framebuffer {
     bool colorBufferDisabled = false;
 };
 
+#ifdef VULKAN
+class CoreRenderPass {
+  public:
+    static std::shared_ptr<CoreRenderPass>
+    create(std::shared_ptr<Pipeline> pipeline,
+           std::shared_ptr<Framebuffer> framebuffer);
+
+    VkRenderPass renderPass = VK_NULL_HANDLE;
+    VkPipeline pipeline = VK_NULL_HANDLE;
+
+    std::shared_ptr<Pipeline> opalPipeline;
+    std::shared_ptr<Framebuffer> opalFramebuffer;
+};
+#endif
+
 class RenderPass {
   public:
     static std::shared_ptr<RenderPass> create();
@@ -656,6 +695,12 @@ class RenderPass {
     void setFramebuffer(std::shared_ptr<Framebuffer> framebuffer);
 
     std::shared_ptr<Framebuffer> framebuffer;
+
+#ifdef VULKAN
+    static std::vector<std::shared_ptr<CoreRenderPass>> cachedRenderPasses;
+    std::shared_ptr<CoreRenderPass> currentRenderPass;
+    void applyRenderPass();
+#endif
 };
 
 class ResolveAction {
@@ -725,7 +770,12 @@ class CommandBuffer {
   private:
     std::shared_ptr<Pipeline> boundPipeline = nullptr;
     std::shared_ptr<DrawingState> boundDrawingState = nullptr;
+    std::shared_ptr<RenderPass> renderPass = nullptr;
 };
+
+#ifdef VULKAN
+VkFormat opalTextureFormatToVulkanFormat(TextureFormat format);
+#endif
 
 } // namespace opal
 

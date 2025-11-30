@@ -31,6 +31,7 @@ void CommandBuffer::beginPass(
     if (renderPass != nullptr) {
         renderPass->framebuffer->bind();
     }
+    this->renderPass = renderPass;
 }
 
 void CommandBuffer::beginSampled(
@@ -50,6 +51,20 @@ void CommandBuffer::commit() {}
 void CommandBuffer::bindPipeline(std::shared_ptr<Pipeline> pipeline) {
     pipeline->bind();
     boundPipeline = pipeline;
+#ifdef VULKAN
+    for (auto &corePipeline : RenderPass::cachedRenderPasses) {
+        if (corePipeline->opalFramebuffer->attachments ==
+            renderPass->framebuffer->attachments) {
+            if (*corePipeline->opalPipeline == pipeline) {
+                renderPass->currentRenderPass = corePipeline;
+                return;
+            }
+        }
+    }
+    auto coreRenderPass =
+        CoreRenderPass::create(pipeline, renderPass->framebuffer);
+    renderPass->currentRenderPass = coreRenderPass;
+#endif
 }
 
 void CommandBuffer::unbindPipeline() { boundPipeline = nullptr; }
@@ -62,7 +77,7 @@ void CommandBuffer::bindDrawingState(
 void CommandBuffer::unbindDrawingState() { boundDrawingState = nullptr; }
 
 auto CommandBuffer::draw(uint vertexCount, uint instanceCount, uint firstVertex,
-                         [[maybe_unused]] uint firstInstance)-> void {
+                         [[maybe_unused]] uint firstInstance) -> void {
 #ifdef OPENGL
     if (boundDrawingState != nullptr) {
         boundDrawingState->bind();
