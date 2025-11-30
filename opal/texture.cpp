@@ -275,6 +275,15 @@ void Pipeline::bindTexture(const std::string &name,
     glBindTexture(texture->glType, texture->textureID);
     int location = glGetUniformLocation(shaderProgram->programID, name.c_str());
     glUniform1i(location, unit);
+#elif defined(VULKAN)
+    const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
+    if (!info) {
+        throw std::runtime_error("Sampler uniform not found: " + name);
+    }
+    // Texture binding for Vulkan requires descriptor set updates
+    // This is handled through the descriptor set system
+    (void)texture;
+    (void)unit;
 #endif
 }
 
@@ -285,6 +294,13 @@ void Pipeline::bindTexture2D(const std::string &name, uint textureId,
     glBindTexture(GL_TEXTURE_2D, textureId);
     int location = glGetUniformLocation(shaderProgram->programID, name.c_str());
     glUniform1i(location, unit);
+#elif defined(VULKAN)
+    const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
+    if (!info) {
+        throw std::runtime_error("Sampler uniform not found: " + name);
+    }
+    (void)textureId;
+    (void)unit;
 #endif
 }
 
@@ -295,6 +311,13 @@ void Pipeline::bindTexture3D(const std::string &name, uint textureId,
     glBindTexture(GL_TEXTURE_3D, textureId);
     int location = glGetUniformLocation(shaderProgram->programID, name.c_str());
     glUniform1i(location, unit);
+#elif defined(VULKAN)
+    const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
+    if (!info) {
+        throw std::runtime_error("Sampler uniform not found: " + name);
+    }
+    (void)textureId;
+    (void)unit;
 #endif
 }
 
@@ -305,6 +328,13 @@ void Pipeline::bindTextureCubemap(const std::string &name, uint textureId,
     glBindTexture(GL_TEXTURE_CUBE_MAP, textureId);
     int location = glGetUniformLocation(shaderProgram->programID, name.c_str());
     glUniform1i(location, unit);
+#elif defined(VULKAN)
+    const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
+    if (!info) {
+        throw std::runtime_error("Sampler uniform not found: " + name);
+    }
+    (void)textureId;
+    (void)unit;
 #endif
 }
 

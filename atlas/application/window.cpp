@@ -34,7 +34,7 @@ Window *Window::mainWindow = nullptr;
 
 Window::Window(WindowConfiguration config)
     : title(config.title), width(config.width), height(config.height) {
-    auto context = opal::Context::create();
+    auto context = opal::Context::create({.useOpenGL = false});
 
     context->setFlag(GLFW_DECORATED, config.decorations);
     context->setFlag(GLFW_RESIZABLE, config.resizable);

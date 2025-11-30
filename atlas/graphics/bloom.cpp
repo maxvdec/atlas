@@ -148,7 +148,7 @@ void BloomRenderTarget::renderDownsamples(unsigned int srcTexture) {
                                      srcViewportSizef.y);
     downsamplePipeline->bindTexture2D("srcTexture", srcTexture, 0);
 
-    auto commandBuffer = opal::Device::acquireCommandBuffer();
+    auto commandBuffer = Window::mainWindow->device->acquireCommandBuffer();
 
     for (size_t i = 0; i < elements.size(); i++) {
         const BloomElement &element = elements[i];
@@ -179,7 +179,7 @@ void BloomRenderTarget::renderUpsamples(float filterRadius) {
 
     upsamplePipeline->setUniform1f("filterRadius", filterRadius);
 
-    auto commandBuffer = opal::Device::acquireCommandBuffer();
+    auto commandBuffer = Window::mainWindow->device->acquireCommandBuffer();
 
     for (int i = elements.size() - 1; i > 0; i--) {
         const BloomElement &element = elements[i];

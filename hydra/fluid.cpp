@@ -274,7 +274,8 @@ void Fluid::ensureTargets(Window &window) {
             target =
                 std::make_unique<RenderTarget>(window, RenderTargetType::Scene);
 
-            auto commandBuffer = opal::Device::acquireCommandBuffer();
+            auto commandBuffer =
+                Window::mainWindow->device->acquireCommandBuffer();
             target->bind();
             commandBuffer->clear(0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
             target->unbind();

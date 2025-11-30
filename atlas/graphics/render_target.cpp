@@ -479,14 +479,15 @@ void RenderTarget::resolve() {
             auto resolveAction =
                 opal::ResolveAction::createForColorAttachment(fb, resolveFb, i);
             // We need a command buffer to perform resolve - get the active one
-            auto commandBuffer = opal::Device::acquireCommandBuffer();
+            auto commandBuffer =
+                Window::mainWindow->device->acquireCommandBuffer();
             commandBuffer->performResolve(resolveAction);
         }
 
         // Resolve depth
         auto depthResolveAction =
             opal::ResolveAction::createForDepth(fb, resolveFb);
-        auto commandBuffer = opal::Device::acquireCommandBuffer();
+        auto commandBuffer = Window::mainWindow->device->acquireCommandBuffer();
         commandBuffer->performResolve(depthResolveAction);
     }
 

@@ -7,6 +7,7 @@
 // Copyright (c) 2025 Max Van den Eynde
 //
 #include <cstdint>
+#include <iostream>
 #include <vector>
 #include <set>
 #ifdef VULKAN
@@ -25,9 +26,9 @@ bool Device::deviceMeetsRequirements(VkPhysicalDevice device) {
         return false;
     }
 
-    return deviceProperties.deviceType ==
-               VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU &&
-           deviceFeatures.geometryShader;
+    return (
+        deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU ||
+        deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU);
 }
 
 bool Device::supportsDeviceExtension(VkPhysicalDevice device,
@@ -97,6 +98,14 @@ Device::QueueFamilyIndices Device::findQueueFamilies(VkPhysicalDevice device,
 }
 
 void Device::createLogicalDevice(std::shared_ptr<Context> context) {
+    if (context == nullptr) {
+        throw std::runtime_error(
+            "Context is required to create logical device");
+    }
+    if (context->surface == VK_NULL_HANDLE) {
+        throw std::runtime_error(
+            "Cannot create logical device without surface");
+    }
     QueueFamilyIndices indices =
         findQueueFamilies(this->physicalDevice, context->surface);
 

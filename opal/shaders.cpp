@@ -14,6 +14,8 @@
 #include <vector>
 #ifdef VULKAN
 #include <vulkan/vulkan.hpp>
+#include <spirv_cross/spirv_cross.hpp>
+#include <spirv_cross/spirv_glsl.hpp>
 #endif
 
 namespace opal {
@@ -76,6 +78,10 @@ std::shared_ptr<Shader> Shader::createFromSource(const char *source,
         bytecode.push_back(byte);
     }
 
+    // Store SPIR-V bytecode as uint32_t for reflection
+    shader->spirvBytecode.resize(bytecode.size() / 4);
+    memcpy(shader->spirvBytecode.data(), bytecode.data(), bytecode.size());
+
     VkShaderModuleCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
     createInfo.codeSize = bytecode.size();
@@ -84,6 +90,9 @@ std::shared_ptr<Shader> Shader::createFromSource(const char *source,
                              &shader->shaderModule) != VK_SUCCESS) {
         throw std::runtime_error("Failed to create shader module");
     }
+
+    // Perform SPIR-V reflection
+    shader->performReflection();
 
     return shader;
 #else
@@ -145,6 +154,10 @@ void ShaderProgram::attachShader(std::shared_ptr<Shader> shader) {
     attachedShaders.push_back(shader);
 #elif defined(VULKAN)
     attachedShaders.push_back(shader);
+    // Merge uniform bindings from this shader
+    for (const auto &pair : shader->uniformBindings) {
+        uniformBindings[pair.first] = pair.second;
+    }
 #else
     throw std::runtime_error("Shader attachment not implemented for this API");
 #endif
@@ -186,5 +199,165 @@ void ShaderProgram::getProgramLog(char *logBuffer, size_t bufferSize) const {
         "Shader program log retrieval not implemented for this API");
 #endif
 }
+
+#ifdef VULKAN
+void Shader::performReflection() {
+    if (spirvBytecode.empty()) {
+        return;
+    }
+
+    spirv_cross::Compiler compiler(spirvBytecode);
+    spirv_cross::ShaderResources resources = compiler.get_shader_resources();
+
+    // Process uniform buffers
+    for (const auto &ubo : resources.uniform_buffers) {
+        uint32_t set =
+            compiler.get_decoration(ubo.id, spv::DecorationDescriptorSet);
+        uint32_t binding =
+            compiler.get_decoration(ubo.id, spv::DecorationBinding);
+
+        const spirv_cross::SPIRType &type = compiler.get_type(ubo.base_type_id);
+        size_t blockSize = compiler.get_declared_struct_size(type);
+
+        // Store the block itself
+        UniformBindingInfo blockInfo;
+        blockInfo.set = set;
+        blockInfo.binding = binding;
+        blockInfo.size = static_cast<uint32_t>(blockSize);
+        blockInfo.offset = 0;
+        blockInfo.isSampler = false;
+        blockInfo.isBuffer = true;
+        uniformBindings[ubo.name] = blockInfo;
+
+        // Store individual members of the uniform block
+        for (uint32_t i = 0; i < type.member_types.size(); ++i) {
+            std::string memberName =
+                compiler.get_member_name(ubo.base_type_id, i);
+            uint32_t memberOffset = compiler.type_struct_member_offset(type, i);
+            const spirv_cross::SPIRType &memberType =
+                compiler.get_type(type.member_types[i]);
+            size_t memberSize =
+                compiler.get_declared_struct_member_size(type, i);
+
+            UniformBindingInfo memberInfo;
+            memberInfo.set = set;
+            memberInfo.binding = binding;
+            memberInfo.size = static_cast<uint32_t>(memberSize);
+            memberInfo.offset = memberOffset;
+            memberInfo.isSampler = false;
+            memberInfo.isBuffer = true;
+
+            // Store with both full path and just member name
+            uniformBindings[ubo.name + "." + memberName] = memberInfo;
+            if (uniformBindings.find(memberName) == uniformBindings.end()) {
+                uniformBindings[memberName] = memberInfo;
+            }
+        }
+    }
+
+    // Process push constants
+    for (const auto &pc : resources.push_constant_buffers) {
+        const spirv_cross::SPIRType &type = compiler.get_type(pc.base_type_id);
+
+        for (uint32_t i = 0; i < type.member_types.size(); ++i) {
+            std::string memberName =
+                compiler.get_member_name(pc.base_type_id, i);
+            uint32_t memberOffset = compiler.type_struct_member_offset(type, i);
+            size_t memberSize =
+                compiler.get_declared_struct_member_size(type, i);
+
+            UniformBindingInfo memberInfo;
+            memberInfo.set = 0;
+            memberInfo.binding = 0;
+            memberInfo.size = static_cast<uint32_t>(memberSize);
+            memberInfo.offset = memberOffset;
+            memberInfo.isSampler = false;
+            memberInfo.isBuffer = false; // Push constant, not buffer
+
+            uniformBindings[memberName] = memberInfo;
+            if (!pc.name.empty()) {
+                uniformBindings[pc.name + "." + memberName] = memberInfo;
+            }
+        }
+    }
+
+    // Process sampled images (textures)
+    for (const auto &sampler : resources.sampled_images) {
+        uint32_t set =
+            compiler.get_decoration(sampler.id, spv::DecorationDescriptorSet);
+        uint32_t binding =
+            compiler.get_decoration(sampler.id, spv::DecorationBinding);
+
+        UniformBindingInfo samplerInfo;
+        samplerInfo.set = set;
+        samplerInfo.binding = binding;
+        samplerInfo.size = 0;
+        samplerInfo.offset = 0;
+        samplerInfo.isSampler = true;
+        samplerInfo.isBuffer = false;
+        uniformBindings[sampler.name] = samplerInfo;
+    }
+
+    // Process separate samplers
+    for (const auto &sampler : resources.separate_samplers) {
+        uint32_t set =
+            compiler.get_decoration(sampler.id, spv::DecorationDescriptorSet);
+        uint32_t binding =
+            compiler.get_decoration(sampler.id, spv::DecorationBinding);
+
+        UniformBindingInfo samplerInfo;
+        samplerInfo.set = set;
+        samplerInfo.binding = binding;
+        samplerInfo.size = 0;
+        samplerInfo.offset = 0;
+        samplerInfo.isSampler = true;
+        samplerInfo.isBuffer = false;
+        uniformBindings[sampler.name] = samplerInfo;
+    }
+
+    // Process separate images
+    for (const auto &image : resources.separate_images) {
+        uint32_t set =
+            compiler.get_decoration(image.id, spv::DecorationDescriptorSet);
+        uint32_t binding =
+            compiler.get_decoration(image.id, spv::DecorationBinding);
+
+        UniformBindingInfo imageInfo;
+        imageInfo.set = set;
+        imageInfo.binding = binding;
+        imageInfo.size = 0;
+        imageInfo.offset = 0;
+        imageInfo.isSampler = true;
+        imageInfo.isBuffer = false;
+        uniformBindings[image.name] = imageInfo;
+    }
+
+    // Process storage buffers (SSBOs)
+    for (const auto &ssbo : resources.storage_buffers) {
+        uint32_t set =
+            compiler.get_decoration(ssbo.id, spv::DecorationDescriptorSet);
+        uint32_t binding =
+            compiler.get_decoration(ssbo.id, spv::DecorationBinding);
+
+        UniformBindingInfo ssboInfo;
+        ssboInfo.set = set;
+        ssboInfo.binding = binding;
+        ssboInfo.size = 0; // SSBOs can be dynamically sized
+        ssboInfo.offset = 0;
+        ssboInfo.isSampler = false;
+        ssboInfo.isBuffer = true;
+        uniformBindings[ssbo.name] = ssboInfo;
+    }
+}
+
+const UniformBindingInfo *
+ShaderProgram::findUniform(const std::string &name) const {
+    auto it = uniformBindings.find(name);
+    if (it != uniformBindings.end()) {
+        return &it->second;
+    }
+    return nullptr;
+}
+#endif
 
 } // namespace opal

@@ -31,8 +31,8 @@
 #include <unordered_map>
 #include <vector>
 
-typedef void *CoreWindowReference;
-typedef void *CoreMonitorReference;
+using CoreWindowReference = void *;
+using CoreMonitorReference = void *;
 
 constexpr int WINDOW_CENTERED = -1;
 constexpr int DEFAULT_ASPECT_RATIO = -1;
@@ -538,9 +538,9 @@ class Window {
     int viewportY = 0;
     int viewportWidth = 0;
     int viewportHeight = 0;
+    std::shared_ptr<opal::Device> device;
 
   private:
-    std::shared_ptr<opal::Device> device;
     std::shared_ptr<opal::CommandBuffer> activeCommandBuffer = nullptr;
     CoreWindowReference windowRef;
     std::vector<Renderable *> renderables;

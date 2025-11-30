@@ -42,7 +42,7 @@ void Window::deferredRendering(
     deferredPipeline->setViewport(0, 0, this->gBuffer->getWidth(),
                                   this->gBuffer->getHeight());
     this->gBuffer->getFramebuffer()->setDrawBuffers(4);
-    auto gBufferCmd = opal::Device::acquireCommandBuffer();
+    auto gBufferCmd = Window::mainWindow->device->acquireCommandBuffer();
     gBufferCmd->clear(0.0f, 0.0f, 0.0f, 1.0f, 1.0f);
     deferredPipeline->setCullMode(opal::CullMode::Back);
     deferredPipeline->enableDepthTest(true);
@@ -68,7 +68,7 @@ void Window::deferredRendering(
     target->bind();
     target->getFramebuffer()->setViewport(0, 0, target->getWidth(),
                                           target->getHeight());
-    auto lightCmd = opal::Device::acquireCommandBuffer();
+    auto lightCmd = Window::mainWindow->device->acquireCommandBuffer();
     lightCmd->clear(0.0f, 0.0f, 0.0f, 1.0f, 1.0f);
 
     target->getFramebuffer()->setDrawBuffers(2);
@@ -390,7 +390,7 @@ void Window::deferredRendering(
         volumetricBuffer->bind();
         volumetricBuffer->getFramebuffer()->setViewport(
             0, 0, volumetricBuffer->getWidth(), volumetricBuffer->getHeight());
-        auto volCmd = opal::Device::acquireCommandBuffer();
+        auto volCmd = Window::mainWindow->device->acquireCommandBuffer();
         volCmd->clearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
         // Create volumetric pipeline
@@ -439,7 +439,7 @@ void Window::deferredRendering(
         ssrFramebuffer->bind();
         ssrFramebuffer->getFramebuffer()->setViewport(
             0, 0, ssrFramebuffer->getWidth(), ssrFramebuffer->getHeight());
-        auto ssrCmd = opal::Device::acquireCommandBuffer();
+        auto ssrCmd = Window::mainWindow->device->acquireCommandBuffer();
         ssrCmd->clearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
         // Create SSR pipeline

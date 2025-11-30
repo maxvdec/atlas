@@ -74,6 +74,15 @@ else()
     find_package(Vulkan REQUIRED)
     message(STATUS "Found Vulkan SDK at ${Vulkan_LIBRARY}")
     message(STATUS "Found Vulkan Libraries at ${Vulkan_INCLUDE_DIRS}")
+    
+    # Find SPIRV-Cross for shader reflection
+    # On macOS with Homebrew, we need to set the prefix path
+    if(APPLE)
+        list(APPEND CMAKE_PREFIX_PATH "/opt/homebrew/opt/spirv-cross")
+    endif()
+    find_package(spirv_cross_core REQUIRED)
+    find_package(spirv_cross_glsl REQUIRED)
+    find_package(spirv_cross_reflect REQUIRED)
 endif()
 
 find_package(glm REQUIRED)
@@ -115,7 +124,7 @@ target_link_libraries(opal PRIVATE glm::glm glfw)
 if (BACKEND_OPENGL)
     target_link_libraries(opal PRIVATE OpenGL::GL)
 else()
-    target_link_libraries(opal PRIVATE Vulkan::Vulkan)
+    target_link_libraries(opal PRIVATE Vulkan::Vulkan spirv-cross-core spirv-cross-glsl spirv-cross-reflect)
     target_compile_definitions(opal PRIVATE VULKAN)
 endif()
 

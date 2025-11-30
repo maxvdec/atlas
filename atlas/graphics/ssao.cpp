@@ -105,7 +105,7 @@ void Window::renderSSAO() {
     this->ssaoUpdateCooldown = this->ssaoUpdateInterval;
 
     this->ssaoBuffer->bind();
-    auto ssaoCommandBuffer = opal::Device::acquireCommandBuffer();
+    auto ssaoCommandBuffer = Window::mainWindow->device->acquireCommandBuffer();
     ssaoCommandBuffer->clearColor(1.0f, 1.0f, 1.0f, 1.0f);
     static std::shared_ptr<opal::DrawingState> ssaoState = nullptr;
     static std::shared_ptr<opal::Buffer> ssaoBuffer = nullptr;
