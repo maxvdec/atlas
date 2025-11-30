@@ -11,7 +11,7 @@ jobs:
       - uses: actions/checkout@v5
       - name: Install Dependencies
         run: |
-          brew install cmake glfw glm openal-soft assimp
+          brew install cmake glfw glm openal-soft assimp vulkan-sdk
       - name: Build
         run: |
           mkdir build

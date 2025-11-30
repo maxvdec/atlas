@@ -100,8 +100,8 @@ class Device {
 
     VkSwapchainKHR swapChain = VK_NULL_HANDLE;
     ImageCollection swapChainImages;
-    VkExtent2D swapChainExtent;
-    VkFormat swapChainImageFormat;
+    VkExtent2D swapChainExtent = {};
+    VkFormat swapChainImageFormat = VK_FORMAT_UNDEFINED;
 
     struct QueueFamilyIndices {
         std::optional<uint32_t> graphicsFamily;
@@ -128,6 +128,7 @@ class Device {
     querySwapChainSupport(VkPhysicalDevice device,
                           std::shared_ptr<Context> context);
     void createSwapChain(std::shared_ptr<Context> context);
+    void createImageViews();
     bool supportsDeviceExtension(VkPhysicalDevice device,
                                  const char *extension);
 
