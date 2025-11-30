@@ -112,6 +112,31 @@ void Framebuffer::attachCubemap(std::shared_ptr<Texture> texture,
 #endif
 }
 
+void Framebuffer::attachCubemapFace(std::shared_ptr<Texture> texture, int face,
+                                    Attachment::Type attachmentType) {
+#ifdef OPENGL
+    glBindFramebuffer(GL_FRAMEBUFFER, framebufferID);
+    GLenum glAttachmentType;
+    switch (attachmentType) {
+    case Attachment::Type::Depth:
+        glAttachmentType = GL_DEPTH_ATTACHMENT;
+        break;
+    case Attachment::Type::Color:
+        glAttachmentType =
+            GL_COLOR_ATTACHMENT0 + static_cast<GLenum>(attachments.size());
+        break;
+    default:
+        glAttachmentType = GL_DEPTH_ATTACHMENT;
+        break;
+    }
+    // Attach a specific cubemap face (0-5: +X, -X, +Y, -Y, +Z, -Z)
+    glFramebufferTexture2D(GL_FRAMEBUFFER, glAttachmentType,
+                           GL_TEXTURE_CUBE_MAP_POSITIVE_X + face,
+                           texture->textureID, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#endif
+}
+
 void Framebuffer::disableColorBuffer() {
 #ifdef OPENGL
     glBindFramebuffer(GL_FRAMEBUFFER, framebufferID);

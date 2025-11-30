@@ -519,6 +519,15 @@ void RenderTarget::bind() {
     }
 }
 
+void RenderTarget::bindCubemapFace(int face) {
+    if (fb && texture.texture != nullptr) {
+        fb->attachCubemapFace(texture.texture, face,
+                              opal::Attachment::Type::Depth);
+        fb->bind();
+        fb->setViewport();
+    }
+}
+
 void RenderTarget::unbind() {
     if (fb) {
         fb->unbind();

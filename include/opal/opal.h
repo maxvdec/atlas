@@ -717,6 +717,17 @@ class Framebuffer {
                        Attachment::Type attachmentType);
 
     /**
+     * @brief Attaches a specific face of a cubemap texture to this framebuffer.
+     * Used for multi-pass cubemap rendering on platforms without geometry
+     * shaders.
+     * @param texture The cubemap texture.
+     * @param face The face index (0-5: +X, -X, +Y, -Y, +Z, -Z).
+     * @param attachmentType The attachment type (typically Depth for shadows).
+     */
+    void attachCubemapFace(std::shared_ptr<Texture> texture, int face,
+                           Attachment::Type attachmentType);
+
+    /**
      * @brief Disables color buffer read/write for depth-only rendering.
      * Used for shadow map generation.
      */

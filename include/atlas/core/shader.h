@@ -81,6 +81,12 @@ enum class AtlasVertexShader {
      */
     PointLightShadow,
     /**
+     * @brief Vertex shader for point light shadow maps without geometry shader.
+     * Used on platforms that don't support geometry shaders (e.g.,
+     * macOS/MoltenVK).
+     */
+    PointLightShadowNoGeom,
+    /**
      * @brief Vertex shader for rendering directional light shadows.
      *
      */
@@ -282,6 +288,12 @@ enum class AtlasFragmentShader {
      *
      */
     PointLightShadow,
+    /**
+     * @brief Fragment shader for point light shadow maps without geometry
+     * shader. Used on platforms that don't support geometry shaders (e.g.,
+     * macOS/MoltenVK).
+     */
+    PointLightShadowNoGeom,
     /**
      * @brief Fragment shader for applying a Gaussian blur effect.
      *

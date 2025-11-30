@@ -622,6 +622,14 @@ class Window {
     bool debug = false;
     bool useSSR = false;
 
+    /**
+     * @brief Whether to use multi-pass point light shadow rendering.
+     * This is true on platforms without geometry shader support (e.g.,
+     * macOS/MoltenVK). When true, point light shadows are rendered with 6
+     * separate passes instead of 1.
+     */
+    bool useMultiPassPointShadows = false;
+
     bool clipPlaneEnabled = false;
     glm::vec4 clipPlaneEquation{0.0f};
 
