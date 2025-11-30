@@ -107,6 +107,8 @@ class Device {
 
     VkCommandPool commandPool = VK_NULL_HANDLE;
 
+    bool swapchainDirty = false;
+
     struct QueueFamilyIndices {
         std::optional<uint32_t> graphicsFamily;
         std::optional<uint32_t> presentFamily;
@@ -136,6 +138,7 @@ class Device {
     bool supportsDeviceExtension(VkPhysicalDevice device,
                                  const char *extension);
 
+    void remakeSwapChain(std::shared_ptr<Context> context);
     VkSurfaceFormatKHR chooseSwapSurfaceFormat(
         const std::vector<VkSurfaceFormatKHR> &availableFormats);
     VkPresentModeKHR chooseSwapPresentMode(

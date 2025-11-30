@@ -186,6 +186,18 @@ void Device::createImageViews() {
     }
 }
 
+void Device::remakeSwapChain(std::shared_ptr<Context> context) {
+    vkDeviceWaitIdle(this->logicalDevice);
+
+    for (auto *imageView : swapChainImages.imageViews) {
+        vkDestroyImageView(this->logicalDevice, imageView, nullptr);
+    }
+    vkDestroySwapchainKHR(this->logicalDevice, this->swapChain, nullptr);
+
+    this->createSwapChain(std::move(context));
+    this->createImageViews();
+}
+
 } // namespace opal
 
 #endif

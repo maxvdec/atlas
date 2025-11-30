@@ -149,7 +149,8 @@ void CommandBuffer::bindPipeline(std::shared_ptr<Pipeline> pipeline) {
         CoreRenderPass::create(pipeline, renderPass->framebuffer);
     renderPass->currentRenderPass = coreRenderPass;
 
-    if (framebuffer->framebufferID == 0) {
+    if (framebuffer->framebufferID == 0 &&
+        (device->swapchainDirty || framebuffer->vkFramebuffers.size() == 0)) {
         framebuffer->vkFramebuffers.resize(
             device->swapChainImages.imageViews.size());
         for (size_t i = 0; i < device->swapChainImages.imageViews.size(); i++) {
@@ -170,6 +171,8 @@ void CommandBuffer::bindPipeline(std::shared_ptr<Pipeline> pipeline) {
                 throw std::runtime_error("failed to create framebuffer!");
             }
         }
+
+        device->swapchainDirty = false;
     }
 #endif
 }
@@ -254,9 +257,41 @@ void CommandBuffer::drawPatches(uint vertexCount, uint firstVertex) {
     }
 #elif defined(VULKAN)
     if (!hasStarted) {
-        vkAcquireNextImageKHR(device->logicalDevice, device->swapChain,
-                              UINT64_MAX, imageAvailableSemaphore,
-                              VK_NULL_HANDLE, &imageIndex);
+        VkResult result = vkAcquireNextImageKHR(
+            device->logicalDevice, device->swapChain, UINT64_MAX,
+            imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
+        if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+            device->remakeSwapChain(device->context);
+            if (framebuffer->framebufferID == 0) {
+                framebuffer->vkFramebuffers.resize(
+                    device->swapChainImages.imageViews.size());
+                for (size_t i = 0;
+                     i < device->swapChainImages.imageViews.size(); i++) {
+                    VkImageView attachments[] = {
+                        device->swapChainImages.imageViews[i]};
+
+                    VkFramebufferCreateInfo framebufferInfo{};
+                    framebufferInfo.sType =
+                        VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+                    framebufferInfo.renderPass =
+                        renderPass->currentRenderPass->renderPass;
+                    framebufferInfo.attachmentCount = 1;
+                    framebufferInfo.pAttachments = attachments;
+                    framebufferInfo.width = device->swapChainExtent.width;
+                    framebufferInfo.height = device->swapChainExtent.height;
+                    framebufferInfo.layers = 1;
+
+                    if (vkCreateFramebuffer(
+                            device->logicalDevice, &framebufferInfo, nullptr,
+                            &framebuffer->vkFramebuffers[i]) != VK_SUCCESS) {
+                        throw std::runtime_error(
+                            "failed to create framebuffer!");
+                    }
+                }
+            } else {
+                device->swapchainDirty = true;
+            }
+        }
         vkResetCommandBuffer(this->commandBuffer, 0);
         this->record(imageIndex);
         hasStarted = true;
