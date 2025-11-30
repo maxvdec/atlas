@@ -77,6 +77,77 @@ std::shared_ptr<Buffer> Buffer::create(BufferUsage usage, size_t size,
     glBindBuffer(glTarget, buffer->bufferID);
     glBufferData(glTarget, size, data, GL_STATIC_DRAW);
     glBindBuffer(glTarget, 0);
+#elif defined(VULKAN)
+    auto bufferSize = static_cast<VkDeviceSize>(size);
+    VkBufferUsageFlags usageFlags = 0;
+    switch (usage) {
+    case BufferUsage::VertexBuffer:
+        usageFlags = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+        break;
+    case BufferUsage::IndexArray:
+        usageFlags = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+        break;
+    case BufferUsage::GeneralPurpose:
+        usageFlags =
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+        break;
+    case BufferUsage::UniformBuffer:
+        usageFlags = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+        break;
+    case BufferUsage::ShaderRead:
+        usageFlags = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
+                     VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+        break;
+    case BufferUsage::ShaderReadWrite:
+        usageFlags = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
+                     VK_BUFFER_USAGE_TRANSFER_SRC_BIT |
+                     VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+        break;
+    default:
+        usageFlags = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+        break;
+    }
+
+    VkMemoryPropertyFlags properties = 0;
+    switch (memoryUsage) {
+    case MemoryUsageType::GPUOnly:
+        properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+        break;
+    case MemoryUsageType::CPUToGPU:
+    case MemoryUsageType::GPUToCPU:
+        properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                     VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+        break;
+    default:
+        properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+        break;
+    }
+
+    VkBuffer stagingBuffer;
+    VkDeviceMemory stagingBufferMemory;
+
+    createBuffer(bufferSize,
+                 VK_BUFFER_USAGE_TRANSFER_SRC_BIT |
+                     VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                     VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                 stagingBuffer, stagingBufferMemory);
+
+    if (data != nullptr) {
+        void *mappedData;
+        vkMapMemory(Device::globalInstance->logicalDevice, stagingBufferMemory,
+                    0, bufferSize, 0, &mappedData);
+        memcpy(mappedData, data, static_cast<size_t>(bufferSize));
+        vkUnmapMemory(Device::globalInstance->logicalDevice,
+                      stagingBufferMemory);
+    }
+
+    createBuffer(bufferSize, usageFlags, properties, buffer->vkBuffer,
+                 buffer->vkBufferMemory);
+    if (data != nullptr) {
+        Buffer::copyBuffer(stagingBuffer, buffer->vkBuffer, bufferSize);
+    }
+
 #endif
 
     return buffer;
@@ -112,6 +183,13 @@ void Buffer::updateData(size_t offset, size_t size, const void *data) {
     glBindBuffer(glTarget, bufferID);
     glBufferSubData(glTarget, offset, size, data);
     glBindBuffer(glTarget, 0);
+#elif defined(VULKAN)
+    void *mappedData;
+    vkMapMemory(Device::globalInstance->logicalDevice, vkStagingBufferMemory,
+                offset, size, 0, &mappedData);
+    memcpy(mappedData, data, size);
+    vkUnmapMemory(Device::globalInstance->logicalDevice, vkStagingBufferMemory);
+    Buffer::copyBuffer(stagingBuffer, vkBuffer, size);
 #endif
 }
 

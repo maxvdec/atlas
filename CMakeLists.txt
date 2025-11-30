@@ -29,7 +29,13 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(doxygen-awesome-css)
 FetchContent_GetProperties(doxygen-awesome-css SOURCE_DIR AWESOME_CSS_DIR)
 
-set(SHADER_INPUT_DIR "${CMAKE_SOURCE_DIR}/shaders")
+if (BACKEND_OPENGL)
+    message(STATUS "Configuring shaders for OpenGL backend")
+    set(SHADER_INPUT_DIR "${CMAKE_SOURCE_DIR}/shaders/opengl")
+else()
+    message(STATUS "Configuring shaders for Vulkan backend")
+    set(SHADER_INPUT_DIR "${CMAKE_SOURCE_DIR}/shaders/vulkan")
+endif()
 set(SHADER_OUTPUT_FILE "${CMAKE_SOURCE_DIR}/include/atlas/core/default_shaders.h")
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
@@ -42,13 +48,25 @@ file(GLOB_RECURSE SHADER_SOURCES
     ${SHADER_INPUT_DIR}/*.tese
 )
 
-add_custom_command(
-    OUTPUT ${SHADER_OUTPUT_FILE}
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/include/atlas/core
-    COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/pack_shaders.py ${SHADER_INPUT_DIR} ${SHADER_OUTPUT_FILE}
-    DEPENDS ${SHADER_SOURCES}
-    COMMENT "Packing shaders into shaders.h"
-)
+if(BACKEND_OPENGL)
+    message(STATUS "Packing shaders without SPIR-V compilation")
+    add_custom_command(
+        OUTPUT ${SHADER_OUTPUT_FILE}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/include/atlas/core
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/pack_shaders.py ${SHADER_INPUT_DIR} ${SHADER_OUTPUT_FILE} false
+        DEPENDS ${SHADER_SOURCES}
+        COMMENT "Packing shaders into shaders.h"
+    )
+else()
+    message(STATUS "Packing shaders with SPIR-V compilation")
+    add_custom_command(
+        OUTPUT ${SHADER_OUTPUT_FILE}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/include/atlas/core
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/pack_shaders.py ${SHADER_INPUT_DIR} ${SHADER_OUTPUT_FILE} true
+        DEPENDS ${SHADER_SOURCES}
+        COMMENT "Packing shaders into shaders.h"
+    )
+endif()
 
 if(BACKEND_OPENGL)
     find_package(OpenGL REQUIRED)

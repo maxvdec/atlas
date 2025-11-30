@@ -77,19 +77,38 @@ class Context {
 class CommandBuffer;
 class Framebuffer;
 
+#ifdef VULKAN
+struct ImageCollection {
+    std::vector<VkImage> images;
+    std::vector<VkImageView> imageViews;
+};
+#endif
+
 class Device {
   public:
     static std::shared_ptr<Device> acquire(std::shared_ptr<Context> context);
-    static std::shared_ptr<CommandBuffer> acquireCommandBuffer();
+    std::shared_ptr<CommandBuffer> acquireCommandBuffer();
 
     void submitCommandBuffer(std::shared_ptr<CommandBuffer> commandBuffer);
     std::shared_ptr<Framebuffer> getDefaultFramebuffer();
 
 #ifdef VULKAN
-    VkDevice logicalDevice;
-    VkPhysicalDevice physicalDevice;
-    VkQueue graphicsQueue;
-    VkQueue presentQueue;
+    static VkDevice globalDevice;
+    static Device *globalInstance;
+
+    VkDevice logicalDevice = VK_NULL_HANDLE;
+    VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+    VkQueue graphicsQueue = VK_NULL_HANDLE;
+    VkQueue presentQueue = VK_NULL_HANDLE;
+
+    VkSwapchainKHR swapChain = VK_NULL_HANDLE;
+    ImageCollection swapChainImages;
+    VkExtent2D swapChainExtent = {};
+    VkFormat swapChainImageFormat = VK_FORMAT_UNDEFINED;
+
+    VkCommandPool commandPool = VK_NULL_HANDLE;
+
+    bool swapchainDirty = false;
 
     struct QueueFamilyIndices {
         std::optional<uint32_t> graphicsFamily;
@@ -105,6 +124,32 @@ class Device {
     void createLogicalDevice(std::shared_ptr<Context> context);
     QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device,
                                          VkSurfaceKHR surface);
+
+    struct SwapChainSupportDetails {
+        VkSurfaceCapabilitiesKHR capabilities;
+        std::vector<VkSurfaceFormatKHR> formats;
+        std::vector<VkPresentModeKHR> presentModes;
+    };
+
+    SwapChainSupportDetails
+    querySwapChainSupport(VkPhysicalDevice device,
+                          std::shared_ptr<Context> context);
+    void createSwapChain(std::shared_ptr<Context> context);
+    void createImageViews();
+    bool supportsDeviceExtension(VkPhysicalDevice device,
+                                 const char *extension);
+
+    void remakeSwapChain(std::shared_ptr<Context> context);
+    VkSurfaceFormatKHR chooseSwapSurfaceFormat(
+        const std::vector<VkSurfaceFormatKHR> &availableFormats);
+    VkPresentModeKHR chooseSwapPresentMode(
+        const std::vector<VkPresentModeKHR> &availablePresentModes);
+    VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities,
+                                GLFWwindow *window);
+    uint32_t findMemoryType(uint32_t typeFilter,
+                            VkMemoryPropertyFlags properties);
+
+    std::shared_ptr<Context> context = nullptr;
 #endif
 };
 
@@ -259,6 +304,13 @@ class Shader {
     uint shaderID;
     ShaderType type;
 
+    char *source = nullptr;
+
+#ifdef VULKAN
+    VkShaderModule shaderModule = VK_NULL_HANDLE;
+    VkPipelineShaderStageCreateInfo makeShaderStageInfo() const;
+#endif
+
   private:
 #ifdef OPENGL
     static uint getGLShaderType(ShaderType type);
@@ -278,6 +330,10 @@ class ShaderProgram {
 
     uint programID;
     std::vector<std::shared_ptr<Shader>> attachedShaders;
+
+#ifdef VULKAN
+    std::vector<VkPipelineShaderStageCreateInfo> getShaderStages() const;
+#endif
 };
 
 enum class VertexAttributeType {
@@ -392,6 +448,8 @@ class Pipeline {
 
     void setFrontFace(FrontFace face);
 
+    void setLineWidth(float width) { lineWidth = width; }
+
     void enableDepthTest(bool enabled);
     void setDepthCompareOp(CompareOp op);
     void enableDepthWrite(bool enabled);
@@ -427,6 +485,23 @@ class Pipeline {
     void bindTexture3D(const std::string &name, uint textureId, int unit);
     void bindTextureCubemap(const std::string &name, uint textureId, int unit);
 
+#ifdef VULKAN
+    VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
+    VkPipelineDynamicStateCreateInfo dynamicState;
+    VkPipelineVertexInputStateCreateInfo vertexInputInfo;
+    VkPipelineInputAssemblyStateCreateInfo inputAssembly;
+    VkPipelineViewportStateCreateInfo viewportState;
+    VkPipelineRasterizationStateCreateInfo rasterizer;
+    VkPipelineMultisampleStateCreateInfo multisampling;
+    VkPipelineDepthStencilStateCreateInfo depthStencil;
+    VkPipelineColorBlendStateCreateInfo colorBlending;
+    VkFormat getFormat(VertexAttributeType type, uint size,
+                       bool normalized) const;
+    void buildPipelineLayout();
+#endif
+
+    bool multisamplingEnabled = false;
+
   private:
     PrimitiveStyle primitiveStyle = PrimitiveStyle::Triangles;
     int patchVertices = 4; // Default patch size for tessellation
@@ -440,10 +515,10 @@ class Pipeline {
     bool depthTestEnabled = false;
     bool depthWriteEnabled = true;
     CompareOp depthCompareOp = CompareOp::Less;
-    bool multisamplingEnabled = false;
     bool polygonOffsetEnabled = false;
     float polygonOffsetFactor = 0.0f;
     float polygonOffsetUnits = 0.0f;
+    float lineWidth = 1.0f;
     std::vector<int> enabledClipDistances;
 
     std::vector<VertexAttribute> vertexAttributes;
@@ -490,6 +565,19 @@ class Buffer {
 
     BufferUsage usage;
     MemoryUsageType memoryUsage;
+
+#ifdef VULKAN
+    VkBuffer vkBuffer = VK_NULL_HANDLE;
+    VkBuffer stagingBuffer = VK_NULL_HANDLE;
+    VkDeviceMemory vkStagingBufferMemory = VK_NULL_HANDLE;
+    VkDeviceMemory vkBufferMemory = VK_NULL_HANDLE;
+
+    static void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage,
+                             VkMemoryPropertyFlags properties, VkBuffer &buffer,
+                             VkDeviceMemory &bufferMemory);
+    static void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer,
+                           VkDeviceSize size);
+#endif
 };
 
 struct VertexAttributeBinding {
@@ -523,6 +611,11 @@ class Attachment {
     Type type;
 
     std::shared_ptr<Texture> texture;
+
+    bool operator==(const Attachment &other) const {
+        return type == other.type && texture->type == other.texture->type &&
+               texture->format == other.texture->format;
+    }
 };
 
 class DepthStencilBuffer {
@@ -599,9 +692,28 @@ class Framebuffer {
     int height;
     std::vector<Attachment> attachments;
 
+#ifdef VULKAN
+    std::vector<VkFramebuffer> vkFramebuffers;
+#endif
+
   private:
     bool colorBufferDisabled = false;
 };
+
+#ifdef VULKAN
+class CoreRenderPass {
+  public:
+    static std::shared_ptr<CoreRenderPass>
+    create(std::shared_ptr<Pipeline> pipeline,
+           std::shared_ptr<Framebuffer> framebuffer);
+
+    VkRenderPass renderPass = VK_NULL_HANDLE;
+    VkPipeline pipeline = VK_NULL_HANDLE;
+
+    std::shared_ptr<Pipeline> opalPipeline;
+    std::shared_ptr<Framebuffer> opalFramebuffer;
+};
+#endif
 
 class RenderPass {
   public:
@@ -610,6 +722,12 @@ class RenderPass {
     void setFramebuffer(std::shared_ptr<Framebuffer> framebuffer);
 
     std::shared_ptr<Framebuffer> framebuffer;
+
+#ifdef VULKAN
+    static std::vector<std::shared_ptr<CoreRenderPass>> cachedRenderPasses;
+    std::shared_ptr<CoreRenderPass> currentRenderPass;
+    void applyRenderPass();
+#endif
 };
 
 class ResolveAction {
@@ -677,9 +795,32 @@ class CommandBuffer {
     void clear(float r, float g, float b, float a, float depth);
 
   private:
+#ifdef VULKAN
+    VkCommandBuffer commandBuffer = VK_NULL_HANDLE;
+    VkSemaphore imageAvailableSemaphore = VK_NULL_HANDLE;
+    VkSemaphore renderFinishedSemaphore = VK_NULL_HANDLE;
+    VkFence inFlightFence = VK_NULL_HANDLE;
+    uint32_t imageIndex = 0;
+    void record(uint32_t imageIndex);
+    void createSyncObjects();
+#endif
+
+    float clearColorValue[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+    float clearDepthValue = 1.0f;
+
+    bool hasStarted = false;
+
+    friend class Device;
     std::shared_ptr<Pipeline> boundPipeline = nullptr;
     std::shared_ptr<DrawingState> boundDrawingState = nullptr;
+    std::shared_ptr<RenderPass> renderPass = nullptr;
+    std::shared_ptr<Framebuffer> framebuffer = nullptr;
+    Device *device = nullptr;
 };
+
+#ifdef VULKAN
+VkFormat opalTextureFormatToVulkanFormat(TextureFormat format);
+#endif
 
 } // namespace opal
 

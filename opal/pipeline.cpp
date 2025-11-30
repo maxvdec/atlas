@@ -299,6 +299,8 @@ uint Pipeline::getGLVertexAttributeType(VertexAttributeType type) const {
 void Pipeline::build() {
 #ifdef OPENGL
     (void)this; // Vertex layout applied explicitly per VAO.
+#elif defined(VULKAN)
+    this->buildPipelineLayout();
 #endif
 }
 

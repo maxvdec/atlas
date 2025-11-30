@@ -1,5 +1,5 @@
 //
-// pickDevice.cpp
+// vulkanDevice.cpp
 // As part of the Atlas project
 // Created by Max Van den Eynde in 2025
 // --------------------------------------------------
@@ -19,9 +19,31 @@ bool Device::deviceMeetsRequirements(VkPhysicalDevice device) {
     vkGetPhysicalDeviceProperties(device, &deviceProperties);
     VkPhysicalDeviceFeatures deviceFeatures;
     vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
+
+    if (!this->supportsDeviceExtension(device,
+                                       VK_KHR_SWAPCHAIN_EXTENSION_NAME)) {
+        return false;
+    }
+
     return deviceProperties.deviceType ==
                VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU &&
            deviceFeatures.geometryShader;
+}
+
+bool Device::supportsDeviceExtension(VkPhysicalDevice device,
+                                     const char *extension) {
+    uint32_t extensionCount;
+    vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount,
+                                         nullptr);
+    std::vector<VkExtensionProperties> availableExtensions(extensionCount);
+    vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount,
+                                         availableExtensions.data());
+    for (const auto &ext : availableExtensions) {
+        if (strcmp(ext.extensionName, extension) == 0) {
+            return true;
+        }
+    }
+    return false;
 }
 
 void Device::pickPhysicalDevice(std::shared_ptr<Context> context) {
@@ -99,7 +121,14 @@ void Device::createLogicalDevice(std::shared_ptr<Context> context) {
     createInfo.queueCreateInfoCount =
         static_cast<uint32_t>(queueCreateInfos.size());
     createInfo.pEnabledFeatures = &deviceFeatures;
-    createInfo.enabledExtensionCount = 0;
+
+    const std::vector<const char *> deviceExtensions = {
+        VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+
+    createInfo.enabledExtensionCount =
+        static_cast<uint32_t>(deviceExtensions.size());
+    createInfo.ppEnabledExtensionNames = deviceExtensions.data();
+
     if (context->config.createValidationLayers) {
         createInfo.enabledLayerCount = 1;
         const char *validationLayerName = "VK_LAYER_KHRONOS_validation";
@@ -111,11 +140,28 @@ void Device::createLogicalDevice(std::shared_ptr<Context> context) {
                        &this->logicalDevice) != VK_SUCCESS) {
         throw std::runtime_error("Failed to create logical device!");
     }
+    globalDevice = this->logicalDevice;
 
     vkGetDeviceQueue(this->logicalDevice, indices.graphicsFamily.value(), 0,
                      &this->graphicsQueue);
     vkGetDeviceQueue(this->logicalDevice, indices.presentFamily.value(), 0,
                      &this->presentQueue);
+}
+
+uint32_t Device::findMemoryType(uint32_t typeFilter,
+                                VkMemoryPropertyFlags properties) {
+    VkPhysicalDeviceMemoryProperties memProperties;
+    vkGetPhysicalDeviceMemoryProperties(this->physicalDevice, &memProperties);
+
+    for (uint32_t i = 0; i < memProperties.memoryTypeCount; i++) {
+        if ((typeFilter & (1 << i)) &&
+            (memProperties.memoryTypes[i].propertyFlags & properties) ==
+                properties) {
+            return i;
+        }
+    }
+
+    throw std::runtime_error("Failed to find suitable memory type!");
 }
 
 } // namespace opal
