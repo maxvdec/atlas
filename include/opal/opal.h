@@ -21,6 +21,7 @@
 #include <optional>
 #include <string>
 #include <sys/types.h>
+#include <unordered_map>
 #include <vector>
 #include <glm/glm.hpp>
 
@@ -291,6 +292,21 @@ enum class ShaderType {
     TessellationEvaluation
 };
 
+#ifdef VULKAN
+/**
+ * @brief Describes a uniform buffer or resource binding location in SPIR-V
+ */
+struct UniformBindingInfo {
+    uint32_t set;
+    uint32_t binding;
+    uint32_t size; // Size of the uniform block (0 for samplers)
+    uint32_t
+        offset; // Offset of the member within the block (for struct members)
+    bool isSampler;
+    bool isBuffer; // true for uniform buffers, false for push constants
+};
+#endif
+
 class Shader {
   public:
     static std::shared_ptr<Shader> createFromSource(const char *source,
@@ -309,6 +325,14 @@ class Shader {
 #ifdef VULKAN
     VkShaderModule shaderModule = VK_NULL_HANDLE;
     VkPipelineShaderStageCreateInfo makeShaderStageInfo() const;
+
+    std::vector<uint32_t> spirvBytecode;
+
+    std::unordered_map<std::string, UniformBindingInfo> uniformBindings;
+
+    void performReflection();
+
+    static int currentId;
 #endif
 
   private:
@@ -333,6 +357,12 @@ class ShaderProgram {
 
 #ifdef VULKAN
     std::vector<VkPipelineShaderStageCreateInfo> getShaderStages() const;
+
+    std::unordered_map<std::string, UniformBindingInfo> uniformBindings;
+
+    const UniformBindingInfo *findUniform(const std::string &name) const;
+
+    static int currentId;
 #endif
 };
 
@@ -498,6 +528,36 @@ class Pipeline {
     VkFormat getFormat(VertexAttributeType type, uint size,
                        bool normalized) const;
     void buildPipelineLayout();
+
+    // Descriptor set management for uniform binding
+    VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
+    std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
+    std::vector<VkDescriptorSet> descriptorSets;
+
+    // Uniform buffer storage: maps (set, binding) to buffer and memory
+    struct UniformBufferAllocation {
+        VkBuffer buffer = VK_NULL_HANDLE;
+        VkDeviceMemory memory = VK_NULL_HANDLE;
+        void *mappedData = nullptr;
+        VkDeviceSize size = 0;
+    };
+    std::unordered_map<uint64_t, UniformBufferAllocation> uniformBuffers;
+
+    // Helper to get key from set and binding
+    static uint64_t makeBindingKey(uint32_t set, uint32_t binding) {
+        return (static_cast<uint64_t>(set) << 32) | binding;
+    }
+
+    // Create/get uniform buffer for a binding
+    UniformBufferAllocation &
+    getOrCreateUniformBuffer(uint32_t set, uint32_t binding, VkDeviceSize size);
+
+    // Update uniform data
+    void updateUniformData(uint32_t set, uint32_t binding, uint32_t offset,
+                           const void *data, size_t size);
+
+    // Build descriptor sets from shader reflection
+    void buildDescriptorSets();
 #endif
 
     bool multisamplingEnabled = false;
@@ -655,6 +715,17 @@ class Framebuffer {
      */
     void attachCubemap(std::shared_ptr<Texture> texture,
                        Attachment::Type attachmentType);
+
+    /**
+     * @brief Attaches a specific face of a cubemap texture to this framebuffer.
+     * Used for multi-pass cubemap rendering on platforms without geometry
+     * shaders.
+     * @param texture The cubemap texture.
+     * @param face The face index (0-5: +X, -X, +Y, -Y, +Z, -Z).
+     * @param attachmentType The attachment type (typically Depth for shadows).
+     */
+    void attachCubemapFace(std::shared_ptr<Texture> texture, int face,
+                           Attachment::Type attachmentType);
 
     /**
      * @brief Disables color buffer read/write for depth-only rendering.

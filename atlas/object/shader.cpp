@@ -119,6 +119,14 @@ VertexShader VertexShader::fromDefaultShader(AtlasVertexShader shader) {
         VertexShader::vertexShaderCache[shader] = vertexShader;
         break;
     }
+    case AtlasVertexShader::PointLightShadowNoGeom: {
+        vertexShader = VertexShader::fromSource(POINT_DEPTH_NOGEOM_VERT);
+        vertexShader.desiredAttributes = {0};
+        vertexShader.capabilities = {ShaderCapability::Instances};
+        vertexShader.fromDefaultShaderType = shader;
+        VertexShader::vertexShaderCache[shader] = vertexShader;
+        break;
+    }
     case AtlasVertexShader::Deferred: {
         vertexShader = VertexShader::fromSource(DEFERRED_VERT);
         vertexShader.desiredAttributes = {0, 1, 2, 3, 4, 5};
@@ -269,6 +277,12 @@ FragmentShader FragmentShader::fromDefaultShader(AtlasFragmentShader shader) {
     }
     case AtlasFragmentShader::PointLightShadow: {
         fragmentShader = FragmentShader::fromSource(POINT_DEPTH_FRAG);
+        fragmentShader.fromDefaultShaderType = shader;
+        fragmentShaderCache[shader] = fragmentShader;
+        break;
+    }
+    case AtlasFragmentShader::PointLightShadowNoGeom: {
+        fragmentShader = FragmentShader::fromSource(POINT_DEPTH_NOGEOM_FRAG);
         fragmentShader.fromDefaultShaderType = shader;
         fragmentShaderCache[shader] = fragmentShader;
         break;

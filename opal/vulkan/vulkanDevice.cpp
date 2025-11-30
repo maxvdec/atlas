@@ -7,6 +7,7 @@
 // Copyright (c) 2025 Max Van den Eynde
 //
 #include <cstdint>
+#include <iostream>
 #include <vector>
 #include <set>
 #ifdef VULKAN
@@ -25,9 +26,9 @@ bool Device::deviceMeetsRequirements(VkPhysicalDevice device) {
         return false;
     }
 
-    return deviceProperties.deviceType ==
-               VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU &&
-           deviceFeatures.geometryShader;
+    return (
+        deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU ||
+        deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU);
 }
 
 bool Device::supportsDeviceExtension(VkPhysicalDevice device,
@@ -97,6 +98,14 @@ Device::QueueFamilyIndices Device::findQueueFamilies(VkPhysicalDevice device,
 }
 
 void Device::createLogicalDevice(std::shared_ptr<Context> context) {
+    if (context == nullptr) {
+        throw std::runtime_error(
+            "Context is required to create logical device");
+    }
+    if (context->surface == VK_NULL_HANDLE) {
+        throw std::runtime_error(
+            "Cannot create logical device without surface");
+    }
     QueueFamilyIndices indices =
         findQueueFamilies(this->physicalDevice, context->surface);
 
@@ -122,8 +131,13 @@ void Device::createLogicalDevice(std::shared_ptr<Context> context) {
         static_cast<uint32_t>(queueCreateInfos.size());
     createInfo.pEnabledFeatures = &deviceFeatures;
 
-    const std::vector<const char *> deviceExtensions = {
+    std::vector<const char *> deviceExtensions = {
         VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+
+    if (this->supportsDeviceExtension(this->physicalDevice,
+                                      "VK_KHR_portability_subset")) {
+        deviceExtensions.push_back("VK_KHR_portability_subset");
+    }
 
     createInfo.enabledExtensionCount =
         static_cast<uint32_t>(deviceExtensions.size());

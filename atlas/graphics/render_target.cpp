@@ -479,14 +479,15 @@ void RenderTarget::resolve() {
             auto resolveAction =
                 opal::ResolveAction::createForColorAttachment(fb, resolveFb, i);
             // We need a command buffer to perform resolve - get the active one
-            auto commandBuffer = opal::Device::acquireCommandBuffer();
+            auto commandBuffer =
+                Window::mainWindow->device->acquireCommandBuffer();
             commandBuffer->performResolve(resolveAction);
         }
 
         // Resolve depth
         auto depthResolveAction =
             opal::ResolveAction::createForDepth(fb, resolveFb);
-        auto commandBuffer = opal::Device::acquireCommandBuffer();
+        auto commandBuffer = Window::mainWindow->device->acquireCommandBuffer();
         commandBuffer->performResolve(depthResolveAction);
     }
 
@@ -515,6 +516,15 @@ void RenderTarget::bind() {
         defaultFb->bind();
         defaultFb->setViewport(0, 0, texture.creationData.width,
                                texture.creationData.height);
+    }
+}
+
+void RenderTarget::bindCubemapFace(int face) {
+    if (fb && texture.texture != nullptr) {
+        fb->attachCubemapFace(texture.texture, face,
+                              opal::Attachment::Type::Depth);
+        fb->bind();
+        fb->setViewport();
     }
 }
 

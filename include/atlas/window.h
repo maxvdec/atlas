@@ -31,8 +31,8 @@
 #include <unordered_map>
 #include <vector>
 
-typedef void *CoreWindowReference;
-typedef void *CoreMonitorReference;
+using CoreWindowReference = void *;
+using CoreMonitorReference = void *;
 
 constexpr int WINDOW_CENTERED = -1;
 constexpr int DEFAULT_ASPECT_RATIO = -1;
@@ -538,9 +538,9 @@ class Window {
     int viewportY = 0;
     int viewportWidth = 0;
     int viewportHeight = 0;
+    std::shared_ptr<opal::Device> device;
 
   private:
-    std::shared_ptr<opal::Device> device;
     std::shared_ptr<opal::CommandBuffer> activeCommandBuffer = nullptr;
     CoreWindowReference windowRef;
     std::vector<Renderable *> renderables;
@@ -621,6 +621,14 @@ class Window {
 
     bool debug = false;
     bool useSSR = false;
+
+    /**
+     * @brief Whether to use multi-pass point light shadow rendering.
+     * This is true on platforms without geometry shader support (e.g.,
+     * macOS/MoltenVK). When true, point light shadows are rendered with 6
+     * separate passes instead of 1.
+     */
+    bool useMultiPassPointShadows = false;
 
     bool clipPlaneEnabled = false;
     glm::vec4 clipPlaneEquation{0.0f};

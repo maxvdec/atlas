@@ -90,9 +90,9 @@ Device::acquire([[maybe_unused]] std::shared_ptr<Context> context) {
 #else
     auto device = std::make_shared<Device>();
     device->context = context;
-    device->pickPhysicalDevice(std::move(context));
-    device->createLogicalDevice(std::move(context));
-    device->createSwapChain(std::move(context));
+    device->pickPhysicalDevice(context);
+    device->createLogicalDevice(context);
+    device->createSwapChain(context);
     Device::globalInstance = device.get();
     return device;
 #endif
@@ -105,5 +105,8 @@ std::shared_ptr<Framebuffer> Device::getDefaultFramebuffer() {
     fb->height = 0;
     return fb;
 }
+
+Device *Device::globalInstance = nullptr;
+VkDevice Device::globalDevice = VK_NULL_HANDLE;
 
 } // namespace opal

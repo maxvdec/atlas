@@ -96,7 +96,7 @@ Device::chooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities,
 
 void Device::createSwapChain(std::shared_ptr<Context> context) {
     SwapChainSupportDetails swapChainSupport =
-        querySwapChainSupport(this->physicalDevice, std::move(context));
+        querySwapChainSupport(this->physicalDevice, context);
 
     VkSurfaceFormatKHR surfaceFormat =
         chooseSwapSurfaceFormat(swapChainSupport.formats);

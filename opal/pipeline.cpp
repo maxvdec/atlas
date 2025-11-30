@@ -9,9 +9,13 @@
 
 #include "opal/opal.h"
 #include <algorithm>
+#include <cstring>
 #include <memory>
 #include <stdexcept>
 #include <vector>
+#ifdef VULKAN
+#include <vulkan/vulkan.hpp>
+#endif
 
 namespace opal {
 
@@ -19,6 +23,9 @@ std::shared_ptr<Pipeline> Pipeline::create() {
     auto pipeline = std::make_shared<Pipeline>();
     return pipeline;
 }
+
+std::vector<std::shared_ptr<CoreRenderPass>> RenderPass::cachedRenderPasses =
+    {};
 
 void Pipeline::setShaderProgram(std::shared_ptr<ShaderProgram> program) {
 #ifdef OPENGL
@@ -420,6 +427,18 @@ void Pipeline::setUniform1f(const std::string &name, float v0) {
 #ifdef OPENGL
     glUniform1f(
         glGetUniformLocation(this->shaderProgram->programID, name.c_str()), v0);
+#elif defined(VULKAN)
+    const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
+    if (!info) {
+        throw std::runtime_error("Uniform not found: " + name);
+    }
+    if (!info->isBuffer) {
+        // Push constant - not implemented yet, would need vkCmdPushConstants
+        throw std::runtime_error(
+            "Push constant uniforms not yet implemented: " + name);
+    }
+    updateUniformData(info->set, info->binding, info->offset, &v0,
+                      sizeof(float));
 #endif
 }
 
@@ -429,6 +448,17 @@ void Pipeline::setUniformMat4f(const std::string &name,
     glUniformMatrix4fv(
         glGetUniformLocation(this->shaderProgram->programID, name.c_str()), 1,
         GL_FALSE, &matrix[0][0]);
+#elif defined(VULKAN)
+    const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
+    if (!info) {
+        throw std::runtime_error("Uniform not found: " + name);
+    }
+    if (!info->isBuffer) {
+        throw std::runtime_error(
+            "Push constant uniforms not yet implemented: " + name);
+    }
+    updateUniformData(info->set, info->binding, info->offset, &matrix[0][0],
+                      sizeof(glm::mat4));
 #endif
 }
 
@@ -438,6 +468,18 @@ void Pipeline::setUniform3f(const std::string &name, float v0, float v1,
     glUniform3f(
         glGetUniformLocation(this->shaderProgram->programID, name.c_str()), v0,
         v1, v2);
+#elif defined(VULKAN)
+    const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
+    if (!info) {
+        throw std::runtime_error("Uniform not found: " + name);
+    }
+    if (!info->isBuffer) {
+        throw std::runtime_error(
+            "Push constant uniforms not yet implemented: " + name);
+    }
+    float data[3] = {v0, v1, v2};
+    updateUniformData(info->set, info->binding, info->offset, data,
+                      sizeof(data));
 #endif
 }
 
@@ -445,6 +487,16 @@ void Pipeline::setUniform1i(const std::string &name, int v0) {
 #ifdef OPENGL
     glUniform1i(
         glGetUniformLocation(this->shaderProgram->programID, name.c_str()), v0);
+#elif defined(VULKAN)
+    const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
+    if (!info) {
+        throw std::runtime_error("Uniform not found: " + name);
+    }
+    if (!info->isBuffer) {
+        throw std::runtime_error(
+            "Push constant uniforms not yet implemented: " + name);
+    }
+    updateUniformData(info->set, info->binding, info->offset, &v0, sizeof(int));
 #endif
 }
 
@@ -453,6 +505,18 @@ void Pipeline::setUniformBool(const std::string &name, bool value) {
     glUniform1i(
         glGetUniformLocation(this->shaderProgram->programID, name.c_str()),
         (int)value);
+#elif defined(VULKAN)
+    const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
+    if (!info) {
+        throw std::runtime_error("Uniform not found: " + name);
+    }
+    if (!info->isBuffer) {
+        throw std::runtime_error(
+            "Push constant uniforms not yet implemented: " + name);
+    }
+    int intValue = value ? 1 : 0;
+    updateUniformData(info->set, info->binding, info->offset, &intValue,
+                      sizeof(int));
 #endif
 }
 
@@ -462,6 +526,18 @@ void Pipeline::setUniform4f(const std::string &name, float v0, float v1,
     glUniform4f(
         glGetUniformLocation(this->shaderProgram->programID, name.c_str()), v0,
         v1, v2, v3);
+#elif defined(VULKAN)
+    const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
+    if (!info) {
+        throw std::runtime_error("Uniform not found: " + name);
+    }
+    if (!info->isBuffer) {
+        throw std::runtime_error(
+            "Push constant uniforms not yet implemented: " + name);
+    }
+    float data[4] = {v0, v1, v2, v3};
+    updateUniformData(info->set, info->binding, info->offset, data,
+                      sizeof(data));
 #endif
 }
 
@@ -470,7 +546,129 @@ void Pipeline::setUniform2f(const std::string &name, float v0, float v1) {
     glUniform2f(
         glGetUniformLocation(this->shaderProgram->programID, name.c_str()), v0,
         v1);
+#elif defined(VULKAN)
+    const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
+    if (!info) {
+        throw std::runtime_error("Uniform not found: " + name);
+    }
+    if (!info->isBuffer) {
+        throw std::runtime_error(
+            "Push constant uniforms not yet implemented: " + name);
+    }
+    float data[2] = {v0, v1};
+    updateUniformData(info->set, info->binding, info->offset, data,
+                      sizeof(data));
 #endif
 }
+
+#ifdef VULKAN
+Pipeline::UniformBufferAllocation &
+Pipeline::getOrCreateUniformBuffer(uint32_t set, uint32_t binding,
+                                   VkDeviceSize size) {
+
+    uint64_t key = makeBindingKey(set, binding);
+    auto it = uniformBuffers.find(key);
+
+    if (it != uniformBuffers.end()) {
+        // Buffer exists, check if size is sufficient
+        if (it->second.size >= size) {
+            return it->second;
+        }
+        // Need to recreate with larger size
+        if (it->second.mappedData) {
+            vkUnmapMemory(Device::globalDevice, it->second.memory);
+        }
+        vkDestroyBuffer(Device::globalDevice, it->second.buffer, nullptr);
+        vkFreeMemory(Device::globalDevice, it->second.memory, nullptr);
+    }
+
+    // Create new buffer
+    UniformBufferAllocation &alloc = uniformBuffers[key];
+    alloc.size = size;
+
+    VkBufferCreateInfo bufferInfo{};
+    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    bufferInfo.size = size;
+    bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+    bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+    if (vkCreateBuffer(Device::globalDevice, &bufferInfo, nullptr,
+                       &alloc.buffer) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to create uniform buffer");
+    }
+
+    VkMemoryRequirements memRequirements;
+    vkGetBufferMemoryRequirements(Device::globalDevice, alloc.buffer,
+                                  &memRequirements);
+
+    VkMemoryAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocInfo.allocationSize = memRequirements.size;
+    allocInfo.memoryTypeIndex = Device::globalInstance->findMemoryType(
+        memRequirements.memoryTypeBits,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+            VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+    if (vkAllocateMemory(Device::globalDevice, &allocInfo, nullptr,
+                         &alloc.memory) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to allocate uniform buffer memory");
+    }
+
+    vkBindBufferMemory(Device::globalDevice, alloc.buffer, alloc.memory, 0);
+
+    // Map the memory persistently
+    vkMapMemory(Device::globalDevice, alloc.memory, 0, size, 0,
+                &alloc.mappedData);
+
+    // Initialize to zero
+    memset(alloc.mappedData, 0, size);
+
+    return alloc;
+}
+
+void Pipeline::updateUniformData(uint32_t set, uint32_t binding,
+                                 uint32_t offset, const void *data,
+                                 size_t size) {
+    // Find the block size from reflection data
+    VkDeviceSize blockSize = 256; // Default minimum uniform buffer alignment
+
+    // Look through shader program's uniform bindings to find the block size
+    if (this->shaderProgram) {
+        for (const auto &pair : this->shaderProgram->uniformBindings) {
+            const UniformBindingInfo &info = pair.second;
+            if (info.set == set && info.binding == binding && info.isBuffer &&
+                info.size > 0) {
+                if (info.offset == 0) {
+                    // This is the block itself, use its size
+                    blockSize = info.size;
+                    break;
+                }
+            }
+        }
+    }
+
+    // Ensure we allocate at least enough for this write
+    VkDeviceSize requiredSize = offset + size;
+    if (blockSize < requiredSize) {
+        blockSize = requiredSize;
+    }
+
+    UniformBufferAllocation &alloc =
+        getOrCreateUniformBuffer(set, binding, blockSize);
+
+    // Write data at the correct offset
+    char *dst = static_cast<char *>(alloc.mappedData) + offset;
+    memcpy(dst, data, size);
+}
+
+void Pipeline::buildDescriptorSets() {
+    // This function would build descriptor sets based on reflection data
+    // For now, we rely on the existing descriptor set management in the render
+    // pass A full implementation would:
+    // 1. Create descriptor set layouts based on uniform bindings
+    // 2. Allocate descriptor sets from a pool
+    // 3. Update descriptor sets with buffer/image bindings
+}
+#endif
 
 } // namespace opal

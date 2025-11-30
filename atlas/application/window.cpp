@@ -34,7 +34,7 @@ Window *Window::mainWindow = nullptr;
 
 Window::Window(WindowConfiguration config)
     : title(config.title), width(config.width), height(config.height) {
-    auto context = opal::Context::create();
+    auto context = opal::Context::create({.useOpenGL = false});
 
     context->setFlag(GLFW_DECORATED, config.decorations);
     context->setFlag(GLFW_RESIZABLE, config.resizable);
@@ -126,20 +126,42 @@ Window::Window(WindowConfiguration config)
     program.compile();
     this->depthProgram = program;
 
-    VertexShader pointVertexShader =
-        VertexShader::fromDefaultShader(AtlasVertexShader::PointLightShadow);
-    pointVertexShader.compile();
-    FragmentShader pointFragmentShader = FragmentShader::fromDefaultShader(
-        AtlasFragmentShader::PointLightShadow);
-    pointFragmentShader.compile();
-    GeometryShader geometryShader = GeometryShader::fromDefaultShader(
-        AtlasGeometryShader::PointLightShadow);
-    geometryShader.compile();
+    // Check if geometry shaders are supported (not available on macOS/MoltenVK)
+#ifdef __APPLE__
+    // macOS with MoltenVK doesn't support geometry shaders
+    this->useMultiPassPointShadows = true;
+#else
+    this->useMultiPassPointShadows = false;
+#endif
+
     ShaderProgram pointProgram = ShaderProgram();
-    pointProgram.vertexShader = pointVertexShader;
-    pointProgram.fragmentShader = pointFragmentShader;
-    pointProgram.geometryShader = geometryShader;
-    pointProgram.compile();
+    if (this->useMultiPassPointShadows) {
+        // Use multi-pass shaders without geometry shader
+        VertexShader pointVertexShader = VertexShader::fromDefaultShader(
+            AtlasVertexShader::PointLightShadowNoGeom);
+        pointVertexShader.compile();
+        FragmentShader pointFragmentShader = FragmentShader::fromDefaultShader(
+            AtlasFragmentShader::PointLightShadowNoGeom);
+        pointFragmentShader.compile();
+        pointProgram.vertexShader = pointVertexShader;
+        pointProgram.fragmentShader = pointFragmentShader;
+        pointProgram.compile();
+    } else {
+        // Use single-pass shaders with geometry shader
+        VertexShader pointVertexShader = VertexShader::fromDefaultShader(
+            AtlasVertexShader::PointLightShadow);
+        pointVertexShader.compile();
+        FragmentShader pointFragmentShader = FragmentShader::fromDefaultShader(
+            AtlasFragmentShader::PointLightShadow);
+        pointFragmentShader.compile();
+        GeometryShader geometryShader = GeometryShader::fromDefaultShader(
+            AtlasGeometryShader::PointLightShadow);
+        geometryShader.compile();
+        pointProgram.vertexShader = pointVertexShader;
+        pointProgram.fragmentShader = pointFragmentShader;
+        pointProgram.geometryShader = geometryShader;
+        pointProgram.compile();
+    }
     this->pointDepthProgram = pointProgram;
 
     this->deferredProgram = ShaderProgram::fromDefaultShaders(
@@ -930,60 +952,89 @@ void Window::renderLightsToShadowMaps(
         pointLightPipeline =
             this->pointDepthProgram.requestPipeline(pointLightPipeline);
 
-        shadowRenderTarget->bind();
-        commandBuffer->clearDepth(1.0f);
+        std::vector<glm::mat4> shadowTransforms =
+            light->calculateShadowTransforms();
 
-        for (auto &obj : this->renderables) {
-            if (obj->renderLateForward) {
-                continue;
-            }
-            if (obj->getPipeline() == std::nullopt || !obj->canCastShadows()) {
-                continue;
-            }
-            std::vector<glm::mat4> shadowTransforms =
-                light->calculateShadowTransforms();
+        pointLightPipeline->setUniform3f("lightPos", light->position.x,
+                                         light->position.y, light->position.z);
+        pointLightPipeline->setUniform1f("far_plane", light->distance);
+        light->lastShadowParams.farPlane = light->distance;
 
-            pointLightPipeline->setUniform3f("lightPos", light->position.x,
-                                             light->position.y,
-                                             light->position.z);
-            pointLightPipeline->setUniform1f("far_plane", light->distance);
-            light->lastShadowParams.farPlane = light->distance;
+        if (this->useMultiPassPointShadows) {
+            // Multi-pass rendering: render 6 times, once per cubemap face
+            for (int face = 0; face < 6; ++face) {
+                shadowRenderTarget->bindCubemapFace(face);
+                commandBuffer->clearDepth(1.0f);
+
+                // Set the shadow matrix for this face
+                pointLightPipeline->setUniformMat4f("shadowMatrix",
+                                                    shadowTransforms[face]);
+                pointLightPipeline->setUniform1i("faceIndex", face);
+
+                for (auto &obj : this->renderables) {
+                    if (obj->renderLateForward) {
+                        continue;
+                    }
+                    if (obj->getPipeline() == std::nullopt ||
+                        !obj->canCastShadows()) {
+                        continue;
+                    }
+
+                    obj->setProjectionMatrix(glm::mat4(1.0));
+                    obj->setViewMatrix(glm::mat4(1.0));
+                    obj->setPipeline(pointLightPipeline);
+                    obj->render(getDeltaTime(), commandBuffer, false);
+                }
+
+                for (auto &obj : this->lateForwardRenderables) {
+                    if (obj->getPipeline() == std::nullopt ||
+                        !obj->canCastShadows()) {
+                        continue;
+                    }
+
+                    obj->setProjectionMatrix(glm::mat4(1.0));
+                    obj->setViewMatrix(glm::mat4(1.0));
+                    obj->setPipeline(pointLightPipeline);
+                    obj->render(getDeltaTime(), commandBuffer, false);
+                }
+            }
+        } else {
+            // Single-pass rendering with geometry shader
+            shadowRenderTarget->bind();
+            commandBuffer->clearDepth(1.0f);
+
             for (size_t i = 0; i < shadowTransforms.size(); ++i) {
                 pointLightPipeline->setUniformMat4f("shadowMatrices[" +
                                                         std::to_string(i) + "]",
                                                     shadowTransforms[i]);
             }
 
-            obj->setProjectionMatrix(glm::mat4(1.0));
-            obj->setViewMatrix(glm::mat4(1.0));
-            obj->setPipeline(pointLightPipeline);
+            for (auto &obj : this->renderables) {
+                if (obj->renderLateForward) {
+                    continue;
+                }
+                if (obj->getPipeline() == std::nullopt ||
+                    !obj->canCastShadows()) {
+                    continue;
+                }
 
-            obj->render(getDeltaTime(), commandBuffer, false);
-        }
-
-        for (auto &obj : this->lateForwardRenderables) {
-            if (obj->getPipeline() == std::nullopt || !obj->canCastShadows()) {
-                continue;
-            }
-            std::vector<glm::mat4> shadowTransforms =
-                light->calculateShadowTransforms();
-
-            pointLightPipeline->setUniform3f("lightPos", light->position.x,
-                                             light->position.y,
-                                             light->position.z);
-            pointLightPipeline->setUniform1f("far_plane", light->distance);
-            light->lastShadowParams.farPlane = light->distance;
-            for (size_t i = 0; i < shadowTransforms.size(); ++i) {
-                pointLightPipeline->setUniformMat4f("shadowMatrices[" +
-                                                        std::to_string(i) + "]",
-                                                    shadowTransforms[i]);
+                obj->setProjectionMatrix(glm::mat4(1.0));
+                obj->setViewMatrix(glm::mat4(1.0));
+                obj->setPipeline(pointLightPipeline);
+                obj->render(getDeltaTime(), commandBuffer, false);
             }
 
-            obj->setProjectionMatrix(glm::mat4(1.0));
-            obj->setViewMatrix(glm::mat4(1.0));
-            obj->setPipeline(pointLightPipeline);
+            for (auto &obj : this->lateForwardRenderables) {
+                if (obj->getPipeline() == std::nullopt ||
+                    !obj->canCastShadows()) {
+                    continue;
+                }
 
-            obj->render(getDeltaTime(), commandBuffer, false);
+                obj->setProjectionMatrix(glm::mat4(1.0));
+                obj->setViewMatrix(glm::mat4(1.0));
+                obj->setPipeline(pointLightPipeline);
+                obj->render(getDeltaTime(), commandBuffer, false);
+            }
         }
     }
 

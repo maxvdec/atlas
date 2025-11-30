@@ -1,14 +1,14 @@
-
 ENABLE_OPENGL := "OFF"
+GENERATOR := "Unix Makefiles"
 
 build:
     mkdir -p build
-    cd build && cmake -DENABLE_OPENGL={{ENABLE_OPENGL}} ..
+    cd build && cmake -G "{{GENERATOR}}" -DENABLE_OPENGL={{ENABLE_OPENGL}} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
     cd build && make -j8
 
 target target:
     mkdir -p build
-    cd build && cmake -DENABLE_OPENGL={{ENABLE_OPENGL}} ..
+    cd build && cmake -G "{{GENERATOR}}" -DENABLE_OPENGL={{ENABLE_OPENGL}} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
     cd build && make -j8 {{target}}
 
 run:
@@ -17,7 +17,7 @@ run:
 
 clangd:
     mkdir -p build
-    cd build && cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DENABLE_OPENGL={{ENABLE_OPENGL}} ..
+    cd build && cmake -G "{{GENERATOR}}" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DENABLE_OPENGL={{ENABLE_OPENGL}} ..
     ln -sf build/compile_commands.json compile_commands.json
 
 lint:
@@ -35,14 +35,14 @@ cli:
 
 release:
     mkdir -p build
-    cd build && cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_OPENGL={{ENABLE_OPENGL}} ..
+    cd build && cmake -G "{{GENERATOR}}" -DCMAKE_BUILD_TYPE=Release -DENABLE_OPENGL={{ENABLE_OPENGL}} ..
     cd build && make -j8
 
 docs:
     mkdir -p build
     doxygen -w html header.html delete.html delete.css
     rm delete.html delete.css
-    cd build && cmake -DENABLE_OPENGL={{ENABLE_OPENGL}} ..
+    cd build && cmake -G "{{GENERATOR}}" -DENABLE_OPENGL={{ENABLE_OPENGL}} ..
     cp header.html build/_deps/doxygen-awesome-css-src/header.html
     rm header.html
     doxygen Doxyfile
