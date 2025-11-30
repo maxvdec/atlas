@@ -105,6 +105,8 @@ class Device {
     VkExtent2D swapChainExtent = {};
     VkFormat swapChainImageFormat = VK_FORMAT_UNDEFINED;
 
+    VkCommandPool commandPool = VK_NULL_HANDLE;
+
     struct QueueFamilyIndices {
         std::optional<uint32_t> graphicsFamily;
         std::optional<uint32_t> presentFamily;
@@ -140,6 +142,8 @@ class Device {
         const std::vector<VkPresentModeKHR> &availablePresentModes);
     VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities,
                                 GLFWwindow *window);
+
+    std::shared_ptr<Context> context = nullptr;
 #endif
 };
 
@@ -772,6 +776,16 @@ class CommandBuffer {
     void clear(float r, float g, float b, float a, float depth);
 
   private:
+#ifdef VULKAN
+    VkCommandBuffer commandBuffer = VK_NULL_HANDLE;
+    void record(uint32_t imageIndex);
+#endif
+
+    float clearColorValue[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+    float clearDepthValue = 1.0f;
+
+    bool hasStarted = false;
+
     friend class Device;
     std::shared_ptr<Pipeline> boundPipeline = nullptr;
     std::shared_ptr<DrawingState> boundDrawingState = nullptr;

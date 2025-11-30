@@ -15,6 +15,32 @@ namespace opal {
 std::shared_ptr<CommandBuffer> Device::acquireCommandBuffer() {
     auto commandBuffer = std::make_shared<CommandBuffer>();
     commandBuffer->device = this;
+
+#ifdef VULKAN
+    if (this->commandPool == VK_NULL_HANDLE) {
+        QueueFamilyIndices indices =
+            findQueueFamilies(physicalDevice, context->surface);
+
+        VkCommandPoolCreateInfo poolInfo{};
+        poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+        poolInfo.queueFamilyIndex = indices.graphicsFamily.value();
+        poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+        if (vkCreateCommandPool(logicalDevice, &poolInfo, nullptr,
+                                &this->commandPool) != VK_SUCCESS) {
+            throw std::runtime_error("Failed to create command pool!");
+        }
+    }
+
+    VkCommandBufferAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    allocInfo.commandPool = this->commandPool;
+    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocInfo.commandBufferCount = 1;
+    if (vkAllocateCommandBuffers(this->logicalDevice, &allocInfo,
+                                 &commandBuffer->commandBuffer) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to allocate command buffers!");
+    }
+#endif
     return commandBuffer;
 }
 
@@ -52,8 +78,15 @@ void CommandBuffer::commit() {}
 
 void CommandBuffer::bindPipeline(std::shared_ptr<Pipeline> pipeline) {
     pipeline->bind();
+#ifdef VULKAN
+    if (boundPipeline != nullptr) {
+        vkCmdEndRenderPass(this->commandBuffer);
+        hasStarted = false;
+    }
+#endif
     boundPipeline = pipeline;
 #ifdef VULKAN
+
     for (auto &corePipeline : RenderPass::cachedRenderPasses) {
         if (corePipeline->opalFramebuffer->attachments ==
             renderPass->framebuffer->attachments) {
@@ -112,6 +145,16 @@ auto CommandBuffer::draw(uint vertexCount, uint instanceCount, uint firstVertex,
     if (boundDrawingState != nullptr) {
         boundDrawingState->unbind();
     }
+#elif defined(VULKAN)
+    if (!hasStarted) {
+        // START THE COMMAND BUFFER
+        this->record(0); // TODO: Pass the correct image index
+        hasStarted = true;
+    }
+    vkCmdBindPipeline(this->commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                      renderPass->currentRenderPass->pipeline);
+    vkCmdDraw(this->commandBuffer, vertexCount, instanceCount, firstVertex,
+              firstInstance);
 #endif
 }
 
@@ -129,6 +172,16 @@ void CommandBuffer::drawIndexed(uint indexCount, uint instanceCount,
     if (boundDrawingState != nullptr) {
         boundDrawingState->unbind();
     }
+#elif defined(VULKAN)
+    if (!hasStarted) {
+        // START THE COMMAND BUFFER
+        this->record(0); // TODO: Pass the correct image index
+        hasStarted = true;
+    }
+    vkCmdBindPipeline(this->commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                      renderPass->currentRenderPass->pipeline);
+    vkCmdDrawIndexed(this->commandBuffer, indexCount, instanceCount, firstIndex,
+                     vertexOffset, firstInstance);
 #endif
 }
 
@@ -144,6 +197,15 @@ void CommandBuffer::drawPatches(uint vertexCount, uint firstVertex) {
     if (boundDrawingState != nullptr) {
         boundDrawingState->unbind();
     }
+#elif defined(VULKAN)
+    if (!hasStarted) {
+        // START THE COMMAND BUFFER
+        this->record(0); // TODO: Pass the correct image index
+        hasStarted = true;
+    }
+    vkCmdBindPipeline(this->commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                      renderPass->currentRenderPass->pipeline);
+    vkCmdDraw(this->commandBuffer, vertexCount, 1, firstVertex, 0);
 #endif
 }
 
@@ -152,6 +214,10 @@ void CommandBuffer::clearColor(float r, float g, float b, float a) {
     glClearColor(r, g, b, a);
     glClear(GL_COLOR_BUFFER_BIT);
 #endif
+    this->clearColorValue[0] = r;
+    this->clearColorValue[1] = g;
+    this->clearColorValue[2] = b;
+    this->clearColorValue[3] = a;
 }
 
 void CommandBuffer::clearDepth(float depth) {
@@ -159,6 +225,7 @@ void CommandBuffer::clearDepth(float depth) {
     glClearDepth(depth);
     glClear(GL_DEPTH_BUFFER_BIT);
 #endif
+    this->clearDepthValue = depth;
 }
 
 void CommandBuffer::clear(float r, float g, float b, float a, float depth) {
@@ -167,6 +234,11 @@ void CommandBuffer::clear(float r, float g, float b, float a, float depth) {
     glClearDepth(depth);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 #endif
+    this->clearColorValue[0] = r;
+    this->clearColorValue[1] = g;
+    this->clearColorValue[2] = b;
+    this->clearColorValue[3] = a;
+    this->clearDepthValue = depth;
 }
 
 } // namespace opal
