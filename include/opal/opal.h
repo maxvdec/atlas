@@ -326,14 +326,13 @@ class Shader {
     VkShaderModule shaderModule = VK_NULL_HANDLE;
     VkPipelineShaderStageCreateInfo makeShaderStageInfo() const;
 
-    // SPIR-V bytecode for reflection
     std::vector<uint32_t> spirvBytecode;
 
-    // Reflection data: maps uniform/sampler names to their binding info
     std::unordered_map<std::string, UniformBindingInfo> uniformBindings;
 
-    // Perform SPIR-V reflection to populate uniformBindings
     void performReflection();
+
+    static int currentId;
 #endif
 
   private:
@@ -359,11 +358,11 @@ class ShaderProgram {
 #ifdef VULKAN
     std::vector<VkPipelineShaderStageCreateInfo> getShaderStages() const;
 
-    // Combined reflection data from all attached shaders
     std::unordered_map<std::string, UniformBindingInfo> uniformBindings;
 
-    // Find uniform binding info by name, returns nullptr if not found
     const UniformBindingInfo *findUniform(const std::string &name) const;
+
+    static int currentId;
 #endif
 };
 

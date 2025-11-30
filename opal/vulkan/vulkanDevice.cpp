@@ -131,8 +131,13 @@ void Device::createLogicalDevice(std::shared_ptr<Context> context) {
         static_cast<uint32_t>(queueCreateInfos.size());
     createInfo.pEnabledFeatures = &deviceFeatures;
 
-    const std::vector<const char *> deviceExtensions = {
+    std::vector<const char *> deviceExtensions = {
         VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+
+    if (this->supportsDeviceExtension(this->physicalDevice,
+                                      "VK_KHR_portability_subset")) {
+        deviceExtensions.push_back("VK_KHR_portability_subset");
+    }
 
     createInfo.enabledExtensionCount =
         static_cast<uint32_t>(deviceExtensions.size());

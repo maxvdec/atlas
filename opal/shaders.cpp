@@ -39,6 +39,9 @@ uint Shader::getGLShaderType(ShaderType type) {
 }
 #endif
 
+int Shader::currentId = 1;
+int ShaderProgram::currentId = 1;
+
 std::shared_ptr<Shader> Shader::createFromSource(const char *source,
                                                  ShaderType type) {
 #ifdef OPENGL
@@ -77,8 +80,11 @@ std::shared_ptr<Shader> Shader::createFromSource(const char *source,
         }
         bytecode.push_back(byte);
     }
+    if (type == ShaderType::Geometry) {
+        throw std::runtime_error(
+            "Geometry shaders are not supported in Vulkan");
+    }
 
-    // Store SPIR-V bytecode as uint32_t for reflection
     shader->spirvBytecode.resize(bytecode.size() / 4);
     memcpy(shader->spirvBytecode.data(), bytecode.data(), bytecode.size());
 
@@ -91,7 +97,6 @@ std::shared_ptr<Shader> Shader::createFromSource(const char *source,
         throw std::runtime_error("Failed to create shader module");
     }
 
-    // Perform SPIR-V reflection
     shader->performReflection();
 
     return shader;
@@ -103,6 +108,8 @@ std::shared_ptr<Shader> Shader::createFromSource(const char *source,
 void Shader::compile() {
 #ifdef OPENGL
     glCompileShader(shaderID);
+#elif defined(VULKAN)
+    this->shaderID = Shader::currentId++;
 #endif
 }
 
@@ -154,7 +161,6 @@ void ShaderProgram::attachShader(std::shared_ptr<Shader> shader) {
     attachedShaders.push_back(shader);
 #elif defined(VULKAN)
     attachedShaders.push_back(shader);
-    // Merge uniform bindings from this shader
     for (const auto &pair : shader->uniformBindings) {
         uniformBindings[pair.first] = pair.second;
     }
@@ -167,7 +173,7 @@ void ShaderProgram::link() {
 #ifdef OPENGL
     glLinkProgram(programID);
 #elif defined(VULKAN)
-
+    this->programID = ShaderProgram::currentId++;
 #else
     throw std::runtime_error(
         "Shader program linking not implemented for this API");
@@ -209,7 +215,6 @@ void Shader::performReflection() {
     spirv_cross::Compiler compiler(spirvBytecode);
     spirv_cross::ShaderResources resources = compiler.get_shader_resources();
 
-    // Process uniform buffers
     for (const auto &ubo : resources.uniform_buffers) {
         uint32_t set =
             compiler.get_decoration(ubo.id, spv::DecorationDescriptorSet);
@@ -219,7 +224,6 @@ void Shader::performReflection() {
         const spirv_cross::SPIRType &type = compiler.get_type(ubo.base_type_id);
         size_t blockSize = compiler.get_declared_struct_size(type);
 
-        // Store the block itself
         UniformBindingInfo blockInfo;
         blockInfo.set = set;
         blockInfo.binding = binding;
@@ -229,7 +233,6 @@ void Shader::performReflection() {
         blockInfo.isBuffer = true;
         uniformBindings[ubo.name] = blockInfo;
 
-        // Store individual members of the uniform block
         for (uint32_t i = 0; i < type.member_types.size(); ++i) {
             std::string memberName =
                 compiler.get_member_name(ubo.base_type_id, i);
@@ -247,7 +250,6 @@ void Shader::performReflection() {
             memberInfo.isSampler = false;
             memberInfo.isBuffer = true;
 
-            // Store with both full path and just member name
             uniformBindings[ubo.name + "." + memberName] = memberInfo;
             if (uniformBindings.find(memberName) == uniformBindings.end()) {
                 uniformBindings[memberName] = memberInfo;
@@ -255,7 +257,6 @@ void Shader::performReflection() {
         }
     }
 
-    // Process push constants
     for (const auto &pc : resources.push_constant_buffers) {
         const spirv_cross::SPIRType &type = compiler.get_type(pc.base_type_id);
 
@@ -272,7 +273,7 @@ void Shader::performReflection() {
             memberInfo.size = static_cast<uint32_t>(memberSize);
             memberInfo.offset = memberOffset;
             memberInfo.isSampler = false;
-            memberInfo.isBuffer = false; // Push constant, not buffer
+            memberInfo.isBuffer = false;
 
             uniformBindings[memberName] = memberInfo;
             if (!pc.name.empty()) {
@@ -281,7 +282,6 @@ void Shader::performReflection() {
         }
     }
 
-    // Process sampled images (textures)
     for (const auto &sampler : resources.sampled_images) {
         uint32_t set =
             compiler.get_decoration(sampler.id, spv::DecorationDescriptorSet);
@@ -298,7 +298,6 @@ void Shader::performReflection() {
         uniformBindings[sampler.name] = samplerInfo;
     }
 
-    // Process separate samplers
     for (const auto &sampler : resources.separate_samplers) {
         uint32_t set =
             compiler.get_decoration(sampler.id, spv::DecorationDescriptorSet);
@@ -315,7 +314,6 @@ void Shader::performReflection() {
         uniformBindings[sampler.name] = samplerInfo;
     }
 
-    // Process separate images
     for (const auto &image : resources.separate_images) {
         uint32_t set =
             compiler.get_decoration(image.id, spv::DecorationDescriptorSet);
@@ -332,7 +330,6 @@ void Shader::performReflection() {
         uniformBindings[image.name] = imageInfo;
     }
 
-    // Process storage buffers (SSBOs)
     for (const auto &ssbo : resources.storage_buffers) {
         uint32_t set =
             compiler.get_decoration(ssbo.id, spv::DecorationDescriptorSet);
@@ -342,7 +339,7 @@ void Shader::performReflection() {
         UniformBindingInfo ssboInfo;
         ssboInfo.set = set;
         ssboInfo.binding = binding;
-        ssboInfo.size = 0; // SSBOs can be dynamically sized
+        ssboInfo.size = 0;
         ssboInfo.offset = 0;
         ssboInfo.isSampler = false;
         ssboInfo.isBuffer = true;
