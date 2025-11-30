@@ -7,6 +7,7 @@
 // Copyright (c) 2025 maxvdec
 //
 
+#include <cstdint>
 #include <memory>
 #include <opal/opal.h>
 
@@ -48,6 +49,13 @@ void CommandBuffer::start() {
     // Reset state for a new command recording session
     boundPipeline = nullptr;
     boundDrawingState = nullptr;
+#ifdef VULKAN
+    hasStarted = false;
+    this->createSyncObjects();
+    vkWaitForFences(device->logicalDevice, 1, &inFlightFence, VK_TRUE,
+                    UINT64_MAX);
+    vkResetFences(device->logicalDevice, 1, &inFlightFence);
+#endif
 }
 
 void Device::submitCommandBuffer(
@@ -74,7 +82,48 @@ void CommandBuffer::beginSampled(
 }
 
 void CommandBuffer::endPass() {}
-void CommandBuffer::commit() {}
+void CommandBuffer::commit() {
+#ifdef VULKAN
+    if (hasStarted) {
+        vkCmdEndRenderPass(this->commandBuffer);
+        hasStarted = false;
+    }
+
+    VkSubmitInfo submitInfo{};
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+
+    VkSemaphore waitSemaphores[] = {imageAvailableSemaphore};
+    VkPipelineStageFlags waitStages[] = {
+        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
+    submitInfo.waitSemaphoreCount = 1;
+    submitInfo.pWaitSemaphores = waitSemaphores;
+    submitInfo.pWaitDstStageMask = waitStages;
+
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &this->commandBuffer;
+
+    VkSemaphore signalSemaphores[] = {renderFinishedSemaphore};
+    submitInfo.signalSemaphoreCount = 1;
+    submitInfo.pSignalSemaphores = signalSemaphores;
+
+    if (vkQueueSubmit(device->graphicsQueue, 1, &submitInfo, inFlightFence) !=
+        VK_SUCCESS) {
+        throw std::runtime_error("Failed to submit draw command buffer!");
+    }
+
+    VkPresentInfoKHR presentInfo{};
+    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+    presentInfo.waitSemaphoreCount = 1;
+    presentInfo.pWaitSemaphores = signalSemaphores;
+
+    VkSwapchainKHR swapChains[] = {device->swapChain};
+    presentInfo.swapchainCount = 1;
+    presentInfo.pSwapchains = swapChains;
+    presentInfo.pImageIndices = &imageIndex;
+
+    vkQueuePresentKHR(device->presentQueue, &presentInfo);
+#endif
+}
 
 void CommandBuffer::bindPipeline(std::shared_ptr<Pipeline> pipeline) {
     pipeline->bind();
@@ -147,8 +196,11 @@ auto CommandBuffer::draw(uint vertexCount, uint instanceCount, uint firstVertex,
     }
 #elif defined(VULKAN)
     if (!hasStarted) {
-        // START THE COMMAND BUFFER
-        this->record(0); // TODO: Pass the correct image index
+        vkAcquireNextImageKHR(device->logicalDevice, device->swapChain,
+                              UINT64_MAX, imageAvailableSemaphore,
+                              VK_NULL_HANDLE, &imageIndex);
+        vkResetCommandBuffer(this->commandBuffer, 0);
+        this->record(imageIndex);
         hasStarted = true;
     }
     vkCmdBindPipeline(this->commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -174,8 +226,11 @@ void CommandBuffer::drawIndexed(uint indexCount, uint instanceCount,
     }
 #elif defined(VULKAN)
     if (!hasStarted) {
-        // START THE COMMAND BUFFER
-        this->record(0); // TODO: Pass the correct image index
+        vkAcquireNextImageKHR(device->logicalDevice, device->swapChain,
+                              UINT64_MAX, imageAvailableSemaphore,
+                              VK_NULL_HANDLE, &imageIndex);
+        vkResetCommandBuffer(this->commandBuffer, 0);
+        this->record(imageIndex);
         hasStarted = true;
     }
     vkCmdBindPipeline(this->commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
@@ -199,8 +254,11 @@ void CommandBuffer::drawPatches(uint vertexCount, uint firstVertex) {
     }
 #elif defined(VULKAN)
     if (!hasStarted) {
-        // START THE COMMAND BUFFER
-        this->record(0); // TODO: Pass the correct image index
+        vkAcquireNextImageKHR(device->logicalDevice, device->swapChain,
+                              UINT64_MAX, imageAvailableSemaphore,
+                              VK_NULL_HANDLE, &imageIndex);
+        vkResetCommandBuffer(this->commandBuffer, 0);
+        this->record(imageIndex);
         hasStarted = true;
     }
     vkCmdBindPipeline(this->commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,

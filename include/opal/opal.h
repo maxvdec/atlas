@@ -778,7 +778,12 @@ class CommandBuffer {
   private:
 #ifdef VULKAN
     VkCommandBuffer commandBuffer = VK_NULL_HANDLE;
+    VkSemaphore imageAvailableSemaphore = VK_NULL_HANDLE;
+    VkSemaphore renderFinishedSemaphore = VK_NULL_HANDLE;
+    VkFence inFlightFence = VK_NULL_HANDLE;
+    uint32_t imageIndex = 0;
     void record(uint32_t imageIndex);
+    void createSyncObjects();
 #endif
 
     float clearColorValue[4] = {0.0f, 0.0f, 0.0f, 1.0f};
