@@ -14,6 +14,7 @@ namespace opal {
 
 std::shared_ptr<CommandBuffer> Device::acquireCommandBuffer() {
     auto commandBuffer = std::make_shared<CommandBuffer>();
+    commandBuffer->device = this;
     return commandBuffer;
 }
 
@@ -31,6 +32,7 @@ void CommandBuffer::beginPass(
     if (renderPass != nullptr) {
         renderPass->framebuffer->bind();
     }
+    this->framebuffer = renderPass->framebuffer;
     this->renderPass = renderPass;
 }
 
@@ -64,6 +66,29 @@ void CommandBuffer::bindPipeline(std::shared_ptr<Pipeline> pipeline) {
     auto coreRenderPass =
         CoreRenderPass::create(pipeline, renderPass->framebuffer);
     renderPass->currentRenderPass = coreRenderPass;
+
+    if (framebuffer->framebufferID == 0) {
+        framebuffer->vkFramebuffers.resize(
+            device->swapChainImages.imageViews.size());
+        for (size_t i = 0; i < device->swapChainImages.imageViews.size(); i++) {
+            VkImageView attachments[] = {device->swapChainImages.imageViews[i]};
+
+            VkFramebufferCreateInfo framebufferInfo{};
+            framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+            framebufferInfo.renderPass = coreRenderPass->renderPass;
+            framebufferInfo.attachmentCount = 1;
+            framebufferInfo.pAttachments = attachments;
+            framebufferInfo.width = device->swapChainExtent.width;
+            framebufferInfo.height = device->swapChainExtent.height;
+            framebufferInfo.layers = 1;
+
+            if (vkCreateFramebuffer(device->logicalDevice, &framebufferInfo,
+                                    nullptr, &framebuffer->vkFramebuffers[i]) !=
+                VK_SUCCESS) {
+                throw std::runtime_error("failed to create framebuffer!");
+            }
+        }
+    }
 #endif
 }
 

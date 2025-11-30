@@ -87,7 +87,7 @@ struct ImageCollection {
 class Device {
   public:
     static std::shared_ptr<Device> acquire(std::shared_ptr<Context> context);
-    static std::shared_ptr<CommandBuffer> acquireCommandBuffer();
+    std::shared_ptr<CommandBuffer> acquireCommandBuffer();
 
     void submitCommandBuffer(std::shared_ptr<CommandBuffer> commandBuffer);
     std::shared_ptr<Framebuffer> getDefaultFramebuffer();
@@ -669,6 +669,10 @@ class Framebuffer {
     int height;
     std::vector<Attachment> attachments;
 
+#ifdef VULKAN
+    std::vector<VkFramebuffer> vkFramebuffers;
+#endif
+
   private:
     bool colorBufferDisabled = false;
 };
@@ -768,9 +772,12 @@ class CommandBuffer {
     void clear(float r, float g, float b, float a, float depth);
 
   private:
+    friend class Device;
     std::shared_ptr<Pipeline> boundPipeline = nullptr;
     std::shared_ptr<DrawingState> boundDrawingState = nullptr;
     std::shared_ptr<RenderPass> renderPass = nullptr;
+    std::shared_ptr<Framebuffer> framebuffer = nullptr;
+    Device *device = nullptr;
 };
 
 #ifdef VULKAN
