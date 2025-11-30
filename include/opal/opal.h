@@ -93,6 +93,8 @@ class Device {
     std::shared_ptr<Framebuffer> getDefaultFramebuffer();
 
 #ifdef VULKAN
+    static VkDevice globalDevice;
+
     VkDevice logicalDevice = VK_NULL_HANDLE;
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
     VkQueue graphicsQueue = VK_NULL_HANDLE;
@@ -292,6 +294,13 @@ class Shader {
     uint shaderID;
     ShaderType type;
 
+    char *source = nullptr;
+
+#ifdef VULKAN
+    VkShaderModule shaderModule = VK_NULL_HANDLE;
+    VkPipelineShaderStageCreateInfo makeShaderStageInfo() const;
+#endif
+
   private:
 #ifdef OPENGL
     static uint getGLShaderType(ShaderType type);
@@ -311,6 +320,10 @@ class ShaderProgram {
 
     uint programID;
     std::vector<std::shared_ptr<Shader>> attachedShaders;
+
+#ifdef VULKAN
+    std::vector<VkPipelineShaderStageCreateInfo> getShaderStages() const;
+#endif
 };
 
 enum class VertexAttributeType {

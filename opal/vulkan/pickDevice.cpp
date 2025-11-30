@@ -140,6 +140,7 @@ void Device::createLogicalDevice(std::shared_ptr<Context> context) {
                        &this->logicalDevice) != VK_SUCCESS) {
         throw std::runtime_error("Failed to create logical device!");
     }
+    globalDevice = this->logicalDevice;
 
     vkGetDeviceQueue(this->logicalDevice, indices.graphicsFamily.value(), 0,
                      &this->graphicsQueue);
