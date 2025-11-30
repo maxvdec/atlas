@@ -568,7 +568,15 @@ class Buffer {
 
 #ifdef VULKAN
     VkBuffer vkBuffer = VK_NULL_HANDLE;
+    VkBuffer stagingBuffer = VK_NULL_HANDLE;
+    VkDeviceMemory vkStagingBufferMemory = VK_NULL_HANDLE;
     VkDeviceMemory vkBufferMemory = VK_NULL_HANDLE;
+
+    static void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage,
+                             VkMemoryPropertyFlags properties, VkBuffer &buffer,
+                             VkDeviceMemory &bufferMemory);
+    static void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer,
+                           VkDeviceSize size);
 #endif
 };
 

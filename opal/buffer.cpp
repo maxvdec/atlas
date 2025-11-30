@@ -78,75 +78,76 @@ std::shared_ptr<Buffer> Buffer::create(BufferUsage usage, size_t size,
     glBufferData(glTarget, size, data, GL_STATIC_DRAW);
     glBindBuffer(glTarget, 0);
 #elif defined(VULKAN)
-    VkBufferCreateInfo bufferInfo{};
-    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    bufferInfo.size = size;
+    auto bufferSize = static_cast<VkDeviceSize>(size);
+    VkBufferUsageFlags usageFlags = 0;
     switch (usage) {
     case BufferUsage::VertexBuffer:
-        bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+        usageFlags = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
         break;
     case BufferUsage::IndexArray:
-        bufferInfo.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+        usageFlags = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
         break;
     case BufferUsage::GeneralPurpose:
-        bufferInfo.usage =
+        usageFlags =
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
         break;
     case BufferUsage::UniformBuffer:
+        usageFlags = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+        break;
     case BufferUsage::ShaderRead:
+        usageFlags = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
+                     VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+        break;
     case BufferUsage::ShaderReadWrite:
-        bufferInfo.usage = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+        usageFlags = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
+                     VK_BUFFER_USAGE_TRANSFER_SRC_BIT |
+                     VK_BUFFER_USAGE_TRANSFER_DST_BIT;
         break;
     default:
-        bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+        usageFlags = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
         break;
     }
 
+    VkMemoryPropertyFlags properties = 0;
     switch (memoryUsage) {
     case MemoryUsageType::GPUOnly:
-        bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
         break;
     case MemoryUsageType::CPUToGPU:
     case MemoryUsageType::GPUToCPU:
-        bufferInfo.sharingMode = VK_SHARING_MODE_CONCURRENT;
+        properties = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                     VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+        break;
+    default:
+        properties = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
         break;
     }
 
-    if (vkCreateBuffer(Device::globalDevice, &bufferInfo, nullptr,
-                       &buffer->vkBuffer) != VK_SUCCESS) {
-        throw std::runtime_error("Failed to create buffer!");
+    VkBuffer stagingBuffer;
+    VkDeviceMemory stagingBufferMemory;
+
+    createBuffer(bufferSize,
+                 VK_BUFFER_USAGE_TRANSFER_SRC_BIT |
+                     VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                     VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                 stagingBuffer, stagingBufferMemory);
+
+    if (data != nullptr) {
+        void *mappedData;
+        vkMapMemory(Device::globalInstance->logicalDevice, stagingBufferMemory,
+                    0, bufferSize, 0, &mappedData);
+        memcpy(mappedData, data, static_cast<size_t>(bufferSize));
+        vkUnmapMemory(Device::globalInstance->logicalDevice,
+                      stagingBufferMemory);
     }
 
-    VkMemoryRequirements memRequirements;
-    vkGetBufferMemoryRequirements(Device::globalDevice, buffer->vkBuffer,
-                                  &memRequirements);
-
-    VkMemoryAllocateInfo allocInfo{};
-    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    allocInfo.allocationSize = memRequirements.size;
-    allocInfo.memoryTypeIndex = Device::globalInstance->findMemoryType(
-        memRequirements.memoryTypeBits,
-        (memoryUsage == MemoryUsageType::GPUOnly)
-            ? VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT
-        : (MemoryUsageType::CPUToGPU == memoryUsage)
-            ? (VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-               VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
-            : (VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-               VK_MEMORY_PROPERTY_HOST_CACHED_BIT));
-    if (vkAllocateMemory(Device::globalDevice, &allocInfo, nullptr,
-                         &buffer->vkBufferMemory) != VK_SUCCESS) {
-        throw std::runtime_error("Failed to allocate buffer memory!");
+    createBuffer(bufferSize, usageFlags, properties, buffer->vkBuffer,
+                 buffer->vkBufferMemory);
+    if (data != nullptr) {
+        Buffer::copyBuffer(stagingBuffer, buffer->vkBuffer, bufferSize);
     }
 
-    vkBindBufferMemory(Device::globalDevice, buffer->vkBuffer,
-                       buffer->vkBufferMemory, 0);
-    void *mappedData;
-    vkMapMemory(Device::globalDevice, buffer->vkBufferMemory, 0, size, 0,
-                &mappedData);
-    if (data) {
-        memcpy(mappedData, data, size);
-    }
-    vkUnmapMemory(Device::globalDevice, buffer->vkBufferMemory);
 #endif
 
     return buffer;
@@ -184,10 +185,11 @@ void Buffer::updateData(size_t offset, size_t size, const void *data) {
     glBindBuffer(glTarget, 0);
 #elif defined(VULKAN)
     void *mappedData;
-    vkMapMemory(Device::globalDevice, vkBufferMemory, offset, size, 0,
-                &mappedData);
+    vkMapMemory(Device::globalInstance->logicalDevice, vkStagingBufferMemory,
+                offset, size, 0, &mappedData);
     memcpy(mappedData, data, size);
-    vkUnmapMemory(Device::globalDevice, vkBufferMemory);
+    vkUnmapMemory(Device::globalInstance->logicalDevice, vkStagingBufferMemory);
+    Buffer::copyBuffer(stagingBuffer, vkBuffer, size);
 #endif
 }
 

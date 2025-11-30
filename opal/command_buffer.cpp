@@ -186,6 +186,11 @@ void CommandBuffer::bindDrawingState(
     vkCmdBindVertexBuffers(this->commandBuffer, 0, 1,
                            &drawingState->vertexBuffer->vkBuffer,
                            (VkDeviceSize[]){0});
+    if (drawingState->indexBuffer != nullptr) {
+        vkCmdBindIndexBuffer(this->commandBuffer,
+                             drawingState->indexBuffer->vkBuffer, 0,
+                             VK_INDEX_TYPE_UINT32);
+    }
 #endif
 }
 
