@@ -77,6 +77,9 @@ class Context {
 
 class CommandBuffer;
 class Framebuffer;
+#ifdef VULKAN
+class CoreRenderPass;
+#endif
 
 #ifdef VULKAN
 struct ImageCollection {

@@ -27,13 +27,16 @@ VkFormat opalTextureFormatToVulkanFormat(TextureFormat format) {
     case TextureFormat::sRgba8:
         return VK_FORMAT_R8G8B8A8_SRGB;
     case TextureFormat::Rgb8:
-        return VK_FORMAT_R8G8B8_UNORM;
+        // 3-channel formats not widely supported, use 4-channel
+        return VK_FORMAT_R8G8B8A8_UNORM;
     case TextureFormat::sRgb8:
-        return VK_FORMAT_R8G8B8_SRGB;
+        // 3-channel formats not widely supported, use 4-channel
+        return VK_FORMAT_R8G8B8A8_SRGB;
     case TextureFormat::Rgba16F:
         return VK_FORMAT_R16G16B16A16_SFLOAT;
     case TextureFormat::Rgb16F:
-        return VK_FORMAT_R16G16B16_SFLOAT;
+        // VK_FORMAT_R16G16B16_SFLOAT not supported on most GPUs
+        return VK_FORMAT_R16G16B16A16_SFLOAT;
     case TextureFormat::Depth24Stencil8:
         return VK_FORMAT_D24_UNORM_S8_UINT;
     case TextureFormat::DepthComponent24:
