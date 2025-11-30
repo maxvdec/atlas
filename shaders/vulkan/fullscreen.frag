@@ -125,14 +125,14 @@ vec4 edgeDetection(sampler2D image) {
 
 // Uniforms
 
-layout(set = 1, binding = 0) uniform sampler2D Texture;
-layout(set = 1, binding = 1) uniform sampler2D BrightTexture;
-layout(set = 1, binding = 2) uniform sampler2D DepthTexture;
-layout(set = 1, binding = 3) uniform sampler2D VolumetricLightTexture;
-layout(set = 1, binding = 4) uniform sampler2D PositionTexture;
-layout(set = 1, binding = 5) uniform sampler2D LUTTexture;
-layout(set = 1, binding = 6) uniform sampler2D SSRTexture;
-layout(set = 1, binding = 7) uniform sampler3D cloudsTexture;
+layout(set = 2, binding = 0) uniform sampler2D Texture;
+layout(set = 2, binding = 1) uniform sampler2D BrightTexture;
+layout(set = 2, binding = 2) uniform sampler2D DepthTexture;
+layout(set = 2, binding = 3) uniform sampler2D VolumetricLightTexture;
+layout(set = 2, binding = 4) uniform sampler2D PositionTexture;
+layout(set = 2, binding = 5) uniform sampler2D LUTTexture;
+layout(set = 2, binding = 6) uniform sampler2D SSRTexture;
+layout(set = 2, binding = 7) uniform sampler3D cloudsTexture;
 
 layout(push_constant) uniform PushConstants {
     int hasBrightTexture;
@@ -147,40 +147,40 @@ layout(push_constant) uniform PushConstants {
     int EffectCount;
 };
 
-layout(std430, set = 2, binding = 0) buffer EffectBuffer {
+layout(std430, set = 3, binding = 0) buffer EffectBuffer {
     int Effects[];
 };
 
-layout(std430, set = 2, binding = 1) buffer EffectFloat1Buffer {
+layout(std430, set = 3, binding = 1) buffer EffectFloat1Buffer {
     float EffectFloat1[];
 };
 
-layout(std430, set = 2, binding = 2) buffer EffectFloat2Buffer {
+layout(std430, set = 3, binding = 2) buffer EffectFloat2Buffer {
     float EffectFloat2[];
 };
 
-layout(std430, set = 2, binding = 3) buffer EffectFloat3Buffer {
+layout(std430, set = 3, binding = 3) buffer EffectFloat3Buffer {
     float EffectFloat3[];
 };
 
-layout(std430, set = 2, binding = 4) buffer EffectFloat4Buffer {
+layout(std430, set = 3, binding = 4) buffer EffectFloat4Buffer {
     float EffectFloat4[];
 };
 
-layout(std430, set = 2, binding = 5) buffer EffectFloat5Buffer {
+layout(std430, set = 3, binding = 5) buffer EffectFloat5Buffer {
     float EffectFloat5[];
 };
 
-layout(std430, set = 2, binding = 6) buffer EffectFloat6Buffer {
+layout(std430, set = 3, binding = 6) buffer EffectFloat6Buffer {
     float EffectFloat6[];
 };
 
-layout(set = 0, binding = 0) uniform Environment {
+layout(set = 1, binding = 0) uniform Environment {
     vec3 fogColor;
     float fogIntensity;
 } environment;
 
-layout(set = 0, binding = 1) uniform Uniforms {
+layout(set = 1, binding = 1) uniform Uniforms {
     mat4 invProjectionMatrix;
     mat4 projectionMatrix;
     mat4 viewMatrix;
@@ -196,7 +196,7 @@ layout(set = 0, binding = 1) uniform Uniforms {
     float time;
 };
 
-layout(set = 3, binding = 0) uniform Clouds {
+layout(set = 4, binding = 0) uniform Clouds {
     vec3 cloudPosition;
     vec3 cloudSize;
     vec3 cameraPosition;

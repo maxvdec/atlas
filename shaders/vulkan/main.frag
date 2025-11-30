@@ -73,25 +73,25 @@ struct ShadowParameters {
 };
 
 // ----- Textures -----
-layout(set = 1, binding = 0) uniform sampler2D texture1;
-layout(set = 1, binding = 1) uniform sampler2D texture2;
-layout(set = 1, binding = 2) uniform sampler2D texture3;
-layout(set = 1, binding = 3) uniform sampler2D texture4;
-layout(set = 1, binding = 4) uniform sampler2D texture5;
-layout(set = 1, binding = 5) uniform sampler2D texture6;
-layout(set = 1, binding = 6) uniform sampler2D texture7;
-layout(set = 1, binding = 7) uniform sampler2D texture8;
-layout(set = 1, binding = 8) uniform sampler2D texture9;
-layout(set = 1, binding = 9) uniform sampler2D texture10;
-layout(set = 1, binding = 10) uniform samplerCube skybox;
-layout(set = 1, binding = 11) uniform samplerCube cubeMap1;
-layout(set = 1, binding = 12) uniform samplerCube cubeMap2;
-layout(set = 1, binding = 13) uniform samplerCube cubeMap3;
-layout(set = 1, binding = 14) uniform samplerCube cubeMap4;
-layout(set = 1, binding = 15) uniform samplerCube cubeMap5;
+layout(set = 2, binding = 0) uniform sampler2D texture1;
+layout(set = 2, binding = 1) uniform sampler2D texture2;
+layout(set = 2, binding = 2) uniform sampler2D texture3;
+layout(set = 2, binding = 3) uniform sampler2D texture4;
+layout(set = 2, binding = 4) uniform sampler2D texture5;
+layout(set = 2, binding = 5) uniform sampler2D texture6;
+layout(set = 2, binding = 6) uniform sampler2D texture7;
+layout(set = 2, binding = 7) uniform sampler2D texture8;
+layout(set = 2, binding = 8) uniform sampler2D texture9;
+layout(set = 2, binding = 9) uniform sampler2D texture10;
+layout(set = 2, binding = 10) uniform samplerCube skybox;
+layout(set = 2, binding = 11) uniform samplerCube cubeMap1;
+layout(set = 2, binding = 12) uniform samplerCube cubeMap2;
+layout(set = 2, binding = 13) uniform samplerCube cubeMap3;
+layout(set = 2, binding = 14) uniform samplerCube cubeMap4;
+layout(set = 2, binding = 15) uniform samplerCube cubeMap5;
 
 // ----- Uniforms -----
-layout(set = 0, binding = 0) uniform Uniforms {
+layout(set = 1, binding = 0) uniform Uniforms {
     int textureTypes[16];
     int textureCount;
     vec3 cameraPosition;
@@ -109,7 +109,7 @@ layout(push_constant) uniform PushConstants {
     int shadowParamCount;
 };
 
-layout(set = 0, binding = 1) uniform Material {
+layout(set = 1, binding = 1) uniform Material {
     vec3 albedo;
     float metallic;
     float roughness;
@@ -117,33 +117,33 @@ layout(set = 0, binding = 1) uniform Material {
     float reflectivity;
 } material;
 
-layout(set = 0, binding = 2) uniform Environment {
+layout(set = 1, binding = 2) uniform Environment {
     float rimLightIntensity;
     vec3 rimLightColor;
 } environment;
 
-layout(set = 2, binding = 0) uniform AmbientLight {
+layout(set = 3, binding = 0) uniform AmbientLight {
     vec4 color;
     float intensity;
 } ambientLight;
 
-layout(set = 2, binding = 1) buffer DrectionalLightsUBO {
+layout(set = 3, binding = 1) buffer DrectionalLightsUBO {
     DirectionalLight directionalLights[];
 };
 
-layout(set = 2, binding = 2) buffer PointLightsUBO {
+layout(set = 3, binding = 2) buffer PointLightsUBO {
     PointLight pointLights[];
 };
 
-layout(set = 2, binding = 3) buffer SpotLightsUBO {
+layout(set = 3, binding = 3) buffer SpotLightsUBO {
     SpotLight spotlights[];
 };
 
-layout(set = 2, binding = 4) buffer AreaLightsUBO {
+layout(set = 3, binding = 4) buffer AreaLightsUBO {
     AreaLight areaLights[];
 };
 
-layout(set = 2, binding = 5) buffer ShadowParametersUBO {
+layout(set = 3, binding = 5) buffer ShadowParametersUBO {
     ShadowParameters shadowParams[];
 };
 

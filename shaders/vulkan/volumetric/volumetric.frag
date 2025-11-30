@@ -3,16 +3,16 @@ layout(location = 0) in vec2 TexCoords;
 
 layout(location = 0) out vec4 FragColor;
 
-layout(set = 1, binding = 0) uniform sampler2D sceneTexture;
-layout(set = 0, binding = 0) uniform Sun {
+layout(set = 2, binding = 0) uniform sampler2D sceneTexture;
+layout(set = 1, binding = 0) uniform Sun {
     vec2 sunPos;
 };
 
-layout(set = 0, binding = 1) uniform DirectionalLight {
+layout(set = 1, binding = 1) uniform DirectionalLight {
     vec3 color;
 } directionalLight;
 
-layout(set = 0, binding = 2) uniform VolumetricParameters {
+layout(set = 1, binding = 2) uniform VolumetricParameters {
     float density;
     float weight;
     float decay;
