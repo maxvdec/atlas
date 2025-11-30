@@ -29,7 +29,13 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(doxygen-awesome-css)
 FetchContent_GetProperties(doxygen-awesome-css SOURCE_DIR AWESOME_CSS_DIR)
 
-set(SHADER_INPUT_DIR "${CMAKE_SOURCE_DIR}/shaders")
+if (BACKEND_OPENGL)
+    message(STATUS "Configuring shaders for OpenGL backend")
+    set(SHADER_INPUT_DIR "${CMAKE_SOURCE_DIR}/shaders/opengl")
+else()
+    message(STATUS "Configuring shaders for Vulkan backend")
+    set(SHADER_INPUT_DIR "${CMAKE_SOURCE_DIR}/shaders/vulkan")
+endif()
 set(SHADER_OUTPUT_FILE "${CMAKE_SOURCE_DIR}/include/atlas/core/default_shaders.h")
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
