@@ -275,6 +275,31 @@ class Texture {
     int height = 0;
     int samples = 1; // For multisampled textures
 
+#ifdef VULKAN
+    VkImage vkImage = VK_NULL_HANDLE;
+    VkDeviceMemory vkImageMemory = VK_NULL_HANDLE;
+    VkImageView vkImageView = VK_NULL_HANDLE;
+    VkSampler vkSampler = VK_NULL_HANDLE;
+    VkImageLayout currentLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+
+    static std::shared_ptr<Texture>
+    createVulkan(TextureType type, TextureFormat format, int width, int height,
+                 TextureDataFormat dataFormat = TextureDataFormat::Rgba,
+                 const void *data = nullptr, uint mipLevels = 1);
+
+    static std::shared_ptr<Texture>
+    createMultisampledVulkan(TextureFormat format, int width, int height,
+                             int samples = 4);
+
+    static std::shared_ptr<Texture>
+    createDepthCubemapVulkan(TextureFormat format, int resolution);
+
+    static std::shared_ptr<Texture>
+    create3DVulkan(TextureFormat format, int width, int height, int depth,
+                   TextureDataFormat dataFormat = TextureDataFormat::Rgba,
+                   const void *data = nullptr);
+#endif
+
   private:
     friend class Pipeline;
     friend class CommandBuffer;
@@ -765,6 +790,12 @@ class Framebuffer {
 
 #ifdef VULKAN
     std::vector<VkFramebuffer> vkFramebuffers;
+
+    void createVulkanFramebuffers(std::shared_ptr<CoreRenderPass> renderPass);
+    static void transitionImageLayout(VkImage image, VkFormat format,
+                                      VkImageLayout oldLayout,
+                                      VkImageLayout newLayout,
+                                      uint32_t layerCount = 1);
 #endif
 
   private:

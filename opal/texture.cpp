@@ -116,6 +116,11 @@ std::shared_ptr<Texture> Texture::create(TextureType type, TextureFormat format,
     }
 
     return texture;
+#elif defined(VULKAN)
+    return Texture::createVulkan(type, format, width, height, dataFormat, data,
+                                 mipLevels);
+#else
+    return nullptr;
 #endif
 }
 
@@ -131,6 +136,13 @@ void Texture::updateFace(int faceIndex, const void *data, int width, int height,
         glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + faceIndex, 0, glFormat,
                      width, height, 0, glDataFmt, GL_UNSIGNED_BYTE, data);
     }
+#elif defined(VULKAN)
+    // Vulkan cubemap face update would require staging buffer and copy
+    (void)faceIndex;
+    (void)data;
+    (void)width;
+    (void)height;
+    (void)dataFormat;
 #endif
 }
 
@@ -141,6 +153,13 @@ void Texture::updateData3D(const void *data, int width, int height, int depth,
     glBindTexture(GL_TEXTURE_3D, textureID);
     glTexImage3D(GL_TEXTURE_3D, 0, glFormat, width, height, depth, 0, glDataFmt,
                  GL_UNSIGNED_BYTE, data);
+#elif defined(VULKAN)
+    // Vulkan 3D texture update would require staging buffer and copy
+    (void)data;
+    (void)width;
+    (void)height;
+    (void)depth;
+    (void)dataFormat;
 #endif
 }
 
@@ -163,6 +182,12 @@ void Texture::updateData(const void *data, int width, int height,
         this->width = width;
         this->height = height;
     }
+#elif defined(VULKAN)
+    // Vulkan texture update would require staging buffer and copy
+    (void)data;
+    (void)width;
+    (void)height;
+    (void)dataFormat;
 #endif
 }
 
@@ -170,6 +195,9 @@ void Texture::changeFormat(TextureFormat newFormat) {
 #ifdef OPENGL
     this->format = newFormat;
     this->glFormat = getGLInternalFormat(newFormat);
+#elif defined(VULKAN)
+    this->format = newFormat;
+    // Note: In Vulkan, changing format may require recreating the image
 #endif
 }
 
@@ -197,6 +225,11 @@ void Texture::readData(void *buffer, TextureDataFormat dataFormat) {
         break;
     }
     glGetTexImage(this->glType, 0, glDataFormat, glDataType, buffer);
+#elif defined(VULKAN)
+    // Vulkan readback requires transitioning to transfer src layout
+    // and using a staging buffer
+    (void)buffer;
+    (void)dataFormat;
 #endif
 }
 
@@ -204,6 +237,8 @@ void Texture::generateMipmaps([[maybe_unused]] uint levels) {
 #ifdef OPENGL
     glBindTexture(this->glType, textureID);
     glGenerateMipmap(this->glType);
+#elif defined(VULKAN)
+    // Vulkan mipmap generation requires vkCmdBlitImage
 #endif
 }
 
@@ -211,6 +246,8 @@ void Texture::automaticallyGenerateMipmaps() {
 #ifdef OPENGL
     glBindTexture(this->glType, textureID);
     glGenerateMipmap(this->glType);
+#elif defined(VULKAN)
+    // Vulkan mipmap generation requires vkCmdBlitImage
 #endif
 }
 
@@ -221,6 +258,10 @@ void Texture::setWrapMode(TextureAxis axis, TextureWrapMode mode) {
     static constexpr GLenum axisTable[] = {GL_TEXTURE_WRAP_S, GL_TEXTURE_WRAP_T,
                                            GL_TEXTURE_WRAP_R};
     glTexParameteri(this->glType, axisTable[static_cast<int>(axis)], glMode);
+#elif defined(VULKAN)
+    // In Vulkan, sampler parameters are set at sampler creation time
+    (void)axis;
+    (void)mode;
 #endif
 }
 
@@ -230,6 +271,9 @@ void Texture::changeBorderColor(const glm::vec4 &borderColor) {
     GLfloat color[4] = {borderColor.r, borderColor.g, borderColor.b,
                         borderColor.a};
     glTexParameterfv(this->glType, GL_TEXTURE_BORDER_COLOR, color);
+#elif defined(VULKAN)
+    // In Vulkan, border color is set at sampler creation time
+    (void)borderColor;
 #endif
 }
 
@@ -239,6 +283,10 @@ void Texture::setFilterMode(TextureFilterMode minFilter,
     glBindTexture(this->glType, textureID);
     glTexParameteri(glType, GL_TEXTURE_MIN_FILTER, getGLFilterMode(minFilter));
     glTexParameteri(glType, GL_TEXTURE_MAG_FILTER, getGLFilterMode(magFilter));
+#elif defined(VULKAN)
+    // In Vulkan, filter modes are set at sampler creation time
+    (void)minFilter;
+    (void)magFilter;
 #endif
 }
 
@@ -251,6 +299,12 @@ void Texture::setParameters(TextureWrapMode wrapS, TextureWrapMode wrapT,
     glTexParameteri(glType, GL_TEXTURE_WRAP_T, getGLWrapMode(wrapT));
     glTexParameteri(glType, GL_TEXTURE_MIN_FILTER, getGLFilterMode(minFilter));
     glTexParameteri(glType, GL_TEXTURE_MAG_FILTER, getGLFilterMode(magFilter));
+#elif defined(VULKAN)
+    // In Vulkan, these parameters are set at sampler creation time
+    (void)wrapS;
+    (void)wrapT;
+    (void)minFilter;
+    (void)magFilter;
 #endif
 }
 
@@ -265,6 +319,13 @@ void Texture::setParameters3D(TextureWrapMode wrapS, TextureWrapMode wrapT,
     glTexParameteri(glType, GL_TEXTURE_WRAP_R, getGLWrapMode(wrapR));
     glTexParameteri(glType, GL_TEXTURE_MIN_FILTER, getGLFilterMode(minFilter));
     glTexParameteri(glType, GL_TEXTURE_MAG_FILTER, getGLFilterMode(magFilter));
+#elif defined(VULKAN)
+    // In Vulkan, these parameters are set at sampler creation time
+    (void)wrapS;
+    (void)wrapT;
+    (void)wrapR;
+    (void)minFilter;
+    (void)magFilter;
 #endif
 }
 
@@ -359,6 +420,8 @@ std::shared_ptr<Texture> Texture::createMultisampled(TextureFormat format,
                             height, GL_TRUE);
 
     return texture;
+#elif defined(VULKAN)
+    return Texture::createMultisampledVulkan(format, width, height, samples);
 #else
     return nullptr;
 #endif
@@ -393,6 +456,8 @@ std::shared_ptr<Texture> Texture::createDepthCubemap(TextureFormat format,
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
     return texture;
+#elif defined(VULKAN)
+    return Texture::createDepthCubemapVulkan(format, resolution);
 #else
     return nullptr;
 #endif
@@ -439,6 +504,9 @@ std::shared_ptr<Texture> Texture::create3D(TextureFormat format, int width,
     glPixelStorei(GL_UNPACK_ALIGNMENT, previousAlignment);
 
     return texture;
+#elif defined(VULKAN)
+    return Texture::create3DVulkan(format, width, height, depth, dataFormat,
+                                   data);
 #else
     return nullptr;
 #endif

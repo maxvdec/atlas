@@ -9,6 +9,9 @@
 
 #include "opal/opal.h"
 #include <memory>
+#ifdef VULKAN
+#include <vulkan/vulkan.hpp>
+#endif
 
 namespace opal {
 
@@ -27,6 +30,8 @@ std::shared_ptr<Framebuffer> Framebuffer::create(int width, int height) {
 
 #ifdef OPENGL
     glGenFramebuffers(1, &framebuffer->framebufferID);
+#elif defined(VULKAN)
+    // Vulkan framebuffers are created lazily when a render pass is applied
 #endif
 
     return framebuffer;
@@ -39,6 +44,8 @@ std::shared_ptr<Framebuffer> Framebuffer::create() {
 
 #ifdef OPENGL
     glGenFramebuffers(1, &framebuffer->framebufferID);
+#elif defined(VULKAN)
+    // Vulkan framebuffers are created lazily when a render pass is applied
 #endif
 
     return framebuffer;
@@ -53,6 +60,11 @@ void Framebuffer::attachTexture(std::shared_ptr<Texture> texture,
     glFramebufferTexture2D(GL_FRAMEBUFFER, attachmentType, texture->glType,
                            texture->textureID, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#elif defined(VULKAN)
+    Attachment att;
+    att.type = Attachment::Type::Color;
+    att.texture = texture;
+    attachments.push_back(att);
 #endif
 }
 
@@ -80,6 +92,8 @@ void Framebuffer::addAttachment(const Attachment &attachment) {
     glFramebufferTexture2D(GL_FRAMEBUFFER, attachmentType,
                            attachment.texture->glType,
                            attachment.texture->textureID, 0);
+    attachments.push_back(attachment);
+#elif defined(VULKAN)
     attachments.push_back(attachment);
 #endif
 }
@@ -109,6 +123,11 @@ void Framebuffer::attachCubemap(std::shared_ptr<Texture> texture,
     att.type = attachmentType;
     att.texture = texture;
     attachments.push_back(att);
+#elif defined(VULKAN)
+    Attachment att;
+    att.type = attachmentType;
+    att.texture = texture;
+    attachments.push_back(att);
 #endif
 }
 
@@ -134,6 +153,14 @@ void Framebuffer::attachCubemapFace(std::shared_ptr<Texture> texture, int face,
                            GL_TEXTURE_CUBE_MAP_POSITIVE_X + face,
                            texture->textureID, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#elif defined(VULKAN)
+    // For Vulkan, cubemap face attachment is handled differently
+    // Store the face index for later use
+    (void)face;
+    Attachment att;
+    att.type = attachmentType;
+    att.texture = texture;
+    attachments.push_back(att);
 #endif
 }
 
@@ -143,18 +170,24 @@ void Framebuffer::disableColorBuffer() {
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
     colorBufferDisabled = true;
+#elif defined(VULKAN)
+    colorBufferDisabled = true;
 #endif
 }
 
 void Framebuffer::setViewport() {
 #ifdef OPENGL
     glViewport(0, 0, width, height);
+#elif defined(VULKAN)
+    // Viewport is set dynamically in Vulkan via command buffer
 #endif
 }
 
 void Framebuffer::setViewport(int x, int y, int viewWidth, int viewHeight) {
 #ifdef OPENGL
     glViewport(x, y, viewWidth, viewHeight);
+#elif defined(VULKAN)
+    // Viewport is set dynamically in Vulkan via command buffer
 #endif
 }
 
@@ -163,6 +196,9 @@ bool Framebuffer::getStatus() const {
     glBindFramebuffer(GL_FRAMEBUFFER, framebufferID);
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     return status == GL_FRAMEBUFFER_COMPLETE;
+#elif defined(VULKAN)
+    // In Vulkan, framebuffer validity is checked at creation time
+    return !vkFramebuffers.empty();
 #else
     return false;
 #endif
@@ -194,24 +230,32 @@ void Framebuffer::bind() {
     } else {
         glDrawBuffer(GL_NONE);
     }
+#elif defined(VULKAN)
+    // In Vulkan, framebuffer binding is handled through render passes
 #endif
 }
 
 void Framebuffer::unbind() {
 #ifdef OPENGL
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#elif defined(VULKAN)
+    // In Vulkan, framebuffer unbinding is handled through render passes
 #endif
 }
 
 void Framebuffer::bindForRead() {
 #ifdef OPENGL
     glBindFramebuffer(GL_READ_FRAMEBUFFER, framebufferID);
+#elif defined(VULKAN)
+    // Vulkan handles read operations differently
 #endif
 }
 
 void Framebuffer::bindForDraw() {
 #ifdef OPENGL
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebufferID);
+#elif defined(VULKAN)
+    // Vulkan handles draw operations through render passes
 #endif
 }
 
@@ -227,6 +271,9 @@ void Framebuffer::setDrawBuffers(int attachmentCount) {
         drawBuffers.push_back(GL_COLOR_ATTACHMENT0 + i);
     }
     glDrawBuffers(attachmentCount, drawBuffers.data());
+#elif defined(VULKAN)
+    // In Vulkan, color attachments are configured at render pass creation
+    (void)attachmentCount;
 #endif
 }
 
@@ -296,6 +343,10 @@ void CommandBuffer::performResolve(std::shared_ptr<ResolveAction> action) {
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#elif defined(VULKAN)
+    // Vulkan resolve is handled through render pass resolve attachments
+    // or vkCmdResolveImage
+    (void)action;
 #endif
 }
 
