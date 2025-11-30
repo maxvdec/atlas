@@ -94,6 +94,7 @@ class Device {
 
 #ifdef VULKAN
     static VkDevice globalDevice;
+    static Device *globalInstance;
 
     VkDevice logicalDevice = VK_NULL_HANDLE;
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
@@ -145,6 +146,8 @@ class Device {
         const std::vector<VkPresentModeKHR> &availablePresentModes);
     VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities,
                                 GLFWwindow *window);
+    uint32_t findMemoryType(uint32_t typeFilter,
+                            VkMemoryPropertyFlags properties);
 
     std::shared_ptr<Context> context = nullptr;
 #endif
@@ -562,6 +565,11 @@ class Buffer {
 
     BufferUsage usage;
     MemoryUsageType memoryUsage;
+
+#ifdef VULKAN
+    VkBuffer vkBuffer = VK_NULL_HANDLE;
+    VkDeviceMemory vkBufferMemory = VK_NULL_HANDLE;
+#endif
 };
 
 struct VertexAttributeBinding {

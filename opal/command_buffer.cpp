@@ -182,6 +182,11 @@ void CommandBuffer::unbindPipeline() { boundPipeline = nullptr; }
 void CommandBuffer::bindDrawingState(
     std::shared_ptr<DrawingState> drawingState) {
     boundDrawingState = drawingState;
+#ifdef VULKAN
+    vkCmdBindVertexBuffers(this->commandBuffer, 0, 1,
+                           &drawingState->vertexBuffer->vkBuffer,
+                           (VkDeviceSize[]){0});
+#endif
 }
 
 void CommandBuffer::unbindDrawingState() { boundDrawingState = nullptr; }
