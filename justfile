@@ -24,7 +24,7 @@ lint:
     find atlas test \( -name '*.cpp' -o -name '*.h' \) -print0 | xargs -0 clang-format --dry-run --Werror
 
 clean:
-    rm -rf build compile_commands.json
+    rm -rf build compile_commands.json include/atlas/core/default_shaders.h docs/html
 
 frametest:
     just build

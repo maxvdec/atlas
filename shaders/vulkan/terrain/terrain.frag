@@ -35,7 +35,10 @@ layout(push_constant) uniform PushConstants {
     vec3 viewDir;
     float ambientStrength;
     float shadowBias;
-} pushConstants;
+    int biomesCount;
+    float diffuseStrength;
+    float specularStrength;
+} ;
 
 layout(set = 1, binding = 0) uniform TerrainParameters {
     float maxPeak;
