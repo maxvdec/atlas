@@ -38,9 +38,11 @@ VkFormat opalTextureFormatToVulkanFormat(TextureFormat format) {
         // VK_FORMAT_R16G16B16_SFLOAT not supported on most GPUs
         return VK_FORMAT_R16G16B16A16_SFLOAT;
     case TextureFormat::Depth24Stencil8:
-        return VK_FORMAT_D24_UNORM_S8_UINT;
+        // VK_FORMAT_D24_UNORM_S8_UINT not supported on macOS/MoltenVK
+        return VK_FORMAT_D32_SFLOAT_S8_UINT;
     case TextureFormat::DepthComponent24:
-        return VK_FORMAT_D24_UNORM_S8_UINT;
+        // Use D32 for better compatibility
+        return VK_FORMAT_D32_SFLOAT;
     case TextureFormat::Depth32F:
         return VK_FORMAT_D32_SFLOAT;
     case TextureFormat::Red8:
@@ -287,22 +289,35 @@ Texture::createVulkan(TextureType type, TextureFormat format, int width,
 
     // If data is provided, upload it via a staging buffer
     if (data != nullptr && width > 0 && height > 0) {
-        // Calculate size based on format
-        VkDeviceSize imageSize = 0;
+        // Determine input data size based on dataFormat
+        size_t inputBytesPerPixel = 0;
         switch (dataFormat) {
         case TextureDataFormat::Rgba:
-            imageSize = width * height * 4;
+            inputBytesPerPixel = 4;
             break;
         case TextureDataFormat::Rgb:
-            imageSize = width * height * 3;
+            inputBytesPerPixel = 3;
             break;
         case TextureDataFormat::Red:
-            imageSize = width * height;
+            inputBytesPerPixel = 1;
             break;
         default:
-            imageSize = width * height * 4;
+            inputBytesPerPixel = 4;
             break;
         }
+
+        // Determine output size based on Vulkan format (we use RGBA for RGB
+        // inputs)
+        size_t outputBytesPerPixel = 4; // Default for RGBA formats
+        if (vkFormat == VK_FORMAT_R8_UNORM ||
+            vkFormat == VK_FORMAT_R16_SFLOAT) {
+            outputBytesPerPixel = (vkFormat == VK_FORMAT_R16_SFLOAT) ? 2 : 1;
+        } else if (vkFormat == VK_FORMAT_R16G16B16A16_SFLOAT) {
+            outputBytesPerPixel = 8;
+        }
+
+        size_t pixelCount = static_cast<size_t>(width) * height;
+        VkDeviceSize imageSize = pixelCount * outputBytesPerPixel;
 
         VkBuffer stagingBuffer;
         VkDeviceMemory stagingBufferMemory;
@@ -314,7 +329,21 @@ Texture::createVulkan(TextureType type, TextureFormat format, int width,
         void *mappedData;
         vkMapMemory(Device::globalDevice, stagingBufferMemory, 0, imageSize, 0,
                     &mappedData);
-        memcpy(mappedData, data, static_cast<size_t>(imageSize));
+
+        // Convert RGB to RGBA if necessary
+        if (dataFormat == TextureDataFormat::Rgb && outputBytesPerPixel == 4) {
+            const uint8_t *src = static_cast<const uint8_t *>(data);
+            uint8_t *dst = static_cast<uint8_t *>(mappedData);
+            for (size_t i = 0; i < pixelCount; ++i) {
+                dst[i * 4 + 0] = src[i * 3 + 0];
+                dst[i * 4 + 1] = src[i * 3 + 1];
+                dst[i * 4 + 2] = src[i * 3 + 2];
+                dst[i * 4 + 3] = 255; // Full alpha
+            }
+        } else {
+            memcpy(mappedData, data, pixelCount * inputBytesPerPixel);
+        }
+
         vkUnmapMemory(Device::globalDevice, stagingBufferMemory);
 
         // Transition image layout and copy

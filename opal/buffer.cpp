@@ -82,17 +82,20 @@ std::shared_ptr<Buffer> Buffer::create(BufferUsage usage, size_t size,
     VkBufferUsageFlags usageFlags = 0;
     switch (usage) {
     case BufferUsage::VertexBuffer:
-        usageFlags = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+        usageFlags = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT |
+                     VK_BUFFER_USAGE_TRANSFER_DST_BIT;
         break;
     case BufferUsage::IndexArray:
-        usageFlags = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+        usageFlags =
+            VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
         break;
     case BufferUsage::GeneralPurpose:
         usageFlags =
             VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT;
         break;
     case BufferUsage::UniformBuffer:
-        usageFlags = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+        usageFlags = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT |
+                     VK_BUFFER_USAGE_TRANSFER_DST_BIT;
         break;
     case BufferUsage::ShaderRead:
         usageFlags = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT |
@@ -104,7 +107,8 @@ std::shared_ptr<Buffer> Buffer::create(BufferUsage usage, size_t size,
                      VK_BUFFER_USAGE_TRANSFER_DST_BIT;
         break;
     default:
-        usageFlags = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+        usageFlags = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT |
+                     VK_BUFFER_USAGE_TRANSFER_DST_BIT;
         break;
     }
 

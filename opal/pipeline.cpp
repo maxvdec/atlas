@@ -28,117 +28,72 @@ std::vector<std::shared_ptr<CoreRenderPass>> RenderPass::cachedRenderPasses =
     {};
 
 void Pipeline::setShaderProgram(std::shared_ptr<ShaderProgram> program) {
-#ifdef OPENGL
     this->shaderProgram = program;
-#endif
 }
 
 void Pipeline::setVertexAttributes(
     const std::vector<VertexAttribute> &attributes,
     const VertexBinding &binding) {
-#ifdef OPENGL
     this->vertexAttributes = attributes;
     this->vertexBinding = binding;
-#endif
 }
 
 void Pipeline::setPrimitiveStyle(PrimitiveStyle style) {
-#ifdef OPENGL
     this->primitiveStyle = style;
-#endif
 }
 
-void Pipeline::setPatchVertices(int count) {
-#ifdef OPENGL
-    this->patchVertices = count;
-#endif
-}
+void Pipeline::setPatchVertices(int count) { this->patchVertices = count; }
 
 void Pipeline::setViewport(int x, int y, int width, int height) {
-#ifdef OPENGL
     this->viewportX = x;
     this->viewportY = y;
     this->viewportWidth = width;
     this->viewportHeight = height;
-#endif
 }
 
 void Pipeline::setRasterizerMode(RasterizerMode mode) {
-#ifdef OPENGL
     this->rasterizerMode = mode;
-#endif
 }
 
-void Pipeline::setCullMode(CullMode mode) {
-#ifdef OPENGL
-    this->cullMode = mode;
-#endif
-}
+void Pipeline::setCullMode(CullMode mode) { this->cullMode = mode; }
 
-void Pipeline::setFrontFace(FrontFace face) {
-#ifdef OPENGL
-    this->frontFace = face;
-#endif
-}
+void Pipeline::setFrontFace(FrontFace face) { this->frontFace = face; }
 
 void Pipeline::enableDepthTest(bool enabled) {
-#ifdef OPENGL
     this->depthTestEnabled = enabled;
-#endif
 }
 
-void Pipeline::setDepthCompareOp(CompareOp op) {
-#ifdef OPENGL
-    this->depthCompareOp = op;
-#endif
-}
+void Pipeline::setDepthCompareOp(CompareOp op) { this->depthCompareOp = op; }
 
 void Pipeline::enableDepthWrite(bool enabled) {
-#ifdef OPENGL
     this->depthWriteEnabled = enabled;
-#endif
 }
 
-void Pipeline::enableBlending(bool enabled) {
-#ifdef OPENGL
-    this->blendingEnabled = enabled;
-#endif
-}
+void Pipeline::enableBlending(bool enabled) { this->blendingEnabled = enabled; }
 
 void Pipeline::setBlendFunc(BlendFunc srcFactor, BlendFunc dstFactor) {
-#ifdef OPENGL
     this->blendSrcFactor = srcFactor;
     this->blendDstFactor = dstFactor;
-#endif
 }
 
 void Pipeline::setBlendEquation(BlendEquation equation) {
-#ifdef OPENGL
     this->blendEquation = equation;
-#endif
 }
 
 void Pipeline::enableMultisampling(bool enabled) {
-#ifdef OPENGL
     this->multisamplingEnabled = enabled;
-#endif
 }
 
 void Pipeline::enablePolygonOffset(bool enabled) {
-#ifdef OPENGL
     this->polygonOffsetEnabled = enabled;
-#endif
 }
 
 void Pipeline::setPolygonOffset(float factor, float units) {
-#ifdef OPENGL
     this->polygonOffsetFactor = factor;
     this->polygonOffsetUnits = units;
-#endif
 }
 
 void Pipeline::enableClipDistance(int index, bool enabled) {
-#ifdef OPENGL
     if (enabled) {
         if (std::find(this->enabledClipDistances.begin(),
                       this->enabledClipDistances.end(),
@@ -152,7 +107,6 @@ void Pipeline::enableClipDistance(int index, bool enabled) {
             this->enabledClipDistances.erase(it);
         }
     }
-#endif
 }
 
 uint Pipeline::getGLBlendFactor(BlendFunc func) const {

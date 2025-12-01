@@ -18,23 +18,9 @@ std::shared_ptr<CommandBuffer> Device::acquireCommandBuffer() {
     commandBuffer->device = this;
 
 #ifdef VULKAN
-    if (this->commandPool == VK_NULL_HANDLE) {
-        QueueFamilyIndices indices =
-            findQueueFamilies(physicalDevice, context->surface);
-
-        VkCommandPoolCreateInfo poolInfo{};
-        poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-        poolInfo.queueFamilyIndex = indices.graphicsFamily.value();
-        poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-        if (vkCreateCommandPool(logicalDevice, &poolInfo, nullptr,
-                                &this->commandPool) != VK_SUCCESS) {
-            throw std::runtime_error("Failed to create command pool!");
-        }
-    }
-
     VkCommandBufferAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-    allocInfo.commandPool = this->commandPool;
+    allocInfo.commandPool = Device::globalInstance->commandPool;
     allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
     allocInfo.commandBufferCount = 1;
     if (vkAllocateCommandBuffers(this->logicalDevice, &allocInfo,

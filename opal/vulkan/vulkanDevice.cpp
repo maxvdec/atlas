@@ -160,6 +160,15 @@ void Device::createLogicalDevice(std::shared_ptr<Context> context) {
                      &this->graphicsQueue);
     vkGetDeviceQueue(this->logicalDevice, indices.presentFamily.value(), 0,
                      &this->presentQueue);
+
+    VkCommandPoolCreateInfo poolInfo{};
+    poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+    poolInfo.queueFamilyIndex = indices.graphicsFamily.value();
+    poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+    if (vkCreateCommandPool(logicalDevice, &poolInfo, nullptr,
+                            &this->commandPool) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to create command pool!");
+    }
 }
 
 uint32_t Device::findMemoryType(uint32_t typeFilter,

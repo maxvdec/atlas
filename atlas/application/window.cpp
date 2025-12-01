@@ -126,9 +126,7 @@ Window::Window(WindowConfiguration config)
     program.compile();
     this->depthProgram = program;
 
-    // Check if geometry shaders are supported (not available on macOS/MoltenVK)
 #ifdef __APPLE__
-    // macOS with MoltenVK doesn't support geometry shaders
     this->useMultiPassPointShadows = true;
 #else
     this->useMultiPassPointShadows = false;
@@ -183,12 +181,12 @@ Window::Window(WindowConfiguration config)
         throw std::runtime_error("Failed to initialize audio engine");
     }
 
-    std::cout << "Atlas Engine" << std::endl;
-    std::cout << "Alpha 5 Version" << std::endl;
+    std::cout << "\033[1m\033[36mAtlas Engine\033[0m" << std::endl;
+    std::cout << "\033[1m\033[36mAlpha 5 Version\033[0m" << std::endl;
 #ifdef OPENGL
-    std::cout << "Using OpenGL Backend" << std::endl;
+    std::cout << "\033[1m\033[32mUsing OpenGL Backend\033[0m" << std::endl;
 #else
-    std::cout << "Using Vulkan Backend" << std::endl;
+    std::cout << "\033[1m\033[32mUsing Vulkan Backend\033[0m" << std::endl;
 #endif
 }
 
