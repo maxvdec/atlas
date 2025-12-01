@@ -168,16 +168,8 @@ void CommandBuffer::unbindPipeline() { boundPipeline = nullptr; }
 void CommandBuffer::bindDrawingState(
     std::shared_ptr<DrawingState> drawingState) {
     boundDrawingState = drawingState;
-#ifdef VULKAN
-    vkCmdBindVertexBuffers(this->commandBuffer, 0, 1,
-                           &drawingState->vertexBuffer->vkBuffer,
-                           (VkDeviceSize[]){0});
-    if (drawingState->indexBuffer != nullptr) {
-        vkCmdBindIndexBuffer(this->commandBuffer,
-                             drawingState->indexBuffer->vkBuffer, 0,
-                             VK_INDEX_TYPE_UINT32);
-    }
-#endif
+    // Note: In Vulkan, vertex/index buffer binding is deferred to draw calls
+    // because the command buffer must be in recording state first
 }
 
 void CommandBuffer::unbindDrawingState() { boundDrawingState = nullptr; }
@@ -194,6 +186,10 @@ auto CommandBuffer::draw(uint vertexCount, uint instanceCount, uint firstVertex,
         boundDrawingState->unbind();
     }
 #elif defined(VULKAN)
+    if (renderPass == nullptr || renderPass->currentRenderPass == nullptr) {
+        // No pipeline bound yet, skip this draw call
+        return;
+    }
     if (!hasStarted) {
         vkAcquireNextImageKHR(device->logicalDevice, device->swapChain,
                               UINT64_MAX, imageAvailableSemaphore,
@@ -204,6 +200,12 @@ auto CommandBuffer::draw(uint vertexCount, uint instanceCount, uint firstVertex,
     }
     vkCmdBindPipeline(this->commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                       renderPass->currentRenderPass->pipeline);
+    if (boundDrawingState != nullptr &&
+        boundDrawingState->vertexBuffer != nullptr) {
+        vkCmdBindVertexBuffers(this->commandBuffer, 0, 1,
+                               &boundDrawingState->vertexBuffer->vkBuffer,
+                               (VkDeviceSize[]){0});
+    }
     vkCmdDraw(this->commandBuffer, vertexCount, instanceCount, firstVertex,
               firstInstance);
 #endif
@@ -224,6 +226,10 @@ void CommandBuffer::drawIndexed(uint indexCount, uint instanceCount,
         boundDrawingState->unbind();
     }
 #elif defined(VULKAN)
+    if (renderPass == nullptr || renderPass->currentRenderPass == nullptr) {
+        // No pipeline bound yet, skip this draw call
+        return;
+    }
     if (!hasStarted) {
         vkAcquireNextImageKHR(device->logicalDevice, device->swapChain,
                               UINT64_MAX, imageAvailableSemaphore,
@@ -234,6 +240,18 @@ void CommandBuffer::drawIndexed(uint indexCount, uint instanceCount,
     }
     vkCmdBindPipeline(this->commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                       renderPass->currentRenderPass->pipeline);
+    if (boundDrawingState != nullptr) {
+        if (boundDrawingState->vertexBuffer != nullptr) {
+            vkCmdBindVertexBuffers(this->commandBuffer, 0, 1,
+                                   &boundDrawingState->vertexBuffer->vkBuffer,
+                                   (VkDeviceSize[]){0});
+        }
+        if (boundDrawingState->indexBuffer != nullptr) {
+            vkCmdBindIndexBuffer(this->commandBuffer,
+                                 boundDrawingState->indexBuffer->vkBuffer, 0,
+                                 VK_INDEX_TYPE_UINT32);
+        }
+    }
     vkCmdDrawIndexed(this->commandBuffer, indexCount, instanceCount, firstIndex,
                      vertexOffset, firstInstance);
 #endif
@@ -252,6 +270,10 @@ void CommandBuffer::drawPatches(uint vertexCount, uint firstVertex) {
         boundDrawingState->unbind();
     }
 #elif defined(VULKAN)
+    if (renderPass == nullptr || renderPass->currentRenderPass == nullptr) {
+        // No pipeline bound yet, skip this draw call
+        return;
+    }
     if (!hasStarted) {
         VkResult result = vkAcquireNextImageKHR(
             device->logicalDevice, device->swapChain, UINT64_MAX,
@@ -294,6 +316,12 @@ void CommandBuffer::drawPatches(uint vertexCount, uint firstVertex) {
     }
     vkCmdBindPipeline(this->commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                       renderPass->currentRenderPass->pipeline);
+    if (boundDrawingState != nullptr &&
+        boundDrawingState->vertexBuffer != nullptr) {
+        vkCmdBindVertexBuffers(this->commandBuffer, 0, 1,
+                               &boundDrawingState->vertexBuffer->vkBuffer,
+                               (VkDeviceSize[]){0});
+    }
     vkCmdDraw(this->commandBuffer, vertexCount, 1, firstVertex, 0);
 #endif
 }

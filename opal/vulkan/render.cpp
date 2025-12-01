@@ -21,6 +21,17 @@ void CommandBuffer::record(uint32_t imageIndex) {
         throw std::runtime_error("Failed to begin recording command buffer!");
     }
 
+    if (renderPass == nullptr || renderPass->currentRenderPass == nullptr) {
+        throw std::runtime_error("Cannot record command buffer: no render pass "
+                                 "bound. Call bindPipeline() before draw().");
+    }
+
+    if (framebuffer == nullptr ||
+        imageIndex >= framebuffer->vkFramebuffers.size()) {
+        throw std::runtime_error("Cannot record command buffer: invalid "
+                                 "framebuffer or image index.");
+    }
+
     VkRenderPassBeginInfo renderPassInfo{};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
     renderPassInfo.renderPass = renderPass->currentRenderPass->renderPass;
