@@ -384,15 +384,16 @@ void Pipeline::setUniform1f(const std::string &name, float v0) {
 #elif defined(VULKAN)
     const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
     if (!info) {
-        throw std::runtime_error("Uniform not found: " + name);
+        // Uniform not found, silently ignore for compatibility
+        return;
     }
     if (!info->isBuffer) {
-        // Push constant - not implemented yet, would need vkCmdPushConstants
-        throw std::runtime_error(
-            "Push constant uniforms not yet implemented: " + name);
+        // Push constant
+        updatePushConstant(info->offset, &v0, sizeof(float));
+    } else {
+        updateUniformData(info->set, info->binding, info->offset, &v0,
+                          sizeof(float));
     }
-    updateUniformData(info->set, info->binding, info->offset, &v0,
-                      sizeof(float));
 #endif
 }
 
@@ -405,14 +406,14 @@ void Pipeline::setUniformMat4f(const std::string &name,
 #elif defined(VULKAN)
     const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
     if (!info) {
-        throw std::runtime_error("Uniform not found: " + name);
+        return;
     }
     if (!info->isBuffer) {
-        throw std::runtime_error(
-            "Push constant uniforms not yet implemented: " + name);
+        updatePushConstant(info->offset, &matrix[0][0], sizeof(glm::mat4));
+    } else {
+        updateUniformData(info->set, info->binding, info->offset, &matrix[0][0],
+                          sizeof(glm::mat4));
     }
-    updateUniformData(info->set, info->binding, info->offset, &matrix[0][0],
-                      sizeof(glm::mat4));
 #endif
 }
 
@@ -425,15 +426,15 @@ void Pipeline::setUniform3f(const std::string &name, float v0, float v1,
 #elif defined(VULKAN)
     const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
     if (!info) {
-        throw std::runtime_error("Uniform not found: " + name);
-    }
-    if (!info->isBuffer) {
-        throw std::runtime_error(
-            "Push constant uniforms not yet implemented: " + name);
+        return;
     }
     float data[3] = {v0, v1, v2};
-    updateUniformData(info->set, info->binding, info->offset, data,
-                      sizeof(data));
+    if (!info->isBuffer) {
+        updatePushConstant(info->offset, data, sizeof(data));
+    } else {
+        updateUniformData(info->set, info->binding, info->offset, data,
+                          sizeof(data));
+    }
 #endif
 }
 
@@ -444,13 +445,14 @@ void Pipeline::setUniform1i(const std::string &name, int v0) {
 #elif defined(VULKAN)
     const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
     if (!info) {
-        throw std::runtime_error("Uniform not found: " + name);
+        return;
     }
     if (!info->isBuffer) {
-        throw std::runtime_error(
-            "Push constant uniforms not yet implemented: " + name);
+        updatePushConstant(info->offset, &v0, sizeof(int));
+    } else {
+        updateUniformData(info->set, info->binding, info->offset, &v0,
+                          sizeof(int));
     }
-    updateUniformData(info->set, info->binding, info->offset, &v0, sizeof(int));
 #endif
 }
 
@@ -462,15 +464,15 @@ void Pipeline::setUniformBool(const std::string &name, bool value) {
 #elif defined(VULKAN)
     const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
     if (!info) {
-        throw std::runtime_error("Uniform not found: " + name);
-    }
-    if (!info->isBuffer) {
-        throw std::runtime_error(
-            "Push constant uniforms not yet implemented: " + name);
+        return;
     }
     int intValue = value ? 1 : 0;
-    updateUniformData(info->set, info->binding, info->offset, &intValue,
-                      sizeof(int));
+    if (!info->isBuffer) {
+        updatePushConstant(info->offset, &intValue, sizeof(int));
+    } else {
+        updateUniformData(info->set, info->binding, info->offset, &intValue,
+                          sizeof(int));
+    }
 #endif
 }
 
@@ -483,15 +485,15 @@ void Pipeline::setUniform4f(const std::string &name, float v0, float v1,
 #elif defined(VULKAN)
     const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
     if (!info) {
-        throw std::runtime_error("Uniform not found: " + name);
-    }
-    if (!info->isBuffer) {
-        throw std::runtime_error(
-            "Push constant uniforms not yet implemented: " + name);
+        return;
     }
     float data[4] = {v0, v1, v2, v3};
-    updateUniformData(info->set, info->binding, info->offset, data,
-                      sizeof(data));
+    if (!info->isBuffer) {
+        updatePushConstant(info->offset, data, sizeof(data));
+    } else {
+        updateUniformData(info->set, info->binding, info->offset, data,
+                          sizeof(data));
+    }
 #endif
 }
 
@@ -503,15 +505,15 @@ void Pipeline::setUniform2f(const std::string &name, float v0, float v1) {
 #elif defined(VULKAN)
     const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
     if (!info) {
-        throw std::runtime_error("Uniform not found: " + name);
-    }
-    if (!info->isBuffer) {
-        throw std::runtime_error(
-            "Push constant uniforms not yet implemented: " + name);
+        return;
     }
     float data[2] = {v0, v1};
-    updateUniformData(info->set, info->binding, info->offset, data,
-                      sizeof(data));
+    if (!info->isBuffer) {
+        updatePushConstant(info->offset, data, sizeof(data));
+    } else {
+        updateUniformData(info->set, info->binding, info->offset, data,
+                          sizeof(data));
+    }
 #endif
 }
 
@@ -622,6 +624,31 @@ void Pipeline::buildDescriptorSets() {
     // 1. Create descriptor set layouts based on uniform bindings
     // 2. Allocate descriptor sets from a pool
     // 3. Update descriptor sets with buffer/image bindings
+}
+
+void Pipeline::updatePushConstant(uint32_t offset, const void *data,
+                                  size_t size) {
+    // Ensure push constant buffer is large enough
+    uint32_t requiredSize = offset + static_cast<uint32_t>(size);
+    if (pushConstantData.size() < requiredSize) {
+        pushConstantData.resize(requiredSize, 0);
+        pushConstantSize = requiredSize;
+    }
+
+    // Copy data to push constant buffer
+    memcpy(pushConstantData.data() + offset, data, size);
+    pushConstantsDirty = true;
+}
+
+void Pipeline::flushPushConstants(VkCommandBuffer commandBuffer) {
+    if (!pushConstantsDirty || pushConstantSize == 0) {
+        return;
+    }
+
+    vkCmdPushConstants(commandBuffer, pipelineLayout, pushConstantStages, 0,
+                       pushConstantSize, pushConstantData.data());
+
+    pushConstantsDirty = false;
 }
 #endif
 

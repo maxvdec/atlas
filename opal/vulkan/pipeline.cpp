@@ -133,20 +133,19 @@ VkFormat Pipeline::getFormat(VertexAttributeType type, uint size,
 }
 
 void Pipeline::buildPipelineLayout() {
-    std::vector<VkDynamicState> dynamicStates = {VK_DYNAMIC_STATE_VIEWPORT,
-                                                 VK_DYNAMIC_STATE_SCISSOR};
+    vkDynamicStates = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
 
     dynamicState = {};
     dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
     dynamicState.dynamicStateCount =
-        static_cast<uint32_t>(dynamicStates.size());
-    dynamicState.pDynamicStates = dynamicStates.data();
+        static_cast<uint32_t>(vkDynamicStates.size());
+    dynamicState.pDynamicStates = vkDynamicStates.data();
 
     // Create vertex input state
 
     vertexInputInfo = {};
-    std::vector<VkVertexInputBindingDescription> bindingDescriptions;
-    std::vector<VkVertexInputAttributeDescription> attributeDescriptions;
+    vkBindingDescriptions.clear();
+    vkAttributeDescriptions.clear();
 
     VkVertexInputBindingDescription bindingDesc{};
     bindingDesc.binding = 0;
@@ -156,7 +155,7 @@ void Pipeline::buildPipelineLayout() {
             ? VK_VERTEX_INPUT_RATE_VERTEX
             : VK_VERTEX_INPUT_RATE_INSTANCE;
 
-    bindingDescriptions.push_back(bindingDesc);
+    vkBindingDescriptions.push_back(bindingDesc);
 
     for (const auto &attr : this->vertexAttributes) {
         VkVertexInputAttributeDescription attrDesc{};
@@ -166,17 +165,18 @@ void Pipeline::buildPipelineLayout() {
             this->getFormat(attr.type, attr.size, attr.normalized);
         attrDesc.offset = attr.offset;
 
-        attributeDescriptions.push_back(attrDesc);
+        vkAttributeDescriptions.push_back(attrDesc);
     }
 
     vertexInputInfo.sType =
         VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
     vertexInputInfo.vertexBindingDescriptionCount =
-        static_cast<uint32_t>(bindingDescriptions.size());
-    vertexInputInfo.pVertexBindingDescriptions = bindingDescriptions.data();
+        static_cast<uint32_t>(vkBindingDescriptions.size());
+    vertexInputInfo.pVertexBindingDescriptions = vkBindingDescriptions.data();
     vertexInputInfo.vertexAttributeDescriptionCount =
-        static_cast<uint32_t>(attributeDescriptions.size());
-    vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
+        static_cast<uint32_t>(vkAttributeDescriptions.size());
+    vertexInputInfo.pVertexAttributeDescriptions =
+        vkAttributeDescriptions.data();
 
     // Define input assembly state
 
@@ -213,25 +213,25 @@ void Pipeline::buildPipelineLayout() {
     inputAssembly.primitiveRestartEnable = VK_FALSE;
 
     // Create the viewport
-    VkViewport viewport{};
-    viewport.x = static_cast<float>(viewportX);
-    viewport.y = static_cast<float>(viewportY);
-    viewport.width = static_cast<float>(viewportWidth);
-    viewport.height = static_cast<float>(viewportHeight);
-    viewport.minDepth = 0.0f;
-    viewport.maxDepth = 1.0f;
+    vkViewport = {};
+    vkViewport.x = static_cast<float>(viewportX);
+    vkViewport.y = static_cast<float>(viewportY);
+    vkViewport.width = static_cast<float>(viewportWidth);
+    vkViewport.height = static_cast<float>(viewportHeight);
+    vkViewport.minDepth = 0.0f;
+    vkViewport.maxDepth = 1.0f;
 
-    VkRect2D scissor{};
-    scissor.offset = {.x = 0, .y = 0};
-    scissor.extent = {.width = static_cast<uint32_t>(viewportWidth),
-                      .height = static_cast<uint32_t>(viewportHeight)};
+    vkScissor = {};
+    vkScissor.offset = {.x = 0, .y = 0};
+    vkScissor.extent = {.width = static_cast<uint32_t>(viewportWidth),
+                        .height = static_cast<uint32_t>(viewportHeight)};
 
     viewportState = {};
     viewportState.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
     viewportState.viewportCount = 1;
-    viewportState.pViewports = &viewport;
+    viewportState.pViewports = &vkViewport;
     viewportState.scissorCount = 1;
-    viewportState.pScissors = &scissor;
+    viewportState.pScissors = &vkScissor;
 
     // Create the rasterizer state
     rasterizer = {};
@@ -333,6 +333,7 @@ void Pipeline::buildPipelineLayout() {
     }
 
     // Create the color blend state
+    vkColorBlendAttachments.clear();
     VkPipelineColorBlendAttachmentState colorBlendAttachment{};
     colorBlendAttachment.colorWriteMask =
         VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
@@ -436,16 +437,76 @@ void Pipeline::buildPipelineLayout() {
         break;
     };
 
+    vkColorBlendAttachments.push_back(colorBlendAttachment);
+
     colorBlending = {};
     colorBlending.sType =
         VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
     colorBlending.logicOpEnable = VK_FALSE;
-    colorBlending.attachmentCount = 1;
-    colorBlending.pAttachments = &colorBlendAttachment;
+    colorBlending.attachmentCount =
+        static_cast<uint32_t>(vkColorBlendAttachments.size());
+    colorBlending.pAttachments = vkColorBlendAttachments.data();
+
+    // Calculate push constant size from shader reflection
+    uint32_t maxPushConstantSize = 0;
+    VkShaderStageFlags pushConstantStageFlags = 0;
+
+    if (this->shaderProgram) {
+        for (const auto &shader : this->shaderProgram->attachedShaders) {
+            for (const auto &pair : shader->uniformBindings) {
+                const UniformBindingInfo &info = pair.second;
+                if (!info.isBuffer && !info.isSampler) {
+                    // This is a push constant
+                    uint32_t endOffset = info.offset + info.size;
+                    if (endOffset > maxPushConstantSize) {
+                        maxPushConstantSize = endOffset;
+                    }
+                    // Set stage flag based on shader type
+                    switch (shader->type) {
+                    case ShaderType::Vertex:
+                        pushConstantStageFlags |= VK_SHADER_STAGE_VERTEX_BIT;
+                        break;
+                    case ShaderType::Fragment:
+                        pushConstantStageFlags |= VK_SHADER_STAGE_FRAGMENT_BIT;
+                        break;
+                    case ShaderType::Geometry:
+                        pushConstantStageFlags |= VK_SHADER_STAGE_GEOMETRY_BIT;
+                        break;
+                    case ShaderType::TessellationControl:
+                        pushConstantStageFlags |=
+                            VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+                        break;
+                    case ShaderType::TessellationEvaluation:
+                        pushConstantStageFlags |=
+                            VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
+                        break;
+                    default:
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    // Store push constant info for later use
+    this->pushConstantSize = maxPushConstantSize;
+    this->pushConstantStages = pushConstantStageFlags;
+    if (maxPushConstantSize > 0) {
+        this->pushConstantData.resize(maxPushConstantSize, 0);
+    }
 
     // Create the pipeline layout
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+
+    VkPushConstantRange pushConstantRange{};
+    if (maxPushConstantSize > 0) {
+        pushConstantRange.stageFlags = pushConstantStageFlags;
+        pushConstantRange.offset = 0;
+        pushConstantRange.size = maxPushConstantSize;
+        pipelineLayoutInfo.pushConstantRangeCount = 1;
+        pipelineLayoutInfo.pPushConstantRanges = &pushConstantRange;
+    }
 
     if (vkCreatePipelineLayout(Device::globalDevice, &pipelineLayoutInfo,
                                nullptr, &this->pipelineLayout) != VK_SUCCESS) {

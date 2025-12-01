@@ -553,6 +553,16 @@ class Pipeline {
     VkPipelineMultisampleStateCreateInfo multisampling;
     VkPipelineDepthStencilStateCreateInfo depthStencil;
     VkPipelineColorBlendStateCreateInfo colorBlending;
+
+    // Storage for data referenced by create info structs (must outlive pipeline
+    // creation)
+    std::vector<VkDynamicState> vkDynamicStates;
+    std::vector<VkVertexInputBindingDescription> vkBindingDescriptions;
+    std::vector<VkVertexInputAttributeDescription> vkAttributeDescriptions;
+    VkViewport vkViewport;
+    VkRect2D vkScissor;
+    std::vector<VkPipelineColorBlendAttachmentState> vkColorBlendAttachments;
+
     VkFormat getFormat(VertexAttributeType type, uint size,
                        bool normalized) const;
     void buildPipelineLayout();
@@ -586,6 +596,14 @@ class Pipeline {
 
     // Build descriptor sets from shader reflection
     void buildDescriptorSets();
+
+    // Push constant support
+    std::vector<uint8_t> pushConstantData;
+    uint32_t pushConstantSize = 0;
+    VkShaderStageFlags pushConstantStages = 0;
+    void updatePushConstant(uint32_t offset, const void *data, size_t size);
+    void flushPushConstants(VkCommandBuffer commandBuffer);
+    bool pushConstantsDirty = false;
 #endif
 
     bool multisamplingEnabled = false;

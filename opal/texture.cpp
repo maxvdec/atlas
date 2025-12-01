@@ -337,12 +337,10 @@ void Pipeline::bindTexture(const std::string &name,
     int location = glGetUniformLocation(shaderProgram->programID, name.c_str());
     glUniform1i(location, unit);
 #elif defined(VULKAN)
-    const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
-    if (!info) {
-        throw std::runtime_error("Sampler uniform not found: " + name);
-    }
     // Texture binding for Vulkan requires descriptor set updates
     // This is handled through the descriptor set system
+    // For now, silently ignore if uniform not found (matches OpenGL behavior)
+    (void)name;
     (void)texture;
     (void)unit;
 #endif
@@ -356,10 +354,9 @@ void Pipeline::bindTexture2D(const std::string &name, uint textureId,
     int location = glGetUniformLocation(shaderProgram->programID, name.c_str());
     glUniform1i(location, unit);
 #elif defined(VULKAN)
-    const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
-    if (!info) {
-        throw std::runtime_error("Sampler uniform not found: " + name);
-    }
+    // Vulkan texture binding requires descriptor sets - not yet implemented
+    // Silently ignore if uniform not found (matches OpenGL behavior)
+    (void)name;
     (void)textureId;
     (void)unit;
 #endif
@@ -373,10 +370,9 @@ void Pipeline::bindTexture3D(const std::string &name, uint textureId,
     int location = glGetUniformLocation(shaderProgram->programID, name.c_str());
     glUniform1i(location, unit);
 #elif defined(VULKAN)
-    const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
-    if (!info) {
-        throw std::runtime_error("Sampler uniform not found: " + name);
-    }
+    // Vulkan texture binding requires descriptor sets - not yet implemented
+    // Silently ignore if uniform not found (matches OpenGL behavior)
+    (void)name;
     (void)textureId;
     (void)unit;
 #endif
@@ -390,10 +386,9 @@ void Pipeline::bindTextureCubemap(const std::string &name, uint textureId,
     int location = glGetUniformLocation(shaderProgram->programID, name.c_str());
     glUniform1i(location, unit);
 #elif defined(VULKAN)
-    const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
-    if (!info) {
-        throw std::runtime_error("Sampler uniform not found: " + name);
-    }
+    // Vulkan texture binding requires descriptor sets - not yet implemented
+    // Silently ignore if uniform not found (matches OpenGL behavior)
+    (void)name;
     (void)textureId;
     (void)unit;
 #endif

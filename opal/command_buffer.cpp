@@ -206,6 +206,10 @@ auto CommandBuffer::draw(uint vertexCount, uint instanceCount, uint firstVertex,
                                &boundDrawingState->vertexBuffer->vkBuffer,
                                (VkDeviceSize[]){0});
     }
+    if (renderPass->currentRenderPass->opalPipeline != nullptr) {
+        renderPass->currentRenderPass->opalPipeline->flushPushConstants(
+            this->commandBuffer);
+    }
     vkCmdDraw(this->commandBuffer, vertexCount, instanceCount, firstVertex,
               firstInstance);
 #endif
@@ -251,6 +255,10 @@ void CommandBuffer::drawIndexed(uint indexCount, uint instanceCount,
                                  boundDrawingState->indexBuffer->vkBuffer, 0,
                                  VK_INDEX_TYPE_UINT32);
         }
+    }
+    if (renderPass->currentRenderPass->opalPipeline != nullptr) {
+        renderPass->currentRenderPass->opalPipeline->flushPushConstants(
+            this->commandBuffer);
     }
     vkCmdDrawIndexed(this->commandBuffer, indexCount, instanceCount, firstIndex,
                      vertexOffset, firstInstance);
@@ -321,6 +329,10 @@ void CommandBuffer::drawPatches(uint vertexCount, uint firstVertex) {
         vkCmdBindVertexBuffers(this->commandBuffer, 0, 1,
                                &boundDrawingState->vertexBuffer->vkBuffer,
                                (VkDeviceSize[]){0});
+    }
+    if (renderPass->currentRenderPass->opalPipeline != nullptr) {
+        renderPass->currentRenderPass->opalPipeline->flushPushConstants(
+            this->commandBuffer);
     }
     vkCmdDraw(this->commandBuffer, vertexCount, 1, firstVertex, 0);
 #endif
