@@ -90,10 +90,11 @@ Device::acquire([[maybe_unused]] std::shared_ptr<Context> context) {
 #else
     auto device = std::make_shared<Device>();
     device->context = context;
+    Device::globalInstance = device.get();
     device->pickPhysicalDevice(context);
     device->createLogicalDevice(context);
     device->createSwapChain(context);
-    Device::globalInstance = device.get();
+    device->createImageViews();
     return device;
 #endif
 }
@@ -111,5 +112,22 @@ std::shared_ptr<Framebuffer> Device::getDefaultFramebuffer() {
 
 Device *Device::globalInstance = nullptr;
 VkDevice Device::globalDevice = VK_NULL_HANDLE;
+
+#ifdef VULKAN
+std::shared_ptr<Buffer> Device::getDefaultInstanceBuffer() {
+    if (defaultInstanceBuffer != nullptr) {
+        return defaultInstanceBuffer;
+    }
+
+    static const float identity[16] = {1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+                                       0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+                                       0.0f, 0.0f, 0.0f, 1.0f};
+
+    defaultInstanceBuffer =
+        Buffer::create(BufferUsage::VertexBuffer, sizeof(identity), identity,
+                       MemoryUsageType::GPUOnly);
+    return defaultInstanceBuffer;
+}
+#endif
 
 } // namespace opal

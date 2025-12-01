@@ -77,6 +77,8 @@ class Context {
 
 class CommandBuffer;
 class Framebuffer;
+class Buffer;
+class Texture;
 #ifdef VULKAN
 class CoreRenderPass;
 #endif
@@ -112,9 +114,6 @@ class Device {
     ImageCollection swapChainImages;
     VkExtent2D swapChainExtent = {};
     VkFormat swapChainImageFormat = VK_FORMAT_UNDEFINED;
-#ifdef VULKAN
-    std::vector<std::shared_ptr<Texture>> swapChainBrightTextures;
-#endif
 
     VkCommandPool commandPool = VK_NULL_HANDLE;
 
@@ -146,12 +145,16 @@ class Device {
                           std::shared_ptr<Context> context);
     void createSwapChain(std::shared_ptr<Context> context);
     void createImageViews();
-#ifdef VULKAN
-    void createSwapChainBrightTextures();
-    void destroySwapChainBrightTextures();
-#endif
     bool supportsDeviceExtension(VkPhysicalDevice device,
                                  const char *extension);
+
+#ifdef VULKAN
+    void destroySwapChainBrightTextures();
+    void createSwapChainBrightTextures();
+    std::vector<std::shared_ptr<Texture>> swapChainBrightTextures;
+    std::shared_ptr<Buffer> getDefaultInstanceBuffer();
+    std::shared_ptr<Buffer> defaultInstanceBuffer = nullptr;
+#endif
 
     void remakeSwapChain(std::shared_ptr<Context> context);
     VkSurfaceFormatKHR chooseSwapSurfaceFormat(
@@ -602,6 +605,7 @@ class Pipeline {
     VkViewport vkViewport;
     VkRect2D vkScissor;
     std::vector<VkPipelineColorBlendAttachmentState> vkColorBlendAttachments;
+    bool hasInstanceAttributes = false;
 
     VkFormat getFormat(VertexAttributeType type, uint size,
                        bool normalized) const;
@@ -748,6 +752,7 @@ struct VertexAttributeBinding {
 struct DrawingState {
     std::shared_ptr<Buffer> vertexBuffer = nullptr;
     std::shared_ptr<Buffer> indexBuffer = nullptr;
+    std::shared_ptr<Buffer> instanceBuffer = nullptr;
 
     static std::shared_ptr<DrawingState>
     create(std::shared_ptr<Buffer> vertexBuffer,
@@ -758,8 +763,8 @@ struct DrawingState {
 
     void bind() const;
     void unbind() const;
-    void configureAttributes(
-        const std::vector<VertexAttributeBinding> &bindings) const;
+    void
+    configureAttributes(const std::vector<VertexAttributeBinding> &bindings);
 
     uint index;
 };
@@ -981,6 +986,7 @@ class CommandBuffer {
     uint32_t imageIndex = 0;
     void record(uint32_t imageIndex);
     void createSyncObjects();
+    void bindVertexBuffersIfNeeded();
 #endif
 
     float clearColorValue[4] = {0.0f, 0.0f, 0.0f, 1.0f};

@@ -36,6 +36,8 @@ void CommandBuffer::start() {
     // Reset state for a new command recording session
     boundPipeline = nullptr;
     boundDrawingState = nullptr;
+    renderPass = nullptr;
+    framebuffer = nullptr;
 #ifdef VULKAN
     hasStarted = false;
     this->createSyncObjects();
@@ -48,13 +50,28 @@ void CommandBuffer::start() {
 void Device::submitCommandBuffer(
     [[maybe_unused]] std::shared_ptr<CommandBuffer> commandBuffer) {}
 
-void CommandBuffer::beginPass(
-    [[maybe_unused]] std::shared_ptr<RenderPass> renderPass) {
-    if (renderPass != nullptr) {
-        renderPass->framebuffer->bind();
+void CommandBuffer::beginPass(std::shared_ptr<RenderPass> newRenderPass) {
+    if (newRenderPass == nullptr) {
+        throw std::runtime_error(
+            "Cannot begin a command buffer pass without a render pass");
     }
-    this->framebuffer = renderPass->framebuffer;
-    this->renderPass = renderPass;
+    if (newRenderPass->framebuffer == nullptr) {
+        throw std::runtime_error(
+            "Render pass must have a framebuffer before beginPass");
+    }
+
+    renderPass = std::move(newRenderPass);
+    framebuffer = renderPass->framebuffer;
+
+#ifdef OPENGL
+    framebuffer->bind();
+#elif defined(VULKAN)
+    // Ensure default framebuffer dimensions follow the swapchain.
+    if (framebuffer->isDefaultFramebuffer && device != nullptr) {
+        framebuffer->width = static_cast<int>(device->swapChainExtent.width);
+        framebuffer->height = static_cast<int>(device->swapChainExtent.height);
+    }
+#endif
 }
 
 void CommandBuffer::beginSampled(
@@ -246,12 +263,7 @@ auto CommandBuffer::draw(uint vertexCount, uint instanceCount, uint firstVertex,
     }
     vkCmdBindPipeline(this->commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                       renderPass->currentRenderPass->pipeline);
-    if (boundDrawingState != nullptr &&
-        boundDrawingState->vertexBuffer != nullptr) {
-        vkCmdBindVertexBuffers(this->commandBuffer, 0, 1,
-                               &boundDrawingState->vertexBuffer->vkBuffer,
-                               (VkDeviceSize[]){0});
-    }
+    bindVertexBuffersIfNeeded();
     if (renderPass->currentRenderPass->opalPipeline != nullptr) {
         renderPass->currentRenderPass->opalPipeline->flushPushConstants(
             this->commandBuffer);
@@ -291,11 +303,7 @@ void CommandBuffer::drawIndexed(uint indexCount, uint instanceCount,
     vkCmdBindPipeline(this->commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                       renderPass->currentRenderPass->pipeline);
     if (boundDrawingState != nullptr) {
-        if (boundDrawingState->vertexBuffer != nullptr) {
-            vkCmdBindVertexBuffers(this->commandBuffer, 0, 1,
-                                   &boundDrawingState->vertexBuffer->vkBuffer,
-                                   (VkDeviceSize[]){0});
-        }
+        bindVertexBuffersIfNeeded();
         if (boundDrawingState->indexBuffer != nullptr) {
             vkCmdBindIndexBuffer(this->commandBuffer,
                                  boundDrawingState->indexBuffer->vkBuffer, 0,
@@ -384,12 +392,7 @@ void CommandBuffer::drawPatches(uint vertexCount, uint firstVertex) {
     }
     vkCmdBindPipeline(this->commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                       renderPass->currentRenderPass->pipeline);
-    if (boundDrawingState != nullptr &&
-        boundDrawingState->vertexBuffer != nullptr) {
-        vkCmdBindVertexBuffers(this->commandBuffer, 0, 1,
-                               &boundDrawingState->vertexBuffer->vkBuffer,
-                               (VkDeviceSize[]){0});
-    }
+    bindVertexBuffersIfNeeded();
     if (renderPass->currentRenderPass->opalPipeline != nullptr) {
         renderPass->currentRenderPass->opalPipeline->flushPushConstants(
             this->commandBuffer);
@@ -397,6 +400,41 @@ void CommandBuffer::drawPatches(uint vertexCount, uint firstVertex) {
     vkCmdDraw(this->commandBuffer, vertexCount, 1, firstVertex, 0);
 #endif
 }
+
+#ifdef VULKAN
+void CommandBuffer::bindVertexBuffersIfNeeded() {
+    if (boundDrawingState == nullptr ||
+        boundDrawingState->vertexBuffer == nullptr) {
+        return;
+    }
+
+    std::array<VkBuffer, 2> buffers = {
+        boundDrawingState->vertexBuffer->vkBuffer, VK_NULL_HANDLE};
+    std::array<VkDeviceSize, 2> offsets = {0, 0};
+    uint32_t bindingCount = 1;
+
+    bool needsInstanceBinding =
+        boundPipeline != nullptr && boundPipeline->hasInstanceAttributes;
+
+    VkBuffer instanceBufferHandle = VK_NULL_HANDLE;
+    if (boundDrawingState->instanceBuffer != nullptr) {
+        instanceBufferHandle = boundDrawingState->instanceBuffer->vkBuffer;
+    } else if (needsInstanceBinding && device != nullptr) {
+        auto fallback = device->getDefaultInstanceBuffer();
+        if (fallback != nullptr) {
+            instanceBufferHandle = fallback->vkBuffer;
+        }
+    }
+
+    if (instanceBufferHandle != VK_NULL_HANDLE) {
+        buffers[1] = instanceBufferHandle;
+        bindingCount = 2;
+    }
+
+    vkCmdBindVertexBuffers(this->commandBuffer, 0, bindingCount, buffers.data(),
+                           offsets.data());
+}
+#endif
 
 void CommandBuffer::clearColor(float r, float g, float b, float a) {
 #ifdef OPENGL

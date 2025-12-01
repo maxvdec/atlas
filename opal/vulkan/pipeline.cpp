@@ -156,24 +156,26 @@ void Pipeline::buildPipelineLayout() {
     vkBindingDescriptions.push_back(vertexBindingDesc);
 
     // Check if we have any instance attributes
-    bool hasInstanceAttributes = false;
+    bool foundInstanceAttributes = false;
     uint32_t instanceStride = 0;
     for (const auto &attr : this->vertexAttributes) {
         if (attr.inputRate == VertexBindingInputRate::Instance) {
-            hasInstanceAttributes = true;
+            foundInstanceAttributes = true;
             instanceStride = attr.stride;
             break;
         }
     }
 
     // Create binding for per-instance data (binding 1) if needed
-    if (hasInstanceAttributes) {
+    if (foundInstanceAttributes) {
         VkVertexInputBindingDescription instanceBindingDesc{};
         instanceBindingDesc.binding = 1;
         instanceBindingDesc.stride = instanceStride;
         instanceBindingDesc.inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
         vkBindingDescriptions.push_back(instanceBindingDesc);
     }
+
+    hasInstanceAttributes = foundInstanceAttributes;
 
     for (const auto &attr : this->vertexAttributes) {
         VkVertexInputAttributeDescription attrDesc{};

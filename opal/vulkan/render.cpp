@@ -80,6 +80,22 @@ void CommandBuffer::record(uint32_t imageIndex) {
 
     vkCmdBeginRenderPass(this->commandBuffer, &renderPassInfo,
                          VK_SUBPASS_CONTENTS_INLINE);
+
+    // Configure dynamic viewport/scissor to match current render area
+    VkViewport viewport{};
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
+    viewport.width = static_cast<float>(renderPassInfo.renderArea.extent.width);
+    viewport.height =
+        static_cast<float>(renderPassInfo.renderArea.extent.height);
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    vkCmdSetViewport(this->commandBuffer, 0, 1, &viewport);
+
+    VkRect2D scissor{};
+    scissor.offset = {.x = 0, .y = 0};
+    scissor.extent = renderPassInfo.renderArea.extent;
+    vkCmdSetScissor(this->commandBuffer, 0, 1, &scissor);
 }
 
 void CommandBuffer::createSyncObjects() {

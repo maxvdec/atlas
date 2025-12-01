@@ -303,7 +303,7 @@ void DrawingState::unbind() const {
 }
 
 void DrawingState::configureAttributes(
-    const std::vector<VertexAttributeBinding> &bindings) const {
+    const std::vector<VertexAttributeBinding> &bindings) {
 #ifdef OPENGL
     if (bindings.empty()) {
         return;
@@ -341,6 +341,21 @@ void DrawingState::configureAttributes(
     }
 
     glBindVertexArray(0);
+#elif defined(VULKAN)
+    bool hasInstanceBinding = false;
+    for (const auto &binding : bindings) {
+        if (binding.attribute.inputRate == VertexBindingInputRate::Instance &&
+            binding.sourceBuffer != nullptr) {
+            instanceBuffer = binding.sourceBuffer;
+            hasInstanceBinding = true;
+            break;
+        }
+    }
+    if (!hasInstanceBinding) {
+        instanceBuffer = nullptr;
+    }
+#else
+    (void)bindings;
 #endif
 }
 

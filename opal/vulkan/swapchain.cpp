@@ -201,11 +201,11 @@ void Device::createSwapChainBrightTextures() {
 
     swapChainBrightTextures.reserve(swapChainImages.images.size());
     for (size_t i = 0; i < swapChainImages.images.size(); ++i) {
-        auto texture = Texture::create(TextureType::Texture2D,
-                                       TextureFormat::Rgba16F,
-                                       static_cast<int>(swapChainExtent.width),
-                                       static_cast<int>(swapChainExtent.height),
-                                       TextureDataFormat::Rgba, nullptr, 1);
+        auto texture =
+            Texture::create(TextureType::Texture2D, TextureFormat::Rgba16F,
+                            static_cast<int>(swapChainExtent.width),
+                            static_cast<int>(swapChainExtent.height),
+                            TextureDataFormat::Rgba, nullptr, 1);
         swapChainBrightTextures.push_back(texture);
     }
 }
