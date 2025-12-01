@@ -331,7 +331,8 @@ struct UniformBindingInfo {
     uint32_t
         offset; // Offset of the member within the block (for struct members)
     bool isSampler;
-    bool isBuffer; // true for uniform buffers, false for push constants
+    bool isBuffer;        // true for uniform buffers, false for push constants
+    bool isStorageBuffer; // true for storage buffers (SSBOs)
 };
 #endif
 

@@ -7,6 +7,7 @@
 // Copyright (c) 2025 Max Van den Eynde
 //
 
+#include <map>
 #include <memory>
 #include <vector>
 #ifdef VULKAN
@@ -447,43 +448,107 @@ void Pipeline::buildPipelineLayout() {
         static_cast<uint32_t>(vkColorBlendAttachments.size());
     colorBlending.pAttachments = vkColorBlendAttachments.data();
 
-    // Calculate push constant size from shader reflection
+    // Collect all uniform buffer bindings and push constants from shaders
     uint32_t maxPushConstantSize = 0;
     VkShaderStageFlags pushConstantStageFlags = 0;
 
+    // Map from (set, binding) to descriptor info
+    struct DescriptorBindingInfo {
+        VkDescriptorType type;
+        VkShaderStageFlags stageFlags;
+        uint32_t count;
+    };
+    std::map<uint32_t, std::map<uint32_t, DescriptorBindingInfo>> setBindings;
+
     if (this->shaderProgram) {
         for (const auto &shader : this->shaderProgram->attachedShaders) {
+            VkShaderStageFlags stageFlag = 0;
+            switch (shader->type) {
+            case ShaderType::Vertex:
+                stageFlag = VK_SHADER_STAGE_VERTEX_BIT;
+                break;
+            case ShaderType::Fragment:
+                stageFlag = VK_SHADER_STAGE_FRAGMENT_BIT;
+                break;
+            case ShaderType::Geometry:
+                stageFlag = VK_SHADER_STAGE_GEOMETRY_BIT;
+                break;
+            case ShaderType::TessellationControl:
+                stageFlag = VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
+                break;
+            case ShaderType::TessellationEvaluation:
+                stageFlag = VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
+                break;
+            default:
+                break;
+            }
+
             for (const auto &pair : shader->uniformBindings) {
                 const UniformBindingInfo &info = pair.second;
-                if (!info.isBuffer && !info.isSampler) {
+                if (info.isBuffer) {
+                    // This is a uniform buffer - add to descriptor set layout
+                    auto &binding = setBindings[info.set][info.binding];
+                    binding.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                    binding.stageFlags |= stageFlag;
+                    binding.count = 1;
+                } else if (info.isSampler) {
+                    // This is a sampler - add to descriptor set layout
+                    auto &binding = setBindings[info.set][info.binding];
+                    binding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                    binding.stageFlags |= stageFlag;
+                    binding.count = 1;
+                } else {
                     // This is a push constant
                     uint32_t endOffset = info.offset + info.size;
                     if (endOffset > maxPushConstantSize) {
                         maxPushConstantSize = endOffset;
                     }
-                    // Set stage flag based on shader type
-                    switch (shader->type) {
-                    case ShaderType::Vertex:
-                        pushConstantStageFlags |= VK_SHADER_STAGE_VERTEX_BIT;
-                        break;
-                    case ShaderType::Fragment:
-                        pushConstantStageFlags |= VK_SHADER_STAGE_FRAGMENT_BIT;
-                        break;
-                    case ShaderType::Geometry:
-                        pushConstantStageFlags |= VK_SHADER_STAGE_GEOMETRY_BIT;
-                        break;
-                    case ShaderType::TessellationControl:
-                        pushConstantStageFlags |=
-                            VK_SHADER_STAGE_TESSELLATION_CONTROL_BIT;
-                        break;
-                    case ShaderType::TessellationEvaluation:
-                        pushConstantStageFlags |=
-                            VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
-                        break;
-                    default:
-                        break;
-                    }
+                    pushConstantStageFlags |= stageFlag;
                 }
+            }
+        }
+    }
+
+    // Clean up old descriptor set layouts
+    for (auto layout : descriptorSetLayouts) {
+        if (layout != VK_NULL_HANDLE) {
+            vkDestroyDescriptorSetLayout(Device::globalDevice, layout, nullptr);
+        }
+    }
+    descriptorSetLayouts.clear();
+
+    // Create descriptor set layouts for each set
+    if (!setBindings.empty()) {
+        uint32_t maxSet = setBindings.rbegin()->first;
+        descriptorSetLayouts.resize(maxSet + 1, VK_NULL_HANDLE);
+
+        for (const auto &setPair : setBindings) {
+            uint32_t setIndex = setPair.first;
+            const auto &bindings = setPair.second;
+
+            std::vector<VkDescriptorSetLayoutBinding> layoutBindings;
+            for (const auto &bindingPair : bindings) {
+                VkDescriptorSetLayoutBinding layoutBinding{};
+                layoutBinding.binding = bindingPair.first;
+                layoutBinding.descriptorType = bindingPair.second.type;
+                layoutBinding.descriptorCount = bindingPair.second.count;
+                layoutBinding.stageFlags = bindingPair.second.stageFlags;
+                layoutBinding.pImmutableSamplers = nullptr;
+                layoutBindings.push_back(layoutBinding);
+            }
+
+            VkDescriptorSetLayoutCreateInfo layoutInfo{};
+            layoutInfo.sType =
+                VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+            layoutInfo.bindingCount =
+                static_cast<uint32_t>(layoutBindings.size());
+            layoutInfo.pBindings = layoutBindings.data();
+
+            if (vkCreateDescriptorSetLayout(
+                    Device::globalDevice, &layoutInfo, nullptr,
+                    &descriptorSetLayouts[setIndex]) != VK_SUCCESS) {
+                throw std::runtime_error(
+                    "Failed to create descriptor set layout!");
             }
         }
     }
@@ -498,6 +563,13 @@ void Pipeline::buildPipelineLayout() {
     // Create the pipeline layout
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+
+    // Add descriptor set layouts
+    if (!descriptorSetLayouts.empty()) {
+        pipelineLayoutInfo.setLayoutCount =
+            static_cast<uint32_t>(descriptorSetLayouts.size());
+        pipelineLayoutInfo.pSetLayouts = descriptorSetLayouts.data();
+    }
 
     VkPushConstantRange pushConstantRange{};
     if (maxPushConstantSize > 0) {
