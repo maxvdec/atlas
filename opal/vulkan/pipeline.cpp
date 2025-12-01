@@ -486,9 +486,13 @@ void Pipeline::buildPipelineLayout() {
             for (const auto &pair : shader->uniformBindings) {
                 const UniformBindingInfo &info = pair.second;
                 if (info.isBuffer) {
-                    // This is a uniform buffer - add to descriptor set layout
+                    // This is a buffer - add to descriptor set layout
                     auto &binding = setBindings[info.set][info.binding];
-                    binding.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                    if (info.isStorageBuffer) {
+                        binding.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+                    } else {
+                        binding.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                    }
                     binding.stageFlags |= stageFlag;
                     binding.count = 1;
                 } else if (info.isSampler) {

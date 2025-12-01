@@ -14,6 +14,120 @@
 #include <memory>
 #include <vector>
 
+// Helper functions to convert C++ light structs to GPU-compatible formats
+namespace {
+
+std::vector<GPUDirectionalLight>
+buildGPUDirectionalLights(const std::vector<DirectionalLight *> &lights,
+                          int maxCount) {
+    std::vector<GPUDirectionalLight> result;
+    int count = std::min(static_cast<int>(lights.size()), maxCount);
+    result.reserve(count);
+    for (int i = 0; i < count; i++) {
+        DirectionalLight *light = lights[i];
+        GPUDirectionalLight gpu;
+        gpu.direction = glm::vec3(light->direction.x, light->direction.y,
+                                  light->direction.z);
+        gpu.diffuse = glm::vec3(light->color.r, light->color.g, light->color.b);
+        gpu.specular = glm::vec3(light->shineColor.r, light->shineColor.g,
+                                 light->shineColor.b);
+        gpu._pad1 = 0.0f;
+        gpu._pad2 = 0.0f;
+        gpu._pad3 = 0.0f;
+        result.push_back(gpu);
+    }
+    return result;
+}
+
+std::vector<GPUPointLight>
+buildGPUPointLights(const std::vector<Light *> &lights, int maxCount) {
+    std::vector<GPUPointLight> result;
+    int count = std::min(static_cast<int>(lights.size()), maxCount);
+    result.reserve(count);
+    for (int i = 0; i < count; i++) {
+        Light *light = lights[i];
+        PointLightConstants plc = light->calculateConstants();
+        GPUPointLight gpu;
+        gpu.position =
+            glm::vec3(light->position.x, light->position.y, light->position.z);
+        gpu.diffuse = glm::vec3(light->color.r, light->color.g, light->color.b);
+        gpu.specular = glm::vec3(light->shineColor.r, light->shineColor.g,
+                                 light->shineColor.b);
+        gpu.constant = plc.constant;
+        gpu.linear = plc.linear;
+        gpu.quadratic = plc.quadratic;
+        gpu.radius = plc.radius;
+        gpu._pad1 = 0.0f;
+        gpu._pad2 = 0.0f;
+        gpu._pad3 = 0.0f;
+        result.push_back(gpu);
+    }
+    return result;
+}
+
+std::vector<GPUSpotLight>
+buildGPUSpotLights(const std::vector<Spotlight *> &lights, int maxCount) {
+    std::vector<GPUSpotLight> result;
+    int count = std::min(static_cast<int>(lights.size()), maxCount);
+    result.reserve(count);
+    for (int i = 0; i < count; i++) {
+        Spotlight *light = lights[i];
+        GPUSpotLight gpu;
+        gpu.position =
+            glm::vec3(light->position.x, light->position.y, light->position.z);
+        gpu.direction = glm::vec3(light->direction.x, light->direction.y,
+                                  light->direction.z);
+        gpu.cutOff = light->cutOff;
+        gpu.outerCutOff = light->outerCutoff;
+        gpu.diffuse = glm::vec3(light->color.r, light->color.g, light->color.b);
+        gpu.specular = glm::vec3(light->shineColor.r, light->shineColor.g,
+                                 light->shineColor.b);
+        gpu._pad1 = 0.0f;
+        gpu._pad2 = 0.0f;
+        gpu._pad3 = 0.0f;
+        gpu._pad4 = 0.0f;
+        gpu._pad5 = 0.0f;
+        gpu._pad6 = 0.0f;
+        result.push_back(gpu);
+    }
+    return result;
+}
+
+std::vector<GPUAreaLight>
+buildGPUAreaLights(const std::vector<AreaLight *> &lights, int maxCount) {
+    std::vector<GPUAreaLight> result;
+    int count = std::min(static_cast<int>(lights.size()), maxCount);
+    result.reserve(count);
+    for (int i = 0; i < count; i++) {
+        AreaLight *light = lights[i];
+        GPUAreaLight gpu;
+        gpu.position =
+            glm::vec3(light->position.x, light->position.y, light->position.z);
+        gpu.right = glm::vec3(light->right.x, light->right.y, light->right.z);
+        gpu.up = glm::vec3(light->up.x, light->up.y, light->up.z);
+        gpu.size = glm::vec2(static_cast<float>(light->size.width),
+                             static_cast<float>(light->size.height));
+        gpu.diffuse = glm::vec3(light->color.r, light->color.g, light->color.b);
+        gpu.specular = glm::vec3(light->shineColor.r, light->shineColor.g,
+                                 light->shineColor.b);
+        gpu.angle = light->angle;
+        gpu.castsBothSides = light->castsBothSides ? 1 : 0;
+        gpu._pad1 = 0.0f;
+        gpu._pad2 = 0.0f;
+        gpu._pad3 = 0.0f;
+        gpu._pad4 = 0.0f;
+        gpu._pad5 = 0.0f;
+        gpu._pad6 = 0.0f;
+        gpu._pad7 = 0.0f;
+        gpu._pad8 = 0.0f;
+        gpu._pad9 = 0.0f;
+        result.push_back(gpu);
+    }
+    return result;
+}
+
+} // anonymous namespace
+
 void Window::deferredRendering(
     RenderTarget *target, std::shared_ptr<opal::CommandBuffer> commandBuffer) {
     if (commandBuffer == nullptr) {
@@ -171,87 +285,44 @@ void Window::deferredRendering(
                                 getCamera()->position.y,
                                 getCamera()->position.z);
 
-    // Send directional lights
+    // Send directional lights using buffer binding
     int dirLightCount = std::min((int)scene->directionalLights.size(), 256);
     lightPipeline->setUniform1i("directionalLightCount", dirLightCount);
 
-    for (int i = 0; i < dirLightCount; i++) {
-        DirectionalLight *light = scene->directionalLights[i];
-        std::string baseName = "directionalLights[" + std::to_string(i) + "]";
-        lightPipeline->setUniform3f(baseName + ".direction", light->direction.x,
-                                    light->direction.y, light->direction.z);
-        lightPipeline->setUniform3f(baseName + ".diffuse", light->color.r,
-                                    light->color.g, light->color.b);
-        lightPipeline->setUniform3f(baseName + ".specular", light->shineColor.r,
-                                    light->shineColor.g, light->shineColor.b);
+    if (dirLightCount > 0) {
+        auto gpuDirLights =
+            buildGPUDirectionalLights(scene->directionalLights, dirLightCount);
+        lightPipeline->bindBuffer("DirectionalLights", gpuDirLights);
     }
 
-    // Send point lights
-
+    // Send point lights using buffer binding
     int pointLightCount = std::min((int)scene->pointLights.size(), 256);
     lightPipeline->setUniform1i("pointLightCount", pointLightCount);
 
-    for (int i = 0; i < pointLightCount; i++) {
-        Light *light = scene->pointLights[i];
-        std::string baseName = "pointLights[" + std::to_string(i) + "]";
-        lightPipeline->setUniform3f(baseName + ".position", light->position.x,
-                                    light->position.y, light->position.z);
-        lightPipeline->setUniform3f(baseName + ".diffuse", light->color.r,
-                                    light->color.g, light->color.b);
-        lightPipeline->setUniform3f(baseName + ".specular", light->shineColor.r,
-                                    light->shineColor.g, light->shineColor.b);
-
-        PointLightConstants plc = light->calculateConstants();
-        lightPipeline->setUniform1f(baseName + ".constant", plc.constant);
-        lightPipeline->setUniform1f(baseName + ".linear", plc.linear);
-        lightPipeline->setUniform1f(baseName + ".quadratic", plc.quadratic);
-        lightPipeline->setUniform1f(baseName + ".radius", plc.radius);
+    if (pointLightCount > 0) {
+        auto gpuPointLights =
+            buildGPUPointLights(scene->pointLights, pointLightCount);
+        lightPipeline->bindBuffer("PointLights", gpuPointLights);
     }
 
-    // Send spotlights
-
+    // Send spotlights using buffer binding
     int spotlightCount = std::min((int)scene->spotlights.size(), 256);
     lightPipeline->setUniform1i("spotlightCount", spotlightCount);
 
-    for (int i = 0; i < spotlightCount; i++) {
-        Spotlight *light = scene->spotlights[i];
-        std::string baseName = "spotlights[" + std::to_string(i) + "]";
-        lightPipeline->setUniform3f(baseName + ".position", light->position.x,
-                                    light->position.y, light->position.z);
-        lightPipeline->setUniform3f(baseName + ".direction", light->direction.x,
-                                    light->direction.y, light->direction.z);
-        lightPipeline->setUniform3f(baseName + ".diffuse", light->color.r,
-                                    light->color.g, light->color.b);
-        lightPipeline->setUniform3f(baseName + ".specular", light->shineColor.r,
-                                    light->shineColor.g, light->shineColor.b);
-        lightPipeline->setUniform1f(baseName + ".cutOff", light->cutOff);
-        lightPipeline->setUniform1f(baseName + ".outerCutOff",
-                                    light->outerCutoff);
+    if (spotlightCount > 0) {
+        auto gpuSpotLights =
+            buildGPUSpotLights(scene->spotlights, spotlightCount);
+        lightPipeline->bindBuffer("SpotLights", gpuSpotLights);
     }
 
-    // Send area lights
+    // Send area lights using buffer binding
     int areaLightCount = std::min((int)scene->areaLights.size(), 256);
     lightPipeline->setUniform1i("areaLightCount", areaLightCount);
 
-    for (int i = 0; i < areaLightCount; i++) {
-        AreaLight *light = scene->areaLights[i];
-        std::string baseName = "areaLights[" + std::to_string(i) + "]";
-        lightPipeline->setUniform3f(baseName + ".position", light->position.x,
-                                    light->position.y, light->position.z);
-        lightPipeline->setUniform3f(baseName + ".right", light->right.x,
-                                    light->right.y, light->right.z);
-        lightPipeline->setUniform3f(baseName + ".up", light->up.x, light->up.y,
-                                    light->up.z);
-        lightPipeline->setUniform2f(baseName + ".size",
-                                    static_cast<float>(light->size.width),
-                                    static_cast<float>(light->size.height));
-        lightPipeline->setUniform3f(baseName + ".diffuse", light->color.r,
-                                    light->color.g, light->color.b);
-        lightPipeline->setUniform3f(baseName + ".specular", light->shineColor.r,
-                                    light->shineColor.g, light->shineColor.b);
-        lightPipeline->setUniform1f(baseName + ".angle", light->angle);
-        lightPipeline->setUniform1i(baseName + ".castsBothSides",
-                                    light->castsBothSides ? 1 : 0);
+    if (areaLightCount > 0) {
+        auto gpuAreaLights =
+            buildGPUAreaLights(scene->areaLights, areaLightCount);
+        lightPipeline->bindBuffer("AreaLights", gpuAreaLights);
     }
 
     for (int i = 0; i < 5; i++) {

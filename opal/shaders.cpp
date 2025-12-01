@@ -231,6 +231,7 @@ void Shader::performReflection() {
         blockInfo.offset = 0;
         blockInfo.isSampler = false;
         blockInfo.isBuffer = true;
+        blockInfo.isStorageBuffer = false;
         uniformBindings[ubo.name] = blockInfo;
 
         for (uint32_t i = 0; i < type.member_types.size(); ++i) {
@@ -249,6 +250,7 @@ void Shader::performReflection() {
             memberInfo.offset = memberOffset;
             memberInfo.isSampler = false;
             memberInfo.isBuffer = true;
+            memberInfo.isStorageBuffer = false;
 
             uniformBindings[ubo.name + "." + memberName] = memberInfo;
             if (uniformBindings.find(memberName) == uniformBindings.end()) {
@@ -274,6 +276,7 @@ void Shader::performReflection() {
             memberInfo.offset = memberOffset;
             memberInfo.isSampler = false;
             memberInfo.isBuffer = false;
+            memberInfo.isStorageBuffer = false;
 
             uniformBindings[memberName] = memberInfo;
             if (!pc.name.empty()) {
@@ -295,6 +298,7 @@ void Shader::performReflection() {
         samplerInfo.offset = 0;
         samplerInfo.isSampler = true;
         samplerInfo.isBuffer = false;
+        samplerInfo.isStorageBuffer = false;
         uniformBindings[sampler.name] = samplerInfo;
     }
 
@@ -311,6 +315,7 @@ void Shader::performReflection() {
         samplerInfo.offset = 0;
         samplerInfo.isSampler = true;
         samplerInfo.isBuffer = false;
+        samplerInfo.isStorageBuffer = false;
         uniformBindings[sampler.name] = samplerInfo;
     }
 
@@ -327,6 +332,7 @@ void Shader::performReflection() {
         imageInfo.offset = 0;
         imageInfo.isSampler = true;
         imageInfo.isBuffer = false;
+        imageInfo.isStorageBuffer = false;
         uniformBindings[image.name] = imageInfo;
     }
 
@@ -343,6 +349,7 @@ void Shader::performReflection() {
         ssboInfo.offset = 0;
         ssboInfo.isSampler = false;
         ssboInfo.isBuffer = true;
+        ssboInfo.isStorageBuffer = true;
         uniformBindings[ssbo.name] = ssboInfo;
     }
 }
