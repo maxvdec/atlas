@@ -8,6 +8,8 @@
 */
 
 #include "opal/opal.h"
+#include <array>
+#include <cctype>
 #include <cstdint>
 #include <glad/glad.h>
 #include <memory>
@@ -215,6 +217,65 @@ void Shader::performReflection() {
     spirv_cross::Compiler compiler(spirvBytecode);
     spirv_cross::ShaderResources resources = compiler.get_shader_resources();
 
+    auto registerBinding = [&](const std::string &name,
+                               const UniformBindingInfo &info,
+                               bool addAliases) {
+        if (name.empty()) {
+            return;
+        }
+
+        uniformBindings[name] = info;
+
+        if (!addAliases) {
+            return;
+        }
+
+        auto addAlias = [&](const std::string &alias) {
+            if (alias.empty()) {
+                return;
+            }
+            if (uniformBindings.find(alias) == uniformBindings.end()) {
+                uniformBindings[alias] = info;
+            }
+        };
+
+        auto addAliasIfSuffixMatches = [&](const std::string &suffix) {
+            size_t suffixLen = suffix.size();
+            if (name.size() <= suffixLen) {
+                return;
+            }
+            bool matches = true;
+            for (size_t i = 0; i < suffixLen; ++i) {
+                char cName =
+                    static_cast<char>(std::toupper(static_cast<unsigned char>(
+                        name[name.size() - suffixLen + i])));
+                char cSuffix = static_cast<char>(
+                    std::toupper(static_cast<unsigned char>(suffix[i])));
+                if (cName != cSuffix) {
+                    matches = false;
+                    break;
+                }
+            }
+            if (!matches) {
+                return;
+            }
+
+            std::string trimmed = name.substr(0, name.size() - suffixLen);
+            while (!trimmed.empty() &&
+                   std::isspace(static_cast<unsigned char>(trimmed.back()))) {
+                trimmed.pop_back();
+            }
+            if (!trimmed.empty()) {
+                addAlias(trimmed);
+            }
+        };
+
+        const std::array<std::string, 3> suffixes = {"UBO", "SSBO", "BUFFER"};
+        for (const auto &suffix : suffixes) {
+            addAliasIfSuffixMatches(suffix);
+        }
+    };
+
     for (const auto &ubo : resources.uniform_buffers) {
         uint32_t set =
             compiler.get_decoration(ubo.id, spv::DecorationDescriptorSet);
@@ -232,7 +293,7 @@ void Shader::performReflection() {
         blockInfo.isSampler = false;
         blockInfo.isBuffer = true;
         blockInfo.isStorageBuffer = false;
-        uniformBindings[ubo.name] = blockInfo;
+        registerBinding(ubo.name, blockInfo, true);
 
         for (uint32_t i = 0; i < type.member_types.size(); ++i) {
             std::string memberName =
@@ -252,9 +313,9 @@ void Shader::performReflection() {
             memberInfo.isBuffer = true;
             memberInfo.isStorageBuffer = false;
 
-            uniformBindings[ubo.name + "." + memberName] = memberInfo;
+            registerBinding(ubo.name + "." + memberName, memberInfo, false);
             if (uniformBindings.find(memberName) == uniformBindings.end()) {
-                uniformBindings[memberName] = memberInfo;
+                registerBinding(memberName, memberInfo, false);
             }
         }
     }
@@ -278,9 +339,9 @@ void Shader::performReflection() {
             memberInfo.isBuffer = false;
             memberInfo.isStorageBuffer = false;
 
-            uniformBindings[memberName] = memberInfo;
+            registerBinding(memberName, memberInfo, false);
             if (!pc.name.empty()) {
-                uniformBindings[pc.name + "." + memberName] = memberInfo;
+                registerBinding(pc.name + "." + memberName, memberInfo, false);
             }
         }
     }
@@ -299,7 +360,7 @@ void Shader::performReflection() {
         samplerInfo.isSampler = true;
         samplerInfo.isBuffer = false;
         samplerInfo.isStorageBuffer = false;
-        uniformBindings[sampler.name] = samplerInfo;
+        registerBinding(sampler.name, samplerInfo, false);
     }
 
     for (const auto &sampler : resources.separate_samplers) {
@@ -316,7 +377,7 @@ void Shader::performReflection() {
         samplerInfo.isSampler = true;
         samplerInfo.isBuffer = false;
         samplerInfo.isStorageBuffer = false;
-        uniformBindings[sampler.name] = samplerInfo;
+        registerBinding(sampler.name, samplerInfo, false);
     }
 
     for (const auto &image : resources.separate_images) {
@@ -333,7 +394,7 @@ void Shader::performReflection() {
         imageInfo.isSampler = true;
         imageInfo.isBuffer = false;
         imageInfo.isStorageBuffer = false;
-        uniformBindings[image.name] = imageInfo;
+        registerBinding(image.name, imageInfo, false);
     }
 
     for (const auto &ssbo : resources.storage_buffers) {
@@ -350,7 +411,7 @@ void Shader::performReflection() {
         ssboInfo.isSampler = false;
         ssboInfo.isBuffer = true;
         ssboInfo.isStorageBuffer = true;
-        uniformBindings[ssbo.name] = ssboInfo;
+        registerBinding(ssbo.name, ssboInfo, true);
     }
 }
 

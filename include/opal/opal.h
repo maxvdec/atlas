@@ -16,6 +16,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <map>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <optional>
@@ -616,12 +617,24 @@ class Pipeline {
     std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
     std::vector<VkDescriptorSet> descriptorSets;
 
+    struct DescriptorBindingInfoEntry {
+        VkDescriptorType type = VK_DESCRIPTOR_TYPE_MAX_ENUM;
+        VkShaderStageFlags stageFlags = 0;
+        uint32_t count = 1;
+        uint32_t minBufferSize = 0;
+        bool isBuffer = false;
+        bool isSampler = false;
+    };
+    std::map<uint32_t, std::map<uint32_t, DescriptorBindingInfoEntry>>
+        descriptorBindingInfo;
+
     // Uniform buffer storage: maps (set, binding) to buffer and memory
     struct UniformBufferAllocation {
         VkBuffer buffer = VK_NULL_HANDLE;
         VkDeviceMemory memory = VK_NULL_HANDLE;
         void *mappedData = nullptr;
         VkDeviceSize size = 0;
+        VkDescriptorType descriptorType = VK_DESCRIPTOR_TYPE_MAX_ENUM;
     };
     std::unordered_map<uint64_t, UniformBufferAllocation> uniformBuffers;
 
@@ -640,6 +653,12 @@ class Pipeline {
 
     // Build descriptor sets from shader reflection
     void buildDescriptorSets();
+    void ensureDescriptorResources();
+    void bindDescriptorSets(VkCommandBuffer commandBuffer);
+    void bindUniformBufferDescriptor(uint32_t set, uint32_t binding);
+    void resetDescriptorSets();
+    const DescriptorBindingInfoEntry *
+    getDescriptorBindingInfo(uint32_t set, uint32_t binding) const;
 
     // Push constant support
     std::vector<uint8_t> pushConstantData;

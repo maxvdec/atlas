@@ -337,12 +337,36 @@ void Pipeline::bindTexture(const std::string &name,
     int location = glGetUniformLocation(shaderProgram->programID, name.c_str());
     glUniform1i(location, unit);
 #elif defined(VULKAN)
-    // Texture binding for Vulkan requires descriptor set updates
-    // This is handled through the descriptor set system
-    // For now, silently ignore if uniform not found (matches OpenGL behavior)
-    (void)name;
-    (void)texture;
-    (void)unit;
+    if (!shaderProgram || texture == nullptr) {
+        return;
+    }
+    const UniformBindingInfo *info = shaderProgram->findUniform(name);
+    if (info == nullptr || !info->isSampler) {
+        return;
+    }
+
+    ensureDescriptorResources();
+    if (descriptorSets.size() <= info->set ||
+        descriptorSets[info->set] == VK_NULL_HANDLE) {
+        return;
+    }
+
+    VkDescriptorImageInfo imageInfo{};
+    imageInfo.sampler = texture->vkSampler;
+    imageInfo.imageView = texture->vkImageView;
+    imageInfo.imageLayout = texture->currentLayout == VK_IMAGE_LAYOUT_UNDEFINED
+                                ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+                                : texture->currentLayout;
+
+    VkWriteDescriptorSet write{};
+    write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    write.dstSet = descriptorSets[info->set];
+    write.dstBinding = info->binding;
+    write.descriptorCount = 1;
+    write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    write.pImageInfo = &imageInfo;
+
+    vkUpdateDescriptorSets(Device::globalDevice, 1, &write, 0, nullptr);
 #endif
 }
 

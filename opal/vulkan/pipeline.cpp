@@ -475,12 +475,7 @@ void Pipeline::buildPipelineLayout() {
     VkShaderStageFlags pushConstantStageFlags = 0;
 
     // Map from (set, binding) to descriptor info
-    struct DescriptorBindingInfo {
-        VkDescriptorType type;
-        VkShaderStageFlags stageFlags;
-        uint32_t count;
-    };
-    std::map<uint32_t, std::map<uint32_t, DescriptorBindingInfo>> setBindings;
+    descriptorBindingInfo.clear();
 
     if (this->shaderProgram) {
         for (const auto &shader : this->shaderProgram->attachedShaders) {
@@ -509,7 +504,8 @@ void Pipeline::buildPipelineLayout() {
                 const UniformBindingInfo &info = pair.second;
                 if (info.isBuffer) {
                     // This is a buffer - add to descriptor set layout
-                    auto &binding = setBindings[info.set][info.binding];
+                    auto &binding =
+                        descriptorBindingInfo[info.set][info.binding];
                     if (info.isStorageBuffer) {
                         binding.type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
                     } else {
@@ -517,12 +513,19 @@ void Pipeline::buildPipelineLayout() {
                     }
                     binding.stageFlags |= stageFlag;
                     binding.count = 1;
+                    binding.minBufferSize =
+                        std::max(binding.minBufferSize, info.size);
+                    binding.isBuffer = true;
+                    binding.isSampler = false;
                 } else if (info.isSampler) {
                     // This is a sampler - add to descriptor set layout
-                    auto &binding = setBindings[info.set][info.binding];
+                    auto &binding =
+                        descriptorBindingInfo[info.set][info.binding];
                     binding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                     binding.stageFlags |= stageFlag;
                     binding.count = 1;
+                    binding.isBuffer = false;
+                    binding.isSampler = true;
                 } else {
                     // This is a push constant
                     uint32_t endOffset = info.offset + info.size;
@@ -535,6 +538,10 @@ void Pipeline::buildPipelineLayout() {
         }
     }
 
+    // Release descriptor sets before destroying their layouts to satisfy
+    // Vulkan lifetime rules.
+    resetDescriptorSets();
+
     // Clean up old descriptor set layouts
     for (auto layout : descriptorSetLayouts) {
         if (layout != VK_NULL_HANDLE) {
@@ -544,11 +551,11 @@ void Pipeline::buildPipelineLayout() {
     descriptorSetLayouts.clear();
 
     // Create descriptor set layouts for each set
-    if (!setBindings.empty()) {
-        uint32_t maxSet = setBindings.rbegin()->first;
+    if (!descriptorBindingInfo.empty()) {
+        uint32_t maxSet = descriptorBindingInfo.rbegin()->first;
         descriptorSetLayouts.resize(maxSet + 1, VK_NULL_HANDLE);
 
-        for (const auto &setPair : setBindings) {
+        for (const auto &setPair : descriptorBindingInfo) {
             uint32_t setIndex = setPair.first;
             const auto &bindings = setPair.second;
 
@@ -610,6 +617,8 @@ void Pipeline::buildPipelineLayout() {
                                nullptr, &this->pipelineLayout) != VK_SUCCESS) {
         throw std::runtime_error("Failed to create pipeline layout!");
     }
+
+    ensureDescriptorResources();
 }
 
 VkFormat opalFormatToVkFormat(opal::TextureFormat format) {

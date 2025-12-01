@@ -555,12 +555,24 @@ Pipeline::UniformBufferAllocation &
 Pipeline::getOrCreateUniformBuffer(uint32_t set, uint32_t binding,
                                    VkDeviceSize size) {
 
+    const DescriptorBindingInfoEntry *bindingInfo =
+        getDescriptorBindingInfo(set, binding);
+    VkDescriptorType descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    if (bindingInfo) {
+        descriptorType = bindingInfo->type;
+    }
+    VkBufferUsageFlags usage =
+        descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
+            ? VK_BUFFER_USAGE_STORAGE_BUFFER_BIT
+            : VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+
     uint64_t key = makeBindingKey(set, binding);
     auto it = uniformBuffers.find(key);
 
     if (it != uniformBuffers.end()) {
         // Buffer exists, check if size is sufficient
-        if (it->second.size >= size) {
+        if (it->second.descriptorType == descriptorType &&
+            it->second.size >= size) {
             return it->second;
         }
         // Need to recreate with larger size
@@ -574,11 +586,12 @@ Pipeline::getOrCreateUniformBuffer(uint32_t set, uint32_t binding,
     // Create new buffer
     UniformBufferAllocation &alloc = uniformBuffers[key];
     alloc.size = size;
+    alloc.descriptorType = descriptorType;
 
     VkBufferCreateInfo bufferInfo{};
     bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     bufferInfo.size = size;
-    bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+    bufferInfo.usage = usage;
     bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
     if (vkCreateBuffer(Device::globalDevice, &bufferInfo, nullptr,
@@ -615,6 +628,19 @@ Pipeline::getOrCreateUniformBuffer(uint32_t set, uint32_t binding,
     return alloc;
 }
 
+const Pipeline::DescriptorBindingInfoEntry *
+Pipeline::getDescriptorBindingInfo(uint32_t set, uint32_t binding) const {
+    auto setIt = descriptorBindingInfo.find(set);
+    if (setIt == descriptorBindingInfo.end()) {
+        return nullptr;
+    }
+    auto bindingIt = setIt->second.find(binding);
+    if (bindingIt == setIt->second.end()) {
+        return nullptr;
+    }
+    return &bindingIt->second;
+}
+
 void Pipeline::updateUniformData(uint32_t set, uint32_t binding,
                                  uint32_t offset, const void *data,
                                  size_t size) {
@@ -648,6 +674,8 @@ void Pipeline::updateUniformData(uint32_t set, uint32_t binding,
     // Write data at the correct offset
     char *dst = static_cast<char *>(alloc.mappedData) + offset;
     memcpy(dst, data, size);
+
+    bindUniformBufferDescriptor(set, binding);
 }
 
 void Pipeline::buildDescriptorSets() {
@@ -657,6 +685,193 @@ void Pipeline::buildDescriptorSets() {
     // 1. Create descriptor set layouts based on uniform bindings
     // 2. Allocate descriptor sets from a pool
     // 3. Update descriptor sets with buffer/image bindings
+}
+
+void Pipeline::resetDescriptorSets() {
+    if (descriptorPool != VK_NULL_HANDLE) {
+        vkDestroyDescriptorPool(Device::globalDevice, descriptorPool, nullptr);
+        descriptorPool = VK_NULL_HANDLE;
+    }
+    descriptorSets.clear();
+}
+
+void Pipeline::ensureDescriptorResources() {
+    if (descriptorBindingInfo.empty()) {
+        return;
+    }
+
+    bool needsAllocation = descriptorSets.size() != descriptorSetLayouts.size();
+    if (!needsAllocation) {
+        for (size_t i = 0; i < descriptorSetLayouts.size(); ++i) {
+            if (descriptorSetLayouts[i] != VK_NULL_HANDLE &&
+                descriptorSets[i] == VK_NULL_HANDLE) {
+                needsAllocation = true;
+                break;
+            }
+        }
+    }
+    if (!needsAllocation) {
+        return;
+    }
+
+    resetDescriptorSets();
+
+    std::unordered_map<VkDescriptorType, uint32_t> typeCounts;
+    uint32_t setCount = 0;
+    for (const auto &setPair : descriptorBindingInfo) {
+        uint32_t setIdx = setPair.first;
+        if (setIdx >= descriptorSetLayouts.size() ||
+            descriptorSetLayouts[setIdx] == VK_NULL_HANDLE) {
+            continue;
+        }
+        setCount++;
+        for (const auto &bindingPair : setPair.second) {
+            typeCounts[bindingPair.second.type] += bindingPair.second.count;
+        }
+    }
+
+    if (setCount == 0 || typeCounts.empty()) {
+        return;
+    }
+
+    std::vector<VkDescriptorPoolSize> poolSizes;
+    poolSizes.reserve(typeCounts.size());
+    for (const auto &pair : typeCounts) {
+        VkDescriptorPoolSize poolSize{};
+        poolSize.type = pair.first;
+        poolSize.descriptorCount = pair.second;
+        poolSizes.push_back(poolSize);
+    }
+
+    VkDescriptorPoolCreateInfo poolInfo{};
+    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+    poolInfo.pPoolSizes = poolSizes.data();
+    poolInfo.maxSets = setCount;
+
+    if (vkCreateDescriptorPool(Device::globalDevice, &poolInfo, nullptr,
+                               &descriptorPool) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to create descriptor pool");
+    }
+
+    descriptorSets.assign(descriptorSetLayouts.size(), VK_NULL_HANDLE);
+
+    for (size_t i = 0; i < descriptorSetLayouts.size(); ++i) {
+        if (descriptorSetLayouts[i] == VK_NULL_HANDLE) {
+            continue;
+        }
+
+        VkDescriptorSetLayout layout = descriptorSetLayouts[i];
+        VkDescriptorSetAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        allocInfo.descriptorPool = descriptorPool;
+        allocInfo.descriptorSetCount = 1;
+        allocInfo.pSetLayouts = &layout;
+
+        VkDescriptorSet set = VK_NULL_HANDLE;
+        if (vkAllocateDescriptorSets(Device::globalDevice, &allocInfo, &set) !=
+            VK_SUCCESS) {
+            throw std::runtime_error("Failed to allocate descriptor set");
+        }
+        descriptorSets[i] = set;
+    }
+
+    // Prime all buffer descriptors with zero-initialized resources so Vulkan
+    // validation layers always see a valid binding, even before the app uploads
+    // data (e.g., when light counts are zero).
+    for (const auto &setPair : descriptorBindingInfo) {
+        uint32_t setIndex = setPair.first;
+        if (setIndex >= descriptorSets.size() ||
+            descriptorSets[setIndex] == VK_NULL_HANDLE) {
+            continue;
+        }
+        for (const auto &bindingPair : setPair.second) {
+            if (!bindingPair.second.isBuffer) {
+                continue;
+            }
+            bindUniformBufferDescriptor(setIndex, bindingPair.first);
+        }
+    }
+}
+
+void Pipeline::bindUniformBufferDescriptor(uint32_t set, uint32_t binding) {
+    if (descriptorBindingInfo.empty()) {
+        return;
+    }
+
+    ensureDescriptorResources();
+
+    if (set >= descriptorSets.size() || descriptorSets[set] == VK_NULL_HANDLE) {
+        return;
+    }
+
+    const auto *info = getDescriptorBindingInfo(set, binding);
+    if (info == nullptr) {
+        return;
+    }
+    if (!info->isBuffer) {
+        return;
+    }
+
+    VkDeviceSize minSize = info->minBufferSize > 0 ? info->minBufferSize : 256;
+    UniformBufferAllocation &alloc =
+        getOrCreateUniformBuffer(set, binding, minSize);
+
+    VkDescriptorBufferInfo bufferInfo{};
+    bufferInfo.buffer = alloc.buffer;
+    bufferInfo.offset = 0;
+    bufferInfo.range = alloc.size;
+
+    VkWriteDescriptorSet write{};
+    write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    write.dstSet = descriptorSets[set];
+    write.dstBinding = binding;
+    write.descriptorCount = 1;
+    write.descriptorType = info->type;
+    write.pBufferInfo = &bufferInfo;
+
+    vkUpdateDescriptorSets(Device::globalDevice, 1, &write, 0, nullptr);
+}
+
+void Pipeline::bindDescriptorSets(VkCommandBuffer commandBuffer) {
+    if (descriptorSetLayouts.empty()) {
+        return;
+    }
+
+    ensureDescriptorResources();
+
+    uint32_t currentStart = UINT32_MAX;
+    std::vector<VkDescriptorSet> run;
+
+    for (uint32_t i = 0; i < descriptorSets.size(); ++i) {
+        bool setValid = i < descriptorSetLayouts.size() &&
+                        descriptorSetLayouts[i] != VK_NULL_HANDLE &&
+                        descriptorSets[i] != VK_NULL_HANDLE;
+
+        if (!setValid) {
+            if (!run.empty() && currentStart != UINT32_MAX) {
+                vkCmdBindDescriptorSets(
+                    commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                    pipelineLayout, currentStart,
+                    static_cast<uint32_t>(run.size()), run.data(), 0, nullptr);
+                run.clear();
+                currentStart = UINT32_MAX;
+            }
+            continue;
+        }
+
+        if (currentStart == UINT32_MAX) {
+            currentStart = i;
+        }
+        run.push_back(descriptorSets[i]);
+    }
+
+    if (!run.empty() && currentStart != UINT32_MAX) {
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                pipelineLayout, currentStart,
+                                static_cast<uint32_t>(run.size()), run.data(),
+                                0, nullptr);
+    }
 }
 
 void Pipeline::updatePushConstant(uint32_t offset, const void *data,

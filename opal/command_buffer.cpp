@@ -263,6 +263,10 @@ auto CommandBuffer::draw(uint vertexCount, uint instanceCount, uint firstVertex,
     }
     vkCmdBindPipeline(this->commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                       renderPass->currentRenderPass->pipeline);
+    if (renderPass->currentRenderPass->opalPipeline != nullptr) {
+        renderPass->currentRenderPass->opalPipeline->bindDescriptorSets(
+            this->commandBuffer);
+    }
     bindVertexBuffersIfNeeded();
     if (renderPass->currentRenderPass->opalPipeline != nullptr) {
         renderPass->currentRenderPass->opalPipeline->flushPushConstants(
@@ -302,6 +306,10 @@ void CommandBuffer::drawIndexed(uint indexCount, uint instanceCount,
     }
     vkCmdBindPipeline(this->commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                       renderPass->currentRenderPass->pipeline);
+    if (renderPass->currentRenderPass->opalPipeline != nullptr) {
+        renderPass->currentRenderPass->opalPipeline->bindDescriptorSets(
+            this->commandBuffer);
+    }
     if (boundDrawingState != nullptr) {
         bindVertexBuffersIfNeeded();
         if (boundDrawingState->indexBuffer != nullptr) {
@@ -392,6 +400,10 @@ void CommandBuffer::drawPatches(uint vertexCount, uint firstVertex) {
     }
     vkCmdBindPipeline(this->commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                       renderPass->currentRenderPass->pipeline);
+    if (renderPass->currentRenderPass->opalPipeline != nullptr) {
+        renderPass->currentRenderPass->opalPipeline->bindDescriptorSets(
+            this->commandBuffer);
+    }
     bindVertexBuffersIfNeeded();
     if (renderPass->currentRenderPass->opalPipeline != nullptr) {
         renderPass->currentRenderPass->opalPipeline->flushPushConstants(
