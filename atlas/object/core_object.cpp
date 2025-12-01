@@ -426,6 +426,18 @@ void CoreObject::initialize() {
     }
     vao->configureAttributes(attributeBindings);
 
+    // Add instance model matrix attributes (locations 6-9 for mat4)
+    // These are always needed because the shader expects them
+    std::size_t vec4Size = sizeof(glm::vec4);
+    for (unsigned int i = 0; i < 4; ++i) {
+        vertexAttributes.push_back(opal::VertexAttribute{
+            "instanceModel" + std::to_string(i),
+            opal::VertexAttributeType::Float, static_cast<uint>(i * vec4Size),
+            static_cast<uint>(6 + i), false, 4,
+            static_cast<uint>(sizeof(glm::mat4)),
+            opal::VertexBindingInputRate::Instance, 1});
+    }
+
     if (!instances.empty()) {
         std::vector<glm::mat4> modelMatrices;
         for (auto &instance : instances) {

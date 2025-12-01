@@ -148,20 +148,40 @@ void Pipeline::buildPipelineLayout() {
     vkBindingDescriptions.clear();
     vkAttributeDescriptions.clear();
 
-    VkVertexInputBindingDescription bindingDesc{};
-    bindingDesc.binding = 0;
-    bindingDesc.stride = vertexBinding.stride;
-    bindingDesc.inputRate =
-        (vertexBinding.inputRate == VertexBindingInputRate::Vertex)
-            ? VK_VERTEX_INPUT_RATE_VERTEX
-            : VK_VERTEX_INPUT_RATE_INSTANCE;
+    // Create binding for per-vertex data (binding 0)
+    VkVertexInputBindingDescription vertexBindingDesc{};
+    vertexBindingDesc.binding = 0;
+    vertexBindingDesc.stride = vertexBinding.stride;
+    vertexBindingDesc.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+    vkBindingDescriptions.push_back(vertexBindingDesc);
 
-    vkBindingDescriptions.push_back(bindingDesc);
+    // Check if we have any instance attributes
+    bool hasInstanceAttributes = false;
+    uint32_t instanceStride = 0;
+    for (const auto &attr : this->vertexAttributes) {
+        if (attr.inputRate == VertexBindingInputRate::Instance) {
+            hasInstanceAttributes = true;
+            instanceStride = attr.stride;
+            break;
+        }
+    }
+
+    // Create binding for per-instance data (binding 1) if needed
+    if (hasInstanceAttributes) {
+        VkVertexInputBindingDescription instanceBindingDesc{};
+        instanceBindingDesc.binding = 1;
+        instanceBindingDesc.stride = instanceStride;
+        instanceBindingDesc.inputRate = VK_VERTEX_INPUT_RATE_INSTANCE;
+        vkBindingDescriptions.push_back(instanceBindingDesc);
+    }
 
     for (const auto &attr : this->vertexAttributes) {
         VkVertexInputAttributeDescription attrDesc{};
         attrDesc.location = attr.location;
-        attrDesc.binding = 0;
+        // Use binding 0 for vertex attributes, binding 1 for instance
+        // attributes
+        attrDesc.binding =
+            (attr.inputRate == VertexBindingInputRate::Instance) ? 1 : 0;
         attrDesc.format =
             this->getFormat(attr.type, attr.size, attr.normalized);
         attrDesc.offset = attr.offset;
@@ -626,52 +646,88 @@ CoreRenderPass::create(std::shared_ptr<Pipeline> pipeline,
     renderPass->opalFramebuffer = framebuffer;
 
     std::vector<VkAttachmentDescription> attachments;
-    for (const auto &attachment : framebuffer->attachments) {
-        VkAttachmentDescription attachmentDesc{};
-        attachmentDesc.format =
-            opalFormatToVkFormat(attachment.texture->format);
-        attachmentDesc.samples = attachment.texture->samples > 1
-                                     ? VK_SAMPLE_COUNT_4_BIT
-                                     : VK_SAMPLE_COUNT_1_BIT;
-        attachmentDesc.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        attachmentDesc.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        attachmentDesc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        attachmentDesc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-
-        attachmentDesc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-
-        if (attachment.type == opal::Attachment::Type::Color) {
-            attachmentDesc.finalLayout =
-                VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-        } else if (attachment.type == opal::Attachment::Type::Depth ||
-                   attachment.type == opal::Attachment::Type::DepthStencil) {
-            attachmentDesc.finalLayout =
-                VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-            attachmentDesc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-            attachmentDesc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
-        }
-
-        attachments.push_back(attachmentDesc);
-    }
-
     std::vector<VkAttachmentReference> colorAttachmentRefs;
     VkAttachmentReference depthAttachmentRef{};
     bool hasDepthAttachment = false;
 
-    for (uint32_t i = 0; i < framebuffer->attachments.size(); ++i) {
-        const auto &attachment = framebuffer->attachments[i];
+    if (framebuffer->isDefaultFramebuffer) {
+        VkAttachmentDescription colorAttachment{};
+        colorAttachment.format = Device::globalInstance->swapChainImageFormat;
+        colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        attachments.push_back(colorAttachment);
 
-        if (attachment.type == opal::Attachment::Type::Color) {
-            VkAttachmentReference colorRef{};
-            colorRef.attachment = i;
-            colorRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-            colorAttachmentRefs.push_back(colorRef);
-        } else if (attachment.type == opal::Attachment::Type::Depth ||
-                   attachment.type == opal::Attachment::Type::DepthStencil) {
-            depthAttachmentRef.attachment = i;
-            depthAttachmentRef.layout =
-                VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-            hasDepthAttachment = true;
+        VkAttachmentReference colorRef{};
+        colorRef.attachment = 0;
+        colorRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        colorAttachmentRefs.push_back(colorRef);
+
+        VkAttachmentDescription brightAttachment{};
+        brightAttachment.format = VK_FORMAT_R16G16B16A16_SFLOAT;
+        brightAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        brightAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        brightAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        brightAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        brightAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        brightAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        brightAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        attachments.push_back(brightAttachment);
+
+        VkAttachmentReference brightRef{};
+        brightRef.attachment = 1;
+        brightRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        colorAttachmentRefs.push_back(brightRef);
+    } else {
+        for (const auto &attachment : framebuffer->attachments) {
+            VkAttachmentDescription attachmentDesc{};
+            attachmentDesc.format =
+                opalFormatToVkFormat(attachment.texture->format);
+            attachmentDesc.samples = attachment.texture->samples > 1
+                                         ? VK_SAMPLE_COUNT_4_BIT
+                                         : VK_SAMPLE_COUNT_1_BIT;
+            attachmentDesc.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+            attachmentDesc.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+            attachmentDesc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+            attachmentDesc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+
+            attachmentDesc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+
+            if (attachment.type == opal::Attachment::Type::Color) {
+                attachmentDesc.finalLayout =
+                    VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            } else if (attachment.type == opal::Attachment::Type::Depth ||
+                       attachment.type ==
+                           opal::Attachment::Type::DepthStencil) {
+                attachmentDesc.finalLayout =
+                    VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+                attachmentDesc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+                attachmentDesc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
+            }
+
+            attachments.push_back(attachmentDesc);
+        }
+
+        for (uint32_t i = 0; i < framebuffer->attachments.size(); ++i) {
+            const auto &attachment = framebuffer->attachments[i];
+
+            if (attachment.type == opal::Attachment::Type::Color) {
+                VkAttachmentReference colorRef{};
+                colorRef.attachment = i;
+                colorRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+                colorAttachmentRefs.push_back(colorRef);
+            } else if (attachment.type == opal::Attachment::Type::Depth ||
+                       attachment.type ==
+                           opal::Attachment::Type::DepthStencil) {
+                depthAttachmentRef.attachment = i;
+                depthAttachmentRef.layout =
+                    VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+                hasDepthAttachment = true;
+            }
         }
     }
 
@@ -719,13 +775,67 @@ CoreRenderPass::create(std::shared_ptr<Pipeline> pipeline,
     pipelineInfo.pInputAssemblyState = &pipeline->inputAssembly;
     pipelineInfo.pViewportState = &pipeline->viewportState;
     pipelineInfo.pRasterizationState = &pipeline->rasterizer;
-    if (pipeline->multisamplingEnabled) {
-        pipelineInfo.pMultisampleState = &pipeline->multisampling;
-    } else {
-        pipelineInfo.pMultisampleState = nullptr;
+
+    // Determine the sample count from the framebuffer
+    VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT;
+    if (framebuffer->isDefaultFramebuffer) {
+        // Default framebuffer uses swapchain which is always 1 sample
+        sampleCount = VK_SAMPLE_COUNT_1_BIT;
+    } else if (!framebuffer->attachments.empty()) {
+        // Use the sample count from the first attachment
+        int samples = framebuffer->attachments[0].texture->samples;
+        if (samples > 1) {
+            sampleCount = VK_SAMPLE_COUNT_4_BIT;
+        }
     }
+
+    // Create a multisampling state that matches the framebuffer
+    VkPipelineMultisampleStateCreateInfo multisampling{};
+    multisampling.sType =
+        VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+    multisampling.sampleShadingEnable = VK_FALSE;
+    multisampling.rasterizationSamples = sampleCount;
+    multisampling.minSampleShading = 1.0f;
+    multisampling.pSampleMask = nullptr;
+    multisampling.alphaToCoverageEnable = VK_FALSE;
+    multisampling.alphaToOneEnable = VK_FALSE;
+
+    pipelineInfo.pMultisampleState = &multisampling;
     pipelineInfo.pDepthStencilState = &pipeline->depthStencil;
-    pipelineInfo.pColorBlendState = &pipeline->colorBlending;
+
+    // Duplicate the color blend attachment state for every color attachment
+    VkPipelineColorBlendStateCreateInfo colorBlending = pipeline->colorBlending;
+    std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachments =
+        pipeline->vkColorBlendAttachments;
+
+    if (colorAttachmentRefs.empty()) {
+        colorBlendAttachments.clear();
+        colorBlending.attachmentCount = 0;
+        colorBlending.pAttachments = nullptr;
+    } else {
+        if (colorBlendAttachments.empty()) {
+            VkPipelineColorBlendAttachmentState defaultState{};
+            defaultState.colorWriteMask =
+                VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
+                VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+            defaultState.blendEnable = VK_FALSE;
+            colorBlendAttachments.push_back(defaultState);
+        }
+
+        if (colorBlendAttachments.size() < colorAttachmentRefs.size()) {
+            auto templateState = colorBlendAttachments.front();
+            colorBlendAttachments.resize(colorAttachmentRefs.size(),
+                                         templateState);
+        } else if (colorBlendAttachments.size() > colorAttachmentRefs.size()) {
+            colorBlendAttachments.resize(colorAttachmentRefs.size());
+        }
+
+        colorBlending.attachmentCount =
+            static_cast<uint32_t>(colorBlendAttachments.size());
+        colorBlending.pAttachments = colorBlendAttachments.data();
+    }
+
+    pipelineInfo.pColorBlendState = &colorBlending;
     pipelineInfo.pDynamicState = &pipeline->dynamicState;
     pipelineInfo.layout = pipeline->pipelineLayout;
     pipelineInfo.renderPass = renderPass->renderPass;

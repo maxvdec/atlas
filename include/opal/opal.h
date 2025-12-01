@@ -96,7 +96,10 @@ class Device {
     void submitCommandBuffer(std::shared_ptr<CommandBuffer> commandBuffer);
     std::shared_ptr<Framebuffer> getDefaultFramebuffer();
 
-#ifdef VULKAN
+  private:
+    std::shared_ptr<Framebuffer> defaultFramebuffer = nullptr;
+
+  public:
     static VkDevice globalDevice;
     static Device *globalInstance;
 
@@ -109,6 +112,9 @@ class Device {
     ImageCollection swapChainImages;
     VkExtent2D swapChainExtent = {};
     VkFormat swapChainImageFormat = VK_FORMAT_UNDEFINED;
+#ifdef VULKAN
+    std::vector<std::shared_ptr<Texture>> swapChainBrightTextures;
+#endif
 
     VkCommandPool commandPool = VK_NULL_HANDLE;
 
@@ -140,6 +146,10 @@ class Device {
                           std::shared_ptr<Context> context);
     void createSwapChain(std::shared_ptr<Context> context);
     void createImageViews();
+#ifdef VULKAN
+    void createSwapChainBrightTextures();
+    void destroySwapChainBrightTextures();
+#endif
     bool supportsDeviceExtension(VkPhysicalDevice device,
                                  const char *extension);
 
@@ -154,7 +164,6 @@ class Device {
                             VkMemoryPropertyFlags properties);
 
     std::shared_ptr<Context> context = nullptr;
-#endif
 };
 
 enum class TextureType {
@@ -853,6 +862,7 @@ class Framebuffer {
     int width;
     int height;
     std::vector<Attachment> attachments;
+    bool isDefaultFramebuffer = false;
 
 #ifdef VULKAN
     std::vector<VkFramebuffer> vkFramebuffers;

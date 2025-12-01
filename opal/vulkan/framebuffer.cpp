@@ -8,6 +8,7 @@
 //
 
 #ifdef VULKAN
+#include <array>
 #include <opal/opal.h>
 #include <vulkan/vulkan.hpp>
 
@@ -28,21 +29,34 @@ void Framebuffer::createVulkanFramebuffers(
     }
     vkFramebuffers.clear();
 
-    // If this is a default framebuffer (no attachments), create framebuffers
-    // for each swapchain image
-    if (attachments.empty()) {
+    // If this is a default framebuffer, create framebuffers for each swapchain
+    // image
+    if (isDefaultFramebuffer) {
         Device *device = Device::globalInstance;
         vkFramebuffers.resize(device->swapChainImages.imageViews.size());
+        if (device->swapChainBrightTextures.size() !=
+            device->swapChainImages.imageViews.size()) {
+            device->createSwapChainBrightTextures();
+        }
 
         for (size_t i = 0; i < device->swapChainImages.imageViews.size(); i++) {
-            VkImageView attachmentViews[] = {
-                device->swapChainImages.imageViews[i]};
+            auto &brightTextures = device->swapChainBrightTextures;
+            if (brightTextures.size() <= i || brightTextures[i] == nullptr ||
+                brightTextures[i]->vkImageView == VK_NULL_HANDLE) {
+                throw std::runtime_error(
+                    "Swapchain bright attachments are not initialized");
+            }
+
+            std::array<VkImageView, 2> attachmentViews = {
+                device->swapChainImages.imageViews[i],
+                brightTextures[i]->vkImageView};
 
             VkFramebufferCreateInfo framebufferInfo{};
             framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
             framebufferInfo.renderPass = renderPass->renderPass;
-            framebufferInfo.attachmentCount = 1;
-            framebufferInfo.pAttachments = attachmentViews;
+            framebufferInfo.attachmentCount =
+                static_cast<uint32_t>(attachmentViews.size());
+            framebufferInfo.pAttachments = attachmentViews.data();
             framebufferInfo.width = device->swapChainExtent.width;
             framebufferInfo.height = device->swapChainExtent.height;
             framebufferInfo.layers = 1;
@@ -202,7 +216,7 @@ void RenderPass::applyRenderPass() {
     VkAttachmentReference depthAttachmentRef{};
     bool hasDepthAttachment = false;
 
-    if (this->framebuffer->attachments.empty()) {
+    if (this->framebuffer->isDefaultFramebuffer) {
         // Default framebuffer - use swapchain format
         VkAttachmentDescription colorAttachment{};
         colorAttachment.format = Device::globalInstance->swapChainImageFormat;
@@ -219,6 +233,22 @@ void RenderPass::applyRenderPass() {
         colorRef.attachment = 0;
         colorRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
         colorAttachmentRefs.push_back(colorRef);
+
+        VkAttachmentDescription brightAttachment{};
+        brightAttachment.format = VK_FORMAT_R16G16B16A16_SFLOAT;
+        brightAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        brightAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        brightAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        brightAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        brightAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        brightAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        brightAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        attachments.push_back(brightAttachment);
+
+        VkAttachmentReference brightRef{};
+        brightRef.attachment = 1;
+        brightRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        colorAttachmentRefs.push_back(brightRef);
     } else {
         for (uint32_t i = 0; i < this->framebuffer->attachments.size(); ++i) {
             const auto &attachment = this->framebuffer->attachments[i];

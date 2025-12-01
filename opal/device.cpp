@@ -99,11 +99,14 @@ Device::acquire([[maybe_unused]] std::shared_ptr<Context> context) {
 }
 
 std::shared_ptr<Framebuffer> Device::getDefaultFramebuffer() {
-    auto fb = std::make_shared<Framebuffer>();
-    fb->framebufferID = 0;
-    fb->width = 0;
-    fb->height = 0;
-    return fb;
+    if (defaultFramebuffer == nullptr) {
+        defaultFramebuffer = std::make_shared<Framebuffer>();
+        defaultFramebuffer->framebufferID = 0;
+        defaultFramebuffer->width = 0;
+        defaultFramebuffer->height = 0;
+        defaultFramebuffer->isDefaultFramebuffer = true;
+    }
+    return defaultFramebuffer;
 }
 
 Device *Device::globalInstance = nullptr;

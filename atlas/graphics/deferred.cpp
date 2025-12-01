@@ -150,14 +150,19 @@ void Window::deferredRendering(
         }
     }
 
+    // End the current render pass and start G-Buffer render pass
+    commandBuffer->endPass();
+    auto gBufferRenderPass = opal::RenderPass::create();
+    gBufferRenderPass->setFramebuffer(this->gBuffer->getFramebuffer());
+    commandBuffer->beginPass(gBufferRenderPass);
+
     this->gBuffer->bind();
     this->gBuffer->getFramebuffer()->setViewport(
         0, 0, this->gBuffer->getWidth(), this->gBuffer->getHeight());
     deferredPipeline->setViewport(0, 0, this->gBuffer->getWidth(),
                                   this->gBuffer->getHeight());
     this->gBuffer->getFramebuffer()->setDrawBuffers(4);
-    auto gBufferCmd = Window::mainWindow->device->acquireCommandBuffer();
-    gBufferCmd->clear(0.0f, 0.0f, 0.0f, 1.0f, 1.0f);
+    commandBuffer->clear(0.0f, 0.0f, 0.0f, 1.0f, 1.0f);
     deferredPipeline->setCullMode(opal::CullMode::Back);
     deferredPipeline->enableDepthTest(true);
     deferredPipeline->setDepthCompareOp(opal::CompareOp::Less);
@@ -174,16 +179,22 @@ void Window::deferredRendering(
 
     this->gBuffer->resolve();
 
+    // End G-Buffer pass
+    commandBuffer->endPass();
     this->gBuffer->unbind();
 
     target->resolve();
     this->renderSSAO();
 
+    // Start target render pass for light pass
+    auto targetRenderPass = opal::RenderPass::create();
+    targetRenderPass->setFramebuffer(target->getFramebuffer());
+    commandBuffer->beginPass(targetRenderPass);
+
     target->bind();
     target->getFramebuffer()->setViewport(0, 0, target->getWidth(),
                                           target->getHeight());
-    auto lightCmd = Window::mainWindow->device->acquireCommandBuffer();
-    lightCmd->clear(0.0f, 0.0f, 0.0f, 1.0f, 1.0f);
+    commandBuffer->clear(0.0f, 0.0f, 0.0f, 1.0f, 1.0f);
 
     target->getFramebuffer()->setDrawBuffers(2);
 
@@ -447,7 +458,7 @@ void Window::deferredRendering(
         Window::mainWindow->currentScene->environment.rimLight.color.b);
 
     quadState->bind();
-    lightCmd->draw(6, 1, 0, 0);
+    commandBuffer->draw(6, 1, 0, 0);
     quadState->unbind();
 
     if (dirLightCount > 0) {
@@ -458,11 +469,17 @@ void Window::deferredRendering(
 
         target->resolve();
 
+        // End target pass and start volumetric pass
+        commandBuffer->endPass();
+        auto volumetricRenderPass = opal::RenderPass::create();
+        volumetricRenderPass->setFramebuffer(
+            volumetricBuffer->getFramebuffer());
+        commandBuffer->beginPass(volumetricRenderPass);
+
         volumetricBuffer->bind();
         volumetricBuffer->getFramebuffer()->setViewport(
             0, 0, volumetricBuffer->getWidth(), volumetricBuffer->getHeight());
-        auto volCmd = Window::mainWindow->device->acquireCommandBuffer();
-        volCmd->clearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        commandBuffer->clearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
         // Create volumetric pipeline
         static std::shared_ptr<opal::Pipeline> volumetricPipeline = nullptr;
@@ -500,18 +517,23 @@ void Window::deferredRendering(
         volumetricPipeline->setUniform2f("sunPos", sunUV.x, sunUV.y);
 
         quadState->bind();
-        volCmd->draw(6, 1, 0, 0);
+        commandBuffer->draw(6, 1, 0, 0);
         quadState->unbind();
     }
 
     if (this->ssrFramebuffer != nullptr && useSSR) {
         target->resolve();
 
+        // End current pass and start SSR pass
+        commandBuffer->endPass();
+        auto ssrRenderPass = opal::RenderPass::create();
+        ssrRenderPass->setFramebuffer(ssrFramebuffer->getFramebuffer());
+        commandBuffer->beginPass(ssrRenderPass);
+
         ssrFramebuffer->bind();
         ssrFramebuffer->getFramebuffer()->setViewport(
             0, 0, ssrFramebuffer->getWidth(), ssrFramebuffer->getHeight());
-        auto ssrCmd = Window::mainWindow->device->acquireCommandBuffer();
-        ssrCmd->clearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        commandBuffer->clearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
         // Create SSR pipeline
         static std::shared_ptr<opal::Pipeline> ssrPipeline = nullptr;
@@ -541,13 +563,19 @@ void Window::deferredRendering(
                                   camera->position.y, camera->position.z);
 
         quadState->bind();
-        ssrCmd->draw(6, 1, 0, 0);
+        commandBuffer->draw(6, 1, 0, 0);
         quadState->unbind();
     }
 
     target->volumetricLightTexture = volumetricBuffer->texture;
     target->ssrTexture = ssrFramebuffer->texture;
     target->gPosition = gBuffer->gPosition;
+
+    // End current pass and re-establish target render pass for caller
+    commandBuffer->endPass();
+    auto finalRenderPass = opal::RenderPass::create();
+    finalRenderPass->setFramebuffer(target->getFramebuffer());
+    commandBuffer->beginPass(finalRenderPass);
 
     auto finalPipeline = opal::Pipeline::create();
     finalPipeline->enableDepthWrite(true);

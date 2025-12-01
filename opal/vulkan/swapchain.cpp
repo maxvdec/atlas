@@ -184,11 +184,36 @@ void Device::createImageViews() {
             throw std::runtime_error("failed to create image views!");
         }
     }
+
+    createSwapChainBrightTextures();
+}
+
+void Device::destroySwapChainBrightTextures() {
+    swapChainBrightTextures.clear();
+}
+
+void Device::createSwapChainBrightTextures() {
+    destroySwapChainBrightTextures();
+
+    if (swapChainImages.images.empty()) {
+        return;
+    }
+
+    swapChainBrightTextures.reserve(swapChainImages.images.size());
+    for (size_t i = 0; i < swapChainImages.images.size(); ++i) {
+        auto texture = Texture::create(TextureType::Texture2D,
+                                       TextureFormat::Rgba16F,
+                                       static_cast<int>(swapChainExtent.width),
+                                       static_cast<int>(swapChainExtent.height),
+                                       TextureDataFormat::Rgba, nullptr, 1);
+        swapChainBrightTextures.push_back(texture);
+    }
 }
 
 void Device::remakeSwapChain(std::shared_ptr<Context> context) {
     vkDeviceWaitIdle(this->logicalDevice);
 
+    destroySwapChainBrightTextures();
     for (auto *imageView : swapChainImages.imageViews) {
         vkDestroyImageView(this->logicalDevice, imageView, nullptr);
     }

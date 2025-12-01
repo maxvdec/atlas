@@ -7,6 +7,7 @@
 // Copyright (c) 2025 maxvdec
 //
 
+#include <array>
 #include <cstdint>
 #include <memory>
 #include <opal/opal.h>
@@ -122,43 +123,88 @@ void CommandBuffer::bindPipeline(std::shared_ptr<Pipeline> pipeline) {
     boundPipeline = pipeline;
 #ifdef VULKAN
 
+    std::shared_ptr<CoreRenderPass> coreRenderPass = nullptr;
+
     for (auto &corePipeline : RenderPass::cachedRenderPasses) {
-        if (corePipeline->opalFramebuffer->attachments ==
-            renderPass->framebuffer->attachments) {
-            if (*corePipeline->opalPipeline == pipeline) {
-                renderPass->currentRenderPass = corePipeline;
-                return;
-            }
+        // For default framebuffer, check framebufferID; for custom, compare
+        // attachments
+        bool renderPassIsDefault =
+            renderPass->framebuffer->isDefaultFramebuffer;
+        bool cachedIsDefault =
+            corePipeline->opalFramebuffer->isDefaultFramebuffer;
+
+        bool framebufferMatch = false;
+        if (renderPassIsDefault && cachedIsDefault) {
+            // Both reference the default swapchain-backed framebuffer
+            framebufferMatch = true;
+        } else if (!renderPassIsDefault && !cachedIsDefault) {
+            // Both are custom framebuffers - compare attachments
+            framebufferMatch = (corePipeline->opalFramebuffer->attachments ==
+                                renderPass->framebuffer->attachments);
+        }
+
+        if (framebufferMatch && *corePipeline->opalPipeline == pipeline) {
+            renderPass->currentRenderPass = corePipeline;
+            coreRenderPass = corePipeline;
+            break;
         }
     }
-    auto coreRenderPass =
-        CoreRenderPass::create(pipeline, renderPass->framebuffer);
-    renderPass->currentRenderPass = coreRenderPass;
 
-    if (framebuffer->framebufferID == 0 &&
-        (device->swapchainDirty || framebuffer->vkFramebuffers.size() == 0)) {
-        framebuffer->vkFramebuffers.resize(
-            device->swapChainImages.imageViews.size());
-        for (size_t i = 0; i < device->swapChainImages.imageViews.size(); i++) {
-            VkImageView attachments[] = {device->swapChainImages.imageViews[i]};
+    if (coreRenderPass == nullptr) {
+        coreRenderPass =
+            CoreRenderPass::create(pipeline, renderPass->framebuffer);
+        renderPass->currentRenderPass = coreRenderPass;
+    }
 
-            VkFramebufferCreateInfo framebufferInfo{};
-            framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-            framebufferInfo.renderPass = coreRenderPass->renderPass;
-            framebufferInfo.attachmentCount = 1;
-            framebufferInfo.pAttachments = attachments;
-            framebufferInfo.width = device->swapChainExtent.width;
-            framebufferInfo.height = device->swapChainExtent.height;
-            framebufferInfo.layers = 1;
-
-            if (vkCreateFramebuffer(device->logicalDevice, &framebufferInfo,
-                                    nullptr, &framebuffer->vkFramebuffers[i]) !=
-                VK_SUCCESS) {
-                throw std::runtime_error("failed to create framebuffer!");
+    // Create Vulkan framebuffers if needed
+    if (framebuffer->isDefaultFramebuffer) {
+        // Default framebuffer - create framebuffers for swapchain images
+        if (device->swapchainDirty || framebuffer->vkFramebuffers.size() == 0) {
+            framebuffer->vkFramebuffers.resize(
+                device->swapChainImages.imageViews.size());
+            if (device->swapChainBrightTextures.size() !=
+                device->swapChainImages.imageViews.size()) {
+                device->createSwapChainBrightTextures();
             }
-        }
+            for (size_t i = 0; i < device->swapChainImages.imageViews.size();
+                 i++) {
+                auto &brightTextures = device->swapChainBrightTextures;
+                if (brightTextures.size() <= i ||
+                    brightTextures[i] == nullptr ||
+                    brightTextures[i]->vkImageView == VK_NULL_HANDLE) {
+                    throw std::runtime_error(
+                        "Swapchain bright attachments are not initialized");
+                }
 
-        device->swapchainDirty = false;
+                std::array<VkImageView, 2> attachments = {
+                    device->swapChainImages.imageViews[i],
+                    brightTextures[i]->vkImageView};
+
+                VkFramebufferCreateInfo framebufferInfo{};
+                framebufferInfo.sType =
+                    VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+                framebufferInfo.renderPass = coreRenderPass->renderPass;
+                framebufferInfo.attachmentCount =
+                    static_cast<uint32_t>(attachments.size());
+                framebufferInfo.pAttachments = attachments.data();
+                framebufferInfo.width = device->swapChainExtent.width;
+                framebufferInfo.height = device->swapChainExtent.height;
+                framebufferInfo.layers = 1;
+
+                if (vkCreateFramebuffer(
+                        device->logicalDevice, &framebufferInfo, nullptr,
+                        &framebuffer->vkFramebuffers[i]) != VK_SUCCESS) {
+                    throw std::runtime_error("failed to create framebuffer!");
+                }
+            }
+
+            device->swapchainDirty = false;
+        }
+    } else {
+        // Custom framebuffer - create Vulkan framebuffer from attachments
+        if (framebuffer->vkFramebuffers.empty()) {
+            framebuffer->createVulkanFramebuffers(coreRenderPass);
+        }
     }
 #endif
 }
@@ -288,21 +334,35 @@ void CommandBuffer::drawPatches(uint vertexCount, uint firstVertex) {
             imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
         if (result == VK_ERROR_OUT_OF_DATE_KHR) {
             device->remakeSwapChain(device->context);
-            if (framebuffer->framebufferID == 0) {
+            if (framebuffer->isDefaultFramebuffer) {
                 framebuffer->vkFramebuffers.resize(
                     device->swapChainImages.imageViews.size());
+                if (device->swapChainBrightTextures.size() !=
+                    device->swapChainImages.imageViews.size()) {
+                    device->createSwapChainBrightTextures();
+                }
                 for (size_t i = 0;
                      i < device->swapChainImages.imageViews.size(); i++) {
-                    VkImageView attachments[] = {
-                        device->swapChainImages.imageViews[i]};
+                    auto &brightTextures = device->swapChainBrightTextures;
+                    if (brightTextures.size() <= i ||
+                        brightTextures[i] == nullptr ||
+                        brightTextures[i]->vkImageView == VK_NULL_HANDLE) {
+                        throw std::runtime_error(
+                            "Swapchain bright attachments are not initialized");
+                    }
+
+                    std::array<VkImageView, 2> attachments = {
+                        device->swapChainImages.imageViews[i],
+                        brightTextures[i]->vkImageView};
 
                     VkFramebufferCreateInfo framebufferInfo{};
                     framebufferInfo.sType =
                         VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
                     framebufferInfo.renderPass =
                         renderPass->currentRenderPass->renderPass;
-                    framebufferInfo.attachmentCount = 1;
-                    framebufferInfo.pAttachments = attachments;
+                    framebufferInfo.attachmentCount =
+                        static_cast<uint32_t>(attachments.size());
+                    framebufferInfo.pAttachments = attachments.data();
                     framebufferInfo.width = device->swapChainExtent.width;
                     framebufferInfo.height = device->swapChainExtent.height;
                     framebufferInfo.layers = 1;
