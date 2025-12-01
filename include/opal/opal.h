@@ -538,6 +538,36 @@ class Pipeline {
     void setUniform2f(const std::string &name, float v0, float v1);
     void setUniform4f(const std::string &name, float v0, float v1, float v2,
                       float v3);
+
+    /**
+     * @brief Binds a buffer of data to a uniform buffer.
+     * In OpenGL, this sets array uniforms (e.g., "lights[0].position").
+     * In Vulkan, this creates/updates a UBO or SSBO.
+     * @param name The base name of the uniform buffer (e.g., "lights")
+     * @param data The data to bind
+     */
+    template <typename T>
+    void bindBuffer(const std::string &name, const std::vector<T> &data);
+
+    /**
+     * @brief Binds a buffer of data to a uniform buffer using a shared pointer.
+     * In OpenGL, this sets array uniforms (e.g., "lights[0].position").
+     * In Vulkan, this creates/updates a UBO or SSBO.
+     * @param name The base name of the uniform buffer (e.g., "lights")
+     * @param data Shared pointer to the data vector
+     */
+    template <typename T>
+    void bindBuffer(const std::string &name,
+                    std::shared_ptr<std::vector<T>> data);
+
+    /**
+     * @brief Binds raw buffer data to a uniform buffer by name.
+     * @param name The name of the uniform buffer
+     * @param data Pointer to the raw data
+     * @param size Size of the data in bytes
+     */
+    void bindBufferData(const std::string &name, const void *data, size_t size);
+
     void bindTexture(const std::string &name, std::shared_ptr<Texture> texture,
                      int unit);
     void bindTexture2D(const std::string &name, uint textureId, int unit);
@@ -645,6 +675,20 @@ class Pipeline {
     uint getGLFrontFace(FrontFace face) const;
     uint getGLVertexAttributeType(VertexAttributeType type) const;
 };
+
+// Template implementations for Pipeline::bindBuffer
+template <typename T>
+void Pipeline::bindBuffer(const std::string &name, const std::vector<T> &data) {
+    bindBufferData(name, data.data(), data.size() * sizeof(T));
+}
+
+template <typename T>
+void Pipeline::bindBuffer(const std::string &name,
+                          std::shared_ptr<std::vector<T>> data) {
+    if (data) {
+        bindBufferData(name, data->data(), data->size() * sizeof(T));
+    }
+}
 
 enum class BufferUsage {
     VertexBuffer,

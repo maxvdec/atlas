@@ -517,6 +517,39 @@ void Pipeline::setUniform2f(const std::string &name, float v0, float v1) {
 #endif
 }
 
+void Pipeline::bindBufferData(const std::string &name, const void *data,
+                              size_t size) {
+    if (!shaderProgram || !data || size == 0) {
+        return;
+    }
+
+#ifdef OPENGL
+    // In OpenGL, we don't need to do anything special for UBOs
+    // The data will be uploaded through the uniform buffer object system
+    // For now, this is a no-op on OpenGL as the individual uniform setters
+    // handle the data. If you need full UBO support, you'd use
+    // glBufferSubData here.
+    (void)name;
+    (void)data;
+    (void)size;
+#elif defined(VULKAN)
+    // Find the uniform buffer binding info
+    const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
+    if (!info) {
+        // Try to find it as just the buffer name (without member access)
+        return;
+    }
+
+    if (!info->isBuffer) {
+        // This is a push constant, not a buffer
+        return;
+    }
+
+    // Update the entire buffer
+    updateUniformData(info->set, info->binding, 0, data, size);
+#endif
+}
+
 #ifdef VULKAN
 Pipeline::UniformBufferAllocation &
 Pipeline::getOrCreateUniformBuffer(uint32_t set, uint32_t binding,
