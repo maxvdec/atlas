@@ -236,15 +236,18 @@ void Window::run() {
     renderPass->setFramebuffer(defaultFramebuffer);
 
     while (!glfwWindowShouldClose(window)) {
+        glfwPollEvents();
+
         if (this->currentScene == nullptr) {
             commandBuffer->start();
             commandBuffer->beginPass(renderPass);
             commandBuffer->clearColor(0.1f, 0.1f, 0.1f, 1.0f);
             commandBuffer->clearDepth(1.0);
-            glfwSwapBuffers(window);
-            glfwPollEvents();
             commandBuffer->endPass();
             commandBuffer->commit();
+#ifdef OPENGL
+            glfwSwapBuffers(window);
+#endif
             continue;
         }
 
@@ -431,10 +434,10 @@ void Window::run() {
         this->lastViewMatrix = this->camera->calculateViewMatrix();
 
         commandBuffer->endPass();
-        device->submitCommandBuffer(commandBuffer);
-
+        commandBuffer->commit();
+#ifdef OPENGL
         glfwSwapBuffers(window);
-        glfwPollEvents();
+#endif
     }
 }
 

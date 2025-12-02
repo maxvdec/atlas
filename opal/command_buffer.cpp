@@ -19,13 +19,16 @@ std::shared_ptr<CommandBuffer> Device::acquireCommandBuffer() {
     commandBuffer->device = this;
 
 #ifdef VULKAN
+    // Allocate per-frame command buffers
+    commandBuffer->commandBuffers.resize(CommandBuffer::MAX_FRAMES_IN_FLIGHT);
+    
     VkCommandBufferAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     allocInfo.commandPool = Device::globalInstance->commandPool;
     allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-    allocInfo.commandBufferCount = 1;
+    allocInfo.commandBufferCount = CommandBuffer::MAX_FRAMES_IN_FLIGHT;
     if (vkAllocateCommandBuffers(this->logicalDevice, &allocInfo,
-                                 &commandBuffer->commandBuffer) != VK_SUCCESS) {
+                                 commandBuffer->commandBuffers.data()) != VK_SUCCESS) {
         throw std::runtime_error("Failed to allocate command buffers!");
     }
 #endif
@@ -42,9 +45,9 @@ void CommandBuffer::start() {
     hasStarted = false;
     imageAcquired = false;
     this->createSyncObjects();
-    vkWaitForFences(device->logicalDevice, 1, &inFlightFence, VK_TRUE,
-                    UINT64_MAX);
-    vkResetFences(device->logicalDevice, 1, &inFlightFence);
+    vkWaitForFences(device->logicalDevice, 1, &inFlightFences[currentFrame],
+                    VK_TRUE, UINT64_MAX);
+    vkResetFences(device->logicalDevice, 1, &inFlightFences[currentFrame]);
 #endif
 }
 
@@ -86,29 +89,63 @@ void CommandBuffer::beginSampled(
     }
 }
 
-void CommandBuffer::endPass() {}
+void CommandBuffer::endPass() {
+#ifdef VULKAN
+    // End the render pass if one was started
+    if (hasStarted) {
+        vkCmdEndRenderPass(commandBuffers[currentFrame]);
+        hasStarted = false;
+    }
+#endif
+}
+
 void CommandBuffer::commit() {
 #ifdef VULKAN
-    // Only submit and present if we actually acquired an image and recorded
-    // commands
+    // Acquire image and start recording if we haven't yet
+    // This handles cases where we want to present a cleared framebuffer without
+    // draws
+    if (!imageAcquired && framebuffer != nullptr &&
+        framebuffer->isDefaultFramebuffer) {
+        // Check if we have a render pass to record - if not, we can't present
+        if (renderPass == nullptr || renderPass->currentRenderPass == nullptr) {
+            // No pipeline was bound, so we have no render pass to use
+            // Just skip this frame - can't present without a render pass in
+            // Vulkan
+            return;
+        }
+
+        vkAcquireNextImageKHR(device->logicalDevice, device->swapChain,
+                              UINT64_MAX,
+                              imageAvailableSemaphores[currentFrame],
+                              VK_NULL_HANDLE, &imageIndex);
+        imageAcquired = true;
+
+        // Record the render pass with just clear values (no draws)
+        vkResetCommandBuffer(commandBuffers[currentFrame], 0);
+        this->record(imageIndex);
+        hasStarted = true;
+    }
+
+    // Only submit and present if we actually acquired an image
     if (!imageAcquired) {
         return;
     }
 
+    // End render pass if still active
     if (hasStarted) {
-        vkCmdEndRenderPass(this->commandBuffer);
+        vkCmdEndRenderPass(commandBuffers[currentFrame]);
         hasStarted = false;
     }
 
     // End the command buffer recording
-    if (vkEndCommandBuffer(this->commandBuffer) != VK_SUCCESS) {
+    if (vkEndCommandBuffer(commandBuffers[currentFrame]) != VK_SUCCESS) {
         throw std::runtime_error("Failed to end command buffer recording!");
     }
 
     VkSubmitInfo submitInfo{};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-    VkSemaphore waitSemaphores[] = {imageAvailableSemaphore};
+    VkSemaphore waitSemaphores[] = {imageAvailableSemaphores[currentFrame]};
     VkPipelineStageFlags waitStages[] = {
         VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
     submitInfo.waitSemaphoreCount = 1;
@@ -116,14 +153,14 @@ void CommandBuffer::commit() {
     submitInfo.pWaitDstStageMask = waitStages;
 
     submitInfo.commandBufferCount = 1;
-    submitInfo.pCommandBuffers = &this->commandBuffer;
+    submitInfo.pCommandBuffers = &commandBuffers[currentFrame];
 
-    VkSemaphore signalSemaphores[] = {renderFinishedSemaphore};
+    VkSemaphore signalSemaphores[] = {renderFinishedSemaphores[currentFrame]};
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = signalSemaphores;
 
-    if (vkQueueSubmit(device->graphicsQueue, 1, &submitInfo, inFlightFence) !=
-        VK_SUCCESS) {
+    if (vkQueueSubmit(device->graphicsQueue, 1, &submitInfo,
+                      inFlightFences[currentFrame]) != VK_SUCCESS) {
         throw std::runtime_error("Failed to submit draw command buffer!");
     }
 
@@ -139,8 +176,9 @@ void CommandBuffer::commit() {
 
     vkQueuePresentKHR(device->presentQueue, &presentInfo);
 
-    // Reset for next frame
+    // Advance to next frame and reset for next frame
     imageAcquired = false;
+    currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 #endif
 }
 
@@ -152,7 +190,7 @@ void CommandBuffer::bindPipeline(std::shared_ptr<Pipeline> pipeline) {
         return;
     }
     if (boundPipeline != nullptr) {
-        vkCmdEndRenderPass(this->commandBuffer);
+        vkCmdEndRenderPass(commandBuffers[currentFrame]);
         hasStarted = false;
     }
 #endif
@@ -275,28 +313,29 @@ auto CommandBuffer::draw(uint vertexCount, uint instanceCount, uint firstVertex,
     // Acquire swapchain image once per frame
     if (!imageAcquired) {
         vkAcquireNextImageKHR(device->logicalDevice, device->swapChain,
-                              UINT64_MAX, imageAvailableSemaphore,
+                              UINT64_MAX,
+                              imageAvailableSemaphores[currentFrame],
                               VK_NULL_HANDLE, &imageIndex);
         imageAcquired = true;
     }
     // Start recording if not already started
     if (!hasStarted) {
-        vkResetCommandBuffer(this->commandBuffer, 0);
+        vkResetCommandBuffer(commandBuffers[currentFrame], 0);
         this->record(imageIndex);
         hasStarted = true;
     }
-    vkCmdBindPipeline(this->commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+    vkCmdBindPipeline(commandBuffers[currentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS,
                       renderPass->currentRenderPass->pipeline);
     if (renderPass->currentRenderPass->opalPipeline != nullptr) {
         renderPass->currentRenderPass->opalPipeline->bindDescriptorSets(
-            this->commandBuffer);
+            commandBuffers[currentFrame]);
     }
     bindVertexBuffersIfNeeded();
     if (renderPass->currentRenderPass->opalPipeline != nullptr) {
         renderPass->currentRenderPass->opalPipeline->flushPushConstants(
-            this->commandBuffer);
+            commandBuffers[currentFrame]);
     }
-    vkCmdDraw(this->commandBuffer, vertexCount, instanceCount, firstVertex,
+    vkCmdDraw(commandBuffers[currentFrame], vertexCount, instanceCount, firstVertex,
               firstInstance);
 #endif
 }
@@ -323,35 +362,36 @@ void CommandBuffer::drawIndexed(uint indexCount, uint instanceCount,
     // Acquire swapchain image once per frame
     if (!imageAcquired) {
         vkAcquireNextImageKHR(device->logicalDevice, device->swapChain,
-                              UINT64_MAX, imageAvailableSemaphore,
+                              UINT64_MAX,
+                              imageAvailableSemaphores[currentFrame],
                               VK_NULL_HANDLE, &imageIndex);
         imageAcquired = true;
     }
     // Start recording if not already started
     if (!hasStarted) {
-        vkResetCommandBuffer(this->commandBuffer, 0);
+        vkResetCommandBuffer(commandBuffers[currentFrame], 0);
         this->record(imageIndex);
         hasStarted = true;
     }
-    vkCmdBindPipeline(this->commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+    vkCmdBindPipeline(commandBuffers[currentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS,
                       renderPass->currentRenderPass->pipeline);
     if (renderPass->currentRenderPass->opalPipeline != nullptr) {
         renderPass->currentRenderPass->opalPipeline->bindDescriptorSets(
-            this->commandBuffer);
+            commandBuffers[currentFrame]);
     }
     if (boundDrawingState != nullptr) {
         bindVertexBuffersIfNeeded();
         if (boundDrawingState->indexBuffer != nullptr) {
-            vkCmdBindIndexBuffer(this->commandBuffer,
+            vkCmdBindIndexBuffer(commandBuffers[currentFrame],
                                  boundDrawingState->indexBuffer->vkBuffer, 0,
                                  VK_INDEX_TYPE_UINT32);
         }
     }
     if (renderPass->currentRenderPass->opalPipeline != nullptr) {
         renderPass->currentRenderPass->opalPipeline->flushPushConstants(
-            this->commandBuffer);
+            commandBuffers[currentFrame]);
     }
-    vkCmdDrawIndexed(this->commandBuffer, indexCount, instanceCount, firstIndex,
+    vkCmdDrawIndexed(commandBuffers[currentFrame], indexCount, instanceCount, firstIndex,
                      vertexOffset, firstInstance);
 #endif
 }
@@ -377,7 +417,8 @@ void CommandBuffer::drawPatches(uint vertexCount, uint firstVertex) {
     if (!imageAcquired) {
         VkResult result = vkAcquireNextImageKHR(
             device->logicalDevice, device->swapChain, UINT64_MAX,
-            imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
+            imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE,
+            &imageIndex);
         imageAcquired = true;
         if (result == VK_ERROR_OUT_OF_DATE_KHR) {
             device->remakeSwapChain(device->context);
@@ -428,22 +469,22 @@ void CommandBuffer::drawPatches(uint vertexCount, uint firstVertex) {
     }
     // Start recording if not already started
     if (!hasStarted) {
-        vkResetCommandBuffer(this->commandBuffer, 0);
+        vkResetCommandBuffer(commandBuffers[currentFrame], 0);
         this->record(imageIndex);
         hasStarted = true;
     }
-    vkCmdBindPipeline(this->commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+    vkCmdBindPipeline(commandBuffers[currentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS,
                       renderPass->currentRenderPass->pipeline);
     if (renderPass->currentRenderPass->opalPipeline != nullptr) {
         renderPass->currentRenderPass->opalPipeline->bindDescriptorSets(
-            this->commandBuffer);
+            commandBuffers[currentFrame]);
     }
     bindVertexBuffersIfNeeded();
     if (renderPass->currentRenderPass->opalPipeline != nullptr) {
         renderPass->currentRenderPass->opalPipeline->flushPushConstants(
-            this->commandBuffer);
+            commandBuffers[currentFrame]);
     }
-    vkCmdDraw(this->commandBuffer, vertexCount, 1, firstVertex, 0);
+    vkCmdDraw(commandBuffers[currentFrame], vertexCount, 1, firstVertex, 0);
 #endif
 }
 
@@ -490,7 +531,7 @@ void CommandBuffer::bindVertexBuffersIfNeeded() {
         bindingCount = 2;
     }
 
-    vkCmdBindVertexBuffers(this->commandBuffer, 0, bindingCount, buffers.data(),
+    vkCmdBindVertexBuffers(commandBuffers[currentFrame], 0, bindingCount, buffers.data(),
                            offsets.data());
 }
 #endif

@@ -1015,15 +1015,23 @@ class CommandBuffer {
 
   private:
 #ifdef VULKAN
-    VkCommandBuffer commandBuffer = VK_NULL_HANDLE;
-    VkSemaphore imageAvailableSemaphore = VK_NULL_HANDLE;
-    VkSemaphore renderFinishedSemaphore = VK_NULL_HANDLE;
-    VkFence inFlightFence = VK_NULL_HANDLE;
+    // Per-frame command buffers and sync objects
+    static constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 3;
+    std::vector<VkCommandBuffer> commandBuffers;
+    std::vector<VkSemaphore> imageAvailableSemaphores;
+    std::vector<VkSemaphore> renderFinishedSemaphores;
+    std::vector<VkFence> inFlightFences;
+    uint32_t currentFrame = 0;
     uint32_t imageIndex = 0;
     bool imageAcquired = false; // Track if we've acquired a swapchain image
     void record(uint32_t imageIndex);
     void createSyncObjects();
     void bindVertexBuffersIfNeeded();
+    
+    // Helper to get current frame's command buffer
+    VkCommandBuffer getCurrentCommandBuffer() const { 
+        return commandBuffers.empty() ? VK_NULL_HANDLE : commandBuffers[currentFrame]; 
+    }
 #endif
 
     float clearColorValue[4] = {0.0f, 0.0f, 0.0f, 1.0f};

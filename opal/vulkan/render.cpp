@@ -17,7 +17,7 @@ void CommandBuffer::record(uint32_t imageIndex) {
     VkCommandBufferBeginInfo beginInfo{};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-    if (vkBeginCommandBuffer(this->commandBuffer, &beginInfo) != VK_SUCCESS) {
+    if (vkBeginCommandBuffer(commandBuffers[currentFrame], &beginInfo) != VK_SUCCESS) {
         throw std::runtime_error("Failed to begin recording command buffer!");
     }
 
@@ -78,7 +78,7 @@ void CommandBuffer::record(uint32_t imageIndex) {
     renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
     renderPassInfo.pClearValues = clearValues.data();
 
-    vkCmdBeginRenderPass(this->commandBuffer, &renderPassInfo,
+    vkCmdBeginRenderPass(commandBuffers[currentFrame], &renderPassInfo,
                          VK_SUBPASS_CONTENTS_INLINE);
 
     // Configure dynamic viewport/scissor to match current render area
@@ -90,19 +90,23 @@ void CommandBuffer::record(uint32_t imageIndex) {
         static_cast<float>(renderPassInfo.renderArea.extent.height);
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
-    vkCmdSetViewport(this->commandBuffer, 0, 1, &viewport);
+    vkCmdSetViewport(commandBuffers[currentFrame], 0, 1, &viewport);
 
     VkRect2D scissor{};
     scissor.offset = {.x = 0, .y = 0};
     scissor.extent = renderPassInfo.renderArea.extent;
-    vkCmdSetScissor(this->commandBuffer, 0, 1, &scissor);
+    vkCmdSetScissor(commandBuffers[currentFrame], 0, 1, &scissor);
 }
 
 void CommandBuffer::createSyncObjects() {
     // Only create sync objects if they don't exist yet
-    if (imageAvailableSemaphore != VK_NULL_HANDLE) {
+    if (!imageAvailableSemaphores.empty()) {
         return; // Already created
     }
+
+    imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+    renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+    inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
 
     VkSemaphoreCreateInfo semaphoreInfo{};
     semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -111,13 +115,16 @@ void CommandBuffer::createSyncObjects() {
     fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
     fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-    if (vkCreateSemaphore(device->logicalDevice, &semaphoreInfo, nullptr,
-                          &imageAvailableSemaphore) != VK_SUCCESS ||
-        vkCreateSemaphore(device->logicalDevice, &semaphoreInfo, nullptr,
-                          &renderFinishedSemaphore) != VK_SUCCESS ||
-        vkCreateFence(device->logicalDevice, &fenceInfo, nullptr,
-                      &inFlightFence) != VK_SUCCESS) {
-        throw std::runtime_error("Failed to create synchronization objects!");
+    for (uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        if (vkCreateSemaphore(device->logicalDevice, &semaphoreInfo, nullptr,
+                              &imageAvailableSemaphores[i]) != VK_SUCCESS ||
+            vkCreateSemaphore(device->logicalDevice, &semaphoreInfo, nullptr,
+                              &renderFinishedSemaphores[i]) != VK_SUCCESS ||
+            vkCreateFence(device->logicalDevice, &fenceInfo, nullptr,
+                          &inFlightFences[i]) != VK_SUCCESS) {
+            throw std::runtime_error(
+                "Failed to create synchronization objects!");
+        }
     }
 }
 
