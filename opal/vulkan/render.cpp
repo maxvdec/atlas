@@ -99,6 +99,11 @@ void CommandBuffer::record(uint32_t imageIndex) {
 }
 
 void CommandBuffer::createSyncObjects() {
+    // Only create sync objects if they don't exist yet
+    if (imageAvailableSemaphore != VK_NULL_HANDLE) {
+        return; // Already created
+    }
+
     VkSemaphoreCreateInfo semaphoreInfo{};
     semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 

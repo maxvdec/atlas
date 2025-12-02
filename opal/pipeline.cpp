@@ -700,21 +700,29 @@ void Pipeline::ensureDescriptorResources() {
         return;
     }
 
-    bool needsAllocation = descriptorSets.size() != descriptorSetLayouts.size();
-    if (!needsAllocation) {
+    // Check if we already have valid descriptor sets
+    // If descriptorPool exists and has allocated sets, don't reallocate
+    if (descriptorPool != VK_NULL_HANDLE && !descriptorSets.empty()) {
+        bool allSetsValid = true;
         for (size_t i = 0; i < descriptorSetLayouts.size(); ++i) {
             if (descriptorSetLayouts[i] != VK_NULL_HANDLE &&
-                descriptorSets[i] == VK_NULL_HANDLE) {
-                needsAllocation = true;
+                (i >= descriptorSets.size() ||
+                 descriptorSets[i] == VK_NULL_HANDLE)) {
+                allSetsValid = false;
                 break;
             }
         }
-    }
-    if (!needsAllocation) {
-        return;
+        if (allSetsValid) {
+            return; // Already have valid descriptor resources
+        }
     }
 
-    resetDescriptorSets();
+    // Only allocate if we don't have a pool yet
+    if (descriptorPool != VK_NULL_HANDLE) {
+        // Pool exists but sets are invalid - this shouldn't happen during
+        // normal operation. Log a warning but don't reallocate during a frame.
+        return;
+    }
 
     std::unordered_map<VkDescriptorType, uint32_t> typeCounts;
     uint32_t setCount = 0;
@@ -748,6 +756,7 @@ void Pipeline::ensureDescriptorResources() {
     poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
     poolInfo.pPoolSizes = poolSizes.data();
     poolInfo.maxSets = setCount;
+    poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT;
 
     if (vkCreateDescriptorPool(Device::globalDevice, &poolInfo, nullptr,
                                &descriptorPool) != VK_SUCCESS) {
@@ -815,14 +824,13 @@ std::shared_ptr<Texture> Pipeline::getDummyTexture() {
 std::shared_ptr<Texture> Pipeline::getDummyCubemap() {
     static std::shared_ptr<Texture> dummyCube = nullptr;
     if (!dummyCube) {
-        // Create a 1x1 cubemap with 6 white faces
-        uint8_t white[4 * 6]; // 6 faces, each 1x1 with RGBA
-        for (int i = 0; i < 6 * 4; ++i) {
-            white[i] = 255;
-        }
+        // Create a 1x1 cubemap without initial data - it will be uninitialized
+        // but that's fine for a placeholder texture. We avoid passing data
+        // because the staging buffer size calculation in Texture::create
+        // doesn't account for cubemap layers.
         dummyCube =
             Texture::create(TextureType::TextureCubeMap, TextureFormat::Rgba8,
-                            1, 1, TextureDataFormat::Rgba, white, 1);
+                            1, 1, TextureDataFormat::Rgba, nullptr, 1);
     }
     return dummyCube;
 }
@@ -957,7 +965,9 @@ void Pipeline::updatePushConstant(uint32_t offset, const void *data,
 }
 
 void Pipeline::flushPushConstants(VkCommandBuffer commandBuffer) {
-    if (!pushConstantsDirty || pushConstantSize == 0) {
+    // Push constants must be set before drawing if the shader uses them.
+    // We push even if not dirty to ensure the GPU has valid data on first use.
+    if (pushConstantSize == 0) {
         return;
     }
 

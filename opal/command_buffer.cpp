@@ -40,6 +40,7 @@ void CommandBuffer::start() {
     framebuffer = nullptr;
 #ifdef VULKAN
     hasStarted = false;
+    imageAcquired = false;
     this->createSyncObjects();
     vkWaitForFences(device->logicalDevice, 1, &inFlightFence, VK_TRUE,
                     UINT64_MAX);
@@ -88,9 +89,20 @@ void CommandBuffer::beginSampled(
 void CommandBuffer::endPass() {}
 void CommandBuffer::commit() {
 #ifdef VULKAN
+    // Only submit and present if we actually acquired an image and recorded
+    // commands
+    if (!imageAcquired) {
+        return;
+    }
+
     if (hasStarted) {
         vkCmdEndRenderPass(this->commandBuffer);
         hasStarted = false;
+    }
+
+    // End the command buffer recording
+    if (vkEndCommandBuffer(this->commandBuffer) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to end command buffer recording!");
     }
 
     VkSubmitInfo submitInfo{};
@@ -126,12 +138,19 @@ void CommandBuffer::commit() {
     presentInfo.pImageIndices = &imageIndex;
 
     vkQueuePresentKHR(device->presentQueue, &presentInfo);
+
+    // Reset for next frame
+    imageAcquired = false;
 #endif
 }
 
 void CommandBuffer::bindPipeline(std::shared_ptr<Pipeline> pipeline) {
     pipeline->bind();
 #ifdef VULKAN
+    // If binding the same pipeline, no need to end/restart render pass
+    if (boundPipeline == pipeline) {
+        return;
+    }
     if (boundPipeline != nullptr) {
         vkCmdEndRenderPass(this->commandBuffer);
         hasStarted = false;
@@ -253,10 +272,15 @@ auto CommandBuffer::draw(uint vertexCount, uint instanceCount, uint firstVertex,
         // No pipeline bound yet, skip this draw call
         return;
     }
-    if (!hasStarted) {
+    // Acquire swapchain image once per frame
+    if (!imageAcquired) {
         vkAcquireNextImageKHR(device->logicalDevice, device->swapChain,
                               UINT64_MAX, imageAvailableSemaphore,
                               VK_NULL_HANDLE, &imageIndex);
+        imageAcquired = true;
+    }
+    // Start recording if not already started
+    if (!hasStarted) {
         vkResetCommandBuffer(this->commandBuffer, 0);
         this->record(imageIndex);
         hasStarted = true;
@@ -296,10 +320,15 @@ void CommandBuffer::drawIndexed(uint indexCount, uint instanceCount,
         // No pipeline bound yet, skip this draw call
         return;
     }
-    if (!hasStarted) {
+    // Acquire swapchain image once per frame
+    if (!imageAcquired) {
         vkAcquireNextImageKHR(device->logicalDevice, device->swapChain,
                               UINT64_MAX, imageAvailableSemaphore,
                               VK_NULL_HANDLE, &imageIndex);
+        imageAcquired = true;
+    }
+    // Start recording if not already started
+    if (!hasStarted) {
         vkResetCommandBuffer(this->commandBuffer, 0);
         this->record(imageIndex);
         hasStarted = true;
@@ -344,10 +373,12 @@ void CommandBuffer::drawPatches(uint vertexCount, uint firstVertex) {
         // No pipeline bound yet, skip this draw call
         return;
     }
-    if (!hasStarted) {
+    // Acquire swapchain image once per frame
+    if (!imageAcquired) {
         VkResult result = vkAcquireNextImageKHR(
             device->logicalDevice, device->swapChain, UINT64_MAX,
             imageAvailableSemaphore, VK_NULL_HANDLE, &imageIndex);
+        imageAcquired = true;
         if (result == VK_ERROR_OUT_OF_DATE_KHR) {
             device->remakeSwapChain(device->context);
             if (framebuffer->isDefaultFramebuffer) {
@@ -394,6 +425,9 @@ void CommandBuffer::drawPatches(uint vertexCount, uint firstVertex) {
                 device->swapchainDirty = true;
             }
         }
+    }
+    // Start recording if not already started
+    if (!hasStarted) {
         vkResetCommandBuffer(this->commandBuffer, 0);
         this->record(imageIndex);
         hasStarted = true;
@@ -420,25 +454,38 @@ void CommandBuffer::bindVertexBuffersIfNeeded() {
         return;
     }
 
+    // Use the actual pipeline from the render pass, not boundPipeline
+    Pipeline *activePipeline = nullptr;
+    if (renderPass != nullptr && renderPass->currentRenderPass != nullptr &&
+        renderPass->currentRenderPass->opalPipeline != nullptr) {
+        activePipeline = renderPass->currentRenderPass->opalPipeline.get();
+    }
+
     std::array<VkBuffer, 2> buffers = {
         boundDrawingState->vertexBuffer->vkBuffer, VK_NULL_HANDLE};
     std::array<VkDeviceSize, 2> offsets = {0, 0};
     uint32_t bindingCount = 1;
 
     bool needsInstanceBinding =
-        boundPipeline != nullptr && boundPipeline->hasInstanceAttributes;
+        activePipeline != nullptr && activePipeline->hasInstanceAttributes;
 
     VkBuffer instanceBufferHandle = VK_NULL_HANDLE;
     if (boundDrawingState->instanceBuffer != nullptr) {
         instanceBufferHandle = boundDrawingState->instanceBuffer->vkBuffer;
-    } else if (needsInstanceBinding && device != nullptr) {
+    }
+
+    // If pipeline expects instance binding but no instance buffer provided,
+    // use the default identity matrix buffer
+    if (needsInstanceBinding && instanceBufferHandle == VK_NULL_HANDLE &&
+        device != nullptr) {
         auto fallback = device->getDefaultInstanceBuffer();
         if (fallback != nullptr) {
             instanceBufferHandle = fallback->vkBuffer;
         }
     }
 
-    if (instanceBufferHandle != VK_NULL_HANDLE) {
+    // If pipeline expects instance binding, we must bind 2 buffers
+    if (needsInstanceBinding || instanceBufferHandle != VK_NULL_HANDLE) {
         buffers[1] = instanceBufferHandle;
         bindingCount = 2;
     }

@@ -540,7 +540,9 @@ void Pipeline::buildPipelineLayout() {
     }
 
     // Release descriptor sets before destroying their layouts to satisfy
-    // Vulkan lifetime rules.
+    // Vulkan lifetime rules. Note: If this pipeline is currently bound to
+    // an active command buffer, this will cause validation errors. Pipelines
+    // should only be built once during initialization, not during rendering.
     resetDescriptorSets();
 
     // Clean up old descriptor set layouts
@@ -561,6 +563,7 @@ void Pipeline::buildPipelineLayout() {
             const auto &bindings = setPair.second;
 
             std::vector<VkDescriptorSetLayoutBinding> layoutBindings;
+            std::vector<VkDescriptorBindingFlags> bindingFlags;
             for (const auto &bindingPair : bindings) {
                 VkDescriptorSetLayoutBinding layoutBinding{};
                 layoutBinding.binding = bindingPair.first;
@@ -569,7 +572,16 @@ void Pipeline::buildPipelineLayout() {
                 layoutBinding.stageFlags = bindingPair.second.stageFlags;
                 layoutBinding.pImmutableSamplers = nullptr;
                 layoutBindings.push_back(layoutBinding);
+                bindingFlags.push_back(
+                    VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT);
             }
+
+            VkDescriptorSetLayoutBindingFlagsCreateInfo bindingFlagsInfo{};
+            bindingFlagsInfo.sType =
+                VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO;
+            bindingFlagsInfo.bindingCount =
+                static_cast<uint32_t>(bindingFlags.size());
+            bindingFlagsInfo.pBindingFlags = bindingFlags.data();
 
             VkDescriptorSetLayoutCreateInfo layoutInfo{};
             layoutInfo.sType =
@@ -577,6 +589,9 @@ void Pipeline::buildPipelineLayout() {
             layoutInfo.bindingCount =
                 static_cast<uint32_t>(layoutBindings.size());
             layoutInfo.pBindings = layoutBindings.data();
+            layoutInfo.flags =
+                VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT;
+            layoutInfo.pNext = &bindingFlagsInfo;
 
             if (vkCreateDescriptorSetLayout(
                     Device::globalDevice, &layoutInfo, nullptr,

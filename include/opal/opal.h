@@ -1020,6 +1020,7 @@ class CommandBuffer {
     VkSemaphore renderFinishedSemaphore = VK_NULL_HANDLE;
     VkFence inFlightFence = VK_NULL_HANDLE;
     uint32_t imageIndex = 0;
+    bool imageAcquired = false; // Track if we've acquired a swapchain image
     void record(uint32_t imageIndex);
     void createSyncObjects();
     void bindVertexBuffersIfNeeded();

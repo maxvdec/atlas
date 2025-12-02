@@ -473,9 +473,10 @@ void CoreObject::refreshPipeline() {
         return;
     }
 
-    if (this->pipeline == nullptr) {
-        this->pipeline = opal::Pipeline::create();
-    }
+    // Always create a fresh pipeline for configuration.
+    // We don't reuse this->pipeline because it might be a cached pipeline
+    // that's currently bound to an active command buffer.
+    auto unbuiltPipeline = opal::Pipeline::create();
 
     Window &window = *Window::mainWindow;
 
@@ -487,19 +488,19 @@ void CoreObject::refreshPipeline() {
         viewportHeight = static_cast<int>(size.height);
     }
 
-    this->pipeline->setViewport(window.viewportX, window.viewportY,
-                                viewportWidth, viewportHeight);
-    this->pipeline->setPrimitiveStyle(window.primitiveStyle);
-    this->pipeline->setRasterizerMode(window.rasterizerMode);
-    this->pipeline->setCullMode(window.cullMode);
-    this->pipeline->setFrontFace(window.frontFace);
-    this->pipeline->enableDepthTest(window.useDepth);
-    this->pipeline->setDepthCompareOp(window.depthCompareOp);
-    this->pipeline->enableBlending(window.useBlending);
-    this->pipeline->setBlendFunc(window.srcBlend, window.dstBlend);
-    this->pipeline->enableMultisampling(window.useMultisampling);
+    unbuiltPipeline->setViewport(window.viewportX, window.viewportY,
+                                 viewportWidth, viewportHeight);
+    unbuiltPipeline->setPrimitiveStyle(window.primitiveStyle);
+    unbuiltPipeline->setRasterizerMode(window.rasterizerMode);
+    unbuiltPipeline->setCullMode(window.cullMode);
+    unbuiltPipeline->setFrontFace(window.frontFace);
+    unbuiltPipeline->enableDepthTest(window.useDepth);
+    unbuiltPipeline->setDepthCompareOp(window.depthCompareOp);
+    unbuiltPipeline->enableBlending(window.useBlending);
+    unbuiltPipeline->setBlendFunc(window.srcBlend, window.dstBlend);
+    unbuiltPipeline->enableMultisampling(window.useMultisampling);
 
-    this->pipeline = this->shaderProgram.requestPipeline(this->pipeline);
+    this->pipeline = this->shaderProgram.requestPipeline(unbuiltPipeline);
 }
 
 void CoreObject::render(float dt,

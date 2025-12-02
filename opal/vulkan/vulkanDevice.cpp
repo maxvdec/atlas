@@ -126,12 +126,27 @@ void Device::createLogicalDevice(std::shared_ptr<Context> context) {
     VkPhysicalDeviceFeatures deviceFeatures = {};
     deviceFeatures.fragmentStoresAndAtomics = VK_TRUE;
 
+    // Enable descriptor indexing features for update-after-bind
+    VkPhysicalDeviceDescriptorIndexingFeatures indexingFeatures{};
+    indexingFeatures.sType =
+        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
+    indexingFeatures.descriptorBindingUniformBufferUpdateAfterBind = VK_TRUE;
+    indexingFeatures.descriptorBindingSampledImageUpdateAfterBind = VK_TRUE;
+    indexingFeatures.descriptorBindingStorageBufferUpdateAfterBind = VK_TRUE;
+    indexingFeatures.descriptorBindingPartiallyBound = VK_TRUE;
+
+    VkPhysicalDeviceFeatures2 deviceFeatures2{};
+    deviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+    deviceFeatures2.features = deviceFeatures;
+    deviceFeatures2.pNext = &indexingFeatures;
+
     VkDeviceCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     createInfo.pQueueCreateInfos = queueCreateInfos.data();
     createInfo.queueCreateInfoCount =
         static_cast<uint32_t>(queueCreateInfos.size());
-    createInfo.pEnabledFeatures = &deviceFeatures;
+    createInfo.pEnabledFeatures = nullptr; // Using pNext chain instead
+    createInfo.pNext = &deviceFeatures2;
 
     std::vector<const char *> deviceExtensions = {
         VK_KHR_SWAPCHAIN_EXTENSION_NAME};
