@@ -526,6 +526,7 @@ void Pipeline::buildPipelineLayout() {
                     binding.count = 1;
                     binding.isBuffer = false;
                     binding.isSampler = true;
+                    binding.isCubemap = info.isCubemap;
                 } else {
                     // This is a push constant
                     uint32_t endOffset = info.offset + info.size;

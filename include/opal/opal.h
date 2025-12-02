@@ -298,6 +298,8 @@ class Texture {
     VkSampler vkSampler = VK_NULL_HANDLE;
     VkImageLayout currentLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
+    static std::shared_ptr<Texture> getTextureFromHandle(uint32_t handle);
+
     static std::shared_ptr<Texture>
     createVulkan(TextureType type, TextureFormat format, int width, int height,
                  TextureDataFormat dataFormat = TextureDataFormat::Rgba,
@@ -323,6 +325,14 @@ class Texture {
 
     uint glType = 0;
     uint glFormat = 0;
+
+#ifdef VULKAN
+    static uint32_t
+    registerTextureHandle(const std::shared_ptr<Texture> &texture);
+    static std::unordered_map<uint32_t, std::weak_ptr<Texture>>
+        textureHandleRegistry;
+    static uint32_t nextTextureHandle;
+#endif
 };
 
 enum class ShaderType {
@@ -346,6 +356,7 @@ struct UniformBindingInfo {
     bool isSampler;
     bool isBuffer;        // true for uniform buffers, false for push constants
     bool isStorageBuffer; // true for storage buffers (SSBOs)
+    bool isCubemap;       // true for samplerCube types
 };
 #endif
 
@@ -624,6 +635,7 @@ class Pipeline {
         uint32_t minBufferSize = 0;
         bool isBuffer = false;
         bool isSampler = false;
+        bool isCubemap = false;
     };
     std::map<uint32_t, std::map<uint32_t, DescriptorBindingInfoEntry>>
         descriptorBindingInfo;
@@ -656,9 +668,14 @@ class Pipeline {
     void ensureDescriptorResources();
     void bindDescriptorSets(VkCommandBuffer commandBuffer);
     void bindUniformBufferDescriptor(uint32_t set, uint32_t binding);
+    void bindSamplerDescriptor(uint32_t set, uint32_t binding,
+                               std::shared_ptr<Texture> texture);
     void resetDescriptorSets();
     const DescriptorBindingInfoEntry *
     getDescriptorBindingInfo(uint32_t set, uint32_t binding) const;
+
+    static std::shared_ptr<Texture> getDummyTexture();
+    static std::shared_ptr<Texture> getDummyCubemap();
 
     // Push constant support
     std::vector<uint8_t> pushConstantData;

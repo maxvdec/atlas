@@ -394,11 +394,8 @@ void Pipeline::bindTexture3D(const std::string &name, uint textureId,
     int location = glGetUniformLocation(shaderProgram->programID, name.c_str());
     glUniform1i(location, unit);
 #elif defined(VULKAN)
-    // Vulkan texture binding requires descriptor sets - not yet implemented
-    // Silently ignore if uniform not found (matches OpenGL behavior)
-    (void)name;
-    (void)textureId;
-    (void)unit;
+    auto texture = Texture::getTextureFromHandle(textureId);
+    bindTexture(name, texture, unit);
 #endif
 }
 
@@ -410,11 +407,8 @@ void Pipeline::bindTextureCubemap(const std::string &name, uint textureId,
     int location = glGetUniformLocation(shaderProgram->programID, name.c_str());
     glUniform1i(location, unit);
 #elif defined(VULKAN)
-    // Vulkan texture binding requires descriptor sets - not yet implemented
-    // Silently ignore if uniform not found (matches OpenGL behavior)
-    (void)name;
-    (void)textureId;
-    (void)unit;
+    auto texture = Texture::getTextureFromHandle(textureId);
+    bindTexture(name, texture, unit);
 #endif
 }
 
@@ -426,11 +420,8 @@ std::shared_ptr<Texture> Texture::createMultisampled(TextureFormat format,
     texture->type = TextureType::Texture2DMultisample;
     texture->format = format;
     texture->width = width;
-    texture->height = height;
-    texture->samples = samples;
-
-    const GLenum glFormat = getGLInternalFormat(format);
-    texture->glType = GL_TEXTURE_2D_MULTISAMPLE;
+    auto texture = Texture::getTextureFromHandle(textureId);
+    bindTexture(name, texture, unit);
     texture->glFormat = glFormat;
 
     glGenTextures(1, &texture->textureID);
@@ -530,5 +521,43 @@ std::shared_ptr<Texture> Texture::create3D(TextureFormat format, int width,
     return nullptr;
 #endif
 }
+
+#ifdef VULKAN
+uint32_t Texture::nextTextureHandle = 1;
+std::unordered_map<uint32_t, std::weak_ptr<Texture>>
+    Texture::textureHandleRegistry;
+
+uint32_t
+Texture::registerTextureHandle(const std::shared_ptr<Texture> &texture) {
+    if (!texture) {
+        return 0;
+    }
+
+    uint32_t handle = nextTextureHandle++;
+    if (handle == 0) {
+        handle = nextTextureHandle++;
+    }
+
+    textureHandleRegistry[handle] = texture;
+    return handle;
+}
+
+std::shared_ptr<Texture> Texture::getTextureFromHandle(uint32_t handle) {
+    if (handle == 0) {
+        return nullptr;
+    }
+
+    auto it = textureHandleRegistry.find(handle);
+    if (it == textureHandleRegistry.end()) {
+        return nullptr;
+    }
+
+    auto texture = it->second.lock();
+    if (!texture) {
+        textureHandleRegistry.erase(it);
+    }
+    return texture;
+}
+#endif
 
 } // namespace opal

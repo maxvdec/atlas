@@ -776,9 +776,10 @@ void Pipeline::ensureDescriptorResources() {
         descriptorSets[i] = set;
     }
 
-    // Prime all buffer descriptors with zero-initialized resources so Vulkan
-    // validation layers always see a valid binding, even before the app uploads
-    // data (e.g., when light counts are zero).
+    // Prime all descriptors with placeholder resources so Vulkan validation
+    // layers always see valid bindings even before the app uploads data.
+    auto dummyTex = getDummyTexture();
+    auto dummyCubeTex = getDummyCubemap();
     for (const auto &setPair : descriptorBindingInfo) {
         uint32_t setIndex = setPair.first;
         if (setIndex >= descriptorSets.size() ||
@@ -786,12 +787,79 @@ void Pipeline::ensureDescriptorResources() {
             continue;
         }
         for (const auto &bindingPair : setPair.second) {
-            if (!bindingPair.second.isBuffer) {
-                continue;
+            if (bindingPair.second.isBuffer) {
+                bindUniformBufferDescriptor(setIndex, bindingPair.first);
+            } else if (bindingPair.second.isSampler) {
+                if (bindingPair.second.isCubemap) {
+                    bindSamplerDescriptor(setIndex, bindingPair.first,
+                                          dummyCubeTex);
+                } else {
+                    bindSamplerDescriptor(setIndex, bindingPair.first,
+                                          dummyTex);
+                }
             }
-            bindUniformBufferDescriptor(setIndex, bindingPair.first);
         }
     }
+}
+
+std::shared_ptr<Texture> Pipeline::getDummyTexture() {
+    static std::shared_ptr<Texture> dummy = nullptr;
+    if (!dummy) {
+        uint8_t white[4] = {255, 255, 255, 255};
+        dummy = Texture::create(TextureType::Texture2D, TextureFormat::Rgba8, 1,
+                                1, TextureDataFormat::Rgba, white, 1);
+    }
+    return dummy;
+}
+
+std::shared_ptr<Texture> Pipeline::getDummyCubemap() {
+    static std::shared_ptr<Texture> dummyCube = nullptr;
+    if (!dummyCube) {
+        // Create a 1x1 cubemap with 6 white faces
+        uint8_t white[4 * 6]; // 6 faces, each 1x1 with RGBA
+        for (int i = 0; i < 6 * 4; ++i) {
+            white[i] = 255;
+        }
+        dummyCube =
+            Texture::create(TextureType::TextureCubeMap, TextureFormat::Rgba8,
+                            1, 1, TextureDataFormat::Rgba, white, 1);
+    }
+    return dummyCube;
+}
+
+void Pipeline::bindSamplerDescriptor(uint32_t set, uint32_t binding,
+                                     std::shared_ptr<Texture> texture) {
+    if (!texture) {
+        return;
+    }
+
+    ensureDescriptorResources();
+
+    if (set >= descriptorSets.size() || descriptorSets[set] == VK_NULL_HANDLE) {
+        return;
+    }
+
+    const auto *info = getDescriptorBindingInfo(set, binding);
+    if (info == nullptr || !info->isSampler) {
+        return;
+    }
+
+    VkDescriptorImageInfo imageInfo{};
+    imageInfo.sampler = texture->vkSampler;
+    imageInfo.imageView = texture->vkImageView;
+    imageInfo.imageLayout = texture->currentLayout == VK_IMAGE_LAYOUT_UNDEFINED
+                                ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+                                : texture->currentLayout;
+
+    VkWriteDescriptorSet write{};
+    write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    write.dstSet = descriptorSets[set];
+    write.dstBinding = binding;
+    write.descriptorCount = 1;
+    write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    write.pImageInfo = &imageInfo;
+
+    vkUpdateDescriptorSets(Device::globalDevice, 1, &write, 0, nullptr);
 }
 
 void Pipeline::bindUniformBufferDescriptor(uint32_t set, uint32_t binding) {

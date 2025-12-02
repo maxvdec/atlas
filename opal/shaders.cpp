@@ -293,6 +293,7 @@ void Shader::performReflection() {
         blockInfo.isSampler = false;
         blockInfo.isBuffer = true;
         blockInfo.isStorageBuffer = false;
+        blockInfo.isCubemap = false;
         registerBinding(ubo.name, blockInfo, true);
 
         for (uint32_t i = 0; i < type.member_types.size(); ++i) {
@@ -312,6 +313,7 @@ void Shader::performReflection() {
             memberInfo.isSampler = false;
             memberInfo.isBuffer = true;
             memberInfo.isStorageBuffer = false;
+            memberInfo.isCubemap = false;
 
             registerBinding(ubo.name + "." + memberName, memberInfo, false);
             if (uniformBindings.find(memberName) == uniformBindings.end()) {
@@ -338,6 +340,7 @@ void Shader::performReflection() {
             memberInfo.isSampler = false;
             memberInfo.isBuffer = false;
             memberInfo.isStorageBuffer = false;
+            memberInfo.isCubemap = false;
 
             registerBinding(memberName, memberInfo, false);
             if (!pc.name.empty()) {
@@ -352,6 +355,10 @@ void Shader::performReflection() {
         uint32_t binding =
             compiler.get_decoration(sampler.id, spv::DecorationBinding);
 
+        const spirv_cross::SPIRType &samplerType =
+            compiler.get_type(sampler.type_id);
+        bool isCube = samplerType.image.dim == spv::DimCube;
+
         UniformBindingInfo samplerInfo;
         samplerInfo.set = set;
         samplerInfo.binding = binding;
@@ -360,6 +367,7 @@ void Shader::performReflection() {
         samplerInfo.isSampler = true;
         samplerInfo.isBuffer = false;
         samplerInfo.isStorageBuffer = false;
+        samplerInfo.isCubemap = isCube;
         registerBinding(sampler.name, samplerInfo, false);
     }
 
@@ -377,6 +385,7 @@ void Shader::performReflection() {
         samplerInfo.isSampler = true;
         samplerInfo.isBuffer = false;
         samplerInfo.isStorageBuffer = false;
+        samplerInfo.isCubemap = false;
         registerBinding(sampler.name, samplerInfo, false);
     }
 
@@ -394,6 +403,7 @@ void Shader::performReflection() {
         imageInfo.isSampler = true;
         imageInfo.isBuffer = false;
         imageInfo.isStorageBuffer = false;
+        imageInfo.isCubemap = false;
         registerBinding(image.name, imageInfo, false);
     }
 
@@ -411,6 +421,7 @@ void Shader::performReflection() {
         ssboInfo.isSampler = false;
         ssboInfo.isBuffer = true;
         ssboInfo.isStorageBuffer = true;
+        ssboInfo.isCubemap = false;
         registerBinding(ssbo.name, ssboInfo, true);
     }
 }

@@ -365,6 +365,7 @@ Texture::createVulkan(TextureType type, TextureFormat format, int width,
         vkFreeMemory(Device::globalDevice, stagingBufferMemory, nullptr);
     }
 
+    texture->textureID = Texture::registerTextureHandle(texture);
     (void)mipLevels;
     return texture;
 }
@@ -411,6 +412,7 @@ std::shared_ptr<Texture> Texture::createMultisampledVulkan(TextureFormat format,
     texture->vkImageView = createImageView(
         texture->vkImage, vkFormat, aspectFlags, VK_IMAGE_VIEW_TYPE_2D, 1);
 
+    texture->textureID = Texture::registerTextureHandle(texture);
     return texture;
 }
 
@@ -440,6 +442,7 @@ std::shared_ptr<Texture> Texture::createDepthCubemapVulkan(TextureFormat format,
         TextureWrapMode::ClampToEdge, TextureWrapMode::ClampToEdge,
         TextureWrapMode::ClampToEdge);
 
+    texture->textureID = Texture::registerTextureHandle(texture);
     return texture;
 }
 
@@ -507,6 +510,7 @@ Texture::create3DVulkan(TextureFormat format, int width, int height, int depth,
         vkFreeMemory(Device::globalDevice, stagingBufferMemory, nullptr);
     }
 
+    texture->textureID = Texture::registerTextureHandle(texture);
     return texture;
 }
 
