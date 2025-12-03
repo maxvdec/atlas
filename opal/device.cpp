@@ -110,8 +110,10 @@ std::shared_ptr<Framebuffer> Device::getDefaultFramebuffer() {
     return defaultFramebuffer;
 }
 
+#ifdef VULKAN
 Device *Device::globalInstance = nullptr;
 VkDevice Device::globalDevice = VK_NULL_HANDLE;
+#endif
 
 #ifdef VULKAN
 std::shared_ptr<Buffer> Device::getDefaultInstanceBuffer() {

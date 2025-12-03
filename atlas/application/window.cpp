@@ -34,7 +34,15 @@ Window *Window::mainWindow = nullptr;
 
 Window::Window(WindowConfiguration config)
     : title(config.title), width(config.width), height(config.height) {
+#ifdef VULKAN
     auto context = opal::Context::create({.useOpenGL = false});
+#else
+    auto context =
+        opal::Context::create({.useOpenGL = true,
+                               .majorVersion = 4,
+                               .minorVersion = 1,
+                               .profile = opal::OpenGLProfile::Core});
+#endif
 
     context->setFlag(GLFW_DECORATED, config.decorations);
     context->setFlag(GLFW_RESIZABLE, config.resizable);

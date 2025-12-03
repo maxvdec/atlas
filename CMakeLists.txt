@@ -29,6 +29,14 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(doxygen-awesome-css)
 FetchContent_GetProperties(doxygen-awesome-css SOURCE_DIR AWESOME_CSS_DIR)
 
+if(BACKEND_OPENGL)
+    message(STATUS "Building using OpenGL backend")
+    add_definitions(-DOPENGL)
+else()
+    message(STATUS "Building using Vulkan backend")
+    add_definitions(-DVULKAN)
+endif()
+
 if (BACKEND_OPENGL)
     message(STATUS "Configuring shaders for OpenGL backend")
     set(SHADER_INPUT_DIR "${CMAKE_SOURCE_DIR}/shaders/opengl")
@@ -161,12 +169,8 @@ target_link_libraries(atlas
 )
 
 if(BACKEND_OPENGL)
-    message(STATUS "Building using OpenGL backend")
-    add_definitions(-DOPENGL)
     target_link_libraries(atlas PRIVATE OpenGL::GL)
 else()
-    message(STATUS "Building using Vulkan backend")
-    add_definitions(-DVULKAN)
     target_link_libraries(atlas PRIVATE Vulkan::Vulkan)
 
     if(APPLE)

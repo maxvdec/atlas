@@ -9,6 +9,7 @@
 
 #include "opal/opal.h"
 #include <memory>
+#include <sys/types.h>
 
 namespace opal {
 
@@ -420,8 +421,7 @@ std::shared_ptr<Texture> Texture::createMultisampled(TextureFormat format,
     texture->type = TextureType::Texture2DMultisample;
     texture->format = format;
     texture->width = width;
-    auto texture = Texture::getTextureFromHandle(textureId);
-    bindTexture(name, texture, unit);
+    uint glFormat = getGLInternalFormat(format);
     texture->glFormat = glFormat;
 
     glGenTextures(1, &texture->textureID);

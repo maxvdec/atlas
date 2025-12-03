@@ -120,7 +120,11 @@ VertexShader VertexShader::fromDefaultShader(AtlasVertexShader shader) {
         break;
     }
     case AtlasVertexShader::PointLightShadowNoGeom: {
+#ifdef VULKAN
         vertexShader = VertexShader::fromSource(POINT_DEPTH_NOGEOM_VERT);
+#else
+        vertexShader = VertexShader::fromSource(POINT_DEPTH_VERT);
+#endif
         vertexShader.desiredAttributes = {0};
         vertexShader.capabilities = {ShaderCapability::Instances};
         vertexShader.fromDefaultShaderType = shader;
@@ -282,7 +286,11 @@ FragmentShader FragmentShader::fromDefaultShader(AtlasFragmentShader shader) {
         break;
     }
     case AtlasFragmentShader::PointLightShadowNoGeom: {
-        fragmentShader = FragmentShader::fromSource(POINT_DEPTH_NOGEOM_FRAG);
+#ifdef OPENGL
+        fragmentShader = FragmentShader::fromSource(EMPTY_FRAG);
+#elif defined(VULKAN)
+        fragmentShader = FragmentShader::fromSource(POINT_DEPTH_FRAG);
+#endif
         fragmentShader.fromDefaultShaderType = shader;
         fragmentShaderCache[shader] = fragmentShader;
         break;

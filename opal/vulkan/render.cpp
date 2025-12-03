@@ -14,14 +14,6 @@
 namespace opal {
 
 void CommandBuffer::record(uint32_t imageIndex) {
-    VkCommandBufferBeginInfo beginInfo{};
-    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-    if (vkBeginCommandBuffer(commandBuffers[currentFrame], &beginInfo) !=
-        VK_SUCCESS) {
-        throw std::runtime_error("Failed to begin recording command buffer!");
-    }
-
     if (renderPass == nullptr || renderPass->currentRenderPass == nullptr) {
         throw std::runtime_error("Cannot record command buffer: no render pass "
                                  "bound. Call bindPipeline() before draw().");
@@ -127,6 +119,26 @@ void CommandBuffer::createSyncObjects() {
                 "Failed to create synchronization objects!");
         }
     }
+}
+
+void CommandBuffer::beginCommandBufferIfNeeded() {
+    if (commandBufferBegan) {
+        return; // Already began this frame
+    }
+
+    vkResetCommandBuffer(commandBuffers[currentFrame], 0);
+
+    VkCommandBufferBeginInfo beginInfo{};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    beginInfo.flags = 0;
+    beginInfo.pInheritanceInfo = nullptr;
+
+    if (vkBeginCommandBuffer(commandBuffers[currentFrame], &beginInfo) !=
+        VK_SUCCESS) {
+        throw std::runtime_error("Failed to begin recording command buffer!");
+    }
+
+    commandBufferBegan = true;
 }
 
 } // namespace opal

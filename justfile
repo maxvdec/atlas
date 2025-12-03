@@ -1,23 +1,22 @@
-ENABLE_OPENGL := "OFF"
 GENERATOR := "Unix Makefiles"
 
-build:
+build enable_opengl="OFF":
     mkdir -p build
-    cd build && cmake -G "{{GENERATOR}}" -DENABLE_OPENGL={{ENABLE_OPENGL}} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+    cd build && cmake -G "{{GENERATOR}}" -DBACKEND_OPENGL={{enable_opengl}} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
     cd build && make -j8
 
-target target:
+target target enable_opengl="OFF":
     mkdir -p build
-    cd build && cmake -G "{{GENERATOR}}" -DENABLE_OPENGL={{ENABLE_OPENGL}} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+    cd build && cmake -G "{{GENERATOR}}" -DBACKEND_OPENGL={{enable_opengl}} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
     cd build && make -j8 {{target}}
 
-run:
-    just build
+run enable_opengl="OFF":
+    just build {{enable_opengl}}
     ./build/bin/atlas_test
 
-clangd:
+clangd enable_opengl="OFF":
     mkdir -p build
-    cd build && cmake -G "{{GENERATOR}}" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DENABLE_OPENGL={{ENABLE_OPENGL}} ..
+    cd build && cmake -G "{{GENERATOR}}" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DBACKEND_OPENGL={{enable_opengl}} ..
     ln -sf build/compile_commands.json compile_commands.json
 
 lint:
@@ -33,16 +32,16 @@ frametest:
 cli:
     cargo build
 
-release:
+release enable_opengl="OFF":
     mkdir -p build
-    cd build && cmake -G "{{GENERATOR}}" -DCMAKE_BUILD_TYPE=Release -DENABLE_OPENGL={{ENABLE_OPENGL}} ..
+    cd build && cmake -G "{{GENERATOR}}" -DCMAKE_BUILD_TYPE=Release -DBACKEND_OPENGL={{enable_opengl}} ..
     cd build && make -j8
 
-docs:
+docs enable_opengl="OFF":
     mkdir -p build
     doxygen -w html header.html delete.html delete.css
     rm delete.html delete.css
-    cd build && cmake -G "{{GENERATOR}}" -DENABLE_OPENGL={{ENABLE_OPENGL}} ..
+    cd build && cmake -G "{{GENERATOR}}" -DBACKEND_OPENGL={{enable_opengl}} ..
     cp header.html build/_deps/doxygen-awesome-css-src/header.html
     rm header.html
     doxygen Doxyfile

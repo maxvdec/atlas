@@ -41,8 +41,10 @@ uint Shader::getGLShaderType(ShaderType type) {
 }
 #endif
 
+#ifdef VULKAN
 int Shader::currentId = 1;
 int ShaderProgram::currentId = 1;
+#endif
 
 std::shared_ptr<Shader> Shader::createFromSource(const char *source,
                                                  ShaderType type) {

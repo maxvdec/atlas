@@ -45,6 +45,7 @@ void CommandBuffer::start() {
 #ifdef VULKAN
     hasStarted = false;
     imageAcquired = false;
+    commandBufferBegan = false;
     this->createSyncObjects();
     vkWaitForFences(device->logicalDevice, 1, &inFlightFences[currentFrame],
                     VK_TRUE, UINT64_MAX);
@@ -121,8 +122,9 @@ void CommandBuffer::commit() {
                               VK_NULL_HANDLE, &imageIndex);
         imageAcquired = true;
 
-        // Record the render pass with just clear values (no draws)
-        vkResetCommandBuffer(commandBuffers[currentFrame], 0);
+        // Begin command buffer and record the render pass with just clear
+        // values (no draws)
+        beginCommandBufferIfNeeded();
         this->record(imageIndex);
         hasStarted = true;
     }
@@ -311,17 +313,19 @@ auto CommandBuffer::draw(uint vertexCount, uint instanceCount, uint firstVertex,
         // No pipeline bound yet, skip this draw call
         return;
     }
-    // Acquire swapchain image once per frame
-    if (!imageAcquired) {
+    // Acquire swapchain image once per frame (only for default framebuffer)
+    if (!imageAcquired && framebuffer != nullptr &&
+        framebuffer->isDefaultFramebuffer) {
         vkAcquireNextImageKHR(device->logicalDevice, device->swapChain,
                               UINT64_MAX,
                               imageAvailableSemaphores[currentFrame],
                               VK_NULL_HANDLE, &imageIndex);
         imageAcquired = true;
     }
-    // Start recording if not already started
+    // Begin command buffer once per frame (reset happens here)
+    beginCommandBufferIfNeeded();
+    // Start render pass if not already started
     if (!hasStarted) {
-        vkResetCommandBuffer(commandBuffers[currentFrame], 0);
         this->record(imageIndex);
         hasStarted = true;
     }
@@ -361,17 +365,19 @@ void CommandBuffer::drawIndexed(uint indexCount, uint instanceCount,
         // No pipeline bound yet, skip this draw call
         return;
     }
-    // Acquire swapchain image once per frame
-    if (!imageAcquired) {
+    // Acquire swapchain image once per frame (only for default framebuffer)
+    if (!imageAcquired && framebuffer != nullptr &&
+        framebuffer->isDefaultFramebuffer) {
         vkAcquireNextImageKHR(device->logicalDevice, device->swapChain,
                               UINT64_MAX,
                               imageAvailableSemaphores[currentFrame],
                               VK_NULL_HANDLE, &imageIndex);
         imageAcquired = true;
     }
-    // Start recording if not already started
+    // Begin command buffer once per frame (reset happens here)
+    beginCommandBufferIfNeeded();
+    // Start render pass if not already started
     if (!hasStarted) {
-        vkResetCommandBuffer(commandBuffers[currentFrame], 0);
         this->record(imageIndex);
         hasStarted = true;
     }
@@ -416,8 +422,9 @@ void CommandBuffer::drawPatches(uint vertexCount, uint firstVertex) {
         // No pipeline bound yet, skip this draw call
         return;
     }
-    // Acquire swapchain image once per frame
-    if (!imageAcquired) {
+    // Acquire swapchain image once per frame (only for default framebuffer)
+    if (!imageAcquired && framebuffer != nullptr &&
+        framebuffer->isDefaultFramebuffer) {
         VkResult result = vkAcquireNextImageKHR(
             device->logicalDevice, device->swapChain, UINT64_MAX,
             imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE,
@@ -470,9 +477,10 @@ void CommandBuffer::drawPatches(uint vertexCount, uint firstVertex) {
             }
         }
     }
-    // Start recording if not already started
+    // Begin command buffer once per frame (reset happens here)
+    beginCommandBufferIfNeeded();
+    // Start render pass if not already started
     if (!hasStarted) {
-        vkResetCommandBuffer(commandBuffers[currentFrame], 0);
         this->record(imageIndex);
         hasStarted = true;
     }

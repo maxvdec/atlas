@@ -24,8 +24,10 @@ std::shared_ptr<Pipeline> Pipeline::create() {
     return pipeline;
 }
 
+#ifdef VULKAN
 std::vector<std::shared_ptr<CoreRenderPass>> RenderPass::cachedRenderPasses =
     {};
+#endif
 
 void Pipeline::setShaderProgram(std::shared_ptr<ShaderProgram> program) {
     this->shaderProgram = program;

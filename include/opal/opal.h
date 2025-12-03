@@ -103,6 +103,7 @@ class Device {
     std::shared_ptr<Framebuffer> defaultFramebuffer = nullptr;
 
   public:
+#ifdef VULKAN
     static VkDevice globalDevice;
     static Device *globalInstance;
 
@@ -149,13 +150,11 @@ class Device {
     bool supportsDeviceExtension(VkPhysicalDevice device,
                                  const char *extension);
 
-#ifdef VULKAN
     void destroySwapChainBrightTextures();
     void createSwapChainBrightTextures();
     std::vector<std::shared_ptr<Texture>> swapChainBrightTextures;
     std::shared_ptr<Buffer> getDefaultInstanceBuffer();
     std::shared_ptr<Buffer> defaultInstanceBuffer = nullptr;
-#endif
 
     void remakeSwapChain(std::shared_ptr<Context> context);
     VkSurfaceFormatKHR chooseSwapSurfaceFormat(
@@ -168,6 +167,7 @@ class Device {
                             VkMemoryPropertyFlags properties);
 
     std::shared_ptr<Context> context = nullptr;
+#endif
 };
 
 enum class TextureType {
@@ -1024,7 +1024,10 @@ class CommandBuffer {
     uint32_t currentFrame = 0;
     uint32_t imageIndex = 0;
     bool imageAcquired = false; // Track if we've acquired a swapchain image
+    bool commandBufferBegan =
+        false; // Track if command buffer recording has started
     void record(uint32_t imageIndex);
+    void beginCommandBufferIfNeeded();
     void createSyncObjects();
     void bindVertexBuffersIfNeeded();
 
