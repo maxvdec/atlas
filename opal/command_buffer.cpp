@@ -98,6 +98,21 @@ void CommandBuffer::endPass() {
     if (hasStarted) {
         vkCmdEndRenderPass(commandBuffers[currentFrame]);
         hasStarted = false;
+
+        // Update texture layouts to match render pass final layouts
+        if (framebuffer != nullptr && !framebuffer->isDefaultFramebuffer) {
+            for (auto &attachment : framebuffer->attachments) {
+                if (attachment.texture != nullptr) {
+                    if (attachment.type == opal::Attachment::Type::Color) {
+                        attachment.texture->currentLayout =
+                            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                    } else {
+                        attachment.texture->currentLayout =
+                            VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+                    }
+                }
+            }
+        }
     }
 #endif
 }
@@ -198,6 +213,21 @@ void CommandBuffer::bindPipeline(std::shared_ptr<Pipeline> pipeline) {
     if (boundPipeline != nullptr) {
         vkCmdEndRenderPass(commandBuffers[currentFrame]);
         hasStarted = false;
+
+        // Update texture layouts when ending render pass mid-frame
+        if (framebuffer != nullptr && !framebuffer->isDefaultFramebuffer) {
+            for (auto &attachment : framebuffer->attachments) {
+                if (attachment.texture != nullptr) {
+                    if (attachment.type == opal::Attachment::Type::Color) {
+                        attachment.texture->currentLayout =
+                            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                    } else {
+                        attachment.texture->currentLayout =
+                            VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+                    }
+                }
+            }
+        }
     }
 #endif
     boundPipeline = pipeline;

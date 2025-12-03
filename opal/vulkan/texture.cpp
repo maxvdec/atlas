@@ -287,6 +287,12 @@ Texture::createVulkan(TextureType type, TextureFormat format, int width,
                       TextureWrapMode::Repeat, TextureWrapMode::Repeat,
                       TextureWrapMode::Repeat);
 
+    // Transition to appropriate layout
+    bool isDepthFormat = (aspectFlags & VK_IMAGE_ASPECT_DEPTH_BIT) != 0;
+    VkImageLayout targetLayout =
+        isDepthFormat ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+                      : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
     // If data is provided, upload it via a staging buffer
     if (data != nullptr && width > 0 && height > 0) {
         // Determine input data size based on dataFormat
@@ -363,6 +369,12 @@ Texture::createVulkan(TextureType type, TextureFormat format, int width,
 
         vkDestroyBuffer(Device::globalDevice, stagingBuffer, nullptr);
         vkFreeMemory(Device::globalDevice, stagingBufferMemory, nullptr);
+    } else if (width > 0 && height > 0) {
+        // No data provided - transition texture to a usable layout
+        Framebuffer::transitionImageLayout(texture->vkImage, vkFormat,
+                                           VK_IMAGE_LAYOUT_UNDEFINED,
+                                           targetLayout, arrayLayers);
+        texture->currentLayout = targetLayout;
     }
 
     texture->textureID = Texture::registerTextureHandle(texture);
@@ -412,6 +424,15 @@ std::shared_ptr<Texture> Texture::createMultisampledVulkan(TextureFormat format,
     texture->vkImageView = createImageView(
         texture->vkImage, vkFormat, aspectFlags, VK_IMAGE_VIEW_TYPE_2D, 1);
 
+    // Transition multisampled texture to color attachment layout
+    bool isDepthFormat = (aspectFlags & VK_IMAGE_ASPECT_DEPTH_BIT) != 0;
+    VkImageLayout targetLayout =
+        isDepthFormat ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+                      : VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    Framebuffer::transitionImageLayout(
+        texture->vkImage, vkFormat, VK_IMAGE_LAYOUT_UNDEFINED, targetLayout, 1);
+    texture->currentLayout = targetLayout;
+
     texture->textureID = Texture::registerTextureHandle(texture);
     return texture;
 }
@@ -441,6 +462,12 @@ std::shared_ptr<Texture> Texture::createDepthCubemapVulkan(TextureFormat format,
         TextureFilterMode::Nearest, TextureFilterMode::Nearest,
         TextureWrapMode::ClampToEdge, TextureWrapMode::ClampToEdge,
         TextureWrapMode::ClampToEdge);
+
+    // Transition depth cubemap to depth attachment layout
+    Framebuffer::transitionImageLayout(
+        texture->vkImage, vkFormat, VK_IMAGE_LAYOUT_UNDEFINED,
+        VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 6);
+    texture->currentLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
     texture->textureID = Texture::registerTextureHandle(texture);
     return texture;
@@ -473,7 +500,7 @@ Texture::create3DVulkan(TextureFormat format, int width, int height, int depth,
         TextureWrapMode::ClampToEdge, TextureWrapMode::ClampToEdge,
         TextureWrapMode::ClampToEdge);
 
-    if (data != nullptr) {
+    if (data != nullptr && width > 0 && height > 0 && depth > 0) {
         // Upload data similar to 2D textures
         VkDeviceSize imageSize = width * height * depth * 4; // Assuming RGBA
         if (dataFormat == TextureDataFormat::Red) {
@@ -508,6 +535,12 @@ Texture::create3DVulkan(TextureFormat format, int width, int height, int depth,
 
         vkDestroyBuffer(Device::globalDevice, stagingBuffer, nullptr);
         vkFreeMemory(Device::globalDevice, stagingBufferMemory, nullptr);
+    } else if (width > 0 && height > 0 && depth > 0) {
+        // No data - transition to shader read layout for sampling
+        Framebuffer::transitionImageLayout(
+            texture->vkImage, vkFormat, VK_IMAGE_LAYOUT_UNDEFINED,
+            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 1);
+        texture->currentLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     }
 
     texture->textureID = Texture::registerTextureHandle(texture);

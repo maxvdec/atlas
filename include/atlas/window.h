@@ -267,6 +267,8 @@ class Window {
      */
     ~Window();
 
+    void setClearColor(const Color &color) { this->clearColor = color; }
+
     /**
      * @brief Starts the main window loop and begins rendering.
      *
@@ -563,6 +565,8 @@ class Window {
     std::vector<glm::vec3> ssaoKernel;
     std::vector<glm::vec3> ssaoNoise;
     Texture noiseTexture;
+
+    Color clearColor = Color(0.0f, 0.0f, 0.0f, 1.0f);
 
     void setupSSAO();
 

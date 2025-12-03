@@ -249,7 +249,8 @@ void Window::run() {
         if (this->currentScene == nullptr) {
             commandBuffer->start();
             commandBuffer->beginPass(renderPass);
-            commandBuffer->clearColor(0.1f, 0.1f, 0.1f, 1.0f);
+            commandBuffer->clearColor(this->clearColor.r, this->clearColor.g,
+                                      this->clearColor.b, this->clearColor.a);
             commandBuffer->clearDepth(1.0);
             commandBuffer->endPass();
             commandBuffer->commit();
@@ -349,7 +350,8 @@ void Window::run() {
                 target->resolve();
                 continue;
             }
-            commandBuffer->clearColor(0.0f, 0.0f, 0.0f, 1.0f);
+            commandBuffer->clearColor(this->clearColor.r, this->clearColor.g,
+                                      this->clearColor.b, this->clearColor.a);
             commandBuffer->clearDepth(1.0f);
 
             for (auto &obj : this->firstRenderables) {
@@ -385,7 +387,8 @@ void Window::run() {
         int fbWidth, fbHeight;
         glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
         setViewportState(0, 0, fbWidth, fbHeight);
-        commandBuffer->clearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        commandBuffer->clearColor(this->clearColor.r, this->clearColor.g,
+                                  this->clearColor.b, this->clearColor.a);
         commandBuffer->clearDepth(1.0f);
 
         if (this->renderTargets.empty()) {
@@ -1533,7 +1536,8 @@ void Window::captureFluidRefraction(
     updatePipelineStateField(this->cullMode, opal::CullMode::Back);
     updatePipelineStateField(this->depthCompareOp, opal::CompareOp::Less);
 
-    commandBuffer->clear(1.0f, 0.0f, 1.0f, 1.0f, 1.0f);
+    commandBuffer->clear(this->clearColor.r, this->clearColor.g,
+                         this->clearColor.b, this->clearColor.a, 1.0f);
 
     currentRenderTarget = &target;
 
@@ -1641,6 +1645,4 @@ void Window::updateBackbufferTarget(int width, int height) {
     target.depthTexture.creationData.width = width;
     target.depthTexture.creationData.height = height;
     target.type = RenderTargetType::Scene;
-    // Note: screenRenderTarget represents the default framebuffer (0),
-    // so fb remains nullptr. bind() will handle this appropriately.
 }

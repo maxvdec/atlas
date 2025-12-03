@@ -854,12 +854,34 @@ void Pipeline::bindSamplerDescriptor(uint32_t set, uint32_t binding,
         return;
     }
 
+    // Ensure texture is in shader read layout before binding
+    VkImageLayout desiredLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    if (texture->currentLayout != desiredLayout &&
+        texture->currentLayout != VK_IMAGE_LAYOUT_GENERAL) {
+        // Only transition color textures to shader read
+        // Depth textures may need to stay in attachment layout
+        VkFormat vkFormat = opalTextureFormatToVulkanFormat(texture->format);
+        bool isDepth = (texture->format == TextureFormat::Depth24Stencil8 ||
+                        texture->format == TextureFormat::DepthComponent24 ||
+                        texture->format == TextureFormat::Depth32F);
+
+        if (!isDepth || texture->currentLayout == VK_IMAGE_LAYOUT_UNDEFINED) {
+            uint32_t layerCount =
+                (texture->type == TextureType::TextureCubeMap) ? 6 : 1;
+            Framebuffer::transitionImageLayout(texture->vkImage, vkFormat,
+                                               texture->currentLayout,
+                                               desiredLayout, layerCount);
+            texture->currentLayout = desiredLayout;
+        }
+    }
+
     VkDescriptorImageInfo imageInfo{};
     imageInfo.sampler = texture->vkSampler;
     imageInfo.imageView = texture->vkImageView;
-    imageInfo.imageLayout = texture->currentLayout == VK_IMAGE_LAYOUT_UNDEFINED
-                                ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-                                : texture->currentLayout;
+    imageInfo.imageLayout =
+        (texture->currentLayout == VK_IMAGE_LAYOUT_UNDEFINED)
+            ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            : texture->currentLayout;
 
     VkWriteDescriptorSet write{};
     write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
