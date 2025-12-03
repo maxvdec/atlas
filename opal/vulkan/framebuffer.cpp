@@ -9,6 +9,7 @@
 
 #ifdef VULKAN
 #include <array>
+#include <vector>
 #include <opal/opal.h>
 #include <vulkan/vulkan.hpp>
 
@@ -47,9 +48,16 @@ void Framebuffer::createVulkanFramebuffers(
                     "Swapchain bright attachments are not initialized");
             }
 
-            std::array<VkImageView, 2> attachmentViews = {
+            std::vector<VkImageView> attachmentViews = {
                 device->swapChainImages.imageViews[i],
                 brightTextures[i]->vkImageView};
+
+            // Add depth attachment if available
+            if (device->swapChainDepthTexture &&
+                device->swapChainDepthTexture->vkImageView != VK_NULL_HANDLE) {
+                attachmentViews.push_back(
+                    device->swapChainDepthTexture->vkImageView);
+            }
 
             VkFramebufferCreateInfo framebufferInfo{};
             framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;

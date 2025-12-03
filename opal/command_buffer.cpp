@@ -286,9 +286,17 @@ void CommandBuffer::bindPipeline(std::shared_ptr<Pipeline> pipeline) {
                         "Swapchain bright attachments are not initialized");
                 }
 
-                std::array<VkImageView, 2> attachments = {
+                std::vector<VkImageView> attachments = {
                     device->swapChainImages.imageViews[i],
                     brightTextures[i]->vkImageView};
+
+                // Add depth attachment if available
+                if (device->swapChainDepthTexture != nullptr &&
+                    device->swapChainDepthTexture->vkImageView !=
+                        VK_NULL_HANDLE) {
+                    attachments.push_back(
+                        device->swapChainDepthTexture->vkImageView);
+                }
 
                 VkFramebufferCreateInfo framebufferInfo{};
                 framebufferInfo.sType =
@@ -482,9 +490,17 @@ void CommandBuffer::drawPatches(uint vertexCount, uint firstVertex) {
                             "Swapchain bright attachments are not initialized");
                     }
 
-                    std::array<VkImageView, 2> attachments = {
+                    std::vector<VkImageView> attachments = {
                         device->swapChainImages.imageViews[i],
                         brightTextures[i]->vkImageView};
+
+                    // Add depth attachment if available
+                    if (device->swapChainDepthTexture != nullptr &&
+                        device->swapChainDepthTexture->vkImageView !=
+                            VK_NULL_HANDLE) {
+                        attachments.push_back(
+                            device->swapChainDepthTexture->vkImageView);
+                    }
 
                     VkFramebufferCreateInfo framebufferInfo{};
                     framebufferInfo.sType =

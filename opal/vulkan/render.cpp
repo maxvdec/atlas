@@ -55,6 +55,13 @@ void CommandBuffer::record(uint32_t imageIndex) {
         brightClear.color = {{0.0f, 0.0f, 0.0f, 0.0f}};
         clearValues.push_back(colorClear);
         clearValues.push_back(brightClear);
+        
+        // Add depth clear value if depth attachment exists
+        if (device->swapChainDepthTexture) {
+            VkClearValue depthClear{};
+            depthClear.depthStencil = {.depth = 1.0f, .stencil = 0};
+            clearValues.push_back(depthClear);
+        }
     } else {
         for (const auto &attachment : framebuffer->attachments) {
             VkClearValue clear{};

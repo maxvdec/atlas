@@ -208,11 +208,31 @@ void Device::createSwapChainBrightTextures() {
                             TextureDataFormat::Rgba, nullptr, 1);
         swapChainBrightTextures.push_back(texture);
     }
+
+    // Also create the depth texture for the default framebuffer
+    createSwapChainDepthTexture();
+}
+
+void Device::destroySwapChainDepthTexture() { swapChainDepthTexture = nullptr; }
+
+void Device::createSwapChainDepthTexture() {
+    destroySwapChainDepthTexture();
+
+    if (swapChainExtent.width == 0 || swapChainExtent.height == 0) {
+        return;
+    }
+
+    swapChainDepthTexture =
+        Texture::create(TextureType::Texture2D, TextureFormat::Depth32F,
+                        static_cast<int>(swapChainExtent.width),
+                        static_cast<int>(swapChainExtent.height),
+                        TextureDataFormat::DepthComponent, nullptr, 1);
 }
 
 void Device::remakeSwapChain(std::shared_ptr<Context> context) {
     vkDeviceWaitIdle(this->logicalDevice);
 
+    destroySwapChainDepthTexture();
     destroySwapChainBrightTextures();
     for (auto *imageView : swapChainImages.imageViews) {
         vkDestroyImageView(this->logicalDevice, imageView, nullptr);

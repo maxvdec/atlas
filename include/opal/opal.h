@@ -153,6 +153,11 @@ class Device {
     void destroySwapChainBrightTextures();
     void createSwapChainBrightTextures();
     std::vector<std::shared_ptr<Texture>> swapChainBrightTextures;
+
+    void destroySwapChainDepthTexture();
+    void createSwapChainDepthTexture();
+    std::shared_ptr<Texture> swapChainDepthTexture;
+
     std::shared_ptr<Buffer> getDefaultInstanceBuffer();
     std::shared_ptr<Buffer> defaultInstanceBuffer = nullptr;
 
