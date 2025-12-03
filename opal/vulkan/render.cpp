@@ -17,7 +17,8 @@ void CommandBuffer::record(uint32_t imageIndex) {
     VkCommandBufferBeginInfo beginInfo{};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     beginInfo.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
-    if (vkBeginCommandBuffer(commandBuffers[currentFrame], &beginInfo) != VK_SUCCESS) {
+    if (vkBeginCommandBuffer(commandBuffers[currentFrame], &beginInfo) !=
+        VK_SUCCESS) {
         throw std::runtime_error("Failed to begin recording command buffer!");
     }
 

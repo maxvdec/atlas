@@ -21,14 +21,15 @@ std::shared_ptr<CommandBuffer> Device::acquireCommandBuffer() {
 #ifdef VULKAN
     // Allocate per-frame command buffers
     commandBuffer->commandBuffers.resize(CommandBuffer::MAX_FRAMES_IN_FLIGHT);
-    
+
     VkCommandBufferAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     allocInfo.commandPool = Device::globalInstance->commandPool;
     allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
     allocInfo.commandBufferCount = CommandBuffer::MAX_FRAMES_IN_FLIGHT;
     if (vkAllocateCommandBuffers(this->logicalDevice, &allocInfo,
-                                 commandBuffer->commandBuffers.data()) != VK_SUCCESS) {
+                                 commandBuffer->commandBuffers.data()) !=
+        VK_SUCCESS) {
         throw std::runtime_error("Failed to allocate command buffers!");
     }
 #endif
@@ -324,7 +325,8 @@ auto CommandBuffer::draw(uint vertexCount, uint instanceCount, uint firstVertex,
         this->record(imageIndex);
         hasStarted = true;
     }
-    vkCmdBindPipeline(commandBuffers[currentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS,
+    vkCmdBindPipeline(commandBuffers[currentFrame],
+                      VK_PIPELINE_BIND_POINT_GRAPHICS,
                       renderPass->currentRenderPass->pipeline);
     if (renderPass->currentRenderPass->opalPipeline != nullptr) {
         renderPass->currentRenderPass->opalPipeline->bindDescriptorSets(
@@ -335,8 +337,8 @@ auto CommandBuffer::draw(uint vertexCount, uint instanceCount, uint firstVertex,
         renderPass->currentRenderPass->opalPipeline->flushPushConstants(
             commandBuffers[currentFrame]);
     }
-    vkCmdDraw(commandBuffers[currentFrame], vertexCount, instanceCount, firstVertex,
-              firstInstance);
+    vkCmdDraw(commandBuffers[currentFrame], vertexCount, instanceCount,
+              firstVertex, firstInstance);
 #endif
 }
 
@@ -373,7 +375,8 @@ void CommandBuffer::drawIndexed(uint indexCount, uint instanceCount,
         this->record(imageIndex);
         hasStarted = true;
     }
-    vkCmdBindPipeline(commandBuffers[currentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS,
+    vkCmdBindPipeline(commandBuffers[currentFrame],
+                      VK_PIPELINE_BIND_POINT_GRAPHICS,
                       renderPass->currentRenderPass->pipeline);
     if (renderPass->currentRenderPass->opalPipeline != nullptr) {
         renderPass->currentRenderPass->opalPipeline->bindDescriptorSets(
@@ -391,8 +394,8 @@ void CommandBuffer::drawIndexed(uint indexCount, uint instanceCount,
         renderPass->currentRenderPass->opalPipeline->flushPushConstants(
             commandBuffers[currentFrame]);
     }
-    vkCmdDrawIndexed(commandBuffers[currentFrame], indexCount, instanceCount, firstIndex,
-                     vertexOffset, firstInstance);
+    vkCmdDrawIndexed(commandBuffers[currentFrame], indexCount, instanceCount,
+                     firstIndex, vertexOffset, firstInstance);
 #endif
 }
 
@@ -473,7 +476,8 @@ void CommandBuffer::drawPatches(uint vertexCount, uint firstVertex) {
         this->record(imageIndex);
         hasStarted = true;
     }
-    vkCmdBindPipeline(commandBuffers[currentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS,
+    vkCmdBindPipeline(commandBuffers[currentFrame],
+                      VK_PIPELINE_BIND_POINT_GRAPHICS,
                       renderPass->currentRenderPass->pipeline);
     if (renderPass->currentRenderPass->opalPipeline != nullptr) {
         renderPass->currentRenderPass->opalPipeline->bindDescriptorSets(
@@ -531,8 +535,8 @@ void CommandBuffer::bindVertexBuffersIfNeeded() {
         bindingCount = 2;
     }
 
-    vkCmdBindVertexBuffers(commandBuffers[currentFrame], 0, bindingCount, buffers.data(),
-                           offsets.data());
+    vkCmdBindVertexBuffers(commandBuffers[currentFrame], 0, bindingCount,
+                           buffers.data(), offsets.data());
 }
 #endif
 

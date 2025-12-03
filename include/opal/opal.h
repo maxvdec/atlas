@@ -1027,10 +1027,11 @@ class CommandBuffer {
     void record(uint32_t imageIndex);
     void createSyncObjects();
     void bindVertexBuffersIfNeeded();
-    
+
     // Helper to get current frame's command buffer
-    VkCommandBuffer getCurrentCommandBuffer() const { 
-        return commandBuffers.empty() ? VK_NULL_HANDLE : commandBuffers[currentFrame]; 
+    VkCommandBuffer getCurrentCommandBuffer() const {
+        return commandBuffers.empty() ? VK_NULL_HANDLE
+                                      : commandBuffers[currentFrame];
     }
 #endif
 
