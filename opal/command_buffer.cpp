@@ -11,6 +11,7 @@
 #include <cstdint>
 #include <memory>
 #include <opal/opal.h>
+#include <iostream>
 
 namespace opal {
 
@@ -113,6 +114,8 @@ void CommandBuffer::commit() {
             // No pipeline was bound, so we have no render pass to use
             // Just skip this frame - can't present without a render pass in
             // Vulkan
+            std::cout << "commit(): Skipping frame - no render pass!"
+                      << std::endl;
             return;
         }
 

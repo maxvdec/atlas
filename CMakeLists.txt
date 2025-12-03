@@ -35,6 +35,7 @@ if(BACKEND_OPENGL)
 else()
     message(STATUS "Building using Vulkan backend")
     add_definitions(-DVULKAN)
+    add_definitions(-DGLM_FORCE_DEPTH_ZERO_TO_ONE)
 endif()
 
 if (BACKEND_OPENGL)

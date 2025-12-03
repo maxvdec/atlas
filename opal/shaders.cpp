@@ -287,6 +287,12 @@ void Shader::performReflection() {
         const spirv_cross::SPIRType &type = compiler.get_type(ubo.base_type_id);
         size_t blockSize = compiler.get_declared_struct_size(type);
 
+        // Get the type name (e.g., "Material") for additional alias
+        // registration
+        std::string typeName = compiler.get_name(ubo.base_type_id);
+        // ubo.name is the instance name (e.g., "material")
+        std::string instanceName = ubo.name;
+
         UniformBindingInfo blockInfo;
         blockInfo.set = set;
         blockInfo.binding = binding;
@@ -296,7 +302,11 @@ void Shader::performReflection() {
         blockInfo.isBuffer = true;
         blockInfo.isStorageBuffer = false;
         blockInfo.isCubemap = false;
-        registerBinding(ubo.name, blockInfo, true);
+        registerBinding(instanceName, blockInfo, true);
+        // Also register with the type name
+        if (!typeName.empty() && typeName != instanceName) {
+            registerBinding(typeName, blockInfo, true);
+        }
 
         for (uint32_t i = 0; i < type.member_types.size(); ++i) {
             std::string memberName =
@@ -317,7 +327,13 @@ void Shader::performReflection() {
             memberInfo.isStorageBuffer = false;
             memberInfo.isCubemap = false;
 
-            registerBinding(ubo.name + "." + memberName, memberInfo, false);
+            // Register with instance name (e.g., "material.albedo")
+            registerBinding(instanceName + "." + memberName, memberInfo, false);
+            // Also register with type name (e.g., "Material.albedo")
+            if (!typeName.empty() && typeName != instanceName) {
+                registerBinding(typeName + "." + memberName, memberInfo, false);
+            }
+            // Register just the member name as fallback
             if (uniformBindings.find(memberName) == uniformBindings.end()) {
                 registerBinding(memberName, memberInfo, false);
             }

@@ -508,6 +508,7 @@ void Window::setScene(Scene *scene) {
 }
 
 glm::mat4 Window::calculateProjectionMatrix() {
+    glm::mat4 projection{1.0f};
     if (!this->camera->useOrthographic) {
         int fbWidth, fbHeight;
         GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
@@ -515,8 +516,8 @@ glm::mat4 Window::calculateProjectionMatrix() {
 
         float aspectRatio =
             static_cast<float>(fbWidth) / static_cast<float>(fbHeight);
-        return glm::perspective(glm::radians(camera->fov), aspectRatio,
-                                camera->nearClip, camera->farClip);
+        projection = glm::perspective(glm::radians(camera->fov), aspectRatio,
+                                      camera->nearClip, camera->farClip);
     } else {
         float orthoSize = this->camera->orthographicSize;
         int fbWidth, fbHeight;
@@ -524,10 +525,15 @@ glm::mat4 Window::calculateProjectionMatrix() {
         glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
         float aspectRatio =
             static_cast<float>(fbWidth) / static_cast<float>(fbHeight);
-        return glm::ortho(-orthoSize * aspectRatio, orthoSize * aspectRatio,
-                          -orthoSize, orthoSize, camera->nearClip,
-                          camera->farClip);
+        projection = glm::ortho(-orthoSize * aspectRatio,
+                                orthoSize * aspectRatio, -orthoSize, orthoSize,
+                                camera->nearClip, camera->farClip);
     }
+
+#ifdef VULKAN
+    projection[1][1] *= -1.0f; // Flip Y for Vulkan clip space
+#endif
+    return projection;
 }
 
 void Window::setFullscreen(bool enable) {

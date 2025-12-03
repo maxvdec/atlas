@@ -379,11 +379,8 @@ void Pipeline::bindTexture2D(const std::string &name, uint textureId,
     int location = glGetUniformLocation(shaderProgram->programID, name.c_str());
     glUniform1i(location, unit);
 #elif defined(VULKAN)
-    // Vulkan texture binding requires descriptor sets - not yet implemented
-    // Silently ignore if uniform not found (matches OpenGL behavior)
-    (void)name;
-    (void)textureId;
-    (void)unit;
+    auto texture = Texture::getTextureFromHandle(textureId);
+    bindTexture(name, texture, unit);
 #endif
 }
 

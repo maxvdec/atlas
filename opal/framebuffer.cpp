@@ -8,6 +8,7 @@
 //
 
 #include "opal/opal.h"
+#include <algorithm>
 #include <memory>
 #ifdef VULKAN
 #include <vulkan/vulkan.hpp>
@@ -344,9 +345,248 @@ void CommandBuffer::performResolve(std::shared_ptr<ResolveAction> action) {
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 #elif defined(VULKAN)
-    // Vulkan resolve is handled through render pass resolve attachments
-    // or vkCmdResolveImage
-    (void)action;
+    if (action == nullptr || action->source == nullptr ||
+        action->destination == nullptr) {
+        return;
+    }
+
+    if (Device::globalInstance == nullptr ||
+        Device::globalInstance->commandPool == VK_NULL_HANDLE ||
+        Device::globalInstance->graphicsQueue == VK_NULL_HANDLE) {
+        return;
+    }
+
+    if (Device::globalDevice == VK_NULL_HANDLE) {
+        return;
+    }
+
+    auto beginOneTimeCommands = []() -> VkCommandBuffer {
+        VkCommandBufferAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocInfo.commandPool = Device::globalInstance->commandPool;
+        allocInfo.commandBufferCount = 1;
+
+        VkCommandBuffer commandBuffer = VK_NULL_HANDLE;
+        if (vkAllocateCommandBuffers(Device::globalDevice, &allocInfo,
+                                     &commandBuffer) != VK_SUCCESS) {
+            throw std::runtime_error("Failed to allocate resolve command "
+                                     "buffer");
+        }
+
+        VkCommandBufferBeginInfo beginInfo{};
+        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+        if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
+            throw std::runtime_error(
+                "Failed to begin resolve command buffer recording");
+        }
+
+        return commandBuffer;
+    };
+
+    auto endOneTimeCommands = [](VkCommandBuffer commandBuffer) {
+        if (commandBuffer == VK_NULL_HANDLE) {
+            return;
+        }
+
+        vkEndCommandBuffer(commandBuffer);
+
+        VkSubmitInfo submitInfo{};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = &commandBuffer;
+
+        vkQueueSubmit(Device::globalInstance->graphicsQueue, 1, &submitInfo,
+                      VK_NULL_HANDLE);
+        vkQueueWaitIdle(Device::globalInstance->graphicsQueue);
+
+        vkFreeCommandBuffers(Device::globalDevice,
+                             Device::globalInstance->commandPool, 1,
+                             &commandBuffer);
+    };
+
+    auto gatherColorAttachments = [](std::shared_ptr<Framebuffer> fb,
+                                     int preferredIndex) {
+        std::vector<std::shared_ptr<Texture>> attachments;
+        if (fb == nullptr) {
+            return attachments;
+        }
+
+        int currentColorIndex = 0;
+        for (const auto &attachment : fb->attachments) {
+            if (attachment.type != Attachment::Type::Color) {
+                continue;
+            }
+            if (preferredIndex >= 0) {
+                if (currentColorIndex == preferredIndex) {
+                    attachments.push_back(attachment.texture);
+                    break;
+                }
+            } else {
+                attachments.push_back(attachment.texture);
+            }
+            currentColorIndex++;
+        }
+        return attachments;
+    };
+
+    auto getDepthAttachment = [](std::shared_ptr<Framebuffer> fb) {
+        if (fb == nullptr) {
+            return std::shared_ptr<Texture>{nullptr};
+        }
+        for (const auto &attachment : fb->attachments) {
+            if (attachment.type == Attachment::Type::Depth ||
+                attachment.type == Attachment::Type::DepthStencil) {
+                return attachment.texture;
+            }
+        }
+        return std::shared_ptr<Texture>{nullptr};
+    };
+
+    auto aspectMaskForFormat = [](TextureFormat format, bool isDepth) {
+        if (!isDepth) {
+            return VK_IMAGE_ASPECT_COLOR_BIT;
+        }
+        switch (format) {
+        case TextureFormat::Depth24Stencil8:
+            return VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+        case TextureFormat::DepthComponent24:
+        case TextureFormat::Depth32F:
+            return VK_IMAGE_ASPECT_DEPTH_BIT;
+        default:
+            return VK_IMAGE_ASPECT_DEPTH_BIT;
+        }
+    };
+
+    auto transitionTexture = [](std::shared_ptr<Texture> texture,
+                                VkImageLayout newLayout, bool isAttachment,
+                                bool isDepth, uint32_t layerCount) {
+        if (!texture || texture->vkImage == VK_NULL_HANDLE) {
+            return;
+        }
+
+        VkImageLayout currentLayout = texture->currentLayout;
+        if (currentLayout == VK_IMAGE_LAYOUT_UNDEFINED) {
+            if (isAttachment) {
+                currentLayout =
+                    isDepth ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+                            : VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            } else {
+                currentLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            }
+        }
+
+        Framebuffer::transitionImageLayout(
+            texture->vkImage, opalTextureFormatToVulkanFormat(texture->format),
+            currentLayout, newLayout, layerCount);
+        texture->currentLayout = newLayout;
+    };
+
+    auto blitOrResolve = [&](std::shared_ptr<Texture> src,
+                             std::shared_ptr<Texture> dst, bool isDepth) {
+        if (!src || !dst || src->vkImage == VK_NULL_HANDLE ||
+            dst->vkImage == VK_NULL_HANDLE) {
+            return;
+        }
+
+        if (src->width == 0 || src->height == 0 || dst->width == 0 ||
+            dst->height == 0) {
+            return;
+        }
+
+        uint32_t layerCount =
+            (src->type == TextureType::TextureCubeMap) ? 6 : 1;
+        uint32_t dstLayers = (dst->type == TextureType::TextureCubeMap) ? 6 : 1;
+        layerCount = std::min(layerCount, dstLayers);
+        VkImageLayout srcFinalLayout =
+            isDepth ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+                    : VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        VkImageLayout dstFinalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+        transitionTexture(src, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, true,
+                          isDepth, layerCount);
+        transitionTexture(dst, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, false,
+                          isDepth, layerCount);
+
+        VkCommandBuffer commandBuffer = beginOneTimeCommands();
+
+        if (!isDepth && src->samples > 1 && dst->samples == 1) {
+            VkImageResolve region{};
+            region.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            region.srcSubresource.mipLevel = 0;
+            region.srcSubresource.baseArrayLayer = 0;
+            region.srcSubresource.layerCount = layerCount;
+            region.srcOffset = {0, 0, 0};
+            region.dstSubresource = region.srcSubresource;
+            region.dstOffset = {0, 0, 0};
+            region.extent = {static_cast<uint32_t>(dst->width),
+                             static_cast<uint32_t>(dst->height), 1};
+
+            vkCmdResolveImage(commandBuffer, src->vkImage,
+                              VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                              dst->vkImage,
+                              VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+        } else if (src->samples == dst->samples) {
+            VkImageBlit region{};
+            VkImageAspectFlags aspect =
+                aspectMaskForFormat(src->format, isDepth);
+            region.srcSubresource.aspectMask = aspect;
+            region.srcSubresource.mipLevel = 0;
+            region.srcSubresource.baseArrayLayer = 0;
+            region.srcSubresource.layerCount = layerCount;
+            region.dstSubresource.aspectMask =
+                aspectMaskForFormat(dst->format, isDepth);
+            region.dstSubresource.mipLevel = 0;
+            region.dstSubresource.baseArrayLayer = 0;
+            region.dstSubresource.layerCount = layerCount;
+            region.srcOffsets[0] = {0, 0, 0};
+            region.srcOffsets[1] = {static_cast<int32_t>(src->width),
+                                    static_cast<int32_t>(src->height), 1};
+            region.dstOffsets[0] = {0, 0, 0};
+            region.dstOffsets[1] = {static_cast<int32_t>(dst->width),
+                                    static_cast<int32_t>(dst->height), 1};
+
+            VkFilter filter = isDepth ? VK_FILTER_NEAREST : VK_FILTER_LINEAR;
+            vkCmdBlitImage(commandBuffer, src->vkImage,
+                           VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, dst->vkImage,
+                           VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region,
+                           filter);
+        } else {
+            endOneTimeCommands(commandBuffer);
+            transitionTexture(dst, dstFinalLayout, false, isDepth, layerCount);
+            transitionTexture(src, srcFinalLayout, true, isDepth, layerCount);
+            return;
+        }
+
+        endOneTimeCommands(commandBuffer);
+
+        transitionTexture(dst, dstFinalLayout, false, isDepth, layerCount);
+        transitionTexture(src, srcFinalLayout, true, isDepth, layerCount);
+    };
+
+    auto sourceColors =
+        gatherColorAttachments(action->source, action->colorAttachmentIndex);
+    auto destinationColors = gatherColorAttachments(
+        action->destination, action->colorAttachmentIndex);
+
+    if (action->resolveColor && !sourceColors.empty() &&
+        !destinationColors.empty()) {
+        size_t colorCount =
+            std::min(sourceColors.size(), destinationColors.size());
+        for (size_t i = 0; i < colorCount; ++i) {
+            blitOrResolve(sourceColors[i], destinationColors[i], false);
+        }
+    }
+
+    if (action->resolveDepth) {
+        auto srcDepth = getDepthAttachment(action->source);
+        auto dstDepth = getDepthAttachment(action->destination);
+        if (srcDepth && dstDepth) {
+            blitOrResolve(srcDepth, dstDepth, true);
+        }
+    }
 #endif
 }
 

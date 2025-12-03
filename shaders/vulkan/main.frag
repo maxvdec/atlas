@@ -127,7 +127,7 @@ layout(set = 3, binding = 0) uniform AmbientLight {
     float intensity;
 } ambientLight;
 
-layout(set = 3, binding = 1) buffer DrectionalLightsUBO {
+layout(set = 3, binding = 1) buffer DirectionalLightsUBO {
     DirectionalLight directionalLights[];
 };
 

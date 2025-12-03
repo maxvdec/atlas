@@ -199,7 +199,8 @@ class MainScene : public Scene {
 
         window.addObject(&sponza);
 
-        window.useDeferredRendering();
+        // window.useDeferredRendering();
+        window.usesDeferred = false;
         atmosphere.enable();
         atmosphere.secondsPerHour = 4.f;
         atmosphere.setTime(12);
