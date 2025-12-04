@@ -718,6 +718,7 @@ void Skybox::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
     }
 
     commandBuffer->bindDrawingState(obj->vao);
+    commandBuffer->bindPipeline(pipeline); // Required for Vulkan
     commandBuffer->drawIndexed(static_cast<unsigned int>(obj->indices.size()),
                                1, 0, 0, 0);
     commandBuffer->unbindDrawingState();

@@ -645,9 +645,6 @@ float calculateAllPointShadows(vec3 fragPos) {
 
 // ----- Main -----
 void main() {
-    FragColor = vec4(1.0, 0.0, 0.0, 1.0);
-    return;
-
     texCoord = TexCoord;
 
     bool hasParallaxMap = false;

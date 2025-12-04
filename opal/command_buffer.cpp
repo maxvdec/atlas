@@ -149,19 +149,32 @@ void CommandBuffer::commit() {
 
     // Only submit and present if we actually acquired an image
     if (!imageAcquired) {
+        std::cout
+            << "[VULKAN DEBUG] commit(): imageAcquired=false, skipping frame"
+            << std::endl;
         return;
     }
 
     // End render pass if still active
     if (hasStarted) {
+        std::cout << "[VULKAN DEBUG] commit(): ending render pass, imageIndex="
+                  << imageIndex << std::endl;
         vkCmdEndRenderPass(commandBuffers[currentFrame]);
         hasStarted = false;
+    } else {
+        std::cout << "[VULKAN DEBUG] commit(): hasStarted=false, no render "
+                     "pass to end"
+                  << std::endl;
     }
 
     // End the command buffer recording
     if (vkEndCommandBuffer(commandBuffers[currentFrame]) != VK_SUCCESS) {
         throw std::runtime_error("Failed to end command buffer recording!");
     }
+
+    std::cout
+        << "[VULKAN DEBUG] commit(): submitting and presenting imageIndex="
+        << imageIndex << std::endl;
 
     VkSubmitInfo submitInfo{};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -206,28 +219,20 @@ void CommandBuffer::commit() {
 void CommandBuffer::bindPipeline(std::shared_ptr<Pipeline> pipeline) {
     pipeline->bind();
 #ifdef VULKAN
-    // If binding the same pipeline, no need to end/restart render pass
+    // If binding the same pipeline, no need to do anything
     if (boundPipeline == pipeline) {
         return;
     }
-    if (boundPipeline != nullptr) {
-        vkCmdEndRenderPass(commandBuffers[currentFrame]);
-        hasStarted = false;
 
-        // Update texture layouts when ending render pass mid-frame
-        if (framebuffer != nullptr && !framebuffer->isDefaultFramebuffer) {
-            for (auto &attachment : framebuffer->attachments) {
-                if (attachment.texture != nullptr) {
-                    if (attachment.type == opal::Attachment::Type::Color) {
-                        attachment.texture->currentLayout =
-                            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                    } else {
-                        attachment.texture->currentLayout =
-                            VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-                    }
-                }
-            }
-        }
+    // Check if we need to end the current render pass
+    // We only need to end/restart if the framebuffer is changing
+    // Switching pipelines within the same render pass is fine in Vulkan
+    bool needNewRenderPass = false;
+    if (boundPipeline != nullptr && hasStarted) {
+        // Only end render pass if framebuffer is different (which shouldn't
+        // happen mid-pass) For now, we keep the render pass active when just
+        // switching pipelines The actual pipeline bind will happen in the draw
+        // call
     }
 #endif
     boundPipeline = pipeline;
@@ -404,6 +409,8 @@ void CommandBuffer::drawIndexed(uint indexCount, uint instanceCount,
 #elif defined(VULKAN)
     if (renderPass == nullptr || renderPass->currentRenderPass == nullptr) {
         // No pipeline bound yet, skip this draw call
+        std::cout << "[VULKAN DEBUG] drawIndexed SKIPPED - no pipeline bound"
+                  << std::endl;
         return;
     }
     // Acquire swapchain image once per frame (only for default framebuffer)
@@ -443,6 +450,8 @@ void CommandBuffer::drawIndexed(uint indexCount, uint instanceCount,
     }
     vkCmdDrawIndexed(commandBuffers[currentFrame], indexCount, instanceCount,
                      firstIndex, vertexOffset, firstInstance);
+    std::cout << "[VULKAN DEBUG] vkCmdDrawIndexed called: indexCount="
+              << indexCount << ", instanceCount=" << instanceCount << std::endl;
 #endif
 }
 
@@ -594,6 +603,9 @@ void CommandBuffer::bindVertexBuffersIfNeeded() {
 
     vkCmdBindVertexBuffers(commandBuffers[currentFrame], 0, bindingCount,
                            buffers.data(), offsets.data());
+    std::cout << "[VULKAN DEBUG] vkCmdBindVertexBuffers called: bindingCount="
+              << bindingCount << ", buffer0="
+              << (buffers[0] != VK_NULL_HANDLE ? "valid" : "NULL") << std::endl;
 }
 #endif
 

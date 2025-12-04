@@ -14,6 +14,7 @@
 #include <glad/glad.h>
 #include <memory>
 #include <vector>
+#include <iostream>
 #ifdef VULKAN
 #include <vulkan/vulkan.hpp>
 #include <spirv_cross/spirv_cross.hpp>
@@ -293,6 +294,11 @@ void Shader::performReflection() {
         // ubo.name is the instance name (e.g., "material")
         std::string instanceName = ubo.name;
 
+        std::cout << "[VULKAN REFLECT] UBO found: instance='" << instanceName
+                  << "', type='" << typeName << "', set=" << set
+                  << ", binding=" << binding << ", size=" << blockSize
+                  << std::endl;
+
         UniformBindingInfo blockInfo;
         blockInfo.set = set;
         blockInfo.binding = binding;
@@ -316,6 +322,10 @@ void Shader::performReflection() {
                 compiler.get_type(type.member_types[i]);
             size_t memberSize =
                 compiler.get_declared_struct_member_size(type, i);
+
+            std::cout << "[VULKAN REFLECT]   Member: '" << memberName
+                      << "' offset=" << memberOffset << ", size=" << memberSize
+                      << std::endl;
 
             UniformBindingInfo memberInfo;
             memberInfo.set = set;

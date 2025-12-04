@@ -13,6 +13,7 @@
 #include <memory>
 #include <stdexcept>
 #include <vector>
+#include <iostream>
 #ifdef VULKAN
 #include <vulkan/vulkan.hpp>
 #endif
@@ -399,6 +400,8 @@ void Pipeline::setUniform1f(const std::string &name, float v0) {
 #endif
 }
 
+static bool debugUniformsOnce = true;
+
 void Pipeline::setUniformMat4f(const std::string &name,
                                const glm::mat4 &matrix) {
 #ifdef OPENGL
@@ -408,7 +411,21 @@ void Pipeline::setUniformMat4f(const std::string &name,
 #elif defined(VULKAN)
     const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
     if (!info) {
+        if (debugUniformsOnce &&
+            (name == "model" || name == "view" || name == "projection")) {
+            std::cout << "[VULKAN DEBUG] setUniformMat4f: uniform '" << name
+                      << "' NOT FOUND in shader!" << std::endl;
+        }
         return;
+    }
+    if (debugUniformsOnce &&
+        (name == "model" || name == "view" || name == "projection")) {
+        std::cout << "[VULKAN DEBUG] setUniformMat4f: uniform '" << name
+                  << "' found at set=" << info->set
+                  << ", binding=" << info->binding
+                  << ", offset=" << info->offset << std::endl;
+        if (name == "projection")
+            debugUniformsOnce = false;
     }
     if (!info->isBuffer) {
         updatePushConstant(info->offset, &matrix[0][0], sizeof(glm::mat4));
@@ -935,6 +952,9 @@ void Pipeline::bindUniformBufferDescriptor(uint32_t set, uint32_t binding) {
 
 void Pipeline::bindDescriptorSets(VkCommandBuffer commandBuffer) {
     if (descriptorSetLayouts.empty()) {
+        std::cout << "[VULKAN DEBUG] bindDescriptorSets: descriptorSetLayouts "
+                     "is EMPTY - no descriptors bound!"
+                  << std::endl;
         return;
     }
 
@@ -967,10 +987,17 @@ void Pipeline::bindDescriptorSets(VkCommandBuffer commandBuffer) {
     }
 
     if (!run.empty() && currentStart != UINT32_MAX) {
+        std::cout << "[VULKAN DEBUG] bindDescriptorSets: binding " << run.size()
+                  << " descriptor sets starting at set " << currentStart
+                  << std::endl;
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                                 pipelineLayout, currentStart,
                                 static_cast<uint32_t>(run.size()), run.data(),
                                 0, nullptr);
+    } else {
+        std::cout << "[VULKAN DEBUG] bindDescriptorSets: NO descriptor sets to "
+                     "bind (run empty or invalid)"
+                  << std::endl;
     }
 }
 

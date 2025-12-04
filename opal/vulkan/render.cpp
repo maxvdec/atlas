@@ -10,6 +10,7 @@
 #ifdef VULKAN
 #include <opal/opal.h>
 #include <vulkan/vulkan.hpp>
+#include <iostream>
 
 namespace opal {
 
@@ -55,9 +56,8 @@ void CommandBuffer::record(uint32_t imageIndex) {
         brightClear.color = {{0.0f, 0.0f, 0.0f, 0.0f}};
         clearValues.push_back(colorClear);
         clearValues.push_back(brightClear);
-        
-        // Add depth clear value if depth attachment exists
-        if (device->swapChainDepthTexture) {
+        // Add depth clear value if depth texture exists
+        if (device->swapChainDepthTexture != nullptr) {
             VkClearValue depthClear{};
             depthClear.depthStencil = {.depth = 1.0f, .stencil = 0};
             clearValues.push_back(depthClear);
@@ -77,6 +77,12 @@ void CommandBuffer::record(uint32_t imageIndex) {
 
     renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
     renderPassInfo.pClearValues = clearValues.data();
+
+    std::cout << "[VULKAN DEBUG] vkCmdBeginRenderPass: imageIndex="
+              << imageIndex << ", fbIndex=" << fbIndex
+              << ", extent=" << renderPassInfo.renderArea.extent.width << "x"
+              << renderPassInfo.renderArea.extent.height
+              << ", clearValues=" << clearValues.size() << std::endl;
 
     vkCmdBeginRenderPass(commandBuffers[currentFrame], &renderPassInfo,
                          VK_SUBPASS_CONTENTS_INLINE);

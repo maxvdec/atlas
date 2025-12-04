@@ -696,9 +696,9 @@ class Pipeline {
   private:
     PrimitiveStyle primitiveStyle = PrimitiveStyle::Triangles;
     int patchVertices = 4; // Default patch size for tessellation
-    RasterizerMode rasterizerMode;
-    CullMode cullMode;
-    FrontFace frontFace;
+    RasterizerMode rasterizerMode = RasterizerMode::Fill;
+    CullMode cullMode = CullMode::Back;
+    FrontFace frontFace = FrontFace::CounterClockwise;
     bool blendingEnabled = false;
     BlendFunc blendSrcFactor = BlendFunc::One;
     BlendFunc blendDstFactor = BlendFunc::Zero;
