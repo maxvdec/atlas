@@ -198,7 +198,8 @@ class MainScene : public Scene {
         Resource fontResource = Workspace::get().createResource(
             "arial.ttf", "ArialFont", ResourceType::Font);
 
-        fpsText = Text("FPS: 0", Font::fromResource("Arial", fontResource, 24),
+        fpsText = Text("FPS: 0, that is the FPS",
+                       Font::fromResource("Arial", fontResource, 24),
                        {25.0, 25.0}, Color::white());
         window.addUIObject(&fpsText);
 

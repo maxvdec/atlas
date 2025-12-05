@@ -20,6 +20,7 @@
 #include <iostream>
 #include <memory>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <algorithm>
 #include <glm/glm.hpp>
@@ -437,6 +438,7 @@ void Window::run() {
 
         updatePipelineStateField(this->cullMode, opal::CullMode::Back);
         updatePipelineStateField(this->useBlending, true);
+
         for (auto &obj : this->uiRenderables) {
             obj->render(getDeltaTime(), commandBuffer,
                         shouldRefreshPipeline(obj));

@@ -924,19 +924,23 @@ CoreRenderPass::create(std::shared_ptr<Pipeline> pipeline,
     return renderPass;
 }
 
-std::shared_ptr<CoreRenderPass>
-CoreRenderPass::createWithExistingRenderPass(std::shared_ptr<Pipeline> pipeline,
-                                              std::shared_ptr<Framebuffer> framebuffer,
-                                              VkRenderPass existingRenderPass) {
+std::shared_ptr<CoreRenderPass> CoreRenderPass::createWithExistingRenderPass(
+    std::shared_ptr<Pipeline> pipeline,
+    std::shared_ptr<Framebuffer> framebuffer, VkRenderPass existingRenderPass) {
     auto coreRenderPass = std::make_shared<CoreRenderPass>();
     coreRenderPass->opalPipeline = pipeline;
     coreRenderPass->opalFramebuffer = framebuffer;
-    coreRenderPass->renderPass = existingRenderPass;  // Reuse existing render pass
+    coreRenderPass->renderPass =
+        existingRenderPass; // Reuse existing render pass
+
+    // Ensure the pipeline layout is built (sets up dynamicState,
+    // vertexInputInfo, etc.)
+    pipeline->buildPipelineLayout();
 
     // Count color attachments for blend state
     size_t colorAttachmentCount = 0;
     if (framebuffer->isDefaultFramebuffer) {
-        colorAttachmentCount = 2;  // color + bright attachment
+        colorAttachmentCount = 2; // color + bright attachment
     } else {
         for (const auto &attachment : framebuffer->attachments) {
             if (attachment.type == opal::Attachment::Type::Color) {
@@ -947,7 +951,8 @@ CoreRenderPass::createWithExistingRenderPass(std::shared_ptr<Pipeline> pipeline,
 
     // Determine sample count
     VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT;
-    if (!framebuffer->isDefaultFramebuffer && !framebuffer->attachments.empty()) {
+    if (!framebuffer->isDefaultFramebuffer &&
+        !framebuffer->attachments.empty()) {
         int samples = framebuffer->attachments[0].texture->samples;
         if (samples > 1) {
             sampleCount = VK_SAMPLE_COUNT_4_BIT;
@@ -957,7 +962,7 @@ CoreRenderPass::createWithExistingRenderPass(std::shared_ptr<Pipeline> pipeline,
     // Create the pipeline using the existing render pass
     VkGraphicsPipelineCreateInfo pipelineInfo{};
     pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-    
+
     std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
     for (const auto &shader : pipeline->shaderProgram->attachedShaders) {
         shaderStages.push_back(shader->makeShaderStageInfo());
@@ -970,7 +975,8 @@ CoreRenderPass::createWithExistingRenderPass(std::shared_ptr<Pipeline> pipeline,
     pipelineInfo.pRasterizationState = &pipeline->rasterizer;
 
     VkPipelineMultisampleStateCreateInfo multisampling{};
-    multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+    multisampling.sType =
+        VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
     multisampling.sampleShadingEnable = VK_FALSE;
     multisampling.rasterizationSamples = sampleCount;
     multisampling.minSampleShading = 1.0f;
@@ -1021,7 +1027,8 @@ CoreRenderPass::createWithExistingRenderPass(std::shared_ptr<Pipeline> pipeline,
     if (vkCreateGraphicsPipelines(Device::globalDevice, VK_NULL_HANDLE, 1,
                                   &pipelineInfo, nullptr,
                                   &coreRenderPass->pipeline) != VK_SUCCESS) {
-        throw std::runtime_error("Failed to create graphics pipeline with existing render pass!");
+        throw std::runtime_error(
+            "Failed to create graphics pipeline with existing render pass!");
     }
 
     RenderPass::cachedRenderPasses.push_back(coreRenderPass);

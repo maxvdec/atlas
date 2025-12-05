@@ -591,14 +591,14 @@ Pipeline::getOrCreateUniformBuffer(uint32_t set, uint32_t binding,
     if (it != uniformBuffers.end()) {
         // Buffer exists, check if size is sufficient AND memory is valid
         if (it->second.descriptorType == descriptorType &&
-            it->second.size >= size &&
-            it->second.buffer != VK_NULL_HANDLE &&
+            it->second.size >= size && it->second.buffer != VK_NULL_HANDLE &&
             it->second.memory != VK_NULL_HANDLE &&
             it->second.mappedData != nullptr) {
             return it->second;
         }
         // Need to recreate - clean up old resources if they exist
-        if (it->second.mappedData != nullptr && it->second.memory != VK_NULL_HANDLE) {
+        if (it->second.mappedData != nullptr &&
+            it->second.memory != VK_NULL_HANDLE) {
             vkUnmapMemory(Device::globalDevice, it->second.memory);
         }
         if (it->second.buffer != VK_NULL_HANDLE) {
@@ -652,8 +652,8 @@ Pipeline::getOrCreateUniformBuffer(uint32_t set, uint32_t binding,
     vkBindBufferMemory(Device::globalDevice, alloc.buffer, alloc.memory, 0);
 
     // Map the memory persistently
-    VkResult mapResult = vkMapMemory(Device::globalDevice, alloc.memory, 0, size, 0,
-                                     &alloc.mappedData);
+    VkResult mapResult = vkMapMemory(Device::globalDevice, alloc.memory, 0,
+                                     size, 0, &alloc.mappedData);
     if (mapResult != VK_SUCCESS || alloc.mappedData == nullptr) {
         vkDestroyBuffer(Device::globalDevice, alloc.buffer, nullptr);
         vkFreeMemory(Device::globalDevice, alloc.memory, nullptr);
@@ -779,7 +779,8 @@ void Pipeline::ensureDescriptorResources() {
         }
         setCount++;
         for (const auto &bindingPair : setPair.second) {
-            typeCounts[bindingPair.second.type] += bindingPair.second.count;
+            typeCounts[bindingPair.second.type] +=
+                bindingPair.second.count * descriptorSetMultiplier;
         }
     }
 
@@ -800,7 +801,7 @@ void Pipeline::ensureDescriptorResources() {
     poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
     poolInfo.pPoolSizes = poolSizes.data();
-    poolInfo.maxSets = setCount;
+    poolInfo.maxSets = setCount * descriptorSetMultiplier;
     poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT;
 
     if (vkCreateDescriptorPool(Device::globalDevice, &poolInfo, nullptr,
@@ -809,6 +810,7 @@ void Pipeline::ensureDescriptorResources() {
     }
 
     descriptorSets.assign(descriptorSetLayouts.size(), VK_NULL_HANDLE);
+    descriptorSetPools.assign(descriptorSetLayouts.size(), {});
 
     for (size_t i = 0; i < descriptorSetLayouts.size(); ++i) {
         if (descriptorSetLayouts[i] == VK_NULL_HANDLE) {
@@ -828,6 +830,7 @@ void Pipeline::ensureDescriptorResources() {
             throw std::runtime_error("Failed to allocate descriptor set");
         }
         descriptorSets[i] = set;
+        descriptorSetPools[i].push_back(set);
     }
 
     // Prime all descriptors with placeholder resources so Vulkan validation

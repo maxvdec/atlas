@@ -137,8 +137,9 @@ std::shared_ptr<Buffer> Buffer::create(BufferUsage usage, size_t size,
 
     if (data != nullptr) {
         void *mappedData;
-        vkMapMemory(Device::globalInstance->logicalDevice, buffer->vkStagingBufferMemory,
-                    0, bufferSize, 0, &mappedData);
+        vkMapMemory(Device::globalInstance->logicalDevice,
+                    buffer->vkStagingBufferMemory, 0, bufferSize, 0,
+                    &mappedData);
         memcpy(mappedData, data, static_cast<size_t>(bufferSize));
         vkUnmapMemory(Device::globalInstance->logicalDevice,
                       buffer->vkStagingBufferMemory);
@@ -187,18 +188,59 @@ void Buffer::updateData(size_t offset, size_t size, const void *data) {
     glBindBuffer(glTarget, 0);
 #elif defined(VULKAN)
     // Safety check: ensure staging buffer exists
-    if (vkStagingBufferMemory == VK_NULL_HANDLE || stagingBuffer == VK_NULL_HANDLE) {
-        throw std::runtime_error("Buffer::updateData: staging buffer not initialized");
+    if (vkStagingBufferMemory == VK_NULL_HANDLE ||
+        stagingBuffer == VK_NULL_HANDLE) {
+        throw std::runtime_error(
+            "Buffer::updateData: staging buffer not initialized");
     }
     void *mappedData;
-    VkResult result = vkMapMemory(Device::globalInstance->logicalDevice, vkStagingBufferMemory,
-                offset, size, 0, &mappedData);
+    VkResult result =
+        vkMapMemory(Device::globalInstance->logicalDevice,
+                    vkStagingBufferMemory, offset, size, 0, &mappedData);
     if (result != VK_SUCCESS) {
-        throw std::runtime_error("Buffer::updateData: failed to map staging buffer memory");
+        throw std::runtime_error(
+            "Buffer::updateData: failed to map staging buffer memory");
     }
     memcpy(mappedData, data, size);
     vkUnmapMemory(Device::globalInstance->logicalDevice, vkStagingBufferMemory);
-    Buffer::copyBuffer(stagingBuffer, vkBuffer, size);
+
+    // Copy only the updated range into the device-local buffer at the same
+    // offset.
+    VkCommandBufferAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocInfo.commandPool = Device::globalInstance->commandPool;
+    allocInfo.commandBufferCount = 1;
+
+    VkCommandBuffer commandBuffer;
+    vkAllocateCommandBuffers(Device::globalDevice, &allocInfo, &commandBuffer);
+
+    VkCommandBufferBeginInfo beginInfo{};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+    vkBeginCommandBuffer(commandBuffer, &beginInfo);
+
+    VkBufferCopy copyRegion{};
+    copyRegion.srcOffset = offset;
+    copyRegion.dstOffset = offset;
+    copyRegion.size = size;
+    vkCmdCopyBuffer(commandBuffer, stagingBuffer, vkBuffer, 1, &copyRegion);
+
+    vkEndCommandBuffer(commandBuffer);
+
+    VkSubmitInfo submitInfo{};
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &commandBuffer;
+
+    vkQueueSubmit(Device::globalInstance->graphicsQueue, 1, &submitInfo,
+                  VK_NULL_HANDLE);
+    vkQueueWaitIdle(Device::globalInstance->graphicsQueue);
+
+    vkFreeCommandBuffers(Device::globalDevice,
+                         Device::globalInstance->commandPool, 1,
+                         &commandBuffer);
 #endif
 }
 

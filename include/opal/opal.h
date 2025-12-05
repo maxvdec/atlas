@@ -632,6 +632,11 @@ class Pipeline {
     VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
     std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
     std::vector<VkDescriptorSet> descriptorSets;
+    // Allow allocating multiple descriptor sets per layout so per-draw
+    // sampler updates do not overwrite previous draws in the same command
+    // buffer.
+    static constexpr uint32_t descriptorSetMultiplier = 64;
+    std::vector<std::vector<VkDescriptorSet>> descriptorSetPools;
 
     struct DescriptorBindingInfoEntry {
         VkDescriptorType type = VK_DESCRIPTOR_TYPE_MAX_ENUM;
@@ -931,13 +936,13 @@ class CoreRenderPass {
     static std::shared_ptr<CoreRenderPass>
     create(std::shared_ptr<Pipeline> pipeline,
            std::shared_ptr<Framebuffer> framebuffer);
-    
+
     // Create a CoreRenderPass that reuses an existing VkRenderPass
     // This is used when switching pipelines mid-render-pass
     static std::shared_ptr<CoreRenderPass>
     createWithExistingRenderPass(std::shared_ptr<Pipeline> pipeline,
-                                  std::shared_ptr<Framebuffer> framebuffer,
-                                  VkRenderPass existingRenderPass);
+                                 std::shared_ptr<Framebuffer> framebuffer,
+                                 VkRenderPass existingRenderPass);
 
     VkRenderPass renderPass = VK_NULL_HANDLE;
     VkPipeline pipeline = VK_NULL_HANDLE;

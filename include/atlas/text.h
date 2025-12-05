@@ -196,6 +196,7 @@ class Text : public UIObject {
   private:
     std::shared_ptr<opal::DrawingState> vao = nullptr;
     std::shared_ptr<opal::Buffer> vertexBuffer = nullptr;
+    size_t vertexBufferCapacity = sizeof(float) * 6 * 4; // capacity in bytes
     glm::mat4 projection;
     ShaderProgram shader;
 };
