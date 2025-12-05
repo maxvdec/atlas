@@ -19,7 +19,8 @@ void main() {
     vec3 normalWorld = texture(gNormal, TexCoord).rgb;
     
     if (length(normalWorld) < 0.001) {
-        FragColor = 0.0;
+        // Treat missing/invalid normals as fully lit (no occlusion)
+        FragColor = 1.0;
         return;
     }
     

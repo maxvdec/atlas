@@ -614,8 +614,9 @@ void CoreObject::render(float dt,
                                      static_cast<float>(ambientColor.r),
                                      static_cast<float>(ambientColor.g),
                                      static_cast<float>(ambientColor.b), 1.0f);
+        // Use full ambient intensity provided by the scene
         this->pipeline->setUniform1f("ambientLight.intensity",
-                                     ambientIntensity / 2.0f);
+                                     ambientIntensity);
 
         // Set camera position
         this->pipeline->setUniform3f(

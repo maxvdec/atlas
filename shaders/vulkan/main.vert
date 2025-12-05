@@ -31,9 +31,8 @@ void main() {
     gl_Position = mvp * vec4(aPos, 1.0);
 
     FragPos = vec3(modelMatrix * vec4(aPos, 1.0));
-    // Flip V coordinate to match texture orientation (textures are flipped on
-    // load)
-    TexCoord = vec2(aTexCoord.x, 1.0 - aTexCoord.y);
+    // UVs used as-is - textures are flipped on load to match OpenGL convention
+    TexCoord = aTexCoord;
     outColor = aColor;
 
     mat3 normalMatrix = transpose(inverse(mat3(modelMatrix)));

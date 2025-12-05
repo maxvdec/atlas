@@ -32,9 +32,8 @@ void main() {
     FragPos = worldPos.xyz;
     gl_Position = projection * view * worldPos;
 
-    // Flip V coordinate to match texture orientation (textures are flipped on
-    // load)
-    TexCoord = vec2(aTexCoord.x, 1.0 - aTexCoord.y);
+    // Textures are already flipped on load; keep UVs as-is for Vulkan
+    TexCoord = aTexCoord;
     outColor = aColor;
 
     mat3 normalMatrix = mat3(transpose(inverse(finalModel)));

@@ -288,8 +288,7 @@ void Window::deferredRendering(
                                 static_cast<float>(ambientColor.r),
                                 static_cast<float>(ambientColor.g),
                                 static_cast<float>(ambientColor.b), 1.0f);
-    lightPipeline->setUniform1f("ambientLight.intensity",
-                                ambientIntensity / 2.0f);
+    lightPipeline->setUniform1f("ambientLight.intensity", ambientIntensity);
 
     // Set camera position
     lightPipeline->setUniform3f("cameraPosition", getCamera()->position.x,

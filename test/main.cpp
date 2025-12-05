@@ -200,11 +200,10 @@ class MainScene : public Scene {
         window.addObject(&sponza);
 
         // window.useDeferredRendering();
-        window.usesDeferred = false;
         atmosphere.enable();
         atmosphere.secondsPerHour = 4.f;
         atmosphere.setTime(12);
-        atmosphere.cycle = false;
+        atmosphere.cycle = true;
         atmosphere.useGlobalLight();
 
         // atmosphere.castShadowsFromSunlight(4096);

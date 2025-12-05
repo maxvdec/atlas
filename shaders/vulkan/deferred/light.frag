@@ -385,7 +385,8 @@ void main() {
     float ssaoFactor = clamp(texture(ssao, TexCoord).r, 0.0, 1.0);
     float ssaoDesaturated = mix(1.0, ssaoFactor, 0.35);
     float occlusion = clamp(ao * (0.2 + 0.8 * ssaoDesaturated), 0.0, 1.0);
-    float lightingOcclusion = clamp(ssaoDesaturated, 0.2, 1.0);
+    // Keep a small floor so fully occluded pixels still receive ambient
+    float lightingOcclusion = clamp(ssaoDesaturated, 0.25, 1.0);
 
     float dirShadow = 0.0;
     float pointShadow = 0.0;
@@ -447,7 +448,10 @@ void main() {
     vec3 rimResult = getRimLight(FragPos, N, V, F0, albedo, metallic, roughness);
     vec3 lighting = (directionalResult + pointResult + spotResult + areaResult + rimResult) * lightingOcclusion;
 
-    vec3 ambient = ambientLight.color.rgb * ambientLight.intensity * albedo * occlusion;
+    // Ensure a minimal ambient even if the scene intensity is zero
+    float ambientStrength = max(ambientLight.intensity, 0.05);
+    float occlusionFloor = max(occlusion, 0.2);
+    vec3 ambient = ambientLight.color.rgb * ambientStrength * albedo * occlusionFloor;
 
     vec3 iblContribution = vec3(0.0);
     if (useIBL) {
