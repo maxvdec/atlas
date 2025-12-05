@@ -879,7 +879,6 @@ class Model : public GameObject {
     void loadModel(Resource resource);
     void processNode(aiNode *node, const aiScene *scene,
                      glm::mat4 parentTransform,
-                     std::shared_ptr<opal::Pipeline> sharedPipeline,
                      std::unordered_map<std::string, Texture> &textureCache);
     CoreObject
     processMesh(aiMesh *mesh, const aiScene *scene, const glm::mat4 &transform,

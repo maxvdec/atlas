@@ -36,11 +36,19 @@ void Model::loadModel(Resource resource) {
     Assimp::Importer importer;
     if (resource.type != ResourceType::Model)
         return;
-    const aiScene *scene = importer.ReadFile(
-        resource.path.string(),
-        aiProcess_Triangulate | aiProcess_CalcTangentSpace | aiProcess_FlipUVs |
-            aiProcess_JoinIdenticalVertices | aiProcess_ImproveCacheLocality |
-            aiProcess_SortByPType | aiProcess_GenSmoothNormals);
+
+    // Base import flags - don't flip UVs here, texture loading handles the flip
+    unsigned int importFlags =
+        aiProcess_Triangulate | aiProcess_CalcTangentSpace |
+        aiProcess_JoinIdenticalVertices | aiProcess_ImproveCacheLocality |
+        aiProcess_SortByPType | aiProcess_GenSmoothNormals;
+    // Note: We don't use aiProcess_FlipUVs because:
+    // - OpenGL: textures are flipped during loading
+    // (stbi_set_flip_vertically_on_load)
+    // - Vulkan: neither textures nor UVs need flipping
+
+    const aiScene *scene =
+        importer.ReadFile(resource.path.string(), importFlags);
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE ||
         !scene->mRootNode) {
@@ -51,16 +59,13 @@ void Model::loadModel(Resource resource) {
     }
     directory = resource.path.parent_path().string();
 
-    // Create a single shared pipeline for all meshes in this model
-    auto sharedPipeline = opal::Pipeline::create();
-    sharedPipeline =
-        ShaderProgram::defaultProgram().requestPipeline(sharedPipeline);
-
     // Texture cache to avoid loading the same texture multiple times
     std::unordered_map<std::string, Texture> textureCache;
 
-    processNode(scene->mRootNode, scene, glm::mat4(1.0f), sharedPipeline,
-                textureCache);
+    // Note: We don't share pipeline objects between meshes because each mesh
+    // needs its own descriptor sets for its textures. The underlying VkPipeline
+    // is still shared via CoreRenderPass caching.
+    processNode(scene->mRootNode, scene, glm::mat4(1.0f), textureCache);
 
     std::cout << "Created model from resource: " << resource.name << " with "
               << objects.size() << " objects." << std::endl;
@@ -89,7 +94,6 @@ void Model::loadModel(Resource resource) {
 
 void Model::processNode(
     aiNode *node, const aiScene *scene, glm::mat4 parentTransform,
-    std::shared_ptr<opal::Pipeline> sharedPipeline,
     std::unordered_map<std::string, Texture> &textureCache) {
     glm::mat4 nodeTransform =
         parentTransform * glm::make_mat4(&node->mTransformation.a1);
@@ -98,15 +102,15 @@ void Model::processNode(
         aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
         auto obj = std::make_shared<CoreObject>(
             processMesh(mesh, scene, nodeTransform, textureCache));
-        // Reuse the shared pipeline instead of creating a new one per mesh
-        obj->setPipeline(sharedPipeline);
+        // Each mesh gets its own pipeline object so it can have its own
+        // descriptor sets for textures. The underlying VkPipeline is shared
+        // via CoreRenderPass caching, so this is still efficient.
         obj->initialize();
         this->objects.push_back(obj);
     }
 
     for (unsigned int i = 0; i < node->mNumChildren; i++) {
-        processNode(node->mChildren[i], scene, nodeTransform, sharedPipeline,
-                    textureCache);
+        processNode(node->mChildren[i], scene, nodeTransform, textureCache);
     }
 }
 

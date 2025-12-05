@@ -87,7 +87,8 @@ void CommandBuffer::record(uint32_t imageIndex) {
     vkCmdBeginRenderPass(commandBuffers[currentFrame], &renderPassInfo,
                          VK_SUBPASS_CONTENTS_INLINE);
 
-    // Configure dynamic viewport/scissor to match current render area
+    // Configure dynamic viewport/scissor to match current render area (positive
+    // height)
     VkViewport viewport{};
     viewport.x = 0.0f;
     viewport.y = 0.0f;

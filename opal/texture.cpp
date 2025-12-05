@@ -8,6 +8,7 @@
 //
 
 #include "opal/opal.h"
+#include <cstring>
 #include <memory>
 #include <sys/types.h>
 
@@ -138,12 +139,126 @@ void Texture::updateFace(int faceIndex, const void *data, int width, int height,
                      width, height, 0, glDataFmt, GL_UNSIGNED_BYTE, data);
     }
 #elif defined(VULKAN)
-    // Vulkan cubemap face update would require staging buffer and copy
-    (void)faceIndex;
-    (void)data;
-    (void)width;
-    (void)height;
-    (void)dataFormat;
+    if (data == nullptr || width <= 0 || height <= 0 ||
+        vkImage == VK_NULL_HANDLE) {
+        return;
+    }
+
+    // Determine bytes per pixel based on format
+    size_t bytesPerPixel = 4; // Default RGBA
+    if (dataFormat == TextureDataFormat::Rgb) {
+        bytesPerPixel = 3;
+    } else if (dataFormat == TextureDataFormat::Red) {
+        bytesPerPixel = 1;
+    }
+
+    size_t pixelCount = static_cast<size_t>(width) * height;
+    VkDeviceSize imageSize = pixelCount * 4; // Vulkan uses RGBA
+
+    // Create staging buffer
+    VkBuffer stagingBuffer;
+    VkDeviceMemory stagingBufferMemory;
+    Buffer::createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                             VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                         stagingBuffer, stagingBufferMemory);
+
+    void *mappedData;
+    vkMapMemory(Device::globalDevice, stagingBufferMemory, 0, imageSize, 0,
+                &mappedData);
+
+    // Convert RGB to RGBA if necessary
+    if (bytesPerPixel == 3) {
+        const uint8_t *src = static_cast<const uint8_t *>(data);
+        uint8_t *dst = static_cast<uint8_t *>(mappedData);
+        for (size_t i = 0; i < pixelCount; ++i) {
+            dst[i * 4 + 0] = src[i * 3 + 0];
+            dst[i * 4 + 1] = src[i * 3 + 1];
+            dst[i * 4 + 2] = src[i * 3 + 2];
+            dst[i * 4 + 3] = 255;
+        }
+    } else if (bytesPerPixel == 1) {
+        const uint8_t *src = static_cast<const uint8_t *>(data);
+        uint8_t *dst = static_cast<uint8_t *>(mappedData);
+        for (size_t i = 0; i < pixelCount; ++i) {
+            dst[i * 4 + 0] = src[i];
+            dst[i * 4 + 1] = src[i];
+            dst[i * 4 + 2] = src[i];
+            dst[i * 4 + 3] = 255;
+        }
+    } else {
+        memcpy(mappedData, data, pixelCount * bytesPerPixel);
+    }
+
+    vkUnmapMemory(Device::globalDevice, stagingBufferMemory);
+
+    VkFormat vkFormat = opalTextureFormatToVulkanFormat(format);
+
+    // Only transition to transfer dst if not already there
+    if (currentLayout != VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
+        Framebuffer::transitionImageLayout(vkImage, vkFormat, currentLayout,
+                                           VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                                           6);
+        currentLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    }
+
+    // Copy buffer to the specific face (array layer)
+    VkCommandBufferAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+    allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+    allocInfo.commandPool = Device::globalInstance->commandPool;
+    allocInfo.commandBufferCount = 1;
+
+    VkCommandBuffer commandBuffer;
+    vkAllocateCommandBuffers(Device::globalDevice, &allocInfo, &commandBuffer);
+
+    VkCommandBufferBeginInfo beginInfo{};
+    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+    vkBeginCommandBuffer(commandBuffer, &beginInfo);
+
+    VkBufferImageCopy region{};
+    region.bufferOffset = 0;
+    region.bufferRowLength = 0;
+    region.bufferImageHeight = 0;
+    region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    region.imageSubresource.mipLevel = 0;
+    region.imageSubresource.baseArrayLayer = static_cast<uint32_t>(faceIndex);
+    region.imageSubresource.layerCount = 1;
+    region.imageOffset = {0, 0, 0};
+    region.imageExtent = {static_cast<uint32_t>(width),
+                          static_cast<uint32_t>(height), 1};
+
+    vkCmdCopyBufferToImage(commandBuffer, stagingBuffer, vkImage,
+                           VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+
+    vkEndCommandBuffer(commandBuffer);
+
+    VkSubmitInfo submitInfo{};
+    submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    submitInfo.commandBufferCount = 1;
+    submitInfo.pCommandBuffers = &commandBuffer;
+
+    vkQueueSubmit(Device::globalInstance->graphicsQueue, 1, &submitInfo,
+                  VK_NULL_HANDLE);
+    vkQueueWaitIdle(Device::globalInstance->graphicsQueue);
+
+    vkFreeCommandBuffers(Device::globalDevice,
+                         Device::globalInstance->commandPool, 1,
+                         &commandBuffer);
+
+    // Transition back to shader read layout after the last face (face 5)
+    if (faceIndex == 5) {
+        Framebuffer::transitionImageLayout(
+            vkImage, vkFormat, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 6);
+        currentLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    }
+
+    // Clean up staging buffer
+    vkDestroyBuffer(Device::globalDevice, stagingBuffer, nullptr);
+    vkFreeMemory(Device::globalDevice, stagingBufferMemory, nullptr);
 #endif
 }
 

@@ -219,21 +219,8 @@ void CommandBuffer::commit() {
 void CommandBuffer::bindPipeline(std::shared_ptr<Pipeline> pipeline) {
     pipeline->bind();
 #ifdef VULKAN
-    // If binding the same pipeline, no need to do anything
-    if (boundPipeline == pipeline) {
-        return;
-    }
-
-    // Check if we need to end the current render pass
-    // We only need to end/restart if the framebuffer is changing
-    // Switching pipelines within the same render pass is fine in Vulkan
-    bool needNewRenderPass = false;
-    if (boundPipeline != nullptr && hasStarted) {
-        // Only end render pass if framebuffer is different (which shouldn't
-        // happen mid-pass) For now, we keep the render pass active when just
-        // switching pipelines The actual pipeline bind will happen in the draw
-        // call
-    }
+    // Don't skip even if same pipeline - textures may have changed and we need
+    // to rebind descriptor sets in the draw call
 #endif
     boundPipeline = pipeline;
 #ifdef VULKAN
@@ -378,14 +365,14 @@ auto CommandBuffer::draw(uint vertexCount, uint instanceCount, uint firstVertex,
     vkCmdBindPipeline(commandBuffers[currentFrame],
                       VK_PIPELINE_BIND_POINT_GRAPHICS,
                       renderPass->currentRenderPass->pipeline);
-    if (renderPass->currentRenderPass->opalPipeline != nullptr) {
-        renderPass->currentRenderPass->opalPipeline->bindDescriptorSets(
-            commandBuffers[currentFrame]);
+    // Use boundPipeline for descriptor sets - this is the pipeline that had
+    // textures bound to it, not the cached CoreRenderPass pipeline
+    if (boundPipeline != nullptr) {
+        boundPipeline->bindDescriptorSets(commandBuffers[currentFrame]);
     }
     bindVertexBuffersIfNeeded();
-    if (renderPass->currentRenderPass->opalPipeline != nullptr) {
-        renderPass->currentRenderPass->opalPipeline->flushPushConstants(
-            commandBuffers[currentFrame]);
+    if (boundPipeline != nullptr) {
+        boundPipeline->flushPushConstants(commandBuffers[currentFrame]);
     }
     vkCmdDraw(commandBuffers[currentFrame], vertexCount, instanceCount,
               firstVertex, firstInstance);
@@ -432,9 +419,10 @@ void CommandBuffer::drawIndexed(uint indexCount, uint instanceCount,
     vkCmdBindPipeline(commandBuffers[currentFrame],
                       VK_PIPELINE_BIND_POINT_GRAPHICS,
                       renderPass->currentRenderPass->pipeline);
-    if (renderPass->currentRenderPass->opalPipeline != nullptr) {
-        renderPass->currentRenderPass->opalPipeline->bindDescriptorSets(
-            commandBuffers[currentFrame]);
+    // Use boundPipeline for descriptor sets - this is the pipeline that had
+    // textures bound to it, not the cached CoreRenderPass pipeline
+    if (boundPipeline != nullptr) {
+        boundPipeline->bindDescriptorSets(commandBuffers[currentFrame]);
     }
     if (boundDrawingState != nullptr) {
         bindVertexBuffersIfNeeded();
@@ -444,9 +432,8 @@ void CommandBuffer::drawIndexed(uint indexCount, uint instanceCount,
                                  VK_INDEX_TYPE_UINT32);
         }
     }
-    if (renderPass->currentRenderPass->opalPipeline != nullptr) {
-        renderPass->currentRenderPass->opalPipeline->flushPushConstants(
-            commandBuffers[currentFrame]);
+    if (boundPipeline != nullptr) {
+        boundPipeline->flushPushConstants(commandBuffers[currentFrame]);
     }
     vkCmdDrawIndexed(commandBuffers[currentFrame], indexCount, instanceCount,
                      firstIndex, vertexOffset, firstInstance);
@@ -545,14 +532,14 @@ void CommandBuffer::drawPatches(uint vertexCount, uint firstVertex) {
     vkCmdBindPipeline(commandBuffers[currentFrame],
                       VK_PIPELINE_BIND_POINT_GRAPHICS,
                       renderPass->currentRenderPass->pipeline);
-    if (renderPass->currentRenderPass->opalPipeline != nullptr) {
-        renderPass->currentRenderPass->opalPipeline->bindDescriptorSets(
-            commandBuffers[currentFrame]);
+    // Use boundPipeline for descriptor sets - this is the pipeline that had
+    // textures bound to it, not the cached CoreRenderPass pipeline
+    if (boundPipeline != nullptr) {
+        boundPipeline->bindDescriptorSets(commandBuffers[currentFrame]);
     }
     bindVertexBuffersIfNeeded();
-    if (renderPass->currentRenderPass->opalPipeline != nullptr) {
-        renderPass->currentRenderPass->opalPipeline->flushPushConstants(
-            commandBuffers[currentFrame]);
+    if (boundPipeline != nullptr) {
+        boundPipeline->flushPushConstants(commandBuffers[currentFrame]);
     }
     vkCmdDraw(commandBuffers[currentFrame], vertexCount, 1, firstVertex, 0);
 #endif

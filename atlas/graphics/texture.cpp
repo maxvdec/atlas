@@ -215,6 +215,8 @@ Texture Texture::fromResource(const Resource &resource, TextureType type,
     }
 
     int width, height, channels;
+    // Always flip textures vertically on load - this ensures consistent
+    // UV coordinate handling across both OpenGL and Vulkan backends
     stbi_set_flip_vertically_on_load(true);
 
     TextureCreationData creationData{};

@@ -32,7 +32,9 @@ void main() {
     FragPos = worldPos.xyz;
     gl_Position = projection * view * worldPos;
 
-    TexCoord = aTexCoord;
+    // Flip V coordinate to match texture orientation (textures are flipped on
+    // load)
+    TexCoord = vec2(aTexCoord.x, 1.0 - aTexCoord.y);
     outColor = aColor;
 
     mat3 normalMatrix = mat3(transpose(inverse(finalModel)));

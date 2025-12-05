@@ -176,6 +176,8 @@ void Terrain::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
     terrainPipeline->setDepthCompareOp(opal::CompareOp::Less);
     terrainPipeline->enableDepthWrite(true);
     terrainPipeline->setCullMode(opal::CullMode::Back);
+    // Terrain geometry is wound clockwise; with CCW default, override to CW for
+    // draw
     terrainPipeline->setFrontFace(opal::FrontFace::Clockwise);
     terrainPipeline->setPrimitiveStyle(opal::PrimitiveStyle::Patches);
     terrainPipeline->setPatchVertices(patch_count);
@@ -280,7 +282,7 @@ void Terrain::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
     commandBuffer->drawPatches(patch_count * rez * rez, 0);
     commandBuffer->unbindDrawingState();
 
-    // Restore default state via pipeline
+    // Restore default state via pipeline (CCW default)
     terrainPipeline->setCullMode(opal::CullMode::Back);
     terrainPipeline->setFrontFace(opal::FrontFace::CounterClockwise);
     terrainPipeline->bind();

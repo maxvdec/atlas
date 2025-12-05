@@ -195,7 +195,7 @@ class MainScene : public Scene {
 
         sponza.material.albedo = Color(1.0, 0.0, 0.0, 1.0);
 
-        this->setAmbientIntensity(0.2f);
+        this->setAmbientIntensity(1.0f);
 
         window.addObject(&sponza);
 
@@ -207,7 +207,7 @@ class MainScene : public Scene {
         atmosphere.cycle = false;
         atmosphere.useGlobalLight();
 
-        atmosphere.castShadowsFromSunlight(4096);
+        // atmosphere.castShadowsFromSunlight(4096);
     }
 };
 

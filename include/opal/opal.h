@@ -698,6 +698,7 @@ class Pipeline {
     int patchVertices = 4; // Default patch size for tessellation
     RasterizerMode rasterizerMode = RasterizerMode::Fill;
     CullMode cullMode = CullMode::Back;
+    // Both APIs use CCW; projection Y-flip doesn't affect rasterizer winding
     FrontFace frontFace = FrontFace::CounterClockwise;
     bool blendingEnabled = false;
     BlendFunc blendSrcFactor = BlendFunc::One;
