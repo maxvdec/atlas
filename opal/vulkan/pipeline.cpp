@@ -924,5 +924,110 @@ CoreRenderPass::create(std::shared_ptr<Pipeline> pipeline,
     return renderPass;
 }
 
+std::shared_ptr<CoreRenderPass>
+CoreRenderPass::createWithExistingRenderPass(std::shared_ptr<Pipeline> pipeline,
+                                              std::shared_ptr<Framebuffer> framebuffer,
+                                              VkRenderPass existingRenderPass) {
+    auto coreRenderPass = std::make_shared<CoreRenderPass>();
+    coreRenderPass->opalPipeline = pipeline;
+    coreRenderPass->opalFramebuffer = framebuffer;
+    coreRenderPass->renderPass = existingRenderPass;  // Reuse existing render pass
+
+    // Count color attachments for blend state
+    size_t colorAttachmentCount = 0;
+    if (framebuffer->isDefaultFramebuffer) {
+        colorAttachmentCount = 2;  // color + bright attachment
+    } else {
+        for (const auto &attachment : framebuffer->attachments) {
+            if (attachment.type == opal::Attachment::Type::Color) {
+                colorAttachmentCount++;
+            }
+        }
+    }
+
+    // Determine sample count
+    VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT;
+    if (!framebuffer->isDefaultFramebuffer && !framebuffer->attachments.empty()) {
+        int samples = framebuffer->attachments[0].texture->samples;
+        if (samples > 1) {
+            sampleCount = VK_SAMPLE_COUNT_4_BIT;
+        }
+    }
+
+    // Create the pipeline using the existing render pass
+    VkGraphicsPipelineCreateInfo pipelineInfo{};
+    pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+    
+    std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
+    for (const auto &shader : pipeline->shaderProgram->attachedShaders) {
+        shaderStages.push_back(shader->makeShaderStageInfo());
+    }
+    pipelineInfo.stageCount = static_cast<uint32_t>(shaderStages.size());
+    pipelineInfo.pStages = shaderStages.data();
+    pipelineInfo.pVertexInputState = &pipeline->vertexInputInfo;
+    pipelineInfo.pInputAssemblyState = &pipeline->inputAssembly;
+    pipelineInfo.pViewportState = &pipeline->viewportState;
+    pipelineInfo.pRasterizationState = &pipeline->rasterizer;
+
+    VkPipelineMultisampleStateCreateInfo multisampling{};
+    multisampling.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+    multisampling.sampleShadingEnable = VK_FALSE;
+    multisampling.rasterizationSamples = sampleCount;
+    multisampling.minSampleShading = 1.0f;
+    multisampling.pSampleMask = nullptr;
+    multisampling.alphaToCoverageEnable = VK_FALSE;
+    multisampling.alphaToOneEnable = VK_FALSE;
+
+    pipelineInfo.pMultisampleState = &multisampling;
+    pipelineInfo.pDepthStencilState = &pipeline->depthStencil;
+
+    // Set up color blend attachments
+    VkPipelineColorBlendStateCreateInfo colorBlending = pipeline->colorBlending;
+    std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachments =
+        pipeline->vkColorBlendAttachments;
+
+    if (colorAttachmentCount == 0) {
+        colorBlendAttachments.clear();
+        colorBlending.attachmentCount = 0;
+        colorBlending.pAttachments = nullptr;
+    } else {
+        if (colorBlendAttachments.empty()) {
+            VkPipelineColorBlendAttachmentState defaultState{};
+            defaultState.colorWriteMask =
+                VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT |
+                VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+            defaultState.blendEnable = VK_FALSE;
+            colorBlendAttachments.push_back(defaultState);
+        }
+
+        if (colorBlendAttachments.size() < colorAttachmentCount) {
+            auto templateState = colorBlendAttachments.front();
+            colorBlendAttachments.resize(colorAttachmentCount, templateState);
+        } else if (colorBlendAttachments.size() > colorAttachmentCount) {
+            colorBlendAttachments.resize(colorAttachmentCount);
+        }
+
+        colorBlending.attachmentCount =
+            static_cast<uint32_t>(colorBlendAttachments.size());
+        colorBlending.pAttachments = colorBlendAttachments.data();
+    }
+
+    pipelineInfo.pColorBlendState = &colorBlending;
+    pipelineInfo.pDynamicState = &pipeline->dynamicState;
+    pipelineInfo.layout = pipeline->pipelineLayout;
+    pipelineInfo.renderPass = existingRenderPass;
+    pipelineInfo.subpass = 0;
+
+    if (vkCreateGraphicsPipelines(Device::globalDevice, VK_NULL_HANDLE, 1,
+                                  &pipelineInfo, nullptr,
+                                  &coreRenderPass->pipeline) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to create graphics pipeline with existing render pass!");
+    }
+
+    RenderPass::cachedRenderPasses.push_back(coreRenderPass);
+
+    return coreRenderPass;
+}
+
 } // namespace opal
 #endif

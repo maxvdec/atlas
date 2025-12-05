@@ -253,8 +253,18 @@ void CommandBuffer::bindPipeline(std::shared_ptr<Pipeline> pipeline) {
     }
 
     if (coreRenderPass == nullptr) {
-        coreRenderPass =
-            CoreRenderPass::create(pipeline, renderPass->framebuffer);
+        // If render pass is already started, we need to create a pipeline
+        // compatible with the current render pass
+        if (hasStarted && renderPass->currentRenderPass != nullptr &&
+            renderPass->currentRenderPass->renderPass != VK_NULL_HANDLE) {
+            // Create new pipeline using the existing VkRenderPass
+            coreRenderPass = CoreRenderPass::createWithExistingRenderPass(
+                pipeline, renderPass->framebuffer,
+                renderPass->currentRenderPass->renderPass);
+        } else {
+            coreRenderPass =
+                CoreRenderPass::create(pipeline, renderPass->framebuffer);
+        }
         renderPass->currentRenderPass = coreRenderPass;
     }
 

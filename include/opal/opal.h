@@ -931,6 +931,13 @@ class CoreRenderPass {
     static std::shared_ptr<CoreRenderPass>
     create(std::shared_ptr<Pipeline> pipeline,
            std::shared_ptr<Framebuffer> framebuffer);
+    
+    // Create a CoreRenderPass that reuses an existing VkRenderPass
+    // This is used when switching pipelines mid-render-pass
+    static std::shared_ptr<CoreRenderPass>
+    createWithExistingRenderPass(std::shared_ptr<Pipeline> pipeline,
+                                  std::shared_ptr<Framebuffer> framebuffer,
+                                  VkRenderPass existingRenderPass);
 
     VkRenderPass renderPass = VK_NULL_HANDLE;
     VkPipeline pipeline = VK_NULL_HANDLE;

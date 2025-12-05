@@ -589,23 +589,35 @@ Pipeline::getOrCreateUniformBuffer(uint32_t set, uint32_t binding,
     auto it = uniformBuffers.find(key);
 
     if (it != uniformBuffers.end()) {
-        // Buffer exists, check if size is sufficient
+        // Buffer exists, check if size is sufficient AND memory is valid
         if (it->second.descriptorType == descriptorType &&
-            it->second.size >= size) {
+            it->second.size >= size &&
+            it->second.buffer != VK_NULL_HANDLE &&
+            it->second.memory != VK_NULL_HANDLE &&
+            it->second.mappedData != nullptr) {
             return it->second;
         }
-        // Need to recreate with larger size
-        if (it->second.mappedData) {
+        // Need to recreate - clean up old resources if they exist
+        if (it->second.mappedData != nullptr && it->second.memory != VK_NULL_HANDLE) {
             vkUnmapMemory(Device::globalDevice, it->second.memory);
         }
-        vkDestroyBuffer(Device::globalDevice, it->second.buffer, nullptr);
-        vkFreeMemory(Device::globalDevice, it->second.memory, nullptr);
+        if (it->second.buffer != VK_NULL_HANDLE) {
+            vkDestroyBuffer(Device::globalDevice, it->second.buffer, nullptr);
+        }
+        if (it->second.memory != VK_NULL_HANDLE) {
+            vkFreeMemory(Device::globalDevice, it->second.memory, nullptr);
+        }
+        // Remove old entry before creating new one
+        uniformBuffers.erase(it);
     }
 
-    // Create new buffer
-    UniformBufferAllocation &alloc = uniformBuffers[key];
+    // Create new buffer - initialize struct first
+    UniformBufferAllocation alloc{};
     alloc.size = size;
     alloc.descriptorType = descriptorType;
+    alloc.buffer = VK_NULL_HANDLE;
+    alloc.memory = VK_NULL_HANDLE;
+    alloc.mappedData = nullptr;
 
     VkBufferCreateInfo bufferInfo{};
     bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -632,19 +644,28 @@ Pipeline::getOrCreateUniformBuffer(uint32_t set, uint32_t binding,
 
     if (vkAllocateMemory(Device::globalDevice, &allocInfo, nullptr,
                          &alloc.memory) != VK_SUCCESS) {
+        // Clean up buffer before throwing
+        vkDestroyBuffer(Device::globalDevice, alloc.buffer, nullptr);
         throw std::runtime_error("Failed to allocate uniform buffer memory");
     }
 
     vkBindBufferMemory(Device::globalDevice, alloc.buffer, alloc.memory, 0);
 
     // Map the memory persistently
-    vkMapMemory(Device::globalDevice, alloc.memory, 0, size, 0,
-                &alloc.mappedData);
+    VkResult mapResult = vkMapMemory(Device::globalDevice, alloc.memory, 0, size, 0,
+                                     &alloc.mappedData);
+    if (mapResult != VK_SUCCESS || alloc.mappedData == nullptr) {
+        vkDestroyBuffer(Device::globalDevice, alloc.buffer, nullptr);
+        vkFreeMemory(Device::globalDevice, alloc.memory, nullptr);
+        throw std::runtime_error("Failed to map uniform buffer memory");
+    }
 
     // Initialize to zero
     memset(alloc.mappedData, 0, size);
 
-    return alloc;
+    // Only insert into map after successful creation
+    uniformBuffers[key] = alloc;
+    return uniformBuffers[key];
 }
 
 const Pipeline::DescriptorBindingInfoEntry *
@@ -689,6 +710,11 @@ void Pipeline::updateUniformData(uint32_t set, uint32_t binding,
 
     UniformBufferAllocation &alloc =
         getOrCreateUniformBuffer(set, binding, blockSize);
+
+    // Safety check: ensure buffer is mapped before writing
+    if (alloc.mappedData == nullptr) {
+        return;
+    }
 
     // Write data at the correct offset
     char *dst = static_cast<char *>(alloc.mappedData) + offset;
@@ -933,6 +959,11 @@ void Pipeline::bindUniformBufferDescriptor(uint32_t set, uint32_t binding) {
     VkDeviceSize minSize = info->minBufferSize > 0 ? info->minBufferSize : 256;
     UniformBufferAllocation &alloc =
         getOrCreateUniformBuffer(set, binding, minSize);
+
+    // Safety check: ensure buffer is valid before binding
+    if (alloc.buffer == VK_NULL_HANDLE || alloc.memory == VK_NULL_HANDLE) {
+        return;
+    }
 
     VkDescriptorBufferInfo bufferInfo{};
     bufferInfo.buffer = alloc.buffer;

@@ -149,13 +149,38 @@ void Text::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
     static std::shared_ptr<opal::Pipeline> textPipeline = nullptr;
     if (textPipeline == nullptr) {
         textPipeline = opal::Pipeline::create();
+        
+        // Text vertex format: vec4 (x, y, u, v)
+        opal::VertexAttribute textAttribute{
+            "vertex",
+            opal::VertexAttributeType::Float,
+            0,                              // offset
+            0,                              // location
+            false,                          // normalized
+            4,                              // size (4 floats)
+            static_cast<uint>(4 * sizeof(float)), // stride
+            opal::VertexBindingInputRate::Vertex,
+            0                               // binding
+        };
+        std::vector<opal::VertexAttribute> textAttributes = {textAttribute};
+        opal::VertexBinding textBinding{
+            static_cast<uint>(4 * sizeof(float)),
+            opal::VertexBindingInputRate::Vertex
+        };
+        textPipeline->setVertexAttributes(textAttributes, textBinding);
     }
-    textPipeline = shader.requestPipeline(textPipeline);
+    
+    // Set shader program manually instead of requestPipeline, 
+    // since text uses a different vertex layout (vec4 instead of CoreVertex)
+    textPipeline->setShaderProgram(shader.shader);
+    
     textPipeline->enableBlending(true);
     textPipeline->setBlendFunc(opal::BlendFunc::SrcAlpha,
                                opal::BlendFunc::OneMinusSrcAlpha);
     textPipeline->enableDepthTest(false);
-    textPipeline->bind();
+    
+    // Must bind through command buffer for Vulkan descriptor set binding
+    commandBuffer->bindPipeline(textPipeline);
 
     textPipeline->setUniform3f("textColor", color.r, color.g, color.b);
     textPipeline->setUniformMat4f("projection", projection);

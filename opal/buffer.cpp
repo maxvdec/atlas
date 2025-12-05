@@ -127,29 +127,27 @@ std::shared_ptr<Buffer> Buffer::create(BufferUsage usage, size_t size,
         break;
     }
 
-    VkBuffer stagingBuffer;
-    VkDeviceMemory stagingBufferMemory;
-
+    // Store staging buffer in the buffer object so updateData can use it
     createBuffer(bufferSize,
                  VK_BUFFER_USAGE_TRANSFER_SRC_BIT |
                      VK_BUFFER_USAGE_TRANSFER_DST_BIT,
                  VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
                      VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-                 stagingBuffer, stagingBufferMemory);
+                 buffer->stagingBuffer, buffer->vkStagingBufferMemory);
 
     if (data != nullptr) {
         void *mappedData;
-        vkMapMemory(Device::globalInstance->logicalDevice, stagingBufferMemory,
+        vkMapMemory(Device::globalInstance->logicalDevice, buffer->vkStagingBufferMemory,
                     0, bufferSize, 0, &mappedData);
         memcpy(mappedData, data, static_cast<size_t>(bufferSize));
         vkUnmapMemory(Device::globalInstance->logicalDevice,
-                      stagingBufferMemory);
+                      buffer->vkStagingBufferMemory);
     }
 
     createBuffer(bufferSize, usageFlags, properties, buffer->vkBuffer,
                  buffer->vkBufferMemory);
     if (data != nullptr) {
-        Buffer::copyBuffer(stagingBuffer, buffer->vkBuffer, bufferSize);
+        Buffer::copyBuffer(buffer->stagingBuffer, buffer->vkBuffer, bufferSize);
     }
 
 #endif
@@ -188,9 +186,16 @@ void Buffer::updateData(size_t offset, size_t size, const void *data) {
     glBufferSubData(glTarget, offset, size, data);
     glBindBuffer(glTarget, 0);
 #elif defined(VULKAN)
+    // Safety check: ensure staging buffer exists
+    if (vkStagingBufferMemory == VK_NULL_HANDLE || stagingBuffer == VK_NULL_HANDLE) {
+        throw std::runtime_error("Buffer::updateData: staging buffer not initialized");
+    }
     void *mappedData;
-    vkMapMemory(Device::globalInstance->logicalDevice, vkStagingBufferMemory,
+    VkResult result = vkMapMemory(Device::globalInstance->logicalDevice, vkStagingBufferMemory,
                 offset, size, 0, &mappedData);
+    if (result != VK_SUCCESS) {
+        throw std::runtime_error("Buffer::updateData: failed to map staging buffer memory");
+    }
     memcpy(mappedData, data, size);
     vkUnmapMemory(Device::globalInstance->logicalDevice, vkStagingBufferMemory);
     Buffer::copyBuffer(stagingBuffer, vkBuffer, size);

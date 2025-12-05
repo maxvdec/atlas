@@ -195,7 +195,14 @@ class MainScene : public Scene {
 
         sponza.material.albedo = Color(1.0, 0.0, 0.0, 1.0);
 
-        this->setAmbientIntensity(1.0f);
+        Resource fontResource = Workspace::get().createResource(
+            "arial.ttf", "ArialFont", ResourceType::Font);
+
+        fpsText = Text("FPS: 0", Font::fromResource("Arial", fontResource, 24),
+                       {25.0, 25.0}, Color::white());
+        window.addUIObject(&fpsText);
+
+        this->setAmbientIntensity(10.0f);
 
         window.addObject(&sponza);
 
