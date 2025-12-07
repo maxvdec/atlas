@@ -149,32 +149,19 @@ void CommandBuffer::commit() {
 
     // Only submit and present if we actually acquired an image
     if (!imageAcquired) {
-        std::cout
-            << "[VULKAN DEBUG] commit(): imageAcquired=false, skipping frame"
-            << std::endl;
         return;
     }
 
     // End render pass if still active
     if (hasStarted) {
-        std::cout << "[VULKAN DEBUG] commit(): ending render pass, imageIndex="
-                  << imageIndex << std::endl;
         vkCmdEndRenderPass(commandBuffers[currentFrame]);
         hasStarted = false;
-    } else {
-        std::cout << "[VULKAN DEBUG] commit(): hasStarted=false, no render "
-                     "pass to end"
-                  << std::endl;
     }
 
     // End the command buffer recording
     if (vkEndCommandBuffer(commandBuffers[currentFrame]) != VK_SUCCESS) {
         throw std::runtime_error("Failed to end command buffer recording!");
     }
-
-    std::cout
-        << "[VULKAN DEBUG] commit(): submitting and presenting imageIndex="
-        << imageIndex << std::endl;
 
     VkSubmitInfo submitInfo{};
     submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -420,8 +407,6 @@ void CommandBuffer::drawIndexed(uint indexCount, uint instanceCount,
 #elif defined(VULKAN)
     if (renderPass == nullptr || renderPass->currentRenderPass == nullptr) {
         // No pipeline bound yet, skip this draw call
-        std::cout << "[VULKAN DEBUG] drawIndexed SKIPPED - no pipeline bound"
-                  << std::endl;
         return;
     }
     // Acquire swapchain image once per frame (only for default framebuffer)
@@ -475,8 +460,6 @@ void CommandBuffer::drawIndexed(uint indexCount, uint instanceCount,
     }
     vkCmdDrawIndexed(commandBuffers[currentFrame], indexCount, instanceCount,
                      firstIndex, vertexOffset, firstInstance);
-    std::cout << "[VULKAN DEBUG] vkCmdDrawIndexed called: indexCount="
-              << indexCount << ", instanceCount=" << instanceCount << std::endl;
 #endif
 }
 
@@ -642,9 +625,6 @@ void CommandBuffer::bindVertexBuffersIfNeeded() {
 
     vkCmdBindVertexBuffers(commandBuffers[currentFrame], 0, bindingCount,
                            buffers.data(), offsets.data());
-    std::cout << "[VULKAN DEBUG] vkCmdBindVertexBuffers called: bindingCount="
-              << bindingCount << ", buffer0="
-              << (buffers[0] != VK_NULL_HANDLE ? "valid" : "NULL") << std::endl;
 }
 #endif
 

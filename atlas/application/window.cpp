@@ -1423,9 +1423,6 @@ void Window::captureFluidReflection(
             }
             if (obj->canUseDeferredRendering()) {
                 oldProgram = obj->getShaderProgram().value();
-                std::cout << "For object with type: " << typeid(*obj).name()
-                          << " and ID: " << obj->getId()
-                          << " setting reflection shader." << std::endl;
                 obj->setShader(ShaderProgram::fromDefaultShaders(
                     AtlasVertexShader::Main, AtlasFragmentShader::Main));
             }
@@ -1562,9 +1559,6 @@ void Window::captureFluidRefraction(
             }
             if (obj->canUseDeferredRendering()) {
                 oldProgram = obj->getShaderProgram().value();
-                std::cout << "For object with type: " << typeid(*obj).name()
-                          << " and ID: " << obj->getId()
-                          << " setting refraction shader." << std::endl;
                 obj->setShader(ShaderProgram::fromDefaultShaders(
                     AtlasVertexShader::Main, AtlasFragmentShader::Main));
             }

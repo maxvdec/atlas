@@ -78,12 +78,6 @@ void CommandBuffer::record(uint32_t imageIndex) {
     renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
     renderPassInfo.pClearValues = clearValues.data();
 
-    std::cout << "[VULKAN DEBUG] vkCmdBeginRenderPass: imageIndex="
-              << imageIndex << ", fbIndex=" << fbIndex
-              << ", extent=" << renderPassInfo.renderArea.extent.width << "x"
-              << renderPassInfo.renderArea.extent.height
-              << ", clearValues=" << clearValues.size() << std::endl;
-
     vkCmdBeginRenderPass(commandBuffers[currentFrame], &renderPassInfo,
                          VK_SUBPASS_CONTENTS_INLINE);
 

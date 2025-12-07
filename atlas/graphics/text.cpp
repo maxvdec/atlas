@@ -183,16 +183,6 @@ void Text::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
             "Text::render requires a valid command buffer");
     }
 
-    static bool debugOnce = true;
-    if (debugOnce) {
-        std::cout << "[TEXT DEBUG] Text::render called, content: '" << content
-                  << "'" << std::endl;
-        std::cout << "[TEXT DEBUG] Position: (" << position.x << ", "
-                  << position.y << ")" << std::endl;
-        std::cout << "[TEXT DEBUG] Color: (" << color.r << ", " << color.g
-                  << ", " << color.b << ")" << std::endl;
-    }
-
     static std::shared_ptr<opal::Pipeline> textPipeline = nullptr;
     int fbWidth = 0;
     int fbHeight = 0;
@@ -325,11 +315,6 @@ void Text::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
                             static_cast<uint>(offset / (4 * sizeof(float))), 0);
 
         x += (ch.advance >> 6) * scale;
-    }
-
-    if (debugOnce) {
-        std::cout << "[TEXT DEBUG] Text render complete" << std::endl;
-        debugOnce = false;
     }
 
     commandBuffer->unbindDrawingState();

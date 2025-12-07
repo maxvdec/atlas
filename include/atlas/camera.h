@@ -60,13 +60,13 @@ class Camera {
      * value will be clipped.
      *
      */
-    float nearClip = 0.1f;
+    float nearClip = 0.5f;
     /**
      * @brief The far clipping plane distance. Everything farther than this
      * value will be clipped.
      *
      */
-    float farClip = 100.0f;
+    float farClip = 1000.0f;
     /**
      * @brief The size of the orthographic projection.
      *
@@ -196,8 +196,6 @@ class Camera {
     }
 
   private:
-    float lastFrame;
-
     float yaw = -90.0f;
     float pitch = 0.0f;
 
