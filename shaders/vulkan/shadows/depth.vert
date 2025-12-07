@@ -9,6 +9,8 @@ layout(set = 0, binding = 0) uniform UBO {
     bool isInstanced;
 };
 
+invariant gl_Position;
+
 void main() {
     if (isInstanced) {
         gl_Position = projection * view * instanceModel * vec4(aPos, 1.0);

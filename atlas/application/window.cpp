@@ -20,6 +20,7 @@
 #include <iostream>
 #include <memory>
 #include <optional>
+#include <stdexcept>
 #include <string>
 #include <algorithm>
 #include <glm/glm.hpp>
@@ -34,7 +35,15 @@ Window *Window::mainWindow = nullptr;
 
 Window::Window(WindowConfiguration config)
     : title(config.title), width(config.width), height(config.height) {
+#ifdef VULKAN
     auto context = opal::Context::create({.useOpenGL = false});
+#else
+    auto context =
+        opal::Context::create({.useOpenGL = true,
+                               .majorVersion = 4,
+                               .minorVersion = 1,
+                               .profile = opal::OpenGLProfile::Core});
+#endif
 
     context->setFlag(GLFW_DECORATED, config.decorations);
     context->setFlag(GLFW_RESIZABLE, config.resizable);
@@ -126,9 +135,7 @@ Window::Window(WindowConfiguration config)
     program.compile();
     this->depthProgram = program;
 
-    // Check if geometry shaders are supported (not available on macOS/MoltenVK)
 #ifdef __APPLE__
-    // macOS with MoltenVK doesn't support geometry shaders
     this->useMultiPassPointShadows = true;
 #else
     this->useMultiPassPointShadows = false;
@@ -183,12 +190,26 @@ Window::Window(WindowConfiguration config)
         throw std::runtime_error("Failed to initialize audio engine");
     }
 
-    std::cout << "Atlas Engine" << std::endl;
-    std::cout << "Alpha 5 Version" << std::endl;
+    opal::DeviceInfo info = device->getDeviceInfo();
+
+    std::cout << "\033[1m\033[36mAtlas Engine\033[0m" << std::endl;
+    std::cout << "\033[1m\033[36mVersion " << ATLAS_VERSION << " \033[0m"
+              << std::endl;
+    std::cout << "\033[1m\033[31mUsing Opal Graphics Library - Version "
+              << info.opalVersion << " \033[0m" << std::endl;
 #ifdef OPENGL
-    std::cout << "Using OpenGL Backend" << std::endl;
+    std::cout << "\033[1m\033[32mUsing OpenGL Backend\033[0m" << std::endl;
 #else
-    std::cout << "Using Vulkan Backend" << std::endl;
+    std::cout << "\033[1m\033[32mUsing Vulkan Backend\033[0m" << std::endl;
+    std::cout << "\033[1m\033[35m---------------\033[0m" << std::endl;
+    std::cout << "\033[1m\033[35mUsing GPU: " << info.deviceName << "\033[0m"
+              << std::endl;
+    std::cout << "\033[1m\033[35mVendor ID: " << info.vendorName << "\033[0m"
+              << std::endl;
+    std::cout << "\033[1m\033[35mDriver Version: " << info.driverVersion
+              << "\033[0m" << std::endl;
+    std::cout << "\033[1m\033[35mAPI Version: " << info.renderingVersion
+              << "\033[0m" << std::endl;
 #endif
 }
 
@@ -238,15 +259,19 @@ void Window::run() {
     renderPass->setFramebuffer(defaultFramebuffer);
 
     while (!glfwWindowShouldClose(window)) {
+        glfwPollEvents();
+
         if (this->currentScene == nullptr) {
             commandBuffer->start();
             commandBuffer->beginPass(renderPass);
-            commandBuffer->clearColor(0.1f, 0.1f, 0.1f, 1.0f);
+            commandBuffer->clearColor(this->clearColor.r, this->clearColor.g,
+                                      this->clearColor.b, this->clearColor.a);
             commandBuffer->clearDepth(1.0);
-            glfwSwapBuffers(window);
-            glfwPollEvents();
             commandBuffer->endPass();
             commandBuffer->commit();
+#ifdef OPENGL
+            glfwSwapBuffers(window);
+#endif
             continue;
         }
 
@@ -340,7 +365,8 @@ void Window::run() {
                 target->resolve();
                 continue;
             }
-            commandBuffer->clearColor(0.0f, 0.0f, 0.0f, 1.0f);
+            commandBuffer->clearColor(this->clearColor.r, this->clearColor.g,
+                                      this->clearColor.b, this->clearColor.a);
             commandBuffer->clearDepth(1.0f);
 
             for (auto &obj : this->firstRenderables) {
@@ -376,7 +402,8 @@ void Window::run() {
         int fbWidth, fbHeight;
         glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
         setViewportState(0, 0, fbWidth, fbHeight);
-        commandBuffer->clearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        commandBuffer->clearColor(this->clearColor.r, this->clearColor.g,
+                                  this->clearColor.b, this->clearColor.a);
         commandBuffer->clearDepth(1.0f);
 
         if (this->renderTargets.empty()) {
@@ -425,6 +452,7 @@ void Window::run() {
 
         updatePipelineStateField(this->cullMode, opal::CullMode::Back);
         updatePipelineStateField(this->useBlending, true);
+
         for (auto &obj : this->uiRenderables) {
             obj->render(getDeltaTime(), commandBuffer,
                         shouldRefreshPipeline(obj));
@@ -433,10 +461,10 @@ void Window::run() {
         this->lastViewMatrix = this->camera->calculateViewMatrix();
 
         commandBuffer->endPass();
-        device->submitCommandBuffer(commandBuffer);
-
+        commandBuffer->commit();
+#ifdef OPENGL
         glfwSwapBuffers(window);
-        glfwPollEvents();
+#endif
     }
 }
 
@@ -499,6 +527,7 @@ void Window::setScene(Scene *scene) {
 }
 
 glm::mat4 Window::calculateProjectionMatrix() {
+    glm::mat4 projection{1.0f};
     if (!this->camera->useOrthographic) {
         int fbWidth, fbHeight;
         GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
@@ -506,8 +535,8 @@ glm::mat4 Window::calculateProjectionMatrix() {
 
         float aspectRatio =
             static_cast<float>(fbWidth) / static_cast<float>(fbHeight);
-        return glm::perspective(glm::radians(camera->fov), aspectRatio,
-                                camera->nearClip, camera->farClip);
+        projection = glm::perspective(glm::radians(camera->fov), aspectRatio,
+                                      camera->nearClip, camera->farClip);
     } else {
         float orthoSize = this->camera->orthographicSize;
         int fbWidth, fbHeight;
@@ -515,10 +544,16 @@ glm::mat4 Window::calculateProjectionMatrix() {
         glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
         float aspectRatio =
             static_cast<float>(fbWidth) / static_cast<float>(fbHeight);
-        return glm::ortho(-orthoSize * aspectRatio, orthoSize * aspectRatio,
-                          -orthoSize, orthoSize, camera->nearClip,
-                          camera->farClip);
+        projection = glm::ortho(-orthoSize * aspectRatio,
+                                orthoSize * aspectRatio, -orthoSize, orthoSize,
+                                camera->nearClip, camera->farClip);
     }
+
+    // For Vulkan, flip Y in projection to match GL-style coordinates
+#ifdef VULKAN
+    projection[1][1] *= -1.0f;
+#endif
+    return projection;
 }
 
 void Window::setFullscreen(bool enable) {
@@ -1131,7 +1166,6 @@ void Window::renderPingpong(RenderTarget *target) {
         this->pingpongFramebuffers[1] == nullptr ||
         blurWidth != this->pingpongWidth ||
         blurHeight != this->pingpongHeight) {
-        // Release old resources (opal handles cleanup through shared_ptr)
         this->pingpongFramebuffers[0] = nullptr;
         this->pingpongFramebuffers[1] = nullptr;
         this->pingpongTextures[0] = nullptr;
@@ -1402,9 +1436,6 @@ void Window::captureFluidReflection(
             }
             if (obj->canUseDeferredRendering()) {
                 oldProgram = obj->getShaderProgram().value();
-                std::cout << "For object with type: " << typeid(*obj).name()
-                          << " and ID: " << obj->getId()
-                          << " setting reflection shader." << std::endl;
                 obj->setShader(ShaderProgram::fromDefaultShaders(
                     AtlasVertexShader::Main, AtlasFragmentShader::Main));
             }
@@ -1518,7 +1549,8 @@ void Window::captureFluidRefraction(
     updatePipelineStateField(this->cullMode, opal::CullMode::Back);
     updatePipelineStateField(this->depthCompareOp, opal::CompareOp::Less);
 
-    commandBuffer->clear(1.0f, 0.0f, 1.0f, 1.0f, 1.0f);
+    commandBuffer->clear(this->clearColor.r, this->clearColor.g,
+                         this->clearColor.b, this->clearColor.a, 1.0f);
 
     currentRenderTarget = &target;
 
@@ -1540,9 +1572,6 @@ void Window::captureFluidRefraction(
             }
             if (obj->canUseDeferredRendering()) {
                 oldProgram = obj->getShaderProgram().value();
-                std::cout << "For object with type: " << typeid(*obj).name()
-                          << " and ID: " << obj->getId()
-                          << " setting refraction shader." << std::endl;
                 obj->setShader(ShaderProgram::fromDefaultShaders(
                     AtlasVertexShader::Main, AtlasFragmentShader::Main));
             }
@@ -1626,6 +1655,4 @@ void Window::updateBackbufferTarget(int width, int height) {
     target.depthTexture.creationData.width = width;
     target.depthTexture.creationData.height = height;
     target.type = RenderTargetType::Scene;
-    // Note: screenRenderTarget represents the default framebuffer (0),
-    // so fb remains nullptr. bind() will handle this appropriately.
 }

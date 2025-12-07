@@ -13,6 +13,7 @@
 #include <memory>
 #include <stdexcept>
 #include <vector>
+#include <iostream>
 #ifdef VULKAN
 #include <vulkan/vulkan.hpp>
 #endif
@@ -24,121 +25,86 @@ std::shared_ptr<Pipeline> Pipeline::create() {
     return pipeline;
 }
 
+#ifdef VULKAN
 std::vector<std::shared_ptr<CoreRenderPass>> RenderPass::cachedRenderPasses =
     {};
+#endif
 
 void Pipeline::setShaderProgram(std::shared_ptr<ShaderProgram> program) {
-#ifdef OPENGL
     this->shaderProgram = program;
-#endif
 }
 
 void Pipeline::setVertexAttributes(
     const std::vector<VertexAttribute> &attributes,
     const VertexBinding &binding) {
-#ifdef OPENGL
     this->vertexAttributes = attributes;
     this->vertexBinding = binding;
-#endif
 }
 
 void Pipeline::setPrimitiveStyle(PrimitiveStyle style) {
-#ifdef OPENGL
     this->primitiveStyle = style;
-#endif
 }
 
-void Pipeline::setPatchVertices(int count) {
-#ifdef OPENGL
-    this->patchVertices = count;
-#endif
-}
+void Pipeline::setPatchVertices(int count) { this->patchVertices = count; }
 
 void Pipeline::setViewport(int x, int y, int width, int height) {
-#ifdef OPENGL
     this->viewportX = x;
     this->viewportY = y;
     this->viewportWidth = width;
     this->viewportHeight = height;
+#ifdef VULKAN
+    this->vkViewport.x = static_cast<float>(x);
+    this->vkViewport.y = static_cast<float>(y);
+    this->vkViewport.width = static_cast<float>(width);
+    this->vkViewport.height = static_cast<float>(height);
+    this->vkViewport.minDepth = 0.0f;
+    this->vkViewport.maxDepth = 1.0f;
 #endif
 }
 
 void Pipeline::setRasterizerMode(RasterizerMode mode) {
-#ifdef OPENGL
     this->rasterizerMode = mode;
-#endif
 }
 
-void Pipeline::setCullMode(CullMode mode) {
-#ifdef OPENGL
-    this->cullMode = mode;
-#endif
-}
+void Pipeline::setCullMode(CullMode mode) { this->cullMode = mode; }
 
-void Pipeline::setFrontFace(FrontFace face) {
-#ifdef OPENGL
-    this->frontFace = face;
-#endif
-}
+void Pipeline::setFrontFace(FrontFace face) { this->frontFace = face; }
 
 void Pipeline::enableDepthTest(bool enabled) {
-#ifdef OPENGL
     this->depthTestEnabled = enabled;
-#endif
 }
 
-void Pipeline::setDepthCompareOp(CompareOp op) {
-#ifdef OPENGL
-    this->depthCompareOp = op;
-#endif
-}
+void Pipeline::setDepthCompareOp(CompareOp op) { this->depthCompareOp = op; }
 
 void Pipeline::enableDepthWrite(bool enabled) {
-#ifdef OPENGL
     this->depthWriteEnabled = enabled;
-#endif
 }
 
-void Pipeline::enableBlending(bool enabled) {
-#ifdef OPENGL
-    this->blendingEnabled = enabled;
-#endif
-}
+void Pipeline::enableBlending(bool enabled) { this->blendingEnabled = enabled; }
 
 void Pipeline::setBlendFunc(BlendFunc srcFactor, BlendFunc dstFactor) {
-#ifdef OPENGL
     this->blendSrcFactor = srcFactor;
     this->blendDstFactor = dstFactor;
-#endif
 }
 
 void Pipeline::setBlendEquation(BlendEquation equation) {
-#ifdef OPENGL
     this->blendEquation = equation;
-#endif
 }
 
 void Pipeline::enableMultisampling(bool enabled) {
-#ifdef OPENGL
     this->multisamplingEnabled = enabled;
-#endif
 }
 
 void Pipeline::enablePolygonOffset(bool enabled) {
-#ifdef OPENGL
     this->polygonOffsetEnabled = enabled;
-#endif
 }
 
 void Pipeline::setPolygonOffset(float factor, float units) {
-#ifdef OPENGL
     this->polygonOffsetFactor = factor;
     this->polygonOffsetUnits = units;
-#endif
 }
 
 void Pipeline::enableClipDistance(int index, bool enabled) {
-#ifdef OPENGL
     if (enabled) {
         if (std::find(this->enabledClipDistances.begin(),
                       this->enabledClipDistances.end(),
@@ -152,7 +118,6 @@ void Pipeline::enableClipDistance(int index, bool enabled) {
             this->enabledClipDistances.erase(it);
         }
     }
-#endif
 }
 
 uint Pipeline::getGLBlendFactor(BlendFunc func) const {
@@ -430,15 +395,16 @@ void Pipeline::setUniform1f(const std::string &name, float v0) {
 #elif defined(VULKAN)
     const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
     if (!info) {
-        throw std::runtime_error("Uniform not found: " + name);
+        // Uniform not found, silently ignore for compatibility
+        return;
     }
     if (!info->isBuffer) {
-        // Push constant - not implemented yet, would need vkCmdPushConstants
-        throw std::runtime_error(
-            "Push constant uniforms not yet implemented: " + name);
+        // Push constant
+        updatePushConstant(info->offset, &v0, sizeof(float));
+    } else {
+        updateUniformData(info->set, info->binding, info->offset, &v0,
+                          sizeof(float));
     }
-    updateUniformData(info->set, info->binding, info->offset, &v0,
-                      sizeof(float));
 #endif
 }
 
@@ -451,14 +417,14 @@ void Pipeline::setUniformMat4f(const std::string &name,
 #elif defined(VULKAN)
     const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
     if (!info) {
-        throw std::runtime_error("Uniform not found: " + name);
+        return;
     }
     if (!info->isBuffer) {
-        throw std::runtime_error(
-            "Push constant uniforms not yet implemented: " + name);
+        updatePushConstant(info->offset, &matrix[0][0], sizeof(glm::mat4));
+    } else {
+        updateUniformData(info->set, info->binding, info->offset, &matrix[0][0],
+                          sizeof(glm::mat4));
     }
-    updateUniformData(info->set, info->binding, info->offset, &matrix[0][0],
-                      sizeof(glm::mat4));
 #endif
 }
 
@@ -471,15 +437,15 @@ void Pipeline::setUniform3f(const std::string &name, float v0, float v1,
 #elif defined(VULKAN)
     const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
     if (!info) {
-        throw std::runtime_error("Uniform not found: " + name);
-    }
-    if (!info->isBuffer) {
-        throw std::runtime_error(
-            "Push constant uniforms not yet implemented: " + name);
+        return;
     }
     float data[3] = {v0, v1, v2};
-    updateUniformData(info->set, info->binding, info->offset, data,
-                      sizeof(data));
+    if (!info->isBuffer) {
+        updatePushConstant(info->offset, data, sizeof(data));
+    } else {
+        updateUniformData(info->set, info->binding, info->offset, data,
+                          sizeof(data));
+    }
 #endif
 }
 
@@ -490,13 +456,14 @@ void Pipeline::setUniform1i(const std::string &name, int v0) {
 #elif defined(VULKAN)
     const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
     if (!info) {
-        throw std::runtime_error("Uniform not found: " + name);
+        return;
     }
     if (!info->isBuffer) {
-        throw std::runtime_error(
-            "Push constant uniforms not yet implemented: " + name);
+        updatePushConstant(info->offset, &v0, sizeof(int));
+    } else {
+        updateUniformData(info->set, info->binding, info->offset, &v0,
+                          sizeof(int));
     }
-    updateUniformData(info->set, info->binding, info->offset, &v0, sizeof(int));
 #endif
 }
 
@@ -508,15 +475,15 @@ void Pipeline::setUniformBool(const std::string &name, bool value) {
 #elif defined(VULKAN)
     const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
     if (!info) {
-        throw std::runtime_error("Uniform not found: " + name);
-    }
-    if (!info->isBuffer) {
-        throw std::runtime_error(
-            "Push constant uniforms not yet implemented: " + name);
+        return;
     }
     int intValue = value ? 1 : 0;
-    updateUniformData(info->set, info->binding, info->offset, &intValue,
-                      sizeof(int));
+    if (!info->isBuffer) {
+        updatePushConstant(info->offset, &intValue, sizeof(int));
+    } else {
+        updateUniformData(info->set, info->binding, info->offset, &intValue,
+                          sizeof(int));
+    }
 #endif
 }
 
@@ -529,15 +496,15 @@ void Pipeline::setUniform4f(const std::string &name, float v0, float v1,
 #elif defined(VULKAN)
     const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
     if (!info) {
-        throw std::runtime_error("Uniform not found: " + name);
-    }
-    if (!info->isBuffer) {
-        throw std::runtime_error(
-            "Push constant uniforms not yet implemented: " + name);
+        return;
     }
     float data[4] = {v0, v1, v2, v3};
-    updateUniformData(info->set, info->binding, info->offset, data,
-                      sizeof(data));
+    if (!info->isBuffer) {
+        updatePushConstant(info->offset, data, sizeof(data));
+    } else {
+        updateUniformData(info->set, info->binding, info->offset, data,
+                          sizeof(data));
+    }
 #endif
 }
 
@@ -549,15 +516,39 @@ void Pipeline::setUniform2f(const std::string &name, float v0, float v1) {
 #elif defined(VULKAN)
     const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
     if (!info) {
-        throw std::runtime_error("Uniform not found: " + name);
-    }
-    if (!info->isBuffer) {
-        throw std::runtime_error(
-            "Push constant uniforms not yet implemented: " + name);
+        return;
     }
     float data[2] = {v0, v1};
-    updateUniformData(info->set, info->binding, info->offset, data,
-                      sizeof(data));
+    if (!info->isBuffer) {
+        updatePushConstant(info->offset, data, sizeof(data));
+    } else {
+        updateUniformData(info->set, info->binding, info->offset, data,
+                          sizeof(data));
+    }
+#endif
+}
+
+void Pipeline::bindBufferData(const std::string &name, const void *data,
+                              size_t size) {
+    if (!shaderProgram || !data || size == 0) {
+        return;
+    }
+
+#ifdef OPENGL
+    (void)name;
+    (void)data;
+    (void)size;
+#elif defined(VULKAN)
+    const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
+    if (!info) {
+        return;
+    }
+
+    if (!info->isBuffer) {
+        return;
+    }
+
+    updateUniformData(info->set, info->binding, 0, data, size);
 #endif
 }
 
@@ -566,30 +557,51 @@ Pipeline::UniformBufferAllocation &
 Pipeline::getOrCreateUniformBuffer(uint32_t set, uint32_t binding,
                                    VkDeviceSize size) {
 
+    const DescriptorBindingInfoEntry *bindingInfo =
+        getDescriptorBindingInfo(set, binding);
+    VkDescriptorType descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    if (bindingInfo) {
+        descriptorType = bindingInfo->type;
+    }
+    VkBufferUsageFlags usage =
+        descriptorType == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
+            ? VK_BUFFER_USAGE_STORAGE_BUFFER_BIT
+            : VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+
     uint64_t key = makeBindingKey(set, binding);
     auto it = uniformBuffers.find(key);
 
     if (it != uniformBuffers.end()) {
-        // Buffer exists, check if size is sufficient
-        if (it->second.size >= size) {
+        if (it->second.descriptorType == descriptorType &&
+            it->second.size >= size && it->second.buffer != VK_NULL_HANDLE &&
+            it->second.memory != VK_NULL_HANDLE &&
+            it->second.mappedData != nullptr) {
             return it->second;
         }
-        // Need to recreate with larger size
-        if (it->second.mappedData) {
+        if (it->second.mappedData != nullptr &&
+            it->second.memory != VK_NULL_HANDLE) {
             vkUnmapMemory(Device::globalDevice, it->second.memory);
         }
-        vkDestroyBuffer(Device::globalDevice, it->second.buffer, nullptr);
-        vkFreeMemory(Device::globalDevice, it->second.memory, nullptr);
+        if (it->second.buffer != VK_NULL_HANDLE) {
+            vkDestroyBuffer(Device::globalDevice, it->second.buffer, nullptr);
+        }
+        if (it->second.memory != VK_NULL_HANDLE) {
+            vkFreeMemory(Device::globalDevice, it->second.memory, nullptr);
+        }
+        uniformBuffers.erase(it);
     }
 
-    // Create new buffer
-    UniformBufferAllocation &alloc = uniformBuffers[key];
+    UniformBufferAllocation alloc{};
     alloc.size = size;
+    alloc.descriptorType = descriptorType;
+    alloc.buffer = VK_NULL_HANDLE;
+    alloc.memory = VK_NULL_HANDLE;
+    alloc.mappedData = nullptr;
 
     VkBufferCreateInfo bufferInfo{};
     bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     bufferInfo.size = size;
-    bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+    bufferInfo.usage = usage;
     bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
     if (vkCreateBuffer(Device::globalDevice, &bufferInfo, nullptr,
@@ -611,35 +623,50 @@ Pipeline::getOrCreateUniformBuffer(uint32_t set, uint32_t binding,
 
     if (vkAllocateMemory(Device::globalDevice, &allocInfo, nullptr,
                          &alloc.memory) != VK_SUCCESS) {
+        vkDestroyBuffer(Device::globalDevice, alloc.buffer, nullptr);
         throw std::runtime_error("Failed to allocate uniform buffer memory");
     }
 
     vkBindBufferMemory(Device::globalDevice, alloc.buffer, alloc.memory, 0);
 
-    // Map the memory persistently
-    vkMapMemory(Device::globalDevice, alloc.memory, 0, size, 0,
-                &alloc.mappedData);
+    VkResult mapResult = vkMapMemory(Device::globalDevice, alloc.memory, 0,
+                                     size, 0, &alloc.mappedData);
+    if (mapResult != VK_SUCCESS || alloc.mappedData == nullptr) {
+        vkDestroyBuffer(Device::globalDevice, alloc.buffer, nullptr);
+        vkFreeMemory(Device::globalDevice, alloc.memory, nullptr);
+        throw std::runtime_error("Failed to map uniform buffer memory");
+    }
 
-    // Initialize to zero
     memset(alloc.mappedData, 0, size);
 
-    return alloc;
+    uniformBuffers[key] = alloc;
+    return uniformBuffers[key];
+}
+
+const Pipeline::DescriptorBindingInfoEntry *
+Pipeline::getDescriptorBindingInfo(uint32_t set, uint32_t binding) const {
+    auto setIt = descriptorBindingInfo.find(set);
+    if (setIt == descriptorBindingInfo.end()) {
+        return nullptr;
+    }
+    auto bindingIt = setIt->second.find(binding);
+    if (bindingIt == setIt->second.end()) {
+        return nullptr;
+    }
+    return &bindingIt->second;
 }
 
 void Pipeline::updateUniformData(uint32_t set, uint32_t binding,
                                  uint32_t offset, const void *data,
                                  size_t size) {
-    // Find the block size from reflection data
-    VkDeviceSize blockSize = 256; // Default minimum uniform buffer alignment
+    VkDeviceSize blockSize = 256;
 
-    // Look through shader program's uniform bindings to find the block size
     if (this->shaderProgram) {
         for (const auto &pair : this->shaderProgram->uniformBindings) {
             const UniformBindingInfo &info = pair.second;
             if (info.set == set && info.binding == binding && info.isBuffer &&
                 info.size > 0) {
                 if (info.offset == 0) {
-                    // This is the block itself, use its size
                     blockSize = info.size;
                     break;
                 }
@@ -647,27 +674,320 @@ void Pipeline::updateUniformData(uint32_t set, uint32_t binding,
         }
     }
 
-    // Ensure we allocate at least enough for this write
     VkDeviceSize requiredSize = offset + size;
-    if (blockSize < requiredSize) {
-        blockSize = requiredSize;
-    }
+    blockSize = std::max(blockSize, requiredSize);
 
     UniformBufferAllocation &alloc =
         getOrCreateUniformBuffer(set, binding, blockSize);
 
-    // Write data at the correct offset
+    if (alloc.mappedData == nullptr) {
+        return;
+    }
+
     char *dst = static_cast<char *>(alloc.mappedData) + offset;
     memcpy(dst, data, size);
+
+    bindUniformBufferDescriptor(set, binding);
 }
 
-void Pipeline::buildDescriptorSets() {
-    // This function would build descriptor sets based on reflection data
-    // For now, we rely on the existing descriptor set management in the render
-    // pass A full implementation would:
-    // 1. Create descriptor set layouts based on uniform bindings
-    // 2. Allocate descriptor sets from a pool
-    // 3. Update descriptor sets with buffer/image bindings
+void Pipeline::buildDescriptorSets() {}
+
+void Pipeline::resetDescriptorSets() {
+    if (descriptorPool != VK_NULL_HANDLE) {
+        vkDestroyDescriptorPool(Device::globalDevice, descriptorPool, nullptr);
+        descriptorPool = VK_NULL_HANDLE;
+    }
+    descriptorSets.clear();
+}
+
+void Pipeline::ensureDescriptorResources() {
+    if (descriptorBindingInfo.empty()) {
+        return;
+    }
+
+    if (descriptorPool != VK_NULL_HANDLE && !descriptorSets.empty()) {
+        bool allSetsValid = true;
+        for (size_t i = 0; i < descriptorSetLayouts.size(); ++i) {
+            if (descriptorSetLayouts[i] != VK_NULL_HANDLE &&
+                (i >= descriptorSets.size() ||
+                 descriptorSets[i] == VK_NULL_HANDLE)) {
+                allSetsValid = false;
+                break;
+            }
+        }
+        if (allSetsValid) {
+            return;
+        }
+    }
+
+    if (descriptorPool != VK_NULL_HANDLE) {
+        return;
+    }
+
+    std::unordered_map<VkDescriptorType, uint32_t> typeCounts;
+    uint32_t setCount = 0;
+    for (const auto &setPair : descriptorBindingInfo) {
+        uint32_t setIdx = setPair.first;
+        if (setIdx >= descriptorSetLayouts.size() ||
+            descriptorSetLayouts[setIdx] == VK_NULL_HANDLE) {
+            continue;
+        }
+        setCount++;
+        for (const auto &bindingPair : setPair.second) {
+            typeCounts[bindingPair.second.type] += bindingPair.second.count;
+        }
+    }
+
+    if (setCount == 0 || typeCounts.empty()) {
+        return;
+    }
+
+    std::vector<VkDescriptorPoolSize> poolSizes;
+    poolSizes.reserve(typeCounts.size());
+    for (const auto &pair : typeCounts) {
+        VkDescriptorPoolSize poolSize{};
+        poolSize.type = pair.first;
+        poolSize.descriptorCount = pair.second;
+        poolSizes.push_back(poolSize);
+    }
+
+    VkDescriptorPoolCreateInfo poolInfo{};
+    poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+    poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+    poolInfo.pPoolSizes = poolSizes.data();
+    poolInfo.maxSets = setCount;
+    poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT;
+
+    if (vkCreateDescriptorPool(Device::globalDevice, &poolInfo, nullptr,
+                               &descriptorPool) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to create descriptor pool");
+    }
+
+    descriptorSets.assign(descriptorSetLayouts.size(), VK_NULL_HANDLE);
+
+    for (size_t i = 0; i < descriptorSetLayouts.size(); ++i) {
+        if (descriptorSetLayouts[i] == VK_NULL_HANDLE) {
+            continue;
+        }
+
+        VkDescriptorSetLayout layout = descriptorSetLayouts[i];
+        VkDescriptorSetAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        allocInfo.descriptorPool = descriptorPool;
+        allocInfo.descriptorSetCount = 1;
+        allocInfo.pSetLayouts = &layout;
+
+        VkDescriptorSet set = VK_NULL_HANDLE;
+        if (vkAllocateDescriptorSets(Device::globalDevice, &allocInfo, &set) !=
+            VK_SUCCESS) {
+            throw std::runtime_error("Failed to allocate descriptor set");
+        }
+        descriptorSets[i] = set;
+    }
+
+    auto dummyTex = getDummyTexture();
+    auto dummyCubeTex = getDummyCubemap();
+    for (const auto &setPair : descriptorBindingInfo) {
+        uint32_t setIndex = setPair.first;
+        if (setIndex >= descriptorSets.size() ||
+            descriptorSets[setIndex] == VK_NULL_HANDLE) {
+            continue;
+        }
+        for (const auto &bindingPair : setPair.second) {
+            if (bindingPair.second.isBuffer) {
+                bindUniformBufferDescriptor(setIndex, bindingPair.first);
+            } else if (bindingPair.second.isSampler) {
+                if (bindingPair.second.isCubemap) {
+                    bindSamplerDescriptor(setIndex, bindingPair.first,
+                                          dummyCubeTex);
+                } else {
+                    bindSamplerDescriptor(setIndex, bindingPair.first,
+                                          dummyTex);
+                }
+            }
+        }
+    }
+}
+
+std::shared_ptr<Texture> Pipeline::getDummyTexture() {
+    static std::shared_ptr<Texture> dummy = nullptr;
+    if (!dummy) {
+        uint8_t white[4] = {255, 255, 255, 255};
+        dummy = Texture::create(TextureType::Texture2D, TextureFormat::Rgba8, 1,
+                                1, TextureDataFormat::Rgba, white, 1);
+    }
+    return dummy;
+}
+
+std::shared_ptr<Texture> Pipeline::getDummyCubemap() {
+    static std::shared_ptr<Texture> dummyCube = nullptr;
+    if (!dummyCube) {
+        dummyCube =
+            Texture::create(TextureType::TextureCubeMap, TextureFormat::Rgba8,
+                            1, 1, TextureDataFormat::Rgba, nullptr, 1);
+    }
+    return dummyCube;
+}
+
+void Pipeline::bindSamplerDescriptor(uint32_t set, uint32_t binding,
+                                     std::shared_ptr<Texture> texture) {
+    if (!texture) {
+        return;
+    }
+
+    ensureDescriptorResources();
+
+    if (set >= descriptorSets.size() || descriptorSets[set] == VK_NULL_HANDLE) {
+        return;
+    }
+
+    const auto *info = getDescriptorBindingInfo(set, binding);
+    if (info == nullptr || !info->isSampler) {
+        return;
+    }
+
+    VkImageLayout desiredLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    if (texture->currentLayout != desiredLayout &&
+        texture->currentLayout != VK_IMAGE_LAYOUT_GENERAL) {
+        VkFormat vkFormat = opalTextureFormatToVulkanFormat(texture->format);
+        bool isDepth = (texture->format == TextureFormat::Depth24Stencil8 ||
+                        texture->format == TextureFormat::DepthComponent24 ||
+                        texture->format == TextureFormat::Depth32F);
+
+        if (!isDepth || texture->currentLayout == VK_IMAGE_LAYOUT_UNDEFINED) {
+            uint32_t layerCount =
+                (texture->type == TextureType::TextureCubeMap) ? 6 : 1;
+            Framebuffer::transitionImageLayout(texture->vkImage, vkFormat,
+                                               texture->currentLayout,
+                                               desiredLayout, layerCount);
+            texture->currentLayout = desiredLayout;
+        }
+    }
+
+    VkDescriptorImageInfo imageInfo{};
+    imageInfo.sampler = texture->vkSampler;
+    imageInfo.imageView = texture->vkImageView;
+    imageInfo.imageLayout =
+        (texture->currentLayout == VK_IMAGE_LAYOUT_UNDEFINED)
+            ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+            : texture->currentLayout;
+
+    VkWriteDescriptorSet write{};
+    write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    write.dstSet = descriptorSets[set];
+    write.dstBinding = binding;
+    write.descriptorCount = 1;
+    write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    write.pImageInfo = &imageInfo;
+
+    vkUpdateDescriptorSets(Device::globalDevice, 1, &write, 0, nullptr);
+}
+
+void Pipeline::bindUniformBufferDescriptor(uint32_t set, uint32_t binding) {
+    if (descriptorBindingInfo.empty()) {
+        return;
+    }
+
+    ensureDescriptorResources();
+
+    if (set >= descriptorSets.size() || descriptorSets[set] == VK_NULL_HANDLE) {
+        return;
+    }
+
+    const auto *info = getDescriptorBindingInfo(set, binding);
+    if (info == nullptr) {
+        return;
+    }
+    if (!info->isBuffer) {
+        return;
+    }
+
+    VkDeviceSize minSize = info->minBufferSize > 0 ? info->minBufferSize : 256;
+    UniformBufferAllocation &alloc =
+        getOrCreateUniformBuffer(set, binding, minSize);
+
+    if (alloc.buffer == VK_NULL_HANDLE || alloc.memory == VK_NULL_HANDLE) {
+        return;
+    }
+
+    VkDescriptorBufferInfo bufferInfo{};
+    bufferInfo.buffer = alloc.buffer;
+    bufferInfo.offset = 0;
+    bufferInfo.range = alloc.size;
+
+    VkWriteDescriptorSet write{};
+    write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    write.dstSet = descriptorSets[set];
+    write.dstBinding = binding;
+    write.descriptorCount = 1;
+    write.descriptorType = info->type;
+    write.pBufferInfo = &bufferInfo;
+
+    vkUpdateDescriptorSets(Device::globalDevice, 1, &write, 0, nullptr);
+}
+
+void Pipeline::bindDescriptorSets(VkCommandBuffer commandBuffer) {
+    if (descriptorSetLayouts.empty()) {
+        return;
+    }
+
+    ensureDescriptorResources();
+
+    uint32_t currentStart = UINT32_MAX;
+    std::vector<VkDescriptorSet> run;
+
+    for (uint32_t i = 0; i < descriptorSets.size(); ++i) {
+        bool setValid = i < descriptorSetLayouts.size() &&
+                        descriptorSetLayouts[i] != VK_NULL_HANDLE &&
+                        descriptorSets[i] != VK_NULL_HANDLE;
+
+        if (!setValid) {
+            if (!run.empty() && currentStart != UINT32_MAX) {
+                vkCmdBindDescriptorSets(
+                    commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                    pipelineLayout, currentStart,
+                    static_cast<uint32_t>(run.size()), run.data(), 0, nullptr);
+                run.clear();
+                currentStart = UINT32_MAX;
+            }
+            continue;
+        }
+
+        if (currentStart == UINT32_MAX) {
+            currentStart = i;
+        }
+        run.push_back(descriptorSets[i]);
+    }
+
+    if (!run.empty() && currentStart != UINT32_MAX) {
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                pipelineLayout, currentStart,
+                                static_cast<uint32_t>(run.size()), run.data(),
+                                0, nullptr);
+    }
+}
+
+void Pipeline::updatePushConstant(uint32_t offset, const void *data,
+                                  size_t size) {
+    uint32_t requiredSize = offset + static_cast<uint32_t>(size);
+    if (pushConstantData.size() < requiredSize) {
+        pushConstantData.resize(requiredSize, 0);
+        pushConstantSize = requiredSize;
+    }
+
+    memcpy(pushConstantData.data() + offset, data, size);
+    pushConstantsDirty = true;
+}
+
+void Pipeline::flushPushConstants(VkCommandBuffer commandBuffer) {
+    if (pushConstantSize == 0) {
+        return;
+    }
+
+    vkCmdPushConstants(commandBuffer, pipelineLayout, pushConstantStages, 0,
+                       pushConstantSize, pushConstantData.data());
+
+    pushConstantsDirty = false;
 }
 #endif
 

@@ -138,9 +138,10 @@ VKAPI_ATTR VkBool32 VKAPI_CALL Context::debugCallback(
     }
 
     if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
-        std::cerr << "[ATLAS_WARNING] " << pCallbackData->pMessage << std::endl;
+        // std::cerr << "[ATLAS_WARNING] " << pCallbackData->pMessage <<
+        // std::endl;
     } else {
-        std::cout << "[ATLAS_INFO] " << pCallbackData->pMessage << std::endl;
+        // std::cout << "[ATLAS_INFO] " << pCallbackData->pMessage << std::endl;
     }
 
     return VK_FALSE;

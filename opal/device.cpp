@@ -78,6 +78,28 @@ GLFWwindow *Context::getWindow() const {
     return this->window;
 }
 
+DeviceInfo Device::getDeviceInfo() {
+    DeviceInfo info;
+#ifdef OPENGL
+    info.deviceName = reinterpret_cast<const char *>(glGetString(GL_RENDERER));
+    info.vendorName = reinterpret_cast<const char *>(glGetString(GL_VENDOR));
+    info.driverVersion = "N/A";
+    info.renderingVersion = reinterpret_cast<const char *>(
+        glGetString(GL_SHADING_LANGUAGE_VERSION));
+    info.opalVersion = OPAL_VERSION;
+    return info;
+#else
+    VkPhysicalDeviceProperties deviceProperties;
+    vkGetPhysicalDeviceProperties(this->physicalDevice, &deviceProperties);
+    info.driverVersion = std::to_string(deviceProperties.driverVersion);
+    info.deviceName = deviceProperties.deviceName;
+    info.vendorName = std::to_string(deviceProperties.vendorID);
+    info.renderingVersion = std::to_string(deviceProperties.apiVersion);
+    info.opalVersion = OPAL_VERSION;
+    return info;
+#endif
+}
+
 std::shared_ptr<Device>
 Device::acquire([[maybe_unused]] std::shared_ptr<Context> context) {
 #ifdef OPENGL
@@ -90,23 +112,46 @@ Device::acquire([[maybe_unused]] std::shared_ptr<Context> context) {
 #else
     auto device = std::make_shared<Device>();
     device->context = context;
+    Device::globalInstance = device.get();
     device->pickPhysicalDevice(context);
     device->createLogicalDevice(context);
     device->createSwapChain(context);
-    Device::globalInstance = device.get();
+    device->createImageViews();
     return device;
 #endif
 }
 
 std::shared_ptr<Framebuffer> Device::getDefaultFramebuffer() {
-    auto fb = std::make_shared<Framebuffer>();
-    fb->framebufferID = 0;
-    fb->width = 0;
-    fb->height = 0;
-    return fb;
+    if (defaultFramebuffer == nullptr) {
+        defaultFramebuffer = std::make_shared<Framebuffer>();
+        defaultFramebuffer->framebufferID = 0;
+        defaultFramebuffer->width = 0;
+        defaultFramebuffer->height = 0;
+        defaultFramebuffer->isDefaultFramebuffer = true;
+    }
+    return defaultFramebuffer;
 }
 
+#ifdef VULKAN
 Device *Device::globalInstance = nullptr;
 VkDevice Device::globalDevice = VK_NULL_HANDLE;
+#endif
+
+#ifdef VULKAN
+std::shared_ptr<Buffer> Device::getDefaultInstanceBuffer() {
+    if (defaultInstanceBuffer != nullptr) {
+        return defaultInstanceBuffer;
+    }
+
+    static const float identity[16] = {1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f,
+                                       0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+                                       0.0f, 0.0f, 0.0f, 1.0f};
+
+    defaultInstanceBuffer =
+        Buffer::create(BufferUsage::VertexBuffer, sizeof(identity), identity,
+                       MemoryUsageType::GPUOnly);
+    return defaultInstanceBuffer;
+}
+#endif
 
 } // namespace opal

@@ -124,12 +124,28 @@ void Device::createLogicalDevice(std::shared_ptr<Context> context) {
     }
 
     VkPhysicalDeviceFeatures deviceFeatures = {};
+    deviceFeatures.fragmentStoresAndAtomics = VK_TRUE;
+
+    VkPhysicalDeviceDescriptorIndexingFeatures indexingFeatures{};
+    indexingFeatures.sType =
+        VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;
+    indexingFeatures.descriptorBindingUniformBufferUpdateAfterBind = VK_TRUE;
+    indexingFeatures.descriptorBindingSampledImageUpdateAfterBind = VK_TRUE;
+    indexingFeatures.descriptorBindingStorageBufferUpdateAfterBind = VK_TRUE;
+    indexingFeatures.descriptorBindingPartiallyBound = VK_TRUE;
+
+    VkPhysicalDeviceFeatures2 deviceFeatures2{};
+    deviceFeatures2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+    deviceFeatures2.features = deviceFeatures;
+    deviceFeatures2.pNext = &indexingFeatures;
+
     VkDeviceCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
     createInfo.pQueueCreateInfos = queueCreateInfos.data();
     createInfo.queueCreateInfoCount =
         static_cast<uint32_t>(queueCreateInfos.size());
-    createInfo.pEnabledFeatures = &deviceFeatures;
+    createInfo.pEnabledFeatures = nullptr; // Using pNext chain instead
+    createInfo.pNext = &deviceFeatures2;
 
     std::vector<const char *> deviceExtensions = {
         VK_KHR_SWAPCHAIN_EXTENSION_NAME};
@@ -160,6 +176,15 @@ void Device::createLogicalDevice(std::shared_ptr<Context> context) {
                      &this->graphicsQueue);
     vkGetDeviceQueue(this->logicalDevice, indices.presentFamily.value(), 0,
                      &this->presentQueue);
+
+    VkCommandPoolCreateInfo poolInfo{};
+    poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+    poolInfo.queueFamilyIndex = indices.graphicsFamily.value();
+    poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+    if (vkCreateCommandPool(logicalDevice, &poolInfo, nullptr,
+                            &this->commandPool) != VK_SUCCESS) {
+        throw std::runtime_error("Failed to create command pool!");
+    }
 }
 
 uint32_t Device::findMemoryType(uint32_t typeFilter,

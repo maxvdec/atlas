@@ -267,6 +267,8 @@ class Window {
      */
     ~Window();
 
+    void setClearColor(const Color &color) { this->clearColor = color; }
+
     /**
      * @brief Starts the main window loop and begins rendering.
      *
@@ -525,6 +527,7 @@ class Window {
 
     opal::BlendFunc dstBlend = opal::BlendFunc::DstAlpha;
     opal::BlendFunc srcBlend = opal::BlendFunc::OneMinusSrcAlpha;
+    // Both APIs use CCW; projection Y-flip doesn't affect rasterizer winding
     opal::FrontFace frontFace = opal::FrontFace::CounterClockwise;
     opal::CullMode cullMode = opal::CullMode::Back;
     opal::CompareOp depthCompareOp = opal::CompareOp::Less;
@@ -563,6 +566,8 @@ class Window {
     std::vector<glm::vec3> ssaoKernel;
     std::vector<glm::vec3> ssaoNoise;
     Texture noiseTexture;
+
+    Color clearColor = Color(0.0f, 0.0f, 0.0f, 1.0f);
 
     void setupSSAO();
 

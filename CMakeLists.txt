@@ -3,6 +3,9 @@ project(Atlas LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+add_definitions(-DATLAS_VERSION=\"Alpha\ 5\")
+add_definitions(-DOPAL_VERSION=\"1\ Ellipse\")
+
 message(STATUS "Building for platform: ${CMAKE_SYSTEM_NAME}")
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
@@ -28,6 +31,15 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(doxygen-awesome-css)
 FetchContent_GetProperties(doxygen-awesome-css SOURCE_DIR AWESOME_CSS_DIR)
+
+if(BACKEND_OPENGL)
+    message(STATUS "Building using OpenGL backend")
+    add_definitions(-DOPENGL)
+else()
+    message(STATUS "Building using Vulkan backend")
+    add_definitions(-DVULKAN)
+    add_definitions(-DGLM_FORCE_DEPTH_ZERO_TO_ONE)
+endif()
 
 if (BACKEND_OPENGL)
     message(STATUS "Configuring shaders for OpenGL backend")
@@ -75,8 +87,6 @@ else()
     message(STATUS "Found Vulkan SDK at ${Vulkan_LIBRARY}")
     message(STATUS "Found Vulkan Libraries at ${Vulkan_INCLUDE_DIRS}")
     
-    # Find SPIRV-Cross for shader reflection
-    # On macOS with Homebrew, we need to set the prefix path
     if(APPLE)
         list(APPEND CMAKE_PREFIX_PATH "/opt/homebrew/opt/spirv-cross")
     endif()
@@ -161,12 +171,8 @@ target_link_libraries(atlas
 )
 
 if(BACKEND_OPENGL)
-    message(STATUS "Building using OpenGL backend")
-    add_definitions(-DOPENGL)
     target_link_libraries(atlas PRIVATE OpenGL::GL)
 else()
-    message(STATUS "Building using Vulkan backend")
-    add_definitions(-DVULKAN)
     target_link_libraries(atlas PRIVATE Vulkan::Vulkan)
 
     if(APPLE)
@@ -177,6 +183,10 @@ endif()
 
 target_include_directories(atlas PRIVATE ${FREETYPE_INCLUDE_DIRS}/freetype2)
 target_compile_definitions(atlas PRIVATE ATLAS_LIB GL_SILENT_DEPRECATION)
+
+target_compile_options(atlas PRIVATE # Suppress warnings from packed shaders
+    -Wno-overlength-strings
+)
 
 get_filename_component(TEST_PATH_ABS "${CMAKE_CURRENT_SOURCE_DIR}/test" ABSOLUTE)
 add_executable(atlas_test ${TEST_SOURCES})

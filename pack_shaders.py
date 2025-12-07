@@ -11,6 +11,8 @@ input_dir = sys.argv[1]
 output_file = sys.argv[2]
 vulkan = len(sys.argv) >= 4 and sys.argv[3].lower() == 'true'
 
+MAX_CHUNK = 60000  # max characters per literal chunk
+
 def compile_to_spirv(glsl_code, shader_path):
     """Compile GLSL to SPIR-V using glslangValidator or glslc"""
     ext = os.path.splitext(shader_path)[1].lower()
@@ -48,18 +50,25 @@ def compile_to_spirv(glsl_code, shader_path):
         with open(tmp_out_path, 'rb') as f:
             spirv_bytes = f.read()
         
-        byte_array = ', '.join(f'0x{b:02x}' for b in spirv_bytes)
-        return spirv_bytes, byte_array
+        return spirv_bytes
         
     except subprocess.CalledProcessError as e:
         print(f"Error compiling {shader_path}: {e}")
         print(f"stderr: {e.stderr.decode() if e.stderr else 'N/A'}")
-        return None, None
+        return None
     finally:
         if os.path.exists(tmp_in_path):
             os.remove(tmp_in_path)
         if os.path.exists(tmp_out_path):
             os.remove(tmp_out_path)
+
+def write_chunks(out, var_name, contents):
+    """Write large strings in chunks using raw string literals"""
+    out.write(f'static const char* {var_name} =\n')
+    for i in range(0, len(contents), MAX_CHUNK):
+        chunk = contents[i:i+MAX_CHUNK]
+        out.write(f'R"({chunk})"\n')
+    out.write(';\n\n')
 
 with open(output_file, "w") as out:
     out.write("// This file contains packed shader source code.\n")
@@ -67,8 +76,6 @@ with open(output_file, "w") as out:
         out.write("// Shaders compiled to SPIR-V for Vulkan\n")
     out.write("#ifndef ATLAS_GENERATED_SHADERS_H\n")
     out.write("#define ATLAS_GENERATED_SHADERS_H\n\n")
-    
-
     
     for root, _, files in os.walk(input_dir):
         for filename in files:
@@ -82,15 +89,15 @@ with open(output_file, "w") as out:
                 contents = f.read()
             
             if vulkan:
-                spirv_bytes, byte_array = compile_to_spirv(contents, path)
+                spirv_bytes = compile_to_spirv(contents, path)
                 if spirv_bytes is not None:
                     hex_string = ''.join(f'{b:02x}' for b in spirv_bytes)
                     out.write(f'// Compiled from {filename} (SPIR-V as hex string)\n')
-                    out.write(f'static const char* {var_name} = "{hex_string}";\n\n')
+                    write_chunks(out, var_name, hex_string)
                 else:
                     print(f"Warning: Failed to compile {filename}, skipping...")
             else:
-                out.write(f'static const char* {var_name} = R"(\n{contents}\n)";\n\n')
+                write_chunks(out, var_name, contents)
     
     out.write("#endif // ATLAS_GENERATED_SHADERS_H\n")
 

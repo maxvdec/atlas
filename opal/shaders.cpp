@@ -8,10 +8,13 @@
 */
 
 #include "opal/opal.h"
+#include <array>
+#include <cctype>
 #include <cstdint>
 #include <glad/glad.h>
 #include <memory>
 #include <vector>
+#include <iostream>
 #ifdef VULKAN
 #include <vulkan/vulkan.hpp>
 #include <spirv_cross/spirv_cross.hpp>
@@ -39,8 +42,10 @@ uint Shader::getGLShaderType(ShaderType type) {
 }
 #endif
 
+#ifdef VULKAN
 int Shader::currentId = 1;
 int ShaderProgram::currentId = 1;
+#endif
 
 std::shared_ptr<Shader> Shader::createFromSource(const char *source,
                                                  ShaderType type) {
@@ -215,6 +220,65 @@ void Shader::performReflection() {
     spirv_cross::Compiler compiler(spirvBytecode);
     spirv_cross::ShaderResources resources = compiler.get_shader_resources();
 
+    auto registerBinding = [&](const std::string &name,
+                               const UniformBindingInfo &info,
+                               bool addAliases) {
+        if (name.empty()) {
+            return;
+        }
+
+        uniformBindings[name] = info;
+
+        if (!addAliases) {
+            return;
+        }
+
+        auto addAlias = [&](const std::string &alias) {
+            if (alias.empty()) {
+                return;
+            }
+            if (uniformBindings.find(alias) == uniformBindings.end()) {
+                uniformBindings[alias] = info;
+            }
+        };
+
+        auto addAliasIfSuffixMatches = [&](const std::string &suffix) {
+            size_t suffixLen = suffix.size();
+            if (name.size() <= suffixLen) {
+                return;
+            }
+            bool matches = true;
+            for (size_t i = 0; i < suffixLen; ++i) {
+                char cName =
+                    static_cast<char>(std::toupper(static_cast<unsigned char>(
+                        name[name.size() - suffixLen + i])));
+                char cSuffix = static_cast<char>(
+                    std::toupper(static_cast<unsigned char>(suffix[i])));
+                if (cName != cSuffix) {
+                    matches = false;
+                    break;
+                }
+            }
+            if (!matches) {
+                return;
+            }
+
+            std::string trimmed = name.substr(0, name.size() - suffixLen);
+            while (!trimmed.empty() &&
+                   std::isspace(static_cast<unsigned char>(trimmed.back()))) {
+                trimmed.pop_back();
+            }
+            if (!trimmed.empty()) {
+                addAlias(trimmed);
+            }
+        };
+
+        const std::array<std::string, 3> suffixes = {"UBO", "SSBO", "BUFFER"};
+        for (const auto &suffix : suffixes) {
+            addAliasIfSuffixMatches(suffix);
+        }
+    };
+
     for (const auto &ubo : resources.uniform_buffers) {
         uint32_t set =
             compiler.get_decoration(ubo.id, spv::DecorationDescriptorSet);
@@ -224,6 +288,14 @@ void Shader::performReflection() {
         const spirv_cross::SPIRType &type = compiler.get_type(ubo.base_type_id);
         size_t blockSize = compiler.get_declared_struct_size(type);
 
+        std::string typeName = compiler.get_name(ubo.base_type_id);
+        std::string instanceName = ubo.name;
+
+        // std::cout << "[VULKAN REFLECT] UBO found: instance='" << instanceName
+        //           << "', type='" << typeName << "', set=" << set
+        //           << ", binding=" << binding << ", size=" << blockSize
+        //           << std::endl;
+
         UniformBindingInfo blockInfo;
         blockInfo.set = set;
         blockInfo.binding = binding;
@@ -231,16 +303,24 @@ void Shader::performReflection() {
         blockInfo.offset = 0;
         blockInfo.isSampler = false;
         blockInfo.isBuffer = true;
-        uniformBindings[ubo.name] = blockInfo;
+        blockInfo.isStorageBuffer = false;
+        blockInfo.isCubemap = false;
+        registerBinding(instanceName, blockInfo, true);
+        if (!typeName.empty() && typeName != instanceName) {
+            registerBinding(typeName, blockInfo, true);
+        }
 
         for (uint32_t i = 0; i < type.member_types.size(); ++i) {
             std::string memberName =
                 compiler.get_member_name(ubo.base_type_id, i);
             uint32_t memberOffset = compiler.type_struct_member_offset(type, i);
-            const spirv_cross::SPIRType &memberType =
-                compiler.get_type(type.member_types[i]);
             size_t memberSize =
                 compiler.get_declared_struct_member_size(type, i);
+
+            // std::cout << "[VULKAN REFLECT]   Member: '" << memberName
+            //           << "' offset=" << memberOffset << ", size=" <<
+            //           memberSize
+            //           << std::endl;
 
             UniformBindingInfo memberInfo;
             memberInfo.set = set;
@@ -249,10 +329,15 @@ void Shader::performReflection() {
             memberInfo.offset = memberOffset;
             memberInfo.isSampler = false;
             memberInfo.isBuffer = true;
+            memberInfo.isStorageBuffer = false;
+            memberInfo.isCubemap = false;
 
-            uniformBindings[ubo.name + "." + memberName] = memberInfo;
+            registerBinding(instanceName + "." + memberName, memberInfo, false);
+            if (!typeName.empty() && typeName != instanceName) {
+                registerBinding(typeName + "." + memberName, memberInfo, false);
+            }
             if (uniformBindings.find(memberName) == uniformBindings.end()) {
-                uniformBindings[memberName] = memberInfo;
+                registerBinding(memberName, memberInfo, false);
             }
         }
     }
@@ -274,10 +359,12 @@ void Shader::performReflection() {
             memberInfo.offset = memberOffset;
             memberInfo.isSampler = false;
             memberInfo.isBuffer = false;
+            memberInfo.isStorageBuffer = false;
+            memberInfo.isCubemap = false;
 
-            uniformBindings[memberName] = memberInfo;
+            registerBinding(memberName, memberInfo, false);
             if (!pc.name.empty()) {
-                uniformBindings[pc.name + "." + memberName] = memberInfo;
+                registerBinding(pc.name + "." + memberName, memberInfo, false);
             }
         }
     }
@@ -288,6 +375,10 @@ void Shader::performReflection() {
         uint32_t binding =
             compiler.get_decoration(sampler.id, spv::DecorationBinding);
 
+        const spirv_cross::SPIRType &samplerType =
+            compiler.get_type(sampler.type_id);
+        bool isCube = samplerType.image.dim == spv::DimCube;
+
         UniformBindingInfo samplerInfo;
         samplerInfo.set = set;
         samplerInfo.binding = binding;
@@ -295,7 +386,9 @@ void Shader::performReflection() {
         samplerInfo.offset = 0;
         samplerInfo.isSampler = true;
         samplerInfo.isBuffer = false;
-        uniformBindings[sampler.name] = samplerInfo;
+        samplerInfo.isStorageBuffer = false;
+        samplerInfo.isCubemap = isCube;
+        registerBinding(sampler.name, samplerInfo, false);
     }
 
     for (const auto &sampler : resources.separate_samplers) {
@@ -311,7 +404,9 @@ void Shader::performReflection() {
         samplerInfo.offset = 0;
         samplerInfo.isSampler = true;
         samplerInfo.isBuffer = false;
-        uniformBindings[sampler.name] = samplerInfo;
+        samplerInfo.isStorageBuffer = false;
+        samplerInfo.isCubemap = false;
+        registerBinding(sampler.name, samplerInfo, false);
     }
 
     for (const auto &image : resources.separate_images) {
@@ -327,7 +422,9 @@ void Shader::performReflection() {
         imageInfo.offset = 0;
         imageInfo.isSampler = true;
         imageInfo.isBuffer = false;
-        uniformBindings[image.name] = imageInfo;
+        imageInfo.isStorageBuffer = false;
+        imageInfo.isCubemap = false;
+        registerBinding(image.name, imageInfo, false);
     }
 
     for (const auto &ssbo : resources.storage_buffers) {
@@ -343,7 +440,9 @@ void Shader::performReflection() {
         ssboInfo.offset = 0;
         ssboInfo.isSampler = false;
         ssboInfo.isBuffer = true;
-        uniformBindings[ssbo.name] = ssboInfo;
+        ssboInfo.isStorageBuffer = true;
+        ssboInfo.isCubemap = false;
+        registerBinding(ssbo.name, ssboInfo, true);
     }
 }
 

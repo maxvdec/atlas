@@ -36,60 +36,55 @@ void Model::loadModel(Resource resource) {
     Assimp::Importer importer;
     if (resource.type != ResourceType::Model)
         return;
-    const aiScene *scene = importer.ReadFile(
-        resource.path.string(),
-        aiProcess_Triangulate | aiProcess_CalcTangentSpace | aiProcess_FlipUVs |
-            aiProcess_JoinIdenticalVertices | aiProcess_ImproveCacheLocality |
-            aiProcess_SortByPType | aiProcess_GenSmoothNormals);
+
+    unsigned int importFlags =
+        aiProcess_Triangulate | aiProcess_CalcTangentSpace |
+        aiProcess_JoinIdenticalVertices | aiProcess_ImproveCacheLocality |
+        aiProcess_SortByPType | aiProcess_GenSmoothNormals;
+
+    const aiScene *scene =
+        importer.ReadFile(resource.path.string(), importFlags);
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE ||
         !scene->mRootNode) {
         throw std::runtime_error("Assimp error: " +
                                  std::string(importer.GetErrorString()));
-        // Error handling
         return;
     }
     directory = resource.path.parent_path().string();
-
-    // Create a single shared pipeline for all meshes in this model
-    auto sharedPipeline = opal::Pipeline::create();
-    sharedPipeline =
-        ShaderProgram::defaultProgram().requestPipeline(sharedPipeline);
-
     // Texture cache to avoid loading the same texture multiple times
     std::unordered_map<std::string, Texture> textureCache;
 
-    processNode(scene->mRootNode, scene, glm::mat4(1.0f), sharedPipeline,
-                textureCache);
+    processNode(scene->mRootNode, scene, glm::mat4(1.0f), textureCache);
 
-    std::cout << "Created model from resource: " << resource.name << " with "
-              << objects.size() << " objects." << std::endl;
-    std::cout << "Model path: " << resource.path << std::endl;
-    std::cout << "Model directory: " << directory << std::endl;
-    std::cout << "First model object has "
-              << (objects.size() > 0 ? objects[0]->getVertices().size() : 0)
-              << " vertices." << std::endl;
+    // std::cout << "Created model from resource: " << resource.name << " with "
+    //           << objects.size() << " objects." << std::endl;
+    // std::cout << "Model path: " << resource.path << std::endl;
+    // std::cout << "Model directory: " << directory << std::endl;
+    // std::cout << "First model object has "
+    //           << (objects.size() > 0 ? objects[0]->getVertices().size() : 0)
+    //           << " vertices." << std::endl;
 
-    std::cout << "Model loaded successfully." << std::endl;
-    std::cout << "Meshes: " << scene->mNumMeshes << std::endl;
-    std::cout << "Unique textures loaded: " << textureCache.size() << std::endl;
+    // std::cout << "Model loaded successfully." << std::endl;
+    // std::cout << "Meshes: " << scene->mNumMeshes << std::endl;
+    // std::cout << "Unique textures loaded: " << textureCache.size() <<
+    // std::endl;
 
-    size_t totalVertices = 0;
-    size_t totalTriangles = 0;
-    for (unsigned int i = 0; i < scene->mNumMeshes; i++) {
-        aiMesh *mesh = scene->mMeshes[i];
-        totalVertices += mesh->mNumVertices;
-        totalTriangles +=
-            mesh->mNumFaces; // each face is a triangle (after Triangulate)
-    }
+    // size_t totalVertices = 0;
+    // size_t totalTriangles = 0;
+    // for (unsigned int i = 0; i < scene->mNumMeshes; i++) {
+    //     aiMesh *mesh = scene->mMeshes[i];
+    //     totalVertices += mesh->mNumVertices;
+    //     totalTriangles +=
+    //         mesh->mNumFaces; // each face is a triangle (after Triangulate)
+    // }
 
-    std::cout << "Total Vertices: " << totalVertices << std::endl;
-    std::cout << "Total Triangles: " << totalTriangles << std::endl;
+    // std::cout << "Total Vertices: " << totalVertices << std::endl;
+    // std::cout << "Total Triangles: " << totalTriangles << std::endl;
 }
 
 void Model::processNode(
     aiNode *node, const aiScene *scene, glm::mat4 parentTransform,
-    std::shared_ptr<opal::Pipeline> sharedPipeline,
     std::unordered_map<std::string, Texture> &textureCache) {
     glm::mat4 nodeTransform =
         parentTransform * glm::make_mat4(&node->mTransformation.a1);
@@ -98,15 +93,12 @@ void Model::processNode(
         aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
         auto obj = std::make_shared<CoreObject>(
             processMesh(mesh, scene, nodeTransform, textureCache));
-        // Reuse the shared pipeline instead of creating a new one per mesh
-        obj->setPipeline(sharedPipeline);
         obj->initialize();
         this->objects.push_back(obj);
     }
 
     for (unsigned int i = 0; i < node->mNumChildren; i++) {
-        processNode(node->mChildren[i], scene, nodeTransform, sharedPipeline,
-                    textureCache);
+        processNode(node->mChildren[i], scene, nodeTransform, textureCache);
     }
 }
 
@@ -251,8 +243,8 @@ std::vector<Texture> Model::loadMaterialTextures(
             continue;
         }
 
-        std::cout << "Loading texture: " << str.C_Str() << " of type "
-                  << typeName << std::endl;
+        // std::cout << "Loading texture: " << str.C_Str() << " of type "
+        //           << typeName << std::endl;
 
         ResourceType resType = ResourceType::Image;
         if (typeName == "texture_specular") {

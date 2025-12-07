@@ -126,10 +126,20 @@ vec2 parallaxMapping(vec2 texCoords, vec3 viewDir) {
 void main() {
     texCoord = TexCoord;
 
-    vec3 tangentViewDir = normalize(transpose(TBN) * (cameraPosition - FragPos));
-    texCoord = parallaxMapping(texCoord, tangentViewDir);
+    // Only apply parallax mapping if a parallax texture exists
+    bool hasParallaxMap = false;
+    for (int i = 0; i < textureCount; i++) {
+        if (textureTypes[i] == TEXTURE_PARALLAX) {
+            hasParallaxMap = true;
+            break;
+        }
+    }
 
-    texCoord = clamp(texCoord, vec2(0.0), vec2(1.0));
+    if (hasParallaxMap) {
+        vec3 tangentViewDir = normalize(transpose(TBN) * (cameraPosition - FragPos));
+        texCoord = parallaxMapping(texCoord, tangentViewDir);
+        texCoord = clamp(texCoord, vec2(0.0), vec2(1.0));
+    }
 
     vec4 sampledColor = enableTextures(TEXTURE_COLOR);
     bool hasColorTexture = sampledColor != vec4(-1.0);
