@@ -181,6 +181,39 @@ typedef std::function<WeatherState(ViewInformation)> WeatherDelegate;
 
 /**
  * @brief Manages day-night cycle, sky colors, lights, and volumetric weather.
+ *
+ * \subsection atmosphere-example Example
+ * ```cpp
+ * // Create atmosphere with day-night cycle
+ * Atmosphere atmosphere;
+ * atmosphere.timeOfDay = 14.5f; // 2:30 PM
+ * atmosphere.secondsPerHour = 120.0f; // Fast time: 2 minutes per hour
+ * atmosphere.enable();
+ *
+ * // Configure volumetric clouds
+ * Clouds clouds(4, 6); // Worley frequency and divisions
+ * clouds.position = Position3d(0.0f, 100.0f, 0.0f);
+ * clouds.size = Size3d(500.0f, 80.0f, 500.0f);
+ * clouds.density = 0.5f;
+ * clouds.absorption = 1.2f;
+ * clouds.scattering = 0.9f;
+ * clouds.wind = Magnitude3d(0.05f, 0.0f, 0.02f);
+ * clouds.primaryStepCount = 16; // Quality vs performance
+ *
+ * // Set up dynamic weather
+ * atmosphere.enableWeather();
+ * atmosphere.weatherDelegate = [](ViewInformation viewInfo) {
+ *     WeatherState weather;
+ *     weather.condition = WeatherCondition::Rain;
+ *     weather.intensity = 0.7f;
+ *     weather.wind = Magnitude3d(0.1f, -0.5f, 0.05f);
+ *     return weather;
+ * };
+ *
+ * // Update each frame
+ * atmosphere.update(deltaTime);
+ * ```
+ *
  */
 class Atmosphere {
   public:

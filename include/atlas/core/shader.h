@@ -175,6 +175,29 @@ enum class ShaderCapability {
 /**
  * @brief Structure representing a vertex shader, including its source code,
  *
+ * \subsection vertexshader-example Example
+ * ```cpp
+ * // Create a custom vertex shader from GLSL source
+ * const char* vertSource = R"(
+ *     #version 410 core
+ *     layout(location = 0) in vec3 aPos;
+ *     layout(location = 1) in vec3 aColor;
+ *     out vec3 fragColor;
+ *     uniform mat4 model;
+ *     uniform mat4 view;
+ *     uniform mat4 projection;
+ *     void main() {
+ *         gl_Position = projection * view * model * vec4(aPos, 1.0);
+ *         fragColor = aColor;
+ *     }
+ * )";
+ * VertexShader vertShader = VertexShader::fromSource(vertSource);
+ * vertShader.compile();
+ * // Or use a default shader
+ * VertexShader defaultVert = VertexShader::fromDefaultShader(
+ *     AtlasVertexShader::Main);
+ * ```
+ *
  */
 struct VertexShader {
     /**
@@ -343,6 +366,24 @@ enum class AtlasFragmentShader {
 /**
  * @brief Structure representing a fragment shader, including its source code
  * and its OpenGL ID.
+ *
+ * \subsection fragmentshader-example Example
+ * ```cpp
+ * // Create a custom fragment shader from GLSL source
+ * const char* fragSource = R"(
+ *     #version 410 core
+ *     in vec3 fragColor;
+ *     out vec4 FragColor;
+ *     void main() {
+ *         FragColor = vec4(fragColor, 1.0);
+ *     }
+ * )";
+ * FragmentShader fragShader = FragmentShader::fromSource(fragSource);
+ * fragShader.compile();
+ * // Or use a default shader
+ * FragmentShader defaultFrag = FragmentShader::fromDefaultShader(
+ *     AtlasFragmentShader::Main);
+ * ```
  *
  */
 struct FragmentShader {
@@ -551,6 +592,25 @@ struct LayoutDescriptor {
 /**
  * @brief Structure representing a complete shader program, consisting of a
  * vertex shader and a fragment shader.
+ *
+ * \subsection shaderprogram-example Example
+ * ```cpp
+ * // Create a shader program from custom shaders
+ * VertexShader vertShader = VertexShader::fromSource(vertexSource);
+ * FragmentShader fragShader = FragmentShader::fromSource(fragmentSource);
+ * ShaderProgram program;
+ * program.vertexShader = vertShader;
+ * program.fragmentShader = fragShader;
+ * program.compile();
+ *
+ * // Or use default shaders
+ * ShaderProgram defaultProgram = ShaderProgram::fromDefaultShaders(
+ *     AtlasVertexShader::Main, AtlasFragmentShader::Main);
+ *
+ * // Set uniforms
+ * program.setUniform3f("lightPosition", 10.0f, 5.0f, -3.0f);
+ * program.setUniform1i("useTexture", 1);
+ * ```
  *
  */
 struct ShaderProgram {

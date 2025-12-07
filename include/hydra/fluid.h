@@ -24,6 +24,29 @@ class Window;
 /**
  * @brief Dynamic water surface that captures reflections/refractions and
  * renders Gerstner-style waves.
+ *
+ * \subsection fluid-example Example
+ * ```cpp
+ * // Create a water surface with specific extent and color
+ * Fluid waterSurface;
+ * waterSurface.create(Size2d(100.0f, 100.0f), Color(0.1, 0.3, 0.6, 0.8));
+ * waterSurface.setPosition(Position3d(0.0f, -2.0f, 0.0f));
+ *
+ * // Configure wave animation
+ * waterSurface.setWaveVelocity(0.5f); // Wave movement speed
+ *
+ * // Load normal and movement textures for surface detail
+ * waterSurface.normalTexture = Texture::fromFile("water_normal.png");
+ * waterSurface.movementTexture = Texture::fromFile("water_flow.png");
+ *
+ * // Initialize and add to scene
+ * waterSurface.initialize();
+ * scene.addObject(&waterSurface);
+ *
+ * // The fluid automatically captures reflections and refractions
+ * // during the render pass
+ * ```
+ *
  */
 struct Fluid : GameObject {
     /**

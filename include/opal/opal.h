@@ -99,6 +99,34 @@ struct DeviceInfo {
     std::string opalVersion;
 };
 
+/**
+ * @brief Represents the rendering device abstraction for OpenGL/Vulkan.
+ * Manages command buffer acquisition, framebuffer access, and device queries.
+ *
+ * \subsection device-example Example
+ * ```cpp
+ * // Create context and acquire device
+ * ContextConfiguration config;
+ * config.useOpenGL = true;
+ * config.majorVersion = 4;
+ * config.minorVersion = 1;
+ * auto context = Context::create(config);
+ * auto device = Device::acquire(context);
+ *
+ * // Get device information
+ * DeviceInfo info = device->getDeviceInfo();
+ * std::cout << "GPU: " << info.deviceName << std::endl;
+ *
+ * // Acquire command buffer for rendering
+ * auto commandBuffer = device->acquireCommandBuffer();
+ * // Record rendering commands...
+ * device->submitCommandBuffer(commandBuffer);
+ *
+ * // Access default framebuffer
+ * auto framebuffer = device->getDefaultFramebuffer();
+ * ```
+ *
+ */
 class Device {
   public:
     static std::shared_ptr<Device> acquire(std::shared_ptr<Context> context);

@@ -16,6 +16,15 @@
 
 /**
  * @brief Classic gradient-noise implementation used for soft terrain shapes.
+ *
+ * \subsection perlinnoise-example Example
+ * ```cpp
+ * // Generate Perlin noise for terrain heightmap
+ * PerlinNoise perlin(12345); // Seed for reproducible results
+ * float height = perlin.noise(10.5f, 20.3f);
+ * // Apply to terrain mesh vertex
+ * Position3d vertex(x, height * 50.0f, z); // Scale height by 50 units
+ * ```
  */
 struct PerlinNoise {
   private:
@@ -94,6 +103,18 @@ class WorleyNoise {
 
 /**
  * @brief Fractal sums of Perlin noise used for more complex landscapes.
+ *
+ * \subsection fractalnoise-example Example
+ * ```cpp
+ * // Create fractal noise for mountainous terrain
+ * FractalNoise fractal(6, 0.5f); // 6 octaves, 0.5 persistence
+ * for (int z = 0; z < gridSize; z++) {
+ *     for (int x = 0; x < gridSize; x++) {
+ *         float height = fractal.noise(x * 0.01f, z * 0.01f);
+ *         heightmap[z][x] = height * 100.0f; // Scale to world units
+ *     }
+ * }
+ * ```
  */
 class FractalNoise {
   private:
@@ -174,6 +195,26 @@ class TerrainGenerator {
 
 /**
  * @brief Low-frequency noise generator used for rolling hills and plains.
+ *
+ * \subsection terraingenerator-example Example
+ * ```cpp
+ * // Use individual generators
+ * HillGenerator hills(0.02f, 15.0f);
+ * MountainGenerator mountains(8.0f, 120.0f, 6, 0.6f);
+ *
+ * // Or combine multiple generators
+ * CompoundGenerator combined;
+ * combined.addGenerator(PlainGenerator(0.03f, 3.0f));
+ * combined.addGenerator(MountainGenerator(10.0f, 80.0f));
+ * combined.addGenerator(HillGenerator(0.01f, 20.0f));
+ *
+ * // Apply to terrain
+ * Terrain terrain;
+ * combined.applyTo(terrain);
+ *
+ * // Or sample directly
+ * float heightValue = combined.generateHeight(100.0f, 50.0f);
+ * ```
  */
 class HillGenerator : public TerrainGenerator {
   private:

@@ -26,6 +26,50 @@ class Window;
  * a Window. Contains virtual methods for rendering, initialization, updating,
  * and setting view/projection matrices.
  *
+ * \subsection renderable-example Example
+ * ```cpp
+ * // Create a custom renderable object
+ * class CustomRenderable : public Renderable {
+ * private:
+ *     Position3d position;
+ *     glm::mat4 viewMatrix, projectionMatrix;
+ *     std::shared_ptr<opal::Pipeline> pipeline;
+ *     std::shared_ptr<opal::Buffer> vertexBuffer;
+ *
+ * public:
+ *     void initialize() override {
+ *         // Set up buffers, load shaders, create pipeline
+ *         opal::Device& device = opal::Device::get();
+ *         pipeline = device.createPipeline(...);
+ *         vertexBuffer = device.createBuffer(...);
+ *     }
+ *
+ *     void render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
+ *                 bool updatePipeline) override {
+ *         // Bind pipeline and draw
+ *         commandBuffer->bindPipeline(pipeline);
+ *         commandBuffer->bindVertexBuffer(vertexBuffer);
+ *         commandBuffer->draw(vertexCount, 1, 0, 0);
+ *     }
+ *
+ *     void update(Window& window) override {
+ *         // Update logic (movement, animation, etc.)
+ *         position += Position3d(0.01f, 0.0f, 0.0f);
+ *     }
+ *
+ *     void setViewMatrix(const glm::mat4& view) override {
+ *         viewMatrix = view;
+ *     }
+ *
+ *     void setProjectionMatrix(const glm::mat4& projection) override {
+ *         projectionMatrix = projection;
+ *     }
+ *
+ *     Position3d getPosition() const override { return position; }
+ *     bool canCastShadows() const override { return true; }
+ * };
+ * ```
+ *
  */
 class Renderable {
   public:

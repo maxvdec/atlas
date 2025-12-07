@@ -19,6 +19,15 @@
  * @brief Structure representing a position in 3D space with double precision.
  * Provides arithmetic operations and conversions to/from GLM types.
  *
+ * \subsection position3d-example Example
+ * ```cpp
+ * // Create a position
+ * Position3d pos(10.0f, 5.0f, -3.0f);
+ * // Move it
+ * pos += Position3d(1.0f, 0.0f, 0.0f);
+ * // Convert to GLM vector for rendering
+ * glm::vec3 glmPos = pos.toGlm();
+ * ```
  */
 struct Position3d {
     float x;
@@ -121,6 +130,15 @@ typedef Position3d Magnitude3d;
  * @brief Structure representing rotation in 3D space using Euler angles.
  * Provides arithmetic operations and conversions to/from GLM quaternions.
  *
+ * \subsection rotation3d-example Example
+ * ```cpp
+ * // Create a rotation (pitch, yaw, roll in degrees)
+ * Rotation3d rot(0.0f, 45.0f, 0.0f);
+ * // Rotate object over time
+ * rot.yaw += deltaTime * 90.0f; // 90 degrees per second
+ * // Convert to quaternion for rendering
+ * glm::quat quatRot = rot.toGlmQuat();
+ * ```
  */
 struct Rotation3d {
     float pitch; // Rotation around the X-axis
@@ -178,6 +196,18 @@ struct Rotation3d {
  * @brief Structure representing an RGBA color with double precision.
  * Provides arithmetic operations and common color constants.
  *
+ * \subsection color-example Example
+ * ```cpp
+ * // Create colors using static constructors
+ * Color red = Color::Red();
+ * Color customColor(0.2, 0.8, 0.5, 1.0);
+ * // Parse from hex string
+ * Color fromHex = Color::fromHex("#FF5733");
+ * // Mix two colors
+ * Color blended = Color::mix(red, customColor, 0.5);
+ * // Convert to GLM vector
+ * glm::vec4 glmColor = blended.toGlm();
+ * ```
  */
 struct Color {
     float r = 1.0;
@@ -338,6 +368,15 @@ typedef Position2d Magnitude2d;
  * @brief Structure representing angular measurements in radians.
  * Provides arithmetic operations and conversion from degrees.
  *
+ * \subsection radians-example Example
+ * ```cpp
+ * // Convert from degrees to radians
+ * Radians angle = Radians::fromDegrees(45.0f);
+ * // Perform angle arithmetic
+ * Radians doubled = angle * 2.0f;
+ * // Convert back to float for trigonometry
+ * float sinValue = std::sin(angle.toFloat());
+ * ```
  */
 struct Radians {
     float value;
@@ -365,6 +404,17 @@ struct Radians {
  * @brief Structure representing 2D dimensions with width and height.
  * Provides arithmetic operations and conversions to GLM types.
  *
+ * \subsection size2d-example Example
+ * ```cpp
+ * // Create window or UI element size
+ * Size2d windowSize{1920.0f, 1080.0f};
+ * // Scale size
+ * Size2d halfSize = windowSize / 2.0f;
+ * // Calculate area
+ * float area = windowSize.width * windowSize.height;
+ * // Convert to GLM vector
+ * glm::vec2 glmSize = windowSize.toGlm();
+ * ```
  */
 struct Size2d {
     float width;
