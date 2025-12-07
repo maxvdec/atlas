@@ -1,7 +1,5 @@
 var default__shaders_8h =
 [
-    [ "BINN_PHONG_VERT", "default__shaders_8h.html#ab88cb28a63dbaadc0417f3333f7d6994", null ],
-    [ "BLINN_PHONG_FRAG", "default__shaders_8h.html#ac9c5a1747c6e8231627d39aada2406d8", null ],
     [ "COLOR_FRAG", "default__shaders_8h.html#a56686808191d97f1d6a78ed6c8b3ad02", null ],
     [ "COLOR_VERT", "default__shaders_8h.html#abd40d744c94aaf9963332aadd7b06466", null ],
     [ "DEBUG_FRAG", "default__shaders_8h.html#ab61110f9533f7aaccfce61ce7b25da9b", null ],
@@ -24,11 +22,14 @@ var default__shaders_8h =
     [ "PARTICLE_VERT", "default__shaders_8h.html#a88c8c32c6aa70e502d94dc3765a54a85", null ],
     [ "POINT_DEPTH_FRAG", "default__shaders_8h.html#aee226ae18ed5464f74cd0abeb795fa84", null ],
     [ "POINT_DEPTH_GEOM", "default__shaders_8h.html#ad346966a531110057848a978cf65409d", null ],
+    [ "POINT_DEPTH_NOGEOM_FRAG", "default__shaders_8h.html#ad35413ab72d67dd4ca0c458a2fdec585", null ],
+    [ "POINT_DEPTH_NOGEOM_VERT", "default__shaders_8h.html#a6cfec6ed9891d97c1bddad12d9a547eb", null ],
     [ "POINT_DEPTH_VERT", "default__shaders_8h.html#a8b6ccb83c67ae58ec1c69e87c40b2113", null ],
     [ "SKYBOX_FRAG", "default__shaders_8h.html#a8f6a623fa306218517b69dc65ff8733e", null ],
     [ "SKYBOX_VERT", "default__shaders_8h.html#accb5b46bd2b12d12a056815764bc4501", null ],
     [ "SSAO_BLUR_FRAG", "default__shaders_8h.html#ae246351246e38222f7f020310ba18c96", null ],
     [ "SSAO_FRAG", "default__shaders_8h.html#ad0bc8276a246d872f0f11a408ede96a6", null ],
+    [ "SSR_BLUR_FRAG", "default__shaders_8h.html#a9468b7d98396ad89026077ce080b1e58", null ],
     [ "SSR_FRAG", "default__shaders_8h.html#a243dd6ea801fa133a860a4c71b44ecf4", null ],
     [ "TERRAIN_CONTROL_TESC", "default__shaders_8h.html#a3621a0a2bf9ff3e7fcc2ae3c6f69afde", null ],
     [ "TERRAIN_EVAL_TESE", "default__shaders_8h.html#a261f7e9b00026e82bbc6e2d24bcbda37", null ],

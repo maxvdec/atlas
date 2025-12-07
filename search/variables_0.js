@@ -1,19 +1,12 @@
 var searchData=
 [
-  ['a_0',['a',['../struct_color.html#a693d5fe08d58e91a8483639bcca6da3f',1,'Color::a'],['../struct_collision_pair.html#a42774adc74909268b2ba38eda0aa3a6b',1,'CollisionPair::a'],['../struct_triangle.html#aa1781b2e0265b3fef1d7aa02430a7821',1,'Triangle::a'],['../struct_edge.html#a768226912acc6e80c2ecb5f72c5b21e5',1,'Edge::a']]],
-  ['absorption_1',['absorption',['../class_clouds.html#ae1987c456c2759caa56de5cb55165134',1,'Clouds']]],
-  ['active_2',['active',['../struct_particle.html#a73a4154dfbae2e2787ef72c1bee83413',1,'Particle']]],
-  ['advance_3',['advance',['../struct_character.html#a782c09f2ac5412664ef5127882891568',1,'Character']]],
-  ['albedo_4',['albedo',['../struct_material.html#aa61df35ac281fa40c0745235494d4b19',1,'Material']]],
-  ['alwaysontop_5',['alwaysOnTop',['../struct_window_configuration.html#a097dc5b5aee3944a617487530393dd11',1,'WindowConfiguration']]],
-  ['amount_6',['amount',['../struct_film_grain_parameters.html#a33e117b4ffffa2117fea8d0913a3dea5',1,'FilmGrainParameters']]],
-  ['angle_7',['angle',['../struct_area_light.html#a55e92eab392d1c273a3172b24ba8fe07',1,'AreaLight']]],
-  ['angularvelocity_8',['angularVelocity',['../class_body.html#a6f9bd0b59a4f9d8099079d3ff07b37b0',1,'Body']]],
-  ['ao_9',['ao',['../struct_material.html#a0946dbf03359dc3cd8d32910045dc5d4',1,'Material']]],
-  ['aspectratiox_10',['aspectRatioX',['../struct_window_configuration.html#a45697805b5409de3b3ba16f8fd63e347',1,'WindowConfiguration']]],
-  ['aspectratioy_11',['aspectRatioY',['../struct_window_configuration.html#a4d9ab6af44609b23217808963ca0c1f5',1,'WindowConfiguration']]],
-  ['atlas_12',['atlas',['../struct_font.html#a55ce744ba518079323089dccdb0a3bdd',1,'Font']]],
-  ['atmosphere_13',['atmosphere',['../class_scene.html#ad520f963a249356936b795d2d2a6706e',1,'Scene']]],
-  ['audioengine_14',['audioEngine',['../class_window.html#a2133e2bb4562bcc491d091a640dcae88',1,'Window']]],
-  ['averagecolor_15',['averageColor',['../struct_cubemap.html#a50b2c6343093573ff1a058918f63f514',1,'Cubemap']]]
+  ['_5fpad1_0',['_pad1',['../struct_g_p_u_directional_light.html#aaec0097c1a6c2ce20c84983e91d853ac',1,'GPUDirectionalLight::_pad1'],['../struct_g_p_u_point_light.html#ad1a608ee86a727f34a1f9b75b5a4e259',1,'GPUPointLight::_pad1'],['../struct_g_p_u_spot_light.html#a28d20b2ec551650bc7d7bce9a0be86d5',1,'GPUSpotLight::_pad1'],['../struct_g_p_u_area_light.html#a606f11538f6aeca5f55e32d2eac4a0bd',1,'GPUAreaLight::_pad1'],['../struct_g_p_u_shadow_params.html#aafec3120f9207ad89f38950f3de0c20b',1,'GPUShadowParams::_pad1']]],
+  ['_5fpad2_1',['_pad2',['../struct_g_p_u_directional_light.html#a9b4cf84da4a18d0a0ab1293152a4d238',1,'GPUDirectionalLight::_pad2'],['../struct_g_p_u_point_light.html#a2bbb4ee7f4f59e7265fb0aaba1f4befa',1,'GPUPointLight::_pad2'],['../struct_g_p_u_spot_light.html#aa234842a8a5e351ea2849fd4ce7544cf',1,'GPUSpotLight::_pad2'],['../struct_g_p_u_area_light.html#a175171488b4633741a9323a9f6e1ed4b',1,'GPUAreaLight::_pad2']]],
+  ['_5fpad3_2',['_pad3',['../struct_g_p_u_directional_light.html#ada1ce647179767945509a8d8ee58d2d9',1,'GPUDirectionalLight::_pad3'],['../struct_g_p_u_point_light.html#a21a3a7d1de7d168fbebe0aa1bfcce01a',1,'GPUPointLight::_pad3'],['../struct_g_p_u_spot_light.html#a93df6103d00db30b14647c571bca2057',1,'GPUSpotLight::_pad3'],['../struct_g_p_u_area_light.html#ae1f57814982024a4e8886e67ba18b11a',1,'GPUAreaLight::_pad3']]],
+  ['_5fpad4_3',['_pad4',['../struct_g_p_u_spot_light.html#a187bde86c42bda7ad9c2b1ab1fa6a28f',1,'GPUSpotLight::_pad4'],['../struct_g_p_u_area_light.html#a056cbc2ded9d67a4f7f1b7ff96aee86a',1,'GPUAreaLight::_pad4']]],
+  ['_5fpad5_4',['_pad5',['../struct_g_p_u_spot_light.html#ab420c66766177372046c378e811445a7',1,'GPUSpotLight::_pad5'],['../struct_g_p_u_area_light.html#a376ef686a4e829000593fcc777d683b9',1,'GPUAreaLight::_pad5']]],
+  ['_5fpad6_5',['_pad6',['../struct_g_p_u_spot_light.html#ae663dfc35cc400badb16c2e27714bfc5',1,'GPUSpotLight::_pad6'],['../struct_g_p_u_area_light.html#a0fe803113b83f5bee7da2d4e14dedcb5',1,'GPUAreaLight::_pad6']]],
+  ['_5fpad7_6',['_pad7',['../struct_g_p_u_area_light.html#a4647af63a44389670ddf46e00f70caf2',1,'GPUAreaLight']]],
+  ['_5fpad8_7',['_pad8',['../struct_g_p_u_area_light.html#a5adb65a62e5d6580cb425edd8762e260',1,'GPUAreaLight']]],
+  ['_5fpad9_8',['_pad9',['../struct_g_p_u_area_light.html#aa936fea33c0c147f9dad0e7cd4789b17',1,'GPUAreaLight']]]
 ];

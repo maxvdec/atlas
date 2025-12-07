@@ -12,7 +12,7 @@ var class_particle_emitter =
     [ "getPosition", "class_particle_emitter.html#a0a4c69870a82921e620a467f8264be1b", null ],
     [ "initialize", "class_particle_emitter.html#ae3c78db9b68fadecfcbe8e22a82bba41", null ],
     [ "move", "class_particle_emitter.html#ac3f87ddcbb7272315b1c06421add053b", null ],
-    [ "render", "class_particle_emitter.html#afe658d35da0cdba391d4c841decf71e0", null ],
+    [ "render", "class_particle_emitter.html#a843f99879457bc5bd078c02e7c5c1c8a", null ],
     [ "setColor", "class_particle_emitter.html#a152e95df28b2885262d5f5025d5f1497", null ],
     [ "setDirection", "class_particle_emitter.html#a56c9c5dc364ef087cd0d311aff2ed60a", null ],
     [ "setEmissionType", "class_particle_emitter.html#afa47fd3fc1fc5338fef9e04f05ae73a7", null ],

@@ -6,5 +6,6 @@ var searchData=
   ['blur_3',['Blur',['../class_blur.html',1,'']]],
   ['body_4',['Body',['../class_body.html',1,'']]],
   ['bounds_5',['Bounds',['../class_bounds.html',1,'']]],
-  ['box_6',['Box',['../class_box.html',1,'']]]
+  ['box_6',['Box',['../class_box.html',1,'']]],
+  ['buffer_7',['Buffer',['../classopal_1_1_buffer.html',1,'opal']]]
 ];

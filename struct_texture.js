@@ -10,5 +10,6 @@ var struct_texture =
     [ "creationData", "struct_texture.html#a7424dca65a18a64a794fd3996530b437", null ],
     [ "id", "struct_texture.html#a6faee3eee64a8091460ec57033c4b3a6", null ],
     [ "resource", "struct_texture.html#a2c68086bd793696d36daf636f42ddb2f", null ],
+    [ "texture", "struct_texture.html#ab86803e93f83c4dfab6b1db25f38f30f", null ],
     [ "type", "struct_texture.html#ad83ed086abaa805a606a5ccd433f505c", null ]
 ];

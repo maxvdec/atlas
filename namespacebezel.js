@@ -30,7 +30,7 @@ var namespacebezel =
     [ "isEdgeUnique", "namespacebezel.html#a38ea744619e0b833fa4497ff996e5d1a", null ],
     [ "isExternal", "namespacebezel.html#a0027696456cb0bc89fb9b97139c6d79c", null ],
     [ "normalDirection", "namespacebezel.html#a97f934e1e485a23010282639c1df2c37", null ],
-    [ "numValids", "namespacebezel.html#a77d836219f1bf00c051c91e41f597229", null ],
+    [ "numValids", "namespacebezel.html#a674dfb48923d3f9a3a44d7d07c84e003", null ],
     [ "projectOn1D", "namespacebezel.html#a97d2a0d170ac93a2fea7898a0a9542bb", null ],
     [ "projectOn2D", "namespacebezel.html#a75e9d076d6bac61a2dae5a371fa53cef", null ],
     [ "projectOn3D", "namespacebezel.html#a6e541a1f93a9c6ea9bb15c486ed5abe7", null ],

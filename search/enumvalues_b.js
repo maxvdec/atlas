@@ -8,8 +8,14 @@ var searchData=
   ['leftcontrol_5',['LeftControl',['../input_8h.html#a9479d299e1852e6140dcca1f405868aba641642d3718d5db8994a79d51b43e88c',1,'input.h']]],
   ['leftshift_6',['LeftShift',['../input_8h.html#a9479d299e1852e6140dcca1f405868aba982621712db76f723b7bb88b631dc64d',1,'input.h']]],
   ['leftsuper_7',['LeftSuper',['../input_8h.html#a9479d299e1852e6140dcca1f405868aba4bd45bf12e08f60072b6962e9f7794c2',1,'input.h']]],
-  ['light_8',['Light',['../shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82a9914a0ce04a7b7b6a8e39bec55064b82',1,'Light:&#160;shader.h'],['../shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a9914a0ce04a7b7b6a8e39bec55064b82',1,'Light:&#160;shader.h']]],
-  ['lightdeferred_9',['LightDeferred',['../shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcda62e60907eeb7e4b927057202c2a3eaba',1,'shader.h']]],
-  ['lighting_10',['Lighting',['../shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcda2e4b97fde8cf63085ec969fcc7e490c0',1,'shader.h']]],
-  ['linear_11',['Linear',['../texture_8h.html#a1c9c9d9944566343118d0de8faa720f3a32a843da6ea40ab3b17a3421ccdf671b',1,'texture.h']]]
+  ['less_8',['Less',['../namespaceopal.html#aa865954abe3c03f9552eb2789cf2e7f6a1cfdf0e8d0c87a228c1f40d9bee7888b',1,'opal']]],
+  ['lessequal_9',['LessEqual',['../namespaceopal.html#aa865954abe3c03f9552eb2789cf2e7f6ad3e6fdac55bb7b0edd7834c968ba1f38',1,'opal']]],
+  ['light_10',['Light',['../shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82a9914a0ce04a7b7b6a8e39bec55064b82',1,'Light:&#160;shader.h'],['../shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a9914a0ce04a7b7b6a8e39bec55064b82',1,'Light:&#160;shader.h']]],
+  ['lightdeferred_11',['LightDeferred',['../shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcda62e60907eeb7e4b927057202c2a3eaba',1,'shader.h']]],
+  ['lighting_12',['Lighting',['../shader_8h.html#ad6dfc2a6ff142b1671ab89fca4fdbfcda2e4b97fde8cf63085ec969fcc7e490c0',1,'shader.h']]],
+  ['line_13',['Line',['../namespaceopal.html#a28f9a91b3648e9c463fcd5fb95bf3afba4803e6b9e63dabf04de980788d6a13c4',1,'opal']]],
+  ['linear_14',['Linear',['../texture_8h.html#a1c9c9d9944566343118d0de8faa720f3a32a843da6ea40ab3b17a3421ccdf671b',1,'Linear:&#160;texture.h'],['../namespaceopal.html#a2593432c0d5ad7aef12e0406f22c1511a32a843da6ea40ab3b17a3421ccdf671b',1,'opal::Linear']]],
+  ['linearmipmaplinear_15',['LinearMipmapLinear',['../namespaceopal.html#a2593432c0d5ad7aef12e0406f22c1511a1173bd3987b1e185d86b9c3fe1b8bd72',1,'opal']]],
+  ['lines_16',['Lines',['../namespaceopal.html#a0f2a10029931d49d9cb7366b874115baaa0b0293a2db49f5f93c15a62e095c819',1,'opal']]],
+  ['linestrip_17',['LineStrip',['../namespaceopal.html#a0f2a10029931d49d9cb7366b874115baae7f9e73b8edd21f420a63b3ace5768a2',1,'opal']]]
 ];

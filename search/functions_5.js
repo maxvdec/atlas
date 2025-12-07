@@ -1,6 +1,6 @@
 var searchData=
 [
-  ['fastestlinearspeed_0',['fastestLinearSpeed',['../class_shape.html#a9a859eff4601d136d5312d67b4db4d29',1,'Shape::fastestLinearSpeed()'],['../class_box.html#adaba3fd9ab8b836227c02769123b9f7f',1,'Box::fastestLinearSpeed()'],['../class_convex.html#a05ef2bf9aa5f48d5a06c7c0225066ee6',1,'Convex::fastestLinearSpeed()']]],
+  ['fastestlinearspeed_0',['fastestLinearSpeed',['../class_shape.html#a70b6407583e3163a650a78412de4f149',1,'Shape::fastestLinearSpeed()'],['../class_box.html#adaba3fd9ab8b836227c02769123b9f7f',1,'Box::fastestLinearSpeed()'],['../class_convex.html#a05ef2bf9aa5f48d5a06c7c0225066ee6',1,'Convex::fastestLinearSpeed()']]],
   ['filmgrain_1',['FilmGrain',['../class_film_grain.html#aeb33625f2a1f4c8cb936b2f905d20c29',1,'FilmGrain']]],
   ['finddanglingedges_2',['findDanglingEdges',['../namespacebezel.html#a0808322f15f3829a4897c3bf15906cef',1,'bezel']]],
   ['findfurthestpointfromline_3',['findFurthestPointFromLine',['../namespacebezel.html#acf36db9065dde74a65986d77fc3df018',1,'bezel']]],
@@ -13,7 +13,7 @@ var searchData=
   ['fromcolors_10',['fromColors',['../struct_cubemap.html#a6e50b3412c0dbd04d9e32aec5e78b011',1,'Cubemap']]],
   ['fromdefaultshader_11',['fromDefaultShader',['../struct_vertex_shader.html#aee30d849ca2b428f566b1447b082b4d8',1,'VertexShader::fromDefaultShader()'],['../struct_fragment_shader.html#afc4673c59028e88f4b9ddbee9bf57383',1,'FragmentShader::fromDefaultShader()'],['../struct_geometry_shader.html#a3dc9fd835db2224279533e2f746d978f',1,'GeometryShader::fromDefaultShader()'],['../class_tessellation_shader.html#a4f71dc7facdb94f640cf740b3a15a252',1,'TessellationShader::fromDefaultShader()']]],
   ['fromdefaultshaders_12',['fromDefaultShaders',['../struct_shader_program.html#a93c54bc14ce385f41ff2575fcb25a4f0',1,'ShaderProgram']]],
-  ['fromdegrees_13',['fromDegrees',['../struct_radians.html#ad7e1f62f166beb0c7ee8856bb1fe0a7a',1,'Radians']]],
+  ['fromdegrees_13',['fromDegrees',['../struct_radians.html#adaf5f289ea9b3ae2d0869f9dc247beb9',1,'Radians']]],
   ['fromfile_14',['fromFile',['../class_audio_source.html#aa67087209ce640f1a4b1766f2b59b004',1,'AudioSource']]],
   ['fromglm_15',['fromGlm',['../struct_position3d.html#a824e59149fabc3261e92a2aa0d358d28',1,'Position3d::fromGlm()'],['../struct_rotation3d.html#a2f42a660030160c71d076ddbeaa7ff3b',1,'Rotation3d::fromGlm(const glm::vec3 &amp;vec)']]],
   ['fromglmquat_16',['fromGlmQuat',['../struct_rotation3d.html#abcac30171bdd8fc2aa4300db6c9bd715',1,'Rotation3d']]],

@@ -14,10 +14,10 @@ var struct_color =
     [ "navy", "struct_color.html#a1c406c19f8639a2f70decf6210e615fd", null ],
     [ "olive", "struct_color.html#a6def3f549161bab580196c9cb7f7fb05", null ],
     [ "operator*", "struct_color.html#a94c0d1e5b5e477d3354eab4b1c91bfb6", null ],
-    [ "operator*", "struct_color.html#a457a855b1394e379aca1c55c1eb9bec1", null ],
+    [ "operator*", "struct_color.html#aace65feda252e4fb7dd02ccc4f3ef764", null ],
     [ "operator+", "struct_color.html#af120872d8445c917e04039f4921279d3", null ],
     [ "operator-", "struct_color.html#a185821340c57a5a560507331052a928d", null ],
-    [ "operator/", "struct_color.html#acab1f0be09a8a7fb66285603ef074733", null ],
+    [ "operator/", "struct_color.html#a76d3dcb4b23da616f9f9f84cefa36611", null ],
     [ "operator==", "struct_color.html#ae4b5d5500c2ee028e3f7d92a4d098ee0", null ],
     [ "orange", "struct_color.html#a090b397b9550904617102f3e9ede5b0d", null ],
     [ "pink", "struct_color.html#ad59827d26560a708b1a5e73488faf050", null ],
@@ -28,8 +28,8 @@ var struct_color =
     [ "transparent", "struct_color.html#a567711b6a0cc30d06b69d3b4651324fb", null ],
     [ "white", "struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8", null ],
     [ "yellow", "struct_color.html#ad32e9a83a97f7d14177fb92532dcd2dd", null ],
-    [ "a", "struct_color.html#a693d5fe08d58e91a8483639bcca6da3f", null ],
-    [ "b", "struct_color.html#a37683f9d882695ac49f945d52158055a", null ],
-    [ "g", "struct_color.html#adcc846eae0491cee6a64f503044bca1b", null ],
-    [ "r", "struct_color.html#a12b28b8a60c6add344b485d12e1d2168", null ]
+    [ "a", "struct_color.html#a98047aee65fc3d825f88a76da728fd27", null ],
+    [ "b", "struct_color.html#a33e482be18d6ea31d2b403bee13683b7", null ],
+    [ "g", "struct_color.html#a5defbb21620e480e556181772d665f34", null ],
+    [ "r", "struct_color.html#a3958a556b47d2de3dd45c75aac833c20", null ]
 ];

@@ -1,7 +1,14 @@
 var searchData=
 [
-  ['x_0',['x',['../struct_position3d.html#af899929e630441ac87e42eeb367bc090',1,'Position3d::x'],['../struct_position2d.html#ab1e9024a5b755e0411fbed9fb66f1b87',1,'Position2d::x']]],
-  ['xoffset_1',['xoffset',['../struct_mouse_packet.html#add7993f1d346dd2d712c4d79d6821dbf',1,'MousePacket::xoffset'],['../struct_mouse_scroll_packet.html#ab924db6a08757933ed07096877745c0f',1,'MouseScrollPacket::xoffset']]],
-  ['xpos_2',['xpos',['../struct_mouse_packet.html#a79bcd28ccfd1012ebec9cb3cd3c0449a',1,'MousePacket']]],
-  ['xyz_3',['xyz',['../struct_point.html#a047588ae7ce066f95106c96fd4f8741a',1,'Point']]]
+  ['wavevelocity_0',['waveVelocity',['../struct_fluid.html#a8efbd9aa19764ca29fe8e1fc4a64dc95',1,'Fluid']]],
+  ['weatherdelegate_1',['weatherDelegate',['../class_atmosphere.html#a0733736400004a7241f48940058e2c93',1,'Atmosphere']]],
+  ['weight_2',['weight',['../struct_volumetric_lighting.html#afc05594fff5f90455900b9f33104ab85',1,'VolumetricLighting']]],
+  ['width_3',['width',['../struct_texture_creation_data.html#a4684dfe2e8ff4978d210fbded8e46329',1,'TextureCreationData::width'],['../struct_size2d.html#a3e167fc7c5b984316366a3320fe87d07',1,'Size2d::width'],['../struct_window_configuration.html#a4df560282200968d1957c90a801959be',1,'WindowConfiguration::width'],['../struct_video_mode.html#a639c85303e8684c34fc22aee73b22c9a',1,'VideoMode::width'],['../class_window.html#af5b1c436782cc9752d386493fbc5dc8c',1,'Window::width'],['../class_terrain.html#a53beea1f5b3421259bc95845fccc7c44',1,'Terrain::width'],['../classopal_1_1_texture.html#ae8b910249425b926607743dc7d52ac97',1,'opal::Texture::width'],['../classopal_1_1_framebuffer.html#a690b33a566c7fc65dca4d62d6cc16441',1,'opal::Framebuffer::width']]],
+  ['wind_4',['wind',['../class_clouds.html#af17be5d7ad80994d01e1610c65d76a42',1,'Clouds::wind'],['../struct_weather_state.html#a9e18cee9b9d91c0149956b9e81ed8f2c',1,'WeatherState::wind'],['../class_atmosphere.html#a05f0844d725b9914aa13775b130a74f5',1,'Atmosphere::wind']]],
+  ['window_5',['window',['../classopal_1_1_context.html#a2e61a4bb3ea27ebc9bcf2ef2cff82507',1,'opal::Context']]],
+  ['window_5fcentered_6',['WINDOW_CENTERED',['../window_8h.html#ab807f56d82d66168c2b8f785c1df699f',1,'window.h']]],
+  ['worldspacepoint_7',['worldSpacePoint',['../struct_intersection_point.html#acffb6dba668c3fa1ee6f7b5a43fe1704',1,'IntersectionPoint']]],
+  ['wrappingmodes_8',['wrappingModeS',['../struct_texture_parameters.html#a7b1f9f2cfe234989d79f621c5d274e9a',1,'TextureParameters']]],
+  ['wrappingmodet_9',['wrappingModeT',['../struct_texture_parameters.html#ab9bc6d86781999189234c75e7c4e265f',1,'TextureParameters']]],
+  ['writedepth_10',['writeDepth',['../class_window.html#ad78f26e26e5b198b9f184664920e7b6a',1,'Window']]]
 ];

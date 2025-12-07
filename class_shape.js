@@ -5,8 +5,9 @@ var class_shape =
       [ "Box", "class_shape.html#a4cb9bc6c74b4184257003c83a8d8d39ea3cfce651e667ab85486dd42a8185f98a", null ],
       [ "Convex", "class_shape.html#a4cb9bc6c74b4184257003c83a8d8d39ea766cae017fab4bcc1d1e83fbb9af87c3", null ]
     ] ],
-    [ "build", "class_shape.html#aa0ba2ffd071df28e96cd53a3dd2e1c5a", null ],
-    [ "fastestLinearSpeed", "class_shape.html#a9a859eff4601d136d5312d67b4db4d29", null ],
+    [ "~Shape", "class_shape.html#ac8ad2fd02e1e94beeb98e65ab795cd56", null ],
+    [ "build", "class_shape.html#a8da566a2cbb6b5f1f43f5fbbd900cb7b", null ],
+    [ "fastestLinearSpeed", "class_shape.html#a70b6407583e3163a650a78412de4f149", null ],
     [ "getBounds", "class_shape.html#a5843b8523d0dac25818b031365dc1cd8", null ],
     [ "getBounds", "class_shape.html#ac942bbdbba2011bb79af65117be2d151", null ],
     [ "getCenterOfMass", "class_shape.html#a70fbd011007b13c474b031aaf38d0a4d", null ],

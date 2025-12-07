@@ -54,7 +54,8 @@ var NAVTREE =
       [ "Namespace List", "namespaces.html", "namespaces_dup" ],
       [ "Namespace Members", "namespacemembers.html", [
         [ "All", "namespacemembers.html", null ],
-        [ "Functions", "namespacemembers_func.html", null ]
+        [ "Functions", "namespacemembers_func.html", null ],
+        [ "Enumerations", "namespacemembers_enum.html", null ]
       ] ]
     ] ],
     [ "Classes", "annotated.html", [
@@ -87,12 +88,14 @@ var NAVTREEINDEX =
 [
 "annotated.html",
 "class_color_correction.html#a6db3892398a3dfc92a8629c48b7d661e",
-"class_particle_emitter.html#a31aeca0316daa73fbeef682d70f3ec2f",
-"class_window.html#aa3c2a95cf2ce8cbbb668247f029b610c",
-"input_8h.html#a9479d299e1852e6140dcca1f405868aba7d7902d5e2998e4fb2b8694a2de4ff65",
-"struct_chromatic_aberration_parameters.html#ab9c3d5bef2153bafa0b0b8aee6f6178f",
-"struct_position3d.html#ae0c5070d443bf148ba63f0c72e36a98e",
-"workspace_8h.html#a8571efa4409be32e28abf3ea74a0dbb1ab22f0418e8ac915eb66f829d262d14a2"
+"class_particle_emitter.html#a152e95df28b2885262d5f5025d5f1497",
+"class_window.html#a4fad7ebbb042281a41828a13a1ef457f",
+"classopal_1_1_pipeline.html#a459ad3d7f59d547115cfc592387c48b2",
+"functions_func_o.html",
+"namespacemembers.html",
+"struct_checker_tile.html#a3c834c116f184d7810a7b8cfb851d8b7",
+"struct_motion_blur_parameters.html#afa5e5a78bf3b2c87efc54c5f626bb726",
+"structopal_1_1_context_configuration.html#a549d62090da033f04186b19cf2790a7b"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronization';

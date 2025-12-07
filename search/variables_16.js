@@ -1,7 +1,7 @@
 var searchData=
 [
-  ['y_0',['y',['../struct_position3d.html#a5ba53cfb9bfc34c187a96b160d3edcc0',1,'Position3d::y'],['../struct_position2d.html#a3e803223d447ebee6ede4a2cd155a36b',1,'Position2d::y']]],
-  ['yaw_1',['yaw',['../struct_rotation3d.html#a5c06ac897552725fef5fb70245b79da6',1,'Rotation3d']]],
-  ['yoffset_2',['yoffset',['../struct_mouse_packet.html#affcd0b2302371d6614d4f0f051282695',1,'MousePacket::yoffset'],['../struct_mouse_scroll_packet.html#aafe95f5a4ac07a1d6778f15ffeab047a',1,'MouseScrollPacket::yoffset']]],
-  ['ypos_3',['ypos',['../struct_mouse_packet.html#a5aab87325030261a99dc38db26d6e7a4',1,'MousePacket']]]
+  ['x_0',['x',['../struct_position3d.html#a600cc5acded2f96d674441c4f9a38e4b',1,'Position3d::x'],['../struct_position2d.html#a11332025148153740cf9f3d71a8361c0',1,'Position2d::x']]],
+  ['xoffset_1',['xoffset',['../struct_mouse_packet.html#add7993f1d346dd2d712c4d79d6821dbf',1,'MousePacket::xoffset'],['../struct_mouse_scroll_packet.html#ab924db6a08757933ed07096877745c0f',1,'MouseScrollPacket::xoffset']]],
+  ['xpos_2',['xpos',['../struct_mouse_packet.html#a79bcd28ccfd1012ebec9cb3cd3c0449a',1,'MousePacket']]],
+  ['xyz_3',['xyz',['../struct_point.html#a047588ae7ce066f95106c96fd4f8741a',1,'Point']]]
 ];

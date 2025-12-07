@@ -7,7 +7,7 @@ var class_terrain =
     [ "canUseDeferredRendering", "class_terrain.html#aff56ffedcc1fc7eed7f5d332c240270b", null ],
     [ "initialize", "class_terrain.html#a2e2067f853bbe6384788cd7c19b5d681", null ],
     [ "move", "class_terrain.html#a2f3d6a1be68011a0925c4a7c84c4e722", null ],
-    [ "render", "class_terrain.html#aa74a3e4f14db3852dfa2431be3d22c48", null ],
+    [ "render", "class_terrain.html#a34ed61ab198a85dc2e5ad0bc632ed508", null ],
     [ "rotate", "class_terrain.html#a52cdfdd83cda1830924b3544560699dc", null ],
     [ "scaleBy", "class_terrain.html#ab575c84e5305da44205d01b3a4296fb9", null ],
     [ "setPosition", "class_terrain.html#a96182e33afacd4c81e4b8551397ecef2", null ],

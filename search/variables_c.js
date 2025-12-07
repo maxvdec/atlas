@@ -1,10 +1,8 @@
 var searchData=
 [
-  ['object_0',['object',['../class_component.html#a702063beef62c1319e2019fa1525f5bf',1,'Component::object'],['../class_render_target.html#a1ec7d8ec91e888599057ada1bd6dddc1',1,'RenderTarget::object'],['../class_skybox.html#a839c02e97d141c30f9f1e34275cf9f37',1,'Skybox::object']]],
-  ['objects_1',['objects',['../class_compound_object.html#a3bf2527da20abdca0ae64d4d9793d215',1,'CompoundObject']]],
-  ['offset_2',['offset',['../struct_layout_descriptor.html#acbc4d2b0de323299b2cca4b0bd89d5e7',1,'LayoutDescriptor::offset'],['../class_clouds.html#a89db40a15eb1f1168fbafad6c602d23b',1,'Clouds::offset']]],
-  ['opacity_3',['opacity',['../struct_window_configuration.html#af603ed135d4e249a99add01471feacb2',1,'WindowConfiguration']]],
-  ['orientation_4',['orientation',['../class_body.html#a9b112aeb26e736f839f18707273d3c06',1,'Body']]],
-  ['orthographicsize_5',['orthographicSize',['../class_camera.html#a922270f6e4bc3d7004ef454bb063b8ec',1,'Camera']]],
-  ['outercutoff_6',['outerCutoff',['../struct_spotlight.html#a01229439116d8beeafc6b71b1b449abc',1,'Spotlight']]]
+  ['name_0',['name',['../struct_layout_descriptor.html#a55731605096b1fea2f04032d5853ace0',1,'LayoutDescriptor::name'],['../struct_font.html#a60d1f9d2201ce3d92d76882d6b7c2578',1,'Font::name'],['../struct_resource.html#a2470c0f38c44ae45229e2eb0d6ea1881',1,'Resource::name'],['../class_biome.html#a45d0a14ac780f5a5a0215df8be24e8cf',1,'Biome::name'],['../structopal_1_1_vertex_attribute.html#a5857f9b070ab52307b8d1f44e9c45134',1,'opal::VertexAttribute::name']]],
+  ['nearclip_1',['nearClip',['../class_camera.html#a08a4777bfebab3ed2f71383b1f825203',1,'Camera']]],
+  ['normal_2',['normal',['../struct_core_vertex.html#abc2d2f54279470559c2774fc62a6593f',1,'CoreVertex::normal'],['../struct_contact.html#afb4170a4c6f854f1f8b15ee2cc0a057f',1,'Contact::normal']]],
+  ['normalized_3',['normalized',['../struct_layout_descriptor.html#ac857d18e7c022da576d5abd7c8dd4fed',1,'LayoutDescriptor::normalized'],['../structopal_1_1_vertex_attribute.html#a007810f9afe6ead122ff8f80ccc0ab7d',1,'opal::VertexAttribute::normalized']]],
+  ['normaltexture_4',['normalTexture',['../struct_fluid.html#a9d6cd05defd9aff87f59aa5356bb4a55',1,'Fluid']]]
 ];

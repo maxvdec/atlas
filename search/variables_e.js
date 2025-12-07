@@ -1,4 +1,30 @@
 var searchData=
 [
-  ['quadratic_0',['quadratic',['../struct_point_light_constants.html#a26b70f1a2cb49fd214c4a70212d64249',1,'PointLightConstants']]]
+  ['params_0',['params',['../class_color_correction.html#ae7dedd2d2f9b3cd1e310d2a9d8525b35',1,'ColorCorrection::params'],['../class_motion_blur.html#a8d4c93a424e404d6eb4ea8c5cecaacba',1,'MotionBlur::params'],['../class_chromatic_aberration.html#a4b9adc562f6843357d2d038b7eaca338',1,'ChromaticAberration::params'],['../class_posterization.html#a384252a81036e1b2814bf405d1e2fe24',1,'Posterization::params'],['../class_pixelation.html#a5564b025590e4d54e156f492231c523d',1,'Pixelation::params'],['../class_dilation.html#ab2a67f78b367d2d5217b307f04b8c337',1,'Dilation::params'],['../class_film_grain.html#ab8eeef263e41d675fcc1d4bc1e771aad',1,'FilmGrain::params']]],
+  ['particle_5ffrag_1',['PARTICLE_FRAG',['../default__shaders_8h.html#adbc40b4a97e5a3bf53b4b7128dfbdc9e',1,'default_shaders.h']]],
+  ['particle_5fvert_2',['PARTICLE_VERT',['../default__shaders_8h.html#a88c8c32c6aa70e502d94dc3765a54a85',1,'default_shaders.h']]],
+  ['path_3',['path',['../struct_resource.html#a8d0773f9cdb4b2530e39d7b29af6a3c1',1,'Resource']]],
+  ['phase_4',['phase',['../class_clouds.html#a7800e54874f54d9ab83f0e3a15df65e3',1,'Clouds']]],
+  ['pipeline_5',['pipeline',['../class_core_object.html#aef3a0ff1c9a05c547a5148b86c22fa14',1,'CoreObject']]],
+  ['pipelines_6',['pipelines',['../struct_shader_program.html#a62f04507abacbc37908695bef0fe8bb3',1,'ShaderProgram']]],
+  ['pitch_7',['pitch',['../struct_rotation3d.html#a433d1efd2209adfc3ce07a0e0696c3fc',1,'Rotation3d']]],
+  ['pixelsize_8',['pixelSize',['../struct_pixelation_parameters.html#a3ffc0921e011dde996095cd897a99a46',1,'PixelationParameters']]],
+  ['point_5fdepth_5ffrag_9',['POINT_DEPTH_FRAG',['../default__shaders_8h.html#aee226ae18ed5464f74cd0abeb795fa84',1,'default_shaders.h']]],
+  ['point_5fdepth_5fgeom_10',['POINT_DEPTH_GEOM',['../default__shaders_8h.html#ad346966a531110057848a978cf65409d',1,'default_shaders.h']]],
+  ['point_5fdepth_5fnogeom_5ffrag_11',['POINT_DEPTH_NOGEOM_FRAG',['../default__shaders_8h.html#ad35413ab72d67dd4ca0c458a2fdec585',1,'default_shaders.h']]],
+  ['point_5fdepth_5fnogeom_5fvert_12',['POINT_DEPTH_NOGEOM_VERT',['../default__shaders_8h.html#a6cfec6ed9891d97c1bddad12d9a547eb',1,'default_shaders.h']]],
+  ['point_5fdepth_5fvert_13',['POINT_DEPTH_VERT',['../default__shaders_8h.html#a8b6ccb83c67ae58ec1c69e87c40b2113',1,'default_shaders.h']]],
+  ['pointa_14',['pointA',['../struct_contact.html#a7563b7648d82a4dfe259593f0eeba43d',1,'Contact']]],
+  ['pointb_15',['pointB',['../struct_contact.html#a5e7fbf9bae06ecd385345db493bf2ef6',1,'Contact']]],
+  ['position_16',['position',['../class_camera.html#aa039dfa8c2a624a999b69b0fece3f6fb',1,'Camera::position'],['../struct_view_information.html#aae65e639c7c885295f027b0756634c1c',1,'ViewInformation::position'],['../struct_g_p_u_point_light.html#ae2f0e7ed719bc33b5ed4028109876d48',1,'GPUPointLight::position'],['../struct_g_p_u_spot_light.html#a417bec253262e1f5184bca7df113cbb4',1,'GPUSpotLight::position'],['../struct_g_p_u_area_light.html#a610006a2b43fa8601d41a4f5077ff3c1',1,'GPUAreaLight::position'],['../struct_light.html#ad1bbf10bd6b27da5ddb05399d863ab2b',1,'Light::position'],['../struct_spotlight.html#a76c95332e1fdf991ca0c183acc3e2e07',1,'Spotlight::position'],['../struct_area_light.html#ae56af6976e0662319c51b8396509162e',1,'AreaLight::position'],['../struct_core_vertex.html#acde6bccd12e2eeed36d31fa4b2af9677',1,'CoreVertex::position'],['../struct_instance.html#a92960b42c8508cfa6a2dc5f76c7e9cde',1,'Instance::position'],['../class_core_object.html#a79d0cf7f055f652cd4cd688c836f887f',1,'CoreObject::position'],['../struct_particle.html#afbd7964edf5e088d7a5887e59c730d1a',1,'Particle::position'],['../class_text.html#a49712261e34bfab1ce17687bc5dd5884',1,'Text::position'],['../class_terrain.html#a6d19d49e1a422867270eb9545bc4dff5',1,'Terrain::position'],['../class_body.html#a4a96ea854ac2c1d39c04954530ed83fb',1,'Body::position'],['../class_clouds.html#a49470570cbd431711afb57c61d8110b4',1,'Clouds::position']]],
+  ['posx_17',['posX',['../struct_window_configuration.html#af82774e73872b7f9723a32317cc2c584',1,'WindowConfiguration']]],
+  ['posy_18',['posY',['../struct_window_configuration.html#a74135e5e43337d42165fef181311744d',1,'WindowConfiguration']]],
+  ['primary_19',['primary',['../class_monitor.html#abf0e4583f21c777297e2d7867f1cd471',1,'Monitor']]],
+  ['primarystepcount_20',['primaryStepCount',['../class_clouds.html#a105ed79dc0725c3b287cdc20feeb1f5b',1,'Clouds']]],
+  ['primitivestyle_21',['primitiveStyle',['../class_window.html#af4ee5fe20cfe2443986d86987ccb67ed',1,'Window']]],
+  ['profile_22',['profile',['../structopal_1_1_context_configuration.html#ae0b4935d2640a3b94e084bec522bf12a',1,'opal::ContextConfiguration']]],
+  ['programid_23',['programID',['../classopal_1_1_shader_program.html#aaafeaff1cae89e4ad102b2fd215e503e',1,'opal::ShaderProgram']]],
+  ['programid_24',['programId',['../struct_shader_program.html#ad9211f0d2de370252bec4a1f01e39b4a',1,'ShaderProgram']]],
+  ['pta_25',['ptA',['../struct_point.html#a7c66d22da0312adce5350c433fc67cb3',1,'Point']]],
+  ['ptb_26',['ptB',['../struct_point.html#a0161efe0801b2033ac5db68e987bb68d',1,'Point']]]
 ];

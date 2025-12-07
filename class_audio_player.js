@@ -12,7 +12,7 @@ var class_audio_player =
     [ "setPosition", "class_audio_player.html#ac8e32f560614ca6428fb1f6217c3416b", null ],
     [ "setSource", "class_audio_player.html#a86ea99672d1b155501dc9fedee349c44", null ],
     [ "stop", "class_audio_player.html#a061331787895c48a1dd321aab4fb9c10", null ],
-    [ "update", "class_audio_player.html#a9a991ea02e39e2a0ab66c863432f5782", null ],
+    [ "update", "class_audio_player.html#ae1eca28510c218215fd57d63e905fd95", null ],
     [ "useSpatialization", "class_audio_player.html#a75710b41e16e5c45a3254539248aa89a", null ],
     [ "source", "class_audio_player.html#a57f411e3ce3d3aef39af086788595708", null ]
 ];

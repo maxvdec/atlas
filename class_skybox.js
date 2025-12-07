@@ -5,7 +5,7 @@ var class_skybox =
     [ "create", "class_skybox.html#a987db38dfe17f815ade835da953246b1", null ],
     [ "display", "class_skybox.html#a0860e9aa6cbf872f3e37aecc632a66f8", null ],
     [ "hide", "class_skybox.html#a2441bc54c326105f9c7e4331e3ec643d", null ],
-    [ "render", "class_skybox.html#a00dc102234c9b5631df8d216c2852c54", null ],
+    [ "render", "class_skybox.html#a25950a2d0cad36d0171241759aabb32e", null ],
     [ "setProjectionMatrix", "class_skybox.html#a83a3864abcb171c4f223a58d97575e54", null ],
     [ "setViewMatrix", "class_skybox.html#afead5bf73c14712ac0654e5a3e3f35a6", null ],
     [ "show", "class_skybox.html#a1fa2b711ffc73c6cadaaf0073f7a31be", null ],
