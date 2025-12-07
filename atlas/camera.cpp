@@ -15,11 +15,11 @@
 #include <glm/glm.hpp>
 
 glm::mat4 Camera::calculateViewMatrix() const {
-    glm::vec3 camPos(position.x, position.y, position.z);
-    glm::vec3 camTarget(target.x, target.y, target.z);
-    glm::vec3 upVector(0.0f, 1.0f, 0.0f); // Assuming Y-up coordinate system
+    glm::dvec3 camPos(position.x, position.y, position.z);
+    glm::dvec3 camTarget(target.x, target.y, target.z);
+    glm::dvec3 upVector(0.0, 1.0, 0.0); // Assuming Y-up coordinate system
 
-    return glm::lookAt(camPos, camTarget, upVector);
+    return glm::mat4(glm::lookAt(camPos, camTarget, upVector));
 }
 
 void Camera::move(const Position3d &delta) {
@@ -81,9 +81,7 @@ void Camera::update(Window &window) {
         glm::normalize(glm::vec3(target.x, target.y, target.z) - camPos);
     glm::vec3 upVector(0.0f, 1.0f, 0.0f); // Assuming Y-up coordinate system
 
-    float currentFrame = window.getTime();
-    float deltaTime = currentFrame - lastFrame;
-    lastFrame = currentFrame;
+    float deltaTime = window.getDeltaTime();
 
     float cameraSpeed = movementSpeed * deltaTime;
 

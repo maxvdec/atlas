@@ -65,54 +65,56 @@ void ParticleEmitter::initialize() {
     vao = opal::DrawingState::create(quadBuffer, indexBuffer);
     vao->setBuffers(quadBuffer, indexBuffer);
 
-    opal::VertexAttribute positionAttr{"particlePosition",
-                                       opal::VertexAttributeType::Float,
-                                       0,
-                                       0,
-                                       false,
-                                       3,
-                                       static_cast<uint>(sizeof(QuadVertex)),
-                                       opal::VertexBindingInputRate::Vertex,
-                                       0};
-    opal::VertexAttribute uvAttr{"particleUV",
-                                 opal::VertexAttributeType::Float,
-                                 static_cast<uint>(3 * sizeof(float)),
-                                 1,
-                                 false,
-                                 2,
-                                 static_cast<uint>(sizeof(QuadVertex)),
-                                 opal::VertexBindingInputRate::Vertex,
-                                 0};
+    opal::VertexAttribute positionAttr{
+        .name = "particlePosition",
+        .type = opal::VertexAttributeType::Float,
+        .offset = 0,
+        .location = 0,
+        .normalized = false,
+        .size = 3,
+        .stride = static_cast<uint>(sizeof(QuadVertex)),
+        .inputRate = opal::VertexBindingInputRate::Vertex,
+        .divisor = 0};
+    opal::VertexAttribute uvAttr{
+        .name = "particleUV",
+        .type = opal::VertexAttributeType::Float,
+        .offset = static_cast<uint>(3 * sizeof(float)),
+        .location = 1,
+        .normalized = false,
+        .size = 2,
+        .stride = static_cast<uint>(sizeof(QuadVertex)),
+        .inputRate = opal::VertexBindingInputRate::Vertex,
+        .divisor = 0};
     opal::VertexAttribute instancePos{
-        "instancePosition",
-        opal::VertexAttributeType::Float,
-        0,
-        2,
-        false,
-        3,
-        static_cast<uint>(sizeof(ParticleInstanceData)),
-        opal::VertexBindingInputRate::Instance,
-        1};
+        .name = "instancePosition",
+        .type = opal::VertexAttributeType::Float,
+        .offset = 0,
+        .location = 2,
+        .normalized = false,
+        .size = 3,
+        .stride = static_cast<uint>(sizeof(ParticleInstanceData)),
+        .inputRate = opal::VertexBindingInputRate::Instance,
+        .divisor = 1};
     opal::VertexAttribute instanceColor{
-        "instanceColor",
-        opal::VertexAttributeType::Float,
-        static_cast<uint>(3 * sizeof(float)),
-        3,
-        false,
-        4,
-        static_cast<uint>(sizeof(ParticleInstanceData)),
-        opal::VertexBindingInputRate::Instance,
-        1};
+        .name = "instanceColor",
+        .type = opal::VertexAttributeType::Float,
+        .offset = static_cast<uint>(3 * sizeof(float)),
+        .location = 3,
+        .normalized = false,
+        .size = 4,
+        .stride = static_cast<uint>(sizeof(ParticleInstanceData)),
+        .inputRate = opal::VertexBindingInputRate::Instance,
+        .divisor = 1};
     opal::VertexAttribute instanceSize{
-        "instanceSize",
-        opal::VertexAttributeType::Float,
-        static_cast<uint>(7 * sizeof(float)),
-        4,
-        false,
-        1,
-        static_cast<uint>(sizeof(ParticleInstanceData)),
-        opal::VertexBindingInputRate::Instance,
-        1};
+        .name = "instanceSize",
+        .type = opal::VertexAttributeType::Float,
+        .offset = static_cast<uint>(7 * sizeof(float)),
+        .location = 4,
+        .normalized = false,
+        .size = 1,
+        .stride = static_cast<uint>(sizeof(ParticleInstanceData)),
+        .inputRate = opal::VertexBindingInputRate::Instance,
+        .divisor = 1};
 
     std::vector<opal::VertexAttributeBinding> bindings = {
         {positionAttr, quadBuffer},

@@ -527,6 +527,14 @@ class RenderTarget : public Renderable {
     void bind();
 
     /**
+     * @brief Binds a specific face of a cubemap render target for rendering.
+     * Used for multi-pass cubemap rendering on platforms without geometry
+     * shaders.
+     * @param face The face index (0-5: +X, -X, +Y, -Y, +Z, -Z).
+     */
+    void bindCubemapFace(int face);
+
+    /**
      * @brief Unbinds the framebuffer (binds the default framebuffer).
      */
     void unbind();

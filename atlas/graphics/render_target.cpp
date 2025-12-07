@@ -37,9 +37,10 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
     int scaledWidth = std::max(1, static_cast<int>(fbWidth * targetScale));
     int scaledHeight = std::max(1, static_cast<int>(fbHeight * targetScale));
     Size2d size;
-    size = {static_cast<float>(scaledWidth), static_cast<float>(scaledHeight)};
-    const GLsizei width = static_cast<GLsizei>(scaledWidth);
-    const GLsizei height = static_cast<GLsizei>(scaledHeight);
+    size = {.width = static_cast<float>(scaledWidth),
+            .height = static_cast<float>(scaledHeight)};
+    const auto width = static_cast<GLsizei>(scaledWidth);
+    const auto height = static_cast<GLsizei>(scaledHeight);
     this->type = type;
 
     if (type == RenderTargetType::Scene) {
@@ -93,10 +94,8 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
     } else if (type == RenderTargetType::Multisampled) {
         const int samples = 4;
 
-        // Create the multisampled framebuffer
         fb = opal::Framebuffer::create(width, height);
 
-        // Create multisampled color textures
         auto msColor0 = opal::Texture::createMultisampled(
             opal::TextureFormat::Rgba16F, width, height, samples);
         auto msColor1 = opal::Texture::createMultisampled(
@@ -112,7 +111,6 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
         colorAttachment1.type = opal::Attachment::Type::Color;
         fb->addAttachment(colorAttachment1);
 
-        // Create multisampled depth texture
         auto msDepth = opal::Texture::createMultisampled(
             opal::TextureFormat::DepthComponent24, width, height, samples);
 
@@ -141,7 +139,6 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
         this->msDepthTexture.creationData.height = scaledHeight;
         this->msDepthTexture.type = TextureType::Depth;
 
-        // Create the resolve framebuffer
         resolveFb = opal::Framebuffer::create(width, height);
 
         auto resolvedColor0 = opal::Texture::create(
@@ -262,7 +259,6 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
     } else if (this->type == RenderTargetType::GBuffer) {
         fb = opal::Framebuffer::create(width, height);
 
-        // Position texture (RGBA16F)
         auto positionTex = opal::Texture::create(
             opal::TextureType::Texture2D, opal::TextureFormat::Rgba16F, width,
             height, opal::TextureDataFormat::Rgba, nullptr, 1);
@@ -283,7 +279,6 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
         gPosition.creationData.height = scaledHeight;
         gPosition.type = TextureType::Color;
 
-        // Normal texture (RGBA16F)
         auto normalTex = opal::Texture::create(
             opal::TextureType::Texture2D, opal::TextureFormat::Rgba16F, width,
             height, opal::TextureDataFormat::Rgba, nullptr, 1);
@@ -304,7 +299,6 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
         gNormal.creationData.height = scaledHeight;
         gNormal.type = TextureType::Color;
 
-        // Albedo/Specular texture (RGBA8)
         auto albedoTex = opal::Texture::create(
             opal::TextureType::Texture2D, opal::TextureFormat::Rgba8, width,
             height, opal::TextureDataFormat::Rgba, nullptr, 1);
@@ -325,7 +319,6 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
         gAlbedoSpec.creationData.height = scaledHeight;
         gAlbedoSpec.type = TextureType::Color;
 
-        // Material texture (RGBA8)
         auto materialTex = opal::Texture::create(
             opal::TextureType::Texture2D, opal::TextureFormat::Rgba8, width,
             height, opal::TextureDataFormat::Rgba, nullptr, 1);
@@ -346,7 +339,6 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
         gMaterial.creationData.height = scaledHeight;
         gMaterial.type = TextureType::Color;
 
-        // Depth texture
         auto gbufferDepth = opal::Texture::create(
             opal::TextureType::Texture2D, opal::TextureFormat::DepthComponent24,
             width, height, opal::TextureDataFormat::DepthComponent, nullptr, 1);
@@ -474,19 +466,17 @@ void RenderTarget::display(Window &window, float zindex) {
 
 void RenderTarget::resolve() {
     if (type == RenderTargetType::Multisampled && fb && resolveFb) {
-        // Resolve each color attachment
         for (int i = 0; i < 2; i++) {
             auto resolveAction =
                 opal::ResolveAction::createForColorAttachment(fb, resolveFb, i);
-            // We need a command buffer to perform resolve - get the active one
-            auto commandBuffer = opal::Device::acquireCommandBuffer();
+            auto commandBuffer =
+                Window::mainWindow->device->acquireCommandBuffer();
             commandBuffer->performResolve(resolveAction);
         }
 
-        // Resolve depth
         auto depthResolveAction =
             opal::ResolveAction::createForDepth(fb, resolveFb);
-        auto commandBuffer = opal::Device::acquireCommandBuffer();
+        auto commandBuffer = Window::mainWindow->device->acquireCommandBuffer();
         commandBuffer->performResolve(depthResolveAction);
     }
 
@@ -495,7 +485,6 @@ void RenderTarget::resolve() {
         return;
     }
 
-    // Generate mipmaps for the texture if it exists
     if (this->texture.texture != nullptr) {
         this->texture.texture->automaticallyGenerateMipmaps();
         this->texture.texture->setFilterMode(
@@ -509,12 +498,20 @@ void RenderTarget::bind() {
         fb->bind();
         fb->setViewport();
     } else {
-        // Default framebuffer
         auto defaultFb =
             Window::mainWindow->getDevice()->getDefaultFramebuffer();
         defaultFb->bind();
         defaultFb->setViewport(0, 0, texture.creationData.width,
                                texture.creationData.height);
+    }
+}
+
+void RenderTarget::bindCubemapFace(int face) {
+    if (fb && texture.texture != nullptr) {
+        fb->attachCubemapFace(texture.texture, face,
+                              opal::Attachment::Type::Depth);
+        fb->bind();
+        fb->setViewport();
     }
 }
 
@@ -609,9 +606,6 @@ void RenderTarget::render(float dt,
     }
 
     CoreObject *obj = this->object.get();
-
-    // Note: Texture bindings are managed by the pipeline - no need to clear
-    // them manually
 
     static std::shared_ptr<opal::Pipeline> renderTargetPipeline = nullptr;
     if (renderTargetPipeline == nullptr) {

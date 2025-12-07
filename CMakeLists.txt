@@ -3,6 +3,9 @@ project(Atlas LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+add_definitions(-DATLAS_VERSION=\"Alpha\ 5\")
+add_definitions(-DOPAL_VERSION=\"1\ Ellipse\")
+
 message(STATUS "Building for platform: ${CMAKE_SYSTEM_NAME}")
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
@@ -14,7 +17,7 @@ else()
     add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-add_definitions(-DOPENGL)
+option(BACKEND_OPENGL "Enable OpenGL backend" OFF)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -29,7 +32,22 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(doxygen-awesome-css)
 FetchContent_GetProperties(doxygen-awesome-css SOURCE_DIR AWESOME_CSS_DIR)
 
-set(SHADER_INPUT_DIR "${CMAKE_SOURCE_DIR}/shaders")
+if(BACKEND_OPENGL)
+    message(STATUS "Building using OpenGL backend")
+    add_definitions(-DOPENGL)
+else()
+    message(STATUS "Building using Vulkan backend")
+    add_definitions(-DVULKAN)
+    add_definitions(-DGLM_FORCE_DEPTH_ZERO_TO_ONE)
+endif()
+
+if (BACKEND_OPENGL)
+    message(STATUS "Configuring shaders for OpenGL backend")
+    set(SHADER_INPUT_DIR "${CMAKE_SOURCE_DIR}/shaders/opengl")
+else()
+    message(STATUS "Configuring shaders for Vulkan backend")
+    set(SHADER_INPUT_DIR "${CMAKE_SOURCE_DIR}/shaders/vulkan")
+endif()
 set(SHADER_OUTPUT_FILE "${CMAKE_SOURCE_DIR}/include/atlas/core/default_shaders.h")
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
 
@@ -42,15 +60,41 @@ file(GLOB_RECURSE SHADER_SOURCES
     ${SHADER_INPUT_DIR}/*.tese
 )
 
-add_custom_command(
-    OUTPUT ${SHADER_OUTPUT_FILE}
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/include/atlas/core
-    COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/pack_shaders.py ${SHADER_INPUT_DIR} ${SHADER_OUTPUT_FILE}
-    DEPENDS ${SHADER_SOURCES}
-    COMMENT "Packing shaders into shaders.h"
-)
+if(BACKEND_OPENGL)
+    message(STATUS "Packing shaders without SPIR-V compilation")
+    add_custom_command(
+        OUTPUT ${SHADER_OUTPUT_FILE}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/include/atlas/core
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/pack_shaders.py ${SHADER_INPUT_DIR} ${SHADER_OUTPUT_FILE} false
+        DEPENDS ${SHADER_SOURCES}
+        COMMENT "Packing shaders into shaders.h"
+    )
+else()
+    message(STATUS "Packing shaders with SPIR-V compilation")
+    add_custom_command(
+        OUTPUT ${SHADER_OUTPUT_FILE}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/include/atlas/core
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/pack_shaders.py ${SHADER_INPUT_DIR} ${SHADER_OUTPUT_FILE} true
+        DEPENDS ${SHADER_SOURCES}
+        COMMENT "Packing shaders into shaders.h"
+    )
+endif()
 
-find_package(OpenGL REQUIRED)
+if(BACKEND_OPENGL)
+    find_package(OpenGL REQUIRED)
+else()
+    find_package(Vulkan REQUIRED)
+    message(STATUS "Found Vulkan SDK at ${Vulkan_LIBRARY}")
+    message(STATUS "Found Vulkan Libraries at ${Vulkan_INCLUDE_DIRS}")
+    
+    if(APPLE)
+        list(APPEND CMAKE_PREFIX_PATH "/opt/homebrew/opt/spirv-cross")
+    endif()
+    find_package(spirv_cross_core REQUIRED)
+    find_package(spirv_cross_glsl REQUIRED)
+    find_package(spirv_cross_reflect REQUIRED)
+endif()
+
 find_package(glm REQUIRED)
 find_package(Freetype REQUIRED)
 find_package(Assimp REQUIRED)
@@ -85,18 +129,36 @@ target_link_libraries(finewave PRIVATE glfw glm::glm ${OPENAL_LIB})
 target_include_directories(finewave PRIVATE ${OPENAL_INCLUDE})
 
 add_library(opal ${OPAL_SOURCES})
-target_link_libraries(opal PRIVATE glm::glm glfw OpenGL::GL)
+target_link_libraries(opal PRIVATE glm::glm glfw)
+
+if (BACKEND_OPENGL)
+    target_link_libraries(opal PRIVATE OpenGL::GL)
+else()
+    target_link_libraries(opal PRIVATE Vulkan::Vulkan spirv-cross-core spirv-cross-glsl spirv-cross-reflect)
+    target_compile_definitions(opal PRIVATE VULKAN)
+endif()
 
 add_library(aurora ${AURORA_SOURCES})
-target_link_libraries(aurora PRIVATE glm::glm glfw OpenGL::GL) 
+target_link_libraries(aurora PRIVATE glm::glm glfw)
+
+if (BACKEND_OPENGL)
+    target_link_libraries(aurora PRIVATE OpenGL::GL)
+else()
+    target_link_libraries(aurora PRIVATE Vulkan::Vulkan)
+endif()
 
 add_library(hydra ${HYDRA_SOURCES})
-target_link_libraries(hydra PRIVATE glm::glm glfw OpenGL::GL)
+target_link_libraries(hydra PRIVATE glm::glm glfw)
+
+if (BACKEND_OPENGL)
+    target_link_libraries(hydra PRIVATE OpenGL::GL)
+else()
+    target_link_libraries(hydra PRIVATE Vulkan::Vulkan)
+endif()
 
 add_library(atlas ${ATLAS_SOURCES} ${SHADER_OUTPUT_FILE})
 target_link_libraries(atlas
     PUBLIC
-        OpenGL::GL
         glfw
         glm::glm
         bezel
@@ -107,8 +169,24 @@ target_link_libraries(atlas
         ${FREETYPE_LIBRARIES}
         assimp::assimp
 )
+
+if(BACKEND_OPENGL)
+    target_link_libraries(atlas PRIVATE OpenGL::GL)
+else()
+    target_link_libraries(atlas PRIVATE Vulkan::Vulkan)
+
+    if(APPLE)
+        message(STATUS "Configuring MoltenVK for macOS")
+        target_compile_definitions(atlas PRIVATE VK_USE_PLATFORM_MACOS_MVK)
+    endif()
+endif()
+
 target_include_directories(atlas PRIVATE ${FREETYPE_INCLUDE_DIRS}/freetype2)
 target_compile_definitions(atlas PRIVATE ATLAS_LIB GL_SILENT_DEPRECATION)
+
+target_compile_options(atlas PRIVATE # Suppress warnings from packed shaders
+    -Wno-overlength-strings
+)
 
 get_filename_component(TEST_PATH_ABS "${CMAKE_CURRENT_SOURCE_DIR}/test" ABSOLUTE)
 add_executable(atlas_test ${TEST_SOURCES})
@@ -122,7 +200,11 @@ if(WIN32)
     target_compile_definitions(atlas PRIVATE _CRT_SECURE_NO_WARNINGS NOMINMAX)
     target_link_libraries(atlas PRIVATE opengl32)
 elseif(APPLE)
-    target_link_libraries(atlas PRIVATE "-framework OpenGL" "-framework Cocoa" "-framework IOKit")
+    if(BACKEND_OPENGL)
+        target_link_libraries(atlas PRIVATE "-framework OpenGL" "-framework Cocoa" "-framework IOKit")
+    else()
+        target_link_libraries(atlas PRIVATE "-framework Cocoa" "-framework IOKit" "-framework QuartzCore")
+    endif()
 elseif(UNIX)
     target_link_libraries(atlas PRIVATE dl pthread)
 endif()

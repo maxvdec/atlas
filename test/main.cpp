@@ -195,18 +195,21 @@ class MainScene : public Scene {
 
         sponza.material.albedo = Color(1.0, 0.0, 0.0, 1.0);
 
-        this->setAmbientIntensity(0.2f);
+        Resource fontResource = Workspace::get().createResource(
+            "arial.ttf", "ArialFont", ResourceType::Font);
+
+        this->setAmbientIntensity(1.0f);
 
         window.addObject(&sponza);
 
-        window.useDeferredRendering();
+        // window.useDeferredRendering();
         atmosphere.enable();
         atmosphere.secondsPerHour = 4.f;
         atmosphere.setTime(12);
-        atmosphere.cycle = false;
+        atmosphere.cycle = true;
         atmosphere.useGlobalLight();
 
-        atmosphere.castShadowsFromSunlight(4096);
+        // atmosphere.castShadowsFromSunlight(4096);
     }
 };
 
