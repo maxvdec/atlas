@@ -34,8 +34,6 @@ Font Font::fromResource(const std::string &fontName, Resource resource,
 
     Font font;
 
-    // Create a texture atlas
-    // We'll use a fixed size for now, e.g., 1024x1024
     const int atlasWidth = 1024;
     const int atlasHeight = 1024;
     std::vector<unsigned char> atlasData(atlasWidth * atlasHeight, 0);
@@ -54,20 +52,17 @@ Font Font::fromResource(const std::string &fontName, Resource resource,
         int width = face->glyph->bitmap.width;
         int height = face->glyph->bitmap.rows;
 
-        // If we reach the end of the row, move to the next row
         if (currentX + width + padding > atlasWidth) {
             currentX = 0;
             currentY += rowHeight + padding;
             rowHeight = 0;
         }
 
-        // If we reach the bottom of the atlas, stop (or handle overflow)
         if (currentY + height + padding > atlasHeight) {
             std::cerr << "Font atlas full for font: " << fontName << std::endl;
             break;
         }
 
-        // Copy bitmap to atlas
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 atlasData[(currentY + y) * atlasWidth + (currentX + x)] =
@@ -76,15 +71,17 @@ Font Font::fromResource(const std::string &fontName, Resource resource,
         }
 
         Character character = {
-            Size2d(width, height),
-            Position2d(face->glyph->bitmap_left, face->glyph->bitmap_top),
-            static_cast<unsigned int>(face->glyph->advance.x),
+            .size = Size2d(width, height),
+            .bearing =
+                Position2d(face->glyph->bitmap_left, face->glyph->bitmap_top),
+            .advance = static_cast<unsigned int>(face->glyph->advance.x),
             // UV Min (Top-Left)
-            Position2d(static_cast<float>(currentX) / atlasWidth,
-                       static_cast<float>(currentY) / atlasHeight),
+            .uvMin = Position2d(static_cast<float>(currentX) / atlasWidth,
+                                static_cast<float>(currentY) / atlasHeight),
             // UV Max (Bottom-Right)
-            Position2d(static_cast<float>(currentX + width) / atlasWidth,
-                       static_cast<float>(currentY + height) / atlasHeight)};
+            .uvMax = Position2d(
+                static_cast<float>(currentX + width) / atlasWidth,
+                static_cast<float>(currentY + height) / atlasHeight)};
 
         font.atlas.insert(std::pair<char, Character>(c, character));
 
@@ -92,7 +89,6 @@ Font Font::fromResource(const std::string &fontName, Resource resource,
         rowHeight = std::max(rowHeight, height);
     }
 
-    // Create the single texture for the font
     auto opalTexture = opal::Texture::create(
         opal::TextureType::Texture2D, opal::TextureFormat::Red8, atlasWidth,
         atlasHeight, opal::TextureDataFormat::Red, atlasData.data(), 1);
@@ -223,7 +219,6 @@ void Text::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
                                    opal::BlendFunc::OneMinusSrcAlpha);
         textPipeline->build();
     } else {
-        // Keep viewport in sync with current framebuffer size.
 #ifdef VULKAN
         textPipeline->setViewport(0, fbHeight, fbWidth, -fbHeight);
 #else
@@ -242,14 +237,12 @@ void Text::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
     textPipeline->setUniform3f("textColor", color.r, color.g, color.b);
     textPipeline->setUniformMat4f("projection", projection);
 
-    // Bind the font atlas texture once
     if (font.texture) {
         textPipeline->bindTexture2D("text", font.texture->textureID, 0);
     }
 
     commandBuffer->bindDrawingState(vao);
 
-    // Recompute projection to follow live framebuffer size (resizes).
     glfwGetFramebufferSize(
         static_cast<GLFWwindow *>(Window::mainWindow->windowRef), &fbWidth,
         &fbHeight);
@@ -289,16 +282,11 @@ void Text::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
         float w = ch.size.width * scale;
         float h = ch.size.height * scale;
 
-        // Use UV coordinates from the atlas
         float u0 = ch.uvMin.x;
         float v0 = ch.uvMin.y;
         float u1 = ch.uvMax.x;
         float v1 = ch.uvMax.y;
 
-        // Vertices for the quad
-        // Note: We map the atlas UVs directly.
-        // (xpos, ypos) is top-left on screen (if y increases downwards)
-        // (u0, v0) is top-left in atlas
         float vertices[6][4] = {
             {xpos, ypos, u0, v0},         {xpos, ypos + h, u0, v1},
             {xpos + w, ypos + h, u1, v1},
@@ -310,7 +298,6 @@ void Text::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
         const size_t offset = glyphIndex * bytesPerGlyph;
         vertexBuffer->updateData(offset, sizeof(vertices), vertices);
         vertexBuffer->unbind();
-        // firstVertex is offset / stride (4 floats per vertex)
         commandBuffer->draw(6, 1,
                             static_cast<uint>(offset / (4 * sizeof(float))), 0);
 

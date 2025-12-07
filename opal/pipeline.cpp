@@ -535,28 +535,19 @@ void Pipeline::bindBufferData(const std::string &name, const void *data,
     }
 
 #ifdef OPENGL
-    // In OpenGL, we don't need to do anything special for UBOs
-    // The data will be uploaded through the uniform buffer object system
-    // For now, this is a no-op on OpenGL as the individual uniform setters
-    // handle the data. If you need full UBO support, you'd use
-    // glBufferSubData here.
     (void)name;
     (void)data;
     (void)size;
 #elif defined(VULKAN)
-    // Find the uniform buffer binding info
     const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
     if (!info) {
-        // Try to find it as just the buffer name (without member access)
         return;
     }
 
     if (!info->isBuffer) {
-        // This is a push constant, not a buffer
         return;
     }
 
-    // Update the entire buffer
     updateUniformData(info->set, info->binding, 0, data, size);
 #endif
 }
@@ -581,14 +572,12 @@ Pipeline::getOrCreateUniformBuffer(uint32_t set, uint32_t binding,
     auto it = uniformBuffers.find(key);
 
     if (it != uniformBuffers.end()) {
-        // Buffer exists, check if size is sufficient AND memory is valid
         if (it->second.descriptorType == descriptorType &&
             it->second.size >= size && it->second.buffer != VK_NULL_HANDLE &&
             it->second.memory != VK_NULL_HANDLE &&
             it->second.mappedData != nullptr) {
             return it->second;
         }
-        // Need to recreate - clean up old resources if they exist
         if (it->second.mappedData != nullptr &&
             it->second.memory != VK_NULL_HANDLE) {
             vkUnmapMemory(Device::globalDevice, it->second.memory);
@@ -599,11 +588,9 @@ Pipeline::getOrCreateUniformBuffer(uint32_t set, uint32_t binding,
         if (it->second.memory != VK_NULL_HANDLE) {
             vkFreeMemory(Device::globalDevice, it->second.memory, nullptr);
         }
-        // Remove old entry before creating new one
         uniformBuffers.erase(it);
     }
 
-    // Create new buffer - initialize struct first
     UniformBufferAllocation alloc{};
     alloc.size = size;
     alloc.descriptorType = descriptorType;
@@ -636,14 +623,12 @@ Pipeline::getOrCreateUniformBuffer(uint32_t set, uint32_t binding,
 
     if (vkAllocateMemory(Device::globalDevice, &allocInfo, nullptr,
                          &alloc.memory) != VK_SUCCESS) {
-        // Clean up buffer before throwing
         vkDestroyBuffer(Device::globalDevice, alloc.buffer, nullptr);
         throw std::runtime_error("Failed to allocate uniform buffer memory");
     }
 
     vkBindBufferMemory(Device::globalDevice, alloc.buffer, alloc.memory, 0);
 
-    // Map the memory persistently
     VkResult mapResult = vkMapMemory(Device::globalDevice, alloc.memory, 0,
                                      size, 0, &alloc.mappedData);
     if (mapResult != VK_SUCCESS || alloc.mappedData == nullptr) {
@@ -652,10 +637,8 @@ Pipeline::getOrCreateUniformBuffer(uint32_t set, uint32_t binding,
         throw std::runtime_error("Failed to map uniform buffer memory");
     }
 
-    // Initialize to zero
     memset(alloc.mappedData, 0, size);
 
-    // Only insert into map after successful creation
     uniformBuffers[key] = alloc;
     return uniformBuffers[key];
 }
@@ -676,17 +659,14 @@ Pipeline::getDescriptorBindingInfo(uint32_t set, uint32_t binding) const {
 void Pipeline::updateUniformData(uint32_t set, uint32_t binding,
                                  uint32_t offset, const void *data,
                                  size_t size) {
-    // Find the block size from reflection data
-    VkDeviceSize blockSize = 256; // Default minimum uniform buffer alignment
+    VkDeviceSize blockSize = 256;
 
-    // Look through shader program's uniform bindings to find the block size
     if (this->shaderProgram) {
         for (const auto &pair : this->shaderProgram->uniformBindings) {
             const UniformBindingInfo &info = pair.second;
             if (info.set == set && info.binding == binding && info.isBuffer &&
                 info.size > 0) {
                 if (info.offset == 0) {
-                    // This is the block itself, use its size
                     blockSize = info.size;
                     break;
                 }
@@ -694,35 +674,23 @@ void Pipeline::updateUniformData(uint32_t set, uint32_t binding,
         }
     }
 
-    // Ensure we allocate at least enough for this write
     VkDeviceSize requiredSize = offset + size;
-    if (blockSize < requiredSize) {
-        blockSize = requiredSize;
-    }
+    blockSize = std::max(blockSize, requiredSize);
 
     UniformBufferAllocation &alloc =
         getOrCreateUniformBuffer(set, binding, blockSize);
 
-    // Safety check: ensure buffer is mapped before writing
     if (alloc.mappedData == nullptr) {
         return;
     }
 
-    // Write data at the correct offset
     char *dst = static_cast<char *>(alloc.mappedData) + offset;
     memcpy(dst, data, size);
 
     bindUniformBufferDescriptor(set, binding);
 }
 
-void Pipeline::buildDescriptorSets() {
-    // This function would build descriptor sets based on reflection data
-    // For now, we rely on the existing descriptor set management in the render
-    // pass A full implementation would:
-    // 1. Create descriptor set layouts based on uniform bindings
-    // 2. Allocate descriptor sets from a pool
-    // 3. Update descriptor sets with buffer/image bindings
-}
+void Pipeline::buildDescriptorSets() {}
 
 void Pipeline::resetDescriptorSets() {
     if (descriptorPool != VK_NULL_HANDLE) {
@@ -737,8 +705,6 @@ void Pipeline::ensureDescriptorResources() {
         return;
     }
 
-    // Check if we already have valid descriptor sets
-    // If descriptorPool exists and has allocated sets, don't reallocate
     if (descriptorPool != VK_NULL_HANDLE && !descriptorSets.empty()) {
         bool allSetsValid = true;
         for (size_t i = 0; i < descriptorSetLayouts.size(); ++i) {
@@ -750,14 +716,11 @@ void Pipeline::ensureDescriptorResources() {
             }
         }
         if (allSetsValid) {
-            return; // Already have valid descriptor resources
+            return;
         }
     }
 
-    // Only allocate if we don't have a pool yet
     if (descriptorPool != VK_NULL_HANDLE) {
-        // Pool exists but sets are invalid - this shouldn't happen during
-        // normal operation. Log a warning but don't reallocate during a frame.
         return;
     }
 
@@ -822,8 +785,6 @@ void Pipeline::ensureDescriptorResources() {
         descriptorSets[i] = set;
     }
 
-    // Prime all descriptors with placeholder resources so Vulkan validation
-    // layers always see valid bindings even before the app uploads data.
     auto dummyTex = getDummyTexture();
     auto dummyCubeTex = getDummyCubemap();
     for (const auto &setPair : descriptorBindingInfo) {
@@ -861,10 +822,6 @@ std::shared_ptr<Texture> Pipeline::getDummyTexture() {
 std::shared_ptr<Texture> Pipeline::getDummyCubemap() {
     static std::shared_ptr<Texture> dummyCube = nullptr;
     if (!dummyCube) {
-        // Create a 1x1 cubemap without initial data - it will be uninitialized
-        // but that's fine for a placeholder texture. We avoid passing data
-        // because the staging buffer size calculation in Texture::create
-        // doesn't account for cubemap layers.
         dummyCube =
             Texture::create(TextureType::TextureCubeMap, TextureFormat::Rgba8,
                             1, 1, TextureDataFormat::Rgba, nullptr, 1);
@@ -889,12 +846,9 @@ void Pipeline::bindSamplerDescriptor(uint32_t set, uint32_t binding,
         return;
     }
 
-    // Ensure texture is in shader read layout before binding
     VkImageLayout desiredLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     if (texture->currentLayout != desiredLayout &&
         texture->currentLayout != VK_IMAGE_LAYOUT_GENERAL) {
-        // Only transition color textures to shader read
-        // Depth textures may need to stay in attachment layout
         VkFormat vkFormat = opalTextureFormatToVulkanFormat(texture->format);
         bool isDepth = (texture->format == TextureFormat::Depth24Stencil8 ||
                         texture->format == TextureFormat::DepthComponent24 ||
@@ -952,7 +906,6 @@ void Pipeline::bindUniformBufferDescriptor(uint32_t set, uint32_t binding) {
     UniformBufferAllocation &alloc =
         getOrCreateUniformBuffer(set, binding, minSize);
 
-    // Safety check: ensure buffer is valid before binding
     if (alloc.buffer == VK_NULL_HANDLE || alloc.memory == VK_NULL_HANDLE) {
         return;
     }
@@ -1016,21 +969,17 @@ void Pipeline::bindDescriptorSets(VkCommandBuffer commandBuffer) {
 
 void Pipeline::updatePushConstant(uint32_t offset, const void *data,
                                   size_t size) {
-    // Ensure push constant buffer is large enough
     uint32_t requiredSize = offset + static_cast<uint32_t>(size);
     if (pushConstantData.size() < requiredSize) {
         pushConstantData.resize(requiredSize, 0);
         pushConstantSize = requiredSize;
     }
 
-    // Copy data to push constant buffer
     memcpy(pushConstantData.data() + offset, data, size);
     pushConstantsDirty = true;
 }
 
 void Pipeline::flushPushConstants(VkCommandBuffer commandBuffer) {
-    // Push constants must be set before drawing if the shader uses them.
-    // We push even if not dirty to ensure the GPU has valid data on first use.
     if (pushConstantSize == 0) {
         return;
     }

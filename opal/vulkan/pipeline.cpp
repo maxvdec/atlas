@@ -142,20 +142,16 @@ void Pipeline::buildPipelineLayout() {
         static_cast<uint32_t>(vkDynamicStates.size());
     dynamicState.pDynamicStates = vkDynamicStates.data();
 
-    // Create vertex input state
-
     vertexInputInfo = {};
     vkBindingDescriptions.clear();
     vkAttributeDescriptions.clear();
 
-    // Create binding for per-vertex data (binding 0)
     VkVertexInputBindingDescription vertexBindingDesc{};
     vertexBindingDesc.binding = 0;
     vertexBindingDesc.stride = vertexBinding.stride;
     vertexBindingDesc.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
     vkBindingDescriptions.push_back(vertexBindingDesc);
 
-    // Check if we have any instance attributes
     bool foundInstanceAttributes = false;
     uint32_t instanceStride = 0;
     for (const auto &attr : this->vertexAttributes) {
@@ -166,7 +162,6 @@ void Pipeline::buildPipelineLayout() {
         }
     }
 
-    // Create binding for per-instance data (binding 1) if needed
     if (foundInstanceAttributes) {
         VkVertexInputBindingDescription instanceBindingDesc{};
         instanceBindingDesc.binding = 1;
@@ -180,8 +175,6 @@ void Pipeline::buildPipelineLayout() {
     for (const auto &attr : this->vertexAttributes) {
         VkVertexInputAttributeDescription attrDesc{};
         attrDesc.location = attr.location;
-        // Use binding 0 for vertex attributes, binding 1 for instance
-        // attributes
         attrDesc.binding =
             (attr.inputRate == VertexBindingInputRate::Instance) ? 1 : 0;
         attrDesc.format =
@@ -200,8 +193,6 @@ void Pipeline::buildPipelineLayout() {
         static_cast<uint32_t>(vkAttributeDescriptions.size());
     vertexInputInfo.pVertexAttributeDescriptions =
         vkAttributeDescriptions.data();
-
-    // Define input assembly state
 
     inputAssembly = {};
     inputAssembly.sType =
@@ -235,7 +226,6 @@ void Pipeline::buildPipelineLayout() {
 
     inputAssembly.primitiveRestartEnable = VK_FALSE;
 
-    // Create the viewport
     vkViewport = {};
     vkViewport.x = static_cast<float>(viewportX);
     vkViewport.y = static_cast<float>(viewportY);
@@ -256,7 +246,6 @@ void Pipeline::buildPipelineLayout() {
     viewportState.scissorCount = 1;
     viewportState.pScissors = &vkScissor;
 
-    // Create the rasterizer state
     rasterizer = {};
     rasterizer.sType =
         VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
@@ -321,7 +310,6 @@ void Pipeline::buildPipelineLayout() {
         multisampling.rasterizationSamples = VK_SAMPLE_COUNT_4_BIT;
     }
 
-    // Depth and stencil testing
     depthStencil = {};
     depthStencil.sType =
         VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
@@ -355,7 +343,6 @@ void Pipeline::buildPipelineLayout() {
         break;
     }
 
-    // Create the color blend state
     vkColorBlendAttachments.clear();
     VkPipelineColorBlendAttachmentState colorBlendAttachment{};
     colorBlendAttachment.colorWriteMask =
@@ -470,11 +457,9 @@ void Pipeline::buildPipelineLayout() {
         static_cast<uint32_t>(vkColorBlendAttachments.size());
     colorBlending.pAttachments = vkColorBlendAttachments.data();
 
-    // Collect all uniform buffer bindings and push constants from shaders
     uint32_t maxPushConstantSize = 0;
     VkShaderStageFlags pushConstantStageFlags = 0;
 
-    // Map from (set, binding) to descriptor info
     descriptorBindingInfo.clear();
 
     if (this->shaderProgram) {
@@ -518,7 +503,6 @@ void Pipeline::buildPipelineLayout() {
                     binding.isBuffer = true;
                     binding.isSampler = false;
                 } else if (info.isSampler) {
-                    // This is a sampler - add to descriptor set layout
                     auto &binding =
                         descriptorBindingInfo[info.set][info.binding];
                     binding.type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -528,7 +512,6 @@ void Pipeline::buildPipelineLayout() {
                     binding.isSampler = true;
                     binding.isCubemap = info.isCubemap;
                 } else {
-                    // This is a push constant
                     uint32_t endOffset = info.offset + info.size;
                     if (endOffset > maxPushConstantSize) {
                         maxPushConstantSize = endOffset;
@@ -539,13 +522,8 @@ void Pipeline::buildPipelineLayout() {
         }
     }
 
-    // Release descriptor sets before destroying their layouts to satisfy
-    // Vulkan lifetime rules. Note: If this pipeline is currently bound to
-    // an active command buffer, this will cause validation errors. Pipelines
-    // should only be built once during initialization, not during rendering.
     resetDescriptorSets();
 
-    // Clean up old descriptor set layouts
     for (auto layout : descriptorSetLayouts) {
         if (layout != VK_NULL_HANDLE) {
             vkDestroyDescriptorSetLayout(Device::globalDevice, layout, nullptr);
@@ -553,7 +531,6 @@ void Pipeline::buildPipelineLayout() {
     }
     descriptorSetLayouts.clear();
 
-    // Create descriptor set layouts for each set
     if (!descriptorBindingInfo.empty()) {
         uint32_t maxSet = descriptorBindingInfo.rbegin()->first;
         descriptorSetLayouts.resize(maxSet + 1, VK_NULL_HANDLE);
@@ -602,18 +579,15 @@ void Pipeline::buildPipelineLayout() {
         }
     }
 
-    // Store push constant info for later use
     this->pushConstantSize = maxPushConstantSize;
     this->pushConstantStages = pushConstantStageFlags;
     if (maxPushConstantSize > 0) {
         this->pushConstantData.resize(maxPushConstantSize, 0);
     }
 
-    // Create the pipeline layout
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
 
-    // Add descriptor set layouts
     if (!descriptorSetLayouts.empty()) {
         pipelineLayoutInfo.setLayoutCount =
             static_cast<uint32_t>(descriptorSetLayouts.size());
@@ -710,7 +684,6 @@ CoreRenderPass::create(std::shared_ptr<Pipeline> pipeline,
         brightRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
         colorAttachmentRefs.push_back(brightRef);
 
-        // Add depth attachment for the default framebuffer
         if (Device::globalInstance->swapChainDepthTexture != nullptr) {
             VkAttachmentDescription depthAttachment{};
             depthAttachment.format = VK_FORMAT_D32_SFLOAT;
@@ -745,14 +718,11 @@ CoreRenderPass::create(std::shared_ptr<Pipeline> pipeline,
             attachmentDesc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
             if (attachment.type == opal::Attachment::Type::Color) {
-                // Transition to shader read so it can be sampled in subsequent
-                // passes
                 attachmentDesc.finalLayout =
                     VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
             } else if (attachment.type == opal::Attachment::Type::Depth ||
                        attachment.type ==
                            opal::Attachment::Type::DepthStencil) {
-                // Keep depth in attachment layout as it's typically re-used
                 attachmentDesc.finalLayout =
                     VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
                 attachmentDesc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
@@ -797,8 +767,6 @@ CoreRenderPass::create(std::shared_ptr<Pipeline> pipeline,
     renderPassInfo.subpassCount = 1;
     renderPassInfo.pSubpasses = &subpass;
 
-    // Entry dependency: wait for previous operations before starting render
-    // pass
     VkSubpassDependency dependencies[2] = {};
     dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
     dependencies[0].dstSubpass = 0;
@@ -815,7 +783,6 @@ CoreRenderPass::create(std::shared_ptr<Pipeline> pipeline,
         VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT |
         VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
-    // Exit dependency: ensure render pass completes before subsequent reads
     dependencies[1].srcSubpass = 0;
     dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
     dependencies[1].srcStageMask =
@@ -848,20 +815,16 @@ CoreRenderPass::create(std::shared_ptr<Pipeline> pipeline,
     pipelineInfo.pViewportState = &pipeline->viewportState;
     pipelineInfo.pRasterizationState = &pipeline->rasterizer;
 
-    // Determine the sample count from the framebuffer
     VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT;
     if (framebuffer->isDefaultFramebuffer) {
-        // Default framebuffer uses swapchain which is always 1 sample
         sampleCount = VK_SAMPLE_COUNT_1_BIT;
     } else if (!framebuffer->attachments.empty()) {
-        // Use the sample count from the first attachment
         int samples = framebuffer->attachments[0].texture->samples;
         if (samples > 1) {
             sampleCount = VK_SAMPLE_COUNT_4_BIT;
         }
     }
 
-    // Create a multisampling state that matches the framebuffer
     VkPipelineMultisampleStateCreateInfo multisampling{};
     multisampling.sType =
         VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
@@ -875,7 +838,6 @@ CoreRenderPass::create(std::shared_ptr<Pipeline> pipeline,
     pipelineInfo.pMultisampleState = &multisampling;
     pipelineInfo.pDepthStencilState = &pipeline->depthStencil;
 
-    // Duplicate the color blend attachment state for every color attachment
     VkPipelineColorBlendStateCreateInfo colorBlending = pipeline->colorBlending;
     std::vector<VkPipelineColorBlendAttachmentState> colorBlendAttachments =
         pipeline->vkColorBlendAttachments;
@@ -930,14 +892,10 @@ std::shared_ptr<CoreRenderPass> CoreRenderPass::createWithExistingRenderPass(
     auto coreRenderPass = std::make_shared<CoreRenderPass>();
     coreRenderPass->opalPipeline = pipeline;
     coreRenderPass->opalFramebuffer = framebuffer;
-    coreRenderPass->renderPass =
-        existingRenderPass; // Reuse existing render pass
+    coreRenderPass->renderPass = existingRenderPass;
 
-    // Ensure the pipeline layout is built (sets up dynamicState,
-    // vertexInputInfo, etc.)
     pipeline->buildPipelineLayout();
 
-    // Count color attachments for blend state
     size_t colorAttachmentCount = 0;
     if (framebuffer->isDefaultFramebuffer) {
         colorAttachmentCount = 2; // color + bright attachment
@@ -949,7 +907,6 @@ std::shared_ptr<CoreRenderPass> CoreRenderPass::createWithExistingRenderPass(
         }
     }
 
-    // Determine sample count
     VkSampleCountFlagBits sampleCount = VK_SAMPLE_COUNT_1_BIT;
     if (!framebuffer->isDefaultFramebuffer &&
         !framebuffer->attachments.empty()) {
@@ -959,7 +916,6 @@ std::shared_ptr<CoreRenderPass> CoreRenderPass::createWithExistingRenderPass(
         }
     }
 
-    // Create the pipeline using the existing render pass
     VkGraphicsPipelineCreateInfo pipelineInfo{};
     pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
 

@@ -616,7 +616,6 @@ ShaderProgram ShaderProgram::fromDefaultShaders(
     program.vertexShader.compile();
     program.fragmentShader.compile();
 
-    // We need to wait a bit to ensure the GPU is ready for the next compilation
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
     if (program.vertexShader.shaderId == 0 ||
@@ -646,22 +645,29 @@ std::shared_ptr<opal::Pipeline> ShaderProgram::requestPipeline(
 
     for (const auto &attr : layoutDescriptors) {
         vertexAttributes.push_back(opal::VertexAttribute{
-            attr.name, attr.type, static_cast<uint>(attr.offset),
-            static_cast<uint>(attr.layoutPos), attr.normalized,
-            static_cast<uint>(attr.size), static_cast<uint>(attr.stride),
-            opal::VertexBindingInputRate::Vertex, 0});
+            .name = attr.name,
+            .type = attr.type,
+            .offset = static_cast<uint>(attr.offset),
+            .location = static_cast<uint>(attr.layoutPos),
+            .normalized = attr.normalized,
+            .size = static_cast<uint>(attr.size),
+            .stride = static_cast<uint>(attr.stride),
+            .inputRate = opal::VertexBindingInputRate::Vertex,
+            .divisor = 0});
     }
 
-    // Add instance model matrix attributes (locations 6-9 for mat4)
-    // These are always needed because the shader expects them
     std::size_t vec4Size = sizeof(glm::vec4);
     for (unsigned int i = 0; i < 4; ++i) {
         vertexAttributes.push_back(opal::VertexAttribute{
-            "instanceModel" + std::to_string(i),
-            opal::VertexAttributeType::Float, static_cast<uint>(i * vec4Size),
-            static_cast<uint>(6 + i), false, 4,
-            static_cast<uint>(sizeof(glm::mat4)),
-            opal::VertexBindingInputRate::Instance, 1});
+            .name = "instanceModel" + std::to_string(i),
+            .type = opal::VertexAttributeType::Float,
+            .offset = static_cast<uint>(i * vec4Size),
+            .location = static_cast<uint>(6 + i),
+            .normalized = false,
+            .size = 4,
+            .stride = static_cast<uint>(sizeof(glm::mat4)),
+            .inputRate = opal::VertexBindingInputRate::Instance,
+            .divisor = 1});
     }
 
     vertexBinding = opal::VertexBinding{(uint)layoutDescriptors[0].stride,

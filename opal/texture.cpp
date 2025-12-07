@@ -144,8 +144,7 @@ void Texture::updateFace(int faceIndex, const void *data, int width, int height,
         return;
     }
 
-    // Determine bytes per pixel based on format
-    size_t bytesPerPixel = 4; // Default RGBA
+    size_t bytesPerPixel = 4;
     if (dataFormat == TextureDataFormat::Rgb) {
         bytesPerPixel = 3;
     } else if (dataFormat == TextureDataFormat::Red) {
@@ -153,9 +152,8 @@ void Texture::updateFace(int faceIndex, const void *data, int width, int height,
     }
 
     size_t pixelCount = static_cast<size_t>(width) * height;
-    VkDeviceSize imageSize = pixelCount * 4; // Vulkan uses RGBA
+    VkDeviceSize imageSize = pixelCount * 4;
 
-    // Create staging buffer
     VkBuffer stagingBuffer;
     VkDeviceMemory stagingBufferMemory;
     Buffer::createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
@@ -167,10 +165,9 @@ void Texture::updateFace(int faceIndex, const void *data, int width, int height,
     vkMapMemory(Device::globalDevice, stagingBufferMemory, 0, imageSize, 0,
                 &mappedData);
 
-    // Convert RGB to RGBA if necessary
     if (bytesPerPixel == 3) {
-        const uint8_t *src = static_cast<const uint8_t *>(data);
-        uint8_t *dst = static_cast<uint8_t *>(mappedData);
+        const auto *src = static_cast<const uint8_t *>(data);
+        auto *dst = static_cast<uint8_t *>(mappedData);
         for (size_t i = 0; i < pixelCount; ++i) {
             dst[i * 4 + 0] = src[i * 3 + 0];
             dst[i * 4 + 1] = src[i * 3 + 1];
@@ -178,8 +175,8 @@ void Texture::updateFace(int faceIndex, const void *data, int width, int height,
             dst[i * 4 + 3] = 255;
         }
     } else if (bytesPerPixel == 1) {
-        const uint8_t *src = static_cast<const uint8_t *>(data);
-        uint8_t *dst = static_cast<uint8_t *>(mappedData);
+        const auto *src = static_cast<const uint8_t *>(data);
+        auto *dst = static_cast<uint8_t *>(mappedData);
         for (size_t i = 0; i < pixelCount; ++i) {
             dst[i * 4 + 0] = src[i];
             dst[i * 4 + 1] = src[i];
@@ -194,7 +191,6 @@ void Texture::updateFace(int faceIndex, const void *data, int width, int height,
 
     VkFormat vkFormat = opalTextureFormatToVulkanFormat(format);
 
-    // Only transition to transfer dst if not already there
     if (currentLayout != VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
         Framebuffer::transitionImageLayout(vkImage, vkFormat, currentLayout,
                                            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
@@ -202,7 +198,6 @@ void Texture::updateFace(int faceIndex, const void *data, int width, int height,
         currentLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
     }
 
-    // Copy buffer to the specific face (array layer)
     VkCommandBufferAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
@@ -226,9 +221,10 @@ void Texture::updateFace(int faceIndex, const void *data, int width, int height,
     region.imageSubresource.mipLevel = 0;
     region.imageSubresource.baseArrayLayer = static_cast<uint32_t>(faceIndex);
     region.imageSubresource.layerCount = 1;
-    region.imageOffset = {0, 0, 0};
-    region.imageExtent = {static_cast<uint32_t>(width),
-                          static_cast<uint32_t>(height), 1};
+    region.imageOffset = {.x = 0, .y = 0, .z = 0};
+    region.imageExtent = {.width = static_cast<uint32_t>(width),
+                          .height = static_cast<uint32_t>(height),
+                          .depth = 1};
 
     vkCmdCopyBufferToImage(commandBuffer, stagingBuffer, vkImage,
                            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
@@ -248,7 +244,6 @@ void Texture::updateFace(int faceIndex, const void *data, int width, int height,
                          Device::globalInstance->commandPool, 1,
                          &commandBuffer);
 
-    // Transition back to shader read layout after the last face (face 5)
     if (faceIndex == 5) {
         Framebuffer::transitionImageLayout(
             vkImage, vkFormat, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
@@ -256,7 +251,6 @@ void Texture::updateFace(int faceIndex, const void *data, int width, int height,
         currentLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     }
 
-    // Clean up staging buffer
     vkDestroyBuffer(Device::globalDevice, stagingBuffer, nullptr);
     vkFreeMemory(Device::globalDevice, stagingBufferMemory, nullptr);
 #endif
@@ -270,7 +264,6 @@ void Texture::updateData3D(const void *data, int width, int height, int depth,
     glTexImage3D(GL_TEXTURE_3D, 0, glFormat, width, height, depth, 0, glDataFmt,
                  GL_UNSIGNED_BYTE, data);
 #elif defined(VULKAN)
-    // Vulkan 3D texture update would require staging buffer and copy
     (void)data;
     (void)width;
     (void)height;
@@ -342,8 +335,6 @@ void Texture::readData(void *buffer, TextureDataFormat dataFormat) {
     }
     glGetTexImage(this->glType, 0, glDataFormat, glDataType, buffer);
 #elif defined(VULKAN)
-    // Vulkan readback requires transitioning to transfer src layout
-    // and using a staging buffer
     (void)buffer;
     (void)dataFormat;
 #endif
@@ -354,7 +345,6 @@ void Texture::generateMipmaps([[maybe_unused]] uint levels) {
     glBindTexture(this->glType, textureID);
     glGenerateMipmap(this->glType);
 #elif defined(VULKAN)
-    // Vulkan mipmap generation requires vkCmdBlitImage
 #endif
 }
 
@@ -363,7 +353,6 @@ void Texture::automaticallyGenerateMipmaps() {
     glBindTexture(this->glType, textureID);
     glGenerateMipmap(this->glType);
 #elif defined(VULKAN)
-    // Vulkan mipmap generation requires vkCmdBlitImage
 #endif
 }
 
@@ -375,7 +364,6 @@ void Texture::setWrapMode(TextureAxis axis, TextureWrapMode mode) {
                                            GL_TEXTURE_WRAP_R};
     glTexParameteri(this->glType, axisTable[static_cast<int>(axis)], glMode);
 #elif defined(VULKAN)
-    // In Vulkan, sampler parameters are set at sampler creation time
     (void)axis;
     (void)mode;
 #endif
@@ -388,7 +376,6 @@ void Texture::changeBorderColor(const glm::vec4 &borderColor) {
                         borderColor.a};
     glTexParameterfv(this->glType, GL_TEXTURE_BORDER_COLOR, color);
 #elif defined(VULKAN)
-    // In Vulkan, border color is set at sampler creation time
     (void)borderColor;
 #endif
 }
@@ -400,7 +387,6 @@ void Texture::setFilterMode(TextureFilterMode minFilter,
     glTexParameteri(glType, GL_TEXTURE_MIN_FILTER, getGLFilterMode(minFilter));
     glTexParameteri(glType, GL_TEXTURE_MAG_FILTER, getGLFilterMode(magFilter));
 #elif defined(VULKAN)
-    // In Vulkan, filter modes are set at sampler creation time
     (void)minFilter;
     (void)magFilter;
 #endif
@@ -416,7 +402,6 @@ void Texture::setParameters(TextureWrapMode wrapS, TextureWrapMode wrapT,
     glTexParameteri(glType, GL_TEXTURE_MIN_FILTER, getGLFilterMode(minFilter));
     glTexParameteri(glType, GL_TEXTURE_MAG_FILTER, getGLFilterMode(magFilter));
 #elif defined(VULKAN)
-    // In Vulkan, these parameters are set at sampler creation time
     (void)wrapS;
     (void)wrapT;
     (void)minFilter;
@@ -436,7 +421,6 @@ void Texture::setParameters3D(TextureWrapMode wrapS, TextureWrapMode wrapT,
     glTexParameteri(glType, GL_TEXTURE_MIN_FILTER, getGLFilterMode(minFilter));
     glTexParameteri(glType, GL_TEXTURE_MAG_FILTER, getGLFilterMode(magFilter));
 #elif defined(VULKAN)
-    // In Vulkan, these parameters are set at sampler creation time
     (void)wrapS;
     (void)wrapT;
     (void)wrapR;
@@ -467,7 +451,6 @@ void Pipeline::bindTexture(const std::string &name,
         return;
     }
 
-    // Ensure texture is in shader read layout before binding
     VkImageLayout desiredLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     if (texture->currentLayout != desiredLayout &&
         texture->currentLayout != VK_IMAGE_LAYOUT_GENERAL) {

@@ -1166,7 +1166,6 @@ void Window::renderPingpong(RenderTarget *target) {
         this->pingpongFramebuffers[1] == nullptr ||
         blurWidth != this->pingpongWidth ||
         blurHeight != this->pingpongHeight) {
-        // Release old resources (opal handles cleanup through shared_ptr)
         this->pingpongFramebuffers[0] = nullptr;
         this->pingpongFramebuffers[1] = nullptr;
         this->pingpongTextures[0] = nullptr;

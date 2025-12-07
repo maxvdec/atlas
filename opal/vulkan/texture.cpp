@@ -27,21 +27,16 @@ VkFormat opalTextureFormatToVulkanFormat(TextureFormat format) {
     case TextureFormat::sRgba8:
         return VK_FORMAT_R8G8B8A8_SRGB;
     case TextureFormat::Rgb8:
-        // 3-channel formats not widely supported, use 4-channel
         return VK_FORMAT_R8G8B8A8_UNORM;
     case TextureFormat::sRgb8:
-        // 3-channel formats not widely supported, use 4-channel
         return VK_FORMAT_R8G8B8A8_SRGB;
     case TextureFormat::Rgba16F:
         return VK_FORMAT_R16G16B16A16_SFLOAT;
     case TextureFormat::Rgb16F:
-        // VK_FORMAT_R16G16B16_SFLOAT not supported on most GPUs
         return VK_FORMAT_R16G16B16A16_SFLOAT;
     case TextureFormat::Depth24Stencil8:
-        // VK_FORMAT_D24_UNORM_S8_UINT not supported on macOS/MoltenVK
         return VK_FORMAT_D32_SFLOAT_S8_UINT;
     case TextureFormat::DepthComponent24:
-        // Use D32 for better compatibility
         return VK_FORMAT_D32_SFLOAT;
     case TextureFormat::Depth32F:
         return VK_FORMAT_D32_SFLOAT;
@@ -287,15 +282,12 @@ Texture::createVulkan(TextureType type, TextureFormat format, int width,
                       TextureWrapMode::Repeat, TextureWrapMode::Repeat,
                       TextureWrapMode::Repeat);
 
-    // Transition to appropriate layout
     bool isDepthFormat = (aspectFlags & VK_IMAGE_ASPECT_DEPTH_BIT) != 0;
     VkImageLayout targetLayout =
         isDepthFormat ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
                       : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-    // If data is provided, upload it via a staging buffer
     if (data != nullptr && width > 0 && height > 0) {
-        // Determine input data size based on dataFormat
         size_t inputBytesPerPixel = 0;
         switch (dataFormat) {
         case TextureDataFormat::Rgba:
@@ -312,8 +304,6 @@ Texture::createVulkan(TextureType type, TextureFormat format, int width,
             break;
         }
 
-        // Determine output size based on Vulkan format (we use RGBA for RGB
-        // inputs)
         size_t outputBytesPerPixel = 4; // Default for RGBA formats
         if (vkFormat == VK_FORMAT_R8_UNORM ||
             vkFormat == VK_FORMAT_R16_SFLOAT) {
@@ -336,15 +326,14 @@ Texture::createVulkan(TextureType type, TextureFormat format, int width,
         vkMapMemory(Device::globalDevice, stagingBufferMemory, 0, imageSize, 0,
                     &mappedData);
 
-        // Convert RGB to RGBA if necessary
         if (dataFormat == TextureDataFormat::Rgb && outputBytesPerPixel == 4) {
-            const uint8_t *src = static_cast<const uint8_t *>(data);
-            uint8_t *dst = static_cast<uint8_t *>(mappedData);
+            const auto *src = static_cast<const uint8_t *>(data);
+            auto *dst = static_cast<uint8_t *>(mappedData);
             for (size_t i = 0; i < pixelCount; ++i) {
-                dst[i * 4 + 0] = src[i * 3 + 0];
-                dst[i * 4 + 1] = src[i * 3 + 1];
-                dst[i * 4 + 2] = src[i * 3 + 2];
-                dst[i * 4 + 3] = 255; // Full alpha
+                dst[(i * 4) + 0] = src[(i * 3) + 0];
+                dst[(i * 4) + 1] = src[(i * 3) + 1];
+                dst[(i * 4) + 2] = src[(i * 3) + 2];
+                dst[(i * 4) + 3] = 255; // Full alpha
             }
         } else {
             memcpy(mappedData, data, pixelCount * inputBytesPerPixel);
@@ -352,12 +341,10 @@ Texture::createVulkan(TextureType type, TextureFormat format, int width,
 
         vkUnmapMemory(Device::globalDevice, stagingBufferMemory);
 
-        // Transition image layout and copy
         Framebuffer::transitionImageLayout(
             texture->vkImage, vkFormat, VK_IMAGE_LAYOUT_UNDEFINED,
             VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, arrayLayers);
 
-        // Copy buffer to image
         copyBufferToImage(stagingBuffer, texture->vkImage, width, height,
                           arrayLayers);
 
@@ -370,7 +357,6 @@ Texture::createVulkan(TextureType type, TextureFormat format, int width,
         vkDestroyBuffer(Device::globalDevice, stagingBuffer, nullptr);
         vkFreeMemory(Device::globalDevice, stagingBufferMemory, nullptr);
     } else if (width > 0 && height > 0) {
-        // No data provided - transition texture to a usable layout
         Framebuffer::transitionImageLayout(texture->vkImage, vkFormat,
                                            VK_IMAGE_LAYOUT_UNDEFINED,
                                            targetLayout, arrayLayers);
@@ -424,7 +410,6 @@ std::shared_ptr<Texture> Texture::createMultisampledVulkan(TextureFormat format,
     texture->vkImageView = createImageView(
         texture->vkImage, vkFormat, aspectFlags, VK_IMAGE_VIEW_TYPE_2D, 1);
 
-    // Transition multisampled texture to color attachment layout
     bool isDepthFormat = (aspectFlags & VK_IMAGE_ASPECT_DEPTH_BIT) != 0;
     VkImageLayout targetLayout =
         isDepthFormat ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
@@ -463,7 +448,6 @@ std::shared_ptr<Texture> Texture::createDepthCubemapVulkan(TextureFormat format,
         TextureWrapMode::ClampToEdge, TextureWrapMode::ClampToEdge,
         TextureWrapMode::ClampToEdge);
 
-    // Transition depth cubemap to depth attachment layout
     Framebuffer::transitionImageLayout(
         texture->vkImage, vkFormat, VK_IMAGE_LAYOUT_UNDEFINED,
         VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 6);
@@ -536,7 +520,6 @@ Texture::create3DVulkan(TextureFormat format, int width, int height, int depth,
         vkDestroyBuffer(Device::globalDevice, stagingBuffer, nullptr);
         vkFreeMemory(Device::globalDevice, stagingBufferMemory, nullptr);
     } else if (width > 0 && height > 0 && depth > 0) {
-        // No data - transition to shader read layout for sampling
         Framebuffer::transitionImageLayout(
             texture->vkImage, vkFormat, VK_IMAGE_LAYOUT_UNDEFINED,
             VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 1);
@@ -619,8 +602,8 @@ void copyBufferToImage3D(VkBuffer buffer, VkImage image, uint32_t width,
     region.imageSubresource.mipLevel = 0;
     region.imageSubresource.baseArrayLayer = 0;
     region.imageSubresource.layerCount = 1;
-    region.imageOffset = {0, 0, 0};
-    region.imageExtent = {width, height, depth};
+    region.imageOffset = {.x = 0, .y = 0, .z = 0};
+    region.imageExtent = {.width = width, .height = height, .depth = depth};
 
     vkCmdCopyBufferToImage(commandBuffer, buffer, image,
                            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);

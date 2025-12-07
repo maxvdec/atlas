@@ -124,31 +124,32 @@ void Window::renderSSAO() {
         ssaoState = opal::DrawingState::create(ssaoBuffer);
         ssaoState->setBuffers(ssaoBuffer, nullptr);
 
-        opal::VertexAttribute positionAttr{"ssaoPosition",
-                                           opal::VertexAttributeType::Float,
-                                           0,
-                                           0,
-                                           false,
-                                           3,
-                                           static_cast<uint>(5 * sizeof(float)),
-                                           opal::VertexBindingInputRate::Vertex,
-                                           0};
-        opal::VertexAttribute uvAttr{"ssaoUV",
-                                     opal::VertexAttributeType::Float,
-                                     static_cast<uint>(3 * sizeof(float)),
-                                     1,
-                                     false,
-                                     2,
-                                     static_cast<uint>(5 * sizeof(float)),
-                                     opal::VertexBindingInputRate::Vertex,
-                                     0};
+        opal::VertexAttribute positionAttr{
+            .name = "ssaoPosition",
+            .type = opal::VertexAttributeType::Float,
+            .offset = 0,
+            .location = 0,
+            .normalized = false,
+            .size = 3,
+            .stride = static_cast<uint>(5 * sizeof(float)),
+            .inputRate = opal::VertexBindingInputRate::Vertex,
+            .divisor = 0};
+        opal::VertexAttribute uvAttr{
+            .name = "ssaoUV",
+            .type = opal::VertexAttributeType::Float,
+            .offset = static_cast<uint>(3 * sizeof(float)),
+            .location = 1,
+            .normalized = false,
+            .size = 2,
+            .stride = static_cast<uint>(5 * sizeof(float)),
+            .inputRate = opal::VertexBindingInputRate::Vertex,
+            .divisor = 0};
 
         std::vector<opal::VertexAttributeBinding> bindings = {
             {positionAttr, ssaoBuffer}, {uvAttr, ssaoBuffer}};
         ssaoState->configureAttributes(bindings);
     }
 
-    // Get or create pipeline for SSAO
     static std::shared_ptr<opal::Pipeline> ssaoPipeline = nullptr;
     if (ssaoPipeline == nullptr) {
         ssaoPipeline = opal::Pipeline::create();
@@ -182,7 +183,6 @@ void Window::renderSSAO() {
     this->ssaoBlurBuffer->bind();
     ssaoCommandBuffer->clearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-    // Get or create pipeline for SSAO blur
     static std::shared_ptr<opal::Pipeline> ssaoBlurPipeline = nullptr;
     if (ssaoBlurPipeline == nullptr) {
         ssaoBlurPipeline = opal::Pipeline::create();

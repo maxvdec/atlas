@@ -81,24 +81,26 @@ void BloomRenderTarget::init(int width, int height, int chainLength) {
         quadState = opal::DrawingState::create(quadBuffer);
         quadState->setBuffers(quadBuffer, nullptr);
 
-        opal::VertexAttribute positionAttr{"bloomPosition",
-                                           opal::VertexAttributeType::Float,
-                                           0,
-                                           0,
-                                           false,
-                                           3,
-                                           static_cast<uint>(5 * sizeof(float)),
-                                           opal::VertexBindingInputRate::Vertex,
-                                           0};
-        opal::VertexAttribute uvAttr{"bloomUV",
-                                     opal::VertexAttributeType::Float,
-                                     static_cast<uint>(3 * sizeof(float)),
-                                     1,
-                                     false,
-                                     2,
-                                     static_cast<uint>(5 * sizeof(float)),
-                                     opal::VertexBindingInputRate::Vertex,
-                                     0};
+        opal::VertexAttribute positionAttr{
+            .name = "bloomPosition",
+            .type = opal::VertexAttributeType::Float,
+            .offset = 0,
+            .location = 0,
+            .normalized = false,
+            .size = 3,
+            .stride = static_cast<uint>(5 * sizeof(float)),
+            .inputRate = opal::VertexBindingInputRate::Vertex,
+            .divisor = 0};
+        opal::VertexAttribute uvAttr{
+            .name = "bloomUV",
+            .type = opal::VertexAttributeType::Float,
+            .offset = static_cast<uint>(3 * sizeof(float)),
+            .location = 1,
+            .normalized = false,
+            .size = 2,
+            .stride = static_cast<uint>(5 * sizeof(float)),
+            .inputRate = opal::VertexBindingInputRate::Vertex,
+            .divisor = 0};
 
         std::vector<opal::VertexAttributeBinding> bindings = {
             {positionAttr, quadBuffer}, {uvAttr, quadBuffer}};

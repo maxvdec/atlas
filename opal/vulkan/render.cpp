@@ -56,7 +56,6 @@ void CommandBuffer::record(uint32_t imageIndex) {
         brightClear.color = {{0.0f, 0.0f, 0.0f, 0.0f}};
         clearValues.push_back(colorClear);
         clearValues.push_back(brightClear);
-        // Add depth clear value if depth texture exists
         if (device->swapChainDepthTexture != nullptr) {
             VkClearValue depthClear{};
             depthClear.depthStencil = {.depth = 1.0f, .stencil = 0};
@@ -81,17 +80,13 @@ void CommandBuffer::record(uint32_t imageIndex) {
     vkCmdBeginRenderPass(commandBuffers[currentFrame], &renderPassInfo,
                          VK_SUBPASS_CONTENTS_INLINE);
 
-    // Configure dynamic viewport/scissor
     VkViewport viewport{};
     if (renderPass->currentRenderPass &&
         renderPass->currentRenderPass->opalPipeline) {
-        // Use the pipeline's viewport if it has been set (width != 0)
-        // This allows for custom viewports (e.g. flipped Y for text)
         if (renderPass->currentRenderPass->opalPipeline->vkViewport.width !=
             0.0f) {
             viewport = renderPass->currentRenderPass->opalPipeline->vkViewport;
         } else {
-            // Fallback to render area if pipeline viewport is not set
             viewport.x = 0.0f;
             viewport.y = 0.0f;
             viewport.width =
@@ -120,7 +115,6 @@ void CommandBuffer::record(uint32_t imageIndex) {
 }
 
 void CommandBuffer::createSyncObjects() {
-    // Only create sync objects if they don't exist yet
     if (!imageAvailableSemaphores.empty()) {
         return; // Already created
     }
@@ -151,7 +145,7 @@ void CommandBuffer::createSyncObjects() {
 
 void CommandBuffer::beginCommandBufferIfNeeded() {
     if (commandBufferBegan) {
-        return; // Already began this frame
+        return;
     }
 
     vkResetCommandBuffer(commandBuffers[currentFrame], 0);

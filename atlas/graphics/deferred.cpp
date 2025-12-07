@@ -14,7 +14,6 @@
 #include <memory>
 #include <vector>
 
-// Helper functions to convert C++ light structs to GPU-compatible formats
 namespace {
 
 std::vector<GPUDirectionalLight>
@@ -25,7 +24,7 @@ buildGPUDirectionalLights(const std::vector<DirectionalLight *> &lights,
     result.reserve(count);
     for (int i = 0; i < count; i++) {
         DirectionalLight *light = lights[i];
-        GPUDirectionalLight gpu;
+        GPUDirectionalLight gpu{};
         gpu.direction = glm::vec3(light->direction.x, light->direction.y,
                                   light->direction.z);
         gpu.diffuse = glm::vec3(light->color.r, light->color.g, light->color.b);
@@ -47,7 +46,7 @@ buildGPUPointLights(const std::vector<Light *> &lights, int maxCount) {
     for (int i = 0; i < count; i++) {
         Light *light = lights[i];
         PointLightConstants plc = light->calculateConstants();
-        GPUPointLight gpu;
+        GPUPointLight gpu{};
         gpu.position =
             glm::vec3(light->position.x, light->position.y, light->position.z);
         gpu.diffuse = glm::vec3(light->color.r, light->color.g, light->color.b);
@@ -72,7 +71,7 @@ buildGPUSpotLights(const std::vector<Spotlight *> &lights, int maxCount) {
     result.reserve(count);
     for (int i = 0; i < count; i++) {
         Spotlight *light = lights[i];
-        GPUSpotLight gpu;
+        GPUSpotLight gpu{};
         gpu.position =
             glm::vec3(light->position.x, light->position.y, light->position.z);
         gpu.direction = glm::vec3(light->direction.x, light->direction.y,
@@ -100,13 +99,12 @@ buildGPUAreaLights(const std::vector<AreaLight *> &lights, int maxCount) {
     result.reserve(count);
     for (int i = 0; i < count; i++) {
         AreaLight *light = lights[i];
-        GPUAreaLight gpu;
+        GPUAreaLight gpu{};
         gpu.position =
             glm::vec3(light->position.x, light->position.y, light->position.z);
         gpu.right = glm::vec3(light->right.x, light->right.y, light->right.z);
         gpu.up = glm::vec3(light->up.x, light->up.y, light->up.z);
-        gpu.size = glm::vec2(static_cast<float>(light->size.width),
-                             static_cast<float>(light->size.height));
+        gpu.size = glm::vec2(light->size.width, light->size.height);
         gpu.diffuse = glm::vec3(light->color.r, light->color.g, light->color.b);
         gpu.specular = glm::vec3(light->shineColor.r, light->shineColor.g,
                                  light->shineColor.b);
@@ -136,7 +134,6 @@ void Window::deferredRendering(
     if (commandBuffer == nullptr) {
         return;
     }
-    // Render to G-Buffer
     std::vector<std::shared_ptr<opal::Pipeline>> originalPipelines;
     auto deferredPipeline = opal::Pipeline::create();
     for (auto &obj : this->renderables) {
@@ -150,7 +147,6 @@ void Window::deferredRendering(
         }
     }
 
-    // End the current render pass and start G-Buffer render pass
     commandBuffer->endPass();
     auto gBufferRenderPass = opal::RenderPass::create();
     gBufferRenderPass->setFramebuffer(this->gBuffer->getFramebuffer());
@@ -179,14 +175,12 @@ void Window::deferredRendering(
 
     this->gBuffer->resolve();
 
-    // End G-Buffer pass
     commandBuffer->endPass();
     this->gBuffer->unbind();
 
     target->resolve();
     this->renderSSAO();
 
-    // Start target render pass for light pass
     auto targetRenderPass = opal::RenderPass::create();
     targetRenderPass->setFramebuffer(target->getFramebuffer());
     commandBuffer->beginPass(targetRenderPass);
@@ -223,31 +217,32 @@ void Window::deferredRendering(
         quadState = opal::DrawingState::create(quadBuffer);
         quadState->setBuffers(quadBuffer, nullptr);
 
-        opal::VertexAttribute positionAttr{"deferredPosition",
-                                           opal::VertexAttributeType::Float,
-                                           0,
-                                           0,
-                                           false,
-                                           3,
-                                           static_cast<uint>(5 * sizeof(float)),
-                                           opal::VertexBindingInputRate::Vertex,
-                                           0};
-        opal::VertexAttribute uvAttr{"deferredUV",
-                                     opal::VertexAttributeType::Float,
-                                     static_cast<uint>(3 * sizeof(float)),
-                                     1,
-                                     false,
-                                     2,
-                                     static_cast<uint>(5 * sizeof(float)),
-                                     opal::VertexBindingInputRate::Vertex,
-                                     0};
+        opal::VertexAttribute positionAttr{
+            .name = "deferredPosition",
+            .type = opal::VertexAttributeType::Float,
+            .offset = 0,
+            .location = 0,
+            .normalized = false,
+            .size = 3,
+            .stride = static_cast<uint>(5 * sizeof(float)),
+            .inputRate = opal::VertexBindingInputRate::Vertex,
+            .divisor = 0};
+        opal::VertexAttribute uvAttr{
+            .name = "deferredUV",
+            .type = opal::VertexAttributeType::Float,
+            .offset = static_cast<uint>(3 * sizeof(float)),
+            .location = 1,
+            .normalized = false,
+            .size = 2,
+            .stride = static_cast<uint>(5 * sizeof(float)),
+            .inputRate = opal::VertexBindingInputRate::Vertex,
+            .divisor = 0};
 
         std::vector<opal::VertexAttributeBinding> bindings = {
             {positionAttr, quadBuffer}, {uvAttr, quadBuffer}};
         quadState->configureAttributes(bindings);
     }
 
-    // Create and configure light pass pipeline
     static std::shared_ptr<opal::Pipeline> lightPipeline = nullptr;
     if (lightPipeline == nullptr) {
         lightPipeline = opal::Pipeline::create();
@@ -284,9 +279,8 @@ void Window::deferredRendering(
         ambientColor = scene->getAutomaticAmbientColor();
         ambientIntensity = scene->getAutomaticAmbientIntensity();
     }
-    lightPipeline->setUniform4f("ambientLight.color",
-                                static_cast<float>(ambientColor.r),
-                                static_cast<float>(ambientColor.g),
+    lightPipeline->setUniform4f("ambientLight.color", ambientColor.r,
+                                ambientColor.g,
                                 static_cast<float>(ambientColor.b), 1.0f);
     lightPipeline->setUniform1f("ambientLight.intensity", ambientIntensity);
 
@@ -344,7 +338,7 @@ void Window::deferredRendering(
     int boundParameters = 0;
 
     // Cycle though directional lights
-    for (auto light : scene->directionalLights) {
+    for (auto *light : scene->directionalLights) {
         if (!light->doesCastShadows) {
             continue;
         }
@@ -376,7 +370,7 @@ void Window::deferredRendering(
     }
 
     // Cycle though spotlights
-    for (auto light : scene->spotlights) {
+    for (auto *light : scene->spotlights) {
         if (!light->doesCastShadows) {
             continue;
         }
@@ -407,12 +401,10 @@ void Window::deferredRendering(
         boundTextures++;
     }
 
-    for (auto light : scene->pointLights) {
+    for (auto *light : scene->pointLights) {
         if (!light->doesCastShadows) {
             continue;
         }
-        // Reserve up to 5 cubemap units (cubeMap1..cubeMap5 bound to
-        // units 10..14)
         if (boundCubemaps >= 5) {
             break;
         }

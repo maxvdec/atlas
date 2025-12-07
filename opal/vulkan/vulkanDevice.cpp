@@ -126,7 +126,6 @@ void Device::createLogicalDevice(std::shared_ptr<Context> context) {
     VkPhysicalDeviceFeatures deviceFeatures = {};
     deviceFeatures.fragmentStoresAndAtomics = VK_TRUE;
 
-    // Enable descriptor indexing features for update-after-bind
     VkPhysicalDeviceDescriptorIndexingFeatures indexingFeatures{};
     indexingFeatures.sType =
         VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_FEATURES;

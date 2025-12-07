@@ -32,7 +32,6 @@ std::shared_ptr<Framebuffer> Framebuffer::create(int width, int height) {
 #ifdef OPENGL
     glGenFramebuffers(1, &framebuffer->framebufferID);
 #elif defined(VULKAN)
-    // Vulkan framebuffers are created lazily when a render pass is applied
 #endif
 
     return framebuffer;
@@ -46,7 +45,6 @@ std::shared_ptr<Framebuffer> Framebuffer::create() {
 #ifdef OPENGL
     glGenFramebuffers(1, &framebuffer->framebufferID);
 #elif defined(VULKAN)
-    // Vulkan framebuffers are created lazily when a render pass is applied
 #endif
 
     return framebuffer;
@@ -156,8 +154,6 @@ void Framebuffer::attachCubemapFace(std::shared_ptr<Texture> texture, int face,
                            texture->textureID, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 #elif defined(VULKAN)
-    // For Vulkan, cubemap face attachment is handled differently
-    // Store the face index for later use
     (void)face;
     Attachment att;
     att.type = attachmentType;
@@ -181,7 +177,6 @@ void Framebuffer::setViewport() {
 #ifdef OPENGL
     glViewport(0, 0, width, height);
 #elif defined(VULKAN)
-    // Viewport is set dynamically in Vulkan via command buffer
 #endif
 }
 
@@ -193,7 +188,6 @@ void Framebuffer::setViewport(int x, int y, int viewWidth, int viewHeight) {
     (void)y;
     (void)viewWidth;
     (void)viewHeight;
-    // Viewport is set dynamically in Vulkan via command buffer
 #endif
 }
 
@@ -203,10 +197,6 @@ bool Framebuffer::getStatus() const {
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     return status == GL_FRAMEBUFFER_COMPLETE;
 #elif defined(VULKAN)
-    // In Vulkan the actual VkFramebuffer objects are created lazily when a
-    // render pass is bound. Treat the attachment configuration as valid as
-    // soon as it has been specified so higher level code does not misinterpret
-    // the lack of VkFramebuffer instances as an error.
     (void)this;
     return true;
 #else
@@ -218,7 +208,6 @@ void Framebuffer::bind() {
 #ifdef OPENGL
     glBindFramebuffer(GL_FRAMEBUFFER, framebufferID);
     if (framebufferID == 0) {
-        // Default framebuffer - draw to back buffer
         glDrawBuffer(GL_BACK);
     } else if (colorBufferDisabled) {
         glDrawBuffer(GL_NONE);
@@ -241,7 +230,6 @@ void Framebuffer::bind() {
         glDrawBuffer(GL_NONE);
     }
 #elif defined(VULKAN)
-    // In Vulkan, framebuffer binding is handled through render passes
 #endif
 }
 
@@ -249,7 +237,6 @@ void Framebuffer::unbind() {
 #ifdef OPENGL
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 #elif defined(VULKAN)
-    // In Vulkan, framebuffer unbinding is handled through render passes
 #endif
 }
 
@@ -257,7 +244,6 @@ void Framebuffer::bindForRead() {
 #ifdef OPENGL
     glBindFramebuffer(GL_READ_FRAMEBUFFER, framebufferID);
 #elif defined(VULKAN)
-    // Vulkan handles read operations differently
 #endif
 }
 
@@ -265,7 +251,6 @@ void Framebuffer::bindForDraw() {
 #ifdef OPENGL
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebufferID);
 #elif defined(VULKAN)
-    // Vulkan handles draw operations through render passes
 #endif
 }
 
@@ -282,7 +267,6 @@ void Framebuffer::setDrawBuffers(int attachmentCount) {
     }
     glDrawBuffers(attachmentCount, drawBuffers.data());
 #elif defined(VULKAN)
-    // In Vulkan, color attachments are configured at render pass creation
     (void)attachmentCount;
 #endif
 }
@@ -528,11 +512,12 @@ void CommandBuffer::performResolve(std::shared_ptr<ResolveAction> action) {
             region.srcSubresource.mipLevel = 0;
             region.srcSubresource.baseArrayLayer = 0;
             region.srcSubresource.layerCount = layerCount;
-            region.srcOffset = {0, 0, 0};
+            region.srcOffset = {.x = 0, .y = 0, .z = 0};
             region.dstSubresource = region.srcSubresource;
-            region.dstOffset = {0, 0, 0};
-            region.extent = {static_cast<uint32_t>(dst->width),
-                             static_cast<uint32_t>(dst->height), 1};
+            region.dstOffset = {.x = 0, .y = 0, .z = 0};
+            region.extent = {.width = static_cast<uint32_t>(dst->width),
+                             .height = static_cast<uint32_t>(dst->height),
+                             .depth = 1};
 
             vkCmdResolveImage(commandBuffer, src->vkImage,
                               VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
@@ -551,12 +536,14 @@ void CommandBuffer::performResolve(std::shared_ptr<ResolveAction> action) {
             region.dstSubresource.mipLevel = 0;
             region.dstSubresource.baseArrayLayer = 0;
             region.dstSubresource.layerCount = layerCount;
-            region.srcOffsets[0] = {0, 0, 0};
-            region.srcOffsets[1] = {static_cast<int32_t>(src->width),
-                                    static_cast<int32_t>(src->height), 1};
-            region.dstOffsets[0] = {0, 0, 0};
-            region.dstOffsets[1] = {static_cast<int32_t>(dst->width),
-                                    static_cast<int32_t>(dst->height), 1};
+            region.srcOffsets[0] = {.x = 0, .y = 0, .z = 0};
+            region.srcOffsets[1] = {.x = static_cast<int32_t>(src->width),
+                                    .y = static_cast<int32_t>(src->height),
+                                    .z = 1};
+            region.dstOffsets[0] = {.x = 0, .y = 0, .z = 0};
+            region.dstOffsets[1] = {.x = static_cast<int32_t>(dst->width),
+                                    .y = static_cast<int32_t>(dst->height),
+                                    .z = 1};
 
             VkFilter filter = isDepth ? VK_FILTER_NEAREST : VK_FILTER_LINEAR;
             vkCmdBlitImage(commandBuffer, src->vkImage,

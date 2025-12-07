@@ -34,21 +34,21 @@ makeInstanceAttributeBindings(const std::shared_ptr<opal::Buffer> &buffer) {
     bindings.reserve(4);
     std::size_t vec4Size = sizeof(glm::vec4);
     for (unsigned int i = 0; i < 4; ++i) {
-        opal::VertexAttribute attribute{"instanceModel" + std::to_string(i),
-                                        opal::VertexAttributeType::Float,
-                                        static_cast<uint>(i * vec4Size),
-                                        static_cast<uint>(6 + i),
-                                        false,
-                                        4,
-                                        static_cast<uint>(sizeof(glm::mat4)),
-                                        opal::VertexBindingInputRate::Instance,
-                                        1};
+        opal::VertexAttribute attribute{
+            .name = "instanceModel" + std::to_string(i),
+            .type = opal::VertexAttributeType::Float,
+            .offset = static_cast<uint>(i * vec4Size),
+            .location = static_cast<uint>(6 + i),
+            .normalized = false,
+            .size = 4,
+            .stride = static_cast<uint>(sizeof(glm::mat4)),
+            .inputRate = opal::VertexBindingInputRate::Instance,
+            .divisor = 1};
         bindings.push_back({attribute, buffer});
     }
     return bindings;
 }
 
-// Helper functions to convert C++ light structs to GPU-compatible formats
 std::vector<GPUDirectionalLight>
 buildGPUDirectionalLights(const std::vector<DirectionalLight *> &lights,
                           int maxCount) {
@@ -410,10 +410,15 @@ void CoreObject::initialize() {
 
     for (const auto &attr : layoutDescriptors) {
         vertexAttributes.push_back(opal::VertexAttribute{
-            attr.name, attr.type, static_cast<uint>(attr.offset),
-            static_cast<uint>(attr.layoutPos), attr.normalized,
-            static_cast<uint>(attr.size), static_cast<uint>(attr.stride),
-            opal::VertexBindingInputRate::Vertex, 0});
+            .name = attr.name,
+            .type = attr.type,
+            .offset = static_cast<uint>(attr.offset),
+            .location = static_cast<uint>(attr.layoutPos),
+            .normalized = attr.normalized,
+            .size = static_cast<uint>(attr.size),
+            .stride = static_cast<uint>(attr.stride),
+            .inputRate = opal::VertexBindingInputRate::Vertex,
+            .divisor = 0});
     }
 
     vertexBinding = opal::VertexBinding{(uint)layoutDescriptors[0].stride,
@@ -426,16 +431,18 @@ void CoreObject::initialize() {
     }
     vao->configureAttributes(attributeBindings);
 
-    // Add instance model matrix attributes (locations 6-9 for mat4)
-    // These are always needed because the shader expects them
     std::size_t vec4Size = sizeof(glm::vec4);
     for (unsigned int i = 0; i < 4; ++i) {
         vertexAttributes.push_back(opal::VertexAttribute{
-            "instanceModel" + std::to_string(i),
-            opal::VertexAttributeType::Float, static_cast<uint>(i * vec4Size),
-            static_cast<uint>(6 + i), false, 4,
-            static_cast<uint>(sizeof(glm::mat4)),
-            opal::VertexBindingInputRate::Instance, 1});
+            .name = "instanceModel" + std::to_string(i),
+            .type = opal::VertexAttributeType::Float,
+            .offset = static_cast<uint>(i * vec4Size),
+            .location = static_cast<uint>(6 + i),
+            .normalized = false,
+            .size = 4,
+            .stride = static_cast<uint>(sizeof(glm::mat4)),
+            .inputRate = opal::VertexBindingInputRate::Instance,
+            .divisor = 1});
     }
 
     if (!instances.empty()) {
@@ -473,9 +480,6 @@ void CoreObject::refreshPipeline() {
         return;
     }
 
-    // Always create a fresh pipeline for configuration.
-    // We don't reuse this->pipeline because it might be a cached pipeline
-    // that's currently bound to an active command buffer.
     auto unbuiltPipeline = opal::Pipeline::create();
 
     Window &window = *Window::mainWindow;
@@ -614,16 +618,13 @@ void CoreObject::render(float dt,
                                      static_cast<float>(ambientColor.r),
                                      static_cast<float>(ambientColor.g),
                                      static_cast<float>(ambientColor.b), 1.0f);
-        // Use full ambient intensity provided by the scene
         this->pipeline->setUniform1f("ambientLight.intensity",
                                      ambientIntensity);
 
-        // Set camera position
         this->pipeline->setUniform3f(
             "cameraPosition", window->getCamera()->position.x,
             window->getCamera()->position.y, window->getCamera()->position.z);
 
-        // Send directional lights using buffer binding
         int dirLightCount = std::min((int)scene->directionalLights.size(), 256);
         this->pipeline->setUniform1i("directionalLightCount", dirLightCount);
 
@@ -633,7 +634,6 @@ void CoreObject::render(float dt,
             this->pipeline->bindBuffer("DirectionalLights", gpuDirLights);
         }
 
-        // Send point lights using buffer binding
         int pointLightCount = std::min((int)scene->pointLights.size(), 256);
         this->pipeline->setUniform1i("pointLightCount", pointLightCount);
 
@@ -643,7 +643,6 @@ void CoreObject::render(float dt,
             this->pipeline->bindBuffer("PointLights", gpuPointLights);
         }
 
-        // Send spotlights using buffer binding
         int spotlightCount = std::min((int)scene->spotlights.size(), 256);
         this->pipeline->setUniform1i("spotlightCount", spotlightCount);
 
@@ -653,7 +652,6 @@ void CoreObject::render(float dt,
             this->pipeline->bindBuffer("SpotLights", gpuSpotLights);
         }
 
-        // Send area lights using buffer binding
         int areaLightCount = std::min((int)scene->areaLights.size(), 256);
         this->pipeline->setUniform1i("areaLightCount", areaLightCount);
 
@@ -668,7 +666,6 @@ void CoreObject::render(float dt,
                   shaderProgram.capabilities.end(),
                   ShaderCapability::LightDeferred) !=
         shaderProgram.capabilities.end()) {
-        // Bind G-Buffer textures
         Window *window = Window::mainWindow;
         RenderTarget *gBuffer = window->gBuffer.get();
         this->pipeline->bindTexture2D("gPosition", gBuffer->gPosition.id,
@@ -696,12 +693,10 @@ void CoreObject::render(float dt,
             std::string uniformName = "cubeMap" + std::to_string(i + 1);
             this->pipeline->setUniform1i(uniformName, i + 10);
         }
-        // Bind shadow maps
         Scene *scene = Window::mainWindow->currentScene;
 
         int boundParameters = 0;
 
-        // Cycle though directional lights
         for (auto light : scene->directionalLights) {
             if (!light->doesCastShadows) {
                 continue;
@@ -728,7 +723,6 @@ void CoreObject::render(float dt,
             boundTextures++;
         }
 
-        // Cycle though spotlights
         for (auto light : scene->spotlights) {
             if (!light->doesCastShadows) {
                 continue;
@@ -784,7 +778,6 @@ void CoreObject::render(float dt,
 
         this->pipeline->setUniform1i("shadowParamCount", boundParameters);
 
-        // Set texture units array using pipeline
         for (int i = 0; i < boundTextures && i < 16; i++) {
             std::string uniformName = "textures[" + std::to_string(i) + "]";
             this->pipeline->setUniform1i(uniformName, i);
@@ -795,7 +788,6 @@ void CoreObject::render(float dt,
                   shaderProgram.capabilities.end(),
                   ShaderCapability::EnvironmentMapping) !=
         shaderProgram.capabilities.end()) {
-        // Bind skybox
         Window *window = Window::mainWindow;
         Scene *scene = window->getCurrentScene();
         if (scene->skybox != nullptr) {
@@ -828,7 +820,6 @@ void CoreObject::render(float dt,
             updateInstances();
             this->savedInstances = this->instances;
         }
-        // Update instance buffer data
         this->pipeline->setUniform1i("isInstanced", 1);
 
         if (!indices.empty()) {

@@ -37,15 +37,10 @@ void Model::loadModel(Resource resource) {
     if (resource.type != ResourceType::Model)
         return;
 
-    // Base import flags - don't flip UVs here, texture loading handles the flip
     unsigned int importFlags =
         aiProcess_Triangulate | aiProcess_CalcTangentSpace |
         aiProcess_JoinIdenticalVertices | aiProcess_ImproveCacheLocality |
         aiProcess_SortByPType | aiProcess_GenSmoothNormals;
-    // Note: We don't use aiProcess_FlipUVs because:
-    // - OpenGL: textures are flipped during loading
-    // (stbi_set_flip_vertically_on_load)
-    // - Vulkan: neither textures nor UVs need flipping
 
     const aiScene *scene =
         importer.ReadFile(resource.path.string(), importFlags);
@@ -54,17 +49,12 @@ void Model::loadModel(Resource resource) {
         !scene->mRootNode) {
         throw std::runtime_error("Assimp error: " +
                                  std::string(importer.GetErrorString()));
-        // Error handling
         return;
     }
     directory = resource.path.parent_path().string();
-
     // Texture cache to avoid loading the same texture multiple times
     std::unordered_map<std::string, Texture> textureCache;
 
-    // Note: We don't share pipeline objects between meshes because each mesh
-    // needs its own descriptor sets for its textures. The underlying VkPipeline
-    // is still shared via CoreRenderPass caching.
     processNode(scene->mRootNode, scene, glm::mat4(1.0f), textureCache);
 
     // std::cout << "Created model from resource: " << resource.name << " with "
@@ -103,9 +93,6 @@ void Model::processNode(
         aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
         auto obj = std::make_shared<CoreObject>(
             processMesh(mesh, scene, nodeTransform, textureCache));
-        // Each mesh gets its own pipeline object so it can have its own
-        // descriptor sets for textures. The underlying VkPipeline is shared
-        // via CoreRenderPass caching, so this is still efficient.
         obj->initialize();
         this->objects.push_back(obj);
     }

@@ -20,7 +20,6 @@ std::shared_ptr<CommandBuffer> Device::acquireCommandBuffer() {
     commandBuffer->device = this;
 
 #ifdef VULKAN
-    // Allocate per-frame command buffers
     commandBuffer->commandBuffers.resize(CommandBuffer::MAX_FRAMES_IN_FLIGHT);
 
     VkCommandBufferAllocateInfo allocInfo{};
@@ -38,7 +37,6 @@ std::shared_ptr<CommandBuffer> Device::acquireCommandBuffer() {
 }
 
 void CommandBuffer::start() {
-    // Reset state for a new command recording session
     boundPipeline = nullptr;
     boundDrawingState = nullptr;
     renderPass = nullptr;
@@ -73,7 +71,6 @@ void CommandBuffer::beginPass(std::shared_ptr<RenderPass> newRenderPass) {
 #ifdef OPENGL
     framebuffer->bind();
 #elif defined(VULKAN)
-    // Ensure default framebuffer dimensions follow the swapchain.
     if (framebuffer->isDefaultFramebuffer && device != nullptr) {
         framebuffer->width = static_cast<int>(device->swapChainExtent.width);
         framebuffer->height = static_cast<int>(device->swapChainExtent.height);
@@ -94,12 +91,10 @@ void CommandBuffer::beginSampled(
 
 void CommandBuffer::endPass() {
 #ifdef VULKAN
-    // End the render pass if one was started
     if (hasStarted) {
         vkCmdEndRenderPass(commandBuffers[currentFrame]);
         hasStarted = false;
 
-        // Update texture layouts to match render pass final layouts
         if (framebuffer != nullptr && !framebuffer->isDefaultFramebuffer) {
             for (auto &attachment : framebuffer->attachments) {
                 if (attachment.texture != nullptr) {
@@ -119,16 +114,9 @@ void CommandBuffer::endPass() {
 
 void CommandBuffer::commit() {
 #ifdef VULKAN
-    // Acquire image and start recording if we haven't yet
-    // This handles cases where we want to present a cleared framebuffer without
-    // draws
     if (!imageAcquired && framebuffer != nullptr &&
         framebuffer->isDefaultFramebuffer) {
-        // Check if we have a render pass to record - if not, we can't present
         if (renderPass == nullptr || renderPass->currentRenderPass == nullptr) {
-            // No pipeline was bound, so we have no render pass to use
-            // Just skip this frame - can't present without a render pass in
-            // Vulkan
             std::cout << "commit(): Skipping frame - no render pass!"
                       << std::endl;
             return;
@@ -140,25 +128,20 @@ void CommandBuffer::commit() {
                               VK_NULL_HANDLE, &imageIndex);
         imageAcquired = true;
 
-        // Begin command buffer and record the render pass with just clear
-        // values (no draws)
         beginCommandBufferIfNeeded();
         this->record(imageIndex);
         hasStarted = true;
     }
 
-    // Only submit and present if we actually acquired an image
     if (!imageAcquired) {
         return;
     }
 
-    // End render pass if still active
     if (hasStarted) {
         vkCmdEndRenderPass(commandBuffers[currentFrame]);
         hasStarted = false;
     }
 
-    // End the command buffer recording
     if (vkEndCommandBuffer(commandBuffers[currentFrame]) != VK_SUCCESS) {
         throw std::runtime_error("Failed to end command buffer recording!");
     }
@@ -197,7 +180,6 @@ void CommandBuffer::commit() {
 
     vkQueuePresentKHR(device->presentQueue, &presentInfo);
 
-    // Advance to next frame and reset for next frame
     imageAcquired = false;
     currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 #endif
@@ -206,8 +188,6 @@ void CommandBuffer::commit() {
 void CommandBuffer::bindPipeline(std::shared_ptr<Pipeline> pipeline) {
     pipeline->bind();
 #ifdef VULKAN
-    // Don't skip even if same pipeline - textures may have changed and we need
-    // to rebind descriptor sets in the draw call
 #endif
     boundPipeline = pipeline;
 #ifdef VULKAN
@@ -215,8 +195,6 @@ void CommandBuffer::bindPipeline(std::shared_ptr<Pipeline> pipeline) {
     std::shared_ptr<CoreRenderPass> coreRenderPass = nullptr;
 
     for (auto &corePipeline : RenderPass::cachedRenderPasses) {
-        // For default framebuffer, check framebufferID; for custom, compare
-        // attachments
         bool renderPassIsDefault =
             renderPass->framebuffer->isDefaultFramebuffer;
         bool cachedIsDefault =
@@ -224,10 +202,8 @@ void CommandBuffer::bindPipeline(std::shared_ptr<Pipeline> pipeline) {
 
         bool framebufferMatch = false;
         if (renderPassIsDefault && cachedIsDefault) {
-            // Both reference the default swapchain-backed framebuffer
             framebufferMatch = true;
         } else if (!renderPassIsDefault && !cachedIsDefault) {
-            // Both are custom framebuffers - compare attachments
             framebufferMatch = (corePipeline->opalFramebuffer->attachments ==
                                 renderPass->framebuffer->attachments);
         }
@@ -240,11 +216,8 @@ void CommandBuffer::bindPipeline(std::shared_ptr<Pipeline> pipeline) {
     }
 
     if (coreRenderPass == nullptr) {
-        // If render pass is already started, we need to create a pipeline
-        // compatible with the current render pass
         if (hasStarted && renderPass->currentRenderPass != nullptr &&
             renderPass->currentRenderPass->renderPass != VK_NULL_HANDLE) {
-            // Create new pipeline using the existing VkRenderPass
             coreRenderPass = CoreRenderPass::createWithExistingRenderPass(
                 pipeline, renderPass->framebuffer,
                 renderPass->currentRenderPass->renderPass);
@@ -255,9 +228,7 @@ void CommandBuffer::bindPipeline(std::shared_ptr<Pipeline> pipeline) {
         renderPass->currentRenderPass = coreRenderPass;
     }
 
-    // Create Vulkan framebuffers if needed
     if (framebuffer->isDefaultFramebuffer) {
-        // Default framebuffer - create framebuffers for swapchain images
         if (device->swapchainDirty || framebuffer->vkFramebuffers.size() == 0) {
             framebuffer->vkFramebuffers.resize(
                 device->swapChainImages.imageViews.size());
@@ -279,7 +250,6 @@ void CommandBuffer::bindPipeline(std::shared_ptr<Pipeline> pipeline) {
                     device->swapChainImages.imageViews[i],
                     brightTextures[i]->vkImageView};
 
-                // Add depth attachment if available
                 if (device->swapChainDepthTexture != nullptr &&
                     device->swapChainDepthTexture->vkImageView !=
                         VK_NULL_HANDLE) {
@@ -308,7 +278,6 @@ void CommandBuffer::bindPipeline(std::shared_ptr<Pipeline> pipeline) {
             device->swapchainDirty = false;
         }
     } else {
-        // Custom framebuffer - create Vulkan framebuffer from attachments
         if (framebuffer->vkFramebuffers.empty()) {
             framebuffer->createVulkanFramebuffers(coreRenderPass);
         }
@@ -321,8 +290,6 @@ void CommandBuffer::unbindPipeline() { boundPipeline = nullptr; }
 void CommandBuffer::bindDrawingState(
     std::shared_ptr<DrawingState> drawingState) {
     boundDrawingState = drawingState;
-    // Note: In Vulkan, vertex/index buffer binding is deferred to draw calls
-    // because the command buffer must be in recording state first
 }
 
 void CommandBuffer::unbindDrawingState() { boundDrawingState = nullptr; }
@@ -340,10 +307,8 @@ auto CommandBuffer::draw(uint vertexCount, uint instanceCount, uint firstVertex,
     }
 #elif defined(VULKAN)
     if (renderPass == nullptr || renderPass->currentRenderPass == nullptr) {
-        // No pipeline bound yet, skip this draw call
         return;
     }
-    // Acquire swapchain image once per frame (only for default framebuffer)
     if (!imageAcquired && framebuffer != nullptr &&
         framebuffer->isDefaultFramebuffer) {
         vkAcquireNextImageKHR(device->logicalDevice, device->swapChain,
@@ -352,9 +317,7 @@ auto CommandBuffer::draw(uint vertexCount, uint instanceCount, uint firstVertex,
                               VK_NULL_HANDLE, &imageIndex);
         imageAcquired = true;
     }
-    // Begin command buffer once per frame (reset happens here)
     beginCommandBufferIfNeeded();
-    // Start render pass if not already started
     if (!hasStarted) {
         this->record(imageIndex);
         hasStarted = true;
@@ -362,8 +325,6 @@ auto CommandBuffer::draw(uint vertexCount, uint instanceCount, uint firstVertex,
     vkCmdBindPipeline(commandBuffers[currentFrame],
                       VK_PIPELINE_BIND_POINT_GRAPHICS,
                       renderPass->currentRenderPass->pipeline);
-    // Use boundPipeline for descriptor sets - this is the pipeline that had
-    // textures bound to it, not the cached CoreRenderPass pipeline
     if (boundPipeline != nullptr) {
         boundPipeline->bindDescriptorSets(commandBuffers[currentFrame]);
     }
@@ -406,10 +367,8 @@ void CommandBuffer::drawIndexed(uint indexCount, uint instanceCount,
     }
 #elif defined(VULKAN)
     if (renderPass == nullptr || renderPass->currentRenderPass == nullptr) {
-        // No pipeline bound yet, skip this draw call
         return;
     }
-    // Acquire swapchain image once per frame (only for default framebuffer)
     if (!imageAcquired && framebuffer != nullptr &&
         framebuffer->isDefaultFramebuffer) {
         vkAcquireNextImageKHR(device->logicalDevice, device->swapChain,
@@ -418,9 +377,7 @@ void CommandBuffer::drawIndexed(uint indexCount, uint instanceCount,
                               VK_NULL_HANDLE, &imageIndex);
         imageAcquired = true;
     }
-    // Begin command buffer once per frame (reset happens here)
     beginCommandBufferIfNeeded();
-    // Start render pass if not already started
     if (!hasStarted) {
         this->record(imageIndex);
         hasStarted = true;
@@ -428,8 +385,6 @@ void CommandBuffer::drawIndexed(uint indexCount, uint instanceCount,
     vkCmdBindPipeline(commandBuffers[currentFrame],
                       VK_PIPELINE_BIND_POINT_GRAPHICS,
                       renderPass->currentRenderPass->pipeline);
-    // Use boundPipeline for descriptor sets - this is the pipeline that had
-    // textures bound to it, not the cached CoreRenderPass pipeline
     if (boundPipeline != nullptr) {
         boundPipeline->bindDescriptorSets(commandBuffers[currentFrame]);
     }
@@ -477,10 +432,8 @@ void CommandBuffer::drawPatches(uint vertexCount, uint firstVertex) {
     }
 #elif defined(VULKAN)
     if (renderPass == nullptr || renderPass->currentRenderPass == nullptr) {
-        // No pipeline bound yet, skip this draw call
         return;
     }
-    // Acquire swapchain image once per frame (only for default framebuffer)
     if (!imageAcquired && framebuffer != nullptr &&
         framebuffer->isDefaultFramebuffer) {
         VkResult result = vkAcquireNextImageKHR(
@@ -511,7 +464,6 @@ void CommandBuffer::drawPatches(uint vertexCount, uint firstVertex) {
                         device->swapChainImages.imageViews[i],
                         brightTextures[i]->vkImageView};
 
-                    // Add depth attachment if available
                     if (device->swapChainDepthTexture != nullptr &&
                         device->swapChainDepthTexture->vkImageView !=
                             VK_NULL_HANDLE) {
@@ -543,9 +495,7 @@ void CommandBuffer::drawPatches(uint vertexCount, uint firstVertex) {
             }
         }
     }
-    // Begin command buffer once per frame (reset happens here)
     beginCommandBufferIfNeeded();
-    // Start render pass if not already started
     if (!hasStarted) {
         this->record(imageIndex);
         hasStarted = true;
@@ -553,8 +503,6 @@ void CommandBuffer::drawPatches(uint vertexCount, uint firstVertex) {
     vkCmdBindPipeline(commandBuffers[currentFrame],
                       VK_PIPELINE_BIND_POINT_GRAPHICS,
                       renderPass->currentRenderPass->pipeline);
-    // Use boundPipeline for descriptor sets - this is the pipeline that had
-    // textures bound to it, not the cached CoreRenderPass pipeline
     if (boundPipeline != nullptr) {
         boundPipeline->bindDescriptorSets(commandBuffers[currentFrame]);
     }
@@ -587,7 +535,6 @@ void CommandBuffer::bindVertexBuffersIfNeeded() {
         return;
     }
 
-    // Use the actual pipeline from the render pass, not boundPipeline
     Pipeline *activePipeline = nullptr;
     if (renderPass != nullptr && renderPass->currentRenderPass != nullptr &&
         renderPass->currentRenderPass->opalPipeline != nullptr) {
@@ -607,8 +554,6 @@ void CommandBuffer::bindVertexBuffersIfNeeded() {
         instanceBufferHandle = boundDrawingState->instanceBuffer->vkBuffer;
     }
 
-    // If pipeline expects instance binding but no instance buffer provided,
-    // use the default identity matrix buffer
     if (needsInstanceBinding && instanceBufferHandle == VK_NULL_HANDLE &&
         device != nullptr) {
         auto fallback = device->getDefaultInstanceBuffer();
@@ -617,7 +562,6 @@ void CommandBuffer::bindVertexBuffersIfNeeded() {
         }
     }
 
-    // If pipeline expects instance binding, we must bind 2 buffers
     if (needsInstanceBinding || instanceBufferHandle != VK_NULL_HANDLE) {
         buffers[1] = instanceBufferHandle;
         bindingCount = 2;

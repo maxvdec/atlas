@@ -22,7 +22,6 @@ void Framebuffer::createVulkanFramebuffers(
             "Device not initialized for Vulkan framebuffer creation");
     }
 
-    // Clean up any existing framebuffers
     for (auto fb : vkFramebuffers) {
         if (fb != VK_NULL_HANDLE) {
             vkDestroyFramebuffer(Device::globalDevice, fb, nullptr);
@@ -30,8 +29,6 @@ void Framebuffer::createVulkanFramebuffers(
     }
     vkFramebuffers.clear();
 
-    // If this is a default framebuffer, create framebuffers for each swapchain
-    // image
     if (isDefaultFramebuffer) {
         Device *device = Device::globalInstance;
         vkFramebuffers.resize(device->swapChainImages.imageViews.size());
@@ -80,7 +77,6 @@ void Framebuffer::createVulkanFramebuffers(
         this->width = static_cast<int>(device->swapChainExtent.width);
         this->height = static_cast<int>(device->swapChainExtent.height);
     } else {
-        // Create a single framebuffer from the attachments
         std::vector<VkImageView> attachmentViews;
         for (const auto &attachment : attachments) {
             attachmentViews.push_back(attachment.texture->vkImageView);
@@ -237,7 +233,6 @@ void Framebuffer::transitionImageLayout(VkImage image, VkFormat format,
 }
 
 void RenderPass::applyRenderPass() {
-    // Look for a cached render pass with the same configuration
     for (const auto &cached : cachedRenderPasses) {
         if (cached->opalFramebuffer == this->framebuffer) {
             this->currentRenderPass = cached;
@@ -245,9 +240,6 @@ void RenderPass::applyRenderPass() {
         }
     }
 
-    // Create a new render pass
-    // We need a pipeline for render pass creation, but we'll create a minimal
-    // one
     auto renderPass = std::make_shared<CoreRenderPass>();
     renderPass->opalFramebuffer = this->framebuffer;
 
@@ -257,7 +249,6 @@ void RenderPass::applyRenderPass() {
     bool hasDepthAttachment = false;
 
     if (this->framebuffer->isDefaultFramebuffer) {
-        // Default framebuffer - use swapchain format
         VkAttachmentDescription colorAttachment{};
         colorAttachment.format = Device::globalInstance->swapChainImageFormat;
         colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
@@ -306,8 +297,6 @@ void RenderPass::applyRenderPass() {
             attachmentDesc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
 
             if (attachment.type == Attachment::Type::Color) {
-                // Transition to shader read so it can be sampled in subsequent
-                // passes
                 attachmentDesc.finalLayout =
                     VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
@@ -339,8 +328,6 @@ void RenderPass::applyRenderPass() {
         subpass.pDepthStencilAttachment = &depthAttachmentRef;
     }
 
-    // Entry dependency: wait for previous operations before starting render
-    // pass
     VkSubpassDependency dependencies[2] = {};
     dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
     dependencies[0].dstSubpass = 0;
@@ -357,7 +344,6 @@ void RenderPass::applyRenderPass() {
         VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT |
         VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
-    // Exit dependency: ensure render pass completes before subsequent reads
     dependencies[1].srcSubpass = 0;
     dependencies[1].dstSubpass = VK_SUBPASS_EXTERNAL;
     dependencies[1].srcStageMask =
@@ -383,7 +369,6 @@ void RenderPass::applyRenderPass() {
         throw std::runtime_error("Failed to create render pass!");
     }
 
-    // Create framebuffers for this render pass
     this->framebuffer->createVulkanFramebuffers(renderPass);
 
     cachedRenderPasses.push_back(renderPass);

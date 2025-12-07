@@ -15,7 +15,7 @@
 namespace opal {
 
 namespace {
-
+#ifdef OPENGL
 uint getGLVertexAttributeType(VertexAttributeType type) {
     switch (type) {
     case VertexAttributeType::Float:
@@ -38,6 +38,8 @@ uint getGLVertexAttributeType(VertexAttributeType type) {
         return GL_FLOAT;
     }
 }
+
+#endif
 
 } // namespace
 
@@ -187,7 +189,6 @@ void Buffer::updateData(size_t offset, size_t size, const void *data) {
     glBufferSubData(glTarget, offset, size, data);
     glBindBuffer(glTarget, 0);
 #elif defined(VULKAN)
-    // Safety check: ensure staging buffer exists
     if (vkStagingBufferMemory == VK_NULL_HANDLE ||
         stagingBuffer == VK_NULL_HANDLE) {
         throw std::runtime_error(
@@ -204,8 +205,6 @@ void Buffer::updateData(size_t offset, size_t size, const void *data) {
     memcpy(mappedData, data, size);
     vkUnmapMemory(Device::globalInstance->logicalDevice, vkStagingBufferMemory);
 
-    // Copy only the updated range into the device-local buffer at the same
-    // offset.
     VkCommandBufferAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
     allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;

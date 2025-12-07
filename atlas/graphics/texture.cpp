@@ -215,8 +215,6 @@ Texture Texture::fromResource(const Resource &resource, TextureType type,
     }
 
     int width, height, channels;
-    // Always flip textures vertically on load - this ensures consistent
-    // UV coordinate handling across both OpenGL and Vulkan backends
     stbi_set_flip_vertically_on_load(true);
 
     TextureCreationData creationData{};
@@ -242,7 +240,6 @@ Texture Texture::fromResource(const Resource &resource, TextureType type,
             dataFormat = opal::TextureDataFormat::Rgba;
         }
 
-        // Create with correct format and data in one call
         opalTexture =
             opal::Texture::create(opal::TextureType::Texture2D, internalFormat,
                                   width, height, dataFormat, data, 1);
@@ -266,14 +263,12 @@ Texture Texture::fromResource(const Resource &resource, TextureType type,
                           : (channels == 3 ? opal::TextureDataFormat::Rgb
                                            : opal::TextureDataFormat::Red);
 
-        // Create with correct format and data in one call
         opalTexture =
             opal::Texture::create(opal::TextureType::Texture2D, internalFormat,
                                   width, height, dataFormat, data, 1);
         stbi_image_free(data);
     }
 
-    // Set all texture parameters in one batched call (single bind)
     auto toOpalWrap = [](TextureWrappingMode m) -> opal::TextureWrapMode {
         switch (m) {
         case TextureWrappingMode::Repeat:
@@ -371,7 +366,6 @@ Cubemap Cubemap::fromResourceGroup(ResourceGroup &group) {
     glm::dvec3 accumulatedColor(0.0);
     unsigned long long accumulatedPixels = 0;
 
-    // First pass: determine dimensions and format from first image
     stbi_set_flip_vertically_on_load(false);
     unsigned char *firstData =
         stbi_load(group.resources[0].path.string().c_str(), &width, &height,
@@ -390,11 +384,9 @@ Cubemap Cubemap::fromResourceGroup(ResourceGroup &group) {
                       : (channels == 3 ? opal::TextureDataFormat::Rgb
                                        : opal::TextureDataFormat::Red);
 
-    // Create cubemap with pre-allocated faces
     auto opalTexture = opal::Texture::create(opal::TextureType::TextureCubeMap,
                                              format, width, height);
 
-    // Process first face (already loaded)
     {
         unsigned long long facePixelCount =
             static_cast<unsigned long long>(width) *
@@ -422,7 +414,6 @@ Cubemap Cubemap::fromResourceGroup(ResourceGroup &group) {
         stbi_image_free(firstData);
     }
 
-    // Process remaining 5 faces
     for (size_t i = 1; i < 6; i++) {
         Resource &resource = group.resources[i];
         if (resource.type != ResourceType::Image) {
@@ -469,7 +460,6 @@ Cubemap Cubemap::fromResourceGroup(ResourceGroup &group) {
         stbi_image_free(data);
     }
 
-    // Set all parameters in one batched call (single bind for cubemap)
     opalTexture->setParameters3D(
         opal::TextureWrapMode::ClampToEdge, opal::TextureWrapMode::ClampToEdge,
         opal::TextureWrapMode::ClampToEdge, opal::TextureFilterMode::Linear,
@@ -487,9 +477,10 @@ Cubemap Cubemap::fromResourceGroup(ResourceGroup &group) {
     if (accumulatedPixels > 0) {
         glm::dvec3 normalized =
             accumulatedColor / (static_cast<double>(accumulatedPixels) * 255.0);
-        cubemap.averageColor = {static_cast<float>(normalized.x),
-                                static_cast<float>(normalized.y),
-                                static_cast<float>(normalized.z), 1.0f};
+        cubemap.averageColor = {.r = static_cast<float>(normalized.x),
+                                .g = static_cast<float>(normalized.y),
+                                .b = static_cast<float>(normalized.z),
+                                .a = 1.0f};
         cubemap.hasAverageColor = true;
     }
     return cubemap;
@@ -518,7 +509,6 @@ Cubemap Cubemap::fromColors(const std::array<Color, 6> &colors, int size) {
                              static_cast<unsigned long long>(size);
     }
 
-    // Set all parameters in one batched call
     opalTexture->setParameters3D(
         opal::TextureWrapMode::ClampToEdge, opal::TextureWrapMode::ClampToEdge,
         opal::TextureWrapMode::ClampToEdge, opal::TextureFilterMode::Linear,
@@ -533,9 +523,10 @@ Cubemap Cubemap::fromColors(const std::array<Color, 6> &colors, int size) {
     if (accumulatedPixels > 0) {
         glm::dvec3 normalized =
             accumulatedColor / static_cast<double>(accumulatedPixels);
-        cubemap.averageColor = {static_cast<float>(normalized.x),
-                                static_cast<float>(normalized.y),
-                                static_cast<float>(normalized.z), 1.0f};
+        cubemap.averageColor = {.r = static_cast<float>(normalized.x),
+                                .g = static_cast<float>(normalized.y),
+                                .b = static_cast<float>(normalized.z),
+                                .a = 1.0f};
         cubemap.hasAverageColor = true;
     }
 
@@ -570,9 +561,10 @@ void Cubemap::updateWithColors(const std::array<Color, 6> &colors) {
     if (accumulatedPixels > 0) {
         glm::dvec3 normalized =
             accumulatedColor / static_cast<double>(accumulatedPixels);
-        averageColor = {static_cast<float>(normalized.x),
-                        static_cast<float>(normalized.y),
-                        static_cast<float>(normalized.z), 1.0f};
+        averageColor = {.r = static_cast<float>(normalized.x),
+                        .g = static_cast<float>(normalized.y),
+                        .b = static_cast<float>(normalized.z),
+                        .a = 1.0f};
         hasAverageColor = true;
     } else {
         hasAverageColor = false;
@@ -662,7 +654,6 @@ void Skybox::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
 
     CoreObject *obj = this->object.get();
 
-    // Create a pipeline description with the specific settings we need
     auto pipelineDesc = opal::Pipeline::create();
 
     if (Window::mainWindow) {
@@ -685,14 +676,11 @@ void Skybox::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
         pipelineDesc->enableMultisampling(window.useMultisampling);
     }
 
-    // Apply Skybox-specific overrides
     pipelineDesc->setDepthCompareOp(opal::CompareOp::LessEqual);
     pipelineDesc->enableDepthWrite(false);
     pipelineDesc->setCullMode(opal::CullMode::None);
     pipelineDesc->enableDepthTest(true);
 
-    // Request the pipeline from the shader program (handles caching and
-    // building)
     auto pipeline = obj->shaderProgram.requestPipeline(pipelineDesc);
     obj->setPipeline(pipeline);
 
