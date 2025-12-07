@@ -190,12 +190,26 @@ Window::Window(WindowConfiguration config)
         throw std::runtime_error("Failed to initialize audio engine");
     }
 
+    opal::DeviceInfo info = device->getDeviceInfo();
+
     std::cout << "\033[1m\033[36mAtlas Engine\033[0m" << std::endl;
-    std::cout << "\033[1m\033[36mAlpha 5 Version\033[0m" << std::endl;
+    std::cout << "\033[1m\033[36mVersion " << ATLAS_VERSION << " \033[0m"
+              << std::endl;
+    std::cout << "\033[1m\033[31mUsing Opal Graphics Library - Version "
+              << info.opalVersion << " \033[0m" << std::endl;
 #ifdef OPENGL
     std::cout << "\033[1m\033[32mUsing OpenGL Backend\033[0m" << std::endl;
 #else
     std::cout << "\033[1m\033[32mUsing Vulkan Backend\033[0m" << std::endl;
+    std::cout << "\033[1m\033[35m---------------\033[0m" << std::endl;
+    std::cout << "\033[1m\033[35mUsing GPU: " << info.deviceName << "\033[0m"
+              << std::endl;
+    std::cout << "\033[1m\033[35mVendor ID: " << info.vendorName << "\033[0m"
+              << std::endl;
+    std::cout << "\033[1m\033[35mDriver Version: " << info.driverVersion
+              << "\033[0m" << std::endl;
+    std::cout << "\033[1m\033[35mAPI Version: " << info.renderingVersion
+              << "\033[0m" << std::endl;
 #endif
 }
 

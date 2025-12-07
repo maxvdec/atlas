@@ -107,6 +107,8 @@ class Device {
     void submitCommandBuffer(std::shared_ptr<CommandBuffer> commandBuffer);
     std::shared_ptr<Framebuffer> getDefaultFramebuffer();
 
+    DeviceInfo getDeviceInfo();
+
   private:
     std::shared_ptr<Framebuffer> defaultFramebuffer = nullptr;
 

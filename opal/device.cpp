@@ -78,6 +78,28 @@ GLFWwindow *Context::getWindow() const {
     return this->window;
 }
 
+DeviceInfo Device::getDeviceInfo() {
+    DeviceInfo info;
+#ifdef OPENGL
+    info.deviceName = reinterpret_cast<const char *>(glGetString(GL_RENDERER));
+    info.vendorName = reinterpret_cast<const char *>(glGetString(GL_VENDOR));
+    info.driverVersion = "N/A";
+    info.renderingVersion = reinterpret_cast<const char *>(
+        glGetString(GL_SHADING_LANGUAGE_VERSION));
+    info.opalVersion = OPAL_VERSION;
+    return info;
+#else
+    VkPhysicalDeviceProperties deviceProperties;
+    vkGetPhysicalDeviceProperties(this->physicalDevice, &deviceProperties);
+    info.driverVersion = std::to_string(deviceProperties.driverVersion);
+    info.deviceName = deviceProperties.deviceName;
+    info.vendorName = std::to_string(deviceProperties.vendorID);
+    info.renderingVersion = std::to_string(deviceProperties.apiVersion);
+    info.opalVersion = OPAL_VERSION;
+    return info;
+#endif
+}
+
 std::shared_ptr<Device>
 Device::acquire([[maybe_unused]] std::shared_ptr<Context> context) {
 #ifdef OPENGL

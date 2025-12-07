@@ -3,8 +3,8 @@ project(Atlas LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_definitions(-DATLAS_VERSION=\"Alpha 5\")
-add_definitions(-DOPAL_VERSION=\"1 Ellipse\")
+add_definitions(-DATLAS_VERSION=\"Alpha\ 5\")
+add_definitions(-DOPAL_VERSION=\"1\ Ellipse\")
 
 message(STATUS "Building for platform: ${CMAKE_SYSTEM_NAME}")
 if(NOT CMAKE_BUILD_TYPE)
@@ -87,8 +87,6 @@ else()
     message(STATUS "Found Vulkan SDK at ${Vulkan_LIBRARY}")
     message(STATUS "Found Vulkan Libraries at ${Vulkan_INCLUDE_DIRS}")
     
-    # Find SPIRV-Cross for shader reflection
-    # On macOS with Homebrew, we need to set the prefix path
     if(APPLE)
         list(APPEND CMAKE_PREFIX_PATH "/opt/homebrew/opt/spirv-cross")
     endif()

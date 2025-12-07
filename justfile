@@ -11,6 +11,7 @@ target target enable_opengl="OFF":
     cd build && make -j8 {{target}}
 
 run enable_opengl="OFF":
+    export MTL_HUD_ENABLED=1
     just build {{enable_opengl}}
     ./build/bin/atlas_test
 
