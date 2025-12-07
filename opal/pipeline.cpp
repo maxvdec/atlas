@@ -52,6 +52,14 @@ void Pipeline::setViewport(int x, int y, int width, int height) {
     this->viewportY = y;
     this->viewportWidth = width;
     this->viewportHeight = height;
+#ifdef VULKAN
+    this->vkViewport.x = static_cast<float>(x);
+    this->vkViewport.y = static_cast<float>(y);
+    this->vkViewport.width = static_cast<float>(width);
+    this->vkViewport.height = static_cast<float>(height);
+    this->vkViewport.minDepth = 0.0f;
+    this->vkViewport.maxDepth = 1.0f;
+#endif
 }
 
 void Pipeline::setRasterizerMode(RasterizerMode mode) {
@@ -779,8 +787,7 @@ void Pipeline::ensureDescriptorResources() {
         }
         setCount++;
         for (const auto &bindingPair : setPair.second) {
-            typeCounts[bindingPair.second.type] +=
-                bindingPair.second.count * descriptorSetMultiplier;
+            typeCounts[bindingPair.second.type] += bindingPair.second.count;
         }
     }
 
@@ -801,7 +808,7 @@ void Pipeline::ensureDescriptorResources() {
     poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
     poolInfo.pPoolSizes = poolSizes.data();
-    poolInfo.maxSets = setCount * descriptorSetMultiplier;
+    poolInfo.maxSets = setCount;
     poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT;
 
     if (vkCreateDescriptorPool(Device::globalDevice, &poolInfo, nullptr,
@@ -810,7 +817,6 @@ void Pipeline::ensureDescriptorResources() {
     }
 
     descriptorSets.assign(descriptorSetLayouts.size(), VK_NULL_HANDLE);
-    descriptorSetPools.assign(descriptorSetLayouts.size(), {});
 
     for (size_t i = 0; i < descriptorSetLayouts.size(); ++i) {
         if (descriptorSetLayouts[i] == VK_NULL_HANDLE) {
@@ -830,7 +836,6 @@ void Pipeline::ensureDescriptorResources() {
             throw std::runtime_error("Failed to allocate descriptor set");
         }
         descriptorSets[i] = set;
-        descriptorSetPools[i].push_back(set);
     }
 
     // Prime all descriptors with placeholder resources so Vulkan validation

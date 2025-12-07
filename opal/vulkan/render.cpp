@@ -87,16 +87,36 @@ void CommandBuffer::record(uint32_t imageIndex) {
     vkCmdBeginRenderPass(commandBuffers[currentFrame], &renderPassInfo,
                          VK_SUBPASS_CONTENTS_INLINE);
 
-    // Configure dynamic viewport/scissor to match current render area (positive
-    // height)
+    // Configure dynamic viewport/scissor
     VkViewport viewport{};
-    viewport.x = 0.0f;
-    viewport.y = 0.0f;
-    viewport.width = static_cast<float>(renderPassInfo.renderArea.extent.width);
-    viewport.height =
-        static_cast<float>(renderPassInfo.renderArea.extent.height);
-    viewport.minDepth = 0.0f;
-    viewport.maxDepth = 1.0f;
+    if (renderPass->currentRenderPass &&
+        renderPass->currentRenderPass->opalPipeline) {
+        // Use the pipeline's viewport if it has been set (width != 0)
+        // This allows for custom viewports (e.g. flipped Y for text)
+        if (renderPass->currentRenderPass->opalPipeline->vkViewport.width !=
+            0.0f) {
+            viewport = renderPass->currentRenderPass->opalPipeline->vkViewport;
+        } else {
+            // Fallback to render area if pipeline viewport is not set
+            viewport.x = 0.0f;
+            viewport.y = 0.0f;
+            viewport.width =
+                static_cast<float>(renderPassInfo.renderArea.extent.width);
+            viewport.height =
+                static_cast<float>(renderPassInfo.renderArea.extent.height);
+            viewport.minDepth = 0.0f;
+            viewport.maxDepth = 1.0f;
+        }
+    } else {
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width =
+            static_cast<float>(renderPassInfo.renderArea.extent.width);
+        viewport.height =
+            static_cast<float>(renderPassInfo.renderArea.extent.height);
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+    }
     vkCmdSetViewport(commandBuffers[currentFrame], 0, 1, &viewport);
 
     VkRect2D scissor{};

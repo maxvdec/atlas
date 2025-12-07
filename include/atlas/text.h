@@ -26,16 +26,6 @@
  */
 struct Character {
     /**
-     * @brief The ID of the texture that contains the glyph.
-     *
-     */
-    unsigned int textureID;
-    /**
-     * @brief The opal texture object.
-     *
-     */
-    std::shared_ptr<opal::Texture> texture;
-    /**
      * @brief The size of the glyph.
      *
      */
@@ -50,6 +40,16 @@ struct Character {
      *
      */
     unsigned int advance;
+    /**
+     * @brief The top-left UV coordinate in the atlas.
+     *
+     */
+    Position2d uvMin;
+    /**
+     * @brief The bottom-right UV coordinate in the atlas.
+     *
+     */
+    Position2d uvMax;
 };
 
 /**
@@ -94,6 +94,11 @@ struct Font {
      *
      */
     Resource resource;
+    /**
+     * @brief The texture atlas containing all glyphs.
+     *
+     */
+    std::shared_ptr<opal::Texture> texture;
 
     /**
      * @brief Creates a font from a resource.

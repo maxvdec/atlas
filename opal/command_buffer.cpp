@@ -382,6 +382,20 @@ auto CommandBuffer::draw(uint vertexCount, uint instanceCount, uint firstVertex,
     }
     bindVertexBuffersIfNeeded();
     if (boundPipeline != nullptr) {
+        VkViewport viewport = boundPipeline->vkViewport;
+        if (viewport.width != 0.0f) {
+            vkCmdSetViewport(commandBuffers[currentFrame], 0, 1, &viewport);
+        } else if (framebuffer != nullptr) {
+            VkViewport defaultViewport{};
+            defaultViewport.x = 0.0f;
+            defaultViewport.y = 0.0f;
+            defaultViewport.width = static_cast<float>(framebuffer->width);
+            defaultViewport.height = static_cast<float>(framebuffer->height);
+            defaultViewport.minDepth = 0.0f;
+            defaultViewport.maxDepth = 1.0f;
+            vkCmdSetViewport(commandBuffers[currentFrame], 0, 1,
+                             &defaultViewport);
+        }
         boundPipeline->flushPushConstants(commandBuffers[currentFrame]);
     }
     vkCmdDraw(commandBuffers[currentFrame], vertexCount, instanceCount,
@@ -443,6 +457,20 @@ void CommandBuffer::drawIndexed(uint indexCount, uint instanceCount,
         }
     }
     if (boundPipeline != nullptr) {
+        VkViewport viewport = boundPipeline->vkViewport;
+        if (viewport.width != 0.0f) {
+            vkCmdSetViewport(commandBuffers[currentFrame], 0, 1, &viewport);
+        } else if (framebuffer != nullptr) {
+            VkViewport defaultViewport{};
+            defaultViewport.x = 0.0f;
+            defaultViewport.y = 0.0f;
+            defaultViewport.width = static_cast<float>(framebuffer->width);
+            defaultViewport.height = static_cast<float>(framebuffer->height);
+            defaultViewport.minDepth = 0.0f;
+            defaultViewport.maxDepth = 1.0f;
+            vkCmdSetViewport(commandBuffers[currentFrame], 0, 1,
+                             &defaultViewport);
+        }
         boundPipeline->flushPushConstants(commandBuffers[currentFrame]);
     }
     vkCmdDrawIndexed(commandBuffers[currentFrame], indexCount, instanceCount,
@@ -549,6 +577,20 @@ void CommandBuffer::drawPatches(uint vertexCount, uint firstVertex) {
     }
     bindVertexBuffersIfNeeded();
     if (boundPipeline != nullptr) {
+        VkViewport viewport = boundPipeline->vkViewport;
+        if (viewport.width != 0.0f) {
+            vkCmdSetViewport(commandBuffers[currentFrame], 0, 1, &viewport);
+        } else if (framebuffer != nullptr) {
+            VkViewport defaultViewport{};
+            defaultViewport.x = 0.0f;
+            defaultViewport.y = 0.0f;
+            defaultViewport.width = static_cast<float>(framebuffer->width);
+            defaultViewport.height = static_cast<float>(framebuffer->height);
+            defaultViewport.minDepth = 0.0f;
+            defaultViewport.maxDepth = 1.0f;
+            vkCmdSetViewport(commandBuffers[currentFrame], 0, 1,
+                             &defaultViewport);
+        }
         boundPipeline->flushPushConstants(commandBuffers[currentFrame]);
     }
     vkCmdDraw(commandBuffers[currentFrame], vertexCount, 1, firstVertex, 0);

@@ -34,38 +34,74 @@ Font Font::fromResource(const std::string &fontName, Resource resource,
 
     Font font;
 
+    // Create a texture atlas
+    // We'll use a fixed size for now, e.g., 1024x1024
+    const int atlasWidth = 1024;
+    const int atlasHeight = 1024;
+    std::vector<unsigned char> atlasData(atlasWidth * atlasHeight, 0);
+
+    int currentX = 0;
+    int currentY = 0;
+    int rowHeight = 0;
+    const int padding = 1;
+
     for (unsigned char c = 0; c < 128; c++) {
         if (FT_Load_Char(face, c, FT_LOAD_RENDER)) {
             std::cerr << "Failed to load Glyph: " << c << std::endl;
             continue;
         }
 
-        if (face->glyph->bitmap.width == 0 || face->glyph->bitmap.rows == 0) {
-            Character character = {
-                0, nullptr, Size2d(0, 0), Position2d(0, 0),
-                static_cast<unsigned int>(face->glyph->advance.x)};
-            font.atlas.insert(std::pair<char, Character>(c, character));
-            continue;
+        int width = face->glyph->bitmap.width;
+        int height = face->glyph->bitmap.rows;
+
+        // If we reach the end of the row, move to the next row
+        if (currentX + width + padding > atlasWidth) {
+            currentX = 0;
+            currentY += rowHeight + padding;
+            rowHeight = 0;
         }
 
-        auto opalTexture = opal::Texture::create(
-            opal::TextureType::Texture2D, opal::TextureFormat::Red8,
-            face->glyph->bitmap.width, face->glyph->bitmap.rows,
-            opal::TextureDataFormat::Red, face->glyph->bitmap.buffer, 1);
+        // If we reach the bottom of the atlas, stop (or handle overflow)
+        if (currentY + height + padding > atlasHeight) {
+            std::cerr << "Font atlas full for font: " << fontName << std::endl;
+            break;
+        }
 
-        opalTexture->setParameters(opal::TextureWrapMode::ClampToEdge,
-                                   opal::TextureWrapMode::ClampToEdge,
-                                   opal::TextureFilterMode::Linear,
-                                   opal::TextureFilterMode::Linear);
+        // Copy bitmap to atlas
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                atlasData[(currentY + y) * atlasWidth + (currentX + x)] =
+                    face->glyph->bitmap.buffer[y * width + x];
+            }
+        }
 
         Character character = {
-            opalTexture->textureID, opalTexture,
-            Size2d(face->glyph->bitmap.width, face->glyph->bitmap.rows),
+            Size2d(width, height),
             Position2d(face->glyph->bitmap_left, face->glyph->bitmap_top),
-            static_cast<unsigned int>(face->glyph->advance.x)};
+            static_cast<unsigned int>(face->glyph->advance.x),
+            // UV Min (Top-Left)
+            Position2d(static_cast<float>(currentX) / atlasWidth,
+                       static_cast<float>(currentY) / atlasHeight),
+            // UV Max (Bottom-Right)
+            Position2d(static_cast<float>(currentX + width) / atlasWidth,
+                       static_cast<float>(currentY + height) / atlasHeight)};
 
         font.atlas.insert(std::pair<char, Character>(c, character));
+
+        currentX += width + padding;
+        rowHeight = std::max(rowHeight, height);
     }
+
+    // Create the single texture for the font
+    auto opalTexture = opal::Texture::create(
+        opal::TextureType::Texture2D, opal::TextureFormat::Red8, atlasWidth,
+        atlasHeight, opal::TextureDataFormat::Red, atlasData.data(), 1);
+
+    opalTexture->setParameters(
+        opal::TextureWrapMode::ClampToEdge, opal::TextureWrapMode::ClampToEdge,
+        opal::TextureFilterMode::Linear, opal::TextureFilterMode::Linear);
+
+    font.texture = opalTexture;
 
     FT_Done_Face(face);
     FT_Done_FreeType(ft);
@@ -93,6 +129,7 @@ void Font::changeSize(int newSize) {
     }
     Font newFont = Font::fromResource(name, resource, newSize);
     atlas = newFont.atlas;
+    texture = newFont.texture;
     size = newSize;
 }
 
@@ -215,6 +252,11 @@ void Text::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
     textPipeline->setUniform3f("textColor", color.r, color.g, color.b);
     textPipeline->setUniformMat4f("projection", projection);
 
+    // Bind the font atlas texture once
+    if (font.texture) {
+        textPipeline->bindTexture2D("text", font.texture->textureID, 0);
+    }
+
     commandBuffer->bindDrawingState(vao);
 
     // Recompute projection to follow live framebuffer size (resizes).
@@ -257,15 +299,23 @@ void Text::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
         float w = ch.size.width * scale;
         float h = ch.size.height * scale;
 
-        // Flip V to keep glyphs upright (FreeType buffer is top-left).
+        // Use UV coordinates from the atlas
+        float u0 = ch.uvMin.x;
+        float v0 = ch.uvMin.y;
+        float u1 = ch.uvMax.x;
+        float v1 = ch.uvMax.y;
+
+        // Vertices for the quad
+        // Note: We map the atlas UVs directly.
+        // (xpos, ypos) is top-left on screen (if y increases downwards)
+        // (u0, v0) is top-left in atlas
         float vertices[6][4] = {
-            {xpos, ypos, 0.0f, 1.0f},         {xpos, ypos + h, 0.0f, 0.0f},
-            {xpos + w, ypos + h, 1.0f, 0.0f},
+            {xpos, ypos, u0, v0},         {xpos, ypos + h, u0, v1},
+            {xpos + w, ypos + h, u1, v1},
 
-            {xpos, ypos, 0.0f, 1.0f},         {xpos + w, ypos + h, 1.0f, 0.0f},
-            {xpos + w, ypos, 1.0f, 1.0f}};
+            {xpos, ypos, u0, v0},         {xpos + w, ypos + h, u1, v1},
+            {xpos + w, ypos, u1, v0}};
 
-        textPipeline->bindTexture2D("text", ch.textureID, 0);
         vertexBuffer->bind();
         const size_t offset = glyphIndex * bytesPerGlyph;
         vertexBuffer->updateData(offset, sizeof(vertices), vertices);

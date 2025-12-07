@@ -632,11 +632,11 @@ class Pipeline {
     VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
     std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
     std::vector<VkDescriptorSet> descriptorSets;
-    // Allow allocating multiple descriptor sets per layout so per-draw
-    // sampler updates do not overwrite previous draws in the same command
-    // buffer.
-    static constexpr uint32_t descriptorSetMultiplier = 64;
+    // Small ring of descriptor sets per layout to allow per-draw sampler updates
+    // without unbounded allocations.
+    static constexpr uint32_t descriptorSetRingSize = 16;
     std::vector<std::vector<VkDescriptorSet>> descriptorSetPools;
+    std::vector<uint32_t> descriptorSetPoolCursor;
 
     struct DescriptorBindingInfoEntry {
         VkDescriptorType type = VK_DESCRIPTOR_TYPE_MAX_ENUM;
