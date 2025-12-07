@@ -123,8 +123,12 @@ Texture Texture::createDoubleCheckerboard(
 
     TextureCreationData creationData{width, height, 3};
 
-    return Texture{Resource(),  creationData,       opalTexture->textureID,
-                   opalTexture, TextureType::Color, borderColor};
+    return Texture{.resource = Resource(),
+                   .creationData = creationData,
+                   .id = opalTexture->textureID,
+                   .texture = opalTexture,
+                   .type = TextureType::Color,
+                   .borderColor = borderColor};
 }
 
 Texture Texture::createTiledCheckerboard(int width, int height,
@@ -144,7 +148,7 @@ Texture Texture::createTiledCheckerboard(int width, int height,
         int tileRow = y / tileHeight;
         for (int x = 0; x < width; ++x) {
             int tileCol = x / tileWidth;
-            int tileIndex = tileRow * cols + tileCol;
+            int tileIndex = (tileRow * cols) + tileCol;
             if (tileIndex >= numTiles)
                 tileIndex = numTiles - 1;
 
@@ -185,9 +189,14 @@ Texture Texture::createTiledCheckerboard(int width, int height,
 
     opalTexture->automaticallyGenerateMipmaps();
 
-    TextureCreationData creationData{width, height, 3};
-    return Texture{Resource(),  creationData,       opalTexture->textureID,
-                   opalTexture, TextureType::Color, borderColor};
+    TextureCreationData creationData{
+        .width = width, .height = height, .channels = 3};
+    return Texture{.resource = Resource(),
+                   .creationData = creationData,
+                   .id = opalTexture->textureID,
+                   .texture = opalTexture,
+                   .type = TextureType::Color,
+                   .borderColor = borderColor};
 }
 
 Texture Texture::createRainStreak(int width, int height,
@@ -250,7 +259,12 @@ Texture Texture::createRainStreak(int width, int height,
 
     opalTexture->automaticallyGenerateMipmaps();
 
-    TextureCreationData creationData{width, height, 4};
-    return Texture{Resource(),  creationData,       opalTexture->textureID,
-                   opalTexture, TextureType::Color, borderColor};
+    TextureCreationData creationData{
+        .width = width, .height = height, .channels = 4};
+    return Texture{.resource = Resource(),
+                   .creationData = creationData,
+                   .id = opalTexture->textureID,
+                   .texture = opalTexture,
+                   .type = TextureType::Color,
+                   .borderColor = borderColor};
 }

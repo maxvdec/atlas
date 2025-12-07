@@ -30,6 +30,7 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - The audio engine is Finewave. Finewave is a separate library that handles all the audio playback and processing.
 - The terrain system is Aurora. Aurora is a separate library that handles terrain generation and rendering.
 - The environment system is Hydra. Hydra is a separate library that handles sky, atmosphere, weather and fluid simulation.
+- The rendering backend is Opal, an in-house rendering abstraction layer that allows for easy switching between different graphics APIs.
 
 ## Getting the Engine
 

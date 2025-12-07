@@ -11,6 +11,7 @@
 #include "atlas/window.h"
 #include "opal/opal.h"
 #include "ft2build.h" // IWYU pragma: keep
+#include <algorithm>
 #include <iostream>
 #include FT_FREETYPE_H
 #include <vector>
@@ -33,40 +34,70 @@ Font Font::fromResource(const std::string &fontName, Resource resource,
 
     Font font;
 
+    const int atlasWidth = 1024;
+    const int atlasHeight = 1024;
+    std::vector<unsigned char> atlasData(atlasWidth * atlasHeight, 0);
+
+    int currentX = 0;
+    int currentY = 0;
+    int rowHeight = 0;
+    const int padding = 1;
+
     for (unsigned char c = 0; c < 128; c++) {
         if (FT_Load_Char(face, c, FT_LOAD_RENDER)) {
             std::cerr << "Failed to load Glyph: " << c << std::endl;
             continue;
         }
 
-        if (face->glyph->bitmap.width == 0 || face->glyph->bitmap.rows == 0) {
-            Character character = {
-                0, nullptr, Size2d(0, 0), Position2d(0, 0),
-                static_cast<unsigned int>(face->glyph->advance.x)};
-            font.atlas.insert(std::pair<char, Character>(c, character));
-            continue;
+        int width = face->glyph->bitmap.width;
+        int height = face->glyph->bitmap.rows;
+
+        if (currentX + width + padding > atlasWidth) {
+            currentX = 0;
+            currentY += rowHeight + padding;
+            rowHeight = 0;
         }
 
-        // Create texture with data in one call, texture remains bound
-        auto opalTexture = opal::Texture::create(
-            opal::TextureType::Texture2D, opal::TextureFormat::Red8,
-            face->glyph->bitmap.width, face->glyph->bitmap.rows,
-            opal::TextureDataFormat::Red, face->glyph->bitmap.buffer, 1);
+        if (currentY + height + padding > atlasHeight) {
+            std::cerr << "Font atlas full for font: " << fontName << std::endl;
+            break;
+        }
 
-        // Set all parameters in one batched call (single bind)
-        opalTexture->setParameters(opal::TextureWrapMode::ClampToEdge,
-                                   opal::TextureWrapMode::ClampToEdge,
-                                   opal::TextureFilterMode::Linear,
-                                   opal::TextureFilterMode::Linear);
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                atlasData[(currentY + y) * atlasWidth + (currentX + x)] =
+                    face->glyph->bitmap.buffer[y * width + x];
+            }
+        }
 
         Character character = {
-            opalTexture->textureID, opalTexture,
-            Size2d(face->glyph->bitmap.width, face->glyph->bitmap.rows),
-            Position2d(face->glyph->bitmap_left, face->glyph->bitmap_top),
-            static_cast<unsigned int>(face->glyph->advance.x)};
+            .size = Size2d(width, height),
+            .bearing =
+                Position2d(face->glyph->bitmap_left, face->glyph->bitmap_top),
+            .advance = static_cast<unsigned int>(face->glyph->advance.x),
+            // UV Min (Top-Left)
+            .uvMin = Position2d(static_cast<float>(currentX) / atlasWidth,
+                                static_cast<float>(currentY) / atlasHeight),
+            // UV Max (Bottom-Right)
+            .uvMax = Position2d(
+                static_cast<float>(currentX + width) / atlasWidth,
+                static_cast<float>(currentY + height) / atlasHeight)};
 
         font.atlas.insert(std::pair<char, Character>(c, character));
+
+        currentX += width + padding;
+        rowHeight = std::max(rowHeight, height);
     }
+
+    auto opalTexture = opal::Texture::create(
+        opal::TextureType::Texture2D, opal::TextureFormat::Red8, atlasWidth,
+        atlasHeight, opal::TextureDataFormat::Red, atlasData.data(), 1);
+
+    opalTexture->setParameters(
+        opal::TextureWrapMode::ClampToEdge, opal::TextureWrapMode::ClampToEdge,
+        opal::TextureFilterMode::Linear, opal::TextureFilterMode::Linear);
+
+    font.texture = opalTexture;
 
     FT_Done_Face(face);
     FT_Done_FreeType(ft);
@@ -94,6 +125,7 @@ void Font::changeSize(int newSize) {
     }
     Font newFont = Font::fromResource(name, resource, newSize);
     atlas = newFont.atlas;
+    texture = newFont.texture;
     size = newSize;
 }
 
@@ -108,24 +140,31 @@ void Text::initialize() {
     glfwGetFramebufferSize(static_cast<GLFWwindow *>(window->windowRef),
                            &fbWidth, &fbHeight);
 
+#ifdef VULKAN
     projection = glm::ortho(0.0f, static_cast<float>(fbWidth),
                             static_cast<float>(fbHeight), 0.0f);
+#else
+    projection = glm::ortho(0.0f, static_cast<float>(fbWidth), 0.0f,
+                            static_cast<float>(fbHeight));
+#endif
 
+    vertexBufferCapacity = sizeof(float) * 6 * 4; // one glyph quad
     vertexBuffer = opal::Buffer::create(opal::BufferUsage::VertexBuffer,
-                                        sizeof(float) * 6 * 4, nullptr,
+                                        vertexBufferCapacity, nullptr,
                                         opal::MemoryUsageType::CPUToGPU);
     vao = opal::DrawingState::create(vertexBuffer);
     vao->setBuffers(vertexBuffer, nullptr);
 
-    opal::VertexAttribute textAttribute{"textVertex",
-                                        opal::VertexAttributeType::Float,
-                                        0,
-                                        0,
-                                        false,
-                                        4,
-                                        static_cast<uint>(4 * sizeof(float)),
-                                        opal::VertexBindingInputRate::Vertex,
-                                        0};
+    opal::VertexAttribute textAttribute{
+        .name = "textVertex",
+        .type = opal::VertexAttributeType::Float,
+        .offset = 0,
+        .location = 0,
+        .normalized = false,
+        .size = 4,
+        .stride = static_cast<uint>(4 * sizeof(float)),
+        .inputRate = opal::VertexBindingInputRate::Vertex,
+        .divisor = 0};
     std::vector<opal::VertexAttributeBinding> bindings = {
         {textAttribute, vertexBuffer}};
     vao->configureAttributes(bindings);
@@ -145,58 +184,132 @@ void Text::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
             "Text::render requires a valid command buffer");
     }
 
-    // Get or create pipeline for text
     static std::shared_ptr<opal::Pipeline> textPipeline = nullptr;
+    int fbWidth = 0;
+    int fbHeight = 0;
+    glfwGetFramebufferSize(
+        static_cast<GLFWwindow *>(Window::mainWindow->windowRef), &fbWidth,
+        &fbHeight);
+
     if (textPipeline == nullptr) {
         textPipeline = opal::Pipeline::create();
+
+        opal::VertexAttribute textAttribute{
+            .name = "vertex",
+            .type = opal::VertexAttributeType::Float,
+            .offset = 0,
+            .location = 0,
+            .normalized = false,
+            .size = 4,
+            .stride = static_cast<uint>(4 * sizeof(float)),
+            .inputRate = opal::VertexBindingInputRate::Vertex,
+            .divisor = 0};
+        std::vector<opal::VertexAttribute> textAttributes = {textAttribute};
+        opal::VertexBinding textBinding{
+            .stride = static_cast<uint>(4 * sizeof(float)),
+            .inputRate = opal::VertexBindingInputRate::Vertex};
+        textPipeline->setVertexAttributes(textAttributes, textBinding);
+        textPipeline->setShaderProgram(shader.shader);
+#ifdef VULKAN
+        textPipeline->setViewport(0, fbHeight, fbWidth, -fbHeight);
+#else
+        textPipeline->setViewport(0, 0, fbWidth, fbHeight);
+#endif
+        textPipeline->setCullMode(opal::CullMode::None);
+        textPipeline->enableDepthTest(false);
+        textPipeline->enableDepthWrite(false);
+        textPipeline->setPrimitiveStyle(opal::PrimitiveStyle::Triangles);
+        textPipeline->enableBlending(true);
+        textPipeline->setBlendFunc(opal::BlendFunc::SrcAlpha,
+                                   opal::BlendFunc::OneMinusSrcAlpha);
+        textPipeline->build();
+    } else {
+#ifdef VULKAN
+        textPipeline->setViewport(0, fbHeight, fbWidth, -fbHeight);
+#else
+        textPipeline->setViewport(0, 0, fbWidth, fbHeight);
+#endif
+        textPipeline->setShaderProgram(shader.shader);
     }
-    textPipeline = shader.requestPipeline(textPipeline);
+
     textPipeline->enableBlending(true);
     textPipeline->setBlendFunc(opal::BlendFunc::SrcAlpha,
                                opal::BlendFunc::OneMinusSrcAlpha);
     textPipeline->enableDepthTest(false);
-    textPipeline->bind();
+
+    commandBuffer->bindPipeline(textPipeline);
 
     textPipeline->setUniform3f("textColor", color.r, color.g, color.b);
     textPipeline->setUniformMat4f("projection", projection);
 
+    if (font.texture) {
+        textPipeline->bindTexture2D("text", font.texture->textureID, 0);
+    }
+
     commandBuffer->bindDrawingState(vao);
+
+    glfwGetFramebufferSize(
+        static_cast<GLFWwindow *>(Window::mainWindow->windowRef), &fbWidth,
+        &fbHeight);
+#ifdef VULKAN
+    projection = glm::ortho(0.0f, static_cast<float>(fbWidth),
+                            static_cast<float>(fbHeight), 0.0f);
+#else
+    projection = glm::ortho(0.0f, static_cast<float>(fbWidth), 0.0f,
+                            static_cast<float>(fbHeight));
+#endif
 
     float scale = 2.0f;
 
     float maxBearingY = 0;
     for (const char &ch : content) {
         Character character = font.atlas[ch];
-        if (character.bearing.y > maxBearingY) {
-            maxBearingY = character.bearing.y;
-        }
+        maxBearingY = std::max(character.bearing.y, maxBearingY);
     }
 
     float x = position.x;
-    float y = position.y + maxBearingY * scale;
+    float y = position.y + (maxBearingY * scale);
 
     std::string::const_iterator c;
-    for (c = content.begin(); c != content.end(); c++) {
+    const size_t glyphCount = content.size();
+    const size_t bytesPerGlyph = sizeof(float) * 6 * 4;
+    const size_t requiredBytes = glyphCount * bytesPerGlyph;
+    if (requiredBytes > vertexBufferCapacity) {
+        vertexBufferCapacity = requiredBytes;
+        vertexBuffer = opal::Buffer::create(opal::BufferUsage::VertexBuffer,
+                                            vertexBufferCapacity, nullptr,
+                                            opal::MemoryUsageType::CPUToGPU);
+        vao->setBuffers(vertexBuffer, nullptr);
+    }
+
+    size_t glyphIndex = 0;
+    for (c = content.begin(); c != content.end(); c++, ++glyphIndex) {
         Character ch = font.atlas[*c];
 
-        float xpos = x + ch.bearing.x * scale;
-        float ypos = y - ch.bearing.y * scale;
+        float xpos = x + (ch.bearing.x * scale);
+        float ypos = y - (ch.bearing.y * scale);
 
         float w = ch.size.width * scale;
         float h = ch.size.height * scale;
 
+        float u0 = ch.uvMin.x;
+        float v0 = ch.uvMin.y;
+        float u1 = ch.uvMax.x;
+        float v1 = ch.uvMax.y;
+
         float vertices[6][4] = {
-            {xpos, ypos, 0.0f, 0.0f},         {xpos, ypos + h, 0.0f, 1.0f},
-            {xpos + w, ypos + h, 1.0f, 1.0f},
+            {xpos, ypos, u0, v0},         {xpos, ypos + h, u0, v1},
+            {xpos + w, ypos + h, u1, v1},
 
-            {xpos, ypos, 0.0f, 0.0f},         {xpos + w, ypos + h, 1.0f, 1.0f},
-            {xpos + w, ypos, 1.0f, 0.0f}};
+            {xpos, ypos, u0, v0},         {xpos + w, ypos + h, u1, v1},
+            {xpos + w, ypos, u1, v0}};
 
-        textPipeline->bindTexture2D("text", ch.textureID, 0);
         vertexBuffer->bind();
-        vertexBuffer->updateData(0, sizeof(vertices), vertices);
+        const size_t offset = glyphIndex * bytesPerGlyph;
+        vertexBuffer->updateData(offset, sizeof(vertices), vertices);
         vertexBuffer->unbind();
-        commandBuffer->draw(6, 1, 0, 0);
+        commandBuffer->draw(6, 1,
+                            static_cast<uint>(offset / (4 * sizeof(float))), 0);
 
         x += (ch.advance >> 6) * scale;
     }

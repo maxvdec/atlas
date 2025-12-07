@@ -8,7 +8,11 @@
 //
 
 #include "opal/opal.h"
+#include <algorithm>
 #include <memory>
+#ifdef VULKAN
+#include <vulkan/vulkan.hpp>
+#endif
 
 namespace opal {
 
@@ -27,6 +31,7 @@ std::shared_ptr<Framebuffer> Framebuffer::create(int width, int height) {
 
 #ifdef OPENGL
     glGenFramebuffers(1, &framebuffer->framebufferID);
+#elif defined(VULKAN)
 #endif
 
     return framebuffer;
@@ -39,6 +44,7 @@ std::shared_ptr<Framebuffer> Framebuffer::create() {
 
 #ifdef OPENGL
     glGenFramebuffers(1, &framebuffer->framebufferID);
+#elif defined(VULKAN)
 #endif
 
     return framebuffer;
@@ -53,6 +59,12 @@ void Framebuffer::attachTexture(std::shared_ptr<Texture> texture,
     glFramebufferTexture2D(GL_FRAMEBUFFER, attachmentType, texture->glType,
                            texture->textureID, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#elif defined(VULKAN)
+    (void)attachmentIndex;
+    Attachment att;
+    att.type = Attachment::Type::Color;
+    att.texture = texture;
+    attachments.push_back(att);
 #endif
 }
 
@@ -80,6 +92,8 @@ void Framebuffer::addAttachment(const Attachment &attachment) {
     glFramebufferTexture2D(GL_FRAMEBUFFER, attachmentType,
                            attachment.texture->glType,
                            attachment.texture->textureID, 0);
+    attachments.push_back(attachment);
+#elif defined(VULKAN)
     attachments.push_back(attachment);
 #endif
 }
@@ -109,6 +123,42 @@ void Framebuffer::attachCubemap(std::shared_ptr<Texture> texture,
     att.type = attachmentType;
     att.texture = texture;
     attachments.push_back(att);
+#elif defined(VULKAN)
+    Attachment att;
+    att.type = attachmentType;
+    att.texture = texture;
+    attachments.push_back(att);
+#endif
+}
+
+void Framebuffer::attachCubemapFace(std::shared_ptr<Texture> texture, int face,
+                                    Attachment::Type attachmentType) {
+#ifdef OPENGL
+    glBindFramebuffer(GL_FRAMEBUFFER, framebufferID);
+    GLenum glAttachmentType;
+    switch (attachmentType) {
+    case Attachment::Type::Depth:
+        glAttachmentType = GL_DEPTH_ATTACHMENT;
+        break;
+    case Attachment::Type::Color:
+        glAttachmentType =
+            GL_COLOR_ATTACHMENT0 + static_cast<GLenum>(attachments.size());
+        break;
+    default:
+        glAttachmentType = GL_DEPTH_ATTACHMENT;
+        break;
+    }
+    // Attach a specific cubemap face (0-5: +X, -X, +Y, -Y, +Z, -Z)
+    glFramebufferTexture2D(GL_FRAMEBUFFER, glAttachmentType,
+                           GL_TEXTURE_CUBE_MAP_POSITIVE_X + face,
+                           texture->textureID, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#elif defined(VULKAN)
+    (void)face;
+    Attachment att;
+    att.type = attachmentType;
+    att.texture = texture;
+    attachments.push_back(att);
 #endif
 }
 
@@ -118,18 +168,26 @@ void Framebuffer::disableColorBuffer() {
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
     colorBufferDisabled = true;
+#elif defined(VULKAN)
+    colorBufferDisabled = true;
 #endif
 }
 
 void Framebuffer::setViewport() {
 #ifdef OPENGL
     glViewport(0, 0, width, height);
+#elif defined(VULKAN)
 #endif
 }
 
 void Framebuffer::setViewport(int x, int y, int viewWidth, int viewHeight) {
 #ifdef OPENGL
     glViewport(x, y, viewWidth, viewHeight);
+#elif defined(VULKAN)
+    (void)x;
+    (void)y;
+    (void)viewWidth;
+    (void)viewHeight;
 #endif
 }
 
@@ -138,6 +196,9 @@ bool Framebuffer::getStatus() const {
     glBindFramebuffer(GL_FRAMEBUFFER, framebufferID);
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     return status == GL_FRAMEBUFFER_COMPLETE;
+#elif defined(VULKAN)
+    (void)this;
+    return true;
 #else
     return false;
 #endif
@@ -147,7 +208,6 @@ void Framebuffer::bind() {
 #ifdef OPENGL
     glBindFramebuffer(GL_FRAMEBUFFER, framebufferID);
     if (framebufferID == 0) {
-        // Default framebuffer - draw to back buffer
         glDrawBuffer(GL_BACK);
     } else if (colorBufferDisabled) {
         glDrawBuffer(GL_NONE);
@@ -169,24 +229,28 @@ void Framebuffer::bind() {
     } else {
         glDrawBuffer(GL_NONE);
     }
+#elif defined(VULKAN)
 #endif
 }
 
 void Framebuffer::unbind() {
 #ifdef OPENGL
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#elif defined(VULKAN)
 #endif
 }
 
 void Framebuffer::bindForRead() {
 #ifdef OPENGL
     glBindFramebuffer(GL_READ_FRAMEBUFFER, framebufferID);
+#elif defined(VULKAN)
 #endif
 }
 
 void Framebuffer::bindForDraw() {
 #ifdef OPENGL
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebufferID);
+#elif defined(VULKAN)
 #endif
 }
 
@@ -202,6 +266,8 @@ void Framebuffer::setDrawBuffers(int attachmentCount) {
         drawBuffers.push_back(GL_COLOR_ATTACHMENT0 + i);
     }
     glDrawBuffers(attachmentCount, drawBuffers.data());
+#elif defined(VULKAN)
+    (void)attachmentCount;
 #endif
 }
 
@@ -271,6 +337,253 @@ void CommandBuffer::performResolve(std::shared_ptr<ResolveAction> action) {
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#elif defined(VULKAN)
+    if (action == nullptr || action->source == nullptr ||
+        action->destination == nullptr) {
+        return;
+    }
+
+    if (Device::globalInstance == nullptr ||
+        Device::globalInstance->commandPool == VK_NULL_HANDLE ||
+        Device::globalInstance->graphicsQueue == VK_NULL_HANDLE) {
+        return;
+    }
+
+    if (Device::globalDevice == VK_NULL_HANDLE) {
+        return;
+    }
+
+    auto beginOneTimeCommands = []() -> VkCommandBuffer {
+        VkCommandBufferAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocInfo.commandPool = Device::globalInstance->commandPool;
+        allocInfo.commandBufferCount = 1;
+
+        VkCommandBuffer commandBuffer = VK_NULL_HANDLE;
+        if (vkAllocateCommandBuffers(Device::globalDevice, &allocInfo,
+                                     &commandBuffer) != VK_SUCCESS) {
+            throw std::runtime_error("Failed to allocate resolve command "
+                                     "buffer");
+        }
+
+        VkCommandBufferBeginInfo beginInfo{};
+        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+        if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
+            throw std::runtime_error(
+                "Failed to begin resolve command buffer recording");
+        }
+
+        return commandBuffer;
+    };
+
+    auto endOneTimeCommands = [](VkCommandBuffer commandBuffer) {
+        if (commandBuffer == VK_NULL_HANDLE) {
+            return;
+        }
+
+        vkEndCommandBuffer(commandBuffer);
+
+        VkSubmitInfo submitInfo{};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = &commandBuffer;
+
+        vkQueueSubmit(Device::globalInstance->graphicsQueue, 1, &submitInfo,
+                      VK_NULL_HANDLE);
+        vkQueueWaitIdle(Device::globalInstance->graphicsQueue);
+
+        vkFreeCommandBuffers(Device::globalDevice,
+                             Device::globalInstance->commandPool, 1,
+                             &commandBuffer);
+    };
+
+    auto gatherColorAttachments = [](std::shared_ptr<Framebuffer> fb,
+                                     int preferredIndex) {
+        std::vector<std::shared_ptr<Texture>> attachments;
+        if (fb == nullptr) {
+            return attachments;
+        }
+
+        int currentColorIndex = 0;
+        for (const auto &attachment : fb->attachments) {
+            if (attachment.type != Attachment::Type::Color) {
+                continue;
+            }
+            if (preferredIndex >= 0) {
+                if (currentColorIndex == preferredIndex) {
+                    attachments.push_back(attachment.texture);
+                    break;
+                }
+            } else {
+                attachments.push_back(attachment.texture);
+            }
+            currentColorIndex++;
+        }
+        return attachments;
+    };
+
+    auto getDepthAttachment = [](std::shared_ptr<Framebuffer> fb) {
+        if (fb == nullptr) {
+            return std::shared_ptr<Texture>{nullptr};
+        }
+        for (const auto &attachment : fb->attachments) {
+            if (attachment.type == Attachment::Type::Depth ||
+                attachment.type == Attachment::Type::DepthStencil) {
+                return attachment.texture;
+            }
+        }
+        return std::shared_ptr<Texture>{nullptr};
+    };
+
+    auto aspectMaskForFormat = [](TextureFormat format,
+                                  bool isDepth) -> VkImageAspectFlags {
+        if (!isDepth) {
+            return VK_IMAGE_ASPECT_COLOR_BIT;
+        }
+        switch (format) {
+        case TextureFormat::Depth24Stencil8:
+            return VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT;
+        case TextureFormat::DepthComponent24:
+        case TextureFormat::Depth32F:
+            return VK_IMAGE_ASPECT_DEPTH_BIT;
+        default:
+            return VK_IMAGE_ASPECT_DEPTH_BIT;
+        }
+    };
+
+    auto transitionTexture = [](std::shared_ptr<Texture> texture,
+                                VkImageLayout newLayout, bool isAttachment,
+                                bool isDepth, uint32_t layerCount) {
+        if (!texture || texture->vkImage == VK_NULL_HANDLE) {
+            return;
+        }
+
+        VkImageLayout currentLayout = texture->currentLayout;
+        if (currentLayout == VK_IMAGE_LAYOUT_UNDEFINED) {
+            if (isAttachment) {
+                currentLayout =
+                    isDepth ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+                            : VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+            } else {
+                currentLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            }
+        }
+
+        Framebuffer::transitionImageLayout(
+            texture->vkImage, opalTextureFormatToVulkanFormat(texture->format),
+            currentLayout, newLayout, layerCount);
+        texture->currentLayout = newLayout;
+    };
+
+    auto blitOrResolve = [&](std::shared_ptr<Texture> src,
+                             std::shared_ptr<Texture> dst, bool isDepth) {
+        if (!src || !dst || src->vkImage == VK_NULL_HANDLE ||
+            dst->vkImage == VK_NULL_HANDLE) {
+            return;
+        }
+
+        if (src->width == 0 || src->height == 0 || dst->width == 0 ||
+            dst->height == 0) {
+            return;
+        }
+
+        uint32_t layerCount =
+            (src->type == TextureType::TextureCubeMap) ? 6 : 1;
+        uint32_t dstLayers = (dst->type == TextureType::TextureCubeMap) ? 6 : 1;
+        layerCount = std::min(layerCount, dstLayers);
+        VkImageLayout srcFinalLayout =
+            isDepth ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+                    : VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        VkImageLayout dstFinalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+        transitionTexture(src, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, true,
+                          isDepth, layerCount);
+        transitionTexture(dst, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, false,
+                          isDepth, layerCount);
+
+        VkCommandBuffer commandBuffer = beginOneTimeCommands();
+
+        if (!isDepth && src->samples > 1 && dst->samples == 1) {
+            VkImageResolve region{};
+            region.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            region.srcSubresource.mipLevel = 0;
+            region.srcSubresource.baseArrayLayer = 0;
+            region.srcSubresource.layerCount = layerCount;
+            region.srcOffset = {.x = 0, .y = 0, .z = 0};
+            region.dstSubresource = region.srcSubresource;
+            region.dstOffset = {.x = 0, .y = 0, .z = 0};
+            region.extent = {.width = static_cast<uint32_t>(dst->width),
+                             .height = static_cast<uint32_t>(dst->height),
+                             .depth = 1};
+
+            vkCmdResolveImage(commandBuffer, src->vkImage,
+                              VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                              dst->vkImage,
+                              VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+        } else if (src->samples == dst->samples) {
+            VkImageBlit region{};
+            VkImageAspectFlags aspect =
+                aspectMaskForFormat(src->format, isDepth);
+            region.srcSubresource.aspectMask = aspect;
+            region.srcSubresource.mipLevel = 0;
+            region.srcSubresource.baseArrayLayer = 0;
+            region.srcSubresource.layerCount = layerCount;
+            region.dstSubresource.aspectMask =
+                aspectMaskForFormat(dst->format, isDepth);
+            region.dstSubresource.mipLevel = 0;
+            region.dstSubresource.baseArrayLayer = 0;
+            region.dstSubresource.layerCount = layerCount;
+            region.srcOffsets[0] = {.x = 0, .y = 0, .z = 0};
+            region.srcOffsets[1] = {.x = static_cast<int32_t>(src->width),
+                                    .y = static_cast<int32_t>(src->height),
+                                    .z = 1};
+            region.dstOffsets[0] = {.x = 0, .y = 0, .z = 0};
+            region.dstOffsets[1] = {.x = static_cast<int32_t>(dst->width),
+                                    .y = static_cast<int32_t>(dst->height),
+                                    .z = 1};
+
+            VkFilter filter = isDepth ? VK_FILTER_NEAREST : VK_FILTER_LINEAR;
+            vkCmdBlitImage(commandBuffer, src->vkImage,
+                           VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, dst->vkImage,
+                           VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region,
+                           filter);
+        } else {
+            endOneTimeCommands(commandBuffer);
+            transitionTexture(dst, dstFinalLayout, false, isDepth, layerCount);
+            transitionTexture(src, srcFinalLayout, true, isDepth, layerCount);
+            return;
+        }
+
+        endOneTimeCommands(commandBuffer);
+
+        transitionTexture(dst, dstFinalLayout, false, isDepth, layerCount);
+        transitionTexture(src, srcFinalLayout, true, isDepth, layerCount);
+    };
+
+    auto sourceColors =
+        gatherColorAttachments(action->source, action->colorAttachmentIndex);
+    auto destinationColors = gatherColorAttachments(
+        action->destination, action->colorAttachmentIndex);
+
+    if (action->resolveColor && !sourceColors.empty() &&
+        !destinationColors.empty()) {
+        size_t colorCount =
+            std::min(sourceColors.size(), destinationColors.size());
+        for (size_t i = 0; i < colorCount; ++i) {
+            blitOrResolve(sourceColors[i], destinationColors[i], false);
+        }
+    }
+
+    if (action->resolveDepth) {
+        auto srcDepth = getDepthAttachment(action->source);
+        auto dstDepth = getDepthAttachment(action->destination);
+        if (srcDepth && dstDepth) {
+            blitOrResolve(srcDepth, dstDepth, true);
+        }
+    }
 #endif
 }
 

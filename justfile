@@ -1,37 +1,52 @@
+GENERATOR := "Unix Makefiles"
 
-build:
-    cmake .
-    make -j8
+build enable_opengl="OFF":
+    mkdir -p build
+    cd build && cmake -G "{{GENERATOR}}" -DBACKEND_OPENGL={{enable_opengl}} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+    cd build && make -j8
 
-run:
-    just build
-    ./bin/atlas_test
+target target enable_opengl="OFF":
+    mkdir -p build
+    cd build && cmake -G "{{GENERATOR}}" -DBACKEND_OPENGL={{enable_opengl}} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+    cd build && make -j8 {{target}}
 
-clangd:
-    cmake . -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+run enable_opengl="OFF":
+    just build {{enable_opengl}}
+    MTL_HUD_ENABLED=0 ./build/bin/atlas_test
+
+debug enable_opengl="OFF":
+    just build {{enable_opengl}}
+    MTL_HUD_ENABLED=1 ./build/bin/atlas_test
+
+clangd enable_opengl="OFF":
+    mkdir -p build
+    cd build && cmake -G "{{GENERATOR}}" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DBACKEND_OPENGL={{enable_opengl}} ..
+    ln -sf build/compile_commands.json compile_commands.json
 
 lint:
-   find atlas test \( -name '*.cpp' -o -name '*.h' \) -print0 | xargs -0 clang-format --dry-run --Werror
+    find atlas test \( -name '*.cpp' -o -name '*.h' \) -print0 | xargs -0 clang-format --dry-run --Werror
 
 clean:
-    rm -rf CMakeFiles CMakeCache.txt cmake_install.cmake Makefile bin
+    rm -rf build include/atlas/core/default_shaders.h docs/html
 
 frametest:
     just build
-    timeout 2 ./bin/atlas_test
+    timeout 2 ./build/bin/atlas_test
 
 cli:
     cargo build
 
-release:
-    cmake . -DCMAKE_BUILD_TYPE=Release
-    make -j8
+release enable_opengl="OFF":
+    mkdir -p build
+    cd build && cmake -G "{{GENERATOR}}" -DCMAKE_BUILD_TYPE=Release -DBACKEND_OPENGL={{enable_opengl}} ..
+    cd build && make -j8
 
-docs:
+docs enable_opengl="OFF":
+    mkdir -p build
     doxygen -w html header.html delete.html delete.css
     rm delete.html delete.css
-    cmake .
-    cp header.html _deps/doxygen-awesome-css-src/header.html
+    cd build && cmake -G "{{GENERATOR}}" -DBACKEND_OPENGL={{enable_opengl}} ..
+    cp header.html build/_deps/doxygen-awesome-css-src/header.html
     rm header.html
     doxygen Doxyfile
 
