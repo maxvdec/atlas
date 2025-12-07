@@ -662,14 +662,39 @@ void Skybox::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
 
     CoreObject *obj = this->object.get();
 
-    // Get or create pipeline for skybox
-    if (obj->getPipeline() == std::nullopt) {
-        obj->refreshPipeline();
+    // Create a pipeline description with the specific settings we need
+    auto pipelineDesc = opal::Pipeline::create();
+
+    if (Window::mainWindow) {
+        Window &window = *Window::mainWindow;
+        int viewportWidth = window.viewportWidth;
+        int viewportHeight = window.viewportHeight;
+        if (viewportWidth == 0 || viewportHeight == 0) {
+            Size2d size = window.getSize();
+            viewportWidth = static_cast<int>(size.width);
+            viewportHeight = static_cast<int>(size.height);
+        }
+
+        pipelineDesc->setViewport(window.viewportX, window.viewportY,
+                                  viewportWidth, viewportHeight);
+        pipelineDesc->setPrimitiveStyle(window.primitiveStyle);
+        pipelineDesc->setRasterizerMode(window.rasterizerMode);
+        pipelineDesc->setFrontFace(window.frontFace);
+        pipelineDesc->enableBlending(window.useBlending);
+        pipelineDesc->setBlendFunc(window.srcBlend, window.dstBlend);
+        pipelineDesc->enableMultisampling(window.useMultisampling);
     }
-    auto pipeline = obj->getPipeline().value();
-    pipeline->setDepthCompareOp(opal::CompareOp::LessEqual);
-    pipeline->enableDepthWrite(false);
-    pipeline->setCullMode(opal::CullMode::None);
+
+    // Apply Skybox-specific overrides
+    pipelineDesc->setDepthCompareOp(opal::CompareOp::LessEqual);
+    pipelineDesc->enableDepthWrite(false);
+    pipelineDesc->setCullMode(opal::CullMode::None);
+    pipelineDesc->enableDepthTest(true);
+
+    // Request the pipeline from the shader program (handles caching and building)
+    auto pipeline = obj->shaderProgram.requestPipeline(pipelineDesc);
+    obj->setPipeline(pipeline);
+
     pipeline->bind();
 
     pipeline->setUniformMat4f("view", view);
@@ -724,8 +749,4 @@ void Skybox::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
     commandBuffer->drawIndexed(static_cast<unsigned int>(obj->indices.size()),
                                1, 0, 0, 0);
     commandBuffer->unbindDrawingState();
-    pipeline->setDepthCompareOp(opal::CompareOp::Less);
-    pipeline->enableDepthWrite(true);
-    pipeline->setCullMode(opal::CullMode::Back);
-    pipeline->bind();
 }
