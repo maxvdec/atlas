@@ -16,6 +16,7 @@ namespace opal {
 
 namespace {
 
+#ifdef OPENGL
 constexpr GLenum glInternalFormatTable[] = {GL_RGBA8,
                                             GL_SRGB8_ALPHA8,
                                             GL_RGB8,
@@ -61,6 +62,8 @@ inline GLenum getGLWrapMode(TextureWrapMode mode) {
 inline GLenum getGLFilterMode(TextureFilterMode mode) {
     return glFilterModeTable[static_cast<int>(mode)];
 }
+
+#endif
 
 } // namespace
 
@@ -430,7 +433,8 @@ void Texture::setParameters3D(TextureWrapMode wrapS, TextureWrapMode wrapT,
 }
 
 void Pipeline::bindTexture(const std::string &name,
-                           std::shared_ptr<Texture> texture, int unit) {
+                           std::shared_ptr<Texture> texture,
+                           [[maybe_unused]] int unit) {
 #ifdef OPENGL
     glActiveTexture(GL_TEXTURE0 + unit);
     glBindTexture(texture->glType, texture->textureID);

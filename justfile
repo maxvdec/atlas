@@ -12,12 +12,11 @@ target target enable_opengl="OFF":
 
 run enable_opengl="OFF":
     just build {{enable_opengl}}
-    ./build/bin/atlas_test
+    MTL_HUD_ENABLED=0 ./build/bin/atlas_test
 
 debug enable_opengl="OFF":
-    export MTL_HUD_ENABLED=1
     just build {{enable_opengl}}
-    ./build/bin/atlas_test
+    MTL_HUD_ENABLED=1 ./build/bin/atlas_test
 
 clangd enable_opengl="OFF":
     mkdir -p build

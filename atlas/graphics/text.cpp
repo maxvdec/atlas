@@ -140,8 +140,13 @@ void Text::initialize() {
     glfwGetFramebufferSize(static_cast<GLFWwindow *>(window->windowRef),
                            &fbWidth, &fbHeight);
 
+#ifdef VULKAN
     projection = glm::ortho(0.0f, static_cast<float>(fbWidth),
                             static_cast<float>(fbHeight), 0.0f);
+#else
+    projection = glm::ortho(0.0f, static_cast<float>(fbWidth), 0.0f,
+                            static_cast<float>(fbHeight));
+#endif
 
     vertexBufferCapacity = sizeof(float) * 6 * 4; // one glyph quad
     vertexBuffer = opal::Buffer::create(opal::BufferUsage::VertexBuffer,
@@ -246,8 +251,13 @@ void Text::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
     glfwGetFramebufferSize(
         static_cast<GLFWwindow *>(Window::mainWindow->windowRef), &fbWidth,
         &fbHeight);
+#ifdef VULKAN
     projection = glm::ortho(0.0f, static_cast<float>(fbWidth),
                             static_cast<float>(fbHeight), 0.0f);
+#else
+    projection = glm::ortho(0.0f, static_cast<float>(fbWidth), 0.0f,
+                            static_cast<float>(fbHeight));
+#endif
 
     float scale = 2.0f;
 

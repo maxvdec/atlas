@@ -184,6 +184,10 @@ endif()
 target_include_directories(atlas PRIVATE ${FREETYPE_INCLUDE_DIRS}/freetype2)
 target_compile_definitions(atlas PRIVATE ATLAS_LIB GL_SILENT_DEPRECATION)
 
+target_compile_options(atlas PRIVATE # Suppress warnings from packed shaders
+    -Wno-overlength-strings
+)
+
 get_filename_component(TEST_PATH_ABS "${CMAKE_CURRENT_SOURCE_DIR}/test" ABSOLUTE)
 add_executable(atlas_test ${TEST_SOURCES})
 target_link_libraries(atlas_test PRIVATE atlas)

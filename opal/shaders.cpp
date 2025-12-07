@@ -314,8 +314,6 @@ void Shader::performReflection() {
             std::string memberName =
                 compiler.get_member_name(ubo.base_type_id, i);
             uint32_t memberOffset = compiler.type_struct_member_offset(type, i);
-            const spirv_cross::SPIRType &memberType =
-                compiler.get_type(type.member_types[i]);
             size_t memberSize =
                 compiler.get_declared_struct_member_size(type, i);
 

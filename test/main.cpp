@@ -198,12 +198,6 @@ class MainScene : public Scene {
         Resource fontResource = Workspace::get().createResource(
             "arial.ttf", "ArialFont", ResourceType::Font);
 
-        fpsText = Text("FPS: 0", Font::fromResource("Arial", fontResource, 24),
-                       {25.0, 25.0}, Color::white());
-
-        fpsText.addTraitComponent<Text>(FPSTextUpdater());
-        window.addUIObject(&fpsText);
-
         this->setAmbientIntensity(1.0f);
 
         window.addObject(&sponza);
