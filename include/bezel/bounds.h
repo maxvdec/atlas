@@ -19,6 +19,38 @@
  * collision detection. Provides methods for intersection testing and expansion
  * operations.
  *
+ * \subsection bounds-example Example
+ * ```cpp
+ * // Create and expand bounds for a mesh
+ * Bounds objectBounds;
+ * objectBounds.expand(glm::vec3(-5.0f, 0.0f, -5.0f));
+ * objectBounds.expand(glm::vec3(5.0f, 10.0f, 5.0f));
+ *
+ * // Test intersection with another object
+ * Bounds otherBounds;
+ * otherBounds.expand(glm::vec3(3.0f, 0.0f, 3.0f));
+ * otherBounds.expand(glm::vec3(8.0f, 5.0f, 8.0f));
+ *
+ * if (objectBounds.doesIntersect(otherBounds)) {
+ *     // Handle collision
+ * }
+ *
+ * // Get bounds dimensions
+ * float width = objectBounds.widthX();
+ * float height = objectBounds.widthY();
+ * float depth = objectBounds.widthZ();
+ *
+ * // Broad-phase collision detection for physics simulation
+ * std::vector<std::shared_ptr<Body>> bodies = {...};
+ * std::vector<CollisionPair> collisionPairs;
+ * bezel::broadPhase(bodies, collisionPairs, deltaTime);
+ *
+ * // Process potential collisions
+ * for (const auto& pair : collisionPairs) {
+ *     // Perform narrow-phase collision detection on pair.a and pair.b
+ * }
+ * ```
+ *
  */
 class Bounds {
   public:

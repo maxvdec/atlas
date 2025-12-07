@@ -27,6 +27,21 @@ class AudioEffect {
 /**
  * @brief Reverb audio effect that simulates acoustic reflections in a space.
  *
+ * \subsection reverb-example Example
+ * ```cpp
+ * // Create reverb effect for a cathedral environment
+ * Reverb cathedralReverb;
+ * cathedralReverb.setRoomSize(0.9f);    // Large room
+ * cathedralReverb.setDamping(0.3f);     // Low damping for long reflections
+ * cathedralReverb.setWetLevel(0.6f);    // 60% reverb
+ * cathedralReverb.setDryLevel(0.4f);    // 40% original signal
+ * cathedralReverb.setWidth(1.0f);       // Full stereo width
+ *
+ * // Apply to audio source
+ * AudioSource footsteps;
+ * footsteps.applyEffect(cathedralReverb);
+ * ```
+ *
  */
 class Reverb : public AudioEffect {
   public:
@@ -71,6 +86,20 @@ class Reverb : public AudioEffect {
  * @brief Echo audio effect that creates delayed repetitions of the original
  * sound.
  *
+ * \subsection echo-example Example
+ * ```cpp
+ * // Create echo effect with 500ms delay
+ * Echo canyonEcho;
+ * canyonEcho.setDelay(0.5f);        // 500ms delay
+ * canyonEcho.setDecay(0.4f);        // 40% decay per repetition
+ * canyonEcho.setWetLevel(0.5f);     // 50% echo
+ * canyonEcho.setDryLevel(0.7f);     // 70% original signal
+ *
+ * // Apply to voice audio
+ * AudioSource voiceLine;
+ * voiceLine.applyEffect(canyonEcho);
+ * ```
+ *
  */
 class Echo : public AudioEffect {
   public:
@@ -107,6 +136,19 @@ class Echo : public AudioEffect {
 
 /**
  * @brief Distortion audio effect that adds harmonic distortion to the sound.
+ *
+ * \subsection distortion-example Example
+ * ```cpp
+ * // Create distortion effect for electric guitar sound
+ * Distortion guitarDistortion;
+ * guitarDistortion.setEdge(0.7f);           // High edge for crunch
+ * guitarDistortion.setGain(3.0f);           // 3x gain multiplier
+ * guitarDistortion.setLowpassCutoff(4000.0f); // 4kHz cutoff
+ *
+ * // Apply to guitar audio source
+ * AudioSource guitarSound;
+ * guitarSound.applyEffect(guitarDistortion);
+ * ```
  *
  */
 class Distortion : public AudioEffect {
