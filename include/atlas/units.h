@@ -19,11 +19,26 @@
  * @brief Structure representing a position in 3D space with double precision.
  * Provides arithmetic operations and conversions to/from GLM types.
  *
+ * \subsection position3d-example Example
+ * ```cpp
+ * // Create a position
+ * Position3d pos(10.0f, 5.0f, -3.0f);
+ * // Move it
+ * pos += Position3d(1.0f, 0.0f, 0.0f);
+ * // Convert to GLM vector for rendering
+ * glm::vec3 glmPos = pos.toGlm();
+ * ```
  */
 struct Position3d {
-    double x;
-    double y;
-    double z;
+    float x;
+    float y;
+    float z;
+
+    Position3d() : x(0.0f), y(0.0f), z(0.0f) {}
+    Position3d(float x, float y, float z) : x(x), y(y), z(z) {}
+    Position3d(double x, double y, double z)
+        : x(static_cast<float>(x)), y(static_cast<float>(y)),
+          z(static_cast<float>(z)) {}
 
     Position3d operator+(const Position3d &other) const {
         return {x + other.x, y + other.y, z + other.z};
@@ -33,11 +48,11 @@ struct Position3d {
         return {x - other.x, y - other.y, z - other.z};
     }
 
-    Position3d operator*(double scalar) const {
+    Position3d operator*(float scalar) const {
         return {x * scalar, y * scalar, z * scalar};
     }
 
-    Position3d operator/(double scalar) const {
+    Position3d operator/(float scalar) const {
         return {x / scalar, y / scalar, z / scalar};
     }
 
@@ -45,10 +60,7 @@ struct Position3d {
         return x == other.x && y == other.y && z == other.z;
     }
 
-    inline glm::vec3 toGlm() const {
-        return glm::vec3(static_cast<float>(x), static_cast<float>(y),
-                         static_cast<float>(z));
-    }
+    inline glm::vec3 toGlm() const { return glm::vec3(x, y, z); }
 
     Position3d operator+(const glm::vec3 &vec) const {
         return {x + vec.x, y + vec.y, z + vec.z};
@@ -71,16 +83,15 @@ struct Position3d {
     }
 
     inline Position3d normalized() const {
-        double length = std::sqrt(x * x + y * y + z * z);
+        float length = std::sqrt(x * x + y * y + z * z);
         if (length == 0)
-            return {0, 0, 0};
+            return {};
         return {x / length, y / length, z / length};
     }
 
     inline static Position3d fromGlm(const glm::vec3 &vec) {
-        return {static_cast<double>(vec.x), static_cast<double>(vec.y),
-                static_cast<double>(vec.z)};
-    }
+        return {vec.x, vec.y, vec.z};
+    };
 
     inline friend std::ostream &operator<<(std::ostream &os,
                                            const Position3d &p) {
@@ -119,11 +130,29 @@ typedef Position3d Magnitude3d;
  * @brief Structure representing rotation in 3D space using Euler angles.
  * Provides arithmetic operations and conversions to/from GLM quaternions.
  *
+ * \subsection rotation3d-example Example
+ * ```cpp
+ * // Create a rotation (pitch, yaw, roll in degrees)
+ * Rotation3d rot(0.0f, 45.0f, 0.0f);
+ * // Rotate object over time
+ * rot.yaw += deltaTime * 90.0f; // 90 degrees per second
+ * // Convert to quaternion for rendering
+ * glm::quat quatRot = rot.toGlmQuat();
+ * ```
  */
 struct Rotation3d {
-    double pitch; // Rotation around the X-axis
-    double yaw;   // Rotation around the Y-axis
-    double roll;  // Rotation around the Z-axis
+    float pitch; // Rotation around the X-axis
+    float yaw;   // Rotation around the Y-axis
+    float roll;  // Rotation around the Z-axis
+
+    Rotation3d() : pitch(0.0f), yaw(0.0f), roll(0.0f) {}
+
+    Rotation3d(float pitch, float yaw, float roll)
+        : pitch(pitch), yaw(yaw), roll(roll) {}
+
+    Rotation3d(double pitch, double yaw, double roll)
+        : pitch(static_cast<float>(pitch)), yaw(static_cast<float>(yaw)),
+          roll(static_cast<float>(roll)) {}
 
     Rotation3d operator+(const Rotation3d &other) const {
         return {pitch + other.pitch, yaw + other.yaw, roll + other.roll};
@@ -133,7 +162,7 @@ struct Rotation3d {
         return {pitch - other.pitch, yaw - other.yaw, roll - other.roll};
     }
 
-    Rotation3d operator*(double scalar) const {
+    Rotation3d operator*(float scalar) const {
         return {pitch * scalar, yaw * scalar, roll * scalar};
     }
 
@@ -141,14 +170,11 @@ struct Rotation3d {
         return pitch == other.pitch && yaw == other.yaw && roll == other.roll;
     }
 
-    Rotation3d operator/(double scalar) const {
+    Rotation3d operator/(float scalar) const {
         return {pitch / scalar, yaw / scalar, roll / scalar};
     }
 
-    inline glm::vec3 toGlm() const {
-        return glm::vec3(static_cast<float>(pitch), static_cast<float>(yaw),
-                         static_cast<float>(roll));
-    }
+    inline glm::vec3 toGlm() const { return glm::vec3(pitch, yaw, roll); }
 
     inline glm::quat toGlmQuat() const {
         glm::vec3 eulerAngles = toGlm();
@@ -158,13 +184,11 @@ struct Rotation3d {
 
     inline static Rotation3d fromGlmQuat(const glm::quat &quat) {
         glm::vec3 euler = glm::degrees(glm::eulerAngles(quat));
-        return {static_cast<double>(euler.x), static_cast<double>(euler.y),
-                static_cast<double>(euler.z)};
+        return {euler.x, euler.y, euler.z};
     }
 
     inline static Rotation3d fromGlm(const glm::vec3 &vec) {
-        return {static_cast<double>(vec.x), static_cast<double>(vec.y),
-                static_cast<double>(vec.z)};
+        return {vec.x, vec.y, vec.z};
     }
 };
 
@@ -172,12 +196,24 @@ struct Rotation3d {
  * @brief Structure representing an RGBA color with double precision.
  * Provides arithmetic operations and common color constants.
  *
+ * \subsection color-example Example
+ * ```cpp
+ * // Create colors using static constructors
+ * Color red = Color::Red();
+ * Color customColor(0.2, 0.8, 0.5, 1.0);
+ * // Parse from hex string
+ * Color fromHex = Color::fromHex("#FF5733");
+ * // Mix two colors
+ * Color blended = Color::mix(red, customColor, 0.5);
+ * // Convert to GLM vector
+ * glm::vec4 glmColor = blended.toGlm();
+ * ```
  */
 struct Color {
-    double r = 1.0;
-    double g = 1.0;
-    double b = 1.0;
-    double a = 1.0;
+    float r = 1.0;
+    float g = 1.0;
+    float b = 1.0;
+    float a = 1.0;
 
     Color operator+(const Color &other) const {
         return {r + other.r, g + other.g, b + other.b, a + other.a};
@@ -187,7 +223,7 @@ struct Color {
         return {r - other.r, g - other.g, b - other.b, a - other.a};
     }
 
-    Color operator*(double scalar) const {
+    Color operator*(float scalar) const {
         return {r * scalar, g * scalar, b * scalar, a * scalar};
     }
 
@@ -195,7 +231,7 @@ struct Color {
         return {r * other.r, g * other.g, b * other.b, a * other.a};
     }
 
-    Color operator/(double scalar) const {
+    Color operator/(float scalar) const {
         return {r / scalar, g / scalar, b / scalar, a / scalar};
     }
 
@@ -213,10 +249,10 @@ struct Color {
     static Color cyan() { return {0.0, 1.0, 1.0, 1.0}; }
     static Color magenta() { return {1.0, 0.0, 1.0, 1.0}; }
     static Color gray() { return {0.5, 0.5, 0.5, 1.0}; }
-    static Color orange() { return {1.0, 0.65, 0.0, 1.0}; }
+    static Color orange() { return {1.0, 0.65f, 0.0, 1.0}; }
     static Color purple() { return {0.5, 0.0, 0.5, 1.0}; }
-    static Color brown() { return {0.6, 0.4, 0.2, 1.0}; }
-    static Color pink() { return {1.0, 0.75, 0.8, 1.0}; }
+    static Color brown() { return {0.6f, 0.4f, 0.2f, 1.0}; }
+    static Color pink() { return {1.0, 0.75f, 0.8f, 1.0}; }
     static Color lime() { return {0.0, 1.0, 0.0, 1.0}; }
     static Color navy() { return {0.0, 0.0, 0.5, 1.0}; }
     static Color teal() { return {0.0, 0.5, 0.5, 1.0}; }
@@ -224,17 +260,17 @@ struct Color {
     static Color maroon() { return {0.5, 0.0, 0.0, 1.0}; }
 
     static Color fromHex(unsigned int hexValue) {
-        double r = ((hexValue >> 16) & 0xFF) / 255.0;
-        double g = ((hexValue >> 8) & 0xFF) / 255.0;
-        double b = (hexValue & 0xFF) / 255.0;
-        return {r, g, b, 1.0};
+        float r = static_cast<float>(((hexValue >> 16) & 0xFF) / 255.0);
+        float g = static_cast<float>(((hexValue >> 8) & 0xFF) / 255.0);
+        float b = static_cast<float>((hexValue & 0xFF) / 255.0);
+        return {r, g, b, 1.0f};
     }
 
     static Color mix(Color color1, Color color2, float ratio = 0.5) {
-        double r = color1.r * (1 - ratio) + color2.r * ratio;
-        double g = color1.g * (1 - ratio) + color2.g * ratio;
-        double b = color1.b * (1 - ratio) + color2.b * ratio;
-        double a = color1.a * (1 - ratio) + color2.a * ratio;
+        float r = color1.r * (1 - ratio) + color2.r * ratio;
+        float g = color1.g * (1 - ratio) + color2.g * ratio;
+        float b = color1.b * (1 - ratio) + color2.b * ratio;
+        float a = color1.a * (1 - ratio) + color2.a * ratio;
         return {r, g, b, a};
     }
 
@@ -287,8 +323,8 @@ enum class Direction3d {
  *
  */
 struct Position2d {
-    double x;
-    double y;
+    float x;
+    float y;
 
     Position2d operator+(const Position2d &other) const {
         return {x + other.x, y + other.y};
@@ -298,11 +334,11 @@ struct Position2d {
         return {x - other.x, y - other.y};
     }
 
-    Position2d operator*(double scalar) const {
+    Position2d operator*(float scalar) const {
         return {x * scalar, y * scalar};
     }
 
-    Position2d operator/(double scalar) const {
+    Position2d operator/(float scalar) const {
         return {x / scalar, y / scalar};
     }
 
@@ -332,9 +368,18 @@ typedef Position2d Magnitude2d;
  * @brief Structure representing angular measurements in radians.
  * Provides arithmetic operations and conversion from degrees.
  *
+ * \subsection radians-example Example
+ * ```cpp
+ * // Convert from degrees to radians
+ * Radians angle = Radians::fromDegrees(45.0f);
+ * // Perform angle arithmetic
+ * Radians doubled = angle * 2.0f;
+ * // Convert back to float for trigonometry
+ * float sinValue = std::sin(angle.toFloat());
+ * ```
  */
 struct Radians {
-    double value;
+    float value;
 
     Radians operator+(const Radians &other) const {
         return {value + other.value};
@@ -344,14 +389,14 @@ struct Radians {
         return {value - other.value};
     }
 
-    Radians operator*(double scalar) const { return {value * scalar}; }
+    Radians operator*(float scalar) const { return {value * scalar}; }
 
-    Radians operator/(double scalar) const { return {value / scalar}; }
+    Radians operator/(float scalar) const { return {value / scalar}; }
 
     inline float toFloat() const { return static_cast<float>(value); }
 
-    inline static Radians fromDegrees(double degrees) {
-        return {degrees * (std::numbers::pi) / 180.0};
+    inline static Radians fromDegrees(float degrees) {
+        return {static_cast<float>(degrees * (std::numbers::pi) / 180.0f)};
     }
 };
 
@@ -359,10 +404,21 @@ struct Radians {
  * @brief Structure representing 2D dimensions with width and height.
  * Provides arithmetic operations and conversions to GLM types.
  *
+ * \subsection size2d-example Example
+ * ```cpp
+ * // Create window or UI element size
+ * Size2d windowSize{1920.0f, 1080.0f};
+ * // Scale size
+ * Size2d halfSize = windowSize / 2.0f;
+ * // Calculate area
+ * float area = windowSize.width * windowSize.height;
+ * // Convert to GLM vector
+ * glm::vec2 glmSize = windowSize.toGlm();
+ * ```
  */
 struct Size2d {
-    double width;
-    double height;
+    float width;
+    float height;
 
     Size2d operator+(const Size2d &other) const {
         return {width + other.width, height + other.height};
@@ -372,11 +428,11 @@ struct Size2d {
         return {width - other.width, height - other.height};
     }
 
-    Size2d operator*(double scalar) const {
+    Size2d operator*(float scalar) const {
         return {width * scalar, height * scalar};
     }
 
-    Size2d operator/(double scalar) const {
+    Size2d operator/(float scalar) const {
         return {width / scalar, height / scalar};
     }
 

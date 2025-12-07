@@ -11,12 +11,13 @@
 #include "atlas/light.h"
 #include "atlas/texture.h"
 #include "atlas/window.h"
+#include "opal/opal.h"
 
 #include <cstddef>
 #include <algorithm>
-#include <iostream>
 #include <memory>
 #include <stdexcept>
+#include <string>
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
@@ -28,17 +29,7 @@ Fluid::Fluid() : GameObject() {
     updateModelMatrix();
 }
 
-Fluid::~Fluid() {
-    if (vao != 0) {
-        glDeleteVertexArrays(1, &vao);
-    }
-    if (vbo != 0) {
-        glDeleteBuffers(1, &vbo);
-    }
-    if (ebo != 0) {
-        glDeleteBuffers(1, &ebo);
-    }
-}
+Fluid::~Fluid() = default;
 
 void Fluid::create(Size2d extent, Color color) {
     this->color = color;
@@ -56,175 +47,166 @@ void Fluid::initialize() {
         return;
     }
 
-    if (vao == 0) {
-        glGenVertexArrays(1, &vao);
-        glGenBuffers(1, &vbo);
-        glGenBuffers(1, &ebo);
-    }
+    vertexBuffer = opal::Buffer::create(opal::BufferUsage::VertexBuffer,
+                                        sizeof(vertices), vertices.data());
+    indexBuffer = opal::Buffer::create(opal::BufferUsage::IndexArray,
+                                       sizeof(indices), indices.data());
 
-    glBindVertexArray(vao);
+    drawingState = opal::DrawingState::create(vertexBuffer, indexBuffer);
+    drawingState->setBuffers(vertexBuffer, indexBuffer);
 
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(FluidVertex),
-                 vertices.data(), GL_STATIC_DRAW);
+    const unsigned int stride = static_cast<unsigned int>(sizeof(FluidVertex));
+    std::vector<opal::VertexAttributeBinding> bindings;
+    bindings.reserve(5);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ebo);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.size() * sizeof(unsigned int),
-                 indices.data(), GL_STATIC_DRAW);
+    auto makeBinding = [&](const char *name, unsigned int location,
+                           unsigned int size, size_t offset) {
+        opal::VertexAttribute attribute{std::string(name),
+                                        opal::VertexAttributeType::Float,
+                                        static_cast<unsigned int>(offset),
+                                        location,
+                                        false,
+                                        size,
+                                        stride,
+                                        opal::VertexBindingInputRate::Vertex,
+                                        0};
+        bindings.push_back({attribute, vertexBuffer});
+    };
 
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(
-        0, 3, GL_FLOAT, GL_FALSE, sizeof(FluidVertex),
-        reinterpret_cast<void *>(offsetof(FluidVertex, position)));
+    makeBinding("position", 0, 3, offsetof(FluidVertex, position));
+    makeBinding("texCoord", 1, 2, offsetof(FluidVertex, texCoord));
+    makeBinding("normal", 2, 3, offsetof(FluidVertex, normal));
+    makeBinding("tangent", 3, 3, offsetof(FluidVertex, tangent));
+    makeBinding("bitangent", 4, 3, offsetof(FluidVertex, bitangent));
 
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(
-        1, 2, GL_FLOAT, GL_FALSE, sizeof(FluidVertex),
-        reinterpret_cast<void *>(offsetof(FluidVertex, texCoord)));
-
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(
-        2, 3, GL_FLOAT, GL_FALSE, sizeof(FluidVertex),
-        reinterpret_cast<void *>(offsetof(FluidVertex, normal)));
-
-    glEnableVertexAttribArray(3);
-    glVertexAttribPointer(
-        3, 3, GL_FLOAT, GL_FALSE, sizeof(FluidVertex),
-        reinterpret_cast<void *>(offsetof(FluidVertex, tangent)));
-    glEnableVertexAttribArray(4);
-    glVertexAttribPointer(
-        4, 3, GL_FLOAT, GL_FALSE, sizeof(FluidVertex),
-        reinterpret_cast<void *>(offsetof(FluidVertex, bitangent)));
-
-    glBindVertexArray(0);
+    drawingState->configureAttributes(bindings);
 
     isInitialized = true;
 }
 
-void Fluid::render(float dt) {
+void Fluid::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                   bool updatePipeline) {
     if (!isInitialized) {
         initialize();
     }
 
+    (void)updatePipeline;
+    if (commandBuffer == nullptr) {
+        throw std::runtime_error(
+            "Fluid::render requires a valid command buffer");
+    }
     if (captureDirty) {
         Window *window = Window::mainWindow;
         if (window) {
             ensureTargets(*window);
             if (reflectionTarget && refractionTarget) {
-                window->captureFluidReflection(*this);
-                window->captureFluidRefraction(*this);
+                window->captureFluidReflection(*this, commandBuffer);
+                window->captureFluidRefraction(*this, commandBuffer);
                 captureDirty = false;
             }
         }
     }
 
-    glDisable(GL_CULL_FACE);
+    static std::shared_ptr<opal::Pipeline> fluidPipeline = nullptr;
+    if (fluidPipeline == nullptr) {
+        fluidPipeline = opal::Pipeline::create();
+    }
+    fluidPipeline->setCullMode(opal::CullMode::None);
+    fluidPipeline = fluidShader.requestPipeline(fluidPipeline);
+    fluidPipeline->bind();
 
-    glUseProgram(fluidShader.programId);
-    fluidShader.setUniformMat4f("model", modelMatrix);
-    fluidShader.setUniformMat4f("view", viewMatrix);
-    fluidShader.setUniformMat4f("projection", projectionMatrix);
-    fluidShader.setUniform4f("waterColor", color.r, color.g, color.b, color.a);
+    fluidPipeline->setUniformMat4f("model", modelMatrix);
+    fluidPipeline->setUniformMat4f("view", viewMatrix);
+    fluidPipeline->setUniformMat4f("projection", projectionMatrix);
+    fluidPipeline->setUniform4f("waterColor", color.r, color.g, color.b,
+                                color.a);
 
     RenderTarget *target = Window::mainWindow->currentRenderTarget;
     if (target == nullptr) {
         return;
     }
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, target->texture.id);
-    fluidShader.setUniform1i("sceneTexture", 0);
-
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, target->depthTexture.id);
-    fluidShader.setUniform1i("sceneDepth", 1);
+    fluidPipeline->bindTexture2D("sceneTexture", target->texture.id, 0);
+    fluidPipeline->bindTexture2D("sceneDepth", target->depthTexture.id, 1);
 
     if (reflectionTarget) {
-        glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, reflectionTarget->texture.id);
-        fluidShader.setUniform1i("reflectionTexture", 3);
+        fluidPipeline->bindTexture2D("reflectionTexture",
+                                     reflectionTarget->texture.id, 3);
     } else {
-        glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, target->texture.id);
-        fluidShader.setUniform1i("reflectionTexture", 3);
+        fluidPipeline->bindTexture2D("reflectionTexture", target->texture.id,
+                                     3);
     }
 
     if (refractionTarget) {
-        glActiveTexture(GL_TEXTURE4);
-        glBindTexture(GL_TEXTURE_2D, refractionTarget->texture.id);
-        fluidShader.setUniform1i("refractionTexture", 4);
+        fluidPipeline->bindTexture2D("refractionTexture",
+                                     refractionTarget->texture.id, 4);
     } else {
-        glActiveTexture(GL_TEXTURE4);
-        glBindTexture(GL_TEXTURE_2D, target->texture.id);
-        fluidShader.setUniform1i("refractionTexture", 4);
+        fluidPipeline->bindTexture2D("refractionTexture", target->texture.id,
+                                     4);
     }
 
-    fluidShader.setUniform1i("movementTexture", 5);
-    glActiveTexture(GL_TEXTURE5);
-    glBindTexture(GL_TEXTURE_2D, movementTexture.id);
+    fluidPipeline->bindTexture2D("movementTexture", movementTexture.id, 5);
     if (movementTexture.id == 0) {
-        fluidShader.setUniform1i("hasMovementTexture", 0);
+        fluidPipeline->setUniform1i("hasMovementTexture", 0);
     } else {
-        fluidShader.setUniform1i("hasMovementTexture", 1);
+        fluidPipeline->setUniform1i("hasMovementTexture", 1);
     }
 
-    fluidShader.setUniform1i("normalTexture", 6);
-    glActiveTexture(GL_TEXTURE6);
-    glBindTexture(GL_TEXTURE_2D, normalTexture.id);
-    fluidShader.setUniform1i("hasNormalTexture", normalTexture.id != 0);
+    fluidPipeline->bindTexture2D("normalTexture", normalTexture.id, 6);
+    fluidPipeline->setUniform1i("hasNormalTexture", normalTexture.id != 0);
 
-    fluidShader.setUniform3f("cameraPos",
-                             Window::mainWindow->getCamera()->position.x,
-                             Window::mainWindow->getCamera()->position.y,
-                             Window::mainWindow->getCamera()->position.z);
+    fluidPipeline->setUniform3f("cameraPos",
+                                Window::mainWindow->getCamera()->position.x,
+                                Window::mainWindow->getCamera()->position.y,
+                                Window::mainWindow->getCamera()->position.z);
 
-    fluidShader.setUniform3f("waterNormal", 0.0f, 1.0f, 0.0f);
-    fluidShader.setUniform1f("time", dt);
-    fluidShader.setUniform1f("refractionStrength", 0.5f);
-    fluidShader.setUniform1f("reflectionStrength", 0.5f);
-    fluidShader.setUniform1f("depthFade", 0.1f);
+    fluidPipeline->setUniform3f("waterNormal", 0.0f, 1.0f, 0.0f);
+    fluidPipeline->setUniform1f("time", dt);
+    fluidPipeline->setUniform1f("refractionStrength", 0.5f);
+    fluidPipeline->setUniform1f("reflectionStrength", 0.5f);
+    fluidPipeline->setUniform1f("depthFade", 0.1f);
 
     DirectionalLight *primaryLight =
         Window::mainWindow->getCurrentScene()->directionalLights[0];
 
-    fluidShader.setUniform3f("lightDirection", primaryLight->direction.x,
-                             primaryLight->direction.y,
-                             primaryLight->direction.z);
+    fluidPipeline->setUniform3f("lightDirection", primaryLight->direction.x,
+                                primaryLight->direction.y,
+                                primaryLight->direction.z);
 
-    fluidShader.setUniform3f("lightColor", primaryLight->color.r,
-                             primaryLight->color.g, primaryLight->color.b);
-    fluidShader.setUniform3f(
+    fluidPipeline->setUniform3f("lightColor", primaryLight->color.r,
+                                primaryLight->color.g, primaryLight->color.b);
+    fluidPipeline->setUniform3f(
         "windForce", Window::mainWindow->getCurrentScene()->atmosphere.wind.x,
         Window::mainWindow->getCurrentScene()->atmosphere.wind.y,
         Window::mainWindow->getCurrentScene()->atmosphere.wind.z);
 
-    fluidShader.setUniformMat4f("invProjection",
-                                glm::inverse(projectionMatrix));
-    fluidShader.setUniformMat4f("invView", glm::inverse(viewMatrix));
+    fluidPipeline->setUniformMat4f("invProjection",
+                                   glm::inverse(projectionMatrix));
+    fluidPipeline->setUniformMat4f("invView", glm::inverse(viewMatrix));
 
-    glBindVertexArray(vao);
-    glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()),
-                   GL_UNSIGNED_INT, nullptr);
-    glBindVertexArray(0);
+    commandBuffer->bindDrawingState(drawingState);
+    commandBuffer->drawIndexed(static_cast<unsigned int>(indices.size()), 1, 0,
+                               0, 0);
+    commandBuffer->unbindDrawingState();
 
-    glActiveTexture(GL_TEXTURE0);
-
-    glEnable(GL_CULL_FACE);
+    fluidPipeline->setCullMode(opal::CullMode::Back);
+    fluidPipeline->bind();
 
     captureDirty = true;
 }
 
 void Fluid::update(Window &window) { (void)window; }
 
-void Fluid::updateCapture(Window &window) {
+void Fluid::updateCapture(Window &window,
+                          std::shared_ptr<opal::CommandBuffer> commandBuffer) {
     ensureTargets(window);
 
     if (!reflectionTarget || !refractionTarget) {
         return;
     }
 
-    window.captureFluidReflection(*this);
-    window.captureFluidRefraction(*this);
+    window.captureFluidReflection(*this, commandBuffer);
+    window.captureFluidRefraction(*this, commandBuffer);
 
     captureDirty = false;
 }
@@ -261,7 +243,7 @@ void Fluid::setScale(const Scale3d &newScale) {
 
 void Fluid::setExtent(const Size2d &ext) {
     extent = ext;
-    extentScale = {ext.width, 1.0, ext.height};
+    extentScale = {ext.width, 1.0f, ext.height};
     updateModelMatrix();
 }
 
@@ -292,14 +274,11 @@ void Fluid::ensureTargets(Window &window) {
             target =
                 std::make_unique<RenderTarget>(window, RenderTargetType::Scene);
 
-            GLint previousFBO;
-            glGetIntegerv(GL_FRAMEBUFFER_BINDING, &previousFBO);
-
-            glBindFramebuffer(GL_FRAMEBUFFER, target->fbo);
-            glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-            glBindFramebuffer(GL_FRAMEBUFFER, previousFBO);
+            auto commandBuffer =
+                Window::mainWindow->device->acquireCommandBuffer();
+            target->bind();
+            commandBuffer->clear(0.0f, 0.0f, 0.0f, 0.0f, 1.0f);
+            target->unbind();
         }
     };
 

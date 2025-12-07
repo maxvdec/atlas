@@ -12,6 +12,8 @@
 #include <glm/geometric.hpp>
 #include <glm/gtc/random.hpp>
 #include <random>
+#include <vector>
+#include "opal/opal.h"
 
 void Window::setupSSAO() {
     std::uniform_real_distribution<float> randomFloats(0.0, 1.0);
@@ -39,17 +41,16 @@ void Window::setupSSAO() {
         this->ssaoNoise.push_back(noise);
     }
 
-    unsigned int noiseTextureID;
-    glGenTextures(1, &noiseTextureID);
-    glBindTexture(GL_TEXTURE_2D, noiseTextureID);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, 4, 4, 0, GL_RGB, GL_FLOAT,
-                 this->ssaoNoise.data());
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-    noiseTexture.id = noiseTextureID;
+    noiseTexture.texture = opal::Texture::create(
+        opal::TextureType::Texture2D, opal::TextureFormat::Rgb16F, 4, 4,
+        opal::TextureDataFormat::Rgb, this->ssaoNoise.data(), 1);
+    noiseTexture.texture->setFilterMode(opal::TextureFilterMode::Nearest,
+                                        opal::TextureFilterMode::Nearest);
+    noiseTexture.texture->setWrapMode(opal::TextureAxis::S,
+                                      opal::TextureWrapMode::Repeat);
+    noiseTexture.texture->setWrapMode(opal::TextureAxis::T,
+                                      opal::TextureWrapMode::Repeat);
+    noiseTexture.id = noiseTexture.texture->textureID;
     noiseTexture.creationData.width = 4;
     noiseTexture.creationData.height = 4;
     noiseTexture.type = TextureType::SSAONoise;
@@ -66,7 +67,7 @@ void Window::setupSSAO() {
     this->ssaoMapsDirty = true;
 }
 
-void Window::renderSSAO(RenderTarget *target) {
+void Window::renderSSAO() {
     if (this->ssaoBuffer == nullptr || this->ssaoBlurBuffer == nullptr) {
         return;
     }
@@ -103,14 +104,12 @@ void Window::renderSSAO(RenderTarget *target) {
     this->ssaoMapsDirty = false;
     this->ssaoUpdateCooldown = this->ssaoUpdateInterval;
 
-    glBindFramebuffer(GL_FRAMEBUFFER, this->ssaoBuffer->fbo);
-    glViewport(0, 0, this->ssaoBuffer->getWidth(),
-               this->ssaoBuffer->getHeight());
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-    static Id ssaoVAO = 0;
-    static Id ssaoVBO;
-    if (ssaoVAO == 0) {
+    this->ssaoBuffer->bind();
+    auto ssaoCommandBuffer = Window::mainWindow->device->acquireCommandBuffer();
+    ssaoCommandBuffer->clearColor(1.0f, 1.0f, 1.0f, 1.0f);
+    static std::shared_ptr<opal::DrawingState> ssaoState = nullptr;
+    static std::shared_ptr<opal::Buffer> ssaoBuffer = nullptr;
+    if (ssaoState == nullptr) {
         float quadVertices[] = {
             // positions         // texCoords
             -1.0f, 1.0f,  0.0f, 0.0f, 1.0f, // top-left
@@ -120,64 +119,82 @@ void Window::renderSSAO(RenderTarget *target) {
             1.0f,  -1.0f, 0.0f, 1.0f, 0.0f, // bottom-right
             1.0f,  1.0f,  0.0f, 1.0f, 1.0f  // top-right
         };
-        glGenVertexArrays(1, &ssaoVAO);
-        glGenBuffers(1, &ssaoVBO);
-        glBindVertexArray(ssaoVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, ssaoVBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices,
-                     GL_STATIC_DRAW);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                              (void *)0);
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                              (void *)(3 * sizeof(float)));
+        ssaoBuffer = opal::Buffer::create(opal::BufferUsage::VertexBuffer,
+                                          sizeof(quadVertices), quadVertices);
+        ssaoState = opal::DrawingState::create(ssaoBuffer);
+        ssaoState->setBuffers(ssaoBuffer, nullptr);
+
+        opal::VertexAttribute positionAttr{
+            .name = "ssaoPosition",
+            .type = opal::VertexAttributeType::Float,
+            .offset = 0,
+            .location = 0,
+            .normalized = false,
+            .size = 3,
+            .stride = static_cast<uint>(5 * sizeof(float)),
+            .inputRate = opal::VertexBindingInputRate::Vertex,
+            .divisor = 0};
+        opal::VertexAttribute uvAttr{
+            .name = "ssaoUV",
+            .type = opal::VertexAttributeType::Float,
+            .offset = static_cast<uint>(3 * sizeof(float)),
+            .location = 1,
+            .normalized = false,
+            .size = 2,
+            .stride = static_cast<uint>(5 * sizeof(float)),
+            .inputRate = opal::VertexBindingInputRate::Vertex,
+            .divisor = 0};
+
+        std::vector<opal::VertexAttributeBinding> bindings = {
+            {positionAttr, ssaoBuffer}, {uvAttr, ssaoBuffer}};
+        ssaoState->configureAttributes(bindings);
     }
 
-    glUseProgram(this->ssaoProgram.programId);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, this->gBuffer->gPosition.id);
-    this->ssaoProgram.setUniform1i("gPosition", 0);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, this->gBuffer->gNormal.id);
-    this->ssaoProgram.setUniform1i("gNormal", 1);
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, this->noiseTexture.id);
-    this->ssaoProgram.setUniform1i("texNoise", 2);
-    for (size_t i = 0; i < this->ssaoKernel.size(); ++i) {
-        this->ssaoProgram.setUniform3f("samples[" + std::to_string(i) + "]",
-                                       ssaoKernel[i].x, ssaoKernel[i].y,
-                                       ssaoKernel[i].z);
+    static std::shared_ptr<opal::Pipeline> ssaoPipeline = nullptr;
+    if (ssaoPipeline == nullptr) {
+        ssaoPipeline = opal::Pipeline::create();
     }
-    this->ssaoProgram.setUniform1i("kernelSize",
-                                   static_cast<int>(this->ssaoKernel.size()));
-    this->ssaoProgram.setUniformMat4f("projection",
-                                      this->calculateProjectionMatrix());
-    this->ssaoProgram.setUniformMat4f("view",
-                                      getCamera()->calculateViewMatrix());
+    ssaoPipeline = this->ssaoProgram.requestPipeline(ssaoPipeline);
+    ssaoPipeline->bind();
+
+    ssaoPipeline->bindTexture2D("gPosition", this->gBuffer->gPosition.id, 0);
+    ssaoPipeline->bindTexture2D("gNormal", this->gBuffer->gNormal.id, 1);
+    ssaoPipeline->bindTexture2D("texNoise", this->noiseTexture.id, 2);
+    for (size_t i = 0; i < this->ssaoKernel.size(); ++i) {
+        ssaoPipeline->setUniform3f("samples[" + std::to_string(i) + "]",
+                                   ssaoKernel[i].x, ssaoKernel[i].y,
+                                   ssaoKernel[i].z);
+    }
+    ssaoPipeline->setUniform1i("kernelSize",
+                               static_cast<int>(this->ssaoKernel.size()));
+    ssaoPipeline->setUniformMat4f("projection",
+                                  this->calculateProjectionMatrix());
+    ssaoPipeline->setUniformMat4f("view", getCamera()->calculateViewMatrix());
     glm::vec2 screenSize(this->ssaoBuffer->getWidth(),
                          this->ssaoBuffer->getHeight());
     glm::vec2 noiseSize(4.0f, 4.0f);
-    this->ssaoProgram.setUniform2f("noiseScale", screenSize.x / noiseSize.x,
-                                   screenSize.y / noiseSize.y);
-    glBindVertexArray(ssaoVAO);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-    glBindVertexArray(0);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    ssaoPipeline->setUniform2f("noiseScale", screenSize.x / noiseSize.x,
+                               screenSize.y / noiseSize.y);
+    ssaoState->bind();
+    ssaoCommandBuffer->draw(6, 1, 0, 0);
+    ssaoState->unbind();
+    this->ssaoBuffer->unbind();
 
-    glBindFramebuffer(GL_FRAMEBUFFER, this->ssaoBlurBuffer->fbo);
-    glViewport(0, 0, this->ssaoBlurBuffer->getWidth(),
-               this->ssaoBlurBuffer->getHeight());
-    glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
-    glUseProgram(this->ssaoBlurProgram.programId);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, this->ssaoBuffer->texture.id);
-    this->ssaoBlurProgram.setUniform1i("inSSAO", 0);
-    glBindVertexArray(ssaoVAO);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-    glBindVertexArray(0);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    this->ssaoBlurBuffer->bind();
+    ssaoCommandBuffer->clearColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+    static std::shared_ptr<opal::Pipeline> ssaoBlurPipeline = nullptr;
+    if (ssaoBlurPipeline == nullptr) {
+        ssaoBlurPipeline = opal::Pipeline::create();
+    }
+    ssaoBlurPipeline = this->ssaoBlurProgram.requestPipeline(ssaoBlurPipeline);
+    ssaoBlurPipeline->bind();
+
+    ssaoBlurPipeline->bindTexture2D("inSSAO", this->ssaoBuffer->texture.id, 0);
+    ssaoState->bind();
+    ssaoCommandBuffer->draw(6, 1, 0, 0);
+    ssaoState->unbind();
+    this->ssaoBlurBuffer->unbind();
 
     if (this->camera != nullptr) {
         this->lastSSAOCameraPosition = this->camera->position;

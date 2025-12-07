@@ -17,6 +17,7 @@
 #include "atlas/units.h"
 #include "atlas/workspace.h"
 #include "aurora/procedural.h"
+#include "opal/opal.h"
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -125,7 +126,7 @@ class Biome {
     /**
      * @brief Optional hook executed before the biome is rasterized.
      */
-    BiomeFunction condition = [](Biome &thisBiome) { return; };
+    BiomeFunction condition = [](Biome &) { return; };
 };
 
 /**
@@ -178,7 +179,8 @@ class Terrain : public GameObject {
     /**
      * @brief Renders the terrain patches.
      */
-    void render(float dt) override;
+    void render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                bool updatePipeline = false) override;
     /**
      * @brief Builds buffers, materials, and generator data.
      */
@@ -226,8 +228,8 @@ class Terrain : public GameObject {
     template <typename T>
         requires std::is_base_of<TerrainGenerator, T>::value
     Terrain(T generator, int width = 512, int height = 512)
-        : generator(std::make_shared<T>(generator)), width(width),
-          height(height), createdWithMap(false){};
+        : generator(std::make_shared<T>(generator)), createdWithMap(false),
+          width(width), height(height){};
     Terrain() = default;
 
     /**
@@ -314,9 +316,8 @@ class Terrain : public GameObject {
     float seaLevel = 16.f;
 
   private:
-    BufferIndex vao = 0;
-    BufferIndex vbo = 0;
-    BufferIndex ebo = 0;
+    std::shared_ptr<opal::DrawingState> drawingState;
+    std::shared_ptr<opal::Buffer> vertexBuffer;
     ShaderProgram terrainShader;
 
     Texture terrainTexture;

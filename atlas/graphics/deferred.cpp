@@ -9,68 +9,198 @@
 
 #include "atlas/light.h"
 #include "atlas/window.h"
+#include "opal/opal.h"
 #include <glad/glad.h>
-#include <iostream>
+#include <memory>
+#include <vector>
 
-void Window::deferredRendering(RenderTarget *target) {
-    // Render to G-Buffer
-    std::vector<ShaderProgram> originalPrograms;
+namespace {
+
+std::vector<GPUDirectionalLight>
+buildGPUDirectionalLights(const std::vector<DirectionalLight *> &lights,
+                          int maxCount) {
+    std::vector<GPUDirectionalLight> result;
+    int count = std::min(static_cast<int>(lights.size()), maxCount);
+    result.reserve(count);
+    for (int i = 0; i < count; i++) {
+        DirectionalLight *light = lights[i];
+        GPUDirectionalLight gpu{};
+        gpu.direction = glm::vec3(light->direction.x, light->direction.y,
+                                  light->direction.z);
+        gpu.diffuse = glm::vec3(light->color.r, light->color.g, light->color.b);
+        gpu.specular = glm::vec3(light->shineColor.r, light->shineColor.g,
+                                 light->shineColor.b);
+        gpu._pad1 = 0.0f;
+        gpu._pad2 = 0.0f;
+        gpu._pad3 = 0.0f;
+        result.push_back(gpu);
+    }
+    return result;
+}
+
+std::vector<GPUPointLight>
+buildGPUPointLights(const std::vector<Light *> &lights, int maxCount) {
+    std::vector<GPUPointLight> result;
+    int count = std::min(static_cast<int>(lights.size()), maxCount);
+    result.reserve(count);
+    for (int i = 0; i < count; i++) {
+        Light *light = lights[i];
+        PointLightConstants plc = light->calculateConstants();
+        GPUPointLight gpu{};
+        gpu.position =
+            glm::vec3(light->position.x, light->position.y, light->position.z);
+        gpu.diffuse = glm::vec3(light->color.r, light->color.g, light->color.b);
+        gpu.specular = glm::vec3(light->shineColor.r, light->shineColor.g,
+                                 light->shineColor.b);
+        gpu.constant = plc.constant;
+        gpu.linear = plc.linear;
+        gpu.quadratic = plc.quadratic;
+        gpu.radius = plc.radius;
+        gpu._pad1 = 0.0f;
+        gpu._pad2 = 0.0f;
+        gpu._pad3 = 0.0f;
+        result.push_back(gpu);
+    }
+    return result;
+}
+
+std::vector<GPUSpotLight>
+buildGPUSpotLights(const std::vector<Spotlight *> &lights, int maxCount) {
+    std::vector<GPUSpotLight> result;
+    int count = std::min(static_cast<int>(lights.size()), maxCount);
+    result.reserve(count);
+    for (int i = 0; i < count; i++) {
+        Spotlight *light = lights[i];
+        GPUSpotLight gpu{};
+        gpu.position =
+            glm::vec3(light->position.x, light->position.y, light->position.z);
+        gpu.direction = glm::vec3(light->direction.x, light->direction.y,
+                                  light->direction.z);
+        gpu.cutOff = light->cutOff;
+        gpu.outerCutOff = light->outerCutoff;
+        gpu.diffuse = glm::vec3(light->color.r, light->color.g, light->color.b);
+        gpu.specular = glm::vec3(light->shineColor.r, light->shineColor.g,
+                                 light->shineColor.b);
+        gpu._pad1 = 0.0f;
+        gpu._pad2 = 0.0f;
+        gpu._pad3 = 0.0f;
+        gpu._pad4 = 0.0f;
+        gpu._pad5 = 0.0f;
+        gpu._pad6 = 0.0f;
+        result.push_back(gpu);
+    }
+    return result;
+}
+
+std::vector<GPUAreaLight>
+buildGPUAreaLights(const std::vector<AreaLight *> &lights, int maxCount) {
+    std::vector<GPUAreaLight> result;
+    int count = std::min(static_cast<int>(lights.size()), maxCount);
+    result.reserve(count);
+    for (int i = 0; i < count; i++) {
+        AreaLight *light = lights[i];
+        GPUAreaLight gpu{};
+        gpu.position =
+            glm::vec3(light->position.x, light->position.y, light->position.z);
+        gpu.right = glm::vec3(light->right.x, light->right.y, light->right.z);
+        gpu.up = glm::vec3(light->up.x, light->up.y, light->up.z);
+        gpu.size = glm::vec2(light->size.width, light->size.height);
+        gpu.diffuse = glm::vec3(light->color.r, light->color.g, light->color.b);
+        gpu.specular = glm::vec3(light->shineColor.r, light->shineColor.g,
+                                 light->shineColor.b);
+        gpu.angle = light->angle;
+        gpu.castsBothSides = light->castsBothSides ? 1 : 0;
+        gpu._pad1 = 0.0f;
+        gpu._pad2 = 0.0f;
+        gpu._pad3 = 0.0f;
+        gpu._pad4 = 0.0f;
+        gpu._pad5 = 0.0f;
+        gpu._pad6 = 0.0f;
+        gpu._pad7 = 0.0f;
+        gpu._pad8 = 0.0f;
+        gpu._pad9 = 0.0f;
+        result.push_back(gpu);
+    }
+    return result;
+}
+
+} // anonymous namespace
+
+void Window::deferredRendering(
+    RenderTarget *target, std::shared_ptr<opal::CommandBuffer> commandBuffer) {
+    if (commandBuffer == nullptr) {
+        commandBuffer = this->activeCommandBuffer;
+    }
+    if (commandBuffer == nullptr) {
+        return;
+    }
+    std::vector<std::shared_ptr<opal::Pipeline>> originalPipelines;
+    auto deferredPipeline = opal::Pipeline::create();
     for (auto &obj : this->renderables) {
         if (!obj->canUseDeferredRendering()) {
             continue;
         }
-        if (obj->getShaderProgram() != std::nullopt) {
-            originalPrograms.push_back(obj->getShaderProgram().value());
+        if (obj->getPipeline() != std::nullopt) {
+            originalPipelines.push_back(obj->getPipeline().value());
         } else {
-            originalPrograms.push_back(ShaderProgram());
+            originalPipelines.push_back(opal::Pipeline::create());
         }
-        obj->setShader(this->deferredProgram);
     }
 
-    glBindFramebuffer(GL_FRAMEBUFFER, this->gBuffer->fbo);
-    glViewport(0, 0, this->gBuffer->getWidth(), this->gBuffer->getHeight());
-    unsigned int attachments[4] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1,
-                                   GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3};
-    glDrawBuffers(4, attachments);
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
-    glDepthMask(GL_TRUE);
+    commandBuffer->endPass();
+    auto gBufferRenderPass = opal::RenderPass::create();
+    gBufferRenderPass->setFramebuffer(this->gBuffer->getFramebuffer());
+    commandBuffer->beginPass(gBufferRenderPass);
+
+    this->gBuffer->bind();
+    this->gBuffer->getFramebuffer()->setViewport(
+        0, 0, this->gBuffer->getWidth(), this->gBuffer->getHeight());
+    deferredPipeline->setViewport(0, 0, this->gBuffer->getWidth(),
+                                  this->gBuffer->getHeight());
+    this->gBuffer->getFramebuffer()->setDrawBuffers(4);
+    commandBuffer->clear(0.0f, 0.0f, 0.0f, 1.0f, 1.0f);
+    deferredPipeline->setCullMode(opal::CullMode::Back);
+    deferredPipeline->enableDepthTest(true);
+    deferredPipeline->setDepthCompareOp(opal::CompareOp::Less);
+    deferredPipeline->enableDepthWrite(true);
+    deferredPipeline = this->deferredProgram.requestPipeline(deferredPipeline);
     for (auto &obj : this->renderables) {
         if (obj->canUseDeferredRendering()) {
             obj->setViewMatrix(this->camera->calculateViewMatrix());
             obj->setProjectionMatrix(calculateProjectionMatrix());
-            obj->render(getDeltaTime());
+            obj->setPipeline(deferredPipeline);
+            obj->render(getDeltaTime(), commandBuffer, false);
         }
     }
 
     this->gBuffer->resolve();
 
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    commandBuffer->endPass();
+    this->gBuffer->unbind();
 
     target->resolve();
-    this->renderSSAO(target);
+    this->renderSSAO();
 
-    glBindFramebuffer(GL_FRAMEBUFFER, target->fbo);
-    glViewport(0, 0, target->getWidth(), target->getHeight());
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    auto targetRenderPass = opal::RenderPass::create();
+    targetRenderPass->setFramebuffer(target->getFramebuffer());
+    commandBuffer->beginPass(targetRenderPass);
 
-    unsigned int targetAttachments[2] = {GL_COLOR_ATTACHMENT0,
-                                         GL_COLOR_ATTACHMENT1};
-    glDrawBuffers(2, targetAttachments);
+    target->bind();
+    target->getFramebuffer()->setViewport(0, 0, target->getWidth(),
+                                          target->getHeight());
+    commandBuffer->clear(0.0f, 0.0f, 0.0f, 1.0f, 1.0f);
 
-    glDisable(GL_CULL_FACE);
-    glDisable(GL_DEPTH_TEST);
+    target->getFramebuffer()->setDrawBuffers(2);
 
-    glDepthMask(GL_FALSE);
+    auto lightPassPipeline = opal::Pipeline::create();
+    lightPassPipeline->setCullMode(opal::CullMode::None);
+    lightPassPipeline->enableDepthTest(false);
+    lightPassPipeline->enableDepthWrite(false);
+    lightPassPipeline->bind();
 
-    static Id quadVAO = 0;
-    static Id quadVBO;
-    if (quadVAO == 0) {
+    static std::shared_ptr<opal::DrawingState> quadState = nullptr;
+    static std::shared_ptr<opal::Buffer> quadBuffer = nullptr;
+    if (quadState == nullptr) {
         float quadVertices[] = {
             // positions         // texCoords
             -1.0f, 1.0f,  0.0f, 0.0f, 1.0f, // top-left
@@ -82,56 +212,65 @@ void Window::deferredRendering(RenderTarget *target) {
             1.0f,  1.0f,  0.0f, 1.0f, 1.0f  // top-right
         };
 
-        glGenVertexArrays(1, &quadVAO);
-        glGenBuffers(1, &quadVBO);
-        glBindVertexArray(quadVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, quadVBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(quadVertices), &quadVertices,
-                     GL_STATIC_DRAW);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                              (void *)0);
-        glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                              (void *)(3 * sizeof(float)));
+        quadBuffer = opal::Buffer::create(opal::BufferUsage::VertexBuffer,
+                                          sizeof(quadVertices), quadVertices);
+        quadState = opal::DrawingState::create(quadBuffer);
+        quadState->setBuffers(quadBuffer, nullptr);
+
+        opal::VertexAttribute positionAttr{
+            .name = "deferredPosition",
+            .type = opal::VertexAttributeType::Float,
+            .offset = 0,
+            .location = 0,
+            .normalized = false,
+            .size = 3,
+            .stride = static_cast<uint>(5 * sizeof(float)),
+            .inputRate = opal::VertexBindingInputRate::Vertex,
+            .divisor = 0};
+        opal::VertexAttribute uvAttr{
+            .name = "deferredUV",
+            .type = opal::VertexAttributeType::Float,
+            .offset = static_cast<uint>(3 * sizeof(float)),
+            .location = 1,
+            .normalized = false,
+            .size = 2,
+            .stride = static_cast<uint>(5 * sizeof(float)),
+            .inputRate = opal::VertexBindingInputRate::Vertex,
+            .divisor = 0};
+
+        std::vector<opal::VertexAttributeBinding> bindings = {
+            {positionAttr, quadBuffer}, {uvAttr, quadBuffer}};
+        quadState->configureAttributes(bindings);
     }
 
-    glUseProgram(this->lightProgram.programId);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, this->gBuffer->gPosition.id);
-    this->lightProgram.setUniform1i("gPosition", 0);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, this->gBuffer->gNormal.id);
-    this->lightProgram.setUniform1i("gNormal", 1);
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, this->gBuffer->gAlbedoSpec.id);
-    this->lightProgram.setUniform1i("gAlbedoSpec", 2);
-    glActiveTexture(GL_TEXTURE3);
-    glBindTexture(GL_TEXTURE_2D, this->gBuffer->gMaterial.id);
-    this->lightProgram.setUniform1i("gMaterial", 3);
+    static std::shared_ptr<opal::Pipeline> lightPipeline = nullptr;
+    if (lightPipeline == nullptr) {
+        lightPipeline = opal::Pipeline::create();
+    }
+    lightPipeline = this->lightProgram.requestPipeline(lightPipeline);
+    lightPipeline->bind();
+
+    lightPipeline->bindTexture2D("gPosition", this->gBuffer->gPosition.id, 0);
+    lightPipeline->bindTexture2D("gNormal", this->gBuffer->gNormal.id, 1);
+    lightPipeline->bindTexture2D("gAlbedoSpec", this->gBuffer->gAlbedoSpec.id,
+                                 2);
+    lightPipeline->bindTexture2D("gMaterial", this->gBuffer->gMaterial.id, 3);
 
     int boundTextures = 4;
 
     if (this->ssaoBlurBuffer != nullptr) {
-        glActiveTexture(GL_TEXTURE4);
-        glBindTexture(GL_TEXTURE_2D, this->ssaoBlurBuffer->texture.id);
-        this->lightProgram.setUniform1i("ssao", 4);
+        lightPipeline->bindTexture2D("ssao", this->ssaoBlurBuffer->texture.id,
+                                     4);
         boundTextures++;
     }
 
     int boundCubemaps = 0;
 
-    ShaderProgram shaderProgram = this->lightProgram;
     Scene *scene = this->currentScene;
 
-    shaderProgram.setUniform3f("cameraPosition", getCamera()->position.x,
-                               getCamera()->position.y,
-                               getCamera()->position.z);
-
-    const bool shaderSupportsIbl =
-        std::find(shaderProgram.capabilities.begin(),
-                  shaderProgram.capabilities.end(),
-                  ShaderCapability::IBL) != shaderProgram.capabilities.end();
+    lightPipeline->setUniform3f("cameraPosition", getCamera()->position.x,
+                                getCamera()->position.y,
+                                getCamera()->position.z);
 
     // Set ambient light
     Color ambientColor = scene->getAmbientColor();
@@ -140,111 +279,66 @@ void Window::deferredRendering(RenderTarget *target) {
         ambientColor = scene->getAutomaticAmbientColor();
         ambientIntensity = scene->getAutomaticAmbientIntensity();
     }
-    shaderProgram.setUniform4f("ambientLight.color",
-                               static_cast<float>(ambientColor.r),
-                               static_cast<float>(ambientColor.g),
-                               static_cast<float>(ambientColor.b), 1.0f);
-    shaderProgram.setUniform1f("ambientLight.intensity",
-                               ambientIntensity / 2.0f);
+    lightPipeline->setUniform4f("ambientLight.color", ambientColor.r,
+                                ambientColor.g,
+                                static_cast<float>(ambientColor.b), 1.0f);
+    lightPipeline->setUniform1f("ambientLight.intensity", ambientIntensity);
 
     // Set camera position
-    shaderProgram.setUniform3f("cameraPosition", getCamera()->position.x,
-                               getCamera()->position.y,
-                               getCamera()->position.z);
+    lightPipeline->setUniform3f("cameraPosition", getCamera()->position.x,
+                                getCamera()->position.y,
+                                getCamera()->position.z);
 
-    // Send directional lights
+    // Send directional lights using buffer binding
     int dirLightCount = std::min((int)scene->directionalLights.size(), 256);
-    shaderProgram.setUniform1i("directionalLightCount", dirLightCount);
+    lightPipeline->setUniform1i("directionalLightCount", dirLightCount);
 
-    for (int i = 0; i < dirLightCount; i++) {
-        DirectionalLight *light = scene->directionalLights[i];
-        std::string baseName = "directionalLights[" + std::to_string(i) + "]";
-        shaderProgram.setUniform3f(baseName + ".direction", light->direction.x,
-                                   light->direction.y, light->direction.z);
-        shaderProgram.setUniform3f(baseName + ".diffuse", light->color.r,
-                                   light->color.g, light->color.b);
-        shaderProgram.setUniform3f(baseName + ".specular", light->shineColor.r,
-                                   light->shineColor.g, light->shineColor.b);
+    if (dirLightCount > 0) {
+        auto gpuDirLights =
+            buildGPUDirectionalLights(scene->directionalLights, dirLightCount);
+        lightPipeline->bindBuffer("DirectionalLights", gpuDirLights);
     }
 
-    // Send point lights
-
+    // Send point lights using buffer binding
     int pointLightCount = std::min((int)scene->pointLights.size(), 256);
-    shaderProgram.setUniform1i("pointLightCount", pointLightCount);
+    lightPipeline->setUniform1i("pointLightCount", pointLightCount);
 
-    for (int i = 0; i < pointLightCount; i++) {
-        Light *light = scene->pointLights[i];
-        std::string baseName = "pointLights[" + std::to_string(i) + "]";
-        shaderProgram.setUniform3f(baseName + ".position", light->position.x,
-                                   light->position.y, light->position.z);
-        shaderProgram.setUniform3f(baseName + ".diffuse", light->color.r,
-                                   light->color.g, light->color.b);
-        shaderProgram.setUniform3f(baseName + ".specular", light->shineColor.r,
-                                   light->shineColor.g, light->shineColor.b);
-
-        PointLightConstants plc = light->calculateConstants();
-        shaderProgram.setUniform1f(baseName + ".constant", plc.constant);
-        shaderProgram.setUniform1f(baseName + ".linear", plc.linear);
-        shaderProgram.setUniform1f(baseName + ".quadratic", plc.quadratic);
-        shaderProgram.setUniform1f(baseName + ".radius", plc.radius);
+    if (pointLightCount > 0) {
+        auto gpuPointLights =
+            buildGPUPointLights(scene->pointLights, pointLightCount);
+        lightPipeline->bindBuffer("PointLights", gpuPointLights);
     }
 
-    // Send spotlights
-
+    // Send spotlights using buffer binding
     int spotlightCount = std::min((int)scene->spotlights.size(), 256);
-    shaderProgram.setUniform1i("spotlightCount", spotlightCount);
+    lightPipeline->setUniform1i("spotlightCount", spotlightCount);
 
-    for (int i = 0; i < spotlightCount; i++) {
-        Spotlight *light = scene->spotlights[i];
-        std::string baseName = "spotlights[" + std::to_string(i) + "]";
-        shaderProgram.setUniform3f(baseName + ".position", light->position.x,
-                                   light->position.y, light->position.z);
-        shaderProgram.setUniform3f(baseName + ".direction", light->direction.x,
-                                   light->direction.y, light->direction.z);
-        shaderProgram.setUniform3f(baseName + ".diffuse", light->color.r,
-                                   light->color.g, light->color.b);
-        shaderProgram.setUniform3f(baseName + ".specular", light->shineColor.r,
-                                   light->shineColor.g, light->shineColor.b);
-        shaderProgram.setUniform1f(baseName + ".cutOff", light->cutOff);
-        shaderProgram.setUniform1f(baseName + ".outerCutOff",
-                                   light->outerCutoff);
+    if (spotlightCount > 0) {
+        auto gpuSpotLights =
+            buildGPUSpotLights(scene->spotlights, spotlightCount);
+        lightPipeline->bindBuffer("SpotLights", gpuSpotLights);
     }
 
-    // Send area lights
+    // Send area lights using buffer binding
     int areaLightCount = std::min((int)scene->areaLights.size(), 256);
-    shaderProgram.setUniform1i("areaLightCount", areaLightCount);
+    lightPipeline->setUniform1i("areaLightCount", areaLightCount);
 
-    for (int i = 0; i < areaLightCount; i++) {
-        AreaLight *light = scene->areaLights[i];
-        std::string baseName = "areaLights[" + std::to_string(i) + "]";
-        shaderProgram.setUniform3f(baseName + ".position", light->position.x,
-                                   light->position.y, light->position.z);
-        shaderProgram.setUniform3f(baseName + ".right", light->right.x,
-                                   light->right.y, light->right.z);
-        shaderProgram.setUniform3f(baseName + ".up", light->up.x, light->up.y,
-                                   light->up.z);
-        shaderProgram.setUniform2f(baseName + ".size",
-                                   static_cast<float>(light->size.width),
-                                   static_cast<float>(light->size.height));
-        shaderProgram.setUniform3f(baseName + ".diffuse", light->color.r,
-                                   light->color.g, light->color.b);
-        shaderProgram.setUniform3f(baseName + ".specular", light->shineColor.r,
-                                   light->shineColor.g, light->shineColor.b);
-        shaderProgram.setUniform1f(baseName + ".angle", light->angle);
-        shaderProgram.setUniform1i(baseName + ".castsBothSides",
-                                   light->castsBothSides ? 1 : 0);
+    if (areaLightCount > 0) {
+        auto gpuAreaLights =
+            buildGPUAreaLights(scene->areaLights, areaLightCount);
+        lightPipeline->bindBuffer("AreaLights", gpuAreaLights);
     }
 
     for (int i = 0; i < 5; i++) {
         std::string uniformName = "cubeMap" + std::to_string(i + 1);
-        shaderProgram.setUniform1i(uniformName, i + 10);
+        lightPipeline->setUniform1i(uniformName, i + 10);
     }
 
     int shadow2DSamplerIndex = 0;
     int boundParameters = 0;
 
     // Cycle though directional lights
-    for (auto light : scene->directionalLights) {
+    for (auto *light : scene->directionalLights) {
         if (!light->doesCastShadows) {
             continue;
         }
@@ -255,22 +349,20 @@ void Window::deferredRendering(RenderTarget *target) {
         if (shadow2DSamplerIndex >= 5) {
             break;
         }
-        glActiveTexture(GL_TEXTURE0 + boundTextures);
-        glBindTexture(GL_TEXTURE_2D, light->shadowRenderTarget->texture.id);
         std::string baseName =
             "shadowParams[" + std::to_string(boundParameters) + "]";
-        shaderProgram.setUniform1i("texture" +
-                                       std::to_string(shadow2DSamplerIndex + 1),
-                                   boundTextures);
-        shaderProgram.setUniform1i(baseName + ".textureIndex",
-                                   shadow2DSamplerIndex);
+        lightPipeline->bindTexture2D(
+            "texture" + std::to_string(shadow2DSamplerIndex + 1),
+            light->shadowRenderTarget->texture.id, boundTextures);
+        lightPipeline->setUniform1i(baseName + ".textureIndex",
+                                    shadow2DSamplerIndex);
         ShadowParams shadowParams = light->lastShadowParams;
-        shaderProgram.setUniformMat4f(baseName + ".lightView",
-                                      shadowParams.lightView);
-        shaderProgram.setUniformMat4f(baseName + ".lightProjection",
-                                      shadowParams.lightProjection);
-        shaderProgram.setUniform1f(baseName + ".bias", shadowParams.bias);
-        shaderProgram.setUniform1f(baseName + ".isPointLight", 0);
+        lightPipeline->setUniformMat4f(baseName + ".lightView",
+                                       shadowParams.lightView);
+        lightPipeline->setUniformMat4f(baseName + ".lightProjection",
+                                       shadowParams.lightProjection);
+        lightPipeline->setUniform1f(baseName + ".bias", shadowParams.bias);
+        lightPipeline->setUniform1f(baseName + ".isPointLight", 0);
 
         boundParameters++;
         shadow2DSamplerIndex++;
@@ -278,7 +370,7 @@ void Window::deferredRendering(RenderTarget *target) {
     }
 
     // Cycle though spotlights
-    for (auto light : scene->spotlights) {
+    for (auto *light : scene->spotlights) {
         if (!light->doesCastShadows) {
             continue;
         }
@@ -289,83 +381,76 @@ void Window::deferredRendering(RenderTarget *target) {
         if (shadow2DSamplerIndex >= 5) {
             break;
         }
-        glActiveTexture(GL_TEXTURE0 + boundTextures);
-        glBindTexture(GL_TEXTURE_2D, light->shadowRenderTarget->texture.id);
         std::string baseName =
             "shadowParams[" + std::to_string(boundParameters) + "]";
-        shaderProgram.setUniform1i("texture" +
-                                       std::to_string(shadow2DSamplerIndex + 1),
-                                   boundTextures);
-        shaderProgram.setUniform1i(baseName + ".textureIndex",
-                                   shadow2DSamplerIndex);
+        lightPipeline->bindTexture2D(
+            "texture" + std::to_string(shadow2DSamplerIndex + 1),
+            light->shadowRenderTarget->texture.id, boundTextures);
+        lightPipeline->setUniform1i(baseName + ".textureIndex",
+                                    shadow2DSamplerIndex);
         ShadowParams shadowParams = light->lastShadowParams;
-        shaderProgram.setUniformMat4f(baseName + ".lightView",
-                                      shadowParams.lightView);
-        shaderProgram.setUniformMat4f(baseName + ".lightProjection",
-                                      shadowParams.lightProjection);
-        shaderProgram.setUniform1f(baseName + ".bias", shadowParams.bias);
-        shaderProgram.setUniform1f(baseName + ".isPointLight", 0);
+        lightPipeline->setUniformMat4f(baseName + ".lightView",
+                                       shadowParams.lightView);
+        lightPipeline->setUniformMat4f(baseName + ".lightProjection",
+                                       shadowParams.lightProjection);
+        lightPipeline->setUniform1f(baseName + ".bias", shadowParams.bias);
+        lightPipeline->setUniform1f(baseName + ".isPointLight", 0);
 
         boundParameters++;
         shadow2DSamplerIndex++;
         boundTextures++;
     }
 
-    for (auto light : scene->pointLights) {
+    for (auto *light : scene->pointLights) {
         if (!light->doesCastShadows) {
             continue;
         }
-        // Reserve up to 5 cubemap units (cubeMap1..cubeMap5 bound to
-        // units 10..14)
         if (boundCubemaps >= 5) {
             break;
         }
 
-        glActiveTexture(GL_TEXTURE0 + 10 + boundCubemaps);
-        glBindTexture(GL_TEXTURE_CUBE_MAP,
-                      light->shadowRenderTarget->texture.id);
-
         std::string baseName =
             "shadowParams[" + std::to_string(boundParameters) + "]";
-        shaderProgram.setUniform1i(baseName + ".textureIndex", boundCubemaps);
-        shaderProgram.setUniform1f(baseName + ".farPlane", light->distance);
-        shaderProgram.setUniform3f(baseName + ".lightPos", light->position.x,
-                                   light->position.y, light->position.z);
-        shaderProgram.setUniform1i(baseName + ".isPointLight", 1);
+        lightPipeline->bindTextureCubemap(
+            "cubeMap" + std::to_string(boundCubemaps + 1),
+            light->shadowRenderTarget->texture.id, 10 + boundCubemaps);
+        lightPipeline->setUniform1i(baseName + ".textureIndex", boundCubemaps);
+        lightPipeline->setUniform1f(baseName + ".farPlane", light->distance);
+        lightPipeline->setUniform3f(baseName + ".lightPos", light->position.x,
+                                    light->position.y, light->position.z);
+        lightPipeline->setUniform1i(baseName + ".isPointLight", 1);
 
         boundParameters++;
         boundCubemaps++;
     }
 
-    shaderProgram.setUniform1i("shadowParamCount", boundParameters);
+    lightPipeline->setUniform1i("shadowParamCount", boundParameters);
 
-    GLint units[16];
-    for (int i = 0; i < boundTextures; i++)
-        units[i] = i;
-
-    glUniform1iv(glGetUniformLocation(shaderProgram.programId, "textures"),
-                 boundTextures, units);
+    // Set texture units array using pipeline
+    for (int i = 0; i < boundTextures && i < 16; i++) {
+        std::string uniformName = "textures[" + std::to_string(i) + "]";
+        lightPipeline->setUniform1i(uniformName, i);
+    }
 
     // Bind skybox
     if (scene->skybox != nullptr) {
-        glActiveTexture(GL_TEXTURE0 + boundTextures);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, scene->skybox->cubemap.id);
-        shaderProgram.setUniform1i("skybox", boundTextures);
+        lightPipeline->bindTextureCubemap("skybox", scene->skybox->cubemap.id,
+                                          boundTextures);
         boundTextures++;
     }
 
-    shaderProgram.setUniform1f(
+    lightPipeline->setUniform1f(
         "environment.rimLightIntensity",
         Window::mainWindow->currentScene->environment.rimLight.intensity);
-    shaderProgram.setUniform3f(
+    lightPipeline->setUniform3f(
         "environment.rimLightColor",
         Window::mainWindow->currentScene->environment.rimLight.color.r,
         Window::mainWindow->currentScene->environment.rimLight.color.g,
         Window::mainWindow->currentScene->environment.rimLight.color.b);
 
-    glBindVertexArray(quadVAO);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-    glBindVertexArray(0);
+    quadState->bind();
+    commandBuffer->draw(6, 1, 0, 0);
+    quadState->unbind();
 
     if (dirLightCount > 0) {
         if (!volumetricBuffer) {
@@ -375,31 +460,43 @@ void Window::deferredRendering(RenderTarget *target) {
 
         target->resolve();
 
-        glBindFramebuffer(GL_FRAMEBUFFER, volumetricBuffer->fbo);
-        glViewport(0, 0, volumetricBuffer->getWidth(),
-                   volumetricBuffer->getHeight());
-        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        // End target pass and start volumetric pass
+        commandBuffer->endPass();
+        auto volumetricRenderPass = opal::RenderPass::create();
+        volumetricRenderPass->setFramebuffer(
+            volumetricBuffer->getFramebuffer());
+        commandBuffer->beginPass(volumetricRenderPass);
 
-        glUseProgram(volumetricProgram.programId);
+        volumetricBuffer->bind();
+        volumetricBuffer->getFramebuffer()->setViewport(
+            0, 0, volumetricBuffer->getWidth(), volumetricBuffer->getHeight());
+        commandBuffer->clearColor(0.0f, 0.0f, 0.0f, 0.0f);
+
+        // Create volumetric pipeline
+        static std::shared_ptr<opal::Pipeline> volumetricPipeline = nullptr;
+        if (volumetricPipeline == nullptr) {
+            volumetricPipeline = opal::Pipeline::create();
+        }
+        volumetricPipeline =
+            this->volumetricProgram.requestPipeline(volumetricPipeline);
+        volumetricPipeline->bind();
 
         DirectionalLight *dirLight = scene->directionalLights[0];
 
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, target->texture.id);
-        volumetricProgram.setUniform1i("sceneTexture", 0);
+        volumetricPipeline->bindTexture2D("sceneTexture", target->texture.id,
+                                          0);
 
-        volumetricProgram.setUniform1f(
+        volumetricPipeline->setUniform1f(
             "density", scene->environment.volumetricLighting.density);
-        volumetricProgram.setUniform1f(
+        volumetricPipeline->setUniform1f(
             "weight", scene->environment.volumetricLighting.weight);
-        volumetricProgram.setUniform1f(
+        volumetricPipeline->setUniform1f(
             "decay", scene->environment.volumetricLighting.decay);
-        volumetricProgram.setUniform1f(
+        volumetricPipeline->setUniform1f(
             "exposure", scene->environment.volumetricLighting.exposure);
-        volumetricProgram.setUniform3f("directionalLight.color",
-                                       dirLight->color.r, dirLight->color.g,
-                                       dirLight->color.b);
+        volumetricPipeline->setUniform3f("directionalLight.color",
+                                         dirLight->color.r, dirLight->color.g,
+                                         dirLight->color.b);
         glm::vec3 lightPos = -dirLight->direction.toGlm() * 1000.f;
         glm::vec4 clipSpace = calculateProjectionMatrix() *
                               camera->calculateViewMatrix() *
@@ -408,72 +505,74 @@ void Window::deferredRendering(RenderTarget *target) {
         glm::vec3 ndc = glm::vec3(clipSpace) / clipSpace.w;
         glm::vec2 sunUV = (glm::vec2(ndc.x, ndc.y) + 1.0f) * 0.5f;
 
-        volumetricProgram.setUniform2f("sunPos", sunUV.x, sunUV.y);
+        volumetricPipeline->setUniform2f("sunPos", sunUV.x, sunUV.y);
 
-        glBindVertexArray(quadVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-        glBindVertexArray(0);
+        quadState->bind();
+        commandBuffer->draw(6, 1, 0, 0);
+        quadState->unbind();
     }
 
     if (this->ssrFramebuffer != nullptr && useSSR) {
         target->resolve();
 
-        glBindFramebuffer(GL_FRAMEBUFFER, ssrFramebuffer->fbo);
-        glViewport(0, 0, ssrFramebuffer->getWidth(),
-                   ssrFramebuffer->getHeight());
-        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+        // End current pass and start SSR pass
+        commandBuffer->endPass();
+        auto ssrRenderPass = opal::RenderPass::create();
+        ssrRenderPass->setFramebuffer(ssrFramebuffer->getFramebuffer());
+        commandBuffer->beginPass(ssrRenderPass);
 
-        glUseProgram(ssrProgram.programId);
+        ssrFramebuffer->bind();
+        ssrFramebuffer->getFramebuffer()->setViewport(
+            0, 0, ssrFramebuffer->getWidth(), ssrFramebuffer->getHeight());
+        commandBuffer->clearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, gBuffer->gPosition.id);
-        ssrProgram.setUniform1i("gPosition", 0);
+        // Create SSR pipeline
+        static std::shared_ptr<opal::Pipeline> ssrPipeline = nullptr;
+        if (ssrPipeline == nullptr) {
+            ssrPipeline = opal::Pipeline::create();
+        }
+        ssrPipeline = this->ssrProgram.requestPipeline(ssrPipeline);
+        ssrPipeline->bind();
 
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, gBuffer->gNormal.id);
-        ssrProgram.setUniform1i("gNormal", 1);
-
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, gBuffer->gAlbedoSpec.id);
-        ssrProgram.setUniform1i("gAlbedoSpec", 2);
-
-        glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, gBuffer->gMaterial.id);
-        ssrProgram.setUniform1i("gMaterial", 3);
-
-        glActiveTexture(GL_TEXTURE4);
-        glBindTexture(GL_TEXTURE_2D, target->texture.id);
-        ssrProgram.setUniform1i("sceneColor", 4);
-
-        glActiveTexture(GL_TEXTURE5);
-        glBindTexture(GL_TEXTURE_2D, gBuffer->depthTexture.id);
-        ssrProgram.setUniform1i("gDepth", 5);
+        ssrPipeline->bindTexture2D("gPosition", gBuffer->gPosition.id, 0);
+        ssrPipeline->bindTexture2D("gNormal", gBuffer->gNormal.id, 1);
+        ssrPipeline->bindTexture2D("gAlbedoSpec", gBuffer->gAlbedoSpec.id, 2);
+        ssrPipeline->bindTexture2D("gMaterial", gBuffer->gMaterial.id, 3);
+        ssrPipeline->bindTexture2D("sceneColor", target->texture.id, 4);
+        ssrPipeline->bindTexture2D("gDepth", gBuffer->depthTexture.id, 5);
 
         const glm::mat4 projectionMatrix =
             Window::mainWindow->calculateProjectionMatrix();
         const glm::mat4 viewMatrix =
             Window::mainWindow->getCamera()->calculateViewMatrix();
-        ssrProgram.setUniformMat4f("projection", projectionMatrix);
-        ssrProgram.setUniformMat4f("view", viewMatrix);
-        ssrProgram.setUniformMat4f("inverseView", glm::inverse(viewMatrix));
-        ssrProgram.setUniformMat4f("inverseProjection",
-                                   glm::inverse(projectionMatrix));
-        ssrProgram.setUniform3f("cameraPosition", camera->position.x,
-                                camera->position.y, camera->position.z);
+        ssrPipeline->setUniformMat4f("projection", projectionMatrix);
+        ssrPipeline->setUniformMat4f("view", viewMatrix);
+        ssrPipeline->setUniformMat4f("inverseView", glm::inverse(viewMatrix));
+        ssrPipeline->setUniformMat4f("inverseProjection",
+                                     glm::inverse(projectionMatrix));
+        ssrPipeline->setUniform3f("cameraPosition", camera->position.x,
+                                  camera->position.y, camera->position.z);
 
-        glBindVertexArray(quadVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 6);
-        glBindVertexArray(0);
+        quadState->bind();
+        commandBuffer->draw(6, 1, 0, 0);
+        quadState->unbind();
     }
 
     target->volumetricLightTexture = volumetricBuffer->texture;
     target->ssrTexture = ssrFramebuffer->texture;
     target->gPosition = gBuffer->gPosition;
 
-    glDepthMask(GL_TRUE);
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
+    // End current pass and re-establish target render pass for caller
+    commandBuffer->endPass();
+    auto finalRenderPass = opal::RenderPass::create();
+    finalRenderPass->setFramebuffer(target->getFramebuffer());
+    commandBuffer->beginPass(finalRenderPass);
 
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    auto finalPipeline = opal::Pipeline::create();
+    finalPipeline->enableDepthWrite(true);
+    finalPipeline->enableDepthTest(true);
+    finalPipeline->setDepthCompareOp(opal::CompareOp::Less);
+    finalPipeline->bind();
+
+    this->device->getDefaultFramebuffer()->bind();
 }

@@ -9,10 +9,11 @@
 
 #include "atlas/texture.h"
 #include "atlas/units.h"
+#include "opal/opal.h"
 #include <algorithm>
 #include <cmath>
+#include <memory>
 #include <stdexcept>
-#include <glad/glad.h>
 
 Texture Texture::createCheckerboard(int width, int height, int checkSize,
                                     Color color1, Color color2,
@@ -38,14 +39,16 @@ Texture Texture::createCheckerboard(int width, int height, int checkSize,
         }
     }
 
-    Id textureId;
-    glGenTextures(1, &textureId);
-    glBindTexture(GL_TEXTURE_2D, textureId);
+    auto opalTexture = opal::Texture::create(
+        opal::TextureType::Texture2D, opal::TextureFormat::sRgb8, width, height,
+        opal::TextureDataFormat::Rgb, data.data(), 1);
 
-    Texture::applyWrappingMode(params.wrappingModeS, GL_TEXTURE_WRAP_S);
-    Texture::applyWrappingMode(params.wrappingModeT, GL_TEXTURE_WRAP_T);
-    Texture::applyFilteringMode(params.minifyingFilter, true);
-    Texture::applyFilteringMode(params.magnifyingFilter, false);
+    Texture::applyWrappingMode(params.wrappingModeS, opal::TextureAxis::S,
+                               opalTexture);
+    Texture::applyWrappingMode(params.wrappingModeT, opal::TextureAxis::T,
+                               opalTexture);
+    Texture::applyFilteringModes(params.minifyingFilter,
+                                 params.magnifyingFilter, opalTexture);
 
     if (params.wrappingModeS == TextureWrappingMode::ClampToBorder ||
         params.wrappingModeT == TextureWrappingMode::ClampToBorder) {
@@ -55,20 +58,15 @@ Texture Texture::createCheckerboard(int width, int height, int checkSize,
             throw std::runtime_error(
                 "Border color values must be between 0 and 1");
         }
-        float borderColorArr[4] = {static_cast<float>(borderColor.r),
-                                   static_cast<float>(borderColor.g),
-                                   static_cast<float>(borderColor.b),
-                                   static_cast<float>(borderColor.a)};
-        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR,
-                         borderColorArr);
+        opalTexture->changeBorderColor(borderColor.toGlm());
     }
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
-                 GL_UNSIGNED_BYTE, data.data());
-    glGenerateMipmap(GL_TEXTURE_2D);
+
+    opalTexture->automaticallyGenerateMipmaps();
+
     TextureCreationData creationData{width, height, 3};
 
-    return Texture{Resource(), creationData, textureId, TextureType::Color,
-                   borderColor};
+    return Texture{Resource(),  creationData,       opalTexture->textureID,
+                   opalTexture, TextureType::Color, borderColor};
 }
 
 Texture Texture::createDoubleCheckerboard(
@@ -99,33 +97,38 @@ Texture Texture::createDoubleCheckerboard(
         }
     }
 
-    Id textureId;
-    glGenTextures(1, &textureId);
-    glBindTexture(GL_TEXTURE_2D, textureId);
+    auto opalTexture = opal::Texture::create(
+        opal::TextureType::Texture2D, opal::TextureFormat::sRgb8, width, height,
+        opal::TextureDataFormat::Rgb, data.data(), 1);
 
-    Texture::applyWrappingMode(params.wrappingModeS, GL_TEXTURE_WRAP_S);
-    Texture::applyWrappingMode(params.wrappingModeT, GL_TEXTURE_WRAP_T);
-    Texture::applyFilteringMode(params.minifyingFilter, true);
-    Texture::applyFilteringMode(params.magnifyingFilter, false);
+    Texture::applyWrappingMode(params.wrappingModeS, opal::TextureAxis::S,
+                               opalTexture);
+    Texture::applyWrappingMode(params.wrappingModeT, opal::TextureAxis::T,
+                               opalTexture);
+    Texture::applyFilteringModes(params.minifyingFilter,
+                                 params.magnifyingFilter, opalTexture);
 
     if (params.wrappingModeS == TextureWrappingMode::ClampToBorder ||
         params.wrappingModeT == TextureWrappingMode::ClampToBorder) {
-        float borderColorArr[4] = {static_cast<float>(borderColor.r),
-                                   static_cast<float>(borderColor.g),
-                                   static_cast<float>(borderColor.b),
-                                   static_cast<float>(borderColor.a)};
-        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR,
-                         borderColorArr);
+        if (borderColor.r < 0 || borderColor.r > 1 || borderColor.g < 0 ||
+            borderColor.g > 1 || borderColor.b < 0 || borderColor.b > 1 ||
+            borderColor.a < 0 || borderColor.a > 1) {
+            throw std::runtime_error(
+                "Border color values must be between 0 and 1");
+        }
+        opalTexture->changeBorderColor(borderColor.toGlm());
     }
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
-                 GL_UNSIGNED_BYTE, data.data());
-    glGenerateMipmap(GL_TEXTURE_2D);
+    opalTexture->automaticallyGenerateMipmaps();
 
     TextureCreationData creationData{width, height, 3};
 
-    return Texture{Resource(), creationData, textureId, TextureType::Color,
-                   borderColor};
+    return Texture{.resource = Resource(),
+                   .creationData = creationData,
+                   .id = opalTexture->textureID,
+                   .texture = opalTexture,
+                   .type = TextureType::Color,
+                   .borderColor = borderColor};
 }
 
 Texture Texture::createTiledCheckerboard(int width, int height,
@@ -145,7 +148,7 @@ Texture Texture::createTiledCheckerboard(int width, int height,
         int tileRow = y / tileHeight;
         for (int x = 0; x < width; ++x) {
             int tileCol = x / tileWidth;
-            int tileIndex = tileRow * cols + tileCol;
+            int tileIndex = (tileRow * cols) + tileCol;
             if (tileIndex >= numTiles)
                 tileIndex = numTiles - 1;
 
@@ -162,32 +165,38 @@ Texture Texture::createTiledCheckerboard(int width, int height,
         }
     }
 
-    Id textureId;
-    glGenTextures(1, &textureId);
-    glBindTexture(GL_TEXTURE_2D, textureId);
+    auto opalTexture = opal::Texture::create(
+        opal::TextureType::Texture2D, opal::TextureFormat::sRgb8, width, height,
+        opal::TextureDataFormat::Rgb, data.data(), 1);
 
-    Texture::applyWrappingMode(params.wrappingModeS, GL_TEXTURE_WRAP_S);
-    Texture::applyWrappingMode(params.wrappingModeT, GL_TEXTURE_WRAP_T);
-    Texture::applyFilteringMode(params.minifyingFilter, true);
-    Texture::applyFilteringMode(params.magnifyingFilter, false);
+    Texture::applyWrappingMode(params.wrappingModeS, opal::TextureAxis::S,
+                               opalTexture);
+    Texture::applyWrappingMode(params.wrappingModeT, opal::TextureAxis::T,
+                               opalTexture);
+    Texture::applyFilteringModes(params.minifyingFilter,
+                                 params.magnifyingFilter, opalTexture);
 
     if (params.wrappingModeS == TextureWrappingMode::ClampToBorder ||
         params.wrappingModeT == TextureWrappingMode::ClampToBorder) {
-        float borderColorArr[4] = {static_cast<float>(borderColor.r),
-                                   static_cast<float>(borderColor.g),
-                                   static_cast<float>(borderColor.b),
-                                   static_cast<float>(borderColor.a)};
-        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR,
-                         borderColorArr);
+        if (borderColor.r < 0 || borderColor.r > 1 || borderColor.g < 0 ||
+            borderColor.g > 1 || borderColor.b < 0 || borderColor.b > 1 ||
+            borderColor.a < 0 || borderColor.a > 1) {
+            throw std::runtime_error(
+                "Border color values must be between 0 and 1");
+        }
+        opalTexture->changeBorderColor(borderColor.toGlm());
     }
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
-                 GL_UNSIGNED_BYTE, data.data());
-    glGenerateMipmap(GL_TEXTURE_2D);
+    opalTexture->automaticallyGenerateMipmaps();
 
-    TextureCreationData creationData{width, height, 3};
-    return Texture{Resource(), creationData, textureId, TextureType::Color,
-                   borderColor};
+    TextureCreationData creationData{
+        .width = width, .height = height, .channels = 3};
+    return Texture{.resource = Resource(),
+                   .creationData = creationData,
+                   .id = opalTexture->textureID,
+                   .texture = opalTexture,
+                   .type = TextureType::Color,
+                   .borderColor = borderColor};
 }
 
 Texture Texture::createRainStreak(int width, int height,
@@ -226,14 +235,16 @@ Texture Texture::createRainStreak(int width, int height,
         }
     }
 
-    Id textureId;
-    glGenTextures(1, &textureId);
-    glBindTexture(GL_TEXTURE_2D, textureId);
+    auto opalTexture = opal::Texture::create(
+        opal::TextureType::Texture2D, opal::TextureFormat::sRgba8, width,
+        height, opal::TextureDataFormat::Rgba, data.data(), 1);
 
-    Texture::applyWrappingMode(params.wrappingModeS, GL_TEXTURE_WRAP_S);
-    Texture::applyWrappingMode(params.wrappingModeT, GL_TEXTURE_WRAP_T);
-    Texture::applyFilteringMode(params.minifyingFilter, true);
-    Texture::applyFilteringMode(params.magnifyingFilter, false);
+    Texture::applyWrappingMode(params.wrappingModeS, opal::TextureAxis::S,
+                               opalTexture);
+    Texture::applyWrappingMode(params.wrappingModeT, opal::TextureAxis::T,
+                               opalTexture);
+    Texture::applyFilteringModes(params.minifyingFilter,
+                                 params.magnifyingFilter, opalTexture);
 
     if (params.wrappingModeS == TextureWrappingMode::ClampToBorder ||
         params.wrappingModeT == TextureWrappingMode::ClampToBorder) {
@@ -243,19 +254,17 @@ Texture Texture::createRainStreak(int width, int height,
             throw std::runtime_error(
                 "Border color values must be between 0 and 1");
         }
-        float borderColorArr[4] = {static_cast<float>(borderColor.r),
-                                   static_cast<float>(borderColor.g),
-                                   static_cast<float>(borderColor.b),
-                                   static_cast<float>(borderColor.a)};
-        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR,
-                         borderColorArr);
+        opalTexture->changeBorderColor(borderColor.toGlm());
     }
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
-                 GL_UNSIGNED_BYTE, data.data());
-    glGenerateMipmap(GL_TEXTURE_2D);
+    opalTexture->automaticallyGenerateMipmaps();
 
-    TextureCreationData creationData{width, height, 4};
-    return Texture{Resource(), creationData, textureId, TextureType::Color,
-                   borderColor};
+    TextureCreationData creationData{
+        .width = width, .height = height, .channels = 4};
+    return Texture{.resource = Resource(),
+                   .creationData = creationData,
+                   .id = opalTexture->textureID,
+                   .texture = opalTexture,
+                   .type = TextureType::Color,
+                   .borderColor = borderColor};
 }

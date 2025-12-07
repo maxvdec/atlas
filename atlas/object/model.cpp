@@ -14,14 +14,21 @@
 #include "atlas/units.h"
 #include "atlas/window.h"
 #include "atlas/workspace.h"
+#include "opal/opal.h"
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
+#include <unordered_map>
 #include <vector>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/matrix_decompose.hpp>
+#include <glm/gtx/string_cast.hpp>
+#include <glm/gtc/epsilon.hpp>
 
 void Model::fromResource(Resource resource) { loadModel(resource); }
 
@@ -29,136 +36,215 @@ void Model::loadModel(Resource resource) {
     Assimp::Importer importer;
     if (resource.type != ResourceType::Model)
         return;
-    const aiScene *scene = importer.ReadFile(
-        resource.path.string(),
-        aiProcess_Triangulate | aiProcess_MakeLeftHanded |
-            aiProcess_FlipWindingOrder | aiProcess_CalcTangentSpace);
+
+    unsigned int importFlags =
+        aiProcess_Triangulate | aiProcess_CalcTangentSpace |
+        aiProcess_JoinIdenticalVertices | aiProcess_ImproveCacheLocality |
+        aiProcess_SortByPType | aiProcess_GenSmoothNormals;
+
+    const aiScene *scene =
+        importer.ReadFile(resource.path.string(), importFlags);
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE ||
         !scene->mRootNode) {
         throw std::runtime_error("Assimp error: " +
                                  std::string(importer.GetErrorString()));
-        // Error handling
         return;
     }
     directory = resource.path.parent_path().string();
+    // Texture cache to avoid loading the same texture multiple times
+    std::unordered_map<std::string, Texture> textureCache;
 
-    processNode(scene->mRootNode, scene);
+    processNode(scene->mRootNode, scene, glm::mat4(1.0f), textureCache);
 
-    std::cout << "Created model from resource: " << resource.name << " with "
-              << objects.size() << " objects." << std::endl;
-    std::cout << "Model path: " << resource.path << std::endl;
-    std::cout << "Model directory: " << directory << std::endl;
-    std::cout << "First model object has "
-              << (objects.size() > 0 ? objects[0]->getVertices().size() : 0)
-              << " vertices." << std::endl;
+    // std::cout << "Created model from resource: " << resource.name << " with "
+    //           << objects.size() << " objects." << std::endl;
+    // std::cout << "Model path: " << resource.path << std::endl;
+    // std::cout << "Model directory: " << directory << std::endl;
+    // std::cout << "First model object has "
+    //           << (objects.size() > 0 ? objects[0]->getVertices().size() : 0)
+    //           << " vertices." << std::endl;
+
+    // std::cout << "Model loaded successfully." << std::endl;
+    // std::cout << "Meshes: " << scene->mNumMeshes << std::endl;
+    // std::cout << "Unique textures loaded: " << textureCache.size() <<
+    // std::endl;
+
+    // size_t totalVertices = 0;
+    // size_t totalTriangles = 0;
+    // for (unsigned int i = 0; i < scene->mNumMeshes; i++) {
+    //     aiMesh *mesh = scene->mMeshes[i];
+    //     totalVertices += mesh->mNumVertices;
+    //     totalTriangles +=
+    //         mesh->mNumFaces; // each face is a triangle (after Triangulate)
+    // }
+
+    // std::cout << "Total Vertices: " << totalVertices << std::endl;
+    // std::cout << "Total Triangles: " << totalTriangles << std::endl;
 }
 
-void Model::processNode(aiNode *node, const aiScene *scene,
-                        glm::mat4 parentTransform) {
-    aiMatrix4x4 aiTrans = node->mTransformation;
-    glm::mat4 nodeTransform = glm::mat4(
-        aiTrans.a1, aiTrans.b1, aiTrans.c1, aiTrans.d1, aiTrans.a2, aiTrans.b2,
-        aiTrans.c2, aiTrans.d2, aiTrans.a3, aiTrans.b3, aiTrans.c3, aiTrans.d3,
-        aiTrans.a4, aiTrans.b4, aiTrans.c4, aiTrans.d4);
+void Model::processNode(
+    aiNode *node, const aiScene *scene, glm::mat4 parentTransform,
+    std::unordered_map<std::string, Texture> &textureCache) {
+    glm::mat4 nodeTransform =
+        parentTransform * glm::make_mat4(&node->mTransformation.a1);
 
-    glm::mat4 globalTransform = parentTransform * nodeTransform;
     for (unsigned int i = 0; i < node->mNumMeshes; i++) {
         aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
-        auto obj = std::make_shared<CoreObject>(processMesh(mesh, scene));
-        glm::vec3 position, scale, skew;
-        glm::vec4 perspective;
-        glm::quat rotation;
-
-        glm::decompose(globalTransform, scale, rotation, position, skew,
-                       perspective);
-
-        position /= scale;
-        rotation = glm::normalize(rotation);
-
-        obj->setPosition({position.x, position.y, position.z});
-        obj->setRotation(Rotation3d::fromGlmQuat(rotation));
-        obj->setShader(ShaderProgram::defaultProgram());
+        auto obj = std::make_shared<CoreObject>(
+            processMesh(mesh, scene, nodeTransform, textureCache));
         obj->initialize();
         this->objects.push_back(obj);
     }
+
     for (unsigned int i = 0; i < node->mNumChildren; i++) {
-        processNode(node->mChildren[i], scene);
+        processNode(node->mChildren[i], scene, nodeTransform, textureCache);
     }
 }
 
-CoreObject Model::processMesh(aiMesh *mesh, const aiScene *scene) {
+CoreObject
+Model::processMesh(aiMesh *mesh, const aiScene *scene,
+                   const glm::mat4 &transform,
+                   std::unordered_map<std::string, Texture> &textureCache) {
     CoreObject object;
     std::vector<CoreVertex> vertices;
     std::vector<unsigned int> indices;
-    std::vector<Texture> textures;
+
+    vertices.reserve(mesh->mNumVertices);
 
     for (unsigned int i = 0; i < mesh->mNumVertices; i++) {
+        glm::vec4 pos =
+            transform * glm::vec4(mesh->mVertices[i].x, mesh->mVertices[i].y,
+                                  mesh->mVertices[i].z, 1.0f);
+
         CoreVertex vertex;
-        vertex.position = {mesh->mVertices[i].x, mesh->mVertices[i].y,
-                           mesh->mVertices[i].z};
+        vertex.position = Position3d::fromGlm(glm::vec3(pos));
+
+        // ---------- Normals ----------
         if (mesh->mNormals) {
-            vertex.normal = {mesh->mNormals[i].x, mesh->mNormals[i].y,
-                             mesh->mNormals[i].z};
+            glm::vec3 normal =
+                glm::mat3(transform) * glm::vec3(mesh->mNormals[i].x,
+                                                 mesh->mNormals[i].y,
+                                                 mesh->mNormals[i].z);
+            if (glm::length(normal) < 1e-6f) {
+                normal = glm::vec3(0.0f, 1.0f, 0.0f);
+            } else {
+                normal = glm::normalize(normal);
+            }
+            vertex.normal = Normal3d::fromGlm(normal);
         } else {
-            vertex.normal = {0.0f, 0.0f, 0.0f};
+            vertex.normal = Normal3d::fromGlm(glm::vec3(0.0f, 1.0f, 0.0f));
         }
-        if (mesh->mTextureCoords[0]) {
-            vertex.textureCoordinate = {mesh->mTextureCoords[0][i].x,
-                                        mesh->mTextureCoords[0][i].y};
-        } else {
-            vertex.textureCoordinate = {0.0f, 0.0f};
-        }
+
+        // ---------- Tangents ----------
         if (mesh->mTangents) {
-            vertex.tangent = {mesh->mTangents[i].x, mesh->mTangents[i].y,
-                              mesh->mTangents[i].z};
-        } else {
-            vertex.tangent = {0.0f, 0.0f, 0.0f};
+            glm::vec3 tangent =
+                glm::mat3(transform) * glm::vec3(mesh->mTangents[i].x,
+                                                 mesh->mTangents[i].y,
+                                                 mesh->mTangents[i].z);
+            if (glm::length(tangent) < 1e-6f)
+                tangent = glm::vec3(1.0f, 0.0f, 0.0f);
+            vertex.tangent = Normal3d::fromGlm(glm::normalize(tangent));
         }
-        if (mesh->mBitangents) {
-            vertex.bitangent = {mesh->mBitangents[i].x, mesh->mBitangents[i].y,
-                                mesh->mBitangents[i].z};
+
+        // ---------- Texture Coordinates ----------
+        if (mesh->mTextureCoords[0]) {
+            glm::vec2 uv = glm::vec2(mesh->mTextureCoords[0][i].x,
+                                     mesh->mTextureCoords[0][i].y);
+            if (glm::all(glm::isnan(uv)) || glm::any(glm::isinf(uv)))
+                uv = glm::vec2(0.0f, 0.0f);
+            vertex.textureCoordinate = TextureCoordinate{uv.x, uv.y};
         } else {
-            vertex.bitangent = {0.0f, 0.0f, 0.0f};
+            vertex.textureCoordinate = TextureCoordinate{0.0f, 0.0f};
         }
-        vertex.color = {1.0f, 1.0f, 1.0f, 1.0f};
+
+        // ---------- Vertex Color ----------
+        if (mesh->mColors[0]) {
+            glm::vec4 col =
+                glm::vec4(mesh->mColors[0][i].r, mesh->mColors[0][i].g,
+                          mesh->mColors[0][i].b, mesh->mColors[0][i].a);
+            if (glm::all(glm::isnan(col)) || glm::any(glm::isinf(col)))
+                col = glm::vec4(1.0f);
+            vertex.color = Color{col.r, col.g, col.b, col.a};
+        } else {
+            vertex.color = Color{1.0f, 1.0f, 1.0f, 1.0f};
+        }
+
         vertices.push_back(vertex);
     }
+
+    // ---------- Indices ----------
+    // Pre-calculate total indices for reservation
+    size_t totalIndices = 0;
     for (unsigned int i = 0; i < mesh->mNumFaces; i++) {
-        aiFace face = mesh->mFaces[i];
+        totalIndices += mesh->mFaces[i].mNumIndices;
+    }
+    indices.reserve(totalIndices);
+
+    for (unsigned int i = 0; i < mesh->mNumFaces; i++) {
+        const aiFace &face = mesh->mFaces[i];
         for (unsigned int j = 0; j < face.mNumIndices; j++)
             indices.push_back(face.mIndices[j]);
     }
+
+    std::vector<Texture> textures;
     if (mesh->mMaterialIndex >= 0) {
         aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
-        std::vector<Texture> diffuseMaps = loadMaterialTextures(
-            material, (std::any)aiTextureType_DIFFUSE, "texture_diffuse");
+
+        auto diffuseMaps =
+            loadMaterialTextures(material, std::any(aiTextureType_DIFFUSE),
+                                 "texture_diffuse", textureCache);
         textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
-        std::vector<Texture> specularMaps = loadMaterialTextures(
-            material, (std::any)aiTextureType_SPECULAR, "texture_specular");
+
+        auto specularMaps =
+            loadMaterialTextures(material, std::any(aiTextureType_SPECULAR),
+                                 "texture_specular", textureCache);
         textures.insert(textures.end(), specularMaps.begin(),
                         specularMaps.end());
+
+        auto normalMaps =
+            loadMaterialTextures(material, std::any(aiTextureType_NORMALS),
+                                 "texture_normal", textureCache);
+        textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
+
+        auto heightMaps =
+            loadMaterialTextures(material, std::any(aiTextureType_HEIGHT),
+                                 "texture_height", textureCache);
+        textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
     }
+
+    if (!textures.empty()) {
+        for (const auto &texture : textures) {
+            object.attachTexture(texture);
+        }
+    }
+
     object.attachVertices(vertices);
     object.attachIndices(indices);
-    for (const Texture &tex : textures) {
-        object.attachTexture(tex);
-    }
     return object;
 }
 
-std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, std::any type,
-                                                 const std::string &typeName) {
+std::vector<Texture> Model::loadMaterialTextures(
+    aiMaterial *mat, std::any type, const std::string &typeName,
+    std::unordered_map<std::string, Texture> &textureCache) {
     aiMaterial *material = mat;
     aiTextureType textureType = std::any_cast<aiTextureType>(type);
     std::vector<Texture> textures;
     for (unsigned int i = 0; i < material->GetTextureCount(textureType); i++) {
         aiString str;
         material->GetTexture(textureType, i, &str);
-        std::cout << "Loading texture: " << str.C_Str() << " of type "
-                  << typeName << std::endl;
         std::string filename = std::string(str.C_Str());
         std::string fullPath = directory + "/" + filename;
+
+        // Check if texture is already cached
+        auto cacheIt = textureCache.find(fullPath);
+        if (cacheIt != textureCache.end()) {
+            textures.push_back(cacheIt->second);
+            continue;
+        }
+
+        // std::cout << "Loading texture: " << str.C_Str() << " of type "
+        //           << typeName << std::endl;
 
         ResourceType resType = ResourceType::Image;
         if (typeName == "texture_specular") {
@@ -166,13 +252,23 @@ std::vector<Texture> Model::loadMaterialTextures(aiMaterial *mat, std::any type,
         }
         Resource resource =
             Workspace::get().createResource(fullPath, filename, resType);
-        Texture texture(resource);
-        TextureType textureType = TextureType::Color;
-        if (resType == ResourceType::SpecularMap)
-            textureType = TextureType::Specular;
+        TextureType texType = TextureType::Color;
+        if (typeName == "texture_specular") {
+            texType = TextureType::Specular;
+        } else if (typeName == "texture_normal") {
+            texType = TextureType::Normal;
+        } else if (typeName == "texture_height") {
+            texType = TextureType::Parallax;
+        }
 
-        texture.type = textureType;
-        textures.push_back(texture);
+        try {
+            Texture loadedTexture = Texture::fromResource(resource, texType);
+            textureCache[fullPath] = loadedTexture;
+            textures.push_back(loadedTexture);
+        } catch (const std::exception &ex) {
+            std::cerr << "Failed to load texture '" << filename
+                      << "': " << ex.what() << std::endl;
+        }
     }
     return textures;
 }

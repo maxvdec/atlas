@@ -7,17 +7,20 @@
  Copyright (c) 2025 maxvdec
 */
 
+#include <cstddef>
 #include <glad/glad.h>
 #include <algorithm>
 #include <iostream>
+#include <memory>
 #include <vector>
 #include "atlas/camera.h"
 #include "atlas/core/shader.h"
-#include "atlas/effect.h"
+#include "atlas/effect.h" // IWYU pragma: keep
 #include "atlas/object.h"
 #include "atlas/texture.h"
 #include "atlas/units.h"
 #include "atlas/window.h"
+#include "opal/opal.h"
 
 RenderTarget::RenderTarget(Window &window, RenderTargetType type,
                            int resolution) {
@@ -34,377 +37,392 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
     int scaledWidth = std::max(1, static_cast<int>(fbWidth * targetScale));
     int scaledHeight = std::max(1, static_cast<int>(fbHeight * targetScale));
     Size2d size;
-    size = {static_cast<double>(scaledWidth),
-            static_cast<double>(scaledHeight)};
-    const GLsizei width = static_cast<GLsizei>(scaledWidth);
-    const GLsizei height = static_cast<GLsizei>(scaledHeight);
+    size = {.width = static_cast<float>(scaledWidth),
+            .height = static_cast<float>(scaledHeight)};
+    const auto width = static_cast<GLsizei>(scaledWidth);
+    const auto height = static_cast<GLsizei>(scaledHeight);
     this->type = type;
 
     if (type == RenderTargetType::Scene) {
-        glGenFramebuffers(1, &fbo);
-        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-
-        unsigned int colorTextures[2];
-        glGenTextures(2, colorTextures);
+        fb = opal::Framebuffer::create(width, height);
+        std::vector<std::shared_ptr<opal::Texture>> colorTextures;
         for (unsigned int i = 0; i < 2; i++) {
-            glBindTexture(GL_TEXTURE_2D, colorTextures[i]);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0,
-                         GL_RGBA, GL_FLOAT, nullptr);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i,
-                                   GL_TEXTURE_2D, colorTextures[i], 0);
+            auto texture = opal::Texture::create(
+                opal::TextureType::Texture2D, opal::TextureFormat::Rgba16F,
+                width, height, opal::TextureDataFormat::Rgba, nullptr, 1);
+            texture->setFilterMode(opal::TextureFilterMode::Linear,
+                                   opal::TextureFilterMode::Linear);
+            texture->setWrapMode(opal::TextureAxis::S,
+                                 opal::TextureWrapMode::ClampToEdge);
+            texture->setWrapMode(opal::TextureAxis::T,
+                                 opal::TextureWrapMode::ClampToEdge);
+            opal::Attachment attachment;
+            attachment.texture = texture;
+            attachment.type = opal::Attachment::Type::Color;
+            colorTextures.push_back(texture);
+            fb->addAttachment(attachment);
         }
 
-        unsigned int attachments[2] = {GL_COLOR_ATTACHMENT0,
-                                       GL_COLOR_ATTACHMENT1};
-        glDrawBuffers(2, attachments);
+        auto depthTexture = opal::Texture::create(
+            opal::TextureType::Texture2D, opal::TextureFormat::DepthComponent24,
+            width, height, opal::TextureDataFormat::DepthComponent, nullptr, 1);
+        opal::Attachment depthAttachment;
+        depthAttachment.texture = depthTexture;
+        depthAttachment.type = opal::Attachment::Type::Depth;
+        fb->addAttachment(depthAttachment);
 
-        GLuint depthTexture;
-        glGenTextures(1, &depthTexture);
-        glBindTexture(GL_TEXTURE_2D, depthTexture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, width, height, 0,
-                     GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-                               GL_TEXTURE_2D, depthTexture, 0);
-        this->depthTexture.id = depthTexture;
+        this->depthTexture.texture = depthTexture;
         this->depthTexture.creationData.width = scaledWidth;
         this->depthTexture.creationData.height = scaledHeight;
         this->depthTexture.type = TextureType::Depth;
 
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) !=
-            GL_FRAMEBUFFER_COMPLETE) {
+        if (fb->getStatus() == false) {
             std::cerr << "Error: Framebuffer is not complete!" << std::endl;
         }
 
         texture.creationData.width = scaledWidth;
         texture.creationData.height = scaledHeight;
         texture.type = TextureType::Color;
-        texture.id = colorTextures[0];
+        texture.texture = colorTextures[0];
 
         brightTexture.creationData.width = scaledWidth;
         brightTexture.creationData.height = scaledHeight;
         brightTexture.type = TextureType::Color;
-        brightTexture.id = colorTextures[1];
+        brightTexture.texture = colorTextures[1];
 
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glBindTexture(GL_TEXTURE_2D, 0);
-        glBindRenderbuffer(GL_RENDERBUFFER, 0);
+        fb->unbind();
     } else if (type == RenderTargetType::Multisampled) {
-        glGenFramebuffers(1, &fbo);
-        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-
         const int samples = 4;
 
-        GLuint colorTextures[2];
-        glGenTextures(2, colorTextures);
-        for (unsigned int i = 0; i < 2; i++) {
-            glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, colorTextures[i]);
-            glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples,
-                                    GL_RGBA16F, width, height, GL_TRUE);
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i,
-                                   GL_TEXTURE_2D_MULTISAMPLE, colorTextures[i],
-                                   0);
-        }
+        fb = opal::Framebuffer::create(width, height);
 
-        GLuint attachments[2] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
-        glDrawBuffers(2, attachments);
+        auto msColor0 = opal::Texture::createMultisampled(
+            opal::TextureFormat::Rgba16F, width, height, samples);
+        auto msColor1 = opal::Texture::createMultisampled(
+            opal::TextureFormat::Rgba16F, width, height, samples);
 
-        GLuint depthTexture;
-        glGenTextures(1, &depthTexture);
-        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, depthTexture);
-        glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples,
-                                GL_DEPTH_COMPONENT24, width, height, GL_TRUE);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-                               GL_TEXTURE_2D_MULTISAMPLE, depthTexture, 0);
+        opal::Attachment colorAttachment0;
+        colorAttachment0.texture = msColor0;
+        colorAttachment0.type = opal::Attachment::Type::Color;
+        fb->addAttachment(colorAttachment0);
 
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) !=
-            GL_FRAMEBUFFER_COMPLETE) {
+        opal::Attachment colorAttachment1;
+        colorAttachment1.texture = msColor1;
+        colorAttachment1.type = opal::Attachment::Type::Color;
+        fb->addAttachment(colorAttachment1);
+
+        auto msDepth = opal::Texture::createMultisampled(
+            opal::TextureFormat::DepthComponent24, width, height, samples);
+
+        opal::Attachment depthAttachment;
+        depthAttachment.texture = msDepth;
+        depthAttachment.type = opal::Attachment::Type::Depth;
+        fb->addAttachment(depthAttachment);
+
+        if (!fb->getStatus()) {
             std::cerr << "Error: Multisampled framebuffer is not complete!"
                       << std::endl;
         }
 
-        this->msTexture.id = colorTextures[0];
+        this->msTexture.texture = msColor0;
         this->msTexture.creationData.width = scaledWidth;
         this->msTexture.creationData.height = scaledHeight;
         this->msTexture.type = TextureType::Color;
 
-        this->msBrightTexture.id = colorTextures[1];
+        this->msBrightTexture.texture = msColor1;
         this->msBrightTexture.creationData.width = scaledWidth;
         this->msBrightTexture.creationData.height = scaledHeight;
         this->msBrightTexture.type = TextureType::Color;
 
-        this->msDepthTexture.id = depthTexture;
+        this->msDepthTexture.texture = msDepth;
         this->msDepthTexture.creationData.width = scaledWidth;
         this->msDepthTexture.creationData.height = scaledHeight;
         this->msDepthTexture.type = TextureType::Depth;
 
-        glGenFramebuffers(1, &resolveFbo);
-        glBindFramebuffer(GL_FRAMEBUFFER, resolveFbo);
+        resolveFb = opal::Framebuffer::create(width, height);
 
-        GLuint resolvedColor[2];
-        glGenTextures(2, resolvedColor);
-        for (int i = 0; i < 2; i++) {
-            glBindTexture(GL_TEXTURE_2D, resolvedColor[i]);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0,
-                         GL_RGBA, GL_FLOAT, nullptr);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i,
-                                   GL_TEXTURE_2D, resolvedColor[i], 0);
-        }
+        auto resolvedColor0 = opal::Texture::create(
+            opal::TextureType::Texture2D, opal::TextureFormat::Rgba16F, width,
+            height, opal::TextureDataFormat::Rgba, nullptr, 1);
+        resolvedColor0->setFilterMode(opal::TextureFilterMode::Linear,
+                                      opal::TextureFilterMode::Linear);
+        resolvedColor0->setWrapMode(opal::TextureAxis::S,
+                                    opal::TextureWrapMode::ClampToEdge);
+        resolvedColor0->setWrapMode(opal::TextureAxis::T,
+                                    opal::TextureWrapMode::ClampToEdge);
 
-        GLuint resolvedAttachments[2] = {GL_COLOR_ATTACHMENT0,
-                                         GL_COLOR_ATTACHMENT1};
-        glDrawBuffers(2, resolvedAttachments);
+        auto resolvedColor1 = opal::Texture::create(
+            opal::TextureType::Texture2D, opal::TextureFormat::Rgba16F, width,
+            height, opal::TextureDataFormat::Rgba, nullptr, 1);
+        resolvedColor1->setFilterMode(opal::TextureFilterMode::Linear,
+                                      opal::TextureFilterMode::Linear);
+        resolvedColor1->setWrapMode(opal::TextureAxis::S,
+                                    opal::TextureWrapMode::ClampToEdge);
+        resolvedColor1->setWrapMode(opal::TextureAxis::T,
+                                    opal::TextureWrapMode::ClampToEdge);
 
-        GLuint resolvedDepth;
-        glGenTextures(1, &resolvedDepth);
-        glBindTexture(GL_TEXTURE_2D, resolvedDepth);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, width, height, 0,
-                     GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-                               GL_TEXTURE_2D, resolvedDepth, 0);
+        opal::Attachment resolveColorAttachment0;
+        resolveColorAttachment0.texture = resolvedColor0;
+        resolveColorAttachment0.type = opal::Attachment::Type::Color;
+        resolveFb->addAttachment(resolveColorAttachment0);
 
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) !=
-            GL_FRAMEBUFFER_COMPLETE) {
+        opal::Attachment resolveColorAttachment1;
+        resolveColorAttachment1.texture = resolvedColor1;
+        resolveColorAttachment1.type = opal::Attachment::Type::Color;
+        resolveFb->addAttachment(resolveColorAttachment1);
+
+        auto resolvedDepth = opal::Texture::create(
+            opal::TextureType::Texture2D, opal::TextureFormat::DepthComponent24,
+            width, height, opal::TextureDataFormat::DepthComponent, nullptr, 1);
+        resolvedDepth->setFilterMode(opal::TextureFilterMode::Linear,
+                                     opal::TextureFilterMode::Linear);
+
+        opal::Attachment resolveDepthAttachment;
+        resolveDepthAttachment.texture = resolvedDepth;
+        resolveDepthAttachment.type = opal::Attachment::Type::Depth;
+        resolveFb->addAttachment(resolveDepthAttachment);
+
+        if (!resolveFb->getStatus()) {
             std::cerr << "Error: Resolve framebuffer is not complete!"
                       << std::endl;
         }
 
-        texture.id = resolvedColor[0];
+        texture.texture = resolvedColor0;
         texture.creationData.width = scaledWidth;
         texture.creationData.height = scaledHeight;
         texture.type = TextureType::Color;
 
-        brightTexture.id = resolvedColor[1];
+        brightTexture.texture = resolvedColor1;
         brightTexture.creationData.width = scaledWidth;
         brightTexture.creationData.height = scaledHeight;
         brightTexture.type = TextureType::Color;
 
-        depthTexture = resolvedDepth;
+        this->depthTexture.texture = resolvedDepth;
+        this->depthTexture.creationData.width = scaledWidth;
+        this->depthTexture.creationData.height = scaledHeight;
+        this->depthTexture.type = TextureType::Depth;
 
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+        resolveFb->unbind();
     } else if (this->type == RenderTargetType::Shadow) {
-        Id depthFBO;
-        glGenFramebuffers(1, &depthFBO);
-
         int SHADOW_WIDTH = resolution, SHADOW_HEIGHT = resolution;
 
-        Id depthMap;
-        glGenTextures(1, &depthMap);
-        glBindTexture(GL_TEXTURE_2D, depthMap);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH,
-                     SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        fb = opal::Framebuffer::create(SHADOW_WIDTH, SHADOW_HEIGHT);
 
-        glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-                               GL_TEXTURE_2D, depthMap, 0);
-        glDrawBuffer(GL_NONE);
-        glReadBuffer(GL_NONE);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        auto depthMap = opal::Texture::create(
+            opal::TextureType::Texture2D, opal::TextureFormat::DepthComponent24,
+            SHADOW_WIDTH, SHADOW_HEIGHT,
+            opal::TextureDataFormat::DepthComponent, nullptr, 1);
+        depthMap->setFilterMode(opal::TextureFilterMode::Nearest,
+                                opal::TextureFilterMode::Nearest);
+        depthMap->setWrapMode(opal::TextureAxis::S,
+                              opal::TextureWrapMode::Repeat);
+        depthMap->setWrapMode(opal::TextureAxis::T,
+                              opal::TextureWrapMode::Repeat);
 
-        Texture texture;
-        texture.id = depthMap;
+        opal::Attachment depthAttachment;
+        depthAttachment.texture = depthMap;
+        depthAttachment.type = opal::Attachment::Type::Depth;
+        fb->addAttachment(depthAttachment);
+        fb->disableColorBuffer();
+
+        if (!fb->getStatus()) {
+            std::cerr << "Error: Shadow framebuffer is not complete!"
+                      << std::endl;
+        }
+
+        texture.texture = depthMap;
         texture.creationData = {SHADOW_WIDTH, SHADOW_HEIGHT, 1};
         texture.type = TextureType::Depth;
 
-        this->fbo = depthFBO;
-        this->texture = texture;
-        this->rbo = 0;
-        this->resolveFbo = 0;
+        fb->unbind();
     } else if (this->type == RenderTargetType::CubeShadow) {
-        Id depthFBO;
-        glGenFramebuffers(1, &depthFBO);
-
         int SHADOW_WIDTH = resolution, SHADOW_HEIGHT = resolution;
 
-        Id depthCubemap;
-        glGenTextures(1, &depthCubemap);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, depthCubemap);
-        for (unsigned int i = 0; i < 6; ++i) {
-            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0,
-                         GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0,
-                         GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+        fb = opal::Framebuffer::create(SHADOW_WIDTH, SHADOW_HEIGHT);
+
+        auto depthCubemap = opal::Texture::createDepthCubemap(
+            opal::TextureFormat::DepthComponent24, SHADOW_WIDTH);
+
+        fb->attachCubemap(depthCubemap, opal::Attachment::Type::Depth);
+        fb->disableColorBuffer();
+
+        if (!fb->getStatus()) {
+            std::cerr << "Error: CubeShadow framebuffer is not complete!"
+                      << std::endl;
         }
 
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S,
-                        GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T,
-                        GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R,
-                        GL_CLAMP_TO_EDGE);
-
-        glBindFramebuffer(GL_FRAMEBUFFER, depthFBO);
-        glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthCubemap,
-                             0);
-        glDrawBuffer(GL_NONE);
-        glReadBuffer(GL_NONE);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-        Texture texture;
-        texture.id = depthCubemap;
+        texture.texture = depthCubemap;
         texture.creationData = {SHADOW_WIDTH, SHADOW_HEIGHT, 1};
         texture.type = TextureType::DepthCube;
-        this->fbo = depthFBO;
-        this->texture = texture;
-        this->rbo = 0;
-        this->resolveFbo = 0;
-    } else if (this->type == RenderTargetType::GBuffer) {
-        glGenFramebuffers(1, &fbo);
-        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
-        glGenTextures(1, &gPosition.id);
-        glBindTexture(GL_TEXTURE_2D, gPosition.id);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA,
-                     GL_FLOAT, nullptr);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                               GL_TEXTURE_2D, gPosition.id, 0);
+        fb->unbind();
+    } else if (this->type == RenderTargetType::GBuffer) {
+        fb = opal::Framebuffer::create(width, height);
+
+        auto positionTex = opal::Texture::create(
+            opal::TextureType::Texture2D, opal::TextureFormat::Rgba16F, width,
+            height, opal::TextureDataFormat::Rgba, nullptr, 1);
+        positionTex->setFilterMode(opal::TextureFilterMode::Nearest,
+                                   opal::TextureFilterMode::Nearest);
+        positionTex->setWrapMode(opal::TextureAxis::S,
+                                 opal::TextureWrapMode::ClampToEdge);
+        positionTex->setWrapMode(opal::TextureAxis::T,
+                                 opal::TextureWrapMode::ClampToEdge);
+
+        opal::Attachment positionAttachment;
+        positionAttachment.texture = positionTex;
+        positionAttachment.type = opal::Attachment::Type::Color;
+        fb->addAttachment(positionAttachment);
+
+        gPosition.texture = positionTex;
         gPosition.creationData.width = scaledWidth;
         gPosition.creationData.height = scaledHeight;
         gPosition.type = TextureType::Color;
 
-        glGenTextures(1, &gNormal.id);
-        glBindTexture(GL_TEXTURE_2D, gNormal.id);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, width, height, 0, GL_RGBA,
-                     GL_FLOAT, nullptr);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1,
-                               GL_TEXTURE_2D, gNormal.id, 0);
+        auto normalTex = opal::Texture::create(
+            opal::TextureType::Texture2D, opal::TextureFormat::Rgba16F, width,
+            height, opal::TextureDataFormat::Rgba, nullptr, 1);
+        normalTex->setFilterMode(opal::TextureFilterMode::Nearest,
+                                 opal::TextureFilterMode::Nearest);
+        normalTex->setWrapMode(opal::TextureAxis::S,
+                               opal::TextureWrapMode::ClampToEdge);
+        normalTex->setWrapMode(opal::TextureAxis::T,
+                               opal::TextureWrapMode::ClampToEdge);
+
+        opal::Attachment normalAttachment;
+        normalAttachment.texture = normalTex;
+        normalAttachment.type = opal::Attachment::Type::Color;
+        fb->addAttachment(normalAttachment);
+
+        gNormal.texture = normalTex;
         gNormal.creationData.width = scaledWidth;
         gNormal.creationData.height = scaledHeight;
         gNormal.type = TextureType::Color;
 
-        glGenTextures(1, &gAlbedoSpec.id);
-        glBindTexture(GL_TEXTURE_2D, gAlbedoSpec.id);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
-                     GL_UNSIGNED_BYTE, nullptr);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2,
-                               GL_TEXTURE_2D, gAlbedoSpec.id, 0);
+        auto albedoTex = opal::Texture::create(
+            opal::TextureType::Texture2D, opal::TextureFormat::Rgba8, width,
+            height, opal::TextureDataFormat::Rgba, nullptr, 1);
+        albedoTex->setFilterMode(opal::TextureFilterMode::Nearest,
+                                 opal::TextureFilterMode::Nearest);
+        albedoTex->setWrapMode(opal::TextureAxis::S,
+                               opal::TextureWrapMode::ClampToEdge);
+        albedoTex->setWrapMode(opal::TextureAxis::T,
+                               opal::TextureWrapMode::ClampToEdge);
+
+        opal::Attachment albedoAttachment;
+        albedoAttachment.texture = albedoTex;
+        albedoAttachment.type = opal::Attachment::Type::Color;
+        fb->addAttachment(albedoAttachment);
+
+        gAlbedoSpec.texture = albedoTex;
         gAlbedoSpec.creationData.width = scaledWidth;
         gAlbedoSpec.creationData.height = scaledHeight;
         gAlbedoSpec.type = TextureType::Color;
 
-        glGenTextures(1, &gMaterial.id);
-        glBindTexture(GL_TEXTURE_2D, gMaterial.id);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
-                     GL_UNSIGNED_BYTE, nullptr);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT3,
-                               GL_TEXTURE_2D, gMaterial.id, 0);
+        auto materialTex = opal::Texture::create(
+            opal::TextureType::Texture2D, opal::TextureFormat::Rgba8, width,
+            height, opal::TextureDataFormat::Rgba, nullptr, 1);
+        materialTex->setFilterMode(opal::TextureFilterMode::Nearest,
+                                   opal::TextureFilterMode::Nearest);
+        materialTex->setWrapMode(opal::TextureAxis::S,
+                                 opal::TextureWrapMode::ClampToEdge);
+        materialTex->setWrapMode(opal::TextureAxis::T,
+                                 opal::TextureWrapMode::ClampToEdge);
+
+        opal::Attachment materialAttachment;
+        materialAttachment.texture = materialTex;
+        materialAttachment.type = opal::Attachment::Type::Color;
+        fb->addAttachment(materialAttachment);
+
+        gMaterial.texture = materialTex;
         gMaterial.creationData.width = scaledWidth;
         gMaterial.creationData.height = scaledHeight;
         gMaterial.type = TextureType::Color;
 
-        glGenTextures(1, &depthTexture.id);
-        glBindTexture(GL_TEXTURE_2D, depthTexture.id);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, width, height, 0,
-                     GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-                               GL_TEXTURE_2D, depthTexture.id, 0);
+        auto gbufferDepth = opal::Texture::create(
+            opal::TextureType::Texture2D, opal::TextureFormat::DepthComponent24,
+            width, height, opal::TextureDataFormat::DepthComponent, nullptr, 1);
+        gbufferDepth->setFilterMode(opal::TextureFilterMode::Nearest,
+                                    opal::TextureFilterMode::Nearest);
+        gbufferDepth->setWrapMode(opal::TextureAxis::S,
+                                  opal::TextureWrapMode::ClampToEdge);
+        gbufferDepth->setWrapMode(opal::TextureAxis::T,
+                                  opal::TextureWrapMode::ClampToEdge);
+
+        opal::Attachment gbufferDepthAttachment;
+        gbufferDepthAttachment.texture = gbufferDepth;
+        gbufferDepthAttachment.type = opal::Attachment::Type::Depth;
+        fb->addAttachment(gbufferDepthAttachment);
+
+        depthTexture.texture = gbufferDepth;
         depthTexture.creationData.width = scaledWidth;
         depthTexture.creationData.height = scaledHeight;
         depthTexture.type = TextureType::Depth;
 
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) !=
-            GL_FRAMEBUFFER_COMPLETE) {
+        if (!fb->getStatus()) {
             std::cerr << "Error: GBuffer Framebuffer is not complete!"
                       << std::endl;
         }
 
-        unsigned int attachments[4] = {
-            GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2,
-            GL_COLOR_ATTACHMENT3};
-        glDrawBuffers(4, attachments);
+        fb->unbind();
     } else if (this->type == RenderTargetType::SSAO) {
-        glGenFramebuffers(1, &fbo);
-        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+        fb = opal::Framebuffer::create(width, height);
 
-        glGenTextures(1, &texture.id);
-        glBindTexture(GL_TEXTURE_2D, texture.id);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED,
-                     GL_FLOAT, nullptr);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                               GL_TEXTURE_2D, texture.id, 0);
+        auto ssaoTex = opal::Texture::create(
+            opal::TextureType::Texture2D, opal::TextureFormat::Red8, width,
+            height, opal::TextureDataFormat::Red, nullptr, 1);
+        ssaoTex->setFilterMode(opal::TextureFilterMode::Nearest,
+                               opal::TextureFilterMode::Nearest);
+        ssaoTex->setWrapMode(opal::TextureAxis::S,
+                             opal::TextureWrapMode::ClampToEdge);
+        ssaoTex->setWrapMode(opal::TextureAxis::T,
+                             opal::TextureWrapMode::ClampToEdge);
 
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) !=
-            GL_FRAMEBUFFER_COMPLETE) {
+        opal::Attachment ssaoAttachment;
+        ssaoAttachment.texture = ssaoTex;
+        ssaoAttachment.type = opal::Attachment::Type::Color;
+        fb->addAttachment(ssaoAttachment);
+
+        if (!fb->getStatus()) {
             std::cerr << "Error: SSAO Framebuffer is not complete!"
                       << std::endl;
         }
 
+        texture.texture = ssaoTex;
         texture.creationData.width = scaledWidth;
         texture.creationData.height = scaledHeight;
         texture.type = TextureType::SSAO;
 
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        fb->unbind();
     } else if (this->type == RenderTargetType::SSAOBlur) {
-        glGenFramebuffers(1, &fbo);
-        glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+        fb = opal::Framebuffer::create(width, height);
 
-        glGenTextures(1, &texture.id);
-        glBindTexture(GL_TEXTURE_2D, texture.id);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED,
-                     GL_FLOAT, nullptr);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                               GL_TEXTURE_2D, texture.id, 0);
+        auto ssaoBlurTex = opal::Texture::create(
+            opal::TextureType::Texture2D, opal::TextureFormat::Red8, width,
+            height, opal::TextureDataFormat::Red, nullptr, 1);
+        ssaoBlurTex->setFilterMode(opal::TextureFilterMode::Nearest,
+                                   opal::TextureFilterMode::Nearest);
+        ssaoBlurTex->setWrapMode(opal::TextureAxis::S,
+                                 opal::TextureWrapMode::ClampToEdge);
+        ssaoBlurTex->setWrapMode(opal::TextureAxis::T,
+                                 opal::TextureWrapMode::ClampToEdge);
 
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) !=
-            GL_FRAMEBUFFER_COMPLETE) {
+        opal::Attachment ssaoBlurAttachment;
+        ssaoBlurAttachment.texture = ssaoBlurTex;
+        ssaoBlurAttachment.type = opal::Attachment::Type::Color;
+        fb->addAttachment(ssaoBlurAttachment);
+
+        if (!fb->getStatus()) {
             std::cerr << "Error: SSAO Blur Framebuffer is not complete!"
                       << std::endl;
         }
 
+        texture.texture = ssaoBlurTex;
         texture.creationData.width = scaledWidth;
         texture.creationData.height = scaledHeight;
         texture.type = TextureType::SSAO;
 
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        fb->unbind();
     } else {
         throw std::runtime_error("Unknown render target type");
     }
@@ -447,24 +465,19 @@ void RenderTarget::display(Window &window, float zindex) {
 }
 
 void RenderTarget::resolve() {
-    if (type == RenderTargetType::Multisampled) {
-        Size2d size = {static_cast<double>(texture.creationData.width),
-                       static_cast<double>(texture.creationData.height)};
-
-        glBindFramebuffer(GL_READ_FRAMEBUFFER, fbo);
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, resolveFbo);
-
+    if (type == RenderTargetType::Multisampled && fb && resolveFb) {
         for (int i = 0; i < 2; i++) {
-            glReadBuffer(GL_COLOR_ATTACHMENT0 + i);
-            glDrawBuffer(GL_COLOR_ATTACHMENT0 + i);
-            glBlitFramebuffer(0, 0, size.width, size.height, 0, 0, size.width,
-                              size.height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+            auto resolveAction =
+                opal::ResolveAction::createForColorAttachment(fb, resolveFb, i);
+            auto commandBuffer =
+                Window::mainWindow->device->acquireCommandBuffer();
+            commandBuffer->performResolve(resolveAction);
         }
 
-        glBlitFramebuffer(0, 0, size.width, size.height, 0, 0, size.width,
-                          size.height, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
-
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        auto depthResolveAction =
+            opal::ResolveAction::createForDepth(fb, resolveFb);
+        auto commandBuffer = Window::mainWindow->device->acquireCommandBuffer();
+        commandBuffer->performResolve(depthResolveAction);
     }
 
     if (type != RenderTargetType::Scene &&
@@ -472,13 +485,48 @@ void RenderTarget::resolve() {
         return;
     }
 
-    glBindTexture(GL_TEXTURE_2D, this->texture.id);
-    if (this->texture.id != 0) {
-        glGenerateMipmap(GL_TEXTURE_2D);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                        GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    if (this->texture.texture != nullptr) {
+        this->texture.texture->automaticallyGenerateMipmaps();
+        this->texture.texture->setFilterMode(
+            opal::TextureFilterMode::LinearMipmapLinear,
+            opal::TextureFilterMode::Linear);
     }
+}
+
+void RenderTarget::bind() {
+    if (fb) {
+        fb->bind();
+        fb->setViewport();
+    } else {
+        auto defaultFb =
+            Window::mainWindow->getDevice()->getDefaultFramebuffer();
+        defaultFb->bind();
+        defaultFb->setViewport(0, 0, texture.creationData.width,
+                               texture.creationData.height);
+    }
+}
+
+void RenderTarget::bindCubemapFace(int face) {
+    if (fb && texture.texture != nullptr) {
+        fb->attachCubemapFace(texture.texture, face,
+                              opal::Attachment::Type::Depth);
+        fb->bind();
+        fb->setViewport();
+    }
+}
+
+void RenderTarget::unbind() {
+    if (fb) {
+        fb->unbind();
+    }
+}
+
+std::shared_ptr<opal::Framebuffer> RenderTarget::getFramebuffer() const {
+    return fb;
+}
+
+std::shared_ptr<opal::Framebuffer> RenderTarget::getResolveFramebuffer() const {
+    return resolveFb;
 }
 
 int RenderTarget::getWidth() const {
@@ -545,120 +593,106 @@ void RenderTarget::show() {
     }
 }
 
-void RenderTarget::render(float dt) {
+void RenderTarget::render(float dt,
+                          std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                          bool updatePipeline) {
+    (void)updatePipeline;
     if (!object || !object->isVisible) {
         return;
+    }
+    if (commandBuffer == nullptr) {
+        throw std::runtime_error(
+            "RenderTarget::render requires a valid command buffer");
     }
 
     CoreObject *obj = this->object.get();
 
-    for (int i = 0; i < 16; i++) {
-        glActiveTexture(GL_TEXTURE0 + i);
-        glBindTexture(GL_TEXTURE_2D, 0);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+    static std::shared_ptr<opal::Pipeline> renderTargetPipeline = nullptr;
+    if (renderTargetPipeline == nullptr) {
+        renderTargetPipeline = opal::Pipeline::create();
     }
-
-    glActiveTexture(GL_TEXTURE0);
-
-    glBindVertexArray(0);
-
-    GLuint currentProgram;
-    glGetIntegerv(GL_CURRENT_PROGRAM, (GLint *)&currentProgram);
-    if (currentProgram != obj->shaderProgram.programId) {
-        glUseProgram(obj->shaderProgram.programId);
-    }
+    renderTargetPipeline =
+        obj->shaderProgram.requestPipeline(renderTargetPipeline);
+    renderTargetPipeline->bind();
 
     Camera *camera = Window::mainWindow->camera;
 
     if (texture.type == TextureType::DepthCube) {
-        glActiveTexture(GL_TEXTURE10);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, texture.id);
-        obj->shaderProgram.setUniform1i("cubeMap", 10);
-        obj->shaderProgram.setUniform1i("isCubeMap", 1);
+        renderTargetPipeline->bindTextureCubemap("cubeMap", texture.id, 10);
+        renderTargetPipeline->setUniform1i("isCubeMap", 1);
     } else {
         if (texture.id == 0) {
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, gMaterial.id);
-            obj->shaderProgram.setUniform1i("Texture", 0);
-            obj->shaderProgram.setUniform1i("isCubeMap", 0);
+            renderTargetPipeline->bindTexture2D("Texture", gMaterial.id, 0);
+            renderTargetPipeline->setUniform1i("isCubeMap", 0);
         } else {
-            glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, texture.id);
-            obj->shaderProgram.setUniform1i("Texture", 0);
-            obj->shaderProgram.setUniform1i("isCubeMap", 0);
+            renderTargetPipeline->bindTexture2D("Texture", texture.id, 0);
+            renderTargetPipeline->setUniform1i("isCubeMap", 0);
         }
 
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, blurredTexture.id);
-        obj->shaderProgram.setUniform1i("BrightTexture", 1);
-        obj->shaderProgram.setUniform1i("hasBrightTexture",
-                                        brightTexture.id != 0 ? 1 : 0);
+        renderTargetPipeline->bindTexture2D("BrightTexture", blurredTexture.id,
+                                            1);
+        renderTargetPipeline->setUniform1i("hasBrightTexture",
+                                           brightTexture.id != 0 ? 1 : 0);
 
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, depthTexture.id);
-        obj->shaderProgram.setUniform1i("DepthTexture", 2);
+        renderTargetPipeline->bindTexture2D("DepthTexture", depthTexture.id, 2);
         const bool hasDepth = depthTexture.id != 0;
-        obj->shaderProgram.setUniform1i("hasDepthTexture", hasDepth ? 1 : 0);
+        renderTargetPipeline->setUniform1i("hasDepthTexture", hasDepth ? 1 : 0);
 
-        glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, volumetricLightTexture.id);
-        obj->shaderProgram.setUniform1i("VolumetricLightTexture", 3);
-        obj->shaderProgram.setUniform1i("hasVolumetricLightTexture",
-                                        volumetricLightTexture.id > 1 ? 1 : 0);
+        renderTargetPipeline->bindTexture2D("VolumetricLightTexture",
+                                            volumetricLightTexture.id, 3);
+        renderTargetPipeline->setUniform1i(
+            "hasVolumetricLightTexture", volumetricLightTexture.id > 1 ? 1 : 0);
 
-        glActiveTexture(GL_TEXTURE4);
-        glBindTexture(GL_TEXTURE_2D, gPosition.id);
-        obj->shaderProgram.setUniform1i("PositionTexture", 4);
-        obj->shaderProgram.setUniform1i("hasPositionTexture",
-                                        gPosition.id != 0 ? 1 : 0);
+        renderTargetPipeline->bindTexture2D("PositionTexture", gPosition.id, 4);
+        renderTargetPipeline->setUniform1i("hasPositionTexture",
+                                           gPosition.id != 0 ? 1 : 0);
 
-        glActiveTexture(GL_TEXTURE5);
-        glBindTexture(GL_TEXTURE_2D, ssrTexture.id);
-        obj->shaderProgram.setUniform1i("SSRTexture", 5);
-        obj->shaderProgram.setUniform1i("hasSSRTexture",
-                                        ssrTexture.id != 0 ? 1 : 0);
+        renderTargetPipeline->bindTexture2D("SSRTexture", ssrTexture.id, 5);
+        renderTargetPipeline->setUniform1i("hasSSRTexture",
+                                           ssrTexture.id != 0 ? 1 : 0);
 
-        glActiveTexture(GL_TEXTURE6);
-        glBindTexture(GL_TEXTURE_2D, LUT.id);
-        obj->shaderProgram.setUniform1i("LUTTexture", 6);
-        obj->shaderProgram.setUniform1i("hasLUTTexture", LUT.id != 0 ? 1 : 0);
+        renderTargetPipeline->bindTexture2D("LUTTexture", LUT.id, 6);
+        renderTargetPipeline->setUniform1i("hasLUTTexture",
+                                           LUT.id != 0 ? 1 : 0);
 
         const glm::mat4 projectionMatrix =
             Window::mainWindow->calculateProjectionMatrix();
         const glm::mat4 viewMatrix =
             Window::mainWindow->getCamera()->calculateViewMatrix();
 
-        obj->shaderProgram.setUniformMat4f("projectionMatrix",
-                                           projectionMatrix);
-        obj->shaderProgram.setUniformMat4f("invProjectionMatrix",
-                                           glm::inverse(projectionMatrix));
+        renderTargetPipeline->setUniformMat4f("projectionMatrix",
+                                              projectionMatrix);
+        renderTargetPipeline->setUniformMat4f("invProjectionMatrix",
+                                              glm::inverse(projectionMatrix));
 
-        obj->shaderProgram.setUniformMat4f("viewMatrix", viewMatrix);
-        obj->shaderProgram.setUniformMat4f("invViewMatrix",
-                                           glm::inverse(viewMatrix));
-        obj->shaderProgram.setUniformMat4f("lastViewMatrix",
-                                           Window::mainWindow->lastViewMatrix);
-        obj->shaderProgram.setUniform3f("cameraPosition", camera->position.x,
-                                        camera->position.y, camera->position.z);
+        renderTargetPipeline->setUniformMat4f("viewMatrix", viewMatrix);
+        renderTargetPipeline->setUniformMat4f("invViewMatrix",
+                                              glm::inverse(viewMatrix));
+        renderTargetPipeline->setUniformMat4f(
+            "lastViewMatrix", Window::mainWindow->lastViewMatrix);
+        renderTargetPipeline->setUniform3f("cameraPosition", camera->position.x,
+                                           camera->position.y,
+                                           camera->position.z);
 
-        obj->shaderProgram.setUniform1f("nearPlane", camera->nearClip);
-        obj->shaderProgram.setUniform1f("farPlane", camera->farClip);
-        obj->shaderProgram.setUniform1f("focusDepth", camera->focusDepth);
-        obj->shaderProgram.setUniform1f("focusRange", camera->focusRange);
+        renderTargetPipeline->setUniform1f("nearPlane", camera->nearClip);
+        renderTargetPipeline->setUniform1f("farPlane", camera->farClip);
+        renderTargetPipeline->setUniform1f("focusDepth", camera->focusDepth);
+        renderTargetPipeline->setUniform1f("focusRange", camera->focusRange);
 
-        obj->shaderProgram.setUniform1f("deltaTime", dt);
-        obj->shaderProgram.setUniform1f("time", Window::mainWindow->getTime());
+        renderTargetPipeline->setUniform1f("deltaTime", dt);
+        renderTargetPipeline->setUniform1f("time",
+                                           Window::mainWindow->getTime());
 
         int maxMipLevels = (int)std::floor(
             std::log2(std::max(Window::mainWindow->getSize().width,
                                Window::mainWindow->getSize().height)));
 
-        obj->shaderProgram.setUniform1i("maxMipLevel", maxMipLevels);
+        renderTargetPipeline->setUniform1i("maxMipLevel", maxMipLevels);
 
         Scene *scene = Window::mainWindow->getCurrentScene();
-        obj->shaderProgram.setUniform1f("environment.fogIntensity",
-                                        scene->environment.fog.intensity);
-        obj->shaderProgram.setUniform3f(
+        renderTargetPipeline->setUniform1f("environment.fogIntensity",
+                                           scene->environment.fog.intensity);
+        renderTargetPipeline->setUniform3f(
             "environment.fogColor", scene->environment.fog.color.r,
             scene->environment.fog.color.g, scene->environment.fog.color.b);
 
@@ -685,79 +719,80 @@ void RenderTarget::render(float dt) {
                                           static_cast<float>(ambientColor.b)) *
                                 ambientIntensity;
 
-            glActiveTexture(GL_TEXTURE15);
-            glBindTexture(GL_TEXTURE_3D, cloudSettings.getCloudTexture(128));
-            obj->shaderProgram.setUniform1i("cloudsTexture", 15);
-            obj->shaderProgram.setUniform3f("cloudSize", cloudSize.x,
-                                            cloudSize.y, cloudSize.z);
-            obj->shaderProgram.setUniform3f("cloudPosition", cloudPos.x,
-                                            cloudPos.y, cloudPos.z);
-            obj->shaderProgram.setUniform1f("cloudScale", cloudSettings.scale);
-            obj->shaderProgram.setUniform3f(
+            renderTargetPipeline->bindTexture3D(
+                "cloudsTexture", cloudSettings.getCloudTexture(128), 15);
+            renderTargetPipeline->setUniform3f("cloudSize", cloudSize.x,
+                                               cloudSize.y, cloudSize.z);
+            renderTargetPipeline->setUniform3f("cloudPosition", cloudPos.x,
+                                               cloudPos.y, cloudPos.z);
+            renderTargetPipeline->setUniform1f("cloudScale",
+                                               cloudSettings.scale);
+            renderTargetPipeline->setUniform3f(
                 "cloudOffset", cloudSettings.offset.x, cloudSettings.offset.y,
                 cloudSettings.offset.z);
-            obj->shaderProgram.setUniform1f("cloudDensityThreshold",
-                                            cloudSettings.density);
-            obj->shaderProgram.setUniform1f("cloudDensityMultiplier",
-                                            cloudSettings.densityMultiplier);
-            obj->shaderProgram.setUniform1f("cloudAbsorption",
-                                            cloudSettings.absorption);
-            obj->shaderProgram.setUniform1f("cloudScattering",
-                                            cloudSettings.scattering);
-            obj->shaderProgram.setUniform1f("cloudPhaseG", cloudSettings.phase);
-            obj->shaderProgram.setUniform1f("cloudClusterStrength",
-                                            cloudSettings.clusterStrength);
-            obj->shaderProgram.setUniform1i(
+            renderTargetPipeline->setUniform1f("cloudDensityThreshold",
+                                               cloudSettings.density);
+            renderTargetPipeline->setUniform1f("cloudDensityMultiplier",
+                                               cloudSettings.densityMultiplier);
+            renderTargetPipeline->setUniform1f("cloudAbsorption",
+                                               cloudSettings.absorption);
+            renderTargetPipeline->setUniform1f("cloudScattering",
+                                               cloudSettings.scattering);
+            renderTargetPipeline->setUniform1f("cloudPhaseG",
+                                               cloudSettings.phase);
+            renderTargetPipeline->setUniform1f("cloudClusterStrength",
+                                               cloudSettings.clusterStrength);
+            renderTargetPipeline->setUniform1i(
                 "cloudPrimarySteps",
                 std::max(1, cloudSettings.primaryStepCount));
-            obj->shaderProgram.setUniform1i(
+            renderTargetPipeline->setUniform1i(
                 "cloudLightSteps", std::max(1, cloudSettings.lightStepCount));
-            obj->shaderProgram.setUniform1f("cloudLightStepMultiplier",
-                                            cloudSettings.lightStepMultiplier);
-            obj->shaderProgram.setUniform1f("cloudMinStepLength",
-                                            cloudSettings.minStepLength);
-            obj->shaderProgram.setUniform3f("sunDirection", sunDir.x, sunDir.y,
-                                            sunDir.z);
-            obj->shaderProgram.setUniform3f(
+            renderTargetPipeline->setUniform1f(
+                "cloudLightStepMultiplier", cloudSettings.lightStepMultiplier);
+            renderTargetPipeline->setUniform1f("cloudMinStepLength",
+                                               cloudSettings.minStepLength);
+            renderTargetPipeline->setUniform3f("sunDirection", sunDir.x,
+                                               sunDir.y, sunDir.z);
+            renderTargetPipeline->setUniform3f(
                 "sunColor", static_cast<float>(sunColor.r),
                 static_cast<float>(sunColor.g), static_cast<float>(sunColor.b));
-            obj->shaderProgram.setUniform1f("sunIntensity", sunIntensity);
-            obj->shaderProgram.setUniform3f("cloudAmbientColor", ambient.x,
-                                            ambient.y, ambient.z);
-            obj->shaderProgram.setUniform1i("hasClouds", 1);
+            renderTargetPipeline->setUniform1f("sunIntensity", sunIntensity);
+            renderTargetPipeline->setUniform3f("cloudAmbientColor", ambient.x,
+                                               ambient.y, ambient.z);
+            renderTargetPipeline->setUniform1i("hasClouds", 1);
         } else {
-            glActiveTexture(GL_TEXTURE15);
-            glBindTexture(GL_TEXTURE_3D, 0);
-            obj->shaderProgram.setUniform1i("cloudsTexture", 15);
-            obj->shaderProgram.setUniform1i("hasClouds", 0);
+            renderTargetPipeline->bindTexture3D("cloudsTexture", 0, 15);
+            renderTargetPipeline->setUniform1i("hasClouds", 0);
         }
     }
 
-    obj->shaderProgram.setUniform1i("TextureType",
-                                    static_cast<int>(texture.type));
-    obj->shaderProgram.setUniform1i("EffectCount", effects.size());
+    renderTargetPipeline->setUniform1i("TextureType",
+                                       static_cast<int>(texture.type));
+    renderTargetPipeline->setUniform1i("EffectCount", effects.size());
 
-    for (int i = 0; i < effects.size(); i++) {
+    for (size_t i = 0; i < effects.size(); i++) {
         std::string uniformName = "Effects[" + std::to_string(i) + "]";
-        obj->shaderProgram.setUniform1i(uniformName,
-                                        static_cast<int>(effects[i]->type));
+        renderTargetPipeline->setUniform1i(uniformName,
+                                           static_cast<int>(effects[i]->type));
         effects[i]->applyToProgram(obj->shaderProgram, i);
     }
 
-    glDisable(GL_DEPTH_TEST);
+    renderTargetPipeline->enableDepthTest(false);
+    renderTargetPipeline->enableBlending(true);
+    renderTargetPipeline->setBlendFunc(opal::BlendFunc::SrcAlpha,
+                                       opal::BlendFunc::OneMinusSrcAlpha);
+    renderTargetPipeline->bind();
 
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    glBindVertexArray(obj->vao);
-
+    commandBuffer->bindDrawingState(obj->vao);
     if (!obj->indices.empty()) {
-        glDrawElements(GL_TRIANGLES, obj->indices.size(), GL_UNSIGNED_INT, 0);
+        commandBuffer->drawIndexed(
+            static_cast<unsigned int>(obj->indices.size()), 1, 0, 0, 0);
     } else {
-        glDrawArrays(GL_TRIANGLES, 0, obj->vertices.size());
+        commandBuffer->draw(static_cast<unsigned int>(obj->vertices.size()), 1,
+                            0, 0);
     }
+    commandBuffer->unbindDrawingState();
 
-    glBindVertexArray(0);
-
-    glEnable(GL_DEPTH_TEST);
+    renderTargetPipeline->enableDepthTest(true);
+    renderTargetPipeline->bind();
 }

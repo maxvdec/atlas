@@ -14,7 +14,6 @@
 #include "aurora/terrain.h"
 #include "hydra/atmosphere.h"
 #include "hydra/fluid.h"
-#include <iostream>
 #include <memory>
 
 class SphereCube : public CompoundObject {
@@ -24,7 +23,7 @@ class SphereCube : public CompoundObject {
   public:
     void init() override {
         cube = createDebugBox({0.5f, 0.5f, 0.5f});
-        cube.setPosition({-1.0, cube.getPosition().y, 0.0});
+        cube.setPosition({-1.0f, cube.getPosition().y, 0.0f});
         cube.initialize();
         cube.body->applyMass(0); // Make it static
         this->addObject(&cube);
@@ -35,7 +34,7 @@ class SphereCube : public CompoundObject {
         }
 
         sphere = createDebugSphere(0.25f);
-        sphere.setPosition({1.0, sphere.getPosition().y, 0.0});
+        sphere.setPosition({1.0f, sphere.getPosition().y, 0.0f});
         sphere.initialize();
         sphere.body->applyMass(0); // Make it static
         this->addObject(&sphere);
@@ -82,16 +81,15 @@ class WaterPot : public CompoundObject {
 
   public:
     void init() override {
-        pot = createBox({1.0, 0.25, 0.25}, Color(0.6f, 0.4f, 0.2f));
+        pot = createBox({1.0f, 0.25f, 0.25f}, Color(0.6f, 0.4f, 0.2f));
 
-        Instance &potLeft = pot.createInstance();
         Instance &potRight = pot.createInstance();
         potRight.move({0.0f, 0.0f, 1.0f});
         Instance &potDown = pot.createInstance();
-        potDown.rotate({0.0, 90.0f, 0.0});
+        potDown.rotate({0.0f, 90.0f, 0.0f});
         potDown.move({-0.5f, 0.0f, 0.5f});
         Instance &potUp = pot.createInstance();
-        potUp.rotate({0.0, -90.0f, 0.0});
+        potUp.rotate({0.0f, -90.0f, 0.0f});
         potUp.move({0.5f, 0.0f, 0.5f});
         pot.initialize();
         this->addObject(&pot);
@@ -129,6 +127,7 @@ class MainScene : public Scene {
     AreaLight areaLight;
     ParticleEmitter emitter;
     WaterPot waterPot;
+    Model sponza;
 
     bool doesUpdate = true;
     bool fall = false;
@@ -189,83 +188,28 @@ class MainScene : public Scene {
         camera.farClip = 1000.f;
         window.setCamera(&camera);
 
-        ground = createBox({5.0f, 0.1f, 5.0f}, Color(0.3f, 0.8f, 0.3f));
-        ground.attachTexture(
-            Texture::fromResource(Workspace::get().createResource(
-                "ground.jpg", "GroundTexture", ResourceType::Image)));
-        ground.setPosition({0.0f, -0.1f, 0.0f});
-        window.addObject(&ground);
+        sponza = Model();
+        sponza.fromResource(Workspace::get().createResource(
+            "sponza.obj", "SponzaModel", ResourceType::Model));
+        sponza.setScale({0.01f, 0.01f, 0.01f});
 
-        areaLight.position = {0.0f, 2.0f, 0.0};
-        areaLight.rotate({0.0f, 90.0f, 0.0f});
-        areaLight.castsBothSides = true;
-        this->addAreaLight(&areaLight);
-        areaLight.createDebugObject();
-        areaLight.addDebugObject(window);
+        sponza.material.albedo = Color(1.0, 0.0, 0.0, 1.0);
 
         Resource fontResource = Workspace::get().createResource(
-            "arial.ttf", "Arial", ResourceType::Font);
+            "arial.ttf", "ArialFont", ResourceType::Font);
 
-        fpsText = Text("FPS: 0", Font::fromResource("Arial", fontResource, 24),
-                       {25.0, 25.0}, Color::white());
+        this->setAmbientIntensity(1.0f);
 
-        fpsText.addTraitComponent<Text>(FPSTextUpdater());
-        window.addUIObject(&fpsText);
+        window.addObject(&sponza);
 
-        ball = createDebugSphere(0.5f, 76, 76);
-        ball.body->applyMass(0.0);
-        ball.material.metallic = 1.0f;
-        ball.material.roughness = 0.0f;
-        ball.move({0.f, 1.0f, 1.0});
-        window.addObject(&ball);
-
-        ball2 = createDebugSphere(0.5f, 76, 76);
-        ball2.body->applyMass(0.0);
-        ball2.move({0.f, 1.0f, -1.0});
-        window.addObject(&ball2);
-
-        Resource heightmapResource = Workspace::get().createResource(
-            "terrain/heightmap.png", "Heightmap", ResourceType::Image);
-
-        CompoundGenerator compoundGen;
-        compoundGen.addGenerator(MountainGenerator(0.01f, 1.f, 5, 0.5f));
-
-        terrain = Terrain(heightmapResource);
-        terrain.move({20.f, 0.0, 0.0});
-        Biome grasslandBiome =
-            Biome("Grassland", Color(0.1f, 0.8f, 0.1f, 1.0f));
-        grasslandBiome.condition = [](Biome &biome) {
-            biome.maxHeight = 10.0f;
-        };
-        terrain.addBiome(grasslandBiome);
-
-        Biome mountainBiome = Biome("Mountain", Color(0.5f, 0.5f, 0.5f, 1.0f));
-        mountainBiome.condition = [](Biome &biome) {
-            biome.minHeight = 10.0f;
-            biome.maxHeight = 150.0f;
-        };
-        terrain.addBiome(mountainBiome);
-
-        Biome snowBiome = Biome("Snow", Color(4.0f, 4.0f, 4.0f, 4.0f));
-        snowBiome.condition = [](Biome &biome) { biome.minHeight = 150.0f; };
-        terrain.addBiome(snowBiome);
-        terrain.resolution = 100;
-        terrain.maxPeak = 100.f;
-
-        light = DirectionalLight({1.0f, -0.3f, 0.5f}, Color::white());
-
-        frameBuffer = RenderTarget(window);
-        window.addRenderTarget(&frameBuffer);
-        frameBuffer.display(window);
-
-        window.useDeferredRendering();
+        // window.useDeferredRendering();
         atmosphere.enable();
         atmosphere.secondsPerHour = 4.f;
-        atmosphere.setTime(12.0);
-        atmosphere.cycle = false;
+        atmosphere.setTime(12);
+        atmosphere.cycle = true;
         atmosphere.useGlobalLight();
-        atmosphere.wind = {0.1f, 0.0f, 0.0f};
-        atmosphere.castShadowsFromSunlight(4096);
+
+        // atmosphere.castShadowsFromSunlight(4096);
     }
 };
 

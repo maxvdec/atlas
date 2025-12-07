@@ -1,0 +1,77 @@
+# -----------------------------
+# General project info
+# -----------------------------
+PROJECT_NAME           = "Atlas"
+PROJECT_NUMBER         = "Alpha 5"
+PROJECT_BRIEF          = "Build everything, and beyond"
+
+# -----------------------------
+# Input files
+# -----------------------------
+INPUT                  = include docs/pages docs/pages/images
+RECURSIVE              = YES
+
+# -----------------------------
+# Output
+# -----------------------------
+OUTPUT_DIRECTORY       = docs
+GENERATE_LATEX         = NO
+GENERATE_TREEVIEW      = YES
+TREEVIEW_WIDTH         = 335
+
+# -----------------------------
+# Source browsing
+# -----------------------------
+SOURCE_BROWSER         = YES
+INLINE_SOURCES         = YES
+STRIP_CODE_COMMENTS    = NO
+REFERENCES_RELATION    = YES
+CALL_GRAPH             = YES
+CALLER_GRAPH           = YES
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = NO
+EXTRACT_STATIC         = YES
+
+# -----------------------------
+# Markdown / Math
+# -----------------------------
+MARKDOWN_SUPPORT       = YES
+USE_MDFILE_AS_MAINPAGE = docs/pages/main.md
+USE_MATHJAX            = YES
+
+# -----------------------------
+# HTML customization
+# -----------------------------
+HTML_HEADER            = docs/header.html
+HTML_EXTRA_STYLESHEET  = _deps/doxygen-awesome-css-src/doxygen-awesome.css \
+                         _deps/doxygen-awesome-css-src/doxygen-awesome-sidebar-only.css \
+                         _deps/doxygen-awesome-css-src/doxygen-awesome-sidebar-only-darkmode-toggle.css
+HTML_EXTRA_FILES       = _deps/doxygen-awesome-css-src/doxygen-awesome-darkmode-toggle.js \
+                         _deps/doxygen-awesome-css-src/doxygen-awesome-fragment-copy-button.js \
+                         _deps/doxygen-awesome-css-src/doxygen-awesome-paragraph-link.js \
+                         _deps/doxygen-awesome-css-src/doxygen-awesome-interactive-toc.js \
+                         docs/pages/resources/ambient.png \
+                         docs/pages/resources/camera.png \
+                         docs/pages/resources/compound.png \
+                         docs/pages/resources/create-window.png \
+                         docs/pages/resources/fall-ball.png \
+                         docs/pages/resources/lit-scene.png \
+                         docs/pages/resources/moving.png \
+                         docs/pages/resources/nx.png \
+                         docs/pages/resources/ny.png \
+                         docs/pages/resources/nz.png \
+                         docs/pages/resources/plane.png \
+                         docs/pages/resources/px.png \
+                         docs/pages/resources/py.png \
+                         docs/pages/resources/pz.png \
+                         docs/pages/resources/result.png \
+                         docs/pages/resources/shadows.png \
+                         docs/pages/resources/skybox.png \
+                         docs/pages/resources/text.png \
+                         docs/pages/resources/unlit-scene.png
+
+HTML_COPY_CLIPBOARD     = NO
+HTML_COLORSTYLE         = LIGHT
+PAGE_OUTLINE_PANEL      = NO
+FULL_SIDEBAR            = NO
+DISABLE_INDEX           = NO

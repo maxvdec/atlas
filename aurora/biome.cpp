@@ -9,13 +9,12 @@
 
 #include "atlas/texture.h"
 #include "aurora/terrain.h"
+#include "opal/opal.h"
 #include <algorithm>
 #include <cstdint>
 #include <cstdlib>
-#include <iostream>
 #include <sys/types.h>
 #include <vector>
-#include <glad/glad.h>
 
 float aurora::computeSlope(const uint8_t *heightMap, int width, int height,
                            int x, int y) {
@@ -34,7 +33,6 @@ float aurora::computeSlope(const uint8_t *heightMap, int width, int height,
 
 void Terrain::generateMaps(unsigned char *heightmapData, int height, int width,
                            int generationParameter, int nChannels) {
-    const float waterLevel = 64.0f;
     const float maxHeight = 255.0f;
 
     for (int y = 0; y < height; ++y) {
@@ -82,8 +80,8 @@ void Terrain::generateBiomes(unsigned char *heightmapData, int height,
         generateMaps(heightmapData, width, height, 2, nChannels);
     } else {
         std::vector<uint8_t> data(width * height * 4);
-        glBindTexture(GL_TEXTURE_2D, moistureTexture.id);
-        glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.data());
+        moistureTexture.texture->readData(data.data(),
+                                          opal::TextureDataFormat::Rgba);
 
         for (int i = 0; i < width * height; ++i) {
             this->moistureData.push_back(data[i * 4]);
@@ -94,8 +92,8 @@ void Terrain::generateBiomes(unsigned char *heightmapData, int height,
         generateMaps(heightmapData, width, height, 1, nChannels);
     } else {
         std::vector<uint8_t> data(width * height * 4);
-        glBindTexture(GL_TEXTURE_2D, temperatureTexture.id);
-        glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data.data());
+        temperatureTexture.texture->readData(data.data(),
+                                             opal::TextureDataFormat::Rgba);
 
         for (int i = 0; i < width * height; ++i) {
             this->temperatureData.push_back(data[i * 4]);
@@ -106,22 +104,27 @@ void Terrain::generateBiomes(unsigned char *heightmapData, int height,
         return;
     }
 
-    glGenTextures(1, &moistureTexture.id);
-    glBindTexture(GL_TEXTURE_2D, moistureTexture.id);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED,
-                 GL_UNSIGNED_BYTE, moistureData.data());
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glGenTextures(1, &temperatureTexture.id);
-    glBindTexture(GL_TEXTURE_2D, temperatureTexture.id);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, width, height, 0, GL_RED,
-                 GL_UNSIGNED_BYTE, temperatureData.data());
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    moistureTexture.texture = opal::Texture::create(
+        opal::TextureType::Texture2D, opal::TextureFormat::Red8, width, height,
+        opal::TextureDataFormat::Red, moistureData.data(), 1);
+    moistureTexture.texture->setWrapMode(opal::TextureAxis::S,
+                                         opal::TextureWrapMode::Repeat);
+    moistureTexture.texture->setWrapMode(opal::TextureAxis::T,
+                                         opal::TextureWrapMode::Repeat);
+    moistureTexture.texture->setFilterMode(opal::TextureFilterMode::Linear,
+                                           opal::TextureFilterMode::Linear);
+    moistureTexture.id = moistureTexture.texture->textureID;
+
+    temperatureTexture.texture = opal::Texture::create(
+        opal::TextureType::Texture2D, opal::TextureFormat::Red8, width, height,
+        opal::TextureDataFormat::Red, temperatureData.data(), 1);
+    temperatureTexture.texture->setWrapMode(opal::TextureAxis::S,
+                                            opal::TextureWrapMode::Repeat);
+    temperatureTexture.texture->setWrapMode(opal::TextureAxis::T,
+                                            opal::TextureWrapMode::Repeat);
+    temperatureTexture.texture->setFilterMode(opal::TextureFilterMode::Linear,
+                                              opal::TextureFilterMode::Linear);
+    temperatureTexture.id = temperatureTexture.texture->textureID;
 
     for (auto &biome : biomes) {
         biome.condition(biome);

@@ -46,8 +46,7 @@ bool bezel::raySphere(const glm::vec3 &rayOrigin, const glm::vec3 &rayDirection,
     return true;
 }
 
-Bounds Sphere::getBounds(const glm::vec3 &pos,
-                         const glm::quat &orientation) const {
+Bounds Sphere::getBounds(const glm::vec3 &pos, const glm::quat &) const {
     Bounds bounds;
     glm::vec3 radiusVec(radius, radius, radius);
     bounds.expand(pos - radiusVec);
@@ -64,7 +63,7 @@ Bounds Sphere::getBounds() const {
 }
 
 glm::vec3 Sphere::support(const glm::vec3 &dir, const glm::vec3 &pos,
-                          const glm::quat &orientation, float bias) const {
+                          const glm::quat &, float bias) const {
 
     return pos + dir * (radius + bias);
 }

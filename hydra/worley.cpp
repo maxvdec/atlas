@@ -9,7 +9,7 @@
 
 #include <hydra/atmosphere.h>
 
-#include <glad/glad.h>
+#include <opal/opal.h>
 
 #include <algorithm>
 #include <cmath>
@@ -153,7 +153,7 @@ Id WorleyNoise3D::get3dTexture(int res) const {
         }
     });
 
-    return createTexture3d(data, resolution, GL_RGBA, GL_RGBA16F);
+    return createTexture3d(data, resolution);
 }
 
 Id WorleyNoise3D::getDetailTexture(int res) const {
@@ -202,7 +202,7 @@ Id WorleyNoise3D::getDetailTexture(int res) const {
         }
     });
 
-    return createTexture3d(data, resolution, GL_RGBA, GL_RGBA16F);
+    return createTexture3d(data, resolution);
 }
 
 Id WorleyNoise3D::get3dTextureAtAllChannels(int res) const {
@@ -238,7 +238,7 @@ Id WorleyNoise3D::get3dTextureAtAllChannels(int res) const {
         }
     });
 
-    return createTexture3d(data, resolution, GL_RGBA, GL_RGBA16F);
+    return createTexture3d(data, resolution);
 }
 
 void WorleyNoise3D::generateFeaturePoints() {
@@ -382,37 +382,26 @@ int WorleyNoise3D::getCellIndex(int cx, int cy, int cz) const {
            wrappedX;
 }
 
-Id WorleyNoise3D::createTexture3d(const std::vector<float> &data, int res,
-                                  GLenum format, GLenum internalFormat) const {
+Id WorleyNoise3D::createTexture3d(const std::vector<float> &data,
+                                  int res) const {
     if (data.empty() || res <= 0) {
         return 0;
     }
 
-    Id textureId = 0;
-    glGenTextures(1, &textureId);
-    if (textureId == 0) {
+    // Use opal to create the 3D texture
+    auto texture =
+        opal::Texture::create3D(opal::TextureFormat::Rgba16F, res, res, res,
+                                opal::TextureDataFormat::Rgba, data.data());
+
+    if (!texture) {
         return 0;
     }
 
-    GLint previousAlignment = 0;
-    glGetIntegerv(GL_UNPACK_ALIGNMENT, &previousAlignment);
-    GLint previousTexture = 0;
-    glGetIntegerv(GL_TEXTURE_BINDING_3D, &previousTexture);
+    // Set texture parameters using opal
+    texture->setParameters3D(
+        opal::TextureWrapMode::Repeat, opal::TextureWrapMode::Repeat,
+        opal::TextureWrapMode::Repeat, opal::TextureFilterMode::Linear,
+        opal::TextureFilterMode::Linear);
 
-    glBindTexture(GL_TEXTURE_3D, textureId);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    glTexImage3D(GL_TEXTURE_3D, 0, internalFormat, res, res, res, 0, format,
-                 GL_FLOAT, data.data());
-
-    glBindTexture(GL_TEXTURE_3D, previousTexture);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, previousAlignment);
-
-    return textureId;
+    return texture->textureID;
 }

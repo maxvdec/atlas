@@ -16,6 +16,7 @@
 #include "atlas/window.h"
 #include "atlas/workspace.h"
 #include <map>
+#include "opal/opal.h"
 #include <string>
 #include <vector>
 
@@ -24,11 +25,6 @@
  *
  */
 struct Character {
-    /**
-     * @brief The ID of the texture that contains the glyph.
-     *
-     */
-    unsigned int textureID;
     /**
      * @brief The size of the glyph.
      *
@@ -44,6 +40,16 @@ struct Character {
      *
      */
     unsigned int advance;
+    /**
+     * @brief The top-left UV coordinate in the atlas.
+     *
+     */
+    Position2d uvMin;
+    /**
+     * @brief The bottom-right UV coordinate in the atlas.
+     *
+     */
+    Position2d uvMax;
 };
 
 /**
@@ -88,6 +94,11 @@ struct Font {
      *
      */
     Resource resource;
+    /**
+     * @brief The texture atlas containing all glyphs.
+     *
+     */
+    std::shared_ptr<opal::Texture> texture;
 
     /**
      * @brief Creates a font from a resource.
@@ -184,10 +195,13 @@ class Text : public UIObject {
      * @brief Renders the text glyphs to the screen honoring kerning and font
      * metrics.
      */
-    void render(float dt) override;
+    void render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                bool updatePipeline = false) override;
 
   private:
-    Id VAO, VBO;
+    std::shared_ptr<opal::DrawingState> vao = nullptr;
+    std::shared_ptr<opal::Buffer> vertexBuffer = nullptr;
+    size_t vertexBufferCapacity = sizeof(float) * 6 * 4; // capacity in bytes
     glm::mat4 projection;
     ShaderProgram shader;
 };

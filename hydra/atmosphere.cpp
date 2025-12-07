@@ -182,7 +182,7 @@ void Atmosphere::update(float dt) {
         return;
 
     if (mainLight) {
-        mainLight->direction = getSunAngle();
+        mainLight->direction = getSunAngle() * -1.0f;
         mainLight->color = Color(getLightColor().r, getLightColor().g,
                                  getLightColor().b, getLightIntensity());
         Window::mainWindow->getCurrentScene()->setAmbientIntensity(
@@ -301,7 +301,7 @@ void Atmosphere::updateSkyCubemap(Cubemap &cubemap) const {
     auto colors = getSkyboxColors();
 
     if (skyboxCacheValid) {
-        double maxComponentDelta = 0.0;
+        float maxComponentDelta = 0.0;
         for (size_t face = 0; face < colors.size(); ++face) {
             const Color &newColor = colors[face];
             const Color &oldColor = lastSkyboxColors[face];

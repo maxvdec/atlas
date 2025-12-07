@@ -18,6 +18,7 @@
 #include "atlas/core/renderable.h"
 #include "atlas/units.h"
 #include "atlas/workspace.h"
+#include "opal/opal.h"
 #include <memory>
 #include <string>
 
@@ -174,6 +175,7 @@ struct Texture {
      *
      */
     Id id;
+    std::shared_ptr<opal::Texture> texture;
     /**
      * @brief The type of the texture (e.g., Color, Specular, Cubemap).
      *
@@ -278,8 +280,12 @@ struct Texture {
                                     Color borderColor = {0, 0, 0, 0});
 
   private:
-    static void applyWrappingMode(TextureWrappingMode mode, Id glAxis);
-    static void applyFilteringMode(TextureFilteringMode mode, bool isMinifying);
+    static void applyWrappingMode(TextureWrappingMode mode,
+                                  opal::TextureAxis axis,
+                                  std::shared_ptr<opal::Texture> texture);
+    static void applyFilteringModes(TextureFilteringMode minMode,
+                                    TextureFilteringMode magMode,
+                                    std::shared_ptr<opal::Texture> texture);
 };
 
 /**
@@ -302,6 +308,11 @@ struct Cubemap {
      *
      */
     Id id;
+    /**
+     * @brief The opal texture object.
+     *
+     */
+    std::shared_ptr<opal::Texture> texture;
     /**
      * @brief The type of the texture (Cubemap).
      *
@@ -483,7 +494,8 @@ class RenderTarget : public Renderable {
      * @brief Renders the quad representing this render target, applying any
      * queued post-processing effects.
      */
-    void render(float dt) override;
+    void render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                bool updatePipeline = false) override;
     /**
      * @brief Resolves the render target by copying multisampled buffers to
      * regular textures.
@@ -509,14 +521,44 @@ class RenderTarget : public Renderable {
         effects.push_back(effect);
     }
 
+    /**
+     * @brief Binds this render target's framebuffer for rendering.
+     */
+    void bind();
+
+    /**
+     * @brief Binds a specific face of a cubemap render target for rendering.
+     * Used for multi-pass cubemap rendering on platforms without geometry
+     * shaders.
+     * @param face The face index (0-5: +X, -X, +Y, -Y, +Z, -Z).
+     */
+    void bindCubemapFace(int face);
+
+    /**
+     * @brief Unbinds the framebuffer (binds the default framebuffer).
+     */
+    void unbind();
+
+    /**
+     * @brief Returns the primary framebuffer for this render target.
+     * @return The framebuffer, or nullptr if not created.
+     */
+    std::shared_ptr<opal::Framebuffer> getFramebuffer() const;
+
+    /**
+     * @brief Returns the resolve framebuffer for multisampled targets.
+     * @return The resolve framebuffer, or nullptr if not applicable.
+     */
+    std::shared_ptr<opal::Framebuffer> getResolveFramebuffer() const;
+
   private:
-    Id fbo = 0;
-    Id rbo = 0;
-    Id resolveFbo = 0;
+    std::shared_ptr<opal::Framebuffer> fb = nullptr;
+    std::shared_ptr<opal::Framebuffer> resolveFb = nullptr;
+    std::shared_ptr<opal::DepthStencilBuffer> renderbuffer = nullptr;
     std::vector<std::shared_ptr<Effect>> effects;
 
     friend class Window;
-    friend class Fluid;
+    friend struct Fluid;
 };
 
 /**
@@ -579,7 +621,8 @@ class Skybox : public Renderable {
     /**
      * @brief Renders the skybox cube using the stored cubemap texture.
      */
-    void render(float dt) override;
+    void render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                bool updatePipeline = false) override;
     /**
      * @brief Updates the view matrix while removing translation for correct
      * skybox rendering.
@@ -605,6 +648,7 @@ struct BloomElement {
     glm::vec2 size;
     glm::ivec2 intSize;
     Id textureId;
+    std::shared_ptr<opal::Texture> texture;
 };
 
 /**
@@ -651,14 +695,14 @@ class BloomRenderTarget {
 
     std::vector<BloomElement> elements;
     bool initialized = false;
-    Id fbo;
+    std::shared_ptr<opal::Framebuffer> framebuffer;
     glm::ivec2 srcViewportSize;
     glm::vec2 srcViewportSizef;
     ShaderProgram downsampleProgram;
     ShaderProgram upsampleProgram;
 
-    Id vao;
-    Id vbo;
+    std::shared_ptr<opal::DrawingState> quadState = nullptr;
+    std::shared_ptr<opal::Buffer> quadBuffer = nullptr;
 };
 
 #endif // TEXTURE_H

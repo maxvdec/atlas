@@ -9,6 +9,7 @@
 
 #include "bezel/bounds.h"
 #include "bezel/shape.h"
+#include <cstddef>
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <vector>
@@ -70,7 +71,7 @@ glm::vec3 Convex::support(const glm::vec3 &dir, const glm::vec3 &pos,
                           const glm::quat &orientation, float bias) const {
     glm::vec3 maxPt = orientation * vertices[0] + pos;
     float maxDist = glm::dot(maxPt, dir);
-    for (int i = 1; i < vertices.size(); i++) {
+    for (size_t i = 1; i < vertices.size(); i++) {
         glm::vec3 pt = orientation * vertices[i] + pos;
         float dist = glm::dot(pt, dir);
         if (dist > maxDist) {

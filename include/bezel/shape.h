@@ -39,12 +39,14 @@ class Shape {
                               const glm::quat &orientation,
                               float bias) const = 0;
 
-    virtual float fastestLinearSpeed(const glm::vec3 &linearVelocity,
-                                     const glm::vec3 &dir) const {
+    virtual float fastestLinearSpeed(const glm::vec3 &,
+                                     const glm::vec3 &) const {
         return 0.0f;
     }
 
-    virtual void build(const std::vector<glm::vec3> points) {};
+    virtual void build(const std::vector<glm::vec3>) {};
+
+    virtual ~Shape() = default;
 
   protected:
     glm::vec3 centerOfMass = {0.0f, 0.0f, 0.0f};
@@ -52,6 +54,19 @@ class Shape {
 
 /**
  * @brief Spherical collision shape with a defined radius.
+ *
+ * \subsection sphere-example Example
+ * ```cpp
+ * // Create a sphere shape with radius 2.5 units
+ * auto sphereShape = std::make_shared<Sphere>(2.5f);
+ *
+ * // Create a physics body with the sphere shape
+ * Body sphereBody;
+ * sphereBody.shape = sphereShape;
+ * sphereBody.position = Position3d(0.0f, 10.0f, 0.0f);
+ * sphereBody.mass = 5.0f;
+ * sphereBody.elasticity = 0.7f; // Bouncy ball
+ * ```
  *
  */
 class Sphere : public Shape {
@@ -78,6 +93,24 @@ class Sphere : public Shape {
 
 /**
  * @brief Box collision shape defined by a set of vertices.
+ *
+ * \subsection box-example Example
+ * ```cpp
+ * // Create a box shape from 8 corner vertices
+ * std::vector<glm::vec3> boxVertices = {
+ *     {-1.0f, -1.0f, -1.0f}, { 1.0f, -1.0f, -1.0f},
+ *     {-1.0f,  1.0f, -1.0f}, { 1.0f,  1.0f, -1.0f},
+ *     {-1.0f, -1.0f,  1.0f}, { 1.0f, -1.0f,  1.0f},
+ *     {-1.0f,  1.0f,  1.0f}, { 1.0f,  1.0f,  1.0f}
+ * };
+ * auto boxShape = std::make_shared<Box>(boxVertices);
+ *
+ * // Create a physics body with the box shape
+ * Body boxBody;
+ * boxBody.shape = boxShape;
+ * boxBody.position = Position3d(5.0f, 2.0f, 0.0f);
+ * boxBody.mass = 10.0f;
+ * ```
  *
  */
 class Box : public Shape {
@@ -111,6 +144,25 @@ class Box : public Shape {
 
 /**
  * @brief Convex hull collision shape built from a set of points.
+ *
+ * \subsection convex-example Example
+ * ```cpp
+ * // Create a convex hull from arbitrary point cloud
+ * // (e.g., from a 3D model)
+ * std::vector<glm::vec3> meshVertices = {
+ *     {0.0f, 2.0f, 0.0f},  // Top vertex
+ *     {-1.0f, 0.0f, -1.0f}, {1.0f, 0.0f, -1.0f},
+ *     {-1.0f, 0.0f,  1.0f}, {1.0f, 0.0f,  1.0f}
+ * };
+ * auto convexShape = std::make_shared<Convex>(meshVertices);
+ *
+ * // Use with physics body for complex object collision
+ * Body pyramidBody;
+ * pyramidBody.shape = convexShape;
+ * pyramidBody.position = Position3d(-5.0f, 8.0f, 0.0f);
+ * pyramidBody.mass = 15.0f;
+ * pyramidBody.friction = 0.6f;
+ * ```
  *
  */
 class Convex : public Shape {
@@ -177,6 +229,9 @@ struct Point {
     glm::vec3 ptB;
 
     Point() : xyz(0.0f), ptA(0.0f), ptB(0.0f) {}
+
+    Point(const Point &other)
+        : xyz(other.xyz), ptA(other.ptA), ptB(other.ptB) {}
 
     inline const Point &operator=(const Point &other) {
         xyz = other.xyz;
@@ -508,6 +563,14 @@ bool hasPoint(const std::array<Point, 4> &simplex, const Point &p);
  */
 bool hasPoint(const glm::vec3 &w, const std::vector<Triangle> &triangles,
               const std::vector<Point> &points);
+
+/**
+ * @brief Counts the number of valid points in a simplex based on lambda values.
+ *
+ * @param lambdas Barycentric coordinates.
+ * @return (int) Number of valid points.
+ */
+int numValids(const glm::vec4 &lambdas);
 /**
  * @brief Sorts valid points in a simplex based on lambda values.
  *
@@ -515,13 +578,6 @@ bool hasPoint(const glm::vec3 &w, const std::vector<Triangle> &triangles,
  * @param lambdas Barycentric coordinates for sorting.
  */
 void sortValids(std::array<Point, 4> &simplex, glm::vec4 &lambdas);
-/**
- * @brief Counts the number of valid lambda values.
- *
- * @param lambdas Barycentric coordinates to count.
- * @return (int) Number of valid values.
- */
-static int numValids(const glm::vec4 &lambdas);
 /**
  * @brief Performs GJK intersection test between two bodies.
  *

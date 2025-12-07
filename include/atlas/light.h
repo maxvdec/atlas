@@ -22,6 +22,103 @@
 
 class Window;
 
+// ============================================================================
+// GPU Buffer Structures - must match shader buffer layouts exactly
+// These are used with Pipeline::bindBuffer() for efficient GPU transfer
+// ============================================================================
+
+/**
+ * @brief GPU-compatible directional light structure for shader buffers.
+ * Matches the GLSL DirectionalLight struct in the shaders.
+ */
+struct alignas(16) GPUDirectionalLight {
+    glm::vec3 direction;
+    float _pad1;
+    glm::vec3 diffuse;
+    float _pad2;
+    glm::vec3 specular;
+    float _pad3;
+};
+
+/**
+ * @brief GPU-compatible point light structure for shader buffers.
+ * Matches the GLSL PointLight struct in the shaders.
+ */
+struct alignas(16) GPUPointLight {
+    glm::vec3 position;
+    float _pad1;
+    glm::vec3 diffuse;
+    float _pad2;
+    glm::vec3 specular;
+    float constant;
+    float linear;
+    float quadratic;
+    float radius;
+    float _pad3;
+};
+
+/**
+ * @brief GPU-compatible spotlight structure for shader buffers.
+ * Matches the GLSL SpotLight struct in the shaders.
+ */
+struct alignas(16) GPUSpotLight {
+    glm::vec3 position;
+    float _pad1;
+    glm::vec3 direction;
+    float cutOff;
+    float outerCutOff;
+    float _pad2;
+    float _pad3;
+    float _pad4;
+    glm::vec3 diffuse;
+    float _pad5;
+    glm::vec3 specular;
+    float _pad6;
+};
+
+/**
+ * @brief GPU-compatible area light structure for shader buffers.
+ * Matches the GLSL AreaLight struct in the shaders.
+ */
+struct alignas(16) GPUAreaLight {
+    glm::vec3 position;
+    float _pad1;
+    glm::vec3 right;
+    float _pad2;
+    glm::vec3 up;
+    float _pad3;
+    glm::vec2 size;
+    float _pad4;
+    float _pad5;
+    glm::vec3 diffuse;
+    float _pad6;
+    glm::vec3 specular;
+    float angle;
+    int castsBothSides;
+    float _pad7;
+    float _pad8;
+    float _pad9;
+};
+
+/**
+ * @brief GPU-compatible shadow parameters structure for shader buffers.
+ * Matches the GLSL ShadowParameters struct in the shaders.
+ */
+struct alignas(16) GPUShadowParams {
+    glm::mat4 lightView;
+    glm::mat4 lightProjection;
+    float bias;
+    int textureIndex;
+    float farPlane;
+    float _pad1;
+    glm::vec3 lightPos;
+    int isPointLight;
+};
+
+// ============================================================================
+// Original Light Structures
+// ============================================================================
+
 /**
  * @brief Structure representing ambient light in a scene. This is the most
  * straightforward type of light.
@@ -370,7 +467,7 @@ struct Spotlight {
               const Color &color = Color::white(), const float angle = 35.f,
               const float outerAngle = 40.f,
               const Color &shineColor = Color::white())
-        : position(pos), color(color), shineColor(shineColor), direction(dir),
+        : position(pos), direction(dir), color(color), shineColor(shineColor),
           cutOff(glm::cos(glm::radians(static_cast<double>(angle)))),
           outerCutoff(glm::cos(glm::radians(static_cast<double>(outerAngle)))) {
     }

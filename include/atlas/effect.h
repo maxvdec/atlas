@@ -12,7 +12,6 @@
 
 #include "atlas/core/shader.h"
 #include "atlas/units.h"
-#include <iostream>
 #include <memory>
 
 /**
@@ -104,7 +103,10 @@ class Effect {
      * @param program The shader program to apply the effect to.
      * @param index The index of the effect in the effect array.
      */
-    virtual void applyToProgram(ShaderProgram &program, int index) {};
+    virtual void applyToProgram([[maybe_unused]] ShaderProgram &program,
+                                [[maybe_unused]] int index) {};
+
+    virtual ~Effect() = default;
 };
 
 /**

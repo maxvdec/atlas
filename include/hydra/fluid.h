@@ -14,6 +14,7 @@
 #include "atlas/core/shader.h"
 #include "atlas/texture.h"
 #include "atlas/units.h"
+#include "opal/opal.h"
 #include <array>
 #include <glm/glm.hpp>
 #include <memory>
@@ -23,6 +24,29 @@ class Window;
 /**
  * @brief Dynamic water surface that captures reflections/refractions and
  * renders Gerstner-style waves.
+ *
+ * \subsection fluid-example Example
+ * ```cpp
+ * // Create a water surface with specific extent and color
+ * Fluid waterSurface;
+ * waterSurface.create(Size2d(100.0f, 100.0f), Color(0.1, 0.3, 0.6, 0.8));
+ * waterSurface.setPosition(Position3d(0.0f, -2.0f, 0.0f));
+ *
+ * // Configure wave animation
+ * waterSurface.setWaveVelocity(0.5f); // Wave movement speed
+ *
+ * // Load normal and movement textures for surface detail
+ * waterSurface.normalTexture = Texture::fromFile("water_normal.png");
+ * waterSurface.movementTexture = Texture::fromFile("water_flow.png");
+ *
+ * // Initialize and add to scene
+ * waterSurface.initialize();
+ * scene.addObject(&waterSurface);
+ *
+ * // The fluid automatically captures reflections and refractions
+ * // during the render pass
+ * ```
+ *
  */
 struct Fluid : GameObject {
     /**
@@ -54,13 +78,16 @@ struct Fluid : GameObject {
     /**
      * @brief Draws the water surface and applies screen-space effects.
      */
-    void render(float dt) override;
+    void render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                bool updatePipeline = false) override;
 
     /**
      * @brief Triggers the generation of reflection and refraction render
      * targets for the current frame.
      */
-    void updateCapture(Window &window);
+    void
+    updateCapture(Window &window,
+                  std::shared_ptr<opal::CommandBuffer> commandBuffer = nullptr);
 
     /**
      * @brief Stores the camera view matrix for shader consumption.
@@ -150,9 +177,9 @@ struct Fluid : GameObject {
     Color color{1.0, 0.0, 0.0, 1.0};
     ShaderProgram fluidShader;
 
-    unsigned int vao = 0;
-    unsigned int vbo = 0;
-    unsigned int ebo = 0;
+    std::shared_ptr<opal::DrawingState> drawingState = nullptr;
+    std::shared_ptr<opal::Buffer> vertexBuffer = nullptr;
+    std::shared_ptr<opal::Buffer> indexBuffer = nullptr;
 
     glm::mat4 modelMatrix{1.0f};
     glm::mat4 viewMatrix{1.0f};

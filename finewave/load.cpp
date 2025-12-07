@@ -79,7 +79,6 @@ std::shared_ptr<AudioData> AudioData::fromResource(Resource resource) {
 
     if (resource.path.extension() == ".mp3") {
         Mp3Data data{};
-        drmp3_config config;
         drmp3 mp3;
         if (!drmp3_init_file(&mp3, resource.path.c_str(), nullptr)) {
             throw std::runtime_error("Failed to open MP3 file");

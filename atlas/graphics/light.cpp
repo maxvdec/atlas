@@ -12,7 +12,6 @@
 #include "atlas/object.h"
 #include "atlas/texture.h"
 #include "atlas/window.h"
-#include <iostream>
 #include <tuple>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -51,23 +50,59 @@ PointLightConstants Light::calculateConstants() const {
         float distance, constant, linear, quadratic;
     };
     static const Entry table[] = {
-        {7, 1.0f, 0.7f, 1.8f},        {13, 1.0f, 0.35f, 0.44f},
-        {20, 1.0f, 0.22f, 0.20f},     {32, 1.0f, 0.14f, 0.07f},
-        {50, 1.0f, 0.09f, 0.032f},    {65, 1.0f, 0.07f, 0.017f},
-        {100, 1.0f, 0.045f, 0.0075f}, {160, 1.0f, 0.027f, 0.0028f},
-        {200, 1.0f, 0.022f, 0.0019f}, {325, 1.0f, 0.014f, 0.0007f},
-        {600, 1.0f, 0.007f, 0.0002f}, {3250, 1.0f, 0.0014f, 0.000007f},
+        {.distance = 7, .constant = 1.0f, .linear = 0.7f, .quadratic = 1.8f},
+        {.distance = 13, .constant = 1.0f, .linear = 0.35f, .quadratic = 0.44f},
+        {.distance = 20, .constant = 1.0f, .linear = 0.22f, .quadratic = 0.20f},
+        {.distance = 32, .constant = 1.0f, .linear = 0.14f, .quadratic = 0.07f},
+        {.distance = 50,
+         .constant = 1.0f,
+         .linear = 0.09f,
+         .quadratic = 0.032f},
+        {.distance = 65,
+         .constant = 1.0f,
+         .linear = 0.07f,
+         .quadratic = 0.017f},
+        {.distance = 100,
+         .constant = 1.0f,
+         .linear = 0.045f,
+         .quadratic = 0.0075f},
+        {.distance = 160,
+         .constant = 1.0f,
+         .linear = 0.027f,
+         .quadratic = 0.0028f},
+        {.distance = 200,
+         .constant = 1.0f,
+         .linear = 0.022f,
+         .quadratic = 0.0019f},
+        {.distance = 325,
+         .constant = 1.0f,
+         .linear = 0.014f,
+         .quadratic = 0.0007f},
+        {.distance = 600,
+         .constant = 1.0f,
+         .linear = 0.007f,
+         .quadratic = 0.0002f},
+        {.distance = 3250,
+         .constant = 1.0f,
+         .linear = 0.0014f,
+         .quadratic = 0.000007f},
     };
 
     const int n = sizeof(table) / sizeof(table[0]);
 
     if (distance <= table[0].distance) {
-        return {distance, table[0].constant, table[0].linear,
-                table[0].quadratic};
+        return {.distance = distance,
+                .constant = table[0].constant,
+                .linear = table[0].linear,
+                .quadratic = table[0].quadratic,
+                .radius = 0.0f};
     }
     if (distance >= table[n - 1].distance) {
-        return {distance, table[n - 1].constant, table[n - 1].linear,
-                table[n - 1].quadratic};
+        return {.distance = distance,
+                .constant = table[n - 1].constant,
+                .linear = table[n - 1].linear,
+                .quadratic = table[n - 1].quadratic,
+                .radius = 0.0f};
     }
 
     for (int i = 0; i < n - 1; i++) {
@@ -76,21 +111,30 @@ PointLightConstants Light::calculateConstants() const {
             float t = (distance - table[i].distance) /
                       (table[i + 1].distance - table[i].distance);
             float constant = table[i].constant +
-                             t * (table[i + 1].constant - table[i].constant);
+                             (t * (table[i + 1].constant - table[i].constant));
             float linear =
-                table[i].linear + t * (table[i + 1].linear - table[i].linear);
-            float quadratic = table[i].quadratic +
-                              t * (table[i + 1].quadratic - table[i].quadratic);
+                table[i].linear + (t * (table[i + 1].linear - table[i].linear));
+            float quadratic =
+                table[i].quadratic +
+                (t * (table[i + 1].quadratic - table[i].quadratic));
             float radius =
-                (-linear + sqrt(linear * linear -
-                                4 * quadratic *
-                                    (constant - (256.0f / 5.0f) * distance))) /
+                (-linear + sqrt((linear * linear) -
+                                ((constant - (256.0f / 5.0f) * distance) * 4 *
+                                 quadratic))) /
                 (2 * quadratic);
-            return {distance, constant, linear, quadratic, radius};
+            return {.distance = distance,
+                    .constant = constant,
+                    .linear = linear,
+                    .quadratic = quadratic,
+                    .radius = radius};
         }
     }
 
-    return {distance, 1.0f, 0.0f, 0.0f, 0.0f};
+    return {.distance = distance,
+            .constant = 1.0f,
+            .linear = 0.0f,
+            .quadratic = 0.0f,
+            .radius = 0.0f};
 }
 
 void Spotlight::createDebugObject() {
@@ -158,7 +202,7 @@ ShadowParams DirectionalLight::calculateLightSpaceMatrix(
 
     if (objects.empty()) {
         glm::mat4 identity = glm::mat4(1.0f);
-        return {identity, identity};
+        return {identity, identity, 0.0f, 0.0f};
     }
 
     glm::vec3 minPos(std::numeric_limits<float>::max());
@@ -244,7 +288,10 @@ ShadowParams DirectionalLight::calculateLightSpaceMatrix(
 
     float bias = 0.0002f * glm::length(extent);
 
-    return {lightView, lightProjection, bias};
+    return {.lightView = lightView,
+            .lightProjection = lightProjection,
+            .bias = bias,
+            .farPlane = 0.0f};
 }
 
 std::tuple<glm::mat4, glm::mat4> Spotlight::calculateLightSpaceMatrix() const {

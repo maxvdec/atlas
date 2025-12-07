@@ -6,8 +6,9 @@
 // Description: Terrain functions implementation
 // Copyright (c) 2025 Max Van den Eynde
 //
+#include <cstddef>
 #include <cstdint>
-#include <glad/glad.h>
+#include "opal/opal.h"
 #include "atlas/camera.h"
 #include "atlas/core/shader.h"
 #include "atlas/light.h"
@@ -21,9 +22,6 @@
 #include <glm/gtx/string_cast.hpp>
 
 void Terrain::initialize() {
-    while (glGetError() != GL_NO_ERROR) {
-    }
-
     VertexShader vertexShader =
         VertexShader::fromDefaultShader(AtlasVertexShader::Terrain);
     FragmentShader fragmentShader =
@@ -81,19 +79,26 @@ void Terrain::initialize() {
 
     this->generateBiomes(data, height, width, nChannels);
 
-    glGenTextures(1, &terrainTexture.id);
-    glBindTexture(GL_TEXTURE_2D, terrainTexture.id);
-    glTexImage2D(GL_TEXTURE_2D, 0,
-                 nChannels == 4 ? GL_RGBA : (nChannels == 3 ? GL_RGB : GL_R16F),
-                 width, height, 0,
-                 nChannels == 4 ? GL_RGBA : (nChannels == 3 ? GL_RGB : GL_R16F),
-                 GL_UNSIGNED_BYTE, data);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                    GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glGenerateMipmap(GL_TEXTURE_2D);
+    opal::TextureFormat texFormat =
+        nChannels == 4 ? opal::TextureFormat::Rgba8
+                       : (nChannels == 3 ? opal::TextureFormat::Rgb8
+                                         : opal::TextureFormat::Rgb16F);
+    opal::TextureDataFormat dataFormat =
+        nChannels == 4 ? opal::TextureDataFormat::Rgba
+                       : (nChannels == 3 ? opal::TextureDataFormat::Rgb
+                                         : opal::TextureDataFormat::Red);
+    terrainTexture.texture =
+        opal::Texture::create(opal::TextureType::Texture2D, texFormat, width,
+                              height, dataFormat, data, 1);
+    terrainTexture.texture->setWrapMode(opal::TextureAxis::S,
+                                        opal::TextureWrapMode::Repeat);
+    terrainTexture.texture->setWrapMode(opal::TextureAxis::T,
+                                        opal::TextureWrapMode::Repeat);
+    terrainTexture.texture->setFilterMode(
+        opal::TextureFilterMode::LinearMipmapLinear,
+        opal::TextureFilterMode::Linear);
+    terrainTexture.texture->automaticallyGenerateMipmaps();
+    terrainTexture.id = terrainTexture.texture->textureID;
 
     rez = resolution;
 
@@ -135,141 +140,152 @@ void Terrain::initialize() {
         data = nullptr;
     }
 
-    glGenVertexArrays(1, &this->vao);
-    glBindVertexArray(this->vao);
+    // Create vertex buffer with opal
+    vertexBuffer = opal::Buffer::create(
+        opal::BufferUsage::VertexBuffer, vertices.size() * sizeof(float),
+        vertices.data(), opal::MemoryUsageType::GPUOnly);
 
-    glGenBuffers(1, &this->vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, this->vbo);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float),
-                 vertices.data(), GL_STATIC_DRAW);
+    // Create drawing state (VAO equivalent)
+    drawingState = opal::DrawingState::create(vertexBuffer, nullptr);
 
-    // Position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                          (void *)0);
-    glEnableVertexAttribArray(0);
-    // Texture coord attribute
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
-                          (void *)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
+    // Configure vertex attributes
+    std::vector<opal::VertexAttributeBinding> attributeBindings = {
+        {opal::VertexAttribute{"position", opal::VertexAttributeType::Float, 0,
+                               0, false, 3, 5 * sizeof(float)},
+         vertexBuffer},
+        {opal::VertexAttribute{"texCoord", opal::VertexAttributeType::Float,
+                               3 * sizeof(float), 1, false, 2,
+                               5 * sizeof(float)},
+         vertexBuffer}};
+    drawingState->configureAttributes(attributeBindings);
 
     patch_count = 4;
-    glPatchParameteri(GL_PATCH_VERTICES, patch_count);
-
-    glBindVertexArray(0);
 }
 
-void Terrain::render(float dt) {
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
-    glDepthMask(GL_TRUE);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-    glFrontFace(GL_CW);
-    glBindVertexArray(this->vao);
-    glUseProgram(terrainShader.programId);
+void Terrain::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                     bool updatePipeline) {
+    (void)updatePipeline;
 
-    terrainShader.setUniformMat4f("model", model);
-    terrainShader.setUniformMat4f("view", view);
-    terrainShader.setUniformMat4f("projection", projection);
+    static std::shared_ptr<opal::Pipeline> terrainPipeline = nullptr;
+    if (terrainPipeline == nullptr) {
+        terrainPipeline = opal::Pipeline::create();
+    }
+    terrainPipeline = terrainShader.requestPipeline(terrainPipeline);
 
-    terrainShader.setUniform1f("maxPeak", maxPeak);
-    terrainShader.setUniform1f("seaLevel", seaLevel);
-    terrainShader.setUniform1i("isFromMap", createdWithMap ? 1 : 0);
+    terrainPipeline->enableDepthTest(true);
+    terrainPipeline->setDepthCompareOp(opal::CompareOp::Less);
+    terrainPipeline->enableDepthWrite(true);
+    terrainPipeline->setCullMode(opal::CullMode::Back);
+    // Terrain geometry is wound clockwise; with CCW default, override to CW for
+    // draw
+    terrainPipeline->setFrontFace(opal::FrontFace::Clockwise);
+    terrainPipeline->setPrimitiveStyle(opal::PrimitiveStyle::Patches);
+    terrainPipeline->setPatchVertices(patch_count);
+    terrainPipeline->bind();
 
-    terrainShader.setUniform1i("heightMap", 0);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, terrainTexture.id);
-    terrainShader.setUniform1i("moistureMap", 1);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, moistureMapTexture.id);
-    terrainShader.setUniform1i("temperatureMap", 2);
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, temperatureMapTexture.id);
+    // Bind drawing state (VAO equivalent)
+    commandBuffer->bindDrawingState(drawingState);
+
+    terrainPipeline->setUniformMat4f("model", model);
+    terrainPipeline->setUniformMat4f("view", view);
+    terrainPipeline->setUniformMat4f("projection", projection);
+
+    terrainPipeline->setUniform1f("maxPeak", maxPeak);
+    terrainPipeline->setUniform1f("seaLevel", seaLevel);
+    terrainPipeline->setUniform1i("isFromMap", createdWithMap ? 1 : 0);
+
+    terrainPipeline->bindTexture2D("heightMap", terrainTexture.id, 0);
+    terrainPipeline->bindTexture2D("moistureMap", moistureMapTexture.id, 1);
+    terrainPipeline->bindTexture2D("temperatureMap", temperatureMapTexture.id,
+                                   2);
 
     for (int i = 0; i < 12; i++) {
-        terrainShader.setUniform1i("texture" + std::to_string(i), i + 4);
+        terrainPipeline->setUniform1i("texture" + std::to_string(i), i + 4);
     }
 
-    for (int i = 0; i < biomes.size(); i++) {
+    for (size_t i = 0; i < biomes.size(); i++) {
         Biome &biome = biomes[i];
         if (biome.useTexture) {
-            terrainShader.setUniform1i(
+            terrainPipeline->setUniform1i(
                 "biomes[" + std::to_string(i) + "].useTexture", 1);
-            terrainShader.setUniform1i(
+            terrainPipeline->setUniform1i(
                 "biomes[" + std::to_string(i) + "].textureId", i + 4);
-            glActiveTexture(GL_TEXTURE3 + i);
-            glBindTexture(GL_TEXTURE_2D, biome.texture.id);
+            terrainPipeline->bindTexture2D("biomeTexture" + std::to_string(i),
+                                           biome.texture.id, 3 + i);
         } else {
-            terrainShader.setUniform1i(
+            terrainPipeline->setUniform1i(
                 "biomes[" + std::to_string(i) + "].useTexture", 0);
         }
         std::string baseName = "biomes[" + std::to_string(i) + "]";
-        terrainShader.setUniform1i(baseName + ".id", i);
-        terrainShader.setUniform4f(baseName + ".tintColor", biomes[i].color.r,
-                                   biomes[i].color.g, biomes[i].color.b,
-                                   biomes[i].color.a);
-        terrainShader.setUniform1f(baseName + ".minHeight",
-                                   biomes[i].minHeight);
-        terrainShader.setUniform1f(baseName + ".maxHeight",
-                                   biomes[i].maxHeight);
-        terrainShader.setUniform1f(baseName + ".minMoisture",
-                                   biomes[i].minMoisture);
-        terrainShader.setUniform1f(baseName + ".maxMoisture",
-                                   biomes[i].maxMoisture);
-        terrainShader.setUniform1f(baseName + ".minTemperature",
-                                   biomes[i].minTemperature);
-        terrainShader.setUniform1f(baseName + ".maxTemperature",
-                                   biomes[i].maxTemperature);
+        terrainPipeline->setUniform1i(baseName + ".id", i);
+        terrainPipeline->setUniform4f(baseName + ".tintColor",
+                                      biomes[i].color.r, biomes[i].color.g,
+                                      biomes[i].color.b, biomes[i].color.a);
+        terrainPipeline->setUniform1f(baseName + ".minHeight",
+                                      biomes[i].minHeight);
+        terrainPipeline->setUniform1f(baseName + ".maxHeight",
+                                      biomes[i].maxHeight);
+        terrainPipeline->setUniform1f(baseName + ".minMoisture",
+                                      biomes[i].minMoisture);
+        terrainPipeline->setUniform1f(baseName + ".maxMoisture",
+                                      biomes[i].maxMoisture);
+        terrainPipeline->setUniform1f(baseName + ".minTemperature",
+                                      biomes[i].minTemperature);
+        terrainPipeline->setUniform1f(baseName + ".maxTemperature",
+                                      biomes[i].maxTemperature);
     }
-    terrainShader.setUniform1i("biomesCount", biomes.size());
+    terrainPipeline->setUniform1i("biomesCount", biomes.size());
     bool hasShadow = false;
     Window *mainWindow = Window::mainWindow;
     for (auto dirLight : mainWindow->getCurrentScene()->directionalLights) {
-        terrainShader.setUniform3f("lightDir", dirLight->direction.x,
-                                   dirLight->direction.y,
-                                   dirLight->direction.z);
-        terrainShader.setUniform4f("directionalColor", dirLight->color.r,
-                                   dirLight->color.g, dirLight->color.b,
-                                   dirLight->color.a);
-        terrainShader.setUniform1f("directionalIntensity", dirLight->color.a);
+        terrainPipeline->setUniform3f("lightDir", dirLight->direction.x,
+                                      dirLight->direction.y,
+                                      dirLight->direction.z);
+        terrainPipeline->setUniform4f("directionalColor", dirLight->color.r,
+                                      dirLight->color.g, dirLight->color.b,
+                                      dirLight->color.a);
+        terrainPipeline->setUniform1f("directionalIntensity",
+                                      dirLight->color.a);
         if (!dirLight->doesCastShadows)
             continue;
         hasShadow = true;
-        terrainShader.setUniform1i("shadowMap", 3);
-        glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, dirLight->shadowRenderTarget->texture.id);
+        terrainPipeline->bindTexture2D(
+            "shadowMap", dirLight->shadowRenderTarget->texture.id, 3);
         ShadowParams shadowParams =
             dirLight->calculateLightSpaceMatrix(mainWindow->renderables);
-        terrainShader.setUniformMat4f("lightViewProj",
-                                      shadowParams.lightProjection *
-                                          shadowParams.lightView);
-        terrainShader.setUniform1f("shadowBias", shadowParams.bias);
+        terrainPipeline->setUniformMat4f("lightViewProj",
+                                         shadowParams.lightProjection *
+                                             shadowParams.lightView);
+        terrainPipeline->setUniform1f("shadowBias", shadowParams.bias);
     }
 
     if (mainWindow->getCurrentScene()->directionalLights.size() > 0) {
-        terrainShader.setUniform1i("hasLight", 1);
+        terrainPipeline->setUniform1i("hasLight", 1);
     } else {
-        terrainShader.setUniform1i("hasLight", 0);
+        terrainPipeline->setUniform1i("hasLight", 0);
     }
 
     if (!hasShadow) {
-        terrainShader.setUniform1i("useShadowMap", 0);
+        terrainPipeline->setUniform1i("useShadowMap", 0);
     } else {
-        terrainShader.setUniform1i("useShadowMap", 1);
+        terrainPipeline->setUniform1i("useShadowMap", 1);
     }
 
     Camera *camera = mainWindow->getCamera();
-    terrainShader.setUniform3f("viewDir", camera->getFrontVector().x,
-                               camera->getFrontVector().y,
-                               camera->getFrontVector().z);
+    terrainPipeline->setUniform3f("viewDir", camera->getFrontVector().x,
+                                  camera->getFrontVector().y,
+                                  camera->getFrontVector().z);
     AmbientLight ambient = mainWindow->getCurrentScene()->ambientLight;
-    terrainShader.setUniform1f("ambientStrength", ambient.intensity * 4.0);
+    terrainPipeline->setUniform1f("ambientStrength", ambient.intensity * 4.0);
 
-    glDrawArrays(GL_PATCHES, 0, patch_count * rez * rez);
-    glBindVertexArray(0);
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
-    glFrontFace(GL_CCW);
+    // Draw tessellation patches using opal command buffer
+    commandBuffer->drawPatches(patch_count * rez * rez, 0);
+    commandBuffer->unbindDrawingState();
+
+    // Restore default state via pipeline (CCW default)
+    terrainPipeline->setCullMode(opal::CullMode::Back);
+    terrainPipeline->setFrontFace(opal::FrontFace::CounterClockwise);
+    terrainPipeline->bind();
 }
 
 void Terrain::updateModelMatrix() {

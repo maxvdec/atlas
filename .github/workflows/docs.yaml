@@ -11,14 +11,15 @@ permissions:
 
 jobs:
   build:
+    if: github.event_name != 'pull_request'
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v5
       - name: Install Dependencies
-        run: brew install cmake doxygen graphviz glfw glm openal-soft assimp
+        run: brew install cmake doxygen graphviz glfw glm openal-soft assimp vulkan-loader molten-vk vulkan-validationlayers spirv-cross spirv-headers spirv-tools
       - name: Build doxygen
         run: |
-          cmake .
+          cmake . -DBACKEND_OPENGL=OFF
           doxygen Doxyfile
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v4

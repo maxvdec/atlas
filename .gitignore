@@ -13,6 +13,7 @@ test/resources/skybox
 libbezel.a
 libaurora.a
 libhydra.a
+lib/*
 build
 .vscode
 Cargo.lock
@@ -23,4 +24,7 @@ libfinewave.a
 _deps
 docs/html
 docs/latex
-Doxyfile
+.idea
+.cmake
+build.ninja
+Testing

@@ -12,7 +12,9 @@
 
 #include "atlas/core/shader.h"
 #include "atlas/units.h"
+#include "opal/opal.h"
 #include <glm/glm.hpp>
+#include <memory>
 #include <optional>
 #include <vector>
 
@@ -24,6 +26,50 @@ class Window;
  * a Window. Contains virtual methods for rendering, initialization, updating,
  * and setting view/projection matrices.
  *
+ * \subsection renderable-example Example
+ * ```cpp
+ * // Create a custom renderable object
+ * class CustomRenderable : public Renderable {
+ * private:
+ *     Position3d position;
+ *     glm::mat4 viewMatrix, projectionMatrix;
+ *     std::shared_ptr<opal::Pipeline> pipeline;
+ *     std::shared_ptr<opal::Buffer> vertexBuffer;
+ *
+ * public:
+ *     void initialize() override {
+ *         // Set up buffers, load shaders, create pipeline
+ *         opal::Device& device = opal::Device::get();
+ *         pipeline = device.createPipeline(...);
+ *         vertexBuffer = device.createBuffer(...);
+ *     }
+ *
+ *     void render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
+ *                 bool updatePipeline) override {
+ *         // Bind pipeline and draw
+ *         commandBuffer->bindPipeline(pipeline);
+ *         commandBuffer->bindVertexBuffer(vertexBuffer);
+ *         commandBuffer->draw(vertexCount, 1, 0, 0);
+ *     }
+ *
+ *     void update(Window& window) override {
+ *         // Update logic (movement, animation, etc.)
+ *         position += Position3d(0.01f, 0.0f, 0.0f);
+ *     }
+ *
+ *     void setViewMatrix(const glm::mat4& view) override {
+ *         viewMatrix = view;
+ *     }
+ *
+ *     void setProjectionMatrix(const glm::mat4& projection) override {
+ *         projectionMatrix = projection;
+ *     }
+ *
+ *     Position3d getPosition() const override { return position; }
+ *     bool canCastShadows() const override { return true; }
+ * };
+ * ```
+ *
  */
 class Renderable {
   public:
@@ -32,8 +78,13 @@ class Renderable {
      * classes.
      *
      * @param dt Delta time since the last frame, useful for animations.
+     * @param updatePipeline When true, the renderable should rebuild or fetch
+     * the graphics pipeline to reflect the window's current state before
+     * drawing. When false, the previously prepared pipeline may be reused.
      */
-    virtual void render(float dt) = 0;
+    virtual void render(float dt,
+                        std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                        bool updatePipeline = false) = 0;
     /**
      * @brief Function to initialize the object. Can be overridden by derived.
      *
@@ -48,43 +99,47 @@ class Renderable {
      *
      * @param window The window where the object is being rendered.
      */
-    virtual void update(Window &window) {};
+    virtual void update([[maybe_unused]] Window &window) {};
     /**
      * @brief Function to set the view matrix for the object. Called from \ref
      * Window for internal purposes.
      *
      * @param view The view matrix to set.
      */
-    virtual void setViewMatrix(const glm::mat4 &view) {};
+    virtual void setViewMatrix([[maybe_unused]] const glm::mat4 &view) {};
     /**
      * @brief Function to set the projection matrix for the object. Called from
      * \ref Window for internal purposes.
      *
      * @param projection The projection matrix to set.
      */
-    virtual void setProjectionMatrix(const glm::mat4 &projection) {};
+    virtual void
+    setProjectionMatrix([[maybe_unused]] const glm::mat4 &projection) {};
+    virtual std::optional<std::shared_ptr<opal::Pipeline>> getPipeline() {
+        return std::nullopt;
+    };
+
+    virtual void
+    setPipeline([[maybe_unused]] std::shared_ptr<opal::Pipeline> &pipeline) {};
+
     /**
-     * @brief Function to get the current shader program used by the object.
-     *
-     * @return An optional containing the shader program if set, or \c
-     * std::nullopt if not.
+     * @brief Returns the currently bound shader program, if any.
      */
     virtual std::optional<ShaderProgram> getShaderProgram() {
         return std::nullopt;
     };
+
     /**
-     * @brief Function to set the shader program for the object. Can be used to
-     * force an object to use a specific shader.
-     *
-     * @param shader The shader program to set.
+     * @brief Replaces the shader program bound to the renderable.
      */
-    virtual void setShader(const ShaderProgram &shader) {};
+    virtual void
+    setShader([[maybe_unused]] const ShaderProgram &shaderProgram) {};
     /**
      * @brief Function to get the position of the object in 3D space.
      *
      * @return The position of the object as a Position3d struct.
      */
-    virtual Position3d getPosition() const { return {0, 0, 0}; };
+    virtual Position3d getPosition() const { return {0.0f, 0.0f, 0.0f}; };
     /**
      * @brief Function to get the vertices of the object in 3D space.
      *
@@ -96,7 +151,7 @@ class Renderable {
      *
      * @return The scale of the object as a Size3d struct.
      */
-    virtual Size3d getScale() const { return {1, 1, 1}; };
+    virtual Size3d getScale() const { return {1.0f, 1.0f, 1.0f}; };
     /**
      * @brief Function to determine if the object can cast shadows. Can be
      * overridden by derived classes.
