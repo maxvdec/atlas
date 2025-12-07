@@ -676,9 +676,6 @@ std::shared_ptr<opal::Pipeline> ShaderProgram::requestPipeline(
         }
     }
 
-    std::cout << "Building new pipeline for shader program ID: "
-              << this->programId << std::endl;
-
     unbuiltPipeline->build();
 
     pipelines.push_back(unbuiltPipeline);

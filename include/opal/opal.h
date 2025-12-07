@@ -91,6 +91,14 @@ struct ImageCollection {
 };
 #endif
 
+struct DeviceInfo {
+    std::string deviceName;
+    std::string vendorName;
+    std::string driverVersion;
+    std::string renderingVersion;
+    std::string opalVersion;
+};
+
 class Device {
   public:
     static std::shared_ptr<Device> acquire(std::shared_ptr<Context> context);
@@ -632,11 +640,6 @@ class Pipeline {
     VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
     std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
     std::vector<VkDescriptorSet> descriptorSets;
-    // Small ring of descriptor sets per layout to allow per-draw sampler updates
-    // without unbounded allocations.
-    static constexpr uint32_t descriptorSetRingSize = 16;
-    std::vector<std::vector<VkDescriptorSet>> descriptorSetPools;
-    std::vector<uint32_t> descriptorSetPoolCursor;
 
     struct DescriptorBindingInfoEntry {
         VkDescriptorType type = VK_DESCRIPTOR_TYPE_MAX_ENUM;

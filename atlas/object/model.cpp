@@ -67,29 +67,30 @@ void Model::loadModel(Resource resource) {
     // is still shared via CoreRenderPass caching.
     processNode(scene->mRootNode, scene, glm::mat4(1.0f), textureCache);
 
-    std::cout << "Created model from resource: " << resource.name << " with "
-              << objects.size() << " objects." << std::endl;
-    std::cout << "Model path: " << resource.path << std::endl;
-    std::cout << "Model directory: " << directory << std::endl;
-    std::cout << "First model object has "
-              << (objects.size() > 0 ? objects[0]->getVertices().size() : 0)
-              << " vertices." << std::endl;
+    // std::cout << "Created model from resource: " << resource.name << " with "
+    //           << objects.size() << " objects." << std::endl;
+    // std::cout << "Model path: " << resource.path << std::endl;
+    // std::cout << "Model directory: " << directory << std::endl;
+    // std::cout << "First model object has "
+    //           << (objects.size() > 0 ? objects[0]->getVertices().size() : 0)
+    //           << " vertices." << std::endl;
 
-    std::cout << "Model loaded successfully." << std::endl;
-    std::cout << "Meshes: " << scene->mNumMeshes << std::endl;
-    std::cout << "Unique textures loaded: " << textureCache.size() << std::endl;
+    // std::cout << "Model loaded successfully." << std::endl;
+    // std::cout << "Meshes: " << scene->mNumMeshes << std::endl;
+    // std::cout << "Unique textures loaded: " << textureCache.size() <<
+    // std::endl;
 
-    size_t totalVertices = 0;
-    size_t totalTriangles = 0;
-    for (unsigned int i = 0; i < scene->mNumMeshes; i++) {
-        aiMesh *mesh = scene->mMeshes[i];
-        totalVertices += mesh->mNumVertices;
-        totalTriangles +=
-            mesh->mNumFaces; // each face is a triangle (after Triangulate)
-    }
+    // size_t totalVertices = 0;
+    // size_t totalTriangles = 0;
+    // for (unsigned int i = 0; i < scene->mNumMeshes; i++) {
+    //     aiMesh *mesh = scene->mMeshes[i];
+    //     totalVertices += mesh->mNumVertices;
+    //     totalTriangles +=
+    //         mesh->mNumFaces; // each face is a triangle (after Triangulate)
+    // }
 
-    std::cout << "Total Vertices: " << totalVertices << std::endl;
-    std::cout << "Total Triangles: " << totalTriangles << std::endl;
+    // std::cout << "Total Vertices: " << totalVertices << std::endl;
+    // std::cout << "Total Triangles: " << totalTriangles << std::endl;
 }
 
 void Model::processNode(
@@ -255,8 +256,8 @@ std::vector<Texture> Model::loadMaterialTextures(
             continue;
         }
 
-        std::cout << "Loading texture: " << str.C_Str() << " of type "
-                  << typeName << std::endl;
+        // std::cout << "Loading texture: " << str.C_Str() << " of type "
+        //           << typeName << std::endl;
 
         ResourceType resType = ResourceType::Image;
         if (typeName == "texture_specular") {
