@@ -691,7 +691,8 @@ void Skybox::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
     pipelineDesc->setCullMode(opal::CullMode::None);
     pipelineDesc->enableDepthTest(true);
 
-    // Request the pipeline from the shader program (handles caching and building)
+    // Request the pipeline from the shader program (handles caching and
+    // building)
     auto pipeline = obj->shaderProgram.requestPipeline(pipelineDesc);
     obj->setPipeline(pipeline);
 
