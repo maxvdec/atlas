@@ -24,7 +24,6 @@ libfinewave.a
 _deps
 docs/html
 docs/latex
-Doxyfile
 .idea
 .cmake
 build.ninja
