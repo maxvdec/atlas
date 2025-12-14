@@ -388,7 +388,7 @@ void ParticleEmitter::render(float dt,
     }
 
     commandBuffer->bindDrawingState(vao);
-    commandBuffer->drawIndexed(6, activeParticleCount, 0, 0, 0);
+    commandBuffer->drawIndexed(6, activeParticleCount, 0, 0, 0, id);
     commandBuffer->unbindDrawingState();
 
     particlePipeline->enableDepthWrite(true);

@@ -10,6 +10,7 @@
 #include "atlas/core/shader.h"
 #include "atlas/light.h"
 #include "atlas/object.h"
+#include "atlas/tracer/data.h"
 #include "atlas/window.h"
 #include "opal/opal.h"
 #include <algorithm>
@@ -17,7 +18,6 @@
 #include <iostream>
 #include <limits>
 #include <memory>
-#include <random>
 #include <string>
 #include <vector>
 #include <cmath>
@@ -178,11 +178,6 @@ std::vector<LayoutDescriptor> CoreVertex::getLayoutDescriptors() {
 
 CoreObject::CoreObject() : vao(nullptr), vbo(nullptr), ebo(nullptr) {
     shaderProgram = ShaderProgram::defaultProgram();
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<unsigned int> dist(0, UINT32_MAX);
-
-    id = dist(gen);
 }
 
 void CoreObject::attachProgram(const ShaderProgram &program) {
@@ -826,13 +821,13 @@ void CoreObject::render(float dt,
             commandBuffer->bindDrawingState(vao);
             commandBuffer->bindPipeline(this->pipeline);
             commandBuffer->drawIndexed(indices.size(), instances.size(), 0, 0,
-                                       0);
+                                       0, id);
             commandBuffer->unbindDrawingState();
             return;
         }
         commandBuffer->bindDrawingState(vao);
         commandBuffer->bindPipeline(this->pipeline);
-        commandBuffer->draw(vertices.size(), instances.size(), 0, 0);
+        commandBuffer->draw(vertices.size(), instances.size(), 0, 0, id);
         commandBuffer->unbindDrawingState();
         return;
     }
@@ -841,13 +836,14 @@ void CoreObject::render(float dt,
     if (!indices.empty()) {
         commandBuffer->bindDrawingState(vao);
         commandBuffer->bindPipeline(this->pipeline);
-        commandBuffer->drawIndexed(indices.size(), 1, 0, 0, 0);
+        commandBuffer->drawIndexed(indices.size(), 1, 0, 0, 0, id);
         commandBuffer->unbindDrawingState();
+
         return;
     }
     commandBuffer->bindDrawingState(vao);
     commandBuffer->bindPipeline(this->pipeline);
-    commandBuffer->draw(vertices.size(), 1, 0, 0);
+    commandBuffer->draw(vertices.size(), 1, 0, 0, id);
     commandBuffer->unbindDrawingState();
 }
 

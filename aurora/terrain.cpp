@@ -283,8 +283,7 @@ void Terrain::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
     AmbientLight ambient = mainWindow->getCurrentScene()->ambientLight;
     terrainPipeline->setUniform1f("ambientStrength", ambient.intensity * 4.0);
 
-    // Draw tessellation patches using opal command buffer
-    commandBuffer->drawPatches(patch_count * rez * rez, 0);
+    commandBuffer->drawPatches(patch_count * rez * rez, 0, id);
     commandBuffer->unbindDrawingState();
 
     // Restore default state via pipeline (CCW default)
