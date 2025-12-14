@@ -28,6 +28,30 @@ void ResourceEventInfo::send() {
 
     if (operation == DebugResourceOperation::Created) {
         ResourceTracker::getInstance().createdResources += 1;
+        AllocationPacket alloc;
+        alloc.description = "Resource created: " + callerObject;
+        alloc.owner = callerObject;
+        alloc.domain = DebugMemoryDomain::CPU;
+        switch (resourceType) {
+        case DebugResourceType::Buffer:
+            alloc.kind = DebugResourceKind::StorageBuffer;
+            break;
+        case DebugResourceType::Shader:
+            alloc.kind = DebugResourceKind::PipelineCache;
+            break;
+        case DebugResourceType::Texture:
+            alloc.kind = DebugResourceKind::Texture2d;
+            break;
+        case DebugResourceType::Mesh:
+            alloc.kind = DebugResourceKind::VertexBuffer;
+            break;
+        default:
+            alloc.kind = DebugResourceKind::Other;
+            break;
+        }
+        alloc.sizeMb = sizeMb;
+        alloc.frameNumber = frameNumber;
+        alloc.send();
     }
     if (operation == DebugResourceOperation::Loaded) {
         ResourceTracker::getInstance().loadedResources += 1;
