@@ -18,7 +18,6 @@
 #include <iostream>
 #include <limits>
 #include <memory>
-#include <random>
 #include <string>
 #include <vector>
 #include <cmath>
@@ -179,11 +178,6 @@ std::vector<LayoutDescriptor> CoreVertex::getLayoutDescriptors() {
 
 CoreObject::CoreObject() : vao(nullptr), vbo(nullptr), ebo(nullptr) {
     shaderProgram = ShaderProgram::defaultProgram();
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<unsigned int> dist(0, UINT32_MAX);
-
-    id = dist(gen);
 }
 
 void CoreObject::attachProgram(const ShaderProgram &program) {

@@ -455,12 +455,6 @@ class CoreObject : public GameObject {
     std::shared_ptr<Light> light = nullptr;
 
     /**
-     * @brief The unique identifier for the object.
-     *
-     */
-    Id id;
-
-    /**
      * @brief Variable that determines if the object casts shadows.
      *
      */
@@ -582,11 +576,6 @@ class CoreObject : public GameObject {
      * @brief Reports whether the object is configured to cast shadows.
      */
     inline bool canCastShadows() const override { return castsShadows; }
-
-    /**
-     * @brief Returns the unique identifier associated with this object.
-     */
-    inline unsigned int getId() override { return id; }
 
     /**
      * @brief Performs per-frame updates such as component ticking or buffering
