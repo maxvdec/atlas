@@ -441,7 +441,7 @@ class Shader {
 class ShaderProgram {
   public:
     static std::shared_ptr<ShaderProgram> create();
-    void attachShader(std::shared_ptr<Shader> shader);
+    void attachShader(std::shared_ptr<Shader> shader, int callerId = -1);
 
     void link();
     void use();
@@ -794,12 +794,13 @@ class Buffer {
   public:
     static std::shared_ptr<Buffer>
     create(BufferUsage usage, size_t size, const void *data = nullptr,
-           MemoryUsageType memoryUsage = MemoryUsageType::GPUOnly);
+           MemoryUsageType memoryUsage = MemoryUsageType::GPUOnly,
+           int callerId = -1);
 
     void updateData(size_t offset, size_t size, const void *data);
 
-    void bind() const;
-    void unbind() const;
+    void bind(int callerId = -1) const;
+    void unbind(int callerId = -1) const;
 
     uint bufferID;
 

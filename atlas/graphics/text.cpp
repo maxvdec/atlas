@@ -159,7 +159,7 @@ void Text::initialize() {
     vertexBufferCapacity = sizeof(float) * 6 * 4; // one glyph quad
     vertexBuffer = opal::Buffer::create(opal::BufferUsage::VertexBuffer,
                                         vertexBufferCapacity, nullptr,
-                                        opal::MemoryUsageType::CPUToGPU);
+                                        opal::MemoryUsageType::CPUToGPU, id);
     vao = opal::DrawingState::create(vertexBuffer);
     vao->setBuffers(vertexBuffer, nullptr);
 
@@ -284,9 +284,9 @@ void Text::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
     const size_t requiredBytes = glyphCount * bytesPerGlyph;
     if (requiredBytes > vertexBufferCapacity) {
         vertexBufferCapacity = requiredBytes;
-        vertexBuffer = opal::Buffer::create(opal::BufferUsage::VertexBuffer,
-                                            vertexBufferCapacity, nullptr,
-                                            opal::MemoryUsageType::CPUToGPU);
+        vertexBuffer = opal::Buffer::create(
+            opal::BufferUsage::VertexBuffer, vertexBufferCapacity, nullptr,
+            opal::MemoryUsageType::CPUToGPU, id);
         vao->setBuffers(vertexBuffer, nullptr);
     }
 

@@ -53,9 +53,11 @@ void Fluid::initialize() {
     atlas_log("Initializing fluid");
 
     vertexBuffer = opal::Buffer::create(opal::BufferUsage::VertexBuffer,
-                                        sizeof(vertices), vertices.data());
+                                        sizeof(vertices), vertices.data(),
+                                        opal::MemoryUsageType::GPUOnly, id);
     indexBuffer = opal::Buffer::create(opal::BufferUsage::IndexArray,
-                                       sizeof(indices), indices.data());
+                                       sizeof(indices), indices.data(),
+                                       opal::MemoryUsageType::GPUOnly, id);
 
     drawingState = opal::DrawingState::create(vertexBuffer, indexBuffer);
     drawingState->setBuffers(vertexBuffer, indexBuffer);

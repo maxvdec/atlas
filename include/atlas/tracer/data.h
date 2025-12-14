@@ -74,15 +74,6 @@ struct IndividualResourceTypeInfo {
     int count;
 };
 
-struct ObjectResourcesInfo {
-    std::string callerObject;
-    int resouceType;
-    float sizeMb;
-    std::vector<IndividualResourceTypeInfo> breakdown;
-
-    void send();
-};
-
 class ResourceTracker {
   private:
     ResourceTracker() = default;

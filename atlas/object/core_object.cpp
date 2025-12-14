@@ -381,14 +381,14 @@ void CoreObject::initialize() {
         vao = opal::DrawingState::create(nullptr);
     }
 
-    vbo = opal::Buffer::create(opal::BufferUsage::VertexBuffer,
-                               vertices.size() * sizeof(CoreVertex),
-                               vertices.data());
+    vbo = opal::Buffer::create(
+        opal::BufferUsage::VertexBuffer, vertices.size() * sizeof(CoreVertex),
+        vertices.data(), opal::MemoryUsageType::CPUToGPU, id);
 
     if (!indices.empty()) {
-        ebo = opal::Buffer::create(opal::BufferUsage::IndexArray,
-                                   indices.size() * sizeof(Index),
-                                   indices.data());
+        ebo = opal::Buffer::create(
+            opal::BufferUsage::IndexArray, indices.size() * sizeof(Index),
+            indices.data(), opal::MemoryUsageType::CPUToGPU, id);
     }
 
     vao->setBuffers(vbo, ebo);
@@ -449,7 +449,8 @@ void CoreObject::initialize() {
 
         instanceVBO = opal::Buffer::create(opal::BufferUsage::GeneralPurpose,
                                            instances.size() * sizeof(glm::mat4),
-                                           modelMatrices.data());
+                                           modelMatrices.data(),
+                                           opal::MemoryUsageType::CPUToGPU, id);
         auto instanceBindings = makeInstanceAttributeBindings(instanceVBO);
         vao->configureAttributes(instanceBindings);
     }
@@ -941,7 +942,8 @@ void CoreObject::updateInstances() {
     if (this->instanceVBO == nullptr) {
         instanceVBO =
             opal::Buffer::create(opal::BufferUsage::GeneralPurpose,
-                                 instances.size() * sizeof(glm::mat4), nullptr);
+                                 instances.size() * sizeof(glm::mat4), nullptr,
+                                 opal::MemoryUsageType::CPUToGPU, id);
         auto instanceBindings = makeInstanceAttributeBindings(instanceVBO);
         vao->configureAttributes(instanceBindings);
     }
@@ -954,10 +956,10 @@ void CoreObject::updateInstances() {
         modelMatrices.push_back(instance.getModelMatrix());
     }
 
-    instanceVBO->bind();
+    instanceVBO->bind(id);
     instanceVBO->updateData(0, instances.size() * sizeof(glm::mat4),
                             modelMatrices.data());
-    instanceVBO->unbind();
+    instanceVBO->unbind(id);
 }
 
 void Instance::updateModelMatrix() {

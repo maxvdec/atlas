@@ -9,6 +9,7 @@
 #include "atlas/object.h"
 #include "atlas/units.h"
 #include "atlas/window.h"
+#include "opal/opal.h"
 #include <cstddef>
 #include <glad/glad.h>
 #include <random>
@@ -54,14 +55,15 @@ void ParticleEmitter::initialize() {
     static const unsigned int indices[] = {0, 1, 2, 2, 3, 0};
 
     quadBuffer = opal::Buffer::create(opal::BufferUsage::VertexBuffer,
-                                      sizeof(quadVertices), quadVertices);
-    indexBuffer = opal::Buffer::create(opal::BufferUsage::IndexArray,
-                                       sizeof(indices), indices);
+                                      sizeof(quadVertices), quadVertices,
+                                      opal::MemoryUsageType::GPUOnly, id);
+    indexBuffer =
+        opal::Buffer::create(opal::BufferUsage::IndexArray, sizeof(indices),
+                             indices, opal::MemoryUsageType::GPUOnly, id);
     instanceBuffer =
         opal::Buffer::create(opal::BufferUsage::GeneralPurpose,
                              maxParticles * sizeof(ParticleInstanceData),
-                             nullptr, opal::MemoryUsageType::CPUToGPU);
-
+                             nullptr, opal::MemoryUsageType::CPUToGPU, id);
     vao = opal::DrawingState::create(quadBuffer, indexBuffer);
     vao->setBuffers(quadBuffer, indexBuffer);
 

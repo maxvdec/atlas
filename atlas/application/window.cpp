@@ -483,6 +483,23 @@ void Window::run() {
         frameInfo.frameNumber = device->frameCount;
         frameInfo.fps = this->framesPerSecond;
         frameInfo.send();
+
+        FrameResourcesInfo frameResourcesInfo{};
+        frameResourcesInfo.frameNumber = device->frameCount;
+        frameResourcesInfo.resourcesCreated =
+            ResourceTracker::getInstance().createdResources;
+        frameResourcesInfo.resourcesUnloaded =
+            ResourceTracker::getInstance().unloadedResources;
+        frameResourcesInfo.resourcesLoaded =
+            ResourceTracker::getInstance().loadedResources;
+        frameResourcesInfo.totalMemoryMb =
+            ResourceTracker::getInstance().totalMemoryMb;
+
+        ResourceTracker::getInstance().createdResources = 0;
+        ResourceTracker::getInstance().loadedResources = 0;
+        ResourceTracker::getInstance().unloadedResources = 0;
+        ResourceTracker::getInstance().totalMemoryMb = 0.0f;
+        frameResourcesInfo.send();
     }
 }
 

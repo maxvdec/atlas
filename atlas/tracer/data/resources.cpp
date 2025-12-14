@@ -26,6 +26,17 @@ void ResourceEventInfo::send() {
     object["size_mb"] = sizeMb;
     object["type"] = "resource_event";
 
+    if (operation == DebugResourceOperation::Created) {
+        ResourceTracker::getInstance().createdResources += 1;
+    }
+    if (operation == DebugResourceOperation::Loaded) {
+        ResourceTracker::getInstance().loadedResources += 1;
+    }
+    if (operation == DebugResourceOperation::Unloaded) {
+        ResourceTracker::getInstance().unloadedResources += 1;
+    }
+    ResourceTracker::getInstance().totalMemoryMb += sizeMb;
+
     TracerServices::getInstance().tracerPipe->send(object.dump() + "\n");
 }
 
@@ -41,30 +52,5 @@ void FrameResourcesInfo::send() {
     object["resources_unloaded"] = resourcesUnloaded;
     object["total_memory_mb"] = totalMemoryMb;
     object["type"] = "frame_resources_info";
-    TracerServices::getInstance().tracerPipe->send(object.dump() + "\n");
-}
-
-void ObjectResourcesInfo::send() {
-    if (!TracerServices::getInstance().isOk()) {
-        return;
-    }
-
-    json object;
-    object["caller_object"] = callerObject;
-    object["resource_type"] = resouceType;
-    object["size_mb"] = sizeMb;
-
-    std::vector<json> breakdownArray;
-    for (const auto &entry : breakdown) {
-        json entryJson;
-        entryJson["individual_type"] = entry.resourceType;
-        entryJson["count"] = entry.count;
-        breakdownArray.push_back(entryJson);
-    }
-
-    object["breakdown"] = breakdownArray;
-
-    object["type"] = "object_resources_info";
-
     TracerServices::getInstance().tracerPipe->send(object.dump() + "\n");
 }

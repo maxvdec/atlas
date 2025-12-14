@@ -145,22 +145,28 @@ void Terrain::initialize() {
         data = nullptr;
     }
 
-    // Create vertex buffer with opal
     vertexBuffer = opal::Buffer::create(
         opal::BufferUsage::VertexBuffer, vertices.size() * sizeof(float),
-        vertices.data(), opal::MemoryUsageType::GPUOnly);
+        vertices.data(), opal::MemoryUsageType::GPUOnly, id);
 
-    // Create drawing state (VAO equivalent)
     drawingState = opal::DrawingState::create(vertexBuffer, nullptr);
 
-    // Configure vertex attributes
     std::vector<opal::VertexAttributeBinding> attributeBindings = {
-        {opal::VertexAttribute{"position", opal::VertexAttributeType::Float, 0,
-                               0, false, 3, 5 * sizeof(float)},
+        {opal::VertexAttribute{.name = "position",
+                               .type = opal::VertexAttributeType::Float,
+                               .offset = 0,
+                               .location = 0,
+                               .normalized = false,
+                               .size = 3,
+                               .stride = 5 * sizeof(float)},
          vertexBuffer},
-        {opal::VertexAttribute{"texCoord", opal::VertexAttributeType::Float,
-                               3 * sizeof(float), 1, false, 2,
-                               5 * sizeof(float)},
+        {opal::VertexAttribute{.name = "texCoord",
+                               .type = opal::VertexAttributeType::Float,
+                               .offset = 3 * sizeof(float),
+                               .location = 1,
+                               .normalized = false,
+                               .size = 2,
+                               .stride = 5 * sizeof(float)},
          vertexBuffer}};
     drawingState->configureAttributes(attributeBindings);
 
