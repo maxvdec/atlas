@@ -11,6 +11,7 @@
 #include "atlas/core/shader.h"
 #include "atlas/object.h"
 #include "atlas/texture.h"
+#include "atlas/tracer/data.h"
 #include "atlas/tracer/log.h"
 #include "atlas/units.h"
 #include "atlas/window.h"
@@ -21,6 +22,7 @@
 #include <iostream>
 #include <memory>
 #include <stdexcept>
+#include <string>
 #include <unordered_map>
 #include <vector>
 
@@ -231,6 +233,12 @@ Model::processMesh(aiMesh *mesh, const aiScene *scene,
 
     object.attachVertices(vertices);
     object.attachIndices(indices);
+
+    ResourceEventInfo info;
+    info.resourceType = DebugResourceType::Mesh;
+    info.callerObject = std::to_string(object.getId());
+    info.operation = DebugResourceOperation::Created;
+    info.frameNumber = Window::mainWindow->device->frameCount;
     return object;
 }
 
