@@ -11,6 +11,8 @@
 #define TRACER_LOG_H
 
 #include <atlas/network/pipe.h>
+#include <chrono>
+#include <ctime>
 #include <memory>
 #include <string>
 
@@ -52,5 +54,17 @@ class Logger {
 #define atlas_error(msg) Logger::getInstance().error(msg, __FILE__, __LINE__);
 
 #define TRACER_PORT 5123
+
+class DebugTimer {
+  public:
+    DebugTimer(const std::string &name);
+    ~DebugTimer();
+
+    uint64_t stop();
+
+  private:
+    std::string name;
+    std::chrono::high_resolution_clock::time_point startTime;
+};
 
 #endif // TRACER_LOG_H

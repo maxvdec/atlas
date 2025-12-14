@@ -20,6 +20,7 @@
 #include "bezel/body.h"
 #include "finewave/audio.h"
 #include <atlas/window.h>
+#include <cstdint>
 #include <iostream>
 #include <memory>
 #include <optional>
@@ -28,6 +29,7 @@
 #include <algorithm>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <sys/resource.h>
 #include <vector>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
@@ -272,6 +274,9 @@ void Window::run() {
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
 
+        DebugTimer cpuTimer("Cpu Data");
+        DebugTimer mainTimer("Main Loop");
+
         if (this->currentScene == nullptr) {
             commandBuffer->start();
             commandBuffer->beginPass(renderPass);
@@ -310,6 +315,10 @@ void Window::run() {
         }
 
         currentScene->update(*this);
+
+        uint64_t cpuTime = cpuTimer.stop();
+
+        DebugTimer gpuTimer("Gpu Data");
 
         renderLightsToShadowMaps(commandBuffer);
 
@@ -477,6 +486,9 @@ void Window::run() {
         glfwSwapBuffers(window);
 #endif
 
+        uint64_t gpuTime = gpuTimer.stop();
+        uint64_t mainTime = mainTimer.stop();
+
         FrameDrawInfo frameInfo{};
         frameInfo.drawCallCount = commandBuffer->getAndResetDrawCallCount();
         frameInfo.frameTimeMs = this->deltaTime * 1000.0f;
@@ -507,6 +519,35 @@ void Window::run() {
         memoryPacket.deallocationCount =
             ResourceTracker::getInstance().unloadedResources;
         memoryPacket.send();
+
+        rusage usage{};
+        getrusage(RUSAGE_SELF, &usage);
+
+        double normalCpuTime =
+            usage.ru_utime.tv_sec + (usage.ru_utime.tv_usec / 1e6) +
+            usage.ru_stime.tv_sec + (usage.ru_stime.tv_usec / 1e6);
+
+        TimingEventPacket timingEvent{};
+        timingEvent.frameNumber = device->frameCount;
+        timingEvent.durationMs = static_cast<float>(gpuTime) / 1'000'000.0f;
+        timingEvent.name = "Main Loop";
+        timingEvent.subsystem = TimingEventSubsystem::Rendering;
+        timingEvent.send();
+
+        FrameTimingPacket timingPacket{};
+        timingPacket.frameNumber = device->frameCount;
+        timingPacket.cpuFrameTimeMs =
+            static_cast<float>(cpuTime) / 1'000'000.0f;
+        timingPacket.gpuFrameTimeMs =
+            static_cast<float>(gpuTime) / 1'000'000.0f;
+        timingPacket.workerThreadTimeMs = 0.0f;
+        timingPacket.mainThreadTimeMs =
+            static_cast<float>(mainTime) / 1'000'000.0f;
+        timingPacket.memoryMb = ResourceTracker::getInstance().totalMemoryMb;
+        timingPacket.cpuUsagePercent =
+            static_cast<float>(normalCpuTime / this->deltaTime * 100.0);
+        timingPacket.gpuUsagePercent = 0.0f;
+        timingPacket.send();
 
         ResourceTracker::getInstance().createdResources = 0;
         ResourceTracker::getInstance().loadedResources = 0;

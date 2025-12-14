@@ -162,4 +162,39 @@ struct FrameMemoryPacket {
     void send();
 };
 
+struct FrameTimingPacket {
+    unsigned int frameNumber;
+    float cpuFrameTimeMs;
+    float gpuFrameTimeMs;
+    float mainThreadTimeMs;
+    float workerThreadTimeMs;
+    float memoryMb;
+    float cpuUsagePercent;
+    float gpuUsagePercent;
+
+    void send();
+};
+
+enum class TimingEventSubsystem {
+    Rendering = 1,
+    Physics = 2,
+    AI = 3,
+    Scripting = 4,
+    Animation = 5,
+    Audio = 6,
+    Networking = 7,
+    Io = 8,
+    Scene = 9,
+    Other = 10,
+};
+
+struct TimingEventPacket {
+    std::string name;
+    TimingEventSubsystem subsystem;
+    float durationMs;
+    unsigned int frameNumber;
+
+    void send();
+};
+
 #endif // TRACER_DATA_H
