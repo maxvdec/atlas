@@ -90,4 +90,31 @@ class ResourceTracker {
     }
 };
 
+// Objects Debug
+
+enum class DebugObjectType {
+    StaticMesh = 1,
+    SkeletalMesh = 2,
+    ParticleSystem = 3,
+    LightProbe = 4,
+    Terrain = 5,
+    Other = 6,
+};
+
+struct DebugObjectPacket {
+    int objectId;
+    DebugObjectType objectType;
+
+    int triangleCount;
+    int materialCount;
+
+    float vertexBufferSizeMb;
+    float indexBufferSizeMb;
+    float textureCount;
+
+    int drawCallsForObject;
+
+    void send();
+};
+
 #endif // TRACER_DATA_H

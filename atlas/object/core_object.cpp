@@ -846,6 +846,22 @@ void CoreObject::render(float dt,
     commandBuffer->bindPipeline(this->pipeline);
     commandBuffer->draw(vertices.size(), 1, 0, 0, id);
     commandBuffer->unbindDrawingState();
+
+    DebugObjectPacket debugPacket{};
+    debugPacket.drawCallsForObject = 1;
+    debugPacket.triangleCount = static_cast<uint32_t>(indices.size() / 3);
+    debugPacket.vertexBufferSizeMb =
+        static_cast<float>(sizeof(CoreVertex) * vertices.size()) /
+        (1024.0f * 1024.0f);
+    debugPacket.indexBufferSizeMb =
+        static_cast<float>(sizeof(Index) * indices.size()) /
+        (1024.0f * 1024.0f);
+    debugPacket.textureCount = static_cast<uint32_t>(textures.size());
+    debugPacket.materialCount = 1;
+    debugPacket.objectType = DebugObjectType::StaticMesh;
+    debugPacket.objectId = this->id;
+
+    debugPacket.send();
 }
 
 void CoreObject::setViewMatrix(const glm::mat4 &view) {

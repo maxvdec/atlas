@@ -10,6 +10,7 @@
 #include "hydra/fluid.h"
 #include "atlas/light.h"
 #include "atlas/texture.h"
+#include "atlas/tracer/data.h"
 #include "atlas/tracer/log.h"
 #include "atlas/window.h"
 #include "opal/opal.h"
@@ -68,15 +69,16 @@ void Fluid::initialize() {
 
     auto makeBinding = [&](const char *name, unsigned int location,
                            unsigned int size, size_t offset) {
-        opal::VertexAttribute attribute{std::string(name),
-                                        opal::VertexAttributeType::Float,
-                                        static_cast<unsigned int>(offset),
-                                        location,
-                                        false,
-                                        size,
-                                        stride,
-                                        opal::VertexBindingInputRate::Vertex,
-                                        0};
+        opal::VertexAttribute attribute{
+            .name = std::string(name),
+            .type = opal::VertexAttributeType::Float,
+            .offset = static_cast<unsigned int>(offset),
+            .location = location,
+            .normalized = false,
+            .size = size,
+            .stride = stride,
+            .inputRate = opal::VertexBindingInputRate::Vertex,
+            .divisor = 0};
         bindings.push_back({attribute, vertexBuffer});
     };
 
@@ -200,6 +202,24 @@ void Fluid::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
     fluidPipeline->bind();
 
     captureDirty = true;
+
+    DebugObjectPacket debugPacket{};
+    debugPacket.drawCallsForObject = 1;
+    debugPacket.triangleCount = indices.size() / 3;
+    debugPacket.vertexBufferSizeMb =
+        static_cast<float>(sizeof(FluidVertex) * vertices.size()) /
+        (1024.0f * 1024.0f);
+    debugPacket.indexBufferSizeMb =
+        static_cast<float>(sizeof(unsigned int) * indices.size()) /
+        (1024.0f * 1024.0f);
+    debugPacket.textureCount =
+        (reflectionTarget ? 1 : 0) + (refractionTarget ? 1 : 0) +
+        (movementTexture.id != 0 ? 1 : 0) + (normalTexture.id != 0 ? 1 : 0);
+    debugPacket.materialCount = 0;
+    debugPacket.objectType = DebugObjectType::SkeletalMesh;
+    debugPacket.objectId = this->id;
+
+    debugPacket.send();
 }
 
 void Fluid::update(Window &window) { (void)window; }

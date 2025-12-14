@@ -8,6 +8,7 @@
 //
 #include <cstddef>
 #include <cstdint>
+#include "atlas/tracer/data.h"
 #include "opal/opal.h"
 #include "atlas/camera.h"
 #include "atlas/core/shader.h"
@@ -187,14 +188,11 @@ void Terrain::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
     terrainPipeline->setDepthCompareOp(opal::CompareOp::Less);
     terrainPipeline->enableDepthWrite(true);
     terrainPipeline->setCullMode(opal::CullMode::Back);
-    // Terrain geometry is wound clockwise; with CCW default, override to CW for
-    // draw
     terrainPipeline->setFrontFace(opal::FrontFace::Clockwise);
     terrainPipeline->setPrimitiveStyle(opal::PrimitiveStyle::Patches);
     terrainPipeline->setPatchVertices(patch_count);
     terrainPipeline->bind();
 
-    // Bind drawing state (VAO equivalent)
     commandBuffer->bindDrawingState(drawingState);
 
     terrainPipeline->setUniformMat4f("model", model);
@@ -292,10 +290,24 @@ void Terrain::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
     commandBuffer->drawPatches(patch_count * rez * rez, 0, id);
     commandBuffer->unbindDrawingState();
 
-    // Restore default state via pipeline (CCW default)
     terrainPipeline->setCullMode(opal::CullMode::Back);
     terrainPipeline->setFrontFace(opal::FrontFace::CounterClockwise);
     terrainPipeline->bind();
+
+    DebugObjectPacket debugPacket{};
+    debugPacket.drawCallsForObject = 1;
+    debugPacket.triangleCount =
+        static_cast<uint32_t>(patch_count * rez * rez) * 2;
+    debugPacket.vertexBufferSizeMb =
+        static_cast<float>(vertices.size() * sizeof(float)) /
+        (1024.0f * 1024.0f);
+    debugPacket.indexBufferSizeMb = 0.0f;
+    debugPacket.textureCount = 3 + static_cast<uint32_t>(biomes.size());
+    debugPacket.materialCount = 0;
+    debugPacket.objectType = DebugObjectType::Terrain;
+    debugPacket.objectId = this->id;
+
+    debugPacket.send();
 }
 
 void Terrain::updateModelMatrix() {

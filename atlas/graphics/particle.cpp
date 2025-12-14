@@ -7,6 +7,7 @@
 #include "atlas/camera.h"
 #include "atlas/core/shader.h"
 #include "atlas/object.h"
+#include "atlas/tracer/data.h"
 #include "atlas/units.h"
 #include "atlas/window.h"
 #include "opal/opal.h"
@@ -396,6 +397,20 @@ void ParticleEmitter::render(float dt,
     particlePipeline->enableDepthWrite(true);
     particlePipeline->enableBlending(false);
     particlePipeline->bind();
+
+    DebugObjectPacket debugPacket{};
+    debugPacket.drawCallsForObject = 1;
+    debugPacket.triangleCount = activeParticleCount * 2;
+    debugPacket.vertexBufferSizeMb =
+        static_cast<float>(sizeof(QuadVertex) * 4) / (1024.0f * 1024.0f);
+    debugPacket.indexBufferSizeMb =
+        static_cast<float>(sizeof(unsigned int) * 6) / (1024.0f * 1024.0f);
+    debugPacket.textureCount = useTexture ? 1 : 0;
+    debugPacket.materialCount = 0;
+    debugPacket.objectType = DebugObjectType::ParticleSystem;
+    debugPacket.objectId = this->id;
+
+    debugPacket.send();
 }
 
 void ParticleEmitter::setProjectionMatrix(const glm::mat4 &projection) {
