@@ -78,3 +78,17 @@ void Logger::error(const std::string &message, const std::string &file,
 
     TracerServices::getInstance().tracerPipe->send(log.dump() + "\n");
 }
+
+DebugTimer::DebugTimer(const std::string &name) : name(name) {
+    startTime = std::chrono::high_resolution_clock::now();
+}
+
+uint64_t DebugTimer::stop() {
+    auto endTime = std::chrono::high_resolution_clock::now();
+    uint64_t duration = std::chrono::duration_cast<std::chrono::microseconds>(
+                            endTime - startTime)
+                            .count();
+    return duration;
+}
+
+DebugTimer::~DebugTimer() {}

@@ -11,6 +11,7 @@
 #include "atlas/light.h"
 #include "atlas/object.h"
 #include "atlas/tracer/data.h"
+#include "atlas/tracer/log.h"
 #include "atlas/window.h"
 #include "opal/opal.h"
 #include <algorithm>
@@ -908,11 +909,21 @@ void CoreObject::update(Window &window) {
     if (!hasPhysics)
         return;
 
+    DebugTimer physicsTimer("Physics Update");
+
     this->body->update(window);
 
     this->position = this->body->position;
     this->rotation = Rotation3d::fromGlmQuat(this->body->orientation);
     updateModelMatrix();
+
+    uint64_t physicsTime = physicsTimer.stop();
+    TimingEventPacket physicsEvent{};
+    physicsEvent.name = "Physics Update";
+    physicsEvent.durationMs = static_cast<float>(physicsTime) / 1'000'000.0f;
+    physicsEvent.subsystem = TimingEventSubsystem::Physics;
+    physicsEvent.frameNumber = Window::mainWindow->device->frameCount;
+    physicsEvent.send();
 }
 
 void CoreObject::setupPhysics(Body body) {
