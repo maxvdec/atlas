@@ -637,10 +637,13 @@ class Pipeline {
     void bindBufferData(const std::string &name, const void *data, size_t size);
 
     void bindTexture(const std::string &name, std::shared_ptr<Texture> texture,
-                     int unit);
-    void bindTexture2D(const std::string &name, uint textureId, int unit);
-    void bindTexture3D(const std::string &name, uint textureId, int unit);
-    void bindTextureCubemap(const std::string &name, uint textureId, int unit);
+                     int unit, int callerId = -1);
+    void bindTexture2D(const std::string &name, uint textureId, int unit,
+                       int callerId = -1);
+    void bindTexture3D(const std::string &name, uint textureId, int unit,
+                       int callerId = -1);
+    void bindTextureCubemap(const std::string &name, uint textureId, int unit,
+                            int callerId = -1);
 
 #ifdef VULKAN
     VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
