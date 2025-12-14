@@ -10,6 +10,7 @@
 #include "atlas/core/shader.h"
 #include "atlas/light.h"
 #include "atlas/object.h"
+#include "atlas/tracer/data.h"
 #include "atlas/window.h"
 #include "opal/opal.h"
 #include <algorithm>
@@ -843,6 +844,7 @@ void CoreObject::render(float dt,
         commandBuffer->bindPipeline(this->pipeline);
         commandBuffer->drawIndexed(indices.size(), 1, 0, 0, 0);
         commandBuffer->unbindDrawingState();
+
         return;
     }
     commandBuffer->bindDrawingState(vao);

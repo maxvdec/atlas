@@ -1047,17 +1047,17 @@ class CommandBuffer {
     void bindDrawingState(std::shared_ptr<DrawingState> drawingState);
     void unbindDrawingState();
     void draw(uint vertexCount, uint instanceCount = 1, uint firstVertex = 0,
-              [[maybe_unused]] uint firstInstance = 0);
+              [[maybe_unused]] uint firstInstance = 0, int objectId = -1);
     void drawIndexed(uint indexCount, uint instanceCount = 1,
                      uint firstIndex = 0, int vertexOffset = 0,
-                     uint firstInstance = 0);
+                     uint firstInstance = 0, int objectId = -1);
     /**
      * @brief Draws using tessellation patches.
      * @param vertexCount Number of vertices to draw.
      * @param firstVertex Starting vertex offset.
      * Requires Pipeline with PrimitiveStyle::Patches and setPatchVertices().
      */
-    void drawPatches(uint vertexCount, uint firstVertex = 0);
+    void drawPatches(uint vertexCount, uint firstVertex = 0, int objectId = -1);
     void performResolve(std::shared_ptr<ResolveAction> resolveAction);
 
     void clearColor(float r, float g, float b, float a);
@@ -1066,7 +1066,6 @@ class CommandBuffer {
 
   private:
 #ifdef VULKAN
-    // Per-frame command buffers and sync objects
     static constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 3;
     std::vector<VkCommandBuffer> commandBuffers;
     std::vector<VkSemaphore> imageAvailableSemaphores;
@@ -1074,15 +1073,13 @@ class CommandBuffer {
     std::vector<VkFence> inFlightFences;
     uint32_t currentFrame = 0;
     uint32_t imageIndex = 0;
-    bool imageAcquired = false; // Track if we've acquired a swapchain image
-    bool commandBufferBegan =
-        false; // Track if command buffer recording has started
+    bool imageAcquired = false;
+    bool commandBufferBegan = false;
     void record(uint32_t imageIndex);
     void beginCommandBufferIfNeeded();
     void createSyncObjects();
     void bindVertexBuffersIfNeeded();
 
-    // Helper to get current frame's command buffer
     VkCommandBuffer getCurrentCommandBuffer() const {
         return commandBuffers.empty() ? VK_NULL_HANDLE
                                       : commandBuffers[currentFrame];
