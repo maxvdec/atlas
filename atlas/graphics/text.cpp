@@ -251,7 +251,7 @@ void Text::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
     textPipeline->setUniformMat4f("projection", projection);
 
     if (font.texture) {
-        textPipeline->bindTexture2D("text", font.texture->textureID, 0);
+        textPipeline->bindTexture2D("text", font.texture->textureID, 0, id);
     }
 
     commandBuffer->bindDrawingState(vao);

@@ -699,7 +699,7 @@ void Skybox::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
 
     pipeline->setUniformMat4f("view", view);
     pipeline->setUniformMat4f("projection", projection);
-    pipeline->bindTextureCubemap("skybox", cubemap.id, 0);
+    pipeline->bindTextureCubemap("skybox", cubemap.id, 0, obj->id);
 
     if (!Window::mainWindow || !Window::mainWindow->getCurrentScene()) {
         throw std::runtime_error(

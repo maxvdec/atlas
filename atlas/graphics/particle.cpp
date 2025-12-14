@@ -384,7 +384,7 @@ void ParticleEmitter::render(float dt,
         "isAmbient", (emissionType == ParticleEmissionType::Ambient) ? 1 : 0);
 
     if (useTexture) {
-        particlePipeline->bindTexture2D("particleTexture", texture.id, 0);
+        particlePipeline->bindTexture2D("particleTexture", texture.id, 0, id);
     }
 
     commandBuffer->bindDrawingState(vao);

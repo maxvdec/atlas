@@ -19,11 +19,12 @@ void ResourceEventInfo::send() {
     }
 
     json object;
-    object["callerObject"] = callerObject;
-    object["resourceType"] = static_cast<int>(resourceType);
+    object["caller_object"] = callerObject;
+    object["resource_type"] = static_cast<int>(resourceType);
     object["operation"] = static_cast<int>(operation);
-    object["frameNumber"] = frameNumber;
-    object["sizeMb"] = sizeMb;
+    object["frame_number"] = frameNumber;
+    object["size_mb"] = sizeMb;
+    object["type"] = "resource_event";
 
     TracerServices::getInstance().tracerPipe->send(object.dump() + "\n");
 }
@@ -34,12 +35,12 @@ void FrameResourcesInfo::send() {
     }
 
     json object;
-    object["frameNumber"] = frameNumber;
-    object["resourcesCreated"] = resourcesCreated;
-    object["resourcesLoaded"] = resourcesLoaded;
-    object["resourcesUnloaded"] = resourcesUnloaded;
-    object["totalMemoryMb"] = totalMemoryMb;
-
+    object["frame_number"] = frameNumber;
+    object["resources_created"] = resourcesCreated;
+    object["resources_loaded"] = resourcesLoaded;
+    object["resources_unloaded"] = resourcesUnloaded;
+    object["total_memory_mb"] = totalMemoryMb;
+    object["type"] = "frame_resources_info";
     TracerServices::getInstance().tracerPipe->send(object.dump() + "\n");
 }
 
@@ -49,18 +50,21 @@ void ObjectResourcesInfo::send() {
     }
 
     json object;
-    object["callerObject"] = callerObject;
-    object["resouceType"] = resouceType;
-    object["sizeMb"] = sizeMb;
+    object["caller_object"] = callerObject;
+    object["resource_type"] = resouceType;
+    object["size_mb"] = sizeMb;
 
     std::vector<json> breakdownArray;
     for (const auto &entry : breakdown) {
         json entryJson;
-        entryJson["individualType"] = entry.resourceType;
+        entryJson["individual_type"] = entry.resourceType;
         entryJson["count"] = entry.count;
         breakdownArray.push_back(entryJson);
     }
+
     object["breakdown"] = breakdownArray;
+
+    object["type"] = "object_resources_info";
 
     TracerServices::getInstance().tracerPipe->send(object.dump() + "\n");
 }

@@ -199,10 +199,10 @@ void Terrain::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
     terrainPipeline->setUniform1f("seaLevel", seaLevel);
     terrainPipeline->setUniform1i("isFromMap", createdWithMap ? 1 : 0);
 
-    terrainPipeline->bindTexture2D("heightMap", terrainTexture.id, 0);
-    terrainPipeline->bindTexture2D("moistureMap", moistureMapTexture.id, 1);
+    terrainPipeline->bindTexture2D("heightMap", terrainTexture.id, 0, id);
+    terrainPipeline->bindTexture2D("moistureMap", moistureMapTexture.id, 1, id);
     terrainPipeline->bindTexture2D("temperatureMap", temperatureMapTexture.id,
-                                   2);
+                                   2, id);
 
     for (int i = 0; i < 12; i++) {
         terrainPipeline->setUniform1i("texture" + std::to_string(i), i + 4);
@@ -216,7 +216,7 @@ void Terrain::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
             terrainPipeline->setUniform1i(
                 "biomes[" + std::to_string(i) + "].textureId", i + 4);
             terrainPipeline->bindTexture2D("biomeTexture" + std::to_string(i),
-                                           biome.texture.id, 3 + i);
+                                           biome.texture.id, 3 + i, id);
         } else {
             terrainPipeline->setUniform1i(
                 "biomes[" + std::to_string(i) + "].useTexture", 0);
@@ -255,7 +255,7 @@ void Terrain::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
             continue;
         hasShadow = true;
         terrainPipeline->bindTexture2D(
-            "shadowMap", dirLight->shadowRenderTarget->texture.id, 3);
+            "shadowMap", dirLight->shadowRenderTarget->texture.id, 3, id);
         ShadowParams shadowParams =
             dirLight->calculateLightSpaceMatrix(mainWindow->renderables);
         terrainPipeline->setUniformMat4f("lightViewProj",
