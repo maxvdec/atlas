@@ -12,7 +12,9 @@
 #include <cstring>
 #include <unistd.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <thread>
+#include <chrono>
 #include <mutex>
 #include <vector>
 #include <string>
@@ -34,65 +36,84 @@ void NetworkPipe::start() {
     }
     running = true;
 
-    listenerThread = std::thread(&NetworkPipe::listenLoop, this);
+    connectLoop();
 }
 
 void NetworkPipe::stop() {
     running = false;
-    if (clientSocket != -1) {
-        close(clientSocket);
-        clientSocket = -1;
+    int sock = clientSocket.exchange(-1);
+    if (sock != -1) {
+        close(sock);
     }
-    if (serverSocket != -1) {
-        close(serverSocket);
-        serverSocket = -1;
-    }
-    if (listenerThread.joinable()) {
-        listenerThread.join();
+    if (recvThread.joinable()) {
+        recvThread.join();
     }
 }
 
-void NetworkPipe::listenLoop() {
-    serverSocket = socket(AF_INET, SOCK_STREAM, 0);
-    if (serverSocket == -1) {
-        perror("socket");
+void NetworkPipe::connectLoop() {
+    bool connected = false;
+    bool messageShown = false;
+
+    while (running && !connected) {
+        clientSocket = socket(AF_INET, SOCK_STREAM, 0);
+        if (clientSocket == -1) {
+            perror("socket");
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+            continue;
+        }
+
+        sockaddr_in addr{};
+        addr.sin_family = AF_INET;
+        addr.sin_port = htons(port);
+
+        if (inet_pton(AF_INET, serverAddress.c_str(), &addr.sin_addr) <= 0) {
+            std::cerr << "Invalid address" << std::endl;
+            close(clientSocket);
+            clientSocket = -1;
+            return;
+        }
+
+        if (connect(clientSocket, reinterpret_cast<sockaddr *>(&addr),
+                    sizeof(addr)) < 0) {
+            if (!messageShown) {
+                std::cout
+                    << "\033[1;3;32mWaiting for a tracer to connect...\033[0m"
+                    << std::endl;
+                messageShown = true;
+            }
+            close(clientSocket);
+            clientSocket = -1;
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+            continue;
+        }
+
+        connected = true;
+        if (messageShown) {
+            std::cout << "\rConnected to tracer on port " << port << "!"
+                      << std::string(20, ' ') << std::endl;
+        } else {
+            std::cout << "Connected to tracer on port " << port << "!"
+                      << std::endl;
+        }
+    }
+
+    if (!connected) {
         return;
     }
 
-    sockaddr_in addr{};
-    addr.sin_family = AF_INET;
-    addr.sin_addr.s_addr = INADDR_ANY;
-    addr.sin_port = htons(port);
+    recvThread = std::thread(&NetworkPipe::receiveLoop, this);
+}
 
-    int opt = 1;
-    setsockopt(serverSocket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-
-    if (bind(serverSocket, reinterpret_cast<sockaddr *>(&addr), sizeof(addr)) <
-        0) {
-        perror("bind");
-        return;
-    }
-
-    if (listen(serverSocket, 1) < 0) {
-        perror("listen");
-        return;
-    }
-
-    std::cout << "Listening on port " << port << "...\n";
-
-    sockaddr_in clientAddr{};
-    socklen_t clientLen = sizeof(clientAddr);
-    clientSocket = accept(
-        serverSocket, reinterpret_cast<sockaddr *>(&clientAddr), &clientLen);
-    if (clientSocket < 0) {
-        perror("accept");
-        return;
-    }
-
+void NetworkPipe::receiveLoop() {
     char buffer[4096];
     while (running) {
+        int sock = clientSocket.load();
+        if (sock == -1) {
+            break;
+        }
+
         std::memset(buffer, 0, sizeof(buffer));
-        ssize_t received = recv(clientSocket, buffer, sizeof(buffer), 0);
+        ssize_t received = recv(sock, buffer, sizeof(buffer), 0);
         if (received > 0) {
             std::string msg(buffer, received);
 
@@ -105,9 +126,11 @@ void NetworkPipe::listenLoop() {
                 dispatcher(msg);
             }
         } else if (received == 0) {
-            std::cout << "Client disconnected\n";
-            close(clientSocket);
-            clientSocket = -1;
+            std::cout << "Tracer disconnected\n";
+            int expected = sock;
+            if (clientSocket.compare_exchange_strong(expected, -1)) {
+                close(sock);
+            }
             break;
         } else {
             perror("recv");
@@ -117,8 +140,9 @@ void NetworkPipe::listenLoop() {
 }
 
 void NetworkPipe::send(const std::string &message) const {
-    if (clientSocket != -1) {
-        ssize_t sent = ::send(clientSocket, message.c_str(), message.size(), 0);
+    int sock = clientSocket.load();
+    if (sock != -1) {
+        ssize_t sent = ::send(sock, message.c_str(), message.size(), 0);
         if (sent < 0) {
             perror("send");
         }

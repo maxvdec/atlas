@@ -13,6 +13,7 @@
 #include "atlas/object.h"
 #include "atlas/scene.h"
 #include "atlas/texture.h"
+#include "atlas/tracer/log.h"
 #include "atlas/units.h"
 #include "hydra/fluid.h"
 #include "bezel/body.h"
@@ -213,17 +214,8 @@ Window::Window(WindowConfiguration config)
               << "\033[0m" << std::endl;
 #endif
 
-    // Initialize test network pipe
-    this->testNetworkPipe = std::make_shared<NetworkPipe>();
-    testNetworkPipe->setPort(5123);
-    testNetworkPipe->onRecieve([](const std::string &message) {
-        std::cout << "Received message on test pipe: " << message << std::endl;
-    });
-    testNetworkPipe->start();
-    testNetworkPipe->send("Hello from Atlas Window!");
-
-    while (true) {
-    }
+    TracerServices::getInstance().startTracing(TRACER_PORT);
+    atlas_log("Hello, World!, Atlas Tracer initialized.");
 }
 
 std::tuple<int, int> Window::getCursorPosition() {
