@@ -381,14 +381,14 @@ void CoreObject::initialize() {
         vao = opal::DrawingState::create(nullptr);
     }
 
-    vbo = opal::Buffer::create(opal::BufferUsage::VertexBuffer,
-                               vertices.size() * sizeof(CoreVertex),
-                               vertices.data());
+    vbo = opal::Buffer::create(
+        opal::BufferUsage::VertexBuffer, vertices.size() * sizeof(CoreVertex),
+        vertices.data(), opal::MemoryUsageType::CPUToGPU, id);
 
     if (!indices.empty()) {
-        ebo = opal::Buffer::create(opal::BufferUsage::IndexArray,
-                                   indices.size() * sizeof(Index),
-                                   indices.data());
+        ebo = opal::Buffer::create(
+            opal::BufferUsage::IndexArray, indices.size() * sizeof(Index),
+            indices.data(), opal::MemoryUsageType::CPUToGPU, id);
     }
 
     vao->setBuffers(vbo, ebo);
@@ -449,7 +449,8 @@ void CoreObject::initialize() {
 
         instanceVBO = opal::Buffer::create(opal::BufferUsage::GeneralPurpose,
                                            instances.size() * sizeof(glm::mat4),
-                                           modelMatrices.data());
+                                           modelMatrices.data(),
+                                           opal::MemoryUsageType::CPUToGPU, id);
         auto instanceBindings = makeInstanceAttributeBindings(instanceVBO);
         vao->configureAttributes(instanceBindings);
     }
@@ -553,7 +554,7 @@ void CoreObject::render(float dt,
 
         for (int i = 0; i < count; i++) {
             std::string uniformName = "texture" + std::to_string(i + 1) + "";
-            this->pipeline->bindTexture2D(uniformName, textures[i].id, i);
+            this->pipeline->bindTexture2D(uniformName, textures[i].id, i, id);
             boundTextures++;
         }
 
@@ -664,19 +665,19 @@ void CoreObject::render(float dt,
         Window *window = Window::mainWindow;
         RenderTarget *gBuffer = window->gBuffer.get();
         this->pipeline->bindTexture2D("gPosition", gBuffer->gPosition.id,
-                                      boundTextures);
+                                      boundTextures, id);
         boundTextures++;
 
         this->pipeline->bindTexture2D("gNormal", gBuffer->gNormal.id,
-                                      boundTextures);
+                                      boundTextures, id);
         boundTextures++;
 
         this->pipeline->bindTexture2D("gAlbedoSpec", gBuffer->gAlbedoSpec.id,
-                                      boundTextures);
+                                      boundTextures, id);
         boundTextures++;
 
         this->pipeline->bindTexture2D("gMaterial", gBuffer->gMaterial.id,
-                                      boundTextures);
+                                      boundTextures, id);
         boundTextures++;
     }
 
@@ -704,7 +705,7 @@ void CoreObject::render(float dt,
                 "shadowParams[" + std::to_string(boundParameters) + "]";
             this->pipeline->bindTexture2D(baseName + ".textureIndex",
                                           light->shadowRenderTarget->texture.id,
-                                          boundTextures);
+                                          boundTextures, id);
             ShadowParams shadowParams = light->calculateLightSpaceMatrix(
                 Window::mainWindow->renderables);
             this->pipeline->setUniformMat4f(baseName + ".lightView",
@@ -730,7 +731,7 @@ void CoreObject::render(float dt,
                 "shadowParams[" + std::to_string(boundParameters) + "]";
             this->pipeline->bindTexture2D(baseName + ".textureIndex",
                                           light->shadowRenderTarget->texture.id,
-                                          boundTextures);
+                                          boundTextures, id);
             std::tuple<glm::mat4, glm::mat4> lightSpace =
                 light->calculateLightSpaceMatrix();
             this->pipeline->setUniformMat4f(baseName + ".lightView",
@@ -756,7 +757,7 @@ void CoreObject::render(float dt,
                 "shadowParams[" + std::to_string(boundParameters) + "]";
             this->pipeline->bindTextureCubemap(
                 baseName + ".textureIndex",
-                light->shadowRenderTarget->texture.id, 10 + boundCubemaps);
+                light->shadowRenderTarget->texture.id, 10 + boundCubemaps, id);
             this->pipeline->setUniform1i(baseName + ".textureIndex",
                                          boundCubemaps);
             this->pipeline->setUniform1f(baseName + ".farPlane",
@@ -787,7 +788,7 @@ void CoreObject::render(float dt,
         Scene *scene = window->getCurrentScene();
         if (scene->skybox != nullptr) {
             this->pipeline->bindTextureCubemap(
-                "skybox", scene->skybox->cubemap.id, boundTextures);
+                "skybox", scene->skybox->cubemap.id, boundTextures, id);
             boundTextures++;
         }
     }
@@ -941,7 +942,8 @@ void CoreObject::updateInstances() {
     if (this->instanceVBO == nullptr) {
         instanceVBO =
             opal::Buffer::create(opal::BufferUsage::GeneralPurpose,
-                                 instances.size() * sizeof(glm::mat4), nullptr);
+                                 instances.size() * sizeof(glm::mat4), nullptr,
+                                 opal::MemoryUsageType::CPUToGPU, id);
         auto instanceBindings = makeInstanceAttributeBindings(instanceVBO);
         vao->configureAttributes(instanceBindings);
     }
@@ -954,10 +956,10 @@ void CoreObject::updateInstances() {
         modelMatrices.push_back(instance.getModelMatrix());
     }
 
-    instanceVBO->bind();
+    instanceVBO->bind(id);
     instanceVBO->updateData(0, instances.size() * sizeof(glm::mat4),
                             modelMatrices.data());
-    instanceVBO->unbind();
+    instanceVBO->unbind(id);
 }
 
 void Instance::updateModelMatrix() {

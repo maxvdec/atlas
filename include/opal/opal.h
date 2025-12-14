@@ -441,7 +441,7 @@ class Shader {
 class ShaderProgram {
   public:
     static std::shared_ptr<ShaderProgram> create();
-    void attachShader(std::shared_ptr<Shader> shader);
+    void attachShader(std::shared_ptr<Shader> shader, int callerId = -1);
 
     void link();
     void use();
@@ -637,10 +637,13 @@ class Pipeline {
     void bindBufferData(const std::string &name, const void *data, size_t size);
 
     void bindTexture(const std::string &name, std::shared_ptr<Texture> texture,
-                     int unit);
-    void bindTexture2D(const std::string &name, uint textureId, int unit);
-    void bindTexture3D(const std::string &name, uint textureId, int unit);
-    void bindTextureCubemap(const std::string &name, uint textureId, int unit);
+                     int unit, int callerId = -1);
+    void bindTexture2D(const std::string &name, uint textureId, int unit,
+                       int callerId = -1);
+    void bindTexture3D(const std::string &name, uint textureId, int unit,
+                       int callerId = -1);
+    void bindTextureCubemap(const std::string &name, uint textureId, int unit,
+                            int callerId = -1);
 
 #ifdef VULKAN
     VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
@@ -791,12 +794,13 @@ class Buffer {
   public:
     static std::shared_ptr<Buffer>
     create(BufferUsage usage, size_t size, const void *data = nullptr,
-           MemoryUsageType memoryUsage = MemoryUsageType::GPUOnly);
+           MemoryUsageType memoryUsage = MemoryUsageType::GPUOnly,
+           int callerId = -1);
 
     void updateData(size_t offset, size_t size, const void *data);
 
-    void bind() const;
-    void unbind() const;
+    void bind(int callerId = -1) const;
+    void unbind(int callerId = -1) const;
 
     uint bufferID;
 

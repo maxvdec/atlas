@@ -53,9 +53,11 @@ void Fluid::initialize() {
     atlas_log("Initializing fluid");
 
     vertexBuffer = opal::Buffer::create(opal::BufferUsage::VertexBuffer,
-                                        sizeof(vertices), vertices.data());
+                                        sizeof(vertices), vertices.data(),
+                                        opal::MemoryUsageType::GPUOnly, id);
     indexBuffer = opal::Buffer::create(opal::BufferUsage::IndexArray,
-                                       sizeof(indices), indices.data());
+                                       sizeof(indices), indices.data(),
+                                       opal::MemoryUsageType::GPUOnly, id);
 
     drawingState = opal::DrawingState::create(vertexBuffer, indexBuffer);
     drawingState->setBuffers(vertexBuffer, indexBuffer);
@@ -131,33 +133,33 @@ void Fluid::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
         return;
     }
 
-    fluidPipeline->bindTexture2D("sceneTexture", target->texture.id, 0);
-    fluidPipeline->bindTexture2D("sceneDepth", target->depthTexture.id, 1);
+    fluidPipeline->bindTexture2D("sceneTexture", target->texture.id, 0, id);
+    fluidPipeline->bindTexture2D("sceneDepth", target->depthTexture.id, 1, id);
 
     if (reflectionTarget) {
         fluidPipeline->bindTexture2D("reflectionTexture",
-                                     reflectionTarget->texture.id, 3);
+                                     reflectionTarget->texture.id, 3, id);
     } else {
-        fluidPipeline->bindTexture2D("reflectionTexture", target->texture.id,
-                                     3);
+        fluidPipeline->bindTexture2D("reflectionTexture", target->texture.id, 3,
+                                     id);
     }
 
     if (refractionTarget) {
         fluidPipeline->bindTexture2D("refractionTexture",
-                                     refractionTarget->texture.id, 4);
+                                     refractionTarget->texture.id, 4, id);
     } else {
-        fluidPipeline->bindTexture2D("refractionTexture", target->texture.id,
-                                     4);
+        fluidPipeline->bindTexture2D("refractionTexture", target->texture.id, 4,
+                                     id);
     }
 
-    fluidPipeline->bindTexture2D("movementTexture", movementTexture.id, 5);
+    fluidPipeline->bindTexture2D("movementTexture", movementTexture.id, 5, id);
     if (movementTexture.id == 0) {
         fluidPipeline->setUniform1i("hasMovementTexture", 0);
     } else {
         fluidPipeline->setUniform1i("hasMovementTexture", 1);
     }
 
-    fluidPipeline->bindTexture2D("normalTexture", normalTexture.id, 6);
+    fluidPipeline->bindTexture2D("normalTexture", normalTexture.id, 6, id);
     fluidPipeline->setUniform1i("hasNormalTexture", normalTexture.id != 0);
 
     fluidPipeline->setUniform3f("cameraPos",

@@ -622,40 +622,46 @@ void RenderTarget::render(float dt,
     Camera *camera = Window::mainWindow->camera;
 
     if (texture.type == TextureType::DepthCube) {
-        renderTargetPipeline->bindTextureCubemap("cubeMap", texture.id, 10);
+        renderTargetPipeline->bindTextureCubemap("cubeMap", texture.id, 10,
+                                                 obj->id);
         renderTargetPipeline->setUniform1i("isCubeMap", 1);
     } else {
         if (texture.id == 0) {
-            renderTargetPipeline->bindTexture2D("Texture", gMaterial.id, 0);
+            renderTargetPipeline->bindTexture2D("Texture", gMaterial.id, 0,
+                                                obj->id);
             renderTargetPipeline->setUniform1i("isCubeMap", 0);
         } else {
-            renderTargetPipeline->bindTexture2D("Texture", texture.id, 0);
+            renderTargetPipeline->bindTexture2D("Texture", texture.id, 0,
+                                                obj->id);
             renderTargetPipeline->setUniform1i("isCubeMap", 0);
         }
 
         renderTargetPipeline->bindTexture2D("BrightTexture", blurredTexture.id,
-                                            1);
+                                            1, obj->id);
         renderTargetPipeline->setUniform1i("hasBrightTexture",
                                            brightTexture.id != 0 ? 1 : 0);
 
-        renderTargetPipeline->bindTexture2D("DepthTexture", depthTexture.id, 2);
+        renderTargetPipeline->bindTexture2D("DepthTexture", depthTexture.id, 2,
+                                            obj->id);
         const bool hasDepth = depthTexture.id != 0;
         renderTargetPipeline->setUniform1i("hasDepthTexture", hasDepth ? 1 : 0);
 
-        renderTargetPipeline->bindTexture2D("VolumetricLightTexture",
-                                            volumetricLightTexture.id, 3);
+        renderTargetPipeline->bindTexture2D(
+            "VolumetricLightTexture", volumetricLightTexture.id, 3, obj->id);
         renderTargetPipeline->setUniform1i(
             "hasVolumetricLightTexture", volumetricLightTexture.id > 1 ? 1 : 0);
 
-        renderTargetPipeline->bindTexture2D("PositionTexture", gPosition.id, 4);
+        renderTargetPipeline->bindTexture2D("PositionTexture", gPosition.id, 4,
+                                            obj->id);
         renderTargetPipeline->setUniform1i("hasPositionTexture",
                                            gPosition.id != 0 ? 1 : 0);
 
-        renderTargetPipeline->bindTexture2D("SSRTexture", ssrTexture.id, 5);
+        renderTargetPipeline->bindTexture2D("SSRTexture", ssrTexture.id, 5,
+                                            obj->id);
         renderTargetPipeline->setUniform1i("hasSSRTexture",
                                            ssrTexture.id != 0 ? 1 : 0);
 
-        renderTargetPipeline->bindTexture2D("LUTTexture", LUT.id, 6);
+        renderTargetPipeline->bindTexture2D("LUTTexture", LUT.id, 6, obj->id);
         renderTargetPipeline->setUniform1i("hasLUTTexture",
                                            LUT.id != 0 ? 1 : 0);
 
@@ -724,7 +730,8 @@ void RenderTarget::render(float dt,
                                 ambientIntensity;
 
             renderTargetPipeline->bindTexture3D(
-                "cloudsTexture", cloudSettings.getCloudTexture(128), 15);
+                "cloudsTexture", cloudSettings.getCloudTexture(128), 15,
+                obj->id);
             renderTargetPipeline->setUniform3f("cloudSize", cloudSize.x,
                                                cloudSize.y, cloudSize.z);
             renderTargetPipeline->setUniform3f("cloudPosition", cloudPos.x,
@@ -765,7 +772,8 @@ void RenderTarget::render(float dt,
                                                ambient.y, ambient.z);
             renderTargetPipeline->setUniform1i("hasClouds", 1);
         } else {
-            renderTargetPipeline->bindTexture3D("cloudsTexture", 0, 15);
+            renderTargetPipeline->bindTexture3D("cloudsTexture", 0, 15,
+                                                obj->id);
             renderTargetPipeline->setUniform1i("hasClouds", 0);
         }
     }
