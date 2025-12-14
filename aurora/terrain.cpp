@@ -8,10 +8,12 @@
 //
 #include <cstddef>
 #include <cstdint>
+#include "atlas/tracer/data.h"
 #include "opal/opal.h"
 #include "atlas/camera.h"
 #include "atlas/core/shader.h"
 #include "atlas/light.h"
+#include "atlas/tracer/log.h"
 #include "atlas/window.h"
 #include "atlas/workspace.h"
 #include <aurora/terrain.h>
@@ -22,6 +24,7 @@
 #include <glm/gtx/string_cast.hpp>
 
 void Terrain::initialize() {
+    atlas_log("Initializing terrain");
     VertexShader vertexShader =
         VertexShader::fromDefaultShader(AtlasVertexShader::Terrain);
     FragmentShader fragmentShader =
@@ -43,6 +46,7 @@ void Terrain::initialize() {
     std::vector<uint8_t> heightData = {};
     if (createdWithMap) {
         if (heightmap.type != ResourceType::Image) {
+            atlas_error("Heightmap resource is not an image");
             throw std::runtime_error("Heightmap resource is not an image");
         }
 
@@ -50,6 +54,7 @@ void Terrain::initialize() {
         data = stbi_load(heightmap.path.string().c_str(), &width, &height,
                          &nChannels, 0);
         if (data == nullptr) {
+            atlas_error("Failed to load heightmap: " + heightmap.path.string());
             std::cerr << "Failed to load heightmap!" << std::endl;
             return;
         }
@@ -73,6 +78,7 @@ void Terrain::initialize() {
         data = heightData.data();
         nChannels = 4;
     } else {
+        atlas_error("No heightmap resource or terrain generator provided");
         throw std::runtime_error(
             "No heightmap resource or terrain generator provided");
     }
@@ -140,22 +146,28 @@ void Terrain::initialize() {
         data = nullptr;
     }
 
-    // Create vertex buffer with opal
     vertexBuffer = opal::Buffer::create(
         opal::BufferUsage::VertexBuffer, vertices.size() * sizeof(float),
-        vertices.data(), opal::MemoryUsageType::GPUOnly);
+        vertices.data(), opal::MemoryUsageType::GPUOnly, id);
 
-    // Create drawing state (VAO equivalent)
     drawingState = opal::DrawingState::create(vertexBuffer, nullptr);
 
-    // Configure vertex attributes
     std::vector<opal::VertexAttributeBinding> attributeBindings = {
-        {opal::VertexAttribute{"position", opal::VertexAttributeType::Float, 0,
-                               0, false, 3, 5 * sizeof(float)},
+        {opal::VertexAttribute{.name = "position",
+                               .type = opal::VertexAttributeType::Float,
+                               .offset = 0,
+                               .location = 0,
+                               .normalized = false,
+                               .size = 3,
+                               .stride = 5 * sizeof(float)},
          vertexBuffer},
-        {opal::VertexAttribute{"texCoord", opal::VertexAttributeType::Float,
-                               3 * sizeof(float), 1, false, 2,
-                               5 * sizeof(float)},
+        {opal::VertexAttribute{.name = "texCoord",
+                               .type = opal::VertexAttributeType::Float,
+                               .offset = 3 * sizeof(float),
+                               .location = 1,
+                               .normalized = false,
+                               .size = 2,
+                               .stride = 5 * sizeof(float)},
          vertexBuffer}};
     drawingState->configureAttributes(attributeBindings);
 
@@ -176,14 +188,11 @@ void Terrain::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
     terrainPipeline->setDepthCompareOp(opal::CompareOp::Less);
     terrainPipeline->enableDepthWrite(true);
     terrainPipeline->setCullMode(opal::CullMode::Back);
-    // Terrain geometry is wound clockwise; with CCW default, override to CW for
-    // draw
     terrainPipeline->setFrontFace(opal::FrontFace::Clockwise);
     terrainPipeline->setPrimitiveStyle(opal::PrimitiveStyle::Patches);
     terrainPipeline->setPatchVertices(patch_count);
     terrainPipeline->bind();
 
-    // Bind drawing state (VAO equivalent)
     commandBuffer->bindDrawingState(drawingState);
 
     terrainPipeline->setUniformMat4f("model", model);
@@ -194,10 +203,10 @@ void Terrain::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
     terrainPipeline->setUniform1f("seaLevel", seaLevel);
     terrainPipeline->setUniform1i("isFromMap", createdWithMap ? 1 : 0);
 
-    terrainPipeline->bindTexture2D("heightMap", terrainTexture.id, 0);
-    terrainPipeline->bindTexture2D("moistureMap", moistureMapTexture.id, 1);
+    terrainPipeline->bindTexture2D("heightMap", terrainTexture.id, 0, id);
+    terrainPipeline->bindTexture2D("moistureMap", moistureMapTexture.id, 1, id);
     terrainPipeline->bindTexture2D("temperatureMap", temperatureMapTexture.id,
-                                   2);
+                                   2, id);
 
     for (int i = 0; i < 12; i++) {
         terrainPipeline->setUniform1i("texture" + std::to_string(i), i + 4);
@@ -211,7 +220,7 @@ void Terrain::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
             terrainPipeline->setUniform1i(
                 "biomes[" + std::to_string(i) + "].textureId", i + 4);
             terrainPipeline->bindTexture2D("biomeTexture" + std::to_string(i),
-                                           biome.texture.id, 3 + i);
+                                           biome.texture.id, 3 + i, id);
         } else {
             terrainPipeline->setUniform1i(
                 "biomes[" + std::to_string(i) + "].useTexture", 0);
@@ -250,7 +259,7 @@ void Terrain::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
             continue;
         hasShadow = true;
         terrainPipeline->bindTexture2D(
-            "shadowMap", dirLight->shadowRenderTarget->texture.id, 3);
+            "shadowMap", dirLight->shadowRenderTarget->texture.id, 3, id);
         ShadowParams shadowParams =
             dirLight->calculateLightSpaceMatrix(mainWindow->renderables);
         terrainPipeline->setUniformMat4f("lightViewProj",
@@ -278,14 +287,27 @@ void Terrain::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
     AmbientLight ambient = mainWindow->getCurrentScene()->ambientLight;
     terrainPipeline->setUniform1f("ambientStrength", ambient.intensity * 4.0);
 
-    // Draw tessellation patches using opal command buffer
-    commandBuffer->drawPatches(patch_count * rez * rez, 0);
+    commandBuffer->drawPatches(patch_count * rez * rez, 0, id);
     commandBuffer->unbindDrawingState();
 
-    // Restore default state via pipeline (CCW default)
     terrainPipeline->setCullMode(opal::CullMode::Back);
     terrainPipeline->setFrontFace(opal::FrontFace::CounterClockwise);
     terrainPipeline->bind();
+
+    DebugObjectPacket debugPacket{};
+    debugPacket.drawCallsForObject = 1;
+    debugPacket.triangleCount =
+        static_cast<uint32_t>(patch_count * rez * rez) * 2;
+    debugPacket.vertexBufferSizeMb =
+        static_cast<float>(vertices.size() * sizeof(float)) /
+        (1024.0f * 1024.0f);
+    debugPacket.indexBufferSizeMb = 0.0f;
+    debugPacket.textureCount = 3 + static_cast<uint32_t>(biomes.size());
+    debugPacket.materialCount = 0;
+    debugPacket.objectType = DebugObjectType::Terrain;
+    debugPacket.objectId = this->id;
+
+    debugPacket.send();
 }
 
 void Terrain::updateModelMatrix() {

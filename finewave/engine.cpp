@@ -11,6 +11,7 @@
 #include <AL/al.h>
 #include <AL/alc.h>
 #include <iostream>
+#include "atlas/tracer/log.h"
 #include "atlas/units.h"
 
 const char *getALErrorStringSourceEngine(ALenum error) {
@@ -43,8 +44,10 @@ const char *getALErrorStringSourceEngine(ALenum error) {
     }
 
 bool AudioEngine::initialize() {
+    atlas_log("Initializing audio engine");
     ALCdevice *device = alcOpenDevice(nullptr);
     if (device == nullptr) {
+        atlas_error("Failed to open OpenAL device");
         return false;
     }
 
@@ -57,6 +60,7 @@ bool AudioEngine::initialize() {
 
     ALCcontext *context = alcCreateContext(device, nullptr);
     if (context == nullptr) {
+        atlas_error("Failed to create OpenAL context");
         alcCloseDevice(device);
         return false;
     }
@@ -101,6 +105,8 @@ bool AudioEngine::initialize() {
     CHECK_AL_ERROR();
 
     alDistanceModel(AL_INVERSE_DISTANCE_CLAMPED);
+    atlas_log("Audio engine initialized successfully (device: " +
+              this->deviceName + ")");
     return true;
 }
 

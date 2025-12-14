@@ -7,12 +7,15 @@
  Copyright (c) 2025 maxvdec
 */
 
+#include "atlas/tracer/data.h"
 #include "opal/opal.h"
+#include "atlas/tracer/log.h"
 #include <array>
 #include <cctype>
 #include <cstdint>
 #include <glad/glad.h>
 #include <memory>
+#include <string>
 #include <vector>
 #include <iostream>
 #ifdef VULKAN
@@ -37,6 +40,7 @@ uint Shader::getGLShaderType(ShaderType type) {
     case ShaderType::TessellationEvaluation:
         return GL_TESS_EVALUATION_SHADER;
     default:
+        atlas_error("Unknown shader type");
         throw std::runtime_error("Unknown shader type");
     }
 }
@@ -160,7 +164,7 @@ std::shared_ptr<ShaderProgram> ShaderProgram::create() {
 #endif
 }
 
-void ShaderProgram::attachShader(std::shared_ptr<Shader> shader) {
+void ShaderProgram::attachShader(std::shared_ptr<Shader> shader, int callerId) {
 #ifdef OPENGL
     glAttachShader(programID, shader->shaderID);
     attachedShaders.push_back(shader);
@@ -169,6 +173,16 @@ void ShaderProgram::attachShader(std::shared_ptr<Shader> shader) {
     for (const auto &pair : shader->uniformBindings) {
         uniformBindings[pair.first] = pair.second;
     }
+
+    ResourceEventInfo info;
+    info.resourceType = DebugResourceType::Shader;
+    info.operation = DebugResourceOperation::Loaded;
+    info.callerObject = std::to_string(callerId);
+    info.frameNumber = Device::globalInstance->frameCount;
+    info.sizeMb =
+        static_cast<float>(shader->spirvBytecode.size()) / (1024.0f * 1024.0f);
+    info.send();
+
 #else
     throw std::runtime_error("Shader attachment not implemented for this API");
 #endif

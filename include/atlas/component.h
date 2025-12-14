@@ -16,7 +16,9 @@
 #include "atlas/units.h"
 #include "bezel/body.h"
 #include "opal/opal.h"
+#include <climits>
 #include <memory>
+#include <random>
 #include <vector>
 
 class CoreObject;
@@ -156,6 +158,16 @@ class TraitComponent : public Component {
  */
 class GameObject : public Renderable {
   public:
+    /**
+     * @brief Construct a new GameObject and assign it a unique ID.
+     */
+    GameObject() {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<int> dist(0, INT_MAX);
+        id = dist(gen);
+    }
+
     /**
      * @brief Attaches a shader program to the object.
      *
@@ -308,8 +320,18 @@ class GameObject : public Renderable {
      */
     std::shared_ptr<Body> body = nullptr;
 
+    /**
+     * @brief Returns the unique identifier associated with this object.
+     */
+    unsigned int getId() override { return id; }
+
   protected:
     std::vector<std::shared_ptr<Component>> components;
+
+    /**
+     * @brief The unique identifier for the object.
+     */
+    int id;
 };
 
 /**

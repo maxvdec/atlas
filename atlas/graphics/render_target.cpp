@@ -18,12 +18,16 @@
 #include "atlas/effect.h" // IWYU pragma: keep
 #include "atlas/object.h"
 #include "atlas/texture.h"
+#include "atlas/tracer/data.h"
+#include "atlas/tracer/log.h"
 #include "atlas/units.h"
 #include "atlas/window.h"
 #include "opal/opal.h"
 
 RenderTarget::RenderTarget(Window &window, RenderTargetType type,
                            int resolution) {
+    atlas_log("Creating render target (type: " +
+              std::to_string(static_cast<int>(type)) + ")");
     GLFWwindow *glfwWindow = static_cast<GLFWwindow *>(window.windowRef);
     int fbWidth, fbHeight;
     glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
@@ -77,6 +81,7 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
         this->depthTexture.type = TextureType::Depth;
 
         if (fb->getStatus() == false) {
+            atlas_error("Framebuffer is not complete for Scene render target");
             std::cerr << "Error: Framebuffer is not complete!" << std::endl;
         }
 
@@ -426,6 +431,17 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
     } else {
         throw std::runtime_error("Unknown render target type");
     }
+
+    AllocationPacket packet;
+    packet.description =
+        "RenderTarget Type " + std::to_string(static_cast<int>(type));
+    ;
+    packet.sizeMb = (static_cast<float>(width) * static_cast<float>(height) *
+                     4.0f /* bytes per pixel */) /
+                    (1024.0f * 1024.0f);
+    packet.kind = DebugResourceKind::RenderTarget;
+    packet.frameNumber = Window::mainWindow->device->frameCount;
+    packet.send();
 }
 
 void RenderTarget::display(Window &window, float zindex) {
@@ -618,40 +634,46 @@ void RenderTarget::render(float dt,
     Camera *camera = Window::mainWindow->camera;
 
     if (texture.type == TextureType::DepthCube) {
-        renderTargetPipeline->bindTextureCubemap("cubeMap", texture.id, 10);
+        renderTargetPipeline->bindTextureCubemap("cubeMap", texture.id, 10,
+                                                 obj->id);
         renderTargetPipeline->setUniform1i("isCubeMap", 1);
     } else {
         if (texture.id == 0) {
-            renderTargetPipeline->bindTexture2D("Texture", gMaterial.id, 0);
+            renderTargetPipeline->bindTexture2D("Texture", gMaterial.id, 0,
+                                                obj->id);
             renderTargetPipeline->setUniform1i("isCubeMap", 0);
         } else {
-            renderTargetPipeline->bindTexture2D("Texture", texture.id, 0);
+            renderTargetPipeline->bindTexture2D("Texture", texture.id, 0,
+                                                obj->id);
             renderTargetPipeline->setUniform1i("isCubeMap", 0);
         }
 
         renderTargetPipeline->bindTexture2D("BrightTexture", blurredTexture.id,
-                                            1);
+                                            1, obj->id);
         renderTargetPipeline->setUniform1i("hasBrightTexture",
                                            brightTexture.id != 0 ? 1 : 0);
 
-        renderTargetPipeline->bindTexture2D("DepthTexture", depthTexture.id, 2);
+        renderTargetPipeline->bindTexture2D("DepthTexture", depthTexture.id, 2,
+                                            obj->id);
         const bool hasDepth = depthTexture.id != 0;
         renderTargetPipeline->setUniform1i("hasDepthTexture", hasDepth ? 1 : 0);
 
-        renderTargetPipeline->bindTexture2D("VolumetricLightTexture",
-                                            volumetricLightTexture.id, 3);
+        renderTargetPipeline->bindTexture2D(
+            "VolumetricLightTexture", volumetricLightTexture.id, 3, obj->id);
         renderTargetPipeline->setUniform1i(
             "hasVolumetricLightTexture", volumetricLightTexture.id > 1 ? 1 : 0);
 
-        renderTargetPipeline->bindTexture2D("PositionTexture", gPosition.id, 4);
+        renderTargetPipeline->bindTexture2D("PositionTexture", gPosition.id, 4,
+                                            obj->id);
         renderTargetPipeline->setUniform1i("hasPositionTexture",
                                            gPosition.id != 0 ? 1 : 0);
 
-        renderTargetPipeline->bindTexture2D("SSRTexture", ssrTexture.id, 5);
+        renderTargetPipeline->bindTexture2D("SSRTexture", ssrTexture.id, 5,
+                                            obj->id);
         renderTargetPipeline->setUniform1i("hasSSRTexture",
                                            ssrTexture.id != 0 ? 1 : 0);
 
-        renderTargetPipeline->bindTexture2D("LUTTexture", LUT.id, 6);
+        renderTargetPipeline->bindTexture2D("LUTTexture", LUT.id, 6, obj->id);
         renderTargetPipeline->setUniform1i("hasLUTTexture",
                                            LUT.id != 0 ? 1 : 0);
 
@@ -720,7 +742,8 @@ void RenderTarget::render(float dt,
                                 ambientIntensity;
 
             renderTargetPipeline->bindTexture3D(
-                "cloudsTexture", cloudSettings.getCloudTexture(128), 15);
+                "cloudsTexture", cloudSettings.getCloudTexture(128), 15,
+                obj->id);
             renderTargetPipeline->setUniform3f("cloudSize", cloudSize.x,
                                                cloudSize.y, cloudSize.z);
             renderTargetPipeline->setUniform3f("cloudPosition", cloudPos.x,
@@ -761,7 +784,8 @@ void RenderTarget::render(float dt,
                                                ambient.y, ambient.z);
             renderTargetPipeline->setUniform1i("hasClouds", 1);
         } else {
-            renderTargetPipeline->bindTexture3D("cloudsTexture", 0, 15);
+            renderTargetPipeline->bindTexture3D("cloudsTexture", 0, 15,
+                                                obj->id);
             renderTargetPipeline->setUniform1i("hasClouds", 0);
         }
     }
@@ -786,13 +810,31 @@ void RenderTarget::render(float dt,
     commandBuffer->bindDrawingState(obj->vao);
     if (!obj->indices.empty()) {
         commandBuffer->drawIndexed(
-            static_cast<unsigned int>(obj->indices.size()), 1, 0, 0, 0);
+            static_cast<unsigned int>(obj->indices.size()), 1, 0, 0, 0,
+            obj->id);
     } else {
         commandBuffer->draw(static_cast<unsigned int>(obj->vertices.size()), 1,
-                            0, 0);
+                            0, 0, obj->id);
     }
     commandBuffer->unbindDrawingState();
 
     renderTargetPipeline->enableDepthTest(true);
     renderTargetPipeline->bind();
+
+    DebugObjectPacket debugPacket{};
+    debugPacket.drawCallsForObject = 1;
+    debugPacket.triangleCount = 2;
+    debugPacket.vertexBufferSizeMb =
+        static_cast<float>(sizeof(CoreVertex) * 4) / (1024.0f * 1024.0f);
+    debugPacket.indexBufferSizeMb =
+        static_cast<float>(sizeof(Index) * 6) / (1024.0f * 1024.0f);
+    debugPacket.textureCount =
+        1 + (brightTexture.id != 0 ? 1 : 0) + (depthTexture.id != 0 ? 1 : 0) +
+        (gPosition.id != 0 ? 1 : 0) + (ssrTexture.id != 0 ? 1 : 0) +
+        (LUT.id != 0 ? 1 : 0);
+    debugPacket.materialCount = 0;
+    debugPacket.objectType = DebugObjectType::Other;
+    debugPacket.objectId = obj->id;
+
+    debugPacket.send();
 }

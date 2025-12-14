@@ -11,6 +11,7 @@
 #define NETWORK_PIPE_H
 
 // TCP Pipe
+#include <atomic>
 #include <functional>
 #include <mutex>
 #include <string>
@@ -22,10 +23,10 @@ using PipeCallback = std::function<void(const std::string &)>;
 class NetworkPipe {
   private:
     int port = 0;
-    int serverSocket = -1;
-    int clientSocket = -1;
+    std::string serverAddress = "127.0.0.1";
+    std::atomic<int> clientSocket{-1};
 
-    std::thread listenerThread;
+    std::thread recvThread;
     bool running = false;
 
     std::vector<std::string> messages;
@@ -33,7 +34,8 @@ class NetworkPipe {
 
     PipeCallback dispatcher;
 
-    void listenLoop();
+    void connectLoop();
+    void receiveLoop();
 
   public:
     NetworkPipe();

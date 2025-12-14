@@ -11,6 +11,7 @@
 #include "atlas/core/shader.h"
 #include "atlas/object.h"
 #include "atlas/texture.h"
+#include "atlas/tracer/log.h"
 #include "atlas/window.h"
 #include <tuple>
 #include <glm/glm.hpp>
@@ -182,6 +183,8 @@ void Spotlight::lookAt(const Position3d &target) {
 }
 
 void Spotlight::castShadows(Window &window, int resolution) {
+    atlas_log("Enabling shadow casting for spotlight (resolution: " +
+              std::to_string(resolution) + ")");
     if (this->shadowRenderTarget == nullptr) {
         this->shadowRenderTarget =
             new RenderTarget(window, RenderTargetType::Shadow, resolution);
@@ -190,6 +193,8 @@ void Spotlight::castShadows(Window &window, int resolution) {
 }
 
 void DirectionalLight::castShadows(Window &window, int resolution) {
+    atlas_log("Enabling shadow casting for directional light (resolution: " +
+              std::to_string(resolution) + ")");
     if (this->shadowRenderTarget == nullptr) {
         this->shadowRenderTarget =
             new RenderTarget(window, RenderTargetType::Shadow, resolution);

@@ -10,6 +10,8 @@
 #include "hydra/fluid.h"
 #include "atlas/light.h"
 #include "atlas/texture.h"
+#include "atlas/tracer/data.h"
+#include "atlas/tracer/log.h"
 #include "atlas/window.h"
 #include "opal/opal.h"
 
@@ -40,6 +42,8 @@ void Fluid::create(Size2d extent, Color color) {
 
 void Fluid::initialize() {
     if (fluidShader.programId == 0) {
+        atlas_error(
+            "Fluid shader not initialized. Call create() before initialize().");
         throw std::runtime_error(
             "Fluid shader not initialized. Call create() before initialize().");
     }
@@ -47,10 +51,14 @@ void Fluid::initialize() {
         return;
     }
 
+    atlas_log("Initializing fluid");
+
     vertexBuffer = opal::Buffer::create(opal::BufferUsage::VertexBuffer,
-                                        sizeof(vertices), vertices.data());
+                                        sizeof(vertices), vertices.data(),
+                                        opal::MemoryUsageType::GPUOnly, id);
     indexBuffer = opal::Buffer::create(opal::BufferUsage::IndexArray,
-                                       sizeof(indices), indices.data());
+                                       sizeof(indices), indices.data(),
+                                       opal::MemoryUsageType::GPUOnly, id);
 
     drawingState = opal::DrawingState::create(vertexBuffer, indexBuffer);
     drawingState->setBuffers(vertexBuffer, indexBuffer);
@@ -61,15 +69,16 @@ void Fluid::initialize() {
 
     auto makeBinding = [&](const char *name, unsigned int location,
                            unsigned int size, size_t offset) {
-        opal::VertexAttribute attribute{std::string(name),
-                                        opal::VertexAttributeType::Float,
-                                        static_cast<unsigned int>(offset),
-                                        location,
-                                        false,
-                                        size,
-                                        stride,
-                                        opal::VertexBindingInputRate::Vertex,
-                                        0};
+        opal::VertexAttribute attribute{
+            .name = std::string(name),
+            .type = opal::VertexAttributeType::Float,
+            .offset = static_cast<unsigned int>(offset),
+            .location = location,
+            .normalized = false,
+            .size = size,
+            .stride = stride,
+            .inputRate = opal::VertexBindingInputRate::Vertex,
+            .divisor = 0};
         bindings.push_back({attribute, vertexBuffer});
     };
 
@@ -126,33 +135,33 @@ void Fluid::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
         return;
     }
 
-    fluidPipeline->bindTexture2D("sceneTexture", target->texture.id, 0);
-    fluidPipeline->bindTexture2D("sceneDepth", target->depthTexture.id, 1);
+    fluidPipeline->bindTexture2D("sceneTexture", target->texture.id, 0, id);
+    fluidPipeline->bindTexture2D("sceneDepth", target->depthTexture.id, 1, id);
 
     if (reflectionTarget) {
         fluidPipeline->bindTexture2D("reflectionTexture",
-                                     reflectionTarget->texture.id, 3);
+                                     reflectionTarget->texture.id, 3, id);
     } else {
-        fluidPipeline->bindTexture2D("reflectionTexture", target->texture.id,
-                                     3);
+        fluidPipeline->bindTexture2D("reflectionTexture", target->texture.id, 3,
+                                     id);
     }
 
     if (refractionTarget) {
         fluidPipeline->bindTexture2D("refractionTexture",
-                                     refractionTarget->texture.id, 4);
+                                     refractionTarget->texture.id, 4, id);
     } else {
-        fluidPipeline->bindTexture2D("refractionTexture", target->texture.id,
-                                     4);
+        fluidPipeline->bindTexture2D("refractionTexture", target->texture.id, 4,
+                                     id);
     }
 
-    fluidPipeline->bindTexture2D("movementTexture", movementTexture.id, 5);
+    fluidPipeline->bindTexture2D("movementTexture", movementTexture.id, 5, id);
     if (movementTexture.id == 0) {
         fluidPipeline->setUniform1i("hasMovementTexture", 0);
     } else {
         fluidPipeline->setUniform1i("hasMovementTexture", 1);
     }
 
-    fluidPipeline->bindTexture2D("normalTexture", normalTexture.id, 6);
+    fluidPipeline->bindTexture2D("normalTexture", normalTexture.id, 6, id);
     fluidPipeline->setUniform1i("hasNormalTexture", normalTexture.id != 0);
 
     fluidPipeline->setUniform3f("cameraPos",
@@ -193,6 +202,24 @@ void Fluid::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
     fluidPipeline->bind();
 
     captureDirty = true;
+
+    DebugObjectPacket debugPacket{};
+    debugPacket.drawCallsForObject = 1;
+    debugPacket.triangleCount = indices.size() / 3;
+    debugPacket.vertexBufferSizeMb =
+        static_cast<float>(sizeof(FluidVertex) * vertices.size()) /
+        (1024.0f * 1024.0f);
+    debugPacket.indexBufferSizeMb =
+        static_cast<float>(sizeof(unsigned int) * indices.size()) /
+        (1024.0f * 1024.0f);
+    debugPacket.textureCount =
+        (reflectionTarget ? 1 : 0) + (refractionTarget ? 1 : 0) +
+        (movementTexture.id != 0 ? 1 : 0) + (normalTexture.id != 0 ? 1 : 0);
+    debugPacket.materialCount = 0;
+    debugPacket.objectType = DebugObjectType::SkeletalMesh;
+    debugPacket.objectId = this->id;
+
+    debugPacket.send();
 }
 
 void Fluid::update(Window &window) { (void)window; }

@@ -9,14 +9,18 @@
 
 #include "atlas/core/shader.h"
 #include "atlas/light.h"
+#include "atlas/network/pipe.h"
 #include "atlas/object.h"
 #include "atlas/scene.h"
 #include "atlas/texture.h"
+#include "atlas/tracer/data.h"
+#include "atlas/tracer/log.h"
 #include "atlas/units.h"
 #include "hydra/fluid.h"
 #include "bezel/body.h"
 #include "finewave/audio.h"
 #include <atlas/window.h>
+#include <cstdint>
 #include <iostream>
 #include <memory>
 #include <optional>
@@ -25,6 +29,7 @@
 #include <algorithm>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <sys/resource.h>
 #include <vector>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
@@ -35,14 +40,17 @@ Window *Window::mainWindow = nullptr;
 
 Window::Window(WindowConfiguration config)
     : title(config.title), width(config.width), height(config.height) {
+    atlas_log("Initializing window: " + config.title);
 #ifdef VULKAN
     auto context = opal::Context::create({.useOpenGL = false});
+    atlas_log("Using Vulkan backend");
 #else
     auto context =
         opal::Context::create({.useOpenGL = true,
                                .majorVersion = 4,
                                .minorVersion = 1,
                                .profile = opal::OpenGLProfile::Core});
+    atlas_log("Using OpenGL backend");
 #endif
 
     context->setFlag(GLFW_DECORATED, config.decorations);
@@ -187,8 +195,10 @@ Window::Window(WindowConfiguration config)
     audioEngine = std::make_shared<AudioEngine>();
     bool result = audioEngine->initialize();
     if (!result) {
+        atlas_error("Failed to initialize audio engine");
         throw std::runtime_error("Failed to initialize audio engine");
     }
+    atlas_log("Audio engine initialized successfully");
 
     opal::DeviceInfo info = device->getDeviceInfo();
 
@@ -211,6 +221,9 @@ Window::Window(WindowConfiguration config)
     std::cout << "\033[1m\033[35mAPI Version: " << info.renderingVersion
               << "\033[0m" << std::endl;
 #endif
+
+    TracerServices::getInstance().startTracing(TRACER_PORT);
+    atlas_log("Atlas Tracer initialized.");
 }
 
 std::tuple<int, int> Window::getCursorPosition() {
@@ -261,6 +274,9 @@ void Window::run() {
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
 
+        DebugTimer cpuTimer("Cpu Data");
+        DebugTimer mainTimer("Main Loop");
+
         if (this->currentScene == nullptr) {
             commandBuffer->start();
             commandBuffer->beginPass(renderPass);
@@ -299,6 +315,10 @@ void Window::run() {
         }
 
         currentScene->update(*this);
+
+        uint64_t cpuTime = cpuTimer.stop();
+
+        DebugTimer gpuTimer("Gpu Data");
 
         renderLightsToShadowMaps(commandBuffer);
 
@@ -465,6 +485,75 @@ void Window::run() {
 #ifdef OPENGL
         glfwSwapBuffers(window);
 #endif
+
+        uint64_t gpuTime = gpuTimer.stop();
+        uint64_t mainTime = mainTimer.stop();
+
+        FrameDrawInfo frameInfo{};
+        frameInfo.drawCallCount = commandBuffer->getAndResetDrawCallCount();
+        frameInfo.frameTimeMs = this->deltaTime * 1000.0f;
+        frameInfo.frameNumber = device->frameCount;
+        frameInfo.fps = this->framesPerSecond;
+        frameInfo.send();
+
+        FrameResourcesInfo frameResourcesInfo{};
+        frameResourcesInfo.frameNumber = device->frameCount;
+        frameResourcesInfo.resourcesCreated =
+            ResourceTracker::getInstance().createdResources;
+        frameResourcesInfo.resourcesUnloaded =
+            ResourceTracker::getInstance().unloadedResources;
+        frameResourcesInfo.resourcesLoaded =
+            ResourceTracker::getInstance().loadedResources;
+        frameResourcesInfo.totalMemoryMb =
+            ResourceTracker::getInstance().totalMemoryMb;
+
+        FrameMemoryPacket memoryPacket{};
+        memoryPacket.frameNumber = device->frameCount;
+        memoryPacket.allocationCount =
+            ResourceTracker::getInstance().createdResources -
+            ResourceTracker::getInstance().unloadedResources;
+        memoryPacket.totalAllocatedMb =
+            ResourceTracker::getInstance().totalMemoryMb;
+        memoryPacket.totalCPUMb = ResourceTracker::getInstance().totalMemoryMb;
+        memoryPacket.totalGPUMb = ResourceTracker::getInstance().totalMemoryMb;
+        memoryPacket.deallocationCount =
+            ResourceTracker::getInstance().unloadedResources;
+        memoryPacket.send();
+
+        rusage usage{};
+        getrusage(RUSAGE_SELF, &usage);
+
+        double normalCpuTime =
+            usage.ru_utime.tv_sec + (usage.ru_utime.tv_usec / 1e6) +
+            usage.ru_stime.tv_sec + (usage.ru_stime.tv_usec / 1e6);
+
+        TimingEventPacket timingEvent{};
+        timingEvent.frameNumber = device->frameCount;
+        timingEvent.durationMs = static_cast<float>(gpuTime) / 1'000'000.0f;
+        timingEvent.name = "Main Loop";
+        timingEvent.subsystem = TimingEventSubsystem::Rendering;
+        timingEvent.send();
+
+        FrameTimingPacket timingPacket{};
+        timingPacket.frameNumber = device->frameCount;
+        timingPacket.cpuFrameTimeMs =
+            static_cast<float>(cpuTime) / 1'000'000.0f;
+        timingPacket.gpuFrameTimeMs =
+            static_cast<float>(gpuTime) / 1'000'000.0f;
+        timingPacket.workerThreadTimeMs = 0.0f;
+        timingPacket.mainThreadTimeMs =
+            static_cast<float>(mainTime) / 1'000'000.0f;
+        timingPacket.memoryMb = ResourceTracker::getInstance().totalMemoryMb;
+        timingPacket.cpuUsagePercent =
+            static_cast<float>(normalCpuTime / this->deltaTime * 100.0);
+        timingPacket.gpuUsagePercent = 0.0f;
+        timingPacket.send();
+
+        ResourceTracker::getInstance().createdResources = 0;
+        ResourceTracker::getInstance().loadedResources = 0;
+        ResourceTracker::getInstance().unloadedResources = 0;
+        ResourceTracker::getInstance().totalMemoryMb = 0.0f;
+        frameResourcesInfo.send();
     }
 }
 
@@ -510,6 +599,7 @@ void Window::close() {
 void Window::setCamera(Camera *newCamera) { this->camera = newCamera; }
 
 void Window::setScene(Scene *scene) {
+    atlas_log("Setting active scene");
     this->currentScene = scene;
     scene->initialize(*this);
     this->shadowMapsDirty = true;
@@ -557,6 +647,8 @@ glm::mat4 Window::calculateProjectionMatrix() {
 }
 
 void Window::setFullscreen(bool enable) {
+    atlas_log(enable ? "Switching to fullscreen mode"
+                     : "Switching to windowed mode");
     GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
     if (enable) {
         GLFWmonitor *monitor = glfwGetPrimaryMonitor();
@@ -1202,6 +1294,7 @@ void Window::renderPingpong(RenderTarget *target) {
     }
 
     device->getDefaultFramebuffer()->bind();
+    device->frameCount++;
 
     bool horizontal = true;
     bool firstIteration = true;
@@ -1276,6 +1369,7 @@ void Window::renderPingpong(RenderTarget *target) {
 }
 
 void Window::useDeferredRendering() {
+    atlas_log("Enabling deferred rendering");
     this->usesDeferred = true;
     auto target = std::make_shared<RenderTarget>(
         RenderTarget(*this, RenderTargetType::GBuffer));

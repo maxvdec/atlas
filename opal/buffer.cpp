@@ -7,6 +7,7 @@
 // Copyright (c) 2025 maxvdec
 //
 
+#include "atlas/tracer/data.h"
 #include <memory>
 #include <opal/opal.h>
 #include <stdexcept>
@@ -45,7 +46,8 @@ uint getGLVertexAttributeType(VertexAttributeType type) {
 
 std::shared_ptr<Buffer> Buffer::create(BufferUsage usage, size_t size,
                                        const void *data,
-                                       MemoryUsageType memoryUsage) {
+                                       MemoryUsageType memoryUsage,
+                                       int callerId) {
     auto buffer = std::make_shared<Buffer>();
     buffer->usage = usage;
     buffer->memoryUsage = memoryUsage;
@@ -155,6 +157,14 @@ std::shared_ptr<Buffer> Buffer::create(BufferUsage usage, size_t size,
 
 #endif
 
+    ResourceEventInfo info;
+    info.resourceType = DebugResourceType::Buffer;
+    info.operation = DebugResourceOperation::Created;
+    info.callerObject = std::to_string(callerId);
+    info.frameNumber = Device::globalInstance->frameCount;
+    info.sizeMb = static_cast<float>(size) / (1024.0f * 1024.0f);
+    info.send();
+
     return buffer;
 }
 
@@ -243,7 +253,7 @@ void Buffer::updateData(size_t offset, size_t size, const void *data) {
 #endif
 }
 
-void Buffer::bind() const {
+void Buffer::bind(int callerId) const {
 #ifdef OPENGL
     uint glTarget;
     switch (usage) {
@@ -272,9 +282,16 @@ void Buffer::bind() const {
     }
     glBindBuffer(glTarget, bufferID);
 #endif
+
+    ResourceEventInfo info;
+    info.resourceType = DebugResourceType::Buffer;
+    info.operation = DebugResourceOperation::Loaded;
+    info.callerObject = std::to_string(callerId);
+    info.frameNumber = Device::globalInstance->frameCount;
+    info.send();
 }
 
-void Buffer::unbind() const {
+void Buffer::unbind(int callerId) const {
 #ifdef OPENGL
     uint glTarget;
     switch (usage) {
@@ -303,6 +320,12 @@ void Buffer::unbind() const {
     }
     glBindBuffer(glTarget, 0);
 #endif
+    ResourceEventInfo info;
+    info.resourceType = DebugResourceType::Buffer;
+    info.operation = DebugResourceOperation::Unloaded;
+    info.callerObject = std::to_string(callerId);
+    info.frameNumber = Device::globalInstance->frameCount;
+    info.send();
 }
 
 std::shared_ptr<DrawingState>

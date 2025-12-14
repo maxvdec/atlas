@@ -10,6 +10,8 @@
 #include "atlas/texture.h"
 #include "atlas/core/shader.h"
 #include "atlas/object.h"
+#include "atlas/tracer/data.h"
+#include "atlas/tracer/log.h"
 #include "atlas/units.h"
 #include "atlas/window.h"
 #include "atlas/workspace.h"
@@ -211,8 +213,11 @@ Texture Texture::fromResource(const Resource &resource, TextureType type,
                               TextureParameters params, Color borderColor) {
     if (resource.type != ResourceType::Image &&
         resource.type != ResourceType::SpecularMap) {
+        atlas_error("Resource is not an image: " + resource.name);
         throw std::runtime_error("Resource is not an image");
     }
+
+    atlas_log("Loading texture: " + resource.name);
 
     int width, height, channels;
     stbi_set_flip_vertically_on_load(true);
@@ -224,6 +229,7 @@ Texture Texture::fromResource(const Resource &resource, TextureType type,
         float *data = stbi_loadf(resource.path.string().c_str(), &width,
                                  &height, &channels, 0);
         if (!data) {
+            atlas_error("Failed to load HDR image: " + resource.path.string());
             throw std::runtime_error("Failed to load HDR image: " +
                                      resource.path.string());
         }
@@ -248,6 +254,7 @@ Texture Texture::fromResource(const Resource &resource, TextureType type,
         unsigned char *data = stbi_load(resource.path.string().c_str(), &width,
                                         &height, &channels, 0);
         if (!data) {
+            atlas_error("Failed to load image: " + resource.path.string());
             throw std::runtime_error("Failed to load image: " +
                                      resource.path.string());
         }
@@ -359,8 +366,11 @@ void Texture::applyFilteringModes(TextureFilteringMode minMode,
 
 Cubemap Cubemap::fromResourceGroup(ResourceGroup &group) {
     if (group.resources.size() != 6) {
+        atlas_error("Cubemap requires exactly 6 resources");
         throw std::runtime_error("Cubemap requires exactly 6 resources");
     }
+
+    atlas_log("Creating cubemap from resource group: " + group.groupName);
 
     int width = 0, height = 0, channels = 0;
     glm::dvec3 accumulatedColor(0.0);
@@ -371,6 +381,8 @@ Cubemap Cubemap::fromResourceGroup(ResourceGroup &group) {
         stbi_load(group.resources[0].path.string().c_str(), &width, &height,
                   &channels, 0);
     if (!firstData) {
+        atlas_error("Failed to load image: " +
+                    group.resources[0].path.string());
         throw std::runtime_error("Failed to load image: " +
                                  group.resources[0].path.string());
     }
@@ -688,7 +700,7 @@ void Skybox::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
 
     pipeline->setUniformMat4f("view", view);
     pipeline->setUniformMat4f("projection", projection);
-    pipeline->bindTextureCubemap("skybox", cubemap.id, 0);
+    pipeline->bindTextureCubemap("skybox", cubemap.id, 0, obj->id);
 
     if (!Window::mainWindow || !Window::mainWindow->getCurrentScene()) {
         throw std::runtime_error(
@@ -736,6 +748,23 @@ void Skybox::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
     commandBuffer->bindDrawingState(obj->vao);
     commandBuffer->bindPipeline(pipeline); // Required for Vulkan
     commandBuffer->drawIndexed(static_cast<unsigned int>(obj->indices.size()),
-                               1, 0, 0, 0);
+                               1, 0, 0, 0, obj->id);
     commandBuffer->unbindDrawingState();
+
+    DebugObjectPacket debugPacket{};
+    debugPacket.drawCallsForObject = 1;
+    debugPacket.triangleCount =
+        static_cast<unsigned int>(obj->indices.size()) / 3;
+    debugPacket.vertexBufferSizeMb =
+        static_cast<float>(sizeof(CoreVertex) * obj->vertices.size()) /
+        (1024.0f * 1024.0f);
+    debugPacket.indexBufferSizeMb =
+        static_cast<float>(sizeof(Index) * obj->indices.size()) /
+        (1024.0f * 1024.0f);
+    debugPacket.textureCount = 1;
+    debugPacket.materialCount = 0;
+    debugPacket.objectType = DebugObjectType::Terrain;
+    debugPacket.objectId = obj->id;
+
+    debugPacket.send();
 }

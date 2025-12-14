@@ -8,6 +8,8 @@
 //
 
 #include "atlas/text.h"
+#include "atlas/tracer/data.h"
+#include "atlas/tracer/log.h"
 #include "atlas/window.h"
 #include "opal/opal.h"
 #include "ft2build.h" // IWYU pragma: keep
@@ -18,13 +20,17 @@
 
 Font Font::fromResource(const std::string &fontName, Resource resource,
                         int fontSize) {
+    atlas_log("Loading font: " + fontName +
+              " (size: " + std::to_string(fontSize) + ")");
     FT_Library ft;
     if (FT_Init_FreeType(&ft)) {
+        atlas_error("Could not initialize FreeType Library");
         throw std::runtime_error("Could not initialize FreeType Library");
     }
 
     FT_Face face;
     if (FT_New_Face(ft, resource.path.c_str(), 0, &face)) {
+        atlas_error("Failed to load font: " + std::string(resource.path));
         throw std::runtime_error("Failed to load font: " +
                                  std::string(resource.path));
     }
@@ -45,6 +51,8 @@ Font Font::fromResource(const std::string &fontName, Resource resource,
 
     for (unsigned char c = 0; c < 128; c++) {
         if (FT_Load_Char(face, c, FT_LOAD_RENDER)) {
+            atlas_warning("Failed to load Glyph: " +
+                          std::to_string(static_cast<int>(c)));
             std::cerr << "Failed to load Glyph: " << c << std::endl;
             continue;
         }
@@ -59,6 +67,7 @@ Font Font::fromResource(const std::string &fontName, Resource resource,
         }
 
         if (currentY + height + padding > atlasHeight) {
+            atlas_warning("Font atlas full for font: " + fontName);
             std::cerr << "Font atlas full for font: " << fontName << std::endl;
             break;
         }
@@ -151,7 +160,7 @@ void Text::initialize() {
     vertexBufferCapacity = sizeof(float) * 6 * 4; // one glyph quad
     vertexBuffer = opal::Buffer::create(opal::BufferUsage::VertexBuffer,
                                         vertexBufferCapacity, nullptr,
-                                        opal::MemoryUsageType::CPUToGPU);
+                                        opal::MemoryUsageType::CPUToGPU, id);
     vao = opal::DrawingState::create(vertexBuffer);
     vao->setBuffers(vertexBuffer, nullptr);
 
@@ -243,7 +252,7 @@ void Text::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
     textPipeline->setUniformMat4f("projection", projection);
 
     if (font.texture) {
-        textPipeline->bindTexture2D("text", font.texture->textureID, 0);
+        textPipeline->bindTexture2D("text", font.texture->textureID, 0, id);
     }
 
     commandBuffer->bindDrawingState(vao);
@@ -276,9 +285,9 @@ void Text::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
     const size_t requiredBytes = glyphCount * bytesPerGlyph;
     if (requiredBytes > vertexBufferCapacity) {
         vertexBufferCapacity = requiredBytes;
-        vertexBuffer = opal::Buffer::create(opal::BufferUsage::VertexBuffer,
-                                            vertexBufferCapacity, nullptr,
-                                            opal::MemoryUsageType::CPUToGPU);
+        vertexBuffer = opal::Buffer::create(
+            opal::BufferUsage::VertexBuffer, vertexBufferCapacity, nullptr,
+            opal::MemoryUsageType::CPUToGPU, id);
         vao->setBuffers(vertexBuffer, nullptr);
     }
 
@@ -308,8 +317,8 @@ void Text::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
         const size_t offset = glyphIndex * bytesPerGlyph;
         vertexBuffer->updateData(offset, sizeof(vertices), vertices);
         vertexBuffer->unbind();
-        commandBuffer->draw(6, 1,
-                            static_cast<uint>(offset / (4 * sizeof(float))), 0);
+        commandBuffer->draw(
+            6, 1, static_cast<uint>(offset / (4 * sizeof(float))), 0, id);
 
         x += (ch.advance >> 6) * scale;
     }
@@ -318,4 +327,17 @@ void Text::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
     textPipeline->enableBlending(false);
     textPipeline->enableDepthTest(true);
     textPipeline->bind();
+
+    DebugObjectPacket debugPacket{};
+    debugPacket.drawCallsForObject = 1;
+    debugPacket.triangleCount = static_cast<unsigned int>(glyphCount) * 2;
+    debugPacket.vertexBufferSizeMb =
+        static_cast<float>(requiredBytes) / (1024.0f * 1024.0f);
+    debugPacket.indexBufferSizeMb = 0.0f;
+    debugPacket.textureCount = (font.texture ? 1 : 0);
+    debugPacket.materialCount = 0;
+    debugPacket.objectType = DebugObjectType::Other;
+    debugPacket.objectId = this->id;
+
+    debugPacket.send();
 }

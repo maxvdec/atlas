@@ -8,6 +8,7 @@
 */
 
 #include "opal/opal.h"
+#include "atlas/tracer/log.h"
 #include <cstddef>
 #include <memory>
 #include <stdexcept>
@@ -20,8 +21,11 @@ namespace opal {
 
 std::shared_ptr<Context> Context::create(ContextConfiguration config) {
     if (!glfwInit()) {
+        atlas_error("Failed to initialize GLFW");
         throw std::runtime_error("Failed to initialize GLFW");
     }
+
+    atlas_log("Initializing graphics context");
 
     auto context = std::make_shared<Context>();
     context->config = config;
@@ -64,6 +68,7 @@ GLFWwindow *Context::makeWindow(int width, int height, const char *title,
                                 GLFWmonitor *monitor, GLFWwindow *share) {
     this->window = glfwCreateWindow(width, height, title, monitor, share);
     if (this->window == nullptr) {
+        atlas_error("Failed to create GLFW window");
         throw std::runtime_error("Failed to create GLFW window");
     }
 #ifdef VULKAN
@@ -104,8 +109,11 @@ std::shared_ptr<Device>
 Device::acquire([[maybe_unused]] std::shared_ptr<Context> context) {
 #ifdef OPENGL
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
+        atlas_error("Failed to initialize GLAD");
         throw std::runtime_error("Failed to initialize GLAD");
     }
+
+    atlas_log("Graphics device acquired (OpenGL)");
 
     auto device = std::make_shared<Device>();
     return device;

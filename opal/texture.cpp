@@ -7,6 +7,7 @@
 // Copyright (c) 2025 maxvdec
 //
 
+#include "atlas/tracer/data.h"
 #include "opal/opal.h"
 #include <cstring>
 #include <memory>
@@ -64,6 +65,48 @@ inline GLenum getGLFilterMode(TextureFilterMode mode) {
 }
 
 #endif
+
+inline float calculateTextureSizeMb(TextureFormat format, int width, int height,
+                                    int depth = 1) {
+    size_t bytesPerPixel = 0;
+
+    switch (format) {
+    case TextureFormat::Rgba8:
+        bytesPerPixel = 4;
+        break;
+    case TextureFormat::Rgb8:
+        bytesPerPixel = 3;
+        break;
+    case TextureFormat::Rgba16F:
+        bytesPerPixel = 8;
+        break;
+    case TextureFormat::Rgb16F:
+        bytesPerPixel = 6;
+        break;
+    case TextureFormat::Depth24Stencil8:
+        bytesPerPixel = 4;
+        break;
+    case TextureFormat::DepthComponent24:
+        bytesPerPixel = 3;
+        break;
+    case TextureFormat::Depth32F:
+        bytesPerPixel = 4;
+        break;
+    case TextureFormat::Red8:
+        bytesPerPixel = 1;
+        break;
+    case TextureFormat::Red16F:
+        bytesPerPixel = 2;
+        break;
+    default:
+        bytesPerPixel = 4;
+        break;
+    }
+
+    size_t totalBytes =
+        static_cast<size_t>(width) * height * depth * bytesPerPixel;
+    return totalBytes / (1024.0f * 1024.0f);
+}
 
 } // namespace
 
@@ -127,6 +170,14 @@ std::shared_ptr<Texture> Texture::create(TextureType type, TextureFormat format,
 #else
     return nullptr;
 #endif
+
+    ResourceEventInfo info;
+    info.callerObject = "-1";
+    info.resourceType = DebugResourceType::Texture;
+    info.operation = DebugResourceOperation::Created;
+    info.frameNumber = Device::globalInstance->frameCount;
+    info.sizeMb = calculateTextureSizeMb(format, width, height);
+    info.send();
 }
 
 void Texture::updateFace(int faceIndex, const void *data, int width, int height,
@@ -257,6 +308,14 @@ void Texture::updateFace(int faceIndex, const void *data, int width, int height,
     vkDestroyBuffer(Device::globalDevice, stagingBuffer, nullptr);
     vkFreeMemory(Device::globalDevice, stagingBufferMemory, nullptr);
 #endif
+
+    ResourceEventInfo info;
+    info.callerObject = "-1";
+    info.resourceType = DebugResourceType::Texture;
+    info.operation = DebugResourceOperation::Created;
+    info.frameNumber = Device::globalInstance->frameCount;
+    info.sizeMb = calculateTextureSizeMb(format, width, height);
+    info.send();
 }
 
 void Texture::updateData3D(const void *data, int width, int height, int depth,
@@ -295,7 +354,6 @@ void Texture::updateData(const void *data, int width, int height,
         this->height = height;
     }
 #elif defined(VULKAN)
-    // Vulkan texture update would require staging buffer and copy
     (void)data;
     (void)width;
     (void)height;
@@ -309,7 +367,6 @@ void Texture::changeFormat(TextureFormat newFormat) {
     this->glFormat = getGLInternalFormat(newFormat);
 #elif defined(VULKAN)
     this->format = newFormat;
-    // Note: In Vulkan, changing format may require recreating the image
 #endif
 }
 
@@ -434,7 +491,7 @@ void Texture::setParameters3D(TextureWrapMode wrapS, TextureWrapMode wrapT,
 
 void Pipeline::bindTexture(const std::string &name,
                            std::shared_ptr<Texture> texture,
-                           [[maybe_unused]] int unit) {
+                           [[maybe_unused]] int unit, int callerId) {
 #ifdef OPENGL
     glActiveTexture(GL_TEXTURE0 + unit);
     glBindTexture(texture->glType, texture->textureID);
@@ -491,10 +548,19 @@ void Pipeline::bindTexture(const std::string &name,
 
     vkUpdateDescriptorSets(Device::globalDevice, 1, &write, 0, nullptr);
 #endif
+
+    ResourceEventInfo resourceInfo;
+    resourceInfo.callerObject = std::to_string(callerId);
+    resourceInfo.resourceType = DebugResourceType::Texture;
+    resourceInfo.operation = DebugResourceOperation::Loaded;
+    resourceInfo.frameNumber = Device::globalInstance->frameCount;
+    resourceInfo.sizeMb = calculateTextureSizeMb(
+        texture->format, texture->width, texture->height);
+    resourceInfo.send();
 }
 
-void Pipeline::bindTexture2D(const std::string &name, uint textureId,
-                             int unit) {
+void Pipeline::bindTexture2D(const std::string &name, uint textureId, int unit,
+                             int callerId) {
 #ifdef OPENGL
     glActiveTexture(GL_TEXTURE0 + unit);
     glBindTexture(GL_TEXTURE_2D, textureId);
@@ -502,12 +568,12 @@ void Pipeline::bindTexture2D(const std::string &name, uint textureId,
     glUniform1i(location, unit);
 #elif defined(VULKAN)
     auto texture = Texture::getTextureFromHandle(textureId);
-    bindTexture(name, texture, unit);
+    bindTexture(name, texture, unit, callerId);
 #endif
 }
 
-void Pipeline::bindTexture3D(const std::string &name, uint textureId,
-                             int unit) {
+void Pipeline::bindTexture3D(const std::string &name, uint textureId, int unit,
+                             int callerId) {
 #ifdef OPENGL
     glActiveTexture(GL_TEXTURE0 + unit);
     glBindTexture(GL_TEXTURE_3D, textureId);
@@ -515,12 +581,12 @@ void Pipeline::bindTexture3D(const std::string &name, uint textureId,
     glUniform1i(location, unit);
 #elif defined(VULKAN)
     auto texture = Texture::getTextureFromHandle(textureId);
-    bindTexture(name, texture, unit);
+    bindTexture(name, texture, unit, callerId);
 #endif
 }
 
 void Pipeline::bindTextureCubemap(const std::string &name, uint textureId,
-                                  int unit) {
+                                  int unit, int callerId) {
 #ifdef OPENGL
     glActiveTexture(GL_TEXTURE0 + unit);
     glBindTexture(GL_TEXTURE_CUBE_MAP, textureId);
@@ -528,7 +594,7 @@ void Pipeline::bindTextureCubemap(const std::string &name, uint textureId,
     glUniform1i(location, unit);
 #elif defined(VULKAN)
     auto texture = Texture::getTextureFromHandle(textureId);
-    bindTexture(name, texture, unit);
+    bindTexture(name, texture, unit, callerId);
 #endif
 }
 

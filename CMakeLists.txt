@@ -4,7 +4,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_definitions(-DATLAS_VERSION=\"Alpha\ 5\")
-add_definitions(-DOPAL_VERSION=\"1\ Ellipse\")
+add_definitions(-DOPAL_VERSION=\"1.1\ Ellipse\")
 
 message(STATUS "Building for platform: ${CMAKE_SYSTEM_NAME}")
 if(NOT CMAKE_BUILD_TYPE)

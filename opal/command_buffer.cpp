@@ -7,11 +7,13 @@
 // Copyright (c) 2025 maxvdec
 //
 
+#include "atlas/tracer/data.h"
 #include <array>
 #include <cstdint>
 #include <memory>
 #include <opal/opal.h>
 #include <iostream>
+#include <string>
 
 namespace opal {
 
@@ -110,6 +112,12 @@ void CommandBuffer::endPass() {
         }
     }
 #endif
+}
+
+int CommandBuffer::getAndResetDrawCallCount() {
+    int count = drawCallCount;
+    drawCallCount = 0;
+    return count;
 }
 
 void CommandBuffer::commit() {
@@ -295,7 +303,8 @@ void CommandBuffer::bindDrawingState(
 void CommandBuffer::unbindDrawingState() { boundDrawingState = nullptr; }
 
 auto CommandBuffer::draw(uint vertexCount, uint instanceCount, uint firstVertex,
-                         [[maybe_unused]] uint firstInstance) -> void {
+                         [[maybe_unused]] uint firstInstance, int objectId)
+    -> void {
 #ifdef OPENGL
     if (boundDrawingState != nullptr) {
         boundDrawingState->bind();
@@ -349,12 +358,21 @@ auto CommandBuffer::draw(uint vertexCount, uint instanceCount, uint firstVertex,
     vkCmdDraw(commandBuffers[currentFrame], vertexCount, instanceCount,
               firstVertex, firstInstance);
 #endif
+
+    DrawCallInfo info;
+    info.callerObject = std::to_string(objectId);
+    info.frameNumber = (int)device->frameCount;
+    info.type = DrawCallType::Draw;
+    info.send();
+
+    drawCallCount++;
 }
 
 void CommandBuffer::drawIndexed(uint indexCount, uint instanceCount,
                                 uint firstIndex,
                                 [[maybe_unused]] int vertexOffset,
-                                [[maybe_unused]] uint firstInstance) {
+                                [[maybe_unused]] uint firstInstance,
+                                int objectId) {
 #ifdef OPENGL
     if (boundDrawingState != nullptr) {
         boundDrawingState->bind();
@@ -416,9 +434,18 @@ void CommandBuffer::drawIndexed(uint indexCount, uint instanceCount,
     vkCmdDrawIndexed(commandBuffers[currentFrame], indexCount, instanceCount,
                      firstIndex, vertexOffset, firstInstance);
 #endif
+
+    DrawCallInfo info;
+    info.callerObject = std::to_string(objectId);
+    info.frameNumber = (int)device->frameCount;
+    info.type = DrawCallType::Indexed;
+    info.send();
+
+    drawCallCount++;
 }
 
-void CommandBuffer::drawPatches(uint vertexCount, uint firstVertex) {
+void CommandBuffer::drawPatches(uint vertexCount, uint firstVertex,
+                                int objectId) {
 #ifdef OPENGL
     if (boundDrawingState != nullptr) {
         boundDrawingState->bind();
@@ -526,6 +553,14 @@ void CommandBuffer::drawPatches(uint vertexCount, uint firstVertex) {
     }
     vkCmdDraw(commandBuffers[currentFrame], vertexCount, 1, firstVertex, 0);
 #endif
+
+    DrawCallInfo info;
+    info.callerObject = std::to_string(objectId);
+    info.frameNumber = device->frameCount;
+    info.type = DrawCallType::Patch;
+    info.send();
+
+    drawCallCount++;
 }
 
 #ifdef VULKAN

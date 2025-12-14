@@ -13,6 +13,7 @@
 #include "atlas/camera.h"
 #include "atlas/core/renderable.h"
 #include "atlas/input.h"
+#include "atlas/network/pipe.h"
 #include "atlas/object.h"
 #include "atlas/scene.h"
 #include "atlas/texture.h"
