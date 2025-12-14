@@ -28,7 +28,7 @@ void DebugObjectPacket::send() {
     object["material_count"] = materialCount;
     object["vertex_buffer_mb"] = vertexBufferSizeMb;
     object["index_buffer_mb"] = indexBufferSizeMb;
-    object["texture_mb"] = textureMemoryMb;
+    object["texture_count"] = textureCount;
 
     TracerServices::getInstance().tracerPipe->send(object.dump() + "\n");
 }
