@@ -18,6 +18,7 @@
 #include "atlas/effect.h" // IWYU pragma: keep
 #include "atlas/object.h"
 #include "atlas/texture.h"
+#include "atlas/tracer/data.h"
 #include "atlas/tracer/log.h"
 #include "atlas/units.h"
 #include "atlas/window.h"
@@ -808,4 +809,21 @@ void RenderTarget::render(float dt,
 
     renderTargetPipeline->enableDepthTest(true);
     renderTargetPipeline->bind();
+
+    DebugObjectPacket debugPacket{};
+    debugPacket.drawCallsForObject = 1;
+    debugPacket.triangleCount = 2;
+    debugPacket.vertexBufferSizeMb =
+        static_cast<float>(sizeof(CoreVertex) * 4) / (1024.0f * 1024.0f);
+    debugPacket.indexBufferSizeMb =
+        static_cast<float>(sizeof(Index) * 6) / (1024.0f * 1024.0f);
+    debugPacket.textureCount =
+        1 + (brightTexture.id != 0 ? 1 : 0) + (depthTexture.id != 0 ? 1 : 0) +
+        (gPosition.id != 0 ? 1 : 0) + (ssrTexture.id != 0 ? 1 : 0) +
+        (LUT.id != 0 ? 1 : 0);
+    debugPacket.materialCount = 0;
+    debugPacket.objectType = DebugObjectType::Other;
+    debugPacket.objectId = obj->id;
+
+    debugPacket.send();
 }

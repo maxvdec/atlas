@@ -8,6 +8,7 @@
 //
 
 #include "atlas/text.h"
+#include "atlas/tracer/data.h"
 #include "atlas/tracer/log.h"
 #include "atlas/window.h"
 #include "opal/opal.h"
@@ -326,4 +327,17 @@ void Text::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
     textPipeline->enableBlending(false);
     textPipeline->enableDepthTest(true);
     textPipeline->bind();
+
+    DebugObjectPacket debugPacket{};
+    debugPacket.drawCallsForObject = 1;
+    debugPacket.triangleCount = static_cast<unsigned int>(glyphCount) * 2;
+    debugPacket.vertexBufferSizeMb =
+        static_cast<float>(requiredBytes) / (1024.0f * 1024.0f);
+    debugPacket.indexBufferSizeMb = 0.0f;
+    debugPacket.textureCount = (font.texture ? 1 : 0);
+    debugPacket.materialCount = 0;
+    debugPacket.objectType = DebugObjectType::Other;
+    debugPacket.objectId = this->id;
+
+    debugPacket.send();
 }
