@@ -196,7 +196,6 @@ Window::Window(WindowConfiguration config)
     bool result = audioEngine->initialize();
     if (!result) {
         atlas_error("Failed to initialize audio engine");
-        throw std::runtime_error("Failed to initialize audio engine");
     }
     atlas_log("Audio engine initialized successfully");
 

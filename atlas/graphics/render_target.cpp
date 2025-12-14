@@ -429,7 +429,8 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
 
         fb->unbind();
     } else {
-        throw std::runtime_error("Unknown render target type");
+        atlas_warning("Unknown render target type");
+        return;
     }
 
     AllocationPacket packet;
@@ -597,7 +598,7 @@ void RenderTarget::hide() {
     if (object != nullptr) {
         object->hide();
     } else {
-        throw std::runtime_error("Render target object is null");
+        atlas_error("Render target object is null");
     }
 }
 
@@ -605,7 +606,7 @@ void RenderTarget::show() {
     if (object != nullptr) {
         object->show();
     } else {
-        throw std::runtime_error("Render target object is null");
+        atlas_error("Render target object is null");
     }
 }
 
@@ -617,8 +618,8 @@ void RenderTarget::render(float dt,
         return;
     }
     if (commandBuffer == nullptr) {
-        throw std::runtime_error(
-            "RenderTarget::render requires a valid command buffer");
+        atlas_error("RenderTarget::render requires a valid command buffer");
+        return;
     }
 
     CoreObject *obj = this->object.get();

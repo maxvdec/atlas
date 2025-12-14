@@ -25,14 +25,13 @@ Font Font::fromResource(const std::string &fontName, Resource resource,
     FT_Library ft;
     if (FT_Init_FreeType(&ft)) {
         atlas_error("Could not initialize FreeType Library");
-        throw std::runtime_error("Could not initialize FreeType Library");
+        return Font();
     }
 
     FT_Face face;
     if (FT_New_Face(ft, resource.path.c_str(), 0, &face)) {
         atlas_error("Failed to load font: " + std::string(resource.path));
-        throw std::runtime_error("Failed to load font: " +
-                                 std::string(resource.path));
+        return Font();
     }
 
     int dpi = 96;
@@ -125,7 +124,8 @@ Font &Font::getFont(const std::string &fontName) {
             return font;
         }
     }
-    throw std::runtime_error("Font not found: " + fontName);
+    atlas_error("Font not found: " + fontName);
+    return fonts[0]; // Return a default font or handle this case appropriately
 }
 
 void Font::changeSize(int newSize) {
@@ -189,8 +189,8 @@ void Text::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
         component->update(dt);
     }
     if (commandBuffer == nullptr) {
-        throw std::runtime_error(
-            "Text::render requires a valid command buffer");
+        atlas_error("Text::render requires a valid command buffer");
+        return;
     }
 
     static std::shared_ptr<opal::Pipeline> textPipeline = nullptr;

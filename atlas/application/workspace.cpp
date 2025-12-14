@@ -49,7 +49,6 @@ Resource Workspace::getResource(std::string name) {
         }
     }
     atlas_warning("Resource not found: " + name);
-    throw std::runtime_error("Resource not found: " + name);
 }
 
 std::vector<Resource> Workspace::getAllResources() { return resources; }
@@ -75,7 +74,6 @@ ResourceGroup Workspace::getResourceGroup(std::string groupName) {
         }
     }
     atlas_warning("Resource group not found: " + groupName);
-    throw std::runtime_error("Resource group not found: " + groupName);
 }
 
 Resource ResourceGroup::findResource(std::string name) {
@@ -84,5 +82,5 @@ Resource ResourceGroup::findResource(std::string name) {
             return res;
         }
     }
-    throw std::runtime_error("Resource not found in group: " + name);
+    atlas_error("Resource not found in group: " + name);
 }

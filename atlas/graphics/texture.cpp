@@ -214,7 +214,6 @@ Texture Texture::fromResource(const Resource &resource, TextureType type,
     if (resource.type != ResourceType::Image &&
         resource.type != ResourceType::SpecularMap) {
         atlas_error("Resource is not an image: " + resource.name);
-        throw std::runtime_error("Resource is not an image");
     }
 
     atlas_log("Loading texture: " + resource.name);
@@ -230,8 +229,6 @@ Texture Texture::fromResource(const Resource &resource, TextureType type,
                                  &height, &channels, 0);
         if (!data) {
             atlas_error("Failed to load HDR image: " + resource.path.string());
-            throw std::runtime_error("Failed to load HDR image: " +
-                                     resource.path.string());
         }
 
         creationData = TextureCreationData{width, height, channels};
@@ -255,8 +252,6 @@ Texture Texture::fromResource(const Resource &resource, TextureType type,
                                         &height, &channels, 0);
         if (!data) {
             atlas_error("Failed to load image: " + resource.path.string());
-            throw std::runtime_error("Failed to load image: " +
-                                     resource.path.string());
         }
 
         creationData = TextureCreationData{width, height, channels};

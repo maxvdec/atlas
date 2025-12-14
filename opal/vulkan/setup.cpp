@@ -7,6 +7,7 @@
 // Copyright (c) 2025 Max Van den Eynde
 //
 
+#include "atlas/tracer/log.h"
 #include <iostream>
 #include <vector>
 #ifdef VULKAN
@@ -133,15 +134,13 @@ VKAPI_ATTR VkBool32 VKAPI_CALL Context::debugCallback(
     const VkDebugUtilsMessengerCallbackDataEXT *pCallbackData, void *) {
 
     if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) {
-        throw std::runtime_error("Vulkan validation layer reported an error: " +
-                                 std::string(pCallbackData->pMessage));
+        atlas_error(pCallbackData->pMessage);
     }
 
     if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
-        // std::cerr << "[ATLAS_WARNING] " << pCallbackData->pMessage <<
-        // std::endl;
-    } else {
-        // std::cout << "[ATLAS_INFO] " << pCallbackData->pMessage << std::endl;
+        atlas_warning(pCallbackData->pMessage);
+    } else if (messageSeverity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT) {
+        atlas_log(pCallbackData->pMessage);
     }
 
     return VK_FALSE;

@@ -8,6 +8,7 @@
 #include "atlas/core/shader.h"
 #include "atlas/object.h"
 #include "atlas/tracer/data.h"
+#include "atlas/tracer/log.h"
 #include "atlas/units.h"
 #include "atlas/window.h"
 #include "opal/opal.h"
@@ -362,8 +363,8 @@ void ParticleEmitter::render(float dt,
     if (activeParticleCount == 0)
         return;
     if (commandBuffer == nullptr) {
-        throw std::runtime_error(
-            "ParticleEmitter::render requires a valid command buffer");
+        atlas_error("ParticleEmitter::render requires a valid command buffer");
+        return;
     }
 
     // Get or create pipeline

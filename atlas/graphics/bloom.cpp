@@ -32,7 +32,7 @@ void BloomRenderTarget::init(int width, int height, int chainLength) {
     glm::ivec2 mipIntSize((int)width, (int)height);
     if (width > INT_MAX || height > INT_MAX) {
         atlas_error("Texture dimensions exceed maximum allowed");
-        throw std::runtime_error("Texture dimensions exceed maximum allowed");
+        return;
     }
 
     this->srcViewportSize = mipIntSize;
