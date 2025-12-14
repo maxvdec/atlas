@@ -10,6 +10,7 @@
 #include "atlas/core/shader.h"
 #include "atlas/core/default_shaders.h"
 #include "atlas/object.h"
+#include "atlas/tracer/log.h"
 #include "opal/opal.h"
 #include <glad/glad.h>
 #include <iostream>
@@ -194,6 +195,7 @@ VertexShader VertexShader::fromSource(const char *source) {
 
 void VertexShader::compile() {
     if (shaderId != 0) {
+        atlas_warning("Vertex shader already compiled");
         throw std::runtime_error("Vertex shader already compiled");
     }
 
@@ -205,10 +207,13 @@ void VertexShader::compile() {
     if (!success) {
         char infoLog[512];
         shader->getShaderLog(infoLog, sizeof(infoLog));
+        atlas_error("Vertex shader compilation failed: " +
+                    std::string(infoLog));
         throw std::runtime_error(
             std::string("Vertex shader compilation failed: ") + infoLog);
     }
 
+    atlas_log("Vertex shader compiled successfully");
     this->shaderId = shader->shaderID;
 }
 
@@ -370,6 +375,7 @@ FragmentShader FragmentShader::fromSource(const char *source) {
 
 void FragmentShader::compile() {
     if (shaderId != 0) {
+        atlas_warning("Fragment shader already compiled");
         throw std::runtime_error("Fragment shader already compiled");
     }
 
@@ -381,10 +387,13 @@ void FragmentShader::compile() {
     if (!success) {
         char infoLog[512];
         shader->getShaderLog(infoLog, sizeof(infoLog));
+        atlas_error("Fragment shader compilation failed: " +
+                    std::string(infoLog));
         throw std::runtime_error(
             std::string("Fragment shader compilation failed: ") + infoLog);
     }
 
+    atlas_log("Fragment shader compiled successfully");
     this->shaderId = shader->shaderID;
 }
 
@@ -406,6 +415,7 @@ GeometryShader GeometryShader::fromSource(const char *source) {
 
 void GeometryShader::compile() {
     if (shaderId != 0) {
+        atlas_warning("Geometry shader already compiled");
         throw std::runtime_error("Geometry shader already compiled");
     }
 
@@ -417,10 +427,13 @@ void GeometryShader::compile() {
     if (!success) {
         char infoLog[512];
         shader->getShaderLog(infoLog, sizeof(infoLog));
+        atlas_error("Geometry shader compilation failed: " +
+                    std::string(infoLog));
         throw std::runtime_error(
             std::string("Geometry shader compilation failed: ") + infoLog);
     }
 
+    atlas_log("Geometry shader compiled successfully");
     this->shaderId = shader->shaderID;
 }
 
@@ -483,14 +496,17 @@ void TessellationShader::compile() {
 
 void ShaderProgram::compile() {
     if (programId != 0) {
+        atlas_warning("Shader program already compiled");
         throw std::runtime_error("Shader program already compiled");
     }
 
     if (vertexShader.shaderId == 0) {
+        atlas_error("Vertex shader not compiled");
         throw std::runtime_error("Vertex shader not compiled");
     }
 
     if (fragmentShader.shaderId == 0) {
+        atlas_error("Fragment shader not compiled");
         throw std::runtime_error("Fragment shader not compiled");
     }
 
@@ -505,6 +521,7 @@ void ShaderProgram::compile() {
         }
     }
 
+    atlas_log("Linking shader program");
     desiredAttributes = vertexShader.desiredAttributes;
     capabilities = vertexShader.capabilities;
 
@@ -527,9 +544,12 @@ void ShaderProgram::compile() {
     if (!success) {
         char infoLog[512];
         this->shader->getProgramLog(infoLog, sizeof(infoLog));
+        atlas_error("Shader program linking failed: " + std::string(infoLog));
         throw std::runtime_error(
             std::string("Shader program linking failed: ") + infoLog);
     }
+
+    atlas_log("Shader program linked successfully");
 
     if (fragmentShader.fromDefaultShaderType.has_value() &&
         vertexShader.fromDefaultShaderType.has_value()) {

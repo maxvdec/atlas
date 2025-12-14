@@ -16,6 +16,7 @@
 
 #include "atlas/camera.h"
 #include "atlas/particle.h"
+#include "atlas/tracer/log.h"
 #include "atlas/units.h"
 #include "atlas/window.h"
 
@@ -99,6 +100,7 @@ void Atmosphere::update(float dt) {
 
     if (weatherEnabled &&
         (this->snowEmitter == nullptr || this->rainEmitter == nullptr)) {
+        atlas_log("Creating weather particle emitters");
         this->snowEmitter = std::make_shared<ParticleEmitter>(1000);
         this->snowEmitter->setEmissionType(ParticleEmissionType::Ambient);
         this->snowEmitter->settings.minSize = 0.1f;

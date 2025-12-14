@@ -18,12 +18,15 @@
 #include "atlas/effect.h" // IWYU pragma: keep
 #include "atlas/object.h"
 #include "atlas/texture.h"
+#include "atlas/tracer/log.h"
 #include "atlas/units.h"
 #include "atlas/window.h"
 #include "opal/opal.h"
 
 RenderTarget::RenderTarget(Window &window, RenderTargetType type,
                            int resolution) {
+    atlas_log("Creating render target (type: " +
+              std::to_string(static_cast<int>(type)) + ")");
     GLFWwindow *glfwWindow = static_cast<GLFWwindow *>(window.windowRef);
     int fbWidth, fbHeight;
     glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
@@ -77,6 +80,7 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
         this->depthTexture.type = TextureType::Depth;
 
         if (fb->getStatus() == false) {
+            atlas_error("Framebuffer is not complete for Scene render target");
             std::cerr << "Error: Framebuffer is not complete!" << std::endl;
         }
 

@@ -10,6 +10,7 @@
 #include "hydra/fluid.h"
 #include "atlas/light.h"
 #include "atlas/texture.h"
+#include "atlas/tracer/log.h"
 #include "atlas/window.h"
 #include "opal/opal.h"
 
@@ -40,12 +41,16 @@ void Fluid::create(Size2d extent, Color color) {
 
 void Fluid::initialize() {
     if (fluidShader.programId == 0) {
+        atlas_error(
+            "Fluid shader not initialized. Call create() before initialize().");
         throw std::runtime_error(
             "Fluid shader not initialized. Call create() before initialize().");
     }
     if (isInitialized) {
         return;
     }
+
+    atlas_log("Initializing fluid");
 
     vertexBuffer = opal::Buffer::create(opal::BufferUsage::VertexBuffer,
                                         sizeof(vertices), vertices.data());

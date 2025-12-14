@@ -8,14 +8,17 @@
 */
 
 #include "atlas/workspace.h"
+#include "atlas/tracer/log.h"
 
 Resource Workspace::createResource(const fs::path &path, std::string name,
                                    ResourceType type) {
     for (const auto &res : resources) {
         if (res.name == name) {
+            atlas_log("Resource already exists: " + name);
             return res;
         }
     }
+    atlas_log("Creating resource: " + name);
     Resource res;
     if (rootPath && path.is_relative()) {
         res.path = rootPath.value() / path;
@@ -31,6 +34,7 @@ Resource Workspace::createResource(const fs::path &path, std::string name,
 ResourceGroup
 Workspace::createResourceGroup(std::string groupName,
                                const std::vector<Resource> &resources) {
+    atlas_log("Creating resource group: " + groupName);
     ResourceGroup group;
     group.groupName = groupName;
     group.resources = resources;
@@ -44,6 +48,7 @@ Resource Workspace::getResource(std::string name) {
             return res;
         }
     }
+    atlas_warning("Resource not found: " + name);
     throw std::runtime_error("Resource not found: " + name);
 }
 
@@ -69,6 +74,7 @@ ResourceGroup Workspace::getResourceGroup(std::string groupName) {
             return group;
         }
     }
+    atlas_warning("Resource group not found: " + groupName);
     throw std::runtime_error("Resource group not found: " + groupName);
 }
 

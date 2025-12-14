@@ -12,6 +12,7 @@
 #include "atlas/camera.h"
 #include "atlas/core/shader.h"
 #include "atlas/light.h"
+#include "atlas/tracer/log.h"
 #include "atlas/window.h"
 #include "atlas/workspace.h"
 #include <aurora/terrain.h>
@@ -22,6 +23,7 @@
 #include <glm/gtx/string_cast.hpp>
 
 void Terrain::initialize() {
+    atlas_log("Initializing terrain");
     VertexShader vertexShader =
         VertexShader::fromDefaultShader(AtlasVertexShader::Terrain);
     FragmentShader fragmentShader =
@@ -43,6 +45,7 @@ void Terrain::initialize() {
     std::vector<uint8_t> heightData = {};
     if (createdWithMap) {
         if (heightmap.type != ResourceType::Image) {
+            atlas_error("Heightmap resource is not an image");
             throw std::runtime_error("Heightmap resource is not an image");
         }
 
@@ -50,6 +53,7 @@ void Terrain::initialize() {
         data = stbi_load(heightmap.path.string().c_str(), &width, &height,
                          &nChannels, 0);
         if (data == nullptr) {
+            atlas_error("Failed to load heightmap: " + heightmap.path.string());
             std::cerr << "Failed to load heightmap!" << std::endl;
             return;
         }
@@ -73,6 +77,7 @@ void Terrain::initialize() {
         data = heightData.data();
         nChannels = 4;
     } else {
+        atlas_error("No heightmap resource or terrain generator provided");
         throw std::runtime_error(
             "No heightmap resource or terrain generator provided");
     }

@@ -8,6 +8,7 @@
 //
 
 #include "atlas/network/pipe.h"
+#include "atlas/tracer/log.h"
 #include <iostream>
 #include <cstring>
 #include <unistd.h>
@@ -31,9 +32,11 @@ void NetworkPipe::onRecieve(const PipeCallback &callback) {
 
 void NetworkPipe::start() {
     if (port == 0) {
+        atlas_warning("Port not set. Cannot start NetworkPipe.");
         std::cerr << "Port not set. Cannot start NetworkPipe." << std::endl;
         return;
     }
+    atlas_log("Starting network pipe on port " + std::to_string(port));
     running = true;
 
     connectLoop();
@@ -89,9 +92,11 @@ void NetworkPipe::connectLoop() {
 
         connected = true;
         if (messageShown) {
+            atlas_log("Connected to tracer on port " + std::to_string(port));
             std::cout << "\rConnected to tracer on port " << port << "!"
                       << std::string(20, ' ') << std::endl;
         } else {
+            atlas_log("Connected to tracer on port " + std::to_string(port));
             std::cout << "Connected to tracer on port " << port << "!"
                       << std::endl;
         }
@@ -126,6 +131,7 @@ void NetworkPipe::receiveLoop() {
                 dispatcher(msg);
             }
         } else if (received == 0) {
+            atlas_log("Tracer disconnected");
             std::cout << "Tracer disconnected\n";
             int expected = sock;
             if (clientSocket.compare_exchange_strong(expected, -1)) {

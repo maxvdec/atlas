@@ -8,6 +8,7 @@
 //
 
 #include "opal/opal.h"
+#include "atlas/tracer/log.h"
 #include <algorithm>
 #include <memory>
 #ifdef VULKAN
@@ -87,6 +88,7 @@ void Framebuffer::addAttachment(const Attachment &attachment) {
         attachmentType = GL_DEPTH_STENCIL_ATTACHMENT;
         break;
     default:
+        atlas_error("Unknown attachment type");
         throw std::runtime_error("Unknown attachment type");
     }
     glFramebufferTexture2D(GL_FRAMEBUFFER, attachmentType,

@@ -44,7 +44,7 @@ void Logger::log(const std::string &message, const std::string &file,
     log["file"] = file;
     log["line"] = line;
 
-    TracerServices::getInstance().tracerPipe->send(log.dump());
+    TracerServices::getInstance().tracerPipe->send(log.dump() + "\n");
 }
 
 void Logger::warning(const std::string &message, const std::string &file,
@@ -60,7 +60,7 @@ void Logger::warning(const std::string &message, const std::string &file,
     log["file"] = file;
     log["line"] = line;
 
-    TracerServices::getInstance().tracerPipe->send(log.dump());
+    TracerServices::getInstance().tracerPipe->send(log.dump() + "\n");
 }
 
 void Logger::error(const std::string &message, const std::string &file,
@@ -76,5 +76,5 @@ void Logger::error(const std::string &message, const std::string &file,
     log["file"] = file;
     log["line"] = line;
 
-    TracerServices::getInstance().tracerPipe->send(log.dump());
+    TracerServices::getInstance().tracerPipe->send(log.dump() + "\n");
 }

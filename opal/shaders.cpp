@@ -8,6 +8,7 @@
 */
 
 #include "opal/opal.h"
+#include "atlas/tracer/log.h"
 #include <array>
 #include <cctype>
 #include <cstdint>
@@ -37,6 +38,7 @@ uint Shader::getGLShaderType(ShaderType type) {
     case ShaderType::TessellationEvaluation:
         return GL_TESS_EVALUATION_SHADER;
     default:
+        atlas_error("Unknown shader type");
         throw std::runtime_error("Unknown shader type");
     }
 }
