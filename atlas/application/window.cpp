@@ -9,6 +9,7 @@
 
 #include "atlas/core/shader.h"
 #include "atlas/light.h"
+#include "atlas/network/pipe.h"
 #include "atlas/object.h"
 #include "atlas/scene.h"
 #include "atlas/texture.h"
@@ -211,6 +212,18 @@ Window::Window(WindowConfiguration config)
     std::cout << "\033[1m\033[35mAPI Version: " << info.renderingVersion
               << "\033[0m" << std::endl;
 #endif
+
+    // Initialize test network pipe
+    this->testNetworkPipe = std::make_shared<NetworkPipe>();
+    testNetworkPipe->setPort(5123);
+    testNetworkPipe->onRecieve([](const std::string &message) {
+        std::cout << "Received message on test pipe: " << message << std::endl;
+    });
+    testNetworkPipe->start();
+    testNetworkPipe->send("Hello from Atlas Window!");
+
+    while (true) {
+    }
 }
 
 std::tuple<int, int> Window::getCursorPosition() {

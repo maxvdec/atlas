@@ -13,6 +13,7 @@
 #include "atlas/camera.h"
 #include "atlas/core/renderable.h"
 #include "atlas/input.h"
+#include "atlas/network/pipe.h"
 #include "atlas/object.h"
 #include "atlas/scene.h"
 #include "atlas/texture.h"
@@ -562,6 +563,8 @@ class Window {
     std::shared_ptr<RenderTarget> lightBuffer;
     std::shared_ptr<RenderTarget> ssrFramebuffer;
     std::shared_ptr<BloomRenderTarget> bloomBuffer;
+
+    std::shared_ptr<NetworkPipe> testNetworkPipe;
 
     std::vector<glm::vec3> ssaoKernel;
     std::vector<glm::vec3> ssaoNoise;
