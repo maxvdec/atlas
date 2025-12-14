@@ -11,6 +11,7 @@
 #define TRACER_DATA_H
 
 #include <string>
+#include <vector>
 
 // Graphics debugging
 
@@ -31,6 +32,71 @@ struct FrameDrawInfo {
     float fps;
 
     void send();
+};
+
+// Resources Event
+
+enum class DebugResourceType {
+    Texture = 1,
+    Buffer = 2,
+    Shader = 3,
+    Mesh = 4,
+};
+
+enum class DebugResourceOperation {
+    Created = 1,
+    Loaded = 2,
+    Unloaded = 3,
+};
+
+struct ResourceEventInfo {
+    std::string callerObject;
+    DebugResourceType resourceType;
+    DebugResourceOperation operation;
+    unsigned int frameNumber;
+    float sizeMb;
+
+    void send();
+};
+
+struct FrameResourcesInfo {
+    unsigned int frameNumber;
+    int resourcesCreated;
+    int resourcesLoaded;
+    int resourcesUnloaded;
+    float totalMemoryMb;
+
+    void send();
+};
+
+struct IndividualResourceTypeInfo {
+    DebugResourceType resourceType;
+    int count;
+};
+
+struct ObjectResourcesInfo {
+    std::string callerObject;
+    int resouceType;
+    float sizeMb;
+    std::vector<IndividualResourceTypeInfo> breakdown;
+
+    void send();
+};
+
+class ResourceTracker {
+  private:
+    ResourceTracker() = default;
+
+  public:
+    int createdResources = 0;
+    int loadedResources = 0;
+    int unloadedResources = 0;
+    float totalMemoryMb = 0.0f;
+
+    static ResourceTracker &getInstance() {
+        static ResourceTracker instance;
+        return instance;
+    }
 };
 
 #endif // TRACER_DATA_H
