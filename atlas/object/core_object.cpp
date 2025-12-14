@@ -821,13 +821,13 @@ void CoreObject::render(float dt,
             commandBuffer->bindDrawingState(vao);
             commandBuffer->bindPipeline(this->pipeline);
             commandBuffer->drawIndexed(indices.size(), instances.size(), 0, 0,
-                                       0);
+                                       0, id);
             commandBuffer->unbindDrawingState();
             return;
         }
         commandBuffer->bindDrawingState(vao);
         commandBuffer->bindPipeline(this->pipeline);
-        commandBuffer->draw(vertices.size(), instances.size(), 0, 0);
+        commandBuffer->draw(vertices.size(), instances.size(), 0, 0, id);
         commandBuffer->unbindDrawingState();
         return;
     }
@@ -836,14 +836,14 @@ void CoreObject::render(float dt,
     if (!indices.empty()) {
         commandBuffer->bindDrawingState(vao);
         commandBuffer->bindPipeline(this->pipeline);
-        commandBuffer->drawIndexed(indices.size(), 1, 0, 0, 0);
+        commandBuffer->drawIndexed(indices.size(), 1, 0, 0, 0, id);
         commandBuffer->unbindDrawingState();
 
         return;
     }
     commandBuffer->bindDrawingState(vao);
     commandBuffer->bindPipeline(this->pipeline);
-    commandBuffer->draw(vertices.size(), 1, 0, 0);
+    commandBuffer->draw(vertices.size(), 1, 0, 0, id);
     commandBuffer->unbindDrawingState();
 }
 

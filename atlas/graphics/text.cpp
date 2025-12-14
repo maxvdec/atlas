@@ -316,8 +316,8 @@ void Text::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
         const size_t offset = glyphIndex * bytesPerGlyph;
         vertexBuffer->updateData(offset, sizeof(vertices), vertices);
         vertexBuffer->unbind();
-        commandBuffer->draw(6, 1,
-                            static_cast<uint>(offset / (4 * sizeof(float))), 0);
+        commandBuffer->draw(
+            6, 1, static_cast<uint>(offset / (4 * sizeof(float))), 0, id);
 
         x += (ch.advance >> 6) * scale;
     }

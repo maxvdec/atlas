@@ -790,10 +790,11 @@ void RenderTarget::render(float dt,
     commandBuffer->bindDrawingState(obj->vao);
     if (!obj->indices.empty()) {
         commandBuffer->drawIndexed(
-            static_cast<unsigned int>(obj->indices.size()), 1, 0, 0, 0);
+            static_cast<unsigned int>(obj->indices.size()), 1, 0, 0, 0,
+            obj->id);
     } else {
         commandBuffer->draw(static_cast<unsigned int>(obj->vertices.size()), 1,
-                            0, 0);
+                            0, 0, obj->id);
     }
     commandBuffer->unbindDrawingState();
 

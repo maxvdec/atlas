@@ -13,6 +13,7 @@
 #include "atlas/object.h"
 #include "atlas/scene.h"
 #include "atlas/texture.h"
+#include "atlas/tracer/data.h"
 #include "atlas/tracer/log.h"
 #include "atlas/units.h"
 #include "hydra/fluid.h"
@@ -475,6 +476,13 @@ void Window::run() {
 #ifdef OPENGL
         glfwSwapBuffers(window);
 #endif
+
+        FrameDrawInfo frameInfo{};
+        frameInfo.drawCallCount = commandBuffer->getAndResetDrawCallCount();
+        frameInfo.frameTimeMs = this->deltaTime * 1000.0f;
+        frameInfo.frameNumber = device->frameCount;
+        frameInfo.fps = this->framesPerSecond;
+        frameInfo.send();
     }
 }
 
@@ -1215,6 +1223,7 @@ void Window::renderPingpong(RenderTarget *target) {
     }
 
     device->getDefaultFramebuffer()->bind();
+    device->frameCount++;
 
     bool horizontal = true;
     bool firstIteration = true;

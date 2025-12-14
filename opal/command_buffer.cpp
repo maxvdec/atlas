@@ -114,6 +114,12 @@ void CommandBuffer::endPass() {
 #endif
 }
 
+int CommandBuffer::getAndResetDrawCallCount() {
+    int count = drawCallCount;
+    drawCallCount = 0;
+    return count;
+}
+
 void CommandBuffer::commit() {
 #ifdef VULKAN
     if (!imageAcquired && framebuffer != nullptr &&
@@ -355,9 +361,11 @@ auto CommandBuffer::draw(uint vertexCount, uint instanceCount, uint firstVertex,
 
     DrawCallInfo info;
     info.callerObject = std::to_string(objectId);
-    info.frameNumber = 0;
+    info.frameNumber = (int)device->frameCount;
     info.type = DrawCallType::Draw;
     info.send();
+
+    drawCallCount++;
 }
 
 void CommandBuffer::drawIndexed(uint indexCount, uint instanceCount,
@@ -429,9 +437,11 @@ void CommandBuffer::drawIndexed(uint indexCount, uint instanceCount,
 
     DrawCallInfo info;
     info.callerObject = std::to_string(objectId);
-    info.frameNumber = 0;
+    info.frameNumber = (int)device->frameCount;
     info.type = DrawCallType::Indexed;
     info.send();
+
+    drawCallCount++;
 }
 
 void CommandBuffer::drawPatches(uint vertexCount, uint firstVertex,
@@ -546,9 +556,11 @@ void CommandBuffer::drawPatches(uint vertexCount, uint firstVertex,
 
     DrawCallInfo info;
     info.callerObject = std::to_string(objectId);
-    info.frameNumber = 0;
+    info.frameNumber = device->frameCount;
     info.type = DrawCallType::Patch;
     info.send();
+
+    drawCallCount++;
 }
 
 #ifdef VULKAN

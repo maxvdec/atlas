@@ -145,6 +145,8 @@ class Device {
     static VkDevice globalDevice;
     static Device *globalInstance;
 
+    long frameCount = 0;
+
     VkDevice logicalDevice = VK_NULL_HANDLE;
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
     VkQueue graphicsQueue = VK_NULL_HANDLE;
@@ -393,13 +395,12 @@ enum class ShaderType {
 struct UniformBindingInfo {
     uint32_t set;
     uint32_t binding;
-    uint32_t size; // Size of the uniform block (0 for samplers)
-    uint32_t
-        offset; // Offset of the member within the block (for struct members)
+    uint32_t size;
+    uint32_t offset;
     bool isSampler;
-    bool isBuffer;        // true for uniform buffers, false for push constants
-    bool isStorageBuffer; // true for storage buffers (SSBOs)
-    bool isCubemap;       // true for samplerCube types
+    bool isBuffer;
+    bool isStorageBuffer;
+    bool isCubemap;
 };
 #endif
 
@@ -652,8 +653,6 @@ class Pipeline {
     VkPipelineDepthStencilStateCreateInfo depthStencil;
     VkPipelineColorBlendStateCreateInfo colorBlending;
 
-    // Storage for data referenced by create info structs (must outlive pipeline
-    // creation)
     std::vector<VkDynamicState> vkDynamicStates;
     std::vector<VkVertexInputBindingDescription> vkBindingDescriptions;
     std::vector<VkVertexInputAttributeDescription> vkAttributeDescriptions;
@@ -666,7 +665,6 @@ class Pipeline {
                        bool normalized) const;
     void buildPipelineLayout();
 
-    // Descriptor set management for uniform binding
     VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
     std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
     std::vector<VkDescriptorSet> descriptorSets;
@@ -683,7 +681,6 @@ class Pipeline {
     std::map<uint32_t, std::map<uint32_t, DescriptorBindingInfoEntry>>
         descriptorBindingInfo;
 
-    // Uniform buffer storage: maps (set, binding) to buffer and memory
     struct UniformBufferAllocation {
         VkBuffer buffer = VK_NULL_HANDLE;
         VkDeviceMemory memory = VK_NULL_HANDLE;
@@ -693,20 +690,16 @@ class Pipeline {
     };
     std::unordered_map<uint64_t, UniformBufferAllocation> uniformBuffers;
 
-    // Helper to get key from set and binding
     static uint64_t makeBindingKey(uint32_t set, uint32_t binding) {
         return (static_cast<uint64_t>(set) << 32) | binding;
     }
 
-    // Create/get uniform buffer for a binding
     UniformBufferAllocation &
     getOrCreateUniformBuffer(uint32_t set, uint32_t binding, VkDeviceSize size);
 
-    // Update uniform data
     void updateUniformData(uint32_t set, uint32_t binding, uint32_t offset,
                            const void *data, size_t size);
 
-    // Build descriptor sets from shader reflection
     void buildDescriptorSets();
     void ensureDescriptorResources();
     void bindDescriptorSets(VkCommandBuffer commandBuffer);
@@ -1064,6 +1057,8 @@ class CommandBuffer {
     void clearDepth(float depth);
     void clear(float r, float g, float b, float a, float depth);
 
+    int getAndResetDrawCallCount();
+
   private:
 #ifdef VULKAN
     static constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 3;
@@ -1088,6 +1083,8 @@ class CommandBuffer {
 
     float clearColorValue[4] = {0.0f, 0.0f, 0.0f, 1.0f};
     float clearDepthValue = 1.0f;
+
+    int drawCallCount = 0;
 
     bool hasStarted = false;
 

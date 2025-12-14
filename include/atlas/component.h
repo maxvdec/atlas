@@ -16,6 +16,7 @@
 #include "atlas/units.h"
 #include "bezel/body.h"
 #include "opal/opal.h"
+#include <climits>
 #include <memory>
 #include <random>
 #include <vector>
@@ -163,7 +164,7 @@ class GameObject : public Renderable {
     GameObject() {
         std::random_device rd;
         std::mt19937 gen(rd());
-        std::uniform_int_distribution<unsigned int> dist(0, UINT32_MAX);
+        std::uniform_int_distribution<int> dist(0, INT_MAX);
         id = dist(gen);
     }
 
@@ -330,7 +331,7 @@ class GameObject : public Renderable {
     /**
      * @brief The unique identifier for the object.
      */
-    unsigned int id;
+    int id;
 };
 
 /**
