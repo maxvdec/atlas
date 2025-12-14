@@ -495,6 +495,19 @@ void Window::run() {
         frameResourcesInfo.totalMemoryMb =
             ResourceTracker::getInstance().totalMemoryMb;
 
+        FrameMemoryPacket memoryPacket{};
+        memoryPacket.frameNumber = device->frameCount;
+        memoryPacket.allocationCount =
+            ResourceTracker::getInstance().createdResources -
+            ResourceTracker::getInstance().unloadedResources;
+        memoryPacket.totalAllocatedMb =
+            ResourceTracker::getInstance().totalMemoryMb;
+        memoryPacket.totalCPUMb = ResourceTracker::getInstance().totalMemoryMb;
+        memoryPacket.totalGPUMb = ResourceTracker::getInstance().totalMemoryMb;
+        memoryPacket.deallocationCount =
+            ResourceTracker::getInstance().unloadedResources;
+        memoryPacket.send();
+
         ResourceTracker::getInstance().createdResources = 0;
         ResourceTracker::getInstance().loadedResources = 0;
         ResourceTracker::getInstance().unloadedResources = 0;

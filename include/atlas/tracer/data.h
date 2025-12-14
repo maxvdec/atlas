@@ -117,4 +117,49 @@ struct DebugObjectPacket {
     void send();
 };
 
+// Traces Debug
+
+enum class DebugMemoryDomain {
+    GPU = 1,
+    CPU = 2,
+};
+
+enum class DebugResourceKind {
+    VertexBuffer = 1,
+    IndexBuffer = 2,
+    UniformBuffer = 3,
+    StorageBuffer = 4,
+    Texture2d = 5,
+    Texture3d = 6,
+    TextureCube = 7,
+    RenderTarget = 8,
+    DepthStencil = 9,
+    Sampler = 10,
+    PipelineCache = 11,
+    AccelerationStructure = 12,
+    Other = 13,
+};
+
+struct AllocationPacket {
+    std::string description;
+    std::string owner;
+    DebugMemoryDomain domain;
+    DebugResourceKind kind;
+    float sizeMb;
+    unsigned int frameNumber;
+
+    void send();
+};
+
+struct FrameMemoryPacket {
+    unsigned int frameNumber;
+    float totalAllocatedMb;
+    float totalGPUMb;
+    float totalCPUMb;
+    int allocationCount;
+    int deallocationCount;
+
+    void send();
+};
+
 #endif // TRACER_DATA_H

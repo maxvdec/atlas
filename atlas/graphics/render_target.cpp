@@ -431,6 +431,17 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
     } else {
         throw std::runtime_error("Unknown render target type");
     }
+
+    AllocationPacket packet;
+    packet.description =
+        "RenderTarget Type " + std::to_string(static_cast<int>(type));
+    ;
+    packet.sizeMb = (static_cast<float>(width) * static_cast<float>(height) *
+                     4.0f /* bytes per pixel */) /
+                    (1024.0f * 1024.0f);
+    packet.kind = DebugResourceKind::RenderTarget;
+    packet.frameNumber = Window::mainWindow->device->frameCount;
+    packet.send();
 }
 
 void RenderTarget::display(Window &window, float zindex) {
