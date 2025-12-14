@@ -11,6 +11,7 @@
 #include "atlas/core/shader.h"
 #include "atlas/object.h"
 #include "atlas/texture.h"
+#include "atlas/tracer/log.h"
 #include "atlas/units.h"
 #include "atlas/window.h"
 #include "atlas/workspace.h"
@@ -34,8 +35,12 @@ void Model::fromResource(Resource resource) { loadModel(resource); }
 
 void Model::loadModel(Resource resource) {
     Assimp::Importer importer;
-    if (resource.type != ResourceType::Model)
+    if (resource.type != ResourceType::Model) {
+        atlas_warning("Resource is not a model: " + resource.name);
         return;
+    }
+
+    atlas_log("Loading model: " + resource.name);
 
     unsigned int importFlags =
         aiProcess_Triangulate | aiProcess_CalcTangentSpace |
@@ -47,6 +52,7 @@ void Model::loadModel(Resource resource) {
 
     if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE ||
         !scene->mRootNode) {
+        atlas_error("Assimp error: " + std::string(importer.GetErrorString()));
         throw std::runtime_error("Assimp error: " +
                                  std::string(importer.GetErrorString()));
         return;
@@ -56,6 +62,10 @@ void Model::loadModel(Resource resource) {
     std::unordered_map<std::string, Texture> textureCache;
 
     processNode(scene->mRootNode, scene, glm::mat4(1.0f), textureCache);
+
+    atlas_log("Model loaded successfully: " + resource.name + " (" +
+              std::to_string(objects.size()) + " objects, " +
+              std::to_string(scene->mNumMeshes) + " meshes)");
 
     // std::cout << "Created model from resource: " << resource.name << " with "
     //           << objects.size() << " objects." << std::endl;
@@ -266,6 +276,8 @@ std::vector<Texture> Model::loadMaterialTextures(
             textureCache[fullPath] = loadedTexture;
             textures.push_back(loadedTexture);
         } catch (const std::exception &ex) {
+            atlas_warning("Failed to load texture '" + filename +
+                          "': " + ex.what());
             std::cerr << "Failed to load texture '" << filename
                       << "': " << ex.what() << std::endl;
         }

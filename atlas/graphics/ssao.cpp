@@ -8,6 +8,7 @@
 //
 
 #include "atlas/window.h"
+#include "atlas/tracer/log.h"
 #include <algorithm>
 #include <glm/geometric.hpp>
 #include <glm/gtc/random.hpp>
@@ -16,6 +17,8 @@
 #include "opal/opal.h"
 
 void Window::setupSSAO() {
+    atlas_log("Setting up SSAO (kernel size: " +
+              std::to_string(this->ssaoKernelSize) + ")");
     std::uniform_real_distribution<float> randomFloats(0.0, 1.0);
     std::default_random_engine generator;
     this->ssaoKernel.clear();

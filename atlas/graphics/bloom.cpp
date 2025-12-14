@@ -8,6 +8,7 @@
 */
 
 #include "atlas/core/shader.h"
+#include "atlas/tracer/log.h"
 #include "atlas/window.h"
 #include <atlas/texture.h>
 #include <climits>
@@ -17,16 +18,22 @@
 #include "opal/opal.h"
 
 void BloomRenderTarget::init(int width, int height, int chainLength) {
-    if (initialized)
+    if (initialized) {
         return;
+    }
+    atlas_log("Initializing bloom system (chain length: " +
+              std::to_string(chainLength) + ", resolution: " +
+              std::to_string(width) + "x" + std::to_string(height) + ")");
     initialized = true;
 
     this->framebuffer = opal::Framebuffer::create();
 
     glm::vec2 mipSize((float)width, (float)height);
     glm::ivec2 mipIntSize((int)width, (int)height);
-    if (width > INT_MAX || height > INT_MAX)
+    if (width > INT_MAX || height > INT_MAX) {
+        atlas_error("Texture dimensions exceed maximum allowed");
         throw std::runtime_error("Texture dimensions exceed maximum allowed");
+    }
 
     this->srcViewportSize = mipIntSize;
     this->srcViewportSizef = mipSize;

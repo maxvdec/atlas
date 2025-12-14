@@ -13,6 +13,7 @@
 #include "atlas/object.h"
 #include "atlas/scene.h"
 #include "atlas/texture.h"
+#include "atlas/tracer/log.h"
 #include "atlas/units.h"
 #include "hydra/fluid.h"
 #include "bezel/body.h"
@@ -36,14 +37,17 @@ Window *Window::mainWindow = nullptr;
 
 Window::Window(WindowConfiguration config)
     : title(config.title), width(config.width), height(config.height) {
+    atlas_log("Initializing window: " + config.title);
 #ifdef VULKAN
     auto context = opal::Context::create({.useOpenGL = false});
+    atlas_log("Using Vulkan backend");
 #else
     auto context =
         opal::Context::create({.useOpenGL = true,
                                .majorVersion = 4,
                                .minorVersion = 1,
                                .profile = opal::OpenGLProfile::Core});
+    atlas_log("Using OpenGL backend");
 #endif
 
     context->setFlag(GLFW_DECORATED, config.decorations);
@@ -188,8 +192,10 @@ Window::Window(WindowConfiguration config)
     audioEngine = std::make_shared<AudioEngine>();
     bool result = audioEngine->initialize();
     if (!result) {
+        atlas_error("Failed to initialize audio engine");
         throw std::runtime_error("Failed to initialize audio engine");
     }
+    atlas_log("Audio engine initialized successfully");
 
     opal::DeviceInfo info = device->getDeviceInfo();
 
@@ -213,17 +219,8 @@ Window::Window(WindowConfiguration config)
               << "\033[0m" << std::endl;
 #endif
 
-    // Initialize test network pipe
-    this->testNetworkPipe = std::make_shared<NetworkPipe>();
-    testNetworkPipe->setPort(5123);
-    testNetworkPipe->onRecieve([](const std::string &message) {
-        std::cout << "Received message on test pipe: " << message << std::endl;
-    });
-    testNetworkPipe->start();
-    testNetworkPipe->send("Hello from Atlas Window!");
-
-    while (true) {
-    }
+    TracerServices::getInstance().startTracing(TRACER_PORT);
+    atlas_log("Atlas Tracer initialized.");
 }
 
 std::tuple<int, int> Window::getCursorPosition() {
@@ -523,6 +520,7 @@ void Window::close() {
 void Window::setCamera(Camera *newCamera) { this->camera = newCamera; }
 
 void Window::setScene(Scene *scene) {
+    atlas_log("Setting active scene");
     this->currentScene = scene;
     scene->initialize(*this);
     this->shadowMapsDirty = true;
@@ -570,6 +568,8 @@ glm::mat4 Window::calculateProjectionMatrix() {
 }
 
 void Window::setFullscreen(bool enable) {
+    atlas_log(enable ? "Switching to fullscreen mode"
+                     : "Switching to windowed mode");
     GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
     if (enable) {
         GLFWmonitor *monitor = glfwGetPrimaryMonitor();
@@ -1289,6 +1289,7 @@ void Window::renderPingpong(RenderTarget *target) {
 }
 
 void Window::useDeferredRendering() {
+    atlas_log("Enabling deferred rendering");
     this->usesDeferred = true;
     auto target = std::make_shared<RenderTarget>(
         RenderTarget(*this, RenderTargetType::GBuffer));

@@ -8,6 +8,7 @@
 //
 
 #include "atlas/text.h"
+#include "atlas/tracer/log.h"
 #include "atlas/window.h"
 #include "opal/opal.h"
 #include "ft2build.h" // IWYU pragma: keep
@@ -18,13 +19,17 @@
 
 Font Font::fromResource(const std::string &fontName, Resource resource,
                         int fontSize) {
+    atlas_log("Loading font: " + fontName +
+              " (size: " + std::to_string(fontSize) + ")");
     FT_Library ft;
     if (FT_Init_FreeType(&ft)) {
+        atlas_error("Could not initialize FreeType Library");
         throw std::runtime_error("Could not initialize FreeType Library");
     }
 
     FT_Face face;
     if (FT_New_Face(ft, resource.path.c_str(), 0, &face)) {
+        atlas_error("Failed to load font: " + std::string(resource.path));
         throw std::runtime_error("Failed to load font: " +
                                  std::string(resource.path));
     }
@@ -45,6 +50,8 @@ Font Font::fromResource(const std::string &fontName, Resource resource,
 
     for (unsigned char c = 0; c < 128; c++) {
         if (FT_Load_Char(face, c, FT_LOAD_RENDER)) {
+            atlas_warning("Failed to load Glyph: " +
+                          std::to_string(static_cast<int>(c)));
             std::cerr << "Failed to load Glyph: " << c << std::endl;
             continue;
         }
@@ -59,6 +66,7 @@ Font Font::fromResource(const std::string &fontName, Resource resource,
         }
 
         if (currentY + height + padding > atlasHeight) {
+            atlas_warning("Font atlas full for font: " + fontName);
             std::cerr << "Font atlas full for font: " << fontName << std::endl;
             break;
         }
