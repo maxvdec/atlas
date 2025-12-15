@@ -19,8 +19,7 @@
 namespace opal {
 void Context::createInstance() {
     if (this->config.createValidationLayers && !this->hasValidationLayer()) {
-        throw std::runtime_error(
-            "Validation layers requested, but not available!");
+        this->config.createValidationLayers = false;
     }
 
     VkApplicationInfo appInfo = {};
