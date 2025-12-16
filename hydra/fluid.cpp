@@ -205,6 +205,7 @@ void Fluid::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
 
     DebugObjectPacket debugPacket{};
     debugPacket.drawCallsForObject = 1;
+    debugPacket.frameCount = Window::mainWindow->device->frameCount;
     debugPacket.triangleCount = indices.size() / 3;
     debugPacket.vertexBufferSizeMb =
         static_cast<float>(sizeof(FluidVertex) * vertices.size()) /

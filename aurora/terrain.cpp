@@ -296,6 +296,7 @@ void Terrain::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
 
     DebugObjectPacket debugPacket{};
     debugPacket.drawCallsForObject = 1;
+    debugPacket.frameCount = Window::mainWindow->device->frameCount;
     debugPacket.triangleCount =
         static_cast<uint32_t>(patch_count * rez * rez) * 2;
     debugPacket.vertexBufferSizeMb =

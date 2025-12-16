@@ -19,6 +19,8 @@
 namespace opal {
 void Context::createInstance() {
     if (this->config.createValidationLayers && !this->hasValidationLayer()) {
+        atlas_warning("Validation layers requested, but not available! "
+                      "Disabling them and continuing.");
         this->config.createValidationLayers = false;
     }
 

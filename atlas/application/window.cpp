@@ -273,6 +273,8 @@ void Window::run() {
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
 
+        device->frameCount++;
+
         DebugTimer cpuTimer("Cpu Data");
         DebugTimer mainTimer("Main Loop");
 
