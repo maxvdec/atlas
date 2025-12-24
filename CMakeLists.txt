@@ -83,19 +83,19 @@ endif()
 find_program(TYPST_EXECUTABLE typst)
 if(TYPST_EXECUTABLE)
     message(STATUS "Found Typst: ${TYPST_EXECUTABLE}")
-    
+
     file(GLOB_RECURSE TYPST_SOURCES ${CMAKE_SOURCE_DIR}/*.typ)
-    
+
     if(TYPST_SOURCES)
         message(STATUS "Found ${CMAKE_MATCH_COUNT} Typst document(s)")
         set(TYPST_OUTPUT_DIR ${CMAKE_BINARY_DIR}/docs)
         file(MAKE_DIRECTORY ${TYPST_OUTPUT_DIR})
-        
+
         set(TYPST_OUTPUTS "")
         foreach(TYPST_FILE ${TYPST_SOURCES})
             get_filename_component(TYPST_NAME ${TYPST_FILE} NAME_WE)
             set(PDF_OUTPUT ${TYPST_OUTPUT_DIR}/${TYPST_NAME}.pdf)
-            
+
             add_custom_command(
                 OUTPUT ${PDF_OUTPUT}
                 COMMAND ${TYPST_EXECUTABLE} compile ${TYPST_FILE} ${PDF_OUTPUT}
@@ -103,10 +103,10 @@ if(TYPST_EXECUTABLE)
                 COMMENT "Compiling Typst document: ${TYPST_NAME}.typ -> ${TYPST_NAME}.pdf"
                 VERBATIM
             )
-            
+
             list(APPEND TYPST_OUTPUTS ${PDF_OUTPUT})
         endforeach()
-        
+
         add_custom_target(typst_docs ALL DEPENDS ${TYPST_OUTPUTS})
         message(STATUS "Typst documents will be compiled to: ${TYPST_OUTPUT_DIR}")
     else()
@@ -117,13 +117,26 @@ else()
     message(WARNING "Install Typst from https://typst.app to enable document building")
 endif()
 
+# Setting up Jolt Physics
+set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
+FetchContent_Declare(
+    JoltPhysics
+    GIT_REPOSITORY https://github.com/jrouwe/JoltPhysics.git
+    GIT_TAG v5.4.0
+    GIT_SHALLOW TRUE
+    UPDATE_DISCONNECTED TRUE
+    SOURCE_SUBDIR Build
+)
+FetchContent_MakeAvailable(JoltPhysics)
+message(STATUS "Downloaded Jolt Physics, version 5.4.0")
+
 if(BACKEND_OPENGL)
     find_package(OpenGL REQUIRED)
 else()
     find_package(Vulkan REQUIRED)
     message(STATUS "Found Vulkan SDK at ${Vulkan_LIBRARY}")
     message(STATUS "Found Vulkan Libraries at ${Vulkan_INCLUDE_DIRS}")
-    
+
     if(APPLE)
         list(APPEND CMAKE_PREFIX_PATH "/opt/homebrew/opt/spirv-cross")
     endif()
@@ -160,6 +173,7 @@ file(GLOB_RECURSE OPAL_SOURCES CONFIGURE_DEPENDS opal/*.cpp)
 
 add_library(bezel ${BEZEL_SOURCES})
 target_link_libraries(bezel PRIVATE glfw glm::glm)
+target_link_libraries(bezel PUBLIC Jolt::Jolt)
 
 add_library(finewave ${FINEWAVE_SOURCES})
 target_link_libraries(finewave PRIVATE glfw glm::glm ${OPENAL_LIB})
@@ -221,7 +235,7 @@ endif()
 target_include_directories(atlas PRIVATE ${FREETYPE_INCLUDE_DIRS}/freetype2)
 target_compile_definitions(atlas PRIVATE ATLAS_LIB GL_SILENT_DEPRECATION)
 
-target_compile_options(atlas PRIVATE 
+target_compile_options(atlas PRIVATE
     -Wno-overlength-strings
 )
 
