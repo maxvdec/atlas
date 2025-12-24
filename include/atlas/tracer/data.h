@@ -113,6 +113,7 @@ struct DebugObjectPacket {
     float textureCount;
 
     int drawCallsForObject;
+    int frameCount;
 
     void send();
 };
@@ -161,6 +162,8 @@ struct FrameMemoryPacket {
 
     void send();
 };
+
+// Timing Debug
 
 struct FrameTimingPacket {
     unsigned int frameNumber;

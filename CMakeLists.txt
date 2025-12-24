@@ -80,6 +80,43 @@ else()
     )
 endif()
 
+find_program(TYPST_EXECUTABLE typst)
+if(TYPST_EXECUTABLE)
+    message(STATUS "Found Typst: ${TYPST_EXECUTABLE}")
+    
+    file(GLOB_RECURSE TYPST_SOURCES ${CMAKE_SOURCE_DIR}/*.typ)
+    
+    if(TYPST_SOURCES)
+        message(STATUS "Found ${CMAKE_MATCH_COUNT} Typst document(s)")
+        set(TYPST_OUTPUT_DIR ${CMAKE_BINARY_DIR}/docs)
+        file(MAKE_DIRECTORY ${TYPST_OUTPUT_DIR})
+        
+        set(TYPST_OUTPUTS "")
+        foreach(TYPST_FILE ${TYPST_SOURCES})
+            get_filename_component(TYPST_NAME ${TYPST_FILE} NAME_WE)
+            set(PDF_OUTPUT ${TYPST_OUTPUT_DIR}/${TYPST_NAME}.pdf)
+            
+            add_custom_command(
+                OUTPUT ${PDF_OUTPUT}
+                COMMAND ${TYPST_EXECUTABLE} compile ${TYPST_FILE} ${PDF_OUTPUT}
+                DEPENDS ${TYPST_FILE}
+                COMMENT "Compiling Typst document: ${TYPST_NAME}.typ -> ${TYPST_NAME}.pdf"
+                VERBATIM
+            )
+            
+            list(APPEND TYPST_OUTPUTS ${PDF_OUTPUT})
+        endforeach()
+        
+        add_custom_target(typst_docs ALL DEPENDS ${TYPST_OUTPUTS})
+        message(STATUS "Typst documents will be compiled to: ${TYPST_OUTPUT_DIR}")
+    else()
+        message(STATUS "No Typst documents found")
+    endif()
+else()
+    message(WARNING "Typst not found - skipping document compilation")
+    message(WARNING "Install Typst from https://typst.app to enable document building")
+endif()
+
 if(BACKEND_OPENGL)
     find_package(OpenGL REQUIRED)
 else()
@@ -184,7 +221,7 @@ endif()
 target_include_directories(atlas PRIVATE ${FREETYPE_INCLUDE_DIRS}/freetype2)
 target_compile_definitions(atlas PRIVATE ATLAS_LIB GL_SILENT_DEPRECATION)
 
-target_compile_options(atlas PRIVATE # Suppress warnings from packed shaders
+target_compile_options(atlas PRIVATE 
     -Wno-overlength-strings
 )
 

@@ -824,6 +824,7 @@ void RenderTarget::render(float dt,
 
     DebugObjectPacket debugPacket{};
     debugPacket.drawCallsForObject = 1;
+    debugPacket.frameCount = Window::mainWindow->device->frameCount;
     debugPacket.triangleCount = 2;
     debugPacket.vertexBufferSizeMb =
         static_cast<float>(sizeof(CoreVertex) * 4) / (1024.0f * 1024.0f);

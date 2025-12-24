@@ -401,6 +401,7 @@ void ParticleEmitter::render(float dt,
 
     DebugObjectPacket debugPacket{};
     debugPacket.drawCallsForObject = 1;
+    debugPacket.frameCount = Window::mainWindow->device->frameCount;
     debugPacket.triangleCount = activeParticleCount * 2;
     debugPacket.vertexBufferSizeMb =
         static_cast<float>(sizeof(QuadVertex) * 4) / (1024.0f * 1024.0f);

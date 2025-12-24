@@ -29,6 +29,7 @@ void DebugObjectPacket::send() {
     object["vertex_buffer_mb"] = vertexBufferSizeMb;
     object["index_buffer_mb"] = indexBufferSizeMb;
     object["texture_count"] = textureCount;
+    object["frame_count"] = frameCount;
 
     TracerServices::getInstance().tracerPipe->send(object.dump() + "\n");
 }
