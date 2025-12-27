@@ -600,6 +600,15 @@ void CoreObject::render(float dt,
         this->pipeline->setUniform1f("material.metallic", material.metallic);
         this->pipeline->setUniform1f("material.roughness", material.roughness);
         this->pipeline->setUniform1f("material.ao", material.ao);
+
+        // Vulkan push-constant reflection for blocks may expose members without
+        // the block instance prefix; set fallbacks so deferred rendering keeps
+        // working even if the reflected names differ.
+        this->pipeline->setUniform3f("albedo", material.albedo.r,
+                                     material.albedo.g, material.albedo.b);
+        this->pipeline->setUniform1f("metallic", material.metallic);
+        this->pipeline->setUniform1f("roughness", material.roughness);
+        this->pipeline->setUniform1f("ao", material.ao);
     }
 
     const bool shaderSupportsIbl =

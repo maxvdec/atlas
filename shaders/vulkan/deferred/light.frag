@@ -25,38 +25,59 @@ layout(set = 3, binding = 5) uniform samplerCube skybox;
 
 struct DirectionalLight {
     vec3 direction;
+    float _pad1;
     vec3 diffuse;
+    float _pad2;
     vec3 specular;
+    float _pad3;
 };
 
 struct PointLight {
     vec3 position;
+    float _pad1;
     vec3 diffuse;
+    float _pad2;
     vec3 specular;
     float constant;
     float linear;
     float quadratic;
     float radius;
+    float _pad3;
 };
 
 struct SpotLight {
     vec3 position;
+    float _pad1;
     vec3 direction;
     float cutOff;
     float outerCutOff;
+    float _pad2;
+    float _pad3;
+    float _pad4;
     vec3 diffuse;
+    float _pad5;
     vec3 specular;
+    float _pad6;
 };
 
 struct AreaLight {
     vec3 position;
+    float _pad1;
     vec3 right;
+    float _pad2;
     vec3 up;
+    float _pad3;
     vec2 size;
+    float _pad4;
+    float _pad5;
     vec3 diffuse;
+    float _pad6;
     vec3 specular;
     float angle;
     int castsBothSides;
+    float _pad7;
+    float _pad8;
+    float _pad9;
 };
 
 struct ShadowParameters {
@@ -65,8 +86,9 @@ struct ShadowParameters {
     float bias;
     int textureIndex;
     float farPlane;
+    float _pad1;
     vec3 lightPos;
-    bool isPointLight;
+    int isPointLight;
 };
 
 layout(set = 1, binding = 1) uniform Environment {
@@ -110,6 +132,7 @@ layout(set = 1, binding = 0) uniform UBO {
 layout(set = 1, binding = 2) uniform AmbientLight {
     vec4 color;
     float intensity;
+    vec3 _pad0;
 } ambientLight;
 
 const float PI = 3.14159265;
@@ -177,9 +200,18 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0) {
 }
 
 float calculateShadow(ShadowParameters shadowParam, vec3 fragPos, vec3 normal) {
+    vec2 dims = getTextureDimensions(shadowParam.textureIndex);
+    if (dims.x == 0.0 || dims.y == 0.0) {
+        return 0.0; // No valid shadow map bound
+    }
+
     vec4 fragPosLightSpace = shadowParam.lightProjection * shadowParam.lightView * vec4(fragPos, 1.0);
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    // Transform from [-1,1] to [0,1] for texture sampling
     projCoords = projCoords * 0.5 + 0.5;
+    // Flip Y because shadow map was rendered with OpenGL-style projection but sampled in Vulkan
+    projCoords.y = 1.0 - projCoords.y;
+    // Note: Shadow maps are rendered without Y-flip projection, so no Y-flip needed here
 
     if (projCoords.x < 0.0 || projCoords.x > 1.0 ||
             projCoords.y < 0.0 || projCoords.y > 1.0 ||
@@ -196,10 +228,10 @@ float calculateShadow(ShadowParameters shadowParam, vec3 fragPos, vec3 normal) {
     float bias = max(biasValue * (1.0 - ndotl), minBias);
 
     float shadow = 0.0;
-    vec2 texelSize = 1.0 / getTextureDimensions(shadowParam.textureIndex);
+    vec2 texelSize = 1.0 / dims;
 
     float distance = length(cameraPosition - fragPos);
-    vec2 shadowMapSize = getTextureDimensions(shadowParam.textureIndex);
+    vec2 shadowMapSize = dims;
     float avgDim = 0.5 * (shadowMapSize.x + shadowMapSize.y);
     float resFactor = clamp(1024.0 / max(avgDim, 1.0), 0.75, 1.25);
     float distFactor = clamp(distance / 800.0, 0.0, 1.0);
@@ -239,6 +271,10 @@ float calculateShadow(ShadowParameters shadowParam, vec3 fragPos, vec3 normal) {
 }
 
 float calculatePointShadow(ShadowParameters shadowParam, vec3 fragPos) {
+        vec2 dims = getTextureDimensions(shadowParam.textureIndex);
+        if (dims.x == 0.0 || dims.y == 0.0) {
+            return 0.0; // No valid shadow cubemap bound
+        }
     vec3 fragToLight = fragPos - shadowParam.lightPos;
     float currentDepth = length(fragToLight);
 
@@ -385,13 +421,14 @@ void main() {
     float ssaoFactor = clamp(texture(ssao, TexCoord).r, 0.0, 1.0);
     float ssaoDesaturated = mix(1.0, ssaoFactor, 0.35);
     float occlusion = clamp(ao * (0.2 + 0.8 * ssaoDesaturated), 0.0, 1.0);
-    // Keep a small floor so fully occluded pixels still receive ambient
     float lightingOcclusion = clamp(ssaoDesaturated, 0.25, 1.0);
 
     float dirShadow = 0.0;
     float pointShadow = 0.0;
-    for (int i = 0; i < shadowParamCount; ++i) {
-        if (shadowParams[i].isPointLight) {
+
+    int shadowCount = shadowParamCount;
+    for (int i = 0; i < shadowCount; ++i) {
+        if (shadowParams[i].isPointLight != 0) {
             pointShadow = max(pointShadow, calculatePointShadow(shadowParams[i], FragPos));
         } else {
             dirShadow = max(dirShadow, calculateShadow(shadowParams[i], FragPos, N));
@@ -448,10 +485,11 @@ void main() {
     vec3 rimResult = getRimLight(FragPos, N, V, F0, albedo, metallic, roughness);
     vec3 lighting = (directionalResult + pointResult + spotResult + areaResult + rimResult) * lightingOcclusion;
 
-    // Ensure a minimal ambient even if the scene intensity is zero
     float ambientStrength = max(ambientLight.intensity, 0.05);
     float occlusionFloor = max(occlusion, 0.2);
     vec3 ambient = ambientLight.color.rgb * ambientStrength * albedo * occlusionFloor;
+    
+    ambient = max(ambient, vec3(0.1) * albedo);
 
     vec3 iblContribution = vec3(0.0);
     if (useIBL) {

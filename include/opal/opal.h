@@ -141,11 +141,11 @@ class Device {
     std::shared_ptr<Framebuffer> defaultFramebuffer = nullptr;
 
   public:
+    long frameCount = 0;
+
+    static Device *globalInstance;
 #ifdef VULKAN
     static VkDevice globalDevice;
-    static Device *globalInstance;
-
-    long frameCount = 0;
 
     VkDevice logicalDevice = VK_NULL_HANDLE;
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
