@@ -342,6 +342,9 @@ void Window::deferredRendering(
         if (!light->doesCastShadows) {
             continue;
         }
+        if (light->shadowRenderTarget == nullptr) {
+            continue;
+        }
         if (boundTextures >= 16) {
             break;
         }
@@ -374,6 +377,9 @@ void Window::deferredRendering(
         if (!light->doesCastShadows) {
             continue;
         }
+        if (light->shadowRenderTarget == nullptr) {
+            continue;
+        }
         if (boundTextures >= 16) {
             break;
         }
@@ -403,6 +409,9 @@ void Window::deferredRendering(
 
     for (auto *light : scene->pointLights) {
         if (!light->doesCastShadows) {
+            continue;
+        }
+        if (light->shadowRenderTarget == nullptr) {
             continue;
         }
         if (boundCubemaps >= 5) {

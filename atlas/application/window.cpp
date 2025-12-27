@@ -962,8 +962,12 @@ void Window::renderLightsToShadowMaps(
         if (light->doesCastShadows == false) {
             continue;
         }
-        renderedShadows = true;
         RenderTarget *shadowRenderTarget = light->shadowRenderTarget;
+        if (shadowRenderTarget == nullptr ||
+            shadowRenderTarget->getFramebuffer() == nullptr) {
+            continue;
+        }
+        renderedShadows = true;
 
         depthPipeline->setViewport(
             0, 0, shadowRenderTarget->texture.creationData.width,
@@ -973,6 +977,11 @@ void Window::renderLightsToShadowMaps(
         depthPipeline->setPolygonOffset(2.0f, 4.0f);
 
         depthPipeline = this->depthProgram.requestPipeline(depthPipeline);
+
+        // Set up render pass for shadow framebuffer
+        auto shadowRenderPass = opal::RenderPass::create();
+        shadowRenderPass->setFramebuffer(shadowRenderTarget->getFramebuffer());
+        commandBuffer->beginPass(shadowRenderPass);
 
         shadowRenderTarget->bind();
         commandBuffer->clearDepth(1.0f);
@@ -1006,6 +1015,8 @@ void Window::renderLightsToShadowMaps(
             obj->setViewMatrix(lightView);
             obj->render(getDeltaTime(), commandBuffer, false);
         }
+
+        commandBuffer->endPass();
     }
 
     std::shared_ptr<opal::Pipeline> spotlightsPipeline =
@@ -1015,8 +1026,12 @@ void Window::renderLightsToShadowMaps(
         if (light->doesCastShadows == false) {
             continue;
         }
-        renderedShadows = true;
         RenderTarget *shadowRenderTarget = light->shadowRenderTarget;
+        if (shadowRenderTarget == nullptr ||
+            shadowRenderTarget->getFramebuffer() == nullptr) {
+            continue;
+        }
+        renderedShadows = true;
         spotlightsPipeline->setViewport(
             0, 0, shadowRenderTarget->texture.creationData.width,
             shadowRenderTarget->texture.creationData.height);
@@ -1025,6 +1040,11 @@ void Window::renderLightsToShadowMaps(
         spotlightsPipeline->setPolygonOffset(2.0f, 4.0f);
         spotlightsPipeline =
             this->depthProgram.requestPipeline(spotlightsPipeline);
+
+        // Set up render pass for shadow framebuffer
+        auto shadowRenderPass = opal::RenderPass::create();
+        shadowRenderPass->setFramebuffer(shadowRenderTarget->getFramebuffer());
+        commandBuffer->beginPass(shadowRenderPass);
 
         shadowRenderTarget->bind();
         commandBuffer->clearDepth(1.0f);
@@ -1062,6 +1082,8 @@ void Window::renderLightsToShadowMaps(
             obj->setViewMatrix(lightView);
             obj->render(getDeltaTime(), commandBuffer, false);
         }
+
+        commandBuffer->endPass();
     }
 
     std::shared_ptr<opal::Pipeline> pointLightPipeline =
@@ -1071,8 +1093,12 @@ void Window::renderLightsToShadowMaps(
         if (!light->doesCastShadows) {
             continue;
         }
-        renderedShadows = true;
         RenderTarget *shadowRenderTarget = light->shadowRenderTarget;
+        if (shadowRenderTarget == nullptr ||
+            shadowRenderTarget->getFramebuffer() == nullptr) {
+            continue;
+        }
+        renderedShadows = true;
         pointLightPipeline->setViewport(
             0, 0, shadowRenderTarget->texture.creationData.width,
             shadowRenderTarget->texture.creationData.height);
@@ -1094,6 +1120,13 @@ void Window::renderLightsToShadowMaps(
             // Multi-pass rendering: render 6 times, once per cubemap face
             for (int face = 0; face < 6; ++face) {
                 shadowRenderTarget->bindCubemapFace(face);
+
+                // Set up render pass for this cubemap face
+                auto shadowRenderPass = opal::RenderPass::create();
+                shadowRenderPass->setFramebuffer(
+                    shadowRenderTarget->getFramebuffer());
+                commandBuffer->beginPass(shadowRenderPass);
+
                 commandBuffer->clearDepth(1.0f);
 
                 // Set the shadow matrix for this face
@@ -1127,9 +1160,16 @@ void Window::renderLightsToShadowMaps(
                     obj->setPipeline(pointLightPipeline);
                     obj->render(getDeltaTime(), commandBuffer, false);
                 }
+
+                commandBuffer->endPass();
             }
         } else {
             // Single-pass rendering with geometry shader
+            auto shadowRenderPass = opal::RenderPass::create();
+            shadowRenderPass->setFramebuffer(
+                shadowRenderTarget->getFramebuffer());
+            commandBuffer->beginPass(shadowRenderPass);
+
             shadowRenderTarget->bind();
             commandBuffer->clearDepth(1.0f);
 
@@ -1165,6 +1205,8 @@ void Window::renderLightsToShadowMaps(
                 obj->setPipeline(pointLightPipeline);
                 obj->render(getDeltaTime(), commandBuffer, false);
             }
+
+            commandBuffer->endPass();
         }
     }
 

@@ -205,6 +205,7 @@ class MainScene : public Scene {
         atmosphere.setTime(12);
         atmosphere.cycle = false;
         atmosphere.useGlobalLight();
+        atmosphere.castShadowsFromSunlight(4690);
     }
 };
 
