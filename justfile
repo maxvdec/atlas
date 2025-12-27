@@ -1,26 +1,26 @@
 GENERATOR := "Unix Makefiles"
 
-build enable_opengl="OFF":
+build enable_opengl="OFF" bezel_native="OFF":
     mkdir -p build
-    cd build && cmake -G "{{GENERATOR}}" -DBACKEND_OPENGL={{enable_opengl}} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+    cd build && cmake -G "{{GENERATOR}}" -DBACKEND_OPENGL={{enable_opengl}} -DBEZEL_NATIVE={{bezel_native}} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
     cd build && make -j8
 
-target target enable_opengl="OFF":
+target target enable_opengl="OFF" bezel_native="OFF":
     mkdir -p build
-    cd build && cmake -G "{{GENERATOR}}" -DBACKEND_OPENGL={{enable_opengl}} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+    cd build && cmake -G "{{GENERATOR}}" -DBACKEND_OPENGL={{enable_opengl}} -DBEZEL_NATIVE={{bezel_native}} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
     cd build && make -j8 {{target}}
 
-run enable_opengl="OFF":
-    just build {{enable_opengl}}
+run enable_opengl="OFF" bezel_native="OFF":
+    just build {{enable_opengl}} {{bezel_native}}
     MTL_HUD_ENABLED=0 ./build/bin/atlas_test
 
-debug enable_opengl="OFF":
-    just build {{enable_opengl}}
+debug enable_opengl="OFF" bezel_native="OFF":
+    just build {{enable_opengl}} {{bezel_native}}
     MTL_HUD_ENABLED=1 ./build/bin/atlas_test
 
-clangd enable_opengl="OFF":
+clangd enable_opengl="OFF" bezel_native="OFF":
     mkdir -p build
-    cd build && cmake -G "{{GENERATOR}}" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DBACKEND_OPENGL={{enable_opengl}} ..
+    cd build && cmake -G "{{GENERATOR}}" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DBACKEND_OPENGL={{enable_opengl}} -DBEZEL_NATIVE={{bezel_native}} ..
     ln -sf build/compile_commands.json compile_commands.json
 
 lint:

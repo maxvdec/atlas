@@ -18,6 +18,7 @@ else()
 endif()
 
 option(BACKEND_OPENGL "Enable OpenGL backend" OFF)
+option(BEZEL_NATIVE "Enable Bezel Native" OFF)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -117,9 +118,11 @@ else()
     message(WARNING "Install Typst from https://typst.app to enable document building")
 endif()
 
-# Setting up Jolt Physics
-set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
-FetchContent_Declare(
+if(BEZEL_NATIVE)
+else()
+    # Setting up Jolt Physics
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
+    FetchContent_Declare(
     JoltPhysics
     GIT_REPOSITORY https://github.com/jrouwe/JoltPhysics.git
     GIT_TAG v5.4.0
@@ -127,8 +130,9 @@ FetchContent_Declare(
     UPDATE_DISCONNECTED TRUE
     SOURCE_SUBDIR Build
 )
-FetchContent_MakeAvailable(JoltPhysics)
-message(STATUS "Downloaded Jolt Physics, version 5.4.0")
+    FetchContent_MakeAvailable(JoltPhysics)
+    message(STATUS "Downloaded Jolt Physics, version 5.4.0")
+endif()
 
 if(BACKEND_OPENGL)
     find_package(OpenGL REQUIRED)
@@ -163,7 +167,14 @@ elseif(UNIX)
     set(OPENAL_INCLUDE ${OPENAL_INCLUDE_DIR})
 endif()
 
-file(GLOB_RECURSE BEZEL_SOURCES CONFIGURE_DEPENDS bezel/*.cpp)
+if (BEZEL_NATIVE)
+    message(STATUS "Compiling with Bezel Native")
+    file(GLOB_RECURSE BEZEL_SOURCES CONFIGURE_DEPENDS bezel/native/*.cpp)
+else()
+    message(STATUS "Compiling with Bezel Jolt (Jolt Physics 5.4.0)")
+    file(GLOB_RECURSE BEZEL_SOURCES CONFIGURE_DEPENDS bezel/jolt/*.cpp)
+endif()
+
 file(GLOB_RECURSE FINEWAVE_SOURCES CONFIGURE_DEPENDS finewave/*.cpp)
 file(GLOB_RECURSE AURORA_SOURCES CONFIGURE_DEPENDS aurora/*.cpp)
 file(GLOB_RECURSE HYDRA_SOURCES CONFIGURE_DEPENDS hydra/*.cpp)
@@ -173,7 +184,10 @@ file(GLOB_RECURSE OPAL_SOURCES CONFIGURE_DEPENDS opal/*.cpp)
 
 add_library(bezel ${BEZEL_SOURCES})
 target_link_libraries(bezel PRIVATE glfw glm::glm)
-target_link_libraries(bezel PUBLIC Jolt::Jolt)
+if (BEZEL_NATIVE)
+else()
+    target_link_libraries(bezel PUBLIC Jolt::Jolt)
+endif()
 
 add_library(finewave ${FINEWAVE_SOURCES})
 target_link_libraries(finewave PRIVATE glfw glm::glm ${OPENAL_LIB})
