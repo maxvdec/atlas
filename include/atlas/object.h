@@ -11,8 +11,7 @@
 #define ATLAS_OBJECT_H
 
 #include "atlas/component.h"
-#include "bezel/body.h"
-#include "opal/opal.h"
+#include "bezel/bezel.h"
 #include <any>
 #include <memory>
 #include <string>

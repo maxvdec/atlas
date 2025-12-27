@@ -7,11 +7,10 @@
  Copyright (c) 2025 Max Van den Eynde
 */
 
-#include "bezel/shape.h"
+#include "bezel/bezel.h"
 #include "atlas/object.h"
 #include "atlas/texture.h"
 #include "atlas/units.h"
-#include "bezel/body.h"
 #include <memory>
 #include <vector>
 
@@ -513,13 +512,6 @@ CoreObject createDebugSphere(double radius, unsigned int sectorCount,
     sphere.attachTexture(checkerboard);
     sphere.material.albedo = Color::white() * 0.5;
 
-    Body body;
-    std::shared_ptr<Sphere> physicsSphere = std::make_shared<Sphere>(radius);
-    body.shape = physicsSphere;
-    body.invMass = 1.0f;
-
-    sphere.setupPhysics(body);
-
     return sphere;
 }
 
@@ -553,13 +545,6 @@ CoreObject createDebugBox(Size3d size) {
                                       {size.x / 2, -size.y / 2, size.z / 2},
                                       {size.x / 2, size.y / 2, size.z / 2},
                                       {-size.x / 2, size.y / 2, size.z / 2}};
-
-    Body body;
-    std::shared_ptr<Box> physicsBox = std::make_shared<Box>(corners);
-    body.shape = physicsBox;
-    body.invMass = 1.0f;
-
-    box.setupPhysics(body);
 
     return box;
 }

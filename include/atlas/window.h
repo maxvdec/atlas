@@ -18,7 +18,7 @@
 #include "atlas/scene.h"
 #include "atlas/texture.h"
 #include "atlas/units.h"
-#include "bezel/body.h"
+#include "bezel/bezel.h"
 #include "finewave/audio.h"
 #include "opal/opal.h"
 #include <glm/vec3.hpp>
@@ -477,6 +477,8 @@ class Window {
      */
     float gravity = 9.81f;
 
+    void useTracer(bool enable) { this->waitForTracer = enable; }
+
     /**
      * @brief The audio engine instance for managing spatial audio. Shared
      * across the window.
@@ -563,6 +565,8 @@ class Window {
     std::shared_ptr<RenderTarget> lightBuffer;
     std::shared_ptr<RenderTarget> ssrFramebuffer;
     std::shared_ptr<BloomRenderTarget> bloomBuffer;
+
+    bool waitForTracer = false;
 
     std::vector<glm::vec3> ssaoKernel;
     std::vector<glm::vec3> ssaoNoise;

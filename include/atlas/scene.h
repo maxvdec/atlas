@@ -14,7 +14,7 @@
 #include "atlas/object.h"
 #include "atlas/texture.h"
 #include "atlas/units.h"
-#include "bezel/body.h"
+#include "bezel/bezel.h"
 #include "hydra/atmosphere.h"
 #include <algorithm>
 #include <memory>

@@ -17,7 +17,7 @@
 #include "atlas/tracer/log.h"
 #include "atlas/units.h"
 #include "hydra/fluid.h"
-#include "bezel/body.h"
+#include "bezel/bezel.h"
 #include "finewave/audio.h"
 #include <atlas/window.h>
 #include <cstdint>
@@ -221,8 +221,10 @@ Window::Window(WindowConfiguration config)
               << "\033[0m" << std::endl;
 #endif
 
-    TracerServices::getInstance().startTracing(TRACER_PORT);
-    atlas_log("Atlas Tracer initialized.");
+    if (this->waitForTracer) {
+        TracerServices::getInstance().startTracing(TRACER_PORT);
+        atlas_log("Atlas Tracer initialized.");
+    }
 }
 
 std::tuple<int, int> Window::getCursorPosition() {

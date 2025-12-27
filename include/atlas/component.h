@@ -14,7 +14,7 @@
 #include "atlas/core/shader.h"
 #include "atlas/texture.h"
 #include "atlas/units.h"
-#include "bezel/body.h"
+#include "bezel/bezel.h"
 #include "opal/opal.h"
 #include <climits>
 #include <memory>

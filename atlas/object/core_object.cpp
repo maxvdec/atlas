@@ -270,7 +270,7 @@ void CoreObject::setRotation(const Rotation3d &newRotation) {
     rotation = newRotation;
 
     if (hasPhysics && body != nullptr) {
-        body->orientation = rotation.toGlmQuat();
+        body->orientation = rotation;
     }
 
     if (!instances.empty()) {
@@ -916,7 +916,7 @@ void CoreObject::update(Window &window) {
     this->body->update(window);
 
     this->position = this->body->position;
-    this->rotation = Rotation3d::fromGlmQuat(this->body->orientation);
+    this->rotation = this->body->orientation;
     updateModelMatrix();
 
     uint64_t physicsTime = physicsTimer.stop();
@@ -931,7 +931,7 @@ void CoreObject::update(Window &window) {
 void CoreObject::setupPhysics(Body body) {
     this->body = std::make_shared<Body>(body);
     this->body->position = this->position;
-    this->body->orientation = this->rotation.toGlmQuat();
+    this->body->orientation = this->rotation;
     this->hasPhysics = true;
 }
 
