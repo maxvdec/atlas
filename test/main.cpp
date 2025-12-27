@@ -188,28 +188,23 @@ class MainScene : public Scene {
         camera.farClip = 1000.f;
         window.setCamera(&camera);
 
-        sponza = Model();
-        sponza.fromResource(Workspace::get().createResource(
-            "sponza.obj", "SponzaModel", ResourceType::Model));
-        sponza.setScale({0.01f, 0.01f, 0.01f});
+        ground = createBox({2.0, 0.1, 2.0});
+        ground.move({0.0f, -0.1f, 0.0f});
+        window.addObject(&ground);
 
-        sponza.material.albedo = Color(1.0, 0.0, 0.0, 1.0);
-
-        Resource fontResource = Workspace::get().createResource(
-            "arial.ttf", "ArialFont", ResourceType::Font);
+        ball = createDebugSphere(0.5);
+        ball.move({0.0f, 1.0f, 0.0f});
+        window.addObject(&ball);
 
         this->setAmbientIntensity(1.0f);
+        this->setAutomaticAmbient(false);
 
-        window.addObject(&sponza);
-
-        // window.useDeferredRendering();
+        window.useDeferredRendering();
         atmosphere.enable();
         atmosphere.secondsPerHour = 4.f;
         atmosphere.setTime(12);
-        atmosphere.cycle = true;
+        atmosphere.cycle = false;
         atmosphere.useGlobalLight();
-
-        // atmosphere.castShadowsFromSunlight(4096);
     }
 };
 
