@@ -82,17 +82,22 @@ void bezel::Rigidbody::refresh(std::shared_ptr<bezel::PhysicsWorld> world) {
     const JPH::Body &body = lock.GetBody();
 
     JPH::Vec3 linearVelocity = body.GetLinearVelocity();
-    if (Window::mainWindow->getDeltaTime() * linearVelocity.Length() >
-        this->collider->getMinExtent() / 2.0f) {
+    JPH::Vec3 position = body.GetPosition();
+    JPH::Quat rotation = body.GetRotation();
+
+    bool needsCCD =
+        Window::mainWindow->getDeltaTime() * linearVelocity.Length() >
+        this->collider->getMinExtent() / 2.0f;
+
+    lock.ReleaseLock();
+
+    if (needsCCD) {
         atlas_log(
             "[JOLT] Enabling linear cast for fast moving body with Object ID " +
             std::to_string(this->id.atlasId));
-        Window::mainWindow->physicsWorld->physicsSystem.GetBodyInterface()
-            .SetMotionQuality(joltBodyId, JPH::EMotionQuality::LinearCast);
+        world->physicsSystem.GetBodyInterface().SetMotionQuality(
+            joltBodyId, JPH::EMotionQuality::LinearCast);
     }
-
-    JPH::Vec3 position = body.GetPosition();
-    JPH::Quat rotation = body.GetRotation();
 
     this->position =
         Position3d(position.GetX(), position.GetY(), position.GetZ());

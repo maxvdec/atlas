@@ -164,7 +164,6 @@ void bezel::PhysicsWorld::init() {
     JPH::Trace = TraceImpl;
     JPH_IF_ENABLE_ASSERTS(JPH::AssertFailed = AssertFailedImpl);
 
-    // Diable tracer for now
     if (JPH::Factory::sInstance == nullptr) {
         JPH::Factory::sInstance = new JPH::Factory();
     }
@@ -185,7 +184,7 @@ void bezel::PhysicsWorld::init() {
         MAX_JOBS, MAX_BARRIERS, num_worker_threads);
 
     constexpr uint32_t MAX_BODIES = 65536;
-    constexpr uint32_t NUM_BODY_MUTEXES = 0;
+    constexpr uint32_t NUM_BODY_MUTEXES = 1024;
     constexpr uint32_t MAX_BODY_PAIRS = 65536;
     constexpr uint32_t MAX_CONTACT_CONSTRAINTS = 65536;
 
