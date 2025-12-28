@@ -250,10 +250,6 @@ void CoreObject::setPosition(const Position3d &newPosition) {
     Position3d delta = newPosition - oldPosition;
     position = newPosition;
 
-    if (hasPhysics && body != nullptr) {
-        body->position = position;
-    }
-
     if (!instances.empty()) {
         for (auto &instance : instances) {
             instance.position += delta;
@@ -268,10 +264,6 @@ void CoreObject::setRotation(const Rotation3d &newRotation) {
     Rotation3d oldRotation = rotation;
     Rotation3d delta = newRotation - oldRotation;
     rotation = newRotation;
-
-    if (hasPhysics && body != nullptr) {
-        body->orientation = rotation;
-    }
 
     if (!instances.empty()) {
         for (auto &instance : instances) {
@@ -918,10 +910,6 @@ void CoreObject::update(Window &window) {
 
     DebugTimer physicsTimer("Physics Update");
 
-    this->body->update(window);
-
-    this->position = this->body->position;
-    this->rotation = this->body->orientation;
     updateModelMatrix();
 
     uint64_t physicsTime = physicsTimer.stop();
@@ -931,13 +919,6 @@ void CoreObject::update(Window &window) {
     physicsEvent.subsystem = TimingEventSubsystem::Physics;
     physicsEvent.frameNumber = Window::mainWindow->device->frameCount;
     physicsEvent.send();
-}
-
-void CoreObject::setupPhysics(bezel::Body body) {
-    this->body = std::make_shared<bezel::Body>(body);
-    this->body->position = this->position;
-    this->body->orientation = this->rotation;
-    this->hasPhysics = true;
 }
 
 void CoreObject::makeEmissive(Scene *scene, Color emissionColor,

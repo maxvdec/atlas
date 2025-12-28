@@ -20,25 +20,6 @@ class Window;
 
 namespace bezel {
 
-class Body {
-  private:
-    float mass = 0;
-
-  public:
-    Position3d position;
-    Rotation3d orientation;
-
-    void applyMass(float targetMass) {
-        if (targetMass == INFINITY) {
-            this->mass = 0;
-        } else {
-            this->mass = targetMass;
-        }
-    }
-
-    void update(Window &window);
-};
-
 class PhysicsWorld {
 #ifndef BEZEL_NATIVE
     JPH::PhysicsSystem physicsSystem;

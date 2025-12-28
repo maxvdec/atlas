@@ -441,12 +441,6 @@ class CoreObject : public GameObject {
     inline void hide() override { isVisible = false; }
 
     /**
-     * @brief Attaches a physics body so the object can interact with the rigid
-     * body system.
-     */
-    void setupPhysics(bezel::Body body) override;
-
-    /**
      * @brief The light attached to this object if it's emissive. Used for
      * emissive objects created with makeEmissive().
      *
@@ -471,7 +465,6 @@ class CoreObject : public GameObject {
     void addComponent(T existing) {
         std::shared_ptr<T> component = std::make_shared<T>(existing);
         component->object = this;
-        component->body = this->body.get();
         components.push_back(component);
     }
 

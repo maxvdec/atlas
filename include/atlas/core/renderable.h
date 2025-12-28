@@ -167,6 +167,7 @@ class Renderable {
      * otherwise.
      */
     virtual bool canUseDeferredRendering() { return true; };
+    virtual void beforePhysics() {}
 
     /**
      * @brief Whether the object should be included in depth of field

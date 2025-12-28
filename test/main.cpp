@@ -25,7 +25,6 @@ class SphereCube : public CompoundObject {
         cube = createDebugBox({0.5f, 0.5f, 0.5f});
         cube.setPosition({-1.0f, cube.getPosition().y, 0.0f});
         cube.initialize();
-        cube.body->applyMass(0); // Make it static
         this->addObject(&cube);
 
         for (int i = 0; i < 6; i++) {
@@ -36,7 +35,6 @@ class SphereCube : public CompoundObject {
         sphere = createDebugSphere(0.25f);
         sphere.setPosition({1.0f, sphere.getPosition().y, 0.0f});
         sphere.initialize();
-        sphere.body->applyMass(0); // Make it static
         this->addObject(&sphere);
     }
 };

@@ -283,6 +283,10 @@ void Window::run() {
         DebugTimer cpuTimer("Cpu Data");
         DebugTimer mainTimer("Main Loop");
 
+        for (auto &obj : this->renderables) {
+            obj->beforePhysics();
+        }
+
         this->physicsWorld->update(this->deltaTime);
 
         if (this->currentScene == nullptr) {
@@ -1276,17 +1280,6 @@ void Window::renderLightsToShadowMaps(
             j++;
         }
     }
-}
-
-std::vector<std::shared_ptr<bezel::Body>> Window::getAllBodies() {
-    std::vector<std::shared_ptr<bezel::Body>> bodies;
-    for (auto &obj : this->renderables) {
-        CoreObject *coreObj = dynamic_cast<CoreObject *>(obj);
-        if (coreObj != nullptr && coreObj->hasPhysics) {
-            bodies.push_back(coreObj->body);
-        }
-    }
-    return bodies;
 }
 
 void Window::renderPingpong(RenderTarget *target) {
