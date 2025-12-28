@@ -190,6 +190,9 @@ class MainScene : public Scene {
         ground = createBox({2.0, 0.1, 2.0});
         ground.move({0.0f, -0.1f, 0.0f});
         ground.material.albedo = Color(0.3f, 0.8f, 0.3f);
+        ground.addComponent(Rigidbody());
+        ground.rigidbody->addBoxCollider({2.0f, 0.1f, 2.0f});
+        ground.rigidbody->setMotionType(MotionType::Static);
         window.addObject(&ground);
 
         ball = createDebugSphere(0.5);

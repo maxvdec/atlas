@@ -45,6 +45,7 @@ class GameObject;
  */
 class Component {
   public:
+    virtual ~Component() = default;
     /**
      * @brief Initializes the component. This method is called once when the
      * component is added to a GameObject.
@@ -52,6 +53,7 @@ class Component {
      */
     virtual void init() {}
     virtual void beforePhysics() {}
+    virtual void atAttach() {}
     /**
      * @brief Updates the component each frame. This method is called every
      * frame before rendering.
@@ -255,6 +257,7 @@ class GameObject : public Renderable {
         std::shared_ptr<T> component =
             std::make_shared<T>(std::forward<T>(existing));
         component->object = this;
+        component->atAttach();
         components.push_back(component);
     }
 
@@ -312,6 +315,8 @@ class GameObject : public Renderable {
      * @brief Returns the unique identifier associated with this object.
      */
     unsigned int getId() override { return id; }
+
+    virtual Rotation3d getRotation() const { return Rotation3d(0.f, 0.f, 0.f); }
 
   protected:
     std::vector<std::shared_ptr<Component>> components;

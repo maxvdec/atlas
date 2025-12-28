@@ -14,10 +14,13 @@
 #include <atlas/component.h>
 #include <memory>
 
+using MotionType = bezel::MotionType;
+
 class Rigidbody final : public Component {
   public:
     std::shared_ptr<bezel::Rigidbody> body;
 
+    void atAttach() override;
     void init() override;
     void beforePhysics() override;
     void update(float dt) override;
@@ -26,6 +29,29 @@ class Rigidbody final : public Component {
     void addBoxCollider(const Position3d &extents);
     void addSphereCollider(float radius);
     void addMeshCollider();
+    void setFriction(float friction) {
+        if (body) {
+            body->friction = friction;
+        }
+    }
+
+    void setMass(float mass) {
+        if (body) {
+            body->mass = mass;
+        }
+    }
+
+    void setRestitution(float restitution) {
+        if (body) {
+            body->restitution = restitution;
+        }
+    }
+
+    void setMotionType(MotionType motionType) {
+        if (body) {
+            body->motionType = motionType;
+        }
+    }
 
     Rigidbody() = default;
 };

@@ -29,8 +29,7 @@ JPH::RefConst<JPH::Shape> bezel::MeshCollider::getJoltShape() const {
     JPH::VertexList v;
     v.reserve(vertices.size());
     for (const auto &vert : vertices)
-        v.emplace_back((float)vert.position.x, (float)vert.position.y,
-                       (float)vert.position.z);
+        v.emplace_back((float)vert.x, (float)vert.y, (float)vert.z);
 
     JPH::IndexedTriangleList tris;
     tris.reserve(indices.size() / 3);

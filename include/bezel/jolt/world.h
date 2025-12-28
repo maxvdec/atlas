@@ -74,6 +74,14 @@ class BroadPhaseLayerImpl final : public JPH::BroadPhaseLayerInterface {
     JPH::BroadPhaseLayer mObjectToBroadPhase[bezel::jolt::layers::NUM_LAYERS];
 };
 
+enum class JoltLogLevel { Info, Warning, Error };
+
+void AtlasLog(JoltLogLevel level, std::string_view msg);
+JoltLogLevel Classify(std::string_view s);
+void TraceImpl(const char *fmt, ...);
+bool AssertFailedImpl(const char *expr, const char *msg, const char *file,
+                      JPH::uint line);
+
 class ObjectLayerPairFilterImpl final : public JPH::ObjectLayerPairFilter {
   public:
     bool ShouldCollide(JPH::ObjectLayer inLayer1,

@@ -238,6 +238,9 @@ void Window::run() {
     if (this->camera == nullptr) {
         this->camera = new Camera();
     }
+    this->physicsWorld = std::make_shared<bezel::PhysicsWorld>();
+    this->physicsWorld->init();
+
     for (auto &obj : this->renderables) {
         obj->initialize();
     }
@@ -271,9 +274,6 @@ void Window::run() {
     auto defaultFramebuffer = device->getDefaultFramebuffer();
     auto renderPass = opal::RenderPass::create();
     renderPass->setFramebuffer(defaultFramebuffer);
-
-    this->physicsWorld = std::make_shared<bezel::PhysicsWorld>();
-    this->physicsWorld->init();
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();

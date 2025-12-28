@@ -462,6 +462,7 @@ class CoreObject : public GameObject {
     void addComponent(T existing) {
         std::shared_ptr<T> component = std::make_shared<T>(existing);
         component->object = this;
+        component->atAttach();
         components.push_back(component);
     }
 
@@ -565,6 +566,8 @@ class CoreObject : public GameObject {
      * @brief Reports whether the object is configured to cast shadows.
      */
     inline bool canCastShadows() const override { return castsShadows; }
+
+    Rotation3d getRotation() const override { return rotation; }
 
     /**
      * @brief Performs per-frame updates such as component ticking or buffering

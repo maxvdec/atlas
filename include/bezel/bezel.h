@@ -20,8 +20,6 @@
 
 class Window;
 
-struct CoreVertex;
-
 namespace bezel {
 
 struct BodyIdentifier {
@@ -77,10 +75,10 @@ class SphereCollider : public Collider {
 
 class MeshCollider : public Collider {
   public:
-    std::vector<CoreVertex> vertices;
+    std::vector<Position3d> vertices;
     std::vector<uint32_t> indices;
 
-    MeshCollider(const std::vector<CoreVertex> &vertices,
+    MeshCollider(const std::vector<Position3d> &vertices,
                  const std::vector<uint32_t> &indices);
 #ifndef BEZEL_NATIVE
     JPH::RefConst<JPH::Shape> getJoltShape() const override;
@@ -95,18 +93,25 @@ struct Rigidbody {
     float friction = 0.5f;
     float restitution = 0.0f;
 
+    void setPosition(const Position3d &position,
+                     std::shared_ptr<PhysicsWorld> world);
+    void setRotation(const Rotation3d &rotation,
+                     std::shared_ptr<PhysicsWorld> world);
+
     std::shared_ptr<Collider> collider;
 
     BodyIdentifier id = {.joltId = 0, .atlasId = 0};
     MotionType motionType = MotionType::Dynamic;
 
-    void create(PhysicsWorld &world);
+    void create(std::shared_ptr<PhysicsWorld> world);
     void setCollider(std::shared_ptr<Collider> collider);
+
+    void refresh(std::shared_ptr<PhysicsWorld> world);
 };
 
 class PhysicsWorld {
 #ifndef BEZEL_NATIVE
-    std::unique_ptr<JPH::TempAllocatorImpl> tempAllocator;
+    std::unique_ptr<JPH::TempAllocatorMalloc> tempAllocator;
     std::unique_ptr<JPH::JobSystemThreadPool> jobSystem;
 
     BroadPhaseLayerImpl broadPhaseLayerInterface;
