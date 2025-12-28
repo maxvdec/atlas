@@ -8,17 +8,29 @@
 //
 
 #include "opal/opal.h"
+#include "atlas/tracer/log.h"
 #include <algorithm>
 #include <cstring>
 #include <memory>
 #include <stdexcept>
+#include <unordered_set>
 #include <vector>
-#include <iostream>
 #ifdef VULKAN
 #include <vulkan/vulkan.hpp>
 #endif
 
 namespace opal {
+
+#ifdef VULKAN
+namespace {
+void logMissingUniformOnce(const std::string &name) {
+    static std::unordered_set<std::string> missing;
+    if (missing.insert(name).second) {
+        atlas_warning(std::string("Vulkan uniform not found: ") + name);
+    }
+}
+} // namespace
+#endif
 
 std::shared_ptr<Pipeline> Pipeline::create() {
     auto pipeline = std::make_shared<Pipeline>();
@@ -395,7 +407,7 @@ void Pipeline::setUniform1f(const std::string &name, float v0) {
 #elif defined(VULKAN)
     const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
     if (!info) {
-        // Uniform not found, silently ignore for compatibility
+        logMissingUniformOnce(name);
         return;
     }
     if (!info->isBuffer) {
@@ -417,6 +429,7 @@ void Pipeline::setUniformMat4f(const std::string &name,
 #elif defined(VULKAN)
     const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
     if (!info) {
+        logMissingUniformOnce(name);
         return;
     }
     if (!info->isBuffer) {
@@ -437,6 +450,7 @@ void Pipeline::setUniform3f(const std::string &name, float v0, float v1,
 #elif defined(VULKAN)
     const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
     if (!info) {
+        logMissingUniformOnce(name);
         return;
     }
     float data[3] = {v0, v1, v2};
@@ -456,6 +470,7 @@ void Pipeline::setUniform1i(const std::string &name, int v0) {
 #elif defined(VULKAN)
     const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
     if (!info) {
+        logMissingUniformOnce(name);
         return;
     }
     if (!info->isBuffer) {
@@ -475,6 +490,7 @@ void Pipeline::setUniformBool(const std::string &name, bool value) {
 #elif defined(VULKAN)
     const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
     if (!info) {
+        logMissingUniformOnce(name);
         return;
     }
     int intValue = value ? 1 : 0;
@@ -496,6 +512,7 @@ void Pipeline::setUniform4f(const std::string &name, float v0, float v1,
 #elif defined(VULKAN)
     const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
     if (!info) {
+        logMissingUniformOnce(name);
         return;
     }
     float data[4] = {v0, v1, v2, v3};
@@ -516,6 +533,7 @@ void Pipeline::setUniform2f(const std::string &name, float v0, float v1) {
 #elif defined(VULKAN)
     const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
     if (!info) {
+        logMissingUniformOnce(name);
         return;
     }
     float data[2] = {v0, v1};
@@ -541,6 +559,7 @@ void Pipeline::bindBufferData(const std::string &name, const void *data,
 #elif defined(VULKAN)
     const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
     if (!info) {
+        logMissingUniformOnce(name);
         return;
     }
 

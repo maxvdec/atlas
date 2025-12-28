@@ -11,7 +11,14 @@
 #define BEZEL_H
 
 #include "atlas/units.h"
+#include <memory>
+#ifndef BEZEL_NATIVE
+#include <bezel/jolt/world.h>
+#endif
+
 class Window;
+
+namespace bezel {
 
 class Body {
   private:
@@ -31,5 +38,28 @@ class Body {
 
     void update(Window &window);
 };
+
+class PhysicsWorld {
+#ifndef BEZEL_NATIVE
+    JPH::PhysicsSystem physicsSystem;
+    std::unique_ptr<JPH::TempAllocatorImpl> tempAllocator;
+    std::unique_ptr<JPH::JobSystemThreadPool> jobSystem;
+
+    BroadPhaseLayerImpl broadPhaseLayerInterface;
+    ObjectVsBroadPhaseLayerFilterImpl objectVsBroadPhaseLayerFilter;
+    ObjectLayerPairFilterImpl objectLayerPairFilter;
+
+#endif
+  public:
+    bool initialized = false;
+
+    void init();
+
+    void update(float dt);
+
+    ~PhysicsWorld();
+};
+
+} // namespace bezel
 
 #endif

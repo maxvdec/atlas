@@ -116,11 +116,13 @@ Device::acquire([[maybe_unused]] std::shared_ptr<Context> context) {
     atlas_log("Graphics device acquired (OpenGL)");
 
     auto device = std::make_shared<Device>();
+
+    Device::globalInstance = device.get();
     return device;
 #else
     auto device = std::make_shared<Device>();
-    device->context = context;
     Device::globalInstance = device.get();
+    device->context = context;
     device->pickPhysicalDevice(context);
     device->createLogicalDevice(context);
     device->createSwapChain(context);
@@ -140,8 +142,9 @@ std::shared_ptr<Framebuffer> Device::getDefaultFramebuffer() {
     return defaultFramebuffer;
 }
 
-#ifdef VULKAN
 Device *Device::globalInstance = nullptr;
+
+#ifdef VULKAN
 VkDevice Device::globalDevice = VK_NULL_HANDLE;
 #endif
 

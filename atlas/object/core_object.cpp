@@ -594,12 +594,17 @@ void CoreObject::render(float dt,
                   shaderProgram.capabilities.end(),
                   ShaderCapability::Material) !=
         shaderProgram.capabilities.end()) {
-        // Set material properties
         this->pipeline->setUniform3f("material.albedo", material.albedo.r,
                                      material.albedo.g, material.albedo.b);
         this->pipeline->setUniform1f("material.metallic", material.metallic);
         this->pipeline->setUniform1f("material.roughness", material.roughness);
         this->pipeline->setUniform1f("material.ao", material.ao);
+
+        this->pipeline->setUniform3f("albedo", material.albedo.r,
+                                     material.albedo.g, material.albedo.b);
+        this->pipeline->setUniform1f("metallic", material.metallic);
+        this->pipeline->setUniform1f("roughness", material.roughness);
+        this->pipeline->setUniform1f("ao", material.ao);
     }
 
     const bool shaderSupportsIbl =
@@ -928,8 +933,8 @@ void CoreObject::update(Window &window) {
     physicsEvent.send();
 }
 
-void CoreObject::setupPhysics(Body body) {
-    this->body = std::make_shared<Body>(body);
+void CoreObject::setupPhysics(bezel::Body body) {
+    this->body = std::make_shared<bezel::Body>(body);
     this->body->position = this->position;
     this->body->orientation = this->rotation;
     this->hasPhysics = true;

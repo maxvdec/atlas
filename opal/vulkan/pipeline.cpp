@@ -626,8 +626,8 @@ VkFormat opalFormatToVkFormat(opal::TextureFormat format) {
     case opal::TextureFormat::Rgb16F:
         return VK_FORMAT_R16G16B16_SFLOAT;
     case opal::TextureFormat::Depth24Stencil8:
+        return VK_FORMAT_D32_SFLOAT_S8_UINT;
     case opal::TextureFormat::DepthComponent24:
-        return VK_FORMAT_D24_UNORM_S8_UINT;
     case opal::TextureFormat::Depth32F:
         return VK_FORMAT_D32_SFLOAT;
     case opal::TextureFormat::Red8:

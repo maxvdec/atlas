@@ -468,7 +468,7 @@ class Window {
      * @return (std::vector<std::shared_ptr<Body>>) Vector of all physics
      * bodies.
      */
-    std::vector<std::shared_ptr<Body>> getAllBodies();
+    std::vector<std::shared_ptr<bezel::Body>> getAllBodies();
 
     /**
      * @brief The gravity constant applied to physics bodies. Default is 9.81
@@ -545,6 +545,8 @@ class Window {
     int viewportWidth = 0;
     int viewportHeight = 0;
     std::shared_ptr<opal::Device> device;
+
+    std::shared_ptr<bezel::PhysicsWorld> physicsWorld;
 
   private:
     std::shared_ptr<opal::CommandBuffer> activeCommandBuffer = nullptr;
