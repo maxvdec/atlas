@@ -14,5 +14,5 @@ void main() {
             result += texture(inSSAO, TexCoord + offset).r;
         }
     }
-    FragColor = result / (4.0 * 4.0);
+    FragColor = result / 25.0;
 }

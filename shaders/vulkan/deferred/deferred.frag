@@ -37,7 +37,7 @@ layout(set = 1, binding = 0) uniform UBO {
     vec3 cameraPosition;
 };
 
-layout(set = 1, binding = 1) uniform Material {
+layout(push_constant) uniform MaterialPush {
     vec3 albedo;
     float metallic;
     float roughness;
@@ -162,29 +162,29 @@ void main() {
         normal = normalize(Normal);
     }
 
-    vec3 albedo = baseColor.rgb;
+    vec3 albedoColor = baseColor.rgb;
 
-    float metallic = material.metallic;
+    float metallicValue = material.metallic;
     vec4 metallicTex = enableTextures(TEXTURE_METALLIC);
     if (metallicTex != vec4(-1.0)) {
-        metallic *= metallicTex.r;
+        metallicValue *= metallicTex.r;
     }
 
-    float roughness = material.roughness;
+    float roughnessValue = material.roughness;
     vec4 roughnessTex = enableTextures(TEXTURE_ROUGHNESS);
     if (roughnessTex != vec4(-1.0)) {
-        roughness *= roughnessTex.r;
+        roughnessValue *= roughnessTex.r;
     }
 
-    float ao = material.ao;
+    float aoValue = material.ao;
     vec4 aoTex = enableTextures(TEXTURE_AO);
     if (aoTex != vec4(-1.0)) {
-        ao *= aoTex.r;
+        aoValue *= aoTex.r;
     }
 
-    metallic = clamp(metallic, 0.0, 1.0);
-    roughness = clamp(roughness, 0.0, 1.0);
-    ao = clamp(ao, 0.0, 1.0);
+    metallicValue = clamp(metallicValue, 0.0, 1.0);
+    roughnessValue = clamp(roughnessValue, 0.0, 1.0);
+    aoValue = clamp(aoValue, 0.0, 1.0);
 
     float nonlinearDepth = gl_FragCoord.z;
     gPosition = vec4(FragPos, nonlinearDepth);
@@ -195,11 +195,11 @@ void main() {
     }
     gNormal = vec4(n, 1.0);
 
-    vec3 a = clamp(albedo, 0.0, 1.0);
+    vec3 a = clamp(albedoColor, 0.0, 1.0);
     if (!all(equal(a, a))) {
         a = vec3(0.0);
     }
-    gAlbedoSpec = vec4(a, ao);
+    gAlbedoSpec = vec4(a, aoValue);
 
-    gMaterial = vec4(metallic, roughness, ao, 1.0);
+    gMaterial = vec4(metallicValue, roughnessValue, aoValue, 1.0);
 }

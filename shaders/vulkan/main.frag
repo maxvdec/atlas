@@ -26,40 +26,59 @@ vec2 texCoord;
 // ----- Structures -----
 struct DirectionalLight {
     vec3 direction;
+    float _pad1;
     vec3 diffuse;
+    float _pad2;
     vec3 specular;
+    float _pad3;
 };
 
 struct PointLight {
     vec3 position;
-
+    float _pad1;
     vec3 diffuse;
+    float _pad2;
     vec3 specular;
-
     float constant;
     float linear;
     float quadratic;
+    float radius;
+    float _pad3;
 };
 
 struct SpotLight {
     vec3 position;
+    float _pad1;
     vec3 direction;
     float cutOff;
     float outerCutOff;
-
+    float _pad2;
+    float _pad3;
+    float _pad4;
     vec3 diffuse;
+    float _pad5;
     vec3 specular;
+    float _pad6;
 };
 
 struct AreaLight {
     vec3 position;
+    float _pad1;
     vec3 right;
+    float _pad2;
     vec3 up;
+    float _pad3;
     vec2 size;
+    float _pad4;
+    float _pad5;
     vec3 diffuse;
+    float _pad6;
     vec3 specular;
     float angle;
     int castsBothSides;
+    float _pad7;
+    float _pad8;
+    float _pad9;
 };
 
 struct ShadowParameters {
@@ -68,8 +87,9 @@ struct ShadowParameters {
     float bias;
     int textureIndex;
     float farPlane;
+    float _pad1;
     vec3 lightPos;
-    bool isPointLight;
+    int isPointLight;
 };
 
 // ----- Textures -----
@@ -122,9 +142,10 @@ layout(set = 1, binding = 2) uniform Environment {
     vec3 rimLightColor;
 } environment;
 
-layout(set = 3, binding = 0) uniform AmbientLight {
+layout(set = 1, binding = 3) uniform AmbientLight {
     vec4 color;
     float intensity;
+    vec3 _pad0;
 } ambientLight;
 
 layout(set = 3, binding = 1) buffer DirectionalLightsUBO {
@@ -517,7 +538,11 @@ vec3 calcAllSpotLights(vec3 N, vec3 fragPos, vec3 L, vec3 viewDir, vec3 albedo, 
 // ----- Shadow Calculations -----
 float calculateShadow(ShadowParameters shadowParam, vec4 fragPosLightSpace) {
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+    // Transform from [-1,1] to [0,1] for texture sampling
     projCoords = projCoords * 0.5 + 0.5;
+    // Flip Y because shadow map was rendered with OpenGL-style projection but sampled in Vulkan
+    projCoords.y = 1.0 - projCoords.y;
+    // Note: Shadow maps are rendered without Y-flip projection, so no Y-flip needed here
 
     if (projCoords.x < 0.0 || projCoords.x > 1.0 ||
             projCoords.y < 0.0 || projCoords.y > 1.0 ||
@@ -555,6 +580,7 @@ float calculateShadow(ShadowParameters shadowParam, vec4 fragPosLightSpace) {
 float calculateShadowRaw(ShadowParameters shadowParam, vec4 fragPosLightSpace) {
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
     projCoords = projCoords * 0.5 + 0.5;
+    projCoords.y = 1.0 - projCoords.y;
 
     if (projCoords.x < 0.0 || projCoords.x > 1.0 ||
             projCoords.y < 0.0 || projCoords.y > 1.0 ||
@@ -635,7 +661,7 @@ float calculatePointShadow(ShadowParameters shadowParam, vec3 fragPos)
 float calculateAllPointShadows(vec3 fragPos) {
     float totalShadow = 0.0;
     for (int i = 0; i < shadowParamCount; i++) {
-        if (shadowParams[i].isPointLight) {
+        if (shadowParams[i].isPointLight != 0) {
             float shadow = calculatePointShadow(shadowParams[i], fragPos);
             totalShadow = max(totalShadow, shadow);
         }
@@ -707,7 +733,7 @@ void main() {
 
     if (shadowParamCount > 0) {
         for (int i = 0; i < shadowParamCount; i++) {
-            if (!shadowParams[i].isPointLight) {
+            if (shadowParams[i].isPointLight == 0) {
                 vec4 fragPosLightSpace = shadowParams[i].lightProjection *
                         shadowParams[i].lightView *
                         vec4(FragPos, 1.0);
@@ -769,7 +795,19 @@ void main() {
         lighting += areaResult;
     }
 
-    vec3 ambient = albedo * ambientLight.intensity * ambientLight.color.rgb * ao;
+    float aoClamped = clamp(ao, 0.0, 1.0);
+    float aoWithFloor = max(aoClamped, 0.2);
+
+    float ambientIntensity = ambientLight.intensity;
+    vec3 ambientColor = ambientLight.color.rgb;
+    if (ambientIntensity <= 0.0001) {
+        ambientIntensity = 0.03;
+    }
+    if (dot(ambientColor, ambientColor) <= 1e-6) {
+        ambientColor = vec3(1.0);
+    }
+
+    vec3 ambient = albedo * ambientIntensity * ambientColor * aoWithFloor;
 
     vec3 iblContribution = vec3(0.0);
     if (useIBL) {
@@ -787,7 +825,7 @@ void main() {
         float roughnessAttenuation = mix(1.0, 0.15, clamp(roughness, 0.0, 1.0));
         vec3 specularIBL = specularEnv * roughnessAttenuation;
 
-        iblContribution = (kD * diffuseIBL + kS * specularIBL) * ao;
+        iblContribution = (kD * diffuseIBL + kS * specularIBL) * aoWithFloor;
     }
 
     vec3 color = ambient + lighting + iblContribution;

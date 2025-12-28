@@ -160,6 +160,10 @@ void Window::deferredRendering(
     this->gBuffer->getFramebuffer()->setDrawBuffers(4);
     commandBuffer->clear(0.0f, 0.0f, 0.0f, 1.0f, 1.0f);
     deferredPipeline->setCullMode(opal::CullMode::Back);
+#ifdef VULKAN
+    // In Vulkan, the Y-flip in projection inverts winding order
+    deferredPipeline->setFrontFace(opal::FrontFace::Clockwise);
+#endif
     deferredPipeline->enableDepthTest(true);
     deferredPipeline->setDepthCompareOp(opal::CompareOp::Less);
     deferredPipeline->enableDepthWrite(true);

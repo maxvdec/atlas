@@ -190,14 +190,12 @@ class MainScene : public Scene {
 
         ground = createBox({2.0, 0.1, 2.0});
         ground.move({0.0f, -0.1f, 0.0f});
+        ground.material.albedo = Color(0.3f, 0.8f, 0.3f);
         window.addObject(&ground);
 
         ball = createDebugSphere(0.5);
         ball.move({0.0f, 1.0f, 0.0f});
         window.addObject(&ball);
-
-        this->setAmbientIntensity(1.0f);
-        this->setAutomaticAmbient(false);
 
         window.useDeferredRendering();
         atmosphere.enable();
@@ -205,7 +203,9 @@ class MainScene : public Scene {
         atmosphere.setTime(12);
         atmosphere.cycle = false;
         atmosphere.useGlobalLight();
-        atmosphere.castShadowsFromSunlight(4690);
+        atmosphere.castShadowsFromSunlight(4096);
+
+        this->setAutomaticAmbient(true);
     }
 };
 
