@@ -9,12 +9,16 @@
 
 #include <bezel/bezel.h>
 #include <bezel/jolt/world.h>
+#include <cmath>
 
 void bezel::Rigidbody::setCollider(std::shared_ptr<Collider> collider) {
     this->collider = collider;
 }
 
 void bezel::Rigidbody::create(std::shared_ptr<bezel::PhysicsWorld> world) {
+    if (this->id.joltId != bezel::INVALID_JOLT_ID) {
+        destroy(world);
+    }
     JPH::BodyInterface &bodyInterface = world->physicsSystem.GetBodyInterface();
 
     auto shape = collider->getJoltShape();
@@ -76,12 +80,24 @@ void bezel::Rigidbody::refresh(std::shared_ptr<bezel::PhysicsWorld> world) {
 
     glm::quat glmRotation(rotation.GetW(), rotation.GetX(), rotation.GetY(),
                           rotation.GetZ());
-    this->rotation = Rotation3d::fromGlmQuat(glmRotation);
+
+    Rotation3d next = Rotation3d::fromGlmQuat(glmRotation);
+
+    auto unwrapDegrees = [](float prev, float current) {
+        float delta = std::remainder(current - prev, 360.0f);
+        return prev + delta;
+    };
+
+    next.pitch = unwrapDegrees(this->rotation.pitch, next.pitch);
+    next.yaw = unwrapDegrees(this->rotation.yaw, next.yaw);
+    next.roll = unwrapDegrees(this->rotation.roll, next.roll);
+
+    this->rotation = next;
 }
 
 void bezel::Rigidbody::setPosition(const Position3d &position,
                                    std::shared_ptr<PhysicsWorld> world) {
-    if (id.joltId == 0) {
+    if (id.joltId == INVALID_JOLT_ID) {
         this->position = position;
         return;
     }
@@ -97,7 +113,7 @@ void bezel::Rigidbody::setPosition(const Position3d &position,
 
 void bezel::Rigidbody::setRotation(const Rotation3d &rotation,
                                    std::shared_ptr<PhysicsWorld> world) {
-    if (id.joltId == 0) {
+    if (id.joltId == INVALID_JOLT_ID) {
         this->rotation = rotation;
         return;
     }
@@ -111,4 +127,16 @@ void bezel::Rigidbody::setRotation(const Rotation3d &rotation,
                            glmRotation.z);
     bodyInterface.SetRotation(joltBodyId, joltRotation,
                               JPH::EActivation::Activate);
+}
+
+void bezel::Rigidbody::destroy(std::shared_ptr<bezel::PhysicsWorld> world) {
+    if (id.joltId == INVALID_JOLT_ID) {
+        return;
+    }
+
+    JPH::BodyInterface &bodyInterface = world->physicsSystem.GetBodyInterface();
+    auto joltBodyId = JPH::BodyID(id.joltId);
+    bodyInterface.RemoveBody(joltBodyId);
+    bodyInterface.DestroyBody(joltBodyId);
+    id.joltId = INVALID_JOLT_ID;
 }

@@ -187,18 +187,21 @@ class MainScene : public Scene {
         camera.farClip = 1000.f;
         window.setCamera(&camera);
 
-        ground = createBox({2.0, 0.1, 2.0});
+        ground = createBox({15.0, 0.1, 15.0});
         ground.move({0.0f, -0.1f, 0.0f});
         ground.material.albedo = Color(0.3f, 0.8f, 0.3f);
         ground.addComponent(Rigidbody());
-        ground.rigidbody->addBoxCollider({2.0f, 0.1f, 2.0f});
+        ground.rigidbody->addBoxCollider({15.0f, 0.1f, 15.0f});
         ground.rigidbody->setMotionType(MotionType::Static);
+        ground.rigidbody->setFriction(0.1);
         window.addObject(&ground);
 
         ball = createDebugSphere(0.5);
-        ball.move({0.0f, 1.0f, 0.0f});
+        ball.move({0.0f, 5.0f, 0.0f});
         ball.addComponent(Rigidbody());
         ball.rigidbody->addSphereCollider(0.5);
+        ball.rigidbody->setFriction(0.1);
+        ball.rigidbody->setRestitution(0.8f);
         window.addObject(&ball);
 
         window.useDeferredRendering();

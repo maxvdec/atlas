@@ -275,8 +275,32 @@ void Window::run() {
     auto renderPass = opal::RenderPass::create();
     renderPass->setFramebuffer(defaultFramebuffer);
 
+    // Prevent the first frame (and any large stalls) from producing a massive
+    // delta time that explodes simulation steps.
+    constexpr float MAX_DELTA_TIME = 1.0f / 30.0f;
+    bool firstFrame = true;
+
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
+
+        float currentTime = static_cast<float>(glfwGetTime());
+        float rawDelta = currentTime - this->lastTime;
+        this->lastTime = currentTime;
+
+        if (firstFrame) {
+            // Prime the simulation/render loop.
+            this->deltaTime = 0.0f;
+            firstFrame = false;
+        } else {
+            if (rawDelta < 0.0f) {
+                rawDelta = 0.0f;
+            }
+            this->deltaTime = std::min(rawDelta, MAX_DELTA_TIME);
+        }
+
+        if (this->deltaTime > 0.0f) {
+            this->framesPerSecond = 1.0f / this->deltaTime;
+        }
 
         device->frameCount++;
 
@@ -304,13 +328,6 @@ void Window::run() {
         }
 
         commandBuffer->start();
-        float currentTime = static_cast<float>(glfwGetTime());
-        this->deltaTime = currentTime - this->lastTime;
-        lastTime = currentTime;
-
-        if (this->deltaTime > 0.0f) {
-            this->framesPerSecond = 1.0f / this->deltaTime;
-        }
 
         currentScene->updateScene(this->deltaTime);
 

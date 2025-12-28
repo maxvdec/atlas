@@ -339,7 +339,7 @@ void CoreObject::lookAt(const Position3d &target, const Normal3d &up) {
         roll = 0.0f;
     }
 
-    rotation = Rotation3d{roll, yaw, pitch};
+    rotation = Rotation3d{pitch, yaw, roll};
     updateModelMatrix();
 }
 

@@ -29,30 +29,13 @@ class Rigidbody final : public Component {
     void addBoxCollider(const Position3d &extents);
     void addSphereCollider(float radius);
     void addMeshCollider();
-    void setFriction(float friction) {
-        if (body) {
-            body->friction = friction;
-        }
-    }
+    void setFriction(float friction);
 
-    void setMass(float mass) {
-        if (body) {
-            body->mass = mass;
-        }
-    }
+    void setMass(float mass);
 
-    void setRestitution(float restitution) {
-        if (body) {
-            body->restitution = restitution;
-        }
-    }
+    void setRestitution(float restitution);
 
-    void setMotionType(MotionType motionType) {
-        if (body) {
-            body->motionType = motionType;
-        }
-    }
-
+    void setMotionType(MotionType motionType);
     Rigidbody() = default;
 };
 

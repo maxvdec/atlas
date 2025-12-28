@@ -12,7 +12,6 @@
 #include "atlas/tracer/log.h"
 #include "atlas/units.h"
 #include "atlas/window.h"
-#include <iostream>
 #include <vector>
 
 void Rigidbody::atAttach() {
@@ -34,6 +33,11 @@ void Rigidbody::atAttach() {
 
 void Rigidbody::init() {
     if (body && Window::mainWindow && Window::mainWindow->physicsWorld) {
+        // Prime the physics body with the scene transform before creation.
+        // This is especially important for Dynamic bodies since we don't push
+        // transforms every frame (physics drives them).
+        body->position = object->getPosition();
+        body->rotation = object->getRotation();
         body->create(Window::mainWindow->physicsWorld);
     } else {
         if (!body) {
@@ -82,6 +86,8 @@ void Rigidbody::addMeshCollider() {
         }
         body->setCollider(std::make_shared<bezel::MeshCollider>(
             vertices, coreObject->indices));
+        body->position = object->getPosition();
+        body->rotation = object->getRotation();
         body->create(Window::mainWindow->physicsWorld);
     } else {
         atlas_warning(
@@ -90,12 +96,56 @@ void Rigidbody::addMeshCollider() {
 }
 
 void Rigidbody::beforePhysics() {
+    if (!body || !Window::mainWindow || !Window::mainWindow->physicsWorld) {
+        return;
+    }
+
+    if (body->motionType == MotionType::Dynamic) {
+        return;
+    }
+
     body->setPosition(object->getPosition(), Window::mainWindow->physicsWorld);
     body->setRotation(object->getRotation(), Window::mainWindow->physicsWorld);
 }
 
 void Rigidbody::update(float dt) {
+    (void)dt;
+    if (!body || !Window::mainWindow || !Window::mainWindow->physicsWorld) {
+        return;
+    }
+
     body->refresh(Window::mainWindow->physicsWorld);
-    object->setPosition(body->position);
-    object->setRotation(body->rotation);
+
+    if (body->motionType == MotionType::Dynamic) {
+        object->setPosition(body->position);
+        object->setRotation(body->rotation);
+    }
+}
+
+void Rigidbody::setFriction(float friction) {
+    if (!body) {
+        body = std::make_shared<bezel::Rigidbody>();
+    }
+    body->friction = friction;
+}
+
+void Rigidbody::setMass(float mass) {
+    if (!body) {
+        body = std::make_shared<bezel::Rigidbody>();
+    }
+    body->mass = mass;
+}
+
+void Rigidbody::setRestitution(float restitution) {
+    if (!body) {
+        body = std::make_shared<bezel::Rigidbody>();
+    }
+    body->restitution = restitution;
+}
+
+void Rigidbody::setMotionType(MotionType motionType) {
+    if (!body) {
+        body = std::make_shared<bezel::Rigidbody>();
+    }
+    body->motionType = motionType;
 }

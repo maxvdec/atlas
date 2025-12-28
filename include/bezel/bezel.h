@@ -22,6 +22,8 @@ class Window;
 
 namespace bezel {
 
+constexpr uint32_t INVALID_JOLT_ID = UINT32_MAX;
+
 struct BodyIdentifier {
     uint32_t joltId;
     uint32_t atlasId;
@@ -100,13 +102,14 @@ struct Rigidbody {
 
     std::shared_ptr<Collider> collider;
 
-    BodyIdentifier id = {.joltId = 0, .atlasId = 0};
+    BodyIdentifier id = {.joltId = INVALID_JOLT_ID, .atlasId = 0};
     MotionType motionType = MotionType::Dynamic;
 
     void create(std::shared_ptr<PhysicsWorld> world);
     void setCollider(std::shared_ptr<Collider> collider);
 
     void refresh(std::shared_ptr<PhysicsWorld> world);
+    void destroy(std::shared_ptr<PhysicsWorld> world);
 };
 
 class PhysicsWorld {
