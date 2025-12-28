@@ -25,6 +25,15 @@
 #include <Jolt/Physics/Collision/PhysicsMaterial.h>
 #include <Jolt/Physics/Body/BodyActivationListener.h>
 #include <Jolt/Physics/Collision/ContactListener.h>
+#include <Jolt/Physics/Collision/Shape/Shape.h>
+#include <Jolt/Physics/Body/BodyCreationSettings.h>
+#include <Jolt/Physics/Body/Body.h>
+#include <Jolt/Core/Reference.h>
+
+#include <Jolt/Physics/Collision/Shape/BoxShape.h>
+#include <Jolt/Physics/Collision/Shape/SphereShape.h>
+#include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
+#include <Jolt/Physics/Collision/Shape/MeshShape.h>
 
 #include <Jolt/RegisterTypes.h>
 
@@ -64,6 +73,14 @@ class BroadPhaseLayerImpl final : public JPH::BroadPhaseLayerInterface {
   private:
     JPH::BroadPhaseLayer mObjectToBroadPhase[bezel::jolt::layers::NUM_LAYERS];
 };
+
+enum class JoltLogLevel { Info, Warning, Error };
+
+void AtlasLog(JoltLogLevel level, std::string_view msg);
+JoltLogLevel Classify(std::string_view s);
+void TraceImpl(const char *fmt, ...);
+bool AssertFailedImpl(const char *expr, const char *msg, const char *file,
+                      JPH::uint line);
 
 class ObjectLayerPairFilterImpl final : public JPH::ObjectLayerPairFilter {
   public:

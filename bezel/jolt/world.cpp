@@ -9,8 +9,10 @@
 
 #include "bezel/jolt/world.h"
 #include "Jolt/Core/Factory.h"
+#include "Jolt/Core/IssueReporting.h"
 #include "Jolt/Core/JobSystemThreadPool.h"
 #include "Jolt/Core/Memory.h"
+#include "Jolt/Core/TempAllocator.h"
 #include "Jolt/Physics/Collision/ContactListener.h"
 #include "Jolt/Physics/EPhysicsUpdateError.h"
 #include "Jolt/RegisterTypes.h"
@@ -20,6 +22,7 @@
 #include <cstdint>
 #include <memory>
 #include <thread>
+#include "atlas/tracer/log.h"
 
 BroadPhaseLayerImpl::BroadPhaseLayerImpl() {
     mObjectToBroadPhase[bezel::jolt::layers::NON_MOVING] =
@@ -92,10 +95,75 @@ bool ObjectVsBroadPhaseLayerFilterImpl::ShouldCollide(
     }
 }
 
+void bezel::PhysicsWorld::addBody(std::shared_ptr<bezel::Rigidbody> body) {
+    bodies.push_back(body->id);
+}
+
+void bezel::PhysicsWorld::setGravity(const Position3d &gravity) {
+    physicsSystem.SetGravity(JPH::Vec3(static_cast<float>(gravity.x),
+                                       static_cast<float>(gravity.y),
+                                       static_cast<float>(gravity.z)));
+}
+
+void AtlasLog(JoltLogLevel level, std::string_view msg) {
+    switch (level) {
+    case JoltLogLevel::Info:
+        atlas_log(std::string("[Jolt] ") + std::string(msg));
+        break;
+    case JoltLogLevel::Warning:
+        atlas_warning(std::string("[Jolt] ") + std::string(msg));
+        break;
+    case JoltLogLevel::Error:
+        atlas_error(std::string("[Jolt] ") + std::string(msg));
+        break;
+    }
+}
+
+JoltLogLevel Classify(std::string_view s) {
+    if (s.starts_with("Error:") || s.starts_with("ERROR:") ||
+        s.starts_with("FATAL") || s.find("failed") != std::string_view::npos ||
+        s.find("Out of memory") != std::string_view::npos) {
+        return JoltLogLevel::Error;
+    }
+
+    if (s.starts_with("Warning:") || s.starts_with("WARN:") ||
+        s.find("deprecated") != std::string_view::npos) {
+        return JoltLogLevel::Warning;
+    }
+
+    return JoltLogLevel::Info;
+}
+
+void TraceImpl(const char *fmt, ...) {
+    char buf[4096];
+
+    va_list args;
+    va_start(args, fmt);
+    int _ = std::vsnprintf(buf, sizeof(buf), fmt, args);
+    va_end(args);
+
+    std::string_view msg(buf);
+    AtlasLog(Classify(msg), msg);
+}
+
+bool AssertFailedImpl(const char *expr, const char *msg, const char *file,
+                      JPH::uint line) {
+    char buf[4096];
+    int _ =
+        std::snprintf(buf, sizeof(buf), "Assert failed: %s%s%s (%s:%u)", expr,
+                      msg ? " : " : "", msg ? msg : "", file, (unsigned)line);
+
+    AtlasLog(JoltLogLevel::Error, buf);
+
+    return true;
+}
+
 void bezel::PhysicsWorld::init() {
     JPH::RegisterDefaultAllocator();
 
-    // Diable tracer for now
+    JPH::Trace = TraceImpl;
+    JPH_IF_ENABLE_ASSERTS(JPH::AssertFailed = AssertFailedImpl);
+
     if (JPH::Factory::sInstance == nullptr) {
         JPH::Factory::sInstance = new JPH::Factory();
     }
@@ -104,8 +172,7 @@ void bezel::PhysicsWorld::init() {
 
     initialized = true;
 
-    constexpr size_t TEMP_ALLOC_SIZE = 32 * 1024 * 1024; // 32 MB
-    tempAllocator = std::make_unique<JPH::TempAllocatorImpl>(TEMP_ALLOC_SIZE);
+    tempAllocator = std::make_unique<JPH::TempAllocatorMalloc>();
 
     uint32_t hw = std::max(1u, std::thread::hardware_concurrency());
     uint32_t num_worker_threads = std::max(1u, hw > 1 ? (hw - 1) : 1);
@@ -117,7 +184,7 @@ void bezel::PhysicsWorld::init() {
         MAX_JOBS, MAX_BARRIERS, num_worker_threads);
 
     constexpr uint32_t MAX_BODIES = 65536;
-    constexpr uint32_t NUM_BODY_MUTEXES = 0;
+    constexpr uint32_t NUM_BODY_MUTEXES = 1024;
     constexpr uint32_t MAX_BODY_PAIRS = 65536;
     constexpr uint32_t MAX_CONTACT_CONSTRAINTS = 65536;
 

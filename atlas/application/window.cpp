@@ -238,6 +238,9 @@ void Window::run() {
     if (this->camera == nullptr) {
         this->camera = new Camera();
     }
+    this->physicsWorld = std::make_shared<bezel::PhysicsWorld>();
+    this->physicsWorld->init();
+
     for (auto &obj : this->renderables) {
         obj->initialize();
     }
@@ -272,16 +275,38 @@ void Window::run() {
     auto renderPass = opal::RenderPass::create();
     renderPass->setFramebuffer(defaultFramebuffer);
 
-    this->physicsWorld = std::make_shared<bezel::PhysicsWorld>();
-    this->physicsWorld->init();
+    constexpr float MAX_DELTA_TIME = 1.0f / 30.0f;
+    bool firstFrame = true;
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
+
+        float currentTime = static_cast<float>(glfwGetTime());
+        float rawDelta = currentTime - this->lastTime;
+        this->lastTime = currentTime;
+
+        if (firstFrame) {
+            this->deltaTime = 0.0f;
+            firstFrame = false;
+        } else {
+            if (rawDelta < 0.0f) {
+                rawDelta = 0.0f;
+            }
+            this->deltaTime = std::min(rawDelta, MAX_DELTA_TIME);
+        }
+
+        if (this->deltaTime > 0.0f) {
+            this->framesPerSecond = 1.0f / this->deltaTime;
+        }
 
         device->frameCount++;
 
         DebugTimer cpuTimer("Cpu Data");
         DebugTimer mainTimer("Main Loop");
+
+        for (auto &obj : this->renderables) {
+            obj->beforePhysics();
+        }
 
         this->physicsWorld->update(this->deltaTime);
 
@@ -300,13 +325,6 @@ void Window::run() {
         }
 
         commandBuffer->start();
-        float currentTime = static_cast<float>(glfwGetTime());
-        this->deltaTime = currentTime - this->lastTime;
-        lastTime = currentTime;
-
-        if (this->deltaTime > 0.0f) {
-            this->framesPerSecond = 1.0f / this->deltaTime;
-        }
 
         currentScene->updateScene(this->deltaTime);
 
@@ -1276,17 +1294,6 @@ void Window::renderLightsToShadowMaps(
             j++;
         }
     }
-}
-
-std::vector<std::shared_ptr<bezel::Body>> Window::getAllBodies() {
-    std::vector<std::shared_ptr<bezel::Body>> bodies;
-    for (auto &obj : this->renderables) {
-        CoreObject *coreObj = dynamic_cast<CoreObject *>(obj);
-        if (coreObj != nullptr && coreObj->hasPhysics) {
-            bodies.push_back(coreObj->body);
-        }
-    }
-    return bodies;
 }
 
 void Window::renderPingpong(RenderTarget *target) {

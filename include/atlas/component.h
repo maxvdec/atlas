@@ -45,12 +45,15 @@ class GameObject;
  */
 class Component {
   public:
+    virtual ~Component() = default;
     /**
      * @brief Initializes the component. This method is called once when the
      * component is added to a GameObject.
      *
      */
     virtual void init() {}
+    virtual void beforePhysics() {}
+    virtual void atAttach() {}
     /**
      * @brief Updates the component each frame. This method is called every
      * frame before rendering.
@@ -90,11 +93,6 @@ class Component {
      *
      */
     GameObject *object = nullptr;
-    /**
-     * @brief Gets the Body associated with the component.
-     *
-     */
-    bezel::Body *body = nullptr;
 };
 
 /**
@@ -244,12 +242,6 @@ class GameObject : public Renderable {
      *
      */
     virtual void show() {};
-    /**
-     * @brief Sets up the physics body for the object.
-     *
-     * @param body The physics body to associate with the object.
-     */
-    virtual void setupPhysics([[maybe_unused]] bezel::Body body) {};
 
     /**
      * @brief Adds a component to the object.
@@ -265,8 +257,14 @@ class GameObject : public Renderable {
         std::shared_ptr<T> component =
             std::make_shared<T>(std::forward<T>(existing));
         component->object = this;
-        component->body = this->body.get();
+        component->atAttach();
         components.push_back(component);
+    }
+
+    void beforePhysics() override {
+        for (auto &component : components) {
+            component->beforePhysics();
+        }
     }
 
     /**
@@ -314,16 +312,11 @@ class GameObject : public Renderable {
     }
 
     /**
-     * @brief Gets the physics body associated with the object.
-     *
-     * @return A shared pointer to the physics body, or nullptr if not set.
-     */
-    std::shared_ptr<bezel::Body> body = nullptr;
-
-    /**
      * @brief Returns the unique identifier associated with this object.
      */
     unsigned int getId() override { return id; }
+
+    virtual Rotation3d getRotation() const { return Rotation3d(0.f, 0.f, 0.f); }
 
   protected:
     std::vector<std::shared_ptr<Component>> components;
@@ -466,10 +459,6 @@ class CompoundObject : public GameObject {
      * @brief Makes the aggregate renderable again after being hidden.
      */
     void show() override;
-    /**
-     * @brief Configures a physics body shared between all child objects.
-     */
-    void setupPhysics(bezel::Body body) override;
 
     /**
      * @brief Adds a component to the object.

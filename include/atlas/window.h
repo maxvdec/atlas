@@ -463,14 +463,6 @@ class Window {
     inline float getFramesPerSecond() { return this->framesPerSecond; }
 
     /**
-     * @brief Gets all physics bodies in the window.
-     *
-     * @return (std::vector<std::shared_ptr<Body>>) Vector of all physics
-     * bodies.
-     */
-    std::vector<std::shared_ptr<bezel::Body>> getAllBodies();
-
-    /**
      * @brief The gravity constant applied to physics bodies. Default is 9.81
      * m/s².
      *

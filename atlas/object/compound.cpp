@@ -12,6 +12,7 @@
 #include "atlas/units.h"
 #include "atlas/window.h"
 #include "opal/opal.h"
+#include <algorithm>
 #include <iostream>
 #include <memory>
 #include <optional>
@@ -190,11 +191,6 @@ Size3d CompoundObject::getScale() const {
 void CompoundObject::update(Window &window) {
     updateObjects(window);
     for (auto &obj : objects) {
-        if (obj->body == nullptr)
-            continue;
-        obj->body->update(window);
-        Position3d position = obj->body->position;
-
         if (changedPosition) {
             std::cout << "Updating position of compound object child\n";
             obj->setPosition(position + this->position);
@@ -204,12 +200,8 @@ void CompoundObject::update(Window &window) {
 }
 
 bool CompoundObject::canCastShadows() const {
-    for (auto &obj : objects) {
-        if (obj->canCastShadows()) {
-            return true;
-        }
-    }
-    return false;
+    return std::ranges::any_of(
+        objects, [](const auto &obj) { return obj->canCastShadows(); });
 }
 
 void CompoundObject::setPosition(const Position3d &newPosition) {
@@ -255,14 +247,6 @@ void CompoundObject::hide() {
 void CompoundObject::show() {
     for (auto &obj : objects) {
         obj->show();
-    }
-}
-
-void CompoundObject::setupPhysics(bezel::Body body) {
-    for (auto &obj : objects) {
-        if (obj->body == nullptr) {
-            obj->setupPhysics(body);
-        }
     }
 }
 
