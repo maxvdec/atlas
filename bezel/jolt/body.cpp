@@ -10,4 +10,4 @@
 #include "atlas/window.h"
 #include <bezel/bezel.h>
 
-void Body::update(Window &window) { (void)window; }
+void bezel::Body::update(Window &window) { (void)window; }

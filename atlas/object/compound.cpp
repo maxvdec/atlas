@@ -258,7 +258,7 @@ void CompoundObject::show() {
     }
 }
 
-void CompoundObject::setupPhysics(Body body) {
+void CompoundObject::setupPhysics(bezel::Body body) {
     for (auto &obj : objects) {
         if (obj->body == nullptr) {
             obj->setupPhysics(body);

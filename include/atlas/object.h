@@ -444,7 +444,7 @@ class CoreObject : public GameObject {
      * @brief Attaches a physics body so the object can interact with the rigid
      * body system.
      */
-    void setupPhysics(Body body) override;
+    void setupPhysics(bezel::Body body) override;
 
     /**
      * @brief The light attached to this object if it's emissive. Used for

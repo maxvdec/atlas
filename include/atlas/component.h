@@ -94,7 +94,7 @@ class Component {
      * @brief Gets the Body associated with the component.
      *
      */
-    Body *body = nullptr;
+    bezel::Body *body = nullptr;
 };
 
 /**
@@ -249,7 +249,7 @@ class GameObject : public Renderable {
      *
      * @param body The physics body to associate with the object.
      */
-    virtual void setupPhysics([[maybe_unused]] Body body) {};
+    virtual void setupPhysics([[maybe_unused]] bezel::Body body) {};
 
     /**
      * @brief Adds a component to the object.
@@ -318,7 +318,7 @@ class GameObject : public Renderable {
      *
      * @return A shared pointer to the physics body, or nullptr if not set.
      */
-    std::shared_ptr<Body> body = nullptr;
+    std::shared_ptr<bezel::Body> body = nullptr;
 
     /**
      * @brief Returns the unique identifier associated with this object.
@@ -469,7 +469,7 @@ class CompoundObject : public GameObject {
     /**
      * @brief Configures a physics body shared between all child objects.
      */
-    void setupPhysics(Body body) override;
+    void setupPhysics(bezel::Body body) override;
 
     /**
      * @brief Adds a component to the object.

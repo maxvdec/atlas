@@ -272,6 +272,9 @@ void Window::run() {
     auto renderPass = opal::RenderPass::create();
     renderPass->setFramebuffer(defaultFramebuffer);
 
+    this->physicsWorld = std::make_shared<bezel::PhysicsWorld>();
+    this->physicsWorld->init();
+
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
 
@@ -279,6 +282,8 @@ void Window::run() {
 
         DebugTimer cpuTimer("Cpu Data");
         DebugTimer mainTimer("Main Loop");
+
+        this->physicsWorld->update(this->deltaTime);
 
         if (this->currentScene == nullptr) {
             commandBuffer->start();
@@ -1273,8 +1278,8 @@ void Window::renderLightsToShadowMaps(
     }
 }
 
-std::vector<std::shared_ptr<Body>> Window::getAllBodies() {
-    std::vector<std::shared_ptr<Body>> bodies;
+std::vector<std::shared_ptr<bezel::Body>> Window::getAllBodies() {
+    std::vector<std::shared_ptr<bezel::Body>> bodies;
     for (auto &obj : this->renderables) {
         CoreObject *coreObj = dynamic_cast<CoreObject *>(obj);
         if (coreObj != nullptr && coreObj->hasPhysics) {
