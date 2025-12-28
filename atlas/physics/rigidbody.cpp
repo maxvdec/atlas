@@ -117,7 +117,11 @@ void Rigidbody::update(float dt) {
 
     if (body->motionType == MotionType::Dynamic) {
         object->setPosition(body->position);
-        object->setRotation(body->rotation);
+        if (auto *coreObject = dynamic_cast<CoreObject *>(object)) {
+            coreObject->setRotationQuat(body->rotationQuat);
+        } else {
+            object->setRotation(body->rotation);
+        }
     }
 }
 

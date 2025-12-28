@@ -398,6 +398,7 @@ class CoreObject : public GameObject {
      * @brief Assigns an absolute rotation to the object.
      */
     void setRotation(const Rotation3d &newRotation) override;
+    void setRotationQuat(const glm::quat &quat);
     /**
      * @brief Rotates the object so its forward vector points towards a
      * target.
@@ -511,6 +512,8 @@ class CoreObject : public GameObject {
     glm::mat4 model = glm::mat4(1.0f);
     glm::mat4 view = glm::mat4(1.0f);
     glm::mat4 projection = glm::mat4(1.0f);
+
+    glm::quat rotationQuat = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 
     bool useColor = true;
     bool useTexture = false;

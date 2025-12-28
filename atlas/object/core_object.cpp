@@ -24,6 +24,7 @@
 #include <cmath>
 #include <cstdint>
 #include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -261,13 +262,34 @@ void CoreObject::setPosition(const Position3d &newPosition) {
 }
 
 void CoreObject::setRotation(const Rotation3d &newRotation) {
-    Rotation3d oldRotation = rotation;
-    Rotation3d delta = newRotation - oldRotation;
+    const glm::quat oldQuat = rotationQuat;
     rotation = newRotation;
+    rotationQuat = glm::normalize(rotation.toGlmQuat());
 
     if (!instances.empty()) {
+        const glm::quat deltaQuat = rotationQuat * glm::inverse(oldQuat);
         for (auto &instance : instances) {
-            instance.rotation = instance.rotation + delta;
+            glm::quat instQuat = glm::normalize(instance.rotation.toGlmQuat());
+            instQuat = glm::normalize(deltaQuat * instQuat);
+            instance.rotation = Rotation3d::fromGlmQuat(instQuat);
+            instance.updateModelMatrix();
+        }
+    }
+
+    updateModelMatrix();
+}
+
+void CoreObject::setRotationQuat(const glm::quat &quat) {
+    const glm::quat oldQuat = rotationQuat;
+    rotationQuat = glm::normalize(quat);
+    rotation = Rotation3d::fromGlmQuat(rotationQuat);
+
+    if (!instances.empty()) {
+        const glm::quat deltaQuat = rotationQuat * glm::inverse(oldQuat);
+        for (auto &instance : instances) {
+            glm::quat instQuat = glm::normalize(instance.rotation.toGlmQuat());
+            instQuat = glm::normalize(deltaQuat * instQuat);
+            instance.rotation = Rotation3d::fromGlmQuat(instQuat);
             instance.updateModelMatrix();
         }
     }
@@ -340,21 +362,14 @@ void CoreObject::lookAt(const Position3d &target, const Normal3d &up) {
     }
 
     rotation = Rotation3d{pitch, yaw, roll};
+    rotationQuat = glm::normalize(rotation.toGlmQuat());
     updateModelMatrix();
 }
 
 void CoreObject::updateModelMatrix() {
     glm::mat4 scale_matrix = glm::scale(glm::mat4(1.0f), scale.toGlm());
 
-    glm::mat4 rotation_matrix = glm::mat4(1.0f);
-    rotation_matrix =
-        glm::rotate(rotation_matrix, glm::radians(float(rotation.roll)),
-                    glm::vec3(0, 0, 1));
-    rotation_matrix =
-        glm::rotate(rotation_matrix, glm::radians(float(rotation.pitch)),
-                    glm::vec3(1, 0, 0));
-    rotation_matrix = glm::rotate(
-        rotation_matrix, glm::radians(float(rotation.yaw)), glm::vec3(0, 1, 0));
+    glm::mat4 rotation_matrix = glm::mat4_cast(rotationQuat);
 
     glm::mat4 translation_matrix =
         glm::translate(glm::mat4(1.0f), position.toGlm());

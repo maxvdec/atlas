@@ -275,8 +275,6 @@ void Window::run() {
     auto renderPass = opal::RenderPass::create();
     renderPass->setFramebuffer(defaultFramebuffer);
 
-    // Prevent the first frame (and any large stalls) from producing a massive
-    // delta time that explodes simulation steps.
     constexpr float MAX_DELTA_TIME = 1.0f / 30.0f;
     bool firstFrame = true;
 
@@ -288,7 +286,6 @@ void Window::run() {
         this->lastTime = currentTime;
 
         if (firstFrame) {
-            // Prime the simulation/render loop.
             this->deltaTime = 0.0f;
             firstFrame = false;
         } else {

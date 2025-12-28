@@ -27,9 +27,10 @@ void bezel::Rigidbody::create(std::shared_ptr<bezel::PhysicsWorld> world) {
 
     JPH::RVec3 joltPosition(position.x, position.y, position.z);
 
-    glm::quat glmRotation = rotation.toGlmQuat();
-    JPH::Quat joltRotation(glmRotation.w, glmRotation.x, glmRotation.y,
-                           glmRotation.z);
+    glm::quat glmRotation = glm::normalize(rotation.toGlmQuat());
+    rotationQuat = glmRotation;
+    JPH::Quat joltRotation(glmRotation.x, glmRotation.y, glmRotation.z,
+                           glmRotation.w);
 
     JPH::EMotionType joltMotionType;
     switch (motionType) {
@@ -85,7 +86,13 @@ void bezel::Rigidbody::refresh(std::shared_ptr<bezel::PhysicsWorld> world) {
     glm::quat glmRotation(rotation.GetW(), rotation.GetX(), rotation.GetY(),
                           rotation.GetZ());
 
-    Rotation3d next = Rotation3d::fromGlmQuat(glmRotation);
+    if (glm::dot(rotationQuat, glmRotation) < 0.0f) {
+        glmRotation = -glmRotation;
+    }
+
+    rotationQuat = glm::normalize(glmRotation);
+
+    Rotation3d next = Rotation3d::fromGlmQuat(rotationQuat);
 
     auto unwrapDegrees = [](float prev, float current) {
         float delta = std::remainder(current - prev, 360.0f);
@@ -126,9 +133,10 @@ void bezel::Rigidbody::setRotation(const Rotation3d &rotation,
     auto joltBodyId = JPH::BodyID(id.joltId);
     JPH::BodyInterface &bodyInterface = world->physicsSystem.GetBodyInterface();
 
-    glm::quat glmRotation = rotation.toGlmQuat();
-    JPH::Quat joltRotation(glmRotation.w, glmRotation.x, glmRotation.y,
-                           glmRotation.z);
+    glm::quat glmRotation = glm::normalize(rotation.toGlmQuat());
+    rotationQuat = glmRotation;
+    JPH::Quat joltRotation(glmRotation.x, glmRotation.y, glmRotation.z,
+                           glmRotation.w);
     bodyInterface.SetRotation(joltBodyId, joltRotation,
                               JPH::EActivation::Activate);
 }
