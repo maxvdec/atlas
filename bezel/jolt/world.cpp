@@ -92,6 +92,10 @@ bool ObjectVsBroadPhaseLayerFilterImpl::ShouldCollide(
     }
 }
 
+void bezel::PhysicsWorld::addBody(std::shared_ptr<bezel::Rigidbody> body) {
+    bodies.push_back(body->id);
+}
+
 void bezel::PhysicsWorld::init() {
     JPH::RegisterDefaultAllocator();
 

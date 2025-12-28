@@ -11,7 +11,9 @@
 #define BEZEL_H
 
 #include "atlas/units.h"
+#include <cstdint>
 #include <memory>
+#include <vector>
 #ifndef BEZEL_NATIVE
 #include <bezel/jolt/world.h>
 #endif
@@ -19,6 +21,15 @@
 class Window;
 
 namespace bezel {
+
+struct BodyIdentifier {
+    uint32_t joltId;
+    uint32_t atlasId;
+};
+
+struct Rigidbody {
+    BodyIdentifier id;
+};
 
 class PhysicsWorld {
 #ifndef BEZEL_NATIVE
@@ -30,6 +41,8 @@ class PhysicsWorld {
     ObjectVsBroadPhaseLayerFilterImpl objectVsBroadPhaseLayerFilter;
     ObjectLayerPairFilterImpl objectLayerPairFilter;
 
+    std::vector<BodyIdentifier> bodies;
+
 #endif
   public:
     bool initialized = false;
@@ -37,6 +50,8 @@ class PhysicsWorld {
     void init();
 
     void update(float dt);
+
+    void addBody(std::shared_ptr<bezel::Rigidbody> body);
 
     ~PhysicsWorld();
 };

@@ -11,6 +11,7 @@
 #define ATLAS_OBJECT_H
 
 #include "atlas/component.h"
+#include "atlas/physics.h"
 #include "bezel/bezel.h"
 #include <any>
 #include <memory>
@@ -258,12 +259,6 @@ struct Instance {
  * cubeMaterial.specular = Color(1.0, 1.0, 1.0, 1.0);
  * cubeMaterial.shininess = 32.0f;
  * cube.material = cubeMaterial;
- * // Add a physics body to the cube
- * Body cubeBody;
- * cubeBody.type = BodyType::Dynamic;
- * cubeBody.mass = 1.0f;
- * cubeBody.friction = 0.5f;
- * cube.setupPhysics(cubeBody);
  * // Add the cube to the scene
  * scene.addObject(&cube);
  * ```
@@ -437,6 +432,8 @@ class CoreObject : public GameObject {
      */
     CoreObject clone() const;
 
+    Rigidbody *rigidbody = nullptr;
+
     inline void show() override { isVisible = true; }
     inline void hide() override { isVisible = false; }
 
@@ -580,6 +577,12 @@ class CoreObject : public GameObject {
      * rendering pipeline.
      */
     bool canUseDeferredRendering() override { return useDeferredRendering; }
+
+    void beforePhysics() override {
+        for (auto &component : components) {
+            component->beforePhysics();
+        }
+    }
 };
 
 /**

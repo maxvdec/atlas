@@ -2,6 +2,7 @@
 #include "atlas/particle.h"
 #include "atlas/light.h"
 #include "atlas/object.h"
+#include "atlas/physics.h"
 #include "atlas/scene.h"
 #include "atlas/text.h"
 #include "atlas/texture.h"
@@ -193,6 +194,7 @@ class MainScene : public Scene {
 
         ball = createDebugSphere(0.5);
         ball.move({0.0f, 1.0f, 0.0f});
+        ball.addComponent(Rigidbody());
         window.addObject(&ball);
 
         window.useDeferredRendering();
