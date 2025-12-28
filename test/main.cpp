@@ -195,6 +195,7 @@ class MainScene : public Scene {
         ball = createDebugSphere(0.5);
         ball.move({0.0f, 1.0f, 0.0f});
         ball.addComponent(Rigidbody());
+        ball.rigidbody->addSphereCollider(0.5);
         window.addObject(&ball);
 
         window.useDeferredRendering();

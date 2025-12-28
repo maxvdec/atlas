@@ -29,6 +29,28 @@ void Rigidbody::init() {
     body->id.atlasId = object->getId();
 }
 
+void Rigidbody::addCapsuleCollider(float radius, float height) {
+    body->setCollider(std::make_shared<bezel::CapsuleCollider>(radius, height));
+}
+
+void Rigidbody::addBoxCollider(const Position3d &extents) {
+    body->setCollider(std::make_shared<bezel::BoxCollider>(extents / 2.0));
+}
+
+void Rigidbody::addSphereCollider(float radius) {
+    body->setCollider(std::make_shared<bezel::SphereCollider>(radius));
+}
+
+void Rigidbody::addMeshCollider() {
+    if (auto *coreObject = dynamic_cast<CoreObject *>(object)) {
+        body->setCollider(std::make_shared<bezel::MeshCollider>(
+            coreObject->getVertices(), coreObject->indices));
+    } else {
+        atlas_warning(
+            "MeshCollider can only be added to CoreObject instances.");
+    }
+}
+
 void Rigidbody::beforePhysics() {}
 
 void Rigidbody::update(float dt) {}

@@ -22,6 +22,11 @@ class Rigidbody final : public Component {
     void beforePhysics() override;
     void update(float dt) override;
 
+    void addCapsuleCollider(float radius, float height);
+    void addBoxCollider(const Position3d &extents);
+    void addSphereCollider(float radius);
+    void addMeshCollider();
+
     Rigidbody() = default;
 };
 
