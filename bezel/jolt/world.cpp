@@ -96,6 +96,12 @@ void bezel::PhysicsWorld::addBody(std::shared_ptr<bezel::Rigidbody> body) {
     bodies.push_back(body->id);
 }
 
+void bezel::PhysicsWorld::setGravity(const Position3d &gravity) {
+    physicsSystem.SetGravity(JPH::Vec3(static_cast<float>(gravity.x),
+                                       static_cast<float>(gravity.y),
+                                       static_cast<float>(gravity.z)));
+}
+
 void bezel::PhysicsWorld::init() {
     JPH::RegisterDefaultAllocator();
 

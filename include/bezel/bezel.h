@@ -53,6 +53,8 @@ class PhysicsWorld {
 
     void addBody(std::shared_ptr<bezel::Rigidbody> body);
 
+    void setGravity(const Position3d &gravity);
+
     ~PhysicsWorld();
 };
 
