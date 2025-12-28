@@ -33,9 +33,6 @@ void Rigidbody::atAttach() {
 
 void Rigidbody::init() {
     if (body && Window::mainWindow && Window::mainWindow->physicsWorld) {
-        // Prime the physics body with the scene transform before creation.
-        // This is especially important for Dynamic bodies since we don't push
-        // transforms every frame (physics drives them).
         body->position = object->getPosition();
         body->rotation = object->getRotation();
         body->create(Window::mainWindow->physicsWorld);
@@ -106,6 +103,8 @@ void Rigidbody::beforePhysics() {
 
     body->setPosition(object->getPosition(), Window::mainWindow->physicsWorld);
     body->setRotation(object->getRotation(), Window::mainWindow->physicsWorld);
+
+    body->applyProperties(Window::mainWindow->physicsWorld);
 }
 
 void Rigidbody::update(float dt) {
@@ -148,4 +147,57 @@ void Rigidbody::setMotionType(MotionType motionType) {
         body = std::make_shared<bezel::Rigidbody>();
     }
     body->motionType = motionType;
+}
+
+void Rigidbody::applyForce(const Position3d &force) {
+    if (!body) {
+        body = std::make_shared<bezel::Rigidbody>();
+    }
+    body->force = force;
+}
+
+void Rigidbody::applyForceAtPoint(const Position3d &force,
+                                  const Position3d &point) {
+    if (!body) {
+        body = std::make_shared<bezel::Rigidbody>();
+    }
+    body->force = force;
+    body->forcePoint = point;
+}
+
+void Rigidbody::applyImpulse(const Position3d &impulse) {
+    if (!body) {
+        body = std::make_shared<bezel::Rigidbody>();
+    }
+    body->impulse = impulse;
+}
+
+void Rigidbody::setLinearVelocity(const Position3d &velocity) {
+    if (!body) {
+        body = std::make_shared<bezel::Rigidbody>();
+    }
+    body->linearVelocity = velocity;
+}
+
+void Rigidbody::setAngularVelocity(const Position3d &velocity) {
+    if (!body) {
+        body = std::make_shared<bezel::Rigidbody>();
+    }
+    body->angularVelocity = velocity;
+}
+
+void Rigidbody::addLinearVelocity(const Position3d &velocity) {
+    if (!body) {
+        body = std::make_shared<bezel::Rigidbody>();
+    }
+    body->linearVelocity = velocity;
+    body->addLinearVelocity = true;
+}
+
+void Rigidbody::addAngularVelocity(const Position3d &velocity) {
+    if (!body) {
+        body = std::make_shared<bezel::Rigidbody>();
+    }
+    body->angularVelocity = velocity;
+    body->addAngularVelocity = true;
 }

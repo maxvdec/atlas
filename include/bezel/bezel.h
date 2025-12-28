@@ -95,6 +95,15 @@ struct Rigidbody {
     float friction = 0.5f;
     float restitution = 0.0f;
 
+    Position3d linearVelocity = {-1.0f, -1.0f, -1.0f};
+    Position3d angularVelocity = {-1.0f, -1.0f, -1.0f};
+    Position3d impulse = {0.0f, 0.0f, 0.0f};
+    Position3d force = {0.0f, 0.0f, 0.0f};
+    Position3d forcePoint = {0.0f, 0.0f, 0.0f};
+
+    bool addLinearVelocity = false;
+    bool addAngularVelocity = false;
+
     void setPosition(const Position3d &position,
                      std::shared_ptr<PhysicsWorld> world);
     void setRotation(const Rotation3d &rotation,
@@ -107,6 +116,8 @@ struct Rigidbody {
 
     void create(std::shared_ptr<PhysicsWorld> world);
     void setCollider(std::shared_ptr<Collider> collider);
+
+    void applyProperties(std::shared_ptr<PhysicsWorld> world);
 
     void refresh(std::shared_ptr<PhysicsWorld> world);
     void destroy(std::shared_ptr<PhysicsWorld> world);

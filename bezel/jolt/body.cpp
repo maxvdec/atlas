@@ -7,9 +7,11 @@
 // Copyright (c) 2025 maxvdec
 //
 
+#include "atlas/units.h"
 #include <bezel/bezel.h>
 #include <bezel/jolt/world.h>
 #include <cmath>
+#include <memory>
 
 void bezel::Rigidbody::setCollider(std::shared_ptr<Collider> collider) {
     this->collider = collider;
@@ -61,6 +63,8 @@ void bezel::Rigidbody::create(std::shared_ptr<bezel::PhysicsWorld> world) {
     JPH::BodyID joltBodyId = joltBody->GetID();
     this->id.joltId = joltBodyId.GetIndexAndSequenceNumber();
     bodyInterface.AddBody(joltBodyId, JPH::EActivation::Activate);
+
+    applyProperties(world);
 }
 
 void bezel::Rigidbody::refresh(std::shared_ptr<bezel::PhysicsWorld> world) {
@@ -139,4 +143,71 @@ void bezel::Rigidbody::destroy(std::shared_ptr<bezel::PhysicsWorld> world) {
     bodyInterface.RemoveBody(joltBodyId);
     bodyInterface.DestroyBody(joltBodyId);
     id.joltId = INVALID_JOLT_ID;
+}
+
+void bezel::Rigidbody::applyProperties(
+    std::shared_ptr<bezel::PhysicsWorld> world) {
+    if (id.joltId == INVALID_JOLT_ID) {
+        return;
+    }
+
+    auto joltBodyId = JPH::BodyID(id.joltId);
+    JPH::BodyInterface &bodyInterface = world->physicsSystem.GetBodyInterface();
+    if (linearVelocity != Position3d{-1.0f, -1.0f, -1.0f}) {
+        if (addLinearVelocity) {
+            JPH::Vec3 linearVelocityVec =
+                bodyInterface.GetLinearVelocity(joltBodyId);
+            bodyInterface.SetLinearVelocity(
+                joltBodyId, JPH::Vec3(linearVelocity.x, linearVelocity.y,
+                                      linearVelocity.z) +
+                                linearVelocityVec);
+            addLinearVelocity = false;
+            linearVelocity = Position3d{-1.0f, -1.0f, -1.0f};
+        } else {
+            bodyInterface.SetLinearVelocity(
+                joltBodyId, JPH::Vec3(linearVelocity.x, linearVelocity.y,
+                                      linearVelocity.z));
+            linearVelocity = Position3d{-1.0f, -1.0f, -1.0f};
+        }
+    }
+
+    if (angularVelocity != Position3d{-1.0f, -1.0f, -1.0f}) {
+        if (addAngularVelocity) {
+            JPH::Vec3 angularVelocityVec =
+                bodyInterface.GetAngularVelocity(joltBodyId);
+            bodyInterface.SetAngularVelocity(
+                joltBodyId, JPH::Vec3(angularVelocity.x, angularVelocity.y,
+                                      angularVelocity.z) +
+                                angularVelocityVec);
+            addAngularVelocity = false;
+            angularVelocity = Position3d{-1.0f, -1.0f, -1.0f};
+        } else {
+            bodyInterface.SetAngularVelocity(
+                joltBodyId, JPH::Vec3(angularVelocity.x, angularVelocity.y,
+                                      angularVelocity.z));
+            angularVelocity = Position3d{-1.0f, -1.0f, -1.0f};
+        }
+    }
+
+    if (impulse != Position3d{0.0f, 0.0f, 0.0f}) {
+        bodyInterface.AddImpulse(
+            joltBodyId, JPH::Vec3(impulse.x, impulse.y, impulse.z),
+            JPH::Vec3(forcePoint.x, forcePoint.y, forcePoint.z));
+        impulse = Position3d{0.0f, 0.0f, 0.0f};
+        forcePoint = Position3d{0.0f, 0.0f, 0.0f};
+    }
+
+    if (force != Position3d{0.0f, 0.0f, 0.0f}) {
+        if (forcePoint == Position3d{0.0f, 0.0f, 0.0f}) {
+            bodyInterface.AddForce(joltBodyId,
+                                   JPH::Vec3(force.x, force.y, force.z));
+            force = Position3d{0.0f, 0.0f, 0.0f};
+        } else {
+            bodyInterface.AddForce(
+                joltBodyId, JPH::Vec3(force.x, force.y, force.z),
+                JPH::Vec3(forcePoint.x, forcePoint.y, forcePoint.z));
+            force = Position3d{0.0f, 0.0f, 0.0f};
+            forcePoint = Position3d{0.0f, 0.0f, 0.0f};
+        }
+    }
 }

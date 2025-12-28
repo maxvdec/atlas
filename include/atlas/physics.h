@@ -31,6 +31,14 @@ class Rigidbody final : public Component {
     void addMeshCollider();
     void setFriction(float friction);
 
+    void applyForce(const Position3d &force);
+    void applyForceAtPoint(const Position3d &force, const Position3d &point);
+    void applyImpulse(const Position3d &impulse);
+    void setLinearVelocity(const Position3d &velocity);
+    void addLinearVelocity(const Position3d &velocity);
+    void setAngularVelocity(const Position3d &velocity);
+    void addAngularVelocity(const Position3d &velocity);
+
     void setMass(float mass);
 
     void setRestitution(float restitution);

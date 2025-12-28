@@ -202,6 +202,7 @@ class MainScene : public Scene {
         ball.rigidbody->addSphereCollider(0.5);
         ball.rigidbody->setFriction(0.1);
         ball.rigidbody->setRestitution(0.8f);
+        ball.rigidbody->addLinearVelocity(Position3d{1.0f, 0.0f, 1.0f});
         window.addObject(&ball);
 
         window.useDeferredRendering();
