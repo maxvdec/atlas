@@ -7,6 +7,8 @@
 // Copyright (c) 2025 maxvdec
 //
 
+#include "atlas/window.h"
+#include "atlas/tracer/log.h"
 #include "atlas/units.h"
 #include <bezel/bezel.h>
 #include <bezel/jolt/world.h>
@@ -54,6 +56,8 @@ void bezel::Rigidbody::create(std::shared_ptr<bezel::PhysicsWorld> world) {
 
     bodySettings.mFriction = friction;
     bodySettings.mRestitution = restitution;
+    bodySettings.mLinearDamping = linearDamping;
+    bodySettings.mAngularDamping = angularDamping;
     if (mass > 0.0f) {
         bodySettings.mOverrideMassProperties =
             JPH::EOverrideMassProperties::CalculateInertia;
@@ -76,6 +80,16 @@ void bezel::Rigidbody::refresh(std::shared_ptr<bezel::PhysicsWorld> world) {
         return;
 
     const JPH::Body &body = lock.GetBody();
+
+    JPH::Vec3 linearVelocity = body.GetLinearVelocity();
+    if (Window::mainWindow->getDeltaTime() * linearVelocity.Length() >
+        this->collider->getMinExtent() / 2.0f) {
+        atlas_log(
+            "[JOLT] Enabling linear cast for fast moving body with Object ID " +
+            std::to_string(this->id.atlasId));
+        Window::mainWindow->physicsWorld->physicsSystem.GetBodyInterface()
+            .SetMotionQuality(joltBodyId, JPH::EMotionQuality::LinearCast);
+    }
 
     JPH::Vec3 position = body.GetPosition();
     JPH::Quat rotation = body.GetRotation();

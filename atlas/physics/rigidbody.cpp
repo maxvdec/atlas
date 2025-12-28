@@ -205,3 +205,11 @@ void Rigidbody::addAngularVelocity(const Position3d &velocity) {
     body->angularVelocity = velocity;
     body->addAngularVelocity = true;
 }
+
+void Rigidbody::setDamping(float linearDamping, float angularDamping) {
+    if (!body) {
+        body = std::make_shared<bezel::Rigidbody>();
+    }
+    body->linearDamping = linearDamping;
+    body->angularDamping = angularDamping;
+}

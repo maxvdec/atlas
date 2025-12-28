@@ -36,6 +36,7 @@ class PhysicsWorld;
 class Collider {
   public:
     virtual ~Collider() = default;
+    virtual float getMinExtent() const = 0;
 
 #ifndef BEZEL_NATIVE
     virtual JPH::RefConst<JPH::Shape> getJoltShape() const = 0;
@@ -48,6 +49,10 @@ class BoxCollider : public Collider {
 
     BoxCollider(const Position3d &halfExtents) : halfExtents(halfExtents) {}
 
+    float getMinExtent() const override {
+        return std::min({halfExtents.x, halfExtents.y, halfExtents.z});
+    }
+
 #ifndef BEZEL_NATIVE
     JPH::RefConst<JPH::Shape> getJoltShape() const override;
 #endif
@@ -57,6 +62,10 @@ class CapsuleCollider : public Collider {
   public:
     float radius;
     float height;
+
+    float getMinExtent() const override {
+        return std::min(radius * 2.0f, height);
+    }
 
     CapsuleCollider(float radius, float height)
         : radius(radius), height(height) {}
@@ -69,6 +78,8 @@ class SphereCollider : public Collider {
   public:
     float radius;
 
+    float getMinExtent() const override { return radius * 2.0f; }
+
     explicit SphereCollider(float radius) : radius(radius) {}
 #ifndef BEZEL_NATIVE
     JPH::RefConst<JPH::Shape> getJoltShape() const override;
@@ -79,6 +90,14 @@ class MeshCollider : public Collider {
   public:
     std::vector<Position3d> vertices;
     std::vector<uint32_t> indices;
+
+    float getMinExtent() const override {
+        float minExtent = std::numeric_limits<float>::max();
+        for (const auto &vert : vertices) {
+            minExtent = std::min({minExtent, vert.x, vert.y, vert.z});
+        }
+        return minExtent;
+    }
 
     MeshCollider(const std::vector<Position3d> &vertices,
                  const std::vector<uint32_t> &indices);
@@ -101,6 +120,9 @@ struct Rigidbody {
     Position3d impulse = {0.0f, 0.0f, 0.0f};
     Position3d force = {0.0f, 0.0f, 0.0f};
     Position3d forcePoint = {0.0f, 0.0f, 0.0f};
+
+    float linearDamping = 0.05f;
+    float angularDamping = 0.1f;
 
     bool addLinearVelocity = false;
     bool addAngularVelocity = false;

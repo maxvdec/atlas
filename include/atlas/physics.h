@@ -39,6 +39,8 @@ class Rigidbody final : public Component {
     void setAngularVelocity(const Position3d &velocity);
     void addAngularVelocity(const Position3d &velocity);
 
+    void setDamping(float linearDamping, float angularDamping);
+
     void setMass(float mass);
 
     void setRestitution(float restitution);
