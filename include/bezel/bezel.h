@@ -124,7 +124,7 @@ struct RaycastHit {
     Normal3d normal = {0.0f, 0.0f, 0.0f};
     float distance = 0.0;
     bezel::Rigidbody *rigidbody = nullptr;
-    bool hit = false;
+    bool didHit = false;
 };
 
 struct RaycastResult {
@@ -203,6 +203,11 @@ class PhysicsWorld {
     void init();
 
     void update(float dt);
+
+    RaycastResult raycast(const Position3d &origin, const Position3d &direction,
+                          float maxDistance);
+    RaycastResult raycastAll(const Position3d &origin,
+                             const Position3d &direction, float maxDistance);
 
     void addBody(std::shared_ptr<bezel::Rigidbody> body);
 

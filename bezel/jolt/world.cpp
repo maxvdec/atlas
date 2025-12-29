@@ -229,3 +229,109 @@ bezel::PhysicsWorld::~PhysicsWorld() {
         initialized = false;
     }
 }
+
+bezel::RaycastResult bezel::PhysicsWorld::raycast(const Position3d &origin,
+                                                  const Position3d &direction,
+                                                  float maxDistance) {
+    RaycastResult out;
+
+    JPH::RVec3Arg originJolt(origin.x, origin.y, origin.z);
+    JPH::RVec3Arg directionJolt(direction.x, direction.y, direction.z);
+
+    const JPH::RRayCast ray(originJolt,
+                            directionJolt.Normalized() * maxDistance);
+
+    JPH::RayCastResult hit;
+
+    const bool didHit = physicsSystem.GetNarrowPhaseQuery().CastRay(ray, hit);
+
+    if (!didHit) {
+        out.hit.didHit = false;
+        return out;
+    }
+
+    const float dist = hit.mFraction * maxDistance;
+    out.closestDistance = dist;
+
+    RaycastHit h;
+    h.didHit = true;
+    h.distance = dist;
+    h.position =
+        Position3d(origin.x + (direction.x * hit.mFraction * maxDistance),
+                   origin.y + (direction.y * hit.mFraction * maxDistance),
+                   origin.z + (direction.z * hit.mFraction * maxDistance));
+
+    JPH::BodyID bodyId = hit.mBodyID;
+    auto it = bezel_jolt::bodyIdToRigidbodyMap.find(bodyId);
+    h.rigidbody =
+        (it != bezel_jolt::bodyIdToRigidbodyMap.end()) ? it->second : nullptr;
+    JPH::Vec3 normal = -ray.mDirection * hit.mFraction;
+    h.normal = Normal3d(normal.GetX(), normal.GetY(), normal.GetZ());
+
+    out.hits.push_back(h);
+    out.hit = h;
+
+    return out;
+}
+
+bezel::RaycastResult bezel::PhysicsWorld::raycastAll(
+    const Position3d &origin, const Position3d &direction, float maxDistance) {
+    RaycastResult out;
+
+    JPH::RVec3Arg originJolt(origin.x, origin.y, origin.z);
+    JPH::RVec3Arg directionJolt(direction.x, direction.y, direction.z);
+
+    const JPH::RRayCast ray(originJolt,
+                            directionJolt.Normalized() * maxDistance);
+
+    class AllHitsCollector : public JPH::CastRayCollector {
+      public:
+        std::vector<JPH::RayCastResult> hits;
+
+        void AddHit(const JPH::RayCastResult &result) override {
+            hits.push_back(result);
+        }
+    };
+
+    AllHitsCollector collector;
+    JPH::RayCastSettings settings;
+    physicsSystem.GetNarrowPhaseQuery().CastRay(ray, settings, collector);
+
+    if (collector.hits.empty()) {
+        out.hit.didHit = false;
+        return out;
+    }
+
+    float closestDist = std::numeric_limits<float>::max();
+
+    for (const auto &hit : collector.hits) {
+        const float dist = hit.mFraction * maxDistance;
+
+        RaycastHit h;
+        h.didHit = true;
+        h.distance = dist;
+        h.position =
+            Position3d(origin.x + (direction.x * hit.mFraction * maxDistance),
+                       origin.y + (direction.y * hit.mFraction * maxDistance),
+                       origin.z + (direction.z * hit.mFraction * maxDistance));
+
+        JPH::BodyID bodyId = hit.mBodyID;
+        auto it = bezel_jolt::bodyIdToRigidbodyMap.find(bodyId);
+        h.rigidbody = (it != bezel_jolt::bodyIdToRigidbodyMap.end())
+                          ? it->second
+                          : nullptr;
+
+        JPH::Vec3 normal = -ray.mDirection * hit.mFraction;
+        h.normal = Normal3d(normal.GetX(), normal.GetY(), normal.GetZ());
+
+        out.hits.push_back(h);
+
+        if (dist < closestDist) {
+            closestDist = dist;
+            out.hit = h;
+            out.closestDistance = dist;
+        }
+    }
+
+    return out;
+}
