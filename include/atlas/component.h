@@ -27,6 +27,8 @@ class Window;
 class GameObject;
 class Rigidbody;
 
+struct QueryResult;
+
 /**
  * @brief Behavior or property that can be attached to a \ref GameObject to
  * extend its capabilities.
@@ -92,6 +94,7 @@ class Component {
 
     virtual void onCollisionEnter(GameObject *other) {}
     virtual void onCollisionExit(GameObject *other) {}
+    virtual void onQueryRecieve(QueryResult &result) {}
 
     /**
      * @brief Gets the GameObject associated with the component.
@@ -290,6 +293,7 @@ class GameObject : public Renderable {
 
     virtual void onCollisionEnter([[maybe_unused]] GameObject *other) {}
     virtual void onCollisionExit([[maybe_unused]] GameObject *other) {}
+    virtual void onQueryRecieve([[maybe_unused]] QueryResult &result) {}
 
     /**
      * @brief Adds a component to the object.

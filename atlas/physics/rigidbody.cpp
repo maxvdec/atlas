@@ -7,11 +7,13 @@
 // Copyright (c) 2025 Max Van den Eynde
 //
 
+#include "atlas/component.h"
 #include "atlas/physics.h"
 #include "atlas/object.h"
 #include "atlas/tracer/log.h"
 #include "atlas/units.h"
 #include "atlas/window.h"
+#include "bezel/bezel.h"
 #include <vector>
 #include <iostream>
 
@@ -289,4 +291,303 @@ void Rigidbody::removeTag(const std::string &tag) {
     }
     body->tags.erase(std::remove(body->tags.begin(), body->tags.end(), tag),
                      body->tags.end());
+}
+
+void Rigidbody::raycast(const Position3d &direction, float maxDistance) {
+    if (!body || !Window::mainWindow || !Window::mainWindow->physicsWorld) {
+        return;
+    }
+
+    QueryResult result;
+    result.operation = QueryOperation::Raycast;
+    bezel::RaycastResult raycastResult =
+        body->raycast(direction, maxDistance, Window::mainWindow->physicsWorld);
+
+    result.raycastResult.closestDistance = raycastResult.closestDistance;
+    result.raycastResult.hits.reserve(raycastResult.hits.size());
+    for (const auto &hit : raycastResult.hits) {
+        RaycastHit h;
+        h.position = hit.position;
+        h.normal = hit.normal;
+        h.distance = hit.distance;
+        h.rigidbody = hit.rigidbody;
+        h.didHit = hit.didHit;
+        GameObject *hitObject = nullptr;
+        if (hit.rigidbody) {
+            auto it = atlas::gameObjects.find((int)hit.rigidbody->id.atlasId);
+            if (it != atlas::gameObjects.end()) {
+                hitObject = it->second;
+            } else {
+                atlas_error("Rigidbody hit by raycast does not have an "
+                            "associated GameObject.");
+                continue;
+            }
+        }
+        h.object = hitObject;
+        result.raycastResult.hits.push_back(h);
+    }
+    result.raycastResult.hit = result.raycastResult.hits.empty()
+                                   ? RaycastHit{}
+                                   : result.raycastResult.hits[0];
+
+    if (object) {
+        object->onQueryRecieve(result);
+    } else {
+        atlas_warning("Rigidbody raycast result has no associated GameObject.");
+    }
+}
+
+void Rigidbody::raycastAll(const Position3d &direction, float maxDistance) {
+    if (!body || !Window::mainWindow || !Window::mainWindow->physicsWorld) {
+        return;
+    }
+
+    QueryResult result;
+    result.operation = QueryOperation::RaycastAll;
+    bezel::RaycastResult raycastResult = body->raycastAll(
+        direction, maxDistance, Window::mainWindow->physicsWorld);
+
+    result.raycastResult.closestDistance = raycastResult.closestDistance;
+    result.raycastResult.hits.reserve(raycastResult.hits.size());
+    for (const auto &hit : raycastResult.hits) {
+        RaycastHit h;
+        h.position = hit.position;
+        h.normal = hit.normal;
+        h.distance = hit.distance;
+        h.rigidbody = hit.rigidbody;
+        h.didHit = hit.didHit;
+        GameObject *hitObject = nullptr;
+        if (hit.rigidbody) {
+            auto it = atlas::gameObjects.find((int)hit.rigidbody->id.atlasId);
+            if (it != atlas::gameObjects.end()) {
+                hitObject = it->second;
+            } else {
+                atlas_error("Rigidbody hit by raycast does not have an "
+                            "associated GameObject.");
+                continue;
+            }
+        }
+        h.object = hitObject;
+        result.raycastResult.hits.push_back(h);
+    }
+    result.raycastResult.hit = result.raycastResult.hits.empty()
+                                   ? RaycastHit{}
+                                   : result.raycastResult.hits[0];
+
+    if (object) {
+        object->onQueryRecieve(result);
+    } else {
+        atlas_warning("Rigidbody raycast result has no associated GameObject.");
+    }
+}
+
+void Rigidbody::raycastWorld(const Position3d &origin,
+                             const Position3d &direction, float maxDistance) {
+    if (!body || !Window::mainWindow || !Window::mainWindow->physicsWorld) {
+        return;
+    }
+
+    QueryResult result;
+    result.operation = QueryOperation::RaycastWorld;
+    bezel::RaycastResult raycastResult =
+        Window::mainWindow->physicsWorld->raycast(origin, direction,
+                                                  maxDistance);
+
+    result.raycastResult.closestDistance = raycastResult.closestDistance;
+    result.raycastResult.hits.reserve(raycastResult.hits.size());
+    for (const auto &hit : raycastResult.hits) {
+        RaycastHit h;
+        h.position = hit.position;
+        h.normal = hit.normal;
+        h.distance = hit.distance;
+        h.rigidbody = hit.rigidbody;
+        h.didHit = hit.didHit;
+        GameObject *hitObject = nullptr;
+        if (hit.rigidbody) {
+            auto it = atlas::gameObjects.find((int)hit.rigidbody->id.atlasId);
+            if (it != atlas::gameObjects.end()) {
+                hitObject = it->second;
+            } else {
+                atlas_error("Rigidbody hit by raycast does not have an "
+                            "associated GameObject.");
+                continue;
+            }
+        }
+        h.object = hitObject;
+        result.raycastResult.hits.push_back(h);
+    }
+    result.raycastResult.hit = result.raycastResult.hits.empty()
+                                   ? RaycastHit{}
+                                   : result.raycastResult.hits[0];
+
+    if (object) {
+        object->onQueryRecieve(result);
+    } else {
+        atlas_warning("Rigidbody raycast result has no associated GameObject.");
+    }
+}
+
+void Rigidbody::raycastWorldAll(const Position3d &origin,
+                                const Position3d &direction,
+                                float maxDistance) {
+    if (!body || !Window::mainWindow || !Window::mainWindow->physicsWorld) {
+        return;
+    }
+
+    QueryResult result;
+    result.operation = QueryOperation::RaycastWorldAll;
+    bezel::RaycastResult raycastResult =
+        Window::mainWindow->physicsWorld->raycastAll(origin, direction,
+                                                     maxDistance);
+
+    result.raycastResult.closestDistance = raycastResult.closestDistance;
+    result.raycastResult.hits.reserve(raycastResult.hits.size());
+    for (const auto &hit : raycastResult.hits) {
+        RaycastHit h;
+        h.position = hit.position;
+        h.normal = hit.normal;
+        h.distance = hit.distance;
+        h.rigidbody = hit.rigidbody;
+        h.didHit = hit.didHit;
+        GameObject *hitObject = nullptr;
+        if (hit.rigidbody) {
+            auto it = atlas::gameObjects.find((int)hit.rigidbody->id.atlasId);
+            if (it != atlas::gameObjects.end()) {
+                hitObject = it->second;
+            } else {
+                atlas_error("Rigidbody hit by raycast does not have an "
+                            "associated GameObject.");
+                continue;
+            }
+        }
+        h.object = hitObject;
+        result.raycastResult.hits.push_back(h);
+    }
+    result.raycastResult.hit = result.raycastResult.hits.empty()
+                                   ? RaycastHit{}
+                                   : result.raycastResult.hits[0];
+
+    if (object) {
+        object->onQueryRecieve(result);
+    } else {
+        atlas_warning("Rigidbody raycast result has no associated GameObject.");
+    }
+}
+
+void Rigidbody::raycastTagged(const std::vector<std::string> &tags,
+                              const Position3d &direction, float maxDistance) {
+    if (!body || !Window::mainWindow || !Window::mainWindow->physicsWorld) {
+        return;
+    }
+
+    QueryResult result;
+    result.operation = QueryOperation::RaycastTagged;
+    bezel::RaycastResult raycastResult =
+        body->raycast(direction, maxDistance, Window::mainWindow->physicsWorld);
+
+    result.raycastResult.closestDistance = raycastResult.closestDistance;
+    result.raycastResult.hits.reserve(raycastResult.hits.size());
+    for (const auto &hit : raycastResult.hits) {
+        RaycastHit h;
+        h.position = hit.position;
+        h.normal = hit.normal;
+        h.distance = hit.distance;
+        h.rigidbody = hit.rigidbody;
+        if (hit.rigidbody->tags.end() ==
+            std::find_first_of(hit.rigidbody->tags.begin(),
+                               hit.rigidbody->tags.end(), tags.begin(),
+                               tags.end())) {
+            std::cout << "Raycast hit object with atlasId: "
+                      << hit.rigidbody->id.atlasId << " at distance "
+                      << hit.distance << " but it has tags: [";
+            for (size_t i = 0; i < hit.rigidbody->tags.size(); ++i) {
+                std::cout << "\"" << hit.rigidbody->tags[i] << "\"";
+                if (i < hit.rigidbody->tags.size() - 1)
+                    std::cout << ", ";
+            }
+            std::cout << "], required: [";
+            for (size_t i = 0; i < tags.size(); ++i) {
+                std::cout << "\"" << tags[i] << "\"";
+                if (i < tags.size() - 1)
+                    std::cout << ", ";
+            }
+            std::cout << "], skipping." << std::endl;
+            continue;
+        }
+        h.didHit = hit.didHit;
+        GameObject *hitObject = nullptr;
+        if (hit.rigidbody) {
+            auto it = atlas::gameObjects.find((int)hit.rigidbody->id.atlasId);
+            if (it != atlas::gameObjects.end()) {
+                hitObject = it->second;
+            } else {
+                atlas_error("Rigidbody hit by raycast does not have an "
+                            "associated GameObject.");
+                continue;
+            }
+        }
+        h.object = hitObject;
+        result.raycastResult.hits.push_back(h);
+    }
+    result.raycastResult.hit = result.raycastResult.hits.empty()
+                                   ? RaycastHit{}
+                                   : result.raycastResult.hits[0];
+
+    if (object) {
+        object->onQueryRecieve(result);
+    } else {
+        atlas_warning("Rigidbody raycast result has no associated GameObject.");
+    }
+}
+
+void Rigidbody::raycastTaggedAll(const std::vector<std::string> &tags,
+                                 const Position3d &direction,
+                                 float maxDistance) {
+    if (!body || !Window::mainWindow || !Window::mainWindow->physicsWorld) {
+        return;
+    }
+
+    QueryResult result;
+    result.operation = QueryOperation::RaycastTaggedAll;
+    bezel::RaycastResult raycastResult = body->raycastAll(
+        direction, maxDistance, Window::mainWindow->physicsWorld);
+
+    result.raycastResult.closestDistance = raycastResult.closestDistance;
+    result.raycastResult.hits.reserve(raycastResult.hits.size());
+    for (const auto &hit : raycastResult.hits) {
+        RaycastHit h;
+        h.position = hit.position;
+        h.normal = hit.normal;
+        h.distance = hit.distance;
+        h.rigidbody = hit.rigidbody;
+        if (hit.rigidbody->tags.end() ==
+            std::find_first_of(hit.rigidbody->tags.begin(),
+                               hit.rigidbody->tags.end(), tags.begin(),
+                               tags.end())) {
+            continue;
+        }
+        h.didHit = hit.didHit;
+        GameObject *hitObject = nullptr;
+        if (hit.rigidbody) {
+            auto it = atlas::gameObjects.find((int)hit.rigidbody->id.atlasId);
+            if (it != atlas::gameObjects.end()) {
+                hitObject = it->second;
+            } else {
+                atlas_error("Rigidbody hit by raycast does not have an "
+                            "associated GameObject.");
+                continue;
+            }
+        }
+        h.object = hitObject;
+        result.raycastResult.hits.push_back(h);
+    }
+    result.raycastResult.hit = result.raycastResult.hits.empty()
+                                   ? RaycastHit{}
+                                   : result.raycastResult.hits[0];
+
+    if (object) {
+        object->onQueryRecieve(result);
+    } else {
+        atlas_warning("Rigidbody raycast result has no associated GameObject.");
+    }
 }

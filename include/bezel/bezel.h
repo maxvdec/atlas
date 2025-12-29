@@ -162,9 +162,11 @@ struct Rigidbody {
                      std::shared_ptr<PhysicsWorld> world);
 
     RaycastResult raycast(const Position3d &direction, float maxDistance,
-                          std::shared_ptr<PhysicsWorld> world);
+                          std::shared_ptr<PhysicsWorld> world,
+                          uint32_t ignoreBodyId = INVALID_JOLT_ID);
     RaycastResult raycastAll(const Position3d &direction, float maxDistance,
-                             std::shared_ptr<PhysicsWorld> world);
+                             std::shared_ptr<PhysicsWorld> world,
+                             uint32_t ignoreBodyId = INVALID_JOLT_ID);
 
     std::shared_ptr<Collider> collider;
 
@@ -205,9 +207,11 @@ class PhysicsWorld {
     void update(float dt);
 
     RaycastResult raycast(const Position3d &origin, const Position3d &direction,
-                          float maxDistance);
+                          float maxDistance,
+                          uint32_t ignoreBodyId = INVALID_JOLT_ID);
     RaycastResult raycastAll(const Position3d &origin,
-                             const Position3d &direction, float maxDistance);
+                             const Position3d &direction, float maxDistance,
+                             uint32_t ignoreBodyId = INVALID_JOLT_ID);
 
     void addBody(std::shared_ptr<bezel::Rigidbody> body);
 

@@ -10,11 +10,43 @@
 #ifndef ATLAS_PHYSICS_H
 #define ATLAS_PHYSICS_H
 
+#include "atlas/units.h"
 #include <bezel/bezel.h>
 #include <atlas/component.h>
 #include <memory>
+#include <string>
+#include <vector>
 
 using MotionType = bezel::MotionType;
+
+struct RaycastHit {
+    Position3d position = {0.0f, 0.0f, 0.0f};
+    Normal3d normal = {0.0f, 0.0f, 0.0f};
+    float distance = 0.0;
+    GameObject *object = nullptr;
+    bezel::Rigidbody *rigidbody = nullptr;
+    bool didHit = false;
+};
+
+struct RaycastResult {
+    std::vector<RaycastHit> hits;
+    RaycastHit hit;
+    float closestDistance = 0.0f;
+};
+
+enum class QueryOperation {
+    RaycastAll,
+    Raycast,
+    RaycastWorld,
+    RaycastWorldAll,
+    RaycastTagged,
+    RaycastTaggedAll,
+};
+
+struct QueryResult {
+    QueryOperation operation = QueryOperation::Raycast;
+    RaycastResult raycastResult;
+};
 
 class Rigidbody final : public Component {
   public:
@@ -38,6 +70,19 @@ class Rigidbody final : public Component {
     void addLinearVelocity(const Position3d &velocity);
     void setAngularVelocity(const Position3d &velocity);
     void addAngularVelocity(const Position3d &velocity);
+
+    void raycast(const Position3d &direction, float maxDistance = 1000.0f);
+    void raycastAll(const Position3d &direction, float maxDistance = 100.0f);
+    void raycastWorld(const Position3d &origin, const Position3d &direction,
+                      float maxDistance = 1000.0f);
+    void raycastWorldAll(const Position3d &origin, const Position3d &direction,
+                         float maxDistance = 1000.0f);
+    void raycastTagged(const std::vector<std::string> &tags,
+                       const Position3d &direction,
+                       float maxDistance = 1000.0f);
+    void raycastTaggedAll(const std::vector<std::string> &tags,
+                          const Position3d &direction,
+                          float maxDistance = 1000.0f);
 
     bool hasTag(const std::string &tag) const;
     void addTag(const std::string &tag);

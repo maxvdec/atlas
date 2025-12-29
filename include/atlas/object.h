@@ -599,6 +599,12 @@ class CoreObject : public GameObject {
             component->beforePhysics();
         }
     }
+
+    void onQueryRecieve(QueryResult &result) override {
+        for (auto &component : components) {
+            component->onQueryRecieve(result);
+        }
+    }
 };
 
 /**

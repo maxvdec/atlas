@@ -156,3 +156,29 @@ void JoltCollisionDispatcher::setup(bezel::PhysicsWorld *world) {
 void JoltCollisionDispatcher::update(bezel::PhysicsWorld *world) {
     contactListener->dispatchEvents();
 }
+
+bezel::RaycastResult
+bezel::Rigidbody::raycast(const Position3d &direction, float maxDistance,
+                          std::shared_ptr<bezel::PhysicsWorld> world,
+                          uint32_t ignoreBodyId) {
+    Position3d origin = position;
+
+    if (ignoreBodyId == bezel::INVALID_JOLT_ID) {
+        ignoreBodyId = id.joltId;
+    }
+
+    return world->raycast(origin, direction, maxDistance, ignoreBodyId);
+}
+
+bezel::RaycastResult
+bezel::Rigidbody::raycastAll(const Position3d &direction, float maxDistance,
+                             std::shared_ptr<bezel::PhysicsWorld> world,
+                             uint32_t ignoreBodyId) {
+    Position3d origin = position;
+
+    if (ignoreBodyId == bezel::INVALID_JOLT_ID) {
+        ignoreBodyId = id.joltId;
+    }
+
+    return world->raycastAll(origin, direction, maxDistance, ignoreBodyId);
+}

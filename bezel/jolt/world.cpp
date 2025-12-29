@@ -25,6 +25,24 @@
 #include "atlas/tracer/log.h"
 #include "bezel/jolt/query.h"
 
+namespace {
+
+class IgnoreBodyFilter final : public JPH::BodyFilter {
+  public:
+    uint32_t ignoreId;
+
+    explicit IgnoreBodyFilter(uint32_t id) : ignoreId(id) {}
+
+    bool ShouldCollide(const JPH::BodyID &inBodyID) const override {
+        if (ignoreId == bezel::INVALID_JOLT_ID) {
+            return true;
+        }
+        return inBodyID.GetIndexAndSequenceNumber() != ignoreId;
+    }
+};
+
+} // namespace
+
 namespace bezel_jolt {
 std::map<JPH::BodyID, bezel::Rigidbody *> bodyIdToRigidbodyMap;
 }
@@ -232,7 +250,8 @@ bezel::PhysicsWorld::~PhysicsWorld() {
 
 bezel::RaycastResult bezel::PhysicsWorld::raycast(const Position3d &origin,
                                                   const Position3d &direction,
-                                                  float maxDistance) {
+                                                  float maxDistance,
+                                                  uint32_t ignoreBodyId) {
     RaycastResult out;
 
     JPH::RVec3Arg originJolt(origin.x, origin.y, origin.z);
@@ -243,7 +262,10 @@ bezel::RaycastResult bezel::PhysicsWorld::raycast(const Position3d &origin,
 
     JPH::RayCastResult hit;
 
-    const bool didHit = physicsSystem.GetNarrowPhaseQuery().CastRay(ray, hit);
+    IgnoreBodyFilter bodyFilter(ignoreBodyId);
+
+    const bool didHit = physicsSystem.GetNarrowPhaseQuery().CastRay(
+        ray, hit, {}, {}, bodyFilter);
 
     if (!didHit) {
         out.hit.didHit = false;
@@ -274,8 +296,10 @@ bezel::RaycastResult bezel::PhysicsWorld::raycast(const Position3d &origin,
     return out;
 }
 
-bezel::RaycastResult bezel::PhysicsWorld::raycastAll(
-    const Position3d &origin, const Position3d &direction, float maxDistance) {
+bezel::RaycastResult
+bezel::PhysicsWorld::raycastAll(const Position3d &origin,
+                                const Position3d &direction, float maxDistance,
+                                uint32_t ignoreBodyId) {
     RaycastResult out;
 
     JPH::RVec3Arg originJolt(origin.x, origin.y, origin.z);
@@ -290,12 +314,15 @@ bezel::RaycastResult bezel::PhysicsWorld::raycastAll(
 
         void AddHit(const JPH::RayCastResult &result) override {
             hits.push_back(result);
+            ResetEarlyOutFraction();
         }
     };
 
     AllHitsCollector collector;
+    IgnoreBodyFilter bodyFilter(ignoreBodyId);
     JPH::RayCastSettings settings;
-    physicsSystem.GetNarrowPhaseQuery().CastRay(ray, settings, collector);
+    physicsSystem.GetNarrowPhaseQuery().CastRay(ray, settings, collector, {},
+                                                {}, bodyFilter);
 
     if (collector.hits.empty()) {
         out.hit.didHit = false;

@@ -115,11 +115,19 @@ class WaterPot : public CompoundObject {
 class BallBehavior : public Component {
   public:
     void onCollisionEnter(GameObject *other) override {
-        if (other->rigidbody->hasTag("Ground")) {
-            std::cout << "Ball collided with the ground!" << std::endl;
-        }
         std::cout << "Ball collided with object ID: " << other->getId()
                   << std::endl;
+    }
+    void update(float) override {
+        object->rigidbody->raycastTagged({"Ground"}, Position3d::down());
+    }
+    void onQueryRecieve(QueryResult &result) override {
+        if (result.raycastResult.hit.didHit) {
+            std::cout << "Ball is " << result.raycastResult.hit.distance
+                      << " units above the ground." << std::endl;
+        } else {
+            std::cout << "Ball is not above any ground." << std::endl;
+        }
     }
     void onCollisionExit(GameObject *other) override {
         std::cout << "Ball ended collision with object ID: " << other->getId()
