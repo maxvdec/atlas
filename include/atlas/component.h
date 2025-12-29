@@ -92,9 +92,11 @@ class Component {
      */
     Component() = default;
 
-    virtual void onCollisionEnter(GameObject *other) {}
-    virtual void onCollisionExit(GameObject *other) {}
-    virtual void onQueryRecieve(QueryResult &result) {}
+    virtual void onCollisionEnter([[maybe_unused]] GameObject *other) {}
+    virtual void onCollisionExit([[maybe_unused]] GameObject *other) {}
+    virtual void onCollisionStay([[maybe_unused]] GameObject *other) {}
+
+    virtual void onQueryRecieve([[maybe_unused]] QueryResult &result) {}
 
     /**
      * @brief Gets the GameObject associated with the component.
@@ -180,7 +182,7 @@ class GameObject : public Renderable {
         atlas::gameObjects[id] = this;
     }
 
-    GameObject(const GameObject &other) {
+    GameObject([[maybe_unused]] const GameObject &other) {
         std::random_device rd;
         std::mt19937 gen(rd());
         std::uniform_int_distribution<int> dist(0, INT_MAX);
@@ -189,7 +191,7 @@ class GameObject : public Renderable {
         atlas::gameObjects[id] = this;
     }
 
-    GameObject(GameObject &&other) noexcept {
+    GameObject([[maybe_unused]] GameObject &&other) noexcept {
         std::random_device rd;
         std::mt19937 gen(rd());
         std::uniform_int_distribution<int> dist(0, INT_MAX);
@@ -293,6 +295,8 @@ class GameObject : public Renderable {
 
     virtual void onCollisionEnter([[maybe_unused]] GameObject *other) {}
     virtual void onCollisionExit([[maybe_unused]] GameObject *other) {}
+    virtual void onCollisionStay([[maybe_unused]] GameObject *other) {}
+
     virtual void onQueryRecieve([[maybe_unused]] QueryResult &result) {}
 
     /**

@@ -594,6 +594,12 @@ class CoreObject : public GameObject {
         }
     }
 
+    void onCollisionStay([[maybe_unused]] GameObject *other) override {
+        for (auto &component : components) {
+            component->onCollisionStay(other);
+        }
+    }
+
     void beforePhysics() override {
         for (auto &component : components) {
             component->beforePhysics();

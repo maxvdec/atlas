@@ -49,7 +49,12 @@ void GlobalContactListener::OnContactAdded(
 void GlobalContactListener::OnContactPersisted(
     const JPH::Body &inBody1, const JPH::Body &inBody2,
     const JPH::ContactManifold &inManifold, JPH::ContactSettings &ioSettings) {
-    // Currently not used
+    PairKey key(inBody1.GetID(), inBody2.GetID());
+
+    if (activePairs.find(key) == activePairs.end()) {
+        activePairs.insert(key);
+        queueEnter(inBody1.GetID(), inBody2.GetID());
+    }
 }
 
 void GlobalContactListener::OnContactRemoved(
@@ -84,6 +89,11 @@ void GlobalContactListener::queueExit(const JPH::BodyID &inBody1,
     collisionExitEvents.emplace_back(inBody1, inBody2);
 }
 
+void GlobalContactListener::queuePersist(const JPH::BodyID &inBody1,
+                                         const JPH::BodyID &inBody2) {
+    collisionPersistEvents.emplace_back(inBody1, inBody2);
+}
+
 void GlobalContactListener::fireOnCollisionEnter(const JPH::BodyID &inBody1,
                                                  const JPH::BodyID &inBody2) {
     auto it1 = bodyIdToRigidbodyMap.find(inBody1);
@@ -105,6 +115,37 @@ void GlobalContactListener::fireOnCollisionEnter(const JPH::BodyID &inBody1,
         if (object1 && object2) {
             object1->onCollisionEnter(object2);
             object2->onCollisionEnter(object1);
+        } else {
+            atlas_error(
+                "One of the objects involved in collision enter is null.");
+        }
+    } else {
+        atlas_error("One of the rigidbodies involved in collision enter is not "
+                    "registered in the bodyIdToRigidbodyMap.");
+    }
+}
+
+void GlobalContactListener::fireOnCollisionPersist(const JPH::BodyID &inBody1,
+                                                   const JPH::BodyID &inBody2) {
+    auto it1 = bodyIdToRigidbodyMap.find(inBody1);
+    auto it2 = bodyIdToRigidbodyMap.find(inBody2);
+
+    if (it1 != bodyIdToRigidbodyMap.end() &&
+        it2 != bodyIdToRigidbodyMap.end()) {
+        bezel::Rigidbody *rigidbody1 = it1->second;
+        bezel::Rigidbody *rigidbody2 = it2->second;
+
+        auto objIt1 = atlas::gameObjects.find((int)rigidbody1->id.atlasId);
+        auto objIt2 = atlas::gameObjects.find((int)rigidbody2->id.atlasId);
+
+        GameObject *object1 =
+            (objIt1 != atlas::gameObjects.end()) ? objIt1->second : nullptr;
+        GameObject *object2 =
+            (objIt2 != atlas::gameObjects.end()) ? objIt2->second : nullptr;
+
+        if (object1 && object2) {
+            object1->onCollisionStay(object2);
+            object2->onCollisionStay(object1);
         } else {
             atlas_error(
                 "One of the objects involved in collision enter is null.");

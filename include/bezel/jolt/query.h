@@ -58,11 +58,14 @@ class GlobalContactListener final : public JPH::ContactListener {
   private:
     void queueEnter(const JPH::BodyID &inBody1, const JPH::BodyID &inBody2);
     void queueExit(const JPH::BodyID &inBody1, const JPH::BodyID &inBody2);
+    void queuePersist(const JPH::BodyID &inBody1, const JPH::BodyID &inBody2);
 
     void fireOnCollisionEnter(const JPH::BodyID &inBody1,
                               const JPH::BodyID &inBody2);
     void fireOnCollisionExit(const JPH::BodyID &inBody1,
                              const JPH::BodyID &inBody2);
+    void fireOnCollisionPersist(const JPH::BodyID &inBody1,
+                                const JPH::BodyID &inBody2);
 
     JPH::PhysicsSystem &physicsSystem;
 
@@ -70,6 +73,7 @@ class GlobalContactListener final : public JPH::ContactListener {
 
     std::vector<std::pair<JPH::BodyID, JPH::BodyID>> collisionEnterEvents;
     std::vector<std::pair<JPH::BodyID, JPH::BodyID>> collisionExitEvents;
+    std::vector<std::pair<JPH::BodyID, JPH::BodyID>> collisionPersistEvents;
 };
 
 class JoltCollisionDispatcher : public bezel::CollisionDispatcher {
