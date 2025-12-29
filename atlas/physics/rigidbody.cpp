@@ -262,3 +262,31 @@ void Rigidbody::setDamping(float linearDamping, float angularDamping) {
     body->linearDamping = linearDamping;
     body->angularDamping = angularDamping;
 }
+
+bool Rigidbody::hasTag(const std::string &tag) const {
+    if (!body) {
+        return false;
+    }
+    return std::find(body->tags.begin(), body->tags.end(), tag) !=
+           body->tags.end();
+}
+
+void Rigidbody::addTag(const std::string &tag) {
+    if (!body) {
+        body = std::make_shared<bezel::Rigidbody>();
+        if (object) {
+            body->id.atlasId = object->getId();
+        }
+    }
+    if (!hasTag(tag)) {
+        body->tags.push_back(tag);
+    }
+}
+
+void Rigidbody::removeTag(const std::string &tag) {
+    if (!body) {
+        return;
+    }
+    body->tags.erase(std::remove(body->tags.begin(), body->tags.end(), tag),
+                     body->tags.end());
+}

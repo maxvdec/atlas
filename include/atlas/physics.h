@@ -39,6 +39,10 @@ class Rigidbody final : public Component {
     void setAngularVelocity(const Position3d &velocity);
     void addAngularVelocity(const Position3d &velocity);
 
+    bool hasTag(const std::string &tag) const;
+    void addTag(const std::string &tag);
+    void removeTag(const std::string &tag);
+
     void setDamping(float linearDamping, float angularDamping);
 
     void setMass(float mass);

@@ -13,6 +13,7 @@
 #include "atlas/units.h"
 #include <cstdint>
 #include <memory>
+#include <string>
 #include <vector>
 #ifndef BEZEL_NATIVE
 #include <bezel/jolt/world.h>
@@ -118,6 +119,20 @@ class CollisionDispatcher {
     virtual void setup(bezel::PhysicsWorld *world) = 0;
 };
 
+struct RaycastHit {
+    Position3d position = {0.0f, 0.0f, 0.0f};
+    Normal3d normal = {0.0f, 0.0f, 0.0f};
+    float distance = 0.0;
+    bezel::Rigidbody *rigidbody = nullptr;
+    bool hit = false;
+};
+
+struct RaycastResult {
+    float closestDistance = -1;
+    std::vector<RaycastHit> hits;
+    RaycastHit hit;
+};
+
 struct Rigidbody {
     Position3d position;
     Rotation3d rotation;
@@ -126,6 +141,8 @@ struct Rigidbody {
     float mass = 0.0f;
     float friction = 0.5f;
     float restitution = 0.0f;
+
+    std::vector<std::string> tags;
 
     Position3d linearVelocity = {-1.0f, -1.0f, -1.0f};
     Position3d angularVelocity = {-1.0f, -1.0f, -1.0f};
@@ -143,6 +160,11 @@ struct Rigidbody {
                      std::shared_ptr<PhysicsWorld> world);
     void setRotation(const Rotation3d &rotation,
                      std::shared_ptr<PhysicsWorld> world);
+
+    RaycastResult raycast(const Position3d &direction, float maxDistance,
+                          std::shared_ptr<PhysicsWorld> world);
+    RaycastResult raycastAll(const Position3d &direction, float maxDistance,
+                             std::shared_ptr<PhysicsWorld> world);
 
     std::shared_ptr<Collider> collider;
 

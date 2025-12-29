@@ -115,7 +115,9 @@ class WaterPot : public CompoundObject {
 class BallBehavior : public Component {
   public:
     void onCollisionEnter(GameObject *other) override {
-        other->setColor(Color::red());
+        if (other->rigidbody->hasTag("Ground")) {
+            std::cout << "Ball collided with the ground!" << std::endl;
+        }
         std::cout << "Ball collided with object ID: " << other->getId()
                   << std::endl;
     }
@@ -208,6 +210,7 @@ class MainScene : public Scene {
         ground.rigidbody->addBoxCollider({15.0f, 0.1f, 15.0f});
         ground.rigidbody->setMotionType(MotionType::Static);
         ground.rigidbody->setFriction(0.1);
+        ground.rigidbody->addTag("Ground");
         window.addObject(&ground);
 
         ball = createDebugSphere(0.5);
