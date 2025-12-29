@@ -15,6 +15,7 @@
 #include "aurora/terrain.h"
 #include "hydra/atmosphere.h"
 #include "hydra/fluid.h"
+#include <iostream>
 #include <memory>
 
 class SphereCube : public CompoundObject {
@@ -111,6 +112,19 @@ class WaterPot : public CompoundObject {
     }
 };
 
+class BallBehavior : public Component {
+  public:
+    void onCollisionEnter(GameObject *other) override {
+        other->setColor(Color::red());
+        std::cout << "Ball collided with object ID: " << other->getId()
+                  << std::endl;
+    }
+    void onCollisionExit(GameObject *other) override {
+        std::cout << "Ball ended collision with object ID: " << other->getId()
+                  << std::endl;
+    }
+};
+
 class MainScene : public Scene {
     CoreObject ground;
     CoreObject ball;
@@ -203,6 +217,7 @@ class MainScene : public Scene {
         ball.rigidbody->setFriction(0.1);
         ball.rigidbody->setRestitution(0.8f);
         ball.rigidbody->addLinearVelocity(Position3d{1.0f, 0.0f, 1.0f});
+        ball.addComponent(BallBehavior());
         window.addObject(&ball);
 
         window.useDeferredRendering();

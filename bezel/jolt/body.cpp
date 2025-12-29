@@ -70,6 +70,7 @@ void bezel::Rigidbody::create(std::shared_ptr<bezel::PhysicsWorld> world) {
     bodyInterface.AddBody(joltBodyId, JPH::EActivation::Activate);
 
     applyProperties(world);
+    bodyIdToRigidbodyMap[joltBodyId] = this;
 }
 
 void bezel::Rigidbody::refresh(std::shared_ptr<bezel::PhysicsWorld> world) {
@@ -167,6 +168,9 @@ void bezel::Rigidbody::destroy(std::shared_ptr<bezel::PhysicsWorld> world) {
 
     JPH::BodyInterface &bodyInterface = world->physicsSystem.GetBodyInterface();
     auto joltBodyId = JPH::BodyID(id.joltId);
+
+    bodyIdToRigidbodyMap.erase(joltBodyId);
+
     bodyInterface.RemoveBody(joltBodyId);
     bodyInterface.DestroyBody(joltBodyId);
     id.joltId = INVALID_JOLT_ID;

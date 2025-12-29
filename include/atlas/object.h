@@ -433,8 +433,6 @@ class CoreObject : public GameObject {
      */
     CoreObject clone() const;
 
-    Rigidbody *rigidbody = nullptr;
-
     inline void show() override { isVisible = true; }
     inline void hide() override { isVisible = false; }
 
@@ -583,6 +581,18 @@ class CoreObject : public GameObject {
      * rendering pipeline.
      */
     bool canUseDeferredRendering() override { return useDeferredRendering; }
+
+    void onCollisionEnter([[maybe_unused]] GameObject *other) override {
+        for (auto &component : components) {
+            component->onCollisionEnter(other);
+        }
+    }
+
+    void onCollisionExit([[maybe_unused]] GameObject *other) override {
+        for (auto &component : components) {
+            component->onCollisionExit(other);
+        }
+    }
 
     void beforePhysics() override {
         for (auto &component : components) {

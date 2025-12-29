@@ -14,6 +14,7 @@
 #include "opal/opal.h"
 #include <algorithm>
 #include <iostream>
+#include <map>
 #include <memory>
 #include <optional>
 #include <vector>

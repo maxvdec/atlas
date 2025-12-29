@@ -23,6 +23,11 @@
 #include <memory>
 #include <thread>
 #include "atlas/tracer/log.h"
+#include "bezel/jolt/query.h"
+
+namespace bezel_jolt {
+std::map<JPH::BodyID, bezel::Rigidbody *> bodyIdToRigidbodyMap;
+}
 
 BroadPhaseLayerImpl::BroadPhaseLayerImpl() {
     mObjectToBroadPhase[bezel::jolt::layers::NON_MOVING] =
@@ -105,7 +110,7 @@ void bezel::PhysicsWorld::setGravity(const Position3d &gravity) {
                                        static_cast<float>(gravity.z)));
 }
 
-void AtlasLog(JoltLogLevel level, std::string_view msg) {
+void bezel_jolt::AtlasLog(JoltLogLevel level, std::string_view msg) {
     switch (level) {
     case JoltLogLevel::Info:
         atlas_log(std::string("[Jolt] ") + std::string(msg));
@@ -119,7 +124,7 @@ void AtlasLog(JoltLogLevel level, std::string_view msg) {
     }
 }
 
-JoltLogLevel Classify(std::string_view s) {
+JoltLogLevel bezel_jolt::Classify(std::string_view s) {
     if (s.starts_with("Error:") || s.starts_with("ERROR:") ||
         s.starts_with("FATAL") || s.find("failed") != std::string_view::npos ||
         s.find("Out of memory") != std::string_view::npos) {
@@ -134,7 +139,7 @@ JoltLogLevel Classify(std::string_view s) {
     return JoltLogLevel::Info;
 }
 
-void TraceImpl(const char *fmt, ...) {
+void bezel_jolt::TraceImpl(const char *fmt, ...) {
     char buf[4096];
 
     va_list args;
@@ -143,17 +148,17 @@ void TraceImpl(const char *fmt, ...) {
     va_end(args);
 
     std::string_view msg(buf);
-    AtlasLog(Classify(msg), msg);
+    bezel_jolt::AtlasLog(bezel_jolt::Classify(msg), msg);
 }
 
-bool AssertFailedImpl(const char *expr, const char *msg, const char *file,
-                      JPH::uint line) {
+bool bezel_jolt::AssertFailedImpl(const char *expr, const char *msg,
+                                  const char *file, JPH::uint line) {
     char buf[4096];
     int _ =
         std::snprintf(buf, sizeof(buf), "Assert failed: %s%s%s (%s:%u)", expr,
                       msg ? " : " : "", msg ? msg : "", file, (unsigned)line);
 
-    AtlasLog(JoltLogLevel::Error, buf);
+    bezel_jolt::AtlasLog(JoltLogLevel::Error, buf);
 
     return true;
 }
@@ -161,8 +166,8 @@ bool AssertFailedImpl(const char *expr, const char *msg, const char *file,
 void bezel::PhysicsWorld::init() {
     JPH::RegisterDefaultAllocator();
 
-    JPH::Trace = TraceImpl;
-    JPH_IF_ENABLE_ASSERTS(JPH::AssertFailed = AssertFailedImpl);
+    JPH::Trace = bezel_jolt::TraceImpl;
+    JPH_IF_ENABLE_ASSERTS(JPH::AssertFailed = bezel_jolt::AssertFailedImpl);
 
     if (JPH::Factory::sInstance == nullptr) {
         JPH::Factory::sInstance = new JPH::Factory();
@@ -193,6 +198,10 @@ void bezel::PhysicsWorld::init() {
                        objectVsBroadPhaseLayerFilter, objectLayerPairFilter);
 
     physicsSystem.SetGravity(JPH::Vec3(0, -9.81f, 0));
+
+    this->collisionDispatcher = std::make_shared<JoltCollisionDispatcher>();
+
+    collisionDispatcher->setup(this);
 }
 
 void bezel::PhysicsWorld::update(float dt) {
@@ -203,6 +212,8 @@ void bezel::PhysicsWorld::update(float dt) {
     if (error != JPH::EPhysicsUpdateError::None) {
         throw std::runtime_error("Jolt PhysicsWorld update error");
     }
+
+    collisionDispatcher->update(this);
 }
 
 bezel::PhysicsWorld::~PhysicsWorld() {

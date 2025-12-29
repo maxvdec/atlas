@@ -13,6 +13,7 @@
 #include "atlas/units.h"
 #include "atlas/window.h"
 #include <vector>
+#include <iostream>
 
 void Rigidbody::atAttach() {
     if (!body) {
@@ -55,6 +56,9 @@ void Rigidbody::init() {
 void Rigidbody::addCapsuleCollider(float radius, float height) {
     if (!body) {
         body = std::make_shared<bezel::Rigidbody>();
+        if (object) {
+            body->id.atlasId = object->getId();
+        }
     }
 
     body->setCollider(std::make_shared<bezel::CapsuleCollider>(radius, height));
@@ -63,6 +67,9 @@ void Rigidbody::addCapsuleCollider(float radius, float height) {
 void Rigidbody::addBoxCollider(const Position3d &extents) {
     if (!body) {
         body = std::make_shared<bezel::Rigidbody>();
+        if (object) {
+            body->id.atlasId = object->getId();
+        }
     }
     body->setCollider(std::make_shared<bezel::BoxCollider>(extents / 2.0));
 }
@@ -70,6 +77,12 @@ void Rigidbody::addBoxCollider(const Position3d &extents) {
 void Rigidbody::addSphereCollider(float radius) {
     if (!body) {
         body = std::make_shared<bezel::Rigidbody>();
+        if (object) {
+            body->id.atlasId = object->getId();
+        }
+        std::cout
+            << "Created NEW bezel::Rigidbody in addSphereCollider, atlasId: "
+            << body->id.atlasId << std::endl;
     }
     body->setCollider(std::make_shared<bezel::SphereCollider>(radius));
 }
@@ -128,6 +141,9 @@ void Rigidbody::update(float dt) {
 void Rigidbody::setFriction(float friction) {
     if (!body) {
         body = std::make_shared<bezel::Rigidbody>();
+        if (object) {
+            body->id.atlasId = object->getId();
+        }
     }
     body->friction = friction;
 }
@@ -135,6 +151,9 @@ void Rigidbody::setFriction(float friction) {
 void Rigidbody::setMass(float mass) {
     if (!body) {
         body = std::make_shared<bezel::Rigidbody>();
+        if (object) {
+            body->id.atlasId = object->getId();
+        }
     }
     body->mass = mass;
 }
@@ -142,6 +161,9 @@ void Rigidbody::setMass(float mass) {
 void Rigidbody::setRestitution(float restitution) {
     if (!body) {
         body = std::make_shared<bezel::Rigidbody>();
+        if (object) {
+            body->id.atlasId = object->getId();
+        }
     }
     body->restitution = restitution;
 }
@@ -149,6 +171,9 @@ void Rigidbody::setRestitution(float restitution) {
 void Rigidbody::setMotionType(MotionType motionType) {
     if (!body) {
         body = std::make_shared<bezel::Rigidbody>();
+        if (object) {
+            body->id.atlasId = object->getId();
+        }
     }
     body->motionType = motionType;
 }
@@ -156,6 +181,9 @@ void Rigidbody::setMotionType(MotionType motionType) {
 void Rigidbody::applyForce(const Position3d &force) {
     if (!body) {
         body = std::make_shared<bezel::Rigidbody>();
+        if (object) {
+            body->id.atlasId = object->getId();
+        }
     }
     body->force = force;
 }
@@ -164,6 +192,9 @@ void Rigidbody::applyForceAtPoint(const Position3d &force,
                                   const Position3d &point) {
     if (!body) {
         body = std::make_shared<bezel::Rigidbody>();
+        if (object) {
+            body->id.atlasId = object->getId();
+        }
     }
     body->force = force;
     body->forcePoint = point;
@@ -172,6 +203,9 @@ void Rigidbody::applyForceAtPoint(const Position3d &force,
 void Rigidbody::applyImpulse(const Position3d &impulse) {
     if (!body) {
         body = std::make_shared<bezel::Rigidbody>();
+        if (object) {
+            body->id.atlasId = object->getId();
+        }
     }
     body->impulse = impulse;
 }
@@ -179,6 +213,9 @@ void Rigidbody::applyImpulse(const Position3d &impulse) {
 void Rigidbody::setLinearVelocity(const Position3d &velocity) {
     if (!body) {
         body = std::make_shared<bezel::Rigidbody>();
+        if (object) {
+            body->id.atlasId = object->getId();
+        }
     }
     body->linearVelocity = velocity;
 }
@@ -186,6 +223,9 @@ void Rigidbody::setLinearVelocity(const Position3d &velocity) {
 void Rigidbody::setAngularVelocity(const Position3d &velocity) {
     if (!body) {
         body = std::make_shared<bezel::Rigidbody>();
+        if (object) {
+            body->id.atlasId = object->getId();
+        }
     }
     body->angularVelocity = velocity;
 }
@@ -193,6 +233,9 @@ void Rigidbody::setAngularVelocity(const Position3d &velocity) {
 void Rigidbody::addLinearVelocity(const Position3d &velocity) {
     if (!body) {
         body = std::make_shared<bezel::Rigidbody>();
+        if (object) {
+            body->id.atlasId = object->getId();
+        }
     }
     body->linearVelocity = velocity;
     body->addLinearVelocity = true;
@@ -201,6 +244,9 @@ void Rigidbody::addLinearVelocity(const Position3d &velocity) {
 void Rigidbody::addAngularVelocity(const Position3d &velocity) {
     if (!body) {
         body = std::make_shared<bezel::Rigidbody>();
+        if (object) {
+            body->id.atlasId = object->getId();
+        }
     }
     body->angularVelocity = velocity;
     body->addAngularVelocity = true;
@@ -209,6 +255,9 @@ void Rigidbody::addAngularVelocity(const Position3d &velocity) {
 void Rigidbody::setDamping(float linearDamping, float angularDamping) {
     if (!body) {
         body = std::make_shared<bezel::Rigidbody>();
+        if (object) {
+            body->id.atlasId = object->getId();
+        }
     }
     body->linearDamping = linearDamping;
     body->angularDamping = angularDamping;

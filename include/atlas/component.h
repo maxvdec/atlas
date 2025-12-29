@@ -17,6 +17,7 @@
 #include "bezel/bezel.h"
 #include "opal/opal.h"
 #include <climits>
+#include <map>
 #include <memory>
 #include <random>
 #include <vector>
@@ -24,6 +25,7 @@
 class CoreObject;
 class Window;
 class GameObject;
+class Rigidbody;
 
 /**
  * @brief Behavior or property that can be attached to a \ref GameObject to
@@ -88,6 +90,9 @@ class Component {
      */
     Component() = default;
 
+    virtual void onCollisionEnter(GameObject *other) {}
+    virtual void onCollisionExit(GameObject *other) {}
+
     /**
      * @brief Gets the GameObject associated with the component.
      *
@@ -150,6 +155,10 @@ class TraitComponent : public Component {
     T *typedObject = nullptr;
 };
 
+namespace atlas {
+inline std::map<int, GameObject *> gameObjects = {};
+}
+
 /**
  * @brief Base class for all Game Objects. It extends from \ref Renderable and
  * it provides common functionality for all game objects in the scene.
@@ -164,7 +173,43 @@ class GameObject : public Renderable {
         std::mt19937 gen(rd());
         std::uniform_int_distribution<int> dist(0, INT_MAX);
         id = dist(gen);
+
+        atlas::gameObjects[id] = this;
     }
+
+    GameObject(const GameObject &other) {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<int> dist(0, INT_MAX);
+        id = dist(gen);
+
+        atlas::gameObjects[id] = this;
+    }
+
+    GameObject(GameObject &&other) noexcept {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<int> dist(0, INT_MAX);
+        id = dist(gen);
+
+        atlas::gameObjects[id] = this;
+    }
+
+    GameObject &operator=(const GameObject &other) {
+        if (this != &other) {
+            atlas::gameObjects[id] = this;
+        }
+        return *this;
+    }
+
+    GameObject &operator=(GameObject &&other) noexcept {
+        if (this != &other) {
+            atlas::gameObjects[id] = this;
+        }
+        return *this;
+    }
+
+    virtual ~GameObject() { atlas::gameObjects.erase(id); }
 
     /**
      * @brief Attaches a shader program to the object.
@@ -243,6 +288,9 @@ class GameObject : public Renderable {
      */
     virtual void show() {};
 
+    virtual void onCollisionEnter([[maybe_unused]] GameObject *other) {}
+    virtual void onCollisionExit([[maybe_unused]] GameObject *other) {}
+
     /**
      * @brief Adds a component to the object.
      *
@@ -310,6 +358,8 @@ class GameObject : public Renderable {
         }
         return nullptr;
     }
+
+    Rigidbody *rigidbody = nullptr;
 
     /**
      * @brief Returns the unique identifier associated with this object.

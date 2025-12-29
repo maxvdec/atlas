@@ -9,6 +9,7 @@
 
 #ifndef BEZEL_JOLT_WORLD_H
 #define BEZEL_JOLT_WORLD_H
+#include <map>
 #ifndef BEZEL_NATIVE
 
 #include <Jolt/Jolt.h>
@@ -56,6 +57,14 @@ static constexpr JPH::BroadPhaseLayer SENSOR(2);
 static constexpr JPH::uint NUM_BROADPHASE_LAYERS = 3;
 
 } // namespace bezel::jolt::broad_phase_layers
+
+namespace bezel {
+struct Rigidbody;
+}
+
+namespace bezel_jolt {
+
+extern std::map<JPH::BodyID, bezel::Rigidbody *> bodyIdToRigidbodyMap;
 
 class BroadPhaseLayerImpl final : public JPH::BroadPhaseLayerInterface {
   public:
@@ -109,24 +118,7 @@ class BodyActivationListenerMain final : public JPH::BodyActivationListener {
     };
 };
 
-class ContactListenerImpl final : public JPH::ContactListener {
-  public:
-    JPH::ValidateResult
-    OnContactValidate(const JPH::Body &, const JPH::Body &, JPH::RVec3Arg,
-                      const JPH::CollideShapeResult &) override {
-        return JPH::ValidateResult::AcceptAllContactsForThisBodyPair;
-    }
-
-    void OnContactAdded(const JPH::Body &, const JPH::Body &,
-                        const JPH::ContactManifold &,
-                        JPH::ContactSettings &) override {}
-
-    void OnContactPersisted(const JPH::Body &, const JPH::Body &,
-                            const JPH::ContactManifold &,
-                            JPH::ContactSettings &) override {}
-
-    void OnContactRemoved(const JPH::SubShapeIDPair &) override {}
-};
+} // namespace bezel_jolt
 
 #endif
 #endif // BEZEL_JOLT_WORLD_H

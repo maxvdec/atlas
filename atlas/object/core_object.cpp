@@ -232,6 +232,7 @@ void CoreObject::setColor(const Color &color) {
     }
     useColor = true;
     useTexture = false;
+    material.albedo = color;
 }
 
 void CoreObject::attachVertices(const std::vector<CoreVertex> &newVertices) {

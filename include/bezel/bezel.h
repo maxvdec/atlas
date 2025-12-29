@@ -18,6 +18,10 @@
 #include <bezel/jolt/world.h>
 #endif
 
+#ifndef BEZEL_NATIVE
+using namespace bezel_jolt;
+#endif
+
 class Window;
 
 namespace bezel {
@@ -106,6 +110,14 @@ class MeshCollider : public Collider {
 #endif
 };
 
+class CollisionDispatcher {
+  public:
+    virtual ~CollisionDispatcher() = default;
+
+    virtual void update(bezel::PhysicsWorld *world) = 0;
+    virtual void setup(bezel::PhysicsWorld *world) = 0;
+};
+
 struct Rigidbody {
     Position3d position;
     Rotation3d rotation;
@@ -154,6 +166,7 @@ class PhysicsWorld {
     BroadPhaseLayerImpl broadPhaseLayerInterface;
     ObjectVsBroadPhaseLayerFilterImpl objectVsBroadPhaseLayerFilter;
     ObjectLayerPairFilterImpl objectLayerPairFilter;
+    std::shared_ptr<CollisionDispatcher> collisionDispatcher;
 
     std::vector<BodyIdentifier> bodies;
 
