@@ -34,6 +34,35 @@ struct RaycastResult {
     float closestDistance = 0.0f;
 };
 
+struct OverlapHit {
+    Position3d contactPoint = {0.0f, 0.0f, 0.0f};
+    Point3d penetrationAxis = {0.0f, 0.0f, 0.0f};
+    float penetrationDepth = 0.0f;
+    GameObject *object = nullptr;
+    bezel::Rigidbody *rigidbody = nullptr;
+};
+
+struct OverlapResult {
+    std::vector<OverlapHit> hits;
+    bool hitAny = false;
+};
+
+struct SweepHit {
+    Position3d position = {0.0f, 0.0f, 0.0f};
+    Normal3d normal = {0.0f, 0.0f, 0.0f};
+    float distance = 0.0f;
+    float percentage = 0.0f;
+    GameObject *object = nullptr;
+    bezel::Rigidbody *rigidbody = nullptr;
+};
+
+struct SweepResult {
+    std::vector<SweepHit> hits;
+    SweepHit closest;
+    bool hitAny = false;
+    Position3d endPosition = {0.0f, 0.0f, 0.0f};
+};
+
 enum class QueryOperation {
     RaycastAll,
     Raycast,
@@ -41,11 +70,16 @@ enum class QueryOperation {
     RaycastWorldAll,
     RaycastTagged,
     RaycastTaggedAll,
+    Movement,
+    Overlap,
+    MovementAll,
 };
 
 struct QueryResult {
     QueryOperation operation = QueryOperation::Raycast;
     RaycastResult raycastResult;
+    OverlapResult overlapResult;
+    SweepResult sweepResult;
 };
 
 class Rigidbody final : public Component {
@@ -83,6 +117,52 @@ class Rigidbody final : public Component {
     void raycastTaggedAll(const std::vector<std::string> &tags,
                           const Position3d &direction,
                           float maxDistance = 1000.0f);
+
+    void overlapCapsule(float radius, float height);
+    void overlapBox(const Position3d &extents);
+    void overlapSphere(float radius);
+    void overlap(); // Using existing collider
+
+    void overlapCapsuleWorld(const Position3d &position, float radius,
+                             float height);
+    void overlapBoxWorld(const Position3d &position, const Position3d &extents);
+    void overlapSphereWorld(const Position3d &position, float radius);
+
+    void predictMovementCapsule(const Position3d &endPosition, float radius,
+                                float height);
+    void predictMovementBox(const Position3d &endPosition,
+                            const Position3d &extents);
+    void predictMovementSphere(const Position3d &endPosition, float radius);
+    void
+    predictMovement(const Position3d &endPosition); // Using existing collider
+
+    void predictMovementCapsuleAll(const Position3d &endPosition, float radius,
+                                   float height);
+    void predictMovementBoxAll(const Position3d &endPosition,
+                               const Position3d &extents);
+    void predictMovementSphereAll(const Position3d &endPosition, float radius);
+    void predictMovementAll(
+        const Position3d &endPosition); // Using existing collider
+
+    void predictMovementCapsuleWorld(const Position3d &startPosition,
+                                     const Position3d &endPosition,
+                                     float radius, float height);
+    void predictMovementBoxWorld(const Position3d &startPosition,
+                                 const Position3d &endPosition,
+                                 const Position3d &extents);
+    void predictMovementSphereWorld(const Position3d &startPosition,
+                                    const Position3d &endPosition,
+                                    float radius);
+
+    void predictMovementCapsuleWorldAll(const Position3d &startPosition,
+                                        const Position3d &endPosition,
+                                        float radius, float height);
+    void predictMovementBoxWorldAll(const Position3d &startPosition,
+                                    const Position3d &endPosition,
+                                    const Position3d &extents);
+    void predictMovementSphereWorldAll(const Position3d &startPosition,
+                                       const Position3d &endPosition,
+                                       float radius);
 
     bool hasTag(const std::string &tag) const;
     void addTag(const std::string &tag);

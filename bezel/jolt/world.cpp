@@ -14,6 +14,8 @@
 #include "Jolt/Core/Memory.h"
 #include "Jolt/Core/TempAllocator.h"
 #include "Jolt/Physics/Collision/ContactListener.h"
+#include "Jolt/Physics/Collision/CollideShape.h"
+#include "Jolt/Physics/Collision/ShapeCast.h"
 #include "Jolt/Physics/EPhysicsUpdateError.h"
 #include "Jolt/RegisterTypes.h"
 #include "bezel/bezel.h"
@@ -358,6 +360,288 @@ bezel::PhysicsWorld::raycastAll(const Position3d &origin,
             out.hit = h;
             out.closestDistance = dist;
         }
+    }
+
+    return out;
+}
+
+bezel::OverlapResult bezel::PhysicsWorld::overlap(
+    std::shared_ptr<bezel::PhysicsWorld> world,
+    std::shared_ptr<bezel::Collider> collider, const Position3d &position,
+    const Rotation3d &rotation, uint32_t ignoreBodyId) {
+    (void)world;
+
+    OverlapResult out;
+    if (!collider) {
+        return out;
+    }
+
+    auto shape = collider->getJoltShape();
+    if (shape == nullptr) {
+        return out;
+    }
+
+    glm::quat glmRotation = glm::normalize(rotation.toGlmQuat());
+    JPH::Quat joltRotation(glmRotation.x, glmRotation.y, glmRotation.z,
+                           glmRotation.w);
+
+    const JPH::RVec3 joltPosition(position.x, position.y, position.z);
+    const JPH::RMat44 transform =
+        JPH::RMat44::sRotationTranslation(joltRotation, joltPosition);
+
+    class AllHitsCollector final : public JPH::CollideShapeCollector {
+      public:
+        std::vector<JPH::CollideShapeResult> hits;
+
+        void AddHit(const JPH::CollideShapeResult &result) override {
+            hits.push_back(result);
+            ResetEarlyOutFraction();
+        }
+    };
+
+    AllHitsCollector collector;
+    IgnoreBodyFilter bodyFilter(ignoreBodyId);
+
+    JPH::CollideShapeSettings settings;
+    physicsSystem.GetNarrowPhaseQuery().CollideShape(
+        shape.GetPtr(), JPH::Vec3::sReplicate(1.0f), transform, settings,
+        JPH::RVec3::sZero(), collector, {}, {}, bodyFilter);
+
+    out.hits.reserve(collector.hits.size());
+    for (const auto &hit : collector.hits) {
+        OverlapHit h;
+        h.contactPoint =
+            Position3d(hit.mContactPointOn2.GetX(), hit.mContactPointOn2.GetY(),
+                       hit.mContactPointOn2.GetZ());
+        h.penetrationAxis =
+            Point3d(hit.mPenetrationAxis.GetX(), hit.mPenetrationAxis.GetY(),
+                    hit.mPenetrationAxis.GetZ());
+        h.penetrationDepth = hit.mPenetrationDepth;
+
+        const JPH::BodyID bodyId = hit.mBodyID2;
+        auto it = bezel_jolt::bodyIdToRigidbodyMap.find(bodyId);
+        h.rigidbody = (it != bezel_jolt::bodyIdToRigidbodyMap.end())
+                          ? it->second
+                          : nullptr;
+
+        out.hits.push_back(h);
+    }
+    out.hitAny = !out.hits.empty();
+    return out;
+}
+
+bezel::SweepResult bezel::PhysicsWorld::sweep(
+    std::shared_ptr<bezel::PhysicsWorld> world,
+    std::shared_ptr<bezel::Collider> collider, const Position3d &startPosition,
+    const Rotation3d &startRotation, const Position3d &direction,
+    Position3d &endPosition, uint32_t ignoreBodyId) {
+    (void)world;
+
+    SweepResult out;
+    if (!collider) {
+        endPosition = startPosition + direction;
+        return out;
+    }
+
+    auto shape = collider->getJoltShape();
+    if (shape == nullptr) {
+        endPosition = startPosition + direction;
+        return out;
+    }
+
+    const float dirLen =
+        std::sqrt((direction.x * direction.x) + (direction.y * direction.y) +
+                  (direction.z * direction.z));
+
+    if (dirLen <= 0.0f) {
+        endPosition = startPosition;
+        return out;
+    }
+
+    glm::quat glmRotation = glm::normalize(startRotation.toGlmQuat());
+    JPH::Quat joltRotation(glmRotation.x, glmRotation.y, glmRotation.z,
+                           glmRotation.w);
+
+    const JPH::RVec3 joltStart(startPosition.x, startPosition.y,
+                               startPosition.z);
+    const JPH::RMat44 startWorldTransform =
+        JPH::RMat44::sRotationTranslation(joltRotation, joltStart);
+
+    const JPH::Vec3 castDirection(static_cast<float>(direction.x),
+                                  static_cast<float>(direction.y),
+                                  static_cast<float>(direction.z));
+
+    const JPH::RShapeCast cast = JPH::RShapeCast::sFromWorldTransform(
+        shape.GetPtr(), JPH::Vec3::sReplicate(1.0f), startWorldTransform,
+        castDirection);
+
+    class ClosestHitCollector final : public JPH::CastShapeCollector {
+      public:
+        bool hasHit = false;
+        JPH::ShapeCastResult best;
+
+        void AddHit(const JPH::ShapeCastResult &result) override {
+            if (!hasHit ||
+                result.GetEarlyOutFraction() < best.GetEarlyOutFraction()) {
+                hasHit = true;
+                best = result;
+                UpdateEarlyOutFraction(result.GetEarlyOutFraction());
+            }
+        }
+    };
+
+    ClosestHitCollector collector;
+    IgnoreBodyFilter bodyFilter(ignoreBodyId);
+    JPH::ShapeCastSettings settings;
+    physicsSystem.GetNarrowPhaseQuery().CastShape(
+        cast, settings, JPH::RVec3::sZero(), collector, {}, {}, bodyFilter);
+
+    endPosition = startPosition + direction;
+
+    if (!collector.hasHit) {
+        out.hitAny = false;
+        return out;
+    }
+
+    out.hitAny = true;
+
+    const float fraction = collector.best.mFraction;
+    const float dist = fraction * dirLen;
+
+    SweepHit hit;
+    hit.distance = dist;
+    hit.percentage = fraction;
+    hit.position = Position3d(collector.best.mContactPointOn2.GetX(),
+                              collector.best.mContactPointOn2.GetY(),
+                              collector.best.mContactPointOn2.GetZ());
+
+    JPH::Vec3 axis = collector.best.mPenetrationAxis;
+    if (axis.LengthSq() > 0.0f) {
+        axis = -axis.Normalized();
+    }
+    hit.normal = Normal3d(axis.GetX(), axis.GetY(), axis.GetZ());
+
+    const JPH::BodyID bodyId = collector.best.mBodyID2;
+    auto it = bezel_jolt::bodyIdToRigidbodyMap.find(bodyId);
+    hit.rigidbody =
+        (it != bezel_jolt::bodyIdToRigidbodyMap.end()) ? it->second : nullptr;
+
+    out.closest = hit;
+    out.hits.push_back(hit);
+
+    endPosition = startPosition + (direction * fraction);
+    return out;
+}
+
+bezel::SweepResult bezel::PhysicsWorld::sweepAll(
+    std::shared_ptr<bezel::PhysicsWorld> world,
+    std::shared_ptr<bezel::Collider> collider, const Position3d &startPosition,
+    const Rotation3d &startRotation, const Position3d &direction,
+    Position3d &endPosition, uint32_t ignoreBodyId) {
+    (void)world;
+
+    SweepResult out;
+    if (!collider) {
+        endPosition = startPosition + direction;
+        return out;
+    }
+
+    auto shape = collider->getJoltShape();
+    if (shape == nullptr) {
+        endPosition = startPosition + direction;
+        return out;
+    }
+
+    const float dirLen =
+        std::sqrt((direction.x * direction.x) + (direction.y * direction.y) +
+                  (direction.z * direction.z));
+    if (dirLen <= 0.0f) {
+        endPosition = startPosition;
+        return out;
+    }
+
+    glm::quat glmRotation = glm::normalize(startRotation.toGlmQuat());
+    JPH::Quat joltRotation(glmRotation.x, glmRotation.y, glmRotation.z,
+                           glmRotation.w);
+
+    const JPH::RVec3 joltStart(startPosition.x, startPosition.y,
+                               startPosition.z);
+    const JPH::RMat44 startWorldTransform =
+        JPH::RMat44::sRotationTranslation(joltRotation, joltStart);
+
+    const JPH::Vec3 castDirection(static_cast<float>(direction.x),
+                                  static_cast<float>(direction.y),
+                                  static_cast<float>(direction.z));
+
+    const JPH::RShapeCast cast = JPH::RShapeCast::sFromWorldTransform(
+        shape.GetPtr(), JPH::Vec3::sReplicate(1.0f), startWorldTransform,
+        castDirection);
+
+    class AllHitsCollector final : public JPH::CastShapeCollector {
+      public:
+        std::vector<JPH::ShapeCastResult> hits;
+
+        void AddHit(const JPH::ShapeCastResult &result) override {
+            hits.push_back(result);
+            ResetEarlyOutFraction();
+        }
+    };
+
+    AllHitsCollector collector;
+    IgnoreBodyFilter bodyFilter(ignoreBodyId);
+    JPH::ShapeCastSettings settings;
+    physicsSystem.GetNarrowPhaseQuery().CastShape(
+        cast, settings, JPH::RVec3::sZero(), collector, {}, {}, bodyFilter);
+
+    endPosition = startPosition + direction;
+
+    if (collector.hits.empty()) {
+        out.hitAny = false;
+        return out;
+    }
+
+    out.hitAny = true;
+    out.hits.reserve(collector.hits.size());
+
+    float bestDist = std::numeric_limits<float>::max();
+    SweepHit best{};
+    bool hasBest = false;
+
+    for (const auto &h : collector.hits) {
+        const float fraction = h.mFraction;
+        const float dist = fraction * dirLen;
+
+        SweepHit hit;
+        hit.distance = dist;
+        hit.percentage = fraction;
+        hit.position =
+            Position3d(h.mContactPointOn2.GetX(), h.mContactPointOn2.GetY(),
+                       h.mContactPointOn2.GetZ());
+
+        JPH::Vec3 axis = h.mPenetrationAxis;
+        if (axis.LengthSq() > 0.0f) {
+            axis = -axis.Normalized();
+        }
+        hit.normal = Normal3d(axis.GetX(), axis.GetY(), axis.GetZ());
+
+        const JPH::BodyID bodyId = h.mBodyID2;
+        auto it = bezel_jolt::bodyIdToRigidbodyMap.find(bodyId);
+        hit.rigidbody = (it != bezel_jolt::bodyIdToRigidbodyMap.end())
+                            ? it->second
+                            : nullptr;
+
+        out.hits.push_back(hit);
+
+        if (dist < bestDist) {
+            bestDist = dist;
+            best = hit;
+            hasBest = true;
+        }
+    }
+
+    if (hasBest) {
+        out.closest = best;
+        endPosition = startPosition + (direction * best.percentage);
     }
 
     return out;

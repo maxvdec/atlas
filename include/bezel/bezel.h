@@ -133,6 +133,32 @@ struct RaycastResult {
     RaycastHit hit;
 };
 
+struct OverlapHit {
+    Position3d contactPoint = {0.0f, 0.0f, 0.0f};
+    Point3d penetrationAxis = {0.0f, 0.0f, 0.0f};
+    float penetrationDepth = 0.0f;
+    bezel::Rigidbody *rigidbody = nullptr;
+};
+
+struct OverlapResult {
+    std::vector<OverlapHit> hits;
+    bool hitAny = false;
+};
+
+struct SweepHit {
+    bezel::Rigidbody *rigidbody = nullptr;
+    float distance = 0.0f;
+    float percentage = 0.0f;
+    Position3d position = {0.0f, 0.0f, 0.0f};
+    Normal3d normal = {0.0f, 0.0f, 0.0f};
+};
+
+struct SweepResult {
+    std::vector<SweepHit> hits;
+    SweepHit closest;
+    bool hitAny = false;
+};
+
 struct Rigidbody {
     Position3d position;
     Rotation3d rotation;
@@ -167,6 +193,22 @@ struct Rigidbody {
     RaycastResult raycastAll(const Position3d &direction, float maxDistance,
                              std::shared_ptr<PhysicsWorld> world,
                              uint32_t ignoreBodyId = INVALID_JOLT_ID);
+
+    OverlapResult overlap(std::shared_ptr<PhysicsWorld> world,
+                          std::shared_ptr<Collider> collider,
+                          const Position3d &position,
+                          const Rotation3d &rotation,
+                          uint32_t ignoreBodyId = INVALID_JOLT_ID);
+
+    SweepResult sweep(std::shared_ptr<PhysicsWorld> world,
+                      std::shared_ptr<Collider> collider,
+                      const Position3d &direction, Position3d &endPosition,
+                      uint32_t ignoreBodyId = INVALID_JOLT_ID);
+
+    SweepResult sweepAll(std::shared_ptr<PhysicsWorld> world,
+                         std::shared_ptr<Collider> collider,
+                         const Position3d &direction, Position3d &endPosition,
+                         uint32_t ignoreBodyId = INVALID_JOLT_ID);
 
     std::shared_ptr<Collider> collider;
 
@@ -212,6 +254,26 @@ class PhysicsWorld {
     RaycastResult raycastAll(const Position3d &origin,
                              const Position3d &direction, float maxDistance,
                              uint32_t ignoreBodyId = INVALID_JOLT_ID);
+
+    OverlapResult overlap(std::shared_ptr<PhysicsWorld> world,
+                          std::shared_ptr<Collider> collider,
+                          const Position3d &position,
+                          const Rotation3d &rotation,
+                          uint32_t ignoreBodyId = INVALID_JOLT_ID);
+
+    SweepResult sweep(std::shared_ptr<PhysicsWorld> world,
+                      std::shared_ptr<Collider> collider,
+                      const Position3d &startPosition,
+                      const Rotation3d &startRotation,
+                      const Position3d &direction, Position3d &endPosition,
+                      uint32_t ignoreBodyId = INVALID_JOLT_ID);
+
+    SweepResult sweepAll(std::shared_ptr<PhysicsWorld> world,
+                         std::shared_ptr<Collider> collider,
+                         const Position3d &startPosition,
+                         const Rotation3d &startRotation,
+                         const Position3d &direction, Position3d &endPosition,
+                         uint32_t ignoreBodyId = INVALID_JOLT_ID);
 
     void addBody(std::shared_ptr<bezel::Rigidbody> body);
 

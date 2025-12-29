@@ -17,6 +17,77 @@
 #include <vector>
 #include <iostream>
 
+namespace {
+
+OverlapResult convertOverlapResult(const bezel::OverlapResult &in) {
+    OverlapResult out;
+    out.hitAny = in.hitAny;
+    out.hits.reserve(in.hits.size());
+
+    for (const auto &hit : in.hits) {
+        OverlapHit h;
+        h.contactPoint = hit.contactPoint;
+        h.penetrationAxis = hit.penetrationAxis;
+        h.penetrationDepth = hit.penetrationDepth;
+        h.rigidbody = hit.rigidbody;
+
+        GameObject *hitObject = nullptr;
+        if (hit.rigidbody) {
+            auto it = atlas::gameObjects.find((int)hit.rigidbody->id.atlasId);
+            if (it != atlas::gameObjects.end()) {
+                hitObject = it->second;
+            }
+        }
+        h.object = hitObject;
+        out.hits.push_back(h);
+    }
+
+    return out;
+}
+
+SweepResult convertSweepResult(const bezel::SweepResult &in,
+                               const Position3d &endPosition) {
+    SweepResult out;
+    out.hitAny = in.hitAny;
+    out.endPosition = endPosition;
+    out.hits.reserve(in.hits.size());
+
+    auto convertHit = [](const bezel::SweepHit &hit) {
+        SweepHit h;
+        h.position = hit.position;
+        h.normal = hit.normal;
+        h.distance = hit.distance;
+        h.percentage = hit.percentage;
+        h.rigidbody = hit.rigidbody;
+        GameObject *hitObject = nullptr;
+        if (hit.rigidbody) {
+            auto it = atlas::gameObjects.find((int)hit.rigidbody->id.atlasId);
+            if (it != atlas::gameObjects.end()) {
+                hitObject = it->second;
+            }
+        }
+        h.object = hitObject;
+        return h;
+    };
+
+    for (const auto &hit : in.hits) {
+        out.hits.push_back(convertHit(hit));
+    }
+
+    if (in.hitAny) {
+        out.closest = convertHit(in.closest);
+    }
+
+    return out;
+}
+
+bool ensureBodyAndWorld(Rigidbody *rb) {
+    return rb && rb->object && rb->body && Window::mainWindow &&
+           Window::mainWindow->physicsWorld;
+}
+
+} // namespace
+
 void Rigidbody::atAttach() {
     if (!body) {
         body = std::make_shared<bezel::Rigidbody>();
@@ -589,5 +660,377 @@ void Rigidbody::raycastTaggedAll(const std::vector<std::string> &tags,
         object->onQueryRecieve(result);
     } else {
         atlas_warning("Rigidbody raycast result has no associated GameObject.");
+    }
+}
+
+void Rigidbody::overlapCapsule(float radius, float height) {
+    if (!ensureBodyAndWorld(this)) {
+        return;
+    }
+
+    overlapCapsuleWorld(object->getPosition(), radius, height);
+}
+
+void Rigidbody::overlapBox(const Position3d &extents) {
+    if (!ensureBodyAndWorld(this)) {
+        return;
+    }
+
+    overlapBoxWorld(object->getPosition(), extents);
+}
+
+void Rigidbody::overlapSphere(float radius) {
+    if (!ensureBodyAndWorld(this)) {
+        return;
+    }
+
+    overlapSphereWorld(object->getPosition(), radius);
+}
+
+void Rigidbody::overlap() {
+    if (!ensureBodyAndWorld(this)) {
+        return;
+    }
+
+    if (!body->collider) {
+        atlas_warning("Rigidbody overlap() called with no collider set.");
+        return;
+    }
+
+    QueryResult result;
+    result.operation = QueryOperation::Overlap;
+
+    const Position3d pos = object->getPosition();
+    const Rotation3d rot = object->getRotation();
+
+    const bezel::OverlapResult overlapResult = body->overlap(
+        Window::mainWindow->physicsWorld, body->collider, pos, rot);
+
+    result.overlapResult = convertOverlapResult(overlapResult);
+
+    if (object) {
+        object->onQueryRecieve(result);
+    }
+}
+
+void Rigidbody::overlapCapsuleWorld(const Position3d &position, float radius,
+                                    float height) {
+    if (!ensureBodyAndWorld(this)) {
+        return;
+    }
+
+    QueryResult result;
+    result.operation = QueryOperation::Overlap;
+
+    auto collider = std::make_shared<bezel::CapsuleCollider>(radius, height);
+    const Rotation3d rot = object ? object->getRotation() : Rotation3d{};
+    const bezel::OverlapResult overlapResult = body->overlap(
+        Window::mainWindow->physicsWorld, collider, position, rot);
+
+    result.overlapResult = convertOverlapResult(overlapResult);
+
+    if (object) {
+        object->onQueryRecieve(result);
+    }
+}
+
+void Rigidbody::overlapBoxWorld(const Position3d &position,
+                                const Position3d &extents) {
+    if (!ensureBodyAndWorld(this)) {
+        return;
+    }
+
+    QueryResult result;
+    result.operation = QueryOperation::Overlap;
+
+    auto collider = std::make_shared<bezel::BoxCollider>(extents / 2.0);
+    const Rotation3d rot = object ? object->getRotation() : Rotation3d{};
+    const bezel::OverlapResult overlapResult = body->overlap(
+        Window::mainWindow->physicsWorld, collider, position, rot);
+
+    result.overlapResult = convertOverlapResult(overlapResult);
+
+    if (object) {
+        object->onQueryRecieve(result);
+    }
+}
+
+void Rigidbody::overlapSphereWorld(const Position3d &position, float radius) {
+    if (!ensureBodyAndWorld(this)) {
+        return;
+    }
+
+    QueryResult result;
+    result.operation = QueryOperation::Overlap;
+
+    auto collider = std::make_shared<bezel::SphereCollider>(radius);
+    const Rotation3d rot = object ? object->getRotation() : Rotation3d{};
+    const bezel::OverlapResult overlapResult = body->overlap(
+        Window::mainWindow->physicsWorld, collider, position, rot);
+
+    result.overlapResult = convertOverlapResult(overlapResult);
+
+    if (object) {
+        object->onQueryRecieve(result);
+    }
+}
+
+void Rigidbody::predictMovementCapsule(const Position3d &endPosition,
+                                       float radius, float height) {
+    if (!ensureBodyAndWorld(this)) {
+        return;
+    }
+    predictMovementCapsuleWorld(object->getPosition(), endPosition, radius,
+                                height);
+}
+
+void Rigidbody::predictMovementBox(const Position3d &endPosition,
+                                   const Position3d &extents) {
+    if (!ensureBodyAndWorld(this)) {
+        return;
+    }
+    predictMovementBoxWorld(object->getPosition(), endPosition, extents);
+}
+
+void Rigidbody::predictMovementSphere(const Position3d &endPosition,
+                                      float radius) {
+    if (!ensureBodyAndWorld(this)) {
+        return;
+    }
+    predictMovementSphereWorld(object->getPosition(), endPosition, radius);
+}
+
+void Rigidbody::predictMovement(const Position3d &endPosition) {
+    if (!ensureBodyAndWorld(this)) {
+        return;
+    }
+
+    if (!body->collider) {
+        atlas_warning(
+            "Rigidbody predictMovement() called with no collider set.");
+        return;
+    }
+
+    const Position3d startPosition = object->getPosition();
+    const Position3d direction = endPosition - startPosition;
+    Position3d actualEnd = endPosition;
+
+    QueryResult result;
+    result.operation = QueryOperation::Movement;
+
+    const bezel::SweepResult sweepResult = body->sweep(
+        Window::mainWindow->physicsWorld, body->collider, direction, actualEnd);
+    result.sweepResult = convertSweepResult(sweepResult, actualEnd);
+
+    if (object) {
+        object->onQueryRecieve(result);
+    }
+}
+
+void Rigidbody::predictMovementCapsuleAll(const Position3d &endPosition,
+                                          float radius, float height) {
+    if (!ensureBodyAndWorld(this)) {
+        return;
+    }
+    predictMovementCapsuleWorldAll(object->getPosition(), endPosition, radius,
+                                   height);
+}
+
+void Rigidbody::predictMovementBoxAll(const Position3d &endPosition,
+                                      const Position3d &extents) {
+    if (!ensureBodyAndWorld(this)) {
+        return;
+    }
+    predictMovementBoxWorldAll(object->getPosition(), endPosition, extents);
+}
+
+void Rigidbody::predictMovementSphereAll(const Position3d &endPosition,
+                                         float radius) {
+    if (!ensureBodyAndWorld(this)) {
+        return;
+    }
+    predictMovementSphereWorldAll(object->getPosition(), endPosition, radius);
+}
+
+void Rigidbody::predictMovementAll(const Position3d &endPosition) {
+    if (!ensureBodyAndWorld(this)) {
+        return;
+    }
+
+    if (!body->collider) {
+        atlas_warning(
+            "Rigidbody predictMovementAll() called with no collider set.");
+        return;
+    }
+
+    const Position3d startPosition = object->getPosition();
+    const Position3d direction = endPosition - startPosition;
+    Position3d actualEnd = endPosition;
+
+    QueryResult result;
+    result.operation = QueryOperation::MovementAll;
+
+    const bezel::SweepResult sweepResult = body->sweepAll(
+        Window::mainWindow->physicsWorld, body->collider, direction, actualEnd);
+    result.sweepResult = convertSweepResult(sweepResult, actualEnd);
+
+    if (object) {
+        object->onQueryRecieve(result);
+    }
+}
+
+void Rigidbody::predictMovementCapsuleWorld(const Position3d &startPosition,
+                                            const Position3d &endPosition,
+                                            float radius, float height) {
+    if (!ensureBodyAndWorld(this)) {
+        return;
+    }
+
+    QueryResult result;
+    result.operation = QueryOperation::Movement;
+
+    auto collider = std::make_shared<bezel::CapsuleCollider>(radius, height);
+    const Position3d direction = endPosition - startPosition;
+    Position3d actualEnd = endPosition;
+
+    const bezel::SweepResult sweepResult =
+        Window::mainWindow->physicsWorld->sweep(
+            Window::mainWindow->physicsWorld, collider, startPosition,
+            object ? object->getRotation() : Rotation3d{}, direction, actualEnd,
+            body ? body->id.joltId : bezel::INVALID_JOLT_ID);
+
+    result.sweepResult = convertSweepResult(sweepResult, actualEnd);
+    if (object) {
+        object->onQueryRecieve(result);
+    }
+}
+
+void Rigidbody::predictMovementBoxWorld(const Position3d &startPosition,
+                                        const Position3d &endPosition,
+                                        const Position3d &extents) {
+    if (!ensureBodyAndWorld(this)) {
+        return;
+    }
+
+    QueryResult result;
+    result.operation = QueryOperation::Movement;
+
+    auto collider = std::make_shared<bezel::BoxCollider>(extents / 2.0);
+    const Position3d direction = endPosition - startPosition;
+    Position3d actualEnd = endPosition;
+
+    const bezel::SweepResult sweepResult =
+        Window::mainWindow->physicsWorld->sweep(
+            Window::mainWindow->physicsWorld, collider, startPosition,
+            object ? object->getRotation() : Rotation3d{}, direction, actualEnd,
+            body ? body->id.joltId : bezel::INVALID_JOLT_ID);
+
+    result.sweepResult = convertSweepResult(sweepResult, actualEnd);
+    if (object) {
+        object->onQueryRecieve(result);
+    }
+}
+
+void Rigidbody::predictMovementSphereWorld(const Position3d &startPosition,
+                                           const Position3d &endPosition,
+                                           float radius) {
+    if (!ensureBodyAndWorld(this)) {
+        return;
+    }
+
+    QueryResult result;
+    result.operation = QueryOperation::Movement;
+
+    auto collider = std::make_shared<bezel::SphereCollider>(radius);
+    const Position3d direction = endPosition - startPosition;
+    Position3d actualEnd = endPosition;
+
+    const bezel::SweepResult sweepResult =
+        Window::mainWindow->physicsWorld->sweep(
+            Window::mainWindow->physicsWorld, collider, startPosition,
+            object ? object->getRotation() : Rotation3d{}, direction, actualEnd,
+            body ? body->id.joltId : bezel::INVALID_JOLT_ID);
+
+    result.sweepResult = convertSweepResult(sweepResult, actualEnd);
+    if (object) {
+        object->onQueryRecieve(result);
+    }
+}
+
+void Rigidbody::predictMovementCapsuleWorldAll(const Position3d &startPosition,
+                                               const Position3d &endPosition,
+                                               float radius, float height) {
+    if (!ensureBodyAndWorld(this)) {
+        return;
+    }
+
+    QueryResult result;
+    result.operation = QueryOperation::MovementAll;
+
+    auto collider = std::make_shared<bezel::CapsuleCollider>(radius, height);
+    const Position3d direction = endPosition - startPosition;
+    Position3d actualEnd = endPosition;
+
+    const bezel::SweepResult sweepResult =
+        Window::mainWindow->physicsWorld->sweepAll(
+            Window::mainWindow->physicsWorld, collider, startPosition,
+            object ? object->getRotation() : Rotation3d{}, direction, actualEnd,
+            body ? body->id.joltId : bezel::INVALID_JOLT_ID);
+
+    result.sweepResult = convertSweepResult(sweepResult, actualEnd);
+    if (object) {
+        object->onQueryRecieve(result);
+    }
+}
+
+void Rigidbody::predictMovementBoxWorldAll(const Position3d &startPosition,
+                                           const Position3d &endPosition,
+                                           const Position3d &extents) {
+    if (!ensureBodyAndWorld(this)) {
+        return;
+    }
+
+    QueryResult result;
+    result.operation = QueryOperation::MovementAll;
+
+    auto collider = std::make_shared<bezel::BoxCollider>(extents / 2.0);
+    const Position3d direction = endPosition - startPosition;
+    Position3d actualEnd = endPosition;
+
+    const bezel::SweepResult sweepResult =
+        Window::mainWindow->physicsWorld->sweepAll(
+            Window::mainWindow->physicsWorld, collider, startPosition,
+            object ? object->getRotation() : Rotation3d{}, direction, actualEnd,
+            body ? body->id.joltId : bezel::INVALID_JOLT_ID);
+
+    result.sweepResult = convertSweepResult(sweepResult, actualEnd);
+    if (object) {
+        object->onQueryRecieve(result);
+    }
+}
+
+void Rigidbody::predictMovementSphereWorldAll(const Position3d &startPosition,
+                                              const Position3d &endPosition,
+                                              float radius) {
+    if (!ensureBodyAndWorld(this)) {
+        return;
+    }
+
+    QueryResult result;
+    result.operation = QueryOperation::MovementAll;
+
+    auto collider = std::make_shared<bezel::SphereCollider>(radius);
+    const Position3d direction = endPosition - startPosition;
+    Position3d actualEnd = endPosition;
+
+    const bezel::SweepResult sweepResult =
+        Window::mainWindow->physicsWorld->sweepAll(
+            Window::mainWindow->physicsWorld, collider, startPosition,
+            object ? object->getRotation() : Rotation3d{}, direction, actualEnd,
+            body ? body->id.joltId : bezel::INVALID_JOLT_ID);
+
+    result.sweepResult = convertSweepResult(sweepResult, actualEnd);
+    if (object) {
+        object->onQueryRecieve(result);
     }
 }
