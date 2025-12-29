@@ -164,6 +164,9 @@ struct Rigidbody {
     Rotation3d rotation;
     glm::quat rotationQuat = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 
+    bool isSensor = false;
+    std::string sensorSignal;
+
     float mass = 0.0f;
     float friction = 0.5f;
     float restitution = 0.0f;

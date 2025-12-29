@@ -119,17 +119,15 @@ class BallBehavior : public Component {
                   << std::endl;
     }
     void update(float) override { object->rigidbody->overlapSphere(2.0f); }
-    void onQueryRecieve(QueryResult &result) override {
-        if (result.operation == QueryOperation::Overlap &&
-            result.overlapResult.hitAny) {
-            std::cout << "Ball overlap detected "
-                      << result.overlapResult.hits.size() << " hits."
-                      << std::endl;
-        }
-    }
+    void onQueryRecieve(QueryResult &result) override {}
     void onCollisionExit(GameObject *other) override {
         std::cout << "Ball ended collision with object ID: " << other->getId()
                   << std::endl;
+    }
+    void onSignalRecieve(const std::string &signal,
+                         GameObject *sender) override {
+        std::cout << "Received sensor signal: " << signal
+                  << " from object ID: " << sender->getId() << std::endl;
     }
 };
 
@@ -228,6 +226,15 @@ class MainScene : public Scene {
         ball.rigidbody->addLinearVelocity(Position3d{1.0f, 0.0f, 1.0f});
         ball.addComponent(BallBehavior());
         window.addObject(&ball);
+
+        ball2 = createBox({4.0, 4.0, 1.0});
+        ball2.move({2.0f, 0.0f, 0.0f});
+        ball2.addComponent(Sensor());
+        ball2.rigidbody->addBoxCollider({4.0f, 4.0f, 1.f});
+        ball2.rigidbody->setMotionType(MotionType::Static);
+        ball2.rigidbody->sendSignal = "BallSensorSignal";
+        ball2.material.albedo = Color(0.8f, 0.3f, 0.3f, 0.5f);
+        window.addObject(&ball2);
 
         window.useDeferredRendering();
         atmosphere.enable();

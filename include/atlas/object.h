@@ -600,6 +600,20 @@ class CoreObject : public GameObject {
         }
     }
 
+    void onSignalRecieve([[maybe_unused]] const std::string &signal,
+                         [[maybe_unused]] GameObject *sender) override {
+        for (auto &component : components) {
+            component->onSignalRecieve(signal, sender);
+        }
+    }
+
+    void onSignalEnd([[maybe_unused]] const std::string &signal,
+                     [[maybe_unused]] GameObject *sender) override {
+        for (auto &component : components) {
+            component->onSignalEnd(signal, sender);
+        }
+    }
+
     void beforePhysics() override {
         for (auto &component : components) {
             component->beforePhysics();

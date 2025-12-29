@@ -14,6 +14,7 @@
 #include <cstddef>
 #include <atlas/tracer/log.h>
 #include <iostream>
+#include <string>
 
 PairKey::PairKey(JPH::BodyID b1, JPH::BodyID b2) {
     if (b1.GetIndexAndSequenceNumber() < b2.GetIndexAndSequenceNumber()) {
@@ -39,6 +40,18 @@ size_t PairKeyHash::operator()(const PairKey &k) const noexcept {
 void GlobalContactListener::OnContactAdded(
     const JPH::Body &inBody1, const JPH::Body &inBody2,
     const JPH::ContactManifold &inManifold, JPH::ContactSettings &ioSettings) {
+    (void)inManifold;
+    (void)ioSettings;
+    if (inBody1.IsSensor() && inBody2.IsSensor()) {
+        return;
+    }
+    if (inBody1.IsSensor() || inBody2.IsSensor()) {
+        PairKey key(inBody1.GetID(), inBody2.GetID());
+        if (activePairs.insert(key).second) {
+            queueSignalEnter(inBody1.GetID(), inBody2.GetID());
+        }
+        return;
+    }
     PairKey key(inBody1.GetID(), inBody2.GetID());
 
     if (activePairs.insert(key).second) {
@@ -49,7 +62,22 @@ void GlobalContactListener::OnContactAdded(
 void GlobalContactListener::OnContactPersisted(
     const JPH::Body &inBody1, const JPH::Body &inBody2,
     const JPH::ContactManifold &inManifold, JPH::ContactSettings &ioSettings) {
+    (void)inManifold;
+    (void)ioSettings;
     PairKey key(inBody1.GetID(), inBody2.GetID());
+
+    // Sensors can sometimes only show up as persisted contacts depending on
+    // how the broadphase/narrowphase updates; handle them consistently.
+    if (inBody1.IsSensor() && inBody2.IsSensor()) {
+        return;
+    }
+    if (inBody1.IsSensor() || inBody2.IsSensor()) {
+        if (activePairs.find(key) == activePairs.end()) {
+            activePairs.insert(key);
+            queueSignalEnter(inBody1.GetID(), inBody2.GetID());
+        }
+        return;
+    }
 
     if (activePairs.find(key) == activePairs.end()) {
         activePairs.insert(key);
@@ -59,13 +87,43 @@ void GlobalContactListener::OnContactPersisted(
 
 void GlobalContactListener::OnContactRemoved(
     const JPH::SubShapeIDPair &inSubShapePair) {
+
     PairKey key(inSubShapePair.GetBody1ID(), inSubShapePair.GetBody2ID());
 
+    // Don't lock bodies here: OnContactRemoved can be called from within the
+    // physics update and taking locks can stall/hang.
+    const JPH::BodyID body1 = inSubShapePair.GetBody1ID();
+    const JPH::BodyID body2 = inSubShapePair.GetBody2ID();
+
+    const auto itRb1 = bodyIdToRigidbodyMap.find(body1);
+    const auto itRb2 = bodyIdToRigidbodyMap.find(body2);
+    const bool body1IsSensor = (itRb1 != bodyIdToRigidbodyMap.end() &&
+                                itRb1->second && itRb1->second->isSensor);
+    const bool body2IsSensor = (itRb2 != bodyIdToRigidbodyMap.end() &&
+                                itRb2->second && itRb2->second->isSensor);
+
     auto it = activePairs.find(key);
-    if (it != activePairs.end()) {
-        activePairs.erase(it);
-        queueExit(inSubShapePair.GetBody1ID(), inSubShapePair.GetBody2ID());
+    if (it == activePairs.end()) {
+        return;
     }
+
+    activePairs.erase(it);
+
+    if (body1IsSensor || body2IsSensor) {
+        queueSignalExit(body1, body2);
+    } else {
+        queueExit(body1, body2);
+    }
+}
+
+void GlobalContactListener::queueSignalEnter(const JPH::BodyID &inBody1,
+                                             const JPH::BodyID &inBody2) {
+    signalEnterEvents.emplace_back(inBody1, inBody2);
+}
+
+void GlobalContactListener::queueSignalExit(const JPH::BodyID &inBody1,
+                                            const JPH::BodyID &inBody2) {
+    signalExitEvents.emplace_back(inBody1, inBody2);
 }
 
 void GlobalContactListener::dispatchEvents() {
@@ -75,8 +133,20 @@ void GlobalContactListener::dispatchEvents() {
     for (auto &exitPair : collisionExitEvents) {
         fireOnCollisionExit(exitPair.first, exitPair.second);
     }
+    for (auto &persistPair : collisionPersistEvents) {
+        fireOnCollisionPersist(persistPair.first, persistPair.second);
+    }
+    for (auto &signalEnterPair : signalEnterEvents) {
+        fireOnSignalEnter(signalEnterPair.first, signalEnterPair.second);
+    }
+    for (auto &signalExitPair : signalExitEvents) {
+        fireOnSignalExit(signalExitPair.first, signalExitPair.second);
+    }
     collisionEnterEvents.clear();
     collisionExitEvents.clear();
+    collisionPersistEvents.clear();
+    signalEnterEvents.clear();
+    signalExitEvents.clear();
 }
 
 void GlobalContactListener::queueEnter(const JPH::BodyID &inBody1,
@@ -115,6 +185,92 @@ void GlobalContactListener::fireOnCollisionEnter(const JPH::BodyID &inBody1,
         if (object1 && object2) {
             object1->onCollisionEnter(object2);
             object2->onCollisionEnter(object1);
+        } else {
+            atlas_error(
+                "One of the objects involved in collision enter is null.");
+        }
+    } else {
+        atlas_error("One of the rigidbodies involved in collision enter is not "
+                    "registered in the bodyIdToRigidbodyMap.");
+    }
+}
+
+void GlobalContactListener::fireOnSignalEnter(const JPH::BodyID &inBody1,
+                                              const JPH::BodyID &inBody2) {
+    auto it1 = bodyIdToRigidbodyMap.find(inBody1);
+    auto it2 = bodyIdToRigidbodyMap.find(inBody2);
+
+    if (it1 != bodyIdToRigidbodyMap.end() &&
+        it2 != bodyIdToRigidbodyMap.end()) {
+        bezel::Rigidbody *rigidbody1 = it1->second;
+        bezel::Rigidbody *rigidbody2 = it2->second;
+
+        std::string event;
+        if (rigidbody1->isSensor) {
+            event = rigidbody1->sensorSignal;
+        } else if (rigidbody2->isSensor) {
+            event = rigidbody2->sensorSignal;
+        } else {
+            return;
+        }
+
+        auto objIt1 = atlas::gameObjects.find((int)rigidbody1->id.atlasId);
+        auto objIt2 = atlas::gameObjects.find((int)rigidbody2->id.atlasId);
+
+        GameObject *object1 =
+            (objIt1 != atlas::gameObjects.end()) ? objIt1->second : nullptr;
+        GameObject *object2 =
+            (objIt2 != atlas::gameObjects.end()) ? objIt2->second : nullptr;
+
+        if (object1 && object2) {
+            if (rigidbody1->isSensor) {
+                object2->onSignalRecieve(event, object1);
+            } else if (rigidbody2->isSensor) {
+                object1->onSignalRecieve(event, object2);
+            }
+        } else {
+            atlas_error(
+                "One of the objects involved in collision enter is null.");
+        }
+    } else {
+        atlas_error("One of the rigidbodies involved in collision enter is not "
+                    "registered in the bodyIdToRigidbodyMap.");
+    }
+}
+
+void GlobalContactListener::fireOnSignalExit(const JPH::BodyID &inBody1,
+                                             const JPH::BodyID &inBody2) {
+    auto it1 = bodyIdToRigidbodyMap.find(inBody1);
+    auto it2 = bodyIdToRigidbodyMap.find(inBody2);
+
+    if (it1 != bodyIdToRigidbodyMap.end() &&
+        it2 != bodyIdToRigidbodyMap.end()) {
+        bezel::Rigidbody *rigidbody1 = it1->second;
+        bezel::Rigidbody *rigidbody2 = it2->second;
+
+        std::string event;
+        if (rigidbody1->isSensor) {
+            event = rigidbody1->sensorSignal;
+        } else if (rigidbody2->isSensor) {
+            event = rigidbody2->sensorSignal;
+        } else {
+            return;
+        }
+
+        auto objIt1 = atlas::gameObjects.find((int)rigidbody1->id.atlasId);
+        auto objIt2 = atlas::gameObjects.find((int)rigidbody2->id.atlasId);
+
+        GameObject *object1 =
+            (objIt1 != atlas::gameObjects.end()) ? objIt1->second : nullptr;
+        GameObject *object2 =
+            (objIt2 != atlas::gameObjects.end()) ? objIt2->second : nullptr;
+
+        if (object1 && object2) {
+            if (rigidbody1->isSensor) {
+                object2->onSignalEnd(event, object1);
+            } else if (rigidbody2->isSensor) {
+                object1->onSignalEnd(event, object2);
+            }
         } else {
             atlas_error(
                 "One of the objects involved in collision enter is null.");
@@ -195,6 +351,7 @@ void JoltCollisionDispatcher::setup(bezel::PhysicsWorld *world) {
 }
 
 void JoltCollisionDispatcher::update(bezel::PhysicsWorld *world) {
+    (void)world;
     contactListener->dispatchEvents();
 }
 

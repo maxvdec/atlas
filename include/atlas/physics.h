@@ -82,9 +82,11 @@ struct QueryResult {
     SweepResult sweepResult;
 };
 
-class Rigidbody final : public Component {
+class Rigidbody : public Component {
   public:
     std::shared_ptr<bezel::Rigidbody> body;
+    std::string sendSignal;
+    bool isSensor = false;
 
     void atAttach() override;
     void init() override;
@@ -176,6 +178,13 @@ class Rigidbody final : public Component {
 
     void setMotionType(MotionType motionType);
     Rigidbody() = default;
+};
+
+class Sensor final : public Rigidbody {
+  public:
+    Sensor() { Rigidbody::isSensor = true; }
+
+    void setSignal(const std::string &signal) { sendSignal = signal; }
 };
 
 #endif // ATLAS_PHYSICS_H

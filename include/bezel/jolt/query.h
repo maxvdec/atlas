@@ -59,6 +59,10 @@ class GlobalContactListener final : public JPH::ContactListener {
     void queueEnter(const JPH::BodyID &inBody1, const JPH::BodyID &inBody2);
     void queueExit(const JPH::BodyID &inBody1, const JPH::BodyID &inBody2);
     void queuePersist(const JPH::BodyID &inBody1, const JPH::BodyID &inBody2);
+    void queueSignalEnter(const JPH::BodyID &inBody1,
+                          const JPH::BodyID &inBody2);
+    void queueSignalExit(const JPH::BodyID &inBody1,
+                         const JPH::BodyID &inBody2);
 
     void fireOnCollisionEnter(const JPH::BodyID &inBody1,
                               const JPH::BodyID &inBody2);
@@ -66,6 +70,10 @@ class GlobalContactListener final : public JPH::ContactListener {
                              const JPH::BodyID &inBody2);
     void fireOnCollisionPersist(const JPH::BodyID &inBody1,
                                 const JPH::BodyID &inBody2);
+    void fireOnSignalEnter(const JPH::BodyID &inBody1,
+                           const JPH::BodyID &inBody2);
+    void fireOnSignalExit(const JPH::BodyID &inBody1,
+                          const JPH::BodyID &inBody2);
 
     JPH::PhysicsSystem &physicsSystem;
 
@@ -74,6 +82,8 @@ class GlobalContactListener final : public JPH::ContactListener {
     std::vector<std::pair<JPH::BodyID, JPH::BodyID>> collisionEnterEvents;
     std::vector<std::pair<JPH::BodyID, JPH::BodyID>> collisionExitEvents;
     std::vector<std::pair<JPH::BodyID, JPH::BodyID>> collisionPersistEvents;
+    std::vector<std::pair<JPH::BodyID, JPH::BodyID>> signalEnterEvents;
+    std::vector<std::pair<JPH::BodyID, JPH::BodyID>> signalExitEvents;
 };
 
 class JoltCollisionDispatcher : public bezel::CollisionDispatcher {

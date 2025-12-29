@@ -109,6 +109,8 @@ void Rigidbody::init() {
     if (body && Window::mainWindow && Window::mainWindow->physicsWorld) {
         body->position = object->getPosition();
         body->rotation = object->getRotation();
+        body->isSensor = isSensor;
+        body->sensorSignal = sendSignal;
         body->create(Window::mainWindow->physicsWorld);
     } else {
         if (!body) {

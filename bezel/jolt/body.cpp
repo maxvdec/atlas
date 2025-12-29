@@ -50,14 +50,25 @@ void bezel::Rigidbody::create(std::shared_ptr<bezel::PhysicsWorld> world) {
         break;
     }
 
+    // Choose the object layer based on motion type + sensor status.
+    // This must match the filters in `bezel/jolt/world.cpp`.
+    JPH::ObjectLayer objectLayer = bezel::jolt::layers::MOVING;
+    if (isSensor) {
+        objectLayer = bezel::jolt::layers::SENSOR;
+    } else if (joltMotionType == JPH::EMotionType::Static) {
+        objectLayer = bezel::jolt::layers::NON_MOVING;
+    } else {
+        objectLayer = bezel::jolt::layers::MOVING;
+    }
+
     JPH::BodyCreationSettings bodySettings(shape, joltPosition, joltRotation,
-                                           joltMotionType,
-                                           bezel::jolt::layers::MOVING);
+                                           joltMotionType, objectLayer);
 
     bodySettings.mFriction = friction;
     bodySettings.mRestitution = restitution;
     bodySettings.mLinearDamping = linearDamping;
     bodySettings.mAngularDamping = angularDamping;
+    bodySettings.mIsSensor = isSensor;
     if (mass > 0.0f) {
         bodySettings.mOverrideMassProperties =
             JPH::EOverrideMassProperties::CalculateInertia;

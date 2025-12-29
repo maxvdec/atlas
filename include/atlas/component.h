@@ -95,6 +95,10 @@ class Component {
     virtual void onCollisionEnter([[maybe_unused]] GameObject *other) {}
     virtual void onCollisionExit([[maybe_unused]] GameObject *other) {}
     virtual void onCollisionStay([[maybe_unused]] GameObject *other) {}
+    virtual void onSignalRecieve([[maybe_unused]] const std::string &signal,
+                                 [[maybe_unused]] GameObject *sender) {}
+    virtual void onSignalEnd([[maybe_unused]] const std::string &signal,
+                             [[maybe_unused]] GameObject *sender) {}
 
     virtual void onQueryRecieve([[maybe_unused]] QueryResult &result) {}
 
@@ -296,6 +300,11 @@ class GameObject : public Renderable {
     virtual void onCollisionEnter([[maybe_unused]] GameObject *other) {}
     virtual void onCollisionExit([[maybe_unused]] GameObject *other) {}
     virtual void onCollisionStay([[maybe_unused]] GameObject *other) {}
+
+    virtual void onSignalRecieve([[maybe_unused]] const std::string &signal,
+                                 [[maybe_unused]] GameObject *sender) {}
+    virtual void onSignalEnd([[maybe_unused]] const std::string &signal,
+                             [[maybe_unused]] GameObject *sender) {}
 
     virtual void onQueryRecieve([[maybe_unused]] QueryResult &result) {}
 
