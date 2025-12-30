@@ -201,7 +201,7 @@ class Joint {
 
     JPH::Constraint *joint = nullptr;
 
-    Space space = Space::Local;
+    Space space = Space::Global;
 
     Position3d anchor = Position3d::invalid();
 
@@ -327,7 +327,13 @@ class PhysicsWorld {
 #ifndef BEZEL_NATIVE
 
     JPH::PhysicsSystem physicsSystem;
-    std::vector<Joint *> joints;
+    struct BreakableConstraint {
+        JPH::Ref<JPH::Constraint> constraint;
+        float breakForce = 0.0f;
+        float breakTorque = 0.0f;
+    };
+
+    std::vector<BreakableConstraint> breakableConstraints;
 #endif
     bool initialized = false;
 

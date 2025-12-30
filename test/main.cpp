@@ -115,17 +115,10 @@ class WaterPot : public CompoundObject {
 class BallBehavior : public Component {
   public:
     void init() override {
-        auto *anchor = this->object->getDependencies().at(0);
-        auto joint = this->object->getComponent<HingeJoint>();
-        joint->parent = anchor;
-        joint->child = this->object;
-        joint->anchor = Position3d(0.0f, 3.0f, 0.0f);
-        joint->axis1 = Normal3d::right();
-        joint->limits.enabled = true;
-        joint->limits.minAngle = -45.0f;
-        joint->limits.maxAngle = 45.0f;
+        if (object && object->rigidbody) {
+            object->rigidbody->applyImpulse({0.0f, 0.0f, 20.0f});
+        }
     }
-
     void update(float) override { object->rigidbody->overlapSphere(2.0f); }
 };
 
@@ -215,24 +208,39 @@ class MainScene : public Scene {
         ground.rigidbody->addTag("Ground");
         window.addObject(&ground);
 
-        ball = createDebugSphere(0.5);
-        ball.move({0.0f, 1.5f, 0.0f});
-        ball.addComponent(Rigidbody());
-        ball.rigidbody->addSphereCollider(0.5);
-        ball.rigidbody->setFriction(0.1);
-        ball.rigidbody->setRestitution(0.8f);
-        ball.addDependency(&ball2);
-        ball.addComponent(BallBehavior());
-        ball.addComponent(HingeJoint());
-        window.addObject(&ball);
-
+        // Anchor body (static)
         ball2 = createSphere(0.5f);
-        ball2.move({0.0f, 5.0f, 0.0f});
+        ball2.move({0.0f, 3.0f, 0.0f});
         ball2.addComponent(Rigidbody());
         ball2.rigidbody->addSphereCollider(0.5f);
         ball2.rigidbody->setMotionType(MotionType::Static);
         ball2.material.albedo = Color(0.8f, 0.3f, 0.3f, 0.5f);
         window.addObject(&ball2);
+
+        // Hinged body (dynamic)
+        ball = createDebugSphere(0.5);
+        ball.move({0.0f, 2.0f, 1.0f});
+        ball.addComponent(Rigidbody());
+        ball.rigidbody->addSphereCollider(0.5);
+        ball.rigidbody->setMotionType(MotionType::Dynamic);
+        ball.rigidbody->setMass(1.0f);
+        ball.rigidbody->setFriction(0.1);
+        ball.rigidbody->setRestitution(0.8f);
+
+        HingeJoint hinge;
+        hinge.parent = &ball2;
+        hinge.child = &ball;
+        hinge.space = Space::Global;
+        hinge.anchor = ball2.getPosition();
+        hinge.axis1 = Normal3d::right();
+        hinge.axis2 = Normal3d::right();
+        hinge.limits.enabled = true;
+        hinge.limits.minAngle = -45.0f;
+        hinge.limits.maxAngle = 45.0f;
+        ball.addComponent(hinge);
+
+        ball.addComponent(BallBehavior());
+        window.addObject(&ball);
 
         window.useDeferredRendering();
         atmosphere.enable();

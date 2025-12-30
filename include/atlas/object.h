@@ -17,6 +17,7 @@
 #include <memory>
 #include <string>
 #include <type_traits>
+#include <utility>
 #include <unordered_map>
 #pragma once
 
@@ -457,9 +458,22 @@ class CoreObject : public GameObject {
      * @param existing The existing component to add.
      */
     template <typename T>
+        requires std::is_base_of_v<Component, std::remove_cvref_t<T>>
+    void addComponent(T &&existing) {
+        using U = std::remove_cvref_t<T>;
+        std::shared_ptr<U> component =
+            std::make_shared<U>(std::forward<T>(existing));
+        component->object = this;
+        component->atAttach();
+        components.push_back(component);
+    }
+
+    template <typename T>
         requires std::is_base_of_v<Component, T>
-    void addComponent(T existing) {
-        std::shared_ptr<T> component = std::make_shared<T>(existing);
+    void addComponent(const std::shared_ptr<T> &component) {
+        if (!component) {
+            return;
+        }
         component->object = this;
         component->atAttach();
         components.push_back(component);

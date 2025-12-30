@@ -23,21 +23,35 @@ void FixedJoint::beforePhysics() {
         joint = std::make_shared<bezel::FixedJoint>();
         if (std::holds_alternative<GameObject *>(parent)) {
             GameObject *parentObject = *std::get_if<GameObject *>(&parent);
-            if (!parentObject->rigidbody) {
+            if (!parentObject || !parentObject->rigidbody ||
+                !parentObject->rigidbody->body) {
                 atlas_error(
                     "FixedJoint parent GameObject has no Rigidbody component.");
                 return;
             }
             joint->parent = parentObject->rigidbody->body.get();
+        } else {
+            joint->parent = bezel::WorldBody{};
         }
+
         if (std::holds_alternative<GameObject *>(child)) {
             GameObject *childObject = *std::get_if<GameObject *>(&child);
-            if (!childObject->rigidbody) {
+            if (!childObject || !childObject->rigidbody ||
+                !childObject->rigidbody->body) {
                 atlas_error(
                     "FixedJoint child GameObject has no Rigidbody component.");
                 return;
             }
             joint->child = childObject->rigidbody->body.get();
+        } else {
+            joint->child = bezel::WorldBody{};
+        }
+
+        if (std::holds_alternative<WorldBody>(parent) &&
+            std::holds_alternative<WorldBody>(child)) {
+            atlas_error(
+                "FixedJoint cannot have both parent and child as WorldBody");
+            return;
         }
         switch (space) {
         case Space::Global:
@@ -60,21 +74,35 @@ void HingeJoint::beforePhysics() {
         joint = std::make_shared<bezel::HingeJoint>();
         if (std::holds_alternative<GameObject *>(parent)) {
             GameObject *parentObject = *std::get_if<GameObject *>(&parent);
-            if (!parentObject->rigidbody) {
+            if (!parentObject || !parentObject->rigidbody ||
+                !parentObject->rigidbody->body) {
                 atlas_error(
                     "HingeJoint parent GameObject has no Rigidbody component.");
                 return;
             }
             joint->parent = parentObject->rigidbody->body.get();
+        } else {
+            joint->parent = bezel::WorldBody{};
         }
+
         if (std::holds_alternative<GameObject *>(child)) {
             GameObject *childObject = *std::get_if<GameObject *>(&child);
-            if (!childObject->rigidbody) {
+            if (!childObject || !childObject->rigidbody ||
+                !childObject->rigidbody->body) {
                 atlas_error(
                     "HingeJoint child GameObject has no Rigidbody component.");
                 return;
             }
             joint->child = childObject->rigidbody->body.get();
+        } else {
+            joint->child = bezel::WorldBody{};
+        }
+
+        if (std::holds_alternative<WorldBody>(parent) &&
+            std::holds_alternative<WorldBody>(child)) {
+            atlas_error(
+                "HingeJoint cannot have both parent and child as WorldBody");
+            return;
         }
         switch (space) {
         case Space::Global:
@@ -108,21 +136,35 @@ void SpringJoint::beforePhysics() {
         joint = std::make_shared<bezel::SpringJoint>();
         if (std::holds_alternative<GameObject *>(parent)) {
             GameObject *parentObject = *std::get_if<GameObject *>(&parent);
-            if (!parentObject->rigidbody) {
+            if (!parentObject || !parentObject->rigidbody ||
+                !parentObject->rigidbody->body) {
                 atlas_error("SpringJoint parent GameObject has no Rigidbody "
                             "component.");
                 return;
             }
             joint->parent = parentObject->rigidbody->body.get();
+        } else {
+            joint->parent = bezel::WorldBody{};
         }
+
         if (std::holds_alternative<GameObject *>(child)) {
             GameObject *childObject = *std::get_if<GameObject *>(&child);
-            if (!childObject->rigidbody) {
+            if (!childObject || !childObject->rigidbody ||
+                !childObject->rigidbody->body) {
                 atlas_error(
                     "SpringJoint child GameObject has no Rigidbody component.");
                 return;
             }
             joint->child = childObject->rigidbody->body.get();
+        } else {
+            joint->child = bezel::WorldBody{};
+        }
+
+        if (std::holds_alternative<WorldBody>(parent) &&
+            std::holds_alternative<WorldBody>(child)) {
+            atlas_error(
+                "SpringJoint cannot have both parent and child as WorldBody");
+            return;
         }
         switch (space) {
         case Space::Global:

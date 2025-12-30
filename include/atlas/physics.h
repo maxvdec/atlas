@@ -121,7 +121,7 @@ class Joint : public Component {
     JointChild parent;
     JointChild child;
 
-    Space space = Space::Local;
+    Space space = Space::Global;
 
     Position3d anchor = Position3d::invalid();
 

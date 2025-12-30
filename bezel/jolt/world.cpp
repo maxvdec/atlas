@@ -233,17 +233,17 @@ void bezel::PhysicsWorld::update(float dt) {
         throw std::runtime_error("Jolt PhysicsWorld update error");
     }
 
-    // Breakable joints handling
+    // Breakable constraints handling
     if (dt > 0.0f) {
-        for (size_t i = 0; i < joints.size();) {
-            Joint *joint = joints[i];
-            if (joint == nullptr || joint->joint == nullptr) {
+        for (size_t i = 0; i < breakableConstraints.size();) {
+            auto &entry = breakableConstraints[i];
+            if (entry.constraint == nullptr) {
                 ++i;
                 continue;
             }
 
-            const float breakForce = joint->breakForce;
-            const float breakTorque = joint->breakTorque;
+            const float breakForce = entry.breakForce;
+            const float breakTorque = entry.breakTorque;
             if (breakForce <= 0.0f && breakTorque <= 0.0f) {
                 ++i;
                 continue;
@@ -252,7 +252,11 @@ void bezel::PhysicsWorld::update(float dt) {
             float appliedForce = 0.0f;
             float appliedTorque = 0.0f;
 
-            JPH::Constraint *c = joint->joint;
+            JPH::Constraint *c = entry.constraint.GetPtr();
+            if (c == nullptr) {
+                ++i;
+                continue;
+            }
 
             switch (c->GetSubType()) {
             case JPH::EConstraintSubType::Fixed: {
@@ -315,11 +319,11 @@ void bezel::PhysicsWorld::update(float dt) {
                           std::to_string(breakTorque) + ")");
 
                 physicsSystem.RemoveConstraint(c);
-                joint->joint = nullptr;
-
-                joints.erase(
-                    joints.begin() +
-                    static_cast<std::vector<Joint *>::difference_type>(i));
+                breakableConstraints.erase(
+                    breakableConstraints.begin() +
+                    static_cast<std::vector<
+                        PhysicsWorld::BreakableConstraint>::difference_type>(
+                        i));
                 continue;
             }
 

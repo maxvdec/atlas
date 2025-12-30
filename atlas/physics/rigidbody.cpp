@@ -186,6 +186,7 @@ void Rigidbody::beforePhysics() {
     }
 
     if (body->motionType == MotionType::Dynamic) {
+        body->applyProperties(Window::mainWindow->physicsWorld);
         return;
     }
 
