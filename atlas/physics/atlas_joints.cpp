@@ -14,6 +14,7 @@
 #include "atlas/tracer/log.h"
 #include "opal/opal.h"
 #include <memory>
+#include <numbers>
 #include <variant>
 
 void FixedJoint::beforePhysics() {
@@ -90,8 +91,10 @@ void HingeJoint::beforePhysics() {
         joint->axis1 = axis1;
         joint->axis2 = axis2;
         joint->limits.enabled = limits.enabled;
-        joint->limits.minAngle = limits.minAngle;
-        joint->limits.maxAngle = limits.maxAngle;
+        joint->limits.minAngle =
+            limits.minAngle * (std::numbers::pi_v<float> / 180.0f);
+        joint->limits.maxAngle =
+            limits.maxAngle * (std::numbers::pi_v<float> / 180.0f);
         joint->motor.enabled = motor.enabled;
         joint->motor.maxForce = motor.maxForce;
         joint->motor.maxTorque = motor.maxTorque;

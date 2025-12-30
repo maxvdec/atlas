@@ -233,7 +233,7 @@ void bezel::PhysicsWorld::update(float dt) {
         throw std::runtime_error("Jolt PhysicsWorld update error");
     }
 
-    // Breakable joints
+    // Breakable joints handling
     if (dt > 0.0f) {
         for (size_t i = 0; i < joints.size();) {
             Joint *joint = joints[i];
@@ -252,32 +252,54 @@ void bezel::PhysicsWorld::update(float dt) {
             float appliedForce = 0.0f;
             float appliedTorque = 0.0f;
 
-            if (auto *fixed =
-                    dynamic_cast<JPH::FixedConstraint *>(joint->joint)) {
-                const JPH::Vec3 lin_impulse = fixed->GetTotalLambdaPosition();
-                const JPH::Vec3 ang_impulse = fixed->GetTotalLambdaRotation();
-                appliedForce = lin_impulse.Length() / dt;
-                appliedTorque = ang_impulse.Length() / dt;
-            } else if (auto *hinge =
-                           dynamic_cast<JPH::HingeConstraint *>(joint->joint)) {
-                const JPH::Vec3 lin_impulse = hinge->GetTotalLambdaPosition();
-                appliedForce = lin_impulse.Length() / dt;
+            JPH::Constraint *c = joint->joint;
+
+            switch (c->GetSubType()) {
+            case JPH::EConstraintSubType::Fixed: {
+                auto *fixed = static_cast<JPH::FixedConstraint *>(c);
+
+                const JPH::Vec3 lin = fixed->GetTotalLambdaPosition();
+                const JPH::Vec3 ang = fixed->GetTotalLambdaRotation();
+
+                appliedForce = lin.Length() / dt;
+                appliedTorque = ang.Length() / dt;
+                break;
+            }
+
+            case JPH::EConstraintSubType::Hinge: {
+                auto *hinge = static_cast<JPH::HingeConstraint *>(c);
+
+                const JPH::Vec3 lin = hinge->GetTotalLambdaPosition();
+                appliedForce = lin.Length() / dt;
 
                 const auto rot2 = hinge->GetTotalLambdaRotation();
-                const float rot_impulse_mag =
+                const float rotImpulseMag =
                     std::sqrt((rot2[0] * rot2[0]) + (rot2[1] * rot2[1]));
-                const float limit_impulse =
+
+                const float limitImpulse =
                     std::abs(hinge->GetTotalLambdaRotationLimits());
-                const float motor_impulse =
+                const float motorImpulse =
                     std::abs(hinge->GetTotalLambdaMotor());
+
                 appliedTorque =
-                    (rot_impulse_mag + limit_impulse + motor_impulse) / dt;
-            } else if (auto *distance = dynamic_cast<JPH::DistanceConstraint *>(
-                           joint->joint)) {
-                const float lin_impulse =
+                    (rotImpulseMag + limitImpulse + motorImpulse) / dt;
+                break;
+            }
+
+            case JPH::EConstraintSubType::Distance: {
+                auto *distance = static_cast<JPH::DistanceConstraint *>(c);
+
+                const float linImpulse =
                     std::abs(distance->GetTotalLambdaPosition());
-                appliedForce = lin_impulse / dt;
+
+                appliedForce = linImpulse / dt;
                 appliedTorque = 0.0f;
+                break;
+            }
+
+            default:
+                ++i;
+                continue;
             }
 
             const bool forceBroken =
@@ -292,8 +314,9 @@ void bezel::PhysicsWorld::update(float dt) {
                           ", torque=" + std::to_string(appliedTorque) + "/" +
                           std::to_string(breakTorque) + ")");
 
-                physicsSystem.RemoveConstraint(joint->joint);
+                physicsSystem.RemoveConstraint(c);
                 joint->joint = nullptr;
+
                 joints.erase(
                     joints.begin() +
                     static_cast<std::vector<Joint *>::difference_type>(i));
