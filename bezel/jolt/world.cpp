@@ -233,6 +233,77 @@ void bezel::PhysicsWorld::update(float dt) {
         throw std::runtime_error("Jolt PhysicsWorld update error");
     }
 
+    // Breakable joints
+    if (dt > 0.0f) {
+        for (size_t i = 0; i < joints.size();) {
+            Joint *joint = joints[i];
+            if (joint == nullptr || joint->joint == nullptr) {
+                ++i;
+                continue;
+            }
+
+            const float breakForce = joint->breakForce;
+            const float breakTorque = joint->breakTorque;
+            if (breakForce <= 0.0f && breakTorque <= 0.0f) {
+                ++i;
+                continue;
+            }
+
+            float appliedForce = 0.0f;
+            float appliedTorque = 0.0f;
+
+            if (auto *fixed =
+                    dynamic_cast<JPH::FixedConstraint *>(joint->joint)) {
+                const JPH::Vec3 lin_impulse = fixed->GetTotalLambdaPosition();
+                const JPH::Vec3 ang_impulse = fixed->GetTotalLambdaRotation();
+                appliedForce = lin_impulse.Length() / dt;
+                appliedTorque = ang_impulse.Length() / dt;
+            } else if (auto *hinge =
+                           dynamic_cast<JPH::HingeConstraint *>(joint->joint)) {
+                const JPH::Vec3 lin_impulse = hinge->GetTotalLambdaPosition();
+                appliedForce = lin_impulse.Length() / dt;
+
+                const auto rot2 = hinge->GetTotalLambdaRotation();
+                const float rot_impulse_mag =
+                    std::sqrt((rot2[0] * rot2[0]) + (rot2[1] * rot2[1]));
+                const float limit_impulse =
+                    std::abs(hinge->GetTotalLambdaRotationLimits());
+                const float motor_impulse =
+                    std::abs(hinge->GetTotalLambdaMotor());
+                appliedTorque =
+                    (rot_impulse_mag + limit_impulse + motor_impulse) / dt;
+            } else if (auto *distance = dynamic_cast<JPH::DistanceConstraint *>(
+                           joint->joint)) {
+                const float lin_impulse =
+                    std::abs(distance->GetTotalLambdaPosition());
+                appliedForce = lin_impulse / dt;
+                appliedTorque = 0.0f;
+            }
+
+            const bool forceBroken =
+                (breakForce > 0.0f && appliedForce > breakForce);
+            const bool torqueBroken =
+                (breakTorque > 0.0f && appliedTorque > breakTorque);
+
+            if (forceBroken || torqueBroken) {
+                atlas_log("[Jolt] Breaking constraint (force=" +
+                          std::to_string(appliedForce) + "/" +
+                          std::to_string(breakForce) +
+                          ", torque=" + std::to_string(appliedTorque) + "/" +
+                          std::to_string(breakTorque) + ")");
+
+                physicsSystem.RemoveConstraint(joint->joint);
+                joint->joint = nullptr;
+                joints.erase(
+                    joints.begin() +
+                    static_cast<std::vector<Joint *>::difference_type>(i));
+                continue;
+            }
+
+            ++i;
+        }
+    }
+
     collisionDispatcher->update(this);
 }
 

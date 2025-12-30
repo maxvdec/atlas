@@ -64,7 +64,11 @@ void bezel::FixedJoint::create(std::shared_ptr<PhysicsWorld> world) {
             return;
 
         JPH::Body &body = lock.GetBody();
-        settings.Create(body, JPH::Body::sFixedToWorld);
+        auto *constraint = settings.Create(body, JPH::Body::sFixedToWorld);
+        joint = constraint;
+        if (joint) {
+            world->physicsSystem.AddConstraint(joint);
+        }
     } else if (body1IsWorld && !body2IsWorld) {
         Rigidbody *rb2 = std::get_if<Rigidbody *>(&child)
                              ? *std::get_if<Rigidbody *>(&child)
@@ -78,7 +82,11 @@ void bezel::FixedJoint::create(std::shared_ptr<PhysicsWorld> world) {
             return;
 
         JPH::Body &body = lock.GetBody();
-        settings.Create(JPH::Body::sFixedToWorld, body);
+        auto *constraint = settings.Create(JPH::Body::sFixedToWorld, body);
+        joint = constraint;
+        if (joint) {
+            world->physicsSystem.AddConstraint(joint);
+        }
     } else {
         Rigidbody *rb1 = std::get_if<Rigidbody *>(&parent)
                              ? *std::get_if<Rigidbody *>(&parent)
@@ -99,7 +107,11 @@ void bezel::FixedJoint::create(std::shared_ptr<PhysicsWorld> world) {
 
         JPH::Body &body1 = lock1.GetBody();
         JPH::Body &body2 = lock2.GetBody();
-        settings.Create(body1, body2);
+        auto *constraint = settings.Create(body1, body2);
+        joint = constraint;
+        if (joint) {
+            world->physicsSystem.AddConstraint(joint);
+        }
     }
 };
 
@@ -165,7 +177,11 @@ void bezel::HingeJoint::create(std::shared_ptr<PhysicsWorld> world) {
             return;
 
         JPH::Body &body = lock.GetBody();
-        settings.Create(body, JPH::Body::sFixedToWorld);
+        auto *constraint = settings.Create(body, JPH::Body::sFixedToWorld);
+        joint = constraint;
+        if (joint) {
+            world->physicsSystem.AddConstraint(joint);
+        }
     } else if (body1IsWorld && !body2IsWorld) {
         Rigidbody *rb2 = std::get_if<Rigidbody *>(&child)
                              ? *std::get_if<Rigidbody *>(&child)
@@ -179,7 +195,11 @@ void bezel::HingeJoint::create(std::shared_ptr<PhysicsWorld> world) {
             return;
 
         JPH::Body &body = lock.GetBody();
-        settings.Create(JPH::Body::sFixedToWorld, body);
+        auto *constraint = settings.Create(JPH::Body::sFixedToWorld, body);
+        joint = constraint;
+        if (joint) {
+            world->physicsSystem.AddConstraint(joint);
+        }
     } else {
         Rigidbody *rb1 = std::get_if<Rigidbody *>(&parent)
                              ? *std::get_if<Rigidbody *>(&parent)
@@ -200,7 +220,11 @@ void bezel::HingeJoint::create(std::shared_ptr<PhysicsWorld> world) {
 
         JPH::Body &body1 = lock1.GetBody();
         JPH::Body &body2 = lock2.GetBody();
-        settings.Create(body1, body2);
+        auto *constraint = settings.Create(body1, body2);
+        joint = constraint;
+        if (joint) {
+            world->physicsSystem.AddConstraint(joint);
+        }
     }
 };
 
@@ -289,7 +313,11 @@ void bezel::SpringJoint::create(std::shared_ptr<PhysicsWorld> world) {
             return;
 
         JPH::Body &body = lock.GetBody();
-        settings.Create(body, JPH::Body::sFixedToWorld);
+        auto *constraint = settings.Create(body, JPH::Body::sFixedToWorld);
+        joint = constraint;
+        if (joint) {
+            world->physicsSystem.AddConstraint(joint);
+        }
     } else if (body1IsWorld && !body2IsWorld) {
         Rigidbody *rb2 = std::get_if<Rigidbody *>(&child)
                              ? *std::get_if<Rigidbody *>(&child)
@@ -303,7 +331,11 @@ void bezel::SpringJoint::create(std::shared_ptr<PhysicsWorld> world) {
             return;
 
         JPH::Body &body = lock.GetBody();
-        settings.Create(JPH::Body::sFixedToWorld, body);
+        auto *constraint = settings.Create(JPH::Body::sFixedToWorld, body);
+        joint = constraint;
+        if (joint) {
+            world->physicsSystem.AddConstraint(joint);
+        }
     } else {
         Rigidbody *rb1 = std::get_if<Rigidbody *>(&parent)
                              ? *std::get_if<Rigidbody *>(&parent)
@@ -324,7 +356,11 @@ void bezel::SpringJoint::create(std::shared_ptr<PhysicsWorld> world) {
 
         JPH::Body &body1 = lock1.GetBody();
         JPH::Body &body2 = lock2.GetBody();
-        settings.Create(body1, body2);
+        auto *constraint = settings.Create(body1, body2);
+        joint = constraint;
+        if (joint) {
+            world->physicsSystem.AddConstraint(joint);
+        }
     }
 };
 #endif

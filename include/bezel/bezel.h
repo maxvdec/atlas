@@ -199,6 +199,8 @@ class Joint {
     JointChild parent;
     JointChild child;
 
+    JPH::Constraint *joint = nullptr;
+
     Space space = Space::Local;
 
     Position3d anchor = Position3d::invalid();
