@@ -82,6 +82,95 @@ struct QueryResult {
     SweepResult sweepResult;
 };
 
+struct WorldBody {};
+
+using JointChild = std::variant<GameObject *, WorldBody>;
+
+enum class SpringMode { FrequencyAndDamping, StiffnessAndDamping };
+
+enum class Space { Local, Global };
+
+struct Spring {
+    bool enabled = false;
+
+    SpringMode mode = SpringMode::FrequencyAndDamping;
+
+    float frequencyHz = 0.0f;
+    float dampingRatio = 0.0f;
+
+    float stiffness = 0.0f;
+    float damping = 0.0f;
+};
+
+struct AngleLimits {
+    bool enabled = false;
+    float minAngle = 0.0f;
+    float maxAngle = 0.0f;
+};
+
+struct Motor {
+    bool enabled = false;
+    float maxForce = 0.0f;
+    float maxTorque = 0.0f;
+};
+
+class Joint : public Component {
+  public:
+    virtual ~Joint() = default;
+
+    JointChild parent;
+    JointChild child;
+
+    Space space = Space::Local;
+
+    Position3d anchor = Position3d::invalid();
+
+    float breakForce = 0.0f;
+    float breakTorque = 0.0f;
+
+    void beforePhysics() override = 0;
+};
+
+class FixedJoint final : public Joint {
+  private:
+    std::shared_ptr<bezel::FixedJoint> joint;
+
+  public:
+    void beforePhysics() override;
+};
+
+class HingeJoint final : public Joint {
+  private:
+    std::shared_ptr<bezel::HingeJoint> joint;
+
+  public:
+    Normal3d axis1 = Normal3d::up();
+    Normal3d axis2 = Normal3d::up();
+
+    AngleLimits limits;
+    Motor motor;
+
+    void beforePhysics() override;
+};
+
+class SpringJoint final : public Joint {
+  private:
+    std::shared_ptr<bezel::SpringJoint> joint;
+
+  public:
+    Position3d anchorB = Position3d::invalid();
+
+    float restLength = 1.0f;
+
+    bool useLimits = false;
+    float minLength = 0.0f;
+    float maxLength = 0.0f;
+
+    Spring spring;
+
+    void beforePhysics() override;
+};
+
 class Rigidbody : public Component {
   public:
     std::shared_ptr<bezel::Rigidbody> body;

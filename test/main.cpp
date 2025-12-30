@@ -114,6 +114,7 @@ class WaterPot : public CompoundObject {
 
 class BallBehavior : public Component {
   public:
+    void init() override {}
     void onCollisionEnter(GameObject *other) override {
         std::cout << "Ball collided with object ID: " << other->getId()
                   << std::endl;

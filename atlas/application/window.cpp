@@ -580,6 +580,10 @@ void Window::run() {
         ResourceTracker::getInstance().unloadedResources = 0;
         ResourceTracker::getInstance().totalMemoryMb = 0.0f;
         frameResourcesInfo.send();
+
+        if (firstFrame) {
+            firstFrame = false;
+        }
     }
 }
 
