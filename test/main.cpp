@@ -123,6 +123,7 @@ class BallBehavior : public Component {
         if (Window::mainWindow->isKeyClicked(Key::N)) {
             auto hinge = object->getComponent<HingeJoint>();
             if (hinge) {
+                std::cout << "Breaking hinge joint\n";
                 hinge->breakJoint();
             }
         }

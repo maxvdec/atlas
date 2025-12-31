@@ -319,10 +319,11 @@ class GameObject : public Renderable {
      * idea.
      */
     template <typename T>
-        requires std::is_base_of_v<Component, T>
+        requires std::is_base_of_v<Component, std::remove_cvref_t<T>>
     void addComponent(T &&existing) {
-        std::shared_ptr<T> component =
-            std::make_shared<T>(std::forward<T>(existing));
+        using U = std::remove_cvref_t<T>;
+        std::shared_ptr<U> component =
+            std::make_shared<U>(std::forward<T>(existing));
         component->object = this;
         component->atAttach();
         components.push_back(component);
@@ -369,10 +370,7 @@ class GameObject : public Renderable {
     template <typename T>
         requires std::is_base_of_v<Component, T>
     std::shared_ptr<T> getComponent() {
-        std::cout << "Getting component of type: " << typeid(T).name() << "\n";
         for (auto &component : components) {
-            std::cout << "Checking component of type: "
-                      << typeid(component).name() << "\n";
             std::shared_ptr<T> casted = std::dynamic_pointer_cast<T>(component);
             if (casted != nullptr) {
                 return casted;
