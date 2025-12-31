@@ -3,6 +3,8 @@ project(Atlas LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(JOLT_VERSION "5.5.0")
+
 add_definitions(-DATLAS_VERSION=\"Alpha\ 6\")
 add_definitions(-DOPAL_VERSION=\"1.1\ Ellipse\")
 
@@ -124,13 +126,12 @@ else()
     FetchContent_Declare(
     JoltPhysics
     GIT_REPOSITORY https://github.com/jrouwe/JoltPhysics.git
-    GIT_TAG v5.4.0
+    GIT_TAG v${JOLT_VERSION}
     GIT_SHALLOW TRUE
-    UPDATE_DISCONNECTED TRUE
     SOURCE_SUBDIR Build
 )
     FetchContent_MakeAvailable(JoltPhysics)
-    message(STATUS "Downloaded Jolt Physics, version 5.4.0")
+    message(STATUS "Downloaded Jolt Physics, version ${JOLT_VERSION}")
 endif()
 
 if(BACKEND_OPENGL)
@@ -170,7 +171,7 @@ if (BEZEL_NATIVE)
     message(STATUS "Compiling with Bezel Native")
     file(GLOB_RECURSE BEZEL_SOURCES CONFIGURE_DEPENDS bezel/native/*.cpp)
 else()
-    message(STATUS "Compiling with Bezel Jolt (Jolt Physics 5.4.0)")
+    message(STATUS "Compiling with Bezel Jolt (Jolt Physics ${JOLT_VERSION})")
     file(GLOB_RECURSE BEZEL_SOURCES CONFIGURE_DEPENDS bezel/jolt/*.cpp)
 endif()
 
