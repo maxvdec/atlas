@@ -2,6 +2,7 @@
 #include "atlas/particle.h"
 #include "atlas/light.h"
 #include "atlas/object.h"
+#include "atlas/physics.h"
 #include "atlas/scene.h"
 #include "atlas/text.h"
 #include "atlas/texture.h"
@@ -14,6 +15,7 @@
 #include "aurora/terrain.h"
 #include "hydra/atmosphere.h"
 #include "hydra/fluid.h"
+#include <iostream>
 #include <memory>
 
 class SphereCube : public CompoundObject {
@@ -25,7 +27,6 @@ class SphereCube : public CompoundObject {
         cube = createDebugBox({0.5f, 0.5f, 0.5f});
         cube.setPosition({-1.0f, cube.getPosition().y, 0.0f});
         cube.initialize();
-        cube.body->applyMass(0); // Make it static
         this->addObject(&cube);
 
         for (int i = 0; i < 6; i++) {
@@ -36,7 +37,6 @@ class SphereCube : public CompoundObject {
         sphere = createDebugSphere(0.25f);
         sphere.setPosition({1.0f, sphere.getPosition().y, 0.0f});
         sphere.initialize();
-        sphere.body->applyMass(0); // Make it static
         this->addObject(&sphere);
     }
 };
@@ -109,6 +109,24 @@ class WaterPot : public CompoundObject {
         water.normalTexture = waterNormal;
         water.initialize();
         this->addObject(&water);
+    }
+};
+
+class BallBehavior : public Component {
+  public:
+    void init() override {
+        if (object && object->rigidbody) {
+            object->rigidbody->applyImpulse({0.0f, 0.0f, 20.0f});
+        }
+    }
+    void update(float) override {
+        if (Window::mainWindow->isKeyClicked(Key::N)) {
+            auto hinge = object->getComponent<HingeJoint>();
+            if (hinge) {
+                std::cout << "Breaking hinge joint\n";
+                hinge->breakJoint();
+            }
+        }
     }
 };
 
@@ -188,13 +206,48 @@ class MainScene : public Scene {
         camera.farClip = 1000.f;
         window.setCamera(&camera);
 
-        ground = createBox({2.0, 0.1, 2.0});
+        ground = createBox({15.0, 0.1, 15.0});
         ground.move({0.0f, -0.1f, 0.0f});
         ground.material.albedo = Color(0.3f, 0.8f, 0.3f);
+        ground.addComponent(Rigidbody());
+        ground.rigidbody->addBoxCollider({15.0f, 0.1f, 15.0f});
+        ground.rigidbody->setMotionType(MotionType::Static);
+        ground.rigidbody->setFriction(0.1);
+        ground.rigidbody->addTag("Ground");
         window.addObject(&ground);
 
+        // Anchor body (static)
+        ball2 = createSphere(0.5f);
+        ball2.move({0.0f, 3.0f, 0.0f});
+        ball2.addComponent(Rigidbody());
+        ball2.rigidbody->addSphereCollider(0.5f);
+        ball2.rigidbody->setMotionType(MotionType::Static);
+        ball2.material.albedo = Color(0.8f, 0.3f, 0.3f, 0.5f);
+        window.addObject(&ball2);
+
+        // Hinged body (dynamic)
         ball = createDebugSphere(0.5);
-        ball.move({0.0f, 1.0f, 0.0f});
+        ball.move({0.0f, 2.0f, 1.0f});
+        ball.addComponent(Rigidbody());
+        ball.rigidbody->addSphereCollider(0.5);
+        ball.rigidbody->setMotionType(MotionType::Dynamic);
+        ball.rigidbody->setMass(1.0f);
+        ball.rigidbody->setFriction(0.1);
+        ball.rigidbody->setRestitution(0.8f);
+
+        HingeJoint hinge;
+        hinge.parent = &ball2;
+        hinge.child = &ball;
+        hinge.space = Space::Global;
+        hinge.anchor = ball2.getPosition();
+        hinge.axis1 = Normal3d::right();
+        hinge.axis2 = Normal3d::right();
+        hinge.limits.enabled = true;
+        hinge.limits.minAngle = -45.0f;
+        hinge.limits.maxAngle = 45.0f;
+        ball.addComponent(hinge);
+
+        ball.addComponent(BallBehavior());
         window.addObject(&ball);
 
         window.useDeferredRendering();

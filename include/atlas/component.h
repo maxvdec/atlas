@@ -17,13 +17,19 @@
 #include "bezel/bezel.h"
 #include "opal/opal.h"
 #include <climits>
+#include <iostream>
+#include <map>
 #include <memory>
+#include <optional>
 #include <random>
 #include <vector>
 
 class CoreObject;
 class Window;
 class GameObject;
+class Rigidbody;
+
+struct QueryResult;
 
 /**
  * @brief Behavior or property that can be attached to a \ref GameObject to
@@ -45,12 +51,15 @@ class GameObject;
  */
 class Component {
   public:
+    virtual ~Component() = default;
     /**
      * @brief Initializes the component. This method is called once when the
      * component is added to a GameObject.
      *
      */
     virtual void init() {}
+    virtual void beforePhysics() {}
+    virtual void atAttach() {}
     /**
      * @brief Updates the component each frame. This method is called every
      * frame before rendering.
@@ -85,16 +94,21 @@ class Component {
      */
     Component() = default;
 
+    virtual void onCollisionEnter([[maybe_unused]] GameObject *other) {}
+    virtual void onCollisionExit([[maybe_unused]] GameObject *other) {}
+    virtual void onCollisionStay([[maybe_unused]] GameObject *other) {}
+    virtual void onSignalRecieve([[maybe_unused]] const std::string &signal,
+                                 [[maybe_unused]] GameObject *sender) {}
+    virtual void onSignalEnd([[maybe_unused]] const std::string &signal,
+                             [[maybe_unused]] GameObject *sender) {}
+
+    virtual void onQueryRecieve([[maybe_unused]] QueryResult &result) {}
+
     /**
      * @brief Gets the GameObject associated with the component.
      *
      */
     GameObject *object = nullptr;
-    /**
-     * @brief Gets the Body associated with the component.
-     *
-     */
-    Body *body = nullptr;
 };
 
 /**
@@ -152,6 +166,10 @@ class TraitComponent : public Component {
     T *typedObject = nullptr;
 };
 
+namespace atlas {
+inline std::map<int, GameObject *> gameObjects = {};
+}
+
 /**
  * @brief Base class for all Game Objects. It extends from \ref Renderable and
  * it provides common functionality for all game objects in the scene.
@@ -166,7 +184,43 @@ class GameObject : public Renderable {
         std::mt19937 gen(rd());
         std::uniform_int_distribution<int> dist(0, INT_MAX);
         id = dist(gen);
+
+        atlas::gameObjects[id] = this;
     }
+
+    GameObject([[maybe_unused]] const GameObject &other) {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<int> dist(0, INT_MAX);
+        id = dist(gen);
+
+        atlas::gameObjects[id] = this;
+    }
+
+    GameObject([[maybe_unused]] GameObject &&other) noexcept {
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_int_distribution<int> dist(0, INT_MAX);
+        id = dist(gen);
+
+        atlas::gameObjects[id] = this;
+    }
+
+    GameObject &operator=(const GameObject &other) {
+        if (this != &other) {
+            atlas::gameObjects[id] = this;
+        }
+        return *this;
+    }
+
+    GameObject &operator=(GameObject &&other) noexcept {
+        if (this != &other) {
+            atlas::gameObjects[id] = this;
+        }
+        return *this;
+    }
+
+    virtual ~GameObject() { atlas::gameObjects.erase(id); }
 
     /**
      * @brief Attaches a shader program to the object.
@@ -244,12 +298,17 @@ class GameObject : public Renderable {
      *
      */
     virtual void show() {};
-    /**
-     * @brief Sets up the physics body for the object.
-     *
-     * @param body The physics body to associate with the object.
-     */
-    virtual void setupPhysics([[maybe_unused]] Body body) {};
+
+    virtual void onCollisionEnter([[maybe_unused]] GameObject *other) {}
+    virtual void onCollisionExit([[maybe_unused]] GameObject *other) {}
+    virtual void onCollisionStay([[maybe_unused]] GameObject *other) {}
+
+    virtual void onSignalRecieve([[maybe_unused]] const std::string &signal,
+                                 [[maybe_unused]] GameObject *sender) {}
+    virtual void onSignalEnd([[maybe_unused]] const std::string &signal,
+                             [[maybe_unused]] GameObject *sender) {}
+
+    virtual void onQueryRecieve([[maybe_unused]] QueryResult &result) {}
 
     /**
      * @brief Adds a component to the object.
@@ -260,13 +319,20 @@ class GameObject : public Renderable {
      * idea.
      */
     template <typename T>
-        requires std::is_base_of_v<Component, T>
+        requires std::is_base_of_v<Component, std::remove_cvref_t<T>>
     void addComponent(T &&existing) {
-        std::shared_ptr<T> component =
-            std::make_shared<T>(std::forward<T>(existing));
+        using U = std::remove_cvref_t<T>;
+        std::shared_ptr<U> component =
+            std::make_shared<U>(std::forward<T>(existing));
         component->object = this;
-        component->body = this->body.get();
+        component->atAttach();
         components.push_back(component);
+    }
+
+    void beforePhysics() override {
+        for (auto &component : components) {
+            component->beforePhysics();
+        }
     }
 
     /**
@@ -313,20 +379,22 @@ class GameObject : public Renderable {
         return nullptr;
     }
 
-    /**
-     * @brief Gets the physics body associated with the object.
-     *
-     * @return A shared pointer to the physics body, or nullptr if not set.
-     */
-    std::shared_ptr<Body> body = nullptr;
+    Rigidbody *rigidbody = nullptr;
 
     /**
      * @brief Returns the unique identifier associated with this object.
      */
     unsigned int getId() override { return id; }
 
+    virtual Rotation3d getRotation() const { return Rotation3d(0.f, 0.f, 0.f); }
+
+    void addDependency(GameObject *obj) { dependencies.push_back(obj); }
+
+    std::vector<GameObject *> getDependencies() const { return dependencies; }
+
   protected:
     std::vector<std::shared_ptr<Component>> components;
+    std::vector<GameObject *> dependencies;
 
     /**
      * @brief The unique identifier for the object.
@@ -466,10 +534,6 @@ class CompoundObject : public GameObject {
      * @brief Makes the aggregate renderable again after being hidden.
      */
     void show() override;
-    /**
-     * @brief Configures a physics body shared between all child objects.
-     */
-    void setupPhysics(Body body) override;
 
     /**
      * @brief Adds a component to the object.
