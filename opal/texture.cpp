@@ -516,18 +516,12 @@ void Pipeline::bindTexture(const std::string &name,
     if (texture->currentLayout != desiredLayout &&
         texture->currentLayout != VK_IMAGE_LAYOUT_GENERAL) {
         VkFormat vkFormat = opalTextureFormatToVulkanFormat(texture->format);
-        bool isDepth = (texture->format == TextureFormat::Depth24Stencil8 ||
-                        texture->format == TextureFormat::DepthComponent24 ||
-                        texture->format == TextureFormat::Depth32F);
-
-        if (!isDepth || texture->currentLayout == VK_IMAGE_LAYOUT_UNDEFINED) {
-            uint32_t layerCount =
-                (texture->type == TextureType::TextureCubeMap) ? 6 : 1;
-            Framebuffer::transitionImageLayout(texture->vkImage, vkFormat,
-                                               texture->currentLayout,
-                                               desiredLayout, layerCount);
-            texture->currentLayout = desiredLayout;
-        }
+        uint32_t layerCount =
+            (texture->type == TextureType::TextureCubeMap) ? 6 : 1;
+        Framebuffer::transitionImageLayout(texture->vkImage, vkFormat,
+                                           texture->currentLayout,
+                                           desiredLayout, layerCount);
+        texture->currentLayout = desiredLayout;
     }
 
     VkDescriptorImageInfo imageInfo{};

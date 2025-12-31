@@ -537,25 +537,41 @@ vec3 calcAllSpotLights(vec3 N, vec3 fragPos, vec3 L, vec3 viewDir, vec3 albedo, 
 
 // ----- Shadow Calculations -----
 float calculateShadow(ShadowParameters shadowParam, vec4 fragPosLightSpace) {
-    vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
-    // Transform from [-1,1] to [0,1] for texture sampling
-    projCoords = projCoords * 0.5 + 0.5;
-    // Flip Y because shadow map was rendered with OpenGL-style projection but sampled in Vulkan
-    projCoords.y = 1.0 - projCoords.y;
-    // Note: Shadow maps are rendered without Y-flip projection, so no Y-flip needed here
-
-    if (projCoords.x < 0.0 || projCoords.x > 1.0 ||
-            projCoords.y < 0.0 || projCoords.y > 1.0 ||
-            projCoords.z > 1.0) {
-        return 0.0;
+    vec2 uv;
+    float currentDepth;
+    {
+        if (fragPosLightSpace.w <= 0.0) {
+            return 0.0;
+        }
+        vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
+        uv = projCoords.xy * 0.5 + 0.5;
+        uv.y = 1.0 - uv.y;
+        currentDepth = projCoords.z;
+        // Vulkan clip-space depth is typically [0, 1]; OpenGL is [-1, 1].
+        // Auto-remap if we're in the OpenGL-style range.
+        if (currentDepth < 0.0 || currentDepth > 1.0) {
+            currentDepth = currentDepth * 0.5 + 0.5;
+        }
+        if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0 ||
+                currentDepth < 0.0 || currentDepth > 1.0) {
+            return 0.0;
+        }
     }
 
-    float currentDepth = projCoords.z;
+    // Derive the light direction from the light's view matrix to avoid
+    // depending on directionalLights[0] being present/bound.
+    vec3 lightDirCandidate = vec3(shadowParam.lightView[0][2],
+            shadowParam.lightView[1][2],
+            shadowParam.lightView[2][2]);
+    float lightDirLen2 = dot(lightDirCandidate, lightDirCandidate);
+    vec3 lightDir = (lightDirLen2 > 1e-8)
+            ? lightDirCandidate * inversesqrt(lightDirLen2)
+            : vec3(0.0, 1.0, 0.0);
 
-    vec3 lightDir = normalize(-directionalLights[0].direction);
     vec3 normal = normalize(Normal);
-    float biasValue = shadowParam.bias;
-    float bias = max(biasValue * (1.0 - dot(normal, lightDir)), biasValue);
+    float biasValue = max(shadowParam.bias, 0.0002);
+    float ndotl = max(dot(normal, lightDir), 0.0);
+    float bias = max(biasValue * (1.0 - ndotl), biasValue);
 
     float shadow = 0.0;
     vec2 texelSize = 1.0 / getTextureDimensions(shadowParam.textureIndex);
@@ -566,8 +582,8 @@ float calculateShadow(ShadowParameters shadowParam, vec4 fragPosLightSpace) {
     int sampleCount = 0;
     for (int x = -kernelSize; x <= kernelSize; ++x) {
         for (int y = -kernelSize; y <= kernelSize; ++y) {
-            float pcfDepth = sampleTextureAt(shadowParam.textureIndex,
-                    projCoords.xy + vec2(x, y) * texelSize).r;
+                float pcfDepth = sampleTextureAt(shadowParam.textureIndex,
+                    uv + vec2(x, y) * texelSize).r;
             shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
             sampleCount++;
         }
@@ -578,19 +594,24 @@ float calculateShadow(ShadowParameters shadowParam, vec4 fragPosLightSpace) {
 }
 
 float calculateShadowRaw(ShadowParameters shadowParam, vec4 fragPosLightSpace) {
+    if (fragPosLightSpace.w <= 0.0) {
+        return 0.0;
+    }
     vec3 projCoords = fragPosLightSpace.xyz / fragPosLightSpace.w;
-    projCoords = projCoords * 0.5 + 0.5;
-    projCoords.y = 1.0 - projCoords.y;
+    vec2 uv = projCoords.xy * 0.5 + 0.5;
+    uv.y = 1.0 - uv.y;
 
-    if (projCoords.x < 0.0 || projCoords.x > 1.0 ||
-            projCoords.y < 0.0 || projCoords.y > 1.0 ||
-            projCoords.z < 0.0 || projCoords.z > 1.0) {
+    float currentDepth = projCoords.z;
+    if (currentDepth < 0.0 || currentDepth > 1.0) {
+        currentDepth = currentDepth * 0.5 + 0.5;
+    }
+
+    if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0 ||
+            currentDepth < 0.0 || currentDepth > 1.0) {
         return 0.0;
     }
 
-    float currentDepth = projCoords.z;
-    float closestDepth = sampleTextureAt(shadowParam.textureIndex, projCoords.xy).r;
-
+    float closestDepth = sampleTextureAt(shadowParam.textureIndex, uv).r;
     return currentDepth > closestDepth ? 1.0 : 0.0;
 }
 

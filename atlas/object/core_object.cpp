@@ -554,15 +554,62 @@ void CoreObject::render(float dt,
             "Pipeline not created - call refreshPipeline() first");
     }
 
+#ifndef VULKAN
     this->pipeline->setUniformMat4f("model", model);
     this->pipeline->setUniformMat4f("view", view);
     this->pipeline->setUniformMat4f("projection", projection);
+#endif
 
+#ifdef VULKAN
+    struct alignas(16) VulkanVertexUBO {
+        glm::mat4 model;
+        glm::mat4 view;
+        glm::mat4 projection;
+        int32_t isInstanced;
+        int32_t _pad0[3];
+    } vkVertexUBO;
+    vkVertexUBO.model = model;
+    vkVertexUBO.view = view;
+    vkVertexUBO.projection = projection;
+    vkVertexUBO.isInstanced = 0;
+    this->pipeline->bindBufferData("uniforms", &vkVertexUBO,
+                                   sizeof(vkVertexUBO));
+#else
     this->pipeline->setUniform1i("useColor", useColor ? 1 : 0);
     this->pipeline->setUniform1i("useTexture", useTexture ? 1 : 0);
+#endif
 
     int boundTextures = 0;
     int boundCubemaps = 0;
+
+    constexpr int kMax2DSamplers = 10; // shaders expose texture1..texture10
+    constexpr int kMaxShadowParams = 10;
+
+    Window *window = Window::mainWindow;
+    Scene *scene = window ? window->getCurrentScene() : nullptr;
+    const bool shaderSupportsShadows =
+        std::find(shaderProgram.capabilities.begin(),
+                  shaderProgram.capabilities.end(),
+                  ShaderCapability::Shadows) !=
+        shaderProgram.capabilities.end();
+
+    int reservedShadow2DSamplers = 0;
+    if (shaderSupportsShadows && scene != nullptr) {
+        for (auto light : scene->directionalLights) {
+            if (light && light->doesCastShadows &&
+                light->shadowRenderTarget != nullptr) {
+                reservedShadow2DSamplers++;
+            }
+        }
+        for (auto light : scene->spotlights) {
+            if (light && light->doesCastShadows &&
+                light->shadowRenderTarget != nullptr) {
+                reservedShadow2DSamplers++;
+            }
+        }
+        reservedShadow2DSamplers =
+            std::clamp(reservedShadow2DSamplers, 0, kMax2DSamplers);
+    }
 
     const bool shaderSupportsTextures =
         std::find(shaderProgram.capabilities.begin(),
@@ -571,13 +618,83 @@ void CoreObject::render(float dt,
         shaderProgram.capabilities.end();
 
     if (shaderSupportsTextures) {
+#ifdef OPENGL
         this->pipeline->setUniform1i("textureCount", 0);
         this->pipeline->setUniform1i("cubeMapCount", 0);
+#endif
     }
 
+#ifdef VULKAN
+    struct alignas(16) VulkanFragmentUniformsUBO {
+        glm::ivec4 textureTypes[16];
+        int32_t textureCount;
+        int32_t _pad0[3];
+        glm::vec3 cameraPosition;
+        float _pad1;
+    } vkUniformsUBO;
+    for (auto &v : vkUniformsUBO.textureTypes) {
+        v = glm::ivec4(0);
+    }
+    vkUniformsUBO.textureCount = 0;
+    vkUniformsUBO._pad0[0] = vkUniformsUBO._pad0[1] = vkUniformsUBO._pad0[2] =
+        0;
+    vkUniformsUBO.cameraPosition = glm::vec3(0.0f);
+    vkUniformsUBO._pad1 = 0.0f;
+
+    struct alignas(16) VulkanMaterialUBO {
+        glm::vec3 albedo;
+        float metallic;
+        float roughness;
+        float ao;
+        float reflectivity;
+        float _pad0[3];
+    } vkMaterialUBO;
+
+    struct alignas(16) VulkanEnvironmentUBO {
+        float rimLightIntensity;
+        float _pad0[3];
+        glm::vec3 rimLightColor;
+        float _pad1;
+    } vkEnvironmentUBO;
+
+    struct alignas(16) VulkanAmbientLightUBO {
+        glm::vec4 color;
+        float intensity;
+        glm::vec3 _pad0;
+    } vkAmbientLightUBO;
+
+    struct alignas(16) VulkanPushConstants {
+        int32_t useTexture;
+        int32_t useColor;
+        int32_t useIBL;
+        int32_t directionalLightCount;
+        int32_t pointLightCount;
+        int32_t spotlightCount;
+        int32_t areaLightCount;
+        int32_t shadowParamCount;
+    } vkPC;
+    vkPC.useTexture = useTexture ? 1 : 0;
+    vkPC.useColor = useColor ? 1 : 0;
+    vkPC.useIBL = 0;
+    vkPC.directionalLightCount = 0;
+    vkPC.pointLightCount = 0;
+    vkPC.spotlightCount = 0;
+    vkPC.areaLightCount = 0;
+    vkPC.shadowParamCount = 0;
+#endif
+
     if (!textures.empty() && useTexture && shaderSupportsTextures) {
-        int count = std::min((int)textures.size(), 10);
+        int maxMaterialTextures =
+            shaderSupportsShadows ? (kMax2DSamplers - reservedShadow2DSamplers)
+                                  : kMax2DSamplers;
+        maxMaterialTextures =
+            std::clamp(maxMaterialTextures, 0, kMax2DSamplers);
+        int count = std::min((int)textures.size(), maxMaterialTextures);
+#ifdef OPENGL
         this->pipeline->setUniform1i("textureCount", count);
+#elif defined(VULKAN)
+        vkUniformsUBO.textureCount = count;
+#endif
 
         for (int i = 0; i < count; i++) {
             std::string uniformName = "texture" + std::to_string(i + 1) + "";
@@ -585,6 +702,7 @@ void CoreObject::render(float dt,
             boundTextures++;
         }
 
+#ifdef OPENGL
         this->pipeline->setUniform1i("cubeMapCount", 5);
         for (int i = 0; i < 5; i++) {
             std::string uniformName = "cubeMap" + std::to_string(i + 1) + "";
@@ -596,12 +714,30 @@ void CoreObject::render(float dt,
             this->pipeline->setUniform1i(uniformName,
                                          static_cast<int>(textures[i].type));
         }
+#elif defined(VULKAN)
+        for (int i = 0; i < std::min(count, 16); i++) {
+            vkUniformsUBO.textureTypes[i].x =
+                static_cast<int>(textures[i].type);
+        }
+#endif
     }
 
     if (std::find(shaderProgram.capabilities.begin(),
                   shaderProgram.capabilities.end(),
                   ShaderCapability::Material) !=
         shaderProgram.capabilities.end()) {
+#ifdef VULKAN
+        vkMaterialUBO.albedo =
+            glm::vec3(material.albedo.r, material.albedo.g, material.albedo.b);
+        vkMaterialUBO.metallic = material.metallic;
+        vkMaterialUBO.roughness = material.roughness;
+        vkMaterialUBO.ao = material.ao;
+        vkMaterialUBO.reflectivity = 0.0f;
+        vkMaterialUBO._pad0[0] = vkMaterialUBO._pad0[1] =
+            vkMaterialUBO._pad0[2] = 0.0f;
+        this->pipeline->bindBufferData("material", &vkMaterialUBO,
+                                       sizeof(vkMaterialUBO));
+#else
         this->pipeline->setUniform3f("material.albedo", material.albedo.r,
                                      material.albedo.g, material.albedo.b);
         this->pipeline->setUniform1f("material.metallic", material.metallic);
@@ -613,6 +749,7 @@ void CoreObject::render(float dt,
         this->pipeline->setUniform1f("metallic", material.metallic);
         this->pipeline->setUniform1f("roughness", material.roughness);
         this->pipeline->setUniform1f("ao", material.ao);
+#endif
     }
 
     const bool shaderSupportsIbl =
@@ -626,7 +763,11 @@ void CoreObject::render(float dt,
         });
 
     const bool useIbl = shaderSupportsIbl && hasHdrEnvironment;
+#ifdef VULKAN
+    vkPC.useIBL = useIbl ? 1 : 0;
+#else
     this->pipeline->setUniformBool("useIBL", useIbl);
+#endif
 
     if (std::find(shaderProgram.capabilities.begin(),
                   shaderProgram.capabilities.end(),
@@ -642,6 +783,23 @@ void CoreObject::render(float dt,
             ambientColor = scene->getAutomaticAmbientColor();
             ambientIntensity = scene->getAutomaticAmbientIntensity();
         }
+#ifdef VULKAN
+        vkAmbientLightUBO.color =
+            glm::vec4(static_cast<float>(ambientColor.r),
+                      static_cast<float>(ambientColor.g),
+                      static_cast<float>(ambientColor.b), 1.0f);
+        vkAmbientLightUBO.intensity = ambientIntensity;
+        vkAmbientLightUBO._pad0 = glm::vec3(0.0f);
+        this->pipeline->bindBufferData("ambientLight", &vkAmbientLightUBO,
+                                       sizeof(vkAmbientLightUBO));
+
+        vkUniformsUBO.cameraPosition = glm::vec3(
+            window->getCamera()->position.x, window->getCamera()->position.y,
+            window->getCamera()->position.z);
+
+        int dirLightCount = std::min((int)scene->directionalLights.size(), 256);
+        vkPC.directionalLightCount = dirLightCount;
+#else
         this->pipeline->setUniform4f("ambientLight.color",
                                      static_cast<float>(ambientColor.r),
                                      static_cast<float>(ambientColor.g),
@@ -655,6 +813,7 @@ void CoreObject::render(float dt,
 
         int dirLightCount = std::min((int)scene->directionalLights.size(), 256);
         this->pipeline->setUniform1i("directionalLightCount", dirLightCount);
+#endif
 
         if (dirLightCount > 0) {
             auto gpuDirLights = buildGPUDirectionalLights(
@@ -663,7 +822,11 @@ void CoreObject::render(float dt,
         }
 
         int pointLightCount = std::min((int)scene->pointLights.size(), 256);
+#ifdef VULKAN
+        vkPC.pointLightCount = pointLightCount;
+#else
         this->pipeline->setUniform1i("pointLightCount", pointLightCount);
+#endif
 
         if (pointLightCount > 0) {
             auto gpuPointLights =
@@ -672,7 +835,11 @@ void CoreObject::render(float dt,
         }
 
         int spotlightCount = std::min((int)scene->spotlights.size(), 256);
+#ifdef VULKAN
+        vkPC.spotlightCount = spotlightCount;
+#else
         this->pipeline->setUniform1i("spotlightCount", spotlightCount);
+#endif
 
         if (spotlightCount > 0) {
             auto gpuSpotLights =
@@ -681,7 +848,11 @@ void CoreObject::render(float dt,
         }
 
         int areaLightCount = std::min((int)scene->areaLights.size(), 256);
+#ifdef VULKAN
+        vkPC.areaLightCount = areaLightCount;
+#else
         this->pipeline->setUniform1i("areaLightCount", areaLightCount);
+#endif
 
         if (areaLightCount > 0) {
             auto gpuAreaLights =
@@ -713,103 +884,188 @@ void CoreObject::render(float dt,
         boundTextures++;
     }
 
-    if (std::find(shaderProgram.capabilities.begin(),
-                  shaderProgram.capabilities.end(),
-                  ShaderCapability::Shadows) !=
-        shaderProgram.capabilities.end()) {
-        for (int i = 0; i < 5; i++) {
-            std::string uniformName = "cubeMap" + std::to_string(i + 1);
-            this->pipeline->setUniform1i(uniformName, i + 10);
+    if (shaderSupportsShadows) {
+        if (scene == nullptr) {
+#ifdef VULKAN
+            vkPC.shadowParamCount = 0;
+#else
+            this->pipeline->setUniform1i("shadowParamCount", 0);
+#endif
+            return;
         }
-        Scene *scene = Window::mainWindow->currentScene;
 
         int boundParameters = 0;
+
+        int shadow2DSamplerIndex =
+            boundTextures; // continue after material textures
+        int shadowCubeSamplerIndex = 0;
+
+#ifdef VULKAN
+        std::vector<GPUShadowParams> gpuShadowParams;
+        gpuShadowParams.reserve(kMaxShadowParams);
+#endif
 
         for (auto light : scene->directionalLights) {
             if (!light->doesCastShadows) {
                 continue;
             }
-            if (boundTextures >= 16) {
+            if (light->shadowRenderTarget == nullptr) {
+                continue;
+            }
+            if (boundParameters >= kMaxShadowParams) {
+                break;
+            }
+            if (shadow2DSamplerIndex >= kMax2DSamplers) {
                 break;
             }
 
-            std::string baseName =
-                "shadowParams[" + std::to_string(boundParameters) + "]";
-            this->pipeline->bindTexture2D(baseName + ".textureIndex",
+            std::string shadowSamplerName =
+                "texture" + std::to_string(shadow2DSamplerIndex + 1);
+            this->pipeline->bindTexture2D(shadowSamplerName,
                                           light->shadowRenderTarget->texture.id,
-                                          boundTextures, id);
-            ShadowParams shadowParams = light->calculateLightSpaceMatrix(
-                Window::mainWindow->renderables);
+                                          shadow2DSamplerIndex, id);
+            ShadowParams shadowParams = light->lastShadowParams;
+
+#ifdef VULKAN
+            GPUShadowParams gpu{};
+            gpu.lightView = shadowParams.lightView;
+            gpu.lightProjection = shadowParams.lightProjection;
+            gpu.bias = shadowParams.bias;
+            gpu.textureIndex = shadow2DSamplerIndex;
+            gpu.farPlane = 0.0f;
+            gpu._pad1 = 0.0f;
+            gpu.lightPos = glm::vec3(0.0f);
+            gpu.isPointLight = 0;
+            gpuShadowParams.push_back(gpu);
+#else
+            const std::string baseName =
+                "shadowParams[" + std::to_string(boundParameters) + "]";
             this->pipeline->setUniformMat4f(baseName + ".lightView",
                                             shadowParams.lightView);
             this->pipeline->setUniformMat4f(baseName + ".lightProjection",
                                             shadowParams.lightProjection);
             this->pipeline->setUniform1f(baseName + ".bias", shadowParams.bias);
-            this->pipeline->setUniform1f(baseName + ".isPointLight", 0);
+            this->pipeline->setUniform1i(baseName + ".textureIndex",
+                                         shadow2DSamplerIndex);
+            this->pipeline->setUniformBool(baseName + ".isPointLight", false);
+#endif
 
             boundParameters++;
-            boundTextures++;
+            shadow2DSamplerIndex++;
+            boundTextures = std::max(boundTextures, shadow2DSamplerIndex);
         }
 
         for (auto light : scene->spotlights) {
             if (!light->doesCastShadows) {
                 continue;
             }
-            if (boundTextures >= 16) {
+            if (light->shadowRenderTarget == nullptr) {
+                continue;
+            }
+            if (boundParameters >= kMaxShadowParams) {
+                break;
+            }
+            if (shadow2DSamplerIndex >= kMax2DSamplers) {
                 break;
             }
 
-            std::string baseName =
-                "shadowParams[" + std::to_string(boundParameters) + "]";
-            this->pipeline->bindTexture2D(baseName + ".textureIndex",
+            std::string shadowSamplerName =
+                "texture" + std::to_string(shadow2DSamplerIndex + 1);
+            this->pipeline->bindTexture2D(shadowSamplerName,
                                           light->shadowRenderTarget->texture.id,
-                                          boundTextures, id);
-            std::tuple<glm::mat4, glm::mat4> lightSpace =
-                light->calculateLightSpaceMatrix();
+                                          shadow2DSamplerIndex, id);
+            ShadowParams shadowParams = light->lastShadowParams;
+
+#ifdef VULKAN
+            GPUShadowParams gpu{};
+            gpu.lightView = shadowParams.lightView;
+            gpu.lightProjection = shadowParams.lightProjection;
+            gpu.bias = shadowParams.bias;
+            gpu.textureIndex = shadow2DSamplerIndex;
+            gpu.farPlane = 0.0f;
+            gpu._pad1 = 0.0f;
+            gpu.lightPos = glm::vec3(0.0f);
+            gpu.isPointLight = 0;
+            gpuShadowParams.push_back(gpu);
+#else
+            const std::string baseName =
+                "shadowParams[" + std::to_string(boundParameters) + "]";
             this->pipeline->setUniformMat4f(baseName + ".lightView",
-                                            std::get<0>(lightSpace));
+                                            shadowParams.lightView);
             this->pipeline->setUniformMat4f(baseName + ".lightProjection",
-                                            std::get<1>(lightSpace));
-            this->pipeline->setUniform1f(baseName + ".bias", 0.005f);
-            this->pipeline->setUniform1f(baseName + ".isPointLight", 0);
+                                            shadowParams.lightProjection);
+            this->pipeline->setUniform1f(baseName + ".bias", shadowParams.bias);
+            this->pipeline->setUniform1i(baseName + ".textureIndex",
+                                         shadow2DSamplerIndex);
+            this->pipeline->setUniformBool(baseName + ".isPointLight", false);
+#endif
 
             boundParameters++;
-            boundTextures++;
+            shadow2DSamplerIndex++;
+            boundTextures = std::max(boundTextures, shadow2DSamplerIndex);
         }
 
         for (auto light : scene->pointLights) {
             if (!light->doesCastShadows) {
                 continue;
             }
-            if (boundTextures + 6 >= 16) {
+            if (light->shadowRenderTarget == nullptr) {
+                continue;
+            }
+            if (boundParameters >= kMaxShadowParams) {
+                break;
+            }
+            if (boundCubemaps >= 5) {
                 break;
             }
 
-            std::string baseName =
-                "shadowParams[" + std::to_string(boundParameters) + "]";
+            std::string cubeSamplerName =
+                "cubeMap" + std::to_string(shadowCubeSamplerIndex + 1);
             this->pipeline->bindTextureCubemap(
-                baseName + ".textureIndex",
-                light->shadowRenderTarget->texture.id, 10 + boundCubemaps, id);
+                cubeSamplerName, light->shadowRenderTarget->texture.id,
+                10 + shadowCubeSamplerIndex, id);
+
+#ifdef VULKAN
+            GPUShadowParams gpu{};
+            gpu.lightView = glm::mat4(1.0f);
+            gpu.lightProjection = glm::mat4(1.0f);
+            gpu.bias = 0.0f;
+            gpu.textureIndex = shadowCubeSamplerIndex;
+            gpu.farPlane = light->distance;
+            gpu._pad1 = 0.0f;
+            gpu.lightPos = glm::vec3(light->position.x, light->position.y,
+                                     light->position.z);
+            gpu.isPointLight = 1;
+            gpuShadowParams.push_back(gpu);
+#else
+            const std::string baseName =
+                "shadowParams[" + std::to_string(boundParameters) + "]";
             this->pipeline->setUniform1i(baseName + ".textureIndex",
-                                         boundCubemaps);
+                                         shadowCubeSamplerIndex);
             this->pipeline->setUniform1f(baseName + ".farPlane",
                                          light->distance);
             this->pipeline->setUniform3f(baseName + ".lightPos",
                                          light->position.x, light->position.y,
                                          light->position.z);
-            this->pipeline->setUniform1i(baseName + ".isPointLight", 1);
+            this->pipeline->setUniformBool(baseName + ".isPointLight", true);
+#endif
 
             boundParameters++;
-            boundCubemaps++;
-            boundTextures += 6;
+            shadowCubeSamplerIndex++;
+            boundCubemaps = std::max(boundCubemaps, shadowCubeSamplerIndex);
         }
 
+#ifndef VULKAN
         this->pipeline->setUniform1i("shadowParamCount", boundParameters);
+#else
+        vkPC.shadowParamCount = boundParameters;
+#endif
 
-        for (int i = 0; i < boundTextures && i < 16; i++) {
-            std::string uniformName = "textures[" + std::to_string(i) + "]";
-            this->pipeline->setUniform1i(uniformName, i);
+#ifdef VULKAN
+        if (!gpuShadowParams.empty()) {
+            this->pipeline->bindBuffer("ShadowParameters", gpuShadowParams);
         }
+#endif
     }
 
     if (std::find(shaderProgram.capabilities.begin(),
@@ -831,13 +1087,34 @@ void CoreObject::render(float dt,
         shaderProgram.capabilities.end()) {
         Window *window = Window::mainWindow;
         Scene *scene = window->getCurrentScene();
+#ifdef VULKAN
+        vkEnvironmentUBO.rimLightIntensity =
+            scene->environment.rimLight.intensity;
+        vkEnvironmentUBO._pad0[0] = vkEnvironmentUBO._pad0[1] =
+            vkEnvironmentUBO._pad0[2] = 0.0f;
+        vkEnvironmentUBO.rimLightColor =
+            glm::vec3(scene->environment.rimLight.color.r,
+                      scene->environment.rimLight.color.g,
+                      scene->environment.rimLight.color.b);
+        vkEnvironmentUBO._pad1 = 0.0f;
+        this->pipeline->bindBufferData("environment", &vkEnvironmentUBO,
+                                       sizeof(vkEnvironmentUBO));
+#else
         this->pipeline->setUniform1f("environment.rimLightIntensity",
                                      scene->environment.rimLight.intensity);
         this->pipeline->setUniform3f("environment.rimLightColor",
                                      scene->environment.rimLight.color.r,
                                      scene->environment.rimLight.color.g,
                                      scene->environment.rimLight.color.b);
+#endif
     }
+
+#ifdef VULKAN
+    // Finalize Vulkan per-draw data.
+    this->pipeline->bindBufferData("Uniforms", &vkUniformsUBO,
+                                   sizeof(vkUniformsUBO));
+    this->pipeline->setPushConstantsData(&vkPC, sizeof(vkPC));
+#endif
 
     if (std::find(shaderProgram.capabilities.begin(),
                   shaderProgram.capabilities.end(),
@@ -848,7 +1125,13 @@ void CoreObject::render(float dt,
             updateInstances();
             this->savedInstances = this->instances;
         }
+#ifdef VULKAN
+        vkVertexUBO.isInstanced = 1;
+        this->pipeline->bindBufferData("uniforms", &vkVertexUBO,
+                                       sizeof(vkVertexUBO));
+#else
         this->pipeline->setUniform1i("isInstanced", 1);
+#endif
 
         if (!indices.empty()) {
             commandBuffer->bindDrawingState(vao);
@@ -865,7 +1148,13 @@ void CoreObject::render(float dt,
         return;
     }
 
+#ifdef VULKAN
+    vkVertexUBO.isInstanced = 0;
+    this->pipeline->bindBufferData("uniforms", &vkVertexUBO,
+                                   sizeof(vkVertexUBO));
+#else
     this->pipeline->setUniform1i("isInstanced", 0);
+#endif
     if (!indices.empty()) {
         commandBuffer->bindDrawingState(vao);
         commandBuffer->bindPipeline(this->pipeline);

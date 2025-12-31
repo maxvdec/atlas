@@ -201,64 +201,39 @@ class MainScene : public Scene {
         Workspace::get().setRootPath(std::string(TEST_PATH) + "/resources/");
 
         camera = Camera();
-        camera.setPosition({-5.0f, 1.0f, 2.0f});
+        // camera.setPosition({-5.0f, 1.0f, 2.0f});
+        camera.setPosition({20.0f, 1.0f, 2.0f});
         camera.lookAt({0.0f, 0.0f, 0.0f});
         camera.farClip = 1000.f;
         window.setCamera(&camera);
 
-        ground = createBox({15.0, 0.1, 15.0});
-        ground.move({0.0f, -0.1f, 0.0f});
+        ground = createBox({150.0f, 0.1f, 150.0f});
         ground.material.albedo = Color(0.3f, 0.8f, 0.3f);
-        ground.addComponent(Rigidbody());
-        ground.rigidbody->addBoxCollider({15.0f, 0.1f, 15.0f});
-        ground.rigidbody->setMotionType(MotionType::Static);
-        ground.rigidbody->setFriction(0.1);
-        ground.rigidbody->addTag("Ground");
+        ground.setPosition({0.0f, -0.1f, 0.0f});
         window.addObject(&ground);
 
-        // Anchor body (static)
-        ball2 = createSphere(0.5f);
-        ball2.move({0.0f, 3.0f, 0.0f});
-        ball2.addComponent(Rigidbody());
-        ball2.rigidbody->addSphereCollider(0.5f);
-        ball2.rigidbody->setMotionType(MotionType::Static);
-        ball2.material.albedo = Color(0.8f, 0.3f, 0.3f, 0.5f);
-        window.addObject(&ball2);
+        sponza = Model();
+        sponza.fromResource(Workspace::get().createResource(
+            "sponza.obj", "SponzaModel", ResourceType::Model));
+        sponza.setScale({0.01f, 0.01f, 0.01f});
 
-        // Hinged body (dynamic)
-        ball = createDebugSphere(0.5);
-        ball.move({0.0f, 2.0f, 1.0f});
-        ball.addComponent(Rigidbody());
-        ball.rigidbody->addSphereCollider(0.5);
-        ball.rigidbody->setMotionType(MotionType::Dynamic);
-        ball.rigidbody->setMass(1.0f);
-        ball.rigidbody->setFriction(0.1);
-        ball.rigidbody->setRestitution(0.8f);
+        sponza.material.albedo = Color(1.0, 0.0, 0.0, 1.0);
 
-        HingeJoint hinge;
-        hinge.parent = &ball2;
-        hinge.child = &ball;
-        hinge.space = Space::Global;
-        hinge.anchor = ball2.getPosition();
-        hinge.axis1 = Normal3d::right();
-        hinge.axis2 = Normal3d::right();
-        hinge.limits.enabled = true;
-        hinge.limits.minAngle = -45.0f;
-        hinge.limits.maxAngle = 45.0f;
-        ball.addComponent(hinge);
+        Resource fontResource = Workspace::get().createResource(
+            "arial.ttf", "ArialFont", ResourceType::Font);
 
-        ball.addComponent(BallBehavior());
-        window.addObject(&ball);
+        this->setAmbientIntensity(1.0f);
 
-        window.useDeferredRendering();
+        window.addObject(&sponza);
+
+        // window.useDeferredRendering();
         atmosphere.enable();
         atmosphere.secondsPerHour = 4.f;
         atmosphere.setTime(12);
-        atmosphere.cycle = false;
+        atmosphere.cycle = true;
         atmosphere.useGlobalLight();
-        atmosphere.castShadowsFromSunlight(4096);
 
-        this->setAutomaticAmbient(true);
+        atmosphere.castShadowsFromSunlight(4096);
     }
 };
 

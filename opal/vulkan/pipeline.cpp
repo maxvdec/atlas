@@ -723,8 +723,11 @@ CoreRenderPass::create(std::shared_ptr<Pipeline> pipeline,
             } else if (attachment.type == opal::Attachment::Type::Depth ||
                        attachment.type ==
                            opal::Attachment::Type::DepthStencil) {
+                // These depth targets (e.g., shadow maps, gbuffer depth) are
+                // commonly sampled in later passes. Keep them in a readable
+                // layout after the pass.
                 attachmentDesc.finalLayout =
-                    VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+                    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                 attachmentDesc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
                 attachmentDesc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE;
             }

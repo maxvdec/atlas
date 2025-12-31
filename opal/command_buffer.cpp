@@ -105,7 +105,7 @@ void CommandBuffer::endPass() {
                             VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                     } else {
                         attachment.texture->currentLayout =
-                            VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+                            VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                     }
                 }
             }

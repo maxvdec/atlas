@@ -608,6 +608,14 @@ class Pipeline {
                       float v3);
 
     /**
+     * @brief Sets raw push-constant data.
+     * In Vulkan this updates the push-constant backing store; it is flushed
+     * automatically when the pipeline is used for a draw call.
+     * In OpenGL this is a no-op.
+     */
+    void setPushConstantsData(const void *data, size_t size, size_t offset = 0);
+
+    /**
      * @brief Binds a buffer of data to a uniform buffer.
      * In OpenGL, this sets array uniforms (e.g., "lights[0].position").
      * In Vulkan, this creates/updates a UBO or SSBO.

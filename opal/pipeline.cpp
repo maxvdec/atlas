@@ -546,6 +546,26 @@ void Pipeline::setUniform2f(const std::string &name, float v0, float v1) {
 #endif
 }
 
+void Pipeline::setPushConstantsData(const void *data, size_t size,
+                                    size_t offset) {
+#ifdef OPENGL
+    (void)data;
+    (void)size;
+    (void)offset;
+#elif defined(VULKAN)
+    if (!data || size == 0) {
+        return;
+    }
+    // Only valid if this pipeline actually declared a push-constant range.
+    // Otherwise we'd call vkCmdPushConstants() with stageFlags == 0.
+    if (pushConstantStages == 0 || pushConstantSize == 0 ||
+        pushConstantData.empty()) {
+        return;
+    }
+    updatePushConstant(static_cast<uint32_t>(offset), data, size);
+#endif
+}
+
 void Pipeline::bindBufferData(const std::string &name, const void *data,
                               size_t size) {
     if (!shaderProgram || !data || size == 0) {
@@ -988,10 +1008,18 @@ void Pipeline::bindDescriptorSets(VkCommandBuffer commandBuffer) {
 
 void Pipeline::updatePushConstant(uint32_t offset, const void *data,
                                   size_t size) {
+    if (!data || size == 0) {
+        return;
+    }
+    if (pushConstantStages == 0 || pushConstantSize == 0 ||
+        pushConstantData.empty()) {
+        return;
+    }
+
     uint32_t requiredSize = offset + static_cast<uint32_t>(size);
-    if (pushConstantData.size() < requiredSize) {
-        pushConstantData.resize(requiredSize, 0);
-        pushConstantSize = requiredSize;
+    if (requiredSize > pushConstantData.size()) {
+        // Don't grow beyond the pipeline layout's declared push-constant range.
+        return;
     }
 
     memcpy(pushConstantData.data() + offset, data, size);
@@ -999,7 +1027,12 @@ void Pipeline::updatePushConstant(uint32_t offset, const void *data,
 }
 
 void Pipeline::flushPushConstants(VkCommandBuffer commandBuffer) {
-    if (pushConstantSize == 0) {
+    if (pushConstantSize == 0 || pushConstantStages == 0 ||
+        pushConstantData.empty()) {
+        return;
+    }
+
+    if (!pushConstantsDirty) {
         return;
     }
 

@@ -236,11 +236,21 @@ void Shader::performReflection() {
     auto registerBinding = [&](const std::string &name,
                                const UniformBindingInfo &info,
                                bool addAliases) {
-        if (name.empty()) {
-            return;
+        // SPIR-V compiled without debug names (OpName) can yield empty
+        // resource/member names via SPIRV-Cross. We still need stable entries
+        // to build descriptor layouts and push-constant ranges.
+        std::string effectiveName = name;
+        if (effectiveName.empty()) {
+            if (!info.isSampler && !info.isBuffer) {
+                // Push constants (no set/binding).
+                effectiveName = "_push_constants";
+            } else {
+                effectiveName = "_set" + std::to_string(info.set) + "_binding" +
+                                std::to_string(info.binding);
+            }
         }
 
-        uniformBindings[name] = info;
+        uniformBindings[effectiveName] = info;
 
         if (!addAliases) {
             return;
@@ -255,16 +265,77 @@ void Shader::performReflection() {
             }
         };
 
+        // If names were stripped, add conventional aliases based on the
+        // engine's expected descriptor layout (keeps name-based binding code
+        // working).
+        // Add conventional aliases based on set/binding (covers cases where
+        // SPIR-V names are stripped OR compiler-mangled). Aliases are only
+        // added if not already present.
+        if (info.isSampler) {
+            // Forward main shader texture set.
+            if (info.set == 2) {
+                if (info.binding <= 9) {
+                    addAlias("texture" + std::to_string(info.binding + 1));
+                } else if (info.binding == 10) {
+                    addAlias("skybox");
+                } else if (info.binding >= 11 && info.binding <= 15) {
+                    addAlias("cubeMap" + std::to_string(info.binding - 10));
+                }
+            }
+        } else if (info.isBuffer) {
+            if (!info.isStorageBuffer) {
+                // UBO conventions for main forward shader.
+                if (info.set == 0 && info.binding == 0) {
+                    // Vertex UBO instance name in main.vert.
+                    addAlias("uniforms");
+                    addAlias("UBO");
+                }
+                if (info.set == 1) {
+                    if (info.binding == 0) {
+                        // Fragment uniforms block has no instance name in GLSL;
+                        // engine binds it via "Uniforms".
+                        // Do NOT alias this as "uniforms" to avoid clobbering
+                        // the vertex UBO binding.
+                        addAlias("Uniforms");
+                    } else if (info.binding == 1) {
+                        addAlias("material");
+                        addAlias("Material");
+                    } else if (info.binding == 2) {
+                        addAlias("environment");
+                        addAlias("Environment");
+                    } else if (info.binding == 3) {
+                        addAlias("ambientLight");
+                        addAlias("AmbientLight");
+                    }
+                }
+            } else {
+                // SSBO conventions for lighting/shadows.
+                if (info.set == 3) {
+                    if (info.binding == 1) {
+                        addAlias("DirectionalLights");
+                    } else if (info.binding == 2) {
+                        addAlias("PointLights");
+                    } else if (info.binding == 3) {
+                        addAlias("SpotLights");
+                    } else if (info.binding == 4) {
+                        addAlias("AreaLights");
+                    } else if (info.binding == 5) {
+                        addAlias("ShadowParameters");
+                    }
+                }
+            }
+        }
+
         auto addAliasIfSuffixMatches = [&](const std::string &suffix) {
             size_t suffixLen = suffix.size();
-            if (name.size() <= suffixLen) {
+            if (effectiveName.size() <= suffixLen) {
                 return;
             }
             bool matches = true;
             for (size_t i = 0; i < suffixLen; ++i) {
                 char cName =
                     static_cast<char>(std::toupper(static_cast<unsigned char>(
-                        name[name.size() - suffixLen + i])));
+                        effectiveName[effectiveName.size() - suffixLen + i])));
                 char cSuffix = static_cast<char>(
                     std::toupper(static_cast<unsigned char>(suffix[i])));
                 if (cName != cSuffix) {
@@ -276,7 +347,8 @@ void Shader::performReflection() {
                 return;
             }
 
-            std::string trimmed = name.substr(0, name.size() - suffixLen);
+            std::string trimmed =
+                effectiveName.substr(0, effectiveName.size() - suffixLen);
             while (!trimmed.empty() &&
                    std::isspace(static_cast<unsigned char>(trimmed.back()))) {
                 trimmed.pop_back();
@@ -359,6 +431,20 @@ void Shader::performReflection() {
         const spirv_cross::SPIRType &type = compiler.get_type(pc.base_type_id);
         std::string typeName = compiler.get_name(pc.base_type_id);
 
+        // Always register the overall push-constant range, even if individual
+        // member names are stripped.
+        UniformBindingInfo blockInfo;
+        blockInfo.set = 0;
+        blockInfo.binding = 0;
+        blockInfo.size =
+            static_cast<uint32_t>(compiler.get_declared_struct_size(type));
+        blockInfo.offset = 0;
+        blockInfo.isSampler = false;
+        blockInfo.isBuffer = false;
+        blockInfo.isStorageBuffer = false;
+        blockInfo.isCubemap = false;
+        registerBinding(pc.name.empty() ? typeName : pc.name, blockInfo, false);
+
         for (uint32_t i = 0; i < type.member_types.size(); ++i) {
             std::string memberName =
                 compiler.get_member_name(pc.base_type_id, i);
@@ -408,7 +494,7 @@ void Shader::performReflection() {
         samplerInfo.isBuffer = false;
         samplerInfo.isStorageBuffer = false;
         samplerInfo.isCubemap = isCube;
-        registerBinding(sampler.name, samplerInfo, false);
+        registerBinding(sampler.name, samplerInfo, true);
     }
 
     for (const auto &sampler : resources.separate_samplers) {
@@ -426,7 +512,7 @@ void Shader::performReflection() {
         samplerInfo.isBuffer = false;
         samplerInfo.isStorageBuffer = false;
         samplerInfo.isCubemap = false;
-        registerBinding(sampler.name, samplerInfo, false);
+        registerBinding(sampler.name, samplerInfo, true);
     }
 
     for (const auto &image : resources.separate_images) {
@@ -444,7 +530,7 @@ void Shader::performReflection() {
         imageInfo.isBuffer = false;
         imageInfo.isStorageBuffer = false;
         imageInfo.isCubemap = false;
-        registerBinding(image.name, imageInfo, false);
+        registerBinding(image.name, imageInfo, true);
     }
 
     for (const auto &ssbo : resources.storage_buffers) {
