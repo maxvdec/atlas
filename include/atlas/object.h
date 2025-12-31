@@ -538,8 +538,6 @@ class CoreObject : public GameObject {
     friend class RenderTarget;
     friend class Skybox;
 
-    std::vector<std::shared_ptr<Component>> components;
-
     void updateInstances();
 
   public:

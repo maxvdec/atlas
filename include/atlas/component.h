@@ -17,8 +17,10 @@
 #include "bezel/bezel.h"
 #include "opal/opal.h"
 #include <climits>
+#include <iostream>
 #include <map>
 #include <memory>
+#include <optional>
 #include <random>
 #include <vector>
 
@@ -317,10 +319,11 @@ class GameObject : public Renderable {
      * idea.
      */
     template <typename T>
-        requires std::is_base_of_v<Component, T>
+        requires std::is_base_of_v<Component, std::remove_cvref_t<T>>
     void addComponent(T &&existing) {
-        std::shared_ptr<T> component =
-            std::make_shared<T>(std::forward<T>(existing));
+        using U = std::remove_cvref_t<T>;
+        std::shared_ptr<U> component =
+            std::make_shared<U>(std::forward<T>(existing));
         component->object = this;
         component->atAttach();
         components.push_back(component);
