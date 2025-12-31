@@ -11,11 +11,13 @@
 #define ATLAS_OBJECT_H
 
 #include "atlas/component.h"
+#include "atlas/physics.h"
 #include "bezel/bezel.h"
 #include <any>
 #include <memory>
 #include <string>
 #include <type_traits>
+#include <utility>
 #include <unordered_map>
 #pragma once
 
@@ -258,12 +260,6 @@ struct Instance {
  * cubeMaterial.specular = Color(1.0, 1.0, 1.0, 1.0);
  * cubeMaterial.shininess = 32.0f;
  * cube.material = cubeMaterial;
- * // Add a physics body to the cube
- * Body cubeBody;
- * cubeBody.type = BodyType::Dynamic;
- * cubeBody.mass = 1.0f;
- * cubeBody.friction = 0.5f;
- * cube.setupPhysics(cubeBody);
  * // Add the cube to the scene
  * scene.addObject(&cube);
  * ```
@@ -403,6 +399,7 @@ class CoreObject : public GameObject {
      * @brief Assigns an absolute rotation to the object.
      */
     void setRotation(const Rotation3d &newRotation) override;
+    void setRotationQuat(const glm::quat &quat);
     /**
      * @brief Rotates the object so its forward vector points towards a
      * target.
@@ -441,12 +438,6 @@ class CoreObject : public GameObject {
     inline void hide() override { isVisible = false; }
 
     /**
-     * @brief Attaches a physics body so the object can interact with the rigid
-     * body system.
-     */
-    void setupPhysics(Body body) override;
-
-    /**
      * @brief The light attached to this object if it's emissive. Used for
      * emissive objects created with makeEmissive().
      *
@@ -467,11 +458,24 @@ class CoreObject : public GameObject {
      * @param existing The existing component to add.
      */
     template <typename T>
-        requires std::is_base_of_v<Component, T>
-    void addComponent(T existing) {
-        std::shared_ptr<T> component = std::make_shared<T>(existing);
+        requires std::is_base_of_v<Component, std::remove_cvref_t<T>>
+    void addComponent(T &&existing) {
+        using U = std::remove_cvref_t<T>;
+        std::shared_ptr<U> component =
+            std::make_shared<U>(std::forward<T>(existing));
         component->object = this;
-        component->body = this->body.get();
+        component->atAttach();
+        components.push_back(component);
+    }
+
+    template <typename T>
+        requires std::is_base_of_v<Component, T>
+    void addComponent(const std::shared_ptr<T> &component) {
+        if (!component) {
+            return;
+        }
+        component->object = this;
+        component->atAttach();
         components.push_back(component);
     }
 
@@ -521,6 +525,8 @@ class CoreObject : public GameObject {
     glm::mat4 view = glm::mat4(1.0f);
     glm::mat4 projection = glm::mat4(1.0f);
 
+    glm::quat rotationQuat = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+
     bool useColor = true;
     bool useTexture = false;
 
@@ -531,8 +537,6 @@ class CoreObject : public GameObject {
     friend class Window;
     friend class RenderTarget;
     friend class Skybox;
-
-    std::vector<std::shared_ptr<Component>> components;
 
     void updateInstances();
 
@@ -576,6 +580,8 @@ class CoreObject : public GameObject {
      */
     inline bool canCastShadows() const override { return castsShadows; }
 
+    Rotation3d getRotation() const override { return rotation; }
+
     /**
      * @brief Performs per-frame updates such as component ticking or buffering
      * synchronization.
@@ -587,6 +593,50 @@ class CoreObject : public GameObject {
      * rendering pipeline.
      */
     bool canUseDeferredRendering() override { return useDeferredRendering; }
+
+    void onCollisionEnter([[maybe_unused]] GameObject *other) override {
+        for (auto &component : components) {
+            component->onCollisionEnter(other);
+        }
+    }
+
+    void onCollisionExit([[maybe_unused]] GameObject *other) override {
+        for (auto &component : components) {
+            component->onCollisionExit(other);
+        }
+    }
+
+    void onCollisionStay([[maybe_unused]] GameObject *other) override {
+        for (auto &component : components) {
+            component->onCollisionStay(other);
+        }
+    }
+
+    void onSignalRecieve([[maybe_unused]] const std::string &signal,
+                         [[maybe_unused]] GameObject *sender) override {
+        for (auto &component : components) {
+            component->onSignalRecieve(signal, sender);
+        }
+    }
+
+    void onSignalEnd([[maybe_unused]] const std::string &signal,
+                     [[maybe_unused]] GameObject *sender) override {
+        for (auto &component : components) {
+            component->onSignalEnd(signal, sender);
+        }
+    }
+
+    void beforePhysics() override {
+        for (auto &component : components) {
+            component->beforePhysics();
+        }
+    }
+
+    void onQueryRecieve(QueryResult &result) override {
+        for (auto &component : components) {
+            component->onQueryRecieve(result);
+        }
+    }
 };
 
 /**

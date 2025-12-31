@@ -3,7 +3,9 @@ project(Atlas LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_definitions(-DATLAS_VERSION=\"Alpha\ 5\")
+set(JOLT_VERSION "5.5.0")
+
+add_definitions(-DATLAS_VERSION=\"Alpha\ 6\")
 add_definitions(-DOPAL_VERSION=\"1.1\ Ellipse\")
 
 message(STATUS "Building for platform: ${CMAKE_SYSTEM_NAME}")
@@ -120,18 +122,16 @@ endif()
 
 if(BEZEL_NATIVE)
 else()
-    # Setting up Jolt Physics
     set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
     FetchContent_Declare(
     JoltPhysics
     GIT_REPOSITORY https://github.com/jrouwe/JoltPhysics.git
-    GIT_TAG v5.4.0
+    GIT_TAG v${JOLT_VERSION}
     GIT_SHALLOW TRUE
-    UPDATE_DISCONNECTED TRUE
     SOURCE_SUBDIR Build
 )
     FetchContent_MakeAvailable(JoltPhysics)
-    message(STATUS "Downloaded Jolt Physics, version 5.4.0")
+    message(STATUS "Downloaded Jolt Physics, version ${JOLT_VERSION}")
 endif()
 
 if(BACKEND_OPENGL)
@@ -171,7 +171,7 @@ if (BEZEL_NATIVE)
     message(STATUS "Compiling with Bezel Native")
     file(GLOB_RECURSE BEZEL_SOURCES CONFIGURE_DEPENDS bezel/native/*.cpp)
 else()
-    message(STATUS "Compiling with Bezel Jolt (Jolt Physics 5.4.0)")
+    message(STATUS "Compiling with Bezel Jolt (Jolt Physics ${JOLT_VERSION})")
     file(GLOB_RECURSE BEZEL_SOURCES CONFIGURE_DEPENDS bezel/jolt/*.cpp)
 endif()
 
@@ -205,7 +205,7 @@ else()
 endif()
 
 add_library(aurora ${AURORA_SOURCES})
-target_link_libraries(aurora PRIVATE glm::glm glfw)
+target_link_libraries(aurora PRIVATE glm::glm glfw bezel)
 
 if (BACKEND_OPENGL)
     target_link_libraries(aurora PRIVATE OpenGL::GL)
@@ -214,7 +214,7 @@ else()
 endif()
 
 add_library(hydra ${HYDRA_SOURCES})
-target_link_libraries(hydra PRIVATE glm::glm glfw)
+target_link_libraries(hydra PRIVATE glm::glm glfw bezel)
 
 if (BACKEND_OPENGL)
     target_link_libraries(hydra PRIVATE OpenGL::GL)
@@ -235,6 +235,11 @@ target_link_libraries(atlas
         ${FREETYPE_LIBRARIES}
         assimp::assimp
 )
+
+if(BEZEL_NATIVE)
+else()
+    include_directories(${JoltPhysics_SOURCE_DIR})
+endif()
 
 if(BACKEND_OPENGL)
     target_link_libraries(atlas PRIVATE OpenGL::GL)

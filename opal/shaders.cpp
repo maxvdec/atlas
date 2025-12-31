@@ -17,7 +17,6 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include <iostream>
 #ifdef VULKAN
 #include <vulkan/vulkan.hpp>
 #include <spirv_cross/spirv_cross.hpp>
@@ -358,6 +357,7 @@ void Shader::performReflection() {
 
     for (const auto &pc : resources.push_constant_buffers) {
         const spirv_cross::SPIRType &type = compiler.get_type(pc.base_type_id);
+        std::string typeName = compiler.get_name(pc.base_type_id);
 
         for (uint32_t i = 0; i < type.member_types.size(); ++i) {
             std::string memberName =
@@ -376,9 +376,15 @@ void Shader::performReflection() {
             memberInfo.isStorageBuffer = false;
             memberInfo.isCubemap = false;
 
+            // Register with just member name
             registerBinding(memberName, memberInfo, false);
+            // Register with instance name prefix
             if (!pc.name.empty()) {
                 registerBinding(pc.name + "." + memberName, memberInfo, false);
+            }
+            // Register with type name prefix (e.g., "material.albedo")
+            if (!typeName.empty() && typeName != pc.name) {
+                registerBinding(typeName + "." + memberName, memberInfo, false);
             }
         }
     }

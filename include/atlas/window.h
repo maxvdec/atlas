@@ -463,14 +463,6 @@ class Window {
     inline float getFramesPerSecond() { return this->framesPerSecond; }
 
     /**
-     * @brief Gets all physics bodies in the window.
-     *
-     * @return (std::vector<std::shared_ptr<Body>>) Vector of all physics
-     * bodies.
-     */
-    std::vector<std::shared_ptr<Body>> getAllBodies();
-
-    /**
      * @brief The gravity constant applied to physics bodies. Default is 9.81
      * m/s².
      *
@@ -545,6 +537,10 @@ class Window {
     int viewportWidth = 0;
     int viewportHeight = 0;
     std::shared_ptr<opal::Device> device;
+
+    std::shared_ptr<bezel::PhysicsWorld> physicsWorld;
+
+    bool firstFrame = true;
 
   private:
     std::shared_ptr<opal::CommandBuffer> activeCommandBuffer = nullptr;

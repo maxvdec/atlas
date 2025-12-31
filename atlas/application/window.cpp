@@ -238,6 +238,9 @@ void Window::run() {
     if (this->camera == nullptr) {
         this->camera = new Camera();
     }
+    this->physicsWorld = std::make_shared<bezel::PhysicsWorld>();
+    this->physicsWorld->init();
+
     for (auto &obj : this->renderables) {
         obj->initialize();
     }
@@ -272,13 +275,40 @@ void Window::run() {
     auto renderPass = opal::RenderPass::create();
     renderPass->setFramebuffer(defaultFramebuffer);
 
+    constexpr float MAX_DELTA_TIME = 1.0f / 30.0f;
+    this->firstFrame = true;
+
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
+
+        float currentTime = static_cast<float>(glfwGetTime());
+        float rawDelta = currentTime - this->lastTime;
+        this->lastTime = currentTime;
+
+        const bool isFirstFrame = this->firstFrame;
+        if (isFirstFrame) {
+            this->deltaTime = 0.0f;
+        } else {
+            if (rawDelta < 0.0f) {
+                rawDelta = 0.0f;
+            }
+            this->deltaTime = std::min(rawDelta, MAX_DELTA_TIME);
+        }
+
+        if (this->deltaTime > 0.0f) {
+            this->framesPerSecond = 1.0f / this->deltaTime;
+        }
 
         device->frameCount++;
 
         DebugTimer cpuTimer("Cpu Data");
         DebugTimer mainTimer("Main Loop");
+
+        for (auto &obj : this->renderables) {
+            obj->beforePhysics();
+        }
+
+        this->physicsWorld->update(this->deltaTime);
 
         if (this->currentScene == nullptr) {
             commandBuffer->start();
@@ -295,13 +325,6 @@ void Window::run() {
         }
 
         commandBuffer->start();
-        float currentTime = static_cast<float>(glfwGetTime());
-        this->deltaTime = currentTime - this->lastTime;
-        lastTime = currentTime;
-
-        if (this->deltaTime > 0.0f) {
-            this->framesPerSecond = 1.0f / this->deltaTime;
-        }
 
         currentScene->updateScene(this->deltaTime);
 
@@ -557,6 +580,10 @@ void Window::run() {
         ResourceTracker::getInstance().unloadedResources = 0;
         ResourceTracker::getInstance().totalMemoryMb = 0.0f;
         frameResourcesInfo.send();
+
+        if (this->firstFrame) {
+            this->firstFrame = false;
+        }
     }
 }
 
@@ -962,8 +989,12 @@ void Window::renderLightsToShadowMaps(
         if (light->doesCastShadows == false) {
             continue;
         }
-        renderedShadows = true;
         RenderTarget *shadowRenderTarget = light->shadowRenderTarget;
+        if (shadowRenderTarget == nullptr ||
+            shadowRenderTarget->getFramebuffer() == nullptr) {
+            continue;
+        }
+        renderedShadows = true;
 
         depthPipeline->setViewport(
             0, 0, shadowRenderTarget->texture.creationData.width,
@@ -973,6 +1004,11 @@ void Window::renderLightsToShadowMaps(
         depthPipeline->setPolygonOffset(2.0f, 4.0f);
 
         depthPipeline = this->depthProgram.requestPipeline(depthPipeline);
+
+        // Set up render pass for shadow framebuffer
+        auto shadowRenderPass = opal::RenderPass::create();
+        shadowRenderPass->setFramebuffer(shadowRenderTarget->getFramebuffer());
+        commandBuffer->beginPass(shadowRenderPass);
 
         shadowRenderTarget->bind();
         commandBuffer->clearDepth(1.0f);
@@ -1006,6 +1042,8 @@ void Window::renderLightsToShadowMaps(
             obj->setViewMatrix(lightView);
             obj->render(getDeltaTime(), commandBuffer, false);
         }
+
+        commandBuffer->endPass();
     }
 
     std::shared_ptr<opal::Pipeline> spotlightsPipeline =
@@ -1015,8 +1053,12 @@ void Window::renderLightsToShadowMaps(
         if (light->doesCastShadows == false) {
             continue;
         }
-        renderedShadows = true;
         RenderTarget *shadowRenderTarget = light->shadowRenderTarget;
+        if (shadowRenderTarget == nullptr ||
+            shadowRenderTarget->getFramebuffer() == nullptr) {
+            continue;
+        }
+        renderedShadows = true;
         spotlightsPipeline->setViewport(
             0, 0, shadowRenderTarget->texture.creationData.width,
             shadowRenderTarget->texture.creationData.height);
@@ -1025,6 +1067,11 @@ void Window::renderLightsToShadowMaps(
         spotlightsPipeline->setPolygonOffset(2.0f, 4.0f);
         spotlightsPipeline =
             this->depthProgram.requestPipeline(spotlightsPipeline);
+
+        // Set up render pass for shadow framebuffer
+        auto shadowRenderPass = opal::RenderPass::create();
+        shadowRenderPass->setFramebuffer(shadowRenderTarget->getFramebuffer());
+        commandBuffer->beginPass(shadowRenderPass);
 
         shadowRenderTarget->bind();
         commandBuffer->clearDepth(1.0f);
@@ -1062,6 +1109,8 @@ void Window::renderLightsToShadowMaps(
             obj->setViewMatrix(lightView);
             obj->render(getDeltaTime(), commandBuffer, false);
         }
+
+        commandBuffer->endPass();
     }
 
     std::shared_ptr<opal::Pipeline> pointLightPipeline =
@@ -1071,8 +1120,12 @@ void Window::renderLightsToShadowMaps(
         if (!light->doesCastShadows) {
             continue;
         }
-        renderedShadows = true;
         RenderTarget *shadowRenderTarget = light->shadowRenderTarget;
+        if (shadowRenderTarget == nullptr ||
+            shadowRenderTarget->getFramebuffer() == nullptr) {
+            continue;
+        }
+        renderedShadows = true;
         pointLightPipeline->setViewport(
             0, 0, shadowRenderTarget->texture.creationData.width,
             shadowRenderTarget->texture.creationData.height);
@@ -1094,6 +1147,13 @@ void Window::renderLightsToShadowMaps(
             // Multi-pass rendering: render 6 times, once per cubemap face
             for (int face = 0; face < 6; ++face) {
                 shadowRenderTarget->bindCubemapFace(face);
+
+                // Set up render pass for this cubemap face
+                auto shadowRenderPass = opal::RenderPass::create();
+                shadowRenderPass->setFramebuffer(
+                    shadowRenderTarget->getFramebuffer());
+                commandBuffer->beginPass(shadowRenderPass);
+
                 commandBuffer->clearDepth(1.0f);
 
                 // Set the shadow matrix for this face
@@ -1127,9 +1187,16 @@ void Window::renderLightsToShadowMaps(
                     obj->setPipeline(pointLightPipeline);
                     obj->render(getDeltaTime(), commandBuffer, false);
                 }
+
+                commandBuffer->endPass();
             }
         } else {
             // Single-pass rendering with geometry shader
+            auto shadowRenderPass = opal::RenderPass::create();
+            shadowRenderPass->setFramebuffer(
+                shadowRenderTarget->getFramebuffer());
+            commandBuffer->beginPass(shadowRenderPass);
+
             shadowRenderTarget->bind();
             commandBuffer->clearDepth(1.0f);
 
@@ -1165,6 +1232,8 @@ void Window::renderLightsToShadowMaps(
                 obj->setPipeline(pointLightPipeline);
                 obj->render(getDeltaTime(), commandBuffer, false);
             }
+
+            commandBuffer->endPass();
         }
     }
 
@@ -1229,17 +1298,6 @@ void Window::renderLightsToShadowMaps(
             j++;
         }
     }
-}
-
-std::vector<std::shared_ptr<Body>> Window::getAllBodies() {
-    std::vector<std::shared_ptr<Body>> bodies;
-    for (auto &obj : this->renderables) {
-        CoreObject *coreObj = dynamic_cast<CoreObject *>(obj);
-        if (coreObj != nullptr && coreObj->hasPhysics) {
-            bodies.push_back(coreObj->body);
-        }
-    }
-    return bodies;
 }
 
 void Window::renderPingpong(RenderTarget *target) {

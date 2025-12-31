@@ -201,6 +201,9 @@ void Atmosphere::castShadowsFromSunlight(int res) const {
     if (!mainLight) {
         return;
     }
+    if (Window::mainWindow == nullptr) {
+        return;
+    }
     mainLight->castShadows(*Window::mainWindow, res);
 }
 
