@@ -50,8 +50,6 @@ void bezel::Rigidbody::create(std::shared_ptr<bezel::PhysicsWorld> world) {
         break;
     }
 
-    // Choose the object layer based on motion type + sensor status.
-    // This must match the filters in `bezel/jolt/world.cpp`.
     JPH::ObjectLayer objectLayer = bezel::jolt::layers::MOVING;
     if (isSensor) {
         objectLayer = bezel::jolt::layers::SENSOR;

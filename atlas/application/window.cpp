@@ -276,7 +276,7 @@ void Window::run() {
     renderPass->setFramebuffer(defaultFramebuffer);
 
     constexpr float MAX_DELTA_TIME = 1.0f / 30.0f;
-    bool firstFrame = true;
+    this->firstFrame = true;
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
@@ -285,9 +285,9 @@ void Window::run() {
         float rawDelta = currentTime - this->lastTime;
         this->lastTime = currentTime;
 
-        if (firstFrame) {
+        const bool isFirstFrame = this->firstFrame;
+        if (isFirstFrame) {
             this->deltaTime = 0.0f;
-            firstFrame = false;
         } else {
             if (rawDelta < 0.0f) {
                 rawDelta = 0.0f;
@@ -580,6 +580,10 @@ void Window::run() {
         ResourceTracker::getInstance().unloadedResources = 0;
         ResourceTracker::getInstance().totalMemoryMb = 0.0f;
         frameResourcesInfo.send();
+
+        if (this->firstFrame) {
+            this->firstFrame = false;
+        }
     }
 }
 

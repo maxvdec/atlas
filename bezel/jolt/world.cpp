@@ -233,6 +233,104 @@ void bezel::PhysicsWorld::update(float dt) {
         throw std::runtime_error("Jolt PhysicsWorld update error");
     }
 
+    // Breakable constraints handling
+    if (dt > 0.0f) {
+        for (size_t i = 0; i < breakableConstraints.size();) {
+            auto &entry = breakableConstraints[i];
+            if (entry.constraint == nullptr) {
+                ++i;
+                continue;
+            }
+
+            const float breakForce = entry.breakForce;
+            const float breakTorque = entry.breakTorque;
+            if (breakForce <= 0.0f && breakTorque <= 0.0f) {
+                ++i;
+                continue;
+            }
+
+            float appliedForce = 0.0f;
+            float appliedTorque = 0.0f;
+
+            JPH::Constraint *c = entry.constraint.GetPtr();
+            if (c == nullptr) {
+                ++i;
+                continue;
+            }
+
+            switch (c->GetSubType()) {
+            case JPH::EConstraintSubType::Fixed: {
+                auto *fixed = static_cast<JPH::FixedConstraint *>(c);
+
+                const JPH::Vec3 lin = fixed->GetTotalLambdaPosition();
+                const JPH::Vec3 ang = fixed->GetTotalLambdaRotation();
+
+                appliedForce = lin.Length() / dt;
+                appliedTorque = ang.Length() / dt;
+                break;
+            }
+
+            case JPH::EConstraintSubType::Hinge: {
+                auto *hinge = static_cast<JPH::HingeConstraint *>(c);
+
+                const JPH::Vec3 lin = hinge->GetTotalLambdaPosition();
+                appliedForce = lin.Length() / dt;
+
+                const auto rot2 = hinge->GetTotalLambdaRotation();
+                const float rotImpulseMag =
+                    std::sqrt((rot2[0] * rot2[0]) + (rot2[1] * rot2[1]));
+
+                const float limitImpulse =
+                    std::abs(hinge->GetTotalLambdaRotationLimits());
+                const float motorImpulse =
+                    std::abs(hinge->GetTotalLambdaMotor());
+
+                appliedTorque =
+                    (rotImpulseMag + limitImpulse + motorImpulse) / dt;
+                break;
+            }
+
+            case JPH::EConstraintSubType::Distance: {
+                auto *distance = static_cast<JPH::DistanceConstraint *>(c);
+
+                const float linImpulse =
+                    std::abs(distance->GetTotalLambdaPosition());
+
+                appliedForce = linImpulse / dt;
+                appliedTorque = 0.0f;
+                break;
+            }
+
+            default:
+                ++i;
+                continue;
+            }
+
+            const bool forceBroken =
+                (breakForce > 0.0f && appliedForce > breakForce);
+            const bool torqueBroken =
+                (breakTorque > 0.0f && appliedTorque > breakTorque);
+
+            if (forceBroken || torqueBroken) {
+                atlas_log("[Jolt] Breaking constraint (force=" +
+                          std::to_string(appliedForce) + "/" +
+                          std::to_string(breakForce) +
+                          ", torque=" + std::to_string(appliedTorque) + "/" +
+                          std::to_string(breakTorque) + ")");
+
+                physicsSystem.RemoveConstraint(c);
+                breakableConstraints.erase(
+                    breakableConstraints.begin() +
+                    static_cast<std::vector<
+                        PhysicsWorld::BreakableConstraint>::difference_type>(
+                        i));
+                continue;
+            }
+
+            ++i;
+        }
+    }
+
     collisionDispatcher->update(this);
 }
 

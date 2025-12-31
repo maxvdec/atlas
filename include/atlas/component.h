@@ -385,8 +385,13 @@ class GameObject : public Renderable {
 
     virtual Rotation3d getRotation() const { return Rotation3d(0.f, 0.f, 0.f); }
 
+    void addDependency(GameObject *obj) { dependencies.push_back(obj); }
+
+    std::vector<GameObject *> getDependencies() const { return dependencies; }
+
   protected:
     std::vector<std::shared_ptr<Component>> components;
+    std::vector<GameObject *> dependencies;
 
     /**
      * @brief The unique identifier for the object.

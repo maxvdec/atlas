@@ -14,6 +14,7 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <variant>
 #include <vector>
 #ifndef BEZEL_NATIVE
 #include <bezel/jolt/world.h>
@@ -159,6 +160,88 @@ struct SweepResult {
     bool hitAny = false;
 };
 
+struct WorldBody {};
+
+using JointChild = std::variant<Rigidbody *, WorldBody>;
+
+enum class SpringMode { FrequencyAndDamping, StiffnessAndDamping };
+
+enum class Space { Local, Global };
+
+struct Spring {
+    bool enabled = false;
+
+    SpringMode mode = SpringMode::FrequencyAndDamping;
+
+    float frequencyHz = 0.0f;
+    float dampingRatio = 0.0f;
+
+    float stiffness = 0.0f;
+    float damping = 0.0f;
+};
+
+struct AngleLimits {
+    bool enabled = false;
+    float minAngle = 0.0f;
+    float maxAngle = 0.0f;
+};
+
+struct Motor {
+    bool enabled = false;
+    float maxForce = 0.0f;
+    float maxTorque = 0.0f;
+};
+
+class Joint {
+  public:
+    virtual ~Joint() = default;
+
+    JointChild parent;
+    JointChild child;
+
+    JPH::Constraint *joint = nullptr;
+
+    Space space = Space::Global;
+
+    Position3d anchor = Position3d::invalid();
+
+    float breakForce = 0.0f;
+    float breakTorque = 0.0f;
+
+    virtual void create(std::shared_ptr<PhysicsWorld> world) = 0;
+};
+
+class FixedJoint final : public Joint {
+  public:
+    void create(std::shared_ptr<PhysicsWorld> world) override;
+};
+
+class HingeJoint final : public Joint {
+  public:
+    Normal3d axis1 = Normal3d::up();
+    Normal3d axis2 = Normal3d::up();
+
+    AngleLimits limits;
+    Motor motor;
+
+    void create(std::shared_ptr<PhysicsWorld> world) override;
+};
+
+class SpringJoint final : public Joint {
+  public:
+    Position3d anchorB = Position3d::invalid();
+
+    float restLength = 1.0f;
+
+    bool useLimits = false;
+    float minLength = 0.0f;
+    float maxLength = 0.0f;
+
+    Spring spring;
+
+    void create(std::shared_ptr<PhysicsWorld> world) override;
+};
+
 struct Rigidbody {
     Position3d position;
     Rotation3d rotation;
@@ -244,6 +327,13 @@ class PhysicsWorld {
 #ifndef BEZEL_NATIVE
 
     JPH::PhysicsSystem physicsSystem;
+    struct BreakableConstraint {
+        JPH::Ref<JPH::Constraint> constraint;
+        float breakForce = 0.0f;
+        float breakTorque = 0.0f;
+    };
+
+    std::vector<BreakableConstraint> breakableConstraints;
 #endif
     bool initialized = false;
 

@@ -42,6 +42,9 @@ struct Position3d {
     static Position3d back() { return Position3d(0.0f, 0.0f, -1.0f); }
     static Position3d right() { return Position3d(1.0f, 0.0f, 0.0f); }
     static Position3d left() { return Position3d(-1.0f, 0.0f, 0.0f); }
+    static Position3d invalid() {
+        return Position3d(std::nanf(""), std::nanf(""), std::nanf(""));
+    }
 
     Position3d() : x(0.0f), y(0.0f), z(0.0f) {}
     Position3d(float x, float y, float z) : x(x), y(y), z(z) {}

@@ -540,6 +540,8 @@ class Window {
 
     std::shared_ptr<bezel::PhysicsWorld> physicsWorld;
 
+    bool firstFrame = true;
+
   private:
     std::shared_ptr<opal::CommandBuffer> activeCommandBuffer = nullptr;
     CoreWindowReference windowRef;

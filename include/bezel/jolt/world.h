@@ -31,6 +31,12 @@
 #include <Jolt/Physics/Body/Body.h>
 #include <Jolt/Core/Reference.h>
 
+#include <Jolt/Physics/Constraints/Constraint.h>
+#include <Jolt/Physics/Constraints/FixedConstraint.h>
+#include <Jolt/Physics/Constraints/HingeConstraint.h>
+#include <Jolt/Physics/Constraints/DistanceConstraint.h>
+#include <Jolt/Physics/Constraints/SpringSettings.h>
+
 #include <Jolt/Physics/Collision/Shape/BoxShape.h>
 #include <Jolt/Physics/Collision/Shape/SphereShape.h>
 #include <Jolt/Physics/Collision/Shape/CapsuleShape.h>
