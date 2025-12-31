@@ -68,6 +68,8 @@ void FixedJoint::beforePhysics() {
     }
 }
 
+void FixedJoint::breakJoint() { joint->breakJoint(); }
+
 void HingeJoint::beforePhysics() {
     bool isFirstFrame = Window::mainWindow->firstFrame;
     if (isFirstFrame) {
@@ -129,6 +131,8 @@ void HingeJoint::beforePhysics() {
         joint->create(Window::mainWindow->physicsWorld);
     }
 }
+
+void HingeJoint::breakJoint() { joint->breakJoint(); }
 
 void SpringJoint::beforePhysics() {
     bool isFirstFrame = Window::mainWindow->firstFrame;
@@ -192,3 +196,5 @@ void SpringJoint::beforePhysics() {
         joint->create(Window::mainWindow->physicsWorld);
     }
 }
+
+void SpringJoint::breakJoint() { joint->breakJoint(); }

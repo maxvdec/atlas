@@ -119,7 +119,14 @@ class BallBehavior : public Component {
             object->rigidbody->applyImpulse({0.0f, 0.0f, 20.0f});
         }
     }
-    void update(float) override { object->rigidbody->overlapSphere(2.0f); }
+    void update(float) override {
+        if (Window::mainWindow->isKeyClicked(Key::N)) {
+            auto hinge = object->getComponent<HingeJoint>();
+            if (hinge) {
+                hinge->breakJoint();
+            }
+        }
+    }
 };
 
 class MainScene : public Scene {

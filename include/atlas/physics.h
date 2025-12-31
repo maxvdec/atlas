@@ -129,6 +129,8 @@ class Joint : public Component {
     float breakTorque = 0.0f;
 
     void beforePhysics() override = 0;
+
+    virtual void breakJoint() = 0;
 };
 
 class FixedJoint final : public Joint {
@@ -137,6 +139,7 @@ class FixedJoint final : public Joint {
 
   public:
     void beforePhysics() override;
+    void breakJoint() override;
 };
 
 class HingeJoint final : public Joint {
@@ -151,6 +154,7 @@ class HingeJoint final : public Joint {
     Motor motor;
 
     void beforePhysics() override;
+    void breakJoint() override;
 };
 
 class SpringJoint final : public Joint {
@@ -169,6 +173,26 @@ class SpringJoint final : public Joint {
     Spring spring;
 
     void beforePhysics() override;
+    void breakJoint() override;
+};
+
+class Vehicle final : public Component {
+  private:
+    bezel::Vehicle vehicle;
+    bool created = false;
+
+  public:
+    bezel::VehicleSettings settings;
+
+    float forward = 0.0f;   // [-1, 1]
+    float right = 0.0f;     // [-1, 1]
+    float brake = 0.0f;     // [0, 1]
+    float handBrake = 0.0f; // [0, 1]
+
+    void atAttach() override;
+    void beforePhysics() override;
+
+    void requestRecreate();
 };
 
 class Rigidbody : public Component {

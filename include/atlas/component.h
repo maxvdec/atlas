@@ -17,8 +17,10 @@
 #include "bezel/bezel.h"
 #include "opal/opal.h"
 #include <climits>
+#include <iostream>
 #include <map>
 #include <memory>
+#include <optional>
 #include <random>
 #include <vector>
 
@@ -367,7 +369,10 @@ class GameObject : public Renderable {
     template <typename T>
         requires std::is_base_of_v<Component, T>
     std::shared_ptr<T> getComponent() {
+        std::cout << "Getting component of type: " << typeid(T).name() << "\n";
         for (auto &component : components) {
+            std::cout << "Checking component of type: "
+                      << typeid(component).name() << "\n";
             std::shared_ptr<T> casted = std::dynamic_pointer_cast<T>(component);
             if (casted != nullptr) {
                 return casted;

@@ -16,8 +16,17 @@
 #include <string>
 #include <variant>
 #include <vector>
+#include <limits>
 #ifndef BEZEL_NATIVE
 #include <bezel/jolt/world.h>
+#endif
+
+#ifndef BEZEL_NATIVE
+namespace JPH {
+class VehicleConstraint;
+class WheeledVehicleController;
+class VehicleCollisionTester;
+} // namespace JPH
 #endif
 
 #ifndef BEZEL_NATIVE
@@ -209,6 +218,7 @@ class Joint {
     float breakTorque = 0.0f;
 
     virtual void create(std::shared_ptr<PhysicsWorld> world) = 0;
+    void breakJoint() { joint->SetEnabled(false); };
 };
 
 class FixedJoint final : public Joint {
@@ -240,6 +250,113 @@ class SpringJoint final : public Joint {
     Spring spring;
 
     void create(std::shared_ptr<PhysicsWorld> world) override;
+};
+
+// ----------------------------
+// Vehicle (Jolt VehicleConstraint)
+// ----------------------------
+
+struct VehicleWheelSettings {
+    Position3d position = {0.0f, 0.0f, 0.0f};
+
+    bool enableSuspensionForcePoint = false;
+    Position3d suspensionForcePoint = {0.0f, 0.0f, 0.0f};
+
+    Normal3d suspensionDirection = {0.0f, -1.0f, 0.0f};
+    Normal3d steeringAxis = {0.0f, 1.0f, 0.0f};
+    Normal3d wheelUp = {0.0f, 1.0f, 0.0f};
+    Normal3d wheelForward = {0.0f, 0.0f, 1.0f};
+
+    float suspensionMinLength = 0.3f;
+    float suspensionMaxLength = 0.5f;
+    float suspensionPreloadLength = 0.0f;
+    float suspensionFrequencyHz = 1.5f;
+    float suspensionDampingRatio = 0.5f;
+
+    float radius = 0.3f;
+    float width = 0.1f;
+
+    float inertia = 0.9f;
+    float angularDamping = 0.2f;
+    float maxSteerAngleDeg = 70.0f;
+    float maxBrakeTorque = 1500.0f;
+    float maxHandBrakeTorque = 4000.0f;
+};
+
+struct VehicleDifferential {
+    int leftWheel = -1;
+    int rightWheel = -1;
+    float differentialRatio = 3.42f;
+    float leftRightSplit = 0.5f;
+    float limitedSlipRatio = 1.4f;
+    float engineTorqueRatio = 1.0f;
+};
+
+struct VehicleEngine {
+    float maxTorque = 500.0f;
+    float minRPM = 1000.0f;
+    float maxRPM = 6000.0f;
+    float inertia = 0.5f;
+    float angularDamping = 0.2f;
+};
+
+enum class VehicleTransmissionMode { Auto, Manual };
+
+struct VehicleTransmission {
+    VehicleTransmissionMode mode = VehicleTransmissionMode::Auto;
+    std::vector<float> gearRatios = {2.66f, 1.78f, 1.3f, 1.0f, 0.74f};
+    std::vector<float> reverseGearRatios = {-2.90f};
+    float switchTime = 0.5f;
+    float clutchReleaseTime = 0.3f;
+    float switchLatency = 0.5f;
+    float shiftUpRPM = 4000.0f;
+    float shiftDownRPM = 2000.0f;
+    float clutchStrength = 10.0f;
+};
+
+struct VehicleControllerSettings {
+    VehicleEngine engine;
+    VehicleTransmission transmission;
+    std::vector<VehicleDifferential> differentials;
+    float differentialLimitedSlipRatio = 1.4f;
+};
+
+struct VehicleSettings {
+    Normal3d up = {0.0f, 1.0f, 0.0f};
+    Normal3d forward = {0.0f, 0.0f, 1.0f};
+
+    float maxPitchRollAngleDeg = 180.0f;
+
+    std::vector<VehicleWheelSettings> wheels;
+    VehicleControllerSettings controller;
+
+    float maxSlopeAngleDeg = 80.0f;
+};
+
+class Vehicle final {
+  public:
+    Rigidbody *chassis = nullptr;
+    VehicleSettings settings;
+
+    Vehicle() = default;
+    Vehicle(const Vehicle &other);
+    Vehicle &operator=(const Vehicle &other);
+    Vehicle(Vehicle &&other) noexcept;
+    Vehicle &operator=(Vehicle &&other) noexcept;
+
+    void create(std::shared_ptr<PhysicsWorld> world);
+    void destroy(std::shared_ptr<PhysicsWorld> world);
+    bool isCreated() const;
+
+    void setDriverInput(float forward, float right, float brake,
+                        float handBrake);
+
+  private:
+#ifndef BEZEL_NATIVE
+    JPH::VehicleConstraint *constraint = nullptr;
+    JPH::WheeledVehicleController *controller = nullptr;
+    JPH::RefConst<JPH::VehicleCollisionTester> collisionTester = nullptr;
+#endif
 };
 
 struct Rigidbody {
