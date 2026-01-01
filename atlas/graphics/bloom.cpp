@@ -128,12 +128,17 @@ const std::vector<BloomElement> &BloomRenderTarget::getElements() const {
     return elements;
 }
 
-void BloomRenderTarget::renderBloomTexture(unsigned int srcTexture,
-                                           float filterRadius) {
+void BloomRenderTarget::renderBloomTexture(
+    unsigned int srcTexture, float filterRadius,
+    std::shared_ptr<opal::CommandBuffer> commandBuffer) {
     this->bindForWriting();
 
-    this->renderDownsamples(srcTexture);
-    this->renderUpsamples(filterRadius);
+    if (commandBuffer == nullptr) {
+        return;
+    }
+
+    this->renderDownsamples(srcTexture, commandBuffer);
+    this->renderUpsamples(filterRadius, commandBuffer);
 
     this->framebuffer->unbind();
     Window::mainWindow->getDevice()->getDefaultFramebuffer()->setViewport(
@@ -144,7 +149,8 @@ unsigned int BloomRenderTarget::getBloomTexture() {
     return elements[0].textureId;
 }
 
-void BloomRenderTarget::renderDownsamples(unsigned int srcTexture) {
+void BloomRenderTarget::renderDownsamples(
+    unsigned int srcTexture, std::shared_ptr<opal::CommandBuffer> commandBuffer) {
     // Get or create pipeline for downsample
     static std::shared_ptr<opal::Pipeline> downsamplePipeline = nullptr;
     if (downsamplePipeline == nullptr) {
@@ -157,16 +163,23 @@ void BloomRenderTarget::renderDownsamples(unsigned int srcTexture) {
                                      srcViewportSizef.y);
     downsamplePipeline->bindTexture2D("srcTexture", srcTexture, 0);
 
-    auto commandBuffer = Window::mainWindow->device->acquireCommandBuffer();
+    auto renderPass = opal::RenderPass::create();
+    renderPass->setFramebuffer(this->framebuffer);
 
     for (size_t i = 0; i < elements.size(); i++) {
         const BloomElement &element = elements[i];
         this->framebuffer->setViewport(0, 0, element.size.x, element.size.y);
         this->framebuffer->attachTexture(element.texture, 0);
 
+        commandBuffer->beginPass(renderPass);
+        commandBuffer->clearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        commandBuffer->bindPipeline(downsamplePipeline);
+
         commandBuffer->bindDrawingState(quadState);
         commandBuffer->draw(6, 1, 0, 0);
         commandBuffer->unbindDrawingState();
+
+        commandBuffer->endPass();
 
         downsamplePipeline->setUniform2f("srcResolution", element.size.x,
                                          element.size.y);
@@ -174,7 +187,8 @@ void BloomRenderTarget::renderDownsamples(unsigned int srcTexture) {
     }
 }
 
-void BloomRenderTarget::renderUpsamples(float filterRadius) {
+void BloomRenderTarget::renderUpsamples(
+    float filterRadius, std::shared_ptr<opal::CommandBuffer> commandBuffer) {
     // Get or create pipeline for upsample
     static std::shared_ptr<opal::Pipeline> upsamplePipeline = nullptr;
     if (upsamplePipeline == nullptr) {
@@ -188,7 +202,8 @@ void BloomRenderTarget::renderUpsamples(float filterRadius) {
 
     upsamplePipeline->setUniform1f("filterRadius", filterRadius);
 
-    auto commandBuffer = Window::mainWindow->device->acquireCommandBuffer();
+    auto renderPass = opal::RenderPass::create();
+    renderPass->setFramebuffer(this->framebuffer);
 
     for (int i = elements.size() - 1; i > 0; i--) {
         const BloomElement &element = elements[i];
@@ -202,9 +217,15 @@ void BloomRenderTarget::renderUpsamples(float filterRadius) {
                                        nextElement.size.y);
         this->framebuffer->attachTexture(nextElement.texture, 0);
 
+        commandBuffer->beginPass(renderPass);
+        commandBuffer->clearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        commandBuffer->bindPipeline(upsamplePipeline);
+
         commandBuffer->bindDrawingState(quadState);
         commandBuffer->draw(6, 1, 0, 0);
         commandBuffer->unbindDrawingState();
+
+        commandBuffer->endPass();
     }
 
     upsamplePipeline->setBlendFunc(opal::BlendFunc::One,

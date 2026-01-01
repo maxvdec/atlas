@@ -177,13 +177,13 @@ void Window::deferredRendering(
         }
     }
 
-    this->gBuffer->resolve();
+    this->gBuffer->resolve(commandBuffer);
 
     commandBuffer->endPass();
     this->gBuffer->unbind();
 
-    target->resolve();
-    this->renderSSAO();
+    target->resolve(commandBuffer);
+    this->renderSSAO(commandBuffer);
 
     auto targetRenderPass = opal::RenderPass::create();
     targetRenderPass->setFramebuffer(target->getFramebuffer());
@@ -471,7 +471,7 @@ void Window::deferredRendering(
                 std::make_shared<RenderTarget>(*this, RenderTargetType::Scene);
         }
 
-        target->resolve();
+        target->resolve(commandBuffer);
 
         // End target pass and start volumetric pass
         commandBuffer->endPass();
@@ -526,7 +526,7 @@ void Window::deferredRendering(
     }
 
     if (this->ssrFramebuffer != nullptr && useSSR) {
-        target->resolve();
+        target->resolve(commandBuffer);
 
         // End current pass and start SSR pass
         commandBuffer->endPass();

@@ -306,8 +306,12 @@ void RenderPass::applyRenderPass() {
                 colorAttachmentRefs.push_back(colorRef);
             } else if (attachment.type == Attachment::Type::Depth ||
                        attachment.type == Attachment::Type::DepthStencil) {
+                // Depth attachments (shadow maps, gbuffer depth, etc.) are
+                // commonly sampled in later passes. Use SHADER_READ_ONLY as
+                // the final layout so they can be sampled without an extra
+                // transition.
                 attachmentDesc.finalLayout =
-                    VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+                    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
                 depthAttachmentRef.attachment = i;
                 depthAttachmentRef.layout =

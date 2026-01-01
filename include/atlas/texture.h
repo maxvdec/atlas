@@ -501,7 +501,7 @@ class RenderTarget : public Renderable {
      * regular textures.
      *
      */
-    void resolve();
+    void resolve(std::shared_ptr<opal::CommandBuffer> commandBuffer = nullptr);
 
     /**
      * @brief Width of the render target in pixels.
@@ -676,7 +676,9 @@ class BloomRenderTarget {
      * @brief Runs the full bloom blur and upsample pass using the source
      * texture.
      */
-    void renderBloomTexture(unsigned int srcTexture, float filterRadius);
+    void renderBloomTexture(unsigned int srcTexture, float filterRadius,
+                            std::shared_ptr<opal::CommandBuffer> commandBuffer =
+                                nullptr);
     /**
      * @brief Returns the bloom chain hierarchy for inspection or custom
      * rendering.
@@ -690,8 +692,10 @@ class BloomRenderTarget {
   private:
     friend class Window;
 
-    void renderDownsamples(unsigned int srcTexture);
-    void renderUpsamples(float filterRadius);
+    void renderDownsamples(unsigned int srcTexture,
+                           std::shared_ptr<opal::CommandBuffer> commandBuffer);
+    void renderUpsamples(float filterRadius,
+                         std::shared_ptr<opal::CommandBuffer> commandBuffer);
 
     std::vector<BloomElement> elements;
     bool initialized = false;

@@ -763,15 +763,24 @@ void Pipeline::ensureDescriptorResources() {
         return;
     }
 
-    std::unordered_map<VkDescriptorType, uint32_t> typeCounts;
+    // Count sets based on the layouts we will actually allocate.
+    // Note: we may create "empty" set layouts to avoid Vulkan pipeline layout
+    // holes (e.g., shaders use set=1..N but not set=0). Those empty layouts
+    // still require a descriptor set allocation, so maxSets must include them.
     uint32_t setCount = 0;
+    for (const auto &layout : descriptorSetLayouts) {
+        if (layout != VK_NULL_HANDLE) {
+            setCount++;
+        }
+    }
+
+    std::unordered_map<VkDescriptorType, uint32_t> typeCounts;
     for (const auto &setPair : descriptorBindingInfo) {
         uint32_t setIdx = setPair.first;
         if (setIdx >= descriptorSetLayouts.size() ||
             descriptorSetLayouts[setIdx] == VK_NULL_HANDLE) {
             continue;
         }
-        setCount++;
         for (const auto &bindingPair : setPair.second) {
             typeCounts[bindingPair.second.type] += bindingPair.second.count;
         }
@@ -885,31 +894,10 @@ void Pipeline::bindSamplerDescriptor(uint32_t set, uint32_t binding,
         return;
     }
 
-    VkImageLayout desiredLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    if (texture->currentLayout != desiredLayout &&
-        texture->currentLayout != VK_IMAGE_LAYOUT_GENERAL) {
-        VkFormat vkFormat = opalTextureFormatToVulkanFormat(texture->format);
-        bool isDepth = (texture->format == TextureFormat::Depth24Stencil8 ||
-                        texture->format == TextureFormat::DepthComponent24 ||
-                        texture->format == TextureFormat::Depth32F);
-
-        if (!isDepth || texture->currentLayout == VK_IMAGE_LAYOUT_UNDEFINED) {
-            uint32_t layerCount =
-                (texture->type == TextureType::TextureCubeMap) ? 6 : 1;
-            Framebuffer::transitionImageLayout(texture->vkImage, vkFormat,
-                                               texture->currentLayout,
-                                               desiredLayout, layerCount);
-            texture->currentLayout = desiredLayout;
-        }
-    }
-
     VkDescriptorImageInfo imageInfo{};
     imageInfo.sampler = texture->vkSampler;
     imageInfo.imageView = texture->vkImageView;
-    imageInfo.imageLayout =
-        (texture->currentLayout == VK_IMAGE_LAYOUT_UNDEFINED)
-            ? VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-            : texture->currentLayout;
+    imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
     VkWriteDescriptorSet write{};
     write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -1032,7 +1020,12 @@ void Pipeline::flushPushConstants(VkCommandBuffer commandBuffer) {
         return;
     }
 
-    if (!pushConstantsDirty) {
+    // Push constants are not persistent across command buffers. If we start
+    // recording a new VkCommandBuffer (e.g., a new frame), we must push again
+    // before the first draw that statically uses them.
+    bool needsPushForThisCmdBuf =
+        (commandBuffer != lastPushConstantsCommandBuffer);
+    if (!pushConstantsDirty && !needsPushForThisCmdBuf) {
         return;
     }
 
@@ -1040,6 +1033,7 @@ void Pipeline::flushPushConstants(VkCommandBuffer commandBuffer) {
                        pushConstantSize, pushConstantData.data());
 
     pushConstantsDirty = false;
+    lastPushConstantsCommandBuffer = commandBuffer;
 }
 #endif
 

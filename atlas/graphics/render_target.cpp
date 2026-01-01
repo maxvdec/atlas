@@ -481,19 +481,23 @@ void RenderTarget::display(Window &window, float zindex) {
     }
 }
 
-void RenderTarget::resolve() {
-    if (type == RenderTargetType::Multisampled && fb && resolveFb) {
+void RenderTarget::resolve(std::shared_ptr<opal::CommandBuffer> commandBuffer) {
+    if (commandBuffer == nullptr) {
+        commandBuffer = Window::mainWindow != nullptr
+                            ? Window::mainWindow->activeCommandBuffer
+                            : nullptr;
+    }
+
+    if (type == RenderTargetType::Multisampled && fb && resolveFb &&
+        commandBuffer) {
         for (int i = 0; i < 2; i++) {
             auto resolveAction =
                 opal::ResolveAction::createForColorAttachment(fb, resolveFb, i);
-            auto commandBuffer =
-                Window::mainWindow->device->acquireCommandBuffer();
             commandBuffer->performResolve(resolveAction);
         }
 
         auto depthResolveAction =
             opal::ResolveAction::createForDepth(fb, resolveFb);
-        auto commandBuffer = Window::mainWindow->device->acquireCommandBuffer();
         commandBuffer->performResolve(depthResolveAction);
     }
 

@@ -408,7 +408,7 @@ void Window::run() {
                 }
 
                 commandBuffer->endPass();
-                target->resolve();
+                target->resolve(commandBuffer);
                 continue;
             }
             commandBuffer->clearColor(this->clearColor.r, this->clearColor.g,
@@ -438,7 +438,7 @@ void Window::run() {
                 obj->render(getDeltaTime(), commandBuffer,
                             shouldRefreshPipeline(obj));
             }
-            target->resolve();
+            target->resolve(commandBuffer);
 
             commandBuffer->endPass();
         }
@@ -1459,7 +1459,8 @@ void Window::renderPhysicalBloom(RenderTarget *target) {
     }
 
     this->bloomBuffer->renderBloomTexture(
-        target->brightTexture.id, currentScene->environment.lightBloom.radius);
+        target->brightTexture.id, currentScene->environment.lightBloom.radius,
+        this->activeCommandBuffer);
     target->blurredTexture = Texture();
     target->blurredTexture.creationData.width =
         this->bloomBuffer->srcViewportSizef.x;

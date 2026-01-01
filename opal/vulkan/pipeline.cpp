@@ -577,12 +577,43 @@ void Pipeline::buildPipelineLayout() {
                     "Failed to create descriptor set layout!");
             }
         }
+
+        // Vulkan pipeline layouts cannot have "holes" in pSetLayouts when
+        // VK_EXT_graphics_pipeline_library is not enabled. If a shader uses
+        // set N but not set 0..N-1, our vector will contain VK_NULL_HANDLE
+        // entries, which triggers validation errors and can crash later.
+        for (size_t i = 0; i < descriptorSetLayouts.size(); ++i) {
+            if (descriptorSetLayouts[i] != VK_NULL_HANDLE) {
+                continue;
+            }
+            VkDescriptorSetLayoutCreateInfo emptyLayoutInfo{};
+            emptyLayoutInfo.sType =
+                VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+            emptyLayoutInfo.bindingCount = 0;
+            emptyLayoutInfo.pBindings = nullptr;
+            emptyLayoutInfo.flags = 0;
+
+            if (vkCreateDescriptorSetLayout(
+                    Device::globalDevice, &emptyLayoutInfo, nullptr,
+                    &descriptorSetLayouts[i]) != VK_SUCCESS) {
+                throw std::runtime_error(
+                    "Failed to create empty descriptor set layout!");
+            }
+        }
     }
 
     this->pushConstantSize = maxPushConstantSize;
     this->pushConstantStages = pushConstantStageFlags;
     if (maxPushConstantSize > 0) {
         this->pushConstantData.resize(maxPushConstantSize, 0);
+        // Validation requires that statically used push constants have been set
+        // before the first draw call. Default to pushing zero-initialized data
+        // once, even if the app never explicitly updates a push-constant.
+        this->pushConstantsDirty = true;
+        this->lastPushConstantsCommandBuffer = VK_NULL_HANDLE;
+    } else {
+        this->pushConstantsDirty = false;
+        this->lastPushConstantsCommandBuffer = VK_NULL_HANDLE;
     }
 
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
@@ -676,7 +707,8 @@ CoreRenderPass::create(std::shared_ptr<Pipeline> pipeline,
         brightAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
         brightAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
         brightAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        brightAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        // Bright buffer is commonly sampled by bloom/tonemapping passes.
+        brightAttachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         attachments.push_back(brightAttachment);
 
         VkAttachmentReference brightRef{};
@@ -689,12 +721,14 @@ CoreRenderPass::create(std::shared_ptr<Pipeline> pipeline,
             depthAttachment.format = VK_FORMAT_D32_SFLOAT;
             depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
             depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-            depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            // Depth is sampled by effects like SSAO; preserve contents.
+            depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
             depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
             depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
             depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            // Allow sampling after the pass.
             depthAttachment.finalLayout =
-                VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
             attachments.push_back(depthAttachment);
 
             depthAttachmentRef.attachment = 2; // After color and bright

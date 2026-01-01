@@ -87,10 +87,16 @@ static VkImageUsageFlags getVkImageUsageFlags(TextureFormat format) {
     case TextureFormat::DepthComponent24:
     case TextureFormat::Depth32F:
         flags |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+        // Depth attachments may be blitted/resolved (e.g., Framebuffer
+        // resolveDepth).
+        flags |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+        flags |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
         break;
     default:
         flags |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
         flags |= VK_IMAGE_USAGE_TRANSFER_DST_BIT;
+        // Color attachments may be blitted/resolved and used as sources.
+        flags |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
         break;
     }
 
@@ -410,10 +416,10 @@ std::shared_ptr<Texture> Texture::createMultisampledVulkan(TextureFormat format,
     texture->vkImageView = createImageView(
         texture->vkImage, vkFormat, aspectFlags, VK_IMAGE_VIEW_TYPE_2D, 1);
 
-    bool isDepthFormat = (aspectFlags & VK_IMAGE_ASPECT_DEPTH_BIT) != 0;
-    VkImageLayout targetLayout =
-        isDepthFormat ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
-                      : VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    // Multisampled textures are typically used as render targets and then
+    // resolved. Start them in a layout compatible with sampling after resolve.
+    // The render pass will transition as needed via initialLayout=UNDEFINED.
+    VkImageLayout targetLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     Framebuffer::transitionImageLayout(
         texture->vkImage, vkFormat, VK_IMAGE_LAYOUT_UNDEFINED, targetLayout, 1);
     texture->currentLayout = targetLayout;
@@ -448,10 +454,13 @@ std::shared_ptr<Texture> Texture::createDepthCubemapVulkan(TextureFormat format,
         TextureWrapMode::ClampToEdge, TextureWrapMode::ClampToEdge,
         TextureWrapMode::ClampToEdge);
 
+    // Start in SHADER_READ_ONLY so cubemaps are immediately sampleable.
+    // Render passes use initialLayout=UNDEFINED which allows transition
+    // from any layout to DEPTH_ATTACHMENT when used as a depth target.
     Framebuffer::transitionImageLayout(
         texture->vkImage, vkFormat, VK_IMAGE_LAYOUT_UNDEFINED,
-        VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 6);
-    texture->currentLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 6);
+    texture->currentLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
     texture->textureID = Texture::registerTextureHandle(texture);
     return texture;

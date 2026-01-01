@@ -70,8 +70,15 @@ void Window::setupSSAO() {
     this->ssaoMapsDirty = true;
 }
 
-void Window::renderSSAO() {
+void Window::renderSSAO(std::shared_ptr<opal::CommandBuffer> commandBuffer) {
     if (this->ssaoBuffer == nullptr || this->ssaoBlurBuffer == nullptr) {
+        return;
+    }
+
+    if (commandBuffer == nullptr) {
+        commandBuffer = this->activeCommandBuffer;
+    }
+    if (commandBuffer == nullptr) {
         return;
     }
 
@@ -107,12 +114,18 @@ void Window::renderSSAO() {
     this->ssaoMapsDirty = false;
     this->ssaoUpdateCooldown = this->ssaoUpdateInterval;
 
-    this->ssaoBuffer->bind();
-    auto ssaoCommandBuffer = Window::mainWindow->device->acquireCommandBuffer();
-    ssaoCommandBuffer->clearColor(1.0f, 1.0f, 1.0f, 1.0f);
     static std::shared_ptr<opal::DrawingState> ssaoState = nullptr;
-    static std::shared_ptr<opal::Buffer> ssaoBuffer = nullptr;
-    if (ssaoState == nullptr) {
+    static std::shared_ptr<opal::Buffer> ssaoQuadBuffer = nullptr;
+
+    // SSAO pass
+    {
+        auto ssaoRenderPass = opal::RenderPass::create();
+        ssaoRenderPass->setFramebuffer(this->ssaoBuffer->getFramebuffer());
+        commandBuffer->beginPass(ssaoRenderPass);
+        this->ssaoBuffer->bind();
+        commandBuffer->clearColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+        if (ssaoState == nullptr) {
         float quadVertices[] = {
             // positions         // texCoords
             -1.0f, 1.0f,  0.0f, 0.0f, 1.0f, // top-left
@@ -122,10 +135,10 @@ void Window::renderSSAO() {
             1.0f,  -1.0f, 0.0f, 1.0f, 0.0f, // bottom-right
             1.0f,  1.0f,  0.0f, 1.0f, 1.0f  // top-right
         };
-        ssaoBuffer = opal::Buffer::create(opal::BufferUsage::VertexBuffer,
-                                          sizeof(quadVertices), quadVertices);
-        ssaoState = opal::DrawingState::create(ssaoBuffer);
-        ssaoState->setBuffers(ssaoBuffer, nullptr);
+            ssaoQuadBuffer = opal::Buffer::create(opal::BufferUsage::VertexBuffer,
+                                                  sizeof(quadVertices), quadVertices);
+            ssaoState = opal::DrawingState::create(ssaoQuadBuffer);
+            ssaoState->setBuffers(ssaoQuadBuffer, nullptr);
 
         opal::VertexAttribute positionAttr{
             .name = "ssaoPosition",
@@ -148,10 +161,10 @@ void Window::renderSSAO() {
             .inputRate = opal::VertexBindingInputRate::Vertex,
             .divisor = 0};
 
-        std::vector<opal::VertexAttributeBinding> bindings = {
-            {positionAttr, ssaoBuffer}, {uvAttr, ssaoBuffer}};
+            std::vector<opal::VertexAttributeBinding> bindings = {
+                {positionAttr, ssaoQuadBuffer}, {uvAttr, ssaoQuadBuffer}};
         ssaoState->configureAttributes(bindings);
-    }
+        }
 
     static std::shared_ptr<opal::Pipeline> ssaoPipeline = nullptr;
     if (ssaoPipeline == nullptr) {
@@ -178,26 +191,37 @@ void Window::renderSSAO() {
     glm::vec2 noiseSize(4.0f, 4.0f);
     ssaoPipeline->setUniform2f("noiseScale", screenSize.x / noiseSize.x,
                                screenSize.y / noiseSize.y);
-    ssaoState->bind();
-    ssaoCommandBuffer->draw(6, 1, 0, 0);
-    ssaoState->unbind();
-    this->ssaoBuffer->unbind();
-
-    this->ssaoBlurBuffer->bind();
-    ssaoCommandBuffer->clearColor(1.0f, 1.0f, 1.0f, 1.0f);
-
-    static std::shared_ptr<opal::Pipeline> ssaoBlurPipeline = nullptr;
-    if (ssaoBlurPipeline == nullptr) {
-        ssaoBlurPipeline = opal::Pipeline::create();
+        ssaoState->bind();
+        commandBuffer->draw(6, 1, 0, 0);
+        ssaoState->unbind();
+        this->ssaoBuffer->unbind();
+        commandBuffer->endPass();
     }
-    ssaoBlurPipeline = this->ssaoBlurProgram.requestPipeline(ssaoBlurPipeline);
-    ssaoBlurPipeline->bind();
 
-    ssaoBlurPipeline->bindTexture2D("inSSAO", this->ssaoBuffer->texture.id, 0);
-    ssaoState->bind();
-    ssaoCommandBuffer->draw(6, 1, 0, 0);
-    ssaoState->unbind();
-    this->ssaoBlurBuffer->unbind();
+    // SSAO blur pass
+    {
+        auto blurRenderPass = opal::RenderPass::create();
+        blurRenderPass->setFramebuffer(this->ssaoBlurBuffer->getFramebuffer());
+        commandBuffer->beginPass(blurRenderPass);
+        this->ssaoBlurBuffer->bind();
+        commandBuffer->clearColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+        static std::shared_ptr<opal::Pipeline> ssaoBlurPipeline = nullptr;
+        if (ssaoBlurPipeline == nullptr) {
+            ssaoBlurPipeline = opal::Pipeline::create();
+        }
+        ssaoBlurPipeline =
+            this->ssaoBlurProgram.requestPipeline(ssaoBlurPipeline);
+        ssaoBlurPipeline->bind();
+
+        ssaoBlurPipeline->bindTexture2D("inSSAO", this->ssaoBuffer->texture.id,
+                                        0);
+        ssaoState->bind();
+        commandBuffer->draw(6, 1, 0, 0);
+        ssaoState->unbind();
+        this->ssaoBlurBuffer->unbind();
+        commandBuffer->endPass();
+    }
 
     if (this->camera != nullptr) {
         this->lastSSAOCameraPosition = this->camera->position;

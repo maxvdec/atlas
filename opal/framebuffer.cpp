@@ -61,11 +61,18 @@ void Framebuffer::attachTexture(std::shared_ptr<Texture> texture,
                            texture->textureID, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 #elif defined(VULKAN)
-    (void)attachmentIndex;
-    Attachment att;
-    att.type = Attachment::Type::Color;
-    att.texture = texture;
-    attachments.push_back(att);
+    if (attachmentIndex < 0) {
+        return;
+    }
+    if (static_cast<size_t>(attachmentIndex) >= attachments.size()) {
+        attachments.resize(static_cast<size_t>(attachmentIndex) + 1);
+    }
+    attachments[static_cast<size_t>(attachmentIndex)].type =
+        Attachment::Type::Color;
+    attachments[static_cast<size_t>(attachmentIndex)].texture = texture;
+
+    // Attachment image views changed; force VkFramebuffer recreation.
+    vkFramebuffers.clear();
 #endif
 }
 
@@ -355,52 +362,18 @@ void CommandBuffer::performResolve(std::shared_ptr<ResolveAction> action) {
         return;
     }
 
-    auto beginOneTimeCommands = []() -> VkCommandBuffer {
-        VkCommandBufferAllocateInfo allocInfo{};
-        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        allocInfo.commandPool = Device::globalInstance->commandPool;
-        allocInfo.commandBufferCount = 1;
+    // Resolve/blit must be recorded on the same command buffer that will be
+    // submitted for this frame. Using one-time command buffers + QueueWaitIdle
+    // breaks Vulkan layout tracking and causes the exact VUID we're seeing.
+    //
+    // Ensure we are not inside a render pass.
+    this->endPass();
+    beginCommandBufferIfNeeded();
 
-        VkCommandBuffer commandBuffer = VK_NULL_HANDLE;
-        if (vkAllocateCommandBuffers(Device::globalDevice, &allocInfo,
-                                     &commandBuffer) != VK_SUCCESS) {
-            throw std::runtime_error("Failed to allocate resolve command "
-                                     "buffer");
-        }
-
-        VkCommandBufferBeginInfo beginInfo{};
-        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-        if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
-            throw std::runtime_error(
-                "Failed to begin resolve command buffer recording");
-        }
-
-        return commandBuffer;
-    };
-
-    auto endOneTimeCommands = [](VkCommandBuffer commandBuffer) {
-        if (commandBuffer == VK_NULL_HANDLE) {
-            return;
-        }
-
-        vkEndCommandBuffer(commandBuffer);
-
-        VkSubmitInfo submitInfo{};
-        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &commandBuffer;
-
-        vkQueueSubmit(Device::globalInstance->graphicsQueue, 1, &submitInfo,
-                      VK_NULL_HANDLE);
-        vkQueueWaitIdle(Device::globalInstance->graphicsQueue);
-
-        vkFreeCommandBuffers(Device::globalDevice,
-                             Device::globalInstance->commandPool, 1,
-                             &commandBuffer);
-    };
+    VkCommandBuffer commandBuffer = getCurrentCommandBuffer();
+    if (commandBuffer == VK_NULL_HANDLE) {
+        return;
+    }
 
     auto gatherColorAttachments = [](std::shared_ptr<Framebuffer> fb,
                                      int preferredIndex) {
@@ -456,27 +429,88 @@ void CommandBuffer::performResolve(std::shared_ptr<ResolveAction> action) {
         }
     };
 
-    auto transitionTexture = [](std::shared_ptr<Texture> texture,
-                                VkImageLayout newLayout, bool isAttachment,
-                                bool isDepth, uint32_t layerCount) {
+    auto cmdTransitionImageLayout = [&](std::shared_ptr<Texture> texture,
+                                        VkImageLayout newLayout,
+                                        VkImageAspectFlags aspectMask,
+                                        uint32_t layerCount) {
         if (!texture || texture->vkImage == VK_NULL_HANDLE) {
             return;
         }
 
-        VkImageLayout currentLayout = texture->currentLayout;
-        if (currentLayout == VK_IMAGE_LAYOUT_UNDEFINED) {
-            if (isAttachment) {
-                currentLayout =
-                    isDepth ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
-                            : VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-            } else {
-                currentLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-            }
+        VkImageLayout oldLayout = texture->currentLayout;
+        if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED) {
+            // If we truly don't know, treat UNDEFINED as the source.
+            oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         }
 
-        Framebuffer::transitionImageLayout(
-            texture->vkImage, opalTextureFormatToVulkanFormat(texture->format),
-            currentLayout, newLayout, layerCount);
+        if (oldLayout == newLayout) {
+            return;
+        }
+
+        VkImageMemoryBarrier barrier{};
+        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        barrier.oldLayout = oldLayout;
+        barrier.newLayout = newLayout;
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.image = texture->vkImage;
+        barrier.subresourceRange.aspectMask = aspectMask;
+        barrier.subresourceRange.baseMipLevel = 0;
+        barrier.subresourceRange.levelCount = 1;
+        barrier.subresourceRange.baseArrayLayer = 0;
+        barrier.subresourceRange.layerCount = layerCount;
+
+        VkPipelineStageFlags srcStage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
+        VkPipelineStageFlags dstStage = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
+
+        // Common transitions used by resolve/blit.
+        if (oldLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL &&
+            newLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL) {
+            barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+            srcStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+            dstStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+        } else if (oldLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL &&
+                   newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
+            barrier.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            srcStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+            dstStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+        } else if (oldLayout == VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL &&
+                   newLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL) {
+            barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+            barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+            srcStage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+            dstStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+        } else if (oldLayout == VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL &&
+                   newLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL) {
+            barrier.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+            barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+            srcStage = VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+            dstStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+        } else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL &&
+                   newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+            barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            srcStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+            dstStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        } else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL &&
+                   newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+            barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+            barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            srcStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+            dstStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        } else if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED &&
+                   newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
+            barrier.srcAccessMask = 0;
+            barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            srcStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+            dstStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+        }
+
+        vkCmdPipelineBarrier(commandBuffer, srcStage, dstStage, 0, 0, nullptr,
+                             0, nullptr, 1, &barrier);
+
         texture->currentLayout = newLayout;
     };
 
@@ -496,17 +530,21 @@ void CommandBuffer::performResolve(std::shared_ptr<ResolveAction> action) {
             (src->type == TextureType::TextureCubeMap) ? 6 : 1;
         uint32_t dstLayers = (dst->type == TextureType::TextureCubeMap) ? 6 : 1;
         layerCount = std::min(layerCount, dstLayers);
-        VkImageLayout srcFinalLayout =
-            isDepth ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
-                    : VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        // These resolved/gbuffer textures are typically sampled later in the
+        // frame (SSAO/lighting/SSR/debug), so keep them in a readable layout.
+        // Restoring the *source* back to an attachment layout causes
+        // validation errors when the next pass samples it.
+        VkImageLayout srcFinalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         VkImageLayout dstFinalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-        transitionTexture(src, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, true,
-                          isDepth, layerCount);
-        transitionTexture(dst, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, false,
-                          isDepth, layerCount);
+        VkImageAspectFlags aspect =
+            aspectMaskForFormat(src->format, isDepth);
 
-        VkCommandBuffer commandBuffer = beginOneTimeCommands();
+        cmdTransitionImageLayout(src, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                                 aspect, layerCount);
+        cmdTransitionImageLayout(dst, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                                 aspectMaskForFormat(dst->format, isDepth),
+                                 layerCount);
 
         if (!isDepth && src->samples > 1 && dst->samples == 1) {
             VkImageResolve region{};
@@ -527,8 +565,6 @@ void CommandBuffer::performResolve(std::shared_ptr<ResolveAction> action) {
                               VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
         } else if (src->samples == dst->samples) {
             VkImageBlit region{};
-            VkImageAspectFlags aspect =
-                aspectMaskForFormat(src->format, isDepth);
             region.srcSubresource.aspectMask = aspect;
             region.srcSubresource.mipLevel = 0;
             region.srcSubresource.baseArrayLayer = 0;
@@ -553,16 +589,17 @@ void CommandBuffer::performResolve(std::shared_ptr<ResolveAction> action) {
                            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region,
                            filter);
         } else {
-            endOneTimeCommands(commandBuffer);
-            transitionTexture(dst, dstFinalLayout, false, isDepth, layerCount);
-            transitionTexture(src, srcFinalLayout, true, isDepth, layerCount);
+            cmdTransitionImageLayout(dst, dstFinalLayout,
+                                     aspectMaskForFormat(dst->format, isDepth),
+                                     layerCount);
+            cmdTransitionImageLayout(src, srcFinalLayout, aspect, layerCount);
             return;
         }
 
-        endOneTimeCommands(commandBuffer);
-
-        transitionTexture(dst, dstFinalLayout, false, isDepth, layerCount);
-        transitionTexture(src, srcFinalLayout, true, isDepth, layerCount);
+        cmdTransitionImageLayout(dst, dstFinalLayout,
+                                 aspectMaskForFormat(dst->format, isDepth),
+                                 layerCount);
+        cmdTransitionImageLayout(src, srcFinalLayout, aspect, layerCount);
     };
 
     auto sourceColors =

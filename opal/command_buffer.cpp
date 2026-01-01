@@ -97,13 +97,31 @@ void CommandBuffer::endPass() {
         vkCmdEndRenderPass(commandBuffers[currentFrame]);
         hasStarted = false;
 
-        if (framebuffer != nullptr && !framebuffer->isDefaultFramebuffer) {
-            for (auto &attachment : framebuffer->attachments) {
-                if (attachment.texture != nullptr) {
-                    if (attachment.type == opal::Attachment::Type::Color) {
-                        attachment.texture->currentLayout =
+        if (framebuffer != nullptr) {
+            if (framebuffer->isDefaultFramebuffer) {
+                // Default framebuffer uses swapchain images + bright + depth.
+                // We set final layouts in the render pass to shader-read for
+                // bright/depth; track that on the Texture objects so later
+                // sampling doesn’t see stale DEPTH_ATTACHMENT layout.
+                if (device != nullptr) {
+                    if (device->swapChainDepthTexture != nullptr) {
+                        device->swapChainDepthTexture->currentLayout =
                             VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                    } else {
+                    }
+                    if (!device->swapChainBrightTextures.empty() &&
+                        imageAcquired &&
+                        imageIndex < device->swapChainBrightTextures.size()) {
+                        auto &brightTex =
+                            device->swapChainBrightTextures[imageIndex];
+                        if (brightTex != nullptr) {
+                            brightTex->currentLayout =
+                                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                        }
+                    }
+                }
+            } else {
+                for (auto &attachment : framebuffer->attachments) {
+                    if (attachment.texture != nullptr) {
                         attachment.texture->currentLayout =
                             VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
                     }
@@ -216,7 +234,13 @@ void CommandBuffer::bindPipeline(std::shared_ptr<Pipeline> pipeline) {
                                 renderPass->framebuffer->attachments);
         }
 
-        if (framebufferMatch && *corePipeline->opalPipeline == pipeline) {
+        // Only reuse cached CoreRenderPass when using the exact same Pipeline
+        // instance. Reusing across "equivalent" pipelines is unsafe because
+        // descriptor set layouts / push constant ranges can differ, and Vulkan
+        // requires layout compatibility between vkCmdBindPipeline and
+        // vkCmdBindDescriptorSets/vkCmdPushConstants.
+        if (framebufferMatch &&
+            corePipeline->opalPipeline.get() == pipeline.get()) {
             renderPass->currentRenderPass = corePipeline;
             coreRenderPass = corePipeline;
             break;
@@ -334,12 +358,16 @@ auto CommandBuffer::draw(uint vertexCount, uint instanceCount, uint firstVertex,
     vkCmdBindPipeline(commandBuffers[currentFrame],
                       VK_PIPELINE_BIND_POINT_GRAPHICS,
                       renderPass->currentRenderPass->pipeline);
-    if (boundPipeline != nullptr) {
-        boundPipeline->bindDescriptorSets(commandBuffers[currentFrame]);
+    Pipeline *activePipeline = nullptr;
+    if (renderPass->currentRenderPass->opalPipeline != nullptr) {
+        activePipeline = renderPass->currentRenderPass->opalPipeline.get();
+    }
+    if (activePipeline != nullptr) {
+        activePipeline->bindDescriptorSets(commandBuffers[currentFrame]);
     }
     bindVertexBuffersIfNeeded();
-    if (boundPipeline != nullptr) {
-        VkViewport viewport = boundPipeline->vkViewport;
+    if (activePipeline != nullptr) {
+        VkViewport viewport = activePipeline->vkViewport;
         if (viewport.width != 0.0f) {
             vkCmdSetViewport(commandBuffers[currentFrame], 0, 1, &viewport);
         } else if (framebuffer != nullptr) {
@@ -353,7 +381,7 @@ auto CommandBuffer::draw(uint vertexCount, uint instanceCount, uint firstVertex,
             vkCmdSetViewport(commandBuffers[currentFrame], 0, 1,
                              &defaultViewport);
         }
-        boundPipeline->flushPushConstants(commandBuffers[currentFrame]);
+        activePipeline->flushPushConstants(commandBuffers[currentFrame]);
     }
     vkCmdDraw(commandBuffers[currentFrame], vertexCount, instanceCount,
               firstVertex, firstInstance);
@@ -403,8 +431,12 @@ void CommandBuffer::drawIndexed(uint indexCount, uint instanceCount,
     vkCmdBindPipeline(commandBuffers[currentFrame],
                       VK_PIPELINE_BIND_POINT_GRAPHICS,
                       renderPass->currentRenderPass->pipeline);
-    if (boundPipeline != nullptr) {
-        boundPipeline->bindDescriptorSets(commandBuffers[currentFrame]);
+    Pipeline *activePipeline = nullptr;
+    if (renderPass->currentRenderPass->opalPipeline != nullptr) {
+        activePipeline = renderPass->currentRenderPass->opalPipeline.get();
+    }
+    if (activePipeline != nullptr) {
+        activePipeline->bindDescriptorSets(commandBuffers[currentFrame]);
     }
     if (boundDrawingState != nullptr) {
         bindVertexBuffersIfNeeded();
@@ -414,8 +446,8 @@ void CommandBuffer::drawIndexed(uint indexCount, uint instanceCount,
                                  VK_INDEX_TYPE_UINT32);
         }
     }
-    if (boundPipeline != nullptr) {
-        VkViewport viewport = boundPipeline->vkViewport;
+    if (activePipeline != nullptr) {
+        VkViewport viewport = activePipeline->vkViewport;
         if (viewport.width != 0.0f) {
             vkCmdSetViewport(commandBuffers[currentFrame], 0, 1, &viewport);
         } else if (framebuffer != nullptr) {
@@ -429,7 +461,7 @@ void CommandBuffer::drawIndexed(uint indexCount, uint instanceCount,
             vkCmdSetViewport(commandBuffers[currentFrame], 0, 1,
                              &defaultViewport);
         }
-        boundPipeline->flushPushConstants(commandBuffers[currentFrame]);
+        activePipeline->flushPushConstants(commandBuffers[currentFrame]);
     }
     vkCmdDrawIndexed(commandBuffers[currentFrame], indexCount, instanceCount,
                      firstIndex, vertexOffset, firstInstance);
@@ -530,12 +562,16 @@ void CommandBuffer::drawPatches(uint vertexCount, uint firstVertex,
     vkCmdBindPipeline(commandBuffers[currentFrame],
                       VK_PIPELINE_BIND_POINT_GRAPHICS,
                       renderPass->currentRenderPass->pipeline);
-    if (boundPipeline != nullptr) {
-        boundPipeline->bindDescriptorSets(commandBuffers[currentFrame]);
+    Pipeline *activePipeline = nullptr;
+    if (renderPass->currentRenderPass->opalPipeline != nullptr) {
+        activePipeline = renderPass->currentRenderPass->opalPipeline.get();
+    }
+    if (activePipeline != nullptr) {
+        activePipeline->bindDescriptorSets(commandBuffers[currentFrame]);
     }
     bindVertexBuffersIfNeeded();
-    if (boundPipeline != nullptr) {
-        VkViewport viewport = boundPipeline->vkViewport;
+    if (activePipeline != nullptr) {
+        VkViewport viewport = activePipeline->vkViewport;
         if (viewport.width != 0.0f) {
             vkCmdSetViewport(commandBuffers[currentFrame], 0, 1, &viewport);
         } else if (framebuffer != nullptr) {
@@ -549,7 +585,7 @@ void CommandBuffer::drawPatches(uint vertexCount, uint firstVertex,
             vkCmdSetViewport(commandBuffers[currentFrame], 0, 1,
                              &defaultViewport);
         }
-        boundPipeline->flushPushConstants(commandBuffers[currentFrame]);
+        activePipeline->flushPushConstants(commandBuffers[currentFrame]);
     }
     vkCmdDraw(commandBuffers[currentFrame], vertexCount, 1, firstVertex, 0);
 #endif
