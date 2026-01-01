@@ -610,10 +610,10 @@ void Pipeline::buildPipelineLayout() {
         // before the first draw call. Default to pushing zero-initialized data
         // once, even if the app never explicitly updates a push-constant.
         this->pushConstantsDirty = true;
-        this->lastPushConstantsCommandBuffer = VK_NULL_HANDLE;
+        this->lastPushConstantsFrame = 0; // Force push on first use
     } else {
         this->pushConstantsDirty = false;
-        this->lastPushConstantsCommandBuffer = VK_NULL_HANDLE;
+        this->lastPushConstantsFrame = 0;
     }
 
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};

@@ -48,9 +48,15 @@ void CommandBuffer::start() {
     imageAcquired = false;
     commandBufferBegan = false;
     this->createSyncObjects();
+
+    // Wait for the previous frame using this slot to complete
     vkWaitForFences(device->logicalDevice, 1, &inFlightFences[currentFrame],
                     VK_TRUE, UINT64_MAX);
-    vkResetFences(device->logicalDevice, 1, &inFlightFences[currentFrame]);
+
+    // NOTE: We reset the fence in commit() right before vkQueueSubmit, not
+    // here. This ensures we only reset when we're actually about to submit
+    // work. If we reset here and then don't submit, the next start() would
+    // hang.
 #endif
 }
 
@@ -150,35 +156,54 @@ void CommandBuffer::commit() {
     // Skip commit if swapchain has zero extent (minimized window)
     if (device != nullptr && (device->swapChainExtent.width == 0 ||
                               device->swapChainExtent.height == 0)) {
+        // Reset state for next frame - no work was submitted
+        commandBufferBegan = false;
         return;
     }
 
+    // If we haven't acquired an image yet and we're rendering to the default
+    // framebuffer, we need to acquire one. But only if we have a valid render
+    // pass set up.
     if (!imageAcquired && framebuffer != nullptr &&
         framebuffer->isDefaultFramebuffer) {
         if (renderPass == nullptr || renderPass->currentRenderPass == nullptr) {
-            std::cout << "commit(): Skipping frame - no render pass!"
-                      << std::endl;
+            // No render pass means nothing was rendered - skip this frame
+            // Don't acquire an image since we have no work to submit
+            commandBufferBegan = false;
             return;
         }
 
-        vkAcquireNextImageKHR(device->logicalDevice, device->swapChain,
-                              UINT64_MAX,
-                              imageAvailableSemaphores[currentFrame],
-                              VK_NULL_HANDLE, &imageIndex);
+        VkResult acquireResult = vkAcquireNextImageKHR(
+            device->logicalDevice, device->swapChain, UINT64_MAX,
+            imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE,
+            &imageIndex);
+
+        if (acquireResult == VK_ERROR_OUT_OF_DATE_KHR ||
+            acquireResult == VK_SUBOPTIMAL_KHR) {
+            // Swapchain needs recreation - skip this frame
+            device->swapchainDirty = true;
+            commandBufferBegan = false;
+            return;
+        }
+
         imageAcquired = true;
 
         beginCommandBufferIfNeeded();
         hasStarted = this->record(imageIndex);
     }
 
+    // If we still don't have an image acquired, there's nothing to present
     if (!imageAcquired) {
+        commandBufferBegan = false;
         return;
     }
 
-    // If no command buffer was begun, nothing to submit
+    // If no command buffer was begun, we can't submit anything.
+    // But we already acquired an image, so we need to submit SOMETHING to
+    // consume the semaphore and signal the fence.
     if (!commandBufferBegan) {
-        imageAcquired = false;
-        return;
+        // Begin an empty command buffer just to maintain sync
+        beginCommandBufferIfNeeded();
     }
 
     if (hasStarted) {
@@ -206,6 +231,10 @@ void CommandBuffer::commit() {
     VkSemaphore signalSemaphores[] = {renderFinishedSemaphores[currentFrame]};
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = signalSemaphores;
+
+    // Reset the fence right before submit - this ensures we only reset when
+    // we're actually about to submit work that will signal it
+    vkResetFences(device->logicalDevice, 1, &inFlightFences[currentFrame]);
 
     if (vkQueueSubmit(device->graphicsQueue, 1, &submitInfo,
                       inFlightFences[currentFrame]) != VK_SUCCESS) {
@@ -383,8 +412,12 @@ auto CommandBuffer::draw(uint vertexCount, uint instanceCount, uint firstVertex,
     vkCmdBindPipeline(commandBuffers[currentFrame],
                       VK_PIPELINE_BIND_POINT_GRAPHICS,
                       renderPass->currentRenderPass->pipeline);
-    Pipeline *activePipeline = nullptr;
-    if (renderPass->currentRenderPass->opalPipeline != nullptr) {
+
+    // Use boundPipeline for all pipeline operations - it's the one the user set
+    // uniforms on
+    Pipeline *activePipeline = boundPipeline.get();
+    if (activePipeline == nullptr &&
+        renderPass->currentRenderPass->opalPipeline != nullptr) {
         activePipeline = renderPass->currentRenderPass->opalPipeline.get();
     }
     if (activePipeline != nullptr) {
@@ -458,8 +491,12 @@ void CommandBuffer::drawIndexed(uint indexCount, uint instanceCount,
     vkCmdBindPipeline(commandBuffers[currentFrame],
                       VK_PIPELINE_BIND_POINT_GRAPHICS,
                       renderPass->currentRenderPass->pipeline);
-    Pipeline *activePipeline = nullptr;
-    if (renderPass->currentRenderPass->opalPipeline != nullptr) {
+
+    // Use boundPipeline for all pipeline operations - it's the one the user set
+    // uniforms on
+    Pipeline *activePipeline = boundPipeline.get();
+    if (activePipeline == nullptr &&
+        renderPass->currentRenderPass->opalPipeline != nullptr) {
         activePipeline = renderPass->currentRenderPass->opalPipeline.get();
     }
     if (activePipeline != nullptr) {
@@ -550,8 +587,12 @@ void CommandBuffer::drawPatches(uint vertexCount, uint firstVertex,
     vkCmdBindPipeline(commandBuffers[currentFrame],
                       VK_PIPELINE_BIND_POINT_GRAPHICS,
                       renderPass->currentRenderPass->pipeline);
-    Pipeline *activePipeline = nullptr;
-    if (renderPass->currentRenderPass->opalPipeline != nullptr) {
+
+    // Use boundPipeline for all pipeline operations - it's the one the user set
+    // uniforms on
+    Pipeline *activePipeline = boundPipeline.get();
+    if (activePipeline == nullptr &&
+        renderPass->currentRenderPass->opalPipeline != nullptr) {
         activePipeline = renderPass->currentRenderPass->opalPipeline.get();
     }
     if (activePipeline != nullptr) {

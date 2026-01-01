@@ -732,9 +732,10 @@ class Pipeline {
     void flushPushConstants(VkCommandBuffer commandBuffer);
     bool pushConstantsDirty = false;
     // Push constants are command-buffer state in Vulkan; we must re-push at
-    // least once for each newly recorded command buffer, even if values didn't
-    // change between frames.
-    VkCommandBuffer lastPushConstantsCommandBuffer = VK_NULL_HANDLE;
+    // least once per frame (after command buffer reset), even if values didn't
+    // change between frames. Track frame count instead of command buffer handle
+    // because command buffers are reused across frames.
+    uint64_t lastPushConstantsFrame = 0;
 #endif
 
     bool multisamplingEnabled = false;

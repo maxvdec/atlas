@@ -1020,12 +1020,13 @@ void Pipeline::flushPushConstants(VkCommandBuffer commandBuffer) {
         return;
     }
 
-    // Push constants are not persistent across command buffers. If we start
-    // recording a new VkCommandBuffer (e.g., a new frame), we must push again
-    // before the first draw that statically uses them.
-    bool needsPushForThisCmdBuf =
-        (commandBuffer != lastPushConstantsCommandBuffer);
-    if (!pushConstantsDirty && !needsPushForThisCmdBuf) {
+    // Push constants are command-buffer state in Vulkan. After
+    // vkResetCommandBuffer, they must be re-pushed. Track by frame count since
+    // command buffer handles are reused across frames.
+    uint64_t currentFrame =
+        Device::globalInstance ? Device::globalInstance->frameCount : 0;
+    bool needsPushForThisFrame = (currentFrame != lastPushConstantsFrame);
+    if (!pushConstantsDirty && !needsPushForThisFrame) {
         return;
     }
 
@@ -1033,7 +1034,7 @@ void Pipeline::flushPushConstants(VkCommandBuffer commandBuffer) {
                        pushConstantSize, pushConstantData.data());
 
     pushConstantsDirty = false;
-    lastPushConstantsCommandBuffer = commandBuffer;
+    lastPushConstantsFrame = currentFrame;
 }
 #endif
 
