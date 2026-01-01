@@ -291,7 +291,10 @@ ShadowParams DirectionalLight::calculateLightSpaceMatrix(
     glm::mat4 lightProjection =
         glm::ortho(left, right, bottom, top, near_plane, far_plane);
 
-    float bias = 0.0002f * glm::length(extent);
+    // Bias is applied in the receiver pass to prevent self-shadowing.
+    // Keep this small and stable: a bias that scales too aggressively with
+    // scene extent can completely remove shadows.
+    float bias = 0.0005f + (0.000001f * glm::length(extent));
 
     return {.lightView = lightView,
             .lightProjection = lightProjection,

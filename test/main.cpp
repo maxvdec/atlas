@@ -145,7 +145,6 @@ class MainScene : public Scene {
     AreaLight areaLight;
     ParticleEmitter emitter;
     WaterPot waterPot;
-    Model sponza;
 
     bool doesUpdate = true;
     bool fall = false;
@@ -201,38 +200,57 @@ class MainScene : public Scene {
         Workspace::get().setRootPath(std::string(TEST_PATH) + "/resources/");
 
         camera = Camera();
-        // camera.setPosition({-5.0f, 1.0f, 2.0f});
-        camera.setPosition({20.0f, 1.0f, 2.0f});
+        camera.setPosition({-5.0f, 1.0f, 2.0f});
         camera.lookAt({0.0f, 0.0f, 0.0f});
         camera.farClip = 1000.f;
         window.setCamera(&camera);
 
-        ground = createBox({150.0f, 0.1f, 150.0f});
-        ground.material.albedo = Color(0.3f, 0.8f, 0.3f);
+        ground = createBox({5.0f, 0.1f, 5.0f}, Color(0.3f, 0.8f, 0.3f));
+        ground.attachTexture(
+            Texture::fromResource(Workspace::get().createResource(
+                "ground.jpg", "GroundTexture", ResourceType::Image)));
         ground.setPosition({0.0f, -0.1f, 0.0f});
         window.addObject(&ground);
 
-        sponza = Model();
-        sponza.fromResource(Workspace::get().createResource(
-            "sponza.obj", "SponzaModel", ResourceType::Model));
-        sponza.setScale({0.01f, 0.01f, 0.01f});
-
-        sponza.material.albedo = Color(1.0, 0.0, 0.0, 1.0);
+        areaLight.position = {0.0f, 2.0f, 0.0f};
+        areaLight.rotate({0.0f, 90.0f, 0.0f});
+        areaLight.castsBothSides = true;
+        this->addAreaLight(&areaLight);
+        areaLight.createDebugObject();
+        areaLight.addDebugObject(window);
 
         Resource fontResource = Workspace::get().createResource(
-            "arial.ttf", "ArialFont", ResourceType::Font);
+            "arial.ttf", "Arial", ResourceType::Font);
 
-        this->setAmbientIntensity(1.0f);
+        fpsText = Text("FPS: 0", Font::fromResource("Arial", fontResource, 24),
+                       {25.0, 25.0}, Color::white());
 
-        window.addObject(&sponza);
+        fpsText.addTraitComponent<Text>(FPSTextUpdater());
+        window.addUIObject(&fpsText);
 
-        // window.useDeferredRendering();
+        ball = createDebugSphere(0.5f, 76, 76);
+        ball.material.metallic = 1.0f;
+        ball.material.roughness = 0.0f;
+        ball.move({0.f, 1.0f, 1.0f});
+        window.addObject(&ball);
+
+        ball2 = createDebugSphere(0.5f, 76, 76);
+        ball2.move({0.f, 1.0f, -1.0f});
+        window.addObject(&ball2);
+
+        light = DirectionalLight({1.0f, -0.3f, 0.5f}, Color::white());
+
+        frameBuffer = RenderTarget(window);
+        window.addRenderTarget(&frameBuffer);
+        frameBuffer.display(window);
+
+        window.useDeferredRendering();
         atmosphere.enable();
         atmosphere.secondsPerHour = 4.f;
-        atmosphere.setTime(12);
-        atmosphere.cycle = true;
+        atmosphere.setTime(12.0);
+        atmosphere.cycle = false;
         atmosphere.useGlobalLight();
-
+        atmosphere.wind = {0.1f, 0.0f, 0.0f};
         atmosphere.castShadowsFromSunlight(4096);
     }
 };

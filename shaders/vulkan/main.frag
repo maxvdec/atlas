@@ -547,8 +547,6 @@ float calculateShadow(ShadowParameters shadowParam, vec4 fragPosLightSpace) {
         uv = projCoords.xy * 0.5 + 0.5;
         uv.y = 1.0 - uv.y;
         currentDepth = projCoords.z;
-        // Vulkan clip-space depth is typically [0, 1]; OpenGL is [-1, 1].
-        // Auto-remap if we're in the OpenGL-style range.
         if (currentDepth < 0.0 || currentDepth > 1.0) {
             currentDepth = currentDepth * 0.5 + 0.5;
         }
@@ -558,8 +556,6 @@ float calculateShadow(ShadowParameters shadowParam, vec4 fragPosLightSpace) {
         }
     }
 
-    // Derive the light direction from the light's view matrix to avoid
-    // depending on directionalLights[0] being present/bound.
     vec3 lightDirCandidate = vec3(shadowParam.lightView[0][2],
             shadowParam.lightView[1][2],
             shadowParam.lightView[2][2]);
@@ -569,9 +565,11 @@ float calculateShadow(ShadowParameters shadowParam, vec4 fragPosLightSpace) {
             : vec3(0.0, 1.0, 0.0);
 
     vec3 normal = normalize(Normal);
-    float biasValue = max(shadowParam.bias, 0.0002);
     float ndotl = max(dot(normal, lightDir), 0.0);
-    float bias = max(biasValue * (1.0 - ndotl), biasValue);
+
+    float biasBase = clamp(shadowParam.bias, 0.00005, 0.005);
+    float biasSlope = 0.0025 * (1.0 - ndotl);
+    float bias = max(biasBase, biasSlope);
 
     float shadow = 0.0;
     vec2 texelSize = 1.0 / getTextureDimensions(shadowParam.textureIndex);
