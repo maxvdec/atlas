@@ -31,6 +31,15 @@ void Framebuffer::createVulkanFramebuffers(
 
     if (isDefaultFramebuffer) {
         Device *device = Device::globalInstance;
+
+        if (device->swapChainExtent.width == 0 ||
+            device->swapChainExtent.height == 0) {
+            throw std::runtime_error(
+                "Swapchain extent is 0x0; cannot create Vulkan framebuffers. "
+                "This usually happens when the window framebuffer size is 0 "
+                "during startup or while minimized.");
+        }
+
         vkFramebuffers.resize(device->swapChainImages.imageViews.size());
         if (device->swapChainBrightTextures.size() !=
             device->swapChainImages.imageViews.size()) {
@@ -77,6 +86,12 @@ void Framebuffer::createVulkanFramebuffers(
         this->width = static_cast<int>(device->swapChainExtent.width);
         this->height = static_cast<int>(device->swapChainExtent.height);
     } else {
+        // Skip creating framebuffers with zero dimensions - they'll be created
+        // later
+        if (this->width <= 0 || this->height <= 0) {
+            return;
+        }
+
         std::vector<VkImageView> attachmentViews;
         for (const auto &attachment : attachments) {
             attachmentViews.push_back(attachment.texture->vkImageView);
@@ -266,7 +281,14 @@ void RenderPass::applyRenderPass() {
         colorAttachmentRefs.push_back(colorRef);
 
         VkAttachmentDescription brightAttachment{};
-        brightAttachment.format = VK_FORMAT_R16G16B16A16_SFLOAT;
+        VkFormat brightFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
+        if (Device::globalInstance != nullptr &&
+            !Device::globalInstance->swapChainBrightTextures.empty() &&
+            Device::globalInstance->swapChainBrightTextures[0] != nullptr) {
+            brightFormat = opalTextureFormatToVulkanFormat(
+                Device::globalInstance->swapChainBrightTextures[0]->format);
+        }
+        brightAttachment.format = brightFormat;
         brightAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
         brightAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         brightAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -280,6 +302,26 @@ void RenderPass::applyRenderPass() {
         brightRef.attachment = 1;
         brightRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
         colorAttachmentRefs.push_back(brightRef);
+
+        // Add depth attachment for default framebuffer if depth texture exists
+        if (Device::globalInstance->swapChainDepthTexture != nullptr) {
+            VkAttachmentDescription depthAttachment{};
+            depthAttachment.format = VK_FORMAT_D32_SFLOAT;
+            depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+            depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+            depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+            depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+            depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            depthAttachment.finalLayout =
+                VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            attachments.push_back(depthAttachment);
+
+            depthAttachmentRef.attachment = 2; // Index 2 after color and bright
+            depthAttachmentRef.layout =
+                VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+            hasDepthAttachment = true;
+        }
     } else {
         for (uint32_t i = 0; i < this->framebuffer->attachments.size(); ++i) {
             const auto &attachment = this->framebuffer->attachments[i];

@@ -126,71 +126,74 @@ void Window::renderSSAO(std::shared_ptr<opal::CommandBuffer> commandBuffer) {
         commandBuffer->clearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
         if (ssaoState == nullptr) {
-        float quadVertices[] = {
-            // positions         // texCoords
-            -1.0f, 1.0f,  0.0f, 0.0f, 1.0f, // top-left
-            -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, // bottom-left
-            1.0f,  -1.0f, 0.0f, 1.0f, 0.0f, // bottom-right
-            -1.0f, 1.0f,  0.0f, 0.0f, 1.0f, // top-left
-            1.0f,  -1.0f, 0.0f, 1.0f, 0.0f, // bottom-right
-            1.0f,  1.0f,  0.0f, 1.0f, 1.0f  // top-right
-        };
-            ssaoQuadBuffer = opal::Buffer::create(opal::BufferUsage::VertexBuffer,
-                                                  sizeof(quadVertices), quadVertices);
+            float quadVertices[] = {
+                // positions         // texCoords
+                -1.0f, 1.0f,  0.0f, 0.0f, 1.0f, // top-left
+                -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, // bottom-left
+                1.0f,  -1.0f, 0.0f, 1.0f, 0.0f, // bottom-right
+                -1.0f, 1.0f,  0.0f, 0.0f, 1.0f, // top-left
+                1.0f,  -1.0f, 0.0f, 1.0f, 0.0f, // bottom-right
+                1.0f,  1.0f,  0.0f, 1.0f, 1.0f  // top-right
+            };
+            ssaoQuadBuffer =
+                opal::Buffer::create(opal::BufferUsage::VertexBuffer,
+                                     sizeof(quadVertices), quadVertices);
             ssaoState = opal::DrawingState::create(ssaoQuadBuffer);
             ssaoState->setBuffers(ssaoQuadBuffer, nullptr);
 
-        opal::VertexAttribute positionAttr{
-            .name = "ssaoPosition",
-            .type = opal::VertexAttributeType::Float,
-            .offset = 0,
-            .location = 0,
-            .normalized = false,
-            .size = 3,
-            .stride = static_cast<uint>(5 * sizeof(float)),
-            .inputRate = opal::VertexBindingInputRate::Vertex,
-            .divisor = 0};
-        opal::VertexAttribute uvAttr{
-            .name = "ssaoUV",
-            .type = opal::VertexAttributeType::Float,
-            .offset = static_cast<uint>(3 * sizeof(float)),
-            .location = 1,
-            .normalized = false,
-            .size = 2,
-            .stride = static_cast<uint>(5 * sizeof(float)),
-            .inputRate = opal::VertexBindingInputRate::Vertex,
-            .divisor = 0};
+            opal::VertexAttribute positionAttr{
+                .name = "ssaoPosition",
+                .type = opal::VertexAttributeType::Float,
+                .offset = 0,
+                .location = 0,
+                .normalized = false,
+                .size = 3,
+                .stride = static_cast<uint>(5 * sizeof(float)),
+                .inputRate = opal::VertexBindingInputRate::Vertex,
+                .divisor = 0};
+            opal::VertexAttribute uvAttr{
+                .name = "ssaoUV",
+                .type = opal::VertexAttributeType::Float,
+                .offset = static_cast<uint>(3 * sizeof(float)),
+                .location = 1,
+                .normalized = false,
+                .size = 2,
+                .stride = static_cast<uint>(5 * sizeof(float)),
+                .inputRate = opal::VertexBindingInputRate::Vertex,
+                .divisor = 0};
 
             std::vector<opal::VertexAttributeBinding> bindings = {
                 {positionAttr, ssaoQuadBuffer}, {uvAttr, ssaoQuadBuffer}};
-        ssaoState->configureAttributes(bindings);
+            ssaoState->configureAttributes(bindings);
         }
 
-    static std::shared_ptr<opal::Pipeline> ssaoPipeline = nullptr;
-    if (ssaoPipeline == nullptr) {
-        ssaoPipeline = opal::Pipeline::create();
-    }
-    ssaoPipeline = this->ssaoProgram.requestPipeline(ssaoPipeline);
-    ssaoPipeline->bind();
+        static std::shared_ptr<opal::Pipeline> ssaoPipeline = nullptr;
+        if (ssaoPipeline == nullptr) {
+            ssaoPipeline = opal::Pipeline::create();
+        }
+        ssaoPipeline = this->ssaoProgram.requestPipeline(ssaoPipeline);
+        ssaoPipeline->bind();
 
-    ssaoPipeline->bindTexture2D("gPosition", this->gBuffer->gPosition.id, 0);
-    ssaoPipeline->bindTexture2D("gNormal", this->gBuffer->gNormal.id, 1);
-    ssaoPipeline->bindTexture2D("texNoise", this->noiseTexture.id, 2);
-    for (size_t i = 0; i < this->ssaoKernel.size(); ++i) {
-        ssaoPipeline->setUniform3f("samples[" + std::to_string(i) + "]",
-                                   ssaoKernel[i].x, ssaoKernel[i].y,
-                                   ssaoKernel[i].z);
-    }
-    ssaoPipeline->setUniform1i("kernelSize",
-                               static_cast<int>(this->ssaoKernel.size()));
-    ssaoPipeline->setUniformMat4f("projection",
-                                  this->calculateProjectionMatrix());
-    ssaoPipeline->setUniformMat4f("view", getCamera()->calculateViewMatrix());
-    glm::vec2 screenSize(this->ssaoBuffer->getWidth(),
-                         this->ssaoBuffer->getHeight());
-    glm::vec2 noiseSize(4.0f, 4.0f);
-    ssaoPipeline->setUniform2f("noiseScale", screenSize.x / noiseSize.x,
-                               screenSize.y / noiseSize.y);
+        ssaoPipeline->bindTexture2D("gPosition", this->gBuffer->gPosition.id,
+                                    0);
+        ssaoPipeline->bindTexture2D("gNormal", this->gBuffer->gNormal.id, 1);
+        ssaoPipeline->bindTexture2D("texNoise", this->noiseTexture.id, 2);
+        for (size_t i = 0; i < this->ssaoKernel.size(); ++i) {
+            ssaoPipeline->setUniform3f("samples[" + std::to_string(i) + "]",
+                                       ssaoKernel[i].x, ssaoKernel[i].y,
+                                       ssaoKernel[i].z);
+        }
+        ssaoPipeline->setUniform1i("kernelSize",
+                                   static_cast<int>(this->ssaoKernel.size()));
+        ssaoPipeline->setUniformMat4f("projection",
+                                      this->calculateProjectionMatrix());
+        ssaoPipeline->setUniformMat4f("view",
+                                      getCamera()->calculateViewMatrix());
+        glm::vec2 screenSize(this->ssaoBuffer->getWidth(),
+                             this->ssaoBuffer->getHeight());
+        glm::vec2 noiseSize(4.0f, 4.0f);
+        ssaoPipeline->setUniform2f("noiseScale", screenSize.x / noiseSize.x,
+                                   screenSize.y / noiseSize.y);
         ssaoState->bind();
         commandBuffer->draw(6, 1, 0, 0);
         ssaoState->unbind();

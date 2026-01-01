@@ -1086,7 +1086,7 @@ class CommandBuffer {
     uint32_t imageIndex = 0;
     bool imageAcquired = false;
     bool commandBufferBegan = false;
-    void record(uint32_t imageIndex);
+    bool record(uint32_t imageIndex);
     void beginCommandBufferIfNeeded();
     void createSyncObjects();
     void bindVertexBuffersIfNeeded();

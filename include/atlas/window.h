@@ -586,7 +586,8 @@ class Window {
     void deferredRendering(
         RenderTarget *target,
         std::shared_ptr<opal::CommandBuffer> commandBuffer = nullptr);
-    void renderSSAO(std::shared_ptr<opal::CommandBuffer> commandBuffer = nullptr);
+    void
+    renderSSAO(std::shared_ptr<opal::CommandBuffer> commandBuffer = nullptr);
     void updateFluidCaptures(
         std::shared_ptr<opal::CommandBuffer> commandBuffer = nullptr);
     void captureFluidReflection(

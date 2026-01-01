@@ -643,31 +643,11 @@ void Pipeline::buildPipelineLayout() {
 }
 
 VkFormat opalFormatToVkFormat(opal::TextureFormat format) {
-    switch (format) {
-    case opal::TextureFormat::Rgba8:
-        return VK_FORMAT_R8G8B8A8_UNORM;
-    case opal::TextureFormat::sRgba8:
-        return VK_FORMAT_R8G8B8A8_SRGB;
-    case opal::TextureFormat::Rgb8:
-        return VK_FORMAT_R8G8B8_UNORM;
-    case opal::TextureFormat::sRgb8:
-        return VK_FORMAT_R8G8B8_SRGB;
-    case opal::TextureFormat::Rgba16F:
-        return VK_FORMAT_R16G16B16A16_SFLOAT;
-    case opal::TextureFormat::Rgb16F:
-        return VK_FORMAT_R16G16B16_SFLOAT;
-    case opal::TextureFormat::Depth24Stencil8:
-        return VK_FORMAT_D32_SFLOAT_S8_UINT;
-    case opal::TextureFormat::DepthComponent24:
-    case opal::TextureFormat::Depth32F:
-        return VK_FORMAT_D32_SFLOAT;
-    case opal::TextureFormat::Red8:
-        return VK_FORMAT_R8_UNORM;
-    case opal::TextureFormat::Red16F:
-        return VK_FORMAT_R16_SFLOAT;
-    default:
-        return VK_FORMAT_UNDEFINED;
-    }
+    // Keep render pass attachment formats consistent with VkImage creation.
+    // In particular, MoltenVK does not support VK_FORMAT_R16G16B16_SFLOAT as a
+    // color attachment; Atlas already uses RGBA8/RGBA16F images for RGB
+    // formats.
+    return opalTextureFormatToVulkanFormat(format);
 }
 
 std::shared_ptr<CoreRenderPass>
@@ -700,7 +680,14 @@ CoreRenderPass::create(std::shared_ptr<Pipeline> pipeline,
         colorAttachmentRefs.push_back(colorRef);
 
         VkAttachmentDescription brightAttachment{};
-        brightAttachment.format = VK_FORMAT_R16G16B16A16_SFLOAT;
+        VkFormat brightFormat = VK_FORMAT_R16G16B16A16_SFLOAT;
+        if (Device::globalInstance != nullptr &&
+            !Device::globalInstance->swapChainBrightTextures.empty() &&
+            Device::globalInstance->swapChainBrightTextures[0] != nullptr) {
+            brightFormat = opalTextureFormatToVulkanFormat(
+                Device::globalInstance->swapChainBrightTextures[0]->format);
+        }
+        brightAttachment.format = brightFormat;
         brightAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
         brightAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         brightAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -833,6 +820,45 @@ CoreRenderPass::create(std::shared_ptr<Pipeline> pipeline,
 
     renderPassInfo.dependencyCount = 2;
     renderPassInfo.pDependencies = dependencies;
+
+    if (Device::globalInstance != nullptr &&
+        Device::globalInstance->physicalDevice != VK_NULL_HANDLE) {
+        auto formatSupports = [&](VkFormat format,
+                                  VkFormatFeatureFlags required) {
+            VkFormatProperties props{};
+            vkGetPhysicalDeviceFormatProperties(
+                Device::globalInstance->physicalDevice, format, &props);
+            return (props.optimalTilingFeatures & required) == required;
+        };
+
+        for (const auto &ref : colorAttachmentRefs) {
+            if (ref.attachment == VK_ATTACHMENT_UNUSED) {
+                continue;
+            }
+            const VkFormat fmt = attachments[ref.attachment].format;
+            if (!formatSupports(fmt, VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT)) {
+                throw std::runtime_error(
+                    "RenderPass creation failed: a color attachment format is "
+                    "not supported as VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT "
+                    "on this device.");
+            }
+        }
+
+        if (hasDepthAttachment &&
+            depthAttachmentRef.attachment != VK_ATTACHMENT_UNUSED) {
+            const VkFormat fmt =
+                attachments[depthAttachmentRef.attachment].format;
+            if (!formatSupports(
+                    fmt, VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT)) {
+                throw std::runtime_error(
+                    "RenderPass creation failed: the depth attachment format "
+                    "is "
+                    "not supported as "
+                    "VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT "
+                    "on this device.");
+            }
+        }
+    }
 
     if (vkCreateRenderPass(Device::globalDevice, &renderPassInfo, nullptr,
                            &renderPass->renderPass) != VK_SUCCESS) {

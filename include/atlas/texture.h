@@ -676,9 +676,9 @@ class BloomRenderTarget {
      * @brief Runs the full bloom blur and upsample pass using the source
      * texture.
      */
-    void renderBloomTexture(unsigned int srcTexture, float filterRadius,
-                            std::shared_ptr<opal::CommandBuffer> commandBuffer =
-                                nullptr);
+    void renderBloomTexture(
+        unsigned int srcTexture, float filterRadius,
+        std::shared_ptr<opal::CommandBuffer> commandBuffer = nullptr);
     /**
      * @brief Returns the bloom chain hierarchy for inspection or custom
      * rendering.

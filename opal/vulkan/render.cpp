@@ -14,15 +14,26 @@
 
 namespace opal {
 
-void CommandBuffer::record(uint32_t imageIndex) {
+bool CommandBuffer::record(uint32_t imageIndex) {
     if (renderPass == nullptr || renderPass->currentRenderPass == nullptr) {
-        throw std::runtime_error("Cannot record command buffer: no render pass "
-                                 "bound. Call bindPipeline() before draw().");
+        return false; // No render pass bound
     }
 
     if (framebuffer == nullptr || framebuffer->vkFramebuffers.empty()) {
-        throw std::runtime_error("Cannot record command buffer: invalid "
-                                 "framebuffer or no Vulkan framebuffers.");
+        // Skip recording if framebuffer is not ready (e.g., zero dimensions
+        // during init)
+        return false;
+    }
+
+    // Guard against zero extent - skip rendering when window is minimized or
+    // framebuffer not ready
+    if (framebuffer->isDefaultFramebuffer && device != nullptr) {
+        if (device->swapChainExtent.width == 0 ||
+            device->swapChainExtent.height == 0) {
+            return false;
+        }
+    } else if (framebuffer->width <= 0 || framebuffer->height <= 0) {
+        return false;
     }
 
     uint32_t fbIndex =
@@ -45,6 +56,12 @@ void CommandBuffer::record(uint32_t imageIndex) {
             static_cast<uint32_t>(framebuffer->height);
     } else {
         renderPassInfo.renderArea.extent = device->swapChainExtent;
+    }
+
+    // Final guard: ensure we don't use zero extent
+    if (renderPassInfo.renderArea.extent.width == 0 ||
+        renderPassInfo.renderArea.extent.height == 0) {
+        return false;
     }
 
     std::vector<VkClearValue> clearValues;
@@ -112,6 +129,8 @@ void CommandBuffer::record(uint32_t imageIndex) {
     scissor.offset = {.x = 0, .y = 0};
     scissor.extent = renderPassInfo.renderArea.extent;
     vkCmdSetScissor(commandBuffers[currentFrame], 0, 1, &scissor);
+
+    return true; // Render pass successfully started
 }
 
 void CommandBuffer::createSyncObjects() {

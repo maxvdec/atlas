@@ -11,11 +11,20 @@
 #include <cstdint>
 #include <memory>
 #ifdef VULKAN
+#include "atlas/tracer/log.h"
 #include <opal/opal.h>
 #include <utility>
 #include <vulkan/vulkan.hpp>
 
 namespace opal {
+
+static bool formatSupportsFeatures(VkPhysicalDevice physicalDevice,
+                                   VkFormat format,
+                                   VkFormatFeatureFlags required) {
+    VkFormatProperties props{};
+    vkGetPhysicalDeviceFormatProperties(physicalDevice, format, &props);
+    return (props.optimalTilingFeatures & required) == required;
+}
 Device::SwapChainSupportDetails
 Device::querySwapChainSupport(VkPhysicalDevice device,
                               std::shared_ptr<Context> context) {
@@ -73,25 +82,54 @@ VkPresentModeKHR Device::chooseSwapPresentMode(
 VkExtent2D
 Device::chooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities,
                          GLFWwindow *window) {
-    if (capabilities.currentExtent.width !=
-        std::numeric_limits<uint32_t>::max()) {
-        return capabilities.currentExtent;
-    } else {
-        int width, height;
+    int width, height;
+    glfwGetFramebufferSize(window, &width, &height);
+
+    // GLFW can report a 0x0 framebuffer size during startup (before the
+    // window is shown) and when the window is minimized. Creating a
+    // swapchain (and its framebuffers) with a 0 extent is invalid.
+    // Poll events until we have a valid size, but only for a limited time
+    // to avoid blocking startup.
+    int attempts = 0;
+    while ((width == 0 || height == 0) && attempts < 100) {
+        glfwPollEvents();
         glfwGetFramebufferSize(window, &width, &height);
-
-        VkExtent2D actualExtent = {static_cast<uint32_t>(width),
-                                   static_cast<uint32_t>(height)};
-
-        actualExtent.width = std::max(
-            capabilities.minImageExtent.width,
-            std::min(capabilities.maxImageExtent.width, actualExtent.width));
-        actualExtent.height = std::max(
-            capabilities.minImageExtent.height,
-            std::min(capabilities.maxImageExtent.height, actualExtent.height));
-
-        return actualExtent;
+        attempts++;
     }
+
+    // If still zero, use the capabilities extent if valid
+    if (width == 0 || height == 0) {
+        if (capabilities.currentExtent.width !=
+                std::numeric_limits<uint32_t>::max() &&
+            capabilities.currentExtent.width > 0 &&
+            capabilities.currentExtent.height > 0) {
+            return capabilities.currentExtent;
+        }
+        // Last resort: use minimum extent from capabilities
+        width =
+            static_cast<int>(std::max(capabilities.minImageExtent.width, 1u));
+        height =
+            static_cast<int>(std::max(capabilities.minImageExtent.height, 1u));
+    }
+
+    if (capabilities.currentExtent.width !=
+            std::numeric_limits<uint32_t>::max() &&
+        capabilities.currentExtent.width > 0 &&
+        capabilities.currentExtent.height > 0) {
+        return capabilities.currentExtent;
+    }
+
+    VkExtent2D actualExtent = {static_cast<uint32_t>(width),
+                               static_cast<uint32_t>(height)};
+
+    actualExtent.width = std::max(
+        capabilities.minImageExtent.width,
+        std::min(capabilities.maxImageExtent.width, actualExtent.width));
+    actualExtent.height = std::max(
+        capabilities.minImageExtent.height,
+        std::min(capabilities.maxImageExtent.height, actualExtent.height));
+
+    return actualExtent;
 }
 
 void Device::createSwapChain(std::shared_ptr<Context> context) {
@@ -200,12 +238,41 @@ void Device::createSwapChainBrightTextures() {
     }
 
     swapChainBrightTextures.reserve(swapChainImages.images.size());
+
+    // The bright buffer is both rendered-to and sampled by bloom/tonemapping.
+    // Some platforms (notably MoltenVK) have tighter render-target format
+    // support. Pick a format that is guaranteed to be usable as a color
+    // attachment and a sampled image to avoid runtime surprises.
+    TextureFormat brightFormat = TextureFormat::Rgba16F;
+    const VkFormatFeatureFlags required =
+        VK_FORMAT_FEATURE_COLOR_ATTACHMENT_BIT |
+        VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT |
+        VK_FORMAT_FEATURE_TRANSFER_SRC_BIT | VK_FORMAT_FEATURE_TRANSFER_DST_BIT;
+
+    const VkFormat rgba16fVk =
+        opalTextureFormatToVulkanFormat(TextureFormat::Rgba16F);
+    if (!formatSupportsFeatures(this->physicalDevice, rgba16fVk, required)) {
+        atlas_warning("Vulkan: RGBA16F is not supported as a "
+                      "renderable+sampled format on "
+                      "this device; falling back to RGBA8 for bright buffer.");
+        brightFormat = TextureFormat::Rgba8;
+
+        const VkFormat rgba8Vk =
+            opalTextureFormatToVulkanFormat(TextureFormat::Rgba8);
+        if (!formatSupportsFeatures(this->physicalDevice, rgba8Vk, required)) {
+            atlas_error(
+                "Vulkan: RGBA8 is also not supported as a renderable+sampled "
+                "format on this device.");
+            throw std::runtime_error(
+                "No supported Vulkan format for swapchain bright buffer");
+        }
+    }
+
     for (size_t i = 0; i < swapChainImages.images.size(); ++i) {
-        auto texture =
-            Texture::create(TextureType::Texture2D, TextureFormat::Rgba16F,
-                            static_cast<int>(swapChainExtent.width),
-                            static_cast<int>(swapChainExtent.height),
-                            TextureDataFormat::Rgba, nullptr, 1);
+        auto texture = Texture::create(TextureType::Texture2D, brightFormat,
+                                       static_cast<int>(swapChainExtent.width),
+                                       static_cast<int>(swapChainExtent.height),
+                                       TextureDataFormat::Rgba, nullptr, 1);
         swapChainBrightTextures.push_back(texture);
     }
 

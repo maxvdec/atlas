@@ -33,6 +33,13 @@ frametest:
     just build
     timeout 2 ./build/bin/atlas_test
 
+# Runs a short smoke test and fails if validation errors are printed.
+check:
+    just build
+    rm -f build/atlas_check.log
+    (timeout 5 ./build/bin/atlas_test 2>&1 | tee build/atlas_check.log) || true
+    ! grep -E "\\[ERROR\\]|VUID-" build/atlas_check.log
+
 cli:
     cargo build
 

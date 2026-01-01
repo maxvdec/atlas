@@ -150,7 +150,8 @@ unsigned int BloomRenderTarget::getBloomTexture() {
 }
 
 void BloomRenderTarget::renderDownsamples(
-    unsigned int srcTexture, std::shared_ptr<opal::CommandBuffer> commandBuffer) {
+    unsigned int srcTexture,
+    std::shared_ptr<opal::CommandBuffer> commandBuffer) {
     // Get or create pipeline for downsample
     static std::shared_ptr<opal::Pipeline> downsamplePipeline = nullptr;
     if (downsamplePipeline == nullptr) {
