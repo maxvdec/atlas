@@ -156,8 +156,35 @@ void BloomRenderTarget::renderDownsamples(
     static std::shared_ptr<opal::Pipeline> downsamplePipeline = nullptr;
     if (downsamplePipeline == nullptr) {
         downsamplePipeline = opal::Pipeline::create();
+        const uint quadStride = static_cast<uint>(5 * sizeof(float));
+        const opal::VertexAttribute positionAttr{
+            .name = "bloomPosition",
+            .type = opal::VertexAttributeType::Float,
+            .offset = 0,
+            .location = 0,
+            .normalized = false,
+            .size = 3,
+            .stride = quadStride,
+            .inputRate = opal::VertexBindingInputRate::Vertex,
+            .divisor = 0};
+        const opal::VertexAttribute uvAttr{
+            .name = "bloomUV",
+            .type = opal::VertexAttributeType::Float,
+            .offset = static_cast<uint>(3 * sizeof(float)),
+            .location = 1,
+            .normalized = false,
+            .size = 2,
+            .stride = quadStride,
+            .inputRate = opal::VertexBindingInputRate::Vertex,
+            .divisor = 0};
+        const opal::VertexBinding quadBinding{
+            quadStride, opal::VertexBindingInputRate::Vertex};
+        downsamplePipeline->setShaderProgram(downsampleProgram.shader);
+        std::vector<opal::VertexAttribute> quadAttributes = {positionAttr,
+                                                             uvAttr};
+        downsamplePipeline->setVertexAttributes(quadAttributes, quadBinding);
+        downsamplePipeline->build();
     }
-    downsamplePipeline = downsampleProgram.requestPipeline(downsamplePipeline);
     downsamplePipeline->bind();
 
     downsamplePipeline->setUniform2f("srcResolution", srcViewportSizef.x,
@@ -171,6 +198,8 @@ void BloomRenderTarget::renderDownsamples(
         const BloomElement &element = elements[i];
         this->framebuffer->setViewport(0, 0, element.size.x, element.size.y);
         this->framebuffer->attachTexture(element.texture, 0);
+        downsamplePipeline->setViewport(0, 0, element.intSize.x,
+                                        element.intSize.y);
 
         commandBuffer->beginPass(renderPass);
         commandBuffer->clearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -194,11 +223,39 @@ void BloomRenderTarget::renderUpsamples(
     static std::shared_ptr<opal::Pipeline> upsamplePipeline = nullptr;
     if (upsamplePipeline == nullptr) {
         upsamplePipeline = opal::Pipeline::create();
+        const uint quadStride = static_cast<uint>(5 * sizeof(float));
+        const opal::VertexAttribute positionAttr{
+            .name = "bloomPosition",
+            .type = opal::VertexAttributeType::Float,
+            .offset = 0,
+            .location = 0,
+            .normalized = false,
+            .size = 3,
+            .stride = quadStride,
+            .inputRate = opal::VertexBindingInputRate::Vertex,
+            .divisor = 0};
+        const opal::VertexAttribute uvAttr{
+            .name = "bloomUV",
+            .type = opal::VertexAttributeType::Float,
+            .offset = static_cast<uint>(3 * sizeof(float)),
+            .location = 1,
+            .normalized = false,
+            .size = 2,
+            .stride = quadStride,
+            .inputRate = opal::VertexBindingInputRate::Vertex,
+            .divisor = 0};
+        const opal::VertexBinding quadBinding{
+            quadStride, opal::VertexBindingInputRate::Vertex};
+        upsamplePipeline->setShaderProgram(upsampleProgram.shader);
+        std::vector<opal::VertexAttribute> quadAttributes = {positionAttr,
+                                                             uvAttr};
+        upsamplePipeline->setVertexAttributes(quadAttributes, quadBinding);
+        upsamplePipeline->enableBlending(true);
+        upsamplePipeline->setBlendFunc(opal::BlendFunc::One,
+                                       opal::BlendFunc::One);
+        upsamplePipeline->setBlendEquation(opal::BlendEquation::Add);
+        upsamplePipeline->build();
     }
-    upsamplePipeline = upsampleProgram.requestPipeline(upsamplePipeline);
-    upsamplePipeline->enableBlending(true);
-    upsamplePipeline->setBlendFunc(opal::BlendFunc::One, opal::BlendFunc::One);
-    upsamplePipeline->setBlendEquation(opal::BlendEquation::Add);
     upsamplePipeline->bind();
 
     upsamplePipeline->setUniform1f("filterRadius", filterRadius);
@@ -217,6 +274,8 @@ void BloomRenderTarget::renderUpsamples(
         this->framebuffer->setViewport(0, 0, nextElement.size.x,
                                        nextElement.size.y);
         this->framebuffer->attachTexture(nextElement.texture, 0);
+        upsamplePipeline->setViewport(0, 0, nextElement.intSize.x,
+                                      nextElement.intSize.y);
 
         commandBuffer->beginPass(renderPass);
         commandBuffer->clearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -229,10 +288,6 @@ void BloomRenderTarget::renderUpsamples(
         commandBuffer->endPass();
     }
 
-    upsamplePipeline->setBlendFunc(opal::BlendFunc::One,
-                                   opal::BlendFunc::OneMinusSrcAlpha);
-    upsamplePipeline->enableBlending(false);
-    upsamplePipeline->bind();
 }
 
 void BloomRenderTarget::bindForWriting() { this->framebuffer->bind(); }

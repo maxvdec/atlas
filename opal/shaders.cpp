@@ -256,6 +256,14 @@ void Shader::performReflection() {
             return;
         }
 
+        // Only apply set/binding-driven aliasing when SPIR-V names are missing
+        // (or compiler-generated). If we already have a meaningful resource
+        // name, binding-based aliasing can incorrectly map engine names to the
+        // wrong block (e.g., fullscreen set=1 binding=0 is Environment, not
+        // Uniforms).
+        const bool applySetBindingAliases =
+            (name.empty() || effectiveName.rfind("_set", 0) == 0);
+
         auto addAlias = [&](const std::string &alias) {
             if (alias.empty()) {
                 return;
@@ -267,13 +275,30 @@ void Shader::performReflection() {
 
         // If names were stripped, add conventional aliases based on the
         // engine's expected descriptor layout (keeps name-based binding code
-        // working).
-        // Add conventional aliases based on set/binding (covers cases where
-        // SPIR-V names are stripped OR compiler-mangled). Aliases are only
-        // added if not already present.
-        if (info.isSampler) {
+        // working). Aliases are only added if not already present.
+        if (applySetBindingAliases && info.isSampler) {
             // Forward main shader texture set.
             if (info.set == 2) {
+                // Fullscreen / render-target display shader uses these
+                // canonical names at fixed bindings.
+                if (info.binding == 0) {
+                    addAlias("Texture");
+                } else if (info.binding == 1) {
+                    addAlias("BrightTexture");
+                } else if (info.binding == 2) {
+                    addAlias("DepthTexture");
+                } else if (info.binding == 3) {
+                    addAlias("VolumetricLightTexture");
+                } else if (info.binding == 4) {
+                    addAlias("PositionTexture");
+                } else if (info.binding == 5) {
+                    addAlias("LUTTexture");
+                } else if (info.binding == 6) {
+                    addAlias("SSRTexture");
+                } else if (info.binding == 7) {
+                    addAlias("cloudsTexture");
+                }
+
                 if (info.binding <= 9) {
                     addAlias("texture" + std::to_string(info.binding + 1));
                 } else if (info.binding == 10) {
@@ -282,7 +307,7 @@ void Shader::performReflection() {
                     addAlias("cubeMap" + std::to_string(info.binding - 10));
                 }
             }
-        } else if (info.isBuffer) {
+        } else if (applySetBindingAliases && info.isBuffer) {
             if (!info.isStorageBuffer) {
                 // UBO conventions for main forward shader.
                 if (info.set == 0 && info.binding == 0) {
@@ -417,11 +442,16 @@ void Shader::performReflection() {
             memberInfo.isStorageBuffer = false;
             memberInfo.isCubemap = false;
 
-            registerBinding(instanceName + "." + memberName, memberInfo, false);
-            if (!typeName.empty() && typeName != instanceName) {
+            if (!instanceName.empty() && !memberName.empty()) {
+                registerBinding(instanceName + "." + memberName, memberInfo,
+                                false);
+            }
+            if (!typeName.empty() && typeName != instanceName &&
+                !memberName.empty()) {
                 registerBinding(typeName + "." + memberName, memberInfo, false);
             }
-            if (uniformBindings.find(memberName) == uniformBindings.end()) {
+            if (!memberName.empty() &&
+                uniformBindings.find(memberName) == uniformBindings.end()) {
                 registerBinding(memberName, memberInfo, false);
             }
         }
@@ -557,6 +587,24 @@ ShaderProgram::findUniform(const std::string &name) const {
     auto it = uniformBindings.find(name);
     if (it != uniformBindings.end()) {
         return &it->second;
+    }
+    for (const auto &pair : uniformBindings) {
+        const std::string &key = pair.first;
+        if (key.size() != name.size()) {
+            continue;
+        }
+        bool match = true;
+        for (size_t i = 0; i < key.size(); ++i) {
+            unsigned char a = static_cast<unsigned char>(key[i]);
+            unsigned char b = static_cast<unsigned char>(name[i]);
+            if (std::tolower(a) != std::tolower(b)) {
+                match = false;
+                break;
+            }
+        }
+        if (match) {
+            return &pair.second;
+        }
     }
     return nullptr;
 }

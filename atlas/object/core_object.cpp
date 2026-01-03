@@ -628,7 +628,9 @@ void CoreObject::render(float dt,
     struct alignas(16) VulkanFragmentUniformsUBO {
         glm::ivec4 textureTypes[16];
         int32_t textureCount;
-        int32_t _pad0[3];
+        int32_t useTexture;
+        int32_t useColor;
+        int32_t _pad0;
         glm::vec3 cameraPosition;
         float _pad1;
     } vkUniformsUBO;
@@ -636,8 +638,9 @@ void CoreObject::render(float dt,
         v = glm::ivec4(0);
     }
     vkUniformsUBO.textureCount = 0;
-    vkUniformsUBO._pad0[0] = vkUniformsUBO._pad0[1] = vkUniformsUBO._pad0[2] =
-        0;
+    vkUniformsUBO.useTexture = useTexture ? 1 : 0;
+    vkUniformsUBO.useColor = useColor ? 1 : 0;
+    vkUniformsUBO._pad0 = 0;
     vkUniformsUBO.cameraPosition = glm::vec3(0.0f);
     vkUniformsUBO._pad1 = 0.0f;
 
@@ -727,16 +730,32 @@ void CoreObject::render(float dt,
                   ShaderCapability::Material) !=
         shaderProgram.capabilities.end()) {
 #ifdef VULKAN
-        vkMaterialUBO.albedo =
-            glm::vec3(material.albedo.r, material.albedo.g, material.albedo.b);
-        vkMaterialUBO.metallic = material.metallic;
-        vkMaterialUBO.roughness = material.roughness;
-        vkMaterialUBO.ao = material.ao;
-        vkMaterialUBO.reflectivity = 0.0f;
-        vkMaterialUBO._pad0[0] = vkMaterialUBO._pad0[1] =
-            vkMaterialUBO._pad0[2] = 0.0f;
-        this->pipeline->bindBufferData("material", &vkMaterialUBO,
-                                       sizeof(vkMaterialUBO));
+        const opal::UniformBindingInfo *materialInfo =
+            this->pipeline && this->pipeline->shaderProgram
+                ? this->pipeline->shaderProgram->findUniform("material")
+                : nullptr;
+        if (materialInfo && !materialInfo->isBuffer) {
+            this->pipeline->setUniform3f(
+                "material.albedo", material.albedo.r, material.albedo.g,
+                material.albedo.b);
+            this->pipeline->setUniform1f("material.metallic",
+                                         material.metallic);
+            this->pipeline->setUniform1f("material.roughness",
+                                         material.roughness);
+            this->pipeline->setUniform1f("material.ao", material.ao);
+        } else {
+            vkMaterialUBO.albedo = glm::vec3(material.albedo.r,
+                                             material.albedo.g,
+                                             material.albedo.b);
+            vkMaterialUBO.metallic = material.metallic;
+            vkMaterialUBO.roughness = material.roughness;
+            vkMaterialUBO.ao = material.ao;
+            vkMaterialUBO.reflectivity = 0.0f;
+            vkMaterialUBO._pad0[0] = vkMaterialUBO._pad0[1] =
+                vkMaterialUBO._pad0[2] = 0.0f;
+            this->pipeline->bindBufferData("material", &vkMaterialUBO,
+                                           sizeof(vkMaterialUBO));
+        }
 #else
         this->pipeline->setUniform3f("material.albedo", material.albedo.r,
                                      material.albedo.g, material.albedo.b);
@@ -1111,8 +1130,19 @@ void CoreObject::render(float dt,
 
 #ifdef VULKAN
     // Finalize Vulkan per-draw data.
-    this->pipeline->bindBufferData("Uniforms", &vkUniformsUBO,
-                                   sizeof(vkUniformsUBO));
+    if (this->pipeline && this->pipeline->shaderProgram) {
+        const opal::UniformBindingInfo *uniformsInfo =
+            this->pipeline->shaderProgram->findUniform("Uniforms");
+        const opal::UniformBindingInfo *uboInfo =
+            this->pipeline->shaderProgram->findUniform("UBO");
+        if (uniformsInfo && uniformsInfo->isBuffer) {
+            this->pipeline->bindBufferData("Uniforms", &vkUniformsUBO,
+                                           sizeof(vkUniformsUBO));
+        } else if (uboInfo && uboInfo->isBuffer) {
+            this->pipeline->bindBufferData("UBO", &vkUniformsUBO,
+                                           sizeof(vkUniformsUBO));
+        }
+    }
     this->pipeline->setPushConstantsData(&vkPC, sizeof(vkPC));
 #endif
 

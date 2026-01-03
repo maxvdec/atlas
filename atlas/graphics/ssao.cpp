@@ -17,20 +17,27 @@
 #include "opal/opal.h"
 
 void Window::setupSSAO() {
+    int kernelSize = this->ssaoKernelSize;
+#ifdef VULKAN
+    if (kernelSize < 64) {
+        kernelSize = 64;
+        this->ssaoKernelSize = kernelSize;
+    }
+#endif
     atlas_log("Setting up SSAO (kernel size: " +
-              std::to_string(this->ssaoKernelSize) + ")");
+              std::to_string(kernelSize) + ")");
     std::uniform_real_distribution<float> randomFloats(0.0, 1.0);
     std::default_random_engine generator;
     this->ssaoKernel.clear();
-    this->ssaoKernel.reserve(this->ssaoKernelSize);
-    for (int i = 0; i < this->ssaoKernelSize; ++i) {
+    this->ssaoKernel.reserve(kernelSize);
+    for (int i = 0; i < kernelSize; ++i) {
         glm::vec3 sample(randomFloats(generator) * 2.0 - 1.0,
                          randomFloats(generator) * 2.0 - 1.0,
                          randomFloats(generator));
         sample = glm::normalize(sample);
         sample *= randomFloats(generator);
         float scale = static_cast<float>(i) /
-                      static_cast<float>(std::max(1, this->ssaoKernelSize));
+                      static_cast<float>(std::max(1, kernelSize));
         scale = 0.1f + 0.9f * (scale * scale);
         sample *= scale;
         ssaoKernel.push_back(sample);
@@ -116,6 +123,29 @@ void Window::renderSSAO(std::shared_ptr<opal::CommandBuffer> commandBuffer) {
 
     static std::shared_ptr<opal::DrawingState> ssaoState = nullptr;
     static std::shared_ptr<opal::Buffer> ssaoQuadBuffer = nullptr;
+    const uint quadStride = static_cast<uint>(5 * sizeof(float));
+    const opal::VertexAttribute positionAttr{
+        .name = "ssaoPosition",
+        .type = opal::VertexAttributeType::Float,
+        .offset = 0,
+        .location = 0,
+        .normalized = false,
+        .size = 3,
+        .stride = quadStride,
+        .inputRate = opal::VertexBindingInputRate::Vertex,
+        .divisor = 0};
+    const opal::VertexAttribute uvAttr{
+        .name = "ssaoUV",
+        .type = opal::VertexAttributeType::Float,
+        .offset = static_cast<uint>(3 * sizeof(float)),
+        .location = 1,
+        .normalized = false,
+        .size = 2,
+        .stride = quadStride,
+        .inputRate = opal::VertexBindingInputRate::Vertex,
+        .divisor = 0};
+    const opal::VertexBinding quadBinding{quadStride,
+                                          opal::VertexBindingInputRate::Vertex};
 
     // SSAO pass
     {
@@ -141,27 +171,6 @@ void Window::renderSSAO(std::shared_ptr<opal::CommandBuffer> commandBuffer) {
             ssaoState = opal::DrawingState::create(ssaoQuadBuffer);
             ssaoState->setBuffers(ssaoQuadBuffer, nullptr);
 
-            opal::VertexAttribute positionAttr{
-                .name = "ssaoPosition",
-                .type = opal::VertexAttributeType::Float,
-                .offset = 0,
-                .location = 0,
-                .normalized = false,
-                .size = 3,
-                .stride = static_cast<uint>(5 * sizeof(float)),
-                .inputRate = opal::VertexBindingInputRate::Vertex,
-                .divisor = 0};
-            opal::VertexAttribute uvAttr{
-                .name = "ssaoUV",
-                .type = opal::VertexAttributeType::Float,
-                .offset = static_cast<uint>(3 * sizeof(float)),
-                .location = 1,
-                .normalized = false,
-                .size = 2,
-                .stride = static_cast<uint>(5 * sizeof(float)),
-                .inputRate = opal::VertexBindingInputRate::Vertex,
-                .divisor = 0};
-
             std::vector<opal::VertexAttributeBinding> bindings = {
                 {positionAttr, ssaoQuadBuffer}, {uvAttr, ssaoQuadBuffer}};
             ssaoState->configureAttributes(bindings);
@@ -170,14 +179,49 @@ void Window::renderSSAO(std::shared_ptr<opal::CommandBuffer> commandBuffer) {
         static std::shared_ptr<opal::Pipeline> ssaoPipeline = nullptr;
         if (ssaoPipeline == nullptr) {
             ssaoPipeline = opal::Pipeline::create();
+            ssaoPipeline->setShaderProgram(this->ssaoProgram.shader);
+            std::vector<opal::VertexAttribute> quadAttributes = {positionAttr,
+                                                                 uvAttr};
+            ssaoPipeline->setVertexAttributes(quadAttributes, quadBinding);
+            ssaoPipeline->build();
         }
-        ssaoPipeline = this->ssaoProgram.requestPipeline(ssaoPipeline);
+        ssaoPipeline->setViewport(0, 0, this->ssaoBuffer->getWidth(),
+                                  this->ssaoBuffer->getHeight());
         ssaoPipeline->bind();
 
         ssaoPipeline->bindTexture2D("gPosition", this->gBuffer->gPosition.id,
                                     0);
         ssaoPipeline->bindTexture2D("gNormal", this->gBuffer->gNormal.id, 1);
         ssaoPipeline->bindTexture2D("texNoise", this->noiseTexture.id, 2);
+        glm::vec2 screenSize(this->ssaoBuffer->getWidth(),
+                             this->ssaoBuffer->getHeight());
+        glm::vec2 noiseSize(4.0f, 4.0f);
+#ifdef VULKAN
+        struct alignas(16) VulkanSSAOParameters {
+            glm::mat4 projection;
+            glm::mat4 view;
+            glm::vec2 noiseScale;
+            glm::vec2 pad0;
+        } params{};
+        params.projection = this->calculateProjectionMatrix();
+        params.view = getCamera()->calculateViewMatrix();
+        params.noiseScale =
+            glm::vec2(screenSize.x / noiseSize.x, screenSize.y / noiseSize.y);
+        params.pad0 = glm::vec2(0.0f);
+
+        struct alignas(16) VulkanSSAOSamples {
+            glm::vec4 samples[64];
+        } sampleData{};
+
+        size_t sampleCount = std::min<size_t>(this->ssaoKernel.size(), 64);
+        for (size_t i = 0; i < sampleCount; ++i) {
+            sampleData.samples[i] = glm::vec4(this->ssaoKernel[i], 0.0f);
+        }
+
+        ssaoPipeline->bindBufferData("Paramters", &params, sizeof(params));
+        ssaoPipeline->bindBufferData("Samples", &sampleData,
+                                     sizeof(sampleData));
+#else
         for (size_t i = 0; i < this->ssaoKernel.size(); ++i) {
             ssaoPipeline->setUniform3f("samples[" + std::to_string(i) + "]",
                                        ssaoKernel[i].x, ssaoKernel[i].y,
@@ -189,12 +233,11 @@ void Window::renderSSAO(std::shared_ptr<opal::CommandBuffer> commandBuffer) {
                                       this->calculateProjectionMatrix());
         ssaoPipeline->setUniformMat4f("view",
                                       getCamera()->calculateViewMatrix());
-        glm::vec2 screenSize(this->ssaoBuffer->getWidth(),
-                             this->ssaoBuffer->getHeight());
-        glm::vec2 noiseSize(4.0f, 4.0f);
         ssaoPipeline->setUniform2f("noiseScale", screenSize.x / noiseSize.x,
                                    screenSize.y / noiseSize.y);
+#endif
         ssaoState->bind();
+        commandBuffer->bindPipeline(ssaoPipeline);
         commandBuffer->draw(6, 1, 0, 0);
         ssaoState->unbind();
         this->ssaoBuffer->unbind();
@@ -212,14 +255,20 @@ void Window::renderSSAO(std::shared_ptr<opal::CommandBuffer> commandBuffer) {
         static std::shared_ptr<opal::Pipeline> ssaoBlurPipeline = nullptr;
         if (ssaoBlurPipeline == nullptr) {
             ssaoBlurPipeline = opal::Pipeline::create();
+            ssaoBlurPipeline->setShaderProgram(this->ssaoBlurProgram.shader);
+            std::vector<opal::VertexAttribute> quadAttributes = {positionAttr,
+                                                                 uvAttr};
+            ssaoBlurPipeline->setVertexAttributes(quadAttributes, quadBinding);
+            ssaoBlurPipeline->build();
         }
-        ssaoBlurPipeline =
-            this->ssaoBlurProgram.requestPipeline(ssaoBlurPipeline);
+        ssaoBlurPipeline->setViewport(0, 0, this->ssaoBlurBuffer->getWidth(),
+                                      this->ssaoBlurBuffer->getHeight());
         ssaoBlurPipeline->bind();
 
         ssaoBlurPipeline->bindTexture2D("inSSAO", this->ssaoBuffer->texture.id,
                                         0);
         ssaoState->bind();
+        commandBuffer->bindPipeline(ssaoBlurPipeline);
         commandBuffer->draw(6, 1, 0, 0);
         ssaoState->unbind();
         this->ssaoBlurBuffer->unbind();

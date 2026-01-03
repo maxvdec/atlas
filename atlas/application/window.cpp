@@ -368,7 +368,7 @@ void Window::run() {
             if (this->usesDeferred) {
                 this->deferredRendering(target, commandBuffer);
 
-                auto resolveCommand = opal::ResolveAction::create(
+                auto resolveCommand = opal::ResolveAction::createForDepth(
                     this->gBuffer->getFramebuffer(), target->getFramebuffer());
                 commandBuffer->performResolve(resolveCommand);
 

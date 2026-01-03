@@ -409,15 +409,28 @@ auto CommandBuffer::draw(uint vertexCount, uint instanceCount, uint firstVertex,
     if (!hasStarted) {
         return; // Render pass not started, skip draw
     }
+
+    // Ensure the VkPipeline we bind matches the Pipeline instance we bind
+    // descriptor sets / push constants with. Vulkan requires layout
+    // compatibility between vkCmdBindPipeline and vkCmdBindDescriptorSets/
+    // vkCmdPushConstants.
+    if (boundPipeline != nullptr &&
+        renderPass->currentRenderPass->opalPipeline.get() !=
+            boundPipeline.get()) {
+        bindPipeline(boundPipeline);
+        if (renderPass == nullptr || renderPass->currentRenderPass == nullptr) {
+            return;
+        }
+    }
+
     vkCmdBindPipeline(commandBuffers[currentFrame],
                       VK_PIPELINE_BIND_POINT_GRAPHICS,
                       renderPass->currentRenderPass->pipeline);
 
-    // Use boundPipeline for all pipeline operations - it's the one the user set
-    // uniforms on
-    Pipeline *activePipeline = boundPipeline.get();
-    if (activePipeline == nullptr &&
-        renderPass->currentRenderPass->opalPipeline != nullptr) {
+    // Always bind descriptor sets/push constants using the exact Pipeline that
+    // created the bound VkPipeline.
+    Pipeline *activePipeline = nullptr;
+    if (renderPass->currentRenderPass->opalPipeline != nullptr) {
         activePipeline = renderPass->currentRenderPass->opalPipeline.get();
     }
     if (activePipeline != nullptr) {
@@ -488,15 +501,24 @@ void CommandBuffer::drawIndexed(uint indexCount, uint instanceCount,
     if (!hasStarted) {
         return; // Render pass not started, skip draw
     }
+
+    // Ensure the VkPipeline we bind matches the Pipeline instance we bind
+    // descriptor sets / push constants with.
+    if (boundPipeline != nullptr &&
+        renderPass->currentRenderPass->opalPipeline.get() !=
+            boundPipeline.get()) {
+        bindPipeline(boundPipeline);
+        if (renderPass == nullptr || renderPass->currentRenderPass == nullptr) {
+            return;
+        }
+    }
+
     vkCmdBindPipeline(commandBuffers[currentFrame],
                       VK_PIPELINE_BIND_POINT_GRAPHICS,
                       renderPass->currentRenderPass->pipeline);
 
-    // Use boundPipeline for all pipeline operations - it's the one the user set
-    // uniforms on
-    Pipeline *activePipeline = boundPipeline.get();
-    if (activePipeline == nullptr &&
-        renderPass->currentRenderPass->opalPipeline != nullptr) {
+    Pipeline *activePipeline = nullptr;
+    if (renderPass->currentRenderPass->opalPipeline != nullptr) {
         activePipeline = renderPass->currentRenderPass->opalPipeline.get();
     }
     if (activePipeline != nullptr) {
@@ -584,15 +606,24 @@ void CommandBuffer::drawPatches(uint vertexCount, uint firstVertex,
     if (!hasStarted) {
         return; // Render pass not started, skip draw
     }
+
+    // Ensure the VkPipeline we bind matches the Pipeline instance we bind
+    // descriptor sets / push constants with.
+    if (boundPipeline != nullptr &&
+        renderPass->currentRenderPass->opalPipeline.get() !=
+            boundPipeline.get()) {
+        bindPipeline(boundPipeline);
+        if (renderPass == nullptr || renderPass->currentRenderPass == nullptr) {
+            return;
+        }
+    }
+
     vkCmdBindPipeline(commandBuffers[currentFrame],
                       VK_PIPELINE_BIND_POINT_GRAPHICS,
                       renderPass->currentRenderPass->pipeline);
 
-    // Use boundPipeline for all pipeline operations - it's the one the user set
-    // uniforms on
-    Pipeline *activePipeline = boundPipeline.get();
-    if (activePipeline == nullptr &&
-        renderPass->currentRenderPass->opalPipeline != nullptr) {
+    Pipeline *activePipeline = nullptr;
+    if (renderPass->currentRenderPass->opalPipeline != nullptr) {
         activePipeline = renderPass->currentRenderPass->opalPipeline.get();
     }
     if (activePipeline != nullptr) {

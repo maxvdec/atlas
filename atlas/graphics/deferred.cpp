@@ -204,6 +204,29 @@ void Window::deferredRendering(
 
     static std::shared_ptr<opal::DrawingState> quadState = nullptr;
     static std::shared_ptr<opal::Buffer> quadBuffer = nullptr;
+    const uint quadStride = static_cast<uint>(5 * sizeof(float));
+    const opal::VertexAttribute positionAttr{
+        .name = "deferredPosition",
+        .type = opal::VertexAttributeType::Float,
+        .offset = 0,
+        .location = 0,
+        .normalized = false,
+        .size = 3,
+        .stride = quadStride,
+        .inputRate = opal::VertexBindingInputRate::Vertex,
+        .divisor = 0};
+    const opal::VertexAttribute uvAttr{
+        .name = "deferredUV",
+        .type = opal::VertexAttributeType::Float,
+        .offset = static_cast<uint>(3 * sizeof(float)),
+        .location = 1,
+        .normalized = false,
+        .size = 2,
+        .stride = quadStride,
+        .inputRate = opal::VertexBindingInputRate::Vertex,
+        .divisor = 0};
+    const opal::VertexBinding quadBinding{quadStride,
+                                          opal::VertexBindingInputRate::Vertex};
     if (quadState == nullptr) {
         float quadVertices[] = {
             // positions         // texCoords
@@ -221,27 +244,6 @@ void Window::deferredRendering(
         quadState = opal::DrawingState::create(quadBuffer);
         quadState->setBuffers(quadBuffer, nullptr);
 
-        opal::VertexAttribute positionAttr{
-            .name = "deferredPosition",
-            .type = opal::VertexAttributeType::Float,
-            .offset = 0,
-            .location = 0,
-            .normalized = false,
-            .size = 3,
-            .stride = static_cast<uint>(5 * sizeof(float)),
-            .inputRate = opal::VertexBindingInputRate::Vertex,
-            .divisor = 0};
-        opal::VertexAttribute uvAttr{
-            .name = "deferredUV",
-            .type = opal::VertexAttributeType::Float,
-            .offset = static_cast<uint>(3 * sizeof(float)),
-            .location = 1,
-            .normalized = false,
-            .size = 2,
-            .stride = static_cast<uint>(5 * sizeof(float)),
-            .inputRate = opal::VertexBindingInputRate::Vertex,
-            .divisor = 0};
-
         std::vector<opal::VertexAttributeBinding> bindings = {
             {positionAttr, quadBuffer}, {uvAttr, quadBuffer}};
         quadState->configureAttributes(bindings);
@@ -250,8 +252,13 @@ void Window::deferredRendering(
     static std::shared_ptr<opal::Pipeline> lightPipeline = nullptr;
     if (lightPipeline == nullptr) {
         lightPipeline = opal::Pipeline::create();
+        lightPipeline->setShaderProgram(this->lightProgram.shader);
+        std::vector<opal::VertexAttribute> quadAttributes = {positionAttr,
+                                                             uvAttr};
+        lightPipeline->setVertexAttributes(quadAttributes, quadBinding);
+        lightPipeline->build();
     }
-    lightPipeline = this->lightProgram.requestPipeline(lightPipeline);
+    lightPipeline->setViewport(0, 0, target->getWidth(), target->getHeight());
     lightPipeline->bind();
 
     lightPipeline->bindTexture2D("gPosition", this->gBuffer->gPosition.id, 0);
@@ -269,6 +276,10 @@ void Window::deferredRendering(
     }
 
     int boundCubemaps = 0;
+#ifdef VULKAN
+    std::vector<GPUShadowParams> gpuShadowParams;
+    gpuShadowParams.reserve(10);
+#endif
 
     Scene *scene = this->currentScene;
 
@@ -333,10 +344,12 @@ void Window::deferredRendering(
         lightPipeline->bindBuffer("AreaLights", gpuAreaLights);
     }
 
+#ifndef VULKAN
     for (int i = 0; i < 5; i++) {
         std::string uniformName = "cubeMap" + std::to_string(i + 1);
         lightPipeline->setUniform1i(uniformName, i + 10);
     }
+#endif
 
     int shadow2DSamplerIndex = 0;
     int boundParameters = 0;
@@ -361,6 +374,18 @@ void Window::deferredRendering(
         lightPipeline->bindTexture2D(
             "texture" + std::to_string(shadow2DSamplerIndex + 1),
             light->shadowRenderTarget->texture.id, boundTextures);
+#ifdef VULKAN
+        GPUShadowParams gpu{};
+        gpu.lightView = light->lastShadowParams.lightView;
+        gpu.lightProjection = light->lastShadowParams.lightProjection;
+        gpu.bias = light->lastShadowParams.bias;
+        gpu.textureIndex = shadow2DSamplerIndex;
+        gpu.farPlane = 0.0f;
+        gpu._pad1 = 0.0f;
+        gpu.lightPos = glm::vec3(0.0f);
+        gpu.isPointLight = 0;
+        gpuShadowParams.push_back(gpu);
+#else
         lightPipeline->setUniform1i(baseName + ".textureIndex",
                                     shadow2DSamplerIndex);
         ShadowParams shadowParams = light->lastShadowParams;
@@ -370,6 +395,7 @@ void Window::deferredRendering(
                                        shadowParams.lightProjection);
         lightPipeline->setUniform1f(baseName + ".bias", shadowParams.bias);
         lightPipeline->setUniform1f(baseName + ".isPointLight", 0);
+#endif
 
         boundParameters++;
         shadow2DSamplerIndex++;
@@ -396,6 +422,18 @@ void Window::deferredRendering(
         lightPipeline->bindTexture2D(
             "texture" + std::to_string(shadow2DSamplerIndex + 1),
             light->shadowRenderTarget->texture.id, boundTextures);
+#ifdef VULKAN
+        GPUShadowParams gpu{};
+        gpu.lightView = light->lastShadowParams.lightView;
+        gpu.lightProjection = light->lastShadowParams.lightProjection;
+        gpu.bias = light->lastShadowParams.bias;
+        gpu.textureIndex = shadow2DSamplerIndex;
+        gpu.farPlane = 0.0f;
+        gpu._pad1 = 0.0f;
+        gpu.lightPos = glm::vec3(0.0f);
+        gpu.isPointLight = 0;
+        gpuShadowParams.push_back(gpu);
+#else
         lightPipeline->setUniform1i(baseName + ".textureIndex",
                                     shadow2DSamplerIndex);
         ShadowParams shadowParams = light->lastShadowParams;
@@ -405,6 +443,7 @@ void Window::deferredRendering(
                                        shadowParams.lightProjection);
         lightPipeline->setUniform1f(baseName + ".bias", shadowParams.bias);
         lightPipeline->setUniform1f(baseName + ".isPointLight", 0);
+#endif
 
         boundParameters++;
         shadow2DSamplerIndex++;
@@ -427,23 +466,44 @@ void Window::deferredRendering(
         lightPipeline->bindTextureCubemap(
             "cubeMap" + std::to_string(boundCubemaps + 1),
             light->shadowRenderTarget->texture.id, 10 + boundCubemaps);
+#ifdef VULKAN
+        GPUShadowParams gpu{};
+        gpu.lightView = glm::mat4(1.0f);
+        gpu.lightProjection = glm::mat4(1.0f);
+        gpu.bias = 0.0f;
+        gpu.textureIndex = boundCubemaps;
+        gpu.farPlane = light->distance;
+        gpu._pad1 = 0.0f;
+        gpu.lightPos =
+            glm::vec3(light->position.x, light->position.y, light->position.z);
+        gpu.isPointLight = 1;
+        gpuShadowParams.push_back(gpu);
+#else
         lightPipeline->setUniform1i(baseName + ".textureIndex", boundCubemaps);
         lightPipeline->setUniform1f(baseName + ".farPlane", light->distance);
         lightPipeline->setUniform3f(baseName + ".lightPos", light->position.x,
                                     light->position.y, light->position.z);
         lightPipeline->setUniform1i(baseName + ".isPointLight", 1);
+#endif
 
         boundParameters++;
         boundCubemaps++;
     }
 
     lightPipeline->setUniform1i("shadowParamCount", boundParameters);
+#ifdef VULKAN
+    if (!gpuShadowParams.empty()) {
+        lightPipeline->bindBuffer("ShadowParams", gpuShadowParams);
+    }
+#endif
 
     // Set texture units array using pipeline
+#ifndef VULKAN
     for (int i = 0; i < boundTextures && i < 16; i++) {
         std::string uniformName = "textures[" + std::to_string(i) + "]";
         lightPipeline->setUniform1i(uniformName, i);
     }
+#endif
 
     // Bind skybox
     if (scene->skybox != nullptr) {
@@ -462,6 +522,7 @@ void Window::deferredRendering(
         Window::mainWindow->currentScene->environment.rimLight.color.b);
 
     quadState->bind();
+    commandBuffer->bindPipeline(lightPipeline);
     commandBuffer->draw(6, 1, 0, 0);
     quadState->unbind();
 
@@ -489,9 +550,16 @@ void Window::deferredRendering(
         static std::shared_ptr<opal::Pipeline> volumetricPipeline = nullptr;
         if (volumetricPipeline == nullptr) {
             volumetricPipeline = opal::Pipeline::create();
+            volumetricPipeline->setShaderProgram(
+                this->volumetricProgram.shader);
+            std::vector<opal::VertexAttribute> quadAttributes = {positionAttr,
+                                                                 uvAttr};
+            volumetricPipeline->setVertexAttributes(quadAttributes,
+                                                    quadBinding);
+            volumetricPipeline->build();
         }
-        volumetricPipeline =
-            this->volumetricProgram.requestPipeline(volumetricPipeline);
+        volumetricPipeline->setViewport(0, 0, volumetricBuffer->getWidth(),
+                                        volumetricBuffer->getHeight());
         volumetricPipeline->bind();
 
         DirectionalLight *dirLight = scene->directionalLights[0];
@@ -521,6 +589,7 @@ void Window::deferredRendering(
         volumetricPipeline->setUniform2f("sunPos", sunUV.x, sunUV.y);
 
         quadState->bind();
+        commandBuffer->bindPipeline(volumetricPipeline);
         commandBuffer->draw(6, 1, 0, 0);
         quadState->unbind();
     }
@@ -543,8 +612,14 @@ void Window::deferredRendering(
         static std::shared_ptr<opal::Pipeline> ssrPipeline = nullptr;
         if (ssrPipeline == nullptr) {
             ssrPipeline = opal::Pipeline::create();
+            ssrPipeline->setShaderProgram(this->ssrProgram.shader);
+            std::vector<opal::VertexAttribute> quadAttributes = {positionAttr,
+                                                                 uvAttr};
+            ssrPipeline->setVertexAttributes(quadAttributes, quadBinding);
+            ssrPipeline->build();
         }
-        ssrPipeline = this->ssrProgram.requestPipeline(ssrPipeline);
+        ssrPipeline->setViewport(0, 0, ssrFramebuffer->getWidth(),
+                                 ssrFramebuffer->getHeight());
         ssrPipeline->bind();
 
         ssrPipeline->bindTexture2D("gPosition", gBuffer->gPosition.id, 0);
@@ -567,6 +642,7 @@ void Window::deferredRendering(
                                   camera->position.y, camera->position.z);
 
         quadState->bind();
+        commandBuffer->bindPipeline(ssrPipeline);
         commandBuffer->draw(6, 1, 0, 0);
         quadState->unbind();
     }

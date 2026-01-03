@@ -76,6 +76,7 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
         fb->addAttachment(depthAttachment);
 
         this->depthTexture.texture = depthTexture;
+        this->depthTexture.id = depthTexture->textureID;
         this->depthTexture.creationData.width = scaledWidth;
         this->depthTexture.creationData.height = scaledHeight;
         this->depthTexture.type = TextureType::Depth;
@@ -89,11 +90,13 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
         texture.creationData.height = scaledHeight;
         texture.type = TextureType::Color;
         texture.texture = colorTextures[0];
+        texture.id = colorTextures[0]->textureID;
 
         brightTexture.creationData.width = scaledWidth;
         brightTexture.creationData.height = scaledHeight;
         brightTexture.type = TextureType::Color;
         brightTexture.texture = colorTextures[1];
+        brightTexture.id = colorTextures[1]->textureID;
 
         fb->unbind();
     } else if (type == RenderTargetType::Multisampled) {
@@ -130,16 +133,19 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
         }
 
         this->msTexture.texture = msColor0;
+        this->msTexture.id = msColor0->textureID;
         this->msTexture.creationData.width = scaledWidth;
         this->msTexture.creationData.height = scaledHeight;
         this->msTexture.type = TextureType::Color;
 
         this->msBrightTexture.texture = msColor1;
+        this->msBrightTexture.id = msColor1->textureID;
         this->msBrightTexture.creationData.width = scaledWidth;
         this->msBrightTexture.creationData.height = scaledHeight;
         this->msBrightTexture.type = TextureType::Color;
 
         this->msDepthTexture.texture = msDepth;
+        this->msDepthTexture.id = msDepth->textureID;
         this->msDepthTexture.creationData.width = scaledWidth;
         this->msDepthTexture.creationData.height = scaledHeight;
         this->msDepthTexture.type = TextureType::Depth;
@@ -193,16 +199,19 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
         }
 
         texture.texture = resolvedColor0;
+        texture.id = resolvedColor0->textureID;
         texture.creationData.width = scaledWidth;
         texture.creationData.height = scaledHeight;
         texture.type = TextureType::Color;
 
         brightTexture.texture = resolvedColor1;
+        brightTexture.id = resolvedColor1->textureID;
         brightTexture.creationData.width = scaledWidth;
         brightTexture.creationData.height = scaledHeight;
         brightTexture.type = TextureType::Color;
 
         this->depthTexture.texture = resolvedDepth;
+        this->depthTexture.id = resolvedDepth->textureID;
         this->depthTexture.creationData.width = scaledWidth;
         this->depthTexture.creationData.height = scaledHeight;
         this->depthTexture.type = TextureType::Depth;
@@ -236,6 +245,7 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
         }
 
         texture.texture = depthMap;
+        texture.id = depthMap->textureID;
         texture.creationData = {SHADOW_WIDTH, SHADOW_HEIGHT, 1};
         texture.type = TextureType::Depth;
 
@@ -257,6 +267,7 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
         }
 
         texture.texture = depthCubemap;
+        texture.id = depthCubemap->textureID;
         texture.creationData = {SHADOW_WIDTH, SHADOW_HEIGHT, 1};
         texture.type = TextureType::DepthCube;
 
@@ -280,6 +291,7 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
         fb->addAttachment(positionAttachment);
 
         gPosition.texture = positionTex;
+        gPosition.id = positionTex->textureID;
         gPosition.creationData.width = scaledWidth;
         gPosition.creationData.height = scaledHeight;
         gPosition.type = TextureType::Color;
@@ -300,6 +312,7 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
         fb->addAttachment(normalAttachment);
 
         gNormal.texture = normalTex;
+        gNormal.id = normalTex->textureID;
         gNormal.creationData.width = scaledWidth;
         gNormal.creationData.height = scaledHeight;
         gNormal.type = TextureType::Color;
@@ -320,6 +333,7 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
         fb->addAttachment(albedoAttachment);
 
         gAlbedoSpec.texture = albedoTex;
+        gAlbedoSpec.id = albedoTex->textureID;
         gAlbedoSpec.creationData.width = scaledWidth;
         gAlbedoSpec.creationData.height = scaledHeight;
         gAlbedoSpec.type = TextureType::Color;
@@ -340,6 +354,7 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
         fb->addAttachment(materialAttachment);
 
         gMaterial.texture = materialTex;
+        gMaterial.id = materialTex->textureID;
         gMaterial.creationData.width = scaledWidth;
         gMaterial.creationData.height = scaledHeight;
         gMaterial.type = TextureType::Color;
@@ -360,6 +375,7 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
         fb->addAttachment(gbufferDepthAttachment);
 
         depthTexture.texture = gbufferDepth;
+        depthTexture.id = gbufferDepth->textureID;
         depthTexture.creationData.width = scaledWidth;
         depthTexture.creationData.height = scaledHeight;
         depthTexture.type = TextureType::Depth;
@@ -394,6 +410,7 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
         }
 
         texture.texture = ssaoTex;
+        texture.id = ssaoTex->textureID;
         texture.creationData.width = scaledWidth;
         texture.creationData.height = scaledHeight;
         texture.type = TextureType::SSAO;
@@ -423,6 +440,7 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
         }
 
         texture.texture = ssaoBlurTex;
+        texture.id = ssaoBlurTex->textureID;
         texture.creationData.width = scaledWidth;
         texture.creationData.height = scaledHeight;
         texture.type = TextureType::SSAO;
@@ -466,7 +484,7 @@ void RenderTarget::display(Window &window, float zindex) {
 
         obj.createAndAttachProgram(vertexShader, fragmentShader);
 
-        std::vector<Index> indices = {0, 1, 3, 1, 2, 3};
+        std::vector<Index> indices = {0, 3, 1, 1, 3, 2};
 
         obj.attachTexture(this->texture);
         obj.attachVertices(vertices);
@@ -631,6 +649,14 @@ void RenderTarget::render(float dt,
     static std::shared_ptr<opal::Pipeline> renderTargetPipeline = nullptr;
     if (renderTargetPipeline == nullptr) {
         renderTargetPipeline = opal::Pipeline::create();
+#ifdef VULKAN
+        renderTargetPipeline->setCullMode(opal::CullMode::None);
+        renderTargetPipeline->enableDepthTest(false);
+        renderTargetPipeline->enableDepthWrite(false);
+        renderTargetPipeline->enableBlending(true);
+        renderTargetPipeline->setBlendFunc(opal::BlendFunc::SrcAlpha,
+                                           opal::BlendFunc::OneMinusSrcAlpha);
+#endif
     }
     renderTargetPipeline =
         obj->shaderProgram.requestPipeline(renderTargetPipeline);
@@ -641,17 +667,20 @@ void RenderTarget::render(float dt,
     if (texture.type == TextureType::DepthCube) {
         renderTargetPipeline->bindTextureCubemap("cubeMap", texture.id, 10,
                                                  obj->id);
+#ifndef VULKAN
         renderTargetPipeline->setUniform1i("isCubeMap", 1);
+#endif
     } else {
         if (texture.id == 0) {
             renderTargetPipeline->bindTexture2D("Texture", gMaterial.id, 0,
                                                 obj->id);
-            renderTargetPipeline->setUniform1i("isCubeMap", 0);
         } else {
             renderTargetPipeline->bindTexture2D("Texture", texture.id, 0,
                                                 obj->id);
-            renderTargetPipeline->setUniform1i("isCubeMap", 0);
         }
+#ifndef VULKAN
+        renderTargetPipeline->setUniform1i("isCubeMap", 0);
+#endif
 
         renderTargetPipeline->bindTexture2D("BrightTexture", blurredTexture.id,
                                             1, obj->id);
@@ -806,12 +835,21 @@ void RenderTarget::render(float dt,
         effects[i]->applyToProgram(obj->shaderProgram, i);
     }
 
+#ifndef VULKAN
     renderTargetPipeline->enableDepthTest(false);
     renderTargetPipeline->enableBlending(true);
     renderTargetPipeline->setBlendFunc(opal::BlendFunc::SrcAlpha,
                                        opal::BlendFunc::OneMinusSrcAlpha);
     renderTargetPipeline->bind();
+#endif
 
+    if (Window::mainWindow != nullptr) {
+        auto size = Window::mainWindow->getSize();
+        renderTargetPipeline->setViewport(0, 0, static_cast<int>(size.width),
+                                          static_cast<int>(size.height));
+    }
+
+    commandBuffer->bindPipeline(renderTargetPipeline);
     commandBuffer->bindDrawingState(obj->vao);
     if (!obj->indices.empty()) {
         commandBuffer->drawIndexed(
