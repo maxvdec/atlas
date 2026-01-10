@@ -1,26 +1,26 @@
-GENERATOR := "Unix Makefiles"
+GENERATOR := "Ninja"
 
 build enable_opengl="OFF" bezel_native="OFF":
     mkdir -p build
-    cd build && cmake -G "{{GENERATOR}}" -DBACKEND_OPENGL={{enable_opengl}} -DBEZEL_NATIVE={{bezel_native}} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
-    cd build && make -j8
+    cd build && cmake -G "{{ GENERATOR }}" -DBACKEND_OPENGL={{ enable_opengl }} -DBEZEL_NATIVE={{ bezel_native }} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+    cd build && ninja
 
 target target enable_opengl="OFF" bezel_native="OFF":
     mkdir -p build
-    cd build && cmake -G "{{GENERATOR}}" -DBACKEND_OPENGL={{enable_opengl}} -DBEZEL_NATIVE={{bezel_native}} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
-    cd build && make -j8 {{target}}
+    cd build && cmake -G "{{ GENERATOR }}" -DBACKEND_OPENGL={{ enable_opengl }} -DBEZEL_NATIVE={{ bezel_native }} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+    cd build && ninja {{ target }}
 
 run enable_opengl="OFF" bezel_native="OFF":
-    just build {{enable_opengl}} {{bezel_native}}
+    just build {{ enable_opengl }} {{ bezel_native }}
     MTL_HUD_ENABLED=0 ./build/bin/atlas_test
 
 debug enable_opengl="OFF" bezel_native="OFF":
-    just build {{enable_opengl}} {{bezel_native}}
+    just build {{ enable_opengl }} {{ bezel_native }}
     MTL_HUD_ENABLED=1 ./build/bin/atlas_test
 
 clangd enable_opengl="OFF" bezel_native="OFF":
     mkdir -p build
-    cd build && cmake -G "{{GENERATOR}}" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DBACKEND_OPENGL={{enable_opengl}} -DBEZEL_NATIVE={{bezel_native}} ..
+    cd build && cmake -G "{{ GENERATOR }}" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DBACKEND_OPENGL={{ enable_opengl }} -DBEZEL_NATIVE={{ bezel_native }} ..
     ln -sf build/compile_commands.json compile_commands.json
 
 lint:
@@ -45,14 +45,14 @@ cli:
 
 release enable_opengl="OFF":
     mkdir -p build
-    cd build && cmake -G "{{GENERATOR}}" -DCMAKE_BUILD_TYPE=Release -DBACKEND_OPENGL={{enable_opengl}} ..
-    cd build && make -j8
+    cd build && cmake -G "{{ GENERATOR }}" -DCMAKE_BUILD_TYPE=Release -DBACKEND_OPENGL={{ enable_opengl }} ..
+    cd build && ninja
 
 docs enable_opengl="OFF":
     mkdir -p build
     doxygen -w html header.html delete.html delete.css
     rm delete.html delete.css
-    cd build && cmake -G "{{GENERATOR}}" -DBACKEND_OPENGL={{enable_opengl}} ..
+    cd build && cmake -G "{{ GENERATOR }}" -DBACKEND_OPENGL={{ enable_opengl }} ..
     cp header.html build/_deps/doxygen-awesome-css-src/header.html
     rm header.html
     doxygen Doxyfile
