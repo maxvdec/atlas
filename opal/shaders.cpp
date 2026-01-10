@@ -14,8 +14,10 @@
 #include <cctype>
 #include <cstdint>
 #include <glad/glad.h>
+#include <iostream>
 #include <memory>
 #include <string>
+#include <unordered_set>
 #include <vector>
 #ifdef VULKAN
 #include <vulkan/vulkan.hpp>
@@ -270,13 +272,15 @@ void Shader::performReflection() {
             }
             if (uniformBindings.find(alias) == uniformBindings.end()) {
                 uniformBindings[alias] = info;
+                std::cout << "[VULKAN REFLECT] Added alias '" << alias
+                          << "' for set=" << info.set << ", binding=" << info.binding << std::endl;
             }
         };
 
-        // If names were stripped, add conventional aliases based on the
-        // engine's expected descriptor layout (keeps name-based binding code
-        // working). Aliases are only added if not already present.
-        if (applySetBindingAliases && info.isSampler) {
+        // Always apply standard aliases for known sets/bindings used by the engine.
+        // The engine C++ code relies on specific names like "material", "DirectionalLights", etc.
+        // unrelated to the actual variable names in the shader source.
+        if (info.isSampler) {
             // Forward main shader texture set.
             if (info.set == 2) {
                 // Fullscreen / render-target display shader uses these
@@ -307,7 +311,7 @@ void Shader::performReflection() {
                     addAlias("cubeMap" + std::to_string(info.binding - 10));
                 }
             }
-        } else if (applySetBindingAliases && info.isBuffer) {
+        } else if (info.isBuffer) {
             if (!info.isStorageBuffer) {
                 // UBO conventions for main forward shader.
                 if (info.set == 0 && info.binding == 0) {
@@ -319,8 +323,6 @@ void Shader::performReflection() {
                     if (info.binding == 0) {
                         // Fragment uniforms block has no instance name in GLSL;
                         // engine binds it via "Uniforms".
-                        // Do NOT alias this as "uniforms" to avoid clobbering
-                        // the vertex UBO binding.
                         addAlias("Uniforms");
                     } else if (info.binding == 1) {
                         addAlias("material");
@@ -401,10 +403,10 @@ void Shader::performReflection() {
         std::string typeName = compiler.get_name(ubo.base_type_id);
         std::string instanceName = ubo.name;
 
-        // std::cout << "[VULKAN REFLECT] UBO found: instance='" << instanceName
-        //           << "', type='" << typeName << "', set=" << set
-        //           << ", binding=" << binding << ", size=" << blockSize
-        //           << std::endl;
+        std::cout << "[VULKAN REFLECT] UBO found: instance='" << instanceName
+                  << "', type='" << typeName << "', set=" << set
+                  << ", binding=" << binding << ", size=" << blockSize
+                  << std::endl;
 
         UniformBindingInfo blockInfo;
         blockInfo.set = set;
@@ -605,6 +607,15 @@ ShaderProgram::findUniform(const std::string &name) const {
         if (match) {
             return &pair.second;
         }
+    }
+    // Debug: show available bindings when not found
+    static std::unordered_set<std::string> debuggedNames;
+    if (debuggedNames.insert(name).second) {
+        std::cout << "[VULKAN DEBUG] findUniform failed for '" << name << "'. Available bindings: ";
+        for (const auto &pair : uniformBindings) {
+            std::cout << "'" << pair.first << "' ";
+        }
+        std::cout << std::endl;
     }
     return nullptr;
 }
