@@ -151,7 +151,7 @@ void main() {
     }
 
     if (baseColor.a < 0.1)
-        discard;
+    discard;
 
     vec4 normTexture = enableTextures(TEXTURE_NORMAL);
     vec3 normal;

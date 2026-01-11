@@ -350,6 +350,7 @@ class CoreObject : public GameObject {
 
     std::optional<std::shared_ptr<opal::Pipeline>> getPipeline() override;
     void setPipeline(std::shared_ptr<opal::Pipeline> &pipeline) override;
+    void resetPipeline() override;
 
     /**
      * @brief Function to render the object with color and texture.

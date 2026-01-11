@@ -29,160 +29,173 @@
 #include <glm/gtc/type_ptr.hpp>
 
 namespace {
-
-std::vector<opal::VertexAttributeBinding>
-makeInstanceAttributeBindings(const std::shared_ptr<opal::Buffer> &buffer) {
-    std::vector<opal::VertexAttributeBinding> bindings;
-    bindings.reserve(4);
-    std::size_t vec4Size = sizeof(glm::vec4);
-    for (unsigned int i = 0; i < 4; ++i) {
-        opal::VertexAttribute attribute{
-            .name = "instanceModel" + std::to_string(i),
-            .type = opal::VertexAttributeType::Float,
-            .offset = static_cast<uint>(i * vec4Size),
-            .location = static_cast<uint>(6 + i),
-            .normalized = false,
-            .size = 4,
-            .stride = static_cast<uint>(sizeof(glm::mat4)),
-            .inputRate = opal::VertexBindingInputRate::Instance,
-            .divisor = 1};
-        bindings.push_back({attribute, buffer});
+    std::vector<opal::VertexAttributeBinding>
+    makeInstanceAttributeBindings(const std::shared_ptr<opal::Buffer>& buffer) {
+        std::vector<opal::VertexAttributeBinding> bindings;
+        bindings.reserve(4);
+        std::size_t vec4Size = sizeof(glm::vec4);
+        for (unsigned int i = 0; i < 4; ++i) {
+            opal::VertexAttribute attribute{
+                .name = "instanceModel" + std::to_string(i),
+                .type = opal::VertexAttributeType::Float,
+                .offset = static_cast<uint>(i * vec4Size),
+                .location = static_cast<uint>(6 + i),
+                .normalized = false,
+                .size = 4,
+                .stride = static_cast<uint>(sizeof(glm::mat4)),
+                .inputRate = opal::VertexBindingInputRate::Instance,
+                .divisor = 1
+            };
+            bindings.push_back({attribute, buffer});
+        }
+        return bindings;
     }
-    return bindings;
-}
 
-std::vector<GPUDirectionalLight>
-buildGPUDirectionalLights(const std::vector<DirectionalLight *> &lights,
-                          int maxCount) {
-    std::vector<GPUDirectionalLight> result;
-    int count = std::min(static_cast<int>(lights.size()), maxCount);
-    result.reserve(count);
-    for (int i = 0; i < count; i++) {
-        DirectionalLight *light = lights[i];
-        GPUDirectionalLight gpu;
-        gpu.direction = glm::vec3(light->direction.x, light->direction.y,
-                                  light->direction.z);
-        gpu.diffuse = glm::vec3(light->color.r, light->color.g, light->color.b);
-        gpu.specular = glm::vec3(light->shineColor.r, light->shineColor.g,
-                                 light->shineColor.b);
-        gpu._pad1 = 0.0f;
-        gpu._pad2 = 0.0f;
-        gpu._pad3 = 0.0f;
-        result.push_back(gpu);
+    std::vector<GPUDirectionalLight>
+    buildGPUDirectionalLights(const std::vector<DirectionalLight*>& lights,
+                              int maxCount) {
+        std::vector<GPUDirectionalLight> result;
+        int count = std::min(static_cast<int>(lights.size()), maxCount);
+        result.reserve(count);
+        for (int i = 0; i < count; i++) {
+            DirectionalLight* light = lights[i];
+            GPUDirectionalLight gpu;
+            gpu.direction = glm::vec3(light->direction.x, light->direction.y,
+                                      light->direction.z);
+            gpu.diffuse = glm::vec3(light->color.r, light->color.g, light->color.b);
+            gpu.specular = glm::vec3(light->shineColor.r, light->shineColor.g,
+                                     light->shineColor.b);
+            gpu._pad1 = 0.0f;
+            gpu._pad2 = 0.0f;
+            gpu._pad3 = 0.0f;
+            result.push_back(gpu);
+        }
+        return result;
     }
-    return result;
-}
 
-std::vector<GPUPointLight>
-buildGPUPointLights(const std::vector<Light *> &lights, int maxCount) {
-    std::vector<GPUPointLight> result;
-    int count = std::min(static_cast<int>(lights.size()), maxCount);
-    result.reserve(count);
-    for (int i = 0; i < count; i++) {
-        Light *light = lights[i];
-        PointLightConstants plc = light->calculateConstants();
-        GPUPointLight gpu;
-        gpu.position =
-            glm::vec3(light->position.x, light->position.y, light->position.z);
-        gpu.diffuse = glm::vec3(light->color.r, light->color.g, light->color.b);
-        gpu.specular = glm::vec3(light->shineColor.r, light->shineColor.g,
-                                 light->shineColor.b);
-        gpu.constant = plc.constant;
-        gpu.linear = plc.linear;
-        gpu.quadratic = plc.quadratic;
-        gpu.radius = plc.radius;
-        gpu._pad1 = 0.0f;
-        gpu._pad2 = 0.0f;
-        gpu._pad3 = 0.0f;
-        result.push_back(gpu);
+    std::vector<GPUPointLight>
+    buildGPUPointLights(const std::vector<Light*>& lights, int maxCount) {
+        std::vector<GPUPointLight> result;
+        int count = std::min(static_cast<int>(lights.size()), maxCount);
+        result.reserve(count);
+        for (int i = 0; i < count; i++) {
+            Light* light = lights[i];
+            PointLightConstants plc = light->calculateConstants();
+            GPUPointLight gpu;
+            gpu.position =
+                glm::vec3(light->position.x, light->position.y, light->position.z);
+            gpu.diffuse = glm::vec3(light->color.r, light->color.g, light->color.b);
+            gpu.specular = glm::vec3(light->shineColor.r, light->shineColor.g,
+                                     light->shineColor.b);
+            gpu.constant = plc.constant;
+            gpu.linear = plc.linear;
+            gpu.quadratic = plc.quadratic;
+            gpu.radius = plc.radius;
+            gpu._pad1 = 0.0f;
+            gpu._pad2 = 0.0f;
+            gpu._pad3 = 0.0f;
+            result.push_back(gpu);
+        }
+        return result;
     }
-    return result;
-}
 
-std::vector<GPUSpotLight>
-buildGPUSpotLights(const std::vector<Spotlight *> &lights, int maxCount) {
-    std::vector<GPUSpotLight> result;
-    int count = std::min(static_cast<int>(lights.size()), maxCount);
-    result.reserve(count);
-    for (int i = 0; i < count; i++) {
-        Spotlight *light = lights[i];
-        GPUSpotLight gpu;
-        gpu.position =
-            glm::vec3(light->position.x, light->position.y, light->position.z);
-        gpu.direction = glm::vec3(light->direction.x, light->direction.y,
-                                  light->direction.z);
-        gpu.cutOff = light->cutOff;
-        gpu.outerCutOff = light->outerCutoff;
-        gpu.diffuse = glm::vec3(light->color.r, light->color.g, light->color.b);
-        gpu.specular = glm::vec3(light->shineColor.r, light->shineColor.g,
-                                 light->shineColor.b);
-        gpu._pad1 = 0.0f;
-        gpu._pad2 = 0.0f;
-        gpu._pad3 = 0.0f;
-        gpu._pad4 = 0.0f;
-        gpu._pad5 = 0.0f;
-        gpu._pad6 = 0.0f;
-        result.push_back(gpu);
+    std::vector<GPUSpotLight>
+    buildGPUSpotLights(const std::vector<Spotlight*>& lights, int maxCount) {
+        std::vector<GPUSpotLight> result;
+        int count = std::min(static_cast<int>(lights.size()), maxCount);
+        result.reserve(count);
+        for (int i = 0; i < count; i++) {
+            Spotlight* light = lights[i];
+            GPUSpotLight gpu;
+            gpu.position =
+                glm::vec3(light->position.x, light->position.y, light->position.z);
+            gpu.direction = glm::vec3(light->direction.x, light->direction.y,
+                                      light->direction.z);
+            gpu.cutOff = light->cutOff;
+            gpu.outerCutOff = light->outerCutoff;
+            gpu.diffuse = glm::vec3(light->color.r, light->color.g, light->color.b);
+            gpu.specular = glm::vec3(light->shineColor.r, light->shineColor.g,
+                                     light->shineColor.b);
+            gpu._pad1 = 0.0f;
+            gpu._pad2 = 0.0f;
+            gpu._pad3 = 0.0f;
+            gpu._pad4 = 0.0f;
+            gpu._pad5 = 0.0f;
+            gpu._pad6 = 0.0f;
+            result.push_back(gpu);
+        }
+        return result;
     }
-    return result;
-}
 
-std::vector<GPUAreaLight>
-buildGPUAreaLights(const std::vector<AreaLight *> &lights, int maxCount) {
-    std::vector<GPUAreaLight> result;
-    int count = std::min(static_cast<int>(lights.size()), maxCount);
-    result.reserve(count);
-    for (int i = 0; i < count; i++) {
-        AreaLight *light = lights[i];
-        GPUAreaLight gpu;
-        gpu.position =
-            glm::vec3(light->position.x, light->position.y, light->position.z);
-        gpu.right = glm::vec3(light->right.x, light->right.y, light->right.z);
-        gpu.up = glm::vec3(light->up.x, light->up.y, light->up.z);
-        gpu.size = glm::vec2(static_cast<float>(light->size.width),
-                             static_cast<float>(light->size.height));
-        gpu.diffuse = glm::vec3(light->color.r, light->color.g, light->color.b);
-        gpu.specular = glm::vec3(light->shineColor.r, light->shineColor.g,
-                                 light->shineColor.b);
-        gpu.angle = light->angle;
-        gpu.castsBothSides = light->castsBothSides ? 1 : 0;
-        gpu._pad1 = 0.0f;
-        gpu._pad2 = 0.0f;
-        gpu._pad3 = 0.0f;
-        gpu._pad4 = 0.0f;
-        gpu._pad5 = 0.0f;
-        gpu._pad6 = 0.0f;
-        gpu._pad7 = 0.0f;
-        gpu._pad8 = 0.0f;
-        gpu._pad9 = 0.0f;
-        result.push_back(gpu);
+    std::vector<GPUAreaLight>
+    buildGPUAreaLights(const std::vector<AreaLight*>& lights, int maxCount) {
+        std::vector<GPUAreaLight> result;
+        int count = std::min(static_cast<int>(lights.size()), maxCount);
+        result.reserve(count);
+        for (int i = 0; i < count; i++) {
+            AreaLight* light = lights[i];
+            GPUAreaLight gpu;
+            gpu.position =
+                glm::vec3(light->position.x, light->position.y, light->position.z);
+            gpu.right = glm::vec3(light->right.x, light->right.y, light->right.z);
+            gpu.up = glm::vec3(light->up.x, light->up.y, light->up.z);
+            gpu.size = glm::vec2(static_cast<float>(light->size.width),
+                                 static_cast<float>(light->size.height));
+            gpu.diffuse = glm::vec3(light->color.r, light->color.g, light->color.b);
+            gpu.specular = glm::vec3(light->shineColor.r, light->shineColor.g,
+                                     light->shineColor.b);
+            gpu.angle = light->angle;
+            gpu.castsBothSides = light->castsBothSides ? 1 : 0;
+            gpu._pad1 = 0.0f;
+            gpu._pad2 = 0.0f;
+            gpu._pad3 = 0.0f;
+            gpu._pad4 = 0.0f;
+            gpu._pad5 = 0.0f;
+            gpu._pad6 = 0.0f;
+            gpu._pad7 = 0.0f;
+            gpu._pad8 = 0.0f;
+            gpu._pad9 = 0.0f;
+            result.push_back(gpu);
+        }
+        return result;
     }
-    return result;
-}
-
 } // namespace
 
 std::vector<LayoutDescriptor> CoreVertex::getLayoutDescriptors() {
-    return {{"position", 0, 3, opal::VertexAttributeType::Float, false,
-             sizeof(CoreVertex), offsetof(CoreVertex, position)},
-            {"color", 1, 4, opal::VertexAttributeType::Float, false,
-             sizeof(CoreVertex), offsetof(CoreVertex, color)},
-            {"textureCoordinates", 2, 2, opal::VertexAttributeType::Float,
-             false, sizeof(CoreVertex),
-             offsetof(CoreVertex, textureCoordinate)},
-            {"normal", 3, 3, opal::VertexAttributeType::Float, false,
-             sizeof(CoreVertex), offsetof(CoreVertex, normal)},
-            {"tangent", 4, 3, opal::VertexAttributeType::Float, false,
-             sizeof(CoreVertex), offsetof(CoreVertex, tangent)},
-            {"bitangent", 5, 3, opal::VertexAttributeType::Float, false,
-             sizeof(CoreVertex), offsetof(CoreVertex, bitangent)}};
+    return {
+        {
+            "position", 0, 3, opal::VertexAttributeType::Float, false,
+            sizeof(CoreVertex), offsetof(CoreVertex, position)
+        },
+        {
+            "color", 1, 4, opal::VertexAttributeType::Float, false,
+            sizeof(CoreVertex), offsetof(CoreVertex, color)
+        },
+        {
+            "textureCoordinates", 2, 2, opal::VertexAttributeType::Float,
+            false, sizeof(CoreVertex),
+            offsetof(CoreVertex, textureCoordinate)
+        },
+        {
+            "normal", 3, 3, opal::VertexAttributeType::Float, false,
+            sizeof(CoreVertex), offsetof(CoreVertex, normal)
+        },
+        {
+            "tangent", 4, 3, opal::VertexAttributeType::Float, false,
+            sizeof(CoreVertex), offsetof(CoreVertex, tangent)
+        },
+        {
+            "bitangent", 5, 3, opal::VertexAttributeType::Float, false,
+            sizeof(CoreVertex), offsetof(CoreVertex, bitangent)
+        }
+    };
 }
 
 CoreObject::CoreObject() : vao(nullptr), vbo(nullptr), ebo(nullptr) {
     shaderProgram = ShaderProgram::defaultProgram();
 }
 
-void CoreObject::attachProgram(const ShaderProgram &program) {
+void CoreObject::attachProgram(const ShaderProgram& program) {
     shaderProgram = program;
     if (shaderProgram.programId == 0) {
         shaderProgram.compile();
@@ -190,8 +203,8 @@ void CoreObject::attachProgram(const ShaderProgram &program) {
     this->refreshPipeline();
 }
 
-void CoreObject::createAndAttachProgram(VertexShader &vertexShader,
-                                        FragmentShader &fragmentShader) {
+void CoreObject::createAndAttachProgram(VertexShader& vertexShader,
+                                        FragmentShader& fragmentShader) {
     if (vertexShader.shaderId == 0) {
         vertexShader.compile();
     }
@@ -220,14 +233,14 @@ void CoreObject::renderOnlyTexture() {
     useTexture = true;
 }
 
-void CoreObject::attachTexture(const Texture &tex) {
+void CoreObject::attachTexture(const Texture& tex) {
     textures.push_back(tex);
     useTexture = true;
     useColor = false;
 }
 
-void CoreObject::setColor(const Color &color) {
-    for (auto &vertex : vertices) {
+void CoreObject::setColor(const Color& color) {
+    for (auto& vertex : vertices) {
         vertex.color = color;
     }
     useColor = true;
@@ -235,7 +248,7 @@ void CoreObject::setColor(const Color &color) {
     material.albedo = color;
 }
 
-void CoreObject::attachVertices(const std::vector<CoreVertex> &newVertices) {
+void CoreObject::attachVertices(const std::vector<CoreVertex>& newVertices) {
     if (newVertices.empty()) {
         throw std::runtime_error("Cannot attach empty vertex array");
     }
@@ -243,17 +256,17 @@ void CoreObject::attachVertices(const std::vector<CoreVertex> &newVertices) {
     vertices = newVertices;
 }
 
-void CoreObject::attachIndices(const std::vector<Index> &newIndices) {
+void CoreObject::attachIndices(const std::vector<Index>& newIndices) {
     indices = newIndices;
 }
 
-void CoreObject::setPosition(const Position3d &newPosition) {
+void CoreObject::setPosition(const Position3d& newPosition) {
     Position3d oldPosition = position;
     Position3d delta = newPosition - oldPosition;
     position = newPosition;
 
     if (!instances.empty()) {
-        for (auto &instance : instances) {
+        for (auto& instance : instances) {
             instance.position += delta;
             instance.updateModelMatrix();
         }
@@ -262,14 +275,14 @@ void CoreObject::setPosition(const Position3d &newPosition) {
     updateModelMatrix();
 }
 
-void CoreObject::setRotation(const Rotation3d &newRotation) {
+void CoreObject::setRotation(const Rotation3d& newRotation) {
     const glm::quat oldQuat = rotationQuat;
     rotation = newRotation;
     rotationQuat = glm::normalize(rotation.toGlmQuat());
 
     if (!instances.empty()) {
         const glm::quat deltaQuat = rotationQuat * glm::inverse(oldQuat);
-        for (auto &instance : instances) {
+        for (auto& instance : instances) {
             glm::quat instQuat = glm::normalize(instance.rotation.toGlmQuat());
             instQuat = glm::normalize(deltaQuat * instQuat);
             instance.rotation = Rotation3d::fromGlmQuat(instQuat);
@@ -280,14 +293,14 @@ void CoreObject::setRotation(const Rotation3d &newRotation) {
     updateModelMatrix();
 }
 
-void CoreObject::setRotationQuat(const glm::quat &quat) {
+void CoreObject::setRotationQuat(const glm::quat& quat) {
     const glm::quat oldQuat = rotationQuat;
     rotationQuat = glm::normalize(quat);
     rotation = Rotation3d::fromGlmQuat(rotationQuat);
 
     if (!instances.empty()) {
         const glm::quat deltaQuat = rotationQuat * glm::inverse(oldQuat);
-        for (auto &instance : instances) {
+        for (auto& instance : instances) {
             glm::quat instQuat = glm::normalize(instance.rotation.toGlmQuat());
             instQuat = glm::normalize(deltaQuat * instQuat);
             instance.rotation = Rotation3d::fromGlmQuat(instQuat);
@@ -298,12 +311,13 @@ void CoreObject::setRotationQuat(const glm::quat &quat) {
     updateModelMatrix();
 }
 
-void CoreObject::setScale(const Scale3d &newScale) {
+void CoreObject::setScale(const Scale3d& newScale) {
     Scale3d oldScale = scale;
     scale = newScale;
 
     if (!instances.empty()) {
-        const auto computeFactor = [](double newValue, double oldValue) {
+        const auto computeFactor = [](double newValue, double oldValue)
+        {
             const double epsilon = std::numeric_limits<double>::epsilon();
             if (std::abs(oldValue) <= epsilon) {
                 return newValue;
@@ -315,10 +329,12 @@ void CoreObject::setScale(const Scale3d &newScale) {
         double factorY = computeFactor(newScale.y, oldScale.y);
         double factorZ = computeFactor(newScale.z, oldScale.z);
 
-        for (auto &instance : instances) {
-            instance.scale = {instance.scale.x * factorX,
-                              instance.scale.y * factorY,
-                              instance.scale.z * factorZ};
+        for (auto& instance : instances) {
+            instance.scale = {
+                instance.scale.x * factorX,
+                instance.scale.y * factorY,
+                instance.scale.z * factorZ
+            };
             instance.updateModelMatrix();
         }
     }
@@ -326,15 +342,15 @@ void CoreObject::setScale(const Scale3d &newScale) {
     updateModelMatrix();
 }
 
-void CoreObject::move(const Position3d &delta) {
+void CoreObject::move(const Position3d& delta) {
     setPosition(position + delta);
 }
 
-void CoreObject::rotate(const Rotation3d &delta) {
+void CoreObject::rotate(const Rotation3d& delta) {
     setRotation(rotation + delta);
 }
 
-void CoreObject::lookAt(const Position3d &target, const Normal3d &up) {
+void CoreObject::lookAt(const Position3d& target, const Normal3d& up) {
     glm::vec3 pos = position.toGlm();
     glm::vec3 targetPos = target.toGlm();
     glm::vec3 upVec = up.toGlm();
@@ -346,8 +362,8 @@ void CoreObject::lookAt(const Position3d &target, const Normal3d &up) {
     glm::vec3 realUp = glm::cross(right, forward);
 
     glm::mat3 rotMatrix;
-    rotMatrix[0] = right;    // X-axis
-    rotMatrix[1] = realUp;   // Y-axis
+    rotMatrix[0] = right; // X-axis
+    rotMatrix[1] = realUp; // Y-axis
     rotMatrix[2] = -forward; // Z-axis (negative because OpenGL looks down -Z)
 
     float pitch, yaw, roll;
@@ -357,7 +373,8 @@ void CoreObject::lookAt(const Position3d &target, const Normal3d &up) {
     if (abs(cos(glm::radians(pitch))) > 0.00001f) {
         yaw = glm::degrees(atan2(-rotMatrix[2][0], rotMatrix[2][2]));
         roll = glm::degrees(atan2(-rotMatrix[0][1], rotMatrix[1][1]));
-    } else {
+    }
+    else {
         yaw = glm::degrees(atan2(rotMatrix[1][0], rotMatrix[0][0]));
         roll = 0.0f;
     }
@@ -379,7 +396,7 @@ void CoreObject::updateModelMatrix() {
 }
 
 void CoreObject::initialize() {
-    for (auto &component : components) {
+    for (auto& component : components) {
         component->init();
     }
     if (vertices.empty()) {
@@ -412,7 +429,7 @@ void CoreObject::initialize() {
     std::vector<opal::VertexAttribute> vertexAttributes;
     opal::VertexBinding vertexBinding;
 
-    for (const auto &attr : layoutDescriptors) {
+    for (const auto& attr : layoutDescriptors) {
         vertexAttributes.push_back(opal::VertexAttribute{
             .name = attr.name,
             .type = attr.type,
@@ -422,15 +439,18 @@ void CoreObject::initialize() {
             .size = static_cast<uint>(attr.size),
             .stride = static_cast<uint>(attr.stride),
             .inputRate = opal::VertexBindingInputRate::Vertex,
-            .divisor = 0});
+            .divisor = 0
+        });
     }
 
-    vertexBinding = opal::VertexBinding{(uint)layoutDescriptors[0].stride,
-                                        opal::VertexBindingInputRate::Vertex};
+    vertexBinding = opal::VertexBinding{
+        (uint)layoutDescriptors[0].stride,
+        opal::VertexBindingInputRate::Vertex
+    };
 
     std::vector<opal::VertexAttributeBinding> attributeBindings;
     attributeBindings.reserve(vertexAttributes.size());
-    for (const auto &attribute : vertexAttributes) {
+    for (const auto& attribute : vertexAttributes) {
         attributeBindings.push_back({attribute, vbo});
     }
     vao->configureAttributes(attributeBindings);
@@ -446,12 +466,13 @@ void CoreObject::initialize() {
             .size = 4,
             .stride = static_cast<uint>(sizeof(glm::mat4)),
             .inputRate = opal::VertexBindingInputRate::Instance,
-            .divisor = 1});
+            .divisor = 1
+        });
     }
 
     if (!instances.empty()) {
         std::vector<glm::mat4> modelMatrices;
-        for (auto &instance : instances) {
+        for (auto& instance : instances) {
             instance.updateModelMatrix();
             modelMatrices.push_back(instance.getModelMatrix());
         }
@@ -476,8 +497,12 @@ std::optional<std::shared_ptr<opal::Pipeline>> CoreObject::getPipeline() {
     return this->pipeline;
 }
 
-void CoreObject::setPipeline(std::shared_ptr<opal::Pipeline> &newPipeline) {
+void CoreObject::setPipeline(std::shared_ptr<opal::Pipeline>& newPipeline) {
     this->pipeline = newPipeline;
+}
+
+void CoreObject::resetPipeline() {
+    this->pipeline = nullptr;
 }
 
 void CoreObject::refreshPipeline() {
@@ -487,7 +512,7 @@ void CoreObject::refreshPipeline() {
 
     auto unbuiltPipeline = opal::Pipeline::create();
 
-    Window &window = *Window::mainWindow;
+    Window& window = *Window::mainWindow;
 
     int viewportWidth = window.viewportWidth;
     int viewportHeight = window.viewportHeight;
@@ -515,7 +540,7 @@ void CoreObject::refreshPipeline() {
 void CoreObject::render(float dt,
                         std::shared_ptr<opal::CommandBuffer> commandBuffer,
                         bool updatePipeline) {
-    for (auto &component : components) {
+    for (auto& component : components) {
         component->update(dt);
     }
     if (!isVisible) {
@@ -549,7 +574,8 @@ void CoreObject::render(float dt,
 
     if (this->pipeline != nullptr) {
         this->pipeline->bind();
-    } else {
+    }
+    else {
         throw std::runtime_error(
             "Pipeline not created - call refreshPipeline() first");
     }
@@ -585,8 +611,8 @@ void CoreObject::render(float dt,
     constexpr int kMax2DSamplers = 10; // shaders expose texture1..texture10
     constexpr int kMaxShadowParams = 10;
 
-    Window *window = Window::mainWindow;
-    Scene *scene = window ? window->getCurrentScene() : nullptr;
+    Window* window = Window::mainWindow;
+    Scene* scene = window ? window->getCurrentScene() : nullptr;
     const bool shaderSupportsShadows =
         std::find(shaderProgram.capabilities.begin(),
                   shaderProgram.capabilities.end(),
@@ -634,7 +660,7 @@ void CoreObject::render(float dt,
         glm::vec3 cameraPosition;
         float _pad1;
     } vkUniformsUBO;
-    for (auto &v : vkUniformsUBO.textureTypes) {
+    for (auto& v : vkUniformsUBO.textureTypes) {
         v = glm::ivec4(0);
     }
     vkUniformsUBO.textureCount = 0;
@@ -688,8 +714,9 @@ void CoreObject::render(float dt,
 
     if (!textures.empty() && useTexture && shaderSupportsTextures) {
         int maxMaterialTextures =
-            shaderSupportsShadows ? (kMax2DSamplers - reservedShadow2DSamplers)
-                                  : kMax2DSamplers;
+            shaderSupportsShadows
+                ? (kMax2DSamplers - reservedShadow2DSamplers)
+                : kMax2DSamplers;
         maxMaterialTextures =
             std::clamp(maxMaterialTextures, 0, kMax2DSamplers);
         int count = std::min((int)textures.size(), maxMaterialTextures);
@@ -730,7 +757,7 @@ void CoreObject::render(float dt,
                   ShaderCapability::Material) !=
         shaderProgram.capabilities.end()) {
 #ifdef VULKAN
-        const opal::UniformBindingInfo *materialInfo =
+        const opal::UniformBindingInfo* materialInfo =
             this->pipeline && this->pipeline->shaderProgram
                 ? this->pipeline->shaderProgram->findUniform("material")
                 : nullptr;
@@ -743,7 +770,8 @@ void CoreObject::render(float dt,
             this->pipeline->setUniform1f("material.roughness",
                                          material.roughness);
             this->pipeline->setUniform1f("material.ao", material.ao);
-        } else {
+        }
+        else {
             vkMaterialUBO.albedo = glm::vec3(material.albedo.r,
                                              material.albedo.g,
                                              material.albedo.b);
@@ -777,7 +805,8 @@ void CoreObject::render(float dt,
                   ShaderCapability::IBL) != shaderProgram.capabilities.end();
 
     bool hasHdrEnvironment = std::any_of(
-        textures.begin(), textures.end(), [](const Texture &texture) {
+        textures.begin(), textures.end(), [](const Texture& texture)
+        {
             return texture.type == TextureType::HDR;
         });
 
@@ -792,8 +821,8 @@ void CoreObject::render(float dt,
                   shaderProgram.capabilities.end(),
                   ShaderCapability::Lighting) !=
         shaderProgram.capabilities.end()) {
-        Window *window = Window::mainWindow;
-        Scene *scene = window->getCurrentScene();
+        Window* window = Window::mainWindow;
+        Scene* scene = window->getCurrentScene();
 
         // Set ambient light
         Color ambientColor = scene->getAmbientColor();
@@ -884,8 +913,8 @@ void CoreObject::render(float dt,
                   shaderProgram.capabilities.end(),
                   ShaderCapability::LightDeferred) !=
         shaderProgram.capabilities.end()) {
-        Window *window = Window::mainWindow;
-        RenderTarget *gBuffer = window->gBuffer.get();
+        Window* window = Window::mainWindow;
+        RenderTarget* gBuffer = window->gBuffer.get();
         this->pipeline->bindTexture2D("gPosition", gBuffer->gPosition.id,
                                       boundTextures, id);
         boundTextures++;
@@ -910,189 +939,189 @@ void CoreObject::render(float dt,
 #else
             this->pipeline->setUniform1i("shadowParamCount", 0);
 #endif
-            return;
         }
+        else {
+            int boundParameters = 0;
 
-        int boundParameters = 0;
-
-        int shadow2DSamplerIndex =
-            boundTextures; // continue after material textures
-        int shadowCubeSamplerIndex = 0;
+            int shadow2DSamplerIndex =
+                boundTextures; // continue after material textures
+            int shadowCubeSamplerIndex = 0;
 
 #ifdef VULKAN
-        std::vector<GPUShadowParams> gpuShadowParams;
-        gpuShadowParams.reserve(kMaxShadowParams);
+            std::vector<GPUShadowParams> gpuShadowParams;
+            gpuShadowParams.reserve(kMaxShadowParams);
 #endif
 
-        for (auto light : scene->directionalLights) {
-            if (!light->doesCastShadows) {
-                continue;
-            }
-            if (light->shadowRenderTarget == nullptr) {
-                continue;
-            }
-            if (boundParameters >= kMaxShadowParams) {
-                break;
-            }
-            if (shadow2DSamplerIndex >= kMax2DSamplers) {
-                break;
-            }
+            for (auto light : scene->directionalLights) {
+                if (!light->doesCastShadows) {
+                    continue;
+                }
+                if (light->shadowRenderTarget == nullptr) {
+                    continue;
+                }
+                if (boundParameters >= kMaxShadowParams) {
+                    break;
+                }
+                if (shadow2DSamplerIndex >= kMax2DSamplers) {
+                    break;
+                }
 
-            std::string shadowSamplerName =
-                "texture" + std::to_string(shadow2DSamplerIndex + 1);
-            this->pipeline->bindTexture2D(shadowSamplerName,
-                                          light->shadowRenderTarget->texture.id,
-                                          shadow2DSamplerIndex, id);
-            ShadowParams shadowParams = light->lastShadowParams;
+                std::string shadowSamplerName =
+                    "texture" + std::to_string(shadow2DSamplerIndex + 1);
+                this->pipeline->bindTexture2D(shadowSamplerName,
+                                              light->shadowRenderTarget->texture.id,
+                                              shadow2DSamplerIndex, id);
+                ShadowParams shadowParams = light->lastShadowParams;
 
 #ifdef VULKAN
-            GPUShadowParams gpu{};
-            gpu.lightView = shadowParams.lightView;
-            gpu.lightProjection = shadowParams.lightProjection;
-            gpu.bias = shadowParams.bias;
-            gpu.textureIndex = shadow2DSamplerIndex;
-            gpu.farPlane = 0.0f;
-            gpu._pad1 = 0.0f;
-            gpu.lightPos = glm::vec3(0.0f);
-            gpu.isPointLight = 0;
-            gpuShadowParams.push_back(gpu);
+                GPUShadowParams gpu{};
+                gpu.lightView = shadowParams.lightView;
+                gpu.lightProjection = shadowParams.lightProjection;
+                gpu.bias = shadowParams.bias;
+                gpu.textureIndex = shadow2DSamplerIndex;
+                gpu.farPlane = 0.0f;
+                gpu._pad1 = 0.0f;
+                gpu.lightPos = glm::vec3(0.0f);
+                gpu.isPointLight = 0;
+                gpuShadowParams.push_back(gpu);
 #else
-            const std::string baseName =
-                "shadowParams[" + std::to_string(boundParameters) + "]";
-            this->pipeline->setUniformMat4f(baseName + ".lightView",
-                                            shadowParams.lightView);
-            this->pipeline->setUniformMat4f(baseName + ".lightProjection",
-                                            shadowParams.lightProjection);
-            this->pipeline->setUniform1f(baseName + ".bias", shadowParams.bias);
-            this->pipeline->setUniform1i(baseName + ".textureIndex",
-                                         shadow2DSamplerIndex);
-            this->pipeline->setUniformBool(baseName + ".isPointLight", false);
+                const std::string baseName =
+                    "shadowParams[" + std::to_string(boundParameters) + "]";
+                this->pipeline->setUniformMat4f(baseName + ".lightView",
+                                                shadowParams.lightView);
+                this->pipeline->setUniformMat4f(baseName + ".lightProjection",
+                                                shadowParams.lightProjection);
+                this->pipeline->setUniform1f(baseName + ".bias", shadowParams.bias);
+                this->pipeline->setUniform1i(baseName + ".textureIndex",
+                                             shadow2DSamplerIndex);
+                this->pipeline->setUniformBool(baseName + ".isPointLight", false);
 #endif
 
-            boundParameters++;
-            shadow2DSamplerIndex++;
-            boundTextures = std::max(boundTextures, shadow2DSamplerIndex);
-        }
-
-        for (auto light : scene->spotlights) {
-            if (!light->doesCastShadows) {
-                continue;
-            }
-            if (light->shadowRenderTarget == nullptr) {
-                continue;
-            }
-            if (boundParameters >= kMaxShadowParams) {
-                break;
-            }
-            if (shadow2DSamplerIndex >= kMax2DSamplers) {
-                break;
+                boundParameters++;
+                shadow2DSamplerIndex++;
+                boundTextures = std::max(boundTextures, shadow2DSamplerIndex);
             }
 
-            std::string shadowSamplerName =
-                "texture" + std::to_string(shadow2DSamplerIndex + 1);
-            this->pipeline->bindTexture2D(shadowSamplerName,
-                                          light->shadowRenderTarget->texture.id,
-                                          shadow2DSamplerIndex, id);
-            ShadowParams shadowParams = light->lastShadowParams;
+            for (auto light : scene->spotlights) {
+                if (!light->doesCastShadows) {
+                    continue;
+                }
+                if (light->shadowRenderTarget == nullptr) {
+                    continue;
+                }
+                if (boundParameters >= kMaxShadowParams) {
+                    break;
+                }
+                if (shadow2DSamplerIndex >= kMax2DSamplers) {
+                    break;
+                }
+
+                std::string shadowSamplerName =
+                    "texture" + std::to_string(shadow2DSamplerIndex + 1);
+                this->pipeline->bindTexture2D(shadowSamplerName,
+                                              light->shadowRenderTarget->texture.id,
+                                              shadow2DSamplerIndex, id);
+                ShadowParams shadowParams = light->lastShadowParams;
 
 #ifdef VULKAN
-            GPUShadowParams gpu{};
-            gpu.lightView = shadowParams.lightView;
-            gpu.lightProjection = shadowParams.lightProjection;
-            gpu.bias = shadowParams.bias;
-            gpu.textureIndex = shadow2DSamplerIndex;
-            gpu.farPlane = 0.0f;
-            gpu._pad1 = 0.0f;
-            gpu.lightPos = glm::vec3(0.0f);
-            gpu.isPointLight = 0;
-            gpuShadowParams.push_back(gpu);
+                GPUShadowParams gpu{};
+                gpu.lightView = shadowParams.lightView;
+                gpu.lightProjection = shadowParams.lightProjection;
+                gpu.bias = shadowParams.bias;
+                gpu.textureIndex = shadow2DSamplerIndex;
+                gpu.farPlane = 0.0f;
+                gpu._pad1 = 0.0f;
+                gpu.lightPos = glm::vec3(0.0f);
+                gpu.isPointLight = 0;
+                gpuShadowParams.push_back(gpu);
 #else
-            const std::string baseName =
-                "shadowParams[" + std::to_string(boundParameters) + "]";
-            this->pipeline->setUniformMat4f(baseName + ".lightView",
-                                            shadowParams.lightView);
-            this->pipeline->setUniformMat4f(baseName + ".lightProjection",
-                                            shadowParams.lightProjection);
-            this->pipeline->setUniform1f(baseName + ".bias", shadowParams.bias);
-            this->pipeline->setUniform1i(baseName + ".textureIndex",
-                                         shadow2DSamplerIndex);
-            this->pipeline->setUniformBool(baseName + ".isPointLight", false);
+                const std::string baseName =
+                    "shadowParams[" + std::to_string(boundParameters) + "]";
+                this->pipeline->setUniformMat4f(baseName + ".lightView",
+                                                shadowParams.lightView);
+                this->pipeline->setUniformMat4f(baseName + ".lightProjection",
+                                                shadowParams.lightProjection);
+                this->pipeline->setUniform1f(baseName + ".bias", shadowParams.bias);
+                this->pipeline->setUniform1i(baseName + ".textureIndex",
+                                             shadow2DSamplerIndex);
+                this->pipeline->setUniformBool(baseName + ".isPointLight", false);
 #endif
 
-            boundParameters++;
-            shadow2DSamplerIndex++;
-            boundTextures = std::max(boundTextures, shadow2DSamplerIndex);
-        }
-
-        for (auto light : scene->pointLights) {
-            if (!light->doesCastShadows) {
-                continue;
-            }
-            if (light->shadowRenderTarget == nullptr) {
-                continue;
-            }
-            if (boundParameters >= kMaxShadowParams) {
-                break;
-            }
-            if (boundCubemaps >= 5) {
-                break;
+                boundParameters++;
+                shadow2DSamplerIndex++;
+                boundTextures = std::max(boundTextures, shadow2DSamplerIndex);
             }
 
-            std::string cubeSamplerName =
-                "cubeMap" + std::to_string(shadowCubeSamplerIndex + 1);
-            this->pipeline->bindTextureCubemap(
-                cubeSamplerName, light->shadowRenderTarget->texture.id,
-                10 + shadowCubeSamplerIndex, id);
+            for (auto light : scene->pointLights) {
+                if (!light->doesCastShadows) {
+                    continue;
+                }
+                if (light->shadowRenderTarget == nullptr) {
+                    continue;
+                }
+                if (boundParameters >= kMaxShadowParams) {
+                    break;
+                }
+                if (boundCubemaps >= 5) {
+                    break;
+                }
+
+                std::string cubeSamplerName =
+                    "cubeMap" + std::to_string(shadowCubeSamplerIndex + 1);
+                this->pipeline->bindTextureCubemap(
+                    cubeSamplerName, light->shadowRenderTarget->texture.id,
+                    10 + shadowCubeSamplerIndex, id);
 
 #ifdef VULKAN
-            GPUShadowParams gpu{};
-            gpu.lightView = glm::mat4(1.0f);
-            gpu.lightProjection = glm::mat4(1.0f);
-            gpu.bias = 0.0f;
-            gpu.textureIndex = shadowCubeSamplerIndex;
-            gpu.farPlane = light->distance;
-            gpu._pad1 = 0.0f;
-            gpu.lightPos = glm::vec3(light->position.x, light->position.y,
-                                     light->position.z);
-            gpu.isPointLight = 1;
-            gpuShadowParams.push_back(gpu);
-#else
-            const std::string baseName =
-                "shadowParams[" + std::to_string(boundParameters) + "]";
-            this->pipeline->setUniform1i(baseName + ".textureIndex",
-                                         shadowCubeSamplerIndex);
-            this->pipeline->setUniform1f(baseName + ".farPlane",
-                                         light->distance);
-            this->pipeline->setUniform3f(baseName + ".lightPos",
-                                         light->position.x, light->position.y,
+                GPUShadowParams gpu{};
+                gpu.lightView = glm::mat4(1.0f);
+                gpu.lightProjection = glm::mat4(1.0f);
+                gpu.bias = 0.0f;
+                gpu.textureIndex = shadowCubeSamplerIndex;
+                gpu.farPlane = light->distance;
+                gpu._pad1 = 0.0f;
+                gpu.lightPos = glm::vec3(light->position.x, light->position.y,
                                          light->position.z);
-            this->pipeline->setUniformBool(baseName + ".isPointLight", true);
+                gpu.isPointLight = 1;
+                gpuShadowParams.push_back(gpu);
+#else
+                const std::string baseName =
+                    "shadowParams[" + std::to_string(boundParameters) + "]";
+                this->pipeline->setUniform1i(baseName + ".textureIndex",
+                                             shadowCubeSamplerIndex);
+                this->pipeline->setUniform1f(baseName + ".farPlane",
+                                             light->distance);
+                this->pipeline->setUniform3f(baseName + ".lightPos",
+                                             light->position.x, light->position.y,
+                                             light->position.z);
+                this->pipeline->setUniformBool(baseName + ".isPointLight", true);
 #endif
 
-            boundParameters++;
-            shadowCubeSamplerIndex++;
-            boundCubemaps = std::max(boundCubemaps, shadowCubeSamplerIndex);
-        }
+                boundParameters++;
+                shadowCubeSamplerIndex++;
+                boundCubemaps = std::max(boundCubemaps, shadowCubeSamplerIndex);
+            }
 
 #ifndef VULKAN
-        this->pipeline->setUniform1i("shadowParamCount", boundParameters);
+            this->pipeline->setUniform1i("shadowParamCount", boundParameters);
 #else
-        vkPC.shadowParamCount = boundParameters;
+            vkPC.shadowParamCount = boundParameters;
 #endif
 
 #ifdef VULKAN
-        if (!gpuShadowParams.empty()) {
-            this->pipeline->bindBuffer("ShadowParameters", gpuShadowParams);
-        }
+            if (!gpuShadowParams.empty()) {
+                this->pipeline->bindBuffer("ShadowParameters", gpuShadowParams);
+            }
 #endif
+        } // end else (scene != nullptr)
     }
 
     if (std::find(shaderProgram.capabilities.begin(),
                   shaderProgram.capabilities.end(),
                   ShaderCapability::EnvironmentMapping) !=
         shaderProgram.capabilities.end()) {
-        Window *window = Window::mainWindow;
-        Scene *scene = window->getCurrentScene();
+        Window* window = Window::mainWindow;
+        Scene* scene = window->getCurrentScene();
         if (scene->skybox != nullptr) {
             this->pipeline->bindTextureCubemap(
                 "skybox", scene->skybox->cubemap.id, boundTextures, id);
@@ -1104,8 +1133,8 @@ void CoreObject::render(float dt,
                   shaderProgram.capabilities.end(),
                   ShaderCapability::Environment) !=
         shaderProgram.capabilities.end()) {
-        Window *window = Window::mainWindow;
-        Scene *scene = window->getCurrentScene();
+        Window* window = Window::mainWindow;
+        Scene* scene = window->getCurrentScene();
 #ifdef VULKAN
         vkEnvironmentUBO.rimLightIntensity =
             scene->environment.rimLight.intensity;
@@ -1131,14 +1160,15 @@ void CoreObject::render(float dt,
 #ifdef VULKAN
     // Finalize Vulkan per-draw data.
     if (this->pipeline && this->pipeline->shaderProgram) {
-        const opal::UniformBindingInfo *uniformsInfo =
+        const opal::UniformBindingInfo* uniformsInfo =
             this->pipeline->shaderProgram->findUniform("Uniforms");
-        const opal::UniformBindingInfo *uboInfo =
+        const opal::UniformBindingInfo* uboInfo =
             this->pipeline->shaderProgram->findUniform("UBO");
         if (uniformsInfo && uniformsInfo->isBuffer) {
             this->pipeline->bindBufferData("Uniforms", &vkUniformsUBO,
                                            sizeof(vkUniformsUBO));
-        } else if (uboInfo && uboInfo->isBuffer) {
+        }
+        else if (uboInfo && uboInfo->isBuffer) {
             this->pipeline->bindBufferData("UBO", &vkUniformsUBO,
                                            sizeof(vkUniformsUBO));
         }
@@ -1149,7 +1179,7 @@ void CoreObject::render(float dt,
     if (std::find(shaderProgram.capabilities.begin(),
                   shaderProgram.capabilities.end(),
                   ShaderCapability::Instances) !=
-            shaderProgram.capabilities.end() &&
+        shaderProgram.capabilities.end() &&
         !instances.empty()) {
         if (this->instances != this->savedInstances) {
             updateInstances();
@@ -1199,16 +1229,16 @@ void CoreObject::render(float dt,
     commandBuffer->unbindDrawingState();
 }
 
-void CoreObject::setViewMatrix(const glm::mat4 &view) {
+void CoreObject::setViewMatrix(const glm::mat4& view) {
     this->view = view;
-    for (auto &component : components) {
+    for (auto& component : components) {
         component->setViewMatrix(view);
     }
 }
 
-void CoreObject::setProjectionMatrix(const glm::mat4 &projection) {
+void CoreObject::setProjectionMatrix(const glm::mat4& projection) {
     this->projection = projection;
-    for (auto &component : components) {
+    for (auto& component : components) {
         component->setProjectionMatrix(projection);
     }
 }
@@ -1231,7 +1261,7 @@ CoreObject CoreObject::clone() const {
 void CoreObject::updateVertices() {
     if (vbo == nullptr || vertices.empty()) {
         throw std::runtime_error("Cannot update vertices: VBO not "
-                                 "initialized or empty vertex list");
+            "initialized or empty vertex list");
     }
 
     vbo->bind();
@@ -1239,7 +1269,7 @@ void CoreObject::updateVertices() {
     vbo->unbind();
 }
 
-void CoreObject::update(Window &window) {
+void CoreObject::update(Window& window) {
     if (!hasPhysics)
         return;
 
@@ -1256,7 +1286,7 @@ void CoreObject::update(Window &window) {
     physicsEvent.send();
 }
 
-void CoreObject::makeEmissive(Scene *scene, Color emissionColor,
+void CoreObject::makeEmissive(Scene* scene, Color emissionColor,
                               float intensity) {
     this->initialize();
     if (light != nullptr) {
@@ -1270,7 +1300,7 @@ void CoreObject::makeEmissive(Scene *scene, Color emissionColor,
     light->doesCastShadows = false;
     this->useDeferredRendering = false;
 
-    for (auto &vertex : vertices) {
+    for (auto& vertex : vertices) {
         vertex.color = emissionColor * intensity;
     }
     updateVertices();
@@ -1301,7 +1331,7 @@ void CoreObject::updateInstances() {
     std::vector<glm::mat4> modelMatrices;
     modelMatrices.reserve(instances.size());
 
-    for (auto &instance : instances) {
+    for (auto& instance : instances) {
         instance.updateModelMatrix();
         modelMatrices.push_back(instance.getModelMatrix());
     }
@@ -1315,7 +1345,7 @@ void CoreObject::updateInstances() {
 void Instance::updateModelMatrix() {
     glm::mat4 scale_matrix = glm::scale(glm::mat4(1.0f), scale.toGlm());
 
-    glm::mat4 rotation_matrix = glm::mat4(1.0f);
+    auto rotation_matrix = glm::mat4(1.0f);
     rotation_matrix =
         glm::rotate(rotation_matrix, glm::radians(float(rotation.roll)),
                     glm::vec3(0, 0, 1));
@@ -1331,30 +1361,30 @@ void Instance::updateModelMatrix() {
     this->model = translation_matrix * rotation_matrix * scale_matrix;
 }
 
-void Instance::move(const Position3d &deltaPosition) {
+void Instance::move(const Position3d& deltaPosition) {
     setPosition(position + deltaPosition);
 }
 
-void Instance::setPosition(const Position3d &newPosition) {
+void Instance::setPosition(const Position3d& newPosition) {
     position = newPosition;
     updateModelMatrix();
 }
 
-void Instance::setRotation(const Rotation3d &newRotation) {
+void Instance::setRotation(const Rotation3d& newRotation) {
     rotation = newRotation;
     updateModelMatrix();
 }
 
-void Instance::rotate(const Rotation3d &deltaRotation) {
+void Instance::rotate(const Rotation3d& deltaRotation) {
     setRotation(rotation + deltaRotation);
 }
 
-void Instance::setScale(const Scale3d &newScale) {
+void Instance::setScale(const Scale3d& newScale) {
     scale = newScale;
     updateModelMatrix();
 }
 
-void Instance::scaleBy(const Scale3d &deltaScale) {
+void Instance::scaleBy(const Scale3d& deltaScale) {
     setScale(Scale3d(scale.x * deltaScale.x, scale.y * deltaScale.y,
                      scale.z * deltaScale.z));
 }

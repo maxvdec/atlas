@@ -12,6 +12,7 @@
 #include "atlas/object.h"
 #include "atlas/tracer/log.h"
 #include "opal/opal.h"
+#include <algorithm>
 #include <glad/glad.h>
 #include <iostream>
 #include <map>
@@ -22,12 +23,12 @@
 #include <vector>
 
 std::map<std::pair<AtlasVertexShader, AtlasFragmentShader>, ShaderProgram>
-    ShaderProgram::shaderCache = {};
+ShaderProgram::shaderCache = {};
 
 std::map<AtlasVertexShader, VertexShader> VertexShader::vertexShaderCache = {};
 
 std::map<AtlasFragmentShader, FragmentShader>
-    FragmentShader::fragmentShaderCache = {};
+FragmentShader::fragmentShaderCache = {};
 
 VertexShader VertexShader::fromDefaultShader(AtlasVertexShader shader) {
     if (VertexShader::vertexShaderCache.find(shader) !=
@@ -36,7 +37,8 @@ VertexShader VertexShader::fromDefaultShader(AtlasVertexShader shader) {
     }
     VertexShader vertexShader;
     switch (shader) {
-    case AtlasVertexShader::Debug: {
+    case AtlasVertexShader::Debug:
+    {
         vertexShader = VertexShader::fromSource(DEBUG_VERT);
         vertexShader.desiredAttributes = {0};
         vertexShader.capabilities = {};
@@ -44,7 +46,8 @@ VertexShader VertexShader::fromDefaultShader(AtlasVertexShader shader) {
         VertexShader::vertexShaderCache[shader] = vertexShader;
         break;
     }
-    case AtlasVertexShader::Color: {
+    case AtlasVertexShader::Color:
+    {
         vertexShader = VertexShader::fromSource(COLOR_VERT);
         vertexShader.desiredAttributes = {0, 1};
         vertexShader.capabilities = {ShaderCapability::Instances};
@@ -52,19 +55,22 @@ VertexShader VertexShader::fromDefaultShader(AtlasVertexShader shader) {
         VertexShader::vertexShaderCache[shader] = vertexShader;
         break;
     }
-    case AtlasVertexShader::Main: {
+    case AtlasVertexShader::Main:
+    {
         vertexShader = VertexShader::fromSource(MAIN_VERT);
         vertexShader.desiredAttributes = {0, 1, 2, 3, 4, 5};
         vertexShader.capabilities = {
-            ShaderCapability::Lighting,  ShaderCapability::Textures,
-            ShaderCapability::Shadows,   ShaderCapability::EnvironmentMapping,
-            ShaderCapability::IBL,       ShaderCapability::Material,
-            ShaderCapability::Instances, ShaderCapability::Environment};
+            ShaderCapability::Lighting, ShaderCapability::Textures,
+            ShaderCapability::Shadows, ShaderCapability::EnvironmentMapping,
+            ShaderCapability::IBL, ShaderCapability::Material,
+            ShaderCapability::Instances, ShaderCapability::Environment
+        };
         vertexShader.fromDefaultShaderType = shader;
         VertexShader::vertexShaderCache[shader] = vertexShader;
         break;
     }
-    case AtlasVertexShader::Texture: {
+    case AtlasVertexShader::Texture:
+    {
         vertexShader = VertexShader::fromSource(TEXTURE_VERT);
         vertexShader.desiredAttributes = {0, 1, 2};
         vertexShader.capabilities = {ShaderCapability::Textures};
@@ -72,7 +78,8 @@ VertexShader VertexShader::fromDefaultShader(AtlasVertexShader shader) {
         VertexShader::vertexShaderCache[shader] = vertexShader;
         break;
     }
-    case AtlasVertexShader::Fullscreen: {
+    case AtlasVertexShader::Fullscreen:
+    {
         vertexShader = VertexShader::fromSource(FULLSCREEN_VERT);
         vertexShader.desiredAttributes = {0, 1, 2, 3};
         vertexShader.capabilities = {ShaderCapability::Textures};
@@ -80,7 +87,8 @@ VertexShader VertexShader::fromDefaultShader(AtlasVertexShader shader) {
         VertexShader::vertexShaderCache[shader] = vertexShader;
         break;
     }
-    case AtlasVertexShader::Skybox: {
+    case AtlasVertexShader::Skybox:
+    {
         vertexShader = VertexShader::fromSource(SKYBOX_VERT);
         vertexShader.desiredAttributes = {0};
         vertexShader.capabilities = {ShaderCapability::Textures};
@@ -88,7 +96,8 @@ VertexShader VertexShader::fromDefaultShader(AtlasVertexShader shader) {
         VertexShader::vertexShaderCache[shader] = vertexShader;
         break;
     }
-    case AtlasVertexShader::Depth: {
+    case AtlasVertexShader::Depth:
+    {
         vertexShader = VertexShader::fromSource(DEPTH_VERT);
         vertexShader.desiredAttributes = {0};
         vertexShader.capabilities = {ShaderCapability::Instances};
@@ -96,7 +105,8 @@ VertexShader VertexShader::fromDefaultShader(AtlasVertexShader shader) {
         VertexShader::vertexShaderCache[shader] = vertexShader;
         break;
     }
-    case AtlasVertexShader::Particle: {
+    case AtlasVertexShader::Particle:
+    {
         vertexShader = VertexShader::fromSource(PARTICLE_VERT);
         vertexShader.desiredAttributes = {};
         vertexShader.capabilities = {ShaderCapability::Textures};
@@ -104,7 +114,8 @@ VertexShader VertexShader::fromDefaultShader(AtlasVertexShader shader) {
         VertexShader::vertexShaderCache[shader] = vertexShader;
         break;
     }
-    case AtlasVertexShader::Text: {
+    case AtlasVertexShader::Text:
+    {
         vertexShader = VertexShader::fromSource(TEXT_VERT);
         vertexShader.desiredAttributes = {0};
         vertexShader.capabilities = {ShaderCapability::Textures};
@@ -112,7 +123,8 @@ VertexShader VertexShader::fromDefaultShader(AtlasVertexShader shader) {
         VertexShader::vertexShaderCache[shader] = vertexShader;
         break;
     }
-    case AtlasVertexShader::PointLightShadow: {
+    case AtlasVertexShader::PointLightShadow:
+    {
         vertexShader = VertexShader::fromSource(POINT_DEPTH_VERT);
         vertexShader.desiredAttributes = {0};
         vertexShader.capabilities = {ShaderCapability::Instances};
@@ -120,7 +132,8 @@ VertexShader VertexShader::fromDefaultShader(AtlasVertexShader shader) {
         VertexShader::vertexShaderCache[shader] = vertexShader;
         break;
     }
-    case AtlasVertexShader::PointLightShadowNoGeom: {
+    case AtlasVertexShader::PointLightShadowNoGeom:
+    {
 #ifdef VULKAN
         vertexShader = VertexShader::fromSource(POINT_DEPTH_NOGEOM_VERT);
 #else
@@ -132,28 +145,33 @@ VertexShader VertexShader::fromDefaultShader(AtlasVertexShader shader) {
         VertexShader::vertexShaderCache[shader] = vertexShader;
         break;
     }
-    case AtlasVertexShader::Deferred: {
+    case AtlasVertexShader::Deferred:
+    {
         vertexShader = VertexShader::fromSource(DEFERRED_VERT);
         vertexShader.desiredAttributes = {0, 1, 2, 3, 4, 5};
         vertexShader.capabilities = {
             ShaderCapability::Textures, ShaderCapability::Deferred,
-            ShaderCapability::Material, ShaderCapability::Instances};
+            ShaderCapability::Material, ShaderCapability::Instances
+        };
         vertexShader.fromDefaultShaderType = shader;
         VertexShader::vertexShaderCache[shader] = vertexShader;
         break;
     }
-    case AtlasVertexShader::Light: {
+    case AtlasVertexShader::Light:
+    {
         vertexShader = VertexShader::fromSource(LIGHT_VERT);
         vertexShader.desiredAttributes = {0, 1};
         vertexShader.capabilities = {
             ShaderCapability::Shadows, ShaderCapability::Lighting,
             ShaderCapability::EnvironmentMapping,
-            ShaderCapability::LightDeferred, ShaderCapability::Environment};
+            ShaderCapability::LightDeferred, ShaderCapability::Environment
+        };
         vertexShader.fromDefaultShaderType = shader;
         VertexShader::vertexShaderCache[shader] = vertexShader;
         break;
     }
-    case AtlasVertexShader::Terrain: {
+    case AtlasVertexShader::Terrain:
+    {
         vertexShader = VertexShader::fromSource(TERRAIN_VERT);
         vertexShader.desiredAttributes = {};
         vertexShader.capabilities = {};
@@ -161,7 +179,8 @@ VertexShader VertexShader::fromDefaultShader(AtlasVertexShader shader) {
         VertexShader::vertexShaderCache[shader] = vertexShader;
         break;
     }
-    case AtlasVertexShader::Volumetric: {
+    case AtlasVertexShader::Volumetric:
+    {
         vertexShader = VertexShader::fromSource(VOLUMETRIC_VERT);
         vertexShader.desiredAttributes = {};
         vertexShader.capabilities = {};
@@ -169,11 +188,14 @@ VertexShader VertexShader::fromDefaultShader(AtlasVertexShader shader) {
         VertexShader::vertexShaderCache[shader] = vertexShader;
         break;
     }
-    case AtlasVertexShader::Fluid: {
+    case AtlasVertexShader::Fluid:
+    {
         vertexShader = VertexShader::fromSource(FLUID_VERT);
         vertexShader.desiredAttributes = {0, 1, 2, 3, 4, 5};
-        vertexShader.capabilities = {ShaderCapability::Fluid,
-                                     ShaderCapability::Instances};
+        vertexShader.capabilities = {
+            ShaderCapability::Fluid,
+            ShaderCapability::Instances
+        };
         vertexShader.fromDefaultShaderType = shader;
         VertexShader::vertexShaderCache[shader] = vertexShader;
         break;
@@ -185,7 +207,7 @@ VertexShader VertexShader::fromDefaultShader(AtlasVertexShader shader) {
     return vertexShader;
 }
 
-VertexShader VertexShader::fromSource(const char *source) {
+VertexShader VertexShader::fromSource(const char* source) {
     VertexShader shader;
     shader.source = source;
     shader.shaderId = 0;
@@ -208,7 +230,7 @@ void VertexShader::compile() {
         char infoLog[512];
         shader->getShaderLog(infoLog, sizeof(infoLog));
         atlas_error("Vertex shader compilation failed: " +
-                    std::string(infoLog));
+            std::string(infoLog));
         throw std::runtime_error(
             std::string("Vertex shader compilation failed: ") + infoLog);
     }
@@ -224,73 +246,85 @@ FragmentShader FragmentShader::fromDefaultShader(AtlasFragmentShader shader) {
     }
     FragmentShader fragmentShader;
     switch (shader) {
-    case AtlasFragmentShader::Debug: {
+    case AtlasFragmentShader::Debug:
+    {
         fragmentShader = FragmentShader::fromSource(DEBUG_FRAG);
         fragmentShader.fromDefaultShaderType = shader;
         fragmentShaderCache[shader] = fragmentShader;
         break;
     }
-    case AtlasFragmentShader::Color: {
+    case AtlasFragmentShader::Color:
+    {
         fragmentShader = FragmentShader::fromSource(COLOR_FRAG);
         fragmentShader.fromDefaultShaderType = shader;
         fragmentShaderCache[shader] = fragmentShader;
         break;
     }
-    case AtlasFragmentShader::Main: {
+    case AtlasFragmentShader::Main:
+    {
         fragmentShader = FragmentShader::fromSource(MAIN_FRAG);
         fragmentShader.fromDefaultShaderType = shader;
         fragmentShaderCache[shader] = fragmentShader;
         break;
     }
-    case AtlasFragmentShader::GaussianBlur: {
+    case AtlasFragmentShader::GaussianBlur:
+    {
         fragmentShader = FragmentShader::fromSource(GAUSSIAN_FRAG);
         fragmentShader.fromDefaultShaderType = shader;
         fragmentShaderCache[shader] = fragmentShader;
         break;
     }
-    case AtlasFragmentShader::Texture: {
+    case AtlasFragmentShader::Texture:
+    {
         fragmentShader = FragmentShader::fromSource(TEXTURE_FRAG);
         fragmentShader.fromDefaultShaderType = shader;
         fragmentShaderCache[shader] = fragmentShader;
         break;
     }
-    case AtlasFragmentShader::Fullscreen: {
+    case AtlasFragmentShader::Fullscreen:
+    {
         fragmentShader = FragmentShader::fromSource(FULLSCREEN_FRAG);
         fragmentShader.fromDefaultShaderType = shader;
         fragmentShaderCache[shader] = fragmentShader;
         break;
     }
-    case AtlasFragmentShader::Skybox: {
+    case AtlasFragmentShader::Skybox:
+    {
         fragmentShader = FragmentShader::fromSource(SKYBOX_FRAG);
         fragmentShader.fromDefaultShaderType = shader;
         fragmentShaderCache[shader] = fragmentShader;
         break;
     }
-    case AtlasFragmentShader::Empty: {
+    case AtlasFragmentShader::Empty:
+    {
         fragmentShader = FragmentShader::fromSource(EMPTY_FRAG);
         fragmentShader.fromDefaultShaderType = shader;
         fragmentShaderCache[shader] = fragmentShader;
         break;
     }
-    case AtlasFragmentShader::Particle: {
+    case AtlasFragmentShader::Particle:
+    {
         fragmentShader = FragmentShader::fromSource(PARTICLE_FRAG);
         fragmentShader.fromDefaultShaderType = shader;
         fragmentShaderCache[shader] = fragmentShader;
         break;
     }
-    case AtlasFragmentShader::Text: {
+    case AtlasFragmentShader::Text:
+    {
         fragmentShader = FragmentShader::fromSource(TEXT_FRAG);
         fragmentShader.fromDefaultShaderType = shader;
         fragmentShaderCache[shader] = fragmentShader;
         break;
     }
-    case AtlasFragmentShader::PointLightShadow: {
+    case AtlasFragmentShader::PointLightShadow:
+    {
         fragmentShader = FragmentShader::fromSource(POINT_DEPTH_FRAG);
         fragmentShader.fromDefaultShaderType = shader;
         fragmentShaderCache[shader] = fragmentShader;
         break;
     }
-    case AtlasFragmentShader::PointLightShadowNoGeom: {
+    case AtlasFragmentShader::PointLightShadowNoGeom:
+    {
 #ifdef OPENGL
         fragmentShader = FragmentShader::fromSource(EMPTY_FRAG);
 #elif defined(VULKAN)
@@ -300,61 +334,71 @@ FragmentShader FragmentShader::fromDefaultShader(AtlasFragmentShader shader) {
         fragmentShaderCache[shader] = fragmentShader;
         break;
     }
-    case AtlasFragmentShader::Deferred: {
+    case AtlasFragmentShader::Deferred:
+    {
         fragmentShader = FragmentShader::fromSource(DEFERRED_FRAG);
         fragmentShader.fromDefaultShaderType = shader;
         fragmentShaderCache[shader] = fragmentShader;
         break;
     }
-    case AtlasFragmentShader::Light: {
+    case AtlasFragmentShader::Light:
+    {
         fragmentShader = FragmentShader::fromSource(LIGHT_FRAG);
         fragmentShader.fromDefaultShaderType = shader;
         fragmentShaderCache[shader] = fragmentShader;
         break;
     }
-    case AtlasFragmentShader::SSAO: {
+    case AtlasFragmentShader::SSAO:
+    {
         fragmentShader = FragmentShader::fromSource(SSAO_FRAG);
         fragmentShader.fromDefaultShaderType = shader;
         fragmentShaderCache[shader] = fragmentShader;
         break;
     }
-    case AtlasFragmentShader::SSAOBlur: {
+    case AtlasFragmentShader::SSAOBlur:
+    {
         fragmentShader = FragmentShader::fromSource(SSAO_BLUR_FRAG);
         fragmentShader.fromDefaultShaderType = shader;
         fragmentShaderCache[shader] = fragmentShader;
         break;
     }
-    case AtlasFragmentShader::Terrain: {
+    case AtlasFragmentShader::Terrain:
+    {
         fragmentShader = FragmentShader::fromSource(TERRAIN_FRAG);
         fragmentShader.fromDefaultShaderType = shader;
         fragmentShaderCache[shader] = fragmentShader;
         break;
     }
-    case AtlasFragmentShader::Volumetric: {
+    case AtlasFragmentShader::Volumetric:
+    {
         fragmentShader = FragmentShader::fromSource(VOLUMETRIC_FRAG);
         fragmentShader.fromDefaultShaderType = shader;
         fragmentShaderCache[shader] = fragmentShader;
         break;
     }
-    case AtlasFragmentShader::Downsample: {
+    case AtlasFragmentShader::Downsample:
+    {
         fragmentShader = FragmentShader::fromSource(DOWNSAMPLE_FRAG);
         fragmentShader.fromDefaultShaderType = shader;
         fragmentShaderCache[shader] = fragmentShader;
         break;
     }
-    case AtlasFragmentShader::Upsample: {
+    case AtlasFragmentShader::Upsample:
+    {
         fragmentShader = FragmentShader::fromSource(UPSAMPLE_FRAG);
         fragmentShader.fromDefaultShaderType = shader;
         fragmentShaderCache[shader] = fragmentShader;
         break;
     }
-    case AtlasFragmentShader::Fluid: {
+    case AtlasFragmentShader::Fluid:
+    {
         fragmentShader = FragmentShader::fromSource(FLUID_FRAG);
         fragmentShader.fromDefaultShaderType = shader;
         fragmentShaderCache[shader] = fragmentShader;
         break;
     }
-    case AtlasFragmentShader::SSR: {
+    case AtlasFragmentShader::SSR:
+    {
         fragmentShader = FragmentShader::fromSource(SSR_FRAG);
         fragmentShader.fromDefaultShaderType = shader;
         fragmentShaderCache[shader] = fragmentShader;
@@ -366,7 +410,7 @@ FragmentShader FragmentShader::fromDefaultShader(AtlasFragmentShader shader) {
     return fragmentShader;
 }
 
-FragmentShader FragmentShader::fromSource(const char *source) {
+FragmentShader FragmentShader::fromSource(const char* source) {
     FragmentShader shader;
     shader.source = source;
     shader.shaderId = 0;
@@ -388,7 +432,7 @@ void FragmentShader::compile() {
         char infoLog[512];
         shader->getShaderLog(infoLog, sizeof(infoLog));
         atlas_error("Fragment shader compilation failed: " +
-                    std::string(infoLog));
+            std::string(infoLog));
         throw std::runtime_error(
             std::string("Fragment shader compilation failed: ") + infoLog);
     }
@@ -406,7 +450,7 @@ GeometryShader GeometryShader::fromDefaultShader(AtlasGeometryShader shader) {
     }
 }
 
-GeometryShader GeometryShader::fromSource(const char *source) {
+GeometryShader GeometryShader::fromSource(const char* source) {
     GeometryShader shader;
     shader.source = source;
     shader.shaderId = 0;
@@ -428,7 +472,7 @@ void GeometryShader::compile() {
         char infoLog[512];
         shader->getShaderLog(infoLog, sizeof(infoLog));
         atlas_error("Geometry shader compilation failed: " +
-                    std::string(infoLog));
+            std::string(infoLog));
         throw std::runtime_error(
             std::string("Geometry shader compilation failed: ") + infoLog);
     }
@@ -451,7 +495,7 @@ TessellationShader::fromDefaultShader(AtlasTessellationShader shader) {
     }
 }
 
-TessellationShader TessellationShader::fromSource(const char *source,
+TessellationShader TessellationShader::fromSource(const char* source,
                                                   TessellationShaderType type) {
     TessellationShader shader;
     shader.source = source;
@@ -532,7 +576,7 @@ void ShaderProgram::compile() {
     if (geometryShader.shaderId != 0) {
         this->shader->attachShader(geometryShader.shader);
     }
-    for (const auto &tessShader : tessellationShaders) {
+    for (const auto& tessShader : tessellationShaders) {
         if (tessShader.shaderId != 0) {
             this->shader->attachShader(tessShader.shader);
         }
@@ -604,7 +648,7 @@ void ShaderProgram::setUniform1f(std::string name, float v0) {
     }
 }
 
-void ShaderProgram::setUniformMat4f(std::string name, const glm::mat4 &matrix) {
+void ShaderProgram::setUniformMat4f(std::string name, const glm::mat4& matrix) {
     if (currentPipeline) {
         currentPipeline->setUniformMat4f(name, matrix);
     }
@@ -655,7 +699,7 @@ std::shared_ptr<opal::Pipeline> ShaderProgram::requestPipeline(
 
     std::vector<GLuint> activeLocations = this->desiredAttributes;
     if (activeLocations.empty()) {
-        for (const auto &attr : layoutDescriptors) {
+        for (const auto& attr : layoutDescriptors) {
             activeLocations.push_back(attr.layoutPos);
         }
     }
@@ -663,7 +707,13 @@ std::shared_ptr<opal::Pipeline> ShaderProgram::requestPipeline(
     std::vector<opal::VertexAttribute> vertexAttributes;
     opal::VertexBinding vertexBinding;
 
-    for (const auto &attr : layoutDescriptors) {
+    for (const auto& attr : layoutDescriptors) {
+        // Only add attributes that are in the active locations list
+        bool isActive = std::find(activeLocations.begin(), activeLocations.end(),
+                                  attr.layoutPos) != activeLocations.end();
+        if (!isActive) {
+            continue;
+        }
         vertexAttributes.push_back(opal::VertexAttribute{
             .name = attr.name,
             .type = attr.type,
@@ -673,29 +723,38 @@ std::shared_ptr<opal::Pipeline> ShaderProgram::requestPipeline(
             .size = static_cast<uint>(attr.size),
             .stride = static_cast<uint>(attr.stride),
             .inputRate = opal::VertexBindingInputRate::Vertex,
-            .divisor = 0});
+            .divisor = 0
+        });
     }
 
-    std::size_t vec4Size = sizeof(glm::vec4);
-    for (unsigned int i = 0; i < 4; ++i) {
-        vertexAttributes.push_back(opal::VertexAttribute{
-            .name = "instanceModel" + std::to_string(i),
-            .type = opal::VertexAttributeType::Float,
-            .offset = static_cast<uint>(i * vec4Size),
-            .location = static_cast<uint>(6 + i),
-            .normalized = false,
-            .size = 4,
-            .stride = static_cast<uint>(sizeof(glm::mat4)),
-            .inputRate = opal::VertexBindingInputRate::Instance,
-            .divisor = 1});
+    // Only add instance model attributes if the shader supports instancing
+    bool supportsInstancing = std::find(capabilities.begin(), capabilities.end(),
+                                        ShaderCapability::Instances) != capabilities.end();
+    if (supportsInstancing) {
+        std::size_t vec4Size = sizeof(glm::vec4);
+        for (unsigned int i = 0; i < 4; ++i) {
+            vertexAttributes.push_back(opal::VertexAttribute{
+                .name = "instanceModel" + std::to_string(i),
+                .type = opal::VertexAttributeType::Float,
+                .offset = static_cast<uint>(i * vec4Size),
+                .location = static_cast<uint>(6 + i),
+                .normalized = false,
+                .size = 4,
+                .stride = static_cast<uint>(sizeof(glm::mat4)),
+                .inputRate = opal::VertexBindingInputRate::Instance,
+                .divisor = 1
+            });
+        }
     }
 
-    vertexBinding = opal::VertexBinding{(uint)layoutDescriptors[0].stride,
-                                        opal::VertexBindingInputRate::Vertex};
+    vertexBinding = opal::VertexBinding{
+        (uint)layoutDescriptors[0].stride,
+        opal::VertexBindingInputRate::Vertex
+    };
 
     unbuiltPipeline->setVertexAttributes(vertexAttributes, vertexBinding);
 
-    for (auto &existingPipeline : pipelines) {
+    for (auto& existingPipeline : pipelines) {
         if (*existingPipeline == unbuiltPipeline) {
             currentPipeline = existingPipeline;
             return existingPipeline;

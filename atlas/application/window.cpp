@@ -949,22 +949,14 @@ void Window::renderLightsToShadowMaps(
 
     bool renderedShadows = false;
 
-    std::vector<std::shared_ptr<opal::Pipeline>> originalPipelines;
+    std::vector<std::optional<std::shared_ptr<opal::Pipeline>>> originalPipelines;
     for (auto &obj : this->renderables) {
-        if (obj->getPipeline() != std::nullopt) {
-            originalPipelines.push_back(obj->getPipeline().value());
-        } else {
-            originalPipelines.push_back(opal::Pipeline::create());
-        }
+        originalPipelines.push_back(obj->getPipeline());
     }
 
-    std::vector<std::shared_ptr<opal::Pipeline>> originalLatePipelines;
+    std::vector<std::optional<std::shared_ptr<opal::Pipeline>>> originalLatePipelines;
     for (auto &obj : this->lateForwardRenderables) {
-        if (obj->getPipeline() != std::nullopt) {
-            originalLatePipelines.push_back(obj->getPipeline().value());
-        } else {
-            originalLatePipelines.push_back(opal::Pipeline::create());
-        }
+        originalLatePipelines.push_back(obj->getPipeline());
     }
 
     auto gatherShadowCasters = [this]() {
@@ -1286,7 +1278,11 @@ void Window::renderLightsToShadowMaps(
     size_t i = 0;
     for (auto &renderable : this->renderables) {
         if (i < originalPipelines.size()) {
-            renderable->setPipeline(originalPipelines[i]);
+            if (originalPipelines[i].has_value()) {
+                renderable->setPipeline(originalPipelines[i].value());
+            } else {
+                renderable->resetPipeline();
+            }
             i++;
         }
     }
@@ -1294,7 +1290,11 @@ void Window::renderLightsToShadowMaps(
     size_t j = 0;
     for (auto &renderable : this->lateForwardRenderables) {
         if (j < originalLatePipelines.size()) {
-            renderable->setPipeline(originalLatePipelines[j]);
+            if (originalLatePipelines[j].has_value()) {
+                renderable->setPipeline(originalLatePipelines[j].value());
+            } else {
+                renderable->resetPipeline();
+            }
             j++;
         }
     }

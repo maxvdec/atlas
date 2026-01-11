@@ -122,6 +122,8 @@ class Renderable {
     virtual void
     setPipeline([[maybe_unused]] std::shared_ptr<opal::Pipeline> &pipeline) {};
 
+    virtual void resetPipeline() {};
+
     /**
      * @brief Returns the currently bound shader program, if any.
      */

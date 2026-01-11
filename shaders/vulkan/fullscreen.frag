@@ -41,22 +41,22 @@ vec3 acesToneMapping(vec3 color) {
 
 vec4 sharpen(sampler2D image) {
     vec2 offsets[9] = vec2[](
-            vec2(-offset, offset),
-            vec2(0.0f, offset),
-            vec2(offset, offset),
-            vec2(-offset, 0.0f),
-            vec2(0.0f, 0.0f),
-            vec2(offset, 0.0f),
-            vec2(-offset, -offset),
-            vec2(0.0f, -offset),
-            vec2(offset, -offset)
-        );
+    vec2(-offset, offset),
+    vec2(0.0f, offset),
+    vec2(offset, offset),
+    vec2(-offset, 0.0f),
+    vec2(0.0f, 0.0f),
+    vec2(offset, 0.0f),
+    vec2(-offset, -offset),
+    vec2(0.0f, -offset),
+    vec2(offset, -offset)
+    );
 
     float kernel[9] = float[](
-            -1, -1, -1,
-            -1, 9, -1,
-            -1, -1, -1
-        );
+    -1, -1, -1,
+    -1, 9, -1,
+    -1, -1, -1
+    );
 
     vec3 sampleTex[9];
     for (int i = 0; i < 9; i++) {
@@ -93,22 +93,22 @@ vec4 blur(sampler2D image, float radius) {
 
 vec4 edgeDetection(sampler2D image) {
     vec2 offsets[9] = vec2[](
-            vec2(-offset, offset),
-            vec2(0.0f, offset),
-            vec2(offset, offset),
-            vec2(-offset, 0.0f),
-            vec2(0.0f, 0.0f),
-            vec2(offset, 0.0f),
-            vec2(-offset, -offset),
-            vec2(0.0f, -offset),
-            vec2(offset, -offset)
-        );
+    vec2(-offset, offset),
+    vec2(0.0f, offset),
+    vec2(offset, offset),
+    vec2(-offset, 0.0f),
+    vec2(0.0f, 0.0f),
+    vec2(offset, 0.0f),
+    vec2(-offset, -offset),
+    vec2(0.0f, -offset),
+    vec2(offset, -offset)
+    );
 
     float kernel[9] = float[](
-            1, 1, 1,
-            1, -8, 1,
-            1, 1, 1
-        );
+    1, 1, 1,
+    1, -8, 1,
+    1, 1, 1
+    );
 
     vec3 sampleTex[9];
     for (int i = 0; i < 9; i++) {
@@ -216,7 +216,7 @@ layout(set = 4, binding = 0) uniform Clouds {
     vec3 sunColor;
     float sunIntensity;
     vec3 cloudAmbientColor;
-    int hasClouds;   
+    int hasClouds;
 };
 
 vec4 sampleColor(vec2 uv) {
@@ -320,7 +320,7 @@ vec4 sampleBright(vec2 uv) {
 float LinearizeDepth(float depth) {
     float z = depth * 2.0 - 1.0;
     float linear = (2.0 * nearPlane * farPlane) /
-            (farPlane + nearPlane - z * (farPlane - nearPlane));
+    (farPlane + nearPlane - z * (farPlane - nearPlane));
     return linear / farPlane;
 }
 
@@ -453,20 +453,20 @@ vec4 applyFXAA(sampler2D tex, vec2 texCoord) {
     dir.y = ((lumaNW + lumaSW) - (lumaNE + lumaSE));
 
     float dirReduce = max((lumaNW + lumaNE + lumaSW + lumaSE) *
-                (0.25 * FXAA_REDUCE_MUL), FXAA_REDUCE_MIN);
+    (0.25 * FXAA_REDUCE_MUL), FXAA_REDUCE_MIN);
 
     float rcpDirMin = 1.0 / (min(abs(dir.x), abs(dir.y)) + dirReduce);
     dir = min(vec2(FXAA_SPAN_MAX, FXAA_SPAN_MAX),
-            max(vec2(-FXAA_SPAN_MAX, -FXAA_SPAN_MAX),
-                dir * rcpDirMin)) * texelSize;
+    max(vec2(-FXAA_SPAN_MAX, -FXAA_SPAN_MAX),
+    dir * rcpDirMin)) * texelSize;
 
     vec3 rgbA = 0.5 * (
-            sampleColor(texCoord + dir * (1.0 / 3.0 - 0.5)).rgb +
-                sampleColor(texCoord + dir * (2.0 / 3.0 - 0.5)).rgb);
+    sampleColor(texCoord + dir * (1.0 / 3.0 - 0.5)).rgb +
+    sampleColor(texCoord + dir * (2.0 / 3.0 - 0.5)).rgb);
 
     vec3 rgbB = rgbA * 0.5 + 0.25 * (
-                sampleColor(texCoord + dir * -0.5).rgb +
-                    sampleColor(texCoord + dir * 0.5).rgb);
+    sampleColor(texCoord + dir * -0.5).rgb +
+    sampleColor(texCoord + dir * 0.5).rgb);
 
     float lumaB = dot(rgbB, luma);
 
@@ -535,7 +535,7 @@ vec4 applyMotionBlur(vec2 texCoord, float size, float separation, vec4 color) {
         vec2 sampleCoord = texCoord + velocity * t;
 
         if (sampleCoord.x >= 0.0 && sampleCoord.x <= 1.0 &&
-                sampleCoord.y >= 0.0 && sampleCoord.y <= 1.0) {
+        sampleCoord.y >= 0.0 && sampleCoord.y <= 1.0) {
             vec4 sampled = sampleColor(sampleCoord);
             if (hasBrightTexture == 1) {
                 sampled += sampleBright(sampleCoord);
@@ -626,7 +626,7 @@ float calculateCloudDensity(vec3 worldPos) {
     vec3 localPos = (worldPos - cloudPosition) / halfExtents;
 
     if (any(lessThan(localPos, vec3(-1.0))) ||
-        any(greaterThan(localPos, vec3(1.0)))) {
+    any(greaterThan(localPos, vec3(1.0)))) {
         return 0.0;
     }
 
@@ -635,7 +635,7 @@ float calculateCloudDensity(vec3 worldPos) {
     vec3 noiseCoord = fract(uvw * scale + cloudOffset);
 
     vec4 shape = texture(cloudsTexture, noiseCoord);
-    
+
     float cluster = saturate(cloudClusterStrength);
 
     float lowerFade = smoothstep(-0.95, -0.6, localPos.y);
@@ -646,12 +646,12 @@ float calculateCloudDensity(vec3 worldPos) {
     float coverageSoftness = mix(0.22, 0.34, cluster);
     float coverageNoise = mix(shape.r, shape.a, 0.4 + cluster * 0.35);
     float coverage = smoothstep(coverageThreshold,
-                                coverageThreshold + coverageSoftness,
-                                coverageNoise);
+    coverageThreshold + coverageSoftness,
+    coverageNoise);
     coverage = pow(coverage, mix(2.0, 0.7, cluster));
 
-    float detail = mix(smoothstep(0.25, 0.75, shape.g), 
-                       smoothstep(0.2, 0.9, shape.a), 0.55);
+    float detail = mix(smoothstep(0.25, 0.75, shape.g),
+    smoothstep(0.2, 0.9, shape.a), 0.55);
     detail = pow(detail, mix(1.6, 0.85, cluster));
 
     float cavityNoise = smoothstep(0.22, 0.85, shape.b);
@@ -682,7 +682,7 @@ float sampleSunTransmittance(vec3 worldPos, float stepSize) {
     for (int i = 0; i < steps && attenuation > 0.05; ++i) {
         travel += lightStep;
         if (travel > maxDistance)
-            break;
+        break;
 
         vec3 samplePos = worldPos + lightDir * travel;
         float density = calculateCloudDensity(samplePos);
@@ -699,8 +699,8 @@ vec4 cloudRendering(vec4 inColor) {
     }
 
     float nonLinearDepth = hasDepthTexture == 1
-                               ? texture(DepthTexture, TexCoord).r
-                               : 1.0;
+    ? texture(DepthTexture, TexCoord).r
+    : 1.0;
     bool depthAvailable = hasDepthTexture == 1 && nonLinearDepth < 1.0;
     float depthSample = depthAvailable ? nonLinearDepth : 1.0;
 
@@ -754,7 +754,7 @@ vec4 cloudRendering(vec4 inColor) {
     float phaseG = clamp(cloudPhaseG, -0.95, 0.95);
 
     for (int step = 0; step < steps && travelled < dstLimit;
-         ++step) {
+    ++step) {
         if (transmittance <= 0.01) {
             break;
         }
@@ -786,7 +786,7 @@ vec4 cloudRendering(vec4 inColor) {
             vec3 ambientLight = cloudAmbientColor;
 
             vec3 lighting = (ambientLight * 0.35 + directLight) *
-                            sampleWeight * cloudScattering;
+            sampleWeight * cloudScattering;
 
             accumulatedLight += lighting * transmittance;
             transmittance *= exp(-density * adaptiveStep * cloudAbsorption);
@@ -867,7 +867,7 @@ void main() {
     }
 
     hdrColor = mapToLUT(hdrColor);
-    
+
 
     hdrColor.rgb = acesToneMapping(hdrColor.rgb);
 
