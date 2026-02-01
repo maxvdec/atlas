@@ -81,7 +81,7 @@ VertexShader VertexShader::fromDefaultShader(AtlasVertexShader shader) {
     case AtlasVertexShader::Fullscreen:
     {
         vertexShader = VertexShader::fromSource(FULLSCREEN_VERT);
-        vertexShader.desiredAttributes = {0, 1, 2, 3};
+        vertexShader.desiredAttributes = {0, 1, 2};
         vertexShader.capabilities = {ShaderCapability::Textures};
         vertexShader.fromDefaultShaderType = shader;
         VertexShader::vertexShaderCache[shader] = vertexShader;

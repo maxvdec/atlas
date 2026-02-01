@@ -254,11 +254,23 @@ void Window::deferredRendering(
     this->lightPassPipeline->setCullMode(opal::CullMode::None);
     this->lightPassPipeline->enableDepthTest(false);
     this->lightPassPipeline->enableDepthWrite(false);
+
+#ifdef VULKAN
+    // In Vulkan, the deferred light pass uses a specialized Vertex Shader that only requires Position(0) and UV(1).
+    // Ensure the pipeline is aware of this to avoid "Attribute at Location X not found" errors if previous
+    // configurations leaked. We explicitly set the attributes here.
     std::vector<opal::VertexAttribute> quadAttributes = {
         positionAttr,
         uvAttr
     };
     this->lightPassPipeline->setVertexAttributes(quadAttributes, quadBinding);
+#else
+    std::vector<opal::VertexAttribute> quadAttributes = {
+        positionAttr,
+        uvAttr
+    };
+    this->lightPassPipeline->setVertexAttributes(quadAttributes, quadBinding);
+#endif
     this->lightPassPipeline->build();
     this->lightPassPipeline->setViewport(0, 0, target->getWidth(), target->getHeight());
     this->lightPassPipeline->bind();
