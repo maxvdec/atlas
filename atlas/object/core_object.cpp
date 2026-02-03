@@ -21,6 +21,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <cctype>
 #include <cmath>
 #include <cstdint>
 #include <glm/glm.hpp>
@@ -651,6 +652,35 @@ void CoreObject::render(float dt,
     }
 
 #ifdef VULKAN
+    auto hasUniform = [&](const std::string& name) -> bool
+    {
+        if (!this->pipeline || !this->pipeline->shaderProgram) {
+            return false;
+        }
+        const auto& bindings = this->pipeline->shaderProgram->uniformBindings;
+        if (bindings.find(name) != bindings.end()) {
+            return true;
+        }
+        for (const auto& pair : bindings) {
+            if (pair.first.size() != name.size()) {
+                continue;
+            }
+            bool match = true;
+            for (size_t i = 0; i < name.size(); ++i) {
+                unsigned char a = static_cast<unsigned char>(pair.first[i]);
+                unsigned char b = static_cast<unsigned char>(name[i]);
+                if (std::tolower(a) != std::tolower(b)) {
+                    match = false;
+                    break;
+                }
+            }
+            if (match) {
+                return true;
+            }
+        }
+        return false;
+    };
+
     struct alignas(16) VulkanFragmentUniformsUBO {
         glm::ivec4 textureTypes[16];
         int32_t textureCount;
@@ -712,7 +742,14 @@ void CoreObject::render(float dt,
     vkPC.shadowParamCount = 0;
 #endif
 
-    if (!textures.empty() && useTexture && shaderSupportsTextures) {
+#ifdef VULKAN
+    const bool pipelineHasMaterialTextures = hasUniform("texture1");
+#else
+    const bool pipelineHasMaterialTextures = true;
+#endif
+
+    if (!textures.empty() && useTexture && shaderSupportsTextures &&
+        pipelineHasMaterialTextures) {
         int maxMaterialTextures =
             shaderSupportsShadows
                 ? (kMax2DSamplers - reservedShadow2DSamplers)
@@ -757,32 +794,33 @@ void CoreObject::render(float dt,
                   ShaderCapability::Material) !=
         shaderProgram.capabilities.end()) {
 #ifdef VULKAN
-        const opal::UniformBindingInfo* materialInfo =
-            this->pipeline && this->pipeline->shaderProgram
-                ? this->pipeline->shaderProgram->findUniform("material")
-                : nullptr;
-        if (materialInfo && !materialInfo->isBuffer) {
-            this->pipeline->setUniform3f(
-                "material.albedo", material.albedo.r, material.albedo.g,
-                material.albedo.b);
-            this->pipeline->setUniform1f("material.metallic",
-                                         material.metallic);
-            this->pipeline->setUniform1f("material.roughness",
-                                         material.roughness);
-            this->pipeline->setUniform1f("material.ao", material.ao);
-        }
-        else {
-            vkMaterialUBO.albedo = glm::vec3(material.albedo.r,
-                                             material.albedo.g,
-                                             material.albedo.b);
-            vkMaterialUBO.metallic = material.metallic;
-            vkMaterialUBO.roughness = material.roughness;
-            vkMaterialUBO.ao = material.ao;
-            vkMaterialUBO.reflectivity = 0.0f;
-            vkMaterialUBO._pad0[0] = vkMaterialUBO._pad0[1] =
-                vkMaterialUBO._pad0[2] = 0.0f;
-            this->pipeline->bindBufferData("material", &vkMaterialUBO,
-                                           sizeof(vkMaterialUBO));
+        if (hasUniform("material")) {
+            const opal::UniformBindingInfo* materialInfo =
+                this->pipeline && this->pipeline->shaderProgram
+                    ? this->pipeline->shaderProgram->findUniform("material")
+                    : nullptr;
+            if (materialInfo && !materialInfo->isBuffer) {
+                this->pipeline->setUniform3f(
+                    "material.albedo", material.albedo.r, material.albedo.g,
+                    material.albedo.b);
+                this->pipeline->setUniform1f("material.metallic",
+                                             material.metallic);
+                this->pipeline->setUniform1f("material.roughness",
+                                             material.roughness);
+                this->pipeline->setUniform1f("material.ao", material.ao);
+            } else if (materialInfo) {
+                vkMaterialUBO.albedo = glm::vec3(material.albedo.r,
+                                                 material.albedo.g,
+                                                 material.albedo.b);
+                vkMaterialUBO.metallic = material.metallic;
+                vkMaterialUBO.roughness = material.roughness;
+                vkMaterialUBO.ao = material.ao;
+                vkMaterialUBO.reflectivity = 0.0f;
+                vkMaterialUBO._pad0[0] = vkMaterialUBO._pad0[1] =
+                    vkMaterialUBO._pad0[2] = 0.0f;
+                this->pipeline->bindBufferData("material", &vkMaterialUBO,
+                                               sizeof(vkMaterialUBO));
+            }
         }
 #else
         this->pipeline->setUniform3f("material.albedo", material.albedo.r,
@@ -832,14 +870,16 @@ void CoreObject::render(float dt,
             ambientIntensity = scene->getAutomaticAmbientIntensity();
         }
 #ifdef VULKAN
-        vkAmbientLightUBO.color =
-            glm::vec4(static_cast<float>(ambientColor.r),
-                      static_cast<float>(ambientColor.g),
-                      static_cast<float>(ambientColor.b), 1.0f);
-        vkAmbientLightUBO.intensity = ambientIntensity;
-        vkAmbientLightUBO._pad0 = glm::vec3(0.0f);
-        this->pipeline->bindBufferData("ambientLight", &vkAmbientLightUBO,
-                                       sizeof(vkAmbientLightUBO));
+        if (hasUniform("ambientLight")) {
+            vkAmbientLightUBO.color =
+                glm::vec4(static_cast<float>(ambientColor.r),
+                          static_cast<float>(ambientColor.g),
+                          static_cast<float>(ambientColor.b), 1.0f);
+            vkAmbientLightUBO.intensity = ambientIntensity;
+            vkAmbientLightUBO._pad0 = glm::vec3(0.0f);
+            this->pipeline->bindBufferData("ambientLight", &vkAmbientLightUBO,
+                                           sizeof(vkAmbientLightUBO));
+        }
 
         vkUniformsUBO.cameraPosition = glm::vec3(
             window->getCamera()->position.x, window->getCamera()->position.y,
@@ -866,7 +906,9 @@ void CoreObject::render(float dt,
         if (dirLightCount > 0) {
             auto gpuDirLights = buildGPUDirectionalLights(
                 scene->directionalLights, dirLightCount);
-            this->pipeline->bindBuffer("DirectionalLights", gpuDirLights);
+            if (hasUniform("DirectionalLights")) {
+                this->pipeline->bindBuffer("DirectionalLights", gpuDirLights);
+            }
         }
 
         int pointLightCount = std::min((int)scene->pointLights.size(), 256);
@@ -879,7 +921,9 @@ void CoreObject::render(float dt,
         if (pointLightCount > 0) {
             auto gpuPointLights =
                 buildGPUPointLights(scene->pointLights, pointLightCount);
-            this->pipeline->bindBuffer("PointLights", gpuPointLights);
+            if (hasUniform("PointLights")) {
+                this->pipeline->bindBuffer("PointLights", gpuPointLights);
+            }
         }
 
         int spotlightCount = std::min((int)scene->spotlights.size(), 256);
@@ -892,7 +936,9 @@ void CoreObject::render(float dt,
         if (spotlightCount > 0) {
             auto gpuSpotLights =
                 buildGPUSpotLights(scene->spotlights, spotlightCount);
-            this->pipeline->bindBuffer("SpotLights", gpuSpotLights);
+            if (hasUniform("SpotLights")) {
+                this->pipeline->bindBuffer("SpotLights", gpuSpotLights);
+            }
         }
 
         int areaLightCount = std::min((int)scene->areaLights.size(), 256);
@@ -905,7 +951,9 @@ void CoreObject::render(float dt,
         if (areaLightCount > 0) {
             auto gpuAreaLights =
                 buildGPUAreaLights(scene->areaLights, areaLightCount);
-            this->pipeline->bindBuffer("AreaLights", gpuAreaLights);
+            if (hasUniform("AreaLights")) {
+                this->pipeline->bindBuffer("AreaLights", gpuAreaLights);
+            }
         }
     }
 
@@ -913,26 +961,34 @@ void CoreObject::render(float dt,
                   shaderProgram.capabilities.end(),
                   ShaderCapability::LightDeferred) !=
         shaderProgram.capabilities.end()) {
-        Window* window = Window::mainWindow;
-        RenderTarget* gBuffer = window->gBuffer.get();
-        this->pipeline->bindTexture2D("gPosition", gBuffer->gPosition.id,
-                                      boundTextures, id);
-        boundTextures++;
+        const bool pipelineHasDeferredTextures =
+#ifdef VULKAN
+            hasUniform("gPosition");
+#else
+            true;
+#endif
+        if (pipelineHasDeferredTextures) {
+            Window* window = Window::mainWindow;
+            RenderTarget* gBuffer = window->gBuffer.get();
+            this->pipeline->bindTexture2D("gPosition", gBuffer->gPosition.id,
+                                          boundTextures, id);
+            boundTextures++;
 
-        this->pipeline->bindTexture2D("gNormal", gBuffer->gNormal.id,
-                                      boundTextures, id);
-        boundTextures++;
+            this->pipeline->bindTexture2D("gNormal", gBuffer->gNormal.id,
+                                          boundTextures, id);
+            boundTextures++;
 
-        this->pipeline->bindTexture2D("gAlbedoSpec", gBuffer->gAlbedoSpec.id,
-                                      boundTextures, id);
-        boundTextures++;
+            this->pipeline->bindTexture2D("gAlbedoSpec", gBuffer->gAlbedoSpec.id,
+                                          boundTextures, id);
+            boundTextures++;
 
-        this->pipeline->bindTexture2D("gMaterial", gBuffer->gMaterial.id,
-                                      boundTextures, id);
-        boundTextures++;
+            this->pipeline->bindTexture2D("gMaterial", gBuffer->gMaterial.id,
+                                          boundTextures, id);
+            boundTextures++;
+        }
     }
 
-    if (shaderSupportsShadows) {
+    if (shaderSupportsShadows && pipelineHasMaterialTextures) {
         if (scene == nullptr) {
 #ifdef VULKAN
             vkPC.shadowParamCount = 0;
@@ -1109,7 +1165,7 @@ void CoreObject::render(float dt,
 #endif
 
 #ifdef VULKAN
-            if (!gpuShadowParams.empty()) {
+            if (!gpuShadowParams.empty() && hasUniform("ShadowParameters")) {
                 this->pipeline->bindBuffer("ShadowParameters", gpuShadowParams);
             }
 #endif
@@ -1120,12 +1176,20 @@ void CoreObject::render(float dt,
                   shaderProgram.capabilities.end(),
                   ShaderCapability::EnvironmentMapping) !=
         shaderProgram.capabilities.end()) {
-        Window* window = Window::mainWindow;
-        Scene* scene = window->getCurrentScene();
-        if (scene->skybox != nullptr) {
-            this->pipeline->bindTextureCubemap(
-                "skybox", scene->skybox->cubemap.id, boundTextures, id);
-            boundTextures++;
+        const bool pipelineHasSkybox =
+#ifdef VULKAN
+            hasUniform("skybox");
+#else
+            true;
+#endif
+        if (pipelineHasSkybox) {
+            Window* window = Window::mainWindow;
+            Scene* scene = window->getCurrentScene();
+            if (scene->skybox != nullptr) {
+                this->pipeline->bindTextureCubemap(
+                    "skybox", scene->skybox->cubemap.id, boundTextures, id);
+                boundTextures++;
+            }
         }
     }
 
@@ -1133,44 +1197,55 @@ void CoreObject::render(float dt,
                   shaderProgram.capabilities.end(),
                   ShaderCapability::Environment) !=
         shaderProgram.capabilities.end()) {
-        Window* window = Window::mainWindow;
-        Scene* scene = window->getCurrentScene();
+        const bool pipelineHasEnvironment =
 #ifdef VULKAN
-        vkEnvironmentUBO.rimLightIntensity =
-            scene->environment.rimLight.intensity;
-        vkEnvironmentUBO._pad0[0] = vkEnvironmentUBO._pad0[1] =
-            vkEnvironmentUBO._pad0[2] = 0.0f;
-        vkEnvironmentUBO.rimLightColor =
-            glm::vec3(scene->environment.rimLight.color.r,
-                      scene->environment.rimLight.color.g,
-                      scene->environment.rimLight.color.b);
-        vkEnvironmentUBO._pad1 = 0.0f;
-        this->pipeline->bindBufferData("environment", &vkEnvironmentUBO,
-                                       sizeof(vkEnvironmentUBO));
+            hasUniform("environment");
 #else
-        this->pipeline->setUniform1f("environment.rimLightIntensity",
-                                     scene->environment.rimLight.intensity);
-        this->pipeline->setUniform3f("environment.rimLightColor",
-                                     scene->environment.rimLight.color.r,
-                                     scene->environment.rimLight.color.g,
-                                     scene->environment.rimLight.color.b);
+            true;
 #endif
+        if (pipelineHasEnvironment) {
+            Window* window = Window::mainWindow;
+            Scene* scene = window->getCurrentScene();
+#ifdef VULKAN
+            vkEnvironmentUBO.rimLightIntensity =
+                scene->environment.rimLight.intensity;
+            vkEnvironmentUBO._pad0[0] = vkEnvironmentUBO._pad0[1] =
+                vkEnvironmentUBO._pad0[2] = 0.0f;
+            vkEnvironmentUBO.rimLightColor =
+                glm::vec3(scene->environment.rimLight.color.r,
+                          scene->environment.rimLight.color.g,
+                          scene->environment.rimLight.color.b);
+            vkEnvironmentUBO._pad1 = 0.0f;
+            this->pipeline->bindBufferData("environment", &vkEnvironmentUBO,
+                                           sizeof(vkEnvironmentUBO));
+#else
+            this->pipeline->setUniform1f("environment.rimLightIntensity",
+                                         scene->environment.rimLight.intensity);
+            this->pipeline->setUniform3f("environment.rimLightColor",
+                                         scene->environment.rimLight.color.r,
+                                         scene->environment.rimLight.color.g,
+                                         scene->environment.rimLight.color.b);
+#endif
+        }
     }
 
 #ifdef VULKAN
     // Finalize Vulkan per-draw data.
     if (this->pipeline && this->pipeline->shaderProgram) {
-        const opal::UniformBindingInfo* uniformsInfo =
-            this->pipeline->shaderProgram->findUniform("Uniforms");
-        const opal::UniformBindingInfo* uboInfo =
-            this->pipeline->shaderProgram->findUniform("UBO");
-        if (uniformsInfo && uniformsInfo->isBuffer) {
-            this->pipeline->bindBufferData("Uniforms", &vkUniformsUBO,
-                                           sizeof(vkUniformsUBO));
-        }
-        else if (uboInfo && uboInfo->isBuffer) {
-            this->pipeline->bindBufferData("UBO", &vkUniformsUBO,
-                                           sizeof(vkUniformsUBO));
+        if (hasUniform("Uniforms")) {
+            const opal::UniformBindingInfo* uniformsInfo =
+                this->pipeline->shaderProgram->findUniform("Uniforms");
+            if (uniformsInfo && uniformsInfo->isBuffer) {
+                this->pipeline->bindBufferData("Uniforms", &vkUniformsUBO,
+                                               sizeof(vkUniformsUBO));
+            }
+        } else if (hasUniform("UBO")) {
+            const opal::UniformBindingInfo* uboInfo =
+                this->pipeline->shaderProgram->findUniform("UBO");
+            if (uboInfo && uboInfo->isBuffer) {
+                this->pipeline->bindBufferData("UBO", &vkUniformsUBO,
+                                               sizeof(vkUniformsUBO));
+            }
         }
     }
     this->pipeline->setPushConstantsData(&vkPC, sizeof(vkPC));

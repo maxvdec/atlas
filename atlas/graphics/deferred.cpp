@@ -132,19 +132,7 @@ void Window::deferredRendering(
     if (commandBuffer == nullptr) {
         return;
     }
-    std::vector<std::shared_ptr<opal::Pipeline>> originalPipelines;
     auto deferredPipeline = opal::Pipeline::create();
-    for (auto& obj : this->renderables) {
-        if (!obj->canUseDeferredRendering()) {
-            continue;
-        }
-        if (obj->getPipeline() != std::nullopt) {
-            originalPipelines.push_back(obj->getPipeline().value());
-        }
-        else {
-            originalPipelines.push_back(opal::Pipeline::create());
-        }
-    }
 
     commandBuffer->endPass();
     auto gBufferRenderPass = opal::RenderPass::create();
@@ -181,7 +169,6 @@ void Window::deferredRendering(
     commandBuffer->endPass();
     this->gBuffer->unbind();
 
-    target->resolve(commandBuffer);
     this->renderSSAO(commandBuffer);
 
     auto targetRenderPass = opal::RenderPass::create();
@@ -544,16 +531,47 @@ void Window::deferredRendering(
     commandBuffer->draw(6, 1, 0, 0);
     quadState->unbind();
 
+    updatePipelineStateField(this->useDepth, true);
+    updatePipelineStateField(this->depthCompareOp, opal::CompareOp::Less);
+    updatePipelineStateField(this->writeDepth, true);
+    updatePipelineStateField(this->cullMode, opal::CullMode::Back);
+
+    for (auto &obj : this->firstRenderables) {
+        obj->setViewMatrix(this->camera->calculateViewMatrix());
+        obj->setProjectionMatrix(calculateProjectionMatrix());
+        obj->render(getDeltaTime(), commandBuffer,
+                    shouldRefreshPipeline(obj));
+    }
+
+    for (auto &obj : this->renderables) {
+        if (obj->renderLateForward) {
+            continue;
+        }
+        if (!obj->canUseDeferredRendering()) {
+            obj->setViewMatrix(this->camera->calculateViewMatrix());
+            obj->setProjectionMatrix(calculateProjectionMatrix());
+            obj->render(getDeltaTime(), commandBuffer,
+                        shouldRefreshPipeline(obj));
+        }
+    }
+
+    for (auto &obj : this->lateForwardRenderables) {
+        obj->setViewMatrix(this->camera->calculateViewMatrix());
+        obj->setProjectionMatrix(calculateProjectionMatrix());
+        obj->render(getDeltaTime(), commandBuffer,
+                    shouldRefreshPipeline(obj));
+    }
+
+    commandBuffer->endPass();
+    target->resolve(commandBuffer);
+
     if (dirLightCount > 0) {
         if (!volumetricBuffer) {
             volumetricBuffer =
                 std::make_shared<RenderTarget>(*this, RenderTargetType::Scene);
         }
 
-        target->resolve(commandBuffer);
-
-        // End target pass and start volumetric pass
-        commandBuffer->endPass();
+        // Start volumetric pass
         auto volumetricRenderPass = opal::RenderPass::create();
         volumetricRenderPass->setFramebuffer(
             volumetricBuffer->getFramebuffer());
@@ -612,13 +630,11 @@ void Window::deferredRendering(
         commandBuffer->bindPipeline(volumetricPipeline);
         commandBuffer->draw(6, 1, 0, 0);
         quadState->unbind();
+
+        commandBuffer->endPass();
     }
 
     if (this->ssrFramebuffer != nullptr && useSSR) {
-        target->resolve(commandBuffer);
-
-        // End current pass and start SSR pass
-        commandBuffer->endPass();
         auto ssrRenderPass = opal::RenderPass::create();
         ssrRenderPass->setFramebuffer(ssrFramebuffer->getFramebuffer());
         commandBuffer->beginPass(ssrRenderPass);
@@ -667,23 +683,12 @@ void Window::deferredRendering(
         commandBuffer->bindPipeline(ssrPipeline);
         commandBuffer->draw(6, 1, 0, 0);
         quadState->unbind();
+
+        commandBuffer->endPass();
     }
 
     target->volumetricLightTexture = volumetricBuffer->texture;
     target->ssrTexture = ssrFramebuffer->texture;
     target->gPosition = gBuffer->gPosition;
 
-    // End current pass and re-establish target render pass for caller
-    commandBuffer->endPass();
-    auto finalRenderPass = opal::RenderPass::create();
-    finalRenderPass->setFramebuffer(target->getFramebuffer());
-    commandBuffer->beginPass(finalRenderPass);
-
-    auto finalPipeline = opal::Pipeline::create();
-    finalPipeline->enableDepthWrite(true);
-    finalPipeline->enableDepthTest(true);
-    finalPipeline->setDepthCompareOp(opal::CompareOp::Less);
-    finalPipeline->bind();
-
-    this->device->getDefaultFramebuffer()->bind();
 }

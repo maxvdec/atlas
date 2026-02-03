@@ -372,41 +372,6 @@ void Window::run() {
                     this->gBuffer->getFramebuffer(), target->getFramebuffer());
                 commandBuffer->performResolve(resolveCommand);
 
-                target->getFramebuffer()->bindForRead();
-                target->getFramebuffer()->setDrawBuffers(2);
-
-                updatePipelineStateField(this->useDepth, true);
-                updatePipelineStateField(this->depthCompareOp,
-                                         opal::CompareOp::Less);
-                updatePipelineStateField(this->writeDepth, true);
-                updatePipelineStateField(this->cullMode, opal::CullMode::Back);
-
-                for (auto &obj : this->firstRenderables) {
-                    obj->setViewMatrix(this->camera->calculateViewMatrix());
-                    obj->setProjectionMatrix(calculateProjectionMatrix());
-                    obj->render(getDeltaTime(), commandBuffer,
-                                shouldRefreshPipeline(obj));
-                }
-
-                for (auto &obj : this->renderables) {
-                    if (obj->renderLateForward) {
-                        continue;
-                    }
-                    if (!obj->canUseDeferredRendering()) {
-                        obj->setViewMatrix(this->camera->calculateViewMatrix());
-                        obj->setProjectionMatrix(calculateProjectionMatrix());
-                        obj->render(getDeltaTime(), commandBuffer,
-                                    shouldRefreshPipeline(obj));
-                    }
-                }
-
-                for (auto &obj : this->lateForwardRenderables) {
-                    obj->setViewMatrix(this->camera->calculateViewMatrix());
-                    obj->setProjectionMatrix(calculateProjectionMatrix());
-                    obj->render(getDeltaTime(), commandBuffer,
-                                shouldRefreshPipeline(obj));
-                }
-
                 commandBuffer->endPass();
                 target->resolve(commandBuffer);
                 continue;

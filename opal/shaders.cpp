@@ -282,129 +282,122 @@ namespace opal {
                 }
             };
 
-            // Always apply standard aliases for known sets/bindings used by the engine.
-            // The engine C++ code relies on specific names like "material", "DirectionalLights", etc.
-            // unrelated to the actual variable names in the shader source.
-            if (info.isSampler) {
-                // Forward main shader texture set.
-                if (info.set == 2) {
-                    // Fullscreen / render-target display shader uses these
-                    // canonical names at fixed bindings.
-                    if (info.binding == 0) {
-                        addAlias("Texture");
-                        addAlias("gPosition");
-                    }
-                    else if (info.binding == 1) {
-                        addAlias("BrightTexture");
-                        addAlias("gNormal");
-                    }
-                    else if (info.binding == 2) {
-                        addAlias("DepthTexture");
-                        addAlias("gAlbedoSpec");
-                    }
-                    else if (info.binding == 3) {
-                        addAlias("VolumetricLightTexture");
-                        addAlias("gMaterial");
-                    }
-                    else if (info.binding == 4) {
-                        addAlias("PositionTexture");
-                        addAlias("ssao");
-                    }
-                    else if (info.binding == 5) {
-                        addAlias("LUTTexture");
-                        addAlias("texture1");
-                    }
-                    else if (info.binding == 6) {
-                        addAlias("SSRTexture");
-                        addAlias("texture2");
-                    }
-                    else if (info.binding == 7) {
-                        addAlias("cloudsTexture");
-                        addAlias("texture3");
-                    }
-                    else if (info.binding == 8) {
-                        addAlias("texture4");
-                    }
-                    else if (info.binding == 9) {
-                        addAlias("texture5");
-                    }
-
-                    if (info.binding == 10) {
-                        addAlias("skybox");
-                    }
-                    else if (info.binding >= 11 && info.binding <= 15) {
-                        addAlias("cubeMap" + std::to_string(info.binding - 10));
-                    }
-                }
-
-                if (info.set == 3) {
-                    if (info.isCubemap) {
-                        if (info.binding <= 4) {
-                            addAlias("cubeMap" + std::to_string(info.binding + 1));
-                        }
-                        else if (info.binding == 5) {
-                            addAlias("skybox");
-                        }
-                    }
-                }
+            if (info.isBuffer && !info.isStorageBuffer && info.set == 0 &&
+                info.binding == 0) {
+                addAlias("uniforms");
+                addAlias("UBO");
             }
-            else if (info.isBuffer) {
-                if (!info.isStorageBuffer) {
-                    // UBO conventions for main forward shader.
-                    if (info.set == 0 && info.binding == 0) {
-                        // Vertex UBO instance name in main.vert.
-                        addAlias("uniforms");
-                        addAlias("UBO");
-                    }
-                    if (info.set == 1) {
+
+            if (applySetBindingAliases) {
+                if (info.isSampler) {
+                    if (info.set == 2) {
                         if (info.binding == 0) {
-                            // Fragment uniforms block has no instance name in GLSL;
-                            // engine binds it via "Uniforms".
-                            addAlias("Uniforms");
+                            addAlias("Texture");
+                            addAlias("gPosition");
                         }
                         else if (info.binding == 1) {
-                            addAlias("material");
-                            addAlias("Material");
+                            addAlias("BrightTexture");
+                            addAlias("gNormal");
                         }
                         else if (info.binding == 2) {
-                            addAlias("environment");
-                            addAlias("Environment");
+                            addAlias("DepthTexture");
+                            addAlias("gAlbedoSpec");
                         }
                         else if (info.binding == 3) {
-                            addAlias("ambientLight");
-                            addAlias("AmbientLight");
+                            addAlias("VolumetricLightTexture");
+                            addAlias("gMaterial");
+                        }
+                        else if (info.binding == 4) {
+                            addAlias("PositionTexture");
+                            addAlias("ssao");
+                        }
+                        else if (info.binding == 5) {
+                            addAlias("LUTTexture");
+                            addAlias("texture1");
+                        }
+                        else if (info.binding == 6) {
+                            addAlias("SSRTexture");
+                            addAlias("texture2");
+                        }
+                        else if (info.binding == 7) {
+                            addAlias("cloudsTexture");
+                            addAlias("texture3");
+                        }
+                        else if (info.binding == 8) {
+                            addAlias("texture4");
+                        }
+                        else if (info.binding == 9) {
+                            addAlias("texture5");
+                        }
+
+                        if (info.binding == 10) {
+                            addAlias("skybox");
+                        }
+                        else if (info.binding >= 11 && info.binding <= 15) {
+                            addAlias("cubeMap" + std::to_string(info.binding - 10));
+                        }
+                    }
+
+                    if (info.set == 3) {
+                        if (info.isCubemap) {
+                            if (info.binding <= 4) {
+                                addAlias("cubeMap" + std::to_string(info.binding + 1));
+                            }
+                            else if (info.binding == 5) {
+                                addAlias("skybox");
+                            }
                         }
                     }
                 }
-                else {
-                    // SSBO conventions for lighting/shadows.
-                    if (info.set == 3) {
-                        if (info.binding == 1) {
-                            addAlias("DirectionalLights");
-                        }
-                        else if (info.binding == 2) {
-                            addAlias("PointLights");
-                        }
-                        else if (info.binding == 3) {
-                            addAlias("SpotLights");
-                        }
-                        else if (info.binding == 4) {
-                            addAlias("AreaLights");
-                        }
-                        else if (info.binding == 5) {
-                            addAlias("ShadowParameters");
+                else if (info.isBuffer) {
+                    if (!info.isStorageBuffer) {
+                        if (info.set == 1) {
+                            if (info.binding == 0) {
+                                addAlias("Uniforms");
+                            }
+                            else if (info.binding == 1) {
+                                addAlias("material");
+                                addAlias("Material");
+                            }
+                            else if (info.binding == 2) {
+                                addAlias("environment");
+                                addAlias("Environment");
+                            }
+                            else if (info.binding == 3) {
+                                addAlias("ambientLight");
+                                addAlias("AmbientLight");
+                            }
                         }
                     }
+                    else {
+                        if (info.set == 3) {
+                            if (info.binding == 1) {
+                                addAlias("DirectionalLights");
+                            }
+                            else if (info.binding == 2) {
+                                addAlias("PointLights");
+                            }
+                            else if (info.binding == 3) {
+                                addAlias("SpotLights");
+                            }
+                            else if (info.binding == 4) {
+                                addAlias("AreaLights");
+                            }
+                            else if (info.binding == 5) {
+                                addAlias("ShadowParameters");
+                            }
+                        }
 
-                    if (info.set == 4) {
-                        if (info.binding == 0) addAlias("DirectionalLights");
-                        else if (info.binding == 1) addAlias("PointLights");
-                        else if (info.binding == 2) addAlias("SpotLights");
-                        else if (info.binding == 3) addAlias("AreaLights");
-                    }
+                        if (info.set == 4) {
+                            if (info.binding == 0) addAlias("DirectionalLights");
+                            else if (info.binding == 1) addAlias("PointLights");
+                            else if (info.binding == 2) addAlias("SpotLights");
+                            else if (info.binding == 3) addAlias("AreaLights");
+                        }
 
-                    if (info.set == 5) {
-                        if (info.binding == 0) addAlias("ShadowParams");
+                        if (info.set == 5) {
+                            if (info.binding == 0) addAlias("ShadowParams");
+                        }
                     }
                 }
             }
