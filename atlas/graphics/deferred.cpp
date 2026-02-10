@@ -169,6 +169,10 @@ void Window::deferredRendering(
     commandBuffer->endPass();
     this->gBuffer->unbind();
 
+    auto resolveDepth = opal::ResolveAction::createForDepth(
+        this->gBuffer->getFramebuffer(), target->getFramebuffer());
+    commandBuffer->performResolve(resolveDepth);
+
     this->renderSSAO(commandBuffer);
 
     auto targetRenderPass = opal::RenderPass::create();
@@ -178,7 +182,7 @@ void Window::deferredRendering(
     target->bind();
     target->getFramebuffer()->setViewport(0, 0, target->getWidth(),
                                           target->getHeight());
-    commandBuffer->clear(0.0f, 0.0f, 0.0f, 1.0f, 1.0f);
+    commandBuffer->clearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
     target->getFramebuffer()->setDrawBuffers(2);
 
@@ -236,29 +240,20 @@ void Window::deferredRendering(
 
     if (this->lightPassPipeline == nullptr) {
         this->lightPassPipeline = opal::Pipeline::create();
-    }
-    this->lightPassPipeline->setShaderProgram(this->lightProgram.shader);
-    this->lightPassPipeline->setCullMode(opal::CullMode::None);
-    this->lightPassPipeline->enableDepthTest(false);
-    this->lightPassPipeline->enableDepthWrite(false);
+        this->lightPassPipeline->setShaderProgram(this->lightProgram.shader);
+        this->lightPassPipeline->setCullMode(opal::CullMode::None);
+        this->lightPassPipeline->enableDepthTest(false);
+        this->lightPassPipeline->enableDepthWrite(false);
 
-#ifdef VULKAN
-    // In Vulkan, the deferred light pass uses a specialized Vertex Shader that only requires Position(0) and UV(1).
-    // Ensure the pipeline is aware of this to avoid "Attribute at Location X not found" errors if previous
-    // configurations leaked. We explicitly set the attributes here.
-    std::vector<opal::VertexAttribute> quadAttributes = {
-        positionAttr,
-        uvAttr
-    };
-    this->lightPassPipeline->setVertexAttributes(quadAttributes, quadBinding);
-#else
-    std::vector<opal::VertexAttribute> quadAttributes = {
-        positionAttr,
-        uvAttr
-    };
-    this->lightPassPipeline->setVertexAttributes(quadAttributes, quadBinding);
-#endif
-    this->lightPassPipeline->build();
+        // The deferred light pass only needs Position(0) and UV(1).
+        std::vector<opal::VertexAttribute> quadAttributes = {
+            positionAttr,
+            uvAttr
+        };
+        this->lightPassPipeline->setVertexAttributes(quadAttributes,
+                                                     quadBinding);
+        this->lightPassPipeline->build();
+    }
     this->lightPassPipeline->setViewport(0, 0, target->getWidth(), target->getHeight());
     this->lightPassPipeline->bind();
 
@@ -507,6 +502,7 @@ void Window::deferredRendering(
 #endif
 
     bool hasSkybox = scene->skybox != nullptr;
+    this->lightPassPipeline->setUniformBool("hasSkybox", hasSkybox);
     this->lightPassPipeline->setUniformBool("useIBL", false);
     if (hasSkybox) {
         this->lightPassPipeline->bindTextureCubemap("skybox", scene->skybox->cubemap.id,
@@ -526,24 +522,24 @@ void Window::deferredRendering(
         Window::mainWindow->currentScene->environment.rimLight.color.g,
         Window::mainWindow->currentScene->environment.rimLight.color.b);
 
-    quadState->bind();
     commandBuffer->bindPipeline(this->lightPassPipeline);
+    commandBuffer->bindDrawingState(quadState);
     commandBuffer->draw(6, 1, 0, 0);
-    quadState->unbind();
+    commandBuffer->unbindDrawingState();
 
-    updatePipelineStateField(this->useDepth, true);
-    updatePipelineStateField(this->depthCompareOp, opal::CompareOp::Less);
     updatePipelineStateField(this->writeDepth, true);
+    updatePipelineStateField(this->depthCompareOp, opal::CompareOp::LessEqual);
+    updatePipelineStateField(this->cullMode, opal::CullMode::Back);
     updatePipelineStateField(this->cullMode, opal::CullMode::Back);
 
-    for (auto &obj : this->firstRenderables) {
+    for (auto& obj : this->firstRenderables) {
         obj->setViewMatrix(this->camera->calculateViewMatrix());
         obj->setProjectionMatrix(calculateProjectionMatrix());
         obj->render(getDeltaTime(), commandBuffer,
                     shouldRefreshPipeline(obj));
     }
 
-    for (auto &obj : this->renderables) {
+    for (auto& obj : this->renderables) {
         if (obj->renderLateForward) {
             continue;
         }
@@ -555,7 +551,7 @@ void Window::deferredRendering(
         }
     }
 
-    for (auto &obj : this->lateForwardRenderables) {
+    for (auto& obj : this->lateForwardRenderables) {
         obj->setViewMatrix(this->camera->calculateViewMatrix());
         obj->setProjectionMatrix(calculateProjectionMatrix());
         obj->render(getDeltaTime(), commandBuffer,
@@ -626,10 +622,10 @@ void Window::deferredRendering(
 
         volumetricPipeline->setUniform2f("sunPos", sunUV.x, sunUV.y);
 
-        quadState->bind();
         commandBuffer->bindPipeline(volumetricPipeline);
+        commandBuffer->bindDrawingState(quadState);
         commandBuffer->draw(6, 1, 0, 0);
-        quadState->unbind();
+        commandBuffer->unbindDrawingState();
 
         commandBuffer->endPass();
     }
@@ -679,10 +675,10 @@ void Window::deferredRendering(
         ssrPipeline->setUniform3f("cameraPosition", camera->position.x,
                                   camera->position.y, camera->position.z);
 
-        quadState->bind();
         commandBuffer->bindPipeline(ssrPipeline);
+        commandBuffer->bindDrawingState(quadState);
         commandBuffer->draw(6, 1, 0, 0);
-        quadState->unbind();
+        commandBuffer->unbindDrawingState();
 
         commandBuffer->endPass();
     }
@@ -690,5 +686,4 @@ void Window::deferredRendering(
     target->volumetricLightTexture = volumetricBuffer->texture;
     target->ssrTexture = ssrFramebuffer->texture;
     target->gPosition = gBuffer->gPosition;
-
 }

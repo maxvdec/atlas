@@ -71,6 +71,14 @@ void Framebuffer::attachTexture(std::shared_ptr<Texture> texture,
         Attachment::Type::Color;
     attachments[static_cast<size_t>(attachmentIndex)].texture = texture;
 
+    if (texture != nullptr) {
+        if (width == 0 || height == 0 ||
+            width != texture->width || height != texture->height) {
+            width = texture->width;
+            height = texture->height;
+        }
+    }
+
     // Attachment image views changed; force VkFramebuffer recreation.
     vkFramebuffers.clear();
 #endif
@@ -104,6 +112,14 @@ void Framebuffer::addAttachment(const Attachment &attachment) {
     attachments.push_back(attachment);
 #elif defined(VULKAN)
     attachments.push_back(attachment);
+    if (attachment.texture != nullptr) {
+        if (width == 0 || height == 0 ||
+            width != attachment.texture->width ||
+            height != attachment.texture->height) {
+            width = attachment.texture->width;
+            height = attachment.texture->height;
+        }
+    }
 #endif
 }
 

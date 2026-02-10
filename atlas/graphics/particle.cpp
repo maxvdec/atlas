@@ -391,6 +391,7 @@ void ParticleEmitter::render(float dt,
         particlePipeline->bindTexture2D("particleTexture", texture.id, 0, id);
     }
 
+    commandBuffer->bindPipeline(particlePipeline);
     commandBuffer->bindDrawingState(vao);
     commandBuffer->drawIndexed(6, activeParticleCount, 0, 0, 0, id);
     commandBuffer->unbindDrawingState();

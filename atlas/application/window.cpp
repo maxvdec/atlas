@@ -408,6 +408,16 @@ void Window::run() {
             commandBuffer->endPass();
         }
 
+        // Run post-processing that needs its own render passes (e.g., bloom)
+        // before starting the default framebuffer pass. This avoids nested
+        // Vulkan render passes that would otherwise clobber the active pass.
+        for (auto &obj : this->preferenceRenderables) {
+            RenderTarget *target = dynamic_cast<RenderTarget *>(obj);
+            if (target != nullptr && target->brightTexture.id != 0) {
+                this->renderPhysicalBloom(target);
+            }
+        }
+
         // Render to the screen
         commandBuffer->beginPass(renderPass);
         int fbWidth, fbHeight;
@@ -451,10 +461,6 @@ void Window::run() {
 
         updatePipelineStateField(this->cullMode, opal::CullMode::None);
         for (auto &obj : this->preferenceRenderables) {
-            RenderTarget *target = dynamic_cast<RenderTarget *>(obj);
-            if (target != nullptr && target->brightTexture.id != 0) {
-                this->renderPhysicalBloom(target);
-            }
             obj->setViewMatrix(this->camera->calculateViewMatrix());
             obj->setProjectionMatrix(calculateProjectionMatrix());
             obj->render(getDeltaTime(), commandBuffer,
@@ -1397,16 +1403,59 @@ void Window::renderPingpong(RenderTarget *target) {
 void Window::useDeferredRendering() {
     atlas_log("Enabling deferred rendering");
     this->usesDeferred = true;
-    auto target = std::make_shared<RenderTarget>(
-        RenderTarget(*this, RenderTargetType::GBuffer));
-    this->gBuffer = target;
-    auto volumetricTarget = std::make_shared<RenderTarget>(
-        RenderTarget(*this, RenderTargetType::Scene));
-    this->volumetricBuffer = volumetricTarget;
-    auto ssrTarget = std::make_shared<RenderTarget>(
-        RenderTarget(*this, RenderTargetType::Scene));
-    this->ssrFramebuffer = ssrTarget;
+    if (this->gBuffer == nullptr) {
+        this->gBuffer = std::make_shared<RenderTarget>(
+            RenderTarget(*this, RenderTargetType::GBuffer));
+    }
+    if (this->volumetricBuffer == nullptr) {
+        this->volumetricBuffer = std::make_shared<RenderTarget>(
+            RenderTarget(*this, RenderTargetType::Scene));
+    }
+    if (this->ssrFramebuffer == nullptr) {
+        this->ssrFramebuffer = std::make_shared<RenderTarget>(
+            RenderTarget(*this, RenderTargetType::Scene));
+    }
     this->ssaoMapsDirty = true;
+
+    RenderTarget *displayTarget = nullptr;
+    for (auto *target : this->renderTargets) {
+        if (target == nullptr) {
+            continue;
+        }
+        if (target->object != nullptr) {
+            displayTarget = target;
+            break;
+        }
+    }
+
+    if (displayTarget == nullptr) {
+        for (auto *target : this->renderTargets) {
+            if (target == nullptr) {
+                continue;
+            }
+            if (target->type == RenderTargetType::Scene ||
+                target->type == RenderTargetType::Multisampled) {
+                displayTarget = target;
+                break;
+            }
+        }
+    }
+
+    if (displayTarget == nullptr) {
+        if (this->deferredSceneTarget == nullptr) {
+            this->deferredSceneTarget = std::make_shared<RenderTarget>(
+                RenderTarget(*this, RenderTargetType::Scene));
+        }
+        displayTarget = this->deferredSceneTarget.get();
+        if (std::find(this->renderTargets.begin(), this->renderTargets.end(),
+                      displayTarget) == this->renderTargets.end()) {
+            this->renderTargets.push_back(displayTarget);
+        }
+    }
+
+    if (displayTarget != nullptr) {
+        displayTarget->display(*this, -1.0f);
+    }
 }
 
 void Window::renderPhysicalBloom(RenderTarget *target) {

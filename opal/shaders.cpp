@@ -13,6 +13,12 @@
 #include <array>
 #include <cctype>
 #include <cstdint>
+#include <cstring>
+#include <cstdlib>
+#include <filesystem>
+#include <fstream>
+#include <chrono>
+#include <random>
 #include <glad/glad.h>
 #include <iostream>
 #include <memory>
@@ -23,6 +29,208 @@
 #include <vulkan/vulkan.hpp>
 #include <spirv_cross/spirv_cross.hpp>
 #include <spirv_cross/spirv_glsl.hpp>
+#endif
+
+#ifdef VULKAN
+namespace {
+    std::string shaderStageToString(opal::ShaderType type) {
+        switch (type) {
+        case opal::ShaderType::Vertex:
+            return "vert";
+        case opal::ShaderType::Fragment:
+            return "frag";
+        case opal::ShaderType::Geometry:
+            return "geom";
+        case opal::ShaderType::TessellationControl:
+            return "tesc";
+        case opal::ShaderType::TessellationEvaluation:
+            return "tese";
+        default:
+            return "vert";
+        }
+    }
+
+    bool isHexSource(const char* source) {
+        if (!source) {
+            return false;
+        }
+        bool hasHex = false;
+        for (const char* p = source; *p; ++p) {
+            unsigned char c = static_cast<unsigned char>(*p);
+            if (std::isspace(c)) {
+                continue;
+            }
+            if (std::isxdigit(c)) {
+                hasHex = true;
+                continue;
+            }
+            return false;
+        }
+        return hasHex;
+    }
+
+    std::vector<uint8_t> parseHexSource(const char* source) {
+        std::vector<uint8_t> bytecode;
+        if (!source) {
+            return bytecode;
+        }
+        int highNibble = -1;
+        for (const char* p = source; *p; ++p) {
+            unsigned char c = static_cast<unsigned char>(*p);
+            if (std::isspace(c)) {
+                continue;
+            }
+            int value = 0;
+            if (c >= '0' && c <= '9') {
+                value = c - '0';
+            } else if (c >= 'a' && c <= 'f') {
+                value = c - 'a' + 10;
+            } else if (c >= 'A' && c <= 'F') {
+                value = c - 'A' + 10;
+            } else {
+                throw std::runtime_error(
+                    "Invalid hex character in shader source");
+            }
+            if (highNibble < 0) {
+                highNibble = value;
+            } else {
+                uint8_t byte = static_cast<uint8_t>((highNibble << 4) | value);
+                bytecode.push_back(byte);
+                highNibble = -1;
+            }
+        }
+        if (highNibble >= 0) {
+            throw std::runtime_error(
+                "Odd number of hex characters in shader source");
+        }
+        return bytecode;
+    }
+
+    bool runCommand(const std::string& command) {
+        int result = std::system(command.c_str());
+        return result == 0;
+    }
+
+    std::vector<uint8_t> readBinaryFile(const std::filesystem::path& path) {
+        std::ifstream file(path, std::ios::binary);
+        if (!file.is_open()) {
+            return {};
+        }
+        return std::vector<uint8_t>(std::istreambuf_iterator<char>(file),
+                                    std::istreambuf_iterator<char>());
+    }
+
+    std::vector<uint8_t> compileGlslToSpirv(const char* source,
+                                            opal::ShaderType type) {
+        if (!source) {
+            throw std::runtime_error("Shader source is null");
+        }
+
+        const std::string stage = shaderStageToString(type);
+        const auto tempDir = std::filesystem::temp_directory_path();
+
+        std::random_device rd;
+        std::mt19937_64 gen(rd());
+        std::uniform_int_distribution<uint64_t> dist;
+        const auto stamp = std::chrono::high_resolution_clock::now()
+                               .time_since_epoch()
+                               .count();
+        const uint64_t rnd = dist(gen);
+        const std::string baseName =
+            "atlas_shader_" + std::to_string(stamp) + "_" +
+            std::to_string(rnd);
+
+        std::filesystem::path srcPath = tempDir / baseName;
+        srcPath += "." + stage;
+        std::filesystem::path spvPath = tempDir / baseName;
+        spvPath += ".spv";
+
+        {
+            std::ofstream out(srcPath, std::ios::binary);
+            if (!out.is_open()) {
+                throw std::runtime_error("Failed to create temporary shader file");
+            }
+            out.write(source, static_cast<std::streamsize>(std::strlen(source)));
+        }
+
+        const std::string quotedSrc = "\"" + srcPath.string() + "\"";
+        const std::string quotedSpv = "\"" + spvPath.string() + "\"";
+
+        bool compiled = false;
+        std::string glslangCmd =
+            "glslangValidator -V -o " + quotedSpv + " " + quotedSrc;
+        compiled = runCommand(glslangCmd);
+
+        if (!compiled) {
+            std::string glslcCmd =
+                "glslc -fshader-stage=" + stage + " -o " + quotedSpv + " " +
+                quotedSrc;
+            compiled = runCommand(glslcCmd);
+        }
+
+        std::vector<uint8_t> bytecode;
+        if (compiled) {
+            bytecode = readBinaryFile(spvPath);
+        }
+
+        std::error_code ec;
+        std::filesystem::remove(srcPath, ec);
+        std::filesystem::remove(spvPath, ec);
+
+        if (!compiled || bytecode.empty()) {
+            throw std::runtime_error(
+                "Failed to compile GLSL to SPIR-V (glslangValidator/glslc)");
+        }
+
+        return bytecode;
+    }
+
+    struct CombinedShaderSource {
+        std::string glsl;
+        std::string packed;
+    };
+
+    bool extractCombinedShaderSource(const char* source,
+                                     CombinedShaderSource& out) {
+        if (!source) {
+            return false;
+        }
+
+        const std::string_view markerGlsl = "//__ATLAS_GLSL__";
+        const std::string_view markerPacked = "//__ATLAS_PACKED__";
+        std::string_view input(source);
+
+        size_t glslPos = input.find(markerGlsl);
+        size_t packedPos = input.find(markerPacked);
+        if (glslPos == std::string_view::npos ||
+            packedPos == std::string_view::npos ||
+            packedPos <= glslPos) {
+            return false;
+        }
+
+        size_t glslStart = glslPos + markerGlsl.size();
+        while (glslStart < input.size() &&
+               (input[glslStart] == '\n' || input[glslStart] == '\r')) {
+            ++glslStart;
+        }
+
+        size_t glslEnd = packedPos;
+        while (glslEnd > glslStart &&
+               (input[glslEnd - 1] == '\n' || input[glslEnd - 1] == '\r')) {
+            --glslEnd;
+        }
+
+        size_t packedStart = packedPos + markerPacked.size();
+        while (packedStart < input.size() &&
+               (input[packedStart] == '\n' || input[packedStart] == '\r')) {
+            ++packedStart;
+        }
+
+        out.glsl.assign(input.substr(glslStart, glslEnd - glslStart));
+        out.packed.assign(input.substr(packedStart));
+        return true;
+    }
+} // namespace
 #endif
 
 namespace opal {
@@ -70,31 +278,41 @@ namespace opal {
         shader->type = type;
         shader->source = strdup(source);
 
-        std::vector<uint8_t> bytecode;
-        while (*source) {
-            uint8_t byte = 0;
-            for (int i = 0; i < 2; ++i) {
-                char c = *source++;
-                byte <<= 4;
-                if (c >= '0' && c <= '9') {
-                    byte |= (c - '0');
-                }
-                else if (c >= 'a' && c <= 'f') {
-                    byte |= (c - 'a' + 10);
-                }
-                else if (c >= 'A' && c <= 'F') {
-                    byte |= (c - 'A' + 10);
-                }
-                else {
-                    throw std::runtime_error(
-                        "Invalid hex character in shader source");
-                }
-            }
-            bytecode.push_back(byte);
-        }
         if (type == ShaderType::Geometry) {
             throw std::runtime_error(
                 "Geometry shaders are not supported in Vulkan");
+        }
+
+        std::vector<uint8_t> bytecode;
+        CombinedShaderSource combined{};
+        if (extractCombinedShaderSource(source, combined)) {
+            bool compiled = false;
+            try {
+                bytecode = compileGlslToSpirv(combined.glsl.c_str(), type);
+                compiled = true;
+            } catch (const std::exception& ex) {
+                std::cerr << "[VULKAN] GLSL compile failed, falling back to "
+                             "packed SPIR-V: "
+                          << ex.what() << std::endl;
+            }
+            if (!compiled) {
+                if (!combined.packed.empty()) {
+                    bytecode = parseHexSource(combined.packed.c_str());
+                } else {
+                    throw std::runtime_error(
+                        "GLSL compilation failed and no packed fallback "
+                        "provided");
+                }
+            }
+        } else if (isHexSource(source)) {
+            bytecode = parseHexSource(source);
+        } else {
+            bytecode = compileGlslToSpirv(source, type);
+        }
+
+        if (bytecode.empty() || (bytecode.size() % 4) != 0) {
+            throw std::runtime_error(
+                "Invalid SPIR-V bytecode size for Vulkan shader");
         }
 
         shader->spirvBytecode.resize(bytecode.size() / 4);

@@ -693,7 +693,16 @@ CoreRenderPass::create(std::shared_ptr<Pipeline> pipeline,
         brightAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
         brightAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
         brightAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        brightAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        VkImageLayout brightInitialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        if (Device::globalInstance != nullptr &&
+            !Device::globalInstance->swapChainBrightTextures.empty() &&
+            Device::globalInstance->swapChainBrightTextures[0] != nullptr &&
+            Device::globalInstance->swapChainBrightTextures[0]->currentLayout !=
+                VK_IMAGE_LAYOUT_UNDEFINED) {
+            brightInitialLayout =
+                Device::globalInstance->swapChainBrightTextures[0]->currentLayout;
+        }
+        brightAttachment.initialLayout = brightInitialLayout;
         // Bright buffer is commonly sampled by bloom/tonemapping passes.
         brightAttachment.finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         attachments.push_back(brightAttachment);
@@ -712,7 +721,15 @@ CoreRenderPass::create(std::shared_ptr<Pipeline> pipeline,
             depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
             depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
             depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-            depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            VkImageLayout depthInitialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            if (Device::globalInstance != nullptr &&
+                Device::globalInstance->swapChainDepthTexture != nullptr &&
+                Device::globalInstance->swapChainDepthTexture->currentLayout !=
+                    VK_IMAGE_LAYOUT_UNDEFINED) {
+                depthInitialLayout =
+                    Device::globalInstance->swapChainDepthTexture->currentLayout;
+            }
+            depthAttachment.initialLayout = depthInitialLayout;
             // Allow sampling after the pass.
             depthAttachment.finalLayout =
                 VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -736,7 +753,13 @@ CoreRenderPass::create(std::shared_ptr<Pipeline> pipeline,
             attachmentDesc.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
             attachmentDesc.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
 
-            attachmentDesc.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            VkImageLayout initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            if (attachment.texture != nullptr &&
+                attachment.texture->currentLayout !=
+                    VK_IMAGE_LAYOUT_UNDEFINED) {
+                initialLayout = attachment.texture->currentLayout;
+            }
+            attachmentDesc.initialLayout = initialLayout;
 
             if (attachment.type == opal::Attachment::Type::Color) {
                 attachmentDesc.finalLayout =
@@ -957,7 +980,9 @@ std::shared_ptr<CoreRenderPass> CoreRenderPass::createWithExistingRenderPass(
     coreRenderPass->opalFramebuffer = framebuffer;
     coreRenderPass->renderPass = existingRenderPass;
 
-    pipeline->buildPipelineLayout();
+    if (pipeline->pipelineLayout == VK_NULL_HANDLE) {
+        pipeline->buildPipelineLayout();
+    }
 
     size_t colorAttachmentCount = 0;
     if (framebuffer->isDefaultFramebuffer) {

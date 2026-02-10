@@ -560,6 +560,7 @@ private:
     std::shared_ptr<RenderTarget> volumetricBuffer;
     std::shared_ptr<RenderTarget> lightBuffer;
     std::shared_ptr<RenderTarget> ssrFramebuffer;
+    std::shared_ptr<RenderTarget> deferredSceneTarget;
     std::shared_ptr<BloomRenderTarget> bloomBuffer;
 
     bool waitForTracer = false;

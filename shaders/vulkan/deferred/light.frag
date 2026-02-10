@@ -127,6 +127,7 @@ layout(push_constant) uniform PushConstants {
 layout(set = 1, binding = 0) uniform UBO {
     vec3 cameraPosition;
     bool useIBL;
+    bool hasSkybox;
 };
 
 layout(set = 1, binding = 2) uniform AmbientLight {
@@ -404,8 +405,23 @@ float roughness
 }
 
 void main() {
+    vec3 gNormSample = texture(gNormal, TexCoord).xyz;
+    if (length(gNormSample) < 0.1) {
+        if (hasSkybox) {
+            // In background, we don't have a valid normal.
+            // We can't robustly calculate reflection without a ray.
+            // Since this is a fullscreen quad at Z=0, we can't easily get view ray unless we reconstruct it.
+            // But we can just output black or discard.
+            // If we discard, the clear color (black) remains.
+            discard;
+        } else {
+            discard;
+        }
+        return;
+    }
+
     vec3 FragPos = texture(gPosition, TexCoord).xyz;
-    vec3 N = normalize(texture(gNormal, TexCoord).xyz);
+    vec3 N = normalize(gNormSample);
     vec4 albedoAo = texture(gAlbedoSpec, TexCoord);
     vec3 albedo = albedoAo.rgb;
     vec4 matData = texture(gMaterial, TexCoord);
@@ -492,11 +508,11 @@ void main() {
     ambient = max(ambient, vec3(0.1) * albedo);
 
     vec3 iblContribution = vec3(0.0);
-    if (useIBL) {
+    if (useIBL && hasSkybox) {
         vec3 irradiance = sampleEnvironmentRadiance(N);
         vec3 diffuseIBL = irradiance * albedo;
 
-        vec3 reflection = reflect(-V, N);
+        vec3 reflection = reflect(-V, N);// -V is Incident. Correct.
         vec3 specularEnv = sampleEnvironmentRadiance(reflection);
 
         vec3 F = fresnelSchlick(max(dot(N, V), 0.0), F0);
@@ -511,9 +527,9 @@ void main() {
 
     vec3 finalColor = ambient + lighting + iblContribution;
 
-    if (!useIBL) {
+    if (!useIBL && hasSkybox) {
         vec3 I = normalize(FragPos - cameraPosition);
-        vec3 R = reflect(-I, N);
+        vec3 R = reflect(I, N);// Fixed: I is incident.
 
         vec3 F = fresnelSchlick(max(dot(N, -I), 0.0), F0);
         vec3 kS = F;

@@ -236,10 +236,10 @@ void Window::renderSSAO(std::shared_ptr<opal::CommandBuffer> commandBuffer) {
         ssaoPipeline->setUniform2f("noiseScale", screenSize.x / noiseSize.x,
                                    screenSize.y / noiseSize.y);
 #endif
-        ssaoState->bind();
         commandBuffer->bindPipeline(ssaoPipeline);
+        commandBuffer->bindDrawingState(ssaoState);
         commandBuffer->draw(6, 1, 0, 0);
-        ssaoState->unbind();
+        commandBuffer->unbindDrawingState();
         this->ssaoBuffer->unbind();
         commandBuffer->endPass();
     }
@@ -267,10 +267,10 @@ void Window::renderSSAO(std::shared_ptr<opal::CommandBuffer> commandBuffer) {
 
         ssaoBlurPipeline->bindTexture2D("inSSAO", this->ssaoBuffer->texture.id,
                                         0);
-        ssaoState->bind();
         commandBuffer->bindPipeline(ssaoBlurPipeline);
+        commandBuffer->bindDrawingState(ssaoState);
         commandBuffer->draw(6, 1, 0, 0);
-        ssaoState->unbind();
+        commandBuffer->unbindDrawingState();
         this->ssaoBlurBuffer->unbind();
         commandBuffer->endPass();
     }

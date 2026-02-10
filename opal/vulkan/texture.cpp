@@ -289,9 +289,10 @@ Texture::createVulkan(TextureType type, TextureFormat format, int width,
                       TextureWrapMode::Repeat);
 
     bool isDepthFormat = (aspectFlags & VK_IMAGE_ASPECT_DEPTH_BIT) != 0;
-    VkImageLayout targetLayout =
-        isDepthFormat ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
-                      : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    // Depth targets are sampled later (SSAO, shadows, DOF). Keep the initial
+    // layout consistent with the render-pass final layout to avoid stale
+    // layout mismatches across cached render passes.
+    VkImageLayout targetLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
     if (data != nullptr && width > 0 && height > 0) {
         size_t inputBytesPerPixel = 0;

@@ -1078,7 +1078,10 @@ class CommandBuffer {
 
   private:
 #ifdef VULKAN
-    static constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 3;
+    // Vulkan backend reuses offscreen render targets (gBuffer/scene/etc.)
+    // without per-frame copies. Keep frames-in-flight at 1 to avoid
+    // read/write hazards across frames and ensure correct results.
+    static constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 1;
     std::vector<VkCommandBuffer> commandBuffers;
     std::vector<VkSemaphore> imageAvailableSemaphores;
     std::vector<VkSemaphore> renderFinishedSemaphores;
