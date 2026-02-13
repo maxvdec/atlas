@@ -19,9 +19,36 @@ else()
     add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-option(BACKEND_OPENGL "Enable OpenGL backend" OFF)
-option(BACKEND_VULKAN "Enable Vulkan backend" OFF)
-option(BACKEND_METAL "Enable Metal backend" OFF)
+set(BACKEND "AUTO" CACHE STRING "Rendering backend: AUTO, VULKAN, METAL, OPENGL")
+set_property(CACHE BACKEND PROPERTY STRINGS AUTO VULKAN METAL OPENGL)
+
+string(TOUPPER "${BACKEND}" BACKEND)
+
+if(BACKEND STREQUAL "AUTO")
+    if(APPLE)
+        set(BACKEND "METAL")
+    else()
+        set(BACKEND "VULKAN")
+    endif()
+endif()
+
+set(BACKEND_OPENGL OFF)
+set(BACKEND_VULKAN OFF)
+set(BACKEND_METAL  OFF)
+
+if(BACKEND STREQUAL "OPENGL")
+    set(BACKEND_OPENGL ON)
+elseif(BACKEND STREQUAL "VULKAN")
+    set(BACKEND_VULKAN ON)
+elseif(BACKEND STREQUAL "METAL")
+    set(BACKEND_METAL ON)
+else()
+    message(FATAL_ERROR
+        "Invalid BACKEND='${BACKEND}'. Valid values are: AUTO, VULKAN, METAL, OPENGL"
+    )
+endif()
+
+message(STATUS "Selected backend: ${BACKEND}")
 option(BEZEL_NATIVE "Enable Bezel Native" OFF)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -57,6 +84,7 @@ elseif(BACKEND_VULKAN)
     set(SHADER_INPUT_DIR "${CMAKE_SOURCE_DIR}/shaders/vulkan")
 elseif(BACKEND_METAL)
     message(STATUS "Configuring shaders for Metal backend")
+    set(SHADER_INPUT_DIR "${CMAKE_SOURCE_DIR}/shaders/metal")
 endif()
 set(SHADER_OUTPUT_FILE "${CMAKE_SOURCE_DIR}/include/atlas/core/default_shaders.h")
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
@@ -68,6 +96,7 @@ file(GLOB_RECURSE SHADER_SOURCES
     ${SHADER_INPUT_DIR}/*.geom
     ${SHADER_INPUT_DIR}/*.tesc
     ${SHADER_INPUT_DIR}/*.tese
+    ${SHADER_INPUT_DIR}/*.metal
 )
 
 if(BACKEND_OPENGL)
@@ -79,7 +108,7 @@ if(BACKEND_OPENGL)
         DEPENDS ${SHADER_SOURCES}
         COMMENT "Packing shaders into shaders.h"
     )
-elseif(BACKEND_VULKAN OR BACKEND_METAL)
+elseif(BACKEND_VULKAN)
     message(STATUS "Packing shaders with SPIR-V compilation")
     add_custom_command(
         OUTPUT ${SHADER_OUTPUT_FILE}
@@ -88,7 +117,15 @@ elseif(BACKEND_VULKAN OR BACKEND_METAL)
         DEPENDS ${SHADER_SOURCES}
         COMMENT "Packing shaders into shaders.h"
     )
-
+elseif(BACKEND_METAL)
+    message(STATUS "Packing shaders with SPIR-V compilation")
+    add_custom_command(
+        OUTPUT ${SHADER_OUTPUT_FILE}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/include/atlas/core
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/pack_shaders.py ${SHADER_INPUT_DIR} ${SHADER_OUTPUT_FILE} true
+        DEPENDS ${SHADER_SOURCES}
+        COMMENT "Packing shaders into shaders.h"
+    )
 endif()
 
 find_program(TYPST_EXECUTABLE typst)
@@ -156,6 +193,7 @@ elseif(BACKEND_VULKAN)
     find_package(spirv_cross_glsl REQUIRED)
     find_package(spirv_cross_reflect REQUIRED)
 elseif(BACKEND_METAL)
+    message("Linking Metal to Source")
 endif()
 
 find_package(glm REQUIRED)
