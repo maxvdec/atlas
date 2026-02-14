@@ -192,7 +192,6 @@ class MainScene : public Scene {
 
         return Cubemap::fromResourceGroup(group);
     }
-
     void initialize(Window &window) override {
         Environment env;
         env.fog.intensity = 0.0;
@@ -206,59 +205,53 @@ class MainScene : public Scene {
         camera.farClip = 1000.f;
         window.setCamera(&camera);
 
-        ground = createBox({15.0, 0.1, 15.0});
-        ground.move({0.0f, -0.1f, 0.0f});
-        ground.material.albedo = Color(0.3f, 0.8f, 0.3f);
-        ground.addComponent(Rigidbody());
-        ground.rigidbody->addBoxCollider({15.0f, 0.1f, 15.0f});
-        ground.rigidbody->setMotionType(MotionType::Static);
-        ground.rigidbody->setFriction(0.1);
-        ground.rigidbody->addTag("Ground");
+        ground = createBox({5.0f, 0.1f, 5.0f}, Color(0.3f, 0.8f, 0.3f));
+        ground.attachTexture(
+            Texture::fromResource(Workspace::get().createResource(
+                "ground.jpg", "GroundTexture", ResourceType::Image)));
+        ground.setPosition({0.0f, -0.1f, 0.0f});
         window.addObject(&ground);
 
-        // Anchor body (static)
-        ball2 = createSphere(0.5f);
-        ball2.move({0.0f, 3.0f, 0.0f});
-        ball2.addComponent(Rigidbody());
-        ball2.rigidbody->addSphereCollider(0.5f);
-        ball2.rigidbody->setMotionType(MotionType::Static);
-        ball2.material.albedo = Color(0.8f, 0.3f, 0.3f, 0.5f);
-        window.addObject(&ball2);
+        areaLight.position = {0.0f, 2.0f, 0.0f};
+        areaLight.rotate({0.0f, 90.0f, 0.0f});
+        areaLight.castsBothSides = true;
+        this->addAreaLight(&areaLight);
+        areaLight.createDebugObject();
+        areaLight.addDebugObject(window);
 
-        // Hinged body (dynamic)
-        ball = createDebugSphere(0.5);
-        ball.move({0.0f, 2.0f, 1.0f});
-        ball.addComponent(Rigidbody());
-        ball.rigidbody->addSphereCollider(0.5);
-        ball.rigidbody->setMotionType(MotionType::Dynamic);
-        ball.rigidbody->setMass(1.0f);
-        ball.rigidbody->setFriction(0.1);
-        ball.rigidbody->setRestitution(0.8f);
+        Resource fontResource = Workspace::get().createResource(
+            "arial.ttf", "Arial", ResourceType::Font);
 
-        HingeJoint hinge;
-        hinge.parent = &ball2;
-        hinge.child = &ball;
-        hinge.space = Space::Global;
-        hinge.anchor = ball2.getPosition();
-        hinge.axis1 = Normal3d::right();
-        hinge.axis2 = Normal3d::right();
-        hinge.limits.enabled = true;
-        hinge.limits.minAngle = -45.0f;
-        hinge.limits.maxAngle = 45.0f;
-        ball.addComponent(hinge);
+        fpsText = Text("FPS: 0", Font::fromResource("Arial", fontResource, 24),
+                       {25.0, 25.0}, Color::white());
 
-        ball.addComponent(BallBehavior());
+        fpsText.addTraitComponent<Text>(FPSTextUpdater());
+        window.addUIObject(&fpsText);
+
+        ball = createDebugSphere(0.5f, 76, 76);
+        ball.material.metallic = 1.0f;
+        ball.material.roughness = 0.0f;
+        ball.move({0.f, 1.0f, 1.0f});
         window.addObject(&ball);
 
-        window.useDeferredRendering();
+        ball2 = createDebugSphere(0.5f, 76, 76);
+        ball2.move({0.f, 1.0f, -1.0f});
+        window.addObject(&ball2);
+
+        light = DirectionalLight({1.0f, -0.3f, 0.5f}, Color::white());
+
+        frameBuffer = RenderTarget(window);
+        window.addRenderTarget(&frameBuffer);
+        frameBuffer.display(window);
+
+        window.usesDeferred = false;
         atmosphere.enable();
         atmosphere.secondsPerHour = 4.f;
-        atmosphere.setTime(12);
+        atmosphere.setTime(12.0);
         atmosphere.cycle = false;
         atmosphere.useGlobalLight();
+        atmosphere.wind = {0.1f, 0.0f, 0.0f};
         atmosphere.castShadowsFromSunlight(4096);
-
-        this->setAutomaticAmbient(true);
     }
 };
 

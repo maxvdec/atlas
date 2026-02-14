@@ -560,7 +560,11 @@ void rebuildTextureSampler(Texture *texture, MTL::Device *device) {
         }
     }
 
+    if (state.sampler != nullptr) {
+        state.sampler->release();
+    }
     state.sampler = device->newSamplerState(descriptor);
+    descriptor->release();
 }
 
 bool parseProgramLayouts(const std::string &vertexSource,

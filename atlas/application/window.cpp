@@ -44,6 +44,9 @@ Window::Window(WindowConfiguration config)
 #ifdef VULKAN
     auto context = opal::Context::create({.useOpenGL = false});
     atlas_log("Using Vulkan backend");
+#elif defined(METAL)
+    auto context = opal::Context::create({.useOpenGL = false});
+    atlas_log("Using Metal backend");
 #else
     auto context =
         opal::Context::create({.useOpenGL = true,
@@ -208,8 +211,14 @@ Window::Window(WindowConfiguration config)
               << info.opalVersion << " \033[0m" << std::endl;
 #ifdef OPENGL
     std::cout << "\033[1m\033[32mUsing OpenGL Backend\033[0m" << std::endl;
-#else
+#elif defined(VULKAN)
     std::cout << "\033[1m\033[32mUsing Vulkan Backend\033[0m" << std::endl;
+#elif defined(METAL)
+    std::cout << "\033[1m\033[32mUsing Metal Backend\033[0m" << std::endl;
+#else
+    std::cout << "\033[1m\033[32mUsing Unknown Backend\033[0m" << std::endl;
+#endif
+#if defined(VULKAN) || defined(METAL)
     std::cout << "\033[1m\033[35m---------------\033[0m" << std::endl;
     std::cout << "\033[1m\033[35mUsing GPU: " << info.deviceName << "\033[0m"
               << std::endl;
@@ -438,9 +447,8 @@ void Window::run() {
                 obj->render(getDeltaTime(), commandBuffer,
                             shouldRefreshPipeline(obj));
             }
-            target->resolve();
-
             commandBuffer->endPass();
+            target->resolve();
         }
 
         // Render to the screen
@@ -669,8 +677,8 @@ glm::mat4 Window::calculateProjectionMatrix() {
                                 camera->nearClip, camera->farClip);
     }
 
-    // For Vulkan, flip Y in projection to match GL-style coordinates
-#ifdef VULKAN
+    // For Vulkan/Metal, flip Y in projection to match GL-style coordinates
+#if defined(VULKAN) || defined(METAL)
     projection[1][1] *= -1.0f;
 #endif
     return projection;

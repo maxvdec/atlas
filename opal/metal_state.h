@@ -140,6 +140,7 @@ struct FramebufferState {
 };
 
 struct CommandBufferState {
+    NS::AutoreleasePool *autoreleasePool = nullptr;
     MTL::CommandBuffer *commandBuffer = nullptr;
     MTL::RenderCommandEncoder *encoder = nullptr;
     MTL::RenderPassDescriptor *passDescriptor = nullptr;

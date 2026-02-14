@@ -10,6 +10,7 @@
 #include "atlas/tracer/data.h"
 #include "opal/opal.h"
 #include <algorithm>
+#include <cstdint>
 #include <cstring>
 #include <memory>
 #include <sys/types.h>
@@ -112,6 +113,203 @@ inline float calculateTextureSizeMb(TextureFormat format, int width, int height,
     return totalBytes / (1024.0f * 1024.0f);
 }
 
+#ifdef METAL
+struct MetalUploadBuffer {
+    std::vector<uint8_t> converted;
+    const void *bytes = nullptr;
+    NS::UInteger bytesPerRow = 0;
+    NS::UInteger bytesPerImage = 0;
+};
+
+inline size_t metalDataChannels(TextureDataFormat format) {
+    switch (format) {
+    case TextureDataFormat::Rgba:
+        return 4;
+    case TextureDataFormat::Rgb:
+        return 3;
+    case TextureDataFormat::Red:
+        return 1;
+    case TextureDataFormat::DepthComponent:
+        return 1;
+    default:
+        return 4;
+    }
+}
+
+inline size_t metalDestinationChannels(TextureFormat format) {
+    switch (format) {
+    case TextureFormat::Red8:
+    case TextureFormat::Red16F:
+    case TextureFormat::DepthComponent24:
+    case TextureFormat::Depth32F:
+        return 1;
+    case TextureFormat::Depth24Stencil8:
+        return 2;
+    default:
+        return 4;
+    }
+}
+
+inline size_t metalSourceBytesPerChannel(TextureFormat textureFormat,
+                                         TextureDataFormat dataFormat) {
+    if (dataFormat == TextureDataFormat::DepthComponent) {
+        return 4;
+    }
+    switch (textureFormat) {
+    case TextureFormat::Rgba16F:
+    case TextureFormat::Rgb16F:
+    case TextureFormat::Red16F:
+        return 4;
+    default:
+        return 1;
+    }
+}
+
+inline size_t metalDestinationBytesPerChannel(TextureFormat textureFormat) {
+    switch (textureFormat) {
+    case TextureFormat::Rgba16F:
+    case TextureFormat::Rgb16F:
+    case TextureFormat::Red16F:
+        return 2;
+    case TextureFormat::DepthComponent24:
+    case TextureFormat::Depth32F:
+        return 4;
+    default:
+        return 1;
+    }
+}
+
+inline uint16_t metalFloatToHalf(float value) {
+    uint32_t bits = 0;
+    std::memcpy(&bits, &value, sizeof(bits));
+
+    uint32_t sign = (bits >> 16) & 0x8000u;
+    uint32_t mantissa = bits & 0x007fffffu;
+    int32_t exponent = static_cast<int32_t>((bits >> 23) & 0xffu) - 127 + 15;
+
+    if (exponent <= 0) {
+        if (exponent < -10) {
+            return static_cast<uint16_t>(sign);
+        }
+        mantissa = (mantissa | 0x00800000u) >> (1 - exponent);
+        if ((mantissa & 0x00001000u) != 0u) {
+            mantissa += 0x00002000u;
+        }
+        return static_cast<uint16_t>(sign | (mantissa >> 13));
+    }
+
+    if (exponent >= 31) {
+        if (mantissa == 0u) {
+            return static_cast<uint16_t>(sign | 0x7c00u);
+        }
+        mantissa >>= 13;
+        return static_cast<uint16_t>(sign | 0x7c00u | mantissa |
+                                     (mantissa == 0u));
+    }
+
+    if ((mantissa & 0x00001000u) != 0u) {
+        mantissa += 0x00002000u;
+        if ((mantissa & 0x00800000u) != 0u) {
+            mantissa = 0u;
+            exponent += 1;
+            if (exponent >= 31) {
+                return static_cast<uint16_t>(sign | 0x7c00u);
+            }
+        }
+    }
+
+    return static_cast<uint16_t>(sign | (static_cast<uint32_t>(exponent) << 10) |
+                                 (mantissa >> 13));
+}
+
+inline float metalReadChannel(const uint8_t *src, size_t bytesPerChannel) {
+    if (bytesPerChannel == 1) {
+        return static_cast<float>(src[0]) / 255.0f;
+    }
+    if (bytesPerChannel == 4) {
+        float value = 0.0f;
+        std::memcpy(&value, src, sizeof(float));
+        return value;
+    }
+    return 0.0f;
+}
+
+inline void metalWriteChannel(uint8_t *dst, size_t bytesPerChannel, float value) {
+    if (bytesPerChannel == 1) {
+        float clamped = std::clamp(value, 0.0f, 1.0f);
+        dst[0] = static_cast<uint8_t>(clamped * 255.0f + 0.5f);
+        return;
+    }
+    if (bytesPerChannel == 2) {
+        uint16_t half = metalFloatToHalf(value);
+        std::memcpy(dst, &half, sizeof(uint16_t));
+        return;
+    }
+    if (bytesPerChannel == 4) {
+        std::memcpy(dst, &value, sizeof(float));
+    }
+}
+
+MetalUploadBuffer prepareMetalUpload(const void *data, int width, int height,
+                                     int depth, TextureFormat textureFormat,
+                                     TextureDataFormat dataFormat) {
+    MetalUploadBuffer upload{};
+    if (data == nullptr || width <= 0 || height <= 0 || depth <= 0) {
+        return upload;
+    }
+
+    size_t srcChannels = metalDataChannels(dataFormat);
+    size_t dstChannels = metalDestinationChannels(textureFormat);
+    size_t srcBytesPerChannel =
+        metalSourceBytesPerChannel(textureFormat, dataFormat);
+    size_t dstBytesPerChannel = metalDestinationBytesPerChannel(textureFormat);
+    size_t texelCount =
+        static_cast<size_t>(width) * static_cast<size_t>(height) *
+        static_cast<size_t>(depth);
+
+    size_t srcBytesPerTexel = srcChannels * srcBytesPerChannel;
+    size_t dstBytesPerTexel = dstChannels * dstBytesPerChannel;
+    size_t srcRowBytes = static_cast<size_t>(width) * srcBytesPerTexel;
+    size_t dstRowBytes = static_cast<size_t>(width) * dstBytesPerTexel;
+
+    if (srcChannels == dstChannels && srcBytesPerChannel == dstBytesPerChannel) {
+        upload.bytes = data;
+        upload.bytesPerRow = static_cast<NS::UInteger>(srcRowBytes);
+        upload.bytesPerImage = static_cast<NS::UInteger>(
+            srcRowBytes * static_cast<size_t>(height));
+        return upload;
+    }
+
+    upload.converted.resize(texelCount * dstBytesPerTexel);
+    const uint8_t *srcBytes = static_cast<const uint8_t *>(data);
+    uint8_t *dstBytes = upload.converted.data();
+
+    for (size_t texel = 0; texel < texelCount; ++texel) {
+        const uint8_t *srcTexel = srcBytes + texel * srcBytesPerTexel;
+        uint8_t *dstTexel = dstBytes + texel * dstBytesPerTexel;
+
+        for (size_t channel = 0; channel < dstChannels; ++channel) {
+            float value = 0.0f;
+            if (channel < srcChannels) {
+                value =
+                    metalReadChannel(srcTexel + channel * srcBytesPerChannel,
+                                     srcBytesPerChannel);
+            } else if (channel == 3) {
+                value = 1.0f;
+            }
+            metalWriteChannel(dstTexel + channel * dstBytesPerChannel,
+                              dstBytesPerChannel, value);
+        }
+    }
+
+    upload.bytes = upload.converted.data();
+    upload.bytesPerRow = static_cast<NS::UInteger>(dstRowBytes);
+    upload.bytesPerImage = static_cast<NS::UInteger>(
+        dstRowBytes * static_cast<size_t>(height));
+    return upload;
+}
+#endif
+
 } // namespace
 
 std::shared_ptr<Texture> Texture::create(TextureType type, TextureFormat format,
@@ -213,7 +411,7 @@ std::shared_ptr<Texture> Texture::create(TextureType type, TextureFormat format,
 
     if (type == TextureType::TextureCubeMap) {
         descriptor->setTextureType(MTL::TextureTypeCube);
-        descriptor->setArrayLength(6);
+        descriptor->setArrayLength(1);
     } else if (type == TextureType::Texture2DArray) {
         descriptor->setTextureType(MTL::TextureType2DArray);
         descriptor->setArrayLength(1);
@@ -225,6 +423,7 @@ std::shared_ptr<Texture> Texture::create(TextureType type, TextureFormat format,
     }
 
     state.texture = deviceState.device->newTexture(descriptor);
+    descriptor->release();
     if (state.texture == nullptr) {
         throw std::runtime_error("Failed to create Metal texture");
     }
@@ -387,20 +586,17 @@ void Texture::updateFace(int faceIndex, const void *data, int width, int height,
         return;
     }
 
-    size_t bytesPerPixel = 4;
-    if (dataFormat == TextureDataFormat::Rgb) {
-        bytesPerPixel = 3;
-    } else if (dataFormat == TextureDataFormat::Red) {
-        bytesPerPixel = 1;
+    MetalUploadBuffer upload = prepareMetalUpload(data, width, height, 1, format,
+                                                  dataFormat);
+    if (upload.bytes == nullptr || upload.bytesPerRow == 0) {
+        return;
     }
 
     MTL::Region region = MTL::Region::Make2D(
         0, 0, static_cast<NS::UInteger>(width), static_cast<NS::UInteger>(height));
-    NS::UInteger bytesPerRow =
-        static_cast<NS::UInteger>(width * static_cast<int>(bytesPerPixel));
-    NS::UInteger bytesPerImage = bytesPerRow * static_cast<NS::UInteger>(height);
     state.texture->replaceRegion(region, 0, static_cast<NS::UInteger>(faceIndex),
-                                 data, bytesPerRow, bytesPerImage);
+                                 upload.bytes, upload.bytesPerRow,
+                                 upload.bytesPerImage);
 #endif
 
     ResourceEventInfo info;
@@ -432,20 +628,18 @@ void Texture::updateData3D(const void *data, int width, int height, int depth,
         return;
     }
 
-    size_t bytesPerPixel = 4;
-    if (dataFormat == TextureDataFormat::Rgb) {
-        bytesPerPixel = 3;
-    } else if (dataFormat == TextureDataFormat::Red) {
-        bytesPerPixel = 1;
+    MetalUploadBuffer upload =
+        prepareMetalUpload(data, width, height, depth, format, dataFormat);
+    if (upload.bytes == nullptr || upload.bytesPerRow == 0 ||
+        upload.bytesPerImage == 0) {
+        return;
     }
 
     MTL::Region region = MTL::Region::Make3D(
         0, 0, 0, static_cast<NS::UInteger>(width),
         static_cast<NS::UInteger>(height), static_cast<NS::UInteger>(depth));
-    NS::UInteger bytesPerRow =
-        static_cast<NS::UInteger>(width * static_cast<int>(bytesPerPixel));
-    NS::UInteger bytesPerImage = bytesPerRow * static_cast<NS::UInteger>(height);
-    state.texture->replaceRegion(region, 0, 0, data, bytesPerRow, bytesPerImage);
+    state.texture->replaceRegion(region, 0, 0, upload.bytes, upload.bytesPerRow,
+                                 upload.bytesPerImage);
     state.depth = depth;
 #endif
 }
@@ -481,18 +675,15 @@ void Texture::updateData(const void *data, int width, int height,
         return;
     }
 
-    size_t bytesPerPixel = 4;
-    if (dataFormat == TextureDataFormat::Rgb) {
-        bytesPerPixel = 3;
-    } else if (dataFormat == TextureDataFormat::Red) {
-        bytesPerPixel = 1;
+    MetalUploadBuffer upload =
+        prepareMetalUpload(data, width, height, 1, format, dataFormat);
+    if (upload.bytes == nullptr || upload.bytesPerRow == 0) {
+        return;
     }
 
     MTL::Region region = MTL::Region::Make2D(
         0, 0, static_cast<NS::UInteger>(width), static_cast<NS::UInteger>(height));
-    NS::UInteger bytesPerRow =
-        static_cast<NS::UInteger>(width * static_cast<int>(bytesPerPixel));
-    state.texture->replaceRegion(region, 0, data, bytesPerRow);
+    state.texture->replaceRegion(region, 0, upload.bytes, upload.bytesPerRow);
     this->width = width;
     this->height = height;
     state.width = width;
@@ -778,10 +969,11 @@ void Pipeline::bindTexture(const std::string &name,
     vkUpdateDescriptorSets(Device::globalDevice, 1, &write, 0, nullptr);
 #elif defined(METAL)
     (void)name;
+    auto &state = metal::pipelineState(this);
     if (texture == nullptr) {
+        state.texturesByUnit.erase(unit);
         return;
     }
-    auto &state = metal::pipelineState(this);
     state.texturesByUnit[unit] = texture;
 #endif
 
@@ -996,6 +1188,7 @@ std::shared_ptr<Texture> Texture::create3D(TextureFormat format, int width,
     descriptor->setStorageMode(MTL::StorageModeShared);
 
     state.texture = deviceState.device->newTexture(descriptor);
+    descriptor->release();
     if (state.texture == nullptr) {
         throw std::runtime_error("Failed to create Metal 3D texture");
     }

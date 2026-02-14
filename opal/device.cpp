@@ -201,9 +201,10 @@ Device::acquire([[maybe_unused]] std::shared_ptr<Context> context) {
 #elif defined(METAL)
     auto device = std::make_shared<Device>();
     Device::globalInstance = device.get();
+    device->context = context;
 
     auto &deviceState = metal::deviceState(device.get());
-    deviceState.context = context.get();
+    deviceState.context = device->context.get();
     deviceState.device = MTL::CreateSystemDefaultDevice();
     if (deviceState.device == nullptr) {
         throw std::runtime_error("Failed to create default Metal device");

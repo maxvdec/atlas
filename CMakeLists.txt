@@ -74,6 +74,7 @@ elseif(BACKEND_VULKAN)
 elseif(BACKEND_METAL)
     message(STATUS "Building using Metal backend")
     add_definitions(-DMETAL)
+    add_definitions(-DGLM_FORCE_DEPTH_ZERO_TO_ONE)
 endif()
 
 if (BACKEND_OPENGL)

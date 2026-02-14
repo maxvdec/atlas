@@ -144,6 +144,10 @@ class Device {
     long frameCount = 0;
 
     static Device *globalInstance;
+#if defined(VULKAN) || defined(METAL)
+    std::shared_ptr<Context> context = nullptr;
+#endif
+
 #ifdef VULKAN
     static VkDevice globalDevice;
 
@@ -211,7 +215,6 @@ class Device {
     uint32_t findMemoryType(uint32_t typeFilter,
                             VkMemoryPropertyFlags properties);
 
-    std::shared_ptr<Context> context = nullptr;
 #endif
 };
 

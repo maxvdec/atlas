@@ -195,8 +195,14 @@ VertexShader VertexShader::fromSource(const char *source) {
 
 void VertexShader::compile() {
     if (shaderId != 0) {
-        atlas_warning("Vertex shader already compiled");
-        throw std::runtime_error("Vertex shader already compiled");
+        if (shader != nullptr) {
+            return;
+        }
+        shaderId = 0;
+    }
+
+    if (source == nullptr) {
+        throw std::runtime_error("Vertex shader source is null");
     }
 
     shader = opal::Shader::createFromSource(source, opal::ShaderType::Vertex);
@@ -293,7 +299,7 @@ FragmentShader FragmentShader::fromDefaultShader(AtlasFragmentShader shader) {
     case AtlasFragmentShader::PointLightShadowNoGeom: {
 #ifdef OPENGL
         fragmentShader = FragmentShader::fromSource(EMPTY_FRAG);
-#elif defined(VULKAN)
+#elif defined(VULKAN) || defined(METAL)
         fragmentShader = FragmentShader::fromSource(POINT_DEPTH_FRAG);
 #endif
         fragmentShader.fromDefaultShaderType = shader;
@@ -375,8 +381,14 @@ FragmentShader FragmentShader::fromSource(const char *source) {
 
 void FragmentShader::compile() {
     if (shaderId != 0) {
-        atlas_warning("Fragment shader already compiled");
-        throw std::runtime_error("Fragment shader already compiled");
+        if (shader != nullptr) {
+            return;
+        }
+        shaderId = 0;
+    }
+
+    if (source == nullptr) {
+        throw std::runtime_error("Fragment shader source is null");
     }
 
     shader = opal::Shader::createFromSource(source, opal::ShaderType::Fragment);
@@ -415,8 +427,14 @@ GeometryShader GeometryShader::fromSource(const char *source) {
 
 void GeometryShader::compile() {
     if (shaderId != 0) {
-        atlas_warning("Geometry shader already compiled");
-        throw std::runtime_error("Geometry shader already compiled");
+        if (shader != nullptr) {
+            return;
+        }
+        shaderId = 0;
+    }
+
+    if (source == nullptr) {
+        throw std::runtime_error("Geometry shader source is null");
     }
 
     shader = opal::Shader::createFromSource(source, opal::ShaderType::Geometry);
@@ -462,7 +480,18 @@ TessellationShader TessellationShader::fromSource(const char *source,
 
 void TessellationShader::compile() {
     if (shaderId != 0) {
-        throw std::runtime_error("Tessellation shader already compiled");
+        if (shader != nullptr) {
+            return;
+        }
+        shaderId = 0;
+    }
+
+    if (source == nullptr) {
+        throw std::runtime_error("Tessellation shader source is null");
+    }
+
+    if (shaderId != 0) {
+        return;
     }
 
     opal::ShaderType shaderType;
@@ -496,18 +525,28 @@ void TessellationShader::compile() {
 
 void ShaderProgram::compile() {
     if (programId != 0) {
-        atlas_warning("Shader program already compiled");
-        throw std::runtime_error("Shader program already compiled");
+        if (shader != nullptr) {
+            return;
+        }
+        programId = 0;
     }
 
     if (vertexShader.shaderId == 0) {
         atlas_error("Vertex shader not compiled");
         throw std::runtime_error("Vertex shader not compiled");
     }
+    if (vertexShader.shader == nullptr) {
+        atlas_error("Vertex shader object is null");
+        throw std::runtime_error("Vertex shader object is null");
+    }
 
     if (fragmentShader.shaderId == 0) {
         atlas_error("Fragment shader not compiled");
         throw std::runtime_error("Fragment shader not compiled");
+    }
+    if (fragmentShader.shader == nullptr) {
+        atlas_error("Fragment shader object is null");
+        throw std::runtime_error("Fragment shader object is null");
     }
 
     if (fragmentShader.fromDefaultShaderType.has_value() &&
@@ -529,11 +568,11 @@ void ShaderProgram::compile() {
 
     this->shader->attachShader(vertexShader.shader);
     this->shader->attachShader(fragmentShader.shader);
-    if (geometryShader.shaderId != 0) {
+    if (geometryShader.shaderId != 0 && geometryShader.shader != nullptr) {
         this->shader->attachShader(geometryShader.shader);
     }
     for (const auto &tessShader : tessellationShaders) {
-        if (tessShader.shaderId != 0) {
+        if (tessShader.shaderId != 0 && tessShader.shader != nullptr) {
             this->shader->attachShader(tessShader.shader);
         }
     }

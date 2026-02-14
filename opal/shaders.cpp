@@ -148,6 +148,7 @@ void Shader::compile() {
         NS::String::string(source, NS::UTF8StringEncoding);
     shaderState.library =
         deviceState.device->newLibrary(sourceString, compileOptions, &error);
+    compileOptions->release();
     if (shaderState.library == nullptr) {
         std::string message = "Metal shader compilation failed";
         if (error != nullptr && error->localizedDescription() != nullptr) {
@@ -228,6 +229,9 @@ std::shared_ptr<ShaderProgram> ShaderProgram::create() {
 }
 
 void ShaderProgram::attachShader(std::shared_ptr<Shader> shader, int callerId) {
+    if (shader == nullptr) {
+        throw std::runtime_error("Cannot attach null shader");
+    }
 #ifdef OPENGL
     glAttachShader(programID, shader->shaderID);
     attachedShaders.push_back(shader);
@@ -255,7 +259,9 @@ void ShaderProgram::attachShader(std::shared_ptr<Shader> shader, int callerId) {
     info.callerObject = std::to_string(callerId);
     info.frameNumber = Device::globalInstance ? Device::globalInstance->frameCount
                                               : 0;
-    info.sizeMb = static_cast<float>(strlen(shader->source)) / (1024.0f * 1024.0f);
+    info.sizeMb =
+        static_cast<float>(shader->source ? strlen(shader->source) : 0) /
+        (1024.0f * 1024.0f);
     info.send();
 
 #else

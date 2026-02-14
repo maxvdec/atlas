@@ -26,6 +26,9 @@ namespace opal {
 #ifdef METAL
 namespace {
 
+constexpr NS::UInteger kVertexStreamBufferIndex = 24;
+constexpr NS::UInteger kInstanceStreamBufferIndex = 25;
+
 template <typename T>
 static inline T alignUp(T value, T alignment) {
     if (alignment <= 1) {
@@ -251,6 +254,7 @@ static MTL::RenderPipelineState *getRenderPipelineState(
     NS::Error *error = nullptr;
     MTL::RenderPipelineState *created =
         deviceState.device->newRenderPipelineState(descriptor, &error);
+    descriptor->release();
     if (created == nullptr) {
         std::string message = "Failed to create Metal render pipeline";
         if (error != nullptr && error->localizedDescription() != nullptr) {
@@ -292,6 +296,9 @@ static void uploadUniformBuffers(const std::shared_ptr<Pipeline> &pipeline,
         auto &uniformBuffer = pipelineState.uniformBuffers[binding.index];
         if (uniformBuffer == nullptr ||
             uniformBuffer->length() < static_cast<NS::UInteger>(bytes.size())) {
+            if (uniformBuffer != nullptr) {
+                uniformBuffer->release();
+            }
             uniformBuffer = device->newBuffer(
                 static_cast<NS::UInteger>(alignUp(bytes.size(), static_cast<size_t>(16))),
                 MTL::ResourceStorageModeShared);
@@ -359,9 +366,6 @@ static void ensureRenderEncoder(
     }
 
     auto &state = metal::commandBufferState(commandBuffer);
-    if (state.encoder != nullptr) {
-        return;
-    }
     if (device == nullptr || framebuffer == nullptr || boundPipeline == nullptr) {
         return;
     }
@@ -381,6 +385,13 @@ static void ensureRenderEncoder(
     auto framebufferColors = collectColorAttachments(framebuffer);
     uint32_t actualColorCount =
         static_cast<uint32_t>(framebufferColors.size());
+    uint32_t existingColorCount = 0;
+    for (uint32_t i = 0; i < 8; ++i) {
+        auto *attachment = state.passDescriptor->colorAttachments()->object(i);
+        if (attachment != nullptr && attachment->texture() != nullptr) {
+            existingColorCount = std::max(existingColorCount, i + 1);
+        }
+    }
 
     int fbWidth = framebuffer->width;
     int fbHeight = framebuffer->height;
@@ -390,7 +401,8 @@ static void ensureRenderEncoder(
     }
     ensureDefaultAuxiliaryTextures(device, fbWidth, fbHeight);
 
-    uint32_t targetColorCount = std::max(requiredColors, actualColorCount);
+    uint32_t targetColorCount =
+        std::max(std::max(requiredColors, actualColorCount), existingColorCount);
     targetColorCount = std::max<uint32_t>(1, targetColorCount);
     targetColorCount = std::min<uint32_t>(8, targetColorCount);
 
@@ -413,11 +425,13 @@ static void ensureRenderEncoder(
         }
     }
 
-    configureColorAttachmentForClear(state.passDescriptor, targetColorCount,
-                                     clearColorValue, state.clearColorPending);
-    configureDepthAttachmentForClear(state.passDescriptor,
-                                     clearDepthValue,
-                                     state.clearDepthPending);
+    if (state.encoder == nullptr) {
+        configureColorAttachmentForClear(state.passDescriptor, targetColorCount,
+                                         clearColorValue, state.clearColorPending);
+        configureDepthAttachmentForClear(state.passDescriptor,
+                                         clearDepthValue,
+                                         state.clearDepthPending);
+    }
 
     std::array<MTL::PixelFormat, 8> colorFormats{};
     colorFormats.fill(MTL::PixelFormatInvalid);
@@ -451,16 +465,21 @@ static void ensureRenderEncoder(
             state.passDescriptor->stencilAttachment()->texture()->pixelFormat();
     }
 
+    if (state.encoder == nullptr) {
+        state.encoder = state.commandBuffer->renderCommandEncoder(state.passDescriptor);
+        if (state.encoder == nullptr) {
+            throw std::runtime_error("Failed to create Metal render command encoder");
+        }
+
+        state.clearColorPending = false;
+        state.clearDepthPending = false;
+    }
+
     MTL::RenderPipelineState *renderPipelineState = getRenderPipelineState(
         device, boundPipeline, colorFormats, colorCount, depthFormat,
         stencilFormat, sampleCount);
     if (renderPipelineState == nullptr) {
         throw std::runtime_error("Metal render pipeline state creation failed");
-    }
-
-    state.encoder = state.commandBuffer->renderCommandEncoder(state.passDescriptor);
-    if (state.encoder == nullptr) {
-        throw std::runtime_error("Failed to create Metal render command encoder");
     }
 
     auto &pipelineState = metal::pipelineState(boundPipeline.get());
@@ -478,27 +497,29 @@ static void ensureRenderEncoder(
         state.encoder->setDepthBias(0.0f, 0.0f, 0.0f);
     }
 
+    int viewportX = std::max(0, pipelineState.viewportX);
+    int viewportY = std::max(0, pipelineState.viewportY);
     int viewportW = pipelineState.viewportWidth > 0 ? pipelineState.viewportWidth
                                                      : fbWidth;
     int viewportH = pipelineState.viewportHeight > 0 ? pipelineState.viewportHeight
                                                       : fbHeight;
-    MTL::Viewport viewport{static_cast<double>(pipelineState.viewportX),
-                           static_cast<double>(pipelineState.viewportY),
+    viewportW = std::max(1, std::min(viewportW, std::max(1, fbWidth - viewportX)));
+    viewportH = std::max(1, std::min(viewportH, std::max(1, fbHeight - viewportY)));
+
+    MTL::Viewport viewport{static_cast<double>(viewportX),
+                           static_cast<double>(viewportY),
                            static_cast<double>(viewportW),
                            static_cast<double>(viewportH), 0.0, 1.0};
     state.encoder->setViewport(viewport);
 
-    MTL::ScissorRect scissor{static_cast<NS::UInteger>(std::max(0, pipelineState.viewportX)),
-                             static_cast<NS::UInteger>(std::max(0, pipelineState.viewportY)),
+    MTL::ScissorRect scissor{static_cast<NS::UInteger>(viewportX),
+                             static_cast<NS::UInteger>(viewportY),
                              static_cast<NS::UInteger>(std::max(1, viewportW)),
                              static_cast<NS::UInteger>(std::max(1, viewportH))};
     state.encoder->setScissorRect(scissor);
 
     uploadUniformBuffers(boundPipeline, state.encoder, deviceState.device);
     bindTextures(boundPipeline, state.encoder, deviceState.device);
-
-    state.clearColorPending = false;
-    state.clearDepthPending = false;
 }
 
 } // namespace
@@ -540,6 +561,10 @@ void CommandBuffer::start() {
     vkResetFences(device->logicalDevice, 1, &inFlightFences[currentFrame]);
 #elif defined(METAL)
     auto &state = metal::commandBufferState(this);
+    if (state.autoreleasePool != nullptr) {
+        state.autoreleasePool->release();
+    }
+    state.autoreleasePool = NS::AutoreleasePool::alloc()->init();
     state.commandBuffer = nullptr;
     state.encoder = nullptr;
     state.passDescriptor = nullptr;
@@ -626,14 +651,6 @@ void CommandBuffer::beginPass(std::shared_ptr<RenderPass> newRenderPass) {
         auto *color0 = state.passDescriptor->colorAttachments()->object(0);
         color0->setTexture(deviceState.drawable->texture());
         color0->setStoreAction(MTL::StoreActionStore);
-
-        if (deviceState.brightTexture != nullptr) {
-            auto &brightState =
-                metal::textureState(deviceState.brightTexture.get());
-            auto *color1 = state.passDescriptor->colorAttachments()->object(1);
-            color1->setTexture(brightState.texture);
-            color1->setStoreAction(MTL::StoreActionStore);
-        }
 
         if (deviceState.depthTexture != nullptr) {
             auto &depthState = metal::textureState(deviceState.depthTexture.get());
@@ -803,6 +820,10 @@ void CommandBuffer::commit() {
 #elif defined(METAL)
     auto &state = metal::commandBufferState(this);
     if (state.commandBuffer == nullptr) {
+        if (state.autoreleasePool != nullptr) {
+            state.autoreleasePool->release();
+            state.autoreleasePool = nullptr;
+        }
         return;
     }
 
@@ -821,6 +842,10 @@ void CommandBuffer::commit() {
     state.drawable = nullptr;
     state.needsPresent = false;
     state.hasDraw = false;
+    if (state.autoreleasePool != nullptr) {
+        state.autoreleasePool->release();
+        state.autoreleasePool = nullptr;
+    }
 #endif
 }
 
@@ -1003,7 +1028,8 @@ auto CommandBuffer::draw(uint vertexCount, uint instanceCount, uint firstVertex,
     if (boundDrawingState != nullptr && boundDrawingState->vertexBuffer != nullptr) {
         auto &vertexState = metal::bufferState(boundDrawingState->vertexBuffer.get());
         if (vertexState.buffer != nullptr) {
-            state.encoder->setVertexBuffer(vertexState.buffer, 0, 0);
+            state.encoder->setVertexBuffer(vertexState.buffer, 0,
+                                           kVertexStreamBufferIndex);
         }
     }
 
@@ -1012,7 +1038,8 @@ auto CommandBuffer::draw(uint vertexCount, uint instanceCount, uint firstVertex,
         auto &instanceState =
             metal::bufferState(boundDrawingState->instanceBuffer.get());
         if (instanceState.buffer != nullptr) {
-            state.encoder->setVertexBuffer(instanceState.buffer, 0, 1);
+            state.encoder->setVertexBuffer(instanceState.buffer, 0,
+                                           kInstanceStreamBufferIndex);
         }
     }
 
@@ -1117,7 +1144,8 @@ void CommandBuffer::drawIndexed(uint indexCount, uint instanceCount,
     if (boundDrawingState->vertexBuffer != nullptr) {
         auto &vertexState = metal::bufferState(boundDrawingState->vertexBuffer.get());
         if (vertexState.buffer != nullptr) {
-            state.encoder->setVertexBuffer(vertexState.buffer, 0, 0);
+            state.encoder->setVertexBuffer(vertexState.buffer, 0,
+                                           kVertexStreamBufferIndex);
         }
     }
 
@@ -1125,7 +1153,8 @@ void CommandBuffer::drawIndexed(uint indexCount, uint instanceCount,
         auto &instanceState =
             metal::bufferState(boundDrawingState->instanceBuffer.get());
         if (instanceState.buffer != nullptr) {
-            state.encoder->setVertexBuffer(instanceState.buffer, 0, 1);
+            state.encoder->setVertexBuffer(instanceState.buffer, 0,
+                                           kInstanceStreamBufferIndex);
         }
     }
 
@@ -1275,7 +1304,8 @@ void CommandBuffer::drawPatches(uint vertexCount, uint firstVertex,
     if (boundDrawingState != nullptr && boundDrawingState->vertexBuffer != nullptr) {
         auto &vertexState = metal::bufferState(boundDrawingState->vertexBuffer.get());
         if (vertexState.buffer != nullptr) {
-            state.encoder->setVertexBuffer(vertexState.buffer, 0, 0);
+            state.encoder->setVertexBuffer(vertexState.buffer, 0,
+                                           kVertexStreamBufferIndex);
         }
     }
     auto &pipelineState = metal::pipelineState(boundPipeline.get());

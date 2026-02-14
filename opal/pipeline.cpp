@@ -38,6 +38,9 @@ void logMissingUniformOnce(const std::string &name) {
 #ifdef METAL
 namespace {
 
+constexpr NS::UInteger kVertexStreamBufferIndex = 24;
+constexpr NS::UInteger kInstanceStreamBufferIndex = 25;
+
 template <typename T>
 static inline T alignUp(T value, T alignment) {
     if (alignment <= 1) {
@@ -152,11 +155,11 @@ static MTL::CullMode toMetalCull(CullMode mode) {
 static MTL::Winding toMetalWinding(FrontFace face) {
     switch (face) {
     case FrontFace::Clockwise:
-        return MTL::WindingClockwise;
+        return MTL::WindingCounterClockwise;
     case FrontFace::CounterClockwise:
-        return MTL::WindingCounterClockwise;
+        return MTL::WindingClockwise;
     default:
-        return MTL::WindingCounterClockwise;
+        return MTL::WindingClockwise;
     }
 }
 
@@ -587,7 +590,10 @@ void Pipeline::build() {
     state.viewportWidth = this->viewportWidth;
     state.viewportHeight = this->viewportHeight;
 
-    state.vertexDescriptor = MTL::VertexDescriptor::vertexDescriptor();
+    if (state.vertexDescriptor != nullptr) {
+        state.vertexDescriptor->release();
+    }
+    state.vertexDescriptor = MTL::VertexDescriptor::alloc()->init();
 
     auto *layouts = state.vertexDescriptor->layouts();
     auto *attributes = state.vertexDescriptor->attributes();
@@ -604,7 +610,8 @@ void Pipeline::build() {
 
         bool isInstance =
             attribute.inputRate == VertexBindingInputRate::Instance;
-        NS::UInteger bufferIndex = isInstance ? 1 : 0;
+        NS::UInteger bufferIndex =
+            isInstance ? kInstanceStreamBufferIndex : kVertexStreamBufferIndex;
 
         descriptor->setBufferIndex(bufferIndex);
         descriptor->setOffset(static_cast<NS::UInteger>(attribute.offset));
@@ -621,7 +628,7 @@ void Pipeline::build() {
         }
     }
 
-    auto *vertexLayout = layouts->object(0);
+    auto *vertexLayout = layouts->object(kVertexStreamBufferIndex);
     if (vertexLayout != nullptr) {
         vertexLayout->setStride(static_cast<NS::UInteger>(vertexBinding.stride));
         vertexLayout->setStepFunction(MTL::VertexStepFunctionPerVertex);
@@ -629,7 +636,7 @@ void Pipeline::build() {
     }
 
     if (hasInstance) {
-        auto *instanceLayout = layouts->object(1);
+        auto *instanceLayout = layouts->object(kInstanceStreamBufferIndex);
         if (instanceLayout != nullptr) {
             instanceLayout->setStride(instanceStride);
             instanceLayout->setStepFunction(MTL::VertexStepFunctionPerInstance);
@@ -646,7 +653,11 @@ void Pipeline::build() {
         depthDescriptor->setDepthCompareFunction(MTL::CompareFunctionAlways);
     }
     depthDescriptor->setDepthWriteEnabled(this->depthWriteEnabled);
+    if (state.depthStencilState != nullptr) {
+        state.depthStencilState->release();
+    }
     state.depthStencilState = deviceState.device->newDepthStencilState(depthDescriptor);
+    depthDescriptor->release();
 #endif
 }
 
@@ -750,8 +761,12 @@ void Pipeline::bind() {
                     MTL::CompareFunctionAlways);
             }
             depthDescriptor->setDepthWriteEnabled(this->depthWriteEnabled);
+            if (state.depthStencilState != nullptr) {
+                state.depthStencilState->release();
+            }
             state.depthStencilState =
                 deviceState.device->newDepthStencilState(depthDescriptor);
+            depthDescriptor->release();
         }
     }
 #endif

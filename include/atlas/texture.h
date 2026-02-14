@@ -174,13 +174,13 @@ struct Texture {
      * @brief The core Id for the texture in OpenGL.
      *
      */
-    Id id;
+    Id id = 0;
     std::shared_ptr<opal::Texture> texture;
     /**
      * @brief The type of the texture (e.g., Color, Specular, Cubemap).
      *
      */
-    TextureType type;
+    TextureType type = TextureType::Color;
     /**
      * @brief The border color used when the wrapping mode is set to use.
      *
@@ -307,7 +307,7 @@ struct Cubemap {
      * @brief The core Id for the texture in OpenGL.
      *
      */
-    Id id;
+    Id id = 0;
     /**
      * @brief The opal texture object.
      *

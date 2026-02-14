@@ -11,7 +11,7 @@ struct Params
 
 struct main0_out
 {
-    float3 upsample [[color(0)]];
+    float4 upsample [[color(0)]];
 };
 
 struct main0_in
@@ -35,10 +35,10 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Params& _13 [[buffer
     float3 g = srcTexture.sample(srcTextureSmplr, float2(texCoord.x - x, texCoord.y - y)).xyz;
     float3 h = srcTexture.sample(srcTextureSmplr, float2(texCoord.x, texCoord.y - y)).xyz;
     float3 i = srcTexture.sample(srcTextureSmplr, float2(texCoord.x + x, texCoord.y - y)).xyz;
-    out.upsample = e * 4.0;
-    out.upsample += ((((b + d) + f) + h) * 2.0);
-    out.upsample += (((a + c) + g) + i);
-    out.upsample *= 0.0625;
+    float3 upsampleColor = e * 4.0;
+    upsampleColor += ((((b + d) + f) + h) * 2.0);
+    upsampleColor += (((a + c) + g) + i);
+    upsampleColor *= 0.0625;
+    out.upsample = float4(upsampleColor, 1.0);
     return out;
 }
-
