@@ -280,23 +280,34 @@ static void updateMetalUniform(Pipeline *pipeline, const std::string &name,
 
     auto &pipelineState = metal::pipelineState(pipeline);
     for (const auto &location : locations) {
-        auto &bytes = pipelineState.uniformData[location.bufferIndex];
+        auto writeStage = [&](bool fragmentStage) {
+            uint32_t key =
+                metal::stageBindingKey(location.bufferIndex, fragmentStage);
+            auto &bytes = pipelineState.uniformData[key];
 
-        size_t bindingSize = 0;
-        auto bindingIt = programState.bindingSize.find(location.bufferIndex);
-        if (bindingIt != programState.bindingSize.end()) {
-            bindingSize = bindingIt->second;
+            size_t declaredSize = 0;
+            auto bindingIt = programState.bindingSize.find(key);
+            if (bindingIt != programState.bindingSize.end()) {
+                declaredSize = bindingIt->second;
+            }
+
+            size_t writeSize = clampToDeclaredSize ? std::min(size, location.size)
+                                                   : size;
+            size_t requiredSize = location.offset + writeSize;
+            requiredSize = std::max(requiredSize, declaredSize);
+            if (bytes.size() < requiredSize) {
+                bytes.resize(alignUp(requiredSize, static_cast<size_t>(16)), 0);
+            }
+
+            std::memcpy(bytes.data() + location.offset, data, writeSize);
+        };
+
+        if (location.vertexStage) {
+            writeStage(false);
         }
-
-        size_t writeSize = clampToDeclaredSize ? std::min(size, location.size)
-                                               : size;
-        size_t requiredSize = location.offset + writeSize;
-        requiredSize = std::max(requiredSize, bindingSize);
-        if (bytes.size() < requiredSize) {
-            bytes.resize(alignUp(requiredSize, static_cast<size_t>(16)), 0);
+        if (location.fragmentStage) {
+            writeStage(true);
         }
-
-        std::memcpy(bytes.data() + location.offset, data, writeSize);
     }
 }
 

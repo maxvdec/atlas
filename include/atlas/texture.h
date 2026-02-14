@@ -543,13 +543,13 @@ class RenderTarget : public Renderable {
      * @brief Returns the primary framebuffer for this render target.
      * @return The framebuffer, or nullptr if not created.
      */
-    std::shared_ptr<opal::Framebuffer> getFramebuffer() const;
+    const std::shared_ptr<opal::Framebuffer> &getFramebuffer() const;
 
     /**
      * @brief Returns the resolve framebuffer for multisampled targets.
      * @return The resolve framebuffer, or nullptr if not applicable.
      */
-    std::shared_ptr<opal::Framebuffer> getResolveFramebuffer() const;
+    const std::shared_ptr<opal::Framebuffer> &getResolveFramebuffer() const;
 
   private:
     std::shared_ptr<opal::Framebuffer> fb = nullptr;

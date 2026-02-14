@@ -561,11 +561,12 @@ void RenderTarget::unbind() {
     }
 }
 
-std::shared_ptr<opal::Framebuffer> RenderTarget::getFramebuffer() const {
+const std::shared_ptr<opal::Framebuffer> &RenderTarget::getFramebuffer() const {
     return fb;
 }
 
-std::shared_ptr<opal::Framebuffer> RenderTarget::getResolveFramebuffer() const {
+const std::shared_ptr<opal::Framebuffer> &
+RenderTarget::getResolveFramebuffer() const {
     return resolveFb;
 }
 

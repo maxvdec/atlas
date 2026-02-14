@@ -361,6 +361,9 @@ void Window::run() {
         updatePipelineStateField(this->cullMode, opal::CullMode::Back);
         // Render to the targets
         for (auto &target : this->renderTargets) {
+            if (target == nullptr) {
+                continue;
+            }
             this->currentRenderTarget = target;
             updatePipelineStateField(this->depthCompareOp,
                                      opal::CompareOp::Less);
@@ -375,6 +378,10 @@ void Window::run() {
             }
 
             if (this->usesDeferred) {
+                if (this->gBuffer == nullptr) {
+                    this->useDeferredRendering();
+                }
+
                 this->deferredRendering(target, commandBuffer);
 
                 auto resolveCommand = opal::ResolveAction::create(

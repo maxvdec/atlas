@@ -149,7 +149,7 @@ void Text::initialize() {
     glfwGetFramebufferSize(static_cast<GLFWwindow *>(window->windowRef),
                            &fbWidth, &fbHeight);
 
-#ifdef VULKAN
+#if defined(VULKAN) || defined(METAL)
     projection = glm::ortho(0.0f, static_cast<float>(fbWidth),
                             static_cast<float>(fbHeight), 0.0f);
 #else
@@ -248,6 +248,17 @@ void Text::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
 
     commandBuffer->bindPipeline(textPipeline);
 
+    glfwGetFramebufferSize(
+        static_cast<GLFWwindow *>(Window::mainWindow->windowRef), &fbWidth,
+        &fbHeight);
+#if defined(VULKAN) || defined(METAL)
+    projection = glm::ortho(0.0f, static_cast<float>(fbWidth),
+                            static_cast<float>(fbHeight), 0.0f);
+#else
+    projection = glm::ortho(0.0f, static_cast<float>(fbWidth), 0.0f,
+                            static_cast<float>(fbHeight));
+#endif
+
     textPipeline->setUniform3f("textColor", color.r, color.g, color.b);
     textPipeline->setUniformMat4f("projection", projection);
 
@@ -256,17 +267,6 @@ void Text::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
     }
 
     commandBuffer->bindDrawingState(vao);
-
-    glfwGetFramebufferSize(
-        static_cast<GLFWwindow *>(Window::mainWindow->windowRef), &fbWidth,
-        &fbHeight);
-#ifdef VULKAN
-    projection = glm::ortho(0.0f, static_cast<float>(fbWidth),
-                            static_cast<float>(fbHeight), 0.0f);
-#else
-    projection = glm::ortho(0.0f, static_cast<float>(fbWidth), 0.0f,
-                            static_cast<float>(fbHeight));
-#endif
 
     float scale = 2.0f;
 

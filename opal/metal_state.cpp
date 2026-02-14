@@ -228,6 +228,25 @@ static StructLayout computeLayout(
     std::unordered_map<std::string, StructLayout> &cache,
     std::unordered_set<std::string> &visiting);
 
+static size_t findMatchingParen(const std::string &source, size_t openParenPos) {
+    if (openParenPos >= source.size() || source[openParenPos] != '(') {
+        return std::string::npos;
+    }
+    int depth = 0;
+    for (size_t i = openParenPos; i < source.size(); ++i) {
+        char c = source[i];
+        if (c == '(') {
+            depth++;
+        } else if (c == ')') {
+            depth--;
+            if (depth == 0) {
+                return i;
+            }
+        }
+    }
+    return std::string::npos;
+}
+
 static FieldType resolveType(
     const std::string &typeName,
     const std::unordered_map<std::string, RawStruct> &rawStructs,
@@ -305,22 +324,31 @@ static StructLayout computeLayout(
 static std::vector<BufferBinding> parseStageBufferBindings(const std::string &source,
                                                            bool isVertexStage) {
     std::vector<BufferBinding> bindings;
-    const std::regex stageRegex(
-        isVertexStage ? R"(vertex\s+[^\(\{]+\(([^)]*)\))"
-                      : R"(fragment\s+[^\(\{]+\(([^)]*)\))");
+    const std::regex stageStartRegex(
+        isVertexStage ? R"(\bvertex\b[^\(\{;]*\()"
+                      : R"(\bfragment\b[^\(\{;]*\()");
     const std::regex bufferRegex(
-        R"((?:constant|device)\s+([A-Za-z_][A-Za-z0-9_]*)\s*(?:\*|&)\s*[A-Za-z_][A-Za-z0-9_]*\s*\[\[buffer\((\d+)\)\]\])");
+        R"((?:constant|device)\s+([A-Za-z_][A-Za-z0-9_]*)\s*(?:\*|&)\s*([A-Za-z_][A-Za-z0-9_]*)\s*\[\[buffer\((\d+)\)\]\])");
 
-    auto stageBegin = std::sregex_iterator(source.begin(), source.end(), stageRegex);
+    auto stageBegin =
+        std::sregex_iterator(source.begin(), source.end(), stageStartRegex);
     auto stageEnd = std::sregex_iterator();
     for (auto stageIt = stageBegin; stageIt != stageEnd; ++stageIt) {
-        const std::string params = (*stageIt)[1].str();
+        size_t openParenPos = static_cast<size_t>((*stageIt).position(0) +
+                                                  (*stageIt).length(0) - 1);
+        size_t closeParenPos = findMatchingParen(source, openParenPos);
+        if (closeParenPos == std::string::npos || closeParenPos <= openParenPos) {
+            continue;
+        }
+        const std::string params =
+            source.substr(openParenPos + 1, closeParenPos - openParenPos - 1);
         auto begin = std::sregex_iterator(params.begin(), params.end(), bufferRegex);
         auto end = std::sregex_iterator();
         for (auto it = begin; it != end; ++it) {
             BufferBinding binding;
             binding.structName = (*it)[1].str();
-            binding.index = static_cast<uint32_t>(std::stoul((*it)[2].str()));
+            binding.instanceName = (*it)[2].str();
+            binding.index = static_cast<uint32_t>(std::stoul((*it)[3].str()));
             binding.vertexStage = isVertexStage;
             binding.fragmentStage = !isVertexStage;
             bindings.push_back(binding);
@@ -346,6 +374,46 @@ static bool parseUniformToken(const std::string &token, std::string &fieldName,
     hasIndex = match[2].matched;
     index = hasIndex ? static_cast<size_t>(std::stoul(match[2].str())) : 0;
     return true;
+}
+
+static bool hasSuffixIgnoreCase(const std::string &value,
+                                const std::string &suffix) {
+    if (value.size() < suffix.size()) {
+        return false;
+    }
+    size_t offset = value.size() - suffix.size();
+    for (size_t i = 0; i < suffix.size(); ++i) {
+        char lhs = static_cast<char>(
+            std::toupper(static_cast<unsigned char>(value[offset + i])));
+        char rhs = static_cast<char>(
+            std::toupper(static_cast<unsigned char>(suffix[i])));
+        if (lhs != rhs) {
+            return false;
+        }
+    }
+    return true;
+}
+
+static bool matchesBindingAlias(const BufferBinding &binding,
+                                const std::string &token) {
+    if (!binding.instanceName.empty() && token == binding.instanceName) {
+        return true;
+    }
+    if (token == binding.structName) {
+        return true;
+    }
+    static const std::string suffixes[] = {"UBO", "SSBO", "BUFFER"};
+    for (const std::string &suffix : suffixes) {
+        if (!hasSuffixIgnoreCase(binding.structName, suffix)) {
+            continue;
+        }
+        std::string trimmed =
+            binding.structName.substr(0, binding.structName.size() - suffix.size());
+        if (token == trimmed) {
+            return true;
+        }
+    }
+    return false;
 }
 
 static const StructField *findField(const StructLayout &layout,
@@ -427,6 +495,10 @@ std::shared_ptr<Texture> getTextureFromHandle(uint32_t handle) {
         gTextureRegistry.erase(it);
     }
     return texture;
+}
+
+uint32_t stageBindingKey(uint32_t index, bool fragmentStage) {
+    return (fragmentStage ? 0x80000000u : 0u) | (index & 0x7fffffffu);
 }
 
 MTL::PixelFormat textureFormatToPixelFormat(TextureFormat format) {
@@ -600,6 +672,13 @@ bool parseProgramLayouts(const std::string &vertexSource,
                 existing.vertexStage = existing.vertexStage || binding.vertexStage;
                 existing.fragmentStage =
                     existing.fragmentStage || binding.fragmentStage;
+                bool existingAnonymous = existing.instanceName.empty() ||
+                                         existing.instanceName[0] == '_';
+                bool incomingNamed = !binding.instanceName.empty() &&
+                                     binding.instanceName[0] != '_';
+                if (existingAnonymous && incomingNamed) {
+                    existing.instanceName = binding.instanceName;
+                }
                 merged = true;
                 break;
             }
@@ -618,8 +697,16 @@ bool parseProgramLayouts(const std::string &vertexSource,
             continue;
         }
         state.layouts[binding.structName] = layout;
-        state.bindingSize[binding.index] =
-            std::max(state.bindingSize[binding.index], layout.size);
+        if (binding.vertexStage) {
+            uint32_t vertexKey = stageBindingKey(binding.index, false);
+            state.bindingSize[vertexKey] =
+                std::max(state.bindingSize[vertexKey], layout.size);
+        }
+        if (binding.fragmentStage) {
+            uint32_t fragmentKey = stageBindingKey(binding.index, true);
+            state.bindingSize[fragmentKey] =
+                std::max(state.bindingSize[fragmentKey], layout.size);
+        }
     }
 
     return state.vertexFunction != nullptr && state.fragmentFunction != nullptr;
@@ -649,8 +736,17 @@ std::vector<UniformLocation> resolveUniformLocations(ProgramState &programState,
         size_t offset = 0;
         size_t finalSize = 0;
         bool ok = true;
+        size_t tokenStart = 0;
+        if (!tokens.empty() && matchesBindingAlias(binding, tokens[0])) {
+            tokenStart = 1;
+        }
 
-        for (size_t tokenIndex = 0; tokenIndex < tokens.size(); ++tokenIndex) {
+        if (tokenStart == tokens.size()) {
+            finalSize = layout->size;
+        }
+
+        for (size_t tokenIndex = tokenStart; tokenIndex < tokens.size();
+             ++tokenIndex) {
             std::string fieldName;
             bool hasIndex = false;
             size_t index = 0;

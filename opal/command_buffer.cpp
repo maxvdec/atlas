@@ -28,6 +28,9 @@ namespace {
 
 constexpr NS::UInteger kVertexStreamBufferIndex = 24;
 constexpr NS::UInteger kInstanceStreamBufferIndex = 25;
+constexpr float kIdentityInstanceMatrix[16] = {
+    1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+    0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
 
 template <typename T>
 static inline T alignUp(T value, T alignment) {
@@ -280,39 +283,50 @@ static void uploadUniformBuffers(const std::shared_ptr<Pipeline> &pipeline,
     auto &pipelineState = metal::pipelineState(pipeline.get());
 
     for (const auto &binding : programState.bindings) {
-        auto &bytes = pipelineState.uniformData[binding.index];
-        size_t requiredSize = 0;
-        auto bindingSizeIt = programState.bindingSize.find(binding.index);
-        if (bindingSizeIt != programState.bindingSize.end()) {
-            requiredSize = bindingSizeIt->second;
-        }
-        if (bytes.size() < requiredSize) {
-            bytes.resize(requiredSize, 0);
-        }
-        if (bytes.empty()) {
-            continue;
-        }
-
-        auto &uniformBuffer = pipelineState.uniformBuffers[binding.index];
-        if (uniformBuffer == nullptr ||
-            uniformBuffer->length() < static_cast<NS::UInteger>(bytes.size())) {
-            if (uniformBuffer != nullptr) {
-                uniformBuffer->release();
+        auto uploadStage = [&](bool fragmentStage) {
+            uint32_t key = metal::stageBindingKey(binding.index, fragmentStage);
+            auto &bytes = pipelineState.uniformData[key];
+            size_t requiredSize = 0;
+            auto bindingSizeIt = programState.bindingSize.find(key);
+            if (bindingSizeIt != programState.bindingSize.end()) {
+                requiredSize = bindingSizeIt->second;
             }
-            uniformBuffer = device->newBuffer(
-                static_cast<NS::UInteger>(alignUp(bytes.size(), static_cast<size_t>(16))),
-                MTL::ResourceStorageModeShared);
-        }
+            if (bytes.size() < requiredSize) {
+                bytes.resize(requiredSize, 0);
+            }
+            if (bytes.empty()) {
+                return;
+            }
 
-        std::memcpy(uniformBuffer->contents(), bytes.data(), bytes.size());
-        uniformBuffer->didModifyRange(
-            NS::Range::Make(0, static_cast<NS::UInteger>(bytes.size())));
+            auto &uniformBuffer = pipelineState.uniformBuffers[key];
+            if (uniformBuffer == nullptr ||
+                uniformBuffer->length() <
+                    static_cast<NS::UInteger>(bytes.size())) {
+                if (uniformBuffer != nullptr) {
+                    uniformBuffer->release();
+                }
+                uniformBuffer = device->newBuffer(
+                    static_cast<NS::UInteger>(
+                        alignUp(bytes.size(), static_cast<size_t>(16))),
+                    MTL::ResourceStorageModeShared);
+            }
+
+            std::memcpy(uniformBuffer->contents(), bytes.data(), bytes.size());
+            uniformBuffer->didModifyRange(
+                NS::Range::Make(0, static_cast<NS::UInteger>(bytes.size())));
+
+            if (fragmentStage) {
+                encoder->setFragmentBuffer(uniformBuffer, 0, binding.index);
+            } else {
+                encoder->setVertexBuffer(uniformBuffer, 0, binding.index);
+            }
+        };
 
         if (binding.vertexStage) {
-            encoder->setVertexBuffer(uniformBuffer, 0, binding.index);
+            uploadStage(false);
         }
         if (binding.fragmentStage) {
-            encoder->setFragmentBuffer(uniformBuffer, 0, binding.index);
+            uploadStage(true);
         }
     }
 }
@@ -1041,6 +1055,10 @@ auto CommandBuffer::draw(uint vertexCount, uint instanceCount, uint firstVertex,
             state.encoder->setVertexBuffer(instanceState.buffer, 0,
                                            kInstanceStreamBufferIndex);
         }
+    } else {
+        state.encoder->setVertexBytes(
+            kIdentityInstanceMatrix, static_cast<NS::UInteger>(sizeof(kIdentityInstanceMatrix)),
+            kInstanceStreamBufferIndex);
     }
 
     auto &pipelineState = metal::pipelineState(boundPipeline.get());
@@ -1156,6 +1174,10 @@ void CommandBuffer::drawIndexed(uint indexCount, uint instanceCount,
             state.encoder->setVertexBuffer(instanceState.buffer, 0,
                                            kInstanceStreamBufferIndex);
         }
+    } else {
+        state.encoder->setVertexBytes(
+            kIdentityInstanceMatrix, static_cast<NS::UInteger>(sizeof(kIdentityInstanceMatrix)),
+            kInstanceStreamBufferIndex);
     }
 
     auto &indexState = metal::bufferState(boundDrawingState->indexBuffer.get());
@@ -1306,6 +1328,18 @@ void CommandBuffer::drawPatches(uint vertexCount, uint firstVertex,
         if (vertexState.buffer != nullptr) {
             state.encoder->setVertexBuffer(vertexState.buffer, 0,
                                            kVertexStreamBufferIndex);
+        }
+    }
+    if (boundDrawingState == nullptr || boundDrawingState->instanceBuffer == nullptr) {
+        state.encoder->setVertexBytes(
+            kIdentityInstanceMatrix, static_cast<NS::UInteger>(sizeof(kIdentityInstanceMatrix)),
+            kInstanceStreamBufferIndex);
+    } else {
+        auto &instanceState =
+            metal::bufferState(boundDrawingState->instanceBuffer.get());
+        if (instanceState.buffer != nullptr) {
+            state.encoder->setVertexBuffer(instanceState.buffer, 0,
+                                           kInstanceStreamBufferIndex);
         }
     }
     auto &pipelineState = metal::pipelineState(boundPipeline.get());

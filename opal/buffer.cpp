@@ -352,6 +352,7 @@ void Buffer::bind(int callerId) const {
     info.operation = DebugResourceOperation::Loaded;
     info.callerObject = std::to_string(callerId);
     info.frameNumber = Device::globalInstance->frameCount;
+    info.sizeMb = 0.0f;
     info.send();
 }
 
@@ -390,6 +391,7 @@ void Buffer::unbind(int callerId) const {
     info.operation = DebugResourceOperation::Unloaded;
     info.callerObject = std::to_string(callerId);
     info.frameNumber = Device::globalInstance->frameCount;
+    info.sizeMb = 0.0f;
     info.send();
 }
 

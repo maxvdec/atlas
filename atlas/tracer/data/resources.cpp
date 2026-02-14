@@ -26,8 +26,10 @@ void ResourceEventInfo::send() {
     object["size_mb"] = sizeMb;
     object["type"] = "resource_event";
 
+    auto &tracker = ResourceTracker::getInstance();
+
     if (operation == DebugResourceOperation::Created) {
-        ResourceTracker::getInstance().createdResources += 1;
+        tracker.createdResources += 1;
         AllocationPacket alloc;
         alloc.description = "Resource created: " + callerObject;
         alloc.owner = callerObject;
@@ -52,14 +54,20 @@ void ResourceEventInfo::send() {
         alloc.sizeMb = sizeMb;
         alloc.frameNumber = frameNumber;
         alloc.send();
+        tracker.totalMemoryMb += sizeMb;
     }
     if (operation == DebugResourceOperation::Loaded) {
-        ResourceTracker::getInstance().loadedResources += 1;
+        tracker.loadedResources += 1;
     }
     if (operation == DebugResourceOperation::Unloaded) {
-        ResourceTracker::getInstance().unloadedResources += 1;
+        tracker.unloadedResources += 1;
+        if (sizeMb > 0.0f) {
+            tracker.totalMemoryMb -= sizeMb;
+            if (tracker.totalMemoryMb < 0.0f) {
+                tracker.totalMemoryMb = 0.0f;
+            }
+        }
     }
-    ResourceTracker::getInstance().totalMemoryMb += sizeMb;
 
     TracerServices::getInstance().tracerPipe->send(object.dump() + "\n");
 }

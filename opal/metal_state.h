@@ -41,6 +41,7 @@ struct StructLayout {
 struct BufferBinding {
     uint32_t index = 0;
     std::string structName;
+    std::string instanceName;
     bool vertexStage = false;
     bool fragmentStage = false;
 };
@@ -163,6 +164,7 @@ CommandBufferState &commandBufferState(CommandBuffer *commandBuffer);
 
 uint32_t registerTextureHandle(const std::shared_ptr<Texture> &texture);
 std::shared_ptr<Texture> getTextureFromHandle(uint32_t handle);
+uint32_t stageBindingKey(uint32_t index, bool fragmentStage);
 
 MTL::PixelFormat textureFormatToPixelFormat(TextureFormat format);
 MTL::TextureType textureTypeToMetal(TextureType type);
