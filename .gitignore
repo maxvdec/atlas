@@ -28,3 +28,4 @@ docs/latex
 .cmake
 build.ninja
 Testing
+__pycache__

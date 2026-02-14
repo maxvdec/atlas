@@ -100,11 +100,11 @@ file(GLOB_RECURSE SHADER_SOURCES
 )
 
 if(BACKEND_OPENGL)
-    message(STATUS "Packing shaders without SPIR-V compilation")
+    message(STATUS "Packing shaders for OpenGL backend")
     add_custom_command(
         OUTPUT ${SHADER_OUTPUT_FILE}
         COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/include/atlas/core
-        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/pack_shaders.py ${SHADER_INPUT_DIR} ${SHADER_OUTPUT_FILE} false
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/pack_shaders.py ${SHADER_INPUT_DIR} ${SHADER_OUTPUT_FILE} opengl
         DEPENDS ${SHADER_SOURCES}
         COMMENT "Packing shaders into shaders.h"
     )
@@ -113,16 +113,16 @@ elseif(BACKEND_VULKAN)
     add_custom_command(
         OUTPUT ${SHADER_OUTPUT_FILE}
         COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/include/atlas/core
-        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/pack_shaders.py ${SHADER_INPUT_DIR} ${SHADER_OUTPUT_FILE} true
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/pack_shaders.py ${SHADER_INPUT_DIR} ${SHADER_OUTPUT_FILE} vulkan
         DEPENDS ${SHADER_SOURCES}
         COMMENT "Packing shaders into shaders.h"
     )
 elseif(BACKEND_METAL)
-    message(STATUS "Packing shaders with SPIR-V compilation")
+    message(STATUS "Packing shaders for Metal backend")
     add_custom_command(
         OUTPUT ${SHADER_OUTPUT_FILE}
         COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/include/atlas/core
-        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/pack_shaders.py ${SHADER_INPUT_DIR} ${SHADER_OUTPUT_FILE} true
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/pack_shaders.py ${SHADER_INPUT_DIR} ${SHADER_OUTPUT_FILE} metal
         DEPENDS ${SHADER_SOURCES}
         COMMENT "Packing shaders into shaders.h"
     )
@@ -193,7 +193,7 @@ elseif(BACKEND_VULKAN)
     find_package(spirv_cross_glsl REQUIRED)
     find_package(spirv_cross_reflect REQUIRED)
 elseif(BACKEND_METAL)
-    message("Linking Metal to Source")
+    message(STATUS "Linking Metal to Source")
 endif()
 
 find_package(glm REQUIRED)
