@@ -9,9 +9,13 @@
 
 #include "atlas/tracer/data.h"
 #include "opal/opal.h"
+#include <algorithm>
 #include <cstring>
 #include <memory>
 #include <sys/types.h>
+#ifdef METAL
+#include "metal_state.h"
+#endif
 
 namespace opal {
 
@@ -167,6 +171,75 @@ std::shared_ptr<Texture> Texture::create(TextureType type, TextureFormat format,
 #elif defined(VULKAN)
     return Texture::createVulkan(type, format, width, height, dataFormat, data,
                                  mipLevels);
+#elif defined(METAL)
+    if (Device::globalInstance == nullptr) {
+        throw std::runtime_error("Cannot create Metal texture without device");
+    }
+
+    auto &deviceState = metal::deviceState(Device::globalInstance);
+    if (deviceState.device == nullptr) {
+        throw std::runtime_error("Metal device is not initialized");
+    }
+
+    auto texture = std::make_shared<Texture>();
+    texture->type = type;
+    texture->format = format;
+    texture->width = width;
+    texture->height = height;
+    texture->samples = (type == TextureType::Texture2DMultisample)
+                           ? static_cast<int>(mipLevels)
+                           : 1;
+
+    auto &state = metal::textureState(texture.get());
+    state.type = type;
+    state.format = format;
+    state.dataFormat = dataFormat;
+    state.width = width;
+    state.height = height;
+    state.depth = 1;
+    state.samples = texture->samples;
+
+    MTL::TextureDescriptor *descriptor =
+        MTL::TextureDescriptor::alloc()->init();
+    descriptor->setTextureType(metal::textureTypeToMetal(type));
+    descriptor->setPixelFormat(metal::textureFormatToPixelFormat(format));
+    descriptor->setWidth(static_cast<NS::UInteger>(std::max(width, 1)));
+    descriptor->setHeight(static_cast<NS::UInteger>(std::max(height, 1)));
+    descriptor->setDepth(1);
+    descriptor->setMipmapLevelCount(
+        static_cast<NS::UInteger>(std::max<uint>(1, mipLevels)));
+    descriptor->setUsage(metal::textureUsageFor(type, format));
+    descriptor->setStorageMode(MTL::StorageModeShared);
+
+    if (type == TextureType::TextureCubeMap) {
+        descriptor->setTextureType(MTL::TextureTypeCube);
+        descriptor->setArrayLength(6);
+    } else if (type == TextureType::Texture2DArray) {
+        descriptor->setTextureType(MTL::TextureType2DArray);
+        descriptor->setArrayLength(1);
+    } else if (type == TextureType::Texture2DMultisample) {
+        descriptor->setTextureType(MTL::TextureType2DMultisample);
+        descriptor->setSampleCount(
+            static_cast<NS::UInteger>(std::max(1, texture->samples)));
+        descriptor->setMipmapLevelCount(1);
+    }
+
+    state.texture = deviceState.device->newTexture(descriptor);
+    if (state.texture == nullptr) {
+        throw std::runtime_error("Failed to create Metal texture");
+    }
+
+    metal::rebuildTextureSampler(texture.get(), deviceState.device);
+    state.handle = metal::registerTextureHandle(texture);
+    texture->textureID = state.handle;
+
+    if (data != nullptr && width > 0 && height > 0 &&
+        type != TextureType::Texture2DMultisample &&
+        type != TextureType::TextureCubeMap) {
+        texture->updateData(data, width, height, dataFormat);
+    }
+
+    return texture;
 #else
     return nullptr;
 #endif
@@ -307,6 +380,27 @@ void Texture::updateFace(int faceIndex, const void *data, int width, int height,
 
     vkDestroyBuffer(Device::globalDevice, stagingBuffer, nullptr);
     vkFreeMemory(Device::globalDevice, stagingBufferMemory, nullptr);
+#elif defined(METAL)
+    auto &state = metal::textureState(this);
+    if (state.texture == nullptr || data == nullptr || width <= 0 ||
+        height <= 0 || type != TextureType::TextureCubeMap) {
+        return;
+    }
+
+    size_t bytesPerPixel = 4;
+    if (dataFormat == TextureDataFormat::Rgb) {
+        bytesPerPixel = 3;
+    } else if (dataFormat == TextureDataFormat::Red) {
+        bytesPerPixel = 1;
+    }
+
+    MTL::Region region = MTL::Region::Make2D(
+        0, 0, static_cast<NS::UInteger>(width), static_cast<NS::UInteger>(height));
+    NS::UInteger bytesPerRow =
+        static_cast<NS::UInteger>(width * static_cast<int>(bytesPerPixel));
+    NS::UInteger bytesPerImage = bytesPerRow * static_cast<NS::UInteger>(height);
+    state.texture->replaceRegion(region, 0, static_cast<NS::UInteger>(faceIndex),
+                                 data, bytesPerRow, bytesPerImage);
 #endif
 
     ResourceEventInfo info;
@@ -331,6 +425,28 @@ void Texture::updateData3D(const void *data, int width, int height, int depth,
     (void)height;
     (void)depth;
     (void)dataFormat;
+#elif defined(METAL)
+    auto &state = metal::textureState(this);
+    if (state.texture == nullptr || data == nullptr || width <= 0 ||
+        height <= 0 || depth <= 0) {
+        return;
+    }
+
+    size_t bytesPerPixel = 4;
+    if (dataFormat == TextureDataFormat::Rgb) {
+        bytesPerPixel = 3;
+    } else if (dataFormat == TextureDataFormat::Red) {
+        bytesPerPixel = 1;
+    }
+
+    MTL::Region region = MTL::Region::Make3D(
+        0, 0, 0, static_cast<NS::UInteger>(width),
+        static_cast<NS::UInteger>(height), static_cast<NS::UInteger>(depth));
+    NS::UInteger bytesPerRow =
+        static_cast<NS::UInteger>(width * static_cast<int>(bytesPerPixel));
+    NS::UInteger bytesPerImage = bytesPerRow * static_cast<NS::UInteger>(height);
+    state.texture->replaceRegion(region, 0, 0, data, bytesPerRow, bytesPerImage);
+    state.depth = depth;
 #endif
 }
 
@@ -358,6 +474,29 @@ void Texture::updateData(const void *data, int width, int height,
     (void)width;
     (void)height;
     (void)dataFormat;
+#elif defined(METAL)
+    auto &state = metal::textureState(this);
+    if (state.texture == nullptr || data == nullptr || width <= 0 ||
+        height <= 0) {
+        return;
+    }
+
+    size_t bytesPerPixel = 4;
+    if (dataFormat == TextureDataFormat::Rgb) {
+        bytesPerPixel = 3;
+    } else if (dataFormat == TextureDataFormat::Red) {
+        bytesPerPixel = 1;
+    }
+
+    MTL::Region region = MTL::Region::Make2D(
+        0, 0, static_cast<NS::UInteger>(width), static_cast<NS::UInteger>(height));
+    NS::UInteger bytesPerRow =
+        static_cast<NS::UInteger>(width * static_cast<int>(bytesPerPixel));
+    state.texture->replaceRegion(region, 0, data, bytesPerRow);
+    this->width = width;
+    this->height = height;
+    state.width = width;
+    state.height = height;
 #endif
 }
 
@@ -367,6 +506,9 @@ void Texture::changeFormat(TextureFormat newFormat) {
     this->glFormat = getGLInternalFormat(newFormat);
 #elif defined(VULKAN)
     this->format = newFormat;
+#elif defined(METAL)
+    this->format = newFormat;
+    metal::textureState(this).format = newFormat;
 #endif
 }
 
@@ -397,6 +539,27 @@ void Texture::readData(void *buffer, TextureDataFormat dataFormat) {
 #elif defined(VULKAN)
     (void)buffer;
     (void)dataFormat;
+#elif defined(METAL)
+    auto &state = metal::textureState(this);
+    if (state.texture == nullptr || buffer == nullptr || width <= 0 ||
+        height <= 0) {
+        return;
+    }
+
+    size_t bytesPerPixel = 4;
+    if (dataFormat == TextureDataFormat::Rgb) {
+        bytesPerPixel = 3;
+    } else if (dataFormat == TextureDataFormat::Red) {
+        bytesPerPixel = 1;
+    } else if (dataFormat == TextureDataFormat::DepthComponent) {
+        bytesPerPixel = 4;
+    }
+
+    MTL::Region region = MTL::Region::Make2D(
+        0, 0, static_cast<NS::UInteger>(width), static_cast<NS::UInteger>(height));
+    NS::UInteger bytesPerRow =
+        static_cast<NS::UInteger>(width * static_cast<int>(bytesPerPixel));
+    state.texture->getBytes(buffer, bytesPerRow, region, 0);
 #endif
 }
 
@@ -405,6 +568,21 @@ void Texture::generateMipmaps([[maybe_unused]] uint levels) {
     glBindTexture(this->glType, textureID);
     glGenerateMipmap(this->glType);
 #elif defined(VULKAN)
+#elif defined(METAL)
+    if (Device::globalInstance == nullptr) {
+        return;
+    }
+    auto &deviceState = metal::deviceState(Device::globalInstance);
+    auto &state = metal::textureState(this);
+    if (deviceState.queue == nullptr || state.texture == nullptr) {
+        return;
+    }
+    MTL::CommandBuffer *commandBuffer = deviceState.queue->commandBuffer();
+    MTL::BlitCommandEncoder *blit = commandBuffer->blitCommandEncoder();
+    blit->generateMipmaps(state.texture);
+    blit->endEncoding();
+    commandBuffer->commit();
+    commandBuffer->waitUntilCompleted();
 #endif
 }
 
@@ -413,6 +591,8 @@ void Texture::automaticallyGenerateMipmaps() {
     glBindTexture(this->glType, textureID);
     glGenerateMipmap(this->glType);
 #elif defined(VULKAN)
+#elif defined(METAL)
+    generateMipmaps(0);
 #endif
 }
 
@@ -426,6 +606,19 @@ void Texture::setWrapMode(TextureAxis axis, TextureWrapMode mode) {
 #elif defined(VULKAN)
     (void)axis;
     (void)mode;
+#elif defined(METAL)
+    auto &state = metal::textureState(this);
+    if (axis == TextureAxis::S) {
+        state.wrapS = mode;
+    } else if (axis == TextureAxis::T) {
+        state.wrapT = mode;
+    } else {
+        state.wrapR = mode;
+    }
+    if (Device::globalInstance != nullptr) {
+        auto &deviceState = metal::deviceState(Device::globalInstance);
+        metal::rebuildTextureSampler(this, deviceState.device);
+    }
 #endif
 }
 
@@ -437,6 +630,13 @@ void Texture::changeBorderColor(const glm::vec4 &borderColor) {
     glTexParameterfv(this->glType, GL_TEXTURE_BORDER_COLOR, color);
 #elif defined(VULKAN)
     (void)borderColor;
+#elif defined(METAL)
+    auto &state = metal::textureState(this);
+    state.borderColor = borderColor;
+    if (Device::globalInstance != nullptr) {
+        auto &deviceState = metal::deviceState(Device::globalInstance);
+        metal::rebuildTextureSampler(this, deviceState.device);
+    }
 #endif
 }
 
@@ -449,6 +649,14 @@ void Texture::setFilterMode(TextureFilterMode minFilter,
 #elif defined(VULKAN)
     (void)minFilter;
     (void)magFilter;
+#elif defined(METAL)
+    auto &state = metal::textureState(this);
+    state.minFilter = minFilter;
+    state.magFilter = magFilter;
+    if (Device::globalInstance != nullptr) {
+        auto &deviceState = metal::deviceState(Device::globalInstance);
+        metal::rebuildTextureSampler(this, deviceState.device);
+    }
 #endif
 }
 
@@ -466,6 +674,16 @@ void Texture::setParameters(TextureWrapMode wrapS, TextureWrapMode wrapT,
     (void)wrapT;
     (void)minFilter;
     (void)magFilter;
+#elif defined(METAL)
+    auto &state = metal::textureState(this);
+    state.wrapS = wrapS;
+    state.wrapT = wrapT;
+    state.minFilter = minFilter;
+    state.magFilter = magFilter;
+    if (Device::globalInstance != nullptr) {
+        auto &deviceState = metal::deviceState(Device::globalInstance);
+        metal::rebuildTextureSampler(this, deviceState.device);
+    }
 #endif
 }
 
@@ -486,6 +704,17 @@ void Texture::setParameters3D(TextureWrapMode wrapS, TextureWrapMode wrapT,
     (void)wrapR;
     (void)minFilter;
     (void)magFilter;
+#elif defined(METAL)
+    auto &state = metal::textureState(this);
+    state.wrapS = wrapS;
+    state.wrapT = wrapT;
+    state.wrapR = wrapR;
+    state.minFilter = minFilter;
+    state.magFilter = magFilter;
+    if (Device::globalInstance != nullptr) {
+        auto &deviceState = metal::deviceState(Device::globalInstance);
+        metal::rebuildTextureSampler(this, deviceState.device);
+    }
 #endif
 }
 
@@ -547,7 +776,18 @@ void Pipeline::bindTexture(const std::string &name,
     write.pImageInfo = &imageInfo;
 
     vkUpdateDescriptorSets(Device::globalDevice, 1, &write, 0, nullptr);
+#elif defined(METAL)
+    (void)name;
+    if (texture == nullptr) {
+        return;
+    }
+    auto &state = metal::pipelineState(this);
+    state.texturesByUnit[unit] = texture;
 #endif
+
+    if (texture == nullptr) {
+        return;
+    }
 
     ResourceEventInfo resourceInfo;
     resourceInfo.callerObject = std::to_string(callerId);
@@ -569,6 +809,9 @@ void Pipeline::bindTexture2D(const std::string &name, uint textureId, int unit,
 #elif defined(VULKAN)
     auto texture = Texture::getTextureFromHandle(textureId);
     bindTexture(name, texture, unit, callerId);
+#elif defined(METAL)
+    auto texture = metal::getTextureFromHandle(textureId);
+    bindTexture(name, texture, unit, callerId);
 #endif
 }
 
@@ -582,6 +825,9 @@ void Pipeline::bindTexture3D(const std::string &name, uint textureId, int unit,
 #elif defined(VULKAN)
     auto texture = Texture::getTextureFromHandle(textureId);
     bindTexture(name, texture, unit, callerId);
+#elif defined(METAL)
+    auto texture = metal::getTextureFromHandle(textureId);
+    bindTexture(name, texture, unit, callerId);
 #endif
 }
 
@@ -594,6 +840,9 @@ void Pipeline::bindTextureCubemap(const std::string &name, uint textureId,
     glUniform1i(location, unit);
 #elif defined(VULKAN)
     auto texture = Texture::getTextureFromHandle(textureId);
+    bindTexture(name, texture, unit, callerId);
+#elif defined(METAL)
+    auto texture = metal::getTextureFromHandle(textureId);
     bindTexture(name, texture, unit, callerId);
 #endif
 }
@@ -617,6 +866,10 @@ std::shared_ptr<Texture> Texture::createMultisampled(TextureFormat format,
     return texture;
 #elif defined(VULKAN)
     return Texture::createMultisampledVulkan(format, width, height, samples);
+#elif defined(METAL)
+    return Texture::create(TextureType::Texture2DMultisample, format, width,
+                           height, TextureDataFormat::Rgba, nullptr,
+                           static_cast<uint>(samples));
 #else
     return nullptr;
 #endif
@@ -653,6 +906,10 @@ std::shared_ptr<Texture> Texture::createDepthCubemap(TextureFormat format,
     return texture;
 #elif defined(VULKAN)
     return Texture::createDepthCubemapVulkan(format, resolution);
+#elif defined(METAL)
+    return Texture::create(TextureType::TextureCubeMap, format, resolution,
+                           resolution, TextureDataFormat::DepthComponent,
+                           nullptr, 1);
 #else
     return nullptr;
 #endif
@@ -702,6 +959,56 @@ std::shared_ptr<Texture> Texture::create3D(TextureFormat format, int width,
 #elif defined(VULKAN)
     return Texture::create3DVulkan(format, width, height, depth, dataFormat,
                                    data);
+#elif defined(METAL)
+    if (Device::globalInstance == nullptr) {
+        throw std::runtime_error("Cannot create Metal 3D texture without device");
+    }
+    auto &deviceState = metal::deviceState(Device::globalInstance);
+    if (deviceState.device == nullptr) {
+        throw std::runtime_error("Metal device is not initialized");
+    }
+
+    auto texture = std::make_shared<Texture>();
+    texture->type = TextureType::Texture3D;
+    texture->format = format;
+    texture->width = width;
+    texture->height = height;
+    texture->samples = 1;
+
+    auto &state = metal::textureState(texture.get());
+    state.type = TextureType::Texture3D;
+    state.format = format;
+    state.dataFormat = dataFormat;
+    state.width = width;
+    state.height = height;
+    state.depth = depth;
+    state.samples = 1;
+
+    MTL::TextureDescriptor *descriptor =
+        MTL::TextureDescriptor::alloc()->init();
+    descriptor->setTextureType(MTL::TextureType3D);
+    descriptor->setPixelFormat(metal::textureFormatToPixelFormat(format));
+    descriptor->setWidth(static_cast<NS::UInteger>(std::max(width, 1)));
+    descriptor->setHeight(static_cast<NS::UInteger>(std::max(height, 1)));
+    descriptor->setDepth(static_cast<NS::UInteger>(std::max(depth, 1)));
+    descriptor->setMipmapLevelCount(1);
+    descriptor->setUsage(metal::textureUsageFor(TextureType::Texture3D, format));
+    descriptor->setStorageMode(MTL::StorageModeShared);
+
+    state.texture = deviceState.device->newTexture(descriptor);
+    if (state.texture == nullptr) {
+        throw std::runtime_error("Failed to create Metal 3D texture");
+    }
+
+    metal::rebuildTextureSampler(texture.get(), deviceState.device);
+    state.handle = metal::registerTextureHandle(texture);
+    texture->textureID = state.handle;
+
+    if (data != nullptr) {
+        texture->updateData3D(data, width, height, depth, dataFormat);
+    }
+
+    return texture;
 #else
     return nullptr;
 #endif

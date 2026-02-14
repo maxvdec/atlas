@@ -11,6 +11,9 @@
 #include "atlas/tracer/log.h"
 #include <algorithm>
 #include <memory>
+#ifdef METAL
+#include "metal_state.h"
+#endif
 #ifdef VULKAN
 #include <vulkan/vulkan.hpp>
 #endif
@@ -60,7 +63,7 @@ void Framebuffer::attachTexture(std::shared_ptr<Texture> texture,
     glFramebufferTexture2D(GL_FRAMEBUFFER, attachmentType, texture->glType,
                            texture->textureID, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-#elif defined(VULKAN)
+#elif defined(VULKAN) || defined(METAL)
     (void)attachmentIndex;
     Attachment att;
     att.type = Attachment::Type::Color;
@@ -95,7 +98,7 @@ void Framebuffer::addAttachment(const Attachment &attachment) {
                            attachment.texture->glType,
                            attachment.texture->textureID, 0);
     attachments.push_back(attachment);
-#elif defined(VULKAN)
+#elif defined(VULKAN) || defined(METAL)
     attachments.push_back(attachment);
 #endif
 }
@@ -125,7 +128,7 @@ void Framebuffer::attachCubemap(std::shared_ptr<Texture> texture,
     att.type = attachmentType;
     att.texture = texture;
     attachments.push_back(att);
-#elif defined(VULKAN)
+#elif defined(VULKAN) || defined(METAL)
     Attachment att;
     att.type = attachmentType;
     att.texture = texture;
@@ -155,7 +158,7 @@ void Framebuffer::attachCubemapFace(std::shared_ptr<Texture> texture, int face,
                            GL_TEXTURE_CUBE_MAP_POSITIVE_X + face,
                            texture->textureID, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-#elif defined(VULKAN)
+#elif defined(VULKAN) || defined(METAL)
     (void)face;
     Attachment att;
     att.type = attachmentType;
@@ -170,7 +173,7 @@ void Framebuffer::disableColorBuffer() {
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
     colorBufferDisabled = true;
-#elif defined(VULKAN)
+#elif defined(VULKAN) || defined(METAL)
     colorBufferDisabled = true;
 #endif
 }
@@ -179,6 +182,7 @@ void Framebuffer::setViewport() {
 #ifdef OPENGL
     glViewport(0, 0, width, height);
 #elif defined(VULKAN)
+#elif defined(METAL)
 #endif
 }
 
@@ -186,6 +190,11 @@ void Framebuffer::setViewport(int x, int y, int viewWidth, int viewHeight) {
 #ifdef OPENGL
     glViewport(x, y, viewWidth, viewHeight);
 #elif defined(VULKAN)
+    (void)x;
+    (void)y;
+    (void)viewWidth;
+    (void)viewHeight;
+#elif defined(METAL)
     (void)x;
     (void)y;
     (void)viewWidth;
@@ -199,6 +208,9 @@ bool Framebuffer::getStatus() const {
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     return status == GL_FRAMEBUFFER_COMPLETE;
 #elif defined(VULKAN)
+    (void)this;
+    return true;
+#elif defined(METAL)
     (void)this;
     return true;
 #else
@@ -232,6 +244,7 @@ void Framebuffer::bind() {
         glDrawBuffer(GL_NONE);
     }
 #elif defined(VULKAN)
+#elif defined(METAL)
 #endif
 }
 
@@ -239,6 +252,7 @@ void Framebuffer::unbind() {
 #ifdef OPENGL
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 #elif defined(VULKAN)
+#elif defined(METAL)
 #endif
 }
 
@@ -246,6 +260,7 @@ void Framebuffer::bindForRead() {
 #ifdef OPENGL
     glBindFramebuffer(GL_READ_FRAMEBUFFER, framebufferID);
 #elif defined(VULKAN)
+#elif defined(METAL)
 #endif
 }
 
@@ -253,6 +268,7 @@ void Framebuffer::bindForDraw() {
 #ifdef OPENGL
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebufferID);
 #elif defined(VULKAN)
+#elif defined(METAL)
 #endif
 }
 
@@ -269,6 +285,8 @@ void Framebuffer::setDrawBuffers(int attachmentCount) {
     }
     glDrawBuffers(attachmentCount, drawBuffers.data());
 #elif defined(VULKAN)
+    (void)attachmentCount;
+#elif defined(METAL)
     (void)attachmentCount;
 #endif
 }
@@ -339,6 +357,130 @@ void CommandBuffer::performResolve(std::shared_ptr<ResolveAction> action) {
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+#elif defined(METAL)
+    if (action == nullptr || action->source == nullptr ||
+        action->destination == nullptr) {
+        return;
+    }
+    if (Device::globalInstance == nullptr) {
+        return;
+    }
+
+    auto &deviceState = metal::deviceState(Device::globalInstance);
+    if (deviceState.queue == nullptr) {
+        return;
+    }
+
+    auto gatherColorAttachments = [](const std::shared_ptr<Framebuffer> &fb,
+                                     int preferredIndex) {
+        std::vector<std::shared_ptr<Texture>> attachments;
+        if (fb == nullptr) {
+            return attachments;
+        }
+        int colorIndex = 0;
+        for (const auto &attachment : fb->attachments) {
+            if (attachment.type != Attachment::Type::Color ||
+                attachment.texture == nullptr) {
+                continue;
+            }
+            if (preferredIndex >= 0) {
+                if (colorIndex == preferredIndex) {
+                    attachments.push_back(attachment.texture);
+                    break;
+                }
+            } else {
+                attachments.push_back(attachment.texture);
+            }
+            colorIndex++;
+        }
+        return attachments;
+    };
+
+    auto gatherDepthAttachment = [](const std::shared_ptr<Framebuffer> &fb) {
+        if (fb == nullptr) {
+            return std::shared_ptr<Texture>{nullptr};
+        }
+        for (const auto &attachment : fb->attachments) {
+            if ((attachment.type == Attachment::Type::Depth ||
+                 attachment.type == Attachment::Type::DepthStencil) &&
+                attachment.texture != nullptr) {
+                return attachment.texture;
+            }
+        }
+        return std::shared_ptr<Texture>{nullptr};
+    };
+
+    auto resolveMsaaColor = [&](const std::shared_ptr<Texture> &source,
+                                const std::shared_ptr<Texture> &destination) {
+        auto &srcState = metal::textureState(source.get());
+        auto &dstState = metal::textureState(destination.get());
+        if (srcState.texture == nullptr || dstState.texture == nullptr) {
+            return;
+        }
+
+        MTL::CommandBuffer *commandBuffer = deviceState.queue->commandBuffer();
+        MTL::RenderPassDescriptor *descriptor =
+            MTL::RenderPassDescriptor::renderPassDescriptor();
+        auto *colorAttachment = descriptor->colorAttachments()->object(0);
+        colorAttachment->setTexture(srcState.texture);
+        colorAttachment->setResolveTexture(dstState.texture);
+        colorAttachment->setLoadAction(MTL::LoadActionLoad);
+        colorAttachment->setStoreAction(MTL::StoreActionMultisampleResolve);
+
+        MTL::RenderCommandEncoder *encoder =
+            commandBuffer->renderCommandEncoder(descriptor);
+        if (encoder != nullptr) {
+            encoder->endEncoding();
+        }
+        commandBuffer->commit();
+        commandBuffer->waitUntilCompleted();
+    };
+
+    auto copyTexture = [&](const std::shared_ptr<Texture> &source,
+                           const std::shared_ptr<Texture> &destination) {
+        auto &srcState = metal::textureState(source.get());
+        auto &dstState = metal::textureState(destination.get());
+        if (srcState.texture == nullptr || dstState.texture == nullptr) {
+            return;
+        }
+        MTL::CommandBuffer *commandBuffer = deviceState.queue->commandBuffer();
+        MTL::BlitCommandEncoder *blit = commandBuffer->blitCommandEncoder();
+        blit->copyFromTexture(srcState.texture, dstState.texture);
+        blit->endEncoding();
+        commandBuffer->commit();
+        commandBuffer->waitUntilCompleted();
+    };
+
+    auto sourceColors =
+        gatherColorAttachments(action->source, action->colorAttachmentIndex);
+    auto destinationColors = gatherColorAttachments(
+        action->destination, action->colorAttachmentIndex);
+
+    if (action->resolveColor && !sourceColors.empty() &&
+        !destinationColors.empty()) {
+        size_t count = std::min(sourceColors.size(), destinationColors.size());
+        for (size_t i = 0; i < count; ++i) {
+            auto &src = sourceColors[i];
+            auto &dst = destinationColors[i];
+            if (!src || !dst) {
+                continue;
+            }
+            if (src->samples > 1 && dst->samples == 1) {
+                resolveMsaaColor(src, dst);
+            } else {
+                copyTexture(src, dst);
+            }
+        }
+    }
+
+    if (action->resolveDepth) {
+        auto srcDepth = gatherDepthAttachment(action->source);
+        auto dstDepth = gatherDepthAttachment(action->destination);
+        if (srcDepth != nullptr && dstDepth != nullptr &&
+            srcDepth->samples == dstDepth->samples) {
+            copyTexture(srcDepth, dstDepth);
+        }
+    }
 #elif defined(VULKAN)
     if (action == nullptr || action->source == nullptr ||
         action->destination == nullptr) {

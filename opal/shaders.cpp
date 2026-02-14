@@ -13,10 +13,14 @@
 #include <array>
 #include <cctype>
 #include <cstdint>
+#include <cstring>
 #include <glad/glad.h>
 #include <memory>
 #include <string>
 #include <vector>
+#ifdef METAL
+#include "metal_state.h"
+#endif
 #ifdef VULKAN
 #include <vulkan/vulkan.hpp>
 #include <spirv_cross/spirv_cross.hpp>
@@ -45,7 +49,7 @@ uint Shader::getGLShaderType(ShaderType type) {
 }
 #endif
 
-#ifdef VULKAN
+#if defined(VULKAN) || defined(METAL)
 int Shader::currentId = 1;
 int ShaderProgram::currentId = 1;
 #endif
@@ -108,6 +112,11 @@ std::shared_ptr<Shader> Shader::createFromSource(const char *source,
     shader->performReflection();
 
     return shader;
+#elif defined(METAL)
+    auto shader = std::make_shared<Shader>();
+    shader->type = type;
+    shader->source = strdup(source);
+    return shader;
 #else
     throw std::runtime_error("Shader creation not implemented for this API");
 #endif
@@ -117,6 +126,51 @@ void Shader::compile() {
 #ifdef OPENGL
     glCompileShader(shaderID);
 #elif defined(VULKAN)
+    this->shaderID = Shader::currentId++;
+#elif defined(METAL)
+    if (Device::globalInstance == nullptr) {
+        throw std::runtime_error("Cannot compile Metal shader without device");
+    }
+
+    auto &deviceState = metal::deviceState(Device::globalInstance);
+    if (deviceState.device == nullptr) {
+        throw std::runtime_error("Metal device is not initialized");
+    }
+
+    auto &shaderState = metal::shaderState(this);
+
+    NS::Error *error = nullptr;
+    auto compileOptions = MTL::CompileOptions::alloc()->init();
+    compileOptions->setLanguageVersion(MTL::LanguageVersion4_0);
+    compileOptions->setFastMathEnabled(true);
+
+    NS::String *sourceString =
+        NS::String::string(source, NS::UTF8StringEncoding);
+    shaderState.library =
+        deviceState.device->newLibrary(sourceString, compileOptions, &error);
+    if (shaderState.library == nullptr) {
+        std::string message = "Metal shader compilation failed";
+        if (error != nullptr && error->localizedDescription() != nullptr) {
+            message += ": ";
+            message += error->localizedDescription()->utf8String();
+        }
+        throw std::runtime_error(message);
+    }
+
+    NS::String *entryName = NS::String::string("main0", NS::UTF8StringEncoding);
+    shaderState.function = shaderState.library->newFunction(entryName);
+    if (shaderState.function == nullptr) {
+        NS::Array *functions = shaderState.library->functionNames();
+        if (functions != nullptr && functions->count() > 0) {
+            NS::String *firstName = functions->object<NS::String>(0);
+            shaderState.function = shaderState.library->newFunction(firstName);
+        }
+    }
+
+    if (shaderState.function == nullptr) {
+        throw std::runtime_error("Unable to load Metal entry function");
+    }
+
     this->shaderID = Shader::currentId++;
 #endif
 }
@@ -128,6 +182,9 @@ bool Shader::getShaderStatus() const {
     return success == GL_TRUE;
 #elif defined(VULKAN)
     return true;
+#elif defined(METAL)
+    auto &shaderState = metal::shaderState(const_cast<Shader *>(this));
+    return shaderState.function != nullptr;
 #else
     throw std::runtime_error(
         "Shader status retrieval not implemented for this API");
@@ -140,6 +197,9 @@ void Shader::getShaderLog(char *logBuffer, size_t bufferSize) const {
                        logBuffer);
 #elif defined(VULKAN)
     strncpy(logBuffer, "Vulkan shader modules do not have compile logs.",
+            bufferSize);
+#elif defined(METAL)
+    strncpy(logBuffer, "Metal shader compile status available via exceptions.",
             bufferSize);
 #else
     throw std::runtime_error(
@@ -156,6 +216,10 @@ std::shared_ptr<ShaderProgram> ShaderProgram::create() {
     return program;
 #elif defined(VULKAN)
     auto program = std::make_shared<ShaderProgram>();
+    return program;
+#elif defined(METAL)
+    auto program = std::make_shared<ShaderProgram>();
+    program->attachedShaders = {};
     return program;
 #else
     throw std::runtime_error(
@@ -182,6 +246,18 @@ void ShaderProgram::attachShader(std::shared_ptr<Shader> shader, int callerId) {
         static_cast<float>(shader->spirvBytecode.size()) / (1024.0f * 1024.0f);
     info.send();
 
+#elif defined(METAL)
+    attachedShaders.push_back(shader);
+
+    ResourceEventInfo info;
+    info.resourceType = DebugResourceType::Shader;
+    info.operation = DebugResourceOperation::Loaded;
+    info.callerObject = std::to_string(callerId);
+    info.frameNumber = Device::globalInstance ? Device::globalInstance->frameCount
+                                              : 0;
+    info.sizeMb = static_cast<float>(strlen(shader->source)) / (1024.0f * 1024.0f);
+    info.send();
+
 #else
     throw std::runtime_error("Shader attachment not implemented for this API");
 #endif
@@ -191,6 +267,37 @@ void ShaderProgram::link() {
 #ifdef OPENGL
     glLinkProgram(programID);
 #elif defined(VULKAN)
+    this->programID = ShaderProgram::currentId++;
+#elif defined(METAL)
+    auto &state = metal::programState(this);
+    state = {};
+
+    const char *vertexSource = nullptr;
+    const char *fragmentSource = nullptr;
+
+    for (const auto &shader : attachedShaders) {
+        auto &shaderState = metal::shaderState(shader.get());
+        if (shader->type == ShaderType::Vertex) {
+            state.vertexFunction = shaderState.function;
+            vertexSource = shader->source;
+        } else if (shader->type == ShaderType::Fragment) {
+            state.fragmentFunction = shaderState.function;
+            fragmentSource = shader->source;
+        }
+    }
+
+    if (state.vertexFunction == nullptr || state.fragmentFunction == nullptr) {
+        throw std::runtime_error("Metal shader program requires vertex and fragment shaders");
+    }
+
+    if (vertexSource == nullptr || fragmentSource == nullptr) {
+        throw std::runtime_error("Metal shader program source is missing");
+    }
+
+    if (!metal::parseProgramLayouts(vertexSource, fragmentSource, state)) {
+        throw std::runtime_error("Failed to parse Metal shader buffer layouts");
+    }
+
     this->programID = ShaderProgram::currentId++;
 #else
     throw std::runtime_error(
@@ -205,6 +312,9 @@ bool ShaderProgram::getProgramStatus() const {
     return success == GL_TRUE;
 #elif defined(VULKAN)
     return true;
+#elif defined(METAL)
+    auto &state = metal::programState(const_cast<ShaderProgram *>(this));
+    return state.vertexFunction != nullptr && state.fragmentFunction != nullptr;
 #else
     throw std::runtime_error(
         "Shader program status retrieval not implemented for this API");
@@ -217,6 +327,9 @@ void ShaderProgram::getProgramLog(char *logBuffer, size_t bufferSize) const {
                         logBuffer);
 #elif defined(VULKAN)
     strncpy(logBuffer, "Vulkan shader programs do not have link logs.",
+            bufferSize);
+#elif defined(METAL)
+    strncpy(logBuffer, "Metal program link status available via exceptions.",
             bufferSize);
 #else
     throw std::runtime_error(

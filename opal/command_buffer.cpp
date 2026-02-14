@@ -8,14 +8,501 @@
 //
 
 #include "atlas/tracer/data.h"
+#include <algorithm>
 #include <array>
 #include <cstdint>
+#include <cstring>
 #include <memory>
 #include <opal/opal.h>
 #include <iostream>
+#include <stdexcept>
 #include <string>
+#ifdef METAL
+#include "metal_state.h"
+#endif
 
 namespace opal {
+
+#ifdef METAL
+namespace {
+
+template <typename T>
+static inline T alignUp(T value, T alignment) {
+    if (alignment <= 1) {
+        return value;
+    }
+    return (value + alignment - 1) / alignment * alignment;
+}
+
+static std::vector<std::shared_ptr<Texture>>
+collectColorAttachments(const std::shared_ptr<Framebuffer> &framebuffer) {
+    std::vector<std::shared_ptr<Texture>> colors;
+    if (framebuffer == nullptr) {
+        return colors;
+    }
+    for (const auto &attachment : framebuffer->attachments) {
+        if (attachment.type == Attachment::Type::Color &&
+            attachment.texture != nullptr) {
+            colors.push_back(attachment.texture);
+        }
+    }
+    return colors;
+}
+
+static std::shared_ptr<Texture>
+collectDepthAttachment(const std::shared_ptr<Framebuffer> &framebuffer) {
+    if (framebuffer == nullptr) {
+        return nullptr;
+    }
+    for (const auto &attachment : framebuffer->attachments) {
+        if (attachment.texture == nullptr) {
+            continue;
+        }
+        if (attachment.type == Attachment::Type::Depth ||
+            attachment.type == Attachment::Type::DepthStencil) {
+            return attachment.texture;
+        }
+    }
+    return nullptr;
+}
+
+static std::shared_ptr<Texture>
+collectStencilAttachment(const std::shared_ptr<Framebuffer> &framebuffer) {
+    if (framebuffer == nullptr) {
+        return nullptr;
+    }
+    for (const auto &attachment : framebuffer->attachments) {
+        if (attachment.texture == nullptr) {
+            continue;
+        }
+        if (attachment.type == Attachment::Type::Stencil ||
+            attachment.type == Attachment::Type::DepthStencil) {
+            return attachment.texture;
+        }
+    }
+    return nullptr;
+}
+
+static void ensureDefaultAuxiliaryTextures(Device *device, int width,
+                                           int height) {
+    if (device == nullptr || width <= 0 || height <= 0) {
+        return;
+    }
+
+    auto &deviceState = metal::deviceState(device);
+    if (deviceState.brightTexture == nullptr ||
+        deviceState.brightTexture->width != width ||
+        deviceState.brightTexture->height != height) {
+        deviceState.brightTexture = Texture::create(
+            TextureType::Texture2D, TextureFormat::Rgba16F, width, height,
+            TextureDataFormat::Rgba, nullptr, 1);
+    }
+
+    if (deviceState.depthTexture == nullptr ||
+        deviceState.depthTexture->width != width ||
+        deviceState.depthTexture->height != height) {
+        deviceState.depthTexture = Texture::create(
+            TextureType::Texture2D, TextureFormat::Depth32F, width, height,
+            TextureDataFormat::DepthComponent, nullptr, 1);
+    }
+}
+
+static void updateLayerDrawableSize(Device *device, int width, int height) {
+    if (device == nullptr || width <= 0 || height <= 0) {
+        return;
+    }
+    auto &deviceState = metal::deviceState(device);
+    if (deviceState.context == nullptr) {
+        return;
+    }
+    auto &contextState = metal::contextState(deviceState.context);
+    if (contextState.layer == nullptr) {
+        return;
+    }
+    contextState.layer->setDrawableSize(
+        CGSizeMake(static_cast<double>(width), static_cast<double>(height)));
+}
+
+static void configureColorAttachmentForClear(MTL::RenderPassDescriptor *pass,
+                                             uint32_t colorCount,
+                                             const float clearColor[4],
+                                             bool clearRequested) {
+    if (pass == nullptr) {
+        return;
+    }
+    for (uint32_t i = 0; i < colorCount; ++i) {
+        auto *attachment = pass->colorAttachments()->object(i);
+        if (attachment == nullptr || attachment->texture() == nullptr) {
+            continue;
+        }
+        if (clearRequested) {
+            attachment->setLoadAction(MTL::LoadActionClear);
+            attachment->setClearColor(MTL::ClearColor::Make(
+                clearColor[0], clearColor[1], clearColor[2], clearColor[3]));
+        } else {
+            attachment->setLoadAction(MTL::LoadActionLoad);
+        }
+        attachment->setStoreAction(MTL::StoreActionStore);
+    }
+}
+
+static void configureDepthAttachmentForClear(MTL::RenderPassDescriptor *pass,
+                                             float clearDepth,
+                                             bool clearRequested) {
+    if (pass == nullptr) {
+        return;
+    }
+    auto *depthAttachment = pass->depthAttachment();
+    if (depthAttachment != nullptr && depthAttachment->texture() != nullptr) {
+        depthAttachment->setLoadAction(clearRequested ? MTL::LoadActionClear
+                                                      : MTL::LoadActionLoad);
+        depthAttachment->setStoreAction(MTL::StoreActionStore);
+        depthAttachment->setClearDepth(static_cast<double>(clearDepth));
+    }
+    auto *stencilAttachment = pass->stencilAttachment();
+    if (stencilAttachment != nullptr && stencilAttachment->texture() != nullptr) {
+        stencilAttachment->setLoadAction(clearRequested ? MTL::LoadActionClear
+                                                        : MTL::LoadActionLoad);
+        stencilAttachment->setStoreAction(MTL::StoreActionStore);
+        stencilAttachment->setClearStencil(0);
+    }
+}
+
+static uint32_t requiredColorOutputs(const std::shared_ptr<Pipeline> &pipeline) {
+    if (pipeline == nullptr || pipeline->shaderProgram == nullptr) {
+        return 1;
+    }
+    uint32_t maxCount = 1;
+    for (const auto &shader : pipeline->shaderProgram->attachedShaders) {
+        if (shader != nullptr && shader->type == ShaderType::Fragment &&
+            shader->source != nullptr) {
+            maxCount =
+                std::max(maxCount, metal::fragmentColorOutputCount(shader->source));
+        }
+    }
+    return std::max<uint32_t>(1, maxCount);
+}
+
+static MTL::RenderPipelineState *getRenderPipelineState(
+    Device *device, const std::shared_ptr<Pipeline> &pipeline,
+    const std::array<MTL::PixelFormat, 8> &colorFormats, uint32_t colorCount,
+    MTL::PixelFormat depthFormat, MTL::PixelFormat stencilFormat,
+    uint32_t sampleCount) {
+    if (device == nullptr || pipeline == nullptr || pipeline->shaderProgram == nullptr) {
+        return nullptr;
+    }
+
+    auto &deviceState = metal::deviceState(device);
+    auto &pipelineState = metal::pipelineState(pipeline.get());
+    auto &programState = metal::programState(pipeline->shaderProgram.get());
+    if (deviceState.device == nullptr || programState.vertexFunction == nullptr ||
+        programState.fragmentFunction == nullptr) {
+        return nullptr;
+    }
+
+    std::string key = metal::makePipelineKey(colorFormats, colorCount, depthFormat,
+                                             stencilFormat, sampleCount);
+    key += "|" + std::to_string(static_cast<int>(pipelineState.blendingEnabled));
+    key += "|" + std::to_string(static_cast<int>(pipelineState.blendSrc));
+    key += "|" + std::to_string(static_cast<int>(pipelineState.blendDst));
+    key += "|" + std::to_string(static_cast<int>(pipelineState.blendOp));
+    key += "|" + std::to_string(static_cast<int>(pipelineState.depthTestEnabled));
+    key += "|" + std::to_string(static_cast<int>(pipelineState.depthWriteEnabled));
+    key += "|" + std::to_string(static_cast<int>(pipelineState.depthCompare));
+    auto cacheIt = pipelineState.renderPipelineCache.find(key);
+    if (cacheIt != pipelineState.renderPipelineCache.end()) {
+        return cacheIt->second;
+    }
+
+    MTL::RenderPipelineDescriptor *descriptor =
+        MTL::RenderPipelineDescriptor::alloc()->init();
+    descriptor->setVertexFunction(programState.vertexFunction);
+    descriptor->setFragmentFunction(programState.fragmentFunction);
+    descriptor->setSampleCount(std::max<uint32_t>(1, sampleCount));
+    if (pipelineState.vertexDescriptor != nullptr) {
+        descriptor->setVertexDescriptor(pipelineState.vertexDescriptor);
+    }
+
+    for (uint32_t i = 0; i < colorCount && i < colorFormats.size(); ++i) {
+        auto *attachment = descriptor->colorAttachments()->object(i);
+        if (attachment == nullptr) {
+            continue;
+        }
+        attachment->setPixelFormat(colorFormats[i]);
+        attachment->setWriteMask(MTL::ColorWriteMaskAll);
+        attachment->setBlendingEnabled(pipelineState.blendingEnabled);
+        if (pipelineState.blendingEnabled) {
+            attachment->setRgbBlendOperation(pipelineState.blendOp);
+            attachment->setAlphaBlendOperation(pipelineState.blendOp);
+            attachment->setSourceRGBBlendFactor(pipelineState.blendSrc);
+            attachment->setDestinationRGBBlendFactor(pipelineState.blendDst);
+            attachment->setSourceAlphaBlendFactor(pipelineState.blendSrc);
+            attachment->setDestinationAlphaBlendFactor(pipelineState.blendDst);
+        }
+    }
+
+    if (depthFormat != MTL::PixelFormatInvalid) {
+        descriptor->setDepthAttachmentPixelFormat(depthFormat);
+    }
+    if (stencilFormat != MTL::PixelFormatInvalid) {
+        descriptor->setStencilAttachmentPixelFormat(stencilFormat);
+    }
+
+    NS::Error *error = nullptr;
+    MTL::RenderPipelineState *created =
+        deviceState.device->newRenderPipelineState(descriptor, &error);
+    if (created == nullptr) {
+        std::string message = "Failed to create Metal render pipeline";
+        if (error != nullptr && error->localizedDescription() != nullptr) {
+            message += ": ";
+            message += error->localizedDescription()->utf8String();
+        }
+        throw std::runtime_error(message);
+    }
+
+    pipelineState.renderPipelineCache[key] = created;
+    return created;
+}
+
+static void uploadUniformBuffers(const std::shared_ptr<Pipeline> &pipeline,
+                                 MTL::RenderCommandEncoder *encoder,
+                                 MTL::Device *device) {
+    if (pipeline == nullptr || encoder == nullptr || device == nullptr ||
+        pipeline->shaderProgram == nullptr) {
+        return;
+    }
+
+    auto &programState = metal::programState(pipeline->shaderProgram.get());
+    auto &pipelineState = metal::pipelineState(pipeline.get());
+
+    for (const auto &binding : programState.bindings) {
+        auto &bytes = pipelineState.uniformData[binding.index];
+        size_t requiredSize = 0;
+        auto bindingSizeIt = programState.bindingSize.find(binding.index);
+        if (bindingSizeIt != programState.bindingSize.end()) {
+            requiredSize = bindingSizeIt->second;
+        }
+        if (bytes.size() < requiredSize) {
+            bytes.resize(requiredSize, 0);
+        }
+        if (bytes.empty()) {
+            continue;
+        }
+
+        auto &uniformBuffer = pipelineState.uniformBuffers[binding.index];
+        if (uniformBuffer == nullptr ||
+            uniformBuffer->length() < static_cast<NS::UInteger>(bytes.size())) {
+            uniformBuffer = device->newBuffer(
+                static_cast<NS::UInteger>(alignUp(bytes.size(), static_cast<size_t>(16))),
+                MTL::ResourceStorageModeShared);
+        }
+
+        std::memcpy(uniformBuffer->contents(), bytes.data(), bytes.size());
+        uniformBuffer->didModifyRange(
+            NS::Range::Make(0, static_cast<NS::UInteger>(bytes.size())));
+
+        if (binding.vertexStage) {
+            encoder->setVertexBuffer(uniformBuffer, 0, binding.index);
+        }
+        if (binding.fragmentStage) {
+            encoder->setFragmentBuffer(uniformBuffer, 0, binding.index);
+        }
+    }
+}
+
+static void bindTextures(const std::shared_ptr<Pipeline> &pipeline,
+                         MTL::RenderCommandEncoder *encoder, MTL::Device *device) {
+    if (pipeline == nullptr || encoder == nullptr || device == nullptr) {
+        return;
+    }
+
+    auto &pipelineState = metal::pipelineState(pipeline.get());
+    for (int unit = 0; unit < 32; ++unit) {
+        encoder->setVertexTexture(nullptr, unit);
+        encoder->setFragmentTexture(nullptr, unit);
+        encoder->setVertexSamplerState(nullptr, unit);
+        encoder->setFragmentSamplerState(nullptr, unit);
+    }
+
+    for (const auto &pair : pipelineState.texturesByUnit) {
+        int unit = pair.first;
+        const auto &texture = pair.second;
+        if (unit < 0 || texture == nullptr) {
+            continue;
+        }
+        auto &textureState = metal::textureState(texture.get());
+        if (textureState.texture == nullptr) {
+            continue;
+        }
+        if (textureState.sampler == nullptr) {
+            metal::rebuildTextureSampler(texture.get(), device);
+        }
+
+        encoder->setVertexTexture(textureState.texture,
+                                  static_cast<NS::UInteger>(unit));
+        encoder->setFragmentTexture(textureState.texture,
+                                    static_cast<NS::UInteger>(unit));
+        encoder->setVertexSamplerState(textureState.sampler,
+                                       static_cast<NS::UInteger>(unit));
+        encoder->setFragmentSamplerState(textureState.sampler,
+                                         static_cast<NS::UInteger>(unit));
+    }
+}
+
+static void ensureRenderEncoder(
+    CommandBuffer *commandBuffer, Device *device,
+    const std::shared_ptr<Framebuffer> &framebuffer,
+    const std::shared_ptr<Pipeline> &boundPipeline,
+    const float clearColorValue[4], float clearDepthValue) {
+    if (commandBuffer == nullptr) {
+        return;
+    }
+
+    auto &state = metal::commandBufferState(commandBuffer);
+    if (state.encoder != nullptr) {
+        return;
+    }
+    if (device == nullptr || framebuffer == nullptr || boundPipeline == nullptr) {
+        return;
+    }
+
+    auto &deviceState = metal::deviceState(device);
+    if (deviceState.queue == nullptr || deviceState.device == nullptr) {
+        throw std::runtime_error("Metal device queue is not initialized");
+    }
+    if (state.commandBuffer == nullptr) {
+        state.commandBuffer = deviceState.queue->commandBuffer();
+    }
+    if (state.passDescriptor == nullptr) {
+        throw std::runtime_error("Metal render pass descriptor is not initialized");
+    }
+
+    uint32_t requiredColors = requiredColorOutputs(boundPipeline);
+    auto framebufferColors = collectColorAttachments(framebuffer);
+    uint32_t actualColorCount =
+        static_cast<uint32_t>(framebufferColors.size());
+
+    int fbWidth = framebuffer->width;
+    int fbHeight = framebuffer->height;
+    if (framebuffer->isDefaultFramebuffer) {
+        fbWidth = std::max(1, deviceState.drawableWidth);
+        fbHeight = std::max(1, deviceState.drawableHeight);
+    }
+    ensureDefaultAuxiliaryTextures(device, fbWidth, fbHeight);
+
+    uint32_t targetColorCount = std::max(requiredColors, actualColorCount);
+    targetColorCount = std::max<uint32_t>(1, targetColorCount);
+    targetColorCount = std::min<uint32_t>(8, targetColorCount);
+
+    for (uint32_t i = 0; i < targetColorCount; ++i) {
+        auto *attachment = state.passDescriptor->colorAttachments()->object(i);
+        if (attachment == nullptr) {
+            continue;
+        }
+        if (attachment->texture() == nullptr) {
+            if (i == 0 && framebuffer->isDefaultFramebuffer &&
+                state.drawable != nullptr) {
+                attachment->setTexture(state.drawable->texture());
+                attachment->setStoreAction(MTL::StoreActionStore);
+            } else if (deviceState.brightTexture != nullptr) {
+                auto &brightState =
+                    metal::textureState(deviceState.brightTexture.get());
+                attachment->setTexture(brightState.texture);
+                attachment->setStoreAction(MTL::StoreActionDontCare);
+            }
+        }
+    }
+
+    configureColorAttachmentForClear(state.passDescriptor, targetColorCount,
+                                     clearColorValue, state.clearColorPending);
+    configureDepthAttachmentForClear(state.passDescriptor,
+                                     clearDepthValue,
+                                     state.clearDepthPending);
+
+    std::array<MTL::PixelFormat, 8> colorFormats{};
+    colorFormats.fill(MTL::PixelFormatInvalid);
+    uint32_t colorCount = 0;
+    uint32_t sampleCount = 1;
+
+    for (uint32_t i = 0; i < targetColorCount; ++i) {
+        auto *attachment = state.passDescriptor->colorAttachments()->object(i);
+        if (attachment == nullptr || attachment->texture() == nullptr) {
+            continue;
+        }
+        colorFormats[i] = attachment->texture()->pixelFormat();
+        colorCount = std::max(colorCount, i + 1);
+        sampleCount = std::max<uint32_t>(
+            sampleCount, static_cast<uint32_t>(attachment->texture()->sampleCount()));
+    }
+
+    MTL::PixelFormat depthFormat = MTL::PixelFormatInvalid;
+    MTL::PixelFormat stencilFormat = MTL::PixelFormatInvalid;
+    if (state.passDescriptor->depthAttachment() != nullptr &&
+        state.passDescriptor->depthAttachment()->texture() != nullptr) {
+        depthFormat = state.passDescriptor->depthAttachment()->texture()->pixelFormat();
+        sampleCount = std::max<uint32_t>(
+            sampleCount,
+            static_cast<uint32_t>(
+                state.passDescriptor->depthAttachment()->texture()->sampleCount()));
+    }
+    if (state.passDescriptor->stencilAttachment() != nullptr &&
+        state.passDescriptor->stencilAttachment()->texture() != nullptr) {
+        stencilFormat =
+            state.passDescriptor->stencilAttachment()->texture()->pixelFormat();
+    }
+
+    MTL::RenderPipelineState *renderPipelineState = getRenderPipelineState(
+        device, boundPipeline, colorFormats, colorCount, depthFormat,
+        stencilFormat, sampleCount);
+    if (renderPipelineState == nullptr) {
+        throw std::runtime_error("Metal render pipeline state creation failed");
+    }
+
+    state.encoder = state.commandBuffer->renderCommandEncoder(state.passDescriptor);
+    if (state.encoder == nullptr) {
+        throw std::runtime_error("Failed to create Metal render command encoder");
+    }
+
+    auto &pipelineState = metal::pipelineState(boundPipeline.get());
+    state.encoder->setRenderPipelineState(renderPipelineState);
+    if (pipelineState.depthStencilState != nullptr) {
+        state.encoder->setDepthStencilState(pipelineState.depthStencilState);
+    }
+    state.encoder->setCullMode(pipelineState.cullMode);
+    state.encoder->setFrontFacingWinding(pipelineState.frontFace);
+    state.encoder->setTriangleFillMode(pipelineState.fillMode);
+    if (pipelineState.polygonOffsetEnabled) {
+        state.encoder->setDepthBias(pipelineState.polygonOffsetUnits,
+                                    pipelineState.polygonOffsetFactor, 0.0f);
+    } else {
+        state.encoder->setDepthBias(0.0f, 0.0f, 0.0f);
+    }
+
+    int viewportW = pipelineState.viewportWidth > 0 ? pipelineState.viewportWidth
+                                                     : fbWidth;
+    int viewportH = pipelineState.viewportHeight > 0 ? pipelineState.viewportHeight
+                                                      : fbHeight;
+    MTL::Viewport viewport{static_cast<double>(pipelineState.viewportX),
+                           static_cast<double>(pipelineState.viewportY),
+                           static_cast<double>(viewportW),
+                           static_cast<double>(viewportH), 0.0, 1.0};
+    state.encoder->setViewport(viewport);
+
+    MTL::ScissorRect scissor{static_cast<NS::UInteger>(std::max(0, pipelineState.viewportX)),
+                             static_cast<NS::UInteger>(std::max(0, pipelineState.viewportY)),
+                             static_cast<NS::UInteger>(std::max(1, viewportW)),
+                             static_cast<NS::UInteger>(std::max(1, viewportH))};
+    state.encoder->setScissorRect(scissor);
+
+    uploadUniformBuffers(boundPipeline, state.encoder, deviceState.device);
+    bindTextures(boundPipeline, state.encoder, deviceState.device);
+
+    state.clearColorPending = false;
+    state.clearDepthPending = false;
+}
+
+} // namespace
+#endif
 
 std::shared_ptr<CommandBuffer> Device::acquireCommandBuffer() {
     auto commandBuffer = std::make_shared<CommandBuffer>();
@@ -51,6 +538,16 @@ void CommandBuffer::start() {
     vkWaitForFences(device->logicalDevice, 1, &inFlightFences[currentFrame],
                     VK_TRUE, UINT64_MAX);
     vkResetFences(device->logicalDevice, 1, &inFlightFences[currentFrame]);
+#elif defined(METAL)
+    auto &state = metal::commandBufferState(this);
+    state.commandBuffer = nullptr;
+    state.encoder = nullptr;
+    state.passDescriptor = nullptr;
+    state.drawable = nullptr;
+    state.needsPresent = false;
+    state.hasDraw = false;
+    state.clearColorPending = false;
+    state.clearDepthPending = false;
 #endif
 }
 
@@ -77,6 +574,111 @@ void CommandBuffer::beginPass(std::shared_ptr<RenderPass> newRenderPass) {
         framebuffer->width = static_cast<int>(device->swapChainExtent.width);
         framebuffer->height = static_cast<int>(device->swapChainExtent.height);
     }
+#elif defined(METAL)
+    if (device == nullptr) {
+        throw std::runtime_error("Metal command buffer has no device");
+    }
+
+    auto &deviceState = metal::deviceState(device);
+    if (deviceState.device == nullptr || deviceState.queue == nullptr) {
+        throw std::runtime_error("Metal device queue is not initialized");
+    }
+
+    auto &state = metal::commandBufferState(this);
+    if (state.encoder != nullptr) {
+        state.encoder->endEncoding();
+        state.encoder = nullptr;
+    }
+
+    if (state.commandBuffer == nullptr) {
+        state.commandBuffer = deviceState.queue->commandBuffer();
+    }
+
+    state.passDescriptor = MTL::RenderPassDescriptor::renderPassDescriptor();
+    state.hasDraw = false;
+
+    if (framebuffer->isDefaultFramebuffer) {
+        if (deviceState.context == nullptr) {
+            throw std::runtime_error("Metal device context is missing");
+        }
+        GLFWwindow *window = deviceState.context->getWindow();
+        int fbWidth = 0;
+        int fbHeight = 0;
+        glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
+        fbWidth = std::max(1, fbWidth);
+        fbHeight = std::max(1, fbHeight);
+
+        updateLayerDrawableSize(device, fbWidth, fbHeight);
+        ensureDefaultAuxiliaryTextures(device, fbWidth, fbHeight);
+
+        auto &contextState = metal::contextState(deviceState.context);
+        deviceState.drawable = contextState.layer->nextDrawable();
+        state.drawable = deviceState.drawable;
+        if (deviceState.drawable == nullptr) {
+            state.passDescriptor = nullptr;
+            return;
+        }
+        deviceState.drawableWidth = fbWidth;
+        deviceState.drawableHeight = fbHeight;
+        framebuffer->width = fbWidth;
+        framebuffer->height = fbHeight;
+
+        auto *color0 = state.passDescriptor->colorAttachments()->object(0);
+        color0->setTexture(deviceState.drawable->texture());
+        color0->setStoreAction(MTL::StoreActionStore);
+
+        if (deviceState.brightTexture != nullptr) {
+            auto &brightState =
+                metal::textureState(deviceState.brightTexture.get());
+            auto *color1 = state.passDescriptor->colorAttachments()->object(1);
+            color1->setTexture(brightState.texture);
+            color1->setStoreAction(MTL::StoreActionStore);
+        }
+
+        if (deviceState.depthTexture != nullptr) {
+            auto &depthState = metal::textureState(deviceState.depthTexture.get());
+            auto *depthAttachment = state.passDescriptor->depthAttachment();
+            depthAttachment->setTexture(depthState.texture);
+            depthAttachment->setStoreAction(MTL::StoreActionStore);
+            if (depthState.format == TextureFormat::Depth24Stencil8) {
+                auto *stencilAttachment = state.passDescriptor->stencilAttachment();
+                stencilAttachment->setTexture(depthState.texture);
+                stencilAttachment->setStoreAction(MTL::StoreActionStore);
+            }
+        }
+
+        state.needsPresent = true;
+    } else {
+        std::vector<std::shared_ptr<Texture>> colors =
+            collectColorAttachments(framebuffer);
+        for (size_t i = 0; i < colors.size() && i < 8; ++i) {
+            auto *attachment = state.passDescriptor->colorAttachments()->object(i);
+            auto &textureState = metal::textureState(colors[i].get());
+            attachment->setTexture(textureState.texture);
+            attachment->setStoreAction(MTL::StoreActionStore);
+        }
+
+        auto depthTexture = collectDepthAttachment(framebuffer);
+        if (depthTexture != nullptr) {
+            auto *depthAttachment = state.passDescriptor->depthAttachment();
+            auto &depthState = metal::textureState(depthTexture.get());
+            depthAttachment->setTexture(depthState.texture);
+            depthAttachment->setStoreAction(MTL::StoreActionStore);
+        }
+
+        auto stencilTexture = collectStencilAttachment(framebuffer);
+        if (stencilTexture != nullptr) {
+            auto *stencilAttachment = state.passDescriptor->stencilAttachment();
+            auto &stencilState = metal::textureState(stencilTexture.get());
+            stencilAttachment->setTexture(stencilState.texture);
+            stencilAttachment->setStoreAction(MTL::StoreActionStore);
+        }
+    }
+
+    configureColorAttachmentForClear(state.passDescriptor, 8, clearColorValue,
+                                     state.clearColorPending);
+    configureDepthAttachmentForClear(state.passDescriptor, clearDepthValue,
+                                     state.clearDepthPending);
 #endif
 }
 
@@ -111,6 +713,14 @@ void CommandBuffer::endPass() {
             }
         }
     }
+#elif defined(METAL)
+    auto &state = metal::commandBufferState(this);
+    if (state.encoder != nullptr) {
+        state.encoder->endEncoding();
+        state.encoder = nullptr;
+    }
+    state.passDescriptor = nullptr;
+    state.hasDraw = false;
 #endif
 }
 
@@ -190,6 +800,27 @@ void CommandBuffer::commit() {
 
     imageAcquired = false;
     currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+#elif defined(METAL)
+    auto &state = metal::commandBufferState(this);
+    if (state.commandBuffer == nullptr) {
+        return;
+    }
+
+    if (state.encoder != nullptr) {
+        state.encoder->endEncoding();
+        state.encoder = nullptr;
+    }
+
+    if (state.needsPresent && state.drawable != nullptr) {
+        state.commandBuffer->presentDrawable(state.drawable);
+    }
+
+    state.commandBuffer->commit();
+    state.commandBuffer = nullptr;
+    state.passDescriptor = nullptr;
+    state.drawable = nullptr;
+    state.needsPresent = false;
+    state.hasDraw = false;
 #endif
 }
 
@@ -357,6 +988,41 @@ auto CommandBuffer::draw(uint vertexCount, uint instanceCount, uint firstVertex,
     }
     vkCmdDraw(commandBuffers[currentFrame], vertexCount, instanceCount,
               firstVertex, firstInstance);
+#elif defined(METAL)
+    if (boundPipeline == nullptr || framebuffer == nullptr) {
+        return;
+    }
+
+    auto &state = metal::commandBufferState(this);
+    ensureRenderEncoder(this, device, framebuffer, boundPipeline,
+                        clearColorValue, clearDepthValue);
+    if (state.encoder == nullptr) {
+        return;
+    }
+
+    if (boundDrawingState != nullptr && boundDrawingState->vertexBuffer != nullptr) {
+        auto &vertexState = metal::bufferState(boundDrawingState->vertexBuffer.get());
+        if (vertexState.buffer != nullptr) {
+            state.encoder->setVertexBuffer(vertexState.buffer, 0, 0);
+        }
+    }
+
+    if (boundDrawingState != nullptr &&
+        boundDrawingState->instanceBuffer != nullptr) {
+        auto &instanceState =
+            metal::bufferState(boundDrawingState->instanceBuffer.get());
+        if (instanceState.buffer != nullptr) {
+            state.encoder->setVertexBuffer(instanceState.buffer, 0, 1);
+        }
+    }
+
+    auto &pipelineState = metal::pipelineState(boundPipeline.get());
+    state.encoder->drawPrimitives(
+        pipelineState.primitiveType, static_cast<NS::UInteger>(firstVertex),
+        static_cast<NS::UInteger>(vertexCount),
+        static_cast<NS::UInteger>(instanceCount),
+        static_cast<NS::UInteger>(firstInstance));
+    state.hasDraw = true;
 #endif
 
     DrawCallInfo info;
@@ -433,6 +1099,49 @@ void CommandBuffer::drawIndexed(uint indexCount, uint instanceCount,
     }
     vkCmdDrawIndexed(commandBuffers[currentFrame], indexCount, instanceCount,
                      firstIndex, vertexOffset, firstInstance);
+#elif defined(METAL)
+    if (boundPipeline == nullptr || framebuffer == nullptr) {
+        return;
+    }
+    if (boundDrawingState == nullptr || boundDrawingState->indexBuffer == nullptr) {
+        return;
+    }
+
+    auto &state = metal::commandBufferState(this);
+    ensureRenderEncoder(this, device, framebuffer, boundPipeline,
+                        clearColorValue, clearDepthValue);
+    if (state.encoder == nullptr) {
+        return;
+    }
+
+    if (boundDrawingState->vertexBuffer != nullptr) {
+        auto &vertexState = metal::bufferState(boundDrawingState->vertexBuffer.get());
+        if (vertexState.buffer != nullptr) {
+            state.encoder->setVertexBuffer(vertexState.buffer, 0, 0);
+        }
+    }
+
+    if (boundDrawingState->instanceBuffer != nullptr) {
+        auto &instanceState =
+            metal::bufferState(boundDrawingState->instanceBuffer.get());
+        if (instanceState.buffer != nullptr) {
+            state.encoder->setVertexBuffer(instanceState.buffer, 0, 1);
+        }
+    }
+
+    auto &indexState = metal::bufferState(boundDrawingState->indexBuffer.get());
+    if (indexState.buffer == nullptr) {
+        return;
+    }
+
+    auto &pipelineState = metal::pipelineState(boundPipeline.get());
+    state.encoder->drawIndexedPrimitives(
+        pipelineState.primitiveType, static_cast<NS::UInteger>(indexCount),
+        MTL::IndexTypeUInt32, indexState.buffer,
+        static_cast<NS::UInteger>(firstIndex * sizeof(uint)),
+        static_cast<NS::UInteger>(instanceCount), vertexOffset,
+        static_cast<NS::UInteger>(firstInstance));
+    state.hasDraw = true;
 #endif
 
     DrawCallInfo info;
@@ -552,6 +1261,28 @@ void CommandBuffer::drawPatches(uint vertexCount, uint firstVertex,
         boundPipeline->flushPushConstants(commandBuffers[currentFrame]);
     }
     vkCmdDraw(commandBuffers[currentFrame], vertexCount, 1, firstVertex, 0);
+#elif defined(METAL)
+    if (boundPipeline == nullptr || framebuffer == nullptr) {
+        return;
+    }
+    auto &state = metal::commandBufferState(this);
+    ensureRenderEncoder(this, device, framebuffer, boundPipeline,
+                        clearColorValue, clearDepthValue);
+    if (state.encoder == nullptr) {
+        return;
+    }
+
+    if (boundDrawingState != nullptr && boundDrawingState->vertexBuffer != nullptr) {
+        auto &vertexState = metal::bufferState(boundDrawingState->vertexBuffer.get());
+        if (vertexState.buffer != nullptr) {
+            state.encoder->setVertexBuffer(vertexState.buffer, 0, 0);
+        }
+    }
+    auto &pipelineState = metal::pipelineState(boundPipeline.get());
+    state.encoder->drawPrimitives(pipelineState.primitiveType,
+                                  static_cast<NS::UInteger>(firstVertex),
+                                  static_cast<NS::UInteger>(vertexCount));
+    state.hasDraw = true;
 #endif
 
     DrawCallInfo info;
@@ -611,19 +1342,39 @@ void CommandBuffer::clearColor(float r, float g, float b, float a) {
 #ifdef OPENGL
     glClearColor(r, g, b, a);
     glClear(GL_COLOR_BUFFER_BIT);
+#elif defined(METAL)
+    auto &state = metal::commandBufferState(this);
+    state.clearColorPending = true;
 #endif
     this->clearColorValue[0] = r;
     this->clearColorValue[1] = g;
     this->clearColorValue[2] = b;
     this->clearColorValue[3] = a;
+
+#ifdef METAL
+    if (state.passDescriptor != nullptr && state.encoder == nullptr) {
+        configureColorAttachmentForClear(state.passDescriptor, 8, clearColorValue,
+                                         true);
+    }
+#endif
 }
 
 void CommandBuffer::clearDepth(float depth) {
 #ifdef OPENGL
     glClearDepth(depth);
     glClear(GL_DEPTH_BUFFER_BIT);
+#elif defined(METAL)
+    auto &state = metal::commandBufferState(this);
+    state.clearDepthPending = true;
 #endif
     this->clearDepthValue = depth;
+
+#ifdef METAL
+    if (state.passDescriptor != nullptr && state.encoder == nullptr) {
+        configureDepthAttachmentForClear(state.passDescriptor, clearDepthValue,
+                                         true);
+    }
+#endif
 }
 
 void CommandBuffer::clear(float r, float g, float b, float a, float depth) {
@@ -631,12 +1382,25 @@ void CommandBuffer::clear(float r, float g, float b, float a, float depth) {
     glClearColor(r, g, b, a);
     glClearDepth(depth);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+#elif defined(METAL)
+    auto &state = metal::commandBufferState(this);
+    state.clearColorPending = true;
+    state.clearDepthPending = true;
 #endif
     this->clearColorValue[0] = r;
     this->clearColorValue[1] = g;
     this->clearColorValue[2] = b;
     this->clearColorValue[3] = a;
     this->clearDepthValue = depth;
+
+#ifdef METAL
+    if (state.passDescriptor != nullptr && state.encoder == nullptr) {
+        configureColorAttachmentForClear(state.passDescriptor, 8, clearColorValue,
+                                         true);
+        configureDepthAttachmentForClear(state.passDescriptor, clearDepthValue,
+                                         true);
+    }
+#endif
 }
 
 } // namespace opal

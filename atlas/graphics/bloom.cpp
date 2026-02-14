@@ -158,20 +158,27 @@ void BloomRenderTarget::renderDownsamples(unsigned int srcTexture) {
     downsamplePipeline->bindTexture2D("srcTexture", srcTexture, 0);
 
     auto commandBuffer = Window::mainWindow->device->acquireCommandBuffer();
+    commandBuffer->start();
 
     for (size_t i = 0; i < elements.size(); i++) {
         const BloomElement &element = elements[i];
         this->framebuffer->setViewport(0, 0, element.size.x, element.size.y);
         this->framebuffer->attachTexture(element.texture, 0);
 
+        auto renderPass = opal::RenderPass::create();
+        renderPass->setFramebuffer(this->framebuffer);
+        commandBuffer->beginPass(renderPass);
+        commandBuffer->bindPipeline(downsamplePipeline);
         commandBuffer->bindDrawingState(quadState);
         commandBuffer->draw(6, 1, 0, 0);
         commandBuffer->unbindDrawingState();
+        commandBuffer->endPass();
 
         downsamplePipeline->setUniform2f("srcResolution", element.size.x,
                                          element.size.y);
         downsamplePipeline->bindTexture2D("srcTexture", element.textureId, 0);
     }
+    commandBuffer->commit();
 }
 
 void BloomRenderTarget::renderUpsamples(float filterRadius) {
@@ -189,6 +196,7 @@ void BloomRenderTarget::renderUpsamples(float filterRadius) {
     upsamplePipeline->setUniform1f("filterRadius", filterRadius);
 
     auto commandBuffer = Window::mainWindow->device->acquireCommandBuffer();
+    commandBuffer->start();
 
     for (int i = elements.size() - 1; i > 0; i--) {
         const BloomElement &element = elements[i];
@@ -202,10 +210,16 @@ void BloomRenderTarget::renderUpsamples(float filterRadius) {
                                        nextElement.size.y);
         this->framebuffer->attachTexture(nextElement.texture, 0);
 
+        auto renderPass = opal::RenderPass::create();
+        renderPass->setFramebuffer(this->framebuffer);
+        commandBuffer->beginPass(renderPass);
+        commandBuffer->bindPipeline(upsamplePipeline);
         commandBuffer->bindDrawingState(quadState);
         commandBuffer->draw(6, 1, 0, 0);
         commandBuffer->unbindDrawingState();
+        commandBuffer->endPass();
     }
+    commandBuffer->commit();
 
     upsamplePipeline->setBlendFunc(opal::BlendFunc::One,
                                    opal::BlendFunc::OneMinusSrcAlpha);

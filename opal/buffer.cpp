@@ -10,8 +10,12 @@
 #include "atlas/tracer/data.h"
 #include <memory>
 #include <opal/opal.h>
+#include <cstring>
 #include <stdexcept>
 #include <string>
+#ifdef METAL
+#include "metal_state.h"
+#endif
 
 namespace opal {
 
@@ -48,9 +52,11 @@ std::shared_ptr<Buffer> Buffer::create(BufferUsage usage, size_t size,
                                        const void *data,
                                        MemoryUsageType memoryUsage,
                                        int callerId) {
+    static uint32_t nextBufferId = 1;
     auto buffer = std::make_shared<Buffer>();
     buffer->usage = usage;
     buffer->memoryUsage = memoryUsage;
+    buffer->bufferID = nextBufferId++;
 #ifdef OPENGL
     glGenBuffers(1, &buffer->bufferID);
     uint glTarget;
@@ -155,6 +161,29 @@ std::shared_ptr<Buffer> Buffer::create(BufferUsage usage, size_t size,
         Buffer::copyBuffer(buffer->stagingBuffer, buffer->vkBuffer, bufferSize);
     }
 
+#elif defined(METAL)
+    if (Device::globalInstance == nullptr) {
+        throw std::runtime_error("Cannot create Metal buffer without device");
+    }
+
+    auto &deviceState = metal::deviceState(Device::globalInstance);
+    if (deviceState.device == nullptr) {
+        throw std::runtime_error("Metal device is not initialized");
+    }
+
+    auto &bufferState = metal::bufferState(buffer.get());
+    bufferState.buffer = deviceState.device->newBuffer(
+        static_cast<NS::UInteger>(size), MTL::ResourceStorageModeShared);
+    if (bufferState.buffer == nullptr) {
+        throw std::runtime_error("Failed to allocate Metal buffer");
+    }
+    bufferState.size = size;
+
+    if (data != nullptr && size > 0) {
+        std::memcpy(bufferState.buffer->contents(), data, size);
+        bufferState.buffer->didModifyRange(
+            NS::Range::Make(0, static_cast<NS::UInteger>(size)));
+    }
 #endif
 
     ResourceEventInfo info;
@@ -250,6 +279,40 @@ void Buffer::updateData(size_t offset, size_t size, const void *data) {
     vkFreeCommandBuffers(Device::globalDevice,
                          Device::globalInstance->commandPool, 1,
                          &commandBuffer);
+#elif defined(METAL)
+    if (Device::globalInstance == nullptr) {
+        throw std::runtime_error("Cannot update Metal buffer without device");
+    }
+    auto &deviceState = metal::deviceState(Device::globalInstance);
+    auto &bufferState = metal::bufferState(this);
+    if (bufferState.buffer == nullptr || deviceState.device == nullptr) {
+        throw std::runtime_error("Metal buffer is not initialized");
+    }
+    if (data == nullptr || size == 0) {
+        return;
+    }
+
+    size_t required = offset + size;
+    if (required > bufferState.size) {
+        size_t newSize = required;
+        MTL::Buffer *newBuffer = deviceState.device->newBuffer(
+            static_cast<NS::UInteger>(newSize), MTL::ResourceStorageModeShared);
+        if (newBuffer == nullptr) {
+            throw std::runtime_error("Failed to resize Metal buffer");
+        }
+        std::memcpy(newBuffer->contents(), bufferState.buffer->contents(),
+                    bufferState.size);
+        newBuffer->didModifyRange(
+            NS::Range::Make(0, static_cast<NS::UInteger>(bufferState.size)));
+        bufferState.buffer = newBuffer;
+        bufferState.size = newSize;
+    }
+
+    std::memcpy(static_cast<uint8_t *>(bufferState.buffer->contents()) + offset,
+                data, size);
+    bufferState.buffer->didModifyRange(
+        NS::Range::Make(static_cast<NS::UInteger>(offset),
+                        static_cast<NS::UInteger>(size)));
 #endif
 }
 
@@ -281,6 +344,7 @@ void Buffer::bind(int callerId) const {
         break;
     }
     glBindBuffer(glTarget, bufferID);
+#elif defined(METAL)
 #endif
 
     ResourceEventInfo info;
@@ -319,6 +383,7 @@ void Buffer::unbind(int callerId) const {
         break;
     }
     glBindBuffer(glTarget, 0);
+#elif defined(METAL)
 #endif
     ResourceEventInfo info;
     info.resourceType = DebugResourceType::Buffer;
@@ -356,6 +421,7 @@ void DrawingState::bind() const {
     if (indexBuffer) {
         indexBuffer->bind();
     }
+#elif defined(METAL)
 #endif
 }
 
@@ -368,6 +434,7 @@ void DrawingState::unbind() const {
     if (vertexBuffer) {
         vertexBuffer->unbind();
     }
+#elif defined(METAL)
 #endif
 }
 
@@ -410,7 +477,7 @@ void DrawingState::configureAttributes(
     }
 
     glBindVertexArray(0);
-#elif defined(VULKAN)
+#elif defined(VULKAN) || defined(METAL)
     bool hasInstanceBinding = false;
     for (const auto &binding : bindings) {
         if (binding.attribute.inputRate == VertexBindingInputRate::Instance &&

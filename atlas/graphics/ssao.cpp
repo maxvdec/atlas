@@ -107,8 +107,8 @@ void Window::renderSSAO() {
     this->ssaoMapsDirty = false;
     this->ssaoUpdateCooldown = this->ssaoUpdateInterval;
 
-    this->ssaoBuffer->bind();
     auto ssaoCommandBuffer = Window::mainWindow->device->acquireCommandBuffer();
+    ssaoCommandBuffer->start();
     ssaoCommandBuffer->clearColor(1.0f, 1.0f, 1.0f, 1.0f);
     static std::shared_ptr<opal::DrawingState> ssaoState = nullptr;
     static std::shared_ptr<opal::Buffer> ssaoBuffer = nullptr;
@@ -158,7 +158,11 @@ void Window::renderSSAO() {
         ssaoPipeline = opal::Pipeline::create();
     }
     ssaoPipeline = this->ssaoProgram.requestPipeline(ssaoPipeline);
+    auto ssaoRenderPass = opal::RenderPass::create();
+    ssaoRenderPass->setFramebuffer(this->ssaoBuffer->getFramebuffer());
+    ssaoCommandBuffer->beginPass(ssaoRenderPass);
     ssaoPipeline->bind();
+    ssaoCommandBuffer->bindPipeline(ssaoPipeline);
 
     ssaoPipeline->bindTexture2D("gPosition", this->gBuffer->gPosition.id, 0);
     ssaoPipeline->bindTexture2D("gNormal", this->gBuffer->gNormal.id, 1);
@@ -178,12 +182,11 @@ void Window::renderSSAO() {
     glm::vec2 noiseSize(4.0f, 4.0f);
     ssaoPipeline->setUniform2f("noiseScale", screenSize.x / noiseSize.x,
                                screenSize.y / noiseSize.y);
-    ssaoState->bind();
+    ssaoCommandBuffer->bindDrawingState(ssaoState);
     ssaoCommandBuffer->draw(6, 1, 0, 0);
-    ssaoState->unbind();
-    this->ssaoBuffer->unbind();
+    ssaoCommandBuffer->unbindDrawingState();
+    ssaoCommandBuffer->endPass();
 
-    this->ssaoBlurBuffer->bind();
     ssaoCommandBuffer->clearColor(1.0f, 1.0f, 1.0f, 1.0f);
 
     static std::shared_ptr<opal::Pipeline> ssaoBlurPipeline = nullptr;
@@ -191,13 +194,18 @@ void Window::renderSSAO() {
         ssaoBlurPipeline = opal::Pipeline::create();
     }
     ssaoBlurPipeline = this->ssaoBlurProgram.requestPipeline(ssaoBlurPipeline);
+    auto ssaoBlurRenderPass = opal::RenderPass::create();
+    ssaoBlurRenderPass->setFramebuffer(this->ssaoBlurBuffer->getFramebuffer());
+    ssaoCommandBuffer->beginPass(ssaoBlurRenderPass);
     ssaoBlurPipeline->bind();
+    ssaoCommandBuffer->bindPipeline(ssaoBlurPipeline);
 
     ssaoBlurPipeline->bindTexture2D("inSSAO", this->ssaoBuffer->texture.id, 0);
-    ssaoState->bind();
+    ssaoCommandBuffer->bindDrawingState(ssaoState);
     ssaoCommandBuffer->draw(6, 1, 0, 0);
-    ssaoState->unbind();
-    this->ssaoBlurBuffer->unbind();
+    ssaoCommandBuffer->unbindDrawingState();
+    ssaoCommandBuffer->endPass();
+    ssaoCommandBuffer->commit();
 
     if (this->camera != nullptr) {
         this->lastSSAOCameraPosition = this->camera->position;

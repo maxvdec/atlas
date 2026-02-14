@@ -428,7 +428,9 @@ class Shader {
     std::unordered_map<std::string, UniformBindingInfo> uniformBindings;
 
     void performReflection();
+#endif
 
+#if defined(VULKAN) || defined(METAL)
     static int currentId;
 #endif
 
@@ -458,7 +460,9 @@ class ShaderProgram {
     std::unordered_map<std::string, UniformBindingInfo> uniformBindings;
 
     const UniformBindingInfo *findUniform(const std::string &name) const;
+#endif
 
+#if defined(VULKAN) || defined(METAL)
     static int currentId;
 #endif
 };
