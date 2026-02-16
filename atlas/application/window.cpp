@@ -684,8 +684,8 @@ glm::mat4 Window::calculateProjectionMatrix() {
                                 camera->nearClip, camera->farClip);
     }
 
-    // For Vulkan/Metal, flip Y in projection to match GL-style coordinates
-#if defined(VULKAN) || defined(METAL)
+    // For Vulkan, flip Y in projection to match clip-space conventions
+#if defined(VULKAN)
     projection[1][1] *= -1.0f;
 #endif
     return projection;

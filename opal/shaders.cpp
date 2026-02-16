@@ -12,6 +12,7 @@
 #include "atlas/tracer/log.h"
 #include <array>
 #include <cctype>
+#include <cstdlib>
 #include <cstdint>
 #include <cstring>
 #include <glad/glad.h>
@@ -53,6 +54,22 @@ uint Shader::getGLShaderType(ShaderType type) {
 int Shader::currentId = 1;
 int ShaderProgram::currentId = 1;
 #endif
+
+Shader::~Shader() {
+#ifdef METAL
+    metal::releaseShaderState(this);
+#endif
+    if (source != nullptr) {
+        std::free(source);
+        source = nullptr;
+    }
+}
+
+ShaderProgram::~ShaderProgram() {
+#ifdef METAL
+    metal::releaseProgramState(this);
+#endif
+}
 
 std::shared_ptr<Shader> Shader::createFromSource(const char *source,
                                                  ShaderType type) {

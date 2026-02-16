@@ -19,6 +19,12 @@
 
 namespace opal {
 
+Buffer::~Buffer() {
+#ifdef METAL
+    metal::releaseBufferState(this);
+#endif
+}
+
 namespace {
 #ifdef OPENGL
 uint getGLVertexAttributeType(VertexAttributeType type) {
@@ -295,17 +301,23 @@ void Buffer::updateData(size_t offset, size_t size, const void *data) {
     size_t required = offset + size;
     if (required > bufferState.size) {
         size_t newSize = required;
+        MTL::Buffer *oldBuffer = bufferState.buffer;
         MTL::Buffer *newBuffer = deviceState.device->newBuffer(
             static_cast<NS::UInteger>(newSize), MTL::ResourceStorageModeShared);
         if (newBuffer == nullptr) {
             throw std::runtime_error("Failed to resize Metal buffer");
         }
-        std::memcpy(newBuffer->contents(), bufferState.buffer->contents(),
-                    bufferState.size);
-        newBuffer->didModifyRange(
-            NS::Range::Make(0, static_cast<NS::UInteger>(bufferState.size)));
+        if (oldBuffer != nullptr && bufferState.size > 0) {
+            std::memcpy(newBuffer->contents(), oldBuffer->contents(),
+                        bufferState.size);
+            newBuffer->didModifyRange(
+                NS::Range::Make(0, static_cast<NS::UInteger>(bufferState.size)));
+        }
         bufferState.buffer = newBuffer;
         bufferState.size = newSize;
+        if (oldBuffer != nullptr) {
+            oldBuffer->release();
+        }
     }
 
     std::memcpy(static_cast<uint8_t *>(bufferState.buffer->contents()) + offset,

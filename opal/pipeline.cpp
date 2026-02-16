@@ -146,20 +146,20 @@ static MTL::CullMode toMetalCull(CullMode mode) {
     case CullMode::Back:
         return MTL::CullModeBack;
     case CullMode::FrontAndBack:
-        return MTL::CullModeNone;
+        return MTL::CullModeFront;
     default:
-        return MTL::CullModeBack;
+        return MTL::CullModeNone;
     }
 }
 
 static MTL::Winding toMetalWinding(FrontFace face) {
     switch (face) {
     case FrontFace::Clockwise:
-        return MTL::WindingCounterClockwise;
+        return MTL::WindingClockwise;
     case FrontFace::CounterClockwise:
-        return MTL::WindingClockwise;
+        return MTL::WindingCounterClockwise;
     default:
-        return MTL::WindingClockwise;
+        return MTL::WindingCounterClockwise;
     }
 }
 
@@ -174,6 +174,41 @@ static MTL::TriangleFillMode toMetalFillMode(RasterizerMode mode) {
     default:
         return MTL::TriangleFillModeFill;
     }
+}
+
+static void ensureMetalDepthStencilState(metal::PipelineState &state,
+                                         MTL::Device *device,
+                                         bool depthTestEnabled,
+                                         bool depthWriteEnabled,
+                                         MTL::CompareFunction depthCompare) {
+    if (device == nullptr) {
+        return;
+    }
+
+    bool needsRebuild = state.depthStencilState == nullptr ||
+                        state.depthTestEnabled != depthTestEnabled ||
+                        state.depthWriteEnabled != depthWriteEnabled ||
+                        state.depthCompare != depthCompare;
+    if (!needsRebuild) {
+        return;
+    }
+
+    MTL::DepthStencilDescriptor *depthDescriptor =
+        MTL::DepthStencilDescriptor::alloc()->init();
+    depthDescriptor->setDepthCompareFunction(depthCompare);
+    depthDescriptor->setDepthWriteEnabled(depthWriteEnabled);
+
+    MTL::DepthStencilState *newState =
+        device->newDepthStencilState(depthDescriptor);
+    depthDescriptor->release();
+    if (newState == nullptr) {
+        throw std::runtime_error("Failed to create Metal depth stencil state");
+    }
+
+    if (state.depthStencilState != nullptr) {
+        state.depthStencilState->release();
+    }
+    state.depthStencilState = newState;
 }
 
 static MTL::VertexFormat toMetalVertexFormat(VertexAttributeType type, uint size,
@@ -317,6 +352,12 @@ static void updateMetalUniform(Pipeline *pipeline, const std::string &name,
 std::shared_ptr<Pipeline> Pipeline::create() {
     auto pipeline = std::make_shared<Pipeline>();
     return pipeline;
+}
+
+Pipeline::~Pipeline() {
+#ifdef METAL
+    metal::releasePipelineState(this);
+#endif
 }
 
 #ifdef VULKAN
@@ -586,9 +627,9 @@ void Pipeline::build() {
     state.cullMode = toMetalCull(this->cullMode);
     state.frontFace = toMetalWinding(this->frontFace);
     state.fillMode = toMetalFillMode(this->rasterizerMode);
-    state.depthTestEnabled = this->depthTestEnabled;
-    state.depthWriteEnabled = this->depthWriteEnabled;
-    state.depthCompare = toMetalCompare(this->depthCompareOp);
+    MTL::CompareFunction desiredDepthCompare = this->depthTestEnabled
+                                                   ? toMetalCompare(this->depthCompareOp)
+                                                   : MTL::CompareFunctionAlways;
     state.blendingEnabled = this->blendingEnabled;
     state.blendSrc = toMetalBlendFactor(this->blendSrcFactor);
     state.blendDst = toMetalBlendFactor(this->blendDstFactor);
@@ -655,20 +696,12 @@ void Pipeline::build() {
         }
     }
 
-    MTL::DepthStencilDescriptor *depthDescriptor =
-        MTL::DepthStencilDescriptor::alloc()->init();
-    if (this->depthTestEnabled) {
-        depthDescriptor->setDepthCompareFunction(
-            toMetalCompare(this->depthCompareOp));
-    } else {
-        depthDescriptor->setDepthCompareFunction(MTL::CompareFunctionAlways);
-    }
-    depthDescriptor->setDepthWriteEnabled(this->depthWriteEnabled);
-    if (state.depthStencilState != nullptr) {
-        state.depthStencilState->release();
-    }
-    state.depthStencilState = deviceState.device->newDepthStencilState(depthDescriptor);
-    depthDescriptor->release();
+    ensureMetalDepthStencilState(state, deviceState.device,
+                                 this->depthTestEnabled,
+                                 this->depthWriteEnabled, desiredDepthCompare);
+    state.depthTestEnabled = this->depthTestEnabled;
+    state.depthWriteEnabled = this->depthWriteEnabled;
+    state.depthCompare = desiredDepthCompare;
 #endif
 }
 
@@ -744,9 +777,9 @@ void Pipeline::bind() {
     state.cullMode = toMetalCull(this->cullMode);
     state.frontFace = toMetalWinding(this->frontFace);
     state.fillMode = toMetalFillMode(this->rasterizerMode);
-    state.depthTestEnabled = this->depthTestEnabled;
-    state.depthWriteEnabled = this->depthWriteEnabled;
-    state.depthCompare = toMetalCompare(this->depthCompareOp);
+    MTL::CompareFunction desiredDepthCompare = this->depthTestEnabled
+                                                   ? toMetalCompare(this->depthCompareOp)
+                                                   : MTL::CompareFunctionAlways;
     state.blendingEnabled = this->blendingEnabled;
     state.blendSrc = toMetalBlendFactor(this->blendSrcFactor);
     state.blendDst = toMetalBlendFactor(this->blendDstFactor);
@@ -762,24 +795,15 @@ void Pipeline::bind() {
     if (Device::globalInstance != nullptr) {
         auto &deviceState = metal::deviceState(Device::globalInstance);
         if (deviceState.device != nullptr) {
-            MTL::DepthStencilDescriptor *depthDescriptor =
-                MTL::DepthStencilDescriptor::alloc()->init();
-            if (this->depthTestEnabled) {
-                depthDescriptor->setDepthCompareFunction(
-                    toMetalCompare(this->depthCompareOp));
-            } else {
-                depthDescriptor->setDepthCompareFunction(
-                    MTL::CompareFunctionAlways);
-            }
-            depthDescriptor->setDepthWriteEnabled(this->depthWriteEnabled);
-            if (state.depthStencilState != nullptr) {
-                state.depthStencilState->release();
-            }
-            state.depthStencilState =
-                deviceState.device->newDepthStencilState(depthDescriptor);
-            depthDescriptor->release();
+            ensureMetalDepthStencilState(state, deviceState.device,
+                                         this->depthTestEnabled,
+                                         this->depthWriteEnabled,
+                                         desiredDepthCompare);
         }
     }
+    state.depthTestEnabled = this->depthTestEnabled;
+    state.depthWriteEnabled = this->depthWriteEnabled;
+    state.depthCompare = desiredDepthCompare;
 #endif
 }
 

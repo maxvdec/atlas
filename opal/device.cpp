@@ -24,6 +24,22 @@
 
 namespace opal {
 
+Context::~Context() {
+#ifdef METAL
+    metal::releaseContextState(this);
+#endif
+    if (window != nullptr) {
+        glfwDestroyWindow(window);
+        window = nullptr;
+    }
+}
+
+Device::~Device() {
+#ifdef METAL
+    metal::releaseDeviceState(this);
+#endif
+}
+
 #ifdef METAL
 namespace {
 

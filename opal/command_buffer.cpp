@@ -23,6 +23,12 @@
 
 namespace opal {
 
+CommandBuffer::~CommandBuffer() {
+#ifdef METAL
+    metal::releaseCommandBufferState(this);
+#endif
+}
+
 #ifdef METAL
 namespace {
 
@@ -331,24 +337,26 @@ static void uploadUniformBuffers(const std::shared_ptr<Pipeline> &pipeline,
     }
 }
 
-static void bindTextures(const std::shared_ptr<Pipeline> &pipeline,
+static void bindTextures(CommandBuffer *commandBuffer,
+                         const std::shared_ptr<Pipeline> &pipeline,
                          MTL::RenderCommandEncoder *encoder, MTL::Device *device) {
-    if (pipeline == nullptr || encoder == nullptr || device == nullptr) {
+    if (commandBuffer == nullptr || pipeline == nullptr || encoder == nullptr ||
+        device == nullptr) {
         return;
     }
 
+    auto &commandState = metal::commandBufferState(commandBuffer);
     auto &pipelineState = metal::pipelineState(pipeline.get());
-    for (int unit = 0; unit < 32; ++unit) {
-        encoder->setVertexTexture(nullptr, unit);
-        encoder->setFragmentTexture(nullptr, unit);
-        encoder->setVertexSamplerState(nullptr, unit);
-        encoder->setFragmentSamplerState(nullptr, unit);
-    }
+    std::array<MTL::Texture *, 32> desiredTextures{};
+    std::array<MTL::SamplerState *, 32> desiredSamplers{};
+    desiredTextures.fill(nullptr);
+    desiredSamplers.fill(nullptr);
 
     for (const auto &pair : pipelineState.texturesByUnit) {
         int unit = pair.first;
         const auto &texture = pair.second;
-        if (unit < 0 || texture == nullptr) {
+        if (unit < 0 || unit >= static_cast<int>(desiredTextures.size()) ||
+            texture == nullptr) {
             continue;
         }
         auto &textureState = metal::textureState(texture.get());
@@ -358,15 +366,41 @@ static void bindTextures(const std::shared_ptr<Pipeline> &pipeline,
         if (textureState.sampler == nullptr) {
             metal::rebuildTextureSampler(texture.get(), device);
         }
+        desiredTextures[static_cast<size_t>(unit)] = textureState.texture;
+        desiredSamplers[static_cast<size_t>(unit)] = textureState.sampler;
+    }
 
-        encoder->setVertexTexture(textureState.texture,
-                                  static_cast<NS::UInteger>(unit));
-        encoder->setFragmentTexture(textureState.texture,
-                                    static_cast<NS::UInteger>(unit));
-        encoder->setVertexSamplerState(textureState.sampler,
-                                       static_cast<NS::UInteger>(unit));
-        encoder->setFragmentSamplerState(textureState.sampler,
-                                         static_cast<NS::UInteger>(unit));
+    if (!commandState.textureBindingsInitialized) {
+        commandState.boundVertexTextures.fill(nullptr);
+        commandState.boundFragmentTextures.fill(nullptr);
+        commandState.boundVertexSamplers.fill(nullptr);
+        commandState.boundFragmentSamplers.fill(nullptr);
+        commandState.textureBindingsInitialized = true;
+    }
+
+    for (size_t unit = 0; unit < desiredTextures.size(); ++unit) {
+        MTL::Texture *desiredTexture = desiredTextures[unit];
+        MTL::SamplerState *desiredSampler = desiredSamplers[unit];
+
+        if (commandState.boundVertexTextures[unit] != desiredTexture) {
+            encoder->setVertexTexture(desiredTexture, static_cast<NS::UInteger>(unit));
+            commandState.boundVertexTextures[unit] = desiredTexture;
+        }
+        if (commandState.boundFragmentTextures[unit] != desiredTexture) {
+            encoder->setFragmentTexture(desiredTexture,
+                                        static_cast<NS::UInteger>(unit));
+            commandState.boundFragmentTextures[unit] = desiredTexture;
+        }
+        if (commandState.boundVertexSamplers[unit] != desiredSampler) {
+            encoder->setVertexSamplerState(desiredSampler,
+                                           static_cast<NS::UInteger>(unit));
+            commandState.boundVertexSamplers[unit] = desiredSampler;
+        }
+        if (commandState.boundFragmentSamplers[unit] != desiredSampler) {
+            encoder->setFragmentSamplerState(desiredSampler,
+                                             static_cast<NS::UInteger>(unit));
+            commandState.boundFragmentSamplers[unit] = desiredSampler;
+        }
     }
 }
 
@@ -388,11 +422,11 @@ static void ensureRenderEncoder(
     if (deviceState.queue == nullptr || deviceState.device == nullptr) {
         throw std::runtime_error("Metal device queue is not initialized");
     }
+    if (state.passDescriptor == nullptr) {
+        return;
+    }
     if (state.commandBuffer == nullptr) {
         state.commandBuffer = deviceState.queue->commandBuffer();
-    }
-    if (state.passDescriptor == nullptr) {
-        throw std::runtime_error("Metal render pass descriptor is not initialized");
     }
 
     uint32_t requiredColors = requiredColorOutputs(boundPipeline);
@@ -533,7 +567,7 @@ static void ensureRenderEncoder(
     state.encoder->setScissorRect(scissor);
 
     uploadUniformBuffers(boundPipeline, state.encoder, deviceState.device);
-    bindTextures(boundPipeline, state.encoder, deviceState.device);
+    bindTextures(commandBuffer, boundPipeline, state.encoder, deviceState.device);
 }
 
 } // namespace
@@ -583,6 +617,11 @@ void CommandBuffer::start() {
     state.encoder = nullptr;
     state.passDescriptor = nullptr;
     state.drawable = nullptr;
+    state.boundVertexTextures.fill(nullptr);
+    state.boundFragmentTextures.fill(nullptr);
+    state.boundVertexSamplers.fill(nullptr);
+    state.boundFragmentSamplers.fill(nullptr);
+    state.textureBindingsInitialized = false;
     state.needsPresent = false;
     state.hasDraw = false;
     state.clearColorPending = false;
@@ -627,6 +666,7 @@ void CommandBuffer::beginPass(std::shared_ptr<RenderPass> newRenderPass) {
     if (state.encoder != nullptr) {
         state.encoder->endEncoding();
         state.encoder = nullptr;
+        state.textureBindingsInitialized = false;
     }
 
     if (state.commandBuffer == nullptr) {
@@ -655,6 +695,8 @@ void CommandBuffer::beginPass(std::shared_ptr<RenderPass> newRenderPass) {
         state.drawable = deviceState.drawable;
         if (deviceState.drawable == nullptr) {
             state.passDescriptor = nullptr;
+            state.commandBuffer = nullptr;
+            state.needsPresent = false;
             return;
         }
         deviceState.drawableWidth = fbWidth;
@@ -749,8 +791,10 @@ void CommandBuffer::endPass() {
     if (state.encoder != nullptr) {
         state.encoder->endEncoding();
         state.encoder = nullptr;
+        state.textureBindingsInitialized = false;
     }
     state.passDescriptor = nullptr;
+    state.textureBindingsInitialized = false;
     state.hasDraw = false;
 #endif
 }
@@ -838,12 +882,14 @@ void CommandBuffer::commit() {
             state.autoreleasePool->release();
             state.autoreleasePool = nullptr;
         }
+        state.textureBindingsInitialized = false;
         return;
     }
 
     if (state.encoder != nullptr) {
         state.encoder->endEncoding();
         state.encoder = nullptr;
+        state.textureBindingsInitialized = false;
     }
 
     if (state.needsPresent && state.drawable != nullptr) {
@@ -854,6 +900,7 @@ void CommandBuffer::commit() {
     state.commandBuffer = nullptr;
     state.passDescriptor = nullptr;
     state.drawable = nullptr;
+    state.textureBindingsInitialized = false;
     state.needsPresent = false;
     state.hasDraw = false;
     if (state.autoreleasePool != nullptr) {

@@ -206,6 +206,16 @@ void Window::deferredRendering(
     static std::shared_ptr<opal::Buffer> quadBuffer = nullptr;
     if (quadState == nullptr) {
         float quadVertices[] = {
+#ifdef METAL
+            // positions         // texCoords (Metal Y-flip)
+            -1.0f, 1.0f,  0.0f, 0.0f, 0.0f, // top-left
+            -1.0f, -1.0f, 0.0f, 0.0f, 1.0f, // bottom-left
+            1.0f,  -1.0f, 0.0f, 1.0f, 1.0f, // bottom-right
+
+            -1.0f, 1.0f,  0.0f, 0.0f, 0.0f, // top-left
+            1.0f,  -1.0f, 0.0f, 1.0f, 1.0f, // bottom-right
+            1.0f,  1.0f,  0.0f, 1.0f, 0.0f  // top-right
+#else
             // positions         // texCoords
             -1.0f, 1.0f,  0.0f, 0.0f, 1.0f, // top-left
             -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, // bottom-left
@@ -214,6 +224,7 @@ void Window::deferredRendering(
             -1.0f, 1.0f,  0.0f, 0.0f, 1.0f, // top-left
             1.0f,  -1.0f, 0.0f, 1.0f, 0.0f, // bottom-right
             1.0f,  1.0f,  0.0f, 1.0f, 1.0f  // top-right
+#endif
         };
 
         quadBuffer = opal::Buffer::create(opal::BufferUsage::VertexBuffer,

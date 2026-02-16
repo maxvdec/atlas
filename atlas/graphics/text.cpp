@@ -279,10 +279,18 @@ void Text::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
     float x = position.x;
     float y = position.y + (maxBearingY * scale);
 
-    std::string::const_iterator c;
     const size_t glyphCount = content.size();
     const size_t bytesPerGlyph = sizeof(float) * 6 * 4;
     const size_t requiredBytes = glyphCount * bytesPerGlyph;
+    
+    if (requiredBytes == 0) {
+        commandBuffer->unbindDrawingState();
+        textPipeline->enableBlending(false);
+        textPipeline->enableDepthTest(true);
+        textPipeline->bind();
+        return;
+    }
+
     if (requiredBytes > vertexBufferCapacity) {
         vertexBufferCapacity = requiredBytes;
         vertexBuffer = opal::Buffer::create(
@@ -291,8 +299,11 @@ void Text::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
         vao->setBuffers(vertexBuffer, nullptr);
     }
 
-    size_t glyphIndex = 0;
-    for (c = content.begin(); c != content.end(); c++, ++glyphIndex) {
+    std::vector<float> allVertices;
+    allVertices.reserve(glyphCount * 6 * 4);
+
+    std::string::const_iterator c;
+    for (c = content.begin(); c != content.end(); c++) {
         Character ch = font.atlas[*c];
 
         float xpos = x + (ch.bearing.x * scale);
@@ -306,22 +317,24 @@ void Text::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
         float u1 = ch.uvMax.x;
         float v1 = ch.uvMax.y;
 
-        float vertices[6][4] = {
-            {xpos, ypos, u0, v0},         {xpos, ypos + h, u0, v1},
-            {xpos + w, ypos + h, u1, v1},
+        // Triangle 1
+        allVertices.push_back(xpos); allVertices.push_back(ypos); allVertices.push_back(u0); allVertices.push_back(v0);
+        allVertices.push_back(xpos); allVertices.push_back(ypos + h); allVertices.push_back(u0); allVertices.push_back(v1);
+        allVertices.push_back(xpos + w); allVertices.push_back(ypos + h); allVertices.push_back(u1); allVertices.push_back(v1);
 
-            {xpos, ypos, u0, v0},         {xpos + w, ypos + h, u1, v1},
-            {xpos + w, ypos, u1, v0}};
-
-        vertexBuffer->bind();
-        const size_t offset = glyphIndex * bytesPerGlyph;
-        vertexBuffer->updateData(offset, sizeof(vertices), vertices);
-        vertexBuffer->unbind();
-        commandBuffer->draw(
-            6, 1, static_cast<uint>(offset / (4 * sizeof(float))), 0, id);
+        // Triangle 2
+        allVertices.push_back(xpos); allVertices.push_back(ypos); allVertices.push_back(u0); allVertices.push_back(v0);
+        allVertices.push_back(xpos + w); allVertices.push_back(ypos + h); allVertices.push_back(u1); allVertices.push_back(v1);
+        allVertices.push_back(xpos + w); allVertices.push_back(ypos); allVertices.push_back(u1); allVertices.push_back(v0);
 
         x += (ch.advance >> 6) * scale;
     }
+
+    vertexBuffer->bind();
+    vertexBuffer->updateData(0, allVertices.size() * sizeof(float), allVertices.data());
+    vertexBuffer->unbind();
+    
+    commandBuffer->draw(static_cast<uint>(glyphCount * 6), 1, 0, 0, id);
 
     commandBuffer->unbindDrawingState();
     textPipeline->enableBlending(false);

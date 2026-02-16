@@ -43,6 +43,7 @@ struct ContextConfiguration {
 class Context {
   public:
     static std::shared_ptr<Context> create(ContextConfiguration config = {});
+    ~Context();
 
     void setFlag(int flag, bool enabled);
     void setFlag(int flag, int value);
@@ -130,6 +131,7 @@ struct DeviceInfo {
 class Device {
   public:
     static std::shared_ptr<Device> acquire(std::shared_ptr<Context> context);
+    ~Device();
     std::shared_ptr<CommandBuffer> acquireCommandBuffer();
 
     void submitCommandBuffer(std::shared_ptr<CommandBuffer> commandBuffer);
@@ -262,6 +264,7 @@ class Texture {
     create(TextureType type, TextureFormat format, int width, int height,
            TextureDataFormat dataFormat = TextureDataFormat::Rgba,
            const void *data = nullptr, uint mipLevels = 1);
+    ~Texture();
 
     /**
      * @brief Creates a multisampled texture for use with multisampled
@@ -411,6 +414,7 @@ class Shader {
   public:
     static std::shared_ptr<Shader> createFromSource(const char *source,
                                                     ShaderType type);
+    ~Shader();
 
     void compile();
 
@@ -446,6 +450,7 @@ class Shader {
 class ShaderProgram {
   public:
     static std::shared_ptr<ShaderProgram> create();
+    ~ShaderProgram();
     void attachShader(std::shared_ptr<Shader> shader, int callerId = -1);
 
     void link();
@@ -553,6 +558,7 @@ struct VertexBinding {
 class Pipeline {
   public:
     static std::shared_ptr<Pipeline> create();
+    ~Pipeline();
 
     void setShaderProgram(std::shared_ptr<ShaderProgram> program);
 
@@ -803,6 +809,7 @@ class Buffer {
     create(BufferUsage usage, size_t size, const void *data = nullptr,
            MemoryUsageType memoryUsage = MemoryUsageType::GPUOnly,
            int callerId = -1);
+    ~Buffer();
 
     void updateData(size_t offset, size_t size, const void *data);
 
@@ -882,6 +889,7 @@ class Framebuffer {
   public:
     static std::shared_ptr<Framebuffer> create(int width, int height);
     static std::shared_ptr<Framebuffer> create();
+    ~Framebuffer();
 
     void addAttachment(const Attachment &attachment);
     void attachDepthStencilBuffer(
@@ -1038,6 +1046,7 @@ class ResolveAction {
 
 class CommandBuffer {
   public:
+    ~CommandBuffer();
     void start();
     void beginPass(std::shared_ptr<RenderPass> renderPass);
     void beginSampled(std::shared_ptr<Framebuffer> readFramebuffer,

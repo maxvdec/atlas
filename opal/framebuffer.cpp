@@ -20,6 +20,12 @@
 
 namespace opal {
 
+Framebuffer::~Framebuffer() {
+#ifdef METAL
+    metal::releaseFramebufferState(this);
+#endif
+}
+
 std::shared_ptr<RenderPass> RenderPass::create() {
     return std::make_shared<RenderPass>();
 }
@@ -371,6 +377,20 @@ void CommandBuffer::performResolve(std::shared_ptr<ResolveAction> action) {
         return;
     }
 
+    auto &state = metal::commandBufferState(this);
+    if (state.encoder != nullptr) {
+        state.encoder->endEncoding();
+        state.encoder = nullptr;
+        state.textureBindingsInitialized = false;
+    }
+
+    bool ownedCommandBuffer = false;
+    MTL::CommandBuffer *metalCB = state.commandBuffer;
+    if (metalCB == nullptr) {
+        metalCB = deviceState.queue->commandBuffer();
+        ownedCommandBuffer = true;
+    }
+
     auto gatherColorAttachments = [](const std::shared_ptr<Framebuffer> &fb,
                                      int preferredIndex) {
         std::vector<std::shared_ptr<Texture>> attachments;
@@ -418,7 +438,6 @@ void CommandBuffer::performResolve(std::shared_ptr<ResolveAction> action) {
             return;
         }
 
-        MTL::CommandBuffer *commandBuffer = deviceState.queue->commandBuffer();
         MTL::RenderPassDescriptor *descriptor =
             MTL::RenderPassDescriptor::renderPassDescriptor();
         auto *colorAttachment = descriptor->colorAttachments()->object(0);
@@ -428,12 +447,10 @@ void CommandBuffer::performResolve(std::shared_ptr<ResolveAction> action) {
         colorAttachment->setStoreAction(MTL::StoreActionMultisampleResolve);
 
         MTL::RenderCommandEncoder *encoder =
-            commandBuffer->renderCommandEncoder(descriptor);
+            metalCB->renderCommandEncoder(descriptor);
         if (encoder != nullptr) {
             encoder->endEncoding();
         }
-        commandBuffer->commit();
-        commandBuffer->waitUntilCompleted();
     };
 
     auto copyTexture = [&](const std::shared_ptr<Texture> &source,
@@ -443,12 +460,9 @@ void CommandBuffer::performResolve(std::shared_ptr<ResolveAction> action) {
         if (srcState.texture == nullptr || dstState.texture == nullptr) {
             return;
         }
-        MTL::CommandBuffer *commandBuffer = deviceState.queue->commandBuffer();
-        MTL::BlitCommandEncoder *blit = commandBuffer->blitCommandEncoder();
+        MTL::BlitCommandEncoder *blit = metalCB->blitCommandEncoder();
         blit->copyFromTexture(srcState.texture, dstState.texture);
         blit->endEncoding();
-        commandBuffer->commit();
-        commandBuffer->waitUntilCompleted();
     };
 
     auto sourceColors =
@@ -480,6 +494,10 @@ void CommandBuffer::performResolve(std::shared_ptr<ResolveAction> action) {
             srcDepth->samples == dstDepth->samples) {
             copyTexture(srcDepth, dstDepth);
         }
+    }
+
+    if (ownedCommandBuffer) {
+        metalCB->commit();
     }
 #elif defined(VULKAN)
     if (action == nullptr || action->source == nullptr ||

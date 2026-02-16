@@ -20,6 +20,12 @@
 
 namespace opal {
 
+Texture::~Texture() {
+#ifdef METAL
+    metal::releaseTextureState(this);
+#endif
+}
+
 namespace {
 
 #ifdef OPENGL
@@ -773,7 +779,6 @@ void Texture::generateMipmaps([[maybe_unused]] uint levels) {
     blit->generateMipmaps(state.texture);
     blit->endEncoding();
     commandBuffer->commit();
-    commandBuffer->waitUntilCompleted();
 #endif
 }
 

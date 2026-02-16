@@ -501,18 +501,19 @@ void RenderTarget::display(Window &window, float zindex) {
 
 void RenderTarget::resolve() {
     if (type == RenderTargetType::Multisampled && fb && resolveFb) {
+        auto cb = Window::mainWindow->activeCommandBuffer;
+        if (cb == nullptr) {
+            cb = Window::mainWindow->device->acquireCommandBuffer();
+        }
         for (int i = 0; i < 2; i++) {
             auto resolveAction =
                 opal::ResolveAction::createForColorAttachment(fb, resolveFb, i);
-            auto commandBuffer =
-                Window::mainWindow->device->acquireCommandBuffer();
-            commandBuffer->performResolve(resolveAction);
+            cb->performResolve(resolveAction);
         }
 
         auto depthResolveAction =
             opal::ResolveAction::createForDepth(fb, resolveFb);
-        auto commandBuffer = Window::mainWindow->device->acquireCommandBuffer();
-        commandBuffer->performResolve(depthResolveAction);
+        cb->performResolve(depthResolveAction);
     }
 
     if (type != RenderTargetType::Scene &&
@@ -826,10 +827,10 @@ void RenderTarget::render(float dt,
         effects[i]->applyToProgram(obj->shaderProgram, i);
     }
 
+    renderTargetPipeline->setCullMode(opal::CullMode::None);
     renderTargetPipeline->enableDepthTest(false);
-    renderTargetPipeline->enableBlending(true);
-    renderTargetPipeline->setBlendFunc(opal::BlendFunc::SrcAlpha,
-                                       opal::BlendFunc::OneMinusSrcAlpha);
+    renderTargetPipeline->enableDepthWrite(false);
+    renderTargetPipeline->enableBlending(false);
     renderTargetPipeline->bind();
 
     commandBuffer->bindDrawingState(obj->vao);

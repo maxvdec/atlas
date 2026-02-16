@@ -146,6 +146,11 @@ struct CommandBufferState {
     MTL::RenderCommandEncoder *encoder = nullptr;
     MTL::RenderPassDescriptor *passDescriptor = nullptr;
     CA::MetalDrawable *drawable = nullptr;
+    std::array<MTL::Texture *, 32> boundVertexTextures = {};
+    std::array<MTL::Texture *, 32> boundFragmentTextures = {};
+    std::array<MTL::SamplerState *, 32> boundVertexSamplers = {};
+    std::array<MTL::SamplerState *, 32> boundFragmentSamplers = {};
+    bool textureBindingsInitialized = false;
     bool needsPresent = false;
     bool hasDraw = false;
     bool clearColorPending = false;
@@ -161,6 +166,15 @@ ProgramState &programState(ShaderProgram *program);
 PipelineState &pipelineState(Pipeline *pipeline);
 FramebufferState &framebufferState(Framebuffer *framebuffer);
 CommandBufferState &commandBufferState(CommandBuffer *commandBuffer);
+void releaseContextState(Context *context);
+void releaseDeviceState(Device *device);
+void releaseBufferState(Buffer *buffer);
+void releaseTextureState(Texture *texture);
+void releaseShaderState(Shader *shader);
+void releaseProgramState(ShaderProgram *program);
+void releasePipelineState(Pipeline *pipeline);
+void releaseFramebufferState(Framebuffer *framebuffer);
+void releaseCommandBufferState(CommandBuffer *commandBuffer);
 
 uint32_t registerTextureHandle(const std::shared_ptr<Texture> &texture);
 std::shared_ptr<Texture> getTextureFromHandle(uint32_t handle);

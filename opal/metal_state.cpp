@@ -432,67 +432,327 @@ static inline T enumOr(T lhs, T rhs) {
                           static_cast<NS::UInteger>(rhs));
 }
 
-static std::unordered_map<Context *, ContextState> gContextStates;
-static std::unordered_map<Device *, DeviceState> gDeviceStates;
-static std::unordered_map<Buffer *, BufferState> gBufferStates;
-static std::unordered_map<Texture *, TextureState> gTextureStates;
-static std::unordered_map<Shader *, ShaderState> gShaderStates;
-static std::unordered_map<ShaderProgram *, ProgramState> gProgramStates;
-static std::unordered_map<Pipeline *, PipelineState> gPipelineStates;
-static std::unordered_map<Framebuffer *, FramebufferState> gFramebufferStates;
-static std::unordered_map<CommandBuffer *, CommandBufferState> gCommandStates;
+static std::unordered_map<Context *, ContextState> &contextStatesStorage() {
+    static auto *states = new std::unordered_map<Context *, ContextState>();
+    return *states;
+}
 
-static std::unordered_map<uint32_t, std::weak_ptr<Texture>> gTextureRegistry;
-static uint32_t gNextTextureHandle = 1;
+static std::unordered_map<Device *, DeviceState> &deviceStatesStorage() {
+    static auto *states = new std::unordered_map<Device *, DeviceState>();
+    return *states;
+}
+
+static std::unordered_map<Buffer *, BufferState> &bufferStatesStorage() {
+    static auto *states = new std::unordered_map<Buffer *, BufferState>();
+    return *states;
+}
+
+static std::unordered_map<Texture *, TextureState> &textureStatesStorage() {
+    static auto *states = new std::unordered_map<Texture *, TextureState>();
+    return *states;
+}
+
+static std::unordered_map<Shader *, ShaderState> &shaderStatesStorage() {
+    static auto *states = new std::unordered_map<Shader *, ShaderState>();
+    return *states;
+}
+
+static std::unordered_map<ShaderProgram *, ProgramState> &
+programStatesStorage() {
+    static auto *states =
+        new std::unordered_map<ShaderProgram *, ProgramState>();
+    return *states;
+}
+
+static std::unordered_map<Pipeline *, PipelineState> &pipelineStatesStorage() {
+    static auto *states = new std::unordered_map<Pipeline *, PipelineState>();
+    return *states;
+}
+
+static std::unordered_map<Framebuffer *, FramebufferState> &
+framebufferStatesStorage() {
+    static auto *states =
+        new std::unordered_map<Framebuffer *, FramebufferState>();
+    return *states;
+}
+
+static std::unordered_map<CommandBuffer *, CommandBufferState> &
+commandStatesStorage() {
+    static auto *states =
+        new std::unordered_map<CommandBuffer *, CommandBufferState>();
+    return *states;
+}
+
+static std::unordered_map<uint32_t, std::weak_ptr<Texture>> &
+textureRegistryStorage() {
+    static auto *registry =
+        new std::unordered_map<uint32_t, std::weak_ptr<Texture>>();
+    return *registry;
+}
+
+static uint32_t &nextTextureHandleStorage() {
+    static auto *nextHandle = new uint32_t(1);
+    return *nextHandle;
+}
 
 } // namespace
 
-ContextState &contextState(Context *context) { return gContextStates[context]; }
+ContextState &contextState(Context *context) {
+    return contextStatesStorage()[context];
+}
 
-DeviceState &deviceState(Device *device) { return gDeviceStates[device]; }
+DeviceState &deviceState(Device *device) { return deviceStatesStorage()[device]; }
 
-BufferState &bufferState(Buffer *buffer) { return gBufferStates[buffer]; }
+BufferState &bufferState(Buffer *buffer) { return bufferStatesStorage()[buffer]; }
 
-TextureState &textureState(Texture *texture) { return gTextureStates[texture]; }
+TextureState &textureState(Texture *texture) {
+    return textureStatesStorage()[texture];
+}
 
-ShaderState &shaderState(Shader *shader) { return gShaderStates[shader]; }
+ShaderState &shaderState(Shader *shader) { return shaderStatesStorage()[shader]; }
 
 ProgramState &programState(ShaderProgram *program) {
-    return gProgramStates[program];
+    return programStatesStorage()[program];
 }
 
 PipelineState &pipelineState(Pipeline *pipeline) {
-    return gPipelineStates[pipeline];
+    return pipelineStatesStorage()[pipeline];
 }
 
 FramebufferState &framebufferState(Framebuffer *framebuffer) {
-    return gFramebufferStates[framebuffer];
+    return framebufferStatesStorage()[framebuffer];
 }
 
 CommandBufferState &commandBufferState(CommandBuffer *commandBuffer) {
-    return gCommandStates[commandBuffer];
+    return commandStatesStorage()[commandBuffer];
+}
+
+void releaseContextState(Context *context) {
+    if (context == nullptr) {
+        return;
+    }
+    auto &states = contextStatesStorage();
+    auto it = states.find(context);
+    if (it == states.end()) {
+        return;
+    }
+    it->second.layer = nullptr;
+    states.erase(it);
+}
+
+void releaseDeviceState(Device *device) {
+    if (device == nullptr) {
+        return;
+    }
+    auto &states = deviceStatesStorage();
+    auto it = states.find(device);
+    if (it == states.end()) {
+        return;
+    }
+    DeviceState &state = it->second;
+    state.brightTexture.reset();
+    state.depthTexture.reset();
+    state.drawable = nullptr;
+    state.context = nullptr;
+    state.drawableWidth = 0;
+    state.drawableHeight = 0;
+    if (state.queue != nullptr) {
+        state.queue->release();
+        state.queue = nullptr;
+    }
+    if (state.device != nullptr) {
+        state.device->release();
+        state.device = nullptr;
+    }
+    states.erase(it);
+}
+
+void releaseBufferState(Buffer *buffer) {
+    if (buffer == nullptr) {
+        return;
+    }
+    auto &states = bufferStatesStorage();
+    auto it = states.find(buffer);
+    if (it == states.end()) {
+        return;
+    }
+    BufferState &state = it->second;
+    if (state.buffer != nullptr) {
+        state.buffer->release();
+        state.buffer = nullptr;
+    }
+    state.size = 0;
+    states.erase(it);
+}
+
+void releaseTextureState(Texture *texture) {
+    if (texture == nullptr) {
+        return;
+    }
+    auto &states = textureStatesStorage();
+    auto it = states.find(texture);
+    if (it == states.end()) {
+        return;
+    }
+    TextureState &state = it->second;
+    if (state.sampler != nullptr) {
+        state.sampler->release();
+        state.sampler = nullptr;
+    }
+    if (state.texture != nullptr) {
+        state.texture->release();
+        state.texture = nullptr;
+    }
+    if (state.handle != 0) {
+        textureRegistryStorage().erase(state.handle);
+        state.handle = 0;
+    }
+    states.erase(it);
+}
+
+void releaseShaderState(Shader *shader) {
+    if (shader == nullptr) {
+        return;
+    }
+    auto &states = shaderStatesStorage();
+    auto it = states.find(shader);
+    if (it == states.end()) {
+        return;
+    }
+    ShaderState &state = it->second;
+    if (state.function != nullptr) {
+        state.function->release();
+        state.function = nullptr;
+    }
+    if (state.library != nullptr) {
+        state.library->release();
+        state.library = nullptr;
+    }
+    states.erase(it);
+}
+
+void releaseProgramState(ShaderProgram *program) {
+    if (program == nullptr) {
+        return;
+    }
+    auto &states = programStatesStorage();
+    auto it = states.find(program);
+    if (it == states.end()) {
+        return;
+    }
+    ProgramState &state = it->second;
+    state.vertexFunction = nullptr;
+    state.fragmentFunction = nullptr;
+    state.layouts.clear();
+    state.bindings.clear();
+    state.bindingSize.clear();
+    state.uniformResolutionCache.clear();
+    states.erase(it);
+}
+
+void releasePipelineState(Pipeline *pipeline) {
+    if (pipeline == nullptr) {
+        return;
+    }
+    auto &states = pipelineStatesStorage();
+    auto it = states.find(pipeline);
+    if (it == states.end()) {
+        return;
+    }
+    PipelineState &state = it->second;
+    for (auto &cacheEntry : state.renderPipelineCache) {
+        if (cacheEntry.second != nullptr) {
+            cacheEntry.second->release();
+        }
+    }
+    state.renderPipelineCache.clear();
+    for (auto &bufferEntry : state.uniformBuffers) {
+        if (bufferEntry.second != nullptr) {
+            bufferEntry.second->release();
+        }
+    }
+    state.uniformBuffers.clear();
+    state.uniformData.clear();
+    state.texturesByUnit.clear();
+    if (state.depthStencilState != nullptr) {
+        state.depthStencilState->release();
+        state.depthStencilState = nullptr;
+    }
+    if (state.vertexDescriptor != nullptr) {
+        state.vertexDescriptor->release();
+        state.vertexDescriptor = nullptr;
+    }
+    states.erase(it);
+}
+
+void releaseFramebufferState(Framebuffer *framebuffer) {
+    if (framebuffer == nullptr) {
+        return;
+    }
+    auto &states = framebufferStatesStorage();
+    auto it = states.find(framebuffer);
+    if (it == states.end()) {
+        return;
+    }
+    states.erase(it);
+}
+
+void releaseCommandBufferState(CommandBuffer *commandBuffer) {
+    if (commandBuffer == nullptr) {
+        return;
+    }
+    auto &states = commandStatesStorage();
+    auto it = states.find(commandBuffer);
+    if (it == states.end()) {
+        return;
+    }
+    CommandBufferState &state = it->second;
+    if (state.encoder != nullptr) {
+        state.encoder->endEncoding();
+        state.encoder = nullptr;
+    }
+    state.commandBuffer = nullptr;
+    state.passDescriptor = nullptr;
+    state.drawable = nullptr;
+    state.boundVertexTextures.fill(nullptr);
+    state.boundFragmentTextures.fill(nullptr);
+    state.boundVertexSamplers.fill(nullptr);
+    state.boundFragmentSamplers.fill(nullptr);
+    state.textureBindingsInitialized = false;
+    state.needsPresent = false;
+    state.hasDraw = false;
+    state.clearColorPending = false;
+    state.clearDepthPending = false;
+    if (state.autoreleasePool != nullptr) {
+        state.autoreleasePool->release();
+        state.autoreleasePool = nullptr;
+    }
+    states.erase(it);
 }
 
 uint32_t registerTextureHandle(const std::shared_ptr<Texture> &texture) {
     if (!texture) {
         return 0;
     }
-    uint32_t handle = gNextTextureHandle++;
+    uint32_t &nextHandle = nextTextureHandleStorage();
+    auto &registry = textureRegistryStorage();
+    uint32_t handle = nextHandle++;
     if (handle == 0) {
-        handle = gNextTextureHandle++;
+        handle = nextHandle++;
     }
-    gTextureRegistry[handle] = texture;
+    registry[handle] = texture;
     return handle;
 }
 
 std::shared_ptr<Texture> getTextureFromHandle(uint32_t handle) {
-    auto it = gTextureRegistry.find(handle);
-    if (it == gTextureRegistry.end()) {
+    auto &registry = textureRegistryStorage();
+    auto it = registry.find(handle);
+    if (it == registry.end()) {
         return nullptr;
     }
     std::shared_ptr<Texture> texture = it->second.lock();
     if (!texture) {
-        gTextureRegistry.erase(it);
+        registry.erase(it);
     }
     return texture;
 }
