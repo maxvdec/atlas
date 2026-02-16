@@ -951,6 +951,7 @@ class Framebuffer {
      * @param attachmentCount Number of color attachments to enable (0-N).
      */
     void setDrawBuffers(int attachmentCount);
+    int getDrawBufferCount() const { return drawBufferCount; }
 
     bool getStatus() const;
 
@@ -973,6 +974,7 @@ class Framebuffer {
 
   private:
     bool colorBufferDisabled = false;
+    int drawBufferCount = -1;
 };
 
 #ifdef VULKAN

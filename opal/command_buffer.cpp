@@ -53,10 +53,16 @@ collectColorAttachments(const std::shared_ptr<Framebuffer> &framebuffer) {
     if (framebuffer == nullptr) {
         return colors;
     }
+    const int drawLimit = framebuffer->getDrawBufferCount();
+    int colorIndex = 0;
     for (const auto &attachment : framebuffer->attachments) {
         if (attachment.type == Attachment::Type::Color &&
             attachment.texture != nullptr) {
+            if (drawLimit >= 0 && colorIndex >= drawLimit) {
+                break;
+            }
             colors.push_back(attachment.texture);
+            colorIndex++;
         }
     }
     return colors;
@@ -424,6 +430,11 @@ static void ensureRenderEncoder(
     }
 
     uint32_t requiredColors = requiredColorOutputs(boundPipeline);
+    const int drawLimit = framebuffer->getDrawBufferCount();
+    if (drawLimit >= 0) {
+        requiredColors =
+            std::min(requiredColors, static_cast<uint32_t>(drawLimit));
+    }
     auto framebufferColors = collectColorAttachments(framebuffer);
     uint32_t actualColorCount =
         static_cast<uint32_t>(framebufferColors.size());
@@ -440,12 +451,14 @@ static void ensureRenderEncoder(
     if (framebuffer->isDefaultFramebuffer) {
         fbWidth = std::max(1, deviceState.drawableWidth);
         fbHeight = std::max(1, deviceState.drawableHeight);
+        ensureDefaultAuxiliaryTextures(device, fbWidth, fbHeight);
     }
-    ensureDefaultAuxiliaryTextures(device, fbWidth, fbHeight);
 
-    uint32_t targetColorCount =
-        std::max(std::max(requiredColors, actualColorCount), existingColorCount);
-    targetColorCount = std::max<uint32_t>(1, targetColorCount);
+    uint32_t targetColorCount = std::max(actualColorCount, existingColorCount);
+    if (framebuffer->isDefaultFramebuffer) {
+        targetColorCount = std::max(targetColorCount, requiredColors);
+        targetColorCount = std::max<uint32_t>(1, targetColorCount);
+    }
     targetColorCount = std::min<uint32_t>(8, targetColorCount);
 
     for (uint32_t i = 0; i < targetColorCount; ++i) {
@@ -458,7 +471,8 @@ static void ensureRenderEncoder(
                 state.drawable != nullptr) {
                 attachment->setTexture(state.drawable->texture());
                 attachment->setStoreAction(MTL::StoreActionStore);
-            } else if (deviceState.brightTexture != nullptr) {
+            } else if (framebuffer->isDefaultFramebuffer &&
+                       deviceState.brightTexture != nullptr) {
                 auto &brightState =
                     metal::textureState(deviceState.brightTexture.get());
                 attachment->setTexture(brightState.texture);

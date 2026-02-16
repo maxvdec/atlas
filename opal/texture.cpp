@@ -973,13 +973,20 @@ void Pipeline::bindTexture(const std::string &name,
 
     vkUpdateDescriptorSets(Device::globalDevice, 1, &write, 0, nullptr);
 #elif defined(METAL)
-    (void)name;
     auto &state = metal::pipelineState(this);
+    int resolvedUnit = unit;
+    if (shaderProgram != nullptr) {
+        auto &programState = metal::programState(shaderProgram.get());
+        auto bindingIt = programState.textureBindings.find(name);
+        if (bindingIt != programState.textureBindings.end()) {
+            resolvedUnit = bindingIt->second;
+        }
+    }
     if (texture == nullptr) {
-        state.texturesByUnit.erase(unit);
+        state.texturesByUnit.erase(resolvedUnit);
         return;
     }
-    state.texturesByUnit[unit] = texture;
+    state.texturesByUnit[resolvedUnit] = texture;
 #endif
 
     if (texture == nullptr) {

@@ -392,12 +392,31 @@ void Window::run() {
 
                 this->deferredRendering(target, commandBuffer);
 
-                auto resolveCommand = opal::ResolveAction::create(
-                    this->gBuffer->getFramebuffer(), target->getFramebuffer());
-                commandBuffer->performResolve(resolveCommand);
-
-                target->getFramebuffer()->bindForRead();
-                target->getFramebuffer()->setDrawBuffers(2);
+                auto forwardFramebuffer = target->getFramebuffer();
+                if (target->type == RenderTargetType::Multisampled &&
+                    target->getResolveFramebuffer() != nullptr) {
+                    forwardFramebuffer = target->getResolveFramebuffer();
+                }
+                bool needsForwardDepth = !this->firstRenderables.empty() ||
+                                         !this->lateForwardRenderables.empty();
+                if (!needsForwardDepth) {
+                    for (auto &obj : this->renderables) {
+                        if (obj->renderLateForward) {
+                            continue;
+                        }
+                        if (!obj->canUseDeferredRendering()) {
+                            needsForwardDepth = true;
+                            break;
+                        }
+                    }
+                }
+                if (needsForwardDepth) {
+                    auto resolveCommand = opal::ResolveAction::createForDepth(
+                        this->gBuffer->getFramebuffer(), forwardFramebuffer);
+                    commandBuffer->performResolve(resolveCommand);
+                    forwardFramebuffer->bind();
+                    forwardFramebuffer->setDrawBuffers(2);
+                }
 
                 updatePipelineStateField(this->useDepth, true);
                 updatePipelineStateField(this->depthCompareOp,
@@ -432,7 +451,6 @@ void Window::run() {
                 }
 
                 commandBuffer->endPass();
-                target->resolve();
                 continue;
             }
             commandBuffer->clearColor(this->clearColor.r, this->clearColor.g,
@@ -464,6 +482,13 @@ void Window::run() {
             }
             commandBuffer->endPass();
             target->resolve();
+        }
+
+        for (auto &obj : this->preferenceRenderables) {
+            RenderTarget *target = dynamic_cast<RenderTarget *>(obj);
+            if (target != nullptr && target->brightTexture.id != 0) {
+                this->renderPhysicalBloom(target);
+            }
         }
 
         // Render to the screen
@@ -508,10 +533,6 @@ void Window::run() {
         }
 
         for (auto &obj : this->preferenceRenderables) {
-            RenderTarget *target = dynamic_cast<RenderTarget *>(obj);
-            if (target != nullptr && target->brightTexture.id != 0) {
-                this->renderPhysicalBloom(target);
-            }
             obj->setViewMatrix(this->camera->calculateViewMatrix());
             obj->setProjectionMatrix(calculateProjectionMatrix());
             obj->render(getDeltaTime(), commandBuffer,
@@ -1475,28 +1496,49 @@ void Window::useDeferredRendering() {
 }
 
 void Window::renderPhysicalBloom(RenderTarget *target) {
-    if (target->brightTexture.id == 0) {
+    if (target == nullptr || target->brightTexture.id == 0 ||
+        this->currentScene == nullptr ||
+        this->currentScene->environment.lightBloom.radius <= 0.0f ||
+        this->currentScene->environment.lightBloom.maxSamples <= 0) {
+        target->blurredTexture = target->brightTexture;
         return;
     }
+
+    int sizeX = std::max(1, target->brightTexture.creationData.width);
+    int sizeY = std::max(1, target->brightTexture.creationData.height);
+    int chainLength = std::max(1, currentScene->environment.lightBloom.maxSamples);
 
     if (this->bloomBuffer == nullptr) {
         this->bloomBuffer =
             std::make_shared<BloomRenderTarget>(BloomRenderTarget());
-        int sizeX, sizeY;
-        glfwGetFramebufferSize((GLFWwindow *)this->windowRef, &sizeX, &sizeY);
-        this->bloomBuffer->init(
-            sizeX, sizeY, currentScene->environment.lightBloom.maxSamples);
+    }
+
+    bool needsRebuild = !this->bloomBuffer->initialized ||
+                        this->bloomBuffer->srcViewportSize.x != sizeX ||
+                        this->bloomBuffer->srcViewportSize.y != sizeY ||
+                        static_cast<int>(this->bloomBuffer->elements.size()) !=
+                            chainLength;
+    if (needsRebuild) {
+        this->bloomBuffer->destroy();
+        this->bloomBuffer->init(sizeX, sizeY, chainLength);
+    }
+
+    if (!this->bloomBuffer->initialized || this->bloomBuffer->elements.empty()) {
+        target->blurredTexture = target->brightTexture;
+        return;
     }
 
     this->bloomBuffer->renderBloomTexture(
-        target->brightTexture.id, currentScene->environment.lightBloom.radius);
+        target->brightTexture.id, currentScene->environment.lightBloom.radius,
+        this->activeCommandBuffer);
     target->blurredTexture = Texture();
     target->blurredTexture.creationData.width =
-        this->bloomBuffer->srcViewportSizef.x;
+        this->bloomBuffer->srcViewportSize.x;
     target->blurredTexture.creationData.height =
-        this->bloomBuffer->srcViewportSizef.y;
+        this->bloomBuffer->srcViewportSize.y;
     target->blurredTexture.type = TextureType::Color;
     target->blurredTexture.id = this->bloomBuffer->getBloomTexture();
+    target->blurredTexture.texture = this->bloomBuffer->elements[0].texture;
 }
 
 void Window::updateFluidCaptures(

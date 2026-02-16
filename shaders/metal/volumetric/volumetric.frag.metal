@@ -40,7 +40,7 @@ float3 computeVolumetricLighting(thread const float2& uv, constant Sun& _21, con
     float2 deltaTexCoord = (_21.sunPos - uv) * _31.density;
     float2 coord = uv;
     float illuminationDecay = 1.0;
-    for (int i = 0; i < 100; i++)
+    for (int i = 0; i < 48; i++)
     {
         coord += deltaTexCoord;
         bool _59 = coord.x < 0.0;
@@ -97,4 +97,3 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Sun& _21 [[buffer(0)
     out.FragColor = float4(rays, 1.0);
     return out;
 }
-

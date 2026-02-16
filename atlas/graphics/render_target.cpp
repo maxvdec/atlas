@@ -712,7 +712,7 @@ void RenderTarget::render(float dt,
         renderTargetPipeline->bindTexture2D("BrightTexture", blurredTexture.id,
                                             1, obj->id);
         renderTargetPipeline->setUniform1i("hasBrightTexture",
-                                           brightTexture.id != 0 ? 1 : 0);
+                                           blurredTexture.id != 0 ? 1 : 0);
 
         renderTargetPipeline->bindTexture2D("DepthTexture", depthTexture.id, 2,
                                             obj->id);
@@ -722,7 +722,8 @@ void RenderTarget::render(float dt,
         renderTargetPipeline->bindTexture2D(
             "VolumetricLightTexture", volumetricLightTexture.id, 3, obj->id);
         renderTargetPipeline->setUniform1i(
-            "hasVolumetricLightTexture", volumetricLightTexture.id > 1 ? 1 : 0);
+            "hasVolumetricLightTexture", volumetricLightTexture.id != 0 ? 1
+                                                                         : 0);
 
         renderTargetPipeline->bindTexture2D("PositionTexture", gPosition.id, 4,
                                             obj->id);

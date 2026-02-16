@@ -195,6 +195,8 @@ class MainScene : public Scene {
     void initialize(Window &window) override {
         Environment env;
         env.fog.intensity = 0.0;
+        env.volumetricLighting.enabled = false;
+        env.lightBloom.radius = 0.008f;
         this->setEnvironment(env);
 
         Workspace::get().setRootPath(std::string(TEST_PATH) + "/resources/");
@@ -244,14 +246,14 @@ class MainScene : public Scene {
         window.addRenderTarget(&frameBuffer);
         frameBuffer.display(window);
 
-        window.usesDeferred = false;
+        window.usesDeferred = true;
         atmosphere.enable();
         atmosphere.secondsPerHour = 4.f;
         atmosphere.setTime(12.0);
         atmosphere.cycle = false;
         atmosphere.useGlobalLight();
         atmosphere.wind = {0.1f, 0.0f, 0.0f};
-        atmosphere.castShadowsFromSunlight(2048);
+        atmosphere.castShadowsFromSunlight(1024);
     }
 };
 

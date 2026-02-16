@@ -20,6 +20,80 @@
 
 namespace opal {
 
+namespace {
+
+void upsertColorAttachment(std::vector<Attachment> &attachments, int colorIndex,
+                           const std::shared_ptr<Texture> &texture) {
+    if (colorIndex < 0) {
+        return;
+    }
+
+    int currentColor = 0;
+    for (auto &attachment : attachments) {
+        if (attachment.type != Attachment::Type::Color) {
+            continue;
+        }
+        if (currentColor == colorIndex) {
+            attachment.texture = texture;
+            return;
+        }
+        currentColor++;
+    }
+
+    Attachment attachment;
+    attachment.type = Attachment::Type::Color;
+    attachment.texture = texture;
+    attachments.push_back(attachment);
+}
+
+void upsertAttachmentByType(std::vector<Attachment> &attachments,
+                            Attachment::Type type,
+                            const std::shared_ptr<Texture> &texture) {
+    for (auto &attachment : attachments) {
+        if (attachment.type == type) {
+            attachment.texture = texture;
+            return;
+        }
+    }
+    Attachment attachment;
+    attachment.type = type;
+    attachment.texture = texture;
+    attachments.push_back(attachment);
+}
+
+std::vector<std::shared_ptr<Texture>>
+collectDrawColorAttachments(const std::shared_ptr<Framebuffer> &fb,
+                            int preferredIndex = -1) {
+    std::vector<std::shared_ptr<Texture>> result;
+    if (fb == nullptr) {
+        return result;
+    }
+
+    const int drawLimit = fb->getDrawBufferCount();
+    int colorIndex = 0;
+    for (const auto &attachment : fb->attachments) {
+        if (attachment.type != Attachment::Type::Color ||
+            attachment.texture == nullptr) {
+            continue;
+        }
+        if (drawLimit >= 0 && colorIndex >= drawLimit) {
+            break;
+        }
+        if (preferredIndex >= 0) {
+            if (colorIndex == preferredIndex) {
+                result.push_back(attachment.texture);
+                break;
+            }
+        } else {
+            result.push_back(attachment.texture);
+        }
+        colorIndex++;
+    }
+    return result;
+}
+
+} // namespace
+
 Framebuffer::~Framebuffer() {
 #ifdef METAL
     metal::releaseFramebufferState(this);
@@ -38,6 +112,7 @@ std::shared_ptr<Framebuffer> Framebuffer::create(int width, int height) {
     auto framebuffer = std::make_shared<Framebuffer>();
     framebuffer->width = width;
     framebuffer->height = height;
+    framebuffer->drawBufferCount = -1;
 
 #ifdef OPENGL
     glGenFramebuffers(1, &framebuffer->framebufferID);
@@ -51,6 +126,7 @@ std::shared_ptr<Framebuffer> Framebuffer::create() {
     auto framebuffer = std::make_shared<Framebuffer>();
     framebuffer->width = 0;
     framebuffer->height = 0;
+    framebuffer->drawBufferCount = -1;
 
 #ifdef OPENGL
     glGenFramebuffers(1, &framebuffer->framebufferID);
@@ -70,11 +146,7 @@ void Framebuffer::attachTexture(std::shared_ptr<Texture> texture,
                            texture->textureID, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 #elif defined(VULKAN) || defined(METAL)
-    (void)attachmentIndex;
-    Attachment att;
-    att.type = Attachment::Type::Color;
-    att.texture = texture;
-    attachments.push_back(att);
+    upsertColorAttachment(attachments, attachmentIndex, texture);
 #endif
 }
 
@@ -135,10 +207,7 @@ void Framebuffer::attachCubemap(std::shared_ptr<Texture> texture,
     att.texture = texture;
     attachments.push_back(att);
 #elif defined(VULKAN) || defined(METAL)
-    Attachment att;
-    att.type = attachmentType;
-    att.texture = texture;
-    attachments.push_back(att);
+    upsertAttachmentByType(attachments, attachmentType, texture);
 #endif
 }
 
@@ -166,10 +235,7 @@ void Framebuffer::attachCubemapFace(std::shared_ptr<Texture> texture, int face,
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 #elif defined(VULKAN) || defined(METAL)
     (void)face;
-    Attachment att;
-    att.type = attachmentType;
-    att.texture = texture;
-    attachments.push_back(att);
+    upsertAttachmentByType(attachments, attachmentType, texture);
 #endif
 }
 
@@ -181,6 +247,7 @@ void Framebuffer::disableColorBuffer() {
     colorBufferDisabled = true;
 #elif defined(VULKAN) || defined(METAL)
     colorBufferDisabled = true;
+    drawBufferCount = 0;
 #endif
 }
 
@@ -279,6 +346,7 @@ void Framebuffer::bindForDraw() {
 }
 
 void Framebuffer::setDrawBuffers(int attachmentCount) {
+    drawBufferCount = attachmentCount < 0 ? -1 : attachmentCount;
 #ifdef OPENGL
     if (attachmentCount <= 0) {
         glDrawBuffer(GL_NONE);
@@ -393,27 +461,7 @@ void CommandBuffer::performResolve(std::shared_ptr<ResolveAction> action) {
 
     auto gatherColorAttachments = [](const std::shared_ptr<Framebuffer> &fb,
                                      int preferredIndex) {
-        std::vector<std::shared_ptr<Texture>> attachments;
-        if (fb == nullptr) {
-            return attachments;
-        }
-        int colorIndex = 0;
-        for (const auto &attachment : fb->attachments) {
-            if (attachment.type != Attachment::Type::Color ||
-                attachment.texture == nullptr) {
-                continue;
-            }
-            if (preferredIndex >= 0) {
-                if (colorIndex == preferredIndex) {
-                    attachments.push_back(attachment.texture);
-                    break;
-                }
-            } else {
-                attachments.push_back(attachment.texture);
-            }
-            colorIndex++;
-        }
-        return attachments;
+        return collectDrawColorAttachments(fb, preferredIndex);
     };
 
     auto gatherDepthAttachment = [](const std::shared_ptr<Framebuffer> &fb) {
@@ -564,27 +612,7 @@ void CommandBuffer::performResolve(std::shared_ptr<ResolveAction> action) {
 
     auto gatherColorAttachments = [](std::shared_ptr<Framebuffer> fb,
                                      int preferredIndex) {
-        std::vector<std::shared_ptr<Texture>> attachments;
-        if (fb == nullptr) {
-            return attachments;
-        }
-
-        int currentColorIndex = 0;
-        for (const auto &attachment : fb->attachments) {
-            if (attachment.type != Attachment::Type::Color) {
-                continue;
-            }
-            if (preferredIndex >= 0) {
-                if (currentColorIndex == preferredIndex) {
-                    attachments.push_back(attachment.texture);
-                    break;
-                }
-            } else {
-                attachments.push_back(attachment.texture);
-            }
-            currentColorIndex++;
-        }
-        return attachments;
+        return collectDrawColorAttachments(fb, preferredIndex);
     };
 
     auto getDepthAttachment = [](std::shared_ptr<Framebuffer> fb) {

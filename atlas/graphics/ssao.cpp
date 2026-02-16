@@ -70,7 +70,7 @@ void Window::setupSSAO() {
     this->ssaoMapsDirty = true;
 }
 
-void Window::renderSSAO() {
+void Window::renderSSAO(std::shared_ptr<opal::CommandBuffer> commandBuffer) {
     if (this->ssaoBuffer == nullptr || this->ssaoBlurBuffer == nullptr) {
         return;
     }
@@ -107,8 +107,13 @@ void Window::renderSSAO() {
     this->ssaoMapsDirty = false;
     this->ssaoUpdateCooldown = this->ssaoUpdateInterval;
 
-    auto ssaoCommandBuffer = Window::mainWindow->device->acquireCommandBuffer();
-    ssaoCommandBuffer->start();
+    bool ownsCommandBuffer = false;
+    auto ssaoCommandBuffer = commandBuffer;
+    if (ssaoCommandBuffer == nullptr) {
+        ssaoCommandBuffer = Window::mainWindow->device->acquireCommandBuffer();
+        ssaoCommandBuffer->start();
+        ownsCommandBuffer = true;
+    }
     ssaoCommandBuffer->clearColor(1.0f, 1.0f, 1.0f, 1.0f);
     static std::shared_ptr<opal::DrawingState> ssaoState = nullptr;
     static std::shared_ptr<opal::Buffer> ssaoBuffer = nullptr;
@@ -213,7 +218,9 @@ void Window::renderSSAO() {
     ssaoCommandBuffer->draw(6, 1, 0, 0);
     ssaoCommandBuffer->unbindDrawingState();
     ssaoCommandBuffer->endPass();
-    ssaoCommandBuffer->commit();
+    if (ownsCommandBuffer) {
+        ssaoCommandBuffer->commit();
+    }
 
     if (this->camera != nullptr) {
         this->lastSSAOCameraPosition = this->camera->position;

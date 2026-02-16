@@ -358,6 +358,42 @@ static std::vector<BufferBinding> parseStageBufferBindings(const std::string &so
     return bindings;
 }
 
+static void parseStageTextureBindings(
+    const std::string &source, bool isVertexStage,
+    std::unordered_map<std::string, int> &bindings) {
+    const std::regex stageStartRegex(
+        isVertexStage ? R"(\bvertex\b[^\(\{;]*\()"
+                      : R"(\bfragment\b[^\(\{;]*\()");
+    const std::regex textureRegex(
+        R"(([A-Za-z_][A-Za-z0-9_:]*(?:<[^>]+>)?)\s+([A-Za-z_][A-Za-z0-9_]*)\s*\[\[texture\((\d+)\)\]\])");
+
+    auto stageBegin =
+        std::sregex_iterator(source.begin(), source.end(), stageStartRegex);
+    auto stageEnd = std::sregex_iterator();
+    for (auto stageIt = stageBegin; stageIt != stageEnd; ++stageIt) {
+        size_t openParenPos = static_cast<size_t>((*stageIt).position(0) +
+                                                  (*stageIt).length(0) - 1);
+        size_t closeParenPos = findMatchingParen(source, openParenPos);
+        if (closeParenPos == std::string::npos || closeParenPos <= openParenPos) {
+            continue;
+        }
+        const std::string params =
+            source.substr(openParenPos + 1, closeParenPos - openParenPos - 1);
+        auto begin = std::sregex_iterator(params.begin(), params.end(), textureRegex);
+        auto end = std::sregex_iterator();
+        for (auto it = begin; it != end; ++it) {
+            const std::string typeName = (*it)[1].str();
+            if (typeName.find("texture") == std::string::npos &&
+                typeName.find("depth") == std::string::npos) {
+                continue;
+            }
+            const std::string textureName = (*it)[2].str();
+            const int index = std::stoi((*it)[3].str());
+            bindings[textureName] = index;
+        }
+    }
+}
+
 static std::vector<std::string> parseUniformPath(const std::string &name) {
     return split(name, '.');
 }
@@ -905,6 +941,7 @@ bool parseProgramLayouts(const std::string &vertexSource,
     state.layouts.clear();
     state.bindings.clear();
     state.bindingSize.clear();
+    state.textureBindings.clear();
     state.uniformResolutionCache.clear();
 
     std::unordered_map<std::string, RawStruct> rawStructs =
@@ -921,6 +958,8 @@ bool parseProgramLayouts(const std::string &vertexSource,
         parseStageBufferBindings(vertexSource, true);
     std::vector<BufferBinding> fragmentBindings =
         parseStageBufferBindings(fragmentSource, false);
+    parseStageTextureBindings(vertexSource, true, state.textureBindings);
+    parseStageTextureBindings(fragmentSource, false, state.textureBindings);
     vertexBindings.insert(vertexBindings.end(), fragmentBindings.begin(),
                           fragmentBindings.end());
 
