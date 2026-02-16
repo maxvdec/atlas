@@ -11,6 +11,7 @@
 #include "atlas/window.h"
 #include "opal/opal.h"
 #include <glad/glad.h>
+#include <cstddef>
 #include <cmath>
 #include <memory>
 #include <vector>
@@ -163,7 +164,7 @@ void Window::deferredRendering(
                                   this->gBuffer->getHeight());
     this->gBuffer->getFramebuffer()->setDrawBuffers(4);
     commandBuffer->clear(0.0f, 0.0f, 0.0f, 1.0f, 1.0f);
-    deferredPipeline->setCullMode(opal::CullMode::Back);
+    deferredPipeline->setCullMode(opal::CullMode::None);
     deferredPipeline->setFrontFace(this->frontFace);
     deferredPipeline->enableDepthTest(true);
     deferredPipeline->setDepthCompareOp(opal::CompareOp::Less);
@@ -198,25 +199,21 @@ void Window::deferredRendering(
     static std::shared_ptr<opal::DrawingState> quadState = nullptr;
     static std::shared_ptr<opal::Buffer> quadBuffer = nullptr;
     if (quadState == nullptr) {
-        float quadVertices[] = {
+        CoreVertex quadVertices[] = {
 #ifdef METAL
-            // positions         // texCoords (Metal Y-flip)
-            -1.0f, 1.0f,  0.0f, 0.0f, 0.0f, // top-left
-            -1.0f, -1.0f, 0.0f, 0.0f, 1.0f, // bottom-left
-            1.0f,  -1.0f, 0.0f, 1.0f, 1.0f, // bottom-right
-
-            -1.0f, 1.0f,  0.0f, 0.0f, 0.0f, // top-left
-            1.0f,  -1.0f, 0.0f, 1.0f, 1.0f, // bottom-right
-            1.0f,  1.0f,  0.0f, 1.0f, 0.0f  // top-right
+            {{-1.0f, 1.0f, 0.0f}, Color::white(), {0.0f, 0.0f}},
+            {{-1.0f, -1.0f, 0.0f}, Color::white(), {0.0f, 1.0f}},
+            {{1.0f, -1.0f, 0.0f}, Color::white(), {1.0f, 1.0f}},
+            {{-1.0f, 1.0f, 0.0f}, Color::white(), {0.0f, 0.0f}},
+            {{1.0f, -1.0f, 0.0f}, Color::white(), {1.0f, 1.0f}},
+            {{1.0f, 1.0f, 0.0f}, Color::white(), {1.0f, 0.0f}}
 #else
-            // positions         // texCoords
-            -1.0f, 1.0f,  0.0f, 0.0f, 1.0f, // top-left
-            -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, // bottom-left
-            1.0f,  -1.0f, 0.0f, 1.0f, 0.0f, // bottom-right
-
-            -1.0f, 1.0f,  0.0f, 0.0f, 1.0f, // top-left
-            1.0f,  -1.0f, 0.0f, 1.0f, 0.0f, // bottom-right
-            1.0f,  1.0f,  0.0f, 1.0f, 1.0f  // top-right
+            {{-1.0f, 1.0f, 0.0f}, Color::white(), {0.0f, 1.0f}},
+            {{-1.0f, -1.0f, 0.0f}, Color::white(), {0.0f, 0.0f}},
+            {{1.0f, -1.0f, 0.0f}, Color::white(), {1.0f, 0.0f}},
+            {{-1.0f, 1.0f, 0.0f}, Color::white(), {0.0f, 1.0f}},
+            {{1.0f, -1.0f, 0.0f}, Color::white(), {1.0f, 0.0f}},
+            {{1.0f, 1.0f, 0.0f}, Color::white(), {1.0f, 1.0f}}
 #endif
         };
 
@@ -228,21 +225,21 @@ void Window::deferredRendering(
         opal::VertexAttribute positionAttr{
             .name = "deferredPosition",
             .type = opal::VertexAttributeType::Float,
-            .offset = 0,
+            .offset = static_cast<uint>(offsetof(CoreVertex, position)),
             .location = 0,
             .normalized = false,
             .size = 3,
-            .stride = static_cast<uint>(5 * sizeof(float)),
+            .stride = static_cast<uint>(sizeof(CoreVertex)),
             .inputRate = opal::VertexBindingInputRate::Vertex,
             .divisor = 0};
         opal::VertexAttribute uvAttr{
             .name = "deferredUV",
             .type = opal::VertexAttributeType::Float,
-            .offset = static_cast<uint>(3 * sizeof(float)),
-            .location = 1,
+            .offset = static_cast<uint>(offsetof(CoreVertex, textureCoordinate)),
+            .location = 2,
             .normalized = false,
             .size = 2,
-            .stride = static_cast<uint>(5 * sizeof(float)),
+            .stride = static_cast<uint>(sizeof(CoreVertex)),
             .inputRate = opal::VertexBindingInputRate::Vertex,
             .divisor = 0};
 

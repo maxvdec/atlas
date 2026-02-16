@@ -144,7 +144,7 @@ VertexShader VertexShader::fromDefaultShader(AtlasVertexShader shader) {
     }
     case AtlasVertexShader::Light: {
         vertexShader = VertexShader::fromSource(LIGHT_VERT);
-        vertexShader.desiredAttributes = {0, 1};
+        vertexShader.desiredAttributes = {0, 2};
         vertexShader.capabilities = {
             ShaderCapability::Shadows, ShaderCapability::Lighting,
             ShaderCapability::EnvironmentMapping,
@@ -163,7 +163,7 @@ VertexShader VertexShader::fromDefaultShader(AtlasVertexShader shader) {
     }
     case AtlasVertexShader::Volumetric: {
         vertexShader = VertexShader::fromSource(VOLUMETRIC_VERT);
-        vertexShader.desiredAttributes = {};
+        vertexShader.desiredAttributes = {0, 2};
         vertexShader.capabilities = {};
         vertexShader.fromDefaultShaderType = shader;
         VertexShader::vertexShaderCache[shader] = vertexShader;

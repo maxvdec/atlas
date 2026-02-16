@@ -12,7 +12,7 @@ struct main0_out
 struct main0_in
 {
     float3 aPos [[attribute(0)]];
-    float2 aTexCoord [[attribute(1)]];
+    float2 aTexCoord [[attribute(2)]];
 };
 
 vertex main0_out main0(main0_in in [[stage_in]])
@@ -22,4 +22,3 @@ vertex main0_out main0(main0_in in [[stage_in]])
     out.gl_Position = float4(in.aPos, 1.0);
     return out;
 }
-

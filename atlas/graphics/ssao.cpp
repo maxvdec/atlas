@@ -10,6 +10,7 @@
 #include "atlas/window.h"
 #include "atlas/tracer/log.h"
 #include <algorithm>
+#include <cstddef>
 #include <glm/geometric.hpp>
 #include <glm/gtc/random.hpp>
 #include <random>
@@ -118,14 +119,22 @@ void Window::renderSSAO(std::shared_ptr<opal::CommandBuffer> commandBuffer) {
     static std::shared_ptr<opal::DrawingState> ssaoState = nullptr;
     static std::shared_ptr<opal::Buffer> ssaoBuffer = nullptr;
     if (ssaoState == nullptr) {
-        float quadVertices[] = {
-            // positions         // texCoords
-            -1.0f, 1.0f,  0.0f, 0.0f, 1.0f, // top-left
-            -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, // bottom-left
-            1.0f,  -1.0f, 0.0f, 1.0f, 0.0f, // bottom-right
-            -1.0f, 1.0f,  0.0f, 0.0f, 1.0f, // top-left
-            1.0f,  -1.0f, 0.0f, 1.0f, 0.0f, // bottom-right
-            1.0f,  1.0f,  0.0f, 1.0f, 1.0f  // top-right
+        CoreVertex quadVertices[] = {
+#ifdef METAL
+            {{-1.0f, 1.0f, 0.0f}, Color::white(), {0.0f, 0.0f}},
+            {{-1.0f, -1.0f, 0.0f}, Color::white(), {0.0f, 1.0f}},
+            {{1.0f, -1.0f, 0.0f}, Color::white(), {1.0f, 1.0f}},
+            {{-1.0f, 1.0f, 0.0f}, Color::white(), {0.0f, 0.0f}},
+            {{1.0f, -1.0f, 0.0f}, Color::white(), {1.0f, 1.0f}},
+            {{1.0f, 1.0f, 0.0f}, Color::white(), {1.0f, 0.0f}}
+#else
+            {{-1.0f, 1.0f, 0.0f}, Color::white(), {0.0f, 1.0f}},
+            {{-1.0f, -1.0f, 0.0f}, Color::white(), {0.0f, 0.0f}},
+            {{1.0f, -1.0f, 0.0f}, Color::white(), {1.0f, 0.0f}},
+            {{-1.0f, 1.0f, 0.0f}, Color::white(), {0.0f, 1.0f}},
+            {{1.0f, -1.0f, 0.0f}, Color::white(), {1.0f, 0.0f}},
+            {{1.0f, 1.0f, 0.0f}, Color::white(), {1.0f, 1.0f}}
+#endif
         };
         ssaoBuffer = opal::Buffer::create(opal::BufferUsage::VertexBuffer,
                                           sizeof(quadVertices), quadVertices);
@@ -135,21 +144,21 @@ void Window::renderSSAO(std::shared_ptr<opal::CommandBuffer> commandBuffer) {
         opal::VertexAttribute positionAttr{
             .name = "ssaoPosition",
             .type = opal::VertexAttributeType::Float,
-            .offset = 0,
+            .offset = static_cast<uint>(offsetof(CoreVertex, position)),
             .location = 0,
             .normalized = false,
             .size = 3,
-            .stride = static_cast<uint>(5 * sizeof(float)),
+            .stride = static_cast<uint>(sizeof(CoreVertex)),
             .inputRate = opal::VertexBindingInputRate::Vertex,
             .divisor = 0};
         opal::VertexAttribute uvAttr{
             .name = "ssaoUV",
             .type = opal::VertexAttributeType::Float,
-            .offset = static_cast<uint>(3 * sizeof(float)),
-            .location = 1,
+            .offset = static_cast<uint>(offsetof(CoreVertex, textureCoordinate)),
+            .location = 2,
             .normalized = false,
             .size = 2,
-            .stride = static_cast<uint>(5 * sizeof(float)),
+            .stride = static_cast<uint>(sizeof(CoreVertex)),
             .inputRate = opal::VertexBindingInputRate::Vertex,
             .divisor = 0};
 

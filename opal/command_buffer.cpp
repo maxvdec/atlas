@@ -705,6 +705,10 @@ void CommandBuffer::beginPass(std::shared_ptr<RenderPass> newRenderPass) {
         state.commandBuffer = deviceState.queue->commandBuffer();
     }
 
+    if (state.passDescriptor != nullptr) {
+        state.passDescriptor->release();
+        state.passDescriptor = nullptr;
+    }
     state.passDescriptor =
         MTL::RenderPassDescriptor::renderPassDescriptor()->copy();
     state.hasDraw = false;
@@ -789,6 +793,9 @@ void CommandBuffer::beginPass(std::shared_ptr<RenderPass> newRenderPass) {
                                      state.clearColorPending);
     configureDepthAttachmentForClear(state.passDescriptor, clearDepthValue,
                                      state.clearDepthPending);
+
+    state.clearColorPending = false;
+    state.clearDepthPending = false;
 #endif
 }
 
