@@ -224,8 +224,8 @@ inline uint16_t metalFloatToHalf(float value) {
         }
     }
 
-    return static_cast<uint16_t>(sign | (static_cast<uint32_t>(exponent) << 10) |
-                                 (mantissa >> 13));
+    return static_cast<uint16_t>(
+        sign | (static_cast<uint32_t>(exponent) << 10) | (mantissa >> 13));
 }
 
 inline float metalReadChannel(const uint8_t *src, size_t bytesPerChannel) {
@@ -240,7 +240,8 @@ inline float metalReadChannel(const uint8_t *src, size_t bytesPerChannel) {
     return 0.0f;
 }
 
-inline void metalWriteChannel(uint8_t *dst, size_t bytesPerChannel, float value) {
+inline void metalWriteChannel(uint8_t *dst, size_t bytesPerChannel,
+                              float value) {
     if (bytesPerChannel == 1) {
         float clamped = std::clamp(value, 0.0f, 1.0f);
         dst[0] = static_cast<uint8_t>(clamped * 255.0f + 0.5f);
@@ -269,16 +270,17 @@ MetalUploadBuffer prepareMetalUpload(const void *data, int width, int height,
     size_t srcBytesPerChannel =
         metalSourceBytesPerChannel(textureFormat, dataFormat);
     size_t dstBytesPerChannel = metalDestinationBytesPerChannel(textureFormat);
-    size_t texelCount =
-        static_cast<size_t>(width) * static_cast<size_t>(height) *
-        static_cast<size_t>(depth);
+    size_t texelCount = static_cast<size_t>(width) *
+                        static_cast<size_t>(height) *
+                        static_cast<size_t>(depth);
 
     size_t srcBytesPerTexel = srcChannels * srcBytesPerChannel;
     size_t dstBytesPerTexel = dstChannels * dstBytesPerChannel;
     size_t srcRowBytes = static_cast<size_t>(width) * srcBytesPerTexel;
     size_t dstRowBytes = static_cast<size_t>(width) * dstBytesPerTexel;
 
-    if (srcChannels == dstChannels && srcBytesPerChannel == dstBytesPerChannel) {
+    if (srcChannels == dstChannels &&
+        srcBytesPerChannel == dstBytesPerChannel) {
         upload.bytes = data;
         upload.bytesPerRow = static_cast<NS::UInteger>(srcRowBytes);
         upload.bytesPerImage = static_cast<NS::UInteger>(
@@ -310,8 +312,8 @@ MetalUploadBuffer prepareMetalUpload(const void *data, int width, int height,
 
     upload.bytes = upload.converted.data();
     upload.bytesPerRow = static_cast<NS::UInteger>(dstRowBytes);
-    upload.bytesPerImage = static_cast<NS::UInteger>(
-        dstRowBytes * static_cast<size_t>(height));
+    upload.bytesPerImage =
+        static_cast<NS::UInteger>(dstRowBytes * static_cast<size_t>(height));
     return upload;
 }
 #endif
@@ -592,17 +594,18 @@ void Texture::updateFace(int faceIndex, const void *data, int width, int height,
         return;
     }
 
-    MetalUploadBuffer upload = prepareMetalUpload(data, width, height, 1, format,
-                                                  dataFormat);
+    MetalUploadBuffer upload =
+        prepareMetalUpload(data, width, height, 1, format, dataFormat);
     if (upload.bytes == nullptr || upload.bytesPerRow == 0) {
         return;
     }
 
-    MTL::Region region = MTL::Region::Make2D(
-        0, 0, static_cast<NS::UInteger>(width), static_cast<NS::UInteger>(height));
-    state.texture->replaceRegion(region, 0, static_cast<NS::UInteger>(faceIndex),
-                                 upload.bytes, upload.bytesPerRow,
-                                 upload.bytesPerImage);
+    MTL::Region region =
+        MTL::Region::Make2D(0, 0, static_cast<NS::UInteger>(width),
+                            static_cast<NS::UInteger>(height));
+    state.texture->replaceRegion(
+        region, 0, static_cast<NS::UInteger>(faceIndex), upload.bytes,
+        upload.bytesPerRow, upload.bytesPerImage);
 #endif
 
     ResourceEventInfo info;
@@ -687,8 +690,9 @@ void Texture::updateData(const void *data, int width, int height,
         return;
     }
 
-    MTL::Region region = MTL::Region::Make2D(
-        0, 0, static_cast<NS::UInteger>(width), static_cast<NS::UInteger>(height));
+    MTL::Region region =
+        MTL::Region::Make2D(0, 0, static_cast<NS::UInteger>(width),
+                            static_cast<NS::UInteger>(height));
     state.texture->replaceRegion(region, 0, upload.bytes, upload.bytesPerRow);
     this->width = width;
     this->height = height;
@@ -752,8 +756,9 @@ void Texture::readData(void *buffer, TextureDataFormat dataFormat) {
         bytesPerPixel = 4;
     }
 
-    MTL::Region region = MTL::Region::Make2D(
-        0, 0, static_cast<NS::UInteger>(width), static_cast<NS::UInteger>(height));
+    MTL::Region region =
+        MTL::Region::Make2D(0, 0, static_cast<NS::UInteger>(width),
+                            static_cast<NS::UInteger>(height));
     NS::UInteger bytesPerRow =
         static_cast<NS::UInteger>(width * static_cast<int>(bytesPerPixel));
     state.texture->getBytes(buffer, bytesPerRow, region, 0);
@@ -779,6 +784,7 @@ void Texture::generateMipmaps([[maybe_unused]] uint levels) {
     blit->generateMipmaps(state.texture);
     blit->endEncoding();
     commandBuffer->commit();
+    commandBuffer->waitUntilCompleted();
 #endif
 }
 
@@ -1165,7 +1171,8 @@ std::shared_ptr<Texture> Texture::create3D(TextureFormat format, int width,
                                    data);
 #elif defined(METAL)
     if (Device::globalInstance == nullptr) {
-        throw std::runtime_error("Cannot create Metal 3D texture without device");
+        throw std::runtime_error(
+            "Cannot create Metal 3D texture without device");
     }
     auto &deviceState = metal::deviceState(Device::globalInstance);
     if (deviceState.device == nullptr) {
@@ -1196,7 +1203,8 @@ std::shared_ptr<Texture> Texture::create3D(TextureFormat format, int width,
     descriptor->setHeight(static_cast<NS::UInteger>(std::max(height, 1)));
     descriptor->setDepth(static_cast<NS::UInteger>(std::max(depth, 1)));
     descriptor->setMipmapLevelCount(1);
-    descriptor->setUsage(metal::textureUsageFor(TextureType::Texture3D, format));
+    descriptor->setUsage(
+        metal::textureUsageFor(TextureType::Texture3D, format));
     descriptor->setStorageMode(MTL::StorageModeShared);
 
     state.texture = deviceState.device->newTexture(descriptor);

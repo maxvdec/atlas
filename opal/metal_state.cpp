@@ -17,8 +17,7 @@ namespace opal::metal {
 
 namespace {
 
-template <typename T>
-static inline T alignUp(T value, T alignment) {
+template <typename T> static inline T alignUp(T value, T alignment) {
     if (alignment <= 1) {
         return value;
     }
@@ -39,7 +38,8 @@ static std::string trim(const std::string &input) {
     return input.substr(start, end - start);
 }
 
-static std::vector<std::string> split(const std::string &input, char delimiter) {
+static std::vector<std::string> split(const std::string &input,
+                                      char delimiter) {
     std::vector<std::string> parts;
     std::string current;
     for (char c : input) {
@@ -84,12 +84,13 @@ parseRawStructs(const std::string &source) {
 
     static const std::regex structStart(
         R"(struct\s+([A-Za-z_][A-Za-z0-9_]*)\s*\{)");
-    auto begin = std::sregex_iterator(source.begin(), source.end(), structStart);
+    auto begin =
+        std::sregex_iterator(source.begin(), source.end(), structStart);
     auto end = std::sregex_iterator();
     for (auto it = begin; it != end; ++it) {
         const std::string structName = (*it)[1].str();
-        size_t bodyStart = static_cast<size_t>((*it).position(0) +
-                                               (*it).length(0));
+        size_t bodyStart =
+            static_cast<size_t>((*it).position(0) + (*it).length(0));
         int depth = 1;
         size_t cursor = bodyStart;
         while (cursor < source.size() && depth > 0) {
@@ -191,8 +192,8 @@ static std::optional<FieldType> builtinType(const std::string &name) {
         }
 
         if (packed) {
-            return FieldType{scalarSize * static_cast<size_t>(count), scalarSize,
-                             false, ""};
+            return FieldType{scalarSize * static_cast<size_t>(count),
+                             scalarSize, false, ""};
         }
 
         if (count == 2) {
@@ -211,8 +212,7 @@ static std::optional<FieldType> builtinType(const std::string &name) {
         int columns = std::stoi(matrixMatch[2].str());
         int rows = std::stoi(matrixMatch[3].str());
 
-        size_t vectorAlignment =
-            (rows == 2) ? scalarSize * 2 : scalarSize * 4;
+        size_t vectorAlignment = (rows == 2) ? scalarSize * 2 : scalarSize * 4;
         size_t vectorSize = (rows == 3) ? scalarSize * 4 : scalarSize * rows;
         vectorSize = alignUp(vectorSize, vectorAlignment);
         size_t matrixSize = vectorSize * static_cast<size_t>(columns);
@@ -222,13 +222,14 @@ static std::optional<FieldType> builtinType(const std::string &name) {
     return std::nullopt;
 }
 
-static StructLayout computeLayout(
-    const std::string &name,
-    const std::unordered_map<std::string, RawStruct> &rawStructs,
-    std::unordered_map<std::string, StructLayout> &cache,
-    std::unordered_set<std::string> &visiting);
+static StructLayout
+computeLayout(const std::string &name,
+              const std::unordered_map<std::string, RawStruct> &rawStructs,
+              std::unordered_map<std::string, StructLayout> &cache,
+              std::unordered_set<std::string> &visiting);
 
-static size_t findMatchingParen(const std::string &source, size_t openParenPos) {
+static size_t findMatchingParen(const std::string &source,
+                                size_t openParenPos) {
     if (openParenPos >= source.size() || source[openParenPos] != '(') {
         return std::string::npos;
     }
@@ -247,11 +248,11 @@ static size_t findMatchingParen(const std::string &source, size_t openParenPos) 
     return std::string::npos;
 }
 
-static FieldType resolveType(
-    const std::string &typeName,
-    const std::unordered_map<std::string, RawStruct> &rawStructs,
-    std::unordered_map<std::string, StructLayout> &cache,
-    std::unordered_set<std::string> &visiting) {
+static FieldType
+resolveType(const std::string &typeName,
+            const std::unordered_map<std::string, RawStruct> &rawStructs,
+            std::unordered_map<std::string, StructLayout> &cache,
+            std::unordered_set<std::string> &visiting) {
     auto builtin = builtinType(typeName);
     if (builtin.has_value()) {
         return builtin.value();
@@ -259,18 +260,19 @@ static FieldType resolveType(
 
     auto rawIt = rawStructs.find(typeName);
     if (rawIt != rawStructs.end()) {
-        StructLayout nested = computeLayout(typeName, rawStructs, cache, visiting);
+        StructLayout nested =
+            computeLayout(typeName, rawStructs, cache, visiting);
         return FieldType{nested.size, nested.alignment, true, typeName};
     }
 
     return FieldType{};
 }
 
-static StructLayout computeLayout(
-    const std::string &name,
-    const std::unordered_map<std::string, RawStruct> &rawStructs,
-    std::unordered_map<std::string, StructLayout> &cache,
-    std::unordered_set<std::string> &visiting) {
+static StructLayout
+computeLayout(const std::string &name,
+              const std::unordered_map<std::string, RawStruct> &rawStructs,
+              std::unordered_map<std::string, StructLayout> &cache,
+              std::unordered_set<std::string> &visiting) {
     auto cacheIt = cache.find(name);
     if (cacheIt != cache.end()) {
         return cacheIt->second;
@@ -307,8 +309,9 @@ static StructLayout computeLayout(
         field.arrayCount = std::max<size_t>(1, rawField.arrayCount);
         field.stride = alignUp(fieldType.size, fieldType.alignment);
 
-        size_t fieldSize = (field.arrayCount > 1) ? field.stride * field.arrayCount
-                                                  : fieldType.size;
+        size_t fieldSize = (field.arrayCount > 1)
+                               ? field.stride * field.arrayCount
+                               : fieldType.size;
         cursor += fieldSize;
         layout.alignment = std::max(layout.alignment, fieldType.alignment);
         layout.fields.push_back(field);
@@ -321,12 +324,12 @@ static StructLayout computeLayout(
     return layout;
 }
 
-static std::vector<BufferBinding> parseStageBufferBindings(const std::string &source,
-                                                           bool isVertexStage) {
+static std::vector<BufferBinding>
+parseStageBufferBindings(const std::string &source, bool isVertexStage) {
     std::vector<BufferBinding> bindings;
-    const std::regex stageStartRegex(
-        isVertexStage ? R"(\bvertex\b[^\(\{;]*\()"
-                      : R"(\bfragment\b[^\(\{;]*\()");
+    const std::regex stageStartRegex(isVertexStage
+                                         ? R"(\bvertex\b[^\(\{;]*\()"
+                                         : R"(\bfragment\b[^\(\{;]*\()");
     const std::regex bufferRegex(
         R"((?:constant|device)\s+([A-Za-z_][A-Za-z0-9_]*)\s*(?:\*|&)\s*([A-Za-z_][A-Za-z0-9_]*)\s*\[\[buffer\((\d+)\)\]\])");
 
@@ -337,12 +340,14 @@ static std::vector<BufferBinding> parseStageBufferBindings(const std::string &so
         size_t openParenPos = static_cast<size_t>((*stageIt).position(0) +
                                                   (*stageIt).length(0) - 1);
         size_t closeParenPos = findMatchingParen(source, openParenPos);
-        if (closeParenPos == std::string::npos || closeParenPos <= openParenPos) {
+        if (closeParenPos == std::string::npos ||
+            closeParenPos <= openParenPos) {
             continue;
         }
         const std::string params =
             source.substr(openParenPos + 1, closeParenPos - openParenPos - 1);
-        auto begin = std::sregex_iterator(params.begin(), params.end(), bufferRegex);
+        auto begin =
+            std::sregex_iterator(params.begin(), params.end(), bufferRegex);
         auto end = std::sregex_iterator();
         for (auto it = begin; it != end; ++it) {
             BufferBinding binding;
@@ -358,12 +363,12 @@ static std::vector<BufferBinding> parseStageBufferBindings(const std::string &so
     return bindings;
 }
 
-static void parseStageTextureBindings(
-    const std::string &source, bool isVertexStage,
-    std::unordered_map<std::string, int> &bindings) {
-    const std::regex stageStartRegex(
-        isVertexStage ? R"(\bvertex\b[^\(\{;]*\()"
-                      : R"(\bfragment\b[^\(\{;]*\()");
+static void
+parseStageTextureBindings(const std::string &source, bool isVertexStage,
+                          std::unordered_map<std::string, int> &bindings) {
+    const std::regex stageStartRegex(isVertexStage
+                                         ? R"(\bvertex\b[^\(\{;]*\()"
+                                         : R"(\bfragment\b[^\(\{;]*\()");
     const std::regex textureRegex(
         R"(([A-Za-z_][A-Za-z0-9_:]*(?:<[^>]+>)?)\s+([A-Za-z_][A-Za-z0-9_]*)\s*\[\[texture\((\d+)\)\]\])");
 
@@ -374,12 +379,14 @@ static void parseStageTextureBindings(
         size_t openParenPos = static_cast<size_t>((*stageIt).position(0) +
                                                   (*stageIt).length(0) - 1);
         size_t closeParenPos = findMatchingParen(source, openParenPos);
-        if (closeParenPos == std::string::npos || closeParenPos <= openParenPos) {
+        if (closeParenPos == std::string::npos ||
+            closeParenPos <= openParenPos) {
             continue;
         }
         const std::string params =
             source.substr(openParenPos + 1, closeParenPos - openParenPos - 1);
-        auto begin = std::sregex_iterator(params.begin(), params.end(), textureRegex);
+        auto begin =
+            std::sregex_iterator(params.begin(), params.end(), textureRegex);
         auto end = std::sregex_iterator();
         for (auto it = begin; it != end; ++it) {
             const std::string typeName = (*it)[1].str();
@@ -443,8 +450,8 @@ static bool matchesBindingAlias(const BufferBinding &binding,
         if (!hasSuffixIgnoreCase(binding.structName, suffix)) {
             continue;
         }
-        std::string trimmed =
-            binding.structName.substr(0, binding.structName.size() - suffix.size());
+        std::string trimmed = binding.structName.substr(
+            0, binding.structName.size() - suffix.size());
         if (token == trimmed) {
             return true;
         }
@@ -462,8 +469,7 @@ static const StructField *findField(const StructLayout &layout,
     return nullptr;
 }
 
-template <typename T>
-static inline T enumOr(T lhs, T rhs) {
+template <typename T> static inline T enumOr(T lhs, T rhs) {
     return static_cast<T>(static_cast<NS::UInteger>(lhs) |
                           static_cast<NS::UInteger>(rhs));
 }
@@ -537,15 +543,21 @@ ContextState &contextState(Context *context) {
     return contextStatesStorage()[context];
 }
 
-DeviceState &deviceState(Device *device) { return deviceStatesStorage()[device]; }
+DeviceState &deviceState(Device *device) {
+    return deviceStatesStorage()[device];
+}
 
-BufferState &bufferState(Buffer *buffer) { return bufferStatesStorage()[buffer]; }
+BufferState &bufferState(Buffer *buffer) {
+    return bufferStatesStorage()[buffer];
+}
 
 TextureState &textureState(Texture *texture) {
     return textureStatesStorage()[texture];
 }
 
-ShaderState &shaderState(Shader *shader) { return shaderStatesStorage()[shader]; }
+ShaderState &shaderState(Shader *shader) {
+    return shaderStatesStorage()[shader];
+}
 
 ProgramState &programState(ShaderProgram *program) {
     return programStatesStorage()[program];
@@ -747,8 +759,11 @@ void releaseCommandBufferState(CommandBuffer *commandBuffer) {
         state.encoder->endEncoding();
         state.encoder = nullptr;
     }
+    if (state.passDescriptor != nullptr) {
+        state.passDescriptor->release();
+        state.passDescriptor = nullptr;
+    }
     state.commandBuffer = nullptr;
-    state.passDescriptor = nullptr;
     state.drawable = nullptr;
     state.boundVertexTextures.fill(nullptr);
     state.boundFragmentTextures.fill(nullptr);
@@ -851,10 +866,12 @@ bool isDepthFormat(TextureFormat format) {
 
 MTL::TextureUsage textureUsageFor(TextureType type, TextureFormat format) {
     if (type == TextureType::Texture3D) {
-        return enumOr(MTL::TextureUsageShaderRead, MTL::TextureUsageShaderWrite);
+        return enumOr(MTL::TextureUsageShaderRead,
+                      MTL::TextureUsageShaderWrite);
     }
     if (isDepthFormat(format)) {
-        return enumOr(MTL::TextureUsageShaderRead, MTL::TextureUsageRenderTarget);
+        return enumOr(MTL::TextureUsageShaderRead,
+                      MTL::TextureUsageRenderTarget);
     }
     return enumOr(MTL::TextureUsageShaderRead, MTL::TextureUsageRenderTarget);
 }
@@ -918,9 +935,9 @@ void rebuildTextureSampler(Texture *texture, MTL::Device *device) {
     if (state.wrapS == TextureWrapMode::ClampToBorder ||
         state.wrapT == TextureWrapMode::ClampToBorder ||
         state.wrapR == TextureWrapMode::ClampToBorder) {
-        float avg = (state.borderColor.r + state.borderColor.g +
-                     state.borderColor.b) /
-                    3.0f;
+        float avg =
+            (state.borderColor.r + state.borderColor.g + state.borderColor.b) /
+            3.0f;
         if (avg > 0.75f) {
             descriptor->setBorderColor(MTL::SamplerBorderColorOpaqueWhite);
         } else {
@@ -968,7 +985,8 @@ bool parseProgramLayouts(const std::string &vertexSource,
         for (BufferBinding &existing : state.bindings) {
             if (existing.index == binding.index &&
                 existing.structName == binding.structName) {
-                existing.vertexStage = existing.vertexStage || binding.vertexStage;
+                existing.vertexStage =
+                    existing.vertexStage || binding.vertexStage;
                 existing.fragmentStage =
                     existing.fragmentStage || binding.fragmentStage;
                 bool existingAnonymous = existing.instanceName.empty() ||
@@ -1070,10 +1088,11 @@ std::vector<UniformLocation> resolveUniformLocations(ProgramState &programState,
                     finalSize = hasIndex ? field->type.size
                                          : field->stride * field->arrayCount;
                 } else {
-                    finalSize = hasIndex ? field->type.size
-                                         : ((field->arrayCount > 1)
-                                                ? field->stride * field->arrayCount
-                                                : field->type.size);
+                    finalSize = hasIndex
+                                    ? field->type.size
+                                    : ((field->arrayCount > 1)
+                                           ? field->stride * field->arrayCount
+                                           : field->type.size);
                 }
             } else {
                 if (!field->type.isStruct) {
@@ -1114,8 +1133,8 @@ std::string makePipelineKey(const std::array<MTL::PixelFormat, 8> &colors,
                             uint32_t sampleCount) {
     std::string key = std::to_string(colorCount) + "|" +
                       std::to_string(static_cast<uint32_t>(depthFormat)) + "|" +
-                      std::to_string(static_cast<uint32_t>(stencilFormat)) + "|" +
-                      std::to_string(sampleCount);
+                      std::to_string(static_cast<uint32_t>(stencilFormat)) +
+                      "|" + std::to_string(sampleCount);
     for (uint32_t i = 0; i < colorCount && i < colors.size(); ++i) {
         key += "|" + std::to_string(static_cast<uint32_t>(colors[i]));
     }
@@ -1124,9 +1143,8 @@ std::string makePipelineKey(const std::array<MTL::PixelFormat, 8> &colors,
 
 uint32_t fragmentColorOutputCount(const std::string &fragmentSource) {
     static const std::regex colorRegex(R"(\[\[\s*color\((\d+)\)\s*\]\])");
-    auto begin =
-        std::sregex_iterator(fragmentSource.begin(), fragmentSource.end(),
-                             colorRegex);
+    auto begin = std::sregex_iterator(fragmentSource.begin(),
+                                      fragmentSource.end(), colorRegex);
     auto end = std::sregex_iterator();
     int maxIndex = -1;
     for (auto it = begin; it != end; ++it) {

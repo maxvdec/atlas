@@ -546,6 +546,7 @@ void CommandBuffer::performResolve(std::shared_ptr<ResolveAction> action) {
 
     if (ownedCommandBuffer) {
         metalCB->commit();
+        metalCB->waitUntilCompleted();
     }
 #elif defined(VULKAN)
     if (action == nullptr || action->source == nullptr ||
