@@ -106,6 +106,7 @@ struct ProgramState {
     std::unordered_map<uint32_t, size_t> bindingSize;
     std::unordered_map<std::string, std::vector<UniformLocation>>
         uniformResolutionCache;
+    uint32_t fragmentColorOutputs = 1;
 };
 
 struct PipelineState {

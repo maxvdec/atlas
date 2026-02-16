@@ -328,12 +328,14 @@ static void updateMetalUniform(Pipeline *pipeline, const std::string &name,
 
             size_t writeSize = clampToDeclaredSize ? std::min(size, location.size)
                                                    : size;
+            if (writeSize == 0) {
+                return;
+            }
             size_t requiredSize = location.offset + writeSize;
             requiredSize = std::max(requiredSize, declaredSize);
             if (bytes.size() < requiredSize) {
                 bytes.resize(alignUp(requiredSize, static_cast<size_t>(16)), 0);
             }
-
             std::memcpy(bytes.data() + location.offset, data, writeSize);
         };
 

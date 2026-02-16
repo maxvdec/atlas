@@ -228,19 +228,19 @@ class MainScene : public Scene {
         fpsText.addTraitComponent<Text>(FPSTextUpdater());
         window.addUIObject(&fpsText);
 
-        ball = createDebugSphere(0.5f, 76, 76);
+        ball = createDebugSphere(0.5f, 48, 48);
         ball.material.metallic = 1.0f;
         ball.material.roughness = 0.0f;
         ball.move({0.f, 1.0f, 1.0f});
         window.addObject(&ball);
 
-        ball2 = createDebugSphere(0.5f, 76, 76);
+        ball2 = createDebugSphere(0.5f, 48, 48);
         ball2.move({0.f, 1.0f, -1.0f});
         window.addObject(&ball2);
 
         light = DirectionalLight({1.0f, -0.3f, 0.5f}, Color::white());
 
-        frameBuffer = RenderTarget(window);
+        frameBuffer = RenderTarget(window, RenderTargetType::Multisampled);
         window.addRenderTarget(&frameBuffer);
         frameBuffer.display(window);
 
@@ -251,7 +251,7 @@ class MainScene : public Scene {
         atmosphere.cycle = false;
         atmosphere.useGlobalLight();
         atmosphere.wind = {0.1f, 0.0f, 0.0f};
-        atmosphere.castShadowsFromSunlight(4096);
+        atmosphere.castShadowsFromSunlight(2048);
     }
 };
 

@@ -467,6 +467,16 @@ void RenderTarget::display(Window &window, float zindex) {
     if (object == nullptr) {
         CoreObject obj;
         std::vector<CoreVertex> vertices = {
+#ifdef METAL
+            {{1.0f, 1.0f, zindex}, Color::white(), {1.0f, 0.0f}}, // top right
+            {{1.0f, -1.0f, zindex},
+             Color::white(),
+             {1.0f, 1.0f}}, // bottom right
+            {{-1.0f, -1.0f, zindex},
+             Color::white(),
+             {0.0f, 1.0f}},                                       // bottom left
+            {{-1.0f, 1.0f, zindex}, Color::white(), {0.0f, 0.0f}} // top left
+#else
             // positions        // texture coords
             {{1.0f, 1.0f, zindex}, Color::white(), {1.0f, 1.0f}}, // top right
             {{1.0f, -1.0f, zindex},
@@ -476,6 +486,7 @@ void RenderTarget::display(Window &window, float zindex) {
              Color::white(),
              {0.0f, 0.0f}},                                       // bottom left
             {{-1.0f, 1.0f, zindex}, Color::white(), {0.0f, 1.0f}} // top left
+#endif
         };
         VertexShader vertexShader =
             VertexShader::fromDefaultShader(AtlasVertexShader::Fullscreen);
@@ -655,6 +666,30 @@ void RenderTarget::render(float dt,
     }
     renderTargetPipeline =
         obj->shaderProgram.requestPipeline(renderTargetPipeline);
+    int viewportX = 0;
+    int viewportY = 0;
+    int viewportWidth = Window::mainWindow ? Window::mainWindow->viewportWidth : 0;
+    int viewportHeight = Window::mainWindow ? Window::mainWindow->viewportHeight : 0;
+    if (Window::mainWindow != nullptr &&
+        (viewportWidth <= 0 || viewportHeight <= 0)) {
+        int fbWidth = 0;
+        int fbHeight = 0;
+        glfwGetFramebufferSize(
+            static_cast<GLFWwindow *>(Window::mainWindow->windowRef), &fbWidth,
+            &fbHeight);
+        viewportWidth = fbWidth;
+        viewportHeight = fbHeight;
+    }
+    if (Window::mainWindow != nullptr) {
+        viewportX = Window::mainWindow->viewportX;
+        viewportY = Window::mainWindow->viewportY;
+    }
+    if (viewportWidth <= 0 || viewportHeight <= 0) {
+        viewportWidth = std::max(1, getWidth());
+        viewportHeight = std::max(1, getHeight());
+    }
+    renderTargetPipeline->setViewport(viewportX, viewportY, viewportWidth,
+                                      viewportHeight);
     renderTargetPipeline->bind();
 
     Camera *camera = Window::mainWindow->camera;
@@ -834,6 +869,7 @@ void RenderTarget::render(float dt,
     renderTargetPipeline->bind();
 
     commandBuffer->bindDrawingState(obj->vao);
+    commandBuffer->bindPipeline(renderTargetPipeline);
     if (!obj->indices.empty()) {
         commandBuffer->drawIndexed(
             static_cast<unsigned int>(obj->indices.size()), 1, 0, 0, 0,
@@ -847,21 +883,22 @@ void RenderTarget::render(float dt,
     renderTargetPipeline->enableDepthTest(true);
     renderTargetPipeline->bind();
 
-    DebugObjectPacket debugPacket{};
-    debugPacket.drawCallsForObject = 1;
-    debugPacket.frameCount = Window::mainWindow->device->frameCount;
-    debugPacket.triangleCount = 2;
-    debugPacket.vertexBufferSizeMb =
-        static_cast<float>(sizeof(CoreVertex) * 4) / (1024.0f * 1024.0f);
-    debugPacket.indexBufferSizeMb =
-        static_cast<float>(sizeof(Index) * 6) / (1024.0f * 1024.0f);
-    debugPacket.textureCount =
-        1 + (brightTexture.id != 0 ? 1 : 0) + (depthTexture.id != 0 ? 1 : 0) +
-        (gPosition.id != 0 ? 1 : 0) + (ssrTexture.id != 0 ? 1 : 0) +
-        (LUT.id != 0 ? 1 : 0);
-    debugPacket.materialCount = 0;
-    debugPacket.objectType = DebugObjectType::Other;
-    debugPacket.objectId = obj->id;
-
-    debugPacket.send();
+    if (TracerServices::getInstance().isOk()) {
+        DebugObjectPacket debugPacket{};
+        debugPacket.drawCallsForObject = 1;
+        debugPacket.frameCount = Window::mainWindow->device->frameCount;
+        debugPacket.triangleCount = 2;
+        debugPacket.vertexBufferSizeMb =
+            static_cast<float>(sizeof(CoreVertex) * 4) / (1024.0f * 1024.0f);
+        debugPacket.indexBufferSizeMb =
+            static_cast<float>(sizeof(Index) * 6) / (1024.0f * 1024.0f);
+        debugPacket.textureCount =
+            1 + (brightTexture.id != 0 ? 1 : 0) + (depthTexture.id != 0 ? 1 : 0) +
+            (gPosition.id != 0 ? 1 : 0) + (ssrTexture.id != 0 ? 1 : 0) +
+            (LUT.id != 0 ? 1 : 0);
+        debugPacket.materialCount = 0;
+        debugPacket.objectType = DebugObjectType::Other;
+        debugPacket.objectId = obj->id;
+        debugPacket.send();
+    }
 }

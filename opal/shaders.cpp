@@ -320,6 +320,8 @@ void ShaderProgram::link() {
     if (!metal::parseProgramLayouts(vertexSource, fragmentSource, state)) {
         throw std::runtime_error("Failed to parse Metal shader buffer layouts");
     }
+    uint32_t colorOutputs = metal::fragmentColorOutputCount(fragmentSource);
+    state.fragmentColorOutputs = colorOutputs > 0 ? colorOutputs : 1;
 
     this->programID = ShaderProgram::currentId++;
 #else

@@ -135,7 +135,10 @@ void Window::deferredRendering(
         return;
     }
     std::vector<std::shared_ptr<opal::Pipeline>> originalPipelines;
-    auto deferredPipeline = opal::Pipeline::create();
+    static std::shared_ptr<opal::Pipeline> deferredPipeline = nullptr;
+    if (deferredPipeline == nullptr) {
+        deferredPipeline = opal::Pipeline::create();
+    }
     for (auto &obj : this->renderables) {
         if (!obj->canUseDeferredRendering()) {
             continue;
@@ -160,10 +163,7 @@ void Window::deferredRendering(
     this->gBuffer->getFramebuffer()->setDrawBuffers(4);
     commandBuffer->clear(0.0f, 0.0f, 0.0f, 1.0f, 1.0f);
     deferredPipeline->setCullMode(opal::CullMode::Back);
-#ifdef VULKAN
-    // In Vulkan, the Y-flip in projection inverts winding order
-    deferredPipeline->setFrontFace(opal::FrontFace::Clockwise);
-#endif
+    deferredPipeline->setFrontFace(this->frontFace);
     deferredPipeline->enableDepthTest(true);
     deferredPipeline->setDepthCompareOp(opal::CompareOp::Less);
     deferredPipeline->enableDepthWrite(true);
@@ -195,12 +195,6 @@ void Window::deferredRendering(
     commandBuffer->clear(0.0f, 0.0f, 0.0f, 1.0f, 1.0f);
 
     target->getFramebuffer()->setDrawBuffers(2);
-
-    auto lightPassPipeline = opal::Pipeline::create();
-    lightPassPipeline->setCullMode(opal::CullMode::None);
-    lightPassPipeline->enableDepthTest(false);
-    lightPassPipeline->enableDepthWrite(false);
-    lightPassPipeline->bind();
 
     static std::shared_ptr<opal::DrawingState> quadState = nullptr;
     static std::shared_ptr<opal::Buffer> quadBuffer = nullptr;
@@ -263,6 +257,10 @@ void Window::deferredRendering(
         lightPipeline = opal::Pipeline::create();
     }
     lightPipeline = this->lightProgram.requestPipeline(lightPipeline);
+    lightPipeline->setCullMode(opal::CullMode::None);
+    lightPipeline->enableDepthTest(false);
+    lightPipeline->enableDepthWrite(false);
+    lightPipeline->enableBlending(false);
     lightPipeline->bind();
 
     lightPipeline->bindTexture2D("gPosition", this->gBuffer->gPosition.id, 0);
@@ -473,6 +471,7 @@ void Window::deferredRendering(
         Window::mainWindow->currentScene->environment.rimLight.color.b);
 
     quadState->bind();
+    commandBuffer->bindPipeline(lightPipeline);
     commandBuffer->draw(6, 1, 0, 0);
     quadState->unbind();
 
@@ -503,6 +502,10 @@ void Window::deferredRendering(
         }
         volumetricPipeline =
             this->volumetricProgram.requestPipeline(volumetricPipeline);
+        volumetricPipeline->setCullMode(opal::CullMode::None);
+        volumetricPipeline->enableDepthTest(false);
+        volumetricPipeline->enableDepthWrite(false);
+        volumetricPipeline->enableBlending(false);
         volumetricPipeline->bind();
 
         DirectionalLight *dirLight = scene->directionalLights[0];
@@ -532,6 +535,7 @@ void Window::deferredRendering(
         volumetricPipeline->setUniform2f("sunPos", sunUV.x, sunUV.y);
 
         quadState->bind();
+        commandBuffer->bindPipeline(volumetricPipeline);
         commandBuffer->draw(6, 1, 0, 0);
         quadState->unbind();
     }
@@ -556,6 +560,10 @@ void Window::deferredRendering(
             ssrPipeline = opal::Pipeline::create();
         }
         ssrPipeline = this->ssrProgram.requestPipeline(ssrPipeline);
+        ssrPipeline->setCullMode(opal::CullMode::None);
+        ssrPipeline->enableDepthTest(false);
+        ssrPipeline->enableDepthWrite(false);
+        ssrPipeline->enableBlending(false);
         ssrPipeline->bind();
 
         ssrPipeline->bindTexture2D("gPosition", gBuffer->gPosition.id, 0);
@@ -578,6 +586,7 @@ void Window::deferredRendering(
                                   camera->position.y, camera->position.z);
 
         quadState->bind();
+        commandBuffer->bindPipeline(ssrPipeline);
         commandBuffer->draw(6, 1, 0, 0);
         quadState->unbind();
     }

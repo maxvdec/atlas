@@ -56,6 +56,12 @@ Window::Window(WindowConfiguration config)
     atlas_log("Using OpenGL backend");
 #endif
 
+#if defined(VULKAN) || defined(METAL)
+    this->frontFace = opal::FrontFace::Clockwise;
+#else
+    this->frontFace = opal::FrontFace::CounterClockwise;
+#endif
+
     context->setFlag(GLFW_DECORATED, config.decorations);
     context->setFlag(GLFW_RESIZABLE, config.resizable);
     context->setFlag(GLFW_TRANSPARENT_FRAMEBUFFER, config.transparent);
@@ -81,6 +87,10 @@ Window::Window(WindowConfiguration config)
     int fbWidth, fbHeight;
     glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
     device->getDefaultFramebuffer()->setViewport(0, 0, fbWidth, fbHeight);
+    this->viewportX = 0;
+    this->viewportY = 0;
+    this->viewportWidth = fbWidth;
+    this->viewportHeight = fbHeight;
 
     if (config.posX != WINDOW_CENTERED && config.posY != WINDOW_CENTERED) {
         glfwSetWindowPos(window, config.posX, config.posY);
@@ -357,8 +367,6 @@ void Window::run() {
 
         renderLightsToShadowMaps(commandBuffer);
 
-        updatePipelineStateField(this->cullMode, opal::CullMode::None);
-        updatePipelineStateField(this->cullMode, opal::CullMode::Back);
         // Render to the targets
         for (auto &target : this->renderTargets) {
             if (target == nullptr) {
@@ -499,7 +507,6 @@ void Window::run() {
             this->currentRenderTarget = nullptr;
         }
 
-        updatePipelineStateField(this->cullMode, opal::CullMode::None);
         for (auto &obj : this->preferenceRenderables) {
             RenderTarget *target = dynamic_cast<RenderTarget *>(obj);
             if (target != nullptr && target->brightTexture.id != 0) {
@@ -511,7 +518,6 @@ void Window::run() {
                         shouldRefreshPipeline(obj));
         }
 
-        updatePipelineStateField(this->cullMode, opal::CullMode::Back);
         updatePipelineStateField(this->useBlending, true);
 
         for (auto &obj : this->uiRenderables) {
@@ -530,71 +536,76 @@ void Window::run() {
         uint64_t gpuTime = gpuTimer.stop();
         uint64_t mainTime = mainTimer.stop();
 
-        FrameDrawInfo frameInfo{};
-        frameInfo.drawCallCount = commandBuffer->getAndResetDrawCallCount();
-        frameInfo.frameTimeMs = this->deltaTime * 1000.0f;
-        frameInfo.frameNumber = device->frameCount;
-        frameInfo.fps = this->framesPerSecond;
-        frameInfo.send();
+        if (TracerServices::getInstance().isOk()) {
+            FrameDrawInfo frameInfo{};
+            frameInfo.drawCallCount = commandBuffer->getAndResetDrawCallCount();
+            frameInfo.frameTimeMs = this->deltaTime * 1000.0f;
+            frameInfo.frameNumber = device->frameCount;
+            frameInfo.fps = this->framesPerSecond;
+            frameInfo.send();
 
-        FrameResourcesInfo frameResourcesInfo{};
-        frameResourcesInfo.frameNumber = device->frameCount;
-        frameResourcesInfo.resourcesCreated =
-            ResourceTracker::getInstance().createdResources;
-        frameResourcesInfo.resourcesUnloaded =
-            ResourceTracker::getInstance().unloadedResources;
-        frameResourcesInfo.resourcesLoaded =
-            ResourceTracker::getInstance().loadedResources;
-        frameResourcesInfo.totalMemoryMb =
-            ResourceTracker::getInstance().totalMemoryMb;
+            FrameResourcesInfo frameResourcesInfo{};
+            frameResourcesInfo.frameNumber = device->frameCount;
+            frameResourcesInfo.resourcesCreated =
+                ResourceTracker::getInstance().createdResources;
+            frameResourcesInfo.resourcesUnloaded =
+                ResourceTracker::getInstance().unloadedResources;
+            frameResourcesInfo.resourcesLoaded =
+                ResourceTracker::getInstance().loadedResources;
+            frameResourcesInfo.totalMemoryMb =
+                ResourceTracker::getInstance().totalMemoryMb;
 
-        FrameMemoryPacket memoryPacket{};
-        memoryPacket.frameNumber = device->frameCount;
-        memoryPacket.allocationCount =
-            ResourceTracker::getInstance().createdResources -
-            ResourceTracker::getInstance().unloadedResources;
-        memoryPacket.totalAllocatedMb =
-            ResourceTracker::getInstance().totalMemoryMb;
-        memoryPacket.totalCPUMb = ResourceTracker::getInstance().totalMemoryMb;
-        memoryPacket.totalGPUMb = ResourceTracker::getInstance().totalMemoryMb;
-        memoryPacket.deallocationCount =
-            ResourceTracker::getInstance().unloadedResources;
-        memoryPacket.send();
+            FrameMemoryPacket memoryPacket{};
+            memoryPacket.frameNumber = device->frameCount;
+            memoryPacket.allocationCount =
+                ResourceTracker::getInstance().createdResources -
+                ResourceTracker::getInstance().unloadedResources;
+            memoryPacket.totalAllocatedMb =
+                ResourceTracker::getInstance().totalMemoryMb;
+            memoryPacket.totalCPUMb = ResourceTracker::getInstance().totalMemoryMb;
+            memoryPacket.totalGPUMb = ResourceTracker::getInstance().totalMemoryMb;
+            memoryPacket.deallocationCount =
+                ResourceTracker::getInstance().unloadedResources;
+            memoryPacket.send();
 
-        rusage usage{};
-        getrusage(RUSAGE_SELF, &usage);
+            rusage usage{};
+            getrusage(RUSAGE_SELF, &usage);
 
-        double normalCpuTime =
-            usage.ru_utime.tv_sec + (usage.ru_utime.tv_usec / 1e6) +
-            usage.ru_stime.tv_sec + (usage.ru_stime.tv_usec / 1e6);
+            double normalCpuTime =
+                usage.ru_utime.tv_sec + (usage.ru_utime.tv_usec / 1e6) +
+                usage.ru_stime.tv_sec + (usage.ru_stime.tv_usec / 1e6);
 
-        TimingEventPacket timingEvent{};
-        timingEvent.frameNumber = device->frameCount;
-        timingEvent.durationMs = static_cast<float>(gpuTime) / 1'000'000.0f;
-        timingEvent.name = "Main Loop";
-        timingEvent.subsystem = TimingEventSubsystem::Rendering;
-        timingEvent.send();
+            TimingEventPacket timingEvent{};
+            timingEvent.frameNumber = device->frameCount;
+            timingEvent.durationMs = static_cast<float>(gpuTime) / 1'000'000.0f;
+            timingEvent.name = "Main Loop";
+            timingEvent.subsystem = TimingEventSubsystem::Rendering;
+            timingEvent.send();
 
-        FrameTimingPacket timingPacket{};
-        timingPacket.frameNumber = device->frameCount;
-        timingPacket.cpuFrameTimeMs =
-            static_cast<float>(cpuTime) / 1'000'000.0f;
-        timingPacket.gpuFrameTimeMs =
-            static_cast<float>(gpuTime) / 1'000'000.0f;
-        timingPacket.workerThreadTimeMs = 0.0f;
-        timingPacket.mainThreadTimeMs =
-            static_cast<float>(mainTime) / 1'000'000.0f;
-        timingPacket.memoryMb = ResourceTracker::getInstance().totalMemoryMb;
-        timingPacket.cpuUsagePercent =
-            static_cast<float>(normalCpuTime / this->deltaTime * 100.0);
-        timingPacket.gpuUsagePercent = 0.0f;
-        timingPacket.send();
+            FrameTimingPacket timingPacket{};
+            timingPacket.frameNumber = device->frameCount;
+            timingPacket.cpuFrameTimeMs =
+                static_cast<float>(cpuTime) / 1'000'000.0f;
+            timingPacket.gpuFrameTimeMs =
+                static_cast<float>(gpuTime) / 1'000'000.0f;
+            timingPacket.workerThreadTimeMs = 0.0f;
+            timingPacket.mainThreadTimeMs =
+                static_cast<float>(mainTime) / 1'000'000.0f;
+            timingPacket.memoryMb = ResourceTracker::getInstance().totalMemoryMb;
+            timingPacket.cpuUsagePercent =
+                static_cast<float>(normalCpuTime / this->deltaTime * 100.0);
+            timingPacket.gpuUsagePercent = 0.0f;
+            timingPacket.send();
+
+            frameResourcesInfo.send();
+        } else {
+            commandBuffer->getAndResetDrawCallCount();
+        }
 
         ResourceTracker::getInstance().createdResources = 0;
         ResourceTracker::getInstance().loadedResources = 0;
         ResourceTracker::getInstance().unloadedResources = 0;
         ResourceTracker::getInstance().totalMemoryMb = 0.0f;
-        frameResourcesInfo.send();
 
         if (this->firstFrame) {
             this->firstFrame = false;
@@ -1015,6 +1026,7 @@ void Window::renderLightsToShadowMaps(
             0, 0, shadowRenderTarget->texture.creationData.width,
             shadowRenderTarget->texture.creationData.height);
         depthPipeline->setCullMode(opal::CullMode::Back);
+        depthPipeline->setFrontFace(this->frontFace);
         depthPipeline->enablePolygonOffset(true);
         depthPipeline->setPolygonOffset(2.0f, 4.0f);
 
@@ -1078,6 +1090,7 @@ void Window::renderLightsToShadowMaps(
             0, 0, shadowRenderTarget->texture.creationData.width,
             shadowRenderTarget->texture.creationData.height);
         spotlightsPipeline->setCullMode(opal::CullMode::Back);
+        spotlightsPipeline->setFrontFace(this->frontFace);
         spotlightsPipeline->enablePolygonOffset(true);
         spotlightsPipeline->setPolygonOffset(2.0f, 4.0f);
         spotlightsPipeline =
@@ -1145,6 +1158,7 @@ void Window::renderLightsToShadowMaps(
             0, 0, shadowRenderTarget->texture.creationData.width,
             shadowRenderTarget->texture.creationData.height);
         pointLightPipeline->setCullMode(opal::CullMode::Back);
+        pointLightPipeline->setFrontFace(this->frontFace);
         pointLightPipeline->enablePolygonOffset(true);
         pointLightPipeline->setPolygonOffset(2.0f, 4.0f);
         pointLightPipeline =
@@ -1412,6 +1426,7 @@ void Window::renderPingpong(RenderTarget *target) {
                            : this->pingpongTextures[!horizontal]->textureID,
             0);
 
+        activeCommandBuffer->bindPipeline(blurPipeline);
         if (!target->object->indices.empty()) {
             activeCommandBuffer->drawIndexed(
                 static_cast<uint>(target->object->indices.size()));
@@ -1593,7 +1608,6 @@ void Window::captureFluidReflection(
 
     auto renderQueue = [&](const std::vector<Renderable *> &queue,
                            bool skipLate) {
-        ShaderProgram oldProgram;
         for (auto *obj : queue) {
             if (obj == nullptr) {
                 continue;
@@ -1604,19 +1618,10 @@ void Window::captureFluidReflection(
             if (dynamic_cast<Fluid *>(obj) == &fluid) {
                 continue;
             }
-            if (obj->canUseDeferredRendering()) {
-                oldProgram = obj->getShaderProgram().value();
-                obj->setShader(ShaderProgram::fromDefaultShaders(
-                    AtlasVertexShader::Main, AtlasFragmentShader::Main));
-            }
             obj->setViewMatrix(view);
             obj->setProjectionMatrix(projection);
             obj->render(getDeltaTime(), commandBuffer,
                         shouldRefreshPipeline(obj));
-
-            if (obj->canUseDeferredRendering()) {
-                obj->setShader(oldProgram);
-            }
         }
     };
 
@@ -1729,7 +1734,6 @@ void Window::captureFluidRefraction(
 
     auto renderQueue = [&](const std::vector<Renderable *> &queue,
                            bool skipLate) {
-        ShaderProgram oldProgram;
         for (auto *obj : queue) {
             if (obj == nullptr) {
                 continue;
@@ -1740,19 +1744,10 @@ void Window::captureFluidRefraction(
             if (dynamic_cast<Fluid *>(obj) == &fluid) {
                 continue;
             }
-            if (obj->canUseDeferredRendering()) {
-                oldProgram = obj->getShaderProgram().value();
-                obj->setShader(ShaderProgram::fromDefaultShaders(
-                    AtlasVertexShader::Main, AtlasFragmentShader::Main));
-            }
             obj->setViewMatrix(view);
             obj->setProjectionMatrix(projection);
             obj->render(getDeltaTime(), commandBuffer,
                         shouldRefreshPipeline(obj));
-
-            if (obj->canUseDeferredRendering()) {
-                obj->setShader(oldProgram);
-            }
         }
     };
 

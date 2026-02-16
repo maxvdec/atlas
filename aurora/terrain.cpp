@@ -294,21 +294,22 @@ void Terrain::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
     terrainPipeline->setFrontFace(opal::FrontFace::CounterClockwise);
     terrainPipeline->bind();
 
-    DebugObjectPacket debugPacket{};
-    debugPacket.drawCallsForObject = 1;
-    debugPacket.frameCount = Window::mainWindow->device->frameCount;
-    debugPacket.triangleCount =
-        static_cast<uint32_t>(patch_count * rez * rez) * 2;
-    debugPacket.vertexBufferSizeMb =
-        static_cast<float>(vertices.size() * sizeof(float)) /
-        (1024.0f * 1024.0f);
-    debugPacket.indexBufferSizeMb = 0.0f;
-    debugPacket.textureCount = 3 + static_cast<uint32_t>(biomes.size());
-    debugPacket.materialCount = 0;
-    debugPacket.objectType = DebugObjectType::Terrain;
-    debugPacket.objectId = this->id;
-
-    debugPacket.send();
+    if (TracerServices::getInstance().isOk()) {
+        DebugObjectPacket debugPacket{};
+        debugPacket.drawCallsForObject = 1;
+        debugPacket.frameCount = Window::mainWindow->device->frameCount;
+        debugPacket.triangleCount =
+            static_cast<uint32_t>(patch_count * rez * rez) * 2;
+        debugPacket.vertexBufferSizeMb =
+            static_cast<float>(vertices.size() * sizeof(float)) /
+            (1024.0f * 1024.0f);
+        debugPacket.indexBufferSizeMb = 0.0f;
+        debugPacket.textureCount = 3 + static_cast<uint32_t>(biomes.size());
+        debugPacket.materialCount = 0;
+        debugPacket.objectType = DebugObjectType::Terrain;
+        debugPacket.objectId = this->id;
+        debugPacket.send();
+    }
 }
 
 void Terrain::updateModelMatrix() {

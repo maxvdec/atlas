@@ -8,6 +8,7 @@
 //
 
 #include "atlas/tracer/data.h"
+#include "atlas/tracer/log.h"
 #include <algorithm>
 #include <array>
 #include <cstdint>
@@ -184,15 +185,9 @@ static uint32_t requiredColorOutputs(const std::shared_ptr<Pipeline> &pipeline) 
     if (pipeline == nullptr || pipeline->shaderProgram == nullptr) {
         return 1;
     }
-    uint32_t maxCount = 1;
-    for (const auto &shader : pipeline->shaderProgram->attachedShaders) {
-        if (shader != nullptr && shader->type == ShaderType::Fragment &&
-            shader->source != nullptr) {
-            maxCount =
-                std::max(maxCount, metal::fragmentColorOutputCount(shader->source));
-        }
-    }
-    return std::max<uint32_t>(1, maxCount);
+    auto &programState = metal::programState(pipeline->shaderProgram.get());
+    return programState.fragmentColorOutputs > 0 ? programState.fragmentColorOutputs
+                                                  : 1;
 }
 
 static MTL::RenderPipelineState *getRenderPipelineState(
@@ -316,7 +311,6 @@ static void uploadUniformBuffers(const std::shared_ptr<Pipeline> &pipeline,
                         alignUp(bytes.size(), static_cast<size_t>(16))),
                     MTL::ResourceStorageModeShared);
             }
-
             std::memcpy(uniformBuffer->contents(), bytes.data(), bytes.size());
             uniformBuffer->didModifyRange(
                 NS::Range::Make(0, static_cast<NS::UInteger>(bytes.size())));
@@ -1117,11 +1111,13 @@ auto CommandBuffer::draw(uint vertexCount, uint instanceCount, uint firstVertex,
     state.hasDraw = true;
 #endif
 
-    DrawCallInfo info;
-    info.callerObject = std::to_string(objectId);
-    info.frameNumber = (int)device->frameCount;
-    info.type = DrawCallType::Draw;
-    info.send();
+    if (TracerServices::getInstance().isOk()) {
+        DrawCallInfo info;
+        info.callerObject = std::to_string(objectId);
+        info.frameNumber = (int)device->frameCount;
+        info.type = DrawCallType::Draw;
+        info.send();
+    }
 
     drawCallCount++;
 }
@@ -1242,11 +1238,13 @@ void CommandBuffer::drawIndexed(uint indexCount, uint instanceCount,
     state.hasDraw = true;
 #endif
 
-    DrawCallInfo info;
-    info.callerObject = std::to_string(objectId);
-    info.frameNumber = (int)device->frameCount;
-    info.type = DrawCallType::Indexed;
-    info.send();
+    if (TracerServices::getInstance().isOk()) {
+        DrawCallInfo info;
+        info.callerObject = std::to_string(objectId);
+        info.frameNumber = (int)device->frameCount;
+        info.type = DrawCallType::Indexed;
+        info.send();
+    }
 
     drawCallCount++;
 }
@@ -1396,11 +1394,13 @@ void CommandBuffer::drawPatches(uint vertexCount, uint firstVertex,
     state.hasDraw = true;
 #endif
 
-    DrawCallInfo info;
-    info.callerObject = std::to_string(objectId);
-    info.frameNumber = device->frameCount;
-    info.type = DrawCallType::Patch;
-    info.send();
+    if (TracerServices::getInstance().isOk()) {
+        DrawCallInfo info;
+        info.callerObject = std::to_string(objectId);
+        info.frameNumber = device->frameCount;
+        info.type = DrawCallType::Patch;
+        info.send();
+    }
 
     drawCallCount++;
 }

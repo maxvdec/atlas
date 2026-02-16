@@ -194,36 +194,72 @@ void Fluid::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
     fluidPipeline->setUniformMat4f("invView", glm::inverse(viewMatrix));
 
     commandBuffer->bindDrawingState(drawingState);
+    commandBuffer->bindPipeline(fluidPipeline);
     commandBuffer->drawIndexed(static_cast<unsigned int>(indices.size()), 1, 0,
                                0, 0);
     commandBuffer->unbindDrawingState();
 
-    fluidPipeline->setCullMode(opal::CullMode::Back);
-    fluidPipeline->bind();
-
-    captureDirty = true;
-
-    DebugObjectPacket debugPacket{};
-    debugPacket.drawCallsForObject = 1;
-    debugPacket.frameCount = Window::mainWindow->device->frameCount;
-    debugPacket.triangleCount = indices.size() / 3;
-    debugPacket.vertexBufferSizeMb =
-        static_cast<float>(sizeof(FluidVertex) * vertices.size()) /
-        (1024.0f * 1024.0f);
-    debugPacket.indexBufferSizeMb =
-        static_cast<float>(sizeof(unsigned int) * indices.size()) /
-        (1024.0f * 1024.0f);
-    debugPacket.textureCount =
-        (reflectionTarget ? 1 : 0) + (refractionTarget ? 1 : 0) +
-        (movementTexture.id != 0 ? 1 : 0) + (normalTexture.id != 0 ? 1 : 0);
-    debugPacket.materialCount = 0;
-    debugPacket.objectType = DebugObjectType::SkeletalMesh;
-    debugPacket.objectId = this->id;
-
-    debugPacket.send();
+    if (TracerServices::getInstance().isOk()) {
+        DebugObjectPacket debugPacket{};
+        debugPacket.drawCallsForObject = 1;
+        debugPacket.frameCount = Window::mainWindow->device->frameCount;
+        debugPacket.triangleCount = indices.size() / 3;
+        debugPacket.vertexBufferSizeMb =
+            static_cast<float>(sizeof(FluidVertex) * vertices.size()) /
+            (1024.0f * 1024.0f);
+        debugPacket.indexBufferSizeMb =
+            static_cast<float>(sizeof(unsigned int) * indices.size()) /
+            (1024.0f * 1024.0f);
+        debugPacket.textureCount =
+            (reflectionTarget ? 1 : 0) + (refractionTarget ? 1 : 0) +
+            (movementTexture.id != 0 ? 1 : 0) + (normalTexture.id != 0 ? 1 : 0);
+        debugPacket.materialCount = 0;
+        debugPacket.objectType = DebugObjectType::SkeletalMesh;
+        debugPacket.objectId = this->id;
+        debugPacket.send();
+    }
 }
 
-void Fluid::update(Window &window) { (void)window; }
+void Fluid::update(Window &window) {
+    if (captureDirty) {
+        captureUpdateTimer = 0.0f;
+        return;
+    }
+
+    captureUpdateTimer += std::max(0.0f, window.getDeltaTime());
+    if (captureUpdateTimer < captureUpdateInterval) {
+        return;
+    }
+
+    Camera *camera = window.getCamera();
+    if (camera == nullptr) {
+        captureUpdateTimer = 0.0f;
+        return;
+    }
+
+    glm::vec3 cameraPosition = camera->position.toGlm();
+    glm::vec3 cameraDirection = camera->getFrontVector().toGlm();
+
+    bool cameraMoved = !hasCaptureCameraState;
+    if (hasCaptureCameraState) {
+        constexpr float kPositionThreshold = 0.05f;
+        constexpr float kDirectionThreshold = 0.01f;
+        cameraMoved =
+            glm::length(cameraPosition - lastCaptureCameraPosition) >
+                kPositionThreshold ||
+            glm::length(cameraDirection - lastCaptureCameraDirection) >
+                kDirectionThreshold;
+    }
+
+    if (cameraMoved) {
+        captureDirty = true;
+        lastCaptureCameraPosition = cameraPosition;
+        lastCaptureCameraDirection = cameraDirection;
+        hasCaptureCameraState = true;
+    }
+
+    captureUpdateTimer = 0.0f;
+}
 
 void Fluid::updateCapture(Window &window,
                           std::shared_ptr<opal::CommandBuffer> commandBuffer) {
@@ -278,7 +314,7 @@ void Fluid::setExtent(const Size2d &ext) {
 void Fluid::setWaterColor(const Color &newColor) { color = newColor; }
 
 void Fluid::ensureTargets(Window &window) {
-    auto refreshTarget = [&window](std::shared_ptr<RenderTarget> &target) {
+    auto refreshTarget = [this, &window](std::shared_ptr<RenderTarget> &target) {
         GLFWwindow *glfwWindow = static_cast<GLFWwindow *>(window.windowRef);
         int fbWidth = 0;
         int fbHeight = 0;
@@ -301,6 +337,9 @@ void Fluid::ensureTargets(Window &window) {
         if (needsResize(target)) {
             target =
                 std::make_unique<RenderTarget>(window, RenderTargetType::Scene);
+            captureDirty = true;
+            hasCaptureCameraState = false;
+            captureUpdateTimer = 0.0f;
 
             auto commandBuffer =
                 Window::mainWindow->device->acquireCommandBuffer();
@@ -387,4 +426,7 @@ void Fluid::updateModelMatrix() {
         glm::translate(glm::mat4(1.0f), position.toGlm());
 
     modelMatrix = translationMatrix * rotationMatrix * scaleMatrix;
+    captureDirty = true;
+    hasCaptureCameraState = false;
+    captureUpdateTimer = 0.0f;
 }

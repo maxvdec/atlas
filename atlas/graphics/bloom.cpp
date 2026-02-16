@@ -151,6 +151,10 @@ void BloomRenderTarget::renderDownsamples(unsigned int srcTexture) {
         downsamplePipeline = opal::Pipeline::create();
     }
     downsamplePipeline = downsampleProgram.requestPipeline(downsamplePipeline);
+    downsamplePipeline->setCullMode(opal::CullMode::None);
+    downsamplePipeline->enableDepthTest(false);
+    downsamplePipeline->enableDepthWrite(false);
+    downsamplePipeline->enableBlending(false);
     downsamplePipeline->bind();
 
     downsamplePipeline->setUniform2f("srcResolution", srcViewportSizef.x,
@@ -188,6 +192,9 @@ void BloomRenderTarget::renderUpsamples(float filterRadius) {
         upsamplePipeline = opal::Pipeline::create();
     }
     upsamplePipeline = upsampleProgram.requestPipeline(upsamplePipeline);
+    upsamplePipeline->setCullMode(opal::CullMode::None);
+    upsamplePipeline->enableDepthTest(false);
+    upsamplePipeline->enableDepthWrite(false);
     upsamplePipeline->enableBlending(true);
     upsamplePipeline->setBlendFunc(opal::BlendFunc::One, opal::BlendFunc::One);
     upsamplePipeline->setBlendEquation(opal::BlendEquation::Add);

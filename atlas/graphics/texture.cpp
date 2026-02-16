@@ -746,21 +746,22 @@ void Skybox::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
                                1, 0, 0, 0, obj->id);
     commandBuffer->unbindDrawingState();
 
-    DebugObjectPacket debugPacket{};
-    debugPacket.drawCallsForObject = 1;
-    debugPacket.frameCount = Window::mainWindow->device->frameCount;
-    debugPacket.triangleCount =
-        static_cast<unsigned int>(obj->indices.size()) / 3;
-    debugPacket.vertexBufferSizeMb =
-        static_cast<float>(sizeof(CoreVertex) * obj->vertices.size()) /
-        (1024.0f * 1024.0f);
-    debugPacket.indexBufferSizeMb =
-        static_cast<float>(sizeof(Index) * obj->indices.size()) /
-        (1024.0f * 1024.0f);
-    debugPacket.textureCount = 1;
-    debugPacket.materialCount = 0;
-    debugPacket.objectType = DebugObjectType::Terrain;
-    debugPacket.objectId = obj->id;
-
-    debugPacket.send();
+    if (TracerServices::getInstance().isOk()) {
+        DebugObjectPacket debugPacket{};
+        debugPacket.drawCallsForObject = 1;
+        debugPacket.frameCount = Window::mainWindow->device->frameCount;
+        debugPacket.triangleCount =
+            static_cast<unsigned int>(obj->indices.size()) / 3;
+        debugPacket.vertexBufferSizeMb =
+            static_cast<float>(sizeof(CoreVertex) * obj->vertices.size()) /
+            (1024.0f * 1024.0f);
+        debugPacket.indexBufferSizeMb =
+            static_cast<float>(sizeof(Index) * obj->indices.size()) /
+            (1024.0f * 1024.0f);
+        debugPacket.textureCount = 1;
+        debugPacket.materialCount = 0;
+        debugPacket.objectType = DebugObjectType::Terrain;
+        debugPacket.objectId = obj->id;
+        debugPacket.send();
+    }
 }

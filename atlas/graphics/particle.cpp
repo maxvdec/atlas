@@ -373,6 +373,7 @@ void ParticleEmitter::render(float dt,
         particlePipeline = opal::Pipeline::create();
     }
     particlePipeline = this->program.requestPipeline(particlePipeline);
+    particlePipeline->setCullMode(opal::CullMode::None);
     particlePipeline->enableBlending(true);
     particlePipeline->setBlendFunc(opal::BlendFunc::SrcAlpha,
                                    opal::BlendFunc::OneMinusSrcAlpha);
@@ -392,6 +393,7 @@ void ParticleEmitter::render(float dt,
     }
 
     commandBuffer->bindDrawingState(vao);
+    commandBuffer->bindPipeline(particlePipeline);
     commandBuffer->drawIndexed(6, activeParticleCount, 0, 0, 0, id);
     commandBuffer->unbindDrawingState();
 
@@ -399,20 +401,21 @@ void ParticleEmitter::render(float dt,
     particlePipeline->enableBlending(false);
     particlePipeline->bind();
 
-    DebugObjectPacket debugPacket{};
-    debugPacket.drawCallsForObject = 1;
-    debugPacket.frameCount = Window::mainWindow->device->frameCount;
-    debugPacket.triangleCount = activeParticleCount * 2;
-    debugPacket.vertexBufferSizeMb =
-        static_cast<float>(sizeof(QuadVertex) * 4) / (1024.0f * 1024.0f);
-    debugPacket.indexBufferSizeMb =
-        static_cast<float>(sizeof(unsigned int) * 6) / (1024.0f * 1024.0f);
-    debugPacket.textureCount = useTexture ? 1 : 0;
-    debugPacket.materialCount = 0;
-    debugPacket.objectType = DebugObjectType::ParticleSystem;
-    debugPacket.objectId = this->id;
-
-    debugPacket.send();
+    if (TracerServices::getInstance().isOk()) {
+        DebugObjectPacket debugPacket{};
+        debugPacket.drawCallsForObject = 1;
+        debugPacket.frameCount = Window::mainWindow->device->frameCount;
+        debugPacket.triangleCount = activeParticleCount * 2;
+        debugPacket.vertexBufferSizeMb =
+            static_cast<float>(sizeof(QuadVertex) * 4) / (1024.0f * 1024.0f);
+        debugPacket.indexBufferSizeMb =
+            static_cast<float>(sizeof(unsigned int) * 6) / (1024.0f * 1024.0f);
+        debugPacket.textureCount = useTexture ? 1 : 0;
+        debugPacket.materialCount = 0;
+        debugPacket.objectType = DebugObjectType::ParticleSystem;
+        debugPacket.objectId = this->id;
+        debugPacket.send();
+    }
 }
 
 void ParticleEmitter::setProjectionMatrix(const glm::mat4 &projection) {
