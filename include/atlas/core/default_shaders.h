@@ -2354,7 +2354,7 @@ struct ShadowParameters_1
 
 struct ShadowParams
 {
-    ShadowParameters_1 shadowParams[1];
+    spvUnsafeArray<ShadowParameters_1, 1> shadowParams;
 };
 
 struct DirectionalLight_1
@@ -2369,7 +2369,7 @@ struct DirectionalLight_1
 
 struct DirectionalLights
 {
-    DirectionalLight_1 directionalLights[1];
+    spvUnsafeArray<DirectionalLight_1, 1> directionalLights;
 };
 
 struct PointLight_1
@@ -2388,7 +2388,7 @@ struct PointLight_1
 
 struct PointLights
 {
-    PointLight_1 pointLights[1];
+    spvUnsafeArray<PointLight_1, 1> pointLights;
 };
 
 struct SpotLight_1
@@ -2409,7 +2409,7 @@ struct SpotLight_1
 
 struct SpotLights
 {
-    SpotLight_1 spotlights[1];
+    spvUnsafeArray<SpotLight_1, 1> spotlights;
 };
 
 struct AreaLight
@@ -2435,7 +2435,7 @@ struct AreaLight
 
 struct AreaLights
 {
-    AreaLight areaLights[1];
+    spvUnsafeArray<AreaLight, 1> areaLights;
 };
 
 struct AmbientLight
@@ -2923,10 +2923,25 @@ float3 acesToneMapping(thread float3& color)
 fragment main0_out main0(main0_in in [[stage_in]], constant UBO& _526 [[buffer(0)]], constant Environment& environment [[buffer(1)]], constant PushConstants& _1355 [[buffer(2)]], device ShadowParams& _1372 [[buffer(3)]], device DirectionalLights& _1422 [[buffer(4)]], device PointLights& _1465 [[buffer(5)]], device SpotLights& _1510 [[buffer(6)]], device AreaLights& _1552 [[buffer(7)]], constant AmbientLight& ambientLight [[buffer(8)]], texture2d<float> texture1 [[texture(0)]], texture2d<float> texture2 [[texture(1)]], texture2d<float> texture3 [[texture(2)]], texture2d<float> texture4 [[texture(3)]], texture2d<float> texture5 [[texture(4)]], texturecube<float> cubeMap1 [[texture(5)]], texturecube<float> cubeMap2 [[texture(6)]], texturecube<float> cubeMap3 [[texture(7)]], texturecube<float> cubeMap4 [[texture(8)]], texturecube<float> cubeMap5 [[texture(9)]], texturecube<float> skybox [[texture(10)]], texture2d<float> gPosition [[texture(11)]], texture2d<float> gNormal [[texture(12)]], texture2d<float> gAlbedoSpec [[texture(13)]], texture2d<float> gMaterial [[texture(14)]], texture2d<float> ssao [[texture(15)]], sampler texture1Smplr [[sampler(0)]], sampler texture2Smplr [[sampler(1)]], sampler texture3Smplr [[sampler(2)]], sampler texture4Smplr [[sampler(3)]], sampler texture5Smplr [[sampler(4)]], sampler cubeMap1Smplr [[sampler(5)]], sampler cubeMap2Smplr [[sampler(6)]], sampler cubeMap3Smplr [[sampler(7)]], sampler cubeMap4Smplr [[sampler(8)]], sampler cubeMap5Smplr [[sampler(9)]], sampler skyboxSmplr [[sampler(10)]], sampler gPositionSmplr [[sampler(11)]], sampler gNormalSmplr [[sampler(12)]], sampler gAlbedoSpecSmplr [[sampler(13)]], sampler gMaterialSmplr [[sampler(14)]], sampler ssaoSmplr [[sampler(15)]])
 {
     main0_out out = {};
-    float3 FragPos = gPosition.sample(gPositionSmplr, in.TexCoord).xyz;
-    float3 N = fast::normalize(gNormal.sample(gNormalSmplr, in.TexCoord).xyz);
+    float4 gPositionSample = gPosition.sample(gPositionSmplr, in.TexCoord);
+    float3 FragPos = gPositionSample.xyz;
+    if (!all(isfinite(FragPos)))
+    {
+        FragPos = float3(0.0);
+    }
+    float3 sampledNormal = gNormal.sample(gNormalSmplr, in.TexCoord).xyz;
+    float normalLength = length(sampledNormal);
+    float3 N = float3(0.0, 1.0, 0.0);
+    if (all(isfinite(sampledNormal)) && normalLength > 9.9999997473787516355514526367188e-06)
+    {
+        N = sampledNormal / float3(normalLength);
+    }
     float4 albedoAo = gAlbedoSpec.sample(gAlbedoSpecSmplr, in.TexCoord);
-    float3 albedo = albedoAo.xyz;
+    float3 albedo = fast::clamp(albedoAo.xyz, float3(0.0), float3(1.0));
+    if (!all(isfinite(albedo)))
+    {
+        albedo = float3(0.0);
+    }
     float4 matData = gMaterial.sample(gMaterialSmplr, in.TexCoord);
     float metallic = fast::clamp(matData.x, 0.0, 1.0);
     float roughness = fast::clamp(matData.y, 0.0, 1.0);
@@ -3154,7 +3169,6 @@ fragment main0_out main0(main0_in in [[stage_in]], constant UBO& _526 [[buffer(0
     out.FragColor.z = _1897.z;
     return out;
 }
-
 )"
 ;
 
@@ -3289,7 +3303,7 @@ struct DirectionalLight
 
 struct DirectionalLightsUBO
 {
-    DirectionalLight directionalLights[1];
+    spvUnsafeArray<DirectionalLight, 1> directionalLights;
 };
 
 struct PointLight
@@ -3308,7 +3322,7 @@ struct PointLight
 
 struct PointLightsUBO
 {
-    PointLight pointLights[1];
+    spvUnsafeArray<PointLight, 1> pointLights;
 };
 
 struct SpotLight
@@ -3329,7 +3343,7 @@ struct SpotLight
 
 struct SpotLightsUBO
 {
-    SpotLight spotlights[1];
+    spvUnsafeArray<SpotLight, 1> spotlights;
 };
 
 struct Material
@@ -3355,7 +3369,7 @@ struct ShadowParameters_1
 
 struct ShadowParametersUBO
 {
-    ShadowParameters_1 shadowParams[1];
+    spvUnsafeArray<ShadowParameters_1, 1> shadowParams;
 };
 
 struct AreaLight
@@ -3381,7 +3395,7 @@ struct AreaLight
 
 struct AreaLightsUBO
 {
-    AreaLight areaLights[1];
+    spvUnsafeArray<AreaLight, 1> areaLights;
 };
 
 struct AmbientLight
@@ -4357,7 +4371,6 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Uniforms& _163 [[buf
     out.FragColor.z = _2399.z;
     return out;
 }
-
 )"
 ;
 

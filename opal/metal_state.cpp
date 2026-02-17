@@ -694,6 +694,7 @@ void releaseProgramState(ShaderProgram *program) {
     state.layouts.clear();
     state.bindings.clear();
     state.bindingSize.clear();
+    state.textureBindings.clear();
     state.uniformResolutionCache.clear();
     states.erase(it);
 }

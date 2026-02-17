@@ -134,8 +134,9 @@ struct PipelineState {
     float polygonOffsetUnits = 0.0f;
     int viewportX = 0;
     int viewportY = 0;
-    int viewportWidth = 800;
-    int viewportHeight = 600;
+    int viewportWidth = 0;
+    int viewportHeight = 0;
+    bool suppressTextureReset = false;
 };
 
 struct FramebufferState {

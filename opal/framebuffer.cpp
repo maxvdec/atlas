@@ -453,8 +453,10 @@ void CommandBuffer::performResolve(std::shared_ptr<ResolveAction> action) {
     }
 
     bool ownedCommandBuffer = false;
+    NS::AutoreleasePool *resolvePool = nullptr;
     MTL::CommandBuffer *metalCB = state.commandBuffer;
     if (metalCB == nullptr) {
+        resolvePool = NS::AutoreleasePool::alloc()->init();
         metalCB = deviceState.queue->commandBuffer();
         ownedCommandBuffer = true;
     }
@@ -547,6 +549,10 @@ void CommandBuffer::performResolve(std::shared_ptr<ResolveAction> action) {
     if (ownedCommandBuffer) {
         metalCB->commit();
         metalCB->waitUntilCompleted();
+        if (resolvePool != nullptr) {
+            resolvePool->release();
+            resolvePool = nullptr;
+        }
     }
 #elif defined(VULKAN)
     if (action == nullptr || action->source == nullptr ||

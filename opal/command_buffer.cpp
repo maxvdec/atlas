@@ -448,13 +448,6 @@ static void ensureRenderEncoder(CommandBuffer *commandBuffer, Device *device,
     }
     auto framebufferColors = collectColorAttachments(framebuffer);
     uint32_t actualColorCount = static_cast<uint32_t>(framebufferColors.size());
-    uint32_t existingColorCount = 0;
-    for (uint32_t i = 0; i < 8; ++i) {
-        auto *attachment = state.passDescriptor->colorAttachments()->object(i);
-        if (attachment != nullptr && attachment->texture() != nullptr) {
-            existingColorCount = std::max(existingColorCount, i + 1);
-        }
-    }
 
     int fbWidth = framebuffer->width;
     int fbHeight = framebuffer->height;
@@ -464,30 +457,45 @@ static void ensureRenderEncoder(CommandBuffer *commandBuffer, Device *device,
         ensureDefaultAuxiliaryTextures(device, fbWidth, fbHeight);
     }
 
-    uint32_t targetColorCount = std::max(actualColorCount, existingColorCount);
+    uint32_t targetColorCount = actualColorCount;
     if (framebuffer->isDefaultFramebuffer) {
-        targetColorCount = std::max(targetColorCount, requiredColors);
+        targetColorCount = std::max(requiredColors, targetColorCount);
         targetColorCount = std::max<uint32_t>(1, targetColorCount);
     }
     targetColorCount = std::min<uint32_t>(8, targetColorCount);
 
-    for (uint32_t i = 0; i < targetColorCount; ++i) {
+    for (uint32_t i = 0; i < 8; ++i) {
         auto *attachment = state.passDescriptor->colorAttachments()->object(i);
         if (attachment == nullptr) {
             continue;
         }
-        if (attachment->texture() == nullptr) {
-            if (i == 0 && framebuffer->isDefaultFramebuffer &&
-                state.drawable != nullptr) {
-                attachment->setTexture(state.drawable->texture());
-                attachment->setStoreAction(MTL::StoreActionStore);
-            } else if (framebuffer->isDefaultFramebuffer &&
-                       deviceState.brightTexture != nullptr) {
+        MTL::Texture *targetTexture = nullptr;
+        MTL::StoreAction storeAction = MTL::StoreActionDontCare;
+
+        if (i < targetColorCount) {
+            if (!framebuffer->isDefaultFramebuffer) {
+                if (i < framebufferColors.size() &&
+                    framebufferColors[i] != nullptr) {
+                    auto &textureState =
+                        metal::textureState(framebufferColors[i].get());
+                    targetTexture = textureState.texture;
+                    storeAction = MTL::StoreActionStore;
+                }
+            } else if (i == 0 && state.drawable != nullptr) {
+                targetTexture = state.drawable->texture();
+                storeAction = MTL::StoreActionStore;
+            } else if (deviceState.brightTexture != nullptr) {
                 auto &brightState =
                     metal::textureState(deviceState.brightTexture.get());
-                attachment->setTexture(brightState.texture);
-                attachment->setStoreAction(MTL::StoreActionDontCare);
+                targetTexture = brightState.texture;
             }
+        }
+
+        attachment->setTexture(targetTexture);
+        attachment->setResolveTexture(nullptr);
+        attachment->setStoreAction(storeAction);
+        if (targetTexture == nullptr) {
+            attachment->setLoadAction(MTL::LoadActionDontCare);
         }
     }
 

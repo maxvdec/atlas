@@ -147,6 +147,36 @@ void Window::deferredRendering(
     if (outputFramebuffer == nullptr) {
         return;
     }
+
+    const int targetWidth = std::max(1, target->getWidth());
+    const int targetHeight = std::max(1, target->getHeight());
+    bool recreateDeferredTargets = false;
+    if (this->gBuffer == nullptr || this->gBuffer->getWidth() != targetWidth ||
+        this->gBuffer->getHeight() != targetHeight) {
+        recreateDeferredTargets = true;
+    }
+    if (this->volumetricBuffer == nullptr ||
+        this->volumetricBuffer->getWidth() != targetWidth ||
+        this->volumetricBuffer->getHeight() != targetHeight) {
+        recreateDeferredTargets = true;
+    }
+    if (this->ssrFramebuffer == nullptr ||
+        this->ssrFramebuffer->getWidth() != targetWidth ||
+        this->ssrFramebuffer->getHeight() != targetHeight) {
+        recreateDeferredTargets = true;
+    }
+    if (recreateDeferredTargets) {
+        this->gBuffer = std::make_shared<RenderTarget>(
+            RenderTarget(*this, RenderTargetType::GBuffer));
+        this->volumetricBuffer = std::make_shared<RenderTarget>(
+            RenderTarget(*this, RenderTargetType::Scene));
+        this->ssrFramebuffer = std::make_shared<RenderTarget>(
+            RenderTarget(*this, RenderTargetType::Scene));
+        this->ssaoBuffer.reset();
+        this->ssaoBlurBuffer.reset();
+        this->ssaoMapsDirty = true;
+    }
+
     static std::shared_ptr<opal::Pipeline> deferredPipeline = nullptr;
     if (deferredPipeline == nullptr) {
         deferredPipeline = opal::Pipeline::create();
@@ -155,6 +185,7 @@ void Window::deferredRendering(
     commandBuffer->endPass();
     auto gBufferRenderPass = opal::RenderPass::create();
     gBufferRenderPass->setFramebuffer(this->gBuffer->getFramebuffer());
+    this->gBuffer->getFramebuffer()->setDrawBuffers(4);
     commandBuffer->beginPass(gBufferRenderPass);
 
     this->gBuffer->bind();
@@ -162,7 +193,6 @@ void Window::deferredRendering(
         0, 0, this->gBuffer->getWidth(), this->gBuffer->getHeight());
     deferredPipeline->setViewport(0, 0, this->gBuffer->getWidth(),
                                   this->gBuffer->getHeight());
-    this->gBuffer->getFramebuffer()->setDrawBuffers(4);
     commandBuffer->clear(0.0f, 0.0f, 0.0f, 1.0f, 1.0f);
     deferredPipeline->setCullMode(opal::CullMode::None);
     deferredPipeline->setFrontFace(this->frontFace);
@@ -188,13 +218,13 @@ void Window::deferredRendering(
 
     auto targetRenderPass = opal::RenderPass::create();
     targetRenderPass->setFramebuffer(outputFramebuffer);
+    outputFramebuffer->setDrawBuffers(2);
     commandBuffer->beginPass(targetRenderPass);
 
     outputFramebuffer->bind();
-    outputFramebuffer->setViewport(0, 0, target->getWidth(), target->getHeight());
+    outputFramebuffer->setViewport(0, 0, target->getWidth(),
+                                   target->getHeight());
     commandBuffer->clear(0.0f, 0.0f, 0.0f, 1.0f, 1.0f);
-
-    outputFramebuffer->setDrawBuffers(2);
 
     static std::shared_ptr<opal::DrawingState> quadState = nullptr;
     static std::shared_ptr<opal::Buffer> quadBuffer = nullptr;
@@ -235,7 +265,8 @@ void Window::deferredRendering(
         opal::VertexAttribute uvAttr{
             .name = "deferredUV",
             .type = opal::VertexAttributeType::Float,
-            .offset = static_cast<uint>(offsetof(CoreVertex, textureCoordinate)),
+            .offset =
+                static_cast<uint>(offsetof(CoreVertex, textureCoordinate)),
             .location = 2,
             .normalized = false,
             .size = 2,
@@ -373,8 +404,12 @@ void Window::deferredRendering(
                                        shadowParams.lightView);
         lightPipeline->setUniformMat4f(baseName + ".lightProjection",
                                        shadowParams.lightProjection);
+#ifdef METAL
+        lightPipeline->setUniform1f(baseName + ".bias0", shadowParams.bias);
+#else
         lightPipeline->setUniform1f(baseName + ".bias", shadowParams.bias);
-        lightPipeline->setUniform1f(baseName + ".isPointLight", 0);
+#endif
+        lightPipeline->setUniform1i(baseName + ".isPointLight", 0);
 
         boundParameters++;
         shadow2DSamplerIndex++;
@@ -408,8 +443,12 @@ void Window::deferredRendering(
                                        shadowParams.lightView);
         lightPipeline->setUniformMat4f(baseName + ".lightProjection",
                                        shadowParams.lightProjection);
+#ifdef METAL
+        lightPipeline->setUniform1f(baseName + ".bias0", shadowParams.bias);
+#else
         lightPipeline->setUniform1f(baseName + ".bias", shadowParams.bias);
-        lightPipeline->setUniform1f(baseName + ".isPointLight", 0);
+#endif
+        lightPipeline->setUniform1i(baseName + ".isPointLight", 0);
 
         boundParameters++;
         shadow2DSamplerIndex++;
@@ -466,10 +505,10 @@ void Window::deferredRendering(
         Window::mainWindow->currentScene->environment.rimLight.color.g,
         Window::mainWindow->currentScene->environment.rimLight.color.b);
 
-    quadState->bind();
+    commandBuffer->bindDrawingState(quadState);
     commandBuffer->bindPipeline(lightPipeline);
     commandBuffer->draw(6, 1, 0, 0);
-    quadState->unbind();
+    commandBuffer->unbindDrawingState();
 
     bool targetPassActive = true;
     bool hasVolumetricTexture = false;
@@ -494,12 +533,12 @@ void Window::deferredRendering(
         auto volumetricRenderPass = opal::RenderPass::create();
         volumetricRenderPass->setFramebuffer(
             volumetricBuffer->getFramebuffer());
+        volumetricBuffer->getFramebuffer()->setDrawBuffers(1);
         commandBuffer->beginPass(volumetricRenderPass);
 
         volumetricBuffer->bind();
         volumetricBuffer->getFramebuffer()->setViewport(
             0, 0, volumetricBuffer->getWidth(), volumetricBuffer->getHeight());
-        volumetricBuffer->getFramebuffer()->setDrawBuffers(1);
         commandBuffer->clearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
         static std::shared_ptr<opal::Pipeline> volumetricPipeline = nullptr;
@@ -519,14 +558,11 @@ void Window::deferredRendering(
         volumetricPipeline->bindTexture2D("sceneTexture", target->texture.id,
                                           0);
 
-        volumetricPipeline->setUniform1f(
-            "density", volumetricSettings.density);
-        volumetricPipeline->setUniform1f(
-            "weight", volumetricSettings.weight);
-        volumetricPipeline->setUniform1f(
-            "decay", volumetricSettings.decay);
-        volumetricPipeline->setUniform1f(
-            "exposure", volumetricSettings.exposure);
+        volumetricPipeline->setUniform1f("density", volumetricSettings.density);
+        volumetricPipeline->setUniform1f("weight", volumetricSettings.weight);
+        volumetricPipeline->setUniform1f("decay", volumetricSettings.decay);
+        volumetricPipeline->setUniform1f("exposure",
+                                         volumetricSettings.exposure);
         volumetricPipeline->setUniform3f("directionalLight.color",
                                          dirLight->color.r, dirLight->color.g,
                                          dirLight->color.b);
@@ -541,10 +577,10 @@ void Window::deferredRendering(
             if (std::isfinite(sunUV.x) && std::isfinite(sunUV.y) &&
                 target->texture.id != 0) {
                 volumetricPipeline->setUniform2f("sunPos", sunUV.x, sunUV.y);
-                quadState->bind();
+                commandBuffer->bindDrawingState(quadState);
                 commandBuffer->bindPipeline(volumetricPipeline);
                 commandBuffer->draw(6, 1, 0, 0);
-                quadState->unbind();
+                commandBuffer->unbindDrawingState();
                 hasVolumetricTexture = true;
             }
         }
@@ -558,12 +594,12 @@ void Window::deferredRendering(
         }
         auto ssrRenderPass = opal::RenderPass::create();
         ssrRenderPass->setFramebuffer(ssrFramebuffer->getFramebuffer());
+        ssrFramebuffer->getFramebuffer()->setDrawBuffers(1);
         commandBuffer->beginPass(ssrRenderPass);
 
         ssrFramebuffer->bind();
         ssrFramebuffer->getFramebuffer()->setViewport(
             0, 0, ssrFramebuffer->getWidth(), ssrFramebuffer->getHeight());
-        ssrFramebuffer->getFramebuffer()->setDrawBuffers(1);
         commandBuffer->clearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
         static std::shared_ptr<opal::Pipeline> ssrPipeline = nullptr;
@@ -601,10 +637,10 @@ void Window::deferredRendering(
         ssrPipeline->setUniform1f("thickness", 2.0f);
         ssrPipeline->setUniform1f("maxRoughness", 0.5f);
 
-        quadState->bind();
+        commandBuffer->bindDrawingState(quadState);
         commandBuffer->bindPipeline(ssrPipeline);
         commandBuffer->draw(6, 1, 0, 0);
-        quadState->unbind();
+        commandBuffer->unbindDrawingState();
         commandBuffer->endPass();
         hasSSRTexture = true;
     }
@@ -622,10 +658,10 @@ void Window::deferredRendering(
     if (!targetPassActive) {
         auto finalRenderPass = opal::RenderPass::create();
         finalRenderPass->setFramebuffer(outputFramebuffer);
+        outputFramebuffer->setDrawBuffers(2);
         commandBuffer->beginPass(finalRenderPass);
         outputFramebuffer->bind();
         outputFramebuffer->setViewport(0, 0, target->getWidth(),
                                        target->getHeight());
-        outputFramebuffer->setDrawBuffers(2);
     }
 }

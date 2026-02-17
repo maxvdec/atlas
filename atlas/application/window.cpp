@@ -373,6 +373,7 @@ void Window::run() {
                 continue;
             }
             this->currentRenderTarget = target;
+            setViewportState(0, 0, target->getWidth(), target->getHeight());
             updatePipelineStateField(this->depthCompareOp,
                                      opal::CompareOp::Less);
             updatePipelineStateField(this->writeDepth, true);
@@ -380,10 +381,10 @@ void Window::run() {
 
             auto renderPass = opal::RenderPass::create();
             renderPass->setFramebuffer(target->getFramebuffer());
-            commandBuffer->beginPass(renderPass);
             if (target->brightTexture.id != 0) {
                 target->getFramebuffer()->setDrawBuffers(2);
             }
+            commandBuffer->beginPass(renderPass);
 
             if (this->usesDeferred) {
                 if (this->gBuffer == nullptr) {

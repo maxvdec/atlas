@@ -41,8 +41,7 @@ namespace {
 constexpr NS::UInteger kVertexStreamBufferIndex = 24;
 constexpr NS::UInteger kInstanceStreamBufferIndex = 25;
 
-template <typename T>
-static inline T alignUp(T value, T alignment) {
+template <typename T> static inline T alignUp(T value, T alignment) {
     if (alignment <= 1) {
         return value;
     }
@@ -211,8 +210,8 @@ static void ensureMetalDepthStencilState(metal::PipelineState &state,
     state.depthStencilState = newState;
 }
 
-static MTL::VertexFormat toMetalVertexFormat(VertexAttributeType type, uint size,
-                                             bool normalized) {
+static MTL::VertexFormat toMetalVertexFormat(VertexAttributeType type,
+                                             uint size, bool normalized) {
     switch (type) {
     case VertexAttributeType::Float:
         if (size == 1)
@@ -302,8 +301,8 @@ static MTL::VertexFormat toMetalVertexFormat(VertexAttributeType type, uint size
 static void updateMetalUniform(Pipeline *pipeline, const std::string &name,
                                const void *data, size_t size,
                                bool clampToDeclaredSize) {
-    if (pipeline == nullptr || pipeline->shaderProgram == nullptr || data == nullptr ||
-        size == 0) {
+    if (pipeline == nullptr || pipeline->shaderProgram == nullptr ||
+        data == nullptr || size == 0) {
         return;
     }
 
@@ -326,8 +325,8 @@ static void updateMetalUniform(Pipeline *pipeline, const std::string &name,
                 declaredSize = bindingIt->second;
             }
 
-            size_t writeSize = clampToDeclaredSize ? std::min(size, location.size)
-                                                   : size;
+            size_t writeSize =
+                clampToDeclaredSize ? std::min(size, location.size) : size;
             if (writeSize == 0) {
                 return;
             }
@@ -629,9 +628,9 @@ void Pipeline::build() {
     state.cullMode = toMetalCull(this->cullMode);
     state.frontFace = toMetalWinding(this->frontFace);
     state.fillMode = toMetalFillMode(this->rasterizerMode);
-    MTL::CompareFunction desiredDepthCompare = this->depthTestEnabled
-                                                   ? toMetalCompare(this->depthCompareOp)
-                                                   : MTL::CompareFunctionAlways;
+    MTL::CompareFunction desiredDepthCompare =
+        this->depthTestEnabled ? toMetalCompare(this->depthCompareOp)
+                               : MTL::CompareFunctionAlways;
     state.blendingEnabled = this->blendingEnabled;
     state.blendSrc = toMetalBlendFactor(this->blendSrcFactor);
     state.blendDst = toMetalBlendFactor(this->blendDstFactor);
@@ -669,22 +668,24 @@ void Pipeline::build() {
 
         descriptor->setBufferIndex(bufferIndex);
         descriptor->setOffset(static_cast<NS::UInteger>(attribute.offset));
-        descriptor->setFormat(toMetalVertexFormat(attribute.type, attribute.size,
-                                                  attribute.normalized));
+        descriptor->setFormat(toMetalVertexFormat(
+            attribute.type, attribute.size, attribute.normalized));
 
         if (isInstance) {
             hasInstance = true;
-            instanceStride = std::max(instanceStride,
-                                      static_cast<NS::UInteger>(attribute.stride));
-            unsigned int divisor = attribute.divisor == 0 ? 1 : attribute.divisor;
-            instanceDivisor = std::max(instanceDivisor,
-                                       static_cast<NS::UInteger>(divisor));
+            instanceStride = std::max(
+                instanceStride, static_cast<NS::UInteger>(attribute.stride));
+            unsigned int divisor =
+                attribute.divisor == 0 ? 1 : attribute.divisor;
+            instanceDivisor =
+                std::max(instanceDivisor, static_cast<NS::UInteger>(divisor));
         }
     }
 
     auto *vertexLayout = layouts->object(kVertexStreamBufferIndex);
     if (vertexLayout != nullptr) {
-        vertexLayout->setStride(static_cast<NS::UInteger>(vertexBinding.stride));
+        vertexLayout->setStride(
+            static_cast<NS::UInteger>(vertexBinding.stride));
         vertexLayout->setStepFunction(MTL::VertexStepFunctionPerVertex);
         vertexLayout->setStepRate(1);
     }
@@ -716,8 +717,10 @@ void Pipeline::bind() {
     }
     glUseProgram(this->shaderProgram->programID);
 
-    glViewport(this->viewportX, this->viewportY, this->viewportWidth,
-               this->viewportHeight);
+    if (this->viewportWidth > 0 && this->viewportHeight > 0) {
+        glViewport(this->viewportX, this->viewportY, this->viewportWidth,
+                   this->viewportHeight);
+    }
 
     glPolygonMode(GL_FRONT_AND_BACK,
                   this->getGLRasterizerMode(this->rasterizerMode));
@@ -779,9 +782,9 @@ void Pipeline::bind() {
     state.cullMode = toMetalCull(this->cullMode);
     state.frontFace = toMetalWinding(this->frontFace);
     state.fillMode = toMetalFillMode(this->rasterizerMode);
-    MTL::CompareFunction desiredDepthCompare = this->depthTestEnabled
-                                                   ? toMetalCompare(this->depthCompareOp)
-                                                   : MTL::CompareFunctionAlways;
+    MTL::CompareFunction desiredDepthCompare =
+        this->depthTestEnabled ? toMetalCompare(this->depthCompareOp)
+                               : MTL::CompareFunctionAlways;
     state.blendingEnabled = this->blendingEnabled;
     state.blendSrc = toMetalBlendFactor(this->blendSrcFactor);
     state.blendDst = toMetalBlendFactor(this->blendDstFactor);
@@ -793,14 +796,14 @@ void Pipeline::bind() {
     state.viewportY = this->viewportY;
     state.viewportWidth = this->viewportWidth;
     state.viewportHeight = this->viewportHeight;
+    state.texturesByUnit.clear();
 
     if (Device::globalInstance != nullptr) {
         auto &deviceState = metal::deviceState(Device::globalInstance);
         if (deviceState.device != nullptr) {
-            ensureMetalDepthStencilState(state, deviceState.device,
-                                         this->depthTestEnabled,
-                                         this->depthWriteEnabled,
-                                         desiredDepthCompare);
+            ensureMetalDepthStencilState(
+                state, deviceState.device, this->depthTestEnabled,
+                this->depthWriteEnabled, desiredDepthCompare);
         }
     }
     state.depthTestEnabled = this->depthTestEnabled;

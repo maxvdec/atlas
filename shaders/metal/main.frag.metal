@@ -100,7 +100,7 @@ struct DirectionalLight
 
 struct DirectionalLightsUBO
 {
-    DirectionalLight directionalLights[1];
+    spvUnsafeArray<DirectionalLight, 1> directionalLights;
 };
 
 struct PointLight
@@ -119,7 +119,7 @@ struct PointLight
 
 struct PointLightsUBO
 {
-    PointLight pointLights[1];
+    spvUnsafeArray<PointLight, 1> pointLights;
 };
 
 struct SpotLight
@@ -140,7 +140,7 @@ struct SpotLight
 
 struct SpotLightsUBO
 {
-    SpotLight spotlights[1];
+    spvUnsafeArray<SpotLight, 1> spotlights;
 };
 
 struct Material
@@ -166,7 +166,7 @@ struct ShadowParameters_1
 
 struct ShadowParametersUBO
 {
-    ShadowParameters_1 shadowParams[1];
+    spvUnsafeArray<ShadowParameters_1, 1> shadowParams;
 };
 
 struct AreaLight
@@ -192,7 +192,7 @@ struct AreaLight
 
 struct AreaLightsUBO
 {
-    AreaLight areaLights[1];
+    spvUnsafeArray<AreaLight, 1> areaLights;
 };
 
 struct AmbientLight
@@ -1168,4 +1168,3 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Uniforms& _163 [[buf
     out.FragColor.z = _2399.z;
     return out;
 }
-

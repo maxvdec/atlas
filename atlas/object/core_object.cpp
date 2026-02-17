@@ -746,8 +746,13 @@ void CoreObject::render(float dt,
                                             shadowParams.lightView);
             this->pipeline->setUniformMat4f(baseName + ".lightProjection",
                                             shadowParams.lightProjection);
+#ifdef METAL
+            this->pipeline->setUniform1f(baseName + ".bias0",
+                                         shadowParams.bias);
+#else
             this->pipeline->setUniform1f(baseName + ".bias", shadowParams.bias);
-            this->pipeline->setUniform1f(baseName + ".isPointLight", 0);
+#endif
+            this->pipeline->setUniform1i(baseName + ".isPointLight", 0);
 
             boundParameters++;
             boundTextures++;
@@ -772,8 +777,12 @@ void CoreObject::render(float dt,
                                             std::get<0>(lightSpace));
             this->pipeline->setUniformMat4f(baseName + ".lightProjection",
                                             std::get<1>(lightSpace));
+#ifdef METAL
+            this->pipeline->setUniform1f(baseName + ".bias0", 0.005f);
+#else
             this->pipeline->setUniform1f(baseName + ".bias", 0.005f);
-            this->pipeline->setUniform1f(baseName + ".isPointLight", 0);
+#endif
+            this->pipeline->setUniform1i(baseName + ".isPointLight", 0);
 
             boundParameters++;
             boundTextures++;
