@@ -690,6 +690,10 @@ void RenderTarget::render(float dt,
     }
     renderTargetPipeline->setViewport(viewportX, viewportY, viewportWidth,
                                       viewportHeight);
+    renderTargetPipeline->setCullMode(opal::CullMode::None);
+    renderTargetPipeline->enableDepthTest(false);
+    renderTargetPipeline->enableDepthWrite(false);
+    renderTargetPipeline->enableBlending(false);
     renderTargetPipeline->bind();
 
     Camera *camera = Window::mainWindow->camera;
@@ -862,12 +866,6 @@ void RenderTarget::render(float dt,
                                            static_cast<int>(effects[i]->type));
         effects[i]->applyToProgram(obj->shaderProgram, i);
     }
-
-    renderTargetPipeline->setCullMode(opal::CullMode::None);
-    renderTargetPipeline->enableDepthTest(false);
-    renderTargetPipeline->enableDepthWrite(false);
-    renderTargetPipeline->enableBlending(false);
-    renderTargetPipeline->bind();
 
     commandBuffer->bindDrawingState(obj->vao);
     commandBuffer->bindPipeline(renderTargetPipeline);

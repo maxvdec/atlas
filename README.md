@@ -1,14 +1,15 @@
-# Atlas
+# Atlas Engine
 
 ![GitHub contributors](https://img.shields.io/github/contributors/maxvdec/atlas)
 ![GitHub last commit](https://img.shields.io/github/last-commit/maxvdec/atlas)
 ![Tests](https://github.com/maxvdec/atlas/actions/workflows/build.yaml/badge.svg)
 ![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/maxvdec/atlas)
 ![GitHub Repo stars](https://img.shields.io/github/stars/maxvdec/atlas)
-[![](https://dcbadge.limes.pink/api/server/INVITE)](https://discord.gg/WKrxKtr7kW)
+[![](https://dcbadge.limes.pink/api/server/WKrxKtr7kW)](https://discord.gg/WKrxKtr7kW)
 
 Atlas is a Game Engine that uses the latest technologies to provide a fast, simple but powerful experience for developers.
-It is built with C++ and uses OpenGL and Vulkan for rendering, with plans to support Metal in the future.
+It is built with C++ and uses OpenGL, Vulkan and Metal for rendering. It also has a physics engine, an audio engine, a terrain system, 
+an environment system and a debugging system with more to come.
 
 ![Atlas Screenshot](example.png)
 

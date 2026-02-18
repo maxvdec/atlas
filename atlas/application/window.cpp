@@ -384,7 +384,6 @@ void Window::run() {
             if (target->brightTexture.id != 0) {
                 target->getFramebuffer()->setDrawBuffers(2);
             }
-            commandBuffer->beginPass(renderPass);
 
             if (this->usesDeferred) {
                 if (this->gBuffer == nullptr) {
@@ -411,10 +410,10 @@ void Window::run() {
                         }
                     }
                 }
+                auto resolveCommand = opal::ResolveAction::createForDepth(
+                    this->gBuffer->getFramebuffer(), forwardFramebuffer);
+                commandBuffer->performResolve(resolveCommand);
                 if (needsForwardDepth) {
-                    auto resolveCommand = opal::ResolveAction::createForDepth(
-                        this->gBuffer->getFramebuffer(), forwardFramebuffer);
-                    commandBuffer->performResolve(resolveCommand);
                     forwardFramebuffer->bind();
                     forwardFramebuffer->setDrawBuffers(2);
                 }
@@ -454,6 +453,7 @@ void Window::run() {
                 commandBuffer->endPass();
                 continue;
             }
+            commandBuffer->beginPass(renderPass);
             commandBuffer->clearColor(this->clearColor.r, this->clearColor.g,
                                       this->clearColor.b, this->clearColor.a);
             commandBuffer->clearDepth(1.0f);

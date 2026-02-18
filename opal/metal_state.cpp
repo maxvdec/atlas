@@ -365,7 +365,8 @@ parseStageBufferBindings(const std::string &source, bool isVertexStage) {
 
 static void
 parseStageTextureBindings(const std::string &source, bool isVertexStage,
-                          std::unordered_map<std::string, int> &bindings) {
+                          std::unordered_map<std::string, int> &bindings,
+                          std::unordered_map<int, TextureType> &bindingTypes) {
     const std::regex stageStartRegex(isVertexStage
                                          ? R"(\bvertex\b[^\(\{;]*\()"
                                          : R"(\bfragment\b[^\(\{;]*\()");
@@ -397,6 +398,16 @@ parseStageTextureBindings(const std::string &source, bool isVertexStage,
             const std::string textureName = (*it)[2].str();
             const int index = std::stoi((*it)[3].str());
             bindings[textureName] = index;
+            TextureType resolvedType = TextureType::Texture2D;
+            if (typeName.find("texturecube") != std::string::npos) {
+                resolvedType = TextureType::TextureCubeMap;
+            } else if (typeName.find("texture3d") != std::string::npos) {
+                resolvedType = TextureType::Texture3D;
+            } else if (typeName.find("texture2d_array") != std::string::npos ||
+                       typeName.find("texture2darray") != std::string::npos) {
+                resolvedType = TextureType::Texture2DArray;
+            }
+            bindingTypes[index] = resolvedType;
         }
     }
 }
@@ -695,6 +706,7 @@ void releaseProgramState(ShaderProgram *program) {
     state.bindings.clear();
     state.bindingSize.clear();
     state.textureBindings.clear();
+    state.textureTypesByBinding.clear();
     state.uniformResolutionCache.clear();
     states.erase(it);
 }
@@ -960,6 +972,7 @@ bool parseProgramLayouts(const std::string &vertexSource,
     state.bindings.clear();
     state.bindingSize.clear();
     state.textureBindings.clear();
+    state.textureTypesByBinding.clear();
     state.uniformResolutionCache.clear();
 
     std::unordered_map<std::string, RawStruct> rawStructs =
@@ -976,8 +989,10 @@ bool parseProgramLayouts(const std::string &vertexSource,
         parseStageBufferBindings(vertexSource, true);
     std::vector<BufferBinding> fragmentBindings =
         parseStageBufferBindings(fragmentSource, false);
-    parseStageTextureBindings(vertexSource, true, state.textureBindings);
-    parseStageTextureBindings(fragmentSource, false, state.textureBindings);
+    parseStageTextureBindings(vertexSource, true, state.textureBindings,
+                              state.textureTypesByBinding);
+    parseStageTextureBindings(fragmentSource, false, state.textureBindings,
+                              state.textureTypesByBinding);
     vertexBindings.insert(vertexBindings.end(), fragmentBindings.begin(),
                           fragmentBindings.end());
 

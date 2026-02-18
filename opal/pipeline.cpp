@@ -796,7 +796,10 @@ void Pipeline::bind() {
     state.viewportY = this->viewportY;
     state.viewportWidth = this->viewportWidth;
     state.viewportHeight = this->viewportHeight;
-    state.texturesByUnit.clear();
+    if (!state.suppressTextureReset) {
+        state.texturesByUnit.clear();
+    }
+    state.suppressTextureReset = false;
 
     if (Device::globalInstance != nullptr) {
         auto &deviceState = metal::deviceState(Device::globalInstance);

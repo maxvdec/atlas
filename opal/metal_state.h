@@ -105,6 +105,7 @@ struct ProgramState {
     std::vector<BufferBinding> bindings;
     std::unordered_map<uint32_t, size_t> bindingSize;
     std::unordered_map<std::string, int> textureBindings;
+    std::unordered_map<int, TextureType> textureTypesByBinding;
     std::unordered_map<std::string, std::vector<UniformLocation>>
         uniformResolutionCache;
     uint32_t fragmentColorOutputs = 1;

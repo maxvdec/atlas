@@ -18,6 +18,61 @@
 
 namespace {
 
+std::shared_ptr<opal::Texture> createFallbackSSAOTexture() {
+    const unsigned char white = 255;
+    auto texture = opal::Texture::create(opal::TextureType::Texture2D,
+                                         opal::TextureFormat::Red8, 1, 1,
+                                         opal::TextureDataFormat::Red, &white,
+                                         1);
+    texture->setFilterMode(opal::TextureFilterMode::Nearest,
+                           opal::TextureFilterMode::Nearest);
+    texture->setWrapMode(opal::TextureAxis::S,
+                         opal::TextureWrapMode::ClampToEdge);
+    texture->setWrapMode(opal::TextureAxis::T,
+                         opal::TextureWrapMode::ClampToEdge);
+    return texture;
+}
+
+std::shared_ptr<opal::Texture> createFallbackSkyboxTexture() {
+    const unsigned char black[4] = {0, 0, 0, 255};
+    auto texture = opal::Texture::create(opal::TextureType::TextureCubeMap,
+                                         opal::TextureFormat::Rgba8, 1, 1,
+                                         opal::TextureDataFormat::Rgba,
+                                         nullptr, 1);
+    texture->setFilterMode(opal::TextureFilterMode::Linear,
+                           opal::TextureFilterMode::Linear);
+    texture->setWrapMode(opal::TextureAxis::S,
+                         opal::TextureWrapMode::ClampToEdge);
+    texture->setWrapMode(opal::TextureAxis::T,
+                         opal::TextureWrapMode::ClampToEdge);
+    texture->setWrapMode(opal::TextureAxis::R,
+                         opal::TextureWrapMode::ClampToEdge);
+    for (int face = 0; face < 6; face++) {
+        texture->updateFace(face, black, 1, 1, opal::TextureDataFormat::Rgba);
+    }
+    return texture;
+}
+
+std::shared_ptr<opal::Texture> createFallbackShadowCubemapTexture() {
+    const unsigned char white[4] = {255, 255, 255, 255};
+    auto texture = opal::Texture::create(opal::TextureType::TextureCubeMap,
+                                         opal::TextureFormat::Rgba8, 1, 1,
+                                         opal::TextureDataFormat::Rgba,
+                                         nullptr, 1);
+    texture->setFilterMode(opal::TextureFilterMode::Linear,
+                           opal::TextureFilterMode::Linear);
+    texture->setWrapMode(opal::TextureAxis::S,
+                         opal::TextureWrapMode::ClampToEdge);
+    texture->setWrapMode(opal::TextureAxis::T,
+                         opal::TextureWrapMode::ClampToEdge);
+    texture->setWrapMode(opal::TextureAxis::R,
+                         opal::TextureWrapMode::ClampToEdge);
+    for (int face = 0; face < 6; face++) {
+        texture->updateFace(face, white, 1, 1, opal::TextureDataFormat::Rgba);
+    }
+    return texture;
+}
+
 std::vector<GPUDirectionalLight>
 buildGPUDirectionalLights(const std::vector<DirectionalLight *> &lights,
                           int maxCount) {
@@ -172,8 +227,10 @@ void Window::deferredRendering(
             RenderTarget(*this, RenderTargetType::Scene));
         this->ssrFramebuffer = std::make_shared<RenderTarget>(
             RenderTarget(*this, RenderTargetType::Scene));
-        this->ssaoBuffer.reset();
-        this->ssaoBlurBuffer.reset();
+        this->ssaoBuffer = std::make_shared<RenderTarget>(
+            RenderTarget(*this, RenderTargetType::SSAO));
+        this->ssaoBlurBuffer = std::make_shared<RenderTarget>(
+            RenderTarget(*this, RenderTargetType::SSAOBlur));
         this->ssaoMapsDirty = true;
     }
 
@@ -298,10 +355,29 @@ void Window::deferredRendering(
 
     int boundTextures = 4;
 
-    if (this->ssaoBlurBuffer != nullptr) {
+    static std::shared_ptr<opal::Texture> fallbackSSAOTexture = nullptr;
+    if (fallbackSSAOTexture == nullptr) {
+        fallbackSSAOTexture = createFallbackSSAOTexture();
+    }
+    static std::shared_ptr<opal::Texture> fallbackShadowCubemapTexture =
+        nullptr;
+    if (fallbackShadowCubemapTexture == nullptr) {
+        fallbackShadowCubemapTexture = createFallbackShadowCubemapTexture();
+    }
+    if (this->ssaoBlurBuffer != nullptr && this->ssaoBlurBuffer->texture.id != 0) {
         lightPipeline->bindTexture2D("ssao", this->ssaoBlurBuffer->texture.id,
                                      4);
-        boundTextures++;
+    } else {
+        lightPipeline->bindTexture2D("ssao", fallbackSSAOTexture->textureID, 4);
+    }
+    boundTextures++;
+    for (int i = 0; i < 5; i++) {
+        lightPipeline->bindTexture2D("texture" + std::to_string(i + 1),
+                                     fallbackSSAOTexture->textureID,
+                                     boundTextures + i);
+        lightPipeline->bindTextureCubemap(
+            "cubeMap" + std::to_string(i + 1),
+            fallbackShadowCubemapTexture->textureID, 10 + i);
     }
 
     int boundCubemaps = 0;
@@ -490,11 +566,19 @@ void Window::deferredRendering(
     }
 
     // Bind skybox
-    if (scene->skybox != nullptr) {
+    static std::shared_ptr<opal::Texture> fallbackSkyboxTexture = nullptr;
+    if (fallbackSkyboxTexture == nullptr) {
+        fallbackSkyboxTexture = createFallbackSkyboxTexture();
+    }
+    if (scene->skybox != nullptr && scene->skybox->cubemap.id != 0) {
         lightPipeline->bindTextureCubemap("skybox", scene->skybox->cubemap.id,
                                           boundTextures);
-        boundTextures++;
+    } else {
+        lightPipeline->bindTextureCubemap("skybox",
+                                          fallbackSkyboxTexture->textureID,
+                                          boundTextures);
     }
+    boundTextures++;
 
     lightPipeline->setUniform1f(
         "environment.rimLightIntensity",

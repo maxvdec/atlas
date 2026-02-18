@@ -198,6 +198,95 @@ requiredColorOutputs(const std::shared_ptr<Pipeline> &pipeline) {
                : 1;
 }
 
+static std::shared_ptr<Texture> fallbackTexture2D() {
+    if (Device::globalInstance == nullptr) {
+        return nullptr;
+    }
+    static std::shared_ptr<Texture> texture = nullptr;
+    if (texture == nullptr) {
+        const unsigned char black[4] = {0, 0, 0, 255};
+        texture = Texture::create(TextureType::Texture2D, TextureFormat::Rgba8,
+                                  1, 1, TextureDataFormat::Rgba, black, 1);
+        texture->setFilterMode(TextureFilterMode::Nearest,
+                               TextureFilterMode::Nearest);
+        texture->setWrapMode(TextureAxis::S, TextureWrapMode::ClampToEdge);
+        texture->setWrapMode(TextureAxis::T, TextureWrapMode::ClampToEdge);
+    }
+    return texture;
+}
+
+static std::shared_ptr<Texture> fallbackTexture2DArray() {
+    if (Device::globalInstance == nullptr) {
+        return nullptr;
+    }
+    static std::shared_ptr<Texture> texture = nullptr;
+    if (texture == nullptr) {
+        const unsigned char black[4] = {0, 0, 0, 255};
+        texture = Texture::create(TextureType::Texture2DArray,
+                                  TextureFormat::Rgba8, 1, 1,
+                                  TextureDataFormat::Rgba, black, 1);
+        texture->setFilterMode(TextureFilterMode::Nearest,
+                               TextureFilterMode::Nearest);
+        texture->setWrapMode(TextureAxis::S, TextureWrapMode::ClampToEdge);
+        texture->setWrapMode(TextureAxis::T, TextureWrapMode::ClampToEdge);
+    }
+    return texture;
+}
+
+static std::shared_ptr<Texture> fallbackTextureCube() {
+    if (Device::globalInstance == nullptr) {
+        return nullptr;
+    }
+    static std::shared_ptr<Texture> texture = nullptr;
+    if (texture == nullptr) {
+        const unsigned char black[4] = {0, 0, 0, 255};
+        texture = Texture::create(TextureType::TextureCubeMap,
+                                  TextureFormat::Rgba8, 1, 1,
+                                  TextureDataFormat::Rgba, nullptr, 1);
+        texture->setFilterMode(TextureFilterMode::Nearest,
+                               TextureFilterMode::Nearest);
+        texture->setWrapMode(TextureAxis::S, TextureWrapMode::ClampToEdge);
+        texture->setWrapMode(TextureAxis::T, TextureWrapMode::ClampToEdge);
+        texture->setWrapMode(TextureAxis::R, TextureWrapMode::ClampToEdge);
+        for (int face = 0; face < 6; ++face) {
+            texture->updateFace(face, black, 1, 1, TextureDataFormat::Rgba);
+        }
+    }
+    return texture;
+}
+
+static std::shared_ptr<Texture> fallbackTexture3D() {
+    if (Device::globalInstance == nullptr) {
+        return nullptr;
+    }
+    static std::shared_ptr<Texture> texture = nullptr;
+    if (texture == nullptr) {
+        const unsigned char black[4] = {0, 0, 0, 255};
+        texture = Texture::create3D(TextureFormat::Rgba8, 1, 1, 1,
+                                    TextureDataFormat::Rgba, black);
+        texture->setParameters3D(TextureWrapMode::ClampToEdge,
+                                 TextureWrapMode::ClampToEdge,
+                                 TextureWrapMode::ClampToEdge,
+                                 TextureFilterMode::Nearest,
+                                 TextureFilterMode::Nearest);
+    }
+    return texture;
+}
+
+static std::shared_ptr<Texture> fallbackTextureForType(TextureType type) {
+    switch (type) {
+    case TextureType::TextureCubeMap:
+        return fallbackTextureCube();
+    case TextureType::Texture3D:
+        return fallbackTexture3D();
+    case TextureType::Texture2DArray:
+        return fallbackTexture2DArray();
+    case TextureType::Texture2D:
+    default:
+        return fallbackTexture2D();
+    }
+}
+
 static MTL::RenderPipelineState *
 getRenderPipelineState(Device *device,
                        const std::shared_ptr<Pipeline> &pipeline,
@@ -377,6 +466,33 @@ static void bindTextures(CommandBuffer *commandBuffer,
         }
         desiredTextures[static_cast<size_t>(unit)] = textureState.texture;
         desiredSamplers[static_cast<size_t>(unit)] = textureState.sampler;
+    }
+
+    if (pipeline->shaderProgram != nullptr) {
+        auto &programState = metal::programState(pipeline->shaderProgram.get());
+        for (const auto &binding : programState.textureTypesByBinding) {
+            int unit = binding.first;
+            if (unit < 0 || unit >= static_cast<int>(desiredTextures.size())) {
+                continue;
+            }
+            size_t unitIndex = static_cast<size_t>(unit);
+            if (desiredTextures[unitIndex] != nullptr) {
+                continue;
+            }
+            auto fallback = fallbackTextureForType(binding.second);
+            if (fallback == nullptr) {
+                continue;
+            }
+            auto &fallbackState = metal::textureState(fallback.get());
+            if (fallbackState.texture == nullptr) {
+                continue;
+            }
+            if (fallbackState.sampler == nullptr) {
+                metal::rebuildTextureSampler(fallback.get(), device);
+            }
+            desiredTextures[unitIndex] = fallbackState.texture;
+            desiredSamplers[unitIndex] = fallbackState.sampler;
+        }
     }
 
     if (!commandState.textureBindingsInitialized) {
@@ -976,6 +1092,9 @@ void CommandBuffer::commit() {
 }
 
 void CommandBuffer::bindPipeline(std::shared_ptr<Pipeline> pipeline) {
+#ifdef METAL
+    metal::pipelineState(pipeline.get()).suppressTextureReset = true;
+#endif
     pipeline->bind();
 #ifdef VULKAN
 #endif
