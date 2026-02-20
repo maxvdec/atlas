@@ -5,6 +5,7 @@
 ![Tests](https://github.com/maxvdec/atlas/actions/workflows/build.yaml/badge.svg)
 ![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/maxvdec/atlas)
 ![GitHub Repo stars](https://img.shields.io/github/stars/maxvdec/atlas)
+[![](https://dcbadge.limes.pink/api/server/INVITE)](https://discord.gg/WKrxKtr7kW)
 
 Atlas is a Game Engine that uses the latest technologies to provide a fast, simple but powerful experience for developers.
 It is built with C++ and uses OpenGL and Vulkan for rendering, with plans to support Metal in the future.
