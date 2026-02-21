@@ -279,13 +279,16 @@ float2 parallaxMapping(thread const float2& texCoords, thread const float3& view
     int param = textureIndex;
     float2 param_1 = currentTexCoords;
     float currentDepthMapValue = sampleTextureAt(param, param_1, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr).x;
-    while (currentLayerDepth < currentDepthMapValue)
+    int maxIterations = int(numLayers) + 1;
+    int iteration = 0;
+    while (currentLayerDepth < currentDepthMapValue && iteration < maxIterations)
     {
         currentTexCoords = fast::clamp(currentTexCoords - deltaTexCoords, float2(0.0), float2(1.0));
         int param_2 = textureIndex;
         float2 param_3 = currentTexCoords;
         currentDepthMapValue = sampleTextureAt(param_2, param_3, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr).x;
         currentLayerDepth += layerDepth;
+        iteration++;
     }
     float2 prevTexCoords = fast::clamp(currentTexCoords + deltaTexCoords, float2(0.0), float2(1.0));
     float afterDepth = currentDepthMapValue - currentLayerDepth;

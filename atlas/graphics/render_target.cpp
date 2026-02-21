@@ -668,8 +668,10 @@ void RenderTarget::render(float dt,
         obj->shaderProgram.requestPipeline(renderTargetPipeline);
     int viewportX = 0;
     int viewportY = 0;
-    int viewportWidth = Window::mainWindow ? Window::mainWindow->viewportWidth : 0;
-    int viewportHeight = Window::mainWindow ? Window::mainWindow->viewportHeight : 0;
+    int viewportWidth =
+        Window::mainWindow ? Window::mainWindow->viewportWidth : 0;
+    int viewportHeight =
+        Window::mainWindow ? Window::mainWindow->viewportHeight : 0;
     if (Window::mainWindow != nullptr &&
         (viewportWidth <= 0 || viewportHeight <= 0)) {
         int fbWidth = 0;
@@ -718,16 +720,21 @@ void RenderTarget::render(float dt,
         renderTargetPipeline->setUniform1i("hasBrightTexture",
                                            blurredTexture.id != 0 ? 1 : 0);
 
-        renderTargetPipeline->bindTexture2D("DepthTexture", depthTexture.id, 2,
+        uint depthTextureId = depthTexture.id;
+        bool hasDepth = depthTexture.id != 0;
+#ifdef METAL
+        depthTextureId = 0;
+        hasDepth = false;
+#endif
+        renderTargetPipeline->bindTexture2D("DepthTexture", depthTextureId, 2,
                                             obj->id);
-        const bool hasDepth = depthTexture.id != 0;
         renderTargetPipeline->setUniform1i("hasDepthTexture", hasDepth ? 1 : 0);
 
         renderTargetPipeline->bindTexture2D(
             "VolumetricLightTexture", volumetricLightTexture.id, 3, obj->id);
-        renderTargetPipeline->setUniform1i(
-            "hasVolumetricLightTexture", volumetricLightTexture.id != 0 ? 1
-                                                                         : 0);
+        renderTargetPipeline->setUniform1i("hasVolumetricLightTexture",
+                                           volumetricLightTexture.id != 0 ? 1
+                                                                          : 0);
 
         renderTargetPipeline->bindTexture2D("PositionTexture", gPosition.id, 4,
                                             obj->id);
@@ -774,6 +781,9 @@ void RenderTarget::render(float dt,
         int maxMipLevels = (int)std::floor(
             std::log2(std::max(Window::mainWindow->getSize().width,
                                Window::mainWindow->getSize().height)));
+#ifdef METAL
+        maxMipLevels = 0;
+#endif
 
         renderTargetPipeline->setUniform1i("maxMipLevel", maxMipLevels);
 
@@ -892,9 +902,9 @@ void RenderTarget::render(float dt,
         debugPacket.indexBufferSizeMb =
             static_cast<float>(sizeof(Index) * 6) / (1024.0f * 1024.0f);
         debugPacket.textureCount =
-            1 + (brightTexture.id != 0 ? 1 : 0) + (depthTexture.id != 0 ? 1 : 0) +
-            (gPosition.id != 0 ? 1 : 0) + (ssrTexture.id != 0 ? 1 : 0) +
-            (LUT.id != 0 ? 1 : 0);
+            1 + (brightTexture.id != 0 ? 1 : 0) +
+            (depthTexture.id != 0 ? 1 : 0) + (gPosition.id != 0 ? 1 : 0) +
+            (ssrTexture.id != 0 ? 1 : 0) + (LUT.id != 0 ? 1 : 0);
         debugPacket.materialCount = 0;
         debugPacket.objectType = DebugObjectType::Other;
         debugPacket.objectId = obj->id;

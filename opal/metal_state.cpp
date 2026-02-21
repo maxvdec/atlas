@@ -979,9 +979,30 @@ bool parseProgramLayouts(const std::string &vertexSource,
         parseRawStructs(vertexSource);
     std::unordered_map<std::string, RawStruct> fragmentStructs =
         parseRawStructs(fragmentSource);
+    std::unordered_set<std::string> conflictingStructs;
     for (const auto &pair : fragmentStructs) {
-        if (rawStructs.find(pair.first) == rawStructs.end()) {
+        auto it = rawStructs.find(pair.first);
+        if (it == rawStructs.end()) {
             rawStructs[pair.first] = pair.second;
+        } else {
+            bool same = it->second.fields.size() == pair.second.fields.size();
+            if (same) {
+                for (size_t i = 0; i < it->second.fields.size(); ++i) {
+                    if (it->second.fields[i].fieldName !=
+                            pair.second.fields[i].fieldName ||
+                        it->second.fields[i].typeName !=
+                            pair.second.fields[i].typeName ||
+                        it->second.fields[i].arrayCount !=
+                            pair.second.fields[i].arrayCount) {
+                        same = false;
+                        break;
+                    }
+                }
+            }
+            if (!same) {
+                conflictingStructs.insert(pair.first);
+                rawStructs[pair.first + "__frag"] = pair.second;
+            }
         }
     }
 
@@ -989,6 +1010,11 @@ bool parseProgramLayouts(const std::string &vertexSource,
         parseStageBufferBindings(vertexSource, true);
     std::vector<BufferBinding> fragmentBindings =
         parseStageBufferBindings(fragmentSource, false);
+    for (BufferBinding &binding : fragmentBindings) {
+        if (conflictingStructs.count(binding.structName)) {
+            binding.structName += "__frag";
+        }
+    }
     parseStageTextureBindings(vertexSource, true, state.textureBindings,
                               state.textureTypesByBinding);
     parseStageTextureBindings(fragmentSource, false, state.textureBindings,

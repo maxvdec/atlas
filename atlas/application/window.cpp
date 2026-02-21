@@ -397,26 +397,16 @@ void Window::run() {
                     target->getResolveFramebuffer() != nullptr) {
                     forwardFramebuffer = target->getResolveFramebuffer();
                 }
-                bool needsForwardDepth = !this->firstRenderables.empty() ||
-                                         !this->lateForwardRenderables.empty();
-                if (!needsForwardDepth) {
-                    for (auto &obj : this->renderables) {
-                        if (obj->renderLateForward) {
-                            continue;
-                        }
-                        if (!obj->canUseDeferredRendering()) {
-                            needsForwardDepth = true;
-                            break;
-                        }
-                    }
-                }
                 auto resolveCommand = opal::ResolveAction::createForDepth(
                     this->gBuffer->getFramebuffer(), forwardFramebuffer);
                 commandBuffer->performResolve(resolveCommand);
-                if (needsForwardDepth) {
-                    forwardFramebuffer->bind();
-                    forwardFramebuffer->setDrawBuffers(2);
-                }
+
+                auto forwardRenderPass = opal::RenderPass::create();
+                forwardRenderPass->setFramebuffer(forwardFramebuffer);
+                forwardFramebuffer->setDrawBuffers(2);
+                commandBuffer->beginPass(forwardRenderPass);
+                forwardFramebuffer->setViewport(0, 0, target->getWidth(),
+                                                target->getHeight());
 
                 updatePipelineStateField(this->useDepth, true);
                 updatePipelineStateField(this->depthCompareOp,
@@ -584,8 +574,10 @@ void Window::run() {
                 ResourceTracker::getInstance().unloadedResources;
             memoryPacket.totalAllocatedMb =
                 ResourceTracker::getInstance().totalMemoryMb;
-            memoryPacket.totalCPUMb = ResourceTracker::getInstance().totalMemoryMb;
-            memoryPacket.totalGPUMb = ResourceTracker::getInstance().totalMemoryMb;
+            memoryPacket.totalCPUMb =
+                ResourceTracker::getInstance().totalMemoryMb;
+            memoryPacket.totalGPUMb =
+                ResourceTracker::getInstance().totalMemoryMb;
             memoryPacket.deallocationCount =
                 ResourceTracker::getInstance().unloadedResources;
             memoryPacket.send();
@@ -613,7 +605,8 @@ void Window::run() {
             timingPacket.workerThreadTimeMs = 0.0f;
             timingPacket.mainThreadTimeMs =
                 static_cast<float>(mainTime) / 1'000'000.0f;
-            timingPacket.memoryMb = ResourceTracker::getInstance().totalMemoryMb;
+            timingPacket.memoryMb =
+                ResourceTracker::getInstance().totalMemoryMb;
             timingPacket.cpuUsagePercent =
                 static_cast<float>(normalCpuTime / this->deltaTime * 100.0);
             timingPacket.gpuUsagePercent = 0.0f;
@@ -1507,24 +1500,26 @@ void Window::renderPhysicalBloom(RenderTarget *target) {
 
     int sizeX = std::max(1, target->brightTexture.creationData.width);
     int sizeY = std::max(1, target->brightTexture.creationData.height);
-    int chainLength = std::max(1, currentScene->environment.lightBloom.maxSamples);
+    int chainLength =
+        std::max(1, currentScene->environment.lightBloom.maxSamples);
 
     if (this->bloomBuffer == nullptr) {
         this->bloomBuffer =
             std::make_shared<BloomRenderTarget>(BloomRenderTarget());
     }
 
-    bool needsRebuild = !this->bloomBuffer->initialized ||
-                        this->bloomBuffer->srcViewportSize.x != sizeX ||
-                        this->bloomBuffer->srcViewportSize.y != sizeY ||
-                        static_cast<int>(this->bloomBuffer->elements.size()) !=
-                            chainLength;
+    bool needsRebuild =
+        !this->bloomBuffer->initialized ||
+        this->bloomBuffer->srcViewportSize.x != sizeX ||
+        this->bloomBuffer->srcViewportSize.y != sizeY ||
+        static_cast<int>(this->bloomBuffer->elements.size()) != chainLength;
     if (needsRebuild) {
         this->bloomBuffer->destroy();
         this->bloomBuffer->init(sizeX, sizeY, chainLength);
     }
 
-    if (!this->bloomBuffer->initialized || this->bloomBuffer->elements.empty()) {
+    if (!this->bloomBuffer->initialized ||
+        this->bloomBuffer->elements.empty()) {
         target->blurredTexture = target->brightTexture;
         return;
     }

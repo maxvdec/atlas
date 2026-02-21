@@ -176,6 +176,8 @@ void Window::renderSSAO(std::shared_ptr<opal::CommandBuffer> commandBuffer) {
     ssaoPipeline->enableDepthTest(false);
     ssaoPipeline->enableDepthWrite(false);
     ssaoPipeline->enableBlending(false);
+    ssaoPipeline->setViewport(0, 0, this->ssaoBuffer->getWidth(),
+                              this->ssaoBuffer->getHeight());
     auto ssaoRenderPass = opal::RenderPass::create();
     ssaoRenderPass->setFramebuffer(this->ssaoBuffer->getFramebuffer());
     ssaoCommandBuffer->beginPass(ssaoRenderPass);
@@ -216,6 +218,8 @@ void Window::renderSSAO(std::shared_ptr<opal::CommandBuffer> commandBuffer) {
     ssaoBlurPipeline->enableDepthTest(false);
     ssaoBlurPipeline->enableDepthWrite(false);
     ssaoBlurPipeline->enableBlending(false);
+    ssaoBlurPipeline->setViewport(0, 0, this->ssaoBlurBuffer->getWidth(),
+                                  this->ssaoBlurBuffer->getHeight());
     auto ssaoBlurRenderPass = opal::RenderPass::create();
     ssaoBlurRenderPass->setFramebuffer(this->ssaoBlurBuffer->getFramebuffer());
     ssaoCommandBuffer->beginPass(ssaoBlurRenderPass);

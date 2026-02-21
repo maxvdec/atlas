@@ -256,6 +256,8 @@ void Framebuffer::setViewport() {
     glViewport(0, 0, width, height);
 #elif defined(VULKAN)
 #elif defined(METAL)
+    width = std::max(width, 1);
+    height = std::max(height, 1);
 #endif
 }
 
@@ -270,8 +272,12 @@ void Framebuffer::setViewport(int x, int y, int viewWidth, int viewHeight) {
 #elif defined(METAL)
     (void)x;
     (void)y;
-    (void)viewWidth;
-    (void)viewHeight;
+    if (viewWidth > 0) {
+        width = viewWidth;
+    }
+    if (viewHeight > 0) {
+        height = viewHeight;
+    }
 #endif
 }
 

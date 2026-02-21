@@ -222,9 +222,9 @@ static std::shared_ptr<Texture> fallbackTexture2DArray() {
     static std::shared_ptr<Texture> texture = nullptr;
     if (texture == nullptr) {
         const unsigned char black[4] = {0, 0, 0, 255};
-        texture = Texture::create(TextureType::Texture2DArray,
-                                  TextureFormat::Rgba8, 1, 1,
-                                  TextureDataFormat::Rgba, black, 1);
+        texture =
+            Texture::create(TextureType::Texture2DArray, TextureFormat::Rgba8,
+                            1, 1, TextureDataFormat::Rgba, black, 1);
         texture->setFilterMode(TextureFilterMode::Nearest,
                                TextureFilterMode::Nearest);
         texture->setWrapMode(TextureAxis::S, TextureWrapMode::ClampToEdge);
@@ -240,9 +240,9 @@ static std::shared_ptr<Texture> fallbackTextureCube() {
     static std::shared_ptr<Texture> texture = nullptr;
     if (texture == nullptr) {
         const unsigned char black[4] = {0, 0, 0, 255};
-        texture = Texture::create(TextureType::TextureCubeMap,
-                                  TextureFormat::Rgba8, 1, 1,
-                                  TextureDataFormat::Rgba, nullptr, 1);
+        texture =
+            Texture::create(TextureType::TextureCubeMap, TextureFormat::Rgba8,
+                            1, 1, TextureDataFormat::Rgba, nullptr, 1);
         texture->setFilterMode(TextureFilterMode::Nearest,
                                TextureFilterMode::Nearest);
         texture->setWrapMode(TextureAxis::S, TextureWrapMode::ClampToEdge);
@@ -264,11 +264,10 @@ static std::shared_ptr<Texture> fallbackTexture3D() {
         const unsigned char black[4] = {0, 0, 0, 255};
         texture = Texture::create3D(TextureFormat::Rgba8, 1, 1, 1,
                                     TextureDataFormat::Rgba, black);
-        texture->setParameters3D(TextureWrapMode::ClampToEdge,
-                                 TextureWrapMode::ClampToEdge,
-                                 TextureWrapMode::ClampToEdge,
-                                 TextureFilterMode::Nearest,
-                                 TextureFilterMode::Nearest);
+        texture->setParameters3D(
+            TextureWrapMode::ClampToEdge, TextureWrapMode::ClampToEdge,
+            TextureWrapMode::ClampToEdge, TextureFilterMode::Nearest,
+            TextureFilterMode::Nearest);
     }
     return texture;
 }

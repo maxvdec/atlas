@@ -20,10 +20,9 @@ namespace {
 
 std::shared_ptr<opal::Texture> createFallbackSSAOTexture() {
     const unsigned char white = 255;
-    auto texture = opal::Texture::create(opal::TextureType::Texture2D,
-                                         opal::TextureFormat::Red8, 1, 1,
-                                         opal::TextureDataFormat::Red, &white,
-                                         1);
+    auto texture = opal::Texture::create(
+        opal::TextureType::Texture2D, opal::TextureFormat::Red8, 1, 1,
+        opal::TextureDataFormat::Red, &white, 1);
     texture->setFilterMode(opal::TextureFilterMode::Nearest,
                            opal::TextureFilterMode::Nearest);
     texture->setWrapMode(opal::TextureAxis::S,
@@ -35,10 +34,9 @@ std::shared_ptr<opal::Texture> createFallbackSSAOTexture() {
 
 std::shared_ptr<opal::Texture> createFallbackSkyboxTexture() {
     const unsigned char black[4] = {0, 0, 0, 255};
-    auto texture = opal::Texture::create(opal::TextureType::TextureCubeMap,
-                                         opal::TextureFormat::Rgba8, 1, 1,
-                                         opal::TextureDataFormat::Rgba,
-                                         nullptr, 1);
+    auto texture = opal::Texture::create(
+        opal::TextureType::TextureCubeMap, opal::TextureFormat::Rgba8, 1, 1,
+        opal::TextureDataFormat::Rgba, nullptr, 1);
     texture->setFilterMode(opal::TextureFilterMode::Linear,
                            opal::TextureFilterMode::Linear);
     texture->setWrapMode(opal::TextureAxis::S,
@@ -55,10 +53,9 @@ std::shared_ptr<opal::Texture> createFallbackSkyboxTexture() {
 
 std::shared_ptr<opal::Texture> createFallbackShadowCubemapTexture() {
     const unsigned char white[4] = {255, 255, 255, 255};
-    auto texture = opal::Texture::create(opal::TextureType::TextureCubeMap,
-                                         opal::TextureFormat::Rgba8, 1, 1,
-                                         opal::TextureDataFormat::Rgba,
-                                         nullptr, 1);
+    auto texture = opal::Texture::create(
+        opal::TextureType::TextureCubeMap, opal::TextureFormat::Rgba8, 1, 1,
+        opal::TextureDataFormat::Rgba, nullptr, 1);
     texture->setFilterMode(opal::TextureFilterMode::Linear,
                            opal::TextureFilterMode::Linear);
     texture->setWrapMode(opal::TextureAxis::S,
@@ -281,7 +278,7 @@ void Window::deferredRendering(
     outputFramebuffer->bind();
     outputFramebuffer->setViewport(0, 0, target->getWidth(),
                                    target->getHeight());
-    commandBuffer->clear(0.0f, 0.0f, 0.0f, 1.0f, 1.0f);
+    commandBuffer->clearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
     static std::shared_ptr<opal::DrawingState> quadState = nullptr;
     static std::shared_ptr<opal::Buffer> quadBuffer = nullptr;
@@ -364,7 +361,8 @@ void Window::deferredRendering(
     if (fallbackShadowCubemapTexture == nullptr) {
         fallbackShadowCubemapTexture = createFallbackShadowCubemapTexture();
     }
-    if (this->ssaoBlurBuffer != nullptr && this->ssaoBlurBuffer->texture.id != 0) {
+    if (this->ssaoBlurBuffer != nullptr &&
+        this->ssaoBlurBuffer->texture.id != 0) {
         lightPipeline->bindTexture2D("ssao", this->ssaoBlurBuffer->texture.id,
                                      4);
     } else {
@@ -574,9 +572,8 @@ void Window::deferredRendering(
         lightPipeline->bindTextureCubemap("skybox", scene->skybox->cubemap.id,
                                           boundTextures);
     } else {
-        lightPipeline->bindTextureCubemap("skybox",
-                                          fallbackSkyboxTexture->textureID,
-                                          boundTextures);
+        lightPipeline->bindTextureCubemap(
+            "skybox", fallbackSkyboxTexture->textureID, boundTextures);
     }
     boundTextures++;
 
@@ -597,7 +594,6 @@ void Window::deferredRendering(
     bool targetPassActive = true;
     bool hasVolumetricTexture = false;
     bool hasSSRTexture = false;
-
     const auto &volumetricSettings = scene->environment.volumetricLighting;
     bool useVolumetric = dirLightCount > 0 && volumetricSettings.enabled &&
                          volumetricSettings.density > 0.0f &&
@@ -739,13 +735,7 @@ void Window::deferredRendering(
     }
     target->gPosition = gBuffer->gPosition;
 
-    if (!targetPassActive) {
-        auto finalRenderPass = opal::RenderPass::create();
-        finalRenderPass->setFramebuffer(outputFramebuffer);
-        outputFramebuffer->setDrawBuffers(2);
-        commandBuffer->beginPass(finalRenderPass);
-        outputFramebuffer->bind();
-        outputFramebuffer->setViewport(0, 0, target->getWidth(),
-                                       target->getHeight());
+    if (targetPassActive) {
+        commandBuffer->endPass();
     }
 }
