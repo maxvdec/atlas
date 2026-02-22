@@ -556,6 +556,8 @@ void CoreObject::render(float dt,
             "Pipeline not created - call refreshPipeline() first");
     }
 
+    this->pipeline->setUniform1i("isInstanced", 0);
+    this->pipeline->setUniformBool("isInstanced", false);
     this->pipeline->setUniformMat4f("model", model);
     this->pipeline->setUniformMat4f("view", view);
     this->pipeline->setUniformMat4f("projection", projection);
@@ -860,6 +862,7 @@ void CoreObject::render(float dt,
             this->savedInstances = this->instances;
         }
         this->pipeline->setUniform1i("isInstanced", 1);
+        this->pipeline->setUniformBool("isInstanced", true);
 
         if (!indices.empty()) {
             commandBuffer->bindDrawingState(vao);
@@ -877,6 +880,7 @@ void CoreObject::render(float dt,
     }
 
     this->pipeline->setUniform1i("isInstanced", 0);
+    this->pipeline->setUniformBool("isInstanced", false);
     if (!indices.empty()) {
         commandBuffer->bindDrawingState(vao);
         commandBuffer->bindPipeline(this->pipeline);

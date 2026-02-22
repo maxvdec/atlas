@@ -14,6 +14,8 @@
 #include <cstddef>
 #include <cmath>
 #include <memory>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace {
@@ -231,10 +233,7 @@ void Window::deferredRendering(
         this->ssaoMapsDirty = true;
     }
 
-    static std::shared_ptr<opal::Pipeline> deferredPipeline = nullptr;
-    if (deferredPipeline == nullptr) {
-        deferredPipeline = opal::Pipeline::create();
-    }
+    static std::unordered_map<Renderable *, ShaderProgram> deferredPrograms;
 
     auto gBufferRenderPass = opal::RenderPass::create();
     gBufferRenderPass->setFramebuffer(this->gBuffer->getFramebuffer());
@@ -244,17 +243,50 @@ void Window::deferredRendering(
     this->gBuffer->bind();
     this->gBuffer->getFramebuffer()->setViewport(
         0, 0, this->gBuffer->getWidth(), this->gBuffer->getHeight());
-    deferredPipeline->setViewport(0, 0, this->gBuffer->getWidth(),
-                                  this->gBuffer->getHeight());
     commandBuffer->clear(0.0f, 0.0f, 0.0f, 1.0f, 1.0f);
-    deferredPipeline->setCullMode(opal::CullMode::None);
-    deferredPipeline->setFrontFace(this->frontFace);
-    deferredPipeline->enableDepthTest(true);
-    deferredPipeline->setDepthCompareOp(opal::CompareOp::Less);
-    deferredPipeline->enableDepthWrite(true);
-    deferredPipeline = this->deferredProgram.requestPipeline(deferredPipeline);
+
+    std::unordered_set<Renderable *> activeDeferredRenderables;
+    activeDeferredRenderables.reserve(this->renderables.size());
+    for (auto *obj : this->renderables) {
+        if (obj != nullptr && obj->canUseDeferredRendering()) {
+            activeDeferredRenderables.insert(obj);
+        }
+    }
+
+    for (auto it = deferredPrograms.begin(); it != deferredPrograms.end();) {
+        if (activeDeferredRenderables.find(it->first) ==
+            activeDeferredRenderables.end()) {
+            it = deferredPrograms.erase(it);
+        } else {
+            ++it;
+        }
+    }
+
     for (auto &obj : this->renderables) {
+        if (obj == nullptr) {
+            continue;
+        }
         if (obj->canUseDeferredRendering()) {
+            auto programIt = deferredPrograms.find(obj);
+            if (programIt == deferredPrograms.end()) {
+                ShaderProgram renderableProgram = this->deferredProgram;
+                renderableProgram.pipelines.clear();
+                renderableProgram.currentPipeline = nullptr;
+                programIt = deferredPrograms
+                                .emplace(obj, std::move(renderableProgram))
+                                .first;
+            }
+
+            auto deferredPipeline = opal::Pipeline::create();
+            deferredPipeline->setViewport(0, 0, this->gBuffer->getWidth(),
+                                          this->gBuffer->getHeight());
+            deferredPipeline->setCullMode(opal::CullMode::None);
+            deferredPipeline->setFrontFace(this->deferredFrontFace);
+            deferredPipeline->enableDepthTest(true);
+            deferredPipeline->setDepthCompareOp(opal::CompareOp::Less);
+            deferredPipeline->enableDepthWrite(true);
+            deferredPipeline =
+                programIt->second.requestPipeline(deferredPipeline);
             obj->setViewMatrix(this->camera->calculateViewMatrix());
             obj->setProjectionMatrix(calculateProjectionMatrix());
             obj->setPipeline(deferredPipeline);

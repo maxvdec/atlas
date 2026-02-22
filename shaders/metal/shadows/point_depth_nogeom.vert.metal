@@ -39,7 +39,8 @@ vertex main0_out main0(main0_in in [[stage_in]], constant UBO& _12 [[buffer(0)]]
     instanceModel[2] = in.instanceModel_2;
     instanceModel[3] = in.instanceModel_3;
     float4 worldPos;
-    if (_12.isInstanced != 0u)
+    bool hasInstanceMatrix = abs(instanceModel[3].w) > 0.5;
+    if ((_12.isInstanced != 0u) && hasInstanceMatrix)
     {
         worldPos = (_12.model * instanceModel) * float4(in.aPos, 1.0);
     }
@@ -51,4 +52,3 @@ vertex main0_out main0(main0_in in [[stage_in]], constant UBO& _12 [[buffer(0)]]
     out.gl_Position = _62.shadowMatrix * worldPos;
     return out;
 }
-

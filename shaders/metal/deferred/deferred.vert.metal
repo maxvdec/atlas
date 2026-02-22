@@ -99,7 +99,8 @@ vertex main0_out main0(main0_in in [[stage_in]], constant UBO& _12 [[buffer(0)]]
     instanceModel[2] = in.instanceModel_2;
     instanceModel[3] = in.instanceModel_3;
     float4x4 finalModel;
-    if (_12.isInstanced != 0u)
+    bool hasInstanceMatrix = abs(instanceModel[3].w) > 0.5;
+    if ((_12.isInstanced != 0u) && hasInstanceMatrix)
     {
         finalModel = instanceModel;
     }
@@ -124,4 +125,3 @@ vertex main0_out main0(main0_in in [[stage_in]], constant UBO& _12 [[buffer(0)]]
     out.TBN_2 = TBN[2];
     return out;
 }
-

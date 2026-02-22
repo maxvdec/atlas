@@ -522,8 +522,8 @@ class Window {
 
     opal::BlendFunc dstBlend = opal::BlendFunc::DstAlpha;
     opal::BlendFunc srcBlend = opal::BlendFunc::OneMinusSrcAlpha;
-    // Both APIs use CCW; projection Y-flip doesn't affect rasterizer winding
     opal::FrontFace frontFace = opal::FrontFace::CounterClockwise;
+    opal::FrontFace deferredFrontFace = opal::FrontFace::CounterClockwise;
     opal::CullMode cullMode = opal::CullMode::Back;
     opal::CompareOp depthCompareOp = opal::CompareOp::Less;
     opal::RasterizerMode rasterizerMode = opal::RasterizerMode::Fill;

@@ -33,7 +33,8 @@ vertex main0_out main0(main0_in in [[stage_in]], constant UBO& _12 [[buffer(0)]]
     instanceModel[1] = in.instanceModel_1;
     instanceModel[2] = in.instanceModel_2;
     instanceModel[3] = in.instanceModel_3;
-    if (_12.isInstanced != 0u)
+    bool hasInstanceMatrix = abs(instanceModel[3].w) > 0.5;
+    if ((_12.isInstanced != 0u) && hasInstanceMatrix)
     {
         float4x4 _36 = _12.projection * _12.view;
         float4x4 _40 = _36 * instanceModel;
@@ -51,4 +52,3 @@ vertex main0_out main0(main0_in in [[stage_in]], constant UBO& _12 [[buffer(0)]]
     }
     return out;
 }
-

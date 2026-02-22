@@ -351,28 +351,30 @@ std::vector<glm::mat4> Light::calculateShadowTransforms() {
 void AreaLight::createDebugObject() {
     double w = this->size.width * 0.5;
     double h = this->size.height * 0.5;
+    Color emissiveColor = this->color * 2.5f;
+    emissiveColor.a = this->color.a;
 
     std::vector<CoreVertex> vertices = {
         {{-w, -h, 0.0},
-         this->color,
+         emissiveColor,
          {0.0, 0.0},
          {0.0f, 0.0f, 1.0f},
          {1.0f, 0.0f, 0.0f},
          {0.0f, 1.0f, 0.0f}},
         {{w, -h, 0.0},
-         this->color,
+         emissiveColor,
          {1.0, 0.0},
          {0.0f, 0.0f, 1.0f},
          {1.0f, 0.0f, 0.0f},
          {0.0f, 1.0f, 0.0f}},
         {{w, h, 0.0},
-         this->color,
+         emissiveColor,
          {1.0, 1.0},
          {0.0f, 0.0f, 1.0f},
          {1.0f, 0.0f, 0.0f},
          {0.0f, 1.0f, 0.0f}},
         {{-w, h, 0.0},
-         this->color,
+         emissiveColor,
          {0.0, 1.0},
          {0.0f, 0.0f, 1.0f},
          {1.0f, 0.0f, 0.0f},
@@ -380,14 +382,12 @@ void AreaLight::createDebugObject() {
     };
 
     std::vector<Index> indices = {
-        // Front face (CCW)
         0,
         1,
         2,
         2,
         3,
         0,
-        // Back face (CW -> opposite winding)
         0,
         3,
         2,

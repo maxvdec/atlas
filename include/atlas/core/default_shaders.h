@@ -74,7 +74,8 @@ vertex main0_out main0(main0_in in [[stage_in]], constant UBO& _12 [[buffer(0)]]
     instanceModel[2] = in.instanceModel_2;
     instanceModel[3] = in.instanceModel_3;
     float4x4 mvp;
-    if (_12.isInstanced != 0u)
+    bool hasInstanceMatrix = abs(instanceModel[3].w) > 0.5;
+    if ((_12.isInstanced != 0u) && hasInstanceMatrix)
     {
         mvp = (_12.projection * _12.view) * instanceModel;
     }
@@ -86,7 +87,6 @@ vertex main0_out main0(main0_in in [[stage_in]], constant UBO& _12 [[buffer(0)]]
     out.vertexColor = in.aColor;
     return out;
 }
-
 )"
 ;
 
@@ -619,7 +619,8 @@ vertex main0_out main0(main0_in in [[stage_in]], constant UBO& _12 [[buffer(0)]]
     instanceModel[2] = in.instanceModel_2;
     instanceModel[3] = in.instanceModel_3;
     float4x4 finalModel;
-    if (_12.isInstanced != 0u)
+    bool hasInstanceMatrix = abs(instanceModel[3].w) > 0.5;
+    if ((_12.isInstanced != 0u) && hasInstanceMatrix)
     {
         finalModel = instanceModel;
     }
@@ -644,7 +645,6 @@ vertex main0_out main0(main0_in in [[stage_in]], constant UBO& _12 [[buffer(0)]]
     out.TBN_2 = TBN[2];
     return out;
 }
-
 )"
 ;
 
@@ -684,7 +684,8 @@ vertex main0_out main0(main0_in in [[stage_in]], constant UBO& _12 [[buffer(0)]]
     instanceModel[1] = in.instanceModel_1;
     instanceModel[2] = in.instanceModel_2;
     instanceModel[3] = in.instanceModel_3;
-    if (_12.isInstanced != 0u)
+    bool hasInstanceMatrix = abs(instanceModel[3].w) > 0.5;
+    if ((_12.isInstanced != 0u) && hasInstanceMatrix)
     {
         float4x4 _36 = _12.projection * _12.view;
         float4x4 _40 = _36 * instanceModel;
@@ -702,7 +703,6 @@ vertex main0_out main0(main0_in in [[stage_in]], constant UBO& _12 [[buffer(0)]]
     }
     return out;
 }
-
 )"
 ;
 
@@ -2063,7 +2063,7 @@ fragment main0_out main0(main0_in in [[stage_in]], constant PushConstants& _372 
         if (_372.hasBrightTexture == 1)
         {
             float2 param_14 = in.TexCoord;
-            hdrColor += sampleBright(param_14, _372, _381, _394, _403, _411, _419, _426, BrightTexture, BrightTextureSmplr) * 2.5;
+            hdrColor += sampleBright(param_14, _372, _381, _394, _403, _411, _419, _426, BrightTexture, BrightTextureSmplr);
         }
         if (_372.hasVolumetricLightTexture == 1)
         {
@@ -3160,10 +3160,14 @@ fragment main0_out main0(main0_in in [[stage_in]], constant UBO& _526 [[buffer(0
     }
     out.FragColor = float4(finalColor, 1.0);
     float brightness = dot(out.FragColor.xyz, float3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875));
-    float bloomThreshold = 0.05000000074505806;
-    float bloomKnee = 0.949999988079071;
-    float bloomFactor = fast::clamp((brightness - bloomThreshold) / bloomKnee, 0.0, 1.0);
-    out.BrightColor = float4(out.FragColor.xyz * bloomFactor * 2.0, 1.0);
+    if (brightness > 1.0)
+    {
+        out.BrightColor = float4(out.FragColor.xyz, 1.0);
+    }
+    else
+    {
+        out.BrightColor = float4(0.0, 0.0, 0.0, 1.0);
+    }
     float3 param_49 = out.FragColor.xyz;
     float3 _1897 = acesToneMapping(param_49);
     out.FragColor.x = _1897.x;
@@ -4463,7 +4467,8 @@ vertex main0_out main0(main0_in in [[stage_in]], constant UBO& uniforms [[buffer
     instanceModel[2] = in.instanceModel_2;
     instanceModel[3] = in.instanceModel_3;
     float4x4 modelMatrix = uniforms.model;
-    if (uniforms.isInstanced != 0u)
+    bool hasInstanceMatrix = abs(instanceModel[3].w) > 0.5;
+    if ((uniforms.isInstanced != 0u) && hasInstanceMatrix)
     {
         modelMatrix = instanceModel;
     }
@@ -4485,7 +4490,6 @@ vertex main0_out main0(main0_in in [[stage_in]], constant UBO& uniforms [[buffer
     out.TBN_2 = TBN[2];
     return out;
 }
-
 )"
 ;
 
@@ -4742,7 +4746,8 @@ vertex main0_out main0(main0_in in [[stage_in]], constant UBO& _12 [[buffer(0)]]
     instanceModel[2] = in.instanceModel_2;
     instanceModel[3] = in.instanceModel_3;
     float4 worldPos;
-    if (_12.isInstanced != 0u)
+    bool hasInstanceMatrix = abs(instanceModel[3].w) > 0.5;
+    if ((_12.isInstanced != 0u) && hasInstanceMatrix)
     {
         worldPos = (_12.model * instanceModel) * float4(in.aPos, 1.0);
     }
@@ -4754,7 +4759,6 @@ vertex main0_out main0(main0_in in [[stage_in]], constant UBO& _12 [[buffer(0)]]
     out.gl_Position = _62.shadowMatrix * worldPos;
     return out;
 }
-
 )"
 ;
 
@@ -4792,7 +4796,8 @@ vertex main0_out main0(main0_in in [[stage_in]], constant UBO& _12 [[buffer(0)]]
     instanceModel[1] = in.instanceModel_1;
     instanceModel[2] = in.instanceModel_2;
     instanceModel[3] = in.instanceModel_3;
-    if (_12.isInstanced != 0u)
+    bool hasInstanceMatrix = abs(instanceModel[3].w) > 0.5;
+    if ((_12.isInstanced != 0u) && hasInstanceMatrix)
     {
         out.gl_Position = (_12.model * instanceModel) * float4(in.aPos, 1.0);
     }
@@ -4802,7 +4807,6 @@ vertex main0_out main0(main0_in in [[stage_in]], constant UBO& _12 [[buffer(0)]]
     }
     return out;
 }
-
 )"
 ;
 

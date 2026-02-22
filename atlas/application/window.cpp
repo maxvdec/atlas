@@ -56,10 +56,15 @@ Window::Window(WindowConfiguration config)
     atlas_log("Using OpenGL backend");
 #endif
 
-#if defined(VULKAN) || defined(METAL)
+#if defined(VULKAN)
     this->frontFace = opal::FrontFace::Clockwise;
+    this->deferredFrontFace = opal::FrontFace::Clockwise;
+#elif defined(METAL)
+    this->frontFace = opal::FrontFace::Clockwise;
+    this->deferredFrontFace = opal::FrontFace::Clockwise;
 #else
     this->frontFace = opal::FrontFace::CounterClockwise;
+    this->deferredFrontFace = opal::FrontFace::CounterClockwise;
 #endif
 
     context->setFlag(GLFW_DECORATED, config.decorations);
@@ -1524,11 +1529,12 @@ void Window::renderPhysicalBloom(RenderTarget *target) {
         return;
     }
 
-    this->bloomBuffer->renderBloomTexture(
-        target->brightTexture.id,
-        std::max(1.0f, currentScene->environment.lightBloom.radius *
-                           static_cast<float>(std::min(sizeX, sizeY))),
-        this->activeCommandBuffer);
+    float filterRadius = currentScene->environment.lightBloom.radius *
+                         static_cast<float>(std::min(sizeX, sizeY)) * 0.15f;
+    filterRadius = std::clamp(filterRadius, 0.5f, 2.0f);
+    this->bloomBuffer->renderBloomTexture(target->brightTexture.id,
+                                          filterRadius,
+                                          this->activeCommandBuffer);
     target->blurredTexture = Texture();
     target->blurredTexture.creationData.width =
         this->bloomBuffer->srcViewportSize.x;

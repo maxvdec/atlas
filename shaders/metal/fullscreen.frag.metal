@@ -1013,7 +1013,7 @@ fragment main0_out main0(main0_in in [[stage_in]], constant PushConstants& _372 
         if (_372.hasBrightTexture == 1)
         {
             float2 param_14 = in.TexCoord;
-            hdrColor += sampleBright(param_14, _372, _381, _394, _403, _411, _419, _426, BrightTexture, BrightTextureSmplr) * 2.5;
+            hdrColor += sampleBright(param_14, _372, _381, _394, _403, _411, _419, _426, BrightTexture, BrightTextureSmplr);
         }
         if (_372.hasVolumetricLightTexture == 1)
         {

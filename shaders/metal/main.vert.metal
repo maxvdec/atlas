@@ -84,7 +84,8 @@ vertex main0_out main0(main0_in in [[stage_in]], constant UBO& uniforms [[buffer
     instanceModel[2] = in.instanceModel_2;
     instanceModel[3] = in.instanceModel_3;
     float4x4 modelMatrix = uniforms.model;
-    if (uniforms.isInstanced != 0u)
+    bool hasInstanceMatrix = abs(instanceModel[3].w) > 0.5;
+    if ((uniforms.isInstanced != 0u) && hasInstanceMatrix)
     {
         modelMatrix = instanceModel;
     }
@@ -106,4 +107,3 @@ vertex main0_out main0(main0_in in [[stage_in]], constant UBO& uniforms [[buffer
     out.TBN_2 = TBN[2];
     return out;
 }
-
