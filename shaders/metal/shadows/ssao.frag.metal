@@ -57,7 +57,7 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Paramters& _43 [[buf
         float4 _174 = offset;
         float2 _178 = (_174.xy * 0.5) + float2(0.5);
         offset.x = _178.x;
-        offset.y = _178.y;
+        offset.y = 1.0 - _178.y;
         bool _185 = offset.x < 0.0;
         bool _192;
         if (!_185)

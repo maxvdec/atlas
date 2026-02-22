@@ -2639,8 +2639,7 @@ float calculateShadow(thread const ShadowParameters& shadowParam, thread const f
     }
     float4 fragPosLightSpace = (shadowParam.lightProjection * shadowParam.lightView) * float4(fragPos, 1.0);
     float3 projCoords = fragPosLightSpace.xyz / float3(fragPosLightSpace.w);
-    projCoords = (projCoords * 0.5) + float3(0.5);
-    projCoords.y = 1.0 - projCoords.y;
+    projCoords.xy = (projCoords.xy * 0.5) + float2(0.5);
     bool _456 = projCoords.x < 0.0;
     bool _463;
     if (!_456)
@@ -2672,13 +2671,22 @@ float calculateShadow(thread const ShadowParameters& shadowParam, thread const f
     bool _485;
     if (!_477)
     {
-        _485 = projCoords.z > 1.0;
+        _485 = projCoords.z < 0.0;
     }
     else
     {
         _485 = _477;
     }
-    if (_485)
+    bool _493;
+    if (!_485)
+    {
+        _493 = projCoords.z > 1.0;
+    }
+    else
+    {
+        _493 = _485;
+    }
+    if (_493)
     {
         return 0.0;
     }
@@ -3713,8 +3721,7 @@ static inline __attribute__((always_inline))
 float calculateShadow(thread const ShadowParameters& shadowParam, thread const float4& fragPosLightSpace, constant Uniforms& _163, texture2d<float> texture1, sampler texture1Smplr, texture2d<float> texture2, sampler texture2Smplr, texture2d<float> texture3, sampler texture3Smplr, texture2d<float> texture4, sampler texture4Smplr, texture2d<float> texture5, sampler texture5Smplr, texture2d<float> texture6, sampler texture6Smplr, texture2d<float> texture7, sampler texture7Smplr, texture2d<float> texture8, sampler texture8Smplr, texture2d<float> texture9, sampler texture9Smplr, texture2d<float> texture10, sampler texture10Smplr, device DirectionalLightsUBO& _1083, thread float3& Normal, thread float3& FragPos)
 {
     float3 projCoords = fragPosLightSpace.xyz / float3(fragPosLightSpace.w);
-    projCoords = (projCoords * 0.5) + float3(0.5);
-    projCoords.y = 1.0 - projCoords.y;
+    projCoords.xy = (projCoords.xy * 0.5) + float2(0.5);
     bool _1362 = projCoords.x < 0.0;
     bool _1369;
     if (!_1362)
@@ -3746,13 +3753,22 @@ float calculateShadow(thread const ShadowParameters& shadowParam, thread const f
     bool _1390;
     if (!_1383)
     {
-        _1390 = projCoords.z > 1.0;
+        _1390 = projCoords.z < 0.0;
     }
     else
     {
         _1390 = _1383;
     }
-    if (_1390)
+    bool _1398;
+    if (!_1390)
+    {
+        _1398 = projCoords.z > 1.0;
+    }
+    else
+    {
+        _1398 = _1390;
+    }
+    if (_1398)
     {
         return 0.0;
     }
@@ -5231,7 +5247,7 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Paramters& _43 [[buf
         float4 _174 = offset;
         float2 _178 = (_174.xy * 0.5) + float2(0.5);
         offset.x = _178.x;
-        offset.y = _178.y;
+        offset.y = 1.0 - _178.y;
         bool _185 = offset.x < 0.0;
         bool _192;
         if (!_185)

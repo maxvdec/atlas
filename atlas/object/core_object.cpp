@@ -733,6 +733,9 @@ void CoreObject::render(float dt,
             if (!light->doesCastShadows) {
                 continue;
             }
+            if (light->shadowRenderTarget == nullptr) {
+                continue;
+            }
             if (boundTextures >= 16) {
                 break;
             }
@@ -742,8 +745,9 @@ void CoreObject::render(float dt,
             this->pipeline->bindTexture2D(baseName + ".textureIndex",
                                           light->shadowRenderTarget->texture.id,
                                           boundTextures, id);
-            ShadowParams shadowParams = light->calculateLightSpaceMatrix(
-                Window::mainWindow->renderables);
+            this->pipeline->setUniform1i(baseName + ".textureIndex",
+                                         boundTextures);
+            ShadowParams shadowParams = light->lastShadowParams;
             this->pipeline->setUniformMat4f(baseName + ".lightView",
                                             shadowParams.lightView);
             this->pipeline->setUniformMat4f(baseName + ".lightProjection",
@@ -764,6 +768,9 @@ void CoreObject::render(float dt,
             if (!light->doesCastShadows) {
                 continue;
             }
+            if (light->shadowRenderTarget == nullptr) {
+                continue;
+            }
             if (boundTextures >= 16) {
                 break;
             }
@@ -773,16 +780,19 @@ void CoreObject::render(float dt,
             this->pipeline->bindTexture2D(baseName + ".textureIndex",
                                           light->shadowRenderTarget->texture.id,
                                           boundTextures, id);
-            std::tuple<glm::mat4, glm::mat4> lightSpace =
-                light->calculateLightSpaceMatrix();
+            this->pipeline->setUniform1i(baseName + ".textureIndex",
+                                         boundTextures);
+            ShadowParams shadowParams = light->lastShadowParams;
             this->pipeline->setUniformMat4f(baseName + ".lightView",
-                                            std::get<0>(lightSpace));
+                                            shadowParams.lightView);
             this->pipeline->setUniformMat4f(baseName + ".lightProjection",
-                                            std::get<1>(lightSpace));
+                                            shadowParams.lightProjection);
 #ifdef METAL
-            this->pipeline->setUniform1f(baseName + ".bias0", 0.005f);
+            this->pipeline->setUniform1f(baseName + ".bias0",
+                                         shadowParams.bias);
 #else
-            this->pipeline->setUniform1f(baseName + ".bias", 0.005f);
+            this->pipeline->setUniform1f(baseName + ".bias",
+                                         shadowParams.bias);
 #endif
             this->pipeline->setUniform1i(baseName + ".isPointLight", 0);
 

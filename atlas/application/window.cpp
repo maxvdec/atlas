@@ -60,7 +60,7 @@ Window::Window(WindowConfiguration config)
     this->frontFace = opal::FrontFace::Clockwise;
     this->deferredFrontFace = opal::FrontFace::Clockwise;
 #elif defined(METAL)
-    this->frontFace = opal::FrontFace::Clockwise;
+    this->frontFace = opal::FrontFace::CounterClockwise;
     this->deferredFrontFace = opal::FrontFace::Clockwise;
 #else
     this->frontFace = opal::FrontFace::CounterClockwise;
@@ -1047,6 +1047,7 @@ void Window::renderLightsToShadowMaps(
             shadowRenderTarget->texture.creationData.height);
         depthPipeline->setCullMode(opal::CullMode::Back);
         depthPipeline->setFrontFace(this->frontFace);
+        depthPipeline->enableDepthTest(true);
         depthPipeline->enablePolygonOffset(true);
         depthPipeline->setPolygonOffset(2.0f, 4.0f);
 
@@ -1111,6 +1112,7 @@ void Window::renderLightsToShadowMaps(
             shadowRenderTarget->texture.creationData.height);
         spotlightsPipeline->setCullMode(opal::CullMode::Back);
         spotlightsPipeline->setFrontFace(this->frontFace);
+        spotlightsPipeline->enableDepthTest(true);
         spotlightsPipeline->enablePolygonOffset(true);
         spotlightsPipeline->setPolygonOffset(2.0f, 4.0f);
         spotlightsPipeline =
@@ -1140,7 +1142,7 @@ void Window::renderLightsToShadowMaps(
                 continue;
             }
 
-            obj->setPipeline(depthPipeline);
+            obj->setPipeline(spotlightsPipeline);
 
             obj->setProjectionMatrix(lightProjection);
             obj->setViewMatrix(lightView);
@@ -1152,7 +1154,7 @@ void Window::renderLightsToShadowMaps(
                 continue;
             }
 
-            obj->setPipeline(depthPipeline);
+            obj->setPipeline(spotlightsPipeline);
             obj->setProjectionMatrix(lightProjection);
             obj->setViewMatrix(lightView);
             obj->render(getDeltaTime(), commandBuffer, false);
@@ -1179,6 +1181,7 @@ void Window::renderLightsToShadowMaps(
             shadowRenderTarget->texture.creationData.height);
         pointLightPipeline->setCullMode(opal::CullMode::Back);
         pointLightPipeline->setFrontFace(this->frontFace);
+        pointLightPipeline->enableDepthTest(true);
         pointLightPipeline->enablePolygonOffset(true);
         pointLightPipeline->setPolygonOffset(2.0f, 4.0f);
         pointLightPipeline =
@@ -1532,9 +1535,8 @@ void Window::renderPhysicalBloom(RenderTarget *target) {
     float filterRadius = currentScene->environment.lightBloom.radius *
                          static_cast<float>(std::min(sizeX, sizeY)) * 0.15f;
     filterRadius = std::clamp(filterRadius, 0.5f, 2.0f);
-    this->bloomBuffer->renderBloomTexture(target->brightTexture.id,
-                                          filterRadius,
-                                          this->activeCommandBuffer);
+    this->bloomBuffer->renderBloomTexture(
+        target->brightTexture.id, filterRadius, this->activeCommandBuffer);
     target->blurredTexture = Texture();
     target->blurredTexture.creationData.width =
         this->bloomBuffer->srcViewportSize.x;

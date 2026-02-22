@@ -504,8 +504,7 @@ static inline __attribute__((always_inline))
 float calculateShadow(thread const ShadowParameters& shadowParam, thread const float4& fragPosLightSpace, constant Uniforms& _163, texture2d<float> texture1, sampler texture1Smplr, texture2d<float> texture2, sampler texture2Smplr, texture2d<float> texture3, sampler texture3Smplr, texture2d<float> texture4, sampler texture4Smplr, texture2d<float> texture5, sampler texture5Smplr, texture2d<float> texture6, sampler texture6Smplr, texture2d<float> texture7, sampler texture7Smplr, texture2d<float> texture8, sampler texture8Smplr, texture2d<float> texture9, sampler texture9Smplr, texture2d<float> texture10, sampler texture10Smplr, device DirectionalLightsUBO& _1083, thread float3& Normal, thread float3& FragPos)
 {
     float3 projCoords = fragPosLightSpace.xyz / float3(fragPosLightSpace.w);
-    projCoords = (projCoords * 0.5) + float3(0.5);
-    projCoords.y = 1.0 - projCoords.y;
+    projCoords.xy = (projCoords.xy * 0.5) + float2(0.5);
     bool _1362 = projCoords.x < 0.0;
     bool _1369;
     if (!_1362)
@@ -537,13 +536,22 @@ float calculateShadow(thread const ShadowParameters& shadowParam, thread const f
     bool _1390;
     if (!_1383)
     {
-        _1390 = projCoords.z > 1.0;
+        _1390 = projCoords.z < 0.0;
     }
     else
     {
         _1390 = _1383;
     }
-    if (_1390)
+    bool _1398;
+    if (!_1390)
+    {
+        _1398 = projCoords.z > 1.0;
+    }
+    else
+    {
+        _1398 = _1390;
+    }
+    if (_1398)
     {
         return 0.0;
     }

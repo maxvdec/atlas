@@ -467,8 +467,7 @@ float calculateShadow(thread const ShadowParameters& shadowParam, thread const f
     }
     float4 fragPosLightSpace = (shadowParam.lightProjection * shadowParam.lightView) * float4(fragPos, 1.0);
     float3 projCoords = fragPosLightSpace.xyz / float3(fragPosLightSpace.w);
-    projCoords = (projCoords * 0.5) + float3(0.5);
-    projCoords.y = 1.0 - projCoords.y;
+    projCoords.xy = (projCoords.xy * 0.5) + float2(0.5);
     bool _456 = projCoords.x < 0.0;
     bool _463;
     if (!_456)
@@ -500,13 +499,22 @@ float calculateShadow(thread const ShadowParameters& shadowParam, thread const f
     bool _485;
     if (!_477)
     {
-        _485 = projCoords.z > 1.0;
+        _485 = projCoords.z < 0.0;
     }
     else
     {
         _485 = _477;
     }
-    if (_485)
+    bool _493;
+    if (!_485)
+    {
+        _493 = projCoords.z > 1.0;
+    }
+    else
+    {
+        _493 = _485;
+    }
+    if (_493)
     {
         return 0.0;
     }

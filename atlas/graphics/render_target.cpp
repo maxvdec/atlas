@@ -229,9 +229,9 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
         depthMap->setFilterMode(opal::TextureFilterMode::Nearest,
                                 opal::TextureFilterMode::Nearest);
         depthMap->setWrapMode(opal::TextureAxis::S,
-                              opal::TextureWrapMode::Repeat);
+                              opal::TextureWrapMode::ClampToEdge);
         depthMap->setWrapMode(opal::TextureAxis::T,
-                              opal::TextureWrapMode::Repeat);
+                              opal::TextureWrapMode::ClampToEdge);
 
         opal::Attachment depthAttachment;
         depthAttachment.texture = depthMap;
