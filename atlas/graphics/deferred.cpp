@@ -236,7 +236,6 @@ void Window::deferredRendering(
         deferredPipeline = opal::Pipeline::create();
     }
 
-    commandBuffer->endPass();
     auto gBufferRenderPass = opal::RenderPass::create();
     gBufferRenderPass->setFramebuffer(this->gBuffer->getFramebuffer());
     this->gBuffer->getFramebuffer()->setDrawBuffers(4);

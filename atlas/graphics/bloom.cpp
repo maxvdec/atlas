@@ -123,7 +123,8 @@ void BloomRenderTarget::init(int width, int height, int chainLength) {
         opal::VertexAttribute uvAttr{
             .name = "bloomUV",
             .type = opal::VertexAttributeType::Float,
-            .offset = static_cast<uint>(offsetof(CoreVertex, textureCoordinate)),
+            .offset =
+                static_cast<uint>(offsetof(CoreVertex, textureCoordinate)),
             .location = 2,
             .normalized = false,
             .size = 2,
@@ -183,7 +184,8 @@ void BloomRenderTarget::renderBloomTexture(
         bloomCommandBuffer->commit();
     }
 
-    if (Window::mainWindow != nullptr && Window::mainWindow->getDevice() != nullptr) {
+    if (Window::mainWindow != nullptr &&
+        Window::mainWindow->getDevice() != nullptr) {
         Window::mainWindow->getDevice()->getDefaultFramebuffer()->setViewport(
             0, 0, srcViewportSize.x, srcViewportSize.y);
     }
@@ -221,7 +223,10 @@ void BloomRenderTarget::renderDownsamples(
 
     for (size_t i = 0; i < elements.size(); i++) {
         const BloomElement &element = elements[i];
-        this->framebuffer->setViewport(0, 0, element.intSize.x, element.intSize.y);
+        this->framebuffer->width = element.intSize.x;
+        this->framebuffer->height = element.intSize.y;
+        this->framebuffer->setViewport(0, 0, element.intSize.x,
+                                       element.intSize.y);
         this->framebuffer->attachTexture(element.texture, 0);
 
         auto renderPass = opal::RenderPass::create();
@@ -270,6 +275,8 @@ void BloomRenderTarget::renderUpsamples(
         upsamplePipeline->setUniform2f("srcResolution", element.size.x,
                                        element.size.y);
 
+        this->framebuffer->width = nextElement.intSize.x;
+        this->framebuffer->height = nextElement.intSize.y;
         this->framebuffer->setViewport(0, 0, nextElement.intSize.x,
                                        nextElement.intSize.y);
         this->framebuffer->attachTexture(nextElement.texture, 0);

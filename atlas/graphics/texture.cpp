@@ -219,7 +219,11 @@ Texture Texture::fromResource(const Resource &resource, TextureType type,
     atlas_log("Loading texture: " + resource.name);
 
     int width, height, channels;
+#ifdef OPENGL
     stbi_set_flip_vertically_on_load(true);
+#else
+    stbi_set_flip_vertically_on_load(false);
+#endif
 
     TextureCreationData creationData{};
     std::shared_ptr<opal::Texture> opalTexture;

@@ -722,10 +722,6 @@ void RenderTarget::render(float dt,
 
         uint depthTextureId = depthTexture.id;
         bool hasDepth = depthTexture.id != 0;
-#ifdef METAL
-        depthTextureId = 0;
-        hasDepth = false;
-#endif
         renderTargetPipeline->bindTexture2D("DepthTexture", depthTextureId, 2,
                                             obj->id);
         renderTargetPipeline->setUniform1i("hasDepthTexture", hasDepth ? 1 : 0);

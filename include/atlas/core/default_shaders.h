@@ -1978,11 +1978,15 @@ fragment main0_out main0(main0_in in [[stage_in]], constant PushConstants& _372 
     main0_out out = {};
     float2 param = in.TexCoord;
     float4 color = sampleColor(param, _372, _381, _394, _403, _411, _419, _426, Texture, TextureSmplr);
-    float depth = DepthTexture.sample(DepthTextureSmplr, in.TexCoord).x;
+    float depth = 1.0;
+    if (_372.hasDepthTexture == 1)
+    {
+        depth = DepthTexture.sample(DepthTextureSmplr, in.TexCoord).x;
+    }
     float2 param_1 = in.TexCoord;
     float param_2 = depth;
     float3 viewPos = reconstructViewPos(param_1, param_2, _849);
-    float _distance = length(viewPos);
+    float _distance = _372.hasDepthTexture == 1 ? length(viewPos) : _849.farPlane;
     bool useMotionBlur = false;
     float motionBlurSize = 0.0;
     float motionBlurSeparation = 0.0;
@@ -2059,7 +2063,7 @@ fragment main0_out main0(main0_in in [[stage_in]], constant PushConstants& _372 
         if (_372.hasBrightTexture == 1)
         {
             float2 param_14 = in.TexCoord;
-            hdrColor += sampleBright(param_14, _372, _381, _394, _403, _411, _419, _426, BrightTexture, BrightTextureSmplr);
+            hdrColor += sampleBright(param_14, _372, _381, _394, _403, _411, _419, _426, BrightTexture, BrightTextureSmplr) * 2.5;
         }
         if (_372.hasVolumetricLightTexture == 1)
         {
@@ -2082,7 +2086,6 @@ fragment main0_out main0(main0_in in [[stage_in]], constant PushConstants& _372 
     out.FragColor = float4(finalColor, 1.0);
     return out;
 }
-
 )"
 ;
 
@@ -3157,14 +3160,10 @@ fragment main0_out main0(main0_in in [[stage_in]], constant UBO& _526 [[buffer(0
     }
     out.FragColor = float4(finalColor, 1.0);
     float brightness = dot(out.FragColor.xyz, float3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875));
-    if (brightness > 1.0)
-    {
-        out.BrightColor = float4(out.FragColor.xyz, 1.0);
-    }
-    else
-    {
-        out.BrightColor = float4(0.0, 0.0, 0.0, 1.0);
-    }
+    float bloomThreshold = 0.05000000074505806;
+    float bloomKnee = 0.949999988079071;
+    float bloomFactor = fast::clamp((brightness - bloomThreshold) / bloomKnee, 0.0, 1.0);
+    out.BrightColor = float4(out.FragColor.xyz * bloomFactor * 2.0, 1.0);
     float3 param_49 = out.FragColor.xyz;
     float3 _1897 = acesToneMapping(param_49);
     out.FragColor.x = _1897.x;

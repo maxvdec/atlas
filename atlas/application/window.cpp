@@ -1525,7 +1525,9 @@ void Window::renderPhysicalBloom(RenderTarget *target) {
     }
 
     this->bloomBuffer->renderBloomTexture(
-        target->brightTexture.id, currentScene->environment.lightBloom.radius,
+        target->brightTexture.id,
+        std::max(1.0f, currentScene->environment.lightBloom.radius *
+                           static_cast<float>(std::min(sizeX, sizeY))),
         this->activeCommandBuffer);
     target->blurredTexture = Texture();
     target->blurredTexture.creationData.width =

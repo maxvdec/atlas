@@ -928,11 +928,15 @@ fragment main0_out main0(main0_in in [[stage_in]], constant PushConstants& _372 
     main0_out out = {};
     float2 param = in.TexCoord;
     float4 color = sampleColor(param, _372, _381, _394, _403, _411, _419, _426, Texture, TextureSmplr);
-    float depth = DepthTexture.sample(DepthTextureSmplr, in.TexCoord).x;
+    float depth = 1.0;
+    if (_372.hasDepthTexture == 1)
+    {
+        depth = DepthTexture.sample(DepthTextureSmplr, in.TexCoord).x;
+    }
     float2 param_1 = in.TexCoord;
     float param_2 = depth;
     float3 viewPos = reconstructViewPos(param_1, param_2, _849);
-    float _distance = length(viewPos);
+    float _distance = _372.hasDepthTexture == 1 ? length(viewPos) : _849.farPlane;
     bool useMotionBlur = false;
     float motionBlurSize = 0.0;
     float motionBlurSeparation = 0.0;
@@ -1009,7 +1013,7 @@ fragment main0_out main0(main0_in in [[stage_in]], constant PushConstants& _372 
         if (_372.hasBrightTexture == 1)
         {
             float2 param_14 = in.TexCoord;
-            hdrColor += sampleBright(param_14, _372, _381, _394, _403, _411, _419, _426, BrightTexture, BrightTextureSmplr);
+            hdrColor += sampleBright(param_14, _372, _381, _394, _403, _411, _419, _426, BrightTexture, BrightTextureSmplr) * 2.5;
         }
         if (_372.hasVolumetricLightTexture == 1)
         {
@@ -1032,4 +1036,3 @@ fragment main0_out main0(main0_in in [[stage_in]], constant PushConstants& _372 
     out.FragColor = float4(finalColor, 1.0);
     return out;
 }
-

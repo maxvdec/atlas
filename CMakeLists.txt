@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(JOLT_VERSION "5.5.0")
 
 add_definitions(-DATLAS_VERSION=\"Alpha\ 6\")
-add_definitions(-DOPAL_VERSION=\"1.1\ Ellipse\")
+add_definitions(-DOPAL_VERSION=\"2\ Platonic\")
 
 message(STATUS "Building for platform: ${CMAKE_SYSTEM_NAME}")
 if(NOT CMAKE_BUILD_TYPE)
