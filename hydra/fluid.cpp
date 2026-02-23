@@ -10,6 +10,8 @@
 #include "hydra/fluid.h"
 #include "atlas/light.h"
 #include "atlas/texture.h"
+#include "atlas/tracer/data.h"
+#include "atlas/tracer/log.h"
 #include "atlas/window.h"
 #include "opal/opal.h"
 
@@ -40,6 +42,8 @@ void Fluid::create(Size2d extent, Color color) {
 
 void Fluid::initialize() {
     if (fluidShader.programId == 0) {
+        atlas_error(
+            "Fluid shader not initialized. Call create() before initialize().");
         throw std::runtime_error(
             "Fluid shader not initialized. Call create() before initialize().");
     }
@@ -47,10 +51,14 @@ void Fluid::initialize() {
         return;
     }
 
+    atlas_log("Initializing fluid");
+
     vertexBuffer = opal::Buffer::create(opal::BufferUsage::VertexBuffer,
-                                        sizeof(vertices), vertices.data());
+                                        sizeof(vertices), vertices.data(),
+                                        opal::MemoryUsageType::GPUOnly, id);
     indexBuffer = opal::Buffer::create(opal::BufferUsage::IndexArray,
-                                       sizeof(indices), indices.data());
+                                       sizeof(indices), indices.data(),
+                                       opal::MemoryUsageType::GPUOnly, id);
 
     drawingState = opal::DrawingState::create(vertexBuffer, indexBuffer);
     drawingState->setBuffers(vertexBuffer, indexBuffer);
@@ -61,15 +69,16 @@ void Fluid::initialize() {
 
     auto makeBinding = [&](const char *name, unsigned int location,
                            unsigned int size, size_t offset) {
-        opal::VertexAttribute attribute{std::string(name),
-                                        opal::VertexAttributeType::Float,
-                                        static_cast<unsigned int>(offset),
-                                        location,
-                                        false,
-                                        size,
-                                        stride,
-                                        opal::VertexBindingInputRate::Vertex,
-                                        0};
+        opal::VertexAttribute attribute{
+            .name = std::string(name),
+            .type = opal::VertexAttributeType::Float,
+            .offset = static_cast<unsigned int>(offset),
+            .location = location,
+            .normalized = false,
+            .size = size,
+            .stride = stride,
+            .inputRate = opal::VertexBindingInputRate::Vertex,
+            .divisor = 0};
         bindings.push_back({attribute, vertexBuffer});
     };
 
@@ -126,33 +135,33 @@ void Fluid::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
         return;
     }
 
-    fluidPipeline->bindTexture2D("sceneTexture", target->texture.id, 0);
-    fluidPipeline->bindTexture2D("sceneDepth", target->depthTexture.id, 1);
+    fluidPipeline->bindTexture2D("sceneTexture", target->texture.id, 0, id);
+    fluidPipeline->bindTexture2D("sceneDepth", target->depthTexture.id, 1, id);
 
     if (reflectionTarget) {
         fluidPipeline->bindTexture2D("reflectionTexture",
-                                     reflectionTarget->texture.id, 3);
+                                     reflectionTarget->texture.id, 3, id);
     } else {
-        fluidPipeline->bindTexture2D("reflectionTexture", target->texture.id,
-                                     3);
+        fluidPipeline->bindTexture2D("reflectionTexture", target->texture.id, 3,
+                                     id);
     }
 
     if (refractionTarget) {
         fluidPipeline->bindTexture2D("refractionTexture",
-                                     refractionTarget->texture.id, 4);
+                                     refractionTarget->texture.id, 4, id);
     } else {
-        fluidPipeline->bindTexture2D("refractionTexture", target->texture.id,
-                                     4);
+        fluidPipeline->bindTexture2D("refractionTexture", target->texture.id, 4,
+                                     id);
     }
 
-    fluidPipeline->bindTexture2D("movementTexture", movementTexture.id, 5);
+    fluidPipeline->bindTexture2D("movementTexture", movementTexture.id, 5, id);
     if (movementTexture.id == 0) {
         fluidPipeline->setUniform1i("hasMovementTexture", 0);
     } else {
         fluidPipeline->setUniform1i("hasMovementTexture", 1);
     }
 
-    fluidPipeline->bindTexture2D("normalTexture", normalTexture.id, 6);
+    fluidPipeline->bindTexture2D("normalTexture", normalTexture.id, 6, id);
     fluidPipeline->setUniform1i("hasNormalTexture", normalTexture.id != 0);
 
     fluidPipeline->setUniform3f("cameraPos",
@@ -185,17 +194,72 @@ void Fluid::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
     fluidPipeline->setUniformMat4f("invView", glm::inverse(viewMatrix));
 
     commandBuffer->bindDrawingState(drawingState);
+    commandBuffer->bindPipeline(fluidPipeline);
     commandBuffer->drawIndexed(static_cast<unsigned int>(indices.size()), 1, 0,
                                0, 0);
     commandBuffer->unbindDrawingState();
 
-    fluidPipeline->setCullMode(opal::CullMode::Back);
-    fluidPipeline->bind();
-
-    captureDirty = true;
+    if (TracerServices::getInstance().isOk()) {
+        DebugObjectPacket debugPacket{};
+        debugPacket.drawCallsForObject = 1;
+        debugPacket.frameCount = Window::mainWindow->device->frameCount;
+        debugPacket.triangleCount = indices.size() / 3;
+        debugPacket.vertexBufferSizeMb =
+            static_cast<float>(sizeof(FluidVertex) * vertices.size()) /
+            (1024.0f * 1024.0f);
+        debugPacket.indexBufferSizeMb =
+            static_cast<float>(sizeof(unsigned int) * indices.size()) /
+            (1024.0f * 1024.0f);
+        debugPacket.textureCount =
+            (reflectionTarget ? 1 : 0) + (refractionTarget ? 1 : 0) +
+            (movementTexture.id != 0 ? 1 : 0) + (normalTexture.id != 0 ? 1 : 0);
+        debugPacket.materialCount = 0;
+        debugPacket.objectType = DebugObjectType::SkeletalMesh;
+        debugPacket.objectId = this->id;
+        debugPacket.send();
+    }
 }
 
-void Fluid::update(Window &window) { (void)window; }
+void Fluid::update(Window &window) {
+    if (captureDirty) {
+        captureUpdateTimer = 0.0f;
+        return;
+    }
+
+    captureUpdateTimer += std::max(0.0f, window.getDeltaTime());
+    if (captureUpdateTimer < captureUpdateInterval) {
+        return;
+    }
+
+    Camera *camera = window.getCamera();
+    if (camera == nullptr) {
+        captureUpdateTimer = 0.0f;
+        return;
+    }
+
+    glm::vec3 cameraPosition = camera->position.toGlm();
+    glm::vec3 cameraDirection = camera->getFrontVector().toGlm();
+
+    bool cameraMoved = !hasCaptureCameraState;
+    if (hasCaptureCameraState) {
+        constexpr float kPositionThreshold = 0.05f;
+        constexpr float kDirectionThreshold = 0.01f;
+        cameraMoved =
+            glm::length(cameraPosition - lastCaptureCameraPosition) >
+                kPositionThreshold ||
+            glm::length(cameraDirection - lastCaptureCameraDirection) >
+                kDirectionThreshold;
+    }
+
+    if (cameraMoved) {
+        captureDirty = true;
+        lastCaptureCameraPosition = cameraPosition;
+        lastCaptureCameraDirection = cameraDirection;
+        hasCaptureCameraState = true;
+    }
+
+    captureUpdateTimer = 0.0f;
+}
 
 void Fluid::updateCapture(Window &window,
                           std::shared_ptr<opal::CommandBuffer> commandBuffer) {
@@ -250,7 +314,7 @@ void Fluid::setExtent(const Size2d &ext) {
 void Fluid::setWaterColor(const Color &newColor) { color = newColor; }
 
 void Fluid::ensureTargets(Window &window) {
-    auto refreshTarget = [&window](std::shared_ptr<RenderTarget> &target) {
+    auto refreshTarget = [this, &window](std::shared_ptr<RenderTarget> &target) {
         GLFWwindow *glfwWindow = static_cast<GLFWwindow *>(window.windowRef);
         int fbWidth = 0;
         int fbHeight = 0;
@@ -273,6 +337,9 @@ void Fluid::ensureTargets(Window &window) {
         if (needsResize(target)) {
             target =
                 std::make_unique<RenderTarget>(window, RenderTargetType::Scene);
+            captureDirty = true;
+            hasCaptureCameraState = false;
+            captureUpdateTimer = 0.0f;
 
             auto commandBuffer =
                 Window::mainWindow->device->acquireCommandBuffer();
@@ -359,4 +426,7 @@ void Fluid::updateModelMatrix() {
         glm::translate(glm::mat4(1.0f), position.toGlm());
 
     modelMatrix = translationMatrix * rotationMatrix * scaleMatrix;
+    captureDirty = true;
+    hasCaptureCameraState = false;
+    captureUpdateTimer = 0.0f;
 }

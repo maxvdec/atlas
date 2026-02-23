@@ -1,7 +1,7 @@
-# Opal 1 Ellipse
+# Opal 1.2 Ellipse
 
 Opal is the backbone rendering system for Atlas. It is designed to be fast, flexible, and extensible, allowing developers to create rich graphical applications with ease.
-Opal supports OpenGL up to version 4.1 and a Vulkan backend.
+Opal supports OpenGL up to version 4.1, a Vulkan backend and Metal 4.
 
 The backend is designed to be modular, allowing for easy integration of new rendering techniques and optimizations.
 Opal also includes a robust shader management system, making it simple to create and manage complex shader programs.

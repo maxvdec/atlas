@@ -3,8 +3,10 @@ project(Atlas LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_definitions(-DATLAS_VERSION=\"Alpha\ 5\")
-add_definitions(-DOPAL_VERSION=\"1\ Ellipse\")
+set(JOLT_VERSION "5.5.0")
+
+add_definitions(-DATLAS_VERSION=\"Alpha\ 6\")
+add_definitions(-DOPAL_VERSION=\"2\ Platonic\")
 
 message(STATUS "Building for platform: ${CMAKE_SYSTEM_NAME}")
 if(NOT CMAKE_BUILD_TYPE)
@@ -17,7 +19,37 @@ else()
     add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-option(BACKEND_OPENGL "Enable OpenGL backend" OFF)
+set(BACKEND "AUTO" CACHE STRING "Rendering backend: AUTO, VULKAN, METAL, OPENGL")
+set_property(CACHE BACKEND PROPERTY STRINGS AUTO VULKAN METAL OPENGL)
+
+string(TOUPPER "${BACKEND}" BACKEND)
+
+if(BACKEND STREQUAL "AUTO")
+    if(APPLE)
+        set(BACKEND "METAL")
+    else()
+        set(BACKEND "VULKAN")
+    endif()
+endif()
+
+set(BACKEND_OPENGL OFF)
+set(BACKEND_VULKAN OFF)
+set(BACKEND_METAL  OFF)
+
+if(BACKEND STREQUAL "OPENGL")
+    set(BACKEND_OPENGL ON)
+elseif(BACKEND STREQUAL "VULKAN")
+    set(BACKEND_VULKAN ON)
+elseif(BACKEND STREQUAL "METAL")
+    set(BACKEND_METAL ON)
+else()
+    message(FATAL_ERROR
+        "Invalid BACKEND='${BACKEND}'. Valid values are: AUTO, VULKAN, METAL, OPENGL"
+    )
+endif()
+
+message(STATUS "Selected backend: ${BACKEND}")
+option(BEZEL_NATIVE "Enable Bezel Native" OFF)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -35,18 +67,25 @@ FetchContent_GetProperties(doxygen-awesome-css SOURCE_DIR AWESOME_CSS_DIR)
 if(BACKEND_OPENGL)
     message(STATUS "Building using OpenGL backend")
     add_definitions(-DOPENGL)
-else()
+elseif(BACKEND_VULKAN)
     message(STATUS "Building using Vulkan backend")
     add_definitions(-DVULKAN)
+    add_definitions(-DGLM_FORCE_DEPTH_ZERO_TO_ONE)
+elseif(BACKEND_METAL)
+    message(STATUS "Building using Metal backend")
+    add_definitions(-DMETAL)
     add_definitions(-DGLM_FORCE_DEPTH_ZERO_TO_ONE)
 endif()
 
 if (BACKEND_OPENGL)
     message(STATUS "Configuring shaders for OpenGL backend")
     set(SHADER_INPUT_DIR "${CMAKE_SOURCE_DIR}/shaders/opengl")
-else()
+elseif(BACKEND_VULKAN)
     message(STATUS "Configuring shaders for Vulkan backend")
     set(SHADER_INPUT_DIR "${CMAKE_SOURCE_DIR}/shaders/vulkan")
+elseif(BACKEND_METAL)
+    message(STATUS "Configuring shaders for Metal backend")
+    set(SHADER_INPUT_DIR "${CMAKE_SOURCE_DIR}/shaders/metal")
 endif()
 set(SHADER_OUTPUT_FILE "${CMAKE_SOURCE_DIR}/include/atlas/core/default_shaders.h")
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
@@ -58,41 +97,104 @@ file(GLOB_RECURSE SHADER_SOURCES
     ${SHADER_INPUT_DIR}/*.geom
     ${SHADER_INPUT_DIR}/*.tesc
     ${SHADER_INPUT_DIR}/*.tese
+    ${SHADER_INPUT_DIR}/*.metal
 )
 
 if(BACKEND_OPENGL)
-    message(STATUS "Packing shaders without SPIR-V compilation")
+    message(STATUS "Packing shaders for OpenGL backend")
     add_custom_command(
         OUTPUT ${SHADER_OUTPUT_FILE}
         COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/include/atlas/core
-        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/pack_shaders.py ${SHADER_INPUT_DIR} ${SHADER_OUTPUT_FILE} false
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/pack_shaders.py ${SHADER_INPUT_DIR} ${SHADER_OUTPUT_FILE} opengl
         DEPENDS ${SHADER_SOURCES}
         COMMENT "Packing shaders into shaders.h"
     )
-else()
+elseif(BACKEND_VULKAN)
     message(STATUS "Packing shaders with SPIR-V compilation")
     add_custom_command(
         OUTPUT ${SHADER_OUTPUT_FILE}
         COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/include/atlas/core
-        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/pack_shaders.py ${SHADER_INPUT_DIR} ${SHADER_OUTPUT_FILE} true
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/pack_shaders.py ${SHADER_INPUT_DIR} ${SHADER_OUTPUT_FILE} vulkan
+        DEPENDS ${SHADER_SOURCES}
+        COMMENT "Packing shaders into shaders.h"
+    )
+elseif(BACKEND_METAL)
+    message(STATUS "Packing shaders for Metal backend")
+    add_custom_command(
+        OUTPUT ${SHADER_OUTPUT_FILE}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/include/atlas/core
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/pack_shaders.py ${SHADER_INPUT_DIR} ${SHADER_OUTPUT_FILE} metal
         DEPENDS ${SHADER_SOURCES}
         COMMENT "Packing shaders into shaders.h"
     )
 endif()
 
+find_program(TYPST_EXECUTABLE typst)
+if(TYPST_EXECUTABLE)
+    message(STATUS "Found Typst: ${TYPST_EXECUTABLE}")
+
+    file(GLOB_RECURSE TYPST_SOURCES ${CMAKE_SOURCE_DIR}/*.typ)
+
+    if(TYPST_SOURCES)
+        message(STATUS "Found ${CMAKE_MATCH_COUNT} Typst document(s)")
+        set(TYPST_OUTPUT_DIR ${CMAKE_BINARY_DIR}/docs)
+        file(MAKE_DIRECTORY ${TYPST_OUTPUT_DIR})
+
+        set(TYPST_OUTPUTS "")
+        foreach(TYPST_FILE ${TYPST_SOURCES})
+            get_filename_component(TYPST_NAME ${TYPST_FILE} NAME_WE)
+            set(PDF_OUTPUT ${TYPST_OUTPUT_DIR}/${TYPST_NAME}.pdf)
+
+            add_custom_command(
+                OUTPUT ${PDF_OUTPUT}
+                COMMAND ${TYPST_EXECUTABLE} compile ${TYPST_FILE} ${PDF_OUTPUT}
+                DEPENDS ${TYPST_FILE}
+                COMMENT "Compiling Typst document: ${TYPST_NAME}.typ -> ${TYPST_NAME}.pdf"
+                VERBATIM
+            )
+
+            list(APPEND TYPST_OUTPUTS ${PDF_OUTPUT})
+        endforeach()
+
+        add_custom_target(typst_docs ALL DEPENDS ${TYPST_OUTPUTS})
+        message(STATUS "Typst documents will be compiled to: ${TYPST_OUTPUT_DIR}")
+    else()
+        message(STATUS "No Typst documents found")
+    endif()
+else()
+    message(WARNING "Typst not found - skipping document compilation")
+    message(WARNING "Install Typst from https://typst.app to enable document building")
+endif()
+
+if(BEZEL_NATIVE)
+else()
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
+    FetchContent_Declare(
+    JoltPhysics
+    GIT_REPOSITORY https://github.com/jrouwe/JoltPhysics.git
+    GIT_TAG v${JOLT_VERSION}
+    GIT_SHALLOW TRUE
+    SOURCE_SUBDIR Build
+)
+    FetchContent_MakeAvailable(JoltPhysics)
+    message(STATUS "Downloaded Jolt Physics, version ${JOLT_VERSION}")
+endif()
+
 if(BACKEND_OPENGL)
     find_package(OpenGL REQUIRED)
-else()
+elseif(BACKEND_VULKAN)
     find_package(Vulkan REQUIRED)
     message(STATUS "Found Vulkan SDK at ${Vulkan_LIBRARY}")
     message(STATUS "Found Vulkan Libraries at ${Vulkan_INCLUDE_DIRS}")
-    
+
     if(APPLE)
         list(APPEND CMAKE_PREFIX_PATH "/opt/homebrew/opt/spirv-cross")
     endif()
     find_package(spirv_cross_core REQUIRED)
     find_package(spirv_cross_glsl REQUIRED)
     find_package(spirv_cross_reflect REQUIRED)
+elseif(BACKEND_METAL)
+    message(STATUS "Linking Metal to Source")
 endif()
 
 find_package(glm REQUIRED)
@@ -113,7 +215,14 @@ elseif(UNIX)
     set(OPENAL_INCLUDE ${OPENAL_INCLUDE_DIR})
 endif()
 
-file(GLOB_RECURSE BEZEL_SOURCES CONFIGURE_DEPENDS bezel/*.cpp)
+if (BEZEL_NATIVE)
+    message(STATUS "Compiling with Bezel Native")
+    file(GLOB_RECURSE BEZEL_SOURCES CONFIGURE_DEPENDS bezel/native/*.cpp)
+else()
+    message(STATUS "Compiling with Bezel Jolt (Jolt Physics ${JOLT_VERSION})")
+    file(GLOB_RECURSE BEZEL_SOURCES CONFIGURE_DEPENDS bezel/jolt/*.cpp)
+endif()
+
 file(GLOB_RECURSE FINEWAVE_SOURCES CONFIGURE_DEPENDS finewave/*.cpp)
 file(GLOB_RECURSE AURORA_SOURCES CONFIGURE_DEPENDS aurora/*.cpp)
 file(GLOB_RECURSE HYDRA_SOURCES CONFIGURE_DEPENDS hydra/*.cpp)
@@ -123,6 +232,11 @@ file(GLOB_RECURSE OPAL_SOURCES CONFIGURE_DEPENDS opal/*.cpp)
 
 add_library(bezel ${BEZEL_SOURCES})
 target_link_libraries(bezel PRIVATE glfw glm::glm)
+if (BEZEL_NATIVE)
+    target_compile_definitions(bezel PRIVATE NATIVE)
+else()
+    target_link_libraries(bezel PUBLIC Jolt::Jolt)
+endif()
 
 add_library(finewave ${FINEWAVE_SOURCES})
 target_link_libraries(finewave PRIVATE glfw glm::glm ${OPENAL_LIB})
@@ -133,27 +247,30 @@ target_link_libraries(opal PRIVATE glm::glm glfw)
 
 if (BACKEND_OPENGL)
     target_link_libraries(opal PRIVATE OpenGL::GL)
-else()
+elseif(BACKEND_VULKAN)
     target_link_libraries(opal PRIVATE Vulkan::Vulkan spirv-cross-core spirv-cross-glsl spirv-cross-reflect)
     target_compile_definitions(opal PRIVATE VULKAN)
+elseif(BACKEND_METAL)
 endif()
 
 add_library(aurora ${AURORA_SOURCES})
-target_link_libraries(aurora PRIVATE glm::glm glfw)
+target_link_libraries(aurora PRIVATE glm::glm glfw bezel)
 
 if (BACKEND_OPENGL)
     target_link_libraries(aurora PRIVATE OpenGL::GL)
-else()
+elseif(BACKEND_VULKAN)
     target_link_libraries(aurora PRIVATE Vulkan::Vulkan)
+elseif(BACKEND_METAL)
 endif()
 
 add_library(hydra ${HYDRA_SOURCES})
-target_link_libraries(hydra PRIVATE glm::glm glfw)
+target_link_libraries(hydra PRIVATE glm::glm glfw bezel)
 
 if (BACKEND_OPENGL)
     target_link_libraries(hydra PRIVATE OpenGL::GL)
-else()
+elseif(BACKEND_VULKAN)
     target_link_libraries(hydra PRIVATE Vulkan::Vulkan)
+elseif(BACKEND_METAL)
 endif()
 
 add_library(atlas ${ATLAS_SOURCES} ${SHADER_OUTPUT_FILE})
@@ -170,21 +287,27 @@ target_link_libraries(atlas
         assimp::assimp
 )
 
+if(BEZEL_NATIVE)
+else()
+    include_directories(${JoltPhysics_SOURCE_DIR})
+endif()
+
 if(BACKEND_OPENGL)
     target_link_libraries(atlas PRIVATE OpenGL::GL)
-else()
+elseif(BACKEND_VULKAN)
     target_link_libraries(atlas PRIVATE Vulkan::Vulkan)
 
     if(APPLE)
         message(STATUS "Configuring MoltenVK for macOS")
         target_compile_definitions(atlas PRIVATE VK_USE_PLATFORM_MACOS_MVK)
     endif()
+elseif(BACKEND_METAL)
 endif()
 
 target_include_directories(atlas PRIVATE ${FREETYPE_INCLUDE_DIRS}/freetype2)
 target_compile_definitions(atlas PRIVATE ATLAS_LIB GL_SILENT_DEPRECATION)
 
-target_compile_options(atlas PRIVATE # Suppress warnings from packed shaders
+target_compile_options(atlas PRIVATE
     -Wno-overlength-strings
 )
 
@@ -202,8 +325,10 @@ if(WIN32)
 elseif(APPLE)
     if(BACKEND_OPENGL)
         target_link_libraries(atlas PRIVATE "-framework OpenGL" "-framework Cocoa" "-framework IOKit")
-    else()
+    elseif(BACKEND_VULKAN)
         target_link_libraries(atlas PRIVATE "-framework Cocoa" "-framework IOKit" "-framework QuartzCore")
+    elseif(BACKEND_METAL)
+        target_link_libraries(atlas PRIVATE "-framework Metal" "-framework MetalKit" "-framework Cocoa" "-framework IOKit" "-framework QuartzCore")
     endif()
 elseif(UNIX)
     target_link_libraries(atlas PRIVATE dl pthread)

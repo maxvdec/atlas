@@ -7,8 +7,11 @@
 #include "atlas/camera.h"
 #include "atlas/core/shader.h"
 #include "atlas/object.h"
+#include "atlas/tracer/data.h"
+#include "atlas/tracer/log.h"
 #include "atlas/units.h"
 #include "atlas/window.h"
+#include "opal/opal.h"
 #include <cstddef>
 #include <glad/glad.h>
 #include <random>
@@ -54,14 +57,15 @@ void ParticleEmitter::initialize() {
     static const unsigned int indices[] = {0, 1, 2, 2, 3, 0};
 
     quadBuffer = opal::Buffer::create(opal::BufferUsage::VertexBuffer,
-                                      sizeof(quadVertices), quadVertices);
-    indexBuffer = opal::Buffer::create(opal::BufferUsage::IndexArray,
-                                       sizeof(indices), indices);
+                                      sizeof(quadVertices), quadVertices,
+                                      opal::MemoryUsageType::GPUOnly, id);
+    indexBuffer =
+        opal::Buffer::create(opal::BufferUsage::IndexArray, sizeof(indices),
+                             indices, opal::MemoryUsageType::GPUOnly, id);
     instanceBuffer =
         opal::Buffer::create(opal::BufferUsage::GeneralPurpose,
                              maxParticles * sizeof(ParticleInstanceData),
-                             nullptr, opal::MemoryUsageType::CPUToGPU);
-
+                             nullptr, opal::MemoryUsageType::CPUToGPU, id);
     vao = opal::DrawingState::create(quadBuffer, indexBuffer);
     vao->setBuffers(quadBuffer, indexBuffer);
 
@@ -359,8 +363,8 @@ void ParticleEmitter::render(float dt,
     if (activeParticleCount == 0)
         return;
     if (commandBuffer == nullptr) {
-        throw std::runtime_error(
-            "ParticleEmitter::render requires a valid command buffer");
+        atlas_error("ParticleEmitter::render requires a valid command buffer");
+        return;
     }
 
     // Get or create pipeline
@@ -369,6 +373,7 @@ void ParticleEmitter::render(float dt,
         particlePipeline = opal::Pipeline::create();
     }
     particlePipeline = this->program.requestPipeline(particlePipeline);
+    particlePipeline->setCullMode(opal::CullMode::None);
     particlePipeline->enableBlending(true);
     particlePipeline->setBlendFunc(opal::BlendFunc::SrcAlpha,
                                    opal::BlendFunc::OneMinusSrcAlpha);
@@ -384,16 +389,33 @@ void ParticleEmitter::render(float dt,
         "isAmbient", (emissionType == ParticleEmissionType::Ambient) ? 1 : 0);
 
     if (useTexture) {
-        particlePipeline->bindTexture2D("particleTexture", texture.id, 0);
+        particlePipeline->bindTexture2D("particleTexture", texture.id, 0, id);
     }
 
     commandBuffer->bindDrawingState(vao);
-    commandBuffer->drawIndexed(6, activeParticleCount, 0, 0, 0);
+    commandBuffer->bindPipeline(particlePipeline);
+    commandBuffer->drawIndexed(6, activeParticleCount, 0, 0, 0, id);
     commandBuffer->unbindDrawingState();
 
     particlePipeline->enableDepthWrite(true);
     particlePipeline->enableBlending(false);
     particlePipeline->bind();
+
+    if (TracerServices::getInstance().isOk()) {
+        DebugObjectPacket debugPacket{};
+        debugPacket.drawCallsForObject = 1;
+        debugPacket.frameCount = Window::mainWindow->device->frameCount;
+        debugPacket.triangleCount = activeParticleCount * 2;
+        debugPacket.vertexBufferSizeMb =
+            static_cast<float>(sizeof(QuadVertex) * 4) / (1024.0f * 1024.0f);
+        debugPacket.indexBufferSizeMb =
+            static_cast<float>(sizeof(unsigned int) * 6) / (1024.0f * 1024.0f);
+        debugPacket.textureCount = useTexture ? 1 : 0;
+        debugPacket.materialCount = 0;
+        debugPacket.objectType = DebugObjectType::ParticleSystem;
+        debugPacket.objectId = this->id;
+        debugPacket.send();
+    }
 }
 
 void ParticleEmitter::setProjectionMatrix(const glm::mat4 &projection) {

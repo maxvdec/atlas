@@ -174,13 +174,13 @@ struct Texture {
      * @brief The core Id for the texture in OpenGL.
      *
      */
-    Id id;
+    Id id = 0;
     std::shared_ptr<opal::Texture> texture;
     /**
      * @brief The type of the texture (e.g., Color, Specular, Cubemap).
      *
      */
-    TextureType type;
+    TextureType type = TextureType::Color;
     /**
      * @brief The border color used when the wrapping mode is set to use.
      *
@@ -307,7 +307,7 @@ struct Cubemap {
      * @brief The core Id for the texture in OpenGL.
      *
      */
-    Id id;
+    Id id = 0;
     /**
      * @brief The opal texture object.
      *
@@ -543,13 +543,13 @@ class RenderTarget : public Renderable {
      * @brief Returns the primary framebuffer for this render target.
      * @return The framebuffer, or nullptr if not created.
      */
-    std::shared_ptr<opal::Framebuffer> getFramebuffer() const;
+    const std::shared_ptr<opal::Framebuffer> &getFramebuffer() const;
 
     /**
      * @brief Returns the resolve framebuffer for multisampled targets.
      * @return The resolve framebuffer, or nullptr if not applicable.
      */
-    std::shared_ptr<opal::Framebuffer> getResolveFramebuffer() const;
+    const std::shared_ptr<opal::Framebuffer> &getResolveFramebuffer() const;
 
   private:
     std::shared_ptr<opal::Framebuffer> fb = nullptr;
@@ -676,7 +676,9 @@ class BloomRenderTarget {
      * @brief Runs the full bloom blur and upsample pass using the source
      * texture.
      */
-    void renderBloomTexture(unsigned int srcTexture, float filterRadius);
+    void renderBloomTexture(
+        unsigned int srcTexture, float filterRadius,
+        std::shared_ptr<opal::CommandBuffer> commandBuffer = nullptr);
     /**
      * @brief Returns the bloom chain hierarchy for inspection or custom
      * rendering.
@@ -690,8 +692,12 @@ class BloomRenderTarget {
   private:
     friend class Window;
 
-    void renderDownsamples(unsigned int srcTexture);
-    void renderUpsamples(float filterRadius);
+    void renderDownsamples(
+        unsigned int srcTexture,
+        const std::shared_ptr<opal::CommandBuffer> &commandBuffer);
+    void renderUpsamples(
+        float filterRadius,
+        const std::shared_ptr<opal::CommandBuffer> &commandBuffer);
 
     std::vector<BloomElement> elements;
     bool initialized = false;

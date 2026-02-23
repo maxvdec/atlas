@@ -10,6 +10,8 @@
 #include "atlas/core/shader.h"
 #include "atlas/light.h"
 #include "atlas/object.h"
+#include "atlas/tracer/data.h"
+#include "atlas/tracer/log.h"
 #include "atlas/window.h"
 #include "opal/opal.h"
 #include <algorithm>
@@ -17,12 +19,12 @@
 #include <iostream>
 #include <limits>
 #include <memory>
-#include <random>
 #include <string>
 #include <vector>
 #include <cmath>
 #include <cstdint>
 #include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -178,11 +180,6 @@ std::vector<LayoutDescriptor> CoreVertex::getLayoutDescriptors() {
 
 CoreObject::CoreObject() : vao(nullptr), vbo(nullptr), ebo(nullptr) {
     shaderProgram = ShaderProgram::defaultProgram();
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<unsigned int> dist(0, UINT32_MAX);
-
-    id = dist(gen);
 }
 
 void CoreObject::attachProgram(const ShaderProgram &program) {
@@ -235,6 +232,7 @@ void CoreObject::setColor(const Color &color) {
     }
     useColor = true;
     useTexture = false;
+    material.albedo = color;
 }
 
 void CoreObject::attachVertices(const std::vector<CoreVertex> &newVertices) {
@@ -254,10 +252,6 @@ void CoreObject::setPosition(const Position3d &newPosition) {
     Position3d delta = newPosition - oldPosition;
     position = newPosition;
 
-    if (hasPhysics && body != nullptr) {
-        body->position = position;
-    }
-
     if (!instances.empty()) {
         for (auto &instance : instances) {
             instance.position += delta;
@@ -269,17 +263,34 @@ void CoreObject::setPosition(const Position3d &newPosition) {
 }
 
 void CoreObject::setRotation(const Rotation3d &newRotation) {
-    Rotation3d oldRotation = rotation;
-    Rotation3d delta = newRotation - oldRotation;
+    const glm::quat oldQuat = rotationQuat;
     rotation = newRotation;
-
-    if (hasPhysics && body != nullptr) {
-        body->orientation = rotation.toGlmQuat();
-    }
+    rotationQuat = glm::normalize(rotation.toGlmQuat());
 
     if (!instances.empty()) {
+        const glm::quat deltaQuat = rotationQuat * glm::inverse(oldQuat);
         for (auto &instance : instances) {
-            instance.rotation = instance.rotation + delta;
+            glm::quat instQuat = glm::normalize(instance.rotation.toGlmQuat());
+            instQuat = glm::normalize(deltaQuat * instQuat);
+            instance.rotation = Rotation3d::fromGlmQuat(instQuat);
+            instance.updateModelMatrix();
+        }
+    }
+
+    updateModelMatrix();
+}
+
+void CoreObject::setRotationQuat(const glm::quat &quat) {
+    const glm::quat oldQuat = rotationQuat;
+    rotationQuat = glm::normalize(quat);
+    rotation = Rotation3d::fromGlmQuat(rotationQuat);
+
+    if (!instances.empty()) {
+        const glm::quat deltaQuat = rotationQuat * glm::inverse(oldQuat);
+        for (auto &instance : instances) {
+            glm::quat instQuat = glm::normalize(instance.rotation.toGlmQuat());
+            instQuat = glm::normalize(deltaQuat * instQuat);
+            instance.rotation = Rotation3d::fromGlmQuat(instQuat);
             instance.updateModelMatrix();
         }
     }
@@ -351,22 +362,15 @@ void CoreObject::lookAt(const Position3d &target, const Normal3d &up) {
         roll = 0.0f;
     }
 
-    rotation = Rotation3d{roll, yaw, pitch};
+    rotation = Rotation3d{pitch, yaw, roll};
+    rotationQuat = glm::normalize(rotation.toGlmQuat());
     updateModelMatrix();
 }
 
 void CoreObject::updateModelMatrix() {
     glm::mat4 scale_matrix = glm::scale(glm::mat4(1.0f), scale.toGlm());
 
-    glm::mat4 rotation_matrix = glm::mat4(1.0f);
-    rotation_matrix =
-        glm::rotate(rotation_matrix, glm::radians(float(rotation.roll)),
-                    glm::vec3(0, 0, 1));
-    rotation_matrix =
-        glm::rotate(rotation_matrix, glm::radians(float(rotation.pitch)),
-                    glm::vec3(1, 0, 0));
-    rotation_matrix = glm::rotate(
-        rotation_matrix, glm::radians(float(rotation.yaw)), glm::vec3(0, 1, 0));
+    glm::mat4 rotation_matrix = glm::mat4_cast(rotationQuat);
 
     glm::mat4 translation_matrix =
         glm::translate(glm::mat4(1.0f), position.toGlm());
@@ -386,14 +390,14 @@ void CoreObject::initialize() {
         vao = opal::DrawingState::create(nullptr);
     }
 
-    vbo = opal::Buffer::create(opal::BufferUsage::VertexBuffer,
-                               vertices.size() * sizeof(CoreVertex),
-                               vertices.data());
+    vbo = opal::Buffer::create(
+        opal::BufferUsage::VertexBuffer, vertices.size() * sizeof(CoreVertex),
+        vertices.data(), opal::MemoryUsageType::CPUToGPU, id);
 
     if (!indices.empty()) {
-        ebo = opal::Buffer::create(opal::BufferUsage::IndexArray,
-                                   indices.size() * sizeof(Index),
-                                   indices.data());
+        ebo = opal::Buffer::create(
+            opal::BufferUsage::IndexArray, indices.size() * sizeof(Index),
+            indices.data(), opal::MemoryUsageType::CPUToGPU, id);
     }
 
     vao->setBuffers(vbo, ebo);
@@ -454,7 +458,8 @@ void CoreObject::initialize() {
 
         instanceVBO = opal::Buffer::create(opal::BufferUsage::GeneralPurpose,
                                            instances.size() * sizeof(glm::mat4),
-                                           modelMatrices.data());
+                                           modelMatrices.data(),
+                                           opal::MemoryUsageType::CPUToGPU, id);
         auto instanceBindings = makeInstanceAttributeBindings(instanceVBO);
         vao->configureAttributes(instanceBindings);
     }
@@ -517,7 +522,27 @@ void CoreObject::render(float dt,
         return;
     }
     if (shaderProgram.programId == 0) {
-        throw std::runtime_error("Shader program not compiled");
+        atlas_error("Shader program not compiled.");
+        return;
+    }
+
+    if (TracerServices::getInstance().isOk()) {
+        DebugObjectPacket debugPacket{};
+        debugPacket.drawCallsForObject = 1;
+        debugPacket.frameCount = Window::mainWindow->device->frameCount;
+        debugPacket.triangleCount = static_cast<uint32_t>(
+            indices.empty() ? vertices.size() / 3 : indices.size() / 3);
+        debugPacket.vertexBufferSizeMb =
+            static_cast<float>(sizeof(CoreVertex) * vertices.size()) /
+            (1024.0f * 1024.0f);
+        debugPacket.indexBufferSizeMb =
+            static_cast<float>(sizeof(Index) * indices.size()) /
+            (1024.0f * 1024.0f);
+        debugPacket.textureCount = static_cast<uint32_t>(textures.size());
+        debugPacket.materialCount = 1;
+        debugPacket.objectType = DebugObjectType::StaticMesh;
+        debugPacket.objectId = this->id;
+        debugPacket.send();
     }
 
     if (updatePipeline || this->pipeline == nullptr) {
@@ -531,6 +556,8 @@ void CoreObject::render(float dt,
             "Pipeline not created - call refreshPipeline() first");
     }
 
+    this->pipeline->setUniform1i("isInstanced", 0);
+    this->pipeline->setUniformBool("isInstanced", false);
     this->pipeline->setUniformMat4f("model", model);
     this->pipeline->setUniformMat4f("view", view);
     this->pipeline->setUniformMat4f("projection", projection);
@@ -558,7 +585,7 @@ void CoreObject::render(float dt,
 
         for (int i = 0; i < count; i++) {
             std::string uniformName = "texture" + std::to_string(i + 1) + "";
-            this->pipeline->bindTexture2D(uniformName, textures[i].id, i);
+            this->pipeline->bindTexture2D(uniformName, textures[i].id, i, id);
             boundTextures++;
         }
 
@@ -579,12 +606,17 @@ void CoreObject::render(float dt,
                   shaderProgram.capabilities.end(),
                   ShaderCapability::Material) !=
         shaderProgram.capabilities.end()) {
-        // Set material properties
         this->pipeline->setUniform3f("material.albedo", material.albedo.r,
                                      material.albedo.g, material.albedo.b);
         this->pipeline->setUniform1f("material.metallic", material.metallic);
         this->pipeline->setUniform1f("material.roughness", material.roughness);
         this->pipeline->setUniform1f("material.ao", material.ao);
+
+        this->pipeline->setUniform3f("albedo", material.albedo.r,
+                                     material.albedo.g, material.albedo.b);
+        this->pipeline->setUniform1f("metallic", material.metallic);
+        this->pipeline->setUniform1f("roughness", material.roughness);
+        this->pipeline->setUniform1f("ao", material.ao);
     }
 
     const bool shaderSupportsIbl =
@@ -669,19 +701,19 @@ void CoreObject::render(float dt,
         Window *window = Window::mainWindow;
         RenderTarget *gBuffer = window->gBuffer.get();
         this->pipeline->bindTexture2D("gPosition", gBuffer->gPosition.id,
-                                      boundTextures);
+                                      boundTextures, id);
         boundTextures++;
 
         this->pipeline->bindTexture2D("gNormal", gBuffer->gNormal.id,
-                                      boundTextures);
+                                      boundTextures, id);
         boundTextures++;
 
         this->pipeline->bindTexture2D("gAlbedoSpec", gBuffer->gAlbedoSpec.id,
-                                      boundTextures);
+                                      boundTextures, id);
         boundTextures++;
 
         this->pipeline->bindTexture2D("gMaterial", gBuffer->gMaterial.id,
-                                      boundTextures);
+                                      boundTextures, id);
         boundTextures++;
     }
 
@@ -701,30 +733,7 @@ void CoreObject::render(float dt,
             if (!light->doesCastShadows) {
                 continue;
             }
-            if (boundTextures >= 16) {
-                break;
-            }
-
-            std::string baseName =
-                "shadowParams[" + std::to_string(boundParameters) + "]";
-            this->pipeline->bindTexture2D(baseName + ".textureIndex",
-                                          light->shadowRenderTarget->texture.id,
-                                          boundTextures);
-            ShadowParams shadowParams = light->calculateLightSpaceMatrix(
-                Window::mainWindow->renderables);
-            this->pipeline->setUniformMat4f(baseName + ".lightView",
-                                            shadowParams.lightView);
-            this->pipeline->setUniformMat4f(baseName + ".lightProjection",
-                                            shadowParams.lightProjection);
-            this->pipeline->setUniform1f(baseName + ".bias", shadowParams.bias);
-            this->pipeline->setUniform1f(baseName + ".isPointLight", 0);
-
-            boundParameters++;
-            boundTextures++;
-        }
-
-        for (auto light : scene->spotlights) {
-            if (!light->doesCastShadows) {
+            if (light->shadowRenderTarget == nullptr) {
                 continue;
             }
             if (boundTextures >= 16) {
@@ -735,15 +744,57 @@ void CoreObject::render(float dt,
                 "shadowParams[" + std::to_string(boundParameters) + "]";
             this->pipeline->bindTexture2D(baseName + ".textureIndex",
                                           light->shadowRenderTarget->texture.id,
-                                          boundTextures);
-            std::tuple<glm::mat4, glm::mat4> lightSpace =
-                light->calculateLightSpaceMatrix();
+                                          boundTextures, id);
+            this->pipeline->setUniform1i(baseName + ".textureIndex",
+                                         boundTextures);
+            ShadowParams shadowParams = light->lastShadowParams;
             this->pipeline->setUniformMat4f(baseName + ".lightView",
-                                            std::get<0>(lightSpace));
+                                            shadowParams.lightView);
             this->pipeline->setUniformMat4f(baseName + ".lightProjection",
-                                            std::get<1>(lightSpace));
-            this->pipeline->setUniform1f(baseName + ".bias", 0.005f);
-            this->pipeline->setUniform1f(baseName + ".isPointLight", 0);
+                                            shadowParams.lightProjection);
+#ifdef METAL
+            this->pipeline->setUniform1f(baseName + ".bias0",
+                                         shadowParams.bias);
+#else
+            this->pipeline->setUniform1f(baseName + ".bias", shadowParams.bias);
+#endif
+            this->pipeline->setUniform1i(baseName + ".isPointLight", 0);
+
+            boundParameters++;
+            boundTextures++;
+        }
+
+        for (auto light : scene->spotlights) {
+            if (!light->doesCastShadows) {
+                continue;
+            }
+            if (light->shadowRenderTarget == nullptr) {
+                continue;
+            }
+            if (boundTextures >= 16) {
+                break;
+            }
+
+            std::string baseName =
+                "shadowParams[" + std::to_string(boundParameters) + "]";
+            this->pipeline->bindTexture2D(baseName + ".textureIndex",
+                                          light->shadowRenderTarget->texture.id,
+                                          boundTextures, id);
+            this->pipeline->setUniform1i(baseName + ".textureIndex",
+                                         boundTextures);
+            ShadowParams shadowParams = light->lastShadowParams;
+            this->pipeline->setUniformMat4f(baseName + ".lightView",
+                                            shadowParams.lightView);
+            this->pipeline->setUniformMat4f(baseName + ".lightProjection",
+                                            shadowParams.lightProjection);
+#ifdef METAL
+            this->pipeline->setUniform1f(baseName + ".bias0",
+                                         shadowParams.bias);
+#else
+            this->pipeline->setUniform1f(baseName + ".bias",
+                                         shadowParams.bias);
+#endif
+            this->pipeline->setUniform1i(baseName + ".isPointLight", 0);
 
             boundParameters++;
             boundTextures++;
@@ -761,7 +812,7 @@ void CoreObject::render(float dt,
                 "shadowParams[" + std::to_string(boundParameters) + "]";
             this->pipeline->bindTextureCubemap(
                 baseName + ".textureIndex",
-                light->shadowRenderTarget->texture.id, 10 + boundCubemaps);
+                light->shadowRenderTarget->texture.id, 10 + boundCubemaps, id);
             this->pipeline->setUniform1i(baseName + ".textureIndex",
                                          boundCubemaps);
             this->pipeline->setUniform1f(baseName + ".farPlane",
@@ -792,7 +843,7 @@ void CoreObject::render(float dt,
         Scene *scene = window->getCurrentScene();
         if (scene->skybox != nullptr) {
             this->pipeline->bindTextureCubemap(
-                "skybox", scene->skybox->cubemap.id, boundTextures);
+                "skybox", scene->skybox->cubemap.id, boundTextures, id);
             boundTextures++;
         }
     }
@@ -821,33 +872,36 @@ void CoreObject::render(float dt,
             this->savedInstances = this->instances;
         }
         this->pipeline->setUniform1i("isInstanced", 1);
+        this->pipeline->setUniformBool("isInstanced", true);
 
         if (!indices.empty()) {
             commandBuffer->bindDrawingState(vao);
             commandBuffer->bindPipeline(this->pipeline);
             commandBuffer->drawIndexed(indices.size(), instances.size(), 0, 0,
-                                       0);
+                                       0, id);
             commandBuffer->unbindDrawingState();
             return;
         }
         commandBuffer->bindDrawingState(vao);
         commandBuffer->bindPipeline(this->pipeline);
-        commandBuffer->draw(vertices.size(), instances.size(), 0, 0);
+        commandBuffer->draw(vertices.size(), instances.size(), 0, 0, id);
         commandBuffer->unbindDrawingState();
         return;
     }
 
     this->pipeline->setUniform1i("isInstanced", 0);
+    this->pipeline->setUniformBool("isInstanced", false);
     if (!indices.empty()) {
         commandBuffer->bindDrawingState(vao);
         commandBuffer->bindPipeline(this->pipeline);
-        commandBuffer->drawIndexed(indices.size(), 1, 0, 0, 0);
+        commandBuffer->drawIndexed(indices.size(), 1, 0, 0, 0, id);
         commandBuffer->unbindDrawingState();
+
         return;
     }
     commandBuffer->bindDrawingState(vao);
     commandBuffer->bindPipeline(this->pipeline);
-    commandBuffer->draw(vertices.size(), 1, 0, 0);
+    commandBuffer->draw(vertices.size(), 1, 0, 0, id);
     commandBuffer->unbindDrawingState();
 }
 
@@ -895,18 +949,17 @@ void CoreObject::update(Window &window) {
     if (!hasPhysics)
         return;
 
-    this->body->update(window);
+    DebugTimer physicsTimer("Physics Update");
 
-    this->position = this->body->position;
-    this->rotation = Rotation3d::fromGlmQuat(this->body->orientation);
     updateModelMatrix();
-}
 
-void CoreObject::setupPhysics(Body body) {
-    this->body = std::make_shared<Body>(body);
-    this->body->position = this->position;
-    this->body->orientation = this->rotation.toGlmQuat();
-    this->hasPhysics = true;
+    uint64_t physicsTime = physicsTimer.stop();
+    TimingEventPacket physicsEvent{};
+    physicsEvent.name = "Physics Update";
+    physicsEvent.durationMs = static_cast<float>(physicsTime) / 1'000'000.0f;
+    physicsEvent.subsystem = TimingEventSubsystem::Physics;
+    physicsEvent.frameNumber = Window::mainWindow->device->frameCount;
+    physicsEvent.send();
 }
 
 void CoreObject::makeEmissive(Scene *scene, Color emissionColor,
@@ -945,7 +998,8 @@ void CoreObject::updateInstances() {
     if (this->instanceVBO == nullptr) {
         instanceVBO =
             opal::Buffer::create(opal::BufferUsage::GeneralPurpose,
-                                 instances.size() * sizeof(glm::mat4), nullptr);
+                                 instances.size() * sizeof(glm::mat4), nullptr,
+                                 opal::MemoryUsageType::CPUToGPU, id);
         auto instanceBindings = makeInstanceAttributeBindings(instanceVBO);
         vao->configureAttributes(instanceBindings);
     }
@@ -958,10 +1012,10 @@ void CoreObject::updateInstances() {
         modelMatrices.push_back(instance.getModelMatrix());
     }
 
-    instanceVBO->bind();
+    instanceVBO->bind(id);
     instanceVBO->updateData(0, instances.size() * sizeof(glm::mat4),
                             modelMatrices.data());
-    instanceVBO->unbind();
+    instanceVBO->unbind(id);
 }
 
 void Instance::updateModelMatrix() {

@@ -1,25 +1,28 @@
-# Atlas
+# Atlas Engine
 
 ![GitHub contributors](https://img.shields.io/github/contributors/maxvdec/atlas)
 ![GitHub last commit](https://img.shields.io/github/last-commit/maxvdec/atlas)
 ![Tests](https://github.com/maxvdec/atlas/actions/workflows/build.yaml/badge.svg)
 ![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/maxvdec/atlas)
 ![GitHub Repo stars](https://img.shields.io/github/stars/maxvdec/atlas)
+[![](https://dcbadge.limes.pink/api/server/WKrxKtr7kW)](https://discord.gg/WKrxKtr7kW)
 
 Atlas is a Game Engine that uses the latest technologies to provide a fast, simple but powerful experience for developers.
-It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan and Metal in the future.
+It is built with C++ and uses OpenGL, Vulkan and Metal for rendering. It also has a physics engine, an audio engine, a terrain system, 
+an environment system and a debugging system with more to come.
 
 ![Atlas Screenshot](example.png)
 
 ## Features
 
 - Cross-platform support (Windows, macOS, Linux)
-- Fast graphics rendering with OpenGL
+- Fast graphics rendering with OpenGL and Vulkan (via Opal)
 - Simple and intuitive API
 - Physics engine (Bezel)
 - Audio engine (Finewave)
 - Terrain system (Aurora)
 - Environment system (Hydra)
+- Debugging system (Tracer)
 - Asset management
 - Intuitive C++ scripting mode
 
@@ -31,6 +34,7 @@ It is built with C++ and uses OpenGL for rendering, with plans to support Vulkan
 - The terrain system is Aurora. Aurora is a separate library that handles terrain generation and rendering.
 - The environment system is Hydra. Hydra is a separate library that handles sky, atmosphere, weather and fluid simulation.
 - The rendering backend is Opal, an in-house rendering abstraction layer that allows for easy switching between different graphics APIs.
+- The debugging system is Tracer. Tracer is a module in the engine that provides various debugging tools and utilities.
 
 ## Getting the Engine
 

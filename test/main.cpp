@@ -2,6 +2,7 @@
 #include "atlas/particle.h"
 #include "atlas/light.h"
 #include "atlas/object.h"
+#include "atlas/physics.h"
 #include "atlas/scene.h"
 #include "atlas/text.h"
 #include "atlas/texture.h"
@@ -14,6 +15,7 @@
 #include "aurora/terrain.h"
 #include "hydra/atmosphere.h"
 #include "hydra/fluid.h"
+#include <iostream>
 #include <memory>
 
 class SphereCube : public CompoundObject {
@@ -25,7 +27,6 @@ class SphereCube : public CompoundObject {
         cube = createDebugBox({0.5f, 0.5f, 0.5f});
         cube.setPosition({-1.0f, cube.getPosition().y, 0.0f});
         cube.initialize();
-        cube.body->applyMass(0); // Make it static
         this->addObject(&cube);
 
         for (int i = 0; i < 6; i++) {
@@ -36,7 +37,6 @@ class SphereCube : public CompoundObject {
         sphere = createDebugSphere(0.25f);
         sphere.setPosition({1.0f, sphere.getPosition().y, 0.0f});
         sphere.initialize();
-        sphere.body->applyMass(0); // Make it static
         this->addObject(&sphere);
     }
 };
@@ -112,6 +112,24 @@ class WaterPot : public CompoundObject {
     }
 };
 
+class BallBehavior : public Component {
+  public:
+    void init() override {
+        if (object && object->rigidbody) {
+            object->rigidbody->applyImpulse({0.0f, 0.0f, 20.0f});
+        }
+    }
+    void update(float) override {
+        if (Window::mainWindow->isKeyClicked(Key::N)) {
+            auto hinge = object->getComponent<HingeJoint>();
+            if (hinge) {
+                std::cout << "Breaking hinge joint\n";
+                hinge->breakJoint();
+            }
+        }
+    }
+};
+
 class MainScene : public Scene {
     CoreObject ground;
     CoreObject ball;
@@ -174,10 +192,12 @@ class MainScene : public Scene {
 
         return Cubemap::fromResourceGroup(group);
     }
-
     void initialize(Window &window) override {
         Environment env;
         env.fog.intensity = 0.0;
+        env.volumetricLighting.enabled = false;
+        env.lightBloom.radius = 0.008f;
+        env.lightBloom.maxSamples = 5;
         this->setEnvironment(env);
 
         Workspace::get().setRootPath(std::string(TEST_PATH) + "/resources/");
@@ -188,28 +208,55 @@ class MainScene : public Scene {
         camera.farClip = 1000.f;
         window.setCamera(&camera);
 
-        sponza = Model();
-        sponza.fromResource(Workspace::get().createResource(
-            "sponza.obj", "SponzaModel", ResourceType::Model));
-        sponza.setScale({0.01f, 0.01f, 0.01f});
+        ground = createBox({5.0f, 0.1f, 5.0f}, Color(0.3f, 0.8f, 0.3f));
+        ground.attachTexture(
+            Texture::fromResource(Workspace::get().createResource(
+                "ground.jpg", "GroundTexture", ResourceType::Image)));
+        ground.setPosition({0.0f, -0.1f, 0.0f});
+        window.addObject(&ground);
 
-        sponza.material.albedo = Color(1.0, 0.0, 0.0, 1.0);
+        areaLight.position = {0.0f, 2.0f, 0.0f};
+        areaLight.rotate({0.0f, 90.0f, 0.0f});
+        areaLight.castsBothSides = true;
+        areaLight.setColor({0.7f, 0.7f, 0.7f, 1.0f});
+        this->addAreaLight(&areaLight);
+        areaLight.createDebugObject();
+        areaLight.addDebugObject(window);
 
         Resource fontResource = Workspace::get().createResource(
-            "arial.ttf", "ArialFont", ResourceType::Font);
+            "arial.ttf", "Arial", ResourceType::Font);
 
-        this->setAmbientIntensity(1.0f);
+        fpsText = Text("FPS: 0", Font::fromResource("Arial", fontResource, 24),
+                       {25.0, 25.0}, Color::white());
 
-        window.addObject(&sponza);
+        fpsText.addTraitComponent<Text>(FPSTextUpdater());
+        window.addUIObject(&fpsText);
 
-        // window.useDeferredRendering();
+        ball = createDebugSphere(0.5f, 32, 32);
+        ball.material.metallic = 1.0f;
+        ball.material.roughness = 0.0f;
+        ball.move({0.f, 1.0f, 1.0f});
+        window.addObject(&ball);
+
+        ball2 = createDebugSphere(0.5f, 32, 32);
+        ball2.move({0.f, 1.0f, -1.0f});
+        window.addObject(&ball2);
+
+        light = DirectionalLight({0.35f, -1.0f, 0.2f}, Color::white());
+        this->addDirectionalLight(&light);
+        light.castShadows(window, 1024);
+        this->setAmbientIntensity(0.2f);
+
+        frameBuffer = RenderTarget(window, RenderTargetType::Scene);
+        window.addRenderTarget(&frameBuffer);
+        frameBuffer.display(window);
+
+        window.usesDeferred = true;
         atmosphere.enable();
         atmosphere.secondsPerHour = 4.f;
-        atmosphere.setTime(12);
-        atmosphere.cycle = true;
-        atmosphere.useGlobalLight();
-
-        // atmosphere.castShadowsFromSunlight(4096);
+        atmosphere.setTime(12.0);
+        atmosphere.cycle = false;
+        atmosphere.wind = {0.1f, 0.0f, 0.0f};
     }
 };
 
@@ -217,7 +264,10 @@ int main() {
     Window window({.title = "My Window",
                    .width = 1600,
                    .height = 1200,
-                   .mouseCaptured = true});
+                   .renderScale = 0.5f,
+                   .mouseCaptured = true,
+                   .multisampling = false,
+                   .ssaoScale = 0.4f});
     MainScene scene;
     window.setScene(&scene);
     window.run();

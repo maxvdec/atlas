@@ -204,7 +204,7 @@ struct VertexShader {
      * @brief The source code of the vertex shader.
      *
      */
-    const char *source;
+    const char *source = nullptr;
 
     /**
      * @brief Static cache of compiled vertex shaders to avoid recompilation.
@@ -250,9 +250,9 @@ struct VertexShader {
      */
     std::vector<ShaderCapability> capabilities;
 
-    std::shared_ptr<opal::Shader> shader;
+    std::shared_ptr<opal::Shader> shader = nullptr;
 
-    Id shaderId;
+    Id shaderId = 0;
 };
 
 /**
@@ -391,7 +391,7 @@ struct FragmentShader {
      * @brief The source code of the fragment shader.
      *
      */
-    const char *source;
+    const char *source = nullptr;
 
     /**
      * @brief Static cache of compiled fragment shaders to avoid recompilation.
@@ -430,9 +430,9 @@ struct FragmentShader {
      * @brief The desired vertex attributes for the shader.
      *
      */
-    Id shaderId;
+    Id shaderId = 0;
 
-    std::shared_ptr<opal::Shader> shader;
+    std::shared_ptr<opal::Shader> shader = nullptr;
 };
 
 /**
@@ -457,7 +457,7 @@ struct GeometryShader {
      * @brief The source code of the geometry shader.
      *
      */
-    const char *source;
+    const char *source = nullptr;
 
     /**
      * @brief Creates a GeometryShader from a default shader.
@@ -483,9 +483,9 @@ struct GeometryShader {
      * @brief The desired vertex attributes for the shader.
      *
      */
-    Id shaderId;
+    Id shaderId = 0;
 
-    std::shared_ptr<opal::Shader> shader;
+    std::shared_ptr<opal::Shader> shader = nullptr;
 };
 
 enum class AtlasTessellationShader {
@@ -511,13 +511,13 @@ class TessellationShader {
      * @brief The source code of the tessellation shader.
      *
      */
-    const char *source;
+    const char *source = nullptr;
 
     /**
      * @brief The type of the tessellation shader.
      *
      */
-    TessellationShaderType type;
+    TessellationShaderType type = TessellationShaderType::Control;
 
     /**
      * @brief Creates a TessellationShader from a default shader.
@@ -546,9 +546,9 @@ class TessellationShader {
      * @brief The OpenGL ID of the compiled shader.
      *
      */
-    Id shaderId;
+    Id shaderId = 0;
 
-    std::shared_ptr<opal::Shader> shader;
+    std::shared_ptr<opal::Shader> shader = nullptr;
 };
 
 /**
@@ -677,19 +677,19 @@ struct ShaderProgram {
      * @brief The OpenGL ID of the linked shader program.
      *
      */
-    Id programId;
+    Id programId = 0;
 
     std::shared_ptr<opal::Pipeline>
     requestPipeline(std::shared_ptr<opal::Pipeline> unbuiltPipeline);
 
-    std::shared_ptr<opal::ShaderProgram> shader;
+    std::shared_ptr<opal::ShaderProgram> shader = nullptr;
     std::vector<std::shared_ptr<opal::Pipeline>> pipelines;
 
     /**
      * @brief The last pipeline that was requested from this shader program.
      * Used for setting uniforms when called directly on ShaderProgram.
      */
-    std::shared_ptr<opal::Pipeline> currentPipeline;
+    std::shared_ptr<opal::Pipeline> currentPipeline = nullptr;
 
     /**
      * @brief The desired vertex attributes for the shader program.

@@ -8,6 +8,7 @@
 */
 
 #include "atlas/texture.h"
+#include "atlas/tracer/log.h"
 #include "atlas/units.h"
 #include "opal/opal.h"
 #include <algorithm>
@@ -55,8 +56,7 @@ Texture Texture::createCheckerboard(int width, int height, int checkSize,
         if (borderColor.r < 0 || borderColor.r > 1 || borderColor.g < 0 ||
             borderColor.g > 1 || borderColor.b < 0 || borderColor.b > 1 ||
             borderColor.a < 0 || borderColor.a > 1) {
-            throw std::runtime_error(
-                "Border color values must be between 0 and 1");
+            atlas_warning("Border colors must be between 0 and 1");
         }
         opalTexture->changeBorderColor(borderColor.toGlm());
     }
@@ -113,8 +113,7 @@ Texture Texture::createDoubleCheckerboard(
         if (borderColor.r < 0 || borderColor.r > 1 || borderColor.g < 0 ||
             borderColor.g > 1 || borderColor.b < 0 || borderColor.b > 1 ||
             borderColor.a < 0 || borderColor.a > 1) {
-            throw std::runtime_error(
-                "Border color values must be between 0 and 1");
+            atlas_warning("Border colors must be between 0 and 1");
         }
         opalTexture->changeBorderColor(borderColor.toGlm());
     }
@@ -181,8 +180,7 @@ Texture Texture::createTiledCheckerboard(int width, int height,
         if (borderColor.r < 0 || borderColor.r > 1 || borderColor.g < 0 ||
             borderColor.g > 1 || borderColor.b < 0 || borderColor.b > 1 ||
             borderColor.a < 0 || borderColor.a > 1) {
-            throw std::runtime_error(
-                "Border color values must be between 0 and 1");
+            atlas_warning("Border colors must be between 0 and 1");
         }
         opalTexture->changeBorderColor(borderColor.toGlm());
     }
@@ -202,8 +200,7 @@ Texture Texture::createTiledCheckerboard(int width, int height,
 Texture Texture::createRainStreak(int width, int height,
                                   TextureParameters params, Color borderColor) {
     if (width <= 0 || height <= 0) {
-        throw std::runtime_error(
-            "Rain streak texture dimensions must be positive");
+        atlas_error("Rain streak texture dimensions must be positive");
     }
 
     std::vector<unsigned char> data(width * height * 4, 0);
@@ -251,8 +248,7 @@ Texture Texture::createRainStreak(int width, int height,
         if (borderColor.r < 0 || borderColor.r > 1 || borderColor.g < 0 ||
             borderColor.g > 1 || borderColor.b < 0 || borderColor.b > 1 ||
             borderColor.a < 0 || borderColor.a > 1) {
-            throw std::runtime_error(
-                "Border color values must be between 0 and 1");
+            atlas_warning("Border colors values must be between 0 and 1");
         }
         opalTexture->changeBorderColor(borderColor.toGlm());
     }

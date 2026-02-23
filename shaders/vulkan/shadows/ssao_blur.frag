@@ -1,7 +1,7 @@
 #version 450
 layout(location = 0) out float FragColor;
 
-layout(location = 1) in vec2 TexCoord;
+layout(location = 0) in vec2 TexCoord;
 
 layout(set = 2, binding = 0) uniform sampler2D inSSAO;
 
@@ -14,5 +14,5 @@ void main() {
             result += texture(inSSAO, TexCoord + offset).r;
         }
     }
-    FragColor = result / (4.0 * 4.0);
+    FragColor = result / 25.0;
 }

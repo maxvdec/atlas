@@ -14,7 +14,7 @@
 #include "atlas/object.h"
 #include "atlas/texture.h"
 #include "atlas/units.h"
-#include "bezel/body.h"
+#include "bezel/bezel.h"
 #include "hydra/atmosphere.h"
 #include <algorithm>
 #include <memory>
@@ -41,6 +41,7 @@ struct Fog {
  * @brief Settings used when simulating volumetric light shafts.
  */
 struct VolumetricLighting {
+    bool enabled = false;
     /**
      * @brief Overall density of the participating medium.
      */
@@ -66,7 +67,7 @@ struct LightBloom {
     /**
      * @brief Radius of the blur kernel applied to bright fragments.
      */
-    float radius = 0.5f;
+    float radius = 0.008f;
     /**
      * @brief Maximum number of blur passes performed.
      */

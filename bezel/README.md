@@ -1,14 +1,13 @@
-# Bezel 1
+# Bezel
 
-Bezel is a physics engine, the one used in Atlas. It is built with C++ and GLM for mathematics. It is designed to be fast, simple and easy to use.
+Bezel is the physics engine that powers the inside of Atlas. It now supports two backends, each one defining its own features and its own capabilities.
 
-## Features
+The two backends that Bezel supports right now are:
 
-- Rigid body dynamics
-- Collision detection
-- Collision resolution
-- Linar and angular forces
-- Convex collisions
-- Full sphere collisions
-- Support for non-spheric shapes
-- Support for various forces and magnitudes
+- Bezel Native 1 (since Alpha 1)
+- Bezel Jolt 1 (since Alpha 6)
+
+We would like to express our sincere gratitude to the team behind Jolt Physics at [their repo](https://github.com/jrouwe/JoltPhysics).
+
+_Bezel Jolt arrives to Jolt version 5.5.0 released on December 28th, 2025_
+_Bezel Native supports limited features and is in highly development status, therefore, Bezel Jolt is the default for games made with Atlas_

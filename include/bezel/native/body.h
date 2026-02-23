@@ -16,7 +16,6 @@
 #include <glm/gtc/quaternion.hpp>
 #include <memory>
 #include "atlas/units.h"
-#include "bezel/shape.h"
 
 class Window;
 

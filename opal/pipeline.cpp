@@ -8,21 +8,357 @@
 //
 
 #include "opal/opal.h"
+#include "atlas/tracer/log.h"
 #include <algorithm>
 #include <cstring>
 #include <memory>
 #include <stdexcept>
+#include <unordered_set>
 #include <vector>
-#include <iostream>
+#ifdef METAL
+#include "metal_state.h"
+#endif
 #ifdef VULKAN
 #include <vulkan/vulkan.hpp>
 #endif
 
 namespace opal {
 
+#ifdef VULKAN
+namespace {
+void logMissingUniformOnce(const std::string &name) {
+    static std::unordered_set<std::string> missing;
+    if (missing.insert(name).second) {
+        atlas_warning(std::string("Vulkan uniform not found: ") + name);
+    }
+}
+} // namespace
+#endif
+
+#ifdef METAL
+namespace {
+
+constexpr NS::UInteger kVertexStreamBufferIndex = 24;
+constexpr NS::UInteger kInstanceStreamBufferIndex = 25;
+
+template <typename T> static inline T alignUp(T value, T alignment) {
+    if (alignment <= 1) {
+        return value;
+    }
+    return (value + alignment - 1) / alignment * alignment;
+}
+
+static MTL::BlendFactor toMetalBlendFactor(BlendFunc factor) {
+    switch (factor) {
+    case BlendFunc::Zero:
+        return MTL::BlendFactorZero;
+    case BlendFunc::One:
+        return MTL::BlendFactorOne;
+    case BlendFunc::SrcColor:
+        return MTL::BlendFactorSourceColor;
+    case BlendFunc::OneMinusSrcColor:
+        return MTL::BlendFactorOneMinusSourceColor;
+    case BlendFunc::DstColor:
+        return MTL::BlendFactorDestinationColor;
+    case BlendFunc::OneMinusDstColor:
+        return MTL::BlendFactorOneMinusDestinationColor;
+    case BlendFunc::SrcAlpha:
+        return MTL::BlendFactorSourceAlpha;
+    case BlendFunc::OneMinusSrcAlpha:
+        return MTL::BlendFactorOneMinusSourceAlpha;
+    case BlendFunc::DstAlpha:
+        return MTL::BlendFactorDestinationAlpha;
+    case BlendFunc::OneMinusDstAlpha:
+        return MTL::BlendFactorOneMinusDestinationAlpha;
+    default:
+        return MTL::BlendFactorOne;
+    }
+}
+
+static MTL::BlendOperation toMetalBlendOperation(BlendEquation equation) {
+    switch (equation) {
+    case BlendEquation::Add:
+        return MTL::BlendOperationAdd;
+    case BlendEquation::Subtract:
+        return MTL::BlendOperationSubtract;
+    case BlendEquation::ReverseSubtract:
+        return MTL::BlendOperationReverseSubtract;
+    case BlendEquation::Min:
+        return MTL::BlendOperationMin;
+    case BlendEquation::Max:
+        return MTL::BlendOperationMax;
+    default:
+        return MTL::BlendOperationAdd;
+    }
+}
+
+static MTL::CompareFunction toMetalCompare(CompareOp op) {
+    switch (op) {
+    case CompareOp::Never:
+        return MTL::CompareFunctionNever;
+    case CompareOp::Less:
+        return MTL::CompareFunctionLess;
+    case CompareOp::Equal:
+        return MTL::CompareFunctionEqual;
+    case CompareOp::LessEqual:
+        return MTL::CompareFunctionLessEqual;
+    case CompareOp::Greater:
+        return MTL::CompareFunctionGreater;
+    case CompareOp::NotEqual:
+        return MTL::CompareFunctionNotEqual;
+    case CompareOp::GreaterEqual:
+        return MTL::CompareFunctionGreaterEqual;
+    case CompareOp::Always:
+        return MTL::CompareFunctionAlways;
+    default:
+        return MTL::CompareFunctionLess;
+    }
+}
+
+static MTL::PrimitiveType toMetalPrimitive(PrimitiveStyle style) {
+    switch (style) {
+    case PrimitiveStyle::Points:
+        return MTL::PrimitiveTypePoint;
+    case PrimitiveStyle::Lines:
+        return MTL::PrimitiveTypeLine;
+    case PrimitiveStyle::LineStrip:
+        return MTL::PrimitiveTypeLineStrip;
+    case PrimitiveStyle::Triangles:
+        return MTL::PrimitiveTypeTriangle;
+    case PrimitiveStyle::TriangleStrip:
+        return MTL::PrimitiveTypeTriangleStrip;
+    case PrimitiveStyle::TriangleFan:
+        return MTL::PrimitiveTypeTriangle;
+    case PrimitiveStyle::Patches:
+        return MTL::PrimitiveTypeTriangle;
+    default:
+        return MTL::PrimitiveTypeTriangle;
+    }
+}
+
+static MTL::CullMode toMetalCull(CullMode mode) {
+    switch (mode) {
+    case CullMode::None:
+        return MTL::CullModeNone;
+    case CullMode::Front:
+        return MTL::CullModeFront;
+    case CullMode::Back:
+        return MTL::CullModeBack;
+    case CullMode::FrontAndBack:
+        return MTL::CullModeFront;
+    default:
+        return MTL::CullModeNone;
+    }
+}
+
+static MTL::Winding toMetalWinding(FrontFace face) {
+    switch (face) {
+    case FrontFace::Clockwise:
+        return MTL::WindingClockwise;
+    case FrontFace::CounterClockwise:
+        return MTL::WindingCounterClockwise;
+    default:
+        return MTL::WindingCounterClockwise;
+    }
+}
+
+static MTL::TriangleFillMode toMetalFillMode(RasterizerMode mode) {
+    switch (mode) {
+    case RasterizerMode::Fill:
+        return MTL::TriangleFillModeFill;
+    case RasterizerMode::Line:
+        return MTL::TriangleFillModeLines;
+    case RasterizerMode::Point:
+        return MTL::TriangleFillModeFill;
+    default:
+        return MTL::TriangleFillModeFill;
+    }
+}
+
+static void ensureMetalDepthStencilState(metal::PipelineState &state,
+                                         MTL::Device *device,
+                                         bool depthTestEnabled,
+                                         bool depthWriteEnabled,
+                                         MTL::CompareFunction depthCompare) {
+    if (device == nullptr) {
+        return;
+    }
+
+    bool needsRebuild = state.depthStencilState == nullptr ||
+                        state.depthTestEnabled != depthTestEnabled ||
+                        state.depthWriteEnabled != depthWriteEnabled ||
+                        state.depthCompare != depthCompare;
+    if (!needsRebuild) {
+        return;
+    }
+
+    MTL::DepthStencilDescriptor *depthDescriptor =
+        MTL::DepthStencilDescriptor::alloc()->init();
+    depthDescriptor->setDepthCompareFunction(depthCompare);
+    depthDescriptor->setDepthWriteEnabled(depthWriteEnabled);
+
+    MTL::DepthStencilState *newState =
+        device->newDepthStencilState(depthDescriptor);
+    depthDescriptor->release();
+    if (newState == nullptr) {
+        throw std::runtime_error("Failed to create Metal depth stencil state");
+    }
+
+    if (state.depthStencilState != nullptr) {
+        state.depthStencilState->release();
+    }
+    state.depthStencilState = newState;
+}
+
+static MTL::VertexFormat toMetalVertexFormat(VertexAttributeType type,
+                                             uint size, bool normalized) {
+    switch (type) {
+    case VertexAttributeType::Float:
+        if (size == 1)
+            return MTL::VertexFormatFloat;
+        if (size == 2)
+            return MTL::VertexFormatFloat2;
+        if (size == 3)
+            return MTL::VertexFormatFloat3;
+        if (size == 4)
+            return MTL::VertexFormatFloat4;
+        return MTL::VertexFormatFloat4;
+    case VertexAttributeType::Int:
+        if (size == 1)
+            return MTL::VertexFormatInt;
+        if (size == 2)
+            return MTL::VertexFormatInt2;
+        if (size == 3)
+            return MTL::VertexFormatInt3;
+        if (size == 4)
+            return MTL::VertexFormatInt4;
+        return MTL::VertexFormatInt4;
+    case VertexAttributeType::UnsignedInt:
+        if (size == 1)
+            return MTL::VertexFormatUInt;
+        if (size == 2)
+            return MTL::VertexFormatUInt2;
+        if (size == 3)
+            return MTL::VertexFormatUInt3;
+        if (size == 4)
+            return MTL::VertexFormatUInt4;
+        return MTL::VertexFormatUInt4;
+    case VertexAttributeType::Short:
+        if (size == 2)
+            return normalized ? MTL::VertexFormatShort2Normalized
+                              : MTL::VertexFormatShort2;
+        if (size == 3)
+            return normalized ? MTL::VertexFormatShort3Normalized
+                              : MTL::VertexFormatShort3;
+        if (size == 4)
+            return normalized ? MTL::VertexFormatShort4Normalized
+                              : MTL::VertexFormatShort4;
+        return normalized ? MTL::VertexFormatShort2Normalized
+                          : MTL::VertexFormatShort2;
+    case VertexAttributeType::UnsignedShort:
+        if (size == 2)
+            return normalized ? MTL::VertexFormatUShort2Normalized
+                              : MTL::VertexFormatUShort2;
+        if (size == 3)
+            return normalized ? MTL::VertexFormatUShort3Normalized
+                              : MTL::VertexFormatUShort3;
+        if (size == 4)
+            return normalized ? MTL::VertexFormatUShort4Normalized
+                              : MTL::VertexFormatUShort4;
+        return normalized ? MTL::VertexFormatUShort2Normalized
+                          : MTL::VertexFormatUShort2;
+    case VertexAttributeType::Byte:
+        if (size == 2)
+            return normalized ? MTL::VertexFormatChar2Normalized
+                              : MTL::VertexFormatChar2;
+        if (size == 3)
+            return normalized ? MTL::VertexFormatChar3Normalized
+                              : MTL::VertexFormatChar3;
+        if (size == 4)
+            return normalized ? MTL::VertexFormatChar4Normalized
+                              : MTL::VertexFormatChar4;
+        return normalized ? MTL::VertexFormatCharNormalized
+                          : MTL::VertexFormatChar;
+    case VertexAttributeType::UnsignedByte:
+        if (size == 2)
+            return normalized ? MTL::VertexFormatUChar2Normalized
+                              : MTL::VertexFormatUChar2;
+        if (size == 3)
+            return normalized ? MTL::VertexFormatUChar3Normalized
+                              : MTL::VertexFormatUChar3;
+        if (size == 4)
+            return normalized ? MTL::VertexFormatUChar4Normalized
+                              : MTL::VertexFormatUChar4;
+        return normalized ? MTL::VertexFormatUCharNormalized
+                          : MTL::VertexFormatUChar;
+    case VertexAttributeType::Double:
+        return MTL::VertexFormatFloat4;
+    default:
+        return MTL::VertexFormatFloat4;
+    }
+}
+
+static void updateMetalUniform(Pipeline *pipeline, const std::string &name,
+                               const void *data, size_t size,
+                               bool clampToDeclaredSize) {
+    if (pipeline == nullptr || pipeline->shaderProgram == nullptr ||
+        data == nullptr || size == 0) {
+        return;
+    }
+
+    auto &programState = metal::programState(pipeline->shaderProgram.get());
+    auto locations = metal::resolveUniformLocations(programState, name);
+    if (locations.empty()) {
+        return;
+    }
+
+    auto &pipelineState = metal::pipelineState(pipeline);
+    for (const auto &location : locations) {
+        auto writeStage = [&](bool fragmentStage) {
+            uint32_t key =
+                metal::stageBindingKey(location.bufferIndex, fragmentStage);
+            auto &bytes = pipelineState.uniformData[key];
+
+            size_t declaredSize = 0;
+            auto bindingIt = programState.bindingSize.find(key);
+            if (bindingIt != programState.bindingSize.end()) {
+                declaredSize = bindingIt->second;
+            }
+
+            size_t writeSize =
+                clampToDeclaredSize ? std::min(size, location.size) : size;
+            if (writeSize == 0) {
+                return;
+            }
+            size_t requiredSize = location.offset + writeSize;
+            requiredSize = std::max(requiredSize, declaredSize);
+            if (bytes.size() < requiredSize) {
+                bytes.resize(alignUp(requiredSize, static_cast<size_t>(16)), 0);
+            }
+            std::memcpy(bytes.data() + location.offset, data, writeSize);
+        };
+
+        if (location.vertexStage) {
+            writeStage(false);
+        }
+        if (location.fragmentStage) {
+            writeStage(true);
+        }
+    }
+}
+
+} // namespace
+#endif
+
 std::shared_ptr<Pipeline> Pipeline::create() {
     auto pipeline = std::make_shared<Pipeline>();
     return pipeline;
+}
+
+Pipeline::~Pipeline() {
+#ifdef METAL
+    metal::releasePipelineState(this);
+#endif
 }
 
 #ifdef VULKAN
@@ -273,6 +609,102 @@ void Pipeline::build() {
     (void)this; // Vertex layout applied explicitly per VAO.
 #elif defined(VULKAN)
     this->buildPipelineLayout();
+#elif defined(METAL)
+    if (Device::globalInstance == nullptr) {
+        throw std::runtime_error("Cannot build Metal pipeline without device");
+    }
+    auto &deviceState = metal::deviceState(Device::globalInstance);
+    if (deviceState.device == nullptr) {
+        throw std::runtime_error("Metal device is not initialized");
+    }
+
+    if (shaderProgram == nullptr) {
+        throw std::runtime_error("Pipeline::build() requires a shader program");
+    }
+
+    auto &state = metal::pipelineState(this);
+
+    state.primitiveType = toMetalPrimitive(this->primitiveStyle);
+    state.cullMode = toMetalCull(this->cullMode);
+    state.frontFace = toMetalWinding(this->frontFace);
+    state.fillMode = toMetalFillMode(this->rasterizerMode);
+    MTL::CompareFunction desiredDepthCompare =
+        this->depthTestEnabled ? toMetalCompare(this->depthCompareOp)
+                               : MTL::CompareFunctionAlways;
+    state.blendingEnabled = this->blendingEnabled;
+    state.blendSrc = toMetalBlendFactor(this->blendSrcFactor);
+    state.blendDst = toMetalBlendFactor(this->blendDstFactor);
+    state.blendOp = toMetalBlendOperation(this->blendEquation);
+    state.polygonOffsetEnabled = this->polygonOffsetEnabled;
+    state.polygonOffsetFactor = this->polygonOffsetFactor;
+    state.polygonOffsetUnits = this->polygonOffsetUnits;
+    state.viewportX = this->viewportX;
+    state.viewportY = this->viewportY;
+    state.viewportWidth = this->viewportWidth;
+    state.viewportHeight = this->viewportHeight;
+
+    if (state.vertexDescriptor != nullptr) {
+        state.vertexDescriptor->release();
+    }
+    state.vertexDescriptor = MTL::VertexDescriptor::alloc()->init();
+
+    auto *layouts = state.vertexDescriptor->layouts();
+    auto *attributes = state.vertexDescriptor->attributes();
+
+    NS::UInteger instanceStride = 0;
+    NS::UInteger instanceDivisor = 1;
+    bool hasInstance = false;
+
+    for (const auto &attribute : this->vertexAttributes) {
+        auto *descriptor = attributes->object(attribute.location);
+        if (descriptor == nullptr) {
+            continue;
+        }
+
+        bool isInstance =
+            attribute.inputRate == VertexBindingInputRate::Instance;
+        NS::UInteger bufferIndex =
+            isInstance ? kInstanceStreamBufferIndex : kVertexStreamBufferIndex;
+
+        descriptor->setBufferIndex(bufferIndex);
+        descriptor->setOffset(static_cast<NS::UInteger>(attribute.offset));
+        descriptor->setFormat(toMetalVertexFormat(
+            attribute.type, attribute.size, attribute.normalized));
+
+        if (isInstance) {
+            hasInstance = true;
+            instanceStride = std::max(
+                instanceStride, static_cast<NS::UInteger>(attribute.stride));
+            unsigned int divisor =
+                attribute.divisor == 0 ? 1 : attribute.divisor;
+            instanceDivisor =
+                std::max(instanceDivisor, static_cast<NS::UInteger>(divisor));
+        }
+    }
+
+    auto *vertexLayout = layouts->object(kVertexStreamBufferIndex);
+    if (vertexLayout != nullptr) {
+        vertexLayout->setStride(
+            static_cast<NS::UInteger>(vertexBinding.stride));
+        vertexLayout->setStepFunction(MTL::VertexStepFunctionPerVertex);
+        vertexLayout->setStepRate(1);
+    }
+
+    if (hasInstance) {
+        auto *instanceLayout = layouts->object(kInstanceStreamBufferIndex);
+        if (instanceLayout != nullptr) {
+            instanceLayout->setStride(instanceStride);
+            instanceLayout->setStepFunction(MTL::VertexStepFunctionPerInstance);
+            instanceLayout->setStepRate(instanceDivisor);
+        }
+    }
+
+    ensureMetalDepthStencilState(state, deviceState.device,
+                                 this->depthTestEnabled,
+                                 this->depthWriteEnabled, desiredDepthCompare);
+    state.depthTestEnabled = this->depthTestEnabled;
+    state.depthWriteEnabled = this->depthWriteEnabled;
+    state.depthCompare = desiredDepthCompare;
 #endif
 }
 
@@ -285,8 +717,10 @@ void Pipeline::bind() {
     }
     glUseProgram(this->shaderProgram->programID);
 
-    glViewport(this->viewportX, this->viewportY, this->viewportWidth,
-               this->viewportHeight);
+    if (this->viewportWidth > 0 && this->viewportHeight > 0) {
+        glViewport(this->viewportX, this->viewportY, this->viewportWidth,
+                   this->viewportHeight);
+    }
 
     glPolygonMode(GL_FRONT_AND_BACK,
                   this->getGLRasterizerMode(this->rasterizerMode));
@@ -342,6 +776,42 @@ void Pipeline::bind() {
             glDisable(GL_CLIP_DISTANCE0 + i);
         }
     }
+#elif defined(METAL)
+    auto &state = metal::pipelineState(this);
+    state.primitiveType = toMetalPrimitive(this->primitiveStyle);
+    state.cullMode = toMetalCull(this->cullMode);
+    state.frontFace = toMetalWinding(this->frontFace);
+    state.fillMode = toMetalFillMode(this->rasterizerMode);
+    MTL::CompareFunction desiredDepthCompare =
+        this->depthTestEnabled ? toMetalCompare(this->depthCompareOp)
+                               : MTL::CompareFunctionAlways;
+    state.blendingEnabled = this->blendingEnabled;
+    state.blendSrc = toMetalBlendFactor(this->blendSrcFactor);
+    state.blendDst = toMetalBlendFactor(this->blendDstFactor);
+    state.blendOp = toMetalBlendOperation(this->blendEquation);
+    state.polygonOffsetEnabled = this->polygonOffsetEnabled;
+    state.polygonOffsetFactor = this->polygonOffsetFactor;
+    state.polygonOffsetUnits = this->polygonOffsetUnits;
+    state.viewportX = this->viewportX;
+    state.viewportY = this->viewportY;
+    state.viewportWidth = this->viewportWidth;
+    state.viewportHeight = this->viewportHeight;
+    if (!state.suppressTextureReset) {
+        state.texturesByUnit.clear();
+    }
+    state.suppressTextureReset = false;
+
+    if (Device::globalInstance != nullptr) {
+        auto &deviceState = metal::deviceState(Device::globalInstance);
+        if (deviceState.device != nullptr) {
+            ensureMetalDepthStencilState(
+                state, deviceState.device, this->depthTestEnabled,
+                this->depthWriteEnabled, desiredDepthCompare);
+        }
+    }
+    state.depthTestEnabled = this->depthTestEnabled;
+    state.depthWriteEnabled = this->depthWriteEnabled;
+    state.depthCompare = desiredDepthCompare;
 #endif
 }
 
@@ -395,7 +865,7 @@ void Pipeline::setUniform1f(const std::string &name, float v0) {
 #elif defined(VULKAN)
     const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
     if (!info) {
-        // Uniform not found, silently ignore for compatibility
+        logMissingUniformOnce(name);
         return;
     }
     if (!info->isBuffer) {
@@ -405,6 +875,8 @@ void Pipeline::setUniform1f(const std::string &name, float v0) {
         updateUniformData(info->set, info->binding, info->offset, &v0,
                           sizeof(float));
     }
+#elif defined(METAL)
+    updateMetalUniform(this, name, &v0, sizeof(float), true);
 #endif
 }
 
@@ -417,6 +889,7 @@ void Pipeline::setUniformMat4f(const std::string &name,
 #elif defined(VULKAN)
     const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
     if (!info) {
+        logMissingUniformOnce(name);
         return;
     }
     if (!info->isBuffer) {
@@ -425,6 +898,8 @@ void Pipeline::setUniformMat4f(const std::string &name,
         updateUniformData(info->set, info->binding, info->offset, &matrix[0][0],
                           sizeof(glm::mat4));
     }
+#elif defined(METAL)
+    updateMetalUniform(this, name, &matrix[0][0], sizeof(glm::mat4), true);
 #endif
 }
 
@@ -437,6 +912,7 @@ void Pipeline::setUniform3f(const std::string &name, float v0, float v1,
 #elif defined(VULKAN)
     const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
     if (!info) {
+        logMissingUniformOnce(name);
         return;
     }
     float data[3] = {v0, v1, v2};
@@ -446,6 +922,9 @@ void Pipeline::setUniform3f(const std::string &name, float v0, float v1,
         updateUniformData(info->set, info->binding, info->offset, data,
                           sizeof(data));
     }
+#elif defined(METAL)
+    float data[3] = {v0, v1, v2};
+    updateMetalUniform(this, name, data, sizeof(data), true);
 #endif
 }
 
@@ -456,6 +935,7 @@ void Pipeline::setUniform1i(const std::string &name, int v0) {
 #elif defined(VULKAN)
     const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
     if (!info) {
+        logMissingUniformOnce(name);
         return;
     }
     if (!info->isBuffer) {
@@ -464,6 +944,8 @@ void Pipeline::setUniform1i(const std::string &name, int v0) {
         updateUniformData(info->set, info->binding, info->offset, &v0,
                           sizeof(int));
     }
+#elif defined(METAL)
+    updateMetalUniform(this, name, &v0, sizeof(int), true);
 #endif
 }
 
@@ -475,6 +957,7 @@ void Pipeline::setUniformBool(const std::string &name, bool value) {
 #elif defined(VULKAN)
     const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
     if (!info) {
+        logMissingUniformOnce(name);
         return;
     }
     int intValue = value ? 1 : 0;
@@ -484,6 +967,9 @@ void Pipeline::setUniformBool(const std::string &name, bool value) {
         updateUniformData(info->set, info->binding, info->offset, &intValue,
                           sizeof(int));
     }
+#elif defined(METAL)
+    int intValue = value ? 1 : 0;
+    updateMetalUniform(this, name, &intValue, sizeof(int), true);
 #endif
 }
 
@@ -496,6 +982,7 @@ void Pipeline::setUniform4f(const std::string &name, float v0, float v1,
 #elif defined(VULKAN)
     const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
     if (!info) {
+        logMissingUniformOnce(name);
         return;
     }
     float data[4] = {v0, v1, v2, v3};
@@ -505,6 +992,9 @@ void Pipeline::setUniform4f(const std::string &name, float v0, float v1,
         updateUniformData(info->set, info->binding, info->offset, data,
                           sizeof(data));
     }
+#elif defined(METAL)
+    float data[4] = {v0, v1, v2, v3};
+    updateMetalUniform(this, name, data, sizeof(data), true);
 #endif
 }
 
@@ -516,6 +1006,7 @@ void Pipeline::setUniform2f(const std::string &name, float v0, float v1) {
 #elif defined(VULKAN)
     const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
     if (!info) {
+        logMissingUniformOnce(name);
         return;
     }
     float data[2] = {v0, v1};
@@ -525,6 +1016,9 @@ void Pipeline::setUniform2f(const std::string &name, float v0, float v1) {
         updateUniformData(info->set, info->binding, info->offset, data,
                           sizeof(data));
     }
+#elif defined(METAL)
+    float data[2] = {v0, v1};
+    updateMetalUniform(this, name, data, sizeof(data), true);
 #endif
 }
 
@@ -541,6 +1035,7 @@ void Pipeline::bindBufferData(const std::string &name, const void *data,
 #elif defined(VULKAN)
     const UniformBindingInfo *info = this->shaderProgram->findUniform(name);
     if (!info) {
+        logMissingUniformOnce(name);
         return;
     }
 
@@ -549,6 +1044,8 @@ void Pipeline::bindBufferData(const std::string &name, const void *data,
     }
 
     updateUniformData(info->set, info->binding, 0, data, size);
+#elif defined(METAL)
+    updateMetalUniform(this, name, data, size, false);
 #endif
 }
 

@@ -12,6 +12,7 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <cmath>
 #include <numbers>
 #include <ostream>
 
@@ -33,6 +34,17 @@ struct Position3d {
     float x;
     float y;
     float z;
+
+    static Position3d zero() { return Position3d(0.0f, 0.0f, 0.0f); }
+    static Position3d down() { return Position3d(0.0f, -1.0f, 0.0f); }
+    static Position3d up() { return Position3d(0.0f, 1.0f, 0.0f); }
+    static Position3d forward() { return Position3d(0.0f, 0.0f, 1.0f); }
+    static Position3d back() { return Position3d(0.0f, 0.0f, -1.0f); }
+    static Position3d right() { return Position3d(1.0f, 0.0f, 0.0f); }
+    static Position3d left() { return Position3d(-1.0f, 0.0f, 0.0f); }
+    static Position3d invalid() {
+        return Position3d(std::nanf(""), std::nanf(""), std::nanf(""));
+    }
 
     Position3d() : x(0.0f), y(0.0f), z(0.0f) {}
     Position3d(float x, float y, float z) : x(x), y(y), z(z) {}
@@ -177,14 +189,38 @@ struct Rotation3d {
     inline glm::vec3 toGlm() const { return glm::vec3(pitch, yaw, roll); }
 
     inline glm::quat toGlmQuat() const {
-        glm::vec3 eulerAngles = toGlm();
-        glm::vec3 radians = glm::radians(eulerAngles);
-        return glm::quat(radians);
+        const float pitchRad = glm::radians(pitch);
+        const float yawRad = glm::radians(yaw);
+        const float rollRad = glm::radians(roll);
+
+        const glm::quat qYaw = glm::angleAxis(yawRad, glm::vec3(0, 1, 0));
+        const glm::quat qPitch = glm::angleAxis(pitchRad, glm::vec3(1, 0, 0));
+        const glm::quat qRoll = glm::angleAxis(rollRad, glm::vec3(0, 0, 1));
+
+        return qRoll * qPitch * qYaw;
     }
 
     inline static Rotation3d fromGlmQuat(const glm::quat &quat) {
-        glm::vec3 euler = glm::degrees(glm::eulerAngles(quat));
-        return {euler.x, euler.y, euler.z};
+        glm::mat3 m = glm::mat3_cast(quat);
+
+        float sPitch = glm::clamp(m[1][2], -1.0f, 1.0f);
+        float pitchRad = std::asin(sPitch);
+        float cPitch = std::cos(pitchRad);
+
+        float yawRad;
+        float rollRad;
+
+        constexpr float eps = 1e-6f;
+        if (std::abs(cPitch) > eps) {
+            yawRad = std::atan2(-m[0][2], m[2][2]);
+            rollRad = std::atan2(-m[1][0], m[1][1]);
+        } else {
+            yawRad = std::atan2(sPitch * m[0][1], m[0][0]);
+            rollRad = 0.0f;
+        }
+
+        return {glm::degrees(pitchRad), glm::degrees(yawRad),
+                glm::degrees(rollRad)};
     }
 
     inline static Rotation3d fromGlm(const glm::vec3 &vec) {
@@ -199,10 +235,10 @@ struct Rotation3d {
  * \subsection color-example Example
  * ```cpp
  * // Create colors using static constructors
- * Color red = Color::Red();
+ * Color red = Color::red();
  * Color customColor(0.2, 0.8, 0.5, 1.0);
- * // Parse from hex string
- * Color fromHex = Color::fromHex("#FF5733");
+ * // Parse from a packed RGB hex value (0xRRGGBB)
+ * Color fromHex = Color::fromHex(0xFF5733);
  * // Mix two colors
  * Color blended = Color::mix(red, customColor, 0.5);
  * // Convert to GLM vector

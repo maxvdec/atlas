@@ -10,6 +10,7 @@
 #include "atlas/core/shader.h"
 #include "atlas/core/default_shaders.h"
 #include "atlas/object.h"
+#include "atlas/tracer/log.h"
 #include "opal/opal.h"
 #include <glad/glad.h>
 #include <iostream>
@@ -143,7 +144,7 @@ VertexShader VertexShader::fromDefaultShader(AtlasVertexShader shader) {
     }
     case AtlasVertexShader::Light: {
         vertexShader = VertexShader::fromSource(LIGHT_VERT);
-        vertexShader.desiredAttributes = {0, 1};
+        vertexShader.desiredAttributes = {0, 2};
         vertexShader.capabilities = {
             ShaderCapability::Shadows, ShaderCapability::Lighting,
             ShaderCapability::EnvironmentMapping,
@@ -162,7 +163,7 @@ VertexShader VertexShader::fromDefaultShader(AtlasVertexShader shader) {
     }
     case AtlasVertexShader::Volumetric: {
         vertexShader = VertexShader::fromSource(VOLUMETRIC_VERT);
-        vertexShader.desiredAttributes = {};
+        vertexShader.desiredAttributes = {0, 2};
         vertexShader.capabilities = {};
         vertexShader.fromDefaultShaderType = shader;
         VertexShader::vertexShaderCache[shader] = vertexShader;
@@ -194,7 +195,14 @@ VertexShader VertexShader::fromSource(const char *source) {
 
 void VertexShader::compile() {
     if (shaderId != 0) {
-        throw std::runtime_error("Vertex shader already compiled");
+        if (shader != nullptr) {
+            return;
+        }
+        shaderId = 0;
+    }
+
+    if (source == nullptr) {
+        throw std::runtime_error("Vertex shader source is null");
     }
 
     shader = opal::Shader::createFromSource(source, opal::ShaderType::Vertex);
@@ -205,10 +213,13 @@ void VertexShader::compile() {
     if (!success) {
         char infoLog[512];
         shader->getShaderLog(infoLog, sizeof(infoLog));
+        atlas_error("Vertex shader compilation failed: " +
+                    std::string(infoLog));
         throw std::runtime_error(
             std::string("Vertex shader compilation failed: ") + infoLog);
     }
 
+    atlas_log("Vertex shader compiled successfully");
     this->shaderId = shader->shaderID;
 }
 
@@ -288,7 +299,7 @@ FragmentShader FragmentShader::fromDefaultShader(AtlasFragmentShader shader) {
     case AtlasFragmentShader::PointLightShadowNoGeom: {
 #ifdef OPENGL
         fragmentShader = FragmentShader::fromSource(EMPTY_FRAG);
-#elif defined(VULKAN)
+#elif defined(VULKAN) || defined(METAL)
         fragmentShader = FragmentShader::fromSource(POINT_DEPTH_FRAG);
 #endif
         fragmentShader.fromDefaultShaderType = shader;
@@ -370,7 +381,14 @@ FragmentShader FragmentShader::fromSource(const char *source) {
 
 void FragmentShader::compile() {
     if (shaderId != 0) {
-        throw std::runtime_error("Fragment shader already compiled");
+        if (shader != nullptr) {
+            return;
+        }
+        shaderId = 0;
+    }
+
+    if (source == nullptr) {
+        throw std::runtime_error("Fragment shader source is null");
     }
 
     shader = opal::Shader::createFromSource(source, opal::ShaderType::Fragment);
@@ -381,10 +399,13 @@ void FragmentShader::compile() {
     if (!success) {
         char infoLog[512];
         shader->getShaderLog(infoLog, sizeof(infoLog));
+        atlas_error("Fragment shader compilation failed: " +
+                    std::string(infoLog));
         throw std::runtime_error(
             std::string("Fragment shader compilation failed: ") + infoLog);
     }
 
+    atlas_log("Fragment shader compiled successfully");
     this->shaderId = shader->shaderID;
 }
 
@@ -406,7 +427,14 @@ GeometryShader GeometryShader::fromSource(const char *source) {
 
 void GeometryShader::compile() {
     if (shaderId != 0) {
-        throw std::runtime_error("Geometry shader already compiled");
+        if (shader != nullptr) {
+            return;
+        }
+        shaderId = 0;
+    }
+
+    if (source == nullptr) {
+        throw std::runtime_error("Geometry shader source is null");
     }
 
     shader = opal::Shader::createFromSource(source, opal::ShaderType::Geometry);
@@ -417,10 +445,13 @@ void GeometryShader::compile() {
     if (!success) {
         char infoLog[512];
         shader->getShaderLog(infoLog, sizeof(infoLog));
+        atlas_error("Geometry shader compilation failed: " +
+                    std::string(infoLog));
         throw std::runtime_error(
             std::string("Geometry shader compilation failed: ") + infoLog);
     }
 
+    atlas_log("Geometry shader compiled successfully");
     this->shaderId = shader->shaderID;
 }
 
@@ -449,7 +480,18 @@ TessellationShader TessellationShader::fromSource(const char *source,
 
 void TessellationShader::compile() {
     if (shaderId != 0) {
-        throw std::runtime_error("Tessellation shader already compiled");
+        if (shader != nullptr) {
+            return;
+        }
+        shaderId = 0;
+    }
+
+    if (source == nullptr) {
+        throw std::runtime_error("Tessellation shader source is null");
+    }
+
+    if (shaderId != 0) {
+        return;
     }
 
     opal::ShaderType shaderType;
@@ -483,15 +525,28 @@ void TessellationShader::compile() {
 
 void ShaderProgram::compile() {
     if (programId != 0) {
-        throw std::runtime_error("Shader program already compiled");
+        if (shader != nullptr) {
+            return;
+        }
+        programId = 0;
     }
 
     if (vertexShader.shaderId == 0) {
+        atlas_error("Vertex shader not compiled");
         throw std::runtime_error("Vertex shader not compiled");
+    }
+    if (vertexShader.shader == nullptr) {
+        atlas_error("Vertex shader object is null");
+        throw std::runtime_error("Vertex shader object is null");
     }
 
     if (fragmentShader.shaderId == 0) {
+        atlas_error("Fragment shader not compiled");
         throw std::runtime_error("Fragment shader not compiled");
+    }
+    if (fragmentShader.shader == nullptr) {
+        atlas_error("Fragment shader object is null");
+        throw std::runtime_error("Fragment shader object is null");
     }
 
     if (fragmentShader.fromDefaultShaderType.has_value() &&
@@ -505,6 +560,7 @@ void ShaderProgram::compile() {
         }
     }
 
+    atlas_log("Linking shader program");
     desiredAttributes = vertexShader.desiredAttributes;
     capabilities = vertexShader.capabilities;
 
@@ -512,11 +568,11 @@ void ShaderProgram::compile() {
 
     this->shader->attachShader(vertexShader.shader);
     this->shader->attachShader(fragmentShader.shader);
-    if (geometryShader.shaderId != 0) {
+    if (geometryShader.shaderId != 0 && geometryShader.shader != nullptr) {
         this->shader->attachShader(geometryShader.shader);
     }
     for (const auto &tessShader : tessellationShaders) {
-        if (tessShader.shaderId != 0) {
+        if (tessShader.shaderId != 0 && tessShader.shader != nullptr) {
             this->shader->attachShader(tessShader.shader);
         }
     }
@@ -527,9 +583,12 @@ void ShaderProgram::compile() {
     if (!success) {
         char infoLog[512];
         this->shader->getProgramLog(infoLog, sizeof(infoLog));
+        atlas_error("Shader program linking failed: " + std::string(infoLog));
         throw std::runtime_error(
             std::string("Shader program linking failed: ") + infoLog);
     }
+
+    atlas_log("Shader program linked successfully");
 
     if (fragmentShader.fromDefaultShaderType.has_value() &&
         vertexShader.fromDefaultShaderType.has_value()) {

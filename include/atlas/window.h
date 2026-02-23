@@ -13,11 +13,12 @@
 #include "atlas/camera.h"
 #include "atlas/core/renderable.h"
 #include "atlas/input.h"
+#include "atlas/network/pipe.h"
 #include "atlas/object.h"
 #include "atlas/scene.h"
 #include "atlas/texture.h"
 #include "atlas/units.h"
-#include "bezel/body.h"
+#include "bezel/bezel.h"
 #include "finewave/audio.h"
 #include "opal/opal.h"
 #include <glm/vec3.hpp>
@@ -462,19 +463,13 @@ class Window {
     inline float getFramesPerSecond() { return this->framesPerSecond; }
 
     /**
-     * @brief Gets all physics bodies in the window.
-     *
-     * @return (std::vector<std::shared_ptr<Body>>) Vector of all physics
-     * bodies.
-     */
-    std::vector<std::shared_ptr<Body>> getAllBodies();
-
-    /**
      * @brief The gravity constant applied to physics bodies. Default is 9.81
      * m/s².
      *
      */
     float gravity = 9.81f;
+
+    void useTracer(bool enable) { this->waitForTracer = enable; }
 
     /**
      * @brief The audio engine instance for managing spatial audio. Shared
@@ -527,8 +522,8 @@ class Window {
 
     opal::BlendFunc dstBlend = opal::BlendFunc::DstAlpha;
     opal::BlendFunc srcBlend = opal::BlendFunc::OneMinusSrcAlpha;
-    // Both APIs use CCW; projection Y-flip doesn't affect rasterizer winding
     opal::FrontFace frontFace = opal::FrontFace::CounterClockwise;
+    opal::FrontFace deferredFrontFace = opal::FrontFace::CounterClockwise;
     opal::CullMode cullMode = opal::CullMode::Back;
     opal::CompareOp depthCompareOp = opal::CompareOp::Less;
     opal::RasterizerMode rasterizerMode = opal::RasterizerMode::Fill;
@@ -542,6 +537,10 @@ class Window {
     int viewportWidth = 0;
     int viewportHeight = 0;
     std::shared_ptr<opal::Device> device;
+
+    std::shared_ptr<bezel::PhysicsWorld> physicsWorld;
+
+    bool firstFrame = true;
 
   private:
     std::shared_ptr<opal::CommandBuffer> activeCommandBuffer = nullptr;
@@ -562,6 +561,8 @@ class Window {
     std::shared_ptr<RenderTarget> lightBuffer;
     std::shared_ptr<RenderTarget> ssrFramebuffer;
     std::shared_ptr<BloomRenderTarget> bloomBuffer;
+
+    bool waitForTracer = false;
 
     std::vector<glm::vec3> ssaoKernel;
     std::vector<glm::vec3> ssaoNoise;
@@ -585,7 +586,8 @@ class Window {
     void deferredRendering(
         RenderTarget *target,
         std::shared_ptr<opal::CommandBuffer> commandBuffer = nullptr);
-    void renderSSAO();
+    void renderSSAO(
+        std::shared_ptr<opal::CommandBuffer> commandBuffer = nullptr);
     void updateFluidCaptures(
         std::shared_ptr<opal::CommandBuffer> commandBuffer = nullptr);
     void captureFluidReflection(

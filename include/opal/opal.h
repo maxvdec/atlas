@@ -28,8 +28,24 @@
 
 namespace opal {
 
+/**
+ * @file opal/opal.h
+ * @brief Opal rendering abstraction layer (OpenGL/Vulkan/Metal).
+ *
+ * Opal provides context creation, device acquisition, command buffers, and
+ * common GPU resources.
+ *
+ * \note This is an alpha API and may change.
+ */
+
+/**
+ * @brief OpenGL context profile selection.
+ */
 enum class OpenGLProfile { Core, Compatibility };
 
+/**
+ * @brief Parameters used when creating an Opal `Context`.
+ */
 struct ContextConfiguration {
     bool useOpenGL = true;
     int majorVersion = 4;
@@ -40,18 +56,29 @@ struct ContextConfiguration {
     bool createValidationLayers = true;
 };
 
+/**
+ * @brief Rendering context wrapper (GLFW + backend initialization).
+ *
+ * For OpenGL, the context owns the `GLFWwindow*`.
+ */
 class Context {
   public:
+    /** @brief Creates a new context instance. */
     static std::shared_ptr<Context> create(ContextConfiguration config = {});
+    ~Context();
 
+    /** @brief Sets a GLFW window/context flag to a boolean value. */
     void setFlag(int flag, bool enabled);
+    /** @brief Sets a GLFW window/context flag to an integer value. */
     void setFlag(int flag, int value);
 
     GLFWwindow *makeWindow(int width, int height, const char *title,
                            GLFWmonitor *monitor = nullptr,
                            GLFWwindow *share = nullptr);
+    /** @brief Returns the owned window pointer, if created. */
     GLFWwindow *getWindow() const;
 
+    /** @brief Makes the context current for the calling thread. */
     void makeCurrent();
 
     GLFWwindow *window = nullptr;
@@ -130,6 +157,7 @@ struct DeviceInfo {
 class Device {
   public:
     static std::shared_ptr<Device> acquire(std::shared_ptr<Context> context);
+    ~Device();
     std::shared_ptr<CommandBuffer> acquireCommandBuffer();
 
     void submitCommandBuffer(std::shared_ptr<CommandBuffer> commandBuffer);
@@ -141,9 +169,15 @@ class Device {
     std::shared_ptr<Framebuffer> defaultFramebuffer = nullptr;
 
   public:
+    long frameCount = 0;
+
+    static Device *globalInstance;
+#if defined(VULKAN) || defined(METAL)
+    std::shared_ptr<Context> context = nullptr;
+#endif
+
 #ifdef VULKAN
     static VkDevice globalDevice;
-    static Device *globalInstance;
 
     VkDevice logicalDevice = VK_NULL_HANDLE;
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
@@ -209,7 +243,6 @@ class Device {
     uint32_t findMemoryType(uint32_t typeFilter,
                             VkMemoryPropertyFlags properties);
 
-    std::shared_ptr<Context> context = nullptr;
 #endif
 };
 
@@ -257,6 +290,7 @@ class Texture {
     create(TextureType type, TextureFormat format, int width, int height,
            TextureDataFormat dataFormat = TextureDataFormat::Rgba,
            const void *data = nullptr, uint mipLevels = 1);
+    ~Texture();
 
     /**
      * @brief Creates a multisampled texture for use with multisampled
@@ -393,13 +427,12 @@ enum class ShaderType {
 struct UniformBindingInfo {
     uint32_t set;
     uint32_t binding;
-    uint32_t size; // Size of the uniform block (0 for samplers)
-    uint32_t
-        offset; // Offset of the member within the block (for struct members)
+    uint32_t size;
+    uint32_t offset;
     bool isSampler;
-    bool isBuffer;        // true for uniform buffers, false for push constants
-    bool isStorageBuffer; // true for storage buffers (SSBOs)
-    bool isCubemap;       // true for samplerCube types
+    bool isBuffer;
+    bool isStorageBuffer;
+    bool isCubemap;
 };
 #endif
 
@@ -407,6 +440,7 @@ class Shader {
   public:
     static std::shared_ptr<Shader> createFromSource(const char *source,
                                                     ShaderType type);
+    ~Shader();
 
     void compile();
 
@@ -427,7 +461,9 @@ class Shader {
     std::unordered_map<std::string, UniformBindingInfo> uniformBindings;
 
     void performReflection();
+#endif
 
+#if defined(VULKAN) || defined(METAL)
     static int currentId;
 #endif
 
@@ -440,7 +476,8 @@ class Shader {
 class ShaderProgram {
   public:
     static std::shared_ptr<ShaderProgram> create();
-    void attachShader(std::shared_ptr<Shader> shader);
+    ~ShaderProgram();
+    void attachShader(std::shared_ptr<Shader> shader, int callerId = -1);
 
     void link();
     void use();
@@ -457,7 +494,9 @@ class ShaderProgram {
     std::unordered_map<std::string, UniformBindingInfo> uniformBindings;
 
     const UniformBindingInfo *findUniform(const std::string &name) const;
+#endif
 
+#if defined(VULKAN) || defined(METAL)
     static int currentId;
 #endif
 };
@@ -545,6 +584,7 @@ struct VertexBinding {
 class Pipeline {
   public:
     static std::shared_ptr<Pipeline> create();
+    ~Pipeline();
 
     void setShaderProgram(std::shared_ptr<ShaderProgram> program);
 
@@ -636,10 +676,13 @@ class Pipeline {
     void bindBufferData(const std::string &name, const void *data, size_t size);
 
     void bindTexture(const std::string &name, std::shared_ptr<Texture> texture,
-                     int unit);
-    void bindTexture2D(const std::string &name, uint textureId, int unit);
-    void bindTexture3D(const std::string &name, uint textureId, int unit);
-    void bindTextureCubemap(const std::string &name, uint textureId, int unit);
+                     int unit, int callerId = -1);
+    void bindTexture2D(const std::string &name, uint textureId, int unit,
+                       int callerId = -1);
+    void bindTexture3D(const std::string &name, uint textureId, int unit,
+                       int callerId = -1);
+    void bindTextureCubemap(const std::string &name, uint textureId, int unit,
+                            int callerId = -1);
 
 #ifdef VULKAN
     VkPipelineLayout pipelineLayout = VK_NULL_HANDLE;
@@ -652,8 +695,6 @@ class Pipeline {
     VkPipelineDepthStencilStateCreateInfo depthStencil;
     VkPipelineColorBlendStateCreateInfo colorBlending;
 
-    // Storage for data referenced by create info structs (must outlive pipeline
-    // creation)
     std::vector<VkDynamicState> vkDynamicStates;
     std::vector<VkVertexInputBindingDescription> vkBindingDescriptions;
     std::vector<VkVertexInputAttributeDescription> vkAttributeDescriptions;
@@ -666,7 +707,6 @@ class Pipeline {
                        bool normalized) const;
     void buildPipelineLayout();
 
-    // Descriptor set management for uniform binding
     VkDescriptorPool descriptorPool = VK_NULL_HANDLE;
     std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
     std::vector<VkDescriptorSet> descriptorSets;
@@ -683,7 +723,6 @@ class Pipeline {
     std::map<uint32_t, std::map<uint32_t, DescriptorBindingInfoEntry>>
         descriptorBindingInfo;
 
-    // Uniform buffer storage: maps (set, binding) to buffer and memory
     struct UniformBufferAllocation {
         VkBuffer buffer = VK_NULL_HANDLE;
         VkDeviceMemory memory = VK_NULL_HANDLE;
@@ -693,20 +732,16 @@ class Pipeline {
     };
     std::unordered_map<uint64_t, UniformBufferAllocation> uniformBuffers;
 
-    // Helper to get key from set and binding
     static uint64_t makeBindingKey(uint32_t set, uint32_t binding) {
         return (static_cast<uint64_t>(set) << 32) | binding;
     }
 
-    // Create/get uniform buffer for a binding
     UniformBufferAllocation &
     getOrCreateUniformBuffer(uint32_t set, uint32_t binding, VkDeviceSize size);
 
-    // Update uniform data
     void updateUniformData(uint32_t set, uint32_t binding, uint32_t offset,
                            const void *data, size_t size);
 
-    // Build descriptor sets from shader reflection
     void buildDescriptorSets();
     void ensureDescriptorResources();
     void bindDescriptorSets(VkCommandBuffer commandBuffer);
@@ -756,8 +791,8 @@ class Pipeline {
 
     int viewportX = 0;
     int viewportY = 0;
-    int viewportWidth = 800;
-    int viewportHeight = 600;
+    int viewportWidth = 0;
+    int viewportHeight = 0;
 
     uint getGLBlendFactor(BlendFunc factor) const;
     uint getGLBlendEquation(BlendEquation equation) const;
@@ -798,12 +833,14 @@ class Buffer {
   public:
     static std::shared_ptr<Buffer>
     create(BufferUsage usage, size_t size, const void *data = nullptr,
-           MemoryUsageType memoryUsage = MemoryUsageType::GPUOnly);
+           MemoryUsageType memoryUsage = MemoryUsageType::GPUOnly,
+           int callerId = -1);
+    ~Buffer();
 
     void updateData(size_t offset, size_t size, const void *data);
 
-    void bind() const;
-    void unbind() const;
+    void bind(int callerId = -1) const;
+    void unbind(int callerId = -1) const;
 
     uint bufferID;
 
@@ -878,6 +915,7 @@ class Framebuffer {
   public:
     static std::shared_ptr<Framebuffer> create(int width, int height);
     static std::shared_ptr<Framebuffer> create();
+    ~Framebuffer();
 
     void addAttachment(const Attachment &attachment);
     void attachDepthStencilBuffer(
@@ -939,6 +977,7 @@ class Framebuffer {
      * @param attachmentCount Number of color attachments to enable (0-N).
      */
     void setDrawBuffers(int attachmentCount);
+    int getDrawBufferCount() const { return drawBufferCount; }
 
     bool getStatus() const;
 
@@ -961,6 +1000,7 @@ class Framebuffer {
 
   private:
     bool colorBufferDisabled = false;
+    int drawBufferCount = -1;
 };
 
 #ifdef VULKAN
@@ -1034,6 +1074,7 @@ class ResolveAction {
 
 class CommandBuffer {
   public:
+    ~CommandBuffer();
     void start();
     void beginPass(std::shared_ptr<RenderPass> renderPass);
     void beginSampled(std::shared_ptr<Framebuffer> readFramebuffer,
@@ -1047,26 +1088,27 @@ class CommandBuffer {
     void bindDrawingState(std::shared_ptr<DrawingState> drawingState);
     void unbindDrawingState();
     void draw(uint vertexCount, uint instanceCount = 1, uint firstVertex = 0,
-              [[maybe_unused]] uint firstInstance = 0);
+              [[maybe_unused]] uint firstInstance = 0, int objectId = -1);
     void drawIndexed(uint indexCount, uint instanceCount = 1,
                      uint firstIndex = 0, int vertexOffset = 0,
-                     uint firstInstance = 0);
+                     uint firstInstance = 0, int objectId = -1);
     /**
      * @brief Draws using tessellation patches.
      * @param vertexCount Number of vertices to draw.
      * @param firstVertex Starting vertex offset.
      * Requires Pipeline with PrimitiveStyle::Patches and setPatchVertices().
      */
-    void drawPatches(uint vertexCount, uint firstVertex = 0);
+    void drawPatches(uint vertexCount, uint firstVertex = 0, int objectId = -1);
     void performResolve(std::shared_ptr<ResolveAction> resolveAction);
 
     void clearColor(float r, float g, float b, float a);
     void clearDepth(float depth);
     void clear(float r, float g, float b, float a, float depth);
 
+    int getAndResetDrawCallCount();
+
   private:
 #ifdef VULKAN
-    // Per-frame command buffers and sync objects
     static constexpr uint32_t MAX_FRAMES_IN_FLIGHT = 3;
     std::vector<VkCommandBuffer> commandBuffers;
     std::vector<VkSemaphore> imageAvailableSemaphores;
@@ -1074,15 +1116,13 @@ class CommandBuffer {
     std::vector<VkFence> inFlightFences;
     uint32_t currentFrame = 0;
     uint32_t imageIndex = 0;
-    bool imageAcquired = false; // Track if we've acquired a swapchain image
-    bool commandBufferBegan =
-        false; // Track if command buffer recording has started
+    bool imageAcquired = false;
+    bool commandBufferBegan = false;
     void record(uint32_t imageIndex);
     void beginCommandBufferIfNeeded();
     void createSyncObjects();
     void bindVertexBuffersIfNeeded();
 
-    // Helper to get current frame's command buffer
     VkCommandBuffer getCurrentCommandBuffer() const {
         return commandBuffers.empty() ? VK_NULL_HANDLE
                                       : commandBuffers[currentFrame];
@@ -1091,6 +1131,8 @@ class CommandBuffer {
 
     float clearColorValue[4] = {0.0f, 0.0f, 0.0f, 1.0f};
     float clearDepthValue = 1.0f;
+
+    int drawCallCount = 0;
 
     bool hasStarted = false;
 

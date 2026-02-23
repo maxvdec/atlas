@@ -10,7 +10,7 @@
 #ifndef BEZEL_SHAPE_H
 #define BEZEL_SHAPE_H
 
-#include "bezel/bounds.h"
+#include "bezel/native/bounds.h"
 #include <array>
 #include <glm/glm.hpp>
 #include <memory>

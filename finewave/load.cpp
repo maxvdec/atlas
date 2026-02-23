@@ -8,6 +8,7 @@
 //
 
 #include "finewave/audio.h"
+#include "atlas/tracer/log.h"
 #include "atlas/workspace.h"
 #include <AL/al.h>
 #include <AL/alc.h>
@@ -74,6 +75,7 @@ std::shared_ptr<AudioData> AudioData::fromResource(Resource resource) {
     bool isMono = false;
     CHECK_AL_ERROR();
     if (resource.type != ResourceType::Audio) {
+        atlas_error("Resource is not of type Audio: " + resource.name);
         throw std::invalid_argument("Resource is not of type Audio");
     }
 
@@ -81,6 +83,7 @@ std::shared_ptr<AudioData> AudioData::fromResource(Resource resource) {
         Mp3Data data{};
         drmp3 mp3;
         if (!drmp3_init_file(&mp3, resource.path.c_str(), nullptr)) {
+            atlas_error("Failed to open MP3 file: " + resource.path.string());
             throw std::runtime_error("Failed to open MP3 file");
         }
 

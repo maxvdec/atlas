@@ -35,9 +35,15 @@ class Window;
  * // Configure wave animation
  * waterSurface.setWaveVelocity(0.5f); // Wave movement speed
  *
- * // Load normal and movement textures for surface detail
- * waterSurface.normalTexture = Texture::fromFile("water_normal.png");
- * waterSurface.movementTexture = Texture::fromFile("water_flow.png");
+ * // Load normal and movement textures for surface detail (via Workspace)
+ * Workspace::get().createResource("textures/water_normal.png", "WaterNormal",
+ *                                ResourceType::Image);
+ * Workspace::get().createResource("textures/water_flow.png", "WaterFlow",
+ *                                ResourceType::Image);
+ * waterSurface.normalTexture =
+ *     Texture::fromResourceName("WaterNormal", TextureType::Normal);
+ * waterSurface.movementTexture =
+ *     Texture::fromResourceName("WaterFlow", TextureType::Color);
  *
  * // Initialize and add to scene
  * waterSurface.initialize();
@@ -192,6 +198,11 @@ struct Fluid : GameObject {
     std::shared_ptr<RenderTarget> reflectionTarget;
     std::shared_ptr<RenderTarget> refractionTarget;
     bool captureDirty = true;
+    float captureUpdateInterval = 1.0f / 10.0f;
+    float captureUpdateTimer = 0.0f;
+    bool hasCaptureCameraState = false;
+    glm::vec3 lastCaptureCameraPosition{0.0f};
+    glm::vec3 lastCaptureCameraDirection{0.0f, 0.0f, -1.0f};
 
     void ensureTargets(Window &window);
     glm::vec4 calculateClipPlane() const;
