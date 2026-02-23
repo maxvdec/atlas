@@ -28,8 +28,24 @@
 
 namespace opal {
 
+/**
+ * @file opal/opal.h
+ * @brief Opal rendering abstraction layer (OpenGL/Vulkan/Metal).
+ *
+ * Opal provides context creation, device acquisition, command buffers, and
+ * common GPU resources.
+ *
+ * \note This is an alpha API and may change.
+ */
+
+/**
+ * @brief OpenGL context profile selection.
+ */
 enum class OpenGLProfile { Core, Compatibility };
 
+/**
+ * @brief Parameters used when creating an Opal `Context`.
+ */
 struct ContextConfiguration {
     bool useOpenGL = true;
     int majorVersion = 4;
@@ -40,19 +56,29 @@ struct ContextConfiguration {
     bool createValidationLayers = true;
 };
 
+/**
+ * @brief Rendering context wrapper (GLFW + backend initialization).
+ *
+ * For OpenGL, the context owns the `GLFWwindow*`.
+ */
 class Context {
   public:
+    /** @brief Creates a new context instance. */
     static std::shared_ptr<Context> create(ContextConfiguration config = {});
     ~Context();
 
+    /** @brief Sets a GLFW window/context flag to a boolean value. */
     void setFlag(int flag, bool enabled);
+    /** @brief Sets a GLFW window/context flag to an integer value. */
     void setFlag(int flag, int value);
 
     GLFWwindow *makeWindow(int width, int height, const char *title,
                            GLFWmonitor *monitor = nullptr,
                            GLFWwindow *share = nullptr);
+    /** @brief Returns the owned window pointer, if created. */
     GLFWwindow *getWindow() const;
 
+    /** @brief Makes the context current for the calling thread. */
     void makeCurrent();
 
     GLFWwindow *window = nullptr;

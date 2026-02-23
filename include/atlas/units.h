@@ -235,10 +235,10 @@ struct Rotation3d {
  * \subsection color-example Example
  * ```cpp
  * // Create colors using static constructors
- * Color red = Color::Red();
+ * Color red = Color::red();
  * Color customColor(0.2, 0.8, 0.5, 1.0);
- * // Parse from hex string
- * Color fromHex = Color::fromHex("#FF5733");
+ * // Parse from a packed RGB hex value (0xRRGGBB)
+ * Color fromHex = Color::fromHex(0xFF5733);
  * // Mix two colors
  * Color blended = Color::mix(red, customColor, 0.5);
  * // Convert to GLM vector
