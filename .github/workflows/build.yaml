@@ -16,5 +16,5 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake .. -DBACKEND_OPENGL=OFF
+          cmake .. -DBACKEND=AUTO
           make -j4
