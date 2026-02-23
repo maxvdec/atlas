@@ -504,7 +504,7 @@ static inline __attribute__((always_inline))
 float calculateShadow(thread const ShadowParameters& shadowParam, thread const float4& fragPosLightSpace, constant Uniforms& _163, texture2d<float> texture1, sampler texture1Smplr, texture2d<float> texture2, sampler texture2Smplr, texture2d<float> texture3, sampler texture3Smplr, texture2d<float> texture4, sampler texture4Smplr, texture2d<float> texture5, sampler texture5Smplr, texture2d<float> texture6, sampler texture6Smplr, texture2d<float> texture7, sampler texture7Smplr, texture2d<float> texture8, sampler texture8Smplr, texture2d<float> texture9, sampler texture9Smplr, texture2d<float> texture10, sampler texture10Smplr, device DirectionalLightsUBO& _1083, thread float3& Normal, thread float3& FragPos)
 {
     float3 projCoords = fragPosLightSpace.xyz / float3(fragPosLightSpace.w);
-    projCoords.xy = (projCoords.xy * 0.5) + float2(0.5);
+    projCoords = (projCoords * 0.5) + float3(0.5);
     bool _1362 = projCoords.x < 0.0;
     bool _1369;
     if (!_1362)
@@ -1161,7 +1161,7 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Uniforms& _163 [[buf
     float3 color = (ambient + lighting) + iblContribution;
     out.FragColor = float4(color, 1.0);
     float brightness = dot(color, float3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875));
-    if (brightness > 1.0)
+    if (brightness > 0.75)
     {
         out.BrightColor = float4(color, 1.0);
     }

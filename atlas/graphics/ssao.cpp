@@ -101,7 +101,12 @@ void Window::renderSSAO(std::shared_ptr<opal::CommandBuffer> commandBuffer) {
         this->ssaoMapsDirty = true;
     }
 
-    if (!this->ssaoMapsDirty && this->ssaoUpdateCooldown > 0.0f) {
+    if (!this->ssaoMapsDirty && this->ssaoUpdateCooldown > 0.0f &&
+        !cameraMoved) {
+        return;
+    }
+
+    if (this->ssaoUpdateCooldown > 0.0f && !cameraMoved) {
         return;
     }
 

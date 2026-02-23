@@ -13,6 +13,7 @@
 #include "atlas/texture.h"
 #include "atlas/tracer/log.h"
 #include "atlas/window.h"
+#include <algorithm>
 #include <tuple>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -287,11 +288,13 @@ ShadowParams DirectionalLight::calculateLightSpaceMatrix(
         near_plane = 0.1f;
         far_plane = lightDistance * 2.0f;
     }
+    near_plane = std::max(0.1f, near_plane);
+    far_plane = std::max(near_plane + 1.0f, far_plane);
 
     glm::mat4 lightProjection =
         glm::ortho(left, right, bottom, top, near_plane, far_plane);
 
-    float bias = 0.0002f * glm::length(extent);
+    float bias = std::clamp(0.000008f * glm::length(extent), 0.00002f, 0.00025f);
 
     return {.lightView = lightView,
             .lightProjection = lightProjection,

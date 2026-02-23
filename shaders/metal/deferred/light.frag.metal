@@ -467,7 +467,7 @@ float calculateShadow(thread const ShadowParameters& shadowParam, thread const f
     }
     float4 fragPosLightSpace = (shadowParam.lightProjection * shadowParam.lightView) * float4(fragPos, 1.0);
     float3 projCoords = fragPosLightSpace.xyz / float3(fragPosLightSpace.w);
-    projCoords.xy = (projCoords.xy * 0.5) + float2(0.5);
+    projCoords = (projCoords * 0.5) + float3(0.5);
     bool _456 = projCoords.x < 0.0;
     bool _463;
     if (!_456)
@@ -519,10 +519,10 @@ float calculateShadow(thread const ShadowParameters& shadowParam, thread const f
         return 0.0;
     }
     float currentDepth = projCoords.z;
-    float3 lightDirWorld = fast::normalize((spvInverse4x4(shadowParam.lightView) * float4(0.0, 0.0, -1.0, 0.0)).xyz);
+    float3 lightDirWorld = fast::normalize(-(spvInverse4x4(shadowParam.lightView) * float4(0.0, 0.0, -1.0, 0.0)).xyz);
     float biasValue = shadowParam.bias0;
     float ndotl = fast::max(dot(normal, lightDirWorld), 0.0);
-    float minBias = 0.0005000000237487256526947021484375;
+    float minBias = fast::max(4.9999998736893758177757263183594e-05, biasValue * 0.25);
     float bias0 = fast::max(biasValue * (1.0 - ndotl), minBias);
     float shadow = 0.0;
     float2 texelSize = float2(1.0) / dims;
@@ -792,9 +792,9 @@ fragment main0_out main0(main0_in in [[stage_in]], constant UBO& _526 [[buffer(0
     float3 V = (float3(_526.cameraPosition) - FragPos) / float3(viewDistance);
     float3 F0 = mix(float3(0.039999999105930328369140625), albedo, float3(metallic));
     float ssaoFactor = fast::clamp(ssao.sample(ssaoSmplr, in.TexCoord).x, 0.0, 1.0);
-    float ssaoDesaturated = mix(1.0, ssaoFactor, 0.3499999940395355224609375);
-    float occlusion = fast::clamp(ao * (0.20000000298023223876953125 + (0.800000011920928955078125 * ssaoDesaturated)), 0.0, 1.0);
-    float lightingOcclusion = fast::clamp(ssaoDesaturated, 0.25, 1.0);
+    float ssaoContrast = fast::clamp(powr(ssaoFactor, 1.7999999523162841796875), 0.0, 1.0);
+    float occlusion = fast::clamp(ao * (0.0199999995529651641845703125 + (0.980000019073486328125 * ssaoContrast)), 0.0, 1.0);
+    float lightingOcclusion = fast::clamp(ssaoContrast, 0.0199999995529651641845703125, 1.0);
     float dirShadow = 0.0;
     float pointShadow = 0.0;
     int shadowCount = _1355.shadowParamCount;
@@ -996,7 +996,7 @@ fragment main0_out main0(main0_in in [[stage_in]], constant UBO& _526 [[buffer(0
     }
     out.FragColor = float4(finalColor, 1.0);
     float brightness = dot(out.FragColor.xyz, float3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875));
-    if (brightness > 1.0)
+    if (brightness > 0.75)
     {
         out.BrightColor = float4(out.FragColor.xyz, 1.0);
     }

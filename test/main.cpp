@@ -197,6 +197,7 @@ class MainScene : public Scene {
         env.fog.intensity = 0.0;
         env.volumetricLighting.enabled = false;
         env.lightBloom.radius = 0.008f;
+        env.lightBloom.maxSamples = 5;
         this->setEnvironment(env);
 
         Workspace::get().setRootPath(std::string(TEST_PATH) + "/resources/");
@@ -217,6 +218,7 @@ class MainScene : public Scene {
         areaLight.position = {0.0f, 2.0f, 0.0f};
         areaLight.rotate({0.0f, 90.0f, 0.0f});
         areaLight.castsBothSides = true;
+        areaLight.setColor({0.7f, 0.7f, 0.7f, 1.0f});
         this->addAreaLight(&areaLight);
         areaLight.createDebugObject();
         areaLight.addDebugObject(window);
@@ -230,19 +232,22 @@ class MainScene : public Scene {
         fpsText.addTraitComponent<Text>(FPSTextUpdater());
         window.addUIObject(&fpsText);
 
-        ball = createDebugSphere(0.5f, 48, 48);
+        ball = createDebugSphere(0.5f, 32, 32);
         ball.material.metallic = 1.0f;
         ball.material.roughness = 0.0f;
         ball.move({0.f, 1.0f, 1.0f});
         window.addObject(&ball);
 
-        ball2 = createDebugSphere(0.5f, 48, 48);
+        ball2 = createDebugSphere(0.5f, 32, 32);
         ball2.move({0.f, 1.0f, -1.0f});
         window.addObject(&ball2);
 
-        light = DirectionalLight({1.0f, -0.3f, 0.5f}, Color::white());
+        light = DirectionalLight({0.35f, -1.0f, 0.2f}, Color::white());
+        this->addDirectionalLight(&light);
+        light.castShadows(window, 1024);
+        this->setAmbientIntensity(0.2f);
 
-        frameBuffer = RenderTarget(window, RenderTargetType::Multisampled);
+        frameBuffer = RenderTarget(window, RenderTargetType::Scene);
         window.addRenderTarget(&frameBuffer);
         frameBuffer.display(window);
 
@@ -251,9 +256,7 @@ class MainScene : public Scene {
         atmosphere.secondsPerHour = 4.f;
         atmosphere.setTime(12.0);
         atmosphere.cycle = false;
-        atmosphere.useGlobalLight();
         atmosphere.wind = {0.1f, 0.0f, 0.0f};
-        atmosphere.castShadowsFromSunlight(1024);
     }
 };
 
@@ -261,7 +264,10 @@ int main() {
     Window window({.title = "My Window",
                    .width = 1600,
                    .height = 1200,
-                   .mouseCaptured = true});
+                   .renderScale = 0.5f,
+                   .mouseCaptured = true,
+                   .multisampling = false,
+                   .ssaoScale = 0.4f});
     MainScene scene;
     window.setScene(&scene);
     window.run();

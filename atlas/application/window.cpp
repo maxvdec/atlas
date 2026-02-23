@@ -167,6 +167,13 @@ Window::Window(WindowConfiguration config)
     this->useMultiPassPointShadows = false;
 #endif
 
+#if defined(METAL)
+    this->shadowUpdateInterval = 1.0f / 10.0f;
+    this->ssaoUpdateInterval = 1.0f / 12.0f;
+    this->ssaoKernelSize = 16;
+    this->bloomBlurPasses = 4;
+#endif
+
     ShaderProgram pointProgram = ShaderProgram();
     if (this->useMultiPassPointShadows) {
         // Use multi-pass shaders without geometry shader
@@ -986,7 +993,7 @@ void Window::renderLightsToShadowMaps(
         return;
     }
 
-    if (this->shadowUpdateCooldown > 0.0f) {
+    if (this->shadowUpdateCooldown > 0.0f && !cameraMoved && !lightsChanged) {
         return;
     }
 
@@ -1045,7 +1052,11 @@ void Window::renderLightsToShadowMaps(
         depthPipeline->setViewport(
             0, 0, shadowRenderTarget->texture.creationData.width,
             shadowRenderTarget->texture.creationData.height);
+#ifdef METAL
+        depthPipeline->setCullMode(opal::CullMode::None);
+#else
         depthPipeline->setCullMode(opal::CullMode::Back);
+#endif
         depthPipeline->setFrontFace(this->frontFace);
         depthPipeline->enableDepthTest(true);
         depthPipeline->enablePolygonOffset(true);
@@ -1069,7 +1080,7 @@ void Window::renderLightsToShadowMaps(
             if (obj->renderLateForward) {
                 continue;
             }
-            if (obj->getPipeline() == std::nullopt || !obj->canCastShadows()) {
+            if (!obj->canCastShadows()) {
                 continue;
             }
 
@@ -1081,7 +1092,7 @@ void Window::renderLightsToShadowMaps(
         }
 
         for (auto &obj : this->lateForwardRenderables) {
-            if (obj->getPipeline() == std::nullopt || !obj->canCastShadows()) {
+            if (!obj->canCastShadows()) {
                 continue;
             }
 
@@ -1110,7 +1121,11 @@ void Window::renderLightsToShadowMaps(
         spotlightsPipeline->setViewport(
             0, 0, shadowRenderTarget->texture.creationData.width,
             shadowRenderTarget->texture.creationData.height);
+#ifdef METAL
+        spotlightsPipeline->setCullMode(opal::CullMode::None);
+#else
         spotlightsPipeline->setCullMode(opal::CullMode::Back);
+#endif
         spotlightsPipeline->setFrontFace(this->frontFace);
         spotlightsPipeline->enableDepthTest(true);
         spotlightsPipeline->enablePolygonOffset(true);
@@ -1132,13 +1147,13 @@ void Window::renderLightsToShadowMaps(
         ShadowParams cached;
         cached.lightView = lightView;
         cached.lightProjection = lightProjection;
-        cached.bias = 0.005f;
+        cached.bias = 0.001f;
         light->lastShadowParams = cached;
         for (auto &obj : this->renderables) {
             if (obj->renderLateForward) {
                 continue;
             }
-            if (obj->getPipeline() == std::nullopt || !obj->canCastShadows()) {
+            if (!obj->canCastShadows()) {
                 continue;
             }
 
@@ -1150,7 +1165,7 @@ void Window::renderLightsToShadowMaps(
         }
 
         for (auto &obj : this->lateForwardRenderables) {
-            if (obj->getPipeline() == std::nullopt || !obj->canCastShadows()) {
+            if (!obj->canCastShadows()) {
                 continue;
             }
 
@@ -1179,7 +1194,11 @@ void Window::renderLightsToShadowMaps(
         pointLightPipeline->setViewport(
             0, 0, shadowRenderTarget->texture.creationData.width,
             shadowRenderTarget->texture.creationData.height);
+#ifdef METAL
+        pointLightPipeline->setCullMode(opal::CullMode::None);
+#else
         pointLightPipeline->setCullMode(opal::CullMode::Back);
+#endif
         pointLightPipeline->setFrontFace(this->frontFace);
         pointLightPipeline->enableDepthTest(true);
         pointLightPipeline->enablePolygonOffset(true);
@@ -1217,8 +1236,7 @@ void Window::renderLightsToShadowMaps(
                     if (obj->renderLateForward) {
                         continue;
                     }
-                    if (obj->getPipeline() == std::nullopt ||
-                        !obj->canCastShadows()) {
+                    if (!obj->canCastShadows()) {
                         continue;
                     }
 
@@ -1229,8 +1247,7 @@ void Window::renderLightsToShadowMaps(
                 }
 
                 for (auto &obj : this->lateForwardRenderables) {
-                    if (obj->getPipeline() == std::nullopt ||
-                        !obj->canCastShadows()) {
+                    if (!obj->canCastShadows()) {
                         continue;
                     }
 
@@ -1262,8 +1279,7 @@ void Window::renderLightsToShadowMaps(
                 if (obj->renderLateForward) {
                     continue;
                 }
-                if (obj->getPipeline() == std::nullopt ||
-                    !obj->canCastShadows()) {
+                if (!obj->canCastShadows()) {
                     continue;
                 }
 
@@ -1274,8 +1290,7 @@ void Window::renderLightsToShadowMaps(
             }
 
             for (auto &obj : this->lateForwardRenderables) {
-                if (obj->getPipeline() == std::nullopt ||
-                    !obj->canCastShadows()) {
+                if (!obj->canCastShadows()) {
                     continue;
                 }
 
