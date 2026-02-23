@@ -1,5 +1,6 @@
 var classopal_1_1_context =
 [
+    [ "~Context", "classopal_1_1_context.html#a19236b951c548721b6ec2bb1a1f30571", null ],
     [ "create", "classopal_1_1_context.html#a486ff35465dc96ead30600c6acb7cc85", null ],
     [ "getWindow", "classopal_1_1_context.html#a491d00cd9b2f9d2b25adbb640fd0e55f", null ],
     [ "makeCurrent", "classopal_1_1_context.html#a409fda9ca3569ffbb94bec8ca9324b27", null ],

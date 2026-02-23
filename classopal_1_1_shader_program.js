@@ -1,6 +1,7 @@
 var classopal_1_1_shader_program =
 [
-    [ "attachShader", "classopal_1_1_shader_program.html#a7fc8fdd632911580e8443c02a5c0260f", null ],
+    [ "~ShaderProgram", "classopal_1_1_shader_program.html#a39b1d9af7f4400c3ec983693a5fe014f", null ],
+    [ "attachShader", "classopal_1_1_shader_program.html#a06a11d5c376bc857689b97090beb79f6", null ],
     [ "create", "classopal_1_1_shader_program.html#abcbe4639d3351c46594dedfb89fbc5f2", null ],
     [ "getProgramLog", "classopal_1_1_shader_program.html#a73dc864ceea9e336eefa444d1a8a8f4d", null ],
     [ "getProgramStatus", "classopal_1_1_shader_program.html#a389d836807a68daba7820cfd677e2dc5", null ],

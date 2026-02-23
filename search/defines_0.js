@@ -1,5 +1,6 @@
 var searchData=
 [
-  ['default_5ffrag_5fshader_0',['DEFAULT_FRAG_SHADER',['../shader_8h.html#ae3dc3c5c789f2407bf2e7c2799bec14e',1,'shader.h']]],
-  ['default_5fvert_5fshader_1',['DEFAULT_VERT_SHADER',['../shader_8h.html#ad7c89fac3d5c6fcaafd9bc338cc8a2d2',1,'shader.h']]]
+  ['atlas_5ferror_0',['atlas_error',['../log_8h.html#aa8f3ed89b1e26864bdb94d0aaeaf58e7',1,'log.h']]],
+  ['atlas_5flog_1',['atlas_log',['../log_8h.html#a227fb6901cbf4ff898f55ac6faaf3396',1,'log.h']]],
+  ['atlas_5fwarning_2',['atlas_warning',['../log_8h.html#a01596ef17626c5bfeade57b96c7cc40b',1,'log.h']]]
 ];

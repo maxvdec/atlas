@@ -18,6 +18,7 @@ var searchData=
   ['endpass_15',['endPass',['../classopal_1_1_command_buffer.html#a5b8329dd7cc72a2a809124360a4a3b8b',1,'opal::CommandBuffer']]],
   ['enumeratemonitors_16',['enumerateMonitors',['../class_window.html#a9a108e8d770a35f894520cbc9e8ffe76',1,'Window']]],
   ['epaexpand_17',['epaExpand',['../namespacebezel.html#a302569782e842ff805fac641ff8431da',1,'bezel']]],
-  ['expand_18',['expand',['../class_bounds.html#a8971f66bfd951e16426ee10d5835cec0',1,'Bounds::expand(std::vector&lt; glm::vec3 &gt; pts, const int number)'],['../class_bounds.html#a246aa767e226ec38f1b927012df3ab1e',1,'Bounds::expand(const glm::vec3 rhs)'],['../class_bounds.html#a3d2cf840b97a63278c3993df60ecfd3f',1,'Bounds::expand(const Bounds &amp;rhs)']]],
-  ['expandconvexhull_19',['expandConvexHull',['../namespacebezel.html#a981738541d073c0a6a1a043a10b6e167',1,'bezel']]]
+  ['error_18',['error',['../class_logger.html#a21d3ff393ae4d9b074bb9e952dc69c93',1,'Logger']]],
+  ['expand_19',['expand',['../class_bounds.html#a8971f66bfd951e16426ee10d5835cec0',1,'Bounds::expand(std::vector&lt; glm::vec3 &gt; pts, const int number)'],['../class_bounds.html#a246aa767e226ec38f1b927012df3ab1e',1,'Bounds::expand(const glm::vec3 rhs)'],['../class_bounds.html#a3d2cf840b97a63278c3993df60ecfd3f',1,'Bounds::expand(const Bounds &amp;rhs)']]],
+  ['expandconvexhull_20',['expandConvexHull',['../namespacebezel.html#a981738541d073c0a6a1a043a10b6e167',1,'bezel']]]
 ];

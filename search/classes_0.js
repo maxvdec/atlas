@@ -1,12 +1,14 @@
 var searchData=
 [
-  ['ambientlight_0',['AmbientLight',['../struct_ambient_light.html',1,'']]],
-  ['arealight_1',['AreaLight',['../struct_area_light.html',1,'']]],
-  ['atmosphere_2',['Atmosphere',['../class_atmosphere.html',1,'']]],
-  ['attachment_3',['Attachment',['../classopal_1_1_attachment.html',1,'opal']]],
-  ['audiodata_4',['AudioData',['../class_audio_data.html',1,'']]],
-  ['audioeffect_5',['AudioEffect',['../class_audio_effect.html',1,'']]],
-  ['audioengine_6',['AudioEngine',['../class_audio_engine.html',1,'']]],
-  ['audioplayer_7',['AudioPlayer',['../class_audio_player.html',1,'']]],
-  ['audiosource_8',['AudioSource',['../class_audio_source.html',1,'']]]
+  ['allocationpacket_0',['AllocationPacket',['../struct_allocation_packet.html',1,'']]],
+  ['ambientlight_1',['AmbientLight',['../struct_ambient_light.html',1,'']]],
+  ['anglelimits_2',['AngleLimits',['../struct_angle_limits.html',1,'AngleLimits'],['../structbezel_1_1_angle_limits.html',1,'bezel::AngleLimits']]],
+  ['arealight_3',['AreaLight',['../struct_area_light.html',1,'']]],
+  ['atmosphere_4',['Atmosphere',['../class_atmosphere.html',1,'']]],
+  ['attachment_5',['Attachment',['../classopal_1_1_attachment.html',1,'opal']]],
+  ['audiodata_6',['AudioData',['../class_audio_data.html',1,'']]],
+  ['audioeffect_7',['AudioEffect',['../class_audio_effect.html',1,'']]],
+  ['audioengine_8',['AudioEngine',['../class_audio_engine.html',1,'']]],
+  ['audioplayer_9',['AudioPlayer',['../class_audio_player.html',1,'']]],
+  ['audiosource_10',['AudioSource',['../class_audio_source.html',1,'']]]
 ];

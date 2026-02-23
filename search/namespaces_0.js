@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['aurora_0',['aurora',['../namespaceaurora.html',1,'']]]
+  ['atlas_0',['atlas',['../namespaceatlas.html',1,'']]],
+  ['aurora_1',['aurora',['../namespaceaurora.html',1,'']]]
 ];

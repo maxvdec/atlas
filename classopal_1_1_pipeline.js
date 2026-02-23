@@ -1,13 +1,14 @@
 var classopal_1_1_pipeline =
 [
+    [ "~Pipeline", "classopal_1_1_pipeline.html#a60c3804bdfd792e7446ca7f20d4cd918", null ],
     [ "bind", "classopal_1_1_pipeline.html#ad8e579c666e6bf62f8d249dd05da0116", null ],
     [ "bindBuffer", "classopal_1_1_pipeline.html#a056a4d7f5ad6709cfcf34acc2ffb078e", null ],
     [ "bindBuffer", "classopal_1_1_pipeline.html#a5790547277f9f354dc799ac8038a188f", null ],
     [ "bindBufferData", "classopal_1_1_pipeline.html#afbe40b2e26a15b3ea7c1d8124c6c0f6c", null ],
-    [ "bindTexture", "classopal_1_1_pipeline.html#a3213261fb8540f400dfd41e21183504f", null ],
-    [ "bindTexture2D", "classopal_1_1_pipeline.html#af51a4e6060f51fa7fd3bc697adc8e290", null ],
-    [ "bindTexture3D", "classopal_1_1_pipeline.html#a5965276c207aced3ac5795ed37eacf16", null ],
-    [ "bindTextureCubemap", "classopal_1_1_pipeline.html#ab1018f789bfc7af6b6a897183fae69c3", null ],
+    [ "bindTexture", "classopal_1_1_pipeline.html#aa20130df8a74ebe5cd9274d407eac539", null ],
+    [ "bindTexture2D", "classopal_1_1_pipeline.html#a69f7eab2057e4965d533aba6517655cb", null ],
+    [ "bindTexture3D", "classopal_1_1_pipeline.html#a46b53e088c4e46107bfd0e9df6f781f8", null ],
+    [ "bindTextureCubemap", "classopal_1_1_pipeline.html#a792f99dc16eba26d0a80c1e3ff856de2", null ],
     [ "build", "classopal_1_1_pipeline.html#a42e38e706429814a9b8f558bbe030ec3", null ],
     [ "create", "classopal_1_1_pipeline.html#a20c6ae4c3bcd424af4837217b3e6632a", null ],
     [ "enableBlending", "classopal_1_1_pipeline.html#acfacf3227b4107dbb220545e22b072fb", null ],

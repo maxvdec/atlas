@@ -1,8 +1,57 @@
 var namespacebezel =
 [
+    [ "jolt", "namespacebezel_1_1jolt.html", "namespacebezel_1_1jolt" ],
     [ "collisions", "namespacebezel_1_1collisions.html", [
       [ "conservativeAdvance", "namespacebezel_1_1collisions.html#ad1a004088d7b990c836565793861e573", null ],
       [ "sphereToSphereStatic", "namespacebezel_1_1collisions.html#ac22c4b27897eefcbfdcc1513a545e1ab", null ]
+    ] ],
+    [ "BodyIdentifier", "structbezel_1_1_body_identifier.html", "structbezel_1_1_body_identifier" ],
+    [ "Collider", "classbezel_1_1_collider.html", "classbezel_1_1_collider" ],
+    [ "BoxCollider", "classbezel_1_1_box_collider.html", "classbezel_1_1_box_collider" ],
+    [ "CapsuleCollider", "classbezel_1_1_capsule_collider.html", "classbezel_1_1_capsule_collider" ],
+    [ "SphereCollider", "classbezel_1_1_sphere_collider.html", "classbezel_1_1_sphere_collider" ],
+    [ "MeshCollider", "classbezel_1_1_mesh_collider.html", "classbezel_1_1_mesh_collider" ],
+    [ "CollisionDispatcher", "classbezel_1_1_collision_dispatcher.html", "classbezel_1_1_collision_dispatcher" ],
+    [ "RaycastHit", "structbezel_1_1_raycast_hit.html", "structbezel_1_1_raycast_hit" ],
+    [ "RaycastResult", "structbezel_1_1_raycast_result.html", "structbezel_1_1_raycast_result" ],
+    [ "OverlapHit", "structbezel_1_1_overlap_hit.html", "structbezel_1_1_overlap_hit" ],
+    [ "OverlapResult", "structbezel_1_1_overlap_result.html", "structbezel_1_1_overlap_result" ],
+    [ "SweepHit", "structbezel_1_1_sweep_hit.html", "structbezel_1_1_sweep_hit" ],
+    [ "SweepResult", "structbezel_1_1_sweep_result.html", "structbezel_1_1_sweep_result" ],
+    [ "WorldBody", "structbezel_1_1_world_body.html", null ],
+    [ "Spring", "structbezel_1_1_spring.html", "structbezel_1_1_spring" ],
+    [ "AngleLimits", "structbezel_1_1_angle_limits.html", "structbezel_1_1_angle_limits" ],
+    [ "Motor", "structbezel_1_1_motor.html", "structbezel_1_1_motor" ],
+    [ "Joint", "classbezel_1_1_joint.html", "classbezel_1_1_joint" ],
+    [ "FixedJoint", "classbezel_1_1_fixed_joint.html", "classbezel_1_1_fixed_joint" ],
+    [ "HingeJoint", "classbezel_1_1_hinge_joint.html", "classbezel_1_1_hinge_joint" ],
+    [ "SpringJoint", "classbezel_1_1_spring_joint.html", "classbezel_1_1_spring_joint" ],
+    [ "VehicleWheelSettings", "structbezel_1_1_vehicle_wheel_settings.html", "structbezel_1_1_vehicle_wheel_settings" ],
+    [ "VehicleDifferential", "structbezel_1_1_vehicle_differential.html", "structbezel_1_1_vehicle_differential" ],
+    [ "VehicleEngine", "structbezel_1_1_vehicle_engine.html", "structbezel_1_1_vehicle_engine" ],
+    [ "VehicleTransmission", "structbezel_1_1_vehicle_transmission.html", "structbezel_1_1_vehicle_transmission" ],
+    [ "VehicleControllerSettings", "structbezel_1_1_vehicle_controller_settings.html", "structbezel_1_1_vehicle_controller_settings" ],
+    [ "VehicleSettings", "structbezel_1_1_vehicle_settings.html", "structbezel_1_1_vehicle_settings" ],
+    [ "Vehicle", "classbezel_1_1_vehicle.html", "classbezel_1_1_vehicle" ],
+    [ "Rigidbody", "structbezel_1_1_rigidbody.html", "structbezel_1_1_rigidbody" ],
+    [ "PhysicsWorld", "classbezel_1_1_physics_world.html", "classbezel_1_1_physics_world" ],
+    [ "JointChild", "namespacebezel.html#a8e0171ff0a6f8980d2151088534223e4", null ],
+    [ "MotionType", "namespacebezel.html#ab5ff10e4624750d570c4ad4af8061a24", [
+      [ "Static", "namespacebezel.html#ab5ff10e4624750d570c4ad4af8061a24a84a8921b25f505d0d2077aeb5db4bc16", null ],
+      [ "Dynamic", "namespacebezel.html#ab5ff10e4624750d570c4ad4af8061a24a971fd8cc345d8bd9f92e9f7d88fdf20c", null ],
+      [ "Kinematic", "namespacebezel.html#ab5ff10e4624750d570c4ad4af8061a24a40c78b58b86002ee38fad2d3c9dd787e", null ]
+    ] ],
+    [ "Space", "namespacebezel.html#a7e09e6c26234bd3ee104ceba85cf2215", [
+      [ "Local", "namespacebezel.html#a7e09e6c26234bd3ee104ceba85cf2215a509820290d57f333403f490dde7316f4", null ],
+      [ "Global", "namespacebezel.html#a7e09e6c26234bd3ee104ceba85cf2215a4cc6684df7b4a92b1dec6fce3264fac8", null ]
+    ] ],
+    [ "SpringMode", "namespacebezel.html#a1c558cc155222c03d511c30b1c2f0861", [
+      [ "FrequencyAndDamping", "namespacebezel.html#a1c558cc155222c03d511c30b1c2f0861a52630869b4ed10261d514c91e9c9c018", null ],
+      [ "StiffnessAndDamping", "namespacebezel.html#a1c558cc155222c03d511c30b1c2f0861a80c2dd5c28197f2baebff76bf0299d47", null ]
+    ] ],
+    [ "VehicleTransmissionMode", "namespacebezel.html#aba94739fa7056a1518c2c0a6a8fdca10", [
+      [ "Auto", "namespacebezel.html#aba94739fa7056a1518c2c0a6a8fdca10a06b9281e396db002010bde1de57262eb", null ],
+      [ "Manual", "namespacebezel.html#aba94739fa7056a1518c2c0a6a8fdca10ae1ba155a9f2e8c3be94020eef32a0301", null ]
     ] ],
     [ "addPoint", "namespacebezel.html#afe9eb92b3b8e819d49b93f4437db8ad9", null ],
     [ "barycentricCoordinates", "namespacebezel.html#a07bada85ca4efe10a1de746e385b0e6a", null ],
@@ -46,5 +95,6 @@ var namespacebezel =
     [ "support", "namespacebezel.html#afc80ee126c9ecce4cc93fa92b30a3078", null ],
     [ "sweepAndPrune1d", "namespacebezel.html#a2dcc7b65199d4b5c74834caf177660af", null ],
     [ "takeCofactor", "namespacebezel.html#a32c89abb640227ceb93aba33054b8de9", null ],
-    [ "takeOrtho", "namespacebezel.html#adf0c21df6db9a024caa808fed711f38a", null ]
+    [ "takeOrtho", "namespacebezel.html#adf0c21df6db9a024caa808fed711f38a", null ],
+    [ "INVALID_JOLT_ID", "namespacebezel.html#ad1abb1410c342f126373b19eb8f14af8", null ]
 ];

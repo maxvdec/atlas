@@ -7,6 +7,6 @@ var class_bloom_render_target =
     [ "getBloomTexture", "class_bloom_render_target.html#afbcfb35d2e65c88e071bedd9714bab2b", null ],
     [ "getElements", "class_bloom_render_target.html#a32b8ed67d708af289702dafc475c5a2a", null ],
     [ "init", "class_bloom_render_target.html#a6810eea5287d0555b126e7589dd69f12", null ],
-    [ "renderBloomTexture", "class_bloom_render_target.html#ad467afc6397bebe7f82426a29386e050", null ],
+    [ "renderBloomTexture", "class_bloom_render_target.html#aaaa0911c589db3f21691f2e4e8a4fb20", null ],
     [ "Window", "class_bloom_render_target.html#a553f958a25683445088050a69d3de8e9", null ]
 ];

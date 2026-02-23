@@ -1,14 +1,20 @@
 var searchData=
 [
-  ['wavevelocity_0',['waveVelocity',['../struct_fluid.html#a8efbd9aa19764ca29fe8e1fc4a64dc95',1,'Fluid']]],
-  ['weatherdelegate_1',['weatherDelegate',['../class_atmosphere.html#a0733736400004a7241f48940058e2c93',1,'Atmosphere']]],
-  ['weight_2',['weight',['../struct_volumetric_lighting.html#afc05594fff5f90455900b9f33104ab85',1,'VolumetricLighting']]],
-  ['width_3',['width',['../struct_texture_creation_data.html#a4684dfe2e8ff4978d210fbded8e46329',1,'TextureCreationData::width'],['../struct_size2d.html#a3e167fc7c5b984316366a3320fe87d07',1,'Size2d::width'],['../struct_window_configuration.html#a4df560282200968d1957c90a801959be',1,'WindowConfiguration::width'],['../struct_video_mode.html#a639c85303e8684c34fc22aee73b22c9a',1,'VideoMode::width'],['../class_window.html#af5b1c436782cc9752d386493fbc5dc8c',1,'Window::width'],['../class_terrain.html#a53beea1f5b3421259bc95845fccc7c44',1,'Terrain::width'],['../classopal_1_1_texture.html#ae8b910249425b926607743dc7d52ac97',1,'opal::Texture::width'],['../classopal_1_1_framebuffer.html#a690b33a566c7fc65dca4d62d6cc16441',1,'opal::Framebuffer::width']]],
-  ['wind_4',['wind',['../class_clouds.html#af17be5d7ad80994d01e1610c65d76a42',1,'Clouds::wind'],['../struct_weather_state.html#a9e18cee9b9d91c0149956b9e81ed8f2c',1,'WeatherState::wind'],['../class_atmosphere.html#a05f0844d725b9914aa13775b130a74f5',1,'Atmosphere::wind']]],
-  ['window_5',['window',['../classopal_1_1_context.html#a2e61a4bb3ea27ebc9bcf2ef2cff82507',1,'opal::Context']]],
-  ['window_5fcentered_6',['WINDOW_CENTERED',['../window_8h.html#ab807f56d82d66168c2b8f785c1df699f',1,'window.h']]],
-  ['worldspacepoint_7',['worldSpacePoint',['../struct_intersection_point.html#acffb6dba668c3fa1ee6f7b5a43fe1704',1,'IntersectionPoint']]],
-  ['wrappingmodes_8',['wrappingModeS',['../struct_texture_parameters.html#a7b1f9f2cfe234989d79f621c5d274e9a',1,'TextureParameters']]],
-  ['wrappingmodet_9',['wrappingModeT',['../struct_texture_parameters.html#ab9bc6d86781999189234c75e7c4e265f',1,'TextureParameters']]],
-  ['writedepth_10',['writeDepth',['../class_window.html#ad78f26e26e5b198b9f184664920e7b6a',1,'Window']]]
+  ['unloadedresources_0',['unloadedResources',['../class_resource_tracker.html#a5ada7c81a249af92cd5bdcec4b3126f6',1,'ResourceTracker']]],
+  ['up_1',['up',['../struct_g_p_u_area_light.html#aba86668c0a59bcaca82e998f9dae7204',1,'GPUAreaLight::up'],['../struct_area_light.html#ac5fa7f5efc48389faf985bce3296ae54',1,'AreaLight::up'],['../structbezel_1_1_vehicle_settings.html#a68397c1c5ed557f3b5dff56319ca8ca1',1,'bezel::VehicleSettings::up']]],
+  ['upsample_5ffrag_2',['UPSAMPLE_FRAG',['../default__shaders_8h.html#ace1359c556e7f9f111498d2bb0d13be4',1,'default_shaders.h']]],
+  ['usage_3',['usage',['../classopal_1_1_buffer.html#a9fc0b44aec7c5153eb95b1238ac9ea26',1,'opal::Buffer']]],
+  ['useblending_4',['useBlending',['../class_window.html#a2dea4b9c0c67fc468fe370a15ba1bc70',1,'Window']]],
+  ['usedeferredrendering_5',['useDeferredRendering',['../class_core_object.html#ade14d5e7085e4dad510471171f539789',1,'CoreObject::useDeferredRendering'],['../class_model.html#a4ed78d5a7b7f548a4b9c917c05e4924a',1,'Model::useDeferredRendering']]],
+  ['usedepth_6',['useDepth',['../class_window.html#a6f90483b38ed6da5e0454d1cd2f25e5a',1,'Window']]],
+  ['uselimits_7',['useLimits',['../class_spring_joint.html#aa1f645164224a63c910b6bb937800b97',1,'SpringJoint::useLimits'],['../classbezel_1_1_spring_joint.html#a325a7fa5dc96ef3e676c292f8b7f61a5',1,'bezel::SpringJoint::useLimits']]],
+  ['usemultisampling_8',['useMultisampling',['../class_window.html#ae7493fde4db26f51111590c8f2a2639f',1,'Window']]],
+  ['useopengl_9',['useOpenGL',['../structopal_1_1_context_configuration.html#a1637365ee7db3ae7e1190d91612fa554',1,'opal::ContextConfiguration']]],
+  ['useorthographic_10',['useOrthographic',['../class_camera.html#ae745080197fb197cbab0ae5bf257938c',1,'Camera']]],
+  ['usesdeferred_11',['usesDeferred',['../class_window.html#adc988f8bbe51cdd8dbbba10d8e15bf5c',1,'Window']]],
+  ['usesdeferredrendering_12',['usesDeferredRendering',['../class_terrain.html#ae406f72a61e43a11985a0cc8ea00a0a4',1,'Terrain']]],
+  ['useseed_13',['useSeed',['../class_noise.html#a5596e726507d685af8082eb83977c2c4',1,'Noise']]],
+  ['usetexture_14',['useTexture',['../class_biome.html#a189c358cbf3fae7a94fdee07e30aab91',1,'Biome']]],
+  ['uvmax_15',['uvMax',['../struct_character.html#a27972455da47f12713ca647f04644739',1,'Character']]],
+  ['uvmin_16',['uvMin',['../struct_character.html#aa79cdf0bcfc44266a5fc3c884cef21e4',1,'Character']]]
 ];

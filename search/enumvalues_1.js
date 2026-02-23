@@ -9,13 +9,14 @@ var searchData=
   ['bgra_6',['Bgra',['../namespaceopal.html#a636789f362e69d7bcfbcbc88bdd3f899a5c4f1e775f1f46a1d80f5cab1218a586',1,'opal']]],
   ['blur_7',['Blur',['../atlas_2effect_8h.html#a75cf3454fba9ce206c0c748892dc9867a8b52de510bc5497ac43abfe566be48ab',1,'effect.h']]],
   ['box_8',['Box',['../class_shape.html#a4cb9bc6c74b4184257003c83a8d8d39ea3cfce651e667ab85486dd42a8185f98a',1,'Shape']]],
-  ['button1_9',['Button1',['../input_8h.html#a826ef52e881054fee6a2055e382950b4a6475a3746209a62a6ce6289a3741d07e',1,'input.h']]],
-  ['button2_10',['Button2',['../input_8h.html#a826ef52e881054fee6a2055e382950b4ae165925a7c2d5ea94209b91389aa189f',1,'input.h']]],
-  ['button3_11',['Button3',['../input_8h.html#a826ef52e881054fee6a2055e382950b4a6d0c69e60d65a93dd244ae95f90e679c',1,'input.h']]],
-  ['button4_12',['Button4',['../input_8h.html#a826ef52e881054fee6a2055e382950b4a91ff24acfc01cc2c3a4238a272a37d07',1,'input.h']]],
-  ['button5_13',['Button5',['../input_8h.html#a826ef52e881054fee6a2055e382950b4af8849babaeaee3344306b87310664d65',1,'input.h']]],
-  ['button6_14',['Button6',['../input_8h.html#a826ef52e881054fee6a2055e382950b4a375ccc6b3a6125cc5c67f2c700a55b72',1,'input.h']]],
-  ['button7_15',['Button7',['../input_8h.html#a826ef52e881054fee6a2055e382950b4aa00c628d1b186fa4fe9c7f633426979e',1,'input.h']]],
-  ['button8_16',['Button8',['../input_8h.html#a826ef52e881054fee6a2055e382950b4a4f651f24c0b38f6e7ea0d52b0c514e36',1,'input.h']]],
-  ['byte_17',['Byte',['../namespaceopal.html#a3e3ddccc5719e33771cffead9cb40e4faa245c3230debe5c956484ecc6fa93877',1,'opal']]]
+  ['buffer_9',['Buffer',['../data_8h.html#a3997353493fdf53c2c32c752f6ba3c6ea7e62bc342f41c946868f0ea6f0b712d8',1,'data.h']]],
+  ['button1_10',['Button1',['../input_8h.html#a826ef52e881054fee6a2055e382950b4a6475a3746209a62a6ce6289a3741d07e',1,'input.h']]],
+  ['button2_11',['Button2',['../input_8h.html#a826ef52e881054fee6a2055e382950b4ae165925a7c2d5ea94209b91389aa189f',1,'input.h']]],
+  ['button3_12',['Button3',['../input_8h.html#a826ef52e881054fee6a2055e382950b4a6d0c69e60d65a93dd244ae95f90e679c',1,'input.h']]],
+  ['button4_13',['Button4',['../input_8h.html#a826ef52e881054fee6a2055e382950b4a91ff24acfc01cc2c3a4238a272a37d07',1,'input.h']]],
+  ['button5_14',['Button5',['../input_8h.html#a826ef52e881054fee6a2055e382950b4af8849babaeaee3344306b87310664d65',1,'input.h']]],
+  ['button6_15',['Button6',['../input_8h.html#a826ef52e881054fee6a2055e382950b4a375ccc6b3a6125cc5c67f2c700a55b72',1,'input.h']]],
+  ['button7_16',['Button7',['../input_8h.html#a826ef52e881054fee6a2055e382950b4aa00c628d1b186fa4fe9c7f633426979e',1,'input.h']]],
+  ['button8_17',['Button8',['../input_8h.html#a826ef52e881054fee6a2055e382950b4a4f651f24c0b38f6e7ea0d52b0c514e36',1,'input.h']]],
+  ['byte_18',['Byte',['../namespaceopal.html#a3e3ddccc5719e33771cffead9cb40e4faa245c3230debe5c956484ecc6fa93877',1,'opal']]]
 ];

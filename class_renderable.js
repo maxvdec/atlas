@@ -1,6 +1,7 @@
 var class_renderable =
 [
     [ "~Renderable", "class_renderable.html#a2103eed2f7f54bca8ba1001907b367a9", null ],
+    [ "beforePhysics", "class_renderable.html#aa98338dcaa5627bbe79f76561841f83a", null ],
     [ "canCastShadows", "class_renderable.html#a54a97abc4b6fe3280505da3b587cba98", null ],
     [ "canUseDeferredRendering", "class_renderable.html#a1427af9032f3e6c7f91f9b23948ee166", null ],
     [ "getId", "class_renderable.html#ac40a73fd7fb34a4f5757df3cac945a95", null ],

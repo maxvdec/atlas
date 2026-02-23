@@ -20,7 +20,6 @@ var class_compound_object =
     [ "setProjectionMatrix", "class_compound_object.html#aac8d17efbe766307e322e4da95c425dc", null ],
     [ "setRotation", "class_compound_object.html#acabbba275d8064a3024305b2cbab3f13", null ],
     [ "setScale", "class_compound_object.html#a9d8518bd15108ab12db57641e0c6135b", null ],
-    [ "setupPhysics", "class_compound_object.html#a0eddade4b19e991c52c44471f00e3e75", null ],
     [ "setViewMatrix", "class_compound_object.html#aca7a1eb53db643e28c4e886896c56a62", null ],
     [ "show", "class_compound_object.html#a57beb36cb3bcb119ab7c441cc992e8db", null ],
     [ "update", "class_compound_object.html#acbd09ebffe6374270415ca981a945624", null ],

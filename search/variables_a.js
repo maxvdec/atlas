@@ -1,23 +1,5 @@
 var searchData=
 [
-  ['lastmousedata_0',['lastMouseData',['../class_interactive.html#a096ed142d58f658e362c44976012d457',1,'Interactive']]],
-  ['lastshadowparams_1',['lastShadowParams',['../struct_light.html#afd46a921a3365c7a99cac658ac210308',1,'Light::lastShadowParams'],['../class_directional_light.html#acd466392cbfa8a6538c59f47bd04cd75',1,'DirectionalLight::lastShadowParams'],['../struct_spotlight.html#a12e1f218e98a0fc17cf855afeecccaae',1,'Spotlight::lastShadowParams']]],
-  ['layoutpos_2',['layoutPos',['../struct_layout_descriptor.html#a20d2afc6d83235da2293245b6e3144ed',1,'LayoutDescriptor']]],
-  ['levels_3',['levels',['../struct_posterization_parameters.html#aea087f849b13e6f598ff30966b20414f',1,'PosterizationParameters']]],
-  ['life_4',['life',['../struct_particle.html#a1760a331eebb54cbdd6ca280439a36c8',1,'Particle']]],
-  ['light_5',['light',['../class_core_object.html#a231544e0b0d1ba385954661d57715ed6',1,'CoreObject']]],
-  ['light_5ffrag_6',['LIGHT_FRAG',['../default__shaders_8h.html#af458715f0fd9edbc2bf7017ead4811b8',1,'default_shaders.h']]],
-  ['light_5fvert_7',['LIGHT_VERT',['../default__shaders_8h.html#a3f6dbd95ce728eb2fb0cc27949543db7',1,'default_shaders.h']]],
-  ['lightbloom_8',['lightBloom',['../class_environment.html#a8230ab111323228a3ae41a6d9a2c8dd6',1,'Environment']]],
-  ['lightpos_9',['lightPos',['../struct_g_p_u_shadow_params.html#a35b5f0f063da561f94df3b46285e9239',1,'GPUShadowParams']]],
-  ['lightprojection_10',['lightProjection',['../struct_g_p_u_shadow_params.html#aca8fccf9c6d08a00c1dabfb16668bc19',1,'GPUShadowParams::lightProjection'],['../struct_shadow_params.html#a5bfa79aa373ac10c35c7c825bb8f39bd',1,'ShadowParams::lightProjection']]],
-  ['lightstepcount_11',['lightStepCount',['../class_clouds.html#a66c95c31865537191ab5a04c1233a519',1,'Clouds']]],
-  ['lightstepmultiplier_12',['lightStepMultiplier',['../class_clouds.html#ab966a27e7b075efcd9c762a395dbce3e',1,'Clouds']]],
-  ['lightview_13',['lightView',['../struct_g_p_u_shadow_params.html#ad79af6751e049d5ad4567c8c6f58f8fe',1,'GPUShadowParams::lightView'],['../struct_shadow_params.html#aeaadb1369b3aa040c9465e6768e9aab3',1,'ShadowParams::lightView']]],
-  ['linear_14',['linear',['../struct_g_p_u_point_light.html#a5ae796757d3176af31f4acebaea062df',1,'GPUPointLight::linear'],['../struct_point_light_constants.html#a9eff07ab25d2421d1fd68d596fba0511',1,'PointLightConstants::linear']]],
-  ['linearvelocity_15',['linearVelocity',['../class_body.html#a4831e51fa63833e559bcf5a8dbae1c06',1,'Body']]],
-  ['location_16',['location',['../structopal_1_1_vertex_attribute.html#a7998dd277381282961ff78711ad3f688',1,'opal::VertexAttribute']]],
-  ['looksmoothness_17',['lookSmoothness',['../class_camera.html#a38944fa801da05f22169475b83799e8e',1,'Camera']]],
-  ['lookuptexture_18',['lookupTexture',['../class_environment.html#ac1e5e2fc8074a51f8777e6b7fd05c945',1,'Environment']]],
-  ['lut_19',['LUT',['../class_render_target.html#aa95b1e18bed3c2ae201217681987653e',1,'RenderTarget']]]
+  ['joint_0',['joint',['../classbezel_1_1_joint.html#a12f9a20a8b86b25cbccc828609ddff66',1,'bezel::Joint']]],
+  ['joltid_1',['joltId',['../structbezel_1_1_body_identifier.html#a141113290625c1f25b056f729a09ac45',1,'bezel::BodyIdentifier']]]
 ];

@@ -1,5 +1,6 @@
 var classopal_1_1_framebuffer =
 [
+    [ "~Framebuffer", "classopal_1_1_framebuffer.html#a555509821be0295a9c30858c35b8ba8a", null ],
     [ "addAttachment", "classopal_1_1_framebuffer.html#a4994addc8cd8e3af2dfd4e348ce0a665", null ],
     [ "attachCubemap", "classopal_1_1_framebuffer.html#a18ffb19f8fc66bb38dd9934a5b9d9883", null ],
     [ "attachCubemapFace", "classopal_1_1_framebuffer.html#a95ba48b80c8fa71a0bd55da479e95bae", null ],
@@ -11,6 +12,7 @@ var classopal_1_1_framebuffer =
     [ "create", "classopal_1_1_framebuffer.html#a7cbbd8f60c90eea2a82c0bb2c0411c1a", null ],
     [ "create", "classopal_1_1_framebuffer.html#ac32a0518673c63dbf2ebe0c85519823b", null ],
     [ "disableColorBuffer", "classopal_1_1_framebuffer.html#a42f71f03a9bad9f5c2202fa671ef0ac7", null ],
+    [ "getDrawBufferCount", "classopal_1_1_framebuffer.html#a9858bb38347780f126754a4b11708d4c", null ],
     [ "getStatus", "classopal_1_1_framebuffer.html#a99192c1cb8deeadf357dd695c4384b96", null ],
     [ "setDrawBuffers", "classopal_1_1_framebuffer.html#a2a5920a15fabdf08b471528428f4a523", null ],
     [ "setViewport", "classopal_1_1_framebuffer.html#a5835404e9305f4ff02d85737a838c089", null ],

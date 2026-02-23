@@ -55,6 +55,8 @@ var NAVTREE =
       [ "Namespace Members", "namespacemembers.html", [
         [ "All", "namespacemembers.html", null ],
         [ "Functions", "namespacemembers_func.html", null ],
+        [ "Variables", "namespacemembers_vars.html", null ],
+        [ "Typedefs", "namespacemembers_type.html", null ],
         [ "Enumerations", "namespacemembers_enum.html", null ]
       ] ]
     ] ],
@@ -87,15 +89,19 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "annotated.html",
-"class_color_correction.html#a6db3892398a3dfc92a8629c48b7d661e",
-"class_particle_emitter.html#a152e95df28b2885262d5f5025d5f1497",
-"class_window.html#a4fad7ebbb042281a41828a13a1ef457f",
-"classopal_1_1_pipeline.html#a459ad3d7f59d547115cfc592387c48b2",
-"functions_func_o.html",
-"namespacemembers.html",
-"struct_checker_tile.html#a3c834c116f184d7810a7b8cfb851d8b7",
-"struct_motion_blur_parameters.html#afa5e5a78bf3b2c87efc54c5f626bb726",
-"structopal_1_1_context_configuration.html#a549d62090da033f04186b19cf2790a7b"
+"class_color_correction.html#a4f3ee4341b7750d947d5f7ab7ead32c9",
+"class_inversion.html#a2afbbd1b36a72e5399e3d1da0f07d5d4",
+"class_scene.html#a38145c09216f3e29dbf88e5cea5996ae",
+"classbezel_1_1_box_collider.html#abf50a00c93e13a0e27c48c1963214aba",
+"classopal_1_1_command_buffer.html#adc9b980a169ff9d30fffb312061e672d",
+"classopal_1_1_texture.html#a03069949b69da32f0deb39c8144945a5",
+"functions_y.html",
+"namespaceopal.html#a0f2a10029931d49d9cb7366b874115baa1da0b9ead8b051940a89214bae22831c",
+"struct_area_light.html",
+"struct_g_p_u_shadow_params.html#a21a84225a0f93b7e6f8c197f4a90d0c1",
+"struct_shader_program.html#a1f13d77e34b4874d827b17379e7671ee",
+"structbezel_1_1_rigidbody.html#a8812fa4ffc96d1bea7d46b8bbda9e48e",
+"structopal_1_1_vertex_attribute.html#afa41d81bbe577aa4719d5a0ddfff9dc9"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronization';

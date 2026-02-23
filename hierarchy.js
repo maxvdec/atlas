@@ -1,6 +1,9 @@
 var hierarchy =
 [
+    [ "AllocationPacket", "struct_allocation_packet.html", null ],
     [ "AmbientLight", "struct_ambient_light.html", null ],
+    [ "AngleLimits", "struct_angle_limits.html", null ],
+    [ "bezel::AngleLimits", "structbezel_1_1_angle_limits.html", null ],
     [ "AreaLight", "struct_area_light.html", null ],
     [ "Atmosphere", "class_atmosphere.html", null ],
     [ "opal::Attachment", "classopal_1_1_attachment.html", null ],
@@ -16,31 +19,63 @@ var hierarchy =
     [ "BloomElement", "struct_bloom_element.html", null ],
     [ "BloomRenderTarget", "class_bloom_render_target.html", null ],
     [ "Body", "class_body.html", null ],
+    [ "JPH::BodyActivationListener", null, [
+      [ "bezel_jolt::BodyActivationListenerMain", "classbezel__jolt_1_1_body_activation_listener_main.html", null ]
+    ] ],
+    [ "bezel::BodyIdentifier", "structbezel_1_1_body_identifier.html", null ],
     [ "Bounds", "class_bounds.html", null ],
+    [ "bezel::PhysicsWorld::BreakableConstraint", "structbezel_1_1_physics_world_1_1_breakable_constraint.html", null ],
+    [ "JPH::BroadPhaseLayerInterface", null, [
+      [ "bezel_jolt::BroadPhaseLayerImpl", "classbezel__jolt_1_1_broad_phase_layer_impl.html", null ]
+    ] ],
     [ "opal::Buffer", "classopal_1_1_buffer.html", null ],
     [ "Camera", "class_camera.html", null ],
     [ "Character", "struct_character.html", null ],
     [ "CheckerTile", "struct_checker_tile.html", null ],
     [ "ChromaticAberrationParameters", "struct_chromatic_aberration_parameters.html", null ],
     [ "Clouds", "class_clouds.html", null ],
+    [ "bezel::Collider", "classbezel_1_1_collider.html", [
+      [ "bezel::BoxCollider", "classbezel_1_1_box_collider.html", null ],
+      [ "bezel::CapsuleCollider", "classbezel_1_1_capsule_collider.html", null ],
+      [ "bezel::MeshCollider", "classbezel_1_1_mesh_collider.html", null ],
+      [ "bezel::SphereCollider", "classbezel_1_1_sphere_collider.html", null ]
+    ] ],
+    [ "bezel::CollisionDispatcher", "classbezel_1_1_collision_dispatcher.html", [
+      [ "JoltCollisionDispatcher", "class_jolt_collision_dispatcher.html", null ]
+    ] ],
     [ "CollisionPair", "struct_collision_pair.html", null ],
     [ "Color", "struct_color.html", null ],
     [ "ColorCorrectionParameters", "struct_color_correction_parameters.html", null ],
     [ "opal::CommandBuffer", "classopal_1_1_command_buffer.html", null ],
     [ "Component", "class_component.html", [
       [ "AudioPlayer", "class_audio_player.html", null ],
-      [ "TraitComponent< T >", "class_trait_component.html", null ]
+      [ "Joint", "class_joint.html", [
+        [ "FixedJoint", "class_fixed_joint.html", null ],
+        [ "HingeJoint", "class_hinge_joint.html", null ],
+        [ "SpringJoint", "class_spring_joint.html", null ]
+      ] ],
+      [ "Rigidbody", "class_rigidbody.html", [
+        [ "Sensor", "class_sensor.html", null ]
+      ] ],
+      [ "TraitComponent< T >", "class_trait_component.html", null ],
+      [ "Vehicle", "class_vehicle.html", null ]
     ] ],
     [ "Contact", "struct_contact.html", null ],
+    [ "JPH::ContactListener", null, [
+      [ "GlobalContactListener", "class_global_contact_listener.html", null ]
+    ] ],
     [ "opal::Context", "classopal_1_1_context.html", null ],
     [ "opal::ContextConfiguration", "structopal_1_1_context_configuration.html", null ],
     [ "CoreVertex", "struct_core_vertex.html", null ],
     [ "Cubemap", "struct_cubemap.html", null ],
+    [ "DebugObjectPacket", "struct_debug_object_packet.html", null ],
+    [ "DebugTimer", "class_debug_timer.html", null ],
     [ "opal::DepthStencilBuffer", "classopal_1_1_depth_stencil_buffer.html", null ],
     [ "opal::Device", "classopal_1_1_device.html", null ],
     [ "opal::DeviceInfo", "structopal_1_1_device_info.html", null ],
     [ "DilationParameters", "struct_dilation_parameters.html", null ],
     [ "DirectionalLight", "class_directional_light.html", null ],
+    [ "DrawCallInfo", "struct_draw_call_info.html", null ],
     [ "opal::DrawingState", "structopal_1_1_drawing_state.html", null ],
     [ "Edge", "struct_edge.html", null ],
     [ "Effect", "class_effect.html", [
@@ -64,27 +99,54 @@ var hierarchy =
     [ "FractalNoise", "class_fractal_noise.html", null ],
     [ "FragmentShader", "struct_fragment_shader.html", null ],
     [ "opal::Framebuffer", "classopal_1_1_framebuffer.html", null ],
+    [ "FrameDrawInfo", "struct_frame_draw_info.html", null ],
+    [ "FrameMemoryPacket", "struct_frame_memory_packet.html", null ],
+    [ "FrameResourcesInfo", "struct_frame_resources_info.html", null ],
+    [ "FrameTimingPacket", "struct_frame_timing_packet.html", null ],
     [ "GeometryShader", "struct_geometry_shader.html", null ],
     [ "GPUAreaLight", "struct_g_p_u_area_light.html", null ],
     [ "GPUDirectionalLight", "struct_g_p_u_directional_light.html", null ],
     [ "GPUPointLight", "struct_g_p_u_point_light.html", null ],
     [ "GPUShadowParams", "struct_g_p_u_shadow_params.html", null ],
     [ "GPUSpotLight", "struct_g_p_u_spot_light.html", null ],
+    [ "IndividualResourceTypeInfo", "struct_individual_resource_type_info.html", null ],
     [ "Instance", "struct_instance.html", null ],
     [ "Interactive", "class_interactive.html", null ],
     [ "IntersectionPoint", "struct_intersection_point.html", null ],
+    [ "bezel::Joint", "classbezel_1_1_joint.html", [
+      [ "bezel::FixedJoint", "classbezel_1_1_fixed_joint.html", null ],
+      [ "bezel::HingeJoint", "classbezel_1_1_hinge_joint.html", null ],
+      [ "bezel::SpringJoint", "classbezel_1_1_spring_joint.html", null ]
+    ] ],
     [ "LayoutDescriptor", "struct_layout_descriptor.html", null ],
     [ "Light", "struct_light.html", null ],
     [ "LightBloom", "struct_light_bloom.html", null ],
+    [ "Logger", "class_logger.html", null ],
     [ "Material", "struct_material.html", null ],
     [ "Monitor", "class_monitor.html", null ],
     [ "MotionBlurParameters", "struct_motion_blur_parameters.html", null ],
+    [ "bezel::Motor", "structbezel_1_1_motor.html", null ],
+    [ "Motor", "struct_motor.html", null ],
     [ "MousePacket", "struct_mouse_packet.html", null ],
     [ "MouseScrollPacket", "struct_mouse_scroll_packet.html", null ],
+    [ "NetworkPipe", "class_network_pipe.html", null ],
     [ "Noise", "class_noise.html", null ],
+    [ "JPH::ObjectLayerPairFilter", null, [
+      [ "bezel_jolt::ObjectLayerPairFilterImpl", "classbezel__jolt_1_1_object_layer_pair_filter_impl.html", null ]
+    ] ],
+    [ "JPH::ObjectVsBroadPhaseLayerFilter", null, [
+      [ "bezel_jolt::ObjectVsBroadPhaseLayerFilterImpl", "classbezel__jolt_1_1_object_vs_broad_phase_layer_filter_impl.html", null ]
+    ] ],
+    [ "bezel::OverlapHit", "structbezel_1_1_overlap_hit.html", null ],
+    [ "OverlapHit", "struct_overlap_hit.html", null ],
+    [ "bezel::OverlapResult", "structbezel_1_1_overlap_result.html", null ],
+    [ "OverlapResult", "struct_overlap_result.html", null ],
+    [ "PairKey", "struct_pair_key.html", null ],
+    [ "PairKeyHash", "struct_pair_key_hash.html", null ],
     [ "Particle", "struct_particle.html", null ],
     [ "ParticleSettings", "struct_particle_settings.html", null ],
     [ "PerlinNoise", "struct_perlin_noise.html", null ],
+    [ "bezel::PhysicsWorld", "classbezel_1_1_physics_world.html", null ],
     [ "opal::Pipeline", "classopal_1_1_pipeline.html", null ],
     [ "PixelationParameters", "struct_pixelation_parameters.html", null ],
     [ "Point", "struct_point.html", null ],
@@ -93,7 +155,12 @@ var hierarchy =
     [ "Position3d", "struct_position3d.html", null ],
     [ "PosterizationParameters", "struct_posterization_parameters.html", null ],
     [ "PseudoBody", "struct_pseudo_body.html", null ],
+    [ "QueryResult", "struct_query_result.html", null ],
     [ "Radians", "struct_radians.html", null ],
+    [ "bezel::RaycastHit", "structbezel_1_1_raycast_hit.html", null ],
+    [ "RaycastHit", "struct_raycast_hit.html", null ],
+    [ "bezel::RaycastResult", "structbezel_1_1_raycast_result.html", null ],
+    [ "RaycastResult", "struct_raycast_result.html", null ],
     [ "Renderable", "class_renderable.html", [
       [ "GameObject", "class_game_object.html", [
         [ "CompoundObject", "class_compound_object.html", null ],
@@ -113,7 +180,10 @@ var hierarchy =
     [ "opal::RenderPass", "classopal_1_1_render_pass.html", null ],
     [ "opal::ResolveAction", "classopal_1_1_resolve_action.html", null ],
     [ "Resource", "struct_resource.html", null ],
+    [ "ResourceEventInfo", "struct_resource_event_info.html", null ],
     [ "ResourceGroup", "struct_resource_group.html", null ],
+    [ "ResourceTracker", "class_resource_tracker.html", null ],
+    [ "bezel::Rigidbody", "structbezel_1_1_rigidbody.html", null ],
     [ "RimLight", "struct_rim_light.html", null ],
     [ "Rotation3d", "struct_rotation3d.html", null ],
     [ "Scene", "class_scene.html", null ],
@@ -129,6 +199,12 @@ var hierarchy =
     [ "SimplexNoise", "class_simplex_noise.html", null ],
     [ "Size2d", "struct_size2d.html", null ],
     [ "Spotlight", "struct_spotlight.html", null ],
+    [ "bezel::Spring", "structbezel_1_1_spring.html", null ],
+    [ "Spring", "struct_spring.html", null ],
+    [ "bezel::SweepHit", "structbezel_1_1_sweep_hit.html", null ],
+    [ "SweepHit", "struct_sweep_hit.html", null ],
+    [ "bezel::SweepResult", "structbezel_1_1_sweep_result.html", null ],
+    [ "SweepResult", "struct_sweep_result.html", null ],
     [ "TerrainGenerator", "class_terrain_generator.html", [
       [ "CompoundGenerator", "class_compound_generator.html", null ],
       [ "HillGenerator", "class_hill_generator.html", null ],
@@ -141,7 +217,16 @@ var hierarchy =
     [ "Texture", "struct_texture.html", null ],
     [ "TextureCreationData", "struct_texture_creation_data.html", null ],
     [ "TextureParameters", "struct_texture_parameters.html", null ],
+    [ "TimingEventPacket", "struct_timing_event_packet.html", null ],
+    [ "TracerServices", "class_tracer_services.html", null ],
     [ "Triangle", "struct_triangle.html", null ],
+    [ "bezel::Vehicle", "classbezel_1_1_vehicle.html", null ],
+    [ "bezel::VehicleControllerSettings", "structbezel_1_1_vehicle_controller_settings.html", null ],
+    [ "bezel::VehicleDifferential", "structbezel_1_1_vehicle_differential.html", null ],
+    [ "bezel::VehicleEngine", "structbezel_1_1_vehicle_engine.html", null ],
+    [ "bezel::VehicleSettings", "structbezel_1_1_vehicle_settings.html", null ],
+    [ "bezel::VehicleTransmission", "structbezel_1_1_vehicle_transmission.html", null ],
+    [ "bezel::VehicleWheelSettings", "structbezel_1_1_vehicle_wheel_settings.html", null ],
     [ "opal::VertexAttribute", "structopal_1_1_vertex_attribute.html", null ],
     [ "opal::VertexAttributeBinding", "structopal_1_1_vertex_attribute_binding.html", null ],
     [ "opal::VertexBinding", "structopal_1_1_vertex_binding.html", null ],
@@ -153,6 +238,8 @@ var hierarchy =
     [ "Window", "class_window.html", null ],
     [ "WindowConfiguration", "struct_window_configuration.html", null ],
     [ "Workspace", "class_workspace.html", null ],
+    [ "bezel::WorldBody", "structbezel_1_1_world_body.html", null ],
+    [ "WorldBody", "struct_world_body.html", null ],
     [ "WorleyNoise", "class_worley_noise.html", null ],
     [ "WorleyNoise3D", "class_worley_noise3_d.html", null ]
 ];

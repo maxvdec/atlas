@@ -5,5 +5,6 @@ var component_8h =
     [ "GameObject", "class_game_object.html", "class_game_object" ],
     [ "CompoundObject", "class_compound_object.html", "class_compound_object" ],
     [ "UIObject", "class_u_i_object.html", null ],
-    [ "UIView", "class_u_i_view.html", "class_u_i_view" ]
+    [ "UIView", "class_u_i_view.html", "class_u_i_view" ],
+    [ "atlas::gameObjects", "namespaceatlas.html#a5b64384ce05bf1a4179f6bc2973d0744", null ]
 ];

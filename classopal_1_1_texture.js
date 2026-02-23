@@ -1,5 +1,6 @@
 var classopal_1_1_texture =
 [
+    [ "~Texture", "classopal_1_1_texture.html#a597d018046cce4c9f8574cca37292cdc", null ],
     [ "automaticallyGenerateMipmaps", "classopal_1_1_texture.html#a0d4f10026b744860502b614db270db98", null ],
     [ "changeBorderColor", "classopal_1_1_texture.html#aa629dbbb21192862b4d624b3e1f6ce7b", null ],
     [ "changeFormat", "classopal_1_1_texture.html#a03069949b69da32f0deb39c8144945a5", null ],

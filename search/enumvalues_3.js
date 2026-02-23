@@ -10,11 +10,13 @@ var searchData=
   ['depthcomponent_7',['DepthComponent',['../namespaceopal.html#a636789f362e69d7bcfbcbc88bdd3f899a19c8f1ee3a700e77e87053eee47f6bc8',1,'opal']]],
   ['depthcomponent24_8',['DepthComponent24',['../namespaceopal.html#ae052ba81a85ceeaf480a6703e5518319aedf2b17fc7b220c3b855af306c9f409d',1,'opal']]],
   ['depthcube_9',['DepthCube',['../texture_8h.html#a579bf435a05d45b75f553d37ebbb3225a5bd62f0d243a561d11ee9330406ee7f6',1,'texture.h']]],
-  ['depthstencil_10',['DepthStencil',['../classopal_1_1_attachment.html#a47dfeca108c90e506852441736ab917da2fa8076285272883c91e14402975a441',1,'opal::Attachment']]],
+  ['depthstencil_10',['DepthStencil',['../classopal_1_1_attachment.html#a47dfeca108c90e506852441736ab917da2fa8076285272883c91e14402975a441',1,'opal::Attachment::DepthStencil'],['../data_8h.html#ab534a4243e0e6f75ad1f8f49683f9b58a2fa8076285272883c91e14402975a441',1,'DepthStencil:&#160;data.h']]],
   ['dilation_11',['Dilation',['../atlas_2effect_8h.html#a75cf3454fba9ce206c0c748892dc9867a5a870896d32acca70f912a0c11edca66',1,'effect.h']]],
   ['double_12',['Double',['../namespaceopal.html#a3e3ddccc5719e33771cffead9cb40e4fad909d38d705ce75386dd86e611a82f5b',1,'opal']]],
   ['down_13',['Down',['../input_8h.html#a9479d299e1852e6140dcca1f405868aba08a38277b0309070706f6652eeae9a53',1,'Down:&#160;input.h'],['../units_8h.html#ab8c8d5e469ffb9cf502ea12708d544f5a08a38277b0309070706f6652eeae9a53',1,'Down:&#160;units.h']]],
   ['downsample_14',['Downsample',['../shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0a5cf115d0e9094151d1df54187a5aebb8',1,'shader.h']]],
-  ['dstalpha_15',['DstAlpha',['../namespaceopal.html#a21cf4cdb5a3daf53f4097bea2a184d92af72dbe2436b38a39e5927ed644e6818b',1,'opal']]],
-  ['dstcolor_16',['DstColor',['../namespaceopal.html#a21cf4cdb5a3daf53f4097bea2a184d92afaedf511c99a5461048fd6a3b73da26c',1,'opal']]]
+  ['draw_15',['Draw',['../data_8h.html#a42a64d92bebb989347cae60a25e06fbfa2d03c2d5a7ec65ef4619e0582c272ec2',1,'data.h']]],
+  ['dstalpha_16',['DstAlpha',['../namespaceopal.html#a21cf4cdb5a3daf53f4097bea2a184d92af72dbe2436b38a39e5927ed644e6818b',1,'opal']]],
+  ['dstcolor_17',['DstColor',['../namespaceopal.html#a21cf4cdb5a3daf53f4097bea2a184d92afaedf511c99a5461048fd6a3b73da26c',1,'opal']]],
+  ['dynamic_18',['Dynamic',['../namespacebezel.html#ab5ff10e4624750d570c4ad4af8061a24a971fd8cc345d8bd9f92e9f7d88fdf20c',1,'bezel']]]
 ];

@@ -1,5 +1,6 @@
 var classopal_1_1_shader =
 [
+    [ "~Shader", "classopal_1_1_shader.html#aa2639ac5ef47133e8a1349ae227db21e", null ],
     [ "compile", "classopal_1_1_shader.html#ae532babe1073c7ccc0c69015e882e16c", null ],
     [ "createFromSource", "classopal_1_1_shader.html#a316dda42dcff5cf1c1f547e03efed267", null ],
     [ "getShaderLog", "classopal_1_1_shader.html#a39dde952fc7adfff8638ed675eae13f2", null ],
