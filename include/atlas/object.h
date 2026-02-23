@@ -242,25 +242,32 @@ struct Instance {
  *
  * \subsection core-object-example Example of a CoreObject
  * ```cpp
+ * // (Optional) Register resources once, typically at startup
+ * Workspace::get().setRootPath("assets/");
+ * Workspace::get().createResource("textures/brick.png", "Brick",
+ *                                ResourceType::Image);
+ *
  * // Create a simple cube object
  * CoreObject cube = createBox({1.0, 1.0, 1.0}, Color::red());
- * // Set the position of the cube
  * cube.setPosition({0.0, 0.5, 0.0});
- * // Attach a texture to the cube
- * Texture brickTexture("path/to/brick_texture.png");
- * cube.attachTexture(brickTexture);
- * // Create and attach a shader program to the cube
- * VertexShader vertexShader("path/to/vertex_shader.glsl");
- * FragmentShader fragmentShader("path/to/fragment_shader.glsl");
- * cube.createAndAttachProgram(vertexShader, fragmentShader);
- * // Set the material properties of the cube
- * Material cubeMaterial;
- * cubeMaterial.ambient = Color(0.2, 0.2, 0.2, 1.0);
- * cubeMaterial.diffuse = Color(0.8, 0.0, 0.0, 1.0);
- * cubeMaterial.specular = Color(1.0, 1.0, 1.0, 1.0);
- * cubeMaterial.shininess = 32.0f;
- * cube.material = cubeMaterial;
- * // Add the cube to the scene
+ *
+ * // Attach a texture by resource name
+ * cube.attachTexture(Texture::fromResourceName("Brick", TextureType::Color));
+ *
+ * // Attach default shaders (or supply custom GLSL via fromSource)
+ * VertexShader vs = VertexShader::fromDefaultShader(AtlasVertexShader::Main);
+ * FragmentShader fs =
+ *     FragmentShader::fromDefaultShader(AtlasFragmentShader::Main);
+ * vs.compile();
+ * fs.compile();
+ * cube.createAndAttachProgram(vs, fs);
+ *
+ * // PBR-ish material values
+ * cube.material.albedo = Color::red();
+ * cube.material.metallic = 0.0f;
+ * cube.material.roughness = 0.6f;
+ * cube.material.ao = 1.0f;
+ *
  * scene.addObject(&cube);
  * ```
  *

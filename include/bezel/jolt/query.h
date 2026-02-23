@@ -19,6 +19,16 @@
 #include <bezel/jolt/world.h>
 #include <bezel/bezel.h>
 
+/**
+ * @file bezel/jolt/query.h
+ * @brief Contact listener and collision dispatch helpers for the Jolt backend.
+ *
+ * This header provides the Jolt `ContactListener` implementation that queues
+ * collision/signal events and dispatches them into the engine.
+ *
+ * \note This is an alpha API and may change.
+ */
+
 struct PairKey {
     JPH::BodyID body1;
     JPH::BodyID body2;

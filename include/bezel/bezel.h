@@ -37,20 +37,41 @@ class Window;
 
 namespace bezel {
 
+/**
+ * @file bezel/bezel.h
+ * @brief Public Bezel physics abstraction used by Atlas.
+ *
+ * Bezel provides a backend-agnostic interface for rigid bodies, colliders,
+ * joint constraints, and vehicle simulation. When `BEZEL_NATIVE` is not
+ * defined, this implementation is backed by Jolt Physics.
+ *
+ * \note This is an alpha API and may change.
+ */
+
 constexpr uint32_t INVALID_JOLT_ID = UINT32_MAX;
 
+/**
+ * @brief Maps between an underlying physics engine ID and an Atlas object ID.
+ */
 struct BodyIdentifier {
     uint32_t joltId;
     uint32_t atlasId;
 };
 
+/**
+ * @brief Motion type for a rigid body.
+ */
 enum class MotionType { Static, Dynamic, Kinematic };
 
 class PhysicsWorld;
 
+/**
+ * @brief Base collider interface.
+ */
 class Collider {
   public:
     virtual ~Collider() = default;
+    /** @brief Returns the smallest extent used for broad-phase heuristics. */
     virtual float getMinExtent() const = 0;
 
 #ifndef BEZEL_NATIVE
@@ -58,6 +79,9 @@ class Collider {
 #endif
 };
 
+/**
+ * @brief Axis-aligned box collider defined by half-extents.
+ */
 class BoxCollider : public Collider {
   public:
     Position3d halfExtents;
@@ -73,6 +97,9 @@ class BoxCollider : public Collider {
 #endif
 };
 
+/**
+ * @brief Capsule collider defined by radius and height.
+ */
 class CapsuleCollider : public Collider {
   public:
     float radius;
@@ -89,6 +116,9 @@ class CapsuleCollider : public Collider {
 #endif
 };
 
+/**
+ * @brief Sphere collider defined by radius.
+ */
 class SphereCollider : public Collider {
   public:
     float radius;
@@ -101,6 +131,11 @@ class SphereCollider : public Collider {
 #endif
 };
 
+/**
+ * @brief Triangle mesh collider defined by indexed geometry.
+ *
+ * \warning Mesh colliders are typically more expensive than primitives.
+ */
 class MeshCollider : public Collider {
   public:
     std::vector<Position3d> vertices;
@@ -121,6 +156,9 @@ class MeshCollider : public Collider {
 #endif
 };
 
+/**
+ * @brief Dispatch interface used to surface collision events to the engine.
+ */
 class CollisionDispatcher {
   public:
     virtual ~CollisionDispatcher() = default;
@@ -129,6 +167,9 @@ class CollisionDispatcher {
     virtual void setup(bezel::PhysicsWorld *world) = 0;
 };
 
+/**
+ * @brief Single hit returned by raycast queries.
+ */
 struct RaycastHit {
     Position3d position = {0.0f, 0.0f, 0.0f};
     Normal3d normal = {0.0f, 0.0f, 0.0f};
@@ -137,12 +178,18 @@ struct RaycastHit {
     bool didHit = false;
 };
 
+/**
+ * @brief Aggregated results for raycast queries.
+ */
 struct RaycastResult {
     float closestDistance = -1;
     std::vector<RaycastHit> hits;
     RaycastHit hit;
 };
 
+/**
+ * @brief Single hit returned by overlap queries.
+ */
 struct OverlapHit {
     Position3d contactPoint = {0.0f, 0.0f, 0.0f};
     Point3d penetrationAxis = {0.0f, 0.0f, 0.0f};
@@ -150,11 +197,17 @@ struct OverlapHit {
     bezel::Rigidbody *rigidbody = nullptr;
 };
 
+/**
+ * @brief Aggregated results for overlap queries.
+ */
 struct OverlapResult {
     std::vector<OverlapHit> hits;
     bool hitAny = false;
 };
 
+/**
+ * @brief Single hit returned by sweep queries.
+ */
 struct SweepHit {
     bezel::Rigidbody *rigidbody = nullptr;
     float distance = 0.0f;
@@ -163,20 +216,32 @@ struct SweepHit {
     Normal3d normal = {0.0f, 0.0f, 0.0f};
 };
 
+/**
+ * @brief Aggregated results for sweep queries.
+ */
 struct SweepResult {
     std::vector<SweepHit> hits;
     SweepHit closest;
     bool hitAny = false;
 };
 
+/**
+ * @brief Marker type representing the static world as a joint endpoint.
+ */
 struct WorldBody {};
 
+/**
+ * @brief Joint endpoint referencing either a `Rigidbody*` or the world.
+ */
 using JointChild = std::variant<Rigidbody *, WorldBody>;
 
 enum class SpringMode { FrequencyAndDamping, StiffnessAndDamping };
 
 enum class Space { Local, Global };
 
+/**
+ * @brief Spring parameters used by spring joints.
+ */
 struct Spring {
     bool enabled = false;
 
@@ -189,18 +254,28 @@ struct Spring {
     float damping = 0.0f;
 };
 
+/**
+ * @brief Optional angular limit range (degrees or radians depending on
+ * backend).
+ */
 struct AngleLimits {
     bool enabled = false;
     float minAngle = 0.0f;
     float maxAngle = 0.0f;
 };
 
+/**
+ * @brief Motor parameters for driving joints.
+ */
 struct Motor {
     bool enabled = false;
     float maxForce = 0.0f;
     float maxTorque = 0.0f;
 };
 
+/**
+ * @brief Base joint interface.
+ */
 class Joint {
   public:
     virtual ~Joint() = default;
@@ -218,11 +293,13 @@ class Joint {
     float breakTorque = 0.0f;
 
     virtual void create(std::shared_ptr<PhysicsWorld> world) = 0;
+    /** @brief Breaks the joint by disabling its underlying constraint. */
     void breakJoint() { joint->SetEnabled(false); };
 };
 
 class FixedJoint final : public Joint {
   public:
+    /** @brief Creates the fixed joint in the provided world. */
     void create(std::shared_ptr<PhysicsWorld> world) override;
 };
 
@@ -234,6 +311,7 @@ class HingeJoint final : public Joint {
     AngleLimits limits;
     Motor motor;
 
+    /** @brief Creates the hinge joint in the provided world. */
     void create(std::shared_ptr<PhysicsWorld> world) override;
 };
 
@@ -249,6 +327,7 @@ class SpringJoint final : public Joint {
 
     Spring spring;
 
+    /** @brief Creates the spring joint in the provided world. */
     void create(std::shared_ptr<PhysicsWorld> world) override;
 };
 
@@ -333,6 +412,29 @@ struct VehicleSettings {
     float maxSlopeAngleDeg = 80.0f;
 };
 
+/**
+ * @brief High-level vehicle wrapper around Jolt's `VehicleConstraint`.
+ *
+ * \subsection bezel-vehicle-example Example
+ * ```cpp
+ * auto world = std::make_shared<bezel::PhysicsWorld>();
+ * world->init();
+ *
+ * auto chassis = std::make_shared<bezel::Rigidbody>();
+ * chassis->mass = 1200.0f;
+ * chassis->setCollider(std::make_shared<bezel::BoxCollider>(Position3d{1.0f,
+ * 0.5f, 2.0f})); chassis->create(world);
+ *
+ * bezel::Vehicle vehicle;
+ * vehicle.chassis = chassis.get();
+ * vehicle.settings.wheels.resize(4);
+ * vehicle.create(world);
+ *
+ * // Each step
+ * vehicle.setDriverInput(1.0f, 0.0f, 0.0f, 0.0f);
+ * world->update(dt);
+ * ```
+ */
 class Vehicle final {
   public:
     Rigidbody *chassis = nullptr;
@@ -359,6 +461,9 @@ class Vehicle final {
 #endif
 };
 
+/**
+ * @brief Backend rigid body representation used by Atlas components.
+ */
 struct Rigidbody {
     Position3d position;
     Rotation3d rotation;
@@ -385,8 +490,10 @@ struct Rigidbody {
     bool addLinearVelocity = false;
     bool addAngularVelocity = false;
 
+    /** @brief Sets the body's world position and updates the backend body. */
     void setPosition(const Position3d &position,
                      std::shared_ptr<PhysicsWorld> world);
+    /** @brief Sets the body's world rotation and updates the backend body. */
     void setRotation(const Rotation3d &rotation,
                      std::shared_ptr<PhysicsWorld> world);
 
@@ -419,6 +526,7 @@ struct Rigidbody {
     MotionType motionType = MotionType::Dynamic;
 
     void create(std::shared_ptr<PhysicsWorld> world);
+    /** @brief Replaces the collider used by this rigidbody. */
     void setCollider(std::shared_ptr<Collider> collider);
 
     void applyProperties(std::shared_ptr<PhysicsWorld> world);
@@ -427,6 +535,9 @@ struct Rigidbody {
     void destroy(std::shared_ptr<PhysicsWorld> world);
 };
 
+/**
+ * @brief Physics world owning the backend simulation state.
+ */
 class PhysicsWorld {
 #ifndef BEZEL_NATIVE
     std::unique_ptr<JPH::TempAllocatorMalloc> tempAllocator;
@@ -454,8 +565,10 @@ class PhysicsWorld {
 #endif
     bool initialized = false;
 
+    /** @brief Initializes the backend physics system. */
     void init();
 
+    /** @brief Advances the physics simulation by `dt` seconds. */
     void update(float dt);
 
     RaycastResult raycast(const Position3d &origin, const Position3d &direction,
@@ -485,8 +598,10 @@ class PhysicsWorld {
                          const Position3d &direction, Position3d &endPosition,
                          uint32_t ignoreBodyId = INVALID_JOLT_ID);
 
+    /** @brief Adds a rigidbody to the simulation. */
     void addBody(std::shared_ptr<bezel::Rigidbody> body);
 
+    /** @brief Sets the global gravity vector. */
     void setGravity(const Position3d &gravity);
 
     ~PhysicsWorld();

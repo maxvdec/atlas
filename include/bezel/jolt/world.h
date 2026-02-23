@@ -52,6 +52,16 @@
 
 #include <Jolt/RegisterTypes.h>
 
+/**
+ * @file bezel/jolt/world.h
+ * @brief Internal Jolt Physics integration types used by Bezel.
+ *
+ * This header wires up Jolt layers/filters and global plumbing required to
+ * run the simulation. Most consumers should include `bezel/bezel.h` instead.
+ *
+ * \note This is an alpha API and may change.
+ */
+
 namespace bezel::jolt::layers {
 
 static constexpr JPH::ObjectLayer NON_MOVING = 0;
@@ -107,6 +117,7 @@ bool AssertFailedImpl(const char *expr, const char *msg, const char *file,
 
 class ObjectLayerPairFilterImpl final : public JPH::ObjectLayerPairFilter {
   public:
+    /** @brief Returns whether objects in the given layers should collide. */
     bool ShouldCollide(JPH::ObjectLayer inLayer1,
                        JPH::ObjectLayer inLayer2) const override;
 };
@@ -114,6 +125,8 @@ class ObjectLayerPairFilterImpl final : public JPH::ObjectLayerPairFilter {
 class ObjectVsBroadPhaseLayerFilterImpl final
     : public JPH::ObjectVsBroadPhaseLayerFilter {
   public:
+    /** @brief Returns whether an object layer collides with a broadphase layer.
+     */
     bool ShouldCollide(JPH::ObjectLayer inLayer1,
                        JPH::BroadPhaseLayer inLayer2) const override;
 };
