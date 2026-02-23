@@ -11,6 +11,7 @@
 #include "atlas/tracer/log.h"
 #include "atlas/window.h"
 #include <atlas/texture.h>
+#include <algorithm>
 #include <climits>
 #include <cstddef>
 #include <glad/glad.h>
@@ -21,27 +22,35 @@ void BloomRenderTarget::init(int width, int height, int chainLength) {
     if (initialized) {
         return;
     }
+    chainLength = std::max(1, chainLength);
+    if (width <= 0 || height <= 0) {
+        return;
+    }
+    if (width > INT_MAX || height > INT_MAX) {
+        atlas_error("Texture dimensions exceed maximum allowed");
+        return;
+    }
+
     atlas_log("Initializing bloom system (chain length: " +
               std::to_string(chainLength) + ", resolution: " +
               std::to_string(width) + "x" + std::to_string(height) + ")");
     initialized = true;
 
     this->framebuffer = opal::Framebuffer::create();
+    this->elements.clear();
 
     glm::vec2 mipSize((float)width, (float)height);
     glm::ivec2 mipIntSize((int)width, (int)height);
-    if (width > INT_MAX || height > INT_MAX) {
-        atlas_error("Texture dimensions exceed maximum allowed");
-        return;
-    }
 
     this->srcViewportSize = mipIntSize;
     this->srcViewportSizef = mipSize;
 
     for (int i = 0; i < chainLength; i++) {
         BloomElement element;
-        mipSize *= 0.5f;
-        mipIntSize /= 2;
+        mipSize.x = std::max(1.0f, mipSize.x * 0.5f);
+        mipSize.y = std::max(1.0f, mipSize.y * 0.5f);
+        mipIntSize.x = std::max(1, mipIntSize.x / 2);
+        mipIntSize.y = std::max(1, mipIntSize.y / 2);
         element.size = mipSize;
         element.intSize = mipIntSize;
 
@@ -61,6 +70,12 @@ void BloomRenderTarget::init(int width, int height, int chainLength) {
         this->elements.push_back(element);
     }
 
+    if (elements.empty()) {
+        this->framebuffer = nullptr;
+        initialized = false;
+        return;
+    }
+
     this->framebuffer->attachTexture(elements[0].texture, 0);
     this->framebuffer->setDrawBuffers(1);
 
@@ -72,15 +87,22 @@ void BloomRenderTarget::init(int width, int height, int chainLength) {
         AtlasVertexShader::Light, AtlasFragmentShader::Upsample);
 
     if (quadState == nullptr) {
-        float quadVertices[] = {
-            // positions         // texCoords
-            -1.0f, 1.0f,  0.0f, 0.0f, 1.0f, // top-left
-            -1.0f, -1.0f, 0.0f, 0.0f, 0.0f, // bottom-left
-            1.0f,  -1.0f, 0.0f, 1.0f, 0.0f, // bottom-right
-
-            -1.0f, 1.0f,  0.0f, 0.0f, 1.0f, // top-left
-            1.0f,  -1.0f, 0.0f, 1.0f, 0.0f, // bottom-right
-            1.0f,  1.0f,  0.0f, 1.0f, 1.0f  // top-right
+        CoreVertex quadVertices[] = {
+#ifdef METAL
+            {{-1.0f, 1.0f, 0.0f}, Color::white(), {0.0f, 0.0f}},
+            {{-1.0f, -1.0f, 0.0f}, Color::white(), {0.0f, 1.0f}},
+            {{1.0f, -1.0f, 0.0f}, Color::white(), {1.0f, 1.0f}},
+            {{-1.0f, 1.0f, 0.0f}, Color::white(), {0.0f, 0.0f}},
+            {{1.0f, -1.0f, 0.0f}, Color::white(), {1.0f, 1.0f}},
+            {{1.0f, 1.0f, 0.0f}, Color::white(), {1.0f, 0.0f}}
+#else
+            {{-1.0f, 1.0f, 0.0f}, Color::white(), {0.0f, 1.0f}},
+            {{-1.0f, -1.0f, 0.0f}, Color::white(), {0.0f, 0.0f}},
+            {{1.0f, -1.0f, 0.0f}, Color::white(), {1.0f, 0.0f}},
+            {{-1.0f, 1.0f, 0.0f}, Color::white(), {0.0f, 1.0f}},
+            {{1.0f, -1.0f, 0.0f}, Color::white(), {1.0f, 0.0f}},
+            {{1.0f, 1.0f, 0.0f}, Color::white(), {1.0f, 1.0f}}
+#endif
         };
 
         quadBuffer = opal::Buffer::create(opal::BufferUsage::VertexBuffer,
@@ -91,21 +113,22 @@ void BloomRenderTarget::init(int width, int height, int chainLength) {
         opal::VertexAttribute positionAttr{
             .name = "bloomPosition",
             .type = opal::VertexAttributeType::Float,
-            .offset = 0,
+            .offset = static_cast<uint>(offsetof(CoreVertex, position)),
             .location = 0,
             .normalized = false,
             .size = 3,
-            .stride = static_cast<uint>(5 * sizeof(float)),
+            .stride = static_cast<uint>(sizeof(CoreVertex)),
             .inputRate = opal::VertexBindingInputRate::Vertex,
             .divisor = 0};
         opal::VertexAttribute uvAttr{
             .name = "bloomUV",
             .type = opal::VertexAttributeType::Float,
-            .offset = static_cast<uint>(3 * sizeof(float)),
-            .location = 1,
+            .offset =
+                static_cast<uint>(offsetof(CoreVertex, textureCoordinate)),
+            .location = 2,
             .normalized = false,
             .size = 2,
-            .stride = static_cast<uint>(5 * sizeof(float)),
+            .stride = static_cast<uint>(sizeof(CoreVertex)),
             .inputRate = opal::VertexBindingInputRate::Vertex,
             .divisor = 0};
 
@@ -120,7 +143,10 @@ void BloomRenderTarget::destroy() {
         elements[i].textureId = 0;
         elements[i].texture = nullptr;
     }
+    elements.clear();
     this->framebuffer = nullptr;
+    this->srcViewportSize = glm::ivec2(0);
+    this->srcViewportSizef = glm::vec2(0.0f);
     initialized = false;
 }
 
@@ -128,45 +154,89 @@ const std::vector<BloomElement> &BloomRenderTarget::getElements() const {
     return elements;
 }
 
-void BloomRenderTarget::renderBloomTexture(unsigned int srcTexture,
-                                           float filterRadius) {
+void BloomRenderTarget::renderBloomTexture(
+    unsigned int srcTexture, float filterRadius,
+    std::shared_ptr<opal::CommandBuffer> commandBuffer) {
+    if (srcTexture == 0 || !initialized || framebuffer == nullptr ||
+        elements.empty()) {
+        return;
+    }
+
+    auto bloomCommandBuffer = commandBuffer;
+    bool ownsCommandBuffer = false;
+    if (bloomCommandBuffer == nullptr && Window::mainWindow != nullptr &&
+        Window::mainWindow->device != nullptr) {
+        bloomCommandBuffer = Window::mainWindow->device->acquireCommandBuffer();
+        bloomCommandBuffer->start();
+        ownsCommandBuffer = true;
+    }
+    if (bloomCommandBuffer == nullptr) {
+        return;
+    }
+
     this->bindForWriting();
 
-    this->renderDownsamples(srcTexture);
-    this->renderUpsamples(filterRadius);
+    this->renderDownsamples(srcTexture, bloomCommandBuffer);
+    this->renderUpsamples(filterRadius, bloomCommandBuffer);
 
     this->framebuffer->unbind();
-    Window::mainWindow->getDevice()->getDefaultFramebuffer()->setViewport(
-        0, 0, srcViewportSize.x, srcViewportSize.y);
+    if (ownsCommandBuffer) {
+        bloomCommandBuffer->commit();
+    }
+
+    if (Window::mainWindow != nullptr &&
+        Window::mainWindow->getDevice() != nullptr) {
+        Window::mainWindow->getDevice()->getDefaultFramebuffer()->setViewport(
+            0, 0, srcViewportSize.x, srcViewportSize.y);
+    }
 }
 
 unsigned int BloomRenderTarget::getBloomTexture() {
+    if (elements.empty()) {
+        return 0;
+    }
     return elements[0].textureId;
 }
 
-void BloomRenderTarget::renderDownsamples(unsigned int srcTexture) {
-    // Get or create pipeline for downsample
+void BloomRenderTarget::renderDownsamples(
+    unsigned int srcTexture,
+    const std::shared_ptr<opal::CommandBuffer> &commandBuffer) {
+    if (commandBuffer == nullptr) {
+        return;
+    }
+
     static std::shared_ptr<opal::Pipeline> downsamplePipeline = nullptr;
     if (downsamplePipeline == nullptr) {
         downsamplePipeline = opal::Pipeline::create();
     }
     downsamplePipeline = downsampleProgram.requestPipeline(downsamplePipeline);
+    downsamplePipeline->setCullMode(opal::CullMode::None);
+    downsamplePipeline->enableDepthTest(false);
+    downsamplePipeline->enableDepthWrite(false);
+    downsamplePipeline->enableBlending(false);
     downsamplePipeline->bind();
 
     downsamplePipeline->setUniform2f("srcResolution", srcViewportSizef.x,
                                      srcViewportSizef.y);
     downsamplePipeline->bindTexture2D("srcTexture", srcTexture, 0);
-
-    auto commandBuffer = Window::mainWindow->device->acquireCommandBuffer();
+    this->framebuffer->setDrawBuffers(1);
 
     for (size_t i = 0; i < elements.size(); i++) {
         const BloomElement &element = elements[i];
-        this->framebuffer->setViewport(0, 0, element.size.x, element.size.y);
+        this->framebuffer->width = element.intSize.x;
+        this->framebuffer->height = element.intSize.y;
+        this->framebuffer->setViewport(0, 0, element.intSize.x,
+                                       element.intSize.y);
         this->framebuffer->attachTexture(element.texture, 0);
 
+        auto renderPass = opal::RenderPass::create();
+        renderPass->setFramebuffer(this->framebuffer);
+        commandBuffer->beginPass(renderPass);
+        commandBuffer->bindPipeline(downsamplePipeline);
         commandBuffer->bindDrawingState(quadState);
         commandBuffer->draw(6, 1, 0, 0);
         commandBuffer->unbindDrawingState();
+        commandBuffer->endPass();
 
         downsamplePipeline->setUniform2f("srcResolution", element.size.x,
                                          element.size.y);
@@ -174,21 +244,28 @@ void BloomRenderTarget::renderDownsamples(unsigned int srcTexture) {
     }
 }
 
-void BloomRenderTarget::renderUpsamples(float filterRadius) {
-    // Get or create pipeline for upsample
+void BloomRenderTarget::renderUpsamples(
+    float filterRadius,
+    const std::shared_ptr<opal::CommandBuffer> &commandBuffer) {
+    if (commandBuffer == nullptr) {
+        return;
+    }
+
     static std::shared_ptr<opal::Pipeline> upsamplePipeline = nullptr;
     if (upsamplePipeline == nullptr) {
         upsamplePipeline = opal::Pipeline::create();
     }
     upsamplePipeline = upsampleProgram.requestPipeline(upsamplePipeline);
+    upsamplePipeline->setCullMode(opal::CullMode::None);
+    upsamplePipeline->enableDepthTest(false);
+    upsamplePipeline->enableDepthWrite(false);
     upsamplePipeline->enableBlending(true);
     upsamplePipeline->setBlendFunc(opal::BlendFunc::One, opal::BlendFunc::One);
     upsamplePipeline->setBlendEquation(opal::BlendEquation::Add);
     upsamplePipeline->bind();
 
     upsamplePipeline->setUniform1f("filterRadius", filterRadius);
-
-    auto commandBuffer = Window::mainWindow->device->acquireCommandBuffer();
+    this->framebuffer->setDrawBuffers(1);
 
     for (int i = elements.size() - 1; i > 0; i--) {
         const BloomElement &element = elements[i];
@@ -198,13 +275,20 @@ void BloomRenderTarget::renderUpsamples(float filterRadius) {
         upsamplePipeline->setUniform2f("srcResolution", element.size.x,
                                        element.size.y);
 
-        this->framebuffer->setViewport(0, 0, nextElement.size.x,
-                                       nextElement.size.y);
+        this->framebuffer->width = nextElement.intSize.x;
+        this->framebuffer->height = nextElement.intSize.y;
+        this->framebuffer->setViewport(0, 0, nextElement.intSize.x,
+                                       nextElement.intSize.y);
         this->framebuffer->attachTexture(nextElement.texture, 0);
 
+        auto renderPass = opal::RenderPass::create();
+        renderPass->setFramebuffer(this->framebuffer);
+        commandBuffer->beginPass(renderPass);
+        commandBuffer->bindPipeline(upsamplePipeline);
         commandBuffer->bindDrawingState(quadState);
         commandBuffer->draw(6, 1, 0, 0);
         commandBuffer->unbindDrawingState();
+        commandBuffer->endPass();
     }
 
     upsamplePipeline->setBlendFunc(opal::BlendFunc::One,

@@ -43,6 +43,7 @@ struct ContextConfiguration {
 class Context {
   public:
     static std::shared_ptr<Context> create(ContextConfiguration config = {});
+    ~Context();
 
     void setFlag(int flag, bool enabled);
     void setFlag(int flag, int value);
@@ -130,6 +131,7 @@ struct DeviceInfo {
 class Device {
   public:
     static std::shared_ptr<Device> acquire(std::shared_ptr<Context> context);
+    ~Device();
     std::shared_ptr<CommandBuffer> acquireCommandBuffer();
 
     void submitCommandBuffer(std::shared_ptr<CommandBuffer> commandBuffer);
@@ -144,6 +146,10 @@ class Device {
     long frameCount = 0;
 
     static Device *globalInstance;
+#if defined(VULKAN) || defined(METAL)
+    std::shared_ptr<Context> context = nullptr;
+#endif
+
 #ifdef VULKAN
     static VkDevice globalDevice;
 
@@ -211,7 +217,6 @@ class Device {
     uint32_t findMemoryType(uint32_t typeFilter,
                             VkMemoryPropertyFlags properties);
 
-    std::shared_ptr<Context> context = nullptr;
 #endif
 };
 
@@ -259,6 +264,7 @@ class Texture {
     create(TextureType type, TextureFormat format, int width, int height,
            TextureDataFormat dataFormat = TextureDataFormat::Rgba,
            const void *data = nullptr, uint mipLevels = 1);
+    ~Texture();
 
     /**
      * @brief Creates a multisampled texture for use with multisampled
@@ -408,6 +414,7 @@ class Shader {
   public:
     static std::shared_ptr<Shader> createFromSource(const char *source,
                                                     ShaderType type);
+    ~Shader();
 
     void compile();
 
@@ -428,7 +435,9 @@ class Shader {
     std::unordered_map<std::string, UniformBindingInfo> uniformBindings;
 
     void performReflection();
+#endif
 
+#if defined(VULKAN) || defined(METAL)
     static int currentId;
 #endif
 
@@ -441,6 +450,7 @@ class Shader {
 class ShaderProgram {
   public:
     static std::shared_ptr<ShaderProgram> create();
+    ~ShaderProgram();
     void attachShader(std::shared_ptr<Shader> shader, int callerId = -1);
 
     void link();
@@ -458,7 +468,9 @@ class ShaderProgram {
     std::unordered_map<std::string, UniformBindingInfo> uniformBindings;
 
     const UniformBindingInfo *findUniform(const std::string &name) const;
+#endif
 
+#if defined(VULKAN) || defined(METAL)
     static int currentId;
 #endif
 };
@@ -546,6 +558,7 @@ struct VertexBinding {
 class Pipeline {
   public:
     static std::shared_ptr<Pipeline> create();
+    ~Pipeline();
 
     void setShaderProgram(std::shared_ptr<ShaderProgram> program);
 
@@ -752,8 +765,8 @@ class Pipeline {
 
     int viewportX = 0;
     int viewportY = 0;
-    int viewportWidth = 800;
-    int viewportHeight = 600;
+    int viewportWidth = 0;
+    int viewportHeight = 0;
 
     uint getGLBlendFactor(BlendFunc factor) const;
     uint getGLBlendEquation(BlendEquation equation) const;
@@ -796,6 +809,7 @@ class Buffer {
     create(BufferUsage usage, size_t size, const void *data = nullptr,
            MemoryUsageType memoryUsage = MemoryUsageType::GPUOnly,
            int callerId = -1);
+    ~Buffer();
 
     void updateData(size_t offset, size_t size, const void *data);
 
@@ -875,6 +889,7 @@ class Framebuffer {
   public:
     static std::shared_ptr<Framebuffer> create(int width, int height);
     static std::shared_ptr<Framebuffer> create();
+    ~Framebuffer();
 
     void addAttachment(const Attachment &attachment);
     void attachDepthStencilBuffer(
@@ -936,6 +951,7 @@ class Framebuffer {
      * @param attachmentCount Number of color attachments to enable (0-N).
      */
     void setDrawBuffers(int attachmentCount);
+    int getDrawBufferCount() const { return drawBufferCount; }
 
     bool getStatus() const;
 
@@ -958,6 +974,7 @@ class Framebuffer {
 
   private:
     bool colorBufferDisabled = false;
+    int drawBufferCount = -1;
 };
 
 #ifdef VULKAN
@@ -1031,6 +1048,7 @@ class ResolveAction {
 
 class CommandBuffer {
   public:
+    ~CommandBuffer();
     void start();
     void beginPass(std::shared_ptr<RenderPass> renderPass);
     void beginSampled(std::shared_ptr<Framebuffer> readFramebuffer,

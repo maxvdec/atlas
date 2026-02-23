@@ -1,26 +1,26 @@
 GENERATOR := "Unix Makefiles"
 
-build enable_opengl="OFF" bezel_native="OFF":
+build backend="AUTO" bezel_native="OFF":
     mkdir -p build
-    cd build && cmake -G "{{GENERATOR}}" -DBACKEND_OPENGL={{enable_opengl}} -DBEZEL_NATIVE={{bezel_native}} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+    cd build && cmake -G "{{GENERATOR}}" -DBACKEND={{backend}} -DBEZEL_NATIVE={{bezel_native}} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON .. 
     cd build && make -j8
 
-target target enable_opengl="OFF" bezel_native="OFF":
+target target backend="AUTO" bezel_native="OFF":
     mkdir -p build
-    cd build && cmake -G "{{GENERATOR}}" -DBACKEND_OPENGL={{enable_opengl}} -DBEZEL_NATIVE={{bezel_native}} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+    cd build && cmake -G "{{GENERATOR}}" -DBACKEND={{backend}} -DBEZEL_NATIVE={{bezel_native}} -DCMAKE_EXPORT_COMPILE_COMMANDS=ON .. 
     cd build && make -j8 {{target}}
 
-run enable_opengl="OFF" bezel_native="OFF":
-    just build {{enable_opengl}} {{bezel_native}}
+run backend="AUTO" bezel_native="OFF":
+    just build {{backend}} {{bezel_native}}
     MTL_HUD_ENABLED=0 ./build/bin/atlas_test
 
-debug enable_opengl="OFF" bezel_native="OFF":
-    just build {{enable_opengl}} {{bezel_native}}
+debug backend="AUTO" bezel_native="OFF":
+    just build {{backend}} {{bezel_native}}
     MTL_HUD_ENABLED=1 ./build/bin/atlas_test
 
-clangd enable_opengl="OFF" bezel_native="OFF":
+clangd backend="AUTO" bezel_native="OFF":
     mkdir -p build
-    cd build && cmake -G "{{GENERATOR}}" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DBACKEND_OPENGL={{enable_opengl}} -DBEZEL_NATIVE={{bezel_native}} ..
+    cd build && cmake -G "{{GENERATOR}}" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DBACKEND={{backend}} -DBEZEL_NATIVE={{bezel_native}} .. 
     ln -sf build/compile_commands.json compile_commands.json
 
 lint:
@@ -36,16 +36,16 @@ frametest:
 cli:
     cargo build
 
-release enable_opengl="OFF":
+release backend="AUTO":
     mkdir -p build
-    cd build && cmake -G "{{GENERATOR}}" -DCMAKE_BUILD_TYPE=Release -DBACKEND_OPENGL={{enable_opengl}} ..
+    cd build && cmake -G "{{GENERATOR}}" -DCMAKE_BUILD_TYPE=Release -DBACKEND={{backend}} .. 
     cd build && make -j8
 
-docs enable_opengl="OFF":
+docs backend="AUTO":
     mkdir -p build
     doxygen -w html header.html delete.html delete.css
     rm delete.html delete.css
-    cd build && cmake -G "{{GENERATOR}}" -DBACKEND_OPENGL={{enable_opengl}} ..
+    cd build && cmake -G "{{GENERATOR}}" -DBACKEND={{backend}} ..
     cp header.html build/_deps/doxygen-awesome-css-src/header.html
     rm header.html
     doxygen Doxyfile

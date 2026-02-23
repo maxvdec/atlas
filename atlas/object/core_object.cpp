@@ -526,22 +526,24 @@ void CoreObject::render(float dt,
         return;
     }
 
-    DebugObjectPacket debugPacket{};
-    debugPacket.drawCallsForObject = 1;
-    debugPacket.frameCount = Window::mainWindow->device->frameCount;
-    debugPacket.triangleCount = static_cast<uint32_t>(
-        indices.empty() ? vertices.size() / 3 : indices.size() / 3);
-    debugPacket.vertexBufferSizeMb =
-        static_cast<float>(sizeof(CoreVertex) * vertices.size()) /
-        (1024.0f * 1024.0f);
-    debugPacket.indexBufferSizeMb =
-        static_cast<float>(sizeof(Index) * indices.size()) /
-        (1024.0f * 1024.0f);
-    debugPacket.textureCount = static_cast<uint32_t>(textures.size());
-    debugPacket.materialCount = 1;
-    debugPacket.objectType = DebugObjectType::StaticMesh;
-    debugPacket.objectId = this->id;
-    debugPacket.send();
+    if (TracerServices::getInstance().isOk()) {
+        DebugObjectPacket debugPacket{};
+        debugPacket.drawCallsForObject = 1;
+        debugPacket.frameCount = Window::mainWindow->device->frameCount;
+        debugPacket.triangleCount = static_cast<uint32_t>(
+            indices.empty() ? vertices.size() / 3 : indices.size() / 3);
+        debugPacket.vertexBufferSizeMb =
+            static_cast<float>(sizeof(CoreVertex) * vertices.size()) /
+            (1024.0f * 1024.0f);
+        debugPacket.indexBufferSizeMb =
+            static_cast<float>(sizeof(Index) * indices.size()) /
+            (1024.0f * 1024.0f);
+        debugPacket.textureCount = static_cast<uint32_t>(textures.size());
+        debugPacket.materialCount = 1;
+        debugPacket.objectType = DebugObjectType::StaticMesh;
+        debugPacket.objectId = this->id;
+        debugPacket.send();
+    }
 
     if (updatePipeline || this->pipeline == nullptr) {
         this->refreshPipeline();
@@ -554,6 +556,8 @@ void CoreObject::render(float dt,
             "Pipeline not created - call refreshPipeline() first");
     }
 
+    this->pipeline->setUniform1i("isInstanced", 0);
+    this->pipeline->setUniformBool("isInstanced", false);
     this->pipeline->setUniformMat4f("model", model);
     this->pipeline->setUniformMat4f("view", view);
     this->pipeline->setUniformMat4f("projection", projection);
@@ -729,30 +733,7 @@ void CoreObject::render(float dt,
             if (!light->doesCastShadows) {
                 continue;
             }
-            if (boundTextures >= 16) {
-                break;
-            }
-
-            std::string baseName =
-                "shadowParams[" + std::to_string(boundParameters) + "]";
-            this->pipeline->bindTexture2D(baseName + ".textureIndex",
-                                          light->shadowRenderTarget->texture.id,
-                                          boundTextures, id);
-            ShadowParams shadowParams = light->calculateLightSpaceMatrix(
-                Window::mainWindow->renderables);
-            this->pipeline->setUniformMat4f(baseName + ".lightView",
-                                            shadowParams.lightView);
-            this->pipeline->setUniformMat4f(baseName + ".lightProjection",
-                                            shadowParams.lightProjection);
-            this->pipeline->setUniform1f(baseName + ".bias", shadowParams.bias);
-            this->pipeline->setUniform1f(baseName + ".isPointLight", 0);
-
-            boundParameters++;
-            boundTextures++;
-        }
-
-        for (auto light : scene->spotlights) {
-            if (!light->doesCastShadows) {
+            if (light->shadowRenderTarget == nullptr) {
                 continue;
             }
             if (boundTextures >= 16) {
@@ -764,14 +745,56 @@ void CoreObject::render(float dt,
             this->pipeline->bindTexture2D(baseName + ".textureIndex",
                                           light->shadowRenderTarget->texture.id,
                                           boundTextures, id);
-            std::tuple<glm::mat4, glm::mat4> lightSpace =
-                light->calculateLightSpaceMatrix();
+            this->pipeline->setUniform1i(baseName + ".textureIndex",
+                                         boundTextures);
+            ShadowParams shadowParams = light->lastShadowParams;
             this->pipeline->setUniformMat4f(baseName + ".lightView",
-                                            std::get<0>(lightSpace));
+                                            shadowParams.lightView);
             this->pipeline->setUniformMat4f(baseName + ".lightProjection",
-                                            std::get<1>(lightSpace));
-            this->pipeline->setUniform1f(baseName + ".bias", 0.005f);
-            this->pipeline->setUniform1f(baseName + ".isPointLight", 0);
+                                            shadowParams.lightProjection);
+#ifdef METAL
+            this->pipeline->setUniform1f(baseName + ".bias0",
+                                         shadowParams.bias);
+#else
+            this->pipeline->setUniform1f(baseName + ".bias", shadowParams.bias);
+#endif
+            this->pipeline->setUniform1i(baseName + ".isPointLight", 0);
+
+            boundParameters++;
+            boundTextures++;
+        }
+
+        for (auto light : scene->spotlights) {
+            if (!light->doesCastShadows) {
+                continue;
+            }
+            if (light->shadowRenderTarget == nullptr) {
+                continue;
+            }
+            if (boundTextures >= 16) {
+                break;
+            }
+
+            std::string baseName =
+                "shadowParams[" + std::to_string(boundParameters) + "]";
+            this->pipeline->bindTexture2D(baseName + ".textureIndex",
+                                          light->shadowRenderTarget->texture.id,
+                                          boundTextures, id);
+            this->pipeline->setUniform1i(baseName + ".textureIndex",
+                                         boundTextures);
+            ShadowParams shadowParams = light->lastShadowParams;
+            this->pipeline->setUniformMat4f(baseName + ".lightView",
+                                            shadowParams.lightView);
+            this->pipeline->setUniformMat4f(baseName + ".lightProjection",
+                                            shadowParams.lightProjection);
+#ifdef METAL
+            this->pipeline->setUniform1f(baseName + ".bias0",
+                                         shadowParams.bias);
+#else
+            this->pipeline->setUniform1f(baseName + ".bias",
+                                         shadowParams.bias);
+#endif
+            this->pipeline->setUniform1i(baseName + ".isPointLight", 0);
 
             boundParameters++;
             boundTextures++;
@@ -849,6 +872,7 @@ void CoreObject::render(float dt,
             this->savedInstances = this->instances;
         }
         this->pipeline->setUniform1i("isInstanced", 1);
+        this->pipeline->setUniformBool("isInstanced", true);
 
         if (!indices.empty()) {
             commandBuffer->bindDrawingState(vao);
@@ -866,6 +890,7 @@ void CoreObject::render(float dt,
     }
 
     this->pipeline->setUniform1i("isInstanced", 0);
+    this->pipeline->setUniformBool("isInstanced", false);
     if (!indices.empty()) {
         commandBuffer->bindDrawingState(vao);
         commandBuffer->bindPipeline(this->pipeline);

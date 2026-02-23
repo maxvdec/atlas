@@ -44,6 +44,9 @@ Window::Window(WindowConfiguration config)
 #ifdef VULKAN
     auto context = opal::Context::create({.useOpenGL = false});
     atlas_log("Using Vulkan backend");
+#elif defined(METAL)
+    auto context = opal::Context::create({.useOpenGL = false});
+    atlas_log("Using Metal backend");
 #else
     auto context =
         opal::Context::create({.useOpenGL = true,
@@ -51,6 +54,17 @@ Window::Window(WindowConfiguration config)
                                .minorVersion = 1,
                                .profile = opal::OpenGLProfile::Core});
     atlas_log("Using OpenGL backend");
+#endif
+
+#if defined(VULKAN)
+    this->frontFace = opal::FrontFace::Clockwise;
+    this->deferredFrontFace = opal::FrontFace::Clockwise;
+#elif defined(METAL)
+    this->frontFace = opal::FrontFace::CounterClockwise;
+    this->deferredFrontFace = opal::FrontFace::Clockwise;
+#else
+    this->frontFace = opal::FrontFace::CounterClockwise;
+    this->deferredFrontFace = opal::FrontFace::CounterClockwise;
 #endif
 
     context->setFlag(GLFW_DECORATED, config.decorations);
@@ -78,6 +92,10 @@ Window::Window(WindowConfiguration config)
     int fbWidth, fbHeight;
     glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
     device->getDefaultFramebuffer()->setViewport(0, 0, fbWidth, fbHeight);
+    this->viewportX = 0;
+    this->viewportY = 0;
+    this->viewportWidth = fbWidth;
+    this->viewportHeight = fbHeight;
 
     if (config.posX != WINDOW_CENTERED && config.posY != WINDOW_CENTERED) {
         glfwSetWindowPos(window, config.posX, config.posY);
@@ -149,6 +167,13 @@ Window::Window(WindowConfiguration config)
     this->useMultiPassPointShadows = false;
 #endif
 
+#if defined(METAL)
+    this->shadowUpdateInterval = 1.0f / 10.0f;
+    this->ssaoUpdateInterval = 1.0f / 12.0f;
+    this->ssaoKernelSize = 16;
+    this->bloomBlurPasses = 4;
+#endif
+
     ShaderProgram pointProgram = ShaderProgram();
     if (this->useMultiPassPointShadows) {
         // Use multi-pass shaders without geometry shader
@@ -208,8 +233,14 @@ Window::Window(WindowConfiguration config)
               << info.opalVersion << " \033[0m" << std::endl;
 #ifdef OPENGL
     std::cout << "\033[1m\033[32mUsing OpenGL Backend\033[0m" << std::endl;
-#else
+#elif defined(VULKAN)
     std::cout << "\033[1m\033[32mUsing Vulkan Backend\033[0m" << std::endl;
+#elif defined(METAL)
+    std::cout << "\033[1m\033[32mUsing Metal Backend\033[0m" << std::endl;
+#else
+    std::cout << "\033[1m\033[32mUsing Unknown Backend\033[0m" << std::endl;
+#endif
+#if defined(VULKAN) || defined(METAL)
     std::cout << "\033[1m\033[35m---------------\033[0m" << std::endl;
     std::cout << "\033[1m\033[35mUsing GPU: " << info.deviceName << "\033[0m"
               << std::endl;
@@ -348,11 +379,13 @@ void Window::run() {
 
         renderLightsToShadowMaps(commandBuffer);
 
-        updatePipelineStateField(this->cullMode, opal::CullMode::None);
-        updatePipelineStateField(this->cullMode, opal::CullMode::Back);
         // Render to the targets
         for (auto &target : this->renderTargets) {
+            if (target == nullptr) {
+                continue;
+            }
             this->currentRenderTarget = target;
+            setViewportState(0, 0, target->getWidth(), target->getHeight());
             updatePipelineStateField(this->depthCompareOp,
                                      opal::CompareOp::Less);
             updatePipelineStateField(this->writeDepth, true);
@@ -360,20 +393,32 @@ void Window::run() {
 
             auto renderPass = opal::RenderPass::create();
             renderPass->setFramebuffer(target->getFramebuffer());
-            commandBuffer->beginPass(renderPass);
             if (target->brightTexture.id != 0) {
                 target->getFramebuffer()->setDrawBuffers(2);
             }
 
             if (this->usesDeferred) {
+                if (this->gBuffer == nullptr) {
+                    this->useDeferredRendering();
+                }
+
                 this->deferredRendering(target, commandBuffer);
 
-                auto resolveCommand = opal::ResolveAction::create(
-                    this->gBuffer->getFramebuffer(), target->getFramebuffer());
+                auto forwardFramebuffer = target->getFramebuffer();
+                if (target->type == RenderTargetType::Multisampled &&
+                    target->getResolveFramebuffer() != nullptr) {
+                    forwardFramebuffer = target->getResolveFramebuffer();
+                }
+                auto resolveCommand = opal::ResolveAction::createForDepth(
+                    this->gBuffer->getFramebuffer(), forwardFramebuffer);
                 commandBuffer->performResolve(resolveCommand);
 
-                target->getFramebuffer()->bindForRead();
-                target->getFramebuffer()->setDrawBuffers(2);
+                auto forwardRenderPass = opal::RenderPass::create();
+                forwardRenderPass->setFramebuffer(forwardFramebuffer);
+                forwardFramebuffer->setDrawBuffers(2);
+                commandBuffer->beginPass(forwardRenderPass);
+                forwardFramebuffer->setViewport(0, 0, target->getWidth(),
+                                                target->getHeight());
 
                 updatePipelineStateField(this->useDepth, true);
                 updatePipelineStateField(this->depthCompareOp,
@@ -408,9 +453,9 @@ void Window::run() {
                 }
 
                 commandBuffer->endPass();
-                target->resolve();
                 continue;
             }
+            commandBuffer->beginPass(renderPass);
             commandBuffer->clearColor(this->clearColor.r, this->clearColor.g,
                                       this->clearColor.b, this->clearColor.a);
             commandBuffer->clearDepth(1.0f);
@@ -438,9 +483,15 @@ void Window::run() {
                 obj->render(getDeltaTime(), commandBuffer,
                             shouldRefreshPipeline(obj));
             }
-            target->resolve();
-
             commandBuffer->endPass();
+            target->resolve();
+        }
+
+        for (auto &obj : this->preferenceRenderables) {
+            RenderTarget *target = dynamic_cast<RenderTarget *>(obj);
+            if (target != nullptr && target->brightTexture.id != 0) {
+                this->renderPhysicalBloom(target);
+            }
         }
 
         // Render to the screen
@@ -484,19 +535,13 @@ void Window::run() {
             this->currentRenderTarget = nullptr;
         }
 
-        updatePipelineStateField(this->cullMode, opal::CullMode::None);
         for (auto &obj : this->preferenceRenderables) {
-            RenderTarget *target = dynamic_cast<RenderTarget *>(obj);
-            if (target != nullptr && target->brightTexture.id != 0) {
-                this->renderPhysicalBloom(target);
-            }
             obj->setViewMatrix(this->camera->calculateViewMatrix());
             obj->setProjectionMatrix(calculateProjectionMatrix());
             obj->render(getDeltaTime(), commandBuffer,
                         shouldRefreshPipeline(obj));
         }
 
-        updatePipelineStateField(this->cullMode, opal::CullMode::Back);
         updatePipelineStateField(this->useBlending, true);
 
         for (auto &obj : this->uiRenderables) {
@@ -515,71 +560,79 @@ void Window::run() {
         uint64_t gpuTime = gpuTimer.stop();
         uint64_t mainTime = mainTimer.stop();
 
-        FrameDrawInfo frameInfo{};
-        frameInfo.drawCallCount = commandBuffer->getAndResetDrawCallCount();
-        frameInfo.frameTimeMs = this->deltaTime * 1000.0f;
-        frameInfo.frameNumber = device->frameCount;
-        frameInfo.fps = this->framesPerSecond;
-        frameInfo.send();
+        if (TracerServices::getInstance().isOk()) {
+            FrameDrawInfo frameInfo{};
+            frameInfo.drawCallCount = commandBuffer->getAndResetDrawCallCount();
+            frameInfo.frameTimeMs = this->deltaTime * 1000.0f;
+            frameInfo.frameNumber = device->frameCount;
+            frameInfo.fps = this->framesPerSecond;
+            frameInfo.send();
 
-        FrameResourcesInfo frameResourcesInfo{};
-        frameResourcesInfo.frameNumber = device->frameCount;
-        frameResourcesInfo.resourcesCreated =
-            ResourceTracker::getInstance().createdResources;
-        frameResourcesInfo.resourcesUnloaded =
-            ResourceTracker::getInstance().unloadedResources;
-        frameResourcesInfo.resourcesLoaded =
-            ResourceTracker::getInstance().loadedResources;
-        frameResourcesInfo.totalMemoryMb =
-            ResourceTracker::getInstance().totalMemoryMb;
+            FrameResourcesInfo frameResourcesInfo{};
+            frameResourcesInfo.frameNumber = device->frameCount;
+            frameResourcesInfo.resourcesCreated =
+                ResourceTracker::getInstance().createdResources;
+            frameResourcesInfo.resourcesUnloaded =
+                ResourceTracker::getInstance().unloadedResources;
+            frameResourcesInfo.resourcesLoaded =
+                ResourceTracker::getInstance().loadedResources;
+            frameResourcesInfo.totalMemoryMb =
+                ResourceTracker::getInstance().totalMemoryMb;
 
-        FrameMemoryPacket memoryPacket{};
-        memoryPacket.frameNumber = device->frameCount;
-        memoryPacket.allocationCount =
-            ResourceTracker::getInstance().createdResources -
-            ResourceTracker::getInstance().unloadedResources;
-        memoryPacket.totalAllocatedMb =
-            ResourceTracker::getInstance().totalMemoryMb;
-        memoryPacket.totalCPUMb = ResourceTracker::getInstance().totalMemoryMb;
-        memoryPacket.totalGPUMb = ResourceTracker::getInstance().totalMemoryMb;
-        memoryPacket.deallocationCount =
-            ResourceTracker::getInstance().unloadedResources;
-        memoryPacket.send();
+            FrameMemoryPacket memoryPacket{};
+            memoryPacket.frameNumber = device->frameCount;
+            memoryPacket.allocationCount =
+                ResourceTracker::getInstance().createdResources -
+                ResourceTracker::getInstance().unloadedResources;
+            memoryPacket.totalAllocatedMb =
+                ResourceTracker::getInstance().totalMemoryMb;
+            memoryPacket.totalCPUMb =
+                ResourceTracker::getInstance().totalMemoryMb;
+            memoryPacket.totalGPUMb =
+                ResourceTracker::getInstance().totalMemoryMb;
+            memoryPacket.deallocationCount =
+                ResourceTracker::getInstance().unloadedResources;
+            memoryPacket.send();
 
-        rusage usage{};
-        getrusage(RUSAGE_SELF, &usage);
+            rusage usage{};
+            getrusage(RUSAGE_SELF, &usage);
 
-        double normalCpuTime =
-            usage.ru_utime.tv_sec + (usage.ru_utime.tv_usec / 1e6) +
-            usage.ru_stime.tv_sec + (usage.ru_stime.tv_usec / 1e6);
+            double normalCpuTime =
+                usage.ru_utime.tv_sec + (usage.ru_utime.tv_usec / 1e6) +
+                usage.ru_stime.tv_sec + (usage.ru_stime.tv_usec / 1e6);
 
-        TimingEventPacket timingEvent{};
-        timingEvent.frameNumber = device->frameCount;
-        timingEvent.durationMs = static_cast<float>(gpuTime) / 1'000'000.0f;
-        timingEvent.name = "Main Loop";
-        timingEvent.subsystem = TimingEventSubsystem::Rendering;
-        timingEvent.send();
+            TimingEventPacket timingEvent{};
+            timingEvent.frameNumber = device->frameCount;
+            timingEvent.durationMs = static_cast<float>(gpuTime) / 1'000'000.0f;
+            timingEvent.name = "Main Loop";
+            timingEvent.subsystem = TimingEventSubsystem::Rendering;
+            timingEvent.send();
 
-        FrameTimingPacket timingPacket{};
-        timingPacket.frameNumber = device->frameCount;
-        timingPacket.cpuFrameTimeMs =
-            static_cast<float>(cpuTime) / 1'000'000.0f;
-        timingPacket.gpuFrameTimeMs =
-            static_cast<float>(gpuTime) / 1'000'000.0f;
-        timingPacket.workerThreadTimeMs = 0.0f;
-        timingPacket.mainThreadTimeMs =
-            static_cast<float>(mainTime) / 1'000'000.0f;
-        timingPacket.memoryMb = ResourceTracker::getInstance().totalMemoryMb;
-        timingPacket.cpuUsagePercent =
-            static_cast<float>(normalCpuTime / this->deltaTime * 100.0);
-        timingPacket.gpuUsagePercent = 0.0f;
-        timingPacket.send();
+            FrameTimingPacket timingPacket{};
+            timingPacket.frameNumber = device->frameCount;
+            timingPacket.cpuFrameTimeMs =
+                static_cast<float>(cpuTime) / 1'000'000.0f;
+            timingPacket.gpuFrameTimeMs =
+                static_cast<float>(gpuTime) / 1'000'000.0f;
+            timingPacket.workerThreadTimeMs = 0.0f;
+            timingPacket.mainThreadTimeMs =
+                static_cast<float>(mainTime) / 1'000'000.0f;
+            timingPacket.memoryMb =
+                ResourceTracker::getInstance().totalMemoryMb;
+            timingPacket.cpuUsagePercent =
+                static_cast<float>(normalCpuTime / this->deltaTime * 100.0);
+            timingPacket.gpuUsagePercent = 0.0f;
+            timingPacket.send();
+
+            frameResourcesInfo.send();
+        } else {
+            commandBuffer->getAndResetDrawCallCount();
+        }
 
         ResourceTracker::getInstance().createdResources = 0;
         ResourceTracker::getInstance().loadedResources = 0;
         ResourceTracker::getInstance().unloadedResources = 0;
         ResourceTracker::getInstance().totalMemoryMb = 0.0f;
-        frameResourcesInfo.send();
 
         if (this->firstFrame) {
             this->firstFrame = false;
@@ -669,8 +722,8 @@ glm::mat4 Window::calculateProjectionMatrix() {
                                 camera->nearClip, camera->farClip);
     }
 
-    // For Vulkan, flip Y in projection to match GL-style coordinates
-#ifdef VULKAN
+    // For Vulkan, flip Y in projection to match clip-space conventions
+#if defined(VULKAN)
     projection[1][1] *= -1.0f;
 #endif
     return projection;
@@ -940,7 +993,7 @@ void Window::renderLightsToShadowMaps(
         return;
     }
 
-    if (this->shadowUpdateCooldown > 0.0f) {
+    if (this->shadowUpdateCooldown > 0.0f && !cameraMoved && !lightsChanged) {
         return;
     }
 
@@ -999,7 +1052,13 @@ void Window::renderLightsToShadowMaps(
         depthPipeline->setViewport(
             0, 0, shadowRenderTarget->texture.creationData.width,
             shadowRenderTarget->texture.creationData.height);
+#ifdef METAL
+        depthPipeline->setCullMode(opal::CullMode::None);
+#else
         depthPipeline->setCullMode(opal::CullMode::Back);
+#endif
+        depthPipeline->setFrontFace(this->frontFace);
+        depthPipeline->enableDepthTest(true);
         depthPipeline->enablePolygonOffset(true);
         depthPipeline->setPolygonOffset(2.0f, 4.0f);
 
@@ -1021,7 +1080,7 @@ void Window::renderLightsToShadowMaps(
             if (obj->renderLateForward) {
                 continue;
             }
-            if (obj->getPipeline() == std::nullopt || !obj->canCastShadows()) {
+            if (!obj->canCastShadows()) {
                 continue;
             }
 
@@ -1033,7 +1092,7 @@ void Window::renderLightsToShadowMaps(
         }
 
         for (auto &obj : this->lateForwardRenderables) {
-            if (obj->getPipeline() == std::nullopt || !obj->canCastShadows()) {
+            if (!obj->canCastShadows()) {
                 continue;
             }
 
@@ -1062,7 +1121,13 @@ void Window::renderLightsToShadowMaps(
         spotlightsPipeline->setViewport(
             0, 0, shadowRenderTarget->texture.creationData.width,
             shadowRenderTarget->texture.creationData.height);
+#ifdef METAL
+        spotlightsPipeline->setCullMode(opal::CullMode::None);
+#else
         spotlightsPipeline->setCullMode(opal::CullMode::Back);
+#endif
+        spotlightsPipeline->setFrontFace(this->frontFace);
+        spotlightsPipeline->enableDepthTest(true);
         spotlightsPipeline->enablePolygonOffset(true);
         spotlightsPipeline->setPolygonOffset(2.0f, 4.0f);
         spotlightsPipeline =
@@ -1082,17 +1147,17 @@ void Window::renderLightsToShadowMaps(
         ShadowParams cached;
         cached.lightView = lightView;
         cached.lightProjection = lightProjection;
-        cached.bias = 0.005f;
+        cached.bias = 0.001f;
         light->lastShadowParams = cached;
         for (auto &obj : this->renderables) {
             if (obj->renderLateForward) {
                 continue;
             }
-            if (obj->getPipeline() == std::nullopt || !obj->canCastShadows()) {
+            if (!obj->canCastShadows()) {
                 continue;
             }
 
-            obj->setPipeline(depthPipeline);
+            obj->setPipeline(spotlightsPipeline);
 
             obj->setProjectionMatrix(lightProjection);
             obj->setViewMatrix(lightView);
@@ -1100,11 +1165,11 @@ void Window::renderLightsToShadowMaps(
         }
 
         for (auto &obj : this->lateForwardRenderables) {
-            if (obj->getPipeline() == std::nullopt || !obj->canCastShadows()) {
+            if (!obj->canCastShadows()) {
                 continue;
             }
 
-            obj->setPipeline(depthPipeline);
+            obj->setPipeline(spotlightsPipeline);
             obj->setProjectionMatrix(lightProjection);
             obj->setViewMatrix(lightView);
             obj->render(getDeltaTime(), commandBuffer, false);
@@ -1129,7 +1194,13 @@ void Window::renderLightsToShadowMaps(
         pointLightPipeline->setViewport(
             0, 0, shadowRenderTarget->texture.creationData.width,
             shadowRenderTarget->texture.creationData.height);
+#ifdef METAL
+        pointLightPipeline->setCullMode(opal::CullMode::None);
+#else
         pointLightPipeline->setCullMode(opal::CullMode::Back);
+#endif
+        pointLightPipeline->setFrontFace(this->frontFace);
+        pointLightPipeline->enableDepthTest(true);
         pointLightPipeline->enablePolygonOffset(true);
         pointLightPipeline->setPolygonOffset(2.0f, 4.0f);
         pointLightPipeline =
@@ -1165,8 +1236,7 @@ void Window::renderLightsToShadowMaps(
                     if (obj->renderLateForward) {
                         continue;
                     }
-                    if (obj->getPipeline() == std::nullopt ||
-                        !obj->canCastShadows()) {
+                    if (!obj->canCastShadows()) {
                         continue;
                     }
 
@@ -1177,8 +1247,7 @@ void Window::renderLightsToShadowMaps(
                 }
 
                 for (auto &obj : this->lateForwardRenderables) {
-                    if (obj->getPipeline() == std::nullopt ||
-                        !obj->canCastShadows()) {
+                    if (!obj->canCastShadows()) {
                         continue;
                     }
 
@@ -1210,8 +1279,7 @@ void Window::renderLightsToShadowMaps(
                 if (obj->renderLateForward) {
                     continue;
                 }
-                if (obj->getPipeline() == std::nullopt ||
-                    !obj->canCastShadows()) {
+                if (!obj->canCastShadows()) {
                     continue;
                 }
 
@@ -1222,8 +1290,7 @@ void Window::renderLightsToShadowMaps(
             }
 
             for (auto &obj : this->lateForwardRenderables) {
-                if (obj->getPipeline() == std::nullopt ||
-                    !obj->canCastShadows()) {
+                if (!obj->canCastShadows()) {
                     continue;
                 }
 
@@ -1397,6 +1464,7 @@ void Window::renderPingpong(RenderTarget *target) {
                            : this->pingpongTextures[!horizontal]->textureID,
             0);
 
+        activeCommandBuffer->bindPipeline(blurPipeline);
         if (!target->object->indices.empty()) {
             activeCommandBuffer->drawIndexed(
                 static_cast<uint>(target->object->indices.size()));
@@ -1445,28 +1513,53 @@ void Window::useDeferredRendering() {
 }
 
 void Window::renderPhysicalBloom(RenderTarget *target) {
-    if (target->brightTexture.id == 0) {
+    if (target == nullptr || target->brightTexture.id == 0 ||
+        this->currentScene == nullptr ||
+        this->currentScene->environment.lightBloom.radius <= 0.0f ||
+        this->currentScene->environment.lightBloom.maxSamples <= 0) {
+        target->blurredTexture = target->brightTexture;
         return;
     }
+
+    int sizeX = std::max(1, target->brightTexture.creationData.width);
+    int sizeY = std::max(1, target->brightTexture.creationData.height);
+    int chainLength =
+        std::max(1, currentScene->environment.lightBloom.maxSamples);
 
     if (this->bloomBuffer == nullptr) {
         this->bloomBuffer =
             std::make_shared<BloomRenderTarget>(BloomRenderTarget());
-        int sizeX, sizeY;
-        glfwGetFramebufferSize((GLFWwindow *)this->windowRef, &sizeX, &sizeY);
-        this->bloomBuffer->init(
-            sizeX, sizeY, currentScene->environment.lightBloom.maxSamples);
     }
 
+    bool needsRebuild =
+        !this->bloomBuffer->initialized ||
+        this->bloomBuffer->srcViewportSize.x != sizeX ||
+        this->bloomBuffer->srcViewportSize.y != sizeY ||
+        static_cast<int>(this->bloomBuffer->elements.size()) != chainLength;
+    if (needsRebuild) {
+        this->bloomBuffer->destroy();
+        this->bloomBuffer->init(sizeX, sizeY, chainLength);
+    }
+
+    if (!this->bloomBuffer->initialized ||
+        this->bloomBuffer->elements.empty()) {
+        target->blurredTexture = target->brightTexture;
+        return;
+    }
+
+    float filterRadius = currentScene->environment.lightBloom.radius *
+                         static_cast<float>(std::min(sizeX, sizeY)) * 0.15f;
+    filterRadius = std::clamp(filterRadius, 0.5f, 2.0f);
     this->bloomBuffer->renderBloomTexture(
-        target->brightTexture.id, currentScene->environment.lightBloom.radius);
+        target->brightTexture.id, filterRadius, this->activeCommandBuffer);
     target->blurredTexture = Texture();
     target->blurredTexture.creationData.width =
-        this->bloomBuffer->srcViewportSizef.x;
+        this->bloomBuffer->srcViewportSize.x;
     target->blurredTexture.creationData.height =
-        this->bloomBuffer->srcViewportSizef.y;
+        this->bloomBuffer->srcViewportSize.y;
     target->blurredTexture.type = TextureType::Color;
     target->blurredTexture.id = this->bloomBuffer->getBloomTexture();
+    target->blurredTexture.texture = this->bloomBuffer->elements[0].texture;
 }
 
 void Window::updateFluidCaptures(
@@ -1578,7 +1671,6 @@ void Window::captureFluidReflection(
 
     auto renderQueue = [&](const std::vector<Renderable *> &queue,
                            bool skipLate) {
-        ShaderProgram oldProgram;
         for (auto *obj : queue) {
             if (obj == nullptr) {
                 continue;
@@ -1589,19 +1681,10 @@ void Window::captureFluidReflection(
             if (dynamic_cast<Fluid *>(obj) == &fluid) {
                 continue;
             }
-            if (obj->canUseDeferredRendering()) {
-                oldProgram = obj->getShaderProgram().value();
-                obj->setShader(ShaderProgram::fromDefaultShaders(
-                    AtlasVertexShader::Main, AtlasFragmentShader::Main));
-            }
             obj->setViewMatrix(view);
             obj->setProjectionMatrix(projection);
             obj->render(getDeltaTime(), commandBuffer,
                         shouldRefreshPipeline(obj));
-
-            if (obj->canUseDeferredRendering()) {
-                obj->setShader(oldProgram);
-            }
         }
     };
 
@@ -1714,7 +1797,6 @@ void Window::captureFluidRefraction(
 
     auto renderQueue = [&](const std::vector<Renderable *> &queue,
                            bool skipLate) {
-        ShaderProgram oldProgram;
         for (auto *obj : queue) {
             if (obj == nullptr) {
                 continue;
@@ -1725,19 +1807,10 @@ void Window::captureFluidRefraction(
             if (dynamic_cast<Fluid *>(obj) == &fluid) {
                 continue;
             }
-            if (obj->canUseDeferredRendering()) {
-                oldProgram = obj->getShaderProgram().value();
-                obj->setShader(ShaderProgram::fromDefaultShaders(
-                    AtlasVertexShader::Main, AtlasFragmentShader::Main));
-            }
             obj->setViewMatrix(view);
             obj->setProjectionMatrix(projection);
             obj->render(getDeltaTime(), commandBuffer,
                         shouldRefreshPipeline(obj));
-
-            if (obj->canUseDeferredRendering()) {
-                obj->setShader(oldProgram);
-            }
         }
     };
 

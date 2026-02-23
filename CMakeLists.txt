@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(JOLT_VERSION "5.5.0")
 
 add_definitions(-DATLAS_VERSION=\"Alpha\ 6\")
-add_definitions(-DOPAL_VERSION=\"1.1\ Ellipse\")
+add_definitions(-DOPAL_VERSION=\"2\ Platonic\")
 
 message(STATUS "Building for platform: ${CMAKE_SYSTEM_NAME}")
 if(NOT CMAKE_BUILD_TYPE)
@@ -19,7 +19,36 @@ else()
     add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-option(BACKEND_OPENGL "Enable OpenGL backend" OFF)
+set(BACKEND "AUTO" CACHE STRING "Rendering backend: AUTO, VULKAN, METAL, OPENGL")
+set_property(CACHE BACKEND PROPERTY STRINGS AUTO VULKAN METAL OPENGL)
+
+string(TOUPPER "${BACKEND}" BACKEND)
+
+if(BACKEND STREQUAL "AUTO")
+    if(APPLE)
+        set(BACKEND "METAL")
+    else()
+        set(BACKEND "VULKAN")
+    endif()
+endif()
+
+set(BACKEND_OPENGL OFF)
+set(BACKEND_VULKAN OFF)
+set(BACKEND_METAL  OFF)
+
+if(BACKEND STREQUAL "OPENGL")
+    set(BACKEND_OPENGL ON)
+elseif(BACKEND STREQUAL "VULKAN")
+    set(BACKEND_VULKAN ON)
+elseif(BACKEND STREQUAL "METAL")
+    set(BACKEND_METAL ON)
+else()
+    message(FATAL_ERROR
+        "Invalid BACKEND='${BACKEND}'. Valid values are: AUTO, VULKAN, METAL, OPENGL"
+    )
+endif()
+
+message(STATUS "Selected backend: ${BACKEND}")
 option(BEZEL_NATIVE "Enable Bezel Native" OFF)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -38,18 +67,25 @@ FetchContent_GetProperties(doxygen-awesome-css SOURCE_DIR AWESOME_CSS_DIR)
 if(BACKEND_OPENGL)
     message(STATUS "Building using OpenGL backend")
     add_definitions(-DOPENGL)
-else()
+elseif(BACKEND_VULKAN)
     message(STATUS "Building using Vulkan backend")
     add_definitions(-DVULKAN)
+    add_definitions(-DGLM_FORCE_DEPTH_ZERO_TO_ONE)
+elseif(BACKEND_METAL)
+    message(STATUS "Building using Metal backend")
+    add_definitions(-DMETAL)
     add_definitions(-DGLM_FORCE_DEPTH_ZERO_TO_ONE)
 endif()
 
 if (BACKEND_OPENGL)
     message(STATUS "Configuring shaders for OpenGL backend")
     set(SHADER_INPUT_DIR "${CMAKE_SOURCE_DIR}/shaders/opengl")
-else()
+elseif(BACKEND_VULKAN)
     message(STATUS "Configuring shaders for Vulkan backend")
     set(SHADER_INPUT_DIR "${CMAKE_SOURCE_DIR}/shaders/vulkan")
+elseif(BACKEND_METAL)
+    message(STATUS "Configuring shaders for Metal backend")
+    set(SHADER_INPUT_DIR "${CMAKE_SOURCE_DIR}/shaders/metal")
 endif()
 set(SHADER_OUTPUT_FILE "${CMAKE_SOURCE_DIR}/include/atlas/core/default_shaders.h")
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
@@ -61,23 +97,33 @@ file(GLOB_RECURSE SHADER_SOURCES
     ${SHADER_INPUT_DIR}/*.geom
     ${SHADER_INPUT_DIR}/*.tesc
     ${SHADER_INPUT_DIR}/*.tese
+    ${SHADER_INPUT_DIR}/*.metal
 )
 
 if(BACKEND_OPENGL)
-    message(STATUS "Packing shaders without SPIR-V compilation")
+    message(STATUS "Packing shaders for OpenGL backend")
     add_custom_command(
         OUTPUT ${SHADER_OUTPUT_FILE}
         COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/include/atlas/core
-        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/pack_shaders.py ${SHADER_INPUT_DIR} ${SHADER_OUTPUT_FILE} false
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/pack_shaders.py ${SHADER_INPUT_DIR} ${SHADER_OUTPUT_FILE} opengl
         DEPENDS ${SHADER_SOURCES}
         COMMENT "Packing shaders into shaders.h"
     )
-else()
+elseif(BACKEND_VULKAN)
     message(STATUS "Packing shaders with SPIR-V compilation")
     add_custom_command(
         OUTPUT ${SHADER_OUTPUT_FILE}
         COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/include/atlas/core
-        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/pack_shaders.py ${SHADER_INPUT_DIR} ${SHADER_OUTPUT_FILE} true
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/pack_shaders.py ${SHADER_INPUT_DIR} ${SHADER_OUTPUT_FILE} vulkan
+        DEPENDS ${SHADER_SOURCES}
+        COMMENT "Packing shaders into shaders.h"
+    )
+elseif(BACKEND_METAL)
+    message(STATUS "Packing shaders for Metal backend")
+    add_custom_command(
+        OUTPUT ${SHADER_OUTPUT_FILE}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_SOURCE_DIR}/include/atlas/core
+        COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/pack_shaders.py ${SHADER_INPUT_DIR} ${SHADER_OUTPUT_FILE} metal
         DEPENDS ${SHADER_SOURCES}
         COMMENT "Packing shaders into shaders.h"
     )
@@ -136,7 +182,7 @@ endif()
 
 if(BACKEND_OPENGL)
     find_package(OpenGL REQUIRED)
-else()
+elseif(BACKEND_VULKAN)
     find_package(Vulkan REQUIRED)
     message(STATUS "Found Vulkan SDK at ${Vulkan_LIBRARY}")
     message(STATUS "Found Vulkan Libraries at ${Vulkan_INCLUDE_DIRS}")
@@ -147,6 +193,8 @@ else()
     find_package(spirv_cross_core REQUIRED)
     find_package(spirv_cross_glsl REQUIRED)
     find_package(spirv_cross_reflect REQUIRED)
+elseif(BACKEND_METAL)
+    message(STATUS "Linking Metal to Source")
 endif()
 
 find_package(glm REQUIRED)
@@ -199,9 +247,10 @@ target_link_libraries(opal PRIVATE glm::glm glfw)
 
 if (BACKEND_OPENGL)
     target_link_libraries(opal PRIVATE OpenGL::GL)
-else()
+elseif(BACKEND_VULKAN)
     target_link_libraries(opal PRIVATE Vulkan::Vulkan spirv-cross-core spirv-cross-glsl spirv-cross-reflect)
     target_compile_definitions(opal PRIVATE VULKAN)
+elseif(BACKEND_METAL)
 endif()
 
 add_library(aurora ${AURORA_SOURCES})
@@ -209,8 +258,9 @@ target_link_libraries(aurora PRIVATE glm::glm glfw bezel)
 
 if (BACKEND_OPENGL)
     target_link_libraries(aurora PRIVATE OpenGL::GL)
-else()
+elseif(BACKEND_VULKAN)
     target_link_libraries(aurora PRIVATE Vulkan::Vulkan)
+elseif(BACKEND_METAL)
 endif()
 
 add_library(hydra ${HYDRA_SOURCES})
@@ -218,8 +268,9 @@ target_link_libraries(hydra PRIVATE glm::glm glfw bezel)
 
 if (BACKEND_OPENGL)
     target_link_libraries(hydra PRIVATE OpenGL::GL)
-else()
+elseif(BACKEND_VULKAN)
     target_link_libraries(hydra PRIVATE Vulkan::Vulkan)
+elseif(BACKEND_METAL)
 endif()
 
 add_library(atlas ${ATLAS_SOURCES} ${SHADER_OUTPUT_FILE})
@@ -243,13 +294,14 @@ endif()
 
 if(BACKEND_OPENGL)
     target_link_libraries(atlas PRIVATE OpenGL::GL)
-else()
+elseif(BACKEND_VULKAN)
     target_link_libraries(atlas PRIVATE Vulkan::Vulkan)
 
     if(APPLE)
         message(STATUS "Configuring MoltenVK for macOS")
         target_compile_definitions(atlas PRIVATE VK_USE_PLATFORM_MACOS_MVK)
     endif()
+elseif(BACKEND_METAL)
 endif()
 
 target_include_directories(atlas PRIVATE ${FREETYPE_INCLUDE_DIRS}/freetype2)
@@ -273,8 +325,10 @@ if(WIN32)
 elseif(APPLE)
     if(BACKEND_OPENGL)
         target_link_libraries(atlas PRIVATE "-framework OpenGL" "-framework Cocoa" "-framework IOKit")
-    else()
+    elseif(BACKEND_VULKAN)
         target_link_libraries(atlas PRIVATE "-framework Cocoa" "-framework IOKit" "-framework QuartzCore")
+    elseif(BACKEND_METAL)
+        target_link_libraries(atlas PRIVATE "-framework Metal" "-framework MetalKit" "-framework Cocoa" "-framework IOKit" "-framework QuartzCore")
     endif()
 elseif(UNIX)
     target_link_libraries(atlas PRIVATE dl pthread)

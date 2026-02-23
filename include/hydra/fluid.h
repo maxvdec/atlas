@@ -192,6 +192,11 @@ struct Fluid : GameObject {
     std::shared_ptr<RenderTarget> reflectionTarget;
     std::shared_ptr<RenderTarget> refractionTarget;
     bool captureDirty = true;
+    float captureUpdateInterval = 1.0f / 10.0f;
+    float captureUpdateTimer = 0.0f;
+    bool hasCaptureCameraState = false;
+    glm::vec3 lastCaptureCameraPosition{0.0f};
+    glm::vec3 lastCaptureCameraDirection{0.0f, 0.0f, -1.0f};
 
     void ensureTargets(Window &window);
     glm::vec4 calculateClipPlane() const;
