@@ -130,8 +130,8 @@ Id WorleyNoise3D::get3dTexture(int res) const {
             size_t sliceIndex =
                 static_cast<size_t>(z) * resolution * resolution * channelCount;
             for (int y = 0; y < resolution; ++y) {
-                size_t rowIndex = sliceIndex + static_cast<size_t>(y) *
-                                                   resolution * channelCount;
+                size_t rowIndex = sliceIndex + (static_cast<size_t>(y) *
+                                                resolution * channelCount);
                 for (int x = 0; x < resolution; ++x) {
                     float fx = (static_cast<float>(x) + 0.5f) * invResolution;
                     float fy = (static_cast<float>(y) + 0.5f) * invResolution;
@@ -143,7 +143,7 @@ Id WorleyNoise3D::get3dTexture(int res) const {
                     float combined = getValue(fx, fy, fz);
 
                     size_t index =
-                        rowIndex + static_cast<size_t>(x) * channelCount;
+                        rowIndex + (static_cast<size_t>(x) * channelCount);
                     data[index + 0] = low;
                     data[index + 1] = mid;
                     data[index + 2] = high;
@@ -170,8 +170,8 @@ Id WorleyNoise3D::getDetailTexture(int res) const {
             size_t sliceIndex =
                 static_cast<size_t>(z) * resolution * resolution * channelCount;
             for (int y = 0; y < resolution; ++y) {
-                size_t rowIndex = sliceIndex + static_cast<size_t>(y) *
-                                                   resolution * channelCount;
+                size_t rowIndex = sliceIndex + (static_cast<size_t>(y) *
+                                                resolution * channelCount);
                 for (int x = 0; x < resolution; ++x) {
                     float fx = (static_cast<float>(x) + 0.5f) * invResolution;
                     float fy = (static_cast<float>(y) + 0.5f) * invResolution;
@@ -187,12 +187,12 @@ Id WorleyNoise3D::getDetailTexture(int res) const {
 
                     float difference =
                         std::clamp((f2 - f1) / SQRT3, 0.0f, 1.0f);
-                    float ridge = 1.0f - f1 / SQRT3;
+                    float ridge = 1.0f - (f1 / SQRT3);
                     float turbulence =
                         std::clamp((f3 - f1) / SQRT3, 0.0f, 1.0f);
 
                     size_t index =
-                        rowIndex + static_cast<size_t>(x) * channelCount;
+                        rowIndex + (static_cast<size_t>(x) * channelCount);
                     data[index + 0] = difference;
                     data[index + 1] = ridge;
                     data[index + 2] = turbulence;
@@ -219,8 +219,8 @@ Id WorleyNoise3D::get3dTextureAtAllChannels(int res) const {
             size_t sliceIndex =
                 static_cast<size_t>(z) * resolution * resolution * channelCount;
             for (int y = 0; y < resolution; ++y) {
-                size_t rowIndex = sliceIndex + static_cast<size_t>(y) *
-                                                   resolution * channelCount;
+                size_t rowIndex = sliceIndex + (static_cast<size_t>(y) *
+                                                resolution * channelCount);
                 for (int x = 0; x < resolution; ++x) {
                     float fx = (static_cast<float>(x) + 0.5f) * invResolution;
                     float fy = (static_cast<float>(y) + 0.5f) * invResolution;
@@ -228,7 +228,7 @@ Id WorleyNoise3D::get3dTextureAtAllChannels(int res) const {
                     float value = getValue(fx, fy, fz);
 
                     size_t index =
-                        rowIndex + static_cast<size_t>(x) * channelCount;
+                        rowIndex + (static_cast<size_t>(x) * channelCount);
                     data[index + 0] = value;
                     data[index + 1] = value;
                     data[index + 2] = value;
@@ -346,9 +346,7 @@ std::vector<float> WorleyNoise3D::getClosestDistances(float x, float y, float z,
 
                     auto worstIt =
                         std::max_element(distances.begin(), distances.end());
-                    if (distSq < *worstIt) {
-                        *worstIt = distSq;
-                    }
+                    *worstIt = std::min(distSq, *worstIt);
                 }
             }
         }
@@ -378,7 +376,7 @@ int WorleyNoise3D::getCellIndex(int cx, int cy, int cz) const {
     int wrappedZ =
         (cz % numberOfDivisions + numberOfDivisions) % numberOfDivisions;
 
-    return ((wrappedZ * numberOfDivisions) + wrappedY) * numberOfDivisions +
+    return (((wrappedZ * numberOfDivisions) + wrappedY) * numberOfDivisions) +
            wrappedX;
 }
 

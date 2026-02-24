@@ -91,9 +91,9 @@ struct Fluid : GameObject {
      * @brief Triggers the generation of reflection and refraction render
      * targets for the current frame.
      */
-    void
-    updateCapture(Window &window,
-                  std::shared_ptr<opal::CommandBuffer> commandBuffer = nullptr);
+    void updateCapture(
+        Window &window,
+        const std::shared_ptr<opal::CommandBuffer> &commandBuffer = nullptr);
 
     /**
      * @brief Stores the camera view matrix for shader consumption.

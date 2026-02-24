@@ -235,14 +235,14 @@ float Atmosphere::getNormalizedTime() const {
 }
 
 Magnitude3d Atmosphere::getSunAngle() const {
-    float sunAngle = (timeOfDay / 24.0f) * 360.f - 90.f;
+    float sunAngle = ((timeOfDay / 24.0f) * 360.f) - 90.f;
     Magnitude3d sunDir = Magnitude3d(std::cos(glm::radians(sunAngle)),
                                      std::sin(glm::radians(sunAngle)), 0.0f);
     return sunDir;
 }
 
 Magnitude3d Atmosphere::getMoonAngle() const {
-    float moonAngle = (timeOfDay / 24.0f) * 360.f - 90.f;
+    float moonAngle = ((timeOfDay / 24.0f) * 360.f) - 90.f;
     Magnitude3d moonDir = Magnitude3d(std::cos(glm::radians(moonAngle)),
                                       std::sin(glm::radians(moonAngle)), 0.0f);
     return moonDir * -1.0f;
@@ -250,13 +250,13 @@ Magnitude3d Atmosphere::getMoonAngle() const {
 
 float Atmosphere::getLightIntensity() const {
     Magnitude3d sunDir = getSunAngle();
-    float daylight = glm::clamp((float)sunDir.y * 2.0f, 0.0f, 1.0f);
+    float daylight = glm::clamp(sunDir.y * 2.0f, 0.0f, 1.0f);
     return glm::mix(0.01f, 1.0f, daylight);
 }
 
 Color Atmosphere::getLightColor() const {
     Magnitude3d sunAngle = getSunAngle();
-    float daylight = glm::clamp((float)sunAngle.y * 2.0f, 0.0f, 1.0f);
+    float daylight = glm::clamp(sunAngle.y * 2.0f, 0.0f, 1.0f);
     return Color::mix(Color{0.05, 0.07, 0.18, 1.0}, Color{1.0, 0.95, 0.8, 1.0},
                       daylight);
 }
