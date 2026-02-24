@@ -1,0 +1,36 @@
+name: Test Linting
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  clang_tidy:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install Dependencies
+        run: |
+          brew update
+          brew install cmake ninja llvm glfw glm openal-soft assimp vulkan-loader molten-vk vulkan-validationlayers spirv-cross spirv-headers spirv-tools
+
+      - name: Configure (generate compile_commands.json)
+        env:
+          LLVM_DIR: /opt/homebrew/opt/llvm
+        run: |
+          mkdir -p build
+          cd build
+          cmake .. \
+            -DBACKEND=AUTO \
+            -G Ninja \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+            -DCMAKE_C_COMPILER="$LLVM_DIR/bin/clang" \
+            -DCMAKE_CXX_COMPILER="$LLVM_DIR/bin/clang++"
+
+      - name: Run clang-tidy
+        env:
+          LLVM_DIR: /opt/homebrew/opt/llvm
+        run: |
+          export PATH="$LLVM_DIR/bin:$PATH"
+          run-clang-tidy -p build -quiet -warnings-as-errors='*'

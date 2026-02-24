@@ -5,8 +5,21 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(JOLT_VERSION "5.5.0")
 
-add_definitions(-DATLAS_VERSION=\"Alpha\ 6\")
+add_definitions(-DATLAS_VERSION=\"Alpha\ 7\")
 add_definitions(-DOPAL_VERSION=\"2\ Platonic\")
+
+# Enable color diagnostics for GCC and Clang
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    add_compile_options (-fdiagnostics-color=always)
+elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+    add_compile_options (-fcolor-diagnostics)
+endif ()
+
+if (MSVC)
+    add_compile_options(/W4 /WX)
+else()
+    add_compile_options(-Wall -Wextra -Wpedantic -Werror)
+endif()
 
 message(STATUS "Building for platform: ${CMAKE_SYSTEM_NAME}")
 if(NOT CMAKE_BUILD_TYPE)

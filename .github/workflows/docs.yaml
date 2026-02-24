@@ -16,10 +16,10 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Install Dependencies
-        run: brew install cmake doxygen graphviz glfw glm openal-soft assimp vulkan-loader molten-vk vulkan-validationlayers spirv-cross spirv-headers spirv-tools
+        run: brew install cmake doxygen graphviz glfw glm openal-soft assimp vulkan-loader molten-vk vulkan-validationlayers spirv-cross spirv-headers spirv-tools ninja
       - name: Build doxygen
         run: |
-          cmake . -DBACKEND_OPENGL=OFF
+          cmake . -DBACKEND_OPENGL=OFF -G Ninja
           doxygen Doxyfile
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v4
