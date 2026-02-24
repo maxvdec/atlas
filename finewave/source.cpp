@@ -13,6 +13,7 @@
 #include <AL/alc.h>
 #include <iostream>
 #include <memory>
+#include <utility>
 #include <vector>
 
 const char *getALErrorStringSource(ALenum error) {
@@ -75,7 +76,7 @@ AudioSource::AudioSource() {
     }
 }
 
-void AudioSource::setData(std::shared_ptr<AudioData> buffer) {
+void AudioSource::setData(const std::shared_ptr<AudioData> &buffer) {
     if (!buffer) {
         std::cerr << "AudioData buffer is null" << std::endl;
         throw std::invalid_argument("AudioData buffer is null");
@@ -101,7 +102,7 @@ void AudioSource::setData(std::shared_ptr<AudioData> buffer) {
             int16_t leftSample =
                 reinterpret_cast<const int16_t *>(data.data())[i * 2];
             int16_t rightSample =
-                reinterpret_cast<const int16_t *>(data.data())[i * 2 + 1];
+                reinterpret_cast<const int16_t *>(data.data())[(i * 2) + 1];
             int16_t monoSample =
                 static_cast<int16_t>((leftSample + rightSample) / 2);
             reinterpret_cast<int16_t *>(monoData.data())[i] = monoSample;
@@ -136,7 +137,7 @@ void AudioSource::setData(std::shared_ptr<AudioData> buffer) {
 
 void AudioSource::fromFile(Resource resource) {
     try {
-        auto audioData = AudioData::fromResource(resource);
+        auto audioData = AudioData::fromResource(std::move(resource));
         setData(audioData);
         CHECK_AL_ERROR();
     } catch (const std::exception &e) {

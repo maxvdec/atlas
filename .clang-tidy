@@ -34,6 +34,7 @@ Checks: |
   -cppcoreguidelines-pro-bounds-constant-array-index,
   -cppcoreguidelines-pro-bounds-container-index
   -cppcoreguidelines-pro-bounds-avoid-unchecked-container-access
+  -cppcoreguidelines-pro-type-cstyle-cast,
   
   -google-default-arguments
 

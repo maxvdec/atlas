@@ -109,7 +109,7 @@ void Distortion::setLowpassCutoff(float cutoff) {
     FWEFX::alEffectf(id, AL_DISTORTION_LOWPASS_CUTOFF, cutoff);
 }
 
-void AudioSource::applyEffect(const AudioEffect &effect) {
+void AudioSource::applyEffect(const AudioEffect &effect) const {
     CHECK_EFFECTS();
     FWEFX::alAuxiliaryEffectSloti(0, AL_EFFECTSLOT_EFFECT, effect.id);
     alSource3i(id, AL_AUXILIARY_SEND_FILTER, 0, 0, AL_FILTER_NULL);
