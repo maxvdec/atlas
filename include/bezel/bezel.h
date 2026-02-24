@@ -446,8 +446,8 @@ class Vehicle final {
     Vehicle(Vehicle &&other) noexcept;
     Vehicle &operator=(Vehicle &&other) noexcept;
 
-    void create(std::shared_ptr<PhysicsWorld> world);
-    void destroy(std::shared_ptr<PhysicsWorld> world);
+    void create(const std::shared_ptr<PhysicsWorld> &world);
+    void destroy(const std::shared_ptr<PhysicsWorld> &world);
     bool isCreated() const;
 
     void setDriverInput(float forward, float right, float brake,
@@ -492,47 +492,47 @@ struct Rigidbody {
 
     /** @brief Sets the body's world position and updates the backend body. */
     void setPosition(const Position3d &position,
-                     std::shared_ptr<PhysicsWorld> world);
+                     const std::shared_ptr<PhysicsWorld> &world);
     /** @brief Sets the body's world rotation and updates the backend body. */
     void setRotation(const Rotation3d &rotation,
-                     std::shared_ptr<PhysicsWorld> world);
+                     const std::shared_ptr<PhysicsWorld> &world);
 
     RaycastResult raycast(const Position3d &direction, float maxDistance,
-                          std::shared_ptr<PhysicsWorld> world,
-                          uint32_t ignoreBodyId = INVALID_JOLT_ID);
+                          const std::shared_ptr<PhysicsWorld> &world,
+                          uint32_t ignoreBodyId = INVALID_JOLT_ID) const;
     RaycastResult raycastAll(const Position3d &direction, float maxDistance,
-                             std::shared_ptr<PhysicsWorld> world,
-                             uint32_t ignoreBodyId = INVALID_JOLT_ID);
+                             const std::shared_ptr<PhysicsWorld> &world,
+                             uint32_t ignoreBodyId = INVALID_JOLT_ID) const;
 
-    OverlapResult overlap(std::shared_ptr<PhysicsWorld> world,
+    OverlapResult overlap(const std::shared_ptr<PhysicsWorld> &world,
                           std::shared_ptr<Collider> collider,
                           const Position3d &position,
                           const Rotation3d &rotation,
-                          uint32_t ignoreBodyId = INVALID_JOLT_ID);
+                          uint32_t ignoreBodyId = INVALID_JOLT_ID) const;
 
-    SweepResult sweep(std::shared_ptr<PhysicsWorld> world,
+    SweepResult sweep(const std::shared_ptr<PhysicsWorld> &world,
                       std::shared_ptr<Collider> collider,
                       const Position3d &direction, Position3d &endPosition,
-                      uint32_t ignoreBodyId = INVALID_JOLT_ID);
+                      uint32_t ignoreBodyId = INVALID_JOLT_ID) const;
 
-    SweepResult sweepAll(std::shared_ptr<PhysicsWorld> world,
+    SweepResult sweepAll(const std::shared_ptr<PhysicsWorld> &world,
                          std::shared_ptr<Collider> collider,
                          const Position3d &direction, Position3d &endPosition,
-                         uint32_t ignoreBodyId = INVALID_JOLT_ID);
+                         uint32_t ignoreBodyId = INVALID_JOLT_ID) const;
 
     std::shared_ptr<Collider> collider;
 
     BodyIdentifier id = {.joltId = INVALID_JOLT_ID, .atlasId = 0};
     MotionType motionType = MotionType::Dynamic;
 
-    void create(std::shared_ptr<PhysicsWorld> world);
+    void create(const std::shared_ptr<PhysicsWorld> &world);
     /** @brief Replaces the collider used by this rigidbody. */
     void setCollider(std::shared_ptr<Collider> collider);
 
-    void applyProperties(std::shared_ptr<PhysicsWorld> world);
+    void applyProperties(const std::shared_ptr<PhysicsWorld> &world);
 
-    void refresh(std::shared_ptr<PhysicsWorld> world);
-    void destroy(std::shared_ptr<PhysicsWorld> world);
+    void refresh(const std::shared_ptr<PhysicsWorld> &world);
+    void destroy(const std::shared_ptr<PhysicsWorld> &world);
 };
 
 /**
@@ -573,33 +573,33 @@ class PhysicsWorld {
 
     RaycastResult raycast(const Position3d &origin, const Position3d &direction,
                           float maxDistance,
-                          uint32_t ignoreBodyId = INVALID_JOLT_ID);
+                          uint32_t ignoreBodyId = INVALID_JOLT_ID) const;
     RaycastResult raycastAll(const Position3d &origin,
                              const Position3d &direction, float maxDistance,
-                             uint32_t ignoreBodyId = INVALID_JOLT_ID);
+                             uint32_t ignoreBodyId = INVALID_JOLT_ID) const;
 
-    OverlapResult overlap(std::shared_ptr<PhysicsWorld> world,
-                          std::shared_ptr<Collider> collider,
+    OverlapResult overlap(const std::shared_ptr<PhysicsWorld> &world,
+                          const std::shared_ptr<Collider> &collider,
                           const Position3d &position,
                           const Rotation3d &rotation,
-                          uint32_t ignoreBodyId = INVALID_JOLT_ID);
+                          uint32_t ignoreBodyId = INVALID_JOLT_ID) const;
 
-    SweepResult sweep(std::shared_ptr<PhysicsWorld> world,
-                      std::shared_ptr<Collider> collider,
+    SweepResult sweep(const std::shared_ptr<PhysicsWorld> &world,
+                      const std::shared_ptr<Collider> &collider,
                       const Position3d &startPosition,
                       const Rotation3d &startRotation,
                       const Position3d &direction, Position3d &endPosition,
-                      uint32_t ignoreBodyId = INVALID_JOLT_ID);
+                      uint32_t ignoreBodyId = INVALID_JOLT_ID) const;
 
-    SweepResult sweepAll(std::shared_ptr<PhysicsWorld> world,
-                         std::shared_ptr<Collider> collider,
+    SweepResult sweepAll(const std::shared_ptr<PhysicsWorld> &world,
+                         const std::shared_ptr<Collider> &collider,
                          const Position3d &startPosition,
                          const Rotation3d &startRotation,
                          const Position3d &direction, Position3d &endPosition,
-                         uint32_t ignoreBodyId = INVALID_JOLT_ID);
+                         uint32_t ignoreBodyId = INVALID_JOLT_ID) const;
 
     /** @brief Adds a rigidbody to the simulation. */
-    void addBody(std::shared_ptr<bezel::Rigidbody> body);
+    void addBody(const std::shared_ptr<bezel::Rigidbody> &body);
 
     /** @brief Sets the global gravity vector. */
     void setGravity(const Position3d &gravity);

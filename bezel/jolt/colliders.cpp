@@ -7,9 +7,7 @@
 // Copyright (c) 2025 Max Van den Eynde
 //
 
-#include "atlas/object.h"
 #include "bezel/bezel.h"
-#include "bezel/jolt/world.h"
 
 JPH::RefConst<JPH::Shape> bezel::BoxCollider::getJoltShape() const {
     return new JPH::BoxShape(JPH::Vec3(static_cast<float>(halfExtents.x),
