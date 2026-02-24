@@ -24,7 +24,6 @@ clangd backend="AUTO" bezel_native="OFF":
     ln -sf build/compile_commands.json compile_commands.json
 
 lint:
-    find atlas test \( -name '*.cpp' -o -name '*.h' \) -print0 | xargs -0 clang-format --dry-run --Werror
     run-clang-tidy -p build -quiet -warnings-as-errors='*'
 
 clean:

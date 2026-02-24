@@ -260,7 +260,7 @@ void bezel::PhysicsWorld::update(float dt) {
 
             switch (c->GetSubType()) {
             case JPH::EConstraintSubType::Fixed: {
-                auto *fixed = dynamic_cast<JPH::FixedConstraint *>(c);
+                auto *fixed = static_cast<JPH::FixedConstraint *>(c);
 
                 const JPH::Vec3 lin = fixed->GetTotalLambdaPosition();
                 const JPH::Vec3 ang = fixed->GetTotalLambdaRotation();
@@ -271,7 +271,7 @@ void bezel::PhysicsWorld::update(float dt) {
             }
 
             case JPH::EConstraintSubType::Hinge: {
-                auto *hinge = dynamic_cast<JPH::HingeConstraint *>(c);
+                auto *hinge = static_cast<JPH::HingeConstraint *>(c);
 
                 const JPH::Vec3 lin = hinge->GetTotalLambdaPosition();
                 appliedForce = lin.Length() / dt;
@@ -291,7 +291,7 @@ void bezel::PhysicsWorld::update(float dt) {
             }
 
             case JPH::EConstraintSubType::Distance: {
-                auto *distance = dynamic_cast<JPH::DistanceConstraint *>(c);
+                auto *distance = static_cast<JPH::DistanceConstraint *>(c);
 
                 const float linImpulse =
                     std::abs(distance->GetTotalLambdaPosition());

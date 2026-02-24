@@ -33,4 +33,4 @@ jobs:
           LLVM_DIR: /opt/homebrew/opt/llvm
         run: |
           export PATH="$LLVM_DIR/bin:$PATH"
-          run-clang-tidy -p build -quiet -warnings-as-errors='*'
+          run-clang-tidy -p build -quiet

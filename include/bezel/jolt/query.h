@@ -43,9 +43,6 @@ struct PairKeyHash {
 
 class GlobalContactListener final : public JPH::ContactListener {
   public:
-    explicit GlobalContactListener(JPH::PhysicsSystem &physicsSystem)
-        : physicsSystem(physicsSystem) {};
-
     JPH::ValidateResult
     OnContactValidate(const JPH::Body &, const JPH::Body &, JPH::RVec3Arg,
                       const JPH::CollideShapeResult &) override {
@@ -83,8 +80,6 @@ class GlobalContactListener final : public JPH::ContactListener {
                            const JPH::BodyID &inBody2);
     void fireOnSignalExit(const JPH::BodyID &inBody1,
                           const JPH::BodyID &inBody2);
-
-    JPH::PhysicsSystem &physicsSystem;
 
     std::unordered_set<PairKey, PairKeyHash> activePairs;
 
