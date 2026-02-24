@@ -11,7 +11,6 @@
 #define BEZEL_JOLT_QUERY_H
 #include <cstddef>
 #include <memory>
-#include <unordered_map>
 #include <unordered_set>
 #include <utility>
 #ifndef BEZEL_NATIVE

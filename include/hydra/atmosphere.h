@@ -11,8 +11,6 @@
 #define HYDRA_ATMOSPHERE_H
 
 #include "atlas/camera.h"
-#include "atlas/component.h"
-#include "atlas/input.h"
 #include "atlas/light.h"
 #include "atlas/particle.h"
 #include "atlas/texture.h"
@@ -348,7 +346,7 @@ class Atmosphere {
     /**
      * @brief Quickly assess whether the sun is above the horizon.
      */
-    inline bool isDaytime() const {
+    bool isDaytime() const {
         Magnitude3d sunDir = getSunAngle();
         return sunDir.y > 0.0f;
     }
@@ -356,7 +354,7 @@ class Atmosphere {
     /**
      * @brief Overrides the current time of day.
      */
-    inline void setTime(float hours) {
+    void setTime(float hours) {
         if (hours > 0 && hours < 24)
             timeOfDay = hours;
     }
@@ -364,7 +362,7 @@ class Atmosphere {
     /**
      * @brief Instantiates cloud settings with default Worley parameters.
      */
-    inline void addClouds(int frequency = 4, int divisions = 6) {
+    void addClouds(int frequency = 4, int divisions = 6) {
         if (!clouds) {
             clouds = std::make_shared<Clouds>(Clouds(frequency, divisions));
             clouds->wind = this->wind;

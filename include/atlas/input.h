@@ -285,6 +285,7 @@ struct MouseScrollPacket {
  */
 class Interactive {
   public:
+    virtual ~Interactive() = default;
     /**
      * @brief Function that is called automatically when a key is pressed.
      *

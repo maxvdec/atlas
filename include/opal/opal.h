@@ -14,15 +14,11 @@
 #include <vulkan/vulkan.hpp>
 #endif
 #include <cstddef>
-#include <cstdint>
 #include <memory>
-#include <map>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <optional>
 #include <string>
 #include <sys/types.h>
-#include <unordered_map>
 #include <vector>
 #include <glm/glm.hpp>
 
@@ -569,7 +565,7 @@ struct VertexAttribute {
     VertexBindingInputRate inputRate = VertexBindingInputRate::Vertex;
     uint divisor = 0;
 
-    inline bool operator==(const VertexAttribute &other) const {
+    bool operator==(const VertexAttribute &other) const {
         return name == other.name && type == other.type &&
                offset == other.offset && location == other.location &&
                normalized == other.normalized && size == other.size &&

@@ -13,7 +13,6 @@
 #include "atlas/camera.h"
 #include "atlas/core/renderable.h"
 #include "atlas/input.h"
-#include "atlas/network/pipe.h"
 #include "atlas/object.h"
 #include "atlas/scene.h"
 #include "atlas/texture.h"
@@ -32,8 +31,8 @@
 #include <unordered_map>
 #include <vector>
 
-using CoreWindowReference = void*;
-using CoreMonitorReference = void*;
+using CoreWindowReference = void *;
+using CoreMonitorReference = void *;
 
 constexpr int WINDOW_CENTERED = -1;
 constexpr int DEFAULT_ASPECT_RATIO = -1;
@@ -145,7 +144,7 @@ struct VideoMode {
  *
  */
 class Monitor {
-public:
+  public:
     /**
      * @brief The unique identifier for this monitor.
      *
@@ -239,7 +238,7 @@ struct Fluid;
  *
  */
 class Window {
-public:
+  public:
     /**
      * @brief The title of the window displayed in the title bar.
      *
@@ -261,14 +260,14 @@ public:
      *
      * @param config Window configuration settings.
      */
-    Window(const WindowConfiguration& config);
+    Window(const WindowConfiguration &config);
     /**
      * @brief Destructor for Window.
      *
      */
     ~Window();
 
-    void setClearColor(const Color& color) { this->clearColor = color; }
+    void setClearColor(const Color &color) { this->clearColor = color; }
 
     /**
      * @brief Starts the main window loop and begins rendering.
@@ -291,13 +290,13 @@ public:
      *
      * @param monitor The monitor to use for fullscreen.
      */
-    void setFullscreen(Monitor& monitor);
+    void setFullscreen(Monitor &monitor);
     /**
      * @brief Sets the window to windowed mode with new configuration.
      *
      * @param config New window configuration.
      */
-    void setWindowed(const WindowConfiguration& config);
+    void setWindowed(const WindowConfiguration &config);
     /**
      * @brief Enumerates all available monitors.
      *
@@ -312,7 +311,7 @@ public:
      * long-lived. This means that declaring it as a class property is a good
      * idea.
      */
-    void addObject(Renderable* object);
+    void addObject(Renderable *object);
     /**
      * @brief Adds a renderable object with higher rendering priority.
      *
@@ -320,7 +319,7 @@ public:
      * object must be long-lived. This means that declaring it as a class
      * property is a good idea.
      */
-    void addPreferencedObject(Renderable* object);
+    void addPreferencedObject(Renderable *object);
     /**
      * @brief Adds a renderable object to be rendered first.
      *
@@ -328,22 +327,20 @@ public:
      * object must be long-lived. This means that declaring it as a class
      * property is a good idea.
      */
-    inline void addPreludeObject(Renderable* object) {
+    void addPreludeObject(Renderable *object) {
         firstRenderables.push_back(object);
     }
 
     /**
      * @brief Registers a UI renderable so it is drawn after world geometry.
      */
-    inline void addUIObject(Renderable* object) {
-        uiRenderables.push_back(object);
-    }
+    void addUIObject(Renderable *object) { uiRenderables.push_back(object); }
 
     /**
      * @brief Adds a renderable to the late forward queue. Late forward
      * renderables are evaluated after the main forward pass.
      */
-    void addLateForwardObject(Renderable* object);
+    void addLateForwardObject(Renderable *object);
 
     /**
      * @brief Sets the camera for the window.
@@ -352,13 +349,13 @@ public:
      * must be long-lived. This means that declaring it as a class property is
      * a good idea.
      */
-    void setCamera(Camera* newCamera);
+    void setCamera(Camera *newCamera);
     /**
      * @brief Sets the scene for the window.
      *
      * @param scene The scene to render.
      */
-    void setScene(Scene* scene);
+    void setScene(Scene *scene);
 
     /**
      * @brief Gets the current time since window creation.
@@ -405,35 +402,35 @@ public:
      * access to the primary window.
      *
      */
-    static Window* mainWindow;
+    static Window *mainWindow;
 
     /**
      * @brief Gets the current scene being rendered.
      *
      * @return (Scene*) Pointer to the current scene.
      */
-    inline Scene* getCurrentScene() { return currentScene; }
+    Scene *getCurrentScene() { return currentScene; }
     /**
      * @brief Gets the current camera.
      *
      * @return (Camera*) Pointer to the current camera.
      */
-    inline Camera* getCamera() { return camera; }
+    Camera *getCamera() { return camera; }
     /**
      * @brief Adds a render target to the window.
      *
      * @param target The render target to add.
      */
-    void addRenderTarget(RenderTarget* target);
+    void addRenderTarget(RenderTarget *target);
 
     /**
      * @brief Gets the framebuffer size of the window.
      *
      * @return (Size2d) The width and height of the framebuffer.
      */
-    inline Size2d getSize() {
+    Size2d getSize() {
         int fbw, fbh;
-        glfwGetFramebufferSize(static_cast<GLFWwindow*>(windowRef), &fbw,
+        glfwGetFramebufferSize(static_cast<GLFWwindow *>(windowRef), &fbw,
                                &fbh);
         return {static_cast<float>(fbw), static_cast<float>(fbh)};
     }
@@ -442,25 +439,25 @@ public:
      * @brief Activates debug mode for the window.
      *
      */
-    inline void activateDebug() { this->debug = true; }
+    void activateDebug() { this->debug = true; }
     /**
      * @brief Deactivates debug mode for the window.
      *
      */
-    inline void deactivateDebug() { this->debug = false; }
+    void deactivateDebug() { this->debug = false; }
 
     /**
      * @brief Gets the delta time between frames.
      *
      * @return (float) Delta time in seconds.
      */
-    inline float getDeltaTime() { return this->deltaTime; }
+    float getDeltaTime() const { return this->deltaTime; }
     /**
      * @brief Gets the current frames per second.
      *
      * @return (float) Frames per second value.
      */
-    inline float getFramesPerSecond() { return this->framesPerSecond; }
+    float getFramesPerSecond() const { return this->framesPerSecond; }
 
     /**
      * @brief The gravity constant applied to physics bodies. Default is 9.81
@@ -494,31 +491,29 @@ public:
     /**
      * @brief Returns the active internal render scale.
      */
-    inline float getRenderScale() const { return this->renderScale; }
+    float getRenderScale() const { return this->renderScale; }
 
     /**
      * @brief Returns the SSAO-specific render scale.
      */
-    inline float getSSAORenderScale() const { return this->ssaoRenderScale; }
+    float getSSAORenderScale() const { return this->ssaoRenderScale; }
 
     /**
      * @brief Returns the opal device instance for rendering.
      */
-    inline std::shared_ptr<opal::Device> getDevice() const {
-        return this->device;
-    }
+    std::shared_ptr<opal::Device> getDevice() const { return this->device; }
 
     /**
      * @brief Returns the lazily created deferred geometry buffer.
      *
      * @return (RenderTarget*) Pointer to the G-buffer contents.
      */
-    RenderTarget* getGBuffer() const { return gBuffer.get(); }
+    RenderTarget *getGBuffer() const { return gBuffer.get(); }
 
     /**
      * @brief Points to the render target currently bound for drawing.
      */
-    RenderTarget* currentRenderTarget = nullptr;
+    RenderTarget *currentRenderTarget = nullptr;
 
     opal::BlendFunc dstBlend = opal::BlendFunc::DstAlpha;
     opal::BlendFunc srcBlend = opal::BlendFunc::OneMinusSrcAlpha;
@@ -542,16 +537,16 @@ public:
 
     bool firstFrame = true;
 
-private:
+  private:
     std::shared_ptr<opal::CommandBuffer> activeCommandBuffer = nullptr;
     CoreWindowReference windowRef;
-    std::vector<Renderable*> renderables;
-    std::vector<Renderable*> preferenceRenderables;
-    std::vector<Renderable*> firstRenderables;
-    std::vector<Renderable*> uiRenderables;
-    std::vector<Renderable*> lateForwardRenderables;
-    std::vector<Fluid*> lateFluids;
-    std::vector<RenderTarget*> renderTargets;
+    std::vector<Renderable *> renderables;
+    std::vector<Renderable *> preferenceRenderables;
+    std::vector<Renderable *> firstRenderables;
+    std::vector<Renderable *> uiRenderables;
+    std::vector<Renderable *> lateForwardRenderables;
+    std::vector<Fluid *> lateFluids;
+    std::vector<RenderTarget *> renderTargets;
     std::unique_ptr<RenderTarget> screenRenderTarget;
 
     std::shared_ptr<RenderTarget> gBuffer;
@@ -574,42 +569,42 @@ private:
 
     glm::mat4 calculateProjectionMatrix();
     glm::mat4 lastViewMatrix = glm::mat4(1.0f);
-    Scene* currentScene = nullptr;
+    Scene *currentScene = nullptr;
 
     void renderLightsToShadowMaps(
         std::shared_ptr<opal::CommandBuffer> commandBuffer = nullptr);
     Size2d getFurthestPositions();
 
     [[maybe_unused]]
-    void renderPingpong(RenderTarget* target);
-    void renderPhysicalBloom(RenderTarget* target);
+    void renderPingpong(RenderTarget *target);
+    void renderPhysicalBloom(RenderTarget *target);
     void deferredRendering(
-        RenderTarget* target,
+        RenderTarget *target,
         std::shared_ptr<opal::CommandBuffer> commandBuffer = nullptr);
-    void renderSSAO(
-        std::shared_ptr<opal::CommandBuffer> commandBuffer = nullptr);
+    void
+    renderSSAO(std::shared_ptr<opal::CommandBuffer> commandBuffer = nullptr);
     void updateFluidCaptures(
         std::shared_ptr<opal::CommandBuffer> commandBuffer = nullptr);
     void captureFluidReflection(
-        Fluid& fluid,
+        Fluid &fluid,
         std::shared_ptr<opal::CommandBuffer> commandBuffer = nullptr);
     void captureFluidRefraction(
-        Fluid& fluid,
+        Fluid &fluid,
         std::shared_ptr<opal::CommandBuffer> commandBuffer = nullptr);
     void markPipelineStateDirty();
-    bool shouldRefreshPipeline(Renderable* renderable);
-    void setViewportState(int x, int y, int newViewportWidth, int newViewportHeight);
+    bool shouldRefreshPipeline(Renderable *renderable);
+    void setViewportState(int x, int y, int newViewportWidth,
+                          int newViewportHeight);
     void updateBackbufferTarget(int backbufferWidth, int backbufferHeight);
 
-    template <typename T>
-    void updatePipelineStateField(T& field, T value) {
+    template <typename T> void updatePipelineStateField(T &field, T value) {
         if (field != value) {
             field = value;
             markPipelineStateDirty();
         }
     }
 
-    Camera* camera = nullptr;
+    Camera *camera = nullptr;
     float lastMouseX;
     float lastMouseY;
 
@@ -665,11 +660,11 @@ private:
     std::vector<glm::vec3> cachedSpotlightPositions;
     std::vector<glm::vec3> cachedSpotlightDirections;
 
-    void prepareDefaultPipeline(Renderable* renderable, int fbWidth,
+    void prepareDefaultPipeline(Renderable *renderable, int fbWidth,
                                 int fbHeight);
 
     uint64_t pipelineStateVersion = 1;
-    std::unordered_map<Renderable*, uint64_t> renderablePipelineVersions;
+    std::unordered_map<Renderable *, uint64_t> renderablePipelineVersions;
 
     friend class CoreObject;
     friend class RenderTarget;

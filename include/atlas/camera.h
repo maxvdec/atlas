@@ -177,7 +177,7 @@ class Camera {
      *
      * @return (Normal3d) The front vector of the camera.
      */
-    inline Normal3d getFrontVector() const {
+    Normal3d getFrontVector() const {
         Normal3d front;
         front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
         front.y = sin(glm::radians(pitch));
@@ -191,9 +191,7 @@ class Camera {
      *
      * @return (Magnitude3d) The velocity of the camera.
      */
-    inline Magnitude3d getVelocity() const {
-        return getFrontVector() * movementSpeed;
-    }
+    Magnitude3d getVelocity() const { return getFrontVector() * movementSpeed; }
 
   private:
     float yaw = -90.0f;

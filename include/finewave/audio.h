@@ -91,7 +91,7 @@ class AudioData {
      *
      * @return (Id) The audio data ID.
      */
-    inline Id getId() const { return id; }
+    Id getId() const { return id; }
 
     bool isMono = false;
 

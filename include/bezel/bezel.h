@@ -294,7 +294,7 @@ class Joint {
 
     virtual void create(std::shared_ptr<PhysicsWorld> world) = 0;
     /** @brief Breaks the joint by disabling its underlying constraint. */
-    void breakJoint() { joint->SetEnabled(false); };
+    void breakJoint() const { joint->SetEnabled(false); };
 };
 
 class FixedJoint final : public Joint {
