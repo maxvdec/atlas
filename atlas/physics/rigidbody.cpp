@@ -359,7 +359,7 @@ void Rigidbody::addTag(const std::string &tag) {
     }
 }
 
-void Rigidbody::removeTag(const std::string &tag) {
+void Rigidbody::removeTag(const std::string &tag) const {
     if (!body) {
         return;
     }

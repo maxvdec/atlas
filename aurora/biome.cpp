@@ -24,28 +24,28 @@ float aurora::computeSlope(const uint8_t *heightMap, int width, int height,
     int yp = std::min(y + 1, height - 1);
 
     float dzdx =
-        float(heightMap[xp + y * width]) - float(heightMap[xm + y * width]);
+        float(heightMap[xp + (y * width)]) - float(heightMap[xm + (y * width)]);
     float dzdy =
-        float(heightMap[x + yp * width]) - float(heightMap[x + ym * width]);
+        float(heightMap[x + (yp * width)]) - float(heightMap[x + (ym * width)]);
 
-    return std::sqrt(dzdx * dzdx + dzdy * dzdy) / 255.0f;
+    return std::sqrt((dzdx * dzdx) + (dzdy * dzdy)) / 255.0f;
 }
 
-void Terrain::generateMaps(unsigned char *heightmapData, int height, int width,
+void Terrain::generateMaps(unsigned char *heightmapData, int width, int height,
                            int generationParameter, int nChannels) {
     const float maxHeight = 255.0f;
 
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
-            int idx = x + y * width;
+            int idx = x + (y * width);
 
             uint8_t heightValue;
             if (nChannels == 1) {
                 heightValue = heightmapData[idx];
             } else if (nChannels >= 3) {
-                int r = heightmapData[idx * nChannels + 0];
-                int g = heightmapData[idx * nChannels + 1];
-                int b = heightmapData[idx * nChannels + 2];
+                int r = heightmapData[(idx * nChannels) + 0];
+                int g = heightmapData[(idx * nChannels) + 1];
+                int b = heightmapData[(idx * nChannels) + 2];
                 heightValue = static_cast<uint8_t>((r + g + b) / 3);
             } else {
                 heightValue = 0;
@@ -64,7 +64,6 @@ void Terrain::generateMaps(unsigned char *heightmapData, int height, int width,
                     aurora::computeSlope(heightmapData, width, height, x, y);
                 float moisture = (1.0f - slope) *
                                  (1.0f - float(heightValue) / float(maxHeight));
-                moisture += ((rand() % 100) / 1000.0f) * 0.2; // Add some noise
                 moisture = std::clamp(moisture, 0.0f, 1.0f);
                 uint8_t moistureValue = static_cast<uint8_t>(moisture * 255.0f);
 
@@ -74,8 +73,8 @@ void Terrain::generateMaps(unsigned char *heightmapData, int height, int width,
     }
 }
 
-void Terrain::generateBiomes(unsigned char *heightmapData, int height,
-                             int width, int nChannels) {
+void Terrain::generateBiomes(unsigned char *heightmapData, int width,
+                             int height, int nChannels) {
     if (moistureTexture.id == 0) {
         generateMaps(heightmapData, width, height, 2, nChannels);
     } else {

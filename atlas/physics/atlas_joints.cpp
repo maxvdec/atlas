@@ -12,7 +12,6 @@
 #include "atlas/physics.h"
 #include "bezel/bezel.h"
 #include "atlas/tracer/log.h"
-#include "opal/opal.h"
 #include <memory>
 #include <numbers>
 #include <variant>
