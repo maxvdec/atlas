@@ -8,7 +8,6 @@
 //
 #include <any>
 #include <assimp/scene.h>
-#include "atlas/core/shader.h"
 #include "atlas/object.h"
 #include "atlas/texture.h"
 #include "atlas/tracer/data.h"
@@ -16,7 +15,6 @@
 #include "atlas/units.h"
 #include "atlas/window.h"
 #include "atlas/workspace.h"
-#include "opal/opal.h"
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
 #include <iostream>
@@ -24,6 +22,7 @@
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include <glm/glm.hpp>
@@ -33,9 +32,9 @@
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtc/epsilon.hpp>
 
-void Model::fromResource(Resource resource) { loadModel(resource); }
+void Model::fromResource(const Resource &resource) { loadModel(resource); }
 
-void Model::loadModel(Resource resource) {
+void Model::loadModel(const Resource &resource) {
     Assimp::Importer importer;
     if (resource.type != ResourceType::Model) {
         atlas_warning("Resource is not a model: " + resource.name);

@@ -7,7 +7,6 @@
  Copyright (c) 2025 maxvdec
 */
 
-#include <cstddef>
 #include <glad/glad.h>
 #include <algorithm>
 #include <iostream>
@@ -24,11 +23,11 @@
 #include "atlas/window.h"
 #include "opal/opal.h"
 
-RenderTarget::RenderTarget(Window &window, RenderTargetType type,
+RenderTarget::RenderTarget(Window& window, RenderTargetType type,
                            int resolution) {
     atlas_log("Creating render target (type: " +
-              std::to_string(static_cast<int>(type)) + ")");
-    GLFWwindow *glfwWindow = static_cast<GLFWwindow *>(window.windowRef);
+        std::to_string(static_cast<int>(type)) + ")");
+    GLFWwindow* glfwWindow = static_cast<GLFWwindow*>(window.windowRef);
     int fbWidth, fbHeight;
     glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
 
@@ -40,9 +39,6 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
 
     int scaledWidth = std::max(1, static_cast<int>(fbWidth * targetScale));
     int scaledHeight = std::max(1, static_cast<int>(fbHeight * targetScale));
-    Size2d size;
-    size = {.width = static_cast<float>(scaledWidth),
-            .height = static_cast<float>(scaledHeight)};
     const auto width = static_cast<GLsizei>(scaledWidth);
     const auto height = static_cast<GLsizei>(scaledHeight);
     this->type = type;
@@ -51,37 +47,37 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
         fb = opal::Framebuffer::create(width, height);
         std::vector<std::shared_ptr<opal::Texture>> colorTextures;
         for (unsigned int i = 0; i < 2; i++) {
-            auto texture = opal::Texture::create(
+            auto createdTexture = opal::Texture::create(
                 opal::TextureType::Texture2D, opal::TextureFormat::Rgba16F,
                 width, height, opal::TextureDataFormat::Rgba, nullptr, 1);
-            texture->setFilterMode(opal::TextureFilterMode::Linear,
-                                   opal::TextureFilterMode::Linear);
-            texture->setWrapMode(opal::TextureAxis::S,
-                                 opal::TextureWrapMode::ClampToEdge);
-            texture->setWrapMode(opal::TextureAxis::T,
-                                 opal::TextureWrapMode::ClampToEdge);
+            createdTexture->setFilterMode(opal::TextureFilterMode::Linear,
+                                          opal::TextureFilterMode::Linear);
+            createdTexture->setWrapMode(opal::TextureAxis::S,
+                                        opal::TextureWrapMode::ClampToEdge);
+            createdTexture->setWrapMode(opal::TextureAxis::T,
+                                        opal::TextureWrapMode::ClampToEdge);
             opal::Attachment attachment;
-            attachment.texture = texture;
+            attachment.texture = createdTexture;
             attachment.type = opal::Attachment::Type::Color;
-            colorTextures.push_back(texture);
+            colorTextures.push_back(createdTexture);
             fb->addAttachment(attachment);
         }
 
-        auto depthTexture = opal::Texture::create(
+        auto newDepthTexture = opal::Texture::create(
             opal::TextureType::Texture2D, opal::TextureFormat::DepthComponent24,
             width, height, opal::TextureDataFormat::DepthComponent, nullptr, 1);
         opal::Attachment depthAttachment;
-        depthAttachment.texture = depthTexture;
+        depthAttachment.texture = newDepthTexture;
         depthAttachment.type = opal::Attachment::Type::Depth;
         fb->addAttachment(depthAttachment);
 
-        this->depthTexture.texture = depthTexture;
-        this->depthTexture.id = depthTexture->textureID;
+        this->depthTexture.texture = newDepthTexture;
+        this->depthTexture.id = newDepthTexture->textureID;
         this->depthTexture.creationData.width = scaledWidth;
         this->depthTexture.creationData.height = scaledHeight;
         this->depthTexture.type = TextureType::Depth;
 
-        if (fb->getStatus() == false) {
+        if (!fb->getStatus()) {
             atlas_error("Framebuffer is not complete for Scene render target");
             std::cerr << "Error: Framebuffer is not complete!" << std::endl;
         }
@@ -99,7 +95,8 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
         brightTexture.id = colorTextures[1]->textureID;
 
         fb->unbind();
-    } else if (type == RenderTargetType::Multisampled) {
+    }
+    else if (type == RenderTargetType::Multisampled) {
         const int samples = 4;
 
         fb = opal::Framebuffer::create(width, height);
@@ -129,7 +126,7 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
 
         if (!fb->getStatus()) {
             std::cerr << "Error: Multisampled framebuffer is not complete!"
-                      << std::endl;
+                << std::endl;
         }
 
         this->msTexture.texture = msColor0;
@@ -195,7 +192,7 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
 
         if (!resolveFb->getStatus()) {
             std::cerr << "Error: Resolve framebuffer is not complete!"
-                      << std::endl;
+                << std::endl;
         }
 
         texture.texture = resolvedColor0;
@@ -217,7 +214,8 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
         this->depthTexture.type = TextureType::Depth;
 
         resolveFb->unbind();
-    } else if (this->type == RenderTargetType::Shadow) {
+    }
+    else if (this->type == RenderTargetType::Shadow) {
         int SHADOW_WIDTH = resolution, SHADOW_HEIGHT = resolution;
 
         fb = opal::Framebuffer::create(SHADOW_WIDTH, SHADOW_HEIGHT);
@@ -241,16 +239,17 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
 
         if (!fb->getStatus()) {
             std::cerr << "Error: Shadow framebuffer is not complete!"
-                      << std::endl;
+                << std::endl;
         }
 
         texture.texture = depthMap;
         texture.id = depthMap->textureID;
-        texture.creationData = {SHADOW_WIDTH, SHADOW_HEIGHT, 1};
+        texture.creationData = {.width = SHADOW_WIDTH, .height = SHADOW_HEIGHT, .channels = 1};
         texture.type = TextureType::Depth;
 
         fb->unbind();
-    } else if (this->type == RenderTargetType::CubeShadow) {
+    }
+    else if (this->type == RenderTargetType::CubeShadow) {
         int SHADOW_WIDTH = resolution, SHADOW_HEIGHT = resolution;
 
         fb = opal::Framebuffer::create(SHADOW_WIDTH, SHADOW_HEIGHT);
@@ -263,16 +262,17 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
 
         if (!fb->getStatus()) {
             std::cerr << "Error: CubeShadow framebuffer is not complete!"
-                      << std::endl;
+                << std::endl;
         }
 
         texture.texture = depthCubemap;
         texture.id = depthCubemap->textureID;
-        texture.creationData = {SHADOW_WIDTH, SHADOW_HEIGHT, 1};
+        texture.creationData = {.width = SHADOW_WIDTH, .height = SHADOW_HEIGHT, .channels = 1};
         texture.type = TextureType::DepthCube;
 
         fb->unbind();
-    } else if (this->type == RenderTargetType::GBuffer) {
+    }
+    else if (this->type == RenderTargetType::GBuffer) {
         fb = opal::Framebuffer::create(width, height);
 
         auto positionTex = opal::Texture::create(
@@ -382,11 +382,12 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
 
         if (!fb->getStatus()) {
             std::cerr << "Error: GBuffer Framebuffer is not complete!"
-                      << std::endl;
+                << std::endl;
         }
 
         fb->unbind();
-    } else if (this->type == RenderTargetType::SSAO) {
+    }
+    else if (this->type == RenderTargetType::SSAO) {
         fb = opal::Framebuffer::create(width, height);
 
         auto ssaoTex = opal::Texture::create(
@@ -406,7 +407,7 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
 
         if (!fb->getStatus()) {
             std::cerr << "Error: SSAO Framebuffer is not complete!"
-                      << std::endl;
+                << std::endl;
         }
 
         texture.texture = ssaoTex;
@@ -416,7 +417,8 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
         texture.type = TextureType::SSAO;
 
         fb->unbind();
-    } else if (this->type == RenderTargetType::SSAOBlur) {
+    }
+    else if (this->type == RenderTargetType::SSAOBlur) {
         fb = opal::Framebuffer::create(width, height);
 
         auto ssaoBlurTex = opal::Texture::create(
@@ -436,7 +438,7 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
 
         if (!fb->getStatus()) {
             std::cerr << "Error: SSAO Blur Framebuffer is not complete!"
-                      << std::endl;
+                << std::endl;
         }
 
         texture.texture = ssaoBlurTex;
@@ -446,45 +448,53 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
         texture.type = TextureType::SSAO;
 
         fb->unbind();
-    } else {
+    }
+    else {
         atlas_warning("Unknown render target type");
         return;
     }
 
     AllocationPacket packet;
     packet.description =
-        "RenderTarget Type " + std::to_string(static_cast<int>(type));
-    ;
+        "RenderTarget Type " + std::to_string(static_cast<int>(type));;
     packet.sizeMb = (static_cast<float>(width) * static_cast<float>(height) *
-                     4.0f /* bytes per pixel */) /
-                    (1024.0f * 1024.0f);
+            4.0f /* bytes per pixel */) /
+        (1024.0f * 1024.0f);
     packet.kind = DebugResourceKind::RenderTarget;
     packet.frameNumber = Window::mainWindow->device->frameCount;
     packet.send();
 }
 
-void RenderTarget::display(Window &window, float zindex) {
+void RenderTarget::display(Window& window, float zindex) {
     if (object == nullptr) {
         CoreObject obj;
         std::vector<CoreVertex> vertices = {
 #ifdef METAL
             {{1.0f, 1.0f, zindex}, Color::white(), {1.0f, 0.0f}}, // top right
-            {{1.0f, -1.0f, zindex},
-             Color::white(),
-             {1.0f, 1.0f}}, // bottom right
-            {{-1.0f, -1.0f, zindex},
-             Color::white(),
-             {0.0f, 1.0f}},                                       // bottom left
+            {
+                {1.0f, -1.0f, zindex},
+                Color::white(),
+                {1.0f, 1.0f}
+            }, // bottom right
+            {
+                {-1.0f, -1.0f, zindex},
+                Color::white(),
+                {0.0f, 1.0f}
+            }, // bottom left
             {{-1.0f, 1.0f, zindex}, Color::white(), {0.0f, 0.0f}} // top left
 #else
             // positions        // texture coords
             {{1.0f, 1.0f, zindex}, Color::white(), {1.0f, 1.0f}}, // top right
-            {{1.0f, -1.0f, zindex},
-             Color::white(),
-             {1.0f, 0.0f}}, // bottom right
-            {{-1.0f, -1.0f, zindex},
-             Color::white(),
-             {0.0f, 0.0f}},                                       // bottom left
+            {
+                {1.0f, -1.0f, zindex},
+                Color::white(),
+                {1.0f, 0.0f}
+            }, // bottom right
+            {
+                {-1.0f, -1.0f, zindex},
+                Color::white(),
+                {0.0f, 0.0f}
+            }, // bottom left
             {{-1.0f, 1.0f, zindex}, Color::white(), {0.0f, 1.0f}} // top left
 #endif
         };
@@ -505,7 +515,8 @@ void RenderTarget::display(Window &window, float zindex) {
         obj.initialize();
         this->object = std::make_shared<CoreObject>(obj);
         window.addPreferencedObject(this);
-    } else {
+    }
+    else {
         this->object->show();
     }
 }
@@ -549,7 +560,8 @@ void RenderTarget::bind() {
     if (fb) {
         fb->bind();
         fb->setViewport();
-    } else {
+    }
+    else {
         auto defaultFb =
             Window::mainWindow->getDevice()->getDefaultFramebuffer();
         defaultFb->bind();
@@ -573,11 +585,11 @@ void RenderTarget::unbind() {
     }
 }
 
-const std::shared_ptr<opal::Framebuffer> &RenderTarget::getFramebuffer() const {
+const std::shared_ptr<opal::Framebuffer>& RenderTarget::getFramebuffer() const {
     return fb;
 }
 
-const std::shared_ptr<opal::Framebuffer> &
+const std::shared_ptr<opal::Framebuffer>&
 RenderTarget::getResolveFramebuffer() const {
     return resolveFb;
 }
@@ -630,18 +642,20 @@ int RenderTarget::getHeight() const {
     }
 }
 
-void RenderTarget::hide() {
+void RenderTarget::hide() const {
     if (object != nullptr) {
         object->hide();
-    } else {
+    }
+    else {
         atlas_error("Render target object is null");
     }
 }
 
-void RenderTarget::show() {
+void RenderTarget::show() const {
     if (object != nullptr) {
         object->show();
-    } else {
+    }
+    else {
         atlas_error("Render target object is null");
     }
 }
@@ -658,7 +672,7 @@ void RenderTarget::render(float dt,
         return;
     }
 
-    CoreObject *obj = this->object.get();
+    CoreObject* obj = this->object.get();
 
     static std::shared_ptr<opal::Pipeline> renderTargetPipeline = nullptr;
     if (renderTargetPipeline == nullptr) {
@@ -668,16 +682,22 @@ void RenderTarget::render(float dt,
         obj->shaderProgram.requestPipeline(renderTargetPipeline);
     int viewportX = 0;
     int viewportY = 0;
-    int viewportWidth =
-        Window::mainWindow ? Window::mainWindow->viewportWidth : 0;
-    int viewportHeight =
-        Window::mainWindow ? Window::mainWindow->viewportHeight : 0;
+    int viewportWidth;
+    if (Window::mainWindow)
+        viewportWidth = Window::mainWindow->viewportWidth;
+    else
+        viewportWidth = 0;
+    int viewportHeight;
+    if (Window::mainWindow)
+        viewportHeight = Window::mainWindow->viewportHeight;
+    else
+        viewportHeight = 0;
     if (Window::mainWindow != nullptr &&
         (viewportWidth <= 0 || viewportHeight <= 0)) {
         int fbWidth = 0;
         int fbHeight = 0;
         glfwGetFramebufferSize(
-            static_cast<GLFWwindow *>(Window::mainWindow->windowRef), &fbWidth,
+            static_cast<GLFWwindow*>(Window::mainWindow->windowRef), &fbWidth,
             &fbHeight);
         viewportWidth = fbWidth;
         viewportHeight = fbHeight;
@@ -698,18 +718,20 @@ void RenderTarget::render(float dt,
     renderTargetPipeline->enableBlending(false);
     renderTargetPipeline->bind();
 
-    Camera *camera = Window::mainWindow->camera;
+    Camera* camera = Window::mainWindow->camera;
 
     if (texture.type == TextureType::DepthCube) {
         renderTargetPipeline->bindTextureCubemap("cubeMap", texture.id, 10,
                                                  obj->id);
         renderTargetPipeline->setUniform1i("isCubeMap", 1);
-    } else {
+    }
+    else {
         if (texture.id == 0) {
             renderTargetPipeline->bindTexture2D("Texture", gMaterial.id, 0,
                                                 obj->id);
             renderTargetPipeline->setUniform1i("isCubeMap", 0);
-        } else {
+        }
+        else {
             renderTargetPipeline->bindTexture2D("Texture", texture.id, 0,
                                                 obj->id);
             renderTargetPipeline->setUniform1i("isCubeMap", 0);
@@ -729,8 +751,9 @@ void RenderTarget::render(float dt,
         renderTargetPipeline->bindTexture2D(
             "VolumetricLightTexture", volumetricLightTexture.id, 3, obj->id);
         renderTargetPipeline->setUniform1i("hasVolumetricLightTexture",
-                                           volumetricLightTexture.id != 0 ? 1
-                                                                          : 0);
+                                           volumetricLightTexture.id != 0
+                                               ? 1
+                                               : 0);
 
         renderTargetPipeline->bindTexture2D("PositionTexture", gPosition.id, 4,
                                             obj->id);
@@ -783,7 +806,7 @@ void RenderTarget::render(float dt,
 
         renderTargetPipeline->setUniform1i("maxMipLevel", maxMipLevels);
 
-        Scene *scene = Window::mainWindow->getCurrentScene();
+        Scene* scene = Window::mainWindow->getCurrentScene();
         renderTargetPipeline->setUniform1f("environment.fogIntensity",
                                            scene->environment.fog.intensity);
         renderTargetPipeline->setUniform3f(
@@ -791,7 +814,7 @@ void RenderTarget::render(float dt,
             scene->environment.fog.color.g, scene->environment.fog.color.b);
 
         if (scene->atmosphere.clouds) {
-            const Clouds &cloudSettings = *scene->atmosphere.clouds;
+            const Clouds& cloudSettings = *scene->atmosphere.clouds;
 
             const glm::vec3 cloudSize = cloudSettings.size.toGlm();
             const glm::vec3 cloudPos = cloudSettings.position.toGlm();
@@ -800,18 +823,19 @@ void RenderTarget::render(float dt,
             float sunLength = glm::length(sunDir);
             if (sunLength > 1e-3f) {
                 sunDir /= sunLength;
-            } else {
+            }
+            else {
                 sunDir = glm::vec3(0.0f, 1.0f, 0.0f);
             }
 
-            const Color &sunColor = scene->atmosphere.sunColor;
+            const Color& sunColor = scene->atmosphere.sunColor;
             const float sunIntensity = scene->atmosphere.getLightIntensity();
             const Color ambientColor = scene->getAmbientColor();
             const float ambientIntensity = scene->getAmbientIntensity();
             glm::vec3 ambient = glm::vec3(static_cast<float>(ambientColor.r),
                                           static_cast<float>(ambientColor.g),
                                           static_cast<float>(ambientColor.b)) *
-                                ambientIntensity;
+                ambientIntensity;
 
             renderTargetPipeline->bindTexture3D(
                 "cloudsTexture", cloudSettings.getCloudTexture(128), 15,
@@ -855,7 +879,8 @@ void RenderTarget::render(float dt,
             renderTargetPipeline->setUniform3f("cloudAmbientColor", ambient.x,
                                                ambient.y, ambient.z);
             renderTargetPipeline->setUniform1i("hasClouds", 1);
-        } else {
+        }
+        else {
             renderTargetPipeline->bindTexture3D("cloudsTexture", 0, 15,
                                                 obj->id);
             renderTargetPipeline->setUniform1i("hasClouds", 0);
@@ -879,7 +904,8 @@ void RenderTarget::render(float dt,
         commandBuffer->drawIndexed(
             static_cast<unsigned int>(obj->indices.size()), 1, 0, 0, 0,
             obj->id);
-    } else {
+    }
+    else {
         commandBuffer->draw(static_cast<unsigned int>(obj->vertices.size()), 1,
                             0, 0, obj->id);
     }
@@ -889,7 +915,7 @@ void RenderTarget::render(float dt,
     renderTargetPipeline->bind();
 
     if (TracerServices::getInstance().isOk()) {
-        DebugObjectPacket debugPacket{};
+        DebugObjectPacket debugPacket;
         debugPacket.drawCallsForObject = 1;
         debugPacket.frameCount = Window::mainWindow->device->frameCount;
         debugPacket.triangleCount = 2;

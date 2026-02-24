@@ -75,13 +75,13 @@ class NetworkPipe {
     ~NetworkPipe();
 
     /** @brief Sets the server port (defaults to 0 until set). */
-    void setPort(int port);
+    void setPort(int newPort);
     /** @brief Starts the background connection and receive loops. */
     void start();
     /** @brief Stops background threads and disconnects. */
     void stop();
     /** @brief Registers a callback to receive messages. */
-    void onRecieve(const PipeCallback &callback);
+    void onReceive(const PipeCallback &callback);
     /** @brief Sends a raw message to the server. */
     void send(const std::string &message) const;
 

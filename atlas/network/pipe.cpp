@@ -10,7 +10,6 @@
 #include "atlas/network/pipe.h"
 #include "atlas/tracer/log.h"
 #include <iostream>
-#include <cstring>
 #include <unistd.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -24,9 +23,9 @@ NetworkPipe::NetworkPipe() = default;
 
 NetworkPipe::~NetworkPipe() { stop(); }
 
-void NetworkPipe::setPort(int port) { this->port = port; }
+void NetworkPipe::setPort(int newPort) { this->port = newPort; }
 
-void NetworkPipe::onRecieve(const PipeCallback &callback) {
+void NetworkPipe::onReceive(const PipeCallback& callback) {
     this->dispatcher = callback;
 }
 
@@ -76,7 +75,7 @@ void NetworkPipe::connectLoop() {
             return;
         }
 
-        if (connect(clientSocket, reinterpret_cast<sockaddr *>(&addr),
+        if (connect(clientSocket, reinterpret_cast<sockaddr*>(&addr),
                     sizeof(addr)) < 0) {
             if (!messageShown) {
                 std::cout
@@ -94,11 +93,12 @@ void NetworkPipe::connectLoop() {
         if (messageShown) {
             atlas_log("Connected to tracer on port " + std::to_string(port));
             std::cout << "\rConnected to tracer on port " << port << "!"
-                      << std::string(20, ' ') << std::endl;
-        } else {
+                << std::string(20, ' ') << std::endl;
+        }
+        else {
             atlas_log("Connected to tracer on port " + std::to_string(port));
             std::cout << "Connected to tracer on port " << port << "!"
-                      << std::endl;
+                << std::endl;
         }
     }
 
@@ -123,14 +123,15 @@ void NetworkPipe::receiveLoop() {
             std::string msg(buffer, received);
 
             {
-                std::lock_guard<std::mutex> lock(messagesMutex);
+                std::scoped_lock lock(messagesMutex);
                 messages.push_back(msg);
             }
 
             if (dispatcher) {
                 dispatcher(msg);
             }
-        } else if (received == 0) {
+        }
+        else if (received == 0) {
             atlas_log("Tracer disconnected");
             std::cout << "Tracer disconnected\n";
             int expected = sock;
@@ -138,14 +139,15 @@ void NetworkPipe::receiveLoop() {
                 close(sock);
             }
             break;
-        } else {
+        }
+        else {
             perror("recv");
             break;
         }
     }
 }
 
-void NetworkPipe::send(const std::string &message) const {
+void NetworkPipe::send(const std::string& message) const {
     int sock = clientSocket.load();
     if (sock != -1) {
         ssize_t sent = ::send(sock, message.c_str(), message.size(), 0);
@@ -156,6 +158,6 @@ void NetworkPipe::send(const std::string &message) const {
 }
 
 std::vector<std::string> NetworkPipe::getMessages() {
-    std::lock_guard<std::mutex> lock(messagesMutex);
+    std::scoped_lock lock(messagesMutex);
     return messages;
 }

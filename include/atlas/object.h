@@ -749,7 +749,7 @@ class Model : public GameObject {
      *
      * @param resource The resource to load the model from.
      */
-    void fromResource(Resource resource);
+    void fromResource(const Resource &resource);
 
     /**
      * @brief Gets the objects that make up the model.
@@ -921,7 +921,7 @@ class Model : public GameObject {
     std::vector<std::shared_ptr<CoreObject>> objects;
     std::string directory;
 
-    void loadModel(Resource resource);
+    void loadModel(const Resource &resource);
     void processNode(aiNode *node, const aiScene *scene,
                      glm::mat4 parentTransform,
                      std::unordered_map<std::string, Texture> &textureCache);

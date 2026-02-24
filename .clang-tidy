@@ -5,6 +5,7 @@ Checks: |
   -bugprone-implicit-widening-of-multiplication-result,
   -bugprone-narrowing-conversions,
   -bugprone-unchecked-optional-access,
+  -bugprone-branch-clone,
 
   cert-*,
   -cert-err58-cpp,

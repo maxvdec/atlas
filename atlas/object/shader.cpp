@@ -13,7 +13,6 @@
 #include "atlas/tracer/log.h"
 #include "opal/opal.h"
 #include <glad/glad.h>
-#include <iostream>
 #include <map>
 #include <memory>
 #include <string>
@@ -30,8 +29,7 @@ std::map<AtlasFragmentShader, FragmentShader>
     FragmentShader::fragmentShaderCache = {};
 
 VertexShader VertexShader::fromDefaultShader(AtlasVertexShader shader) {
-    if (VertexShader::vertexShaderCache.find(shader) !=
-        VertexShader::vertexShaderCache.end()) {
+    if (VertexShader::vertexShaderCache.contains(shader)) {
         return VertexShader::vertexShaderCache[shader];
     }
     VertexShader vertexShader;
@@ -224,8 +222,7 @@ void VertexShader::compile() {
 }
 
 FragmentShader FragmentShader::fromDefaultShader(AtlasFragmentShader shader) {
-    if (FragmentShader::fragmentShaderCache.find(shader) !=
-        FragmentShader::fragmentShaderCache.end()) {
+    if (FragmentShader::fragmentShaderCache.contains(shader)) {
         return FragmentShader::fragmentShaderCache[shader];
     }
     FragmentShader fragmentShader;
@@ -553,8 +550,7 @@ void ShaderProgram::compile() {
         vertexShader.fromDefaultShaderType.has_value()) {
         auto key = std::make_pair(vertexShader.fromDefaultShaderType.value(),
                                   fragmentShader.fromDefaultShaderType.value());
-        if (ShaderProgram::shaderCache.find(key) !=
-            ShaderProgram::shaderCache.end()) {
+        if (ShaderProgram::shaderCache.contains(key)) {
             *this = ShaderProgram::shaderCache[key];
             return;
         }
@@ -617,45 +613,47 @@ ShaderProgram ShaderProgram::defaultProgram() {
     return program;
 }
 
-void ShaderProgram::setUniform4f(std::string name, float v0, float v1, float v2,
-                                 float v3) {
+void ShaderProgram::setUniform4f(const std::string &name, float v0, float v1,
+                                 float v2, float v3) const {
     if (currentPipeline) {
         currentPipeline->setUniform4f(name, v0, v1, v2, v3);
     }
 }
 
-void ShaderProgram::setUniform3f(std::string name, float v0, float v1,
-                                 float v2) {
+void ShaderProgram::setUniform3f(const std::string &name, float v0, float v1,
+                                 float v2) const {
     if (currentPipeline) {
         currentPipeline->setUniform3f(name, v0, v1, v2);
     }
 }
 
-void ShaderProgram::setUniform2f(std::string name, float v0, float v1) {
+void ShaderProgram::setUniform2f(const std::string &name, float v0,
+                                 float v1) const {
     if (currentPipeline) {
         currentPipeline->setUniform2f(name, v0, v1);
     }
 }
 
-void ShaderProgram::setUniform1f(std::string name, float v0) {
+void ShaderProgram::setUniform1f(const std::string &name, float v0) const {
     if (currentPipeline) {
         currentPipeline->setUniform1f(name, v0);
     }
 }
 
-void ShaderProgram::setUniformMat4f(std::string name, const glm::mat4 &matrix) {
+void ShaderProgram::setUniformMat4f(const std::string &name,
+                                    const glm::mat4 &matrix) const {
     if (currentPipeline) {
         currentPipeline->setUniformMat4f(name, matrix);
     }
 }
 
-void ShaderProgram::setUniform1i(std::string name, int v0) {
+void ShaderProgram::setUniform1i(const std::string &name, int v0) const {
     if (currentPipeline) {
         currentPipeline->setUniform1i(name, v0);
     }
 }
 
-void ShaderProgram::setUniformBool(std::string name, bool value) {
+void ShaderProgram::setUniformBool(const std::string &name, bool value) const {
     if (currentPipeline) {
         currentPipeline->setUniformBool(name, value);
     }
@@ -667,8 +665,8 @@ ShaderProgram ShaderProgram::fromDefaultShaders(
     ShaderProgram program;
     program.vertexShader = VertexShader::fromDefaultShader(vShader);
     program.fragmentShader = FragmentShader::fromDefaultShader(fShader);
-    program.geometryShader = gShader;
-    program.tessellationShaders = tShaders;
+    program.geometryShader = std::move(gShader);
+    program.tessellationShaders = std::move(tShaders);
     program.programId = 0;
     program.desiredAttributes = program.vertexShader.desiredAttributes;
 
@@ -702,6 +700,7 @@ std::shared_ptr<opal::Pipeline> ShaderProgram::requestPipeline(
     std::vector<opal::VertexAttribute> vertexAttributes;
     opal::VertexBinding vertexBinding;
 
+    vertexAttributes.reserve(layoutDescriptors.size());
     for (const auto &attr : layoutDescriptors) {
         vertexAttributes.push_back(opal::VertexAttribute{
             .name = attr.name,

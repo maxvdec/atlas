@@ -197,7 +197,7 @@ struct Texture {
      * use.
      * @return (Texture) The created texture instance.
      */
-    static Texture fromResource(const Resource &resource,
+    static Texture fromResource(const Resource& resource,
                                 TextureType type = TextureType::Color,
                                 TextureParameters params = {},
                                 Color borderColor = {0, 0, 0, 0});
@@ -211,7 +211,7 @@ struct Texture {
      * use.
      * @return (Texture) The created texture instance.
      */
-    static Texture fromResourceName(const std::string &resourceName,
+    static Texture fromResourceName(const std::string& resourceName,
                                     TextureType type = TextureType::Color,
                                     TextureParameters params = {},
                                     Color borderColor = {0, 0, 0, 0});
@@ -268,7 +268,7 @@ struct Texture {
      * @return (Texture) The created tiled checkerboard texture instance.
      */
     static Texture createTiledCheckerboard(
-        int width, int height, const std::vector<CheckerTile> &tiles,
+        int width, int height, const std::vector<CheckerTile>& tiles,
         TextureParameters params = {}, Color borderColor = {0, 0, 0, 0});
 
     /**
@@ -279,13 +279,13 @@ struct Texture {
                                     TextureParameters params = {},
                                     Color borderColor = {0, 0, 0, 0});
 
-  private:
+private:
     static void applyWrappingMode(TextureWrappingMode mode,
                                   opal::TextureAxis axis,
-                                  std::shared_ptr<opal::Texture> texture);
+                                  const std::shared_ptr<opal::Texture>& texture);
     static void applyFilteringModes(TextureFilteringMode minMode,
                                     TextureFilteringMode magMode,
-                                    std::shared_ptr<opal::Texture> texture);
+                                    const std::shared_ptr<opal::Texture>& texture);
 };
 
 /**
@@ -337,11 +337,11 @@ struct Cubemap {
      * It must contain exactly six resources.
      * @return (Cubemap) The created cubemap instance.
      */
-    static Cubemap fromResourceGroup(ResourceGroup &resourceGroup);
+    static Cubemap fromResourceGroup(ResourceGroup& resourceGroup);
 
-    static Cubemap fromColors(const std::array<Color, 6> &colors, int size);
+    static Cubemap fromColors(const std::array<Color, 6>& colors, int size);
 
-    void updateWithColors(const std::array<Color, 6> &colors);
+    void updateWithColors(const std::array<Color, 6>& colors);
 };
 
 class Window;
@@ -381,7 +381,7 @@ class Effect;
  *
  */
 class RenderTarget : public Renderable {
-  public:
+public:
     RenderTarget() = default;
 
     /**
@@ -462,7 +462,7 @@ class RenderTarget : public Renderable {
      * @param resolution The resolution of the render target (it will be created
      * with this resolution).
      */
-    RenderTarget(Window &window,
+    RenderTarget(Window& window,
                  RenderTargetType type = RenderTargetType::Scene,
                  int resolution = 1024);
 
@@ -472,17 +472,17 @@ class RenderTarget : public Renderable {
      * @param window The window in which to display the render target.
      * @param zindex The z-index at which to display the render target.
      */
-    void display(Window &window, float zindex = 0);
+    void display(Window& window, float zindex = 0);
     /**
      * @brief Hides the render target from the window.
      *
      */
-    void hide();
+    void hide() const;
     /**
      * @brief Shows the render target in the window.
      *
      */
-    void show();
+    void show() const;
 
     /**
      * @brief The CoreObject used to render the render target.
@@ -543,15 +543,15 @@ class RenderTarget : public Renderable {
      * @brief Returns the primary framebuffer for this render target.
      * @return The framebuffer, or nullptr if not created.
      */
-    const std::shared_ptr<opal::Framebuffer> &getFramebuffer() const;
+    const std::shared_ptr<opal::Framebuffer>& getFramebuffer() const;
 
     /**
      * @brief Returns the resolve framebuffer for multisampled targets.
      * @return The resolve framebuffer, or nullptr if not applicable.
      */
-    const std::shared_ptr<opal::Framebuffer> &getResolveFramebuffer() const;
+    const std::shared_ptr<opal::Framebuffer>& getResolveFramebuffer() const;
 
-  private:
+private:
     std::shared_ptr<opal::Framebuffer> fb = nullptr;
     std::shared_ptr<opal::Framebuffer> resolveFb = nullptr;
     std::shared_ptr<opal::DepthStencilBuffer> renderbuffer = nullptr;
@@ -582,13 +582,14 @@ class RenderTarget : public Renderable {
  *
  */
 class Skybox : public Renderable {
-  public:
-    static std::shared_ptr<Skybox> create(Cubemap cubemap, Window &window) {
+public:
+    static std::shared_ptr<Skybox> create(Cubemap cubemap, Window& window) {
         auto skybox = std::make_shared<Skybox>();
         skybox->cubemap = cubemap;
         skybox->display(window);
         return skybox;
     }
+
     /**
      * @brief The cubemap texture used for the skybox.
      *
@@ -606,17 +607,17 @@ class Skybox : public Renderable {
      *
      * @param window The window in which to display the skybox.
      */
-    void display(Window &window);
+    void display(Window& window);
     /**
      * @brief Hides the skybox from the window.
      *
      */
-    void hide();
+    void hide() const;
     /**
      * @brief Shows the skybox in the window.
      *
      */
-    void show();
+    void show() const;
 
     /**
      * @brief Renders the skybox cube using the stored cubemap texture.
@@ -627,17 +628,17 @@ class Skybox : public Renderable {
      * @brief Updates the view matrix while removing translation for correct
      * skybox rendering.
      */
-    void setViewMatrix(const glm::mat4 &view) override;
+    void setViewMatrix(const glm::mat4& newView) override;
     /**
      * @brief Stores the projection matrix used for skybox rendering.
      */
-    void setProjectionMatrix(const glm::mat4 &projection) override;
+    void setProjectionMatrix(const glm::mat4& newProjection) override;
 
     bool canUseDeferredRendering() override { return false; }
 
     Skybox() = default;
 
-  private:
+private:
     friend class Window;
 
     glm::mat4 view = glm::mat4(1.0f);
@@ -655,7 +656,7 @@ struct BloomElement {
  * @brief Helper that manages downsample/upsample chains for bloom rendering.
  */
 class BloomRenderTarget {
-  public:
+public:
     BloomRenderTarget() = default;
     ~BloomRenderTarget() = default;
 
@@ -683,21 +684,21 @@ class BloomRenderTarget {
      * @brief Returns the bloom chain hierarchy for inspection or custom
      * rendering.
      */
-    const std::vector<BloomElement> &getElements() const;
+    const std::vector<BloomElement>& getElements() const;
     /**
      * @brief Retrieves the final composite bloom texture.
      */
     unsigned int getBloomTexture();
 
-  private:
+private:
     friend class Window;
 
     void renderDownsamples(
         unsigned int srcTexture,
-        const std::shared_ptr<opal::CommandBuffer> &commandBuffer);
+        const std::shared_ptr<opal::CommandBuffer>& commandBuffer);
     void renderUpsamples(
         float filterRadius,
-        const std::shared_ptr<opal::CommandBuffer> &commandBuffer);
+        const std::shared_ptr<opal::CommandBuffer>& commandBuffer);
 
     std::vector<BloomElement> elements;
     bool initialized = false;
