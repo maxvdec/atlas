@@ -22,6 +22,7 @@
 #include <functional>
 #include <memory>
 #include <string>
+#include <utility>
 #include <vector>
 
 class Biome;
@@ -217,7 +218,7 @@ class Terrain : public GameObject {
      * @param heightmapResource Resource pointing to the heightmap image.
      */
     Terrain(Resource heightmapResource)
-        : heightmap(heightmapResource), createdWithMap(true) {};
+        : heightmap(std::move(heightmapResource)), createdWithMap(true) {};
     /**
      * @brief Creates a procedurally generated terrain.
      *
@@ -228,8 +229,8 @@ class Terrain : public GameObject {
     template <typename T>
         requires std::is_base_of<TerrainGenerator, T>::value
     Terrain(T generator, int width = 512, int height = 512)
-        : generator(std::make_shared<T>(generator)), createdWithMap(false),
-          width(width), height(height){};
+        : generator(std::make_shared<T>(generator)), width(width),
+          height(height){};
     Terrain() = default;
 
     /**

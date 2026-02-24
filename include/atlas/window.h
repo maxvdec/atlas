@@ -13,7 +13,6 @@
 #include "atlas/camera.h"
 #include "atlas/core/renderable.h"
 #include "atlas/input.h"
-#include "atlas/network/pipe.h"
 #include "atlas/object.h"
 #include "atlas/scene.h"
 #include "atlas/texture.h"
@@ -162,38 +161,38 @@ class Monitor {
      *
      * @return (std::vector<VideoMode>) Vector of available video modes.
      */
-    std::vector<VideoMode> queryVideoModes();
+    std::vector<VideoMode> queryVideoModes() const;
     /**
      * @brief Gets the current video mode of this monitor.
      *
      * @return (VideoMode) The current video mode.
      */
-    VideoMode getCurrentVideoMode();
+    VideoMode getCurrentVideoMode() const;
 
     /**
      * @brief Gets the physical size of the monitor in millimeters.
      *
      * @return (std::tuple<int, int>) Width and height in millimeters.
      */
-    std::tuple<int, int> getPhysicalSize(); // in millimeters
+    std::tuple<int, int> getPhysicalSize() const; // in millimeters
     /**
      * @brief Gets the position of the monitor in the desktop coordinate system.
      *
      * @return (std::tuple<int, int>) X and Y position coordinates.
      */
-    std::tuple<int, int> getPosition();
+    std::tuple<int, int> getPosition() const;
     /**
      * @brief Gets the content scale factors for this monitor.
      *
      * @return (std::tuple<float, float>) Horizontal and vertical scale factors.
      */
-    std::tuple<float, float> getContentScale();
+    std::tuple<float, float> getContentScale() const;
     /**
      * @brief Gets the human-readable name of this monitor.
      *
      * @return (std::string) The monitor name.
      */
-    std::string getName();
+    std::string getName() const;
 
     /**
      * @brief Constructs a Monitor object.
@@ -261,7 +260,7 @@ class Window {
      *
      * @param config Window configuration settings.
      */
-    Window(WindowConfiguration config);
+    Window(const WindowConfiguration &config);
     /**
      * @brief Destructor for Window.
      *
@@ -297,7 +296,7 @@ class Window {
      *
      * @param config New window configuration.
      */
-    void setWindowed(WindowConfiguration config);
+    void setWindowed(const WindowConfiguration &config);
     /**
      * @brief Enumerates all available monitors.
      *
@@ -328,16 +327,14 @@ class Window {
      * object must be long-lived. This means that declaring it as a class
      * property is a good idea.
      */
-    inline void addPreludeObject(Renderable *object) {
+    void addPreludeObject(Renderable *object) {
         firstRenderables.push_back(object);
     }
 
     /**
      * @brief Registers a UI renderable so it is drawn after world geometry.
      */
-    inline void addUIObject(Renderable *object) {
-        uiRenderables.push_back(object);
-    }
+    void addUIObject(Renderable *object) { uiRenderables.push_back(object); }
 
     /**
      * @brief Adds a renderable to the late forward queue. Late forward
@@ -412,13 +409,13 @@ class Window {
      *
      * @return (Scene*) Pointer to the current scene.
      */
-    inline Scene *getCurrentScene() { return currentScene; }
+    Scene *getCurrentScene() { return currentScene; }
     /**
      * @brief Gets the current camera.
      *
      * @return (Camera*) Pointer to the current camera.
      */
-    inline Camera *getCamera() { return camera; }
+    Camera *getCamera() { return camera; }
     /**
      * @brief Adds a render target to the window.
      *
@@ -431,7 +428,7 @@ class Window {
      *
      * @return (Size2d) The width and height of the framebuffer.
      */
-    inline Size2d getSize() {
+    Size2d getSize() {
         int fbw, fbh;
         glfwGetFramebufferSize(static_cast<GLFWwindow *>(windowRef), &fbw,
                                &fbh);
@@ -442,25 +439,25 @@ class Window {
      * @brief Activates debug mode for the window.
      *
      */
-    inline void activateDebug() { this->debug = true; }
+    void activateDebug() { this->debug = true; }
     /**
      * @brief Deactivates debug mode for the window.
      *
      */
-    inline void deactivateDebug() { this->debug = false; }
+    void deactivateDebug() { this->debug = false; }
 
     /**
      * @brief Gets the delta time between frames.
      *
      * @return (float) Delta time in seconds.
      */
-    inline float getDeltaTime() { return this->deltaTime; }
+    float getDeltaTime() const { return this->deltaTime; }
     /**
      * @brief Gets the current frames per second.
      *
      * @return (float) Frames per second value.
      */
-    inline float getFramesPerSecond() { return this->framesPerSecond; }
+    float getFramesPerSecond() const { return this->framesPerSecond; }
 
     /**
      * @brief The gravity constant applied to physics bodies. Default is 9.81
@@ -494,19 +491,17 @@ class Window {
     /**
      * @brief Returns the active internal render scale.
      */
-    inline float getRenderScale() const { return this->renderScale; }
+    float getRenderScale() const { return this->renderScale; }
 
     /**
      * @brief Returns the SSAO-specific render scale.
      */
-    inline float getSSAORenderScale() const { return this->ssaoRenderScale; }
+    float getSSAORenderScale() const { return this->ssaoRenderScale; }
 
     /**
      * @brief Returns the opal device instance for rendering.
      */
-    inline std::shared_ptr<opal::Device> getDevice() const {
-        return this->device;
-    }
+    std::shared_ptr<opal::Device> getDevice() const { return this->device; }
 
     /**
      * @brief Returns the lazily created deferred geometry buffer.
@@ -586,8 +581,8 @@ class Window {
     void deferredRendering(
         RenderTarget *target,
         std::shared_ptr<opal::CommandBuffer> commandBuffer = nullptr);
-    void renderSSAO(
-        std::shared_ptr<opal::CommandBuffer> commandBuffer = nullptr);
+    void
+    renderSSAO(std::shared_ptr<opal::CommandBuffer> commandBuffer = nullptr);
     void updateFluidCaptures(
         std::shared_ptr<opal::CommandBuffer> commandBuffer = nullptr);
     void captureFluidReflection(
@@ -598,8 +593,9 @@ class Window {
         std::shared_ptr<opal::CommandBuffer> commandBuffer = nullptr);
     void markPipelineStateDirty();
     bool shouldRefreshPipeline(Renderable *renderable);
-    void setViewportState(int x, int y, int width, int height);
-    void updateBackbufferTarget(int width, int height);
+    void setViewportState(int x, int y, int newViewportWidth,
+                          int newViewportHeight);
+    void updateBackbufferTarget(int backbufferWidth, int backbufferHeight);
 
     template <typename T> void updatePipelineStateField(T &field, T value) {
         if (field != value) {

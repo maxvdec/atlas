@@ -14,7 +14,6 @@
 #include <algorithm>
 #include <cmath>
 #include <memory>
-#include <stdexcept>
 
 Texture Texture::createCheckerboard(int width, int height, int checkSize,
                                     Color color1, Color color2,
@@ -32,7 +31,8 @@ Texture Texture::createCheckerboard(int width, int height, int checkSize,
                 data[i + 0] = static_cast<unsigned char>(color1.r * 255);
                 data[i + 1] = static_cast<unsigned char>(color1.g * 255);
                 data[i + 2] = static_cast<unsigned char>(color1.b * 255);
-            } else {
+            }
+            else {
                 data[i + 0] = static_cast<unsigned char>(color2.r * 255);
                 data[i + 1] = static_cast<unsigned char>(color2.g * 255);
                 data[i + 2] = static_cast<unsigned char>(color2.b * 255);
@@ -63,10 +63,12 @@ Texture Texture::createCheckerboard(int width, int height, int checkSize,
 
     opalTexture->automaticallyGenerateMipmaps();
 
-    TextureCreationData creationData{width, height, 3};
+    TextureCreationData creationData{.width = width, .height = height, .channels = 3};
 
-    return Texture{Resource(),  creationData,       opalTexture->textureID,
-                   opalTexture, TextureType::Color, borderColor};
+    return Texture{
+        .resource = Resource(), .creationData = creationData, .id = opalTexture->textureID,
+        .texture = opalTexture, .type = TextureType::Color, .borderColor = borderColor
+    };
 }
 
 Texture Texture::createDoubleCheckerboard(
@@ -87,7 +89,8 @@ Texture Texture::createDoubleCheckerboard(
 
             if (bigCheck) {
                 finalColor = smallCheck ? color1 : color3;
-            } else {
+            }
+            else {
                 finalColor = smallCheck ? color2 : color3;
             }
 
@@ -120,18 +123,20 @@ Texture Texture::createDoubleCheckerboard(
 
     opalTexture->automaticallyGenerateMipmaps();
 
-    TextureCreationData creationData{width, height, 3};
+    TextureCreationData creationData{.width = width, .height = height, .channels = 3};
 
-    return Texture{.resource = Resource(),
-                   .creationData = creationData,
-                   .id = opalTexture->textureID,
-                   .texture = opalTexture,
-                   .type = TextureType::Color,
-                   .borderColor = borderColor};
+    return Texture{
+        .resource = Resource(),
+        .creationData = creationData,
+        .id = opalTexture->textureID,
+        .texture = opalTexture,
+        .type = TextureType::Color,
+        .borderColor = borderColor
+    };
 }
 
 Texture Texture::createTiledCheckerboard(int width, int height,
-                                         const std::vector<CheckerTile> &tiles,
+                                         const std::vector<CheckerTile>& tiles,
                                          TextureParameters params,
                                          Color borderColor) {
     std::vector<unsigned char> data(width * height * 3);
@@ -151,13 +156,13 @@ Texture Texture::createTiledCheckerboard(int width, int height,
             if (tileIndex >= numTiles)
                 tileIndex = numTiles - 1;
 
-            const CheckerTile &tile = tiles[tileIndex];
+            const CheckerTile& tile = tiles[tileIndex];
 
             bool isWhite = ((x % tileWidth) / tile.checkSize % 2) ^
-                           ((y % tileHeight) / tile.checkSize % 2);
+                ((y % tileHeight) / tile.checkSize % 2);
             int i = (y * width + x) * 3;
 
-            const Color &c = isWhite ? tile.color1 : tile.color2;
+            const Color& c = isWhite ? tile.color1 : tile.color2;
             data[i + 0] = static_cast<unsigned char>(c.r * 255);
             data[i + 1] = static_cast<unsigned char>(c.g * 255);
             data[i + 2] = static_cast<unsigned char>(c.b * 255);
@@ -188,13 +193,16 @@ Texture Texture::createTiledCheckerboard(int width, int height,
     opalTexture->automaticallyGenerateMipmaps();
 
     TextureCreationData creationData{
-        .width = width, .height = height, .channels = 3};
-    return Texture{.resource = Resource(),
-                   .creationData = creationData,
-                   .id = opalTexture->textureID,
-                   .texture = opalTexture,
-                   .type = TextureType::Color,
-                   .borderColor = borderColor};
+        .width = width, .height = height, .channels = 3
+    };
+    return Texture{
+        .resource = Resource(),
+        .creationData = creationData,
+        .id = opalTexture->textureID,
+        .texture = opalTexture,
+        .type = TextureType::Color,
+        .borderColor = borderColor
+    };
 }
 
 Texture Texture::createRainStreak(int width, int height,
@@ -217,11 +225,11 @@ Texture Texture::createRainStreak(int width, int height,
             float offset = (static_cast<float>(x) - center) * invHalfWidth;
             float radial = std::exp(-offset * offset * 12.0f);
             float alpha = std::clamp(
-                radial * (0.25f + taper * 0.65f) + headGlow * 0.1f, 0.0f, 1.0f);
+                (radial * (0.25f + taper * 0.65f)) + (headGlow * 0.1f), 0.0f, 1.0f);
 
             float brightness =
-                std::clamp(radial * 0.8f + headGlow * 0.2f, 0.0f, 1.0f);
-            float tint = 0.65f + 0.35f * headGlow;
+                std::clamp((radial * 0.8f) + (headGlow * 0.2f), 0.0f, 1.0f);
+            float tint = 0.65f + (0.35f * headGlow);
 
             int index = (y * width + x) * 4;
             data[index + 0] = static_cast<unsigned char>(brightness * 180.0f);
@@ -256,11 +264,14 @@ Texture Texture::createRainStreak(int width, int height,
     opalTexture->automaticallyGenerateMipmaps();
 
     TextureCreationData creationData{
-        .width = width, .height = height, .channels = 4};
-    return Texture{.resource = Resource(),
-                   .creationData = creationData,
-                   .id = opalTexture->textureID,
-                   .texture = opalTexture,
-                   .type = TextureType::Color,
-                   .borderColor = borderColor};
+        .width = width, .height = height, .channels = 4
+    };
+    return Texture{
+        .resource = Resource(),
+        .creationData = creationData,
+        .id = opalTexture->textureID,
+        .texture = opalTexture,
+        .type = TextureType::Color,
+        .borderColor = borderColor
+    };
 }

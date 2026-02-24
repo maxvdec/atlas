@@ -83,16 +83,21 @@ void Terrain::initialize() {
             "No heightmap resource or terrain generator provided");
     }
 
-    this->generateBiomes(data, height, width, nChannels);
+    this->generateBiomes(data, width, height, nChannels);
 
-    opal::TextureFormat texFormat =
-        nChannels == 4 ? opal::TextureFormat::Rgba8
-                       : (nChannels == 3 ? opal::TextureFormat::Rgb8
-                                         : opal::TextureFormat::Rgb16F);
-    opal::TextureDataFormat dataFormat =
-        nChannels == 4 ? opal::TextureDataFormat::Rgba
-                       : (nChannels == 3 ? opal::TextureDataFormat::Rgb
-                                         : opal::TextureDataFormat::Red);
+    opal::TextureFormat texFormat;
+    opal::TextureDataFormat dataFormat;
+
+    if (nChannels == 4) {
+        texFormat = opal::TextureFormat::Rgba8;
+        dataFormat = opal::TextureDataFormat::Rgba;
+    } else if (nChannels == 3) {
+        texFormat = opal::TextureFormat::Rgb8;
+        dataFormat = opal::TextureDataFormat::Rgb;
+    } else {
+        texFormat = opal::TextureFormat::Rgb16F;
+        dataFormat = opal::TextureDataFormat::Red;
+    }
     terrainTexture.texture =
         opal::Texture::create(opal::TextureType::Texture2D, texFormat, width,
                               height, dataFormat, data, 1);
@@ -110,33 +115,37 @@ void Terrain::initialize() {
 
     for (unsigned int i = 0; i <= rez - 1; i++) {
         for (unsigned int j = 0; j <= rez - 1; j++) {
-            vertices.push_back(-width / 2.0f + width * i / (float)rez);   // v.x
-            vertices.push_back(0.0f);                                     // v.y
-            vertices.push_back(-height / 2.0f + height * j / (float)rez); // v.z
-            vertices.push_back(i / (float)rez);                           // u
-            vertices.push_back(j / (float)rez);                           // v
+            vertices.push_back((-width / 2.0f) +
+                               (width * i / (float)rez)); // v.x
+            vertices.push_back(0.0f);                     // v.y
+            vertices.push_back((-height / 2.0f) +
+                               (height * j / (float)rez)); // v.z
+            vertices.push_back(i / (float)rez);            // u
+            vertices.push_back(j / (float)rez);            // v
 
-            vertices.push_back(-width / 2.0f +
-                               width * (i + 1) / (float)rez);             // v.x
-            vertices.push_back(0.0f);                                     // v.y
-            vertices.push_back(-height / 2.0f + height * j / (float)rez); // v.z
-            vertices.push_back((i + 1) / (float)rez);                     // u
-            vertices.push_back(j / (float)rez);                           // v
+            vertices.push_back((-width / 2.0f) +
+                               (width * (i + 1) / (float)rez)); // v.x
+            vertices.push_back(0.0f);                           // v.y
+            vertices.push_back((-height / 2.0f) +
+                               (height * j / (float)rez)); // v.z
+            vertices.push_back((i + 1) / (float)rez);      // u
+            vertices.push_back(j / (float)rez);            // v
 
-            vertices.push_back(-width / 2.0f + width * i / (float)rez); // v.x
-            vertices.push_back(0.0f);                                   // v.y
-            vertices.push_back(-height / 2.0f +
-                               height * (j + 1) / (float)rez); // v.z
-            vertices.push_back(i / (float)rez);                // u
-            vertices.push_back((j + 1) / (float)rez);          // v
+            vertices.push_back((-width / 2.0f) +
+                               (width * i / (float)rez)); // v.x
+            vertices.push_back(0.0f);                     // v.y
+            vertices.push_back((-height / 2.0f) +
+                               (height * (j + 1) / (float)rez)); // v.z
+            vertices.push_back(i / (float)rez);                  // u
+            vertices.push_back((j + 1) / (float)rez);            // v
 
-            vertices.push_back(-width / 2.0f +
-                               width * (i + 1) / (float)rez); // v.x
-            vertices.push_back(0.0f);                         // v.y
-            vertices.push_back(-height / 2.0f +
-                               height * (j + 1) / (float)rez); // v.z
-            vertices.push_back((i + 1) / (float)rez);          // u
-            vertices.push_back((j + 1) / (float)rez);          // v
+            vertices.push_back((-width / 2.0f) +
+                               (width * (i + 1) / (float)rez)); // v.x
+            vertices.push_back(0.0f);                           // v.y
+            vertices.push_back((-height / 2.0f) +
+                               (height * (j + 1) / (float)rez)); // v.z
+            vertices.push_back((i + 1) / (float)rez);            // u
+            vertices.push_back((j + 1) / (float)rez);            // v
         }
     }
 
@@ -246,7 +255,7 @@ void Terrain::render(float, std::shared_ptr<opal::CommandBuffer> commandBuffer,
     terrainPipeline->setUniform1i("biomesCount", biomes.size());
     bool hasShadow = false;
     Window *mainWindow = Window::mainWindow;
-    for (auto dirLight : mainWindow->getCurrentScene()->directionalLights) {
+    for (auto *dirLight : mainWindow->getCurrentScene()->directionalLights) {
         terrainPipeline->setUniform3f("lightDir", dirLight->direction.x,
                                       dirLight->direction.y,
                                       dirLight->direction.z);
@@ -316,14 +325,12 @@ void Terrain::updateModelMatrix() {
     glm::mat4 scale_matrix = glm::scale(glm::mat4(1.0f), scale.toGlm());
 
     glm::mat4 rotation_matrix = glm::mat4(1.0f);
-    rotation_matrix =
-        glm::rotate(rotation_matrix, glm::radians(float(rotation.roll)),
-                    glm::vec3(0, 0, 1));
-    rotation_matrix =
-        glm::rotate(rotation_matrix, glm::radians(float(rotation.pitch)),
-                    glm::vec3(1, 0, 0));
-    rotation_matrix = glm::rotate(
-        rotation_matrix, glm::radians(float(rotation.yaw)), glm::vec3(0, 1, 0));
+    rotation_matrix = glm::rotate(rotation_matrix, glm::radians(rotation.roll),
+                                  glm::vec3(0, 0, 1));
+    rotation_matrix = glm::rotate(rotation_matrix, glm::radians(rotation.pitch),
+                                  glm::vec3(1, 0, 0));
+    rotation_matrix = glm::rotate(rotation_matrix, glm::radians(rotation.yaw),
+                                  glm::vec3(0, 1, 0));
 
     glm::mat4 translation_matrix =
         glm::translate(glm::mat4(1.0f), position.toGlm());

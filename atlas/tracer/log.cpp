@@ -24,7 +24,7 @@ void TracerServices::startTracing(int port) {
     tracerPipe->setPort(port);
     tracerPipe->start();
 
-    tracerPipe->onRecieve([](const std::string &message) {
+    tracerPipe->onReceive([](const std::string &message) {
         std::cout << "Tracer received: " << message << std::endl;
     });
 }

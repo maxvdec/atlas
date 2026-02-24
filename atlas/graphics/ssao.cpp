@@ -14,25 +14,30 @@
 #include <glm/geometric.hpp>
 #include <glm/gtc/random.hpp>
 #include <random>
+#include <utility>
 #include <vector>
 #include "opal/opal.h"
 
 void Window::setupSSAO() {
     atlas_log("Setting up SSAO (kernel size: " +
-              std::to_string(this->ssaoKernelSize) + ")");
+        std::to_string(this->ssaoKernelSize) + ")");
     std::uniform_real_distribution<float> randomFloats(0.0, 1.0);
-    std::default_random_engine generator;
+    static std::default_random_engine generator([]
+    {
+        std::random_device rd;
+        return std::default_random_engine(rd());
+    }());
     this->ssaoKernel.clear();
     this->ssaoKernel.reserve(this->ssaoKernelSize);
     for (int i = 0; i < this->ssaoKernelSize; ++i) {
-        glm::vec3 sample(randomFloats(generator) * 2.0 - 1.0,
-                         randomFloats(generator) * 2.0 - 1.0,
+        glm::vec3 sample((randomFloats(generator) * 2.0) - 1.0,
+                         (randomFloats(generator) * 2.0) - 1.0,
                          randomFloats(generator));
         sample = glm::normalize(sample);
         sample *= randomFloats(generator);
         float scale = static_cast<float>(i) /
-                      static_cast<float>(std::max(1, this->ssaoKernelSize));
-        scale = 0.1f + 0.9f * (scale * scale);
+            static_cast<float>(std::max(1, this->ssaoKernelSize));
+        scale = 0.1f + (0.9f * (scale * scale));
         sample *= scale;
         ssaoKernel.push_back(sample);
     }
@@ -40,8 +45,8 @@ void Window::setupSSAO() {
     this->ssaoNoise.clear();
     this->ssaoNoise.reserve(16);
     for (unsigned int i = 0; i < 16; i++) {
-        glm::vec3 noise(randomFloats(generator) * 2.0 - 1.0,
-                        randomFloats(generator) * 2.0 - 1.0, 0.0f);
+        glm::vec3 noise((randomFloats(generator) * 2.0) - 1.0,
+                        (randomFloats(generator) * 2.0) - 1.0, 0.0f);
         this->ssaoNoise.push_back(noise);
     }
 
@@ -87,7 +92,8 @@ void Window::renderSSAO(std::shared_ptr<opal::CommandBuffer> commandBuffer) {
         if (!this->lastSSAOCameraPosition.has_value() ||
             !this->lastSSAOCameraDirection.has_value()) {
             cameraMoved = true;
-        } else {
+        }
+        else {
             glm::vec3 lastPos = this->lastSSAOCameraPosition->toGlm();
             glm::vec3 lastDir = this->lastSSAOCameraDirection->toGlm();
             if (glm::length(currentPos - lastPos) > 0.15f ||
@@ -114,7 +120,7 @@ void Window::renderSSAO(std::shared_ptr<opal::CommandBuffer> commandBuffer) {
     this->ssaoUpdateCooldown = this->ssaoUpdateInterval;
 
     bool ownsCommandBuffer = false;
-    auto ssaoCommandBuffer = commandBuffer;
+    auto ssaoCommandBuffer = std::move(commandBuffer);
     if (ssaoCommandBuffer == nullptr) {
         ssaoCommandBuffer = Window::mainWindow->device->acquireCommandBuffer();
         ssaoCommandBuffer->start();
@@ -122,7 +128,7 @@ void Window::renderSSAO(std::shared_ptr<opal::CommandBuffer> commandBuffer) {
     }
     ssaoCommandBuffer->clearColor(1.0f, 1.0f, 1.0f, 1.0f);
     static std::shared_ptr<opal::DrawingState> ssaoState = nullptr;
-    static std::shared_ptr<opal::Buffer> ssaoBuffer = nullptr;
+    static std::shared_ptr<opal::Buffer> renderSSAOBuffer = nullptr;
     if (ssaoState == nullptr) {
         CoreVertex quadVertices[] = {
 #ifdef METAL
@@ -141,10 +147,10 @@ void Window::renderSSAO(std::shared_ptr<opal::CommandBuffer> commandBuffer) {
             {{1.0f, 1.0f, 0.0f}, Color::white(), {1.0f, 1.0f}}
 #endif
         };
-        ssaoBuffer = opal::Buffer::create(opal::BufferUsage::VertexBuffer,
-                                          sizeof(quadVertices), quadVertices);
-        ssaoState = opal::DrawingState::create(ssaoBuffer);
-        ssaoState->setBuffers(ssaoBuffer, nullptr);
+        renderSSAOBuffer = opal::Buffer::create(opal::BufferUsage::VertexBuffer,
+                                                sizeof(quadVertices), quadVertices);
+        ssaoState = opal::DrawingState::create(renderSSAOBuffer);
+        ssaoState->setBuffers(renderSSAOBuffer, nullptr);
 
         opal::VertexAttribute positionAttr{
             .name = "ssaoPosition",
@@ -155,7 +161,8 @@ void Window::renderSSAO(std::shared_ptr<opal::CommandBuffer> commandBuffer) {
             .size = 3,
             .stride = static_cast<uint>(sizeof(CoreVertex)),
             .inputRate = opal::VertexBindingInputRate::Vertex,
-            .divisor = 0};
+            .divisor = 0
+        };
         opal::VertexAttribute uvAttr{
             .name = "ssaoUV",
             .type = opal::VertexAttributeType::Float,
@@ -165,10 +172,13 @@ void Window::renderSSAO(std::shared_ptr<opal::CommandBuffer> commandBuffer) {
             .size = 2,
             .stride = static_cast<uint>(sizeof(CoreVertex)),
             .inputRate = opal::VertexBindingInputRate::Vertex,
-            .divisor = 0};
+            .divisor = 0
+        };
 
         std::vector<opal::VertexAttributeBinding> bindings = {
-            {positionAttr, ssaoBuffer}, {uvAttr, ssaoBuffer}};
+            {.attribute = positionAttr, .sourceBuffer = renderSSAOBuffer},
+            {.attribute = uvAttr, .sourceBuffer = renderSSAOBuffer}
+        };
         ssaoState->configureAttributes(bindings);
     }
 

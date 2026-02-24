@@ -16,7 +16,6 @@
 #include "opal/opal.h"
 #include <algorithm>
 #include <glad/glad.h>
-#include <iostream>
 #include <limits>
 #include <memory>
 #include <string>
@@ -139,8 +138,7 @@ buildGPUAreaLights(const std::vector<AreaLight *> &lights, int maxCount) {
             glm::vec3(light->position.x, light->position.y, light->position.z);
         gpu.right = glm::vec3(light->right.x, light->right.y, light->right.z);
         gpu.up = glm::vec3(light->up.x, light->up.y, light->up.z);
-        gpu.size = glm::vec2(static_cast<float>(light->size.width),
-                             static_cast<float>(light->size.height));
+        gpu.size = glm::vec2(light->size.width, light->size.height);
         gpu.diffuse = glm::vec3(light->color.r, light->color.g, light->color.b);
         gpu.specular = glm::vec3(light->shineColor.r, light->shineColor.g,
                                  light->shineColor.b);
@@ -412,6 +410,7 @@ void CoreObject::initialize() {
     std::vector<opal::VertexAttribute> vertexAttributes;
     opal::VertexBinding vertexBinding;
 
+    vertexAttributes.reserve(layoutDescriptors.size());
     for (const auto &attr : layoutDescriptors) {
         vertexAttributes.push_back(opal::VertexAttribute{
             .name = attr.name,
@@ -646,10 +645,8 @@ void CoreObject::render(float dt,
             ambientColor = scene->getAutomaticAmbientColor();
             ambientIntensity = scene->getAutomaticAmbientIntensity();
         }
-        this->pipeline->setUniform4f("ambientLight.color",
-                                     static_cast<float>(ambientColor.r),
-                                     static_cast<float>(ambientColor.g),
-                                     static_cast<float>(ambientColor.b), 1.0f);
+        this->pipeline->setUniform4f("ambientLight.color", ambientColor.r,
+                                     ambientColor.g, ambientColor.b, 1.0f);
         this->pipeline->setUniform1f("ambientLight.intensity",
                                      ambientIntensity);
 
@@ -729,7 +726,7 @@ void CoreObject::render(float dt,
 
         int boundParameters = 0;
 
-        for (auto light : scene->directionalLights) {
+        for (auto *light : scene->directionalLights) {
             if (!light->doesCastShadows) {
                 continue;
             }
@@ -764,7 +761,7 @@ void CoreObject::render(float dt,
             boundTextures++;
         }
 
-        for (auto light : scene->spotlights) {
+        for (auto *light : scene->spotlights) {
             if (!light->doesCastShadows) {
                 continue;
             }
@@ -791,8 +788,7 @@ void CoreObject::render(float dt,
             this->pipeline->setUniform1f(baseName + ".bias0",
                                          shadowParams.bias);
 #else
-            this->pipeline->setUniform1f(baseName + ".bias",
-                                         shadowParams.bias);
+            this->pipeline->setUniform1f(baseName + ".bias", shadowParams.bias);
 #endif
             this->pipeline->setUniform1i(baseName + ".isPointLight", 0);
 
@@ -800,7 +796,7 @@ void CoreObject::render(float dt,
             boundTextures++;
         }
 
-        for (auto light : scene->pointLights) {
+        for (auto *light : scene->pointLights) {
             if (!light->doesCastShadows) {
                 continue;
             }
@@ -945,7 +941,7 @@ void CoreObject::updateVertices() {
     vbo->unbind();
 }
 
-void CoreObject::update(Window &window) {
+void CoreObject::update(Window &) {
     if (!hasPhysics)
         return;
 
@@ -1022,14 +1018,12 @@ void Instance::updateModelMatrix() {
     glm::mat4 scale_matrix = glm::scale(glm::mat4(1.0f), scale.toGlm());
 
     glm::mat4 rotation_matrix = glm::mat4(1.0f);
-    rotation_matrix =
-        glm::rotate(rotation_matrix, glm::radians(float(rotation.roll)),
-                    glm::vec3(0, 0, 1));
-    rotation_matrix =
-        glm::rotate(rotation_matrix, glm::radians(float(rotation.pitch)),
-                    glm::vec3(1, 0, 0));
-    rotation_matrix = glm::rotate(
-        rotation_matrix, glm::radians(float(rotation.yaw)), glm::vec3(0, 1, 0));
+    rotation_matrix = glm::rotate(rotation_matrix, glm::radians(rotation.roll),
+                                  glm::vec3(0, 0, 1));
+    rotation_matrix = glm::rotate(rotation_matrix, glm::radians(rotation.pitch),
+                                  glm::vec3(1, 0, 0));
+    rotation_matrix = glm::rotate(rotation_matrix, glm::radians(rotation.yaw),
+                                  glm::vec3(0, 1, 0));
 
     glm::mat4 translation_matrix =
         glm::translate(glm::mat4(1.0f), position.toGlm());

@@ -15,6 +15,7 @@
 #include <atlas/tracer/log.h>
 #include <iostream>
 #include <string>
+#include <utility>
 
 PairKey::PairKey(JPH::BodyID b1, JPH::BodyID b2) {
     if (b1.GetIndexAndSequenceNumber() < b2.GetIndexAndSequenceNumber()) {
@@ -72,14 +73,14 @@ void GlobalContactListener::OnContactPersisted(
         return;
     }
     if (inBody1.IsSensor() || inBody2.IsSensor()) {
-        if (activePairs.find(key) == activePairs.end()) {
+        if (!activePairs.contains(key)) {
             activePairs.insert(key);
             queueSignalEnter(inBody1.GetID(), inBody2.GetID());
         }
         return;
     }
 
-    if (activePairs.find(key) == activePairs.end()) {
+    if (!activePairs.contains(key)) {
         activePairs.insert(key);
         queueEnter(inBody1.GetID(), inBody2.GetID());
     }
@@ -345,8 +346,7 @@ void GlobalContactListener::fireOnCollisionExit(const JPH::BodyID &inBody1,
 
 void JoltCollisionDispatcher::setup(bezel::PhysicsWorld *world) {
     std::cout << "Setting up JoltCollisionDispatcher" << std::endl;
-    this->contactListener =
-        std::make_shared<GlobalContactListener>(world->physicsSystem);
+    this->contactListener = std::make_shared<GlobalContactListener>();
     world->physicsSystem.SetContactListener(contactListener.get());
 }
 
@@ -357,8 +357,8 @@ void JoltCollisionDispatcher::update(bezel::PhysicsWorld *world) {
 
 bezel::RaycastResult
 bezel::Rigidbody::raycast(const Position3d &direction, float maxDistance,
-                          std::shared_ptr<bezel::PhysicsWorld> world,
-                          uint32_t ignoreBodyId) {
+                          const std::shared_ptr<bezel::PhysicsWorld> &world,
+                          uint32_t ignoreBodyId) const {
     Position3d origin = position;
 
     if (ignoreBodyId == bezel::INVALID_JOLT_ID) {
@@ -370,8 +370,8 @@ bezel::Rigidbody::raycast(const Position3d &direction, float maxDistance,
 
 bezel::RaycastResult
 bezel::Rigidbody::raycastAll(const Position3d &direction, float maxDistance,
-                             std::shared_ptr<bezel::PhysicsWorld> world,
-                             uint32_t ignoreBodyId) {
+                             const std::shared_ptr<bezel::PhysicsWorld> &world,
+                             uint32_t ignoreBodyId) const {
     Position3d origin = position;
 
     if (ignoreBodyId == bezel::INVALID_JOLT_ID) {
@@ -381,40 +381,40 @@ bezel::Rigidbody::raycastAll(const Position3d &direction, float maxDistance,
     return world->raycastAll(origin, direction, maxDistance, ignoreBodyId);
 }
 
-bezel::OverlapResult
-bezel::Rigidbody::overlap(std::shared_ptr<bezel::PhysicsWorld> world,
-                          std::shared_ptr<bezel::Collider> collider,
-                          const Position3d &position,
-                          const Rotation3d &rotation, uint32_t ignoreBodyId) {
+bezel::OverlapResult bezel::Rigidbody::overlap(
+    const std::shared_ptr<bezel::PhysicsWorld> &world,
+    std::shared_ptr<bezel::Collider> collider, const Position3d &position,
+    const Rotation3d &rotation, uint32_t ignoreBodyId) const {
     if (ignoreBodyId == bezel::INVALID_JOLT_ID) {
         ignoreBodyId = id.joltId;
     }
 
-    return world->overlap(world, collider, position, rotation, ignoreBodyId);
+    return world->overlap(world, std::move(collider), position, rotation,
+                          ignoreBodyId);
 }
 
 bezel::SweepResult
-bezel::Rigidbody::sweep(std::shared_ptr<bezel::PhysicsWorld> world,
+bezel::Rigidbody::sweep(const std::shared_ptr<bezel::PhysicsWorld> &world,
                         std::shared_ptr<bezel::Collider> collider,
                         const Position3d &direction, Position3d &endPosition,
-                        uint32_t ignoreBodyId) {
+                        uint32_t ignoreBodyId) const {
     if (ignoreBodyId == bezel::INVALID_JOLT_ID) {
         ignoreBodyId = id.joltId;
     }
 
-    return world->sweep(world, collider, position, rotation, direction,
-                        endPosition, ignoreBodyId);
+    return world->sweep(world, std::move(collider), position, rotation,
+                        direction, endPosition, ignoreBodyId);
 }
 
 bezel::SweepResult
-bezel::Rigidbody::sweepAll(std::shared_ptr<bezel::PhysicsWorld> world,
+bezel::Rigidbody::sweepAll(const std::shared_ptr<bezel::PhysicsWorld> &world,
                            std::shared_ptr<bezel::Collider> collider,
                            const Position3d &direction, Position3d &endPosition,
-                           uint32_t ignoreBodyId) {
+                           uint32_t ignoreBodyId) const {
     if (ignoreBodyId == bezel::INVALID_JOLT_ID) {
         ignoreBodyId = id.joltId;
     }
 
-    return world->sweepAll(world, collider, position, rotation, direction,
-                           endPosition, ignoreBodyId);
+    return world->sweepAll(world, std::move(collider), position, rotation,
+                           direction, endPosition, ignoreBodyId);
 }

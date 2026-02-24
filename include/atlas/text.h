@@ -108,7 +108,7 @@ struct Font {
      * @param fontSize The size of the font.
      * @return (Font) The created font instance.
      */
-    static Font fromResource(const std::string &fontName, Resource resource,
+    static Font fromResource(const std::string& fontName, const Resource& resource,
                              int fontSize);
     /**
      * @brief Gets the font associated with the given name.
@@ -116,7 +116,7 @@ struct Font {
      * @param fontName The name of the font to retrieve.
      * @return (Font&) The requested font.
      */
-    static Font &getFont(const std::string &fontName);
+    static Font& getFont(const std::string& fontName);
 
     /**
      * @brief Changes the size of the font. \warning This will regenerate the
@@ -126,7 +126,7 @@ struct Font {
      */
     void changeSize(int newSize);
 
-  private:
+private:
     static std::vector<Font> fonts;
 };
 
@@ -147,7 +147,7 @@ struct Font {
  * ```
  */
 class Text : public UIObject {
-  public:
+public:
     /**
      * @brief The content of the text to render.
      *
@@ -172,7 +172,8 @@ class Text : public UIObject {
      * @brief Function that constructs a new Text object.
      *
      */
-    Text() {};
+    Text() {
+    };
     /**
      * @brief Function that constructs a new Text object with the given
      * parameters.
@@ -182,9 +183,10 @@ class Text : public UIObject {
      * @param position The position of the text.
      * @param color The color of the text.
      */
-    Text(const std::string &text, const Font &font,
-         Position2d position = {0, 0}, const Color &color = Color::white())
-        : content(text), font(font), position(position), color(color) {}
+    Text(const std::string& text, const Font& font,
+         Position2d position = {0, 0}, const Color& color = Color::white())
+        : content(text), font(font), position(position), color(color) {
+    }
 
     /**
      * @brief Prepares vertex buffers, shader state, and fonts for runtime use.
@@ -198,7 +200,7 @@ class Text : public UIObject {
     void render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
                 bool updatePipeline = false) override;
 
-  private:
+private:
     std::shared_ptr<opal::DrawingState> vao = nullptr;
     std::shared_ptr<opal::Buffer> vertexBuffer = nullptr;
     size_t vertexBufferCapacity = sizeof(float) * 6 * 4; // capacity in bytes

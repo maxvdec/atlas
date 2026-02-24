@@ -13,6 +13,7 @@
 #include <cstring>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #ifdef METAL
 #include "metal_state.h"
 #endif
@@ -310,8 +311,8 @@ void Buffer::updateData(size_t offset, size_t size, const void *data) {
         if (oldBuffer != nullptr && bufferState.size > 0) {
             std::memcpy(newBuffer->contents(), oldBuffer->contents(),
                         bufferState.size);
-            newBuffer->didModifyRange(
-                NS::Range::Make(0, static_cast<NS::UInteger>(bufferState.size)));
+            newBuffer->didModifyRange(NS::Range::Make(
+                0, static_cast<NS::UInteger>(bufferState.size)));
         }
         bufferState.buffer = newBuffer;
         bufferState.size = newSize;
@@ -322,9 +323,8 @@ void Buffer::updateData(size_t offset, size_t size, const void *data) {
 
     std::memcpy(static_cast<uint8_t *>(bufferState.buffer->contents()) + offset,
                 data, size);
-    bufferState.buffer->didModifyRange(
-        NS::Range::Make(static_cast<NS::UInteger>(offset),
-                        static_cast<NS::UInteger>(size)));
+    bufferState.buffer->didModifyRange(NS::Range::Make(
+        static_cast<NS::UInteger>(offset), static_cast<NS::UInteger>(size)));
 #endif
 }
 
@@ -411,8 +411,8 @@ std::shared_ptr<DrawingState>
 DrawingState::create(std::shared_ptr<Buffer> vertexBuffer,
                      std::shared_ptr<Buffer> indexBuffer) {
     auto state = std::make_shared<DrawingState>();
-    state->vertexBuffer = vertexBuffer;
-    state->indexBuffer = indexBuffer;
+    state->vertexBuffer = std::move(vertexBuffer);
+    state->indexBuffer = std::move(indexBuffer);
 
 #ifdef OPENGL
     glGenVertexArrays(1, &state->index);
@@ -422,8 +422,8 @@ DrawingState::create(std::shared_ptr<Buffer> vertexBuffer,
 
 void DrawingState::setBuffers(std::shared_ptr<Buffer> vertexBuffer,
                               std::shared_ptr<Buffer> indexBuffer) {
-    this->vertexBuffer = vertexBuffer;
-    this->indexBuffer = indexBuffer;
+    this->vertexBuffer = std::move(vertexBuffer);
+    this->indexBuffer = std::move(indexBuffer);
 }
 
 void DrawingState::bind() const {

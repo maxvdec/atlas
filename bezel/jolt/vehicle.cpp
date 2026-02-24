@@ -21,14 +21,14 @@
 
 namespace {
 
-static inline JPH::Vec3 toJoltVec3(const Position3d &v) {
+inline JPH::Vec3 toJoltVec3(const Position3d &v) {
     return JPH::Vec3(static_cast<float>(v.x), static_cast<float>(v.y),
                      static_cast<float>(v.z));
 }
 
-static inline float degToRad(float deg) { return deg * (JPH::JPH_PI / 180.0f); }
+inline float degToRad(float deg) { return deg * (JPH::JPH_PI / 180.0f); }
 
-static inline JPH::ETransmissionMode toJolt(bezel::VehicleTransmissionMode m) {
+inline JPH::ETransmissionMode toJolt(bezel::VehicleTransmissionMode m) {
     switch (m) {
     case bezel::VehicleTransmissionMode::Manual:
         return JPH::ETransmissionMode::Manual;
@@ -85,7 +85,7 @@ bezel::Vehicle &bezel::Vehicle::operator=(Vehicle &&other) noexcept {
 
 bool bezel::Vehicle::isCreated() const { return constraint != nullptr; }
 
-void bezel::Vehicle::create(std::shared_ptr<PhysicsWorld> world) {
+void bezel::Vehicle::create(const std::shared_ptr<PhysicsWorld> &world) {
     if (!world) {
         atlas_error("Vehicle::create failed: world is null");
         return;
@@ -250,7 +250,7 @@ void bezel::Vehicle::create(std::shared_ptr<PhysicsWorld> world) {
     }
 }
 
-void bezel::Vehicle::destroy(std::shared_ptr<PhysicsWorld> world) {
+void bezel::Vehicle::destroy(const std::shared_ptr<PhysicsWorld> &world) {
     if (!world) {
         constraint = nullptr;
         controller = nullptr;

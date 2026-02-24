@@ -29,3 +29,4 @@ docs/latex
 build.ninja
 Testing
 __pycache__
+build_verify

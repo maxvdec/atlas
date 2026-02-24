@@ -713,7 +713,8 @@ struct ShaderProgram {
      * @param v2 The third component of the vec4.
      * @param v3 The fourth component of the vec4.
      */
-    void setUniform4f(std::string name, float v0, float v1, float v2, float v3);
+    void setUniform4f(const std::string &name, float v0, float v1, float v2,
+                      float v3) const;
     /**
      * @brief Sets a vec3 uniform variable in the shader program.
      *
@@ -722,7 +723,8 @@ struct ShaderProgram {
      * @param v1 The second component of the vec3.
      * @param v2 The third component of the vec3.
      */
-    void setUniform3f(std::string name, float v0, float v1, float v2);
+    void setUniform3f(const std::string &name, float v0, float v1,
+                      float v2) const;
     /**
      * @brief Sets a vec2 uniform variable in the shader program.
      *
@@ -730,35 +732,36 @@ struct ShaderProgram {
      * @param v0  The first component of the vec2.
      * @param v1  The second component of the vec2.
      */
-    void setUniform2f(std::string name, float v0, float v1);
+    void setUniform2f(const std::string &name, float v0, float v1) const;
     /**
      * @brief Sets a float uniform variable in the shader program.
      *
      * @param name The name of the uniform variable.
      * @param v0 The float value to set.
      */
-    void setUniform1f(std::string name, float v0);
+    void setUniform1f(const std::string &name, float v0) const;
     /**
      * @brief Sets an integer uniform variable in the shader program.
      *
      * @param name The name of the uniform variable.
      * @param v0 The integer value to set.
      */
-    void setUniform1i(std::string name, int v0);
+    void setUniform1i(const std::string &name, int v0) const;
     /**
      * @brief Sets a 4x4 matrix uniform variable in the shader program.
      *
      * @param name The name of the uniform variable.
      * @param matrix The 4x4 matrix to set.
      */
-    void setUniformMat4f(std::string name, const glm::mat4 &matrix);
+    void setUniformMat4f(const std::string &name,
+                         const glm::mat4 &matrix) const;
     /**
      * @brief Sets a boolean uniform variable in the shader program.
      *
      * @param name The name of the uniform variable.
      * @param value The boolean value to set.
      */
-    void setUniformBool(std::string name, bool value);
+    void setUniformBool(const std::string &name, bool value) const;
 };
 
 #endif // SHADER_H

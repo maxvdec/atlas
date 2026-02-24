@@ -9,6 +9,7 @@
 
 #include "atlas/tracer/data.h"
 #include "atlas/tracer/log.h"
+#include <algorithm>
 #include <json.hpp>
 
 using json = nlohmann::json;
@@ -63,9 +64,7 @@ void ResourceEventInfo::send() {
         tracker.unloadedResources += 1;
         if (sizeMb > 0.0f) {
             tracker.totalMemoryMb -= sizeMb;
-            if (tracker.totalMemoryMb < 0.0f) {
-                tracker.totalMemoryMb = 0.0f;
-            }
+            tracker.totalMemoryMb = std::max(tracker.totalMemoryMb, 0.0f);
         }
     }
 

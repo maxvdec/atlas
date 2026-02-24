@@ -12,6 +12,7 @@
 
 #include "atlas/core/shader.h"
 #include <array>
+#include <utility>
 #include <vector>
 #pragma once
 
@@ -280,12 +281,13 @@ struct Texture {
                                     Color borderColor = {0, 0, 0, 0});
 
   private:
-    static void applyWrappingMode(TextureWrappingMode mode,
-                                  opal::TextureAxis axis,
-                                  std::shared_ptr<opal::Texture> texture);
-    static void applyFilteringModes(TextureFilteringMode minMode,
-                                    TextureFilteringMode magMode,
-                                    std::shared_ptr<opal::Texture> texture);
+    static void
+    applyWrappingMode(TextureWrappingMode mode, opal::TextureAxis axis,
+                      const std::shared_ptr<opal::Texture> &texture);
+    static void
+    applyFilteringModes(TextureFilteringMode minMode,
+                        TextureFilteringMode magMode,
+                        const std::shared_ptr<opal::Texture> &texture);
 };
 
 /**
@@ -477,12 +479,12 @@ class RenderTarget : public Renderable {
      * @brief Hides the render target from the window.
      *
      */
-    void hide();
+    void hide() const;
     /**
      * @brief Shows the render target in the window.
      *
      */
-    void show();
+    void show() const;
 
     /**
      * @brief The CoreObject used to render the render target.
@@ -517,7 +519,7 @@ class RenderTarget : public Renderable {
      *
      * @param effect The effect to add.
      */
-    inline void addEffect(std::shared_ptr<Effect> effect) {
+    void addEffect(const std::shared_ptr<Effect> &effect) {
         effects.push_back(effect);
     }
 
@@ -585,10 +587,11 @@ class Skybox : public Renderable {
   public:
     static std::shared_ptr<Skybox> create(Cubemap cubemap, Window &window) {
         auto skybox = std::make_shared<Skybox>();
-        skybox->cubemap = cubemap;
+        skybox->cubemap = std::move(cubemap);
         skybox->display(window);
         return skybox;
     }
+
     /**
      * @brief The cubemap texture used for the skybox.
      *
@@ -611,12 +614,12 @@ class Skybox : public Renderable {
      * @brief Hides the skybox from the window.
      *
      */
-    void hide();
+    void hide() const;
     /**
      * @brief Shows the skybox in the window.
      *
      */
-    void show();
+    void show() const;
 
     /**
      * @brief Renders the skybox cube using the stored cubemap texture.
@@ -627,11 +630,11 @@ class Skybox : public Renderable {
      * @brief Updates the view matrix while removing translation for correct
      * skybox rendering.
      */
-    void setViewMatrix(const glm::mat4 &view) override;
+    void setViewMatrix(const glm::mat4 &newView) override;
     /**
      * @brief Stores the projection matrix used for skybox rendering.
      */
-    void setProjectionMatrix(const glm::mat4 &projection) override;
+    void setProjectionMatrix(const glm::mat4 &newProjection) override;
 
     bool canUseDeferredRendering() override { return false; }
 
@@ -695,9 +698,9 @@ class BloomRenderTarget {
     void renderDownsamples(
         unsigned int srcTexture,
         const std::shared_ptr<opal::CommandBuffer> &commandBuffer);
-    void renderUpsamples(
-        float filterRadius,
-        const std::shared_ptr<opal::CommandBuffer> &commandBuffer);
+    void
+    renderUpsamples(float filterRadius,
+                    const std::shared_ptr<opal::CommandBuffer> &commandBuffer);
 
     std::vector<BloomElement> elements;
     bool initialized = false;

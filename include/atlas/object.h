@@ -441,8 +441,8 @@ class CoreObject : public GameObject {
      */
     CoreObject clone() const;
 
-    inline void show() override { isVisible = true; }
-    inline void hide() override { isVisible = false; }
+    void show() override { isVisible = true; }
+    void hide() override { isVisible = false; }
 
     /**
      * @brief The light attached to this object if it's emissive. Used for
@@ -508,7 +508,7 @@ class CoreObject : public GameObject {
      *
      * @return (Instance&) Reference to the newly created instance.
      */
-    inline Instance &createInstance() {
+    Instance &createInstance() {
         instances.emplace_back();
         Instance &inst = instances.back();
 
@@ -569,23 +569,21 @@ class CoreObject : public GameObject {
     /**
      * @brief Gets the world-space position of the object.
      */
-    inline Position3d getPosition() const override { return position; }
+    Position3d getPosition() const override { return position; }
 
     /**
      * @brief Returns a copy of the object's vertex collection.
      */
-    inline std::vector<CoreVertex> getVertices() const override {
-        return vertices;
-    }
+    std::vector<CoreVertex> getVertices() const override { return vertices; }
 
     /**
      * @brief Gets the current non-uniform scale applied to the object.
      */
-    inline Size3d getScale() const override { return scale; }
+    Size3d getScale() const override { return scale; }
     /**
      * @brief Reports whether the object is configured to cast shadows.
      */
-    inline bool canCastShadows() const override { return castsShadows; }
+    bool canCastShadows() const override { return castsShadows; }
 
     Rotation3d getRotation() const override { return rotation; }
 
@@ -749,23 +747,21 @@ class Model : public GameObject {
      *
      * @param resource The resource to load the model from.
      */
-    void fromResource(Resource resource);
+    void fromResource(const Resource &resource);
 
     /**
      * @brief Gets the objects that make up the model.
      *
      * @return (std::vector<std::shared_ptr<CoreObject>>) The objects.
      */
-    inline std::vector<std::shared_ptr<CoreObject>> getObjects() {
-        return objects;
-    }
+    std::vector<std::shared_ptr<CoreObject>> getObjects() { return objects; }
 
     /**
      * @brief Moves the model by a certain amount.
      *
      * @param deltaPosition The amount to move the model by.
      */
-    inline void move(const Position3d &deltaPosition) override {
+    void move(const Position3d &deltaPosition) override {
         for (auto &obj : objects) {
             obj->move(deltaPosition);
         }
@@ -776,7 +772,7 @@ class Model : public GameObject {
      *
      * @param newPosition The new position to set.
      */
-    inline void setPosition(const Position3d &newPosition) override {
+    void setPosition(const Position3d &newPosition) override {
         for (auto &obj : objects) {
             obj->setPosition(newPosition);
         }
@@ -785,7 +781,7 @@ class Model : public GameObject {
     /**
      * @brief Assigns an absolute rotation to every mesh in the model.
      */
-    inline void setRotation(const Rotation3d &newRotation) override {
+    void setRotation(const Rotation3d &newRotation) override {
         for (auto &obj : objects) {
             obj->setRotation(newRotation);
         }
@@ -794,7 +790,7 @@ class Model : public GameObject {
     /**
      * @brief Applies a texture to all contained CoreObjects.
      */
-    inline void attachTexture(const Texture &texture) override {
+    void attachTexture(const Texture &texture) override {
         for (auto &obj : objects) {
             obj->attachTexture(texture);
         }
@@ -803,7 +799,7 @@ class Model : public GameObject {
     /**
      * @brief Scales every mesh in the model uniformly.
      */
-    inline void setScale(const Scale3d &newScale) override {
+    void setScale(const Scale3d &newScale) override {
         for (auto &obj : objects) {
             obj->setScale(newScale);
         }
@@ -812,7 +808,7 @@ class Model : public GameObject {
     /**
      * @brief Stores the current view matrix for every sub-object.
      */
-    inline void setViewMatrix(const glm::mat4 &view) override {
+    void setViewMatrix(const glm::mat4 &view) override {
         for (auto &obj : objects) {
             obj->setViewMatrix(view);
         }
@@ -821,9 +817,8 @@ class Model : public GameObject {
     /**
      * @brief Renders each CoreObject that composes the model.
      */
-    inline void render(float dt,
-                       std::shared_ptr<opal::CommandBuffer> commandBuffer,
-                       bool updatePipeline = false) override {
+    void render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
+                bool updatePipeline = false) override {
         for (auto &component : components) {
             component->update(dt);
         }
@@ -836,7 +831,7 @@ class Model : public GameObject {
      * @brief Updates all underlying CoreObjects to keep transforms and
      * animations synchronized.
      */
-    inline void update(Window &window) override {
+    void update(Window &window) override {
         for (auto &obj : objects) {
             obj->update(window);
         }
@@ -846,7 +841,7 @@ class Model : public GameObject {
      * @brief Initializes every CoreObject and attached component within the
      * model.
      */
-    inline void initialize() override {
+    void initialize() override {
         for (auto &component : components) {
             component->init();
         }
@@ -858,7 +853,7 @@ class Model : public GameObject {
     /**
      * @brief Sets the projection matrix for all meshes composing the model.
      */
-    inline void setProjectionMatrix(const glm::mat4 &projection) override {
+    void setProjectionMatrix(const glm::mat4 &projection) override {
         for (auto &obj : objects) {
             obj->setProjectionMatrix(projection);
         }
@@ -877,8 +872,7 @@ class Model : public GameObject {
      * @brief Retrieves the shader program currently bound to the first mesh.
      */
 
-    inline std::optional<std::shared_ptr<opal::Pipeline>>
-    getPipeline() override {
+    std::optional<std::shared_ptr<opal::Pipeline>> getPipeline() override {
         if (objects.empty()) {
             return std::nullopt;
         }
@@ -888,7 +882,7 @@ class Model : public GameObject {
     /**
      * @brief Returns the world-space position of the first mesh in the model.
      */
-    inline Position3d getPosition() const override {
+    Position3d getPosition() const override {
         if (objects.empty()) {
             throw std::runtime_error("Model has no objects.");
         }
@@ -921,7 +915,7 @@ class Model : public GameObject {
     std::vector<std::shared_ptr<CoreObject>> objects;
     std::string directory;
 
-    void loadModel(Resource resource);
+    void loadModel(const Resource &resource);
     void processNode(aiNode *node, const aiScene *scene,
                      glm::mat4 parentTransform,
                      std::unordered_map<std::string, Texture> &textureCache);

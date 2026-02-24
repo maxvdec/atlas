@@ -14,12 +14,14 @@
 #include <bezel/jolt/world.h>
 #include <cmath>
 #include <memory>
+#include <utility>
 
 void bezel::Rigidbody::setCollider(std::shared_ptr<Collider> collider) {
-    this->collider = collider;
+    this->collider = std::move(collider);
 }
 
-void bezel::Rigidbody::create(std::shared_ptr<bezel::PhysicsWorld> world) {
+void bezel::Rigidbody::create(
+    const std::shared_ptr<bezel::PhysicsWorld> &world) {
     if (this->id.joltId != bezel::INVALID_JOLT_ID) {
         destroy(world);
     }
@@ -82,7 +84,8 @@ void bezel::Rigidbody::create(std::shared_ptr<bezel::PhysicsWorld> world) {
     bodyIdToRigidbodyMap[joltBodyId] = this;
 }
 
-void bezel::Rigidbody::refresh(std::shared_ptr<bezel::PhysicsWorld> world) {
+void bezel::Rigidbody::refresh(
+    const std::shared_ptr<bezel::PhysicsWorld> &world) {
     auto joltBodyId = JPH::BodyID(id.joltId);
     JPH::BodyLockRead lock(world->physicsSystem.GetBodyLockInterface(),
                            joltBodyId);
@@ -136,7 +139,7 @@ void bezel::Rigidbody::refresh(std::shared_ptr<bezel::PhysicsWorld> world) {
 }
 
 void bezel::Rigidbody::setPosition(const Position3d &position,
-                                   std::shared_ptr<PhysicsWorld> world) {
+                                   const std::shared_ptr<PhysicsWorld> &world) {
     if (id.joltId == INVALID_JOLT_ID) {
         this->position = position;
         return;
@@ -152,7 +155,7 @@ void bezel::Rigidbody::setPosition(const Position3d &position,
 }
 
 void bezel::Rigidbody::setRotation(const Rotation3d &rotation,
-                                   std::shared_ptr<PhysicsWorld> world) {
+                                   const std::shared_ptr<PhysicsWorld> &world) {
     if (id.joltId == INVALID_JOLT_ID) {
         this->rotation = rotation;
         return;
@@ -170,7 +173,8 @@ void bezel::Rigidbody::setRotation(const Rotation3d &rotation,
                               JPH::EActivation::Activate);
 }
 
-void bezel::Rigidbody::destroy(std::shared_ptr<bezel::PhysicsWorld> world) {
+void bezel::Rigidbody::destroy(
+    const std::shared_ptr<bezel::PhysicsWorld> &world) {
     if (id.joltId == INVALID_JOLT_ID) {
         return;
     }
@@ -186,7 +190,7 @@ void bezel::Rigidbody::destroy(std::shared_ptr<bezel::PhysicsWorld> world) {
 }
 
 void bezel::Rigidbody::applyProperties(
-    std::shared_ptr<bezel::PhysicsWorld> world) {
+    const std::shared_ptr<bezel::PhysicsWorld> &world) {
     if (id.joltId == INVALID_JOLT_ID) {
         return;
     }

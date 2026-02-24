@@ -9,8 +9,6 @@
 
 #include "atlas/tracer/data.h"
 #include "opal/opal.h"
-#include "atlas/tracer/log.h"
-#include <array>
 #include <cctype>
 #include <cstdlib>
 #include <cstdint>
@@ -157,7 +155,7 @@ void Shader::compile() {
     auto &shaderState = metal::shaderState(this);
 
     NS::Error *error = nullptr;
-    auto compileOptions = MTL::CompileOptions::alloc()->init();
+    auto *compileOptions = MTL::CompileOptions::alloc()->init();
     compileOptions->setLanguageVersion(MTL::LanguageVersion4_0);
     compileOptions->setFastMathEnabled(true);
 
@@ -245,7 +243,8 @@ std::shared_ptr<ShaderProgram> ShaderProgram::create() {
 #endif
 }
 
-void ShaderProgram::attachShader(std::shared_ptr<Shader> shader, int callerId) {
+void ShaderProgram::attachShader(const std::shared_ptr<Shader> &shader,
+                                 int callerId) {
     if (shader == nullptr) {
         throw std::runtime_error("Cannot attach null shader");
     }
@@ -274,8 +273,8 @@ void ShaderProgram::attachShader(std::shared_ptr<Shader> shader, int callerId) {
     info.resourceType = DebugResourceType::Shader;
     info.operation = DebugResourceOperation::Loaded;
     info.callerObject = std::to_string(callerId);
-    info.frameNumber = Device::globalInstance ? Device::globalInstance->frameCount
-                                              : 0;
+    info.frameNumber =
+        Device::globalInstance ? Device::globalInstance->frameCount : 0;
     info.sizeMb =
         static_cast<float>(shader->source ? strlen(shader->source) : 0) /
         (1024.0f * 1024.0f);
@@ -310,7 +309,8 @@ void ShaderProgram::link() {
     }
 
     if (state.vertexFunction == nullptr || state.fragmentFunction == nullptr) {
-        throw std::runtime_error("Metal shader program requires vertex and fragment shaders");
+        throw std::runtime_error(
+            "Metal shader program requires vertex and fragment shaders");
     }
 
     if (vertexSource == nullptr || fragmentSource == nullptr) {

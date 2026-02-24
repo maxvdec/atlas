@@ -10,6 +10,7 @@
 #include "atlas/tracer/data.h"
 #include "opal/opal.h"
 #include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <cstring>
 #include <memory>
@@ -244,7 +245,7 @@ inline void metalWriteChannel(uint8_t *dst, size_t bytesPerChannel,
                               float value) {
     if (bytesPerChannel == 1) {
         float clamped = std::clamp(value, 0.0f, 1.0f);
-        dst[0] = static_cast<uint8_t>(clamped * 255.0f + 0.5f);
+        dst[0] = static_cast<uint8_t>(std::lroundf(clamped * 255.0f));
         return;
     }
     if (bytesPerChannel == 2) {
@@ -293,19 +294,19 @@ MetalUploadBuffer prepareMetalUpload(const void *data, int width, int height,
     uint8_t *dstBytes = upload.converted.data();
 
     for (size_t texel = 0; texel < texelCount; ++texel) {
-        const uint8_t *srcTexel = srcBytes + texel * srcBytesPerTexel;
-        uint8_t *dstTexel = dstBytes + texel * dstBytesPerTexel;
+        const uint8_t *srcTexel = srcBytes + (texel * srcBytesPerTexel);
+        uint8_t *dstTexel = dstBytes + (texel * dstBytesPerTexel);
 
         for (size_t channel = 0; channel < dstChannels; ++channel) {
             float value = 0.0f;
             if (channel < srcChannels) {
                 value =
-                    metalReadChannel(srcTexel + channel * srcBytesPerChannel,
+                    metalReadChannel(srcTexel + (channel * srcBytesPerChannel),
                                      srcBytesPerChannel);
             } else if (channel == 3) {
                 value = 1.0f;
             }
-            metalWriteChannel(dstTexel + channel * dstBytesPerChannel,
+            metalWriteChannel(dstTexel + (channel * dstBytesPerChannel),
                               dstBytesPerChannel, value);
         }
     }
@@ -759,8 +760,8 @@ void Texture::readData(void *buffer, TextureDataFormat dataFormat) {
     MTL::Region region =
         MTL::Region::Make2D(0, 0, static_cast<NS::UInteger>(width),
                             static_cast<NS::UInteger>(height));
-    NS::UInteger bytesPerRow =
-        static_cast<NS::UInteger>(width * static_cast<int>(bytesPerPixel));
+    size_t rowBytes = static_cast<size_t>(width) * bytesPerPixel;
+    NS::UInteger bytesPerRow = static_cast<NS::UInteger>(rowBytes);
     state.texture->getBytes(buffer, bytesPerRow, region, 0);
 #endif
 }
@@ -921,7 +922,7 @@ void Texture::setParameters3D(TextureWrapMode wrapS, TextureWrapMode wrapT,
 }
 
 void Pipeline::bindTexture(const std::string &name,
-                           std::shared_ptr<Texture> texture,
+                           const std::shared_ptr<Texture> &texture,
                            [[maybe_unused]] int unit, int callerId) {
 #ifdef OPENGL
     glActiveTexture(GL_TEXTURE0 + unit);

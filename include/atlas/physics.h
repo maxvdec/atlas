@@ -450,7 +450,7 @@ class Rigidbody : public Component {
     /** @brief Adds a tag for filtering and game logic. */
     void addTag(const std::string &tag);
     /** @brief Removes a previously added tag. */
-    void removeTag(const std::string &tag);
+    void removeTag(const std::string &tag) const;
 
     /** @brief Sets linear and angular damping coefficients. */
     void setDamping(float linearDamping, float angularDamping);

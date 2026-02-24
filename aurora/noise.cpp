@@ -8,6 +8,7 @@
 //
 
 #include "aurora/procedural.h"
+#include <algorithm>
 #include <cmath>
 #include <cstdlib>
 #include <random>
@@ -15,7 +16,7 @@
 
 float PerlinNoise::fade(float t) { return t * t * t * (t * (t * 6 - 15) + 10); }
 
-float PerlinNoise::lerp(float a, float b, float t) { return a + t * (b - a); }
+float PerlinNoise::lerp(float t, float a, float b) { return a + (t * (b - a)); }
 
 float PerlinNoise::grad(int hash, float x, float y) {
     int h = hash & 3;
@@ -35,9 +36,10 @@ PerlinNoise::PerlinNoise(unsigned int seed) {
             perm[i] = i;
         }
 
-        std::srand(seed);
+        std::default_random_engine generator(seed);
+        std::uniform_int_distribution<int> distribution(0, 255);
         for (int i = 255; i > 0; i--) {
-            int j = std::rand() % (i + 1);
+            int j = distribution(generator) % (i + 1);
             std::swap(perm[i], perm[j]);
         }
 
@@ -78,7 +80,7 @@ const int SimplexNoise::grad3[12][3] = {
 int SimplexNoise::fastfloor(float x) { return x > 0 ? (int)x : (int)x - 1; }
 
 float SimplexNoise::dot(const int *g, float x, float y) {
-    return g[0] * x + g[1] * y;
+    return (g[0] * x) + (g[1] * y);
 }
 
 float SimplexNoise::noise(float xin, float yin) {
@@ -106,18 +108,18 @@ float SimplexNoise::noise(float xin, float yin) {
 
     float x1 = x0 - i1 + G2;
     float y1 = y0 - j1 + G2;
-    float x2 = x0 - 1.0f + 2.0f * G2;
-    float y2 = y0 - 1.0f + 2.0f * G2;
+    float x2 = x0 - 1.0f + (2.0f * G2);
+    float y2 = y0 - 1.0f + (2.0f * G2);
 
     int ii = i & 255;
 
-    float t0 = 0.5f - x0 * x0 - y0 * y0;
+    float t0 = 0.5f - (x0 * x0) - (y0 * y0);
     float n0 = t0 < 0 ? 0.0f : pow(t0, 4) * dot(grad3[ii % 12], x0, y0);
 
-    float t1 = 0.5f - x1 * x1 - y1 * y1;
+    float t1 = 0.5f - (x1 * x1) - (y1 * y1);
     float n1 = t1 < 0 ? 0.0f : pow(t1, 4) * dot(grad3[(ii + i1) % 12], x1, y1);
 
-    float t2 = 0.5f - x2 * x2 - y2 * y2;
+    float t2 = 0.5f - (x2 * x2) - (y2 * y2);
     float n2 = t2 < 0 ? 0.0f : pow(t2, 4) * dot(grad3[(ii + 1) % 12], x2, y2);
 
     return 70.0f * (n0 + n1 + n2);
@@ -125,10 +127,11 @@ float SimplexNoise::noise(float xin, float yin) {
 
 WorleyNoise::WorleyNoise(int numPoints, unsigned int seed)
     : numPoints(numPoints) {
-    std::srand(seed);
+    std::default_random_engine generator(seed);
+    std::uniform_real_distribution<float> distribution(0.0f, 1.0f);
     for (int i = 0; i < this->numPoints; i++) {
-        float x = static_cast<float>(std::rand()) / RAND_MAX;
-        float y = static_cast<float>(std::rand()) / RAND_MAX;
+        float x = distribution(generator);
+        float y = distribution(generator);
         featurePoints.emplace_back(x, y);
     }
 }
@@ -138,10 +141,8 @@ float WorleyNoise::noise(float x, float y) const {
     for (const auto &point : featurePoints) {
         float dx = x - point.first;
         float dy = y - point.second;
-        float dist = sqrt(dx * dx + dy * dy);
-        if (dist < minDist) {
-            minDist = dist;
-        }
+        float dist = sqrt((dx * dx) + (dy * dy));
+        minDist = std::min(dist, minDist);
     }
     return minDist;
 }
@@ -189,7 +190,8 @@ float Noise::worley(float x, float y) {
     if (useSeed) {
         return WorleyNoise(16, static_cast<unsigned int>(seed)).noise(x, y);
     } else if (!initializedSeed) {
-        std::default_random_engine generator;
+        std::random_device rd;
+        std::default_random_engine generator(rd());
         std::uniform_int_distribution<unsigned int> distribution(0, 10000);
         seed = static_cast<float>(distribution(generator));
         return WorleyNoise(16, static_cast<unsigned int>(seed)).noise(x, y);

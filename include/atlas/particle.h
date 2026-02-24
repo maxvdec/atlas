@@ -182,11 +182,11 @@ class ParticleEmitter : public GameObject {
      * @brief Updates the projection matrix used to align particles to the
      * camera frustum.
      */
-    void setProjectionMatrix(const glm::mat4 &projection) override;
+    void setProjectionMatrix(const glm::mat4 &newProjection) override;
     /**
      * @brief Stores the view matrix so particles can face the camera.
      */
-    void setViewMatrix(const glm::mat4 &view) override;
+    void setViewMatrix(const glm::mat4 &newView) override;
 
     /**
      * @brief Constructs a new ParticleEmitter object.
@@ -203,22 +203,22 @@ class ParticleEmitter : public GameObject {
     /**
      * @brief Sets a tint color that modulates the particle sprite.
      */
-    void setColor(const Color &color) override;
+    void setColor(const Color &newColor) override;
     /**
      * @brief Function that enables the use of a texture for the particles.
      *
      */
-    inline void enableTexture() { useTexture = true; };
+    void enableTexture() { useTexture = true; };
     /**
      * @brief Function that disables the use of a texture for the particles.
      *
      */
-    inline void disableTexture() { useTexture = false; };
+    void disableTexture() { useTexture = false; };
 
     void setPosition(const Position3d &newPosition) override;
     void move(const Position3d &deltaPosition) override;
-    inline Position3d getPosition() const override { return position; };
-    inline bool canCastShadows() const override { return false; };
+    Position3d getPosition() const override { return position; };
+    bool canCastShadows() const override { return false; };
 
     bool canUseDeferredRendering() override { return false; }
 
@@ -249,9 +249,9 @@ class ParticleEmitter : public GameObject {
     /**
      * @brief Sets the settings for the particles.
      *
-     * @param settings The particle settings to apply.
+     * @param particleSettings The particle settings to apply.
      */
-    void setParticleSettings(const ParticleSettings &settings);
+    void setParticleSettings(const ParticleSettings &particleSettings);
 
     /**
      * @brief Emits particles once.
@@ -285,9 +285,7 @@ class ParticleEmitter : public GameObject {
      *
      * @param rate The spawn rate in particles per second.
      */
-    inline void setSpawnRate(int rate) {
-        setSpawnRate(static_cast<float>(rate));
-    }
+    void setSpawnRate(int rate) { setSpawnRate(static_cast<float>(rate)); }
 
     /**
      * @brief The settings used for particle behavior and appearance.

@@ -18,6 +18,7 @@
 #include "finewave/audio.h"
 #include "finewave/effect.h"
 #include <memory>
+#include <utility>
 
 /**
  * @brief Component that provides audio playback capabilities to an object. It
@@ -45,7 +46,7 @@ class AudioPlayer : public Component {
      * @brief Construct a new empty AudioPlayer object
      *
      */
-    AudioPlayer() : sourceInitialized(false) {}
+    AudioPlayer() {}
 
     /**
      * @brief Destroy the Audio Player object and release resources.
@@ -89,7 +90,7 @@ class AudioPlayer : public Component {
      * @brief Initialize the audio player and prepare it for playback.
      *
      */
-    inline void init() override {
+    void init() override {
         if (!sourceInitialized) {
             source = std::make_unique<AudioSource>();
             sourceInitialized = true;
@@ -100,7 +101,7 @@ class AudioPlayer : public Component {
      * @brief Play the audio from the beginning or resume if paused.
      *
      */
-    inline void play() {
+    void play() {
         ensureSourceInitialized();
         source->play();
     }
@@ -109,7 +110,7 @@ class AudioPlayer : public Component {
      * @brief Pause the audio playback. It can be resumed later.
      *
      */
-    inline void pause() {
+    void pause() {
         ensureSourceInitialized();
         source->pause();
     }
@@ -118,7 +119,7 @@ class AudioPlayer : public Component {
      * @brief Stop the audio playback and reset to the beginning.
      *
      */
-    inline void stop() {
+    void stop() {
         ensureSourceInitialized();
         source->stop();
     }
@@ -128,9 +129,9 @@ class AudioPlayer : public Component {
      *
      * @param sourceResource The resource containing the audio file.
      */
-    inline void setSource(Resource sourceResource) {
+    void setSource(Resource sourceResource) {
         ensureSourceInitialized();
-        source->fromFile(sourceResource);
+        source->fromFile(std::move(sourceResource));
     }
 
     /**
@@ -138,7 +139,7 @@ class AudioPlayer : public Component {
      *
      * @param dt The delta time since the last update.
      */
-    inline void update(float) override {
+    void update(float) override {
         ensureSourceInitialized();
         Window *window = Window::mainWindow;
         Camera *mainCamera = window->getCamera();
@@ -161,7 +162,7 @@ class AudioPlayer : public Component {
      *
      * @param position The new position of the audio source.
      */
-    inline void setPosition(Position3d position) {
+    void setPosition(Position3d position) {
         ensureSourceInitialized();
         source->setPosition(position);
     }
@@ -171,7 +172,7 @@ class AudioPlayer : public Component {
      * affected by the listener's position.
      *
      */
-    inline void useSpatialization() {
+    void useSpatialization() {
         ensureSourceInitialized();
         source->useSpatialization();
     }
@@ -181,7 +182,7 @@ class AudioPlayer : public Component {
      * uniformly regardless of the listener's position.
      *
      */
-    inline void disableSpatialization() {
+    void disableSpatialization() {
         ensureSourceInitialized();
         source->disableSpatialization();
     }
@@ -194,9 +195,9 @@ class AudioPlayer : public Component {
     std::unique_ptr<AudioSource> source;
 
   private:
-    bool sourceInitialized;
+    bool sourceInitialized{};
 
-    inline void ensureSourceInitialized() {
+    void ensureSourceInitialized() {
         if (!sourceInitialized) {
             source = std::make_unique<AudioSource>();
             sourceInitialized = true;

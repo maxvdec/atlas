@@ -7,11 +7,10 @@
  Copyright (c) 2025 Max Van den Eynde
 */
 
-#include "bezel/bezel.h"
 #include "atlas/object.h"
 #include "atlas/texture.h"
 #include "atlas/units.h"
-#include <memory>
+#include <numbers>
 #include <vector>
 
 CoreObject createBox(Size3d size, Color color) {
@@ -407,10 +406,10 @@ CoreObject createSphere(double radius, unsigned int sectorCount,
     std::vector<CoreVertex> vertices;
     std::vector<Index> indices;
 
-    const double PI = 3.141592653589793;
+    const double PI = std::numbers::pi;
 
     for (unsigned int i = 0; i <= stackCount; ++i) {
-        double stackAngle = PI / 2 - i * (PI / stackCount);
+        double stackAngle = (PI / 2) - (i * (PI / stackCount));
         double xy = radius * cos(stackAngle);
         double z = radius * sin(stackAngle);
 

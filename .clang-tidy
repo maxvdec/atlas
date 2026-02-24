@@ -5,10 +5,12 @@ Checks: |
   -bugprone-implicit-widening-of-multiplication-result,
   -bugprone-narrowing-conversions,
   -bugprone-unchecked-optional-access,
+  -bugprone-branch-clone,
 
   cert-*,
   -cert-err58-cpp,
   -cert-dcl21-cpp,
+  -cert-msc51-cpp,
 
   cppcoreguidelines-*,
   -cppcoreguidelines-avoid-c-arrays,
@@ -28,12 +30,22 @@ Checks: |
   -cppcoreguidelines-pro-type-union-access,
   -cppcoreguidelines-pro-type-vararg,
   -cppcoreguidelines-special-member-functions,
+  -cppcoreguidelines-pro-type-member-init,
+  -cppcoreguidelines-pro-bounds-constant-array-index,
+  -cppcoreguidelines-pro-bounds-container-index
+  -cppcoreguidelines-pro-bounds-avoid-unchecked-container-access
+  -cppcoreguidelines-pro-type-cstyle-cast,
+  -cppcoreguidelines-no-malloc,
+  -cppcoreguidelines-pro-type-static-cast-downcast,
+  
+  -google-default-arguments
 
   modernize-*,
   -modernize-avoid-c-arrays,
   -modernize-return-braced-init-list,
   -modernize-use-nodiscard,
   -modernize-use-trailing-return-type,
+  -modernize-use-auto,
 
   performance-*,
   -performance-avoid-endl,

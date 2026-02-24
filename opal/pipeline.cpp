@@ -8,12 +8,11 @@
 //
 
 #include "opal/opal.h"
-#include "atlas/tracer/log.h"
 #include <algorithm>
 #include <cstring>
 #include <memory>
 #include <stdexcept>
-#include <unordered_set>
+#include <utility>
 #include <vector>
 #ifdef METAL
 #include "metal_state.h"
@@ -41,14 +40,14 @@ namespace {
 constexpr NS::UInteger kVertexStreamBufferIndex = 24;
 constexpr NS::UInteger kInstanceStreamBufferIndex = 25;
 
-template <typename T> static inline T alignUp(T value, T alignment) {
+template <typename T> inline T alignUp(T value, T alignment) {
     if (alignment <= 1) {
         return value;
     }
     return (value + alignment - 1) / alignment * alignment;
 }
 
-static MTL::BlendFactor toMetalBlendFactor(BlendFunc factor) {
+MTL::BlendFactor toMetalBlendFactor(BlendFunc factor) {
     switch (factor) {
     case BlendFunc::Zero:
         return MTL::BlendFactorZero;
@@ -75,7 +74,7 @@ static MTL::BlendFactor toMetalBlendFactor(BlendFunc factor) {
     }
 }
 
-static MTL::BlendOperation toMetalBlendOperation(BlendEquation equation) {
+MTL::BlendOperation toMetalBlendOperation(BlendEquation equation) {
     switch (equation) {
     case BlendEquation::Add:
         return MTL::BlendOperationAdd;
@@ -92,7 +91,7 @@ static MTL::BlendOperation toMetalBlendOperation(BlendEquation equation) {
     }
 }
 
-static MTL::CompareFunction toMetalCompare(CompareOp op) {
+MTL::CompareFunction toMetalCompare(CompareOp op) {
     switch (op) {
     case CompareOp::Never:
         return MTL::CompareFunctionNever;
@@ -115,7 +114,7 @@ static MTL::CompareFunction toMetalCompare(CompareOp op) {
     }
 }
 
-static MTL::PrimitiveType toMetalPrimitive(PrimitiveStyle style) {
+MTL::PrimitiveType toMetalPrimitive(PrimitiveStyle style) {
     switch (style) {
     case PrimitiveStyle::Points:
         return MTL::PrimitiveTypePoint;
@@ -136,7 +135,7 @@ static MTL::PrimitiveType toMetalPrimitive(PrimitiveStyle style) {
     }
 }
 
-static MTL::CullMode toMetalCull(CullMode mode) {
+MTL::CullMode toMetalCull(CullMode mode) {
     switch (mode) {
     case CullMode::None:
         return MTL::CullModeNone;
@@ -151,7 +150,7 @@ static MTL::CullMode toMetalCull(CullMode mode) {
     }
 }
 
-static MTL::Winding toMetalWinding(FrontFace face) {
+MTL::Winding toMetalWinding(FrontFace face) {
     switch (face) {
     case FrontFace::Clockwise:
         return MTL::WindingClockwise;
@@ -162,7 +161,7 @@ static MTL::Winding toMetalWinding(FrontFace face) {
     }
 }
 
-static MTL::TriangleFillMode toMetalFillMode(RasterizerMode mode) {
+MTL::TriangleFillMode toMetalFillMode(RasterizerMode mode) {
     switch (mode) {
     case RasterizerMode::Fill:
         return MTL::TriangleFillModeFill;
@@ -175,11 +174,10 @@ static MTL::TriangleFillMode toMetalFillMode(RasterizerMode mode) {
     }
 }
 
-static void ensureMetalDepthStencilState(metal::PipelineState &state,
-                                         MTL::Device *device,
-                                         bool depthTestEnabled,
-                                         bool depthWriteEnabled,
-                                         MTL::CompareFunction depthCompare) {
+void ensureMetalDepthStencilState(metal::PipelineState &state,
+                                  MTL::Device *device, bool depthTestEnabled,
+                                  bool depthWriteEnabled,
+                                  MTL::CompareFunction depthCompare) {
     if (device == nullptr) {
         return;
     }
@@ -210,8 +208,8 @@ static void ensureMetalDepthStencilState(metal::PipelineState &state,
     state.depthStencilState = newState;
 }
 
-static MTL::VertexFormat toMetalVertexFormat(VertexAttributeType type,
-                                             uint size, bool normalized) {
+MTL::VertexFormat toMetalVertexFormat(VertexAttributeType type, uint size,
+                                      bool normalized) {
     switch (type) {
     case VertexAttributeType::Float:
         if (size == 1)
@@ -298,9 +296,9 @@ static MTL::VertexFormat toMetalVertexFormat(VertexAttributeType type,
     }
 }
 
-static void updateMetalUniform(Pipeline *pipeline, const std::string &name,
-                               const void *data, size_t size,
-                               bool clampToDeclaredSize) {
+void updateMetalUniform(Pipeline *pipeline, const std::string &name,
+                        const void *data, size_t size,
+                        bool clampToDeclaredSize) {
     if (pipeline == nullptr || pipeline->shaderProgram == nullptr ||
         data == nullptr || size == 0) {
         return;
@@ -367,7 +365,7 @@ std::vector<std::shared_ptr<CoreRenderPass>> RenderPass::cachedRenderPasses =
 #endif
 
 void Pipeline::setShaderProgram(std::shared_ptr<ShaderProgram> program) {
-    this->shaderProgram = program;
+    this->shaderProgram = std::move(program);
 }
 
 void Pipeline::setVertexAttributes(
@@ -456,8 +454,8 @@ void Pipeline::enableClipDistance(int index, bool enabled) {
     }
 }
 
-uint Pipeline::getGLBlendFactor(BlendFunc func) const {
-    switch (func) {
+uint Pipeline::getGLBlendFactor(BlendFunc factor) const {
+    switch (factor) {
     case BlendFunc::Zero:
         return GL_ZERO;
     case BlendFunc::One:
@@ -815,7 +813,7 @@ void Pipeline::bind() {
 #endif
 }
 
-bool Pipeline::operator==(std::shared_ptr<Pipeline> pipeline) const {
+bool Pipeline::operator==(const std::shared_ptr<Pipeline> &pipeline) const {
     if (this->primitiveStyle != pipeline->primitiveStyle) {
         return false;
     }

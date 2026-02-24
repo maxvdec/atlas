@@ -91,7 +91,7 @@ class AudioData {
      *
      * @return (Id) The audio data ID.
      */
-    inline Id getId() const { return id; }
+    Id getId() const { return id; }
 
     bool isMono = false;
 
@@ -139,7 +139,7 @@ class AudioSource {
      *
      * @param buffer Shared pointer to audio data.
      */
-    void setData(std::shared_ptr<AudioData> buffer);
+    void setData(const std::shared_ptr<AudioData> &buffer);
     /**
      * @brief Loads audio data directly from a resource file.
      *
@@ -218,7 +218,7 @@ class AudioSource {
      *
      * @param effect The audio effect to apply.
      */
-    void applyEffect(const AudioEffect &effect);
+    void applyEffect(const AudioEffect &effect) const;
 
     /**
      * @brief Gets the current position of the audio source.

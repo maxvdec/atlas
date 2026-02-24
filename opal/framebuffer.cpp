@@ -8,9 +8,9 @@
 //
 
 #include "opal/opal.h"
-#include "atlas/tracer/log.h"
 #include <algorithm>
 #include <memory>
+#include <utility>
 #ifdef METAL
 #include "metal_state.h"
 #endif
@@ -105,7 +105,7 @@ std::shared_ptr<RenderPass> RenderPass::create() {
 }
 
 void RenderPass::setFramebuffer(std::shared_ptr<Framebuffer> framebuffer) {
-    this->framebuffer = framebuffer;
+    this->framebuffer = std::move(framebuffer);
 }
 
 std::shared_ptr<Framebuffer> Framebuffer::create(int width, int height) {
@@ -136,7 +136,7 @@ std::shared_ptr<Framebuffer> Framebuffer::create() {
     return framebuffer;
 }
 
-void Framebuffer::attachTexture(std::shared_ptr<Texture> texture,
+void Framebuffer::attachTexture(const std::shared_ptr<Texture> &texture,
                                 int attachmentIndex) {
 #ifdef OPENGL
     glBindFramebuffer(GL_FRAMEBUFFER, framebufferID);
@@ -181,7 +181,7 @@ void Framebuffer::addAttachment(const Attachment &attachment) {
 #endif
 }
 
-void Framebuffer::attachCubemap(std::shared_ptr<Texture> texture,
+void Framebuffer::attachCubemap(const std::shared_ptr<Texture> &texture,
                                 Attachment::Type attachmentType) {
 #ifdef OPENGL
     glBindFramebuffer(GL_FRAMEBUFFER, framebufferID);
@@ -211,8 +211,8 @@ void Framebuffer::attachCubemap(std::shared_ptr<Texture> texture,
 #endif
 }
 
-void Framebuffer::attachCubemapFace(std::shared_ptr<Texture> texture, int face,
-                                    Attachment::Type attachmentType) {
+void Framebuffer::attachCubemapFace(const std::shared_ptr<Texture> &texture,
+                                    int face, Attachment::Type attachmentType) {
 #ifdef OPENGL
     glBindFramebuffer(GL_FRAMEBUFFER, framebufferID);
     GLenum glAttachmentType;
@@ -375,8 +375,8 @@ std::shared_ptr<ResolveAction>
 ResolveAction::create(std::shared_ptr<Framebuffer> source,
                       std::shared_ptr<Framebuffer> destination) {
     auto action = std::make_shared<ResolveAction>();
-    action->source = source;
-    action->destination = destination;
+    action->source = std::move(source);
+    action->destination = std::move(destination);
     action->colorAttachmentIndex = -1;
     action->resolveColor = true;
     action->resolveDepth = true;
@@ -387,8 +387,8 @@ std::shared_ptr<ResolveAction> ResolveAction::createForColorAttachment(
     std::shared_ptr<Framebuffer> source,
     std::shared_ptr<Framebuffer> destination, int colorAttachmentIndex) {
     auto action = std::make_shared<ResolveAction>();
-    action->source = source;
-    action->destination = destination;
+    action->source = std::move(source);
+    action->destination = std::move(destination);
     action->colorAttachmentIndex = colorAttachmentIndex;
     action->resolveColor = true;
     action->resolveDepth = false;
@@ -399,15 +399,16 @@ std::shared_ptr<ResolveAction>
 ResolveAction::createForDepth(std::shared_ptr<Framebuffer> source,
                               std::shared_ptr<Framebuffer> destination) {
     auto action = std::make_shared<ResolveAction>();
-    action->source = source;
-    action->destination = destination;
+    action->source = std::move(source);
+    action->destination = std::move(destination);
     action->colorAttachmentIndex = -1;
     action->resolveColor = false;
     action->resolveDepth = true;
     return action;
 }
 
-void CommandBuffer::performResolve(std::shared_ptr<ResolveAction> action) {
+void CommandBuffer::performResolve(
+    const std::shared_ptr<ResolveAction> &action) {
 #ifdef OPENGL
     glBindFramebuffer(GL_READ_FRAMEBUFFER, action->source->framebufferID);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, action->destination->framebufferID);

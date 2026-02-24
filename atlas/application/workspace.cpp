@@ -10,9 +10,9 @@
 #include "atlas/workspace.h"
 #include "atlas/tracer/log.h"
 
-Resource Workspace::createResource(const fs::path &path, std::string name,
+Resource Workspace::createResource(const fs::path& path, const std::string& name,
                                    ResourceType type) {
-    for (const auto &res : resources) {
+    for (const auto& res : resources) {
         if (res.name == name) {
             atlas_log("Resource already exists: " + name);
             return res;
@@ -22,7 +22,8 @@ Resource Workspace::createResource(const fs::path &path, std::string name,
     Resource res;
     if (rootPath && path.is_relative()) {
         res.path = rootPath.value() / path;
-    } else {
+    }
+    else {
         res.path = path;
     }
     res.name = name;
@@ -32,30 +33,31 @@ Resource Workspace::createResource(const fs::path &path, std::string name,
 }
 
 ResourceGroup
-Workspace::createResourceGroup(std::string groupName,
-                               const std::vector<Resource> &resources) {
+Workspace::createResourceGroup(const std::string& groupName,
+                               const std::vector<Resource>& initResources) {
     atlas_log("Creating resource group: " + groupName);
     ResourceGroup group;
     group.groupName = groupName;
-    group.resources = resources;
+    group.resources = initResources;
     resourceGroups.push_back(group);
     return group;
 }
 
-Resource Workspace::getResource(std::string name) {
-    for (const auto &res : resources) {
+Resource Workspace::getResource(const std::string& name) {
+    for (const auto& res : resources) {
         if (res.name == name) {
             return res;
         }
     }
     atlas_warning("Resource not found: " + name);
+    return Resource();
 }
 
 std::vector<Resource> Workspace::getAllResources() { return resources; }
 
 std::vector<Resource> Workspace::getResourcesByType(ResourceType type) {
     std::vector<Resource> filtered;
-    for (const auto &res : resources) {
+    for (const auto& res : resources) {
         if (res.type == type) {
             filtered.push_back(res);
         }
@@ -67,20 +69,22 @@ std::vector<ResourceGroup> Workspace::getAllResourceGroups() {
     return resourceGroups;
 }
 
-ResourceGroup Workspace::getResourceGroup(std::string groupName) {
-    for (const auto &group : resourceGroups) {
+ResourceGroup Workspace::getResourceGroup(const std::string& groupName) {
+    for (const auto& group : resourceGroups) {
         if (group.groupName == groupName) {
             return group;
         }
     }
     atlas_warning("Resource group not found: " + groupName);
+    return ResourceGroup();
 }
 
-Resource ResourceGroup::findResource(std::string name) {
-    for (const auto &res : resources) {
+Resource ResourceGroup::findResource(const std::string& name) {
+    for (const auto& res : resources) {
         if (res.name == name) {
             return res;
         }
     }
     atlas_error("Resource not found in group: " + name);
+    return Resource();
 }

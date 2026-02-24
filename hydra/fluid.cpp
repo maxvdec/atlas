@@ -25,7 +25,7 @@
 #include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
 
-Fluid::Fluid() : GameObject() {
+Fluid::Fluid() {
     renderLateForward = true;
     buildPlaneGeometry();
     updateModelMatrix();
@@ -261,8 +261,8 @@ void Fluid::update(Window &window) {
     captureUpdateTimer = 0.0f;
 }
 
-void Fluid::updateCapture(Window &window,
-                          std::shared_ptr<opal::CommandBuffer> commandBuffer) {
+void Fluid::updateCapture(
+    Window &window, const std::shared_ptr<opal::CommandBuffer> &commandBuffer) {
     ensureTargets(window);
 
     if (!reflectionTarget || !refractionTarget) {
@@ -314,7 +314,8 @@ void Fluid::setExtent(const Size2d &ext) {
 void Fluid::setWaterColor(const Color &newColor) { color = newColor; }
 
 void Fluid::ensureTargets(Window &window) {
-    auto refreshTarget = [this, &window](std::shared_ptr<RenderTarget> &target) {
+    auto refreshTarget = [this,
+                          &window](std::shared_ptr<RenderTarget> &target) {
         GLFWwindow *glfwWindow = static_cast<GLFWwindow *>(window.windowRef);
         int fbWidth = 0;
         int fbHeight = 0;
@@ -412,14 +413,11 @@ void Fluid::updateModelMatrix() {
     glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), getFinalScale());
 
     glm::mat4 rotationMatrix = glm::mat4(1.0f);
-    rotationMatrix = glm::rotate(
-        rotationMatrix, glm::radians(static_cast<float>(rotation.roll)),
-        glm::vec3(0.0f, 0.0f, 1.0f));
-    rotationMatrix = glm::rotate(
-        rotationMatrix, glm::radians(static_cast<float>(rotation.pitch)),
-        glm::vec3(1.0f, 0.0f, 0.0f));
-    rotationMatrix = glm::rotate(rotationMatrix,
-                                 glm::radians(static_cast<float>(rotation.yaw)),
+    rotationMatrix = glm::rotate(rotationMatrix, glm::radians(rotation.roll),
+                                 glm::vec3(0.0f, 0.0f, 1.0f));
+    rotationMatrix = glm::rotate(rotationMatrix, glm::radians(rotation.pitch),
+                                 glm::vec3(1.0f, 0.0f, 0.0f));
+    rotationMatrix = glm::rotate(rotationMatrix, glm::radians(rotation.yaw),
                                  glm::vec3(0.0f, 1.0f, 0.0f));
 
     glm::mat4 translationMatrix =

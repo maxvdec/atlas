@@ -11,7 +11,6 @@
 #define TRACER_DATA_H
 
 #include <string>
-#include <vector>
 
 /**
  * @file atlas/tracer/data.h

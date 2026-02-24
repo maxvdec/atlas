@@ -83,44 +83,44 @@ const char *BroadPhaseLayerImpl::GetBroadPhaseLayerName(
 }
 #endif
 
-bool ObjectLayerPairFilterImpl::ShouldCollide(
-    JPH::ObjectLayer inObject1, JPH::ObjectLayer inObject2) const {
+bool ObjectLayerPairFilterImpl::ShouldCollide(JPH::ObjectLayer inLayer1,
+                                              JPH::ObjectLayer inLayer2) const {
     using namespace bezel::jolt::layers;
 
-    if (inObject1 == SENSOR)
-        return inObject2 != SENSOR;
-    if (inObject2 == SENSOR)
-        return inObject1 != SENSOR;
+    if (inLayer1 == SENSOR)
+        return inLayer2 != SENSOR;
+    if (inLayer2 == SENSOR)
+        return inLayer1 != SENSOR;
 
-    if (inObject1 == NON_MOVING && inObject2 == NON_MOVING)
+    if (inLayer1 == NON_MOVING && inLayer2 == NON_MOVING)
         return false;
 
     return true;
 }
 
 bool ObjectVsBroadPhaseLayerFilterImpl::ShouldCollide(
-    JPH::ObjectLayer inObjectLayer,
-    JPH::BroadPhaseLayer inBroadPhaseLayer) const {
+    JPH::ObjectLayer inLayer1, JPH::BroadPhaseLayer inLayer2) const {
     using namespace bezel::jolt::layers;
 
-    switch (inObjectLayer) {
+    switch (inLayer1) {
     case NON_MOVING:
-        return inBroadPhaseLayer == bezel::jolt::broad_phase_layers::MOVING ||
-               inBroadPhaseLayer == bezel::jolt::broad_phase_layers::SENSOR;
+        return inLayer2 == bezel::jolt::broad_phase_layers::MOVING ||
+               inLayer2 == bezel::jolt::broad_phase_layers::SENSOR;
 
     case MOVING:
         return true;
 
     case SENSOR:
-        return inBroadPhaseLayer == bezel::jolt::broad_phase_layers::MOVING ||
-               inBroadPhaseLayer == bezel::jolt::broad_phase_layers::NON_MOVING;
+        return inLayer2 == bezel::jolt::broad_phase_layers::MOVING ||
+               inLayer2 == bezel::jolt::broad_phase_layers::NON_MOVING;
 
     default:
         return false;
     }
 }
 
-void bezel::PhysicsWorld::addBody(std::shared_ptr<bezel::Rigidbody> body) {
+void bezel::PhysicsWorld::addBody(
+    const std::shared_ptr<bezel::Rigidbody> &body) {
     bodies.push_back(body->id);
 }
 
@@ -351,7 +351,7 @@ bezel::PhysicsWorld::~PhysicsWorld() {
 bezel::RaycastResult bezel::PhysicsWorld::raycast(const Position3d &origin,
                                                   const Position3d &direction,
                                                   float maxDistance,
-                                                  uint32_t ignoreBodyId) {
+                                                  uint32_t ignoreBodyId) const {
     RaycastResult out;
 
     JPH::RVec3Arg originJolt(origin.x, origin.y, origin.z);
@@ -399,7 +399,7 @@ bezel::RaycastResult bezel::PhysicsWorld::raycast(const Position3d &origin,
 bezel::RaycastResult
 bezel::PhysicsWorld::raycastAll(const Position3d &origin,
                                 const Position3d &direction, float maxDistance,
-                                uint32_t ignoreBodyId) {
+                                uint32_t ignoreBodyId) const {
     RaycastResult out;
 
     JPH::RVec3Arg originJolt(origin.x, origin.y, origin.z);
@@ -463,10 +463,12 @@ bezel::PhysicsWorld::raycastAll(const Position3d &origin,
     return out;
 }
 
-bezel::OverlapResult bezel::PhysicsWorld::overlap(
-    std::shared_ptr<bezel::PhysicsWorld> world,
-    std::shared_ptr<bezel::Collider> collider, const Position3d &position,
-    const Rotation3d &rotation, uint32_t ignoreBodyId) {
+bezel::OverlapResult
+bezel::PhysicsWorld::overlap(const std::shared_ptr<bezel::PhysicsWorld> &world,
+                             const std::shared_ptr<bezel::Collider> &collider,
+                             const Position3d &position,
+                             const Rotation3d &rotation,
+                             uint32_t ignoreBodyId) const {
     (void)world;
 
     OverlapResult out;
@@ -528,11 +530,13 @@ bezel::OverlapResult bezel::PhysicsWorld::overlap(
     return out;
 }
 
-bezel::SweepResult bezel::PhysicsWorld::sweep(
-    std::shared_ptr<bezel::PhysicsWorld> world,
-    std::shared_ptr<bezel::Collider> collider, const Position3d &startPosition,
-    const Rotation3d &startRotation, const Position3d &direction,
-    Position3d &endPosition, uint32_t ignoreBodyId) {
+bezel::SweepResult
+bezel::PhysicsWorld::sweep(const std::shared_ptr<bezel::PhysicsWorld> &world,
+                           const std::shared_ptr<bezel::Collider> &collider,
+                           const Position3d &startPosition,
+                           const Rotation3d &startRotation,
+                           const Position3d &direction, Position3d &endPosition,
+                           uint32_t ignoreBodyId) const {
     (void)world;
 
     SweepResult out;
@@ -632,10 +636,11 @@ bezel::SweepResult bezel::PhysicsWorld::sweep(
 }
 
 bezel::SweepResult bezel::PhysicsWorld::sweepAll(
-    std::shared_ptr<bezel::PhysicsWorld> world,
-    std::shared_ptr<bezel::Collider> collider, const Position3d &startPosition,
-    const Rotation3d &startRotation, const Position3d &direction,
-    Position3d &endPosition, uint32_t ignoreBodyId) {
+    const std::shared_ptr<bezel::PhysicsWorld> &world,
+    const std::shared_ptr<bezel::Collider> &collider,
+    const Position3d &startPosition, const Rotation3d &startRotation,
+    const Position3d &direction, Position3d &endPosition,
+    uint32_t ignoreBodyId) const {
     (void)world;
 
     SweepResult out;
