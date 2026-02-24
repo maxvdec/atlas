@@ -10,7 +10,6 @@
 #include "atlas/light.h"
 #include "atlas/window.h"
 #include "opal/opal.h"
-#include <glad/glad.h>
 #include <cstddef>
 #include <cmath>
 #include <memory>
@@ -19,171 +18,169 @@
 #include <vector>
 
 namespace {
-
-std::shared_ptr<opal::Texture> createFallbackSSAOTexture() {
-    const unsigned char white = 255;
-    auto texture = opal::Texture::create(
-        opal::TextureType::Texture2D, opal::TextureFormat::Red8, 1, 1,
-        opal::TextureDataFormat::Red, &white, 1);
-    texture->setFilterMode(opal::TextureFilterMode::Nearest,
-                           opal::TextureFilterMode::Nearest);
-    texture->setWrapMode(opal::TextureAxis::S,
-                         opal::TextureWrapMode::ClampToEdge);
-    texture->setWrapMode(opal::TextureAxis::T,
-                         opal::TextureWrapMode::ClampToEdge);
-    return texture;
-}
-
-std::shared_ptr<opal::Texture> createFallbackSkyboxTexture() {
-    const unsigned char black[4] = {0, 0, 0, 255};
-    auto texture = opal::Texture::create(
-        opal::TextureType::TextureCubeMap, opal::TextureFormat::Rgba8, 1, 1,
-        opal::TextureDataFormat::Rgba, nullptr, 1);
-    texture->setFilterMode(opal::TextureFilterMode::Linear,
-                           opal::TextureFilterMode::Linear);
-    texture->setWrapMode(opal::TextureAxis::S,
-                         opal::TextureWrapMode::ClampToEdge);
-    texture->setWrapMode(opal::TextureAxis::T,
-                         opal::TextureWrapMode::ClampToEdge);
-    texture->setWrapMode(opal::TextureAxis::R,
-                         opal::TextureWrapMode::ClampToEdge);
-    for (int face = 0; face < 6; face++) {
-        texture->updateFace(face, black, 1, 1, opal::TextureDataFormat::Rgba);
+    std::shared_ptr<opal::Texture> createFallbackSSAOTexture() {
+        const unsigned char white = 255;
+        auto texture = opal::Texture::create(
+            opal::TextureType::Texture2D, opal::TextureFormat::Red8, 1, 1,
+            opal::TextureDataFormat::Red, &white, 1);
+        texture->setFilterMode(opal::TextureFilterMode::Nearest,
+                               opal::TextureFilterMode::Nearest);
+        texture->setWrapMode(opal::TextureAxis::S,
+                             opal::TextureWrapMode::ClampToEdge);
+        texture->setWrapMode(opal::TextureAxis::T,
+                             opal::TextureWrapMode::ClampToEdge);
+        return texture;
     }
-    return texture;
-}
 
-std::shared_ptr<opal::Texture> createFallbackShadowCubemapTexture() {
-    const unsigned char white[4] = {255, 255, 255, 255};
-    auto texture = opal::Texture::create(
-        opal::TextureType::TextureCubeMap, opal::TextureFormat::Rgba8, 1, 1,
-        opal::TextureDataFormat::Rgba, nullptr, 1);
-    texture->setFilterMode(opal::TextureFilterMode::Linear,
-                           opal::TextureFilterMode::Linear);
-    texture->setWrapMode(opal::TextureAxis::S,
-                         opal::TextureWrapMode::ClampToEdge);
-    texture->setWrapMode(opal::TextureAxis::T,
-                         opal::TextureWrapMode::ClampToEdge);
-    texture->setWrapMode(opal::TextureAxis::R,
-                         opal::TextureWrapMode::ClampToEdge);
-    for (int face = 0; face < 6; face++) {
-        texture->updateFace(face, white, 1, 1, opal::TextureDataFormat::Rgba);
+    std::shared_ptr<opal::Texture> createFallbackSkyboxTexture() {
+        const unsigned char black[4] = {0, 0, 0, 255};
+        auto texture = opal::Texture::create(
+            opal::TextureType::TextureCubeMap, opal::TextureFormat::Rgba8, 1, 1,
+            opal::TextureDataFormat::Rgba, nullptr, 1);
+        texture->setFilterMode(opal::TextureFilterMode::Linear,
+                               opal::TextureFilterMode::Linear);
+        texture->setWrapMode(opal::TextureAxis::S,
+                             opal::TextureWrapMode::ClampToEdge);
+        texture->setWrapMode(opal::TextureAxis::T,
+                             opal::TextureWrapMode::ClampToEdge);
+        texture->setWrapMode(opal::TextureAxis::R,
+                             opal::TextureWrapMode::ClampToEdge);
+        for (int face = 0; face < 6; face++) {
+            texture->updateFace(face, black, 1, 1, opal::TextureDataFormat::Rgba);
+        }
+        return texture;
     }
-    return texture;
-}
 
-std::vector<GPUDirectionalLight>
-buildGPUDirectionalLights(const std::vector<DirectionalLight *> &lights,
-                          int maxCount) {
-    std::vector<GPUDirectionalLight> result;
-    int count = std::min(static_cast<int>(lights.size()), maxCount);
-    result.reserve(count);
-    for (int i = 0; i < count; i++) {
-        DirectionalLight *light = lights[i];
-        GPUDirectionalLight gpu{};
-        gpu.direction = glm::vec3(light->direction.x, light->direction.y,
-                                  light->direction.z);
-        gpu.diffuse = glm::vec3(light->color.r, light->color.g, light->color.b);
-        gpu.specular = glm::vec3(light->shineColor.r, light->shineColor.g,
-                                 light->shineColor.b);
-        gpu._pad1 = 0.0f;
-        gpu._pad2 = 0.0f;
-        gpu._pad3 = 0.0f;
-        result.push_back(gpu);
+    std::shared_ptr<opal::Texture> createFallbackShadowCubemapTexture() {
+        const unsigned char white[4] = {255, 255, 255, 255};
+        auto texture = opal::Texture::create(
+            opal::TextureType::TextureCubeMap, opal::TextureFormat::Rgba8, 1, 1,
+            opal::TextureDataFormat::Rgba, nullptr, 1);
+        texture->setFilterMode(opal::TextureFilterMode::Linear,
+                               opal::TextureFilterMode::Linear);
+        texture->setWrapMode(opal::TextureAxis::S,
+                             opal::TextureWrapMode::ClampToEdge);
+        texture->setWrapMode(opal::TextureAxis::T,
+                             opal::TextureWrapMode::ClampToEdge);
+        texture->setWrapMode(opal::TextureAxis::R,
+                             opal::TextureWrapMode::ClampToEdge);
+        for (int face = 0; face < 6; face++) {
+            texture->updateFace(face, white, 1, 1, opal::TextureDataFormat::Rgba);
+        }
+        return texture;
     }
-    return result;
-}
 
-std::vector<GPUPointLight>
-buildGPUPointLights(const std::vector<Light *> &lights, int maxCount) {
-    std::vector<GPUPointLight> result;
-    int count = std::min(static_cast<int>(lights.size()), maxCount);
-    result.reserve(count);
-    for (int i = 0; i < count; i++) {
-        Light *light = lights[i];
-        PointLightConstants plc = light->calculateConstants();
-        GPUPointLight gpu{};
-        gpu.position =
-            glm::vec3(light->position.x, light->position.y, light->position.z);
-        gpu.diffuse = glm::vec3(light->color.r, light->color.g, light->color.b);
-        gpu.specular = glm::vec3(light->shineColor.r, light->shineColor.g,
-                                 light->shineColor.b);
-        gpu.constant = plc.constant;
-        gpu.linear = plc.linear;
-        gpu.quadratic = plc.quadratic;
-        gpu.radius = plc.radius;
-        gpu._pad1 = 0.0f;
-        gpu._pad2 = 0.0f;
-        gpu._pad3 = 0.0f;
-        result.push_back(gpu);
+    std::vector<GPUDirectionalLight>
+    buildGPUDirectionalLights(const std::vector<DirectionalLight*>& lights,
+                              int maxCount) {
+        std::vector<GPUDirectionalLight> result;
+        int count = std::min(static_cast<int>(lights.size()), maxCount);
+        result.reserve(count);
+        for (int i = 0; i < count; i++) {
+            DirectionalLight* light = lights.at(i);
+            GPUDirectionalLight gpu{};
+            gpu.direction = glm::vec3(light->direction.x, light->direction.y,
+                                      light->direction.z);
+            gpu.diffuse = glm::vec3(light->color.r, light->color.g, light->color.b);
+            gpu.specular = glm::vec3(light->shineColor.r, light->shineColor.g,
+                                     light->shineColor.b);
+            gpu._pad1 = 0.0f;
+            gpu._pad2 = 0.0f;
+            gpu._pad3 = 0.0f;
+            result.push_back(gpu);
+        }
+        return result;
     }
-    return result;
-}
 
-std::vector<GPUSpotLight>
-buildGPUSpotLights(const std::vector<Spotlight *> &lights, int maxCount) {
-    std::vector<GPUSpotLight> result;
-    int count = std::min(static_cast<int>(lights.size()), maxCount);
-    result.reserve(count);
-    for (int i = 0; i < count; i++) {
-        Spotlight *light = lights[i];
-        GPUSpotLight gpu{};
-        gpu.position =
-            glm::vec3(light->position.x, light->position.y, light->position.z);
-        gpu.direction = glm::vec3(light->direction.x, light->direction.y,
-                                  light->direction.z);
-        gpu.cutOff = light->cutOff;
-        gpu.outerCutOff = light->outerCutoff;
-        gpu.diffuse = glm::vec3(light->color.r, light->color.g, light->color.b);
-        gpu.specular = glm::vec3(light->shineColor.r, light->shineColor.g,
-                                 light->shineColor.b);
-        gpu._pad1 = 0.0f;
-        gpu._pad2 = 0.0f;
-        gpu._pad3 = 0.0f;
-        gpu._pad4 = 0.0f;
-        gpu._pad5 = 0.0f;
-        gpu._pad6 = 0.0f;
-        result.push_back(gpu);
+    std::vector<GPUPointLight>
+    buildGPUPointLights(const std::vector<Light*>& lights, int maxCount) {
+        std::vector<GPUPointLight> result;
+        int count = std::min(static_cast<int>(lights.size()), maxCount);
+        result.reserve(count);
+        for (int i = 0; i < count; i++) {
+            Light* light = lights.at(i);
+            PointLightConstants plc = light->calculateConstants();
+            GPUPointLight gpu{};
+            gpu.position =
+                glm::vec3(light->position.x, light->position.y, light->position.z);
+            gpu.diffuse = glm::vec3(light->color.r, light->color.g, light->color.b);
+            gpu.specular = glm::vec3(light->shineColor.r, light->shineColor.g,
+                                     light->shineColor.b);
+            gpu.constant = plc.constant;
+            gpu.linear = plc.linear;
+            gpu.quadratic = plc.quadratic;
+            gpu.radius = plc.radius;
+            gpu._pad1 = 0.0f;
+            gpu._pad2 = 0.0f;
+            gpu._pad3 = 0.0f;
+            result.push_back(gpu);
+        }
+        return result;
     }
-    return result;
-}
 
-std::vector<GPUAreaLight>
-buildGPUAreaLights(const std::vector<AreaLight *> &lights, int maxCount) {
-    std::vector<GPUAreaLight> result;
-    int count = std::min(static_cast<int>(lights.size()), maxCount);
-    result.reserve(count);
-    for (int i = 0; i < count; i++) {
-        AreaLight *light = lights[i];
-        GPUAreaLight gpu{};
-        gpu.position =
-            glm::vec3(light->position.x, light->position.y, light->position.z);
-        gpu.right = glm::vec3(light->right.x, light->right.y, light->right.z);
-        gpu.up = glm::vec3(light->up.x, light->up.y, light->up.z);
-        gpu.size = glm::vec2(light->size.width, light->size.height);
-        gpu.diffuse = glm::vec3(light->color.r, light->color.g, light->color.b);
-        gpu.specular = glm::vec3(light->shineColor.r, light->shineColor.g,
-                                 light->shineColor.b);
-        gpu.angle = light->angle;
-        gpu.castsBothSides = light->castsBothSides ? 1 : 0;
-        gpu._pad1 = 0.0f;
-        gpu._pad2 = 0.0f;
-        gpu._pad3 = 0.0f;
-        gpu._pad4 = 0.0f;
-        gpu._pad5 = 0.0f;
-        gpu._pad6 = 0.0f;
-        gpu._pad7 = 0.0f;
-        gpu._pad8 = 0.0f;
-        gpu._pad9 = 0.0f;
-        result.push_back(gpu);
+    std::vector<GPUSpotLight>
+    buildGPUSpotLights(const std::vector<Spotlight*>& lights, int maxCount) {
+        std::vector<GPUSpotLight> result;
+        int count = std::min(static_cast<int>(lights.size()), maxCount);
+        result.reserve(count);
+        for (int i = 0; i < count; i++) {
+            Spotlight* light = lights.at(i);
+            GPUSpotLight gpu{};
+            gpu.position =
+                glm::vec3(light->position.x, light->position.y, light->position.z);
+            gpu.direction = glm::vec3(light->direction.x, light->direction.y,
+                                      light->direction.z);
+            gpu.cutOff = light->cutOff;
+            gpu.outerCutOff = light->outerCutoff;
+            gpu.diffuse = glm::vec3(light->color.r, light->color.g, light->color.b);
+            gpu.specular = glm::vec3(light->shineColor.r, light->shineColor.g,
+                                     light->shineColor.b);
+            gpu._pad1 = 0.0f;
+            gpu._pad2 = 0.0f;
+            gpu._pad3 = 0.0f;
+            gpu._pad4 = 0.0f;
+            gpu._pad5 = 0.0f;
+            gpu._pad6 = 0.0f;
+            result.push_back(gpu);
+        }
+        return result;
     }
-    return result;
-}
 
+    std::vector<GPUAreaLight>
+    buildGPUAreaLights(const std::vector<AreaLight*>& lights, int maxCount) {
+        std::vector<GPUAreaLight> result;
+        int count = std::min(static_cast<int>(lights.size()), maxCount);
+        result.reserve(count);
+        for (int i = 0; i < count; i++) {
+            AreaLight* light = lights.at(i);
+            GPUAreaLight gpu{};
+            gpu.position =
+                glm::vec3(light->position.x, light->position.y, light->position.z);
+            gpu.right = glm::vec3(light->right.x, light->right.y, light->right.z);
+            gpu.up = glm::vec3(light->up.x, light->up.y, light->up.z);
+            gpu.size = glm::vec2(light->size.width, light->size.height);
+            gpu.diffuse = glm::vec3(light->color.r, light->color.g, light->color.b);
+            gpu.specular = glm::vec3(light->shineColor.r, light->shineColor.g,
+                                     light->shineColor.b);
+            gpu.angle = light->angle;
+            gpu.castsBothSides = light->castsBothSides ? 1 : 0;
+            gpu._pad1 = 0.0f;
+            gpu._pad2 = 0.0f;
+            gpu._pad3 = 0.0f;
+            gpu._pad4 = 0.0f;
+            gpu._pad5 = 0.0f;
+            gpu._pad6 = 0.0f;
+            gpu._pad7 = 0.0f;
+            gpu._pad8 = 0.0f;
+            gpu._pad9 = 0.0f;
+            result.push_back(gpu);
+        }
+        return result;
+    }
 } // anonymous namespace
 
 void Window::deferredRendering(
-    RenderTarget *target, std::shared_ptr<opal::CommandBuffer> commandBuffer) {
+    RenderTarget* target, std::shared_ptr<opal::CommandBuffer> commandBuffer) {
     if (target == nullptr) {
         return;
     }
@@ -233,7 +230,7 @@ void Window::deferredRendering(
         this->ssaoMapsDirty = true;
     }
 
-    static std::unordered_map<Renderable *, ShaderProgram> deferredPrograms;
+    static std::unordered_map<Renderable*, ShaderProgram> deferredPrograms;
 
     auto gBufferRenderPass = opal::RenderPass::create();
     gBufferRenderPass->setFramebuffer(this->gBuffer->getFramebuffer());
@@ -245,24 +242,24 @@ void Window::deferredRendering(
         0, 0, this->gBuffer->getWidth(), this->gBuffer->getHeight());
     commandBuffer->clear(0.0f, 0.0f, 0.0f, 1.0f, 1.0f);
 
-    std::unordered_set<Renderable *> activeDeferredRenderables;
+    std::unordered_set<Renderable*> activeDeferredRenderables;
     activeDeferredRenderables.reserve(this->renderables.size());
-    for (auto *obj : this->renderables) {
+    for (auto* obj : this->renderables) {
         if (obj != nullptr && obj->canUseDeferredRendering()) {
             activeDeferredRenderables.insert(obj);
         }
     }
 
     for (auto it = deferredPrograms.begin(); it != deferredPrograms.end();) {
-        if (activeDeferredRenderables.find(it->first) ==
-            activeDeferredRenderables.end()) {
+        if (!activeDeferredRenderables.contains(it->first)) {
             it = deferredPrograms.erase(it);
-        } else {
+        }
+        else {
             ++it;
         }
     }
 
-    for (auto &obj : this->renderables) {
+    for (auto& obj : this->renderables) {
         if (obj == nullptr) {
             continue;
         }
@@ -273,8 +270,8 @@ void Window::deferredRendering(
                 renderableProgram.pipelines.clear();
                 renderableProgram.currentPipeline = nullptr;
                 programIt = deferredPrograms
-                                .emplace(obj, std::move(renderableProgram))
-                                .first;
+                            .emplace(obj, std::move(renderableProgram))
+                            .first;
             }
 
             auto deferredPipeline = opal::Pipeline::create();
@@ -346,21 +343,24 @@ void Window::deferredRendering(
             .size = 3,
             .stride = static_cast<uint>(sizeof(CoreVertex)),
             .inputRate = opal::VertexBindingInputRate::Vertex,
-            .divisor = 0};
+            .divisor = 0
+        };
         opal::VertexAttribute uvAttr{
             .name = "deferredUV",
             .type = opal::VertexAttributeType::Float,
             .offset =
-                static_cast<uint>(offsetof(CoreVertex, textureCoordinate)),
+            static_cast<uint>(offsetof(CoreVertex, textureCoordinate)),
             .location = 2,
             .normalized = false,
             .size = 2,
             .stride = static_cast<uint>(sizeof(CoreVertex)),
             .inputRate = opal::VertexBindingInputRate::Vertex,
-            .divisor = 0};
+            .divisor = 0
+        };
 
         std::vector<opal::VertexAttributeBinding> bindings = {
-            {positionAttr, quadBuffer}, {uvAttr, quadBuffer}};
+            {.attribute = positionAttr, .sourceBuffer = quadBuffer}, {.attribute = uvAttr, .sourceBuffer = quadBuffer}
+        };
         quadState->configureAttributes(bindings);
     }
 
@@ -396,7 +396,8 @@ void Window::deferredRendering(
         this->ssaoBlurBuffer->texture.id != 0) {
         lightPipeline->bindTexture2D("ssao", this->ssaoBlurBuffer->texture.id,
                                      4);
-    } else {
+    }
+    else {
         lightPipeline->bindTexture2D("ssao", fallbackSSAOTexture->textureID, 4);
     }
     boundTextures++;
@@ -411,7 +412,7 @@ void Window::deferredRendering(
 
     int boundCubemaps = 0;
 
-    Scene *scene = this->currentScene;
+    Scene* scene = this->currentScene;
 
     lightPipeline->setUniform3f("cameraPosition", getCamera()->position.x,
                                 getCamera()->position.y,
@@ -426,7 +427,7 @@ void Window::deferredRendering(
     }
     lightPipeline->setUniform4f("ambientLight.color", ambientColor.r,
                                 ambientColor.g,
-                                static_cast<float>(ambientColor.b), 1.0f);
+                                ambientColor.b, 1.0f);
     lightPipeline->setUniform1f("ambientLight.intensity", ambientIntensity);
 
     // Set camera position
@@ -483,7 +484,7 @@ void Window::deferredRendering(
     int boundParameters = 0;
 
     // Cycle though directional lights
-    for (auto *light : scene->directionalLights) {
+    for (auto* light : scene->directionalLights) {
         if (!light->doesCastShadows) {
             continue;
         }
@@ -522,7 +523,7 @@ void Window::deferredRendering(
     }
 
     // Cycle though spotlights
-    for (auto *light : scene->spotlights) {
+    for (auto* light : scene->spotlights) {
         if (!light->doesCastShadows) {
             continue;
         }
@@ -560,7 +561,7 @@ void Window::deferredRendering(
         boundTextures++;
     }
 
-    for (auto *light : scene->pointLights) {
+    for (auto* light : scene->pointLights) {
         if (!light->doesCastShadows) {
             continue;
         }
@@ -602,7 +603,8 @@ void Window::deferredRendering(
     if (scene->skybox != nullptr && scene->skybox->cubemap.id != 0) {
         lightPipeline->bindTextureCubemap("skybox", scene->skybox->cubemap.id,
                                           boundTextures);
-    } else {
+    }
+    else {
         lightPipeline->bindTextureCubemap(
             "skybox", fallbackSkyboxTexture->textureID, boundTextures);
     }
@@ -625,11 +627,11 @@ void Window::deferredRendering(
     bool targetPassActive = true;
     bool hasVolumetricTexture = false;
     bool hasSSRTexture = false;
-    const auto &volumetricSettings = scene->environment.volumetricLighting;
+    const auto& volumetricSettings = scene->environment.volumetricLighting;
     bool useVolumetric = dirLightCount > 0 && volumetricSettings.enabled &&
-                         volumetricSettings.density > 0.0f &&
-                         volumetricSettings.weight > 0.0f &&
-                         volumetricSettings.exposure > 0.0f;
+        volumetricSettings.density > 0.0f &&
+        volumetricSettings.weight > 0.0f &&
+        volumetricSettings.exposure > 0.0f;
 
     if (useVolumetric) {
         if (!volumetricBuffer) {
@@ -664,7 +666,7 @@ void Window::deferredRendering(
         volumetricPipeline->enableBlending(false);
         volumetricPipeline->bind();
 
-        DirectionalLight *dirLight = scene->directionalLights[0];
+        DirectionalLight* dirLight = scene->directionalLights.at(0);
 
         volumetricPipeline->bindTexture2D("sceneTexture", target->texture.id,
                                           0);
@@ -679,8 +681,8 @@ void Window::deferredRendering(
                                          dirLight->color.b);
         glm::vec3 lightPos = -dirLight->direction.toGlm() * 1000.f;
         glm::vec4 clipSpace = calculateProjectionMatrix() *
-                              camera->calculateViewMatrix() *
-                              glm::vec4(lightPos, 1.0f);
+            camera->calculateViewMatrix() *
+            glm::vec4(lightPos, 1.0f);
 
         if (std::abs(clipSpace.w) > 1e-6f) {
             glm::vec3 ndc = glm::vec3(clipSpace) / clipSpace.w;

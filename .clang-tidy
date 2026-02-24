@@ -9,6 +9,7 @@ Checks: |
   cert-*,
   -cert-err58-cpp,
   -cert-dcl21-cpp,
+  -cert-msc51-cpp,
 
   cppcoreguidelines-*,
   -cppcoreguidelines-avoid-c-arrays,
@@ -29,6 +30,11 @@ Checks: |
   -cppcoreguidelines-pro-type-vararg,
   -cppcoreguidelines-special-member-functions,
   -cppcoreguidelines-pro-type-member-init,
+  -cppcoreguidelines-pro-bounds-constant-array-index,
+  -cppcoreguidelines-pro-bounds-container-index
+  -cppcoreguidelines-pro-bounds-avoid-unchecked-container-access
+  
+  -google-default-arguments
 
   modernize-*,
   -modernize-avoid-c-arrays,

@@ -62,7 +62,7 @@ struct ResourceGroup {
      * @param name The name of the resource to find.
      * @return (Resource) The found resource.
      */
-    Resource findResource(std::string name);
+    Resource findResource(const std::string& name);
 };
 
 /**
@@ -87,14 +87,14 @@ struct ResourceGroup {
  *
  */
 class Workspace {
-  public:
-    static Workspace &get() {
+public:
+    static Workspace& get() {
         static Workspace instance;
         return instance;
     }
 
-    Workspace(const Workspace &) = delete;
-    Workspace &operator=(const Workspace &) = delete;
+    Workspace(const Workspace&) = delete;
+    Workspace& operator=(const Workspace&) = delete;
 
     /**
      * @brief Creates a new resource from a file path.
@@ -104,24 +104,24 @@ class Workspace {
      * @param type The type of resource to create.
      * @return (Resource) The created resource.
      */
-    Resource createResource(const fs::path &path, std::string name,
+    Resource createResource(const fs::path& path, const std::string& name,
                             ResourceType type = ResourceType::File);
     /**
      * @brief Creates a new resource group containing multiple resources.
      *
      * @param groupName The name for the resource group.
-     * @param resources The vector of resources to include in the group.
+     * @param initResources The vector of resources to include in the group.
      * @return (ResourceGroup) The created resource group.
      */
-    ResourceGroup createResourceGroup(std::string groupName,
-                                      const std::vector<Resource> &resources);
+    ResourceGroup createResourceGroup(const std::string& groupName,
+                                      const std::vector<Resource>& initResources);
     /**
      * @brief Retrieves a resource by its name.
      *
      * @param name The name of the resource to retrieve.
      * @return (Resource) The found resource.
      */
-    Resource getResource(std::string name);
+    Resource getResource(const std::string& name);
     /**
      * @brief Gets all resources registered in the workspace.
      *
@@ -143,7 +143,7 @@ class Workspace {
      * @param groupName The name of the resource group to retrieve.
      * @return (ResourceGroup) The found resource group.
      */
-    ResourceGroup getResourceGroup(std::string groupName);
+    ResourceGroup getResourceGroup(const std::string& groupName);
     /**
      * @brief Gets all resource groups registered in the workspace.
      *
@@ -157,14 +157,16 @@ class Workspace {
      *
      * @param path The root filesystem path to set.
      */
-    inline void setRootPath(const fs::path &path) { rootPath = path; }
+    inline void setRootPath(const fs::path& path) { rootPath = path; }
 
-  private:
+private:
     std::vector<Resource> resources;
     std::vector<ResourceGroup> resourceGroups;
     std::optional<fs::path> rootPath;
 
-    Workspace() : resources({}), resourceGroups({}), rootPath(std::nullopt) {}
+    Workspace() : resources({}), resourceGroups({}), rootPath(std::nullopt) {
+    }
+
     ~Workspace() = default;
 };
 

@@ -14,7 +14,7 @@
 #include <algorithm>
 #include <climits>
 #include <cstddef>
-#include <glad/glad.h>
+#include <utility>
 #include <vector>
 #include "opal/opal.h"
 
@@ -32,15 +32,15 @@ void BloomRenderTarget::init(int width, int height, int chainLength) {
     }
 
     atlas_log("Initializing bloom system (chain length: " +
-              std::to_string(chainLength) + ", resolution: " +
-              std::to_string(width) + "x" + std::to_string(height) + ")");
+        std::to_string(chainLength) + ", resolution: " +
+        std::to_string(width) + "x" + std::to_string(height) + ")");
     initialized = true;
 
     this->framebuffer = opal::Framebuffer::create();
     this->elements.clear();
 
     glm::vec2 mipSize((float)width, (float)height);
-    glm::ivec2 mipIntSize((int)width, (int)height);
+    glm::ivec2 mipIntSize(width, height);
 
     this->srcViewportSize = mipIntSize;
     this->srcViewportSizef = mipSize;
@@ -76,7 +76,7 @@ void BloomRenderTarget::init(int width, int height, int chainLength) {
         return;
     }
 
-    this->framebuffer->attachTexture(elements[0].texture, 0);
+    this->framebuffer->attachTexture(elements.at(0).texture, 0);
     this->framebuffer->setDrawBuffers(1);
 
     this->framebuffer->unbind();
@@ -119,29 +119,32 @@ void BloomRenderTarget::init(int width, int height, int chainLength) {
             .size = 3,
             .stride = static_cast<uint>(sizeof(CoreVertex)),
             .inputRate = opal::VertexBindingInputRate::Vertex,
-            .divisor = 0};
+            .divisor = 0
+        };
         opal::VertexAttribute uvAttr{
             .name = "bloomUV",
             .type = opal::VertexAttributeType::Float,
             .offset =
-                static_cast<uint>(offsetof(CoreVertex, textureCoordinate)),
+            static_cast<uint>(offsetof(CoreVertex, textureCoordinate)),
             .location = 2,
             .normalized = false,
             .size = 2,
             .stride = static_cast<uint>(sizeof(CoreVertex)),
             .inputRate = opal::VertexBindingInputRate::Vertex,
-            .divisor = 0};
+            .divisor = 0
+        };
 
         std::vector<opal::VertexAttributeBinding> bindings = {
-            {positionAttr, quadBuffer}, {uvAttr, quadBuffer}};
+            {.attribute = positionAttr, .sourceBuffer = quadBuffer}, {.attribute = uvAttr, .sourceBuffer = quadBuffer}
+        };
         quadState->configureAttributes(bindings);
     }
 }
 
 void BloomRenderTarget::destroy() {
-    for (size_t i = 0; i < elements.size(); i++) {
-        elements[i].textureId = 0;
-        elements[i].texture = nullptr;
+    for (auto& element : elements) {
+        element.textureId = 0;
+        element.texture = nullptr;
     }
     elements.clear();
     this->framebuffer = nullptr;
@@ -150,7 +153,7 @@ void BloomRenderTarget::destroy() {
     initialized = false;
 }
 
-const std::vector<BloomElement> &BloomRenderTarget::getElements() const {
+const std::vector<BloomElement>& BloomRenderTarget::getElements() const {
     return elements;
 }
 
@@ -162,7 +165,7 @@ void BloomRenderTarget::renderBloomTexture(
         return;
     }
 
-    auto bloomCommandBuffer = commandBuffer;
+    auto bloomCommandBuffer = std::move(commandBuffer);
     bool ownsCommandBuffer = false;
     if (bloomCommandBuffer == nullptr && Window::mainWindow != nullptr &&
         Window::mainWindow->device != nullptr) {
@@ -195,12 +198,12 @@ unsigned int BloomRenderTarget::getBloomTexture() {
     if (elements.empty()) {
         return 0;
     }
-    return elements[0].textureId;
+    return elements.at(0).textureId;
 }
 
 void BloomRenderTarget::renderDownsamples(
     unsigned int srcTexture,
-    const std::shared_ptr<opal::CommandBuffer> &commandBuffer) {
+    const std::shared_ptr<opal::CommandBuffer>& commandBuffer) {
     if (commandBuffer == nullptr) {
         return;
     }
@@ -221,8 +224,7 @@ void BloomRenderTarget::renderDownsamples(
     downsamplePipeline->bindTexture2D("srcTexture", srcTexture, 0);
     this->framebuffer->setDrawBuffers(1);
 
-    for (size_t i = 0; i < elements.size(); i++) {
-        const BloomElement &element = elements[i];
+    for (const auto& element : elements) {
         this->framebuffer->width = element.intSize.x;
         this->framebuffer->height = element.intSize.y;
         this->framebuffer->setViewport(0, 0, element.intSize.x,
@@ -246,7 +248,7 @@ void BloomRenderTarget::renderDownsamples(
 
 void BloomRenderTarget::renderUpsamples(
     float filterRadius,
-    const std::shared_ptr<opal::CommandBuffer> &commandBuffer) {
+    const std::shared_ptr<opal::CommandBuffer>& commandBuffer) {
     if (commandBuffer == nullptr) {
         return;
     }
@@ -268,8 +270,8 @@ void BloomRenderTarget::renderUpsamples(
     this->framebuffer->setDrawBuffers(1);
 
     for (int i = elements.size() - 1; i > 0; i--) {
-        const BloomElement &element = elements[i];
-        const BloomElement &nextElement = elements[i - 1];
+        const BloomElement& element = elements.at(i);
+        const BloomElement& nextElement = elements.at(i - 1);
 
         upsamplePipeline->bindTexture2D("srcTexture", element.textureId, 0);
         upsamplePipeline->setUniform2f("srcResolution", element.size.x,
