@@ -15,6 +15,12 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
     add_compile_options (-fcolor-diagnostics)
 endif ()
 
+if (MSVC)
+    add_compile_options(/W4 /WX)
+else()
+    add_compile_options(-Wall -Wextra -Wpedantic -Werror)
+endif()
+
 message(STATUS "Building for platform: ${CMAKE_SYSTEM_NAME}")
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Debug)
