@@ -12,7 +12,6 @@
 #include <cstddef>
 #include <memory>
 #include <stdexcept>
-#include <utility>
 #ifdef METAL
 #include "metal_state.h"
 #include <objc/message.h>
@@ -47,12 +46,12 @@ using CocoaObj = void *;
 
 extern "C" CocoaObj glfwGetCocoaWindow(GLFWwindow *window);
 
-static inline CocoaObj sendObjCId(CocoaObj object, const char *selector) {
+inline CocoaObj sendObjCId(CocoaObj object, const char *selector) {
     return reinterpret_cast<CocoaObj (*)(CocoaObj, SEL)>(objc_msgSend)(
         object, sel_registerName(selector));
 }
 
-static void attachMetalLayerToWindow(GLFWwindow *window, CA::MetalLayer *layer) {
+void attachMetalLayerToWindow(GLFWwindow *window, CA::MetalLayer *layer) {
     if (window == nullptr || layer == nullptr) {
         throw std::runtime_error("Cannot attach CAMetalLayer to null window");
     }
@@ -64,7 +63,8 @@ static void attachMetalLayerToWindow(GLFWwindow *window, CA::MetalLayer *layer) 
 
     CocoaObj contentView = sendObjCId(nsWindow, "contentView");
     if (contentView == nullptr) {
-        throw std::runtime_error("Unable to get NSView contentView from NSWindow");
+        throw std::runtime_error(
+            "Unable to get NSView contentView from NSWindow");
     }
 
     reinterpret_cast<void (*)(CocoaObj, SEL, bool)>(objc_msgSend)(
@@ -123,7 +123,6 @@ void Context::setFlag(int flag, int value) { glfwWindowHint(flag, value); }
 
 void Context::makeCurrent() {
 #ifdef METAL
-    return;
 #else
     if (this->window != nullptr) {
         glfwMakeContextCurrent(this->window);
@@ -192,7 +191,7 @@ DeviceInfo Device::getDeviceInfo() {
 }
 
 std::shared_ptr<Device>
-Device::acquire([[maybe_unused]] std::shared_ptr<Context> context) {
+Device::acquire([[maybe_unused]] const std::shared_ptr<Context> &context) {
 #ifdef OPENGL
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         atlas_error("Failed to initialize GLAD");
@@ -246,8 +245,8 @@ Device::acquire([[maybe_unused]] std::shared_ptr<Context> context) {
     int fbWidth = 0;
     int fbHeight = 0;
     glfwGetFramebufferSize(context->getWindow(), &fbWidth, &fbHeight);
-    contextState.layer->setDrawableSize(
-        CGSizeMake(static_cast<double>(fbWidth), static_cast<double>(fbHeight)));
+    contextState.layer->setDrawableSize(CGSizeMake(
+        static_cast<double>(fbWidth), static_cast<double>(fbHeight)));
 
     attachMetalLayerToWindow(context->getWindow(), contextState.layer);
 

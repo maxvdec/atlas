@@ -15,9 +15,9 @@
 #include <cstring>
 #include <memory>
 #include <opal/opal.h>
-#include <iostream>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #ifdef METAL
 #include "metal_state.h"
 #endif
@@ -39,14 +39,14 @@ constexpr float kIdentityInstanceMatrix[16] = {
     1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
     0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
 
-template <typename T> static inline T alignUp(T value, T alignment) {
+template <typename T> inline T alignUp(T value, T alignment) {
     if (alignment <= 1) {
         return value;
     }
     return (value + alignment - 1) / alignment * alignment;
 }
 
-static std::vector<std::shared_ptr<Texture>>
+std::vector<std::shared_ptr<Texture>>
 collectColorAttachments(const std::shared_ptr<Framebuffer> &framebuffer) {
     std::vector<std::shared_ptr<Texture>> colors;
     if (framebuffer == nullptr) {
@@ -67,7 +67,7 @@ collectColorAttachments(const std::shared_ptr<Framebuffer> &framebuffer) {
     return colors;
 }
 
-static std::shared_ptr<Texture>
+std::shared_ptr<Texture>
 collectDepthAttachment(const std::shared_ptr<Framebuffer> &framebuffer) {
     if (framebuffer == nullptr) {
         return nullptr;
@@ -84,7 +84,7 @@ collectDepthAttachment(const std::shared_ptr<Framebuffer> &framebuffer) {
     return nullptr;
 }
 
-static std::shared_ptr<Texture>
+std::shared_ptr<Texture>
 collectStencilAttachment(const std::shared_ptr<Framebuffer> &framebuffer) {
     if (framebuffer == nullptr) {
         return nullptr;
@@ -101,8 +101,7 @@ collectStencilAttachment(const std::shared_ptr<Framebuffer> &framebuffer) {
     return nullptr;
 }
 
-static void ensureDefaultAuxiliaryTextures(Device *device, int width,
-                                           int height) {
+void ensureDefaultAuxiliaryTextures(Device *device, int width, int height) {
     if (device == nullptr || width <= 0 || height <= 0) {
         return;
     }
@@ -125,7 +124,7 @@ static void ensureDefaultAuxiliaryTextures(Device *device, int width,
     }
 }
 
-static void updateLayerDrawableSize(Device *device, int width, int height) {
+void updateLayerDrawableSize(Device *device, int width, int height) {
     if (device == nullptr || width <= 0 || height <= 0) {
         return;
     }
@@ -141,10 +140,10 @@ static void updateLayerDrawableSize(Device *device, int width, int height) {
         CGSizeMake(static_cast<double>(width), static_cast<double>(height)));
 }
 
-static void configureColorAttachmentForClear(MTL::RenderPassDescriptor *pass,
-                                             uint32_t colorCount,
-                                             const float clearColor[4],
-                                             bool clearRequested) {
+void configureColorAttachmentForClear(MTL::RenderPassDescriptor *pass,
+                                      uint32_t colorCount,
+                                      const float clearColor[4],
+                                      bool clearRequested) {
     if (pass == nullptr) {
         return;
     }
@@ -164,9 +163,8 @@ static void configureColorAttachmentForClear(MTL::RenderPassDescriptor *pass,
     }
 }
 
-static void configureDepthAttachmentForClear(MTL::RenderPassDescriptor *pass,
-                                             float clearDepth,
-                                             bool clearRequested) {
+void configureDepthAttachmentForClear(MTL::RenderPassDescriptor *pass,
+                                      float clearDepth, bool clearRequested) {
     if (pass == nullptr) {
         return;
     }
@@ -187,8 +185,7 @@ static void configureDepthAttachmentForClear(MTL::RenderPassDescriptor *pass,
     }
 }
 
-static uint32_t
-requiredColorOutputs(const std::shared_ptr<Pipeline> &pipeline) {
+uint32_t requiredColorOutputs(const std::shared_ptr<Pipeline> &pipeline) {
     if (pipeline == nullptr || pipeline->shaderProgram == nullptr) {
         return 1;
     }
@@ -198,7 +195,7 @@ requiredColorOutputs(const std::shared_ptr<Pipeline> &pipeline) {
                : 1;
 }
 
-static std::shared_ptr<Texture> fallbackTexture2D() {
+std::shared_ptr<Texture> fallbackTexture2D() {
     if (Device::globalInstance == nullptr) {
         return nullptr;
     }
@@ -215,7 +212,7 @@ static std::shared_ptr<Texture> fallbackTexture2D() {
     return texture;
 }
 
-static std::shared_ptr<Texture> fallbackTexture2DArray() {
+std::shared_ptr<Texture> fallbackTexture2DArray() {
     if (Device::globalInstance == nullptr) {
         return nullptr;
     }
@@ -233,7 +230,7 @@ static std::shared_ptr<Texture> fallbackTexture2DArray() {
     return texture;
 }
 
-static std::shared_ptr<Texture> fallbackTextureCube() {
+std::shared_ptr<Texture> fallbackTextureCube() {
     if (Device::globalInstance == nullptr) {
         return nullptr;
     }
@@ -255,7 +252,7 @@ static std::shared_ptr<Texture> fallbackTextureCube() {
     return texture;
 }
 
-static std::shared_ptr<Texture> fallbackTexture3D() {
+std::shared_ptr<Texture> fallbackTexture3D() {
     if (Device::globalInstance == nullptr) {
         return nullptr;
     }
@@ -272,7 +269,7 @@ static std::shared_ptr<Texture> fallbackTexture3D() {
     return texture;
 }
 
-static std::shared_ptr<Texture> fallbackTextureForType(TextureType type) {
+std::shared_ptr<Texture> fallbackTextureForType(TextureType type) {
     switch (type) {
     case TextureType::TextureCubeMap:
         return fallbackTextureCube();
@@ -286,7 +283,7 @@ static std::shared_ptr<Texture> fallbackTextureForType(TextureType type) {
     }
 }
 
-static MTL::RenderPipelineState *
+MTL::RenderPipelineState *
 getRenderPipelineState(Device *device,
                        const std::shared_ptr<Pipeline> &pipeline,
                        const std::array<MTL::PixelFormat, 8> &colorFormats,
@@ -374,9 +371,9 @@ getRenderPipelineState(Device *device,
     return created;
 }
 
-static void uploadUniformBuffers(const std::shared_ptr<Pipeline> &pipeline,
-                                 MTL::RenderCommandEncoder *encoder,
-                                 MTL::Device *device) {
+void uploadUniformBuffers(const std::shared_ptr<Pipeline> &pipeline,
+                          MTL::RenderCommandEncoder *encoder,
+                          MTL::Device *device) {
     if (pipeline == nullptr || encoder == nullptr || device == nullptr ||
         pipeline->shaderProgram == nullptr) {
         return;
@@ -433,10 +430,9 @@ static void uploadUniformBuffers(const std::shared_ptr<Pipeline> &pipeline,
     }
 }
 
-static void bindTextures(CommandBuffer *commandBuffer,
-                         const std::shared_ptr<Pipeline> &pipeline,
-                         MTL::RenderCommandEncoder *encoder,
-                         MTL::Device *device) {
+void bindTextures(CommandBuffer *commandBuffer,
+                  const std::shared_ptr<Pipeline> &pipeline,
+                  MTL::RenderCommandEncoder *encoder, MTL::Device *device) {
     if (commandBuffer == nullptr || pipeline == nullptr || encoder == nullptr ||
         device == nullptr) {
         return;
@@ -529,11 +525,11 @@ static void bindTextures(CommandBuffer *commandBuffer,
     }
 }
 
-static void ensureRenderEncoder(CommandBuffer *commandBuffer, Device *device,
-                                const std::shared_ptr<Framebuffer> &framebuffer,
-                                const std::shared_ptr<Pipeline> &boundPipeline,
-                                const float clearColorValue[4],
-                                float clearDepthValue) {
+void ensureRenderEncoder(CommandBuffer *commandBuffer, Device *device,
+                         const std::shared_ptr<Framebuffer> &framebuffer,
+                         const std::shared_ptr<Pipeline> &boundPipeline,
+                         const float clearColorValue[4],
+                         float clearDepthValue) {
     if (commandBuffer == nullptr) {
         return;
     }
@@ -785,7 +781,7 @@ void CommandBuffer::start() {
 }
 
 void Device::submitCommandBuffer(
-    [[maybe_unused]] std::shared_ptr<CommandBuffer> commandBuffer) {}
+    [[maybe_unused]] const std::shared_ptr<CommandBuffer> &commandBuffer) {}
 
 void CommandBuffer::beginPass(std::shared_ptr<RenderPass> newRenderPass) {
     if (newRenderPass == nullptr) {
@@ -923,8 +919,8 @@ void CommandBuffer::beginPass(std::shared_ptr<RenderPass> newRenderPass) {
 }
 
 void CommandBuffer::beginSampled(
-    [[maybe_unused]] std::shared_ptr<Framebuffer> readFramebuffer,
-    [[maybe_unused]] std::shared_ptr<Framebuffer> writeFramebuffer) {
+    [[maybe_unused]] const std::shared_ptr<Framebuffer> &readFramebuffer,
+    [[maybe_unused]] const std::shared_ptr<Framebuffer> &writeFramebuffer) {
     if (writeFramebuffer != nullptr) {
         writeFramebuffer->bindForDraw();
     }
@@ -1090,7 +1086,7 @@ void CommandBuffer::commit() {
 #endif
 }
 
-void CommandBuffer::bindPipeline(std::shared_ptr<Pipeline> pipeline) {
+void CommandBuffer::bindPipeline(const std::shared_ptr<Pipeline> &pipeline) {
 #ifdef METAL
     metal::pipelineState(pipeline.get()).suppressTextureReset = true;
 #endif
@@ -1197,7 +1193,7 @@ void CommandBuffer::unbindPipeline() { boundPipeline = nullptr; }
 
 void CommandBuffer::bindDrawingState(
     std::shared_ptr<DrawingState> drawingState) {
-    boundDrawingState = drawingState;
+    boundDrawingState = std::move(drawingState);
 }
 
 void CommandBuffer::unbindDrawingState() { boundDrawingState = nullptr; }

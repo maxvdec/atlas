@@ -9,22 +9,20 @@
 #include <algorithm>
 #include <cctype>
 #include <regex>
-#include <set>
-#include <stdexcept>
 #include <unordered_set>
 
 namespace opal::metal {
 
 namespace {
 
-template <typename T> static inline T alignUp(T value, T alignment) {
+template <typename T> inline T alignUp(T value, T alignment) {
     if (alignment <= 1) {
         return value;
     }
     return (value + alignment - 1) / alignment * alignment;
 }
 
-static std::string trim(const std::string &input) {
+std::string trim(const std::string &input) {
     size_t start = 0;
     while (start < input.size() &&
            std::isspace(static_cast<unsigned char>(input[start]))) {
@@ -38,8 +36,7 @@ static std::string trim(const std::string &input) {
     return input.substr(start, end - start);
 }
 
-static std::vector<std::string> split(const std::string &input,
-                                      char delimiter) {
+std::vector<std::string> split(const std::string &input, char delimiter) {
     std::vector<std::string> parts;
     std::string current;
     for (char c : input) {
@@ -65,8 +62,8 @@ struct RawStruct {
     std::vector<RawField> fields;
 };
 
-static bool parseTemplateArray(const std::string &typeName,
-                               std::string &innerType, size_t &count) {
+bool parseTemplateArray(const std::string &typeName, std::string &innerType,
+                        size_t &count) {
     static const std::regex templateRegex(
         R"(spvUnsafeArray\s*<\s*([A-Za-z_][A-Za-z0-9_]*)\s*,\s*(\d+)\s*>)");
     std::smatch match;
@@ -78,7 +75,7 @@ static bool parseTemplateArray(const std::string &typeName,
     return true;
 }
 
-static std::unordered_map<std::string, RawStruct>
+std::unordered_map<std::string, RawStruct>
 parseRawStructs(const std::string &source) {
     std::unordered_map<std::string, RawStruct> structs;
 
@@ -170,7 +167,7 @@ parseRawStructs(const std::string &source) {
     return structs;
 }
 
-static std::optional<FieldType> builtinType(const std::string &name) {
+std::optional<FieldType> builtinType(const std::string &name) {
     if (name == "float" || name == "int" || name == "uint" || name == "bool") {
         return FieldType{4, 4, false, ""};
     }
@@ -228,8 +225,7 @@ computeLayout(const std::string &name,
               std::unordered_map<std::string, StructLayout> &cache,
               std::unordered_set<std::string> &visiting);
 
-static size_t findMatchingParen(const std::string &source,
-                                size_t openParenPos) {
+size_t findMatchingParen(const std::string &source, size_t openParenPos) {
     if (openParenPos >= source.size() || source[openParenPos] != '(') {
         return std::string::npos;
     }
@@ -248,7 +244,7 @@ static size_t findMatchingParen(const std::string &source,
     return std::string::npos;
 }
 
-static FieldType
+FieldType
 resolveType(const std::string &typeName,
             const std::unordered_map<std::string, RawStruct> &rawStructs,
             std::unordered_map<std::string, StructLayout> &cache,
@@ -268,7 +264,7 @@ resolveType(const std::string &typeName,
     return FieldType{};
 }
 
-static StructLayout
+StructLayout
 computeLayout(const std::string &name,
               const std::unordered_map<std::string, RawStruct> &rawStructs,
               std::unordered_map<std::string, StructLayout> &cache,
@@ -278,7 +274,7 @@ computeLayout(const std::string &name,
         return cacheIt->second;
     }
 
-    if (visiting.find(name) != visiting.end()) {
+    if (visiting.contains(name)) {
         return StructLayout{};
     }
 
@@ -324,8 +320,8 @@ computeLayout(const std::string &name,
     return layout;
 }
 
-static std::vector<BufferBinding>
-parseStageBufferBindings(const std::string &source, bool isVertexStage) {
+std::vector<BufferBinding> parseStageBufferBindings(const std::string &source,
+                                                    bool isVertexStage) {
     std::vector<BufferBinding> bindings;
     const std::regex stageStartRegex(isVertexStage
                                          ? R"(\bvertex\b[^\(\{;]*\()"
@@ -363,10 +359,10 @@ parseStageBufferBindings(const std::string &source, bool isVertexStage) {
     return bindings;
 }
 
-static void
-parseStageTextureBindings(const std::string &source, bool isVertexStage,
-                          std::unordered_map<std::string, int> &bindings,
-                          std::unordered_map<int, TextureType> &bindingTypes) {
+void parseStageTextureBindings(
+    const std::string &source, bool isVertexStage,
+    std::unordered_map<std::string, int> &bindings,
+    std::unordered_map<int, TextureType> &bindingTypes) {
     const std::regex stageStartRegex(isVertexStage
                                          ? R"(\bvertex\b[^\(\{;]*\()"
                                          : R"(\bfragment\b[^\(\{;]*\()");
@@ -412,12 +408,12 @@ parseStageTextureBindings(const std::string &source, bool isVertexStage,
     }
 }
 
-static std::vector<std::string> parseUniformPath(const std::string &name) {
+std::vector<std::string> parseUniformPath(const std::string &name) {
     return split(name, '.');
 }
 
-static bool parseUniformToken(const std::string &token, std::string &fieldName,
-                              bool &hasIndex, size_t &index) {
+bool parseUniformToken(const std::string &token, std::string &fieldName,
+                       bool &hasIndex, size_t &index) {
     static const std::regex tokenRegex(
         R"(([A-Za-z_][A-Za-z0-9_]*)(?:\s*\[\s*(\d+)\s*\])?)");
     std::smatch match;
@@ -430,8 +426,7 @@ static bool parseUniformToken(const std::string &token, std::string &fieldName,
     return true;
 }
 
-static bool hasSuffixIgnoreCase(const std::string &value,
-                                const std::string &suffix) {
+bool hasSuffixIgnoreCase(const std::string &value, const std::string &suffix) {
     if (value.size() < suffix.size()) {
         return false;
     }
@@ -448,8 +443,8 @@ static bool hasSuffixIgnoreCase(const std::string &value,
     return true;
 }
 
-static bool matchesBindingAlias(const BufferBinding &binding,
-                                const std::string &token) {
+bool matchesBindingAlias(const BufferBinding &binding,
+                         const std::string &token) {
     if (!binding.instanceName.empty() && token == binding.instanceName) {
         return true;
     }
@@ -457,21 +452,18 @@ static bool matchesBindingAlias(const BufferBinding &binding,
         return true;
     }
     static const std::string suffixes[] = {"UBO", "SSBO", "BUFFER"};
-    for (const std::string &suffix : suffixes) {
+    return std::ranges::any_of(suffixes, [&](const std::string &suffix) {
         if (!hasSuffixIgnoreCase(binding.structName, suffix)) {
-            continue;
+            return false;
         }
         std::string trimmed = binding.structName.substr(
             0, binding.structName.size() - suffix.size());
-        if (token == trimmed) {
-            return true;
-        }
-    }
-    return false;
+        return token == trimmed;
+    });
 }
 
-static const StructField *findField(const StructLayout &layout,
-                                    const std::string &name) {
+const StructField *findField(const StructLayout &layout,
+                             const std::string &name) {
     for (const StructField &field : layout.fields) {
         if (field.name == name) {
             return &field;
@@ -480,70 +472,68 @@ static const StructField *findField(const StructLayout &layout,
     return nullptr;
 }
 
-template <typename T> static inline T enumOr(T lhs, T rhs) {
+template <typename T> inline T enumOr(T lhs, T rhs) {
     return static_cast<T>(static_cast<NS::UInteger>(lhs) |
                           static_cast<NS::UInteger>(rhs));
 }
 
-static std::unordered_map<Context *, ContextState> &contextStatesStorage() {
+std::unordered_map<Context *, ContextState> &contextStatesStorage() {
     static auto *states = new std::unordered_map<Context *, ContextState>();
     return *states;
 }
 
-static std::unordered_map<Device *, DeviceState> &deviceStatesStorage() {
+std::unordered_map<Device *, DeviceState> &deviceStatesStorage() {
     static auto *states = new std::unordered_map<Device *, DeviceState>();
     return *states;
 }
 
-static std::unordered_map<Buffer *, BufferState> &bufferStatesStorage() {
+std::unordered_map<Buffer *, BufferState> &bufferStatesStorage() {
     static auto *states = new std::unordered_map<Buffer *, BufferState>();
     return *states;
 }
 
-static std::unordered_map<Texture *, TextureState> &textureStatesStorage() {
+std::unordered_map<Texture *, TextureState> &textureStatesStorage() {
     static auto *states = new std::unordered_map<Texture *, TextureState>();
     return *states;
 }
 
-static std::unordered_map<Shader *, ShaderState> &shaderStatesStorage() {
+std::unordered_map<Shader *, ShaderState> &shaderStatesStorage() {
     static auto *states = new std::unordered_map<Shader *, ShaderState>();
     return *states;
 }
 
-static std::unordered_map<ShaderProgram *, ProgramState> &
-programStatesStorage() {
+std::unordered_map<ShaderProgram *, ProgramState> &programStatesStorage() {
     static auto *states =
         new std::unordered_map<ShaderProgram *, ProgramState>();
     return *states;
 }
 
-static std::unordered_map<Pipeline *, PipelineState> &pipelineStatesStorage() {
+std::unordered_map<Pipeline *, PipelineState> &pipelineStatesStorage() {
     static auto *states = new std::unordered_map<Pipeline *, PipelineState>();
     return *states;
 }
 
-static std::unordered_map<Framebuffer *, FramebufferState> &
+std::unordered_map<Framebuffer *, FramebufferState> &
 framebufferStatesStorage() {
     static auto *states =
         new std::unordered_map<Framebuffer *, FramebufferState>();
     return *states;
 }
 
-static std::unordered_map<CommandBuffer *, CommandBufferState> &
+std::unordered_map<CommandBuffer *, CommandBufferState> &
 commandStatesStorage() {
     static auto *states =
         new std::unordered_map<CommandBuffer *, CommandBufferState>();
     return *states;
 }
 
-static std::unordered_map<uint32_t, std::weak_ptr<Texture>> &
-textureRegistryStorage() {
+std::unordered_map<uint32_t, std::weak_ptr<Texture>> &textureRegistryStorage() {
     static auto *registry =
         new std::unordered_map<uint32_t, std::weak_ptr<Texture>>();
     return *registry;
 }
 
-static uint32_t &nextTextureHandleStorage() {
+uint32_t &nextTextureHandleStorage() {
     static auto *nextHandle = new uint32_t(1);
     return *nextHandle;
 }
@@ -1011,7 +1001,7 @@ bool parseProgramLayouts(const std::string &vertexSource,
     std::vector<BufferBinding> fragmentBindings =
         parseStageBufferBindings(fragmentSource, false);
     for (BufferBinding &binding : fragmentBindings) {
-        if (conflictingStructs.count(binding.structName)) {
+        if (conflictingStructs.contains(binding.structName)) {
             binding.structName += "__frag";
         }
     }
@@ -1122,19 +1112,24 @@ std::vector<UniformLocation> resolveUniformLocations(ProgramState &programState,
             }
 
             size_t effectiveIndex = hasIndex ? index : 0;
-            offset += field->offset + effectiveIndex * field->stride;
+            offset += field->offset + (effectiveIndex * field->stride);
 
             bool isLast = (tokenIndex + 1 == tokens.size());
             if (isLast) {
                 if (field->type.isStruct) {
-                    finalSize = hasIndex ? field->type.size
-                                         : field->stride * field->arrayCount;
+                    if (hasIndex) {
+                        finalSize = field->type.size;
+                    } else {
+                        finalSize = field->stride * field->arrayCount;
+                    }
                 } else {
-                    finalSize = hasIndex
-                                    ? field->type.size
-                                    : ((field->arrayCount > 1)
-                                           ? field->stride * field->arrayCount
-                                           : field->type.size);
+                    if (hasIndex) {
+                        finalSize = field->type.size;
+                    } else if (field->arrayCount > 1) {
+                        finalSize = field->stride * field->arrayCount;
+                    } else {
+                        finalSize = field->type.size;
+                    }
                 }
             } else {
                 if (!field->type.isStruct) {

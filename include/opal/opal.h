@@ -156,11 +156,13 @@ struct DeviceInfo {
  */
 class Device {
   public:
-    static std::shared_ptr<Device> acquire(std::shared_ptr<Context> context);
+    static std::shared_ptr<Device>
+    acquire(const std::shared_ptr<Context> &context);
     ~Device();
     std::shared_ptr<CommandBuffer> acquireCommandBuffer();
 
-    void submitCommandBuffer(std::shared_ptr<CommandBuffer> commandBuffer);
+    void
+    submitCommandBuffer(const std::shared_ptr<CommandBuffer> &commandBuffer);
     std::shared_ptr<Framebuffer> getDefaultFramebuffer();
 
     DeviceInfo getDeviceInfo();
@@ -477,7 +479,7 @@ class ShaderProgram {
   public:
     static std::shared_ptr<ShaderProgram> create();
     ~ShaderProgram();
-    void attachShader(std::shared_ptr<Shader> shader, int callerId = -1);
+    void attachShader(const std::shared_ptr<Shader> &shader, int callerId = -1);
 
     void link();
     void use();
@@ -633,7 +635,7 @@ class Pipeline {
 
     void bind();
 
-    bool operator==(std::shared_ptr<Pipeline> pipeline) const;
+    bool operator==(const std::shared_ptr<Pipeline> &pipeline) const;
 
     std::shared_ptr<ShaderProgram> shaderProgram;
 
@@ -675,8 +677,9 @@ class Pipeline {
      */
     void bindBufferData(const std::string &name, const void *data, size_t size);
 
-    void bindTexture(const std::string &name, std::shared_ptr<Texture> texture,
-                     int unit, int callerId = -1);
+    void bindTexture(const std::string &name,
+                     const std::shared_ptr<Texture> &texture, int unit,
+                     int callerId = -1);
     void bindTexture2D(const std::string &name, uint textureId, int unit,
                        int callerId = -1);
     void bindTexture3D(const std::string &name, uint textureId, int unit,
@@ -928,7 +931,8 @@ class Framebuffer {
      * @param attachmentIndex The color attachment index (0 =
      * GL_COLOR_ATTACHMENT0, etc.)
      */
-    void attachTexture(std::shared_ptr<Texture> texture, int attachmentIndex);
+    void attachTexture(const std::shared_ptr<Texture> &texture,
+                       int attachmentIndex);
 
     /**
      * @brief Attaches a cubemap texture to this framebuffer for omnidirectional
@@ -936,7 +940,7 @@ class Framebuffer {
      * @param texture The cubemap texture to attach.
      * @param attachmentType The attachment type (typically Depth for shadows).
      */
-    void attachCubemap(std::shared_ptr<Texture> texture,
+    void attachCubemap(const std::shared_ptr<Texture> &texture,
                        Attachment::Type attachmentType);
 
     /**
@@ -947,7 +951,7 @@ class Framebuffer {
      * @param face The face index (0-5: +X, -X, +Y, -Y, +Z, -Z).
      * @param attachmentType The attachment type (typically Depth for shadows).
      */
-    void attachCubemapFace(std::shared_ptr<Texture> texture, int face,
+    void attachCubemapFace(const std::shared_ptr<Texture> &texture, int face,
                            Attachment::Type attachmentType);
 
     /**
@@ -1077,13 +1081,13 @@ class CommandBuffer {
     ~CommandBuffer();
     void start();
     void beginPass(std::shared_ptr<RenderPass> renderPass);
-    void beginSampled(std::shared_ptr<Framebuffer> readFramebuffer,
-                      std::shared_ptr<Framebuffer> writeFramebuffer);
+    void beginSampled(const std::shared_ptr<Framebuffer> &readFramebuffer,
+                      const std::shared_ptr<Framebuffer> &writeFramebuffer);
     void endPass();
     void commit();
 
     // The different commands
-    void bindPipeline(std::shared_ptr<Pipeline> pipeline);
+    void bindPipeline(const std::shared_ptr<Pipeline> &pipeline);
     void unbindPipeline();
     void bindDrawingState(std::shared_ptr<DrawingState> drawingState);
     void unbindDrawingState();
@@ -1099,7 +1103,7 @@ class CommandBuffer {
      * Requires Pipeline with PrimitiveStyle::Patches and setPatchVertices().
      */
     void drawPatches(uint vertexCount, uint firstVertex = 0, int objectId = -1);
-    void performResolve(std::shared_ptr<ResolveAction> resolveAction);
+    void performResolve(const std::shared_ptr<ResolveAction> &resolveAction);
 
     void clearColor(float r, float g, float b, float a);
     void clearDepth(float depth);
