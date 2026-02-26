@@ -50,21 +50,18 @@ struct QueryResult;
  * ```
  */
 class Component {
-public:
+  public:
     virtual ~Component() = default;
     /**
      * @brief Initializes the component. This method is called once when the
      * component is added to a GameObject.
      *
      */
-    virtual void init() {
-    }
+    virtual void init() {}
 
-    virtual void beforePhysics() {
-    }
+    virtual void beforePhysics() {}
 
-    virtual void atAttach() {
-    }
+    virtual void atAttach() {}
 
     /**
      * @brief Updates the component each frame. This method is called every
@@ -72,16 +69,14 @@ public:
      *
      * @param deltaTime The time elapsed since the last frame.
      */
-    virtual void update([[maybe_unused]] float deltaTime) {
-    }
+    virtual void update([[maybe_unused]] float deltaTime) {}
 
     /**
      * @brief Performs changes when the GameObject's view matrix is updated.
      *
      * @param view The new view matrix.
      */
-    virtual void setViewMatrix([[maybe_unused]] const glm::mat4& view) {
-    }
+    virtual void setViewMatrix([[maybe_unused]] const glm::mat4 &view) {}
 
     /**
      * @brief Performs changes when the GameObject's projection matrix is
@@ -90,15 +85,14 @@ public:
      * @param projection The new projection matrix.
      */
     virtual void
-    setProjectionMatrix([[maybe_unused]] const glm::mat4& projection) {
-    }
+    setProjectionMatrix([[maybe_unused]] const glm::mat4 &projection) {}
 
     /**
      * @brief Gets the window associated with the component's GameObject.
      *
      * @return (Window*) The window instance.
      */
-    Window* getWindow();
+    Window *getWindow();
 
     /**
      * @brief Construct a new Component object
@@ -106,31 +100,25 @@ public:
      */
     Component() = default;
 
-    virtual void onCollisionEnter([[maybe_unused]] GameObject* other) {
-    }
+    virtual void onCollisionEnter([[maybe_unused]] GameObject *other) {}
 
-    virtual void onCollisionExit([[maybe_unused]] GameObject* other) {
-    }
+    virtual void onCollisionExit([[maybe_unused]] GameObject *other) {}
 
-    virtual void onCollisionStay([[maybe_unused]] GameObject* other) {
-    }
+    virtual void onCollisionStay([[maybe_unused]] GameObject *other) {}
 
-    virtual void onSignalRecieve([[maybe_unused]] const std::string& signal,
-                                 [[maybe_unused]] GameObject* sender) {
-    }
+    virtual void onSignalRecieve([[maybe_unused]] const std::string &signal,
+                                 [[maybe_unused]] GameObject *sender) {}
 
-    virtual void onSignalEnd([[maybe_unused]] const std::string& signal,
-                             [[maybe_unused]] GameObject* sender) {
-    }
+    virtual void onSignalEnd([[maybe_unused]] const std::string &signal,
+                             [[maybe_unused]] GameObject *sender) {}
 
-    virtual void onQueryRecieve([[maybe_unused]] QueryResult& result) {
-    }
+    virtual void onQueryReceive([[maybe_unused]] QueryResult &result) {}
 
     /**
      * @brief Gets the GameObject associated with the component.
      *
      */
-    GameObject* object = nullptr;
+    GameObject *object = nullptr;
 };
 
 /**
@@ -143,14 +131,13 @@ public:
 template <typename T>
     requires std::is_base_of_v<GameObject, T>
 class TraitComponent : public Component {
-public:
+  public:
     /**
      * @brief Initializes the component. This method is called once when the
      * component is added to a GameObject.
      *
      */
-    virtual void init() override {
-    };
+    virtual void init() override {};
     /**
      * @brief Updates the component each frame. This method is called every
      * frame before rendering.
@@ -169,15 +156,14 @@ public:
      *
      * @param object A pointer to the typed GameObject.
      */
-    virtual void updateComponent([[maybe_unused]] T* object) {
-    }
+    virtual void updateComponent([[maybe_unused]] T *object) {}
 
     /**
      * @brief Sets the typed object reference for the component.
      *
      * @param obj A pointer to the typed GameObject.
      */
-    inline void setTypedObject([[maybe_unused]] T* obj) { typedObject = obj; }
+    inline void setTypedObject([[maybe_unused]] T *obj) { typedObject = obj; }
 
     /**
      * @brief Provides direct access to the specialized GameObject this trait
@@ -186,14 +172,14 @@ public:
      * @return (T*) Pointer to the typed object, or nullptr if the component
      * has not been attached yet.
      */
-    inline T* getObject() { return typedObject; }
+    inline T *getObject() { return typedObject; }
 
-private:
-    T* typedObject = nullptr;
+  private:
+    T *typedObject = nullptr;
 };
 
 namespace atlas {
-    inline std::map<int, GameObject*> gameObjects = {};
+inline std::map<int, GameObject *> gameObjects = {};
 }
 
 /**
@@ -201,7 +187,7 @@ namespace atlas {
  * it provides common functionality for all game objects in the scene.
  */
 class GameObject : public Renderable {
-public:
+  public:
     /**
      * @brief Construct a new GameObject and assign it a unique ID.
      */
@@ -214,7 +200,7 @@ public:
         atlas::gameObjects[id] = this;
     }
 
-    GameObject([[maybe_unused]] const GameObject& other) {
+    GameObject([[maybe_unused]] const GameObject &other) {
         std::random_device rd;
         std::mt19937 gen(rd());
         std::uniform_int_distribution<int> dist(0, INT_MAX);
@@ -223,7 +209,7 @@ public:
         atlas::gameObjects[id] = this;
     }
 
-    GameObject([[maybe_unused]] GameObject&& other) noexcept {
+    GameObject([[maybe_unused]] GameObject &&other) noexcept {
         std::random_device rd;
         std::mt19937 gen(rd());
         std::uniform_int_distribution<int> dist(0, INT_MAX);
@@ -232,14 +218,14 @@ public:
         atlas::gameObjects[id] = this;
     }
 
-    GameObject& operator=(const GameObject& other) {
+    GameObject &operator=(const GameObject &other) {
         if (this != &other) {
             atlas::gameObjects[id] = this;
         }
         return *this;
     }
 
-    GameObject& operator=(GameObject&& other) noexcept {
+    GameObject &operator=(GameObject &&other) noexcept {
         if (this != &other) {
             atlas::gameObjects[id] = this;
         }
@@ -253,7 +239,7 @@ public:
      *
      * @param program
      */
-    virtual void attachProgram([[maybe_unused]] const ShaderProgram& program) {
+    virtual void attachProgram([[maybe_unused]] const ShaderProgram &program) {
     };
     /**
      * @brief Creates and attaches a shader program to the object.
@@ -262,99 +248,82 @@ public:
      * @param fragmentShader The fragment shader for the program
      */
     virtual void
-    createAndAttachProgram([[maybe_unused]] VertexShader& vertexShader,
-                           [[maybe_unused]] FragmentShader& fragmentShader) {
-    };
+    createAndAttachProgram([[maybe_unused]] VertexShader &vertexShader,
+                           [[maybe_unused]] FragmentShader &fragmentShader) {};
     /**
      * @brief Attaches a texture to the object.
      *
      * @param texture The texture to attach.
      */
-    virtual void attachTexture([[maybe_unused]] const Texture& texture) {
-    };
+    virtual void attachTexture([[maybe_unused]] const Texture &texture) {};
     /**
      * @brief Sets the color of the object.
      *
      * @param color The new color to set.
      */
-    virtual void setColor([[maybe_unused]] const Color& color) {
-    };
+    virtual void setColor([[maybe_unused]] const Color &color) {};
     /**
      * @brief Sets the position of the object.
      *
      * @param newPosition The new position to set.
      */
-    virtual void setPosition([[maybe_unused]] const Position3d& newPosition) {
-    };
+    virtual void setPosition([[maybe_unused]] const Position3d &newPosition) {};
     /**
      * @brief Moves the object by a certain amount.
      *
      * @param deltaPosition The amount to move the object by.
      */
-    virtual void move([[maybe_unused]] const Position3d& deltaPosition) {
-    };
+    virtual void move([[maybe_unused]] const Position3d &deltaPosition) {};
     /**
      * @brief Sets the rotation of the object.
      *
      * @param newRotation The new rotation to set.
      */
-    virtual void setRotation([[maybe_unused]] const Rotation3d& newRotation) {
-    };
+    virtual void setRotation([[maybe_unused]] const Rotation3d &newRotation) {};
     /**
      * @brief Sets the object to look at a specific point in 3D space.
      *
      * @param target The point to look at.
      * @param up The up vector to define the orientation.
      */
-    virtual void lookAt([[maybe_unused]] const Position3d& target,
-                        [[maybe_unused]] const Normal3d& up) {
-    };
+    virtual void lookAt([[maybe_unused]] const Position3d &target,
+                        [[maybe_unused]] const Normal3d &up) {};
     /**
      * @brief Rotates the object by a certain amount.
      *
      * @param deltaRotation The amount to rotate the object by.
      */
-    virtual void rotate([[maybe_unused]] const Rotation3d& deltaRotation) {
-    };
+    virtual void rotate([[maybe_unused]] const Rotation3d &deltaRotation) {};
     /**
      * @brief Sets the scale of the object.
      *
      * @param newScale The new scale of the object.
      */
-    virtual void setScale([[maybe_unused]] const Scale3d& newScale) {
-    };
+    virtual void setScale([[maybe_unused]] const Scale3d &newScale) {};
     /**
      * @brief Hides the object, making it invisible in the scene.
      *
      */
-    virtual void hide() {
-    };
+    virtual void hide() {};
     /**
      * @brief Shows the object, making it visible in the scene.
      *
      */
-    virtual void show() {
-    };
+    virtual void show() {};
 
-    virtual void onCollisionEnter([[maybe_unused]] GameObject* other) {
-    }
+    virtual void onCollisionEnter([[maybe_unused]] GameObject *other) {}
 
-    virtual void onCollisionExit([[maybe_unused]] GameObject* other) {
-    }
+    virtual void onCollisionExit([[maybe_unused]] GameObject *other) {}
 
-    virtual void onCollisionStay([[maybe_unused]] GameObject* other) {
-    }
+    virtual void onCollisionStay([[maybe_unused]] GameObject *other) {}
 
-    virtual void onSignalRecieve([[maybe_unused]] const std::string& signal,
-                                 [[maybe_unused]] GameObject* sender) {
-    }
+    virtual void onSignalRecieve([[maybe_unused]] const std::string &signal,
+                                 [[maybe_unused]] GameObject *sender) {}
 
-    virtual void onSignalEnd([[maybe_unused]] const std::string& signal,
-                             [[maybe_unused]] GameObject* sender) {
-    }
+    virtual void onSignalEnd([[maybe_unused]] const std::string &signal,
+                             [[maybe_unused]] GameObject *sender) {}
 
-    virtual void onQueryRecieve([[maybe_unused]] QueryResult& result) {
-    }
+    virtual void onQueryReceive([[maybe_unused]] QueryResult &result) {}
 
     /**
      * @brief Adds a component to the object.
@@ -366,7 +335,7 @@ public:
      */
     template <typename T>
         requires std::is_base_of_v<Component, std::remove_cvref_t<T>>
-    void addComponent(T&& existing) {
+    void addComponent(T &&existing) {
         using U = std::remove_cvref_t<T>;
         std::shared_ptr<U> component =
             std::make_shared<U>(std::forward<T>(existing));
@@ -376,7 +345,7 @@ public:
     }
 
     void beforePhysics() override {
-        for (auto& component : components) {
+        for (auto &component : components) {
             component->beforePhysics();
         }
     }
@@ -393,13 +362,13 @@ public:
      */
     template <typename U, typename T>
         requires std::is_base_of_v<TraitComponent<U>, T>
-    void addTraitComponent(T&& existing) {
-        if (static_cast<U*>(this) == nullptr) {
+    void addTraitComponent(T &&existing) {
+        if (static_cast<U *>(this) == nullptr) {
             throw std::runtime_error(
                 "Cannot add TraitComponent to object that is not of the "
                 "correct type.");
         }
-        existing.setTypedObject(static_cast<U*>(this));
+        existing.setTypedObject(static_cast<U *>(this));
         std::shared_ptr<T> component =
             std::make_shared<T>(std::forward<T>(existing));
         component->object = this;
@@ -416,7 +385,7 @@ public:
     template <typename T>
         requires std::is_base_of_v<Component, T>
     std::shared_ptr<T> getComponent() {
-        for (auto& component : components) {
+        for (auto &component : components) {
             std::shared_ptr<T> casted = std::dynamic_pointer_cast<T>(component);
             if (casted != nullptr) {
                 return casted;
@@ -425,7 +394,7 @@ public:
         return nullptr;
     }
 
-    Rigidbody* rigidbody = nullptr;
+    Rigidbody *rigidbody = nullptr;
 
     /**
      * @brief Returns the unique identifier associated with this object.
@@ -434,13 +403,13 @@ public:
 
     virtual Rotation3d getRotation() const { return Rotation3d(0.f, 0.f, 0.f); }
 
-    void addDependency(GameObject* obj) { dependencies.push_back(obj); }
+    void addDependency(GameObject *obj) { dependencies.push_back(obj); }
 
-    std::vector<GameObject*> getDependencies() const { return dependencies; }
+    std::vector<GameObject *> getDependencies() const { return dependencies; }
 
-protected:
+  protected:
     std::vector<std::shared_ptr<Component>> components;
-    std::vector<GameObject*> dependencies;
+    std::vector<GameObject *> dependencies;
 
     /**
      * @brief The unique identifier for the object.
@@ -472,12 +441,12 @@ protected:
  *
  */
 class CompoundObject : public GameObject {
-public:
+  public:
     /**
      * @brief The objects that make up the compound object.
      *
      */
-    std::vector<GameObject*> objects;
+    std::vector<GameObject *> objects;
 
     /**
      * @brief Bootstraps the compound object, initializing child objects and
@@ -489,20 +458,18 @@ public:
      * @brief Ticks the compound object, ensuring child objects stay
      * synchronized before rendering.
      */
-    virtual void update(Window& window) override;
+    virtual void update(Window &window) override;
     /**
      * @brief Updates the objects within the compound object.
      *
      * @param window The window where the objects are being rendered.
      */
-    virtual void updateObjects([[maybe_unused]] Window& window) {
-    };
+    virtual void updateObjects([[maybe_unused]] Window &window) {};
     /**
      * @brief Initializes the compound object.
      *
      */
-    virtual void init() {
-    };
+    virtual void init() {};
 
     /**
      * @brief Renders every child CoreObject that composes the compound
@@ -513,12 +480,12 @@ public:
     /**
      * @brief Propagates the active view matrix to every child CoreObject.
      */
-    void setViewMatrix(const glm::mat4& view) override;
+    void setViewMatrix(const glm::mat4 &view) override;
     /**
      * @brief Propagates the active projection matrix to every child
      * CoreObject.
      */
-    void setProjectionMatrix(const glm::mat4& projection) override;
+    void setProjectionMatrix(const glm::mat4 &projection) override;
     /**
      * @brief Retrieves the shader program currently in use by the first
      * underlying CoreObject.
@@ -527,7 +494,7 @@ public:
     /**
      * @brief Forces all child objects to use the provided shader program.
      */
-    void setPipeline(std::shared_ptr<opal::Pipeline>& pipeline) override;
+    void setPipeline(std::shared_ptr<opal::Pipeline> &pipeline) override;
     /**
      * @brief Obtains the position of the compound object based on its first
      * child.
@@ -552,28 +519,28 @@ public:
      * @brief Repositions the entire aggregate by offsetting all children the
      * same amount.
      */
-    void setPosition(const Position3d& newPosition) override;
+    void setPosition(const Position3d &newPosition) override;
     /**
      * @brief Translates every child CoreObject by the supplied delta.
      */
-    void move(const Position3d& deltaPosition) override;
+    void move(const Position3d &deltaPosition) override;
     /**
      * @brief Applies an absolute rotation to all children, maintaining their
      * relative offsets.
      */
-    void setRotation(const Rotation3d& newRotation) override;
+    void setRotation(const Rotation3d &newRotation) override;
     /**
      * @brief Rotates every child CoreObject around its own origin.
      */
-    void lookAt(const Position3d& target, const Normal3d& up) override;
+    void lookAt(const Position3d &target, const Normal3d &up) override;
     /**
      * @brief Applies an incremental rotation to all children.
      */
-    void rotate(const Rotation3d& deltaRotation) override;
+    void rotate(const Rotation3d &deltaRotation) override;
     /**
      * @brief Uniformly rescales the compound object across all children.
      */
-    void setScale(const Scale3d& newScale) override;
+    void setScale(const Scale3d &newScale) override;
     /**
      * @brief Temporarily removes the aggregate from the render queue.
      */
@@ -589,7 +556,7 @@ public:
      * @param obj The component instance to add. \warning It must be long-lived.
      * This means that declaring it as a class property is a good idea.
      */
-    inline void addObject(GameObject* obj) {
+    inline void addObject(GameObject *obj) {
         objects.push_back(obj);
         if (obj != nullptr && obj->renderLateForward) {
             lateForwardObjects.push_back(obj);
@@ -600,26 +567,26 @@ public:
      * @brief Returns the late forward proxy renderable, if any children
      * require late rendering.
      */
-    Renderable* getLateRenderable();
+    Renderable *getLateRenderable();
 
     bool canUseDeferredRendering() override;
 
-private:
+  private:
     class LateCompoundRenderable;
 
     Position3d position{0.0, 0.0, 0.0};
     std::vector<Position3d> originalPositions;
-    std::vector<GameObject*> lateForwardObjects;
+    std::vector<GameObject *> lateForwardObjects;
     std::shared_ptr<LateCompoundRenderable> lateRenderableProxy;
     bool lateRenderableRegistered = false;
     bool changedPosition = false;
 
     void renderLate(float dt,
-                    const std::shared_ptr<opal::CommandBuffer>& commandBuffer,
+                    const std::shared_ptr<opal::CommandBuffer> &commandBuffer,
                     bool updatePipeline);
-    void updateLate(Window& window);
-    void setLateViewMatrix(const glm::mat4& view);
-    void setLateProjectionMatrix(const glm::mat4& projection);
+    void updateLate(Window &window);
+    void setLateViewMatrix(const glm::mat4 &view);
+    void setLateProjectionMatrix(const glm::mat4 &projection);
     std::optional<std::shared_ptr<opal::Pipeline>>
     getLateShaderPipelineInternal();
     void setLatePipeline(std::shared_ptr<opal::Pipeline> pipeline);
@@ -641,7 +608,7 @@ class UIObject : public GameObject {
  *
  */
 class UIView : public UIObject {
-public:
+  public:
     /**
      * @brief Renders the view alongside all registered child UI objects in
      * submission order.
@@ -651,11 +618,11 @@ public:
     /**
      * @brief Stores the view matrix used when rendering the UI hierarchy.
      */
-    void setViewMatrix(const glm::mat4& view) override;
+    void setViewMatrix(const glm::mat4 &view) override;
     /**
      * @brief Stores the projection matrix applied to all child UI objects.
      */
-    void setProjectionMatrix(const glm::mat4& projection) override;
+    void setProjectionMatrix(const glm::mat4 &projection) override;
 
     /**
      * @brief Adds a child UI object to this view.
@@ -663,10 +630,10 @@ public:
      * @param child The UI object to add. \warning The object must be
      * long-lived.
      */
-    inline void addChild(UIObject* child) { children.push_back(child); }
+    inline void addChild(UIObject *child) { children.push_back(child); }
 
-private:
-    std::vector<UIObject*> children;
+  private:
+    std::vector<UIObject *> children;
 };
 
 #endif // ATLAS_COMPONENT_H

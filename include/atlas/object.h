@@ -637,9 +637,9 @@ class CoreObject : public GameObject {
         }
     }
 
-    void onQueryRecieve(QueryResult &result) override {
+    void onQueryReceive(QueryResult &result) override {
         for (auto &component : components) {
-            component->onQueryRecieve(result);
+            component->onQueryReceive(result);
         }
     }
 };

@@ -38,7 +38,7 @@
  * // Optional tagging for filtered queries
  * rb->addTag("Player");
  *
- * // Trigger a raycast query (results are delivered via onQueryRecieve)
+ * // Trigger a raycast query (results are delivered via onQueryReceive)
  * rb->raycast({0.0f, -1.0f, 0.0f}, 100.0f);
  *
  * // For sensors, you can emit signals on contact
@@ -340,7 +340,7 @@ class Vehicle final : public Component {
  *
  * Most query APIs (`raycast*`, `overlap*`, `predictMovement*`) are async-style:
  * the request is queued and the result is reported to components via
- * `Component::onQueryRecieve(QueryResult&)`.
+ * `Component::onQueryReceive(QueryResult&)`.
  */
 class Rigidbody : public Component {
   public:
@@ -385,6 +385,13 @@ class Rigidbody : public Component {
     void setAngularVelocity(const Position3d &velocity);
     /** @brief Adds to the rigidbody's angular velocity. */
     void addAngularVelocity(const Position3d &velocity);
+
+    void setMaxLinearVelocity(float maxLinearVelocity);
+    void setMaxAngularVelocity(float maxAngularVelocity);
+
+    Velocity3d getLinearVelocity();
+    Velocity3d getAngularVelocity();
+    Velocity3d getVelocity();
 
     void raycast(const Position3d &direction, float maxDistance = 1000.0f);
     void raycastAll(const Position3d &direction, float maxDistance = 100.0f);

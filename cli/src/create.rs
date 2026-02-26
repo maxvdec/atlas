@@ -218,6 +218,7 @@ else()
     message(STATUS "Downloaded Jolt Physics, version ${JOLT_VERSION}")
 endif()
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 file(GLOB_RECURSE SOURCE_FILES ##PROJECTNAME##/*.cpp)
 
 add_executable(##PROJECTNAMELC## ${SOURCE_FILES})
@@ -248,11 +249,9 @@ set_target_properties(JoltAtlas PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}
 
 target_link_libraries(##PROJECTNAMELC## PRIVATE atlas bezel OpenGL::GL glfw glm::glm finewave aurora hydra ${OPENAL_LIB} JoltAtlas assimp::assimp opal)
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-
 if(BEZEL_NATIVE)
 else()
-    include_directories(${JoltPhysics_SOURCE_DIR})
+    include_directories(${joltphysics_SOURCE_DIR})
     target_compile_definitions(##PROJECTNAMELC## PRIVATE
     JPH_PROFILE_ENABLED=1
     JPH_DEBUG_RENDERER=1

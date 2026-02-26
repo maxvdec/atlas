@@ -35,26 +35,25 @@
 #include <tuple>
 #include <opal/opal.h>
 
-Window* Window::mainWindow = nullptr;
+Window *Window::mainWindow = nullptr;
 
-Window::Window(const WindowConfiguration& config)
+Window::Window(const WindowConfiguration &config)
     : title(config.title), width(config.width), height(config.height) {
     atlas_log("Initializing window: " + config.title);
 #ifdef VULKAN
     auto context = opal::Context::create({.useOpenGL = false});
     atlas_log("Using Vulkan backend");
 #elif defined(METAL)
-    auto context = opal::Context::create(
-        {.useOpenGL = false, .applicationName = config.title, .applicationVersion = ""});
+    auto context = opal::Context::create({.useOpenGL = false,
+                                          .applicationName = config.title,
+                                          .applicationVersion = ""});
     atlas_log("Using Metal backend");
 #else
     auto context =
-        opal::Context::create({
-            .useOpenGL = true,
-            .majorVersion = 4,
-            .minorVersion = 1,
-            .profile = opal::OpenGLProfile::Core
-        });
+        opal::Context::create({.useOpenGL = true,
+                               .majorVersion = 4,
+                               .minorVersion = 1,
+                               .profile = opal::OpenGLProfile::Core});
     atlas_log("Using OpenGL backend");
 #endif
 
@@ -62,8 +61,10 @@ Window::Window(const WindowConfiguration& config)
     this->frontFace = opal::FrontFace::Clockwise;
     this->deferredFrontFace = opal::FrontFace::Clockwise;
 #elif defined(METAL)
-    frontFace = opal::FrontFace::CounterClockwise; // NOLINT(*-prefer-member-initializer)
-    deferredFrontFace = opal::FrontFace::Clockwise; // NOLINT(*-prefer-member-initializer)
+    frontFace = opal::FrontFace::
+        CounterClockwise; // NOLINT(*-prefer-member-initializer)
+    deferredFrontFace =
+        opal::FrontFace::Clockwise; // NOLINT(*-prefer-member-initializer)
 #else
     this->frontFace = opal::FrontFace::CounterClockwise;
     this->deferredFrontFace = opal::FrontFace::CounterClockwise;
@@ -79,7 +80,7 @@ Window::Window(const WindowConfiguration& config)
     context->setFlag(GLFW_COCOA_RETINA_FRAMEBUFFER, true);
 #endif
 
-    GLFWwindow* window = context->makeWindow(
+    GLFWwindow *window = context->makeWindow(
         config.width, config.height, config.title.c_str(), nullptr, nullptr);
 
     context->makeCurrent();
@@ -88,9 +89,8 @@ Window::Window(const WindowConfiguration& config)
 
     glfwSetWindowOpacity(window, config.opacity);
     glfwSetInputMode(window, GLFW_CURSOR,
-                     config.mouseCaptured
-                         ? GLFW_CURSOR_DISABLED
-                         : GLFW_CURSOR_NORMAL);
+                     config.mouseCaptured ? GLFW_CURSOR_DISABLED
+                                          : GLFW_CURSOR_NORMAL);
 
     int fbWidth, fbHeight;
     glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
@@ -115,8 +115,7 @@ Window::Window(const WindowConfiguration& config)
 
     Window::mainWindow = this;
 
-    glfwSetFramebufferSizeCallback(window, [](GLFWwindow* win, int, int)
-    {
+    glfwSetFramebufferSizeCallback(window, [](GLFWwindow *win, int, int) {
         int fbWidth, fbHeight;
         glfwGetFramebufferSize(win, &fbWidth, &fbHeight);
         if (Window::mainWindow != nullptr) {
@@ -131,13 +130,10 @@ Window::Window(const WindowConfiguration& config)
     lastMouseY = height / 2.0;
 
     glfwSetCursorPosCallback(
-        window, [](GLFWwindow*, double xpos, double ypos)
-        {
-            Window* window = Window::mainWindow;
-            Position2d movement = {
-                .x = (float)xpos - window->lastMouseX,
-                .y = window->lastMouseY - (float)ypos
-            };
+        window, [](GLFWwindow *, double xpos, double ypos) {
+            Window *window = Window::mainWindow;
+            Position2d movement = {.x = (float)xpos - window->lastMouseX,
+                                   .y = window->lastMouseY - (float)ypos};
             if (window->currentScene != nullptr) {
                 window->currentScene->onMouseMove(*window, movement);
             }
@@ -146,9 +142,8 @@ Window::Window(const WindowConfiguration& config)
         });
 
     glfwSetScrollCallback(
-        window, [](GLFWwindow*, double xoffset, double yoffset)
-        {
-            Window* window = Window::mainWindow;
+        window, [](GLFWwindow *, double xoffset, double yoffset) {
+            Window *window = Window::mainWindow;
             Position2d offset = {.x = (float)xoffset, .y = (float)yoffset};
             if (window->currentScene != nullptr) {
                 window->currentScene->onMouseScroll(*window, offset);
@@ -217,9 +212,9 @@ Window::Window(const WindowConfiguration& config)
 
     std::cout << "\033[1m\033[36mAtlas Engine\033[0m" << std::endl;
     std::cout << "\033[1m\033[36mVersion " << ATLAS_VERSION << " \033[0m"
-        << std::endl;
+              << std::endl;
     std::cout << "\033[1m\033[31mUsing Opal Graphics Library - Version "
-        << info.opalVersion << " \033[0m" << std::endl;
+              << info.opalVersion << " \033[0m" << std::endl;
 #ifdef OPENGL
     std::cout << "\033[1m\033[32mUsing OpenGL Backend\033[0m" << std::endl;
 #elif defined(VULKAN)
@@ -232,13 +227,13 @@ Window::Window(const WindowConfiguration& config)
 #if defined(VULKAN) || defined(METAL)
     std::cout << "\033[1m\033[35m---------------\033[0m" << std::endl;
     std::cout << "\033[1m\033[35mUsing GPU: " << info.deviceName << "\033[0m"
-        << std::endl;
+              << std::endl;
     std::cout << "\033[1m\033[35mVendor ID: " << info.vendorName << "\033[0m"
-        << std::endl;
+              << std::endl;
     std::cout << "\033[1m\033[35mDriver Version: " << info.driverVersion
-        << "\033[0m" << std::endl;
+              << "\033[0m" << std::endl;
     std::cout << "\033[1m\033[35mAPI Version: " << info.renderingVersion
-        << "\033[0m" << std::endl;
+              << "\033[0m" << std::endl;
 #endif
 
     if (this->waitForTracer) {
@@ -248,7 +243,7 @@ Window::Window(const WindowConfiguration& config)
 }
 
 std::tuple<int, int> Window::getCursorPosition() {
-    GLFWwindow* window = static_cast<GLFWwindow*>(this->windowRef);
+    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
     double xpos, ypos;
     glfwGetCursorPos(window, &xpos, &ypos);
     return {static_cast<int>(xpos), static_cast<int>(ypos)};
@@ -261,22 +256,22 @@ void Window::run() {
     this->physicsWorld = std::make_shared<bezel::PhysicsWorld>();
     this->physicsWorld->init();
 
-    for (auto& obj : this->renderables) {
+    for (auto &obj : this->renderables) {
         obj->initialize();
     }
-    for (auto& obj : this->preferenceRenderables) {
+    for (auto &obj : this->preferenceRenderables) {
         obj->initialize();
     }
-    for (auto& obj : this->firstRenderables) {
+    for (auto &obj : this->firstRenderables) {
         obj->initialize();
     }
-    for (auto& obj : this->lateForwardRenderables) {
+    for (auto &obj : this->lateForwardRenderables) {
         obj->initialize();
     }
-    for (auto& obj : this->uiRenderables) {
+    for (auto &obj : this->uiRenderables) {
         obj->initialize();
     }
-    GLFWwindow* window = static_cast<GLFWwindow*>(this->windowRef);
+    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
 
     auto commandBuffer = device->acquireCommandBuffer();
     this->activeCommandBuffer = commandBuffer;
@@ -308,8 +303,7 @@ void Window::run() {
         const bool isFirstFrame = this->firstFrame;
         if (isFirstFrame) {
             this->deltaTime = 0.0f;
-        }
-        else {
+        } else {
             rawDelta = std::max(rawDelta, 0.0f);
             this->deltaTime = std::min(rawDelta, MAX_DELTA_TIME);
         }
@@ -320,10 +314,48 @@ void Window::run() {
 
         device->frameCount++;
 
+        for (auto *obj : this->pendingRemovals) {
+            this->renderables.erase(std::remove(this->renderables.begin(),
+                                                this->renderables.end(), obj),
+                                    this->renderables.end());
+            this->lateForwardRenderables.erase(
+                std::remove(this->lateForwardRenderables.begin(),
+                            this->lateForwardRenderables.end(), obj),
+                this->lateForwardRenderables.end());
+            this->preferenceRenderables.erase(
+                std::remove(this->preferenceRenderables.begin(),
+                            this->preferenceRenderables.end(), obj),
+                this->preferenceRenderables.end());
+            this->firstRenderables.erase(
+                std::remove(this->firstRenderables.begin(),
+                            this->firstRenderables.end(), obj),
+                this->firstRenderables.end());
+            this->uiRenderables.erase(std::remove(this->uiRenderables.begin(),
+                                                  this->uiRenderables.end(),
+                                                  obj),
+                                      this->uiRenderables.end());
+            if (auto *fluid = dynamic_cast<Fluid *>(obj)) {
+                this->lateFluids.erase(std::remove(this->lateFluids.begin(),
+                                                   this->lateFluids.end(),
+                                                   fluid),
+                                       this->lateFluids.end());
+            }
+        }
+        this->pendingRemovals.clear();
+
+        for (auto *obj : this->pendingObjects) {
+            obj->initialize();
+            this->renderables.push_back(obj);
+            if (obj->renderLateForward) {
+                this->addLateForwardObject(obj);
+            }
+        }
+        this->pendingObjects.clear();
+
         DebugTimer cpuTimer("Cpu Data");
         DebugTimer mainTimer("Main Loop");
 
-        for (auto& obj : this->renderables) {
+        for (auto &obj : this->renderables) {
             obj->beforePhysics();
         }
 
@@ -348,14 +380,14 @@ void Window::run() {
         currentScene->updateScene(this->deltaTime);
 
         // Update the renderables
-        for (auto& obj : this->renderables) {
+        for (auto &obj : this->renderables) {
             if (obj->renderLateForward) {
                 continue;
             }
             obj->update(*this);
         }
 
-        for (auto& obj : this->lateForwardRenderables) {
+        for (auto &obj : this->lateForwardRenderables) {
             obj->update(*this);
         }
 
@@ -368,7 +400,7 @@ void Window::run() {
         renderLightsToShadowMaps(commandBuffer);
 
         // Render to the targets
-        for (auto& target : this->renderTargets) {
+        for (auto &target : this->renderTargets) {
             if (target == nullptr) {
                 continue;
             }
@@ -414,14 +446,14 @@ void Window::run() {
                 updatePipelineStateField(this->writeDepth, true);
                 updatePipelineStateField(this->cullMode, opal::CullMode::Back);
 
-                for (auto& obj : this->firstRenderables) {
+                for (auto &obj : this->firstRenderables) {
                     obj->setViewMatrix(this->camera->calculateViewMatrix());
                     obj->setProjectionMatrix(calculateProjectionMatrix());
                     obj->render(getDeltaTime(), commandBuffer,
                                 shouldRefreshPipeline(obj));
                 }
 
-                for (auto& obj : this->renderables) {
+                for (auto &obj : this->renderables) {
                     if (obj->renderLateForward) {
                         continue;
                     }
@@ -433,7 +465,7 @@ void Window::run() {
                     }
                 }
 
-                for (auto& obj : this->lateForwardRenderables) {
+                for (auto &obj : this->lateForwardRenderables) {
                     obj->setViewMatrix(this->camera->calculateViewMatrix());
                     obj->setProjectionMatrix(calculateProjectionMatrix());
                     obj->render(getDeltaTime(), commandBuffer,
@@ -448,14 +480,14 @@ void Window::run() {
                                       this->clearColor.b, this->clearColor.a);
             commandBuffer->clearDepth(1.0f);
 
-            for (auto& obj : this->firstRenderables) {
+            for (auto &obj : this->firstRenderables) {
                 obj->setViewMatrix(this->camera->calculateViewMatrix());
                 obj->setProjectionMatrix(calculateProjectionMatrix());
                 obj->render(getDeltaTime(), commandBuffer,
                             shouldRefreshPipeline(obj));
             }
 
-            for (auto& obj : this->renderables) {
+            for (auto &obj : this->renderables) {
                 if (obj->renderLateForward) {
                     continue;
                 }
@@ -465,7 +497,7 @@ void Window::run() {
                             shouldRefreshPipeline(obj));
             }
             updateFluidCaptures(commandBuffer);
-            for (auto& obj : this->lateForwardRenderables) {
+            for (auto &obj : this->lateForwardRenderables) {
                 obj->setViewMatrix(this->camera->calculateViewMatrix());
                 obj->setProjectionMatrix(calculateProjectionMatrix());
                 obj->render(getDeltaTime(), commandBuffer,
@@ -475,8 +507,8 @@ void Window::run() {
             target->resolve();
         }
 
-        for (auto& obj : this->preferenceRenderables) {
-            RenderTarget* target = dynamic_cast<RenderTarget*>(obj);
+        for (auto &obj : this->preferenceRenderables) {
+            RenderTarget *target = dynamic_cast<RenderTarget *>(obj);
             if (target != nullptr && target->brightTexture.id != 0) {
                 this->renderPhysicalBloom(target);
             }
@@ -494,14 +526,14 @@ void Window::run() {
         if (this->renderTargets.empty()) {
             updateBackbufferTarget(fbWidth, fbHeight);
             this->currentRenderTarget = this->screenRenderTarget.get();
-            for (auto& obj : this->firstRenderables) {
+            for (auto &obj : this->firstRenderables) {
                 obj->setViewMatrix(this->camera->calculateViewMatrix());
                 obj->setProjectionMatrix(calculateProjectionMatrix());
                 obj->render(getDeltaTime(), commandBuffer,
                             shouldRefreshPipeline(obj));
             }
 
-            for (auto& obj : this->renderables) {
+            for (auto &obj : this->renderables) {
                 if (obj->renderLateForward) {
                     continue;
                 }
@@ -513,18 +545,17 @@ void Window::run() {
 
             updateFluidCaptures(commandBuffer);
 
-            for (auto& obj : this->lateForwardRenderables) {
+            for (auto &obj : this->lateForwardRenderables) {
                 obj->setViewMatrix(this->camera->calculateViewMatrix());
                 obj->setProjectionMatrix(calculateProjectionMatrix());
                 obj->render(getDeltaTime(), commandBuffer,
                             shouldRefreshPipeline(obj));
             }
-        }
-        else {
+        } else {
             this->currentRenderTarget = nullptr;
         }
 
-        for (auto& obj : this->preferenceRenderables) {
+        for (auto &obj : this->preferenceRenderables) {
             obj->setViewMatrix(this->camera->calculateViewMatrix());
             obj->setProjectionMatrix(calculateProjectionMatrix());
             obj->render(getDeltaTime(), commandBuffer,
@@ -533,7 +564,7 @@ void Window::run() {
 
         updatePipelineStateField(this->useBlending, true);
 
-        for (auto& obj : this->uiRenderables) {
+        for (auto &obj : this->uiRenderables) {
             obj->render(getDeltaTime(), commandBuffer,
                         shouldRefreshPipeline(obj));
         }
@@ -614,8 +645,7 @@ void Window::run() {
             timingPacket.send();
 
             frameResourcesInfo.send();
-        }
-        else {
+        } else {
             commandBuffer->getAndResetDrawCallCount();
         }
 
@@ -630,50 +660,84 @@ void Window::run() {
     }
 }
 
-void Window::addObject(Renderable* obj) {
+void Window::addObject(Renderable *obj) {
     if (obj == nullptr) {
         return;
     }
 
-    this->renderables.push_back(obj);
-
-    if (obj->renderLateForward) {
-        this->addLateForwardObject(obj);
+    if (this->physicsWorld != nullptr) {
+        this->pendingObjects.push_back(obj);
+    } else {
+        this->renderables.push_back(obj);
+        if (obj->renderLateForward) {
+            this->addLateForwardObject(obj);
+        }
     }
 }
 
-void Window::addLateForwardObject(Renderable* object) {
+void Window::removeObject(Renderable *obj) {
+    if (obj == nullptr) {
+        return;
+    }
+
+    if (this->physicsWorld != nullptr) {
+        this->pendingRemovals.push_back(obj);
+    } else {
+        this->renderables.erase(std::remove(this->renderables.begin(),
+                                            this->renderables.end(), obj),
+                                this->renderables.end());
+        this->lateForwardRenderables.erase(
+            std::remove(this->lateForwardRenderables.begin(),
+                        this->lateForwardRenderables.end(), obj),
+            this->lateForwardRenderables.end());
+        this->preferenceRenderables.erase(
+            std::remove(this->preferenceRenderables.begin(),
+                        this->preferenceRenderables.end(), obj),
+            this->preferenceRenderables.end());
+        this->firstRenderables.erase(std::remove(this->firstRenderables.begin(),
+                                                 this->firstRenderables.end(),
+                                                 obj),
+                                     this->firstRenderables.end());
+        this->uiRenderables.erase(std::remove(this->uiRenderables.begin(),
+                                              this->uiRenderables.end(), obj),
+                                  this->uiRenderables.end());
+        if (auto *fluid = dynamic_cast<Fluid *>(obj)) {
+            this->lateFluids.erase(std::remove(this->lateFluids.begin(),
+                                               this->lateFluids.end(), fluid),
+                                   this->lateFluids.end());
+        }
+    }
+}
+
+void Window::addLateForwardObject(Renderable *object) {
     if (object == nullptr) {
         return;
     }
 
-    if (std::ranges::find(lateForwardRenderables,
-                          object) == lateForwardRenderables.end()) {
+    if (std::ranges::find(lateForwardRenderables, object) ==
+        lateForwardRenderables.end()) {
         lateForwardRenderables.push_back(object);
     }
 
-    if (auto* fluid = dynamic_cast<Fluid*>(object)) {
-        if (std::ranges::find(lateFluids, fluid) ==
-            lateFluids.end()) {
+    if (auto *fluid = dynamic_cast<Fluid *>(object)) {
+        if (std::ranges::find(lateFluids, fluid) == lateFluids.end()) {
             lateFluids.push_back(fluid);
         }
     }
 }
 
-void Window::addPreferencedObject(Renderable* obj) {
+void Window::addPreferencedObject(Renderable *obj) {
     this->preferenceRenderables.push_back(obj);
 }
 
 void Window::close() {
-    GLFWwindow* window = static_cast<GLFWwindow*>(this->windowRef);
+    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
     glfwSetWindowShouldClose(window, true);
 }
 
-void Window::setCamera(Camera* newCamera) {
-    this->camera = newCamera;
-}
+void Window::setCamera(Camera *newCamera) { this->camera = newCamera; }
 
-void Window::setScene(Scene* scene) {
+void Window::setScene(Scene *scene) {
     atlas_log("Setting active scene");
     this->currentScene = scene;
     scene->initialize(*this);
@@ -695,18 +759,17 @@ glm::mat4 Window::calculateProjectionMatrix() {
     glm::mat4 projection;
     if (!this->camera->useOrthographic) {
         int fbWidth, fbHeight;
-        GLFWwindow* window = static_cast<GLFWwindow*>(this->windowRef);
+        GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
         glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
 
         float aspectRatio =
             static_cast<float>(fbWidth) / static_cast<float>(fbHeight);
         projection = glm::perspective(glm::radians(camera->fov), aspectRatio,
                                       camera->nearClip, camera->farClip);
-    }
-    else {
+    } else {
         float orthoSize = this->camera->orthographicSize;
         int fbWidth, fbHeight;
-        GLFWwindow* window = static_cast<GLFWwindow*>(this->windowRef);
+        GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
         glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
         float aspectRatio =
             static_cast<float>(fbWidth) / static_cast<float>(fbHeight);
@@ -724,45 +787,46 @@ glm::mat4 Window::calculateProjectionMatrix() {
 
 void Window::setFullscreen(bool enable) {
     atlas_log(enable ? "Switching to fullscreen mode"
-        : "Switching to windowed mode");
-    GLFWwindow* window = static_cast<GLFWwindow*>(this->windowRef);
+                     : "Switching to windowed mode");
+    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
     if (enable) {
-        GLFWmonitor* monitor = glfwGetPrimaryMonitor();
-        const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+        GLFWmonitor *monitor = glfwGetPrimaryMonitor();
+        const GLFWvidmode *mode = glfwGetVideoMode(monitor);
         glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height,
                              mode->refreshRate);
-    }
-    else {
+    } else {
         int monitorWidth = this->width;
         int monitorHeight = this->height;
-        glfwSetWindowMonitor(window, nullptr, 100, 100, monitorWidth, monitorHeight, 0);
+        glfwSetWindowMonitor(window, nullptr, 100, 100, monitorWidth,
+                             monitorHeight, 0);
     }
 }
 
-void Window::setFullscreen(Monitor& monitor) {
-    GLFWwindow* window = static_cast<GLFWwindow*>(this->windowRef);
-    GLFWmonitor* glfwMonitor = static_cast<GLFWmonitor*>(monitor.monitorRef);
-    const GLFWvidmode* mode = glfwGetVideoMode(glfwMonitor);
+void Window::setFullscreen(Monitor &monitor) {
+    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
+    GLFWmonitor *glfwMonitor = static_cast<GLFWmonitor *>(monitor.monitorRef);
+    const GLFWvidmode *mode = glfwGetVideoMode(glfwMonitor);
     glfwSetWindowMonitor(window, glfwMonitor, 0, 0, mode->width, mode->height,
                          mode->refreshRate);
 }
 
-void Window::setWindowed(const WindowConfiguration& config) {
-    GLFWwindow* window = static_cast<GLFWwindow*>(this->windowRef);
+void Window::setWindowed(const WindowConfiguration &config) {
+    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
     int windowWidth = config.width;
     int windowHeight = config.height;
     this->renderScale = std::clamp(config.renderScale, 0.5f, 1.0f);
     this->ssaoRenderScale = std::clamp(config.ssaoScale, 0.25f, 1.0f);
     int posX = config.posX != WINDOW_CENTERED ? config.posX : 100;
     int posY = config.posY != WINDOW_CENTERED ? config.posY : 100;
-    glfwSetWindowMonitor(window, nullptr, posX, posY, windowWidth, windowHeight, 0);
+    glfwSetWindowMonitor(window, nullptr, posX, posY, windowWidth, windowHeight,
+                         0);
     this->shadowMapsDirty = true;
     this->ssaoMapsDirty = true;
 }
 
 std::vector<Monitor> Window::enumerateMonitors() {
     int count;
-    GLFWmonitor** monitors = glfwGetMonitors(&count);
+    GLFWmonitor **monitors = glfwGetMonitors(&count);
     std::vector<Monitor> monitorList;
     for (int i = 0; i < count; ++i) {
         bool isPrimary = (monitors[i] == glfwGetPrimaryMonitor());
@@ -781,87 +845,86 @@ Window::~Window() {
     this->pingpongWidth = 0;
     this->pingpongHeight = 0;
 
-    GLFWwindow* window = static_cast<GLFWwindow*>(this->windowRef);
+    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
     glfwDestroyWindow(window);
     glfwTerminate();
 }
 
 Monitor::Monitor(CoreMonitorReference ref, int id, bool isPrimary)
-    :
-    monitorID(id), primary(isPrimary), monitorRef(ref) {
-}
+    : monitorID(id), primary(isPrimary), monitorRef(ref) {}
 
 std::vector<VideoMode> Monitor::queryVideoModes() const {
-    GLFWmonitor* glfwMonitor = static_cast<GLFWmonitor*>(this->monitorRef);
+    GLFWmonitor *glfwMonitor = static_cast<GLFWmonitor *>(this->monitorRef);
     int count;
-    const GLFWvidmode* modes = glfwGetVideoModes(glfwMonitor, &count);
+    const GLFWvidmode *modes = glfwGetVideoModes(glfwMonitor, &count);
     std::vector<VideoMode> videoModes;
     for (int i = 0; i < count; ++i) {
-        videoModes.push_back(
-            {.width = modes[i].width, .height = modes[i].height, .refreshRate = modes[i].refreshRate});
+        videoModes.push_back({.width = modes[i].width,
+                              .height = modes[i].height,
+                              .refreshRate = modes[i].refreshRate});
     }
     return videoModes;
 }
 
 VideoMode Monitor::getCurrentVideoMode() const {
-    GLFWmonitor* glfwMonitor = static_cast<GLFWmonitor*>(this->monitorRef);
-    const GLFWvidmode* mode = glfwGetVideoMode(glfwMonitor);
-    return {.width = mode->width, .height = mode->height, .refreshRate = mode->refreshRate};
+    GLFWmonitor *glfwMonitor = static_cast<GLFWmonitor *>(this->monitorRef);
+    const GLFWvidmode *mode = glfwGetVideoMode(glfwMonitor);
+    return {.width = mode->width,
+            .height = mode->height,
+            .refreshRate = mode->refreshRate};
 }
 
 std::tuple<int, int> Monitor::getPhysicalSize() const {
-    GLFWmonitor* glfwMonitor = static_cast<GLFWmonitor*>(this->monitorRef);
+    GLFWmonitor *glfwMonitor = static_cast<GLFWmonitor *>(this->monitorRef);
     int widthMM, heightMM;
     glfwGetMonitorPhysicalSize(glfwMonitor, &widthMM, &heightMM);
     return {widthMM, heightMM};
 }
 
 std::tuple<int, int> Monitor::getPosition() const {
-    GLFWmonitor* glfwMonitor = static_cast<GLFWmonitor*>(this->monitorRef);
+    GLFWmonitor *glfwMonitor = static_cast<GLFWmonitor *>(this->monitorRef);
     int posX, posY;
     glfwGetMonitorPos(glfwMonitor, &posX, &posY);
     return {posX, posY};
 }
 
 std::tuple<float, float> Monitor::getContentScale() const {
-    GLFWmonitor* glfwMonitor = static_cast<GLFWmonitor*>(this->monitorRef);
+    GLFWmonitor *glfwMonitor = static_cast<GLFWmonitor *>(this->monitorRef);
     float scaleX, scaleY;
     glfwGetMonitorContentScale(glfwMonitor, &scaleX, &scaleY);
     return {scaleX, scaleY};
 }
 
 std::string Monitor::getName() const {
-    GLFWmonitor* glfwMonitor = static_cast<GLFWmonitor*>(this->monitorRef);
+    GLFWmonitor *glfwMonitor = static_cast<GLFWmonitor *>(this->monitorRef);
     return std::string(glfwGetMonitorName(glfwMonitor));
 }
 
-float Window::getTime() {
-    return static_cast<float>(glfwGetTime());
-}
+float Window::getTime() { return static_cast<float>(glfwGetTime()); }
 
 bool Window::isKeyPressed(Key key) {
-    GLFWwindow* window = static_cast<GLFWwindow*>(this->windowRef);
+    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
     int state = glfwGetKey(window, static_cast<int>(key));
     return state == GLFW_PRESS || state == GLFW_REPEAT;
 }
 
 bool Window::isKeyClicked(Key key) {
-    GLFWwindow* window = static_cast<GLFWwindow*>(this->windowRef);
+    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
     int state = glfwGetKey(window, static_cast<int>(key));
     return state == GLFW_PRESS;
 }
 
 void Window::releaseMouse() {
-    GLFWwindow* window = static_cast<GLFWwindow*>(this->windowRef);
+    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 }
 
 void Window::captureMouse() {
-    GLFWwindow* window = static_cast<GLFWwindow*>(this->windowRef);
+    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
 
-void Window::addRenderTarget(RenderTarget* target) {
+void Window::addRenderTarget(RenderTarget *target) {
     this->renderTargets.push_back(target);
 }
 
@@ -888,11 +951,11 @@ void Window::renderLightsToShadowMaps(
         if (!this->lastShadowCameraPosition.has_value() ||
             !this->lastShadowCameraDirection.has_value()) {
             cameraMoved = true;
-        }
-        else {
+        } else {
             glm::vec3 lastPos = this->lastShadowCameraPosition->toGlm();
             glm::vec3 lastDir = this->lastShadowCameraDirection->toGlm();
-            if ((glm::length(currentPos - lastPos) > 0.25f) || glm::length(currentDir - lastDir) > 0.25f) {
+            if ((glm::length(currentPos - lastPos) > 0.25f) ||
+                glm::length(currentDir - lastDir) > 0.25f) {
                 cameraMoved = true;
             }
         }
@@ -902,12 +965,11 @@ void Window::renderLightsToShadowMaps(
     const float positionThreshold = 0.1f;
     const float directionThreshold = 0.02f;
 
-    const auto& directionalLights = this->currentScene->directionalLights;
+    const auto &directionalLights = this->currentScene->directionalLights;
     if (this->cachedDirectionalLightDirections.size() !=
         directionalLights.size()) {
         lightsChanged = true;
-    }
-    else {
+    } else {
         for (size_t i = 0; i < directionalLights.size(); ++i) {
             if (directionalLights.at(i) == nullptr) {
                 if (glm::length(this->cachedDirectionalLightDirections.at(i)) >
@@ -918,20 +980,19 @@ void Window::renderLightsToShadowMaps(
                 continue;
             }
             glm::vec3 dir = directionalLights.at(i)->direction.toGlm();
-            if (glm::length(dir - this->cachedDirectionalLightDirections.at(i)) >
-                directionThreshold) {
+            if (glm::length(dir - this->cachedDirectionalLightDirections.at(
+                                      i)) > directionThreshold) {
                 lightsChanged = true;
                 break;
             }
         }
     }
 
-    const auto& pointLights = this->currentScene->pointLights;
+    const auto &pointLights = this->currentScene->pointLights;
     if (!lightsChanged) {
         if (this->cachedPointLightPositions.size() != pointLights.size()) {
             lightsChanged = true;
-        }
-        else {
+        } else {
             for (size_t i = 0; i < pointLights.size(); ++i) {
                 if (pointLights.at(i) == nullptr) {
                     if (glm::length(this->cachedPointLightPositions.at(i)) >
@@ -951,13 +1012,12 @@ void Window::renderLightsToShadowMaps(
         }
     }
 
-    const auto& spotLights = this->currentScene->spotlights;
+    const auto &spotLights = this->currentScene->spotlights;
     if (!lightsChanged) {
         if (this->cachedSpotlightPositions.size() != spotLights.size() ||
             this->cachedSpotlightDirections.size() != spotLights.size()) {
             lightsChanged = true;
-        }
-        else {
+        } else {
             for (size_t i = 0; i < spotLights.size(); ++i) {
                 if (spotLights.at(i) == nullptr) {
                     bool cachedPosNonZero =
@@ -975,9 +1035,9 @@ void Window::renderLightsToShadowMaps(
                 glm::vec3 pos = spotLights.at(i)->position.toGlm();
                 glm::vec3 dir = spotLights.at(i)->direction.toGlm();
                 if (glm::length(pos - this->cachedSpotlightPositions.at(i)) >
-                    positionThreshold ||
+                        positionThreshold ||
                     glm::length(dir - this->cachedSpotlightDirections.at(i)) >
-                    directionThreshold) {
+                        directionThreshold) {
                     lightsChanged = true;
                     break;
                 }
@@ -1003,37 +1063,34 @@ void Window::renderLightsToShadowMaps(
     bool renderedShadows = false;
 
     std::vector<std::shared_ptr<opal::Pipeline>> originalPipelines;
-    for (auto& obj : this->renderables) {
+    for (auto &obj : this->renderables) {
         if (obj->getPipeline() != std::nullopt) {
             originalPipelines.push_back(obj->getPipeline().value());
-        }
-        else {
+        } else {
             originalPipelines.push_back(opal::Pipeline::create());
         }
     }
 
     std::vector<std::shared_ptr<opal::Pipeline>> originalLatePipelines;
-    for (auto& obj : this->lateForwardRenderables) {
+    for (auto &obj : this->lateForwardRenderables) {
         if (obj->getPipeline() != std::nullopt) {
             originalLatePipelines.push_back(obj->getPipeline().value());
-        }
-        else {
+        } else {
             originalLatePipelines.push_back(opal::Pipeline::create());
         }
     }
 
-    auto gatherShadowCasters = [this]()
-    {
-        std::vector<Renderable*> casters;
+    auto gatherShadowCasters = [this]() {
+        std::vector<Renderable *> casters;
         casters.reserve(this->renderables.size() +
-            this->lateForwardRenderables.size());
-        for (auto& obj : this->renderables) {
+                        this->lateForwardRenderables.size());
+        for (auto &obj : this->renderables) {
             if (obj->renderLateForward) {
                 continue;
             }
             casters.push_back(obj);
         }
-        for (auto& obj : this->lateForwardRenderables) {
+        for (auto &obj : this->lateForwardRenderables) {
             casters.push_back(obj);
         }
         return casters;
@@ -1041,11 +1098,11 @@ void Window::renderLightsToShadowMaps(
 
     std::shared_ptr<opal::Pipeline> depthPipeline = opal::Pipeline::create();
 
-    for (auto& light : this->currentScene->directionalLights) {
+    for (auto &light : this->currentScene->directionalLights) {
         if (!light->doesCastShadows) {
             continue;
         }
-        RenderTarget* shadowRenderTarget = light->shadowRenderTarget;
+        RenderTarget *shadowRenderTarget = light->shadowRenderTarget;
         if (shadowRenderTarget == nullptr ||
             shadowRenderTarget->getFramebuffer() == nullptr) {
             continue;
@@ -1079,7 +1136,7 @@ void Window::renderLightsToShadowMaps(
         glm::mat4 lightView = lightParams.lightView;
         glm::mat4 lightProjection = lightParams.lightProjection;
         light->lastShadowParams = lightParams;
-        for (auto& obj : this->renderables) {
+        for (auto &obj : this->renderables) {
             if (obj->renderLateForward) {
                 continue;
             }
@@ -1094,7 +1151,7 @@ void Window::renderLightsToShadowMaps(
             obj->render(getDeltaTime(), commandBuffer, false);
         }
 
-        for (auto& obj : this->lateForwardRenderables) {
+        for (auto &obj : this->lateForwardRenderables) {
             if (!obj->canCastShadows()) {
                 continue;
             }
@@ -1111,11 +1168,11 @@ void Window::renderLightsToShadowMaps(
     std::shared_ptr<opal::Pipeline> spotlightsPipeline =
         opal::Pipeline::create();
 
-    for (auto& light : this->currentScene->spotlights) {
+    for (auto &light : this->currentScene->spotlights) {
         if (!light->doesCastShadows) {
             continue;
         }
-        RenderTarget* shadowRenderTarget = light->shadowRenderTarget;
+        RenderTarget *shadowRenderTarget = light->shadowRenderTarget;
         if (shadowRenderTarget == nullptr ||
             shadowRenderTarget->getFramebuffer() == nullptr) {
             continue;
@@ -1152,7 +1209,7 @@ void Window::renderLightsToShadowMaps(
         cached.lightProjection = lightProjection;
         cached.bias = 0.001f;
         light->lastShadowParams = cached;
-        for (auto& obj : this->renderables) {
+        for (auto &obj : this->renderables) {
             if (obj->renderLateForward) {
                 continue;
             }
@@ -1167,7 +1224,7 @@ void Window::renderLightsToShadowMaps(
             obj->render(getDeltaTime(), commandBuffer, false);
         }
 
-        for (auto& obj : this->lateForwardRenderables) {
+        for (auto &obj : this->lateForwardRenderables) {
             if (!obj->canCastShadows()) {
                 continue;
             }
@@ -1184,11 +1241,11 @@ void Window::renderLightsToShadowMaps(
     std::shared_ptr<opal::Pipeline> pointLightPipeline =
         opal::Pipeline::create();
 
-    for (auto& light : this->currentScene->pointLights) {
+    for (auto &light : this->currentScene->pointLights) {
         if (!light->doesCastShadows) {
             continue;
         }
-        RenderTarget* shadowRenderTarget = light->shadowRenderTarget;
+        RenderTarget *shadowRenderTarget = light->shadowRenderTarget;
         if (shadowRenderTarget == nullptr ||
             shadowRenderTarget->getFramebuffer() == nullptr) {
             continue;
@@ -1235,7 +1292,7 @@ void Window::renderLightsToShadowMaps(
                                                     shadowTransforms.at(face));
                 pointLightPipeline->setUniform1i("faceIndex", face);
 
-                for (auto& obj : this->renderables) {
+                for (auto &obj : this->renderables) {
                     if (obj->renderLateForward) {
                         continue;
                     }
@@ -1249,7 +1306,7 @@ void Window::renderLightsToShadowMaps(
                     obj->render(getDeltaTime(), commandBuffer, false);
                 }
 
-                for (auto& obj : this->lateForwardRenderables) {
+                for (auto &obj : this->lateForwardRenderables) {
                     if (!obj->canCastShadows()) {
                         continue;
                     }
@@ -1262,8 +1319,7 @@ void Window::renderLightsToShadowMaps(
 
                 commandBuffer->endPass();
             }
-        }
-        else {
+        } else {
             // Single-pass rendering with geometry shader
             auto shadowRenderPass = opal::RenderPass::create();
             shadowRenderPass->setFramebuffer(
@@ -1275,11 +1331,11 @@ void Window::renderLightsToShadowMaps(
 
             for (size_t i = 0; i < shadowTransforms.size(); ++i) {
                 pointLightPipeline->setUniformMat4f("shadowMatrices[" +
-                                                    std::to_string(i) + "]",
+                                                        std::to_string(i) + "]",
                                                     shadowTransforms.at(i));
             }
 
-            for (auto& obj : this->renderables) {
+            for (auto &obj : this->renderables) {
                 if (obj->renderLateForward) {
                     continue;
                 }
@@ -1293,7 +1349,7 @@ void Window::renderLightsToShadowMaps(
                 obj->render(getDeltaTime(), commandBuffer, false);
             }
 
-            for (auto& obj : this->lateForwardRenderables) {
+            for (auto &obj : this->lateForwardRenderables) {
                 if (!obj->canCastShadows()) {
                     continue;
                 }
@@ -1315,7 +1371,7 @@ void Window::renderLightsToShadowMaps(
 
     this->cachedDirectionalLightDirections.clear();
     this->cachedDirectionalLightDirections.reserve(directionalLights.size());
-    for (auto* light : directionalLights) {
+    for (auto *light : directionalLights) {
         if (light == nullptr) {
             this->cachedDirectionalLightDirections.emplace_back(0.0f, 0.0f,
                                                                 0.0f);
@@ -1327,7 +1383,7 @@ void Window::renderLightsToShadowMaps(
 
     this->cachedPointLightPositions.clear();
     this->cachedPointLightPositions.reserve(pointLights.size());
-    for (auto* light : pointLights) {
+    for (auto *light : pointLights) {
         if (light == nullptr) {
             this->cachedPointLightPositions.emplace_back(0.0f, 0.0f, 0.0f);
             continue;
@@ -1339,7 +1395,7 @@ void Window::renderLightsToShadowMaps(
     this->cachedSpotlightDirections.clear();
     this->cachedSpotlightPositions.reserve(spotLights.size());
     this->cachedSpotlightDirections.reserve(spotLights.size());
-    for (auto* light : spotLights) {
+    for (auto *light : spotLights) {
         if (light == nullptr) {
             this->cachedSpotlightPositions.emplace_back(0.0f, 0.0f, 0.0f);
             this->cachedSpotlightDirections.emplace_back(0.0f, 0.0f, 0.0f);
@@ -1355,7 +1411,7 @@ void Window::renderLightsToShadowMaps(
     }
 
     size_t i = 0;
-    for (auto& renderable : this->renderables) {
+    for (auto &renderable : this->renderables) {
         if (i < originalPipelines.size()) {
             renderable->setPipeline(originalPipelines.at(i));
             i++;
@@ -1363,7 +1419,7 @@ void Window::renderLightsToShadowMaps(
     }
 
     size_t j = 0;
-    for (auto& renderable : this->lateForwardRenderables) {
+    for (auto &renderable : this->lateForwardRenderables) {
         if (j < originalLatePipelines.size()) {
             renderable->setPipeline(originalLatePipelines.at(j));
             j++;
@@ -1371,7 +1427,7 @@ void Window::renderLightsToShadowMaps(
     }
 }
 
-void Window::renderPingpong(RenderTarget* target) {
+void Window::renderPingpong(RenderTarget *target) {
     if (target->brightTexture.id == 0) {
         return;
     }
@@ -1382,9 +1438,9 @@ void Window::renderPingpong(RenderTarget* target) {
 
     const int blurDownscaleFactor = 2;
     int blurWidth = std::max(1, target->brightTexture.creationData.width /
-                             blurDownscaleFactor);
+                                    blurDownscaleFactor);
     int blurHeight = std::max(1, target->brightTexture.creationData.height /
-                              blurDownscaleFactor);
+                                     blurDownscaleFactor);
 
     if (this->pingpongFramebuffers.at(0) == nullptr ||
         this->pingpongFramebuffers.at(1) == nullptr ||
@@ -1464,17 +1520,15 @@ void Window::renderPingpong(RenderTarget* target) {
 
         blurPipeline->bindTexture2D(
             "image",
-            firstIteration
-                ? target->brightTexture.id
-                : this->pingpongTextures.at(!horizontal)->textureID,
+            firstIteration ? target->brightTexture.id
+                           : this->pingpongTextures.at(!horizontal)->textureID,
             0);
 
         activeCommandBuffer->bindPipeline(blurPipeline);
         if (!target->object->indices.empty()) {
             activeCommandBuffer->drawIndexed(
                 static_cast<uint>(target->object->indices.size()));
-        }
-        else {
+        } else {
             activeCommandBuffer->draw(
                 static_cast<uint>(target->object->vertices.size()));
         }
@@ -1490,7 +1544,7 @@ void Window::renderPingpong(RenderTarget* target) {
 
     updatePipelineStateField(this->useDepth, true);
 
-    GLFWwindow* window = static_cast<GLFWwindow*>(this->windowRef);
+    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
     int fbWidth, fbHeight;
     glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
     setViewportState(0, 0, fbWidth, fbHeight);
@@ -1499,7 +1553,8 @@ void Window::renderPingpong(RenderTarget* target) {
     target->blurredTexture.creationData.width = this->pingpongWidth;
     target->blurredTexture.creationData.height = this->pingpongHeight;
     target->blurredTexture.type = TextureType::Color;
-    target->blurredTexture.id = this->pingpongTextures.at(!horizontal)->textureID;
+    target->blurredTexture.id =
+        this->pingpongTextures.at(!horizontal)->textureID;
     target->blurredTexture.texture = this->pingpongTextures.at(!horizontal);
 }
 
@@ -1518,7 +1573,7 @@ void Window::useDeferredRendering() {
     this->ssaoMapsDirty = true;
 }
 
-void Window::renderPhysicalBloom(RenderTarget* target) {
+void Window::renderPhysicalBloom(RenderTarget *target) {
     if (target == nullptr || target->brightTexture.id == 0 ||
         this->currentScene == nullptr ||
         this->currentScene->environment.lightBloom.radius <= 0.0f ||
@@ -1553,7 +1608,7 @@ void Window::renderPhysicalBloom(RenderTarget* target) {
     }
 
     float filterRadius = currentScene->environment.lightBloom.radius *
-        static_cast<float>(std::min(sizeX, sizeY)) * 0.15f;
+                         static_cast<float>(std::min(sizeX, sizeY)) * 0.15f;
     filterRadius = std::clamp(filterRadius, 0.5f, 2.0f);
     this->bloomBuffer->renderBloomTexture(
         target->brightTexture.id, filterRadius, this->activeCommandBuffer);
@@ -1575,7 +1630,7 @@ void Window::updateFluidCaptures(
     if (commandBuffer == nullptr) {
         return;
     }
-    for (auto* fluid : lateFluids) {
+    for (auto *fluid : lateFluids) {
         if (fluid == nullptr) {
             continue;
         }
@@ -1586,7 +1641,7 @@ void Window::updateFluidCaptures(
 }
 
 void Window::captureFluidReflection(
-    Fluid& fluid, std::shared_ptr<opal::CommandBuffer> commandBuffer) {
+    Fluid &fluid, std::shared_ptr<opal::CommandBuffer> commandBuffer) {
     if (!fluid.reflectionTarget) {
         return;
     }
@@ -1598,9 +1653,9 @@ void Window::captureFluidReflection(
         return;
     }
 
-    RenderTarget& target = *fluid.reflectionTarget;
+    RenderTarget &target = *fluid.reflectionTarget;
 
-    Camera* originalCamera = this->camera;
+    Camera *originalCamera = this->camera;
     Camera reflectionCamera = *originalCamera;
 
     glm::vec3 planePoint = fluid.calculatePlanePoint();
@@ -1623,7 +1678,7 @@ void Window::captureFluidReflection(
     reflectionCamera.useOrthographic = originalCamera->useOrthographic;
     reflectionCamera.orthographicSize = originalCamera->orthographicSize;
 
-    Camera* cameraBackup = this->camera;
+    Camera *cameraBackup = this->camera;
     this->camera = originalCamera;
 
     glm::vec4 plane = fluid.calculateClipPlane();
@@ -1632,7 +1687,7 @@ void Window::captureFluidReflection(
     clipPlaneEnabled = true;
     clipPlaneEquation = plane;
 
-    RenderTarget* previousTarget = currentRenderTarget;
+    RenderTarget *previousTarget = currentRenderTarget;
     const int previousViewportX = this->viewportX;
     const int previousViewportY = this->viewportY;
     const int previousViewportWidth = this->viewportWidth;
@@ -1674,17 +1729,16 @@ void Window::captureFluidReflection(
     glm::mat4 view = this->camera->calculateViewMatrix();
     glm::mat4 projection = calculateProjectionMatrix();
 
-    auto renderQueue = [&](const std::vector<Renderable*>& queue,
-                           bool skipLate)
-    {
-        for (auto* obj : queue) {
+    auto renderQueue = [&](const std::vector<Renderable *> &queue,
+                           bool skipLate) {
+        for (auto *obj : queue) {
             if (obj == nullptr) {
                 continue;
             }
             if (skipLate && obj->renderLateForward) {
                 continue;
             }
-            if (dynamic_cast<Fluid*>(obj) == &fluid) {
+            if (dynamic_cast<Fluid *>(obj) == &fluid) {
                 continue;
             }
             obj->setViewMatrix(view);
@@ -1702,8 +1756,7 @@ void Window::captureFluidReflection(
         previousTarget->getFramebuffer()->setViewport(
             previousViewportX, previousViewportY, previousViewportWidth,
             previousViewportHeight);
-    }
-    else {
+    } else {
         device->getDefaultFramebuffer()->bind();
         device->getDefaultFramebuffer()->setViewport(
             previousViewportX, previousViewportY, previousViewportWidth,
@@ -1734,7 +1787,7 @@ void Window::captureFluidReflection(
 }
 
 void Window::captureFluidRefraction(
-    Fluid& fluid, std::shared_ptr<opal::CommandBuffer> commandBuffer) {
+    Fluid &fluid, std::shared_ptr<opal::CommandBuffer> commandBuffer) {
     if (!fluid.refractionTarget) {
         return;
     }
@@ -1746,7 +1799,7 @@ void Window::captureFluidRefraction(
         return;
     }
 
-    RenderTarget& target = *fluid.refractionTarget;
+    RenderTarget &target = *fluid.refractionTarget;
 
     glm::vec3 planePoint = fluid.calculatePlanePoint();
     glm::vec3 planeNormal = fluid.calculatePlaneNormal();
@@ -1760,7 +1813,7 @@ void Window::captureFluidRefraction(
     clipPlaneEnabled = true;
     clipPlaneEquation = plane;
 
-    RenderTarget* previousTarget = currentRenderTarget;
+    RenderTarget *previousTarget = currentRenderTarget;
     const int previousViewportX = this->viewportX;
     const int previousViewportY = this->viewportY;
     const int previousViewportWidth = this->viewportWidth;
@@ -1802,17 +1855,16 @@ void Window::captureFluidRefraction(
     glm::mat4 view = this->camera->calculateViewMatrix();
     glm::mat4 projection = calculateProjectionMatrix();
 
-    auto renderQueue = [&](const std::vector<Renderable*>& queue,
-                           bool skipLate)
-    {
-        for (auto* obj : queue) {
+    auto renderQueue = [&](const std::vector<Renderable *> &queue,
+                           bool skipLate) {
+        for (auto *obj : queue) {
             if (obj == nullptr) {
                 continue;
             }
             if (skipLate && obj->renderLateForward) {
                 continue;
             }
-            if (dynamic_cast<Fluid*>(obj) == &fluid) {
+            if (dynamic_cast<Fluid *>(obj) == &fluid) {
                 continue;
             }
             obj->setViewMatrix(view);
@@ -1830,8 +1882,7 @@ void Window::captureFluidRefraction(
         previousTarget->getFramebuffer()->setViewport(
             previousViewportX, previousViewportY, previousViewportWidth,
             previousViewportHeight);
-    }
-    else {
+    } else {
         device->getDefaultFramebuffer()->bind();
         device->getDefaultFramebuffer()->setViewport(
             previousViewportX, previousViewportY, previousViewportWidth,
@@ -1859,15 +1910,13 @@ void Window::captureFluidRefraction(
     updatePipelineStateField(this->depthCompareOp, previousDepthCompare);
 }
 
-void Window::markPipelineStateDirty() {
-    ++pipelineStateVersion;
-}
+void Window::markPipelineStateDirty() { ++pipelineStateVersion; }
 
-bool Window::shouldRefreshPipeline(Renderable* renderable) {
+bool Window::shouldRefreshPipeline(Renderable *renderable) {
     if (renderable == nullptr) {
         return false;
     }
-    auto& version = renderablePipelineVersions[renderable];
+    auto &version = renderablePipelineVersions[renderable];
     if (version != pipelineStateVersion) {
         version = pipelineStateVersion;
         return true;
@@ -1875,7 +1924,8 @@ bool Window::shouldRefreshPipeline(Renderable* renderable) {
     return false;
 }
 
-void Window::setViewportState(int x, int y, int newViewportWidth, int newViewportHeight) {
+void Window::setViewportState(int x, int y, int newViewportWidth,
+                              int newViewportHeight) {
     updatePipelineStateField(this->viewportX, x);
     updatePipelineStateField(this->viewportY, y);
     updatePipelineStateField(this->viewportWidth, newViewportWidth);
@@ -1888,7 +1938,7 @@ void Window::updateBackbufferTarget(int backbufferWidth, int backbufferHeight) {
         this->screenRenderTarget->type = RenderTargetType::Scene;
     }
 
-    RenderTarget& target = *this->screenRenderTarget;
+    RenderTarget &target = *this->screenRenderTarget;
     target.texture.creationData.width = backbufferWidth;
     target.texture.creationData.height = backbufferHeight;
     target.depthTexture.creationData.width = backbufferWidth;

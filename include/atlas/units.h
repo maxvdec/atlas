@@ -72,7 +72,7 @@ struct Position3d {
         return x == other.x && y == other.y && z == other.z;
     }
 
-    inline glm::vec3 toGlm() const { return glm::vec3(x, y, z); }
+    glm::vec3 toGlm() const { return glm::vec3(x, y, z); }
 
     Position3d operator+(const glm::vec3 &vec) const {
         return {x + vec.x, y + vec.y, z + vec.z};
@@ -94,19 +94,18 @@ struct Position3d {
         z -= vec.z;
     }
 
-    inline Position3d normalized() const {
-        float length = std::sqrt(x * x + y * y + z * z);
+    Position3d normalized() const {
+        float length = std::sqrt((x * x) + (y * y) + (z * z));
         if (length == 0)
             return {};
         return {x / length, y / length, z / length};
     }
 
-    inline static Position3d fromGlm(const glm::vec3 &vec) {
+    static Position3d fromGlm(const glm::vec3 &vec) {
         return {vec.x, vec.y, vec.z};
     };
 
-    inline friend std::ostream &operator<<(std::ostream &os,
-                                           const Position3d &p) {
+    friend std::ostream &operator<<(std::ostream &os, const Position3d &p) {
         os << "Position3d(" << p.x << ", " << p.y << ", " << p.z << ")";
         return os;
     }
@@ -116,27 +115,34 @@ struct Position3d {
  * @brief Type alias for 3D scaling factors.
  *
  */
-typedef Position3d Scale3d;
+using Scale3d = Position3d;
 /**
  * @brief Type alias for 3D size dimensions.
  *
  */
-typedef Position3d Size3d;
+using Size3d = Position3d;
 /**
  * @brief Type alias for 3D points.
  *
  */
-typedef Position3d Point3d;
+using Point3d = Position3d;
 /**
  * @brief Type alias for 3D normal vectors.
  *
  */
-typedef Position3d Normal3d;
+using Normal3d = Position3d;
 /**
  * @brief Type alias for 3D magnitude vectors.
  *
  */
-typedef Position3d Magnitude3d;
+using Magnitude3d = Position3d;
+
+using Impulse3d = Position3d;
+using Force3d = Position3d;
+using Vector3 = Position3d;
+using Velocity3d = Position3d;
+
+struct Quaternion;
 
 /**
  * @brief Structure representing rotation in 3D space using Euler angles.
@@ -186,9 +192,9 @@ struct Rotation3d {
         return {pitch / scalar, yaw / scalar, roll / scalar};
     }
 
-    inline glm::vec3 toGlm() const { return glm::vec3(pitch, yaw, roll); }
+    glm::vec3 toGlm() const { return glm::vec3(pitch, yaw, roll); }
 
-    inline glm::quat toGlmQuat() const {
+    glm::quat toGlmQuat() const {
         const float pitchRad = glm::radians(pitch);
         const float yawRad = glm::radians(yaw);
         const float rollRad = glm::radians(roll);
@@ -200,7 +206,7 @@ struct Rotation3d {
         return qRoll * qPitch * qYaw;
     }
 
-    inline static Rotation3d fromGlmQuat(const glm::quat &quat) {
+    static Rotation3d fromGlmQuat(const glm::quat &quat) {
         glm::mat3 m = glm::mat3_cast(quat);
 
         float sPitch = glm::clamp(m[1][2], -1.0f, 1.0f);
@@ -223,8 +229,35 @@ struct Rotation3d {
                 glm::degrees(rollRad)};
     }
 
-    inline static Rotation3d fromGlm(const glm::vec3 &vec) {
+    static Rotation3d fromGlm(const glm::vec3 &vec) {
         return {vec.x, vec.y, vec.z};
+    }
+};
+
+struct Quaternion {
+    float x;
+    float y;
+    float z;
+    float w;
+
+    glm::quat toGlm() const { return glm::quat(w, x, y, z); }
+
+    static Quaternion fromGlm(const glm::quat &quat) {
+        return {.x = quat.x, .y = quat.y, .z = quat.z, .w = quat.w};
+    }
+
+    friend std::ostream &operator<<(std::ostream &os, const Quaternion &q) {
+        os << "Quaternion(" << q.x << ", " << q.y << ", " << q.z << ", " << q.w
+           << ")";
+        return os;
+    }
+
+    static Rotation3d toEuler(const Quaternion &quat) {
+        return Rotation3d::fromGlmQuat(quat.toGlm());
+    }
+
+    static Quaternion fromEuler(const Rotation3d &euler) {
+        return fromGlm(euler.toGlmQuat());
     }
 };
 
@@ -252,65 +285,78 @@ struct Color {
     float a = 1.0;
 
     Color operator+(const Color &other) const {
-        return {r + other.r, g + other.g, b + other.b, a + other.a};
+        return {.r = r + other.r,
+                .g = g + other.g,
+                .b = b + other.b,
+                .a = a + other.a};
     }
 
     Color operator-(const Color &other) const {
-        return {r - other.r, g - other.g, b - other.b, a - other.a};
+        return {.r = r - other.r,
+                .g = g - other.g,
+                .b = b - other.b,
+                .a = a - other.a};
     }
 
     Color operator*(float scalar) const {
-        return {r * scalar, g * scalar, b * scalar, a * scalar};
+        return {
+            .r = r * scalar, .g = g * scalar, .b = b * scalar, .a = a * scalar};
     }
 
     Color operator*(const Color &other) const {
-        return {r * other.r, g * other.g, b * other.b, a * other.a};
+        return {.r = r * other.r,
+                .g = g * other.g,
+                .b = b * other.b,
+                .a = a * other.a};
     }
 
     Color operator/(float scalar) const {
-        return {r / scalar, g / scalar, b / scalar, a / scalar};
+        return {
+            .r = r / scalar, .g = g / scalar, .b = b / scalar, .a = a / scalar};
     }
 
     bool operator==(const Color &other) const {
         return r == other.r && g == other.g && b == other.b && a == other.a;
     }
 
-    static Color white() { return {1.0, 1.0, 1.0, 1.0}; }
-    static Color black() { return {0.0, 0.0, 0.0, 1.0}; }
-    static Color red() { return {1.0, 0.0, 0.0, 1.0}; }
-    static Color green() { return {0.0, 1.0, 0.0, 1.0}; }
-    static Color blue() { return {0.0, 0.0, 1.0, 1.0}; }
-    static Color transparent() { return {0.0, 0.0, 0.0, 0.0}; }
-    static Color yellow() { return {1.0, 1.0, 0.0, 1.0}; }
-    static Color cyan() { return {0.0, 1.0, 1.0, 1.0}; }
-    static Color magenta() { return {1.0, 0.0, 1.0, 1.0}; }
-    static Color gray() { return {0.5, 0.5, 0.5, 1.0}; }
-    static Color orange() { return {1.0, 0.65f, 0.0, 1.0}; }
-    static Color purple() { return {0.5, 0.0, 0.5, 1.0}; }
-    static Color brown() { return {0.6f, 0.4f, 0.2f, 1.0}; }
-    static Color pink() { return {1.0, 0.75f, 0.8f, 1.0}; }
-    static Color lime() { return {0.0, 1.0, 0.0, 1.0}; }
-    static Color navy() { return {0.0, 0.0, 0.5, 1.0}; }
-    static Color teal() { return {0.0, 0.5, 0.5, 1.0}; }
-    static Color olive() { return {0.5, 0.5, 0.0, 1.0}; }
-    static Color maroon() { return {0.5, 0.0, 0.0, 1.0}; }
+    static Color white() { return {.r = 1.0, .g = 1.0, .b = 1.0, .a = 1.0}; }
+    static Color black() { return {.r = 0.0, .g = 0.0, .b = 0.0, .a = 1.0}; }
+    static Color red() { return {.r = 1.0, .g = 0.0, .b = 0.0, .a = 1.0}; }
+    static Color green() { return {.r = 0.0, .g = 1.0, .b = 0.0, .a = 1.0}; }
+    static Color blue() { return {.r = 0.0, .g = 0.0, .b = 1.0, .a = 1.0}; }
+    static Color transparent() {
+        return {.r = 0.0, .g = 0.0, .b = 0.0, .a = 0.0};
+    }
+    static Color yellow() { return {.r = 1.0, .g = 1.0, .b = 0.0, .a = 1.0}; }
+    static Color cyan() { return {.r = 0.0, .g = 1.0, .b = 1.0, .a = 1.0}; }
+    static Color magenta() { return {.r = 1.0, .g = 0.0, .b = 1.0, .a = 1.0}; }
+    static Color gray() { return {.r = 0.5, .g = 0.5, .b = 0.5, .a = 1.0}; }
+    static Color orange() { return {.r = 1.0, .g = 0.65f, .b = 0.0, .a = 1.0}; }
+    static Color purple() { return {.r = 0.5, .g = 0.0, .b = 0.5, .a = 1.0}; }
+    static Color brown() { return {.r = 0.6f, .g = 0.4f, .b = 0.2f, .a = 1.0}; }
+    static Color pink() { return {.r = 1.0, .g = 0.75f, .b = 0.8f, .a = 1.0}; }
+    static Color lime() { return {.r = 0.0, .g = 1.0, .b = 0.0, .a = 1.0}; }
+    static Color navy() { return {.r = 0.0, .g = 0.0, .b = 0.5, .a = 1.0}; }
+    static Color teal() { return {.r = 0.0, .g = 0.5, .b = 0.5, .a = 1.0}; }
+    static Color olive() { return {.r = 0.5, .g = 0.5, .b = 0.0, .a = 1.0}; }
+    static Color maroon() { return {.r = 0.5, .g = 0.0, .b = 0.0, .a = 1.0}; }
 
     static Color fromHex(unsigned int hexValue) {
         float r = static_cast<float>(((hexValue >> 16) & 0xFF) / 255.0);
         float g = static_cast<float>(((hexValue >> 8) & 0xFF) / 255.0);
         float b = static_cast<float>((hexValue & 0xFF) / 255.0);
-        return {r, g, b, 1.0f};
+        return {.r = r, .g = g, .b = b, .a = 1.0f};
     }
 
     static Color mix(Color color1, Color color2, float ratio = 0.5) {
-        float r = color1.r * (1 - ratio) + color2.r * ratio;
-        float g = color1.g * (1 - ratio) + color2.g * ratio;
-        float b = color1.b * (1 - ratio) + color2.b * ratio;
-        float a = color1.a * (1 - ratio) + color2.a * ratio;
-        return {r, g, b, a};
+        float r = (color1.r * (1 - ratio)) + (color2.r * ratio);
+        float g = (color1.g * (1 - ratio)) + (color2.g * ratio);
+        float b = (color1.b * (1 - ratio)) + (color2.b * ratio);
+        float a = (color1.a * (1 - ratio)) + (color2.a * ratio);
+        return {.r = r, .g = g, .b = b, .a = a};
     }
 
-    inline glm::vec4 toGlm() const {
+    glm::vec4 toGlm() const {
         return glm::vec4(static_cast<float>(r), static_cast<float>(g),
                          static_cast<float>(b), static_cast<float>(a));
     }
@@ -320,7 +366,7 @@ struct Color {
  * @brief Type alias for OpenGL object identifiers.
  *
  */
-typedef unsigned int Id;
+using Id = unsigned int;
 
 /**
  * @brief Enumeration of 3D directional constants.
@@ -363,22 +409,22 @@ struct Position2d {
     float y;
 
     Position2d operator+(const Position2d &other) const {
-        return {x + other.x, y + other.y};
+        return {.x = x + other.x, .y = y + other.y};
     }
 
     Position2d operator-(const Position2d &other) const {
-        return {x - other.x, y - other.y};
+        return {.x = x - other.x, .y = y - other.y};
     }
 
     Position2d operator*(float scalar) const {
-        return {x * scalar, y * scalar};
+        return {.x = x * scalar, .y = y * scalar};
     }
 
     Position2d operator/(float scalar) const {
-        return {x / scalar, y / scalar};
+        return {.x = x / scalar, .y = y / scalar};
     }
 
-    inline glm::vec2 toGlm() const {
+    glm::vec2 toGlm() const {
         return glm::vec2(static_cast<float>(x), static_cast<float>(y));
     }
 };
@@ -387,18 +433,18 @@ struct Position2d {
  * @brief Type alias for 2D scaling factors.
  *
  */
-typedef Position2d Scale2d;
+using Scale2d = Position2d;
 /**
  * @brief Type alias for 2D points.
  *
  */
-typedef Position2d Point2d;
+using Point2d = Position2d;
 /**
  * @brief Type alias for 2D movement vectors.
  *
  */
-typedef Position2d Movement2d;
-typedef Position2d Magnitude2d;
+using Movement2d = Position2d;
+using Magnitude2d = Position2d;
 
 /**
  * @brief Structure representing angular measurements in radians.
@@ -429,9 +475,9 @@ struct Radians {
 
     Radians operator/(float scalar) const { return {value / scalar}; }
 
-    inline float toFloat() const { return static_cast<float>(value); }
+    float toFloat() const { return static_cast<float>(value); }
 
-    inline static Radians fromDegrees(float degrees) {
+    static Radians fromDegrees(float degrees) {
         return {static_cast<float>(degrees * (std::numbers::pi) / 180.0f)};
     }
 };
@@ -457,22 +503,22 @@ struct Size2d {
     float height;
 
     Size2d operator+(const Size2d &other) const {
-        return {width + other.width, height + other.height};
+        return {.width = width + other.width, .height = height + other.height};
     }
 
     Size2d operator-(const Size2d &other) const {
-        return {width - other.width, height - other.height};
+        return {.width = width - other.width, .height = height - other.height};
     }
 
     Size2d operator*(float scalar) const {
-        return {width * scalar, height * scalar};
+        return {.width = width * scalar, .height = height * scalar};
     }
 
     Size2d operator/(float scalar) const {
-        return {width / scalar, height / scalar};
+        return {.width = width / scalar, .height = height / scalar};
     }
 
-    inline glm::vec2 toGlm() const {
+    glm::vec2 toGlm() const {
         return glm::vec2(static_cast<float>(width), static_cast<float>(height));
     }
 };

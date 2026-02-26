@@ -251,11 +251,13 @@ class MainScene : public Scene {
         window.addRenderTarget(&frameBuffer);
         frameBuffer.display(window);
 
+        this->setUseAtmosphereSkybox(true);
+
         window.usesDeferred = true;
         atmosphere.enable();
         atmosphere.secondsPerHour = 4.f;
         atmosphere.setTime(12.0);
-        atmosphere.cycle = false;
+        atmosphere.cycle = true;
         atmosphere.wind = {0.1f, 0.0f, 0.0f};
     }
 };

@@ -257,6 +257,10 @@ void CoreObject::setPosition(const Position3d &newPosition) {
         }
     }
 
+    if (light != nullptr) {
+        light->position += delta;
+    }
+
     updateModelMatrix();
 }
 
