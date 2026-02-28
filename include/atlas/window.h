@@ -312,6 +312,7 @@ class Window {
      * idea.
      */
     void addObject(Renderable *object);
+    void removeObject(Renderable *object);
     /**
      * @brief Adds a renderable object with higher rendering priority.
      *
@@ -540,6 +541,8 @@ class Window {
   private:
     std::shared_ptr<opal::CommandBuffer> activeCommandBuffer = nullptr;
     CoreWindowReference windowRef;
+    std::vector<Renderable *> pendingObjects;
+    std::vector<Renderable *> pendingRemovals;
     std::vector<Renderable *> renderables;
     std::vector<Renderable *> preferenceRenderables;
     std::vector<Renderable *> firstRenderables;

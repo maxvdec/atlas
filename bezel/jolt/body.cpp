@@ -234,11 +234,16 @@ void bezel::Rigidbody::applyProperties(
     }
 
     if (impulse != Position3d{0.0f, 0.0f, 0.0f}) {
-        bodyInterface.AddImpulse(
-            joltBodyId, JPH::Vec3(impulse.x, impulse.y, impulse.z),
-            JPH::Vec3(forcePoint.x, forcePoint.y, forcePoint.z));
+        if (forcePoint == Position3d{0.0f, 0.0f, 0.0f}) {
+            bodyInterface.AddImpulse(
+                joltBodyId, JPH::Vec3(impulse.x, impulse.y, impulse.z));
+        } else {
+            bodyInterface.AddImpulse(
+                joltBodyId, JPH::Vec3(impulse.x, impulse.y, impulse.z),
+                JPH::RVec3(forcePoint.x, forcePoint.y, forcePoint.z));
+            forcePoint = Position3d{0.0f, 0.0f, 0.0f};
+        }
         impulse = Position3d{0.0f, 0.0f, 0.0f};
-        forcePoint = Position3d{0.0f, 0.0f, 0.0f};
     }
 
     if (force != Position3d{0.0f, 0.0f, 0.0f}) {
@@ -254,4 +259,57 @@ void bezel::Rigidbody::applyProperties(
             forcePoint = Position3d{0.0f, 0.0f, 0.0f};
         }
     }
+
+    if (maxLinearVelocity >= 0.0f) {
+        bodyInterface.SetMaxLinearVelocity(joltBodyId, maxLinearVelocity);
+        maxLinearVelocity = -1.0f;
+    }
+
+    if (maxAngularVelocity >= 0.0f) {
+        bodyInterface.SetMaxAngularVelocity(joltBodyId, maxAngularVelocity);
+        maxAngularVelocity = -1.0f;
+    }
+}
+
+void bezel::Rigidbody::setMaximumAngularVelocity(float maxAngularVelocity) {
+    this->maxAngularVelocity = maxAngularVelocity;
+}
+
+void bezel::Rigidbody::setMaximumLinearVelocity(float maxLinearVelocity) {
+    this->maxLinearVelocity = maxLinearVelocity;
+}
+
+Velocity3d bezel::Rigidbody::getLinearVelocity(
+    const std::shared_ptr<PhysicsWorld> &world) const {
+    if (id.joltId == INVALID_JOLT_ID) {
+        return Velocity3d{};
+    }
+    auto joltBodyId = JPH::BodyID(id.joltId);
+    JPH::BodyLockRead lock(world->physicsSystem.GetBodyLockInterface(),
+                           joltBodyId);
+    if (!lock.Succeeded()) {
+        return Velocity3d{};
+    }
+    JPH::Vec3 v = lock.GetBody().GetLinearVelocity();
+    return Velocity3d(v.GetX(), v.GetY(), v.GetZ());
+}
+
+Velocity3d bezel::Rigidbody::getAngularVelocity(
+    const std::shared_ptr<PhysicsWorld> &world) const {
+    if (id.joltId == INVALID_JOLT_ID) {
+        return Velocity3d{};
+    }
+    auto joltBodyId = JPH::BodyID(id.joltId);
+    JPH::BodyLockRead lock(world->physicsSystem.GetBodyLockInterface(),
+                           joltBodyId);
+    if (!lock.Succeeded()) {
+        return Velocity3d{};
+    }
+    JPH::Vec3 v = lock.GetBody().GetAngularVelocity();
+    return Velocity3d(v.GetX(), v.GetY(), v.GetZ());
+}
+
+Velocity3d bezel::Rigidbody::getVelocity(
+    const std::shared_ptr<PhysicsWorld> &world) const {
+    return getLinearVelocity(world) + getAngularVelocity(world);
 }

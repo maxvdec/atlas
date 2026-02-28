@@ -21,7 +21,8 @@ struct main0_in
 fragment main0_out main0(main0_in in [[stage_in]], constant Params& _13 [[buffer(0)]], texture2d<float> srcTexture [[texture(0)]], sampler srcTextureSmplr [[sampler(0)]])
 {
     main0_out out = {};
-    float2 srcTexelSize = float2(1.0) / _13.srcResolution;
+    float2 srcTexelSize =
+        float2(1.0) / float2(srcTexture.get_width(), srcTexture.get_height());
     float x = srcTexelSize.x;
     float y = srcTexelSize.y;
     float2 texCoord = in.TexCoord;

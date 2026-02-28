@@ -5,8 +5,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(JOLT_VERSION "5.5.0")
 
-add_definitions(-DATLAS_VERSION=\"Alpha\ 7\")
-add_definitions(-DOPAL_VERSION=\"2\ Platonic\")
+message("Using Compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
+
+add_definitions(-DATLAS_VERSION="Alpha 7")
+add_definitions(-DOPAL_VERSION="2 Platonic")
+set(CMAKE_INTERPROCEDURAL_OPTIMIZATION OFF)
 
 # Enable color diagnostics for GCC and Clang
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
@@ -181,7 +184,6 @@ endif()
 
 if(BEZEL_NATIVE)
 else()
-    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
     FetchContent_Declare(
     JoltPhysics
     GIT_REPOSITORY https://github.com/jrouwe/JoltPhysics.git
@@ -189,7 +191,14 @@ else()
     GIT_SHALLOW TRUE
     SOURCE_SUBDIR Build
 )
+    set(JPH_DEBUG_RENDERER ON CACHE BOOL "" FORCE)
+    set(JPH_PROFILE_ENABLED ON CACHE BOOL "" FORCE)
+    set(JPH_OBJECT_STREAM ON CACHE BOOL "" FORCE)
+    set(JPH_ENABLE_IPO OFF CACHE BOOL "" FORCE)  
     FetchContent_MakeAvailable(JoltPhysics)
+    if(TARGET Jolt)
+        set_target_properties(Jolt PROPERTIES INTERPROCEDURAL_OPTIMIZATION OFF)
+    endif()
     message(STATUS "Downloaded Jolt Physics, version ${JOLT_VERSION}")
 endif()
 
@@ -248,7 +257,12 @@ target_link_libraries(bezel PRIVATE glfw glm::glm)
 if (BEZEL_NATIVE)
     target_compile_definitions(bezel PRIVATE NATIVE)
 else()
-    target_link_libraries(bezel PUBLIC Jolt::Jolt)
+    include_directories(${joltphysics_SOURCE_DIR})
+    target_compile_definitions(bezel PRIVATE
+    JPH_PROFILE_ENABLED=1
+    JPH_DEBUG_RENDERER=1
+    JPH_OBJECT_STREAM=1
+)
 endif()
 
 add_library(finewave ${FINEWAVE_SOURCES})
@@ -298,6 +312,7 @@ target_link_libraries(atlas
         opal
         ${FREETYPE_LIBRARIES}
         assimp::assimp
+        Jolt::Jolt
 )
 
 if(BEZEL_NATIVE)
@@ -328,6 +343,7 @@ get_filename_component(TEST_PATH_ABS "${CMAKE_CURRENT_SOURCE_DIR}/test" ABSOLUTE
 add_executable(atlas_test ${TEST_SOURCES})
 target_link_libraries(atlas_test PRIVATE atlas)
 target_compile_definitions(atlas_test PRIVATE TEST_PATH="${TEST_PATH_ABS}")
+target_compile_definitions(atlas_test PRIVATE JPH_PROFILE_ENABLED=1 JPH_DEBUG_RENDERER=1 JPH_OBJECT_STREAM=1)
 
 include_directories(include extern)
 include_directories(${OPENAL_INCLUDE})

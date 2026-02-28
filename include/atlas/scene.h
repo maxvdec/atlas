@@ -18,6 +18,7 @@
 #include "hydra/atmosphere.h"
 #include <algorithm>
 #include <memory>
+#include <utility>
 #include <vector>
 
 class Window;
@@ -141,6 +142,7 @@ class Environment {
  */
 class Scene {
   public:
+    virtual ~Scene() = default;
     /**
      * @brief Function that initializes the scene. This method is called every
      * frame.
@@ -264,17 +266,66 @@ class Scene {
      * @param newSkybox The new skybox to set.
      */
     void setSkybox(std::shared_ptr<Skybox> newSkybox) {
-        skybox = newSkybox;
+        userSkybox = std::move(newSkybox);
+        if (!useAtmosphereSkybox) {
+            skybox = userSkybox;
+            if (automaticAmbient) {
+                updateAutomaticAmbientFromSkybox();
+            }
+        }
+    }
+
+    /**
+     * @brief Enables or disables using the atmosphere-generated skybox as the
+     * scene skybox.
+     *
+     * When enabled, the renderer is expected to populate `atmosphereSkybox`,
+     * and the scene will expose it via `getSkybox()`.
+     *
+     * When disabled, the scene will use the user-provided skybox set through
+     * `setSkybox()`.
+     */
+    void setUseAtmosphereSkybox(bool enabled) {
+        useAtmosphereSkybox = enabled;
+        skybox = useAtmosphereSkybox ? atmosphereSkybox : userSkybox;
         if (automaticAmbient) {
             updateAutomaticAmbientFromSkybox();
         }
     }
 
     /**
+     * @brief Returns whether the atmosphere-generated skybox is currently used.
+     */
+    bool isUsingAtmosphereSkybox() const { return useAtmosphereSkybox; }
+
+    /**
+     * @brief Sets the internally stored atmosphere-generated skybox.
+     *
+     * This is intended to be called by the renderer/engine once it has
+     * generated or updated the sky cubemap from `atmosphere`.
+     */
+    void setAtmosphereSkybox(std::shared_ptr<Skybox> generatedSkybox) {
+        atmosphereSkybox = std::move(generatedSkybox);
+        if (useAtmosphereSkybox) {
+            skybox = atmosphereSkybox;
+            if (automaticAmbient) {
+                updateAutomaticAmbientFromSkybox();
+            }
+        }
+    }
+
+    /**
+     * @brief Returns the internally stored atmosphere-generated skybox.
+     */
+    std::shared_ptr<Skybox> getAtmosphereSkybox() const {
+        return atmosphereSkybox;
+    }
+
+    /**
      * @brief Overrides the environmental rendering configuration for the
      * scene.
      */
-    void setEnvironment(Environment newEnv) { environment = newEnv; }
+    void setEnvironment(Environment newEnv) { environment = std::move(newEnv); }
 
     void updateScene(float dt);
 
@@ -289,7 +340,15 @@ class Scene {
     std::vector<Spotlight *> spotlights;
     std::vector<AreaLight *> areaLights;
     std::shared_ptr<Skybox> skybox = nullptr;
-    AmbientLight ambientLight = {{1.0f, 1.0f, 1.0f, 1.0f}, 0.5f / 4};
+
+    std::shared_ptr<Skybox> userSkybox = nullptr;
+
+    std::shared_ptr<Skybox> atmosphereSkybox = nullptr;
+
+    bool useAtmosphereSkybox = false;
+    AmbientLight ambientLight = {
+        .color = {.r = 1.0f, .g = 1.0f, .b = 1.0f, .a = 1.0f},
+        .intensity = 0.5f / 4};
     bool automaticAmbient = false;
     Color automaticAmbientColor = Color::white();
     float automaticAmbientIntensity = ambientLight.intensity;
@@ -297,9 +356,9 @@ class Scene {
     void updateAutomaticAmbientFromSkybox() {
         if (skybox != nullptr && skybox->cubemap.hasAverageColor) {
             automaticAmbientColor = skybox->cubemap.averageColor;
-            double luminance = 0.2126 * automaticAmbientColor.r +
-                               0.7152 * automaticAmbientColor.g +
-                               0.0722 * automaticAmbientColor.b;
+            double luminance = (0.2126 * automaticAmbientColor.r) +
+                               (0.7152 * automaticAmbientColor.g) +
+                               (0.0722 * automaticAmbientColor.b);
             automaticAmbientIntensity =
                 static_cast<float>(std::clamp(luminance, 0.0, 1.0));
         } else {

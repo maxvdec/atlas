@@ -480,6 +480,8 @@ struct Rigidbody {
 
     Position3d linearVelocity = {-1.0f, -1.0f, -1.0f};
     Position3d angularVelocity = {-1.0f, -1.0f, -1.0f};
+    float maxLinearVelocity = -1.0f;
+    float maxAngularVelocity = -1.0f;
     Position3d impulse = {0.0f, 0.0f, 0.0f};
     Position3d force = {0.0f, 0.0f, 0.0f};
     Position3d forcePoint = {0.0f, 0.0f, 0.0f};
@@ -524,6 +526,15 @@ struct Rigidbody {
 
     BodyIdentifier id = {.joltId = INVALID_JOLT_ID, .atlasId = 0};
     MotionType motionType = MotionType::Dynamic;
+
+    Velocity3d
+    getAngularVelocity(const std::shared_ptr<PhysicsWorld> &world) const;
+    Velocity3d
+    getLinearVelocity(const std::shared_ptr<PhysicsWorld> &world) const;
+    Velocity3d getVelocity(const std::shared_ptr<PhysicsWorld> &world) const;
+
+    void setMaximumAngularVelocity(float maxAngularVelocity);
+    void setMaximumLinearVelocity(float maxLinearVelocity);
 
     void create(const std::shared_ptr<PhysicsWorld> &world);
     /** @brief Replaces the collider used by this rigidbody. */

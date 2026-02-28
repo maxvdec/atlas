@@ -405,7 +405,7 @@ void Rigidbody::raycast(const Position3d &direction, float maxDistance) {
                                    : result.raycastResult.hits[0];
 
     if (object) {
-        object->onQueryRecieve(result);
+        object->onQueryReceive(result);
     } else {
         atlas_warning("Rigidbody raycast result has no associated GameObject.");
     }
@@ -449,7 +449,7 @@ void Rigidbody::raycastAll(const Position3d &direction, float maxDistance) {
                                    : result.raycastResult.hits[0];
 
     if (object) {
-        object->onQueryRecieve(result);
+        object->onQueryReceive(result);
     } else {
         atlas_warning("Rigidbody raycast result has no associated GameObject.");
     }
@@ -495,7 +495,7 @@ void Rigidbody::raycastWorld(const Position3d &origin,
                                    : result.raycastResult.hits[0];
 
     if (object) {
-        object->onQueryRecieve(result);
+        object->onQueryReceive(result);
     } else {
         atlas_warning("Rigidbody raycast result has no associated GameObject.");
     }
@@ -542,7 +542,7 @@ void Rigidbody::raycastWorldAll(const Position3d &origin,
                                    : result.raycastResult.hits[0];
 
     if (object) {
-        object->onQueryRecieve(result);
+        object->onQueryReceive(result);
     } else {
         atlas_warning("Rigidbody raycast result has no associated GameObject.");
     }
@@ -608,7 +608,7 @@ void Rigidbody::raycastTagged(const std::vector<std::string> &tags,
                                    : result.raycastResult.hits[0];
 
     if (object) {
-        object->onQueryRecieve(result);
+        object->onQueryReceive(result);
     } else {
         atlas_warning("Rigidbody raycast result has no associated GameObject.");
     }
@@ -660,7 +660,7 @@ void Rigidbody::raycastTaggedAll(const std::vector<std::string> &tags,
                                    : result.raycastResult.hits[0];
 
     if (object) {
-        object->onQueryRecieve(result);
+        object->onQueryReceive(result);
     } else {
         atlas_warning("Rigidbody raycast result has no associated GameObject.");
     }
@@ -712,7 +712,7 @@ void Rigidbody::overlap() {
     result.overlapResult = convertOverlapResult(overlapResult);
 
     if (object) {
-        object->onQueryRecieve(result);
+        object->onQueryReceive(result);
     }
 }
 
@@ -733,7 +733,7 @@ void Rigidbody::overlapCapsuleWorld(const Position3d &position, float radius,
     result.overlapResult = convertOverlapResult(overlapResult);
 
     if (object) {
-        object->onQueryRecieve(result);
+        object->onQueryReceive(result);
     }
 }
 
@@ -754,7 +754,7 @@ void Rigidbody::overlapBoxWorld(const Position3d &position,
     result.overlapResult = convertOverlapResult(overlapResult);
 
     if (object) {
-        object->onQueryRecieve(result);
+        object->onQueryReceive(result);
     }
 }
 
@@ -774,7 +774,7 @@ void Rigidbody::overlapSphereWorld(const Position3d &position, float radius) {
     result.overlapResult = convertOverlapResult(overlapResult);
 
     if (object) {
-        object->onQueryRecieve(result);
+        object->onQueryReceive(result);
     }
 }
 
@@ -826,7 +826,7 @@ void Rigidbody::predictMovement(const Position3d &endPosition) {
     result.sweepResult = convertSweepResult(sweepResult, actualEnd);
 
     if (object) {
-        object->onQueryRecieve(result);
+        object->onQueryReceive(result);
     }
 }
 
@@ -878,7 +878,7 @@ void Rigidbody::predictMovementAll(const Position3d &endPosition) {
     result.sweepResult = convertSweepResult(sweepResult, actualEnd);
 
     if (object) {
-        object->onQueryRecieve(result);
+        object->onQueryReceive(result);
     }
 }
 
@@ -904,7 +904,7 @@ void Rigidbody::predictMovementCapsuleWorld(const Position3d &startPosition,
 
     result.sweepResult = convertSweepResult(sweepResult, actualEnd);
     if (object) {
-        object->onQueryRecieve(result);
+        object->onQueryReceive(result);
     }
 }
 
@@ -930,7 +930,7 @@ void Rigidbody::predictMovementBoxWorld(const Position3d &startPosition,
 
     result.sweepResult = convertSweepResult(sweepResult, actualEnd);
     if (object) {
-        object->onQueryRecieve(result);
+        object->onQueryReceive(result);
     }
 }
 
@@ -956,7 +956,7 @@ void Rigidbody::predictMovementSphereWorld(const Position3d &startPosition,
 
     result.sweepResult = convertSweepResult(sweepResult, actualEnd);
     if (object) {
-        object->onQueryRecieve(result);
+        object->onQueryReceive(result);
     }
 }
 
@@ -982,7 +982,7 @@ void Rigidbody::predictMovementCapsuleWorldAll(const Position3d &startPosition,
 
     result.sweepResult = convertSweepResult(sweepResult, actualEnd);
     if (object) {
-        object->onQueryRecieve(result);
+        object->onQueryReceive(result);
     }
 }
 
@@ -1008,7 +1008,7 @@ void Rigidbody::predictMovementBoxWorldAll(const Position3d &startPosition,
 
     result.sweepResult = convertSweepResult(sweepResult, actualEnd);
     if (object) {
-        object->onQueryRecieve(result);
+        object->onQueryReceive(result);
     }
 }
 
@@ -1034,6 +1034,47 @@ void Rigidbody::predictMovementSphereWorldAll(const Position3d &startPosition,
 
     result.sweepResult = convertSweepResult(sweepResult, actualEnd);
     if (object) {
-        object->onQueryRecieve(result);
+        object->onQueryReceive(result);
     }
+}
+
+Velocity3d Rigidbody::getAngularVelocity() {
+    if (!ensureBodyAndWorld(this)) {
+        return Velocity3d{};
+    }
+    return body->getAngularVelocity(Window::mainWindow->physicsWorld);
+}
+
+Velocity3d Rigidbody::getVelocity() {
+    if (!ensureBodyAndWorld(this)) {
+        return Velocity3d{};
+    }
+    return body->getVelocity(Window::mainWindow->physicsWorld);
+}
+
+Velocity3d Rigidbody::getLinearVelocity() {
+    if (!ensureBodyAndWorld(this)) {
+        return Velocity3d{};
+    }
+    return body->getLinearVelocity(Window::mainWindow->physicsWorld);
+}
+
+void Rigidbody::setMaxLinearVelocity(float maxLinearVelocity) {
+    if (!body) {
+        body = std::make_shared<bezel::Rigidbody>();
+        if (object) {
+            body->id.atlasId = object->getId();
+        }
+    }
+    body->setMaximumLinearVelocity(maxLinearVelocity);
+}
+
+void Rigidbody::setMaxAngularVelocity(float maxAngularVelocity) {
+    if (!body) {
+        body = std::make_shared<bezel::Rigidbody>();
+        if (object) {
+            body->id.atlasId = object->getId();
+        }
+    }
+    body->setMaximumAngularVelocity(maxAngularVelocity);
 }

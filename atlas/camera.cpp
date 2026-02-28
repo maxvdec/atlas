@@ -43,6 +43,16 @@ void Camera::lookAt(const Point3d &newTarget) {
     targetYaw = yaw;
 }
 
+void Camera::setPositionKeepingOrientation(const Position3d &newPos) {
+    glm::dvec3 oldPos(position.x, position.y, position.z);
+    glm::dvec3 oldTgt(target.x, target.y, target.z);
+    glm::dvec3 forward = glm::normalize(oldTgt - oldPos);
+
+    position = newPos;
+    target = {position.x + forward.x, position.y + forward.y,
+              position.z + forward.z};
+}
+
 void Camera::moveTo(Direction3d direction, float speed) {
     glm::vec3 camPos = glm::vec3(position.x, position.y, position.z);
     glm::vec3 camFront =
