@@ -398,26 +398,29 @@ void uploadUniformBuffers(const std::shared_ptr<Pipeline> &pipeline,
                 return;
             }
 
-            auto &uniformBuffer = pipelineState.uniformBuffers[key];
-            if (uniformBuffer == nullptr ||
-                uniformBuffer->length() <
-                    static_cast<NS::UInteger>(bytes.size())) {
-                if (uniformBuffer != nullptr) {
-                    uniformBuffer->release();
+            static constexpr size_t kMaxBytesInline = 4096;
+            if (bytes.size() <= kMaxBytesInline) {
+                if (fragmentStage) {
+                    encoder->setFragmentBytes(bytes.data(),
+                                              static_cast<NS::UInteger>(bytes.size()),
+                                              binding.index);
+                } else {
+                    encoder->setVertexBytes(bytes.data(),
+                                            static_cast<NS::UInteger>(bytes.size()),
+                                            binding.index);
                 }
-                uniformBuffer = device->newBuffer(
+            } else {
+                MTL::Buffer *inlineBuffer = device->newBuffer(
+                    bytes.data(),
                     static_cast<NS::UInteger>(
                         alignUp(bytes.size(), static_cast<size_t>(16))),
                     MTL::ResourceStorageModeShared);
-            }
-            std::memcpy(uniformBuffer->contents(), bytes.data(), bytes.size());
-            uniformBuffer->didModifyRange(
-                NS::Range::Make(0, static_cast<NS::UInteger>(bytes.size())));
-
-            if (fragmentStage) {
-                encoder->setFragmentBuffer(uniformBuffer, 0, binding.index);
-            } else {
-                encoder->setVertexBuffer(uniformBuffer, 0, binding.index);
+                if (fragmentStage) {
+                    encoder->setFragmentBuffer(inlineBuffer, 0, binding.index);
+                } else {
+                    encoder->setVertexBuffer(inlineBuffer, 0, binding.index);
+                }
+                inlineBuffer->release();
             }
         };
 

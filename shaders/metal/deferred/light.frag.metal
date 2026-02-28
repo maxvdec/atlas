@@ -466,8 +466,15 @@ float calculateShadow(thread const ShadowParameters& shadowParam, thread const f
         return 0.0;
     }
     float4 fragPosLightSpace = (shadowParam.lightProjection * shadowParam.lightView) * float4(fragPos, 1.0);
-    float3 projCoords = fragPosLightSpace.xyz / float3(fragPosLightSpace.w);
-    projCoords = (projCoords * 0.5) + float3(0.5);
+    if (fragPosLightSpace.w == 0.0)
+    {
+        return 0.0;
+    }
+    float3 clipCoords = fragPosLightSpace.xyz / float3(fragPosLightSpace.w);
+    float3 projCoords;
+    projCoords.xy = (clipCoords.xy * 0.5) + float2(0.5);
+    projCoords.y = 1.0 - projCoords.y;
+    projCoords.z = clipCoords.z;
     bool _456 = projCoords.x < 0.0;
     bool _463;
     if (!_456)

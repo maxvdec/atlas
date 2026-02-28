@@ -17,6 +17,7 @@
 #include <tuple>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
 #include <vector>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
@@ -31,6 +32,7 @@ void Light::createDebugObject() {
 
     sphere.createAndAttachProgram(vShader, shader);
     this->debugObject = std::make_shared<CoreObject>(sphere);
+    this->debugObject->castsShadows = false;
 }
 
 void Light::setColor(Color newColor) {
@@ -174,6 +176,7 @@ void Spotlight::createDebugObject() {
 
     pyramid.createAndAttachProgram(vShader, shader);
     this->debugObject = std::make_shared<CoreObject>(pyramid);
+    this->debugObject->castsShadows = false;
 }
 
 void Spotlight::setColor(Color newColor) {
@@ -236,87 +239,89 @@ ShadowParams DirectionalLight::calculateLightSpaceMatrix(
         return {.lightView = identity, .lightProjection = identity, .bias = 0.0f, .farPlane = 0.0f};
     }
 
-    glm::vec3 minPos(std::numeric_limits<float>::max());
-    glm::vec3 maxPos(std::numeric_limits<float>::lowest());
+    std::vector<glm::vec3> worldPoints;
+    worldPoints.reserve(4096);
+    glm::vec3 worldMin(std::numeric_limits<float>::max());
+    glm::vec3 worldMax(std::numeric_limits<float>::lowest());
 
     for (auto* obj : renderable) {
-        if (!obj->canCastShadows())
+        if (obj == nullptr || !obj->canCastShadows())
             continue;
-        glm::vec3 pos = obj->getPosition().toGlm();
-        glm::vec3 scale = obj->getScale().toGlm();
 
         const auto& vertices = obj->getVertices();
         if (vertices.empty())
             continue;
 
-        glm::vec3 localMin(std::numeric_limits<float>::max());
-        glm::vec3 localMax(std::numeric_limits<float>::lowest());
-
-        for (const auto& vertex : vertices) {
-            glm::vec3 localPos = vertex.position.toGlm();
-            localMin = glm::min(localMin, localPos);
-            localMax = glm::max(localMax, localPos);
+        if (const auto* coreObj = dynamic_cast<const CoreObject*>(obj)) {
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, coreObj->getPosition().toGlm());
+            model *= glm::mat4_cast(
+                glm::normalize(coreObj->getRotation().toGlmQuat()));
+            model = glm::scale(model, coreObj->getScale().toGlm());
+            for (const auto& vertex : vertices) {
+                glm::vec3 worldPos =
+                    glm::vec3(model * glm::vec4(vertex.position.toGlm(), 1.0f));
+                worldPoints.push_back(worldPos);
+                worldMin = glm::min(worldMin, worldPos);
+                worldMax = glm::max(worldMax, worldPos);
+            }
+        } else {
+            glm::vec3 pos = obj->getPosition().toGlm();
+            glm::vec3 scale = obj->getScale().toGlm();
+            for (const auto& vertex : vertices) {
+                glm::vec3 worldPos = pos + (vertex.position.toGlm() * scale);
+                worldPoints.push_back(worldPos);
+                worldMin = glm::min(worldMin, worldPos);
+                worldMax = glm::max(worldMax, worldPos);
+            }
         }
-
-        glm::vec3 scaledMin = localMin * scale;
-        glm::vec3 scaledMax = localMax * scale;
-        glm::vec3 worldMin = pos + scaledMin;
-        glm::vec3 worldMax = pos + scaledMax;
-
-        minPos = glm::min(minPos, worldMin);
-        maxPos = glm::max(maxPos, worldMax);
     }
 
-    glm::vec3 padding(5.0f);
-    minPos -= padding;
-    maxPos += padding;
+    if (worldPoints.empty()) {
+        glm::mat4 identity = glm::mat4(1.0f);
+        return {.lightView = identity, .lightProjection = identity, .bias = 0.0f, .farPlane = 0.0f};
+    }
 
-    glm::vec3 center = (minPos + maxPos) * 0.5f;
-    glm::vec3 extent = maxPos - minPos;
+    glm::vec3 center = (worldMin + worldMax) * 0.5f;
+    glm::vec3 extent = worldMax - worldMin;
 
-    glm::vec3 lightDir = glm::normalize(direction.toGlm());
+    glm::vec3 lightDir = direction.toGlm();
+    if (glm::dot(lightDir, lightDir) < 1e-8f) {
+        lightDir = glm::vec3(0.0f, -1.0f, 0.0f);
+    }
+    lightDir = glm::normalize(lightDir);
 
-    float sceneRadius = glm::length(extent) * 0.5f;
-    float lightDistance = sceneRadius + 50.0f;
+    float sceneRadius = std::max(1.0f, glm::length(extent) * 0.5f);
+    float lightDistance = std::max(10.0f, sceneRadius + 5.0f);
     glm::vec3 lightPos = center - lightDir * lightDistance;
 
-    glm::vec3 up =
-        glm::abs(lightDir.y) > 0.99f ? glm::vec3(0, 0, 1) : glm::vec3(0, 1, 0);
-    glm::mat4 lightView = glm::lookAt(lightPos, center, up);
-
-    std::vector<glm::vec3> corners = {
-        glm::vec3(minPos.x, minPos.y, minPos.z),
-        glm::vec3(maxPos.x, minPos.y, minPos.z),
-        glm::vec3(minPos.x, maxPos.y, minPos.z),
-        glm::vec3(maxPos.x, maxPos.y, minPos.z),
-        glm::vec3(minPos.x, minPos.y, maxPos.z),
-        glm::vec3(maxPos.x, minPos.y, maxPos.z),
-        glm::vec3(minPos.x, maxPos.y, maxPos.z),
-        glm::vec3(maxPos.x, maxPos.y, maxPos.z)
-    };
+    glm::vec3 upAxis(0.0f, 1.0f, 0.0f);
+    if (glm::abs(glm::dot(lightDir, upAxis)) > 0.95f) {
+        upAxis = glm::vec3(0.0f, 0.0f, 1.0f);
+    }
+    if (glm::abs(glm::dot(lightDir, upAxis)) > 0.95f) {
+        upAxis = glm::vec3(1.0f, 0.0f, 0.0f);
+    }
+    glm::mat4 lightView = glm::lookAt(lightPos, center, upAxis);
 
     glm::vec3 lightSpaceMin(std::numeric_limits<float>::max());
     glm::vec3 lightSpaceMax(std::numeric_limits<float>::lowest());
 
-    for (const auto& corner : corners) {
-        glm::vec4 lightSpaceCorner = lightView * glm::vec4(corner, 1.0f);
-        lightSpaceMin = glm::min(lightSpaceMin, glm::vec3(lightSpaceCorner));
-        lightSpaceMax = glm::max(lightSpaceMax, glm::vec3(lightSpaceCorner));
+    for (const auto& worldPos : worldPoints) {
+        glm::vec3 lightSpacePos =
+            glm::vec3(lightView * glm::vec4(worldPos, 1.0f));
+        lightSpaceMin = glm::min(lightSpaceMin, lightSpacePos);
+        lightSpaceMax = glm::max(lightSpaceMax, lightSpacePos);
     }
 
-    float left = lightSpaceMin.x;
-    float right = lightSpaceMax.x;
-    float bottom = lightSpaceMin.y;
-    float top = lightSpaceMax.y;
-    float near_plane = -lightSpaceMax.z - 10.0f;
-    float far_plane = -lightSpaceMin.z + 10.0f;
-
-    if (near_plane >= far_plane) {
-        near_plane = 0.1f;
-        far_plane = lightDistance * 2.0f;
-    }
-    near_plane = std::max(0.1f, near_plane);
-    far_plane = std::max(near_plane + 1.0f, far_plane);
+    float xyMargin = std::max(0.5f, sceneRadius * 0.08f);
+    float zMargin = std::max(2.0f, sceneRadius * 0.1f);
+    float left = lightSpaceMin.x - xyMargin;
+    float right = lightSpaceMax.x + xyMargin;
+    float bottom = lightSpaceMin.y - xyMargin;
+    float top = lightSpaceMax.y + xyMargin;
+    float near_plane = std::max(0.01f, -lightSpaceMax.z - zMargin);
+    float far_plane = std::max(near_plane + 1.0f, -lightSpaceMin.z + zMargin);
 
     glm::mat4 lightProjection =
         glm::ortho(left, right, bottom, top, near_plane, far_plane);
@@ -459,6 +464,7 @@ void AreaLight::createDebugObject() {
     plane.useDeferredRendering = false;
 
     this->debugObject = std::make_shared<CoreObject>(plane);
+    this->debugObject->castsShadows = false;
 }
 
 void AreaLight::addDebugObject(Window& window) {

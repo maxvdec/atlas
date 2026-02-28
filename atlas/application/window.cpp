@@ -1112,15 +1112,12 @@ void Window::renderLightsToShadowMaps(
         depthPipeline->setViewport(
             0, 0, shadowRenderTarget->texture.creationData.width,
             shadowRenderTarget->texture.creationData.height);
-#ifdef METAL
         depthPipeline->setCullMode(opal::CullMode::None);
-#else
-        depthPipeline->setCullMode(opal::CullMode::Back);
-#endif
         depthPipeline->setFrontFace(this->frontFace);
         depthPipeline->enableDepthTest(true);
+        depthPipeline->setDepthCompareOp(opal::CompareOp::Less);
         depthPipeline->enablePolygonOffset(true);
-        depthPipeline->setPolygonOffset(2.0f, 4.0f);
+        depthPipeline->setPolygonOffset(1.0f, 1.0f);
 
         depthPipeline = this->depthProgram.requestPipeline(depthPipeline);
 
@@ -1181,15 +1178,12 @@ void Window::renderLightsToShadowMaps(
         spotlightsPipeline->setViewport(
             0, 0, shadowRenderTarget->texture.creationData.width,
             shadowRenderTarget->texture.creationData.height);
-#ifdef METAL
         spotlightsPipeline->setCullMode(opal::CullMode::None);
-#else
-        spotlightsPipeline->setCullMode(opal::CullMode::Back);
-#endif
         spotlightsPipeline->setFrontFace(this->frontFace);
         spotlightsPipeline->enableDepthTest(true);
+        spotlightsPipeline->setDepthCompareOp(opal::CompareOp::Less);
         spotlightsPipeline->enablePolygonOffset(true);
-        spotlightsPipeline->setPolygonOffset(2.0f, 4.0f);
+        spotlightsPipeline->setPolygonOffset(1.0f, 1.0f);
         spotlightsPipeline =
             this->depthProgram.requestPipeline(spotlightsPipeline);
 
@@ -1254,15 +1248,12 @@ void Window::renderLightsToShadowMaps(
         pointLightPipeline->setViewport(
             0, 0, shadowRenderTarget->texture.creationData.width,
             shadowRenderTarget->texture.creationData.height);
-#ifdef METAL
         pointLightPipeline->setCullMode(opal::CullMode::None);
-#else
-        pointLightPipeline->setCullMode(opal::CullMode::Back);
-#endif
         pointLightPipeline->setFrontFace(this->frontFace);
         pointLightPipeline->enableDepthTest(true);
+        pointLightPipeline->setDepthCompareOp(opal::CompareOp::Less);
         pointLightPipeline->enablePolygonOffset(true);
-        pointLightPipeline->setPolygonOffset(2.0f, 4.0f);
+        pointLightPipeline->setPolygonOffset(1.0f, 1.0f);
         pointLightPipeline =
             this->pointDepthProgram.requestPipeline(pointLightPipeline);
 
