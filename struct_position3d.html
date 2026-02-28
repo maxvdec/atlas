@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 5</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -411,7 +411,7 @@ Example</h2>
 </div><div class="memdoc">
 
 <p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00104">104</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  104</span>                                                         {</div>
+<div class="fragment"><div class="line"><span class="lineno">  104</span>                                                  {</div>
 <div class="line"><span class="lineno">  105</span>        <span class="keywordflow">return</span> {vec.x, vec.y, vec.z};</div>
 <div class="line"><span class="lineno">  106</span>    };</div>
 </div><!-- fragment -->
@@ -505,8 +505,8 @@ Example</h2>
 </div><div class="memdoc">
 
 <p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00097">97</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   97</span>                                         {</div>
-<div class="line"><span class="lineno">   98</span>        <span class="keywordtype">float</span> length = std::sqrt(<a class="code hl_variable" href="#a600cc5acded2f96d674441c4f9a38e4b">x</a> * <a class="code hl_variable" href="#a600cc5acded2f96d674441c4f9a38e4b">x</a> + <a class="code hl_variable" href="#a12a216506ce9925f256e9251c224f99d">y</a> * <a class="code hl_variable" href="#a12a216506ce9925f256e9251c224f99d">y</a> + <a class="code hl_variable" href="#a5a4885c30b2a2e501c773d8fa9cc506b">z</a> * <a class="code hl_variable" href="#a5a4885c30b2a2e501c773d8fa9cc506b">z</a>);</div>
+<div class="fragment"><div class="line"><span class="lineno">   97</span>                                  {</div>
+<div class="line"><span class="lineno">   98</span>        <span class="keywordtype">float</span> length = std::sqrt((<a class="code hl_variable" href="#a600cc5acded2f96d674441c4f9a38e4b">x</a> * <a class="code hl_variable" href="#a600cc5acded2f96d674441c4f9a38e4b">x</a>) + (<a class="code hl_variable" href="#a12a216506ce9925f256e9251c224f99d">y</a> * <a class="code hl_variable" href="#a12a216506ce9925f256e9251c224f99d">y</a>) + (<a class="code hl_variable" href="#a5a4885c30b2a2e501c773d8fa9cc506b">z</a> * <a class="code hl_variable" href="#a5a4885c30b2a2e501c773d8fa9cc506b">z</a>));</div>
 <div class="line"><span class="lineno">   99</span>        <span class="keywordflow">if</span> (length == 0)</div>
 <div class="line"><span class="lineno">  100</span>            <span class="keywordflow">return</span> {};</div>
 <div class="line"><span class="lineno">  101</span>        <span class="keywordflow">return</span> {<a class="code hl_variable" href="#a600cc5acded2f96d674441c4f9a38e4b">x</a> / length, <a class="code hl_variable" href="#a12a216506ce9925f256e9251c224f99d">y</a> / length, <a class="code hl_variable" href="#a5a4885c30b2a2e501c773d8fa9cc506b">z</a> / length};</div>
@@ -957,10 +957,10 @@ Example</h2>
 </div><div class="memdoc">
 
 <p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00108">108</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  109</span>                                                                {</div>
-<div class="line"><span class="lineno">  110</span>        os &lt;&lt; <span class="stringliteral">&quot;Position3d(&quot;</span> &lt;&lt; p.<a class="code hl_variable" href="#a600cc5acded2f96d674441c4f9a38e4b">x</a> &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; p.<a class="code hl_variable" href="#a12a216506ce9925f256e9251c224f99d">y</a> &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; p.<a class="code hl_variable" href="#a5a4885c30b2a2e501c773d8fa9cc506b">z</a> &lt;&lt; <span class="stringliteral">&quot;)&quot;</span>;</div>
-<div class="line"><span class="lineno">  111</span>        <span class="keywordflow">return</span> os;</div>
-<div class="line"><span class="lineno">  112</span>    }</div>
+<div class="fragment"><div class="line"><span class="lineno">  108</span>                                                                       {</div>
+<div class="line"><span class="lineno">  109</span>        os &lt;&lt; <span class="stringliteral">&quot;Position3d(&quot;</span> &lt;&lt; p.<a class="code hl_variable" href="#a600cc5acded2f96d674441c4f9a38e4b">x</a> &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; p.<a class="code hl_variable" href="#a12a216506ce9925f256e9251c224f99d">y</a> &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; p.<a class="code hl_variable" href="#a5a4885c30b2a2e501c773d8fa9cc506b">z</a> &lt;&lt; <span class="stringliteral">&quot;)&quot;</span>;</div>
+<div class="line"><span class="lineno">  110</span>        <span class="keywordflow">return</span> os;</div>
+<div class="line"><span class="lineno">  111</span>    }</div>
 </div><!-- fragment -->
 <p class="reference">References <a class="el" href="units_8h_source.html#l00049">Position3d()</a>, <a class="el" href="units_8h_source.html#l00034">x</a>, <a class="el" href="units_8h_source.html#l00035">y</a>, and <a class="el" href="units_8h_source.html#l00036">z</a>.</p>
 

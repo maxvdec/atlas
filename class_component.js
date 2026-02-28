@@ -9,7 +9,7 @@ var class_component =
     [ "onCollisionEnter", "class_component.html#a2af73436a1514c8db3f3876a6f3bc3d8", null ],
     [ "onCollisionExit", "class_component.html#aeb0bf2c6f2215da76d758e5ff58b9902", null ],
     [ "onCollisionStay", "class_component.html#af86cc990a53aa9b9c3d70572558aecb5", null ],
-    [ "onQueryRecieve", "class_component.html#a0f6d2f7ffd806c10cf675d85b22f012b", null ],
+    [ "onQueryReceive", "class_component.html#a7ad81a397c06433353d21b1d5aa7eda9", null ],
     [ "onSignalEnd", "class_component.html#aeea623ce757a97a895a2500f6de6a33c", null ],
     [ "onSignalRecieve", "class_component.html#a9749b406011df2556b004acd2f032935", null ],
     [ "setProjectionMatrix", "class_component.html#a8efb5aafd9909785aee68660a5edc319", null ],

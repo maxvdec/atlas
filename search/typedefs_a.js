@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['weatherdelegate_0',['WeatherDelegate',['../atmosphere_8h.html#afda69b918865d1f99888c30b91aa47c0',1,'atmosphere.h']]]
+  ['vector3_0',['Vector3',['../units_8h.html#a9cae88f0ee19c76726bf93ac9f6f7e51',1,'units.h']]],
+  ['velocity3d_1',['Velocity3d',['../units_8h.html#a1b9aa5a4c5146cc45a21959a2724cd5d',1,'units.h']]]
 ];

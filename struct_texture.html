@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 5</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -150,8 +150,8 @@ Public Attributes</h2></td></tr>
 <tr class="memdesc:a2c68086bd793696d36daf636f42ddb2f"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="struct_resource.html" title="Structure representing a single resource in the workspace.">Resource</a> from which the texture was created.  <br /></td></tr>
 <tr class="memitem:a7424dca65a18a64a794fd3996530b437" id="r_a7424dca65a18a64a794fd3996530b437"><td class="memItemLeft"><a class="el" href="struct_texture_creation_data.html">TextureCreationData</a>&#160;</td><td class="memItemRight"><a class="el" href="#a7424dca65a18a64a794fd3996530b437">creationData</a></td></tr>
 <tr class="memdesc:a7424dca65a18a64a794fd3996530b437"><td class="mdescLeft">&#160;</td><td class="mdescRight">The data for the texture creation.  <br /></td></tr>
-<tr class="memitem:a6faee3eee64a8091460ec57033c4b3a6" id="r_a6faee3eee64a8091460ec57033c4b3a6"><td class="memItemLeft"><a class="el" href="units_8h.html#a5c9d258201f281b8ad0fb4385b7ef668">Id</a>&#160;</td><td class="memItemRight"><a class="el" href="#a6faee3eee64a8091460ec57033c4b3a6">id</a> = 0</td></tr>
-<tr class="memdesc:a6faee3eee64a8091460ec57033c4b3a6"><td class="mdescLeft">&#160;</td><td class="mdescRight">The core <a class="el" href="units_8h.html#a5c9d258201f281b8ad0fb4385b7ef668" title="Type alias for OpenGL object identifiers.">Id</a> for the texture in OpenGL.  <br /></td></tr>
+<tr class="memitem:a6faee3eee64a8091460ec57033c4b3a6" id="r_a6faee3eee64a8091460ec57033c4b3a6"><td class="memItemLeft"><a class="el" href="units_8h.html#aa39ddd1645a5d1634a3da83ba560d45e">Id</a>&#160;</td><td class="memItemRight"><a class="el" href="#a6faee3eee64a8091460ec57033c4b3a6">id</a> = 0</td></tr>
+<tr class="memdesc:a6faee3eee64a8091460ec57033c4b3a6"><td class="mdescLeft">&#160;</td><td class="mdescRight">The core <a class="el" href="units_8h.html#aa39ddd1645a5d1634a3da83ba560d45e" title="Type alias for OpenGL object identifiers.">Id</a> for the texture in OpenGL.  <br /></td></tr>
 <tr class="memitem:ab86803e93f83c4dfab6b1db25f38f30f" id="r_ab86803e93f83c4dfab6b1db25f38f30f"><td class="memItemLeft">std::shared_ptr&lt; <a class="el" href="classopal_1_1_texture.html">opal::Texture</a> &gt;&#160;</td><td class="memItemRight"><a class="el" href="#ab86803e93f83c4dfab6b1db25f38f30f">texture</a></td></tr>
 <tr class="memitem:ad83ed086abaa805a606a5ccd433f505c" id="r_ad83ed086abaa805a606a5ccd433f505c"><td class="memItemLeft"><a class="el" href="texture_8h.html#a579bf435a05d45b75f553d37ebbb3225">TextureType</a>&#160;</td><td class="memItemRight"><a class="el" href="#ad83ed086abaa805a606a5ccd433f505c">type</a> = <a class="el" href="texture_8h.html#a579bf435a05d45b75f553d37ebbb3225acb5feb1b7314637725a2e73bdc9f7295">TextureType::Color</a></td></tr>
 <tr class="memdesc:ad83ed086abaa805a606a5ccd433f505c"><td class="mdescLeft">&#160;</td><td class="mdescRight">The type of the texture (e.g., <a class="el" href="struct_color.html" title="Structure representing an RGBA color with double precision. Provides arithmetic operations and common...">Color</a>, Specular, <a class="el" href="struct_cubemap.html" title="Structure that holds the data for a cubemap texture.">Cubemap</a>).  <br /></td></tr>
@@ -176,18 +176,18 @@ Example</h2>
 <div class="line">};</div>
 <div class="line"><a class="code hl_enumvalue" href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82aa3e8ae43188ae76d38f414b2bdb0077b">Texture</a> tiledTexture = <a class="code hl_function" href="#a659f1c34d69196f97dbd9de980696d6a">Texture::createTiledCheckerboard</a>(512, 512, tiles);</div>
 <div class="ttc" id="ashader_8h_html_aed7a1c7a5976e4adb712d0a231dada82aa3e8ae43188ae76d38f414b2bdb0077b"><div class="ttname"><a href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82aa3e8ae43188ae76d38f414b2bdb0077b">AtlasVertexShader::Texture</a></div><div class="ttdeci">@ Texture</div><div class="ttdoc">Vertex shader for rendering textured objects.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00052">shader.h:52</a></div></div>
-<div class="ttc" id="astruct_color_html_aacbef2c60156c8c2bb422206d3d9c560"><div class="ttname"><a href="struct_color.html#aacbef2c60156c8c2bb422206d3d9c560">Color::red</a></div><div class="ttdeci">static Color red()</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00280">units.h:280</a></div></div>
-<div class="ttc" id="astruct_color_html_aad4699ae003d7a86b5edc5fccdbaf4c8"><div class="ttname"><a href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a></div><div class="ttdeci">static Color white()</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00278">units.h:278</a></div></div>
-<div class="ttc" id="astruct_color_html_aba1c3be96b5e25fbae9c769d3491e333"><div class="ttname"><a href="struct_color.html#aba1c3be96b5e25fbae9c769d3491e333">Color::black</a></div><div class="ttdeci">static Color black()</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00279">units.h:279</a></div></div>
-<div class="ttc" id="astruct_color_html_ac506f80f2ec86bc439ff19c0f78063c7"><div class="ttname"><a href="struct_color.html#ac506f80f2ec86bc439ff19c0f78063c7">Color::green</a></div><div class="ttdeci">static Color green()</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00281">units.h:281</a></div></div>
-<div class="ttc" id="astruct_color_html_af0d455b2d0f2366422127f4e70cbd594"><div class="ttname"><a href="struct_color.html#af0d455b2d0f2366422127f4e70cbd594">Color::blue</a></div><div class="ttdeci">static Color blue()</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00282">units.h:282</a></div></div>
-<div class="ttc" id="astruct_texture_html"><div class="ttname"><a href="struct_texture.html">Texture</a></div><div class="ttdoc">Structure that holds the data for a texture. It is created from a resource.</div><div class="ttdef"><b>Definition</b> <a href="texture_8h_source.html#l00160">texture.h:160</a></div></div>
+<div class="ttc" id="astruct_color_html_aacbef2c60156c8c2bb422206d3d9c560"><div class="ttname"><a href="struct_color.html#aacbef2c60156c8c2bb422206d3d9c560">Color::red</a></div><div class="ttdeci">static Color red()</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00324">units.h:324</a></div></div>
+<div class="ttc" id="astruct_color_html_aad4699ae003d7a86b5edc5fccdbaf4c8"><div class="ttname"><a href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a></div><div class="ttdeci">static Color white()</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00322">units.h:322</a></div></div>
+<div class="ttc" id="astruct_color_html_aba1c3be96b5e25fbae9c769d3491e333"><div class="ttname"><a href="struct_color.html#aba1c3be96b5e25fbae9c769d3491e333">Color::black</a></div><div class="ttdeci">static Color black()</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00323">units.h:323</a></div></div>
+<div class="ttc" id="astruct_color_html_ac506f80f2ec86bc439ff19c0f78063c7"><div class="ttname"><a href="struct_color.html#ac506f80f2ec86bc439ff19c0f78063c7">Color::green</a></div><div class="ttdeci">static Color green()</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00325">units.h:325</a></div></div>
+<div class="ttc" id="astruct_color_html_af0d455b2d0f2366422127f4e70cbd594"><div class="ttname"><a href="struct_color.html#af0d455b2d0f2366422127f4e70cbd594">Color::blue</a></div><div class="ttdeci">static Color blue()</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00326">units.h:326</a></div></div>
+<div class="ttc" id="astruct_texture_html"><div class="ttname"><a href="struct_texture.html">Texture</a></div><div class="ttdoc">Structure that holds the data for a texture. It is created from a resource.</div><div class="ttdef"><b>Definition</b> <a href="texture_8h_source.html#l00161">texture.h:161</a></div></div>
 <div class="ttc" id="astruct_texture_html_a29875124ac62123b9d6840e38ce60920"><div class="ttname"><a href="#a29875124ac62123b9d6840e38ce60920">Texture::fromResourceName</a></div><div class="ttdeci">static Texture fromResourceName(const std::string &amp;resourceName, TextureType type=TextureType::Color, TextureParameters params={}, Color borderColor={0, 0, 0, 0})</div><div class="ttdoc">Creates a texture from a resource name.</div></div>
 <div class="ttc" id="astruct_texture_html_a659f1c34d69196f97dbd9de980696d6a"><div class="ttname"><a href="#a659f1c34d69196f97dbd9de980696d6a">Texture::createTiledCheckerboard</a></div><div class="ttdeci">static Texture createTiledCheckerboard(int width, int height, const std::vector&lt; CheckerTile &gt; &amp;tiles, TextureParameters params={}, Color borderColor={0, 0, 0, 0})</div><div class="ttdoc">Creates a tiled checkerboard texture.</div></div>
 <div class="ttc" id="astruct_texture_html_a99403f282f676041e01bf76216c62288"><div class="ttname"><a href="#a99403f282f676041e01bf76216c62288">Texture::createCheckerboard</a></div><div class="ttdeci">static Texture createCheckerboard(int width, int height, int checkSize, Color color1, Color color2, TextureParameters params={}, Color borderColor={0, 0, 0, 0})</div><div class="ttdoc">Creates a checkerboard texture.</div></div>
-<div class="ttc" id="atexture_8h_html_a579bf435a05d45b75f553d37ebbb3225acb5feb1b7314637725a2e73bdc9f7295"><div class="ttname"><a href="texture_8h.html#a579bf435a05d45b75f553d37ebbb3225acb5feb1b7314637725a2e73bdc9f7295">TextureType::Color</a></div><div class="ttdeci">@ Color</div><div class="ttdef"><b>Definition</b> <a href="texture_8h_source.html#l00114">texture.h:114</a></div></div>
+<div class="ttc" id="atexture_8h_html_a579bf435a05d45b75f553d37ebbb3225acb5feb1b7314637725a2e73bdc9f7295"><div class="ttname"><a href="texture_8h.html#a579bf435a05d45b75f553d37ebbb3225acb5feb1b7314637725a2e73bdc9f7295">TextureType::Color</a></div><div class="ttdeci">@ Color</div><div class="ttdef"><b>Definition</b> <a href="texture_8h_source.html#l00115">texture.h:115</a></div></div>
 </div><!-- fragment --> 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00160">160</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00161">161</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
 <a id="a99403f282f676041e01bf76216c62288" name="a99403f282f676041e01bf76216c62288"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a99403f282f676041e01bf76216c62288">&#9670;&#160;</a></span>createCheckerboard()</h2>
@@ -486,7 +486,7 @@ Example</h2>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>(<a class="el" href="struct_texture.html" title="Structure that holds the data for a texture. It is created from a resource.">Texture</a>) The created texture instance. </dd></dl>
 
-<p class="reference">References <a class="el" href="texture_8h_source.html#l00114">Color</a>, <a class="el" href="texture_8h_source.html#l00167">resource</a>, and <a class="el" href="texture_8h_source.html#l00183">type</a>.</p>
+<p class="reference">References <a class="el" href="texture_8h_source.html#l00115">Color</a>, <a class="el" href="texture_8h_source.html#l00168">resource</a>, and <a class="el" href="texture_8h_source.html#l00184">type</a>.</p>
 
 </div>
 </div>
@@ -539,7 +539,7 @@ Example</h2>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>(<a class="el" href="struct_texture.html" title="Structure that holds the data for a texture. It is created from a resource.">Texture</a>) The created texture instance. </dd></dl>
 
-<p class="reference">References <a class="el" href="texture_8h_source.html#l00114">Color</a>, and <a class="el" href="texture_8h_source.html#l00183">type</a>.</p>
+<p class="reference">References <a class="el" href="texture_8h_source.html#l00115">Color</a>, and <a class="el" href="texture_8h_source.html#l00184">type</a>.</p>
 
 </div>
 </div>
@@ -558,8 +558,8 @@ Example</h2>
 
 <p>The border color used when the wrapping mode is set to use. </p>
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00188">188</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  188</span>{0, 0, 0, 0};</div>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00189">189</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  189</span>{0, 0, 0, 0};</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -577,7 +577,7 @@ Example</h2>
 
 <p>The data for the texture creation. </p>
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00172">172</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00173">173</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 
 </div>
 </div>
@@ -588,14 +588,14 @@ Example</h2>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="units_8h.html#a5c9d258201f281b8ad0fb4385b7ef668">Id</a> Texture::id = 0</td>
+          <td class="memname"><a class="el" href="units_8h.html#aa39ddd1645a5d1634a3da83ba560d45e">Id</a> Texture::id = 0</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>The core <a class="el" href="units_8h.html#a5c9d258201f281b8ad0fb4385b7ef668" title="Type alias for OpenGL object identifiers.">Id</a> for the texture in OpenGL. </p>
+<p>The core <a class="el" href="units_8h.html#aa39ddd1645a5d1634a3da83ba560d45e" title="Type alias for OpenGL object identifiers.">Id</a> for the texture in OpenGL. </p>
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00177">177</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00178">178</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 
 </div>
 </div>
@@ -614,7 +614,7 @@ Example</h2>
 <p><a class="el" href="struct_resource.html" title="Structure representing a single resource in the workspace.">Resource</a> from which the texture was created. </p>
 <dl class="section warning"><dt>Warning</dt><dd>When creating the texture from a checkerboard or other method, this will be empty. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00167">167</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00168">168</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 
 </div>
 </div>
@@ -630,7 +630,7 @@ Example</h2>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00178">178</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00179">179</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 
 </div>
 </div>
@@ -648,7 +648,7 @@ Example</h2>
 
 <p>The type of the texture (e.g., <a class="el" href="struct_color.html" title="Structure representing an RGBA color with double precision. Provides arithmetic operations and common...">Color</a>, Specular, <a class="el" href="struct_cubemap.html" title="Structure that holds the data for a cubemap texture.">Cubemap</a>). </p>
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00183">183</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00184">184</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 
 </div>
 </div>

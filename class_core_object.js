@@ -27,7 +27,7 @@ var class_core_object =
     [ "onCollisionEnter", "class_core_object.html#a5fad606295a00b698d6dfe8f59b7dadd", null ],
     [ "onCollisionExit", "class_core_object.html#a7e8233deb8675a4e4861e38b71661459", null ],
     [ "onCollisionStay", "class_core_object.html#a20fefe0132ec6e1cced5adbec3e14f8c", null ],
-    [ "onQueryRecieve", "class_core_object.html#a3bfc5b805a5bfb10a665ac120b0ac008", null ],
+    [ "onQueryReceive", "class_core_object.html#ae6e2f46f16121dcfcbf1cf57eeb546ca", null ],
     [ "onSignalEnd", "class_core_object.html#ac741e17b433f83741b0bacff3268c8fa", null ],
     [ "onSignalRecieve", "class_core_object.html#ad967c8e6fba846e5f570ed92e8fe5dac", null ],
     [ "refreshPipeline", "class_core_object.html#af6648432e1725292059df2b4b62b799e", null ],

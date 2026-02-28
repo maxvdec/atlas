@@ -46,7 +46,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 5</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -270,7 +270,7 @@ $(function(){initNavTree('renderable_8h_source.html','',''); });
 <div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span><span class="comment">     *</span></div>
 <div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span><span class="comment">     * @return The scale of the object as a Size3d struct.</span></div>
 <div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00154" name="l00154"></a><span class="lineno"><a class="line" href="class_renderable.html#a98ddcdedf7f0c6d440be821c80d6ed12">  154</a></span>    <span class="keyword">virtual</span> <a class="code hl_typedef" href="units_8h.html#a1636071d291ee0954efc6d64eb8d94f1">Size3d</a> <a class="code hl_function" href="class_renderable.html#a98ddcdedf7f0c6d440be821c80d6ed12">getScale</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> {1.0f, 1.0f, 1.0f}; };<span class="comment"></span></div>
+<div class="line"><a id="l00154" name="l00154"></a><span class="lineno"><a class="line" href="class_renderable.html#a98ddcdedf7f0c6d440be821c80d6ed12">  154</a></span>    <span class="keyword">virtual</span> <a class="code hl_typedef" href="units_8h.html#a64eae7ddcc7a03ddf2cda1866b0fb3aa">Size3d</a> <a class="code hl_function" href="class_renderable.html#a98ddcdedf7f0c6d440be821c80d6ed12">getScale</a>()<span class="keyword"> const </span>{ <span class="keywordflow">return</span> {1.0f, 1.0f, 1.0f}; };<span class="comment"></span></div>
 <div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span><span class="comment">    /**</span></div>
 <div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span><span class="comment">     * @brief Function to determine if the object can cast shadows. Can be</span></div>
 <div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span><span class="comment">     * overridden by derived classes.</span></div>
@@ -325,14 +325,14 @@ $(function(){initNavTree('renderable_8h_source.html','',''); });
 <div class="ttc" id="aclass_renderable_html_ac40a73fd7fb34a4f5757df3cac945a95"><div class="ttname"><a href="class_renderable.html#ac40a73fd7fb34a4f5757df3cac945a95">Renderable::getId</a></div><div class="ttdeci">virtual unsigned int getId()</div><div class="ttdef"><b>Definition</b> <a href="#l00094">renderable.h:94</a></div></div>
 <div class="ttc" id="aclass_renderable_html_ae1b11967b98e6ba4393640652242083f"><div class="ttname"><a href="class_renderable.html#ae1b11967b98e6ba4393640652242083f">Renderable::setViewMatrix</a></div><div class="ttdeci">virtual void setViewMatrix(const glm::mat4 &amp;view)</div><div class="ttdoc">Function to set the view matrix for the object. Called from Window for internal purposes.</div><div class="ttdef"><b>Definition</b> <a href="#l00109">renderable.h:109</a></div></div>
 <div class="ttc" id="aclass_renderable_html_afb2aa3ad0ab8dcfc54088173ea7182cd"><div class="ttname"><a href="class_renderable.html#afb2aa3ad0ab8dcfc54088173ea7182cd">Renderable::update</a></div><div class="ttdeci">virtual void update(Window &amp;window)</div><div class="ttdoc">Function to update the object each frame.</div><div class="ttdef"><b>Definition</b> <a href="#l00102">renderable.h:102</a></div></div>
-<div class="ttc" id="aclass_window_html"><div class="ttname"><a href="class_window.html">Window</a></div><div class="ttdoc">Structure representing a window in the application. This contains the main interface for interacting ...</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00241">window.h:241</a></div></div>
+<div class="ttc" id="aclass_window_html"><div class="ttname"><a href="class_window.html">Window</a></div><div class="ttdoc">Structure representing a window in the application. This contains the main interface for interacting ...</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00240">window.h:240</a></div></div>
 <div class="ttc" id="aopal_8h_html"><div class="ttname"><a href="opal_8h.html">opal.h</a></div><div class="ttdoc">Opal rendering abstraction layer (OpenGL/Vulkan/Metal).</div></div>
 <div class="ttc" id="ashader_8h_html"><div class="ttname"><a href="shader_8h.html">shader.h</a></div></div>
 <div class="ttc" id="astruct_core_vertex_html"><div class="ttname"><a href="struct_core_vertex.html">CoreVertex</a></div><div class="ttdoc">Structure representing a single vertex in 3D space, including position, color, texture coordinates,...</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00079">object.h:79</a></div></div>
 <div class="ttc" id="astruct_position3d_html"><div class="ttname"><a href="struct_position3d.html">Position3d</a></div><div class="ttdoc">Structure representing a position in 3D space with double precision. Provides arithmetic operations a...</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00033">units.h:33</a></div></div>
 <div class="ttc" id="astruct_shader_program_html"><div class="ttname"><a href="struct_shader_program.html">ShaderProgram</a></div><div class="ttdoc">Structure representing a complete shader program, consisting of a vertex shader and a fragment shader...</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00616">shader.h:616</a></div></div>
 <div class="ttc" id="aunits_8h_html"><div class="ttname"><a href="units_8h.html">units.h</a></div></div>
-<div class="ttc" id="aunits_8h_html_a1636071d291ee0954efc6d64eb8d94f1"><div class="ttname"><a href="units_8h.html#a1636071d291ee0954efc6d64eb8d94f1">Size3d</a></div><div class="ttdeci">Position3d Size3d</div><div class="ttdoc">Type alias for 3D size dimensions.</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00124">units.h:124</a></div></div>
+<div class="ttc" id="aunits_8h_html_a64eae7ddcc7a03ddf2cda1866b0fb3aa"><div class="ttname"><a href="units_8h.html#a64eae7ddcc7a03ddf2cda1866b0fb3aa">Size3d</a></div><div class="ttdeci">Position3d Size3d</div><div class="ttdoc">Type alias for 3D size dimensions.</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00123">units.h:123</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 </div><!-- container -->

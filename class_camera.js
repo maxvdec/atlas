@@ -8,6 +8,7 @@ var class_camera =
     [ "move", "class_camera.html#a5687369d5f026a838824f2fedd8fccd6", null ],
     [ "moveTo", "class_camera.html#a302107bd77c00cce532343f666dfdeed", null ],
     [ "setPosition", "class_camera.html#aefe37c9af548b9551704ba8d03e7a16d", null ],
+    [ "setPositionKeepingOrientation", "class_camera.html#a0e67f93fa35040e29ac27dc17bb49749", null ],
     [ "update", "class_camera.html#ad6f9e385de1a864521f3870873aa08a8", null ],
     [ "updateLook", "class_camera.html#af505546c6d360a4af80c2bd14eeb1847", null ],
     [ "updateZoom", "class_camera.html#a05bf5f761a2366625b30c6b59c99ad80", null ],

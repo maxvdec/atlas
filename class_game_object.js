@@ -21,7 +21,7 @@ var class_game_object =
     [ "onCollisionEnter", "class_game_object.html#adb701a3171f04db14279e568b277a236", null ],
     [ "onCollisionExit", "class_game_object.html#a6c3ba10940f9e7440d51c61f56147713", null ],
     [ "onCollisionStay", "class_game_object.html#a1c66aaf520caf184b1c6df3c435b7a70", null ],
-    [ "onQueryRecieve", "class_game_object.html#a886057133ff07c4fca8627418d6a8514", null ],
+    [ "onQueryReceive", "class_game_object.html#aa88ccdc1e5978128d0619ce137dab25e", null ],
     [ "onSignalEnd", "class_game_object.html#a645b7bb8cebf8db03bc91f08f97f8661", null ],
     [ "onSignalRecieve", "class_game_object.html#a644d47aa6002c5551bd454dd61311136", null ],
     [ "operator=", "class_game_object.html#ab0973a6654325520aa4abd99e06f135f", null ],

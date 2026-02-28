@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 5</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -176,6 +176,11 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a580fc0c1e2faf17dd7ec9d00bd4b5c91 inherit pub_methods_class_rigidbody"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the rigidbody's angular velocity.  <br /></td></tr>
 <tr class="memitem:a5c39ff52c066a82762bb7c0897738dbd inherit pub_methods_class_rigidbody" id="r_a5c39ff52c066a82762bb7c0897738dbd"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="class_rigidbody.html#a5c39ff52c066a82762bb7c0897738dbd">addAngularVelocity</a> (const <a class="el" href="struct_position3d.html">Position3d</a> &amp;velocity)</td></tr>
 <tr class="memdesc:a5c39ff52c066a82762bb7c0897738dbd inherit pub_methods_class_rigidbody"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds to the rigidbody's angular velocity.  <br /></td></tr>
+<tr class="memitem:a0f8aa7a2ed0da483d50576476182bfa8 inherit pub_methods_class_rigidbody" id="r_a0f8aa7a2ed0da483d50576476182bfa8"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="class_rigidbody.html#a0f8aa7a2ed0da483d50576476182bfa8">setMaxLinearVelocity</a> (float maxLinearVelocity)</td></tr>
+<tr class="memitem:a88265e5ebbfea258c572e7838dcfd833 inherit pub_methods_class_rigidbody" id="r_a88265e5ebbfea258c572e7838dcfd833"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="class_rigidbody.html#a88265e5ebbfea258c572e7838dcfd833">setMaxAngularVelocity</a> (float maxAngularVelocity)</td></tr>
+<tr class="memitem:a0e8b2130277bbd450d12290ef6a6d0d2 inherit pub_methods_class_rigidbody" id="r_a0e8b2130277bbd450d12290ef6a6d0d2"><td class="memItemLeft"><a class="el" href="units_8h.html#a1b9aa5a4c5146cc45a21959a2724cd5d">Velocity3d</a>&#160;</td><td class="memItemRight"><a class="el" href="class_rigidbody.html#a0e8b2130277bbd450d12290ef6a6d0d2">getLinearVelocity</a> ()</td></tr>
+<tr class="memitem:abfe948994ecbc3e0ada52b9b9558579b inherit pub_methods_class_rigidbody" id="r_abfe948994ecbc3e0ada52b9b9558579b"><td class="memItemLeft"><a class="el" href="units_8h.html#a1b9aa5a4c5146cc45a21959a2724cd5d">Velocity3d</a>&#160;</td><td class="memItemRight"><a class="el" href="class_rigidbody.html#abfe948994ecbc3e0ada52b9b9558579b">getAngularVelocity</a> ()</td></tr>
+<tr class="memitem:ac858887c2ff98e715ba6bb5546eebc44 inherit pub_methods_class_rigidbody" id="r_ac858887c2ff98e715ba6bb5546eebc44"><td class="memItemLeft"><a class="el" href="units_8h.html#a1b9aa5a4c5146cc45a21959a2724cd5d">Velocity3d</a>&#160;</td><td class="memItemRight"><a class="el" href="class_rigidbody.html#ac858887c2ff98e715ba6bb5546eebc44">getVelocity</a> ()</td></tr>
 <tr class="memitem:a20cd52130bc39d0230b03b60ca91fbee inherit pub_methods_class_rigidbody" id="r_a20cd52130bc39d0230b03b60ca91fbee"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="class_rigidbody.html#a20cd52130bc39d0230b03b60ca91fbee">raycast</a> (const <a class="el" href="struct_position3d.html">Position3d</a> &amp;direction, float maxDistance=1000.0f)</td></tr>
 <tr class="memitem:a1e4cf6272a1fca2139a4e89c79b5a9e9 inherit pub_methods_class_rigidbody" id="r_a1e4cf6272a1fca2139a4e89c79b5a9e9"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="class_rigidbody.html#a1e4cf6272a1fca2139a4e89c79b5a9e9">raycastAll</a> (const <a class="el" href="struct_position3d.html">Position3d</a> &amp;direction, float maxDistance=100.0f)</td></tr>
 <tr class="memitem:aa98589cde76257ddcb0eecd15a592ced inherit pub_methods_class_rigidbody" id="r_aa98589cde76257ddcb0eecd15a592ced"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="class_rigidbody.html#aa98589cde76257ddcb0eecd15a592ced">raycastWorld</a> (const <a class="el" href="struct_position3d.html">Position3d</a> &amp;origin, const <a class="el" href="struct_position3d.html">Position3d</a> &amp;direction, float maxDistance=1000.0f)</td></tr>
@@ -207,8 +212,8 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a4abe9f1b17a7c6cc137a7689ab7b47c2 inherit pub_methods_class_rigidbody"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns true if the rigidbody has the provided tag.  <br /></td></tr>
 <tr class="memitem:a438dd8078125ee0e777b7ca9138d271b inherit pub_methods_class_rigidbody" id="r_a438dd8078125ee0e777b7ca9138d271b"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="class_rigidbody.html#a438dd8078125ee0e777b7ca9138d271b">addTag</a> (const std::string &amp;tag)</td></tr>
 <tr class="memdesc:a438dd8078125ee0e777b7ca9138d271b inherit pub_methods_class_rigidbody"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a tag for filtering and game logic.  <br /></td></tr>
-<tr class="memitem:aaa41bba5448c1b5a69cfee40dc14225c inherit pub_methods_class_rigidbody" id="r_aaa41bba5448c1b5a69cfee40dc14225c"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="class_rigidbody.html#aaa41bba5448c1b5a69cfee40dc14225c">removeTag</a> (const std::string &amp;tag)</td></tr>
-<tr class="memdesc:aaa41bba5448c1b5a69cfee40dc14225c inherit pub_methods_class_rigidbody"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes a previously added tag.  <br /></td></tr>
+<tr class="memitem:aab8c8aff718a516af1289e9daa635f18 inherit pub_methods_class_rigidbody" id="r_aab8c8aff718a516af1289e9daa635f18"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="class_rigidbody.html#aab8c8aff718a516af1289e9daa635f18">removeTag</a> (const std::string &amp;tag) const</td></tr>
+<tr class="memdesc:aab8c8aff718a516af1289e9daa635f18 inherit pub_methods_class_rigidbody"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes a previously added tag.  <br /></td></tr>
 <tr class="memitem:a067f2b82eebde4870b323d540c8dfda4 inherit pub_methods_class_rigidbody" id="r_a067f2b82eebde4870b323d540c8dfda4"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="class_rigidbody.html#a067f2b82eebde4870b323d540c8dfda4">setDamping</a> (float linearDamping, float angularDamping)</td></tr>
 <tr class="memdesc:a067f2b82eebde4870b323d540c8dfda4 inherit pub_methods_class_rigidbody"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets linear and angular damping coefficients.  <br /></td></tr>
 <tr class="memitem:a4311e78f1313a6fc5287d94f357cfe9e inherit pub_methods_class_rigidbody" id="r_a4311e78f1313a6fc5287d94f357cfe9e"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="class_rigidbody.html#a4311e78f1313a6fc5287d94f357cfe9e">setMass</a> (float mass)</td></tr>
@@ -233,7 +238,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:af86cc990a53aa9b9c3d70572558aecb5 inherit pub_methods_class_component" id="r_af86cc990a53aa9b9c3d70572558aecb5"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_component.html#af86cc990a53aa9b9c3d70572558aecb5">onCollisionStay</a> (<a class="el" href="class_game_object.html">GameObject</a> *other)</td></tr>
 <tr class="memitem:a9749b406011df2556b004acd2f032935 inherit pub_methods_class_component" id="r_a9749b406011df2556b004acd2f032935"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_component.html#a9749b406011df2556b004acd2f032935">onSignalRecieve</a> (const std::string &amp;signal, <a class="el" href="class_game_object.html">GameObject</a> *sender)</td></tr>
 <tr class="memitem:aeea623ce757a97a895a2500f6de6a33c inherit pub_methods_class_component" id="r_aeea623ce757a97a895a2500f6de6a33c"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_component.html#aeea623ce757a97a895a2500f6de6a33c">onSignalEnd</a> (const std::string &amp;signal, <a class="el" href="class_game_object.html">GameObject</a> *sender)</td></tr>
-<tr class="memitem:a0f6d2f7ffd806c10cf675d85b22f012b inherit pub_methods_class_component" id="r_a0f6d2f7ffd806c10cf675d85b22f012b"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_component.html#a0f6d2f7ffd806c10cf675d85b22f012b">onQueryRecieve</a> (<a class="el" href="struct_query_result.html">QueryResult</a> &amp;result)</td></tr>
+<tr class="memitem:a7ad81a397c06433353d21b1d5aa7eda9 inherit pub_methods_class_component" id="r_a7ad81a397c06433353d21b1d5aa7eda9"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_component.html#a7ad81a397c06433353d21b1d5aa7eda9">onQueryReceive</a> (<a class="el" href="struct_query_result.html">QueryResult</a> &amp;result)</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-inherited" class="groupheader"><a id="inherited" name="inherited"></a>
 Additional Inherited Members</h2></td></tr>
@@ -251,7 +256,7 @@ Additional Inherited Members</h2></td></tr>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Convenience sensor rigidbody that defaults <span class="tt"><a class="el" href="class_rigidbody.html#acf5b0ecde6462d1b3311ed09b58965d4" title="Whether this rigidbody behaves as a sensor (trigger).">isSensor</a></span> to true. </p>
 
-<p class="definition">Definition at line <a class="el" href="physics_8h_source.html#l00472">472</a> of file <a class="el" href="physics_8h_source.html">physics.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="physics_8h_source.html#l00479">479</a> of file <a class="el" href="physics_8h_source.html">physics.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a342d6d11ef572c8cba92cb76fb1a294b" name="a342d6d11ef572c8cba92cb76fb1a294b"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a342d6d11ef572c8cba92cb76fb1a294b">&#9670;&#160;</a></span>Sensor()</h2>
@@ -276,8 +281,8 @@ Additional Inherited Members</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="physics_8h_source.html#l00474">474</a> of file <a class="el" href="physics_8h_source.html">physics.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  474</span>{ <a class="code hl_variable" href="class_rigidbody.html#acf5b0ecde6462d1b3311ed09b58965d4">Rigidbody::isSensor</a> = <span class="keyword">true</span>; }</div>
+<p class="definition">Definition at line <a class="el" href="physics_8h_source.html#l00481">481</a> of file <a class="el" href="physics_8h_source.html">physics.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  481</span>{ <a class="code hl_variable" href="class_rigidbody.html#acf5b0ecde6462d1b3311ed09b58965d4">Rigidbody::isSensor</a> = <span class="keyword">true</span>; }</div>
 <div class="ttc" id="aclass_rigidbody_html_acf5b0ecde6462d1b3311ed09b58965d4"><div class="ttname"><a href="class_rigidbody.html#acf5b0ecde6462d1b3311ed09b58965d4">Rigidbody::isSensor</a></div><div class="ttdeci">bool isSensor</div><div class="ttdoc">Whether this rigidbody behaves as a sensor (trigger).</div><div class="ttdef"><b>Definition</b> <a href="physics_8h_source.html#l00352">physics.h:352</a></div></div>
 </div><!-- fragment -->
 <p class="reference">References <a class="el" href="physics_8h_source.html#l00352">Rigidbody::isSensor</a>.</p>
@@ -310,8 +315,8 @@ Additional Inherited Members</h2></td></tr>
 
 <p>Sets the signal string emitted when the sensor is triggered. </p>
 
-<p class="definition">Definition at line <a class="el" href="physics_8h_source.html#l00477">477</a> of file <a class="el" href="physics_8h_source.html">physics.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  477</span>{ <a class="code hl_variable" href="class_rigidbody.html#a7787a7464690609560b81f9e039f16fb">sendSignal</a> = signal; }</div>
+<p class="definition">Definition at line <a class="el" href="physics_8h_source.html#l00484">484</a> of file <a class="el" href="physics_8h_source.html">physics.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  484</span>{ <a class="code hl_variable" href="class_rigidbody.html#a7787a7464690609560b81f9e039f16fb">sendSignal</a> = signal; }</div>
 <div class="ttc" id="aclass_rigidbody_html_a7787a7464690609560b81f9e039f16fb"><div class="ttname"><a href="class_rigidbody.html#a7787a7464690609560b81f9e039f16fb">Rigidbody::sendSignal</a></div><div class="ttdeci">std::string sendSignal</div><div class="ttdoc">Signal string sent by sensors on overlap/contact events.</div><div class="ttdef"><b>Definition</b> <a href="physics_8h_source.html#l00350">physics.h:350</a></div></div>
 </div><!-- fragment -->
 <p class="reference">References <a class="el" href="physics_8h_source.html#l00350">Rigidbody::sendSignal</a>.</p>

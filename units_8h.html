@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 5</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -137,6 +137,7 @@ Classes</h2></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Structure representing a position in 3D space with double precision. Provides arithmetic operations and conversions to/from GLM types.  <a href="struct_position3d.html#details">More...</a><br /></td></tr>
 <tr class="memitem:Rotation3d" id="r_Rotation3d"><td class="memItemLeft">struct &#160;</td><td class="memItemRight"><a class="el" href="struct_rotation3d.html">Rotation3d</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Structure representing rotation in 3D space using Euler angles. Provides arithmetic operations and conversions to/from GLM quaternions.  <a href="struct_rotation3d.html#details">More...</a><br /></td></tr>
+<tr class="memitem:Quaternion" id="r_Quaternion"><td class="memItemLeft">struct &#160;</td><td class="memItemRight"><a class="el" href="struct_quaternion.html">Quaternion</a></td></tr>
 <tr class="memitem:Color" id="r_Color"><td class="memItemLeft">struct &#160;</td><td class="memItemRight"><a class="el" href="struct_color.html">Color</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Structure representing an RGBA color with double precision. Provides arithmetic operations and common color constants.  <a href="struct_color.html#details">More...</a><br /></td></tr>
 <tr class="memitem:Position2d" id="r_Position2d"><td class="memItemLeft">struct &#160;</td><td class="memItemRight"><a class="el" href="struct_position2d.html">Position2d</a></td></tr>
@@ -148,25 +149,29 @@ Classes</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-typedef-members" class="groupheader"><a id="typedef-members" name="typedef-members"></a>
 Typedefs</h2></td></tr>
-<tr class="memitem:a3b9b132cddb1dfe2ae572f230abe45f1" id="r_a3b9b132cddb1dfe2ae572f230abe45f1"><td class="memItemLeft">typedef <a class="el" href="struct_position3d.html">Position3d</a>&#160;</td><td class="memItemRight"><a class="el" href="#a3b9b132cddb1dfe2ae572f230abe45f1">Scale3d</a></td></tr>
-<tr class="memdesc:a3b9b132cddb1dfe2ae572f230abe45f1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type alias for 3D scaling factors.  <br /></td></tr>
-<tr class="memitem:a1636071d291ee0954efc6d64eb8d94f1" id="r_a1636071d291ee0954efc6d64eb8d94f1"><td class="memItemLeft">typedef <a class="el" href="struct_position3d.html">Position3d</a>&#160;</td><td class="memItemRight"><a class="el" href="#a1636071d291ee0954efc6d64eb8d94f1">Size3d</a></td></tr>
-<tr class="memdesc:a1636071d291ee0954efc6d64eb8d94f1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type alias for 3D size dimensions.  <br /></td></tr>
-<tr class="memitem:af10d74499c12d1bc136434721b5be9a5" id="r_af10d74499c12d1bc136434721b5be9a5"><td class="memItemLeft">typedef <a class="el" href="struct_position3d.html">Position3d</a>&#160;</td><td class="memItemRight"><a class="el" href="#af10d74499c12d1bc136434721b5be9a5">Point3d</a></td></tr>
-<tr class="memdesc:af10d74499c12d1bc136434721b5be9a5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type alias for 3D points.  <br /></td></tr>
-<tr class="memitem:abd755c400f9d4026ef36e03056829444" id="r_abd755c400f9d4026ef36e03056829444"><td class="memItemLeft">typedef <a class="el" href="struct_position3d.html">Position3d</a>&#160;</td><td class="memItemRight"><a class="el" href="#abd755c400f9d4026ef36e03056829444">Normal3d</a></td></tr>
-<tr class="memdesc:abd755c400f9d4026ef36e03056829444"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type alias for 3D normal vectors.  <br /></td></tr>
-<tr class="memitem:af1efe03080186b94608ab2d50c060fe5" id="r_af1efe03080186b94608ab2d50c060fe5"><td class="memItemLeft">typedef <a class="el" href="struct_position3d.html">Position3d</a>&#160;</td><td class="memItemRight"><a class="el" href="#af1efe03080186b94608ab2d50c060fe5">Magnitude3d</a></td></tr>
-<tr class="memdesc:af1efe03080186b94608ab2d50c060fe5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type alias for 3D magnitude vectors.  <br /></td></tr>
-<tr class="memitem:a5c9d258201f281b8ad0fb4385b7ef668" id="r_a5c9d258201f281b8ad0fb4385b7ef668"><td class="memItemLeft">typedef unsigned int&#160;</td><td class="memItemRight"><a class="el" href="#a5c9d258201f281b8ad0fb4385b7ef668">Id</a></td></tr>
-<tr class="memdesc:a5c9d258201f281b8ad0fb4385b7ef668"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type alias for OpenGL object identifiers.  <br /></td></tr>
-<tr class="memitem:a95aaad99d499c90db1c984f3b29170f5" id="r_a95aaad99d499c90db1c984f3b29170f5"><td class="memItemLeft">typedef <a class="el" href="struct_position2d.html">Position2d</a>&#160;</td><td class="memItemRight"><a class="el" href="#a95aaad99d499c90db1c984f3b29170f5">Scale2d</a></td></tr>
-<tr class="memdesc:a95aaad99d499c90db1c984f3b29170f5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type alias for 2D scaling factors.  <br /></td></tr>
-<tr class="memitem:ae68ff956b24309edb7325304c5361481" id="r_ae68ff956b24309edb7325304c5361481"><td class="memItemLeft">typedef <a class="el" href="struct_position2d.html">Position2d</a>&#160;</td><td class="memItemRight"><a class="el" href="#ae68ff956b24309edb7325304c5361481">Point2d</a></td></tr>
-<tr class="memdesc:ae68ff956b24309edb7325304c5361481"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type alias for 2D points.  <br /></td></tr>
-<tr class="memitem:a850e32afea691ea6f3975e6f7cec14d0" id="r_a850e32afea691ea6f3975e6f7cec14d0"><td class="memItemLeft">typedef <a class="el" href="struct_position2d.html">Position2d</a>&#160;</td><td class="memItemRight"><a class="el" href="#a850e32afea691ea6f3975e6f7cec14d0">Movement2d</a></td></tr>
-<tr class="memdesc:a850e32afea691ea6f3975e6f7cec14d0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type alias for 2D movement vectors.  <br /></td></tr>
-<tr class="memitem:a21d9ea40a845ceda7b4377542173b58f" id="r_a21d9ea40a845ceda7b4377542173b58f"><td class="memItemLeft">typedef <a class="el" href="struct_position2d.html">Position2d</a>&#160;</td><td class="memItemRight"><a class="el" href="#a21d9ea40a845ceda7b4377542173b58f">Magnitude2d</a></td></tr>
+<tr class="memitem:a533ea67d7bc3c561752563b080663833" id="r_a533ea67d7bc3c561752563b080663833"><td class="memItemLeft">using&#160;</td><td class="memItemRight"><a class="el" href="#a533ea67d7bc3c561752563b080663833">Scale3d</a> = <a class="el" href="struct_position3d.html">Position3d</a></td></tr>
+<tr class="memdesc:a533ea67d7bc3c561752563b080663833"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type alias for 3D scaling factors.  <br /></td></tr>
+<tr class="memitem:a64eae7ddcc7a03ddf2cda1866b0fb3aa" id="r_a64eae7ddcc7a03ddf2cda1866b0fb3aa"><td class="memItemLeft">using&#160;</td><td class="memItemRight"><a class="el" href="#a64eae7ddcc7a03ddf2cda1866b0fb3aa">Size3d</a> = <a class="el" href="struct_position3d.html">Position3d</a></td></tr>
+<tr class="memdesc:a64eae7ddcc7a03ddf2cda1866b0fb3aa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type alias for 3D size dimensions.  <br /></td></tr>
+<tr class="memitem:aedf79e61648ba9862b3459cec1f363b2" id="r_aedf79e61648ba9862b3459cec1f363b2"><td class="memItemLeft">using&#160;</td><td class="memItemRight"><a class="el" href="#aedf79e61648ba9862b3459cec1f363b2">Point3d</a> = <a class="el" href="struct_position3d.html">Position3d</a></td></tr>
+<tr class="memdesc:aedf79e61648ba9862b3459cec1f363b2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type alias for 3D points.  <br /></td></tr>
+<tr class="memitem:aa79dcdba8644f852dbd5163b96868793" id="r_aa79dcdba8644f852dbd5163b96868793"><td class="memItemLeft">using&#160;</td><td class="memItemRight"><a class="el" href="#aa79dcdba8644f852dbd5163b96868793">Normal3d</a> = <a class="el" href="struct_position3d.html">Position3d</a></td></tr>
+<tr class="memdesc:aa79dcdba8644f852dbd5163b96868793"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type alias for 3D normal vectors.  <br /></td></tr>
+<tr class="memitem:afa7de6f8211b70367d0d4a845db0369a" id="r_afa7de6f8211b70367d0d4a845db0369a"><td class="memItemLeft">using&#160;</td><td class="memItemRight"><a class="el" href="#afa7de6f8211b70367d0d4a845db0369a">Magnitude3d</a> = <a class="el" href="struct_position3d.html">Position3d</a></td></tr>
+<tr class="memdesc:afa7de6f8211b70367d0d4a845db0369a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type alias for 3D magnitude vectors.  <br /></td></tr>
+<tr class="memitem:a1a9e33026a2338c2e67961b26c8d8a26" id="r_a1a9e33026a2338c2e67961b26c8d8a26"><td class="memItemLeft">using&#160;</td><td class="memItemRight"><a class="el" href="#a1a9e33026a2338c2e67961b26c8d8a26">Impulse3d</a> = <a class="el" href="struct_position3d.html">Position3d</a></td></tr>
+<tr class="memitem:ac94b308ca027b2e63f8b7a5fca71f6ad" id="r_ac94b308ca027b2e63f8b7a5fca71f6ad"><td class="memItemLeft">using&#160;</td><td class="memItemRight"><a class="el" href="#ac94b308ca027b2e63f8b7a5fca71f6ad">Force3d</a> = <a class="el" href="struct_position3d.html">Position3d</a></td></tr>
+<tr class="memitem:a9cae88f0ee19c76726bf93ac9f6f7e51" id="r_a9cae88f0ee19c76726bf93ac9f6f7e51"><td class="memItemLeft">using&#160;</td><td class="memItemRight"><a class="el" href="#a9cae88f0ee19c76726bf93ac9f6f7e51">Vector3</a> = <a class="el" href="struct_position3d.html">Position3d</a></td></tr>
+<tr class="memitem:a1b9aa5a4c5146cc45a21959a2724cd5d" id="r_a1b9aa5a4c5146cc45a21959a2724cd5d"><td class="memItemLeft">using&#160;</td><td class="memItemRight"><a class="el" href="#a1b9aa5a4c5146cc45a21959a2724cd5d">Velocity3d</a> = <a class="el" href="struct_position3d.html">Position3d</a></td></tr>
+<tr class="memitem:aa39ddd1645a5d1634a3da83ba560d45e" id="r_aa39ddd1645a5d1634a3da83ba560d45e"><td class="memItemLeft">using&#160;</td><td class="memItemRight"><a class="el" href="#aa39ddd1645a5d1634a3da83ba560d45e">Id</a> = unsigned int</td></tr>
+<tr class="memdesc:aa39ddd1645a5d1634a3da83ba560d45e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type alias for OpenGL object identifiers.  <br /></td></tr>
+<tr class="memitem:ae90d9c4d383cd5d94c30f49cf4f91753" id="r_ae90d9c4d383cd5d94c30f49cf4f91753"><td class="memItemLeft">using&#160;</td><td class="memItemRight"><a class="el" href="#ae90d9c4d383cd5d94c30f49cf4f91753">Scale2d</a> = <a class="el" href="struct_position2d.html">Position2d</a></td></tr>
+<tr class="memdesc:ae90d9c4d383cd5d94c30f49cf4f91753"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type alias for 2D scaling factors.  <br /></td></tr>
+<tr class="memitem:a25c0d1a678ad95a6fa96758d88860f4c" id="r_a25c0d1a678ad95a6fa96758d88860f4c"><td class="memItemLeft">using&#160;</td><td class="memItemRight"><a class="el" href="#a25c0d1a678ad95a6fa96758d88860f4c">Point2d</a> = <a class="el" href="struct_position2d.html">Position2d</a></td></tr>
+<tr class="memdesc:a25c0d1a678ad95a6fa96758d88860f4c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type alias for 2D points.  <br /></td></tr>
+<tr class="memitem:a48cb5ec1b3f30ba3c80b52d84531e07c" id="r_a48cb5ec1b3f30ba3c80b52d84531e07c"><td class="memItemLeft">using&#160;</td><td class="memItemRight"><a class="el" href="#a48cb5ec1b3f30ba3c80b52d84531e07c">Movement2d</a> = <a class="el" href="struct_position2d.html">Position2d</a></td></tr>
+<tr class="memdesc:a48cb5ec1b3f30ba3c80b52d84531e07c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type alias for 2D movement vectors.  <br /></td></tr>
+<tr class="memitem:a0adb96725017e45579dc798b67336b65" id="r_a0adb96725017e45579dc798b67336b65"><td class="memItemLeft">using&#160;</td><td class="memItemRight"><a class="el" href="#a0adb96725017e45579dc798b67336b65">Magnitude2d</a> = <a class="el" href="struct_position2d.html">Position2d</a></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-enum-members" class="groupheader"><a id="enum-members" name="enum-members"></a>
 Enumerations</h2></td></tr>
@@ -183,181 +188,245 @@ Enumerations</h2></td></tr>
 <tr class="memdesc:ab8c8d5e469ffb9cf502ea12708d544f5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enumeration of 3D directional constants.  <a href="#ab8c8d5e469ffb9cf502ea12708d544f5">More...</a><br /></td></tr>
 </table>
 <a name="doc-typedef-members" id="doc-typedef-members"></a><h2 id="header-doc-typedef-members" class="groupheader">Typedef Documentation</h2>
-<a id="a5c9d258201f281b8ad0fb4385b7ef668" name="a5c9d258201f281b8ad0fb4385b7ef668"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a5c9d258201f281b8ad0fb4385b7ef668">&#9670;&#160;</a></span>Id</h2>
+<a id="ac94b308ca027b2e63f8b7a5fca71f6ad" name="ac94b308ca027b2e63f8b7a5fca71f6ad"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac94b308ca027b2e63f8b7a5fca71f6ad">&#9670;&#160;</a></span>Force3d</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">typedef unsigned int <a class="el" href="#a5c9d258201f281b8ad0fb4385b7ef668">Id</a></td>
+          <td class="memname">using <a class="el" href="#ac94b308ca027b2e63f8b7a5fca71f6ad">Force3d</a> = <a class="el" href="struct_position3d.html">Position3d</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00141">141</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+
+</div>
+</div>
+<a id="aa39ddd1645a5d1634a3da83ba560d45e" name="aa39ddd1645a5d1634a3da83ba560d45e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa39ddd1645a5d1634a3da83ba560d45e">&#9670;&#160;</a></span>Id</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">using <a class="el" href="#aa39ddd1645a5d1634a3da83ba560d45e">Id</a> = unsigned int</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 <p>Type alias for OpenGL object identifiers. </p>
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00323">323</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00369">369</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
 
 </div>
 </div>
-<a id="a21d9ea40a845ceda7b4377542173b58f" name="a21d9ea40a845ceda7b4377542173b58f"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a21d9ea40a845ceda7b4377542173b58f">&#9670;&#160;</a></span>Magnitude2d</h2>
+<a id="a1a9e33026a2338c2e67961b26c8d8a26" name="a1a9e33026a2338c2e67961b26c8d8a26"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1a9e33026a2338c2e67961b26c8d8a26">&#9670;&#160;</a></span>Impulse3d</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">typedef <a class="el" href="struct_position2d.html">Position2d</a> <a class="el" href="#a21d9ea40a845ceda7b4377542173b58f">Magnitude2d</a></td>
+          <td class="memname">using <a class="el" href="#a1a9e33026a2338c2e67961b26c8d8a26">Impulse3d</a> = <a class="el" href="struct_position3d.html">Position3d</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00401">401</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00140">140</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
 
 </div>
 </div>
-<a id="af1efe03080186b94608ab2d50c060fe5" name="af1efe03080186b94608ab2d50c060fe5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af1efe03080186b94608ab2d50c060fe5">&#9670;&#160;</a></span>Magnitude3d</h2>
+<a id="a0adb96725017e45579dc798b67336b65" name="a0adb96725017e45579dc798b67336b65"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0adb96725017e45579dc798b67336b65">&#9670;&#160;</a></span>Magnitude2d</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">typedef <a class="el" href="struct_position3d.html">Position3d</a> <a class="el" href="#af1efe03080186b94608ab2d50c060fe5">Magnitude3d</a></td>
+          <td class="memname">using <a class="el" href="#a0adb96725017e45579dc798b67336b65">Magnitude2d</a> = <a class="el" href="struct_position2d.html">Position2d</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00447">447</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+
+</div>
+</div>
+<a id="afa7de6f8211b70367d0d4a845db0369a" name="afa7de6f8211b70367d0d4a845db0369a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afa7de6f8211b70367d0d4a845db0369a">&#9670;&#160;</a></span>Magnitude3d</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">using <a class="el" href="#afa7de6f8211b70367d0d4a845db0369a">Magnitude3d</a> = <a class="el" href="struct_position3d.html">Position3d</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 <p>Type alias for 3D magnitude vectors. </p>
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00139">139</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00138">138</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
 
 </div>
 </div>
-<a id="a850e32afea691ea6f3975e6f7cec14d0" name="a850e32afea691ea6f3975e6f7cec14d0"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a850e32afea691ea6f3975e6f7cec14d0">&#9670;&#160;</a></span>Movement2d</h2>
+<a id="a48cb5ec1b3f30ba3c80b52d84531e07c" name="a48cb5ec1b3f30ba3c80b52d84531e07c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a48cb5ec1b3f30ba3c80b52d84531e07c">&#9670;&#160;</a></span>Movement2d</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">typedef <a class="el" href="struct_position2d.html">Position2d</a> <a class="el" href="#a850e32afea691ea6f3975e6f7cec14d0">Movement2d</a></td>
+          <td class="memname">using <a class="el" href="#a48cb5ec1b3f30ba3c80b52d84531e07c">Movement2d</a> = <a class="el" href="struct_position2d.html">Position2d</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 <p>Type alias for 2D movement vectors. </p>
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00400">400</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00446">446</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
 
 </div>
 </div>
-<a id="abd755c400f9d4026ef36e03056829444" name="abd755c400f9d4026ef36e03056829444"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#abd755c400f9d4026ef36e03056829444">&#9670;&#160;</a></span>Normal3d</h2>
+<a id="aa79dcdba8644f852dbd5163b96868793" name="aa79dcdba8644f852dbd5163b96868793"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa79dcdba8644f852dbd5163b96868793">&#9670;&#160;</a></span>Normal3d</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">typedef <a class="el" href="struct_position3d.html">Position3d</a> <a class="el" href="#abd755c400f9d4026ef36e03056829444">Normal3d</a></td>
+          <td class="memname">using <a class="el" href="#aa79dcdba8644f852dbd5163b96868793">Normal3d</a> = <a class="el" href="struct_position3d.html">Position3d</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 <p>Type alias for 3D normal vectors. </p>
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00134">134</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00133">133</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
 
 </div>
 </div>
-<a id="ae68ff956b24309edb7325304c5361481" name="ae68ff956b24309edb7325304c5361481"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ae68ff956b24309edb7325304c5361481">&#9670;&#160;</a></span>Point2d</h2>
+<a id="a25c0d1a678ad95a6fa96758d88860f4c" name="a25c0d1a678ad95a6fa96758d88860f4c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a25c0d1a678ad95a6fa96758d88860f4c">&#9670;&#160;</a></span>Point2d</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">typedef <a class="el" href="struct_position2d.html">Position2d</a> <a class="el" href="#ae68ff956b24309edb7325304c5361481">Point2d</a></td>
+          <td class="memname">using <a class="el" href="#a25c0d1a678ad95a6fa96758d88860f4c">Point2d</a> = <a class="el" href="struct_position2d.html">Position2d</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 <p>Type alias for 2D points. </p>
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00395">395</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00441">441</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
 
 </div>
 </div>
-<a id="af10d74499c12d1bc136434721b5be9a5" name="af10d74499c12d1bc136434721b5be9a5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af10d74499c12d1bc136434721b5be9a5">&#9670;&#160;</a></span>Point3d</h2>
+<a id="aedf79e61648ba9862b3459cec1f363b2" name="aedf79e61648ba9862b3459cec1f363b2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aedf79e61648ba9862b3459cec1f363b2">&#9670;&#160;</a></span>Point3d</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">typedef <a class="el" href="struct_position3d.html">Position3d</a> <a class="el" href="#af10d74499c12d1bc136434721b5be9a5">Point3d</a></td>
+          <td class="memname">using <a class="el" href="#aedf79e61648ba9862b3459cec1f363b2">Point3d</a> = <a class="el" href="struct_position3d.html">Position3d</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 <p>Type alias for 3D points. </p>
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00129">129</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00128">128</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
 
 </div>
 </div>
-<a id="a95aaad99d499c90db1c984f3b29170f5" name="a95aaad99d499c90db1c984f3b29170f5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a95aaad99d499c90db1c984f3b29170f5">&#9670;&#160;</a></span>Scale2d</h2>
+<a id="ae90d9c4d383cd5d94c30f49cf4f91753" name="ae90d9c4d383cd5d94c30f49cf4f91753"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae90d9c4d383cd5d94c30f49cf4f91753">&#9670;&#160;</a></span>Scale2d</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">typedef <a class="el" href="struct_position2d.html">Position2d</a> <a class="el" href="#a95aaad99d499c90db1c984f3b29170f5">Scale2d</a></td>
+          <td class="memname">using <a class="el" href="#ae90d9c4d383cd5d94c30f49cf4f91753">Scale2d</a> = <a class="el" href="struct_position2d.html">Position2d</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 <p>Type alias for 2D scaling factors. </p>
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00390">390</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00436">436</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
 
 </div>
 </div>
-<a id="a3b9b132cddb1dfe2ae572f230abe45f1" name="a3b9b132cddb1dfe2ae572f230abe45f1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3b9b132cddb1dfe2ae572f230abe45f1">&#9670;&#160;</a></span>Scale3d</h2>
+<a id="a533ea67d7bc3c561752563b080663833" name="a533ea67d7bc3c561752563b080663833"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a533ea67d7bc3c561752563b080663833">&#9670;&#160;</a></span>Scale3d</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">typedef <a class="el" href="struct_position3d.html">Position3d</a> <a class="el" href="#a3b9b132cddb1dfe2ae572f230abe45f1">Scale3d</a></td>
+          <td class="memname">using <a class="el" href="#a533ea67d7bc3c561752563b080663833">Scale3d</a> = <a class="el" href="struct_position3d.html">Position3d</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 <p>Type alias for 3D scaling factors. </p>
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00119">119</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00118">118</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
 
 </div>
 </div>
-<a id="a1636071d291ee0954efc6d64eb8d94f1" name="a1636071d291ee0954efc6d64eb8d94f1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1636071d291ee0954efc6d64eb8d94f1">&#9670;&#160;</a></span>Size3d</h2>
+<a id="a64eae7ddcc7a03ddf2cda1866b0fb3aa" name="a64eae7ddcc7a03ddf2cda1866b0fb3aa"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a64eae7ddcc7a03ddf2cda1866b0fb3aa">&#9670;&#160;</a></span>Size3d</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">typedef <a class="el" href="struct_position3d.html">Position3d</a> <a class="el" href="#a1636071d291ee0954efc6d64eb8d94f1">Size3d</a></td>
+          <td class="memname">using <a class="el" href="#a64eae7ddcc7a03ddf2cda1866b0fb3aa">Size3d</a> = <a class="el" href="struct_position3d.html">Position3d</a></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 <p>Type alias for 3D size dimensions. </p>
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00124">124</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00123">123</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+
+</div>
+</div>
+<a id="a9cae88f0ee19c76726bf93ac9f6f7e51" name="a9cae88f0ee19c76726bf93ac9f6f7e51"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9cae88f0ee19c76726bf93ac9f6f7e51">&#9670;&#160;</a></span>Vector3</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">using <a class="el" href="#a9cae88f0ee19c76726bf93ac9f6f7e51">Vector3</a> = <a class="el" href="struct_position3d.html">Position3d</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00142">142</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+
+</div>
+</div>
+<a id="a1b9aa5a4c5146cc45a21959a2724cd5d" name="a1b9aa5a4c5146cc45a21959a2724cd5d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1b9aa5a4c5146cc45a21959a2724cd5d">&#9670;&#160;</a></span>Velocity3d</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">using <a class="el" href="#a1b9aa5a4c5146cc45a21959a2724cd5d">Velocity3d</a> = <a class="el" href="struct_position3d.html">Position3d</a></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00143">143</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
 
 </div>
 </div>
@@ -398,39 +467,39 @@ Enumerations</h2></td></tr>
 </td></tr>
 </table>
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00329">329</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  329</span>                       {<span class="comment"></span></div>
-<div class="line"><span class="lineno">  330</span><span class="comment">    /**</span></div>
-<div class="line"><span class="lineno">  331</span><span class="comment">     * @brief Positive Y axis.</span></div>
-<div class="line"><span class="lineno">  332</span><span class="comment">     */</span></div>
-<div class="line"><span class="lineno">  333</span>    <a class="code hl_enumvalue" href="#ab8c8d5e469ffb9cf502ea12708d544f5a258f49887ef8d14ac268c92b02503aaa">Up</a>,<span class="comment"></span></div>
-<div class="line"><span class="lineno">  334</span><span class="comment">    /**</span></div>
-<div class="line"><span class="lineno">  335</span><span class="comment">     * @brief Negative Y axis.</span></div>
-<div class="line"><span class="lineno">  336</span><span class="comment">     */</span></div>
-<div class="line"><span class="lineno">  337</span>    <a class="code hl_enumvalue" href="#ab8c8d5e469ffb9cf502ea12708d544f5a08a38277b0309070706f6652eeae9a53">Down</a>,<span class="comment"></span></div>
-<div class="line"><span class="lineno">  338</span><span class="comment">    /**</span></div>
-<div class="line"><span class="lineno">  339</span><span class="comment">     * @brief Negative X axis.</span></div>
-<div class="line"><span class="lineno">  340</span><span class="comment">     */</span></div>
-<div class="line"><span class="lineno">  341</span>    <a class="code hl_enumvalue" href="#ab8c8d5e469ffb9cf502ea12708d544f5a945d5e233cf7d6240f6b783b36a374ff">Left</a>,<span class="comment"></span></div>
-<div class="line"><span class="lineno">  342</span><span class="comment">    /**</span></div>
-<div class="line"><span class="lineno">  343</span><span class="comment">     * @brief Positive X axis.</span></div>
-<div class="line"><span class="lineno">  344</span><span class="comment">     */</span></div>
-<div class="line"><span class="lineno">  345</span>    <a class="code hl_enumvalue" href="#ab8c8d5e469ffb9cf502ea12708d544f5a92b09c7c48c520c3c55e497875da437c">Right</a>,<span class="comment"></span></div>
-<div class="line"><span class="lineno">  346</span><span class="comment">    /**</span></div>
-<div class="line"><span class="lineno">  347</span><span class="comment">     * @brief Positive Z axis.</span></div>
-<div class="line"><span class="lineno">  348</span><span class="comment">     */</span></div>
-<div class="line"><span class="lineno">  349</span>    <a class="code hl_enumvalue" href="#ab8c8d5e469ffb9cf502ea12708d544f5a67d2f6740a8eaebf4d5c6f79be8da481">Forward</a>,<span class="comment"></span></div>
-<div class="line"><span class="lineno">  350</span><span class="comment">    /**</span></div>
-<div class="line"><span class="lineno">  351</span><span class="comment">     * @brief Negative Z axis.</span></div>
-<div class="line"><span class="lineno">  352</span><span class="comment">     */</span></div>
-<div class="line"><span class="lineno">  353</span>    <a class="code hl_enumvalue" href="#ab8c8d5e469ffb9cf502ea12708d544f5ab3263eb38f8903efc271cc7a760da510">Backward</a></div>
-<div class="line"><span class="lineno">  354</span>};</div>
-<div class="ttc" id="aunits_8h_html_ab8c8d5e469ffb9cf502ea12708d544f5a08a38277b0309070706f6652eeae9a53"><div class="ttname"><a href="#ab8c8d5e469ffb9cf502ea12708d544f5a08a38277b0309070706f6652eeae9a53">Direction3d::Down</a></div><div class="ttdeci">@ Down</div><div class="ttdoc">Negative Y axis.</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00337">units.h:337</a></div></div>
-<div class="ttc" id="aunits_8h_html_ab8c8d5e469ffb9cf502ea12708d544f5a258f49887ef8d14ac268c92b02503aaa"><div class="ttname"><a href="#ab8c8d5e469ffb9cf502ea12708d544f5a258f49887ef8d14ac268c92b02503aaa">Direction3d::Up</a></div><div class="ttdeci">@ Up</div><div class="ttdoc">Positive Y axis.</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00333">units.h:333</a></div></div>
-<div class="ttc" id="aunits_8h_html_ab8c8d5e469ffb9cf502ea12708d544f5a67d2f6740a8eaebf4d5c6f79be8da481"><div class="ttname"><a href="#ab8c8d5e469ffb9cf502ea12708d544f5a67d2f6740a8eaebf4d5c6f79be8da481">Direction3d::Forward</a></div><div class="ttdeci">@ Forward</div><div class="ttdoc">Positive Z axis.</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00349">units.h:349</a></div></div>
-<div class="ttc" id="aunits_8h_html_ab8c8d5e469ffb9cf502ea12708d544f5a92b09c7c48c520c3c55e497875da437c"><div class="ttname"><a href="#ab8c8d5e469ffb9cf502ea12708d544f5a92b09c7c48c520c3c55e497875da437c">Direction3d::Right</a></div><div class="ttdeci">@ Right</div><div class="ttdoc">Positive X axis.</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00345">units.h:345</a></div></div>
-<div class="ttc" id="aunits_8h_html_ab8c8d5e469ffb9cf502ea12708d544f5a945d5e233cf7d6240f6b783b36a374ff"><div class="ttname"><a href="#ab8c8d5e469ffb9cf502ea12708d544f5a945d5e233cf7d6240f6b783b36a374ff">Direction3d::Left</a></div><div class="ttdeci">@ Left</div><div class="ttdoc">Negative X axis.</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00341">units.h:341</a></div></div>
-<div class="ttc" id="aunits_8h_html_ab8c8d5e469ffb9cf502ea12708d544f5ab3263eb38f8903efc271cc7a760da510"><div class="ttname"><a href="#ab8c8d5e469ffb9cf502ea12708d544f5ab3263eb38f8903efc271cc7a760da510">Direction3d::Backward</a></div><div class="ttdeci">@ Backward</div><div class="ttdoc">Negative Z axis.</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00353">units.h:353</a></div></div>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00375">375</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  375</span>                       {<span class="comment"></span></div>
+<div class="line"><span class="lineno">  376</span><span class="comment">    /**</span></div>
+<div class="line"><span class="lineno">  377</span><span class="comment">     * @brief Positive Y axis.</span></div>
+<div class="line"><span class="lineno">  378</span><span class="comment">     */</span></div>
+<div class="line"><span class="lineno">  379</span>    <a class="code hl_enumvalue" href="#ab8c8d5e469ffb9cf502ea12708d544f5a258f49887ef8d14ac268c92b02503aaa">Up</a>,<span class="comment"></span></div>
+<div class="line"><span class="lineno">  380</span><span class="comment">    /**</span></div>
+<div class="line"><span class="lineno">  381</span><span class="comment">     * @brief Negative Y axis.</span></div>
+<div class="line"><span class="lineno">  382</span><span class="comment">     */</span></div>
+<div class="line"><span class="lineno">  383</span>    <a class="code hl_enumvalue" href="#ab8c8d5e469ffb9cf502ea12708d544f5a08a38277b0309070706f6652eeae9a53">Down</a>,<span class="comment"></span></div>
+<div class="line"><span class="lineno">  384</span><span class="comment">    /**</span></div>
+<div class="line"><span class="lineno">  385</span><span class="comment">     * @brief Negative X axis.</span></div>
+<div class="line"><span class="lineno">  386</span><span class="comment">     */</span></div>
+<div class="line"><span class="lineno">  387</span>    <a class="code hl_enumvalue" href="#ab8c8d5e469ffb9cf502ea12708d544f5a945d5e233cf7d6240f6b783b36a374ff">Left</a>,<span class="comment"></span></div>
+<div class="line"><span class="lineno">  388</span><span class="comment">    /**</span></div>
+<div class="line"><span class="lineno">  389</span><span class="comment">     * @brief Positive X axis.</span></div>
+<div class="line"><span class="lineno">  390</span><span class="comment">     */</span></div>
+<div class="line"><span class="lineno">  391</span>    <a class="code hl_enumvalue" href="#ab8c8d5e469ffb9cf502ea12708d544f5a92b09c7c48c520c3c55e497875da437c">Right</a>,<span class="comment"></span></div>
+<div class="line"><span class="lineno">  392</span><span class="comment">    /**</span></div>
+<div class="line"><span class="lineno">  393</span><span class="comment">     * @brief Positive Z axis.</span></div>
+<div class="line"><span class="lineno">  394</span><span class="comment">     */</span></div>
+<div class="line"><span class="lineno">  395</span>    <a class="code hl_enumvalue" href="#ab8c8d5e469ffb9cf502ea12708d544f5a67d2f6740a8eaebf4d5c6f79be8da481">Forward</a>,<span class="comment"></span></div>
+<div class="line"><span class="lineno">  396</span><span class="comment">    /**</span></div>
+<div class="line"><span class="lineno">  397</span><span class="comment">     * @brief Negative Z axis.</span></div>
+<div class="line"><span class="lineno">  398</span><span class="comment">     */</span></div>
+<div class="line"><span class="lineno">  399</span>    <a class="code hl_enumvalue" href="#ab8c8d5e469ffb9cf502ea12708d544f5ab3263eb38f8903efc271cc7a760da510">Backward</a></div>
+<div class="line"><span class="lineno">  400</span>};</div>
+<div class="ttc" id="aunits_8h_html_ab8c8d5e469ffb9cf502ea12708d544f5a08a38277b0309070706f6652eeae9a53"><div class="ttname"><a href="#ab8c8d5e469ffb9cf502ea12708d544f5a08a38277b0309070706f6652eeae9a53">Direction3d::Down</a></div><div class="ttdeci">@ Down</div><div class="ttdoc">Negative Y axis.</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00383">units.h:383</a></div></div>
+<div class="ttc" id="aunits_8h_html_ab8c8d5e469ffb9cf502ea12708d544f5a258f49887ef8d14ac268c92b02503aaa"><div class="ttname"><a href="#ab8c8d5e469ffb9cf502ea12708d544f5a258f49887ef8d14ac268c92b02503aaa">Direction3d::Up</a></div><div class="ttdeci">@ Up</div><div class="ttdoc">Positive Y axis.</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00379">units.h:379</a></div></div>
+<div class="ttc" id="aunits_8h_html_ab8c8d5e469ffb9cf502ea12708d544f5a67d2f6740a8eaebf4d5c6f79be8da481"><div class="ttname"><a href="#ab8c8d5e469ffb9cf502ea12708d544f5a67d2f6740a8eaebf4d5c6f79be8da481">Direction3d::Forward</a></div><div class="ttdeci">@ Forward</div><div class="ttdoc">Positive Z axis.</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00395">units.h:395</a></div></div>
+<div class="ttc" id="aunits_8h_html_ab8c8d5e469ffb9cf502ea12708d544f5a92b09c7c48c520c3c55e497875da437c"><div class="ttname"><a href="#ab8c8d5e469ffb9cf502ea12708d544f5a92b09c7c48c520c3c55e497875da437c">Direction3d::Right</a></div><div class="ttdeci">@ Right</div><div class="ttdoc">Positive X axis.</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00391">units.h:391</a></div></div>
+<div class="ttc" id="aunits_8h_html_ab8c8d5e469ffb9cf502ea12708d544f5a945d5e233cf7d6240f6b783b36a374ff"><div class="ttname"><a href="#ab8c8d5e469ffb9cf502ea12708d544f5a945d5e233cf7d6240f6b783b36a374ff">Direction3d::Left</a></div><div class="ttdeci">@ Left</div><div class="ttdoc">Negative X axis.</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00387">units.h:387</a></div></div>
+<div class="ttc" id="aunits_8h_html_ab8c8d5e469ffb9cf502ea12708d544f5ab3263eb38f8903efc271cc7a760da510"><div class="ttname"><a href="#ab8c8d5e469ffb9cf502ea12708d544f5ab3263eb38f8903efc271cc7a760da510">Direction3d::Backward</a></div><div class="ttdeci">@ Backward</div><div class="ttdoc">Negative Z axis.</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00399">units.h:399</a></div></div>
 </div><!-- fragment -->
 </div>
 </div>

@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 5</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -147,16 +147,16 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a843f99879457bc5bd078c02e7c5c1c8a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Renders all active particles with billboarding logic.  <br /></td></tr>
 <tr class="memitem:a10c124a8f860c367cd3e086e90701da0" id="r_a10c124a8f860c367cd3e086e90701da0"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a10c124a8f860c367cd3e086e90701da0">update</a> (<a class="el" href="class_window.html">Window</a> &amp;window) override</td></tr>
 <tr class="memdesc:a10c124a8f860c367cd3e086e90701da0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates particle lifetimes, spawns new particles, and applies forces.  <br /></td></tr>
-<tr class="memitem:a46a3bd7e0981249a61b6b6433df7e3bd" id="r_a46a3bd7e0981249a61b6b6433df7e3bd"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a46a3bd7e0981249a61b6b6433df7e3bd">setProjectionMatrix</a> (const glm::mat4 &amp;projection) override</td></tr>
-<tr class="memdesc:a46a3bd7e0981249a61b6b6433df7e3bd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates the projection matrix used to align particles to the camera frustum.  <br /></td></tr>
-<tr class="memitem:a69bad006c8fb4611ad3bdd3df138af4b" id="r_a69bad006c8fb4611ad3bdd3df138af4b"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a69bad006c8fb4611ad3bdd3df138af4b">setViewMatrix</a> (const glm::mat4 &amp;view) override</td></tr>
-<tr class="memdesc:a69bad006c8fb4611ad3bdd3df138af4b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stores the view matrix so particles can face the camera.  <br /></td></tr>
+<tr class="memitem:a8b2ae2752ddf7baa51e5b75848932b0a" id="r_a8b2ae2752ddf7baa51e5b75848932b0a"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a8b2ae2752ddf7baa51e5b75848932b0a">setProjectionMatrix</a> (const glm::mat4 &amp;newProjection) override</td></tr>
+<tr class="memdesc:a8b2ae2752ddf7baa51e5b75848932b0a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates the projection matrix used to align particles to the camera frustum.  <br /></td></tr>
+<tr class="memitem:a721156f4d33170c87f04beb8881f7e19" id="r_a721156f4d33170c87f04beb8881f7e19"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a721156f4d33170c87f04beb8881f7e19">setViewMatrix</a> (const glm::mat4 &amp;newView) override</td></tr>
+<tr class="memdesc:a721156f4d33170c87f04beb8881f7e19"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stores the view matrix so particles can face the camera.  <br /></td></tr>
 <tr class="memitem:acb6f3e714474c21f30600aa4b02fc2d5" id="r_acb6f3e714474c21f30600aa4b02fc2d5"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="#acb6f3e714474c21f30600aa4b02fc2d5">ParticleEmitter</a> (unsigned int maxParticles=100)</td></tr>
 <tr class="memdesc:acb6f3e714474c21f30600aa4b02fc2d5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs a new <a class="el" href="class_particle_emitter.html" title="Class representing a particle emitter in the game. It emits and manages particles.">ParticleEmitter</a> object.  <br /></td></tr>
 <tr class="memitem:ad4d8472950cf0397702b92bcee6d25f2" id="r_ad4d8472950cf0397702b92bcee6d25f2"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#ad4d8472950cf0397702b92bcee6d25f2">attachTexture</a> (const <a class="el" href="struct_texture.html">Texture</a> &amp;tex) override</td></tr>
 <tr class="memdesc:ad4d8472950cf0397702b92bcee6d25f2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Binds a sprite texture that will be used for each particle.  <br /></td></tr>
-<tr class="memitem:a152e95df28b2885262d5f5025d5f1497" id="r_a152e95df28b2885262d5f5025d5f1497"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a152e95df28b2885262d5f5025d5f1497">setColor</a> (const <a class="el" href="struct_color.html">Color</a> &amp;color) override</td></tr>
-<tr class="memdesc:a152e95df28b2885262d5f5025d5f1497"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets a tint color that modulates the particle sprite.  <br /></td></tr>
+<tr class="memitem:ab2217f3d1e479aa4ded22da42f2c57ce" id="r_ab2217f3d1e479aa4ded22da42f2c57ce"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#ab2217f3d1e479aa4ded22da42f2c57ce">setColor</a> (const <a class="el" href="struct_color.html">Color</a> &amp;newColor) override</td></tr>
+<tr class="memdesc:ab2217f3d1e479aa4ded22da42f2c57ce"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets a tint color that modulates the particle sprite.  <br /></td></tr>
 <tr class="memitem:a80e4e373b9296ee5d9ed33822fec3b83" id="r_a80e4e373b9296ee5d9ed33822fec3b83"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a80e4e373b9296ee5d9ed33822fec3b83">enableTexture</a> ()</td></tr>
 <tr class="memdesc:a80e4e373b9296ee5d9ed33822fec3b83"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function that enables the use of a texture for the particles.  <br /></td></tr>
 <tr class="memitem:abf6e025b3ac0fee071e84c9ccf565aae" id="r_abf6e025b3ac0fee071e84c9ccf565aae"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#abf6e025b3ac0fee071e84c9ccf565aae">disableTexture</a> ()</td></tr>
@@ -173,14 +173,14 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a1ebe45e716d49cf43d2815146e43e158"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to determine if the object can use deferred rendering.  <br /></td></tr>
 <tr class="memitem:afa47fd3fc1fc5338fef9e04f05ae73a7" id="r_afa47fd3fc1fc5338fef9e04f05ae73a7"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#afa47fd3fc1fc5338fef9e04f05ae73a7">setEmissionType</a> (<a class="el" href="particle_8h.html#a5d2a36527b762e139f0a5cefd66b3191">ParticleEmissionType</a> type)</td></tr>
 <tr class="memdesc:afa47fd3fc1fc5338fef9e04f05ae73a7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function that sets the type of particle emission.  <br /></td></tr>
-<tr class="memitem:a56c9c5dc364ef087cd0d311aff2ed60a" id="r_a56c9c5dc364ef087cd0d311aff2ed60a"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a56c9c5dc364ef087cd0d311aff2ed60a">setDirection</a> (const <a class="el" href="units_8h.html#af1efe03080186b94608ab2d50c060fe5">Magnitude3d</a> &amp;dir)</td></tr>
+<tr class="memitem:a56c9c5dc364ef087cd0d311aff2ed60a" id="r_a56c9c5dc364ef087cd0d311aff2ed60a"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a56c9c5dc364ef087cd0d311aff2ed60a">setDirection</a> (const <a class="el" href="units_8h.html#afa7de6f8211b70367d0d4a845db0369a">Magnitude3d</a> &amp;dir)</td></tr>
 <tr class="memdesc:a56c9c5dc364ef087cd0d311aff2ed60a"><td class="mdescLeft">&#160;</td><td class="mdescRight">The direction in which particles are emitted.  <br /></td></tr>
 <tr class="memitem:ae285689b7606d6278cf9e82294780015" id="r_ae285689b7606d6278cf9e82294780015"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#ae285689b7606d6278cf9e82294780015">setSpawnRadius</a> (float radius)</td></tr>
 <tr class="memdesc:ae285689b7606d6278cf9e82294780015"><td class="mdescLeft">&#160;</td><td class="mdescRight">The radius around the emitter from which particles are spawned.  <br /></td></tr>
 <tr class="memitem:a7bac44e4712908099af3a76187ed908e" id="r_a7bac44e4712908099af3a76187ed908e"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a7bac44e4712908099af3a76187ed908e">setSpawnRate</a> (float particlesPerSecond)</td></tr>
 <tr class="memdesc:a7bac44e4712908099af3a76187ed908e"><td class="mdescLeft">&#160;</td><td class="mdescRight">How much particles are spawned each second.  <br /></td></tr>
-<tr class="memitem:a80199623ad22b564bc573ebe45e4e610" id="r_a80199623ad22b564bc573ebe45e4e610"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a80199623ad22b564bc573ebe45e4e610">setParticleSettings</a> (const <a class="el" href="struct_particle_settings.html">ParticleSettings</a> &amp;<a class="el" href="#a5c8da6c957e8457f4daeec394ea6a317">settings</a>)</td></tr>
-<tr class="memdesc:a80199623ad22b564bc573ebe45e4e610"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the settings for the particles.  <br /></td></tr>
+<tr class="memitem:aa3a588d3348bd7ffd99ed4305defd9bc" id="r_aa3a588d3348bd7ffd99ed4305defd9bc"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#aa3a588d3348bd7ffd99ed4305defd9bc">setParticleSettings</a> (const <a class="el" href="struct_particle_settings.html">ParticleSettings</a> &amp;particleSettings)</td></tr>
+<tr class="memdesc:aa3a588d3348bd7ffd99ed4305defd9bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the settings for the particles.  <br /></td></tr>
 <tr class="memitem:a9068f50bd291a3dc3a85d35ff03274e4" id="r_a9068f50bd291a3dc3a85d35ff03274e4"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a9068f50bd291a3dc3a85d35ff03274e4">emitOnce</a> ()</td></tr>
 <tr class="memdesc:a9068f50bd291a3dc3a85d35ff03274e4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Emits particles once.  <br /></td></tr>
 <tr class="memitem:a31aeca0316daa73fbeef682d70f3ec2f" id="r_a31aeca0316daa73fbeef682d70f3ec2f"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a31aeca0316daa73fbeef682d70f3ec2f">emitContinuously</a> ()</td></tr>
@@ -207,11 +207,11 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:adae2fdf703f83008348bd7748a816edc inherit pub_methods_class_game_object"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates and attaches a shader program to the object.  <br /></td></tr>
 <tr class="memitem:a63d28fb59276d40d10cae25f05306451 inherit pub_methods_class_game_object" id="r_a63d28fb59276d40d10cae25f05306451"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_game_object.html#a63d28fb59276d40d10cae25f05306451">setRotation</a> (const <a class="el" href="struct_rotation3d.html">Rotation3d</a> &amp;newRotation)</td></tr>
 <tr class="memdesc:a63d28fb59276d40d10cae25f05306451 inherit pub_methods_class_game_object"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the rotation of the object.  <br /></td></tr>
-<tr class="memitem:ade8c731bbc0de1e624089e5ddfc50d72 inherit pub_methods_class_game_object" id="r_ade8c731bbc0de1e624089e5ddfc50d72"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_game_object.html#ade8c731bbc0de1e624089e5ddfc50d72">lookAt</a> (const <a class="el" href="struct_position3d.html">Position3d</a> &amp;target, const <a class="el" href="units_8h.html#abd755c400f9d4026ef36e03056829444">Normal3d</a> &amp;up)</td></tr>
+<tr class="memitem:ade8c731bbc0de1e624089e5ddfc50d72 inherit pub_methods_class_game_object" id="r_ade8c731bbc0de1e624089e5ddfc50d72"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_game_object.html#ade8c731bbc0de1e624089e5ddfc50d72">lookAt</a> (const <a class="el" href="struct_position3d.html">Position3d</a> &amp;target, const <a class="el" href="units_8h.html#aa79dcdba8644f852dbd5163b96868793">Normal3d</a> &amp;up)</td></tr>
 <tr class="memdesc:ade8c731bbc0de1e624089e5ddfc50d72 inherit pub_methods_class_game_object"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the object to look at a specific point in 3D space.  <br /></td></tr>
 <tr class="memitem:a80eb49c1d0084c82e944ff254532278b inherit pub_methods_class_game_object" id="r_a80eb49c1d0084c82e944ff254532278b"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_game_object.html#a80eb49c1d0084c82e944ff254532278b">rotate</a> (const <a class="el" href="struct_rotation3d.html">Rotation3d</a> &amp;deltaRotation)</td></tr>
 <tr class="memdesc:a80eb49c1d0084c82e944ff254532278b inherit pub_methods_class_game_object"><td class="mdescLeft">&#160;</td><td class="mdescRight">Rotates the object by a certain amount.  <br /></td></tr>
-<tr class="memitem:ab1d5418661030a841e752bdb462b1ebc inherit pub_methods_class_game_object" id="r_ab1d5418661030a841e752bdb462b1ebc"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_game_object.html#ab1d5418661030a841e752bdb462b1ebc">setScale</a> (const <a class="el" href="units_8h.html#a3b9b132cddb1dfe2ae572f230abe45f1">Scale3d</a> &amp;newScale)</td></tr>
+<tr class="memitem:ab1d5418661030a841e752bdb462b1ebc inherit pub_methods_class_game_object" id="r_ab1d5418661030a841e752bdb462b1ebc"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_game_object.html#ab1d5418661030a841e752bdb462b1ebc">setScale</a> (const <a class="el" href="units_8h.html#a533ea67d7bc3c561752563b080663833">Scale3d</a> &amp;newScale)</td></tr>
 <tr class="memdesc:ab1d5418661030a841e752bdb462b1ebc inherit pub_methods_class_game_object"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the scale of the object.  <br /></td></tr>
 <tr class="memitem:a06c5cc4f368665085126282bd4cd6185 inherit pub_methods_class_game_object" id="r_a06c5cc4f368665085126282bd4cd6185"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_game_object.html#a06c5cc4f368665085126282bd4cd6185">hide</a> ()</td></tr>
 <tr class="memdesc:a06c5cc4f368665085126282bd4cd6185 inherit pub_methods_class_game_object"><td class="mdescLeft">&#160;</td><td class="mdescRight">Hides the object, making it invisible in the scene.  <br /></td></tr>
@@ -222,7 +222,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a1c66aaf520caf184b1c6df3c435b7a70 inherit pub_methods_class_game_object" id="r_a1c66aaf520caf184b1c6df3c435b7a70"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_game_object.html#a1c66aaf520caf184b1c6df3c435b7a70">onCollisionStay</a> (<a class="el" href="class_game_object.html">GameObject</a> *other)</td></tr>
 <tr class="memitem:a644d47aa6002c5551bd454dd61311136 inherit pub_methods_class_game_object" id="r_a644d47aa6002c5551bd454dd61311136"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_game_object.html#a644d47aa6002c5551bd454dd61311136">onSignalRecieve</a> (const std::string &amp;signal, <a class="el" href="class_game_object.html">GameObject</a> *sender)</td></tr>
 <tr class="memitem:a645b7bb8cebf8db03bc91f08f97f8661 inherit pub_methods_class_game_object" id="r_a645b7bb8cebf8db03bc91f08f97f8661"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_game_object.html#a645b7bb8cebf8db03bc91f08f97f8661">onSignalEnd</a> (const std::string &amp;signal, <a class="el" href="class_game_object.html">GameObject</a> *sender)</td></tr>
-<tr class="memitem:a886057133ff07c4fca8627418d6a8514 inherit pub_methods_class_game_object" id="r_a886057133ff07c4fca8627418d6a8514"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_game_object.html#a886057133ff07c4fca8627418d6a8514">onQueryRecieve</a> (<a class="el" href="struct_query_result.html">QueryResult</a> &amp;result)</td></tr>
+<tr class="memitem:aa88ccdc1e5978128d0619ce137dab25e inherit pub_methods_class_game_object" id="r_aa88ccdc1e5978128d0619ce137dab25e"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_game_object.html#aa88ccdc1e5978128d0619ce137dab25e">onQueryReceive</a> (<a class="el" href="struct_query_result.html">QueryResult</a> &amp;result)</td></tr>
 <tr class="memitem:a8cb421d4a6cb619271d15560d692a593 inherit pub_methods_class_game_object" id="r_a8cb421d4a6cb619271d15560d692a593"><td class="memTemplParams" colspan="2">template&lt;typename T&gt; </td></tr>
 <tr class="memitem:a8cb421d4a6cb619271d15560d692a593 inherit pub_methods_class_game_object template"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="class_game_object.html#a8cb421d4a6cb619271d15560d692a593">addComponent</a> (T &amp;&amp;existing)</td></tr>
 <tr class="memdesc:a8cb421d4a6cb619271d15560d692a593 inherit pub_methods_class_game_object"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a component to the object.  <br /></td></tr>
@@ -247,7 +247,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a2fcaae3ae9e7fe9bf942b3a9ef58ae55 inherit pub_methods_class_renderable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Replaces the shader program bound to the renderable.  <br /></td></tr>
 <tr class="memitem:a699e0a52700234e195a44f7be4e4d531 inherit pub_methods_class_renderable" id="r_a699e0a52700234e195a44f7be4e4d531"><td class="memItemLeft">virtual std::vector&lt; <a class="el" href="struct_core_vertex.html">CoreVertex</a> &gt;&#160;</td><td class="memItemRight"><a class="el" href="class_renderable.html#a699e0a52700234e195a44f7be4e4d531">getVertices</a> () const</td></tr>
 <tr class="memdesc:a699e0a52700234e195a44f7be4e4d531 inherit pub_methods_class_renderable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to get the vertices of the object in 3D space.  <br /></td></tr>
-<tr class="memitem:a98ddcdedf7f0c6d440be821c80d6ed12 inherit pub_methods_class_renderable" id="r_a98ddcdedf7f0c6d440be821c80d6ed12"><td class="memItemLeft">virtual <a class="el" href="units_8h.html#a1636071d291ee0954efc6d64eb8d94f1">Size3d</a>&#160;</td><td class="memItemRight"><a class="el" href="class_renderable.html#a98ddcdedf7f0c6d440be821c80d6ed12">getScale</a> () const</td></tr>
+<tr class="memitem:a98ddcdedf7f0c6d440be821c80d6ed12 inherit pub_methods_class_renderable" id="r_a98ddcdedf7f0c6d440be821c80d6ed12"><td class="memItemLeft">virtual <a class="el" href="units_8h.html#a64eae7ddcc7a03ddf2cda1866b0fb3aa">Size3d</a>&#160;</td><td class="memItemRight"><a class="el" href="class_renderable.html#a98ddcdedf7f0c6d440be821c80d6ed12">getScale</a> () const</td></tr>
 <tr class="memdesc:a98ddcdedf7f0c6d440be821c80d6ed12 inherit pub_methods_class_renderable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to get the scale of the object in 3D space.  <br /></td></tr>
 <tr class="memitem:a2103eed2f7f54bca8ba1001907b367a9 inherit pub_methods_class_renderable" id="r_a2103eed2f7f54bca8ba1001907b367a9"><td class="memItemLeft">virtual&#160;</td><td class="memItemRight"><a class="el" href="class_renderable.html#a2103eed2f7f54bca8ba1001907b367a9">~Renderable</a> ()=default</td></tr>
 </table><table class="memberdecls">
@@ -304,7 +304,7 @@ Example</h2>
 <div class="line">emitter.enableTexture();</div>
 <div class="line"><span class="comment">// Add the emitter to the scene</span></div>
 <div class="line">scene.addObject(&amp;emitter);</div>
-<div class="ttc" id="aclass_particle_emitter_html_a5c8da6c957e8457f4daeec394ea6a317"><div class="ttname"><a href="#a5c8da6c957e8457f4daeec394ea6a317">ParticleEmitter::settings</a></div><div class="ttdeci">ParticleSettings settings</div><div class="ttdoc">The settings used for particle behavior and appearance.</div><div class="ttdef"><b>Definition</b> <a href="particle_8h_source.html#l00296">particle.h:296</a></div></div>
+<div class="ttc" id="aclass_particle_emitter_html_a5c8da6c957e8457f4daeec394ea6a317"><div class="ttname"><a href="#a5c8da6c957e8457f4daeec394ea6a317">ParticleEmitter::settings</a></div><div class="ttdeci">ParticleSettings settings</div><div class="ttdoc">The settings used for particle behavior and appearance.</div><div class="ttdef"><b>Definition</b> <a href="particle_8h_source.html#l00294">particle.h:294</a></div></div>
 <div class="ttc" id="aclass_particle_emitter_html_acb6f3e714474c21f30600aa4b02fc2d5"><div class="ttname"><a href="#acb6f3e714474c21f30600aa4b02fc2d5">ParticleEmitter::ParticleEmitter</a></div><div class="ttdeci">ParticleEmitter(unsigned int maxParticles=100)</div><div class="ttdoc">Constructs a new ParticleEmitter object.</div></div>
 <div class="ttc" id="aparticle_8h_html_a5d2a36527b762e139f0a5cefd66b3191a7941ce00c308ef62cd69af52664e9788"><div class="ttname"><a href="particle_8h.html#a5d2a36527b762e139f0a5cefd66b3191a7941ce00c308ef62cd69af52664e9788">ParticleEmissionType::Fountain</a></div><div class="ttdeci">@ Fountain</div><div class="ttdoc">Emission type for fountain-like particle effects.</div><div class="ttdef"><b>Definition</b> <a href="particle_8h_source.html#l00028">particle.h:28</a></div></div>
 <div class="ttc" id="ashader_8h_html_aed7a1c7a5976e4adb712d0a231dada82aa3e8ae43188ae76d38f414b2bdb0077b"><div class="ttname"><a href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82aa3e8ae43188ae76d38f414b2bdb0077b">AtlasVertexShader::Texture</a></div><div class="ttdeci">@ Texture</div><div class="ttdoc">Vertex shader for rendering textured objects.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00052">shader.h:52</a></div></div>
@@ -690,8 +690,8 @@ Example</h2>
 
 </div>
 </div>
-<a id="a152e95df28b2885262d5f5025d5f1497" name="a152e95df28b2885262d5f5025d5f1497"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a152e95df28b2885262d5f5025d5f1497">&#9670;&#160;</a></span>setColor()</h2>
+<a id="ab2217f3d1e479aa4ded22da42f2c57ce" name="ab2217f3d1e479aa4ded22da42f2c57ce"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab2217f3d1e479aa4ded22da42f2c57ce">&#9670;&#160;</a></span>setColor()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -702,7 +702,7 @@ Example</h2>
         <tr>
           <td class="memname">void ParticleEmitter::setColor </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="struct_color.html">Color</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>color</em></span></td><td>)</td>
+          <td class="paramtype">const <a class="el" href="struct_color.html">Color</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>newColor</em></span></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -728,7 +728,7 @@ Example</h2>
         <tr>
           <td class="memname">void ParticleEmitter::setDirection </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="units_8h.html#af1efe03080186b94608ab2d50c060fe5">Magnitude3d</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>dir</em></span></td><td>)</td>
+          <td class="paramtype">const <a class="el" href="units_8h.html#afa7de6f8211b70367d0d4a845db0369a">Magnitude3d</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>dir</em></span></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -769,8 +769,8 @@ Example</h2>
 
 </div>
 </div>
-<a id="a80199623ad22b564bc573ebe45e4e610" name="a80199623ad22b564bc573ebe45e4e610"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a80199623ad22b564bc573ebe45e4e610">&#9670;&#160;</a></span>setParticleSettings()</h2>
+<a id="aa3a588d3348bd7ffd99ed4305defd9bc" name="aa3a588d3348bd7ffd99ed4305defd9bc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa3a588d3348bd7ffd99ed4305defd9bc">&#9670;&#160;</a></span>setParticleSettings()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -778,7 +778,7 @@ Example</h2>
         <tr>
           <td class="memname">void ParticleEmitter::setParticleSettings </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="struct_particle_settings.html">ParticleSettings</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>settings</em></span></td><td>)</td>
+          <td class="paramtype">const <a class="el" href="struct_particle_settings.html">ParticleSettings</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>particleSettings</em></span></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -787,12 +787,10 @@ Example</h2>
 <p>Sets the settings for the particles. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname"><a class="el" href="#a5c8da6c957e8457f4daeec394ea6a317" title="The settings used for particle behavior and appearance.">settings</a></td><td>The particle settings to apply. </td></tr>
+    <tr><td class="paramname">particleSettings</td><td>The particle settings to apply. </td></tr>
   </table>
   </dd>
 </dl>
-
-<p class="reference">References <a class="el" href="particle_8h_source.html#l00296">settings</a>.</p>
 
 </div>
 </div>
@@ -831,8 +829,8 @@ Example</h2>
 
 </div>
 </div>
-<a id="a46a3bd7e0981249a61b6b6433df7e3bd" name="a46a3bd7e0981249a61b6b6433df7e3bd"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a46a3bd7e0981249a61b6b6433df7e3bd">&#9670;&#160;</a></span>setProjectionMatrix()</h2>
+<a id="a8b2ae2752ddf7baa51e5b75848932b0a" name="a8b2ae2752ddf7baa51e5b75848932b0a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8b2ae2752ddf7baa51e5b75848932b0a">&#9670;&#160;</a></span>setProjectionMatrix()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -843,7 +841,7 @@ Example</h2>
         <tr>
           <td class="memname">void ParticleEmitter::setProjectionMatrix </td>
           <td>(</td>
-          <td class="paramtype">const glm::mat4 &amp;</td>          <td class="paramname"><span class="paramname"><em>projection</em></span></td><td>)</td>
+          <td class="paramtype">const glm::mat4 &amp;</td>          <td class="paramname"><span class="paramname"><em>newProjection</em></span></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -942,17 +940,15 @@ Example</h2>
 </dl>
 
 <p class="definition">Definition at line <a class="el" href="particle_8h_source.html#l00288">288</a> of file <a class="el" href="particle_8h_source.html">particle.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  288</span>                                       {</div>
-<div class="line"><span class="lineno">  289</span>        <a class="code hl_function" href="#a7bac44e4712908099af3a76187ed908e">setSpawnRate</a>(<span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(rate));</div>
-<div class="line"><span class="lineno">  290</span>    }</div>
+<div class="fragment"><div class="line"><span class="lineno">  288</span>{ <a class="code hl_function" href="#a7bac44e4712908099af3a76187ed908e">setSpawnRate</a>(<span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(rate)); }</div>
 <div class="ttc" id="aclass_particle_emitter_html_a7bac44e4712908099af3a76187ed908e"><div class="ttname"><a href="#a7bac44e4712908099af3a76187ed908e">ParticleEmitter::setSpawnRate</a></div><div class="ttdeci">void setSpawnRate(float particlesPerSecond)</div><div class="ttdoc">How much particles are spawned each second.</div></div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="#a7bac44e4712908099af3a76187ed908e">setSpawnRate()</a>.</p>
+<p class="reference">References <a class="el" href="particle_8h_source.html#l00288">setSpawnRate()</a>.</p>
 
 </div>
 </div>
-<a id="a69bad006c8fb4611ad3bdd3df138af4b" name="a69bad006c8fb4611ad3bdd3df138af4b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a69bad006c8fb4611ad3bdd3df138af4b">&#9670;&#160;</a></span>setViewMatrix()</h2>
+<a id="a721156f4d33170c87f04beb8881f7e19" name="a721156f4d33170c87f04beb8881f7e19"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a721156f4d33170c87f04beb8881f7e19">&#9670;&#160;</a></span>setViewMatrix()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -963,7 +959,7 @@ Example</h2>
         <tr>
           <td class="memname">void ParticleEmitter::setViewMatrix </td>
           <td>(</td>
-          <td class="paramtype">const glm::mat4 &amp;</td>          <td class="paramname"><span class="paramname"><em>view</em></span></td><td>)</td>
+          <td class="paramtype">const glm::mat4 &amp;</td>          <td class="paramname"><span class="paramname"><em>newView</em></span></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -1062,7 +1058,7 @@ Example</h2>
 
 <p>The settings used for particle behavior and appearance. </p>
 
-<p class="definition">Definition at line <a class="el" href="particle_8h_source.html#l00296">296</a> of file <a class="el" href="particle_8h_source.html">particle.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="particle_8h_source.html#l00294">294</a> of file <a class="el" href="particle_8h_source.html">particle.h</a>.</p>
 
 </div>
 </div>

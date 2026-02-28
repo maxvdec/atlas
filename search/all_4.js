@@ -47,7 +47,7 @@ var searchData=
   ['description_44',['description',['../struct_allocation_packet.html#a0b77ab77b86f502d2202bb99a0fa6654',1,'AllocationPacket']]],
   ['desiredattributes_45',['desiredAttributes',['../struct_vertex_shader.html#aa07b8f046212ba235effca38c90269df',1,'VertexShader::desiredAttributes'],['../struct_shader_program.html#a3d6198b12f2a30d592c85fb521690764',1,'ShaderProgram::desiredAttributes']]],
   ['destination_46',['destination',['../classopal_1_1_resolve_action.html#ace5c74362561ccd0984fb73d5e2ed5a6',1,'opal::ResolveAction']]],
-  ['destroy_47',['destroy',['../class_bloom_render_target.html#a43c1f8073611201cdf11c3889a5f1b71',1,'BloomRenderTarget::destroy()'],['../classbezel_1_1_vehicle.html#a7fc304c779e7720ae3d7cbf48916d50e',1,'bezel::Vehicle::destroy()'],['../structbezel_1_1_rigidbody.html#a1ee3e3991a7bf2a806267f7204e73053',1,'bezel::Rigidbody::destroy()']]],
+  ['destroy_47',['destroy',['../class_bloom_render_target.html#a43c1f8073611201cdf11c3889a5f1b71',1,'BloomRenderTarget::destroy()'],['../classbezel_1_1_vehicle.html#a322d93ea64eabe4f29e40e963233b200',1,'bezel::Vehicle::destroy()'],['../structbezel_1_1_rigidbody.html#af8b99de8d1275b9df53b1ee9899ebae8',1,'bezel::Rigidbody::destroy()']]],
   ['device_48',['Device',['../classopal_1_1_device.html',1,'opal::Device'],['../classopal_1_1_command_buffer.html#a520fa05e0bf58785da428f7a0241eee2',1,'opal::CommandBuffer::Device()']]],
   ['device_49',['device',['../class_window.html#a9ee934fe903cd23d8dcd9735f8201b93',1,'Window']]],
   ['deviceinfo_50',['DeviceInfo',['../structopal_1_1_device_info.html',1,'opal']]],

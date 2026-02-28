@@ -155,6 +155,7 @@ var hierarchy =
     [ "Position3d", "struct_position3d.html", null ],
     [ "PosterizationParameters", "struct_posterization_parameters.html", null ],
     [ "PseudoBody", "struct_pseudo_body.html", null ],
+    [ "Quaternion", "struct_quaternion.html", null ],
     [ "QueryResult", "struct_query_result.html", null ],
     [ "Radians", "struct_radians.html", null ],
     [ "bezel::RaycastHit", "structbezel_1_1_raycast_hit.html", null ],

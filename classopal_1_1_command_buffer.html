@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 5</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -131,10 +131,10 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:ae39ffcae4ce4d6843aba20c9be9c9941" id="r_ae39ffcae4ce4d6843aba20c9be9c9941"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="#ae39ffcae4ce4d6843aba20c9be9c9941">~CommandBuffer</a> ()</td></tr>
 <tr class="memitem:a8ce7981e2db34a4cd0a6518b2d20c593" id="r_a8ce7981e2db34a4cd0a6518b2d20c593"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a8ce7981e2db34a4cd0a6518b2d20c593">start</a> ()</td></tr>
 <tr class="memitem:a0277614c4bb6c149a72205c4d4740f3a" id="r_a0277614c4bb6c149a72205c4d4740f3a"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a0277614c4bb6c149a72205c4d4740f3a">beginPass</a> (std::shared_ptr&lt; <a class="el" href="classopal_1_1_render_pass.html">RenderPass</a> &gt; renderPass)</td></tr>
-<tr class="memitem:ad88fa0a532f6fd0fc79b6a494c078b21" id="r_ad88fa0a532f6fd0fc79b6a494c078b21"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#ad88fa0a532f6fd0fc79b6a494c078b21">beginSampled</a> (std::shared_ptr&lt; <a class="el" href="classopal_1_1_framebuffer.html">Framebuffer</a> &gt; readFramebuffer, std::shared_ptr&lt; <a class="el" href="classopal_1_1_framebuffer.html">Framebuffer</a> &gt; writeFramebuffer)</td></tr>
+<tr class="memitem:a434712f3767f307838e4a1785543a552" id="r_a434712f3767f307838e4a1785543a552"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a434712f3767f307838e4a1785543a552">beginSampled</a> (const std::shared_ptr&lt; <a class="el" href="classopal_1_1_framebuffer.html">Framebuffer</a> &gt; &amp;readFramebuffer, const std::shared_ptr&lt; <a class="el" href="classopal_1_1_framebuffer.html">Framebuffer</a> &gt; &amp;writeFramebuffer)</td></tr>
 <tr class="memitem:a5b8329dd7cc72a2a809124360a4a3b8b" id="r_a5b8329dd7cc72a2a809124360a4a3b8b"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a5b8329dd7cc72a2a809124360a4a3b8b">endPass</a> ()</td></tr>
 <tr class="memitem:ae8357a9990fd5ce1ad7c54bfb76660fa" id="r_ae8357a9990fd5ce1ad7c54bfb76660fa"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#ae8357a9990fd5ce1ad7c54bfb76660fa">commit</a> ()</td></tr>
-<tr class="memitem:aaba79f516ecf877d3fd6e2923ce3abb9" id="r_aaba79f516ecf877d3fd6e2923ce3abb9"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#aaba79f516ecf877d3fd6e2923ce3abb9">bindPipeline</a> (std::shared_ptr&lt; <a class="el" href="classopal_1_1_pipeline.html">Pipeline</a> &gt; pipeline)</td></tr>
+<tr class="memitem:ab16a63eff6ef7c6c50301a25f47c7af0" id="r_ab16a63eff6ef7c6c50301a25f47c7af0"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#ab16a63eff6ef7c6c50301a25f47c7af0">bindPipeline</a> (const std::shared_ptr&lt; <a class="el" href="classopal_1_1_pipeline.html">Pipeline</a> &gt; &amp;pipeline)</td></tr>
 <tr class="memitem:a8dcbd2f8de727ad007cb5ab94d6c3c99" id="r_a8dcbd2f8de727ad007cb5ab94d6c3c99"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a8dcbd2f8de727ad007cb5ab94d6c3c99">unbindPipeline</a> ()</td></tr>
 <tr class="memitem:adc9b980a169ff9d30fffb312061e672d" id="r_adc9b980a169ff9d30fffb312061e672d"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#adc9b980a169ff9d30fffb312061e672d">bindDrawingState</a> (std::shared_ptr&lt; <a class="el" href="structopal_1_1_drawing_state.html">DrawingState</a> &gt; drawingState)</td></tr>
 <tr class="memitem:a372dc7010438bfc9d684ac07548849bb" id="r_a372dc7010438bfc9d684ac07548849bb"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a372dc7010438bfc9d684ac07548849bb">unbindDrawingState</a> ()</td></tr>
@@ -142,7 +142,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a30dea764877b491dd37d8def9cadd6cb" id="r_a30dea764877b491dd37d8def9cadd6cb"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a30dea764877b491dd37d8def9cadd6cb">drawIndexed</a> (uint indexCount, uint instanceCount=1, uint firstIndex=0, int vertexOffset=0, uint firstInstance=0, int objectId=-1)</td></tr>
 <tr class="memitem:a824bc79433e4b41d4f718ba696dddc8e" id="r_a824bc79433e4b41d4f718ba696dddc8e"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a824bc79433e4b41d4f718ba696dddc8e">drawPatches</a> (uint vertexCount, uint firstVertex=0, int objectId=-1)</td></tr>
 <tr class="memdesc:a824bc79433e4b41d4f718ba696dddc8e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Draws using tessellation patches.  <br /></td></tr>
-<tr class="memitem:a3c79c6a32a47fafda34c13e6c9e9a088" id="r_a3c79c6a32a47fafda34c13e6c9e9a088"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a3c79c6a32a47fafda34c13e6c9e9a088">performResolve</a> (std::shared_ptr&lt; <a class="el" href="classopal_1_1_resolve_action.html">ResolveAction</a> &gt; resolveAction)</td></tr>
+<tr class="memitem:ac77da83bec874d27ca8b1eea50236e9e" id="r_ac77da83bec874d27ca8b1eea50236e9e"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#ac77da83bec874d27ca8b1eea50236e9e">performResolve</a> (const std::shared_ptr&lt; <a class="el" href="classopal_1_1_resolve_action.html">ResolveAction</a> &gt; &amp;resolveAction)</td></tr>
 <tr class="memitem:a716ed953c2d9052c64b68788d73e089c" id="r_a716ed953c2d9052c64b68788d73e089c"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a716ed953c2d9052c64b68788d73e089c">clearColor</a> (float r, float g, float b, float a)</td></tr>
 <tr class="memitem:a4499c2a39d0cb5e9112120eedfef3755" id="r_a4499c2a39d0cb5e9112120eedfef3755"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a4499c2a39d0cb5e9112120eedfef3755">clearDepth</a> (float depth)</td></tr>
 <tr class="memitem:aa6cbb452302cbadb66ad7d92901bb8a9" id="r_aa6cbb452302cbadb66ad7d92901bb8a9"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#aa6cbb452302cbadb66ad7d92901bb8a9">clear</a> (float r, float g, float b, float a, float depth)</td></tr>
@@ -191,8 +191,8 @@ Friends</h2></td></tr>
 
 </div>
 </div>
-<a id="ad88fa0a532f6fd0fc79b6a494c078b21" name="ad88fa0a532f6fd0fc79b6a494c078b21"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad88fa0a532f6fd0fc79b6a494c078b21">&#9670;&#160;</a></span>beginSampled()</h2>
+<a id="a434712f3767f307838e4a1785543a552" name="a434712f3767f307838e4a1785543a552"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a434712f3767f307838e4a1785543a552">&#9670;&#160;</a></span>beginSampled()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -200,12 +200,12 @@ Friends</h2></td></tr>
         <tr>
           <td class="memname">void opal::CommandBuffer::beginSampled </td>
           <td>(</td>
-          <td class="paramtype">std::shared_ptr&lt; <a class="el" href="classopal_1_1_framebuffer.html">Framebuffer</a> &gt;</td>          <td class="paramname"><span class="paramname"><em>readFramebuffer</em></span>, </td>
+          <td class="paramtype">const std::shared_ptr&lt; <a class="el" href="classopal_1_1_framebuffer.html">Framebuffer</a> &gt; &amp;</td>          <td class="paramname"><span class="paramname"><em>readFramebuffer</em></span>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">std::shared_ptr&lt; <a class="el" href="classopal_1_1_framebuffer.html">Framebuffer</a> &gt;</td>          <td class="paramname"><span class="paramname"><em>writeFramebuffer</em></span>&#160;)</td>
+          <td class="paramtype">const std::shared_ptr&lt; <a class="el" href="classopal_1_1_framebuffer.html">Framebuffer</a> &gt; &amp;</td>          <td class="paramname"><span class="paramname"><em>writeFramebuffer</em></span>&#160;)</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -229,8 +229,8 @@ Friends</h2></td></tr>
 
 </div>
 </div>
-<a id="aaba79f516ecf877d3fd6e2923ce3abb9" name="aaba79f516ecf877d3fd6e2923ce3abb9"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aaba79f516ecf877d3fd6e2923ce3abb9">&#9670;&#160;</a></span>bindPipeline()</h2>
+<a id="ab16a63eff6ef7c6c50301a25f47c7af0" name="ab16a63eff6ef7c6c50301a25f47c7af0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab16a63eff6ef7c6c50301a25f47c7af0">&#9670;&#160;</a></span>bindPipeline()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -238,7 +238,7 @@ Friends</h2></td></tr>
         <tr>
           <td class="memname">void opal::CommandBuffer::bindPipeline </td>
           <td>(</td>
-          <td class="paramtype">std::shared_ptr&lt; <a class="el" href="classopal_1_1_pipeline.html">Pipeline</a> &gt;</td>          <td class="paramname"><span class="paramname"><em>pipeline</em></span></td><td>)</td>
+          <td class="paramtype">const std::shared_ptr&lt; <a class="el" href="classopal_1_1_pipeline.html">Pipeline</a> &gt; &amp;</td>          <td class="paramname"><span class="paramname"><em>pipeline</em></span></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -493,8 +493,8 @@ Friends</h2></td></tr>
 
 </div>
 </div>
-<a id="a3c79c6a32a47fafda34c13e6c9e9a088" name="a3c79c6a32a47fafda34c13e6c9e9a088"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a3c79c6a32a47fafda34c13e6c9e9a088">&#9670;&#160;</a></span>performResolve()</h2>
+<a id="ac77da83bec874d27ca8b1eea50236e9e" name="ac77da83bec874d27ca8b1eea50236e9e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac77da83bec874d27ca8b1eea50236e9e">&#9670;&#160;</a></span>performResolve()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -502,7 +502,7 @@ Friends</h2></td></tr>
         <tr>
           <td class="memname">void opal::CommandBuffer::performResolve </td>
           <td>(</td>
-          <td class="paramtype">std::shared_ptr&lt; <a class="el" href="classopal_1_1_resolve_action.html">ResolveAction</a> &gt;</td>          <td class="paramname"><span class="paramname"><em>resolveAction</em></span></td><td>)</td>
+          <td class="paramtype">const std::shared_ptr&lt; <a class="el" href="classopal_1_1_resolve_action.html">ResolveAction</a> &gt; &amp;</td>          <td class="paramname"><span class="paramname"><em>resolveAction</em></span></td><td>)</td>
           <td></td>
         </tr>
       </table>

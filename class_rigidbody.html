@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 5</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -173,6 +173,11 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a580fc0c1e2faf17dd7ec9d00bd4b5c91"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the rigidbody's angular velocity.  <br /></td></tr>
 <tr class="memitem:a5c39ff52c066a82762bb7c0897738dbd" id="r_a5c39ff52c066a82762bb7c0897738dbd"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a5c39ff52c066a82762bb7c0897738dbd">addAngularVelocity</a> (const <a class="el" href="struct_position3d.html">Position3d</a> &amp;velocity)</td></tr>
 <tr class="memdesc:a5c39ff52c066a82762bb7c0897738dbd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds to the rigidbody's angular velocity.  <br /></td></tr>
+<tr class="memitem:a0f8aa7a2ed0da483d50576476182bfa8" id="r_a0f8aa7a2ed0da483d50576476182bfa8"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a0f8aa7a2ed0da483d50576476182bfa8">setMaxLinearVelocity</a> (float maxLinearVelocity)</td></tr>
+<tr class="memitem:a88265e5ebbfea258c572e7838dcfd833" id="r_a88265e5ebbfea258c572e7838dcfd833"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a88265e5ebbfea258c572e7838dcfd833">setMaxAngularVelocity</a> (float maxAngularVelocity)</td></tr>
+<tr class="memitem:a0e8b2130277bbd450d12290ef6a6d0d2" id="r_a0e8b2130277bbd450d12290ef6a6d0d2"><td class="memItemLeft"><a class="el" href="units_8h.html#a1b9aa5a4c5146cc45a21959a2724cd5d">Velocity3d</a>&#160;</td><td class="memItemRight"><a class="el" href="#a0e8b2130277bbd450d12290ef6a6d0d2">getLinearVelocity</a> ()</td></tr>
+<tr class="memitem:abfe948994ecbc3e0ada52b9b9558579b" id="r_abfe948994ecbc3e0ada52b9b9558579b"><td class="memItemLeft"><a class="el" href="units_8h.html#a1b9aa5a4c5146cc45a21959a2724cd5d">Velocity3d</a>&#160;</td><td class="memItemRight"><a class="el" href="#abfe948994ecbc3e0ada52b9b9558579b">getAngularVelocity</a> ()</td></tr>
+<tr class="memitem:ac858887c2ff98e715ba6bb5546eebc44" id="r_ac858887c2ff98e715ba6bb5546eebc44"><td class="memItemLeft"><a class="el" href="units_8h.html#a1b9aa5a4c5146cc45a21959a2724cd5d">Velocity3d</a>&#160;</td><td class="memItemRight"><a class="el" href="#ac858887c2ff98e715ba6bb5546eebc44">getVelocity</a> ()</td></tr>
 <tr class="memitem:a20cd52130bc39d0230b03b60ca91fbee" id="r_a20cd52130bc39d0230b03b60ca91fbee"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a20cd52130bc39d0230b03b60ca91fbee">raycast</a> (const <a class="el" href="struct_position3d.html">Position3d</a> &amp;direction, float maxDistance=1000.0f)</td></tr>
 <tr class="memitem:a1e4cf6272a1fca2139a4e89c79b5a9e9" id="r_a1e4cf6272a1fca2139a4e89c79b5a9e9"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a1e4cf6272a1fca2139a4e89c79b5a9e9">raycastAll</a> (const <a class="el" href="struct_position3d.html">Position3d</a> &amp;direction, float maxDistance=100.0f)</td></tr>
 <tr class="memitem:aa98589cde76257ddcb0eecd15a592ced" id="r_aa98589cde76257ddcb0eecd15a592ced"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#aa98589cde76257ddcb0eecd15a592ced">raycastWorld</a> (const <a class="el" href="struct_position3d.html">Position3d</a> &amp;origin, const <a class="el" href="struct_position3d.html">Position3d</a> &amp;direction, float maxDistance=1000.0f)</td></tr>
@@ -204,8 +209,8 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a4abe9f1b17a7c6cc137a7689ab7b47c2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns true if the rigidbody has the provided tag.  <br /></td></tr>
 <tr class="memitem:a438dd8078125ee0e777b7ca9138d271b" id="r_a438dd8078125ee0e777b7ca9138d271b"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a438dd8078125ee0e777b7ca9138d271b">addTag</a> (const std::string &amp;tag)</td></tr>
 <tr class="memdesc:a438dd8078125ee0e777b7ca9138d271b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a tag for filtering and game logic.  <br /></td></tr>
-<tr class="memitem:aaa41bba5448c1b5a69cfee40dc14225c" id="r_aaa41bba5448c1b5a69cfee40dc14225c"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#aaa41bba5448c1b5a69cfee40dc14225c">removeTag</a> (const std::string &amp;tag)</td></tr>
-<tr class="memdesc:aaa41bba5448c1b5a69cfee40dc14225c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes a previously added tag.  <br /></td></tr>
+<tr class="memitem:aab8c8aff718a516af1289e9daa635f18" id="r_aab8c8aff718a516af1289e9daa635f18"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#aab8c8aff718a516af1289e9daa635f18">removeTag</a> (const std::string &amp;tag) const</td></tr>
+<tr class="memdesc:aab8c8aff718a516af1289e9daa635f18"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes a previously added tag.  <br /></td></tr>
 <tr class="memitem:a067f2b82eebde4870b323d540c8dfda4" id="r_a067f2b82eebde4870b323d540c8dfda4"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a067f2b82eebde4870b323d540c8dfda4">setDamping</a> (float linearDamping, float angularDamping)</td></tr>
 <tr class="memdesc:a067f2b82eebde4870b323d540c8dfda4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets linear and angular damping coefficients.  <br /></td></tr>
 <tr class="memitem:a4311e78f1313a6fc5287d94f357cfe9e" id="r_a4311e78f1313a6fc5287d94f357cfe9e"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a4311e78f1313a6fc5287d94f357cfe9e">setMass</a> (float mass)</td></tr>
@@ -230,7 +235,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:af86cc990a53aa9b9c3d70572558aecb5 inherit pub_methods_class_component" id="r_af86cc990a53aa9b9c3d70572558aecb5"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_component.html#af86cc990a53aa9b9c3d70572558aecb5">onCollisionStay</a> (<a class="el" href="class_game_object.html">GameObject</a> *other)</td></tr>
 <tr class="memitem:a9749b406011df2556b004acd2f032935 inherit pub_methods_class_component" id="r_a9749b406011df2556b004acd2f032935"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_component.html#a9749b406011df2556b004acd2f032935">onSignalRecieve</a> (const std::string &amp;signal, <a class="el" href="class_game_object.html">GameObject</a> *sender)</td></tr>
 <tr class="memitem:aeea623ce757a97a895a2500f6de6a33c inherit pub_methods_class_component" id="r_aeea623ce757a97a895a2500f6de6a33c"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_component.html#aeea623ce757a97a895a2500f6de6a33c">onSignalEnd</a> (const std::string &amp;signal, <a class="el" href="class_game_object.html">GameObject</a> *sender)</td></tr>
-<tr class="memitem:a0f6d2f7ffd806c10cf675d85b22f012b inherit pub_methods_class_component" id="r_a0f6d2f7ffd806c10cf675d85b22f012b"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_component.html#a0f6d2f7ffd806c10cf675d85b22f012b">onQueryRecieve</a> (<a class="el" href="struct_query_result.html">QueryResult</a> &amp;result)</td></tr>
+<tr class="memitem:a7ad81a397c06433353d21b1d5aa7eda9 inherit pub_methods_class_component" id="r_a7ad81a397c06433353d21b1d5aa7eda9"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_component.html#a7ad81a397c06433353d21b1d5aa7eda9">onQueryReceive</a> (<a class="el" href="struct_query_result.html">QueryResult</a> &amp;result)</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -246,7 +251,7 @@ Public Attributes</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="class_component.html" title="Behavior or property that can be attached to a GameObject to extend its capabilities.">Component</a> that binds a Bezel rigidbody to a <span class="tt"><a class="el" href="class_game_object.html" title="Base class for all Game Objects. It extends from Renderable and it provides common functionality for ...">GameObject</a></span>. </p>
-<p>Most query APIs (<span class="tt">raycast*</span>, <span class="tt">overlap*</span>, <span class="tt">predictMovement*</span>) are async-style: the request is queued and the result is reported to components via <span class="tt"><a class="el" href="class_component.html#a0f6d2f7ffd806c10cf675d85b22f012b">Component::onQueryRecieve</a>(<a class="el" href="struct_query_result.html" title="Union-like container describing the last physics query response.">QueryResult</a>&amp;)</span>. </p>
+<p>Most query APIs (<span class="tt">raycast*</span>, <span class="tt">overlap*</span>, <span class="tt">predictMovement*</span>) are async-style: the request is queued and the result is reported to components via <span class="tt"><a class="el" href="class_component.html#a7ad81a397c06433353d21b1d5aa7eda9">Component::onQueryReceive</a>(<a class="el" href="struct_query_result.html" title="Union-like container describing the last physics query response.">QueryResult</a>&amp;)</span>. </p>
 
 <p class="definition">Definition at line <a class="el" href="physics_8h_source.html#l00345">345</a> of file <a class="el" href="physics_8h_source.html">physics.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
@@ -529,6 +534,57 @@ Public Attributes</h2></td></tr>
 <p>Synchronizes forces and constraints before stepping physics. </p>
 
 <p>Reimplemented from <a class="el" href="class_component.html#a83bd6e1c4f6eb813dd446a4319e98035">Component</a>.</p>
+
+</div>
+</div>
+<a id="abfe948994ecbc3e0ada52b9b9558579b" name="abfe948994ecbc3e0ada52b9b9558579b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abfe948994ecbc3e0ada52b9b9558579b">&#9670;&#160;</a></span>getAngularVelocity()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="units_8h.html#a1b9aa5a4c5146cc45a21959a2724cd5d">Velocity3d</a> Rigidbody::getAngularVelocity </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a0e8b2130277bbd450d12290ef6a6d0d2" name="a0e8b2130277bbd450d12290ef6a6d0d2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0e8b2130277bbd450d12290ef6a6d0d2">&#9670;&#160;</a></span>getLinearVelocity()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="units_8h.html#a1b9aa5a4c5146cc45a21959a2724cd5d">Velocity3d</a> Rigidbody::getLinearVelocity </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="ac858887c2ff98e715ba6bb5546eebc44" name="ac858887c2ff98e715ba6bb5546eebc44"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac858887c2ff98e715ba6bb5546eebc44">&#9670;&#160;</a></span>getVelocity()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="units_8h.html#a1b9aa5a4c5146cc45a21959a2724cd5d">Velocity3d</a> Rigidbody::getVelocity </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
 
 </div>
 </div>
@@ -1202,8 +1258,8 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="aaa41bba5448c1b5a69cfee40dc14225c" name="aaa41bba5448c1b5a69cfee40dc14225c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aaa41bba5448c1b5a69cfee40dc14225c">&#9670;&#160;</a></span>removeTag()</h2>
+<a id="aab8c8aff718a516af1289e9daa635f18" name="aab8c8aff718a516af1289e9daa635f18"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aab8c8aff718a516af1289e9daa635f18">&#9670;&#160;</a></span>removeTag()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1212,7 +1268,7 @@ Public Attributes</h2></td></tr>
           <td class="memname">void Rigidbody::removeTag </td>
           <td>(</td>
           <td class="paramtype">const std::string &amp;</td>          <td class="paramname"><span class="paramname"><em>tag</em></span></td><td>)</td>
-          <td></td>
+          <td> const</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -1317,6 +1373,40 @@ Public Attributes</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Sets the mass in kilograms (engine units). </p>
+
+</div>
+</div>
+<a id="a88265e5ebbfea258c572e7838dcfd833" name="a88265e5ebbfea258c572e7838dcfd833"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a88265e5ebbfea258c572e7838dcfd833">&#9670;&#160;</a></span>setMaxAngularVelocity()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Rigidbody::setMaxAngularVelocity </td>
+          <td>(</td>
+          <td class="paramtype">float</td>          <td class="paramname"><span class="paramname"><em>maxAngularVelocity</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a0f8aa7a2ed0da483d50576476182bfa8" name="a0f8aa7a2ed0da483d50576476182bfa8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0f8aa7a2ed0da483d50576476182bfa8">&#9670;&#160;</a></span>setMaxLinearVelocity()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Rigidbody::setMaxLinearVelocity </td>
+          <td>(</td>
+          <td class="paramtype">float</td>          <td class="paramname"><span class="paramname"><em>maxLinearVelocity</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
 
 </div>
 </div>

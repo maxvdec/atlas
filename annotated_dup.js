@@ -170,6 +170,7 @@ var annotated_dup =
     [ "Posterization", "class_posterization.html", "class_posterization" ],
     [ "PosterizationParameters", "struct_posterization_parameters.html", "struct_posterization_parameters" ],
     [ "PseudoBody", "struct_pseudo_body.html", "struct_pseudo_body" ],
+    [ "Quaternion", "struct_quaternion.html", "struct_quaternion" ],
     [ "QueryResult", "struct_query_result.html", "struct_query_result" ],
     [ "Radians", "struct_radians.html", "struct_radians" ],
     [ "RaycastHit", "struct_raycast_hit.html", "struct_raycast_hit" ],

@@ -19,7 +19,7 @@ var struct_fluid =
     [ "setWaterColor", "struct_fluid.html#a3fd983aa36ba9bf3bfecc23ef54fa789", null ],
     [ "setWaveVelocity", "struct_fluid.html#ae5d6ec0dff17fd759a99c1003884648a", null ],
     [ "update", "struct_fluid.html#aca9417b46da7d36092385ce5f154c7a4", null ],
-    [ "updateCapture", "struct_fluid.html#a210b282198f6d077406c7177bcd07516", null ],
+    [ "updateCapture", "struct_fluid.html#ab8f1e0d313495454ad8a6389269e01b6", null ],
     [ "Window", "struct_fluid.html#a553f958a25683445088050a69d3de8e9", null ],
     [ "movementTexture", "struct_fluid.html#af57ea97a098fb76f3542c3cbd350bf22", null ],
     [ "normalTexture", "struct_fluid.html#a9d6cd05defd9aff87f59aa5356bb4a55", null ],

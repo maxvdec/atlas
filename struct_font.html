@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 5</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -137,8 +137,8 @@ Public Member Functions</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-static-methods" class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:aa7480b6cce6947e2180384e9b7a80c0c" id="r_aa7480b6cce6947e2180384e9b7a80c0c"><td class="memItemLeft">static <a class="el" href="struct_font.html">Font</a>&#160;</td><td class="memItemRight"><a class="el" href="#aa7480b6cce6947e2180384e9b7a80c0c">fromResource</a> (const std::string &amp;fontName, <a class="el" href="struct_resource.html">Resource</a> <a class="el" href="#a953d3ee33e7097789c7ee85748436b4c">resource</a>, int fontSize)</td></tr>
-<tr class="memdesc:aa7480b6cce6947e2180384e9b7a80c0c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a font from a resource.  <br /></td></tr>
+<tr class="memitem:aa9c459935b65e3c7bfb7b87cc23ab27a" id="r_aa9c459935b65e3c7bfb7b87cc23ab27a"><td class="memItemLeft">static <a class="el" href="struct_font.html">Font</a>&#160;</td><td class="memItemRight"><a class="el" href="#aa9c459935b65e3c7bfb7b87cc23ab27a">fromResource</a> (const std::string &amp;fontName, const <a class="el" href="struct_resource.html">Resource</a> &amp;<a class="el" href="#a953d3ee33e7097789c7ee85748436b4c">resource</a>, int fontSize)</td></tr>
+<tr class="memdesc:aa9c459935b65e3c7bfb7b87cc23ab27a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a font from a resource.  <br /></td></tr>
 <tr class="memitem:a0d26a65a8113d5ef34e2a21c65e487e6" id="r_a0d26a65a8113d5ef34e2a21c65e487e6"><td class="memItemLeft">static <a class="el" href="struct_font.html">Font</a> &amp;&#160;</td><td class="memItemRight"><a class="el" href="#a0d26a65a8113d5ef34e2a21c65e487e6">getFont</a> (const std::string &amp;fontName)</td></tr>
 <tr class="memdesc:a0d26a65a8113d5ef34e2a21c65e487e6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets the font associated with the given name.  <br /></td></tr>
 </table><table class="memberdecls">
@@ -160,7 +160,7 @@ Public Attributes</h2></td></tr>
 <h2 class="doxsection"><a class="anchor" id="font-example"></a>
 Example</h2>
 <div class="fragment"><div class="line"><span class="comment">// Load a font from a resource</span></div>
-<div class="line"><a class="code hl_struct" href="struct_font.html">Font</a> myFont = <a class="code hl_function" href="#aa7480b6cce6947e2180384e9b7a80c0c">Font::fromResource</a>(<span class="stringliteral">&quot;MyFont&quot;</span>,</div>
+<div class="line"><a class="code hl_struct" href="struct_font.html">Font</a> myFont = <a class="code hl_function" href="#aa9c459935b65e3c7bfb7b87cc23ab27a">Font::fromResource</a>(<span class="stringliteral">&quot;MyFont&quot;</span>,</div>
 <div class="line"><a class="code hl_function" href="class_workspace.html#a8588fb898bffea4777ceffab7c2c7795">Workspace::get</a>().getResource(<span class="stringliteral">&quot;MyFontResource&quot;</span>), 48);</div>
 <div class="line"><span class="comment">// Retrieve the font later by name</span></div>
 <div class="line"><a class="code hl_struct" href="struct_font.html">Font</a> &amp;retrievedFont = <a class="code hl_function" href="#a0d26a65a8113d5ef34e2a21c65e487e6">Font::getFont</a>(<span class="stringliteral">&quot;MyFont&quot;</span>);</div>
@@ -170,7 +170,7 @@ Example</h2>
 <div class="ttc" id="astruct_font_html"><div class="ttname"><a href="struct_font.html">Font</a></div><div class="ttdoc">Structure that represents a font. It is created from a Resource and then bound to the Text component.</div><div class="ttdef"><b>Definition</b> <a href="text_8h_source.html#l00076">text.h:76</a></div></div>
 <div class="ttc" id="astruct_font_html_a0d26a65a8113d5ef34e2a21c65e487e6"><div class="ttname"><a href="#a0d26a65a8113d5ef34e2a21c65e487e6">Font::getFont</a></div><div class="ttdeci">static Font &amp; getFont(const std::string &amp;fontName)</div><div class="ttdoc">Gets the font associated with the given name.</div></div>
 <div class="ttc" id="astruct_font_html_a8635ed7b0d950015d2cc73236ecc0d9d"><div class="ttname"><a href="#a8635ed7b0d950015d2cc73236ecc0d9d">Font::changeSize</a></div><div class="ttdeci">void changeSize(int newSize)</div><div class="ttdoc">Changes the size of the font.</div></div>
-<div class="ttc" id="astruct_font_html_aa7480b6cce6947e2180384e9b7a80c0c"><div class="ttname"><a href="#aa7480b6cce6947e2180384e9b7a80c0c">Font::fromResource</a></div><div class="ttdeci">static Font fromResource(const std::string &amp;fontName, Resource resource, int fontSize)</div><div class="ttdoc">Creates a font from a resource.</div></div>
+<div class="ttc" id="astruct_font_html_aa9c459935b65e3c7bfb7b87cc23ab27a"><div class="ttname"><a href="#aa9c459935b65e3c7bfb7b87cc23ab27a">Font::fromResource</a></div><div class="ttdeci">static Font fromResource(const std::string &amp;fontName, const Resource &amp;resource, int fontSize)</div><div class="ttdoc">Creates a font from a resource.</div></div>
 </div><!-- fragment --> 
 <p class="definition">Definition at line <a class="el" href="text_8h_source.html#l00076">76</a> of file <a class="el" href="text_8h_source.html">text.h</a>.</p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
@@ -200,8 +200,8 @@ Example</h2>
 
 </div>
 </div>
-<a id="aa7480b6cce6947e2180384e9b7a80c0c" name="aa7480b6cce6947e2180384e9b7a80c0c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa7480b6cce6947e2180384e9b7a80c0c">&#9670;&#160;</a></span>fromResource()</h2>
+<a id="aa9c459935b65e3c7bfb7b87cc23ab27a" name="aa9c459935b65e3c7bfb7b87cc23ab27a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa9c459935b65e3c7bfb7b87cc23ab27a">&#9670;&#160;</a></span>fromResource()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -217,7 +217,7 @@ Example</h2>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype"><a class="el" href="struct_resource.html">Resource</a></td>          <td class="paramname"><span class="paramname"><em>resource</em></span>, </td>
+          <td class="paramtype">const <a class="el" href="struct_resource.html">Resource</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>resource</em></span>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>

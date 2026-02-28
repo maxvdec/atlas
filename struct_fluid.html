@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 5</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -154,8 +154,8 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:aca9417b46da7d36092385ce5f154c7a4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Advances water simulation state and schedules capture updates.  <br /></td></tr>
 <tr class="memitem:a15acfdba410bbdd12d82773c6cdc3b49" id="r_a15acfdba410bbdd12d82773c6cdc3b49"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a15acfdba410bbdd12d82773c6cdc3b49">render</a> (float dt, std::shared_ptr&lt; <a class="el" href="classopal_1_1_command_buffer.html">opal::CommandBuffer</a> &gt; commandBuffer, bool updatePipeline=false) override</td></tr>
 <tr class="memdesc:a15acfdba410bbdd12d82773c6cdc3b49"><td class="mdescLeft">&#160;</td><td class="mdescRight">Draws the water surface and applies screen-space effects.  <br /></td></tr>
-<tr class="memitem:a210b282198f6d077406c7177bcd07516" id="r_a210b282198f6d077406c7177bcd07516"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a210b282198f6d077406c7177bcd07516">updateCapture</a> (<a class="el" href="class_window.html">Window</a> &amp;window, std::shared_ptr&lt; <a class="el" href="classopal_1_1_command_buffer.html">opal::CommandBuffer</a> &gt; commandBuffer=nullptr)</td></tr>
-<tr class="memdesc:a210b282198f6d077406c7177bcd07516"><td class="mdescLeft">&#160;</td><td class="mdescRight">Triggers the generation of reflection and refraction render targets for the current frame.  <br /></td></tr>
+<tr class="memitem:ab8f1e0d313495454ad8a6389269e01b6" id="r_ab8f1e0d313495454ad8a6389269e01b6"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#ab8f1e0d313495454ad8a6389269e01b6">updateCapture</a> (<a class="el" href="class_window.html">Window</a> &amp;window, const std::shared_ptr&lt; <a class="el" href="classopal_1_1_command_buffer.html">opal::CommandBuffer</a> &gt; &amp;commandBuffer=nullptr)</td></tr>
+<tr class="memdesc:ab8f1e0d313495454ad8a6389269e01b6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Triggers the generation of reflection and refraction render targets for the current frame.  <br /></td></tr>
 <tr class="memitem:aab2d9813ce93f44e31a2554b557c7942" id="r_aab2d9813ce93f44e31a2554b557c7942"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#aab2d9813ce93f44e31a2554b557c7942">setViewMatrix</a> (const glm::mat4 &amp;view) override</td></tr>
 <tr class="memdesc:aab2d9813ce93f44e31a2554b557c7942"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stores the camera view matrix for shader consumption.  <br /></td></tr>
 <tr class="memitem:a9bbf2c42501fb5d18e2271255d05864c" id="r_a9bbf2c42501fb5d18e2271255d05864c"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a9bbf2c42501fb5d18e2271255d05864c">setProjectionMatrix</a> (const glm::mat4 &amp;projection) override</td></tr>
@@ -168,7 +168,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a38a4cfd3e26a84963c48f85fc493cf4f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Applies an absolute Euler rotation to the surface.  <br /></td></tr>
 <tr class="memitem:a06fbeabeb73199dc3eb2109029cc0a39" id="r_a06fbeabeb73199dc3eb2109029cc0a39"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a06fbeabeb73199dc3eb2109029cc0a39">rotate</a> (const <a class="el" href="struct_rotation3d.html">Rotation3d</a> &amp;delta) override</td></tr>
 <tr class="memdesc:a06fbeabeb73199dc3eb2109029cc0a39"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds an incremental rotation on top of the current orientation.  <br /></td></tr>
-<tr class="memitem:aa9da2c84debcc0ebd3c67d4485634f08" id="r_aa9da2c84debcc0ebd3c67d4485634f08"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#aa9da2c84debcc0ebd3c67d4485634f08">setScale</a> (const <a class="el" href="units_8h.html#a3b9b132cddb1dfe2ae572f230abe45f1">Scale3d</a> &amp;scale) override</td></tr>
+<tr class="memitem:aa9da2c84debcc0ebd3c67d4485634f08" id="r_aa9da2c84debcc0ebd3c67d4485634f08"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#aa9da2c84debcc0ebd3c67d4485634f08">setScale</a> (const <a class="el" href="units_8h.html#a533ea67d7bc3c561752563b080663833">Scale3d</a> &amp;scale) override</td></tr>
 <tr class="memdesc:aa9da2c84debcc0ebd3c67d4485634f08"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets a custom scale factor applied after the physical extent.  <br /></td></tr>
 <tr class="memitem:a54a81a656019e1eb8feb3d8f4d942fb3" id="r_a54a81a656019e1eb8feb3d8f4d942fb3"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a54a81a656019e1eb8feb3d8f4d942fb3">setExtent</a> (const <a class="el" href="struct_size2d.html">Size2d</a> &amp;ext)</td></tr>
 <tr class="memdesc:a54a81a656019e1eb8feb3d8f4d942fb3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Applies a new width/height for the water plane.  <br /></td></tr>
@@ -178,7 +178,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a3fd983aa36ba9bf3bfecc23ef54fa789"><td class="mdescLeft">&#160;</td><td class="mdescRight">Changes the albedo tint used when shading the surface.  <br /></td></tr>
 <tr class="memitem:a007e82014e23b50177812cf1147c5227" id="r_a007e82014e23b50177812cf1147c5227"><td class="memItemLeft"><a class="el" href="struct_position3d.html">Position3d</a>&#160;</td><td class="memItemRight"><a class="el" href="#a007e82014e23b50177812cf1147c5227">getPosition</a> () const override</td></tr>
 <tr class="memdesc:a007e82014e23b50177812cf1147c5227"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the current world position of the fluid surface.  <br /></td></tr>
-<tr class="memitem:a28e59e0bb5e3c479f5cb9ede6b15677c" id="r_a28e59e0bb5e3c479f5cb9ede6b15677c"><td class="memItemLeft"><a class="el" href="units_8h.html#a1636071d291ee0954efc6d64eb8d94f1">Size3d</a>&#160;</td><td class="memItemRight"><a class="el" href="#a28e59e0bb5e3c479f5cb9ede6b15677c">getScale</a> () const override</td></tr>
+<tr class="memitem:a28e59e0bb5e3c479f5cb9ede6b15677c" id="r_a28e59e0bb5e3c479f5cb9ede6b15677c"><td class="memItemLeft"><a class="el" href="units_8h.html#a64eae7ddcc7a03ddf2cda1866b0fb3aa">Size3d</a>&#160;</td><td class="memItemRight"><a class="el" href="#a28e59e0bb5e3c479f5cb9ede6b15677c">getScale</a> () const override</td></tr>
 <tr class="memdesc:a28e59e0bb5e3c479f5cb9ede6b15677c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the scale applied after combining extent and user scale.  <br /></td></tr>
 <tr class="memitem:a3c5be4acfd9e21a15e468e1effbdc542" id="r_a3c5be4acfd9e21a15e468e1effbdc542"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#a3c5be4acfd9e21a15e468e1effbdc542">canUseDeferredRendering</a> () override</td></tr>
 <tr class="memdesc:a3c5be4acfd9e21a15e468e1effbdc542"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fluids are always rendered in forward passes, so deferred is disabled.  <br /></td></tr>
@@ -198,7 +198,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a7e28874d7a5c387330b97cf93671a3f8 inherit pub_methods_class_game_object"><td class="mdescLeft">&#160;</td><td class="mdescRight">Attaches a texture to the object.  <br /></td></tr>
 <tr class="memitem:acba5ac0698425dfe07de60e9e60432b5 inherit pub_methods_class_game_object" id="r_acba5ac0698425dfe07de60e9e60432b5"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_game_object.html#acba5ac0698425dfe07de60e9e60432b5">setColor</a> (const <a class="el" href="struct_color.html">Color</a> &amp;color)</td></tr>
 <tr class="memdesc:acba5ac0698425dfe07de60e9e60432b5 inherit pub_methods_class_game_object"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the color of the object.  <br /></td></tr>
-<tr class="memitem:ade8c731bbc0de1e624089e5ddfc50d72 inherit pub_methods_class_game_object" id="r_ade8c731bbc0de1e624089e5ddfc50d72"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_game_object.html#ade8c731bbc0de1e624089e5ddfc50d72">lookAt</a> (const <a class="el" href="struct_position3d.html">Position3d</a> &amp;target, const <a class="el" href="units_8h.html#abd755c400f9d4026ef36e03056829444">Normal3d</a> &amp;up)</td></tr>
+<tr class="memitem:ade8c731bbc0de1e624089e5ddfc50d72 inherit pub_methods_class_game_object" id="r_ade8c731bbc0de1e624089e5ddfc50d72"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_game_object.html#ade8c731bbc0de1e624089e5ddfc50d72">lookAt</a> (const <a class="el" href="struct_position3d.html">Position3d</a> &amp;target, const <a class="el" href="units_8h.html#aa79dcdba8644f852dbd5163b96868793">Normal3d</a> &amp;up)</td></tr>
 <tr class="memdesc:ade8c731bbc0de1e624089e5ddfc50d72 inherit pub_methods_class_game_object"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the object to look at a specific point in 3D space.  <br /></td></tr>
 <tr class="memitem:a06c5cc4f368665085126282bd4cd6185 inherit pub_methods_class_game_object" id="r_a06c5cc4f368665085126282bd4cd6185"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_game_object.html#a06c5cc4f368665085126282bd4cd6185">hide</a> ()</td></tr>
 <tr class="memdesc:a06c5cc4f368665085126282bd4cd6185 inherit pub_methods_class_game_object"><td class="mdescLeft">&#160;</td><td class="mdescRight">Hides the object, making it invisible in the scene.  <br /></td></tr>
@@ -209,7 +209,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a1c66aaf520caf184b1c6df3c435b7a70 inherit pub_methods_class_game_object" id="r_a1c66aaf520caf184b1c6df3c435b7a70"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_game_object.html#a1c66aaf520caf184b1c6df3c435b7a70">onCollisionStay</a> (<a class="el" href="class_game_object.html">GameObject</a> *other)</td></tr>
 <tr class="memitem:a644d47aa6002c5551bd454dd61311136 inherit pub_methods_class_game_object" id="r_a644d47aa6002c5551bd454dd61311136"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_game_object.html#a644d47aa6002c5551bd454dd61311136">onSignalRecieve</a> (const std::string &amp;signal, <a class="el" href="class_game_object.html">GameObject</a> *sender)</td></tr>
 <tr class="memitem:a645b7bb8cebf8db03bc91f08f97f8661 inherit pub_methods_class_game_object" id="r_a645b7bb8cebf8db03bc91f08f97f8661"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_game_object.html#a645b7bb8cebf8db03bc91f08f97f8661">onSignalEnd</a> (const std::string &amp;signal, <a class="el" href="class_game_object.html">GameObject</a> *sender)</td></tr>
-<tr class="memitem:a886057133ff07c4fca8627418d6a8514 inherit pub_methods_class_game_object" id="r_a886057133ff07c4fca8627418d6a8514"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_game_object.html#a886057133ff07c4fca8627418d6a8514">onQueryRecieve</a> (<a class="el" href="struct_query_result.html">QueryResult</a> &amp;result)</td></tr>
+<tr class="memitem:aa88ccdc1e5978128d0619ce137dab25e inherit pub_methods_class_game_object" id="r_aa88ccdc1e5978128d0619ce137dab25e"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_game_object.html#aa88ccdc1e5978128d0619ce137dab25e">onQueryReceive</a> (<a class="el" href="struct_query_result.html">QueryResult</a> &amp;result)</td></tr>
 <tr class="memitem:a8cb421d4a6cb619271d15560d692a593 inherit pub_methods_class_game_object" id="r_a8cb421d4a6cb619271d15560d692a593"><td class="memTemplParams" colspan="2">template&lt;typename T&gt; </td></tr>
 <tr class="memitem:a8cb421d4a6cb619271d15560d692a593 inherit pub_methods_class_game_object template"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="class_game_object.html#a8cb421d4a6cb619271d15560d692a593">addComponent</a> (T &amp;&amp;existing)</td></tr>
 <tr class="memdesc:a8cb421d4a6cb619271d15560d692a593 inherit pub_methods_class_game_object"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a component to the object.  <br /></td></tr>
@@ -279,9 +279,9 @@ Example</h2>
 <div class="line">waterSurface.<a class="code hl_function" href="#ae5d6ec0dff17fd759a99c1003884648a">setWaveVelocity</a>(0.5f); <span class="comment">// Wave movement speed</span></div>
 <div class="line"> </div>
 <div class="line"><span class="comment">// Load normal and movement textures for surface detail (via Workspace)</span></div>
-<div class="line"><a class="code hl_function" href="class_workspace.html#a8588fb898bffea4777ceffab7c2c7795">Workspace::get</a>().<a class="code hl_function" href="class_workspace.html#a6eaca94e589851c29b2f66acf28599cb">createResource</a>(<span class="stringliteral">&quot;textures/water_normal.png&quot;</span>, <span class="stringliteral">&quot;WaterNormal&quot;</span>,</div>
+<div class="line"><a class="code hl_function" href="class_workspace.html#a8588fb898bffea4777ceffab7c2c7795">Workspace::get</a>().<a class="code hl_function" href="class_workspace.html#a621d969343b29e86d8053d561b2a228e">createResource</a>(<span class="stringliteral">&quot;textures/water_normal.png&quot;</span>, <span class="stringliteral">&quot;WaterNormal&quot;</span>,</div>
 <div class="line">                               <a class="code hl_enumvalue" href="workspace_8h.html#a8571efa4409be32e28abf3ea74a0dbb1abe53a0541a6d36f6ecb879fa2c584b08">ResourceType::Image</a>);</div>
-<div class="line"><a class="code hl_function" href="class_workspace.html#a8588fb898bffea4777ceffab7c2c7795">Workspace::get</a>().<a class="code hl_function" href="class_workspace.html#a6eaca94e589851c29b2f66acf28599cb">createResource</a>(<span class="stringliteral">&quot;textures/water_flow.png&quot;</span>, <span class="stringliteral">&quot;WaterFlow&quot;</span>,</div>
+<div class="line"><a class="code hl_function" href="class_workspace.html#a8588fb898bffea4777ceffab7c2c7795">Workspace::get</a>().<a class="code hl_function" href="class_workspace.html#a621d969343b29e86d8053d561b2a228e">createResource</a>(<span class="stringliteral">&quot;textures/water_flow.png&quot;</span>, <span class="stringliteral">&quot;WaterFlow&quot;</span>,</div>
 <div class="line">                               <a class="code hl_enumvalue" href="workspace_8h.html#a8571efa4409be32e28abf3ea74a0dbb1abe53a0541a6d36f6ecb879fa2c584b08">ResourceType::Image</a>);</div>
 <div class="line">waterSurface.<a class="code hl_variable" href="#a9d6cd05defd9aff87f59aa5356bb4a55">normalTexture</a> =</div>
 <div class="line">    <a class="code hl_function" href="struct_texture.html#a29875124ac62123b9d6840e38ce60920">Texture::fromResourceName</a>(<span class="stringliteral">&quot;WaterNormal&quot;</span>, <a class="code hl_enumvalue" href="texture_8h.html#a579bf435a05d45b75f553d37ebbb3225a960b44c579bc2f6818d2daaf9e4c16f0">TextureType::Normal</a>);</div>
@@ -294,7 +294,7 @@ Example</h2>
 <div class="line"> </div>
 <div class="line"><span class="comment">// The fluid automatically captures reflections and refractions</span></div>
 <div class="line"><span class="comment">// during the render pass</span></div>
-<div class="ttc" id="aclass_workspace_html_a6eaca94e589851c29b2f66acf28599cb"><div class="ttname"><a href="class_workspace.html#a6eaca94e589851c29b2f66acf28599cb">Workspace::createResource</a></div><div class="ttdeci">Resource createResource(const fs::path &amp;path, std::string name, ResourceType type=ResourceType::File)</div><div class="ttdoc">Creates a new resource from a file path.</div></div>
+<div class="ttc" id="aclass_workspace_html_a621d969343b29e86d8053d561b2a228e"><div class="ttname"><a href="class_workspace.html#a621d969343b29e86d8053d561b2a228e">Workspace::createResource</a></div><div class="ttdeci">Resource createResource(const fs::path &amp;path, const std::string &amp;name, ResourceType type=ResourceType::File)</div><div class="ttdoc">Creates a new resource from a file path.</div></div>
 <div class="ttc" id="aclass_workspace_html_a8588fb898bffea4777ceffab7c2c7795"><div class="ttname"><a href="class_workspace.html#a8588fb898bffea4777ceffab7c2c7795">Workspace::get</a></div><div class="ttdeci">static Workspace &amp; get()</div><div class="ttdef"><b>Definition</b> <a href="workspace_8h_source.html#l00091">workspace.h:91</a></div></div>
 <div class="ttc" id="ashader_8h_html_aed7a1c7a5976e4adb712d0a231dada82acb5feb1b7314637725a2e73bdc9f7295"><div class="ttname"><a href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82acb5feb1b7314637725a2e73bdc9f7295">AtlasVertexShader::Color</a></div><div class="ttdeci">@ Color</div><div class="ttdoc">Vertex shader for rendering solid colors.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00042">shader.h:42</a></div></div>
 <div class="ttc" id="astruct_fluid_html_a5fc46124276d7041248e9890e0972d77"><div class="ttname"><a href="#a5fc46124276d7041248e9890e0972d77">Fluid::Fluid</a></div><div class="ttdeci">Fluid()</div><div class="ttdoc">Constructs an uninitialized fluid surface.</div></div>
@@ -305,10 +305,10 @@ Example</h2>
 <div class="ttc" id="astruct_fluid_html_ae5d6ec0dff17fd759a99c1003884648a"><div class="ttname"><a href="#ae5d6ec0dff17fd759a99c1003884648a">Fluid::setWaveVelocity</a></div><div class="ttdeci">void setWaveVelocity(float velocity)</div><div class="ttdoc">Adjusts the scroll speed of the normal/movement textures.</div><div class="ttdef"><b>Definition</b> <a href="fluid_8h_source.html#l00135">fluid.h:135</a></div></div>
 <div class="ttc" id="astruct_fluid_html_af57ea97a098fb76f3542c3cbd350bf22"><div class="ttname"><a href="#af57ea97a098fb76f3542c3cbd350bf22">Fluid::movementTexture</a></div><div class="ttdeci">Texture movementTexture</div><div class="ttdoc">Flow map used to animate surface movement.</div><div class="ttdef"><b>Definition</b> <a href="fluid_8h_source.html#l00163">fluid.h:163</a></div></div>
 <div class="ttc" id="astruct_position3d_html"><div class="ttname"><a href="struct_position3d.html">Position3d</a></div><div class="ttdoc">Structure representing a position in 3D space with double precision. Provides arithmetic operations a...</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00033">units.h:33</a></div></div>
-<div class="ttc" id="astruct_size2d_html"><div class="ttname"><a href="struct_size2d.html">Size2d</a></div><div class="ttdoc">Structure representing 2D dimensions with width and height. Provides arithmetic operations and conver...</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00455">units.h:455</a></div></div>
+<div class="ttc" id="astruct_size2d_html"><div class="ttname"><a href="struct_size2d.html">Size2d</a></div><div class="ttdoc">Structure representing 2D dimensions with width and height. Provides arithmetic operations and conver...</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00501">units.h:501</a></div></div>
 <div class="ttc" id="astruct_texture_html_a29875124ac62123b9d6840e38ce60920"><div class="ttname"><a href="struct_texture.html#a29875124ac62123b9d6840e38ce60920">Texture::fromResourceName</a></div><div class="ttdeci">static Texture fromResourceName(const std::string &amp;resourceName, TextureType type=TextureType::Color, TextureParameters params={}, Color borderColor={0, 0, 0, 0})</div><div class="ttdoc">Creates a texture from a resource name.</div></div>
-<div class="ttc" id="atexture_8h_html_a579bf435a05d45b75f553d37ebbb3225a960b44c579bc2f6818d2daaf9e4c16f0"><div class="ttname"><a href="texture_8h.html#a579bf435a05d45b75f553d37ebbb3225a960b44c579bc2f6818d2daaf9e4c16f0">TextureType::Normal</a></div><div class="ttdeci">@ Normal</div><div class="ttdef"><b>Definition</b> <a href="texture_8h_source.html#l00119">texture.h:119</a></div></div>
-<div class="ttc" id="atexture_8h_html_a579bf435a05d45b75f553d37ebbb3225acb5feb1b7314637725a2e73bdc9f7295"><div class="ttname"><a href="texture_8h.html#a579bf435a05d45b75f553d37ebbb3225acb5feb1b7314637725a2e73bdc9f7295">TextureType::Color</a></div><div class="ttdeci">@ Color</div><div class="ttdef"><b>Definition</b> <a href="texture_8h_source.html#l00114">texture.h:114</a></div></div>
+<div class="ttc" id="atexture_8h_html_a579bf435a05d45b75f553d37ebbb3225a960b44c579bc2f6818d2daaf9e4c16f0"><div class="ttname"><a href="texture_8h.html#a579bf435a05d45b75f553d37ebbb3225a960b44c579bc2f6818d2daaf9e4c16f0">TextureType::Normal</a></div><div class="ttdeci">@ Normal</div><div class="ttdef"><b>Definition</b> <a href="texture_8h_source.html#l00120">texture.h:120</a></div></div>
+<div class="ttc" id="atexture_8h_html_a579bf435a05d45b75f553d37ebbb3225acb5feb1b7314637725a2e73bdc9f7295"><div class="ttname"><a href="texture_8h.html#a579bf435a05d45b75f553d37ebbb3225acb5feb1b7314637725a2e73bdc9f7295">TextureType::Color</a></div><div class="ttdeci">@ Color</div><div class="ttdef"><b>Definition</b> <a href="texture_8h_source.html#l00115">texture.h:115</a></div></div>
 <div class="ttc" id="aworkspace_8h_html_a8571efa4409be32e28abf3ea74a0dbb1abe53a0541a6d36f6ecb879fa2c584b08"><div class="ttname"><a href="workspace_8h.html#a8571efa4409be32e28abf3ea74a0dbb1abe53a0541a6d36f6ecb879fa2c584b08">ResourceType::Image</a></div><div class="ttdeci">@ Image</div><div class="ttdef"><b>Definition</b> <a href="workspace_8h_source.html#l00024">workspace.h:24</a></div></div>
 </div><!-- fragment --> 
 <p class="definition">Definition at line <a class="el" href="fluid_8h_source.html#l00057">57</a> of file <a class="el" href="fluid_8h_source.html">fluid.h</a>.</p>
@@ -457,7 +457,7 @@ Example</h2>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="units_8h.html#a1636071d291ee0954efc6d64eb8d94f1">Size3d</a> Fluid::getScale </td>
+          <td class="memname"><a class="el" href="units_8h.html#a64eae7ddcc7a03ddf2cda1866b0fb3aa">Size3d</a> Fluid::getScale </td>
           <td>(</td>
           <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
           <td> const</td>
@@ -722,7 +722,7 @@ Example</h2>
         <tr>
           <td class="memname">void Fluid::setScale </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="units_8h.html#a3b9b132cddb1dfe2ae572f230abe45f1">Scale3d</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>scale</em></span></td><td>)</td>
+          <td class="paramtype">const <a class="el" href="units_8h.html#a533ea67d7bc3c561752563b080663833">Scale3d</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>scale</em></span></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -851,8 +851,8 @@ Example</h2>
 
 </div>
 </div>
-<a id="a210b282198f6d077406c7177bcd07516" name="a210b282198f6d077406c7177bcd07516"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a210b282198f6d077406c7177bcd07516">&#9670;&#160;</a></span>updateCapture()</h2>
+<a id="ab8f1e0d313495454ad8a6389269e01b6" name="ab8f1e0d313495454ad8a6389269e01b6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab8f1e0d313495454ad8a6389269e01b6">&#9670;&#160;</a></span>updateCapture()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -865,7 +865,7 @@ Example</h2>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">std::shared_ptr&lt; <a class="el" href="classopal_1_1_command_buffer.html">opal::CommandBuffer</a> &gt;</td>          <td class="paramname"><span class="paramname"><em>commandBuffer</em></span><span class="paramdefsep"> = </span><span class="paramdefval">nullptr</span>&#160;)</td>
+          <td class="paramtype">const std::shared_ptr&lt; <a class="el" href="classopal_1_1_command_buffer.html">opal::CommandBuffer</a> &gt; &amp;</td>          <td class="paramname"><span class="paramname"><em>commandBuffer</em></span><span class="paramdefsep"> = </span><span class="paramdefval">nullptr</span>&#160;)</td>
         </tr>
       </table>
 </div><div class="memdoc">

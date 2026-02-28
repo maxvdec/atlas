@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 5</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -135,13 +135,13 @@ $(function(){initNavTree('classopal_1_1_device.html','','classopal_1_1_device-me
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a516b21b0c2baa3f61408d2553ad58b7e" id="r_a516b21b0c2baa3f61408d2553ad58b7e"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="#a516b21b0c2baa3f61408d2553ad58b7e">~Device</a> ()</td></tr>
 <tr class="memitem:aa4fb89e1170c6972fee7737c1ac70638" id="r_aa4fb89e1170c6972fee7737c1ac70638"><td class="memItemLeft">std::shared_ptr&lt; <a class="el" href="classopal_1_1_command_buffer.html">CommandBuffer</a> &gt;&#160;</td><td class="memItemRight"><a class="el" href="#aa4fb89e1170c6972fee7737c1ac70638">acquireCommandBuffer</a> ()</td></tr>
-<tr class="memitem:a547597b4d6e110454ff56e94943ea1c2" id="r_a547597b4d6e110454ff56e94943ea1c2"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a547597b4d6e110454ff56e94943ea1c2">submitCommandBuffer</a> (std::shared_ptr&lt; <a class="el" href="classopal_1_1_command_buffer.html">CommandBuffer</a> &gt; commandBuffer)</td></tr>
+<tr class="memitem:a73b4f7acb3b3edbad7d706f7d43e2d3f" id="r_a73b4f7acb3b3edbad7d706f7d43e2d3f"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a73b4f7acb3b3edbad7d706f7d43e2d3f">submitCommandBuffer</a> (const std::shared_ptr&lt; <a class="el" href="classopal_1_1_command_buffer.html">CommandBuffer</a> &gt; &amp;commandBuffer)</td></tr>
 <tr class="memitem:aaae40163536bbabe7b6ca6964934b2d9" id="r_aaae40163536bbabe7b6ca6964934b2d9"><td class="memItemLeft">std::shared_ptr&lt; <a class="el" href="classopal_1_1_framebuffer.html">Framebuffer</a> &gt;&#160;</td><td class="memItemRight"><a class="el" href="#aaae40163536bbabe7b6ca6964934b2d9">getDefaultFramebuffer</a> ()</td></tr>
 <tr class="memitem:ad661e872883b83c26c6299af269022e6" id="r_ad661e872883b83c26c6299af269022e6"><td class="memItemLeft"><a class="el" href="structopal_1_1_device_info.html">DeviceInfo</a>&#160;</td><td class="memItemRight"><a class="el" href="#ad661e872883b83c26c6299af269022e6">getDeviceInfo</a> ()</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-static-methods" class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
-<tr class="memitem:a6fd1d6dd4e0780514d67bc4f550e6b2b" id="r_a6fd1d6dd4e0780514d67bc4f550e6b2b"><td class="memItemLeft">static std::shared_ptr&lt; <a class="el" href="classopal_1_1_device.html">Device</a> &gt;&#160;</td><td class="memItemRight"><a class="el" href="#a6fd1d6dd4e0780514d67bc4f550e6b2b">acquire</a> (std::shared_ptr&lt; <a class="el" href="classopal_1_1_context.html">Context</a> &gt; context)</td></tr>
+<tr class="memitem:a58bdb4a1889597f350b6a53756c8f93e" id="r_a58bdb4a1889597f350b6a53756c8f93e"><td class="memItemLeft">static std::shared_ptr&lt; <a class="el" href="classopal_1_1_device.html">Device</a> &gt;&#160;</td><td class="memItemRight"><a class="el" href="#a58bdb4a1889597f350b6a53756c8f93e">acquire</a> (const std::shared_ptr&lt; <a class="el" href="classopal_1_1_context.html">Context</a> &gt; &amp;context)</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -161,7 +161,7 @@ Example</h2>
 <div class="line">config.<a class="code hl_variable" href="structopal_1_1_context_configuration.html#a7bddf1a22092327f6fd4625792e5987a">majorVersion</a> = 4;</div>
 <div class="line">config.<a class="code hl_variable" href="structopal_1_1_context_configuration.html#aae56d444aad0bdd59ca6cdc1e7c85457">minorVersion</a> = 1;</div>
 <div class="line"><span class="keyword">auto</span> context = <a class="code hl_function" href="classopal_1_1_context.html#a486ff35465dc96ead30600c6acb7cc85">Context::create</a>(config);</div>
-<div class="line"><span class="keyword">auto</span> device = <a class="code hl_function" href="#a6fd1d6dd4e0780514d67bc4f550e6b2b">Device::acquire</a>(context);</div>
+<div class="line"><span class="keyword">auto</span> device = <a class="code hl_function" href="#a58bdb4a1889597f350b6a53756c8f93e">Device::acquire</a>(context);</div>
 <div class="line"> </div>
 <div class="line"><span class="comment">// Get device information</span></div>
 <div class="line"><a class="code hl_struct" href="structopal_1_1_device_info.html">DeviceInfo</a> info = device-&gt;getDeviceInfo();</div>
@@ -175,15 +175,15 @@ Example</h2>
 <div class="line"><span class="comment">// Access default framebuffer</span></div>
 <div class="line"><span class="keyword">auto</span> framebuffer = device-&gt;getDefaultFramebuffer();</div>
 <div class="ttc" id="aclassopal_1_1_context_html_a486ff35465dc96ead30600c6acb7cc85"><div class="ttname"><a href="classopal_1_1_context.html#a486ff35465dc96ead30600c6acb7cc85">opal::Context::create</a></div><div class="ttdeci">static std::shared_ptr&lt; Context &gt; create(ContextConfiguration config={})</div><div class="ttdoc">Creates a new context instance.</div></div>
-<div class="ttc" id="aclassopal_1_1_device_html_a6fd1d6dd4e0780514d67bc4f550e6b2b"><div class="ttname"><a href="#a6fd1d6dd4e0780514d67bc4f550e6b2b">opal::Device::acquire</a></div><div class="ttdeci">static std::shared_ptr&lt; Device &gt; acquire(std::shared_ptr&lt; Context &gt; context)</div></div>
-<div class="ttc" id="astructopal_1_1_context_configuration_html"><div class="ttname"><a href="structopal_1_1_context_configuration.html">opal::ContextConfiguration</a></div><div class="ttdoc">Parameters used when creating an Opal Context.</div><div class="ttdef"><b>Definition</b> <a href="opal_8h_source.html#l00049">opal.h:49</a></div></div>
-<div class="ttc" id="astructopal_1_1_context_configuration_html_a1637365ee7db3ae7e1190d91612fa554"><div class="ttname"><a href="structopal_1_1_context_configuration.html#a1637365ee7db3ae7e1190d91612fa554">opal::ContextConfiguration::useOpenGL</a></div><div class="ttdeci">bool useOpenGL</div><div class="ttdef"><b>Definition</b> <a href="opal_8h_source.html#l00050">opal.h:50</a></div></div>
-<div class="ttc" id="astructopal_1_1_context_configuration_html_a7bddf1a22092327f6fd4625792e5987a"><div class="ttname"><a href="structopal_1_1_context_configuration.html#a7bddf1a22092327f6fd4625792e5987a">opal::ContextConfiguration::majorVersion</a></div><div class="ttdeci">int majorVersion</div><div class="ttdef"><b>Definition</b> <a href="opal_8h_source.html#l00051">opal.h:51</a></div></div>
-<div class="ttc" id="astructopal_1_1_context_configuration_html_aae56d444aad0bdd59ca6cdc1e7c85457"><div class="ttname"><a href="structopal_1_1_context_configuration.html#aae56d444aad0bdd59ca6cdc1e7c85457">opal::ContextConfiguration::minorVersion</a></div><div class="ttdeci">int minorVersion</div><div class="ttdef"><b>Definition</b> <a href="opal_8h_source.html#l00052">opal.h:52</a></div></div>
-<div class="ttc" id="astructopal_1_1_device_info_html"><div class="ttname"><a href="structopal_1_1_device_info.html">opal::DeviceInfo</a></div><div class="ttdef"><b>Definition</b> <a href="opal_8h_source.html#l00121">opal.h:121</a></div></div>
-<div class="ttc" id="astructopal_1_1_device_info_html_a32097d5d6ee453770b5f749cf5adbea8"><div class="ttname"><a href="structopal_1_1_device_info.html#a32097d5d6ee453770b5f749cf5adbea8">opal::DeviceInfo::deviceName</a></div><div class="ttdeci">std::string deviceName</div><div class="ttdef"><b>Definition</b> <a href="opal_8h_source.html#l00122">opal.h:122</a></div></div>
+<div class="ttc" id="aclassopal_1_1_device_html_a58bdb4a1889597f350b6a53756c8f93e"><div class="ttname"><a href="#a58bdb4a1889597f350b6a53756c8f93e">opal::Device::acquire</a></div><div class="ttdeci">static std::shared_ptr&lt; Device &gt; acquire(const std::shared_ptr&lt; Context &gt; &amp;context)</div></div>
+<div class="ttc" id="astructopal_1_1_context_configuration_html"><div class="ttname"><a href="structopal_1_1_context_configuration.html">opal::ContextConfiguration</a></div><div class="ttdoc">Parameters used when creating an Opal Context.</div><div class="ttdef"><b>Definition</b> <a href="opal_8h_source.html#l00045">opal.h:45</a></div></div>
+<div class="ttc" id="astructopal_1_1_context_configuration_html_a1637365ee7db3ae7e1190d91612fa554"><div class="ttname"><a href="structopal_1_1_context_configuration.html#a1637365ee7db3ae7e1190d91612fa554">opal::ContextConfiguration::useOpenGL</a></div><div class="ttdeci">bool useOpenGL</div><div class="ttdef"><b>Definition</b> <a href="opal_8h_source.html#l00046">opal.h:46</a></div></div>
+<div class="ttc" id="astructopal_1_1_context_configuration_html_a7bddf1a22092327f6fd4625792e5987a"><div class="ttname"><a href="structopal_1_1_context_configuration.html#a7bddf1a22092327f6fd4625792e5987a">opal::ContextConfiguration::majorVersion</a></div><div class="ttdeci">int majorVersion</div><div class="ttdef"><b>Definition</b> <a href="opal_8h_source.html#l00047">opal.h:47</a></div></div>
+<div class="ttc" id="astructopal_1_1_context_configuration_html_aae56d444aad0bdd59ca6cdc1e7c85457"><div class="ttname"><a href="structopal_1_1_context_configuration.html#aae56d444aad0bdd59ca6cdc1e7c85457">opal::ContextConfiguration::minorVersion</a></div><div class="ttdeci">int minorVersion</div><div class="ttdef"><b>Definition</b> <a href="opal_8h_source.html#l00048">opal.h:48</a></div></div>
+<div class="ttc" id="astructopal_1_1_device_info_html"><div class="ttname"><a href="structopal_1_1_device_info.html">opal::DeviceInfo</a></div><div class="ttdef"><b>Definition</b> <a href="opal_8h_source.html#l00117">opal.h:117</a></div></div>
+<div class="ttc" id="astructopal_1_1_device_info_html_a32097d5d6ee453770b5f749cf5adbea8"><div class="ttname"><a href="structopal_1_1_device_info.html#a32097d5d6ee453770b5f749cf5adbea8">opal::DeviceInfo::deviceName</a></div><div class="ttdeci">std::string deviceName</div><div class="ttdef"><b>Definition</b> <a href="opal_8h_source.html#l00118">opal.h:118</a></div></div>
 </div><!-- fragment --> 
-<p class="definition">Definition at line <a class="el" href="opal_8h_source.html#l00157">157</a> of file <a class="el" href="opal_8h_source.html">opal.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="opal_8h_source.html#l00153">153</a> of file <a class="el" href="opal_8h_source.html">opal.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a516b21b0c2baa3f61408d2553ad58b7e" name="a516b21b0c2baa3f61408d2553ad58b7e"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a516b21b0c2baa3f61408d2553ad58b7e">&#9670;&#160;</a></span>~Device()</h2>
@@ -203,8 +203,8 @@ Example</h2>
 </div>
 </div>
 <a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
-<a id="a6fd1d6dd4e0780514d67bc4f550e6b2b" name="a6fd1d6dd4e0780514d67bc4f550e6b2b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a6fd1d6dd4e0780514d67bc4f550e6b2b">&#9670;&#160;</a></span>acquire()</h2>
+<a id="a58bdb4a1889597f350b6a53756c8f93e" name="a58bdb4a1889597f350b6a53756c8f93e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a58bdb4a1889597f350b6a53756c8f93e">&#9670;&#160;</a></span>acquire()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -215,7 +215,7 @@ Example</h2>
         <tr>
           <td class="memname">std::shared_ptr&lt; <a class="el" href="classopal_1_1_device.html">Device</a> &gt; opal::Device::acquire </td>
           <td>(</td>
-          <td class="paramtype">std::shared_ptr&lt; <a class="el" href="classopal_1_1_context.html">Context</a> &gt;</td>          <td class="paramname"><span class="paramname"><em>context</em></span></td><td>)</td>
+          <td class="paramtype">const std::shared_ptr&lt; <a class="el" href="classopal_1_1_context.html">Context</a> &gt; &amp;</td>          <td class="paramname"><span class="paramname"><em>context</em></span></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -279,8 +279,8 @@ Example</h2>
 
 </div>
 </div>
-<a id="a547597b4d6e110454ff56e94943ea1c2" name="a547597b4d6e110454ff56e94943ea1c2"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a547597b4d6e110454ff56e94943ea1c2">&#9670;&#160;</a></span>submitCommandBuffer()</h2>
+<a id="a73b4f7acb3b3edbad7d706f7d43e2d3f" name="a73b4f7acb3b3edbad7d706f7d43e2d3f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a73b4f7acb3b3edbad7d706f7d43e2d3f">&#9670;&#160;</a></span>submitCommandBuffer()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -288,7 +288,7 @@ Example</h2>
         <tr>
           <td class="memname">void opal::Device::submitCommandBuffer </td>
           <td>(</td>
-          <td class="paramtype">std::shared_ptr&lt; <a class="el" href="classopal_1_1_command_buffer.html">CommandBuffer</a> &gt;</td>          <td class="paramname"><span class="paramname"><em>commandBuffer</em></span></td><td>)</td>
+          <td class="paramtype">const std::shared_ptr&lt; <a class="el" href="classopal_1_1_command_buffer.html">CommandBuffer</a> &gt; &amp;</td>          <td class="paramname"><span class="paramname"><em>commandBuffer</em></span></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -309,7 +309,7 @@ Example</h2>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="opal_8h_source.html#l00172">172</a> of file <a class="el" href="opal_8h_source.html">opal.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="opal_8h_source.html#l00170">170</a> of file <a class="el" href="opal_8h_source.html">opal.h</a>.</p>
 
 </div>
 </div>
@@ -333,7 +333,7 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="opal_8h_source.html#l00174">174</a> of file <a class="el" href="opal_8h_source.html">opal.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="opal_8h_source.html#l00172">172</a> of file <a class="el" href="opal_8h_source.html">opal.h</a>.</p>
 
 </div>
 </div>

@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 5</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -134,14 +134,14 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a4271ae40c3e8474f0fb1c547f07a0c59"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs a disconnected pipe.  <br /></td></tr>
 <tr class="memitem:a9d18ab9f6cfc1d86380a8cfb01a83dee" id="r_a9d18ab9f6cfc1d86380a8cfb01a83dee"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="#a9d18ab9f6cfc1d86380a8cfb01a83dee">~NetworkPipe</a> ()</td></tr>
 <tr class="memdesc:a9d18ab9f6cfc1d86380a8cfb01a83dee"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stops the receive thread and closes the socket.  <br /></td></tr>
-<tr class="memitem:a39f3e05a875c0a09ffaf644138850b89" id="r_a39f3e05a875c0a09ffaf644138850b89"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a39f3e05a875c0a09ffaf644138850b89">setPort</a> (int port)</td></tr>
-<tr class="memdesc:a39f3e05a875c0a09ffaf644138850b89"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the server port (defaults to 0 until set).  <br /></td></tr>
+<tr class="memitem:a173fef21f6111b8245508a8ef8daf824" id="r_a173fef21f6111b8245508a8ef8daf824"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a173fef21f6111b8245508a8ef8daf824">setPort</a> (int newPort)</td></tr>
+<tr class="memdesc:a173fef21f6111b8245508a8ef8daf824"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the server port (defaults to 0 until set).  <br /></td></tr>
 <tr class="memitem:a6ce63b4f5106a4f6809119b5d6241b0c" id="r_a6ce63b4f5106a4f6809119b5d6241b0c"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a6ce63b4f5106a4f6809119b5d6241b0c">start</a> ()</td></tr>
 <tr class="memdesc:a6ce63b4f5106a4f6809119b5d6241b0c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Starts the background connection and receive loops.  <br /></td></tr>
 <tr class="memitem:a64cd38c3769c93f2527326e91861db3e" id="r_a64cd38c3769c93f2527326e91861db3e"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a64cd38c3769c93f2527326e91861db3e">stop</a> ()</td></tr>
 <tr class="memdesc:a64cd38c3769c93f2527326e91861db3e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stops background threads and disconnects.  <br /></td></tr>
-<tr class="memitem:a156f717a2fd9c6fa33e79e3035d09265" id="r_a156f717a2fd9c6fa33e79e3035d09265"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a156f717a2fd9c6fa33e79e3035d09265">onRecieve</a> (const <a class="el" href="pipe_8h.html#aa3a8232d8c376ce1e76cb3b261937c8d">PipeCallback</a> &amp;callback)</td></tr>
-<tr class="memdesc:a156f717a2fd9c6fa33e79e3035d09265"><td class="mdescLeft">&#160;</td><td class="mdescRight">Registers a callback to receive messages.  <br /></td></tr>
+<tr class="memitem:a02bf5ae73caafb340cc8d59953b96e35" id="r_a02bf5ae73caafb340cc8d59953b96e35"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a02bf5ae73caafb340cc8d59953b96e35">onReceive</a> (const <a class="el" href="pipe_8h.html#aa3a8232d8c376ce1e76cb3b261937c8d">PipeCallback</a> &amp;callback)</td></tr>
+<tr class="memdesc:a02bf5ae73caafb340cc8d59953b96e35"><td class="mdescLeft">&#160;</td><td class="mdescRight">Registers a callback to receive messages.  <br /></td></tr>
 <tr class="memitem:afde73e0fbee9c211356539dd2a4ffe0e" id="r_afde73e0fbee9c211356539dd2a4ffe0e"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#afde73e0fbee9c211356539dd2a4ffe0e">send</a> (const std::string &amp;message) const</td></tr>
 <tr class="memdesc:afde73e0fbee9c211356539dd2a4ffe0e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sends a raw message to the server.  <br /></td></tr>
 <tr class="memitem:ab59561be936f15deb251f0eed5fa8e46" id="r_ab59561be936f15deb251f0eed5fa8e46"><td class="memItemLeft">std::vector&lt; std::string &gt;&#160;</td><td class="memItemRight"><a class="el" href="#ab59561be936f15deb251f0eed5fa8e46">getMessages</a> ()</td></tr>
@@ -153,8 +153,8 @@ Public Member Functions</h2></td></tr>
 <h2 class="doxsection"><a class="anchor" id="networkpipe-example"></a>
 Example</h2>
 <div class="fragment"><div class="line"><a class="code hl_function" href="#a4271ae40c3e8474f0fb1c547f07a0c59">NetworkPipe</a> pipe;</div>
-<div class="line">pipe.<a class="code hl_function" href="#a39f3e05a875c0a09ffaf644138850b89">setPort</a>(5123);</div>
-<div class="line">pipe.<a class="code hl_function" href="#a156f717a2fd9c6fa33e79e3035d09265">onRecieve</a>([](<span class="keyword">const</span> std::string&amp; msg) {</div>
+<div class="line">pipe.<a class="code hl_function" href="#a173fef21f6111b8245508a8ef8daf824">setPort</a>(5123);</div>
+<div class="line">pipe.onRecieve([](<span class="keyword">const</span> std::string&amp; msg) {</div>
 <div class="line">    std::cout &lt;&lt; <span class="stringliteral">&quot;Tracer: &quot;</span> &lt;&lt; msg &lt;&lt; std::endl;</div>
 <div class="line">});</div>
 <div class="line">pipe.<a class="code hl_function" href="#a6ce63b4f5106a4f6809119b5d6241b0c">start</a>();</div>
@@ -162,8 +162,7 @@ Example</h2>
 <div class="line">pipe.<a class="code hl_function" href="#afde73e0fbee9c211356539dd2a4ffe0e">send</a>(<span class="stringliteral">&quot;hello\n&quot;</span>);</div>
 <div class="line"><span class="comment">// ... later</span></div>
 <div class="line">pipe.<a class="code hl_function" href="#a64cd38c3769c93f2527326e91861db3e">stop</a>();</div>
-<div class="ttc" id="aclass_network_pipe_html_a156f717a2fd9c6fa33e79e3035d09265"><div class="ttname"><a href="#a156f717a2fd9c6fa33e79e3035d09265">NetworkPipe::onRecieve</a></div><div class="ttdeci">void onRecieve(const PipeCallback &amp;callback)</div><div class="ttdoc">Registers a callback to receive messages.</div></div>
-<div class="ttc" id="aclass_network_pipe_html_a39f3e05a875c0a09ffaf644138850b89"><div class="ttname"><a href="#a39f3e05a875c0a09ffaf644138850b89">NetworkPipe::setPort</a></div><div class="ttdeci">void setPort(int port)</div><div class="ttdoc">Sets the server port (defaults to 0 until set).</div></div>
+<div class="ttc" id="aclass_network_pipe_html_a173fef21f6111b8245508a8ef8daf824"><div class="ttname"><a href="#a173fef21f6111b8245508a8ef8daf824">NetworkPipe::setPort</a></div><div class="ttdeci">void setPort(int newPort)</div><div class="ttdoc">Sets the server port (defaults to 0 until set).</div></div>
 <div class="ttc" id="aclass_network_pipe_html_a4271ae40c3e8474f0fb1c547f07a0c59"><div class="ttname"><a href="#a4271ae40c3e8474f0fb1c547f07a0c59">NetworkPipe::NetworkPipe</a></div><div class="ttdeci">NetworkPipe()</div><div class="ttdoc">Constructs a disconnected pipe.</div></div>
 <div class="ttc" id="aclass_network_pipe_html_a64cd38c3769c93f2527326e91861db3e"><div class="ttname"><a href="#a64cd38c3769c93f2527326e91861db3e">NetworkPipe::stop</a></div><div class="ttdeci">void stop()</div><div class="ttdoc">Stops background threads and disconnects.</div></div>
 <div class="ttc" id="aclass_network_pipe_html_a6ce63b4f5106a4f6809119b5d6241b0c"><div class="ttname"><a href="#a6ce63b4f5106a4f6809119b5d6241b0c">NetworkPipe::start</a></div><div class="ttdeci">void start()</div><div class="ttdoc">Starts the background connection and receive loops.</div></div>
@@ -229,14 +228,14 @@ Example</h2>
 
 </div>
 </div>
-<a id="a156f717a2fd9c6fa33e79e3035d09265" name="a156f717a2fd9c6fa33e79e3035d09265"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a156f717a2fd9c6fa33e79e3035d09265">&#9670;&#160;</a></span>onRecieve()</h2>
+<a id="a02bf5ae73caafb340cc8d59953b96e35" name="a02bf5ae73caafb340cc8d59953b96e35"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a02bf5ae73caafb340cc8d59953b96e35">&#9670;&#160;</a></span>onReceive()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">void NetworkPipe::onRecieve </td>
+          <td class="memname">void NetworkPipe::onReceive </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="pipe_8h.html#aa3a8232d8c376ce1e76cb3b261937c8d">PipeCallback</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>callback</em></span></td><td>)</td>
           <td></td>
@@ -267,8 +266,8 @@ Example</h2>
 
 </div>
 </div>
-<a id="a39f3e05a875c0a09ffaf644138850b89" name="a39f3e05a875c0a09ffaf644138850b89"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a39f3e05a875c0a09ffaf644138850b89">&#9670;&#160;</a></span>setPort()</h2>
+<a id="a173fef21f6111b8245508a8ef8daf824" name="a173fef21f6111b8245508a8ef8daf824"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a173fef21f6111b8245508a8ef8daf824">&#9670;&#160;</a></span>setPort()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -276,7 +275,7 @@ Example</h2>
         <tr>
           <td class="memname">void NetworkPipe::setPort </td>
           <td>(</td>
-          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>port</em></span></td><td>)</td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>newPort</em></span></td><td>)</td>
           <td></td>
         </tr>
       </table>

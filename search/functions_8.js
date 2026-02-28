@@ -16,5 +16,6 @@ var searchData=
   ['iskeypressed_13',['isKeyPressed',['../class_window.html#a934998dda7f1a9c513c47684753075fe',1,'Window']]],
   ['islandgenerator_14',['IslandGenerator',['../class_island_generator.html#a950411391dbd8c2b8953aa1d7fd9d2e1',1,'IslandGenerator']]],
   ['isok_15',['isOk',['../class_tracer_services.html#a8f4c2535943abbe2cc20702a3248e485',1,'TracerServices']]],
-  ['isplaying_16',['isPlaying',['../class_audio_source.html#a218980b87a1b223b2e13bcb766567ad1',1,'AudioSource']]]
+  ['isplaying_16',['isPlaying',['../class_audio_source.html#a218980b87a1b223b2e13bcb766567ad1',1,'AudioSource']]],
+  ['isusingatmosphereskybox_17',['isUsingAtmosphereSkybox',['../class_scene.html#a6aea471ae51d45fc3ae7aa0f6aa13f7f',1,'Scene']]]
 ];

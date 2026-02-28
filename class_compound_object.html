@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 5</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -163,7 +163,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a6197d3400c73d8aeaf7501eb952c6333"><td class="mdescLeft">&#160;</td><td class="mdescRight">Obtains the position of the compound object based on its first child.  <br /></td></tr>
 <tr class="memitem:a861e922b1025bb7bfa000ab858470185" id="r_a861e922b1025bb7bfa000ab858470185"><td class="memItemLeft">std::vector&lt; <a class="el" href="struct_core_vertex.html">CoreVertex</a> &gt;&#160;</td><td class="memItemRight"><a class="el" href="#a861e922b1025bb7bfa000ab858470185">getVertices</a> () const override</td></tr>
 <tr class="memdesc:a861e922b1025bb7bfa000ab858470185"><td class="mdescLeft">&#160;</td><td class="mdescRight">Collects the vertices from the first child <a class="el" href="class_core_object.html" title="Represents a 3D object in the scene, including its geometry, material and every interaction with the ...">CoreObject</a> for quick queries such as bounding-box generation.  <br /></td></tr>
-<tr class="memitem:ad506aaf4b387e22b7278581c26978838" id="r_ad506aaf4b387e22b7278581c26978838"><td class="memItemLeft"><a class="el" href="units_8h.html#a1636071d291ee0954efc6d64eb8d94f1">Size3d</a>&#160;</td><td class="memItemRight"><a class="el" href="#ad506aaf4b387e22b7278581c26978838">getScale</a> () const override</td></tr>
+<tr class="memitem:ad506aaf4b387e22b7278581c26978838" id="r_ad506aaf4b387e22b7278581c26978838"><td class="memItemLeft"><a class="el" href="units_8h.html#a64eae7ddcc7a03ddf2cda1866b0fb3aa">Size3d</a>&#160;</td><td class="memItemRight"><a class="el" href="#ad506aaf4b387e22b7278581c26978838">getScale</a> () const override</td></tr>
 <tr class="memdesc:ad506aaf4b387e22b7278581c26978838"><td class="mdescLeft">&#160;</td><td class="mdescRight">Reports the scale of the compound object, mirroring its first child object.  <br /></td></tr>
 <tr class="memitem:a1c28c8c1394e02e46cbc8200ad4dd9dd" id="r_a1c28c8c1394e02e46cbc8200ad4dd9dd"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#a1c28c8c1394e02e46cbc8200ad4dd9dd">canCastShadows</a> () const override</td></tr>
 <tr class="memdesc:a1c28c8c1394e02e46cbc8200ad4dd9dd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Indicates whether the compound object is eligible to cast shadows.  <br /></td></tr>
@@ -173,11 +173,11 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a512eb4315a038b423d94840bbbdf2c88"><td class="mdescLeft">&#160;</td><td class="mdescRight">Translates every child <a class="el" href="class_core_object.html" title="Represents a 3D object in the scene, including its geometry, material and every interaction with the ...">CoreObject</a> by the supplied delta.  <br /></td></tr>
 <tr class="memitem:acabbba275d8064a3024305b2cbab3f13" id="r_acabbba275d8064a3024305b2cbab3f13"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#acabbba275d8064a3024305b2cbab3f13">setRotation</a> (const <a class="el" href="struct_rotation3d.html">Rotation3d</a> &amp;newRotation) override</td></tr>
 <tr class="memdesc:acabbba275d8064a3024305b2cbab3f13"><td class="mdescLeft">&#160;</td><td class="mdescRight">Applies an absolute rotation to all children, maintaining their relative offsets.  <br /></td></tr>
-<tr class="memitem:adfc06444ac6b75df91a53061daaefaec" id="r_adfc06444ac6b75df91a53061daaefaec"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#adfc06444ac6b75df91a53061daaefaec">lookAt</a> (const <a class="el" href="struct_position3d.html">Position3d</a> &amp;target, const <a class="el" href="units_8h.html#abd755c400f9d4026ef36e03056829444">Normal3d</a> &amp;up) override</td></tr>
+<tr class="memitem:adfc06444ac6b75df91a53061daaefaec" id="r_adfc06444ac6b75df91a53061daaefaec"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#adfc06444ac6b75df91a53061daaefaec">lookAt</a> (const <a class="el" href="struct_position3d.html">Position3d</a> &amp;target, const <a class="el" href="units_8h.html#aa79dcdba8644f852dbd5163b96868793">Normal3d</a> &amp;up) override</td></tr>
 <tr class="memdesc:adfc06444ac6b75df91a53061daaefaec"><td class="mdescLeft">&#160;</td><td class="mdescRight">Rotates every child <a class="el" href="class_core_object.html" title="Represents a 3D object in the scene, including its geometry, material and every interaction with the ...">CoreObject</a> around its own origin.  <br /></td></tr>
 <tr class="memitem:a4210275b72af87578ac4f7fd900906cc" id="r_a4210275b72af87578ac4f7fd900906cc"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a4210275b72af87578ac4f7fd900906cc">rotate</a> (const <a class="el" href="struct_rotation3d.html">Rotation3d</a> &amp;deltaRotation) override</td></tr>
 <tr class="memdesc:a4210275b72af87578ac4f7fd900906cc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Applies an incremental rotation to all children.  <br /></td></tr>
-<tr class="memitem:a9d8518bd15108ab12db57641e0c6135b" id="r_a9d8518bd15108ab12db57641e0c6135b"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a9d8518bd15108ab12db57641e0c6135b">setScale</a> (const <a class="el" href="units_8h.html#a3b9b132cddb1dfe2ae572f230abe45f1">Scale3d</a> &amp;newScale) override</td></tr>
+<tr class="memitem:a9d8518bd15108ab12db57641e0c6135b" id="r_a9d8518bd15108ab12db57641e0c6135b"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a9d8518bd15108ab12db57641e0c6135b">setScale</a> (const <a class="el" href="units_8h.html#a533ea67d7bc3c561752563b080663833">Scale3d</a> &amp;newScale) override</td></tr>
 <tr class="memdesc:a9d8518bd15108ab12db57641e0c6135b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Uniformly rescales the compound object across all children.  <br /></td></tr>
 <tr class="memitem:a09510d32cd3dc14631dbb94e3c455ba3" id="r_a09510d32cd3dc14631dbb94e3c455ba3"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a09510d32cd3dc14631dbb94e3c455ba3">hide</a> () override</td></tr>
 <tr class="memdesc:a09510d32cd3dc14631dbb94e3c455ba3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Temporarily removes the aggregate from the render queue.  <br /></td></tr>
@@ -210,7 +210,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a1c66aaf520caf184b1c6df3c435b7a70 inherit pub_methods_class_game_object" id="r_a1c66aaf520caf184b1c6df3c435b7a70"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_game_object.html#a1c66aaf520caf184b1c6df3c435b7a70">onCollisionStay</a> (<a class="el" href="class_game_object.html">GameObject</a> *other)</td></tr>
 <tr class="memitem:a644d47aa6002c5551bd454dd61311136 inherit pub_methods_class_game_object" id="r_a644d47aa6002c5551bd454dd61311136"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_game_object.html#a644d47aa6002c5551bd454dd61311136">onSignalRecieve</a> (const std::string &amp;signal, <a class="el" href="class_game_object.html">GameObject</a> *sender)</td></tr>
 <tr class="memitem:a645b7bb8cebf8db03bc91f08f97f8661 inherit pub_methods_class_game_object" id="r_a645b7bb8cebf8db03bc91f08f97f8661"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_game_object.html#a645b7bb8cebf8db03bc91f08f97f8661">onSignalEnd</a> (const std::string &amp;signal, <a class="el" href="class_game_object.html">GameObject</a> *sender)</td></tr>
-<tr class="memitem:a886057133ff07c4fca8627418d6a8514 inherit pub_methods_class_game_object" id="r_a886057133ff07c4fca8627418d6a8514"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_game_object.html#a886057133ff07c4fca8627418d6a8514">onQueryRecieve</a> (<a class="el" href="struct_query_result.html">QueryResult</a> &amp;result)</td></tr>
+<tr class="memitem:aa88ccdc1e5978128d0619ce137dab25e inherit pub_methods_class_game_object" id="r_aa88ccdc1e5978128d0619ce137dab25e"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_game_object.html#aa88ccdc1e5978128d0619ce137dab25e">onQueryReceive</a> (<a class="el" href="struct_query_result.html">QueryResult</a> &amp;result)</td></tr>
 <tr class="memitem:a8cb421d4a6cb619271d15560d692a593 inherit pub_methods_class_game_object" id="r_a8cb421d4a6cb619271d15560d692a593"><td class="memTemplParams" colspan="2">template&lt;typename T&gt; </td></tr>
 <tr class="memitem:a8cb421d4a6cb619271d15560d692a593 inherit pub_methods_class_game_object template"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="class_game_object.html#a8cb421d4a6cb619271d15560d692a593">addComponent</a> (T &amp;&amp;existing)</td></tr>
 <tr class="memdesc:a8cb421d4a6cb619271d15560d692a593 inherit pub_methods_class_game_object"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a component to the object.  <br /></td></tr>
@@ -270,14 +270,14 @@ Example of a compound object</h2>
 <div class="line">     <span class="comment">// Update car-specific logic, e.g., movement</span></div>
 <div class="line">   }</div>
 <div class="line">};</div>
-<div class="ttc" id="aclass_compound_object_html"><div class="ttname"><a href="class_compound_object.html">CompoundObject</a></div><div class="ttdoc">A Compound object is a GameObject that can be extended by the user to generate objects that encapsula...</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00428">component.h:428</a></div></div>
-<div class="ttc" id="aclass_compound_object_html_a66cf249148e238c3b28b131dc353fe66"><div class="ttname"><a href="#a66cf249148e238c3b28b131dc353fe66">CompoundObject::addObject</a></div><div class="ttdeci">void addObject(GameObject *obj)</div><div class="ttdoc">Adds a component to the object.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00544">component.h:544</a></div></div>
-<div class="ttc" id="aclass_compound_object_html_acf1f71aaebd2b73fa8da5e586d214484"><div class="ttname"><a href="#acf1f71aaebd2b73fa8da5e586d214484">CompoundObject::updateObjects</a></div><div class="ttdeci">virtual void updateObjects(Window &amp;window)</div><div class="ttdoc">Updates the objects within the compound object.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00452">component.h:452</a></div></div>
-<div class="ttc" id="aclass_compound_object_html_ae606cb70c43eeba4f75e129f8969f703"><div class="ttname"><a href="#ae606cb70c43eeba4f75e129f8969f703">CompoundObject::init</a></div><div class="ttdeci">virtual void init()</div><div class="ttdoc">Initializes the compound object.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00457">component.h:457</a></div></div>
+<div class="ttc" id="aclass_compound_object_html"><div class="ttname"><a href="class_compound_object.html">CompoundObject</a></div><div class="ttdoc">A Compound object is a GameObject that can be extended by the user to generate objects that encapsula...</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00443">component.h:443</a></div></div>
+<div class="ttc" id="aclass_compound_object_html_a66cf249148e238c3b28b131dc353fe66"><div class="ttname"><a href="#a66cf249148e238c3b28b131dc353fe66">CompoundObject::addObject</a></div><div class="ttdeci">void addObject(GameObject *obj)</div><div class="ttdoc">Adds a component to the object.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00559">component.h:559</a></div></div>
+<div class="ttc" id="aclass_compound_object_html_acf1f71aaebd2b73fa8da5e586d214484"><div class="ttname"><a href="#acf1f71aaebd2b73fa8da5e586d214484">CompoundObject::updateObjects</a></div><div class="ttdeci">virtual void updateObjects(Window &amp;window)</div><div class="ttdoc">Updates the objects within the compound object.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00467">component.h:467</a></div></div>
+<div class="ttc" id="aclass_compound_object_html_ae606cb70c43eeba4f75e129f8969f703"><div class="ttname"><a href="#ae606cb70c43eeba4f75e129f8969f703">CompoundObject::init</a></div><div class="ttdeci">virtual void init()</div><div class="ttdoc">Initializes the compound object.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00472">component.h:472</a></div></div>
 <div class="ttc" id="aclass_core_object_html"><div class="ttname"><a href="class_core_object.html">CoreObject</a></div><div class="ttdoc">Represents a 3D object in the scene, including its geometry, material and every interaction with the ...</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00275">object.h:275</a></div></div>
-<div class="ttc" id="aclass_window_html"><div class="ttname"><a href="class_window.html">Window</a></div><div class="ttdoc">Structure representing a window in the application. This contains the main interface for interacting ...</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00241">window.h:241</a></div></div>
+<div class="ttc" id="aclass_window_html"><div class="ttname"><a href="class_window.html">Window</a></div><div class="ttdoc">Structure representing a window in the application. This contains the main interface for interacting ...</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00240">window.h:240</a></div></div>
 </div><!-- fragment --> 
-<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00428">428</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00443">443</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
 <a id="a66cf249148e238c3b28b131dc353fe66" name="a66cf249148e238c3b28b131dc353fe66"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a66cf249148e238c3b28b131dc353fe66">&#9670;&#160;</a></span>addObject()</h2>
@@ -311,17 +311,17 @@ Example of a compound object</h2>
 </dl>
 <dl class="section warning"><dt>Warning</dt><dd>It must be long-lived. This means that declaring it as a class property is a good idea. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00544">544</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  544</span>                                           {</div>
-<div class="line"><span class="lineno">  545</span>        <a class="code hl_variable" href="#a3bf2527da20abdca0ae64d4d9793d215">objects</a>.push_back(obj);</div>
-<div class="line"><span class="lineno">  546</span>        <span class="keywordflow">if</span> (obj != <span class="keyword">nullptr</span> &amp;&amp; obj-&gt;<a class="code hl_variable" href="class_renderable.html#a0ab1fff21021a706629d466964950467">renderLateForward</a>) {</div>
-<div class="line"><span class="lineno">  547</span>            lateForwardObjects.push_back(obj);</div>
-<div class="line"><span class="lineno">  548</span>        }</div>
-<div class="line"><span class="lineno">  549</span>    }</div>
-<div class="ttc" id="aclass_compound_object_html_a3bf2527da20abdca0ae64d4d9793d215"><div class="ttname"><a href="#a3bf2527da20abdca0ae64d4d9793d215">CompoundObject::objects</a></div><div class="ttdeci">std::vector&lt; GameObject * &gt; objects</div><div class="ttdoc">The objects that make up the compound object.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00434">component.h:434</a></div></div>
+<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00559">559</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  559</span>                                           {</div>
+<div class="line"><span class="lineno">  560</span>        <a class="code hl_variable" href="#a3bf2527da20abdca0ae64d4d9793d215">objects</a>.push_back(obj);</div>
+<div class="line"><span class="lineno">  561</span>        <span class="keywordflow">if</span> (obj != <span class="keyword">nullptr</span> &amp;&amp; obj-&gt;<a class="code hl_variable" href="class_renderable.html#a0ab1fff21021a706629d466964950467">renderLateForward</a>) {</div>
+<div class="line"><span class="lineno">  562</span>            lateForwardObjects.push_back(obj);</div>
+<div class="line"><span class="lineno">  563</span>        }</div>
+<div class="line"><span class="lineno">  564</span>    }</div>
+<div class="ttc" id="aclass_compound_object_html_a3bf2527da20abdca0ae64d4d9793d215"><div class="ttname"><a href="#a3bf2527da20abdca0ae64d4d9793d215">CompoundObject::objects</a></div><div class="ttdeci">std::vector&lt; GameObject * &gt; objects</div><div class="ttdoc">The objects that make up the compound object.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00449">component.h:449</a></div></div>
 <div class="ttc" id="aclass_renderable_html_a0ab1fff21021a706629d466964950467"><div class="ttname"><a href="class_renderable.html#a0ab1fff21021a706629d466964950467">Renderable::renderLateForward</a></div><div class="ttdeci">bool renderLateForward</div><div class="ttdoc">Whether the object must be moved to the late forward rendering pipeline. Objects flagged here are ski...</div><div class="ttdef"><b>Definition</b> <a href="renderable_8h_source.html#l00184">renderable.h:184</a></div></div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="component_8h_source.html#l00182">GameObject::GameObject()</a>, <a class="el" href="component_8h_source.html#l00434">objects</a>, and <a class="el" href="renderable_8h_source.html#l00184">Renderable::renderLateForward</a>.</p>
+<p class="reference">References <a class="el" href="component_8h_source.html#l00194">GameObject::GameObject()</a>, <a class="el" href="component_8h_source.html#l00449">objects</a>, and <a class="el" href="renderable_8h_source.html#l00184">Renderable::renderLateForward</a>.</p>
 
 </div>
 </div>
@@ -471,7 +471,7 @@ Example of a compound object</h2>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="units_8h.html#a1636071d291ee0954efc6d64eb8d94f1">Size3d</a> CompoundObject::getScale </td>
+          <td class="memname"><a class="el" href="units_8h.html#a64eae7ddcc7a03ddf2cda1866b0fb3aa">Size3d</a> CompoundObject::getScale </td>
           <td>(</td>
           <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
           <td> const</td>
@@ -573,8 +573,8 @@ Example of a compound object</h2>
 
 <p>Initializes the compound object. </p>
 
-<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00457">457</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  457</span>{};</div>
+<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00472">472</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  472</span>{};</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -624,7 +624,7 @@ Example of a compound object</h2>
         <tr>
           <td class="paramkey"></td>
           <td></td>
-          <td class="paramtype">const <a class="el" href="units_8h.html#abd755c400f9d4026ef36e03056829444">Normal3d</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>up</em></span>&#160;)</td>
+          <td class="paramtype">const <a class="el" href="units_8h.html#aa79dcdba8644f852dbd5163b96868793">Normal3d</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>up</em></span>&#160;)</td>
         </tr>
       </table>
   </td>
@@ -864,7 +864,7 @@ Example of a compound object</h2>
         <tr>
           <td class="memname">void CompoundObject::setScale </td>
           <td>(</td>
-          <td class="paramtype">const <a class="el" href="units_8h.html#a3b9b132cddb1dfe2ae572f230abe45f1">Scale3d</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>newScale</em></span></td><td>)</td>
+          <td class="paramtype">const <a class="el" href="units_8h.html#a533ea67d7bc3c561752563b080663833">Scale3d</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>newScale</em></span></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -999,8 +999,8 @@ Example of a compound object</h2>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00452">452</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  452</span>{};</div>
+<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00467">467</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  467</span>{};</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -1019,7 +1019,7 @@ Example of a compound object</h2>
 
 <p>The objects that make up the compound object. </p>
 
-<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00434">434</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00449">449</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
 
 </div>
 </div>

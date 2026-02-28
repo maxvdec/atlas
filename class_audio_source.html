@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 5</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -134,8 +134,8 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a58ad52e32668f022d45fa6239e56a85c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructs a new <a class="el" href="class_audio_source.html" title="Class representing an audio source that can play audio data with 3D spatial positioning.">AudioSource</a>.  <br /></td></tr>
 <tr class="memitem:a4d4b2be34ec676bf01d1ca1784f79a07" id="r_a4d4b2be34ec676bf01d1ca1784f79a07"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="#a4d4b2be34ec676bf01d1ca1784f79a07">~AudioSource</a> ()</td></tr>
 <tr class="memdesc:a4d4b2be34ec676bf01d1ca1784f79a07"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destructor for <a class="el" href="class_audio_source.html" title="Class representing an audio source that can play audio data with 3D spatial positioning.">AudioSource</a>.  <br /></td></tr>
-<tr class="memitem:aad1ccaf6b4dd4b9facebed6954d92d56" id="r_aad1ccaf6b4dd4b9facebed6954d92d56"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#aad1ccaf6b4dd4b9facebed6954d92d56">setData</a> (std::shared_ptr&lt; <a class="el" href="class_audio_data.html">AudioData</a> &gt; buffer)</td></tr>
-<tr class="memdesc:aad1ccaf6b4dd4b9facebed6954d92d56"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the audio data for this source.  <br /></td></tr>
+<tr class="memitem:a97e0411ac2834dd677b83ec9b9ce600b" id="r_a97e0411ac2834dd677b83ec9b9ce600b"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a97e0411ac2834dd677b83ec9b9ce600b">setData</a> (const std::shared_ptr&lt; <a class="el" href="class_audio_data.html">AudioData</a> &gt; &amp;buffer)</td></tr>
+<tr class="memdesc:a97e0411ac2834dd677b83ec9b9ce600b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the audio data for this source.  <br /></td></tr>
 <tr class="memitem:aa67087209ce640f1a4b1766f2b59b004" id="r_aa67087209ce640f1a4b1766f2b59b004"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#aa67087209ce640f1a4b1766f2b59b004">fromFile</a> (<a class="el" href="struct_resource.html">Resource</a> resource)</td></tr>
 <tr class="memdesc:aa67087209ce640f1a4b1766f2b59b004"><td class="mdescLeft">&#160;</td><td class="mdescRight">Loads audio data directly from a resource file.  <br /></td></tr>
 <tr class="memitem:a4b27391ad7ea7a98b16fd163fcd0deec" id="r_a4b27391ad7ea7a98b16fd163fcd0deec"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a4b27391ad7ea7a98b16fd163fcd0deec">play</a> ()</td></tr>
@@ -152,7 +152,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a6ae2303b3f3abcae075da240a08230cd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the pitch of the audio source.  <br /></td></tr>
 <tr class="memitem:a78010220d278d296911c55f3a8639d21" id="r_a78010220d278d296911c55f3a8639d21"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a78010220d278d296911c55f3a8639d21">setPosition</a> (<a class="el" href="struct_position3d.html">Position3d</a> position)</td></tr>
 <tr class="memdesc:a78010220d278d296911c55f3a8639d21"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the 3D position of the audio source.  <br /></td></tr>
-<tr class="memitem:a26ca17b8c465dd8677f166677adf72dc" id="r_a26ca17b8c465dd8677f166677adf72dc"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a26ca17b8c465dd8677f166677adf72dc">setVelocity</a> (<a class="el" href="units_8h.html#af1efe03080186b94608ab2d50c060fe5">Magnitude3d</a> velocity)</td></tr>
+<tr class="memitem:a26ca17b8c465dd8677f166677adf72dc" id="r_a26ca17b8c465dd8677f166677adf72dc"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a26ca17b8c465dd8677f166677adf72dc">setVelocity</a> (<a class="el" href="units_8h.html#afa7de6f8211b70367d0d4a845db0369a">Magnitude3d</a> velocity)</td></tr>
 <tr class="memdesc:a26ca17b8c465dd8677f166677adf72dc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the velocity of the audio source for Doppler effects.  <br /></td></tr>
 <tr class="memitem:a218980b87a1b223b2e13bcb766567ad1" id="r_a218980b87a1b223b2e13bcb766567ad1"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#a218980b87a1b223b2e13bcb766567ad1">isPlaying</a> () const</td></tr>
 <tr class="memdesc:a218980b87a1b223b2e13bcb766567ad1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if the audio is currently playing.  <br /></td></tr>
@@ -160,8 +160,8 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a1f6570f5cbaa6a53d2a9a2166f59d10e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Starts playing from a specific time position.  <br /></td></tr>
 <tr class="memitem:a8ff385cdf0ee28080bc7646411974f16" id="r_a8ff385cdf0ee28080bc7646411974f16"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a8ff385cdf0ee28080bc7646411974f16">disableSpatialization</a> ()</td></tr>
 <tr class="memdesc:a8ff385cdf0ee28080bc7646411974f16"><td class="mdescLeft">&#160;</td><td class="mdescRight">Disables 3D spatialization for this source.  <br /></td></tr>
-<tr class="memitem:a078e286932afe304e0eabb8455c266a5" id="r_a078e286932afe304e0eabb8455c266a5"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a078e286932afe304e0eabb8455c266a5">applyEffect</a> (const <a class="el" href="class_audio_effect.html">AudioEffect</a> &amp;effect)</td></tr>
-<tr class="memdesc:a078e286932afe304e0eabb8455c266a5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Applies an audio effect to this source.  <br /></td></tr>
+<tr class="memitem:afa60a605b0f4404c6fc1d4ff1ba582f1" id="r_afa60a605b0f4404c6fc1d4ff1ba582f1"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#afa60a605b0f4404c6fc1d4ff1ba582f1">applyEffect</a> (const <a class="el" href="class_audio_effect.html">AudioEffect</a> &amp;effect) const</td></tr>
+<tr class="memdesc:afa60a605b0f4404c6fc1d4ff1ba582f1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Applies an audio effect to this source.  <br /></td></tr>
 <tr class="memitem:a81bd901dfb95e147e8e8cff13323db17" id="r_a81bd901dfb95e147e8e8cff13323db17"><td class="memItemLeft"><a class="el" href="struct_position3d.html">Position3d</a>&#160;</td><td class="memItemRight"><a class="el" href="#a81bd901dfb95e147e8e8cff13323db17">getPosition</a> () const</td></tr>
 <tr class="memdesc:a81bd901dfb95e147e8e8cff13323db17"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets the current position of the audio source.  <br /></td></tr>
 <tr class="memitem:afa4f481b91d4989ac25137c82c2d3346" id="r_afa4f481b91d4989ac25137c82c2d3346"><td class="memItemLeft"><a class="el" href="struct_position3d.html">Position3d</a>&#160;</td><td class="memItemRight"><a class="el" href="#afa4f481b91d4989ac25137c82c2d3346">getListenerPosition</a> () const</td></tr>
@@ -228,8 +228,8 @@ Example</h2>
 </div>
 </div>
 <a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
-<a id="a078e286932afe304e0eabb8455c266a5" name="a078e286932afe304e0eabb8455c266a5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a078e286932afe304e0eabb8455c266a5">&#9670;&#160;</a></span>applyEffect()</h2>
+<a id="afa60a605b0f4404c6fc1d4ff1ba582f1" name="afa60a605b0f4404c6fc1d4ff1ba582f1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afa60a605b0f4404c6fc1d4ff1ba582f1">&#9670;&#160;</a></span>applyEffect()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -238,7 +238,7 @@ Example</h2>
           <td class="memname">void AudioSource::applyEffect </td>
           <td>(</td>
           <td class="paramtype">const <a class="el" href="class_audio_effect.html">AudioEffect</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>effect</em></span></td><td>)</td>
-          <td></td>
+          <td> const</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -420,8 +420,8 @@ Example</h2>
 
 </div>
 </div>
-<a id="aad1ccaf6b4dd4b9facebed6954d92d56" name="aad1ccaf6b4dd4b9facebed6954d92d56"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aad1ccaf6b4dd4b9facebed6954d92d56">&#9670;&#160;</a></span>setData()</h2>
+<a id="a97e0411ac2834dd677b83ec9b9ce600b" name="a97e0411ac2834dd677b83ec9b9ce600b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a97e0411ac2834dd677b83ec9b9ce600b">&#9670;&#160;</a></span>setData()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -429,7 +429,7 @@ Example</h2>
         <tr>
           <td class="memname">void AudioSource::setData </td>
           <td>(</td>
-          <td class="paramtype">std::shared_ptr&lt; <a class="el" href="class_audio_data.html">AudioData</a> &gt;</td>          <td class="paramname"><span class="paramname"><em>buffer</em></span></td><td>)</td>
+          <td class="paramtype">const std::shared_ptr&lt; <a class="el" href="class_audio_data.html">AudioData</a> &gt; &amp;</td>          <td class="paramname"><span class="paramname"><em>buffer</em></span></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -529,7 +529,7 @@ Example</h2>
         <tr>
           <td class="memname">void AudioSource::setVelocity </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="units_8h.html#af1efe03080186b94608ab2d50c060fe5">Magnitude3d</a></td>          <td class="paramname"><span class="paramname"><em>velocity</em></span></td><td>)</td>
+          <td class="paramtype"><a class="el" href="units_8h.html#afa7de6f8211b70367d0d4a845db0369a">Magnitude3d</a></td>          <td class="paramname"><span class="paramname"><em>velocity</em></span></td><td>)</td>
           <td></td>
         </tr>
       </table>

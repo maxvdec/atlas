@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 5</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -172,7 +172,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a644269034ac58f64e47d88846c365cf4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to get the position of the object in 3D space.  <br /></td></tr>
 <tr class="memitem:a699e0a52700234e195a44f7be4e4d531" id="r_a699e0a52700234e195a44f7be4e4d531"><td class="memItemLeft">virtual std::vector&lt; <a class="el" href="struct_core_vertex.html">CoreVertex</a> &gt;&#160;</td><td class="memItemRight"><a class="el" href="#a699e0a52700234e195a44f7be4e4d531">getVertices</a> () const</td></tr>
 <tr class="memdesc:a699e0a52700234e195a44f7be4e4d531"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to get the vertices of the object in 3D space.  <br /></td></tr>
-<tr class="memitem:a98ddcdedf7f0c6d440be821c80d6ed12" id="r_a98ddcdedf7f0c6d440be821c80d6ed12"><td class="memItemLeft">virtual <a class="el" href="units_8h.html#a1636071d291ee0954efc6d64eb8d94f1">Size3d</a>&#160;</td><td class="memItemRight"><a class="el" href="#a98ddcdedf7f0c6d440be821c80d6ed12">getScale</a> () const</td></tr>
+<tr class="memitem:a98ddcdedf7f0c6d440be821c80d6ed12" id="r_a98ddcdedf7f0c6d440be821c80d6ed12"><td class="memItemLeft">virtual <a class="el" href="units_8h.html#a64eae7ddcc7a03ddf2cda1866b0fb3aa">Size3d</a>&#160;</td><td class="memItemRight"><a class="el" href="#a98ddcdedf7f0c6d440be821c80d6ed12">getScale</a> () const</td></tr>
 <tr class="memdesc:a98ddcdedf7f0c6d440be821c80d6ed12"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to get the scale of the object in 3D space.  <br /></td></tr>
 <tr class="memitem:a54a97abc4b6fe3280505da3b587cba98" id="r_a54a97abc4b6fe3280505da3b587cba98"><td class="memItemLeft">virtual bool&#160;</td><td class="memItemRight"><a class="el" href="#a54a97abc4b6fe3280505da3b587cba98">canCastShadows</a> () const</td></tr>
 <tr class="memdesc:a54a97abc4b6fe3280505da3b587cba98"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to determine if the object can cast shadows. Can be overridden by derived classes.  <br /></td></tr>
@@ -240,7 +240,7 @@ Example</h2>
 <div class="ttc" id="aclass_renderable_html_aaa53405a3eb174752fce5e4a2fc8dca8"><div class="ttname"><a href="#aaa53405a3eb174752fce5e4a2fc8dca8">Renderable::initialize</a></div><div class="ttdeci">virtual void initialize()</div><div class="ttdoc">Function to initialize the object. Can be overridden by derived.</div><div class="ttdef"><b>Definition</b> <a href="renderable_8h_source.html#l00092">renderable.h:92</a></div></div>
 <div class="ttc" id="aclass_renderable_html_ae1b11967b98e6ba4393640652242083f"><div class="ttname"><a href="#ae1b11967b98e6ba4393640652242083f">Renderable::setViewMatrix</a></div><div class="ttdeci">virtual void setViewMatrix(const glm::mat4 &amp;view)</div><div class="ttdoc">Function to set the view matrix for the object. Called from Window for internal purposes.</div><div class="ttdef"><b>Definition</b> <a href="renderable_8h_source.html#l00109">renderable.h:109</a></div></div>
 <div class="ttc" id="aclass_renderable_html_afb2aa3ad0ab8dcfc54088173ea7182cd"><div class="ttname"><a href="#afb2aa3ad0ab8dcfc54088173ea7182cd">Renderable::update</a></div><div class="ttdeci">virtual void update(Window &amp;window)</div><div class="ttdoc">Function to update the object each frame.</div><div class="ttdef"><b>Definition</b> <a href="renderable_8h_source.html#l00102">renderable.h:102</a></div></div>
-<div class="ttc" id="aclassopal_1_1_device_html"><div class="ttname"><a href="classopal_1_1_device.html">opal::Device</a></div><div class="ttdoc">Represents the rendering device abstraction for OpenGL/Vulkan. Manages command buffer acquisition,...</div><div class="ttdef"><b>Definition</b> <a href="opal_8h_source.html#l00157">opal.h:157</a></div></div>
+<div class="ttc" id="aclassopal_1_1_device_html"><div class="ttname"><a href="classopal_1_1_device.html">opal::Device</a></div><div class="ttdoc">Represents the rendering device abstraction for OpenGL/Vulkan. Manages command buffer acquisition,...</div><div class="ttdef"><b>Definition</b> <a href="opal_8h_source.html#l00153">opal.h:153</a></div></div>
 <div class="ttc" id="astruct_position3d_html"><div class="ttname"><a href="struct_position3d.html">Position3d</a></div><div class="ttdoc">Structure representing a position in 3D space with double precision. Provides arithmetic operations a...</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00033">units.h:33</a></div></div>
 </div><!-- fragment --> 
 <p class="definition">Definition at line <a class="el" href="renderable_8h_source.html#l00074">74</a> of file <a class="el" href="renderable_8h_source.html">renderable.h</a>.</p>
@@ -472,7 +472,7 @@ Example</h2>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">virtual <a class="el" href="units_8h.html#a1636071d291ee0954efc6d64eb8d94f1">Size3d</a> Renderable::getScale </td>
+          <td class="memname">virtual <a class="el" href="units_8h.html#a64eae7ddcc7a03ddf2cda1866b0fb3aa">Size3d</a> Renderable::getScale </td>
           <td>(</td>
           <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
           <td> const</td>
@@ -486,7 +486,7 @@ Example</h2>
 </div><div class="memdoc">
 
 <p>Function to get the scale of the object in 3D space. </p>
-<dl class="section return"><dt>Returns</dt><dd>The scale of the object as a <a class="el" href="units_8h.html#a1636071d291ee0954efc6d64eb8d94f1" title="Type alias for 3D size dimensions.">Size3d</a> struct. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>The scale of the object as a <a class="el" href="units_8h.html#a64eae7ddcc7a03ddf2cda1866b0fb3aa" title="Type alias for 3D size dimensions.">Size3d</a> struct. </dd></dl>
 
 <p>Reimplemented in <a class="el" href="class_compound_object.html#ad506aaf4b387e22b7278581c26978838">CompoundObject</a>, <a class="el" href="class_core_object.html#a8c8169d24e303581bc1ce6d0ac8cb92d">CoreObject</a>, and <a class="el" href="struct_fluid.html#a28e59e0bb5e3c479f5cb9ede6b15677c">Fluid</a>.</p>
 
@@ -698,7 +698,7 @@ Example</h2>
   </dd>
 </dl>
 
-<p>Reimplemented in <a class="el" href="class_compound_object.html#aac8d17efbe766307e322e4da95c425dc">CompoundObject</a>, <a class="el" href="class_core_object.html#a9f6f1a397e126ef606125f4fd261f40d">CoreObject</a>, <a class="el" href="struct_fluid.html#a9bbf2c42501fb5d18e2271255d05864c">Fluid</a>, <a class="el" href="class_model.html#a778fb43b905eb3520d8b348eab82e89b">Model</a>, <a class="el" href="class_particle_emitter.html#a46a3bd7e0981249a61b6b6433df7e3bd">ParticleEmitter</a>, <a class="el" href="class_skybox.html#a83a3864abcb171c4f223a58d97575e54">Skybox</a>, <a class="el" href="class_terrain.html#abccd0b3c70648c3a463e837db844e021">Terrain</a>, and <a class="el" href="class_u_i_view.html#aa23733f2e111456cbeb74cba03bc259c">UIView</a>.</p>
+<p>Reimplemented in <a class="el" href="class_compound_object.html#aac8d17efbe766307e322e4da95c425dc">CompoundObject</a>, <a class="el" href="class_core_object.html#a9f6f1a397e126ef606125f4fd261f40d">CoreObject</a>, <a class="el" href="struct_fluid.html#a9bbf2c42501fb5d18e2271255d05864c">Fluid</a>, <a class="el" href="class_model.html#a778fb43b905eb3520d8b348eab82e89b">Model</a>, <a class="el" href="class_particle_emitter.html#a8b2ae2752ddf7baa51e5b75848932b0a">ParticleEmitter</a>, <a class="el" href="class_skybox.html#a73068623517fc44f04574290ff4e3fae">Skybox</a>, <a class="el" href="class_terrain.html#abccd0b3c70648c3a463e837db844e021">Terrain</a>, and <a class="el" href="class_u_i_view.html#aa23733f2e111456cbeb74cba03bc259c">UIView</a>.</p>
 
 <p class="definition">Definition at line <a class="el" href="renderable_8h_source.html#l00117">117</a> of file <a class="el" href="renderable_8h_source.html">renderable.h</a>.</p>
 <div class="fragment"><div class="line"><span class="lineno">  117</span>{};</div>
@@ -766,7 +766,7 @@ Example</h2>
   </dd>
 </dl>
 
-<p>Reimplemented in <a class="el" href="class_compound_object.html#aca7a1eb53db643e28c4e886896c56a62">CompoundObject</a>, <a class="el" href="class_core_object.html#a11d7ee2d80f597b75ebc745fee83341f">CoreObject</a>, <a class="el" href="struct_fluid.html#aab2d9813ce93f44e31a2554b557c7942">Fluid</a>, <a class="el" href="class_model.html#ab1bc68ab2ef747780f89d5f2954ca05b">Model</a>, <a class="el" href="class_particle_emitter.html#a69bad006c8fb4611ad3bdd3df138af4b">ParticleEmitter</a>, <a class="el" href="class_skybox.html#afead5bf73c14712ac0654e5a3e3f35a6">Skybox</a>, <a class="el" href="class_terrain.html#ae2e5016c3e0c967d1d4bc818d411fb08">Terrain</a>, and <a class="el" href="class_u_i_view.html#a206aba53465de15a282ef399630c7868">UIView</a>.</p>
+<p>Reimplemented in <a class="el" href="class_compound_object.html#aca7a1eb53db643e28c4e886896c56a62">CompoundObject</a>, <a class="el" href="class_core_object.html#a11d7ee2d80f597b75ebc745fee83341f">CoreObject</a>, <a class="el" href="struct_fluid.html#aab2d9813ce93f44e31a2554b557c7942">Fluid</a>, <a class="el" href="class_model.html#ab1bc68ab2ef747780f89d5f2954ca05b">Model</a>, <a class="el" href="class_particle_emitter.html#a721156f4d33170c87f04beb8881f7e19">ParticleEmitter</a>, <a class="el" href="class_skybox.html#a4c383f3be4590a1698000c556d6d6b7a">Skybox</a>, <a class="el" href="class_terrain.html#ae2e5016c3e0c967d1d4bc818d411fb08">Terrain</a>, and <a class="el" href="class_u_i_view.html#a206aba53465de15a282ef399630c7868">UIView</a>.</p>
 
 <p class="definition">Definition at line <a class="el" href="renderable_8h_source.html#l00109">109</a> of file <a class="el" href="renderable_8h_source.html">renderable.h</a>.</p>
 <div class="fragment"><div class="line"><span class="lineno">  109</span>{};</div>

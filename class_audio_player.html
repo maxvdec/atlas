@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 5</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -185,7 +185,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:af86cc990a53aa9b9c3d70572558aecb5 inherit pub_methods_class_component" id="r_af86cc990a53aa9b9c3d70572558aecb5"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_component.html#af86cc990a53aa9b9c3d70572558aecb5">onCollisionStay</a> (<a class="el" href="class_game_object.html">GameObject</a> *other)</td></tr>
 <tr class="memitem:a9749b406011df2556b004acd2f032935 inherit pub_methods_class_component" id="r_a9749b406011df2556b004acd2f032935"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_component.html#a9749b406011df2556b004acd2f032935">onSignalRecieve</a> (const std::string &amp;signal, <a class="el" href="class_game_object.html">GameObject</a> *sender)</td></tr>
 <tr class="memitem:aeea623ce757a97a895a2500f6de6a33c inherit pub_methods_class_component" id="r_aeea623ce757a97a895a2500f6de6a33c"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_component.html#aeea623ce757a97a895a2500f6de6a33c">onSignalEnd</a> (const std::string &amp;signal, <a class="el" href="class_game_object.html">GameObject</a> *sender)</td></tr>
-<tr class="memitem:a0f6d2f7ffd806c10cf675d85b22f012b inherit pub_methods_class_component" id="r_a0f6d2f7ffd806c10cf675d85b22f012b"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_component.html#a0f6d2f7ffd806c10cf675d85b22f012b">onQueryRecieve</a> (<a class="el" href="struct_query_result.html">QueryResult</a> &amp;result)</td></tr>
+<tr class="memitem:a7ad81a397c06433353d21b1d5aa7eda9 inherit pub_methods_class_component" id="r_a7ad81a397c06433353d21b1d5aa7eda9"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_component.html#a7ad81a397c06433353d21b1d5aa7eda9">onQueryReceive</a> (<a class="el" href="struct_query_result.html">QueryResult</a> &amp;result)</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -210,7 +210,7 @@ Example</h2>
 <div class="line">audioPlayer-&gt;play();</div>
 <div class="ttc" id="aclass_workspace_html_a8588fb898bffea4777ceffab7c2c7795"><div class="ttname"><a href="class_workspace.html#a8588fb898bffea4777ceffab7c2c7795">Workspace::get</a></div><div class="ttdeci">static Workspace &amp; get()</div><div class="ttdef"><b>Definition</b> <a href="workspace_8h_source.html#l00091">workspace.h:91</a></div></div>
 </div><!-- fragment --> 
-<p class="definition">Definition at line <a class="el" href="atlas_2audio_8h_source.html#l00042">42</a> of file <a class="el" href="atlas_2audio_8h_source.html">audio.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="atlas_2audio_8h_source.html#l00043">43</a> of file <a class="el" href="atlas_2audio_8h_source.html">audio.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="aa0545193648596a6e541fe964f16f902" name="aa0545193648596a6e541fe964f16f902"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aa0545193648596a6e541fe964f16f902">&#9670;&#160;</a></span>AudioPlayer() <span class="overload">[1/3]</span></h2>
@@ -237,8 +237,8 @@ Example</h2>
 
 <p>Construct a new empty <a class="el" href="class_audio_player.html" title="Component that provides audio playback capabilities to an object. It can be attach to any object in t...">AudioPlayer</a> object. </p>
 
-<p class="definition">Definition at line <a class="el" href="atlas_2audio_8h_source.html#l00048">48</a> of file <a class="el" href="atlas_2audio_8h_source.html">audio.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   48</span>: sourceInitialized(<span class="keyword">false</span>) {}</div>
+<p class="definition">Definition at line <a class="el" href="atlas_2audio_8h_source.html#l00049">49</a> of file <a class="el" href="atlas_2audio_8h_source.html">audio.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   49</span>{}</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -267,7 +267,7 @@ Example</h2>
 
 <p>Destroy the Audio Player object and release resources. </p>
 
-<p class="reference">References <a class="el" href="atlas_2audio_8h_source.html#l00048">AudioPlayer()</a>.</p>
+<p class="reference">References <a class="el" href="atlas_2audio_8h_source.html#l00049">AudioPlayer()</a>.</p>
 
 </div>
 </div>
@@ -302,14 +302,14 @@ Example</h2>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="atlas_2audio_8h_source.html#l00067">67</a> of file <a class="el" href="atlas_2audio_8h_source.html">audio.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   68</span>        : <a class="code hl_variable" href="#a57f411e3ce3d3aef39af086788595708">source</a>(std::move(other.<a class="code hl_variable" href="#a57f411e3ce3d3aef39af086788595708">source</a>)),</div>
-<div class="line"><span class="lineno">   69</span>          sourceInitialized(other.sourceInitialized) {</div>
-<div class="line"><span class="lineno">   70</span>        other.sourceInitialized = <span class="keyword">false</span>;</div>
-<div class="line"><span class="lineno">   71</span>    }</div>
-<div class="ttc" id="aclass_audio_player_html_a57f411e3ce3d3aef39af086788595708"><div class="ttname"><a href="#a57f411e3ce3d3aef39af086788595708">AudioPlayer::source</a></div><div class="ttdeci">std::unique_ptr&lt; AudioSource &gt; source</div><div class="ttdoc">Get the audio source. This allows for advanced manipulation of the audio playback.</div><div class="ttdef"><b>Definition</b> <a href="atlas_2audio_8h_source.html#l00194">audio.h:194</a></div></div>
+<p class="definition">Definition at line <a class="el" href="atlas_2audio_8h_source.html#l00068">68</a> of file <a class="el" href="atlas_2audio_8h_source.html">audio.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   69</span>        : <a class="code hl_variable" href="#a57f411e3ce3d3aef39af086788595708">source</a>(std::move(other.<a class="code hl_variable" href="#a57f411e3ce3d3aef39af086788595708">source</a>)),</div>
+<div class="line"><span class="lineno">   70</span>          sourceInitialized(other.sourceInitialized) {</div>
+<div class="line"><span class="lineno">   71</span>        other.sourceInitialized = <span class="keyword">false</span>;</div>
+<div class="line"><span class="lineno">   72</span>    }</div>
+<div class="ttc" id="aclass_audio_player_html_a57f411e3ce3d3aef39af086788595708"><div class="ttname"><a href="#a57f411e3ce3d3aef39af086788595708">AudioPlayer::source</a></div><div class="ttdeci">std::unique_ptr&lt; AudioSource &gt; source</div><div class="ttdoc">Get the audio source. This allows for advanced manipulation of the audio playback.</div><div class="ttdef"><b>Definition</b> <a href="atlas_2audio_8h_source.html#l00195">audio.h:195</a></div></div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="atlas_2audio_8h_source.html#l00048">AudioPlayer()</a>.</p>
+<p class="reference">References <a class="el" href="atlas_2audio_8h_source.html#l00049">AudioPlayer()</a>.</p>
 
 </div>
 </div>
@@ -339,13 +339,13 @@ Example</h2>
 
 <p>Disable spatialization for the audio source, making it play uniformly regardless of the listener's position. </p>
 
-<p class="definition">Definition at line <a class="el" href="atlas_2audio_8h_source.html#l00184">184</a> of file <a class="el" href="atlas_2audio_8h_source.html">audio.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  184</span>                                        {</div>
-<div class="line"><span class="lineno">  185</span>        ensureSourceInitialized();</div>
-<div class="line"><span class="lineno">  186</span>        <a class="code hl_variable" href="#a57f411e3ce3d3aef39af086788595708">source</a>-&gt;disableSpatialization();</div>
-<div class="line"><span class="lineno">  187</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="atlas_2audio_8h_source.html#l00185">185</a> of file <a class="el" href="atlas_2audio_8h_source.html">audio.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  185</span>                                 {</div>
+<div class="line"><span class="lineno">  186</span>        ensureSourceInitialized();</div>
+<div class="line"><span class="lineno">  187</span>        <a class="code hl_variable" href="#a57f411e3ce3d3aef39af086788595708">source</a>-&gt;disableSpatialization();</div>
+<div class="line"><span class="lineno">  188</span>    }</div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="atlas_2audio_8h_source.html#l00194">source</a>.</p>
+<p class="reference">References <a class="el" href="atlas_2audio_8h_source.html#l00195">source</a>.</p>
 
 </div>
 </div>
@@ -376,15 +376,15 @@ Example</h2>
 
 <p>Reimplemented from <a class="el" href="class_component.html#a162f8cdc070537a71f2ad0b5e763b86f">Component</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="atlas_2audio_8h_source.html#l00092">92</a> of file <a class="el" href="atlas_2audio_8h_source.html">audio.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   92</span>                                {</div>
-<div class="line"><span class="lineno">   93</span>        <span class="keywordflow">if</span> (!sourceInitialized) {</div>
-<div class="line"><span class="lineno">   94</span>            <a class="code hl_variable" href="#a57f411e3ce3d3aef39af086788595708">source</a> = std::make_unique&lt;AudioSource&gt;();</div>
-<div class="line"><span class="lineno">   95</span>            sourceInitialized = <span class="keyword">true</span>;</div>
-<div class="line"><span class="lineno">   96</span>        }</div>
-<div class="line"><span class="lineno">   97</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="atlas_2audio_8h_source.html#l00093">93</a> of file <a class="el" href="atlas_2audio_8h_source.html">audio.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   93</span>                         {</div>
+<div class="line"><span class="lineno">   94</span>        <span class="keywordflow">if</span> (!sourceInitialized) {</div>
+<div class="line"><span class="lineno">   95</span>            <a class="code hl_variable" href="#a57f411e3ce3d3aef39af086788595708">source</a> = std::make_unique&lt;AudioSource&gt;();</div>
+<div class="line"><span class="lineno">   96</span>            sourceInitialized = <span class="keyword">true</span>;</div>
+<div class="line"><span class="lineno">   97</span>        }</div>
+<div class="line"><span class="lineno">   98</span>    }</div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="atlas_2audio_8h_source.html#l00194">source</a>.</p>
+<p class="reference">References <a class="el" href="atlas_2audio_8h_source.html#l00195">source</a>.</p>
 
 </div>
 </div>
@@ -420,17 +420,17 @@ Example</h2>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd><a class="el" href="class_audio_player.html" title="Component that provides audio playback capabilities to an object. It can be attach to any object in t...">AudioPlayer</a>&amp; Reference to the current instance after move. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="atlas_2audio_8h_source.html#l00079">79</a> of file <a class="el" href="atlas_2audio_8h_source.html">audio.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   79</span>                                                       {</div>
-<div class="line"><span class="lineno">   80</span>        <span class="keywordflow">if</span> (<span class="keyword">this</span> != &amp;other) {</div>
-<div class="line"><span class="lineno">   81</span>            <a class="code hl_variable" href="#a57f411e3ce3d3aef39af086788595708">source</a> = std::move(other.<a class="code hl_variable" href="#a57f411e3ce3d3aef39af086788595708">source</a>);</div>
-<div class="line"><span class="lineno">   82</span>            sourceInitialized = other.sourceInitialized;</div>
-<div class="line"><span class="lineno">   83</span>            other.sourceInitialized = <span class="keyword">false</span>;</div>
-<div class="line"><span class="lineno">   84</span>        }</div>
-<div class="line"><span class="lineno">   85</span>        <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
-<div class="line"><span class="lineno">   86</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="atlas_2audio_8h_source.html#l00080">80</a> of file <a class="el" href="atlas_2audio_8h_source.html">audio.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   80</span>                                                       {</div>
+<div class="line"><span class="lineno">   81</span>        <span class="keywordflow">if</span> (<span class="keyword">this</span> != &amp;other) {</div>
+<div class="line"><span class="lineno">   82</span>            <a class="code hl_variable" href="#a57f411e3ce3d3aef39af086788595708">source</a> = std::move(other.<a class="code hl_variable" href="#a57f411e3ce3d3aef39af086788595708">source</a>);</div>
+<div class="line"><span class="lineno">   83</span>            sourceInitialized = other.sourceInitialized;</div>
+<div class="line"><span class="lineno">   84</span>            other.sourceInitialized = <span class="keyword">false</span>;</div>
+<div class="line"><span class="lineno">   85</span>        }</div>
+<div class="line"><span class="lineno">   86</span>        <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
+<div class="line"><span class="lineno">   87</span>    }</div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="atlas_2audio_8h_source.html#l00048">AudioPlayer()</a>, and <a class="el" href="atlas_2audio_8h_source.html#l00194">source</a>.</p>
+<p class="reference">References <a class="el" href="atlas_2audio_8h_source.html#l00049">AudioPlayer()</a>, and <a class="el" href="atlas_2audio_8h_source.html#l00195">source</a>.</p>
 
 </div>
 </div>
@@ -460,7 +460,7 @@ Example</h2>
 <p>Destroy the Audio Player object and release resources. </p>
 <dl class="section return"><dt>Returns</dt><dd><a class="el" href="class_audio_player.html" title="Component that provides audio playback capabilities to an object. It can be attach to any object in t...">AudioPlayer</a>&amp; </dd></dl>
 
-<p class="reference">References <a class="el" href="atlas_2audio_8h_source.html#l00048">AudioPlayer()</a>.</p>
+<p class="reference">References <a class="el" href="atlas_2audio_8h_source.html#l00049">AudioPlayer()</a>.</p>
 
 </div>
 </div>
@@ -489,13 +489,13 @@ Example</h2>
 
 <p>Pause the audio playback. It can be resumed later. </p>
 
-<p class="definition">Definition at line <a class="el" href="atlas_2audio_8h_source.html#l00112">112</a> of file <a class="el" href="atlas_2audio_8h_source.html">audio.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  112</span>                        {</div>
-<div class="line"><span class="lineno">  113</span>        ensureSourceInitialized();</div>
-<div class="line"><span class="lineno">  114</span>        <a class="code hl_variable" href="#a57f411e3ce3d3aef39af086788595708">source</a>-&gt;pause();</div>
-<div class="line"><span class="lineno">  115</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="atlas_2audio_8h_source.html#l00113">113</a> of file <a class="el" href="atlas_2audio_8h_source.html">audio.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  113</span>                 {</div>
+<div class="line"><span class="lineno">  114</span>        ensureSourceInitialized();</div>
+<div class="line"><span class="lineno">  115</span>        <a class="code hl_variable" href="#a57f411e3ce3d3aef39af086788595708">source</a>-&gt;pause();</div>
+<div class="line"><span class="lineno">  116</span>    }</div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="atlas_2audio_8h_source.html#l00194">source</a>.</p>
+<p class="reference">References <a class="el" href="atlas_2audio_8h_source.html#l00195">source</a>.</p>
 
 </div>
 </div>
@@ -524,13 +524,13 @@ Example</h2>
 
 <p>Play the audio from the beginning or resume if paused. </p>
 
-<p class="definition">Definition at line <a class="el" href="atlas_2audio_8h_source.html#l00103">103</a> of file <a class="el" href="atlas_2audio_8h_source.html">audio.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  103</span>                       {</div>
-<div class="line"><span class="lineno">  104</span>        ensureSourceInitialized();</div>
-<div class="line"><span class="lineno">  105</span>        <a class="code hl_variable" href="#a57f411e3ce3d3aef39af086788595708">source</a>-&gt;play();</div>
-<div class="line"><span class="lineno">  106</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="atlas_2audio_8h_source.html#l00104">104</a> of file <a class="el" href="atlas_2audio_8h_source.html">audio.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  104</span>                {</div>
+<div class="line"><span class="lineno">  105</span>        ensureSourceInitialized();</div>
+<div class="line"><span class="lineno">  106</span>        <a class="code hl_variable" href="#a57f411e3ce3d3aef39af086788595708">source</a>-&gt;play();</div>
+<div class="line"><span class="lineno">  107</span>    }</div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="atlas_2audio_8h_source.html#l00194">source</a>.</p>
+<p class="reference">References <a class="el" href="atlas_2audio_8h_source.html#l00195">source</a>.</p>
 
 </div>
 </div>
@@ -566,13 +566,13 @@ Example</h2>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="atlas_2audio_8h_source.html#l00164">164</a> of file <a class="el" href="atlas_2audio_8h_source.html">audio.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  164</span>                                                 {</div>
-<div class="line"><span class="lineno">  165</span>        ensureSourceInitialized();</div>
-<div class="line"><span class="lineno">  166</span>        <a class="code hl_variable" href="#a57f411e3ce3d3aef39af086788595708">source</a>-&gt;setPosition(position);</div>
-<div class="line"><span class="lineno">  167</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="atlas_2audio_8h_source.html#l00165">165</a> of file <a class="el" href="atlas_2audio_8h_source.html">audio.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  165</span>                                          {</div>
+<div class="line"><span class="lineno">  166</span>        ensureSourceInitialized();</div>
+<div class="line"><span class="lineno">  167</span>        <a class="code hl_variable" href="#a57f411e3ce3d3aef39af086788595708">source</a>-&gt;setPosition(position);</div>
+<div class="line"><span class="lineno">  168</span>    }</div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="atlas_2audio_8h_source.html#l00194">source</a>.</p>
+<p class="reference">References <a class="el" href="atlas_2audio_8h_source.html#l00195">source</a>.</p>
 
 </div>
 </div>
@@ -607,13 +607,13 @@ Example</h2>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="atlas_2audio_8h_source.html#l00131">131</a> of file <a class="el" href="atlas_2audio_8h_source.html">audio.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  131</span>                                                   {</div>
-<div class="line"><span class="lineno">  132</span>        ensureSourceInitialized();</div>
-<div class="line"><span class="lineno">  133</span>        <a class="code hl_variable" href="#a57f411e3ce3d3aef39af086788595708">source</a>-&gt;fromFile(sourceResource);</div>
-<div class="line"><span class="lineno">  134</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="atlas_2audio_8h_source.html#l00132">132</a> of file <a class="el" href="atlas_2audio_8h_source.html">audio.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  132</span>                                            {</div>
+<div class="line"><span class="lineno">  133</span>        ensureSourceInitialized();</div>
+<div class="line"><span class="lineno">  134</span>        <a class="code hl_variable" href="#a57f411e3ce3d3aef39af086788595708">source</a>-&gt;fromFile(std::move(sourceResource));</div>
+<div class="line"><span class="lineno">  135</span>    }</div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="atlas_2audio_8h_source.html#l00194">source</a>.</p>
+<p class="reference">References <a class="el" href="atlas_2audio_8h_source.html#l00195">source</a>.</p>
 
 </div>
 </div>
@@ -642,13 +642,13 @@ Example</h2>
 
 <p>Stop the audio playback and reset to the beginning. </p>
 
-<p class="definition">Definition at line <a class="el" href="atlas_2audio_8h_source.html#l00121">121</a> of file <a class="el" href="atlas_2audio_8h_source.html">audio.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  121</span>                       {</div>
-<div class="line"><span class="lineno">  122</span>        ensureSourceInitialized();</div>
-<div class="line"><span class="lineno">  123</span>        <a class="code hl_variable" href="#a57f411e3ce3d3aef39af086788595708">source</a>-&gt;stop();</div>
-<div class="line"><span class="lineno">  124</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="atlas_2audio_8h_source.html#l00122">122</a> of file <a class="el" href="atlas_2audio_8h_source.html">audio.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  122</span>                {</div>
+<div class="line"><span class="lineno">  123</span>        ensureSourceInitialized();</div>
+<div class="line"><span class="lineno">  124</span>        <a class="code hl_variable" href="#a57f411e3ce3d3aef39af086788595708">source</a>-&gt;stop();</div>
+<div class="line"><span class="lineno">  125</span>    }</div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="atlas_2audio_8h_source.html#l00194">source</a>.</p>
+<p class="reference">References <a class="el" href="atlas_2audio_8h_source.html#l00195">source</a>.</p>
 
 </div>
 </div>
@@ -685,33 +685,33 @@ Example</h2>
 
 <p>Reimplemented from <a class="el" href="class_component.html#a3b3bee5d55446124842e5f2e229e1384">Component</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="atlas_2audio_8h_source.html#l00141">141</a> of file <a class="el" href="atlas_2audio_8h_source.html">audio.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  141</span>                                       {</div>
-<div class="line"><span class="lineno">  142</span>        ensureSourceInitialized();</div>
-<div class="line"><span class="lineno">  143</span>        Window *window = <a class="code hl_variable" href="class_window.html#aa3c2a95cf2ce8cbbb668247f029b610c">Window::mainWindow</a>;</div>
-<div class="line"><span class="lineno">  144</span>        Camera *mainCamera = window-&gt;<a class="code hl_function" href="class_window.html#a44bd50953bdd8e5c40a690aaa9842fea">getCamera</a>();</div>
-<div class="line"><span class="lineno">  145</span> </div>
-<div class="line"><span class="lineno">  146</span>        <span class="keywordflow">if</span> (mainCamera) {</div>
-<div class="line"><span class="lineno">  147</span>            Position3d cameraPos = mainCamera-&gt;<a class="code hl_variable" href="class_camera.html#aa039dfa8c2a624a999b69b0fece3f6fb">position</a>;</div>
-<div class="line"><span class="lineno">  148</span>            <a class="code hl_typedef" href="units_8h.html#abd755c400f9d4026ef36e03056829444">Normal3d</a> cameraFront = mainCamera-&gt;<a class="code hl_function" href="class_camera.html#afbf79ea00fe5e9086a72b29119e08311">getFrontVector</a>();</div>
-<div class="line"><span class="lineno">  149</span>            window-&gt;<a class="code hl_variable" href="class_window.html#a2133e2bb4562bcc491d091a640dcae88">audioEngine</a>-&gt;setListenerPosition(cameraPos);</div>
-<div class="line"><span class="lineno">  150</span>            window-&gt;<a class="code hl_variable" href="class_window.html#a2133e2bb4562bcc491d091a640dcae88">audioEngine</a>-&gt;setListenerOrientation(</div>
-<div class="line"><span class="lineno">  151</span>                cameraFront, <a class="code hl_typedef" href="units_8h.html#abd755c400f9d4026ef36e03056829444">Normal3d</a>{0.0f, 1.0f, 0.0f});</div>
-<div class="line"><span class="lineno">  152</span>            window-&gt;<a class="code hl_variable" href="class_window.html#a2133e2bb4562bcc491d091a640dcae88">audioEngine</a>-&gt;setListenerVelocity(mainCamera-&gt;<a class="code hl_function" href="class_camera.html#ad3e377decee8b087e74188cf4e7b0795">getVelocity</a>());</div>
-<div class="line"><span class="lineno">  153</span>        }</div>
-<div class="line"><span class="lineno">  154</span> </div>
-<div class="line"><span class="lineno">  155</span>        <a class="code hl_variable" href="#a57f411e3ce3d3aef39af086788595708">source</a>-&gt;setPosition(this-&gt;<a class="code hl_variable" href="class_component.html#a702063beef62c1319e2019fa1525f5bf">object</a>-&gt;getPosition());</div>
-<div class="line"><span class="lineno">  156</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="atlas_2audio_8h_source.html#l00142">142</a> of file <a class="el" href="atlas_2audio_8h_source.html">audio.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  142</span>                                {</div>
+<div class="line"><span class="lineno">  143</span>        ensureSourceInitialized();</div>
+<div class="line"><span class="lineno">  144</span>        Window *window = <a class="code hl_variable" href="class_window.html#aa3c2a95cf2ce8cbbb668247f029b610c">Window::mainWindow</a>;</div>
+<div class="line"><span class="lineno">  145</span>        Camera *mainCamera = window-&gt;<a class="code hl_function" href="class_window.html#a44bd50953bdd8e5c40a690aaa9842fea">getCamera</a>();</div>
+<div class="line"><span class="lineno">  146</span> </div>
+<div class="line"><span class="lineno">  147</span>        <span class="keywordflow">if</span> (mainCamera) {</div>
+<div class="line"><span class="lineno">  148</span>            Position3d cameraPos = mainCamera-&gt;<a class="code hl_variable" href="class_camera.html#aa039dfa8c2a624a999b69b0fece3f6fb">position</a>;</div>
+<div class="line"><span class="lineno">  149</span>            <a class="code hl_typedef" href="units_8h.html#aa79dcdba8644f852dbd5163b96868793">Normal3d</a> cameraFront = mainCamera-&gt;<a class="code hl_function" href="class_camera.html#afbf79ea00fe5e9086a72b29119e08311">getFrontVector</a>();</div>
+<div class="line"><span class="lineno">  150</span>            window-&gt;<a class="code hl_variable" href="class_window.html#a2133e2bb4562bcc491d091a640dcae88">audioEngine</a>-&gt;setListenerPosition(cameraPos);</div>
+<div class="line"><span class="lineno">  151</span>            window-&gt;<a class="code hl_variable" href="class_window.html#a2133e2bb4562bcc491d091a640dcae88">audioEngine</a>-&gt;setListenerOrientation(</div>
+<div class="line"><span class="lineno">  152</span>                cameraFront, <a class="code hl_typedef" href="units_8h.html#aa79dcdba8644f852dbd5163b96868793">Normal3d</a>{0.0f, 1.0f, 0.0f});</div>
+<div class="line"><span class="lineno">  153</span>            window-&gt;<a class="code hl_variable" href="class_window.html#a2133e2bb4562bcc491d091a640dcae88">audioEngine</a>-&gt;setListenerVelocity(mainCamera-&gt;<a class="code hl_function" href="class_camera.html#ad3e377decee8b087e74188cf4e7b0795">getVelocity</a>());</div>
+<div class="line"><span class="lineno">  154</span>        }</div>
+<div class="line"><span class="lineno">  155</span> </div>
+<div class="line"><span class="lineno">  156</span>        <a class="code hl_variable" href="#a57f411e3ce3d3aef39af086788595708">source</a>-&gt;setPosition(this-&gt;<a class="code hl_variable" href="class_component.html#a702063beef62c1319e2019fa1525f5bf">object</a>-&gt;getPosition());</div>
+<div class="line"><span class="lineno">  157</span>    }</div>
 <div class="ttc" id="aclass_camera_html_aa039dfa8c2a624a999b69b0fece3f6fb"><div class="ttname"><a href="class_camera.html#aa039dfa8c2a624a999b69b0fece3f6fb">Camera::position</a></div><div class="ttdeci">Position3d position</div><div class="ttdoc">The position of the camera in 3D space.</div><div class="ttdef"><b>Definition</b> <a href="camera_8h_source.html#l00046">camera.h:46</a></div></div>
-<div class="ttc" id="aclass_camera_html_ad3e377decee8b087e74188cf4e7b0795"><div class="ttname"><a href="class_camera.html#ad3e377decee8b087e74188cf4e7b0795">Camera::getVelocity</a></div><div class="ttdeci">Magnitude3d getVelocity() const</div><div class="ttdoc">Get the velocity of the camera based on its front vector and movement speed.</div><div class="ttdef"><b>Definition</b> <a href="camera_8h_source.html#l00194">camera.h:194</a></div></div>
-<div class="ttc" id="aclass_camera_html_afbf79ea00fe5e9086a72b29119e08311"><div class="ttname"><a href="class_camera.html#afbf79ea00fe5e9086a72b29119e08311">Camera::getFrontVector</a></div><div class="ttdeci">Normal3d getFrontVector() const</div><div class="ttdoc">Get the front vector of the camera, representing the direction it is facing.</div><div class="ttdef"><b>Definition</b> <a href="camera_8h_source.html#l00180">camera.h:180</a></div></div>
-<div class="ttc" id="aclass_component_html_a702063beef62c1319e2019fa1525f5bf"><div class="ttname"><a href="class_component.html#a702063beef62c1319e2019fa1525f5bf">Component::object</a></div><div class="ttdeci">GameObject * object</div><div class="ttdoc">Gets the GameObject associated with the component.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00111">component.h:111</a></div></div>
-<div class="ttc" id="aclass_window_html_a2133e2bb4562bcc491d091a640dcae88"><div class="ttname"><a href="class_window.html#a2133e2bb4562bcc491d091a640dcae88">Window::audioEngine</a></div><div class="ttdeci">std::shared_ptr&lt; AudioEngine &gt; audioEngine</div><div class="ttdoc">The audio engine instance for managing spatial audio. Shared across the window.</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00479">window.h:479</a></div></div>
-<div class="ttc" id="aclass_window_html_a44bd50953bdd8e5c40a690aaa9842fea"><div class="ttname"><a href="class_window.html#a44bd50953bdd8e5c40a690aaa9842fea">Window::getCamera</a></div><div class="ttdeci">Camera * getCamera()</div><div class="ttdoc">Gets the current camera.</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00421">window.h:421</a></div></div>
-<div class="ttc" id="aclass_window_html_aa3c2a95cf2ce8cbbb668247f029b610c"><div class="ttname"><a href="class_window.html#aa3c2a95cf2ce8cbbb668247f029b610c">Window::mainWindow</a></div><div class="ttdeci">static Window * mainWindow</div><div class="ttdoc">Static pointer to the main window instance. Used for global access to the primary window.</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00408">window.h:408</a></div></div>
-<div class="ttc" id="aunits_8h_html_abd755c400f9d4026ef36e03056829444"><div class="ttname"><a href="units_8h.html#abd755c400f9d4026ef36e03056829444">Normal3d</a></div><div class="ttdeci">Position3d Normal3d</div><div class="ttdoc">Type alias for 3D normal vectors.</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00134">units.h:134</a></div></div>
+<div class="ttc" id="aclass_camera_html_ad3e377decee8b087e74188cf4e7b0795"><div class="ttname"><a href="class_camera.html#ad3e377decee8b087e74188cf4e7b0795">Camera::getVelocity</a></div><div class="ttdeci">Magnitude3d getVelocity() const</div><div class="ttdoc">Get the velocity of the camera based on its front vector and movement speed.</div><div class="ttdef"><b>Definition</b> <a href="camera_8h_source.html#l00195">camera.h:195</a></div></div>
+<div class="ttc" id="aclass_camera_html_afbf79ea00fe5e9086a72b29119e08311"><div class="ttname"><a href="class_camera.html#afbf79ea00fe5e9086a72b29119e08311">Camera::getFrontVector</a></div><div class="ttdeci">Normal3d getFrontVector() const</div><div class="ttdoc">Get the front vector of the camera, representing the direction it is facing.</div><div class="ttdef"><b>Definition</b> <a href="camera_8h_source.html#l00181">camera.h:181</a></div></div>
+<div class="ttc" id="aclass_component_html_a702063beef62c1319e2019fa1525f5bf"><div class="ttname"><a href="class_component.html#a702063beef62c1319e2019fa1525f5bf">Component::object</a></div><div class="ttdeci">GameObject * object</div><div class="ttdoc">Gets the GameObject associated with the component.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00121">component.h:121</a></div></div>
+<div class="ttc" id="aclass_window_html_a2133e2bb4562bcc491d091a640dcae88"><div class="ttname"><a href="class_window.html#a2133e2bb4562bcc491d091a640dcae88">Window::audioEngine</a></div><div class="ttdeci">std::shared_ptr&lt; AudioEngine &gt; audioEngine</div><div class="ttdoc">The audio engine instance for managing spatial audio. Shared across the window.</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00477">window.h:477</a></div></div>
+<div class="ttc" id="aclass_window_html_a44bd50953bdd8e5c40a690aaa9842fea"><div class="ttname"><a href="class_window.html#a44bd50953bdd8e5c40a690aaa9842fea">Window::getCamera</a></div><div class="ttdeci">Camera * getCamera()</div><div class="ttdoc">Gets the current camera.</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00419">window.h:419</a></div></div>
+<div class="ttc" id="aclass_window_html_aa3c2a95cf2ce8cbbb668247f029b610c"><div class="ttname"><a href="class_window.html#aa3c2a95cf2ce8cbbb668247f029b610c">Window::mainWindow</a></div><div class="ttdeci">static Window * mainWindow</div><div class="ttdoc">Static pointer to the main window instance. Used for global access to the primary window.</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00406">window.h:406</a></div></div>
+<div class="ttc" id="aunits_8h_html_aa79dcdba8644f852dbd5163b96868793"><div class="ttname"><a href="units_8h.html#aa79dcdba8644f852dbd5163b96868793">Normal3d</a></div><div class="ttdeci">Position3d Normal3d</div><div class="ttdoc">Type alias for 3D normal vectors.</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00133">units.h:133</a></div></div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="window_8h_source.html#l00479">Window::audioEngine</a>, <a class="el" href="window_8h_source.html#l00421">Window::getCamera()</a>, <a class="el" href="camera_8h_source.html#l00180">Camera::getFrontVector()</a>, <a class="el" href="camera_8h_source.html#l00194">Camera::getVelocity()</a>, <a class="el" href="window_8h_source.html#l00408">Window::mainWindow</a>, <a class="el" href="component_8h_source.html#l00111">Component::object</a>, <a class="el" href="camera_8h_source.html#l00046">Camera::position</a>, and <a class="el" href="atlas_2audio_8h_source.html#l00194">source</a>.</p>
+<p class="reference">References <a class="el" href="window_8h_source.html#l00477">Window::audioEngine</a>, <a class="el" href="window_8h_source.html#l00419">Window::getCamera()</a>, <a class="el" href="camera_8h_source.html#l00181">Camera::getFrontVector()</a>, <a class="el" href="camera_8h_source.html#l00195">Camera::getVelocity()</a>, <a class="el" href="window_8h_source.html#l00406">Window::mainWindow</a>, <a class="el" href="component_8h_source.html#l00121">Component::object</a>, <a class="el" href="camera_8h_source.html#l00046">Camera::position</a>, and <a class="el" href="atlas_2audio_8h_source.html#l00195">source</a>.</p>
 
 </div>
 </div>
@@ -740,13 +740,13 @@ Example</h2>
 
 <p>Enable spatialization for the audio source, making it 3D and affected by the listener's position. </p>
 
-<p class="definition">Definition at line <a class="el" href="atlas_2audio_8h_source.html#l00174">174</a> of file <a class="el" href="atlas_2audio_8h_source.html">audio.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  174</span>                                    {</div>
-<div class="line"><span class="lineno">  175</span>        ensureSourceInitialized();</div>
-<div class="line"><span class="lineno">  176</span>        <a class="code hl_variable" href="#a57f411e3ce3d3aef39af086788595708">source</a>-&gt;useSpatialization();</div>
-<div class="line"><span class="lineno">  177</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="atlas_2audio_8h_source.html#l00175">175</a> of file <a class="el" href="atlas_2audio_8h_source.html">audio.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  175</span>                             {</div>
+<div class="line"><span class="lineno">  176</span>        ensureSourceInitialized();</div>
+<div class="line"><span class="lineno">  177</span>        <a class="code hl_variable" href="#a57f411e3ce3d3aef39af086788595708">source</a>-&gt;useSpatialization();</div>
+<div class="line"><span class="lineno">  178</span>    }</div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="atlas_2audio_8h_source.html#l00194">source</a>.</p>
+<p class="reference">References <a class="el" href="atlas_2audio_8h_source.html#l00195">source</a>.</p>
 
 </div>
 </div>
@@ -765,7 +765,7 @@ Example</h2>
 
 <p>Get the audio source. This allows for advanced manipulation of the audio playback. </p>
 
-<p class="definition">Definition at line <a class="el" href="atlas_2audio_8h_source.html#l00194">194</a> of file <a class="el" href="atlas_2audio_8h_source.html">audio.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="atlas_2audio_8h_source.html#l00195">195</a> of file <a class="el" href="atlas_2audio_8h_source.html">audio.h</a>.</p>
 
 </div>
 </div>

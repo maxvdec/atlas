@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 5</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -134,8 +134,8 @@ $(function(){initNavTree('struct_light.html','','struct_light-members'); });
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a705f837df8db28b0259a0edc1858492d" id="r_a705f837df8db28b0259a0edc1858492d"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="#a705f837df8db28b0259a0edc1858492d">Light</a> (const <a class="el" href="struct_position3d.html">Position3d</a> &amp;pos={0.0f, 0.0f, 0.0f}, const <a class="el" href="struct_color.html">Color</a> &amp;<a class="el" href="#ad7a168d26aed1bf7cca1a8d8e6f8ada4">color</a>=<a class="el" href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a>(), float <a class="el" href="#aebfa78420d5cf261be042325ff392b62">distance</a>=50.f, const <a class="el" href="struct_color.html">Color</a> &amp;<a class="el" href="#ad0986bcf54730dfe19fefcace47c3cc3">shineColor</a>=<a class="el" href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a>())</td></tr>
 <tr class="memdesc:a705f837df8db28b0259a0edc1858492d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function that constructs a new <a class="el" href="struct_light.html" title="Structure representing a point light in a scene. A point light emits light in all directions from a s...">Light</a> object.  <br /></td></tr>
-<tr class="memitem:ab3970922f291c1e2c2ba1bad199234f8" id="r_ab3970922f291c1e2c2ba1bad199234f8"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#ab3970922f291c1e2c2ba1bad199234f8">setColor</a> (<a class="el" href="struct_color.html">Color</a> <a class="el" href="#ad7a168d26aed1bf7cca1a8d8e6f8ada4">color</a>)</td></tr>
-<tr class="memdesc:ab3970922f291c1e2c2ba1bad199234f8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function that sets the color of the light.  <br /></td></tr>
+<tr class="memitem:a97d9202b097ad77f19b4f876a2409162" id="r_a97d9202b097ad77f19b4f876a2409162"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a97d9202b097ad77f19b4f876a2409162">setColor</a> (<a class="el" href="struct_color.html">Color</a> newColor)</td></tr>
+<tr class="memdesc:a97d9202b097ad77f19b4f876a2409162"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function that sets the color of the light.  <br /></td></tr>
 <tr class="memitem:a95f4aa1289870145405765743e00645b" id="r_a95f4aa1289870145405765743e00645b"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a95f4aa1289870145405765743e00645b">createDebugObject</a> ()</td></tr>
 <tr class="memdesc:a95f4aa1289870145405765743e00645b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function that creates a debug obejct to visualize the light in the scene.  <br /></td></tr>
 <tr class="memitem:a7e11b67a959370fd2493be3ab024a3e6" id="r_a7e11b67a959370fd2493be3ab024a3e6"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a7e11b67a959370fd2493be3ab024a3e6">addDebugObject</a> (<a class="el" href="class_window.html">Window</a> &amp;window)</td></tr>
@@ -183,9 +183,9 @@ Example</h2>
 <div class="line"><span class="comment">// Add the light to the scene</span></div>
 <div class="line">this-&gt;addPointLight(&amp;pointLight);</div>
 <div class="ttc" id="ashader_8h_html_aed7a1c7a5976e4adb712d0a231dada82acb5feb1b7314637725a2e73bdc9f7295"><div class="ttname"><a href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82acb5feb1b7314637725a2e73bdc9f7295">AtlasVertexShader::Color</a></div><div class="ttdeci">@ Color</div><div class="ttdoc">Vertex shader for rendering solid colors.</div><div class="ttdef"><b>Definition</b> <a href="shader_8h_source.html#l00042">shader.h:42</a></div></div>
-<div class="ttc" id="astruct_color_html_aad4699ae003d7a86b5edc5fccdbaf4c8"><div class="ttname"><a href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a></div><div class="ttdeci">static Color white()</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00278">units.h:278</a></div></div>
+<div class="ttc" id="astruct_color_html_aad4699ae003d7a86b5edc5fccdbaf4c8"><div class="ttname"><a href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a></div><div class="ttdeci">static Color white()</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00322">units.h:322</a></div></div>
 <div class="ttc" id="astruct_light_html_a705f837df8db28b0259a0edc1858492d"><div class="ttname"><a href="#a705f837df8db28b0259a0edc1858492d">Light::Light</a></div><div class="ttdeci">Light(const Position3d &amp;pos={0.0f, 0.0f, 0.0f}, const Color &amp;color=Color::white(), float distance=50.f, const Color &amp;shineColor=Color::white())</div><div class="ttdoc">Function that constructs a new Light object.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00249">light.h:249</a></div></div>
-<div class="ttc" id="astruct_light_html_aebfa78420d5cf261be042325ff392b62"><div class="ttname"><a href="#aebfa78420d5cf261be042325ff392b62">Light::distance</a></div><div class="ttdeci">float distance</div><div class="ttdoc">Distance to which the light reaches.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00292">light.h:292</a></div></div>
+<div class="ttc" id="astruct_light_html_aebfa78420d5cf261be042325ff392b62"><div class="ttname"><a href="#aebfa78420d5cf261be042325ff392b62">Light::distance</a></div><div class="ttdeci">float distance</div><div class="ttdoc">Distance to which the light reaches.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00293">light.h:293</a></div></div>
 </div><!-- fragment --> 
 <p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00222">222</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
@@ -239,10 +239,11 @@ Example</h2>
 
 <p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00249">249</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 <div class="fragment"><div class="line"><span class="lineno">  249</span>                                {0.0f, 0.0f, 0.0f},</div>
-<div class="line"><span class="lineno">  250</span>          <span class="keyword">const</span> <a class="code hl_enumvalue" href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82acb5feb1b7314637725a2e73bdc9f7295">Color</a> &amp;<a class="code hl_variable" href="#ad7a168d26aed1bf7cca1a8d8e6f8ada4">color</a> = <a class="code hl_function" href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a>(), <span class="keywordtype">float</span> <a class="code hl_variable" href="#aebfa78420d5cf261be042325ff392b62">distance</a> = 50.f,</div>
-<div class="line"><span class="lineno">  251</span>          <span class="keyword">const</span> <a class="code hl_enumvalue" href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82acb5feb1b7314637725a2e73bdc9f7295">Color</a> &amp;<a class="code hl_variable" href="#ad0986bcf54730dfe19fefcace47c3cc3">shineColor</a> = <a class="code hl_function" href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a>())</div>
+<div class="line"><span class="lineno">  250</span>          <span class="keyword">const</span> <a class="code hl_enumvalue" href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82acb5feb1b7314637725a2e73bdc9f7295">Color</a>&amp; <a class="code hl_variable" href="#ad7a168d26aed1bf7cca1a8d8e6f8ada4">color</a> = <a class="code hl_function" href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a>(), <span class="keywordtype">float</span> <a class="code hl_variable" href="#aebfa78420d5cf261be042325ff392b62">distance</a> = 50.f,</div>
+<div class="line"><span class="lineno">  251</span>          <span class="keyword">const</span> <a class="code hl_enumvalue" href="shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82acb5feb1b7314637725a2e73bdc9f7295">Color</a>&amp; <a class="code hl_variable" href="#ad0986bcf54730dfe19fefcace47c3cc3">shineColor</a> = <a class="code hl_function" href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a>())</div>
 <div class="line"><span class="lineno">  252</span>        : <a class="code hl_variable" href="#ad1bbf10bd6b27da5ddb05399d863ab2b">position</a>(pos), <a class="code hl_variable" href="#ad7a168d26aed1bf7cca1a8d8e6f8ada4">color</a>(<a class="code hl_variable" href="#ad7a168d26aed1bf7cca1a8d8e6f8ada4">color</a>), <a class="code hl_variable" href="#ad0986bcf54730dfe19fefcace47c3cc3">shineColor</a>(<a class="code hl_variable" href="#ad0986bcf54730dfe19fefcace47c3cc3">shineColor</a>),</div>
-<div class="line"><span class="lineno">  253</span>          <a class="code hl_variable" href="#aebfa78420d5cf261be042325ff392b62">distance</a>(<a class="code hl_variable" href="#aebfa78420d5cf261be042325ff392b62">distance</a>) {}</div>
+<div class="line"><span class="lineno">  253</span>          <a class="code hl_variable" href="#aebfa78420d5cf261be042325ff392b62">distance</a>(<a class="code hl_variable" href="#aebfa78420d5cf261be042325ff392b62">distance</a>) {</div>
+<div class="line"><span class="lineno">  254</span>    }</div>
 <div class="ttc" id="astruct_light_html_ad0986bcf54730dfe19fefcace47c3cc3"><div class="ttname"><a href="#ad0986bcf54730dfe19fefcace47c3cc3">Light::shineColor</a></div><div class="ttdeci">Color shineColor</div><div class="ttdoc">The color that the light will use for specular highlights.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00238">light.h:238</a></div></div>
 <div class="ttc" id="astruct_light_html_ad1bbf10bd6b27da5ddb05399d863ab2b"><div class="ttname"><a href="#ad1bbf10bd6b27da5ddb05399d863ab2b">Light::position</a></div><div class="ttdeci">Position3d position</div><div class="ttdoc">The position of the light in 3D space.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00227">light.h:227</a></div></div>
 <div class="ttc" id="astruct_light_html_ad7a168d26aed1bf7cca1a8d8e6f8ada4"><div class="ttname"><a href="#ad7a168d26aed1bf7cca1a8d8e6f8ada4">Light::color</a></div><div class="ttdeci">Color color</div><div class="ttdoc">The color of the light.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00233">light.h:233</a></div></div>
@@ -273,7 +274,7 @@ Example</h2>
   </dd>
 </dl>
 
-<p class="reference">References <a class="el" href="light_8h_source.html#l00314">Window</a>.</p>
+<p class="reference">References <a class="el" href="light_8h_source.html#l00315">Window</a>.</p>
 
 </div>
 </div>
@@ -325,7 +326,7 @@ Example</h2>
   </dd>
 </dl>
 
-<p class="reference">References <a class="el" href="light_8h_source.html#l00314">Window</a>.</p>
+<p class="reference">References <a class="el" href="light_8h_source.html#l00315">Window</a>.</p>
 
 </div>
 </div>
@@ -348,8 +349,8 @@ Example</h2>
 
 </div>
 </div>
-<a id="ab3970922f291c1e2c2ba1bad199234f8" name="ab3970922f291c1e2c2ba1bad199234f8"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ab3970922f291c1e2c2ba1bad199234f8">&#9670;&#160;</a></span>setColor()</h2>
+<a id="a97d9202b097ad77f19b4f876a2409162" name="a97d9202b097ad77f19b4f876a2409162"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a97d9202b097ad77f19b4f876a2409162">&#9670;&#160;</a></span>setColor()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -357,7 +358,7 @@ Example</h2>
         <tr>
           <td class="memname">void Light::setColor </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="struct_color.html">Color</a></td>          <td class="paramname"><span class="paramname"><em>color</em></span></td><td>)</td>
+          <td class="paramtype"><a class="el" href="struct_color.html">Color</a></td>          <td class="paramname"><span class="paramname"><em>newColor</em></span></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -366,12 +367,10 @@ Example</h2>
 <p>Function that sets the color of the light. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname"><a class="el" href="#ad7a168d26aed1bf7cca1a8d8e6f8ada4" title="The color of the light.">color</a></td><td>The new color for the light. </td></tr>
+    <tr><td class="paramname">newColor</td><td>The new color for the light. </td></tr>
   </table>
   </dd>
 </dl>
-
-<p class="reference">References <a class="el" href="light_8h_source.html#l00233">color</a>.</p>
 
 </div>
 </div>
@@ -396,9 +395,9 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00315">315</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00316">316</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 
-<p class="reference">References <a class="el" href="light_8h_source.html#l00315">CoreObject</a>.</p>
+<p class="reference">References <a class="el" href="light_8h_source.html#l00316">CoreObject</a>.</p>
 
 </div>
 </div>
@@ -422,9 +421,9 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00314">314</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00315">315</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 
-<p class="reference">References <a class="el" href="light_8h_source.html#l00314">Window</a>.</p>
+<p class="reference">References <a class="el" href="light_8h_source.html#l00315">Window</a>.</p>
 
 </div>
 </div>
@@ -461,7 +460,7 @@ Example</h2>
 
 <p>The debug object that visualizes the light in the scene. </p>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00279">279</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00280">280</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 
 </div>
 </div>
@@ -479,7 +478,7 @@ Example</h2>
 
 <p>Distance to which the light reaches. </p>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00292">292</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00293">293</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 
 </div>
 </div>
@@ -495,7 +494,7 @@ Example</h2>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00307">307</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00308">308</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 
 </div>
 </div>
@@ -532,7 +531,7 @@ Example</h2>
 
 <p>The render target that holds the shadow map. </p>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00306">306</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00307">307</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 
 </div>
 </div>

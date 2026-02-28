@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 5</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -146,10 +146,10 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:afee70e9a70dc3e4a3019d93bddaed771"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function that constructs a new <a class="el" href="class_render_target.html" title="Class that represents a render target, which is a texture in which a scene can be rendered....">RenderTarget</a> object.  <br /></td></tr>
 <tr class="memitem:abffb80702611f08bfd8289aee1e35186" id="r_abffb80702611f08bfd8289aee1e35186"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#abffb80702611f08bfd8289aee1e35186">display</a> (<a class="el" href="class_window.html">Window</a> &amp;window, float zindex=0)</td></tr>
 <tr class="memdesc:abffb80702611f08bfd8289aee1e35186"><td class="mdescLeft">&#160;</td><td class="mdescRight">Displays the render target in the window.  <br /></td></tr>
-<tr class="memitem:ace17fb8304dc4aec682c8b13a8146f25" id="r_ace17fb8304dc4aec682c8b13a8146f25"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#ace17fb8304dc4aec682c8b13a8146f25">hide</a> ()</td></tr>
-<tr class="memdesc:ace17fb8304dc4aec682c8b13a8146f25"><td class="mdescLeft">&#160;</td><td class="mdescRight">Hides the render target from the window.  <br /></td></tr>
-<tr class="memitem:aa65c40e4d8d0cfcdd38e5d96b1bf69bb" id="r_aa65c40e4d8d0cfcdd38e5d96b1bf69bb"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#aa65c40e4d8d0cfcdd38e5d96b1bf69bb">show</a> ()</td></tr>
-<tr class="memdesc:aa65c40e4d8d0cfcdd38e5d96b1bf69bb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Shows the render target in the window.  <br /></td></tr>
+<tr class="memitem:afc4e81b5ef815ae5df8710f158f4f9f8" id="r_afc4e81b5ef815ae5df8710f158f4f9f8"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#afc4e81b5ef815ae5df8710f158f4f9f8">hide</a> () const</td></tr>
+<tr class="memdesc:afc4e81b5ef815ae5df8710f158f4f9f8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Hides the render target from the window.  <br /></td></tr>
+<tr class="memitem:a29b94b1e04454f7273a30de6b7c4878d" id="r_a29b94b1e04454f7273a30de6b7c4878d"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a29b94b1e04454f7273a30de6b7c4878d">show</a> () const</td></tr>
+<tr class="memdesc:a29b94b1e04454f7273a30de6b7c4878d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Shows the render target in the window.  <br /></td></tr>
 <tr class="memitem:a05293c8c5affe4c05694cbf05d32344b" id="r_a05293c8c5affe4c05694cbf05d32344b"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a05293c8c5affe4c05694cbf05d32344b">render</a> (float dt, std::shared_ptr&lt; <a class="el" href="classopal_1_1_command_buffer.html">opal::CommandBuffer</a> &gt; commandBuffer, bool updatePipeline=false) override</td></tr>
 <tr class="memdesc:a05293c8c5affe4c05694cbf05d32344b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Renders the quad representing this render target, applying any queued post-processing effects.  <br /></td></tr>
 <tr class="memitem:a1ef0cea2d52d86d72bf8be6d44cf1497" id="r_a1ef0cea2d52d86d72bf8be6d44cf1497"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a1ef0cea2d52d86d72bf8be6d44cf1497">resolve</a> ()</td></tr>
@@ -158,8 +158,8 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:ada77bd874308782eaeea700dbcdc1024"><td class="mdescLeft">&#160;</td><td class="mdescRight">Width of the render target in pixels.  <br /></td></tr>
 <tr class="memitem:ac41c1ab892231cde6e74b9106b3ed870" id="r_ac41c1ab892231cde6e74b9106b3ed870"><td class="memItemLeft">int&#160;</td><td class="memItemRight"><a class="el" href="#ac41c1ab892231cde6e74b9106b3ed870">getHeight</a> () const</td></tr>
 <tr class="memdesc:ac41c1ab892231cde6e74b9106b3ed870"><td class="mdescLeft">&#160;</td><td class="mdescRight">Height of the render target in pixels.  <br /></td></tr>
-<tr class="memitem:a30f08e9fae3c0d6ba5d185f4c6e96ca1" id="r_a30f08e9fae3c0d6ba5d185f4c6e96ca1"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a30f08e9fae3c0d6ba5d185f4c6e96ca1">addEffect</a> (std::shared_ptr&lt; <a class="el" href="class_effect.html">Effect</a> &gt; effect)</td></tr>
-<tr class="memdesc:a30f08e9fae3c0d6ba5d185f4c6e96ca1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a post-processing effect to the render target.  <br /></td></tr>
+<tr class="memitem:a61e3a0d5d2f531d7e576eba488cfb92a" id="r_a61e3a0d5d2f531d7e576eba488cfb92a"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a61e3a0d5d2f531d7e576eba488cfb92a">addEffect</a> (const std::shared_ptr&lt; <a class="el" href="class_effect.html">Effect</a> &gt; &amp;effect)</td></tr>
+<tr class="memdesc:a61e3a0d5d2f531d7e576eba488cfb92a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a post-processing effect to the render target.  <br /></td></tr>
 <tr class="memitem:ad3be95ab0face573601ed15eecb7beef" id="r_ad3be95ab0face573601ed15eecb7beef"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#ad3be95ab0face573601ed15eecb7beef">bind</a> ()</td></tr>
 <tr class="memdesc:ad3be95ab0face573601ed15eecb7beef"><td class="mdescLeft">&#160;</td><td class="mdescRight">Binds this render target's framebuffer for rendering.  <br /></td></tr>
 <tr class="memitem:abb706f649b65e1b071ad9d99d86b12db" id="r_abb706f649b65e1b071ad9d99d86b12db"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#abb706f649b65e1b071ad9d99d86b12db">bindCubemapFace</a> (int face)</td></tr>
@@ -190,7 +190,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a644269034ac58f64e47d88846c365cf4 inherit pub_methods_class_renderable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to get the position of the object in 3D space.  <br /></td></tr>
 <tr class="memitem:a699e0a52700234e195a44f7be4e4d531 inherit pub_methods_class_renderable" id="r_a699e0a52700234e195a44f7be4e4d531"><td class="memItemLeft">virtual std::vector&lt; <a class="el" href="struct_core_vertex.html">CoreVertex</a> &gt;&#160;</td><td class="memItemRight"><a class="el" href="class_renderable.html#a699e0a52700234e195a44f7be4e4d531">getVertices</a> () const</td></tr>
 <tr class="memdesc:a699e0a52700234e195a44f7be4e4d531 inherit pub_methods_class_renderable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to get the vertices of the object in 3D space.  <br /></td></tr>
-<tr class="memitem:a98ddcdedf7f0c6d440be821c80d6ed12 inherit pub_methods_class_renderable" id="r_a98ddcdedf7f0c6d440be821c80d6ed12"><td class="memItemLeft">virtual <a class="el" href="units_8h.html#a1636071d291ee0954efc6d64eb8d94f1">Size3d</a>&#160;</td><td class="memItemRight"><a class="el" href="class_renderable.html#a98ddcdedf7f0c6d440be821c80d6ed12">getScale</a> () const</td></tr>
+<tr class="memitem:a98ddcdedf7f0c6d440be821c80d6ed12 inherit pub_methods_class_renderable" id="r_a98ddcdedf7f0c6d440be821c80d6ed12"><td class="memItemLeft">virtual <a class="el" href="units_8h.html#a64eae7ddcc7a03ddf2cda1866b0fb3aa">Size3d</a>&#160;</td><td class="memItemRight"><a class="el" href="class_renderable.html#a98ddcdedf7f0c6d440be821c80d6ed12">getScale</a> () const</td></tr>
 <tr class="memdesc:a98ddcdedf7f0c6d440be821c80d6ed12 inherit pub_methods_class_renderable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to get the scale of the object in 3D space.  <br /></td></tr>
 <tr class="memitem:a54a97abc4b6fe3280505da3b587cba98 inherit pub_methods_class_renderable" id="r_a54a97abc4b6fe3280505da3b587cba98"><td class="memItemLeft">virtual bool&#160;</td><td class="memItemRight"><a class="el" href="class_renderable.html#a54a97abc4b6fe3280505da3b587cba98">canCastShadows</a> () const</td></tr>
 <tr class="memdesc:a54a97abc4b6fe3280505da3b587cba98 inherit pub_methods_class_renderable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to determine if the object can cast shadows. Can be overridden by derived classes.  <br /></td></tr>
@@ -255,9 +255,9 @@ Example</h2>
 <div class="line"><span class="comment">// Show the render target again</span></div>
 <div class="line">renderTarget.show();</div>
 <div class="ttc" id="aclass_render_target_html_a3d16c8367d445094de01933222ef0c63"><div class="ttname"><a href="#a3d16c8367d445094de01933222ef0c63">RenderTarget::RenderTarget</a></div><div class="ttdeci">RenderTarget()=default</div></div>
-<div class="ttc" id="atexture_8h_html_a639c740f69368f9fe25a4f7409a16384a9ead0d38e06ec253ca0ecbf6ea56e59b"><div class="ttname"><a href="texture_8h.html#a639c740f69368f9fe25a4f7409a16384a9ead0d38e06ec253ca0ecbf6ea56e59b">RenderTargetType::Scene</a></div><div class="ttdeci">@ Scene</div><div class="ttdef"><b>Definition</b> <a href="texture_8h_source.html#l00355">texture.h:355</a></div></div>
+<div class="ttc" id="atexture_8h_html_a639c740f69368f9fe25a4f7409a16384a9ead0d38e06ec253ca0ecbf6ea56e59b"><div class="ttname"><a href="texture_8h.html#a639c740f69368f9fe25a4f7409a16384a9ead0d38e06ec253ca0ecbf6ea56e59b">RenderTargetType::Scene</a></div><div class="ttdeci">@ Scene</div><div class="ttdef"><b>Definition</b> <a href="texture_8h_source.html#l00357">texture.h:357</a></div></div>
 </div><!-- fragment --> 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00383">383</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00385">385</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a3d16c8367d445094de01933222ef0c63" name="a3d16c8367d445094de01933222ef0c63"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a3d16c8367d445094de01933222ef0c63">&#9670;&#160;</a></span>RenderTarget() <span class="overload">[1/2]</span></h2>
@@ -318,13 +318,13 @@ Example</h2>
   </dd>
 </dl>
 
-<p class="reference">References <a class="el" href="texture_8h_source.html#l00355">Scene</a>, <a class="el" href="texture_8h_source.html#l00455">type</a>, and <a class="el" href="texture_8h_source.html#l00560">Window</a>.</p>
+<p class="reference">References <a class="el" href="texture_8h_source.html#l00357">Scene</a>, <a class="el" href="texture_8h_source.html#l00457">type</a>, and <a class="el" href="texture_8h_source.html#l00562">Window</a>.</p>
 
 </div>
 </div>
 <a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
-<a id="a30f08e9fae3c0d6ba5d185f4c6e96ca1" name="a30f08e9fae3c0d6ba5d185f4c6e96ca1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a30f08e9fae3c0d6ba5d185f4c6e96ca1">&#9670;&#160;</a></span>addEffect()</h2>
+<a id="a61e3a0d5d2f531d7e576eba488cfb92a" name="a61e3a0d5d2f531d7e576eba488cfb92a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a61e3a0d5d2f531d7e576eba488cfb92a">&#9670;&#160;</a></span>addEffect()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -335,7 +335,7 @@ Example</h2>
         <tr>
           <td class="memname">void RenderTarget::addEffect </td>
           <td>(</td>
-          <td class="paramtype">std::shared_ptr&lt; <a class="el" href="class_effect.html">Effect</a> &gt;</td>          <td class="paramname"><span class="paramname"><em>effect</em></span></td><td>)</td>
+          <td class="paramtype">const std::shared_ptr&lt; <a class="el" href="class_effect.html">Effect</a> &gt; &amp;</td>          <td class="paramname"><span class="paramname"><em>effect</em></span></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -354,10 +354,10 @@ Example</h2>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00520">520</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  520</span>                                                        {</div>
-<div class="line"><span class="lineno">  521</span>        effects.push_back(effect);</div>
-<div class="line"><span class="lineno">  522</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00522">522</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  522</span>                                                        {</div>
+<div class="line"><span class="lineno">  523</span>        effects.push_back(effect);</div>
+<div class="line"><span class="lineno">  524</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -433,7 +433,7 @@ Example</h2>
   </dd>
 </dl>
 
-<p class="reference">References <a class="el" href="texture_8h_source.html#l00560">Window</a>.</p>
+<p class="reference">References <a class="el" href="texture_8h_source.html#l00562">Window</a>.</p>
 
 </div>
 </div>
@@ -515,8 +515,8 @@ Example</h2>
 
 </div>
 </div>
-<a id="ace17fb8304dc4aec682c8b13a8146f25" name="ace17fb8304dc4aec682c8b13a8146f25"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ace17fb8304dc4aec682c8b13a8146f25">&#9670;&#160;</a></span>hide()</h2>
+<a id="afc4e81b5ef815ae5df8710f158f4f9f8" name="afc4e81b5ef815ae5df8710f158f4f9f8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afc4e81b5ef815ae5df8710f158f4f9f8">&#9670;&#160;</a></span>hide()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -525,7 +525,7 @@ Example</h2>
           <td class="memname">void RenderTarget::hide </td>
           <td>(</td>
           <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
-          <td></td>
+          <td> const</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -591,8 +591,8 @@ Example</h2>
 
 </div>
 </div>
-<a id="aa65c40e4d8d0cfcdd38e5d96b1bf69bb" name="aa65c40e4d8d0cfcdd38e5d96b1bf69bb"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa65c40e4d8d0cfcdd38e5d96b1bf69bb">&#9670;&#160;</a></span>show()</h2>
+<a id="a29b94b1e04454f7273a30de6b7c4878d" name="a29b94b1e04454f7273a30de6b7c4878d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a29b94b1e04454f7273a30de6b7c4878d">&#9670;&#160;</a></span>show()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -601,7 +601,7 @@ Example</h2>
           <td class="memname">void RenderTarget::show </td>
           <td>(</td>
           <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
-          <td></td>
+          <td> const</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -650,9 +650,9 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00561">561</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00563">563</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 
-<p class="reference">References <a class="el" href="texture_8h_source.html#l00561">Fluid</a>.</p>
+<p class="reference">References <a class="el" href="texture_8h_source.html#l00563">Fluid</a>.</p>
 
 </div>
 </div>
@@ -676,9 +676,9 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00560">560</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00562">562</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 
-<p class="reference">References <a class="el" href="texture_8h_source.html#l00560">Window</a>.</p>
+<p class="reference">References <a class="el" href="texture_8h_source.html#l00562">Window</a>.</p>
 
 </div>
 </div>
@@ -697,7 +697,7 @@ Example</h2>
 
 <p><a class="el" href="struct_texture.html" title="Structure that holds the data for a texture. It is created from a resource.">Texture</a> containing the blurred version for post-processing. </p>
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00401">401</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00403">403</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 
 </div>
 </div>
@@ -715,7 +715,7 @@ Example</h2>
 
 <p><a class="el" href="struct_texture.html" title="Structure that holds the data for a texture. It is created from a resource.">Texture</a> containing bright areas for bloom effects. </p>
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00396">396</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00398">398</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 
 </div>
 </div>
@@ -733,7 +733,7 @@ Example</h2>
 
 <p><a class="el" href="struct_texture.html" title="Structure that holds the data for a texture. It is created from a resource.">Texture</a> containing depth information for depth-based effects. </p>
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00406">406</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00408">408</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 
 </div>
 </div>
@@ -751,7 +751,7 @@ Example</h2>
 
 <p>G-buffer texture for albedo and specular intensity (deferred rendering). </p>
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00423">423</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00425">425</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 
 </div>
 </div>
@@ -769,7 +769,7 @@ Example</h2>
 
 <p>G-buffer texture for material properties (deferred rendering). </p>
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00428">428</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00430">430</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 
 </div>
 </div>
@@ -787,7 +787,7 @@ Example</h2>
 
 <p>G-buffer texture for normals (deferred rendering). </p>
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00417">417</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00419">419</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 
 </div>
 </div>
@@ -805,7 +805,7 @@ Example</h2>
 
 <p>G-buffer texture for world-space positions (deferred rendering). </p>
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00412">412</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00414">414</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 
 </div>
 </div>
@@ -821,7 +821,7 @@ Example</h2>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00450">450</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00452">452</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 
 </div>
 </div>
@@ -839,7 +839,7 @@ Example</h2>
 
 <p>Multisampled bright texture for anti-aliasing. </p>
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00444">444</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00446">446</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 
 </div>
 </div>
@@ -857,7 +857,7 @@ Example</h2>
 
 <p>Multisampled depth texture for anti-aliasing. </p>
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00439">439</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00441">441</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 
 </div>
 </div>
@@ -875,7 +875,7 @@ Example</h2>
 
 <p>Multisampled texture for anti-aliasing. </p>
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00434">434</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00436">436</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 
 </div>
 </div>
@@ -893,7 +893,7 @@ Example</h2>
 
 <p>The <a class="el" href="class_core_object.html" title="Represents a 3D object in the scene, including its geometry, material and every interaction with the ...">CoreObject</a> used to render the render target. </p>
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00491">491</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00493">493</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 
 </div>
 </div>
@@ -909,7 +909,7 @@ Example</h2>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00449">449</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00451">451</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 
 </div>
 </div>
@@ -927,7 +927,7 @@ Example</h2>
 
 <p>The texture associated with the render target. This will be the output of the rendering process. </p>
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00391">391</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00393">393</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 
 </div>
 </div>
@@ -945,7 +945,7 @@ Example</h2>
 
 <p>The type of the render target. </p>
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00455">455</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00457">457</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 
 </div>
 </div>
@@ -963,7 +963,7 @@ Example</h2>
 
 <p><a class="el" href="struct_texture.html" title="Structure that holds the data for a texture. It is created from a resource.">Texture</a> for volumetric lighting. </p>
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00448">448</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00450">450</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 
 </div>
 </div>

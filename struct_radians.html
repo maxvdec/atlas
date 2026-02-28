@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 5</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -156,11 +156,11 @@ Example</h2>
 <div class="line"><a class="code hl_struct" href="struct_radians.html">Radians</a> doubled = angle * 2.0f;</div>
 <div class="line"><span class="comment">// Convert back to float for trigonometry</span></div>
 <div class="line"><span class="keywordtype">float</span> sinValue = std::sin(angle.<a class="code hl_function" href="#a0f31cb7f5d0e79d0d0c90be8eb6418e0">toFloat</a>());</div>
-<div class="ttc" id="astruct_radians_html"><div class="ttname"><a href="struct_radians.html">Radians</a></div><div class="ttdoc">Structure representing angular measurements in radians. Provides arithmetic operations and conversion...</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00417">units.h:417</a></div></div>
-<div class="ttc" id="astruct_radians_html_a0f31cb7f5d0e79d0d0c90be8eb6418e0"><div class="ttname"><a href="#a0f31cb7f5d0e79d0d0c90be8eb6418e0">Radians::toFloat</a></div><div class="ttdeci">float toFloat() const</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00432">units.h:432</a></div></div>
-<div class="ttc" id="astruct_radians_html_adaf5f289ea9b3ae2d0869f9dc247beb9"><div class="ttname"><a href="#adaf5f289ea9b3ae2d0869f9dc247beb9">Radians::fromDegrees</a></div><div class="ttdeci">static Radians fromDegrees(float degrees)</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00434">units.h:434</a></div></div>
+<div class="ttc" id="astruct_radians_html"><div class="ttname"><a href="struct_radians.html">Radians</a></div><div class="ttdoc">Structure representing angular measurements in radians. Provides arithmetic operations and conversion...</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00463">units.h:463</a></div></div>
+<div class="ttc" id="astruct_radians_html_a0f31cb7f5d0e79d0d0c90be8eb6418e0"><div class="ttname"><a href="#a0f31cb7f5d0e79d0d0c90be8eb6418e0">Radians::toFloat</a></div><div class="ttdeci">float toFloat() const</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00478">units.h:478</a></div></div>
+<div class="ttc" id="astruct_radians_html_adaf5f289ea9b3ae2d0869f9dc247beb9"><div class="ttname"><a href="#adaf5f289ea9b3ae2d0869f9dc247beb9">Radians::fromDegrees</a></div><div class="ttdeci">static Radians fromDegrees(float degrees)</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00480">units.h:480</a></div></div>
 </div><!-- fragment --> 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00417">417</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00463">463</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
 <a id="adaf5f289ea9b3ae2d0869f9dc247beb9" name="adaf5f289ea9b3ae2d0869f9dc247beb9"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#adaf5f289ea9b3ae2d0869f9dc247beb9">&#9670;&#160;</a></span>fromDegrees()</h2>
@@ -185,10 +185,10 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00434">434</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  434</span>                                                     {</div>
-<div class="line"><span class="lineno">  435</span>        <span class="keywordflow">return</span> {<span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(degrees * (std::numbers::pi) / 180.0f)};</div>
-<div class="line"><span class="lineno">  436</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00480">480</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  480</span>                                              {</div>
+<div class="line"><span class="lineno">  481</span>        <span class="keywordflow">return</span> {<span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(degrees * (std::numbers::pi) / 180.0f)};</div>
+<div class="line"><span class="lineno">  482</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -215,11 +215,11 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00428">428</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  428</span>{ <span class="keywordflow">return</span> {<a class="code hl_variable" href="#a0509296b67c5f12e13a12f03558bb7c7">value</a> * scalar}; }</div>
-<div class="ttc" id="astruct_radians_html_a0509296b67c5f12e13a12f03558bb7c7"><div class="ttname"><a href="#a0509296b67c5f12e13a12f03558bb7c7">Radians::value</a></div><div class="ttdeci">float value</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00418">units.h:418</a></div></div>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00474">474</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  474</span>{ <span class="keywordflow">return</span> {<a class="code hl_variable" href="#a0509296b67c5f12e13a12f03558bb7c7">value</a> * scalar}; }</div>
+<div class="ttc" id="astruct_radians_html_a0509296b67c5f12e13a12f03558bb7c7"><div class="ttname"><a href="#a0509296b67c5f12e13a12f03558bb7c7">Radians::value</a></div><div class="ttdeci">float value</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00464">units.h:464</a></div></div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="units_8h_source.html#l00418">value</a>.</p>
+<p class="reference">References <a class="el" href="units_8h_source.html#l00464">value</a>.</p>
 
 </div>
 </div>
@@ -246,12 +246,12 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00420">420</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  420</span>                                                  {</div>
-<div class="line"><span class="lineno">  421</span>        <span class="keywordflow">return</span> {<a class="code hl_variable" href="#a0509296b67c5f12e13a12f03558bb7c7">value</a> + other.<a class="code hl_variable" href="#a0509296b67c5f12e13a12f03558bb7c7">value</a>};</div>
-<div class="line"><span class="lineno">  422</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00466">466</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  466</span>                                                  {</div>
+<div class="line"><span class="lineno">  467</span>        <span class="keywordflow">return</span> {<a class="code hl_variable" href="#a0509296b67c5f12e13a12f03558bb7c7">value</a> + other.<a class="code hl_variable" href="#a0509296b67c5f12e13a12f03558bb7c7">value</a>};</div>
+<div class="line"><span class="lineno">  468</span>    }</div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="units_8h_source.html#l00418">value</a>.</p>
+<p class="reference">References <a class="el" href="units_8h_source.html#l00464">value</a>.</p>
 
 </div>
 </div>
@@ -278,12 +278,12 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00424">424</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  424</span>                                                  {</div>
-<div class="line"><span class="lineno">  425</span>        <span class="keywordflow">return</span> {<a class="code hl_variable" href="#a0509296b67c5f12e13a12f03558bb7c7">value</a> - other.<a class="code hl_variable" href="#a0509296b67c5f12e13a12f03558bb7c7">value</a>};</div>
-<div class="line"><span class="lineno">  426</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00470">470</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  470</span>                                                  {</div>
+<div class="line"><span class="lineno">  471</span>        <span class="keywordflow">return</span> {<a class="code hl_variable" href="#a0509296b67c5f12e13a12f03558bb7c7">value</a> - other.<a class="code hl_variable" href="#a0509296b67c5f12e13a12f03558bb7c7">value</a>};</div>
+<div class="line"><span class="lineno">  472</span>    }</div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="units_8h_source.html#l00418">value</a>.</p>
+<p class="reference">References <a class="el" href="units_8h_source.html#l00464">value</a>.</p>
 
 </div>
 </div>
@@ -310,10 +310,10 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00430">430</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  430</span>{ <span class="keywordflow">return</span> {<a class="code hl_variable" href="#a0509296b67c5f12e13a12f03558bb7c7">value</a> / scalar}; }</div>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00476">476</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  476</span>{ <span class="keywordflow">return</span> {<a class="code hl_variable" href="#a0509296b67c5f12e13a12f03558bb7c7">value</a> / scalar}; }</div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="units_8h_source.html#l00418">value</a>.</p>
+<p class="reference">References <a class="el" href="units_8h_source.html#l00464">value</a>.</p>
 
 </div>
 </div>
@@ -340,10 +340,10 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00432">432</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  432</span>{ <span class="keywordflow">return</span> <span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(<a class="code hl_variable" href="#a0509296b67c5f12e13a12f03558bb7c7">value</a>); }</div>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00478">478</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  478</span>{ <span class="keywordflow">return</span> <span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(<a class="code hl_variable" href="#a0509296b67c5f12e13a12f03558bb7c7">value</a>); }</div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="units_8h_source.html#l00418">value</a>.</p>
+<p class="reference">References <a class="el" href="units_8h_source.html#l00464">value</a>.</p>
 
 </div>
 </div>
@@ -360,7 +360,7 @@ Example</h2>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00418">418</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00464">464</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
 
 </div>
 </div>

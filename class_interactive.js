@@ -1,5 +1,6 @@
 var class_interactive =
 [
+    [ "~Interactive", "class_interactive.html#ab03bea8ae8c18a22a49639ece54ae807", null ],
     [ "atEachFrame", "class_interactive.html#a4756dd0977ce73c046ac377e7d28ec5b", null ],
     [ "onKeyPress", "class_interactive.html#a14a1304885e42e3b777106c9e09fe226", null ],
     [ "onKeyRelease", "class_interactive.html#a7987c4b042c12a440efbeb9dd54e7d80", null ],

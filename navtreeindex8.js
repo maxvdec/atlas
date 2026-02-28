@@ -1,5 +1,17 @@
 var NAVTREEINDEX8 =
 {
+"namespacebezel__jolt.html#ad8ce12750f5027b41715a250ff5276fba0eaadb4fcb48a0a0ed7bc9868be9fbaa":[1,0,3,4,1],
+"namespacebezel__jolt.html#ad8ce12750f5027b41715a250ff5276fba4059b0251f66a18cb56f544728796875":[1,0,3,4,0],
+"namespacebezel__jolt.html#ad8ce12750f5027b41715a250ff5276fba902b0d55fddef6f8d651fe1035b7d4bd":[1,0,3,4,2],
+"namespacebezel__jolt.html#aeb2e9b8b2a6afb97b831a67a63742f62":[1,0,3,5],
+"namespacemembers.html":[1,1,0],
+"namespacemembers_enum.html":[1,1,4],
+"namespacemembers_func.html":[1,1,1],
+"namespacemembers_type.html":[1,1,3],
+"namespacemembers_vars.html":[1,1,2],
+"namespaceopal.html":[1,0,5],
+"namespaceopal.html#a0f2a10029931d49d9cb7366b874115ba":[1,0,5,27],
+"namespaceopal.html#a0f2a10029931d49d9cb7366b874115baa18d58fde618e4a30e2dfdc122e693047":[1,0,5,27,5],
 "namespaceopal.html#a0f2a10029931d49d9cb7366b874115baa1da0b9ead8b051940a89214bae22831c":[1,0,5,27,4],
 "namespaceopal.html#a0f2a10029931d49d9cb7366b874115baa75dd5f1160a3f02b6fae89c54361a1b3":[1,0,5,27,0],
 "namespaceopal.html#a0f2a10029931d49d9cb7366b874115baa7ca66fdfaad3eb33fc65d7490178f856":[1,0,5,27,3],
@@ -237,17 +249,5 @@ var NAVTREEINDEX8 =
 "shape_8h_source.html":[3,0,1,2,1,2],
 "struct_allocation_packet.html":[2,0,3],
 "struct_allocation_packet.html#a0b77ab77b86f502d2202bb99a0fa6654":[2,0,3,1],
-"struct_allocation_packet.html#a238dbf8cb7196bfd0a7daeeb67915319":[2,0,3,0],
-"struct_allocation_packet.html#a29ec048eb3055044632bb3ec7f171732":[2,0,3,6],
-"struct_allocation_packet.html#a41dbe68c43d6b8ad22d716822d4f3a3e":[2,0,3,2],
-"struct_allocation_packet.html#a74d261bca2f16b41369bcf0e73ac53dd":[2,0,3,3],
-"struct_allocation_packet.html#a9591adcd07a418df33486ae3efa826a2":[2,0,3,5],
-"struct_allocation_packet.html#ad7c1a32f287c2ddc4a0df43bba8321c6":[2,0,3,4],
-"struct_ambient_light.html":[2,0,4],
-"struct_ambient_light.html#aca3888612846c67aabc270e0a7c15958":[2,0,4,1],
-"struct_ambient_light.html#ae238c09e84a56bc75179513e55f1452c":[2,0,4,0],
-"struct_angle_limits.html":[2,0,5],
-"struct_angle_limits.html#a6277580bf831cb22865a7721ecb86c86":[2,0,5,0],
-"struct_angle_limits.html#ac9b7f87c7e1f9a9a5289bf16b77b4008":[2,0,5,2],
-"struct_angle_limits.html#aff1ccc453a11ae83f788bf58d490cffe":[2,0,5,1]
+"struct_allocation_packet.html#a238dbf8cb7196bfd0a7daeeb67915319":[2,0,3,0]
 };

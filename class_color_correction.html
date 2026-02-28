@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 5</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -180,7 +180,7 @@ Example</h2>
 <div class="line">renderTarget.addEffect(colorCorrection);</div>
 <div class="ttc" id="aclass_color_correction_html_a6191c102b6696b537e6a29e8acdf23f5"><div class="ttname"><a href="#a6191c102b6696b537e6a29e8acdf23f5">ColorCorrection::create</a></div><div class="ttdeci">static std::shared_ptr&lt; ColorCorrection &gt; create(ColorCorrectionParameters p={})</div><div class="ttdoc">Creates a shared pointer to a ColorCorrection effect.</div><div class="ttdef"><b>Definition</b> <a href="atlas_2effect_8h_source.html#l00329">effect.h:329</a></div></div>
 <div class="ttc" id="aclass_color_correction_html_ae7dedd2d2f9b3cd1e310d2a9d8525b35"><div class="ttname"><a href="#ae7dedd2d2f9b3cd1e310d2a9d8525b35">ColorCorrection::params</a></div><div class="ttdeci">ColorCorrectionParameters params</div><div class="ttdoc">The color correction parameters to apply.</div><div class="ttdef"><b>Definition</b> <a href="atlas_2effect_8h_source.html#l00312">effect.h:312</a></div></div>
-<div class="ttc" id="aclass_render_target_html"><div class="ttname"><a href="class_render_target.html">RenderTarget</a></div><div class="ttdoc">Class that represents a render target, which is a texture in which a scene can be rendered....</div><div class="ttdef"><b>Definition</b> <a href="texture_8h_source.html#l00383">texture.h:383</a></div></div>
+<div class="ttc" id="aclass_render_target_html"><div class="ttname"><a href="class_render_target.html">RenderTarget</a></div><div class="ttdoc">Class that represents a render target, which is a texture in which a scene can be rendered....</div><div class="ttdef"><b>Definition</b> <a href="texture_8h_source.html#l00385">texture.h:385</a></div></div>
 <div class="ttc" id="astruct_color_correction_parameters_html"><div class="ttname"><a href="struct_color_correction_parameters.html">ColorCorrectionParameters</a></div><div class="ttdoc">Structure containing parameters for color correction post-processing. Allows fine-tuning of exposure,...</div><div class="ttdef"><b>Definition</b> <a href="atlas_2effect_8h_source.html#l00247">effect.h:247</a></div></div>
 </div><!-- fragment --> 
 <p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00306">306</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
@@ -266,22 +266,22 @@ Example</h2>
 
 <p class="definition">Definition at line <a class="el" href="atlas_2effect_8h_source.html#l00338">338</a> of file <a class="el" href="atlas_2effect_8h_source.html">effect.h</a>.</p>
 <div class="fragment"><div class="line"><span class="lineno">  338</span>                                                                    {</div>
-<div class="line"><span class="lineno">  339</span>        program.<a class="code hl_function" href="struct_shader_program.html#ad3586861fab8ec713553764fee6fa0c1">setUniform1f</a>(<span class="stringliteral">&quot;EffectFloat1[&quot;</span> + std::to_string((<span class="keywordtype">int</span>)index) + <span class="stringliteral">&quot;]&quot;</span>,</div>
+<div class="line"><span class="lineno">  339</span>        program.<a class="code hl_function" href="struct_shader_program.html#a225ab4a5e2909b73037d130cc435acfa">setUniform1f</a>(<span class="stringliteral">&quot;EffectFloat1[&quot;</span> + std::to_string((<span class="keywordtype">int</span>)index) + <span class="stringliteral">&quot;]&quot;</span>,</div>
 <div class="line"><span class="lineno">  340</span>                             <a class="code hl_variable" href="#ae7dedd2d2f9b3cd1e310d2a9d8525b35">params</a>.exposure);</div>
-<div class="line"><span class="lineno">  341</span>        program.<a class="code hl_function" href="struct_shader_program.html#ad3586861fab8ec713553764fee6fa0c1">setUniform1f</a>(<span class="stringliteral">&quot;EffectFloat2[&quot;</span> + std::to_string((<span class="keywordtype">int</span>)index) + <span class="stringliteral">&quot;]&quot;</span>,</div>
+<div class="line"><span class="lineno">  341</span>        program.<a class="code hl_function" href="struct_shader_program.html#a225ab4a5e2909b73037d130cc435acfa">setUniform1f</a>(<span class="stringliteral">&quot;EffectFloat2[&quot;</span> + std::to_string((<span class="keywordtype">int</span>)index) + <span class="stringliteral">&quot;]&quot;</span>,</div>
 <div class="line"><span class="lineno">  342</span>                             <a class="code hl_variable" href="#ae7dedd2d2f9b3cd1e310d2a9d8525b35">params</a>.contrast);</div>
-<div class="line"><span class="lineno">  343</span>        program.<a class="code hl_function" href="struct_shader_program.html#ad3586861fab8ec713553764fee6fa0c1">setUniform1f</a>(<span class="stringliteral">&quot;EffectFloat3[&quot;</span> + std::to_string((<span class="keywordtype">int</span>)index) + <span class="stringliteral">&quot;]&quot;</span>,</div>
+<div class="line"><span class="lineno">  343</span>        program.<a class="code hl_function" href="struct_shader_program.html#a225ab4a5e2909b73037d130cc435acfa">setUniform1f</a>(<span class="stringliteral">&quot;EffectFloat3[&quot;</span> + std::to_string((<span class="keywordtype">int</span>)index) + <span class="stringliteral">&quot;]&quot;</span>,</div>
 <div class="line"><span class="lineno">  344</span>                             <a class="code hl_variable" href="#ae7dedd2d2f9b3cd1e310d2a9d8525b35">params</a>.saturation);</div>
-<div class="line"><span class="lineno">  345</span>        program.<a class="code hl_function" href="struct_shader_program.html#ad3586861fab8ec713553764fee6fa0c1">setUniform1f</a>(<span class="stringliteral">&quot;EffectFloat4[&quot;</span> + std::to_string((<span class="keywordtype">int</span>)index) + <span class="stringliteral">&quot;]&quot;</span>,</div>
+<div class="line"><span class="lineno">  345</span>        program.<a class="code hl_function" href="struct_shader_program.html#a225ab4a5e2909b73037d130cc435acfa">setUniform1f</a>(<span class="stringliteral">&quot;EffectFloat4[&quot;</span> + std::to_string((<span class="keywordtype">int</span>)index) + <span class="stringliteral">&quot;]&quot;</span>,</div>
 <div class="line"><span class="lineno">  346</span>                             <a class="code hl_variable" href="#ae7dedd2d2f9b3cd1e310d2a9d8525b35">params</a>.gamma);</div>
-<div class="line"><span class="lineno">  347</span>        program.<a class="code hl_function" href="struct_shader_program.html#ad3586861fab8ec713553764fee6fa0c1">setUniform1f</a>(<span class="stringliteral">&quot;EffectFloat5[&quot;</span> + std::to_string((<span class="keywordtype">int</span>)index) + <span class="stringliteral">&quot;]&quot;</span>,</div>
+<div class="line"><span class="lineno">  347</span>        program.<a class="code hl_function" href="struct_shader_program.html#a225ab4a5e2909b73037d130cc435acfa">setUniform1f</a>(<span class="stringliteral">&quot;EffectFloat5[&quot;</span> + std::to_string((<span class="keywordtype">int</span>)index) + <span class="stringliteral">&quot;]&quot;</span>,</div>
 <div class="line"><span class="lineno">  348</span>                             <a class="code hl_variable" href="#ae7dedd2d2f9b3cd1e310d2a9d8525b35">params</a>.temperature);</div>
-<div class="line"><span class="lineno">  349</span>        program.<a class="code hl_function" href="struct_shader_program.html#ad3586861fab8ec713553764fee6fa0c1">setUniform1f</a>(<span class="stringliteral">&quot;EffectFloat6[&quot;</span> + std::to_string((<span class="keywordtype">int</span>)index) + <span class="stringliteral">&quot;]&quot;</span>,</div>
+<div class="line"><span class="lineno">  349</span>        program.<a class="code hl_function" href="struct_shader_program.html#a225ab4a5e2909b73037d130cc435acfa">setUniform1f</a>(<span class="stringliteral">&quot;EffectFloat6[&quot;</span> + std::to_string((<span class="keywordtype">int</span>)index) + <span class="stringliteral">&quot;]&quot;</span>,</div>
 <div class="line"><span class="lineno">  350</span>                             <a class="code hl_variable" href="#ae7dedd2d2f9b3cd1e310d2a9d8525b35">params</a>.tint);</div>
 <div class="line"><span class="lineno">  351</span>    }</div>
-<div class="ttc" id="astruct_shader_program_html_ad3586861fab8ec713553764fee6fa0c1"><div class="ttname"><a href="struct_shader_program.html#ad3586861fab8ec713553764fee6fa0c1">ShaderProgram::setUniform1f</a></div><div class="ttdeci">void setUniform1f(std::string name, float v0)</div><div class="ttdoc">Sets a float uniform variable in the shader program.</div></div>
+<div class="ttc" id="astruct_shader_program_html_a225ab4a5e2909b73037d130cc435acfa"><div class="ttname"><a href="struct_shader_program.html#a225ab4a5e2909b73037d130cc435acfa">ShaderProgram::setUniform1f</a></div><div class="ttdeci">void setUniform1f(const std::string &amp;name, float v0) const</div><div class="ttdoc">Sets a float uniform variable in the shader program.</div></div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="atlas_2effect_8h_source.html#l00312">params</a>, and <a class="el" href="struct_shader_program.html#ad3586861fab8ec713553764fee6fa0c1">ShaderProgram::setUniform1f()</a>.</p>
+<p class="reference">References <a class="el" href="atlas_2effect_8h_source.html#l00312">params</a>, and <a class="el" href="struct_shader_program.html#a225ab4a5e2909b73037d130cc435acfa">ShaderProgram::setUniform1f()</a>.</p>
 
 </div>
 </div>

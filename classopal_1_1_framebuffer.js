@@ -2,10 +2,10 @@ var classopal_1_1_framebuffer =
 [
     [ "~Framebuffer", "classopal_1_1_framebuffer.html#a555509821be0295a9c30858c35b8ba8a", null ],
     [ "addAttachment", "classopal_1_1_framebuffer.html#a4994addc8cd8e3af2dfd4e348ce0a665", null ],
-    [ "attachCubemap", "classopal_1_1_framebuffer.html#a18ffb19f8fc66bb38dd9934a5b9d9883", null ],
-    [ "attachCubemapFace", "classopal_1_1_framebuffer.html#a95ba48b80c8fa71a0bd55da479e95bae", null ],
+    [ "attachCubemap", "classopal_1_1_framebuffer.html#a698dc1296aadf78877ed493596f025fa", null ],
+    [ "attachCubemapFace", "classopal_1_1_framebuffer.html#a6a7ccc5c0a784dc195db4bb05395c6f6", null ],
     [ "attachDepthStencilBuffer", "classopal_1_1_framebuffer.html#a08f6e589eb313aced53857e5c483ed90", null ],
-    [ "attachTexture", "classopal_1_1_framebuffer.html#a26098a04d18575bdc2c3db74d1108cae", null ],
+    [ "attachTexture", "classopal_1_1_framebuffer.html#a78dcced4c63a96b82357a50e2f0b20c5", null ],
     [ "bind", "classopal_1_1_framebuffer.html#aa27be08e95f982fe307a0822323dd86e", null ],
     [ "bindForDraw", "classopal_1_1_framebuffer.html#a0a7c3180464d8373fc7cb116728c5b7c", null ],
     [ "bindForRead", "classopal_1_1_framebuffer.html#aa34853463b5c167c2b904112da164df7", null ],

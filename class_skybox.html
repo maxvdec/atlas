@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 5</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -144,16 +144,16 @@ Inheritance diagram for Skybox:</div>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a0860e9aa6cbf872f3e37aecc632a66f8" id="r_a0860e9aa6cbf872f3e37aecc632a66f8"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a0860e9aa6cbf872f3e37aecc632a66f8">display</a> (<a class="el" href="class_window.html">Window</a> &amp;window)</td></tr>
 <tr class="memdesc:a0860e9aa6cbf872f3e37aecc632a66f8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Displays the skybox in the window.  <br /></td></tr>
-<tr class="memitem:a2441bc54c326105f9c7e4331e3ec643d" id="r_a2441bc54c326105f9c7e4331e3ec643d"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a2441bc54c326105f9c7e4331e3ec643d">hide</a> ()</td></tr>
-<tr class="memdesc:a2441bc54c326105f9c7e4331e3ec643d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Hides the skybox from the window.  <br /></td></tr>
-<tr class="memitem:a1fa2b711ffc73c6cadaaf0073f7a31be" id="r_a1fa2b711ffc73c6cadaaf0073f7a31be"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a1fa2b711ffc73c6cadaaf0073f7a31be">show</a> ()</td></tr>
-<tr class="memdesc:a1fa2b711ffc73c6cadaaf0073f7a31be"><td class="mdescLeft">&#160;</td><td class="mdescRight">Shows the skybox in the window.  <br /></td></tr>
+<tr class="memitem:aba6cd9118a4b0cbc6dc76553e6d7e2f7" id="r_aba6cd9118a4b0cbc6dc76553e6d7e2f7"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#aba6cd9118a4b0cbc6dc76553e6d7e2f7">hide</a> () const</td></tr>
+<tr class="memdesc:aba6cd9118a4b0cbc6dc76553e6d7e2f7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Hides the skybox from the window.  <br /></td></tr>
+<tr class="memitem:ae54b6d2b9f473822add2dcedf7dd1b5d" id="r_ae54b6d2b9f473822add2dcedf7dd1b5d"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#ae54b6d2b9f473822add2dcedf7dd1b5d">show</a> () const</td></tr>
+<tr class="memdesc:ae54b6d2b9f473822add2dcedf7dd1b5d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Shows the skybox in the window.  <br /></td></tr>
 <tr class="memitem:a25950a2d0cad36d0171241759aabb32e" id="r_a25950a2d0cad36d0171241759aabb32e"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a25950a2d0cad36d0171241759aabb32e">render</a> (float dt, std::shared_ptr&lt; <a class="el" href="classopal_1_1_command_buffer.html">opal::CommandBuffer</a> &gt; commandBuffer, bool updatePipeline=false) override</td></tr>
 <tr class="memdesc:a25950a2d0cad36d0171241759aabb32e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Renders the skybox cube using the stored cubemap texture.  <br /></td></tr>
-<tr class="memitem:afead5bf73c14712ac0654e5a3e3f35a6" id="r_afead5bf73c14712ac0654e5a3e3f35a6"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#afead5bf73c14712ac0654e5a3e3f35a6">setViewMatrix</a> (const glm::mat4 &amp;view) override</td></tr>
-<tr class="memdesc:afead5bf73c14712ac0654e5a3e3f35a6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates the view matrix while removing translation for correct skybox rendering.  <br /></td></tr>
-<tr class="memitem:a83a3864abcb171c4f223a58d97575e54" id="r_a83a3864abcb171c4f223a58d97575e54"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a83a3864abcb171c4f223a58d97575e54">setProjectionMatrix</a> (const glm::mat4 &amp;projection) override</td></tr>
-<tr class="memdesc:a83a3864abcb171c4f223a58d97575e54"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stores the projection matrix used for skybox rendering.  <br /></td></tr>
+<tr class="memitem:a4c383f3be4590a1698000c556d6d6b7a" id="r_a4c383f3be4590a1698000c556d6d6b7a"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a4c383f3be4590a1698000c556d6d6b7a">setViewMatrix</a> (const glm::mat4 &amp;newView) override</td></tr>
+<tr class="memdesc:a4c383f3be4590a1698000c556d6d6b7a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates the view matrix while removing translation for correct skybox rendering.  <br /></td></tr>
+<tr class="memitem:a73068623517fc44f04574290ff4e3fae" id="r_a73068623517fc44f04574290ff4e3fae"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a73068623517fc44f04574290ff4e3fae">setProjectionMatrix</a> (const glm::mat4 &amp;newProjection) override</td></tr>
+<tr class="memdesc:a73068623517fc44f04574290ff4e3fae"><td class="mdescLeft">&#160;</td><td class="mdescRight">Stores the projection matrix used for skybox rendering.  <br /></td></tr>
 <tr class="memitem:a416acc72ebc93e24fa1944537c6f7dcd" id="r_a416acc72ebc93e24fa1944537c6f7dcd"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#a416acc72ebc93e24fa1944537c6f7dcd">canUseDeferredRendering</a> () override</td></tr>
 <tr class="memdesc:a416acc72ebc93e24fa1944537c6f7dcd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to determine if the object can use deferred rendering.  <br /></td></tr>
 <tr class="memitem:af90dc48c708b4682a4ef5e4f171c8f38" id="r_af90dc48c708b4682a4ef5e4f171c8f38"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="#af90dc48c708b4682a4ef5e4f171c8f38">Skybox</a> ()=default</td></tr>
@@ -173,7 +173,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a644269034ac58f64e47d88846c365cf4 inherit pub_methods_class_renderable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to get the position of the object in 3D space.  <br /></td></tr>
 <tr class="memitem:a699e0a52700234e195a44f7be4e4d531 inherit pub_methods_class_renderable" id="r_a699e0a52700234e195a44f7be4e4d531"><td class="memItemLeft">virtual std::vector&lt; <a class="el" href="struct_core_vertex.html">CoreVertex</a> &gt;&#160;</td><td class="memItemRight"><a class="el" href="class_renderable.html#a699e0a52700234e195a44f7be4e4d531">getVertices</a> () const</td></tr>
 <tr class="memdesc:a699e0a52700234e195a44f7be4e4d531 inherit pub_methods_class_renderable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to get the vertices of the object in 3D space.  <br /></td></tr>
-<tr class="memitem:a98ddcdedf7f0c6d440be821c80d6ed12 inherit pub_methods_class_renderable" id="r_a98ddcdedf7f0c6d440be821c80d6ed12"><td class="memItemLeft">virtual <a class="el" href="units_8h.html#a1636071d291ee0954efc6d64eb8d94f1">Size3d</a>&#160;</td><td class="memItemRight"><a class="el" href="class_renderable.html#a98ddcdedf7f0c6d440be821c80d6ed12">getScale</a> () const</td></tr>
+<tr class="memitem:a98ddcdedf7f0c6d440be821c80d6ed12 inherit pub_methods_class_renderable" id="r_a98ddcdedf7f0c6d440be821c80d6ed12"><td class="memItemLeft">virtual <a class="el" href="units_8h.html#a64eae7ddcc7a03ddf2cda1866b0fb3aa">Size3d</a>&#160;</td><td class="memItemRight"><a class="el" href="class_renderable.html#a98ddcdedf7f0c6d440be821c80d6ed12">getScale</a> () const</td></tr>
 <tr class="memdesc:a98ddcdedf7f0c6d440be821c80d6ed12 inherit pub_methods_class_renderable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to get the scale of the object in 3D space.  <br /></td></tr>
 <tr class="memitem:a54a97abc4b6fe3280505da3b587cba98 inherit pub_methods_class_renderable" id="r_a54a97abc4b6fe3280505da3b587cba98"><td class="memItemLeft">virtual bool&#160;</td><td class="memItemRight"><a class="el" href="class_renderable.html#a54a97abc4b6fe3280505da3b587cba98">canCastShadows</a> () const</td></tr>
 <tr class="memdesc:a54a97abc4b6fe3280505da3b587cba98 inherit pub_methods_class_renderable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to determine if the object can cast shadows. Can be overridden by derived classes.  <br /></td></tr>
@@ -213,19 +213,19 @@ Example</h2>
 <div class="line"><span class="comment">// Display the skybox in the window</span></div>
 <div class="line">skybox.<a class="code hl_function" href="#a0860e9aa6cbf872f3e37aecc632a66f8">display</a>(window);</div>
 <div class="line"><span class="comment">// Hide the skybox</span></div>
-<div class="line">skybox.<a class="code hl_function" href="#a2441bc54c326105f9c7e4331e3ec643d">hide</a>();</div>
+<div class="line">skybox.<a class="code hl_function" href="#aba6cd9118a4b0cbc6dc76553e6d7e2f7">hide</a>();</div>
 <div class="line"><span class="comment">// Show the skybox again</span></div>
-<div class="line">skybox.<a class="code hl_function" href="#a1fa2b711ffc73c6cadaaf0073f7a31be">show</a>();</div>
+<div class="line">skybox.<a class="code hl_function" href="#ae54b6d2b9f473822add2dcedf7dd1b5d">show</a>();</div>
 <div class="ttc" id="aclass_skybox_html_a0860e9aa6cbf872f3e37aecc632a66f8"><div class="ttname"><a href="#a0860e9aa6cbf872f3e37aecc632a66f8">Skybox::display</a></div><div class="ttdeci">void display(Window &amp;window)</div><div class="ttdoc">Displays the skybox in the window.</div></div>
-<div class="ttc" id="aclass_skybox_html_a1fa2b711ffc73c6cadaaf0073f7a31be"><div class="ttname"><a href="#a1fa2b711ffc73c6cadaaf0073f7a31be">Skybox::show</a></div><div class="ttdeci">void show()</div><div class="ttdoc">Shows the skybox in the window.</div></div>
-<div class="ttc" id="aclass_skybox_html_a2441bc54c326105f9c7e4331e3ec643d"><div class="ttname"><a href="#a2441bc54c326105f9c7e4331e3ec643d">Skybox::hide</a></div><div class="ttdeci">void hide()</div><div class="ttdoc">Hides the skybox from the window.</div></div>
-<div class="ttc" id="aclass_skybox_html_ab91d72f29e949ef124b953be43ac4713"><div class="ttname"><a href="#ab91d72f29e949ef124b953be43ac4713">Skybox::cubemap</a></div><div class="ttdeci">Cubemap cubemap</div><div class="ttdoc">The cubemap texture used for the skybox.</div><div class="ttdef"><b>Definition</b> <a href="texture_8h_source.html#l00596">texture.h:596</a></div></div>
+<div class="ttc" id="aclass_skybox_html_ab91d72f29e949ef124b953be43ac4713"><div class="ttname"><a href="#ab91d72f29e949ef124b953be43ac4713">Skybox::cubemap</a></div><div class="ttdeci">Cubemap cubemap</div><div class="ttdoc">The cubemap texture used for the skybox.</div><div class="ttdef"><b>Definition</b> <a href="texture_8h_source.html#l00599">texture.h:599</a></div></div>
+<div class="ttc" id="aclass_skybox_html_aba6cd9118a4b0cbc6dc76553e6d7e2f7"><div class="ttname"><a href="#aba6cd9118a4b0cbc6dc76553e6d7e2f7">Skybox::hide</a></div><div class="ttdeci">void hide() const</div><div class="ttdoc">Hides the skybox from the window.</div></div>
+<div class="ttc" id="aclass_skybox_html_ae54b6d2b9f473822add2dcedf7dd1b5d"><div class="ttname"><a href="#ae54b6d2b9f473822add2dcedf7dd1b5d">Skybox::show</a></div><div class="ttdeci">void show() const</div><div class="ttdoc">Shows the skybox in the window.</div></div>
 <div class="ttc" id="aclass_skybox_html_af90dc48c708b4682a4ef5e4f171c8f38"><div class="ttname"><a href="#af90dc48c708b4682a4ef5e4f171c8f38">Skybox::Skybox</a></div><div class="ttdeci">Skybox()=default</div></div>
 <div class="ttc" id="aclass_workspace_html_a8588fb898bffea4777ceffab7c2c7795"><div class="ttname"><a href="class_workspace.html#a8588fb898bffea4777ceffab7c2c7795">Workspace::get</a></div><div class="ttdeci">static Workspace &amp; get()</div><div class="ttdef"><b>Definition</b> <a href="workspace_8h_source.html#l00091">workspace.h:91</a></div></div>
-<div class="ttc" id="astruct_cubemap_html"><div class="ttname"><a href="struct_cubemap.html">Cubemap</a></div><div class="ttdoc">Structure that holds the data for a cubemap texture.</div><div class="ttdef"><b>Definition</b> <a href="texture_8h_source.html#l00295">texture.h:295</a></div></div>
+<div class="ttc" id="astruct_cubemap_html"><div class="ttname"><a href="struct_cubemap.html">Cubemap</a></div><div class="ttdoc">Structure that holds the data for a cubemap texture.</div><div class="ttdef"><b>Definition</b> <a href="texture_8h_source.html#l00297">texture.h:297</a></div></div>
 <div class="ttc" id="astruct_cubemap_html_ae5986bc2dbf885ead71ce672f7dd4137"><div class="ttname"><a href="struct_cubemap.html#ae5986bc2dbf885ead71ce672f7dd4137">Cubemap::fromResourceGroup</a></div><div class="ttdeci">static Cubemap fromResourceGroup(ResourceGroup &amp;resourceGroup)</div><div class="ttdoc">Creates a cubemap from a resource group.</div></div>
 </div><!-- fragment --> 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00584">584</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00586">586</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="af90dc48c708b4682a4ef5e4f171c8f38" name="af90dc48c708b4682a4ef5e4f171c8f38"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#af90dc48c708b4682a4ef5e4f171c8f38">&#9670;&#160;</a></span>Skybox()</h2>
@@ -281,8 +281,8 @@ Example</h2>
 
 <p>Reimplemented from <a class="el" href="class_renderable.html#a1427af9032f3e6c7f91f9b23948ee166">Renderable</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00636">636</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  636</span>{ <span class="keywordflow">return</span> <span class="keyword">false</span>; }</div>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00639">639</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  639</span>{ <span class="keywordflow">return</span> <span class="keyword">false</span>; }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -313,15 +313,15 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00586">586</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  586</span>                                                                         {</div>
-<div class="line"><span class="lineno">  587</span>        <span class="keyword">auto</span> skybox = std::make_shared&lt;Skybox&gt;();</div>
-<div class="line"><span class="lineno">  588</span>        skybox-&gt;cubemap = <a class="code hl_variable" href="#ab91d72f29e949ef124b953be43ac4713">cubemap</a>;</div>
-<div class="line"><span class="lineno">  589</span>        skybox-&gt;display(window);</div>
-<div class="line"><span class="lineno">  590</span>        <span class="keywordflow">return</span> skybox;</div>
-<div class="line"><span class="lineno">  591</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00588">588</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  588</span>                                                                         {</div>
+<div class="line"><span class="lineno">  589</span>        <span class="keyword">auto</span> skybox = std::make_shared&lt;Skybox&gt;();</div>
+<div class="line"><span class="lineno">  590</span>        skybox-&gt;cubemap = std::move(<a class="code hl_variable" href="#ab91d72f29e949ef124b953be43ac4713">cubemap</a>);</div>
+<div class="line"><span class="lineno">  591</span>        skybox-&gt;display(window);</div>
+<div class="line"><span class="lineno">  592</span>        <span class="keywordflow">return</span> skybox;</div>
+<div class="line"><span class="lineno">  593</span>    }</div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="texture_8h_source.html#l00596">cubemap</a>, and <a class="el" href="texture_8h_source.html#l00641">Window</a>.</p>
+<p class="reference">References <a class="el" href="texture_8h_source.html#l00599">cubemap</a>, and <a class="el" href="texture_8h_source.html#l00644">Window</a>.</p>
 
 </div>
 </div>
@@ -348,12 +348,12 @@ Example</h2>
   </dd>
 </dl>
 
-<p class="reference">References <a class="el" href="texture_8h_source.html#l00641">Window</a>.</p>
+<p class="reference">References <a class="el" href="texture_8h_source.html#l00644">Window</a>.</p>
 
 </div>
 </div>
-<a id="a2441bc54c326105f9c7e4331e3ec643d" name="a2441bc54c326105f9c7e4331e3ec643d"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2441bc54c326105f9c7e4331e3ec643d">&#9670;&#160;</a></span>hide()</h2>
+<a id="aba6cd9118a4b0cbc6dc76553e6d7e2f7" name="aba6cd9118a4b0cbc6dc76553e6d7e2f7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aba6cd9118a4b0cbc6dc76553e6d7e2f7">&#9670;&#160;</a></span>hide()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -362,7 +362,7 @@ Example</h2>
           <td class="memname">void Skybox::hide </td>
           <td>(</td>
           <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
-          <td></td>
+          <td> const</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -409,8 +409,8 @@ Example</h2>
 
 </div>
 </div>
-<a id="a83a3864abcb171c4f223a58d97575e54" name="a83a3864abcb171c4f223a58d97575e54"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a83a3864abcb171c4f223a58d97575e54">&#9670;&#160;</a></span>setProjectionMatrix()</h2>
+<a id="a73068623517fc44f04574290ff4e3fae" name="a73068623517fc44f04574290ff4e3fae"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a73068623517fc44f04574290ff4e3fae">&#9670;&#160;</a></span>setProjectionMatrix()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -421,7 +421,7 @@ Example</h2>
         <tr>
           <td class="memname">void Skybox::setProjectionMatrix </td>
           <td>(</td>
-          <td class="paramtype">const glm::mat4 &amp;</td>          <td class="paramname"><span class="paramname"><em>projection</em></span></td><td>)</td>
+          <td class="paramtype">const glm::mat4 &amp;</td>          <td class="paramname"><span class="paramname"><em>newProjection</em></span></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -438,8 +438,8 @@ Example</h2>
 
 </div>
 </div>
-<a id="afead5bf73c14712ac0654e5a3e3f35a6" name="afead5bf73c14712ac0654e5a3e3f35a6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#afead5bf73c14712ac0654e5a3e3f35a6">&#9670;&#160;</a></span>setViewMatrix()</h2>
+<a id="a4c383f3be4590a1698000c556d6d6b7a" name="a4c383f3be4590a1698000c556d6d6b7a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4c383f3be4590a1698000c556d6d6b7a">&#9670;&#160;</a></span>setViewMatrix()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -450,7 +450,7 @@ Example</h2>
         <tr>
           <td class="memname">void Skybox::setViewMatrix </td>
           <td>(</td>
-          <td class="paramtype">const glm::mat4 &amp;</td>          <td class="paramname"><span class="paramname"><em>view</em></span></td><td>)</td>
+          <td class="paramtype">const glm::mat4 &amp;</td>          <td class="paramname"><span class="paramname"><em>newView</em></span></td><td>)</td>
           <td></td>
         </tr>
       </table>
@@ -467,8 +467,8 @@ Example</h2>
 
 </div>
 </div>
-<a id="a1fa2b711ffc73c6cadaaf0073f7a31be" name="a1fa2b711ffc73c6cadaaf0073f7a31be"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a1fa2b711ffc73c6cadaaf0073f7a31be">&#9670;&#160;</a></span>show()</h2>
+<a id="ae54b6d2b9f473822add2dcedf7dd1b5d" name="ae54b6d2b9f473822add2dcedf7dd1b5d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae54b6d2b9f473822add2dcedf7dd1b5d">&#9670;&#160;</a></span>show()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -477,7 +477,7 @@ Example</h2>
           <td class="memname">void Skybox::show </td>
           <td>(</td>
           <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
-          <td></td>
+          <td> const</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -507,9 +507,9 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00641">641</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00644">644</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 
-<p class="reference">References <a class="el" href="texture_8h_source.html#l00641">Window</a>.</p>
+<p class="reference">References <a class="el" href="texture_8h_source.html#l00644">Window</a>.</p>
 
 </div>
 </div>
@@ -528,7 +528,7 @@ Example</h2>
 
 <p>The cubemap texture used for the skybox. </p>
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00596">596</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00599">599</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 
 </div>
 </div>
@@ -546,7 +546,7 @@ Example</h2>
 
 <p>The <a class="el" href="class_core_object.html" title="Represents a 3D object in the scene, including its geometry, material and every interaction with the ...">CoreObject</a> used to render the skybox. </p>
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00602">602</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00605">605</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 
 </div>
 </div>
