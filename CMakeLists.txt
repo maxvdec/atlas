@@ -7,7 +7,7 @@ set(JOLT_VERSION "5.5.0")
 
 message("Using Compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
 
-add_definitions(-DATLAS_VERSION="Alpha 7")
+add_definitions(-DATLAS_VERSION="Alpha 6.1")
 add_definitions(-DOPAL_VERSION="2 Platonic")
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION OFF)
 
@@ -194,7 +194,7 @@ else()
     set(JPH_DEBUG_RENDERER ON CACHE BOOL "" FORCE)
     set(JPH_PROFILE_ENABLED ON CACHE BOOL "" FORCE)
     set(JPH_OBJECT_STREAM ON CACHE BOOL "" FORCE)
-    set(JPH_ENABLE_IPO OFF CACHE BOOL "" FORCE)  
+    set(JPH_ENABLE_IPO OFF CACHE BOOL "" FORCE)
     FetchContent_MakeAvailable(JoltPhysics)
     if(TARGET Jolt)
         set_target_properties(Jolt PROPERTIES INTERPROCEDURAL_OPTIMIZATION OFF)
