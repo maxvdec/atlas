@@ -1,4 +1,5 @@
 #include "atlas/camera.h"
+#include "atlas/effect.h"
 #include "atlas/particle.h"
 #include "atlas/light.h"
 #include "atlas/object.h"
@@ -244,7 +245,7 @@ class MainScene : public Scene {
 
         light = DirectionalLight({0.35f, -1.0f, 0.2f}, Color::white());
         this->addDirectionalLight(&light);
-        light.castShadows(window, 1024);
+        light.castShadows(window, 4096);
         this->setAmbientIntensity(0.2f);
 
         frameBuffer = RenderTarget(window, RenderTargetType::Scene);
@@ -254,6 +255,7 @@ class MainScene : public Scene {
         this->setUseAtmosphereSkybox(true);
 
         window.usesDeferred = true;
+        window.enableSSR(true);
         atmosphere.enable();
         atmosphere.secondsPerHour = 4.f;
         atmosphere.setTime(12.0);

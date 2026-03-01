@@ -9,6 +9,7 @@ layout(set = 2, binding = 2) uniform sampler2D gAlbedoSpec;
 layout(set = 2, binding = 3) uniform sampler2D gMaterial;
 layout(set = 2, binding = 4) uniform sampler2D sceneColor;
 layout(set = 2, binding = 5) uniform sampler2D gDepth;
+layout(set = 3, binding = 0) uniform samplerCube skybox;
 
 layout(set = 1, binding = 0) uniform Uniforms {
     mat4 inverseProjection;
@@ -43,15 +44,32 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0) {
     return F0 + (1.0 - F0) * pow(1.0 - cosTheta, 5.0);
 }
 
+vec3 sampleSkyReflection(vec3 normal, vec3 viewDir, vec3 albedo, float metallic) {
+    vec3 reflected = reflect(-normalize(viewDir), normalize(normal));
+    vec3 skyColor = texture(skybox, reflected).rgb;
+    float skyLuma = dot(skyColor, vec3(0.2126, 0.7152, 0.0722));
+    if (skyLuma < 0.001) {
+        float t = clamp(reflected.y * 0.5 + 0.5, 0.0, 1.0);
+        vec3 horizon = vec3(0.74, 0.79, 0.88);
+        vec3 zenith = vec3(0.50, 0.64, 0.84);
+        skyColor = mix(horizon, zenith, t);
+    }
+    float tintStrength = metallic * 0.35;
+    vec3 tint = mix(vec3(1.0), albedo, tintStrength);
+    return skyColor * tint;
+}
+
 vec4 SSR(vec3 worldPos, vec3 normal, vec3 viewDir, float roughness, float metallic, vec3 albedo) {
     vec3 viewPos = (view * vec4(worldPos, 1.0)).xyz;
     vec3 viewNormal = normalize((view * vec4(normal, 0.0)).xyz);
+    float mirrorFactor = clamp(metallic * (1.0 - roughness), 0.0, 1.0);
+    vec3 skyReflection = sampleSkyReflection(normal, viewDir, albedo, metallic);
     
     vec3 viewDirection = normalize(viewPos);
     vec3 viewReflect = normalize(reflect(viewDirection, viewNormal));
     
     if (viewReflect.z > 0.0) {
-        return vec4(0.0);
+        return vec4(skyReflection, mirrorFactor);
     }
     
     vec3 rayOrigin = viewPos + viewNormal * 0.01;
@@ -60,13 +78,14 @@ vec4 SSR(vec3 worldPos, vec3 normal, vec3 viewDir, float roughness, float metall
     float stepSize = maxDistance / float(steps);
     vec3 currentPos = rayOrigin;
     
-    vec3 magic = vec3(0.06711056, 0.00583715, 52.9829189);
-    float jitter = fract(magic.z * fract(dot(gl_FragCoord.xy, magic.xy)));
+    float jitter = hash(gl_FragCoord.xy) * roughness * 0.25;
     currentPos += rayDir * stepSize * jitter;
     
     vec2 hitUV = vec2(-1.0);
     float hitDepth = 0.0;
     bool hit = false;
+    vec2 fallbackUV = TexCoord;
+    bool hasFallbackUV = false;
     
     vec3 lastPos = currentPos;
     
@@ -79,16 +98,40 @@ vec4 SSR(vec3 worldPos, vec3 normal, vec3 viewDir, float roughness, float metall
         projectedPos.xyz /= projectedPos.w;
         vec2 screenUV = projectedPos.xy * 0.5 + 0.5;
         
-        if (screenUV.x < 0.0 || screenUV.x > 1.0 || 
-            screenUV.y < 0.0 || screenUV.y > 1.0) {
+        if (screenUV.x >= 0.0 && screenUV.x <= 1.0 &&
+            screenUV.y >= 0.0 && screenUV.y <= 1.0) {
+            fallbackUV = screenUV;
+            hasFallbackUV = true;
+        } else {
             break;
+        }
+
+        float rawDepth = texture(gDepth, screenUV).r;
+        if (rawDepth >= 0.9999) {
+            lastPos = currentPos;
+            continue;
         }
         
         vec3 sampleWorldPos = texture(gPosition, screenUV).xyz;
+        vec3 sampleNormal = texture(gNormal, screenUV).xyz;
+        if (dot(sampleNormal, sampleNormal) < 0.01) {
+            lastPos = currentPos;
+            continue;
+        }
+        if (length(sampleWorldPos - worldPos) < 0.08) {
+            lastPos = currentPos;
+            continue;
+        }
         vec3 sampleViewPos = (view * vec4(sampleWorldPos, 1.0)).xyz;
         
         float sampleDepth = -sampleViewPos.z;
         float currentDepth = -currentPos.z;
+        vec3 sampleViewNormal = normalize((view * vec4(sampleNormal, 0.0)).xyz);
+        if (dot(sampleViewNormal, viewNormal) > 0.92 &&
+            abs(sampleDepth - currentDepth) < thickness * 1.5) {
+            lastPos = currentPos;
+            continue;
+        }
         
         float depthDiff = sampleDepth - currentDepth;
         
@@ -102,6 +145,15 @@ vec4 SSR(vec3 worldPos, vec3 normal, vec3 viewDir, float roughness, float metall
                 vec4 midProj = projection * vec4(midPoint, 1.0);
                 midProj.xyz /= midProj.w;
                 vec2 midUV = midProj.xy * 0.5 + 0.5;
+                if (midUV.x < 0.0 || midUV.x > 1.0 || midUV.y < 0.0 || midUV.y > 1.0) {
+                    break;
+                }
+
+                float midRawDepth = texture(gDepth, midUV).r;
+                if (midRawDepth >= 0.9999) {
+                    binarySearchStart = midPoint;
+                    continue;
+                }
                 
                 vec3 midSampleWorldPos = texture(gPosition, midUV).xyz;
                 vec3 midSampleViewPos = (view * vec4(midSampleWorldPos, 1.0)).xyz;
@@ -127,11 +179,40 @@ vec4 SSR(vec3 worldPos, vec3 normal, vec3 viewDir, float roughness, float metall
     }
     
     if (!hit) {
-        return vec4(0.0);
+        vec3 fallbackReflection = skyReflection;
+        if (hasFallbackUV) {
+            float mipLevel = roughness * 5.0;
+            vec3 screenFallback = textureLod(sceneColor, fallbackUV, mipLevel).rgb;
+            float fallbackDepth = texture(gDepth, fallbackUV).r;
+            float screenValidity = 1.0 - smoothstep(0.998, 1.0, fallbackDepth);
+            float fallbackLuma = dot(screenFallback, vec3(0.2126, 0.7152, 0.0722));
+            screenValidity *= smoothstep(0.005, 0.03, fallbackLuma);
+            float tintStrength = metallic * 0.35;
+            vec3 metalTint = mix(vec3(1.0), albedo, tintStrength);
+            fallbackReflection = mix(
+                skyReflection, screenFallback * metalTint, screenValidity);
+        }
+        return vec4(fallbackReflection, mirrorFactor);
     }
     
     float mipLevel = roughness * 5.0;
-    vec3 reflectionColor = textureLod(sceneColor, hitUV, mipLevel).rgb;
+    vec3 hitColor = textureLod(sceneColor, hitUV, mipLevel).rgb;
+    float tintStrength = metallic * 0.35;
+    vec3 metalTint = mix(vec3(1.0), albedo, tintStrength);
+    hitColor *= metalTint;
+    float hitDepthRaw = texture(gDepth, hitUV).r;
+    vec3 hitNormalSample = texture(gNormal, hitUV).xyz;
+    float hitNormalLenSq = dot(hitNormalSample, hitNormalSample);
+    vec3 hitNormalDir = hitNormalLenSq > 1e-5
+        ? hitNormalSample * inversesqrt(hitNormalLenSq)
+        : -rayDir;
+    float geometryValidity = 1.0 - smoothstep(0.998, 1.0, hitDepthRaw);
+    geometryValidity *= smoothstep(0.01, 0.1, hitNormalLenSq);
+    float normalFacing = max(dot(hitNormalDir, -rayDir), 0.0);
+    geometryValidity *= smoothstep(0.05, 0.25, normalFacing);
+    float hitLuma = dot(hitColor, vec3(0.2126, 0.7152, 0.0722));
+    float skyLuma = dot(skyReflection, vec3(0.2126, 0.7152, 0.0722));
+    float luminanceValidity = smoothstep(0.002, 0.03, hitLuma + skyLuma * 0.1);
     
     vec2 edgeFade = smoothstep(0.0, 0.15, hitUV) * (1.0 - smoothstep(0.85, 1.0, hitUV));
     float edgeFactor = edgeFade.x * edgeFade.y;
@@ -139,14 +220,19 @@ vec4 SSR(vec3 worldPos, vec3 normal, vec3 viewDir, float roughness, float metall
     float distanceFade = 1.0 - smoothstep(maxDistance * 0.5, maxDistance, hitDepth);
     
     float roughnessFade = 1.0 - smoothstep(0.0, maxRoughness, roughness);
+    float hitConfidence = edgeFactor * distanceFade * roughnessFade;
+    hitConfidence *= geometryValidity * luminanceValidity;
     
     vec3 F0 = mix(vec3(0.04), albedo, metallic);
-    vec3 V = normalize(cameraPosition - worldPos);
+    vec3 V = normalize(viewDir);
     float cosTheta = max(dot(normal, V), 0.0);
     vec3 fresnel = fresnelSchlick(cosTheta, F0);
     float fresnelFactor = (fresnel.r + fresnel.g + fresnel.b) / 3.0;
+    float fresnelWeight = mix(fresnelFactor, 1.0, mirrorFactor);
     
-    float finalFade = edgeFactor * distanceFade * roughnessFade * fresnelFactor;
+    vec3 reflectionColor = mix(skyReflection, hitColor, hitConfidence);
+    float finalFade = mix(hitConfidence * fresnelWeight, 1.0, mirrorFactor);
+    finalFade = clamp(finalFade, 0.0, 1.0);
     
     return vec4(reflectionColor, finalFade);
 }

@@ -774,6 +774,14 @@ void Window::deferredRendering(
         ssrPipeline->bindTexture2D("gMaterial", gBuffer->gMaterial.id, 3);
         ssrPipeline->bindTexture2D("sceneColor", target->texture.id, 4);
         ssrPipeline->bindTexture2D("gDepth", gBuffer->depthTexture.id, 5);
+        if (scene->skybox != nullptr && scene->skybox->cubemap.id != 0) {
+            ssrPipeline->bindTextureCubemap("skybox", scene->skybox->cubemap.id,
+                                            6);
+        }
+        else {
+            ssrPipeline->bindTextureCubemap(
+                "skybox", fallbackSkyboxTexture->textureID, 6);
+        }
 
         const glm::mat4 projectionMatrix =
             Window::mainWindow->calculateProjectionMatrix();
@@ -786,10 +794,10 @@ void Window::deferredRendering(
                                      glm::inverse(projectionMatrix));
         ssrPipeline->setUniform3f("cameraPosition", camera->position.x,
                                   camera->position.y, camera->position.z);
-        ssrPipeline->setUniform1f("maxDistance", 30.0f);
+        ssrPipeline->setUniform1f("maxDistance", 40.0f);
         ssrPipeline->setUniform1f("resolution", 0.5f);
-        ssrPipeline->setUniform1i("steps", 32);
-        ssrPipeline->setUniform1f("thickness", 2.0f);
+        ssrPipeline->setUniform1i("steps", 64);
+        ssrPipeline->setUniform1f("thickness", 1.0f);
         ssrPipeline->setUniform1f("maxRoughness", 0.5f);
 
         commandBuffer->bindDrawingState(quadState);

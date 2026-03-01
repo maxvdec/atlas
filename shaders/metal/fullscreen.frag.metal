@@ -747,22 +747,39 @@ float4 sampleBright(thread const float2& uv, constant PushConstants& _372, devic
 }
 
 static inline __attribute__((always_inline))
-float4 applyMotionBlur(thread const float2& texCoord, thread const float& size, thread const float& separation, thread const float4& color, constant PushConstants& _372, device EffectBuffer& _381, device EffectFloat1Buffer& _394, device EffectFloat2Buffer& _403, device EffectFloat3Buffer& _411, device EffectFloat4Buffer& _419, device EffectFloat5Buffer& _426, texture2d<float> Texture, sampler TextureSmplr, texture2d<float> BrightTexture, sampler BrightTextureSmplr, constant Uniforms& _849, texture2d<float> VolumetricLightTexture, sampler VolumetricLightTextureSmplr, texture2d<float> SSRTexture, sampler SSRTextureSmplr, texture2d<float> PositionTexture, sampler PositionTextureSmplr)
+float4 composeSSR(thread const float4& color, thread const float2& uv, constant PushConstants& _372, texture2d<float> SSRTexture, sampler SSRTextureSmplr)
 {
-    float4 fallbackColor = color;
+    if (_372.hasSSRTexture != 1)
+    {
+        return color;
+    }
+    float4 ssr = SSRTexture.sample(SSRTextureSmplr, uv);
+    float reflectionWeight = fast::clamp(ssr.w, 0.0, 1.0);
+    float baseWeight = 1.0 - reflectionWeight;
+    float4 result = color;
+    result.xyz = (result.xyz * baseWeight) + (ssr.xyz * reflectionWeight);
+    return result;
+}
+
+static inline __attribute__((always_inline))
+float4 composeLighting(thread const float2& uv, thread const float4& baseColor, constant PushConstants& _372, device EffectBuffer& _381, device EffectFloat1Buffer& _394, device EffectFloat2Buffer& _403, device EffectFloat3Buffer& _411, device EffectFloat4Buffer& _419, device EffectFloat5Buffer& _426, texture2d<float> BrightTexture, sampler BrightTextureSmplr, texture2d<float> VolumetricLightTexture, sampler VolumetricLightTextureSmplr, texture2d<float> SSRTexture, sampler SSRTextureSmplr)
+{
+    float4 color = baseColor;
     if (_372.hasBrightTexture == 1)
     {
-        float2 param = texCoord;
-        fallbackColor += sampleBright(param, _372, _381, _394, _403, _411, _419, _426, BrightTexture, BrightTextureSmplr);
+        color += sampleBright(uv, _372, _381, _394, _403, _411, _419, _426, BrightTexture, BrightTextureSmplr);
     }
     if (_372.hasVolumetricLightTexture == 1)
     {
-        fallbackColor += VolumetricLightTexture.sample(VolumetricLightTextureSmplr, texCoord);
+        color += VolumetricLightTexture.sample(VolumetricLightTextureSmplr, uv);
     }
-    if (_372.hasSSRTexture == 1)
-    {
-        fallbackColor += SSRTexture.sample(SSRTextureSmplr, texCoord);
-    }
+    return composeSSR(color, uv, _372, SSRTexture, SSRTextureSmplr);
+}
+
+static inline __attribute__((always_inline))
+float4 applyMotionBlur(thread const float2& texCoord, thread const float& size, thread const float& separation, thread const float4& color, constant PushConstants& _372, device EffectBuffer& _381, device EffectFloat1Buffer& _394, device EffectFloat2Buffer& _403, device EffectFloat3Buffer& _411, device EffectFloat4Buffer& _419, device EffectFloat5Buffer& _426, texture2d<float> Texture, sampler TextureSmplr, texture2d<float> BrightTexture, sampler BrightTextureSmplr, constant Uniforms& _849, texture2d<float> VolumetricLightTexture, sampler VolumetricLightTextureSmplr, texture2d<float> SSRTexture, sampler SSRTextureSmplr, texture2d<float> PositionTexture, sampler PositionTextureSmplr, texture2d<float> DepthTexture, sampler DepthTextureSmplr)
+{
+    float4 fallbackColor = composeLighting(texCoord, color, _372, _381, _394, _403, _411, _419, _426, BrightTexture, BrightTextureSmplr, VolumetricLightTexture, VolumetricLightTextureSmplr, SSRTexture, SSRTextureSmplr);
     if ((size <= 0.0) || (separation <= 0.0))
     {
         return fallbackColor;
@@ -799,46 +816,66 @@ float4 applyMotionBlur(thread const float2& texCoord, thread const float& size, 
     prevClipPos.z = _1573.z;
     float2 prevUV = (prevClipPos.xy * 0.5) + float2(0.5);
     float2 velocity = (currentUV - prevUV) * separation;
-    float maxVelocity = 0.100000001490116119384765625;
-    if (length(velocity) > maxVelocity)
+    float velocityLength = length(velocity);
+    float maxVelocity = 0.119999997317790985107421875;
+    if (velocityLength > maxVelocity)
     {
         velocity = fast::normalize(velocity) * maxVelocity;
+        velocityLength = maxVelocity;
     }
-    if (length(velocity) < 9.9999997473787516355514526367188e-05)
+    if (_372.hasSSRTexture == 1)
+    {
+        float mirrorWeight = fast::clamp(SSRTexture.sample(SSRTextureSmplr, texCoord).w, 0.0, 1.0);
+        float blurDamp = mix(1.0, 0.20000000298023223876953125, mirrorWeight);
+        velocity *= blurDamp;
+        velocityLength *= blurDamp;
+    }
+    if (velocityLength < 9.9999997473787516355514526367188e-05)
     {
         return fallbackColor;
     }
+    int baseSamples = clamp(int(size), 2, 32);
+    float sampleScale = mix(0.75, 1.75, fast::clamp(velocityLength / maxVelocity, 0.0, 1.0));
+    int samples = clamp(int(float(baseSamples) * sampleScale), 3, 48);
+    float centerDepth = 0.0;
+    float depthSoftness = 1.0;
+    if (_372.hasDepthTexture == 1)
+    {
+        float centerDepthRaw = DepthTexture.sample(DepthTextureSmplr, texCoord).x;
+        centerDepth = LinearizeDepth(centerDepthRaw, _849);
+        depthSoftness = fast::max(0.00200000009499490261077880859375, centerDepth * 0.0199999995529651641845703125);
+    }
+    float jitter = (fract(sin(dot(texCoord * float2(173.3000030517578125, 97.09999847412109375), float2(12.98980045318603515625, 78.233001708984375))) * 43758.546875) - 0.5) * 0.3499999940395355224609375;
     float4 result = float4(0.0);
     float totalWeight = 0.0;
-    int samples = int(size);
-    int _1619 = -samples;
-    for (int i = _1619; i <= samples; i++)
+    for (int i = 0; i < samples; i++)
     {
-        float t = float(i) / float(samples);
+        float t = (((float(i) + 0.5) / float(samples)) * 2.0) - 1.0;
+        t += jitter / float(samples);
         float2 sampleCoord = texCoord + (velocity * t);
-        bool _1642 = sampleCoord.x >= 0.0;
+        bool _1642 = sampleCoord.x < 0.0;
         bool _1648;
-        if (_1642)
+        if (!_1642)
         {
-            _1648 = sampleCoord.x <= 1.0;
+            _1648 = sampleCoord.x > 1.0;
         }
         else
         {
             _1648 = _1642;
         }
         bool _1654;
-        if (_1648)
+        if (!_1648)
         {
-            _1654 = sampleCoord.y >= 0.0;
+            _1654 = sampleCoord.y < 0.0;
         }
         else
         {
             _1654 = _1648;
         }
         bool _1660;
-        if (_1654)
+        if (!_1654)
         {
-            _1660 = sampleCoord.y <= 1.0;
+            _1660 = sampleCoord.y > 1.0;
         }
         else
         {
@@ -846,30 +883,30 @@ float4 applyMotionBlur(thread const float2& texCoord, thread const float& size, 
         }
         if (_1660)
         {
-            float2 param_1 = sampleCoord;
-            float4 sampled = sampleColor(param_1, _372, _381, _394, _403, _411, _419, _426, Texture, TextureSmplr);
-            if (_372.hasBrightTexture == 1)
-            {
-                float2 param_2 = sampleCoord;
-                sampled += sampleBright(param_2, _372, _381, _394, _403, _411, _419, _426, BrightTexture, BrightTextureSmplr);
-            }
-            if (_372.hasVolumetricLightTexture == 1)
-            {
-                sampled += VolumetricLightTexture.sample(VolumetricLightTextureSmplr, sampleCoord);
-            }
-            if (_372.hasSSRTexture == 1)
-            {
-                sampled += SSRTexture.sample(SSRTextureSmplr, sampleCoord);
-            }
-            float weight = 1.0 - (abs(t) * 0.5);
-            result += (sampled * weight);
-            totalWeight += weight;
+            continue;
         }
+        float depthWeight = 1.0;
+        if (_372.hasDepthTexture == 1)
+        {
+            float sampleDepthRaw = DepthTexture.sample(DepthTextureSmplr, sampleCoord).x;
+            float sampleDepth = LinearizeDepth(sampleDepthRaw, _849);
+            float depthDelta = abs(sampleDepth - centerDepth);
+            depthWeight = 1.0 - smoothstep(depthSoftness, depthSoftness * 2.5, depthDelta);
+            if (depthWeight <= 0.0)
+            {
+                continue;
+            }
+        }
+        float4 sampled = sampleColor(sampleCoord, _372, _381, _394, _403, _411, _419, _426, Texture, TextureSmplr);
+        sampled = composeLighting(sampleCoord, sampled, _372, _381, _394, _403, _411, _419, _426, BrightTexture, BrightTextureSmplr, VolumetricLightTexture, VolumetricLightTextureSmplr, SSRTexture, SSRTextureSmplr);
+        float gaussian = exp((-4.0) * t * t);
+        float weight = gaussian * depthWeight;
+        result += (sampled * weight);
+        totalWeight += weight;
     }
     if (totalWeight > 0.0)
     {
-        result /= float4(totalWeight);
-        return result;
+        return result / float4(totalWeight);
     }
     return fallbackColor;
 }
@@ -1003,31 +1040,20 @@ fragment main0_out main0(main0_in in [[stage_in]], constant PushConstants& _372 
         float param_11 = motionBlurSize;
         float param_12 = motionBlurSeparation;
         float4 param_13 = color;
-        float4 motionBlurred = applyMotionBlur(param_10, param_11, param_12, param_13, _372, _381, _394, _403, _411, _419, _426, Texture, TextureSmplr, BrightTexture, BrightTextureSmplr, _849, VolumetricLightTexture, VolumetricLightTextureSmplr, SSRTexture, SSRTextureSmplr, PositionTexture, PositionTextureSmplr);
+        float4 motionBlurred = applyMotionBlur(param_10, param_11, param_12, param_13, _372, _381, _394, _403, _411, _419, _426, Texture, TextureSmplr, BrightTexture, BrightTextureSmplr, _849, VolumetricLightTexture, VolumetricLightTextureSmplr, SSRTexture, SSRTextureSmplr, PositionTexture, PositionTextureSmplr, DepthTexture, DepthTextureSmplr);
         out.FragColor = motionBlurred;
         return out;
     }
     else
     {
-        hdrColor = color;
-        if (_372.hasBrightTexture == 1)
-        {
-            float2 param_14 = in.TexCoord;
-            hdrColor += sampleBright(param_14, _372, _381, _394, _403, _411, _419, _426, BrightTexture, BrightTextureSmplr);
-        }
-        if (_372.hasVolumetricLightTexture == 1)
-        {
-            hdrColor += VolumetricLightTexture.sample(VolumetricLightTextureSmplr, in.TexCoord);
-        }
-        if (_372.hasSSRTexture == 1)
-        {
-            hdrColor += SSRTexture.sample(SSRTextureSmplr, in.TexCoord);
-        }
+        float2 param_14 = in.TexCoord;
+        float4 param_15 = color;
+        hdrColor = composeLighting(param_14, param_15, _372, _381, _394, _403, _411, _419, _426, BrightTexture, BrightTextureSmplr, VolumetricLightTexture, VolumetricLightTextureSmplr, SSRTexture, SSRTextureSmplr);
     }
-    float4 param_15 = hdrColor;
-    hdrColor = mapToLUT(param_15, _372, LUTTexture, LUTTextureSmplr);
-    float3 param_16 = hdrColor.xyz;
-    float3 _2744 = acesToneMapping(param_16);
+    float4 param_16 = hdrColor;
+    hdrColor = mapToLUT(param_16, _372, LUTTexture, LUTTextureSmplr);
+    float3 param_17 = hdrColor.xyz;
+    float3 _2744 = acesToneMapping(param_17);
     hdrColor.x = _2744.x;
     hdrColor.y = _2744.y;
     hdrColor.z = _2744.z;

@@ -194,17 +194,12 @@ float calculateShadow(ShadowParameters shadowParam, vec3 fragPos, vec3 normal) {
             vec2(0.519, 0.767), vec2(0.185, -0.893), vec2(0.507, 0.064),
             vec2(0.896, 0.412), vec2(-0.322, -0.933), vec2(-0.792, -0.598)
         );
-    float rand = fract(sin(dot(projCoords.xy, vec2(12.9898, 78.233))) * 43758.5453);
-    float angle = rand * 6.2831853;
-    float ca = cos(angle), sa = sin(angle);
-    mat2 rot = mat2(ca, -sa, sa, ca);
-
     float texelRadius = mix(1.0, 3.0, distFactor) * resFactor;
     vec2 filterRadius = texelSize * texelRadius;
 
     int sampleCount = 0;
     for (int i = 0; i < 12; ++i) {
-        vec2 offset = rot * poissonDisk[i] * filterRadius;
+        vec2 offset = poissonDisk[i] * filterRadius;
         vec2 uv = projCoords.xy + offset;
         if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
             continue;
@@ -378,6 +373,8 @@ void main() {
             dirShadow = max(dirShadow, calculateShadow(shadowParams[i], FragPos, N));
         }
     }
+    dirShadow = clamp(dirShadow * 0.85, 0.0, 1.0);
+    pointShadow = clamp(pointShadow * 0.85, 0.0, 1.0);
 
     vec3 directionalResult = vec3(0.0);
     for (int i = 0; i < directionalLightCount; ++i) {
