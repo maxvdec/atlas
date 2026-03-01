@@ -89,24 +89,34 @@ bool ensureBodyAndWorld(Rigidbody *rb) {
 } // namespace
 
 void Rigidbody::atAttach() {
+    if (!object) {
+        atlas_warning("Rigidbody attached without a valid GameObject.");
+        return;
+    }
+
     if (!body) {
         body = std::make_shared<bezel::Rigidbody>();
     }
 
-    if (auto *coreObject = dynamic_cast<CoreObject *>(object)) {
-        if (coreObject->rigidbody == nullptr) {
-            coreObject->rigidbody = this;
-        } else {
-            atlas_warning(
-                "CoreObject already has a Rigidbody component assigned.");
-        }
+    if (object->rigidbody == nullptr || object->rigidbody == this) {
+        object->rigidbody = this;
+    } else {
+        atlas_warning("GameObject already has a Rigidbody component assigned.");
     }
 
     body->id.atlasId = object->getId();
 }
 
 void Rigidbody::init() {
-    if (body && Window::mainWindow && Window::mainWindow->physicsWorld) {
+    if (body && Window::mainWindow && Window::mainWindow->physicsWorld &&
+        object) {
+        if (!body->collider) {
+            atlas_warning(
+                "Rigidbody initialization skipped: missing collider.");
+            return;
+        }
+
+        body->id.atlasId = object->getId();
         body->position = object->getPosition();
         body->rotation = object->getRotation();
         body->isSensor = isSensor;
@@ -115,6 +125,8 @@ void Rigidbody::init() {
     } else {
         if (!body) {
             atlas_warning("Rigidbody initialization failed: missing body.");
+        } else if (!object) {
+            atlas_warning("Rigidbody initialization failed: missing object.");
         } else if (!Window::mainWindow) {
             atlas_warning(
                 "Rigidbody initialization failed: missing main window.");
@@ -163,6 +175,13 @@ void Rigidbody::addSphereCollider(float radius) {
 }
 
 void Rigidbody::addMeshCollider() {
+    if (!body) {
+        body = std::make_shared<bezel::Rigidbody>();
+        if (object) {
+            body->id.atlasId = object->getId();
+        }
+    }
+
     if (auto *coreObject = dynamic_cast<CoreObject *>(object)) {
         std::vector<Position3d> vertices;
         vertices.reserve(coreObject->getVertices().size());
@@ -212,6 +231,20 @@ void Rigidbody::update(float dt) {
             object->setRotation(body->rotation);
         }
     }
+}
+
+std::shared_ptr<Component> Rigidbody::clone() const {
+    auto cloned = std::make_shared<Rigidbody>();
+    cloned->sendSignal = sendSignal;
+    cloned->isSensor = isSensor;
+
+    if (body) {
+        cloned->body = std::make_shared<bezel::Rigidbody>(*body);
+        cloned->body->id.joltId = bezel::INVALID_JOLT_ID;
+        cloned->body->id.atlasId = 0;
+    }
+
+    return cloned;
 }
 
 void Rigidbody::setFriction(float friction) {
@@ -571,9 +604,7 @@ void Rigidbody::raycastTagged(const std::vector<std::string> &tags,
             std::find_first_of(hit.rigidbody->tags.begin(),
                                hit.rigidbody->tags.end(), tags.begin(),
                                tags.end())) {
-            std::cout << "Raycast hit object with atlasId: "
-                      << hit.rigidbody->id.atlasId << " at distance "
-                      << hit.distance << " but it has tags: [";
+
             for (size_t i = 0; i < hit.rigidbody->tags.size(); ++i) {
                 std::cout << "\"" << hit.rigidbody->tags[i] << "\"";
                 if (i < hit.rigidbody->tags.size() - 1)

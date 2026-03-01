@@ -18,6 +18,9 @@
 #include "atlas/units.h"
 #include "hydra/fluid.h"
 #include "bezel/bezel.h"
+#ifndef BEZEL_NATIVE
+#include "bezel/jolt/world.h"
+#endif
 #include "finewave/audio.h"
 #include <atlas/window.h>
 #include <algorithm>
@@ -296,6 +299,12 @@ void Window::run() {
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();
 
+        if (this->hasPendingSceneChange) {
+            this->applyScene(this->pendingScene);
+            this->pendingScene = nullptr;
+            this->hasPendingSceneChange = false;
+        }
+
         float currentTime = static_cast<float>(glfwGetTime());
         float rawDelta = currentTime - this->lastTime;
         this->lastTime = currentTime;
@@ -360,6 +369,13 @@ void Window::run() {
         }
 
         this->physicsWorld->update(this->deltaTime);
+
+        if (this->hasPendingSceneChange) {
+            this->applyScene(this->pendingScene);
+            this->pendingScene = nullptr;
+            this->hasPendingSceneChange = false;
+            continue;
+        }
 
         if (this->currentScene == nullptr) {
             commandBuffer->start();
@@ -665,6 +681,14 @@ void Window::addObject(Renderable *obj) {
         return;
     }
 
+    const bool inRenderables =
+        std::ranges::find(this->renderables, obj) != this->renderables.end();
+    const bool inPending = std::ranges::find(this->pendingObjects, obj) !=
+                           this->pendingObjects.end();
+    if (inRenderables || inPending) {
+        return;
+    }
+
     if (this->physicsWorld != nullptr) {
         this->pendingObjects.push_back(obj);
     } else {
@@ -717,6 +741,13 @@ void Window::addLateForwardObject(Renderable *object) {
     if (std::ranges::find(lateForwardRenderables, object) ==
         lateForwardRenderables.end()) {
         lateForwardRenderables.push_back(object);
+        const bool inRenderables = std::ranges::find(this->renderables, object) !=
+                                   this->renderables.end();
+        const bool inPending = std::ranges::find(this->pendingObjects, object) !=
+                               this->pendingObjects.end();
+        if (this->physicsWorld != nullptr && !inRenderables && !inPending) {
+            object->initialize();
+        }
     }
 
     if (auto *fluid = dynamic_cast<Fluid *>(object)) {
@@ -727,7 +758,60 @@ void Window::addLateForwardObject(Renderable *object) {
 }
 
 void Window::addPreferencedObject(Renderable *obj) {
+    if (obj == nullptr) {
+        return;
+    }
+    if (std::ranges::find(this->preferenceRenderables, obj) !=
+        this->preferenceRenderables.end()) {
+        return;
+    }
     this->preferenceRenderables.push_back(obj);
+    const bool inRenderables =
+        std::ranges::find(this->renderables, obj) != this->renderables.end();
+    const bool inPending = std::ranges::find(this->pendingObjects, obj) !=
+                           this->pendingObjects.end();
+    if (this->physicsWorld != nullptr && !inRenderables && !inPending) {
+        obj->initialize();
+    }
+}
+
+void Window::addPreludeObject(Renderable *obj) {
+    if (obj == nullptr) {
+        return;
+    }
+    if (std::ranges::find(this->firstRenderables, obj) !=
+        this->firstRenderables.end()) {
+        return;
+    }
+    this->firstRenderables.push_back(obj);
+    const bool inRenderables =
+        std::ranges::find(this->renderables, obj) != this->renderables.end();
+    const bool inPending = std::ranges::find(this->pendingObjects, obj) !=
+                           this->pendingObjects.end();
+    if (this->physicsWorld != nullptr && !inRenderables && !inPending) {
+        obj->initialize();
+    }
+}
+
+void Window::addUIObject(Renderable *obj) {
+    if (obj == nullptr) {
+        return;
+    }
+    if (std::ranges::find(this->uiRenderables, obj) != this->uiRenderables.end()) {
+        return;
+    }
+    this->uiRenderables.push_back(obj);
+    const bool inRenderables =
+        std::ranges::find(this->renderables, obj) != this->renderables.end();
+    const bool inPending = std::ranges::find(this->pendingObjects, obj) !=
+                           this->pendingObjects.end();
+    if (this->physicsWorld != nullptr && !inRenderables && !inPending) {
+        obj->initialize();
+    }
+}
+
+void Window::setLogOutput(bool showLogs, bool showWarnings, bool showErrors) {
+    Logger::getInstance().setConsoleFilter(showLogs, showWarnings, showErrors);
 }
 
 void Window::close() {
@@ -737,10 +821,52 @@ void Window::close() {
 
 void Window::setCamera(Camera *newCamera) { this->camera = newCamera; }
 
-void Window::setScene(Scene *scene) {
+void Window::applyScene(Scene *scene) {
     atlas_log("Setting active scene");
+    this->pendingScene = nullptr;
+    this->hasPendingSceneChange = false;
+
+#ifndef BEZEL_NATIVE
+    for (auto &[bodyId, body] : bezel_jolt::bodyIdToRigidbodyMap) {
+        (void)bodyId;
+        if (body != nullptr) {
+            body->id.joltId = bezel::INVALID_JOLT_ID;
+        }
+    }
+    bezel_jolt::bodyIdToRigidbodyMap.clear();
+#endif
+
+    if (this->physicsWorld != nullptr) {
+        this->physicsWorld = std::make_shared<bezel::PhysicsWorld>();
+        this->physicsWorld->init();
+        this->physicsWorld->setGravity({0.0f, -this->gravity, 0.0f});
+    }
+
+    this->pendingRemovals.clear();
+    this->renderables.clear();
+    this->pendingObjects.clear();
+    this->preferenceRenderables.clear();
+    this->firstRenderables.clear();
+    this->uiRenderables.clear();
+    this->lateForwardRenderables.clear();
+    this->lateFluids.clear();
+    this->renderTargets.clear();
+    this->screenRenderTarget.reset();
+    this->gBuffer = nullptr;
+    this->ssaoBuffer = nullptr;
+    this->ssaoBlurBuffer = nullptr;
+    this->volumetricBuffer = nullptr;
+    this->lightBuffer = nullptr;
+    this->ssrFramebuffer = nullptr;
+    this->bloomBuffer = nullptr;
     this->currentScene = scene;
-    scene->initialize(*this);
+    this->firstFrame = true;
+    this->deltaTime = 0.0f;
+    this->framesPerSecond = 0.0f;
+
+    if (scene != nullptr) {
+        scene->initialize(*this);
+    }
     this->shadowMapsDirty = true;
     this->shadowUpdateCooldown = 0.0f;
     this->lastShadowCameraPosition.reset();
@@ -753,6 +879,21 @@ void Window::setScene(Scene *scene) {
     this->ssaoUpdateCooldown = 0.0f;
     this->lastSSAOCameraPosition.reset();
     this->lastSSAOCameraDirection.reset();
+}
+
+void Window::setScene(Scene *scene) {
+    if (!this->hasPendingSceneChange && scene == this->currentScene) {
+        return;
+    }
+    if (this->hasPendingSceneChange) {
+        return;
+    }
+    if (this->physicsWorld != nullptr) {
+        this->pendingScene = scene;
+        this->hasPendingSceneChange = true;
+        return;
+    }
+    this->applyScene(scene);
 }
 
 glm::mat4 Window::calculateProjectionMatrix() {

@@ -32,11 +32,25 @@ void Vehicle::beforePhysics() {
         return;
     }
 
+    auto *currentWorld = Window::mainWindow->physicsWorld.get();
+    if (boundWorld != currentWorld) {
+        if (vehicle.isCreated()) {
+            vehicle.destroy(nullptr);
+        }
+        created = false;
+        boundWorld = currentWorld;
+    }
+
     if (!object->rigidbody || !object->rigidbody->body) {
+        created = false;
         return;
     }
 
     vehicle.chassis = object->rigidbody->body.get();
+    if (!vehicle.chassis || vehicle.chassis->id.joltId == bezel::INVALID_JOLT_ID) {
+        created = false;
+        return;
+    }
 
     if (!created) {
         if (vehicle.isCreated()) {

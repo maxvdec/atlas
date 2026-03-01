@@ -31,9 +31,19 @@ void TracerServices::startTracing(int port) {
 
 Logger::Logger() {}
 
+void Logger::setConsoleFilter(bool showLogs, bool showWarnings,
+                              bool showErrors) {
+    showInfoLogs = showLogs;
+    showWarningLogs = showWarnings;
+    showErrorLogs = showErrors;
+}
+
 void Logger::log(const std::string &message, const std::string &file,
                  int line) {
     if (!TracerServices::getInstance().isOk()) {
+        if (!showInfoLogs) {
+            return;
+        }
         std::cout << "\033[1;32m[LOG]\033[0m " << message << " (" << file << ":"
                   << line << ")" << std::endl;
         return;
@@ -52,6 +62,9 @@ void Logger::log(const std::string &message, const std::string &file,
 void Logger::warning(const std::string &message, const std::string &file,
                      int line) {
     if (!TracerServices::getInstance().isOk()) {
+        if (!showWarningLogs) {
+            return;
+        }
         std::cout << "\033[1;33m[WARNING]\033[0m " << message << " (" << file
                   << ":" << line << ")" << std::endl;
         return;
@@ -70,6 +83,9 @@ void Logger::warning(const std::string &message, const std::string &file,
 void Logger::error(const std::string &message, const std::string &file,
                    int line) {
     if (!TracerServices::getInstance().isOk()) {
+        if (!showErrorLogs) {
+            return;
+        }
         std::cout << "\033[1;31m[ERROR]\033[0m " << message << " (" << file
                   << ":" << line << ")" << std::endl;
         return;

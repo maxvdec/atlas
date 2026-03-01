@@ -114,6 +114,8 @@ class Component {
 
     virtual void onQueryReceive([[maybe_unused]] QueryResult &result) {}
 
+    virtual std::shared_ptr<Component> clone() const { return nullptr; }
+
     /**
      * @brief Gets the GameObject associated with the component.
      *
@@ -200,26 +202,34 @@ class GameObject : public Renderable {
         atlas::gameObjects[id] = this;
     }
 
-    GameObject([[maybe_unused]] const GameObject &other) {
+    GameObject(const GameObject &other) {
         std::random_device rd;
         std::mt19937 gen(rd());
         std::uniform_int_distribution<int> dist(0, INT_MAX);
         id = dist(gen);
+
+        copyComponents(other);
+        dependencies = other.dependencies;
 
         atlas::gameObjects[id] = this;
     }
 
-    GameObject([[maybe_unused]] GameObject &&other) noexcept {
+    GameObject(GameObject &&other) noexcept {
         std::random_device rd;
         std::mt19937 gen(rd());
         std::uniform_int_distribution<int> dist(0, INT_MAX);
         id = dist(gen);
+
+        moveComponents(std::move(other));
+        dependencies = std::move(other.dependencies);
 
         atlas::gameObjects[id] = this;
     }
 
     GameObject &operator=(const GameObject &other) {
         if (this != &other) {
+            copyComponents(other);
+            dependencies = other.dependencies;
             atlas::gameObjects[id] = this;
         }
         return *this;
@@ -227,6 +237,8 @@ class GameObject : public Renderable {
 
     GameObject &operator=(GameObject &&other) noexcept {
         if (this != &other) {
+            moveComponents(std::move(other));
+            dependencies = std::move(other.dependencies);
             atlas::gameObjects[id] = this;
         }
         return *this;
@@ -415,6 +427,47 @@ class GameObject : public Renderable {
      * @brief The unique identifier for the object.
      */
     int id;
+
+  private:
+    void copyComponents(const GameObject &other) {
+        components.clear();
+        rigidbody = nullptr;
+
+        components.reserve(other.components.size());
+        for (const auto &component : other.components) {
+            if (!component) {
+                continue;
+            }
+
+            auto cloned = component->clone();
+            if (!cloned) {
+                continue;
+            }
+
+            cloned->object = this;
+            cloned->atAttach();
+
+            if (static_cast<void *>(component.get()) ==
+                static_cast<void *>(other.rigidbody)) {
+                rigidbody = reinterpret_cast<Rigidbody *>(cloned.get());
+            }
+
+            components.push_back(std::move(cloned));
+        }
+    }
+
+    void moveComponents(GameObject &&other) {
+        components = std::move(other.components);
+        rigidbody = other.rigidbody;
+        other.rigidbody = nullptr;
+
+        for (auto &component : components) {
+            if (!component) {
+                continue;
+            }
+            component->object = this;
+        }
+    }
 };
 
 /**

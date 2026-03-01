@@ -185,6 +185,9 @@ void Text::initialize() {
 void Text::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
                   bool updatePipeline) {
     (void)updatePipeline;
+    if (shader.shader == nullptr || vao == nullptr || vertexBuffer == nullptr) {
+        initialize();
+    }
     for (auto &component : components) {
         component->update(dt);
     }

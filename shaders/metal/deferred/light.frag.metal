@@ -965,10 +965,7 @@ fragment main0_out main0(main0_in in [[stage_in]], constant UBO& _526 [[buffer(0
     float3 _1714 = getRimLight(param_36, param_37, param_38, param_39, param_40, param_41, param_42, _526, environment);
     float3 rimResult = _1714;
     float3 lighting = ((((directionalResult + pointResult) + spotResult) + areaResult) + rimResult) * lightingOcclusion;
-    float ambientStrength = fast::max(ambientLight.intensity, 0.0500000007450580596923828125);
-    float occlusionFloor = fast::max(occlusion, 0.20000000298023223876953125);
-    float3 ambient = ((ambientLight.color.xyz * ambientStrength) * albedo) * occlusionFloor;
-    ambient = fast::max(ambient, float3(0.100000001490116119384765625) * albedo);
+    float3 ambient = ((ambientLight.color.xyz * ambientLight.intensity) * albedo) * occlusion;
     float3 iblContribution = float3(0.0);
     if (_526.useIBL != 0u)
     {

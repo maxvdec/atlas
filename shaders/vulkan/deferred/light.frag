@@ -485,11 +485,7 @@ void main() {
     vec3 rimResult = getRimLight(FragPos, N, V, F0, albedo, metallic, roughness);
     vec3 lighting = (directionalResult + pointResult + spotResult + areaResult + rimResult) * lightingOcclusion;
 
-    float ambientStrength = max(ambientLight.intensity, 0.05);
-    float occlusionFloor = max(occlusion, 0.2);
-    vec3 ambient = ambientLight.color.rgb * ambientStrength * albedo * occlusionFloor;
-    
-    ambient = max(ambient, vec3(0.1) * albedo);
+    vec3 ambient = ambientLight.color.rgb * ambientLight.intensity * albedo * occlusion;
 
     vec3 iblContribution = vec3(0.0);
     if (useIBL) {

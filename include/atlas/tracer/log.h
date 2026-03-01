@@ -56,6 +56,9 @@ class TracerServices {
 class Logger {
   private:
     Logger();
+    bool showInfoLogs = true;
+    bool showWarningLogs = true;
+    bool showErrorLogs = true;
 
   public:
     static Logger &getInstance() {
@@ -69,6 +72,7 @@ class Logger {
     void warning(const std::string &message, const std::string &file, int line);
     /** @brief Logs an error message. */
     void error(const std::string &message, const std::string &file, int line);
+    void setConsoleFilter(bool showLogs, bool showWarnings, bool showErrors);
 };
 
 /** @brief Convenience macro that logs an informational message with callsite.

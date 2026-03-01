@@ -328,14 +328,12 @@ class Window {
      * object must be long-lived. This means that declaring it as a class
      * property is a good idea.
      */
-    void addPreludeObject(Renderable *object) {
-        firstRenderables.push_back(object);
-    }
+    void addPreludeObject(Renderable *object);
 
     /**
      * @brief Registers a UI renderable so it is drawn after world geometry.
      */
-    void addUIObject(Renderable *object) { uiRenderables.push_back(object); }
+    void addUIObject(Renderable *object);
 
     /**
      * @brief Adds a renderable to the late forward queue. Late forward
@@ -468,6 +466,7 @@ class Window {
     float gravity = 9.81f;
 
     void useTracer(bool enable) { this->waitForTracer = enable; }
+    void setLogOutput(bool showLogs, bool showWarnings, bool showErrors);
 
     /**
      * @brief The audio engine instance for managing spatial audio. Shared
@@ -569,10 +568,13 @@ class Window {
     Color clearColor = Color(0.0f, 0.0f, 0.0f, 1.0f);
 
     void setupSSAO();
+    void applyScene(Scene *scene);
 
     glm::mat4 calculateProjectionMatrix();
     glm::mat4 lastViewMatrix = glm::mat4(1.0f);
     Scene *currentScene = nullptr;
+    Scene *pendingScene = nullptr;
+    bool hasPendingSceneChange = false;
 
     void renderLightsToShadowMaps(
         std::shared_ptr<opal::CommandBuffer> commandBuffer = nullptr);

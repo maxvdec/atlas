@@ -317,6 +317,7 @@ class Vehicle final : public Component {
   private:
     bezel::Vehicle vehicle;
     bool created = false;
+    bezel::PhysicsWorld *boundWorld = nullptr;
 
   public:
     bezel::VehicleSettings settings;
@@ -359,6 +360,7 @@ class Rigidbody : public Component {
     void beforePhysics() override;
     /** @brief Updates transform synchronization and query dispatch. */
     void update(float dt) override;
+    std::shared_ptr<Component> clone() const override;
 
     /** @brief Adds a capsule collider to the rigidbody. */
     void addCapsuleCollider(float radius, float height);

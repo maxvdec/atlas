@@ -105,9 +105,6 @@ void bezel::Rigidbody::refresh(
     lock.ReleaseLock();
 
     if (needsCCD) {
-        atlas_log(
-            "[JOLT] Enabling linear cast for fast moving body with Object ID " +
-            std::to_string(this->id.atlasId));
         world->physicsSystem.GetBodyInterface().SetMotionQuality(
             joltBodyId, JPH::EMotionQuality::LinearCast);
     }

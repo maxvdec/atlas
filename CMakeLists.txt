@@ -310,7 +310,7 @@ target_link_libraries(atlas
         aurora
         hydra
         opal
-        ${FREETYPE_LIBRARIES}
+        Freetype::Freetype
         assimp::assimp
         Jolt::Jolt
 )

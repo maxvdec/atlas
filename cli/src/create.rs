@@ -189,6 +189,8 @@ find_package(OpenGL REQUIRED)
 find_package(glfw3 REQUIRED)
 find_package(glm REQUIRED)
 find_package(Assimp REQUIRED)
+find_package(Freetype REQUIRED)
+
 if(APPLE)
     set(OPENAL_LIB /opt/homebrew/opt/openal-soft/lib/libopenal.dylib)
     set(OPENAL_INCLUDE /opt/homebrew/opt/openal-soft/include)
@@ -247,7 +249,10 @@ set_target_properties(opal PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/lib/
 add_library(JoltAtlas STATIC IMPORTED)
 set_target_properties(JoltAtlas PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/lib/libJolt.a)
 
-target_link_libraries(##PROJECTNAMELC## PRIVATE atlas bezel OpenGL::GL glfw glm::glm finewave aurora hydra ${OPENAL_LIB} JoltAtlas assimp::assimp opal)
+get_filename_component(ASSETS_ABS "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)
+target_compile_definitions(##PROJECTNAMELC## PRIVATE MAIN_PATH="${ASSETS_ABS}")
+
+target_link_libraries(##PROJECTNAMELC## PRIVATE atlas bezel OpenGL::GL glfw glm::glm finewave aurora hydra ${OPENAL_LIB} JoltAtlas assimp::assimp opal Freetype::Freetype)
 
 if(BEZEL_NATIVE)
 else()
