@@ -4,6 +4,7 @@ var class_component =
     [ "Component", "class_component.html#a404098a91640552f9d0284d08b53def4", null ],
     [ "atAttach", "class_component.html#a4e12b49dcc049256848f0efb84c1ace3", null ],
     [ "beforePhysics", "class_component.html#a83bd6e1c4f6eb813dd446a4319e98035", null ],
+    [ "clone", "class_component.html#ab7b5b4676ca88400a52f66d95c9c828e", null ],
     [ "getWindow", "class_component.html#a64a41360decf2e4b88ebf553fadb20e2", null ],
     [ "init", "class_component.html#a162f8cdc070537a71f2ad0b5e763b86f", null ],
     [ "onCollisionEnter", "class_component.html#a2af73436a1514c8db3f3876a6f3bc3d8", null ],

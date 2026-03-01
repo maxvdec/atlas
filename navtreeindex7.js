@@ -1,5 +1,9 @@
 var NAVTREEINDEX7 =
 {
+"functions_vars_m.html":[2,3,2,13],
+"functions_vars_n.html":[2,3,2,14],
+"functions_vars_o.html":[2,3,2,15],
+"functions_vars_p.html":[2,3,2,16],
 "functions_vars_q.html":[2,3,2,17],
 "functions_vars_r.html":[2,3,2,18],
 "functions_vars_s.html":[2,3,2,19],
@@ -245,9 +249,5 @@ var NAVTREEINDEX7 =
 "namespacebezel_1_1jolt_1_1layers.html#ac66c4996e119ddfd64f0b2351bfdda6f":[1,0,2,0,0,1],
 "namespacebezel_1_1jolt_1_1layers.html#ae4e7206ff8e08622f82f4367877cdb23":[1,0,2,0,0,0],
 "namespacebezel__jolt.html":[1,0,3],
-"namespacebezel__jolt.html#a070f216b41a95f9a38a4d75ef32e2cdb":[1,0,3,6],
-"namespacebezel__jolt.html#a3fe528abd21e2e6ca3372b6bbec5b75e":[1,0,3,8],
-"namespacebezel__jolt.html#a488137d5f4de9a5d8bcf1bb5f6cae4f6":[1,0,3,9],
-"namespacebezel__jolt.html#ac9b06e4dfd086931d92a46550690549e":[1,0,3,7],
-"namespacebezel__jolt.html#ad8ce12750f5027b41715a250ff5276fb":[1,0,3,4]
+"namespacebezel__jolt.html#a070f216b41a95f9a38a4d75ef32e2cdb":[1,0,3,6]
 };

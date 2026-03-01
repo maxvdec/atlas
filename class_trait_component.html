@@ -167,6 +167,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a9749b406011df2556b004acd2f032935 inherit pub_methods_class_component" id="r_a9749b406011df2556b004acd2f032935"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_component.html#a9749b406011df2556b004acd2f032935">onSignalRecieve</a> (const std::string &amp;signal, <a class="el" href="class_game_object.html">GameObject</a> *sender)</td></tr>
 <tr class="memitem:aeea623ce757a97a895a2500f6de6a33c inherit pub_methods_class_component" id="r_aeea623ce757a97a895a2500f6de6a33c"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_component.html#aeea623ce757a97a895a2500f6de6a33c">onSignalEnd</a> (const std::string &amp;signal, <a class="el" href="class_game_object.html">GameObject</a> *sender)</td></tr>
 <tr class="memitem:a7ad81a397c06433353d21b1d5aa7eda9 inherit pub_methods_class_component" id="r_a7ad81a397c06433353d21b1d5aa7eda9"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_component.html#a7ad81a397c06433353d21b1d5aa7eda9">onQueryReceive</a> (<a class="el" href="struct_query_result.html">QueryResult</a> &amp;result)</td></tr>
+<tr class="memitem:ab7b5b4676ca88400a52f66d95c9c828e inherit pub_methods_class_component" id="r_ab7b5b4676ca88400a52f66d95c9c828e"><td class="memItemLeft">virtual std::shared_ptr&lt; <a class="el" href="class_component.html">Component</a> &gt;&#160;</td><td class="memItemRight"><a class="el" href="class_component.html#ab7b5b4676ca88400a52f66d95c9c828e">clone</a> () const</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-inherited" class="groupheader"><a id="inherited" name="inherited"></a>
 Additional Inherited Members</h2></td></tr>
@@ -185,7 +186,7 @@ class TraitComponent&lt; T &gt;</div><p><a class="el" href="class_component.html
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00133">133</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00135">135</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
 <a id="af840971476aa0b56fe5051bd7557065f" name="af840971476aa0b56fe5051bd7557065f"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#af840971476aa0b56fe5051bd7557065f">&#9670;&#160;</a></span>getObject()</h2>
@@ -215,8 +216,8 @@ template&lt;typename T&gt; </div>
 <p>Provides direct access to the specialized <a class="el" href="class_game_object.html" title="Base class for all Game Objects. It extends from Renderable and it provides common functionality for ...">GameObject</a> this trait decorates. </p>
 <dl class="section return"><dt>Returns</dt><dd>(T*) Pointer to the typed object, or nullptr if the component has not been attached yet. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00175">175</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  175</span>{ <span class="keywordflow">return</span> typedObject; }</div>
+<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00177">177</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  177</span>{ <span class="keywordflow">return</span> typedObject; }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -249,8 +250,8 @@ template&lt;typename T&gt; </div>
 
 <p>Reimplemented from <a class="el" href="class_component.html#a162f8cdc070537a71f2ad0b5e763b86f">Component</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00140">140</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  140</span>{};</div>
+<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00142">142</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  142</span>{};</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -287,9 +288,9 @@ template&lt;typename T&gt; </div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00166">166</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  166</span>{ typedObject = <a class="code hl_class" href="class_trait_component.html">obj</a>; }</div>
-<div class="ttc" id="aclass_trait_component_html"><div class="ttname"><a href="class_trait_component.html">TraitComponent</a></div><div class="ttdoc">Component that is specifically tied to a certain type of GameObject. It cannot be added to objects th...</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00133">component.h:133</a></div></div>
+<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00168">168</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  168</span>{ typedObject = <a class="code hl_class" href="class_trait_component.html">obj</a>; }</div>
+<div class="ttc" id="aclass_trait_component_html"><div class="ttname"><a href="class_trait_component.html">TraitComponent</a></div><div class="ttdoc">Component that is specifically tied to a certain type of GameObject. It cannot be added to objects th...</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00135">component.h:135</a></div></div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -328,15 +329,15 @@ template&lt;typename T&gt; </div>
 
 <p>Reimplemented from <a class="el" href="class_component.html#a3b3bee5d55446124842e5f2e229e1384">Component</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00147">147</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  147</span>                                                           {</div>
-<div class="line"><span class="lineno">  148</span>        <span class="keywordflow">if</span> (typedObject != <span class="keyword">nullptr</span>) {</div>
-<div class="line"><span class="lineno">  149</span>            <a class="code hl_function" href="#a5dcb86c60e6c21af3bc0a2eabde32e65">updateComponent</a>(typedObject);</div>
-<div class="line"><span class="lineno">  150</span>        }</div>
-<div class="line"><span class="lineno">  151</span>    }</div>
-<div class="ttc" id="aclass_trait_component_html_a5dcb86c60e6c21af3bc0a2eabde32e65"><div class="ttname"><a href="#a5dcb86c60e6c21af3bc0a2eabde32e65">TraitComponent::updateComponent</a></div><div class="ttdeci">virtual void updateComponent(T *object)</div><div class="ttdoc">Updates the component with a typed reference to the GameObject it is bound to.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00159">component.h:159</a></div></div>
+<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00149">149</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  149</span>                                                           {</div>
+<div class="line"><span class="lineno">  150</span>        <span class="keywordflow">if</span> (typedObject != <span class="keyword">nullptr</span>) {</div>
+<div class="line"><span class="lineno">  151</span>            <a class="code hl_function" href="#a5dcb86c60e6c21af3bc0a2eabde32e65">updateComponent</a>(typedObject);</div>
+<div class="line"><span class="lineno">  152</span>        }</div>
+<div class="line"><span class="lineno">  153</span>    }</div>
+<div class="ttc" id="aclass_trait_component_html_a5dcb86c60e6c21af3bc0a2eabde32e65"><div class="ttname"><a href="#a5dcb86c60e6c21af3bc0a2eabde32e65">TraitComponent::updateComponent</a></div><div class="ttdeci">virtual void updateComponent(T *object)</div><div class="ttdoc">Updates the component with a typed reference to the GameObject it is bound to.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00161">component.h:161</a></div></div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="component_8h_source.html#l00159">updateComponent()</a>.</p>
+<p class="reference">References <a class="el" href="component_8h_source.html#l00161">updateComponent()</a>.</p>
 
 </div>
 </div>
@@ -373,8 +374,8 @@ template&lt;typename T&gt; </div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00159">159</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  159</span>{}</div>
+<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00161">161</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  161</span>{}</div>
 </div><!-- fragment -->
 </div>
 </div>

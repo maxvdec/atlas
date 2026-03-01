@@ -270,14 +270,14 @@ Example of a compound object</h2>
 <div class="line">     <span class="comment">// Update car-specific logic, e.g., movement</span></div>
 <div class="line">   }</div>
 <div class="line">};</div>
-<div class="ttc" id="aclass_compound_object_html"><div class="ttname"><a href="class_compound_object.html">CompoundObject</a></div><div class="ttdoc">A Compound object is a GameObject that can be extended by the user to generate objects that encapsula...</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00443">component.h:443</a></div></div>
-<div class="ttc" id="aclass_compound_object_html_a66cf249148e238c3b28b131dc353fe66"><div class="ttname"><a href="#a66cf249148e238c3b28b131dc353fe66">CompoundObject::addObject</a></div><div class="ttdeci">void addObject(GameObject *obj)</div><div class="ttdoc">Adds a component to the object.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00559">component.h:559</a></div></div>
-<div class="ttc" id="aclass_compound_object_html_acf1f71aaebd2b73fa8da5e586d214484"><div class="ttname"><a href="#acf1f71aaebd2b73fa8da5e586d214484">CompoundObject::updateObjects</a></div><div class="ttdeci">virtual void updateObjects(Window &amp;window)</div><div class="ttdoc">Updates the objects within the compound object.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00467">component.h:467</a></div></div>
-<div class="ttc" id="aclass_compound_object_html_ae606cb70c43eeba4f75e129f8969f703"><div class="ttname"><a href="#ae606cb70c43eeba4f75e129f8969f703">CompoundObject::init</a></div><div class="ttdeci">virtual void init()</div><div class="ttdoc">Initializes the compound object.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00472">component.h:472</a></div></div>
+<div class="ttc" id="aclass_compound_object_html"><div class="ttname"><a href="class_compound_object.html">CompoundObject</a></div><div class="ttdoc">A Compound object is a GameObject that can be extended by the user to generate objects that encapsula...</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00496">component.h:496</a></div></div>
+<div class="ttc" id="aclass_compound_object_html_a66cf249148e238c3b28b131dc353fe66"><div class="ttname"><a href="#a66cf249148e238c3b28b131dc353fe66">CompoundObject::addObject</a></div><div class="ttdeci">void addObject(GameObject *obj)</div><div class="ttdoc">Adds a component to the object.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00612">component.h:612</a></div></div>
+<div class="ttc" id="aclass_compound_object_html_acf1f71aaebd2b73fa8da5e586d214484"><div class="ttname"><a href="#acf1f71aaebd2b73fa8da5e586d214484">CompoundObject::updateObjects</a></div><div class="ttdeci">virtual void updateObjects(Window &amp;window)</div><div class="ttdoc">Updates the objects within the compound object.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00520">component.h:520</a></div></div>
+<div class="ttc" id="aclass_compound_object_html_ae606cb70c43eeba4f75e129f8969f703"><div class="ttname"><a href="#ae606cb70c43eeba4f75e129f8969f703">CompoundObject::init</a></div><div class="ttdeci">virtual void init()</div><div class="ttdoc">Initializes the compound object.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00525">component.h:525</a></div></div>
 <div class="ttc" id="aclass_core_object_html"><div class="ttname"><a href="class_core_object.html">CoreObject</a></div><div class="ttdoc">Represents a 3D object in the scene, including its geometry, material and every interaction with the ...</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00275">object.h:275</a></div></div>
 <div class="ttc" id="aclass_window_html"><div class="ttname"><a href="class_window.html">Window</a></div><div class="ttdoc">Structure representing a window in the application. This contains the main interface for interacting ...</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00240">window.h:240</a></div></div>
 </div><!-- fragment --> 
-<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00443">443</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00496">496</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
 <a id="a66cf249148e238c3b28b131dc353fe66" name="a66cf249148e238c3b28b131dc353fe66"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a66cf249148e238c3b28b131dc353fe66">&#9670;&#160;</a></span>addObject()</h2>
@@ -311,17 +311,17 @@ Example of a compound object</h2>
 </dl>
 <dl class="section warning"><dt>Warning</dt><dd>It must be long-lived. This means that declaring it as a class property is a good idea. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00559">559</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  559</span>                                           {</div>
-<div class="line"><span class="lineno">  560</span>        <a class="code hl_variable" href="#a3bf2527da20abdca0ae64d4d9793d215">objects</a>.push_back(obj);</div>
-<div class="line"><span class="lineno">  561</span>        <span class="keywordflow">if</span> (obj != <span class="keyword">nullptr</span> &amp;&amp; obj-&gt;<a class="code hl_variable" href="class_renderable.html#a0ab1fff21021a706629d466964950467">renderLateForward</a>) {</div>
-<div class="line"><span class="lineno">  562</span>            lateForwardObjects.push_back(obj);</div>
-<div class="line"><span class="lineno">  563</span>        }</div>
-<div class="line"><span class="lineno">  564</span>    }</div>
-<div class="ttc" id="aclass_compound_object_html_a3bf2527da20abdca0ae64d4d9793d215"><div class="ttname"><a href="#a3bf2527da20abdca0ae64d4d9793d215">CompoundObject::objects</a></div><div class="ttdeci">std::vector&lt; GameObject * &gt; objects</div><div class="ttdoc">The objects that make up the compound object.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00449">component.h:449</a></div></div>
+<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00612">612</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  612</span>                                           {</div>
+<div class="line"><span class="lineno">  613</span>        <a class="code hl_variable" href="#a3bf2527da20abdca0ae64d4d9793d215">objects</a>.push_back(obj);</div>
+<div class="line"><span class="lineno">  614</span>        <span class="keywordflow">if</span> (obj != <span class="keyword">nullptr</span> &amp;&amp; obj-&gt;<a class="code hl_variable" href="class_renderable.html#a0ab1fff21021a706629d466964950467">renderLateForward</a>) {</div>
+<div class="line"><span class="lineno">  615</span>            lateForwardObjects.push_back(obj);</div>
+<div class="line"><span class="lineno">  616</span>        }</div>
+<div class="line"><span class="lineno">  617</span>    }</div>
+<div class="ttc" id="aclass_compound_object_html_a3bf2527da20abdca0ae64d4d9793d215"><div class="ttname"><a href="#a3bf2527da20abdca0ae64d4d9793d215">CompoundObject::objects</a></div><div class="ttdeci">std::vector&lt; GameObject * &gt; objects</div><div class="ttdoc">The objects that make up the compound object.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00502">component.h:502</a></div></div>
 <div class="ttc" id="aclass_renderable_html_a0ab1fff21021a706629d466964950467"><div class="ttname"><a href="class_renderable.html#a0ab1fff21021a706629d466964950467">Renderable::renderLateForward</a></div><div class="ttdeci">bool renderLateForward</div><div class="ttdoc">Whether the object must be moved to the late forward rendering pipeline. Objects flagged here are ski...</div><div class="ttdef"><b>Definition</b> <a href="renderable_8h_source.html#l00184">renderable.h:184</a></div></div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="component_8h_source.html#l00194">GameObject::GameObject()</a>, <a class="el" href="component_8h_source.html#l00449">objects</a>, and <a class="el" href="renderable_8h_source.html#l00184">Renderable::renderLateForward</a>.</p>
+<p class="reference">References <a class="el" href="component_8h_source.html#l00196">GameObject::GameObject()</a>, <a class="el" href="component_8h_source.html#l00502">objects</a>, and <a class="el" href="renderable_8h_source.html#l00184">Renderable::renderLateForward</a>.</p>
 
 </div>
 </div>
@@ -573,8 +573,8 @@ Example of a compound object</h2>
 
 <p>Initializes the compound object. </p>
 
-<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00472">472</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  472</span>{};</div>
+<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00525">525</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  525</span>{};</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -999,8 +999,8 @@ Example of a compound object</h2>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00467">467</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  467</span>{};</div>
+<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00520">520</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  520</span>{};</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -1019,7 +1019,7 @@ Example of a compound object</h2>
 
 <p>The objects that make up the compound object. </p>
 
-<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00449">449</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00502">502</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
 
 </div>
 </div>

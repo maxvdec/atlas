@@ -40,7 +40,7 @@ var searchData=
   ['clearcolor_37',['clearColor',['../classopal_1_1_command_buffer.html#a716ed953c2d9052c64b68788d73e089c',1,'opal::CommandBuffer']]],
   ['cleardepth_38',['clearDepth',['../classopal_1_1_command_buffer.html#a4499c2a39d0cb5e9112120eedfef3755',1,'opal::CommandBuffer']]],
   ['clockwise_39',['Clockwise',['../namespaceopal.html#a5896ae64717f16fffbc1f783a79aa1fcaba360a794737bcc8657a5b6e870d7ba8',1,'opal']]],
-  ['clone_40',['clone',['../class_core_object.html#af91d0ad0985941edf65b8c3b24865c69',1,'CoreObject']]],
+  ['clone_40',['clone',['../class_component.html#ab7b5b4676ca88400a52f66d95c9c828e',1,'Component::clone()'],['../class_core_object.html#af91d0ad0985941edf65b8c3b24865c69',1,'CoreObject::clone()'],['../class_rigidbody.html#a611c3cdd0c5ea0b6b2ca66eda817fcfd',1,'Rigidbody::clone()']]],
   ['close_41',['close',['../class_window.html#a35055c04498121d39741bfcd5082705b',1,'Window']]],
   ['closest_42',['closest',['../struct_sweep_result.html#a2319747f9d186e569f04210cd4e83246',1,'SweepResult::closest'],['../structbezel_1_1_sweep_result.html#a3f1d1f1cc88df097db4e5fe3f316739b',1,'bezel::SweepResult::closest']]],
   ['closestdistance_43',['closestDistance',['../struct_raycast_result.html#af585839262fe9d8776f5247d3c5dd5f8',1,'RaycastResult::closestDistance'],['../structbezel_1_1_raycast_result.html#a3666b475949bd8cbc5ddd3b92801c44e',1,'bezel::RaycastResult::closestDistance']]],

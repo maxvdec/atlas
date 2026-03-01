@@ -137,6 +137,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a5b6a9d665da5fd759cf3c58287b3a03d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Logs a warning message.  <br /></td></tr>
 <tr class="memitem:a21d3ff393ae4d9b074bb9e952dc69c93" id="r_a21d3ff393ae4d9b074bb9e952dc69c93"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a21d3ff393ae4d9b074bb9e952dc69c93">error</a> (const std::string &amp;message, const std::string &amp;file, int line)</td></tr>
 <tr class="memdesc:a21d3ff393ae4d9b074bb9e952dc69c93"><td class="mdescLeft">&#160;</td><td class="mdescRight">Logs an error message.  <br /></td></tr>
+<tr class="memitem:aff27a24b2029faab2acc4004d0410ff5" id="r_aff27a24b2029faab2acc4004d0410ff5"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#aff27a24b2029faab2acc4004d0410ff5">setConsoleFilter</a> (bool showLogs, bool showWarnings, bool showErrors)</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-static-methods" class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
@@ -198,11 +199,11 @@ Static Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="log_8h_source.html#l00061">61</a> of file <a class="el" href="log_8h_source.html">log.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   61</span>                                 {</div>
-<div class="line"><span class="lineno">   62</span>        <span class="keyword">static</span> Logger instance;</div>
-<div class="line"><span class="lineno">   63</span>        <span class="keywordflow">return</span> instance;</div>
-<div class="line"><span class="lineno">   64</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="log_8h_source.html#l00064">64</a> of file <a class="el" href="log_8h_source.html">log.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   64</span>                                 {</div>
+<div class="line"><span class="lineno">   65</span>        <span class="keyword">static</span> Logger instance;</div>
+<div class="line"><span class="lineno">   66</span>        <span class="keywordflow">return</span> instance;</div>
+<div class="line"><span class="lineno">   67</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -231,6 +232,32 @@ Static Public Member Functions</h2></td></tr>
 </div><div class="memdoc">
 
 <p>Logs an informational message. </p>
+
+</div>
+</div>
+<a id="aff27a24b2029faab2acc4004d0410ff5" name="aff27a24b2029faab2acc4004d0410ff5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aff27a24b2029faab2acc4004d0410ff5">&#9670;&#160;</a></span>setConsoleFilter()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Logger::setConsoleFilter </td>
+          <td>(</td>
+          <td class="paramtype">bool</td>          <td class="paramname"><span class="paramname"><em>showLogs</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool</td>          <td class="paramname"><span class="paramname"><em>showWarnings</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">bool</td>          <td class="paramname"><span class="paramname"><em>showErrors</em></span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
 
 </div>
 </div>

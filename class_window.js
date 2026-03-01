@@ -33,6 +33,7 @@ var class_window =
     [ "setClearColor", "class_window.html#a7154e12eabaec47019c738b66fafe24b", null ],
     [ "setFullscreen", "class_window.html#a1fd1ec66f4ea1cb9ece13708edc81eba", null ],
     [ "setFullscreen", "class_window.html#aafbcf94a1e73295dfae7c9cdba2e5dc3", null ],
+    [ "setLogOutput", "class_window.html#a41c3c499806fb5709876a51eaee01626", null ],
     [ "setScene", "class_window.html#ac693d92bb6f52273932549cd121a5755", null ],
     [ "setWindowed", "class_window.html#abee4609843289470a1ccbc46a86f32e9", null ],
     [ "useDeferredRendering", "class_window.html#adafb4dc8a3af7af838df8d2feba7086f", null ],

@@ -13,6 +13,7 @@ var class_rigidbody =
     [ "applyImpulse", "class_rigidbody.html#adf3dd36c31030e06ee1ec432fbe920d4", null ],
     [ "atAttach", "class_rigidbody.html#a1e981fd719d8d85d83b183ed8a45f3d4", null ],
     [ "beforePhysics", "class_rigidbody.html#acf0b7f46ca30d66ae5fbe19c35b9bc57", null ],
+    [ "clone", "class_rigidbody.html#a611c3cdd0c5ea0b6b2ca66eda817fcfd", null ],
     [ "getAngularVelocity", "class_rigidbody.html#abfe948994ecbc3e0ada52b9b9558579b", null ],
     [ "getLinearVelocity", "class_rigidbody.html#a0e8b2130277bbd450d12290ef6a6d0d2", null ],
     [ "getVelocity", "class_rigidbody.html#ac858887c2ff98e715ba6bb5546eebc44", null ],

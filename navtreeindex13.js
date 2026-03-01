@@ -1,5 +1,9 @@
 var NAVTREEINDEX13 =
 {
+"structopal_1_1_drawing_state.html":[1,0,5,12],
+"structopal_1_1_drawing_state.html":[2,0,2,12],
+"structopal_1_1_drawing_state.html#a04a652a42b4cff2800a7b1e3e470ac58":[1,0,5,12,5],
+"structopal_1_1_drawing_state.html#a04a652a42b4cff2800a7b1e3e470ac58":[2,0,2,12,5],
 "structopal_1_1_drawing_state.html#a214407b70df142932fded619af390534":[1,0,5,12,0],
 "structopal_1_1_drawing_state.html#a214407b70df142932fded619af390534":[2,0,2,12,0],
 "structopal_1_1_drawing_state.html#a257a8c89864d16f972d4df70e1d6e63c":[1,0,5,12,3],

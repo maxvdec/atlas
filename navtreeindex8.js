@@ -1,5 +1,9 @@
 var NAVTREEINDEX8 =
 {
+"namespacebezel__jolt.html#a3fe528abd21e2e6ca3372b6bbec5b75e":[1,0,3,8],
+"namespacebezel__jolt.html#a488137d5f4de9a5d8bcf1bb5f6cae4f6":[1,0,3,9],
+"namespacebezel__jolt.html#ac9b06e4dfd086931d92a46550690549e":[1,0,3,7],
+"namespacebezel__jolt.html#ad8ce12750f5027b41715a250ff5276fb":[1,0,3,4],
 "namespacebezel__jolt.html#ad8ce12750f5027b41715a250ff5276fba0eaadb4fcb48a0a0ed7bc9868be9fbaa":[1,0,3,4,1],
 "namespacebezel__jolt.html#ad8ce12750f5027b41715a250ff5276fba4059b0251f66a18cb56f544728796875":[1,0,3,4,0],
 "namespacebezel__jolt.html#ad8ce12750f5027b41715a250ff5276fba902b0d55fddef6f8d651fe1035b7d4bd":[1,0,3,4,2],
@@ -245,9 +249,5 @@ var NAVTREEINDEX8 =
 "shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82ac2e7db5ac7ab74ea4bb9a7a89d251f3a":[3,0,1,0,0,2,11,15],
 "shader_8h.html#aed7a1c7a5976e4adb712d0a231dada82acb5feb1b7314637725a2e73bdc9f7295":[3,0,1,0,0,2,11,1],
 "shader_8h_source.html":[3,0,1,0,0,2],
-"shape_8h.html":[3,0,1,2,1,2],
-"shape_8h_source.html":[3,0,1,2,1,2],
-"struct_allocation_packet.html":[2,0,3],
-"struct_allocation_packet.html#a0b77ab77b86f502d2202bb99a0fa6654":[2,0,3,1],
-"struct_allocation_packet.html#a238dbf8cb7196bfd0a7daeeb67915319":[2,0,3,0]
+"shape_8h.html":[3,0,1,2,1,2]
 };

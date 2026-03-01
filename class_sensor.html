@@ -152,6 +152,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:acf0b7f46ca30d66ae5fbe19c35b9bc57 inherit pub_methods_class_rigidbody"><td class="mdescLeft">&#160;</td><td class="mdescRight">Synchronizes forces and constraints before stepping physics.  <br /></td></tr>
 <tr class="memitem:ac8cd27b3518b9f5b9e8823ce0a0eea49 inherit pub_methods_class_rigidbody" id="r_ac8cd27b3518b9f5b9e8823ce0a0eea49"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="class_rigidbody.html#ac8cd27b3518b9f5b9e8823ce0a0eea49">update</a> (float dt) override</td></tr>
 <tr class="memdesc:ac8cd27b3518b9f5b9e8823ce0a0eea49 inherit pub_methods_class_rigidbody"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates transform synchronization and query dispatch.  <br /></td></tr>
+<tr class="memitem:a611c3cdd0c5ea0b6b2ca66eda817fcfd inherit pub_methods_class_rigidbody" id="r_a611c3cdd0c5ea0b6b2ca66eda817fcfd"><td class="memItemLeft">std::shared_ptr&lt; <a class="el" href="class_component.html">Component</a> &gt;&#160;</td><td class="memItemRight"><a class="el" href="class_rigidbody.html#a611c3cdd0c5ea0b6b2ca66eda817fcfd">clone</a> () const override</td></tr>
 <tr class="memitem:abaa2f1d8adf3f7b84cc72524c7b89c63 inherit pub_methods_class_rigidbody" id="r_abaa2f1d8adf3f7b84cc72524c7b89c63"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="class_rigidbody.html#abaa2f1d8adf3f7b84cc72524c7b89c63">addCapsuleCollider</a> (float radius, float height)</td></tr>
 <tr class="memdesc:abaa2f1d8adf3f7b84cc72524c7b89c63 inherit pub_methods_class_rigidbody"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a capsule collider to the rigidbody.  <br /></td></tr>
 <tr class="memitem:afd7ae9351877ed7f500c278c680b3a05 inherit pub_methods_class_rigidbody" id="r_afd7ae9351877ed7f500c278c680b3a05"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="class_rigidbody.html#afd7ae9351877ed7f500c278c680b3a05">addBoxCollider</a> (const <a class="el" href="struct_position3d.html">Position3d</a> &amp;extents)</td></tr>
@@ -256,7 +257,7 @@ Additional Inherited Members</h2></td></tr>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Convenience sensor rigidbody that defaults <span class="tt"><a class="el" href="class_rigidbody.html#acf5b0ecde6462d1b3311ed09b58965d4" title="Whether this rigidbody behaves as a sensor (trigger).">isSensor</a></span> to true. </p>
 
-<p class="definition">Definition at line <a class="el" href="physics_8h_source.html#l00479">479</a> of file <a class="el" href="physics_8h_source.html">physics.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="physics_8h_source.html#l00481">481</a> of file <a class="el" href="physics_8h_source.html">physics.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a342d6d11ef572c8cba92cb76fb1a294b" name="a342d6d11ef572c8cba92cb76fb1a294b"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a342d6d11ef572c8cba92cb76fb1a294b">&#9670;&#160;</a></span>Sensor()</h2>
@@ -281,11 +282,11 @@ Additional Inherited Members</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="physics_8h_source.html#l00481">481</a> of file <a class="el" href="physics_8h_source.html">physics.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  481</span>{ <a class="code hl_variable" href="class_rigidbody.html#acf5b0ecde6462d1b3311ed09b58965d4">Rigidbody::isSensor</a> = <span class="keyword">true</span>; }</div>
-<div class="ttc" id="aclass_rigidbody_html_acf5b0ecde6462d1b3311ed09b58965d4"><div class="ttname"><a href="class_rigidbody.html#acf5b0ecde6462d1b3311ed09b58965d4">Rigidbody::isSensor</a></div><div class="ttdeci">bool isSensor</div><div class="ttdoc">Whether this rigidbody behaves as a sensor (trigger).</div><div class="ttdef"><b>Definition</b> <a href="physics_8h_source.html#l00352">physics.h:352</a></div></div>
+<p class="definition">Definition at line <a class="el" href="physics_8h_source.html#l00483">483</a> of file <a class="el" href="physics_8h_source.html">physics.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  483</span>{ <a class="code hl_variable" href="class_rigidbody.html#acf5b0ecde6462d1b3311ed09b58965d4">Rigidbody::isSensor</a> = <span class="keyword">true</span>; }</div>
+<div class="ttc" id="aclass_rigidbody_html_acf5b0ecde6462d1b3311ed09b58965d4"><div class="ttname"><a href="class_rigidbody.html#acf5b0ecde6462d1b3311ed09b58965d4">Rigidbody::isSensor</a></div><div class="ttdeci">bool isSensor</div><div class="ttdoc">Whether this rigidbody behaves as a sensor (trigger).</div><div class="ttdef"><b>Definition</b> <a href="physics_8h_source.html#l00353">physics.h:353</a></div></div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="physics_8h_source.html#l00352">Rigidbody::isSensor</a>.</p>
+<p class="reference">References <a class="el" href="physics_8h_source.html#l00353">Rigidbody::isSensor</a>.</p>
 
 </div>
 </div>
@@ -315,11 +316,11 @@ Additional Inherited Members</h2></td></tr>
 
 <p>Sets the signal string emitted when the sensor is triggered. </p>
 
-<p class="definition">Definition at line <a class="el" href="physics_8h_source.html#l00484">484</a> of file <a class="el" href="physics_8h_source.html">physics.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  484</span>{ <a class="code hl_variable" href="class_rigidbody.html#a7787a7464690609560b81f9e039f16fb">sendSignal</a> = signal; }</div>
-<div class="ttc" id="aclass_rigidbody_html_a7787a7464690609560b81f9e039f16fb"><div class="ttname"><a href="class_rigidbody.html#a7787a7464690609560b81f9e039f16fb">Rigidbody::sendSignal</a></div><div class="ttdeci">std::string sendSignal</div><div class="ttdoc">Signal string sent by sensors on overlap/contact events.</div><div class="ttdef"><b>Definition</b> <a href="physics_8h_source.html#l00350">physics.h:350</a></div></div>
+<p class="definition">Definition at line <a class="el" href="physics_8h_source.html#l00486">486</a> of file <a class="el" href="physics_8h_source.html">physics.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  486</span>{ <a class="code hl_variable" href="class_rigidbody.html#a7787a7464690609560b81f9e039f16fb">sendSignal</a> = signal; }</div>
+<div class="ttc" id="aclass_rigidbody_html_a7787a7464690609560b81f9e039f16fb"><div class="ttname"><a href="class_rigidbody.html#a7787a7464690609560b81f9e039f16fb">Rigidbody::sendSignal</a></div><div class="ttdeci">std::string sendSignal</div><div class="ttdoc">Signal string sent by sensors on overlap/contact events.</div><div class="ttdef"><b>Definition</b> <a href="physics_8h_source.html#l00351">physics.h:351</a></div></div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="physics_8h_source.html#l00350">Rigidbody::sendSignal</a>.</p>
+<p class="reference">References <a class="el" href="physics_8h_source.html#l00351">Rigidbody::sendSignal</a>.</p>
 
 </div>
 </div>

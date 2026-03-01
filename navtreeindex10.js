@@ -1,5 +1,9 @@
 var NAVTREEINDEX10 =
 {
+"struct_g_p_u_directional_light.html#a9b4cf84da4a18d0a0ab1293152a4d238":[2,0,66,1],
+"struct_g_p_u_directional_light.html#aaec0097c1a6c2ce20c84983e91d853ac":[2,0,66,0],
+"struct_g_p_u_directional_light.html#ac7b49ac953ea303557cf67f2245c9c13":[2,0,66,5],
+"struct_g_p_u_directional_light.html#ada1ce647179767945509a8d8ee58d2d9":[2,0,66,2],
 "struct_g_p_u_point_light.html":[2,0,67],
 "struct_g_p_u_point_light.html#a108131b6a91ced2ddec4ad25ae44e588":[2,0,67,7],
 "struct_g_p_u_point_light.html#a21a3a7d1de7d168fbebe0aa1bfcce01a":[2,0,67,2],
@@ -245,9 +249,5 @@ var NAVTREEINDEX10 =
 "struct_resource_event_info.html#a39f10ddd8c4ce8aa1673f5c8933b1001":[2,0,122,2],
 "struct_resource_event_info.html#a72c0b411280abaac00699b136e7393d7":[2,0,122,1],
 "struct_resource_event_info.html#a74400f1f3265e506d3ec5cb7c90badbf":[2,0,122,3],
-"struct_resource_event_info.html#a9c576ff79cc92ba12fcfca6b785ec637":[2,0,122,4],
-"struct_resource_event_info.html#a9cabc24d04c0219fc69516d719d9bc15":[2,0,122,0],
-"struct_resource_group.html":[2,0,123],
-"struct_resource_group.html#a05664160769af46cda501e7d706c3b89":[2,0,123,0],
-"struct_resource_group.html#a147e53b00ed6da7d2fb3d0f0534b8251":[2,0,123,2]
+"struct_resource_event_info.html#a9c576ff79cc92ba12fcfca6b785ec637":[2,0,122,4]
 };

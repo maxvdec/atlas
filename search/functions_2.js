@@ -19,7 +19,7 @@ var searchData=
   ['clear_16',['clear',['../class_bounds.html#a19092760bc7b5e1423b30a9ef8f1da8b',1,'Bounds::clear()'],['../classopal_1_1_command_buffer.html#aa6cbb452302cbadb66ad7d92901bb8a9',1,'opal::CommandBuffer::clear(float r, float g, float b, float a, float depth)']]],
   ['clearcolor_17',['clearColor',['../classopal_1_1_command_buffer.html#a716ed953c2d9052c64b68788d73e089c',1,'opal::CommandBuffer']]],
   ['cleardepth_18',['clearDepth',['../classopal_1_1_command_buffer.html#a4499c2a39d0cb5e9112120eedfef3755',1,'opal::CommandBuffer']]],
-  ['clone_19',['clone',['../class_core_object.html#af91d0ad0985941edf65b8c3b24865c69',1,'CoreObject']]],
+  ['clone_19',['clone',['../class_component.html#ab7b5b4676ca88400a52f66d95c9c828e',1,'Component::clone()'],['../class_core_object.html#af91d0ad0985941edf65b8c3b24865c69',1,'CoreObject::clone()'],['../class_rigidbody.html#a611c3cdd0c5ea0b6b2ca66eda817fcfd',1,'Rigidbody::clone()']]],
   ['close_20',['close',['../class_window.html#a35055c04498121d39741bfcd5082705b',1,'Window']]],
   ['closesttriangle_21',['closestTriangle',['../namespacebezel.html#af8877774f235c83bd99fa5719c446f08',1,'bezel']]],
   ['clouds_22',['Clouds',['../class_clouds.html#af3736c176d64dc81a13c8eb7d59059fb',1,'Clouds']]],

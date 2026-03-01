@@ -149,6 +149,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:acf0b7f46ca30d66ae5fbe19c35b9bc57"><td class="mdescLeft">&#160;</td><td class="mdescRight">Synchronizes forces and constraints before stepping physics.  <br /></td></tr>
 <tr class="memitem:ac8cd27b3518b9f5b9e8823ce0a0eea49" id="r_ac8cd27b3518b9f5b9e8823ce0a0eea49"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#ac8cd27b3518b9f5b9e8823ce0a0eea49">update</a> (float dt) override</td></tr>
 <tr class="memdesc:ac8cd27b3518b9f5b9e8823ce0a0eea49"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates transform synchronization and query dispatch.  <br /></td></tr>
+<tr class="memitem:a611c3cdd0c5ea0b6b2ca66eda817fcfd" id="r_a611c3cdd0c5ea0b6b2ca66eda817fcfd"><td class="memItemLeft">std::shared_ptr&lt; <a class="el" href="class_component.html">Component</a> &gt;&#160;</td><td class="memItemRight"><a class="el" href="#a611c3cdd0c5ea0b6b2ca66eda817fcfd">clone</a> () const override</td></tr>
 <tr class="memitem:abaa2f1d8adf3f7b84cc72524c7b89c63" id="r_abaa2f1d8adf3f7b84cc72524c7b89c63"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#abaa2f1d8adf3f7b84cc72524c7b89c63">addCapsuleCollider</a> (float radius, float height)</td></tr>
 <tr class="memdesc:abaa2f1d8adf3f7b84cc72524c7b89c63"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a capsule collider to the rigidbody.  <br /></td></tr>
 <tr class="memitem:afd7ae9351877ed7f500c278c680b3a05" id="r_afd7ae9351877ed7f500c278c680b3a05"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#afd7ae9351877ed7f500c278c680b3a05">addBoxCollider</a> (const <a class="el" href="struct_position3d.html">Position3d</a> &amp;extents)</td></tr>
@@ -253,7 +254,7 @@ Public Attributes</h2></td></tr>
 <div class="textblock"><p><a class="el" href="class_component.html" title="Behavior or property that can be attached to a GameObject to extend its capabilities.">Component</a> that binds a Bezel rigidbody to a <span class="tt"><a class="el" href="class_game_object.html" title="Base class for all Game Objects. It extends from Renderable and it provides common functionality for ...">GameObject</a></span>. </p>
 <p>Most query APIs (<span class="tt">raycast*</span>, <span class="tt">overlap*</span>, <span class="tt">predictMovement*</span>) are async-style: the request is queued and the result is reported to components via <span class="tt"><a class="el" href="class_component.html#a7ad81a397c06433353d21b1d5aa7eda9">Component::onQueryReceive</a>(<a class="el" href="struct_query_result.html" title="Union-like container describing the last physics query response.">QueryResult</a>&amp;)</span>. </p>
 
-<p class="definition">Definition at line <a class="el" href="physics_8h_source.html#l00345">345</a> of file <a class="el" href="physics_8h_source.html">physics.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="physics_8h_source.html#l00346">346</a> of file <a class="el" href="physics_8h_source.html">physics.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a5a8a4e40d8df12dd9dee889fbc219787" name="a5a8a4e40d8df12dd9dee889fbc219787"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a5a8a4e40d8df12dd9dee889fbc219787">&#9670;&#160;</a></span>Rigidbody()</h2>
@@ -534,6 +535,33 @@ Public Attributes</h2></td></tr>
 <p>Synchronizes forces and constraints before stepping physics. </p>
 
 <p>Reimplemented from <a class="el" href="class_component.html#a83bd6e1c4f6eb813dd446a4319e98035">Component</a>.</p>
+
+</div>
+</div>
+<a id="a611c3cdd0c5ea0b6b2ca66eda817fcfd" name="a611c3cdd0c5ea0b6b2ca66eda817fcfd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a611c3cdd0c5ea0b6b2ca66eda817fcfd">&#9670;&#160;</a></span>clone()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::shared_ptr&lt; <a class="el" href="class_component.html">Component</a> &gt; Rigidbody::clone </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel override">override</span><span class="mlabel virtual">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Reimplemented from <a class="el" href="class_component.html#ab7b5b4676ca88400a52f66d95c9c828e">Component</a>.</p>
 
 </div>
 </div>
@@ -1492,7 +1520,7 @@ Public Attributes</h2></td></tr>
 
 <p>Underlying Bezel rigidbody instance. </p>
 
-<p class="definition">Definition at line <a class="el" href="physics_8h_source.html#l00348">348</a> of file <a class="el" href="physics_8h_source.html">physics.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="physics_8h_source.html#l00349">349</a> of file <a class="el" href="physics_8h_source.html">physics.h</a>.</p>
 
 </div>
 </div>
@@ -1510,7 +1538,7 @@ Public Attributes</h2></td></tr>
 
 <p>Whether this rigidbody behaves as a sensor (trigger). </p>
 
-<p class="definition">Definition at line <a class="el" href="physics_8h_source.html#l00352">352</a> of file <a class="el" href="physics_8h_source.html">physics.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="physics_8h_source.html#l00353">353</a> of file <a class="el" href="physics_8h_source.html">physics.h</a>.</p>
 
 </div>
 </div>
@@ -1528,7 +1556,7 @@ Public Attributes</h2></td></tr>
 
 <p>Signal string sent by sensors on overlap/contact events. </p>
 
-<p class="definition">Definition at line <a class="el" href="physics_8h_source.html#l00350">350</a> of file <a class="el" href="physics_8h_source.html">physics.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="physics_8h_source.html#l00351">351</a> of file <a class="el" href="physics_8h_source.html">physics.h</a>.</p>
 
 </div>
 </div>
