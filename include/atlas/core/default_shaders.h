@@ -1798,22 +1798,39 @@ float4 sampleBright(thread const float2& uv, constant PushConstants& _372, devic
 }
 
 static inline __attribute__((always_inline))
-float4 applyMotionBlur(thread const float2& texCoord, thread const float& size, thread const float& separation, thread const float4& color, constant PushConstants& _372, device EffectBuffer& _381, device EffectFloat1Buffer& _394, device EffectFloat2Buffer& _403, device EffectFloat3Buffer& _411, device EffectFloat4Buffer& _419, device EffectFloat5Buffer& _426, texture2d<float> Texture, sampler TextureSmplr, texture2d<float> BrightTexture, sampler BrightTextureSmplr, constant Uniforms& _849, texture2d<float> VolumetricLightTexture, sampler VolumetricLightTextureSmplr, texture2d<float> SSRTexture, sampler SSRTextureSmplr, texture2d<float> PositionTexture, sampler PositionTextureSmplr)
+float4 composeSSR(thread const float4& color, thread const float2& uv, constant PushConstants& _372, texture2d<float> SSRTexture, sampler SSRTextureSmplr)
 {
-    float4 fallbackColor = color;
+    if (_372.hasSSRTexture != 1)
+    {
+        return color;
+    }
+    float4 ssr = SSRTexture.sample(SSRTextureSmplr, uv);
+    float reflectionWeight = fast::clamp(ssr.w, 0.0, 1.0);
+    float baseWeight = 1.0 - reflectionWeight;
+    float4 result = color;
+    result.xyz = (result.xyz * baseWeight) + (ssr.xyz * reflectionWeight);
+    return result;
+}
+
+static inline __attribute__((always_inline))
+float4 composeLighting(thread const float2& uv, thread const float4& baseColor, constant PushConstants& _372, device EffectBuffer& _381, device EffectFloat1Buffer& _394, device EffectFloat2Buffer& _403, device EffectFloat3Buffer& _411, device EffectFloat4Buffer& _419, device EffectFloat5Buffer& _426, texture2d<float> BrightTexture, sampler BrightTextureSmplr, texture2d<float> VolumetricLightTexture, sampler VolumetricLightTextureSmplr, texture2d<float> SSRTexture, sampler SSRTextureSmplr)
+{
+    float4 color = baseColor;
     if (_372.hasBrightTexture == 1)
     {
-        float2 param = texCoord;
-        fallbackColor += sampleBright(param, _372, _381, _394, _403, _411, _419, _426, BrightTexture, BrightTextureSmplr);
+        color += sampleBright(uv, _372, _381, _394, _403, _411, _419, _426, BrightTexture, BrightTextureSmplr);
     }
     if (_372.hasVolumetricLightTexture == 1)
     {
-        fallbackColor += VolumetricLightTexture.sample(VolumetricLightTextureSmplr, texCoord);
+        color += VolumetricLightTexture.sample(VolumetricLightTextureSmplr, uv);
     }
-    if (_372.hasSSRTexture == 1)
-    {
-        fallbackColor += SSRTexture.sample(SSRTextureSmplr, texCoord);
-    }
+    return composeSSR(color, uv, _372, SSRTexture, SSRTextureSmplr);
+}
+
+static inline __attribute__((always_inline))
+float4 applyMotionBlur(thread const float2& texCoord, thread const float& size, thread const float& separation, thread const float4& color, constant PushConstants& _372, device EffectBuffer& _381, device EffectFloat1Buffer& _394, device EffectFloat2Buffer& _403, device EffectFloat3Buffer& _411, device EffectFloat4Buffer& _419, device EffectFloat5Buffer& _426, texture2d<float> Texture, sampler TextureSmplr, texture2d<float> BrightTexture, sampler BrightTextureSmplr, constant Uniforms& _849, texture2d<float> VolumetricLightTexture, sampler VolumetricLightTextureSmplr, texture2d<float> SSRTexture, sampler SSRTextureSmplr, texture2d<float> PositionTexture, sampler PositionTextureSmplr, texture2d<float> DepthTexture, sampler DepthTextureSmplr)
+{
+    float4 fallbackColor = composeLighting(texCoord, color, _372, _381, _394, _403, _411, _419, _426, BrightTexture, BrightTextureSmplr, VolumetricLightTexture, VolumetricLightTextureSmplr, SSRTexture, SSRTextureSmplr);
     if ((size <= 0.0) || (separation <= 0.0))
     {
         return fallbackColor;
@@ -1850,46 +1867,66 @@ float4 applyMotionBlur(thread const float2& texCoord, thread const float& size, 
     prevClipPos.z = _1573.z;
     float2 prevUV = (prevClipPos.xy * 0.5) + float2(0.5);
     float2 velocity = (currentUV - prevUV) * separation;
-    float maxVelocity = 0.100000001490116119384765625;
-    if (length(velocity) > maxVelocity)
+    float velocityLength = length(velocity);
+    float maxVelocity = 0.119999997317790985107421875;
+    if (velocityLength > maxVelocity)
     {
         velocity = fast::normalize(velocity) * maxVelocity;
+        velocityLength = maxVelocity;
     }
-    if (length(velocity) < 9.9999997473787516355514526367188e-05)
+    if (_372.hasSSRTexture == 1)
+    {
+        float mirrorWeight = fast::clamp(SSRTexture.sample(SSRTextureSmplr, texCoord).w, 0.0, 1.0);
+        float blurDamp = mix(1.0, 0.20000000298023223876953125, mirrorWeight);
+        velocity *= blurDamp;
+        velocityLength *= blurDamp;
+    }
+    if (velocityLength < 9.9999997473787516355514526367188e-05)
     {
         return fallbackColor;
     }
+    int baseSamples = clamp(int(size), 2, 32);
+    float sampleScale = mix(0.75, 1.75, fast::clamp(velocityLength / maxVelocity, 0.0, 1.0));
+    int samples = clamp(int(float(baseSamples) * sampleScale), 3, 48);
+    float centerDepth = 0.0;
+    float depthSoftness = 1.0;
+    if (_372.hasDepthTexture == 1)
+    {
+        float centerDepthRaw = DepthTexture.sample(DepthTextureSmplr, texCoord).x;
+        centerDepth = LinearizeDepth(centerDepthRaw, _849);
+        depthSoftness = fast::max(0.00200000009499490261077880859375, centerDepth * 0.0199999995529651641845703125);
+    }
+    float jitter = (fract(sin(dot(texCoord * float2(173.3000030517578125, 97.09999847412109375), float2(12.98980045318603515625, 78.233001708984375))) * 43758.546875) - 0.5) * 0.3499999940395355224609375;
     float4 result = float4(0.0);
     float totalWeight = 0.0;
-    int samples = int(size);
-    int _1619 = -samples;
-    for (int i = _1619; i <= samples; i++)
+    for (int i = 0; i < samples; i++)
     {
-        float t = float(i) / float(samples);
+        float t = (((float(i) + 0.5) / float(samples)) * 2.0) - 1.0;
+        t += jitter / float(samples);
         float2 sampleCoord = texCoord + (velocity * t);
-        bool _1642 = sampleCoord.x >= 0.0;
+        bool _1642 = sampleCoord.x < 0.0;
         bool _1648;
-        if (_1642)
+        if (!_1642)
         {
-            _1648 = sampleCoord.x <= 1.0;
+            _1648 = sampleCoord.x > 1.0;
         }
         else
         {
             _1648 = _1642;
         }
         bool _1654;
-        if (_1648)
+        if (!_1648)
         {
-            _1654 = sampleCoord.y >= 0.0;
+            _1654 = sampleCoord.y < 0.0;
         }
         else
         {
             _1654 = _1648;
         }
         bool _1660;
-        if (_1654)
+        if (!_1654)
         {
-            _1660 = sampleCoord.y <= 1.0;
+            _1660 = sampleCoord.y > 1.0;
         }
         else
         {
@@ -1897,30 +1934,30 @@ float4 applyMotionBlur(thread const float2& texCoord, thread const float& size, 
         }
         if (_1660)
         {
-            float2 param_1 = sampleCoord;
-            float4 sampled = sampleColor(param_1, _372, _381, _394, _403, _411, _419, _426, Texture, TextureSmplr);
-            if (_372.hasBrightTexture == 1)
-            {
-                float2 param_2 = sampleCoord;
-                sampled += sampleBright(param_2, _372, _381, _394, _403, _411, _419, _426, BrightTexture, BrightTextureSmplr);
-            }
-            if (_372.hasVolumetricLightTexture == 1)
-            {
-                sampled += VolumetricLightTexture.sample(VolumetricLightTextureSmplr, sampleCoord);
-            }
-            if (_372.hasSSRTexture == 1)
-            {
-                sampled += SSRTexture.sample(SSRTextureSmplr, sampleCoord);
-            }
-            float weight = 1.0 - (abs(t) * 0.5);
-            result += (sampled * weight);
-            totalWeight += weight;
+            continue;
         }
+        float depthWeight = 1.0;
+        if (_372.hasDepthTexture == 1)
+        {
+            float sampleDepthRaw = DepthTexture.sample(DepthTextureSmplr, sampleCoord).x;
+            float sampleDepth = LinearizeDepth(sampleDepthRaw, _849);
+            float depthDelta = abs(sampleDepth - centerDepth);
+            depthWeight = 1.0 - smoothstep(depthSoftness, depthSoftness * 2.5, depthDelta);
+            if (depthWeight <= 0.0)
+            {
+                continue;
+            }
+        }
+        float4 sampled = sampleColor(sampleCoord, _372, _381, _394, _403, _411, _419, _426, Texture, TextureSmplr);
+        sampled = composeLighting(sampleCoord, sampled, _372, _381, _394, _403, _411, _419, _426, BrightTexture, BrightTextureSmplr, VolumetricLightTexture, VolumetricLightTextureSmplr, SSRTexture, SSRTextureSmplr);
+        float gaussian = exp((-4.0) * t * t);
+        float weight = gaussian * depthWeight;
+        result += (sampled * weight);
+        totalWeight += weight;
     }
     if (totalWeight > 0.0)
     {
-        result /= float4(totalWeight);
-        return result;
+        return result / float4(totalWeight);
     }
     return fallbackColor;
 }
@@ -2054,31 +2091,20 @@ fragment main0_out main0(main0_in in [[stage_in]], constant PushConstants& _372 
         float param_11 = motionBlurSize;
         float param_12 = motionBlurSeparation;
         float4 param_13 = color;
-        float4 motionBlurred = applyMotionBlur(param_10, param_11, param_12, param_13, _372, _381, _394, _403, _411, _419, _426, Texture, TextureSmplr, BrightTexture, BrightTextureSmplr, _849, VolumetricLightTexture, VolumetricLightTextureSmplr, SSRTexture, SSRTextureSmplr, PositionTexture, PositionTextureSmplr);
+        float4 motionBlurred = applyMotionBlur(param_10, param_11, param_12, param_13, _372, _381, _394, _403, _411, _419, _426, Texture, TextureSmplr, BrightTexture, BrightTextureSmplr, _849, VolumetricLightTexture, VolumetricLightTextureSmplr, SSRTexture, SSRTextureSmplr, PositionTexture, PositionTextureSmplr, DepthTexture, DepthTextureSmplr);
         out.FragColor = motionBlurred;
         return out;
     }
     else
     {
-        hdrColor = color;
-        if (_372.hasBrightTexture == 1)
-        {
-            float2 param_14 = in.TexCoord;
-            hdrColor += sampleBright(param_14, _372, _381, _394, _403, _411, _419, _426, BrightTexture, BrightTextureSmplr);
-        }
-        if (_372.hasVolumetricLightTexture == 1)
-        {
-            hdrColor += VolumetricLightTexture.sample(VolumetricLightTextureSmplr, in.TexCoord);
-        }
-        if (_372.hasSSRTexture == 1)
-        {
-            hdrColor += SSRTexture.sample(SSRTextureSmplr, in.TexCoord);
-        }
+        float2 param_14 = in.TexCoord;
+        float4 param_15 = color;
+        hdrColor = composeLighting(param_14, param_15, _372, _381, _394, _403, _411, _419, _426, BrightTexture, BrightTextureSmplr, VolumetricLightTexture, VolumetricLightTextureSmplr, SSRTexture, SSRTextureSmplr);
     }
-    float4 param_15 = hdrColor;
-    hdrColor = mapToLUT(param_15, _372, LUTTexture, LUTTextureSmplr);
-    float3 param_16 = hdrColor.xyz;
-    float3 _2744 = acesToneMapping(param_16);
+    float4 param_16 = hdrColor;
+    hdrColor = mapToLUT(param_16, _372, LUTTexture, LUTTextureSmplr);
+    float3 param_17 = hdrColor.xyz;
+    float3 _2744 = acesToneMapping(param_17);
     hdrColor.x = _2744.x;
     hdrColor.y = _2744.y;
     hdrColor.z = _2744.z;
@@ -2713,17 +2739,12 @@ float calculateShadow(thread const ShadowParameters& shadowParam, thread const f
     float distFactor = fast::clamp(_distance / 800.0, 0.0, 1.0);
     float desiredKernel = mix(1.0, 1.5, distFactor) * resFactor;
     int kernelSize = int(fast::clamp(floor(desiredKernel + 0.5), 1.0, 2.0));
-    float rand = fract(sin(dot(projCoords.xy, float2(12.98980045318603515625, 78.233001708984375))) * 43758.546875);
-    float angle = rand * 6.283185482025146484375;
-    float ca = cos(angle);
-    float sa = sin(angle);
-    float2x2 rot = float2x2(float2(ca, -sa), float2(sa, ca));
     float texelRadius = mix(1.0, 3.0, distFactor) * resFactor;
     float2 filterRadius = texelSize * texelRadius;
     int sampleCount = 0;
     for (int i = 0; i < 12; i++)
     {
-        float2 offset = (rot * _660[i]) * filterRadius;
+        float2 offset = _660[i] * filterRadius;
         float2 uv = projCoords.xy + offset;
         bool _676 = uv.x < 0.0;
         bool _683;
@@ -3012,6 +3033,8 @@ fragment main0_out main0(main0_in in [[stage_in]], constant UBO& _526 [[buffer(0
             dirShadow = fast::max(dirShadow, calculateShadow(param_2, param_3, param_4, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, _526));
         }
     }
+    dirShadow = fast::clamp(dirShadow * 0.85000002384185791015625, 0.0, 1.0);
+    pointShadow = fast::clamp(pointShadow * 0.85000002384185791015625, 0.0, 1.0);
     float3 directionalResult = float3(0.0);
     for (int i_1 = 0; i_1 < _1355.directionalLightCount; i_1++)
     {
@@ -5362,26 +5385,47 @@ float3 fresnelSchlick(thread const float& cosTheta, thread const float3& F0)
 }
 
 static inline __attribute__((always_inline))
-float4 SSR(thread const float3& worldPos, thread const float3& normal, thread const float3& viewDir, thread const float& roughness, thread const float& metallic, thread const float3& albedo, constant Uniforms& _42, constant SSRParameters& _96, thread float4& gl_FragCoord, texture2d<float> gPosition, sampler gPositionSmplr, texture2d<float> sceneColor, sampler sceneColorSmplr)
+float3 sampleSkyReflection(thread const float3& normal, thread const float3& viewDir, thread const float3& albedo, thread const float& metallic, texturecube<float> skybox, sampler skyboxSmplr)
+{
+    float3 reflected = reflect(-fast::normalize(viewDir), fast::normalize(normal));
+    float3 skyColor = skybox.sample(skyboxSmplr, reflected).xyz;
+    float skyLuma = dot(skyColor, float3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875));
+    if (skyLuma < 0.001000000047497451305389404296875)
+    {
+        float t = fast::clamp((reflected.y * 0.5) + 0.5, 0.0, 1.0);
+        float3 horizon = float3(0.7400000095367431640625, 0.790000021457672119140625, 0.87999999523162841796875);
+        float3 zenith = float3(0.5, 0.63999998569488525390625, 0.839999973773956298828125);
+        skyColor = mix(horizon, zenith, float3(t));
+    }
+    float tintStrength = metallic * 0.3499999940395355224609375;
+    float3 tint = mix(float3(1.0), albedo, float3(tintStrength));
+    return skyColor * tint;
+}
+
+static inline __attribute__((always_inline))
+float4 SSR(thread const float3& worldPos, thread const float3& normal, thread const float3& viewDir, thread const float& roughness, thread const float& metallic, thread const float3& albedo, constant Uniforms& _42, constant SSRParameters& _96, thread float4& gl_FragCoord, texture2d<float> gPosition, sampler gPositionSmplr, texture2d<float> sceneColor, sampler sceneColorSmplr, texture2d<float> gNormal, sampler gNormalSmplr, texture2d<float> gDepth, sampler gDepthSmplr, texturecube<float> skybox, sampler skyboxSmplr)
 {
     float3 viewPos = (_42.view * float4(worldPos, 1.0)).xyz;
     float3 viewNormal = fast::normalize((_42.view * float4(normal, 0.0)).xyz);
+    float mirrorFactor = fast::clamp(metallic * (1.0 - roughness), 0.0, 1.0);
+    float3 skyReflection = sampleSkyReflection(normal, viewDir, albedo, metallic, skybox, skyboxSmplr);
     float3 viewDirection = fast::normalize(viewPos);
     float3 viewReflect = fast::normalize(reflect(viewDirection, viewNormal));
     if (viewReflect.z > 0.0)
     {
-        return float4(0.0);
+        return float4(skyReflection, mirrorFactor);
     }
     float3 rayOrigin = viewPos + (viewNormal * 0.00999999977648258209228515625);
     float3 rayDir = viewReflect;
     float stepSize = _96.maxDistance / float(_96.steps);
     float3 currentPos = rayOrigin;
-    float3 magic = float3(0.067110560834407806396484375, 0.005837149918079376220703125, 52.98291778564453125);
-    float jitter = fract(magic.z * fract(dot(gl_FragCoord.xy, magic.xy)));
+    float jitter = fract(sin(dot(gl_FragCoord.xy, float2(12.98980045318603515625, 78.233001708984375))) * 43758.546875) * roughness * 0.25;
     currentPos += ((rayDir * stepSize) * jitter);
     float2 hitUV = float2(-1.0);
     float hitDepth = 0.0;
     bool hit = false;
+    float2 fallbackUV = float2(0.0);
+    bool hasFallbackUV = false;
     float3 lastPos = currentPos;
     for (int i = 0; i < _96.steps; i++)
     {
@@ -5424,14 +5468,42 @@ float4 SSR(thread const float3& worldPos, thread const float3& normal, thread co
         {
             _229 = _222;
         }
-        if (_229)
+        if (!_229)
+        {
+            fallbackUV = screenUV;
+            hasFallbackUV = true;
+        }
+        else
         {
             break;
         }
+        float rawDepth = gDepth.sample(gDepthSmplr, screenUV).x;
+        if (rawDepth >= 0.99989998340606689453125)
+        {
+            lastPos = currentPos;
+            continue;
+        }
         float3 sampleWorldPos = gPosition.sample(gPositionSmplr, screenUV).xyz;
+        float3 sampleNormal = gNormal.sample(gNormalSmplr, screenUV).xyz;
+        if (dot(sampleNormal, sampleNormal) < 0.00999999977648258209228515625)
+        {
+            lastPos = currentPos;
+            continue;
+        }
+        if (length(sampleWorldPos - worldPos) < 0.07999999821186065673828125)
+        {
+            lastPos = currentPos;
+            continue;
+        }
         float3 sampleViewPos = (_42.view * float4(sampleWorldPos, 1.0)).xyz;
         float sampleDepth = -sampleViewPos.z;
         float currentDepth = -currentPos.z;
+        float3 sampleViewNormal = fast::normalize((_42.view * float4(sampleNormal, 0.0)).xyz);
+        if ((dot(sampleViewNormal, viewNormal) > 0.920000016689300537109375) && (abs(sampleDepth - currentDepth) < (_96.thickness * 1.5)))
+        {
+            lastPos = currentPos;
+            continue;
+        }
         float depthDiff = sampleDepth - currentDepth;
         bool _265 = depthDiff > 0.0;
         bool _272;
@@ -5458,6 +5530,44 @@ float4 SSR(thread const float3& worldPos, thread const float3& normal, thread co
                 midProj.y = _307.y;
                 midProj.z = _307.z;
                 float2 midUV = (midProj.xy * 0.5) + float2(0.5);
+                bool _321 = midUV.x < 0.0;
+                bool _328;
+                if (!_321)
+                {
+                    _328 = midUV.x > 1.0;
+                }
+                else
+                {
+                    _328 = _321;
+                }
+                bool _335;
+                if (!_328)
+                {
+                    _335 = midUV.y < 0.0;
+                }
+                else
+                {
+                    _335 = _328;
+                }
+                bool _342;
+                if (!_335)
+                {
+                    _342 = midUV.y > 1.0;
+                }
+                else
+                {
+                    _342 = _335;
+                }
+                if (_342)
+                {
+                    break;
+                }
+                float midRawDepth = gDepth.sample(gDepthSmplr, midUV).x;
+                if (midRawDepth >= 0.99989998340606689453125)
+                {
+                    binarySearchStart = midPoint;
+                    continue;
+                }
                 float3 midSampleWorldPos = gPosition.sample(gPositionSmplr, midUV).xyz;
                 float3 midSampleViewPos = (_42.view * float4(midSampleWorldPos, 1.0)).xyz;
                 float midSampleDepth = -midSampleViewPos.z;
@@ -5487,26 +5597,58 @@ float4 SSR(thread const float3& worldPos, thread const float3& normal, thread co
     }
     if (!hit)
     {
-        return float4(0.0);
+        float3 fallbackReflection = skyReflection;
+        if (hasFallbackUV)
+        {
+            float mipLevel = roughness * 5.0;
+            float3 screenFallback = sceneColor.sample(sceneColorSmplr, fallbackUV, level(mipLevel)).xyz;
+            float fallbackDepth = gDepth.sample(gDepthSmplr, fallbackUV).x;
+            float screenValidity = 1.0 - smoothstep(0.99800002574920654296875, 1.0, fallbackDepth);
+            float fallbackLuma = dot(screenFallback, float3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875));
+            screenValidity *= smoothstep(0.004999999888241291046142578125, 0.02999999932944774627685546875, fallbackLuma);
+            float tintStrength = metallic * 0.3499999940395355224609375;
+            float3 metalTint = mix(float3(1.0), albedo, float3(tintStrength));
+            fallbackReflection = mix(skyReflection, screenFallback * metalTint, float3(screenValidity));
+        }
+        return float4(fallbackReflection, mirrorFactor);
     }
     float mipLevel = roughness * 5.0;
-    float3 reflectionColor = sceneColor.sample(sceneColorSmplr, hitUV, level(mipLevel)).xyz;
+    float3 hitColor = sceneColor.sample(sceneColorSmplr, hitUV, level(mipLevel)).xyz;
+    float tintStrength = metallic * 0.3499999940395355224609375;
+    float3 metalTint = mix(float3(1.0), albedo, float3(tintStrength));
+    hitColor *= metalTint;
+    float hitDepthRaw = gDepth.sample(gDepthSmplr, hitUV).x;
+    float3 hitNormalSample = gNormal.sample(gNormalSmplr, hitUV).xyz;
+    float hitNormalLenSq = dot(hitNormalSample, hitNormalSample);
+    float3 hitNormalDir = (hitNormalLenSq > 9.9999997473787516355514526367188e-06) ? (hitNormalSample * rsqrt(hitNormalLenSq)) : (-rayDir);
+    float geometryValidity = 1.0 - smoothstep(0.99800002574920654296875, 1.0, hitDepthRaw);
+    geometryValidity *= smoothstep(0.00999999977648258209228515625, 0.100000001490116119384765625, hitNormalLenSq);
+    float normalFacing = fast::max(dot(hitNormalDir, -rayDir), 0.0);
+    geometryValidity *= smoothstep(0.0500000007450580596923828125, 0.25, normalFacing);
+    float hitLuma = dot(hitColor, float3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875));
+    float skyLuma = dot(skyReflection, float3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875));
+    float luminanceValidity = smoothstep(0.00200000009499490261077880859375, 0.02999999932944774627685546875, hitLuma + (skyLuma * 0.100000001490116119384765625));
     float2 edgeFade = smoothstep(float2(0.0), float2(0.1500000059604644775390625), hitUV) * (float2(1.0) - smoothstep(float2(0.85000002384185791015625), float2(1.0), hitUV));
     float edgeFactor = edgeFade.x * edgeFade.y;
     float distanceFade = 1.0 - smoothstep(_96.maxDistance * 0.5, _96.maxDistance, hitDepth);
     float roughnessFade = 1.0 - smoothstep(0.0, _96.maxRoughness, roughness);
+    float hitConfidence = (edgeFactor * distanceFade) * roughnessFade;
+    hitConfidence *= geometryValidity * luminanceValidity;
     float3 F0 = mix(float3(0.039999999105930328369140625), albedo, float3(metallic));
-    float3 V = fast::normalize(_42.cameraPosition - worldPos);
+    float3 V = fast::normalize(viewDir);
     float cosTheta = fast::max(dot(normal, V), 0.0);
     float param = cosTheta;
     float3 param_1 = F0;
     float3 fresnel = fresnelSchlick(param, param_1);
     float fresnelFactor = ((fresnel.x + fresnel.y) + fresnel.z) / 3.0;
-    float finalFade = ((edgeFactor * distanceFade) * roughnessFade) * fresnelFactor;
+    float fresnelWeight = mix(fresnelFactor, 1.0, mirrorFactor);
+    float3 reflectionColor = mix(skyReflection, hitColor, float3(hitConfidence));
+    float finalFade = mix(hitConfidence * fresnelWeight, 1.0, mirrorFactor);
+    finalFade = fast::clamp(finalFade, 0.0, 1.0);
     return float4(reflectionColor, finalFade);
 }
 
-fragment main0_out main0(main0_in in [[stage_in]], constant Uniforms& _42 [[buffer(0)]], constant SSRParameters& _96 [[buffer(1)]], texture2d<float> gPosition [[texture(0)]], texture2d<float> sceneColor [[texture(1)]], texture2d<float> gNormal [[texture(2)]], texture2d<float> gAlbedoSpec [[texture(3)]], texture2d<float> gMaterial [[texture(4)]], sampler gPositionSmplr [[sampler(0)]], sampler sceneColorSmplr [[sampler(1)]], sampler gNormalSmplr [[sampler(2)]], sampler gAlbedoSpecSmplr [[sampler(3)]], sampler gMaterialSmplr [[sampler(4)]], float4 gl_FragCoord [[position]])
+fragment main0_out main0(main0_in in [[stage_in]], constant Uniforms& _42 [[buffer(0)]], constant SSRParameters& _96 [[buffer(1)]], texture2d<float> gPosition [[texture(0)]], texture2d<float> sceneColor [[texture(1)]], texture2d<float> gNormal [[texture(2)]], texture2d<float> gAlbedoSpec [[texture(3)]], texture2d<float> gMaterial [[texture(4)]], texture2d<float> gDepth [[texture(5)]], texturecube<float> skybox [[texture(6)]], sampler gPositionSmplr [[sampler(0)]], sampler sceneColorSmplr [[sampler(1)]], sampler gNormalSmplr [[sampler(2)]], sampler gAlbedoSpecSmplr [[sampler(3)]], sampler gMaterialSmplr [[sampler(4)]], sampler gDepthSmplr [[sampler(5)]], sampler skyboxSmplr [[sampler(6)]], float4 gl_FragCoord [[position]])
 {
     main0_out out = {};
     float3 worldPos = gPosition.sample(gPositionSmplr, in.TexCoord).xyz;
@@ -5532,11 +5674,10 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Uniforms& _42 [[buff
     float param_3 = roughness;
     float param_4 = metallic;
     float3 param_5 = albedo;
-    float4 reflection = SSR(param, param_1, param_2, param_3, param_4, param_5, _42, _96, gl_FragCoord, gPosition, gPositionSmplr, sceneColor, sceneColorSmplr);
+    float4 reflection = SSR(param, param_1, param_2, param_3, param_4, param_5, _42, _96, gl_FragCoord, gPosition, gPositionSmplr, sceneColor, sceneColorSmplr, gNormal, gNormalSmplr, gDepth, gDepthSmplr, skybox, skyboxSmplr);
     out.FragColor = reflection;
     return out;
 }
-
 )"
 ;
 

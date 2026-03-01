@@ -477,17 +477,30 @@ vec4 applyFXAA(sampler2D tex, vec2 texCoord) {
     }
 }
 
-vec4 applyMotionBlur(vec2 texCoord, float size, float separation, vec4 color) {
-    vec4 fallbackColor = color;
+vec4 composeSSR(vec4 color, vec2 uv) {
+    if (hasSSRTexture != 1) {
+        return color;
+    }
+    vec4 ssr = texture(SSRTexture, uv);
+    float reflectionWeight = clamp(ssr.a, 0.0, 1.0);
+    float baseWeight = 1.0 - reflectionWeight;
+    color.rgb = color.rgb * baseWeight + ssr.rgb * reflectionWeight;
+    return color;
+}
+
+vec4 composeLighting(vec2 uv, vec4 baseColor) {
+    vec4 color = baseColor;
     if (hasBrightTexture == 1) {
-        fallbackColor += sampleBright(texCoord);
+        color += sampleBright(uv);
     }
     if (hasVolumetricLightTexture == 1) {
-        fallbackColor += texture(VolumetricLightTexture, texCoord);
+        color += texture(VolumetricLightTexture, uv);
     }
-    if (hasSSRTexture == 1) {
-        fallbackColor += texture(SSRTexture, texCoord);
-    }
+    return composeSSR(color, uv);
+}
+
+vec4 applyMotionBlur(vec2 texCoord, float size, float separation, vec4 color) {
+    vec4 fallbackColor = composeLighting(texCoord, color);
     if (size <= 0.0 || separation <= 0.0) {
         return fallbackColor;
     }
@@ -516,46 +529,75 @@ vec4 applyMotionBlur(vec2 texCoord, float size, float separation, vec4 color) {
     vec2 prevUV = prevClipPos.xy * 0.5 + 0.5;
 
     vec2 velocity = (currentUV - prevUV) * separation;
+    float velocityLength = length(velocity);
 
-    float maxVelocity = 0.1;
-    if (length(velocity) > maxVelocity) {
+    float maxVelocity = 0.12;
+    if (velocityLength > maxVelocity) {
         velocity = normalize(velocity) * maxVelocity;
+        velocityLength = maxVelocity;
+    }
+    if (hasSSRTexture == 1) {
+        float mirrorWeight = clamp(texture(SSRTexture, texCoord).a, 0.0, 1.0);
+        float blurDamp = mix(1.0, 0.2, mirrorWeight);
+        velocity *= blurDamp;
+        velocityLength *= blurDamp;
     }
 
-    if (length(velocity) < 0.0001) {
+    if (velocityLength < 0.0001) {
         return fallbackColor;
     }
+
+    int baseSamples = clamp(int(size), 2, 32);
+    float sampleScale =
+        mix(0.75, 1.75, clamp(velocityLength / maxVelocity, 0.0, 1.0));
+    int samples = clamp(int(float(baseSamples) * sampleScale), 3, 48);
+
+    float centerDepth = 0.0;
+    float depthSoftness = 1.0;
+    if (hasDepthTexture == 1) {
+        centerDepth = LinearizeDepth(texture(DepthTexture, texCoord).r);
+        depthSoftness = max(0.002, centerDepth * 0.02);
+    }
+
+    float jitter = (fract(sin(dot(texCoord * vec2(173.3, 97.1),
+                                  vec2(12.9898, 78.233))) *
+                          43758.5453) -
+                    0.5) *
+        0.35;
 
     vec4 result = vec4(0.0);
     float totalWeight = 0.0;
 
-    int samples = int(size);
-    for (int i = -samples; i <= samples; i++) {
-        float t = float(i) / float(samples);
+    for (int i = 0; i < samples; i++) {
+        float t = ((float(i) + 0.5) / float(samples)) * 2.0 - 1.0;
+        t += jitter / float(samples);
         vec2 sampleCoord = texCoord + velocity * t;
 
-        if (sampleCoord.x >= 0.0 && sampleCoord.x <= 1.0 &&
-                sampleCoord.y >= 0.0 && sampleCoord.y <= 1.0) {
-            vec4 sampled = sampleColor(sampleCoord);
-            if (hasBrightTexture == 1) {
-                sampled += sampleBright(sampleCoord);
-            }
-            if (hasVolumetricLightTexture == 1) {
-                sampled += texture(VolumetricLightTexture, sampleCoord);
-            }
-            if (hasSSRTexture == 1) {
-                sampled += texture(SSRTexture, sampleCoord);
-            }
-
-            float weight = 1.0 - abs(t) * 0.5;
-            result += sampled * weight;
-            totalWeight += weight;
+        if (sampleCoord.x < 0.0 || sampleCoord.x > 1.0 ||
+            sampleCoord.y < 0.0 || sampleCoord.y > 1.0) {
+            continue;
         }
+
+        float depthWeight = 1.0;
+        if (hasDepthTexture == 1) {
+            float sampleDepth = LinearizeDepth(texture(DepthTexture, sampleCoord).r);
+            float depthDelta = abs(sampleDepth - centerDepth);
+            depthWeight =
+                1.0 - smoothstep(depthSoftness, depthSoftness * 2.5, depthDelta);
+            if (depthWeight <= 0.0) {
+                continue;
+            }
+        }
+
+        vec4 sampled = composeLighting(sampleCoord, sampleColor(sampleCoord));
+        float gaussian = exp(-4.0 * t * t);
+        float weight = gaussian * depthWeight;
+        result += sampled * weight;
+        totalWeight += weight;
     }
 
     if (totalWeight > 0.0) {
-        result /= totalWeight;
-        return result;
+        return result / totalWeight;
     }
 
     return fallbackColor;
@@ -854,16 +896,7 @@ void main() {
         FragColor = motionBlurred;
         return;
     } else {
-        hdrColor = color;
-        if (hasBrightTexture == 1) {
-            hdrColor += sampleBright(TexCoord);
-        }
-        if (hasVolumetricLightTexture == 1) {
-            hdrColor += texture(VolumetricLightTexture, TexCoord);
-        }
-        if (hasSSRTexture == 1) {
-            hdrColor += texture(SSRTexture, TexCoord);
-        }
+        hdrColor = composeLighting(TexCoord, color);
     }
 
     hdrColor = mapToLUT(hdrColor);

@@ -540,17 +540,12 @@ float calculateShadow(thread const ShadowParameters& shadowParam, thread const f
     float distFactor = fast::clamp(_distance / 800.0, 0.0, 1.0);
     float desiredKernel = mix(1.0, 1.5, distFactor) * resFactor;
     int kernelSize = int(fast::clamp(floor(desiredKernel + 0.5), 1.0, 2.0));
-    float rand = fract(sin(dot(projCoords.xy, float2(12.98980045318603515625, 78.233001708984375))) * 43758.546875);
-    float angle = rand * 6.283185482025146484375;
-    float ca = cos(angle);
-    float sa = sin(angle);
-    float2x2 rot = float2x2(float2(ca, -sa), float2(sa, ca));
     float texelRadius = mix(1.0, 3.0, distFactor) * resFactor;
     float2 filterRadius = texelSize * texelRadius;
     int sampleCount = 0;
     for (int i = 0; i < 12; i++)
     {
-        float2 offset = (rot * _660[i]) * filterRadius;
+        float2 offset = _660[i] * filterRadius;
         float2 uv = projCoords.xy + offset;
         bool _676 = uv.x < 0.0;
         bool _683;
@@ -839,6 +834,8 @@ fragment main0_out main0(main0_in in [[stage_in]], constant UBO& _526 [[buffer(0
             dirShadow = fast::max(dirShadow, calculateShadow(param_2, param_3, param_4, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, _526));
         }
     }
+    dirShadow = fast::clamp(dirShadow * 0.85000002384185791015625, 0.0, 1.0);
+    pointShadow = fast::clamp(pointShadow * 0.85000002384185791015625, 0.0, 1.0);
     float3 directionalResult = float3(0.0);
     for (int i_1 = 0; i_1 < _1355.directionalLightCount; i_1++)
     {

@@ -40,26 +40,47 @@ float3 fresnelSchlick(thread const float& cosTheta, thread const float3& F0)
 }
 
 static inline __attribute__((always_inline))
-float4 SSR(thread const float3& worldPos, thread const float3& normal, thread const float3& viewDir, thread const float& roughness, thread const float& metallic, thread const float3& albedo, constant Uniforms& _42, constant SSRParameters& _96, thread float4& gl_FragCoord, texture2d<float> gPosition, sampler gPositionSmplr, texture2d<float> sceneColor, sampler sceneColorSmplr)
+float3 sampleSkyReflection(thread const float3& normal, thread const float3& viewDir, thread const float3& albedo, thread const float& metallic, texturecube<float> skybox, sampler skyboxSmplr)
+{
+    float3 reflected = reflect(-fast::normalize(viewDir), fast::normalize(normal));
+    float3 skyColor = skybox.sample(skyboxSmplr, reflected).xyz;
+    float skyLuma = dot(skyColor, float3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875));
+    if (skyLuma < 0.001000000047497451305389404296875)
+    {
+        float t = fast::clamp((reflected.y * 0.5) + 0.5, 0.0, 1.0);
+        float3 horizon = float3(0.7400000095367431640625, 0.790000021457672119140625, 0.87999999523162841796875);
+        float3 zenith = float3(0.5, 0.63999998569488525390625, 0.839999973773956298828125);
+        skyColor = mix(horizon, zenith, float3(t));
+    }
+    float tintStrength = metallic * 0.3499999940395355224609375;
+    float3 tint = mix(float3(1.0), albedo, float3(tintStrength));
+    return skyColor * tint;
+}
+
+static inline __attribute__((always_inline))
+float4 SSR(thread const float3& worldPos, thread const float3& normal, thread const float3& viewDir, thread const float& roughness, thread const float& metallic, thread const float3& albedo, constant Uniforms& _42, constant SSRParameters& _96, thread float4& gl_FragCoord, texture2d<float> gPosition, sampler gPositionSmplr, texture2d<float> sceneColor, sampler sceneColorSmplr, texture2d<float> gNormal, sampler gNormalSmplr, texture2d<float> gDepth, sampler gDepthSmplr, texturecube<float> skybox, sampler skyboxSmplr)
 {
     float3 viewPos = (_42.view * float4(worldPos, 1.0)).xyz;
     float3 viewNormal = fast::normalize((_42.view * float4(normal, 0.0)).xyz);
+    float mirrorFactor = fast::clamp(metallic * (1.0 - roughness), 0.0, 1.0);
+    float3 skyReflection = sampleSkyReflection(normal, viewDir, albedo, metallic, skybox, skyboxSmplr);
     float3 viewDirection = fast::normalize(viewPos);
     float3 viewReflect = fast::normalize(reflect(viewDirection, viewNormal));
     if (viewReflect.z > 0.0)
     {
-        return float4(0.0);
+        return float4(skyReflection, mirrorFactor);
     }
     float3 rayOrigin = viewPos + (viewNormal * 0.00999999977648258209228515625);
     float3 rayDir = viewReflect;
     float stepSize = _96.maxDistance / float(_96.steps);
     float3 currentPos = rayOrigin;
-    float3 magic = float3(0.067110560834407806396484375, 0.005837149918079376220703125, 52.98291778564453125);
-    float jitter = fract(magic.z * fract(dot(gl_FragCoord.xy, magic.xy)));
+    float jitter = fract(sin(dot(gl_FragCoord.xy, float2(12.98980045318603515625, 78.233001708984375))) * 43758.546875) * roughness * 0.25;
     currentPos += ((rayDir * stepSize) * jitter);
     float2 hitUV = float2(-1.0);
     float hitDepth = 0.0;
     bool hit = false;
+    float2 fallbackUV = float2(0.0);
+    bool hasFallbackUV = false;
     float3 lastPos = currentPos;
     for (int i = 0; i < _96.steps; i++)
     {
@@ -102,14 +123,42 @@ float4 SSR(thread const float3& worldPos, thread const float3& normal, thread co
         {
             _229 = _222;
         }
-        if (_229)
+        if (!_229)
+        {
+            fallbackUV = screenUV;
+            hasFallbackUV = true;
+        }
+        else
         {
             break;
         }
+        float rawDepth = gDepth.sample(gDepthSmplr, screenUV).x;
+        if (rawDepth >= 0.99989998340606689453125)
+        {
+            lastPos = currentPos;
+            continue;
+        }
         float3 sampleWorldPos = gPosition.sample(gPositionSmplr, screenUV).xyz;
+        float3 sampleNormal = gNormal.sample(gNormalSmplr, screenUV).xyz;
+        if (dot(sampleNormal, sampleNormal) < 0.00999999977648258209228515625)
+        {
+            lastPos = currentPos;
+            continue;
+        }
+        if (length(sampleWorldPos - worldPos) < 0.07999999821186065673828125)
+        {
+            lastPos = currentPos;
+            continue;
+        }
         float3 sampleViewPos = (_42.view * float4(sampleWorldPos, 1.0)).xyz;
         float sampleDepth = -sampleViewPos.z;
         float currentDepth = -currentPos.z;
+        float3 sampleViewNormal = fast::normalize((_42.view * float4(sampleNormal, 0.0)).xyz);
+        if ((dot(sampleViewNormal, viewNormal) > 0.920000016689300537109375) && (abs(sampleDepth - currentDepth) < (_96.thickness * 1.5)))
+        {
+            lastPos = currentPos;
+            continue;
+        }
         float depthDiff = sampleDepth - currentDepth;
         bool _265 = depthDiff > 0.0;
         bool _272;
@@ -136,6 +185,44 @@ float4 SSR(thread const float3& worldPos, thread const float3& normal, thread co
                 midProj.y = _307.y;
                 midProj.z = _307.z;
                 float2 midUV = (midProj.xy * 0.5) + float2(0.5);
+                bool _321 = midUV.x < 0.0;
+                bool _328;
+                if (!_321)
+                {
+                    _328 = midUV.x > 1.0;
+                }
+                else
+                {
+                    _328 = _321;
+                }
+                bool _335;
+                if (!_328)
+                {
+                    _335 = midUV.y < 0.0;
+                }
+                else
+                {
+                    _335 = _328;
+                }
+                bool _342;
+                if (!_335)
+                {
+                    _342 = midUV.y > 1.0;
+                }
+                else
+                {
+                    _342 = _335;
+                }
+                if (_342)
+                {
+                    break;
+                }
+                float midRawDepth = gDepth.sample(gDepthSmplr, midUV).x;
+                if (midRawDepth >= 0.99989998340606689453125)
+                {
+                    binarySearchStart = midPoint;
+                    continue;
+                }
                 float3 midSampleWorldPos = gPosition.sample(gPositionSmplr, midUV).xyz;
                 float3 midSampleViewPos = (_42.view * float4(midSampleWorldPos, 1.0)).xyz;
                 float midSampleDepth = -midSampleViewPos.z;
@@ -165,26 +252,58 @@ float4 SSR(thread const float3& worldPos, thread const float3& normal, thread co
     }
     if (!hit)
     {
-        return float4(0.0);
+        float3 fallbackReflection = skyReflection;
+        if (hasFallbackUV)
+        {
+            float mipLevel = roughness * 5.0;
+            float3 screenFallback = sceneColor.sample(sceneColorSmplr, fallbackUV, level(mipLevel)).xyz;
+            float fallbackDepth = gDepth.sample(gDepthSmplr, fallbackUV).x;
+            float screenValidity = 1.0 - smoothstep(0.99800002574920654296875, 1.0, fallbackDepth);
+            float fallbackLuma = dot(screenFallback, float3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875));
+            screenValidity *= smoothstep(0.004999999888241291046142578125, 0.02999999932944774627685546875, fallbackLuma);
+            float tintStrength = metallic * 0.3499999940395355224609375;
+            float3 metalTint = mix(float3(1.0), albedo, float3(tintStrength));
+            fallbackReflection = mix(skyReflection, screenFallback * metalTint, float3(screenValidity));
+        }
+        return float4(fallbackReflection, mirrorFactor);
     }
     float mipLevel = roughness * 5.0;
-    float3 reflectionColor = sceneColor.sample(sceneColorSmplr, hitUV, level(mipLevel)).xyz;
+    float3 hitColor = sceneColor.sample(sceneColorSmplr, hitUV, level(mipLevel)).xyz;
+    float tintStrength = metallic * 0.3499999940395355224609375;
+    float3 metalTint = mix(float3(1.0), albedo, float3(tintStrength));
+    hitColor *= metalTint;
+    float hitDepthRaw = gDepth.sample(gDepthSmplr, hitUV).x;
+    float3 hitNormalSample = gNormal.sample(gNormalSmplr, hitUV).xyz;
+    float hitNormalLenSq = dot(hitNormalSample, hitNormalSample);
+    float3 hitNormalDir = (hitNormalLenSq > 9.9999997473787516355514526367188e-06) ? (hitNormalSample * rsqrt(hitNormalLenSq)) : (-rayDir);
+    float geometryValidity = 1.0 - smoothstep(0.99800002574920654296875, 1.0, hitDepthRaw);
+    geometryValidity *= smoothstep(0.00999999977648258209228515625, 0.100000001490116119384765625, hitNormalLenSq);
+    float normalFacing = fast::max(dot(hitNormalDir, -rayDir), 0.0);
+    geometryValidity *= smoothstep(0.0500000007450580596923828125, 0.25, normalFacing);
+    float hitLuma = dot(hitColor, float3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875));
+    float skyLuma = dot(skyReflection, float3(0.2125999927520751953125, 0.715200006961822509765625, 0.072200000286102294921875));
+    float luminanceValidity = smoothstep(0.00200000009499490261077880859375, 0.02999999932944774627685546875, hitLuma + (skyLuma * 0.100000001490116119384765625));
     float2 edgeFade = smoothstep(float2(0.0), float2(0.1500000059604644775390625), hitUV) * (float2(1.0) - smoothstep(float2(0.85000002384185791015625), float2(1.0), hitUV));
     float edgeFactor = edgeFade.x * edgeFade.y;
     float distanceFade = 1.0 - smoothstep(_96.maxDistance * 0.5, _96.maxDistance, hitDepth);
     float roughnessFade = 1.0 - smoothstep(0.0, _96.maxRoughness, roughness);
+    float hitConfidence = (edgeFactor * distanceFade) * roughnessFade;
+    hitConfidence *= geometryValidity * luminanceValidity;
     float3 F0 = mix(float3(0.039999999105930328369140625), albedo, float3(metallic));
-    float3 V = fast::normalize(_42.cameraPosition - worldPos);
+    float3 V = fast::normalize(viewDir);
     float cosTheta = fast::max(dot(normal, V), 0.0);
     float param = cosTheta;
     float3 param_1 = F0;
     float3 fresnel = fresnelSchlick(param, param_1);
     float fresnelFactor = ((fresnel.x + fresnel.y) + fresnel.z) / 3.0;
-    float finalFade = ((edgeFactor * distanceFade) * roughnessFade) * fresnelFactor;
+    float fresnelWeight = mix(fresnelFactor, 1.0, mirrorFactor);
+    float3 reflectionColor = mix(skyReflection, hitColor, float3(hitConfidence));
+    float finalFade = mix(hitConfidence * fresnelWeight, 1.0, mirrorFactor);
+    finalFade = fast::clamp(finalFade, 0.0, 1.0);
     return float4(reflectionColor, finalFade);
 }
 
-fragment main0_out main0(main0_in in [[stage_in]], constant Uniforms& _42 [[buffer(0)]], constant SSRParameters& _96 [[buffer(1)]], texture2d<float> gPosition [[texture(0)]], texture2d<float> sceneColor [[texture(1)]], texture2d<float> gNormal [[texture(2)]], texture2d<float> gAlbedoSpec [[texture(3)]], texture2d<float> gMaterial [[texture(4)]], sampler gPositionSmplr [[sampler(0)]], sampler sceneColorSmplr [[sampler(1)]], sampler gNormalSmplr [[sampler(2)]], sampler gAlbedoSpecSmplr [[sampler(3)]], sampler gMaterialSmplr [[sampler(4)]], float4 gl_FragCoord [[position]])
+fragment main0_out main0(main0_in in [[stage_in]], constant Uniforms& _42 [[buffer(0)]], constant SSRParameters& _96 [[buffer(1)]], texture2d<float> gPosition [[texture(0)]], texture2d<float> sceneColor [[texture(1)]], texture2d<float> gNormal [[texture(2)]], texture2d<float> gAlbedoSpec [[texture(3)]], texture2d<float> gMaterial [[texture(4)]], texture2d<float> gDepth [[texture(5)]], texturecube<float> skybox [[texture(6)]], sampler gPositionSmplr [[sampler(0)]], sampler sceneColorSmplr [[sampler(1)]], sampler gNormalSmplr [[sampler(2)]], sampler gAlbedoSpecSmplr [[sampler(3)]], sampler gMaterialSmplr [[sampler(4)]], sampler gDepthSmplr [[sampler(5)]], sampler skyboxSmplr [[sampler(6)]], float4 gl_FragCoord [[position]])
 {
     main0_out out = {};
     float3 worldPos = gPosition.sample(gPositionSmplr, in.TexCoord).xyz;
@@ -210,8 +329,7 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Uniforms& _42 [[buff
     float param_3 = roughness;
     float param_4 = metallic;
     float3 param_5 = albedo;
-    float4 reflection = SSR(param, param_1, param_2, param_3, param_4, param_5, _42, _96, gl_FragCoord, gPosition, gPositionSmplr, sceneColor, sceneColorSmplr);
+    float4 reflection = SSR(param, param_1, param_2, param_3, param_4, param_5, _42, _96, gl_FragCoord, gPosition, gPositionSmplr, sceneColor, sceneColorSmplr, gNormal, gNormalSmplr, gDepth, gDepthSmplr, skybox, skyboxSmplr);
     out.FragColor = reflection;
     return out;
 }
-

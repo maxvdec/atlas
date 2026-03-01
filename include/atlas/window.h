@@ -510,6 +510,9 @@ class Window {
      */
     RenderTarget *getGBuffer() const { return gBuffer.get(); }
 
+    void enableSSR(bool enabled = true) { this->useSSR = enabled; }
+    bool isSSREnabled() const { return this->useSSR; }
+
     /**
      * @brief Points to the render target currently bound for drawing.
      */
