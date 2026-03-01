@@ -24,6 +24,7 @@
 #include "finewave/audio.h"
 #include <atlas/window.h>
 #include <algorithm>
+#include <cstdint>
 #include <iostream>
 #include <memory>
 #include <optional>
@@ -39,6 +40,59 @@
 #include <opal/opal.h>
 
 Window *Window::mainWindow = nullptr;
+
+namespace {
+template <typename T> void hashCombine(std::size_t &seed, const T &value) {
+    seed ^= std::hash<T>{}(value) + 0x9e3779b97f4a7c15ULL + (seed << 6) +
+            (seed >> 2);
+}
+
+std::size_t computeShadowCasterSignature(
+    const std::vector<Renderable *> &renderables,
+    const std::vector<Renderable *> &lateForwardRenderables) {
+    std::size_t signature = 1469598103934665603ULL;
+
+    auto appendRenderable = [&signature](Renderable *obj) {
+        if (obj == nullptr || !obj->canCastShadows()) {
+            return;
+        }
+
+        hashCombine(signature, reinterpret_cast<std::uintptr_t>(obj));
+
+        const Position3d position = obj->getPosition();
+        hashCombine(signature, position.x);
+        hashCombine(signature, position.y);
+        hashCombine(signature, position.z);
+
+        const Size3d scale = obj->getScale();
+        hashCombine(signature, scale.x);
+        hashCombine(signature, scale.y);
+        hashCombine(signature, scale.z);
+
+        if (auto *gameObject = dynamic_cast<GameObject *>(obj);
+            gameObject != nullptr) {
+            const Rotation3d rotation = gameObject->getRotation();
+            hashCombine(signature, rotation.pitch);
+            hashCombine(signature, rotation.yaw);
+            hashCombine(signature, rotation.roll);
+        }
+
+    };
+
+    for (auto *obj : renderables) {
+        if (obj != nullptr && obj->renderLateForward) {
+            continue;
+        }
+        appendRenderable(obj);
+    }
+
+    for (auto *obj : lateForwardRenderables) {
+        appendRenderable(obj);
+    }
+
+    return signature;
+}
+} // namespace
 
 Window::Window(const WindowConfiguration &config)
     : title(config.title), width(config.width), height(config.height) {
@@ -875,6 +929,8 @@ void Window::applyScene(Scene *scene) {
     this->cachedPointLightPositions.clear();
     this->cachedSpotlightPositions.clear();
     this->cachedSpotlightDirections.clear();
+    this->lastShadowCasterSignature = 0;
+    this->hasShadowCasterSignature = false;
     this->ssaoMapsDirty = true;
     this->ssaoUpdateCooldown = 0.0f;
     this->lastSSAOCameraPosition.reset();
@@ -1186,7 +1242,13 @@ void Window::renderLightsToShadowMaps(
         }
     }
 
-    if (cameraMoved || lightsChanged) {
+    const std::size_t shadowCasterSignature = computeShadowCasterSignature(
+        this->renderables, this->lateForwardRenderables);
+    const bool castersMoved = !this->hasShadowCasterSignature ||
+                              this->lastShadowCasterSignature !=
+                                  shadowCasterSignature;
+
+    if (cameraMoved || lightsChanged || castersMoved) {
         this->shadowMapsDirty = true;
     }
 
@@ -1194,7 +1256,8 @@ void Window::renderLightsToShadowMaps(
         return;
     }
 
-    if (this->shadowUpdateCooldown > 0.0f && !cameraMoved && !lightsChanged) {
+    if (this->shadowUpdateCooldown > 0.0f && !cameraMoved && !lightsChanged &&
+        !castersMoved) {
         return;
     }
 
@@ -1536,6 +1599,9 @@ void Window::renderLightsToShadowMaps(
         this->cachedSpotlightPositions.push_back(light->position.toGlm());
         this->cachedSpotlightDirections.push_back(light->direction.toGlm());
     }
+
+    this->lastShadowCasterSignature = shadowCasterSignature;
+    this->hasShadowCasterSignature = true;
 
     // Polygon offset is controlled per-pipeline, no need to disable globally
     if (!renderedShadows) {

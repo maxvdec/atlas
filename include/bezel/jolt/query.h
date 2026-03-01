@@ -11,8 +11,10 @@
 #define BEZEL_JOLT_QUERY_H
 #include <cstddef>
 #include <memory>
+#include <mutex>
 #include <unordered_set>
 #include <utility>
+#include <vector>
 #ifndef BEZEL_NATIVE
 
 #include <bezel/jolt/world.h>
@@ -82,6 +84,7 @@ class GlobalContactListener final : public JPH::ContactListener {
                           const JPH::BodyID &inBody2);
 
     std::unordered_set<PairKey, PairKeyHash> activePairs;
+    std::mutex contactsMutex;
 
     std::vector<std::pair<JPH::BodyID, JPH::BodyID>> collisionEnterEvents;
     std::vector<std::pair<JPH::BodyID, JPH::BodyID>> collisionExitEvents;

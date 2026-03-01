@@ -664,6 +664,8 @@ class Window {
     std::vector<glm::vec3> cachedPointLightPositions;
     std::vector<glm::vec3> cachedSpotlightPositions;
     std::vector<glm::vec3> cachedSpotlightDirections;
+    std::size_t lastShadowCasterSignature = 0;
+    bool hasShadowCasterSignature = false;
 
     void prepareDefaultPipeline(Renderable *renderable, int fbWidth,
                                 int fbHeight);

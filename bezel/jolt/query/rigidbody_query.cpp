@@ -46,17 +46,18 @@ void GlobalContactListener::OnContactAdded(
     if (inBody1.IsSensor() && inBody2.IsSensor()) {
         return;
     }
+    std::scoped_lock lock(contactsMutex);
     if (inBody1.IsSensor() || inBody2.IsSensor()) {
         PairKey key(inBody1.GetID(), inBody2.GetID());
         if (activePairs.insert(key).second) {
-            queueSignalEnter(inBody1.GetID(), inBody2.GetID());
+            signalEnterEvents.emplace_back(inBody1.GetID(), inBody2.GetID());
         }
         return;
     }
     PairKey key(inBody1.GetID(), inBody2.GetID());
 
     if (activePairs.insert(key).second) {
-        queueEnter(inBody1.GetID(), inBody2.GetID());
+        collisionEnterEvents.emplace_back(inBody1.GetID(), inBody2.GetID());
     }
 }
 
@@ -66,6 +67,7 @@ void GlobalContactListener::OnContactPersisted(
     (void)inManifold;
     (void)ioSettings;
     PairKey key(inBody1.GetID(), inBody2.GetID());
+    std::scoped_lock lock(contactsMutex);
 
     // Sensors can sometimes only show up as persisted contacts depending on
     // how the broadphase/narrowphase updates; handle them consistently.
@@ -75,14 +77,14 @@ void GlobalContactListener::OnContactPersisted(
     if (inBody1.IsSensor() || inBody2.IsSensor()) {
         if (!activePairs.contains(key)) {
             activePairs.insert(key);
-            queueSignalEnter(inBody1.GetID(), inBody2.GetID());
+            signalEnterEvents.emplace_back(inBody1.GetID(), inBody2.GetID());
         }
         return;
     }
 
     if (!activePairs.contains(key)) {
         activePairs.insert(key);
-        queueEnter(inBody1.GetID(), inBody2.GetID());
+        collisionEnterEvents.emplace_back(inBody1.GetID(), inBody2.GetID());
     }
 }
 
@@ -103,65 +105,83 @@ void GlobalContactListener::OnContactRemoved(
     const bool body2IsSensor = (itRb2 != bodyIdToRigidbodyMap.end() &&
                                 itRb2->second && itRb2->second->isSensor);
 
-    auto it = activePairs.find(key);
-    if (it == activePairs.end()) {
-        return;
-    }
+    {
+        std::scoped_lock lock(contactsMutex);
+        auto it = activePairs.find(key);
+        if (it == activePairs.end()) {
+            return;
+        }
+        activePairs.erase(it);
 
-    activePairs.erase(it);
-
-    if (body1IsSensor || body2IsSensor) {
-        queueSignalExit(body1, body2);
-    } else {
-        queueExit(body1, body2);
+        if (body1IsSensor || body2IsSensor) {
+            signalExitEvents.emplace_back(body1, body2);
+        } else {
+            collisionExitEvents.emplace_back(body1, body2);
+        }
     }
 }
 
 void GlobalContactListener::queueSignalEnter(const JPH::BodyID &inBody1,
                                              const JPH::BodyID &inBody2) {
+    std::scoped_lock lock(contactsMutex);
     signalEnterEvents.emplace_back(inBody1, inBody2);
 }
 
 void GlobalContactListener::queueSignalExit(const JPH::BodyID &inBody1,
                                             const JPH::BodyID &inBody2) {
+    std::scoped_lock lock(contactsMutex);
     signalExitEvents.emplace_back(inBody1, inBody2);
 }
 
 void GlobalContactListener::dispatchEvents() {
-    for (auto &enterPair : collisionEnterEvents) {
+    std::vector<std::pair<JPH::BodyID, JPH::BodyID>> localCollisionEnterEvents;
+    std::vector<std::pair<JPH::BodyID, JPH::BodyID>> localCollisionExitEvents;
+    std::vector<std::pair<JPH::BodyID, JPH::BodyID>>
+        localCollisionPersistEvents;
+    std::vector<std::pair<JPH::BodyID, JPH::BodyID>> localSignalEnterEvents;
+    std::vector<std::pair<JPH::BodyID, JPH::BodyID>> localSignalExitEvents;
+
+    {
+        std::scoped_lock lock(contactsMutex);
+        localCollisionEnterEvents.swap(collisionEnterEvents);
+        localCollisionExitEvents.swap(collisionExitEvents);
+        localCollisionPersistEvents.swap(collisionPersistEvents);
+        localSignalEnterEvents.swap(signalEnterEvents);
+        localSignalExitEvents.swap(signalExitEvents);
+    }
+
+    for (auto &enterPair : localCollisionEnterEvents) {
         fireOnCollisionEnter(enterPair.first, enterPair.second);
     }
-    for (auto &exitPair : collisionExitEvents) {
+    for (auto &exitPair : localCollisionExitEvents) {
         fireOnCollisionExit(exitPair.first, exitPair.second);
     }
-    for (auto &persistPair : collisionPersistEvents) {
+    for (auto &persistPair : localCollisionPersistEvents) {
         fireOnCollisionPersist(persistPair.first, persistPair.second);
     }
-    for (auto &signalEnterPair : signalEnterEvents) {
+    for (auto &signalEnterPair : localSignalEnterEvents) {
         fireOnSignalEnter(signalEnterPair.first, signalEnterPair.second);
     }
-    for (auto &signalExitPair : signalExitEvents) {
+    for (auto &signalExitPair : localSignalExitEvents) {
         fireOnSignalExit(signalExitPair.first, signalExitPair.second);
     }
-    collisionEnterEvents.clear();
-    collisionExitEvents.clear();
-    collisionPersistEvents.clear();
-    signalEnterEvents.clear();
-    signalExitEvents.clear();
 }
 
 void GlobalContactListener::queueEnter(const JPH::BodyID &inBody1,
                                        const JPH::BodyID &inBody2) {
+    std::scoped_lock lock(contactsMutex);
     collisionEnterEvents.emplace_back(inBody1, inBody2);
 }
 
 void GlobalContactListener::queueExit(const JPH::BodyID &inBody1,
                                       const JPH::BodyID &inBody2) {
+    std::scoped_lock lock(contactsMutex);
     collisionExitEvents.emplace_back(inBody1, inBody2);
 }
 
 void GlobalContactListener::queuePersist(const JPH::BodyID &inBody1,
                                          const JPH::BodyID &inBody2) {
+    std::scoped_lock lock(contactsMutex);
     collisionPersistEvents.emplace_back(inBody1, inBody2);
 }
 
