@@ -110,7 +110,7 @@ struct ShadowParameters
     float farPlane;
     float _pad1;
     float3 lightPos;
-    int isPointLight;
+    int lightType;
 };
 
 struct DirectionalLight
@@ -120,7 +120,7 @@ struct DirectionalLight
     float3 diffuse;
     float _pad2;
     float3 specular;
-    float _pad3;
+    float intensity;
 };
 
 struct PointLight
@@ -130,6 +130,7 @@ struct PointLight
     float3 diffuse;
     float _pad2;
     float3 specular;
+    float intensity;
     float constant0;
     float linear;
     float quadratic;
@@ -144,8 +145,8 @@ struct SpotLight
     float3 direction;
     float cutOff;
     float outerCutOff;
-    float _pad2;
-    float _pad3;
+    float intensity;
+    float range;
     float _pad4;
     float3 diffuse;
     float _pad5;
@@ -183,7 +184,7 @@ struct ShadowParameters_1
     float farPlane;
     float _pad1;
     packed_float3 lightPos;
-    int isPointLight;
+    int lightType;
 };
 
 struct ShadowParams
@@ -198,7 +199,7 @@ struct DirectionalLight_1
     packed_float3 diffuse;
     float _pad2;
     packed_float3 specular;
-    float _pad3;
+    float intensity;
 };
 
 struct DirectionalLights
@@ -213,6 +214,7 @@ struct PointLight_1
     packed_float3 diffuse;
     float _pad2;
     packed_float3 specular;
+    float intensity;
     float constant0;
     float linear;
     float quadratic;
@@ -232,8 +234,8 @@ struct SpotLight_1
     packed_float3 direction;
     float cutOff;
     float outerCutOff;
-    float _pad2;
-    float _pad3;
+    float intensity;
+    float range;
     float _pad4;
     packed_float3 diffuse;
     float _pad5;
@@ -262,8 +264,8 @@ struct AreaLight
     packed_float3 specular;
     float angle;
     int castsBothSides;
-    float _pad7;
-    float _pad8;
+    float intensity;
+    float range;
     float _pad9;
 };
 
@@ -665,7 +667,7 @@ static inline __attribute__((always_inline))
 float3 calcDirectionalLight(thread const DirectionalLight& light, thread const float3& N, thread const float3& V, thread const float3& F0, thread const float3& albedo, thread const float& metallic, thread const float& roughness)
 {
     float3 L = fast::normalize(-light.direction);
-    float3 radiance = light.diffuse;
+    float3 radiance = light.diffuse * fast::max(light.intensity, 0.0);
     float3 param = L;
     float3 param_1 = radiance;
     float3 param_2 = N;
@@ -694,7 +696,7 @@ float3 calcPointLight(thread const PointLight& light, thread const float3& fragP
     float3 direction = _1019;
     float attenuation = 1.0 / fast::max((light.constant0 + (light.linear * _distance)) + ((light.quadratic * _distance) * _distance), 9.9999997473787516355514526367188e-05);
     float fade = 1.0 - smoothstep(light.radius * 0.89999997615814208984375, light.radius, _distance);
-    float3 radiance = (light.diffuse * attenuation) * fade;
+    float3 radiance = ((light.diffuse * fast::max(light.intensity, 0.0)) * attenuation) * fade;
     float3 param = direction;
     float3 param_1 = radiance;
     float3 param_2 = N;
@@ -716,8 +718,10 @@ float3 calcSpotLight(thread const SpotLight& light, thread const float3& fragPos
     float theta = dot(direction, -spotDirection);
     float epsilon = fast::max(light.cutOff - light.outerCutOff, 9.9999997473787516355514526367188e-05);
     float intensity = fast::clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
-    float attenuation = 1.0 / ((1.0 + (0.0900000035762786865234375 * _distance)) + ((0.0320000015199184417724609375 * _distance) * _distance));
-    float3 radiance = (light.diffuse * attenuation) * intensity;
+    float range = fast::max(light.range, 0.001000000047497451305389404296875);
+    float attenuation = 1.0 / ((1.0 + (_distance / range)) + ((_distance * _distance) / (range * range)));
+    float fade = 1.0 - smoothstep(range * 0.89999997615814208984375, range, _distance);
+    float3 radiance = (((light.diffuse * fast::max(light.intensity, 0.0)) * attenuation) * intensity) * fade;
     float3 param = direction;
     float3 param_1 = radiance;
     float3 param_2 = N;
@@ -797,12 +801,14 @@ fragment main0_out main0(main0_in in [[stage_in]], constant UBO& _526 [[buffer(0
     float ssaoContrast = fast::clamp(powr(ssaoFactor, 1.7999999523162841796875), 0.0, 1.0);
     float occlusion = fast::clamp(ao * (0.0199999995529651641845703125 + (0.980000019073486328125 * ssaoContrast)), 0.0, 1.0);
     float lightingOcclusion = fast::clamp(ssaoContrast, 0.0199999995529651641845703125, 1.0);
-    float dirShadow = 0.0;
+    float directionalShadow = 0.0;
+    float spotShadow = 0.0;
+    float areaShadow = 0.0;
     float pointShadow = 0.0;
     int shadowCount = _1355.shadowParamCount;
     for (int i = 0; i < shadowCount; i++)
     {
-        if (_1372.shadowParams[i].isPointLight != 0)
+        if (_1372.shadowParams[i].lightType == 3)
         {
             ShadowParameters _1386;
             _1386.lightView = _1372.shadowParams[i].lightView;
@@ -812,10 +818,42 @@ fragment main0_out main0(main0_in in [[stage_in]], constant UBO& _526 [[buffer(0
             _1386.farPlane = _1372.shadowParams[i].farPlane;
             _1386._pad1 = _1372.shadowParams[i]._pad1;
             _1386.lightPos = float3(_1372.shadowParams[i].lightPos);
-            _1386.isPointLight = _1372.shadowParams[i].isPointLight;
+            _1386.lightType = _1372.shadowParams[i].lightType;
             ShadowParameters param = _1386;
             float3 param_1 = FragPos;
             pointShadow = fast::max(pointShadow, calculatePointShadow(param, param_1, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, cubeMap1, cubeMap1Smplr, cubeMap2, cubeMap2Smplr, cubeMap3, cubeMap3Smplr, cubeMap4, cubeMap4Smplr, cubeMap5, cubeMap5Smplr));
+        }
+        else if (_1372.shadowParams[i].lightType == 1)
+        {
+            ShadowParameters _1397;
+            _1397.lightView = _1372.shadowParams[i].lightView;
+            _1397.lightProjection = _1372.shadowParams[i].lightProjection;
+            _1397.bias0 = _1372.shadowParams[i].bias0;
+            _1397.textureIndex = _1372.shadowParams[i].textureIndex;
+            _1397.farPlane = _1372.shadowParams[i].farPlane;
+            _1397._pad1 = _1372.shadowParams[i]._pad1;
+            _1397.lightPos = float3(_1372.shadowParams[i].lightPos);
+            _1397.lightType = _1372.shadowParams[i].lightType;
+            ShadowParameters param_2 = _1397;
+            float3 param_3 = FragPos;
+            float3 param_4 = N;
+            spotShadow = fast::max(spotShadow, calculateShadow(param_2, param_3, param_4, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, _526));
+        }
+        else if (_1372.shadowParams[i].lightType == 2)
+        {
+            ShadowParameters _1397;
+            _1397.lightView = _1372.shadowParams[i].lightView;
+            _1397.lightProjection = _1372.shadowParams[i].lightProjection;
+            _1397.bias0 = _1372.shadowParams[i].bias0;
+            _1397.textureIndex = _1372.shadowParams[i].textureIndex;
+            _1397.farPlane = _1372.shadowParams[i].farPlane;
+            _1397._pad1 = _1372.shadowParams[i]._pad1;
+            _1397.lightPos = float3(_1372.shadowParams[i].lightPos);
+            _1397.lightType = _1372.shadowParams[i].lightType;
+            ShadowParameters param_2 = _1397;
+            float3 param_3 = FragPos;
+            float3 param_4 = N;
+            areaShadow = fast::max(areaShadow, calculateShadow(param_2, param_3, param_4, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, _526));
         }
         else
         {
@@ -827,14 +865,16 @@ fragment main0_out main0(main0_in in [[stage_in]], constant UBO& _526 [[buffer(0
             _1397.farPlane = _1372.shadowParams[i].farPlane;
             _1397._pad1 = _1372.shadowParams[i]._pad1;
             _1397.lightPos = float3(_1372.shadowParams[i].lightPos);
-            _1397.isPointLight = _1372.shadowParams[i].isPointLight;
+            _1397.lightType = _1372.shadowParams[i].lightType;
             ShadowParameters param_2 = _1397;
             float3 param_3 = FragPos;
             float3 param_4 = N;
-            dirShadow = fast::max(dirShadow, calculateShadow(param_2, param_3, param_4, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, _526));
+            directionalShadow = fast::max(directionalShadow, calculateShadow(param_2, param_3, param_4, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, _526));
         }
     }
-    dirShadow = fast::clamp(dirShadow * 0.85000002384185791015625, 0.0, 1.0);
+    directionalShadow = fast::clamp(directionalShadow * 0.85000002384185791015625, 0.0, 1.0);
+    spotShadow = fast::clamp(spotShadow * 0.85000002384185791015625, 0.0, 1.0);
+    areaShadow = fast::clamp(areaShadow * 0.85000002384185791015625, 0.0, 1.0);
     pointShadow = fast::clamp(pointShadow * 0.85000002384185791015625, 0.0, 1.0);
     float3 directionalResult = float3(0.0);
     for (int i_1 = 0; i_1 < _1355.directionalLightCount; i_1++)
@@ -845,7 +885,7 @@ fragment main0_out main0(main0_in in [[stage_in]], constant UBO& _526 [[buffer(0
         _1428.diffuse = float3(_1422.directionalLights[i_1].diffuse);
         _1428._pad2 = _1422.directionalLights[i_1]._pad2;
         _1428.specular = float3(_1422.directionalLights[i_1].specular);
-        _1428._pad3 = _1422.directionalLights[i_1]._pad3;
+        _1428.intensity = _1422.directionalLights[i_1].intensity;
         DirectionalLight param_5 = _1428;
         float3 param_6 = N;
         float3 param_7 = V;
@@ -855,7 +895,7 @@ fragment main0_out main0(main0_in in [[stage_in]], constant UBO& _526 [[buffer(0
         float param_11 = roughness;
         directionalResult += calcDirectionalLight(param_5, param_6, param_7, param_8, param_9, param_10, param_11);
     }
-    directionalResult *= (1.0 - dirShadow);
+    directionalResult *= (1.0 - directionalShadow);
     float3 pointResult = float3(0.0);
     for (int i_2 = 0; i_2 < _1355.pointLightCount; i_2++)
     {
@@ -865,6 +905,7 @@ fragment main0_out main0(main0_in in [[stage_in]], constant UBO& _526 [[buffer(0
         _1471.diffuse = float3(_1465.pointLights[i_2].diffuse);
         _1471._pad2 = _1465.pointLights[i_2]._pad2;
         _1471.specular = float3(_1465.pointLights[i_2].specular);
+        _1471.intensity = _1465.pointLights[i_2].intensity;
         _1471.constant0 = _1465.pointLights[i_2].constant0;
         _1471.linear = _1465.pointLights[i_2].linear;
         _1471.quadratic = _1465.pointLights[i_2].quadratic;
@@ -890,8 +931,8 @@ fragment main0_out main0(main0_in in [[stage_in]], constant UBO& _526 [[buffer(0
         _1516.direction = float3(_1510.spotlights[i_3].direction);
         _1516.cutOff = _1510.spotlights[i_3].cutOff;
         _1516.outerCutOff = _1510.spotlights[i_3].outerCutOff;
-        _1516._pad2 = _1510.spotlights[i_3]._pad2;
-        _1516._pad3 = _1510.spotlights[i_3]._pad3;
+        _1516.intensity = _1510.spotlights[i_3].intensity;
+        _1516.range = _1510.spotlights[i_3].range;
         _1516._pad4 = _1510.spotlights[i_3]._pad4;
         _1516.diffuse = float3(_1510.spotlights[i_3].diffuse);
         _1516._pad5 = _1510.spotlights[i_3]._pad5;
@@ -907,6 +948,7 @@ fragment main0_out main0(main0_in in [[stage_in]], constant UBO& _526 [[buffer(0
         float param_27 = roughness;
         spotResult += calcSpotLight(param_20, param_21, param_22, param_23, param_24, param_25, param_26, param_27);
     }
+    spotResult *= (1.0 - spotShadow);
     float3 areaResult = float3(0.0);
     float _1639;
     for (int i_4 = 0; i_4 < _1355.areaLightCount; i_4++)
@@ -938,8 +980,10 @@ fragment main0_out main0(main0_in in [[stage_in]], constant UBO& _526 [[buffer(0
             float cosTheta = cos(radians(_1552.areaLights[i_4].angle));
             if ((facing >= cosTheta) && (facing > 0.0))
             {
-                float attenuation = 1.0 / fast::max(dist * dist, 9.9999997473787516355514526367188e-05);
-                float3 radiance = (float3(_1552.areaLights[i_4].diffuse) * attenuation) * facing;
+                float range = fast::max(_1552.areaLights[i_4].range, 0.001000000047497451305389404296875);
+                float attenuation = 1.0 / ((1.0 + (dist / range)) + ((dist * dist) / (range * range)));
+                float fade = 1.0 - smoothstep(range * 0.89999997615814208984375, range, dist);
+                float3 radiance = (((float3(_1552.areaLights[i_4].diffuse) * fast::max(_1552.areaLights[i_4].intensity, 0.0)) * attenuation) * facing) * fade;
                 float3 param_28 = L;
                 float3 param_29 = radiance;
                 float3 param_30 = N;
@@ -952,6 +996,7 @@ fragment main0_out main0(main0_in in [[stage_in]], constant UBO& _526 [[buffer(0
             }
         }
     }
+    areaResult *= (1.0 - areaShadow);
     float3 param_36 = FragPos;
     float3 param_37 = N;
     float3 param_38 = V;

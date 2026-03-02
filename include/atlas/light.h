@@ -37,7 +37,7 @@ struct alignas(16) GPUDirectionalLight {
     glm::vec3 diffuse;
     float _pad2;
     glm::vec3 specular;
-    float _pad3;
+    float intensity;
 };
 
 /**
@@ -50,6 +50,7 @@ struct alignas(16) GPUPointLight {
     glm::vec3 diffuse;
     float _pad2;
     glm::vec3 specular;
+    float intensity;
     float constant;
     float linear;
     float quadratic;
@@ -67,8 +68,8 @@ struct alignas(16) GPUSpotLight {
     glm::vec3 direction;
     float cutOff;
     float outerCutOff;
-    float _pad2;
-    float _pad3;
+    float intensity;
+    float range;
     float _pad4;
     glm::vec3 diffuse;
     float _pad5;
@@ -95,8 +96,8 @@ struct alignas(16) GPUAreaLight {
     glm::vec3 specular;
     float angle;
     int castsBothSides;
-    float _pad7;
-    float _pad8;
+    float intensity;
+    float range;
     float _pad9;
 };
 
@@ -112,7 +113,7 @@ struct alignas(16) GPUShadowParams {
     float farPlane;
     float _pad1;
     glm::vec3 lightPos;
-    int isPointLight;
+    int lightType;
 };
 
 // ============================================================================
@@ -236,6 +237,7 @@ struct Light {
      *
      */
     Color shineColor = Color::white();
+    float intensity = 1.0f;
 
     /**
      * @brief Function that constructs a new Light object.
@@ -248,9 +250,9 @@ struct Light {
      */
     Light(const Position3d& pos = {0.0f, 0.0f, 0.0f},
           const Color& color = Color::white(), float distance = 50.f,
-          const Color& shineColor = Color::white())
+          const Color& shineColor = Color::white(), float intensity = 1.0f)
         : position(pos), color(color), shineColor(shineColor),
-          distance(distance) {
+          intensity(intensity), distance(distance) {
     }
 
     /**
@@ -352,6 +354,7 @@ public:
      *
      */
     Color shineColor = Color::white();
+    float intensity = 1.0f;
 
     /**
      * @brief Function that constructs a new DirectionalLight object.
@@ -363,8 +366,10 @@ public:
      */
     DirectionalLight(const Magnitude3d& dir = {0.0f, -1.0f, 0.0f},
                      const Color& color = Color::white(),
-                     const Color& shineColor = Color::white())
-        : direction(dir.normalized()), color(color), shineColor(shineColor) {
+                     const Color& shineColor = Color::white(),
+                     float intensity = 1.0f)
+        : direction(dir.normalized()), color(color), shineColor(shineColor),
+          intensity(intensity) {
     }
 
     /**
@@ -452,6 +457,8 @@ struct Spotlight {
      *
      */
     Color shineColor = Color::white();
+    float intensity = 1.0f;
+    float range = 50.0f;
 
     /**
      * @brief Function that constructs a new Spotlight object.
@@ -468,8 +475,10 @@ struct Spotlight {
               Magnitude3d dir = {0.0f, -1.0f, 0.0f},
               const Color& color = Color::white(), const float angle = 35.f,
               const float outerAngle = 40.f,
-              const Color& shineColor = Color::white())
+              const Color& shineColor = Color::white(),
+              float intensity = 1.0f, float range = 50.0f)
         : position(pos), direction(dir), color(color), shineColor(shineColor),
+          intensity(intensity), range(range),
           cutOff(glm::cos(glm::radians(static_cast<double>(angle)))),
           outerCutoff(glm::cos(glm::radians(static_cast<double>(outerAngle)))) {
     }
@@ -583,6 +592,8 @@ struct AreaLight {
      * @brief Specular highlight color for the light.
      */
     Color shineColor = Color::white();
+    float intensity = 1.0f;
+    float range = 50.0f;
 
     /**
      * @brief Emission cone half-angle in degrees around the plane normal.
@@ -641,13 +652,18 @@ struct AreaLight {
      */
     void createDebugObject();
     void addDebugObject(Window& window);
+    void castShadows(Window& window, int resolution = 2048);
 
     /**
      * @brief Optional debug object visualizing the area light.
      */
     std::shared_ptr<CoreObject> debugObject = nullptr;
+    RenderTarget* shadowRenderTarget = nullptr;
+    ShadowParams lastShadowParams;
 
 private:
+    bool doesCastShadows = false;
+    ShadowParams calculateLightSpaceMatrix() const;
     /**
      * @brief Recompute right/up from the current rotation to keep a coherent
      * frame.
@@ -675,6 +691,9 @@ private:
         right = Magnitude3d::fromGlm(R);
         up = Magnitude3d::fromGlm(U);
     }
+
+    friend class Window;
+    friend class CoreObject;
 };
 
 #endif // ATLAS_LIGHT_H
