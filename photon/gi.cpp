@@ -6,3 +6,7 @@
  Description: DDGI Implementation for Atlas
  Copyright (c) 2026 Max Van den Eynde
 */
+
+#include "photon/illuminate.h"
+
+void GlobalIllumination::init() {}
