@@ -113,6 +113,20 @@ struct ProbeSpace {
     // w = totalProbes  (put this here on CPU!)
 };
 
+static inline float3 octDecode(float2 e) {
+    float3 n = float3(e.x, e.y, 1.0f - fabs(e.x) - fabs(e.y));
+
+    if (n.z < 0.0f) {
+        float2 signNotZero =
+            float2(n.x >= 0.0f ? 1.0f : -1.0f, n.y >= 0.0f ? 1.0f : -1.0f);
+        float2 folded = (1.0f - fabs(n.yx)) * signNotZero;
+        n.x = folded.x;
+        n.y = folded.y;
+    }
+
+    return normalize(n);
+}
+
 kernel void main0(texture2d<float, access::write> outTexture [[texture(0)]],
                   constant ProbeSpace &ps [[buffer(0)]],
                   uint2 gid [[thread_position_in_grid]]) {
@@ -123,17 +137,16 @@ kernel void main0(texture2d<float, access::write> outTexture [[texture(0)]],
 
     uint tileRes = innerRes + 2u * border;
 
-    if (gid.x >= outTexture.get_width() || gid.y >= outTexture.get_height())
+    if (gid.x >= outTexture.get_width() || gid.y >= outTexture.get_height()) {
         return;
+    }
 
     uint tileX = gid.x / tileRes;
     uint tileY = gid.y / tileRes;
-
     uint probeIndex = tileX + tileY * tilesPerRow;
 
     if (probeIndex >= totalProbes) {
-        outTexture.write(
-            float4(float(0.02), float(0.02), float(0.02), float(1.0)), gid);
+        outTexture.write(float4(float3(0.0), 1.0), gid);
         return;
     }
 
@@ -143,10 +156,27 @@ kernel void main0(texture2d<float, access::write> outTexture [[texture(0)]],
     bool isOutline = (localX == 0u) || (localY == 0u) ||
                      (localX == tileRes - 1u) || (localY == tileRes - 1u);
 
-    float4 outlineColor = float4(0.0f, 0.0f, 0.0f, 1.0f);
-    float4 fillColor = float4(ps.debugColor.xyz, 1.0);
+    bool isInner = (localX >= border) && (localX < border + innerRes) &&
+                   (localY >= border) && (localY < border + innerRes);
 
-    outTexture.write(isOutline ? outlineColor : fillColor, gid);
+    if (isOutline) {
+        outTexture.write(float4(1, 1, 1, 1), gid);
+        return;
+    }
+
+    if (!isInner) {
+        outTexture.write(float4(0.05f, 0.05f, 0.05f, 1.0f), gid);
+    }
+
+    float2 uv =
+        (float2(localX - border, localY - border) + 0.5f) / float(innerRes);
+    float2 e = uv * 2.0 - 1.0;
+
+    float3 dir = octDecode(e);
+
+    float3 rgb = dir * 0.5 + 0.5;
+
+    outTexture.write(float4(rgb, 1.0), gid);
 }
 )"
 ;
