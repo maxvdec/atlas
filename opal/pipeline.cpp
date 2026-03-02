@@ -1070,6 +1070,174 @@ void Pipeline::bindBufferData(const std::string &name, const void *data,
 #endif
 }
 
+void Pipeline::bindBuffer(const std::string &name,
+                          const std::shared_ptr<Buffer> &buffer, int callerId) {
+#ifdef OPENGL
+    (void)name;
+    (void)buffer;
+    (void)callerId;
+    throw std::runtime_error("bindBuffer(opal::Buffer) is not supported on OpenGL");
+#elif defined(VULKAN)
+    (void)callerId;
+    if (!shaderProgram) {
+        return;
+    }
+    const UniformBindingInfo *info = shaderProgram->findUniform(name);
+    if (info == nullptr || !info->isBuffer) {
+        return;
+    }
+
+    ensureDescriptorResources();
+    if (info->set >= descriptorSets.size() ||
+        descriptorSets[info->set] == VK_NULL_HANDLE) {
+        return;
+    }
+
+    uint64_t key = makeBindingKey(info->set, info->binding);
+    if (!buffer) {
+        descriptorBuffers.erase(key);
+        bindUniformBufferDescriptor(info->set, info->binding);
+        return;
+    }
+    if (buffer->vkBuffer == VK_NULL_HANDLE) {
+        throw std::runtime_error("Vulkan buffer is not initialized");
+    }
+
+    const auto *bindingInfo = getDescriptorBindingInfo(info->set, info->binding);
+    VkDescriptorType descriptorType =
+        bindingInfo ? bindingInfo->type
+                    : (info->isStorageBuffer ? VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
+                                             : VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+    VkDeviceSize range = 256;
+    if (bindingInfo != nullptr && bindingInfo->minBufferSize > 0) {
+        range = bindingInfo->minBufferSize;
+    } else if (info->size > 0) {
+        range = info->size;
+    }
+
+    descriptorBuffers[key] = buffer;
+
+    VkDescriptorBufferInfo bufferInfo{};
+    bufferInfo.buffer = buffer->vkBuffer;
+    bufferInfo.offset = 0;
+    bufferInfo.range = range;
+
+    VkWriteDescriptorSet write{};
+    write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    write.dstSet = descriptorSets[info->set];
+    write.dstBinding = info->binding;
+    write.descriptorCount = 1;
+    write.descriptorType = descriptorType;
+    write.pBufferInfo = &bufferInfo;
+
+    vkUpdateDescriptorSets(Device::globalDevice, 1, &write, 0, nullptr);
+#elif defined(METAL)
+    (void)callerId;
+    if (!shaderProgram) {
+        return;
+    }
+    if (buffer != nullptr && buffer->usage != BufferUsage::UniformBuffer &&
+        buffer->usage != BufferUsage::ShaderRead &&
+        buffer->usage != BufferUsage::ShaderReadWrite &&
+        buffer->usage != BufferUsage::GeneralPurpose) {
+        throw std::runtime_error(
+            "bindBuffer(opal::Buffer) requires a shader-readable buffer usage");
+    }
+
+    auto &programState = metal::programState(shaderProgram.get());
+    auto bindings = metal::resolveBufferBindings(programState, name);
+    if (bindings.empty()) {
+        throw std::runtime_error("Metal buffer binding not found: " + name);
+    }
+
+    auto &pipelineState = metal::pipelineState(this);
+    bool matchedStage = false;
+    for (const auto &binding : bindings) {
+        if (binding.vertexStage) {
+            matchedStage = true;
+            uint32_t key =
+                metal::stageBindingKey(binding.index, metal::MetalProgramStage::Vertex);
+            if (buffer != nullptr) {
+                pipelineState.shaderBuffers[key] = buffer;
+            } else {
+                pipelineState.shaderBuffers.erase(key);
+            }
+        }
+        if (binding.fragmentStage) {
+            matchedStage = true;
+            uint32_t key = metal::stageBindingKey(
+                binding.index, metal::MetalProgramStage::Fragment);
+            if (buffer != nullptr) {
+                pipelineState.shaderBuffers[key] = buffer;
+            } else {
+                pipelineState.shaderBuffers.erase(key);
+            }
+        }
+        if (binding.computeStage) {
+            matchedStage = true;
+            uint32_t key =
+                metal::stageBindingKey(binding.index, metal::MetalProgramStage::Compute);
+            if (buffer != nullptr) {
+                pipelineState.shaderBuffers[key] = buffer;
+            } else {
+                pipelineState.shaderBuffers.erase(key);
+            }
+        }
+    }
+
+    if (!matchedStage) {
+        throw std::runtime_error("Metal buffer binding not found: " + name);
+    }
+#endif
+}
+
+void Pipeline::bindShaderReadWriteBuffer(
+    const std::string &name, const std::shared_ptr<Buffer> &buffer,
+    int callerId) {
+#ifdef METAL
+    (void)callerId;
+    if (!shaderProgram) {
+        return;
+    }
+    if (buffer != nullptr && buffer->usage != BufferUsage::ShaderReadWrite &&
+        buffer->usage != BufferUsage::ShaderRead &&
+        buffer->usage != BufferUsage::GeneralPurpose) {
+        throw std::runtime_error(
+            "bindShaderReadWriteBuffer requires a shader-readable buffer usage");
+    }
+
+    auto &programState = metal::programState(shaderProgram.get());
+    auto bindings = metal::resolveBufferBindings(programState, name);
+    auto &pipelineState = metal::pipelineState(this);
+
+    bool matchedComputeBinding = false;
+    for (const auto &binding : bindings) {
+        if (!binding.computeStage) {
+            continue;
+        }
+        matchedComputeBinding = true;
+        uint32_t key = metal::stageBindingKey(
+            binding.index, metal::MetalProgramStage::Compute);
+        if (buffer != nullptr) {
+            pipelineState.shaderBuffers[key] = buffer;
+        } else {
+            pipelineState.shaderBuffers.erase(key);
+        }
+    }
+
+    if (!matchedComputeBinding) {
+        throw std::runtime_error("Metal compute buffer binding not found: " +
+                                 name);
+    }
+#else
+    (void)name;
+    (void)buffer;
+    (void)callerId;
+    throw std::runtime_error(
+        "bindShaderReadWriteBuffer is only supported on Metal");
+#endif
+}
+
 #ifdef VULKAN
 Pipeline::UniformBufferAllocation &
 Pipeline::getOrCreateUniformBuffer(uint32_t set, uint32_t binding,
@@ -1417,6 +1585,30 @@ void Pipeline::bindUniformBufferDescriptor(uint32_t set, uint32_t binding) {
         return;
     }
     if (!info->isBuffer) {
+        return;
+    }
+
+    uint64_t key = makeBindingKey(set, binding);
+    auto descriptorBufferIt = descriptorBuffers.find(key);
+    if (descriptorBufferIt != descriptorBuffers.end() &&
+        descriptorBufferIt->second != nullptr &&
+        descriptorBufferIt->second->vkBuffer != VK_NULL_HANDLE) {
+        VkDeviceSize range = info->minBufferSize > 0 ? info->minBufferSize : 256;
+        VkDescriptorBufferInfo externalBufferInfo{};
+        externalBufferInfo.buffer = descriptorBufferIt->second->vkBuffer;
+        externalBufferInfo.offset = 0;
+        externalBufferInfo.range = range;
+
+        VkWriteDescriptorSet externalWrite{};
+        externalWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        externalWrite.dstSet = descriptorSets[set];
+        externalWrite.dstBinding = binding;
+        externalWrite.descriptorCount = 1;
+        externalWrite.descriptorType = info->type;
+        externalWrite.pBufferInfo = &externalBufferInfo;
+
+        vkUpdateDescriptorSets(Device::globalDevice, 1, &externalWrite, 0,
+                               nullptr);
         return;
     }
 

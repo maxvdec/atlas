@@ -61,9 +61,9 @@ struct Hit {
     bool hit;
 };
 
-kernel void main0(texture2d<float4, access::write> outTexture [[texture(0)]],
-                  texture2d<float4, access::read> prevTexture [[texture(1)]],
-                  device const float3 *probeRadiance [[buffer(0)]],
+kernel void main0(texture2d<float, access::write> outTexture [[texture(0)]],
+                  texture2d<float, access::read> prevTexture [[texture(1)]],
+                  device float3 *probeRadiance [[buffer(0)]],
                   constant ProbeSpace &ps [[buffer(1)]],
                   constant RaytracingSettings &rt [[buffer(2)]],
                   uint2 gid [[thread_position_in_grid]]) {

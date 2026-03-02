@@ -124,6 +124,7 @@ struct PipelineState {
     MTL::ComputePipelineState *computePipelineState = nullptr;
     std::unordered_map<uint32_t, std::vector<uint8_t>> uniformData;
     std::unordered_map<uint32_t, MTL::Buffer *> uniformBuffers;
+    std::unordered_map<uint32_t, std::shared_ptr<Buffer>> shaderBuffers;
     std::unordered_map<int, std::shared_ptr<Texture>> texturesByUnit;
     MTL::PrimitiveType primitiveType = MTL::PrimitiveTypeTriangle;
     MTL::CullMode cullMode = MTL::CullModeBack;
@@ -204,6 +205,8 @@ bool parseProgramLayouts(const std::string &vertexSource,
                          ProgramState &programState);
 bool parseComputeProgramLayouts(const std::string &computeSource,
                                 ProgramState &programState);
+std::vector<BufferBinding>
+resolveBufferBindings(const ProgramState &programState, const std::string &name);
 std::vector<UniformLocation> resolveUniformLocations(ProgramState &programState,
                                                      const std::string &name);
 

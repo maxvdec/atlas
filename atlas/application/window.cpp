@@ -350,6 +350,7 @@ void Window::run() {
     this->firstFrame = true;
 
     while (!glfwWindowShouldClose(window)) {
+        currentFrame++;
         glfwPollEvents();
 
         if (this->hasPendingSceneChange) {

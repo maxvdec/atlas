@@ -245,6 +245,17 @@ ComputeShader ComputeShader::fromDefaultShader(AtlasComputeShader shader) {
             "AtlasComputeShader::DDGI is only supported on Metal");
 #endif
     }
+    case AtlasComputeShader::DDGI_WRITE: {
+#ifdef METAL
+        computeShader = ComputeShader::fromSource(DDGI_WRITE);
+        computeShader.fromDefaultShaderType = shader;
+        ComputeShader::computeShaderCache[shader] = computeShader;
+        break;
+#else
+        throw std::runtime_error(
+            "AtlasComputeShader::DDGI_WRITE is only supported on Metal");
+#endif
+    }
     default:
         throw std::runtime_error("Unknown default compute shader");
     }

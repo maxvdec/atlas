@@ -42,16 +42,15 @@ struct Material {
     float _pad0;
 };
 
-struct Triangle {
-    float3 v0;
-    float3 v1;
-    float3 v2;
-
-    float3 n0;
-    float3 n1;
-    float3 n2;
-
+struct alignas(16) Triangle {
+    float4 v0;
+    float4 v1;
+    float4 v2;
+    float4 n0;
+    float4 n1;
+    float4 n2;
     int materialID;
+    int padding[3];
 };
 
 struct Hit {
@@ -75,7 +74,7 @@ static inline bool rayTriangleMT(float3 ro, float3 rd, float3 v0, float3 v1,
 
     float3 s = ro - v0;
     u = dot(s, p) * invDet;
-    if (u < 0.0f, || u > 1.0f)
+    if (u < 0.0f || u > 1.0f)
         return false;
 
     float3 q = cross(s, e1);
@@ -97,13 +96,13 @@ static inline Hit traceScene(float3 ro, float3 rd, device const Triangle *tris,
 
     for (uint i = 0; i < triCount; i++) {
         float t, u, v;
-        if (rayTriangleMT(ro, rd, tris[i].v0, tris[i].v1, tris[i].v2, t, u,
-                          v)) {
+        if (rayTriangleMT(ro, rd, tris[i].v0.xyz, tris[i].v1.xyz,
+                          tris[i].v2.xyz, t, u, v)) {
             if (t < best.t) {
                 best.t = t;
                 float w = 1.0f - u - v;
-                float3 n =
-                    normalize(tris[i].n0 * w + tris[i].n1 * u + tris[i].n2 * v);
+                float3 n = normalize(tris[i].n0.xyz * w + tris[i].n1.xyz * u +
+                                     tris[i].n2.xyz * v);
                 best.n = n;
                 best.materialID = tris[i].materialID;
                 best.hit = true;
@@ -160,9 +159,10 @@ static inline float3 octDecode(float2 e) {
 
 kernel void main0(device float3 *probeRadianceOut [[buffer(0)]],
                   device const Triangle *tris [[buffer(1)]],
-                  constant uint &triCount [[buffer(2)]],
-                  constant ProbeSpace &ps [[buffer(3)]],
-                  constant RaytracingSettings &rt [[buffer(4)]],
+                  device const Material *materials [[buffer(2)]],
+                  constant uint &triCount [[buffer(3)]],
+                  constant ProbeSpace &ps [[buffer(4)]],
+                  constant RaytracingSettings &rt [[buffer(5)]],
                   uint tid [[thread_position_in_grid]]) {
     uint totalProbes = (uint)ps.atlasParams.w;
     if (tid >= totalProbes)

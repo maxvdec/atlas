@@ -113,6 +113,129 @@ struct ProbeSpace {
     // w = totalProbes  (put this here on CPU!)
 };
 
+struct RaytracingSettings {
+    uint raysPerProbe;
+    float maxRayDistance;
+    float normalBias;
+    float hysteresis;
+
+    uint frameIndex;
+    uint _pad0;
+    uint _pad1;
+    uint _pad2;
+};
+
+struct Material {
+    int materialID;
+    float metallic;
+    float roughness;
+    float ao;
+
+    float3 albedo;
+    float _pad0;
+};
+
+struct alignas(16) Triangle {
+    float4 v0;
+    float4 v1;
+    float4 v2;
+    float4 n0;
+    float4 n1;
+    float4 n2;
+    int materialID;
+    int padding[3];
+};
+
+struct Hit {
+    float t;
+    float3 n;
+    int materialID;
+    bool hit;
+};
+
+static inline bool rayTriangleMT(float3 ro, float3 rd, float3 v0, float3 v1,
+                                 float3 v2, thread float &t, thread float &u,
+                                 thread float &v) {
+    float3 e1 = v1 - v0;
+    float3 e2 = v2 - v0;
+    float3 p = cross(rd, e2);
+    float det = dot(e1, p);
+
+    if (fabs(det) < 1e-8f)
+        return false;
+    float invDet = 1.0f / det;
+
+    float3 s = ro - v0;
+    u = dot(s, p) * invDet;
+    if (u < 0.0f || u > 1.0f)
+        return false;
+
+    float3 q = cross(s, e1);
+    v = dot(rd, q) * invDet;
+    if (v < 0.0f || u + v > 1.0f)
+        return false;
+
+    t = dot(e2, q) * invDet;
+    return t > 0.0f;
+}
+
+static inline Hit traceScene(float3 ro, float3 rd, device const Triangle *tris,
+                             uint triCount) {
+    Hit best;
+    best.t = INFINITY;
+    best.hit = false;
+    best.materialID = -1;
+    best.n = float3(0.0f, 1.0f, 0.0f);
+
+    for (uint i = 0; i < triCount; i++) {
+        float t, u, v;
+        if (rayTriangleMT(ro, rd, tris[i].v0.xyz, tris[i].v1.xyz,
+                          tris[i].v2.xyz, t, u, v)) {
+            if (t < best.t) {
+                best.t = t;
+                float w = 1.0f - u - v;
+                float3 n = normalize(tris[i].n0.xyz * w + tris[i].n1.xyz * u +
+                                     tris[i].n2.xyz * v);
+                best.n = n;
+                best.materialID = tris[i].materialID;
+                best.hit = true;
+            }
+        }
+    }
+
+    return best;
+}
+
+static inline uint wangHash(uint x) {
+    x = (x ^ 61u) ^ (x >> 16);
+    x *= 9u;
+    x = x ^ (x >> 4);
+    x *= 0x27d4eb2du;
+    x = x ^ (x >> 15);
+    return x;
+}
+
+static inline float rand01(thread uint &state) {
+    state = wangHash(state);
+    return (float)(state & 0x00FFFFFFu) / 16777216.0f;
+}
+
+static inline float3 randomUnitVector(thread uint &state) {
+    float z = rand01(state) * 2.0f - 1.0f;
+    float a = rand01(state) * 6.28318530718f;
+    float r = sqrt(max(0.0f, 1.0f - z * z));
+    return float3(r * cos(a), z, r * sin(a));
+}
+
+static inline uint3 probeCoordFromIndex(uint idx, uint3 counts) {
+    uint xy = counts.x * counts.y;
+    uint z = idx / xy;
+    uint rem = idx - z * xy;
+    uint y = rem / counts.x;
+    uint x = rem - y * counts.x;
+    return uint3(x, y, z);
+}
+
 static inline float3 octDecode(float2 e) {
     float3 n = float3(e.x, e.y, 1.0f - fabs(e.x) - fabs(e.y));
 
@@ -127,62 +250,157 @@ static inline float3 octDecode(float2 e) {
     return normalize(n);
 }
 
+kernel void main0(device float3 *probeRadianceOut [[buffer(0)]],
+                  device const Triangle *tris [[buffer(1)]],
+                  device const Material *materials [[buffer(2)]],
+                  constant uint &triCount [[buffer(3)]],
+                  constant ProbeSpace &ps [[buffer(4)]],
+                  constant RaytracingSettings &rt [[buffer(5)]],
+                  uint tid [[thread_position_in_grid]]) {
+    uint totalProbes = (uint)ps.atlasParams.w;
+    if (tid >= totalProbes)
+        return;
+
+    uint3 counts = uint3((uint)ps.probeCount.x, (uint)ps.probeCount.y,
+                         (uint)ps.probeCount.z);
+    uint3 pc = probeCoordFromIndex(tid, counts);
+
+    float3 probePos = ps.origin + float3(pc) * ps.spacing;
+
+    uint state = tid * 9781u + rt.frameIndex * 6271u;
+
+    float3 sum = float3(0.0f);
+
+    for (uint r = 0; r < rt.raysPerProbe; r++) {
+        float3 rd = randomUnitVector(state);
+        float3 ro = probePos + rd * rt.normalBias;
+
+        Hit h = traceScene(ro, rd, tris, triCount);
+
+        float3 radiance;
+        if (!h.hit) {
+            radiance = float3(0.1f, 0.15f, 0.25f);
+        } else {
+            float3 L = normalize(float3(0.5, 1.0, 0.5));
+            float ndl = max(0.0f, dot(h.n, L));
+            radiance = float3(1.0, 0.95, 0.8) * ndl;
+        }
+
+        sum += radiance;
+    }
+
+    probeRadianceOut[tid] = sum / float(rt.raysPerProbe);
+}
+)"
+;
+
+static const char* DDGI_WRITE =
+R"(#include <metal_stdlib>
+using namespace metal;
+
+struct ProbeSpace {
+    float3 origin;
+    float _pad0;
+
+    float3 spacing;
+    float _pad1;
+
+    float3 probeCount;
+    float _pad2;
+
+    float4 debugColor;
+
+    float4 atlasParams;
+    // x = textureBorderSize
+    // y = probeResolution (inner)
+    // z = probesPerRow
+    // w = totalProbes  (put this here on CPU!)
+};
+
+struct RaytracingSettings {
+    uint raysPerProbe;
+    float maxRayDistance;
+    float normalBias;
+    float hysteresis;
+
+    uint frameIndex;
+    uint _pad0;
+    uint _pad1;
+    uint _pad2;
+};
+
+struct Material {
+    int materialID;
+    float metallic;
+    float roughness;
+    float ao;
+
+    float3 albedo;
+    float _pad0;
+};
+
+struct Triangle {
+    float3 v0;
+    float3 v1;
+    float3 v2;
+
+    float3 n0;
+    float3 n1;
+    float3 n2;
+
+    int materialID;
+};
+
+struct Hit {
+    float t;
+    float3 n;
+    int materialID;
+    bool hit;
+};
+
 kernel void main0(texture2d<float, access::write> outTexture [[texture(0)]],
-                  constant ProbeSpace &ps [[buffer(0)]],
+                  texture2d<float, access::read> prevTexture [[texture(1)]],
+                  device float3 *probeRadiance [[buffer(0)]],
+                  constant ProbeSpace &ps [[buffer(1)]],
+                  constant RaytracingSettings &rt [[buffer(2)]],
                   uint2 gid [[thread_position_in_grid]]) {
-    uint border = ps.atlasParams.x;
-    uint innerRes = ps.atlasParams.y;
-    uint tilesPerRow = ps.atlasParams.z;
-    uint totalProbes = ps.atlasParams.w;
+    uint border = (uint)ps.atlasParams.x;
+    uint innerRes = (uint)ps.atlasParams.y;
+    uint probesPerRow = (uint)ps.atlasParams.z;
+    uint totalProbes = (uint)ps.atlasParams.w;
 
     uint tileRes = innerRes + 2u * border;
 
-    if (gid.x >= outTexture.get_width() || gid.y >= outTexture.get_height()) {
+    if (gid.x >= outTexture.get_width() || gid.y >= outTexture.get_height())
         return;
-    }
 
     uint tileX = gid.x / tileRes;
     uint tileY = gid.y / tileRes;
-    uint probeIndex = tileX + tileY * tilesPerRow;
+    uint probeIndex = tileX + tileY * probesPerRow;
 
     if (probeIndex >= totalProbes) {
-        outTexture.write(float4(float3(0.0), 1.0), gid);
+        outTexture.write(float4(0, 0, 0, 1), gid);
         return;
     }
 
     uint localX = gid.x - tileX * tileRes;
     uint localY = gid.y - tileY * tileRes;
 
-    bool isOutline = (localX == 0u) || (localY == 0u) ||
-                     (localX == tileRes - 1u) || (localY == tileRes - 1u);
-
     bool isInner = (localX >= border) && (localX < border + innerRes) &&
                    (localY >= border) && (localY < border + innerRes);
 
-    if (isOutline) {
-        outTexture.write(float4(1, 1, 1, 1), gid);
+    if (!isInner) {
+        outTexture.write(float4(0.02f, 0.02f, 0.02f, 1), gid);
         return;
     }
 
-    if (!isInner) {
-        outTexture.write(float4(0.05f, 0.05f, 0.05f, 1.0f), gid);
-    }
+    float3 cur = probeRadiance[probeIndex];
 
-    float2 uv =
-        (float2(localX - border, localY - border) + 0.5f) / float(innerRes);
-    float2 e = uv * 2.0 - 1.0;
+    float4 prev = prevTexture.read(gid);
+    float h = rt.hysteresis;
+    float3 blended = mix(cur, prev.xyz, h);
 
-    float3 dir = octDecode(e);
-
-    float3 defaultSunDir = normalize(float3(0.5, 1.0, 0.5));
-    float3 defaultSunColor = float3(1.0, 0.95, 0.8);
-
-    float3 L = normalize(defaultSunDir);
-    float ndl = max(0.0f, dot(dir, L));
-
-    float3 rgb = defaultSunColor * ndl;
-
-    outTexture.write(float4(rgb, 1.0), gid);
+    outTexture.write(float4(blended, 1.0f), gid);
 }
 )"
 ;
@@ -3226,8 +3444,8 @@ fragment main0_out main0(
     sampler texture3Smplr [[sampler(2)]], sampler texture4Smplr [[sampler(3)]],
     sampler texture5Smplr [[sampler(4)]], sampler cubeMap1Smplr [[sampler(5)]],
     sampler cubeMap2Smplr [[sampler(6)]], sampler cubeMap3Smplr [[sampler(7)]],
-    sampler cubeMap4Smplr [[sampler(8)]], sampler skyboxSmplr [[sampler(10)]],
-    sampler gPositionSmplr [[sampler(11)]],
+    sampler cubeMap4Smplr [[sampler(8)]], sampler cubeMap5Smplr [[sampler(9)]],
+    sampler skyboxSmplr [[sampler(10)]], sampler gPositionSmplr [[sampler(11)]],
     sampler gNormalSmplr [[sampler(12)]],
     sampler gAlbedoSpecSmplr [[sampler(13)]],
     sampler gMaterialSmplr [[sampler(14)]], sampler ssaoSmplr [[sampler(15)]]) {

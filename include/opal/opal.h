@@ -684,6 +684,11 @@ class Pipeline {
      * @param size Size of the data in bytes
      */
     void bindBufferData(const std::string &name, const void *data, size_t size);
+    void bindBuffer(const std::string &name, const std::shared_ptr<Buffer> &buffer,
+                    int callerId = -1);
+    void bindShaderReadWriteBuffer(const std::string &name,
+                                   const std::shared_ptr<Buffer> &buffer,
+                                   int callerId = -1);
 
     void bindTexture(const std::string &name,
                      const std::shared_ptr<Texture> &texture, int unit,
@@ -742,6 +747,7 @@ class Pipeline {
         VkDescriptorType descriptorType = VK_DESCRIPTOR_TYPE_MAX_ENUM;
     };
     std::unordered_map<uint64_t, UniformBufferAllocation> uniformBuffers;
+    std::unordered_map<uint64_t, std::shared_ptr<Buffer>> descriptorBuffers;
 
     static uint64_t makeBindingKey(uint32_t set, uint32_t binding) {
         return (static_cast<uint64_t>(set) << 32) | binding;

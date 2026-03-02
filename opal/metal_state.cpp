@@ -739,6 +739,7 @@ void releasePipelineState(Pipeline *pipeline) {
         }
     }
     state.uniformBuffers.clear();
+    state.shaderBuffers.clear();
     state.uniformData.clear();
     state.texturesByUnit.clear();
     if (state.depthStencilState != nullptr) {
@@ -1270,6 +1271,22 @@ std::vector<UniformLocation> resolveUniformLocations(ProgramState &programState,
     }
 
     programState.uniformResolutionCache[name] = resolved;
+    return resolved;
+}
+
+std::vector<BufferBinding>
+resolveBufferBindings(const ProgramState &programState, const std::string &name) {
+    std::vector<BufferBinding> resolved;
+    const std::vector<std::string> tokens = parseUniformPath(name);
+    if (tokens.empty()) {
+        return resolved;
+    }
+    const std::string &token = tokens[0];
+    for (const BufferBinding &binding : programState.bindings) {
+        if (matchesBindingAlias(binding, token)) {
+            resolved.push_back(binding);
+        }
+    }
     return resolved;
 }
 

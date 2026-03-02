@@ -10,6 +10,7 @@
 #ifndef SHADER_H
 #define SHADER_H
 
+#include "atlas/core/default_shaders.h"
 #include "atlas/units.h"
 #include <cstddef>
 #include <map>
@@ -110,6 +111,7 @@ enum class AtlasVertexShader {
 
 enum class AtlasComputeShader {
     DDGI,
+    DDGI_WRITE,
 };
 
 /**

@@ -54,10 +54,44 @@ class GlobalIllumination {
 
     std::shared_ptr<Texture> irradianceMap;
     std::shared_ptr<Texture> irradianceMapPrev;
-    std::shared_ptr<ShaderProgram> giShader;
+    std::shared_ptr<ShaderProgram> giWriteShader;
+    std::shared_ptr<ShaderProgram> giRaytracingShader;
     std::shared_ptr<opal::Pipeline> giPipeline;
+    std::shared_ptr<opal::Pipeline> giRaytracingPipeline;
+
+    std::shared_ptr<opal::Buffer> probeRadianceBuffer;
 
     std::shared_ptr<ProbeSpace> probeSpace;
+
+    std::shared_ptr<opal::Framebuffer> copySrcFramebuffer;
+    std::shared_ptr<opal::Framebuffer> copyDstFramebuffer;
+
+    struct DDGIMaterial {
+        int materialID;
+        float metallic;
+        float roughness;
+        float ao;
+
+        glm::vec3 albedo;
+        float _pad0;
+    };
+
+    struct DDGITriangle {
+        glm::vec4 v0;
+        glm::vec4 v1;
+        glm::vec4 v2;
+
+        glm::vec4 n0;
+        glm::vec4 n1;
+        glm::vec4 n2;
+
+        int materialID;
+
+        int pad[3];
+    };
+
+    std::vector<DDGITriangle> triangles;
+    std::vector<DDGIMaterial> materials;
 
     float probeSpacing = 0.5f;
 

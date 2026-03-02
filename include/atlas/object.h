@@ -13,6 +13,7 @@
 #include "atlas/component.h"
 #include "atlas/physics.h"
 #include "bezel/bezel.h"
+#include "photon/illuminate.h"
 #include <any>
 #include <memory>
 #include <string>
@@ -544,6 +545,7 @@ class CoreObject : public GameObject {
     friend class Window;
     friend class RenderTarget;
     friend class Skybox;
+    friend class photon::GlobalIllumination;
 
     void updateInstances();
 

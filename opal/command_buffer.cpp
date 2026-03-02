@@ -385,6 +385,20 @@ void uploadUniformBuffers(const std::shared_ptr<Pipeline> &pipeline,
     for (const auto &binding : programState.bindings) {
         auto uploadStage = [&](metal::MetalProgramStage stage) {
             uint32_t key = metal::stageBindingKey(binding.index, stage);
+            auto shaderBufferIt = pipelineState.shaderBuffers.find(key);
+            if (shaderBufferIt != pipelineState.shaderBuffers.end() &&
+                shaderBufferIt->second != nullptr) {
+                auto &bufferState = metal::bufferState(shaderBufferIt->second.get());
+                if (bufferState.buffer == nullptr) {
+                    throw std::runtime_error("Metal shader buffer is not initialized");
+                }
+                if (stage == metal::MetalProgramStage::Fragment) {
+                    encoder->setFragmentBuffer(bufferState.buffer, 0, binding.index);
+                } else {
+                    encoder->setVertexBuffer(bufferState.buffer, 0, binding.index);
+                }
+                return;
+            }
             auto &bytes = pipelineState.uniformData[key];
             size_t requiredSize = 0;
             auto bindingSizeIt = programState.bindingSize.find(key);
@@ -580,6 +594,16 @@ void uploadComputeUniformBuffers(const std::shared_ptr<Pipeline> &pipeline,
 
         uint32_t key =
             metal::stageBindingKey(binding.index, metal::MetalProgramStage::Compute);
+        auto shaderBufferIt = pipelineState.shaderBuffers.find(key);
+        if (shaderBufferIt != pipelineState.shaderBuffers.end() &&
+            shaderBufferIt->second != nullptr) {
+            auto &bufferState = metal::bufferState(shaderBufferIt->second.get());
+            if (bufferState.buffer == nullptr) {
+                throw std::runtime_error("Metal shader buffer is not initialized");
+            }
+            encoder->setBuffer(bufferState.buffer, 0, binding.index);
+            continue;
+        }
         auto &bytes = pipelineState.uniformData[key];
 
         size_t requiredSize = 0;

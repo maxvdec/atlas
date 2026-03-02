@@ -256,6 +256,8 @@ class Window {
      */
     int height;
 
+    int currentFrame;
+
     /**
      * @brief Constructs a window with the specified configuration.
      *
