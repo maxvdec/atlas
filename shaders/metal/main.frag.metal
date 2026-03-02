@@ -95,7 +95,7 @@ struct DirectionalLight
     packed_float3 diffuse;
     float _pad2;
     packed_float3 specular;
-    float _pad3;
+    float intensity;
 };
 
 struct DirectionalLightsUBO
@@ -110,6 +110,7 @@ struct PointLight
     packed_float3 diffuse;
     float _pad2;
     packed_float3 specular;
+    float intensity;
     float constant0;
     float linear;
     float quadratic;
@@ -129,8 +130,8 @@ struct SpotLight
     packed_float3 direction;
     float cutOff;
     float outerCutOff;
-    float _pad2;
-    float _pad3;
+    float intensity;
+    float range;
     float _pad4;
     packed_float3 diffuse;
     float _pad5;
@@ -185,8 +186,8 @@ struct AreaLight
     packed_float3 specular;
     float angle;
     int castsBothSides;
-    float _pad7;
-    float _pad8;
+    float intensity;
+    float range;
     float _pad9;
 };
 
@@ -721,7 +722,7 @@ float3 calcAllDirectionalLights(thread const float3& N, thread const float3& V, 
     for (int i = 0; i < _1073.directionalLightCount; i++)
     {
         float3 L = fast::normalize(-float3(_1083.directionalLights[i].direction));
-        float3 radiance = float3(_1083.directionalLights[i].diffuse);
+        float3 radiance = float3(_1083.directionalLights[i].diffuse) * fast::max(_1083.directionalLights[i].intensity, 0.0);
         float3 param = N;
         float3 param_1 = V;
         float3 param_2 = L;
@@ -746,9 +747,12 @@ float3 calcAllPointLights(thread const float3& fragPos, thread const float3& N, 
         float _distance = length(L);
         _distance = fast::max(_distance, 0.001000000047497451305389404296875);
         L = fast::normalize(L);
-        float3 radiance = float3(_1136.pointLights[i].diffuse);
-        float attenuation = 1.0 / fast::max(_distance * _distance, 0.00999999977648258209228515625);
+        float range = fast::max(_1136.pointLights[i].radius, 0.001000000047497451305389404296875);
+        float3 radiance = float3(_1136.pointLights[i].diffuse) * fast::max(_1136.pointLights[i].intensity, 0.0);
+        float attenuation = 1.0 / ((1.0 + (_distance / range)) + ((_distance * _distance) / (range * range)));
+        float fade = 1.0 - smoothstep(range * 0.89999997615814208984375, range, _distance);
         float3 radianceAttenuated = radiance * attenuation;
+        radianceAttenuated *= fade;
         float3 H = fast::normalize(V + L);
         float3 param = N;
         float3 param_1 = H;
@@ -786,8 +790,10 @@ float3 calcAllSpotLights(thread const float3& N, thread const float3& fragPos, t
         float intensity = smoothstep(_1268.spotlights[i].outerCutOff, _1268.spotlights[i].cutOff, theta);
         float _distance = length(float3(_1268.spotlights[i].position) - fragPos);
         _distance = fast::max(_distance, 0.001000000047497451305389404296875);
-        float attenuation = 1.0 / fast::max(_distance * _distance, 0.00999999977648258209228515625);
-        float3 radiance = (float3(_1268.spotlights[i].diffuse) * attenuation) * intensity;
+        float range = fast::max(_1268.spotlights[i].range, 0.001000000047497451305389404296875);
+        float attenuation = 1.0 / ((1.0 + (_distance / range)) + ((_distance * _distance) / (range * range)));
+        float fade = 1.0 - smoothstep(range * 0.89999997615814208984375, range, _distance);
+        float3 radiance = (((float3(_1268.spotlights[i].diffuse) * fast::max(_1268.spotlights[i].intensity, 0.0)) * attenuation) * intensity) * fade;
         float3 param = N;
         float3 param_1 = viewDir;
         float3 param_2 = L_1;
@@ -1100,8 +1106,10 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Uniforms& _163 [[buf
             float cosTheta = cos(radians(_2058.areaLights[i_2].angle));
             if ((facing >= cosTheta) && (facing > 0.0))
             {
-                float attenuation = 1.0 / fast::max(dist * dist, 9.9999997473787516355514526367188e-05);
-                float3 radiance = (float3(_2058.areaLights[i_2].diffuse) * attenuation) * facing;
+                float range = fast::max(_2058.areaLights[i_2].range, 0.001000000047497451305389404296875);
+                float attenuation = 1.0 / ((1.0 + (dist / range)) + ((dist * dist) / (range * range)));
+                float fade = 1.0 - smoothstep(range * 0.89999997615814208984375, range, dist);
+                float3 radiance = (((float3(_2058.areaLights[i_2].diffuse) * fast::max(_2058.areaLights[i_2].intensity, 0.0)) * attenuation) * facing) * fade;
                 float3 H = fast::normalize(V + L);
                 float3 param_42 = N;
                 float3 param_43 = H;

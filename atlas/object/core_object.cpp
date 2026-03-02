@@ -66,7 +66,7 @@ buildGPUDirectionalLights(const std::vector<DirectionalLight *> &lights,
                                  light->shineColor.b);
         gpu._pad1 = 0.0f;
         gpu._pad2 = 0.0f;
-        gpu._pad3 = 0.0f;
+        gpu.intensity = light->intensity;
         result.push_back(gpu);
     }
     return result;
@@ -86,6 +86,7 @@ buildGPUPointLights(const std::vector<Light *> &lights, int maxCount) {
         gpu.diffuse = glm::vec3(light->color.r, light->color.g, light->color.b);
         gpu.specular = glm::vec3(light->shineColor.r, light->shineColor.g,
                                  light->shineColor.b);
+        gpu.intensity = light->intensity;
         gpu.constant = plc.constant;
         gpu.linear = plc.linear;
         gpu.quadratic = plc.quadratic;
@@ -116,8 +117,8 @@ buildGPUSpotLights(const std::vector<Spotlight *> &lights, int maxCount) {
         gpu.specular = glm::vec3(light->shineColor.r, light->shineColor.g,
                                  light->shineColor.b);
         gpu._pad1 = 0.0f;
-        gpu._pad2 = 0.0f;
-        gpu._pad3 = 0.0f;
+        gpu.intensity = light->intensity;
+        gpu.range = light->range;
         gpu._pad4 = 0.0f;
         gpu._pad5 = 0.0f;
         gpu._pad6 = 0.0f;
@@ -150,8 +151,8 @@ buildGPUAreaLights(const std::vector<AreaLight *> &lights, int maxCount) {
         gpu._pad4 = 0.0f;
         gpu._pad5 = 0.0f;
         gpu._pad6 = 0.0f;
-        gpu._pad7 = 0.0f;
-        gpu._pad8 = 0.0f;
+        gpu.intensity = light->intensity;
+        gpu.range = light->range;
         gpu._pad9 = 0.0f;
         result.push_back(gpu);
     }

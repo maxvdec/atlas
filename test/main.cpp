@@ -193,6 +193,9 @@ class MainScene : public Scene {
 
         return Cubemap::fromResourceGroup(group);
     }
+
+#define COZY_LIGHT_COLOR Color(1.0f, 0.9f, 0.4f)
+
     void initialize(Window &window) override {
         Environment env;
         env.fog.intensity = 0.0;
@@ -204,25 +207,25 @@ class MainScene : public Scene {
         Workspace::get().setRootPath(std::string(TEST_PATH) + "/resources/");
 
         camera = Camera();
-        camera.setPosition({-5.0f, 1.0f, 2.0f});
-        camera.lookAt({0.0f, 0.0f, 0.0f});
+        camera.setPosition({-5.0f, 1.0f, 0.0f});
+        camera.lookAt({0.0f, 1.0f, 0.0f});
         camera.farClip = 1000.f;
         window.setCamera(&camera);
 
-        ground = createBox({5.0f, 0.1f, 5.0f}, Color(0.3f, 0.8f, 0.3f));
-        ground.attachTexture(
-            Texture::fromResource(Workspace::get().createResource(
-                "ground.jpg", "GroundTexture", ResourceType::Image)));
-        ground.setPosition({0.0f, -0.1f, 0.0f});
-        window.addObject(&ground);
-
-        areaLight.position = {0.0f, 2.0f, 0.0f};
-        areaLight.rotate({0.0f, 90.0f, 0.0f});
-        areaLight.castsBothSides = true;
-        areaLight.setColor({0.7f, 0.7f, 0.7f, 1.0f});
+        areaLight = AreaLight();
+        areaLight.position = {0.0f, 2.f, 0.f};
+        areaLight.setColor(COZY_LIGHT_COLOR);
+        areaLight.intensity = 1.0f;
+        areaLight.range = 5.0f;
         this->addAreaLight(&areaLight);
+        areaLight.rotate({90.0f, 0.0f, 0.0f});
         areaLight.createDebugObject();
         areaLight.addDebugObject(window);
+
+        ground = createBox({2.0f, 0.1f, 2.0f});
+        ground.material.albedo = Color::white();
+        ground.setPosition({0.0f, -0.1f, 0.0f});
+        window.addObject(&ground);
 
         Resource fontResource = Workspace::get().createResource(
             "arial.ttf", "Arial", ResourceType::Font);
@@ -233,34 +236,16 @@ class MainScene : public Scene {
         fpsText.addTraitComponent<Text>(FPSTextUpdater());
         window.addUIObject(&fpsText);
 
-        ball = createDebugSphere(0.5f, 32, 32);
-        ball.material.metallic = 1.0f;
-        ball.material.roughness = 0.0f;
-        ball.move({0.f, 1.0f, 1.0f});
-        window.addObject(&ball);
-
-        ball2 = createDebugSphere(0.5f, 32, 32);
-        ball2.move({0.f, 1.0f, -1.0f});
-        window.addObject(&ball2);
-
-        light = DirectionalLight({0.35f, -1.0f, 0.2f}, Color::white());
-        this->addDirectionalLight(&light);
-        light.castShadows(window, 4096);
-        this->setAmbientIntensity(0.2f);
+        this->setAmbientIntensity(0.0f);
 
         frameBuffer = RenderTarget(window, RenderTargetType::Scene);
         window.addRenderTarget(&frameBuffer);
         frameBuffer.display(window);
 
-        this->setUseAtmosphereSkybox(true);
+        this->setUseAtmosphereSkybox(false);
 
         window.usesDeferred = true;
         window.enableSSR(true);
-        atmosphere.enable();
-        atmosphere.secondsPerHour = 4.f;
-        atmosphere.setTime(12.0);
-        atmosphere.cycle = true;
-        atmosphere.wind = {0.1f, 0.0f, 0.0f};
     }
 };
 

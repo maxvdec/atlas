@@ -29,7 +29,7 @@ struct DirectionalLight {
     vec3 diffuse;
     float _pad2;
     vec3 specular;
-    float _pad3;
+    float intensity;
 };
 
 struct PointLight {
@@ -38,6 +38,7 @@ struct PointLight {
     vec3 diffuse;
     float _pad2;
     vec3 specular;
+    float intensity;
     float constant;
     float linear;
     float quadratic;
@@ -51,8 +52,8 @@ struct SpotLight {
     vec3 direction;
     float cutOff;
     float outerCutOff;
-    float _pad2;
-    float _pad3;
+    float intensity;
+    float range;
     float _pad4;
     vec3 diffuse;
     float _pad5;
@@ -75,8 +76,8 @@ struct AreaLight {
     vec3 specular;
     float angle;
     int castsBothSides;
-    float _pad7;
-    float _pad8;
+    float intensity;
+    float range;
     float _pad9;
 };
 
@@ -325,7 +326,7 @@ vec3 evaluateBRDF(vec3 L, vec3 radiance, vec3 N, vec3 V, vec3 F0, vec3 albedo, f
 
 vec3 calcDirectionalLight(DirectionalLight light, vec3 N, vec3 V, vec3 F0, vec3 albedo, float metallic, float roughness) {
     vec3 L = normalize(-light.direction);
-    vec3 radiance = light.diffuse;
+    vec3 radiance = light.diffuse * max(light.intensity, 0.0);
     return evaluateBRDF(L, radiance, N, V, F0, albedo, metallic, roughness);
 }
 
@@ -335,7 +336,7 @@ vec3 calcPointLight(PointLight light, vec3 fragPos, vec3 N, vec3 V, vec3 F0, vec
     vec3 direction = distance > 0.0 ? (L / distance) : vec3(0.0, 0.0, 1.0);
     float attenuation = 1.0 / max(light.constant + light.linear * distance + light.quadratic * distance * distance, 0.0001);
     float fade = 1.0 - smoothstep(light.radius * 0.9, light.radius, distance);
-    vec3 radiance = light.diffuse * attenuation * fade;
+    vec3 radiance = light.diffuse * max(light.intensity, 0.0) * attenuation * fade;
     return evaluateBRDF(direction, radiance, N, V, F0, albedo, metallic, roughness);
 }
 
@@ -349,8 +350,10 @@ vec3 calcSpotLight(SpotLight light, vec3 fragPos, vec3 N, vec3 V, vec3 F0, vec3 
     float epsilon = max(light.cutOff - light.outerCutOff, 0.0001);
     float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
 
-    float attenuation = 1.0 / (1.0 + 0.09 * distance + 0.032 * distance * distance);
-    vec3 radiance = light.diffuse * attenuation * intensity;
+    float range = max(light.range, 0.001);
+    float attenuation = 1.0 / (1.0 + (distance / range) + (distance * distance) / (range * range));
+    float fade = 1.0 - smoothstep(range * 0.9, range, distance);
+    vec3 radiance = light.diffuse * max(light.intensity, 0.0) * attenuation * intensity * fade;
     return evaluateBRDF(direction, radiance, N, V, F0, albedo, metallic, roughness);
 }
 
@@ -472,8 +475,10 @@ void main() {
             float cosTheta = cos(radians(areaLights[i].angle));
 
             if (facing >= cosTheta && facing > 0.0) {
-                float attenuation = 1.0 / max(dist * dist, 0.0001);
-                vec3 radiance = areaLights[i].diffuse * attenuation * facing;
+                float range = max(areaLights[i].range, 0.001);
+                float attenuation = 1.0 / (1.0 + (dist / range) + (dist * dist) / (range * range));
+                float fade = 1.0 - smoothstep(range * 0.9, range, dist);
+                vec3 radiance = areaLights[i].diffuse * max(areaLights[i].intensity, 0.0) * attenuation * facing * fade;
                 areaResult += evaluateBRDF(L, radiance, N, V, F0, albedo, metallic, roughness);
             }
         }

@@ -40,6 +40,7 @@ struct DirectionalLight {
     vec3 direction;
     vec3 diffuse;
     vec3 specular;
+    float intensity;
 };
 
 struct PointLight {
@@ -51,6 +52,8 @@ struct PointLight {
     float constant;
     float linear;
     float quadratic;
+    float intensity;
+    float range;
 };
 
 struct SpotLight {
@@ -58,6 +61,8 @@ struct SpotLight {
     vec3 direction;
     float cutOff;
     float outerCutOff;
+    float intensity;
+    float range;
 
     vec3 diffuse;
     vec3 specular;
@@ -71,6 +76,8 @@ struct AreaLight {
     vec3 diffuse;
     vec3 specular;
     float angle;
+    float intensity;
+    float range;
     int castsBothSides;
 };
 
@@ -433,7 +440,7 @@ vec3 calcAllDirectionalLights(vec3 N, vec3 V, vec3 albedo, float metallic, float
 
     for (int i = 0; i < directionalLightCount; i++) {
         vec3 L = normalize(-directionalLights[i].direction);
-        vec3 radiance = directionalLights[i].diffuse;
+        vec3 radiance = directionalLights[i].diffuse * max(directionalLights[i].intensity, 0.0);
         Lo += calculatePBR(N, V, L, F0, radiance, albedo, metallic, roughness, reflectivity);
     }
 
@@ -456,9 +463,12 @@ vec3 calcAllPointLights(vec3 fragPos, vec3 N, vec3 V, vec3 albedo, float metalli
 
         L = normalize(L);
 
-        vec3 radiance = pointLights[i].diffuse;
-        float attenuation = 1.0 / max(distance * distance, 0.01);
+        float range = max(pointLights[i].range, 0.001);
+        vec3 radiance = pointLights[i].diffuse * max(pointLights[i].intensity, 0.0);
+        float attenuation = 1.0 / (1.0 + (distance / range) + (distance * distance) / (range * range));
+        float fade = 1.0 - smoothstep(range * 0.9, range, distance);
         vec3 radianceAttenuated = radiance * attenuation;
+        radianceAttenuated *= fade;
 
         vec3 H = normalize(V + L);
 
@@ -494,9 +504,11 @@ vec3 calcAllSpotLights(vec3 N, vec3 fragPos, vec3 L, vec3 viewDir, vec3 albedo, 
 
         float distance = length(spotlights[i].position - fragPos);
         distance = max(distance, 0.001);
-        float attenuation = 1.0 / max(distance * distance, 0.01);
+        float range = max(spotlights[i].range, 0.001);
+        float attenuation = 1.0 / (1.0 + (distance / range) + (distance * distance) / (range * range));
+        float fade = 1.0 - smoothstep(range * 0.9, range, distance);
 
-        vec3 radiance = spotlights[i].diffuse * attenuation * intensity;
+        vec3 radiance = spotlights[i].diffuse * max(spotlights[i].intensity, 0.0) * attenuation * intensity * fade;
 
         Lo += calculatePBR(N, viewDir, L, F0, radiance, albedo, metallic, roughness, reflectivity);
     }
@@ -740,8 +752,10 @@ void main() {
                 float facing = (areaLights[i].castsBothSides != 0) ? abs(ndotl) : max(ndotl, 0.0);
                 float cosTheta = cos(radians(areaLights[i].angle));
                 if (facing >= cosTheta && facing > 0.0) {
-                    float attenuation = 1.0 / max(dist * dist, 0.0001);
-                    vec3 radiance = areaLights[i].diffuse * attenuation * facing;
+                    float range = max(areaLights[i].range, 0.001);
+                    float attenuation = 1.0 / (1.0 + (dist / range) + (dist * dist) / (range * range));
+                    float fade = 1.0 - smoothstep(range * 0.9, range, dist);
+                    vec3 radiance = areaLights[i].diffuse * max(areaLights[i].intensity, 0.0) * attenuation * facing * fade;
                     vec3 H = normalize(V + L);
                     float NDF = distributionGGX(N, H, roughness);
                     float G = geometrySmith(N, V, L, roughness);
