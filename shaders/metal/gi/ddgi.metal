@@ -81,7 +81,13 @@ kernel void main0(texture2d<float, access::write> outTexture [[texture(0)]],
 
     float3 dir = octDecode(e);
 
-    float3 rgb = dir * 0.5 + 0.5;
+    float3 defaultSunDir = normalize(float3(0.5, 1.0, 0.5));
+    float3 defaultSunColor = float3(1.0, 0.95, 0.8);
+
+    float3 L = normalize(defaultSunDir);
+    float ndl = max(0.0f, dot(dir, L));
+
+    float3 rgb = defaultSunColor * ndl;
 
     outTexture.write(float4(rgb, 1.0), gid);
 }

@@ -425,6 +425,35 @@ void Window::deferredRendering(
             fallbackShadowCubemapTexture->textureID, 10 + i);
     }
 
+#ifdef METAL
+    if (usesGlobalIllumination && ddgiSystem != nullptr) {
+        lightPipeline->setUniform3f("ps.origin",
+                                    ddgiSystem->probeSpace->originWorldSpace.x,
+                                    ddgiSystem->probeSpace->originWorldSpace.y,
+                                    ddgiSystem->probeSpace->originWorldSpace.z);
+        lightPipeline->setUniform3f("ps.spacing",
+                                    ddgiSystem->probeSpace->spacing.x,
+                                    ddgiSystem->probeSpace->spacing.y,
+                                    ddgiSystem->probeSpace->spacing.z);
+        lightPipeline->setUniform3f("ps.probeCount",
+                                    ddgiSystem->probeSpace->probeCount.x,
+                                    ddgiSystem->probeSpace->probeCount.y,
+                                    ddgiSystem->probeSpace->probeCount.z);
+        lightPipeline->setUniform4f("ps.debugColor",
+                                    ddgiSystem->probeSpace->debugColor.r,
+                                    ddgiSystem->probeSpace->debugColor.g,
+                                    ddgiSystem->probeSpace->debugColor.b, 1.0f);
+        lightPipeline->setUniform4f(
+            "ps.atlasParams", (float)ddgiSystem->probeSpace->textureBorderSize,
+            (float)ddgiSystem->probeSpace->probeResolution,
+            (float)ddgiSystem->probeSpace->probesPerRow,
+            (float)ddgiSystem->probeSpace->totalProbes());
+
+        lightPipeline->bindTexture("irradianceMap",
+                                   ddgiSystem->irradianceMap->texture, 16);
+    }
+#endif
+
     int boundCubemaps = 0;
 
     Scene *scene = this->currentScene;
