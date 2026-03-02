@@ -589,7 +589,13 @@ void CoreObject::render(float dt,
 
         for (int i = 0; i < count; i++) {
             std::string uniformName = "texture" + std::to_string(i + 1) + "";
-            this->pipeline->bindTexture2D(uniformName, textures[i].id, i, id);
+            if (textures[i].texture != nullptr) {
+                this->pipeline->bindTexture(uniformName, textures[i].texture, i,
+                                            id);
+            } else {
+                this->pipeline->bindTexture2D(uniformName, textures[i].id, i,
+                                              id);
+            }
             boundTextures++;
         }
 

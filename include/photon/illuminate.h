@@ -15,14 +15,19 @@
 #include "opal/opal.h"
 #include <memory>
 
+namespace photon {
+
 class GlobalIllumination {
   public:
-    void render(std::shared_ptr<opal::CommandBuffer> commandBuffer);
+    void
+    render(const std::shared_ptr<opal::CommandBuffer> &commandBuffer) const;
     void init();
 
     std::shared_ptr<Texture> irradianceMap;
     std::shared_ptr<ShaderProgram> giShader;
     std::shared_ptr<opal::Pipeline> giPipeline;
 };
+
+} // namespace photon
 
 #endif // PHOTON_ILLUMINATE_H

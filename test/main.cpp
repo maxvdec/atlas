@@ -298,7 +298,10 @@ class MainScene : public Scene {
 
         frameBuffer = RenderTarget(window, RenderTargetType::Multisampled);
         window.addRenderTarget(&frameBuffer);
-        frameBuffer.display(window);
+        // frameBuffer.display(window);
+
+        window.enableGlobalIllumination();
+        window.ddgiSystem->irradianceMap->display(window);
 
         this->setUseAtmosphereSkybox(false);
 

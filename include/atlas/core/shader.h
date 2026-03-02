@@ -684,7 +684,6 @@ struct ShaderProgram {
      *
      */
     FragmentShader fragmentShader;
-    ComputeShader computeShader;
 
     /**
      * @brief The geometry shader component of the shader program (optional).
@@ -698,6 +697,7 @@ struct ShaderProgram {
      *
      */
     std::vector<TessellationShader> tessellationShaders;
+    ComputeShader computeShader;
 
     /**
      * @brief Static cache of compiled shader programs to avoid recompilation.

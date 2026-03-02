@@ -502,10 +502,16 @@ void RenderTarget::display(Window& window, float zindex) {
             VertexShader::fromDefaultShader(AtlasVertexShader::Fullscreen);
         FragmentShader fragmentShader =
             FragmentShader::fromDefaultShader(AtlasFragmentShader::Fullscreen);
+        vertexShader.fromDefaultShaderType = std::nullopt;
+        fragmentShader.fromDefaultShaderType = std::nullopt;
 
         obj.createAndAttachProgram(vertexShader, fragmentShader);
 
+#ifdef METAL
+        std::vector<Index> indices = {0, 3, 1, 1, 3, 2};
+#else
         std::vector<Index> indices = {0, 1, 3, 1, 2, 3};
+#endif
 
         obj.attachTexture(this->texture);
         obj.attachVertices(vertices);

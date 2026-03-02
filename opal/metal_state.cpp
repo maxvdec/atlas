@@ -902,7 +902,13 @@ MTL::TextureUsage textureUsageFor(TextureType type, TextureFormat format) {
         return enumOr(MTL::TextureUsageShaderRead,
                       MTL::TextureUsageRenderTarget);
     }
-    return enumOr(MTL::TextureUsageShaderRead, MTL::TextureUsageRenderTarget);
+    if (type == TextureType::Texture2DMultisample) {
+        return enumOr(MTL::TextureUsageShaderRead,
+                      MTL::TextureUsageRenderTarget);
+    }
+    return enumOr(enumOr(MTL::TextureUsageShaderRead,
+                         MTL::TextureUsageShaderWrite),
+                  MTL::TextureUsageRenderTarget);
 }
 
 MTL::SamplerAddressMode wrapModeToAddressMode(TextureWrapMode mode) {

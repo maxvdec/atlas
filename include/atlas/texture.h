@@ -23,6 +23,9 @@
 #include <memory>
 #include <string>
 
+class Window;
+class CoreObject;
+
 /**
  * @brief Structure that holds the creation data for a texture.
  *
@@ -279,6 +282,17 @@ struct Texture {
     static Texture createRainStreak(int width, int height,
                                     TextureParameters params = {},
                                     Color borderColor = {0, 0, 0, 0});
+    static Texture create(int width, int height,
+                          opal::TextureFormat format = opal::TextureFormat::Rgba8,
+                          opal::TextureDataFormat dataFormat =
+                              opal::TextureDataFormat::Rgba,
+                          TextureType type = TextureType::Color,
+                          TextureParameters params = {},
+                          Color borderColor = {0, 0, 0, 0});
+
+    void display(Window &window, float zindex = 0);
+
+    std::shared_ptr<CoreObject> object = nullptr;
 
   private:
     static void
@@ -345,9 +359,6 @@ struct Cubemap {
 
     void updateWithColors(const std::array<Color, 6> &colors);
 };
-
-class Window;
-class CoreObject;
 
 /**
  * @brief The type of the texture (RenderTarget).

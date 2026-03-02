@@ -376,6 +376,59 @@ void Texture::applyFilteringModes(TextureFilteringMode minMode,
     texture->setFilterMode(opalMinMode, opalMagMode);
 }
 
+void Texture::display(Window& window, float zindex) {
+    if (texture == nullptr) {
+        throw std::runtime_error("Texture is not initialized");
+    }
+    if (id == 0) {
+        id = texture->textureID;
+    }
+    if (id == 0) {
+        throw std::runtime_error("Texture is not initialized");
+    }
+
+    if (object == nullptr) {
+        CoreObject obj;
+        std::vector<CoreVertex> vertices = {
+#ifdef METAL
+            {{1.0f, 1.0f, zindex}, Color::white(), {1.0f, 0.0f}},
+            {{1.0f, -1.0f, zindex}, Color::white(), {1.0f, 1.0f}},
+            {{-1.0f, -1.0f, zindex}, Color::white(), {0.0f, 1.0f}},
+            {{-1.0f, 1.0f, zindex}, Color::white(), {0.0f, 0.0f}}
+#else
+            {{1.0f, 1.0f, zindex}, Color::white(), {1.0f, 1.0f}},
+            {{1.0f, -1.0f, zindex}, Color::white(), {1.0f, 0.0f}},
+            {{-1.0f, -1.0f, zindex}, Color::white(), {0.0f, 0.0f}},
+            {{-1.0f, 1.0f, zindex}, Color::white(), {0.0f, 1.0f}}
+#endif
+        };
+
+        VertexShader vertexShader =
+            VertexShader::fromDefaultShader(AtlasVertexShader::Fullscreen);
+        FragmentShader fragmentShader =
+            FragmentShader::fromDefaultShader(AtlasFragmentShader::Fullscreen);
+        vertexShader.fromDefaultShaderType = std::nullopt;
+        fragmentShader.fromDefaultShaderType = std::nullopt;
+        obj.createAndAttachProgram(vertexShader, fragmentShader);
+
+#ifdef METAL
+        std::vector<Index> indices = {0, 3, 1, 1, 3, 2};
+#else
+        std::vector<Index> indices = {0, 1, 3, 1, 2, 3};
+#endif
+        obj.attachTexture(*this);
+        obj.attachVertices(vertices);
+        obj.attachIndices(indices);
+        obj.renderOnlyTexture();
+        obj.show();
+        obj.initialize();
+        object = std::make_shared<CoreObject>(obj);
+        window.addPreferencedObject(object.get());
+    } else {
+        object->show();
+    }
+}
+
 Cubemap Cubemap::fromResourceGroup(ResourceGroup& group) {
     if (group.resources.size() != 6) {
         atlas_error("Cubemap requires exactly 6 resources");

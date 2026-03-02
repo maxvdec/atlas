@@ -8,7 +8,7 @@ set(JOLT_VERSION "5.5.0")
 message("Using Compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
 
 add_definitions(-DATLAS_VERSION="Alpha 7")
-add_definitions(-DOPAL_VERSION="2 Platonic")
+add_definitions(-DOPAL_VERSION="3 Tetrahedron")
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION OFF)
 
 # Enable color diagnostics for GCC and Clang
@@ -274,7 +274,7 @@ add_library(opal ${OPAL_SOURCES})
 target_link_libraries(opal PRIVATE glm::glm glfw)
 
 add_library(photon ${PHOTON_SOURCE})
-target_link_libraries(photon PRIVATER opal glm::glm)
+target_link_libraries(photon PRIVATE opal glm::glm)
 
 if (BACKEND_OPENGL)
     target_link_libraries(opal PRIVATE OpenGL::GL)

@@ -38,12 +38,12 @@ std::map<AtlasComputeShader, ShaderProgram> ShaderProgram::computeShaderCache =
 static const char *ATLAS_DDGI_COMP = R"(#include <metal_stdlib>
 using namespace metal;
 
-kernel void main0(texture2d<float, access::write> outTexture [[texture(0)]],
+kernel void main0(texture2d<half, access::write> outTexture [[texture(0)]],
                   uint2 gid [[thread_position_in_grid]]) {
     if (gid.x >= outTexture.get_width() || gid.y >= outTexture.get_height()) {
         return;
     }
-    outTexture.write(float4(1.0, 0.0, 0.0, 1.0), gid);
+    outTexture.write(half4(1.0h, 0.0h, 0.0h, 1.0h), gid);
 }
 )";
 #endif

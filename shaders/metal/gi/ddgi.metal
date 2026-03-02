@@ -10,7 +10,10 @@
 #include <metal_stdlib>
 using namespace metal;
 
-kernel void main0(texture2d<float, access::write> outTexture [[texture(0)]], uint2 gid [[[[thread_position_in_grid]]) {
-    float4 color = float4(1.0, 0.0, 0.0, 1.0);
-    outTexture.write(color, gid);
+kernel void main0(texture2d<half, access::write> outTexture [[texture(0)]],
+                  uint2 gid [[thread_position_in_grid]]) {
+    if (gid.x >= outTexture.get_width() || gid.y >= outTexture.get_height()) {
+        return;
+    }
+    outTexture.write(half4(1.0h, 0.0h, 0.0h, 1.0h), gid);
 }

@@ -20,6 +20,7 @@
 #include "bezel/bezel.h"
 #include "finewave/audio.h"
 #include "opal/opal.h"
+#include "photon/illuminate.h"
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 #include <array>
@@ -304,6 +305,10 @@ class Window {
      */
     std::vector<Monitor> static enumerateMonitors();
 
+#ifdef METAL
+    void enableGlobalIllumination();
+#endif
+
     /**
      * @brief Adds a renderable object to the window.
      *
@@ -539,6 +544,11 @@ class Window {
     std::shared_ptr<bezel::PhysicsWorld> physicsWorld;
 
     bool firstFrame = true;
+
+    bool usesGlobalIllumination = false;
+#ifdef METAL
+    std::shared_ptr<photon::GlobalIllumination> ddgiSystem;
+#endif
 
   private:
     std::shared_ptr<opal::CommandBuffer> activeCommandBuffer = nullptr;
