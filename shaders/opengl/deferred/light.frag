@@ -76,7 +76,7 @@ struct ShadowParameters {
     int textureIndex;
     float farPlane;
     vec3 lightPos;
-    bool isPointLight;
+    int lightType;
 };
 
 struct Environment {
@@ -372,23 +372,31 @@ void main() {
     float occlusion = clamp(ao * (0.2 + 0.8 * ssaoDesaturated), 0.0, 1.0);
     float lightingOcclusion = clamp(ssaoDesaturated, 0.2, 1.0);
 
-    float dirShadow = 0.0;
+    float directionalShadow = 0.0;
+    float spotShadow = 0.0;
+    float areaShadow = 0.0;
     float pointShadow = 0.0;
     for (int i = 0; i < shadowParamCount; ++i) {
-        if (shadowParams[i].isPointLight) {
+        if (shadowParams[i].lightType == 3) {
             pointShadow = max(pointShadow, calculatePointShadow(shadowParams[i], FragPos));
+        } else if (shadowParams[i].lightType == 1) {
+            spotShadow = max(spotShadow, calculateShadow(shadowParams[i], FragPos, N));
+        } else if (shadowParams[i].lightType == 2) {
+            areaShadow = max(areaShadow, calculateShadow(shadowParams[i], FragPos, N));
         } else {
-            dirShadow = max(dirShadow, calculateShadow(shadowParams[i], FragPos, N));
+            directionalShadow = max(directionalShadow, calculateShadow(shadowParams[i], FragPos, N));
         }
     }
-    dirShadow = clamp(dirShadow * 0.85, 0.0, 1.0);
+    directionalShadow = clamp(directionalShadow * 0.85, 0.0, 1.0);
+    spotShadow = clamp(spotShadow * 0.85, 0.0, 1.0);
+    areaShadow = clamp(areaShadow * 0.85, 0.0, 1.0);
     pointShadow = clamp(pointShadow * 0.85, 0.0, 1.0);
 
     vec3 directionalResult = vec3(0.0);
     for (int i = 0; i < directionalLightCount; ++i) {
         directionalResult += calcDirectionalLight(directionalLights[i], N, V, F0, albedo, metallic, roughness);
     }
-    directionalResult *= (1.0 - dirShadow);
+    directionalResult *= (1.0 - directionalShadow);
 
     vec3 pointResult = vec3(0.0);
     for (int i = 0; i < pointLightCount; ++i) {
@@ -400,6 +408,7 @@ void main() {
     for (int i = 0; i < spotlightCount; ++i) {
         spotResult += calcSpotLight(spotlights[i], FragPos, N, V, F0, albedo, metallic, roughness);
     }
+    spotResult *= (1.0 - spotShadow);
 
     vec3 areaResult = vec3(0.0);
     for (int i = 0; i < areaLightCount; ++i) {
@@ -432,6 +441,7 @@ void main() {
             }
         }
     }
+    areaResult *= (1.0 - areaShadow);
 
     vec3 rimResult = getRimLight(FragPos, N, V, F0, albedo, metallic, roughness);
     vec3 lighting = (directionalResult + pointResult + spotResult + areaResult + rimResult) * lightingOcclusion;

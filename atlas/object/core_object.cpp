@@ -760,7 +760,7 @@ void CoreObject::render(float dt,
 #else
             this->pipeline->setUniform1f(baseName + ".bias", shadowParams.bias);
 #endif
-            this->pipeline->setUniform1i(baseName + ".isPointLight", 0);
+            this->pipeline->setUniform1i(baseName + ".lightType", 0);
 
             boundParameters++;
             boundTextures++;
@@ -795,7 +795,42 @@ void CoreObject::render(float dt,
 #else
             this->pipeline->setUniform1f(baseName + ".bias", shadowParams.bias);
 #endif
-            this->pipeline->setUniform1i(baseName + ".isPointLight", 0);
+            this->pipeline->setUniform1i(baseName + ".lightType", 1);
+
+            boundParameters++;
+            boundTextures++;
+        }
+
+        for (auto *light : scene->areaLights) {
+            if (!light->doesCastShadows) {
+                continue;
+            }
+            if (light->shadowRenderTarget == nullptr) {
+                continue;
+            }
+            if (boundTextures >= 16) {
+                break;
+            }
+
+            std::string baseName =
+                "shadowParams[" + std::to_string(boundParameters) + "]";
+            this->pipeline->bindTexture2D(baseName + ".textureIndex",
+                                          light->shadowRenderTarget->texture.id,
+                                          boundTextures, id);
+            this->pipeline->setUniform1i(baseName + ".textureIndex",
+                                         boundTextures);
+            ShadowParams shadowParams = light->lastShadowParams;
+            this->pipeline->setUniformMat4f(baseName + ".lightView",
+                                            shadowParams.lightView);
+            this->pipeline->setUniformMat4f(baseName + ".lightProjection",
+                                            shadowParams.lightProjection);
+#ifdef METAL
+            this->pipeline->setUniform1f(baseName + ".bias0",
+                                         shadowParams.bias);
+#else
+            this->pipeline->setUniform1f(baseName + ".bias", shadowParams.bias);
+#endif
+            this->pipeline->setUniform1i(baseName + ".lightType", 2);
 
             boundParameters++;
             boundTextures++;
@@ -803,6 +838,9 @@ void CoreObject::render(float dt,
 
         for (auto *light : scene->pointLights) {
             if (!light->doesCastShadows) {
+                continue;
+            }
+            if (light->shadowRenderTarget == nullptr) {
                 continue;
             }
             if (boundTextures + 6 >= 16) {
@@ -821,7 +859,7 @@ void CoreObject::render(float dt,
             this->pipeline->setUniform3f(baseName + ".lightPos",
                                          light->position.x, light->position.y,
                                          light->position.z);
-            this->pipeline->setUniform1i(baseName + ".isPointLight", 1);
+            this->pipeline->setUniform1i(baseName + ".lightType", 3);
 
             boundParameters++;
             boundCubemaps++;

@@ -90,7 +90,7 @@ struct ShadowParameters {
     float farPlane;
     float _pad1;
     vec3 lightPos;
-    int isPointLight;
+    int lightType;
 };
 
 // ----- Textures -----
@@ -558,7 +558,7 @@ float calculateShadow(ShadowParameters shadowParam, vec4 fragPosLightSpace) {
 
     float currentDepth = projCoords.z;
 
-    vec3 lightDir = normalize(-directionalLights[0].direction);
+    vec3 lightDir = normalize((inverse(shadowParam.lightView) * vec4(0.0, 0.0, -1.0, 0.0)).xyz);
     vec3 normal = normalize(Normal);
     float biasValue = shadowParam.bias;
     float bias = max(biasValue * (1.0 - dot(normal, lightDir)), biasValue);
@@ -667,7 +667,7 @@ float calculatePointShadow(ShadowParameters shadowParam, vec3 fragPos)
 float calculateAllPointShadows(vec3 fragPos) {
     float totalShadow = 0.0;
     for (int i = 0; i < shadowParamCount; i++) {
-        if (shadowParams[i].isPointLight != 0) {
+        if (shadowParams[i].lightType == 3) {
             float shadow = calculatePointShadow(shadowParams[i], fragPos);
             totalShadow = max(totalShadow, shadow);
         }
@@ -734,17 +734,29 @@ void main() {
     vec3 F0 = vec3(0.04);
     F0 = mix(F0, albedo, metallic);
 
-    float dirShadow = 0.0;
+    float directionalShadow = 0.0;
+    float spotShadow = 0.0;
+    float areaShadow = 0.0;
     float pointShadow = 0.0;
 
     if (shadowParamCount > 0) {
         for (int i = 0; i < shadowParamCount; i++) {
-            if (shadowParams[i].isPointLight == 0) {
+            if (shadowParams[i].lightType == 0) {
                 vec4 fragPosLightSpace = shadowParams[i].lightProjection *
                         shadowParams[i].lightView *
                         vec4(FragPos, 1.0);
-                dirShadow = max(dirShadow, calculateShadow(shadowParams[i], fragPosLightSpace));
-            } else {
+                directionalShadow = max(directionalShadow, calculateShadow(shadowParams[i], fragPosLightSpace));
+            } else if (shadowParams[i].lightType == 1) {
+                vec4 fragPosLightSpace = shadowParams[i].lightProjection *
+                        shadowParams[i].lightView *
+                        vec4(FragPos, 1.0);
+                spotShadow = max(spotShadow, calculateShadow(shadowParams[i], fragPosLightSpace));
+            } else if (shadowParams[i].lightType == 2) {
+                vec4 fragPosLightSpace = shadowParams[i].lightProjection *
+                        shadowParams[i].lightView *
+                        vec4(FragPos, 1.0);
+                areaShadow = max(areaShadow, calculateShadow(shadowParams[i], fragPosLightSpace));
+            } else if (shadowParams[i].lightType == 3) {
                 pointShadow = max(pointShadow, calculatePointShadow(shadowParams[i], FragPos));
             }
         }
@@ -755,9 +767,9 @@ void main() {
 
     vec3 lighting = vec3(0.0);
 
-    lighting += calcAllDirectionalLights(N, V, albedo, metallic, roughness, F0, reflectivity) * (1.0 - dirShadow);
+    lighting += calcAllDirectionalLights(N, V, albedo, metallic, roughness, F0, reflectivity) * (1.0 - directionalShadow);
     lighting += calcAllPointLights(FragPos, N, V, albedo, metallic, roughness, F0, reflectivity) * (1.0 - pointShadow);
-    lighting += calcAllSpotLights(N, FragPos, V, viewDir, albedo, metallic, roughness, F0, reflectivity);
+    lighting += calcAllSpotLights(N, FragPos, V, viewDir, albedo, metallic, roughness, F0, reflectivity) * (1.0 - spotShadow);
     lighting += getRimLight(FragPos, N, V, F0, albedo, metallic, roughness);
 
     {
@@ -800,7 +812,7 @@ void main() {
                 }
             }
         }
-        lighting += areaResult;
+        lighting += areaResult * (1.0 - areaShadow);
     }
 
     float aoClamped = clamp(ao, 0.0, 1.0);

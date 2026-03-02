@@ -64,7 +64,7 @@ struct ShadowParameters {
     int textureIndex;
     float farPlane;
     vec3 lightPos;
-    bool isPointLight;
+    int lightType;
 };
 
 // ----- Textures -----
@@ -490,7 +490,7 @@ float calculatePointShadow(ShadowParameters shadowParam, vec3 fragPos)
 float calculateAllPointShadows(vec3 fragPos) {
     float totalShadow = 0.0;
     for (int i = 0; i < shadowParamCount; i++) {
-        if (shadowParams[i].isPointLight) {
+        if (shadowParams[i].lightType == 3) {
             float shadow = calculatePointShadow(shadowParams[i], fragPos);
             totalShadow = max(totalShadow, shadow);
         }
@@ -532,7 +532,7 @@ void main() {
     vec3 ambient = ambientLight.color.rgb * ambientLight.intensity * material.ambient;
     float dirShadow = 0.0;
     for (int i = 0; i < shadowParamCount; i++) {
-        if (!shadowParams[i].isPointLight) {
+        if (shadowParams[i].lightType != 3) {
             vec4 fragPosLightSpace = shadowParams[i].lightProjection *
                     shadowParams[i].lightView *
                     vec4(FragPos, 1.0);

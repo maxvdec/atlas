@@ -51,6 +51,42 @@ inline T radians(T d)
     return d * T(0.01745329251);
 }
 
+static inline __attribute__((always_inline))
+float spvDet2x2(float a1, float a2, float b1, float b2)
+{
+    return a1 * b2 - b1 * a2;
+}
+
+static inline __attribute__((always_inline))
+float spvDet3x3(float a1, float a2, float a3, float b1, float b2, float b3, float c1, float c2, float c3)
+{
+    return a1 * spvDet2x2(b2, b3, c2, c3) - b1 * spvDet2x2(a2, a3, c2, c3) + c1 * spvDet2x2(a2, a3, b2, b3);
+}
+
+static inline __attribute__((always_inline))
+float4x4 spvInverse4x4(float4x4 m)
+{
+    float4x4 adj;
+    adj[0][0] =  spvDet3x3(m[1][1], m[1][2], m[1][3], m[2][1], m[2][2], m[2][3], m[3][1], m[3][2], m[3][3]);
+    adj[0][1] = -spvDet3x3(m[0][1], m[0][2], m[0][3], m[2][1], m[2][2], m[2][3], m[3][1], m[3][2], m[3][3]);
+    adj[0][2] =  spvDet3x3(m[0][1], m[0][2], m[0][3], m[1][1], m[1][2], m[1][3], m[3][1], m[3][2], m[3][3]);
+    adj[0][3] = -spvDet3x3(m[0][1], m[0][2], m[0][3], m[1][1], m[1][2], m[1][3], m[2][1], m[2][2], m[2][3]);
+    adj[1][0] = -spvDet3x3(m[1][0], m[1][2], m[1][3], m[2][0], m[2][2], m[2][3], m[3][0], m[3][2], m[3][3]);
+    adj[1][1] =  spvDet3x3(m[0][0], m[0][2], m[0][3], m[2][0], m[2][2], m[2][3], m[3][0], m[3][2], m[3][3]);
+    adj[1][2] = -spvDet3x3(m[0][0], m[0][2], m[0][3], m[1][0], m[1][2], m[1][3], m[3][0], m[3][2], m[3][3]);
+    adj[1][3] =  spvDet3x3(m[0][0], m[0][2], m[0][3], m[1][0], m[1][2], m[1][3], m[2][0], m[2][2], m[2][3]);
+    adj[2][0] =  spvDet3x3(m[1][0], m[1][1], m[1][3], m[2][0], m[2][1], m[2][3], m[3][0], m[3][1], m[3][3]);
+    adj[2][1] = -spvDet3x3(m[0][0], m[0][1], m[0][3], m[2][0], m[2][1], m[2][3], m[3][0], m[3][1], m[3][3]);
+    adj[2][2] =  spvDet3x3(m[0][0], m[0][1], m[0][3], m[1][0], m[1][1], m[1][3], m[3][0], m[3][1], m[3][3]);
+    adj[2][3] = -spvDet3x3(m[0][0], m[0][1], m[0][3], m[1][0], m[1][1], m[1][3], m[2][0], m[2][1], m[2][3]);
+    adj[3][0] = -spvDet3x3(m[1][0], m[1][1], m[1][2], m[2][0], m[2][1], m[2][2], m[3][0], m[3][1], m[3][2]);
+    adj[3][1] =  spvDet3x3(m[0][0], m[0][1], m[0][2], m[2][0], m[2][1], m[2][2], m[3][0], m[3][1], m[3][2]);
+    adj[3][2] = -spvDet3x3(m[0][0], m[0][1], m[0][2], m[1][0], m[1][1], m[1][2], m[3][0], m[3][1], m[3][2]);
+    adj[3][3] =  spvDet3x3(m[0][0], m[0][1], m[0][2], m[1][0], m[1][1], m[1][2], m[2][0], m[2][1], m[2][2]);
+    float det = (adj[0][0] * m[0][0]) + (adj[0][1] * m[1][0]) + (adj[0][2] * m[2][0]) + (adj[0][3] * m[3][0]);
+    return (det != 0.0f) ? (adj * (1.0f / det)) : m;
+}
+
 struct ShadowParameters
 {
     float4x4 lightView;
@@ -60,7 +96,7 @@ struct ShadowParameters
     float farPlane;
     float _pad1;
     float3 lightPos;
-    int isPointLight;
+    int lightType;
 };
 
 struct Uniforms
@@ -162,7 +198,7 @@ struct ShadowParameters_1
     float farPlane;
     float _pad1;
     packed_float3 lightPos;
-    int isPointLight;
+    int lightType;
 };
 
 struct ShadowParametersUBO
@@ -557,7 +593,7 @@ float calculateShadow(thread const ShadowParameters& shadowParam, thread const f
         return 0.0;
     }
     float currentDepth = projCoords.z;
-    float3 lightDir = fast::normalize(-float3(_1083.directionalLights[0].direction));
+    float3 lightDir = fast::normalize(-(spvInverse4x4(shadowParam.lightView) * float4(0.0, 0.0, -1.0, 0.0)).xyz);
     float3 normal = fast::normalize(Normal);
     float biasValue = shadowParam.bias0;
     float bias0 = fast::max(biasValue * (1.0 - dot(normal, lightDir)), biasValue);
@@ -997,13 +1033,15 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Uniforms& _163 [[buf
     }
     float3 F0 = float3(0.039999999105930328369140625);
     F0 = mix(F0, albedo, float3(metallic));
-    float dirShadow = 0.0;
+    float directionalShadow = 0.0;
+    float spotShadow = 0.0;
+    float areaShadow = 0.0;
     float pointShadow = 0.0;
     if (_1073.shadowParamCount > 0)
     {
         for (int i_1 = 0; i_1 < _1073.shadowParamCount; i_1++)
         {
-            if (_1905.shadowParams[i_1].isPointLight == 0)
+            if (_1905.shadowParams[i_1].lightType == 0)
             {
                 float4 fragPosLightSpace = (_1905.shadowParams[i_1].lightProjection * _1905.shadowParams[i_1].lightView) * float4(in.FragPos, 1.0);
                 ShadowParameters _1934;
@@ -1014,10 +1052,42 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Uniforms& _163 [[buf
                 _1934.farPlane = _1905.shadowParams[i_1].farPlane;
                 _1934._pad1 = _1905.shadowParams[i_1]._pad1;
                 _1934.lightPos = float3(_1905.shadowParams[i_1].lightPos);
-                _1934.isPointLight = _1905.shadowParams[i_1].isPointLight;
+                _1934.lightType = _1905.shadowParams[i_1].lightType;
                 ShadowParameters param_7 = _1934;
                 float4 param_8 = fragPosLightSpace;
-                dirShadow = fast::max(dirShadow, calculateShadow(param_7, param_8, _163, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr, _1083, in.Normal, in.FragPos));
+                directionalShadow = fast::max(directionalShadow, calculateShadow(param_7, param_8, _163, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr, _1083, in.Normal, in.FragPos));
+            }
+            else if (_1905.shadowParams[i_1].lightType == 1)
+            {
+                float4 fragPosLightSpace = (_1905.shadowParams[i_1].lightProjection * _1905.shadowParams[i_1].lightView) * float4(in.FragPos, 1.0);
+                ShadowParameters _1934;
+                _1934.lightView = _1905.shadowParams[i_1].lightView;
+                _1934.lightProjection = _1905.shadowParams[i_1].lightProjection;
+                _1934.bias0 = _1905.shadowParams[i_1].bias0;
+                _1934.textureIndex = _1905.shadowParams[i_1].textureIndex;
+                _1934.farPlane = _1905.shadowParams[i_1].farPlane;
+                _1934._pad1 = _1905.shadowParams[i_1]._pad1;
+                _1934.lightPos = float3(_1905.shadowParams[i_1].lightPos);
+                _1934.lightType = _1905.shadowParams[i_1].lightType;
+                ShadowParameters param_7 = _1934;
+                float4 param_8 = fragPosLightSpace;
+                spotShadow = fast::max(spotShadow, calculateShadow(param_7, param_8, _163, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr, _1083, in.Normal, in.FragPos));
+            }
+            else if (_1905.shadowParams[i_1].lightType == 2)
+            {
+                float4 fragPosLightSpace = (_1905.shadowParams[i_1].lightProjection * _1905.shadowParams[i_1].lightView) * float4(in.FragPos, 1.0);
+                ShadowParameters _1934;
+                _1934.lightView = _1905.shadowParams[i_1].lightView;
+                _1934.lightProjection = _1905.shadowParams[i_1].lightProjection;
+                _1934.bias0 = _1905.shadowParams[i_1].bias0;
+                _1934.textureIndex = _1905.shadowParams[i_1].textureIndex;
+                _1934.farPlane = _1905.shadowParams[i_1].farPlane;
+                _1934._pad1 = _1905.shadowParams[i_1]._pad1;
+                _1934.lightPos = float3(_1905.shadowParams[i_1].lightPos);
+                _1934.lightType = _1905.shadowParams[i_1].lightType;
+                ShadowParameters param_7 = _1934;
+                float4 param_8 = fragPosLightSpace;
+                areaShadow = fast::max(areaShadow, calculateShadow(param_7, param_8, _163, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr, _1083, in.Normal, in.FragPos));
             }
             else
             {
@@ -1029,7 +1099,7 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Uniforms& _163 [[buf
                 _1945.farPlane = _1905.shadowParams[i_1].farPlane;
                 _1945._pad1 = _1905.shadowParams[i_1]._pad1;
                 _1945.lightPos = float3(_1905.shadowParams[i_1].lightPos);
-                _1945.isPointLight = _1905.shadowParams[i_1].isPointLight;
+                _1945.lightType = _1905.shadowParams[i_1].lightType;
                 ShadowParameters param_9 = _1945;
                 float3 param_10 = in.FragPos;
                 pointShadow = fast::max(pointShadow, calculatePointShadow(param_9, param_10, cubeMap1, cubeMap1Smplr, cubeMap2, cubeMap2Smplr, cubeMap3, cubeMap3Smplr, cubeMap4, cubeMap4Smplr, cubeMap5, cubeMap5Smplr));
@@ -1046,7 +1116,7 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Uniforms& _163 [[buf
     float param_15 = roughness;
     float3 param_16 = F0;
     float param_17 = reflectivity;
-    lighting += (calcAllDirectionalLights(param_11, param_12, param_13, param_14, param_15, param_16, param_17, _1073, _1083) * (1.0 - dirShadow));
+    lighting += (calcAllDirectionalLights(param_11, param_12, param_13, param_14, param_15, param_16, param_17, _1073, _1083) * (1.0 - directionalShadow));
     float3 param_18 = in.FragPos;
     float3 param_19 = N;
     float3 param_20 = V;
@@ -1065,7 +1135,7 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Uniforms& _163 [[buf
     float param_32 = roughness;
     float3 param_33 = F0;
     float param_34 = reflectivity;
-    lighting += calcAllSpotLights(param_26, param_27, param_28, param_29, param_30, param_31, param_32, param_33, param_34, _1073, _1268);
+    lighting += calcAllSpotLights(param_26, param_27, param_28, param_29, param_30, param_31, param_32, param_33, param_34, _1073, _1268) * (1.0 - spotShadow);
     float3 param_35 = in.FragPos;
     float3 param_36 = N;
     float3 param_37 = V;
@@ -1133,7 +1203,7 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Uniforms& _163 [[buf
             }
         }
     }
-    lighting += areaResult;
+    lighting += areaResult * (1.0 - areaShadow);
     float aoClamped = fast::clamp(ao, 0.0, 1.0);
     float aoWithFloor = fast::max(aoClamped, 0.20000000298023223876953125);
     float ambientIntensity = ambientLight.intensity;

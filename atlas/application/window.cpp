@@ -929,6 +929,9 @@ void Window::applyScene(Scene *scene) {
     this->cachedPointLightPositions.clear();
     this->cachedSpotlightPositions.clear();
     this->cachedSpotlightDirections.clear();
+    this->cachedAreaLightPositions.clear();
+    this->cachedAreaLightNormals.clear();
+    this->cachedAreaLightProperties.clear();
     this->lastShadowCasterSignature = 0;
     this->hasShadowCasterSignature = false;
     this->ssaoMapsDirty = true;
@@ -1242,6 +1245,55 @@ void Window::renderLightsToShadowMaps(
         }
     }
 
+    const auto &areaLights = this->currentScene->areaLights;
+    if (!lightsChanged) {
+        if (this->cachedAreaLightPositions.size() != areaLights.size() ||
+            this->cachedAreaLightNormals.size() != areaLights.size() ||
+            this->cachedAreaLightProperties.size() != areaLights.size()) {
+            lightsChanged = true;
+        } else {
+            for (size_t i = 0; i < areaLights.size(); ++i) {
+                if (areaLights.at(i) == nullptr) {
+                    bool cachedPosNonZero =
+                        glm::length(this->cachedAreaLightPositions.at(i)) >
+                        positionThreshold;
+                    bool cachedNormalNonZero =
+                        glm::length(this->cachedAreaLightNormals.at(i)) >
+                        directionThreshold;
+                    bool cachedPropsNonZero =
+                        glm::length(this->cachedAreaLightProperties.at(i)) >
+                        0.01f;
+                    if (cachedPosNonZero || cachedNormalNonZero ||
+                        cachedPropsNonZero) {
+                        lightsChanged = true;
+                        break;
+                    }
+                    continue;
+                }
+
+                glm::vec3 pos = areaLights.at(i)->position.toGlm();
+                glm::vec3 normal = areaLights.at(i)->getNormal().toGlm();
+                if (glm::length(normal) < 1e-6f) {
+                    normal = glm::vec3(0.0f, 1.0f, 0.0f);
+                } else {
+                    normal = glm::normalize(normal);
+                }
+                glm::vec4 props(static_cast<float>(areaLights.at(i)->size.width),
+                                static_cast<float>(areaLights.at(i)->size.height),
+                                areaLights.at(i)->range, areaLights.at(i)->angle);
+                if (glm::length(pos - this->cachedAreaLightPositions.at(i)) >
+                        positionThreshold ||
+                    glm::length(normal - this->cachedAreaLightNormals.at(i)) >
+                        directionThreshold ||
+                    glm::length(props - this->cachedAreaLightProperties.at(i)) >
+                        0.01f) {
+                    lightsChanged = true;
+                    break;
+                }
+            }
+        }
+    }
+
     const std::size_t shadowCasterSignature = computeShadowCasterSignature(
         this->renderables, this->lateForwardRenderables);
     const bool castersMoved = !this->hasShadowCasterSignature ||
@@ -1436,6 +1488,70 @@ void Window::renderLightsToShadowMaps(
         commandBuffer->endPass();
     }
 
+    std::shared_ptr<opal::Pipeline> areaLightsPipeline =
+        opal::Pipeline::create();
+
+    for (auto &light : this->currentScene->areaLights) {
+        if (!light->doesCastShadows) {
+            continue;
+        }
+        RenderTarget *shadowRenderTarget = light->shadowRenderTarget;
+        if (shadowRenderTarget == nullptr ||
+            shadowRenderTarget->getFramebuffer() == nullptr) {
+            continue;
+        }
+        renderedShadows = true;
+        areaLightsPipeline->setViewport(
+            0, 0, shadowRenderTarget->texture.creationData.width,
+            shadowRenderTarget->texture.creationData.height);
+        areaLightsPipeline->setCullMode(opal::CullMode::None);
+        areaLightsPipeline->setFrontFace(this->frontFace);
+        areaLightsPipeline->enableDepthTest(true);
+        areaLightsPipeline->setDepthCompareOp(opal::CompareOp::Less);
+        areaLightsPipeline->enablePolygonOffset(true);
+        areaLightsPipeline->setPolygonOffset(1.0f, 1.0f);
+        areaLightsPipeline =
+            this->depthProgram.requestPipeline(areaLightsPipeline);
+
+        auto shadowRenderPass = opal::RenderPass::create();
+        shadowRenderPass->setFramebuffer(shadowRenderTarget->getFramebuffer());
+        commandBuffer->beginPass(shadowRenderPass);
+
+        shadowRenderTarget->bind();
+        commandBuffer->clearDepth(1.0f);
+        ShadowParams lightParams = light->calculateLightSpaceMatrix();
+        glm::mat4 lightView = lightParams.lightView;
+        glm::mat4 lightProjection = lightParams.lightProjection;
+        light->lastShadowParams = lightParams;
+
+        for (auto &obj : this->renderables) {
+            if (obj->renderLateForward) {
+                continue;
+            }
+            if (!obj->canCastShadows()) {
+                continue;
+            }
+
+            obj->setPipeline(areaLightsPipeline);
+            obj->setProjectionMatrix(lightProjection);
+            obj->setViewMatrix(lightView);
+            obj->render(getDeltaTime(), commandBuffer, false);
+        }
+
+        for (auto &obj : this->lateForwardRenderables) {
+            if (!obj->canCastShadows()) {
+                continue;
+            }
+
+            obj->setPipeline(areaLightsPipeline);
+            obj->setProjectionMatrix(lightProjection);
+            obj->setViewMatrix(lightView);
+            obj->render(getDeltaTime(), commandBuffer, false);
+        }
+
+        commandBuffer->endPass();
+    }
+
     std::shared_ptr<opal::Pipeline> pointLightPipeline =
         opal::Pipeline::create();
 
@@ -1598,6 +1714,33 @@ void Window::renderLightsToShadowMaps(
         }
         this->cachedSpotlightPositions.push_back(light->position.toGlm());
         this->cachedSpotlightDirections.push_back(light->direction.toGlm());
+    }
+
+    this->cachedAreaLightPositions.clear();
+    this->cachedAreaLightNormals.clear();
+    this->cachedAreaLightProperties.clear();
+    this->cachedAreaLightPositions.reserve(areaLights.size());
+    this->cachedAreaLightNormals.reserve(areaLights.size());
+    this->cachedAreaLightProperties.reserve(areaLights.size());
+    for (auto *light : areaLights) {
+        if (light == nullptr) {
+            this->cachedAreaLightPositions.emplace_back(0.0f, 0.0f, 0.0f);
+            this->cachedAreaLightNormals.emplace_back(0.0f, 0.0f, 0.0f);
+            this->cachedAreaLightProperties.emplace_back(0.0f, 0.0f, 0.0f,
+                                                         0.0f);
+            continue;
+        }
+        glm::vec3 normal = light->getNormal().toGlm();
+        if (glm::length(normal) < 1e-6f) {
+            normal = glm::vec3(0.0f, 1.0f, 0.0f);
+        } else {
+            normal = glm::normalize(normal);
+        }
+        this->cachedAreaLightPositions.push_back(light->position.toGlm());
+        this->cachedAreaLightNormals.push_back(normal);
+        this->cachedAreaLightProperties.emplace_back(
+            static_cast<float>(light->size.width),
+            static_cast<float>(light->size.height), light->range, light->angle);
     }
 
     this->lastShadowCasterSignature = shadowCasterSignature;

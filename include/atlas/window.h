@@ -667,6 +667,9 @@ class Window {
     std::vector<glm::vec3> cachedPointLightPositions;
     std::vector<glm::vec3> cachedSpotlightPositions;
     std::vector<glm::vec3> cachedSpotlightDirections;
+    std::vector<glm::vec3> cachedAreaLightPositions;
+    std::vector<glm::vec3> cachedAreaLightNormals;
+    std::vector<glm::vec4> cachedAreaLightProperties;
     std::size_t lastShadowCasterSignature = 0;
     bool hasShadowCasterSignature = false;
 

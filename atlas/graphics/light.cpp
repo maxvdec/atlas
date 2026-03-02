@@ -385,6 +385,60 @@ std::vector<glm::mat4> Light::calculateShadowTransforms() const {
     return shadowTransforms;
 }
 
+void AreaLight::castShadows(Window& window, int resolution) {
+    atlas_log("Enabling shadow casting for area light (resolution: " +
+        std::to_string(resolution) + ")");
+    if (this->shadowRenderTarget == nullptr) {
+        this->shadowRenderTarget =
+            new RenderTarget(window, RenderTargetType::Shadow, resolution);
+    }
+    this->doesCastShadows = true;
+}
+
+ShadowParams AreaLight::calculateLightSpaceMatrix() const {
+    glm::vec3 rightAxis = glm::normalize(this->right.toGlm());
+    glm::vec3 upAxis = glm::normalize(this->up.toGlm());
+    glm::vec3 normal = glm::cross(rightAxis, upAxis);
+    if (glm::length(normal) < 1e-6f) {
+        normal = glm::vec3(0.0f, -1.0f, 0.0f);
+    } else {
+        normal = glm::normalize(normal);
+    }
+
+    float clampedRange = std::max(1.0f, this->range);
+    glm::vec3 lightPos = this->position.toGlm();
+    float farPlane = clampedRange;
+    if (this->castsBothSides) {
+        lightPos -= normal * (clampedRange * 0.5f);
+        farPlane = clampedRange * 2.0f;
+    }
+
+    glm::vec3 viewUp = upAxis;
+    if (glm::abs(glm::dot(viewUp, normal)) > 0.98f) {
+        viewUp = glm::vec3(0.0f, 1.0f, 0.0f);
+        if (glm::abs(glm::dot(viewUp, normal)) > 0.98f) {
+            viewUp = glm::vec3(1.0f, 0.0f, 0.0f);
+        }
+    }
+
+    glm::mat4 lightView = glm::lookAt(lightPos, lightPos + normal, viewUp);
+    float halfWidth = std::max(0.5f, static_cast<float>(this->size.width) * 0.5f + clampedRange * 0.5f);
+    float halfHeight = std::max(0.5f, static_cast<float>(this->size.height) * 0.5f + clampedRange * 0.5f);
+    float nearPlane = 0.05f;
+    farPlane = std::max(nearPlane + 1.0f, farPlane);
+
+    glm::mat4 lightProjection =
+        glm::ortho(-halfWidth, halfWidth, -halfHeight, halfHeight, nearPlane,
+                   farPlane);
+
+    ShadowParams params;
+    params.lightView = lightView;
+    params.lightProjection = lightProjection;
+    params.bias = 0.001f;
+    params.farPlane = 0.0f;
+    return params;
+}
+
 void AreaLight::createDebugObject() {
     double w = this->size.width * 0.5;
     double h = this->size.height * 0.5;

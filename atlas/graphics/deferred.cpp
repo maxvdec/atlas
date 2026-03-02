@@ -520,7 +520,7 @@ void Window::deferredRendering(
         gpuShadow.farPlane = 0.0f;
         gpuShadow._pad1 = 0.0f;
         gpuShadow.lightPos = glm::vec3(0.0f);
-        gpuShadow.isPointLight = 0;
+        gpuShadow.lightType = 0;
         gpuShadowParams.push_back(gpuShadow);
 #else
         lightPipeline->setUniformMat4f(baseName + ".lightView",
@@ -528,7 +528,7 @@ void Window::deferredRendering(
         lightPipeline->setUniformMat4f(baseName + ".lightProjection",
                                        shadowParams.lightProjection);
         lightPipeline->setUniform1f(baseName + ".bias", shadowParams.bias);
-        lightPipeline->setUniform1i(baseName + ".isPointLight", 0);
+        lightPipeline->setUniform1i(baseName + ".lightType", 0);
 #endif
 
         boundParameters++;
@@ -568,7 +568,7 @@ void Window::deferredRendering(
         gpuShadow.farPlane = 0.0f;
         gpuShadow._pad1 = 0.0f;
         gpuShadow.lightPos = glm::vec3(0.0f);
-        gpuShadow.isPointLight = 0;
+        gpuShadow.lightType = 1;
         gpuShadowParams.push_back(gpuShadow);
 #else
         lightPipeline->setUniformMat4f(baseName + ".lightView",
@@ -576,7 +576,54 @@ void Window::deferredRendering(
         lightPipeline->setUniformMat4f(baseName + ".lightProjection",
                                        shadowParams.lightProjection);
         lightPipeline->setUniform1f(baseName + ".bias", shadowParams.bias);
-        lightPipeline->setUniform1i(baseName + ".isPointLight", 0);
+        lightPipeline->setUniform1i(baseName + ".lightType", 1);
+#endif
+
+        boundParameters++;
+        shadow2DSamplerIndex++;
+        boundTextures++;
+    }
+
+    for (auto* light : scene->areaLights) {
+        if (!light->doesCastShadows) {
+            continue;
+        }
+        if (light->shadowRenderTarget == nullptr) {
+            continue;
+        }
+        if (boundTextures >= 16) {
+            break;
+        }
+        if (shadow2DSamplerIndex >= 5) {
+            break;
+        }
+
+        std::string baseName =
+            "shadowParams[" + std::to_string(boundParameters) + "]";
+        lightPipeline->bindTexture2D(
+            "texture" + std::to_string(shadow2DSamplerIndex + 1),
+            light->shadowRenderTarget->texture.id, boundTextures);
+        lightPipeline->setUniform1i(baseName + ".textureIndex",
+                                    shadow2DSamplerIndex);
+        ShadowParams shadowParams = light->lastShadowParams;
+#ifdef METAL
+        GPUShadowParams gpuShadow{};
+        gpuShadow.lightView = shadowParams.lightView;
+        gpuShadow.lightProjection = shadowParams.lightProjection;
+        gpuShadow.bias = shadowParams.bias;
+        gpuShadow.textureIndex = shadow2DSamplerIndex;
+        gpuShadow.farPlane = 0.0f;
+        gpuShadow._pad1 = 0.0f;
+        gpuShadow.lightPos = glm::vec3(0.0f);
+        gpuShadow.lightType = 2;
+        gpuShadowParams.push_back(gpuShadow);
+#else
+        lightPipeline->setUniformMat4f(baseName + ".lightView",
+                                       shadowParams.lightView);
+        lightPipeline->setUniformMat4f(baseName + ".lightProjection",
+                                       shadowParams.lightProjection);
+        lightPipeline->setUniform1f(baseName + ".bias", shadowParams.bias);
+        lightPipeline->setUniform1i(baseName + ".lightType", 2);
 #endif
 
         boundParameters++;
@@ -612,13 +659,13 @@ void Window::deferredRendering(
         gpuShadow.lightPos = glm::vec3(static_cast<float>(light->position.x),
                                        static_cast<float>(light->position.y),
                                        static_cast<float>(light->position.z));
-        gpuShadow.isPointLight = 1;
+        gpuShadow.lightType = 3;
         gpuShadowParams.push_back(gpuShadow);
 #else
         lightPipeline->setUniform1f(baseName + ".farPlane", light->distance);
         lightPipeline->setUniform3f(baseName + ".lightPos", light->position.x,
                                     light->position.y, light->position.z);
-        lightPipeline->setUniform1i(baseName + ".isPointLight", 1);
+        lightPipeline->setUniform1i(baseName + ".lightType", 3);
 #endif
 
         boundParameters++;

@@ -113,7 +113,7 @@ struct alignas(16) GPUShadowParams {
     float farPlane;
     float _pad1;
     glm::vec3 lightPos;
-    int isPointLight;
+    int lightType;
 };
 
 // ============================================================================
@@ -652,13 +652,18 @@ struct AreaLight {
      */
     void createDebugObject();
     void addDebugObject(Window& window);
+    void castShadows(Window& window, int resolution = 2048);
 
     /**
      * @brief Optional debug object visualizing the area light.
      */
     std::shared_ptr<CoreObject> debugObject = nullptr;
+    RenderTarget* shadowRenderTarget = nullptr;
+    ShadowParams lastShadowParams;
 
 private:
+    bool doesCastShadows = false;
+    ShadowParams calculateLightSpaceMatrix() const;
     /**
      * @brief Recompute right/up from the current rotation to keep a coherent
      * frame.
@@ -686,6 +691,9 @@ private:
         right = Magnitude3d::fromGlm(R);
         up = Magnitude3d::fromGlm(U);
     }
+
+    friend class Window;
+    friend class CoreObject;
 };
 
 #endif // ATLAS_LIGHT_H
