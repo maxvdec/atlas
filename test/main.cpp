@@ -133,8 +133,12 @@ class BallBehavior : public Component {
 
 class MainScene : public Scene {
     CoreObject ground;
-    CoreObject ball;
-    CoreObject ball2;
+    CoreObject wallLeft;
+    CoreObject wallRight;
+    CoreObject wallBack;
+    CoreObject cieling;
+    CoreObject tallBox;
+    CoreObject cubeBox;
     DirectionalLight light;
     Camera camera;
     CoreObject lightObject;
@@ -194,7 +198,7 @@ class MainScene : public Scene {
         return Cubemap::fromResourceGroup(group);
     }
 
-#define COZY_LIGHT_COLOR Color(1.0f, 0.9f, 0.4f)
+#define COZY_LIGHT_COLOR Color(1.0f, 0.8f, 0.4f)
 
     void initialize(Window &window) override {
         Environment env;
@@ -207,25 +211,79 @@ class MainScene : public Scene {
         Workspace::get().setRootPath(std::string(TEST_PATH) + "/resources/");
 
         camera = Camera();
-        camera.setPosition({-5.0f, 1.0f, 0.0f});
-        camera.lookAt({0.0f, 1.0f, 0.0f});
-        camera.farClip = 1000.f;
+        camera.setPosition({0.0f, 1.0f, -4.f});
+        camera.lookAt({0.0f, 1.0f, 0.2f});
+        camera.farClip = 100.0f;
         window.setCamera(&camera);
 
         areaLight = AreaLight();
-        areaLight.position = {0.0f, 2.f, 0.f};
+        areaLight.position = {0.0f, 1.98f, 0.0f};
         areaLight.setColor(COZY_LIGHT_COLOR);
         areaLight.intensity = 1.0f;
-        areaLight.range = 5.0f;
+        areaLight.range = 4.5f;
+        areaLight.size = {0.56f, 0.36f};
+        areaLight.angle = 88.0f;
+        areaLight.castsBothSides = false;
+        areaLight.setRotation({90.0f, 0.0f, 0.0f});
+        areaLight.castShadows(window, 2048);
         this->addAreaLight(&areaLight);
-        areaLight.rotate({90.0f, 0.0f, 0.0f});
         areaLight.createDebugObject();
         areaLight.addDebugObject(window);
 
-        ground = createBox({2.0f, 0.1f, 2.0f});
-        ground.material.albedo = Color::white();
-        ground.setPosition({0.0f, -0.1f, 0.0f});
+        const Color wallWhite = Color(0.92f, 0.92f, 0.92f);
+        const Color wallRed = Color(0.63f, 0.07f, 0.05f);
+        const Color wallGreen = Color(0.14f, 0.45f, 0.09f);
+
+        ground = createBox({2.0f, 0.05f, 2.0f});
+        ground.material.albedo = wallWhite;
+        ground.material.roughness = 0.88f;
+        ground.material.metallic = 0.0f;
+        ground.setPosition({0.0f, -0.025f, 0.0f});
         window.addObject(&ground);
+
+        cieling = createBox({2.0f, 0.05f, 2.0f});
+        cieling.material.albedo = wallWhite;
+        cieling.material.roughness = 0.9f;
+        cieling.material.metallic = 0.0f;
+        cieling.setPosition({0.0f, 2.025f, 0.0f});
+        window.addObject(&cieling);
+
+        wallLeft = createBox({0.05f, 2.0f, 2.0f});
+        wallLeft.material.albedo = wallRed;
+        wallLeft.material.roughness = 0.92f;
+        wallLeft.material.metallic = 0.0f;
+        wallLeft.setPosition({-1.025f, 1.0f, 0.0f});
+        window.addObject(&wallLeft);
+
+        wallRight = createBox({0.05f, 2.0f, 2.0f});
+        wallRight.material.albedo = wallGreen;
+        wallRight.material.roughness = 0.92f;
+        wallRight.material.metallic = 0.0f;
+        wallRight.setPosition({1.025f, 1.0f, 0.0f});
+        window.addObject(&wallRight);
+
+        wallBack = createBox({2.0f, 2.0f, 0.05f});
+        wallBack.material.albedo = wallWhite;
+        wallBack.material.roughness = 0.92f;
+        wallBack.material.metallic = 0.0f;
+        wallBack.setPosition({0.0f, 1.0f, 1.025f});
+        window.addObject(&wallBack);
+
+        tallBox = createBox({0.56f, 1.2f, 0.56f});
+        tallBox.material.albedo = wallWhite;
+        tallBox.material.roughness = 0.8f;
+        tallBox.material.metallic = 0.0f;
+        tallBox.setPosition({-0.42f, 0.6f, 0.5f});
+        tallBox.setRotation({0.0f, -16.0f, 0.0f});
+        window.addObject(&tallBox);
+
+        cubeBox = createBox({0.6f, 0.6f, 0.6f});
+        cubeBox.material.albedo = wallWhite;
+        cubeBox.material.roughness = 0.8f;
+        cubeBox.material.metallic = 0.0f;
+        cubeBox.setPosition({0.42f, 0.3f, -0.5f});
+        cubeBox.setRotation({0.0f, 11.0f, 0.0f});
+        window.addObject(&cubeBox);
 
         Resource fontResource = Workspace::get().createResource(
             "arial.ttf", "Arial", ResourceType::Font);
@@ -238,7 +296,7 @@ class MainScene : public Scene {
 
         this->setAmbientIntensity(0.0f);
 
-        frameBuffer = RenderTarget(window, RenderTargetType::Scene);
+        frameBuffer = RenderTarget(window, RenderTargetType::Multisampled);
         window.addRenderTarget(&frameBuffer);
         frameBuffer.display(window);
 
