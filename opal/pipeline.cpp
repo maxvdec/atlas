@@ -312,9 +312,8 @@ void updateMetalUniform(Pipeline *pipeline, const std::string &name,
 
     auto &pipelineState = metal::pipelineState(pipeline);
     for (const auto &location : locations) {
-        auto writeStage = [&](bool fragmentStage) {
-            uint32_t key =
-                metal::stageBindingKey(location.bufferIndex, fragmentStage);
+        auto writeStage = [&](metal::MetalProgramStage stage) {
+            uint32_t key = metal::stageBindingKey(location.bufferIndex, stage);
             auto &bytes = pipelineState.uniformData[key];
 
             size_t declaredSize = 0;
@@ -337,10 +336,13 @@ void updateMetalUniform(Pipeline *pipeline, const std::string &name,
         };
 
         if (location.vertexStage) {
-            writeStage(false);
+            writeStage(metal::MetalProgramStage::Vertex);
         }
         if (location.fragmentStage) {
-            writeStage(true);
+            writeStage(metal::MetalProgramStage::Fragment);
+        }
+        if (location.computeStage) {
+            writeStage(metal::MetalProgramStage::Compute);
         }
     }
 }
@@ -403,6 +405,12 @@ void Pipeline::setRasterizerMode(RasterizerMode mode) {
 void Pipeline::setCullMode(CullMode mode) { this->cullMode = mode; }
 
 void Pipeline::setFrontFace(FrontFace face) { this->frontFace = face; }
+
+void Pipeline::setComputeThreadgroupSize(uint x, uint y, uint z) {
+    this->computeThreadgroupX = std::max<uint>(1, x);
+    this->computeThreadgroupY = std::max<uint>(1, y);
+    this->computeThreadgroupZ = std::max<uint>(1, z);
+}
 
 void Pipeline::enableDepthTest(bool enabled) {
     this->depthTestEnabled = enabled;
@@ -640,6 +648,9 @@ void Pipeline::build() {
     state.viewportY = this->viewportY;
     state.viewportWidth = this->viewportWidth;
     state.viewportHeight = this->viewportHeight;
+    if (shaderProgram->isComputeProgram()) {
+        return;
+    }
 
     if (state.vertexDescriptor != nullptr) {
         state.vertexDescriptor->release();
@@ -798,6 +809,9 @@ void Pipeline::bind() {
         state.texturesByUnit.clear();
     }
     state.suppressTextureReset = false;
+    if (shaderProgram != nullptr && shaderProgram->isComputeProgram()) {
+        return;
+    }
 
     if (Device::globalInstance != nullptr) {
         auto &deviceState = metal::deviceState(Device::globalInstance);
@@ -851,6 +865,15 @@ bool Pipeline::operator==(const std::shared_ptr<Pipeline> &pipeline) const {
         return false;
     }
     if (this->vertexBinding.stride != pipeline->vertexBinding.stride) {
+        return false;
+    }
+    if (this->computeThreadgroupX != pipeline->computeThreadgroupX) {
+        return false;
+    }
+    if (this->computeThreadgroupY != pipeline->computeThreadgroupY) {
+        return false;
+    }
+    if (this->computeThreadgroupZ != pipeline->computeThreadgroupZ) {
         return false;
     }
     return true;

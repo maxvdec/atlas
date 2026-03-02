@@ -320,12 +320,23 @@ computeLayout(const std::string &name,
     return layout;
 }
 
-std::vector<BufferBinding> parseStageBufferBindings(const std::string &source,
-                                                    bool isVertexStage) {
+std::regex stageStartRegexFor(MetalProgramStage stage) {
+    switch (stage) {
+    case MetalProgramStage::Vertex:
+        return std::regex(R"(\bvertex\b[^\(\{;]*\()");
+    case MetalProgramStage::Fragment:
+        return std::regex(R"(\bfragment\b[^\(\{;]*\()");
+    case MetalProgramStage::Compute:
+        return std::regex(R"(\bkernel\b[^\(\{;]*\()");
+    default:
+        return std::regex(R"(\bvertex\b[^\(\{;]*\()");
+    }
+}
+
+std::vector<BufferBinding>
+parseStageBufferBindings(const std::string &source, MetalProgramStage stage) {
     std::vector<BufferBinding> bindings;
-    const std::regex stageStartRegex(isVertexStage
-                                         ? R"(\bvertex\b[^\(\{;]*\()"
-                                         : R"(\bfragment\b[^\(\{;]*\()");
+    const std::regex stageStartRegex = stageStartRegexFor(stage);
     const std::regex bufferRegex(
         R"((?:constant|device)\s+([A-Za-z_][A-Za-z0-9_]*)\s*(?:\*|&)\s*([A-Za-z_][A-Za-z0-9_]*)\s*\[\[buffer\((\d+)\)\]\])");
 
@@ -350,8 +361,9 @@ std::vector<BufferBinding> parseStageBufferBindings(const std::string &source,
             binding.structName = (*it)[1].str();
             binding.instanceName = (*it)[2].str();
             binding.index = static_cast<uint32_t>(std::stoul((*it)[3].str()));
-            binding.vertexStage = isVertexStage;
-            binding.fragmentStage = !isVertexStage;
+            binding.vertexStage = stage == MetalProgramStage::Vertex;
+            binding.fragmentStage = stage == MetalProgramStage::Fragment;
+            binding.computeStage = stage == MetalProgramStage::Compute;
             bindings.push_back(binding);
         }
     }
@@ -360,12 +372,10 @@ std::vector<BufferBinding> parseStageBufferBindings(const std::string &source,
 }
 
 void parseStageTextureBindings(
-    const std::string &source, bool isVertexStage,
+    const std::string &source, MetalProgramStage stage,
     std::unordered_map<std::string, int> &bindings,
     std::unordered_map<int, TextureType> &bindingTypes) {
-    const std::regex stageStartRegex(isVertexStage
-                                         ? R"(\bvertex\b[^\(\{;]*\()"
-                                         : R"(\bfragment\b[^\(\{;]*\()");
+    const std::regex stageStartRegex = stageStartRegexFor(stage);
     const std::regex textureRegex(
         R"(([A-Za-z_][A-Za-z0-9_:]*(?:<[^>]+>)?)\s+([A-Za-z_][A-Za-z0-9_]*)\s*\[\[texture\((\d+)\)\]\])");
 
@@ -692,6 +702,8 @@ void releaseProgramState(ShaderProgram *program) {
     ProgramState &state = it->second;
     state.vertexFunction = nullptr;
     state.fragmentFunction = nullptr;
+    state.computeFunction = nullptr;
+    state.computeProgram = false;
     state.layouts.clear();
     state.bindings.clear();
     state.bindingSize.clear();
@@ -717,6 +729,10 @@ void releasePipelineState(Pipeline *pipeline) {
         }
     }
     state.renderPipelineCache.clear();
+    if (state.computePipelineState != nullptr) {
+        state.computePipelineState->release();
+        state.computePipelineState = nullptr;
+    }
     for (auto &bufferEntry : state.uniformBuffers) {
         if (bufferEntry.second != nullptr) {
             bufferEntry.second->release();
@@ -761,6 +777,10 @@ void releaseCommandBufferState(CommandBuffer *commandBuffer) {
     if (state.encoder != nullptr) {
         state.encoder->endEncoding();
         state.encoder = nullptr;
+    }
+    if (state.computeEncoder != nullptr) {
+        state.computeEncoder->endEncoding();
+        state.computeEncoder = nullptr;
     }
     if (state.passDescriptor != nullptr) {
         state.passDescriptor->release();
@@ -811,8 +831,14 @@ std::shared_ptr<Texture> getTextureFromHandle(uint32_t handle) {
     return texture;
 }
 
-uint32_t stageBindingKey(uint32_t index, bool fragmentStage) {
-    return (fragmentStage ? 0x80000000u : 0u) | (index & 0x7fffffffu);
+uint32_t stageBindingKey(uint32_t index, MetalProgramStage stage) {
+    uint32_t stageBits = 0u;
+    if (stage == MetalProgramStage::Fragment) {
+        stageBits = 0x80000000u;
+    } else if (stage == MetalProgramStage::Compute) {
+        stageBits = 0x40000000u;
+    }
+    return stageBits | (index & 0x3fffffffu);
 }
 
 MTL::PixelFormat textureFormatToPixelFormat(TextureFormat format) {
@@ -964,6 +990,8 @@ bool parseProgramLayouts(const std::string &vertexSource,
     state.textureBindings.clear();
     state.textureTypesByBinding.clear();
     state.uniformResolutionCache.clear();
+    state.computeProgram = false;
+    state.computeFunction = nullptr;
 
     std::unordered_map<std::string, RawStruct> rawStructs =
         parseRawStructs(vertexSource);
@@ -996,18 +1024,19 @@ bool parseProgramLayouts(const std::string &vertexSource,
         }
     }
 
-    std::vector<BufferBinding> vertexBindings =
-        parseStageBufferBindings(vertexSource, true);
-    std::vector<BufferBinding> fragmentBindings =
-        parseStageBufferBindings(fragmentSource, false);
+    std::vector<BufferBinding> vertexBindings = parseStageBufferBindings(
+        vertexSource, MetalProgramStage::Vertex);
+    std::vector<BufferBinding> fragmentBindings = parseStageBufferBindings(
+        fragmentSource, MetalProgramStage::Fragment);
     for (BufferBinding &binding : fragmentBindings) {
         if (conflictingStructs.contains(binding.structName)) {
             binding.structName += "__frag";
         }
     }
-    parseStageTextureBindings(vertexSource, true, state.textureBindings,
-                              state.textureTypesByBinding);
-    parseStageTextureBindings(fragmentSource, false, state.textureBindings,
+    parseStageTextureBindings(vertexSource, MetalProgramStage::Vertex,
+                              state.textureBindings, state.textureTypesByBinding);
+    parseStageTextureBindings(fragmentSource, MetalProgramStage::Fragment,
+                              state.textureBindings,
                               state.textureTypesByBinding);
     vertexBindings.insert(vertexBindings.end(), fragmentBindings.begin(),
                           fragmentBindings.end());
@@ -1021,6 +1050,8 @@ bool parseProgramLayouts(const std::string &vertexSource,
                     existing.vertexStage || binding.vertexStage;
                 existing.fragmentStage =
                     existing.fragmentStage || binding.fragmentStage;
+                existing.computeStage =
+                    existing.computeStage || binding.computeStage;
                 bool existingAnonymous = existing.instanceName.empty() ||
                                          existing.instanceName[0] == '_';
                 bool incomingNamed = !binding.instanceName.empty() &&
@@ -1047,18 +1078,89 @@ bool parseProgramLayouts(const std::string &vertexSource,
         }
         state.layouts[binding.structName] = layout;
         if (binding.vertexStage) {
-            uint32_t vertexKey = stageBindingKey(binding.index, false);
+            uint32_t vertexKey =
+                stageBindingKey(binding.index, MetalProgramStage::Vertex);
             state.bindingSize[vertexKey] =
                 std::max(state.bindingSize[vertexKey], layout.size);
         }
         if (binding.fragmentStage) {
-            uint32_t fragmentKey = stageBindingKey(binding.index, true);
+            uint32_t fragmentKey =
+                stageBindingKey(binding.index, MetalProgramStage::Fragment);
             state.bindingSize[fragmentKey] =
                 std::max(state.bindingSize[fragmentKey], layout.size);
+        }
+        if (binding.computeStage) {
+            uint32_t computeKey =
+                stageBindingKey(binding.index, MetalProgramStage::Compute);
+            state.bindingSize[computeKey] =
+                std::max(state.bindingSize[computeKey], layout.size);
         }
     }
 
     return state.vertexFunction != nullptr && state.fragmentFunction != nullptr;
+}
+
+bool parseComputeProgramLayouts(const std::string &computeSource,
+                                ProgramState &state) {
+    state.layouts.clear();
+    state.bindings.clear();
+    state.bindingSize.clear();
+    state.textureBindings.clear();
+    state.textureTypesByBinding.clear();
+    state.uniformResolutionCache.clear();
+    state.computeProgram = true;
+    state.vertexFunction = nullptr;
+    state.fragmentFunction = nullptr;
+
+    std::unordered_map<std::string, RawStruct> rawStructs =
+        parseRawStructs(computeSource);
+    std::vector<BufferBinding> computeBindings = parseStageBufferBindings(
+        computeSource, MetalProgramStage::Compute);
+    parseStageTextureBindings(computeSource, MetalProgramStage::Compute,
+                              state.textureBindings,
+                              state.textureTypesByBinding);
+
+    for (const BufferBinding &binding : computeBindings) {
+        bool merged = false;
+        for (BufferBinding &existing : state.bindings) {
+            if (existing.index == binding.index &&
+                existing.structName == binding.structName) {
+                existing.computeStage =
+                    existing.computeStage || binding.computeStage;
+                bool existingAnonymous = existing.instanceName.empty() ||
+                                         existing.instanceName[0] == '_';
+                bool incomingNamed = !binding.instanceName.empty() &&
+                                     binding.instanceName[0] != '_';
+                if (existingAnonymous && incomingNamed) {
+                    existing.instanceName = binding.instanceName;
+                }
+                merged = true;
+                break;
+            }
+        }
+        if (!merged) {
+            state.bindings.push_back(binding);
+        }
+    }
+
+    std::unordered_map<std::string, StructLayout> cache;
+    std::unordered_set<std::string> visiting;
+    for (const BufferBinding &binding : state.bindings) {
+        StructLayout layout =
+            computeLayout(binding.structName, rawStructs, cache, visiting);
+        if (layout.size == 0) {
+            continue;
+        }
+        state.layouts[binding.structName] = layout;
+        if (binding.computeStage) {
+            uint32_t computeKey =
+                stageBindingKey(binding.index, MetalProgramStage::Compute);
+            state.bindingSize[computeKey] =
+                std::max(state.bindingSize[computeKey], layout.size);
+        }
+    }
+
+    return state.computeFunction != nullptr;
 }
 
 std::vector<UniformLocation> resolveUniformLocations(ProgramState &programState,
@@ -1156,6 +1258,7 @@ std::vector<UniformLocation> resolveUniformLocations(ProgramState &programState,
         location.size = finalSize;
         location.vertexStage = binding.vertexStage;
         location.fragmentStage = binding.fragmentStage;
+        location.computeStage = binding.computeStage;
 
         resolved.push_back(location);
     }

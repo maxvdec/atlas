@@ -36,6 +36,9 @@ VkPipelineShaderStageCreateInfo Shader::makeShaderStageInfo() const {
     case ShaderType::TessellationEvaluation:
         shaderStageInfo.stage = VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
         break;
+    case ShaderType::Compute:
+        shaderStageInfo.stage = VK_SHADER_STAGE_COMPUTE_BIT;
+        break;
     default:
         throw std::runtime_error("Unknown shader type");
     }
@@ -481,6 +484,9 @@ void Pipeline::buildPipelineLayout() {
             case ShaderType::TessellationEvaluation:
                 stageFlag = VK_SHADER_STAGE_TESSELLATION_EVALUATION_BIT;
                 break;
+            case ShaderType::Compute:
+                stageFlag = VK_SHADER_STAGE_COMPUTE_BIT;
+                break;
             default:
                 break;
             }
@@ -806,6 +812,9 @@ CoreRenderPass::create(std::shared_ptr<Pipeline> pipeline,
     pipelineInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
     std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
     for (const auto &shader : pipeline->shaderProgram->attachedShaders) {
+        if (shader->type == ShaderType::Compute) {
+            continue;
+        }
         shaderStages.push_back(shader->makeShaderStageInfo());
     }
     pipelineInfo.stageCount = static_cast<uint32_t>(shaderStages.size());
@@ -921,6 +930,9 @@ std::shared_ptr<CoreRenderPass> CoreRenderPass::createWithExistingRenderPass(
 
     std::vector<VkPipelineShaderStageCreateInfo> shaderStages;
     for (const auto &shader : pipeline->shaderProgram->attachedShaders) {
+        if (shader->type == ShaderType::Compute) {
+            continue;
+        }
         shaderStages.push_back(shader->makeShaderStageInfo());
     }
     pipelineInfo.stageCount = static_cast<uint32_t>(shaderStages.size());

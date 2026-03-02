@@ -251,6 +251,7 @@ file(GLOB_RECURSE HYDRA_SOURCES CONFIGURE_DEPENDS hydra/*.cpp)
 file(GLOB_RECURSE ATLAS_SOURCES CONFIGURE_DEPENDS atlas/*.cpp extern/*.c)
 file(GLOB_RECURSE TEST_SOURCES CONFIGURE_DEPENDS test/*.cpp)
 file(GLOB_RECURSE OPAL_SOURCES CONFIGURE_DEPENDS opal/*.cpp)
+file(GLOB_RECURSE PHOTON_SOURCE CONFIGURE_DEPENDS photon/*.cpp)
 
 add_library(bezel ${BEZEL_SOURCES})
 target_link_libraries(bezel PRIVATE glfw glm::glm)
@@ -271,6 +272,9 @@ target_include_directories(finewave PRIVATE ${OPENAL_INCLUDE})
 
 add_library(opal ${OPAL_SOURCES})
 target_link_libraries(opal PRIVATE glm::glm glfw)
+
+add_library(photon ${PHOTON_SOURCE})
+target_link_libraries(photon PRIVATER opal glm::glm)
 
 if (BACKEND_OPENGL)
     target_link_libraries(opal PRIVATE OpenGL::GL)
@@ -313,6 +317,7 @@ target_link_libraries(atlas
         Freetype::Freetype
         assimp::assimp
         Jolt::Jolt
+        photon
 )
 
 if(BEZEL_NATIVE)

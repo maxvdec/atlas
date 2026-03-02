@@ -15,6 +15,8 @@
 
 namespace opal::metal {
 
+enum class MetalProgramStage { Vertex, Fragment, Compute };
+
 struct FieldType {
     size_t size = 0;
     size_t alignment = 1;
@@ -43,6 +45,7 @@ struct BufferBinding {
     std::string instanceName;
     bool vertexStage = false;
     bool fragmentStage = false;
+    bool computeStage = false;
 };
 
 struct UniformLocation {
@@ -51,6 +54,7 @@ struct UniformLocation {
     size_t size = 0;
     bool vertexStage = false;
     bool fragmentStage = false;
+    bool computeStage = false;
 };
 
 struct ContextState {
@@ -100,6 +104,8 @@ struct ShaderState {
 struct ProgramState {
     MTL::Function *vertexFunction = nullptr;
     MTL::Function *fragmentFunction = nullptr;
+    MTL::Function *computeFunction = nullptr;
+    bool computeProgram = false;
     std::unordered_map<std::string, StructLayout> layouts;
     std::vector<BufferBinding> bindings;
     std::unordered_map<uint32_t, size_t> bindingSize;
@@ -115,6 +121,7 @@ struct PipelineState {
     MTL::DepthStencilState *depthStencilState = nullptr;
     std::unordered_map<std::string, MTL::RenderPipelineState *>
         renderPipelineCache;
+    MTL::ComputePipelineState *computePipelineState = nullptr;
     std::unordered_map<uint32_t, std::vector<uint8_t>> uniformData;
     std::unordered_map<uint32_t, MTL::Buffer *> uniformBuffers;
     std::unordered_map<int, std::shared_ptr<Texture>> texturesByUnit;
@@ -147,6 +154,7 @@ struct CommandBufferState {
     NS::AutoreleasePool *autoreleasePool = nullptr;
     MTL::CommandBuffer *commandBuffer = nullptr;
     MTL::RenderCommandEncoder *encoder = nullptr;
+    MTL::ComputeCommandEncoder *computeEncoder = nullptr;
     MTL::RenderPassDescriptor *passDescriptor = nullptr;
     CA::MetalDrawable *drawable = nullptr;
     std::array<MTL::Texture *, 32> boundVertexTextures = {};
@@ -181,7 +189,7 @@ void releaseCommandBufferState(CommandBuffer *commandBuffer);
 
 uint32_t registerTextureHandle(const std::shared_ptr<Texture> &texture);
 std::shared_ptr<Texture> getTextureFromHandle(uint32_t handle);
-uint32_t stageBindingKey(uint32_t index, bool fragmentStage);
+uint32_t stageBindingKey(uint32_t index, MetalProgramStage stage);
 
 MTL::PixelFormat textureFormatToPixelFormat(TextureFormat format);
 MTL::TextureType textureTypeToMetal(TextureType type);
@@ -194,6 +202,8 @@ void rebuildTextureSampler(Texture *texture, MTL::Device *device);
 bool parseProgramLayouts(const std::string &vertexSource,
                          const std::string &fragmentSource,
                          ProgramState &programState);
+bool parseComputeProgramLayouts(const std::string &computeSource,
+                                ProgramState &programState);
 std::vector<UniformLocation> resolveUniformLocations(ProgramState &programState,
                                                      const std::string &name);
 

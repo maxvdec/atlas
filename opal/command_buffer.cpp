@@ -383,8 +383,8 @@ void uploadUniformBuffers(const std::shared_ptr<Pipeline> &pipeline,
     auto &pipelineState = metal::pipelineState(pipeline.get());
 
     for (const auto &binding : programState.bindings) {
-        auto uploadStage = [&](bool fragmentStage) {
-            uint32_t key = metal::stageBindingKey(binding.index, fragmentStage);
+        auto uploadStage = [&](metal::MetalProgramStage stage) {
+            uint32_t key = metal::stageBindingKey(binding.index, stage);
             auto &bytes = pipelineState.uniformData[key];
             size_t requiredSize = 0;
             auto bindingSizeIt = programState.bindingSize.find(key);
@@ -400,7 +400,7 @@ void uploadUniformBuffers(const std::shared_ptr<Pipeline> &pipeline,
 
             static constexpr size_t kMaxBytesInline = 4096;
             if (bytes.size() <= kMaxBytesInline) {
-                if (fragmentStage) {
+                if (stage == metal::MetalProgramStage::Fragment) {
                     encoder->setFragmentBytes(bytes.data(),
                                               static_cast<NS::UInteger>(bytes.size()),
                                               binding.index);
@@ -415,7 +415,7 @@ void uploadUniformBuffers(const std::shared_ptr<Pipeline> &pipeline,
                     static_cast<NS::UInteger>(
                         alignUp(bytes.size(), static_cast<size_t>(16))),
                     MTL::ResourceStorageModeShared);
-                if (fragmentStage) {
+                if (stage == metal::MetalProgramStage::Fragment) {
                     encoder->setFragmentBuffer(inlineBuffer, 0, binding.index);
                 } else {
                     encoder->setVertexBuffer(inlineBuffer, 0, binding.index);
@@ -425,10 +425,10 @@ void uploadUniformBuffers(const std::shared_ptr<Pipeline> &pipeline,
         };
 
         if (binding.vertexStage) {
-            uploadStage(false);
+            uploadStage(metal::MetalProgramStage::Vertex);
         }
         if (binding.fragmentStage) {
-            uploadStage(true);
+            uploadStage(metal::MetalProgramStage::Fragment);
         }
     }
 }
@@ -525,6 +525,153 @@ void bindTextures(CommandBuffer *commandBuffer,
                                              static_cast<NS::UInteger>(unit));
             commandState.boundFragmentSamplers[unit] = desiredSampler;
         }
+    }
+}
+
+MTL::ComputePipelineState *
+getComputePipelineState(Device *device, const std::shared_ptr<Pipeline> &pipeline) {
+    if (device == nullptr || pipeline == nullptr ||
+        pipeline->shaderProgram == nullptr) {
+        return nullptr;
+    }
+
+    auto &deviceState = metal::deviceState(device);
+    auto &programState = metal::programState(pipeline->shaderProgram.get());
+    auto &pipelineState = metal::pipelineState(pipeline.get());
+    if (deviceState.device == nullptr || programState.computeFunction == nullptr) {
+        return nullptr;
+    }
+
+    if (pipelineState.computePipelineState != nullptr) {
+        return pipelineState.computePipelineState;
+    }
+
+    NS::Error *error = nullptr;
+    pipelineState.computePipelineState =
+        deviceState.device->newComputePipelineState(programState.computeFunction,
+                                                    &error);
+    if (pipelineState.computePipelineState == nullptr) {
+        std::string message = "Failed to create Metal compute pipeline";
+        if (error != nullptr && error->localizedDescription() != nullptr) {
+            message += ": ";
+            message += error->localizedDescription()->utf8String();
+        }
+        throw std::runtime_error(message);
+    }
+
+    return pipelineState.computePipelineState;
+}
+
+void uploadComputeUniformBuffers(const std::shared_ptr<Pipeline> &pipeline,
+                                 MTL::ComputeCommandEncoder *encoder,
+                                 MTL::Device *device) {
+    if (pipeline == nullptr || encoder == nullptr || device == nullptr ||
+        pipeline->shaderProgram == nullptr) {
+        return;
+    }
+
+    auto &programState = metal::programState(pipeline->shaderProgram.get());
+    auto &pipelineState = metal::pipelineState(pipeline.get());
+
+    for (const auto &binding : programState.bindings) {
+        if (!binding.computeStage) {
+            continue;
+        }
+
+        uint32_t key =
+            metal::stageBindingKey(binding.index, metal::MetalProgramStage::Compute);
+        auto &bytes = pipelineState.uniformData[key];
+
+        size_t requiredSize = 0;
+        auto bindingSizeIt = programState.bindingSize.find(key);
+        if (bindingSizeIt != programState.bindingSize.end()) {
+            requiredSize = bindingSizeIt->second;
+        }
+        if (bytes.size() < requiredSize) {
+            bytes.resize(requiredSize, 0);
+        }
+        if (bytes.empty()) {
+            continue;
+        }
+
+        static constexpr size_t kMaxBytesInline = 4096;
+        if (bytes.size() <= kMaxBytesInline) {
+            encoder->setBytes(bytes.data(), static_cast<NS::UInteger>(bytes.size()),
+                              binding.index);
+        } else {
+            MTL::Buffer *inlineBuffer = device->newBuffer(
+                bytes.data(),
+                static_cast<NS::UInteger>(
+                    alignUp(bytes.size(), static_cast<size_t>(16))),
+                MTL::ResourceStorageModeShared);
+            encoder->setBuffer(inlineBuffer, 0, binding.index);
+            inlineBuffer->release();
+        }
+    }
+}
+
+void bindComputeTextures(const std::shared_ptr<Pipeline> &pipeline,
+                         MTL::ComputeCommandEncoder *encoder,
+                         MTL::Device *device) {
+    if (pipeline == nullptr || encoder == nullptr || device == nullptr) {
+        return;
+    }
+
+    auto &pipelineState = metal::pipelineState(pipeline.get());
+    std::array<MTL::Texture *, 32> desiredTextures{};
+    std::array<MTL::SamplerState *, 32> desiredSamplers{};
+    desiredTextures.fill(nullptr);
+    desiredSamplers.fill(nullptr);
+
+    for (const auto &pair : pipelineState.texturesByUnit) {
+        int unit = pair.first;
+        const auto &texture = pair.second;
+        if (unit < 0 || unit >= static_cast<int>(desiredTextures.size()) ||
+            texture == nullptr) {
+            continue;
+        }
+        auto &textureState = metal::textureState(texture.get());
+        if (textureState.texture == nullptr) {
+            continue;
+        }
+        if (textureState.sampler == nullptr) {
+            metal::rebuildTextureSampler(texture.get(), device);
+        }
+        desiredTextures[static_cast<size_t>(unit)] = textureState.texture;
+        desiredSamplers[static_cast<size_t>(unit)] = textureState.sampler;
+    }
+
+    if (pipeline->shaderProgram != nullptr) {
+        auto &programState = metal::programState(pipeline->shaderProgram.get());
+        for (const auto &binding : programState.textureTypesByBinding) {
+            int unit = binding.first;
+            if (unit < 0 || unit >= static_cast<int>(desiredTextures.size())) {
+                continue;
+            }
+            size_t unitIndex = static_cast<size_t>(unit);
+            if (desiredTextures[unitIndex] != nullptr) {
+                continue;
+            }
+            auto fallback = fallbackTextureForType(binding.second);
+            if (fallback == nullptr) {
+                continue;
+            }
+            auto &fallbackState = metal::textureState(fallback.get());
+            if (fallbackState.texture == nullptr) {
+                continue;
+            }
+            if (fallbackState.sampler == nullptr) {
+                metal::rebuildTextureSampler(fallback.get(), device);
+            }
+            desiredTextures[unitIndex] = fallbackState.texture;
+            desiredSamplers[unitIndex] = fallbackState.sampler;
+        }
+    }
+
+    for (size_t unit = 0; unit < desiredTextures.size(); ++unit) {
+        encoder->setTexture(desiredTextures[unit], static_cast<NS::UInteger>(unit));
+        encoder->setSamplerState(desiredSamplers[unit],
+                                 static_cast<NS::UInteger>(unit));
     }
 }
 
@@ -766,6 +913,7 @@ void CommandBuffer::start() {
     state.autoreleasePool = NS::AutoreleasePool::alloc()->init();
     state.commandBuffer = nullptr;
     state.encoder = nullptr;
+    state.computeEncoder = nullptr;
     if (state.passDescriptor != nullptr) {
         state.passDescriptor->release();
     }
@@ -821,6 +969,10 @@ void CommandBuffer::beginPass(std::shared_ptr<RenderPass> newRenderPass) {
         state.encoder->endEncoding();
         state.encoder = nullptr;
         state.textureBindingsInitialized = false;
+    }
+    if (state.computeEncoder != nullptr) {
+        state.computeEncoder->endEncoding();
+        state.computeEncoder = nullptr;
     }
 
     if (state.commandBuffer == nullptr) {
@@ -959,6 +1111,10 @@ void CommandBuffer::endPass() {
         state.encoder = nullptr;
         state.textureBindingsInitialized = false;
     }
+    if (state.computeEncoder != nullptr) {
+        state.computeEncoder->endEncoding();
+        state.computeEncoder = nullptr;
+    }
     if (state.passDescriptor != nullptr) {
         state.passDescriptor->release();
         state.passDescriptor = nullptr;
@@ -1063,6 +1219,10 @@ void CommandBuffer::commit() {
         state.encoder->endEncoding();
         state.encoder = nullptr;
         state.textureBindingsInitialized = false;
+    }
+    if (state.computeEncoder != nullptr) {
+        state.computeEncoder->endEncoding();
+        state.computeEncoder = nullptr;
     }
 
     if (state.passDescriptor != nullptr) {
@@ -1601,6 +1761,101 @@ void CommandBuffer::drawPatches(uint vertexCount, uint firstVertex,
     }
 
     drawCallCount++;
+}
+
+void CommandBuffer::dispatch(uint threadCountX, uint threadCountY,
+                             uint threadCountZ) {
+#ifdef OPENGL
+    (void)threadCountX;
+    (void)threadCountY;
+    (void)threadCountZ;
+    throw std::runtime_error("Compute dispatch is not supported on OpenGL");
+#elif defined(VULKAN)
+    (void)threadCountX;
+    (void)threadCountY;
+    (void)threadCountZ;
+    throw std::runtime_error("Compute dispatch is not implemented for Vulkan");
+#elif defined(METAL)
+    if (boundPipeline == nullptr || boundPipeline->shaderProgram == nullptr) {
+        return;
+    }
+    if (!boundPipeline->shaderProgram->isComputeProgram()) {
+        throw std::runtime_error("Dispatch requires a compute shader program");
+    }
+    if (device == nullptr) {
+        throw std::runtime_error("Metal command buffer has no device");
+    }
+
+    auto &deviceState = metal::deviceState(device);
+    if (deviceState.device == nullptr || deviceState.queue == nullptr) {
+        throw std::runtime_error("Metal device queue is not initialized");
+    }
+
+    auto &state = metal::commandBufferState(this);
+    if (state.encoder != nullptr) {
+        state.encoder->endEncoding();
+        state.encoder = nullptr;
+        state.textureBindingsInitialized = false;
+    }
+    if (state.commandBuffer == nullptr) {
+        state.commandBuffer = deviceState.queue->commandBuffer();
+    }
+    if (state.computeEncoder == nullptr) {
+        state.computeEncoder = state.commandBuffer->computeCommandEncoder();
+        if (state.computeEncoder == nullptr) {
+            throw std::runtime_error(
+                "Failed to create Metal compute command encoder");
+        }
+    }
+
+    MTL::ComputePipelineState *computeState =
+        getComputePipelineState(device, boundPipeline);
+    if (computeState == nullptr) {
+        throw std::runtime_error("Metal compute pipeline state creation failed");
+    }
+    state.computeEncoder->setComputePipelineState(computeState);
+    uploadComputeUniformBuffers(boundPipeline, state.computeEncoder,
+                                deviceState.device);
+    bindComputeTextures(boundPipeline, state.computeEncoder, deviceState.device);
+
+    NS::UInteger tgX =
+        static_cast<NS::UInteger>(boundPipeline->getComputeThreadgroupSizeX());
+    NS::UInteger tgY =
+        static_cast<NS::UInteger>(boundPipeline->getComputeThreadgroupSizeY());
+    NS::UInteger tgZ =
+        static_cast<NS::UInteger>(boundPipeline->getComputeThreadgroupSizeZ());
+    tgX = std::max<NS::UInteger>(1, tgX);
+    tgY = std::max<NS::UInteger>(1, tgY);
+    tgZ = std::max<NS::UInteger>(1, tgZ);
+
+    NS::UInteger maxThreads =
+        std::max<NS::UInteger>(1, computeState->maxTotalThreadsPerThreadgroup());
+    while (tgX * tgY * tgZ > maxThreads) {
+        if (tgZ > 1) {
+            tgZ = std::max<NS::UInteger>(1, tgZ / 2);
+            continue;
+        }
+        if (tgY > 1) {
+            tgY = std::max<NS::UInteger>(1, tgY / 2);
+            continue;
+        }
+        if (tgX > 1) {
+            tgX = std::max<NS::UInteger>(1, tgX / 2);
+            continue;
+        }
+        break;
+    }
+
+    NS::UInteger countX = std::max<NS::UInteger>(1, threadCountX);
+    NS::UInteger countY = std::max<NS::UInteger>(1, threadCountY);
+    NS::UInteger countZ = std::max<NS::UInteger>(1, threadCountZ);
+    MTL::Size threadsPerGroup = MTL::Size(tgX, tgY, tgZ);
+    MTL::Size threadgroups = MTL::Size((countX + tgX - 1) / tgX,
+                                       (countY + tgY - 1) / tgY,
+                                       (countZ + tgZ - 1) / tgZ);
+    state.computeEncoder->dispatchThreadgroups(threadgroups, threadsPerGroup);
+    state.hasDraw = true;
+#endif
 }
 
 #ifdef VULKAN
