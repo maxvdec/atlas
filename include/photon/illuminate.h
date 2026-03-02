@@ -53,12 +53,19 @@ class GlobalIllumination {
     void init();
 
     std::shared_ptr<Texture> irradianceMap;
+    std::shared_ptr<Texture> irradianceMapPrev;
     std::shared_ptr<ShaderProgram> giShader;
     std::shared_ptr<opal::Pipeline> giPipeline;
 
     std::shared_ptr<ProbeSpace> probeSpace;
 
     float probeSpacing = 0.5f;
+
+    int raysPerProbe = 64;
+    float maxRayDistance = 20.f;
+    float normalBias = 0.05;
+    float hysteresis = 0.95;
+    int frameIndex;
 };
 
 } // namespace photon

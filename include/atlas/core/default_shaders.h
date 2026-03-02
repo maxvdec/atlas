@@ -3226,8 +3226,8 @@ fragment main0_out main0(
     sampler texture3Smplr [[sampler(2)]], sampler texture4Smplr [[sampler(3)]],
     sampler texture5Smplr [[sampler(4)]], sampler cubeMap1Smplr [[sampler(5)]],
     sampler cubeMap2Smplr [[sampler(6)]], sampler cubeMap3Smplr [[sampler(7)]],
-    sampler cubeMap4Smplr [[sampler(8)]], sampler cubeMap5Smplr [[sampler(9)]],
-    sampler skyboxSmplr [[sampler(10)]], sampler gPositionSmplr [[sampler(11)]],
+    sampler cubeMap4Smplr [[sampler(8)]], sampler skyboxSmplr [[sampler(10)]],
+    sampler gPositionSmplr [[sampler(11)]],
     sampler gNormalSmplr [[sampler(12)]],
     sampler gAlbedoSpecSmplr [[sampler(13)]],
     sampler gMaterialSmplr [[sampler(14)]], sampler ssaoSmplr [[sampler(15)]]) {
@@ -3504,11 +3504,14 @@ fragment main0_out main0(
         ((ambientLight.color.xyz * ambientLight.intensity) * albedo) *
         occlusion;
 
-    float3 ddgiIrrandiance =
+    float3 ddgiIrradiance =
         sampleDDGI(ddgiTexture, gPositionSmplr, ps, FragPos, N);
 
+    out.FragColor = float4(ddgiIrradiance, 1.0);
+    return out;
+
     const float INV_PI = 0.31830988618379067153776752674503;
-    float3 ddgiDiffuse = (ddgiIrrandiance * albedo) * INV_PI;
+    float3 ddgiDiffuse = (ddgiIrradiance * albedo) * INV_PI;
     ddgiDiffuse *= occlusion;
     ambient += ddgiDiffuse;
 

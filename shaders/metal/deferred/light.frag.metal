@@ -1208,11 +1208,14 @@ fragment main0_out main0(
         ((ambientLight.color.xyz * ambientLight.intensity) * albedo) *
         occlusion;
 
-    float3 ddgiIrrandiance =
+    float3 ddgiIrradiance =
         sampleDDGI(ddgiTexture, gPositionSmplr, ps, FragPos, N);
 
+    out.FragColor = float4(ddgiIrradiance, 1.0);
+    return out;
+
     const float INV_PI = 0.31830988618379067153776752674503;
-    float3 ddgiDiffuse = (ddgiIrrandiance * albedo) * INV_PI;
+    float3 ddgiDiffuse = (ddgiIrradiance * albedo) * INV_PI;
     ddgiDiffuse *= occlusion;
     ambient += ddgiDiffuse;
 
