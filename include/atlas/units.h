@@ -144,6 +144,27 @@ using Velocity3d = Position3d;
 
 struct Quaternion;
 
+struct BoundingBox {
+    Position3d min;
+    Position3d max;
+
+    BoundingBox() : min(Position3d::zero()), max(Position3d::zero()) {}
+    BoundingBox(const Position3d &min, const Position3d &max)
+        : min(min), max(max) {}
+
+    bool contains(const Position3d &point) const {
+        return (point.x >= min.x && point.x <= max.x) &&
+               (point.y >= min.y && point.y <= max.y) &&
+               (point.z >= min.z && point.z <= max.z);
+    }
+
+    bool intersects(const BoundingBox &other) const {
+        return (min.x <= other.max.x && max.x >= other.min.x) &&
+               (min.y <= other.max.y && max.y >= other.min.y) &&
+               (min.z <= other.max.z && max.z >= other.min.z);
+    }
+};
+
 /**
  * @brief Structure representing rotation in 3D space using Euler angles.
  * Provides arithmetic operations and conversions to/from GLM quaternions.

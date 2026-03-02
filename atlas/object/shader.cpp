@@ -34,20 +34,6 @@ std::map<AtlasComputeShader, ComputeShader> ComputeShader::computeShaderCache =
 std::map<AtlasComputeShader, ShaderProgram> ShaderProgram::computeShaderCache =
     {};
 
-#ifdef METAL
-static const char *ATLAS_DDGI_COMP = R"(#include <metal_stdlib>
-using namespace metal;
-
-kernel void main0(texture2d<half, access::write> outTexture [[texture(0)]],
-                  uint2 gid [[thread_position_in_grid]]) {
-    if (gid.x >= outTexture.get_width() || gid.y >= outTexture.get_height()) {
-        return;
-    }
-    outTexture.write(half4(1.0h, 0.0h, 0.0h, 1.0h), gid);
-}
-)";
-#endif
-
 VertexShader VertexShader::fromDefaultShader(AtlasVertexShader shader) {
     if (VertexShader::vertexShaderCache.contains(shader)) {
         return VertexShader::vertexShaderCache[shader];
@@ -250,7 +236,7 @@ ComputeShader ComputeShader::fromDefaultShader(AtlasComputeShader shader) {
     switch (shader) {
     case AtlasComputeShader::DDGI: {
 #ifdef METAL
-        computeShader = ComputeShader::fromSource(ATLAS_DDGI_COMP);
+        computeShader = ComputeShader::fromSource(DDGI);
         computeShader.fromDefaultShaderType = shader;
         ComputeShader::computeShaderCache[shader] = computeShader;
         break;
@@ -613,12 +599,10 @@ void ShaderProgram::compile() {
     bool hasComputeShader = computeShader.source != nullptr ||
                             computeShader.shader != nullptr ||
                             computeShader.shaderId != 0;
-    bool hasGraphicsShader = vertexShader.source != nullptr ||
-                             vertexShader.shader != nullptr ||
-                             vertexShader.shaderId != 0 ||
-                             fragmentShader.source != nullptr ||
-                             fragmentShader.shader != nullptr ||
-                             fragmentShader.shaderId != 0;
+    bool hasGraphicsShader =
+        vertexShader.source != nullptr || vertexShader.shader != nullptr ||
+        vertexShader.shaderId != 0 || fragmentShader.source != nullptr ||
+        fragmentShader.shader != nullptr || fragmentShader.shaderId != 0;
 
     if (hasComputeShader && hasGraphicsShader) {
         throw std::runtime_error(

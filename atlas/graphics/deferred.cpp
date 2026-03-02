@@ -309,6 +309,7 @@ void Window::deferredRendering(
             ddgiSystem->init();
         }
 
+        ddgiSystem->updateProbeLayout();
         ddgiSystem->render(commandBuffer);
     }
 #endif

@@ -550,6 +550,8 @@ class Window {
     std::shared_ptr<photon::GlobalIllumination> ddgiSystem;
 #endif
 
+    BoundingBox getSceneBoundingBox();
+
   private:
     std::shared_ptr<opal::CommandBuffer> activeCommandBuffer = nullptr;
     CoreWindowReference windowRef;
@@ -694,6 +696,7 @@ class Window {
     friend class DirectionalLight;
     friend class Text;
     friend class Terrain;
+    friend class photon::GlobalIllumination;
     friend struct Fluid;
 };
 
