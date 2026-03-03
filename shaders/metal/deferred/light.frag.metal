@@ -836,6 +836,31 @@ static inline void buildDDGIBasis(float3 n, thread float3 &t, thread float3 &b) 
     b = safeNormalizeDDGI(cross(n, t), float3(0.0f, 0.0f, 1.0f));
 }
 
+constant uint DDGI_HEMISPHERE_SAMPLE_COUNT = 21u;
+constant float3 DDGI_HEMISPHERE_DIRS[DDGI_HEMISPHERE_SAMPLE_COUNT] = {
+    float3(0.0f, 1.0f, 0.0f),
+    float3(0.5000000f, 0.8660254f, 0.0f),
+    float3(-0.5000000f, 0.8660254f, 0.0f),
+    float3(0.0f, 0.8660254f, 0.5000000f),
+    float3(0.0f, 0.8660254f, -0.5000000f),
+    float3(0.8660254f, 0.5000000f, 0.0f),
+    float3(0.6123724f, 0.5000000f, 0.6123724f),
+    float3(0.0f, 0.5000000f, 0.8660254f),
+    float3(-0.6123724f, 0.5000000f, 0.6123724f),
+    float3(-0.8660254f, 0.5000000f, 0.0f),
+    float3(-0.6123724f, 0.5000000f, -0.6123724f),
+    float3(0.0f, 0.5000000f, -0.8660254f),
+    float3(0.6123724f, 0.5000000f, -0.6123724f),
+    float3(0.9659258f, 0.2588190f, 0.0f),
+    float3(0.6830127f, 0.2588190f, 0.6830127f),
+    float3(0.0f, 0.2588190f, 0.9659258f),
+    float3(-0.6830127f, 0.2588190f, 0.6830127f),
+    float3(-0.9659258f, 0.2588190f, 0.0f),
+    float3(-0.6830127f, 0.2588190f, -0.6830127f),
+    float3(0.0f, 0.2588190f, -0.9659258f),
+    float3(0.6830127f, 0.2588190f, -0.6830127f),
+};
+
 static inline uint probeIndexFromCoord(uint3 c, uint3 counts) {
     return c.x + counts.x * (c.y + counts.y * c.z);
 }
@@ -902,6 +927,14 @@ static inline float3 sampleDDGITextureBilinear(texture2d<float> tex, float2 uv) 
     return mix(cx0, cx1, f.y);
 }
 
+static inline float3 sampleProbeDirectionalRadiance(texture2d<float> ddgiTexture,
+                                                    constant ProbeSpace &ps,
+                                                    uint probeIndex, uint atlasW,
+                                                    uint atlasH, float3 dirWS) {
+    float2 uv = ddgiAtlasUV(probeIndex, dirWS, ps, atlasW, atlasH);
+    return sampleDDGITextureBilinear(ddgiTexture, uv);
+}
+
 static inline float3 sampleProbeIrradiance(texture2d<float> ddgiTexture,
                                            constant ProbeSpace &ps,
                                            uint probeIndex, uint atlasW,
@@ -911,30 +944,33 @@ static inline float3 sampleProbeIrradiance(texture2d<float> ddgiTexture,
     float3 b;
     buildDDGIBasis(n, t, b);
 
-    float3 d0 = n;
-    float3 d1 = safeNormalizeDDGI(n + t * 0.6f, n);
-    float3 d2 = safeNormalizeDDGI(n - t * 0.6f, n);
-    float3 d3 = safeNormalizeDDGI(n + b * 0.6f, n);
-    float3 d4 = safeNormalizeDDGI(n - b * 0.6f, n);
+    float3 sum = float3(0.0f);
+    float weightSum = 0.0f;
+    for (uint i = 0u; i < DDGI_HEMISPHERE_SAMPLE_COUNT; i++) {
+        float3 localDir = DDGI_HEMISPHERE_DIRS[i];
+        float3 dirWS = safeNormalizeDDGI(t * localDir.x + n * localDir.y +
+                                             b * localDir.z,
+                                         n);
+        float nd = max(dot(n, dirWS), 0.0f);
+        if (nd <= 1e-5f) {
+            continue;
+        }
+        float3 radiance = sampleProbeDirectionalRadiance(ddgiTexture, ps, probeIndex,
+                                                         atlasW, atlasH, dirWS);
+        float w = powr(max(nd, 1e-4f), 0.50f);
+        sum += radiance * w;
+        weightSum += w;
+    }
 
-    float2 uv0 = ddgiAtlasUV(probeIndex, d0, ps, atlasW, atlasH);
-    float2 uv1 = ddgiAtlasUV(probeIndex, d1, ps, atlasW, atlasH);
-    float2 uv2 = ddgiAtlasUV(probeIndex, d2, ps, atlasW, atlasH);
-    float2 uv3 = ddgiAtlasUV(probeIndex, d3, ps, atlasW, atlasH);
-    float2 uv4 = ddgiAtlasUV(probeIndex, d4, ps, atlasW, atlasH);
-
-    float3 s0 = sampleDDGITextureBilinear(ddgiTexture, uv0);
-    float3 s1 = sampleDDGITextureBilinear(ddgiTexture, uv1);
-    float3 s2 = sampleDDGITextureBilinear(ddgiTexture, uv2);
-    float3 s3 = sampleDDGITextureBilinear(ddgiTexture, uv3);
-    float3 s4 = sampleDDGITextureBilinear(ddgiTexture, uv4);
-
-    return s0 * 0.4f + (s1 + s2 + s3 + s4) * 0.15f;
+    if (weightSum <= 1e-5f) {
+        return float3(0.0f);
+    }
+    return (sum / weightSum) * 3.14159265359f;
 }
 
-static inline float3 sampleDDGI(texture2d<float> ddgiTexture,
-                                constant ProbeSpace &ps, float3 posWS,
-                                float3 normalWS) {
+static inline float3 sampleDDGIIrradiance(texture2d<float> ddgiTexture,
+                                          constant ProbeSpace &ps, float3 posWS,
+                                          float3 normalWS) {
     uint3 counts = uint3((uint)ps.probeCount.x, (uint)ps.probeCount.y,
                          (uint)ps.probeCount.z);
 
@@ -981,7 +1017,7 @@ static inline float3 sampleDDGI(texture2d<float> ddgiTexture,
     int3 maxBase = int3(int(counts.x) - 2, int(counts.y) - 2, int(counts.z) - 2);
     baseI = clamp(baseI, int3(0), maxBase);
 
-    float3 result = float3(0.0);
+    float3 result = float3(0.0f);
     float weightSum = 0.0f;
 
     for (uint dz = 0; dz <= 1u; dz++) {
@@ -990,7 +1026,6 @@ static inline float3 sampleDDGI(texture2d<float> ddgiTexture,
 
                 uint3 pc = uint3(uint(baseI.x) + dx, uint(baseI.y) + dy,
                                  uint(baseI.z) + dz);
-
                 uint pIndex = probeIndexFromCoord(pc, counts);
 
                 float trilinearW = ((dx == 0u) ? (1.0f - frac.x) : frac.x) *
@@ -1001,7 +1036,88 @@ static inline float3 sampleDDGI(texture2d<float> ddgiTexture,
 
                 float3 irr = sampleProbeIrradiance(ddgiTexture, ps, pIndex, atlasW,
                                                    atlasH, safeNormal);
+                if (!all(isfinite(irr))) {
+                    irr = float3(0.0f);
+                }
+                irr = max(irr, float3(0.0f));
                 result += irr * w;
+                weightSum += w;
+            }
+        }
+    }
+
+    return (weightSum > 0.0f) ? (result / weightSum) : float3(0.0f);
+}
+
+static inline float3 sampleDDGIRadiance(texture2d<float> ddgiTexture,
+                                        constant ProbeSpace &ps, float3 posWS,
+                                        float3 dirWS, float3 normalWS) {
+    uint3 counts = uint3((uint)ps.probeCount.x, (uint)ps.probeCount.y,
+                         (uint)ps.probeCount.z);
+
+    if (counts.x == 0u || counts.y == 0u || counts.z == 0u)
+        return float3(0.0);
+
+    uint atlasW = ddgiTexture.get_width();
+    uint atlasH = ddgiTexture.get_height();
+    if (atlasW == 0u || atlasH == 0u) {
+        return float3(0.0);
+    }
+
+    float3 safeDir = safeNormalizeDDGI(dirWS, float3(0.0f, 1.0f, 0.0f));
+    (void)normalWS;
+    float3 safeSpacing = max(ps.spacing, float3(1e-4f));
+    float3 grid = (posWS - ps.origin) / safeSpacing;
+
+    if (counts.x < 2u || counts.y < 2u || counts.z < 2u) {
+        float3 maxCoord =
+            max(float3(0.0f), float3((float)counts.x - 1.0f,
+                                     (float)counts.y - 1.0f,
+                                     (float)counts.z - 1.0f));
+        float3 clampedGrid = clamp(grid, float3(0.0f), maxCoord);
+        uint3 nearest = uint3(
+            (uint)clamp(int(floor(clampedGrid.x + 0.5f)), 0, int(counts.x) - 1),
+            (uint)clamp(int(floor(clampedGrid.y + 0.5f)), 0, int(counts.y) - 1),
+            (uint)clamp(int(floor(clampedGrid.z + 0.5f)), 0, int(counts.z) - 1));
+        uint pIndex = probeIndexFromCoord(nearest, counts);
+        return sampleProbeDirectionalRadiance(ddgiTexture, ps, pIndex, atlasW,
+                                              atlasH, safeDir);
+    }
+
+    float3 maxGrid =
+        float3((float)counts.x - 1.0001f, (float)counts.y - 1.0001f,
+               (float)counts.z - 1.0001f);
+    float3 clampedGrid = clamp(grid, float3(0.0f), maxGrid);
+
+    float3 baseF = floor(clampedGrid);
+    float3 frac = clampedGrid - baseF;
+    int3 baseI = int3(baseF);
+    int3 maxBase = int3(int(counts.x) - 2, int(counts.y) - 2, int(counts.z) - 2);
+    baseI = clamp(baseI, int3(0), maxBase);
+
+    float3 result = float3(0.0f);
+    float weightSum = 0.0f;
+
+    for (uint dz = 0; dz <= 1u; dz++) {
+        for (uint dy = 0; dy <= 1u; dy++) {
+            for (uint dx = 0; dx <= 1u; dx++) {
+
+                uint3 pc = uint3(uint(baseI.x) + dx, uint(baseI.y) + dy,
+                                 uint(baseI.z) + dz);
+                uint pIndex = probeIndexFromCoord(pc, counts);
+
+                float trilinearW = ((dx == 0u) ? (1.0f - frac.x) : frac.x) *
+                                   ((dy == 0u) ? (1.0f - frac.y) : frac.y) *
+                                   ((dz == 0u) ? (1.0f - frac.z) : frac.z);
+                float w = trilinearW;
+
+                float3 radiance = sampleProbeDirectionalRadiance(
+                    ddgiTexture, ps, pIndex, atlasW, atlasH, safeDir);
+                if (!all(isfinite(radiance))) {
+                    radiance = float3(0.0f);
+                }
+                radiance = max(radiance, float3(0.0f));
+                result += radiance * w;
                 weightSum += w;
             }
         }
@@ -1080,11 +1196,11 @@ fragment main0_out main0(
     float ssaoContrast =
         fast::clamp(powr(ssaoFactor, 1.7999999523162841796875), 0.0, 1.0);
     float occlusion =
-        fast::clamp(ao * (0.0199999995529651641845703125 +
-                          (0.980000019073486328125 * ssaoContrast)),
+        fast::clamp(ao * (0.3499999940395355224609375 +
+                          (0.64999997615814208984375 * ssaoContrast)),
                     0.0, 1.0);
     float lightingOcclusion =
-        fast::clamp(ssaoContrast, 0.0199999995529651641845703125, 1.0);
+        fast::clamp(0.5 + (0.5 * ssaoContrast), 0.5, 1.0);
     float directionalShadow = 0.0;
     float spotShadow = 0.0;
     float areaShadow = 0.0;
@@ -1174,7 +1290,7 @@ fragment main0_out main0(
     directionalShadow =
         fast::clamp(directionalShadow * 0.85000002384185791015625, 0.0, 1.0);
     spotShadow = fast::clamp(spotShadow * 0.85000002384185791015625, 0.0, 1.0);
-    areaShadow = fast::clamp(areaShadow * 0.85000002384185791015625, 0.0, 1.0);
+    areaShadow = fast::clamp(areaShadow * 0.449999988079071044921875, 0.0, 1.0);
     pointShadow =
         fast::clamp(pointShadow * 0.85000002384185791015625, 0.0, 1.0);
     float3 directionalResult = float3(0.0);
@@ -1323,36 +1439,71 @@ fragment main0_out main0(
         ambient *= 0.0f;
     }
 
-    float3 ddgiIrradiance = sampleDDGI(irradianceMap, ps, FragPos, N);
+    float ddgiSampleBias =
+        max(max(ps.spacing.x, max(ps.spacing.y, ps.spacing.z)) * 0.02f, 0.002f);
+    float3 ddgiSamplePos = FragPos + N * ddgiSampleBias;
+    float3 ddgiIrradiance =
+        sampleDDGIIrradiance(irradianceMap, ps, ddgiSamplePos, N);
     if (!all(isfinite(ddgiIrradiance))) {
         ddgiIrradiance = float3(0.0f);
     }
     ddgiIrradiance = max(ddgiIrradiance, float3(0.0f));
-    float3 ddgiGain = max(ps.debugColor.xyz, float3(0.0f));
-    if (ddgiGain.x < 1e-4f && ddgiGain.y < 1e-4f && ddgiGain.z < 1e-4f) {
-        ddgiGain = float3(1.0f);
+    float3 ddgiOmniRadiance = float3(0.0f);
+    if (ps.atlasParams.w > 0.0f) {
+        ddgiOmniRadiance +=
+            sampleDDGIRadiance(irradianceMap, ps, ddgiSamplePos, float3(0.0f, 1.0f, 0.0f), N) *
+            0.22f;
+        ddgiOmniRadiance +=
+            sampleDDGIRadiance(irradianceMap, ps, ddgiSamplePos, float3(0.0f, -1.0f, 0.0f), N) *
+            0.18f;
+        ddgiOmniRadiance +=
+            sampleDDGIRadiance(irradianceMap, ps, ddgiSamplePos, float3(1.0f, 0.0f, 0.0f), N) *
+            0.15f;
+        ddgiOmniRadiance +=
+            sampleDDGIRadiance(irradianceMap, ps, ddgiSamplePos, float3(-1.0f, 0.0f, 0.0f), N) *
+            0.15f;
+        ddgiOmniRadiance +=
+            sampleDDGIRadiance(irradianceMap, ps, ddgiSamplePos, float3(0.0f, 0.0f, 1.0f), N) *
+            0.15f;
+        ddgiOmniRadiance +=
+            sampleDDGIRadiance(irradianceMap, ps, ddgiSamplePos, float3(0.0f, 0.0f, -1.0f), N) *
+            0.15f;
     }
+    if (!all(isfinite(ddgiOmniRadiance))) {
+        ddgiOmniRadiance = float3(0.0f);
+    }
+    ddgiOmniRadiance = max(ddgiOmniRadiance, float3(0.0f));
     float ddgiDebugMode = ps.debugColor.w;
+    float3 ddgiGain = float3(1.0f);
+    if (ddgiDebugMode >= 0.5f) {
+        ddgiGain = max(ps.debugColor.xyz, float3(0.0f));
+        if (ddgiGain.x < 1e-4f && ddgiGain.y < 1e-4f && ddgiGain.z < 1e-4f) {
+            ddgiGain = float3(1.0f);
+        }
+    }
 
     const float INV_PI = 0.31830988618379067153776752674503;
-    float3 ddgiDiffuse = (ddgiIrradiance * albedo) * INV_PI;
-    ddgiDiffuse *= 8.0f;
-    ddgiDiffuse *= ddgiGain;
+    float3 ddgiDiffuseDirectional = (ddgiIrradiance * albedo) * INV_PI;
+    float3 ddgiDiffuseOmni = ddgiOmniRadiance * albedo;
+    float3 ddgiDiffuse =
+        (ddgiDiffuseDirectional * 1.25f + ddgiDiffuseOmni * 0.65f) * ddgiGain;
+    ddgiDiffuse = max(ddgiDiffuse, float3(0.0f));
     ambient += ddgiDiffuse;
 
     float3 ddgiSpecular = float3(0.0f);
     if (ps.atlasParams.w > 0.0f) {
         float3 reflectionDir = reflect(-V, N);
-        float3 ddgiReflection =
-            sampleDDGI(irradianceMap, ps, FragPos + N * 0.03f, reflectionDir);
+        float3 ddgiReflection = sampleDDGIRadiance(
+            irradianceMap, ps, ddgiSamplePos, reflectionDir, N);
         if (!all(isfinite(ddgiReflection))) {
             ddgiReflection = float3(0.0f);
         }
         ddgiReflection = max(ddgiReflection, float3(0.0f));
         float3 Fddgi = fresnelSchlick(fast::max(dot(N, V), 0.0), F0);
-        float gloss = 1.0f - roughness;
-        gloss *= gloss;
-        ddgiSpecular = ddgiReflection * Fddgi * gloss * 1.25f * ddgiGain;
+        float dielectricFloor = mix(0.16f, 0.03f, roughness) * (1.0f - metallic);
+        float3 specWeight = max(Fddgi, float3(dielectricFloor));
+        float specGain = mix(1.7f, 0.35f, roughness);
+        ddgiSpecular = ddgiReflection * specWeight * specGain * ddgiGain;
     }
 
     float3 iblContribution = float3(0.0);
@@ -1376,10 +1527,12 @@ fragment main0_out main0(
         iblContribution = ((kD * diffuseIBL) + (kS * specularIBL)) * occlusion;
     }
     float3 finalColor = (ambient + lighting + ddgiSpecular) + iblContribution;
-    if (ddgiDebugMode >= 29.5f) {
-        finalColor = ddgiIrradiance * ddgiGain * 5.0f;
+    if (ddgiDebugMode >= 39.5f) {
+        finalColor = max(ddgiDiffuse * 3.0f + ddgiSpecular * 2.0f, float3(0.0f));
+    } else if (ddgiDebugMode >= 29.5f) {
+        finalColor = ddgiIrradiance * ddgiGain * 4.0f;
     } else if (ddgiDebugMode >= 19.5f) {
-        finalColor = ddgiDiffuse * 2.5f;
+        finalColor = ddgiDiffuse * 3.0f;
     } else if (!(_526.useIBL != 0u)) {
         float3 I = fast::normalize(FragPos - float3(_526.cameraPosition));
         float3 R_1 = reflect(-I, N);

@@ -214,8 +214,8 @@ static inline float3 safeNormalize(float3 v, float3 fallback) {
 
 static inline float3 sampleSky(float3 d) {
     float t = clamp(d.y * 0.5f + 0.5f, 0.0f, 1.0f);
-    return mix(float3(0.0f, 0.0f, 0.0f),
-               float3(0.006f, 0.008f, 0.011f),
+    return mix(float3(0.0008f, 0.0009f, 0.0011f),
+               float3(0.0100f, 0.0110f, 0.0120f),
                t);
 }
 
@@ -452,12 +452,9 @@ kernel void main0(device float4 *probeRadianceOut [[buffer(0)]],
                 pointLightCount, spotLights, spotLightCount, areaLights,
                 areaLightCount);
 
-            float3 tint = albedo;
-            float luma = dot(tint, float3(0.2126f, 0.7152f, 0.0722f));
-            tint = mix(float3(luma), tint, 1.75f);
-            tint = clamp(pow(max(tint, float3(0.0f)), float3(0.7f)) * 1.8f,
-                         float3(0.0f), float3(1.0f));
-            radiance = (tint * direct) * 2.2f;
+            float3 tint = clamp(pow(max(albedo, float3(0.0f)), float3(0.9f)),
+                                float3(0.0f), float3(1.0f));
+            radiance = direct * tint * 1.45f;
 
             float3 t2;
             float3 b2;
@@ -479,18 +476,15 @@ kernel void main0(device float4 *probeRadianceOut [[buffer(0)]],
                         clamp(materials[h2.materialID].albedo, float3(0.0f),
                               float3(1.0f));
                 }
-                float3 tint2 = albedo2;
-                float luma2 = dot(tint2, float3(0.2126f, 0.7152f, 0.0722f));
-                tint2 = mix(float3(luma2), tint2, 1.85f);
-                tint2 =
-                    clamp(pow(max(tint2, float3(0.0f)), float3(0.7f)) * 1.8f,
+                float3 tint2 =
+                    clamp(pow(max(albedo2, float3(0.0f)), float3(0.9f)),
                           float3(0.0f), float3(1.0f));
                 float3 direct2 = evaluateDirectLights(
                     hitPos2, hitNormal2, bias, maxDistance, tris, triCount,
                     directionalLights, directionalLightCount, pointLights,
                     pointLightCount, spotLights, spotLightCount, areaLights,
                     areaLightCount);
-                radiance += (tint * tint2 * direct2) * 1.35f;
+                radiance += direct2 * (tint * tint2) * 0.95f;
             }
         }
 

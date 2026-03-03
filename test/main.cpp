@@ -169,15 +169,17 @@ class MainScene : public Scene {
             fall = !fall;
         } else if (window.isKeyClicked(Key::G) && window.ddgiSystem != nullptr &&
                    window.ddgiSystem->probeSpace != nullptr) {
-            giDebugMode = (giDebugMode + 1) % 3;
+            giDebugMode = (giDebugMode + 1) % 4;
             float debugAlpha = 0.0f;
             if (giDebugMode == 1) {
                 debugAlpha = 20.0f;
             } else if (giDebugMode == 2) {
                 debugAlpha = 30.0f;
+            } else if (giDebugMode == 3) {
+                debugAlpha = 40.0f;
             }
             window.ddgiSystem->probeSpace->debugColor =
-                Color(1.5f, 1.5f, 1.5f, debugAlpha);
+                Color(3.0f, 3.0f, 3.0f, debugAlpha);
         }
         if (fall) {
             camera.position.y -= 10.f * window.getDeltaTime();
@@ -210,7 +212,7 @@ class MainScene : public Scene {
         return Cubemap::fromResourceGroup(group);
     }
 
-#define COZY_LIGHT_COLOR Color(1.0f, 1.0f, 1.0f)
+#define COZY_LIGHT_COLOR Color(1.0f, 0.96f, 0.86f)
 
     void initialize(Window &window) override {
         Environment env;
@@ -231,9 +233,9 @@ class MainScene : public Scene {
         areaLight = AreaLight();
         areaLight.position = {0.0f, 1.98f, 0.0f};
         areaLight.setColor(COZY_LIGHT_COLOR);
-        areaLight.intensity = 2.0f;
+        areaLight.intensity = 2.2f;
         areaLight.range = 6.5f;
-        areaLight.size = {0.68f, 0.46f};
+        areaLight.size = {0.70f, 0.46f};
         areaLight.angle = 125.0f;
         areaLight.castsBothSides = false;
         areaLight.setRotation({90.0f, 0.0f, 0.0f});
@@ -242,7 +244,8 @@ class MainScene : public Scene {
         areaLight.createDebugObject();
         areaLight.addDebugObject(window);
 
-        const Color wallWhite = Color(0.74f, 0.74f, 0.74f);
+        const Color wallWhite = Color(0.84f, 0.74f, 0.58f);
+        const Color boxWhite = Color(0.84f, 0.84f, 0.84f);
         const Color wallRed = Color(0.98f, 0.05f, 0.03f);
         const Color wallGreen = Color(0.04f, 0.95f, 0.07f);
 
@@ -256,7 +259,7 @@ class MainScene : public Scene {
 
         cieling = createBox({2.0f, 0.05f, 2.0f});
         cieling.material.albedo = wallWhite;
-        cieling.material.roughness = 0.96f;
+        cieling.material.roughness = 0.95f;
         cieling.material.metallic = 0.0f;
         cieling.material.ao = 1.0f;
         cieling.setPosition({0.0f, 2.025f, 0.0f});
@@ -264,7 +267,7 @@ class MainScene : public Scene {
 
         wallLeft = createBox({0.05f, 2.0f, 2.0f});
         wallLeft.material.albedo = wallRed;
-        wallLeft.material.roughness = 0.98f;
+        wallLeft.material.roughness = 0.94f;
         wallLeft.material.metallic = 0.0f;
         wallLeft.material.ao = 1.0f;
         wallLeft.setPosition({-1.025f, 1.0f, 0.0f});
@@ -272,7 +275,7 @@ class MainScene : public Scene {
 
         wallRight = createBox({0.05f, 2.0f, 2.0f});
         wallRight.material.albedo = wallGreen;
-        wallRight.material.roughness = 0.98f;
+        wallRight.material.roughness = 0.94f;
         wallRight.material.metallic = 0.0f;
         wallRight.material.ao = 1.0f;
         wallRight.setPosition({1.025f, 1.0f, 0.0f});
@@ -280,15 +283,15 @@ class MainScene : public Scene {
 
         wallBack = createBox({2.0f, 2.0f, 0.05f});
         wallBack.material.albedo = wallWhite;
-        wallBack.material.roughness = 0.95f;
+        wallBack.material.roughness = 0.94f;
         wallBack.material.metallic = 0.0f;
         wallBack.material.ao = 1.0f;
         wallBack.setPosition({0.0f, 1.0f, 1.025f});
         window.addObject(&wallBack);
 
         tallBox = createBox({0.56f, 1.2f, 0.56f});
-        tallBox.material.albedo = wallWhite;
-        tallBox.material.roughness = 0.92f;
+        tallBox.material.albedo = boxWhite;
+        tallBox.material.roughness = 0.74f;
         tallBox.material.metallic = 0.0f;
         tallBox.material.ao = 1.0f;
         tallBox.setPosition({-0.42f, 0.6f, 0.5f});
@@ -296,8 +299,8 @@ class MainScene : public Scene {
         window.addObject(&tallBox);
 
         cubeBox = createBox({0.6f, 0.6f, 0.6f});
-        cubeBox.material.albedo = wallWhite;
-        cubeBox.material.roughness = 0.92f;
+        cubeBox.material.albedo = boxWhite;
+        cubeBox.material.roughness = 0.72f;
         cubeBox.material.metallic = 0.0f;
         cubeBox.material.ao = 1.0f;
         cubeBox.setPosition({0.42f, 0.3f, -0.5f});
@@ -313,22 +316,22 @@ class MainScene : public Scene {
         fpsText.addTraitComponent<Text>(FPSTextUpdater());
         window.addUIObject(&fpsText);
 
-        this->setAmbientIntensity(0.0f);
+        this->setAmbientIntensity(0.10f);
 
         frameBuffer = RenderTarget(window, RenderTargetType::Multisampled);
         window.addRenderTarget(&frameBuffer);
         frameBuffer.display(window);
 
         window.enableGlobalIllumination();
-        window.ddgiSystem->probeSpacing = 0.28f;
-        window.ddgiSystem->raysPerProbe = 4096;
+        window.ddgiSystem->probeSpacing = 0.14f;
+        window.ddgiSystem->raysPerProbe = 16384;
         window.ddgiSystem->maxRayDistance = 10.0f;
-        window.ddgiSystem->normalBias = 0.01f;
-        window.ddgiSystem->hysteresis = 0.92f;
-        window.ddgiSystem->probeSpace->probeResolution = 16;
+        window.ddgiSystem->normalBias = 0.015f;
+        window.ddgiSystem->hysteresis = 0.40f;
+        window.ddgiSystem->probeSpace->probeResolution = 28;
         window.ddgiSystem->probeSpace->textureBorderSize = 2;
         window.ddgiSystem->probeSpace->debugColor =
-            Color(1.5f, 1.5f, 1.5f, 0.0f);
+            Color(1.0f, 1.0f, 1.0f, 0.0f);
         // window.ddgiSystem->irradianceMap->display(window);
 
         this->setUseAtmosphereSkybox(false);

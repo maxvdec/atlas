@@ -166,13 +166,14 @@ void photon::GlobalIllumination::updateProbeLayout() {
         }
     }
 
+    float layoutPad = spacing * 0.25f;
     Position3d minWs =
-        hasGeometry ? Position3d(boundsMin.x - spacing, boundsMin.y - spacing,
-                                 boundsMin.z - spacing)
+        hasGeometry ? Position3d(boundsMin.x - layoutPad, boundsMin.y - layoutPad,
+                                 boundsMin.z - layoutPad)
                     : Position3d(-spacing, -spacing, -spacing);
     Position3d maxWs =
-        hasGeometry ? Position3d(boundsMax.x + spacing, boundsMax.y + spacing,
-                                 boundsMax.z + spacing)
+        hasGeometry ? Position3d(boundsMax.x + layoutPad, boundsMax.y + layoutPad,
+                                 boundsMax.z + layoutPad)
                     : Position3d(spacing, spacing, spacing);
 
     auto snapDown = [&](float v) { return std::floor(v / spacing) * spacing; };
