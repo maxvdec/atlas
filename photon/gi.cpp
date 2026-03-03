@@ -444,18 +444,28 @@ void photon::GlobalIllumination::render(
     giRaytracingPipeline->bindBufferData("tris", triangleData, triangleSize);
     giRaytracingPipeline->bindBufferData("materials", materialData,
                                          materialSize);
-    giRaytracingPipeline->setUniform1i("triCount",
-                                       static_cast<int>(triangles.size()));
-    giRaytracingPipeline->setUniform1i("materialCount",
-                                       static_cast<int>(materials.size()));
-    giRaytracingPipeline->setUniform1i(
-        "directionalLightCount", static_cast<int>(directionalLights.size()));
-    giRaytracingPipeline->setUniform1i("pointLightCount",
-                                       static_cast<int>(pointLights.size()));
-    giRaytracingPipeline->setUniform1i("spotLightCount",
-                                       static_cast<int>(spotLights.size()));
-    giRaytracingPipeline->setUniform1i("areaLightCount",
-                                       static_cast<int>(areaLights.size()));
+
+    struct GPUSceneCounts {
+        uint32_t triCount;
+        uint32_t materialCount;
+        uint32_t directionalLightCount;
+        uint32_t pointLightCount;
+        uint32_t spotLightCount;
+        uint32_t areaLightCount;
+        uint32_t _pad0;
+        uint32_t _pad1;
+    };
+    GPUSceneCounts sceneCounts{};
+    sceneCounts.triCount = static_cast<uint32_t>(triangles.size());
+    sceneCounts.materialCount = static_cast<uint32_t>(materials.size());
+    sceneCounts.directionalLightCount =
+        static_cast<uint32_t>(directionalLights.size());
+    sceneCounts.pointLightCount = static_cast<uint32_t>(pointLights.size());
+    sceneCounts.spotLightCount = static_cast<uint32_t>(spotLights.size());
+    sceneCounts.areaLightCount = static_cast<uint32_t>(areaLights.size());
+    giRaytracingPipeline->bindBufferData("sc", &sceneCounts,
+                                         sizeof(sceneCounts));
+
     giRaytracingPipeline->setUniform3f(
         "ps.origin", probeSpace->originWorldSpace.x,
         probeSpace->originWorldSpace.y, probeSpace->originWorldSpace.z);

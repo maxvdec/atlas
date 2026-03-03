@@ -129,7 +129,7 @@ struct Material {
     float _pad0;
 };
 
-struct alignas(16) Triangle {
+struct Triangle {
     float4 v0;
     float4 v1;
     float4 v2;
@@ -138,6 +138,17 @@ struct alignas(16) Triangle {
     float4 n2;
     int materialID;
     int padding[3];
+};
+
+struct SceneCounts {
+    uint triCount;
+    uint materialCount;
+    uint directionalLightCount;
+    uint pointLightCount;
+    uint spotLightCount;
+    uint areaLightCount;
+    uint _pad0;
+    uint _pad1;
 };
 
 struct DirectionalLight {
@@ -470,18 +481,13 @@ static inline float3 sphericalFibonacci(uint index, uint count, uint frameIndex)
 kernel void main0(device float4 *probeRadianceOut [[buffer(0)]],
                   device const Triangle *tris [[buffer(1)]],
                   device const Material *materials [[buffer(2)]],
-                  constant uint &triCount [[buffer(3)]],
-                  constant uint &materialCount [[buffer(4)]],
-                  constant ProbeSpace &ps [[buffer(5)]],
-                  constant RaytracingSettings &rt [[buffer(6)]],
-                  device const DirectionalLight *directionalLights [[buffer(7)]],
-                  device const PointLight *pointLights [[buffer(8)]],
-                  device const SpotLight *spotLights [[buffer(9)]],
-                  device const AreaLight *areaLights [[buffer(10)]],
-                  constant uint &directionalLightCount [[buffer(11)]],
-                  constant uint &pointLightCount [[buffer(12)]],
-                  constant uint &spotLightCount [[buffer(13)]],
-                  constant uint &areaLightCount [[buffer(14)]],
+                  constant SceneCounts &sc [[buffer(3)]],
+                  constant ProbeSpace &ps [[buffer(4)]],
+                  constant RaytracingSettings &rt [[buffer(5)]],
+                  device const DirectionalLight *directionalLights [[buffer(6)]],
+                  device const PointLight *pointLights [[buffer(7)]],
+                  device const SpotLight *spotLights [[buffer(8)]],
+                  device const AreaLight *areaLights [[buffer(9)]],
                   uint tid [[thread_position_in_grid]]) {
     const float PI = 3.14159265359f;
     uint totalProbes = (uint)ps.atlasParams.w;
@@ -505,7 +511,7 @@ kernel void main0(device float4 *probeRadianceOut [[buffer(0)]],
     float bias = max(rt.normalBias, 0.001f);
 
     float3 ro = probePos + rayDir * bias;
-    Hit h = traceScene(ro, rayDir, tris, triCount);
+    Hit h = traceScene(ro, rayDir, tris, sc.triCount);
 
     float3 radiance = float3(0.0f);
     if (!h.hit || h.t > maxDistance) {
@@ -519,16 +525,16 @@ kernel void main0(device float4 *probeRadianceOut [[buffer(0)]],
         }
 
         float3 albedo = float3(0.7f);
-        if (h.materialID >= 0 && (uint)h.materialID < materialCount) {
+        if (h.materialID >= 0 && (uint)h.materialID < sc.materialCount) {
             albedo = clamp(materials[h.materialID].albedo, float3(0.0f),
                            float3(1.0f));
         }
 
         float3 direct = evaluateDirectLights(
-            hitPos, hitNormal, bias, maxDistance, tris, triCount,
-            directionalLights, directionalLightCount, pointLights,
-            pointLightCount, spotLights, spotLightCount, areaLights,
-            areaLightCount);
+            hitPos, hitNormal, bias, maxDistance, tris, sc.triCount,
+            directionalLights, sc.directionalLightCount, pointLights,
+            sc.pointLightCount, spotLights, sc.spotLightCount, areaLights,
+            sc.areaLightCount);
 
         radiance = direct * albedo;
 
@@ -542,7 +548,7 @@ kernel void main0(device float4 *probeRadianceOut [[buffer(0)]],
                               b2 * local2.z,
                           hitNormal);
         float3 ro2 = hitPos + hitNormal * bias;
-        Hit h2 = traceScene(ro2, bounceDir, tris, triCount);
+        Hit h2 = traceScene(ro2, bounceDir, tris, sc.triCount);
         if (h2.hit && h2.t <= maxDistance) {
             float3 hitPos2 = ro2 + bounceDir * h2.t;
             float3 hitNormal2 =
@@ -551,16 +557,16 @@ kernel void main0(device float4 *probeRadianceOut [[buffer(0)]],
                 hitNormal2 = -hitNormal2;
             }
             float3 albedo2 = float3(0.7f);
-            if (h2.materialID >= 0 && (uint)h2.materialID < materialCount) {
+            if (h2.materialID >= 0 && (uint)h2.materialID < sc.materialCount) {
                 albedo2 =
                     clamp(materials[h2.materialID].albedo, float3(0.0f),
                           float3(1.0f));
             }
             float3 direct2 = evaluateDirectLights(
-                hitPos2, hitNormal2, bias, maxDistance, tris, triCount,
-                directionalLights, directionalLightCount, pointLights,
-                pointLightCount, spotLights, spotLightCount, areaLights,
-                areaLightCount);
+                hitPos2, hitNormal2, bias, maxDistance, tris, sc.triCount,
+                directionalLights, sc.directionalLightCount, pointLights,
+                sc.pointLightCount, spotLights, sc.spotLightCount, areaLights,
+                sc.areaLightCount);
             radiance += direct2 * albedo2 * albedo;
         }
     }
