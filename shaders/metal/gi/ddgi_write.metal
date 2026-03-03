@@ -14,10 +14,6 @@ struct ProbeSpace {
     float4 debugColor;
 
     float4 atlasParams;
-    // x = textureBorderSize
-    // y = probeResolution (inner)
-    // z = probesPerRow
-    // w = totalProbes  (put this here on CPU!)
 };
 
 struct RaytracingSettings {
@@ -32,38 +28,9 @@ struct RaytracingSettings {
     uint _pad2;
 };
 
-struct Material {
-    int materialID;
-    float metallic;
-    float roughness;
-    float ao;
-
-    float3 albedo;
-    float _pad0;
-};
-
-struct Triangle {
-    float3 v0;
-    float3 v1;
-    float3 v2;
-
-    float3 n0;
-    float3 n1;
-    float3 n2;
-
-    int materialID;
-};
-
-struct Hit {
-    float t;
-    float3 n;
-    int materialID;
-    bool hit;
-};
-
 kernel void main0(texture2d<float, access::write> outTexture [[texture(0)]],
                   texture2d<float, access::read> prevTexture [[texture(1)]],
-                  device float3 *probeRadiance [[buffer(0)]],
+                  device float4 *probeRadiance [[buffer(0)]],
                   constant ProbeSpace &ps [[buffer(1)]],
                   constant RaytracingSettings &rt [[buffer(2)]],
                   uint2 gid [[thread_position_in_grid]]) {
@@ -72,36 +39,44 @@ kernel void main0(texture2d<float, access::write> outTexture [[texture(0)]],
     uint probesPerRow = (uint)ps.atlasParams.z;
     uint totalProbes = (uint)ps.atlasParams.w;
 
-    uint tileRes = innerRes + 2u * border;
-
     if (gid.x >= outTexture.get_width() || gid.y >= outTexture.get_height())
         return;
+
+    uint tileRes = innerRes + 2u * border;
+    if (tileRes == 0u || probesPerRow == 0u || totalProbes == 0u ||
+        innerRes == 0u) {
+        outTexture.write(prevTexture.read(gid), gid);
+        return;
+    }
 
     uint tileX = gid.x / tileRes;
     uint tileY = gid.y / tileRes;
     uint probeIndex = tileX + tileY * probesPerRow;
 
     if (probeIndex >= totalProbes) {
-        outTexture.write(float4(0, 0, 0, 1), gid);
+        outTexture.write(prevTexture.read(gid), gid);
         return;
     }
 
     uint localX = gid.x - tileX * tileRes;
     uint localY = gid.y - tileY * tileRes;
 
-    bool isInner = (localX >= border) && (localX < border + innerRes) &&
-                   (localY >= border) && (localY < border + innerRes);
+    int innerX = clamp(int(localX) - int(border), 0, int(innerRes) - 1);
+    int innerY = clamp(int(localY) - int(border), 0, int(innerRes) - 1);
 
-    if (!isInner) {
-        outTexture.write(float4(0.02f, 0.02f, 0.02f, 1), gid);
-        return;
+    uint texelsPerProbe = innerRes * innerRes;
+    uint probeTexelIndex = probeIndex * texelsPerProbe +
+                           (uint(innerY) * innerRes + uint(innerX));
+
+    float3 cur = probeRadiance[probeTexelIndex].xyz;
+    if (!all(isfinite(cur))) {
+        cur = float3(0.0f);
     }
 
-    float3 cur = probeRadiance[probeIndex];
-
     float4 prev = prevTexture.read(gid);
-    float h = rt.hysteresis;
-    float3 blended = mix(cur, prev.xyz, h);
+    float3 prevValue = all(isfinite(prev.xyz)) ? prev.xyz : float3(0.0f);
+    float h = clamp(rt.hysteresis, 0.0f, 0.995f);
+    float3 blended = (rt.frameIndex == 0u) ? cur : mix(cur, prevValue, h);
 
-    outTexture.write(float4(blended, 1.0f), gid);
+    outTexture.write(float4(max(blended, float3(0.0f)), 1.0f), gid);
 }

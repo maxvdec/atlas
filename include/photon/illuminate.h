@@ -48,7 +48,7 @@ struct ProbeSpace {
 class GlobalIllumination {
   public:
     void
-    render(const std::shared_ptr<opal::CommandBuffer> &commandBuffer) const;
+    render(const std::shared_ptr<opal::CommandBuffer> &commandBuffer);
     void updateProbeLayout();
     void init();
 
@@ -60,6 +60,7 @@ class GlobalIllumination {
     std::shared_ptr<opal::Pipeline> giRaytracingPipeline;
 
     std::shared_ptr<opal::Buffer> probeRadianceBuffer;
+    int probeRadianceCapacity = 0;
 
     std::shared_ptr<ProbeSpace> probeSpace;
 
@@ -95,11 +96,11 @@ class GlobalIllumination {
 
     float probeSpacing = 0.5f;
 
-    int raysPerProbe = 64;
+    int raysPerProbe = 512;
     float maxRayDistance = 20.f;
     float normalBias = 0.05;
-    float hysteresis = 0.95;
-    int frameIndex;
+    float hysteresis = 0.2;
+    int frameIndex = 0;
 };
 
 } // namespace photon

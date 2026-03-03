@@ -32,6 +32,20 @@ std::shared_ptr<opal::Texture> createFallbackSSAOTexture() {
     return texture;
 }
 
+std::shared_ptr<opal::Texture> createFallbackIrradianceTexture() {
+    const unsigned char black[4] = {0, 0, 0, 255};
+    auto texture = opal::Texture::create(
+        opal::TextureType::Texture2D, opal::TextureFormat::Rgba8, 1, 1,
+        opal::TextureDataFormat::Rgba, black, 1);
+    texture->setFilterMode(opal::TextureFilterMode::Nearest,
+                           opal::TextureFilterMode::Nearest);
+    texture->setWrapMode(opal::TextureAxis::S,
+                         opal::TextureWrapMode::ClampToEdge);
+    texture->setWrapMode(opal::TextureAxis::T,
+                         opal::TextureWrapMode::ClampToEdge);
+    return texture;
+}
+
 std::shared_ptr<opal::Texture> createFallbackSkyboxTexture() {
     const unsigned char black[4] = {0, 0, 0, 255};
     auto texture = opal::Texture::create(
@@ -408,6 +422,10 @@ void Window::deferredRendering(
     if (fallbackShadowCubemapTexture == nullptr) {
         fallbackShadowCubemapTexture = createFallbackShadowCubemapTexture();
     }
+    static std::shared_ptr<opal::Texture> fallbackIrradianceTexture = nullptr;
+    if (fallbackIrradianceTexture == nullptr) {
+        fallbackIrradianceTexture = createFallbackIrradianceTexture();
+    }
     if (this->ssaoBlurBuffer != nullptr &&
         this->ssaoBlurBuffer->texture.id != 0) {
         lightPipeline->bindTexture2D("ssao", this->ssaoBlurBuffer->texture.id,
@@ -426,7 +444,9 @@ void Window::deferredRendering(
     }
 
 #ifdef METAL
-    if (usesGlobalIllumination && ddgiSystem != nullptr) {
+    if (usesGlobalIllumination && ddgiSystem != nullptr &&
+        ddgiSystem->probeSpace != nullptr && ddgiSystem->irradianceMap != nullptr &&
+        ddgiSystem->irradianceMap->texture != nullptr) {
         lightPipeline->setUniform3f("ps.origin",
                                     ddgiSystem->probeSpace->originWorldSpace.x,
                                     ddgiSystem->probeSpace->originWorldSpace.y,
@@ -442,7 +462,8 @@ void Window::deferredRendering(
         lightPipeline->setUniform4f("ps.debugColor",
                                     ddgiSystem->probeSpace->debugColor.r,
                                     ddgiSystem->probeSpace->debugColor.g,
-                                    ddgiSystem->probeSpace->debugColor.b, 1.0f);
+                                    ddgiSystem->probeSpace->debugColor.b,
+                                    ddgiSystem->probeSpace->debugColor.a);
         lightPipeline->setUniform4f(
             "ps.atlasParams", (float)ddgiSystem->probeSpace->textureBorderSize,
             (float)ddgiSystem->probeSpace->probeResolution,
@@ -451,6 +472,14 @@ void Window::deferredRendering(
 
         lightPipeline->bindTexture("irradianceMap",
                                    ddgiSystem->irradianceMap->texture, 16);
+    } else {
+        lightPipeline->setUniform3f("ps.origin", 0.0f, 0.0f, 0.0f);
+        lightPipeline->setUniform3f("ps.spacing", 1.0f, 1.0f, 1.0f);
+        lightPipeline->setUniform3f("ps.probeCount", 0.0f, 0.0f, 0.0f);
+        lightPipeline->setUniform4f("ps.debugColor", 0.0f, 0.0f, 0.0f, 0.0f);
+        lightPipeline->setUniform4f("ps.atlasParams", 0.0f, 0.0f, 0.0f, 0.0f);
+        lightPipeline->bindTexture2D("irradianceMap",
+                                     fallbackIrradianceTexture->textureID, 16);
     }
 #endif
 

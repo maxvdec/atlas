@@ -260,6 +260,16 @@ class Scene {
      */
     void addAreaLight(AreaLight *light) { areaLights.push_back(light); }
 
+    const std::vector<DirectionalLight *> &getDirectionalLights() const {
+        return directionalLights;
+    }
+
+    const std::vector<Light *> &getPointLights() const { return pointLights; }
+
+    const std::vector<Spotlight *> &getSpotlights() const { return spotlights; }
+
+    const std::vector<AreaLight *> &getAreaLights() const { return areaLights; }
+
     /**
      * @brief Set the Skybox object
      *

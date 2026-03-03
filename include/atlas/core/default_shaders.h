@@ -107,10 +107,6 @@ struct ProbeSpace {
     float4 debugColor;
 
     float4 atlasParams;
-    // x = textureBorderSize
-    // y = probeResolution (inner)
-    // z = probesPerRow
-    // w = totalProbes  (put this here on CPU!)
 };
 
 struct RaytracingSettings {
@@ -144,6 +140,64 @@ struct alignas(16) Triangle {
     float4 n2;
     int materialID;
     int padding[3];
+};
+
+struct DirectionalLight {
+    float3 direction;
+    float _pad1;
+    float3 diffuse;
+    float _pad2;
+    float3 specular;
+    float intensity;
+};
+
+struct PointLight {
+    float3 position;
+    float _pad1;
+    float3 diffuse;
+    float _pad2;
+    float3 specular;
+    float intensity;
+    float constant0;
+    float linear;
+    float quadratic;
+    float radius;
+    float _pad3;
+};
+
+struct SpotLight {
+    float3 position;
+    float _pad1;
+    float3 direction;
+    float cutOff;
+    float outerCutOff;
+    float intensity;
+    float range;
+    float _pad4;
+    float3 diffuse;
+    float _pad5;
+    float3 specular;
+    float _pad6;
+};
+
+struct AreaLight {
+    float3 position;
+    float _pad1;
+    float3 right;
+    float _pad2;
+    float3 up;
+    float _pad3;
+    float2 size;
+    float _pad4;
+    float _pad5;
+    float3 diffuse;
+    float _pad6;
+    float3 specular;
+    float angle;
+    int castsBothSides;
+    float intensity;
+    float range;
+    float _pad9;
 };
 
 struct Hit {
@@ -220,13 +274,6 @@ static inline float rand01(thread uint &state) {
     return (float)(state & 0x00FFFFFFu) / 16777216.0f;
 }
 
-static inline float3 randomUnitVector(thread uint &state) {
-    float z = rand01(state) * 2.0f - 1.0f;
-    float a = rand01(state) * 6.28318530718f;
-    float r = sqrt(max(0.0f, 1.0f - z * z));
-    return float3(r * cos(a), z, r * sin(a));
-}
-
 static inline uint3 probeCoordFromIndex(uint idx, uint3 counts) {
     uint xy = counts.x * counts.y;
     uint z = idx / xy;
@@ -250,46 +297,300 @@ static inline float3 octDecode(float2 e) {
     return normalize(n);
 }
 
-kernel void main0(device float3 *probeRadianceOut [[buffer(0)]],
+static inline float3 safeNormalize(float3 v, float3 fallback) {
+    float len2 = dot(v, v);
+    if (len2 > 1e-10f) {
+        return v * rsqrt(len2);
+    }
+    return fallback;
+}
+
+static inline float3 sampleSky(float3 d) {
+    float t = clamp(d.y * 0.5f + 0.5f, 0.0f, 1.0f);
+    return mix(float3(0.0f, 0.0f, 0.0f),
+               float3(0.006f, 0.008f, 0.011f),
+               t);
+}
+
+static inline float shadowVisibility(float3 ro, float3 rd, float maxT,
+                                     device const Triangle *tris,
+                                     uint triCount) {
+    if (maxT <= 1e-4f) {
+        return 1.0f;
+    }
+    Hit h = traceScene(ro, rd, tris, triCount);
+    if (!h.hit) {
+        return 1.0f;
+    }
+    return (h.t >= maxT) ? 1.0f : 0.0f;
+}
+
+static inline float3 evaluateDirectLights(
+    float3 posWS, float3 normalWS, float bias, float maxDistance,
+    device const Triangle *tris, uint triCount,
+    device const DirectionalLight *directionalLights, uint directionalLightCount,
+    device const PointLight *pointLights, uint pointLightCount,
+    device const SpotLight *spotLights, uint spotLightCount,
+    device const AreaLight *areaLights, uint areaLightCount) {
+    float3 n = safeNormalize(normalWS, float3(0.0f, 1.0f, 0.0f));
+    float3 start = posWS + n * bias;
+    float3 sum = float3(0.0f);
+
+    for (uint i = 0; i < directionalLightCount; i++) {
+        float3 L = safeNormalize(-directionalLights[i].direction,
+                                 float3(0.0f, 1.0f, 0.0f));
+        float ndl = max(0.0f, dot(n, L));
+        if (ndl <= 0.0f)
+            continue;
+
+        float visibility =
+            shadowVisibility(start, L, maxDistance, tris, triCount);
+        sum += directionalLights[i].diffuse *
+               max(0.0f, directionalLights[i].intensity) * ndl * visibility;
+    }
+
+    for (uint i = 0; i < pointLightCount; i++) {
+        float3 toLight = pointLights[i].position - posWS;
+        float dist = length(toLight);
+        float radius = max(pointLights[i].radius, 0.001f);
+        if (dist <= 1e-4f || dist >= radius)
+            continue;
+
+        float3 L = toLight / dist;
+        float ndl = max(0.0f, dot(n, L));
+        if (ndl <= 0.0f)
+            continue;
+
+        float attenuation =
+            1.0f / max(pointLights[i].constant0 + pointLights[i].linear * dist +
+                           pointLights[i].quadratic * dist * dist,
+                       1e-4f);
+        float fade = 1.0f - smoothstep(radius * 0.9f, radius, dist);
+        float visibility = shadowVisibility(start, L, max(dist - bias * 2.0f, 0.001f),
+                                            tris, triCount);
+
+        sum += pointLights[i].diffuse * max(0.0f, pointLights[i].intensity) *
+               attenuation * fade * ndl * visibility;
+    }
+
+    for (uint i = 0; i < spotLightCount; i++) {
+        float3 toLight = spotLights[i].position - posWS;
+        float dist = length(toLight);
+        float range = max(spotLights[i].range, 0.001f);
+        if (dist <= 1e-4f || dist >= range)
+            continue;
+
+        float3 L = toLight / dist;
+        float ndl = max(0.0f, dot(n, L));
+        if (ndl <= 0.0f)
+            continue;
+
+        float3 spotDir = safeNormalize(spotLights[i].direction,
+                                       float3(0.0f, -1.0f, 0.0f));
+        float theta = dot(L, -spotDir);
+        float epsilon = max(spotLights[i].cutOff - spotLights[i].outerCutOff,
+                            1e-4f);
+        float cone = clamp((theta - spotLights[i].outerCutOff) / epsilon, 0.0f,
+                           1.0f);
+        if (cone <= 0.0f)
+            continue;
+
+        float attenuation =
+            1.0f / ((1.0f + (dist / range)) + ((dist * dist) / (range * range)));
+        float fade = 1.0f - smoothstep(range * 0.9f, range, dist);
+        float visibility = shadowVisibility(start, L, max(dist - bias * 2.0f, 0.001f),
+                                            tris, triCount);
+
+        sum += spotLights[i].diffuse * max(0.0f, spotLights[i].intensity) * cone *
+               attenuation * fade * ndl * visibility;
+    }
+
+    for (uint i = 0; i < areaLightCount; i++) {
+        float3 center = areaLights[i].position;
+        float3 right = safeNormalize(areaLights[i].right, float3(1.0f, 0.0f, 0.0f));
+        float3 up = safeNormalize(areaLights[i].up, float3(0.0f, 1.0f, 0.0f));
+        float2 halfSize = areaLights[i].size * 0.5f;
+
+        float3 toPoint = posWS - center;
+        float s = clamp(dot(toPoint, right), -halfSize.x, halfSize.x);
+        float t = clamp(dot(toPoint, up), -halfSize.y, halfSize.y);
+        float3 closest = center + right * s + up * t;
+
+        float3 Lvec = closest - posWS;
+        float dist = length(Lvec);
+        float range = max(areaLights[i].range, 0.001f);
+        if (dist <= 1e-4f || dist >= range)
+            continue;
+
+        float3 L = Lvec / dist;
+        float ndl = max(0.0f, dot(n, L));
+        if (ndl <= 0.0f)
+            continue;
+
+        float3 lightNormal =
+            safeNormalize(cross(right, up), float3(0.0f, -1.0f, 0.0f));
+        float nl = dot(lightNormal, -L);
+        float facing = (areaLights[i].castsBothSides != 0) ? abs(nl) : max(nl, 0.0f);
+        float cutoff = cos(areaLights[i].angle * 0.01745329251f);
+        if (facing < cutoff || facing <= 0.0f)
+            continue;
+
+        float attenuation =
+            1.0f / ((1.0f + (dist / range)) + ((dist * dist) / (range * range)));
+        float fade = 1.0f - smoothstep(range * 0.9f, range, dist);
+        float visibility = shadowVisibility(start, L, max(dist - bias * 2.0f, 0.001f),
+                                            tris, triCount);
+
+        sum += areaLights[i].diffuse * max(0.0f, areaLights[i].intensity) *
+               facing * attenuation * fade * ndl * visibility;
+    }
+
+    return sum;
+}
+
+static inline void buildBasis(float3 n, thread float3 &t, thread float3 &b) {
+    float3 up = (fabs(n.y) < 0.999f) ? float3(0.0f, 1.0f, 0.0f)
+                                     : float3(1.0f, 0.0f, 0.0f);
+    t = safeNormalize(cross(up, n), float3(1.0f, 0.0f, 0.0f));
+    b = safeNormalize(cross(n, t), float3(0.0f, 0.0f, 1.0f));
+}
+
+static inline float3 sampleCosineHemisphere(thread uint &state) {
+    float u1 = rand01(state);
+    float u2 = rand01(state);
+    float r = sqrt(max(0.0f, u1));
+    float phi = 6.28318530718f * u2;
+    float x = r * cos(phi);
+    float z = r * sin(phi);
+    float y = sqrt(max(0.0f, 1.0f - u1));
+    return float3(x, y, z);
+}
+
+kernel void main0(device float4 *probeRadianceOut [[buffer(0)]],
                   device const Triangle *tris [[buffer(1)]],
                   device const Material *materials [[buffer(2)]],
                   constant uint &triCount [[buffer(3)]],
-                  constant ProbeSpace &ps [[buffer(4)]],
-                  constant RaytracingSettings &rt [[buffer(5)]],
+                  constant uint &materialCount [[buffer(4)]],
+                  constant ProbeSpace &ps [[buffer(5)]],
+                  constant RaytracingSettings &rt [[buffer(6)]],
+                  device const DirectionalLight *directionalLights [[buffer(7)]],
+                  device const PointLight *pointLights [[buffer(8)]],
+                  device const SpotLight *spotLights [[buffer(9)]],
+                  device const AreaLight *areaLights [[buffer(10)]],
+                  constant uint &directionalLightCount [[buffer(11)]],
+                  constant uint &pointLightCount [[buffer(12)]],
+                  constant uint &spotLightCount [[buffer(13)]],
+                  constant uint &areaLightCount [[buffer(14)]],
                   uint tid [[thread_position_in_grid]]) {
     uint totalProbes = (uint)ps.atlasParams.w;
-    if (tid >= totalProbes)
+    uint innerRes = max((uint)ps.atlasParams.y, 1u);
+    uint texelsPerProbe = innerRes * innerRes;
+    uint totalTexels = totalProbes * texelsPerProbe;
+
+    if (tid >= totalTexels)
         return;
+
+    uint probeIndex = tid / texelsPerProbe;
+    uint localIndex = tid - probeIndex * texelsPerProbe;
+    uint lx = localIndex % innerRes;
+    uint ly = localIndex / innerRes;
 
     uint3 counts = uint3((uint)ps.probeCount.x, (uint)ps.probeCount.y,
                          (uint)ps.probeCount.z);
-    uint3 pc = probeCoordFromIndex(tid, counts);
+    uint3 pc = probeCoordFromIndex(probeIndex, counts);
 
     float3 probePos = ps.origin + float3(pc) * ps.spacing;
 
-    uint state = tid * 9781u + rt.frameIndex * 6271u;
+    float2 e = ((float2((float)lx, (float)ly) + 0.5f) / float(innerRes)) * 2.0f -
+               1.0f;
+    float3 baseDir = octDecode(e);
+
+    uint state = tid * 9781u + 1u;
+
+    uint rays =
+        max(8u, (max(rt.raysPerProbe, 1u) + texelsPerProbe - 1u) / texelsPerProbe);
+    float maxDistance = max(rt.maxRayDistance, 0.001f);
+    float bias = max(rt.normalBias, 0.001f);
 
     float3 sum = float3(0.0f);
 
-    for (uint r = 0; r < rt.raysPerProbe; r++) {
-        float3 rd = randomUnitVector(state);
-        float3 ro = probePos + rd * rt.normalBias;
+    for (uint r = 0; r < rays; r++) {
+        float3 t;
+        float3 b;
+        buildBasis(baseDir, t, b);
+        float3 localDir = sampleCosineHemisphere(state);
+        float3 rayDir = safeNormalize(t * localDir.x + baseDir * localDir.y +
+                                          b * localDir.z,
+                                      baseDir);
 
-        Hit h = traceScene(ro, rd, tris, triCount);
+        float3 ro = probePos + rayDir * bias;
+        Hit h = traceScene(ro, rayDir, tris, triCount);
 
-        float3 radiance;
-        if (!h.hit) {
-            radiance = float3(0.1f, 0.15f, 0.25f);
+        float3 radiance = float3(0.0f);
+        if (!h.hit || h.t > maxDistance) {
+            radiance = sampleSky(rayDir);
         } else {
-            float3 L = normalize(float3(0.5, 1.0, 0.5));
-            float ndl = max(0.0f, dot(h.n, L));
-            radiance = float3(1.0, 0.95, 0.8) * ndl;
+            float3 hitPos = ro + rayDir * h.t;
+            float3 hitNormal = safeNormalize(h.n, float3(0.0f, 1.0f, 0.0f));
+
+            float3 albedo = float3(0.7f);
+            if (h.materialID >= 0 && (uint)h.materialID < materialCount) {
+                albedo = clamp(materials[h.materialID].albedo, float3(0.0f),
+                               float3(1.0f));
+            }
+
+            float3 direct = evaluateDirectLights(
+                hitPos, hitNormal, bias, maxDistance, tris, triCount,
+                directionalLights, directionalLightCount, pointLights,
+                pointLightCount, spotLights, spotLightCount, areaLights,
+                areaLightCount);
+
+            float3 tint = albedo;
+            float luma = dot(tint, float3(0.2126f, 0.7152f, 0.0722f));
+            tint = mix(float3(luma), tint, 1.75f);
+            tint = clamp(pow(max(tint, float3(0.0f)), float3(0.7f)) * 1.8f,
+                         float3(0.0f), float3(1.0f));
+            radiance = (tint * direct) * 2.2f;
+
+            float3 t2;
+            float3 b2;
+            buildBasis(hitNormal, t2, b2);
+            float3 local2 = sampleCosineHemisphere(state);
+            float3 bounceDir =
+                safeNormalize(t2 * local2.x + hitNormal * local2.y +
+                                  b2 * local2.z,
+                              hitNormal);
+            float3 ro2 = hitPos + hitNormal * bias;
+            Hit h2 = traceScene(ro2, bounceDir, tris, triCount);
+            if (h2.hit && h2.t <= maxDistance) {
+                float3 hitPos2 = ro2 + bounceDir * h2.t;
+                float3 hitNormal2 =
+                    safeNormalize(h2.n, float3(0.0f, 1.0f, 0.0f));
+                float3 albedo2 = float3(0.7f);
+                if (h2.materialID >= 0 && (uint)h2.materialID < materialCount) {
+                    albedo2 =
+                        clamp(materials[h2.materialID].albedo, float3(0.0f),
+                              float3(1.0f));
+                }
+                float3 tint2 = albedo2;
+                float luma2 = dot(tint2, float3(0.2126f, 0.7152f, 0.0722f));
+                tint2 = mix(float3(luma2), tint2, 1.85f);
+                tint2 =
+                    clamp(pow(max(tint2, float3(0.0f)), float3(0.7f)) * 1.8f,
+                          float3(0.0f), float3(1.0f));
+                float3 direct2 = evaluateDirectLights(
+                    hitPos2, hitNormal2, bias, maxDistance, tris, triCount,
+                    directionalLights, directionalLightCount, pointLights,
+                    pointLightCount, spotLights, spotLightCount, areaLights,
+                    areaLightCount);
+                radiance += (tint * tint2 * direct2) * 1.35f;
+            }
         }
 
         sum += radiance;
     }
 
-    probeRadianceOut[tid] = sum / float(rt.raysPerProbe);
+    probeRadianceOut[tid] = float4(sum / float(rays), 1.0f);
 }
 )"
 ;
@@ -311,10 +612,6 @@ struct ProbeSpace {
     float4 debugColor;
 
     float4 atlasParams;
-    // x = textureBorderSize
-    // y = probeResolution (inner)
-    // z = probesPerRow
-    // w = totalProbes  (put this here on CPU!)
 };
 
 struct RaytracingSettings {
@@ -329,38 +626,9 @@ struct RaytracingSettings {
     uint _pad2;
 };
 
-struct Material {
-    int materialID;
-    float metallic;
-    float roughness;
-    float ao;
-
-    float3 albedo;
-    float _pad0;
-};
-
-struct Triangle {
-    float3 v0;
-    float3 v1;
-    float3 v2;
-
-    float3 n0;
-    float3 n1;
-    float3 n2;
-
-    int materialID;
-};
-
-struct Hit {
-    float t;
-    float3 n;
-    int materialID;
-    bool hit;
-};
-
 kernel void main0(texture2d<float, access::write> outTexture [[texture(0)]],
                   texture2d<float, access::read> prevTexture [[texture(1)]],
-                  device float3 *probeRadiance [[buffer(0)]],
+                  device float4 *probeRadiance [[buffer(0)]],
                   constant ProbeSpace &ps [[buffer(1)]],
                   constant RaytracingSettings &rt [[buffer(2)]],
                   uint2 gid [[thread_position_in_grid]]) {
@@ -369,38 +637,46 @@ kernel void main0(texture2d<float, access::write> outTexture [[texture(0)]],
     uint probesPerRow = (uint)ps.atlasParams.z;
     uint totalProbes = (uint)ps.atlasParams.w;
 
-    uint tileRes = innerRes + 2u * border;
-
     if (gid.x >= outTexture.get_width() || gid.y >= outTexture.get_height())
         return;
+
+    uint tileRes = innerRes + 2u * border;
+    if (tileRes == 0u || probesPerRow == 0u || totalProbes == 0u ||
+        innerRes == 0u) {
+        outTexture.write(prevTexture.read(gid), gid);
+        return;
+    }
 
     uint tileX = gid.x / tileRes;
     uint tileY = gid.y / tileRes;
     uint probeIndex = tileX + tileY * probesPerRow;
 
     if (probeIndex >= totalProbes) {
-        outTexture.write(float4(0, 0, 0, 1), gid);
+        outTexture.write(prevTexture.read(gid), gid);
         return;
     }
 
     uint localX = gid.x - tileX * tileRes;
     uint localY = gid.y - tileY * tileRes;
 
-    bool isInner = (localX >= border) && (localX < border + innerRes) &&
-                   (localY >= border) && (localY < border + innerRes);
+    int innerX = clamp(int(localX) - int(border), 0, int(innerRes) - 1);
+    int innerY = clamp(int(localY) - int(border), 0, int(innerRes) - 1);
 
-    if (!isInner) {
-        outTexture.write(float4(0.02f, 0.02f, 0.02f, 1), gid);
-        return;
+    uint texelsPerProbe = innerRes * innerRes;
+    uint probeTexelIndex = probeIndex * texelsPerProbe +
+                           (uint(innerY) * innerRes + uint(innerX));
+
+    float3 cur = probeRadiance[probeTexelIndex].xyz;
+    if (!all(isfinite(cur))) {
+        cur = float3(0.0f);
     }
 
-    float3 cur = probeRadiance[probeIndex];
-
     float4 prev = prevTexture.read(gid);
-    float h = rt.hysteresis;
-    float3 blended = mix(cur, prev.xyz, h);
+    float3 prevValue = all(isfinite(prev.xyz)) ? prev.xyz : float3(0.0f);
+    float h = clamp(rt.hysteresis, 0.0f, 0.995f);
+    float3 blended = (rt.frameIndex == 0u) ? cur : mix(cur, prevValue, h);
 
-    outTexture.write(float4(blended, 1.0f), gid);
+    outTexture.write(float4(max(blended, float3(0.0f)), 1.0f), gid);
 }
 )"
 ;
@@ -3079,8 +3355,6 @@ static inline __attribute__((always_inline)) float calculateShadow(
     float avgDim = 0.5 * (shadowMapSize.x + shadowMapSize.y);
     float resFactor = fast::clamp(1024.0 / fast::max(avgDim, 1.0), 0.75, 1.25);
     float distFactor = fast::clamp(_distance / 800.0, 0.0, 1.0);
-    float desiredKernel = mix(1.0, 1.5, distFactor) * resFactor;
-    int kernelSize = int(fast::clamp(floor(desiredKernel + 0.5), 1.0, 2.0));
     float texelRadius = mix(1.0, 3.0, distFactor) * resFactor;
     float2 filterRadius = texelSize * texelRadius;
     int sampleCount = 0;
@@ -3337,6 +3611,21 @@ static inline float2 octEncode(float3 n) {
     return e;
 }
 
+static inline float3 safeNormalizeDDGI(float3 v, float3 fallback) {
+    float len2 = dot(v, v);
+    if (len2 > 1e-10f) {
+        return v * rsqrt(len2);
+    }
+    return fallback;
+}
+
+static inline void buildDDGIBasis(float3 n, thread float3 &t, thread float3 &b) {
+    float3 up = (fabs(n.y) < 0.999f) ? float3(0.0f, 1.0f, 0.0f)
+                                     : float3(1.0f, 0.0f, 0.0f);
+    t = safeNormalizeDDGI(cross(up, n), float3(1.0f, 0.0f, 0.0f));
+    b = safeNormalizeDDGI(cross(n, t), float3(0.0f, 0.0f, 1.0f));
+}
+
 static inline uint probeIndexFromCoord(uint3 c, uint3 counts) {
     return c.x + counts.x * (c.y + counts.y * c.z);
 }
@@ -3344,16 +3633,26 @@ static inline uint probeIndexFromCoord(uint3 c, uint3 counts) {
 static inline float2 ddgiAtlasUV(uint probeIndex, float3 dirWS,
                                  constant ProbeSpace &ps, uint atlasW,
                                  uint atlasH) {
+    if (atlasW == 0u || atlasH == 0u) {
+        return float2(0.5f);
+    }
+
     uint border = (uint)ps.atlasParams.x;
     uint innerRes = (uint)ps.atlasParams.y;
     uint probesPerRow = (uint)ps.atlasParams.z;
+    if (innerRes == 0u || probesPerRow == 0u) {
+        return float2(0.5f);
+    }
 
     uint tileRes = innerRes + 2u * border;
 
     uint tileX = probeIndex % probesPerRow;
     uint tileY = probeIndex / probesPerRow;
 
-    float2 e = octEncode(normalize(dirWS));
+    float dirLen = length(dirWS);
+    float3 safeDir =
+        (dirLen > 1e-6f) ? (dirWS / float3(dirLen)) : float3(0.0f, 1.0f, 0.0f);
+    float2 e = octEncode(safeDir);
     float2 innerUV = e * 0.5f + 0.5f;
 
     float2 innerPx = float2((float)(tileX * tileRes + border),
@@ -3363,30 +3662,117 @@ static inline float2 ddgiAtlasUV(uint probeIndex, float3 dirWS,
     return (innerPx + 0.5f) / float2((float)atlasW, (float)atlasH);
 }
 
-static inline float3 sampleDDGI(texture2d<float> ddgiTexture, sampler samp,
+static inline float3 sampleDDGITextureBilinear(texture2d<float> tex, float2 uv) {
+    uint w = tex.get_width();
+    uint h = tex.get_height();
+    if (w == 0u || h == 0u) {
+        return float3(0.0f);
+    }
+
+    float2 pixel = uv * float2((float)w, (float)h) - 0.5f;
+    int2 p0 = int2(floor(pixel));
+    int2 p1 = p0 + int2(1, 0);
+    int2 p2 = p0 + int2(0, 1);
+    int2 p3 = p0 + int2(1, 1);
+
+    int maxX = int(w) - 1;
+    int maxY = int(h) - 1;
+    p0 = int2(clamp(p0.x, 0, maxX), clamp(p0.y, 0, maxY));
+    p1 = int2(clamp(p1.x, 0, maxX), clamp(p1.y, 0, maxY));
+    p2 = int2(clamp(p2.x, 0, maxX), clamp(p2.y, 0, maxY));
+    p3 = int2(clamp(p3.x, 0, maxX), clamp(p3.y, 0, maxY));
+
+    float2 f = fract(pixel);
+    float3 c00 = tex.read(uint2((uint)p0.x, (uint)p0.y)).xyz;
+    float3 c10 = tex.read(uint2((uint)p1.x, (uint)p1.y)).xyz;
+    float3 c01 = tex.read(uint2((uint)p2.x, (uint)p2.y)).xyz;
+    float3 c11 = tex.read(uint2((uint)p3.x, (uint)p3.y)).xyz;
+    float3 cx0 = mix(c00, c10, f.x);
+    float3 cx1 = mix(c01, c11, f.x);
+    return mix(cx0, cx1, f.y);
+}
+
+static inline float3 sampleProbeIrradiance(texture2d<float> ddgiTexture,
+                                           constant ProbeSpace &ps,
+                                           uint probeIndex, uint atlasW,
+                                           uint atlasH, float3 normalWS) {
+    float3 n = safeNormalizeDDGI(normalWS, float3(0.0f, 1.0f, 0.0f));
+    float3 t;
+    float3 b;
+    buildDDGIBasis(n, t, b);
+
+    float3 d0 = n;
+    float3 d1 = safeNormalizeDDGI(n + t * 0.6f, n);
+    float3 d2 = safeNormalizeDDGI(n - t * 0.6f, n);
+    float3 d3 = safeNormalizeDDGI(n + b * 0.6f, n);
+    float3 d4 = safeNormalizeDDGI(n - b * 0.6f, n);
+
+    float2 uv0 = ddgiAtlasUV(probeIndex, d0, ps, atlasW, atlasH);
+    float2 uv1 = ddgiAtlasUV(probeIndex, d1, ps, atlasW, atlasH);
+    float2 uv2 = ddgiAtlasUV(probeIndex, d2, ps, atlasW, atlasH);
+    float2 uv3 = ddgiAtlasUV(probeIndex, d3, ps, atlasW, atlasH);
+    float2 uv4 = ddgiAtlasUV(probeIndex, d4, ps, atlasW, atlasH);
+
+    float3 s0 = sampleDDGITextureBilinear(ddgiTexture, uv0);
+    float3 s1 = sampleDDGITextureBilinear(ddgiTexture, uv1);
+    float3 s2 = sampleDDGITextureBilinear(ddgiTexture, uv2);
+    float3 s3 = sampleDDGITextureBilinear(ddgiTexture, uv3);
+    float3 s4 = sampleDDGITextureBilinear(ddgiTexture, uv4);
+
+    return s0 * 0.4f + (s1 + s2 + s3 + s4) * 0.15f;
+}
+
+static inline float3 sampleDDGI(texture2d<float> ddgiTexture,
                                 constant ProbeSpace &ps, float3 posWS,
                                 float3 normalWS) {
     uint3 counts = uint3((uint)ps.probeCount.x, (uint)ps.probeCount.y,
                          (uint)ps.probeCount.z);
 
-    if (counts.x < 2u || counts.y < 2u || counts.z < 2u)
+    if (counts.x == 0u || counts.y == 0u || counts.z == 0u)
         return float3(0.0);
-
-    float3 grid = (posWS - ps.origin) / ps.spacing;
-    float3 baseF = floor(grid);
-    float3 frac = grid - baseF;
-
-    int3 baseI = int3(baseF);
-
-    int3 maxBase =
-        int3(int(counts.x) - 2, int(counts.y) - 2, int(counts.z) - 2);
-
-    baseI = clamp(baseI, int3(0), maxBase);
 
     uint atlasW = ddgiTexture.get_width();
     uint atlasH = ddgiTexture.get_height();
+    if (atlasW == 0u || atlasH == 0u) {
+        return float3(0.0);
+    }
+
+    float normalLen = length(normalWS);
+    float3 safeNormal = (normalLen > 1e-6f)
+                            ? (normalWS / float3(normalLen))
+                            : float3(0.0f, 1.0f, 0.0f);
+
+    float3 safeSpacing = max(ps.spacing, float3(1e-4f));
+    float3 grid = (posWS - ps.origin) / safeSpacing;
+
+    if (counts.x < 2u || counts.y < 2u || counts.z < 2u) {
+        float3 maxCoord =
+            max(float3(0.0f), float3((float)counts.x - 1.0f,
+                                     (float)counts.y - 1.0f,
+                                     (float)counts.z - 1.0f));
+        float3 clampedGrid = clamp(grid, float3(0.0f), maxCoord);
+        uint3 nearest = uint3(
+            (uint)clamp(int(floor(clampedGrid.x + 0.5f)), 0, int(counts.x) - 1),
+            (uint)clamp(int(floor(clampedGrid.y + 0.5f)), 0, int(counts.y) - 1),
+            (uint)clamp(int(floor(clampedGrid.z + 0.5f)), 0, int(counts.z) - 1));
+        uint pIndex = probeIndexFromCoord(nearest, counts);
+        return sampleProbeIrradiance(ddgiTexture, ps, pIndex, atlasW, atlasH,
+                                     safeNormal);
+    }
+
+    float3 maxGrid =
+        float3((float)counts.x - 1.0001f, (float)counts.y - 1.0001f,
+               (float)counts.z - 1.0001f);
+    float3 clampedGrid = clamp(grid, float3(0.0f), maxGrid);
+
+    float3 baseF = floor(clampedGrid);
+    float3 frac = clampedGrid - baseF;
+    int3 baseI = int3(baseF);
+    int3 maxBase = int3(int(counts.x) - 2, int(counts.y) - 2, int(counts.z) - 2);
+    baseI = clamp(baseI, int3(0), maxBase);
 
     float3 result = float3(0.0);
+    float weightSum = 0.0f;
 
     for (uint dz = 0; dz <= 1u; dz++) {
         for (uint dy = 0; dy <= 1u; dy++) {
@@ -3397,19 +3783,21 @@ static inline float3 sampleDDGI(texture2d<float> ddgiTexture, sampler samp,
 
                 uint pIndex = probeIndexFromCoord(pc, counts);
 
-                float2 uv = ddgiAtlasUV(pIndex, normalWS, ps, atlasW, atlasH);
+                float trilinearW = ((dx == 0u) ? (1.0f - frac.x) : frac.x) *
+                                   ((dy == 0u) ? (1.0f - frac.y) : frac.y) *
+                                   ((dz == 0u) ? (1.0f - frac.z) : frac.z);
 
-                float w = ((dx == 0u) ? (1.0f - frac.x) : frac.x) *
-                          ((dy == 0u) ? (1.0f - frac.y) : frac.y) *
-                          ((dz == 0u) ? (1.0f - frac.z) : frac.z);
+                float w = trilinearW;
 
-                float3 irr = ddgiTexture.sample(samp, uv).xyz;
+                float3 irr = sampleProbeIrradiance(ddgiTexture, ps, pIndex, atlasW,
+                                                   atlasH, safeNormal);
                 result += irr * w;
+                weightSum += w;
             }
         }
     }
 
-    return result;
+    return (weightSum > 0.0f) ? (result / weightSum) : float3(0.0f);
 }
 
 fragment main0_out main0(
@@ -3439,7 +3827,7 @@ fragment main0_out main0(
     texture2d<float> gAlbedoSpec [[texture(13)]],
     texture2d<float> gMaterial [[texture(14)]],
     texture2d<float> ssao [[texture(15)]],
-    texture2d<float> ddgiTexture [[texture(16)]],
+    texture2d<float> irradianceMap [[texture(16)]],
     sampler texture1Smplr [[sampler(0)]], sampler texture2Smplr [[sampler(1)]],
     sampler texture3Smplr [[sampler(2)]], sampler texture4Smplr [[sampler(3)]],
     sampler texture5Smplr [[sampler(4)]], sampler cubeMap1Smplr [[sampler(5)]],
@@ -3721,17 +4109,41 @@ fragment main0_out main0(
     float3 ambient =
         ((ambientLight.color.xyz * ambientLight.intensity) * albedo) *
         occlusion;
+    if (ps.atlasParams.w > 0.0f) {
+        ambient *= 0.0f;
+    }
 
-    float3 ddgiIrradiance =
-        sampleDDGI(ddgiTexture, gPositionSmplr, ps, FragPos, N);
-
-    out.FragColor = float4(ddgiIrradiance, 1.0);
-    return out;
+    float3 ddgiIrradiance = sampleDDGI(irradianceMap, ps, FragPos, N);
+    if (!all(isfinite(ddgiIrradiance))) {
+        ddgiIrradiance = float3(0.0f);
+    }
+    ddgiIrradiance = max(ddgiIrradiance, float3(0.0f));
+    float3 ddgiGain = max(ps.debugColor.xyz, float3(0.0f));
+    if (ddgiGain.x < 1e-4f && ddgiGain.y < 1e-4f && ddgiGain.z < 1e-4f) {
+        ddgiGain = float3(1.0f);
+    }
+    float ddgiDebugMode = ps.debugColor.w;
 
     const float INV_PI = 0.31830988618379067153776752674503;
     float3 ddgiDiffuse = (ddgiIrradiance * albedo) * INV_PI;
-    ddgiDiffuse *= occlusion;
+    ddgiDiffuse *= 8.0f;
+    ddgiDiffuse *= ddgiGain;
     ambient += ddgiDiffuse;
+
+    float3 ddgiSpecular = float3(0.0f);
+    if (ps.atlasParams.w > 0.0f) {
+        float3 reflectionDir = reflect(-V, N);
+        float3 ddgiReflection =
+            sampleDDGI(irradianceMap, ps, FragPos + N * 0.03f, reflectionDir);
+        if (!all(isfinite(ddgiReflection))) {
+            ddgiReflection = float3(0.0f);
+        }
+        ddgiReflection = max(ddgiReflection, float3(0.0f));
+        float3 Fddgi = fresnelSchlick(fast::max(dot(N, V), 0.0), F0);
+        float gloss = 1.0f - roughness;
+        gloss *= gloss;
+        ddgiSpecular = ddgiReflection * Fddgi * gloss * 1.25f * ddgiGain;
+    }
 
     float3 iblContribution = float3(0.0);
     if (_526.useIBL != 0u) {
@@ -3753,15 +4165,18 @@ fragment main0_out main0(
         float3 specularIBL = specularEnv * roughnessAttenuation;
         iblContribution = ((kD * diffuseIBL) + (kS * specularIBL)) * occlusion;
     }
-    float3 finalColor = (ambient + lighting) + iblContribution;
-    if (!(_526.useIBL != 0u)) {
+    float3 finalColor = (ambient + lighting + ddgiSpecular) + iblContribution;
+    if (ddgiDebugMode >= 29.5f) {
+        finalColor = ddgiIrradiance * ddgiGain * 5.0f;
+    } else if (ddgiDebugMode >= 19.5f) {
+        finalColor = ddgiDiffuse * 2.5f;
+    } else if (!(_526.useIBL != 0u)) {
         float3 I = fast::normalize(FragPos - float3(_526.cameraPosition));
         float3 R_1 = reflect(-I, N);
         float param_47 = fast::max(dot(N, -I), 0.0);
         float3 param_48 = F0;
         float3 F_1 = fresnelSchlick(param_47, param_48);
         float3 kS_1 = F_1;
-        float3 kD_1 = (float3(1.0) - kS_1) * (1.0 - metallic);
         float3 envColor = skybox.sample(skyboxSmplr, R_1).xyz;
         float3 reflection_1 = envColor * kS_1;
         finalColor = mix(finalColor, reflection_1, F0);

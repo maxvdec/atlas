@@ -565,8 +565,6 @@ static inline __attribute__((always_inline)) float calculateShadow(
     float avgDim = 0.5 * (shadowMapSize.x + shadowMapSize.y);
     float resFactor = fast::clamp(1024.0 / fast::max(avgDim, 1.0), 0.75, 1.25);
     float distFactor = fast::clamp(_distance / 800.0, 0.0, 1.0);
-    float desiredKernel = mix(1.0, 1.5, distFactor) * resFactor;
-    int kernelSize = int(fast::clamp(floor(desiredKernel + 0.5), 1.0, 2.0));
     float texelRadius = mix(1.0, 3.0, distFactor) * resFactor;
     float2 filterRadius = texelSize * texelRadius;
     int sampleCount = 0;
@@ -823,6 +821,21 @@ static inline float2 octEncode(float3 n) {
     return e;
 }
 
+static inline float3 safeNormalizeDDGI(float3 v, float3 fallback) {
+    float len2 = dot(v, v);
+    if (len2 > 1e-10f) {
+        return v * rsqrt(len2);
+    }
+    return fallback;
+}
+
+static inline void buildDDGIBasis(float3 n, thread float3 &t, thread float3 &b) {
+    float3 up = (fabs(n.y) < 0.999f) ? float3(0.0f, 1.0f, 0.0f)
+                                     : float3(1.0f, 0.0f, 0.0f);
+    t = safeNormalizeDDGI(cross(up, n), float3(1.0f, 0.0f, 0.0f));
+    b = safeNormalizeDDGI(cross(n, t), float3(0.0f, 0.0f, 1.0f));
+}
+
 static inline uint probeIndexFromCoord(uint3 c, uint3 counts) {
     return c.x + counts.x * (c.y + counts.y * c.z);
 }
@@ -830,16 +843,26 @@ static inline uint probeIndexFromCoord(uint3 c, uint3 counts) {
 static inline float2 ddgiAtlasUV(uint probeIndex, float3 dirWS,
                                  constant ProbeSpace &ps, uint atlasW,
                                  uint atlasH) {
+    if (atlasW == 0u || atlasH == 0u) {
+        return float2(0.5f);
+    }
+
     uint border = (uint)ps.atlasParams.x;
     uint innerRes = (uint)ps.atlasParams.y;
     uint probesPerRow = (uint)ps.atlasParams.z;
+    if (innerRes == 0u || probesPerRow == 0u) {
+        return float2(0.5f);
+    }
 
     uint tileRes = innerRes + 2u * border;
 
     uint tileX = probeIndex % probesPerRow;
     uint tileY = probeIndex / probesPerRow;
 
-    float2 e = octEncode(normalize(dirWS));
+    float dirLen = length(dirWS);
+    float3 safeDir =
+        (dirLen > 1e-6f) ? (dirWS / float3(dirLen)) : float3(0.0f, 1.0f, 0.0f);
+    float2 e = octEncode(safeDir);
     float2 innerUV = e * 0.5f + 0.5f;
 
     float2 innerPx = float2((float)(tileX * tileRes + border),
@@ -849,30 +872,117 @@ static inline float2 ddgiAtlasUV(uint probeIndex, float3 dirWS,
     return (innerPx + 0.5f) / float2((float)atlasW, (float)atlasH);
 }
 
-static inline float3 sampleDDGI(texture2d<float> ddgiTexture, sampler samp,
+static inline float3 sampleDDGITextureBilinear(texture2d<float> tex, float2 uv) {
+    uint w = tex.get_width();
+    uint h = tex.get_height();
+    if (w == 0u || h == 0u) {
+        return float3(0.0f);
+    }
+
+    float2 pixel = uv * float2((float)w, (float)h) - 0.5f;
+    int2 p0 = int2(floor(pixel));
+    int2 p1 = p0 + int2(1, 0);
+    int2 p2 = p0 + int2(0, 1);
+    int2 p3 = p0 + int2(1, 1);
+
+    int maxX = int(w) - 1;
+    int maxY = int(h) - 1;
+    p0 = int2(clamp(p0.x, 0, maxX), clamp(p0.y, 0, maxY));
+    p1 = int2(clamp(p1.x, 0, maxX), clamp(p1.y, 0, maxY));
+    p2 = int2(clamp(p2.x, 0, maxX), clamp(p2.y, 0, maxY));
+    p3 = int2(clamp(p3.x, 0, maxX), clamp(p3.y, 0, maxY));
+
+    float2 f = fract(pixel);
+    float3 c00 = tex.read(uint2((uint)p0.x, (uint)p0.y)).xyz;
+    float3 c10 = tex.read(uint2((uint)p1.x, (uint)p1.y)).xyz;
+    float3 c01 = tex.read(uint2((uint)p2.x, (uint)p2.y)).xyz;
+    float3 c11 = tex.read(uint2((uint)p3.x, (uint)p3.y)).xyz;
+    float3 cx0 = mix(c00, c10, f.x);
+    float3 cx1 = mix(c01, c11, f.x);
+    return mix(cx0, cx1, f.y);
+}
+
+static inline float3 sampleProbeIrradiance(texture2d<float> ddgiTexture,
+                                           constant ProbeSpace &ps,
+                                           uint probeIndex, uint atlasW,
+                                           uint atlasH, float3 normalWS) {
+    float3 n = safeNormalizeDDGI(normalWS, float3(0.0f, 1.0f, 0.0f));
+    float3 t;
+    float3 b;
+    buildDDGIBasis(n, t, b);
+
+    float3 d0 = n;
+    float3 d1 = safeNormalizeDDGI(n + t * 0.6f, n);
+    float3 d2 = safeNormalizeDDGI(n - t * 0.6f, n);
+    float3 d3 = safeNormalizeDDGI(n + b * 0.6f, n);
+    float3 d4 = safeNormalizeDDGI(n - b * 0.6f, n);
+
+    float2 uv0 = ddgiAtlasUV(probeIndex, d0, ps, atlasW, atlasH);
+    float2 uv1 = ddgiAtlasUV(probeIndex, d1, ps, atlasW, atlasH);
+    float2 uv2 = ddgiAtlasUV(probeIndex, d2, ps, atlasW, atlasH);
+    float2 uv3 = ddgiAtlasUV(probeIndex, d3, ps, atlasW, atlasH);
+    float2 uv4 = ddgiAtlasUV(probeIndex, d4, ps, atlasW, atlasH);
+
+    float3 s0 = sampleDDGITextureBilinear(ddgiTexture, uv0);
+    float3 s1 = sampleDDGITextureBilinear(ddgiTexture, uv1);
+    float3 s2 = sampleDDGITextureBilinear(ddgiTexture, uv2);
+    float3 s3 = sampleDDGITextureBilinear(ddgiTexture, uv3);
+    float3 s4 = sampleDDGITextureBilinear(ddgiTexture, uv4);
+
+    return s0 * 0.4f + (s1 + s2 + s3 + s4) * 0.15f;
+}
+
+static inline float3 sampleDDGI(texture2d<float> ddgiTexture,
                                 constant ProbeSpace &ps, float3 posWS,
                                 float3 normalWS) {
     uint3 counts = uint3((uint)ps.probeCount.x, (uint)ps.probeCount.y,
                          (uint)ps.probeCount.z);
 
-    if (counts.x < 2u || counts.y < 2u || counts.z < 2u)
+    if (counts.x == 0u || counts.y == 0u || counts.z == 0u)
         return float3(0.0);
-
-    float3 grid = (posWS - ps.origin) / ps.spacing;
-    float3 baseF = floor(grid);
-    float3 frac = grid - baseF;
-
-    int3 baseI = int3(baseF);
-
-    int3 maxBase =
-        int3(int(counts.x) - 2, int(counts.y) - 2, int(counts.z) - 2);
-
-    baseI = clamp(baseI, int3(0), maxBase);
 
     uint atlasW = ddgiTexture.get_width();
     uint atlasH = ddgiTexture.get_height();
+    if (atlasW == 0u || atlasH == 0u) {
+        return float3(0.0);
+    }
+
+    float normalLen = length(normalWS);
+    float3 safeNormal = (normalLen > 1e-6f)
+                            ? (normalWS / float3(normalLen))
+                            : float3(0.0f, 1.0f, 0.0f);
+
+    float3 safeSpacing = max(ps.spacing, float3(1e-4f));
+    float3 grid = (posWS - ps.origin) / safeSpacing;
+
+    if (counts.x < 2u || counts.y < 2u || counts.z < 2u) {
+        float3 maxCoord =
+            max(float3(0.0f), float3((float)counts.x - 1.0f,
+                                     (float)counts.y - 1.0f,
+                                     (float)counts.z - 1.0f));
+        float3 clampedGrid = clamp(grid, float3(0.0f), maxCoord);
+        uint3 nearest = uint3(
+            (uint)clamp(int(floor(clampedGrid.x + 0.5f)), 0, int(counts.x) - 1),
+            (uint)clamp(int(floor(clampedGrid.y + 0.5f)), 0, int(counts.y) - 1),
+            (uint)clamp(int(floor(clampedGrid.z + 0.5f)), 0, int(counts.z) - 1));
+        uint pIndex = probeIndexFromCoord(nearest, counts);
+        return sampleProbeIrradiance(ddgiTexture, ps, pIndex, atlasW, atlasH,
+                                     safeNormal);
+    }
+
+    float3 maxGrid =
+        float3((float)counts.x - 1.0001f, (float)counts.y - 1.0001f,
+               (float)counts.z - 1.0001f);
+    float3 clampedGrid = clamp(grid, float3(0.0f), maxGrid);
+
+    float3 baseF = floor(clampedGrid);
+    float3 frac = clampedGrid - baseF;
+    int3 baseI = int3(baseF);
+    int3 maxBase = int3(int(counts.x) - 2, int(counts.y) - 2, int(counts.z) - 2);
+    baseI = clamp(baseI, int3(0), maxBase);
 
     float3 result = float3(0.0);
+    float weightSum = 0.0f;
 
     for (uint dz = 0; dz <= 1u; dz++) {
         for (uint dy = 0; dy <= 1u; dy++) {
@@ -883,19 +993,21 @@ static inline float3 sampleDDGI(texture2d<float> ddgiTexture, sampler samp,
 
                 uint pIndex = probeIndexFromCoord(pc, counts);
 
-                float2 uv = ddgiAtlasUV(pIndex, normalWS, ps, atlasW, atlasH);
+                float trilinearW = ((dx == 0u) ? (1.0f - frac.x) : frac.x) *
+                                   ((dy == 0u) ? (1.0f - frac.y) : frac.y) *
+                                   ((dz == 0u) ? (1.0f - frac.z) : frac.z);
 
-                float w = ((dx == 0u) ? (1.0f - frac.x) : frac.x) *
-                          ((dy == 0u) ? (1.0f - frac.y) : frac.y) *
-                          ((dz == 0u) ? (1.0f - frac.z) : frac.z);
+                float w = trilinearW;
 
-                float3 irr = ddgiTexture.sample(samp, uv).xyz;
+                float3 irr = sampleProbeIrradiance(ddgiTexture, ps, pIndex, atlasW,
+                                                   atlasH, safeNormal);
                 result += irr * w;
+                weightSum += w;
             }
         }
     }
 
-    return result;
+    return (weightSum > 0.0f) ? (result / weightSum) : float3(0.0f);
 }
 
 fragment main0_out main0(
@@ -925,7 +1037,7 @@ fragment main0_out main0(
     texture2d<float> gAlbedoSpec [[texture(13)]],
     texture2d<float> gMaterial [[texture(14)]],
     texture2d<float> ssao [[texture(15)]],
-    texture2d<float> ddgiTexture [[texture(16)]],
+    texture2d<float> irradianceMap [[texture(16)]],
     sampler texture1Smplr [[sampler(0)]], sampler texture2Smplr [[sampler(1)]],
     sampler texture3Smplr [[sampler(2)]], sampler texture4Smplr [[sampler(3)]],
     sampler texture5Smplr [[sampler(4)]], sampler cubeMap1Smplr [[sampler(5)]],
@@ -1207,17 +1319,41 @@ fragment main0_out main0(
     float3 ambient =
         ((ambientLight.color.xyz * ambientLight.intensity) * albedo) *
         occlusion;
+    if (ps.atlasParams.w > 0.0f) {
+        ambient *= 0.0f;
+    }
 
-    float3 ddgiIrradiance =
-        sampleDDGI(ddgiTexture, gPositionSmplr, ps, FragPos, N);
-
-    out.FragColor = float4(ddgiIrradiance, 1.0);
-    return out;
+    float3 ddgiIrradiance = sampleDDGI(irradianceMap, ps, FragPos, N);
+    if (!all(isfinite(ddgiIrradiance))) {
+        ddgiIrradiance = float3(0.0f);
+    }
+    ddgiIrradiance = max(ddgiIrradiance, float3(0.0f));
+    float3 ddgiGain = max(ps.debugColor.xyz, float3(0.0f));
+    if (ddgiGain.x < 1e-4f && ddgiGain.y < 1e-4f && ddgiGain.z < 1e-4f) {
+        ddgiGain = float3(1.0f);
+    }
+    float ddgiDebugMode = ps.debugColor.w;
 
     const float INV_PI = 0.31830988618379067153776752674503;
     float3 ddgiDiffuse = (ddgiIrradiance * albedo) * INV_PI;
-    ddgiDiffuse *= occlusion;
+    ddgiDiffuse *= 8.0f;
+    ddgiDiffuse *= ddgiGain;
     ambient += ddgiDiffuse;
+
+    float3 ddgiSpecular = float3(0.0f);
+    if (ps.atlasParams.w > 0.0f) {
+        float3 reflectionDir = reflect(-V, N);
+        float3 ddgiReflection =
+            sampleDDGI(irradianceMap, ps, FragPos + N * 0.03f, reflectionDir);
+        if (!all(isfinite(ddgiReflection))) {
+            ddgiReflection = float3(0.0f);
+        }
+        ddgiReflection = max(ddgiReflection, float3(0.0f));
+        float3 Fddgi = fresnelSchlick(fast::max(dot(N, V), 0.0), F0);
+        float gloss = 1.0f - roughness;
+        gloss *= gloss;
+        ddgiSpecular = ddgiReflection * Fddgi * gloss * 1.25f * ddgiGain;
+    }
 
     float3 iblContribution = float3(0.0);
     if (_526.useIBL != 0u) {
@@ -1239,15 +1375,18 @@ fragment main0_out main0(
         float3 specularIBL = specularEnv * roughnessAttenuation;
         iblContribution = ((kD * diffuseIBL) + (kS * specularIBL)) * occlusion;
     }
-    float3 finalColor = (ambient + lighting) + iblContribution;
-    if (!(_526.useIBL != 0u)) {
+    float3 finalColor = (ambient + lighting + ddgiSpecular) + iblContribution;
+    if (ddgiDebugMode >= 29.5f) {
+        finalColor = ddgiIrradiance * ddgiGain * 5.0f;
+    } else if (ddgiDebugMode >= 19.5f) {
+        finalColor = ddgiDiffuse * 2.5f;
+    } else if (!(_526.useIBL != 0u)) {
         float3 I = fast::normalize(FragPos - float3(_526.cameraPosition));
         float3 R_1 = reflect(-I, N);
         float param_47 = fast::max(dot(N, -I), 0.0);
         float3 param_48 = F0;
         float3 F_1 = fresnelSchlick(param_47, param_48);
         float3 kS_1 = F_1;
-        float3 kD_1 = (float3(1.0) - kS_1) * (1.0 - metallic);
         float3 envColor = skybox.sample(skyboxSmplr, R_1).xyz;
         float3 reflection_1 = envColor * kS_1;
         finalColor = mix(finalColor, reflection_1, F0);
