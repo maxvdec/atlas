@@ -47,8 +47,7 @@ struct ProbeSpace {
 
 class GlobalIllumination {
   public:
-    void
-    render(const std::shared_ptr<opal::CommandBuffer> &commandBuffer);
+    void render(const std::shared_ptr<opal::CommandBuffer> &commandBuffer);
     void updateProbeLayout();
     void init();
 
@@ -96,10 +95,10 @@ class GlobalIllumination {
 
     float probeSpacing = 0.5f;
 
-    int raysPerProbe = 512;
+    int raysPerProbe = 256;
     float maxRayDistance = 20.f;
     float normalBias = 0.05;
-    float hysteresis = 0.2;
+    float hysteresis = 0.85;
     int frameIndex = 0;
 };
 

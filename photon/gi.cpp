@@ -109,7 +109,8 @@ void photon::GlobalIllumination::updateProbeLayout() {
         const bool useIndexBuffer = indices.size() >= 3;
         glm::mat4 model(1.0f);
         model = glm::translate(model, object->getPosition().toGlm());
-        model *= glm::mat4_cast(glm::normalize(object->getRotation().toGlmQuat()));
+        model *=
+            glm::mat4_cast(glm::normalize(object->getRotation().toGlmQuat()));
         model = glm::scale(model, object->getScale().toGlm());
         glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(model)));
 
@@ -134,12 +135,12 @@ void photon::GlobalIllumination::updateProbeLayout() {
             tri.v0 = model * glm::vec4(v0.position.toGlm(), 1.0f);
             tri.v1 = model * glm::vec4(v1.position.toGlm(), 1.0f);
             tri.v2 = model * glm::vec4(v2.position.toGlm(), 1.0f);
-            tri.n0 =
-                glm::vec4(glm::normalize(normalMatrix * v0.normal.toGlm()), 0.0f);
-            tri.n1 =
-                glm::vec4(glm::normalize(normalMatrix * v1.normal.toGlm()), 0.0f);
-            tri.n2 =
-                glm::vec4(glm::normalize(normalMatrix * v2.normal.toGlm()), 0.0f);
+            tri.n0 = glm::vec4(glm::normalize(normalMatrix * v0.normal.toGlm()),
+                               0.0f);
+            tri.n1 = glm::vec4(glm::normalize(normalMatrix * v1.normal.toGlm()),
+                               0.0f);
+            tri.n2 = glm::vec4(glm::normalize(normalMatrix * v2.normal.toGlm()),
+                               0.0f);
             tri.materialID = materialID;
 
             triangles.push_back(tri);
@@ -167,14 +168,14 @@ void photon::GlobalIllumination::updateProbeLayout() {
     }
 
     float layoutPad = spacing * 0.25f;
-    Position3d minWs =
-        hasGeometry ? Position3d(boundsMin.x - layoutPad, boundsMin.y - layoutPad,
-                                 boundsMin.z - layoutPad)
-                    : Position3d(-spacing, -spacing, -spacing);
-    Position3d maxWs =
-        hasGeometry ? Position3d(boundsMax.x + layoutPad, boundsMax.y + layoutPad,
-                                 boundsMax.z + layoutPad)
-                    : Position3d(spacing, spacing, spacing);
+    Position3d minWs = hasGeometry ? Position3d(boundsMin.x - layoutPad,
+                                                boundsMin.y - layoutPad,
+                                                boundsMin.z - layoutPad)
+                                   : Position3d(-spacing, -spacing, -spacing);
+    Position3d maxWs = hasGeometry ? Position3d(boundsMax.x + layoutPad,
+                                                boundsMax.y + layoutPad,
+                                                boundsMax.z + layoutPad)
+                                   : Position3d(spacing, spacing, spacing);
 
     auto snapDown = [&](float v) { return std::floor(v / spacing) * spacing; };
     auto snapUp = [&](float v) { return std::ceil(v / spacing) * spacing; };
@@ -198,13 +199,12 @@ void photon::GlobalIllumination::updateProbeLayout() {
         return std::max(1, n);
     };
 
-    int Nx = std::clamp(countAxis(extent.x), 1, 16);
-    int Ny = std::clamp(countAxis(extent.y), 1, 16);
-    int Nz = std::clamp(countAxis(extent.z), 1, 16);
+    int Nx = std::clamp(countAxis(extent.x), 1, 32);
+    int Ny = std::clamp(countAxis(extent.y), 1, 32);
+    int Nz = std::clamp(countAxis(extent.z), 1, 32);
     int totalProbeCount = std::max(1, Nx * Ny * Nz);
-    int probesPerRow =
-        std::clamp(static_cast<int>(std::ceil(std::sqrt((float)totalProbeCount))),
-                   1, 64);
+    int probesPerRow = std::clamp(
+        static_cast<int>(std::ceil(std::sqrt((float)totalProbeCount))), 1, 64);
 
     probeSpace->originWorldSpace = minWs;
     probeSpace->spacing = Position3d(spacing, spacing, spacing);
@@ -246,16 +246,14 @@ void photon::GlobalIllumination::updateProbeLayout() {
                             opal::TextureDataFormat::Rgba, TextureType::Color));
     }
 
+    int effectiveRaysPerProbe = std::max(1, raysPerProbe);
     if (probeRadianceBuffer == nullptr ||
-        probeRadianceCapacity !=
-            totalProbeCount * probeSpace->probeResolution *
-                probeSpace->probeResolution) {
-        int totalProbeTexels = totalProbeCount * probeSpace->probeResolution *
-                               probeSpace->probeResolution;
+        probeRadianceCapacity != totalProbeCount * effectiveRaysPerProbe) {
+        int totalElements = totalProbeCount * effectiveRaysPerProbe;
         probeRadianceBuffer =
             opal::Buffer::create(opal::BufferUsage::ShaderReadWrite,
-                                 sizeof(glm::vec4) * totalProbeTexels);
-        probeRadianceCapacity = totalProbeTexels;
+                                 sizeof(glm::vec4) * totalElements);
+        probeRadianceCapacity = totalElements;
         resetHistory = true;
     }
 
@@ -270,17 +268,16 @@ void photon::GlobalIllumination::render(
         giRaytracingPipeline == nullptr || probeSpace == nullptr ||
         probeRadianceBuffer == nullptr || irradianceMap == nullptr ||
         irradianceMapPrev == nullptr || irradianceMap->texture == nullptr ||
-        irradianceMapPrev->texture == nullptr || copySrcFramebuffer == nullptr ||
-        copyDstFramebuffer == nullptr) {
+        irradianceMapPrev->texture == nullptr ||
+        copySrcFramebuffer == nullptr || copyDstFramebuffer == nullptr) {
         return;
     }
 
     const uint totalProbes =
         static_cast<uint>(std::max(1, this->probeSpace->totalProbes()));
-    const uint probeResolution =
-        static_cast<uint>(std::max(1, this->probeSpace->probeResolution));
-    const uint probeTexelsPerProbe = probeResolution * probeResolution;
-    const uint totalProbeTexels = totalProbes * probeTexelsPerProbe;
+    const uint effectiveRays =
+        static_cast<uint>(std::max(1, this->raysPerProbe));
+    const uint totalRays = totalProbes * effectiveRays;
 
     if (irradianceMap->id == 0) {
         irradianceMap->id = irradianceMap->texture->textureID;
@@ -296,8 +293,9 @@ void photon::GlobalIllumination::render(
     // Perform Ray Tracing
     giRaytracingPipeline->bindShaderReadWriteBuffer("probeRadianceOut",
                                                     probeRadianceBuffer);
-    Scene *scene = (Window::mainWindow != nullptr) ? Window::mainWindow->currentScene
-                                                   : nullptr;
+    Scene *scene = (Window::mainWindow != nullptr)
+                       ? Window::mainWindow->currentScene
+                       : nullptr;
     std::vector<GPUDirectionalLight> directionalLights;
     std::vector<GPUPointLight> pointLights;
     std::vector<GPUSpotLight> spotLights;
@@ -313,10 +311,10 @@ void photon::GlobalIllumination::render(
             }
             GPUDirectionalLight gpu{};
             gpu.direction = light->direction.toGlm();
-            gpu.diffuse = glm::vec3(light->color.r, light->color.g, light->color.b);
-            gpu.specular =
-                glm::vec3(light->shineColor.r, light->shineColor.g,
-                          light->shineColor.b);
+            gpu.diffuse =
+                glm::vec3(light->color.r, light->color.g, light->color.b);
+            gpu.specular = glm::vec3(light->shineColor.r, light->shineColor.g,
+                                     light->shineColor.b);
             gpu.intensity = light->intensity;
             directionalLights.push_back(gpu);
             if (directionalLights.size() >= 64) {
@@ -333,10 +331,10 @@ void photon::GlobalIllumination::render(
             PointLightConstants plc = light->calculateConstants();
             GPUPointLight gpu{};
             gpu.position = light->position.toGlm();
-            gpu.diffuse = glm::vec3(light->color.r, light->color.g, light->color.b);
-            gpu.specular =
-                glm::vec3(light->shineColor.r, light->shineColor.g,
-                          light->shineColor.b);
+            gpu.diffuse =
+                glm::vec3(light->color.r, light->color.g, light->color.b);
+            gpu.specular = glm::vec3(light->shineColor.r, light->shineColor.g,
+                                     light->shineColor.b);
             gpu.intensity = light->intensity;
             gpu.constant = plc.constant;
             gpu.linear = plc.linear;
@@ -361,10 +359,10 @@ void photon::GlobalIllumination::render(
             gpu.outerCutOff = light->outerCutoff;
             gpu.intensity = light->intensity;
             gpu.range = light->range;
-            gpu.diffuse = glm::vec3(light->color.r, light->color.g, light->color.b);
-            gpu.specular =
-                glm::vec3(light->shineColor.r, light->shineColor.g,
-                          light->shineColor.b);
+            gpu.diffuse =
+                glm::vec3(light->color.r, light->color.g, light->color.b);
+            gpu.specular = glm::vec3(light->shineColor.r, light->shineColor.g,
+                                     light->shineColor.b);
             spotLights.push_back(gpu);
             if (spotLights.size() >= 64) {
                 break;
@@ -383,10 +381,10 @@ void photon::GlobalIllumination::render(
             gpu.up = light->up.toGlm();
             gpu.size =
                 glm::vec2((float)light->size.width, (float)light->size.height);
-            gpu.diffuse = glm::vec3(light->color.r, light->color.g, light->color.b);
-            gpu.specular =
-                glm::vec3(light->shineColor.r, light->shineColor.g,
-                          light->shineColor.b);
+            gpu.diffuse =
+                glm::vec3(light->color.r, light->color.g, light->color.b);
+            gpu.specular = glm::vec3(light->shineColor.r, light->shineColor.g,
+                                     light->shineColor.b);
             gpu.angle = light->angle;
             gpu.castsBothSides = light->castsBothSides ? 1 : 0;
             gpu.intensity = light->intensity;
@@ -404,8 +402,9 @@ void photon::GlobalIllumination::render(
     GPUAreaLight fallbackArea{};
     giRaytracingPipeline->bindBufferData(
         "directionalLights",
-        directionalLights.empty() ? static_cast<const void *>(&fallbackDirectional)
-                                  : static_cast<const void *>(directionalLights.data()),
+        directionalLights.empty()
+            ? static_cast<const void *>(&fallbackDirectional)
+            : static_cast<const void *>(directionalLights.data()),
         directionalLights.empty()
             ? sizeof(GPUDirectionalLight)
             : directionalLights.size() * sizeof(GPUDirectionalLight));
@@ -433,19 +432,18 @@ void photon::GlobalIllumination::render(
     const void *triangleData =
         triangles.empty() ? static_cast<const void *>(&fallbackTriangle)
                           : static_cast<const void *>(triangles.data());
-    const size_t triangleSize =
-        triangles.empty() ? sizeof(DDGITriangle)
-                          : triangles.size() * sizeof(DDGITriangle);
+    const size_t triangleSize = triangles.empty()
+                                    ? sizeof(DDGITriangle)
+                                    : triangles.size() * sizeof(DDGITriangle);
     const void *materialData =
         materials.empty() ? static_cast<const void *>(&fallbackMaterial)
                           : static_cast<const void *>(materials.data());
-    const size_t materialSize =
-        materials.empty() ? sizeof(DDGIMaterial)
-                          : materials.size() * sizeof(DDGIMaterial);
-    giRaytracingPipeline->bindBufferData(
-        "tris", triangleData, triangleSize);
-    giRaytracingPipeline->bindBufferData(
-        "materials", materialData, materialSize);
+    const size_t materialSize = materials.empty()
+                                    ? sizeof(DDGIMaterial)
+                                    : materials.size() * sizeof(DDGIMaterial);
+    giRaytracingPipeline->bindBufferData("tris", triangleData, triangleSize);
+    giRaytracingPipeline->bindBufferData("materials", materialData,
+                                         materialSize);
     giRaytracingPipeline->setUniform1i("triCount",
                                        static_cast<int>(triangles.size()));
     giRaytracingPipeline->setUniform1i("materialCount",
@@ -485,7 +483,9 @@ void photon::GlobalIllumination::render(
     giRaytracingPipeline->setUniform1i("rt.frameIndex", ddgiFrameIndex);
 
     commandBuffer->bindPipeline(giRaytracingPipeline);
-    commandBuffer->dispatch(totalProbeTexels, 1, 1);
+    commandBuffer->dispatch(totalRays, 1, 1);
+
+    commandBuffer->computeBarrier();
 
     // Write to irradiance texture
     giPipeline->bindTexture("outTexture", irradianceMap->texture, 0);

@@ -684,8 +684,8 @@ class Pipeline {
      * @param size Size of the data in bytes
      */
     void bindBufferData(const std::string &name, const void *data, size_t size);
-    void bindBuffer(const std::string &name, const std::shared_ptr<Buffer> &buffer,
-                    int callerId = -1);
+    void bindBuffer(const std::string &name,
+                    const std::shared_ptr<Buffer> &buffer, int callerId = -1);
     void bindShaderReadWriteBuffer(const std::string &name,
                                    const std::shared_ptr<Buffer> &buffer,
                                    int callerId = -1);
@@ -1122,6 +1122,7 @@ class CommandBuffer {
     void drawPatches(uint vertexCount, uint firstVertex = 0, int objectId = -1);
     void dispatch(uint threadCountX, uint threadCountY = 1,
                   uint threadCountZ = 1);
+    void computeBarrier();
     void performResolve(const std::shared_ptr<ResolveAction> &resolveAction);
 
     void clearColor(float r, float g, float b, float a);

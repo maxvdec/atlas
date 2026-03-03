@@ -190,20 +190,6 @@ static inline uint3 probeCoordFromIndex(uint idx, uint3 counts) {
     return uint3(x, y, z);
 }
 
-static inline float3 octDecode(float2 e) {
-    float3 n = float3(e.x, e.y, 1.0f - fabs(e.x) - fabs(e.y));
-
-    if (n.z < 0.0f) {
-        float2 signNotZero =
-            float2(n.x >= 0.0f ? 1.0f : -1.0f, n.y >= 0.0f ? 1.0f : -1.0f);
-        float2 folded = (1.0f - fabs(n.yx)) * signNotZero;
-        n.x = folded.x;
-        n.y = folded.y;
-    }
-
-    return normalize(n);
-}
-
 static inline float3 safeNormalize(float3 v, float3 fallback) {
     float len2 = dot(v, v);
     if (len2 > 1e-10f) {
@@ -214,8 +200,8 @@ static inline float3 safeNormalize(float3 v, float3 fallback) {
 
 static inline float3 sampleSky(float3 d) {
     float t = clamp(d.y * 0.5f + 0.5f, 0.0f, 1.0f);
-    return mix(float3(0.0008f, 0.0009f, 0.0011f),
-               float3(0.0100f, 0.0110f, 0.0120f),
+    return mix(float3(0.0002f, 0.0002f, 0.0002f),
+               float3(0.0012f, 0.0011f, 0.0010f),
                t);
 }
 
@@ -227,6 +213,10 @@ static inline float shadowVisibility(float3 ro, float3 rd, float maxT,
     }
     Hit h = traceScene(ro, rd, tris, triCount);
     if (!h.hit) {
+        return 1.0f;
+    }
+    float minOccluderDistance = max(0.01f, maxT * 0.0025f);
+    if (h.t <= minOccluderDistance) {
         return 1.0f;
     }
     return (h.t >= maxT) ? 1.0f : 0.0f;
@@ -373,6 +363,19 @@ static inline float3 sampleCosineHemisphere(thread uint &state) {
     return float3(x, y, z);
 }
 
+static inline float3 sphericalFibonacci(uint index, uint count, uint frameIndex) {
+    const float GOLDEN_RATIO = 1.6180339887498949f;
+    const float TAU = 6.28318530718f;
+    float i = float(index) + 0.5f;
+    float phi = TAU * fract(i / GOLDEN_RATIO);
+    float cosTheta = 1.0f - (2.0f * i) / float(count);
+    float sinTheta = sqrt(max(0.0f, 1.0f - cosTheta * cosTheta));
+    uint rotSeed = wangHash(frameIndex * 1471u + 5743u);
+    float rotAngle = float(rotSeed & 0xFFFFu) / 65536.0f * TAU;
+    phi += rotAngle;
+    return float3(sinTheta * cos(phi), cosTheta, sinTheta * sin(phi));
+}
+
 kernel void main0(device float4 *probeRadianceOut [[buffer(0)]],
                   device const Triangle *tris [[buffer(1)]],
                   device const Material *materials [[buffer(2)]],
@@ -389,107 +392,87 @@ kernel void main0(device float4 *probeRadianceOut [[buffer(0)]],
                   constant uint &spotLightCount [[buffer(13)]],
                   constant uint &areaLightCount [[buffer(14)]],
                   uint tid [[thread_position_in_grid]]) {
+    const float PI = 3.14159265359f;
     uint totalProbes = (uint)ps.atlasParams.w;
-    uint innerRes = max((uint)ps.atlasParams.y, 1u);
-    uint texelsPerProbe = innerRes * innerRes;
-    uint totalTexels = totalProbes * texelsPerProbe;
+    uint raysPerProbe = max(rt.raysPerProbe, 1u);
+    uint totalRays = totalProbes * raysPerProbe;
 
-    if (tid >= totalTexels)
+    if (tid >= totalRays)
         return;
 
-    uint probeIndex = tid / texelsPerProbe;
-    uint localIndex = tid - probeIndex * texelsPerProbe;
-    uint lx = localIndex % innerRes;
-    uint ly = localIndex / innerRes;
+    uint probeIndex = tid / raysPerProbe;
+    uint rayIndex = tid - probeIndex * raysPerProbe;
 
     uint3 counts = uint3((uint)ps.probeCount.x, (uint)ps.probeCount.y,
                          (uint)ps.probeCount.z);
     uint3 pc = probeCoordFromIndex(probeIndex, counts);
-
     float3 probePos = ps.origin + float3(pc) * ps.spacing;
 
-    float2 e = ((float2((float)lx, (float)ly) + 0.5f) / float(innerRes)) * 2.0f -
-               1.0f;
-    float3 baseDir = octDecode(e);
+    float3 rayDir = sphericalFibonacci(rayIndex, raysPerProbe, rt.frameIndex);
 
-    uint state = tid * 9781u + 1u;
-
-    uint rays =
-        max(8u, (max(rt.raysPerProbe, 1u) + texelsPerProbe - 1u) / texelsPerProbe);
     float maxDistance = max(rt.maxRayDistance, 0.001f);
     float bias = max(rt.normalBias, 0.001f);
 
-    float3 sum = float3(0.0f);
+    float3 ro = probePos + rayDir * bias;
+    Hit h = traceScene(ro, rayDir, tris, triCount);
 
-    for (uint r = 0; r < rays; r++) {
-        float3 t;
-        float3 b;
-        buildBasis(baseDir, t, b);
-        float3 localDir = sampleCosineHemisphere(state);
-        float3 rayDir = safeNormalize(t * localDir.x + baseDir * localDir.y +
-                                          b * localDir.z,
-                                      baseDir);
+    float3 radiance = float3(0.0f);
+    if (!h.hit || h.t > maxDistance) {
+        radiance = sampleSky(rayDir);
+    } else {
+        float3 hitPos = ro + rayDir * h.t;
+        float3 hitNormal = safeNormalize(h.n, float3(0.0f, 1.0f, 0.0f));
 
-        float3 ro = probePos + rayDir * bias;
-        Hit h = traceScene(ro, rayDir, tris, triCount);
+        if (dot(hitNormal, -rayDir) < 0.0f) {
+            hitNormal = -hitNormal;
+        }
 
-        float3 radiance = float3(0.0f);
-        if (!h.hit || h.t > maxDistance) {
-            radiance = sampleSky(rayDir);
-        } else {
-            float3 hitPos = ro + rayDir * h.t;
-            float3 hitNormal = safeNormalize(h.n, float3(0.0f, 1.0f, 0.0f));
+        float3 albedo = float3(0.7f);
+        if (h.materialID >= 0 && (uint)h.materialID < materialCount) {
+            albedo = clamp(materials[h.materialID].albedo, float3(0.0f),
+                           float3(1.0f));
+        }
 
-            float3 albedo = float3(0.7f);
-            if (h.materialID >= 0 && (uint)h.materialID < materialCount) {
-                albedo = clamp(materials[h.materialID].albedo, float3(0.0f),
-                               float3(1.0f));
+        float3 direct = evaluateDirectLights(
+            hitPos, hitNormal, bias, maxDistance, tris, triCount,
+            directionalLights, directionalLightCount, pointLights,
+            pointLightCount, spotLights, spotLightCount, areaLights,
+            areaLightCount);
+
+        radiance = direct * albedo;
+
+        uint state = tid * 9781u + rt.frameIndex * 6971u + 1u;
+        float3 t2;
+        float3 b2;
+        buildBasis(hitNormal, t2, b2);
+        float3 local2 = sampleCosineHemisphere(state);
+        float3 bounceDir =
+            safeNormalize(t2 * local2.x + hitNormal * local2.y +
+                              b2 * local2.z,
+                          hitNormal);
+        float3 ro2 = hitPos + hitNormal * bias;
+        Hit h2 = traceScene(ro2, bounceDir, tris, triCount);
+        if (h2.hit && h2.t <= maxDistance) {
+            float3 hitPos2 = ro2 + bounceDir * h2.t;
+            float3 hitNormal2 =
+                safeNormalize(h2.n, float3(0.0f, 1.0f, 0.0f));
+            if (dot(hitNormal2, -bounceDir) < 0.0f) {
+                hitNormal2 = -hitNormal2;
             }
-
-            float3 direct = evaluateDirectLights(
-                hitPos, hitNormal, bias, maxDistance, tris, triCount,
+            float3 albedo2 = float3(0.7f);
+            if (h2.materialID >= 0 && (uint)h2.materialID < materialCount) {
+                albedo2 =
+                    clamp(materials[h2.materialID].albedo, float3(0.0f),
+                          float3(1.0f));
+            }
+            float3 direct2 = evaluateDirectLights(
+                hitPos2, hitNormal2, bias, maxDistance, tris, triCount,
                 directionalLights, directionalLightCount, pointLights,
                 pointLightCount, spotLights, spotLightCount, areaLights,
                 areaLightCount);
-
-            float3 tint = clamp(pow(max(albedo, float3(0.0f)), float3(0.9f)),
-                                float3(0.0f), float3(1.0f));
-            radiance = direct * tint * 1.45f;
-
-            float3 t2;
-            float3 b2;
-            buildBasis(hitNormal, t2, b2);
-            float3 local2 = sampleCosineHemisphere(state);
-            float3 bounceDir =
-                safeNormalize(t2 * local2.x + hitNormal * local2.y +
-                                  b2 * local2.z,
-                              hitNormal);
-            float3 ro2 = hitPos + hitNormal * bias;
-            Hit h2 = traceScene(ro2, bounceDir, tris, triCount);
-            if (h2.hit && h2.t <= maxDistance) {
-                float3 hitPos2 = ro2 + bounceDir * h2.t;
-                float3 hitNormal2 =
-                    safeNormalize(h2.n, float3(0.0f, 1.0f, 0.0f));
-                float3 albedo2 = float3(0.7f);
-                if (h2.materialID >= 0 && (uint)h2.materialID < materialCount) {
-                    albedo2 =
-                        clamp(materials[h2.materialID].albedo, float3(0.0f),
-                              float3(1.0f));
-                }
-                float3 tint2 =
-                    clamp(pow(max(albedo2, float3(0.0f)), float3(0.9f)),
-                          float3(0.0f), float3(1.0f));
-                float3 direct2 = evaluateDirectLights(
-                    hitPos2, hitNormal2, bias, maxDistance, tris, triCount,
-                    directionalLights, directionalLightCount, pointLights,
-                    pointLightCount, spotLights, spotLightCount, areaLights,
-                    areaLightCount);
-                radiance += direct2 * (tint * tint2) * 0.95f;
-            }
+            radiance += direct2 * albedo2 * albedo;
         }
-
-        sum += radiance;
     }
 
-    probeRadianceOut[tid] = float4(sum / float(rays), 1.0f);
+    probeRadianceOut[tid] = float4(radiance, h.hit ? h.t : -1.0f);
 }

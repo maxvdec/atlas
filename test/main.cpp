@@ -167,7 +167,8 @@ class MainScene : public Scene {
             doesUpdate = false;
         } else if (window.isKeyClicked(Key::Q)) {
             fall = !fall;
-        } else if (window.isKeyClicked(Key::G) && window.ddgiSystem != nullptr &&
+        } else if (window.isKeyClicked(Key::G) &&
+                   window.ddgiSystem != nullptr &&
                    window.ddgiSystem->probeSpace != nullptr) {
             giDebugMode = (giDebugMode + 1) % 4;
             float debugAlpha = 0.0f;
@@ -245,7 +246,7 @@ class MainScene : public Scene {
         areaLight.addDebugObject(window);
 
         const Color wallWhite = Color(0.84f, 0.74f, 0.58f);
-        const Color boxWhite = Color(0.84f, 0.84f, 0.84f);
+        const Color boxWhite = Color(0.90f, 0.84f, 0.70f);
         const Color wallRed = Color(0.98f, 0.05f, 0.03f);
         const Color wallGreen = Color(0.04f, 0.95f, 0.07f);
 
@@ -291,7 +292,7 @@ class MainScene : public Scene {
 
         tallBox = createBox({0.56f, 1.2f, 0.56f});
         tallBox.material.albedo = boxWhite;
-        tallBox.material.roughness = 0.74f;
+        tallBox.material.roughness = 0.78f;
         tallBox.material.metallic = 0.0f;
         tallBox.material.ao = 1.0f;
         tallBox.setPosition({-0.42f, 0.6f, 0.5f});
@@ -300,7 +301,7 @@ class MainScene : public Scene {
 
         cubeBox = createBox({0.6f, 0.6f, 0.6f});
         cubeBox.material.albedo = boxWhite;
-        cubeBox.material.roughness = 0.72f;
+        cubeBox.material.roughness = 0.76f;
         cubeBox.material.metallic = 0.0f;
         cubeBox.material.ao = 1.0f;
         cubeBox.setPosition({0.42f, 0.3f, -0.5f});
@@ -323,12 +324,12 @@ class MainScene : public Scene {
         frameBuffer.display(window);
 
         window.enableGlobalIllumination();
-        window.ddgiSystem->probeSpacing = 0.14f;
-        window.ddgiSystem->raysPerProbe = 16384;
+        window.ddgiSystem->probeSpacing = 0.18f;
+        window.ddgiSystem->raysPerProbe = 256;
         window.ddgiSystem->maxRayDistance = 10.0f;
-        window.ddgiSystem->normalBias = 0.015f;
-        window.ddgiSystem->hysteresis = 0.40f;
-        window.ddgiSystem->probeSpace->probeResolution = 28;
+        window.ddgiSystem->normalBias = 0.02f;
+        window.ddgiSystem->hysteresis = 0.80f;
+        window.ddgiSystem->probeSpace->probeResolution = 8;
         window.ddgiSystem->probeSpace->textureBorderSize = 2;
         window.ddgiSystem->probeSpace->debugColor =
             Color(1.0f, 1.0f, 1.0f, 0.0f);

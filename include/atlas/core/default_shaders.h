@@ -3,8 +3,8 @@
 #ifndef ATLAS_GENERATED_SHADERS_H
 #define ATLAS_GENERATED_SHADERS_H
 
-static const char* COLOR_FRAG =
-R"(#include <metal_stdlib>
+static const char *COLOR_FRAG =
+    R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
 using namespace metal;
@@ -32,11 +32,10 @@ fragment main0_out main0(main0_in in [[stage_in]])
     return out;
 }
 
-)"
-;
+)";
 
-static const char* COLOR_VERT =
-R"(#include <metal_stdlib>
+static const char *COLOR_VERT =
+    R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
 using namespace metal;
@@ -87,11 +86,10 @@ vertex main0_out main0(main0_in in [[stage_in]], constant UBO& _12 [[buffer(0)]]
     out.vertexColor = in.aColor;
     return out;
 }
-)"
-;
+)";
 
-static const char* DDGI =
-R"(#include <metal_stdlib>
+static const char *DDGI =
+    R"(#include <metal_stdlib>
 using namespace metal;
 
 struct ProbeSpace {
@@ -283,20 +281,6 @@ static inline uint3 probeCoordFromIndex(uint idx, uint3 counts) {
     return uint3(x, y, z);
 }
 
-static inline float3 octDecode(float2 e) {
-    float3 n = float3(e.x, e.y, 1.0f - fabs(e.x) - fabs(e.y));
-
-    if (n.z < 0.0f) {
-        float2 signNotZero =
-            float2(n.x >= 0.0f ? 1.0f : -1.0f, n.y >= 0.0f ? 1.0f : -1.0f);
-        float2 folded = (1.0f - fabs(n.yx)) * signNotZero;
-        n.x = folded.x;
-        n.y = folded.y;
-    }
-
-    return normalize(n);
-}
-
 static inline float3 safeNormalize(float3 v, float3 fallback) {
     float len2 = dot(v, v);
     if (len2 > 1e-10f) {
@@ -307,8 +291,8 @@ static inline float3 safeNormalize(float3 v, float3 fallback) {
 
 static inline float3 sampleSky(float3 d) {
     float t = clamp(d.y * 0.5f + 0.5f, 0.0f, 1.0f);
-    return mix(float3(0.0008f, 0.0009f, 0.0011f),
-               float3(0.0100f, 0.0110f, 0.0120f),
+    return mix(float3(0.0002f, 0.0002f, 0.0002f),
+               float3(0.0012f, 0.0011f, 0.0010f),
                t);
 }
 
@@ -320,6 +304,10 @@ static inline float shadowVisibility(float3 ro, float3 rd, float maxT,
     }
     Hit h = traceScene(ro, rd, tris, triCount);
     if (!h.hit) {
+        return 1.0f;
+    }
+    float minOccluderDistance = max(0.01f, maxT * 0.0025f);
+    if (h.t <= minOccluderDistance) {
         return 1.0f;
     }
     return (h.t >= maxT) ? 1.0f : 0.0f;
@@ -466,6 +454,19 @@ static inline float3 sampleCosineHemisphere(thread uint &state) {
     return float3(x, y, z);
 }
 
+static inline float3 sphericalFibonacci(uint index, uint count, uint frameIndex) {
+    const float GOLDEN_RATIO = 1.6180339887498949f;
+    const float TAU = 6.28318530718f;
+    float i = float(index) + 0.5f;
+    float phi = TAU * fract(i / GOLDEN_RATIO);
+    float cosTheta = 1.0f - (2.0f * i) / float(count);
+    float sinTheta = sqrt(max(0.0f, 1.0f - cosTheta * cosTheta));
+    uint rotSeed = wangHash(frameIndex * 1471u + 5743u);
+    float rotAngle = float(rotSeed & 0xFFFFu) / 65536.0f * TAU;
+    phi += rotAngle;
+    return float3(sinTheta * cos(phi), cosTheta, sinTheta * sin(phi));
+}
+
 kernel void main0(device float4 *probeRadianceOut [[buffer(0)]],
                   device const Triangle *tris [[buffer(1)]],
                   device const Material *materials [[buffer(2)]],
@@ -482,115 +483,94 @@ kernel void main0(device float4 *probeRadianceOut [[buffer(0)]],
                   constant uint &spotLightCount [[buffer(13)]],
                   constant uint &areaLightCount [[buffer(14)]],
                   uint tid [[thread_position_in_grid]]) {
+    const float PI = 3.14159265359f;
     uint totalProbes = (uint)ps.atlasParams.w;
-    uint innerRes = max((uint)ps.atlasParams.y, 1u);
-    uint texelsPerProbe = innerRes * innerRes;
-    uint totalTexels = totalProbes * texelsPerProbe;
+    uint raysPerProbe = max(rt.raysPerProbe, 1u);
+    uint totalRays = totalProbes * raysPerProbe;
 
-    if (tid >= totalTexels)
+    if (tid >= totalRays)
         return;
 
-    uint probeIndex = tid / texelsPerProbe;
-    uint localIndex = tid - probeIndex * texelsPerProbe;
-    uint lx = localIndex % innerRes;
-    uint ly = localIndex / innerRes;
+    uint probeIndex = tid / raysPerProbe;
+    uint rayIndex = tid - probeIndex * raysPerProbe;
 
     uint3 counts = uint3((uint)ps.probeCount.x, (uint)ps.probeCount.y,
                          (uint)ps.probeCount.z);
     uint3 pc = probeCoordFromIndex(probeIndex, counts);
-
     float3 probePos = ps.origin + float3(pc) * ps.spacing;
 
-    float2 e = ((float2((float)lx, (float)ly) + 0.5f) / float(innerRes)) * 2.0f -
-               1.0f;
-    float3 baseDir = octDecode(e);
+    float3 rayDir = sphericalFibonacci(rayIndex, raysPerProbe, rt.frameIndex);
 
-    uint state = tid * 9781u + 1u;
-
-    uint rays =
-        max(8u, (max(rt.raysPerProbe, 1u) + texelsPerProbe - 1u) / texelsPerProbe);
     float maxDistance = max(rt.maxRayDistance, 0.001f);
     float bias = max(rt.normalBias, 0.001f);
 
-    float3 sum = float3(0.0f);
+    float3 ro = probePos + rayDir * bias;
+    Hit h = traceScene(ro, rayDir, tris, triCount);
 
-    for (uint r = 0; r < rays; r++) {
-        float3 t;
-        float3 b;
-        buildBasis(baseDir, t, b);
-        float3 localDir = sampleCosineHemisphere(state);
-        float3 rayDir = safeNormalize(t * localDir.x + baseDir * localDir.y +
-                                          b * localDir.z,
-                                      baseDir);
+    float3 radiance = float3(0.0f);
+    if (!h.hit || h.t > maxDistance) {
+        radiance = sampleSky(rayDir);
+    } else {
+        float3 hitPos = ro + rayDir * h.t;
+        float3 hitNormal = safeNormalize(h.n, float3(0.0f, 1.0f, 0.0f));
 
-        float3 ro = probePos + rayDir * bias;
-        Hit h = traceScene(ro, rayDir, tris, triCount);
+        if (dot(hitNormal, -rayDir) < 0.0f) {
+            hitNormal = -hitNormal;
+        }
 
-        float3 radiance = float3(0.0f);
-        if (!h.hit || h.t > maxDistance) {
-            radiance = sampleSky(rayDir);
-        } else {
-            float3 hitPos = ro + rayDir * h.t;
-            float3 hitNormal = safeNormalize(h.n, float3(0.0f, 1.0f, 0.0f));
+        float3 albedo = float3(0.7f);
+        if (h.materialID >= 0 && (uint)h.materialID < materialCount) {
+            albedo = clamp(materials[h.materialID].albedo, float3(0.0f),
+                           float3(1.0f));
+        }
 
-            float3 albedo = float3(0.7f);
-            if (h.materialID >= 0 && (uint)h.materialID < materialCount) {
-                albedo = clamp(materials[h.materialID].albedo, float3(0.0f),
-                               float3(1.0f));
+        float3 direct = evaluateDirectLights(
+            hitPos, hitNormal, bias, maxDistance, tris, triCount,
+            directionalLights, directionalLightCount, pointLights,
+            pointLightCount, spotLights, spotLightCount, areaLights,
+            areaLightCount);
+
+        radiance = direct * albedo;
+
+        uint state = tid * 9781u + rt.frameIndex * 6971u + 1u;
+        float3 t2;
+        float3 b2;
+        buildBasis(hitNormal, t2, b2);
+        float3 local2 = sampleCosineHemisphere(state);
+        float3 bounceDir =
+            safeNormalize(t2 * local2.x + hitNormal * local2.y +
+                              b2 * local2.z,
+                          hitNormal);
+        float3 ro2 = hitPos + hitNormal * bias;
+        Hit h2 = traceScene(ro2, bounceDir, tris, triCount);
+        if (h2.hit && h2.t <= maxDistance) {
+            float3 hitPos2 = ro2 + bounceDir * h2.t;
+            float3 hitNormal2 =
+                safeNormalize(h2.n, float3(0.0f, 1.0f, 0.0f));
+            if (dot(hitNormal2, -bounceDir) < 0.0f) {
+                hitNormal2 = -hitNormal2;
             }
-
-            float3 direct = evaluateDirectLights(
-                hitPos, hitNormal, bias, maxDistance, tris, triCount,
+            float3 albedo2 = float3(0.7f);
+            if (h2.materialID >= 0 && (uint)h2.materialID < materialCount) {
+                albedo2 =
+                    clamp(materials[h2.materialID].albedo, float3(0.0f),
+                          float3(1.0f));
+            }
+            float3 direct2 = evaluateDirectLights(
+                hitPos2, hitNormal2, bias, maxDistance, tris, triCount,
                 directionalLights, directionalLightCount, pointLights,
                 pointLightCount, spotLights, spotLightCount, areaLights,
                 areaLightCount);
-
-            float3 tint = clamp(pow(max(albedo, float3(0.0f)), float3(0.9f)),
-                                float3(0.0f), float3(1.0f));
-            radiance = direct * tint * 1.45f;
-
-            float3 t2;
-            float3 b2;
-            buildBasis(hitNormal, t2, b2);
-            float3 local2 = sampleCosineHemisphere(state);
-            float3 bounceDir =
-                safeNormalize(t2 * local2.x + hitNormal * local2.y +
-                                  b2 * local2.z,
-                              hitNormal);
-            float3 ro2 = hitPos + hitNormal * bias;
-            Hit h2 = traceScene(ro2, bounceDir, tris, triCount);
-            if (h2.hit && h2.t <= maxDistance) {
-                float3 hitPos2 = ro2 + bounceDir * h2.t;
-                float3 hitNormal2 =
-                    safeNormalize(h2.n, float3(0.0f, 1.0f, 0.0f));
-                float3 albedo2 = float3(0.7f);
-                if (h2.materialID >= 0 && (uint)h2.materialID < materialCount) {
-                    albedo2 =
-                        clamp(materials[h2.materialID].albedo, float3(0.0f),
-                              float3(1.0f));
-                }
-                float3 tint2 =
-                    clamp(pow(max(albedo2, float3(0.0f)), float3(0.9f)),
-                          float3(0.0f), float3(1.0f));
-                float3 direct2 = evaluateDirectLights(
-                    hitPos2, hitNormal2, bias, maxDistance, tris, triCount,
-                    directionalLights, directionalLightCount, pointLights,
-                    pointLightCount, spotLights, spotLightCount, areaLights,
-                    areaLightCount);
-                radiance += direct2 * (tint * tint2) * 0.95f;
-            }
+            radiance += direct2 * albedo2 * albedo;
         }
-
-        sum += radiance;
     }
 
-    probeRadianceOut[tid] = float4(sum / float(rays), 1.0f);
+    probeRadianceOut[tid] = float4(radiance, h.hit ? h.t : -1.0f);
 }
-)"
-;
+)";
 
-static const char* DDGI_WRITE =
-R"(#include <metal_stdlib>
+static const char *DDGI_WRITE =
+    R"(#include <metal_stdlib>
 using namespace metal;
 
 struct ProbeSpace {
@@ -620,12 +600,48 @@ struct RaytracingSettings {
     uint _pad2;
 };
 
+static inline uint wangHash(uint x) {
+    x = (x ^ 61u) ^ (x >> 16);
+    x *= 9u;
+    x = x ^ (x >> 4);
+    x *= 0x27d4eb2du;
+    x = x ^ (x >> 15);
+    return x;
+}
+
+static inline float3 octDecode(float2 e) {
+    float3 n = float3(e.x, e.y, 1.0f - fabs(e.x) - fabs(e.y));
+    if (n.z < 0.0f) {
+        float2 signNotZero =
+            float2(n.x >= 0.0f ? 1.0f : -1.0f, n.y >= 0.0f ? 1.0f : -1.0f);
+        float2 folded = (1.0f - fabs(n.yx)) * signNotZero;
+        n.x = folded.x;
+        n.y = folded.y;
+    }
+    return normalize(n);
+}
+
+static inline float3 sphericalFibonacci(uint index, uint count, uint frameIndex) {
+    const float GOLDEN_RATIO = 1.6180339887498949f;
+    const float TAU = 6.28318530718f;
+    float i = float(index) + 0.5f;
+    float phi = TAU * fract(i / GOLDEN_RATIO);
+    float cosTheta = 1.0f - (2.0f * i) / float(count);
+    float sinTheta = sqrt(max(0.0f, 1.0f - cosTheta * cosTheta));
+    uint rotSeed = wangHash(frameIndex * 1471u + 5743u);
+    float rotAngle = float(rotSeed & 0xFFFFu) / 65536.0f * TAU;
+    phi += rotAngle;
+    return float3(sinTheta * cos(phi), cosTheta, sinTheta * sin(phi));
+}
+
 kernel void main0(texture2d<float, access::write> outTexture [[texture(0)]],
                   texture2d<float, access::read> prevTexture [[texture(1)]],
                   device float4 *probeRadiance [[buffer(0)]],
                   constant ProbeSpace &ps [[buffer(1)]],
                   constant RaytracingSettings &rt [[buffer(2)]],
                   uint2 gid [[thread_position_in_grid]]) {
+    const float FOUR_PI = 12.566370614359172f;
+
     uint border = (uint)ps.atlasParams.x;
     uint innerRes = (uint)ps.atlasParams.y;
     uint probesPerRow = (uint)ps.atlasParams.z;
@@ -656,27 +672,47 @@ kernel void main0(texture2d<float, access::write> outTexture [[texture(0)]],
     int innerX = clamp(int(localX) - int(border), 0, int(innerRes) - 1);
     int innerY = clamp(int(localY) - int(border), 0, int(innerRes) - 1);
 
-    uint texelsPerProbe = innerRes * innerRes;
-    uint probeTexelIndex = probeIndex * texelsPerProbe +
-                           (uint(innerY) * innerRes + uint(innerX));
+    float2 e = (float2(float(innerX), float(innerY)) + 0.5f) / float(innerRes) * 2.0f - 1.0f;
+    float3 texelDir = octDecode(e);
 
-    float3 cur = probeRadiance[probeTexelIndex].xyz;
-    if (!all(isfinite(cur))) {
-        cur = float3(0.0f);
+    uint raysPerProbe = max(rt.raysPerProbe, 1u);
+    uint baseOffset = probeIndex * raysPerProbe;
+
+    float3 sum = float3(0.0f);
+    float weightSum = 0.0f;
+
+    for (uint r = 0; r < raysPerProbe; r++) {
+        float3 rayDir = sphericalFibonacci(r, raysPerProbe, rt.frameIndex);
+        float w = max(0.0f, dot(texelDir, rayDir));
+        if (w > 1e-6f) {
+            float3 rad = probeRadiance[baseOffset + r].xyz;
+            if (all(isfinite(rad))) {
+                sum += rad * w;
+                weightSum += w;
+            }
+        }
+    }
+
+    float3 irradiance = float3(0.0f);
+    if (weightSum > 1e-6f) {
+        irradiance = sum * (FOUR_PI / float(raysPerProbe));
+    }
+
+    if (!all(isfinite(irradiance))) {
+        irradiance = float3(0.0f);
     }
 
     float4 prev = prevTexture.read(gid);
     float3 prevValue = all(isfinite(prev.xyz)) ? prev.xyz : float3(0.0f);
     float h = clamp(rt.hysteresis, 0.0f, 0.995f);
-    float3 blended = (rt.frameIndex == 0u) ? cur : mix(cur, prevValue, h);
+    float3 blended = (rt.frameIndex == 0u) ? irradiance : mix(irradiance, prevValue, h);
 
     outTexture.write(float4(max(blended, float3(0.0f)), 1.0f), gid);
 }
-)"
-;
+)";
 
-static const char* DEBUG_FRAG =
-R"(#include <metal_stdlib>
+static const char *DEBUG_FRAG =
+    R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
 using namespace metal;
@@ -693,11 +729,10 @@ fragment main0_out main0()
     return out;
 }
 
-)"
-;
+)";
 
-static const char* DEBUG_VERT =
-R"(#include <metal_stdlib>
+static const char *DEBUG_VERT =
+    R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
 using namespace metal;
@@ -719,11 +754,10 @@ vertex main0_out main0(main0_in in [[stage_in]])
     return out;
 }
 
-)"
-;
+)";
 
-static const char* DEFERRED_FRAG =
-R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
+static const char *DEFERRED_FRAG =
+    R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
 
 #include <metal_stdlib>
 #include <simd/simd.h>
@@ -1099,11 +1133,10 @@ fragment main0_out main0(main0_in in [[stage_in]], constant UBO& _46 [[buffer(0)
     return out;
 }
 
-)"
-;
+)";
 
-static const char* DEFERRED_VERT =
-R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
+static const char *DEFERRED_VERT =
+    R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
 
 #include <metal_stdlib>
 #include <simd/simd.h>
@@ -1230,11 +1263,10 @@ vertex main0_out main0(main0_in in [[stage_in]], constant UBO& _12 [[buffer(0)]]
     out.TBN_2 = TBN[2];
     return out;
 }
-)"
-;
+)";
 
-static const char* DEPTH_VERT =
-R"(#include <metal_stdlib>
+static const char *DEPTH_VERT =
+    R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
 using namespace metal;
@@ -1288,11 +1320,10 @@ vertex main0_out main0(main0_in in [[stage_in]], constant UBO& _12 [[buffer(0)]]
     }
     return out;
 }
-)"
-;
+)";
 
-static const char* DOWNSAMPLE_FRAG =
-R"(#include <metal_stdlib>
+static const char *DOWNSAMPLE_FRAG =
+    R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
 using namespace metal;
@@ -1340,11 +1371,10 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Params& _13 [[buffer
     out.downsample = float4(downsampleColor, 1.0);
     return out;
 }
-)"
-;
+)";
 
-static const char* EMPTY_FRAG =
-R"(#include <metal_stdlib>
+static const char *EMPTY_FRAG =
+    R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
 using namespace metal;
@@ -1353,11 +1383,10 @@ fragment void main0()
 {
 }
 
-)"
-;
+)";
 
-static const char* FLUID_FRAG =
-R"(#include <metal_stdlib>
+static const char *FLUID_FRAG =
+    R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
 using namespace metal;
@@ -1583,11 +1612,10 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Uniforms& _19 [[buff
     return out;
 }
 
-)"
-;
+)";
 
-static const char* FLUID_VERT =
-R"(#include <metal_stdlib>
+static const char *FLUID_VERT =
+    R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
 using namespace metal;
@@ -1630,11 +1658,10 @@ vertex main0_out main0(main0_in in [[stage_in]], constant UBO& _19 [[buffer(0)]]
     return out;
 }
 
-)"
-;
+)";
 
-static const char* FULLSCREEN_FRAG =
-R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
+static const char *FULLSCREEN_FRAG =
+    R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
 #pragma clang diagnostic ignored "-Wmissing-braces"
 
 #include <metal_stdlib>
@@ -2698,11 +2725,10 @@ fragment main0_out main0(main0_in in [[stage_in]], constant PushConstants& _372 
     out.FragColor = float4(finalColor, 1.0);
     return out;
 }
-)"
-;
+)";
 
-static const char* FULLSCREEN_VERT =
-R"(#include <metal_stdlib>
+static const char *FULLSCREEN_VERT =
+    R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
 using namespace metal;
@@ -2727,11 +2753,10 @@ vertex main0_out main0(main0_in in [[stage_in]])
     return out;
 }
 
-)"
-;
+)";
 
-static const char* GAUSSIAN_FRAG =
-R"(#include <metal_stdlib>
+static const char *GAUSSIAN_FRAG =
+    R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
 using namespace metal;
@@ -2778,11 +2803,10 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Params& _29 [[buffer
     return out;
 }
 
-)"
-;
+)";
 
-static const char* LIGHT_FRAG =
-R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
+static const char *LIGHT_FRAG =
+    R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
 #pragma clang diagnostic ignored "-Wmissing-braces"
 
 #include <metal_stdlib>
@@ -3613,38 +3637,6 @@ static inline float3 safeNormalizeDDGI(float3 v, float3 fallback) {
     return fallback;
 }
 
-static inline void buildDDGIBasis(float3 n, thread float3 &t, thread float3 &b) {
-    float3 up = (fabs(n.y) < 0.999f) ? float3(0.0f, 1.0f, 0.0f)
-                                     : float3(1.0f, 0.0f, 0.0f);
-    t = safeNormalizeDDGI(cross(up, n), float3(1.0f, 0.0f, 0.0f));
-    b = safeNormalizeDDGI(cross(n, t), float3(0.0f, 0.0f, 1.0f));
-}
-
-constant uint DDGI_HEMISPHERE_SAMPLE_COUNT = 21u;
-constant float3 DDGI_HEMISPHERE_DIRS[DDGI_HEMISPHERE_SAMPLE_COUNT] = {
-    float3(0.0f, 1.0f, 0.0f),
-    float3(0.5000000f, 0.8660254f, 0.0f),
-    float3(-0.5000000f, 0.8660254f, 0.0f),
-    float3(0.0f, 0.8660254f, 0.5000000f),
-    float3(0.0f, 0.8660254f, -0.5000000f),
-    float3(0.8660254f, 0.5000000f, 0.0f),
-    float3(0.6123724f, 0.5000000f, 0.6123724f),
-    float3(0.0f, 0.5000000f, 0.8660254f),
-    float3(-0.6123724f, 0.5000000f, 0.6123724f),
-    float3(-0.8660254f, 0.5000000f, 0.0f),
-    float3(-0.6123724f, 0.5000000f, -0.6123724f),
-    float3(0.0f, 0.5000000f, -0.8660254f),
-    float3(0.6123724f, 0.5000000f, -0.6123724f),
-    float3(0.9659258f, 0.2588190f, 0.0f),
-    float3(0.6830127f, 0.2588190f, 0.6830127f),
-    float3(0.0f, 0.2588190f, 0.9659258f),
-    float3(-0.6830127f, 0.2588190f, 0.6830127f),
-    float3(-0.9659258f, 0.2588190f, 0.0f),
-    float3(-0.6830127f, 0.2588190f, -0.6830127f),
-    float3(0.0f, 0.2588190f, -0.9659258f),
-    float3(0.6830127f, 0.2588190f, -0.6830127f),
-};
-
 static inline uint probeIndexFromCoord(uint3 c, uint3 counts) {
     return c.x + counts.x * (c.y + counts.y * c.z);
 }
@@ -3719,39 +3711,6 @@ static inline float3 sampleProbeDirectionalRadiance(texture2d<float> ddgiTexture
     return sampleDDGITextureBilinear(ddgiTexture, uv);
 }
 
-static inline float3 sampleProbeIrradiance(texture2d<float> ddgiTexture,
-                                           constant ProbeSpace &ps,
-                                           uint probeIndex, uint atlasW,
-                                           uint atlasH, float3 normalWS) {
-    float3 n = safeNormalizeDDGI(normalWS, float3(0.0f, 1.0f, 0.0f));
-    float3 t;
-    float3 b;
-    buildDDGIBasis(n, t, b);
-
-    float3 sum = float3(0.0f);
-    float weightSum = 0.0f;
-    for (uint i = 0u; i < DDGI_HEMISPHERE_SAMPLE_COUNT; i++) {
-        float3 localDir = DDGI_HEMISPHERE_DIRS[i];
-        float3 dirWS = safeNormalizeDDGI(t * localDir.x + n * localDir.y +
-                                             b * localDir.z,
-                                         n);
-        float nd = max(dot(n, dirWS), 0.0f);
-        if (nd <= 1e-5f) {
-            continue;
-        }
-        float3 radiance = sampleProbeDirectionalRadiance(ddgiTexture, ps, probeIndex,
-                                                         atlasW, atlasH, dirWS);
-        float w = powr(max(nd, 1e-4f), 0.50f);
-        sum += radiance * w;
-        weightSum += w;
-    }
-
-    if (weightSum <= 1e-5f) {
-        return float3(0.0f);
-    }
-    return (sum / weightSum) * 3.14159265359f;
-}
-
 static inline float3 sampleDDGIIrradiance(texture2d<float> ddgiTexture,
                                           constant ProbeSpace &ps, float3 posWS,
                                           float3 normalWS) {
@@ -3786,8 +3745,8 @@ static inline float3 sampleDDGIIrradiance(texture2d<float> ddgiTexture,
             (uint)clamp(int(floor(clampedGrid.y + 0.5f)), 0, int(counts.y) - 1),
             (uint)clamp(int(floor(clampedGrid.z + 0.5f)), 0, int(counts.z) - 1));
         uint pIndex = probeIndexFromCoord(nearest, counts);
-        return sampleProbeIrradiance(ddgiTexture, ps, pIndex, atlasW, atlasH,
-                                     safeNormal);
+        return sampleProbeDirectionalRadiance(ddgiTexture, ps, pIndex, atlasW, atlasH,
+                                              safeNormal);
     }
 
     float3 maxGrid =
@@ -3816,92 +3775,21 @@ static inline float3 sampleDDGIIrradiance(texture2d<float> ddgiTexture,
                                    ((dy == 0u) ? (1.0f - frac.y) : frac.y) *
                                    ((dz == 0u) ? (1.0f - frac.z) : frac.z);
 
-                float w = trilinearW;
+                float3 probePos = ps.origin + float3(pc) * safeSpacing;
+                float3 surfaceToProbe = probePos - posWS;
+                float sDist = length(surfaceToProbe);
+                float3 dirToProbe = (sDist > 1e-4f) ? surfaceToProbe / sDist : float3(0.0f, 1.0f, 0.0f);
+                float backfaceW = clamp(dot(safeNormal, dirToProbe) * 0.5f + 0.5f, 0.05f, 1.0f);
 
-                float3 irr = sampleProbeIrradiance(ddgiTexture, ps, pIndex, atlasW,
-                                                   atlasH, safeNormal);
+                float w = trilinearW * backfaceW;
+
+                float3 irr = sampleProbeDirectionalRadiance(ddgiTexture, ps, pIndex, atlasW,
+                                                            atlasH, safeNormal);
                 if (!all(isfinite(irr))) {
                     irr = float3(0.0f);
                 }
                 irr = max(irr, float3(0.0f));
                 result += irr * w;
-                weightSum += w;
-            }
-        }
-    }
-
-    return (weightSum > 0.0f) ? (result / weightSum) : float3(0.0f);
-}
-
-static inline float3 sampleDDGIRadiance(texture2d<float> ddgiTexture,
-                                        constant ProbeSpace &ps, float3 posWS,
-                                        float3 dirWS, float3 normalWS) {
-    uint3 counts = uint3((uint)ps.probeCount.x, (uint)ps.probeCount.y,
-                         (uint)ps.probeCount.z);
-
-    if (counts.x == 0u || counts.y == 0u || counts.z == 0u)
-        return float3(0.0);
-
-    uint atlasW = ddgiTexture.get_width();
-    uint atlasH = ddgiTexture.get_height();
-    if (atlasW == 0u || atlasH == 0u) {
-        return float3(0.0);
-    }
-
-    float3 safeDir = safeNormalizeDDGI(dirWS, float3(0.0f, 1.0f, 0.0f));
-    (void)normalWS;
-    float3 safeSpacing = max(ps.spacing, float3(1e-4f));
-    float3 grid = (posWS - ps.origin) / safeSpacing;
-
-    if (counts.x < 2u || counts.y < 2u || counts.z < 2u) {
-        float3 maxCoord =
-            max(float3(0.0f), float3((float)counts.x - 1.0f,
-                                     (float)counts.y - 1.0f,
-                                     (float)counts.z - 1.0f));
-        float3 clampedGrid = clamp(grid, float3(0.0f), maxCoord);
-        uint3 nearest = uint3(
-            (uint)clamp(int(floor(clampedGrid.x + 0.5f)), 0, int(counts.x) - 1),
-            (uint)clamp(int(floor(clampedGrid.y + 0.5f)), 0, int(counts.y) - 1),
-            (uint)clamp(int(floor(clampedGrid.z + 0.5f)), 0, int(counts.z) - 1));
-        uint pIndex = probeIndexFromCoord(nearest, counts);
-        return sampleProbeDirectionalRadiance(ddgiTexture, ps, pIndex, atlasW,
-                                              atlasH, safeDir);
-    }
-
-    float3 maxGrid =
-        float3((float)counts.x - 1.0001f, (float)counts.y - 1.0001f,
-               (float)counts.z - 1.0001f);
-    float3 clampedGrid = clamp(grid, float3(0.0f), maxGrid);
-
-    float3 baseF = floor(clampedGrid);
-    float3 frac = clampedGrid - baseF;
-    int3 baseI = int3(baseF);
-    int3 maxBase = int3(int(counts.x) - 2, int(counts.y) - 2, int(counts.z) - 2);
-    baseI = clamp(baseI, int3(0), maxBase);
-
-    float3 result = float3(0.0f);
-    float weightSum = 0.0f;
-
-    for (uint dz = 0; dz <= 1u; dz++) {
-        for (uint dy = 0; dy <= 1u; dy++) {
-            for (uint dx = 0; dx <= 1u; dx++) {
-
-                uint3 pc = uint3(uint(baseI.x) + dx, uint(baseI.y) + dy,
-                                 uint(baseI.z) + dz);
-                uint pIndex = probeIndexFromCoord(pc, counts);
-
-                float trilinearW = ((dx == 0u) ? (1.0f - frac.x) : frac.x) *
-                                   ((dy == 0u) ? (1.0f - frac.y) : frac.y) *
-                                   ((dz == 0u) ? (1.0f - frac.z) : frac.z);
-                float w = trilinearW;
-
-                float3 radiance = sampleProbeDirectionalRadiance(
-                    ddgiTexture, ps, pIndex, atlasW, atlasH, safeDir);
-                if (!all(isfinite(radiance))) {
-                    radiance = float3(0.0f);
-                }
-                radiance = max(radiance, float3(0.0f));
-                result += radiance * w;
                 weightSum += w;
             }
         }
@@ -4224,7 +4112,7 @@ fragment main0_out main0(
     }
 
     float ddgiSampleBias =
-        max(max(ps.spacing.x, max(ps.spacing.y, ps.spacing.z)) * 0.02f, 0.002f);
+        max(max(ps.spacing.x, max(ps.spacing.y, ps.spacing.z)) * 0.025f, 0.001f);
     float3 ddgiSamplePos = FragPos + N * ddgiSampleBias;
     float3 ddgiIrradiance =
         sampleDDGIIrradiance(irradianceMap, ps, ddgiSamplePos, N);
@@ -4232,62 +4120,30 @@ fragment main0_out main0(
         ddgiIrradiance = float3(0.0f);
     }
     ddgiIrradiance = max(ddgiIrradiance, float3(0.0f));
-    float3 ddgiOmniRadiance = float3(0.0f);
-    if (ps.atlasParams.w > 0.0f) {
-        ddgiOmniRadiance +=
-            sampleDDGIRadiance(irradianceMap, ps, ddgiSamplePos, float3(0.0f, 1.0f, 0.0f), N) *
-            0.22f;
-        ddgiOmniRadiance +=
-            sampleDDGIRadiance(irradianceMap, ps, ddgiSamplePos, float3(0.0f, -1.0f, 0.0f), N) *
-            0.18f;
-        ddgiOmniRadiance +=
-            sampleDDGIRadiance(irradianceMap, ps, ddgiSamplePos, float3(1.0f, 0.0f, 0.0f), N) *
-            0.15f;
-        ddgiOmniRadiance +=
-            sampleDDGIRadiance(irradianceMap, ps, ddgiSamplePos, float3(-1.0f, 0.0f, 0.0f), N) *
-            0.15f;
-        ddgiOmniRadiance +=
-            sampleDDGIRadiance(irradianceMap, ps, ddgiSamplePos, float3(0.0f, 0.0f, 1.0f), N) *
-            0.15f;
-        ddgiOmniRadiance +=
-            sampleDDGIRadiance(irradianceMap, ps, ddgiSamplePos, float3(0.0f, 0.0f, -1.0f), N) *
-            0.15f;
-    }
-    if (!all(isfinite(ddgiOmniRadiance))) {
-        ddgiOmniRadiance = float3(0.0f);
-    }
-    ddgiOmniRadiance = max(ddgiOmniRadiance, float3(0.0f));
+
     float ddgiDebugMode = ps.debugColor.w;
-    float3 ddgiGain = float3(1.0f);
-    if (ddgiDebugMode >= 0.5f) {
-        ddgiGain = max(ps.debugColor.xyz, float3(0.0f));
-        if (ddgiGain.x < 1e-4f && ddgiGain.y < 1e-4f && ddgiGain.z < 1e-4f) {
-            ddgiGain = float3(1.0f);
-        }
+    float3 ddgiGain = max(ps.debugColor.xyz, float3(0.0f));
+    if (ddgiGain.x < 1e-4f && ddgiGain.y < 1e-4f && ddgiGain.z < 1e-4f) {
+        ddgiGain = float3(1.0f);
     }
 
     const float INV_PI = 0.31830988618379067153776752674503;
-    float3 ddgiDiffuseDirectional = (ddgiIrradiance * albedo) * INV_PI;
-    float3 ddgiDiffuseOmni = ddgiOmniRadiance * albedo;
-    float3 ddgiDiffuse =
-        (ddgiDiffuseDirectional * 1.25f + ddgiDiffuseOmni * 0.65f) * ddgiGain;
+    float3 ddgiDiffuse = ddgiIrradiance * albedo * INV_PI * (1.0f - metallic) * ddgiGain;
     ddgiDiffuse = max(ddgiDiffuse, float3(0.0f));
     ambient += ddgiDiffuse;
 
     float3 ddgiSpecular = float3(0.0f);
-    if (ps.atlasParams.w > 0.0f) {
+    if (ps.atlasParams.w > 0.0f && roughness < 0.7f) {
         float3 reflectionDir = reflect(-V, N);
-        float3 ddgiReflection = sampleDDGIRadiance(
-            irradianceMap, ps, ddgiSamplePos, reflectionDir, N);
+        float3 ddgiReflection = sampleDDGIIrradiance(
+            irradianceMap, ps, ddgiSamplePos, reflectionDir);
         if (!all(isfinite(ddgiReflection))) {
             ddgiReflection = float3(0.0f);
         }
         ddgiReflection = max(ddgiReflection, float3(0.0f));
         float3 Fddgi = fresnelSchlick(fast::max(dot(N, V), 0.0), F0);
-        float dielectricFloor = mix(0.16f, 0.03f, roughness) * (1.0f - metallic);
-        float3 specWeight = max(Fddgi, float3(dielectricFloor));
-        float specGain = mix(1.7f, 0.35f, roughness);
-        ddgiSpecular = ddgiReflection * specWeight * specGain * ddgiGain;
+        float specGain = mix(0.8f, 0.05f, roughness);
+        ddgiSpecular = ddgiReflection * Fddgi * specGain * INV_PI * ddgiGain;
     }
 
     float3 iblContribution = float3(0.0);
@@ -4297,8 +4153,7 @@ fragment main0_out main0(
             sampleEnvironmentRadiance(param_43, skybox, skyboxSmplr);
         float3 diffuseIBL = irradiance * albedo;
         float3 reflection = reflect(-V, N);
-        float3 param_44 = reflect)"
-R"(ion;
+        float3 param_44 = reflection;
         float3 specularEnv =
             sampleEnvironmentRadiance(param_44, skybox, skyboxSmplr);
         float param_45 = fast::max(dot(N, V), 0.0);
@@ -4327,7 +4182,8 @@ R"(ion;
         float3 kS_1 = F_1;
         float3 envColor = skybox.sample(skyboxSmplr, R_1).xyz;
         float3 reflection_1 = envColor * kS_1;
-        finalColor = mix(finalColor, reflection_1, F0);
+        float3 envMix = F0 * (1.0f - roughness) * 0.20f;
+        finalColor = mix(finalColor, reflection_1, envMix);
     }
     out.FragColor = float4(finalColor, 1.0);
     float brightness =
@@ -4346,11 +4202,10 @@ R"(ion;
     out.FragColor.z = _1897.z;
     return out;
 }
-)"
-;
+)";
 
-static const char* LIGHT_VERT =
-R"(#include <metal_stdlib>
+static const char *LIGHT_VERT =
+    R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
 using namespace metal;
@@ -4374,11 +4229,10 @@ vertex main0_out main0(main0_in in [[stage_in]])
     out.gl_Position = float4(in.aPos, 1.0);
     return out;
 }
-)"
-;
+)";
 
-static const char* MAIN_FRAG =
-R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
+static const char *MAIN_FRAG =
+    R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
 #pragma clang diagnostic ignored "-Wmissing-braces"
 
 #include <metal_stdlib>
@@ -5615,7 +5469,7 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Uniforms& _163 [[buf
         float roughnessAttenuation = mix(1.0, 0.1500000059604644775390625, fast::clamp(roughness, 0.0, 1.0));
         float3 specularIBL = specularEnv * roughnessAttenuation;
         iblContribution = ((kD_1 * diffuseIBL) + )"
-R"((kS_1 * specularIBL)) * aoWithFloor;
+    R"((kS_1 * specularIBL)) * aoWithFloor;
     }
     float3 color = (ambient + lighting) + iblContribution;
     out.FragColor = float4(color, 1.0);
@@ -5635,11 +5489,10 @@ R"((kS_1 * specularIBL)) * aoWithFloor;
     out.FragColor.z = _2399.z;
     return out;
 }
-)"
-;
+)";
 
-static const char* MAIN_VERT =
-R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
+static const char *MAIN_VERT =
+    R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
 
 #include <metal_stdlib>
 #include <simd/simd.h>
@@ -5748,11 +5601,10 @@ vertex main0_out main0(main0_in in [[stage_in]], constant UBO& uniforms [[buffer
     out.TBN_2 = TBN[2];
     return out;
 }
-)"
-;
+)";
 
-static const char* PARTICLE_FRAG =
-R"(#include <metal_stdlib>
+static const char *PARTICLE_FRAG =
+    R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
 using namespace metal;
@@ -5799,11 +5651,10 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Params& _9 [[buffer(
     return out;
 }
 
-)"
-;
+)";
 
-static const char* PARTICLE_VERT =
-R"(#include <metal_stdlib>
+static const char *PARTICLE_VERT =
+    R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
 using namespace metal;
@@ -5853,11 +5704,10 @@ vertex main0_out main0(main0_in in [[stage_in]], constant UniformBufferObject& _
     return out;
 }
 
-)"
-;
+)";
 
-static const char* POINT_DEPTH_FRAG =
-R"(#include <metal_stdlib>
+static const char *POINT_DEPTH_FRAG =
+    R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
 using namespace metal;
@@ -5887,11 +5737,10 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Uniforms& _17 [[buff
     return out;
 }
 
-)"
-;
+)";
 
-static const char* POINT_DEPTH_GEOM =
-R"(#include <metal_stdlib>
+static const char *POINT_DEPTH_GEOM =
+    R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
 using namespace metal;
@@ -5925,11 +5774,10 @@ unknown main0_out main0(constant ShadowMatrices& _55 [[buffer(0)]])
     return out;
 }
 
-)"
-;
+)";
 
-static const char* POINT_DEPTH_NOGEOM_FRAG =
-R"(#include <metal_stdlib>
+static const char *POINT_DEPTH_NOGEOM_FRAG =
+    R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
 using namespace metal;
@@ -5959,11 +5807,10 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Uniforms& _17 [[buff
     return out;
 }
 
-)"
-;
+)";
 
-static const char* POINT_DEPTH_NOGEOM_VERT =
-R"(#include <metal_stdlib>
+static const char *POINT_DEPTH_NOGEOM_VERT =
+    R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
 using namespace metal;
@@ -6017,11 +5864,10 @@ vertex main0_out main0(main0_in in [[stage_in]], constant UBO& _12 [[buffer(0)]]
     out.gl_Position = _62.shadowMatrix * worldPos;
     return out;
 }
-)"
-;
+)";
 
-static const char* POINT_DEPTH_VERT =
-R"(#include <metal_stdlib>
+static const char *POINT_DEPTH_VERT =
+    R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
 using namespace metal;
@@ -6065,11 +5911,10 @@ vertex main0_out main0(main0_in in [[stage_in]], constant UBO& _12 [[buffer(0)]]
     }
     return out;
 }
-)"
-;
+)";
 
-static const char* SKYBOX_FRAG =
-R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
+static const char *SKYBOX_FRAG =
+    R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
 
 #include <metal_stdlib>
 #include <simd/simd.h>
@@ -6353,11 +6198,10 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Params& _452 [[buffe
     return out;
 }
 
-)"
-;
+)";
 
-static const char* SKYBOX_VERT =
-R"(#include <metal_stdlib>
+static const char *SKYBOX_VERT =
+    R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
 using namespace metal;
@@ -6390,11 +6234,10 @@ vertex main0_out main0(main0_in in [[stage_in]], constant UniformBufferObject& _
     return out;
 }
 
-)"
-;
+)";
 
-static const char* SSAO_BLUR_FRAG =
-R"(#include <metal_stdlib>
+static const char *SSAO_BLUR_FRAG =
+    R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
 using namespace metal;
@@ -6426,11 +6269,10 @@ fragment main0_out main0(main0_in in [[stage_in]], texture2d<float> inSSAO [[tex
     return out;
 }
 
-)"
-;
+)";
 
-static const char* SSAO_FRAG =
-R"(#include <metal_stdlib>
+static const char *SSAO_FRAG =
+    R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
 using namespace metal;
@@ -6540,11 +6382,10 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Paramters& _43 [[buf
     return out;
 }
 
-)"
-;
+)";
 
-static const char* SSR_BLUR_FRAG =
-R"(#include <metal_stdlib>
+static const char *SSR_BLUR_FRAG =
+    R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
 using namespace metal;
@@ -6553,11 +6394,10 @@ fragment void main0()
 {
 }
 
-)"
-;
+)";
 
-static const char* SSR_FRAG =
-R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
+static const char *SSR_FRAG =
+    R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
 
 #include <metal_stdlib>
 #include <simd/simd.h>
@@ -6892,11 +6732,10 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Uniforms& _42 [[buff
     out.FragColor = reflection;
     return out;
 }
-)"
-;
+)";
 
-static const char* TERRAIN_CONTROL_TESC =
-R"(#include <metal_stdlib>
+static const char *TERRAIN_CONTROL_TESC =
+    R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
 using namespace metal;
@@ -6953,11 +6792,10 @@ kernel void main0(main0_in in [[stage_in]], constant UBO& _56 [[buffer(0)]], uin
     }
 }
 
-)"
-;
+)";
 
-static const char* TERRAIN_EVAL_TESE =
-R"(#include <metal_stdlib>
+static const char *TERRAIN_EVAL_TESE =
+    R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
 using namespace metal;
@@ -7026,11 +6864,10 @@ struct main0_patchIn
     return out;
 }
 
-)"
-;
+)";
 
-static const char* TERRAIN_FRAG =
-R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
+static const char *TERRAIN_FRAG =
+    R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
 
 #include <metal_stdlib>
 #include <simd/simd.h>
@@ -7432,11 +7269,10 @@ fragment main0_out main0(main0_in in [[stage_in]], constant PushConstants& _331 
     return out;
 }
 
-)"
-;
+)";
 
-static const char* TERRAIN_VERT =
-R"(#include <metal_stdlib>
+static const char *TERRAIN_VERT =
+    R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
 using namespace metal;
@@ -7468,11 +7304,10 @@ vertex main0_out main0(main0_in in [[stage_in]], constant UBO& _19 [[buffer(0)]]
     return out;
 }
 
-)"
-;
+)";
 
-static const char* TEXTURE_FRAG =
-R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
+static const char *TEXTURE_FRAG =
+    R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
 
 #include <metal_stdlib>
 #include <simd/simd.h>
@@ -7636,11 +7471,10 @@ fragment main0_out main0(main0_in in [[stage_in]], constant UBO& _28 [[buffer(0)
     return out;
 }
 
-)"
-;
+)";
 
-static const char* TEXTURE_VERT =
-R"(#include <metal_stdlib>
+static const char *TEXTURE_VERT =
+    R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
 using namespace metal;
@@ -7676,11 +7510,10 @@ vertex main0_out main0(main0_in in [[stage_in]], constant UBO& _13 [[buffer(0)]]
     return out;
 }
 
-)"
-;
+)";
 
-static const char* TEXT_FRAG =
-R"(#include <metal_stdlib>
+static const char *TEXT_FRAG =
+    R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
 using namespace metal;
@@ -7708,11 +7541,10 @@ fragment main0_out main0(main0_in in [[stage_in]], constant TextColor& _30 [[buf
     return out;
 }
 
-)"
-;
+)";
 
-static const char* TEXT_VERT =
-R"(#include <metal_stdlib>
+static const char *TEXT_VERT =
+    R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
 using namespace metal;
@@ -7741,11 +7573,10 @@ vertex main0_out main0(main0_in in [[stage_in]], constant Uniforms& _19 [[buffer
     return out;
 }
 
-)"
-;
+)";
 
-static const char* UPSAMPLE_FRAG =
-R"(#include <metal_stdlib>
+static const char *UPSAMPLE_FRAG =
+    R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
 using namespace metal;
@@ -7817,11 +7648,10 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Params& _13 [[buffer
     out.upsample = float4(upsampleColor, 1.0);
     return out;
 }
-)"
-;
+)";
 
-static const char* VOLUMETRIC_FRAG =
-R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
+static const char *VOLUMETRIC_FRAG =
+    R"(#pragma clang diagnostic ignored "-Wmissing-prototypes"
 
 #include <metal_stdlib>
 #include <simd/simd.h>
@@ -7920,11 +7750,10 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Sun& _21 [[buffer(0)
     out.FragColor = float4(rays, 1.0);
     return out;
 }
-)"
-;
+)";
 
-static const char* VOLUMETRIC_VERT =
-R"(#include <metal_stdlib>
+static const char *VOLUMETRIC_VERT =
+    R"(#include <metal_stdlib>
 #include <simd/simd.h>
 
 using namespace metal;
@@ -7948,7 +7777,6 @@ vertex main0_out main0(main0_in in [[stage_in]])
     out.TexCoords = in.aTexCoords;
     return out;
 }
-)"
-;
+)";
 
 #endif // ATLAS_GENERATED_SHADERS_H

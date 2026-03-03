@@ -388,14 +388,18 @@ void uploadUniformBuffers(const std::shared_ptr<Pipeline> &pipeline,
             auto shaderBufferIt = pipelineState.shaderBuffers.find(key);
             if (shaderBufferIt != pipelineState.shaderBuffers.end() &&
                 shaderBufferIt->second != nullptr) {
-                auto &bufferState = metal::bufferState(shaderBufferIt->second.get());
+                auto &bufferState =
+                    metal::bufferState(shaderBufferIt->second.get());
                 if (bufferState.buffer == nullptr) {
-                    throw std::runtime_error("Metal shader buffer is not initialized");
+                    throw std::runtime_error(
+                        "Metal shader buffer is not initialized");
                 }
                 if (stage == metal::MetalProgramStage::Fragment) {
-                    encoder->setFragmentBuffer(bufferState.buffer, 0, binding.index);
+                    encoder->setFragmentBuffer(bufferState.buffer, 0,
+                                               binding.index);
                 } else {
-                    encoder->setVertexBuffer(bufferState.buffer, 0, binding.index);
+                    encoder->setVertexBuffer(bufferState.buffer, 0,
+                                             binding.index);
                 }
                 return;
             }
@@ -415,13 +419,13 @@ void uploadUniformBuffers(const std::shared_ptr<Pipeline> &pipeline,
             static constexpr size_t kMaxBytesInline = 4096;
             if (bytes.size() <= kMaxBytesInline) {
                 if (stage == metal::MetalProgramStage::Fragment) {
-                    encoder->setFragmentBytes(bytes.data(),
-                                              static_cast<NS::UInteger>(bytes.size()),
-                                              binding.index);
+                    encoder->setFragmentBytes(
+                        bytes.data(), static_cast<NS::UInteger>(bytes.size()),
+                        binding.index);
                 } else {
-                    encoder->setVertexBytes(bytes.data(),
-                                            static_cast<NS::UInteger>(bytes.size()),
-                                            binding.index);
+                    encoder->setVertexBytes(
+                        bytes.data(), static_cast<NS::UInteger>(bytes.size()),
+                        binding.index);
                 }
             } else {
                 MTL::Buffer *inlineBuffer = device->newBuffer(
@@ -543,7 +547,8 @@ void bindTextures(CommandBuffer *commandBuffer,
 }
 
 MTL::ComputePipelineState *
-getComputePipelineState(Device *device, const std::shared_ptr<Pipeline> &pipeline) {
+getComputePipelineState(Device *device,
+                        const std::shared_ptr<Pipeline> &pipeline) {
     if (device == nullptr || pipeline == nullptr ||
         pipeline->shaderProgram == nullptr) {
         return nullptr;
@@ -552,7 +557,8 @@ getComputePipelineState(Device *device, const std::shared_ptr<Pipeline> &pipelin
     auto &deviceState = metal::deviceState(device);
     auto &programState = metal::programState(pipeline->shaderProgram.get());
     auto &pipelineState = metal::pipelineState(pipeline.get());
-    if (deviceState.device == nullptr || programState.computeFunction == nullptr) {
+    if (deviceState.device == nullptr ||
+        programState.computeFunction == nullptr) {
         return nullptr;
     }
 
@@ -562,8 +568,8 @@ getComputePipelineState(Device *device, const std::shared_ptr<Pipeline> &pipelin
 
     NS::Error *error = nullptr;
     pipelineState.computePipelineState =
-        deviceState.device->newComputePipelineState(programState.computeFunction,
-                                                    &error);
+        deviceState.device->newComputePipelineState(
+            programState.computeFunction, &error);
     if (pipelineState.computePipelineState == nullptr) {
         std::string message = "Failed to create Metal compute pipeline";
         if (error != nullptr && error->localizedDescription() != nullptr) {
@@ -592,14 +598,16 @@ void uploadComputeUniformBuffers(const std::shared_ptr<Pipeline> &pipeline,
             continue;
         }
 
-        uint32_t key =
-            metal::stageBindingKey(binding.index, metal::MetalProgramStage::Compute);
+        uint32_t key = metal::stageBindingKey(
+            binding.index, metal::MetalProgramStage::Compute);
         auto shaderBufferIt = pipelineState.shaderBuffers.find(key);
         if (shaderBufferIt != pipelineState.shaderBuffers.end() &&
             shaderBufferIt->second != nullptr) {
-            auto &bufferState = metal::bufferState(shaderBufferIt->second.get());
+            auto &bufferState =
+                metal::bufferState(shaderBufferIt->second.get());
             if (bufferState.buffer == nullptr) {
-                throw std::runtime_error("Metal shader buffer is not initialized");
+                throw std::runtime_error(
+                    "Metal shader buffer is not initialized");
             }
             encoder->setBuffer(bufferState.buffer, 0, binding.index);
             continue;
@@ -620,14 +628,15 @@ void uploadComputeUniformBuffers(const std::shared_ptr<Pipeline> &pipeline,
 
         static constexpr size_t kMaxBytesInline = 4096;
         if (bytes.size() <= kMaxBytesInline) {
-            encoder->setBytes(bytes.data(), static_cast<NS::UInteger>(bytes.size()),
+            encoder->setBytes(bytes.data(),
+                              static_cast<NS::UInteger>(bytes.size()),
                               binding.index);
         } else {
-            MTL::Buffer *inlineBuffer = device->newBuffer(
-                bytes.data(),
-                static_cast<NS::UInteger>(
-                    alignUp(bytes.size(), static_cast<size_t>(16))),
-                MTL::ResourceStorageModeShared);
+            MTL::Buffer *inlineBuffer =
+                device->newBuffer(bytes.data(),
+                                  static_cast<NS::UInteger>(alignUp(
+                                      bytes.size(), static_cast<size_t>(16))),
+                                  MTL::ResourceStorageModeShared);
             encoder->setBuffer(inlineBuffer, 0, binding.index);
             inlineBuffer->release();
         }
@@ -693,7 +702,8 @@ void bindComputeTextures(const std::shared_ptr<Pipeline> &pipeline,
     }
 
     for (size_t unit = 0; unit < desiredTextures.size(); ++unit) {
-        encoder->setTexture(desiredTextures[unit], static_cast<NS::UInteger>(unit));
+        encoder->setTexture(desiredTextures[unit],
+                            static_cast<NS::UInteger>(unit));
         encoder->setSamplerState(desiredSamplers[unit],
                                  static_cast<NS::UInteger>(unit));
     }
@@ -1835,12 +1845,14 @@ void CommandBuffer::dispatch(uint threadCountX, uint threadCountY,
     MTL::ComputePipelineState *computeState =
         getComputePipelineState(device, boundPipeline);
     if (computeState == nullptr) {
-        throw std::runtime_error("Metal compute pipeline state creation failed");
+        throw std::runtime_error(
+            "Metal compute pipeline state creation failed");
     }
     state.computeEncoder->setComputePipelineState(computeState);
     uploadComputeUniformBuffers(boundPipeline, state.computeEncoder,
                                 deviceState.device);
-    bindComputeTextures(boundPipeline, state.computeEncoder, deviceState.device);
+    bindComputeTextures(boundPipeline, state.computeEncoder,
+                        deviceState.device);
 
     NS::UInteger tgX =
         static_cast<NS::UInteger>(boundPipeline->getComputeThreadgroupSizeX());
@@ -1852,8 +1864,8 @@ void CommandBuffer::dispatch(uint threadCountX, uint threadCountY,
     tgY = std::max<NS::UInteger>(1, tgY);
     tgZ = std::max<NS::UInteger>(1, tgZ);
 
-    NS::UInteger maxThreads =
-        std::max<NS::UInteger>(1, computeState->maxTotalThreadsPerThreadgroup());
+    NS::UInteger maxThreads = std::max<NS::UInteger>(
+        1, computeState->maxTotalThreadsPerThreadgroup());
     while (tgX * tgY * tgZ > maxThreads) {
         if (tgZ > 1) {
             tgZ = std::max<NS::UInteger>(1, tgZ / 2);
@@ -1874,11 +1886,21 @@ void CommandBuffer::dispatch(uint threadCountX, uint threadCountY,
     NS::UInteger countY = std::max<NS::UInteger>(1, threadCountY);
     NS::UInteger countZ = std::max<NS::UInteger>(1, threadCountZ);
     MTL::Size threadsPerGroup = MTL::Size(tgX, tgY, tgZ);
-    MTL::Size threadgroups = MTL::Size((countX + tgX - 1) / tgX,
-                                       (countY + tgY - 1) / tgY,
-                                       (countZ + tgZ - 1) / tgZ);
+    MTL::Size threadgroups =
+        MTL::Size((countX + tgX - 1) / tgX, (countY + tgY - 1) / tgY,
+                  (countZ + tgZ - 1) / tgZ);
     state.computeEncoder->dispatchThreadgroups(threadgroups, threadsPerGroup);
     state.hasDraw = true;
+#endif
+}
+
+void CommandBuffer::computeBarrier() {
+#ifdef METAL
+    auto &state = metal::commandBufferState(this);
+    if (state.computeEncoder != nullptr) {
+        state.computeEncoder->memoryBarrier(MTL::BarrierScope(
+            MTL::BarrierScopeBuffers | MTL::BarrierScopeTextures));
+    }
 #endif
 }
 

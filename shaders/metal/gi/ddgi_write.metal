@@ -28,12 +28,48 @@ struct RaytracingSettings {
     uint _pad2;
 };
 
+static inline uint wangHash(uint x) {
+    x = (x ^ 61u) ^ (x >> 16);
+    x *= 9u;
+    x = x ^ (x >> 4);
+    x *= 0x27d4eb2du;
+    x = x ^ (x >> 15);
+    return x;
+}
+
+static inline float3 octDecode(float2 e) {
+    float3 n = float3(e.x, e.y, 1.0f - fabs(e.x) - fabs(e.y));
+    if (n.z < 0.0f) {
+        float2 signNotZero =
+            float2(n.x >= 0.0f ? 1.0f : -1.0f, n.y >= 0.0f ? 1.0f : -1.0f);
+        float2 folded = (1.0f - fabs(n.yx)) * signNotZero;
+        n.x = folded.x;
+        n.y = folded.y;
+    }
+    return normalize(n);
+}
+
+static inline float3 sphericalFibonacci(uint index, uint count, uint frameIndex) {
+    const float GOLDEN_RATIO = 1.6180339887498949f;
+    const float TAU = 6.28318530718f;
+    float i = float(index) + 0.5f;
+    float phi = TAU * fract(i / GOLDEN_RATIO);
+    float cosTheta = 1.0f - (2.0f * i) / float(count);
+    float sinTheta = sqrt(max(0.0f, 1.0f - cosTheta * cosTheta));
+    uint rotSeed = wangHash(frameIndex * 1471u + 5743u);
+    float rotAngle = float(rotSeed & 0xFFFFu) / 65536.0f * TAU;
+    phi += rotAngle;
+    return float3(sinTheta * cos(phi), cosTheta, sinTheta * sin(phi));
+}
+
 kernel void main0(texture2d<float, access::write> outTexture [[texture(0)]],
                   texture2d<float, access::read> prevTexture [[texture(1)]],
                   device float4 *probeRadiance [[buffer(0)]],
                   constant ProbeSpace &ps [[buffer(1)]],
                   constant RaytracingSettings &rt [[buffer(2)]],
                   uint2 gid [[thread_position_in_grid]]) {
+    const float FOUR_PI = 12.566370614359172f;
+
     uint border = (uint)ps.atlasParams.x;
     uint innerRes = (uint)ps.atlasParams.y;
     uint probesPerRow = (uint)ps.atlasParams.z;
@@ -64,19 +100,40 @@ kernel void main0(texture2d<float, access::write> outTexture [[texture(0)]],
     int innerX = clamp(int(localX) - int(border), 0, int(innerRes) - 1);
     int innerY = clamp(int(localY) - int(border), 0, int(innerRes) - 1);
 
-    uint texelsPerProbe = innerRes * innerRes;
-    uint probeTexelIndex = probeIndex * texelsPerProbe +
-                           (uint(innerY) * innerRes + uint(innerX));
+    float2 e = (float2(float(innerX), float(innerY)) + 0.5f) / float(innerRes) * 2.0f - 1.0f;
+    float3 texelDir = octDecode(e);
 
-    float3 cur = probeRadiance[probeTexelIndex].xyz;
-    if (!all(isfinite(cur))) {
-        cur = float3(0.0f);
+    uint raysPerProbe = max(rt.raysPerProbe, 1u);
+    uint baseOffset = probeIndex * raysPerProbe;
+
+    float3 sum = float3(0.0f);
+    float weightSum = 0.0f;
+
+    for (uint r = 0; r < raysPerProbe; r++) {
+        float3 rayDir = sphericalFibonacci(r, raysPerProbe, rt.frameIndex);
+        float w = max(0.0f, dot(texelDir, rayDir));
+        if (w > 1e-6f) {
+            float3 rad = probeRadiance[baseOffset + r].xyz;
+            if (all(isfinite(rad))) {
+                sum += rad * w;
+                weightSum += w;
+            }
+        }
+    }
+
+    float3 irradiance = float3(0.0f);
+    if (weightSum > 1e-6f) {
+        irradiance = sum * (FOUR_PI / float(raysPerProbe));
+    }
+
+    if (!all(isfinite(irradiance))) {
+        irradiance = float3(0.0f);
     }
 
     float4 prev = prevTexture.read(gid);
     float3 prevValue = all(isfinite(prev.xyz)) ? prev.xyz : float3(0.0f);
     float h = clamp(rt.hysteresis, 0.0f, 0.995f);
-    float3 blended = (rt.frameIndex == 0u) ? cur : mix(cur, prevValue, h);
+    float3 blended = (rt.frameIndex == 0u) ? irradiance : mix(irradiance, prevValue, h);
 
     outTexture.write(float4(max(blended, float3(0.0f)), 1.0f), gid);
 }
