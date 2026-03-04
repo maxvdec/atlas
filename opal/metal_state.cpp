@@ -333,12 +333,12 @@ std::regex stageStartRegexFor(MetalProgramStage stage) {
     }
 }
 
-std::vector<BufferBinding>
-parseStageBufferBindings(const std::string &source, MetalProgramStage stage) {
+std::vector<BufferBinding> parseStageBufferBindings(const std::string &source,
+                                                    MetalProgramStage stage) {
     std::vector<BufferBinding> bindings;
     const std::regex stageStartRegex = stageStartRegexFor(stage);
     const std::regex bufferRegex(
-        R"((?:constant|device)\s+([A-Za-z_][A-Za-z0-9_]*)\s*(?:\*|&)\s*([A-Za-z_][A-Za-z0-9_]*)\s*\[\[buffer\((\d+)\)\]\])");
+        R"((?:constant|device)\s+(?:const\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*(?:\*|&)\s*([A-Za-z_][A-Za-z0-9_]*)\s*\[\[buffer\((\d+)\)\]\])");
 
     auto stageBegin =
         std::sregex_iterator(source.begin(), source.end(), stageStartRegex);
@@ -907,9 +907,9 @@ MTL::TextureUsage textureUsageFor(TextureType type, TextureFormat format) {
         return enumOr(MTL::TextureUsageShaderRead,
                       MTL::TextureUsageRenderTarget);
     }
-    return enumOr(enumOr(MTL::TextureUsageShaderRead,
-                         MTL::TextureUsageShaderWrite),
-                  MTL::TextureUsageRenderTarget);
+    return enumOr(
+        enumOr(MTL::TextureUsageShaderRead, MTL::TextureUsageShaderWrite),
+        MTL::TextureUsageRenderTarget);
 }
 
 MTL::SamplerAddressMode wrapModeToAddressMode(TextureWrapMode mode) {
@@ -1031,17 +1031,18 @@ bool parseProgramLayouts(const std::string &vertexSource,
         }
     }
 
-    std::vector<BufferBinding> vertexBindings = parseStageBufferBindings(
-        vertexSource, MetalProgramStage::Vertex);
-    std::vector<BufferBinding> fragmentBindings = parseStageBufferBindings(
-        fragmentSource, MetalProgramStage::Fragment);
+    std::vector<BufferBinding> vertexBindings =
+        parseStageBufferBindings(vertexSource, MetalProgramStage::Vertex);
+    std::vector<BufferBinding> fragmentBindings =
+        parseStageBufferBindings(fragmentSource, MetalProgramStage::Fragment);
     for (BufferBinding &binding : fragmentBindings) {
         if (conflictingStructs.contains(binding.structName)) {
             binding.structName += "__frag";
         }
     }
     parseStageTextureBindings(vertexSource, MetalProgramStage::Vertex,
-                              state.textureBindings, state.textureTypesByBinding);
+                              state.textureBindings,
+                              state.textureTypesByBinding);
     parseStageTextureBindings(fragmentSource, MetalProgramStage::Fragment,
                               state.textureBindings,
                               state.textureTypesByBinding);
@@ -1121,8 +1122,8 @@ bool parseComputeProgramLayouts(const std::string &computeSource,
 
     std::unordered_map<std::string, RawStruct> rawStructs =
         parseRawStructs(computeSource);
-    std::vector<BufferBinding> computeBindings = parseStageBufferBindings(
-        computeSource, MetalProgramStage::Compute);
+    std::vector<BufferBinding> computeBindings =
+        parseStageBufferBindings(computeSource, MetalProgramStage::Compute);
     parseStageTextureBindings(computeSource, MetalProgramStage::Compute,
                               state.textureBindings,
                               state.textureTypesByBinding);
@@ -1275,7 +1276,8 @@ std::vector<UniformLocation> resolveUniformLocations(ProgramState &programState,
 }
 
 std::vector<BufferBinding>
-resolveBufferBindings(const ProgramState &programState, const std::string &name) {
+resolveBufferBindings(const ProgramState &programState,
+                      const std::string &name) {
     std::vector<BufferBinding> resolved;
     const std::vector<std::string> tokens = parseUniformPath(name);
     if (tokens.empty()) {

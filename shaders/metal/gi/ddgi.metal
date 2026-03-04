@@ -420,7 +420,19 @@ kernel void main0(device float4 *probeRadianceOut [[buffer(0)]],
     float bias = max(rt.normalBias, 0.001f);
 
     float3 ro = probePos + rayDir * bias;
-    Hit h = traceScene(ro, rayDir, tris, sc.triCount);
+    Hit h;
+    float selfHitThreshold = bias * 4.0f;
+    for (uint escapeStep = 0u; escapeStep < 3u; escapeStep++) {
+        h = traceScene(ro, rayDir, tris, sc.triCount);
+        if (!h.hit || h.t >= selfHitThreshold) {
+            break;
+        }
+        ro += rayDir * (h.t + selfHitThreshold);
+    }
+    if (h.hit && h.t < selfHitThreshold) {
+        h.hit = false;
+        h.t = INFINITY;
+    }
 
     float3 radiance = float3(0.0f);
     if (!h.hit || h.t > maxDistance) {
@@ -476,9 +488,9 @@ kernel void main0(device float4 *probeRadianceOut [[buffer(0)]],
                 directionalLights, sc.directionalLightCount, pointLights,
                 sc.pointLightCount, spotLights, sc.spotLightCount, areaLights,
                 sc.areaLightCount);
-            radiance += direct2 * albedo2 * albedo;
+            radiance += direct2 * albedo2 * albedo * 1.5f;
         }
     }
 
-    probeRadianceOut[tid] = float4(10.0f, 0.0f, 10.0f, h.hit ? h.t : -1.0f);
+    probeRadianceOut[tid] = float4(radiance, h.hit ? h.t : -1.0f);
 }

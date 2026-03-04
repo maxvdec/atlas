@@ -108,12 +108,23 @@ kernel void main0(texture2d<float, access::write> outTexture [[texture(0)]],
 
     float3 sum = float3(0.0f);
     float weightSum = 0.0f;
+    float nearHitCount = 0.0f;
+    float spacingScale =
+        max(max(ps.spacing.x, max(ps.spacing.y, ps.spacing.z)), 1e-4f);
+    float nearHitThreshold =
+        max(max(rt.normalBias * 8.0f, spacingScale * 0.12f), 0.002f);
 
     for (uint r = 0; r < raysPerProbe; r++) {
+        float4 raySample = probeRadiance[baseOffset + r];
+        float hitDistance = raySample.w;
+        if (hitDistance > 0.0f && hitDistance < nearHitThreshold) {
+            nearHitCount += 1.0f;
+        }
+
         float3 rayDir = sphericalFibonacci(r, raysPerProbe, rt.frameIndex);
         float w = max(0.0f, dot(texelDir, rayDir));
         if (w > 1e-6f) {
-            float3 rad = probeRadiance[baseOffset + r].xyz;
+            float3 rad = raySample.xyz;
             if (all(isfinite(rad))) {
                 sum += rad * w;
                 weightSum += w;
@@ -132,8 +143,18 @@ kernel void main0(texture2d<float, access::write> outTexture [[texture(0)]],
 
     float4 prev = prevTexture.read(gid);
     float3 prevValue = all(isfinite(prev.xyz)) ? prev.xyz : float3(0.0f);
+    float prevValidity = isfinite(prev.w) ? clamp(prev.w, 0.0f, 1.0f) : 1.0f;
+
+    float nearFraction = nearHitCount / float(raysPerProbe);
+    float probeValidity = 1.0f - smoothstep(0.35f, 0.90f, nearFraction);
+    probeValidity = clamp(probeValidity, 0.02f, 1.0f);
+
     float h = clamp(rt.hysteresis, 0.0f, 0.995f);
     float3 blended = (rt.frameIndex == 0u) ? irradiance : mix(irradiance, prevValue, h);
+    float blendedValidity =
+        (rt.frameIndex == 0u)
+            ? probeValidity
+            : mix(probeValidity, prevValidity, h);
 
-    outTexture.write(float4(max(blended, float3(0.0f)), 1.0f), gid);
+    outTexture.write(float4(max(blended, float3(0.0f)), blendedValidity), gid);
 }
