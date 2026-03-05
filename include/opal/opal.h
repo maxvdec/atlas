@@ -415,7 +415,8 @@ enum class ShaderType {
     Fragment,
     Geometry,
     TessellationControl,
-    TessellationEvaluation
+    TessellationEvaluation,
+    Compute
 };
 
 #ifdef VULKAN
@@ -485,6 +486,7 @@ class ShaderProgram {
 
     uint programID;
     std::vector<std::shared_ptr<Shader>> attachedShaders;
+    bool isComputeProgram() const { return computeProgram; }
 
 #ifdef VULKAN
     std::vector<VkPipelineShaderStageCreateInfo> getShaderStages() const;
@@ -497,6 +499,12 @@ class ShaderProgram {
 #if defined(VULKAN) || defined(METAL)
     static int currentId;
 #endif
+
+  private:
+    bool computeProgram = false;
+    friend class Shader;
+    friend class Pipeline;
+    friend class CommandBuffer;
 };
 
 enum class VertexAttributeType {
@@ -613,6 +621,10 @@ class Pipeline {
     void setFrontFace(FrontFace face);
 
     void setLineWidth(float width) { lineWidth = width; }
+    void setComputeThreadgroupSize(uint x, uint y = 1, uint z = 1);
+    uint getComputeThreadgroupSizeX() const { return computeThreadgroupX; }
+    uint getComputeThreadgroupSizeY() const { return computeThreadgroupY; }
+    uint getComputeThreadgroupSizeZ() const { return computeThreadgroupZ; }
 
     void enableDepthTest(bool enabled);
     void setDepthCompareOp(CompareOp op);
@@ -672,6 +684,11 @@ class Pipeline {
      * @param size Size of the data in bytes
      */
     void bindBufferData(const std::string &name, const void *data, size_t size);
+    void bindBuffer(const std::string &name,
+                    const std::shared_ptr<Buffer> &buffer, int callerId = -1);
+    void bindShaderReadWriteBuffer(const std::string &name,
+                                   const std::shared_ptr<Buffer> &buffer,
+                                   int callerId = -1);
 
     void bindTexture(const std::string &name,
                      const std::shared_ptr<Texture> &texture, int unit,
@@ -730,6 +747,7 @@ class Pipeline {
         VkDescriptorType descriptorType = VK_DESCRIPTOR_TYPE_MAX_ENUM;
     };
     std::unordered_map<uint64_t, UniformBufferAllocation> uniformBuffers;
+    std::unordered_map<uint64_t, std::shared_ptr<Buffer>> descriptorBuffers;
 
     static uint64_t makeBindingKey(uint32_t set, uint32_t binding) {
         return (static_cast<uint64_t>(set) << 32) | binding;
@@ -792,6 +810,9 @@ class Pipeline {
     int viewportY = 0;
     int viewportWidth = 0;
     int viewportHeight = 0;
+    uint computeThreadgroupX = 8;
+    uint computeThreadgroupY = 8;
+    uint computeThreadgroupZ = 1;
 
     uint getGLBlendFactor(BlendFunc factor) const;
     uint getGLBlendEquation(BlendEquation equation) const;
@@ -1099,6 +1120,9 @@ class CommandBuffer {
      * Requires Pipeline with PrimitiveStyle::Patches and setPatchVertices().
      */
     void drawPatches(uint vertexCount, uint firstVertex = 0, int objectId = -1);
+    void dispatch(uint threadCountX, uint threadCountY = 1,
+                  uint threadCountZ = 1);
+    void computeBarrier();
     void performResolve(const std::shared_ptr<ResolveAction> &resolveAction);
 
     void clearColor(float r, float g, float b, float a);

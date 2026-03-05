@@ -41,6 +41,8 @@ uint Shader::getGLShaderType(ShaderType type) {
         return GL_TESS_CONTROL_SHADER;
     case ShaderType::TessellationEvaluation:
         return GL_TESS_EVALUATION_SHADER;
+    case ShaderType::Compute:
+        return GL_COMPUTE_SHADER;
     default:
         atlas_error("Unknown shader type");
         throw std::runtime_error("Unknown shader type");
@@ -286,6 +288,14 @@ void ShaderProgram::attachShader(const std::shared_ptr<Shader> &shader,
 }
 
 void ShaderProgram::link() {
+    this->computeProgram = false;
+    for (const auto &shader : attachedShaders) {
+        if (shader != nullptr && shader->type == ShaderType::Compute) {
+            this->computeProgram = true;
+            break;
+        }
+    }
+
 #ifdef OPENGL
     glLinkProgram(programID);
 #elif defined(VULKAN)
@@ -296,6 +306,7 @@ void ShaderProgram::link() {
 
     const char *vertexSource = nullptr;
     const char *fragmentSource = nullptr;
+    const char *computeSource = nullptr;
 
     for (const auto &shader : attachedShaders) {
         auto &shaderState = metal::shaderState(shader.get());
@@ -305,23 +316,43 @@ void ShaderProgram::link() {
         } else if (shader->type == ShaderType::Fragment) {
             state.fragmentFunction = shaderState.function;
             fragmentSource = shader->source;
+        } else if (shader->type == ShaderType::Compute) {
+            state.computeFunction = shaderState.function;
+            computeSource = shader->source;
         }
     }
 
-    if (state.vertexFunction == nullptr || state.fragmentFunction == nullptr) {
-        throw std::runtime_error(
-            "Metal shader program requires vertex and fragment shaders");
-    }
+    this->computeProgram = state.computeFunction != nullptr;
+    if (this->computeProgram) {
+        if (state.vertexFunction != nullptr || state.fragmentFunction != nullptr) {
+            throw std::runtime_error(
+                "Metal compute programs must not include vertex or fragment shaders");
+        }
+        if (computeSource == nullptr) {
+            throw std::runtime_error("Metal compute shader source is missing");
+        }
+        if (!metal::parseComputeProgramLayouts(computeSource, state)) {
+            throw std::runtime_error(
+                "Failed to parse Metal compute shader buffer layouts");
+        }
+        state.fragmentColorOutputs = 0;
+    } else {
+        if (state.vertexFunction == nullptr || state.fragmentFunction == nullptr) {
+            throw std::runtime_error(
+                "Metal shader program requires vertex and fragment shaders");
+        }
 
-    if (vertexSource == nullptr || fragmentSource == nullptr) {
-        throw std::runtime_error("Metal shader program source is missing");
-    }
+        if (vertexSource == nullptr || fragmentSource == nullptr) {
+            throw std::runtime_error("Metal shader program source is missing");
+        }
 
-    if (!metal::parseProgramLayouts(vertexSource, fragmentSource, state)) {
-        throw std::runtime_error("Failed to parse Metal shader buffer layouts");
+        if (!metal::parseProgramLayouts(vertexSource, fragmentSource, state)) {
+            throw std::runtime_error(
+                "Failed to parse Metal shader buffer layouts");
+        }
+        uint32_t colorOutputs = metal::fragmentColorOutputCount(fragmentSource);
+        state.fragmentColorOutputs = colorOutputs > 0 ? colorOutputs : 1;
     }
-    uint32_t colorOutputs = metal::fragmentColorOutputCount(fragmentSource);
-    state.fragmentColorOutputs = colorOutputs > 0 ? colorOutputs : 1;
 
     this->programID = ShaderProgram::currentId++;
 #else
@@ -339,6 +370,9 @@ bool ShaderProgram::getProgramStatus() const {
     return true;
 #elif defined(METAL)
     auto &state = metal::programState(const_cast<ShaderProgram *>(this));
+    if (this->computeProgram) {
+        return state.computeFunction != nullptr;
+    }
     return state.vertexFunction != nullptr && state.fragmentFunction != nullptr;
 #else
     throw std::runtime_error(

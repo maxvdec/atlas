@@ -422,10 +422,14 @@ ShadowParams AreaLight::calculateLightSpaceMatrix() const {
     }
 
     glm::mat4 lightView = glm::lookAt(lightPos, lightPos + normal, viewUp);
-    float halfWidth = std::max(0.5f, static_cast<float>(this->size.width) * 0.5f + clampedRange * 0.5f);
-    float halfHeight = std::max(0.5f, static_cast<float>(this->size.height) * 0.5f + clampedRange * 0.5f);
-    float nearPlane = 0.05f;
-    farPlane = std::max(nearPlane + 1.0f, farPlane);
+    float projectionPadding = std::max(0.35f, clampedRange * 0.28f);
+    float halfWidth = std::max(
+        0.45f, static_cast<float>(this->size.width) * 0.5f + projectionPadding);
+    float halfHeight =
+        std::max(0.45f, static_cast<float>(this->size.height) * 0.5f +
+                            projectionPadding);
+    float nearPlane = std::max(0.08f, clampedRange * 0.03f);
+    farPlane = std::max(nearPlane + 0.75f, farPlane);
 
     glm::mat4 lightProjection =
         glm::ortho(-halfWidth, halfWidth, -halfHeight, halfHeight, nearPlane,
@@ -434,7 +438,7 @@ ShadowParams AreaLight::calculateLightSpaceMatrix() const {
     ShadowParams params;
     params.lightView = lightView;
     params.lightProjection = lightProjection;
-    params.bias = 0.001f;
+    params.bias = 0.0025f;
     params.farPlane = 0.0f;
     return params;
 }

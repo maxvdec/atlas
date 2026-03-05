@@ -10,6 +10,7 @@
 #ifndef SHADER_H
 #define SHADER_H
 
+#include "atlas/core/default_shaders.h"
 #include "atlas/units.h"
 #include <cstddef>
 #include <map>
@@ -106,6 +107,11 @@ enum class AtlasVertexShader {
      */
     Volumetric,
     Fluid,
+};
+
+enum class AtlasComputeShader {
+    DDGI,
+    DDGI_WRITE,
 };
 
 /**
@@ -241,6 +247,62 @@ struct VertexShader {
 
     /**
      * @brief The desired vertex attributes for the shader.
+     *
+     */
+    std::vector<uint32_t> desiredAttributes;
+    /**
+     * @brief The capabilities of the shader.
+     *
+     */
+    std::vector<ShaderCapability> capabilities;
+
+    std::shared_ptr<opal::Shader> shader = nullptr;
+
+    Id shaderId = 0;
+};
+
+struct ComputeShader {
+    /**
+     * @brief The source code of the compute shader.
+     *
+     */
+    const char *source = nullptr;
+
+    /**
+     * @brief Static cache of compiled compute shaders to avoid recompilation.
+     *
+     */
+    static std::map<AtlasComputeShader, ComputeShader> computeShaderCache;
+
+    /**
+     * @brief If this shader was created from a default shader, stores which
+     * type it was.
+     *
+     */
+    std::optional<AtlasComputeShader> fromDefaultShaderType = std::nullopt;
+
+    /**
+     * @brief A function that creates a ComputeShader from a default shader.
+     *
+     * @param shader The type of default shader to create.
+     * @return The created ComputeShader instance.
+     */
+    static ComputeShader fromDefaultShader(AtlasComputeShader shader);
+    /**
+     * @brief A function that creates a ComputeShader from custom source code.
+     *
+     * @param source The source code that the shader will contain.
+     * @return The created ComputeShader instance.
+     */
+    static ComputeShader fromSource(const char *source);
+    /**
+     * @brief Compiles the compute shader.
+     *
+     */
+    void compile();
+
+    /**
+     * @brief The desired compute attributes for the shader.
      *
      */
     std::vector<uint32_t> desiredAttributes;
@@ -637,6 +699,7 @@ struct ShaderProgram {
      *
      */
     std::vector<TessellationShader> tessellationShaders;
+    ComputeShader computeShader;
 
     /**
      * @brief Static cache of compiled shader programs to avoid recompilation.
@@ -645,6 +708,7 @@ struct ShaderProgram {
     static std::map<std::pair<AtlasVertexShader, AtlasFragmentShader>,
                     ShaderProgram>
         shaderCache;
+    static std::map<AtlasComputeShader, ShaderProgram> computeShaderCache;
 
     /**
      * @brief Compiles the shader program by linking the vertex and fragment
@@ -672,6 +736,8 @@ struct ShaderProgram {
     fromDefaultShaders(AtlasVertexShader vShader, AtlasFragmentShader fShader,
                        GeometryShader gShader = GeometryShader(),
                        std::vector<TessellationShader> tShaders = {});
+    static ShaderProgram fromDefaultComputeShader(AtlasComputeShader cShader);
+    static ShaderProgram fromComputeShader(ComputeShader cShader);
 
     /**
      * @brief The OpenGL ID of the linked shader program.
@@ -684,6 +750,7 @@ struct ShaderProgram {
 
     std::shared_ptr<opal::ShaderProgram> shader = nullptr;
     std::vector<std::shared_ptr<opal::Pipeline>> pipelines;
+    bool isComputeProgram = false;
 
     /**
      * @brief The last pipeline that was requested from this shader program.

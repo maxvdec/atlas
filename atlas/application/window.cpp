@@ -76,7 +76,6 @@ std::size_t computeShadowCasterSignature(
             hashCombine(signature, rotation.yaw);
             hashCombine(signature, rotation.roll);
         }
-
     };
 
     for (auto *obj : renderables) {
@@ -226,8 +225,8 @@ Window::Window(const WindowConfiguration &config)
 #endif
 
 #ifdef METAL
-    this->shadowUpdateInterval = 1.0f / 10.0f;
-    this->ssaoUpdateInterval = 1.0f / 12.0f;
+    this->shadowUpdateInterval = 1.0f / 6.0f;
+    this->ssaoUpdateInterval = 1.0f / 8.0f;
     this->ssaoKernelSize = 16;
     this->bloomBlurPasses = 4;
 #endif
@@ -351,6 +350,7 @@ void Window::run() {
     this->firstFrame = true;
 
     while (!glfwWindowShouldClose(window)) {
+        currentFrame++;
         glfwPollEvents();
 
         if (this->hasPendingSceneChange) {
@@ -795,10 +795,12 @@ void Window::addLateForwardObject(Renderable *object) {
     if (std::ranges::find(lateForwardRenderables, object) ==
         lateForwardRenderables.end()) {
         lateForwardRenderables.push_back(object);
-        const bool inRenderables = std::ranges::find(this->renderables, object) !=
-                                   this->renderables.end();
-        const bool inPending = std::ranges::find(this->pendingObjects, object) !=
-                               this->pendingObjects.end();
+        const bool inRenderables =
+            std::ranges::find(this->renderables, object) !=
+            this->renderables.end();
+        const bool inPending =
+            std::ranges::find(this->pendingObjects, object) !=
+            this->pendingObjects.end();
         if (this->physicsWorld != nullptr && !inRenderables && !inPending) {
             object->initialize();
         }
@@ -851,7 +853,8 @@ void Window::addUIObject(Renderable *obj) {
     if (obj == nullptr) {
         return;
     }
-    if (std::ranges::find(this->uiRenderables, obj) != this->uiRenderables.end()) {
+    if (std::ranges::find(this->uiRenderables, obj) !=
+        this->uiRenderables.end()) {
         return;
     }
     this->uiRenderables.push_back(obj);
@@ -1278,9 +1281,10 @@ void Window::renderLightsToShadowMaps(
                 } else {
                     normal = glm::normalize(normal);
                 }
-                glm::vec4 props(static_cast<float>(areaLights.at(i)->size.width),
-                                static_cast<float>(areaLights.at(i)->size.height),
-                                areaLights.at(i)->range, areaLights.at(i)->angle);
+                glm::vec4 props(
+                    static_cast<float>(areaLights.at(i)->size.width),
+                    static_cast<float>(areaLights.at(i)->size.height),
+                    areaLights.at(i)->range, areaLights.at(i)->angle);
                 if (glm::length(pos - this->cachedAreaLightPositions.at(i)) >
                         positionThreshold ||
                     glm::length(normal - this->cachedAreaLightNormals.at(i)) >
@@ -1296,9 +1300,9 @@ void Window::renderLightsToShadowMaps(
 
     const std::size_t shadowCasterSignature = computeShadowCasterSignature(
         this->renderables, this->lateForwardRenderables);
-    const bool castersMoved = !this->hasShadowCasterSignature ||
-                              this->lastShadowCasterSignature !=
-                                  shadowCasterSignature;
+    const bool castersMoved =
+        !this->hasShadowCasterSignature ||
+        this->lastShadowCasterSignature != shadowCasterSignature;
 
     if (cameraMoved || lightsChanged || castersMoved) {
         this->shadowMapsDirty = true;
@@ -1504,12 +1508,12 @@ void Window::renderLightsToShadowMaps(
         areaLightsPipeline->setViewport(
             0, 0, shadowRenderTarget->texture.creationData.width,
             shadowRenderTarget->texture.creationData.height);
-        areaLightsPipeline->setCullMode(opal::CullMode::None);
+        areaLightsPipeline->setCullMode(opal::CullMode::Front);
         areaLightsPipeline->setFrontFace(this->frontFace);
         areaLightsPipeline->enableDepthTest(true);
         areaLightsPipeline->setDepthCompareOp(opal::CompareOp::Less);
         areaLightsPipeline->enablePolygonOffset(true);
-        areaLightsPipeline->setPolygonOffset(1.0f, 1.0f);
+        areaLightsPipeline->setPolygonOffset(2.0f, 4.0f);
         areaLightsPipeline =
             this->depthProgram.requestPipeline(areaLightsPipeline);
 
@@ -2285,4 +2289,44 @@ void Window::updateBackbufferTarget(int backbufferWidth, int backbufferHeight) {
     target.depthTexture.creationData.width = backbufferWidth;
     target.depthTexture.creationData.height = backbufferHeight;
     target.type = RenderTargetType::Scene;
+}
+
+BoundingBox Window::getSceneBoundingBox() {
+    glm::vec3 worldMin(std::numeric_limits<float>::max());
+    glm::vec3 worldMax(std::numeric_limits<float>::lowest());
+    bool any = false;
+
+    for (auto *obj : renderables) {
+        if (!obj)
+            continue;
+
+        const auto &vertices = obj->getVertices();
+        if (vertices.empty())
+            continue;
+
+        glm::mat4 model(1.0f);
+
+        if (const auto *coreObj = dynamic_cast<const CoreObject *>(obj)) {
+            model = glm::translate(model, coreObj->getPosition().toGlm());
+            model *= glm::mat4_cast(
+                glm::normalize(coreObj->getRotation().toGlmQuat()));
+            model = glm::scale(model, coreObj->getScale().toGlm());
+        } else {
+            model = glm::translate(model, obj->getPosition().toGlm());
+            model = glm::scale(model, obj->getScale().toGlm());
+        }
+
+        for (const auto &v : vertices) {
+            glm::vec3 p =
+                glm::vec3(model * glm::vec4(v.position.toGlm(), 1.0f));
+            worldMin = glm::min(worldMin, p);
+            worldMax = glm::max(worldMax, p);
+            any = true;
+        }
+    }
+
+    if (!any)
+        return {};
+
+    return {Position3d::fromGlm(worldMin), Position3d::fromGlm(worldMax)};
 }

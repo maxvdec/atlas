@@ -20,6 +20,7 @@
 #include "bezel/bezel.h"
 #include "finewave/audio.h"
 #include "opal/opal.h"
+#include "photon/illuminate.h"
 #include <glm/vec3.hpp>
 #include <glm/vec4.hpp>
 #include <array>
@@ -255,6 +256,8 @@ class Window {
      */
     int height;
 
+    int currentFrame;
+
     /**
      * @brief Constructs a window with the specified configuration.
      *
@@ -303,6 +306,10 @@ class Window {
      * @return (std::vector<Monitor>) Vector of available monitors.
      */
     std::vector<Monitor> static enumerateMonitors();
+
+#ifdef METAL
+    void enableGlobalIllumination();
+#endif
 
     /**
      * @brief Adds a renderable object to the window.
@@ -540,6 +547,13 @@ class Window {
 
     bool firstFrame = true;
 
+    bool usesGlobalIllumination = false;
+#ifdef METAL
+    std::shared_ptr<photon::GlobalIllumination> ddgiSystem;
+#endif
+
+    BoundingBox getSceneBoundingBox();
+
   private:
     std::shared_ptr<opal::CommandBuffer> activeCommandBuffer = nullptr;
     CoreWindowReference windowRef;
@@ -684,6 +698,7 @@ class Window {
     friend class DirectionalLight;
     friend class Text;
     friend class Terrain;
+    friend class photon::GlobalIllumination;
     friend struct Fluid;
 };
 

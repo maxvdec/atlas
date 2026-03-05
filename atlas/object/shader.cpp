@@ -28,6 +28,12 @@ std::map<AtlasVertexShader, VertexShader> VertexShader::vertexShaderCache = {};
 std::map<AtlasFragmentShader, FragmentShader>
     FragmentShader::fragmentShaderCache = {};
 
+std::map<AtlasComputeShader, ComputeShader> ComputeShader::computeShaderCache =
+    {};
+
+std::map<AtlasComputeShader, ShaderProgram> ShaderProgram::computeShaderCache =
+    {};
+
 VertexShader VertexShader::fromDefaultShader(AtlasVertexShader shader) {
     if (VertexShader::vertexShaderCache.contains(shader)) {
         return VertexShader::vertexShaderCache[shader];
@@ -218,6 +224,79 @@ void VertexShader::compile() {
     }
 
     atlas_log("Vertex shader compiled successfully");
+    this->shaderId = shader->shaderID;
+}
+
+ComputeShader ComputeShader::fromDefaultShader(AtlasComputeShader shader) {
+    if (ComputeShader::computeShaderCache.contains(shader)) {
+        return ComputeShader::computeShaderCache[shader];
+    }
+
+    ComputeShader computeShader;
+    switch (shader) {
+    case AtlasComputeShader::DDGI: {
+#ifdef METAL
+        computeShader = ComputeShader::fromSource(DDGI);
+        computeShader.fromDefaultShaderType = shader;
+        ComputeShader::computeShaderCache[shader] = computeShader;
+        break;
+#else
+        throw std::runtime_error(
+            "AtlasComputeShader::DDGI is only supported on Metal");
+#endif
+    }
+    case AtlasComputeShader::DDGI_WRITE: {
+#ifdef METAL
+        computeShader = ComputeShader::fromSource(DDGI_WRITE);
+        computeShader.fromDefaultShaderType = shader;
+        ComputeShader::computeShaderCache[shader] = computeShader;
+        break;
+#else
+        throw std::runtime_error(
+            "AtlasComputeShader::DDGI_WRITE is only supported on Metal");
+#endif
+    }
+    default:
+        throw std::runtime_error("Unknown default compute shader");
+    }
+
+    return computeShader;
+}
+
+ComputeShader ComputeShader::fromSource(const char *source) {
+    ComputeShader shader;
+    shader.source = source;
+    shader.shaderId = 0;
+    shader.desiredAttributes = {};
+    return shader;
+}
+
+void ComputeShader::compile() {
+    if (shaderId != 0) {
+        if (shader != nullptr) {
+            return;
+        }
+        shaderId = 0;
+    }
+
+    if (source == nullptr) {
+        throw std::runtime_error("Compute shader source is null");
+    }
+
+    shader = opal::Shader::createFromSource(source, opal::ShaderType::Compute);
+    shader->compile();
+
+    bool success = shader->getShaderStatus();
+    if (!success) {
+        char infoLog[512];
+        shader->getShaderLog(infoLog, sizeof(infoLog));
+        atlas_error("Compute shader compilation failed: " +
+                    std::string(infoLog));
+        throw std::runtime_error(
+            std::string("Compute shader compilation failed: ") + infoLog);
+    }
+
+    atlas_log("Compute shader compiled successfully");
     this->shaderId = shader->shaderID;
 }
 
@@ -528,6 +607,72 @@ void ShaderProgram::compile() {
         programId = 0;
     }
 
+    bool hasComputeShader = computeShader.source != nullptr ||
+                            computeShader.shader != nullptr ||
+                            computeShader.shaderId != 0;
+    bool hasGraphicsShader =
+        vertexShader.source != nullptr || vertexShader.shader != nullptr ||
+        vertexShader.shaderId != 0 || fragmentShader.source != nullptr ||
+        fragmentShader.shader != nullptr || fragmentShader.shaderId != 0;
+
+    if (hasComputeShader && hasGraphicsShader) {
+        throw std::runtime_error(
+            "Cannot mix compute shaders with vertex/fragment shaders in one "
+            "ShaderProgram");
+    }
+    if (hasComputeShader) {
+        isComputeProgram = true;
+    }
+
+    if (isComputeProgram) {
+        if (computeShader.shaderId == 0) {
+            atlas_error("Compute shader not compiled");
+            throw std::runtime_error("Compute shader not compiled");
+        }
+        if (computeShader.shader == nullptr) {
+            atlas_error("Compute shader object is null");
+            throw std::runtime_error("Compute shader object is null");
+        }
+
+        if (computeShader.fromDefaultShaderType.has_value()) {
+            auto key = computeShader.fromDefaultShaderType.value();
+            if (ShaderProgram::computeShaderCache.contains(key)) {
+                *this = ShaderProgram::computeShaderCache[key];
+                return;
+            }
+        }
+
+        atlas_log("Linking compute shader program");
+        desiredAttributes = computeShader.desiredAttributes;
+        capabilities = computeShader.capabilities;
+
+        this->shader = opal::ShaderProgram::create();
+        this->shader->attachShader(computeShader.shader);
+        this->shader->link();
+        this->programId = this->shader->programID;
+
+        bool success = this->shader->getProgramStatus();
+        if (!success) {
+            char infoLog[512];
+            this->shader->getProgramLog(infoLog, sizeof(infoLog));
+            atlas_error("Compute shader program linking failed: " +
+                        std::string(infoLog));
+            throw std::runtime_error(
+                std::string("Compute shader program linking failed: ") +
+                infoLog);
+        }
+
+        atlas_log("Compute shader program linked successfully");
+
+        if (computeShader.fromDefaultShaderType.has_value()) {
+            ShaderProgram::computeShaderCache
+                [computeShader.fromDefaultShaderType.value()] = *this;
+        }
+        return;
+    }
+
+    isComputeProgram = false;
+
     if (vertexShader.shaderId == 0) {
         atlas_error("Vertex shader not compiled");
         throw std::runtime_error("Vertex shader not compiled");
@@ -665,9 +810,11 @@ ShaderProgram ShaderProgram::fromDefaultShaders(
     ShaderProgram program;
     program.vertexShader = VertexShader::fromDefaultShader(vShader);
     program.fragmentShader = FragmentShader::fromDefaultShader(fShader);
+    program.computeShader = ComputeShader();
     program.geometryShader = std::move(gShader);
     program.tessellationShaders = std::move(tShaders);
     program.programId = 0;
+    program.isComputeProgram = false;
     program.desiredAttributes = program.vertexShader.desiredAttributes;
 
     program.vertexShader.compile();
@@ -684,9 +831,60 @@ ShaderProgram ShaderProgram::fromDefaultShaders(
     return program;
 }
 
+ShaderProgram
+ShaderProgram::fromDefaultComputeShader(AtlasComputeShader cShader) {
+    ShaderProgram program;
+    program.computeShader = ComputeShader::fromDefaultShader(cShader);
+    program.programId = 0;
+    program.isComputeProgram = true;
+    program.desiredAttributes = {};
+
+    program.computeShader.compile();
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+    if (program.computeShader.shaderId == 0) {
+        throw std::runtime_error("Failed to compile default compute shader");
+    }
+
+    program.compile();
+    return program;
+}
+
+ShaderProgram ShaderProgram::fromComputeShader(ComputeShader cShader) {
+    ShaderProgram program;
+    program.computeShader = std::move(cShader);
+    program.programId = 0;
+    program.isComputeProgram = true;
+    program.desiredAttributes = {};
+
+    program.computeShader.compile();
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+    if (program.computeShader.shaderId == 0) {
+        throw std::runtime_error("Failed to compile compute shader");
+    }
+
+    program.compile();
+    return program;
+}
+
 std::shared_ptr<opal::Pipeline> ShaderProgram::requestPipeline(
     std::shared_ptr<opal::Pipeline> unbuiltPipeline) {
     unbuiltPipeline->setShaderProgram(this->shader);
+    if (isComputeProgram) {
+        for (auto &existingPipeline : pipelines) {
+            if (*existingPipeline == unbuiltPipeline) {
+                currentPipeline = existingPipeline;
+                return existingPipeline;
+            }
+        }
+
+        unbuiltPipeline->build();
+        pipelines.push_back(unbuiltPipeline);
+        currentPipeline = unbuiltPipeline;
+        return unbuiltPipeline;
+    }
+
     std::vector<LayoutDescriptor> layoutDescriptors =
         CoreVertex::getLayoutDescriptors();
 

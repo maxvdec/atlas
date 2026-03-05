@@ -275,3 +275,65 @@ Texture Texture::createRainStreak(int width, int height,
         .borderColor = borderColor
     };
 }
+
+Texture Texture::create(int width, int height, opal::TextureFormat format,
+                        opal::TextureDataFormat dataFormat, TextureType type,
+                        TextureParameters params, Color borderColor) {
+    if (width <= 0 || height <= 0) {
+        atlas_error("Texture dimensions must be positive");
+    }
+
+    auto opalTexture =
+        opal::Texture::create(opal::TextureType::Texture2D, format, width,
+                              height, dataFormat, nullptr, 1);
+
+    Texture::applyWrappingMode(params.wrappingModeS, opal::TextureAxis::S,
+                               opalTexture);
+    Texture::applyWrappingMode(params.wrappingModeT, opal::TextureAxis::T,
+                               opalTexture);
+    Texture::applyFilteringModes(params.minifyingFilter,
+                                 params.magnifyingFilter, opalTexture);
+
+    if (params.wrappingModeS == TextureWrappingMode::ClampToBorder ||
+        params.wrappingModeT == TextureWrappingMode::ClampToBorder) {
+        if (borderColor.r < 0 || borderColor.r > 1 || borderColor.g < 0 ||
+            borderColor.g > 1 || borderColor.b < 0 || borderColor.b > 1 ||
+            borderColor.a < 0 || borderColor.a > 1) {
+            atlas_warning("Border colors values must be between 0 and 1");
+        }
+        opalTexture->changeBorderColor(borderColor.toGlm());
+    }
+
+    opalTexture->automaticallyGenerateMipmaps();
+
+    int channels = 4;
+    switch (dataFormat) {
+    case opal::TextureDataFormat::Red:
+    case opal::TextureDataFormat::DepthComponent:
+        channels = 1;
+        break;
+    case opal::TextureDataFormat::Rgb:
+    case opal::TextureDataFormat::Bgr:
+        channels = 3;
+        break;
+    case opal::TextureDataFormat::Rgba:
+    case opal::TextureDataFormat::Bgra:
+        channels = 4;
+        break;
+    default:
+        channels = 4;
+        break;
+    }
+
+    TextureCreationData creationData{
+        .width = width, .height = height, .channels = channels
+    };
+    return Texture{
+        .resource = Resource(),
+        .creationData = creationData,
+        .id = opalTexture->textureID,
+        .texture = opalTexture,
+        .type = type,
+        .borderColor = borderColor
+    };
+}

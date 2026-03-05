@@ -133,8 +133,12 @@ class BallBehavior : public Component {
 
 class MainScene : public Scene {
     CoreObject ground;
-    CoreObject ball;
-    CoreObject ball2;
+    CoreObject wallLeft;
+    CoreObject wallRight;
+    CoreObject wallBack;
+    CoreObject cieling;
+    CoreObject tallBox;
+    CoreObject cubeBox;
     DirectionalLight light;
     Camera camera;
     CoreObject lightObject;
@@ -150,6 +154,7 @@ class MainScene : public Scene {
 
     bool doesUpdate = true;
     bool fall = false;
+    int giDebugMode = 0;
 
   public:
     void update(Window &window) override {
@@ -162,6 +167,20 @@ class MainScene : public Scene {
             doesUpdate = false;
         } else if (window.isKeyClicked(Key::Q)) {
             fall = !fall;
+        } else if (window.isKeyClicked(Key::G) &&
+                   window.ddgiSystem != nullptr &&
+                   window.ddgiSystem->probeSpace != nullptr) {
+            giDebugMode = (giDebugMode + 1) % 4;
+            float debugAlpha = 0.0f;
+            if (giDebugMode == 1) {
+                debugAlpha = 20.0f;
+            } else if (giDebugMode == 2) {
+                debugAlpha = 30.0f;
+            } else if (giDebugMode == 3) {
+                debugAlpha = 40.0f;
+            }
+            window.ddgiSystem->probeSpace->debugColor =
+                Color(3.0f, 3.0f, 3.0f, debugAlpha);
         }
         if (fall) {
             camera.position.y -= 10.f * window.getDeltaTime();
@@ -194,7 +213,7 @@ class MainScene : public Scene {
         return Cubemap::fromResourceGroup(group);
     }
 
-#define COZY_LIGHT_COLOR Color(1.0f, 0.9f, 0.4f)
+#define COZY_LIGHT_COLOR Color(1.0f, 0.96f, 0.86f)
 
     void initialize(Window &window) override {
         Environment env;
@@ -207,25 +226,87 @@ class MainScene : public Scene {
         Workspace::get().setRootPath(std::string(TEST_PATH) + "/resources/");
 
         camera = Camera();
-        camera.setPosition({-5.0f, 1.0f, 0.0f});
-        camera.lookAt({0.0f, 1.0f, 0.0f});
-        camera.farClip = 1000.f;
+        camera.setPosition({0.0f, 1.0f, -4.f});
+        camera.lookAt({0.0f, 1.0f, 0.2f});
+        camera.farClip = 100.0f;
         window.setCamera(&camera);
 
         areaLight = AreaLight();
-        areaLight.position = {0.0f, 2.f, 0.f};
+        areaLight.position = {0.0f, 1.98f, 0.0f};
         areaLight.setColor(COZY_LIGHT_COLOR);
-        areaLight.intensity = 1.0f;
-        areaLight.range = 5.0f;
+        areaLight.intensity = 2.2f;
+        areaLight.range = 6.5f;
+        areaLight.size = {0.70f, 0.46f};
+        areaLight.angle = 125.0f;
+        areaLight.castsBothSides = false;
+        areaLight.setRotation({90.0f, 0.0f, 0.0f});
+        areaLight.castShadows(window, 2048);
         this->addAreaLight(&areaLight);
-        areaLight.rotate({90.0f, 0.0f, 0.0f});
         areaLight.createDebugObject();
         areaLight.addDebugObject(window);
 
-        ground = createBox({2.0f, 0.1f, 2.0f});
-        ground.material.albedo = Color::white();
-        ground.setPosition({0.0f, -0.1f, 0.0f});
+        const Color wallWhite = Color(0.84f, 0.74f, 0.58f);
+        const Color boxWhite = Color(0.90f, 0.84f, 0.70f);
+        const Color wallRed = Color(0.98f, 0.05f, 0.03f);
+        const Color wallGreen = Color(0.04f, 0.95f, 0.07f);
+
+        ground = createBox({2.0f, 0.05f, 2.0f});
+        ground.material.albedo = wallWhite;
+        ground.material.roughness = 0.96f;
+        ground.material.metallic = 0.0f;
+        ground.material.ao = 1.0f;
+        ground.setPosition({0.0f, -0.025f, 0.0f});
         window.addObject(&ground);
+
+        cieling = createBox({2.0f, 0.05f, 2.0f});
+        cieling.material.albedo = wallWhite;
+        cieling.material.roughness = 0.95f;
+        cieling.material.metallic = 0.0f;
+        cieling.material.ao = 1.0f;
+        cieling.setPosition({0.0f, 2.025f, 0.0f});
+        window.addObject(&cieling);
+
+        wallLeft = createBox({0.05f, 2.0f, 2.0f});
+        wallLeft.material.albedo = wallRed;
+        wallLeft.material.roughness = 0.94f;
+        wallLeft.material.metallic = 0.0f;
+        wallLeft.material.ao = 1.0f;
+        wallLeft.setPosition({-1.025f, 1.0f, 0.0f});
+        window.addObject(&wallLeft);
+
+        wallRight = createBox({0.05f, 2.0f, 2.0f});
+        wallRight.material.albedo = wallGreen;
+        wallRight.material.roughness = 0.94f;
+        wallRight.material.metallic = 0.0f;
+        wallRight.material.ao = 1.0f;
+        wallRight.setPosition({1.025f, 1.0f, 0.0f});
+        window.addObject(&wallRight);
+
+        wallBack = createBox({2.0f, 2.0f, 0.05f});
+        wallBack.material.albedo = wallWhite;
+        wallBack.material.roughness = 0.94f;
+        wallBack.material.metallic = 0.0f;
+        wallBack.material.ao = 1.0f;
+        wallBack.setPosition({0.0f, 1.0f, 1.025f});
+        window.addObject(&wallBack);
+
+        tallBox = createBox({0.56f, 1.2f, 0.56f});
+        tallBox.material.albedo = boxWhite;
+        tallBox.material.roughness = 0.78f;
+        tallBox.material.metallic = 0.0f;
+        tallBox.material.ao = 1.0f;
+        tallBox.setPosition({-0.42f, 0.6f, 0.5f});
+        tallBox.setRotation({0.0f, -16.0f, 0.0f});
+        window.addObject(&tallBox);
+
+        cubeBox = createBox({0.6f, 0.6f, 0.6f});
+        cubeBox.material.albedo = boxWhite;
+        cubeBox.material.roughness = 0.76f;
+        cubeBox.material.metallic = 0.0f;
+        cubeBox.material.ao = 1.0f;
+        cubeBox.setPosition({0.42f, 0.3f, -0.5f});
+        cubeBox.setRotation({0.0f, 11.0f, 0.0f});
+        window.addObject(&cubeBox);
 
         Resource fontResource = Workspace::get().createResource(
             "arial.ttf", "Arial", ResourceType::Font);
@@ -236,16 +317,28 @@ class MainScene : public Scene {
         fpsText.addTraitComponent<Text>(FPSTextUpdater());
         window.addUIObject(&fpsText);
 
-        this->setAmbientIntensity(0.0f);
+        this->setAmbientIntensity(0.10f);
 
-        frameBuffer = RenderTarget(window, RenderTargetType::Scene);
+        frameBuffer = RenderTarget(window, RenderTargetType::Multisampled);
         window.addRenderTarget(&frameBuffer);
         frameBuffer.display(window);
+
+        window.enableGlobalIllumination();
+        window.ddgiSystem->probeSpacing = 0.30f;
+        window.ddgiSystem->raysPerProbe = 64;
+        window.ddgiSystem->maxRayDistance = 7.5f;
+        window.ddgiSystem->normalBias = 0.03f;
+        window.ddgiSystem->hysteresis = 0.96f;
+        window.ddgiSystem->probeSpace->probeResolution = 8;
+        window.ddgiSystem->probeSpace->textureBorderSize = 1;
+        window.ddgiSystem->probeSpace->debugColor =
+            Color(1.0f, 1.0f, 1.0f, 0.0f);
+        // window.ddgiSystem->irradianceMap->display(window);
 
         this->setUseAtmosphereSkybox(false);
 
         window.usesDeferred = true;
-        window.enableSSR(true);
+        window.enableSSR(false);
     }
 };
 
