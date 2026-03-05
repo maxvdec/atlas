@@ -1508,12 +1508,12 @@ void Window::renderLightsToShadowMaps(
         areaLightsPipeline->setViewport(
             0, 0, shadowRenderTarget->texture.creationData.width,
             shadowRenderTarget->texture.creationData.height);
-        areaLightsPipeline->setCullMode(opal::CullMode::None);
+        areaLightsPipeline->setCullMode(opal::CullMode::Front);
         areaLightsPipeline->setFrontFace(this->frontFace);
         areaLightsPipeline->enableDepthTest(true);
         areaLightsPipeline->setDepthCompareOp(opal::CompareOp::Less);
         areaLightsPipeline->enablePolygonOffset(true);
-        areaLightsPipeline->setPolygonOffset(1.0f, 1.0f);
+        areaLightsPipeline->setPolygonOffset(2.0f, 4.0f);
         areaLightsPipeline =
             this->depthProgram.requestPipeline(areaLightsPipeline);
 

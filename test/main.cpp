@@ -240,7 +240,7 @@ class MainScene : public Scene {
         areaLight.angle = 125.0f;
         areaLight.castsBothSides = false;
         areaLight.setRotation({90.0f, 0.0f, 0.0f});
-        // areaLight.castShadows(window, 2048);
+        areaLight.castShadows(window, 2048);
         this->addAreaLight(&areaLight);
         areaLight.createDebugObject();
         areaLight.addDebugObject(window);

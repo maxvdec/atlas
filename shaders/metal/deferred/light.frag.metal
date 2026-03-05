@@ -550,14 +550,23 @@ static inline __attribute__((always_inline)) float calculateShadow(
         return 0.0;
     }
     float currentDepth = projCoords.z;
+    bool isAreaShadow = shadowParam.lightType == 2;
     float3 lightDirWorld = fast::normalize(
         -(spvInverse4x4(shadowParam.lightView) * float4(0.0, 0.0, -1.0, 0.0))
              .xyz);
     float biasValue = shadowParam.bias0;
+    if (isAreaShadow) {
+        biasValue = fast::max(biasValue, 0.0012000000569969416);
+    }
     float ndotl = fast::max(dot(normal, lightDirWorld), 0.0);
-    float minBias =
-        fast::max(4.9999998736893758177757263183594e-05, biasValue * 0.25);
+    float minBias = fast::max(isAreaShadow ? 0.0002500000118743628
+                                           : 4.9999998736893758177757263183594e-05,
+                              biasValue * (isAreaShadow ? 0.8500000238418579
+                                                        : 0.25));
     float bias0 = fast::max(biasValue * (1.0 - ndotl), minBias);
+    if (isAreaShadow) {
+        bias0 += 0.0002500000118743628;
+    }
     float shadow = 0.0;
     float2 texelSize = float2(1.0) / dims;
     float _distance = length(float3(_526.cameraPosition) - fragPos);
@@ -565,7 +574,10 @@ static inline __attribute__((always_inline)) float calculateShadow(
     float avgDim = 0.5 * (shadowMapSize.x + shadowMapSize.y);
     float resFactor = fast::clamp(1024.0 / fast::max(avgDim, 1.0), 0.75, 1.25);
     float distFactor = fast::clamp(_distance / 800.0, 0.0, 1.0);
-    float texelRadius = mix(1.0, 3.0, distFactor) * resFactor;
+    float texelRadius =
+        mix(isAreaShadow ? 1.7999999523162842 : 1.0,
+            isAreaShadow ? 4.199999809265137 : 3.0, distFactor) *
+        resFactor;
     float2 filterRadius = texelSize * texelRadius;
     int sampleCount = 0;
     for (int i = 0; i < 12; i++) {
@@ -605,6 +617,9 @@ static inline __attribute__((always_inline)) float calculateShadow(
     }
     if (sampleCount > 0) {
         shadow /= float(sampleCount);
+    }
+    if (isAreaShadow) {
+        shadow = smoothstep(0.18000000715255737, 0.9200000166893005, shadow);
     }
     return shadow;
 }
@@ -1131,6 +1146,7 @@ fragment main0_out main0(
     float directionalShadow = 0.0;
     float spotShadow = 0.0;
     float areaShadow = 0.0;
+    int areaShadowCount = 0;
     float pointShadow = 0.0;
     int shadowCount = _1355.shadowParamCount;
     for (int i = 0; i < shadowCount; i++) {
@@ -1187,12 +1203,11 @@ fragment main0_out main0(
             ShadowParameters param_2 = _1397;
             float3 param_3 = FragPos;
             float3 param_4 = N;
-            areaShadow = fast::max(
-                areaShadow,
-                calculateShadow(param_2, param_3, param_4, texture1,
-                                texture1Smplr, texture2, texture2Smplr,
-                                texture3, texture3Smplr, texture4,
-                                texture4Smplr, texture5, texture5Smplr, _526));
+            areaShadow += calculateShadow(
+                param_2, param_3, param_4, texture1, texture1Smplr, texture2,
+                texture2Smplr, texture3, texture3Smplr, texture4,
+                texture4Smplr, texture5, texture5Smplr, _526);
+            areaShadowCount++;
         } else {
             ShadowParameters _1397;
             _1397.lightView = _1372.shadowParams[i].lightView;
@@ -1213,6 +1228,9 @@ fragment main0_out main0(
                                 texture3, texture3Smplr, texture4,
                                 texture4Smplr, texture5, texture5Smplr, _526));
         }
+    }
+    if (areaShadowCount > 0) {
+        areaShadow /= float(areaShadowCount);
     }
     directionalShadow =
         fast::clamp(directionalShadow * 0.85000002384185791015625, 0.0, 1.0);
