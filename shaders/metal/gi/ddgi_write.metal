@@ -130,7 +130,7 @@ kernel void main0(texture2d<float, access::write> outTexture [[texture(0)]],
             float3 rad = raySample.xyz;
             if (all(isfinite(rad))) {
                 float lum = dot(rad, float3(0.2126f, 0.7152f, 0.0722f));
-                float compression = 1.0f / (1.0f + lum * 0.2f);
+                float compression = 1.0f / (1.0f + lum * 0.25f);
                 rad *= compression;
                 sum += rad * w;
                 weightSum += w;
@@ -156,9 +156,9 @@ kernel void main0(texture2d<float, access::write> outTexture [[texture(0)]],
     float nearPenalty = smoothstep(0.82f, 0.995f, nearFraction);
     float missPenalty = smoothstep(0.95f, 1.0f, missFraction);
     float probeValidity = (1.0f - nearPenalty) * (1.0f - missPenalty);
-    probeValidity = clamp(probeValidity, 0.03f, 1.0f);
+    probeValidity = clamp(probeValidity, 0.005f, 1.0f);
 
-    float h = clamp(max(rt.hysteresis, 0.9f), 0.0f, 0.995f);
+    float h = clamp(max(rt.hysteresis, 0.985f), 0.0f, 0.995f);
     float3 blended = (rt.frameIndex == 0u) ? irradiance : mix(irradiance, prevValue, h);
     float blendedValidity =
         (rt.frameIndex == 0u)

@@ -327,10 +327,7 @@ static inline float shadowVisibility(float3 ro, float3 rd, float maxT,
 }
 
 static inline float giNdotL(float3 n, float3 l) {
-    float ndl = dot(n, l);
-    float front = max(ndl, 0.0f);
-    float back = max(-ndl, 0.0f);
-    return front + back * 0.05f;
+    return max(dot(n, l), 0.0f);
 }
 
 static inline float3 evaluateDirectLights(
@@ -559,7 +556,7 @@ kernel void main0(device float4 *probeRadianceOut [[buffer(0)]],
             sc.pointLightCount, spotLights, sc.spotLightCount, areaLights,
             sc.areaLightCount);
 
-        radiance = direct * albedo;
+        radiance = direct * albedo * 0.6f;
 
         uint state = tid * 9781u + rt.frameIndex * 6971u + 1u;
         float3 t2;
@@ -590,9 +587,9 @@ kernel void main0(device float4 *probeRadianceOut [[buffer(0)]],
                 directionalLights, sc.directionalLightCount, pointLights,
                 sc.pointLightCount, spotLights, sc.spotLightCount, areaLights,
                 sc.areaLightCount);
-            radiance += direct2 * albedo2 * albedo * 1.6f;
+            radiance += direct2 * albedo2 * albedo * 0.55f;
         } else {
-            radiance += sampleSky(bounceDir) * albedo * 0.08f;
+            radiance += sampleSky(bounceDir) * albedo * 0.01f;
         }
     }
 
@@ -734,7 +731,7 @@ kernel void main0(texture2d<float, access::write> outTexture [[texture(0)]],
             float3 rad = raySample.xyz;
             if (all(isfinite(rad))) {
                 float lum = dot(rad, float3(0.2126f, 0.7152f, 0.0722f));
-                float compression = 1.0f / (1.0f + lum * 0.2f);
+                float compression = 1.0f / (1.0f + lum * 0.25f);
                 rad *= compression;
                 sum += rad * w;
                 weightSum += w;
@@ -760,9 +757,9 @@ kernel void main0(texture2d<float, access::write> outTexture [[texture(0)]],
     float nearPenalty = smoothstep(0.82f, 0.995f, nearFraction);
     float missPenalty = smoothstep(0.95f, 1.0f, missFraction);
     float probeValidity = (1.0f - nearPenalty) * (1.0f - missPenalty);
-    probeValidity = clamp(probeValidity, 0.03f, 1.0f);
+    probeValidity = clamp(probeValidity, 0.005f, 1.0f);
 
-    float h = clamp(max(rt.hysteresis, 0.9f), 0.0f, 0.995f);
+    float h = clamp(max(rt.hysteresis, 0.985f), 0.0f, 0.995f);
     float3 blended = (rt.frameIndex == 0u) ? irradiance : mix(irradiance, prevValue, h);
     float blendedValidity =
         (rt.frameIndex == 0u)
@@ -3827,7 +3824,7 @@ static inline float3 sampleDDGIIrradiance(texture2d<float> ddgiTexture,
         float nearestValidity = isfinite(nearestSample.w)
                                     ? clamp(nearestSample.w, 0.0f, 1.0f)
                                     : 0.0f;
-        nearestValidity = mix(0.04f, 1.0f, nearestValidity);
+        nearestValidity = mix(0.05f, 1.0f, nearestValidity);
         float3 nearestIrr =
             all(isfinite(nearestSample.xyz)) ? nearestSample.xyz : float3(0.0f);
         nearestIrr *= nearestValidity;
@@ -3870,7 +3867,8 @@ static inline float3 sampleDDGIIrradiance(texture2d<float> ddgiTexture,
                 float backfaceW =
                     mix(0.04f, 1.0f, frontW * frontW);
                 float distNorm = sDist / spacingScale;
-                float distanceW = 1.0f / (1.0f + distNorm * distNorm);
+                float distNorm2 = distNorm * distNorm;
+                float distanceW = 1.0f / (1.0f + distNorm2 * 1.5f);
 
                 float w = trilinearW * backfaceW * distanceW;
 
@@ -3879,7 +3877,7 @@ static inline float3 sampleDDGIIrradiance(texture2d<float> ddgiTexture,
                 float probeValidity = isfinite(irrSample.w)
                                           ? clamp(irrSample.w, 0.0f, 1.0f)
                                           : 0.0f;
-                float validityW = mix(0.04f, 1.0f, probeValidity);
+                float validityW = mix(0.05f, 1.0f, probeValidity);
                 float3 irr = irrSample.xyz;
                 if (!all(isfinite(irr))) {
                     irr = float3(0.0f);
@@ -3913,7 +3911,7 @@ static inline float3 sampleDDGIIrradiance(texture2d<float> ddgiTexture,
     float fallbackValidity = isfinite(fallbackSample.w)
                                  ? clamp(fallbackSample.w, 0.0f, 1.0f)
                                  : 0.0f;
-    fallbackValidity = mix(0.04f, 1.0f, fallbackValidity);
+    fallbackValidity = mix(0.05f, 1.0f, fallbackValidity);
     float3 fallback =
         all(isfinite(fallbackSample.xyz)) ? fallbackSample.xyz : float3(0.0f);
     fallback *= fallbackValidity;
@@ -4247,7 +4245,7 @@ fragment main0_out main0(
     float3 ambient = ambientBase;
 
     float ddgiSampleBias =
-        max(max(ps.spacing.x, max(ps.spacing.y, ps.spacing.z)) * 0.11f,
+        max(max(ps.spacing.x, max(ps.spacing.y, ps.spacing.z)) * 0.07f,
             0.003f);
     float3 ddgiSamplePos = FragPos + N * ddgiSampleBias;
     float3 ddgiIrradiance =
@@ -4266,15 +4264,18 @@ fragment main0_out main0(
     const float INV_PI = 0.31830988618379067153776752674503;
     float ddgiLuma = dot(ddgiIrradiance, float3(0.2126f, 0.7152f, 0.0722f));
     float3 ddgiChroma = ddgiIrradiance - float3(ddgiLuma);
-    float3 boostedIrradiance = max(float3(ddgiLuma * 0.12f) + ddgiChroma * 1.45f,
+    float3 boostedIrradiance = max(float3(ddgiLuma * 0.015f) + ddgiChroma * 1.0f,
                                    float3(0.0f));
-    float3 bleedAlbedo = mix(albedo, float3(1.0f), 0.08f);
+    float3 bleedAlbedo = albedo;
     float3 ddgiDiffuse = boostedIrradiance * bleedAlbedo * INV_PI *
-                         (1.0f - metallic) * ddgiGain * 0.58f;
+                         (1.0f - metallic) * ddgiGain * 0.18f;
+    float sideFactor = clamp(1.0f - abs(N.y), 0.0f, 1.0f);
+    float ddgiSurfaceFactor = sideFactor * sideFactor * sideFactor;
+    ddgiDiffuse *= ddgiSurfaceFactor;
     float ddgiDiffuseLuma = dot(ddgiDiffuse, float3(0.2126f, 0.7152f, 0.0722f));
     float sceneRefLuma = dot(ambientBase + lighting * 0.35f,
                              float3(0.2126f, 0.7152f, 0.0722f));
-    float ddgiLumaCap = sceneRefLuma * 0.42f + 0.025f;
+    float ddgiLumaCap = sceneRefLuma * 0.05f + 0.004f;
     if (ddgiDiffuseLuma > ddgiLumaCap) {
         ddgiDiffuse *= (ddgiLumaCap / ddgiDiffuseLuma);
     }
@@ -4291,7 +4292,8 @@ fragment main0_out main0(
         }
         ddgiReflection = max(ddgiReflection, float3(0.0f));
         float3 Fddgi = fresnelSchlick(fast::max(dot(N, V), 0.0), F0);
-        float specGain = mix(0.10f, 0.01f, roughness);
+        float specGain = mix(0.008f, 0.001f, roughness);
+        ddgiReflection *= ddgiSurfaceFactor;
         ddgiSpecular = ddgiReflection * Fddgi * specGain * INV_PI * ddgiGain;
     }
 

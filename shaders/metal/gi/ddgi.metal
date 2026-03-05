@@ -234,10 +234,7 @@ static inline float shadowVisibility(float3 ro, float3 rd, float maxT,
 }
 
 static inline float giNdotL(float3 n, float3 l) {
-    float ndl = dot(n, l);
-    float front = max(ndl, 0.0f);
-    float back = max(-ndl, 0.0f);
-    return front + back * 0.05f;
+    return max(dot(n, l), 0.0f);
 }
 
 static inline float3 evaluateDirectLights(
@@ -466,7 +463,7 @@ kernel void main0(device float4 *probeRadianceOut [[buffer(0)]],
             sc.pointLightCount, spotLights, sc.spotLightCount, areaLights,
             sc.areaLightCount);
 
-        radiance = direct * albedo;
+        radiance = direct * albedo * 0.6f;
 
         uint state = tid * 9781u + rt.frameIndex * 6971u + 1u;
         float3 t2;
@@ -497,9 +494,9 @@ kernel void main0(device float4 *probeRadianceOut [[buffer(0)]],
                 directionalLights, sc.directionalLightCount, pointLights,
                 sc.pointLightCount, spotLights, sc.spotLightCount, areaLights,
                 sc.areaLightCount);
-            radiance += direct2 * albedo2 * albedo * 1.6f;
+            radiance += direct2 * albedo2 * albedo * 0.55f;
         } else {
-            radiance += sampleSky(bounceDir) * albedo * 0.08f;
+            radiance += sampleSky(bounceDir) * albedo * 0.01f;
         }
     }
 

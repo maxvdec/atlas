@@ -944,7 +944,7 @@ static inline float3 sampleDDGIIrradiance(texture2d<float> ddgiTexture,
         float nearestValidity = isfinite(nearestSample.w)
                                     ? clamp(nearestSample.w, 0.0f, 1.0f)
                                     : 0.0f;
-        nearestValidity = mix(0.04f, 1.0f, nearestValidity);
+        nearestValidity = mix(0.05f, 1.0f, nearestValidity);
         float3 nearestIrr =
             all(isfinite(nearestSample.xyz)) ? nearestSample.xyz : float3(0.0f);
         nearestIrr *= nearestValidity;
@@ -987,7 +987,8 @@ static inline float3 sampleDDGIIrradiance(texture2d<float> ddgiTexture,
                 float backfaceW =
                     mix(0.04f, 1.0f, frontW * frontW);
                 float distNorm = sDist / spacingScale;
-                float distanceW = 1.0f / (1.0f + distNorm * distNorm);
+                float distNorm2 = distNorm * distNorm;
+                float distanceW = 1.0f / (1.0f + distNorm2 * 1.5f);
 
                 float w = trilinearW * backfaceW * distanceW;
 
@@ -996,7 +997,7 @@ static inline float3 sampleDDGIIrradiance(texture2d<float> ddgiTexture,
                 float probeValidity = isfinite(irrSample.w)
                                           ? clamp(irrSample.w, 0.0f, 1.0f)
                                           : 0.0f;
-                float validityW = mix(0.04f, 1.0f, probeValidity);
+                float validityW = mix(0.05f, 1.0f, probeValidity);
                 float3 irr = irrSample.xyz;
                 if (!all(isfinite(irr))) {
                     irr = float3(0.0f);
@@ -1030,7 +1031,7 @@ static inline float3 sampleDDGIIrradiance(texture2d<float> ddgiTexture,
     float fallbackValidity = isfinite(fallbackSample.w)
                                  ? clamp(fallbackSample.w, 0.0f, 1.0f)
                                  : 0.0f;
-    fallbackValidity = mix(0.04f, 1.0f, fallbackValidity);
+    fallbackValidity = mix(0.05f, 1.0f, fallbackValidity);
     float3 fallback =
         all(isfinite(fallbackSample.xyz)) ? fallbackSample.xyz : float3(0.0f);
     fallback *= fallbackValidity;
@@ -1364,7 +1365,7 @@ fragment main0_out main0(
     float3 ambient = ambientBase;
 
     float ddgiSampleBias =
-        max(max(ps.spacing.x, max(ps.spacing.y, ps.spacing.z)) * 0.11f,
+        max(max(ps.spacing.x, max(ps.spacing.y, ps.spacing.z)) * 0.07f,
             0.003f);
     float3 ddgiSamplePos = FragPos + N * ddgiSampleBias;
     float3 ddgiIrradiance =
@@ -1383,15 +1384,18 @@ fragment main0_out main0(
     const float INV_PI = 0.31830988618379067153776752674503;
     float ddgiLuma = dot(ddgiIrradiance, float3(0.2126f, 0.7152f, 0.0722f));
     float3 ddgiChroma = ddgiIrradiance - float3(ddgiLuma);
-    float3 boostedIrradiance = max(float3(ddgiLuma * 0.12f) + ddgiChroma * 1.45f,
+    float3 boostedIrradiance = max(float3(ddgiLuma * 0.015f) + ddgiChroma * 1.0f,
                                    float3(0.0f));
-    float3 bleedAlbedo = mix(albedo, float3(1.0f), 0.08f);
+    float3 bleedAlbedo = albedo;
     float3 ddgiDiffuse = boostedIrradiance * bleedAlbedo * INV_PI *
-                         (1.0f - metallic) * ddgiGain * 0.58f;
+                         (1.0f - metallic) * ddgiGain * 0.18f;
+    float sideFactor = clamp(1.0f - abs(N.y), 0.0f, 1.0f);
+    float ddgiSurfaceFactor = sideFactor * sideFactor * sideFactor;
+    ddgiDiffuse *= ddgiSurfaceFactor;
     float ddgiDiffuseLuma = dot(ddgiDiffuse, float3(0.2126f, 0.7152f, 0.0722f));
     float sceneRefLuma = dot(ambientBase + lighting * 0.35f,
                              float3(0.2126f, 0.7152f, 0.0722f));
-    float ddgiLumaCap = sceneRefLuma * 0.42f + 0.025f;
+    float ddgiLumaCap = sceneRefLuma * 0.05f + 0.004f;
     if (ddgiDiffuseLuma > ddgiLumaCap) {
         ddgiDiffuse *= (ddgiLumaCap / ddgiDiffuseLuma);
     }
@@ -1408,7 +1412,8 @@ fragment main0_out main0(
         }
         ddgiReflection = max(ddgiReflection, float3(0.0f));
         float3 Fddgi = fresnelSchlick(fast::max(dot(N, V), 0.0), F0);
-        float specGain = mix(0.10f, 0.01f, roughness);
+        float specGain = mix(0.008f, 0.001f, roughness);
+        ddgiReflection *= ddgiSurfaceFactor;
         ddgiSpecular = ddgiReflection * Fddgi * specGain * INV_PI * ddgiGain;
     }
 
