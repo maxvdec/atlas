@@ -10,6 +10,7 @@
 #ifndef OPAL_H
 #define OPAL_H
 
+#include "Metal/Metal.hpp"
 #ifdef VULKAN
 #include <vulkan/vulkan.hpp>
 #endif
@@ -1093,6 +1094,37 @@ class ResolveAction {
     bool resolveColor = true;
 };
 
+#ifdef METAL
+struct PrimitiveVertex {
+    float position[3];
+    float normal[3];
+    float tangent[3];
+    float bitangent[3];
+    float uv[2];
+};
+
+class PrimitiveAccelerationStructure {
+  public:
+    std::vector<PrimitiveVertex> vertices;
+    std::vector<uint32_t> indices;
+
+    static std::shared_ptr<PrimitiveAccelerationStructure>
+    create(const std::vector<PrimitiveVertex> &vertices,
+           const std::vector<uint32_t> &indices);
+
+  private:
+    friend class CommandBuffer;
+    std::shared_ptr<Buffer> asBuffer;
+    std::shared_ptr<Buffer> scratch;
+
+    MTL::AccelerationStructureDescriptor *blasDescriptor = nullptr;
+    MTL::AccelerationStructure *blas = nullptr;
+    std::shared_ptr<MTL::Buffer> vertexBuffer;
+    std::shared_ptr<MTL::Buffer> indexBuffer;
+};
+
+#endif
+
 class CommandBuffer {
   public:
     ~CommandBuffer();
@@ -1130,6 +1162,11 @@ class CommandBuffer {
     void clear(float r, float g, float b, float a, float depth);
 
     int getAndResetDrawCallCount();
+
+#ifdef METAL
+    void buildPrimitiveAccelerationStructure(
+        const std::shared_ptr<PrimitiveAccelerationStructure> &blas);
+#endif
 
   private:
 #ifdef VULKAN
