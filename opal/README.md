@@ -1,4 +1,4 @@
-# Opal 1.2 Ellipse
+# Opal 3 Tetrahedron
 
 Opal is the backbone rendering system for Atlas. It is designed to be fast, flexible, and extensible, allowing developers to create rich graphical applications with ease.
 Opal supports OpenGL up to version 4.1, a Vulkan backend and Metal 4.
@@ -9,3 +9,5 @@ Opal also includes a robust shader management system, making it simple to create
 It provides a high-level API for common rendering tasks, such as scene management, lighting, and post-processing effects.
 
 And also for Vulkan it provides reflection for uniform buffers and push constants using SPIRV-Cross.
+
+With Metal, now Opal 3 support the latest Metal 4 features, including ray tracing, mesh shaders and compute shaders, allowing developers to take advantage of the latest advancements in graphics technology on Apple platforms.

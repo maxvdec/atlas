@@ -321,11 +321,12 @@ class MainScene : public Scene {
 
         frameBuffer = RenderTarget(window, RenderTargetType::Multisampled);
         window.addRenderTarget(&frameBuffer);
-        frameBuffer.display(window);
+        // frameBuffer.display(window);
 
         this->setUseAtmosphereSkybox(false);
 
         window.enablePathTracing();
+        window.pathTracer->pathTracingTexture->display(window);
     }
 };
 

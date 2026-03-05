@@ -309,6 +309,7 @@ class Window {
 
 #ifdef METAL
     void enableGlobalIllumination();
+    void enablePathTracing();
 #endif
 
     /**
@@ -495,10 +496,6 @@ class Window {
      */
     bool usesDeferred = false;
 
-    void enablePathTracing(bool enabled = true) {
-        this->usePathTracing = enabled;
-    }
-
     /**
      * @brief Returns the active internal render scale.
      */
@@ -555,6 +552,7 @@ class Window {
     bool usePathTracing = false;
 #ifdef METAL
     std::shared_ptr<photon::GlobalIllumination> ddgiSystem;
+    std::shared_ptr<photon::PathTracing> pathTracer;
 #endif
 
     BoundingBox getSceneBoundingBox();
@@ -704,6 +702,7 @@ class Window {
     friend class Text;
     friend class Terrain;
     friend class photon::GlobalIllumination;
+    friend class photon::PathTracing;
     friend struct Fluid;
 };
 

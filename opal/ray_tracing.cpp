@@ -100,6 +100,8 @@ void opal::CommandBuffer::buildPrimitiveAccelerationStructure(
     asEnc->buildAccelerationStructure(blas->blas, blas->blasDescriptor,
                                       scratchBuffer.buffer, 0);
     asEnc->endEncoding();
+
+    blas->isBuilt = true;
 }
 
 #endif

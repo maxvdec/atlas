@@ -2013,4 +2013,16 @@ void CommandBuffer::clear(float r, float g, float b, float a, float depth) {
 #endif
 }
 
+#ifdef METAL
+void CommandBuffer::bindAccelerationStructure(
+    const std::shared_ptr<PrimitiveAccelerationStructure> &as,
+    uint32_t binding) {
+    auto &state = metal::commandBufferState(this);
+    if (state.computeEncoder == nullptr) {
+        state.computeEncoder = state.commandBuffer->computeCommandEncoder();
+    }
+    state.computeEncoder->setAccelerationStructure(as->blas, binding);
+}
+#endif
+
 } // namespace opal

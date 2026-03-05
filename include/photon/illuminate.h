@@ -45,6 +45,21 @@ struct ProbeSpace {
     int atlasHeight() const { return atlasRows() * tileResolution(); }
 };
 
+class PathTracing {
+  public:
+    void render(const std::shared_ptr<opal::CommandBuffer> &commandBuffer);
+    void buildAccelerationStructure(
+        const std::shared_ptr<opal::CommandBuffer> &commandBuffer);
+    void init();
+
+    std::shared_ptr<Texture> pathTracingTexture;
+
+  private:
+    std::shared_ptr<opal::PrimitiveAccelerationStructure> sceneBLAS;
+    std::shared_ptr<opal::Pipeline> pathTracingPipeline;
+    std::shared_ptr<ShaderProgram> computePathTracer;
+};
+
 class GlobalIllumination {
   public:
     void render(const std::shared_ptr<opal::CommandBuffer> &commandBuffer);

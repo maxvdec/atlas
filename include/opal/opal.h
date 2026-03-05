@@ -588,6 +588,8 @@ struct VertexBinding {
     VertexBindingInputRate inputRate;
 };
 
+class PrimitiveAccelerationStructure;
+
 class Pipeline {
   public:
     static std::shared_ptr<Pipeline> create();
@@ -1112,6 +1114,8 @@ class PrimitiveAccelerationStructure {
     create(const std::vector<PrimitiveVertex> &vertices,
            const std::vector<uint32_t> &indices);
 
+    bool isBuilt = false;
+
   private:
     friend class CommandBuffer;
     std::shared_ptr<Buffer> asBuffer;
@@ -1166,6 +1170,10 @@ class CommandBuffer {
 #ifdef METAL
     void buildPrimitiveAccelerationStructure(
         const std::shared_ptr<PrimitiveAccelerationStructure> &blas);
+
+    void bindAccelerationStructure(
+        const std::shared_ptr<PrimitiveAccelerationStructure> &blas,
+        uint32_t binding);
 #endif
 
   private:

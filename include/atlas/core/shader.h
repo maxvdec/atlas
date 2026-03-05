@@ -112,6 +112,7 @@ enum class AtlasVertexShader {
 enum class AtlasComputeShader {
     DDGI,
     DDGI_WRITE,
+    PathTracer,
 };
 
 /**

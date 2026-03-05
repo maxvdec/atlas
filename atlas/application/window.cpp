@@ -18,6 +18,7 @@
 #include "atlas/units.h"
 #include "hydra/fluid.h"
 #include "bezel/bezel.h"
+#include "photon/illuminate.h"
 #ifndef BEZEL_NATIVE
 #include "bezel/jolt/world.h"
 #endif
@@ -488,6 +489,7 @@ void Window::run() {
             }
 
             if (this->usePathTracing) {
+                pathTracer->render(commandBuffer);
                 continue;
             }
 
@@ -2333,4 +2335,10 @@ BoundingBox Window::getSceneBoundingBox() {
         return {};
 
     return {Position3d::fromGlm(worldMin), Position3d::fromGlm(worldMax)};
+}
+
+void Window::enablePathTracing() {
+    this->usePathTracing = true;
+    this->pathTracer = std::make_shared<photon::PathTracing>();
+    pathTracer->init();
 }
