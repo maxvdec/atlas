@@ -21,27 +21,32 @@ We also have a **Roadmap** where we list the **core, last-longing features** we 
 
 We assume you know how to fork a repo and get started with modifying Atlas. Besides that, we have a strong policy about naming branches, so we can have our repo structured:
 
-* Feature branches (the ones that implement new features) are prefixed with `feature/`
-* Fix branches (from minor to big fixes) are prefixed with `fix/`
-* Program branches (reorganization of files, optimizations, things that are not seen by the user) are prefixed with `program/`
-* Repo branches (changing files for the repo structure, GitHub actions...) are prefixed with `repo/`
-* Documentation branches (adding documentation) are prefixed with `docs/`
-* Long-living branches (releases, etc...) aren't prefixed, these are rare, but each library has one
+- Feature branches (the ones that implement new features) are prefixed with `feature/`
+- Fix branches (from minor to big fixes) are prefixed with `fix/`
+- Program branches (reorganization of files, optimizations, things that are not seen by the user) are prefixed with `program/`
+- Repo branches (changing files for the repo structure, GitHub actions...) are prefixed with `repo/`
+- Documentation branches (adding documentation) are prefixed with `docs/`
+- Long-living branches (releases, etc...) aren't prefixed, these are rare, but each library has one
 
 After the prefix, put a short description. If you are working for a specific library, add the library prefix. Here's a list of them:
-* `bezel` is for **Bezel**
-* `finewave` is for **Finewave**
-* `aurora` is for **Aurora**
-* `hydra` is for **Hydra**
+
+- `bezel` is for **Bezel**
+- `finewave` is for **Finewave**
+- `aurora` is for **Aurora**
+- `hydra` is for **Hydra**
+- `opal` is for **Opal**
+- `tracer` is for **Tracer**
+- `photon` is for **Photon**
 
 For example, a branch fixing a bug in the rendering of Bezel, would be: `fix/bezel-rendering`. Thanks for keeping the repo clean and organized.
 
 If your change has no global description (for instance, fixing general linting issues), put the date after it in European Style: `fix/27-07-2025`.
 
 ## How to get your Pull Request to be accepted
-* Make sure all the tests are passing, use the commands in the `.github/workflows` to test the result
-* Make sure to document every public part of the code, so other developers can understand
-* In the Pull Request body, explain the changes clearly
+
+- Make sure all the tests are passing, use the commands in the `.github/workflows` to test the result
+- Make sure to document every public part of the code, so other developers can understand
+- In the Pull Request body, explain the changes clearly
 
 ## How to get inspiration
 

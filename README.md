@@ -8,7 +8,7 @@
 [![](https://dcbadge.limes.pink/api/server/WKrxKtr7kW)](https://discord.gg/WKrxKtr7kW)
 
 Atlas is a Game Engine that uses the latest technologies to provide a fast, simple but powerful experience for developers.
-It is built with C++ and uses OpenGL, Vulkan and Metal for rendering. It also has a physics engine, an audio engine, a terrain system, 
+It is built with C++ and uses OpenGL, Vulkan and Metal for rendering. It also has a physics engine, an audio engine, a terrain system,
 an environment system and a debugging system with more to come.
 
 ![Atlas Screenshot](example.png)
@@ -35,6 +35,7 @@ an environment system and a debugging system with more to come.
 - The environment system is Hydra. Hydra is a separate library that handles sky, atmosphere, weather and fluid simulation.
 - The rendering backend is Opal, an in-house rendering abstraction layer that allows for easy switching between different graphics APIs.
 - The debugging system is Tracer. Tracer is a module in the engine that provides various debugging tools and utilities.
+- The illumination engine is Photon. Photon is a module in the engine that handles global illumination and path tracing.
 
 ## Getting the Engine
 
