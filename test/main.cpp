@@ -323,22 +323,9 @@ class MainScene : public Scene {
         window.addRenderTarget(&frameBuffer);
         frameBuffer.display(window);
 
-        window.enableGlobalIllumination();
-        window.ddgiSystem->probeSpacing = 0.30f;
-        window.ddgiSystem->raysPerProbe = 64;
-        window.ddgiSystem->maxRayDistance = 7.5f;
-        window.ddgiSystem->normalBias = 0.03f;
-        window.ddgiSystem->hysteresis = 0.96f;
-        window.ddgiSystem->probeSpace->probeResolution = 8;
-        window.ddgiSystem->probeSpace->textureBorderSize = 1;
-        window.ddgiSystem->probeSpace->debugColor =
-            Color(1.0f, 1.0f, 1.0f, 0.0f);
-        // window.ddgiSystem->irradianceMap->display(window);
-
         this->setUseAtmosphereSkybox(false);
 
-        window.usesDeferred = true;
-        window.enableSSR(false);
+        window.enablePathTracing();
     }
 };
 

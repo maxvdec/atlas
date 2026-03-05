@@ -495,6 +495,10 @@ class Window {
      */
     bool usesDeferred = false;
 
+    void enablePathTracing(bool enabled = true) {
+        this->usePathTracing = enabled;
+    }
+
     /**
      * @brief Returns the active internal render scale.
      */
@@ -548,6 +552,7 @@ class Window {
     bool firstFrame = true;
 
     bool usesGlobalIllumination = false;
+    bool usePathTracing = false;
 #ifdef METAL
     std::shared_ptr<photon::GlobalIllumination> ddgiSystem;
 #endif

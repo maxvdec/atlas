@@ -487,6 +487,10 @@ void Window::run() {
                 target->getFramebuffer()->setDrawBuffers(2);
             }
 
+            if (this->usePathTracing) {
+                continue;
+            }
+
             if (this->usesDeferred) {
                 if (this->gBuffer == nullptr) {
                     this->useDeferredRendering();
