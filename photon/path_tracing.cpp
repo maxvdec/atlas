@@ -39,29 +39,34 @@ void photon::PathTracing::buildAccelerationStructure(
 
     for (const auto &renderable : renderables) {
         if (auto *obj = dynamic_cast<CoreObject *>(renderable)) {
-            auto objectVertices = obj->vertices;
-            auto indices = obj->indices;
+            const auto &objectVertices = obj->vertices;
+            const auto &objectIndices = obj->indices;
 
-            // Append to global lists
-            indices.insert(indices.end(), indices.begin(), indices.end());
+            uint32_t baseVertex = (uint32_t)vertices.size();
 
-            for (auto vertex : objectVertices) {
-                opal::PrimitiveVertex primVertex;
-                primVertex.position[0] = vertex.position.x;
-                primVertex.position[1] = vertex.position.y;
-                primVertex.position[2] = vertex.position.z;
-                primVertex.normal[0] = vertex.normal.x;
-                primVertex.normal[1] = vertex.normal.y;
-                primVertex.normal[2] = vertex.normal.z;
-                primVertex.uv[0] = vertex.textureCoordinate[0];
-                primVertex.uv[1] = vertex.textureCoordinate[1];
-                primVertex.tangent[0] = vertex.tangent.x;
-                primVertex.tangent[1] = vertex.tangent.y;
-                primVertex.tangent[2] = vertex.tangent.z;
-                primVertex.bitangent[0] = vertex.bitangent.x;
-                primVertex.bitangent[1] = vertex.bitangent.y;
-                primVertex.bitangent[2] = vertex.bitangent.z;
-                vertices.push_back(primVertex);
+            vertices.reserve(vertices.size() + objectVertices.size());
+            for (const auto &v : objectVertices) {
+                opal::PrimitiveVertex pv{};
+                pv.position[0] = v.position.x;
+                pv.position[1] = v.position.y;
+                pv.position[2] = v.position.z;
+                pv.normal[0] = v.normal.x;
+                pv.normal[1] = v.normal.y;
+                pv.normal[2] = v.normal.z;
+                pv.uv[0] = v.textureCoordinate[0];
+                pv.uv[1] = v.textureCoordinate[1];
+                pv.tangent[0] = v.tangent.x;
+                pv.tangent[1] = v.tangent.y;
+                pv.tangent[2] = v.tangent.z;
+                pv.bitangent[0] = v.bitangent.x;
+                pv.bitangent[1] = v.bitangent.y;
+                pv.bitangent[2] = v.bitangent.z;
+                vertices.push_back(pv);
+            }
+
+            indices.reserve(indices.size() + objectIndices.size());
+            for (uint32_t i : objectIndices) {
+                indices.push_back(baseVertex + i);
             }
         }
     }
@@ -88,7 +93,7 @@ void photon::PathTracing::render(
     this->buildAccelerationStructure(commandBuffer);
     commandBuffer->bindPipeline(this->pathTracingPipeline);
     pathTracingPipeline->bindTexture("outTex", pathTracingTexture->texture, 0);
-    commandBuffer->bindAccelerationStructure(this->sceneBLAS, 0);
+    commandBuffer->bindPrimitiveAccelerationStructure(this->sceneBLAS, 0);
     commandBuffer->dispatch(Window::mainWindow->viewportWidth,
                             Window::mainWindow->viewportHeight, 1);
 }

@@ -32,6 +32,7 @@ kernel void main0(texture2d<float, access::write> outTex [[texture(0)]],
 
     intersector<triangle_data> isect;
     isect.assume_geometry_type(geometry_type::triangle);
+    isect.set_triangle_cull_mode(triangle_cull_mode::none);
 
     ray r;
     r.origin = ro;
@@ -41,7 +42,11 @@ kernel void main0(texture2d<float, access::write> outTex [[texture(0)]],
 
     auto hit = isect.intersect(r, sceneAS);
 
-    outTex.write(hit.type != intersection_type::none ? float4(1, 0, 0, 1)
-                                                     : float4(0, 0, 0, 1),
-                 gid);
+    if (hit.type == intersection_type::none) {
+        outTex.write(float4(0, 0, 0, 1), gid);
+    } else {
+        float t = hit.distance;
+        float g = clamp(t * 0.05, 0.0, 1.0);
+        outTex.write(float4(g, g, g, 1), gid);
+    }
 }

@@ -1118,6 +1118,7 @@ class PrimitiveAccelerationStructure {
 
   private:
     friend class CommandBuffer;
+    friend class InstanceAccelerationStructure;
     std::shared_ptr<Buffer> asBuffer;
     std::shared_ptr<Buffer> scratch;
 
@@ -1125,6 +1126,30 @@ class PrimitiveAccelerationStructure {
     MTL::AccelerationStructure *blas = nullptr;
     std::shared_ptr<MTL::Buffer> vertexBuffer;
     std::shared_ptr<MTL::Buffer> indexBuffer;
+};
+
+static inline void writeMetalTransform3x4(const glm::mat4 &M, float out3x4[12]);
+
+struct AccelerationStructureInstance {
+    std::shared_ptr<PrimitiveAccelerationStructure> blas;
+    glm::mat4 transform;
+    uint32_t instanceId;
+    uint32_t mask;
+    bool cullDisable;
+};
+
+class InstanceAccelerationStructure {
+  public:
+    static std::shared_ptr<opal::InstanceAccelerationStructure>
+    create(const std::vector<opal::AccelerationStructureInstance> &instances);
+
+  private:
+    std::vector<AccelerationStructureInstance> instances;
+    std::shared_ptr<Buffer> instanceBuffer;
+    MTL::InstanceAccelerationStructureDescriptor *tlasDescriptor = nullptr;
+    MTL::AccelerationStructure *tlas = nullptr;
+
+    friend class CommandBuffer;
 };
 
 #endif
@@ -1171,9 +1196,17 @@ class CommandBuffer {
     void buildPrimitiveAccelerationStructure(
         const std::shared_ptr<PrimitiveAccelerationStructure> &blas);
 
-    void bindAccelerationStructure(
+    void bindPrimitiveAccelerationStructure(
         const std::shared_ptr<PrimitiveAccelerationStructure> &blas,
         uint32_t binding);
+
+    void buildInstanceAccelerationStructure(
+        const std::shared_ptr<InstanceAccelerationStructure> &tlas);
+
+    void bindInstanceAccelerationStructure(
+        const std::shared_ptr<InstanceAccelerationStructure> &tlas,
+        uint32_t binding);
+
 #endif
 
   private:

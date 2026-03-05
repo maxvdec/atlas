@@ -2014,7 +2014,7 @@ void CommandBuffer::clear(float r, float g, float b, float a, float depth) {
 }
 
 #ifdef METAL
-void CommandBuffer::bindAccelerationStructure(
+void CommandBuffer::bindPrimitiveAccelerationStructure(
     const std::shared_ptr<PrimitiveAccelerationStructure> &as,
     uint32_t binding) {
     auto &state = metal::commandBufferState(this);
