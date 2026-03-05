@@ -127,7 +127,7 @@ struct Material {
     float roughness;
     float ao;
 
-    float3 albedo;
+    packed_float3 albedo;
     float _pad0;
 };
 
@@ -154,20 +154,20 @@ struct SceneCounts {
 };
 
 struct DirectionalLight {
-    float3 direction;
+    packed_float3 direction;
     float _pad1;
-    float3 diffuse;
+    packed_float3 diffuse;
     float _pad2;
-    float3 specular;
+    packed_float3 specular;
     float intensity;
 };
 
 struct PointLight {
-    float3 position;
+    packed_float3 position;
     float _pad1;
-    float3 diffuse;
+    packed_float3 diffuse;
     float _pad2;
-    float3 specular;
+    packed_float3 specular;
     float intensity;
     float constant0;
     float linear;
@@ -177,33 +177,33 @@ struct PointLight {
 };
 
 struct SpotLight {
-    float3 position;
+    packed_float3 position;
     float _pad1;
-    float3 direction;
+    packed_float3 direction;
     float cutOff;
     float outerCutOff;
     float intensity;
     float range;
     float _pad4;
-    float3 diffuse;
+    packed_float3 diffuse;
     float _pad5;
-    float3 specular;
+    packed_float3 specular;
     float _pad6;
 };
 
 struct AreaLight {
-    float3 position;
+    packed_float3 position;
     float _pad1;
-    float3 right;
+    packed_float3 right;
     float _pad2;
-    float3 up;
+    packed_float3 up;
     float _pad3;
     float2 size;
     float _pad4;
     float _pad5;
-    float3 diffuse;
+    packed_float3 diffuse;
     float _pad6;
-    float3 specular;
+    packed_float3 specular;
     float angle;
     int castsBothSides;
     float intensity;
@@ -326,6 +326,13 @@ static inline float shadowVisibility(float3 ro, float3 rd, float maxT,
     return (h.t >= maxT) ? 1.0f : 0.0f;
 }
 
+static inline float giNdotL(float3 n, float3 l) {
+    float ndl = dot(n, l);
+    float front = max(ndl, 0.0f);
+    float back = max(-ndl, 0.0f);
+    return front + back * 0.05f;
+}
+
 static inline float3 evaluateDirectLights(
     float3 posWS, float3 normalWS, float bias, float maxDistance,
     device const Triangle *tris, uint triCount,
@@ -334,18 +341,17 @@ static inline float3 evaluateDirectLights(
     device const SpotLight *spotLights, uint spotLightCount,
     device const AreaLight *areaLights, uint areaLightCount) {
     float3 n = safeNormalize(normalWS, float3(0.0f, 1.0f, 0.0f));
-    float3 start = posWS + n * bias;
     float3 sum = float3(0.0f);
 
     for (uint i = 0; i < directionalLightCount; i++) {
         float3 L = safeNormalize(-directionalLights[i].direction,
                                  float3(0.0f, 1.0f, 0.0f));
-        float ndl = max(0.0f, dot(n, L));
+        float ndl = giNdotL(n, L);
         if (ndl <= 0.0f)
             continue;
 
         float visibility =
-            shadowVisibility(start, L, maxDistance, tris, triCount);
+            shadowVisibility(posWS + L * bias, L, maxDistance, tris, triCount);
         sum += directionalLights[i].diffuse *
                max(0.0f, directionalLights[i].intensity) * ndl * visibility;
     }
@@ -358,7 +364,7 @@ static inline float3 evaluateDirectLights(
             continue;
 
         float3 L = toLight / dist;
-        float ndl = max(0.0f, dot(n, L));
+        float ndl = giNdotL(n, L);
         if (ndl <= 0.0f)
             continue;
 
@@ -367,7 +373,8 @@ static inline float3 evaluateDirectLights(
                            pointLights[i].quadratic * dist * dist,
                        1e-4f);
         float fade = 1.0f - smoothstep(radius * 0.9f, radius, dist);
-        float visibility = shadowVisibility(start, L, max(dist - bias * 2.0f, 0.001f),
+        float visibility = shadowVisibility(posWS + L * bias, L,
+                                            max(dist - bias * 2.0f, 0.001f),
                                             tris, triCount);
 
         sum += pointLights[i].diffuse * max(0.0f, pointLights[i].intensity) *
@@ -382,7 +389,7 @@ static inline float3 evaluateDirectLights(
             continue;
 
         float3 L = toLight / dist;
-        float ndl = max(0.0f, dot(n, L));
+        float ndl = giNdotL(n, L);
         if (ndl <= 0.0f)
             continue;
 
@@ -399,7 +406,8 @@ static inline float3 evaluateDirectLights(
         float attenuation =
             1.0f / ((1.0f + (dist / range)) + ((dist * dist) / (range * range)));
         float fade = 1.0f - smoothstep(range * 0.9f, range, dist);
-        float visibility = shadowVisibility(start, L, max(dist - bias * 2.0f, 0.001f),
+        float visibility = shadowVisibility(posWS + L * bias, L,
+                                            max(dist - bias * 2.0f, 0.001f),
                                             tris, triCount);
 
         sum += spotLights[i].diffuse * max(0.0f, spotLights[i].intensity) * cone *
@@ -424,7 +432,7 @@ static inline float3 evaluateDirectLights(
             continue;
 
         float3 L = Lvec / dist;
-        float ndl = max(0.0f, dot(n, L));
+        float ndl = giNdotL(n, L);
         if (ndl <= 0.0f)
             continue;
 
@@ -439,7 +447,8 @@ static inline float3 evaluateDirectLights(
         float attenuation =
             1.0f / ((1.0f + (dist / range)) + ((dist * dist) / (range * range)));
         float fade = 1.0f - smoothstep(range * 0.9f, range, dist);
-        float visibility = shadowVisibility(start, L, max(dist - bias * 2.0f, 0.001f),
+        float visibility = shadowVisibility(posWS + L * bias, L,
+                                            max(dist - bias * 2.0f, 0.001f),
                                             tris, triCount);
 
         sum += areaLights[i].diffuse * max(0.0f, areaLights[i].intensity) *
@@ -581,7 +590,9 @@ kernel void main0(device float4 *probeRadianceOut [[buffer(0)]],
                 directionalLights, sc.directionalLightCount, pointLights,
                 sc.pointLightCount, spotLights, sc.spotLightCount, areaLights,
                 sc.areaLightCount);
-            radiance += direct2 * albedo2 * albedo * 1.5f;
+            radiance += direct2 * albedo2 * albedo * 1.6f;
+        } else {
+            radiance += sampleSky(bounceDir) * albedo * 0.08f;
         }
     }
 
@@ -702,23 +713,29 @@ kernel void main0(texture2d<float, access::write> outTexture [[texture(0)]],
     float3 sum = float3(0.0f);
     float weightSum = 0.0f;
     float nearHitCount = 0.0f;
+    float missCount = 0.0f;
     float spacingScale =
         max(max(ps.spacing.x, max(ps.spacing.y, ps.spacing.z)), 1e-4f);
     float nearHitThreshold =
-        max(max(rt.normalBias * 8.0f, spacingScale * 0.12f), 0.002f);
+        max(max(rt.normalBias * 1.2f, spacingScale * 0.015f), 0.0008f);
 
     for (uint r = 0; r < raysPerProbe; r++) {
         float4 raySample = probeRadiance[baseOffset + r];
         float hitDistance = raySample.w;
         if (hitDistance > 0.0f && hitDistance < nearHitThreshold) {
             nearHitCount += 1.0f;
+        } else if (hitDistance <= 0.0f) {
+            missCount += 1.0f;
         }
 
         float3 rayDir = sphericalFibonacci(r, raysPerProbe, rt.frameIndex);
-        float w = max(0.0f, dot(texelDir, rayDir));
+        float w = sqrt(max(0.0f, dot(texelDir, rayDir)));
         if (w > 1e-6f) {
             float3 rad = raySample.xyz;
             if (all(isfinite(rad))) {
+                float lum = dot(rad, float3(0.2126f, 0.7152f, 0.0722f));
+                float compression = 1.0f / (1.0f + lum * 0.2f);
+                rad *= compression;
                 sum += rad * w;
                 weightSum += w;
             }
@@ -739,10 +756,13 @@ kernel void main0(texture2d<float, access::write> outTexture [[texture(0)]],
     float prevValidity = isfinite(prev.w) ? clamp(prev.w, 0.0f, 1.0f) : 1.0f;
 
     float nearFraction = nearHitCount / float(raysPerProbe);
-    float probeValidity = 1.0f - smoothstep(0.35f, 0.90f, nearFraction);
-    probeValidity = clamp(probeValidity, 0.02f, 1.0f);
+    float missFraction = missCount / float(raysPerProbe);
+    float nearPenalty = smoothstep(0.82f, 0.995f, nearFraction);
+    float missPenalty = smoothstep(0.95f, 1.0f, missFraction);
+    float probeValidity = (1.0f - nearPenalty) * (1.0f - missPenalty);
+    probeValidity = clamp(probeValidity, 0.03f, 1.0f);
 
-    float h = clamp(rt.hysteresis, 0.0f, 0.995f);
+    float h = clamp(max(rt.hysteresis, 0.9f), 0.0f, 0.995f);
     float3 blended = (rt.frameIndex == 0u) ? irradiance : mix(irradiance, prevValue, h);
     float blendedValidity =
         (rt.frameIndex == 0u)
@@ -3807,9 +3827,10 @@ static inline float3 sampleDDGIIrradiance(texture2d<float> ddgiTexture,
         float nearestValidity = isfinite(nearestSample.w)
                                     ? clamp(nearestSample.w, 0.0f, 1.0f)
                                     : 0.0f;
+        nearestValidity = mix(0.04f, 1.0f, nearestValidity);
         float3 nearestIrr =
             all(isfinite(nearestSample.xyz)) ? nearestSample.xyz : float3(0.0f);
-        nearestIrr *= mix(0.05f, 1.0f, nearestValidity);
+        nearestIrr *= nearestValidity;
         return max(nearestIrr, float3(0.0f));
     }
 
@@ -3845,10 +3866,11 @@ static inline float3 sampleDDGIIrradiance(texture2d<float> ddgiTexture,
                 float3 surfaceToProbe = probePos - posWS;
                 float sDist = length(surfaceToProbe);
                 float3 dirToProbe = (sDist > 1e-4f) ? surfaceToProbe / sDist : float3(0.0f, 1.0f, 0.0f);
+                float frontW = max(dot(safeNormal, dirToProbe), 0.0f);
                 float backfaceW =
-                    clamp(dot(safeNormal, dirToProbe) * 0.5f + 0.5f, 0.2f,
-                          1.0f);
-                float distanceW = 1.0f / (1.0f + (sDist / spacingScale));
+                    mix(0.04f, 1.0f, frontW * frontW);
+                float distNorm = sDist / spacingScale;
+                float distanceW = 1.0f / (1.0f + distNorm * distNorm);
 
                 float w = trilinearW * backfaceW * distanceW;
 
@@ -3857,7 +3879,7 @@ static inline float3 sampleDDGIIrradiance(texture2d<float> ddgiTexture,
                 float probeValidity = isfinite(irrSample.w)
                                           ? clamp(irrSample.w, 0.0f, 1.0f)
                                           : 0.0f;
-                float validityW = mix(0.05f, 1.0f, probeValidity);
+                float validityW = mix(0.04f, 1.0f, probeValidity);
                 float3 irr = irrSample.xyz;
                 if (!all(isfinite(irr))) {
                     irr = float3(0.0f);
@@ -3891,9 +3913,10 @@ static inline float3 sampleDDGIIrradiance(texture2d<float> ddgiTexture,
     float fallbackValidity = isfinite(fallbackSample.w)
                                  ? clamp(fallbackSample.w, 0.0f, 1.0f)
                                  : 0.0f;
+    fallbackValidity = mix(0.04f, 1.0f, fallbackValidity);
     float3 fallback =
         all(isfinite(fallbackSample.xyz)) ? fallbackSample.xyz : float3(0.0f);
-    fallback *= mix(0.05f, 1.0f, fallbackValidity);
+    fallback *= fallbackValidity;
     if (!all(isfinite(fallback))) {
         fallback = float3(0.0f);
     }
@@ -3945,6 +3968,18 @@ fragment main0_out main0(
     }
     float3 sampledNormal = gNormal.sample(gNormalSmplr, in.TexCoord).xyz;
     float normalLength = length(sampledNormal);
+    bool hasGeometry = all(isfinite(sampledNormal)) &&
+                       normalLength >
+                           9.9999997473787516355514526367188e-06;
+    if (!hasGeometry) {
+        float2 ndc = in.TexCoord * 2.0f - 1.0f;
+        float3 backgroundDir = fast::normalize(float3(ndc.x, -ndc.y, 1.0f));
+        float3 backgroundColor =
+            sampleEnvironmentRadiance(backgroundDir, skybox, skyboxSmplr);
+        out.FragColor = float4(acesToneMapping(backgroundColor), 1.0);
+        out.BrightColor = float4(0.0, 0.0, 0.0, 1.0);
+        return out;
+    }
     float3 N = float3(0.0, 1.0, 0.0);
     if (all(isfinite(sampledNormal)) &&
         normalLength > 9.9999997473787516355514526367188e-06) {
@@ -4212,7 +4247,7 @@ fragment main0_out main0(
     float3 ambient = ambientBase;
 
     float ddgiSampleBias =
-        max(max(ps.spacing.x, max(ps.spacing.y, ps.spacing.z)) * 0.12f,
+        max(max(ps.spacing.x, max(ps.spacing.y, ps.spacing.z)) * 0.11f,
             0.003f);
     float3 ddgiSamplePos = FragPos + N * ddgiSampleBias;
     float3 ddgiIrradiance =
@@ -4229,7 +4264,20 @@ fragment main0_out main0(
     }
 
     const float INV_PI = 0.31830988618379067153776752674503;
-    float3 ddgiDiffuse = ddgiIrradiance * albedo * INV_PI * (1.0f - metallic) * ddgiGain;
+    float ddgiLuma = dot(ddgiIrradiance, float3(0.2126f, 0.7152f, 0.0722f));
+    float3 ddgiChroma = ddgiIrradiance - float3(ddgiLuma);
+    float3 boostedIrradiance = max(float3(ddgiLuma * 0.12f) + ddgiChroma * 1.45f,
+                                   float3(0.0f));
+    float3 bleedAlbedo = mix(albedo, float3(1.0f), 0.08f);
+    float3 ddgiDiffuse = boostedIrradiance * bleedAlbedo * INV_PI *
+                         (1.0f - metallic) * ddgiGain * 0.58f;
+    float ddgiDiffuseLuma = dot(ddgiDiffuse, float3(0.2126f, 0.7152f, 0.0722f));
+    float sceneRefLuma = dot(ambientBase + lighting * 0.35f,
+                             float3(0.2126f, 0.7152f, 0.0722f));
+    float ddgiLumaCap = sceneRefLuma * 0.42f + 0.025f;
+    if (ddgiDiffuseLuma > ddgiLumaCap) {
+        ddgiDiffuse *= (ddgiLumaCap / ddgiDiffuseLuma);
+    }
     ddgiDiffuse = max(ddgiDiffuse, float3(0.0f));
     ambient += ddgiDiffuse;
 
@@ -4243,7 +4291,7 @@ fragment main0_out main0(
         }
         ddgiReflection = max(ddgiReflection, float3(0.0f));
         float3 Fddgi = fresnelSchlick(fast::max(dot(N, V), 0.0), F0);
-        float specGain = mix(0.8f, 0.05f, roughness);
+        float specGain = mix(0.10f, 0.01f, roughness);
         ddgiSpecular = ddgiReflection * Fddgi * specGain * INV_PI * ddgiGain;
     }
 

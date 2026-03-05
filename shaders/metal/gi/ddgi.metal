@@ -34,7 +34,7 @@ struct Material {
     float roughness;
     float ao;
 
-    float3 albedo;
+    packed_float3 albedo;
     float _pad0;
 };
 
@@ -61,20 +61,20 @@ struct SceneCounts {
 };
 
 struct DirectionalLight {
-    float3 direction;
+    packed_float3 direction;
     float _pad1;
-    float3 diffuse;
+    packed_float3 diffuse;
     float _pad2;
-    float3 specular;
+    packed_float3 specular;
     float intensity;
 };
 
 struct PointLight {
-    float3 position;
+    packed_float3 position;
     float _pad1;
-    float3 diffuse;
+    packed_float3 diffuse;
     float _pad2;
-    float3 specular;
+    packed_float3 specular;
     float intensity;
     float constant0;
     float linear;
@@ -84,33 +84,33 @@ struct PointLight {
 };
 
 struct SpotLight {
-    float3 position;
+    packed_float3 position;
     float _pad1;
-    float3 direction;
+    packed_float3 direction;
     float cutOff;
     float outerCutOff;
     float intensity;
     float range;
     float _pad4;
-    float3 diffuse;
+    packed_float3 diffuse;
     float _pad5;
-    float3 specular;
+    packed_float3 specular;
     float _pad6;
 };
 
 struct AreaLight {
-    float3 position;
+    packed_float3 position;
     float _pad1;
-    float3 right;
+    packed_float3 right;
     float _pad2;
-    float3 up;
+    packed_float3 up;
     float _pad3;
     float2 size;
     float _pad4;
     float _pad5;
-    float3 diffuse;
+    packed_float3 diffuse;
     float _pad6;
-    float3 specular;
+    packed_float3 specular;
     float angle;
     int castsBothSides;
     float intensity;
@@ -233,6 +233,13 @@ static inline float shadowVisibility(float3 ro, float3 rd, float maxT,
     return (h.t >= maxT) ? 1.0f : 0.0f;
 }
 
+static inline float giNdotL(float3 n, float3 l) {
+    float ndl = dot(n, l);
+    float front = max(ndl, 0.0f);
+    float back = max(-ndl, 0.0f);
+    return front + back * 0.05f;
+}
+
 static inline float3 evaluateDirectLights(
     float3 posWS, float3 normalWS, float bias, float maxDistance,
     device const Triangle *tris, uint triCount,
@@ -241,18 +248,17 @@ static inline float3 evaluateDirectLights(
     device const SpotLight *spotLights, uint spotLightCount,
     device const AreaLight *areaLights, uint areaLightCount) {
     float3 n = safeNormalize(normalWS, float3(0.0f, 1.0f, 0.0f));
-    float3 start = posWS + n * bias;
     float3 sum = float3(0.0f);
 
     for (uint i = 0; i < directionalLightCount; i++) {
         float3 L = safeNormalize(-directionalLights[i].direction,
                                  float3(0.0f, 1.0f, 0.0f));
-        float ndl = max(0.0f, dot(n, L));
+        float ndl = giNdotL(n, L);
         if (ndl <= 0.0f)
             continue;
 
         float visibility =
-            shadowVisibility(start, L, maxDistance, tris, triCount);
+            shadowVisibility(posWS + L * bias, L, maxDistance, tris, triCount);
         sum += directionalLights[i].diffuse *
                max(0.0f, directionalLights[i].intensity) * ndl * visibility;
     }
@@ -265,7 +271,7 @@ static inline float3 evaluateDirectLights(
             continue;
 
         float3 L = toLight / dist;
-        float ndl = max(0.0f, dot(n, L));
+        float ndl = giNdotL(n, L);
         if (ndl <= 0.0f)
             continue;
 
@@ -274,7 +280,8 @@ static inline float3 evaluateDirectLights(
                            pointLights[i].quadratic * dist * dist,
                        1e-4f);
         float fade = 1.0f - smoothstep(radius * 0.9f, radius, dist);
-        float visibility = shadowVisibility(start, L, max(dist - bias * 2.0f, 0.001f),
+        float visibility = shadowVisibility(posWS + L * bias, L,
+                                            max(dist - bias * 2.0f, 0.001f),
                                             tris, triCount);
 
         sum += pointLights[i].diffuse * max(0.0f, pointLights[i].intensity) *
@@ -289,7 +296,7 @@ static inline float3 evaluateDirectLights(
             continue;
 
         float3 L = toLight / dist;
-        float ndl = max(0.0f, dot(n, L));
+        float ndl = giNdotL(n, L);
         if (ndl <= 0.0f)
             continue;
 
@@ -306,7 +313,8 @@ static inline float3 evaluateDirectLights(
         float attenuation =
             1.0f / ((1.0f + (dist / range)) + ((dist * dist) / (range * range)));
         float fade = 1.0f - smoothstep(range * 0.9f, range, dist);
-        float visibility = shadowVisibility(start, L, max(dist - bias * 2.0f, 0.001f),
+        float visibility = shadowVisibility(posWS + L * bias, L,
+                                            max(dist - bias * 2.0f, 0.001f),
                                             tris, triCount);
 
         sum += spotLights[i].diffuse * max(0.0f, spotLights[i].intensity) * cone *
@@ -331,7 +339,7 @@ static inline float3 evaluateDirectLights(
             continue;
 
         float3 L = Lvec / dist;
-        float ndl = max(0.0f, dot(n, L));
+        float ndl = giNdotL(n, L);
         if (ndl <= 0.0f)
             continue;
 
@@ -346,7 +354,8 @@ static inline float3 evaluateDirectLights(
         float attenuation =
             1.0f / ((1.0f + (dist / range)) + ((dist * dist) / (range * range)));
         float fade = 1.0f - smoothstep(range * 0.9f, range, dist);
-        float visibility = shadowVisibility(start, L, max(dist - bias * 2.0f, 0.001f),
+        float visibility = shadowVisibility(posWS + L * bias, L,
+                                            max(dist - bias * 2.0f, 0.001f),
                                             tris, triCount);
 
         sum += areaLights[i].diffuse * max(0.0f, areaLights[i].intensity) *
@@ -488,7 +497,9 @@ kernel void main0(device float4 *probeRadianceOut [[buffer(0)]],
                 directionalLights, sc.directionalLightCount, pointLights,
                 sc.pointLightCount, spotLights, sc.spotLightCount, areaLights,
                 sc.areaLightCount);
-            radiance += direct2 * albedo2 * albedo * 1.5f;
+            radiance += direct2 * albedo2 * albedo * 1.6f;
+        } else {
+            radiance += sampleSky(bounceDir) * albedo * 0.08f;
         }
     }
 
