@@ -323,8 +323,27 @@ void Window::deferredRendering(
             ddgiSystem->init();
         }
 
-        ddgiSystem->updateProbeLayout();
-        ddgiSystem->render(commandBuffer);
+        static int ddgiLayoutCountdown = 0;
+        static int ddgiRenderCountdown = 0;
+        const int ddgiLayoutInterval = 12;
+        const int ddgiRenderInterval = 3;
+
+        bool needImmediateLayout =
+            ddgiSystem->probeRadianceBuffer == nullptr ||
+            ddgiSystem->probeSpace == nullptr;
+        if (needImmediateLayout || ddgiLayoutCountdown <= 0) {
+            ddgiSystem->updateProbeLayout();
+            ddgiLayoutCountdown = ddgiLayoutInterval - 1;
+        } else {
+            ddgiLayoutCountdown--;
+        }
+
+        if (ddgiRenderCountdown <= 0) {
+            ddgiSystem->render(commandBuffer);
+            ddgiRenderCountdown = ddgiRenderInterval - 1;
+        } else {
+            ddgiRenderCountdown--;
+        }
     }
 #endif
 

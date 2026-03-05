@@ -254,10 +254,8 @@ static inline float3 evaluateDirectLights(
         if (ndl <= 0.0f)
             continue;
 
-        float visibility =
-            shadowVisibility(posWS + L * bias, L, maxDistance, tris, triCount);
         sum += directionalLights[i].diffuse *
-               max(0.0f, directionalLights[i].intensity) * ndl * visibility;
+               max(0.0f, directionalLights[i].intensity) * ndl;
     }
 
     for (uint i = 0; i < pointLightCount; i++) {
@@ -277,12 +275,8 @@ static inline float3 evaluateDirectLights(
                            pointLights[i].quadratic * dist * dist,
                        1e-4f);
         float fade = 1.0f - smoothstep(radius * 0.9f, radius, dist);
-        float visibility = shadowVisibility(posWS + L * bias, L,
-                                            max(dist - bias * 2.0f, 0.001f),
-                                            tris, triCount);
-
         sum += pointLights[i].diffuse * max(0.0f, pointLights[i].intensity) *
-               attenuation * fade * ndl * visibility;
+               attenuation * fade * ndl;
     }
 
     for (uint i = 0; i < spotLightCount; i++) {
@@ -310,12 +304,8 @@ static inline float3 evaluateDirectLights(
         float attenuation =
             1.0f / ((1.0f + (dist / range)) + ((dist * dist) / (range * range)));
         float fade = 1.0f - smoothstep(range * 0.9f, range, dist);
-        float visibility = shadowVisibility(posWS + L * bias, L,
-                                            max(dist - bias * 2.0f, 0.001f),
-                                            tris, triCount);
-
         sum += spotLights[i].diffuse * max(0.0f, spotLights[i].intensity) * cone *
-               attenuation * fade * ndl * visibility;
+               attenuation * fade * ndl;
     }
 
     for (uint i = 0; i < areaLightCount; i++) {
@@ -351,12 +341,8 @@ static inline float3 evaluateDirectLights(
         float attenuation =
             1.0f / ((1.0f + (dist / range)) + ((dist * dist) / (range * range)));
         float fade = 1.0f - smoothstep(range * 0.9f, range, dist);
-        float visibility = shadowVisibility(posWS + L * bias, L,
-                                            max(dist - bias * 2.0f, 0.001f),
-                                            tris, triCount);
-
         sum += areaLights[i].diffuse * max(0.0f, areaLights[i].intensity) *
-               facing * attenuation * fade * ndl * visibility;
+               facing * attenuation * fade * ndl;
     }
 
     return sum;
@@ -428,7 +414,7 @@ kernel void main0(device float4 *probeRadianceOut [[buffer(0)]],
     float3 ro = probePos + rayDir * bias;
     Hit h;
     float selfHitThreshold = bias * 4.0f;
-    for (uint escapeStep = 0u; escapeStep < 3u; escapeStep++) {
+    for (uint escapeStep = 0u; escapeStep < 1u; escapeStep++) {
         h = traceScene(ro, rayDir, tris, sc.triCount);
         if (!h.hit || h.t >= selfHitThreshold) {
             break;
@@ -465,39 +451,6 @@ kernel void main0(device float4 *probeRadianceOut [[buffer(0)]],
 
         radiance = direct * albedo * 0.6f;
 
-        uint state = tid * 9781u + rt.frameIndex * 6971u + 1u;
-        float3 t2;
-        float3 b2;
-        buildBasis(hitNormal, t2, b2);
-        float3 local2 = sampleCosineHemisphere(state);
-        float3 bounceDir =
-            safeNormalize(t2 * local2.x + hitNormal * local2.y +
-                              b2 * local2.z,
-                          hitNormal);
-        float3 ro2 = hitPos + hitNormal * bias;
-        Hit h2 = traceScene(ro2, bounceDir, tris, sc.triCount);
-        if (h2.hit && h2.t <= maxDistance) {
-            float3 hitPos2 = ro2 + bounceDir * h2.t;
-            float3 hitNormal2 =
-                safeNormalize(h2.n, float3(0.0f, 1.0f, 0.0f));
-            if (dot(hitNormal2, -bounceDir) < 0.0f) {
-                hitNormal2 = -hitNormal2;
-            }
-            float3 albedo2 = float3(0.7f);
-            if (h2.materialID >= 0 && (uint)h2.materialID < sc.materialCount) {
-                albedo2 =
-                    clamp(materials[h2.materialID].albedo, float3(0.0f),
-                          float3(1.0f));
-            }
-            float3 direct2 = evaluateDirectLights(
-                hitPos2, hitNormal2, bias, maxDistance, tris, sc.triCount,
-                directionalLights, sc.directionalLightCount, pointLights,
-                sc.pointLightCount, spotLights, sc.spotLightCount, areaLights,
-                sc.areaLightCount);
-            radiance += direct2 * albedo2 * albedo * 0.55f;
-        } else {
-            radiance += sampleSky(bounceDir) * albedo * 0.01f;
-        }
     }
 
     probeRadianceOut[tid] = float4(radiance, h.hit ? h.t : -1.0f);

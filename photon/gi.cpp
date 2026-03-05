@@ -246,7 +246,7 @@ void photon::GlobalIllumination::updateProbeLayout() {
                             opal::TextureDataFormat::Rgba, TextureType::Color));
     }
 
-    int effectiveRaysPerProbe = std::max(1, raysPerProbe);
+    int effectiveRaysPerProbe = std::max(1, raysPerProbe / 2);
     if (probeRadianceBuffer == nullptr ||
         probeRadianceCapacity != totalProbeCount * effectiveRaysPerProbe) {
         int totalElements = totalProbeCount * effectiveRaysPerProbe;
@@ -275,8 +275,9 @@ void photon::GlobalIllumination::render(
 
     const uint totalProbes =
         static_cast<uint>(std::max(1, this->probeSpace->totalProbes()));
-    const uint effectiveRays =
+    const uint requestedRays =
         static_cast<uint>(std::max(1, this->raysPerProbe));
+    const uint effectiveRays = std::max(1u, requestedRays / 2u);
     const uint totalRays = totalProbes * effectiveRays;
 
     if (irradianceMap->id == 0) {
@@ -302,9 +303,13 @@ void photon::GlobalIllumination::render(
     std::vector<GPUAreaLight> areaLights;
 
     if (scene != nullptr) {
+        constexpr size_t maxDirectionalGI = 2;
+        constexpr size_t maxPointGI = 4;
+        constexpr size_t maxSpotGI = 2;
+        constexpr size_t maxAreaGI = 2;
         const auto &sceneDirectionalLights = scene->getDirectionalLights();
         directionalLights.reserve(
-            std::min<size_t>(sceneDirectionalLights.size(), 64));
+            std::min<size_t>(sceneDirectionalLights.size(), maxDirectionalGI));
         for (auto *light : sceneDirectionalLights) {
             if (light == nullptr) {
                 continue;
@@ -317,13 +322,13 @@ void photon::GlobalIllumination::render(
                                      light->shineColor.b);
             gpu.intensity = light->intensity;
             directionalLights.push_back(gpu);
-            if (directionalLights.size() >= 64) {
+            if (directionalLights.size() >= maxDirectionalGI) {
                 break;
             }
         }
 
         const auto &scenePointLights = scene->getPointLights();
-        pointLights.reserve(std::min<size_t>(scenePointLights.size(), 64));
+        pointLights.reserve(std::min<size_t>(scenePointLights.size(), maxPointGI));
         for (auto *light : scenePointLights) {
             if (light == nullptr) {
                 continue;
@@ -341,13 +346,13 @@ void photon::GlobalIllumination::render(
             gpu.quadratic = plc.quadratic;
             gpu.radius = plc.radius;
             pointLights.push_back(gpu);
-            if (pointLights.size() >= 64) {
+            if (pointLights.size() >= maxPointGI) {
                 break;
             }
         }
 
         const auto &sceneSpotLights = scene->getSpotlights();
-        spotLights.reserve(std::min<size_t>(sceneSpotLights.size(), 64));
+        spotLights.reserve(std::min<size_t>(sceneSpotLights.size(), maxSpotGI));
         for (auto *light : sceneSpotLights) {
             if (light == nullptr) {
                 continue;
@@ -364,13 +369,13 @@ void photon::GlobalIllumination::render(
             gpu.specular = glm::vec3(light->shineColor.r, light->shineColor.g,
                                      light->shineColor.b);
             spotLights.push_back(gpu);
-            if (spotLights.size() >= 64) {
+            if (spotLights.size() >= maxSpotGI) {
                 break;
             }
         }
 
         const auto &sceneAreaLights = scene->getAreaLights();
-        areaLights.reserve(std::min<size_t>(sceneAreaLights.size(), 64));
+        areaLights.reserve(std::min<size_t>(sceneAreaLights.size(), maxAreaGI));
         for (auto *light : sceneAreaLights) {
             if (light == nullptr) {
                 continue;
@@ -390,7 +395,7 @@ void photon::GlobalIllumination::render(
             gpu.intensity = light->intensity;
             gpu.range = light->range;
             areaLights.push_back(gpu);
-            if (areaLights.size() >= 64) {
+            if (areaLights.size() >= maxAreaGI) {
                 break;
             }
         }
@@ -484,7 +489,8 @@ void photon::GlobalIllumination::render(
         static_cast<float>(probeSpace->probesPerRow),
         static_cast<float>(probeSpace->totalProbes()));
 
-    giRaytracingPipeline->setUniform1i("rt.raysPerProbe", this->raysPerProbe);
+    giRaytracingPipeline->setUniform1i("rt.raysPerProbe",
+                                       static_cast<int>(effectiveRays));
     giRaytracingPipeline->setUniform1f("rt.maxRayDistance",
                                        this->maxRayDistance);
     giRaytracingPipeline->setUniform1f("rt.normalBias", this->normalBias);
@@ -520,7 +526,8 @@ void photon::GlobalIllumination::render(
                              static_cast<float>(probeSpace->probesPerRow),
                              static_cast<float>(probeSpace->totalProbes()));
 
-    giPipeline->setUniform1i("rt.raysPerProbe", this->raysPerProbe);
+    giPipeline->setUniform1i("rt.raysPerProbe",
+                             static_cast<int>(effectiveRays));
     giPipeline->setUniform1f("rt.maxRayDistance", this->maxRayDistance);
     giPipeline->setUniform1f("rt.normalBias", this->normalBias);
     giPipeline->setUniform1f("rt.hysteresis", this->hysteresis);

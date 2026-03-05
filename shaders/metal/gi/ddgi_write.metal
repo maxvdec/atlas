@@ -105,6 +105,8 @@ kernel void main0(texture2d<float, access::write> outTexture [[texture(0)]],
 
     uint raysPerProbe = max(rt.raysPerProbe, 1u);
     uint baseOffset = probeIndex * raysPerProbe;
+    uint rayStep = (raysPerProbe >= 128u) ? 2u : 1u;
+    uint sampledRayCount = 0u;
 
     float3 sum = float3(0.0f);
     float weightSum = 0.0f;
@@ -115,7 +117,8 @@ kernel void main0(texture2d<float, access::write> outTexture [[texture(0)]],
     float nearHitThreshold =
         max(max(rt.normalBias * 1.2f, spacingScale * 0.015f), 0.0008f);
 
-    for (uint r = 0; r < raysPerProbe; r++) {
+    for (uint r = 0; r < raysPerProbe; r += rayStep) {
+        sampledRayCount++;
         float4 raySample = probeRadiance[baseOffset + r];
         float hitDistance = raySample.w;
         if (hitDistance > 0.0f && hitDistance < nearHitThreshold) {
@@ -125,7 +128,7 @@ kernel void main0(texture2d<float, access::write> outTexture [[texture(0)]],
         }
 
         float3 rayDir = sphericalFibonacci(r, raysPerProbe, rt.frameIndex);
-        float w = sqrt(max(0.0f, dot(texelDir, rayDir)));
+        float w = max(0.0f, dot(texelDir, rayDir));
         if (w > 1e-6f) {
             float3 rad = raySample.xyz;
             if (all(isfinite(rad))) {
@@ -139,8 +142,9 @@ kernel void main0(texture2d<float, access::write> outTexture [[texture(0)]],
     }
 
     float3 irradiance = float3(0.0f);
+    float invRayCount = 1.0f / float(max(sampledRayCount, 1u));
     if (weightSum > 1e-6f) {
-        irradiance = sum * (FOUR_PI / float(raysPerProbe));
+        irradiance = sum * (FOUR_PI * invRayCount);
     }
 
     if (!all(isfinite(irradiance))) {
@@ -151,8 +155,8 @@ kernel void main0(texture2d<float, access::write> outTexture [[texture(0)]],
     float3 prevValue = all(isfinite(prev.xyz)) ? prev.xyz : float3(0.0f);
     float prevValidity = isfinite(prev.w) ? clamp(prev.w, 0.0f, 1.0f) : 1.0f;
 
-    float nearFraction = nearHitCount / float(raysPerProbe);
-    float missFraction = missCount / float(raysPerProbe);
+    float nearFraction = nearHitCount * invRayCount;
+    float missFraction = missCount * invRayCount;
     float nearPenalty = smoothstep(0.82f, 0.995f, nearFraction);
     float missPenalty = smoothstep(0.95f, 1.0f, missFraction);
     float probeValidity = (1.0f - nearPenalty) * (1.0f - missPenalty);

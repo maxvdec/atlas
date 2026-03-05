@@ -347,10 +347,8 @@ static inline float3 evaluateDirectLights(
         if (ndl <= 0.0f)
             continue;
 
-        float visibility =
-            shadowVisibility(posWS + L * bias, L, maxDistance, tris, triCount);
         sum += directionalLights[i].diffuse *
-               max(0.0f, directionalLights[i].intensity) * ndl * visibility;
+               max(0.0f, directionalLights[i].intensity) * ndl;
     }
 
     for (uint i = 0; i < pointLightCount; i++) {
@@ -370,12 +368,8 @@ static inline float3 evaluateDirectLights(
                            pointLights[i].quadratic * dist * dist,
                        1e-4f);
         float fade = 1.0f - smoothstep(radius * 0.9f, radius, dist);
-        float visibility = shadowVisibility(posWS + L * bias, L,
-                                            max(dist - bias * 2.0f, 0.001f),
-                                            tris, triCount);
-
         sum += pointLights[i].diffuse * max(0.0f, pointLights[i].intensity) *
-               attenuation * fade * ndl * visibility;
+               attenuation * fade * ndl;
     }
 
     for (uint i = 0; i < spotLightCount; i++) {
@@ -403,12 +397,8 @@ static inline float3 evaluateDirectLights(
         float attenuation =
             1.0f / ((1.0f + (dist / range)) + ((dist * dist) / (range * range)));
         float fade = 1.0f - smoothstep(range * 0.9f, range, dist);
-        float visibility = shadowVisibility(posWS + L * bias, L,
-                                            max(dist - bias * 2.0f, 0.001f),
-                                            tris, triCount);
-
         sum += spotLights[i].diffuse * max(0.0f, spotLights[i].intensity) * cone *
-               attenuation * fade * ndl * visibility;
+               attenuation * fade * ndl;
     }
 
     for (uint i = 0; i < areaLightCount; i++) {
@@ -444,12 +434,8 @@ static inline float3 evaluateDirectLights(
         float attenuation =
             1.0f / ((1.0f + (dist / range)) + ((dist * dist) / (range * range)));
         float fade = 1.0f - smoothstep(range * 0.9f, range, dist);
-        float visibility = shadowVisibility(posWS + L * bias, L,
-                                            max(dist - bias * 2.0f, 0.001f),
-                                            tris, triCount);
-
         sum += areaLights[i].diffuse * max(0.0f, areaLights[i].intensity) *
-               facing * attenuation * fade * ndl * visibility;
+               facing * attenuation * fade * ndl;
     }
 
     return sum;
@@ -521,7 +507,7 @@ kernel void main0(device float4 *probeRadianceOut [[buffer(0)]],
     float3 ro = probePos + rayDir * bias;
     Hit h;
     float selfHitThreshold = bias * 4.0f;
-    for (uint escapeStep = 0u; escapeStep < 3u; escapeStep++) {
+    for (uint escapeStep = 0u; escapeStep < 1u; escapeStep++) {
         h = traceScene(ro, rayDir, tris, sc.triCount);
         if (!h.hit || h.t >= selfHitThreshold) {
             break;
@@ -558,39 +544,6 @@ kernel void main0(device float4 *probeRadianceOut [[buffer(0)]],
 
         radiance = direct * albedo * 0.6f;
 
-        uint state = tid * 9781u + rt.frameIndex * 6971u + 1u;
-        float3 t2;
-        float3 b2;
-        buildBasis(hitNormal, t2, b2);
-        float3 local2 = sampleCosineHemisphere(state);
-        float3 bounceDir =
-            safeNormalize(t2 * local2.x + hitNormal * local2.y +
-                              b2 * local2.z,
-                          hitNormal);
-        float3 ro2 = hitPos + hitNormal * bias;
-        Hit h2 = traceScene(ro2, bounceDir, tris, sc.triCount);
-        if (h2.hit && h2.t <= maxDistance) {
-            float3 hitPos2 = ro2 + bounceDir * h2.t;
-            float3 hitNormal2 =
-                safeNormalize(h2.n, float3(0.0f, 1.0f, 0.0f));
-            if (dot(hitNormal2, -bounceDir) < 0.0f) {
-                hitNormal2 = -hitNormal2;
-            }
-            float3 albedo2 = float3(0.7f);
-            if (h2.materialID >= 0 && (uint)h2.materialID < sc.materialCount) {
-                albedo2 =
-                    clamp(materials[h2.materialID].albedo, float3(0.0f),
-                          float3(1.0f));
-            }
-            float3 direct2 = evaluateDirectLights(
-                hitPos2, hitNormal2, bias, maxDistance, tris, sc.triCount,
-                directionalLights, sc.directionalLightCount, pointLights,
-                sc.pointLightCount, spotLights, sc.spotLightCount, areaLights,
-                sc.areaLightCount);
-            radiance += direct2 * albedo2 * albedo * 0.55f;
-        } else {
-            radiance += sampleSky(bounceDir) * albedo * 0.01f;
-        }
     }
 
     probeRadianceOut[tid] = float4(radiance, h.hit ? h.t : -1.0f);
@@ -706,6 +659,8 @@ kernel void main0(texture2d<float, access::write> outTexture [[texture(0)]],
 
     uint raysPerProbe = max(rt.raysPerProbe, 1u);
     uint baseOffset = probeIndex * raysPerProbe;
+    uint rayStep = (raysPerProbe >= 128u) ? 2u : 1u;
+    uint sampledRayCount = 0u;
 
     float3 sum = float3(0.0f);
     float weightSum = 0.0f;
@@ -716,7 +671,8 @@ kernel void main0(texture2d<float, access::write> outTexture [[texture(0)]],
     float nearHitThreshold =
         max(max(rt.normalBias * 1.2f, spacingScale * 0.015f), 0.0008f);
 
-    for (uint r = 0; r < raysPerProbe; r++) {
+    for (uint r = 0; r < raysPerProbe; r += rayStep) {
+        sampledRayCount++;
         float4 raySample = probeRadiance[baseOffset + r];
         float hitDistance = raySample.w;
         if (hitDistance > 0.0f && hitDistance < nearHitThreshold) {
@@ -726,7 +682,7 @@ kernel void main0(texture2d<float, access::write> outTexture [[texture(0)]],
         }
 
         float3 rayDir = sphericalFibonacci(r, raysPerProbe, rt.frameIndex);
-        float w = sqrt(max(0.0f, dot(texelDir, rayDir)));
+        float w = max(0.0f, dot(texelDir, rayDir));
         if (w > 1e-6f) {
             float3 rad = raySample.xyz;
             if (all(isfinite(rad))) {
@@ -740,8 +696,9 @@ kernel void main0(texture2d<float, access::write> outTexture [[texture(0)]],
     }
 
     float3 irradiance = float3(0.0f);
+    float invRayCount = 1.0f / float(max(sampledRayCount, 1u));
     if (weightSum > 1e-6f) {
-        irradiance = sum * (FOUR_PI / float(raysPerProbe));
+        irradiance = sum * (FOUR_PI * invRayCount);
     }
 
     if (!all(isfinite(irradiance))) {
@@ -752,8 +709,8 @@ kernel void main0(texture2d<float, access::write> outTexture [[texture(0)]],
     float3 prevValue = all(isfinite(prev.xyz)) ? prev.xyz : float3(0.0f);
     float prevValidity = isfinite(prev.w) ? clamp(prev.w, 0.0f, 1.0f) : 1.0f;
 
-    float nearFraction = nearHitCount / float(raysPerProbe);
-    float missFraction = missCount / float(raysPerProbe);
+    float nearFraction = nearHitCount * invRayCount;
+    float missFraction = missCount * invRayCount;
     float nearPenalty = smoothstep(0.82f, 0.995f, nearFraction);
     float missPenalty = smoothstep(0.95f, 1.0f, missFraction);
     float probeValidity = (1.0f - nearPenalty) * (1.0f - missPenalty);
@@ -3315,7 +3272,7 @@ static inline __attribute__((always_inline)) float calculatePointShadow(
     float shadow = 0.0;
     float diskRadius = (1.0 + (currentDepth / shadowParam.farPlane)) *
                        0.0500000007450580596923828125;
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < 10; i++) {
         float3 sampleDir =
             fast::normalize(fragToLight + (_861[i] * diskRadius));
         int param_1 = shadowParam.textureIndex;
@@ -3331,7 +3288,7 @@ static inline __attribute__((always_inline)) float calculatePointShadow(
             shadow += 1.0;
         }
     }
-    shadow /= 20.0;
+    shadow /= 10.0;
     return shadow;
 }
 
@@ -3459,8 +3416,9 @@ static inline __attribute__((always_inline)) float calculateShadow(
             isAreaShadow ? 4.199999809265137 : 3.0, distFactor) *
         resFactor;
     float2 filterRadius = texelSize * texelRadius;
+    int kernelSamples = isAreaShadow ? 6 : 8;
     int sampleCount = 0;
-    for (int i = 0; i < 12; i++) {
+    for (int i = 0; i < kernelSamples; i++) {
         float2 offset = _660[i] * filterRadius;
         float2 uv = projCoords.xy + offset;
         bool _676 = uv.x < 0.0;

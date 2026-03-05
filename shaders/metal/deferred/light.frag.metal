@@ -435,7 +435,7 @@ static inline __attribute__((always_inline)) float calculatePointShadow(
     float shadow = 0.0;
     float diskRadius = (1.0 + (currentDepth / shadowParam.farPlane)) *
                        0.0500000007450580596923828125;
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < 10; i++) {
         float3 sampleDir =
             fast::normalize(fragToLight + (_861[i] * diskRadius));
         int param_1 = shadowParam.textureIndex;
@@ -451,7 +451,7 @@ static inline __attribute__((always_inline)) float calculatePointShadow(
             shadow += 1.0;
         }
     }
-    shadow /= 20.0;
+    shadow /= 10.0;
     return shadow;
 }
 
@@ -579,8 +579,9 @@ static inline __attribute__((always_inline)) float calculateShadow(
             isAreaShadow ? 4.199999809265137 : 3.0, distFactor) *
         resFactor;
     float2 filterRadius = texelSize * texelRadius;
+    int kernelSamples = isAreaShadow ? 6 : 8;
     int sampleCount = 0;
-    for (int i = 0; i < 12; i++) {
+    for (int i = 0; i < kernelSamples; i++) {
         float2 offset = _660[i] * filterRadius;
         float2 uv = projCoords.xy + offset;
         bool _676 = uv.x < 0.0;
