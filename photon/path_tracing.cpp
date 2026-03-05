@@ -25,9 +25,10 @@ void photon::PathTracing::init() {
     pathTracingPipeline->setComputeThreadgroupSize(8, 8, 1);
     pathTracingPipeline->build();
 
-    pathTracingTexture = std::make_shared<Texture>(
-        Texture::create(800, 600, opal::TextureFormat::Rgba16F,
-                        opal::TextureDataFormat::Rgba, TextureType::Color));
+    pathTracingTexture = std::make_shared<Texture>(Texture::create(
+        Window::mainWindow->viewportWidth, Window::mainWindow->viewportHeight,
+        opal::TextureFormat::Rgba16F, opal::TextureDataFormat::Rgba,
+        TextureType::Color));
 }
 
 void photon::PathTracing::buildAccelerationStructure(
@@ -72,9 +73,22 @@ void photon::PathTracing::buildAccelerationStructure(
 
 void photon::PathTracing::render(
     const std::shared_ptr<opal::CommandBuffer> &commandBuffer) {
+
+    auto view = Window::mainWindow->getCamera()->calculateViewMatrix();
+    auto proj = Window::mainWindow->calculateProjectionMatrix();
+
+    auto invViewProj = glm::inverse(proj * view);
+
+    pathTracingPipeline->setUniformMat4f("cam.invViewProj", invViewProj);
+    pathTracingPipeline->setUniform3f(
+        "cam.camPos", Window::mainWindow->getCamera()->position.x,
+        Window::mainWindow->getCamera()->position.y,
+        Window::mainWindow->getCamera()->position.z);
+
     this->buildAccelerationStructure(commandBuffer);
     commandBuffer->bindPipeline(this->pathTracingPipeline);
     pathTracingPipeline->bindTexture("outTex", pathTracingTexture->texture, 0);
     commandBuffer->bindAccelerationStructure(this->sceneBLAS, 0);
-    commandBuffer->dispatch((800 + 7) / 8, (600 + 7) / 8, 1);
+    commandBuffer->dispatch(Window::mainWindow->viewportWidth,
+                            Window::mainWindow->viewportHeight, 1);
 }

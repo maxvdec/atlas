@@ -5840,51 +5840,52 @@ vertex main0_out main0(main0_in in [[stage_in]], constant UniformBufferObject& _
 ;
 
 static const char* PATH =
-R"(/*
- path.metal
- As part of the Atlas project
- Created by Max Van den Eynde in 2026
- --------------------------------------------------
- Description: Path Tracing shader for rendering scenes
- Copyright (c) 2026 Max Van den Eynde
-*/
-
-#include <metal_stdlib>
+R"(#include <metal_stdlib>
 #include <metal_raytracing>
-
 using namespace metal;
 using namespace raytracing;
 
-struct Ray {
-    float3 origin;
-    float3 dir;
+struct CameraUniforms {
+    float4x4 invViewProj;
+    float3 camPos;
+    float _pad0;
 };
 
 kernel void main0(texture2d<float, access::write> outTex [[texture(0)]],
                   acceleration_structure<> sceneAS [[buffer(0)]],
+                  constant CameraUniforms &cam [[buffer(1)]],
                   uint2 gid [[thread_position_in_grid]]) {
-    if (gid.x >= outTex.get_width() || gid.y >= outTex.get_height())
+    uint w = outTex.get_width();
+    uint h = outTex.get_height();
+    if (gid.x >= w || gid.y >= h)
         return;
 
-    float2 uv =
-        (float2(gid) + 0.5f) / float2(outTex.get_width(), outTex.get_height());
-    float3 rayOrigin = float3(0.0f, 0.0f, 2.0f);
-    float3 rd = normalize(float3(uv * 2.0 - 1.0, -1.0));
+    float2 uv = (float2(gid) + 0.5) / float2(w, h);
+    float2 ndc = uv * 2.0 - 1.0;
+    ndc.y = -ndc.y;
+
+    float4 clip = float4(ndc, 1.0, 1.0);
+
+    float4 worldH = cam.invViewProj * clip;
+    float3 worldP = worldH.xyz / worldH.w;
+
+    float3 ro = cam.camPos;
+    float3 rd = normalize(worldP - ro);
 
     intersector<triangle_data> isect;
     isect.assume_geometry_type(geometry_type::triangle);
 
     ray r;
-    r.origin = rayOrigin;
+    r.origin = ro;
     r.direction = rd;
-    r.min_distance = 0.001f;
+    r.min_distance = 0.001;
     r.max_distance = 1.0e30;
 
-    intersection_result<triangle_data> hit = isect.intersect(r, sceneAS);
+    auto hit = isect.intersect(r, sceneAS);
 
-    float4 color = hit.type != intersection_type::none ? float4(1, 0, 0, 1)
-                                                       : float4(0, 0, 0, 1);
-    outTex.write(color, gid);
+    outTex.write(hit.type != intersection_type::none ? float4(1, 0, 0, 1)
+                                                     : float4(0, 0, 0, 1),
+                 gid);
 }
 )"
 ;
