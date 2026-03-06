@@ -490,6 +490,16 @@ void Window::run() {
 
             if (this->usePathTracing) {
                 pathTracer->render(commandBuffer);
+                // Copy to the current target
+                pathTracer->copySrcFramebuffer->attachTexture(
+                    pathTracer->pathTracingTexture->texture, 0);
+                pathTracer->copyDstFramebuffer->attachTexture(
+                    target->texture.texture, 0);
+                auto copy = opal::ResolveAction::createForColorAttachment(
+                    pathTracer->copySrcFramebuffer,
+                    pathTracer->copyDstFramebuffer, 0);
+                commandBuffer->performResolve(copy);
+
                 continue;
             }
 

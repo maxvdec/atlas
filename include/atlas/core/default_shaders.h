@@ -6002,19 +6002,6 @@ bool isOccluded(intersector<triangle_data, instancing> isect,
     return shadowHit.type != intersection_type::none;
 }
 
-bool isOccludedToPoint(intersector<triangle_data, instancing> isect,
-                       instance_acceleration_structure sceneAS, float3 P,
-                       float3 N, float3 target) {
-    float3 toTarget = target - P;
-    float dist2 = max(dot(toTarget, toTarget), 1e-6);
-    float dist = sqrt(dist2);
-    if (dist <= 0.001) {
-        return false;
-    }
-    float3 L = toTarget / dist;
-    return isOccluded(isect, sceneAS, P, N, L, dist - 0.001);
-}
-
 bool isOccludedDirectionalLight(DirectionalLightData light, float3 P, float3 N,
                                 intersector<triangle_data, instancing> isect,
                                 instance_acceleration_structure sceneAS) {
@@ -6025,19 +6012,31 @@ bool isOccludedDirectionalLight(DirectionalLightData light, float3 P, float3 N,
 bool isOccludedPointLight(PointLight light, float3 P, float3 N,
                           intersector<triangle_data, instancing> isect,
                           instance_acceleration_structure sceneAS) {
-    return isOccludedToPoint(isect, sceneAS, P, N, light.position);
+    float3 toLight = light.position - P;
+    float dist2 = max(dot(toLight, toLight), 0.001);
+    float dist = sqrt(dist2);
+    float3 L = toLight / dist;
+    return isOccluded(isect, sceneAS, P, N, L, dist - 0.001);
 }
 
 bool isOccludedSpotLight(SpotLight light, float3 P, float3 N,
                          intersector<triangle_data, instancing> isect,
                          instance_acceleration_structure sceneAS) {
-    return isOccludedToPoint(isect, sceneAS, P, N, light.position);
+    float3 toLight = light.position - P;
+    float dist2 = max(dot(toLight, toLight), 1e-4);
+    float dist = sqrt(dist2);
+    float3 L = toLight / dist;
+    return isOccluded(isect, sceneAS, P, N, L, dist - 0.001);
 }
 
 bool isOccludedAreaLight(AreaLight light, float3 P, float3 N,
                          intersector<triangle_data, instancing> isect,
                          instance_acceleration_structure sceneAS) {
-    return isOccludedToPoint(isect, sceneAS, P, N, light.position);
+    float3 toLight = light.position - P;
+    float dist2 = max(dot(toLight, toLight), 1e-4);
+    float dist = sqrt(dist2);
+    float3 L = toLight / dist;
+    return isOccluded(isect, sceneAS, P, N, L, dist - 0.001);
 }
 
 // ---------------------------------------------------------------------------
@@ -6207,44 +6206,30 @@ float3 evalDirectLightingPBR(intersector<triangle_data, instancing> isect,
 
     // Area lights
     for (uint i = 0; i < sceneData.numAreaLights; ++i) {
+        float3 toLight = areaLights[i].position - P;
+        float dist = max(length(toLight), 1e-4);
+        float3 L = toLight / dist;
         float3 lightNorm =
             normalize(cross(areaLights[i].right, areaLights[i].up));
+        float cosLight = areaLights[i].twoSided > 0.5
+                             ? abs(dot(lightNorm, -L))
+                             : max(dot(lightNorm, -L), 0.0);
         float area = 4.0 * areaLights[i].halfWidth * areaLights[i].halfHeight;
-        const float sampleCount = 4.0;
-        for (uint sy = 0; sy < 2; ++sy) {
-            for (uint sx = 0; sx < 2; ++sx) {
-                float u = ((float(sx) + 0.5) * 0.5) * 2.0 - 1.0;
-                float v = ((float(sy) + 0.5) * 0.5) * 2.0 - 1.0;
-                float3 samplePos =
-                    areaLights[i].position +
-                    areaLights[i].right * (u * areaLights[i].halfWidth) +
-                    areaLights[i].up * (v * areaLights[i].halfHeight);
-
-                float3 toLight = samplePos - P;
-                float distSq = max(dot(toLight, toLight), 1e-4);
-                float dist = sqrt(distSq);
-                float3 L = toLight / dist;
-
-                float cosLight = areaLights[i].twoSided > 0.5
-                                     ? abs(dot(lightNorm, -L))
-                                     : max(dot(lightNorm, -L), 0.0);
-                if (cosLight <= 0.0) {
-                    continue;
-                }
-                if (isOccludedToPoint(isect, sceneAS, P, N, samplePos)) {
-                    continue;
-                }
-
-                float atten = (cosLight * area) / max(distSq * sampleCount, 1e-4);
-                float intensity = max(areaLights[i].intensity, 0.0) * atten;
-                float3 c = evalPBR(albedo, metallic, roughness, N, V, L,
-                                   areaLights[i].color, intensity);
-                float3 s = evalSubsurface(albedo, N, V, L, areaLights[i].color,
-                                          intensity, roughness, sssStrength,
-                                          sssThickness);
-                float3 lightContribution = clampLuminance(c + s, 6.0);
-                lighting += lightContribution;
-            }
+        float minDist =
+            max(max(areaLights[i].halfWidth, areaLights[i].halfHeight) * 0.5,
+                0.15);
+        float distSq = dist * dist + minDist * minDist;
+        float atten = (cosLight * area) / max(distSq, 1e-4);
+        float intensity = max(areaLights[i].intensity, 0.0) * atten;
+        float3 c =
+            evalPBR(albedo, metallic, roughness, N, V, L, areaLights[i].color,
+                    intensity);
+        float3 s = evalSubsurface(albedo, N, V, L, areaLights[i].color,
+                                  intensity, roughness, sssStrength,
+                                  sssThickness);
+        if (!isOccludedAreaLight(areaLights[i], P, N, isect, sceneAS)) {
+            float3 lightContribution = clampLuminance(c + s, 8.0);
+            lighting += lightContribution;
         }
     }
 
@@ -6407,6 +6392,10 @@ float3 sampleRadiance(uint2 gid, uint sampleIndex, uint w,
             float bRoughness = clamp(bmat.roughness, 0.08, 1.0);
             float bMetallic = clamp(bmat.metallic, 0.0, 1.0);
             float bAo = clamp(bmat.ao, 0.0, 1.0);
+            float bEmissiveIntensity = clamp(bmat.emissiveIntensity, 0.0, 8.0);
+            float3 bEmissiveColor = float3(bmat.emissiveColor);
+            float3 bEmissive =
+                clampLuminance(bEmissiveColor * bEmissiveIntensity, 8.0);
             float bSssStrength =
                 clamp(1.0 - bmat.albedo.w, 0.0, 1.0) * (1.0 - bMetallic);
             float bSssThickness = mix(0.25, 1.75, bAo);
@@ -6417,7 +6406,7 @@ float3 sampleRadiance(uint2 gid, uint sampleIndex, uint w,
                 pointLights, spotLights, areaLights);
 
             float3 bAmbient = bmat.albedo.xyz * 0.04 * (1.0 - bMetallic) * bAo;
-            indirect = brdfWeight * (bAmbient + bounceDirect) *
+            indirect = brdfWeight * (bAmbient + bounceDirect + bEmissive) *
                        sceneData.indirectStrength;
         }
 

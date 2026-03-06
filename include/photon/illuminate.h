@@ -18,6 +18,8 @@
 #include <unordered_map>
 #include <utility>
 
+class Window;
+
 namespace photon {
 
 struct ProbeSpace {
@@ -62,6 +64,9 @@ class PathTracing {
     int maxBounces = 1;
     float indirectStrength = 0.55f;
 
+    std::shared_ptr<opal::Framebuffer> copySrcFramebuffer;
+    std::shared_ptr<opal::Framebuffer> copyDstFramebuffer;
+
   private:
     std::shared_ptr<opal::Buffer> pointLights;
     std::shared_ptr<opal::Buffer> spotLights;
@@ -79,11 +84,10 @@ class PathTracing {
                        std::shared_ptr<opal::PrimitiveAccelerationStructure>>
         objectBLAS;
 
-    std::shared_ptr<opal::Framebuffer> copySrcFramebuffer;
-    std::shared_ptr<opal::Framebuffer> copyDstFramebuffer;
-
     int frameIndex = 0;
     glm::mat4 cachedInvViewProj = glm::mat4(1.0f);
+
+    friend class Window;
 };
 
 class GlobalIllumination {

@@ -501,5 +501,7 @@ void photon::PathTracing::render(
     commandBuffer->dispatch(Window::mainWindow->viewportWidth,
                             Window::mainWindow->viewportHeight, 1);
 
+    commandBuffer->computeBarrier();
+
     frameIndex++;
 }
