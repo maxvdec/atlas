@@ -5927,10 +5927,31 @@ float3 lambert(float3 albedo, float3 N, float3 L, float3 lightColor,
     return albedo * lightColor * intensity * ndl;
 }
 
+bool isOccluded(intersector<triangle_data, instancing> isect,
+                instance_acceleration_structure sceneAS, float3 P, float3 N,
+                float3 L, float maxDistance) {
+    ray shadowRay;
+    shadowRay.origin = P + N * 0.001;
+    shadowRay.direction = L;
+    shadowRay.min_distance = 0.0;
+    shadowRay.max_distance = maxDistance;
+
+    auto shadowHit = isect.intersect(shadowRay, sceneAS, 0xFF);
+    return shadowHit.type != intersection_type::none;
+}
+
 float3 evalDirectionalLight(DirectionalLightData light, float3 P, float3 N,
                             float3 albedo) {
     float3 L = normalize(-light.direction);
     return lambert(albedo, N, L, light.color, max(light.intensity, 0.0));
+}
+
+bool isOccludedDirectionalLight(DirectionalLightData light, float3 P, float3 N,
+                                intersector<triangle_data, instancing> isect,
+                                instance_acceleration_structure sceneAS) {
+    float3 L = normalize(-light.direction);
+
+    return isOccluded(isect, sceneAS, P, N, L, 1e30);
 }
 
 float3 evalPointLight(PointLight light, float3 P, float3 N, float3 albedo) {
@@ -5947,6 +5968,17 @@ float3 evalPointLight(PointLight light, float3 P, float3 N, float3 albedo) {
 
     return albedo * light.color * light.intensity * NdotL * attenuation *
            rangeFade;
+}
+
+bool isOccludedPointLight(PointLight light, float3 P, float3 N,
+                          intersector<triangle_data, instancing> isect,
+                          instance_acceleration_structure sceneAS) {
+    float3 toLight = light.position - P;
+    float dist2 = max(dot(toLight, toLight), 0.001);
+    float dist = sqrt(dist2);
+    float3 L = toLight / dist;
+
+    return isOccluded(isect, sceneAS, P, N, L, dist - 0.001);
 }
 
 float3 evalSpotLight(SpotLight light, float3 P, float3 N, float3 albedo) {
@@ -5967,6 +5999,17 @@ float3 evalSpotLight(SpotLight light, float3 P, float3 N, float3 albedo) {
 
     return albedo * light.color * light.intensity * NdotL * attenuation *
            rangeFade * spotFactor;
+}
+
+bool isOccludedSpotLight(SpotLight light, float3 P, float3 N,
+                         intersector<triangle_data, instancing> isect,
+                         instance_acceleration_structure sceneAS) {
+    float3 toLight = light.position - P;
+    float dist2 = max(dot(toLight, toLight), 1e-4);
+    float dist = sqrt(dist2);
+    float3 L = toLight / dist;
+
+    return isOccluded(isect, sceneAS, P, N, L, dist - 0.001);
 }
 
 float3 evalAreaLight(AreaLight light, float3 P, float3 N, float3 albedo) {
@@ -5992,6 +6035,20 @@ float3 evalAreaLight(AreaLight light, float3 P, float3 N, float3 albedo) {
 
     return albedo * light.color * (light.intensity * 2) * NdotL * cosLight *
            area * attenuation;
+}
+
+bool isOccludedAreaLight(AreaLight light, float3 P, float3 N,
+                         intersector<triangle_data, instancing> isect,
+                         instance_acceleration_structure sceneAS) {
+    float3 lightNormal = normalize(cross(light.right, light.up));
+
+    float3 toLight = light.position - P;
+    float dist2 = max(dot(toLight, toLight), 1e-4);
+    float dist = sqrt(dist2);
+
+    float3 L = toLight / dist;
+
+    return isOccluded(isect, sceneAS, P, N, L, dist - 0.001);
 }
 
 kernel void main0(texture2d<float, access::write> outTex [[texture(0)]],
@@ -6072,19 +6129,47 @@ kernel void main0(texture2d<float, access::write> outTex [[texture(0)]],
         float3 lighting = float3(0.0);
 
         if (sceneData.numDirectionalLights > 0) {
-            lighting += evalDirectionalLight(dirLight, P, N, mat.albedo.xyz);
+            float3 contribution =
+                evalDirectionalLight(dirLight, P, N, mat.albedo.xyz);
+            bool blocking =
+                isOccludedDirectionalLight(dirLight, P, N, isect, sceneAS);
+            if (blocking) {
+                contribution = float3(0.0);
+            }
+            lighting += contribution;
         }
 
         for (uint i = 0; i < sceneData.numPointLights; ++i) {
-            lighting += evalPointLight(pointLights[i], P, N, mat.albedo.xyz);
+            float3 contribution =
+                evalPointLight(pointLights[i], P, N, mat.albedo.xyz);
+            bool blocking =
+                isOccludedPointLight(pointLights[i], P, N, isect, sceneAS);
+            if (blocking) {
+                contribution = float3(0.0);
+            }
+            lighting += contribution;
         }
 
         for (uint i = 0; i < sceneData.numSpotLights; ++i) {
-            lighting += evalSpotLight(spotLights[i], P, N, mat.albedo.xyz);
+            float3 contribution =
+                evalSpotLight(spotLights[i], P, N, mat.albedo.xyz);
+            bool blocking =
+                isOccludedSpotLight(spotLights[i], P, N, isect, sceneAS);
+            if (blocking) {
+                contribution = float3(0.0);
+            }
+            lighting += contribution;
         }
 
         for (uint i = 0; i < sceneData.numAreaLights; ++i) {
-            lighting += evalAreaLight(areaLights[i], P, N, mat.albedo.xyz);
+            float3 contribution =
+                evalAreaLight(areaLights[i], P, N, mat.albedo.xyz);
+            bool blocking =
+                isOccludedAreaLight(areaLights[i], P, N, isect, sceneAS);
+            if (blocking) {
+                contribution = float3(0.0);
+            }
+            lighting += contribution;
         }
 
         float3 ambient = mat.albedo.xyz * 0.04;
