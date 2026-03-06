@@ -169,6 +169,8 @@ Window::Window(const WindowConfiguration &config)
 
     this->renderScale = std::clamp(config.renderScale, 0.5f, 1.0f);
     this->ssaoRenderScale = std::clamp(config.ssaoScale, 0.25f, 1.0f);
+    this->useMultisampling = config.multisampling;
+    this->metalUpscalingRatio = this->renderScale;
 
     Window::mainWindow = this;
 
@@ -335,7 +337,7 @@ void Window::run() {
 
     this->lastTime = static_cast<float>(glfwGetTime());
 
-    updatePipelineStateField(useMultisampling, true);
+    updatePipelineStateField(useMultisampling, this->useMultisampling);
     updatePipelineStateField(this->useDepth, true);
     updatePipelineStateField(this->useBlending, true);
     updatePipelineStateField(this->srcBlend, opal::BlendFunc::SrcAlpha);
@@ -489,6 +491,10 @@ void Window::run() {
             }
 
             if (this->usePathTracing) {
+                if (pathTracer == nullptr) {
+                    continue;
+                }
+                pathTracer->resizeOutput(target->getWidth(), target->getHeight());
                 pathTracer->render(commandBuffer);
                 // Copy to the current target
                 pathTracer->copySrcFramebuffer->attachTexture(
@@ -1035,10 +1041,27 @@ void Window::setWindowed(const WindowConfiguration &config) {
     int windowHeight = config.height;
     this->renderScale = std::clamp(config.renderScale, 0.5f, 1.0f);
     this->ssaoRenderScale = std::clamp(config.ssaoScale, 0.25f, 1.0f);
+    this->useMultisampling = config.multisampling;
+    this->metalUpscalingRatio = this->renderScale;
     int posX = config.posX != WINDOW_CENTERED ? config.posX : 100;
     int posY = config.posY != WINDOW_CENTERED ? config.posY : 100;
     glfwSetWindowMonitor(window, nullptr, posX, posY, windowWidth, windowHeight,
                          0);
+    this->shadowMapsDirty = true;
+    this->ssaoMapsDirty = true;
+}
+
+void Window::useMetalUpscaling(float ratio) {
+    float clampedRatio = std::clamp(ratio, 0.25f, 1.0f);
+#ifdef METAL
+    this->metalUpscalingEnabled = clampedRatio < 1.0f;
+    this->metalUpscalingRatio = clampedRatio;
+    this->renderScale = clampedRatio;
+#else
+    this->metalUpscalingEnabled = false;
+    this->metalUpscalingRatio = 1.0f;
+    this->renderScale = std::clamp(clampedRatio, 0.5f, 1.0f);
+#endif
     this->shadowMapsDirty = true;
     this->ssaoMapsDirty = true;
 }

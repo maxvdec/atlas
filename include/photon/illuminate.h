@@ -56,6 +56,7 @@ class PathTracing {
         const std::shared_ptr<opal::CommandBuffer> &commandBuffer);
     void createLightBuffers();
     void init();
+    void resizeOutput(int width, int height);
 
     std::shared_ptr<Texture> pathTracingTexture;
     std::shared_ptr<Texture> pathTracingTexturePrev;
@@ -85,6 +86,8 @@ class PathTracing {
         objectBLAS;
 
     int frameIndex = 0;
+    int outputWidth = 0;
+    int outputHeight = 0;
     glm::mat4 cachedInvViewProj = glm::mat4(1.0f);
 
     friend class Window;

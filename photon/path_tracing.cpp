@@ -12,6 +12,7 @@
 #include "atlas/window.h"
 #include "photon/illuminate.h"
 #include "opal/opal.h"
+#include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <ranges>
@@ -44,18 +45,38 @@ void photon::PathTracing::init() {
     pathTracingPipeline->setComputeThreadgroupSize(8, 8, 1);
     pathTracingPipeline->build();
 
+    outputWidth = std::max(1, Window::mainWindow->viewportWidth);
+    outputHeight = std::max(1, Window::mainWindow->viewportHeight);
+
     pathTracingTexture = std::make_shared<Texture>(Texture::create(
-        Window::mainWindow->viewportWidth, Window::mainWindow->viewportHeight,
-        opal::TextureFormat::Rgba16F, opal::TextureDataFormat::Rgba,
-        TextureType::Color));
+        outputWidth, outputHeight, opal::TextureFormat::Rgba16F,
+        opal::TextureDataFormat::Rgba, TextureType::Color));
 
     pathTracingTexturePrev = std::make_shared<Texture>(Texture::create(
-        Window::mainWindow->viewportWidth, Window::mainWindow->viewportHeight,
-        opal::TextureFormat::Rgba16F, opal::TextureDataFormat::Rgba,
-        TextureType::Color));
+        outputWidth, outputHeight, opal::TextureFormat::Rgba16F,
+        opal::TextureDataFormat::Rgba, TextureType::Color));
 
     copySrcFramebuffer = std::make_shared<opal::Framebuffer>();
     copyDstFramebuffer = std::make_shared<opal::Framebuffer>();
+}
+
+void photon::PathTracing::resizeOutput(int width, int height) {
+    const int newWidth = std::max(1, width);
+    const int newHeight = std::max(1, height);
+    if (newWidth == outputWidth && newHeight == outputHeight &&
+        pathTracingTexture != nullptr && pathTracingTexturePrev != nullptr) {
+        return;
+    }
+
+    outputWidth = newWidth;
+    outputHeight = newHeight;
+    pathTracingTexture = std::make_shared<Texture>(Texture::create(
+        outputWidth, outputHeight, opal::TextureFormat::Rgba16F,
+        opal::TextureDataFormat::Rgba, TextureType::Color));
+    pathTracingTexturePrev = std::make_shared<Texture>(Texture::create(
+        outputWidth, outputHeight, opal::TextureFormat::Rgba16F,
+        opal::TextureDataFormat::Rgba, TextureType::Color));
+    frameIndex = 0;
 }
 
 void photon::PathTracing::buildAccelerationStructure(
@@ -498,8 +519,7 @@ void photon::PathTracing::render(
     pathTracingPipeline->bindBuffer("spotLights", spotLights, 10);
     pathTracingPipeline->bindBuffer("areaLights", areaLights, 11);
 
-    commandBuffer->dispatch(Window::mainWindow->viewportWidth,
-                            Window::mainWindow->viewportHeight, 1);
+    commandBuffer->dispatch(outputWidth, outputHeight, 1);
 
     commandBuffer->computeBarrier();
 
