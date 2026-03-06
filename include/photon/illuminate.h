@@ -52,11 +52,16 @@ class PathTracing {
     void render(const std::shared_ptr<opal::CommandBuffer> &commandBuffer);
     void buildAccelerationStructure(
         const std::shared_ptr<opal::CommandBuffer> &commandBuffer);
+    void createLightBuffers();
     void init();
 
     std::shared_ptr<Texture> pathTracingTexture;
 
   private:
+    std::shared_ptr<opal::Buffer> pointLights;
+    std::shared_ptr<opal::Buffer> spotLights;
+    std::shared_ptr<opal::Buffer> areaLights;
+
     std::shared_ptr<opal::Buffer> globalVertices;
     std::shared_ptr<opal::Buffer> globalIndices;
     std::shared_ptr<opal::Buffer> meshInfo;

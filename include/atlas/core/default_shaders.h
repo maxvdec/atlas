@@ -5880,6 +5880,120 @@ struct DirectionalLightData {
     float _pad0;
 };
 
+struct PointLight {
+    packed_float3 position;
+    float intensity;
+    packed_float3 color;
+    float range;
+};
+
+struct SpotLight {
+    packed_float3 position;
+    float intensity;
+
+    packed_float3 direction;
+    float innerCos;
+    packed_float3 color;
+    float outerCos;
+
+    float range;
+    float _pad0[3];
+};
+
+struct AreaLight {
+    packed_float3 position;
+    float intensity;
+
+    packed_float3 right;
+    float halfWidth;
+
+    packed_float3 up;
+    float halfHeight;
+
+    packed_float3 color;
+    float twoSided;
+};
+
+struct SceneData {
+    uint numDirectionalLights;
+    uint numPointLights;
+    uint numSpotLights;
+    uint numAreaLights;
+};
+
+float3 lambert(float3 albedo, float3 N, float3 L, float3 lightColor,
+               float intensity) {
+    float ndl = max(dot(N, L), 0.0);
+    return albedo * lightColor * intensity * ndl;
+}
+
+float3 evalDirectionalLight(DirectionalLightData light, float3 P, float3 N,
+                            float3 albedo) {
+    float3 L = normalize(-light.direction);
+    return lambert(albedo, N, L, light.color, max(light.intensity, 0.0));
+}
+
+float3 evalPointLight(PointLight light, float3 P, float3 N, float3 albedo) {
+    float3 toLight = light.position - P;
+    float dist2 = max(dot(toLight, toLight), 0.001);
+    float dist = sqrt(dist2);
+    float3 L = toLight / dist;
+
+    float NdotL = max(dot(N, L), 0.0);
+
+    float attenuation = 1.0 / dist2;
+
+    float rangeFade = 1.0 - smoothstep(light.range * 0.8, light.range, dist);
+
+    return albedo * light.color * light.intensity * NdotL * attenuation *
+           rangeFade;
+}
+
+float3 evalSpotLight(SpotLight light, float3 P, float3 N, float3 albedo) {
+    float3 toLight = light.position - P;
+    float dist2 = max(dot(toLight, toLight), 1e-4);
+    float dist = sqrt(dist2);
+    float3 L = toLight / dist;
+
+    float NdotL = max(dot(N, L), 0.0);
+
+    float3 lightForward = normalize(light.direction);
+    float spotCos = dot(-L, lightForward);
+
+    float spotFactor = smoothstep(light.outerCos, light.innerCos, spotCos);
+
+    float attenuation = 1.0 / dist2;
+    float rangeFade = 1.0 - smoothstep(light.range * 0.8, light.range, dist);
+
+    return albedo * light.color * light.intensity * NdotL * attenuation *
+           rangeFade * spotFactor;
+}
+
+float3 evalAreaLight(AreaLight light, float3 P, float3 N, float3 albedo) {
+    float3 lightNormal = normalize(cross(light.right, light.up));
+
+    float3 toLight = light.position - P;
+    float dist2 = max(dot(toLight, toLight), 1e-4);
+    float dist = sqrt(dist2);
+
+    float3 L = toLight / dist;
+
+    float NdotL = max(dot(N, L), 0.0);
+
+    float cosLight = dot(lightNormal, -L);
+    if (light.twoSided > 0.5)
+        cosLight = abs(cosLight);
+    else
+        cosLight = max(cosLight, 0.0);
+
+    float area = 4.0 * light.halfWidth * light.halfHeight;
+
+    float attenuation = 1.0 / dist2;
+
+    return albedo * light.color * (light.intensity * 2) * NdotL * cosLight *
+           area * attenuation;
+}
+
 kernel void main0(texture2d<float, access::write> outTex [[texture(0)]],
                   instance_acceleration_structure sceneAS [[buffer(0)]],
                   constant CameraUniforms &cam [[buffer(1)]],
@@ -5889,6 +6003,10 @@ kernel void main0(texture2d<float, access::write> outTex [[texture(0)]],
                   constant uint *indices [[buffer(5)]],
                   constant InstanceData *instanceData [[buffer(6)]],
                   constant DirectionalLightData &dirLight [[buffer(7)]],
+                  constant SceneData &sceneData [[buffer(8)]],
+                  constant PointLight *pointLights [[buffer(9)]],
+                  constant SpotLight *spotLights [[buffer(10)]],
+                  constant AreaLight *areaLights [[buffer(11)]],
                   uint2 gid [[thread_position_in_grid]]) {
     uint w = outTex.get_width();
     uint h = outTex.get_height();
@@ -5942,20 +6060,37 @@ kernel void main0(texture2d<float, access::write> outTex [[texture(0)]],
         float b1 = bary.x;
         float b2 = bary.y;
 
-        float3 localN = n0 * b0 + n1 * b1 + n2 * b2;
-        float3x3 normalMatrix =
-            float3x3(inst.normalCol0.xyz, inst.normalCol1.xyz, inst.normalCol2.xyz);
-        float3 Ns = normalize(normalMatrix * localN);
+        float3 localN = normalize(n0 * b0 + n1 * b1 + n2 * b2);
 
-        float3 L = normalize(-dirLight.direction);
-        float ndl = max(dot(Ns, L), 0.0);
+        float3x3 normalMatrix = float3x3(
+            inst.normalCol0.xyz, inst.normalCol1.xyz, inst.normalCol2.xyz);
+        float3 N = normalize(normalMatrix * localN);
 
-        float3 diffuse =
-            mat.albedo.xyz * dirLight.color * max(dirLight.intensity, 0.0) * ndl;
+        float t = hit.distance;
+        float3 P = r.origin + r.direction * t;
+
+        float3 lighting = float3(0.0);
+
+        if (sceneData.numDirectionalLights > 0) {
+            lighting += evalDirectionalLight(dirLight, P, N, mat.albedo.xyz);
+        }
+
+        for (uint i = 0; i < sceneData.numPointLights; ++i) {
+            lighting += evalPointLight(pointLights[i], P, N, mat.albedo.xyz);
+        }
+
+        for (uint i = 0; i < sceneData.numSpotLights; ++i) {
+            lighting += evalSpotLight(spotLights[i], P, N, mat.albedo.xyz);
+        }
+
+        for (uint i = 0; i < sceneData.numAreaLights; ++i) {
+            lighting += evalAreaLight(areaLights[i], P, N, mat.albedo.xyz);
+        }
+
         float3 ambient = mat.albedo.xyz * 0.04;
-        float3 color = diffuse + ambient;
+        float3 color = ambient + lighting;
 
-        outTex.write(float4(color, 1), gid);
+        outTex.write(float4(color, 1.0), gid);
     }
 }
 )"

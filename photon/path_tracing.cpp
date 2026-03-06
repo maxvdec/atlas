@@ -221,6 +221,139 @@ void photon::PathTracing::buildAccelerationStructure(
     commandBuffer->buildInstanceAccelerationStructure(sceneTLAS);
 }
 
+void photon::PathTracing::createLightBuffers() {
+    struct PointLightData {
+        float position[3];
+        float intensity;
+        float color[3];
+        float range;
+    };
+
+    struct SpotLightData {
+        float position[3];
+        float intensity;
+
+        float direction[3];
+        float innerCos;
+
+        float color[3];
+        float outerCos;
+
+        float range;
+        float _pad0[3];
+    };
+
+    struct AreaLightData {
+        float position[3];
+        float intensity;
+
+        float right[3];
+        float halfWidth;
+
+        float up[3];
+        float halfHeight;
+
+        float color[3];
+        float twoSided;
+    };
+
+    static_assert(sizeof(PointLightData) == 32);
+    static_assert(sizeof(SpotLightData) == 64);
+    static_assert(sizeof(AreaLightData) == 64);
+
+    std::vector<PointLightData> pointLightData;
+    std::vector<SpotLightData> spotLightData;
+    std::vector<AreaLightData> areaLightData;
+
+    Scene *scene =
+        (Window::mainWindow != nullptr) ? Window::mainWindow->getCurrentScene()
+                                        : nullptr;
+
+    if (scene != nullptr) {
+        for (auto *light : scene->getPointLights()) {
+            if (light == nullptr) {
+                continue;
+            }
+            PointLightData data{};
+            data.position[0] = light->position.x;
+            data.position[1] = light->position.y;
+            data.position[2] = light->position.z;
+            data.intensity = light->intensity;
+            data.color[0] = light->color.r;
+            data.color[1] = light->color.g;
+            data.color[2] = light->color.b;
+            data.range = light->distance;
+            pointLightData.push_back(data);
+        }
+
+        for (auto *light : scene->getSpotlights()) {
+            if (light == nullptr) {
+                continue;
+            }
+            SpotLightData data{};
+            data.position[0] = light->position.x;
+            data.position[1] = light->position.y;
+            data.position[2] = light->position.z;
+            data.intensity = light->intensity;
+            data.direction[0] = light->direction.x;
+            data.direction[1] = light->direction.y;
+            data.direction[2] = light->direction.z;
+            data.innerCos = light->cutOff;
+            data.color[0] = light->color.r;
+            data.color[1] = light->color.g;
+            data.color[2] = light->color.b;
+            data.outerCos = light->outerCutoff;
+            data.range = light->range;
+            spotLightData.push_back(data);
+        }
+
+        for (auto *light : scene->getAreaLights()) {
+            if (light == nullptr) {
+                continue;
+            }
+            AreaLightData data{};
+            data.position[0] = light->position.x;
+            data.position[1] = light->position.y;
+            data.position[2] = light->position.z;
+            data.intensity = light->intensity;
+            data.right[0] = light->right.x;
+            data.right[1] = light->right.y;
+            data.right[2] = light->right.z;
+            data.halfWidth = light->size.width * 0.5f;
+            data.up[0] = light->up.x;
+            data.up[1] = light->up.y;
+            data.up[2] = light->up.z;
+            data.halfHeight = light->size.height * 0.5f;
+            data.color[0] = light->color.r;
+            data.color[1] = light->color.g;
+            data.color[2] = light->color.b;
+            data.twoSided = light->castsBothSides ? 1.0f : 0.0f;
+            areaLightData.push_back(data);
+        }
+    }
+
+    if (pointLightData.empty()) {
+        pointLightData.push_back(PointLightData{});
+    }
+    this->pointLights = opal::Buffer::create(
+        opal::BufferUsage::ShaderRead,
+        pointLightData.size() * sizeof(PointLightData), pointLightData.data());
+
+    if (spotLightData.empty()) {
+        spotLightData.push_back(SpotLightData{});
+    }
+    this->spotLights = opal::Buffer::create(
+        opal::BufferUsage::ShaderRead,
+        spotLightData.size() * sizeof(SpotLightData), spotLightData.data());
+
+    if (areaLightData.empty()) {
+        areaLightData.push_back(AreaLightData{});
+    }
+    this->areaLights = opal::Buffer::create(
+        opal::BufferUsage::ShaderRead,
+        areaLightData.size() * sizeof(AreaLightData), areaLightData.data());
+}
+
 void photon::PathTracing::render(
     const std::shared_ptr<opal::CommandBuffer> &commandBuffer) {
 
@@ -235,34 +368,70 @@ void photon::PathTracing::render(
         Window::mainWindow->getCamera()->position.y,
         Window::mainWindow->getCamera()->position.z);
 
-    glm::vec3 directionalLightDirection = glm::normalize(glm::vec3(0.5f, -1.0f, 0.5f));
-    glm::vec3 directionalLightColor(1.0f, 1.0f, 1.0f);
-    float directionalLightIntensity = 1.0f;
-    if (Window::mainWindow != nullptr && Window::mainWindow->currentScene != nullptr) {
-        const auto &directionalLights =
-            Window::mainWindow->currentScene->getDirectionalLights();
-        if (!directionalLights.empty() && directionalLights[0] != nullptr) {
-            auto *light = directionalLights[0];
+    int directionalLightCount = 0;
+    int pointLightCount = 0;
+    int spotLightCount = 0;
+    int areaLightCount = 0;
+
+    Scene *scene =
+        (Window::mainWindow != nullptr) ? Window::mainWindow->getCurrentScene()
+                                        : nullptr;
+
+    if (scene != nullptr) {
+        const auto &directionalLights = scene->getDirectionalLights();
+        for (auto *light : directionalLights) {
+            if (light == nullptr) {
+                continue;
+            }
+            glm::vec3 directionalLightDirection(0.0f, -1.0f, 0.0f);
             glm::vec3 sceneDirection = light->direction.toGlm();
             if (glm::length(sceneDirection) > 0.0001f) {
                 directionalLightDirection = glm::normalize(sceneDirection);
             }
-            directionalLightColor =
+            glm::vec3 directionalLightColor =
                 glm::vec3(light->color.r, light->color.g, light->color.b);
-            directionalLightIntensity = light->intensity;
+            float directionalLightIntensity = light->intensity;
+
+            pathTracingPipeline->setUniform3f(
+                "dirLight.direction", directionalLightDirection.x,
+                directionalLightDirection.y, directionalLightDirection.z);
+            pathTracingPipeline->setUniform3f(
+                "dirLight.color", directionalLightColor.x,
+                directionalLightColor.y, directionalLightColor.z);
+            pathTracingPipeline->setUniform1f("dirLight.intensity",
+                                              directionalLightIntensity);
+            directionalLightCount = 1;
+            break;
+        }
+
+        for (auto *light : scene->getPointLights()) {
+            if (light != nullptr) {
+                pointLightCount++;
+            }
+        }
+        for (auto *light : scene->getSpotlights()) {
+            if (light != nullptr) {
+                spotLightCount++;
+            }
+        }
+        for (auto *light : scene->getAreaLights()) {
+            if (light != nullptr) {
+                areaLightCount++;
+            }
         }
     }
-    pathTracingPipeline->setUniform3f(
-        "dirLight.direction", directionalLightDirection.x,
-        directionalLightDirection.y, directionalLightDirection.z);
-    pathTracingPipeline->setUniform3f("dirLight.color",
-                                      directionalLightColor.x,
-                                      directionalLightColor.y,
-                                      directionalLightColor.z);
-    pathTracingPipeline->setUniform1f("dirLight.intensity",
-                                      directionalLightIntensity);
+
+    pathTracingPipeline->setUniform1i("sceneData.numDirectionalLights",
+                                      directionalLightCount);
+    pathTracingPipeline->setUniform1i("sceneData.numPointLights",
+                                      pointLightCount);
+    pathTracingPipeline->setUniform1i("sceneData.numSpotLights",
+                                      spotLightCount);
+    pathTracingPipeline->setUniform1i("sceneData.numAreaLights",
+                                      areaLightCount);
 
     this->buildAccelerationStructure(commandBuffer);
+    this->createLightBuffers();
     commandBuffer->bindPipeline(this->pathTracingPipeline);
     pathTracingPipeline->bindTexture("outTex", pathTracingTexture->texture, 0);
     commandBuffer->bindInstanceAccelerationStructure(this->sceneTLAS, 0);
@@ -272,6 +441,9 @@ void photon::PathTracing::render(
     pathTracingPipeline->bindBuffer("vertices", globalVertices, 4);
     pathTracingPipeline->bindBuffer("indices", globalIndices, 5);
     pathTracingPipeline->bindBuffer("instanceData", instanceDataBuffer, 6);
+    pathTracingPipeline->bindBuffer("pointLights", pointLights, 9);
+    pathTracingPipeline->bindBuffer("spotLights", spotLights, 10);
+    pathTracingPipeline->bindBuffer("areaLights", areaLights, 11);
 
     commandBuffer->dispatch(Window::mainWindow->viewportWidth,
                             Window::mainWindow->viewportHeight, 1);
