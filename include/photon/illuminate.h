@@ -58,6 +58,10 @@ class PathTracing {
     std::shared_ptr<Texture> pathTracingTexture;
     std::shared_ptr<Texture> pathTracingTexturePrev;
 
+    int raysPerPixel = 1;
+    int maxBounces = 4;
+    float indirectStrength = 1.0f;
+
   private:
     std::shared_ptr<opal::Buffer> pointLights;
     std::shared_ptr<opal::Buffer> spotLights;

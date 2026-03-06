@@ -5919,9 +5919,50 @@ struct SceneData {
     uint numPointLights;
     uint numSpotLights;
     uint numAreaLights;
+
     uint frameIndex;
-    float _pad0[3];
+    uint raysPerPixel;
+    uint maxBounces;
+    float indirectStrength;
 };
+
+uint wang_hash(uint s) {
+    s = (s ^ 61u) ^ (s >> 16u);
+    s *= 9u;
+    s = s ^ (s >> 4u);
+    s *= 0x27d4eb2du;
+    s = s ^ (s >> 15u);
+    return s;
+}
+
+float rand(thread uint &state) {
+    state = wang_hash(state);
+    return float(state) / 4294967296.0;
+}
+
+uint seedBase(uint2 gid, uint w, uint frame, uint sampleIndex) {
+    return gid.x + gid.y * w + frame * 9781u + sampleIndex * 6271u + 1u;
+}
+
+float3 skyColor(float3 dir, float intensity) { return float3(0, 0, 0); }
+
+float3 cosineSampleHemisphere(float2 u) {
+    float r = sqrt(u.x);
+    float theta = 2.0 * M_PI_F * u.y;
+
+    float x = r * cos(theta);
+    float y = r * sin(theta);
+    float z = sqrt(max(0.0, 1.0 - u.x));
+
+    return float3(x, y, z);
+}
+
+float3x3 buildOrthonormalBasis(float3 N) {
+    float3 T = normalize(abs(N.x) > 0.1 ? cross(float3(0, 1, 0), N)
+                                        : cross(float3(1, 0, 0), N));
+    float3 B = cross(N, T);
+    return float3x3(T, B, N);
+}
 
 float3 lambert(float3 albedo, float3 N, float3 L, float3 lightColor,
                float intensity) {
@@ -6035,8 +6076,8 @@ float3 evalAreaLight(AreaLight light, float3 P, float3 N, float3 albedo) {
 
     float attenuation = 1.0 / dist2;
 
-    return albedo * light.color * (light.intensity * 2) * NdotL * cosLight *
-           area * attenuation;
+    return albedo * light.color * (light.intensity) * NdotL * cosLight * area *
+           attenuation;
 }
 
 bool isOccludedAreaLight(AreaLight light, float3 P, float3 N,
@@ -6051,6 +6092,165 @@ bool isOccludedAreaLight(AreaLight light, float3 P, float3 N,
     float3 L = toLight / dist;
 
     return isOccluded(isect, sceneAS, P, N, L, dist - 0.001);
+}
+
+float3 evalDirectLighting(intersector<triangle_data, instancing> isect,
+                          instance_acceleration_structure sceneAS, float3 P,
+                          float3 N, float3 albedo,
+                          constant DirectionalLightData &dirLight,
+                          constant SceneData &sceneData,
+                          constant PointLight *pointLights,
+                          constant SpotLight *spotLights,
+                          constant AreaLight *areaLights) {
+    float3 lighting = float3(0.0);
+
+    if (sceneData.numDirectionalLights > 0) {
+        float3 contribution = evalDirectionalLight(dirLight, P, N, albedo);
+        if (isOccludedDirectionalLight(dirLight, P, N, isect, sceneAS)) {
+            contribution = float3(0.0);
+        }
+        lighting += contribution;
+    }
+
+    for (uint i = 0; i < sceneData.numPointLights; ++i) {
+        float3 contribution = evalPointLight(pointLights[i], P, N, albedo);
+        if (isOccludedPointLight(pointLights[i], P, N, isect, sceneAS)) {
+            contribution = float3(0.0);
+        }
+        lighting += contribution;
+    }
+
+    for (uint i = 0; i < sceneData.numSpotLights; ++i) {
+        float3 contribution = evalSpotLight(spotLights[i], P, N, albedo);
+        if (isOccludedSpotLight(spotLights[i], P, N, isect, sceneAS)) {
+            contribution = float3(0.0);
+        }
+        lighting += contribution;
+    }
+
+    for (uint i = 0; i < sceneData.numAreaLights; ++i) {
+        float3 contribution = evalAreaLight(areaLights[i], P, N, albedo);
+        if (isOccludedAreaLight(areaLights[i], P, N, isect, sceneAS)) {
+            contribution = float3(0.0);
+        }
+        lighting += contribution;
+    }
+
+    return lighting;
+}
+
+float3 sampleRadiance(uint2 gid, uint sampleIndex, uint w,
+                      intersector<triangle_data, instancing> isect,
+                      instance_acceleration_structure sceneAS, ray primaryRay,
+                      constant Material *materials, constant MeshData *meshData,
+                      constant packed_float3 *vertices, constant uint *indices,
+                      constant InstanceData *instanceData,
+                      constant DirectionalLightData &dirLight,
+                      constant SceneData &sceneData,
+                      constant PointLight *pointLights,
+                      constant SpotLight *spotLights,
+                      constant AreaLight *areaLights) {
+    uint rng = seedBase(gid, w, sceneData.frameIndex, sampleIndex);
+
+    auto hit = isect.intersect(primaryRay, sceneAS, 0xFF);
+    if (hit.type == intersection_type::none) {
+        return skyColor(primaryRay.direction, 0.0);
+    }
+
+    uint instanceIndex = hit.instance_id;
+    uint primitiveIndex = hit.primitive_id;
+
+    Material mat = materials[instanceIndex];
+    MeshData mesh = meshData[instanceIndex];
+    InstanceData inst = instanceData[instanceIndex];
+
+    uint i0 = indices[mesh.indexOffset + primitiveIndex * 3 + 0];
+    uint i1 = indices[mesh.indexOffset + primitiveIndex * 3 + 1];
+    uint i2 = indices[mesh.indexOffset + primitiveIndex * 3 + 2];
+
+    float3 n0 = float3(vertices[i0]);
+    float3 n1 = float3(vertices[i1]);
+    float3 n2 = float3(vertices[i2]);
+
+    float2 bary = hit.triangle_barycentric_coord;
+    float b0 = 1.0 - bary.x - bary.y;
+    float b1 = bary.x;
+    float b2 = bary.y;
+
+    float3 localN = normalize(n0 * b0 + n1 * b1 + n2 * b2);
+
+    float3x3 normalMatrix =
+        float3x3(inst.normalCol0.xyz, inst.normalCol1.xyz, inst.normalCol2.xyz);
+    float3 N = normalize(normalMatrix * localN);
+
+    float3 P = primaryRay.origin + primaryRay.direction * hit.distance;
+
+    float3 direct =
+        evalDirectLighting(isect, sceneAS, P, N, mat.albedo.xyz, dirLight,
+                           sceneData, pointLights, spotLights, areaLights);
+
+    float3 indirect = float3(0.0);
+
+    if (sceneData.maxBounces > 0) {
+        float2 u = float2(rand(rng), rand(rng));
+        float3 localBounce = cosineSampleHemisphere(u);
+        float3x3 basis = buildOrthonormalBasis(N);
+        float3 bounceDir = normalize(basis * localBounce);
+
+        ray bounceRay;
+        bounceRay.origin = P + N * 0.001;
+        bounceRay.direction = bounceDir;
+        bounceRay.min_distance = 0.0;
+        bounceRay.max_distance = 1.0e30;
+
+        auto bounceHit = isect.intersect(bounceRay, sceneAS, 0xFF);
+
+        if (bounceHit.type == intersection_type::none) {
+            indirect = mat.albedo.xyz * skyColor(bounceDir, 0.0) *
+                       sceneData.indirectStrength;
+        } else {
+            uint bi = bounceHit.instance_id;
+            uint bp = bounceHit.primitive_id;
+
+            Material bmat = materials[bi];
+            MeshData bmesh = meshData[bi];
+            InstanceData binst = instanceData[bi];
+
+            uint bj0 = indices[bmesh.indexOffset + bp * 3 + 0];
+            uint bj1 = indices[bmesh.indexOffset + bp * 3 + 1];
+            uint bj2 = indices[bmesh.indexOffset + bp * 3 + 2];
+
+            float3 bn0 = float3(vertices[bj0]);
+            float3 bn1 = float3(vertices[bj1]);
+            float3 bn2 = float3(vertices[bj2]);
+
+            float2 bbary = bounceHit.triangle_barycentric_coord;
+            float bb0 = 1.0 - bbary.x - bbary.y;
+            float bb1 = bbary.x;
+            float bb2 = bbary.y;
+
+            float3 blocN = normalize(bn0 * bb0 + bn1 * bb1 + bn2 * bb2);
+
+            float3x3 bNormalMatrix =
+                float3x3(binst.normalCol0.xyz, binst.normalCol1.xyz,
+                         binst.normalCol2.xyz);
+            float3 bN = normalize(bNormalMatrix * blocN);
+
+            float3 bP =
+                bounceRay.origin + bounceRay.direction * bounceHit.distance;
+
+            float3 bounceDirect = evalDirectLighting(
+                isect, sceneAS, bP, bN, bmat.albedo.xyz, dirLight, sceneData,
+                pointLights, spotLights, areaLights);
+
+            float cosineTerm = max(dot(N, bounceDir), 0.0);
+            indirect = mat.albedo.xyz * bounceDirect * cosineTerm *
+                       sceneData.indirectStrength;
+        }
+    }
+
+    float3 ambient = mat.albedo.xyz * 0.04;
+    return ambient + direct + indirect;
 }
 
 kernel void main0(texture2d<float, access::write> outTex [[texture(0)]],
@@ -6100,83 +6300,23 @@ kernel void main0(texture2d<float, access::write> outTex [[texture(0)]],
     if (hit.type == intersection_type::none) {
         outTex.write(float4(0, 0, 0, 1), gid);
     } else {
-        uint instanceIndex = hit.instance_id;
-        uint primitiveIndex = hit.primitive_id;
+        float3 color = float3(0.0);
 
-        Material mat = materials[instanceIndex];
-        MeshData mesh = meshData[instanceIndex];
-        InstanceData inst = instanceData[instanceIndex];
+        uint spp = max(sceneData.raysPerPixel, 1u);
+        for (uint s = 0; s < spp; ++s) {
+            ray primaryRay;
+            primaryRay.origin = ro;
+            primaryRay.direction = rd;
+            primaryRay.min_distance = 0.001;
+            primaryRay.max_distance = 1.0e30;
 
-        uint i0 = indices[mesh.indexOffset + primitiveIndex * 3 + 0];
-        uint i1 = indices[mesh.indexOffset + primitiveIndex * 3 + 1];
-        uint i2 = indices[mesh.indexOffset + primitiveIndex * 3 + 2];
-
-        float3 n0 = float3(vertices[i0]);
-        float3 n1 = float3(vertices[i1]);
-        float3 n2 = float3(vertices[i2]);
-
-        float2 bary = hit.triangle_barycentric_coord;
-        float b0 = 1.0 - bary.x - bary.y;
-        float b1 = bary.x;
-        float b2 = bary.y;
-
-        float3 localN = normalize(n0 * b0 + n1 * b1 + n2 * b2);
-
-        float3x3 normalMatrix = float3x3(
-            inst.normalCol0.xyz, inst.normalCol1.xyz, inst.normalCol2.xyz);
-        float3 N = normalize(normalMatrix * localN);
-
-        float t = hit.distance;
-        float3 P = r.origin + r.direction * t;
-
-        float3 lighting = float3(0.0);
-
-        if (sceneData.numDirectionalLights > 0) {
-            float3 contribution =
-                evalDirectionalLight(dirLight, P, N, mat.albedo.xyz);
-            bool blocking =
-                isOccludedDirectionalLight(dirLight, P, N, isect, sceneAS);
-            if (blocking) {
-                contribution = float3(0.0);
-            }
-            lighting += contribution;
+            color += sampleRadiance(gid, s, w, isect, sceneAS, primaryRay,
+                                    materials, meshData, vertices, indices,
+                                    instanceData, dirLight, sceneData,
+                                    pointLights, spotLights, areaLights);
         }
 
-        for (uint i = 0; i < sceneData.numPointLights; ++i) {
-            float3 contribution =
-                evalPointLight(pointLights[i], P, N, mat.albedo.xyz);
-            bool blocking =
-                isOccludedPointLight(pointLights[i], P, N, isect, sceneAS);
-            if (blocking) {
-                contribution = float3(0.0);
-            }
-            lighting += contribution;
-        }
-
-        for (uint i = 0; i < sceneData.numSpotLights; ++i) {
-            float3 contribution =
-                evalSpotLight(spotLights[i], P, N, mat.albedo.xyz);
-            bool blocking =
-                isOccludedSpotLight(spotLights[i], P, N, isect, sceneAS);
-            if (blocking) {
-                contribution = float3(0.0);
-            }
-            lighting += contribution;
-        }
-
-        for (uint i = 0; i < sceneData.numAreaLights; ++i) {
-            float3 contribution =
-                evalAreaLight(areaLights[i], P, N, mat.albedo.xyz);
-            bool blocking =
-                isOccludedAreaLight(areaLights[i], P, N, isect, sceneAS);
-            if (blocking) {
-                contribution = float3(0.0);
-            }
-            lighting += contribution;
-        }
-
-        float3 ambient = mat.albedo.xyz * 0.04;
-        float3 color = ambient + lighting;
+        color /= float(spp);
 
         int frameIndex = int(sceneData.frameIndex);
 

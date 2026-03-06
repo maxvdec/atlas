@@ -452,6 +452,11 @@ void photon::PathTracing::render(
     pathTracingPipeline->setUniform1i("sceneData.numAreaLights",
                                       areaLightCount);
     pathTracingPipeline->setUniform1i("sceneData.frameIndex", this->frameIndex);
+    pathTracingPipeline->setUniform1i("sceneData.raysPerPixel",
+                                      this->raysPerPixel);
+    pathTracingPipeline->setUniform1f("sceneData.maxBounces", this->maxBounces);
+    pathTracingPipeline->setUniform1f("sceneData.indirectStrength",
+                                      this->indirectStrength);
 
     this->buildAccelerationStructure(commandBuffer);
     this->createLightBuffers();
