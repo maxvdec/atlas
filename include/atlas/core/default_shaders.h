@@ -5859,10 +5859,36 @@ struct Material {
     float _pad0;
 };
 
+struct MeshData {
+    uint vertexOffset;
+    uint indexOffset;
+    uint _pad0;
+    uint _pad1;
+};
+
+struct InstanceData {
+    float4x4 model;
+    float4 normalCol0;
+    float4 normalCol1;
+    float4 normalCol2;
+};
+
+struct DirectionalLightData {
+    float3 direction;
+    float intensity;
+    float3 color;
+    float _pad0;
+};
+
 kernel void main0(texture2d<float, access::write> outTex [[texture(0)]],
                   instance_acceleration_structure sceneAS [[buffer(0)]],
                   constant CameraUniforms &cam [[buffer(1)]],
                   constant Material *materials [[buffer(2)]],
+                  constant MeshData *meshData [[buffer(3)]],
+                  constant packed_float3 *vertices [[buffer(4)]],
+                  constant uint *indices [[buffer(5)]],
+                  constant InstanceData *instanceData [[buffer(6)]],
+                  constant DirectionalLightData &dirLight [[buffer(7)]],
                   uint2 gid [[thread_position_in_grid]]) {
     uint w = outTex.get_width();
     uint h = outTex.get_height();
@@ -5896,12 +5922,40 @@ kernel void main0(texture2d<float, access::write> outTex [[texture(0)]],
     if (hit.type == intersection_type::none) {
         outTex.write(float4(0, 0, 0, 1), gid);
     } else {
-        Material mat = materials[hit.instance_id];
-        if (all(abs(mat.albedo) < float4(1e-6))) {
-            outTex.write(float4(1, 0, 1, 1), gid);
-        } else {
-            outTex.write(mat.albedo, gid);
-        }
+        uint instanceIndex = hit.instance_id;
+        uint primitiveIndex = hit.primitive_id;
+
+        Material mat = materials[instanceIndex];
+        MeshData mesh = meshData[instanceIndex];
+        InstanceData inst = instanceData[instanceIndex];
+
+        uint i0 = indices[mesh.indexOffset + primitiveIndex * 3 + 0];
+        uint i1 = indices[mesh.indexOffset + primitiveIndex * 3 + 1];
+        uint i2 = indices[mesh.indexOffset + primitiveIndex * 3 + 2];
+
+        float3 n0 = float3(vertices[i0]);
+        float3 n1 = float3(vertices[i1]);
+        float3 n2 = float3(vertices[i2]);
+
+        float2 bary = hit.triangle_barycentric_coord;
+        float b0 = 1.0 - bary.x - bary.y;
+        float b1 = bary.x;
+        float b2 = bary.y;
+
+        float3 localN = n0 * b0 + n1 * b1 + n2 * b2;
+        float3x3 normalMatrix =
+            float3x3(inst.normalCol0.xyz, inst.normalCol1.xyz, inst.normalCol2.xyz);
+        float3 Ns = normalize(normalMatrix * localN);
+
+        float3 L = normalize(-dirLight.direction);
+        float ndl = max(dot(Ns, L), 0.0);
+
+        float3 diffuse =
+            mat.albedo.xyz * dirLight.color * max(dirLight.intensity, 0.0) * ndl;
+        float3 ambient = mat.albedo.xyz * 0.04;
+        float3 color = diffuse + ambient;
+
+        outTex.write(float4(color, 1), gid);
     }
 }
 )"

@@ -57,7 +57,11 @@ class PathTracing {
     std::shared_ptr<Texture> pathTracingTexture;
 
   private:
+    std::shared_ptr<opal::Buffer> globalVertices;
+    std::shared_ptr<opal::Buffer> globalIndices;
+    std::shared_ptr<opal::Buffer> meshInfo;
     std::shared_ptr<opal::Buffer> materialBuffer;
+    std::shared_ptr<opal::Buffer> instanceDataBuffer;
     std::shared_ptr<opal::InstanceAccelerationStructure> sceneTLAS;
     std::shared_ptr<opal::Pipeline> pathTracingPipeline;
     std::shared_ptr<ShaderProgram> computePathTracer;
