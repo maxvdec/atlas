@@ -545,6 +545,7 @@ class CoreObject : public GameObject {
     friend class Window;
     friend class RenderTarget;
     friend class Skybox;
+    friend class photon::PathTracing;
     friend class photon::GlobalIllumination;
 
     void updateInstances();

@@ -1143,11 +1143,18 @@ class InstanceAccelerationStructure {
     static std::shared_ptr<opal::InstanceAccelerationStructure>
     create(const std::vector<opal::AccelerationStructureInstance> &instances);
 
+    bool isBuilt = false;
+
   private:
     std::vector<AccelerationStructureInstance> instances;
     std::shared_ptr<Buffer> instanceBuffer;
     MTL::InstanceAccelerationStructureDescriptor *tlasDescriptor = nullptr;
     MTL::AccelerationStructure *tlas = nullptr;
+
+    std::vector<std::shared_ptr<PrimitiveAccelerationStructure>> blasRefs;
+    std::vector<MTL::AccelerationStructure *> blasPtrs;
+
+    std::shared_ptr<Buffer> scratch;
 
     friend class CommandBuffer;
 };

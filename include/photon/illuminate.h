@@ -15,6 +15,8 @@
 #include "atlas/units.h"
 #include "opal/opal.h"
 #include <memory>
+#include <unordered_map>
+#include <utility>
 
 namespace photon {
 
@@ -55,9 +57,13 @@ class PathTracing {
     std::shared_ptr<Texture> pathTracingTexture;
 
   private:
-    std::shared_ptr<opal::PrimitiveAccelerationStructure> sceneBLAS;
+    std::shared_ptr<opal::Buffer> materialBuffer;
+    std::shared_ptr<opal::InstanceAccelerationStructure> sceneTLAS;
     std::shared_ptr<opal::Pipeline> pathTracingPipeline;
     std::shared_ptr<ShaderProgram> computePathTracer;
+    std::unordered_map<int,
+                       std::shared_ptr<opal::PrimitiveAccelerationStructure>>
+        objectBLAS;
 };
 
 class GlobalIllumination {

@@ -9,9 +9,18 @@ struct CameraUniforms {
     float _pad0;
 };
 
+struct Material {
+    float4 albedo;
+    float metallic;
+    float roughness;
+    float ao;
+    float _pad0;
+};
+
 kernel void main0(texture2d<float, access::write> outTex [[texture(0)]],
-                  acceleration_structure<> sceneAS [[buffer(0)]],
+                  instance_acceleration_structure sceneAS [[buffer(0)]],
                   constant CameraUniforms &cam [[buffer(1)]],
+                  constant Material *materials [[buffer(2)]],
                   uint2 gid [[thread_position_in_grid]]) {
     uint w = outTex.get_width();
     uint h = outTex.get_height();
@@ -30,7 +39,7 @@ kernel void main0(texture2d<float, access::write> outTex [[texture(0)]],
     float3 ro = cam.camPos;
     float3 rd = normalize(worldP - ro);
 
-    intersector<triangle_data> isect;
+    intersector<triangle_data, instancing> isect;
     isect.assume_geometry_type(geometry_type::triangle);
     isect.set_triangle_cull_mode(triangle_cull_mode::none);
 
@@ -40,13 +49,16 @@ kernel void main0(texture2d<float, access::write> outTex [[texture(0)]],
     r.min_distance = 0.001;
     r.max_distance = 1.0e30;
 
-    auto hit = isect.intersect(r, sceneAS);
+    auto hit = isect.intersect(r, sceneAS, 0xFF);
 
     if (hit.type == intersection_type::none) {
         outTex.write(float4(0, 0, 0, 1), gid);
     } else {
-        float t = hit.distance;
-        float g = clamp(t * 0.05, 0.0, 1.0);
-        outTex.write(float4(g, g, g, 1), gid);
+        Material mat = materials[hit.instance_id];
+        if (all(abs(mat.albedo) < float4(1e-6))) {
+            outTex.write(float4(1, 0, 1, 1), gid);
+        } else {
+            outTex.write(mat.albedo, gid);
+        }
     }
 }

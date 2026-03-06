@@ -27,7 +27,7 @@ opal::PrimitiveAccelerationStructure::create(
 
     auto &deviceState = metal::deviceState(Device::globalInstance);
 
-    std::shared_ptr<MTL::Buffer> vertexBuffer(
+    blas->vertexBuffer = std::shared_ptr<MTL::Buffer>(
         deviceState.device->newBuffer(vertices.data(),
                                       vertices.size() * sizeof(PrimitiveVertex),
                                       MTL::ResourceStorageModeShared),
@@ -36,7 +36,7 @@ opal::PrimitiveAccelerationStructure::create(
                 b->release();
         });
 
-    std::shared_ptr<MTL::Buffer> indexBuffer(
+    blas->indexBuffer = std::shared_ptr<MTL::Buffer>(
         deviceState.device->newBuffer(indices.data(),
                                       indices.size() * sizeof(uint32_t),
                                       MTL::ResourceStorageModeShared),
@@ -48,17 +48,17 @@ opal::PrimitiveAccelerationStructure::create(
     auto *triDesc =
         MTL::AccelerationStructureTriangleGeometryDescriptor::descriptor();
 
-    triDesc->setVertexBuffer(vertexBuffer.get());
+    triDesc->setVertexBuffer(blas->vertexBuffer.get());
     triDesc->setVertexStride(sizeof(PrimitiveVertex));
     triDesc->setVertexFormat(MTL::AttributeFormatFloat3);
     triDesc->setVertexBufferOffset(offsetof(PrimitiveVertex, position));
 
-    triDesc->setIndexBuffer(indexBuffer.get());
+    triDesc->setIndexBuffer(blas->indexBuffer.get());
     triDesc->setIndexType(MTL::IndexType::IndexTypeUInt32);
     triDesc->setTriangleCount(indices.size() / 3);
 
     auto *blasDesc =
-        MTL::PrimitiveAccelerationStructureDescriptor::descriptor();
+        MTL::PrimitiveAccelerationStructureDescriptor::descriptor()->retain();
     NS::Array *geoms = NS::Array::array((NS::Object **)&triDesc, 1);
     blasDesc->setGeometryDescriptors(geoms);
 
@@ -108,59 +108,92 @@ void opal::CommandBuffer::buildPrimitiveAccelerationStructure(
 }
 
 static inline void opal::writeMetalTransform3x4(const glm::mat4 &M,
-                                                float out3x4[12]) {
-    out3x4[0] = M[0][0];
-    out3x4[1] = M[1][0];
-    out3x4[2] = M[2][0];
-    out3x4[3] = M[3][0];
-    out3x4[4] = M[0][1];
-    out3x4[5] = M[1][1];
-    out3x4[6] = M[2][1];
-    out3x4[7] = M[3][1];
-    out3x4[8] = M[0][2];
-    out3x4[9] = M[1][2];
-    out3x4[10] = M[2][2];
-    out3x4[11] = M[3][2];
+                                                float out[12]) {
+    out[0] = M[0][0];
+    out[1] = M[0][1];
+    out[2] = M[0][2];
+    out[3] = M[1][0];
+    out[4] = M[1][1];
+    out[5] = M[1][2];
+    out[6] = M[2][0];
+    out[7] = M[2][1];
+    out[8] = M[2][2];
+    out[9] = M[3][0];
+    out[10] = M[3][1];
+    out[11] = M[3][2];
 }
 
 std::shared_ptr<opal::InstanceAccelerationStructure>
 opal::InstanceAccelerationStructure::create(
     const std::vector<opal::AccelerationStructureInstance> &instances) {
     auto tlas = std::make_shared<opal::InstanceAccelerationStructure>();
+    tlas->instances = instances;
 
-    std::vector<MTL::AccelerationStructure *> blasList;
-    blasList.reserve(instances.size());
+    tlas->blasRefs.reserve(instances.size());
+    tlas->blasPtrs.reserve(instances.size());
 
-    std::vector<MTL::AccelerationStructureInstanceDescriptor> instanceDescs;
-    instanceDescs.reserve(instances.size());
+    std::vector<MTL::AccelerationStructureUserIDInstanceDescriptor> descs;
+    descs.resize(instances.size());
 
-    for (size_t i = 0; i < instances.size(); i++) {
-        const auto &instance = instances[i];
-        if (instance.blas == nullptr || !instance.blas->isBuilt) {
-            throw std::runtime_error(
-                "All BLAS instances must be built before creating TLAS");
-        }
-        blasList.push_back(instance.blas->blas);
+    for (size_t i = 0; i < instances.size(); ++i) {
+        const auto &inst = instances[i];
 
-        auto &d = instanceDescs[i];
+        if (!inst.blas || !inst.blas->isBuilt)
+            throw std::runtime_error("All BLAS must be built before TLAS.");
+
+        tlas->blasRefs.push_back(inst.blas);
+        tlas->blasPtrs.push_back(inst.blas->blas);
+
+        auto &d = descs[i];
         memset(&d, 0, sizeof(d));
 
         float t[12];
-        writeMetalTransform3x4(instance.transform, t);
-        memcpy(d.transformationMatrix.columns, t, sizeof(t));
+        writeMetalTransform3x4(inst.transform, t);
 
-        d.accelerationStructureIndex = static_cast<uint32_t>(i);
-        d.mask = instance.mask;
+        memcpy(&d.transformationMatrix, t, sizeof(float) * 12);
+
+        d.accelerationStructureIndex = (uint32_t)i;
+        d.mask = inst.mask ? inst.mask : 0xFF;
+        d.userID = inst.instanceId;
         d.options =
-            instance.cullDisable
+            inst.cullDisable
                 ? MTL::AccelerationStructureInstanceOptionDisableTriangleCulling
                 : 0;
         d.intersectionFunctionTableOffset = 0;
-        d.mask = instance.mask;
     }
 
-    tlas->instanceBuffer = Buffer::create(BufferUsage::GeneralPurpose,
-                                          instances.size(), instances.data());
+    tlas->instanceBuffer =
+        Buffer::create(BufferUsage::GeneralPurpose,
+                       descs.size() * sizeof(descs[0]), descs.data());
+
+    tlas->tlasDescriptor =
+        MTL::InstanceAccelerationStructureDescriptor::descriptor()->retain();
+    auto &ib = metal::bufferState(tlas->instanceBuffer.get());
+
+    tlas->tlasDescriptor->setInstanceDescriptorBuffer(ib.buffer);
+    tlas->tlasDescriptor->setInstanceDescriptorStride(
+        sizeof(MTL::AccelerationStructureUserIDInstanceDescriptor));
+    tlas->tlasDescriptor->setInstanceCount((NS::UInteger)descs.size());
+
+    NS::Array *instancedAS =
+        NS::Array::array((NS::Object **)tlas->blasPtrs.data(),
+                         (NS::UInteger)tlas->blasPtrs.size());
+    tlas->tlasDescriptor->setInstancedAccelerationStructures(instancedAS);
+
+    metal::DeviceState &deviceState =
+        metal::deviceState(Device::globalInstance);
+
+    MTL::AccelerationStructureSizes sizes =
+        deviceState.device->accelerationStructureSizes(tlas->tlasDescriptor);
+
+    tlas->scratch = Buffer::create(BufferUsage::GeneralPurpose,
+                                   sizes.buildScratchBufferSize);
+
+    MTL::AccelerationStructure *tlasPtr =
+        deviceState.device->newAccelerationStructure(
+            sizes.accelerationStructureSize);
+
+    tlas->tlas = tlasPtr;
 
     return tlas;
 }
@@ -169,6 +202,7 @@ void opal::CommandBuffer::buildInstanceAccelerationStructure(
     const std::shared_ptr<InstanceAccelerationStructure> &tlas) {
     auto &deviceState = metal::deviceState(Device::globalInstance);
     auto &state = metal::commandBufferState(this);
+
     if (state.encoder != nullptr) {
         state.encoder->endEncoding();
         state.encoder = nullptr;
@@ -181,14 +215,16 @@ void opal::CommandBuffer::buildInstanceAccelerationStructure(
         state.computeEncoder->endEncoding();
         state.computeEncoder = nullptr;
     }
-    auto *cs = state.commandBuffer;
 
-    auto &bufferState = metal::bufferState(tlas->instanceBuffer.get());
+    auto *cs = state.commandBuffer;
+    auto &scratchState = metal::bufferState(tlas->scratch.get());
 
     auto *asEnc = cs->accelerationStructureCommandEncoder();
     asEnc->buildAccelerationStructure(tlas->tlas, tlas->tlasDescriptor,
-                                      bufferState.buffer, 0);
+                                      scratchState.buffer, 0);
     asEnc->endEncoding();
+
+    tlas->isBuilt = true;
 }
 
 #endif
