@@ -56,6 +56,7 @@ class PathTracing {
     void init();
 
     std::shared_ptr<Texture> pathTracingTexture;
+    std::shared_ptr<Texture> pathTracingTexturePrev;
 
   private:
     std::shared_ptr<opal::Buffer> pointLights;
@@ -73,6 +74,12 @@ class PathTracing {
     std::unordered_map<int,
                        std::shared_ptr<opal::PrimitiveAccelerationStructure>>
         objectBLAS;
+
+    std::shared_ptr<opal::Framebuffer> copySrcFramebuffer;
+    std::shared_ptr<opal::Framebuffer> copyDstFramebuffer;
+
+    int frameIndex = 0;
+    glm::mat4 cachedInvViewProj = glm::mat4(1.0f);
 };
 
 class GlobalIllumination {

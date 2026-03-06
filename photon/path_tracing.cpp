@@ -34,6 +34,14 @@ void photon::PathTracing::init() {
         Window::mainWindow->viewportWidth, Window::mainWindow->viewportHeight,
         opal::TextureFormat::Rgba16F, opal::TextureDataFormat::Rgba,
         TextureType::Color));
+
+    pathTracingTexturePrev = std::make_shared<Texture>(Texture::create(
+        Window::mainWindow->viewportWidth, Window::mainWindow->viewportHeight,
+        opal::TextureFormat::Rgba16F, opal::TextureDataFormat::Rgba,
+        TextureType::Color));
+
+    copySrcFramebuffer = std::make_shared<opal::Framebuffer>();
+    copyDstFramebuffer = std::make_shared<opal::Framebuffer>();
 }
 
 void photon::PathTracing::buildAccelerationStructure(
@@ -265,9 +273,9 @@ void photon::PathTracing::createLightBuffers() {
     std::vector<SpotLightData> spotLightData;
     std::vector<AreaLightData> areaLightData;
 
-    Scene *scene =
-        (Window::mainWindow != nullptr) ? Window::mainWindow->getCurrentScene()
-                                        : nullptr;
+    Scene *scene = (Window::mainWindow != nullptr)
+                       ? Window::mainWindow->getCurrentScene()
+                       : nullptr;
 
     if (scene != nullptr) {
         for (auto *light : scene->getPointLights()) {
@@ -357,10 +365,24 @@ void photon::PathTracing::createLightBuffers() {
 void photon::PathTracing::render(
     const std::shared_ptr<opal::CommandBuffer> &commandBuffer) {
 
+    // Copy textures
+    copySrcFramebuffer->attachTexture(pathTracingTexture->texture, 0);
+    copyDstFramebuffer->attachTexture(pathTracingTexturePrev->texture, 0);
+    auto copy = opal::ResolveAction::createForColorAttachment(
+        copySrcFramebuffer, copyDstFramebuffer, 0);
+    commandBuffer->performResolve(copy);
+
     auto view = Window::mainWindow->getCamera()->calculateViewMatrix();
     auto proj = Window::mainWindow->calculateProjectionMatrix();
 
     auto invViewProj = glm::inverse(proj * view);
+
+    if (frameIndex == 0) {
+        cachedInvViewProj = invViewProj;
+    } else if (cachedInvViewProj != invViewProj) {
+        frameIndex = 0;
+        cachedInvViewProj = invViewProj;
+    }
 
     pathTracingPipeline->setUniformMat4f("cam.invViewProj", invViewProj);
     pathTracingPipeline->setUniform3f(
@@ -373,9 +395,9 @@ void photon::PathTracing::render(
     int spotLightCount = 0;
     int areaLightCount = 0;
 
-    Scene *scene =
-        (Window::mainWindow != nullptr) ? Window::mainWindow->getCurrentScene()
-                                        : nullptr;
+    Scene *scene = (Window::mainWindow != nullptr)
+                       ? Window::mainWindow->getCurrentScene()
+                       : nullptr;
 
     if (scene != nullptr) {
         const auto &directionalLights = scene->getDirectionalLights();
@@ -429,11 +451,14 @@ void photon::PathTracing::render(
                                       spotLightCount);
     pathTracingPipeline->setUniform1i("sceneData.numAreaLights",
                                       areaLightCount);
+    pathTracingPipeline->setUniform1i("sceneData.frameIndex", this->frameIndex);
 
     this->buildAccelerationStructure(commandBuffer);
     this->createLightBuffers();
     commandBuffer->bindPipeline(this->pathTracingPipeline);
     pathTracingPipeline->bindTexture("outTex", pathTracingTexture->texture, 0);
+    pathTracingPipeline->bindTexture("prevTex", pathTracingTexturePrev->texture,
+                                     1);
     commandBuffer->bindInstanceAccelerationStructure(this->sceneTLAS, 0);
 
     pathTracingPipeline->bindBuffer("materials", materialBuffer, 2);
@@ -447,4 +472,6 @@ void photon::PathTracing::render(
 
     commandBuffer->dispatch(Window::mainWindow->viewportWidth,
                             Window::mainWindow->viewportHeight, 1);
+
+    frameIndex++;
 }

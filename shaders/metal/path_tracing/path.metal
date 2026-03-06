@@ -77,6 +77,8 @@ struct SceneData {
     uint numPointLights;
     uint numSpotLights;
     uint numAreaLights;
+    uint frameIndex;
+    float _pad0[3];
 };
 
 float3 lambert(float3 albedo, float3 N, float3 L, float3 lightColor,
@@ -210,6 +212,7 @@ bool isOccludedAreaLight(AreaLight light, float3 P, float3 N,
 }
 
 kernel void main0(texture2d<float, access::write> outTex [[texture(0)]],
+                  texture2d<float, access::read> prevTex [[texture(1)]],
                   instance_acceleration_structure sceneAS [[buffer(0)]],
                   constant CameraUniforms &cam [[buffer(1)]],
                   constant Material *materials [[buffer(2)]],
@@ -333,6 +336,14 @@ kernel void main0(texture2d<float, access::write> outTex [[texture(0)]],
         float3 ambient = mat.albedo.xyz * 0.04;
         float3 color = ambient + lighting;
 
-        outTex.write(float4(color, 1.0), gid);
+        int frameIndex = int(sceneData.frameIndex);
+
+        float4 prevColor = prevTex.read(gid);
+        if (frameIndex == 0) {
+            prevColor = float4(0, 0, 0, 1);
+        }
+        float3 accum = (prevColor.xyz * frameIndex + color) / (frameIndex + 1);
+
+        outTex.write(float4(accum, 1.0), gid);
     }
 }
