@@ -63,6 +63,8 @@ struct Material {
      * @brief Ambient occlusion term used to darken creases and cavities.
      */
     float ao = 1.0f;
+    Color emissiveColor = {0.0, 0.0, 0.0, 1.0};
+    float emissiveIntensity = 0.0f;
 };
 
 /**

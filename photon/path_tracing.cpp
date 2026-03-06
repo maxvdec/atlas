@@ -17,6 +17,20 @@
 #include <ranges>
 #include <sys/types.h>
 
+namespace {
+bool mat4ApproximatelyEqual(const glm::mat4 &a, const glm::mat4 &b,
+                            float epsilon) {
+    for (int c = 0; c < 4; ++c) {
+        for (int r = 0; r < 4; ++r) {
+            if (std::fabs(a[c][r] - b[c][r]) > epsilon) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+} // namespace
+
 void photon::PathTracing::init() {
     ComputeShader pathTracerShader =
         ComputeShader::fromDefaultShader(AtlasComputeShader::PathTracer);
@@ -51,8 +65,12 @@ void photon::PathTracing::buildAccelerationStructure(
         float metallic;
         float roughness;
         float ao;
+        float emissiveIntensity;
+        float emissiveColor[3];
         uint _pad0;
     };
+
+    static_assert(sizeof(MaterialData) == 48);
 
     struct MeshData {
         uint vertexOffset;
@@ -129,6 +147,10 @@ void photon::PathTracing::buildAccelerationStructure(
                 data.metallic = object->material.metallic;
                 data.roughness = object->material.roughness;
                 data.ao = object->material.ao;
+                data.emissiveIntensity = object->material.emissiveIntensity;
+                data.emissiveColor[0] = object->material.emissiveColor.r;
+                data.emissiveColor[1] = object->material.emissiveColor.g;
+                data.emissiveColor[2] = object->material.emissiveColor.b;
                 materialData.push_back(data);
 
                 MeshData mdata;
@@ -379,7 +401,8 @@ void photon::PathTracing::render(
 
     if (frameIndex == 0) {
         cachedInvViewProj = invViewProj;
-    } else if (cachedInvViewProj != invViewProj) {
+    } else if (!mat4ApproximatelyEqual(cachedInvViewProj, invViewProj,
+                                       0.00001f)) {
         frameIndex = 0;
         cachedInvViewProj = invViewProj;
     }
@@ -454,7 +477,7 @@ void photon::PathTracing::render(
     pathTracingPipeline->setUniform1i("sceneData.frameIndex", this->frameIndex);
     pathTracingPipeline->setUniform1i("sceneData.raysPerPixel",
                                       this->raysPerPixel);
-    pathTracingPipeline->setUniform1f("sceneData.maxBounces", this->maxBounces);
+    pathTracingPipeline->setUniform1i("sceneData.maxBounces", this->maxBounces);
     pathTracingPipeline->setUniform1f("sceneData.indirectStrength",
                                       this->indirectStrength);
 

@@ -5856,6 +5856,8 @@ struct Material {
     float metallic;
     float roughness;
     float ao;
+    float emissiveIntensity;
+    packed_float3 emissiveColor;
     float _pad0;
 };
 
@@ -5926,6 +5928,23 @@ struct SceneData {
     float indirectStrength;
 };
 
+float pow5(float x) {
+    float x2 = x * x;
+    return x2 * x2 * x;
+}
+
+float luminance(float3 c) {
+    return dot(c, float3(0.2126, 0.7152, 0.0722));
+}
+
+float3 clampLuminance(float3 c, float maxL) {
+    float l = luminance(c);
+    if (l > maxL && l > 1e-6) {
+        c *= maxL / l;
+    }
+    return c;
+}
+
 uint wang_hash(uint s) {
     s = (s ^ 61u) ^ (s >> 16u);
     s *= 9u;
@@ -5983,161 +6002,258 @@ bool isOccluded(intersector<triangle_data, instancing> isect,
     return shadowHit.type != intersection_type::none;
 }
 
-float3 evalDirectionalLight(DirectionalLightData light, float3 P, float3 N,
-                            float3 albedo) {
-    float3 L = normalize(-light.direction);
-    return lambert(albedo, N, L, light.color, max(light.intensity, 0.0));
+bool isOccludedToPoint(intersector<triangle_data, instancing> isect,
+                       instance_acceleration_structure sceneAS, float3 P,
+                       float3 N, float3 target) {
+    float3 toTarget = target - P;
+    float dist2 = max(dot(toTarget, toTarget), 1e-6);
+    float dist = sqrt(dist2);
+    if (dist <= 0.001) {
+        return false;
+    }
+    float3 L = toTarget / dist;
+    return isOccluded(isect, sceneAS, P, N, L, dist - 0.001);
 }
 
 bool isOccludedDirectionalLight(DirectionalLightData light, float3 P, float3 N,
                                 intersector<triangle_data, instancing> isect,
                                 instance_acceleration_structure sceneAS) {
     float3 L = normalize(-light.direction);
-
     return isOccluded(isect, sceneAS, P, N, L, 1e30);
-}
-
-float3 evalPointLight(PointLight light, float3 P, float3 N, float3 albedo) {
-    float3 toLight = light.position - P;
-    float dist2 = max(dot(toLight, toLight), 0.001);
-    float dist = sqrt(dist2);
-    float3 L = toLight / dist;
-
-    float NdotL = max(dot(N, L), 0.0);
-
-    float attenuation = 1.0 / dist2;
-
-    float rangeFade = 1.0 - smoothstep(light.range * 0.8, light.range, dist);
-
-    return albedo * light.color * light.intensity * NdotL * attenuation *
-           rangeFade;
 }
 
 bool isOccludedPointLight(PointLight light, float3 P, float3 N,
                           intersector<triangle_data, instancing> isect,
                           instance_acceleration_structure sceneAS) {
-    float3 toLight = light.position - P;
-    float dist2 = max(dot(toLight, toLight), 0.001);
-    float dist = sqrt(dist2);
-    float3 L = toLight / dist;
-
-    return isOccluded(isect, sceneAS, P, N, L, dist - 0.001);
-}
-
-float3 evalSpotLight(SpotLight light, float3 P, float3 N, float3 albedo) {
-    float3 toLight = light.position - P;
-    float dist2 = max(dot(toLight, toLight), 1e-4);
-    float dist = sqrt(dist2);
-    float3 L = toLight / dist;
-
-    float NdotL = max(dot(N, L), 0.0);
-
-    float3 lightForward = normalize(light.direction);
-    float spotCos = dot(-L, lightForward);
-
-    float spotFactor = smoothstep(light.outerCos, light.innerCos, spotCos);
-
-    float attenuation = 1.0 / dist2;
-    float rangeFade = 1.0 - smoothstep(light.range * 0.8, light.range, dist);
-
-    return albedo * light.color * light.intensity * NdotL * attenuation *
-           rangeFade * spotFactor;
+    return isOccludedToPoint(isect, sceneAS, P, N, light.position);
 }
 
 bool isOccludedSpotLight(SpotLight light, float3 P, float3 N,
                          intersector<triangle_data, instancing> isect,
                          instance_acceleration_structure sceneAS) {
-    float3 toLight = light.position - P;
-    float dist2 = max(dot(toLight, toLight), 1e-4);
-    float dist = sqrt(dist2);
-    float3 L = toLight / dist;
-
-    return isOccluded(isect, sceneAS, P, N, L, dist - 0.001);
-}
-
-float3 evalAreaLight(AreaLight light, float3 P, float3 N, float3 albedo) {
-    float3 lightNormal = normalize(cross(light.right, light.up));
-
-    float3 toLight = light.position - P;
-    float dist2 = max(dot(toLight, toLight), 1e-4);
-    float dist = sqrt(dist2);
-
-    float3 L = toLight / dist;
-
-    float NdotL = max(dot(N, L), 0.0);
-
-    float cosLight = dot(lightNormal, -L);
-    if (light.twoSided > 0.5)
-        cosLight = abs(cosLight);
-    else
-        cosLight = max(cosLight, 0.0);
-
-    float area = 4.0 * light.halfWidth * light.halfHeight;
-
-    float attenuation = 1.0 / dist2;
-
-    return albedo * light.color * (light.intensity) * NdotL * cosLight * area *
-           attenuation;
+    return isOccludedToPoint(isect, sceneAS, P, N, light.position);
 }
 
 bool isOccludedAreaLight(AreaLight light, float3 P, float3 N,
                          intersector<triangle_data, instancing> isect,
                          instance_acceleration_structure sceneAS) {
-    float3 lightNormal = normalize(cross(light.right, light.up));
-
-    float3 toLight = light.position - P;
-    float dist2 = max(dot(toLight, toLight), 1e-4);
-    float dist = sqrt(dist2);
-
-    float3 L = toLight / dist;
-
-    return isOccluded(isect, sceneAS, P, N, L, dist - 0.001);
+    return isOccludedToPoint(isect, sceneAS, P, N, light.position);
 }
 
-float3 evalDirectLighting(intersector<triangle_data, instancing> isect,
-                          instance_acceleration_structure sceneAS, float3 P,
-                          float3 N, float3 albedo,
-                          constant DirectionalLightData &dirLight,
-                          constant SceneData &sceneData,
-                          constant PointLight *pointLights,
-                          constant SpotLight *spotLights,
-                          constant AreaLight *areaLights) {
+// ---------------------------------------------------------------------------
+// PBR helpers: GGX / Cook-Torrance
+// ---------------------------------------------------------------------------
+
+float D_GGX(float NdotH, float roughness) {
+    float a = max(roughness * roughness, 1e-4);
+    float a2 = a * a;
+    float d = (NdotH * NdotH) * (a2 - 1.0) + 1.0;
+    return a2 / max(M_PI_F * d * d, 1e-6);
+}
+
+float3 F_Schlick(float cosTheta, float3 F0) {
+    float c = clamp(1.0 - cosTheta, 0.0, 1.0);
+    return F0 + (1.0 - F0) * pow5(c);
+}
+
+float G_Smith(float NdotV, float NdotL, float roughness) {
+    float r = roughness + 1.0;
+    float k = (r * r) / 8.0;
+    float gV = NdotV / (NdotV * (1.0 - k) + k);
+    float gL = NdotL / (NdotL * (1.0 - k) + k);
+    return gV * gL;
+}
+
+float disneyDiffuseFactor(float NdotV, float NdotL, float LdotH,
+                          float roughness) {
+    float fd90 = 0.5 + 2.0 * LdotH * LdotH * roughness;
+    float lightScatter = 1.0 + (fd90 - 1.0) * pow5(1.0 - NdotL);
+    float viewScatter = 1.0 + (fd90 - 1.0) * pow5(1.0 - NdotV);
+    return lightScatter * viewScatter;
+}
+
+// GGX importance-sampled microfacet half-vector (in local TBN space, Z=up)
+float3 sampleGGX(float2 u, float roughness) {
+    float a = roughness * roughness;
+    float phi = 2.0 * M_PI_F * u.x;
+    float cosTheta = sqrt((1.0 - u.y) / max(1.0 + (a * a - 1.0) * u.y, 1e-7));
+    float sinTheta = sqrt(max(0.0, 1.0 - cosTheta * cosTheta));
+    return float3(sinTheta * cos(phi), sinTheta * sin(phi), cosTheta);
+}
+
+// Full Cook-Torrance PBR for a single analytic light
+float3 evalPBR(float3 albedo, float metallic, float roughness, float3 N,
+               float3 V, float3 L, float3 lightColor, float intensity) {
+    float3 H = normalize(V + L);
+    float NdotL = max(dot(N, L), 0.0);
+    float NdotV = max(dot(N, V), 1e-4);
+    float NdotH = max(dot(N, H), 0.0);
+    float VdotH = max(dot(V, H), 0.0);
+
+    float clampedRoughness = clamp(roughness, 0.045, 1.0);
+    float3 F0 = mix(float3(0.04), albedo, clamp(metallic, 0.0, 1.0));
+    float3 F = F_Schlick(VdotH, F0);
+    float D = D_GGX(NdotH, clampedRoughness);
+    float G = G_Smith(NdotV, NdotL, clampedRoughness);
+
+    float3 specular = (D * G * F) / max(4.0 * NdotV * NdotL, 1e-4);
+    float3 kD = (1.0 - F) * (1.0 - clamp(metallic, 0.0, 1.0));
+    float diffuseFactor =
+        disneyDiffuseFactor(NdotV, NdotL, max(dot(L, H), 0.0), clampedRoughness);
+    float3 diffuse = (kD * albedo * diffuseFactor) / M_PI_F;
+
+    return (diffuse + specular) * lightColor * intensity * NdotL;
+}
+
+float3 evalSubsurface(float3 albedo, float3 N, float3 V, float3 L,
+                      float3 lightColor, float intensity, float roughness,
+                      float sssStrength, float sssThickness) {
+    float NdotL = dot(N, L);
+    float NdotV = max(dot(N, V), 0.0);
+    float backLit = clamp(-NdotL, 0.0, 1.0);
+    float wrapAmount = mix(0.2, 0.7, clamp(roughness, 0.0, 1.0));
+    float wrapped = clamp((NdotL + wrapAmount) / (1.0 + wrapAmount), 0.0, 1.0);
+    float viewScatter =
+        pow(clamp(1.0 - max(dot(V, L), 0.0), 0.0, 1.0), 2.0);
+    float transmission = backLit * (0.35 + 0.65 * viewScatter);
+    float diffuseBleed = wrapped * (0.5 + 0.5 * (1.0 - NdotV));
+    float profile = mix(diffuseBleed, transmission, 0.65);
+    float thicknessFalloff =
+        exp(-max(sssThickness, 0.01) * (1.0 - backLit));
+    return (albedo * lightColor * intensity * sssStrength * profile *
+            thicknessFalloff) /
+           M_PI_F;
+}
+
+// ---------------------------------------------------------------------------
+// Direct lighting with full PBR (replaces old evalDirectLighting)
+// ---------------------------------------------------------------------------
+
+float3 evalDirectLightingPBR(intersector<triangle_data, instancing> isect,
+                             instance_acceleration_structure sceneAS, float3 P,
+                             float3 N, float3 V, float3 albedo, float metallic,
+                             float roughness, float sssStrength,
+                             float sssThickness,
+                             constant DirectionalLightData &dirLight,
+                             constant SceneData &sceneData,
+                             constant PointLight *pointLights,
+                             constant SpotLight *spotLights,
+                             constant AreaLight *areaLights) {
     float3 lighting = float3(0.0);
 
+    // Directional
     if (sceneData.numDirectionalLights > 0) {
-        float3 contribution = evalDirectionalLight(dirLight, P, N, albedo);
-        if (isOccludedDirectionalLight(dirLight, P, N, isect, sceneAS)) {
-            contribution = float3(0.0);
+        float3 L = normalize(-dirLight.direction);
+        float3 c = evalPBR(albedo, metallic, roughness, N, V, L, dirLight.color,
+                           max(dirLight.intensity, 0.0));
+        float3 s = evalSubsurface(albedo, N, V, L, dirLight.color,
+                                  max(dirLight.intensity, 0.0), roughness,
+                                  sssStrength, sssThickness);
+        if (!isOccludedDirectionalLight(dirLight, P, N, isect, sceneAS)) {
+            float3 lightContribution = clampLuminance(c + s, 8.0);
+            lighting += lightContribution;
         }
-        lighting += contribution;
     }
 
+    // Point lights
     for (uint i = 0; i < sceneData.numPointLights; ++i) {
-        float3 contribution = evalPointLight(pointLights[i], P, N, albedo);
-        if (isOccludedPointLight(pointLights[i], P, N, isect, sceneAS)) {
-            contribution = float3(0.0);
+        float3 toLight = pointLights[i].position - P;
+        float dist = max(length(toLight), 1e-4);
+        float3 L = toLight / dist;
+        float lightRange = max(pointLights[i].range, 1e-4);
+        float minDist = max(lightRange * 0.08, 0.15);
+        float distSq = dist * dist + minDist * minDist;
+        float rangeFade = 1.0 - smoothstep(lightRange * 0.75, lightRange, dist);
+        float atten = rangeFade / max(distSq, 1e-4);
+        float intensity = max(pointLights[i].intensity, 0.0) * atten;
+        float3 c =
+            evalPBR(albedo, metallic, roughness, N, V, L, pointLights[i].color,
+                    intensity);
+        float3 s = evalSubsurface(albedo, N, V, L, pointLights[i].color,
+                                  intensity, roughness, sssStrength,
+                                  sssThickness);
+        if (!isOccludedPointLight(pointLights[i], P, N, isect, sceneAS)) {
+            float3 lightContribution = clampLuminance(c + s, 8.0);
+            lighting += lightContribution;
         }
-        lighting += contribution;
     }
 
+    // Spot lights
     for (uint i = 0; i < sceneData.numSpotLights; ++i) {
-        float3 contribution = evalSpotLight(spotLights[i], P, N, albedo);
-        if (isOccludedSpotLight(spotLights[i], P, N, isect, sceneAS)) {
-            contribution = float3(0.0);
+        float3 toLight = spotLights[i].position - P;
+        float dist = max(length(toLight), 1e-4);
+        float3 L = toLight / dist;
+        float3 fwd = normalize(spotLights[i].direction);
+        float spotCos = dot(-L, fwd);
+        float spot =
+            smoothstep(spotLights[i].outerCos, spotLights[i].innerCos, spotCos);
+        float lightRange = max(spotLights[i].range, 1e-4);
+        float minDist = max(lightRange * 0.08, 0.15);
+        float distSq = dist * dist + minDist * minDist;
+        float rangeFade = 1.0 - smoothstep(lightRange * 0.75, lightRange, dist);
+        float atten = rangeFade / max(distSq, 1e-4);
+        float intensity = max(spotLights[i].intensity, 0.0) * atten * spot;
+        float3 c =
+            evalPBR(albedo, metallic, roughness, N, V, L, spotLights[i].color,
+                    intensity);
+        float3 s = evalSubsurface(albedo, N, V, L, spotLights[i].color,
+                                  intensity, roughness, sssStrength,
+                                  sssThickness);
+        if (!isOccludedSpotLight(spotLights[i], P, N, isect, sceneAS)) {
+            float3 lightContribution = clampLuminance(c + s, 8.0);
+            lighting += lightContribution;
         }
-        lighting += contribution;
     }
 
+    // Area lights
     for (uint i = 0; i < sceneData.numAreaLights; ++i) {
-        float3 contribution = evalAreaLight(areaLights[i], P, N, albedo);
-        if (isOccludedAreaLight(areaLights[i], P, N, isect, sceneAS)) {
-            contribution = float3(0.0);
+        float3 lightNorm =
+            normalize(cross(areaLights[i].right, areaLights[i].up));
+        float area = 4.0 * areaLights[i].halfWidth * areaLights[i].halfHeight;
+        const float sampleCount = 4.0;
+        for (uint sy = 0; sy < 2; ++sy) {
+            for (uint sx = 0; sx < 2; ++sx) {
+                float u = ((float(sx) + 0.5) * 0.5) * 2.0 - 1.0;
+                float v = ((float(sy) + 0.5) * 0.5) * 2.0 - 1.0;
+                float3 samplePos =
+                    areaLights[i].position +
+                    areaLights[i].right * (u * areaLights[i].halfWidth) +
+                    areaLights[i].up * (v * areaLights[i].halfHeight);
+
+                float3 toLight = samplePos - P;
+                float distSq = max(dot(toLight, toLight), 1e-4);
+                float dist = sqrt(distSq);
+                float3 L = toLight / dist;
+
+                float cosLight = areaLights[i].twoSided > 0.5
+                                     ? abs(dot(lightNorm, -L))
+                                     : max(dot(lightNorm, -L), 0.0);
+                if (cosLight <= 0.0) {
+                    continue;
+                }
+                if (isOccludedToPoint(isect, sceneAS, P, N, samplePos)) {
+                    continue;
+                }
+
+                float atten = (cosLight * area) / max(distSq * sampleCount, 1e-4);
+                float intensity = max(areaLights[i].intensity, 0.0) * atten;
+                float3 c = evalPBR(albedo, metallic, roughness, N, V, L,
+                                   areaLights[i].color, intensity);
+                float3 s = evalSubsurface(albedo, N, V, L, areaLights[i].color,
+                                          intensity, roughness, sssStrength,
+                                          sssThickness);
+                float3 lightContribution = clampLuminance(c + s, 6.0);
+                lighting += lightContribution;
+            }
         }
-        lighting += contribution;
     }
 
     return lighting;
 }
+
+// ---------------------------------------------------------------------------
+// sampleRadiance — primary path with GGX importance-sampled indirect bounce
+// ---------------------------------------------------------------------------
 
 float3 sampleRadiance(uint2 gid, uint sampleIndex, uint w,
                       intersector<triangle_data, instancing> isect,
@@ -6168,47 +6284,101 @@ float3 sampleRadiance(uint2 gid, uint sampleIndex, uint w,
     uint i1 = indices[mesh.indexOffset + primitiveIndex * 3 + 1];
     uint i2 = indices[mesh.indexOffset + primitiveIndex * 3 + 2];
 
-    float3 n0 = float3(vertices[i0]);
-    float3 n1 = float3(vertices[i1]);
-    float3 n2 = float3(vertices[i2]);
-
     float2 bary = hit.triangle_barycentric_coord;
     float b0 = 1.0 - bary.x - bary.y;
     float b1 = bary.x;
     float b2 = bary.y;
 
-    float3 localN = normalize(n0 * b0 + n1 * b1 + n2 * b2);
+    float3 localN =
+        normalize(float3(vertices[i0]) * b0 + float3(vertices[i1]) * b1 +
+                  float3(vertices[i2]) * b2);
 
     float3x3 normalMatrix =
         float3x3(inst.normalCol0.xyz, inst.normalCol1.xyz, inst.normalCol2.xyz);
     float3 N = normalize(normalMatrix * localN);
-
     float3 P = primaryRay.origin + primaryRay.direction * hit.distance;
+    float3 V = normalize(-primaryRay.direction);
 
-    float3 direct =
-        evalDirectLighting(isect, sceneAS, P, N, mat.albedo.xyz, dirLight,
-                           sceneData, pointLights, spotLights, areaLights);
+    float roughness = clamp(mat.roughness, 0.08, 1.0);
+    float metallic = clamp(mat.metallic, 0.0, 1.0);
+    float ao = clamp(mat.ao, 0.0, 1.0);
+    float emissiveIntensity = max(mat.emissiveIntensity, 0.0);
+    float3 emissiveColor = float3(mat.emissiveColor);
+    float3 emissive =
+        clampLuminance(emissiveColor * min(emissiveIntensity, 8.0), 8.0);
+    float sssStrength = clamp(1.0 - mat.albedo.w, 0.0, 1.0) * (1.0 - metallic);
+    float sssThickness = mix(0.25, 1.75, ao);
 
+    // --- Direct lighting (full PBR for all light types) ---
+    float3 direct = evalDirectLightingPBR(
+        isect, sceneAS, P, N, V, mat.albedo.xyz, metallic, roughness,
+        sssStrength, sssThickness, dirLight, sceneData, pointLights, spotLights,
+        areaLights);
+
+    // --- Indirect bounce: GGX importance sampling ---
     float3 indirect = float3(0.0);
 
     if (sceneData.maxBounces > 0) {
-        float2 u = float2(rand(rng), rand(rng));
-        float3 localBounce = cosineSampleHemisphere(u);
-        float3x3 basis = buildOrthonormalBasis(N);
-        float3 bounceDir = normalize(basis * localBounce);
 
+        // Fresnel at normal incidence — drives specular vs diffuse split
+        float3 F0 = mix(float3(0.04), mat.albedo.xyz, metallic);
+        float3 F_approx = F_Schlick(max(dot(N, V), 0.0), F0);
+
+        // Bias toward specular for metals / smooth surfaces
+        float specProb =
+            clamp(metallic * mix(0.35, 0.9, 1.0 - roughness), 0.0, 0.9);
+
+        float3x3 basis = buildOrthonormalBasis(N);
         ray bounceRay;
         bounceRay.origin = P + N * 0.001;
-        bounceRay.direction = bounceDir;
         bounceRay.min_distance = 0.0;
         bounceRay.max_distance = 1.0e30;
+
+        float3 brdfWeight;
+        float chooseSplit = rand(rng);
+
+        if (specProb > 1e-4 && chooseSplit < specProb) {
+            // ---- Specular / reflective bounce (GGX importance sampled) ----
+            float2 u = float2(rand(rng), rand(rng));
+            float3 localH = sampleGGX(u, max(roughness, 0.001));
+            float3 H_world = normalize(basis * localH);
+            float3 bounceDir = reflect(-V, H_world);
+
+            // Reject directions that go below the surface
+            if (dot(bounceDir, N) <= 0.0)
+                bounceDir = reflect(-V, N); // fallback: perfect mirror
+
+            bounceRay.direction = bounceDir;
+
+            float NdotL2 = max(dot(N, bounceDir), 1e-4);
+            float NdotV2 = max(dot(N, V), 1e-4);
+            float3 Fs = F_Schlick(max(dot(V, H_world), 0.0), F0);
+            float Gs = G_Smith(NdotV2, NdotL2, roughness);
+
+            // Weight = F*G / (4*NdotV) — PDF from GGX sampling cancels D term
+            brdfWeight = (Fs * Gs / max(4.0 * NdotV2, 1e-4)) /
+                         max(specProb, 1e-4);
+
+        } else {
+            // ---- Diffuse bounce (cosine-weighted hemisphere) ----
+            float2 u = float2(rand(rng), rand(rng));
+            float3 localBounce = cosineSampleHemisphere(u);
+            bounceRay.direction = normalize(basis * localBounce);
+
+            float3 kD = (1.0 - F_approx) * (1.0 - metallic);
+            brdfWeight = (kD * mat.albedo.xyz) / max(1.0 - specProb, 1e-4);
+        }
+
+        brdfWeight = clamp(brdfWeight, float3(0.0), float3(1.25));
 
         auto bounceHit = isect.intersect(bounceRay, sceneAS, 0xFF);
 
         if (bounceHit.type == intersection_type::none) {
-            indirect = mat.albedo.xyz * skyColor(bounceDir, 0.0) *
+            // Hit the sky
+            indirect = brdfWeight * skyColor(bounceRay.direction, 0.0) *
                        sceneData.indirectStrength;
         } else {
+            // --- Shade the bounce surface with full PBR direct lighting ---
             uint bi = bounceHit.instance_id;
             uint bp = bounceHit.primitive_id;
 
@@ -6220,37 +6390,42 @@ float3 sampleRadiance(uint2 gid, uint sampleIndex, uint w,
             uint bj1 = indices[bmesh.indexOffset + bp * 3 + 1];
             uint bj2 = indices[bmesh.indexOffset + bp * 3 + 2];
 
-            float3 bn0 = float3(vertices[bj0]);
-            float3 bn1 = float3(vertices[bj1]);
-            float3 bn2 = float3(vertices[bj2]);
-
             float2 bbary = bounceHit.triangle_barycentric_coord;
             float bb0 = 1.0 - bbary.x - bbary.y;
-            float bb1 = bbary.x;
-            float bb2 = bbary.y;
 
-            float3 blocN = normalize(bn0 * bb0 + bn1 * bb1 + bn2 * bb2);
+            float3 blocN = normalize(float3(vertices[bj0]) * bb0 +
+                                     float3(vertices[bj1]) * bbary.x +
+                                     float3(vertices[bj2]) * bbary.y);
 
-            float3x3 bNormalMatrix =
-                float3x3(binst.normalCol0.xyz, binst.normalCol1.xyz,
-                         binst.normalCol2.xyz);
-            float3 bN = normalize(bNormalMatrix * blocN);
-
+            float3x3 bNM = float3x3(binst.normalCol0.xyz, binst.normalCol1.xyz,
+                                    binst.normalCol2.xyz);
+            float3 bN = normalize(bNM * blocN);
             float3 bP =
                 bounceRay.origin + bounceRay.direction * bounceHit.distance;
+            float3 bV = -bounceRay.direction;
 
-            float3 bounceDirect = evalDirectLighting(
-                isect, sceneAS, bP, bN, bmat.albedo.xyz, dirLight, sceneData,
+            float bRoughness = clamp(bmat.roughness, 0.08, 1.0);
+            float bMetallic = clamp(bmat.metallic, 0.0, 1.0);
+            float bAo = clamp(bmat.ao, 0.0, 1.0);
+            float bSssStrength =
+                clamp(1.0 - bmat.albedo.w, 0.0, 1.0) * (1.0 - bMetallic);
+            float bSssThickness = mix(0.25, 1.75, bAo);
+
+            float3 bounceDirect = evalDirectLightingPBR(
+                isect, sceneAS, bP, bN, bV, bmat.albedo.xyz, bMetallic,
+                bRoughness, bSssStrength, bSssThickness, dirLight, sceneData,
                 pointLights, spotLights, areaLights);
 
-            float cosineTerm = max(dot(N, bounceDir), 0.0);
-            indirect = mat.albedo.xyz * bounceDirect * cosineTerm *
+            float3 bAmbient = bmat.albedo.xyz * 0.04 * (1.0 - bMetallic) * bAo;
+            indirect = brdfWeight * (bAmbient + bounceDirect) *
                        sceneData.indirectStrength;
         }
+
+        indirect = clampLuminance(indirect, 3.0);
     }
 
-    float3 ambient = mat.albedo.xyz * 0.04;
-    return ambient + direct + indirect;
+    float3 ambient = mat.albedo.xyz * 0.04 * (1.0 - metallic) * ao;
+    return clampLuminance(ambient + direct + emissive + indirect, 10.0);
 }
 
 kernel void main0(texture2d<float, access::write> outTex [[texture(0)]],
@@ -6278,7 +6453,6 @@ kernel void main0(texture2d<float, access::write> outTex [[texture(0)]],
     ndc.y = -ndc.y;
 
     float4 clip = float4(ndc, 1.0, 1.0);
-
     float4 worldH = cam.invViewProj * clip;
     float3 worldP = worldH.xyz / worldH.w;
 
@@ -6310,10 +6484,11 @@ kernel void main0(texture2d<float, access::write> outTex [[texture(0)]],
             primaryRay.min_distance = 0.001;
             primaryRay.max_distance = 1.0e30;
 
-            color += sampleRadiance(gid, s, w, isect, sceneAS, primaryRay,
-                                    materials, meshData, vertices, indices,
-                                    instanceData, dirLight, sceneData,
-                                    pointLights, spotLights, areaLights);
+            float3 sample = sampleRadiance(gid, s, w, isect, sceneAS, primaryRay,
+                                           materials, meshData, vertices, indices,
+                                           instanceData, dirLight, sceneData,
+                                           pointLights, spotLights, areaLights);
+            color += clampLuminance(sample, 10.0);
         }
 
         color /= float(spp);
@@ -6321,11 +6496,20 @@ kernel void main0(texture2d<float, access::write> outTex [[texture(0)]],
         int frameIndex = int(sceneData.frameIndex);
 
         float4 prevColor = prevTex.read(gid);
-        if (frameIndex == 0) {
+        if (frameIndex == 0)
             prevColor = float4(0, 0, 0, 1);
-        }
-        float3 accum = (prevColor.xyz * frameIndex + color) / (frameIndex + 1);
 
+        if (frameIndex > 2) {
+            float prevL = luminance(prevColor.xyz);
+            float currL = luminance(color);
+            float maxAllowed = max(prevL * 1.6 + 0.15, 0.75);
+            if (currL > maxAllowed && currL > 1e-6) {
+                color *= maxAllowed / currL;
+            }
+        }
+
+        float3 accum = (prevColor.xyz * frameIndex + color) / (frameIndex + 1);
+        accum = clampLuminance(accum, 10.0);
         outTex.write(float4(accum, 1.0), gid);
     }
 }

@@ -234,14 +234,13 @@ class MainScene : public Scene {
         areaLight = AreaLight();
         areaLight.position = {0.0f, 1.98f, 0.0f};
         areaLight.setColor(COZY_LIGHT_COLOR);
-        areaLight.intensity = 2.2f;
         areaLight.range = 6.5f;
         areaLight.size = {0.70f, 0.46f};
         areaLight.angle = 125.0f;
         areaLight.castsBothSides = false;
         areaLight.setRotation({90.0f, 0.0f, 0.0f});
         areaLight.castShadows(window, 2048);
-        areaLight.intensity = 4;
+        areaLight.intensity = 15;
         this->addAreaLight(&areaLight);
         areaLight.createDebugObject();
         areaLight.addDebugObject(window);

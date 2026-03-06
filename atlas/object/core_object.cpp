@@ -1016,10 +1016,15 @@ void CoreObject::makeEmissive(Scene *scene, Color emissionColor,
     light = std::make_shared<Light>();
     light->color = emissionColor;
     light->shineColor = emissionColor;
+    light->intensity = intensity;
     light->position = this->position;
     light->distance = 10.0f;
     light->doesCastShadows = false;
     this->useDeferredRendering = false;
+
+    this->material.albedo = emissionColor;
+    this->material.emissiveColor = emissionColor;
+    this->material.emissiveIntensity = intensity;
 
     for (auto &vertex : vertices) {
         vertex.color = emissionColor * intensity;
