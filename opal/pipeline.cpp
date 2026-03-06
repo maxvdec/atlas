@@ -1076,7 +1076,8 @@ void Pipeline::bindBuffer(const std::string &name,
     (void)name;
     (void)buffer;
     (void)callerId;
-    throw std::runtime_error("bindBuffer(opal::Buffer) is not supported on OpenGL");
+    throw std::runtime_error(
+        "bindBuffer(opal::Buffer) is not supported on OpenGL");
 #elif defined(VULKAN)
     (void)callerId;
     if (!shaderProgram) {
@@ -1103,11 +1104,13 @@ void Pipeline::bindBuffer(const std::string &name,
         throw std::runtime_error("Vulkan buffer is not initialized");
     }
 
-    const auto *bindingInfo = getDescriptorBindingInfo(info->set, info->binding);
+    const auto *bindingInfo =
+        getDescriptorBindingInfo(info->set, info->binding);
     VkDescriptorType descriptorType =
-        bindingInfo ? bindingInfo->type
-                    : (info->isStorageBuffer ? VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
-                                             : VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+        bindingInfo
+            ? bindingInfo->type
+            : (info->isStorageBuffer ? VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
+                                     : VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
     VkDeviceSize range = 256;
     if (bindingInfo != nullptr && bindingInfo->minBufferSize > 0) {
         range = bindingInfo->minBufferSize;
@@ -1140,8 +1143,8 @@ void Pipeline::bindBuffer(const std::string &name,
         buffer->usage != BufferUsage::ShaderRead &&
         buffer->usage != BufferUsage::ShaderReadWrite &&
         buffer->usage != BufferUsage::GeneralPurpose) {
-        throw std::runtime_error(
-            "bindBuffer(opal::Buffer) requires a shader-readable buffer usage");
+        throw std::runtime_error("bindBuffer(opal::Buffer) requires a "
+                                 "shader-readable buffer usage");
     }
 
     auto &programState = metal::programState(shaderProgram.get());
@@ -1155,8 +1158,8 @@ void Pipeline::bindBuffer(const std::string &name,
     for (const auto &binding : bindings) {
         if (binding.vertexStage) {
             matchedStage = true;
-            uint32_t key =
-                metal::stageBindingKey(binding.index, metal::MetalProgramStage::Vertex);
+            uint32_t key = metal::stageBindingKey(
+                binding.index, metal::MetalProgramStage::Vertex);
             if (buffer != nullptr) {
                 pipelineState.shaderBuffers[key] = buffer;
             } else {
@@ -1175,8 +1178,8 @@ void Pipeline::bindBuffer(const std::string &name,
         }
         if (binding.computeStage) {
             matchedStage = true;
-            uint32_t key =
-                metal::stageBindingKey(binding.index, metal::MetalProgramStage::Compute);
+            uint32_t key = metal::stageBindingKey(
+                binding.index, metal::MetalProgramStage::Compute);
             if (buffer != nullptr) {
                 pipelineState.shaderBuffers[key] = buffer;
             } else {
@@ -1191,9 +1194,9 @@ void Pipeline::bindBuffer(const std::string &name,
 #endif
 }
 
-void Pipeline::bindShaderReadWriteBuffer(
-    const std::string &name, const std::shared_ptr<Buffer> &buffer,
-    int callerId) {
+void Pipeline::bindShaderReadWriteBuffer(const std::string &name,
+                                         const std::shared_ptr<Buffer> &buffer,
+                                         int callerId) {
 #ifdef METAL
     (void)callerId;
     if (!shaderProgram) {
@@ -1202,8 +1205,8 @@ void Pipeline::bindShaderReadWriteBuffer(
     if (buffer != nullptr && buffer->usage != BufferUsage::ShaderReadWrite &&
         buffer->usage != BufferUsage::ShaderRead &&
         buffer->usage != BufferUsage::GeneralPurpose) {
-        throw std::runtime_error(
-            "bindShaderReadWriteBuffer requires a shader-readable buffer usage");
+        throw std::runtime_error("bindShaderReadWriteBuffer requires a "
+                                 "shader-readable buffer usage");
     }
 
     auto &programState = metal::programState(shaderProgram.get());
@@ -1593,7 +1596,8 @@ void Pipeline::bindUniformBufferDescriptor(uint32_t set, uint32_t binding) {
     if (descriptorBufferIt != descriptorBuffers.end() &&
         descriptorBufferIt->second != nullptr &&
         descriptorBufferIt->second->vkBuffer != VK_NULL_HANDLE) {
-        VkDeviceSize range = info->minBufferSize > 0 ? info->minBufferSize : 256;
+        VkDeviceSize range =
+            info->minBufferSize > 0 ? info->minBufferSize : 256;
         VkDescriptorBufferInfo externalBufferInfo{};
         externalBufferInfo.buffer = descriptorBufferIt->second->vkBuffer;
         externalBufferInfo.offset = 0;

@@ -234,13 +234,13 @@ class MainScene : public Scene {
         areaLight = AreaLight();
         areaLight.position = {0.0f, 1.98f, 0.0f};
         areaLight.setColor(COZY_LIGHT_COLOR);
-        areaLight.intensity = 2.2f;
         areaLight.range = 6.5f;
         areaLight.size = {0.70f, 0.46f};
         areaLight.angle = 125.0f;
         areaLight.castsBothSides = false;
         areaLight.setRotation({90.0f, 0.0f, 0.0f});
         areaLight.castShadows(window, 2048);
+        areaLight.intensity = 15;
         this->addAreaLight(&areaLight);
         areaLight.createDebugObject();
         areaLight.addDebugObject(window);
@@ -301,8 +301,8 @@ class MainScene : public Scene {
 
         cubeBox = createBox({0.6f, 0.6f, 0.6f});
         cubeBox.material.albedo = boxWhite;
-        cubeBox.material.roughness = 0.76f;
-        cubeBox.material.metallic = 0.0f;
+        cubeBox.material.roughness = 0.0f;
+        cubeBox.material.metallic = 1.0f;
         cubeBox.material.ao = 1.0f;
         cubeBox.setPosition({0.42f, 0.3f, -0.5f});
         cubeBox.setRotation({0.0f, 11.0f, 0.0f});
@@ -323,22 +323,11 @@ class MainScene : public Scene {
         window.addRenderTarget(&frameBuffer);
         frameBuffer.display(window);
 
-        window.enableGlobalIllumination();
-        window.ddgiSystem->probeSpacing = 0.30f;
-        window.ddgiSystem->raysPerProbe = 64;
-        window.ddgiSystem->maxRayDistance = 7.5f;
-        window.ddgiSystem->normalBias = 0.03f;
-        window.ddgiSystem->hysteresis = 0.96f;
-        window.ddgiSystem->probeSpace->probeResolution = 8;
-        window.ddgiSystem->probeSpace->textureBorderSize = 1;
-        window.ddgiSystem->probeSpace->debugColor =
-            Color(1.0f, 1.0f, 1.0f, 0.0f);
-        // window.ddgiSystem->irradianceMap->display(window);
-
         this->setUseAtmosphereSkybox(false);
 
-        window.usesDeferred = true;
-        window.enableSSR(false);
+        window.enablePathTracing();
+        // window.pathTracer->pathTracingTexture->display(window);
+        window.pathTracer->raysPerPixel = 4;
     }
 };
 

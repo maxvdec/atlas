@@ -10,6 +10,7 @@
 #ifndef OPAL_H
 #define OPAL_H
 
+#include "Metal/Metal.hpp"
 #ifdef VULKAN
 #include <vulkan/vulkan.hpp>
 #endif
@@ -587,6 +588,8 @@ struct VertexBinding {
     VertexBindingInputRate inputRate;
 };
 
+class PrimitiveAccelerationStructure;
+
 class Pipeline {
   public:
     static std::shared_ptr<Pipeline> create();
@@ -1093,6 +1096,71 @@ class ResolveAction {
     bool resolveColor = true;
 };
 
+#ifdef METAL
+struct PrimitiveVertex {
+    float position[3];
+    float normal[3];
+    float tangent[3];
+    float bitangent[3];
+    float uv[2];
+};
+
+class PrimitiveAccelerationStructure {
+  public:
+    std::vector<PrimitiveVertex> vertices;
+    std::vector<uint32_t> indices;
+
+    static std::shared_ptr<PrimitiveAccelerationStructure>
+    create(const std::vector<PrimitiveVertex> &vertices,
+           const std::vector<uint32_t> &indices);
+
+    bool isBuilt = false;
+
+  private:
+    friend class CommandBuffer;
+    friend class InstanceAccelerationStructure;
+    std::shared_ptr<Buffer> asBuffer;
+    std::shared_ptr<Buffer> scratch;
+
+    MTL::AccelerationStructureDescriptor *blasDescriptor = nullptr;
+    MTL::AccelerationStructure *blas = nullptr;
+    std::shared_ptr<MTL::Buffer> vertexBuffer;
+    std::shared_ptr<MTL::Buffer> indexBuffer;
+};
+
+static inline void writeMetalTransform3x4(const glm::mat4 &M, float out3x4[12]);
+
+struct AccelerationStructureInstance {
+    std::shared_ptr<PrimitiveAccelerationStructure> blas;
+    glm::mat4 transform;
+    uint32_t instanceId;
+    uint32_t mask;
+    bool cullDisable;
+};
+
+class InstanceAccelerationStructure {
+  public:
+    static std::shared_ptr<opal::InstanceAccelerationStructure>
+    create(const std::vector<opal::AccelerationStructureInstance> &instances);
+
+    bool isBuilt = false;
+
+  private:
+    std::vector<AccelerationStructureInstance> instances;
+    std::shared_ptr<Buffer> instanceBuffer;
+    MTL::InstanceAccelerationStructureDescriptor *tlasDescriptor = nullptr;
+    MTL::AccelerationStructure *tlas = nullptr;
+
+    std::vector<std::shared_ptr<PrimitiveAccelerationStructure>> blasRefs;
+    std::vector<MTL::AccelerationStructure *> blasPtrs;
+
+    std::shared_ptr<Buffer> scratch;
+
+    friend class CommandBuffer;
+};
+
+#endif
+
 class CommandBuffer {
   public:
     ~CommandBuffer();
@@ -1130,6 +1198,23 @@ class CommandBuffer {
     void clear(float r, float g, float b, float a, float depth);
 
     int getAndResetDrawCallCount();
+
+#ifdef METAL
+    void buildPrimitiveAccelerationStructure(
+        const std::shared_ptr<PrimitiveAccelerationStructure> &blas);
+
+    void bindPrimitiveAccelerationStructure(
+        const std::shared_ptr<PrimitiveAccelerationStructure> &blas,
+        uint32_t binding);
+
+    void buildInstanceAccelerationStructure(
+        const std::shared_ptr<InstanceAccelerationStructure> &tlas);
+
+    void bindInstanceAccelerationStructure(
+        const std::shared_ptr<InstanceAccelerationStructure> &tlas,
+        uint32_t binding);
+
+#endif
 
   private:
 #ifdef VULKAN

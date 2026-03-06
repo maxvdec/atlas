@@ -309,6 +309,7 @@ class Window {
 
 #ifdef METAL
     void enableGlobalIllumination();
+    void enablePathTracing();
 #endif
 
     /**
@@ -548,8 +549,10 @@ class Window {
     bool firstFrame = true;
 
     bool usesGlobalIllumination = false;
+    bool usePathTracing = false;
 #ifdef METAL
     std::shared_ptr<photon::GlobalIllumination> ddgiSystem;
+    std::shared_ptr<photon::PathTracing> pathTracer;
 #endif
 
     BoundingBox getSceneBoundingBox();
@@ -699,6 +702,7 @@ class Window {
     friend class Text;
     friend class Terrain;
     friend class photon::GlobalIllumination;
+    friend class photon::PathTracing;
     friend struct Fluid;
 };
 

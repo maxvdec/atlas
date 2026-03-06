@@ -458,6 +458,10 @@ void CommandBuffer::performResolve(
         state.encoder = nullptr;
         state.textureBindingsInitialized = false;
     }
+    if (state.computeEncoder != nullptr) {
+        state.computeEncoder->endEncoding();
+        state.computeEncoder = nullptr;
+    }
 
     bool ownedCommandBuffer = false;
     NS::AutoreleasePool *resolvePool = nullptr;

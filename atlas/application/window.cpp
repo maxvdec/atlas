@@ -18,6 +18,7 @@
 #include "atlas/units.h"
 #include "hydra/fluid.h"
 #include "bezel/bezel.h"
+#include "photon/illuminate.h"
 #ifndef BEZEL_NATIVE
 #include "bezel/jolt/world.h"
 #endif
@@ -485,6 +486,21 @@ void Window::run() {
             newRenderPass->setFramebuffer(target->getFramebuffer());
             if (target->brightTexture.id != 0) {
                 target->getFramebuffer()->setDrawBuffers(2);
+            }
+
+            if (this->usePathTracing) {
+                pathTracer->render(commandBuffer);
+                // Copy to the current target
+                pathTracer->copySrcFramebuffer->attachTexture(
+                    pathTracer->pathTracingTexture->texture, 0);
+                pathTracer->copyDstFramebuffer->attachTexture(
+                    target->texture.texture, 0);
+                auto copy = opal::ResolveAction::createForColorAttachment(
+                    pathTracer->copySrcFramebuffer,
+                    pathTracer->copyDstFramebuffer, 0);
+                commandBuffer->performResolve(copy);
+
+                continue;
             }
 
             if (this->usesDeferred) {
@@ -2329,4 +2345,10 @@ BoundingBox Window::getSceneBoundingBox() {
         return {};
 
     return {Position3d::fromGlm(worldMin), Position3d::fromGlm(worldMax)};
+}
+
+void Window::enablePathTracing() {
+    this->usePathTracing = true;
+    this->pathTracer = std::make_shared<photon::PathTracing>();
+    pathTracer->init();
 }

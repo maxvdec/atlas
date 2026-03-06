@@ -15,6 +15,10 @@
 #include "atlas/units.h"
 #include "opal/opal.h"
 #include <memory>
+#include <unordered_map>
+#include <utility>
+
+class Window;
 
 namespace photon {
 
@@ -43,6 +47,47 @@ struct ProbeSpace {
     int atlasWidth() const { return probesPerRow * tileResolution(); }
 
     int atlasHeight() const { return atlasRows() * tileResolution(); }
+};
+
+class PathTracing {
+  public:
+    void render(const std::shared_ptr<opal::CommandBuffer> &commandBuffer);
+    void buildAccelerationStructure(
+        const std::shared_ptr<opal::CommandBuffer> &commandBuffer);
+    void createLightBuffers();
+    void init();
+
+    std::shared_ptr<Texture> pathTracingTexture;
+    std::shared_ptr<Texture> pathTracingTexturePrev;
+
+    int raysPerPixel = 4;
+    int maxBounces = 1;
+    float indirectStrength = 0.55f;
+
+    std::shared_ptr<opal::Framebuffer> copySrcFramebuffer;
+    std::shared_ptr<opal::Framebuffer> copyDstFramebuffer;
+
+  private:
+    std::shared_ptr<opal::Buffer> pointLights;
+    std::shared_ptr<opal::Buffer> spotLights;
+    std::shared_ptr<opal::Buffer> areaLights;
+
+    std::shared_ptr<opal::Buffer> globalVertices;
+    std::shared_ptr<opal::Buffer> globalIndices;
+    std::shared_ptr<opal::Buffer> meshInfo;
+    std::shared_ptr<opal::Buffer> materialBuffer;
+    std::shared_ptr<opal::Buffer> instanceDataBuffer;
+    std::shared_ptr<opal::InstanceAccelerationStructure> sceneTLAS;
+    std::shared_ptr<opal::Pipeline> pathTracingPipeline;
+    std::shared_ptr<ShaderProgram> computePathTracer;
+    std::unordered_map<int,
+                       std::shared_ptr<opal::PrimitiveAccelerationStructure>>
+        objectBLAS;
+
+    int frameIndex = 0;
+    glm::mat4 cachedInvViewProj = glm::mat4(1.0f);
+
+    friend class Window;
 };
 
 class GlobalIllumination {

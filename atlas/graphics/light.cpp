@@ -25,6 +25,10 @@
 void Light::createDebugObject() {
     CoreObject sphere = createSphere(0.05f, 36, 18, this->color);
     sphere.setPosition(this->position);
+    sphere.material.albedo = this->color;
+    sphere.material.emissiveColor = this->color;
+    sphere.material.emissiveIntensity =
+        std::clamp(this->intensity * 0.2f, 1.0f, 8.0f);
     FragmentShader shader =
         FragmentShader::fromDefaultShader(AtlasFragmentShader::Color);
     VertexShader vShader =
@@ -169,6 +173,10 @@ void Spotlight::createDebugObject() {
     CoreObject pyramid = createPyramid({0.1f, 0.1f, 0.1f}, this->color);
     pyramid.setPosition(this->position);
     pyramid.lookAt(this->position + this->direction);
+    pyramid.material.albedo = this->color;
+    pyramid.material.emissiveColor = this->color;
+    pyramid.material.emissiveIntensity =
+        std::clamp(this->intensity * 0.2f, 1.0f, 8.0f);
     FragmentShader shader =
         FragmentShader::fromDefaultShader(AtlasFragmentShader::Color);
     VertexShader vShader =
@@ -502,6 +510,10 @@ void AreaLight::createDebugObject() {
     CoreObject plane;
     plane.attachVertices(vertices);
     plane.attachIndices(indices);
+    plane.material.albedo = this->color;
+    plane.material.emissiveColor = this->color;
+    plane.material.emissiveIntensity =
+        std::clamp(this->intensity * 0.2f, 1.0f, 8.0f);
 
     glm::vec3 desiredRight = glm::normalize(this->right.toGlm());
     glm::vec3 desiredUp = glm::normalize(this->up.toGlm());
