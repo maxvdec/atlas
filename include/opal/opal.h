@@ -1192,6 +1192,7 @@ class CommandBuffer {
                   uint threadCountZ = 1);
     void computeBarrier();
     void performResolve(const std::shared_ptr<ResolveAction> &resolveAction);
+    bool performSpatialUpscale(const std::shared_ptr<Texture> &sourceTexture);
 
     void clearColor(float r, float g, float b, float a);
     void clearDepth(float depth);

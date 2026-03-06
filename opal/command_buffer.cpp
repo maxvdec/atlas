@@ -20,6 +20,10 @@
 #include <utility>
 #ifdef METAL
 #include "metal_state.h"
+#ifdef __APPLE__
+#include <objc/message.h>
+#include <objc/runtime.h>
+#endif
 #endif
 
 namespace opal {
@@ -282,6 +286,119 @@ std::shared_ptr<Texture> fallbackTextureForType(TextureType type) {
         return fallbackTexture2D();
     }
 }
+
+#ifdef __APPLE__
+bool encodeMetalFXSpatialUpscale(CommandBuffer *commandBuffer, Device *device,
+                                 const std::shared_ptr<Texture> &sourceTexture) {
+    if (commandBuffer == nullptr || device == nullptr ||
+        sourceTexture == nullptr) {
+        return false;
+    }
+
+    auto &state = metal::commandBufferState(commandBuffer);
+    auto &deviceState = metal::deviceState(device);
+    auto &sourceState = metal::textureState(sourceTexture.get());
+    if (deviceState.device == nullptr || deviceState.queue == nullptr ||
+        sourceState.texture == nullptr) {
+        return false;
+    }
+
+    MTL::Texture *destinationTexture = nullptr;
+    if (state.passDescriptor != nullptr) {
+        auto *colorAttachment = state.passDescriptor->colorAttachments()->object(0);
+        if (colorAttachment != nullptr) {
+            destinationTexture = colorAttachment->texture();
+        }
+    }
+    if (destinationTexture == nullptr && state.drawable != nullptr) {
+        destinationTexture = state.drawable->texture();
+    }
+
+    if (destinationTexture == nullptr || sourceState.texture == destinationTexture) {
+        return false;
+    }
+    if (sourceState.texture->sampleCount() != 1 ||
+        destinationTexture->sampleCount() != 1) {
+        return false;
+    }
+
+    if (state.encoder != nullptr) {
+        state.encoder->endEncoding();
+        state.encoder = nullptr;
+        state.textureBindingsInitialized = false;
+    }
+    if (state.computeEncoder != nullptr) {
+        state.computeEncoder->endEncoding();
+        state.computeEncoder = nullptr;
+    }
+    if (state.commandBuffer == nullptr) {
+        state.commandBuffer = deviceState.queue->commandBuffer();
+    }
+    if (state.commandBuffer == nullptr) {
+        return false;
+    }
+
+    Class descriptorClass =
+        reinterpret_cast<Class>(objc_getClass("MTLFXSpatialScalerDescriptor"));
+    if (descriptorClass == nullptr) {
+        return false;
+    }
+
+    auto sendIdNoArgs = [](id obj, SEL selector) -> id {
+        return ((id(*)(id, SEL))objc_msgSend)(obj, selector);
+    };
+    auto sendVoidUInteger = [](id obj, SEL selector, NS::UInteger value) {
+        ((void (*)(id, SEL, NS::UInteger))objc_msgSend)(obj, selector, value);
+    };
+    auto sendVoidPixelFormat = [](id obj, SEL selector, MTL::PixelFormat value) {
+        ((void (*)(id, SEL, MTL::PixelFormat))objc_msgSend)(obj, selector,
+                                                            value);
+    };
+    auto sendVoidId = [](id obj, SEL selector, id value) {
+        ((void (*)(id, SEL, id))objc_msgSend)(obj, selector, value);
+    };
+
+    id descriptor = sendIdNoArgs(reinterpret_cast<id>(descriptorClass),
+                                 sel_registerName("alloc"));
+    descriptor = sendIdNoArgs(descriptor, sel_registerName("init"));
+    if (descriptor == nullptr) {
+        return false;
+    }
+
+    sendVoidUInteger(descriptor, sel_registerName("setInputWidth:"),
+                     sourceState.texture->width());
+    sendVoidUInteger(descriptor, sel_registerName("setInputHeight:"),
+                     sourceState.texture->height());
+    sendVoidUInteger(descriptor, sel_registerName("setOutputWidth:"),
+                     destinationTexture->width());
+    sendVoidUInteger(descriptor, sel_registerName("setOutputHeight:"),
+                     destinationTexture->height());
+    sendVoidPixelFormat(descriptor, sel_registerName("setColorTextureFormat:"),
+                        sourceState.texture->pixelFormat());
+    sendVoidPixelFormat(descriptor, sel_registerName("setOutputTextureFormat:"),
+                        destinationTexture->pixelFormat());
+
+    id scaler = ((id(*)(id, SEL, id))objc_msgSend)(
+        descriptor, sel_registerName("newSpatialScalerWithDevice:"),
+        reinterpret_cast<id>(deviceState.device));
+    ((void (*)(id, SEL))objc_msgSend)(descriptor, sel_registerName("release"));
+
+    if (scaler == nullptr) {
+        return false;
+    }
+
+    sendVoidId(scaler, sel_registerName("setColorTexture:"),
+               reinterpret_cast<id>(sourceState.texture));
+    sendVoidId(scaler, sel_registerName("setOutputTexture:"),
+               reinterpret_cast<id>(destinationTexture));
+    sendVoidId(scaler, sel_registerName("encodeToCommandBuffer:"),
+               reinterpret_cast<id>(state.commandBuffer));
+
+    ((void (*)(id, SEL))objc_msgSend)(scaler, sel_registerName("release"));
+    state.hasDraw = true;
+    return true;
+}
+#endif
 
 MTL::RenderPipelineState *
 getRenderPipelineState(Device *device,
@@ -1901,6 +2018,21 @@ void CommandBuffer::computeBarrier() {
         state.computeEncoder->memoryBarrier(MTL::BarrierScope(
             MTL::BarrierScopeBuffers | MTL::BarrierScopeTextures));
     }
+#endif
+}
+
+bool CommandBuffer::performSpatialUpscale(
+    const std::shared_ptr<Texture> &sourceTexture) {
+#ifdef METAL
+#ifdef __APPLE__
+    return encodeMetalFXSpatialUpscale(this, device, sourceTexture);
+#else
+    (void)sourceTexture;
+    return false;
+#endif
+#else
+    (void)sourceTexture;
+    return false;
 #endif
 }
 

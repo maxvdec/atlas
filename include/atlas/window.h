@@ -501,6 +501,10 @@ class Window {
      */
     float getRenderScale() const { return this->renderScale; }
 
+    void useMetalUpscaling(float ratio = 0.75f);
+    bool isMetalUpscalingEnabled() const { return this->metalUpscalingEnabled; }
+    float getMetalUpscalingRatio() const { return this->metalUpscalingRatio; }
+
     /**
      * @brief Returns the SSAO-specific render scale.
      */
@@ -668,6 +672,8 @@ class Window {
 
     float renderScale = 0.75f;
     float ssaoRenderScale = 0.5f;
+    bool metalUpscalingEnabled = false;
+    float metalUpscalingRatio = 1.0f;
     unsigned int bloomBlurPasses = 4;
     int ssaoKernelSize = 32;
     float ssaoUpdateInterval = 1.0f / 45.0f;
