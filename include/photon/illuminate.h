@@ -78,6 +78,7 @@ class PathTracing {
     std::shared_ptr<opal::Buffer> meshInfo;
     std::shared_ptr<opal::Buffer> materialBuffer;
     std::shared_ptr<opal::Buffer> instanceDataBuffer;
+    std::vector<std::shared_ptr<opal::Texture>> materialTextures;
     std::shared_ptr<opal::InstanceAccelerationStructure> sceneTLAS;
     std::shared_ptr<opal::Pipeline> pathTracingPipeline;
     std::shared_ptr<ShaderProgram> computePathTracer;
@@ -116,12 +117,22 @@ class GlobalIllumination {
 
     struct DDGIMaterial {
         int materialID;
+        int albedoTextureIndex;
+        int normalTextureIndex;
+        int metallicTextureIndex;
+
+        int roughnessTextureIndex;
+        int aoTextureIndex;
         float metallic;
         float roughness;
         float ao;
+        float emissiveIntensity;
 
         glm::vec3 albedo;
         float _pad0;
+
+        glm::vec3 emissiveColor;
+        float _pad1;
     };
 
     struct DDGITriangle {
@@ -133,6 +144,18 @@ class GlobalIllumination {
         glm::vec4 n1;
         glm::vec4 n2;
 
+        glm::vec4 uv0;
+        glm::vec4 uv1;
+        glm::vec4 uv2;
+
+        glm::vec4 t0;
+        glm::vec4 t1;
+        glm::vec4 t2;
+
+        glm::vec4 b0;
+        glm::vec4 b1;
+        glm::vec4 b2;
+
         int materialID;
 
         int pad[3];
@@ -140,6 +163,7 @@ class GlobalIllumination {
 
     std::vector<DDGITriangle> triangles;
     std::vector<DDGIMaterial> materials;
+    std::vector<std::shared_ptr<opal::Texture>> materialTextures;
 
     float probeSpacing = 0.5f;
 

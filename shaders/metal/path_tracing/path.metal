@@ -17,6 +17,12 @@ struct Material {
     float emissiveIntensity;
     packed_float3 emissiveColor;
     float _pad0;
+    int albedoTextureIndex;
+    int normalTextureIndex;
+    int metallicTextureIndex;
+    int roughnessTextureIndex;
+    int aoTextureIndex;
+    int _pad1[3];
 };
 
 struct MeshData {
@@ -24,6 +30,13 @@ struct MeshData {
     uint indexOffset;
     uint _pad0;
     uint _pad1;
+};
+
+struct VertexData {
+    packed_float3 normal;
+    packed_float2 uv;
+    packed_float3 tangent;
+    packed_float3 bitangent;
 };
 
 struct InstanceData {
@@ -84,6 +97,7 @@ struct SceneData {
     uint raysPerPixel;
     uint maxBounces;
     float indirectStrength;
+    uint materialTextureCount;
 };
 
 float pow5(float x) {
@@ -139,6 +153,248 @@ float3x3 buildOrthonormalBasis(float3 N) {
                                         : cross(float3(1, 0, 0), N));
     float3 B = cross(N, T);
     return float3x3(T, B, N);
+}
+
+float3 normalizeOr(float3 v, float3 fallback) {
+    float len2 = dot(v, v);
+    if (len2 > 1e-10) {
+        return v * rsqrt(len2);
+    }
+    return fallback;
+}
+
+constexpr sampler materialTexSampler(coord::normalized, address::repeat,
+                                     filter::linear, mip_filter::linear);
+
+float4 sampleMaterialTexture(int textureIndex, float2 uv,
+                             texture2d<float> materialTexture0,
+                             texture2d<float> materialTexture1,
+                             texture2d<float> materialTexture2,
+                             texture2d<float> materialTexture3,
+                             texture2d<float> materialTexture4,
+                             texture2d<float> materialTexture5,
+                             texture2d<float> materialTexture6,
+                             texture2d<float> materialTexture7,
+                             texture2d<float> materialTexture8,
+                             texture2d<float> materialTexture9,
+                             texture2d<float> materialTexture10,
+                             texture2d<float> materialTexture11,
+                             texture2d<float> materialTexture12,
+                             texture2d<float> materialTexture13,
+                             texture2d<float> materialTexture14,
+                             texture2d<float> materialTexture15,
+                             texture2d<float> materialTexture16,
+                             texture2d<float> materialTexture17,
+                             texture2d<float> materialTexture18,
+                             texture2d<float> materialTexture19) {
+    switch (textureIndex) {
+    case 0:
+        return materialTexture0.sample(materialTexSampler, uv);
+    case 1:
+        return materialTexture1.sample(materialTexSampler, uv);
+    case 2:
+        return materialTexture2.sample(materialTexSampler, uv);
+    case 3:
+        return materialTexture3.sample(materialTexSampler, uv);
+    case 4:
+        return materialTexture4.sample(materialTexSampler, uv);
+    case 5:
+        return materialTexture5.sample(materialTexSampler, uv);
+    case 6:
+        return materialTexture6.sample(materialTexSampler, uv);
+    case 7:
+        return materialTexture7.sample(materialTexSampler, uv);
+    case 8:
+        return materialTexture8.sample(materialTexSampler, uv);
+    case 9:
+        return materialTexture9.sample(materialTexSampler, uv);
+    case 10:
+        return materialTexture10.sample(materialTexSampler, uv);
+    case 11:
+        return materialTexture11.sample(materialTexSampler, uv);
+    case 12:
+        return materialTexture12.sample(materialTexSampler, uv);
+    case 13:
+        return materialTexture13.sample(materialTexSampler, uv);
+    case 14:
+        return materialTexture14.sample(materialTexSampler, uv);
+    case 15:
+        return materialTexture15.sample(materialTexSampler, uv);
+    case 16:
+        return materialTexture16.sample(materialTexSampler, uv);
+    case 17:
+        return materialTexture17.sample(materialTexSampler, uv);
+    case 18:
+        return materialTexture18.sample(materialTexSampler, uv);
+    case 19:
+        return materialTexture19.sample(materialTexSampler, uv);
+    default:
+        break;
+    }
+    return float4(0.0);
+}
+
+void resolveMaterialParameters(Material mat, float2 uv, uint textureCount,
+                               texture2d<float> materialTexture0,
+                               texture2d<float> materialTexture1,
+                               texture2d<float> materialTexture2,
+                               texture2d<float> materialTexture3,
+                               texture2d<float> materialTexture4,
+                               texture2d<float> materialTexture5,
+                               texture2d<float> materialTexture6,
+                               texture2d<float> materialTexture7,
+                               texture2d<float> materialTexture8,
+                               texture2d<float> materialTexture9,
+                               texture2d<float> materialTexture10,
+                               texture2d<float> materialTexture11,
+                               texture2d<float> materialTexture12,
+                               texture2d<float> materialTexture13,
+                               texture2d<float> materialTexture14,
+                               texture2d<float> materialTexture15,
+                               texture2d<float> materialTexture16,
+                               texture2d<float> materialTexture17,
+                               texture2d<float> materialTexture18,
+                               texture2d<float> materialTexture19,
+                               thread float3 &albedo, thread float &metallic,
+                               thread float &roughness, thread float &ao,
+                               thread float3 &emissive) {
+    albedo = mat.albedo.xyz;
+    metallic = mat.metallic;
+    roughness = mat.roughness;
+    ao = mat.ao;
+    emissive =
+        clampLuminance(float3(mat.emissiveColor) * min(max(mat.emissiveIntensity, 0.0), 8.0),
+                       8.0);
+
+    if (mat.albedoTextureIndex >= 0 &&
+        uint(mat.albedoTextureIndex) < textureCount) {
+        float3 tex = sampleMaterialTexture(
+                         mat.albedoTextureIndex, uv, materialTexture0,
+                         materialTexture1, materialTexture2, materialTexture3,
+                         materialTexture4, materialTexture5, materialTexture6,
+                         materialTexture7, materialTexture8, materialTexture9,
+                         materialTexture10, materialTexture11,
+                         materialTexture12, materialTexture13,
+                         materialTexture14, materialTexture15,
+                         materialTexture16, materialTexture17,
+                         materialTexture18, materialTexture19)
+                         .xyz;
+        albedo *= clamp(tex, float3(0.0), float3(1.0));
+    }
+    if (mat.metallicTextureIndex >= 0 &&
+        uint(mat.metallicTextureIndex) < textureCount) {
+        metallic *= clamp(sampleMaterialTexture(
+                              mat.metallicTextureIndex, uv, materialTexture0,
+                              materialTexture1, materialTexture2,
+                              materialTexture3, materialTexture4,
+                              materialTexture5, materialTexture6,
+                              materialTexture7, materialTexture8,
+                              materialTexture9, materialTexture10,
+                              materialTexture11, materialTexture12,
+                              materialTexture13, materialTexture14,
+                              materialTexture15, materialTexture16,
+                              materialTexture17, materialTexture18,
+                              materialTexture19)
+                              .x,
+                          0.0, 1.0);
+    }
+    if (mat.roughnessTextureIndex >= 0 &&
+        uint(mat.roughnessTextureIndex) < textureCount) {
+        roughness *= clamp(sampleMaterialTexture(
+                               mat.roughnessTextureIndex, uv, materialTexture0,
+                               materialTexture1, materialTexture2,
+                               materialTexture3, materialTexture4,
+                               materialTexture5, materialTexture6,
+                               materialTexture7, materialTexture8,
+                               materialTexture9, materialTexture10,
+                               materialTexture11, materialTexture12,
+                               materialTexture13, materialTexture14,
+                               materialTexture15, materialTexture16,
+                               materialTexture17, materialTexture18,
+                               materialTexture19)
+                               .x,
+                           0.0, 1.0);
+    }
+    if (mat.aoTextureIndex >= 0 && uint(mat.aoTextureIndex) < textureCount) {
+        ao *= clamp(sampleMaterialTexture(
+                        mat.aoTextureIndex, uv, materialTexture0,
+                        materialTexture1, materialTexture2, materialTexture3,
+                        materialTexture4, materialTexture5, materialTexture6,
+                        materialTexture7, materialTexture8, materialTexture9,
+                        materialTexture10, materialTexture11,
+                        materialTexture12, materialTexture13,
+                        materialTexture14, materialTexture15,
+                        materialTexture16, materialTexture17,
+                        materialTexture18, materialTexture19)
+                        .x,
+                    0.0, 1.0);
+    }
+
+    albedo = clamp(albedo, float3(0.0), float3(1.0));
+    metallic = clamp(metallic, 0.0, 1.0);
+    roughness = clamp(roughness, 0.08, 1.0);
+    ao = clamp(ao, 0.0, 1.0);
+}
+
+float3 resolveShadingNormal(Material mat, float2 uv, float3 localN,
+                            float3 localT, float3 localB,
+                            InstanceData inst, uint textureCount,
+                            texture2d<float> materialTexture0,
+                            texture2d<float> materialTexture1,
+                            texture2d<float> materialTexture2,
+                            texture2d<float> materialTexture3,
+                            texture2d<float> materialTexture4,
+                            texture2d<float> materialTexture5,
+                            texture2d<float> materialTexture6,
+                            texture2d<float> materialTexture7,
+                            texture2d<float> materialTexture8,
+                            texture2d<float> materialTexture9,
+                            texture2d<float> materialTexture10,
+                            texture2d<float> materialTexture11,
+                            texture2d<float> materialTexture12,
+                            texture2d<float> materialTexture13,
+                            texture2d<float> materialTexture14,
+                            texture2d<float> materialTexture15,
+                            texture2d<float> materialTexture16,
+                            texture2d<float> materialTexture17,
+                            texture2d<float> materialTexture18,
+                            texture2d<float> materialTexture19) {
+    float3x3 normalMatrix =
+        float3x3(inst.normalCol0.xyz, inst.normalCol1.xyz, inst.normalCol2.xyz);
+    float3 N = normalizeOr(normalMatrix * localN, float3(0.0, 1.0, 0.0));
+
+    float3 T = normalizeOr((inst.model * float4(localT, 0.0)).xyz,
+                           float3(1.0, 0.0, 0.0));
+    float3 B = normalizeOr((inst.model * float4(localB, 0.0)).xyz,
+                           float3(0.0, 0.0, 1.0));
+    T = normalizeOr(T - N * dot(N, T), float3(1.0, 0.0, 0.0));
+    B = normalizeOr(B - N * dot(N, B), cross(N, T));
+    if (dot(cross(T, B), cross(T, B)) <= 1e-10) {
+        float3x3 basis = buildOrthonormalBasis(N);
+        T = basis[0];
+        B = basis[1];
+    }
+
+    if (mat.normalTextureIndex >= 0 && uint(mat.normalTextureIndex) < textureCount) {
+        float3 tangentNormal =
+            sampleMaterialTexture(mat.normalTextureIndex, uv, materialTexture0,
+                                  materialTexture1, materialTexture2,
+                                  materialTexture3, materialTexture4,
+                                  materialTexture5, materialTexture6,
+                                  materialTexture7, materialTexture8,
+                                  materialTexture9, materialTexture10,
+                                  materialTexture11, materialTexture12,
+                                  materialTexture13, materialTexture14,
+                                  materialTexture15, materialTexture16,
+                                  materialTexture17, materialTexture18,
+                                  materialTexture19)
+                .xyz;
+        tangentNormal = normalizeOr(tangentNormal * 2.0 - 1.0,
+                                    float3(0.0, 0.0, 1.0));
+        N = normalizeOr(float3x3(T, B, N) * tangentNormal, N);
+    }
+
+    return N;
 }
 
 float3 lambert(float3 albedo, float3 N, float3 L, float3 lightColor,
@@ -402,13 +658,33 @@ float3 sampleRadiance(uint2 gid, uint sampleIndex, uint w,
                       intersector<triangle_data, instancing> isect,
                       instance_acceleration_structure sceneAS, ray primaryRay,
                       constant Material *materials, constant MeshData *meshData,
-                      constant packed_float3 *vertices, constant uint *indices,
+                      constant VertexData *vertices, constant uint *indices,
                       constant InstanceData *instanceData,
                       constant DirectionalLightData &dirLight,
                       constant SceneData &sceneData,
                       constant PointLight *pointLights,
                       constant SpotLight *spotLights,
-                      constant AreaLight *areaLights) {
+                      constant AreaLight *areaLights,
+                      texture2d<float> materialTexture0,
+                      texture2d<float> materialTexture1,
+                      texture2d<float> materialTexture2,
+                      texture2d<float> materialTexture3,
+                      texture2d<float> materialTexture4,
+                      texture2d<float> materialTexture5,
+                      texture2d<float> materialTexture6,
+                      texture2d<float> materialTexture7,
+                      texture2d<float> materialTexture8,
+                      texture2d<float> materialTexture9,
+                      texture2d<float> materialTexture10,
+                      texture2d<float> materialTexture11,
+                      texture2d<float> materialTexture12,
+                      texture2d<float> materialTexture13,
+                      texture2d<float> materialTexture14,
+                      texture2d<float> materialTexture15,
+                      texture2d<float> materialTexture16,
+                      texture2d<float> materialTexture17,
+                      texture2d<float> materialTexture18,
+                      texture2d<float> materialTexture19) {
     uint rng = seedBase(gid, w, sceneData.frameIndex, sampleIndex);
 
     auto hit = isect.intersect(primaryRay, sceneAS, 0xFF);
@@ -432,42 +708,59 @@ float3 sampleRadiance(uint2 gid, uint sampleIndex, uint w,
     float b1 = bary.x;
     float b2 = bary.y;
 
-    float3 localN =
-        normalize(float3(vertices[i0]) * b0 + float3(vertices[i1]) * b1 +
-                  float3(vertices[i2]) * b2);
-
-    float3x3 normalMatrix =
-        float3x3(inst.normalCol0.xyz, inst.normalCol1.xyz, inst.normalCol2.xyz);
-    float3 N = normalize(normalMatrix * localN);
+    float2 texUV = float2(vertices[i0].uv) * b0 + float2(vertices[i1].uv) * b1 +
+                   float2(vertices[i2].uv) * b2;
+    float3 localN = normalizeOr(float3(vertices[i0].normal) * b0 +
+                                    float3(vertices[i1].normal) * b1 +
+                                    float3(vertices[i2].normal) * b2,
+                                float3(0.0, 1.0, 0.0));
+    float3 localT = normalizeOr(float3(vertices[i0].tangent) * b0 +
+                                    float3(vertices[i1].tangent) * b1 +
+                                    float3(vertices[i2].tangent) * b2,
+                                float3(1.0, 0.0, 0.0));
+    float3 localB = normalizeOr(float3(vertices[i0].bitangent) * b0 +
+                                    float3(vertices[i1].bitangent) * b1 +
+                                    float3(vertices[i2].bitangent) * b2,
+                                float3(0.0, 0.0, 1.0));
+    float3 N = resolveShadingNormal(
+        mat, texUV, localN, localT, localB, inst, sceneData.materialTextureCount,
+        materialTexture0, materialTexture1, materialTexture2, materialTexture3,
+        materialTexture4, materialTexture5, materialTexture6, materialTexture7,
+        materialTexture8, materialTexture9, materialTexture10,
+        materialTexture11, materialTexture12, materialTexture13,
+        materialTexture14, materialTexture15, materialTexture16,
+        materialTexture17, materialTexture18, materialTexture19);
     float3 P = primaryRay.origin + primaryRay.direction * hit.distance;
     float3 V = normalize(-primaryRay.direction);
 
-    float roughness = clamp(mat.roughness, 0.08, 1.0);
-    float metallic = clamp(mat.metallic, 0.0, 1.0);
-    float ao = clamp(mat.ao, 0.0, 1.0);
-    float emissiveIntensity = max(mat.emissiveIntensity, 0.0);
-    float3 emissiveColor = float3(mat.emissiveColor);
-    float3 emissive =
-        clampLuminance(emissiveColor * min(emissiveIntensity, 8.0), 8.0);
+    float3 albedo;
+    float metallic;
+    float roughness;
+    float ao;
+    float3 emissive;
+    resolveMaterialParameters(
+        mat, texUV, sceneData.materialTextureCount, materialTexture0,
+        materialTexture1, materialTexture2, materialTexture3, materialTexture4,
+        materialTexture5, materialTexture6, materialTexture7, materialTexture8,
+        materialTexture9, materialTexture10, materialTexture11,
+        materialTexture12, materialTexture13, materialTexture14,
+        materialTexture15, materialTexture16, materialTexture17,
+        materialTexture18, materialTexture19, albedo, metallic, roughness, ao,
+        emissive);
     float sssStrength = clamp(1.0 - mat.albedo.w, 0.0, 1.0) * (1.0 - metallic);
     float sssThickness = mix(0.25, 1.75, ao);
 
-    // --- Direct lighting (full PBR for all light types) ---
     float3 direct = evalDirectLightingPBR(
-        isect, sceneAS, P, N, V, mat.albedo.xyz, metallic, roughness,
+        isect, sceneAS, P, N, V, albedo, metallic, roughness,
         sssStrength, sssThickness, dirLight, sceneData, pointLights, spotLights,
         areaLights);
 
-    // --- Indirect bounce: GGX importance sampling ---
     float3 indirect = float3(0.0);
 
     if (sceneData.maxBounces > 0) {
-
-        // Fresnel at normal incidence — drives specular vs diffuse split
-        float3 F0 = mix(float3(0.04), mat.albedo.xyz, metallic);
+        float3 F0 = mix(float3(0.04), albedo, metallic);
         float3 F_approx = F_Schlick(max(dot(N, V), 0.0), F0);
 
-        // Bias toward specular for metals / smooth surfaces
         float specProb =
             clamp(metallic * mix(0.35, 0.9, 1.0 - roughness), 0.0, 0.9);
 
@@ -481,15 +774,13 @@ float3 sampleRadiance(uint2 gid, uint sampleIndex, uint w,
         float chooseSplit = rand(rng);
 
         if (specProb > 1e-4 && chooseSplit < specProb) {
-            // ---- Specular / reflective bounce (GGX importance sampled) ----
             float2 u = float2(rand(rng), rand(rng));
             float3 localH = sampleGGX(u, max(roughness, 0.001));
             float3 H_world = normalize(basis * localH);
             float3 bounceDir = reflect(-V, H_world);
 
-            // Reject directions that go below the surface
             if (dot(bounceDir, N) <= 0.0)
-                bounceDir = reflect(-V, N); // fallback: perfect mirror
+                bounceDir = reflect(-V, N);
 
             bounceRay.direction = bounceDir;
 
@@ -498,18 +789,16 @@ float3 sampleRadiance(uint2 gid, uint sampleIndex, uint w,
             float3 Fs = F_Schlick(max(dot(V, H_world), 0.0), F0);
             float Gs = G_Smith(NdotV2, NdotL2, roughness);
 
-            // Weight = F*G / (4*NdotV) — PDF from GGX sampling cancels D term
             brdfWeight = (Fs * Gs / max(4.0 * NdotV2, 1e-4)) /
                          max(specProb, 1e-4);
 
         } else {
-            // ---- Diffuse bounce (cosine-weighted hemisphere) ----
             float2 u = float2(rand(rng), rand(rng));
             float3 localBounce = cosineSampleHemisphere(u);
             bounceRay.direction = normalize(basis * localBounce);
 
             float3 kD = (1.0 - F_approx) * (1.0 - metallic);
-            brdfWeight = (kD * mat.albedo.xyz) / max(1.0 - specProb, 1e-4);
+            brdfWeight = (kD * albedo) / max(1.0 - specProb, 1e-4);
         }
 
         brdfWeight = clamp(brdfWeight, float3(0.0), float3(1.25));
@@ -517,11 +806,9 @@ float3 sampleRadiance(uint2 gid, uint sampleIndex, uint w,
         auto bounceHit = isect.intersect(bounceRay, sceneAS, 0xFF);
 
         if (bounceHit.type == intersection_type::none) {
-            // Hit the sky
             indirect = brdfWeight * skyColor(bounceRay.direction, 0.0) *
                        sceneData.indirectStrength;
         } else {
-            // --- Shade the bounce surface with full PBR direct lighting ---
             uint bi = bounceHit.instance_id;
             uint bp = bounceHit.primitive_id;
 
@@ -535,35 +822,63 @@ float3 sampleRadiance(uint2 gid, uint sampleIndex, uint w,
 
             float2 bbary = bounceHit.triangle_barycentric_coord;
             float bb0 = 1.0 - bbary.x - bbary.y;
+            float bb1 = bbary.x;
+            float bb2 = bbary.y;
 
-            float3 blocN = normalize(float3(vertices[bj0]) * bb0 +
-                                     float3(vertices[bj1]) * bbary.x +
-                                     float3(vertices[bj2]) * bbary.y);
-
-            float3x3 bNM = float3x3(binst.normalCol0.xyz, binst.normalCol1.xyz,
-                                    binst.normalCol2.xyz);
-            float3 bN = normalize(bNM * blocN);
+            float2 bUV = float2(vertices[bj0].uv) * bb0 +
+                         float2(vertices[bj1].uv) * bb1 +
+                         float2(vertices[bj2].uv) * bb2;
+            float3 bLocalN = normalizeOr(float3(vertices[bj0].normal) * bb0 +
+                                             float3(vertices[bj1].normal) * bb1 +
+                                             float3(vertices[bj2].normal) * bb2,
+                                         float3(0.0, 1.0, 0.0));
+            float3 bLocalT = normalizeOr(float3(vertices[bj0].tangent) * bb0 +
+                                             float3(vertices[bj1].tangent) * bb1 +
+                                             float3(vertices[bj2].tangent) * bb2,
+                                         float3(1.0, 0.0, 0.0));
+            float3 bLocalB = normalizeOr(float3(vertices[bj0].bitangent) * bb0 +
+                                             float3(vertices[bj1].bitangent) * bb1 +
+                                             float3(vertices[bj2].bitangent) * bb2,
+                                         float3(0.0, 0.0, 1.0));
+            float3 bN = resolveShadingNormal(
+                bmat, bUV, bLocalN, bLocalT, bLocalB, binst,
+                sceneData.materialTextureCount, materialTexture0,
+                materialTexture1, materialTexture2, materialTexture3,
+                materialTexture4, materialTexture5, materialTexture6,
+                materialTexture7, materialTexture8, materialTexture9,
+                materialTexture10, materialTexture11, materialTexture12,
+                materialTexture13, materialTexture14, materialTexture15,
+                materialTexture16, materialTexture17, materialTexture18,
+                materialTexture19);
             float3 bP =
                 bounceRay.origin + bounceRay.direction * bounceHit.distance;
             float3 bV = -bounceRay.direction;
 
-            float bRoughness = clamp(bmat.roughness, 0.08, 1.0);
-            float bMetallic = clamp(bmat.metallic, 0.0, 1.0);
-            float bAo = clamp(bmat.ao, 0.0, 1.0);
-            float bEmissiveIntensity = clamp(bmat.emissiveIntensity, 0.0, 8.0);
-            float3 bEmissiveColor = float3(bmat.emissiveColor);
-            float3 bEmissive =
-                clampLuminance(bEmissiveColor * bEmissiveIntensity, 8.0);
+            float3 bAlbedo;
+            float bMetallic;
+            float bRoughness;
+            float bAo;
+            float3 bEmissive;
+            resolveMaterialParameters(
+                bmat, bUV, sceneData.materialTextureCount, materialTexture0,
+                materialTexture1, materialTexture2, materialTexture3,
+                materialTexture4, materialTexture5, materialTexture6,
+                materialTexture7, materialTexture8, materialTexture9,
+                materialTexture10, materialTexture11, materialTexture12,
+                materialTexture13, materialTexture14, materialTexture15,
+                materialTexture16, materialTexture17, materialTexture18,
+                materialTexture19, bAlbedo, bMetallic, bRoughness, bAo,
+                bEmissive);
             float bSssStrength =
                 clamp(1.0 - bmat.albedo.w, 0.0, 1.0) * (1.0 - bMetallic);
             float bSssThickness = mix(0.25, 1.75, bAo);
 
             float3 bounceDirect = evalDirectLightingPBR(
-                isect, sceneAS, bP, bN, bV, bmat.albedo.xyz, bMetallic,
+                isect, sceneAS, bP, bN, bV, bAlbedo, bMetallic,
                 bRoughness, bSssStrength, bSssThickness, dirLight, sceneData,
                 pointLights, spotLights, areaLights);
 
-            float3 bAmbient = bmat.albedo.xyz * 0.04 * (1.0 - bMetallic) * bAo;
+            float3 bAmbient = bAlbedo * 0.04 * (1.0 - bMetallic) * bAo;
             indirect = brdfWeight * (bAmbient + bounceDirect + bEmissive) *
                        sceneData.indirectStrength;
         }
@@ -571,7 +886,7 @@ float3 sampleRadiance(uint2 gid, uint sampleIndex, uint w,
         indirect = clampLuminance(indirect, 3.0);
     }
 
-    float3 ambient = mat.albedo.xyz * 0.04 * (1.0 - metallic) * ao;
+    float3 ambient = albedo * 0.04 * (1.0 - metallic) * ao;
     return clampLuminance(ambient + direct + emissive + indirect, 10.0);
 }
 
@@ -581,7 +896,7 @@ kernel void main0(texture2d<float, access::write> outTex [[texture(0)]],
                   constant CameraUniforms &cam [[buffer(1)]],
                   constant Material *materials [[buffer(2)]],
                   constant MeshData *meshData [[buffer(3)]],
-                  constant packed_float3 *vertices [[buffer(4)]],
+                  constant VertexData *vertices [[buffer(4)]],
                   constant uint *indices [[buffer(5)]],
                   constant InstanceData *instanceData [[buffer(6)]],
                   constant DirectionalLightData &dirLight [[buffer(7)]],
@@ -589,6 +904,26 @@ kernel void main0(texture2d<float, access::write> outTex [[texture(0)]],
                   constant PointLight *pointLights [[buffer(9)]],
                   constant SpotLight *spotLights [[buffer(10)]],
                   constant AreaLight *areaLights [[buffer(11)]],
+                  texture2d<float> materialTexture0 [[texture(12)]],
+                  texture2d<float> materialTexture1 [[texture(13)]],
+                  texture2d<float> materialTexture2 [[texture(14)]],
+                  texture2d<float> materialTexture3 [[texture(15)]],
+                  texture2d<float> materialTexture4 [[texture(16)]],
+                  texture2d<float> materialTexture5 [[texture(17)]],
+                  texture2d<float> materialTexture6 [[texture(18)]],
+                  texture2d<float> materialTexture7 [[texture(19)]],
+                  texture2d<float> materialTexture8 [[texture(20)]],
+                  texture2d<float> materialTexture9 [[texture(21)]],
+                  texture2d<float> materialTexture10 [[texture(22)]],
+                  texture2d<float> materialTexture11 [[texture(23)]],
+                  texture2d<float> materialTexture12 [[texture(24)]],
+                  texture2d<float> materialTexture13 [[texture(25)]],
+                  texture2d<float> materialTexture14 [[texture(26)]],
+                  texture2d<float> materialTexture15 [[texture(27)]],
+                  texture2d<float> materialTexture16 [[texture(28)]],
+                  texture2d<float> materialTexture17 [[texture(29)]],
+                  texture2d<float> materialTexture18 [[texture(30)]],
+                  texture2d<float> materialTexture19 [[texture(31)]],
                   uint2 gid [[thread_position_in_grid]]) {
     uint w = outTex.get_width();
     uint h = outTex.get_height();
@@ -634,7 +969,17 @@ kernel void main0(texture2d<float, access::write> outTex [[texture(0)]],
             float3 sample = sampleRadiance(gid, s, w, isect, sceneAS, primaryRay,
                                            materials, meshData, vertices, indices,
                                            instanceData, dirLight, sceneData,
-                                           pointLights, spotLights, areaLights);
+                                           pointLights, spotLights, areaLights,
+                                           materialTexture0, materialTexture1,
+                                           materialTexture2, materialTexture3,
+                                           materialTexture4, materialTexture5,
+                                           materialTexture6, materialTexture7,
+                                           materialTexture8, materialTexture9,
+                                           materialTexture10, materialTexture11,
+                                           materialTexture12, materialTexture13,
+                                           materialTexture14, materialTexture15,
+                                           materialTexture16, materialTexture17,
+                                           materialTexture18, materialTexture19);
             color += clampLuminance(sample, 10.0);
         }
 

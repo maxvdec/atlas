@@ -327,7 +327,7 @@ class MainScene : public Scene {
 
         window.enablePathTracing();
         // window.pathTracer->pathTracingTexture->display(window);
-        window.pathTracer->raysPerPixel = 128;
+        window.pathTracer->raysPerPixel = 4;
     }
 };
 

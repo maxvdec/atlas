@@ -19,8 +19,58 @@
 #include <glm/gtc/quaternion.hpp>
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <limits>
 #include <memory>
+#include <unordered_map>
+
+namespace {
+constexpr int kDdgiMaterialTextureUnitStart = 10;
+constexpr int kDdgiMaxMaterialTextures = 20;
+
+int registerMaterialTextureSlot(
+    const Texture &texture,
+    std::vector<std::shared_ptr<opal::Texture>> &materialTextures,
+    std::unordered_map<uint64_t, int> &slotByTexture) {
+    if (texture.texture == nullptr) {
+        return -1;
+    }
+    uint64_t key =
+        static_cast<uint64_t>(reinterpret_cast<uintptr_t>(texture.texture.get()));
+    auto it = slotByTexture.find(key);
+    if (it != slotByTexture.end()) {
+        return it->second;
+    }
+    if (materialTextures.size() >= static_cast<size_t>(kDdgiMaxMaterialTextures)) {
+        return -1;
+    }
+    int slot = static_cast<int>(materialTextures.size());
+    materialTextures.push_back(texture.texture);
+    slotByTexture[key] = slot;
+    return slot;
+}
+
+int findTextureSlotForType(
+    const std::vector<Texture> &textures, TextureType type,
+    std::vector<std::shared_ptr<opal::Texture>> &materialTextures,
+    std::unordered_map<uint64_t, int> &slotByTexture) {
+    for (const auto &texture : textures) {
+        if (texture.type == type) {
+            return registerMaterialTextureSlot(texture, materialTextures,
+                                               slotByTexture);
+        }
+    }
+    return -1;
+}
+
+glm::vec3 normalizeOr(const glm::vec3 &v, const glm::vec3 &fallback) {
+    float len2 = glm::dot(v, v);
+    if (len2 > 1e-10f) {
+        return v * glm::inversesqrt(len2);
+    }
+    return fallback;
+}
+} // namespace
 
 void photon::GlobalIllumination::init() {
     ComputeShader ddgiRaytracing =
@@ -70,6 +120,7 @@ void photon::GlobalIllumination::updateProbeLayout() {
 
     triangles.clear();
     materials.clear();
+    materialTextures.clear();
 
     Position3d previousOrigin = probeSpace->originWorldSpace;
     Position3d previousSpacing = probeSpace->spacing;
@@ -90,6 +141,7 @@ void photon::GlobalIllumination::updateProbeLayout() {
 
     auto renderables = Window::mainWindow->renderables;
     materials.reserve(renderables.size());
+    std::unordered_map<uint64_t, int> textureSlots;
 
     for (auto *renderable : renderables) {
         if (renderable == nullptr || !renderable->canUseDeferredRendering()) {
@@ -112,6 +164,7 @@ void photon::GlobalIllumination::updateProbeLayout() {
         model *=
             glm::mat4_cast(glm::normalize(object->getRotation().toGlmQuat()));
         model = glm::scale(model, object->getScale().toGlm());
+        glm::mat3 linearMatrix = glm::mat3(model);
         glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(model)));
 
         DDGIMaterial baseMaterial{};
@@ -119,6 +172,22 @@ void photon::GlobalIllumination::updateProbeLayout() {
         baseMaterial.ao = object->material.ao;
         baseMaterial.metallic = object->material.metallic;
         baseMaterial.roughness = object->material.roughness;
+        baseMaterial.emissiveColor = object->material.emissiveColor.toGlm();
+        baseMaterial.emissiveIntensity = object->material.emissiveIntensity;
+        baseMaterial.albedoTextureIndex = findTextureSlotForType(
+            object->textures, TextureType::Color, materialTextures,
+            textureSlots);
+        baseMaterial.normalTextureIndex = findTextureSlotForType(
+            object->textures, TextureType::Normal, materialTextures,
+            textureSlots);
+        baseMaterial.metallicTextureIndex = findTextureSlotForType(
+            object->textures, TextureType::Metallic, materialTextures,
+            textureSlots);
+        baseMaterial.roughnessTextureIndex = findTextureSlotForType(
+            object->textures, TextureType::Roughness, materialTextures,
+            textureSlots);
+        baseMaterial.aoTextureIndex = findTextureSlotForType(
+            object->textures, TextureType::AO, materialTextures, textureSlots);
         bool materialBound = false;
         int materialID = -1;
 
@@ -135,12 +204,43 @@ void photon::GlobalIllumination::updateProbeLayout() {
             tri.v0 = model * glm::vec4(v0.position.toGlm(), 1.0f);
             tri.v1 = model * glm::vec4(v1.position.toGlm(), 1.0f);
             tri.v2 = model * glm::vec4(v2.position.toGlm(), 1.0f);
-            tri.n0 = glm::vec4(glm::normalize(normalMatrix * v0.normal.toGlm()),
-                               0.0f);
-            tri.n1 = glm::vec4(glm::normalize(normalMatrix * v1.normal.toGlm()),
-                               0.0f);
-            tri.n2 = glm::vec4(glm::normalize(normalMatrix * v2.normal.toGlm()),
-                               0.0f);
+            glm::vec3 n0 =
+                normalizeOr(normalMatrix * v0.normal.toGlm(), glm::vec3(0, 1, 0));
+            glm::vec3 n1 =
+                normalizeOr(normalMatrix * v1.normal.toGlm(), glm::vec3(0, 1, 0));
+            glm::vec3 n2 =
+                normalizeOr(normalMatrix * v2.normal.toGlm(), glm::vec3(0, 1, 0));
+            tri.n0 = glm::vec4(n0, 0.0f);
+            tri.n1 = glm::vec4(n1, 0.0f);
+            tri.n2 = glm::vec4(n2, 0.0f);
+            tri.uv0 = glm::vec4(v0.textureCoordinate[0], v0.textureCoordinate[1],
+                                0.0f, 0.0f);
+            tri.uv1 = glm::vec4(v1.textureCoordinate[0], v1.textureCoordinate[1],
+                                0.0f, 0.0f);
+            tri.uv2 = glm::vec4(v2.textureCoordinate[0], v2.textureCoordinate[1],
+                                0.0f, 0.0f);
+
+            auto fillTangentFrame = [&](const CoreVertex &v, const glm::vec3 &n,
+                                        glm::vec4 &tOut, glm::vec4 &bOut) {
+                glm::vec3 t =
+                    normalizeOr(linearMatrix * v.tangent.toGlm(), glm::vec3(1, 0, 0));
+                glm::vec3 b = normalizeOr(linearMatrix * v.bitangent.toGlm(),
+                                          glm::vec3(0, 0, 1));
+                if (glm::dot(glm::cross(t, b), glm::cross(t, b)) <= 1e-10f) {
+                    glm::vec3 up = std::abs(n.y) < 0.999f ? glm::vec3(0, 1, 0)
+                                                          : glm::vec3(1, 0, 0);
+                    t = normalizeOr(glm::cross(up, n), glm::vec3(1, 0, 0));
+                    b = normalizeOr(glm::cross(n, t), glm::vec3(0, 0, 1));
+                } else {
+                    t = normalizeOr(t - n * glm::dot(n, t), glm::vec3(1, 0, 0));
+                    b = normalizeOr(b - n * glm::dot(n, b), glm::vec3(0, 0, 1));
+                }
+                tOut = glm::vec4(t, 0.0f);
+                bOut = glm::vec4(b, 0.0f);
+            };
+            fillTangentFrame(v0, n0, tri.t0, tri.b0);
+            fillTangentFrame(v1, n1, tri.t1, tri.b1);
+            fillTangentFrame(v2, n2, tri.t2, tri.b2);
             tri.materialID = materialID;
 
             triangles.push_back(tri);
@@ -457,8 +557,8 @@ void photon::GlobalIllumination::render(
         uint32_t pointLightCount;
         uint32_t spotLightCount;
         uint32_t areaLightCount;
+        uint32_t textureCount;
         uint32_t _pad0;
-        uint32_t _pad1;
     };
     GPUSceneCounts sceneCounts{};
     sceneCounts.triCount = static_cast<uint32_t>(triangles.size());
@@ -468,8 +568,20 @@ void photon::GlobalIllumination::render(
     sceneCounts.pointLightCount = static_cast<uint32_t>(pointLights.size());
     sceneCounts.spotLightCount = static_cast<uint32_t>(spotLights.size());
     sceneCounts.areaLightCount = static_cast<uint32_t>(areaLights.size());
+    sceneCounts.textureCount = static_cast<uint32_t>(std::min<int>(
+        static_cast<int>(materialTextures.size()), kDdgiMaxMaterialTextures));
     giRaytracingPipeline->bindBufferData("sc", &sceneCounts,
                                          sizeof(sceneCounts));
+
+    for (int i = 0; i < kDdgiMaxMaterialTextures; ++i) {
+        std::shared_ptr<opal::Texture> texture = nullptr;
+        if (i < static_cast<int>(materialTextures.size())) {
+            texture = materialTextures[static_cast<size_t>(i)];
+        }
+        giRaytracingPipeline->bindTexture("materialTexture" + std::to_string(i),
+                                          texture,
+                                          kDdgiMaterialTextureUnitStart + i);
+    }
 
     giRaytracingPipeline->setUniform3f(
         "ps.origin", probeSpace->originWorldSpace.x,

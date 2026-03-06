@@ -14,11 +14,16 @@
 #include "opal/opal.h"
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <cstring>
 #include <ranges>
+#include <unordered_map>
 #include <sys/types.h>
 
 namespace {
+constexpr int kPathTracerMaterialTextureUnitStart = 12;
+constexpr int kPathTracerMaxMaterialTextures = 20;
+
 bool mat4ApproximatelyEqual(const glm::mat4 &a, const glm::mat4 &b,
                             float epsilon) {
     for (int c = 0; c < 4; ++c) {
@@ -30,9 +35,48 @@ bool mat4ApproximatelyEqual(const glm::mat4 &a, const glm::mat4 &b,
     }
     return true;
 }
+
+int registerMaterialTextureSlot(
+    const Texture &texture,
+    std::vector<std::shared_ptr<opal::Texture>> &materialTextures,
+    std::unordered_map<uint64_t, int> &slotByTexture) {
+    if (texture.texture == nullptr) {
+        return -1;
+    }
+    uint64_t key =
+        static_cast<uint64_t>(reinterpret_cast<uintptr_t>(texture.texture.get()));
+    auto it = slotByTexture.find(key);
+    if (it != slotByTexture.end()) {
+        return it->second;
+    }
+    if (materialTextures.size() >=
+        static_cast<size_t>(kPathTracerMaxMaterialTextures)) {
+        return -1;
+    }
+    int slot = static_cast<int>(materialTextures.size());
+    materialTextures.push_back(texture.texture);
+    slotByTexture[key] = slot;
+    return slot;
+}
+
+int findTextureSlotForType(
+    const std::vector<Texture> &textures, TextureType type,
+    std::vector<std::shared_ptr<opal::Texture>> &materialTextures,
+    std::unordered_map<uint64_t, int> &slotByTexture) {
+    for (const auto &texture : textures) {
+        if (texture.type == type) {
+            return registerMaterialTextureSlot(texture, materialTextures,
+                                               slotByTexture);
+        }
+    }
+    return -1;
+}
 } // namespace
 
 void photon::PathTracing::init() {
+    materialTextures.clear();
+    objectBLAS.clear();
+
     ComputeShader pathTracerShader =
         ComputeShader::fromDefaultShader(AtlasComputeShader::PathTracer);
     pathTracerShader.compile();
@@ -88,10 +132,16 @@ void photon::PathTracing::buildAccelerationStructure(
         float ao;
         float emissiveIntensity;
         float emissiveColor[3];
-        uint _pad0;
+        float _pad0;
+        int albedoTextureIndex;
+        int normalTextureIndex;
+        int metallicTextureIndex;
+        int roughnessTextureIndex;
+        int aoTextureIndex;
+        int _pad1[3];
     };
 
-    static_assert(sizeof(MaterialData) == 48);
+    static_assert(sizeof(MaterialData) == 80);
 
     struct MeshData {
         uint vertexOffset;
@@ -102,7 +152,12 @@ void photon::PathTracing::buildAccelerationStructure(
 
     struct VertexData {
         float normal[3];
+        float uv[2];
+        float tangent[3];
+        float bitangent[3];
     };
+
+    static_assert(sizeof(VertexData) == 44);
 
     auto renderables = Window::mainWindow->renderables;
     std::vector<MaterialData> materialData;
@@ -113,6 +168,9 @@ void photon::PathTracing::buildAccelerationStructure(
 
     int objectID = 0;
     if (objectBLAS.empty()) {
+        materialTextures.clear();
+        std::unordered_map<uint64_t, int> textureSlots;
+
         for (auto *renderable : renderables) {
             if (auto *object = dynamic_cast<CoreObject *>(renderable)) {
                 const auto &objectVertices = object->vertices;
@@ -148,6 +206,14 @@ void photon::PathTracing::buildAccelerationStructure(
                     vd.normal[0] = v.normal.x;
                     vd.normal[1] = v.normal.y;
                     vd.normal[2] = v.normal.z;
+                    vd.uv[0] = v.textureCoordinate[0];
+                    vd.uv[1] = v.textureCoordinate[1];
+                    vd.tangent[0] = v.tangent.x;
+                    vd.tangent[1] = v.tangent.y;
+                    vd.tangent[2] = v.tangent.z;
+                    vd.bitangent[0] = v.bitangent.x;
+                    vd.bitangent[1] = v.bitangent.y;
+                    vd.bitangent[2] = v.bitangent.z;
                     allVertices.push_back(vd);
                 }
 
@@ -172,6 +238,25 @@ void photon::PathTracing::buildAccelerationStructure(
                 data.emissiveColor[0] = object->material.emissiveColor.r;
                 data.emissiveColor[1] = object->material.emissiveColor.g;
                 data.emissiveColor[2] = object->material.emissiveColor.b;
+                data._pad0 = 0.0f;
+                data.albedoTextureIndex = findTextureSlotForType(
+                    object->textures, TextureType::Color, materialTextures,
+                    textureSlots);
+                data.normalTextureIndex = findTextureSlotForType(
+                    object->textures, TextureType::Normal, materialTextures,
+                    textureSlots);
+                data.metallicTextureIndex = findTextureSlotForType(
+                    object->textures, TextureType::Metallic, materialTextures,
+                    textureSlots);
+                data.roughnessTextureIndex = findTextureSlotForType(
+                    object->textures, TextureType::Roughness, materialTextures,
+                    textureSlots);
+                data.aoTextureIndex = findTextureSlotForType(
+                    object->textures, TextureType::AO, materialTextures,
+                    textureSlots);
+                data._pad1[0] = 0;
+                data._pad1[1] = 0;
+                data._pad1[2] = 0;
                 materialData.push_back(data);
 
                 MeshData mdata;
@@ -518,6 +603,21 @@ void photon::PathTracing::render(
     pathTracingPipeline->bindBuffer("pointLights", pointLights, 9);
     pathTracingPipeline->bindBuffer("spotLights", spotLights, 10);
     pathTracingPipeline->bindBuffer("areaLights", areaLights, 11);
+    pathTracingPipeline->setUniform1i(
+        "sceneData.materialTextureCount",
+        std::min<int>(static_cast<int>(materialTextures.size()),
+                      kPathTracerMaxMaterialTextures));
+
+    for (int i = 0; i < kPathTracerMaxMaterialTextures; ++i) {
+        std::shared_ptr<opal::Texture> texture = nullptr;
+        if (i < static_cast<int>(materialTextures.size())) {
+            texture = materialTextures[static_cast<size_t>(i)];
+        }
+        pathTracingPipeline->bindTexture("materialTexture" + std::to_string(i),
+                                         texture,
+                                         kPathTracerMaterialTextureUnitStart +
+                                             i);
+    }
 
     commandBuffer->dispatch(outputWidth, outputHeight, 1);
 
