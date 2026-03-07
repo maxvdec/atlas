@@ -1,9 +1,7 @@
 #include "atlas/camera.h"
-#include "atlas/effect.h"
 #include "atlas/particle.h"
 #include "atlas/light.h"
 #include "atlas/object.h"
-#include "atlas/physics.h"
 #include "atlas/scene.h"
 #include "atlas/text.h"
 #include "atlas/texture.h"
@@ -16,7 +14,6 @@
 #include "aurora/terrain.h"
 #include "hydra/atmosphere.h"
 #include "hydra/fluid.h"
-#include <iostream>
 #include <memory>
 
 class SphereCube : public CompoundObject {
@@ -113,32 +110,10 @@ class WaterPot : public CompoundObject {
     }
 };
 
-class BallBehavior : public Component {
-  public:
-    void init() override {
-        if (object && object->rigidbody) {
-            object->rigidbody->applyImpulse({0.0f, 0.0f, 20.0f});
-        }
-    }
-    void update(float) override {
-        if (Window::mainWindow->isKeyClicked(Key::N)) {
-            auto hinge = object->getComponent<HingeJoint>();
-            if (hinge) {
-                std::cout << "Breaking hinge joint\n";
-                hinge->breakJoint();
-            }
-        }
-    }
-};
-
 class MainScene : public Scene {
     CoreObject ground;
-    CoreObject wallLeft;
-    CoreObject wallRight;
-    CoreObject wallBack;
-    CoreObject cieling;
-    CoreObject tallBox;
-    CoreObject cubeBox;
+    CoreObject ball;
+    CoreObject ball2;
     DirectionalLight light;
     Camera camera;
     CoreObject lightObject;
@@ -154,7 +129,6 @@ class MainScene : public Scene {
 
     bool doesUpdate = true;
     bool fall = false;
-    int giDebugMode = 0;
 
   public:
     void update(Window &window) override {
@@ -167,20 +141,6 @@ class MainScene : public Scene {
             doesUpdate = false;
         } else if (window.isKeyClicked(Key::Q)) {
             fall = !fall;
-        } else if (window.isKeyClicked(Key::G) &&
-                   window.ddgiSystem != nullptr &&
-                   window.ddgiSystem->probeSpace != nullptr) {
-            giDebugMode = (giDebugMode + 1) % 4;
-            float debugAlpha = 0.0f;
-            if (giDebugMode == 1) {
-                debugAlpha = 20.0f;
-            } else if (giDebugMode == 2) {
-                debugAlpha = 30.0f;
-            } else if (giDebugMode == 3) {
-                debugAlpha = 40.0f;
-            }
-            window.ddgiSystem->probeSpace->debugColor =
-                Color(3.0f, 3.0f, 3.0f, debugAlpha);
         }
         if (fall) {
             camera.position.y -= 10.f * window.getDeltaTime();
@@ -213,121 +173,43 @@ class MainScene : public Scene {
         return Cubemap::fromResourceGroup(group);
     }
 
-#define COZY_LIGHT_COLOR Color(1.0f, 0.96f, 0.86f)
-
     void initialize(Window &window) override {
         Environment env;
         env.fog.intensity = 0.0;
-        env.volumetricLighting.enabled = false;
-        env.lightBloom.radius = 0.008f;
-        env.lightBloom.maxSamples = 5;
         this->setEnvironment(env);
 
         Workspace::get().setRootPath(std::string(TEST_PATH) + "/resources/");
 
         camera = Camera();
-        camera.setPosition({0.0f, 1.0f, -4.f});
-        camera.lookAt({0.0f, 1.0f, 0.2f});
-        camera.farClip = 100.0f;
+        camera.setPosition({-5.0f, 1.0f, 2.0f});
+        camera.lookAt({0.0f, 0.0f, 0.0f});
+        camera.farClip = 1000.f;
         window.setCamera(&camera);
 
-        areaLight = AreaLight();
-        areaLight.position = {0.0f, 1.98f, 0.0f};
-        areaLight.setColor(COZY_LIGHT_COLOR);
-        areaLight.range = 6.5f;
-        areaLight.size = {0.70f, 0.46f};
-        areaLight.angle = 125.0f;
-        areaLight.castsBothSides = false;
-        areaLight.setRotation({90.0f, 0.0f, 0.0f});
-        areaLight.castShadows(window, 2048);
-        areaLight.intensity = 15;
-        this->addAreaLight(&areaLight);
-        areaLight.createDebugObject();
-        areaLight.addDebugObject(window);
+        sponza = Model();
+        sponza.fromResource(Workspace::get().createResource(
+            "sponza.obj", "SponzaModel", ResourceType::Model));
+        sponza.setScale({0.01f, 0.01f, 0.01f});
 
-        const Color wallWhite = Color(0.84f, 0.74f, 0.58f);
-        const Color boxWhite = Color(0.90f, 0.84f, 0.70f);
-        const Color wallRed = Color(0.98f, 0.05f, 0.03f);
-        const Color wallGreen = Color(0.04f, 0.95f, 0.07f);
-
-        ground = createBox({2.0f, 0.05f, 2.0f});
-        ground.material.albedo = wallWhite;
-        ground.material.roughness = 0.96f;
-        ground.material.metallic = 0.0f;
-        ground.material.ao = 1.0f;
-        ground.setPosition({0.0f, -0.025f, 0.0f});
-        window.addObject(&ground);
-
-        cieling = createBox({2.0f, 0.05f, 2.0f});
-        cieling.material.albedo = wallWhite;
-        cieling.material.roughness = 0.95f;
-        cieling.material.metallic = 0.0f;
-        cieling.material.ao = 1.0f;
-        cieling.setPosition({0.0f, 2.025f, 0.0f});
-        window.addObject(&cieling);
-
-        wallLeft = createBox({0.05f, 2.0f, 2.0f});
-        wallLeft.material.albedo = wallRed;
-        wallLeft.material.roughness = 0.94f;
-        wallLeft.material.metallic = 0.0f;
-        wallLeft.material.ao = 1.0f;
-        wallLeft.setPosition({-1.025f, 1.0f, 0.0f});
-        window.addObject(&wallLeft);
-
-        wallRight = createBox({0.05f, 2.0f, 2.0f});
-        wallRight.material.albedo = wallGreen;
-        wallRight.material.roughness = 0.94f;
-        wallRight.material.metallic = 0.0f;
-        wallRight.material.ao = 1.0f;
-        wallRight.setPosition({1.025f, 1.0f, 0.0f});
-        window.addObject(&wallRight);
-
-        wallBack = createBox({2.0f, 2.0f, 0.05f});
-        wallBack.material.albedo = wallWhite;
-        wallBack.material.roughness = 0.94f;
-        wallBack.material.metallic = 0.0f;
-        wallBack.material.ao = 1.0f;
-        wallBack.setPosition({0.0f, 1.0f, 1.025f});
-        window.addObject(&wallBack);
-
-        tallBox = createBox({0.56f, 1.2f, 0.56f});
-        tallBox.material.albedo = boxWhite;
-        tallBox.material.roughness = 0.78f;
-        tallBox.material.metallic = 0.0f;
-        tallBox.material.ao = 1.0f;
-        tallBox.setPosition({-0.42f, 0.6f, 0.5f});
-        tallBox.setRotation({0.0f, -16.0f, 0.0f});
-        window.addObject(&tallBox);
-
-        cubeBox = createBox({0.6f, 0.6f, 0.6f});
-        cubeBox.material.albedo = boxWhite;
-        cubeBox.material.roughness = 0.0f;
-        cubeBox.material.metallic = 1.0f;
-        cubeBox.material.ao = 1.0f;
-        cubeBox.setPosition({0.42f, 0.3f, -0.5f});
-        cubeBox.setRotation({0.0f, 11.0f, 0.0f});
-        window.addObject(&cubeBox);
+        sponza.material.albedo = Color(1.0, 0.0, 0.0, 1.0);
 
         Resource fontResource = Workspace::get().createResource(
-            "arial.ttf", "Arial", ResourceType::Font);
+            "arial.ttf", "ArialFont", ResourceType::Font);
 
-        fpsText = Text("FPS: 0", Font::fromResource("Arial", fontResource, 24),
-                       {25.0, 25.0}, Color::white());
+        this->setAmbientIntensity(1.0f);
 
-        fpsText.addTraitComponent<Text>(FPSTextUpdater());
-        window.addUIObject(&fpsText);
-
-        this->setAmbientIntensity(0.10f);
-
-        frameBuffer = RenderTarget(window, RenderTargetType::Multisampled);
-        window.addRenderTarget(&frameBuffer);
-        frameBuffer.display(window);
-
-        this->setUseAtmosphereSkybox(false);
+        window.addObject(&sponza);
 
         window.enablePathTracing();
-        // window.pathTracer->pathTracingTexture->display(window);
-        window.pathTracer->raysPerPixel = 4;
+
+        atmosphere.enable();
+        atmosphere.secondsPerHour = 4.f;
+        atmosphere.setTime(12);
+        atmosphere.cycle = false;
+        atmosphere.useGlobalLight();
+        atmosphere.castShadowsFromSunlight(4096);
+
+        this->setUseAtmosphereSkybox(true);
     }
 };
 
@@ -335,10 +217,7 @@ int main() {
     Window window({.title = "My Window",
                    .width = 1600,
                    .height = 1200,
-                   .renderScale = 5.0f,
-                   .mouseCaptured = true,
-                   .multisampling = false,
-                   .ssaoScale = 0.4f});
+                   .mouseCaptured = true});
     MainScene scene;
     window.setScene(&scene);
     window.run();

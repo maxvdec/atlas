@@ -256,6 +256,35 @@ ShadowParams DirectionalLight::calculateLightSpaceMatrix(
         if (obj == nullptr || !obj->canCastShadows())
             continue;
 
+        if (const auto* modelObj = dynamic_cast<const Model*>(obj)) {
+            const auto& modelObjects = modelObj->getObjects();
+            for (const auto& modelMesh : modelObjects) {
+                if (modelMesh == nullptr || !modelMesh->canCastShadows()) {
+                    continue;
+                }
+                const auto& modelVertices = modelMesh->getVertices();
+                if (modelVertices.empty()) {
+                    continue;
+                }
+                glm::mat4 modelMatrix = glm::mat4(1.0f);
+                modelMatrix =
+                    glm::translate(modelMatrix, modelMesh->getPosition().toGlm());
+                modelMatrix *= glm::mat4_cast(
+                    glm::normalize(modelMesh->getRotation().toGlmQuat()));
+                modelMatrix =
+                    glm::scale(modelMatrix, modelMesh->getScale().toGlm());
+
+                for (const auto& vertex : modelVertices) {
+                    glm::vec3 worldPos = glm::vec3(
+                        modelMatrix * glm::vec4(vertex.position.toGlm(), 1.0f));
+                    worldPoints.push_back(worldPos);
+                    worldMin = glm::min(worldMin, worldPos);
+                    worldMax = glm::max(worldMax, worldPos);
+                }
+            }
+            continue;
+        }
+
         const auto& vertices = obj->getVertices();
         if (vertices.empty())
             continue;

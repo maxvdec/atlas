@@ -17,8 +17,10 @@
 #include <memory>
 #include <unordered_map>
 #include <utility>
+#include <vector>
 
 class Window;
+class CoreObject;
 
 namespace photon {
 
@@ -85,6 +87,7 @@ class PathTracing {
     std::unordered_map<int,
                        std::shared_ptr<opal::PrimitiveAccelerationStructure>>
         objectBLAS;
+    std::vector<CoreObject *> cachedObjects;
 
     int frameIndex = 0;
     int outputWidth = 0;

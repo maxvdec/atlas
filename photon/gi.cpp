@@ -23,6 +23,7 @@
 #include <limits>
 #include <memory>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace {
 constexpr int kDdgiMaterialTextureUnitStart = 10;
@@ -69,6 +70,35 @@ glm::vec3 normalizeOr(const glm::vec3 &v, const glm::vec3 &fallback) {
         return v * glm::inversesqrt(len2);
     }
     return fallback;
+}
+
+std::vector<CoreObject *>
+collectDdgiObjects(const std::vector<Renderable *> &renderables) {
+    std::vector<CoreObject *> objects;
+    std::unordered_set<CoreObject *> seen;
+    for (auto *renderable : renderables) {
+        if (renderable == nullptr) {
+            continue;
+        }
+        if (auto *object = dynamic_cast<CoreObject *>(renderable)) {
+            if (seen.insert(object).second) {
+                objects.push_back(object);
+            }
+            continue;
+        }
+        if (auto *model = dynamic_cast<Model *>(renderable)) {
+            for (const auto &mesh : model->getObjects()) {
+                CoreObject *object = mesh.get();
+                if (object == nullptr) {
+                    continue;
+                }
+                if (seen.insert(object).second) {
+                    objects.push_back(object);
+                }
+            }
+        }
+    }
+    return objects;
 }
 } // namespace
 
@@ -140,15 +170,12 @@ void photon::GlobalIllumination::updateProbeLayout() {
     };
 
     auto renderables = Window::mainWindow->renderables;
-    materials.reserve(renderables.size());
+    std::vector<CoreObject *> ddgiObjects = collectDdgiObjects(renderables);
+    materials.reserve(ddgiObjects.size());
     std::unordered_map<uint64_t, int> textureSlots;
 
-    for (auto *renderable : renderables) {
-        if (renderable == nullptr || !renderable->canUseDeferredRendering()) {
-            continue;
-        }
-        CoreObject *object = dynamic_cast<CoreObject *>(renderable);
-        if (object == nullptr) {
+    for (auto *object : ddgiObjects) {
+        if (object == nullptr || !object->canUseDeferredRendering()) {
             continue;
         }
 

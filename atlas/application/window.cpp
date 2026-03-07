@@ -1944,6 +1944,7 @@ void Window::renderPingpong(RenderTarget *target) {
 
 void Window::useDeferredRendering() {
     atlas_log("Enabling deferred rendering");
+    this->usePathTracing = false;
     this->usesDeferred = true;
     auto target = std::make_shared<RenderTarget>(
         RenderTarget(*this, RenderTargetType::GBuffer));
@@ -2371,6 +2372,7 @@ BoundingBox Window::getSceneBoundingBox() {
 }
 
 void Window::enablePathTracing() {
+    this->usesDeferred = false;
     this->usePathTracing = true;
     this->pathTracer = std::make_shared<photon::PathTracing>();
     pathTracer->init();
