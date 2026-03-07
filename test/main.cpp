@@ -196,7 +196,7 @@ class MainScene : public Scene {
         Resource fontResource = Workspace::get().createResource(
             "arial.ttf", "ArialFont", ResourceType::Font);
 
-        this->setAmbientIntensity(1.0f);
+        this->setAmbientIntensity(0.1f);
 
         window.addObject(&sponza);
 

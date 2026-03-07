@@ -104,6 +104,8 @@ struct Uniforms
     int4 textureTypes[16];
     int textureCount;
     float3 cameraPosition;
+    float normalMapStrength;
+    uint useNormalMap;
 };
 
 struct Environment
@@ -991,10 +993,14 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Uniforms& _163 [[buf
     {
         _1786 = _1780;
     }
+    float normalStrength = fast::max(_163.normalMapStrength, 0.0f);
+    bool useNormalMap = (_163.useNormalMap != 0u) && (normalStrength > 0.0f);
     float3 N;
-    if (_1786)
+    if (_1786 && useNormalMap)
     {
-        float3 tangentNormal = fast::normalize((normTexture.xyz * 2.0) - float3(1.0));
+        float3 tangentNormal = (normTexture.xyz * 2.0) - float3(1.0);
+        tangentNormal.xy *= normalStrength;
+        tangentNormal = fast::normalize(tangentNormal);
         N = fast::normalize(TBN * tangentNormal);
     }
     else
@@ -1055,7 +1061,7 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Uniforms& _163 [[buf
                 _1934.lightType = _1905.shadowParams[i_1].lightType;
                 ShadowParameters param_7 = _1934;
                 float4 param_8 = fragPosLightSpace;
-                directionalShadow = fast::max(directionalShadow, calculateShadow(param_7, param_8, _163, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr, _1083, in.Normal, in.FragPos));
+                areaShadow = fast::max(areaShadow, calculateShadow(param_7, param_8, _163, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr, _1083, in.Normal, in.FragPos));
             }
             else if (_1905.shadowParams[i_1].lightType == 1)
             {
@@ -1087,7 +1093,7 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Uniforms& _163 [[buf
                 _1934.lightType = _1905.shadowParams[i_1].lightType;
                 ShadowParameters param_7 = _1934;
                 float4 param_8 = fragPosLightSpace;
-                areaShadow = fast::max(areaShadow, calculateShadow(param_7, param_8, _163, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr, _1083, in.Normal, in.FragPos));
+                directionalShadow = fast::max(directionalShadow, calculateShadow(param_7, param_8, _163, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr, _1083, in.Normal, in.FragPos));
             }
             else
             {

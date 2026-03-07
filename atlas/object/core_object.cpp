@@ -611,6 +611,12 @@ void CoreObject::render(float dt,
                                          static_cast<int>(textures[i].type));
         }
     }
+    if (shaderSupportsTextures) {
+        this->pipeline->setUniform1f("normalMapStrength",
+                                     material.normalMapStrength);
+        this->pipeline->setUniform1i("useNormalMap",
+                                     material.useNormalMap ? 1 : 0);
+    }
 
     if (std::find(shaderProgram.capabilities.begin(),
                   shaderProgram.capabilities.end(),

@@ -12,6 +12,8 @@ struct UBO
     uint useTexture;
     uint useColor;
     float3 cameraPosition;
+    float normalMapStrength;
+    uint useNormalMap;
 };
 
 struct MaterialPush
@@ -311,10 +313,14 @@ fragment main0_out main0(main0_in in [[stage_in]], constant UBO& _46 [[buffer(0)
     {
         _540 = _534;
     }
+    float normalStrength = fast::max(_46.normalMapStrength, 0.0f);
+    bool useNormalMap = (_46.useNormalMap != 0u) && (normalStrength > 0.0f);
     float3 normal;
-    if (_540)
+    if (_540 && useNormalMap)
     {
-        float3 tangentNormal = fast::normalize((normTexture.xyz * 2.0) - float3(1.0));
+        float3 tangentNormal = (normTexture.xyz * 2.0) - float3(1.0);
+        tangentNormal.xy *= normalStrength;
+        tangentNormal = fast::normalize(tangentNormal);
         normal = fast::normalize(TBN * tangentNormal);
     }
     else
@@ -373,4 +379,3 @@ fragment main0_out main0(main0_in in [[stage_in]], constant UBO& _46 [[buffer(0)
     out.gMaterial = float4(metallicValue, roughnessValue, aoValue, 1.0);
     return out;
 }
-

@@ -23,9 +23,9 @@ struct RaytracingSettings {
     float hysteresis;
 
     uint frameIndex;
-    uint _pad0;
-    uint _pad1;
-    uint _pad2;
+    uint probeUpdateOffset;
+    uint probeUpdateStride;
+    uint probeUpdateCount;
 };
 
 struct Material {
@@ -332,13 +332,15 @@ static inline void resolveMaterialParameters(
     texture2d<float> materialTexture17, texture2d<float> materialTexture18,
     texture2d<float> materialTexture19, thread float3 &albedo,
     thread float &metallic, thread float &roughness, thread float &ao,
-    thread float3 &emissive, thread int &normalTextureIndex) {
+    thread float3 &emissive, thread int &normalTextureIndex,
+    thread float &normalStrength) {
     albedo = float3(0.7f);
     metallic = 0.0f;
     roughness = 0.6f;
     ao = 1.0f;
     emissive = float3(0.0f);
     normalTextureIndex = -1;
+    normalStrength = 0.0f;
 
     if (materialID < 0 || uint(materialID) >= materialCount) {
         return;
@@ -350,7 +352,9 @@ static inline void resolveMaterialParameters(
     roughness = clamp(mat.roughness, 0.05f, 1.0f);
     ao = clamp(mat.ao, 0.0f, 1.0f);
     emissive = float3(mat.emissiveColor) * max(mat.emissiveIntensity, 0.0f);
-    normalTextureIndex = mat.normalTextureIndex;
+    normalStrength = max(mat._pad0, 0.0f);
+    bool useNormalMap = mat._pad1 > 0.5f && normalStrength > 0.0f;
+    normalTextureIndex = useNormalMap ? mat.normalTextureIndex : -1;
 
     if (mat.albedoTextureIndex >= 0 && uint(mat.albedoTextureIndex) < textureCount) {
         albedo = clamp(sampleMaterialTexture(
@@ -368,37 +372,35 @@ static inline void resolveMaterialParameters(
     }
     if (mat.metallicTextureIndex >= 0 &&
         uint(mat.metallicTextureIndex) < textureCount) {
-        metallic *= clamp(sampleMaterialTexture(
-                              mat.metallicTextureIndex, uv, materialTexture0,
-                              materialTexture1, materialTexture2,
-                              materialTexture3, materialTexture4,
-                              materialTexture5, materialTexture6,
-                              materialTexture7, materialTexture8,
-                              materialTexture9, materialTexture10,
-                              materialTexture11, materialTexture12,
-                              materialTexture13, materialTexture14,
-                              materialTexture15, materialTexture16,
-                              materialTexture17, materialTexture18,
-                              materialTexture19)
-                              .x,
-                          0.0f, 1.0f);
+        float4 metallicSample = sampleMaterialTexture(
+            mat.metallicTextureIndex, uv, materialTexture0, materialTexture1,
+            materialTexture2, materialTexture3, materialTexture4,
+            materialTexture5, materialTexture6, materialTexture7,
+            materialTexture8, materialTexture9, materialTexture10,
+            materialTexture11, materialTexture12, materialTexture13,
+            materialTexture14, materialTexture15, materialTexture16,
+            materialTexture17, materialTexture18, materialTexture19);
+        float metallicValue = metallicSample.x;
+        if (mat.roughnessTextureIndex == mat.metallicTextureIndex) {
+            metallicValue = metallicSample.z;
+        }
+        metallic *= clamp(metallicValue, 0.0f, 1.0f);
     }
     if (mat.roughnessTextureIndex >= 0 &&
         uint(mat.roughnessTextureIndex) < textureCount) {
-        roughness *= clamp(sampleMaterialTexture(
-                               mat.roughnessTextureIndex, uv, materialTexture0,
-                               materialTexture1, materialTexture2,
-                               materialTexture3, materialTexture4,
-                               materialTexture5, materialTexture6,
-                               materialTexture7, materialTexture8,
-                               materialTexture9, materialTexture10,
-                               materialTexture11, materialTexture12,
-                               materialTexture13, materialTexture14,
-                               materialTexture15, materialTexture16,
-                               materialTexture17, materialTexture18,
-                               materialTexture19)
-                               .x,
-                           0.0f, 1.0f);
+        float4 roughnessSample = sampleMaterialTexture(
+            mat.roughnessTextureIndex, uv, materialTexture0, materialTexture1,
+            materialTexture2, materialTexture3, materialTexture4,
+            materialTexture5, materialTexture6, materialTexture7,
+            materialTexture8, materialTexture9, materialTexture10,
+            materialTexture11, materialTexture12, materialTexture13,
+            materialTexture14, materialTexture15, materialTexture16,
+            materialTexture17, materialTexture18, materialTexture19);
+        float roughnessValue = roughnessSample.x;
+        if (mat.roughnessTextureIndex == mat.metallicTextureIndex) {
+            roughnessValue = roughnessSample.y;
+        }
+        roughness *= clamp(roughnessValue, 0.0f, 1.0f);
     }
     if (mat.aoTextureIndex >= 0 && uint(mat.aoTextureIndex) < textureCount) {
         ao *= clamp(sampleMaterialTexture(
@@ -422,7 +424,7 @@ static inline void resolveMaterialParameters(
 }
 
 static inline float3 resolveNormal(
-    int normalTextureIndex, float2 uv, float3 n, float3 tangent,
+    int normalTextureIndex, float normalStrength, float2 uv, float3 n, float3 tangent,
     float3 bitangent, uint textureCount, texture2d<float> materialTexture0,
     texture2d<float> materialTexture1, texture2d<float> materialTexture2,
     texture2d<float> materialTexture3, texture2d<float> materialTexture4,
@@ -443,7 +445,8 @@ static inline float3 resolveNormal(
         T = safeNormalize(cross(up, N), float3(1.0f, 0.0f, 0.0f));
         B = safeNormalize(cross(N, T), float3(0.0f, 0.0f, 1.0f));
     }
-    if (normalTextureIndex >= 0 && uint(normalTextureIndex) < textureCount) {
+    if (normalTextureIndex >= 0 && uint(normalTextureIndex) < textureCount &&
+        normalStrength > 0.0f) {
         float3 texN = sampleMaterialTexture(
                           normalTextureIndex, uv, materialTexture0,
                           materialTexture1, materialTexture2, materialTexture3,
@@ -455,7 +458,9 @@ static inline float3 resolveNormal(
                           materialTexture16, materialTexture17,
                           materialTexture18, materialTexture19)
                           .xyz;
-        texN = safeNormalize(texN * 2.0f - 1.0f, float3(0.0f, 0.0f, 1.0f));
+        texN = texN * 2.0f - 1.0f;
+        texN.xy *= normalStrength;
+        texN = safeNormalize(texN, float3(0.0f, 0.0f, 1.0f));
         N = safeNormalize(float3x3(T, B, N) * texN, N);
     }
     return N;
@@ -665,13 +670,29 @@ kernel void main0(device float4 *probeRadianceOut [[buffer(0)]],
     const float PI = 3.14159265359f;
     uint totalProbes = (uint)ps.atlasParams.w;
     uint raysPerProbe = max(rt.raysPerProbe, 1u);
-    uint totalRays = totalProbes * raysPerProbe;
+    uint updateStride = max(rt.probeUpdateStride, 1u);
+    uint updateOffset =
+        (updateStride > 1u) ? rt.probeUpdateOffset % updateStride : 0u;
+    if (totalProbes > 0u) {
+        updateOffset %= totalProbes;
+    }
+    uint activeProbeCount = rt.probeUpdateCount;
+    if (activeProbeCount == 0u && totalProbes > updateOffset) {
+        activeProbeCount =
+            (totalProbes - updateOffset + updateStride - 1u) / updateStride;
+    }
+    activeProbeCount = max(activeProbeCount, 1u);
+    uint totalRays = activeProbeCount * raysPerProbe;
 
     if (tid >= totalRays)
         return;
 
-    uint probeIndex = tid / raysPerProbe;
-    uint rayIndex = tid - probeIndex * raysPerProbe;
+    uint localProbeIndex = tid / raysPerProbe;
+    uint rayIndex = tid - localProbeIndex * raysPerProbe;
+    uint probeIndex = updateOffset + localProbeIndex * updateStride;
+    if (probeIndex >= totalProbes) {
+        return;
+    }
 
     uint3 counts = uint3((uint)ps.probeCount.x, (uint)ps.probeCount.y,
                          (uint)ps.probeCount.z);
@@ -709,6 +730,7 @@ kernel void main0(device float4 *probeRadianceOut [[buffer(0)]],
         float ao;
         float3 emissive;
         int normalTextureIndex;
+        float normalStrength;
         resolveMaterialParameters(
             materials, h.materialID, sc.materialCount, h.uv, sc.textureCount,
             materialTexture0,
@@ -719,9 +741,9 @@ kernel void main0(device float4 *probeRadianceOut [[buffer(0)]],
             materialTexture13, materialTexture14, materialTexture15,
             materialTexture16, materialTexture17, materialTexture18,
             materialTexture19, albedo, metallic, roughness, ao, emissive,
-            normalTextureIndex);
+            normalTextureIndex, normalStrength);
         float3 hitNormal = resolveNormal(
-            normalTextureIndex, h.uv, h.n, h.tangent, h.bitangent,
+            normalTextureIndex, normalStrength, h.uv, h.n, h.tangent, h.bitangent,
             sc.textureCount, materialTexture0, materialTexture1,
             materialTexture2, materialTexture3, materialTexture4,
             materialTexture5, materialTexture6, materialTexture7,
@@ -746,5 +768,6 @@ kernel void main0(device float4 *probeRadianceOut [[buffer(0)]],
         radiance = clamp(radiance, float3(0.0f), float3(16.0f));
     }
 
-    probeRadianceOut[tid] = float4(radiance, h.hit != 0u ? h.t : -1.0f);
+    uint outIndex = probeIndex * raysPerProbe + rayIndex;
+    probeRadianceOut[outIndex] = float4(radiance, h.hit != 0u ? h.t : -1.0f);
 }

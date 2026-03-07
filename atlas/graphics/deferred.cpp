@@ -276,17 +276,42 @@ void Window::deferredRendering(
     commandBuffer->clear(0.0f, 0.0f, 0.0f, 1.0f, 1.0f);
 
     std::unordered_set<Renderable *> activeDeferredRenderables;
+    std::vector<Renderable *> orderedDeferredRenderables;
     activeDeferredRenderables.reserve(this->renderables.size() +
                                       this->firstRenderables.size());
-    for (auto *obj : this->renderables) {
-        if (obj != nullptr && obj->canUseDeferredRendering()) {
-            activeDeferredRenderables.insert(obj);
+    orderedDeferredRenderables.reserve(this->renderables.size() +
+                                       this->firstRenderables.size());
+
+    auto collectDeferredRenderable = [&](Renderable *obj) {
+        if (obj == nullptr) {
+            return;
         }
-    }
+        if (auto *model = dynamic_cast<Model *>(obj)) {
+            for (const auto &mesh : model->getObjects()) {
+                Renderable *meshRenderable = mesh.get();
+                if (meshRenderable == nullptr ||
+                    !meshRenderable->canUseDeferredRendering()) {
+                    continue;
+                }
+                if (activeDeferredRenderables.insert(meshRenderable).second) {
+                    orderedDeferredRenderables.push_back(meshRenderable);
+                }
+            }
+            return;
+        }
+        if (!obj->canUseDeferredRendering()) {
+            return;
+        }
+        if (activeDeferredRenderables.insert(obj).second) {
+            orderedDeferredRenderables.push_back(obj);
+        }
+    };
+
     for (auto *obj : this->firstRenderables) {
-        if (obj != nullptr && obj->canUseDeferredRendering()) {
-            activeDeferredRenderables.insert(obj);
-        }
+        collectDeferredRenderable(obj);
+    }
+    for (auto *obj : this->renderables) {
+        collectDeferredRenderable(obj);
     }
 
     for (auto it = deferredPrograms.begin(); it != deferredPrograms.end();) {
@@ -305,14 +330,8 @@ void Window::deferredRendering(
         }
     }
 
-    std::unordered_set<Renderable *> renderedDeferred;
-    renderedDeferred.reserve(activeDeferredRenderables.size());
-
     auto renderDeferredRenderable = [&](Renderable *obj) {
         if (obj == nullptr || !obj->canUseDeferredRendering()) {
-            return;
-        }
-        if (!renderedDeferred.insert(obj).second) {
             return;
         }
 
@@ -351,10 +370,7 @@ void Window::deferredRendering(
         obj->render(getDeltaTime(), commandBuffer, false);
     };
 
-    for (auto *obj : this->firstRenderables) {
-        renderDeferredRenderable(obj);
-    }
-    for (auto *obj : this->renderables) {
+    for (auto *obj : orderedDeferredRenderables) {
         renderDeferredRenderable(obj);
     }
 

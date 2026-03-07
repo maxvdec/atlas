@@ -148,15 +148,43 @@ Model::processMesh(aiMesh *mesh, const aiScene *scene,
         }
 
         // ---------- Tangents ----------
+        glm::vec3 normal = vertex.normal.toGlm();
+        glm::vec3 tangent(1.0f, 0.0f, 0.0f);
         if (mesh->mTangents) {
-            glm::vec3 tangent =
-                glm::mat3(transform) * glm::vec3(mesh->mTangents[i].x,
-                                                 mesh->mTangents[i].y,
-                                                 mesh->mTangents[i].z);
-            if (glm::length(tangent) < 1e-6f)
-                tangent = glm::vec3(1.0f, 0.0f, 0.0f);
-            vertex.tangent = Normal3d::fromGlm(glm::normalize(tangent));
+            tangent = glm::mat3(transform) *
+                      glm::vec3(mesh->mTangents[i].x, mesh->mTangents[i].y,
+                                mesh->mTangents[i].z);
         }
+        tangent = tangent - normal * glm::dot(normal, tangent);
+        if (glm::length(tangent) < 1e-6f) {
+            glm::vec3 up =
+                std::abs(normal.y) < 0.999f ? glm::vec3(0.0f, 1.0f, 0.0f)
+                                            : glm::vec3(1.0f, 0.0f, 0.0f);
+            tangent = glm::cross(up, normal);
+        }
+        tangent = glm::normalize(tangent);
+
+        glm::vec3 bitangent(0.0f, 0.0f, 1.0f);
+        if (mesh->mBitangents) {
+            bitangent = glm::mat3(transform) *
+                        glm::vec3(mesh->mBitangents[i].x,
+                                  mesh->mBitangents[i].y,
+                                  mesh->mBitangents[i].z);
+        } else {
+            bitangent = glm::cross(normal, tangent);
+        }
+        bitangent = bitangent - normal * glm::dot(normal, bitangent);
+        if (glm::length(bitangent) < 1e-6f ||
+            glm::length(glm::cross(tangent, bitangent)) < 1e-6f) {
+            bitangent = glm::cross(normal, tangent);
+        }
+        bitangent = glm::normalize(bitangent);
+        if (glm::dot(glm::cross(tangent, bitangent), normal) < 0.0f) {
+            bitangent = -bitangent;
+        }
+
+        vertex.tangent = Normal3d::fromGlm(tangent);
+        vertex.bitangent = Normal3d::fromGlm(bitangent);
 
         // ---------- Texture Coordinates ----------
         if (mesh->mTextureCoords[0]) {
@@ -206,6 +234,13 @@ Model::processMesh(aiMesh *mesh, const aiScene *scene,
             loadMaterialTextures(material, std::any(aiTextureType_DIFFUSE),
                                  "texture_diffuse", textureCache);
         if (diffuseMaps.empty()) {
+            auto baseColorMaps =
+                loadMaterialTextures(material, std::any(aiTextureType_BASE_COLOR),
+                                     "texture_diffuse", textureCache);
+            diffuseMaps.insert(diffuseMaps.end(), baseColorMaps.begin(),
+                               baseColorMaps.end());
+        }
+        if (diffuseMaps.empty()) {
             auto ambientMaps =
                 loadMaterialTextures(material, std::any(aiTextureType_AMBIENT),
                                      "texture_diffuse", textureCache);
@@ -223,12 +258,51 @@ Model::processMesh(aiMesh *mesh, const aiScene *scene,
         auto normalMaps =
             loadMaterialTextures(material, std::any(aiTextureType_NORMALS),
                                  "texture_normal", textureCache);
+        if (normalMaps.empty()) {
+            auto heightAsNormalMaps =
+                loadMaterialTextures(material, std::any(aiTextureType_HEIGHT),
+                                     "texture_normal", textureCache);
+            normalMaps.insert(normalMaps.end(), heightAsNormalMaps.begin(),
+                              heightAsNormalMaps.end());
+        }
+        if (normalMaps.empty()) {
+            auto displacementAsNormalMaps =
+                loadMaterialTextures(material,
+                                     std::any(aiTextureType_DISPLACEMENT),
+                                     "texture_normal", textureCache);
+            normalMaps.insert(normalMaps.end(), displacementAsNormalMaps.begin(),
+                              displacementAsNormalMaps.end());
+        }
         textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
 
         auto heightMaps =
             loadMaterialTextures(material, std::any(aiTextureType_HEIGHT),
                                  "texture_height", textureCache);
         textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
+
+        auto metallicMaps =
+            loadMaterialTextures(material, std::any(aiTextureType_METALNESS),
+                                 "texture_metallic", textureCache);
+        textures.insert(textures.end(), metallicMaps.begin(),
+                        metallicMaps.end());
+
+        auto roughnessMaps = loadMaterialTextures(
+            material, std::any(aiTextureType_DIFFUSE_ROUGHNESS),
+            "texture_roughness", textureCache);
+        textures.insert(textures.end(), roughnessMaps.begin(),
+                        roughnessMaps.end());
+
+        auto aoMaps = loadMaterialTextures(
+            material, std::any(aiTextureType_AMBIENT_OCCLUSION), "texture_ao",
+            textureCache);
+        if (aoMaps.empty()) {
+            auto lightmapMaps = loadMaterialTextures(
+                material, std::any(aiTextureType_LIGHTMAP), "texture_ao",
+                textureCache);
+            aoMaps.insert(aoMaps.end(), lightmapMaps.begin(),
+                          lightmapMaps.end());
+        }
+        textures.insert(textures.end(), aoMaps.begin(), aoMaps.end());
     }
 
     if (!textures.empty()) {
@@ -264,9 +338,10 @@ std::vector<Texture> Model::loadMaterialTextures(
         material->GetTexture(textureType, i, &str);
         std::string filename = std::string(str.C_Str());
         std::string fullPath = directory + "/" + filename;
+        std::string cacheKey = fullPath + "|" + typeName;
 
         // Check if texture is already cached
-        auto cacheIt = textureCache.find(fullPath);
+        auto cacheIt = textureCache.find(cacheKey);
         if (cacheIt != textureCache.end()) {
             textures.push_back(cacheIt->second);
             continue;
@@ -288,11 +363,17 @@ std::vector<Texture> Model::loadMaterialTextures(
             texType = TextureType::Normal;
         } else if (typeName == "texture_height") {
             texType = TextureType::Parallax;
+        } else if (typeName == "texture_metallic") {
+            texType = TextureType::Metallic;
+        } else if (typeName == "texture_roughness") {
+            texType = TextureType::Roughness;
+        } else if (typeName == "texture_ao") {
+            texType = TextureType::AO;
         }
 
         try {
             Texture loadedTexture = Texture::fromResource(resource, texType);
-            textureCache[fullPath] = loadedTexture;
+            textureCache[cacheKey] = loadedTexture;
             textures.push_back(loadedTexture);
         } catch (const std::exception &ex) {
             atlas_warning("Failed to load texture '" + filename +

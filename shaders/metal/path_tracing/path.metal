@@ -305,37 +305,35 @@ void resolveMaterialParameters(Material mat, float2 uv, uint textureCount,
     }
     if (mat.metallicTextureIndex >= 0 &&
         uint(mat.metallicTextureIndex) < textureCount) {
-        metallic *= clamp(sampleMaterialTexture(
-                              mat.metallicTextureIndex, uv, materialTexture0,
-                              materialTexture1, materialTexture2,
-                              materialTexture3, materialTexture4,
-                              materialTexture5, materialTexture6,
-                              materialTexture7, materialTexture8,
-                              materialTexture9, materialTexture10,
-                              materialTexture11, materialTexture12,
-                              materialTexture13, materialTexture14,
-                              materialTexture15, materialTexture16,
-                              materialTexture17, materialTexture18,
-                              materialTexture19)
-                              .x,
-                          0.0, 1.0);
+        float4 metallicSample = sampleMaterialTexture(
+            mat.metallicTextureIndex, uv, materialTexture0, materialTexture1,
+            materialTexture2, materialTexture3, materialTexture4,
+            materialTexture5, materialTexture6, materialTexture7,
+            materialTexture8, materialTexture9, materialTexture10,
+            materialTexture11, materialTexture12, materialTexture13,
+            materialTexture14, materialTexture15, materialTexture16,
+            materialTexture17, materialTexture18, materialTexture19);
+        float metallicValue = metallicSample.x;
+        if (mat.roughnessTextureIndex == mat.metallicTextureIndex) {
+            metallicValue = metallicSample.z;
+        }
+        metallic *= clamp(metallicValue, 0.0, 1.0);
     }
     if (mat.roughnessTextureIndex >= 0 &&
         uint(mat.roughnessTextureIndex) < textureCount) {
-        roughness *= clamp(sampleMaterialTexture(
-                               mat.roughnessTextureIndex, uv, materialTexture0,
-                               materialTexture1, materialTexture2,
-                               materialTexture3, materialTexture4,
-                               materialTexture5, materialTexture6,
-                               materialTexture7, materialTexture8,
-                               materialTexture9, materialTexture10,
-                               materialTexture11, materialTexture12,
-                               materialTexture13, materialTexture14,
-                               materialTexture15, materialTexture16,
-                               materialTexture17, materialTexture18,
-                               materialTexture19)
-                               .x,
-                           0.0, 1.0);
+        float4 roughnessSample = sampleMaterialTexture(
+            mat.roughnessTextureIndex, uv, materialTexture0, materialTexture1,
+            materialTexture2, materialTexture3, materialTexture4,
+            materialTexture5, materialTexture6, materialTexture7,
+            materialTexture8, materialTexture9, materialTexture10,
+            materialTexture11, materialTexture12, materialTexture13,
+            materialTexture14, materialTexture15, materialTexture16,
+            materialTexture17, materialTexture18, materialTexture19);
+        float roughnessValue = roughnessSample.x;
+        if (mat.roughnessTextureIndex == mat.metallicTextureIndex) {
+            roughnessValue = roughnessSample.y;
+        }
+        roughness *= clamp(roughnessValue, 0.0, 1.0);
     }
     if (mat.aoTextureIndex >= 0 && uint(mat.aoTextureIndex) < textureCount) {
         ao *= clamp(sampleMaterialTexture(
@@ -397,7 +395,11 @@ float3 resolveShadingNormal(Material mat, float2 uv, float3 localN,
         B = basis[1];
     }
 
-    if (mat.normalTextureIndex >= 0 && uint(mat.normalTextureIndex) < textureCount) {
+    bool useNormalMap = mat._pad1[0] != 0;
+    float normalStrength = max(mat._pad0, 0.0f);
+    if (useNormalMap && normalStrength > 0.0 &&
+        mat.normalTextureIndex >= 0 &&
+        uint(mat.normalTextureIndex) < textureCount) {
         float3 tangentNormal =
             sampleMaterialTexture(mat.normalTextureIndex, uv, materialTexture0,
                                   materialTexture1, materialTexture2,
@@ -411,8 +413,9 @@ float3 resolveShadingNormal(Material mat, float2 uv, float3 localN,
                                   materialTexture17, materialTexture18,
                                   materialTexture19)
                 .xyz;
-        tangentNormal = normalizeOr(tangentNormal * 2.0 - 1.0,
-                                    float3(0.0, 0.0, 1.0));
+        tangentNormal = tangentNormal * 2.0 - 1.0;
+        tangentNormal.xy *= normalStrength;
+        tangentNormal = normalizeOr(tangentNormal, float3(0.0, 0.0, 1.0));
         N = normalizeOr(float3x3(T, B, N) * tangentNormal, N);
     }
 

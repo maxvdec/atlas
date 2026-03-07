@@ -23,9 +23,9 @@ struct RaytracingSettings {
     float hysteresis;
 
     uint frameIndex;
-    uint _pad0;
-    uint _pad1;
-    uint _pad2;
+    uint probeUpdateOffset;
+    uint probeUpdateStride;
+    uint probeUpdateCount;
 };
 
 static inline uint wangHash(uint x) {

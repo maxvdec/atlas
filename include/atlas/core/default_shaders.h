@@ -116,9 +116,9 @@ struct RaytracingSettings {
     float hysteresis;
 
     uint frameIndex;
-    uint _pad0;
-    uint _pad1;
-    uint _pad2;
+    uint probeUpdateOffset;
+    uint probeUpdateStride;
+    uint probeUpdateCount;
 };
 
 struct Material {
@@ -425,13 +425,15 @@ static inline void resolveMaterialParameters(
     texture2d<float> materialTexture17, texture2d<float> materialTexture18,
     texture2d<float> materialTexture19, thread float3 &albedo,
     thread float &metallic, thread float &roughness, thread float &ao,
-    thread float3 &emissive, thread int &normalTextureIndex) {
+    thread float3 &emissive, thread int &normalTextureIndex,
+    thread float &normalStrength) {
     albedo = float3(0.7f);
     metallic = 0.0f;
     roughness = 0.6f;
     ao = 1.0f;
     emissive = float3(0.0f);
     normalTextureIndex = -1;
+    normalStrength = 0.0f;
 
     if (materialID < 0 || uint(materialID) >= materialCount) {
         return;
@@ -443,7 +445,9 @@ static inline void resolveMaterialParameters(
     roughness = clamp(mat.roughness, 0.05f, 1.0f);
     ao = clamp(mat.ao, 0.0f, 1.0f);
     emissive = float3(mat.emissiveColor) * max(mat.emissiveIntensity, 0.0f);
-    normalTextureIndex = mat.normalTextureIndex;
+    normalStrength = max(mat._pad0, 0.0f);
+    bool useNormalMap = mat._pad1 > 0.5f && normalStrength > 0.0f;
+    normalTextureIndex = useNormalMap ? mat.normalTextureIndex : -1;
 
     if (mat.albedoTextureIndex >= 0 && uint(mat.albedoTextureIndex) < textureCount) {
         albedo = clamp(sampleMaterialTexture(
@@ -461,37 +465,35 @@ static inline void resolveMaterialParameters(
     }
     if (mat.metallicTextureIndex >= 0 &&
         uint(mat.metallicTextureIndex) < textureCount) {
-        metallic *= clamp(sampleMaterialTexture(
-                              mat.metallicTextureIndex, uv, materialTexture0,
-                              materialTexture1, materialTexture2,
-                              materialTexture3, materialTexture4,
-                              materialTexture5, materialTexture6,
-                              materialTexture7, materialTexture8,
-                              materialTexture9, materialTexture10,
-                              materialTexture11, materialTexture12,
-                              materialTexture13, materialTexture14,
-                              materialTexture15, materialTexture16,
-                              materialTexture17, materialTexture18,
-                              materialTexture19)
-                              .x,
-                          0.0f, 1.0f);
+        float4 metallicSample = sampleMaterialTexture(
+            mat.metallicTextureIndex, uv, materialTexture0, materialTexture1,
+            materialTexture2, materialTexture3, materialTexture4,
+            materialTexture5, materialTexture6, materialTexture7,
+            materialTexture8, materialTexture9, materialTexture10,
+            materialTexture11, materialTexture12, materialTexture13,
+            materialTexture14, materialTexture15, materialTexture16,
+            materialTexture17, materialTexture18, materialTexture19);
+        float metallicValue = metallicSample.x;
+        if (mat.roughnessTextureIndex == mat.metallicTextureIndex) {
+            metallicValue = metallicSample.z;
+        }
+        metallic *= clamp(metallicValue, 0.0f, 1.0f);
     }
     if (mat.roughnessTextureIndex >= 0 &&
         uint(mat.roughnessTextureIndex) < textureCount) {
-        roughness *= clamp(sampleMaterialTexture(
-                               mat.roughnessTextureIndex, uv, materialTexture0,
-                               materialTexture1, materialTexture2,
-                               materialTexture3, materialTexture4,
-                               materialTexture5, materialTexture6,
-                               materialTexture7, materialTexture8,
-                               materialTexture9, materialTexture10,
-                               materialTexture11, materialTexture12,
-                               materialTexture13, materialTexture14,
-                               materialTexture15, materialTexture16,
-                               materialTexture17, materialTexture18,
-                               materialTexture19)
-                               .x,
-                           0.0f, 1.0f);
+        float4 roughnessSample = sampleMaterialTexture(
+            mat.roughnessTextureIndex, uv, materialTexture0, materialTexture1,
+            materialTexture2, materialTexture3, materialTexture4,
+            materialTexture5, materialTexture6, materialTexture7,
+            materialTexture8, materialTexture9, materialTexture10,
+            materialTexture11, materialTexture12, materialTexture13,
+            materialTexture14, materialTexture15, materialTexture16,
+            materialTexture17, materialTexture18, materialTexture19);
+        float roughnessValue = roughnessSample.x;
+        if (mat.roughnessTextureIndex == mat.metallicTextureIndex) {
+            roughnessValue = roughnessSample.y;
+        }
+        roughness *= clamp(roughnessValue, 0.0f, 1.0f);
     }
     if (mat.aoTextureIndex >= 0 && uint(mat.aoTextureIndex) < textureCount) {
         ao *= clamp(sampleMaterialTexture(
@@ -515,7 +517,7 @@ static inline void resolveMaterialParameters(
 }
 
 static inline float3 resolveNormal(
-    int normalTextureIndex, float2 uv, float3 n, float3 tangent,
+    int normalTextureIndex, float normalStrength, float2 uv, float3 n, float3 tangent,
     float3 bitangent, uint textureCount, texture2d<float> materialTexture0,
     texture2d<float> materialTexture1, texture2d<float> materialTexture2,
     texture2d<float> materialTexture3, texture2d<float> materialTexture4,
@@ -536,7 +538,8 @@ static inline float3 resolveNormal(
         T = safeNormalize(cross(up, N), float3(1.0f, 0.0f, 0.0f));
         B = safeNormalize(cross(N, T), float3(0.0f, 0.0f, 1.0f));
     }
-    if (normalTextureIndex >= 0 && uint(normalTextureIndex) < textureCount) {
+    if (normalTextureIndex >= 0 && uint(normalTextureIndex) < textureCount &&
+        normalStrength > 0.0f) {
         float3 texN = sampleMaterialTexture(
                           normalTextureIndex, uv, materialTexture0,
                           materialTexture1, materialTexture2, materialTexture3,
@@ -548,7 +551,9 @@ static inline float3 resolveNormal(
                           materialTexture16, materialTexture17,
                           materialTexture18, materialTexture19)
                           .xyz;
-        texN = safeNormalize(texN * 2.0f - 1.0f, float3(0.0f, 0.0f, 1.0f));
+        texN = texN * 2.0f - 1.0f;
+        texN.xy *= normalStrength;
+        texN = safeNormalize(texN, float3(0.0f, 0.0f, 1.0f));
         N = safeNormalize(float3x3(T, B, N) * texN, N);
     }
     return N;
@@ -758,13 +763,29 @@ kernel void main0(device float4 *probeRadianceOut [[buffer(0)]],
     const float PI = 3.14159265359f;
     uint totalProbes = (uint)ps.atlasParams.w;
     uint raysPerProbe = max(rt.raysPerProbe, 1u);
-    uint totalRays = totalProbes * raysPerProbe;
+    uint updateStride = max(rt.probeUpdateStride, 1u);
+    uint updateOffset =
+        (updateStride > 1u) ? rt.probeUpdateOffset % updateStride : 0u;
+    if (totalProbes > 0u) {
+        updateOffset %= totalProbes;
+    }
+    uint activeProbeCount = rt.probeUpdateCount;
+    if (activeProbeCount == 0u && totalProbes > updateOffset) {
+        activeProbeCount =
+            (totalProbes - updateOffset + updateStride - 1u) / updateStride;
+    }
+    activeProbeCount = max(activeProbeCount, 1u);
+    uint totalRays = activeProbeCount * raysPerProbe;
 
     if (tid >= totalRays)
         return;
 
-    uint probeIndex = tid / raysPerProbe;
-    uint rayIndex = tid - probeIndex * raysPerProbe;
+    uint localProbeIndex = tid / raysPerProbe;
+    uint rayIndex = tid - localProbeIndex * raysPerProbe;
+    uint probeIndex = updateOffset + localProbeIndex * updateStride;
+    if (probeIndex >= totalProbes) {
+        return;
+    }
 
     uint3 counts = uint3((uint)ps.probeCount.x, (uint)ps.probeCount.y,
                          (uint)ps.probeCount.z);
@@ -802,6 +823,7 @@ kernel void main0(device float4 *probeRadianceOut [[buffer(0)]],
         float ao;
         float3 emissive;
         int normalTextureIndex;
+        float normalStrength;
         resolveMaterialParameters(
             materials, h.materialID, sc.materialCount, h.uv, sc.textureCount,
             materialTexture0,
@@ -812,9 +834,9 @@ kernel void main0(device float4 *probeRadianceOut [[buffer(0)]],
             materialTexture13, materialTexture14, materialTexture15,
             materialTexture16, materialTexture17, materialTexture18,
             materialTexture19, albedo, metallic, roughness, ao, emissive,
-            normalTextureIndex);
+            normalTextureIndex, normalStrength);
         float3 hitNormal = resolveNormal(
-            normalTextureIndex, h.uv, h.n, h.tangent, h.bitangent,
+            normalTextureIndex, normalStrength, h.uv, h.n, h.tangent, h.bitangent,
             sc.textureCount, materialTexture0, materialTexture1,
             materialTexture2, materialTexture3, materialTexture4,
             materialTexture5, materialTexture6, materialTexture7,
@@ -839,7 +861,8 @@ kernel void main0(device float4 *probeRadianceOut [[buffer(0)]],
         radiance = clamp(radiance, float3(0.0f), float3(16.0f));
     }
 
-    probeRadianceOut[tid] = float4(radiance, h.hit != 0u ? h.t : -1.0f);
+    uint outIndex = probeIndex * raysPerProbe + rayIndex;
+    probeRadianceOut[outIndex] = float4(radiance, h.hit != 0u ? h.t : -1.0f);
 }
 )"
 ;
@@ -870,9 +893,9 @@ struct RaytracingSettings {
     float hysteresis;
 
     uint frameIndex;
-    uint _pad0;
-    uint _pad1;
-    uint _pad2;
+    uint probeUpdateOffset;
+    uint probeUpdateStride;
+    uint probeUpdateCount;
 };
 
 static inline uint wangHash(uint x) {
@@ -1083,6 +1106,8 @@ struct UBO
     uint useTexture;
     uint useColor;
     float3 cameraPosition;
+    float normalMapStrength;
+    uint useNormalMap;
 };
 
 struct MaterialPush
@@ -1382,10 +1407,14 @@ fragment main0_out main0(main0_in in [[stage_in]], constant UBO& _46 [[buffer(0)
     {
         _540 = _534;
     }
+    float normalStrength = fast::max(_46.normalMapStrength, 0.0f);
+    bool useNormalMap = (_46.useNormalMap != 0u) && (normalStrength > 0.0f);
     float3 normal;
-    if (_540)
+    if (_540 && useNormalMap)
     {
-        float3 tangentNormal = fast::normalize((normTexture.xyz * 2.0) - float3(1.0));
+        float3 tangentNormal = (normTexture.xyz * 2.0) - float3(1.0);
+        tangentNormal.xy *= normalStrength;
+        tangentNormal = fast::normalize(tangentNormal);
         normal = fast::normalize(TBN * tangentNormal);
     }
     else
@@ -1444,7 +1473,6 @@ fragment main0_out main0(main0_in in [[stage_in]], constant UBO& _46 [[buffer(0)
     out.gMaterial = float4(metallicValue, roughnessValue, aoValue, 1.0);
     return out;
 }
-
 )"
 ;
 
@@ -3641,10 +3669,7 @@ static inline __attribute__((always_inline)) float calculateShadow(
         return 0.0;
     }
     float3 clipCoords = fragPosLightSpace.xyz / float3(fragPosLightSpace.w);
-    float3 projCoords;
-    projCoords.xy = (clipCoords.xy * 0.5) + float2(0.5);
-    projCoords.y = 1.0 - projCoords.y;
-    projCoords.z = clipCoords.z;
+    float3 projCoords = (clipCoords * 0.5) + float3(0.5);
     bool _456 = projCoords.x < 0.0;
     bool _463;
     if (!_456) {
@@ -3689,10 +3714,10 @@ static inline __attribute__((always_inline)) float calculateShadow(
         biasValue = fast::max(biasValue, 0.0012000000569969416);
     }
     float ndotl = fast::max(dot(normal, lightDirWorld), 0.0);
-    float minBias = fast::max(isAreaShadow ? 0.0002500000118743628
-                                           : 4.9999998736893758177757263183594e-05,
-                              biasValue * (isAreaShadow ? 0.8500000238418579
-                                                        : 0.25));
+    float minBias =
+        fast::max(isAreaShadow ? 0.0002500000118743628
+                               : 4.9999998736893758177757263183594e-05,
+                  biasValue * (isAreaShadow ? 0.8500000238418579 : 0.25));
     float bias0 = fast::max(biasValue * (1.0 - ndotl), minBias);
     if (isAreaShadow) {
         bias0 += 0.0002500000118743628;
@@ -4011,7 +4036,8 @@ static inline float2 ddgiAtlasUV(uint probeIndex, float3 dirWS,
     return (innerPx + 0.5f) / float2((float)atlasW, (float)atlasH);
 }
 
-static inline float4 sampleDDGITextureBilinear(texture2d<float> tex, float2 uv) {
+static inline float4 sampleDDGITextureBilinear(texture2d<float> tex,
+                                               float2 uv) {
     uint w = tex.get_width();
     uint h = tex.get_height();
     if (w == 0u || h == 0u) {
@@ -4041,10 +4067,10 @@ static inline float4 sampleDDGITextureBilinear(texture2d<float> tex, float2 uv) 
     return mix(cx0, cx1, f.y);
 }
 
-static inline float4 sampleProbeDirectionalRadiance(texture2d<float> ddgiTexture,
-                                                    constant ProbeSpace &ps,
-                                                    uint probeIndex, uint atlasW,
-                                                    uint atlasH, float3 dirWS) {
+static inline float4
+sampleProbeDirectionalRadiance(texture2d<float> ddgiTexture,
+                               constant ProbeSpace &ps, uint probeIndex,
+                               uint atlasW, uint atlasH, float3 dirWS) {
     float2 uv = ddgiAtlasUV(probeIndex, dirWS, ps, atlasW, atlasH);
     return sampleDDGITextureBilinear(ddgiTexture, uv);
 }
@@ -4065,9 +4091,8 @@ static inline float3 sampleDDGIIrradiance(texture2d<float> ddgiTexture,
     }
 
     float normalLen = length(normalWS);
-    float3 safeNormal = (normalLen > 1e-6f)
-                            ? (normalWS / float3(normalLen))
-                            : float3(0.0f, 1.0f, 0.0f);
+    float3 safeNormal = (normalLen > 1e-6f) ? (normalWS / float3(normalLen))
+                                            : float3(0.0f, 1.0f, 0.0f);
 
     float3 safeSpacing = max(ps.spacing, float3(1e-4f));
     float spacingScale =
@@ -4075,15 +4100,15 @@ static inline float3 sampleDDGIIrradiance(texture2d<float> ddgiTexture,
     float3 grid = (posWS - ps.origin) / safeSpacing;
 
     if (counts.x < 2u || counts.y < 2u || counts.z < 2u) {
-        float3 maxCoord =
-            max(float3(0.0f), float3((float)counts.x - 1.0f,
-                                     (float)counts.y - 1.0f,
-                                     (float)counts.z - 1.0f));
+        float3 maxCoord = max(float3(0.0f), float3((float)counts.x - 1.0f,
+                                                   (float)counts.y - 1.0f,
+                                                   (float)counts.z - 1.0f));
         float3 clampedGrid = clamp(grid, float3(0.0f), maxCoord);
         uint3 nearest = uint3(
             (uint)clamp(int(floor(clampedGrid.x + 0.5f)), 0, int(counts.x) - 1),
             (uint)clamp(int(floor(clampedGrid.y + 0.5f)), 0, int(counts.y) - 1),
-            (uint)clamp(int(floor(clampedGrid.z + 0.5f)), 0, int(counts.z) - 1));
+            (uint)clamp(int(floor(clampedGrid.z + 0.5f)), 0,
+                        int(counts.z) - 1));
         uint pIndex = probeIndexFromCoord(nearest, counts);
         float4 nearestSample = sampleProbeDirectionalRadiance(
             ddgiTexture, ps, pIndex, atlasW, atlasH, safeNormal);
@@ -4105,7 +4130,8 @@ static inline float3 sampleDDGIIrradiance(texture2d<float> ddgiTexture,
     float3 baseF = floor(clampedGrid);
     float3 frac = clampedGrid - baseF;
     int3 baseI = int3(baseF);
-    int3 maxBase = int3(int(counts.x) - 2, int(counts.y) - 2, int(counts.z) - 2);
+    int3 maxBase =
+        int3(int(counts.x) - 2, int(counts.y) - 2, int(counts.z) - 2);
     baseI = clamp(baseI, int3(0), maxBase);
 
     float3 result = float3(0.0f);
@@ -4128,10 +4154,10 @@ static inline float3 sampleDDGIIrradiance(texture2d<float> ddgiTexture,
                 float3 probePos = ps.origin + float3(pc) * safeSpacing;
                 float3 surfaceToProbe = probePos - posWS;
                 float sDist = length(surfaceToProbe);
-                float3 dirToProbe = (sDist > 1e-4f) ? surfaceToProbe / sDist : float3(0.0f, 1.0f, 0.0f);
+                float3 dirToProbe = (sDist > 1e-4f) ? surfaceToProbe / sDist
+                                                    : float3(0.0f, 1.0f, 0.0f);
                 float frontW = max(dot(safeNormal, dirToProbe), 0.0f);
-                float backfaceW =
-                    mix(0.04f, 1.0f, frontW * frontW);
+                float backfaceW = mix(0.04f, 1.0f, frontW * frontW);
                 float distNorm = sDist / spacingScale;
                 float distNorm2 = distNorm * distNorm;
                 float distanceW = 1.0f / (1.0f + distNorm2 * 1.5f);
@@ -4174,9 +4200,8 @@ static inline float3 sampleDDGIIrradiance(texture2d<float> ddgiTexture,
     uint nearestIndex = probeIndexFromCoord(nearest, counts);
     float4 fallbackSample = sampleProbeDirectionalRadiance(
         ddgiTexture, ps, nearestIndex, atlasW, atlasH, safeNormal);
-    float fallbackValidity = isfinite(fallbackSample.w)
-                                 ? clamp(fallbackSample.w, 0.0f, 1.0f)
-                                 : 0.0f;
+    float fallbackValidity =
+        isfinite(fallbackSample.w) ? clamp(fallbackSample.w, 0.0f, 1.0f) : 0.0f;
     fallbackValidity = mix(0.05f, 1.0f, fallbackValidity);
     float3 fallback =
         all(isfinite(fallbackSample.xyz)) ? fallbackSample.xyz : float3(0.0f);
@@ -4224,7 +4249,7 @@ fragment main0_out main0(
     sampler gNormalSmplr [[sampler(12)]],
     sampler gAlbedoSpecSmplr [[sampler(13)]],
     sampler gMaterialSmplr [[sampler(14)]], sampler ssaoSmplr [[sampler(15)]]) {
-    main0_out out = {};
+    main0_out out{};
     float4 gPositionSample = gPosition.sample(gPositionSmplr, in.TexCoord);
     float3 FragPos = gPositionSample.xyz;
     if (!all(isfinite(FragPos))) {
@@ -4233,8 +4258,7 @@ fragment main0_out main0(
     float3 sampledNormal = gNormal.sample(gNormalSmplr, in.TexCoord).xyz;
     float normalLength = length(sampledNormal);
     bool hasGeometry = all(isfinite(sampledNormal)) &&
-                       normalLength >
-                           9.9999997473787516355514526367188e-06;
+                       normalLength > 9.9999997473787516355514526367188e-06;
     if (!hasGeometry) {
         float2 ndc = in.TexCoord * 2.0f - 1.0f;
         float3 backgroundDir = fast::normalize(float3(ndc.x, -ndc.y, 1.0f));
@@ -4266,14 +4290,16 @@ fragment main0_out main0(
         mix(float3(0.039999999105930328369140625), albedo, float3(metallic));
     float ssaoFactor =
         fast::clamp(ssao.sample(ssaoSmplr, in.TexCoord).x, 0.0, 1.0);
+
+    out.FragColor = float4(ssaoFactor, ssaoFactor, ssaoFactor, 1.0);
+    return out;
     float ssaoContrast =
         fast::clamp(powr(ssaoFactor, 1.7999999523162841796875), 0.0, 1.0);
     float occlusion =
         fast::clamp(ao * (0.3499999940395355224609375 +
                           (0.64999997615814208984375 * ssaoContrast)),
                     0.0, 1.0);
-    float lightingOcclusion =
-        fast::clamp(0.5 + (0.5 * ssaoContrast), 0.5, 1.0);
+    float lightingOcclusion = fast::clamp(0.5 + (0.5 * ssaoContrast), 0.5, 1.0);
     float directionalShadow = 0.0;
     float spotShadow = 0.0;
     float areaShadow = 0.0;
@@ -4336,8 +4362,8 @@ fragment main0_out main0(
             float3 param_4 = N;
             areaShadow += calculateShadow(
                 param_2, param_3, param_4, texture1, texture1Smplr, texture2,
-                texture2Smplr, texture3, texture3Smplr, texture4,
-                texture4Smplr, texture5, texture5Smplr, _526);
+                texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr,
+                texture5, texture5Smplr, _526);
             areaShadowCount++;
         } else {
             ShadowParameters _1397;
@@ -4514,8 +4540,7 @@ fragment main0_out main0(
     float3 ambient = ambientBase;
 
     float ddgiSampleBias =
-        max(max(ps.spacing.x, max(ps.spacing.y, ps.spacing.z)) * 0.07f,
-            0.003f);
+        max(max(ps.spacing.x, max(ps.spacing.y, ps.spacing.z)) * 0.07f, 0.003f);
     float3 ddgiSamplePos = FragPos + N * ddgiSampleBias;
     float3 ddgiIrradiance =
         sampleDDGIIrradiance(irradianceMap, ps, ddgiSamplePos, N);
@@ -4533,8 +4558,8 @@ fragment main0_out main0(
     const float INV_PI = 0.31830988618379067153776752674503;
     float ddgiLuma = dot(ddgiIrradiance, float3(0.2126f, 0.7152f, 0.0722f));
     float3 ddgiChroma = ddgiIrradiance - float3(ddgiLuma);
-    float3 boostedIrradiance = max(float3(ddgiLuma * 0.25f) + ddgiChroma * 1.15f,
-                                   float3(0.0f));
+    float3 boostedIrradiance =
+        max(float3(ddgiLuma * 0.25f) + ddgiChroma * 1.15f, float3(0.0f));
     float3 bleedAlbedo = albedo;
     float3 ddgiDiffuse = boostedIrradiance * bleedAlbedo * INV_PI *
                          (1.0f - metallic) * ddgiGain * 0.45f;
@@ -4542,8 +4567,8 @@ fragment main0_out main0(
     float ddgiSurfaceFactor = 0.35f + sideFactor * 0.65f;
     ddgiDiffuse *= ddgiSurfaceFactor;
     float ddgiDiffuseLuma = dot(ddgiDiffuse, float3(0.2126f, 0.7152f, 0.0722f));
-    float sceneRefLuma = dot(ambientBase + lighting * 0.35f,
-                             float3(0.2126f, 0.7152f, 0.0722f));
+    float sceneRefLuma =
+        dot(ambientBase + lighting * 0.35f, float3(0.2126f, 0.7152f, 0.0722f));
     float ddgiLumaCap = sceneRefLuma * 0.35f + 0.02f;
     if (ddgiDiffuseLuma > ddgiLumaCap) {
         ddgiDiffuse *= (ddgiLumaCap / ddgiDiffuseLuma);
@@ -4588,7 +4613,8 @@ fragment main0_out main0(
     }
     float3 finalColor = (ambient + lighting + ddgiSpecular) + iblContribution;
     if (ddgiDebugMode >= 39.5f) {
-        finalColor = max(ddgiDiffuse * 3.0f + ddgiSpecular * 2.0f, float3(0.0f));
+        finalColor =
+            max(ddgiDiffuse * 3.0f + ddgiSpecular * 2.0f, float3(0.0f));
     } else if (ddgiDebugMode >= 29.5f) {
         finalColor = ddgiIrradiance * ddgiGain * 4.0f;
     } else if (ddgiDebugMode >= 19.5f) {
@@ -4760,6 +4786,8 @@ struct Uniforms
     int4 textureTypes[16];
     int textureCount;
     float3 cameraPosition;
+    float normalMapStrength;
+    uint useNormalMap;
 };
 
 struct Environment
@@ -5647,10 +5675,14 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Uniforms& _163 [[buf
     {
         _1786 = _1780;
     }
+    float normalStrength = fast::max(_163.normalMapStrength, 0.0f);
+    bool useNormalMap = (_163.useNormalMap != 0u) && (normalStrength > 0.0f);
     float3 N;
-    if (_1786)
+    if (_1786 && useNormalMap)
     {
-        float3 tangentNormal = fast::normalize((normTexture.xyz * 2.0) - float3(1.0));
+        float3 tangentNormal = (normTexture.xyz * 2.0) - float3(1.0);
+        tangentNormal.xy *= normalStrength;
+        tangentNormal = fast::normalize(tangentNormal);
         N = fast::normalize(TBN * tangentNormal);
     }
     else
@@ -5711,7 +5743,7 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Uniforms& _163 [[buf
                 _1934.lightType = _1905.shadowParams[i_1].lightType;
                 ShadowParameters param_7 = _1934;
                 float4 param_8 = fragPosLightSpace;
-                directionalShadow = fast::max(directionalShadow, calculateShadow(param_7, param_8, _163, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr, _1083, in.Normal, in.FragPos));
+                areaShadow = fast::max(areaShadow, calculateShadow(param_7, param_8, _163, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr, _1083, in.Normal, in.FragPos));
             }
             else if (_1905.shadowParams[i_1].lightType == 1)
             {
@@ -5743,7 +5775,7 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Uniforms& _163 [[buf
                 _1934.lightType = _1905.shadowParams[i_1].lightType;
                 ShadowParameters param_7 = _1934;
                 float4 param_8 = fragPosLightSpace;
-                areaShadow = fast::max(areaShadow, calculateShadow(param_7, param_8, _163, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr, _1083, in.Normal, in.FragPos));
+                directionalShadow = fast::max(directionalShadow, calculateShadow(param_7, param_8, _163, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr, _1083, in.Normal, in.FragPos));
             }
             else
             {
@@ -5886,12 +5918,12 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Uniforms& _163 [[buf
         float3 param_54 = F0;
         float3 F_1 = fresnelSchlick(param_53, param_54);
         float3 kS_1 = F_1;
-        float3 kD_1 = float3(1.0) - kS_1;
+   )"
+R"(     float3 kD_1 = float3(1.0) - kS_1;
         kD_1 *= (1.0 - metallic);
         float roughnessAttenuation = mix(1.0, 0.1500000059604644775390625, fast::clamp(roughness, 0.0, 1.0));
         float3 specularIBL = specularEnv * roughnessAttenuation;
-        iblContribution = ((kD_1 * diffuseIBL) + )"
-R"((kS_1 * specularIBL)) * aoWithFloor;
+        iblContribution = ((kD_1 * diffuseIBL) + (kS_1 * specularIBL)) * aoWithFloor;
     }
     float3 color = (ambient + lighting) + iblContribution;
     out.FragColor = float4(color, 1.0);
@@ -6440,37 +6472,35 @@ void resolveMaterialParameters(Material mat, float2 uv, uint textureCount,
     }
     if (mat.metallicTextureIndex >= 0 &&
         uint(mat.metallicTextureIndex) < textureCount) {
-        metallic *= clamp(sampleMaterialTexture(
-                              mat.metallicTextureIndex, uv, materialTexture0,
-                              materialTexture1, materialTexture2,
-                              materialTexture3, materialTexture4,
-                              materialTexture5, materialTexture6,
-                              materialTexture7, materialTexture8,
-                              materialTexture9, materialTexture10,
-                              materialTexture11, materialTexture12,
-                              materialTexture13, materialTexture14,
-                              materialTexture15, materialTexture16,
-                              materialTexture17, materialTexture18,
-                              materialTexture19)
-                              .x,
-                          0.0, 1.0);
+        float4 metallicSample = sampleMaterialTexture(
+            mat.metallicTextureIndex, uv, materialTexture0, materialTexture1,
+            materialTexture2, materialTexture3, materialTexture4,
+            materialTexture5, materialTexture6, materialTexture7,
+            materialTexture8, materialTexture9, materialTexture10,
+            materialTexture11, materialTexture12, materialTexture13,
+            materialTexture14, materialTexture15, materialTexture16,
+            materialTexture17, materialTexture18, materialTexture19);
+        float metallicValue = metallicSample.x;
+        if (mat.roughnessTextureIndex == mat.metallicTextureIndex) {
+            metallicValue = metallicSample.z;
+        }
+        metallic *= clamp(metallicValue, 0.0, 1.0);
     }
     if (mat.roughnessTextureIndex >= 0 &&
         uint(mat.roughnessTextureIndex) < textureCount) {
-        roughness *= clamp(sampleMaterialTexture(
-                               mat.roughnessTextureIndex, uv, materialTexture0,
-                               materialTexture1, materialTexture2,
-                               materialTexture3, materialTexture4,
-                               materialTexture5, materialTexture6,
-                               materialTexture7, materialTexture8,
-                               materialTexture9, materialTexture10,
-                               materialTexture11, materialTexture12,
-                               materialTexture13, materialTexture14,
-                               materialTexture15, materialTexture16,
-                               materialTexture17, materialTexture18,
-                               materialTexture19)
-                               .x,
-                           0.0, 1.0);
+        float4 roughnessSample = sampleMaterialTexture(
+            mat.roughnessTextureIndex, uv, materialTexture0, materialTexture1,
+            materialTexture2, materialTexture3, materialTexture4,
+            materialTexture5, materialTexture6, materialTexture7,
+            materialTexture8, materialTexture9, materialTexture10,
+            materialTexture11, materialTexture12, materialTexture13,
+            materialTexture14, materialTexture15, materialTexture16,
+            materialTexture17, materialTexture18, materialTexture19);
+        float roughnessValue = roughnessSample.x;
+        if (mat.roughnessTextureIndex == mat.metallicTextureIndex) {
+            roughnessValue = roughnessSample.y;
+        }
+        roughness *= clamp(roughnessValue, 0.0, 1.0);
     }
     if (mat.aoTextureIndex >= 0 && uint(mat.aoTextureIndex) < textureCount) {
         ao *= clamp(sampleMaterialTexture(
@@ -6532,7 +6562,11 @@ float3 resolveShadingNormal(Material mat, float2 uv, float3 localN,
         B = basis[1];
     }
 
-    if (mat.normalTextureIndex >= 0 && uint(mat.normalTextureIndex) < textureCount) {
+    bool useNormalMap = mat._pad1[0] != 0;
+    float normalStrength = max(mat._pad0, 0.0f);
+    if (useNormalMap && normalStrength > 0.0 &&
+        mat.normalTextureIndex >= 0 &&
+        uint(mat.normalTextureIndex) < textureCount) {
         float3 tangentNormal =
             sampleMaterialTexture(mat.normalTextureIndex, uv, materialTexture0,
                                   materialTexture1, materialTexture2,
@@ -6546,8 +6580,9 @@ float3 resolveShadingNormal(Material mat, float2 uv, float3 localN,
                                   materialTexture17, materialTexture18,
                                   materialTexture19)
                 .xyz;
-        tangentNormal = normalizeOr(tangentNormal * 2.0 - 1.0,
-                                    float3(0.0, 0.0, 1.0));
+        tangentNormal = tangentNormal * 2.0 - 1.0;
+        tangentNormal.xy *= normalStrength;
+        tangentNormal = normalizeOr(tangentNormal, float3(0.0, 0.0, 1.0));
         N = normalizeOr(float3x3(T, B, N) * tangentNormal, N);
     }
 

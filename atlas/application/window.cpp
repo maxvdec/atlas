@@ -30,6 +30,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <unordered_set>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <sys/resource.h>
@@ -48,16 +49,67 @@ template <typename T> void hashCombine(std::size_t &seed, const T &value) {
             (seed >> 2);
 }
 
+void appendShadowCaster(Renderable *obj,
+                        std::unordered_set<Renderable *> &seen,
+                        std::vector<Renderable *> &casters) {
+    if (obj == nullptr) {
+        return;
+    }
+    if (auto *model = dynamic_cast<Model *>(obj)) {
+        for (const auto &mesh : model->getObjects()) {
+            Renderable *meshRenderable = mesh.get();
+            if (meshRenderable == nullptr || !meshRenderable->canCastShadows()) {
+                continue;
+            }
+            if (seen.insert(meshRenderable).second) {
+                casters.push_back(meshRenderable);
+            }
+        }
+        return;
+    }
+    if (!obj->canCastShadows()) {
+        return;
+    }
+    if (seen.insert(obj).second) {
+        casters.push_back(obj);
+    }
+}
+
+std::vector<Renderable *>
+collectShadowCasters(const std::vector<Renderable *> &firstRenderables,
+                     const std::vector<Renderable *> &renderables,
+                     const std::vector<Renderable *> &lateForwardRenderables) {
+    std::vector<Renderable *> casters;
+    casters.reserve(firstRenderables.size() + renderables.size() +
+                    lateForwardRenderables.size());
+    std::unordered_set<Renderable *> seen;
+    seen.reserve(firstRenderables.size() + renderables.size() +
+                 lateForwardRenderables.size());
+
+    for (auto *obj : firstRenderables) {
+        appendShadowCaster(obj, seen, casters);
+    }
+    for (auto *obj : renderables) {
+        if (obj != nullptr && obj->renderLateForward) {
+            continue;
+        }
+        appendShadowCaster(obj, seen, casters);
+    }
+    for (auto *obj : lateForwardRenderables) {
+        appendShadowCaster(obj, seen, casters);
+    }
+
+    return casters;
+}
+
 std::size_t computeShadowCasterSignature(
-    const std::vector<Renderable *> &renderables,
-    const std::vector<Renderable *> &lateForwardRenderables) {
+    const std::vector<Renderable *> &shadowCasters) {
     std::size_t signature = 1469598103934665603ULL;
 
-    auto appendRenderable = [&signature](Renderable *obj) {
-        if (obj == nullptr || !obj->canCastShadows()) {
-            return;
+    for (auto *obj : shadowCasters) {
+        if (obj == nullptr) {
+            continue;
         }
-
         hashCombine(signature, reinterpret_cast<std::uintptr_t>(obj));
 
         const Position3d position = obj->getPosition();
@@ -77,17 +129,6 @@ std::size_t computeShadowCasterSignature(
             hashCombine(signature, rotation.yaw);
             hashCombine(signature, rotation.roll);
         }
-    };
-
-    for (auto *obj : renderables) {
-        if (obj != nullptr && obj->renderLateForward) {
-            continue;
-        }
-        appendRenderable(obj);
-    }
-
-    for (auto *obj : lateForwardRenderables) {
-        appendRenderable(obj);
     }
 
     return signature;
@@ -1357,8 +1398,10 @@ void Window::renderLightsToShadowMaps(
         }
     }
 
-    const std::size_t shadowCasterSignature = computeShadowCasterSignature(
-        this->renderables, this->lateForwardRenderables);
+    const std::vector<Renderable *> shadowCasters = collectShadowCasters(
+        this->firstRenderables, this->renderables, this->lateForwardRenderables);
+    const std::size_t shadowCasterSignature =
+        computeShadowCasterSignature(shadowCasters);
     const bool castersMoved =
         !this->hasShadowCasterSignature ||
         this->lastShadowCasterSignature != shadowCasterSignature;
@@ -1382,38 +1425,14 @@ void Window::renderLightsToShadowMaps(
     bool renderedShadows = false;
 
     std::vector<std::shared_ptr<opal::Pipeline>> originalPipelines;
-    for (auto &obj : this->renderables) {
+    originalPipelines.reserve(shadowCasters.size());
+    for (auto *obj : shadowCasters) {
         if (obj->getPipeline() != std::nullopt) {
             originalPipelines.push_back(obj->getPipeline().value());
         } else {
             originalPipelines.push_back(opal::Pipeline::create());
         }
     }
-
-    std::vector<std::shared_ptr<opal::Pipeline>> originalLatePipelines;
-    for (auto &obj : this->lateForwardRenderables) {
-        if (obj->getPipeline() != std::nullopt) {
-            originalLatePipelines.push_back(obj->getPipeline().value());
-        } else {
-            originalLatePipelines.push_back(opal::Pipeline::create());
-        }
-    }
-
-    auto gatherShadowCasters = [this]() {
-        std::vector<Renderable *> casters;
-        casters.reserve(this->renderables.size() +
-                        this->lateForwardRenderables.size());
-        for (auto &obj : this->renderables) {
-            if (obj->renderLateForward) {
-                continue;
-            }
-            casters.push_back(obj);
-        }
-        for (auto &obj : this->lateForwardRenderables) {
-            casters.push_back(obj);
-        }
-        return casters;
-    };
 
     std::shared_ptr<opal::Pipeline> depthPipeline = opal::Pipeline::create();
 
@@ -1448,31 +1467,17 @@ void Window::renderLightsToShadowMaps(
         shadowRenderTarget->bind();
         commandBuffer->clearDepth(1.0f);
         ShadowParams lightParams =
-            light->calculateLightSpaceMatrix(gatherShadowCasters());
+            light->calculateLightSpaceMatrix(shadowCasters);
         glm::mat4 lightView = lightParams.lightView;
         glm::mat4 lightProjection = lightParams.lightProjection;
         light->lastShadowParams = lightParams;
-        for (auto &obj : this->renderables) {
-            if (obj->renderLateForward) {
-                continue;
-            }
+        for (auto *obj : shadowCasters) {
             if (!obj->canCastShadows()) {
                 continue;
             }
 
             obj->setPipeline(depthPipeline);
 
-            obj->setProjectionMatrix(lightProjection);
-            obj->setViewMatrix(lightView);
-            obj->render(getDeltaTime(), commandBuffer, false);
-        }
-
-        for (auto &obj : this->lateForwardRenderables) {
-            if (!obj->canCastShadows()) {
-                continue;
-            }
-
-            obj->setPipeline(depthPipeline);
             obj->setProjectionMatrix(lightProjection);
             obj->setViewMatrix(lightView);
             obj->render(getDeltaTime(), commandBuffer, false);
@@ -1522,27 +1527,13 @@ void Window::renderLightsToShadowMaps(
         cached.lightProjection = lightProjection;
         cached.bias = 0.001f;
         light->lastShadowParams = cached;
-        for (auto &obj : this->renderables) {
-            if (obj->renderLateForward) {
-                continue;
-            }
+        for (auto *obj : shadowCasters) {
             if (!obj->canCastShadows()) {
                 continue;
             }
 
             obj->setPipeline(spotlightsPipeline);
 
-            obj->setProjectionMatrix(lightProjection);
-            obj->setViewMatrix(lightView);
-            obj->render(getDeltaTime(), commandBuffer, false);
-        }
-
-        for (auto &obj : this->lateForwardRenderables) {
-            if (!obj->canCastShadows()) {
-                continue;
-            }
-
-            obj->setPipeline(spotlightsPipeline);
             obj->setProjectionMatrix(lightProjection);
             obj->setViewMatrix(lightView);
             obj->render(getDeltaTime(), commandBuffer, false);
@@ -1587,21 +1578,7 @@ void Window::renderLightsToShadowMaps(
         glm::mat4 lightProjection = lightParams.lightProjection;
         light->lastShadowParams = lightParams;
 
-        for (auto &obj : this->renderables) {
-            if (obj->renderLateForward) {
-                continue;
-            }
-            if (!obj->canCastShadows()) {
-                continue;
-            }
-
-            obj->setPipeline(areaLightsPipeline);
-            obj->setProjectionMatrix(lightProjection);
-            obj->setViewMatrix(lightView);
-            obj->render(getDeltaTime(), commandBuffer, false);
-        }
-
-        for (auto &obj : this->lateForwardRenderables) {
+        for (auto *obj : shadowCasters) {
             if (!obj->canCastShadows()) {
                 continue;
             }
@@ -1666,21 +1643,7 @@ void Window::renderLightsToShadowMaps(
                                                     shadowTransforms.at(face));
                 pointLightPipeline->setUniform1i("faceIndex", face);
 
-                for (auto &obj : this->renderables) {
-                    if (obj->renderLateForward) {
-                        continue;
-                    }
-                    if (!obj->canCastShadows()) {
-                        continue;
-                    }
-
-                    obj->setProjectionMatrix(glm::mat4(1.0));
-                    obj->setViewMatrix(glm::mat4(1.0));
-                    obj->setPipeline(pointLightPipeline);
-                    obj->render(getDeltaTime(), commandBuffer, false);
-                }
-
-                for (auto &obj : this->lateForwardRenderables) {
+                for (auto *obj : shadowCasters) {
                     if (!obj->canCastShadows()) {
                         continue;
                     }
@@ -1709,21 +1672,7 @@ void Window::renderLightsToShadowMaps(
                                                     shadowTransforms.at(i));
             }
 
-            for (auto &obj : this->renderables) {
-                if (obj->renderLateForward) {
-                    continue;
-                }
-                if (!obj->canCastShadows()) {
-                    continue;
-                }
-
-                obj->setProjectionMatrix(glm::mat4(1.0));
-                obj->setViewMatrix(glm::mat4(1.0));
-                obj->setPipeline(pointLightPipeline);
-                obj->render(getDeltaTime(), commandBuffer, false);
-            }
-
-            for (auto &obj : this->lateForwardRenderables) {
+            for (auto *obj : shadowCasters) {
                 if (!obj->canCastShadows()) {
                     continue;
                 }
@@ -1814,20 +1763,9 @@ void Window::renderLightsToShadowMaps(
         return;
     }
 
-    size_t i = 0;
-    for (auto &renderable : this->renderables) {
-        if (i < originalPipelines.size()) {
-            renderable->setPipeline(originalPipelines.at(i));
-            i++;
-        }
-    }
-
-    size_t j = 0;
-    for (auto &renderable : this->lateForwardRenderables) {
-        if (j < originalLatePipelines.size()) {
-            renderable->setPipeline(originalLatePipelines.at(j));
-            j++;
-        }
+    for (size_t i = 0; i < shadowCasters.size() && i < originalPipelines.size();
+         ++i) {
+        shadowCasters[i]->setPipeline(originalPipelines[i]);
     }
 }
 

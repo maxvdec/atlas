@@ -326,15 +326,37 @@ void photon::PathTracing::buildAccelerationStructure(
             data.emissiveColor[0] = object->material.emissiveColor.r;
             data.emissiveColor[1] = object->material.emissiveColor.g;
             data.emissiveColor[2] = object->material.emissiveColor.b;
-            data._pad0 = 0.0f;
+            const bool useNormalMap =
+                object->material.useNormalMap && sampleNormalMaps;
+            const float normalStrength = std::max(
+                0.0f,
+                object->material.normalMapStrength * normalMapStrength);
+            data._pad0 = normalStrength;
             data.albedoTextureIndex = findTextureSlotForType(
                 object->textures, TextureType::Color, materialTextures,
                 textureSlots);
-            data.normalTextureIndex = -1;
-            data.metallicTextureIndex = -1;
-            data.roughnessTextureIndex = -1;
-            data.aoTextureIndex = -1;
-            data._pad1[0] = 0;
+            int normalTextureIndex = -1;
+            if (useNormalMap && normalStrength > 0.0f) {
+                normalTextureIndex = findTextureSlotForType(
+                    object->textures, TextureType::Normal, materialTextures,
+                    textureSlots);
+                if (normalTextureIndex < 0) {
+                    normalTextureIndex = findTextureSlotForType(
+                        object->textures, TextureType::Parallax,
+                        materialTextures, textureSlots);
+                }
+            }
+            data.normalTextureIndex = normalTextureIndex;
+            data.metallicTextureIndex = findTextureSlotForType(
+                object->textures, TextureType::Metallic, materialTextures,
+                textureSlots);
+            data.roughnessTextureIndex = findTextureSlotForType(
+                object->textures, TextureType::Roughness, materialTextures,
+                textureSlots);
+            data.aoTextureIndex = findTextureSlotForType(
+                object->textures, TextureType::AO, materialTextures,
+                textureSlots);
+            data._pad1[0] = useNormalMap ? 1 : 0;
             data._pad1[1] = 0;
             data._pad1[2] = 0;
             materialData.push_back(data);
