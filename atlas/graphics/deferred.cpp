@@ -47,7 +47,11 @@ std::shared_ptr<opal::Texture> createFallbackIrradianceTexture() {
 }
 
 std::shared_ptr<opal::Texture> createFallbackSkyboxTexture() {
-    const unsigned char black[4] = {0, 0, 0, 255};
+    constexpr unsigned char horizon[4] = {170, 195, 225, 255};
+    constexpr unsigned char zenith[4] = {120, 170, 235, 255};
+    constexpr unsigned char nadir[4] = {215, 220, 230, 255};
+    const unsigned char *faceColors[6] = {
+        horizon, horizon, zenith, nadir, horizon, horizon};
     auto texture = opal::Texture::create(
         opal::TextureType::TextureCubeMap, opal::TextureFormat::Rgba8, 1, 1,
         opal::TextureDataFormat::Rgba, nullptr, 1);
@@ -60,7 +64,8 @@ std::shared_ptr<opal::Texture> createFallbackSkyboxTexture() {
     texture->setWrapMode(opal::TextureAxis::R,
                          opal::TextureWrapMode::ClampToEdge);
     for (int face = 0; face < 6; face++) {
-        texture->updateFace(face, black, 1, 1, opal::TextureDataFormat::Rgba);
+        texture->updateFace(face, faceColors[face], 1, 1,
+                            opal::TextureDataFormat::Rgba);
     }
     return texture;
 }
@@ -251,7 +256,14 @@ void Window::deferredRendering(
         this->ssaoMapsDirty = true;
     }
 
+    struct DeferredPipelineCacheEntry {
+        std::shared_ptr<opal::Pipeline> pipeline;
+        int width = 0;
+        int height = 0;
+    };
     static std::unordered_map<Renderable *, ShaderProgram> deferredPrograms;
+    static std::unordered_map<Renderable *, DeferredPipelineCacheEntry>
+        deferredPipelines;
 
     auto gBufferRenderPass = opal::RenderPass::create();
     gBufferRenderPass->setFramebuffer(this->gBuffer->getFramebuffer());
@@ -264,8 +276,14 @@ void Window::deferredRendering(
     commandBuffer->clear(0.0f, 0.0f, 0.0f, 1.0f, 1.0f);
 
     std::unordered_set<Renderable *> activeDeferredRenderables;
-    activeDeferredRenderables.reserve(this->renderables.size());
+    activeDeferredRenderables.reserve(this->renderables.size() +
+                                      this->firstRenderables.size());
     for (auto *obj : this->renderables) {
+        if (obj != nullptr && obj->canUseDeferredRendering()) {
+            activeDeferredRenderables.insert(obj);
+        }
+    }
+    for (auto *obj : this->firstRenderables) {
         if (obj != nullptr && obj->canUseDeferredRendering()) {
             activeDeferredRenderables.insert(obj);
         }
@@ -279,36 +297,65 @@ void Window::deferredRendering(
         }
     }
 
-    for (auto &obj : this->renderables) {
-        if (obj == nullptr) {
-            continue;
+    for (auto it = deferredPipelines.begin(); it != deferredPipelines.end();) {
+        if (!activeDeferredRenderables.contains(it->first)) {
+            it = deferredPipelines.erase(it);
+        } else {
+            ++it;
         }
-        if (obj->canUseDeferredRendering()) {
-            auto programIt = deferredPrograms.find(obj);
-            if (programIt == deferredPrograms.end()) {
-                ShaderProgram renderableProgram = this->deferredProgram;
-                renderableProgram.pipelines.clear();
-                renderableProgram.currentPipeline = nullptr;
-                programIt =
-                    deferredPrograms.emplace(obj, std::move(renderableProgram))
-                        .first;
-            }
+    }
 
+    std::unordered_set<Renderable *> renderedDeferred;
+    renderedDeferred.reserve(activeDeferredRenderables.size());
+
+    auto renderDeferredRenderable = [&](Renderable *obj) {
+        if (obj == nullptr || !obj->canUseDeferredRendering()) {
+            return;
+        }
+        if (!renderedDeferred.insert(obj).second) {
+            return;
+        }
+
+        auto programIt = deferredPrograms.find(obj);
+        if (programIt == deferredPrograms.end()) {
+            ShaderProgram renderableProgram = this->deferredProgram;
+            renderableProgram.pipelines.clear();
+            renderableProgram.currentPipeline = nullptr;
+            programIt =
+                deferredPrograms.emplace(obj, std::move(renderableProgram))
+                    .first;
+        }
+
+        auto &pipelineEntry = deferredPipelines[obj];
+        const int gbufferWidth = this->gBuffer->getWidth();
+        const int gbufferHeight = this->gBuffer->getHeight();
+        if (pipelineEntry.pipeline == nullptr ||
+            pipelineEntry.width != gbufferWidth ||
+            pipelineEntry.height != gbufferHeight) {
             auto deferredPipeline = opal::Pipeline::create();
-            deferredPipeline->setViewport(0, 0, this->gBuffer->getWidth(),
-                                          this->gBuffer->getHeight());
+            deferredPipeline->setViewport(0, 0, gbufferWidth, gbufferHeight);
             deferredPipeline->setCullMode(opal::CullMode::None);
             deferredPipeline->setFrontFace(this->deferredFrontFace);
             deferredPipeline->enableDepthTest(true);
             deferredPipeline->setDepthCompareOp(opal::CompareOp::Less);
             deferredPipeline->enableDepthWrite(true);
-            deferredPipeline =
+            pipelineEntry.pipeline =
                 programIt->second.requestPipeline(deferredPipeline);
-            obj->setViewMatrix(this->camera->calculateViewMatrix());
-            obj->setProjectionMatrix(calculateProjectionMatrix());
-            obj->setPipeline(deferredPipeline);
-            obj->render(getDeltaTime(), commandBuffer, false);
+            pipelineEntry.width = gbufferWidth;
+            pipelineEntry.height = gbufferHeight;
         }
+
+        obj->setViewMatrix(this->camera->calculateViewMatrix());
+        obj->setProjectionMatrix(calculateProjectionMatrix());
+        obj->setPipeline(pipelineEntry.pipeline);
+        obj->render(getDeltaTime(), commandBuffer, false);
+    };
+
+    for (auto *obj : this->firstRenderables) {
+        renderDeferredRenderable(obj);
+    }
+    for (auto *obj : this->renderables) {
+        renderDeferredRenderable(obj);
     }
 
     this->gBuffer->resolve();
@@ -325,8 +372,8 @@ void Window::deferredRendering(
 
         static int ddgiLayoutCountdown = 0;
         static int ddgiRenderCountdown = 0;
-        const int ddgiLayoutInterval = 12;
-        const int ddgiRenderInterval = 3;
+        const int ddgiLayoutInterval = 4;
+        const int ddgiRenderInterval = 1;
 
         bool needImmediateLayout =
             ddgiSystem->probeRadianceBuffer == nullptr ||

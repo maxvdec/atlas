@@ -205,6 +205,13 @@ Model::processMesh(aiMesh *mesh, const aiScene *scene,
         auto diffuseMaps =
             loadMaterialTextures(material, std::any(aiTextureType_DIFFUSE),
                                  "texture_diffuse", textureCache);
+        if (diffuseMaps.empty()) {
+            auto ambientMaps =
+                loadMaterialTextures(material, std::any(aiTextureType_AMBIENT),
+                                     "texture_diffuse", textureCache);
+            diffuseMaps.insert(diffuseMaps.end(), ambientMaps.begin(),
+                               ambientMaps.end());
+        }
         textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
 
         auto specularMaps =

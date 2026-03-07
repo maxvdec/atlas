@@ -17,8 +17,11 @@
 #include <memory>
 #include <unordered_map>
 #include <utility>
+#include <vector>
+#include <cstdint>
 
 class Window;
+class CoreObject;
 
 namespace photon {
 
@@ -29,7 +32,7 @@ struct ProbeSpace {
     Color debugColor;
 
     int textureBorderSize = 1;
-    int probeResolution = 8;
+    int probeResolution = 6;
     int probesPerRow = 16;
 
     int totalProbes() const {
@@ -78,17 +81,24 @@ class PathTracing {
     std::shared_ptr<opal::Buffer> meshInfo;
     std::shared_ptr<opal::Buffer> materialBuffer;
     std::shared_ptr<opal::Buffer> instanceDataBuffer;
+    std::vector<std::shared_ptr<opal::Texture>> materialTextures;
     std::shared_ptr<opal::InstanceAccelerationStructure> sceneTLAS;
     std::shared_ptr<opal::Pipeline> pathTracingPipeline;
     std::shared_ptr<ShaderProgram> computePathTracer;
     std::unordered_map<int,
                        std::shared_ptr<opal::PrimitiveAccelerationStructure>>
         objectBLAS;
+    std::vector<CoreObject *> cachedObjects;
 
     int frameIndex = 0;
     int outputWidth = 0;
     int outputHeight = 0;
     glm::mat4 cachedInvViewProj = glm::mat4(1.0f);
+    glm::vec3 cachedDirectionalLightDirection = glm::vec3(0.0f, -1.0f, 0.0f);
+    glm::vec3 cachedDirectionalLightColor = glm::vec3(1.0f, 1.0f, 1.0f);
+    float cachedDirectionalLightIntensity = -1.0f;
+    int cachedDirectionalLightCount = -1;
+    uint64_t cachedSkyboxTextureId = 0;
 
     friend class Window;
 };
@@ -116,12 +126,22 @@ class GlobalIllumination {
 
     struct DDGIMaterial {
         int materialID;
+        int albedoTextureIndex;
+        int normalTextureIndex;
+        int metallicTextureIndex;
+
+        int roughnessTextureIndex;
+        int aoTextureIndex;
         float metallic;
         float roughness;
         float ao;
+        float emissiveIntensity;
 
         glm::vec3 albedo;
         float _pad0;
+
+        glm::vec3 emissiveColor;
+        float _pad1;
     };
 
     struct DDGITriangle {
@@ -133,6 +153,18 @@ class GlobalIllumination {
         glm::vec4 n1;
         glm::vec4 n2;
 
+        glm::vec4 uv0;
+        glm::vec4 uv1;
+        glm::vec4 uv2;
+
+        glm::vec4 t0;
+        glm::vec4 t1;
+        glm::vec4 t2;
+
+        glm::vec4 b0;
+        glm::vec4 b1;
+        glm::vec4 b2;
+
         int materialID;
 
         int pad[3];
@@ -140,14 +172,17 @@ class GlobalIllumination {
 
     std::vector<DDGITriangle> triangles;
     std::vector<DDGIMaterial> materials;
+    std::vector<std::shared_ptr<opal::Texture>> materialTextures;
 
-    float probeSpacing = 0.5f;
+    float probeSpacing = 0.9f;
 
-    int raysPerProbe = 256;
+    int raysPerProbe = 64;
     float maxRayDistance = 20.f;
     float normalBias = 0.05;
     float hysteresis = 0.85;
     int frameIndex = 0;
+    uint64_t cachedLayoutSignature = 0;
+    bool hasCachedLayoutSignature = false;
 };
 
 } // namespace photon

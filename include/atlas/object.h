@@ -14,6 +14,7 @@
 #include "atlas/physics.h"
 #include "bezel/bezel.h"
 #include "photon/illuminate.h"
+#include <algorithm>
 #include <any>
 #include <memory>
 #include <string>
@@ -760,6 +761,9 @@ class Model : public GameObject {
      * @return (std::vector<std::shared_ptr<CoreObject>>) The objects.
      */
     std::vector<std::shared_ptr<CoreObject>> getObjects() { return objects; }
+    const std::vector<std::shared_ptr<CoreObject>> &getObjects() const {
+        return objects;
+    }
 
     /**
      * @brief Moves the model by a certain amount.
@@ -828,6 +832,14 @@ class Model : public GameObject {
             component->update(dt);
         }
         for (auto &obj : objects) {
+            if (obj == nullptr) {
+                continue;
+            }
+            bool hasAnyTexture = !obj->textures.empty();
+            if (!hasAnyTexture) {
+                obj->material = material;
+            }
+            obj->useDeferredRendering = useDeferredRendering;
             obj->render(dt, commandBuffer, updatePipeline);
         }
     }
@@ -838,6 +850,14 @@ class Model : public GameObject {
      */
     void update(Window &window) override {
         for (auto &obj : objects) {
+            if (obj == nullptr) {
+                continue;
+            }
+            bool hasAnyTexture = !obj->textures.empty();
+            if (!hasAnyTexture) {
+                obj->material = material;
+            }
+            obj->useDeferredRendering = useDeferredRendering;
             obj->update(window);
         }
     }
@@ -851,6 +871,14 @@ class Model : public GameObject {
             component->init();
         }
         for (auto &obj : objects) {
+            if (obj == nullptr) {
+                continue;
+            }
+            bool hasAnyTexture = !obj->textures.empty();
+            if (!hasAnyTexture) {
+                obj->material = material;
+            }
+            obj->useDeferredRendering = useDeferredRendering;
             obj->initialize();
         }
     }
@@ -892,6 +920,47 @@ class Model : public GameObject {
             throw std::runtime_error("Model has no objects.");
         }
         return objects[0]->getPosition();
+    }
+
+    std::vector<CoreVertex> getVertices() const override {
+        std::vector<CoreVertex> vertices;
+        size_t totalVertices = 0;
+        for (const auto &obj : objects) {
+            if (obj == nullptr) {
+                continue;
+            }
+            totalVertices += obj->vertices.size();
+        }
+        vertices.reserve(totalVertices);
+        for (const auto &obj : objects) {
+            if (obj == nullptr) {
+                continue;
+            }
+            vertices.insert(vertices.end(), obj->vertices.begin(),
+                            obj->vertices.end());
+        }
+        return vertices;
+    }
+
+    Size3d getScale() const override {
+        if (objects.empty()) {
+            return {1.0f, 1.0f, 1.0f};
+        }
+        return objects[0]->getScale();
+    }
+
+    Rotation3d getRotation() const override {
+        if (objects.empty()) {
+            return {0.0f, 0.0f, 0.0f};
+        }
+        return objects[0]->getRotation();
+    }
+
+    bool canCastShadows() const override {
+        return std::any_of(objects.begin(), objects.end(),
+                           [](const auto &obj) {
+                               return obj != nullptr && obj->canCastShadows();
+                           });
     }
 
     Model() = default;

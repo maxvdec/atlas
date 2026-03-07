@@ -14,11 +14,42 @@
 #include "opal/opal.h"
 #include <algorithm>
 #include <cmath>
+#include <cstdint>
 #include <cstring>
 #include <ranges>
+#include <unordered_map>
+#include <unordered_set>
 #include <sys/types.h>
 
 namespace {
+constexpr int kPathTracerMaterialTextureUnitStart = 12;
+constexpr int kPathTracerMaxMaterialTextures = 20;
+constexpr int kPathTracerSkyboxTextureUnit = 32;
+
+std::shared_ptr<opal::Texture> createFallbackSkyboxTexture() {
+    constexpr unsigned char horizon[4] = {170, 195, 225, 255};
+    constexpr unsigned char zenith[4] = {120, 170, 235, 255};
+    constexpr unsigned char nadir[4] = {215, 220, 230, 255};
+    const unsigned char *faceColors[6] = {
+        horizon, horizon, zenith, nadir, horizon, horizon};
+    auto texture = opal::Texture::create(
+        opal::TextureType::TextureCubeMap, opal::TextureFormat::Rgba8, 1, 1,
+        opal::TextureDataFormat::Rgba, nullptr, 1);
+    texture->setFilterMode(opal::TextureFilterMode::Linear,
+                           opal::TextureFilterMode::Linear);
+    texture->setWrapMode(opal::TextureAxis::S,
+                         opal::TextureWrapMode::ClampToEdge);
+    texture->setWrapMode(opal::TextureAxis::T,
+                         opal::TextureWrapMode::ClampToEdge);
+    texture->setWrapMode(opal::TextureAxis::R,
+                         opal::TextureWrapMode::ClampToEdge);
+    for (int face = 0; face < 6; ++face) {
+        texture->updateFace(face, faceColors[face], 1, 1,
+                            opal::TextureDataFormat::Rgba);
+    }
+    return texture;
+}
+
 bool mat4ApproximatelyEqual(const glm::mat4 &a, const glm::mat4 &b,
                             float epsilon) {
     for (int c = 0; c < 4; ++c) {
@@ -30,9 +61,77 @@ bool mat4ApproximatelyEqual(const glm::mat4 &a, const glm::mat4 &b,
     }
     return true;
 }
+
+int registerMaterialTextureSlot(
+    const Texture &texture,
+    std::vector<std::shared_ptr<opal::Texture>> &materialTextures,
+    std::unordered_map<uint64_t, int> &slotByTexture) {
+    if (texture.texture == nullptr) {
+        return -1;
+    }
+    uint64_t key =
+        static_cast<uint64_t>(reinterpret_cast<uintptr_t>(texture.texture.get()));
+    auto it = slotByTexture.find(key);
+    if (it != slotByTexture.end()) {
+        return it->second;
+    }
+    if (materialTextures.size() >=
+        static_cast<size_t>(kPathTracerMaxMaterialTextures)) {
+        return -1;
+    }
+    int slot = static_cast<int>(materialTextures.size());
+    materialTextures.push_back(texture.texture);
+    slotByTexture[key] = slot;
+    return slot;
+}
+
+int findTextureSlotForType(
+    const std::vector<Texture> &textures, TextureType type,
+    std::vector<std::shared_ptr<opal::Texture>> &materialTextures,
+    std::unordered_map<uint64_t, int> &slotByTexture) {
+    for (const auto &texture : textures) {
+        if (texture.type == type) {
+            return registerMaterialTextureSlot(texture, materialTextures,
+                                               slotByTexture);
+        }
+    }
+    return -1;
+}
+
+void collectPathTracingObjectsFromQueue(
+    const std::vector<Renderable *> &renderables,
+    std::unordered_set<CoreObject *> &seen, std::vector<CoreObject *> &objects) {
+    for (auto *renderable : renderables) {
+        if (renderable == nullptr) {
+            continue;
+        }
+        if (auto *object = dynamic_cast<CoreObject *>(renderable)) {
+            if (seen.insert(object).second) {
+                objects.push_back(object);
+            }
+            continue;
+        }
+        if (auto *model = dynamic_cast<Model *>(renderable)) {
+            for (const auto &mesh : model->getObjects()) {
+                CoreObject *object = mesh.get();
+                if (object == nullptr) {
+                    continue;
+                }
+                if (seen.insert(object).second) {
+                    objects.push_back(object);
+                }
+            }
+        }
+    }
+}
+
 } // namespace
 
 void photon::PathTracing::init() {
+    materialTextures.clear();
+    objectBLAS.clear();
+    cachedObjects.clear();
+
     ComputeShader pathTracerShader =
         ComputeShader::fromDefaultShader(AtlasComputeShader::PathTracer);
     pathTracerShader.compile();
@@ -88,10 +187,16 @@ void photon::PathTracing::buildAccelerationStructure(
         float ao;
         float emissiveIntensity;
         float emissiveColor[3];
-        uint _pad0;
+        float _pad0;
+        int albedoTextureIndex;
+        int normalTextureIndex;
+        int metallicTextureIndex;
+        int roughnessTextureIndex;
+        int aoTextureIndex;
+        int _pad1[3];
     };
 
-    static_assert(sizeof(MaterialData) == 48);
+    static_assert(sizeof(MaterialData) == 80);
 
     struct MeshData {
         uint vertexOffset;
@@ -102,88 +207,147 @@ void photon::PathTracing::buildAccelerationStructure(
 
     struct VertexData {
         float normal[3];
+        float uv[2];
+        float tangent[3];
+        float bitangent[3];
     };
 
-    auto renderables = Window::mainWindow->renderables;
+    static_assert(sizeof(VertexData) == 44);
+
+    std::vector<CoreObject *> pathTracingObjects;
+    std::unordered_set<CoreObject *> seenPathObjects;
+    if (Window::mainWindow != nullptr) {
+        collectPathTracingObjectsFromQueue(Window::mainWindow->renderables,
+                                           seenPathObjects, pathTracingObjects);
+        collectPathTracingObjectsFromQueue(Window::mainWindow->firstRenderables,
+                                           seenPathObjects, pathTracingObjects);
+    }
+    std::vector<CoreObject *> traceableObjects;
+    traceableObjects.reserve(pathTracingObjects.size());
+    for (auto *object : pathTracingObjects) {
+        if (object == nullptr) {
+            continue;
+        }
+        if (!object->canUseDeferredRendering()) {
+            continue;
+        }
+        if (object->vertices.size() < 3 || object->indices.size() < 3) {
+            continue;
+        }
+        traceableObjects.push_back(object);
+    }
     std::vector<MaterialData> materialData;
 
     std::vector<VertexData> allVertices;
     std::vector<uint32_t> allIndices;
     std::vector<MeshData> meshData;
 
-    int objectID = 0;
-    if (objectBLAS.empty()) {
-        for (auto *renderable : renderables) {
-            if (auto *object = dynamic_cast<CoreObject *>(renderable)) {
-                const auto &objectVertices = object->vertices;
-                const auto &objectIndices = object->indices;
-
-                std::vector<opal::PrimitiveVertex> vertices;
-                vertices.reserve(objectVertices.size());
-                std::vector<uint32_t> indices;
-                indices.reserve(objectIndices.size());
-
-                int vertexOffset = allVertices.size();
-                int indexOffset = allIndices.size();
-
-                for (const auto &v : objectVertices) {
-                    opal::PrimitiveVertex pv{};
-                    pv.position[0] = v.position.x;
-                    pv.position[1] = v.position.y;
-                    pv.position[2] = v.position.z;
-                    pv.normal[0] = v.normal.x;
-                    pv.normal[1] = v.normal.y;
-                    pv.normal[2] = v.normal.z;
-                    pv.uv[0] = v.textureCoordinate[0];
-                    pv.uv[1] = v.textureCoordinate[1];
-                    pv.tangent[0] = v.tangent.x;
-                    pv.tangent[1] = v.tangent.y;
-                    pv.tangent[2] = v.tangent.z;
-                    pv.bitangent[0] = v.bitangent.x;
-                    pv.bitangent[1] = v.bitangent.y;
-                    pv.bitangent[2] = v.bitangent.z;
-                    vertices.push_back(pv);
-
-                    VertexData vd{};
-                    vd.normal[0] = v.normal.x;
-                    vd.normal[1] = v.normal.y;
-                    vd.normal[2] = v.normal.z;
-                    allVertices.push_back(vd);
-                }
-
-                indices = objectIndices;
-                for (auto &index : indices) {
-                    allIndices.push_back(vertexOffset + index);
-                }
-
-                auto blas = opal::PrimitiveAccelerationStructure::create(
-                    vertices, indices);
-                objectBLAS[objectID] = blas;
-
-                MaterialData data;
-                data.albedo[0] = object->material.albedo.r;
-                data.albedo[1] = object->material.albedo.g;
-                data.albedo[2] = object->material.albedo.b;
-                data.albedo[3] = object->material.albedo.a;
-                data.metallic = object->material.metallic;
-                data.roughness = object->material.roughness;
-                data.ao = object->material.ao;
-                data.emissiveIntensity = object->material.emissiveIntensity;
-                data.emissiveColor[0] = object->material.emissiveColor.r;
-                data.emissiveColor[1] = object->material.emissiveColor.g;
-                data.emissiveColor[2] = object->material.emissiveColor.b;
-                materialData.push_back(data);
-
-                MeshData mdata;
-                mdata.vertexOffset = vertexOffset;
-                mdata.indexOffset = indexOffset;
-                meshData.push_back(mdata);
-
-                objectID++;
+    bool needsRebuild = objectBLAS.empty() ||
+                        cachedObjects.size() != traceableObjects.size();
+    if (!needsRebuild) {
+        for (size_t i = 0; i < traceableObjects.size(); ++i) {
+            if (cachedObjects[i] != traceableObjects[i]) {
+                needsRebuild = true;
+                break;
             }
         }
+    }
 
-        for (const auto &[id, blas] : objectBLAS) {
+    int objectID = 0;
+    if (needsRebuild) {
+        objectBLAS.clear();
+        materialTextures.clear();
+        cachedObjects = traceableObjects;
+        std::unordered_map<uint64_t, int> textureSlots;
+
+        for (auto *object : traceableObjects) {
+            const auto &objectVertices = object->vertices;
+            const auto &objectIndices = object->indices;
+
+            std::vector<opal::PrimitiveVertex> vertices;
+            vertices.reserve(objectVertices.size());
+            std::vector<uint32_t> indices;
+            indices.reserve(objectIndices.size());
+
+            int vertexOffset = allVertices.size();
+            int indexOffset = allIndices.size();
+
+            for (const auto &v : objectVertices) {
+                opal::PrimitiveVertex pv{};
+                pv.position[0] = v.position.x;
+                pv.position[1] = v.position.y;
+                pv.position[2] = v.position.z;
+                pv.normal[0] = v.normal.x;
+                pv.normal[1] = v.normal.y;
+                pv.normal[2] = v.normal.z;
+                pv.uv[0] = v.textureCoordinate[0];
+                pv.uv[1] = v.textureCoordinate[1];
+                pv.tangent[0] = v.tangent.x;
+                pv.tangent[1] = v.tangent.y;
+                pv.tangent[2] = v.tangent.z;
+                pv.bitangent[0] = v.bitangent.x;
+                pv.bitangent[1] = v.bitangent.y;
+                pv.bitangent[2] = v.bitangent.z;
+                vertices.push_back(pv);
+
+                VertexData vd{};
+                vd.normal[0] = v.normal.x;
+                vd.normal[1] = v.normal.y;
+                vd.normal[2] = v.normal.z;
+                vd.uv[0] = v.textureCoordinate[0];
+                vd.uv[1] = v.textureCoordinate[1];
+                vd.tangent[0] = v.tangent.x;
+                vd.tangent[1] = v.tangent.y;
+                vd.tangent[2] = v.tangent.z;
+                vd.bitangent[0] = v.bitangent.x;
+                vd.bitangent[1] = v.bitangent.y;
+                vd.bitangent[2] = v.bitangent.z;
+                allVertices.push_back(vd);
+            }
+
+            indices = objectIndices;
+            for (auto &index : indices) {
+                allIndices.push_back(vertexOffset + index);
+            }
+
+            auto blas = opal::PrimitiveAccelerationStructure::create(vertices,
+                                                                     indices);
+            objectBLAS[objectID] = blas;
+
+            MaterialData data;
+            data.albedo[0] = object->material.albedo.r;
+            data.albedo[1] = object->material.albedo.g;
+            data.albedo[2] = object->material.albedo.b;
+            data.albedo[3] = object->material.albedo.a;
+            data.metallic = object->material.metallic;
+            data.roughness = object->material.roughness;
+            data.ao = object->material.ao;
+            data.emissiveIntensity = object->material.emissiveIntensity;
+            data.emissiveColor[0] = object->material.emissiveColor.r;
+            data.emissiveColor[1] = object->material.emissiveColor.g;
+            data.emissiveColor[2] = object->material.emissiveColor.b;
+            data._pad0 = 0.0f;
+            data.albedoTextureIndex = findTextureSlotForType(
+                object->textures, TextureType::Color, materialTextures,
+                textureSlots);
+            data.normalTextureIndex = -1;
+            data.metallicTextureIndex = -1;
+            data.roughnessTextureIndex = -1;
+            data.aoTextureIndex = -1;
+            data._pad1[0] = 0;
+            data._pad1[1] = 0;
+            data._pad1[2] = 0;
+            materialData.push_back(data);
+
+            MeshData mdata;
+            mdata.vertexOffset = vertexOffset;
+            mdata.indexOffset = indexOffset;
+            meshData.push_back(mdata);
+
+            objectID++;
+        }
+
+        for (const auto &[_, blas] : objectBLAS) {
             if (blas != nullptr) {
                 commandBuffer->buildPrimitiveAccelerationStructure(blas);
             }
@@ -204,10 +368,10 @@ void photon::PathTracing::buildAccelerationStructure(
         meshInfo = opal::Buffer::create(opal::BufferUsage::ShaderRead,
                                         meshData.size() * sizeof(MeshData),
                                         meshData.data());
+        frameIndex = 0;
     }
 
     std::vector<opal::AccelerationStructureInstance> instances;
-    objectID = 0;
 
     struct InstanceData {
         float model[16];
@@ -218,50 +382,48 @@ void photon::PathTracing::buildAccelerationStructure(
 
     std::vector<InstanceData> instanceData;
 
-    for (auto *renderable : renderables) {
-        if (auto *object = dynamic_cast<CoreObject *>(renderable)) {
-            auto it = objectBLAS.find(objectID);
-            if (it == objectBLAS.end()) {
-                continue;
-            }
-            auto blas = it->second;
-            if (blas == nullptr || !blas->isBuilt) {
-                continue;
-            }
-
-            opal::AccelerationStructureInstance instance{};
-            instance.blas = blas;
-            instance.transform = object->model;
-            instance.instanceId = objectID;
-            instance.mask = 0xFF;
-            instance.cullDisable = false;
-            instances.push_back(instance);
-
-            InstanceData d{};
-            const glm::mat4 &m = object->model;
-            memcpy(d.model, &m[0][0], sizeof(float) * 16);
-            glm::mat3 linear = glm::mat3(m);
-            glm::mat3 normalMatrix(1.0f);
-            float det = glm::determinant(linear);
-            if (std::fabs(det) > 0.000001f) {
-                normalMatrix = glm::transpose(glm::inverse(linear));
-            }
-            d.normalCol0[0] = normalMatrix[0][0];
-            d.normalCol0[1] = normalMatrix[0][1];
-            d.normalCol0[2] = normalMatrix[0][2];
-            d.normalCol0[3] = 0.0f;
-            d.normalCol1[0] = normalMatrix[1][0];
-            d.normalCol1[1] = normalMatrix[1][1];
-            d.normalCol1[2] = normalMatrix[1][2];
-            d.normalCol1[3] = 0.0f;
-            d.normalCol2[0] = normalMatrix[2][0];
-            d.normalCol2[1] = normalMatrix[2][1];
-            d.normalCol2[2] = normalMatrix[2][2];
-            d.normalCol2[3] = 0.0f;
-            instanceData.push_back(d);
-
-            objectID++;
+    for (size_t objectIndex = 0; objectIndex < traceableObjects.size();
+         ++objectIndex) {
+        auto *object = traceableObjects[objectIndex];
+        auto it = objectBLAS.find(static_cast<int>(objectIndex));
+        if (it == objectBLAS.end()) {
+            continue;
         }
+        auto blas = it->second;
+        if (blas == nullptr || !blas->isBuilt) {
+            continue;
+        }
+
+        opal::AccelerationStructureInstance instance{};
+        instance.blas = blas;
+        instance.transform = object->model;
+        instance.instanceId = static_cast<uint>(objectIndex);
+        instance.mask = 0xFF;
+        instance.cullDisable = false;
+        instances.push_back(instance);
+
+        InstanceData d{};
+        const glm::mat4 &m = object->model;
+        memcpy(d.model, &m[0][0], sizeof(float) * 16);
+        glm::mat3 linear = glm::mat3(m);
+        glm::mat3 normalMatrix(1.0f);
+        float det = glm::determinant(linear);
+        if (std::fabs(det) > 0.000001f) {
+            normalMatrix = glm::transpose(glm::inverse(linear));
+        }
+        d.normalCol0[0] = normalMatrix[0][0];
+        d.normalCol0[1] = normalMatrix[0][1];
+        d.normalCol0[2] = normalMatrix[0][2];
+        d.normalCol0[3] = 0.0f;
+        d.normalCol1[0] = normalMatrix[1][0];
+        d.normalCol1[1] = normalMatrix[1][1];
+        d.normalCol1[2] = normalMatrix[1][2];
+        d.normalCol1[3] = 0.0f;
+        d.normalCol2[0] = normalMatrix[2][0];
+        d.normalCol2[1] = normalMatrix[2][1];
+        d.normalCol2[2] = normalMatrix[2][2];
+        d.normalCol2[3] = 0.0f;
+        instanceData.push_back(d);
     }
 
     instanceDataBuffer = opal::Buffer::create(
@@ -438,6 +600,9 @@ void photon::PathTracing::render(
     int pointLightCount = 0;
     int spotLightCount = 0;
     int areaLightCount = 0;
+    glm::vec3 directionalLightDirection(0.0f, -1.0f, 0.0f);
+    glm::vec3 directionalLightColor(1.0f, 1.0f, 1.0f);
+    float directionalLightIntensity = 0.0f;
 
     Scene *scene = (Window::mainWindow != nullptr)
                        ? Window::mainWindow->getCurrentScene()
@@ -449,25 +614,29 @@ void photon::PathTracing::render(
             if (light == nullptr) {
                 continue;
             }
-            glm::vec3 directionalLightDirection(0.0f, -1.0f, 0.0f);
             glm::vec3 sceneDirection = light->direction.toGlm();
             if (glm::length(sceneDirection) > 0.0001f) {
                 directionalLightDirection = glm::normalize(sceneDirection);
             }
-            glm::vec3 directionalLightColor =
+            directionalLightColor =
                 glm::vec3(light->color.r, light->color.g, light->color.b);
-            float directionalLightIntensity = light->intensity;
-
-            pathTracingPipeline->setUniform3f(
-                "dirLight.direction", directionalLightDirection.x,
-                directionalLightDirection.y, directionalLightDirection.z);
-            pathTracingPipeline->setUniform3f(
-                "dirLight.color", directionalLightColor.x,
-                directionalLightColor.y, directionalLightColor.z);
-            pathTracingPipeline->setUniform1f("dirLight.intensity",
-                                              directionalLightIntensity);
+            directionalLightIntensity = light->intensity;
             directionalLightCount = 1;
             break;
+        }
+
+        if (directionalLightCount == 0 && scene->atmosphere.isEnabled()) {
+            glm::vec3 sceneDirection = scene->atmosphere.getSunAngle().toGlm();
+            if (glm::length(sceneDirection) > 0.0001f) {
+                directionalLightDirection = -glm::normalize(sceneDirection);
+            }
+            Color atmosphereLightColor = scene->atmosphere.getLightColor();
+            directionalLightColor = glm::vec3(atmosphereLightColor.r,
+                                              atmosphereLightColor.g,
+                                              atmosphereLightColor.b);
+            directionalLightIntensity =
+                scene->atmosphere.getLightIntensity() * 1.2f;
+            directionalLightCount = 1;
         }
 
         for (auto *light : scene->getPointLights()) {
@@ -489,6 +658,14 @@ void photon::PathTracing::render(
 
     pathTracingPipeline->setUniform1i("sceneData.numDirectionalLights",
                                       directionalLightCount);
+    pathTracingPipeline->setUniform3f(
+        "dirLight.direction", directionalLightDirection.x,
+        directionalLightDirection.y, directionalLightDirection.z);
+    pathTracingPipeline->setUniform3f(
+        "dirLight.color", directionalLightColor.x, directionalLightColor.y,
+        directionalLightColor.z);
+    pathTracingPipeline->setUniform1f("dirLight.intensity",
+                                      directionalLightIntensity);
     pathTracingPipeline->setUniform1i("sceneData.numPointLights",
                                       pointLightCount);
     pathTracingPipeline->setUniform1i("sceneData.numSpotLights",
@@ -508,6 +685,38 @@ void photon::PathTracing::render(
     pathTracingPipeline->bindTexture("outTex", pathTracingTexture->texture, 0);
     pathTracingPipeline->bindTexture("prevTex", pathTracingTexturePrev->texture,
                                      1);
+
+    static std::shared_ptr<opal::Texture> fallbackSkyboxTexture = nullptr;
+    if (fallbackSkyboxTexture == nullptr) {
+        fallbackSkyboxTexture = createFallbackSkyboxTexture();
+    }
+    auto skyboxTextureId = fallbackSkyboxTexture->textureID;
+    if (scene != nullptr) {
+        auto skybox = scene->getSkybox();
+        if (skybox != nullptr && skybox->cubemap.id != 0) {
+            skyboxTextureId = skybox->cubemap.id;
+        }
+    }
+    pathTracingPipeline->bindTextureCubemap("skybox", skyboxTextureId,
+                                            kPathTracerSkyboxTextureUnit);
+    bool lightChanged =
+        cachedDirectionalLightCount != directionalLightCount ||
+        glm::length(cachedDirectionalLightDirection -
+                    directionalLightDirection) > 0.0001f ||
+        glm::length(cachedDirectionalLightColor - directionalLightColor) >
+            0.0001f ||
+        std::fabs(cachedDirectionalLightIntensity - directionalLightIntensity) >
+            0.0001f;
+    bool skyChanged = cachedSkyboxTextureId != skyboxTextureId;
+    if (lightChanged || skyChanged) {
+        frameIndex = 0;
+    }
+    cachedDirectionalLightCount = directionalLightCount;
+    cachedDirectionalLightDirection = directionalLightDirection;
+    cachedDirectionalLightColor = directionalLightColor;
+    cachedDirectionalLightIntensity = directionalLightIntensity;
+    cachedSkyboxTextureId = skyboxTextureId;
+
     commandBuffer->bindInstanceAccelerationStructure(this->sceneTLAS, 0);
 
     pathTracingPipeline->bindBuffer("materials", materialBuffer, 2);
@@ -518,6 +727,21 @@ void photon::PathTracing::render(
     pathTracingPipeline->bindBuffer("pointLights", pointLights, 9);
     pathTracingPipeline->bindBuffer("spotLights", spotLights, 10);
     pathTracingPipeline->bindBuffer("areaLights", areaLights, 11);
+    pathTracingPipeline->setUniform1i(
+        "sceneData.materialTextureCount",
+        std::min<int>(static_cast<int>(materialTextures.size()),
+                      kPathTracerMaxMaterialTextures));
+
+    for (int i = 0; i < kPathTracerMaxMaterialTextures; ++i) {
+        std::shared_ptr<opal::Texture> texture = nullptr;
+        if (i < static_cast<int>(materialTextures.size())) {
+            texture = materialTextures[static_cast<size_t>(i)];
+        }
+        pathTracingPipeline->bindTexture("materialTexture" + std::to_string(i),
+                                         texture,
+                                         kPathTracerMaterialTextureUnitStart +
+                                             i);
+    }
 
     commandBuffer->dispatch(outputWidth, outputHeight, 1);
 
