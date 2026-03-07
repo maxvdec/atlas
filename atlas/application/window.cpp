@@ -472,8 +472,25 @@ void Window::run() {
 
         renderLightsToShadowMaps(commandBuffer);
 
+        static std::unique_ptr<RenderTarget> modeScreenTarget = nullptr;
+        std::vector<RenderTarget *> activeRenderTargets = this->renderTargets;
+        bool usesModeScreenTarget = false;
+        if (activeRenderTargets.empty() &&
+            (this->usePathTracing || this->usesDeferred)) {
+            if (!modeScreenTarget) {
+                modeScreenTarget = std::make_unique<RenderTarget>(
+                    *this, RenderTargetType::Scene);
+            }
+            modeScreenTarget->display(*this, 0.0f);
+            modeScreenTarget->show();
+            activeRenderTargets.push_back(modeScreenTarget.get());
+            usesModeScreenTarget = true;
+        } else if (modeScreenTarget) {
+            modeScreenTarget->hide();
+        }
+
         // Render to the targets
-        for (auto &target : this->renderTargets) {
+        for (auto &target : activeRenderTargets) {
             if (target == nullptr) {
                 continue;
             }
@@ -539,6 +556,9 @@ void Window::run() {
                 updatePipelineStateField(this->cullMode, opal::CullMode::Back);
 
                 for (auto &obj : this->firstRenderables) {
+                    if (obj->canUseDeferredRendering()) {
+                        continue;
+                    }
                     obj->setViewMatrix(this->camera->calculateViewMatrix());
                     obj->setProjectionMatrix(calculateProjectionMatrix());
                     obj->render(getDeltaTime(), commandBuffer,
@@ -615,7 +635,7 @@ void Window::run() {
                                   this->clearColor.b, this->clearColor.a);
         commandBuffer->clearDepth(1.0f);
 
-        if (this->renderTargets.empty()) {
+        if (this->renderTargets.empty() && !usesModeScreenTarget) {
             updateBackbufferTarget(fbWidth, fbHeight);
             this->currentRenderTarget = this->screenRenderTarget.get();
             for (auto &obj : this->firstRenderables) {

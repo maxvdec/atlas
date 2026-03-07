@@ -200,14 +200,15 @@ class MainScene : public Scene {
 
         window.addObject(&sponza);
 
-        window.enablePathTracing();
+        window.useDeferredRendering();
+        window.enableGlobalIllumination();
 
         atmosphere.enable();
         atmosphere.secondsPerHour = 4.f;
         atmosphere.setTime(12);
         atmosphere.cycle = false;
         atmosphere.useGlobalLight();
-        atmosphere.castShadowsFromSunlight(4096);
+        // atmosphere.castShadowsFromSunlight(4096);
 
         this->setUseAtmosphereSkybox(true);
     }

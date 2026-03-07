@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
+#include <cstring>
 #include <limits>
 #include <memory>
 #include <unordered_map>
@@ -72,10 +73,56 @@ glm::vec3 normalizeOr(const glm::vec3 &v, const glm::vec3 &fallback) {
     return fallback;
 }
 
-std::vector<CoreObject *>
-collectDdgiObjects(const std::vector<Renderable *> &renderables) {
-    std::vector<CoreObject *> objects;
-    std::unordered_set<CoreObject *> seen;
+uint64_t hashCombineU64(uint64_t seed, uint64_t v) {
+    seed ^= v + 0x9e3779b97f4a7c15ULL + (seed << 6) + (seed >> 2);
+    return seed;
+}
+
+uint64_t hashFloat(float value) {
+    uint32_t bits = 0;
+    std::memcpy(&bits, &value, sizeof(float));
+    return static_cast<uint64_t>(bits);
+}
+
+uint64_t computeDdgiLayoutSignature(const std::vector<CoreObject *> &objects,
+                                    float spacing, int probeResolution,
+                                    int borderSize) {
+    uint64_t signature = 1469598103934665603ULL;
+    signature = hashCombineU64(signature, hashFloat(spacing));
+    signature =
+        hashCombineU64(signature, static_cast<uint64_t>(probeResolution));
+    signature = hashCombineU64(signature, static_cast<uint64_t>(borderSize));
+    for (auto *object : objects) {
+        if (object == nullptr || !object->canUseDeferredRendering()) {
+            continue;
+        }
+        signature = hashCombineU64(
+            signature, static_cast<uint64_t>(reinterpret_cast<uintptr_t>(object)));
+        signature = hashCombineU64(
+            signature, static_cast<uint64_t>(object->vertices.size()));
+        signature = hashCombineU64(
+            signature, static_cast<uint64_t>(object->indices.size()));
+        Position3d pos = object->getPosition();
+        Rotation3d rot = object->getRotation();
+        Size3d scl = object->getScale();
+        glm::quat rotQuat = rot.toGlmQuat();
+        signature = hashCombineU64(signature, hashFloat(static_cast<float>(pos.x)));
+        signature = hashCombineU64(signature, hashFloat(static_cast<float>(pos.y)));
+        signature = hashCombineU64(signature, hashFloat(static_cast<float>(pos.z)));
+        signature = hashCombineU64(signature, hashFloat(rotQuat.x));
+        signature = hashCombineU64(signature, hashFloat(rotQuat.y));
+        signature = hashCombineU64(signature, hashFloat(rotQuat.z));
+        signature = hashCombineU64(signature, hashFloat(rotQuat.w));
+        signature = hashCombineU64(signature, hashFloat(static_cast<float>(scl.x)));
+        signature = hashCombineU64(signature, hashFloat(static_cast<float>(scl.y)));
+        signature = hashCombineU64(signature, hashFloat(static_cast<float>(scl.z)));
+    }
+    return signature;
+}
+
+void collectDdgiObjectsFromQueue(const std::vector<Renderable *> &renderables,
+                                 std::unordered_set<CoreObject *> &seen,
+                                 std::vector<CoreObject *> &objects) {
     for (auto *renderable : renderables) {
         if (renderable == nullptr) {
             continue;
@@ -98,8 +145,8 @@ collectDdgiObjects(const std::vector<Renderable *> &renderables) {
             }
         }
     }
-    return objects;
 }
+
 } // namespace
 
 void photon::GlobalIllumination::init() {
@@ -148,10 +195,6 @@ void photon::GlobalIllumination::updateProbeLayout() {
         return;
     }
 
-    triangles.clear();
-    materials.clear();
-    materialTextures.clear();
-
     Position3d previousOrigin = probeSpace->originWorldSpace;
     Position3d previousSpacing = probeSpace->spacing;
     Vector3 previousProbeCount = probeSpace->probeCount;
@@ -169,8 +212,29 @@ void photon::GlobalIllumination::updateProbeLayout() {
         hasGeometry = true;
     };
 
-    auto renderables = Window::mainWindow->renderables;
-    std::vector<CoreObject *> ddgiObjects = collectDdgiObjects(renderables);
+    std::vector<CoreObject *> ddgiObjects;
+    std::unordered_set<CoreObject *> seenDdgiObjects;
+    if (Window::mainWindow != nullptr) {
+        collectDdgiObjectsFromQueue(Window::mainWindow->renderables,
+                                    seenDdgiObjects, ddgiObjects);
+        collectDdgiObjectsFromQueue(Window::mainWindow->firstRenderables,
+                                    seenDdgiObjects, ddgiObjects);
+    }
+    const uint64_t layoutSignature = computeDdgiLayoutSignature(
+        ddgiObjects, std::max(0.001f, probeSpacing), probeSpace->probeResolution,
+        probeSpace->textureBorderSize);
+    if (hasCachedLayoutSignature &&
+        cachedLayoutSignature == layoutSignature &&
+        probeRadianceBuffer != nullptr && irradianceMap != nullptr &&
+        irradianceMapPrev != nullptr) {
+        return;
+    }
+    cachedLayoutSignature = layoutSignature;
+    hasCachedLayoutSignature = true;
+
+    triangles.clear();
+    materials.clear();
+    materialTextures.clear();
     materials.reserve(ddgiObjects.size());
     std::unordered_map<uint64_t, int> textureSlots;
 
@@ -204,17 +268,10 @@ void photon::GlobalIllumination::updateProbeLayout() {
         baseMaterial.albedoTextureIndex = findTextureSlotForType(
             object->textures, TextureType::Color, materialTextures,
             textureSlots);
-        baseMaterial.normalTextureIndex = findTextureSlotForType(
-            object->textures, TextureType::Normal, materialTextures,
-            textureSlots);
-        baseMaterial.metallicTextureIndex = findTextureSlotForType(
-            object->textures, TextureType::Metallic, materialTextures,
-            textureSlots);
-        baseMaterial.roughnessTextureIndex = findTextureSlotForType(
-            object->textures, TextureType::Roughness, materialTextures,
-            textureSlots);
-        baseMaterial.aoTextureIndex = findTextureSlotForType(
-            object->textures, TextureType::AO, materialTextures, textureSlots);
+        baseMaterial.normalTextureIndex = -1;
+        baseMaterial.metallicTextureIndex = -1;
+        baseMaterial.roughnessTextureIndex = -1;
+        baseMaterial.aoTextureIndex = -1;
         bool materialBound = false;
         int materialID = -1;
 
@@ -326,9 +383,9 @@ void photon::GlobalIllumination::updateProbeLayout() {
         return std::max(1, n);
     };
 
-    int Nx = std::clamp(countAxis(extent.x), 1, 32);
-    int Ny = std::clamp(countAxis(extent.y), 1, 32);
-    int Nz = std::clamp(countAxis(extent.z), 1, 32);
+    int Nx = std::clamp(countAxis(extent.x), 1, 16);
+    int Ny = std::clamp(countAxis(extent.y), 1, 16);
+    int Nz = std::clamp(countAxis(extent.z), 1, 16);
     int totalProbeCount = std::max(1, Nx * Ny * Nz);
     int probesPerRow = std::clamp(
         static_cast<int>(std::ceil(std::sqrt((float)totalProbeCount))), 1, 64);
@@ -373,7 +430,7 @@ void photon::GlobalIllumination::updateProbeLayout() {
                             opal::TextureDataFormat::Rgba, TextureType::Color));
     }
 
-    int effectiveRaysPerProbe = std::max(1, raysPerProbe / 2);
+    int effectiveRaysPerProbe = std::max(1, raysPerProbe / 8);
     if (probeRadianceBuffer == nullptr ||
         probeRadianceCapacity != totalProbeCount * effectiveRaysPerProbe) {
         int totalElements = totalProbeCount * effectiveRaysPerProbe;
@@ -404,7 +461,7 @@ void photon::GlobalIllumination::render(
         static_cast<uint>(std::max(1, this->probeSpace->totalProbes()));
     const uint requestedRays =
         static_cast<uint>(std::max(1, this->raysPerProbe));
-    const uint effectiveRays = std::max(1u, requestedRays / 2u);
+    const uint effectiveRays = std::max(1u, requestedRays / 8u);
     const uint totalRays = totalProbes * effectiveRays;
 
     if (irradianceMap->id == 0) {
@@ -452,6 +509,20 @@ void photon::GlobalIllumination::render(
             if (directionalLights.size() >= maxDirectionalGI) {
                 break;
             }
+        }
+        if (directionalLights.empty() && scene->atmosphere.isEnabled()) {
+            GPUDirectionalLight gpu{};
+            glm::vec3 sunDir = scene->atmosphere.getSunAngle().toGlm();
+            if (glm::length(sunDir) > 0.0001f) {
+                gpu.direction = -glm::normalize(sunDir);
+            } else {
+                gpu.direction = glm::vec3(0.0f, -1.0f, 0.0f);
+            }
+            Color skyLight = scene->atmosphere.getLightColor();
+            gpu.diffuse = glm::vec3(skyLight.r, skyLight.g, skyLight.b);
+            gpu.specular = gpu.diffuse;
+            gpu.intensity = scene->atmosphere.getLightIntensity() * 1.2f;
+            directionalLights.push_back(gpu);
         }
 
         const auto &scenePointLights = scene->getPointLights();

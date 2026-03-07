@@ -14,6 +14,7 @@
 #include "atlas/physics.h"
 #include "bezel/bezel.h"
 #include "photon/illuminate.h"
+#include <algorithm>
 #include <any>
 #include <memory>
 #include <string>
@@ -831,6 +832,14 @@ class Model : public GameObject {
             component->update(dt);
         }
         for (auto &obj : objects) {
+            if (obj == nullptr) {
+                continue;
+            }
+            bool hasAnyTexture = !obj->textures.empty();
+            if (!hasAnyTexture) {
+                obj->material = material;
+            }
+            obj->useDeferredRendering = useDeferredRendering;
             obj->render(dt, commandBuffer, updatePipeline);
         }
     }
@@ -841,6 +850,14 @@ class Model : public GameObject {
      */
     void update(Window &window) override {
         for (auto &obj : objects) {
+            if (obj == nullptr) {
+                continue;
+            }
+            bool hasAnyTexture = !obj->textures.empty();
+            if (!hasAnyTexture) {
+                obj->material = material;
+            }
+            obj->useDeferredRendering = useDeferredRendering;
             obj->update(window);
         }
     }
@@ -854,6 +871,14 @@ class Model : public GameObject {
             component->init();
         }
         for (auto &obj : objects) {
+            if (obj == nullptr) {
+                continue;
+            }
+            bool hasAnyTexture = !obj->textures.empty();
+            if (!hasAnyTexture) {
+                obj->material = material;
+            }
+            obj->useDeferredRendering = useDeferredRendering;
             obj->initialize();
         }
     }

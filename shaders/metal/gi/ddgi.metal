@@ -353,18 +353,18 @@ static inline void resolveMaterialParameters(
     normalTextureIndex = mat.normalTextureIndex;
 
     if (mat.albedoTextureIndex >= 0 && uint(mat.albedoTextureIndex) < textureCount) {
-        albedo *= clamp(sampleMaterialTexture(
-                            mat.albedoTextureIndex, uv, materialTexture0,
-                            materialTexture1, materialTexture2, materialTexture3,
-                            materialTexture4, materialTexture5, materialTexture6,
-                            materialTexture7, materialTexture8, materialTexture9,
-                            materialTexture10, materialTexture11,
-                            materialTexture12, materialTexture13,
-                            materialTexture14, materialTexture15,
-                            materialTexture16, materialTexture17,
-                            materialTexture18, materialTexture19)
-                            .xyz,
-                        float3(0.0f), float3(1.0f));
+        albedo = clamp(sampleMaterialTexture(
+                           mat.albedoTextureIndex, uv, materialTexture0,
+                           materialTexture1, materialTexture2, materialTexture3,
+                           materialTexture4, materialTexture5, materialTexture6,
+                           materialTexture7, materialTexture8, materialTexture9,
+                           materialTexture10, materialTexture11,
+                           materialTexture12, materialTexture13,
+                           materialTexture14, materialTexture15,
+                           materialTexture16, materialTexture17,
+                           materialTexture18, materialTexture19)
+                           .xyz,
+                       float3(0.0f), float3(1.0f));
     }
     if (mat.metallicTextureIndex >= 0 &&
         uint(mat.metallicTextureIndex) < textureCount) {
@@ -463,8 +463,8 @@ static inline float3 resolveNormal(
 
 static inline float3 sampleSky(float3 d) {
     float t = clamp(d.y * 0.5f + 0.5f, 0.0f, 1.0f);
-    return mix(float3(0.0002f, 0.0002f, 0.0002f),
-               float3(0.0012f, 0.0011f, 0.0010f),
+    return mix(float3(0.02f, 0.023f, 0.028f),
+               float3(0.12f, 0.14f, 0.18f),
                t);
 }
 

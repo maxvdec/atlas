@@ -135,7 +135,27 @@ uint seedBase(uint2 gid, uint w, uint frame, uint sampleIndex) {
     return gid.x + gid.y * w + frame * 9781u + sampleIndex * 6271u + 1u;
 }
 
-float3 skyColor(float3 dir, float intensity) { return float3(0, 0, 0); }
+constexpr sampler skyboxSampler(coord::normalized, address::clamp_to_edge,
+                                filter::linear, mip_filter::linear);
+
+float3 skyColor(float3 dir, float intensity, texturecube<float> skybox) {
+    float3 sampleDir = dir;
+    float len2 = dot(sampleDir, sampleDir);
+    if (len2 > 1e-10) {
+        sampleDir *= rsqrt(len2);
+    } else {
+        sampleDir = float3(0.0, 1.0, 0.0);
+    }
+    float3 sky = skybox.sample(skyboxSampler, sampleDir).xyz;
+    if (luminance(sky) < 0.0005) {
+        float t = clamp(sampleDir.y * 0.5 + 0.5, 0.0, 1.0);
+        float3 horizon = float3(0.74, 0.79, 0.88);
+        float3 zenith = float3(0.5, 0.64, 0.84);
+        sky = mix(horizon, zenith, float3(t));
+    }
+    float scale = intensity > 0.0 ? intensity : 1.0;
+    return sky * scale;
+}
 
 float3 cosineSampleHemisphere(float2 u) {
     float r = sqrt(u.x);
@@ -258,7 +278,7 @@ void resolveMaterialParameters(Material mat, float2 uv, uint textureCount,
                                thread float3 &albedo, thread float &metallic,
                                thread float &roughness, thread float &ao,
                                thread float3 &emissive) {
-    albedo = mat.albedo.xyz;
+    albedo = clamp(mat.albedo.xyz, float3(0.0), float3(1.0));
     metallic = mat.metallic;
     roughness = mat.roughness;
     ao = mat.ao;
@@ -268,18 +288,20 @@ void resolveMaterialParameters(Material mat, float2 uv, uint textureCount,
 
     if (mat.albedoTextureIndex >= 0 &&
         uint(mat.albedoTextureIndex) < textureCount) {
-        float3 tex = sampleMaterialTexture(
-                         mat.albedoTextureIndex, uv, materialTexture0,
-                         materialTexture1, materialTexture2, materialTexture3,
-                         materialTexture4, materialTexture5, materialTexture6,
-                         materialTexture7, materialTexture8, materialTexture9,
-                         materialTexture10, materialTexture11,
-                         materialTexture12, materialTexture13,
-                         materialTexture14, materialTexture15,
-                         materialTexture16, materialTexture17,
-                         materialTexture18, materialTexture19)
-                         .xyz;
-        albedo *= clamp(tex, float3(0.0), float3(1.0));
+        albedo = clamp(sampleMaterialTexture(
+                           mat.albedoTextureIndex, uv, materialTexture0,
+                           materialTexture1, materialTexture2,
+                           materialTexture3, materialTexture4,
+                           materialTexture5, materialTexture6,
+                           materialTexture7, materialTexture8,
+                           materialTexture9, materialTexture10,
+                           materialTexture11, materialTexture12,
+                           materialTexture13, materialTexture14,
+                           materialTexture15, materialTexture16,
+                           materialTexture17, materialTexture18,
+                           materialTexture19)
+                           .xyz,
+                       float3(0.0), float3(1.0));
     }
     if (mat.metallicTextureIndex >= 0 &&
         uint(mat.metallicTextureIndex) < textureCount) {
@@ -407,13 +429,16 @@ bool isOccluded(intersector<triangle_data, instancing> isect,
                 instance_acceleration_structure sceneAS, float3 P, float3 N,
                 float3 L, float maxDistance) {
     ray shadowRay;
-    shadowRay.origin = P + N * 0.001;
+    shadowRay.origin = P + N * 0.01;
     shadowRay.direction = L;
-    shadowRay.min_distance = 0.0;
+    shadowRay.min_distance = 0.01;
     shadowRay.max_distance = maxDistance;
 
     auto shadowHit = isect.intersect(shadowRay, sceneAS, 0xFF);
-    return shadowHit.type != intersection_type::none;
+    if (shadowHit.type == intersection_type::none) {
+        return false;
+    }
+    return shadowHit.distance > 0.02;
 }
 
 bool isOccludedDirectionalLight(DirectionalLightData light, float3 P, float3 N,
@@ -684,44 +709,92 @@ float3 sampleRadiance(uint2 gid, uint sampleIndex, uint w,
                       texture2d<float> materialTexture16,
                       texture2d<float> materialTexture17,
                       texture2d<float> materialTexture18,
-                      texture2d<float> materialTexture19) {
+                      texture2d<float> materialTexture19,
+                      texturecube<float> skybox) {
     uint rng = seedBase(gid, w, sceneData.frameIndex, sampleIndex);
 
-    auto hit = isect.intersect(primaryRay, sceneAS, 0xFF);
-    if (hit.type == intersection_type::none) {
-        return skyColor(primaryRay.direction, 0.0);
+    ray surfaceRay = primaryRay;
+    auto hit = isect.intersect(surfaceRay, sceneAS, 0xFF);
+    Material mat{};
+    MeshData mesh{};
+    InstanceData inst{};
+    float2 texUV = float2(0.0);
+    float3 localN = float3(0.0, 1.0, 0.0);
+    float3 localT = float3(1.0, 0.0, 0.0);
+    float3 localB = float3(0.0, 0.0, 1.0);
+    bool foundOpaqueSurface = false;
+
+    for (uint step = 0; step < 8; ++step) {
+        if (hit.type == intersection_type::none) {
+            return skyColor(surfaceRay.direction, 0.0, skybox);
+        }
+
+        uint instanceIndex = hit.instance_id;
+        uint primitiveIndex = hit.primitive_id;
+
+        mat = materials[instanceIndex];
+        mesh = meshData[instanceIndex];
+        inst = instanceData[instanceIndex];
+
+        uint i0 = indices[mesh.indexOffset + primitiveIndex * 3 + 0];
+        uint i1 = indices[mesh.indexOffset + primitiveIndex * 3 + 1];
+        uint i2 = indices[mesh.indexOffset + primitiveIndex * 3 + 2];
+
+        float2 bary = hit.triangle_barycentric_coord;
+        float b0 = 1.0 - bary.x - bary.y;
+        float b1 = bary.x;
+        float b2 = bary.y;
+
+        texUV = float2(vertices[i0].uv) * b0 + float2(vertices[i1].uv) * b1 +
+                float2(vertices[i2].uv) * b2;
+        localN = normalizeOr(float3(vertices[i0].normal) * b0 +
+                                 float3(vertices[i1].normal) * b1 +
+                                 float3(vertices[i2].normal) * b2,
+                             float3(0.0, 1.0, 0.0));
+        localT = normalizeOr(float3(vertices[i0].tangent) * b0 +
+                                 float3(vertices[i1].tangent) * b1 +
+                                 float3(vertices[i2].tangent) * b2,
+                             float3(1.0, 0.0, 0.0));
+        localB = normalizeOr(float3(vertices[i0].bitangent) * b0 +
+                                 float3(vertices[i1].bitangent) * b1 +
+                                 float3(vertices[i2].bitangent) * b2,
+                             float3(0.0, 0.0, 1.0));
+
+        float alpha = clamp(mat.albedo.w, 0.0, 1.0);
+        if (mat.albedoTextureIndex >= 0 &&
+            uint(mat.albedoTextureIndex) < sceneData.materialTextureCount) {
+            alpha = clamp(sampleMaterialTexture(
+                              mat.albedoTextureIndex, texUV, materialTexture0,
+                              materialTexture1, materialTexture2,
+                              materialTexture3, materialTexture4,
+                              materialTexture5, materialTexture6,
+                              materialTexture7, materialTexture8,
+                              materialTexture9, materialTexture10,
+                              materialTexture11, materialTexture12,
+                              materialTexture13, materialTexture14,
+                              materialTexture15, materialTexture16,
+                              materialTexture17, materialTexture18,
+                              materialTexture19)
+                              .w,
+                          0.0, 1.0);
+        }
+
+        if (alpha >= 0.1) {
+            foundOpaqueSurface = true;
+            break;
+        }
+
+        surfaceRay.origin =
+            surfaceRay.origin + surfaceRay.direction * (hit.distance + 0.001);
+        surfaceRay.min_distance = 0.0;
+        surfaceRay.max_distance = primaryRay.max_distance;
+        hit = isect.intersect(surfaceRay, sceneAS, 0xFF);
     }
 
-    uint instanceIndex = hit.instance_id;
-    uint primitiveIndex = hit.primitive_id;
+    if (!foundOpaqueSurface) {
+        return skyColor(surfaceRay.direction, 0.0, skybox);
+    }
 
-    Material mat = materials[instanceIndex];
-    MeshData mesh = meshData[instanceIndex];
-    InstanceData inst = instanceData[instanceIndex];
-
-    uint i0 = indices[mesh.indexOffset + primitiveIndex * 3 + 0];
-    uint i1 = indices[mesh.indexOffset + primitiveIndex * 3 + 1];
-    uint i2 = indices[mesh.indexOffset + primitiveIndex * 3 + 2];
-
-    float2 bary = hit.triangle_barycentric_coord;
-    float b0 = 1.0 - bary.x - bary.y;
-    float b1 = bary.x;
-    float b2 = bary.y;
-
-    float2 texUV = float2(vertices[i0].uv) * b0 + float2(vertices[i1].uv) * b1 +
-                   float2(vertices[i2].uv) * b2;
-    float3 localN = normalizeOr(float3(vertices[i0].normal) * b0 +
-                                    float3(vertices[i1].normal) * b1 +
-                                    float3(vertices[i2].normal) * b2,
-                                float3(0.0, 1.0, 0.0));
-    float3 localT = normalizeOr(float3(vertices[i0].tangent) * b0 +
-                                    float3(vertices[i1].tangent) * b1 +
-                                    float3(vertices[i2].tangent) * b2,
-                                float3(1.0, 0.0, 0.0));
-    float3 localB = normalizeOr(float3(vertices[i0].bitangent) * b0 +
-                                    float3(vertices[i1].bitangent) * b1 +
-                                    float3(vertices[i2].bitangent) * b2,
-                                float3(0.0, 0.0, 1.0));
     float3 N = resolveShadingNormal(
         mat, texUV, localN, localT, localB, inst, sceneData.materialTextureCount,
         materialTexture0, materialTexture1, materialTexture2, materialTexture3,
@@ -730,8 +803,11 @@ float3 sampleRadiance(uint2 gid, uint sampleIndex, uint w,
         materialTexture11, materialTexture12, materialTexture13,
         materialTexture14, materialTexture15, materialTexture16,
         materialTexture17, materialTexture18, materialTexture19);
-    float3 P = primaryRay.origin + primaryRay.direction * hit.distance;
-    float3 V = normalize(-primaryRay.direction);
+    float3 P = surfaceRay.origin + surfaceRay.direction * hit.distance;
+    float3 V = normalize(-surfaceRay.direction);
+    if (dot(N, V) < 0.0) {
+        N = -N;
+    }
 
     float3 albedo;
     float metallic;
@@ -806,7 +882,7 @@ float3 sampleRadiance(uint2 gid, uint sampleIndex, uint w,
         auto bounceHit = isect.intersect(bounceRay, sceneAS, 0xFF);
 
         if (bounceHit.type == intersection_type::none) {
-            indirect = brdfWeight * skyColor(bounceRay.direction, 0.0) *
+            indirect = brdfWeight * skyColor(bounceRay.direction, 0.0, skybox) *
                        sceneData.indirectStrength;
         } else {
             uint bi = bounceHit.instance_id;
@@ -852,7 +928,10 @@ float3 sampleRadiance(uint2 gid, uint sampleIndex, uint w,
                 materialTexture19);
             float3 bP =
                 bounceRay.origin + bounceRay.direction * bounceHit.distance;
-            float3 bV = -bounceRay.direction;
+            float3 bV = normalize(-bounceRay.direction);
+            if (dot(bN, bV) < 0.0) {
+                bN = -bN;
+            }
 
             float3 bAlbedo;
             float bMetallic;
@@ -924,6 +1003,7 @@ kernel void main0(texture2d<float, access::write> outTex [[texture(0)]],
                   texture2d<float> materialTexture17 [[texture(29)]],
                   texture2d<float> materialTexture18 [[texture(30)]],
                   texture2d<float> materialTexture19 [[texture(31)]],
+                  texturecube<float> skybox [[texture(32)]],
                   uint2 gid [[thread_position_in_grid]]) {
     uint w = outTex.get_width();
     uint h = outTex.get_height();
@@ -945,63 +1025,52 @@ kernel void main0(texture2d<float, access::write> outTex [[texture(0)]],
     isect.assume_geometry_type(geometry_type::triangle);
     isect.set_triangle_cull_mode(triangle_cull_mode::none);
 
-    ray r;
-    r.origin = ro;
-    r.direction = rd;
-    r.min_distance = 0.001;
-    r.max_distance = 1.0e30;
+    float3 color = float3(0.0);
 
-    auto hit = isect.intersect(r, sceneAS, 0xFF);
+    uint spp = max(sceneData.raysPerPixel, 1u);
+    for (uint s = 0; s < spp; ++s) {
+        ray primaryRay;
+        primaryRay.origin = ro;
+        primaryRay.direction = rd;
+        primaryRay.min_distance = 0.001;
+        primaryRay.max_distance = 1.0e30;
 
-    if (hit.type == intersection_type::none) {
-        outTex.write(float4(0, 0, 0, 1), gid);
-    } else {
-        float3 color = float3(0.0);
-
-        uint spp = max(sceneData.raysPerPixel, 1u);
-        for (uint s = 0; s < spp; ++s) {
-            ray primaryRay;
-            primaryRay.origin = ro;
-            primaryRay.direction = rd;
-            primaryRay.min_distance = 0.001;
-            primaryRay.max_distance = 1.0e30;
-
-            float3 sample = sampleRadiance(gid, s, w, isect, sceneAS, primaryRay,
-                                           materials, meshData, vertices, indices,
-                                           instanceData, dirLight, sceneData,
-                                           pointLights, spotLights, areaLights,
-                                           materialTexture0, materialTexture1,
-                                           materialTexture2, materialTexture3,
-                                           materialTexture4, materialTexture5,
-                                           materialTexture6, materialTexture7,
-                                           materialTexture8, materialTexture9,
-                                           materialTexture10, materialTexture11,
-                                           materialTexture12, materialTexture13,
-                                           materialTexture14, materialTexture15,
-                                           materialTexture16, materialTexture17,
-                                           materialTexture18, materialTexture19);
-            color += clampLuminance(sample, 10.0);
-        }
-
-        color /= float(spp);
-
-        int frameIndex = int(sceneData.frameIndex);
-
-        float4 prevColor = prevTex.read(gid);
-        if (frameIndex == 0)
-            prevColor = float4(0, 0, 0, 1);
-
-        if (frameIndex > 2) {
-            float prevL = luminance(prevColor.xyz);
-            float currL = luminance(color);
-            float maxAllowed = max(prevL * 1.6 + 0.15, 0.75);
-            if (currL > maxAllowed && currL > 1e-6) {
-                color *= maxAllowed / currL;
-            }
-        }
-
-        float3 accum = (prevColor.xyz * frameIndex + color) / (frameIndex + 1);
-        accum = clampLuminance(accum, 10.0);
-        outTex.write(float4(accum, 1.0), gid);
+        float3 sample = sampleRadiance(gid, s, w, isect, sceneAS, primaryRay,
+                                       materials, meshData, vertices, indices,
+                                       instanceData, dirLight, sceneData,
+                                       pointLights, spotLights, areaLights,
+                                       materialTexture0, materialTexture1,
+                                       materialTexture2, materialTexture3,
+                                       materialTexture4, materialTexture5,
+                                       materialTexture6, materialTexture7,
+                                       materialTexture8, materialTexture9,
+                                       materialTexture10, materialTexture11,
+                                       materialTexture12, materialTexture13,
+                                       materialTexture14, materialTexture15,
+                                       materialTexture16, materialTexture17,
+                                       materialTexture18, materialTexture19,
+                                       skybox);
+        color += clampLuminance(sample, 10.0);
     }
+
+    color /= float(spp);
+
+    int frameIndex = int(sceneData.frameIndex);
+
+    float4 prevColor = prevTex.read(gid);
+    if (frameIndex == 0)
+        prevColor = float4(0, 0, 0, 1);
+
+    if (frameIndex > 2) {
+        float prevL = luminance(prevColor.xyz);
+        float currL = luminance(color);
+        float maxAllowed = max(prevL * 1.6 + 0.15, 0.75);
+        if (currL > maxAllowed && currL > 1e-6) {
+            color *= maxAllowed / currL;
+        }
+    }
+
+    float3 accum = (prevColor.xyz * frameIndex + color) / (frameIndex + 1);
+    accum = clampLuminance(accum, 10.0);
+    outTex.write(float4(accum, 1.0), gid);
 }

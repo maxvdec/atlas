@@ -18,6 +18,7 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+#include <cstdint>
 
 class Window;
 class CoreObject;
@@ -31,7 +32,7 @@ struct ProbeSpace {
     Color debugColor;
 
     int textureBorderSize = 1;
-    int probeResolution = 8;
+    int probeResolution = 6;
     int probesPerRow = 16;
 
     int totalProbes() const {
@@ -93,6 +94,11 @@ class PathTracing {
     int outputWidth = 0;
     int outputHeight = 0;
     glm::mat4 cachedInvViewProj = glm::mat4(1.0f);
+    glm::vec3 cachedDirectionalLightDirection = glm::vec3(0.0f, -1.0f, 0.0f);
+    glm::vec3 cachedDirectionalLightColor = glm::vec3(1.0f, 1.0f, 1.0f);
+    float cachedDirectionalLightIntensity = -1.0f;
+    int cachedDirectionalLightCount = -1;
+    uint64_t cachedSkyboxTextureId = 0;
 
     friend class Window;
 };
@@ -168,13 +174,15 @@ class GlobalIllumination {
     std::vector<DDGIMaterial> materials;
     std::vector<std::shared_ptr<opal::Texture>> materialTextures;
 
-    float probeSpacing = 0.5f;
+    float probeSpacing = 0.9f;
 
-    int raysPerProbe = 256;
+    int raysPerProbe = 64;
     float maxRayDistance = 20.f;
     float normalBias = 0.05;
     float hysteresis = 0.85;
     int frameIndex = 0;
+    uint64_t cachedLayoutSignature = 0;
+    bool hasCachedLayoutSignature = false;
 };
 
 } // namespace photon

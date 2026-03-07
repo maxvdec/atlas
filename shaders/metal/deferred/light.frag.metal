@@ -1403,18 +1403,18 @@ fragment main0_out main0(
     const float INV_PI = 0.31830988618379067153776752674503;
     float ddgiLuma = dot(ddgiIrradiance, float3(0.2126f, 0.7152f, 0.0722f));
     float3 ddgiChroma = ddgiIrradiance - float3(ddgiLuma);
-    float3 boostedIrradiance = max(float3(ddgiLuma * 0.015f) + ddgiChroma * 1.0f,
+    float3 boostedIrradiance = max(float3(ddgiLuma * 0.25f) + ddgiChroma * 1.15f,
                                    float3(0.0f));
     float3 bleedAlbedo = albedo;
     float3 ddgiDiffuse = boostedIrradiance * bleedAlbedo * INV_PI *
-                         (1.0f - metallic) * ddgiGain * 0.18f;
+                         (1.0f - metallic) * ddgiGain * 0.45f;
     float sideFactor = clamp(1.0f - abs(N.y), 0.0f, 1.0f);
-    float ddgiSurfaceFactor = sideFactor * sideFactor * sideFactor;
+    float ddgiSurfaceFactor = 0.35f + sideFactor * 0.65f;
     ddgiDiffuse *= ddgiSurfaceFactor;
     float ddgiDiffuseLuma = dot(ddgiDiffuse, float3(0.2126f, 0.7152f, 0.0722f));
     float sceneRefLuma = dot(ambientBase + lighting * 0.35f,
                              float3(0.2126f, 0.7152f, 0.0722f));
-    float ddgiLumaCap = sceneRefLuma * 0.05f + 0.004f;
+    float ddgiLumaCap = sceneRefLuma * 0.35f + 0.02f;
     if (ddgiDiffuseLuma > ddgiLumaCap) {
         ddgiDiffuse *= (ddgiLumaCap / ddgiDiffuseLuma);
     }
@@ -1431,8 +1431,8 @@ fragment main0_out main0(
         }
         ddgiReflection = max(ddgiReflection, float3(0.0f));
         float3 Fddgi = fresnelSchlick(fast::max(dot(N, V), 0.0), F0);
-        float specGain = mix(0.008f, 0.001f, roughness);
-        ddgiReflection *= ddgiSurfaceFactor;
+        float specGain = mix(0.03f, 0.004f, roughness);
+        ddgiReflection *= (0.5f + ddgiSurfaceFactor * 0.5f);
         ddgiSpecular = ddgiReflection * Fddgi * specGain * INV_PI * ddgiGain;
     }
 

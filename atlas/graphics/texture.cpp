@@ -215,7 +215,7 @@ Texture Texture::fromResource(const Resource& resource, TextureType type,
 
     atlas_log("Loading texture: " + resource.name);
 
-    int width, height, channels;
+    int width, height, channelsInFile;
 #ifdef OPENGL
     stbi_set_flip_vertically_on_load(true);
 #else
@@ -226,6 +226,7 @@ Texture Texture::fromResource(const Resource& resource, TextureType type,
     std::shared_ptr<opal::Texture> opalTexture;
 
     if (type == TextureType::HDR) {
+        int channels = 0;
         float* data = stbi_loadf(resource.path.string().c_str(), &width,
                                  &height, &channels, 0);
         if (!data) {
@@ -251,32 +252,39 @@ Texture Texture::fromResource(const Resource& resource, TextureType type,
         stbi_image_free(data);
     }
     else {
+        const int requestedChannels =
+            (type == TextureType::Color) ? STBI_rgb_alpha : 0;
         unsigned char* data = stbi_load(resource.path.string().c_str(), &width,
-                                        &height, &channels, 0);
+                                        &height, &channelsInFile,
+                                        requestedChannels);
         if (!data) {
             atlas_error("Failed to load image: " + resource.path.string());
         }
 
-        creationData = TextureCreationData{.width = width, .height = height, .channels = channels};
+        int channels = requestedChannels > 0 ? requestedChannels : channelsInFile;
+        creationData = TextureCreationData{
+            .width = width, .height = height, .channels = channels};
 
         opal::TextureFormat internalFormat;
-        if (channels == 3)
-            internalFormat = channels == 4
-                                 ? opal::TextureFormat::sRgba8
-                                 : opal::TextureFormat::sRgb8;
-        else
-            internalFormat = channels == 4
-                                 ? opal::TextureFormat::sRgba8
-                                 : opal::TextureFormat::Red8;
+        const bool useSrgb = (type == TextureType::Color);
+        if (channels == 4) {
+            internalFormat = useSrgb ? opal::TextureFormat::sRgba8
+                                     : opal::TextureFormat::Rgba8;
+        } else if (channels == 3) {
+            internalFormat = useSrgb ? opal::TextureFormat::sRgb8
+                                     : opal::TextureFormat::Rgb8;
+        } else {
+            internalFormat = opal::TextureFormat::Red8;
+        }
+
         opal::TextureDataFormat dataFormat;
-        if (channels == 3)
-            dataFormat = channels == 4
-                             ? opal::TextureDataFormat::Rgba
-                             : opal::TextureDataFormat::Rgb;
-        else
-            dataFormat = channels == 4
-                             ? opal::TextureDataFormat::Rgba
-                             : opal::TextureDataFormat::Red;
+        if (channels == 4) {
+            dataFormat = opal::TextureDataFormat::Rgba;
+        } else if (channels == 3) {
+            dataFormat = opal::TextureDataFormat::Rgb;
+        } else {
+            dataFormat = opal::TextureDataFormat::Red;
+        }
 
         opalTexture =
             opal::Texture::create(opal::TextureType::Texture2D, internalFormat,
