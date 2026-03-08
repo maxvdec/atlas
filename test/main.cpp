@@ -200,7 +200,8 @@ class MainScene : public Scene {
 
         window.addObject(&sponza);
 
-        window.enablePathTracing();
+        window.useDeferredRendering();
+        window.enableGlobalIllumination();
 
         atmosphere.enable();
         atmosphere.secondsPerHour = 4.f;

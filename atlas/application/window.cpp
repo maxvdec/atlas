@@ -163,7 +163,7 @@ Window::Window(const WindowConfiguration &config)
     frontFace = opal::FrontFace::
         CounterClockwise; // NOLINT(*-prefer-member-initializer)
     deferredFrontFace =
-        opal::FrontFace::Clockwise; // NOLINT(*-prefer-member-initializer)
+        opal::FrontFace::CounterClockwise; // NOLINT(*-prefer-member-initializer)
 #else
     this->frontFace = opal::FrontFace::CounterClockwise;
     this->deferredFrontFace = opal::FrontFace::CounterClockwise;

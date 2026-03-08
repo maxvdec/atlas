@@ -432,7 +432,7 @@ void Window::deferredRendering(
             pipelineEntry.height != gbufferHeight) {
             auto deferredPipeline = opal::Pipeline::create();
             deferredPipeline->setViewport(0, 0, gbufferWidth, gbufferHeight);
-            deferredPipeline->setCullMode(opal::CullMode::None);
+            deferredPipeline->setCullMode(this->cullMode);
             deferredPipeline->setFrontFace(this->deferredFrontFace);
             deferredPipeline->enableDepthTest(true);
             deferredPipeline->setDepthCompareOp(opal::CompareOp::Less);

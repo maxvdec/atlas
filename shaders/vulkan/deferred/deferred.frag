@@ -17,6 +17,7 @@ const int TEXTURE_PARALLAX = 6;
 const int TEXTURE_METALLIC = 9;
 const int TEXTURE_ROUGHNESS = 10;
 const int TEXTURE_AO = 11;
+const int TEXTURE_OPACITY = 12;
 
 layout(set = 2, binding = 0) uniform sampler2D texture1;
 layout(set = 2, binding = 1) uniform sampler2D texture2;
@@ -96,7 +97,7 @@ vec2 parallaxMapping(vec2 texCoords, vec3 viewDir) {
     vec2 P = (v.xy / max(v.z, 0.05)) * heightScale;
     vec2 deltaTexCoords = P / numLayers;
 
-    vec2 currentTexCoords = clamp(texCoords, vec2(0.0), vec2(1.0));
+    vec2 currentTexCoords = texCoords;
     int textureIndex = -1;
     for (int i = 0; i < textureCount; i++) {
         if (textureTypes[i] == TEXTURE_PARALLAX) {
@@ -109,19 +110,19 @@ vec2 parallaxMapping(vec2 texCoords, vec3 viewDir) {
     float currentDepthMapValue = sampleTextureAt(textureIndex, currentTexCoords).r;
 
     while (currentLayerDepth < currentDepthMapValue) {
-        currentTexCoords = clamp(currentTexCoords - deltaTexCoords, vec2(0.0), vec2(1.0));
+        currentTexCoords -= deltaTexCoords;
         currentDepthMapValue = sampleTextureAt(textureIndex, currentTexCoords).r;
         currentLayerDepth += layerDepth;
     }
 
-    vec2 prevTexCoords = clamp(currentTexCoords + deltaTexCoords, vec2(0.0), vec2(1.0));
+    vec2 prevTexCoords = currentTexCoords + deltaTexCoords;
     float afterDepth = currentDepthMapValue - currentLayerDepth;
     float beforeDepth = sampleTextureAt(textureIndex, prevTexCoords).r - (currentLayerDepth - layerDepth);
     float denom = max(afterDepth - beforeDepth, 1e-4);
     float weight = clamp(afterDepth / denom, 0.0, 1.0);
     currentTexCoords = prevTexCoords * weight + currentTexCoords * (1.0 - weight);
 
-    return clamp(currentTexCoords, vec2(0.0), vec2(1.0));
+    return currentTexCoords;
 }
 
 void main() {
@@ -139,7 +140,8 @@ void main() {
     if (hasParallaxMap) {
         vec3 tangentViewDir = normalize(transpose(TBN) * (cameraPosition - FragPos));
         texCoord = parallaxMapping(texCoord, tangentViewDir);
-        texCoord = clamp(texCoord, vec2(0.0), vec2(1.0));
+        if (texCoord.x > 1.0 || texCoord.y > 1.0 || texCoord.x < 0.0 || texCoord.y < 0.0)
+            discard;
     }
 
     vec4 sampledColor = enableTextures(TEXTURE_COLOR);
@@ -149,6 +151,14 @@ void main() {
     vec4 albedoTex = enableTextures(TEXTURE_COLOR);
     if (albedoTex != vec4(-1.0)) {
         baseColor *= albedoTex;
+    }
+    vec4 opacityTex = enableTextures(TEXTURE_OPACITY);
+    if (opacityTex != vec4(-1.0)) {
+        if (opacityTex.r < 0.1) {
+            discard;
+        }
+    } else if (material.albedo.a < 0.999 && baseColor.a < 0.1) {
+        discard;
     }
 
 

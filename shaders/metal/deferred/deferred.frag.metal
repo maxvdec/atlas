@@ -125,7 +125,7 @@ float2 parallaxMapping(thread const float2& texCoords, thread const float3& view
     float currentLayerDepth = 0.0;
     float2 P = (v.xy / float2(fast::max(v.z, 0.0500000007450580596923828125))) * 0.039999999105930328369140625;
     float2 deltaTexCoords = P / float2(numLayers);
-    float2 currentTexCoords = fast::clamp(texCoords, float2(0.0), float2(1.0));
+    float2 currentTexCoords = texCoords;
     int textureIndex = -1;
     for (int i = 0; i < _46.textureCount; i++)
     {
@@ -146,14 +146,14 @@ float2 parallaxMapping(thread const float2& texCoords, thread const float3& view
     int iteration = 0;
     while (currentLayerDepth < currentDepthMapValue && iteration < maxIterations)
     {
-        currentTexCoords = fast::clamp(currentTexCoords - deltaTexCoords, float2(0.0), float2(1.0));
+        currentTexCoords -= deltaTexCoords;
         int param_2 = textureIndex;
         float2 param_3 = currentTexCoords;
         currentDepthMapValue = sampleTextureAt(param_2, param_3, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr).x;
         currentLayerDepth += layerDepth;
         iteration++;
     }
-    float2 prevTexCoords = fast::clamp(currentTexCoords + deltaTexCoords, float2(0.0), float2(1.0));
+    float2 prevTexCoords = currentTexCoords + deltaTexCoords;
     float afterDepth = currentDepthMapValue - currentLayerDepth;
     int param_4 = textureIndex;
     float2 param_5 = prevTexCoords;
@@ -161,7 +161,7 @@ float2 parallaxMapping(thread const float2& texCoords, thread const float3& view
     float denom = fast::max(afterDepth - beforeDepth, 9.9999997473787516355514526367188e-05);
     float weight = fast::clamp(afterDepth / denom, 0.0, 1.0);
     currentTexCoords = (prevTexCoords * weight) + (currentTexCoords * (1.0 - weight));
-    return fast::clamp(currentTexCoords, float2(0.0), float2(1.0));
+    return currentTexCoords;
 }
 
 static inline __attribute__((always_inline))
@@ -277,7 +277,38 @@ fragment main0_out main0(main0_in in [[stage_in]], constant UBO& _46 [[buffer(0)
         float2 param = texCoord;
         float3 param_1 = tangentViewDir;
         texCoord = parallaxMapping(param, param_1, _46, texture1, texture1Smplr, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr);
-        texCoord = fast::clamp(texCoord, float2(0.0), float2(1.0));
+        bool _476 = texCoord.x > 1.0;
+        bool _483;
+        if (!_476)
+        {
+            _483 = texCoord.y > 1.0;
+        }
+        else
+        {
+            _483 = _476;
+        }
+        bool _490;
+        if (!_483)
+        {
+            _490 = texCoord.x < 0.0;
+        }
+        else
+        {
+            _490 = _483;
+        }
+        bool _497;
+        if (!_490)
+        {
+            _497 = texCoord.y < 0.0;
+        }
+        else
+        {
+            _497 = _490;
+        }
+        if (_497)
+        {
+            discard_fragment();
+        }
     }
     int param_2 = 0;
     float4 sampledColor = enableTextures(param_2, _46, texture1, texture1Smplr, texCoord, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr);
@@ -288,6 +319,22 @@ fragment main0_out main0(main0_in in [[stage_in]], constant UBO& _46 [[buffer(0)
     if (any(albedoTex != float4(-1.0)))
     {
         baseColor *= albedoTex;
+    }
+    int param_3a = 12;
+    float4 opacityTex = enableTextures(param_3a, _46, texture1, texture1Smplr, texCoord, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr);
+    if (any(opacityTex != float4(-1.0)))
+    {
+        if (opacityTex.x < 0.100000001490116119384765625)
+        {
+            discard_fragment();
+        }
+    }
+    else
+    {
+        if ((baseColor.w < 0.100000001490116119384765625) && (material.albedo[3] < 0.999000012874603271484375))
+        {
+            discard_fragment();
+        }
     }
     int param_4 = 5;
     float4 normTexture = enableTextures(param_4, _46, texture1, texture1Smplr, texCoord, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr);

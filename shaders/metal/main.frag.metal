@@ -888,7 +888,7 @@ float3 sampleEnvironmentRadiance(thread const float3& direction, constant Unifor
     int count = 0;
     for (int i = 0; i < _163.textureCount; i++)
     {
-        if (_163.textureTypes[i].x == 12)
+        if (_163.textureTypes[i].x == 13)
         {
             int param = i;
             float3 param_1 = direction;
@@ -1015,6 +1015,22 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Uniforms& _163 [[buf
     if (any(albedoTex != float4(-1.0)))
     {
         albedo *= albedoTex.xyz;
+    }
+    int param_3a = 12;
+    float4 opacityTex = enableTextures(param_3a, _163, texture1, texture1Smplr, texCoord, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr);
+    if (any(opacityTex != float4(-1.0)))
+    {
+        if (opacityTex.x < 0.100000001490116119384765625)
+        {
+            discard_fragment();
+        }
+    }
+    else
+    {
+        if ((albedoTex.w < 0.100000001490116119384765625) && (material.albedo[3] < 0.999000012874603271484375))
+        {
+            discard_fragment();
+        }
     }
     float metallic = material.metallic;
     int param_4 = 9;
