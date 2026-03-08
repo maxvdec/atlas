@@ -29,11 +29,38 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Paramters& _43 [[buf
 {
     main0_out out = {};
     float3 fragPosWorld = gPosition.sample(gPositionSmplr, in.TexCoord).xyz;
-    float3 normalWorld = gNormal.sample(gNormalSmplr, in.TexCoord).xyz;
-    if (length(normalWorld) < 0.001000000047497451305389404296875)
+    if (!all(isfinite(fragPosWorld)))
     {
         out.FragColor = 1.0;
         return out;
+    }
+    float3 geometricNormal = cross(dfdx(fragPosWorld), dfdy(fragPosWorld));
+    float geometricNormalLength = length(geometricNormal);
+    bool hasGeometricNormal = all(isfinite(geometricNormal)) && geometricNormalLength > 0.001000000047497451305389404296875;
+    float3 sampledNormalWorld = gNormal.sample(gNormalSmplr, in.TexCoord).xyz;
+    float sampledNormalLength = length(sampledNormalWorld);
+    bool hasSampledNormal = all(isfinite(sampledNormalWorld)) && sampledNormalLength > 0.001000000047497451305389404296875;
+    float3 normalWorld;
+    if (hasGeometricNormal)
+    {
+        normalWorld = geometricNormal / geometricNormalLength;
+        if (hasSampledNormal)
+        {
+            float3 shadingNormal = sampledNormalWorld / sampledNormalLength;
+            if (dot(normalWorld, shadingNormal) < 0.0)
+            {
+                normalWorld = -normalWorld;
+            }
+        }
+    }
+    else
+    {
+        if (!hasSampledNormal)
+        {
+            out.FragColor = 1.0;
+            return out;
+        }
+        normalWorld = sampledNormalWorld / sampledNormalLength;
     }
     float3 fragPos = (_43.view * float4(fragPosWorld, 1.0)).xyz;
     float3 normal = fast::normalize((_43.view * float4(normalWorld, 0.0)).xyz);
@@ -41,12 +68,15 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Paramters& _43 [[buf
     float3 tangent = fast::normalize(randomVec - (normal * dot(randomVec, normal)));
     float3 bitangent = cross(normal, tangent);
     float3x3 TBN = float3x3(float3(tangent), float3(bitangent), float3(normal));
+    float viewDepth = abs(fragPos.z);
+    float sampleRadius = mix(0.550000011920928955078125, 2.2000000476837158203125, clamp(viewDepth / 140.0, 0.0, 1.0));
+    float depthBias = mix(0.006000000052154064178466796875, 0.0240000002086162567138671875, clamp(viewDepth / 180.0, 0.0, 1.0));
     float occlusion = 0.0;
     int validSamples = 0;
     for (int i = 0; i < 64; i++)
     {
         float3 samplePos = TBN * _137.samples[i];
-        samplePos = fragPos + (samplePos * 0.5);
+        samplePos = fragPos + (samplePos * sampleRadius);
         float4 offset = _43.projection * float4(samplePos, 1.0);
         float _160 = offset.w;
         float4 _161 = offset;
@@ -91,9 +121,13 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Paramters& _43 [[buf
             continue;
         }
         float3 samplePosWorld = gPosition.sample(gPositionSmplr, offset.xy).xyz;
+        if (!all(isfinite(samplePosWorld)))
+        {
+            continue;
+        }
         float sampleDepth = (_43.view * float4(samplePosWorld, 1.0)).z;
-        float rangeCheck = smoothstep(0.0, 1.0, 0.5 / (abs(fragPos.z - sampleDepth) + 0.001000000047497451305389404296875));
-        occlusion += (float(sampleDepth >= (samplePos.z + 0.02500000037252902984619140625)) * rangeCheck);
+        float rangeCheck = smoothstep(0.0, 1.0, sampleRadius / (abs(fragPos.z - sampleDepth) + 0.0005000000237487256526947021484375));
+        occlusion += (float(sampleDepth >= (samplePos.z + depthBias)) * rangeCheck);
         validSamples++;
     }
     if (validSamples > 0)
@@ -107,4 +141,3 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Paramters& _43 [[buf
     out.FragColor = occlusion;
     return out;
 }
-

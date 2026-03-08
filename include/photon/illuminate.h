@@ -182,7 +182,7 @@ class GlobalIllumination {
     float maxRayDistance = 20.f;
     float normalBias = 0.05;
     float hysteresis = 0.85;
-    bool sampleNormalMaps = true;
+    bool sampleNormalMaps = false;
     float normalMapStrength = 1.0f;
     int probeUpdateStride = 4;
     int frameIndex = 0;

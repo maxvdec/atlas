@@ -19,6 +19,7 @@
 #include "opal/opal.h"
 
 void Window::setupSSAO() {
+    this->ssaoKernelSize = std::max(this->ssaoKernelSize, 64);
     atlas_log("Setting up SSAO (kernel size: " +
         std::to_string(this->ssaoKernelSize) + ")");
     std::uniform_real_distribution<float> randomFloats(0.0, 1.0);
@@ -109,10 +110,6 @@ void Window::renderSSAO(std::shared_ptr<opal::CommandBuffer> commandBuffer) {
 
     if (!this->ssaoMapsDirty && this->ssaoUpdateCooldown > 0.0f &&
         !cameraMoved) {
-        return;
-    }
-
-    if (this->ssaoUpdateCooldown > 0.0f && !cameraMoved) {
         return;
     }
 

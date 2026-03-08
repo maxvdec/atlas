@@ -23,8 +23,8 @@
 
 namespace {
 constexpr int kPathTracerMaterialTextureUnitStart = 12;
-constexpr int kPathTracerMaxMaterialTextures = 20;
-constexpr int kPathTracerSkyboxTextureUnit = 32;
+constexpr int kPathTracerMaxMaterialTextures = 24;
+constexpr int kPathTracerSkyboxTextureUnit = 36;
 
 std::shared_ptr<opal::Texture> createFallbackSkyboxTexture() {
     constexpr unsigned char horizon[4] = {170, 195, 225, 255};
@@ -112,11 +112,21 @@ void collectPathTracingObjectsFromQueue(
             continue;
         }
         if (auto *model = dynamic_cast<Model *>(renderable)) {
-            for (const auto &mesh : model->getObjects()) {
+            const auto &meshes =
+                static_cast<const Model *>(model)->getObjects();
+            for (const auto &mesh : meshes) {
                 CoreObject *object = mesh.get();
                 if (object == nullptr) {
                     continue;
                 }
+                bool hasAnyTexture = !object->textures.empty();
+                if (!hasAnyTexture) {
+                    object->material = model->material;
+                }
+                object->material.useNormalMap = model->material.useNormalMap;
+                object->material.normalMapStrength =
+                    model->material.normalMapStrength;
+                object->useDeferredRendering = model->useDeferredRendering;
                 if (seen.insert(object).second) {
                     objects.push_back(object);
                 }

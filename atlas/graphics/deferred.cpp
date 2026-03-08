@@ -12,6 +12,7 @@
 #include "opal/opal.h"
 #include <cstddef>
 #include <cmath>
+#include <cstring>
 #include <memory>
 #include <unordered_map>
 #include <unordered_set>
@@ -87,6 +88,57 @@ std::shared_ptr<opal::Texture> createFallbackShadowCubemapTexture() {
         texture->updateFace(face, white, 1, 1, opal::TextureDataFormat::Rgba);
     }
     return texture;
+}
+
+uint64_t hashCombineU64(uint64_t seed, uint64_t value) {
+    seed ^= value + 0x9e3779b97f4a7c15ULL + (seed << 6) + (seed >> 2);
+    return seed;
+}
+
+uint64_t hashFloat(float value) {
+    uint32_t bits = 0;
+    std::memcpy(&bits, &value, sizeof(float));
+    return static_cast<uint64_t>(bits);
+}
+
+uint64_t computeDeferredGeometrySignature(
+    const std::vector<Renderable *> &renderables) {
+    uint64_t signature = 1469598103934665603ULL;
+    for (auto *renderable : renderables) {
+        if (renderable == nullptr) {
+            continue;
+        }
+        signature = hashCombineU64(
+            signature,
+            static_cast<uint64_t>(reinterpret_cast<uintptr_t>(renderable)));
+        Position3d position = renderable->getPosition();
+        Size3d scale = renderable->getScale();
+        signature = hashCombineU64(signature,
+                                   hashFloat(static_cast<float>(position.x)));
+        signature = hashCombineU64(signature,
+                                   hashFloat(static_cast<float>(position.y)));
+        signature = hashCombineU64(signature,
+                                   hashFloat(static_cast<float>(position.z)));
+        signature =
+            hashCombineU64(signature, hashFloat(static_cast<float>(scale.x)));
+        signature =
+            hashCombineU64(signature, hashFloat(static_cast<float>(scale.y)));
+        signature =
+            hashCombineU64(signature, hashFloat(static_cast<float>(scale.z)));
+        if (auto *object = dynamic_cast<CoreObject *>(renderable)) {
+            Rotation3d rotation = object->getRotation();
+            glm::quat rotationQuat = rotation.toGlmQuat();
+            signature = hashCombineU64(signature, hashFloat(rotationQuat.x));
+            signature = hashCombineU64(signature, hashFloat(rotationQuat.y));
+            signature = hashCombineU64(signature, hashFloat(rotationQuat.z));
+            signature = hashCombineU64(signature, hashFloat(rotationQuat.w));
+            signature = hashCombineU64(
+                signature, static_cast<uint64_t>(object->vertices.size()));
+            signature = hashCombineU64(
+                signature, static_cast<uint64_t>(object->indices.size()));
+        }
+    }
+    return signature;
 }
 
 std::vector<GPUDirectionalLight>
@@ -202,6 +254,7 @@ buildGPUAreaLights(const std::vector<AreaLight *> &lights, int maxCount) {
 void Window::enableGlobalIllumination() {
     usesGlobalIllumination = true;
     ddgiSystem = std::make_shared<photon::GlobalIllumination>();
+    ddgiSystem->sampleNormalMaps = false;
     ddgiSystem->init();
 }
 
@@ -287,10 +340,24 @@ void Window::deferredRendering(
             return;
         }
         if (auto *model = dynamic_cast<Model *>(obj)) {
-            for (const auto &mesh : model->getObjects()) {
-                Renderable *meshRenderable = mesh.get();
-                if (meshRenderable == nullptr ||
-                    !meshRenderable->canUseDeferredRendering()) {
+            const auto &meshes =
+                static_cast<const Model *>(model)->getObjects();
+            for (const auto &mesh : meshes) {
+                CoreObject *meshRenderable = mesh.get();
+                if (meshRenderable == nullptr) {
+                    continue;
+                }
+                bool hasAnyTexture = !meshRenderable->textures.empty();
+                if (!hasAnyTexture) {
+                    meshRenderable->material = model->material;
+                }
+                meshRenderable->material.useNormalMap =
+                    model->material.useNormalMap;
+                meshRenderable->material.normalMapStrength =
+                    model->material.normalMapStrength;
+                meshRenderable->useDeferredRendering =
+                    model->useDeferredRendering;
+                if (!meshRenderable->canUseDeferredRendering()) {
                     continue;
                 }
                 if (activeDeferredRenderables.insert(meshRenderable).second) {
@@ -312,6 +379,18 @@ void Window::deferredRendering(
     }
     for (auto *obj : this->renderables) {
         collectDeferredRenderable(obj);
+    }
+
+    static uint64_t lastDeferredGeometrySignature = 0;
+    static bool hasDeferredGeometrySignature = false;
+    const uint64_t deferredGeometrySignature =
+        computeDeferredGeometrySignature(orderedDeferredRenderables);
+    if (!hasDeferredGeometrySignature ||
+        deferredGeometrySignature != lastDeferredGeometrySignature) {
+        this->ssaoMapsDirty = true;
+        this->ssaoUpdateCooldown = 0.0f;
+        lastDeferredGeometrySignature = deferredGeometrySignature;
+        hasDeferredGeometrySignature = true;
     }
 
     for (auto it = deferredPrograms.begin(); it != deferredPrograms.end();) {
@@ -367,7 +446,14 @@ void Window::deferredRendering(
         obj->setViewMatrix(this->camera->calculateViewMatrix());
         obj->setProjectionMatrix(calculateProjectionMatrix());
         obj->setPipeline(pipelineEntry.pipeline);
-        obj->render(getDeltaTime(), commandBuffer, false);
+        if (auto *coreObject = dynamic_cast<CoreObject *>(obj)) {
+            ShaderProgram originalProgram = coreObject->shaderProgram;
+            coreObject->shaderProgram = programIt->second;
+            coreObject->render(getDeltaTime(), commandBuffer, false);
+            coreObject->shaderProgram = originalProgram;
+        } else {
+            obj->render(getDeltaTime(), commandBuffer, false);
+        }
     };
 
     for (auto *obj : orderedDeferredRenderables) {
@@ -591,11 +677,28 @@ void Window::deferredRendering(
 
     // Send directional lights using buffer binding
     int dirLightCount = std::min((int)scene->directionalLights.size(), 256);
+    std::vector<GPUDirectionalLight> gpuDirLights;
+    if (dirLightCount > 0) {
+        gpuDirLights =
+            buildGPUDirectionalLights(scene->directionalLights, dirLightCount);
+    } else if (scene->atmosphere.isEnabled()) {
+        GPUDirectionalLight gpu{};
+        glm::vec3 sunDir = scene->atmosphere.getSunAngle().toGlm();
+        if (glm::length(sunDir) > 0.0001f) {
+            gpu.direction = -glm::normalize(sunDir);
+        } else {
+            gpu.direction = glm::vec3(0.0f, -1.0f, 0.0f);
+        }
+        Color skyLight = scene->atmosphere.getLightColor();
+        gpu.diffuse = glm::vec3(skyLight.r, skyLight.g, skyLight.b);
+        gpu.specular = gpu.diffuse;
+        gpu.intensity = scene->atmosphere.getLightIntensity() * 1.2f;
+        gpuDirLights.push_back(gpu);
+        dirLightCount = 1;
+    }
     lightPipeline->setUniform1i("directionalLightCount", dirLightCount);
 
-    if (dirLightCount > 0) {
-        auto gpuDirLights =
-            buildGPUDirectionalLights(scene->directionalLights, dirLightCount);
+    if (!gpuDirLights.empty()) {
         lightPipeline->bindBuffer("DirectionalLights", gpuDirLights);
     }
 

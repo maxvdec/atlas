@@ -762,7 +762,7 @@ class Model : public GameObject {
      *
      * @return (std::vector<std::shared_ptr<CoreObject>>) The objects.
      */
-    std::vector<std::shared_ptr<CoreObject>> getObjects() { return objects; }
+    std::vector<std::shared_ptr<CoreObject>> &getObjects() { return objects; }
     const std::vector<std::shared_ptr<CoreObject>> &getObjects() const {
         return objects;
     }
@@ -841,6 +841,8 @@ class Model : public GameObject {
             if (!hasAnyTexture) {
                 obj->material = material;
             }
+            obj->material.useNormalMap = material.useNormalMap;
+            obj->material.normalMapStrength = material.normalMapStrength;
             obj->useDeferredRendering = useDeferredRendering;
             obj->render(dt, commandBuffer, updatePipeline);
         }
@@ -859,6 +861,8 @@ class Model : public GameObject {
             if (!hasAnyTexture) {
                 obj->material = material;
             }
+            obj->material.useNormalMap = material.useNormalMap;
+            obj->material.normalMapStrength = material.normalMapStrength;
             obj->useDeferredRendering = useDeferredRendering;
             obj->update(window);
         }
@@ -880,6 +884,8 @@ class Model : public GameObject {
             if (!hasAnyTexture) {
                 obj->material = material;
             }
+            obj->material.useNormalMap = material.useNormalMap;
+            obj->material.normalMapStrength = material.normalMapStrength;
             obj->useDeferredRendering = useDeferredRendering;
             obj->initialize();
         }

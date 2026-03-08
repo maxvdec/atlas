@@ -270,7 +270,9 @@ static inline float4 sampleMaterialTexture(
     texture2d<float> materialTexture13, texture2d<float> materialTexture14,
     texture2d<float> materialTexture15, texture2d<float> materialTexture16,
     texture2d<float> materialTexture17, texture2d<float> materialTexture18,
-    texture2d<float> materialTexture19) {
+    texture2d<float> materialTexture19, texture2d<float> materialTexture20,
+    texture2d<float> materialTexture21, texture2d<float> materialTexture22,
+    texture2d<float> materialTexture23) {
     switch (textureIndex) {
     case 0:
         return materialTexture0.sample(materialTexSampler, uv);
@@ -312,6 +314,14 @@ static inline float4 sampleMaterialTexture(
         return materialTexture18.sample(materialTexSampler, uv);
     case 19:
         return materialTexture19.sample(materialTexSampler, uv);
+    case 20:
+        return materialTexture20.sample(materialTexSampler, uv);
+    case 21:
+        return materialTexture21.sample(materialTexSampler, uv);
+    case 22:
+        return materialTexture22.sample(materialTexSampler, uv);
+    case 23:
+        return materialTexture23.sample(materialTexSampler, uv);
     default:
         break;
     }
@@ -330,7 +340,9 @@ static inline void resolveMaterialParameters(
     texture2d<float> materialTexture13, texture2d<float> materialTexture14,
     texture2d<float> materialTexture15, texture2d<float> materialTexture16,
     texture2d<float> materialTexture17, texture2d<float> materialTexture18,
-    texture2d<float> materialTexture19, thread float3 &albedo,
+    texture2d<float> materialTexture19, texture2d<float> materialTexture20,
+    texture2d<float> materialTexture21, texture2d<float> materialTexture22,
+    texture2d<float> materialTexture23, thread float3 &albedo,
     thread float &metallic, thread float &roughness, thread float &ao,
     thread float3 &emissive, thread int &normalTextureIndex,
     thread float &normalStrength) {
@@ -366,7 +378,9 @@ static inline void resolveMaterialParameters(
                            materialTexture12, materialTexture13,
                            materialTexture14, materialTexture15,
                            materialTexture16, materialTexture17,
-                           materialTexture18, materialTexture19)
+                           materialTexture18, materialTexture19,
+                           materialTexture20, materialTexture21,
+                           materialTexture22, materialTexture23)
                            .xyz,
                        float3(0.0f), float3(1.0f));
     }
@@ -379,7 +393,9 @@ static inline void resolveMaterialParameters(
             materialTexture8, materialTexture9, materialTexture10,
             materialTexture11, materialTexture12, materialTexture13,
             materialTexture14, materialTexture15, materialTexture16,
-            materialTexture17, materialTexture18, materialTexture19);
+            materialTexture17, materialTexture18, materialTexture19,
+            materialTexture20, materialTexture21, materialTexture22,
+            materialTexture23);
         float metallicValue = metallicSample.x;
         if (mat.roughnessTextureIndex == mat.metallicTextureIndex) {
             metallicValue = metallicSample.z;
@@ -395,7 +411,9 @@ static inline void resolveMaterialParameters(
             materialTexture8, materialTexture9, materialTexture10,
             materialTexture11, materialTexture12, materialTexture13,
             materialTexture14, materialTexture15, materialTexture16,
-            materialTexture17, materialTexture18, materialTexture19);
+            materialTexture17, materialTexture18, materialTexture19,
+            materialTexture20, materialTexture21, materialTexture22,
+            materialTexture23);
         float roughnessValue = roughnessSample.x;
         if (mat.roughnessTextureIndex == mat.metallicTextureIndex) {
             roughnessValue = roughnessSample.y;
@@ -412,7 +430,9 @@ static inline void resolveMaterialParameters(
                         materialTexture12, materialTexture13,
                         materialTexture14, materialTexture15,
                         materialTexture16, materialTexture17,
-                        materialTexture18, materialTexture19)
+                        materialTexture18, materialTexture19,
+                        materialTexture20, materialTexture21,
+                        materialTexture22, materialTexture23)
                         .x,
                     0.0f, 1.0f);
     }
@@ -435,7 +455,9 @@ static inline float3 resolveNormal(
     texture2d<float> materialTexture13, texture2d<float> materialTexture14,
     texture2d<float> materialTexture15, texture2d<float> materialTexture16,
     texture2d<float> materialTexture17, texture2d<float> materialTexture18,
-    texture2d<float> materialTexture19) {
+    texture2d<float> materialTexture19, texture2d<float> materialTexture20,
+    texture2d<float> materialTexture21, texture2d<float> materialTexture22,
+    texture2d<float> materialTexture23) {
     float3 N = safeNormalize(n, float3(0.0f, 1.0f, 0.0f));
     float3 T = safeNormalize(tangent - N * dot(N, tangent), float3(1.0f, 0.0f, 0.0f));
     float3 B = safeNormalize(bitangent - N * dot(N, bitangent), cross(N, T));
@@ -456,7 +478,9 @@ static inline float3 resolveNormal(
                           materialTexture12, materialTexture13,
                           materialTexture14, materialTexture15,
                           materialTexture16, materialTexture17,
-                          materialTexture18, materialTexture19)
+                          materialTexture18, materialTexture19,
+                          materialTexture20, materialTexture21,
+                          materialTexture22, materialTexture23)
                           .xyz;
         texN = texN * 2.0f - 1.0f;
         texN.xy *= normalStrength;
@@ -666,6 +690,10 @@ kernel void main0(device float4 *probeRadianceOut [[buffer(0)]],
                   texture2d<float> materialTexture17 [[texture(27)]],
                   texture2d<float> materialTexture18 [[texture(28)]],
                   texture2d<float> materialTexture19 [[texture(29)]],
+                  texture2d<float> materialTexture20 [[texture(30)]],
+                  texture2d<float> materialTexture21 [[texture(31)]],
+                  texture2d<float> materialTexture22 [[texture(32)]],
+                  texture2d<float> materialTexture23 [[texture(33)]],
                   uint tid [[thread_position_in_grid]]) {
     const float PI = 3.14159265359f;
     uint totalProbes = (uint)ps.atlasParams.w;
@@ -740,7 +768,9 @@ kernel void main0(device float4 *probeRadianceOut [[buffer(0)]],
             materialTexture10, materialTexture11, materialTexture12,
             materialTexture13, materialTexture14, materialTexture15,
             materialTexture16, materialTexture17, materialTexture18,
-            materialTexture19, albedo, metallic, roughness, ao, emissive,
+            materialTexture19, materialTexture20, materialTexture21,
+            materialTexture22, materialTexture23, albedo, metallic, roughness,
+            ao, emissive,
             normalTextureIndex, normalStrength);
         float3 hitNormal = resolveNormal(
             normalTextureIndex, normalStrength, h.uv, h.n, h.tangent, h.bitangent,
@@ -750,7 +780,9 @@ kernel void main0(device float4 *probeRadianceOut [[buffer(0)]],
             materialTexture8, materialTexture9, materialTexture10,
             materialTexture11, materialTexture12, materialTexture13,
             materialTexture14, materialTexture15, materialTexture16,
-            materialTexture17, materialTexture18, materialTexture19);
+            materialTexture17, materialTexture18, materialTexture19,
+            materialTexture20, materialTexture21, materialTexture22,
+            materialTexture23);
 
         if (dot(hitNormal, -rayDir) < 0.0f) {
             hitNormal = -hitNormal;

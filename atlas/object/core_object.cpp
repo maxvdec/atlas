@@ -616,6 +616,12 @@ void CoreObject::render(float dt,
                                      material.normalMapStrength);
         this->pipeline->setUniform1i("useNormalMap",
                                      material.useNormalMap ? 1 : 0);
+        if (Window::mainWindow != nullptr && Window::mainWindow->getCamera() != nullptr) {
+            this->pipeline->setUniform3f(
+                "cameraPosition", Window::mainWindow->getCamera()->position.x,
+                Window::mainWindow->getCamera()->position.y,
+                Window::mainWindow->getCamera()->position.z);
+        }
     }
 
     if (std::find(shaderProgram.capabilities.begin(),

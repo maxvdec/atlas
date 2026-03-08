@@ -56,7 +56,8 @@ void appendShadowCaster(Renderable *obj,
         return;
     }
     if (auto *model = dynamic_cast<Model *>(obj)) {
-        for (const auto &mesh : model->getObjects()) {
+        const auto &meshes = static_cast<const Model *>(model)->getObjects();
+        for (const auto &mesh : meshes) {
             Renderable *meshRenderable = mesh.get();
             if (meshRenderable == nullptr || !meshRenderable->canCastShadows()) {
                 continue;
@@ -270,8 +271,8 @@ Window::Window(const WindowConfiguration &config)
 
 #ifdef METAL
     this->shadowUpdateInterval = 1.0f / 6.0f;
-    this->ssaoUpdateInterval = 1.0f / 8.0f;
-    this->ssaoKernelSize = 16;
+    this->ssaoUpdateInterval = 1.0f / 24.0f;
+    this->ssaoKernelSize = 64;
     this->bloomBlurPasses = 4;
 #endif
 
@@ -493,6 +494,13 @@ void Window::run() {
 
         currentScene->updateScene(this->deltaTime);
 
+        for (auto &obj : this->firstRenderables) {
+            if (obj == nullptr) {
+                continue;
+            }
+            obj->update(*this);
+        }
+
         // Update the renderables
         for (auto &obj : this->renderables) {
             if (obj->renderLateForward) {
@@ -596,26 +604,59 @@ void Window::run() {
                 updatePipelineStateField(this->writeDepth, true);
                 updatePipelineStateField(this->cullMode, opal::CullMode::Back);
 
-                for (auto &obj : this->firstRenderables) {
+                auto renderForwardOnly = [&](Renderable *obj) {
+                    if (obj == nullptr) {
+                        return;
+                    }
+                    if (auto *model = dynamic_cast<Model *>(obj)) {
+                        const auto &meshes =
+                            static_cast<const Model *>(model)->getObjects();
+                        for (const auto &mesh : meshes) {
+                            CoreObject *meshObject = mesh.get();
+                            if (meshObject == nullptr) {
+                                continue;
+                            }
+                            bool hasAnyTexture = !meshObject->textures.empty();
+                            if (!hasAnyTexture) {
+                                meshObject->material = model->material;
+                            }
+                            meshObject->material.useNormalMap =
+                                model->material.useNormalMap;
+                            meshObject->material.normalMapStrength =
+                                model->material.normalMapStrength;
+                            meshObject->useDeferredRendering =
+                                model->useDeferredRendering;
+                            if (meshObject->canUseDeferredRendering()) {
+                                continue;
+                            }
+                            meshObject->setViewMatrix(
+                                this->camera->calculateViewMatrix());
+                            meshObject->setProjectionMatrix(
+                                calculateProjectionMatrix());
+                            meshObject->render(
+                                getDeltaTime(), commandBuffer,
+                                shouldRefreshPipeline(meshObject));
+                        }
+                        return;
+                    }
                     if (obj->canUseDeferredRendering()) {
-                        continue;
+                        return;
                     }
                     obj->setViewMatrix(this->camera->calculateViewMatrix());
                     obj->setProjectionMatrix(calculateProjectionMatrix());
                     obj->render(getDeltaTime(), commandBuffer,
                                 shouldRefreshPipeline(obj));
+                };
+
+                for (auto &obj : this->firstRenderables) {
+                    renderForwardOnly(obj);
                 }
 
                 for (auto &obj : this->renderables) {
-                    if (obj->renderLateForward) {
+                    if (obj != nullptr && obj->renderLateForward) {
                         continue;
                     }
-                    if (!obj->canUseDeferredRendering()) {
-                        obj->setViewMatrix(this->camera->calculateViewMatrix());
-                        obj->setProjectionMatrix(calculateProjectionMatrix());
-                        obj->render(getDeltaTime(), commandBuffer,
-                                    shouldRefreshPipeline(obj));
-                    }
+                    renderForwardOnly(obj);
                 }
 
                 for (auto &obj : this->lateForwardRenderables) {
@@ -834,6 +875,10 @@ void Window::addObject(Renderable *obj) {
             this->addLateForwardObject(obj);
         }
     }
+    this->shadowMapsDirty = true;
+    this->shadowUpdateCooldown = 0.0f;
+    this->ssaoMapsDirty = true;
+    this->ssaoUpdateCooldown = 0.0f;
 }
 
 void Window::removeObject(Renderable *obj) {
@@ -868,6 +913,10 @@ void Window::removeObject(Renderable *obj) {
                                    this->lateFluids.end());
         }
     }
+    this->shadowMapsDirty = true;
+    this->shadowUpdateCooldown = 0.0f;
+    this->ssaoMapsDirty = true;
+    this->ssaoUpdateCooldown = 0.0f;
 }
 
 void Window::addLateForwardObject(Renderable *object) {
@@ -930,6 +979,10 @@ void Window::addPreludeObject(Renderable *obj) {
     if (this->physicsWorld != nullptr && !inRenderables && !inPending) {
         obj->initialize();
     }
+    this->shadowMapsDirty = true;
+    this->shadowUpdateCooldown = 0.0f;
+    this->ssaoMapsDirty = true;
+    this->ssaoUpdateCooldown = 0.0f;
 }
 
 void Window::addUIObject(Renderable *obj) {

@@ -28,7 +28,7 @@
 
 namespace {
 constexpr int kDdgiMaterialTextureUnitStart = 10;
-constexpr int kDdgiMaxMaterialTextures = 20;
+constexpr int kDdgiMaxMaterialTextures = 24;
 
 int registerMaterialTextureSlot(
     const Texture &texture,
@@ -171,11 +171,21 @@ void collectDdgiObjectsFromQueue(const std::vector<Renderable *> &renderables,
             continue;
         }
         if (auto *model = dynamic_cast<Model *>(renderable)) {
-            for (const auto &mesh : model->getObjects()) {
+            const auto &meshes =
+                static_cast<const Model *>(model)->getObjects();
+            for (const auto &mesh : meshes) {
                 CoreObject *object = mesh.get();
                 if (object == nullptr) {
                     continue;
                 }
+                bool hasAnyTexture = !object->textures.empty();
+                if (!hasAnyTexture) {
+                    object->material = model->material;
+                }
+                object->material.useNormalMap = model->material.useNormalMap;
+                object->material.normalMapStrength =
+                    model->material.normalMapStrength;
+                object->useDeferredRendering = model->useDeferredRendering;
                 if (seen.insert(object).second) {
                     objects.push_back(object);
                 }
@@ -489,7 +499,7 @@ void photon::GlobalIllumination::updateProbeLayout() {
                             opal::TextureDataFormat::Rgba, TextureType::Color));
     }
 
-    int effectiveRaysPerProbe = std::max(1, raysPerProbe / 8);
+    int effectiveRaysPerProbe = std::max(1, raysPerProbe / 4);
     if (probeRadianceBuffer == nullptr ||
         probeRadianceCapacity != totalProbeCount * effectiveRaysPerProbe) {
         int totalElements = totalProbeCount * effectiveRaysPerProbe;
@@ -520,7 +530,7 @@ void photon::GlobalIllumination::render(
         static_cast<uint>(std::max(1, this->probeSpace->totalProbes()));
     const uint requestedRays =
         static_cast<uint>(std::max(1, this->raysPerProbe));
-    const uint effectiveRays = std::max(1u, requestedRays / 8u);
+    const uint effectiveRays = std::max(1u, requestedRays / 4u);
     uint updateStride = static_cast<uint>(std::max(1, this->probeUpdateStride));
     if (frameIndex < static_cast<int>(updateStride) + 2) {
         updateStride = 1u;

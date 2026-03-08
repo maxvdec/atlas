@@ -32,6 +32,12 @@
 #include <glm/gtx/string_cast.hpp>
 #include <glm/gtc/epsilon.hpp>
 
+namespace {
+glm::mat4 assimpToGlmMatrix(const aiMatrix4x4 &matrix) {
+    return glm::transpose(glm::make_mat4(&matrix.a1));
+}
+} // namespace
+
 void Model::fromResource(const Resource &resource) { loadModel(resource); }
 
 void Model::loadModel(const Resource &resource) {
@@ -98,13 +104,12 @@ void Model::processNode(
     aiNode *node, const aiScene *scene, glm::mat4 parentTransform,
     std::unordered_map<std::string, Texture> &textureCache) {
     glm::mat4 nodeTransform =
-        parentTransform * glm::make_mat4(&node->mTransformation.a1);
+        parentTransform * assimpToGlmMatrix(node->mTransformation);
 
     for (unsigned int i = 0; i < node->mNumMeshes; i++) {
         aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
         auto obj = std::make_shared<CoreObject>(
             processMesh(mesh, scene, nodeTransform, textureCache));
-        obj->initialize();
         this->objects.push_back(obj);
     }
 
@@ -120,6 +125,9 @@ Model::processMesh(aiMesh *mesh, const aiScene *scene,
     CoreObject object;
     std::vector<CoreVertex> vertices;
     std::vector<unsigned int> indices;
+    const glm::mat3 linearTransform = glm::mat3(transform);
+    const glm::mat3 normalTransform =
+        glm::transpose(glm::inverse(linearTransform));
 
     vertices.reserve(mesh->mNumVertices);
 
@@ -133,10 +141,10 @@ Model::processMesh(aiMesh *mesh, const aiScene *scene,
 
         // ---------- Normals ----------
         if (mesh->mNormals) {
-            glm::vec3 normal =
-                glm::mat3(transform) * glm::vec3(mesh->mNormals[i].x,
-                                                 mesh->mNormals[i].y,
-                                                 mesh->mNormals[i].z);
+            glm::vec3 normal = normalTransform *
+                               glm::vec3(mesh->mNormals[i].x,
+                                         mesh->mNormals[i].y,
+                                         mesh->mNormals[i].z);
             if (glm::length(normal) < 1e-6f) {
                 normal = glm::vec3(0.0f, 1.0f, 0.0f);
             } else {
@@ -151,7 +159,7 @@ Model::processMesh(aiMesh *mesh, const aiScene *scene,
         glm::vec3 normal = vertex.normal.toGlm();
         glm::vec3 tangent(1.0f, 0.0f, 0.0f);
         if (mesh->mTangents) {
-            tangent = glm::mat3(transform) *
+            tangent = linearTransform *
                       glm::vec3(mesh->mTangents[i].x, mesh->mTangents[i].y,
                                 mesh->mTangents[i].z);
         }
@@ -166,7 +174,7 @@ Model::processMesh(aiMesh *mesh, const aiScene *scene,
 
         glm::vec3 bitangent(0.0f, 0.0f, 1.0f);
         if (mesh->mBitangents) {
-            bitangent = glm::mat3(transform) *
+            bitangent = linearTransform *
                         glm::vec3(mesh->mBitangents[i].x,
                                   mesh->mBitangents[i].y,
                                   mesh->mBitangents[i].z);
@@ -274,11 +282,6 @@ Model::processMesh(aiMesh *mesh, const aiScene *scene,
                               displacementAsNormalMaps.end());
         }
         textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
-
-        auto heightMaps =
-            loadMaterialTextures(material, std::any(aiTextureType_HEIGHT),
-                                 "texture_height", textureCache);
-        textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
 
         auto metallicMaps =
             loadMaterialTextures(material, std::any(aiTextureType_METALNESS),

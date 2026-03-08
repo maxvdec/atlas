@@ -288,10 +288,6 @@ fragment main0_out main0(main0_in in [[stage_in]], constant UBO& _46 [[buffer(0)
     {
         baseColor = albedoTex;
     }
-    if (baseColor.w < 0.100000001490116119384765625)
-    {
-        discard_fragment();
-    }
     int param_4 = 5;
     float4 normTexture = enableTextures(param_4, _46, texture1, texture1Smplr, texCoord, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr);
     bool _527 = normTexture.x != (-1.0);
