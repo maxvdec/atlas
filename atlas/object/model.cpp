@@ -7,6 +7,7 @@
 // Copyright (c) 2025 Max Van den Eynde
 //
 #include <any>
+#include <assimp/material.h>
 #include <assimp/scene.h>
 #include "atlas/object.h"
 #include "atlas/texture.h"
@@ -17,6 +18,8 @@
 #include "atlas/workspace.h"
 #include <assimp/Importer.hpp>
 #include <assimp/postprocess.h>
+#include <algorithm>
+#include <cmath>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
@@ -35,6 +38,109 @@
 namespace {
 glm::mat4 assimpToGlmMatrix(const aiMatrix4x4 &matrix) {
     return glm::transpose(glm::make_mat4(&matrix.a1));
+}
+
+float saturate(float value) {
+    return std::clamp(value, 0.0f, 1.0f);
+}
+
+float luminance(const aiColor3D &color) {
+    return (color.r * 0.2126f) + (color.g * 0.7152f) + (color.b * 0.0722f);
+}
+
+bool hasVisibleColor(const aiColor3D &color) {
+    return color.r > 1e-4f || color.g > 1e-4f || color.b > 1e-4f;
+}
+
+float roughnessFromShininess(float shininess, float strength) {
+    const float effectiveShininess =
+        std::max(0.0f, shininess) * std::max(0.0f, strength);
+    return saturate(std::sqrt(2.0f / (effectiveShininess + 2.0f)));
+}
+
+void importMaterialProperties(aiMaterial *material, CoreObject &object) {
+    aiColor4D baseColor;
+    if (material->Get(AI_MATKEY_BASE_COLOR, baseColor) == AI_SUCCESS) {
+        object.material.albedo = {baseColor.r, baseColor.g, baseColor.b,
+                                  baseColor.a};
+    } else {
+        aiColor3D diffuseColor;
+        if (material->Get(AI_MATKEY_COLOR_DIFFUSE, diffuseColor) ==
+            AI_SUCCESS) {
+            object.material.albedo.r = diffuseColor.r;
+            object.material.albedo.g = diffuseColor.g;
+            object.material.albedo.b = diffuseColor.b;
+        }
+    }
+
+    float opacity = 1.0f;
+    if (material->Get(AI_MATKEY_OPACITY, opacity) == AI_SUCCESS) {
+        object.material.albedo.a = saturate(opacity);
+    } else {
+        float transparency = 0.0f;
+        if (material->Get(AI_MATKEY_TRANSPARENCYFACTOR, transparency) ==
+            AI_SUCCESS) {
+            object.material.albedo.a = saturate(1.0f - transparency);
+        }
+    }
+
+    float metallic = 0.0f;
+    if (material->Get(AI_MATKEY_METALLIC_FACTOR, metallic) == AI_SUCCESS) {
+        object.material.metallic = saturate(metallic);
+    }
+
+    float roughness = 0.0f;
+    if (material->Get(AI_MATKEY_ROUGHNESS_FACTOR, roughness) == AI_SUCCESS) {
+        object.material.roughness = saturate(roughness);
+    } else {
+        float glossiness = 0.0f;
+        if (material->Get(AI_MATKEY_GLOSSINESS_FACTOR, glossiness) ==
+            AI_SUCCESS) {
+            object.material.roughness = saturate(1.0f - glossiness);
+        } else {
+            float shininess = 0.0f;
+            if (material->Get(AI_MATKEY_SHININESS, shininess) == AI_SUCCESS) {
+                float shininessStrength = 1.0f;
+                material->Get(AI_MATKEY_SHININESS_STRENGTH,
+                              shininessStrength);
+                object.material.roughness =
+                    roughnessFromShininess(shininess, shininessStrength);
+            }
+        }
+    }
+
+    aiColor3D emissiveColor(0.0f, 0.0f, 0.0f);
+    const bool hasEmissiveColor =
+        material->Get(AI_MATKEY_COLOR_EMISSIVE, emissiveColor) == AI_SUCCESS;
+    if (hasEmissiveColor) {
+        object.material.emissiveColor = {emissiveColor.r, emissiveColor.g,
+                                         emissiveColor.b, 1.0f};
+    }
+
+    float emissiveIntensity = 0.0f;
+    if (material->Get(AI_MATKEY_EMISSIVE_INTENSITY, emissiveIntensity) ==
+        AI_SUCCESS) {
+        object.material.emissiveIntensity = std::max(0.0f, emissiveIntensity);
+    } else if (hasEmissiveColor && hasVisibleColor(emissiveColor)) {
+        object.material.emissiveIntensity = 1.0f;
+    }
+
+    float bumpScaling = 1.0f;
+    if (material->Get(AI_MATKEY_BUMPSCALING, bumpScaling) == AI_SUCCESS) {
+        object.material.normalMapStrength = std::max(0.0f, bumpScaling);
+    }
+
+    float reflectivity = 0.0f;
+    if (material->Get(AI_MATKEY_REFLECTIVITY, reflectivity) == AI_SUCCESS) {
+        object.material.reflectivity = saturate(reflectivity);
+    } else {
+        aiColor3D specularColor(0.0f, 0.0f, 0.0f);
+        if (material->Get(AI_MATKEY_COLOR_SPECULAR, specularColor) ==
+            AI_SUCCESS) {
+            object.material.reflectivity =
+                saturate(luminance(specularColor));
+        }
+    }
 }
 } // namespace
 
@@ -237,6 +343,7 @@ Model::processMesh(aiMesh *mesh, const aiScene *scene,
     std::vector<Texture> textures;
     if (mesh->mMaterialIndex >= 0) {
         aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
+        importMaterialProperties(material, object);
 
         auto diffuseMaps =
             loadMaterialTextures(material, std::any(aiTextureType_DIFFUSE),
@@ -306,6 +413,12 @@ Model::processMesh(aiMesh *mesh, const aiScene *scene,
                           lightmapMaps.end());
         }
         textures.insert(textures.end(), aoMaps.begin(), aoMaps.end());
+
+        auto opacityMaps = loadMaterialTextures(
+            material, std::any(aiTextureType_OPACITY), "texture_opacity",
+            textureCache);
+        textures.insert(textures.end(), opacityMaps.begin(),
+                        opacityMaps.end());
     }
 
     if (!textures.empty()) {
@@ -372,6 +485,8 @@ std::vector<Texture> Model::loadMaterialTextures(
             texType = TextureType::Roughness;
         } else if (typeName == "texture_ao") {
             texType = TextureType::AO;
+        } else if (typeName == "texture_opacity") {
+            texType = TextureType::Opacity;
         }
 
         try {

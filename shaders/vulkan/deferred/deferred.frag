@@ -42,6 +42,7 @@ layout(push_constant) uniform MaterialPush {
     float metallic;
     float roughness;
     float ao;
+    float reflectivity;
 } material;
 
 vec2 texCoord;
@@ -147,7 +148,7 @@ void main() {
     vec4 baseColor = vec4(material.albedo, 1.0);
     vec4 albedoTex = enableTextures(TEXTURE_COLOR);
     if (albedoTex != vec4(-1.0)) {
-        baseColor = albedoTex;
+        baseColor *= albedoTex;
     }
 
 

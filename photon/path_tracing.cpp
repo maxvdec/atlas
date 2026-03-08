@@ -23,8 +23,8 @@
 
 namespace {
 constexpr int kPathTracerMaterialTextureUnitStart = 12;
-constexpr int kPathTracerMaxMaterialTextures = 24;
-constexpr int kPathTracerSkyboxTextureUnit = 36;
+constexpr int kPathTracerMaxMaterialTextures = 48;
+constexpr int kPathTracerSkyboxTextureUnit = 60;
 
 std::shared_ptr<opal::Texture> createFallbackSkyboxTexture() {
     constexpr unsigned char horizon[4] = {170, 195, 225, 255};
@@ -203,7 +203,8 @@ void photon::PathTracing::buildAccelerationStructure(
         int metallicTextureIndex;
         int roughnessTextureIndex;
         int aoTextureIndex;
-        int _pad1[3];
+        int opacityTextureIndex;
+        int _pad1[2];
     };
 
     static_assert(sizeof(MaterialData) == 80);
@@ -366,9 +367,11 @@ void photon::PathTracing::buildAccelerationStructure(
             data.aoTextureIndex = findTextureSlotForType(
                 object->textures, TextureType::AO, materialTextures,
                 textureSlots);
+            data.opacityTextureIndex = findTextureSlotForType(
+                object->textures, TextureType::Opacity, materialTextures,
+                textureSlots);
             data._pad1[0] = useNormalMap ? 1 : 0;
             data._pad1[1] = 0;
-            data._pad1[2] = 0;
             materialData.push_back(data);
 
             MeshData mdata;
@@ -635,12 +638,16 @@ void photon::PathTracing::render(
     glm::vec3 directionalLightDirection(0.0f, -1.0f, 0.0f);
     glm::vec3 directionalLightColor(1.0f, 1.0f, 1.0f);
     float directionalLightIntensity = 0.0f;
+    float ambientIntensity = 0.0f;
 
     Scene *scene = (Window::mainWindow != nullptr)
                        ? Window::mainWindow->getCurrentScene()
                        : nullptr;
 
     if (scene != nullptr) {
+        ambientIntensity = scene->isAutomaticAmbientEnabled()
+                               ? scene->getAutomaticAmbientIntensity()
+                               : scene->getAmbientIntensity();
         const auto &directionalLights = scene->getDirectionalLights();
         for (auto *light : directionalLights) {
             if (light == nullptr) {
@@ -698,6 +705,8 @@ void photon::PathTracing::render(
         directionalLightColor.z);
     pathTracingPipeline->setUniform1f("dirLight.intensity",
                                       directionalLightIntensity);
+    pathTracingPipeline->setUniform1f("sceneData.ambientIntensity",
+                                      ambientIntensity);
     pathTracingPipeline->setUniform1i("sceneData.numPointLights",
                                       pointLightCount);
     pathTracingPipeline->setUniform1i("sceneData.numSpotLights",

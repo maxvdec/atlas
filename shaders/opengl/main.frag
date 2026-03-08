@@ -680,7 +680,7 @@ void main() {
     vec3 albedo = material.albedo;
     vec4 albedoTex = enableTextures(TEXTURE_COLOR);
     if (albedoTex != vec4(-1.0)) {
-        albedo = albedoTex.rgb;
+        albedo *= albedoTex.rgb;
     }
 
     float metallic = material.metallic;

@@ -127,7 +127,8 @@ enum class TextureType : int {
     Metallic = 9,
     Roughness = 10,
     AO = 11,
-    HDR = 12
+    Opacity = 12,
+    HDR = 13
 };
 
 /**

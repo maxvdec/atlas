@@ -1014,7 +1014,7 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Uniforms& _163 [[buf
     float4 albedoTex = enableTextures(param_3, _163, texture1, texture1Smplr, texCoord, texture2, texture2Smplr, texture3, texture3Smplr, texture4, texture4Smplr, texture5, texture5Smplr, texture6, texture6Smplr, texture7, texture7Smplr, texture8, texture8Smplr, texture9, texture9Smplr, texture10, texture10Smplr);
     if (any(albedoTex != float4(-1.0)))
     {
-        albedo = albedoTex.xyz;
+        albedo *= albedoTex.xyz;
     }
     float metallic = material.metallic;
     int param_4 = 9;
