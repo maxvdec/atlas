@@ -1,8 +1,12 @@
 use crate::Commands;
 use colored::Colorize;
+use dialoguer::{theme::ColorfulTheme, Confirm, Input, Select};
+use indicatif::{ProgressBar, ProgressStyle};
 use reqwest::blocking::Client;
 use serde::Deserialize;
-use std::{fs, io::Write, path::Path};
+use std::fs;
+use std::io::Write;
+use std::path::{Path, PathBuf};
 
 #[derive(Deserialize)]
 struct RemoteFile {
@@ -13,17 +17,40 @@ struct RemoteFile {
     download_url: Option<String>,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 struct ReleaseAsset {
     name: String,
     #[serde(rename = "browser_download_url")]
     download_url: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Clone)]
 struct Release {
     tag_name: String,
     assets: Vec<ReleaseAsset>,
+}
+
+#[derive(Clone)]
+struct AtlasBinarySet {
+    metal: ReleaseAsset,
+    opengl: ReleaseAsset,
+    vulkan: ReleaseAsset,
+}
+
+fn normalize_backend(input: &str) -> Option<String> {
+    let normalized = input.trim().to_uppercase();
+    match normalized.as_str() {
+        "METAL" | "OPENGL" | "VULKAN" => Some(normalized),
+        _ => None,
+    }
+}
+
+fn normalize_platform(input: &str) -> Option<String> {
+    let normalized = input.trim().to_lowercase();
+    match normalized.as_str() {
+        "macos" | "windows" | "linux" => Some(normalized),
+        _ => None,
+    }
 }
 
 fn fetch_folder(
@@ -38,7 +65,7 @@ fn fetch_folder(
     let client = Client::new();
     let files: Vec<RemoteFile> = client
         .get(&url)
-        .header("User-Agent", "rust-client")
+        .header("User-Agent", "atlas-cli")
         .send()?
         .json()?;
 
@@ -51,17 +78,11 @@ fn fetch_folder(
             if let Some(download_url) = file.download_url {
                 let response = client
                     .get(download_url)
-                    .header("User-Agent", "rust-client")
+                    .header("User-Agent", "atlas-cli")
                     .send()?;
                 let mut dest = fs::File::create(outdir.join(&file.name))?;
                 let bytes = response.bytes()?;
                 dest.write_all(&bytes)?;
-                println!(
-                    "{}",
-                    format!("{}{}", "Downloaded file: ", file.name)
-                        .italic()
-                        .yellow()
-                );
                 downloaded_files += 1;
             }
         } else if file.file_type == "dir" {
@@ -85,54 +106,94 @@ fn fetch_releases(owner: &str, repo: &str) -> Result<Vec<Release>, Box<dyn std::
     let client = Client::new();
     let releases: Vec<Release> = client
         .get(&url)
-        .header("User-Agent", "rust-client")
+        .header("User-Agent", "atlas-cli")
         .send()?
         .json()?;
     Ok(releases)
 }
 
-fn fetch_latest_release(owner: &str, repo: &str) -> Result<Release, Box<dyn std::error::Error>> {
-    let releases = fetch_releases(owner, repo)?;
-    releases
-        .into_iter()
-        .max_by(|a, b| a.tag_name.cmp(&b.tag_name))
-        .ok_or_else(|| "No releases found".into())
+fn pick_release(
+    requested_version: &str,
+    releases: &[Release],
+) -> Result<Release, Box<dyn std::error::Error>> {
+    if releases.is_empty() {
+        return Err("No releases found".into());
+    }
+
+    if requested_version != "latest" {
+        if let Some(found) = releases
+            .iter()
+            .find(|release| release.tag_name == requested_version)
+        {
+            return Ok(found.clone());
+        }
+        return Err(format!("Release '{requested_version}' not found").into());
+    }
+
+    let theme = ColorfulTheme::default();
+    let mut sorted = releases.to_vec();
+    sorted.sort_by(|a, b| b.tag_name.cmp(&a.tag_name));
+
+    let mut items = Vec::with_capacity(sorted.len());
+    for (idx, release) in sorted.iter().enumerate() {
+        if idx == 0 {
+            items.push(format!("{} (latest)", release.tag_name));
+        } else {
+            items.push(release.tag_name.clone());
+        }
+    }
+
+    let selection = Select::with_theme(&theme)
+        .with_prompt("Choose Atlas release")
+        .items(&items)
+        .default(0)
+        .interact()?;
+
+    Ok(sorted[selection].clone())
 }
 
-fn fetch_all_assets(
-    owner: &str,
-    repo: &str,
-    outdir: &Path,
-) -> Result<(), Box<dyn std::error::Error>> {
-    let release = fetch_latest_release(owner, repo)?;
-    let client = Client::new();
+fn find_macos_assets(release: &Release) -> Result<AtlasBinarySet, Box<dyn std::error::Error>> {
+    let mut metal: Option<ReleaseAsset> = None;
+    let mut opengl: Option<ReleaseAsset> = None;
+    let mut vulkan: Option<ReleaseAsset> = None;
 
-    fs::create_dir_all(outdir)?;
-
-    for asset in release.assets.iter() {
-        let response = client
-            .get(&asset.download_url)
-            .header("User-Agent", "rust-client")
-            .send()?;
-        if !asset.name.ends_with(".a") {
-            continue;
+    for asset in &release.assets {
+        if asset.name == "macOS-atlas-metal.a" {
+            metal = Some(asset.clone());
+        } else if asset.name == "macOS-atlas-opengl.a" {
+            opengl = Some(asset.clone());
+        } else if asset.name == "macOS-atlas-vulkan.a" {
+            vulkan = Some(asset.clone());
         }
-        let mut dest = fs::File::create(outdir.join(&asset.name))?;
-        let bytes = response.bytes()?;
-        dest.write_all(&bytes)?;
-        println!(
-            "{}",
-            format!("{}{}", "Downloaded asset: ", asset.name)
-                .italic()
-                .yellow()
-        );
     }
-    clear_previous_lines(release.assets.len() as usize);
+
+    match (metal, opengl, vulkan) {
+        (Some(metal), Some(opengl), Some(vulkan)) => Ok(AtlasBinarySet {
+            metal,
+            opengl,
+            vulkan,
+        }),
+        _ => Err(format!(
+            "Release '{}' does not contain all required macOS assets",
+            release.tag_name
+        )
+        .into()),
+    }
+}
+
+fn download_asset(asset: &ReleaseAsset, out_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new();
+    let response = client
+        .get(&asset.download_url)
+        .header("User-Agent", "atlas-cli")
+        .send()?;
+    let mut dest = fs::File::create(out_path)?;
+    let bytes = response.bytes()?;
+    dest.write_all(&bytes)?;
     Ok(())
 }
 
-const TEMPLATE_MAIN: &str = r#"
-#include <atlas/window.h>
+const TEMPLATE_MAIN: &str = r#"#include <atlas/window.h>
 #include <atlas/scene.h>
 #include <atlas/object.h>
 
@@ -141,9 +202,6 @@ public:
     CoreObject cube;
     Camera camera;
 
-    /// Get Started with Atlas by modifying this file.
-    /// This example creates a window with a camera and a cube in the center.
-    /// You can modify this file to create your own application.
     void initialize(Window& window) override {
         camera = Camera();
         window.setCamera(&camera);
@@ -153,7 +211,6 @@ public:
 
         this->setAmbientIntensity(0.2f);
     }
-
 };
 
 int main() {
@@ -165,131 +222,111 @@ int main() {
 }
 "#;
 
-const TEMPLATE_CMAKE: &str = r#"
-# Default CMake configuration for Atlas projects. Modify as needed.
-# This CMakeLists.txt is generated by the Atlas CLI tool and serves as a starting point for your project.
-cmake_minimum_required(VERSION 3.15)
+const TEMPLATE_CMAKE: &str = r###"cmake_minimum_required(VERSION 3.18)
+project(##PROJECTNAME## LANGUAGES CXX)
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-
-project(##PROJECTNAME##)
-include(FetchContent)
-
-message(STATUS "Using Compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
-
-set(JOLT_VERSION "5.5.0")
-set(BEZEL_NATIVE OFF)
-set(BACKEND_OPENGL OFF)
-set(BACKEND_VULKAN OFF)
-set(BACKEND_METAL ON)
-
-# Find packages
-
-find_package(OpenGL REQUIRED)
-find_package(glfw3 REQUIRED)
-find_package(glm REQUIRED)
-find_package(Assimp REQUIRED)
-find_package(Freetype REQUIRED)
-
-if(APPLE)
-    set(OPENAL_LIB /opt/homebrew/opt/openal-soft/lib/libopenal.dylib)
-    set(OPENAL_INCLUDE /opt/homebrew/opt/openal-soft/include)
-else()
-    find_package(OpenAL REQUIRED)
-    set(OPENAL_LIB ${OPENAL_LIBRARY}
-        OPENAL_INCLUDE ${OPENAL_INCLUDE_DIR})
-endif()
-
-if(BEZEL_NATIVE)
-else()
-    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION OFF)
-    set(JPH_DEBUG_RENDERER ON CACHE BOOL "" FORCE)
-    set(JPH_PROFILE_ENABLED ON CACHE BOOL "" FORCE)
-    set(JPH_OBJECT_STREAM ON CACHE BOOL "" FORCE)
-    FetchContent_Declare(
-    JoltPhysics
-    GIT_REPOSITORY https://github.com/jrouwe/JoltPhysics.git
-    GIT_TAG v${JOLT_VERSION}
-    GIT_SHALLOW TRUE
-    SOURCE_SUBDIR Build
-)
-    FetchContent_MakeAvailable(JoltPhysics)
-    if(TARGET Jolt)
-        target_compile_definitions(Jolt PRIVATE JPH_PROFILE_ENABLED=1)
-    endif()
-    message(STATUS "Downloaded Jolt Physics, version ${JOLT_VERSION}")
-endif()
-
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-file(GLOB_RECURSE SOURCE_FILES ##PROJECTNAME##/*.cpp)
 
+set(ATLAS_BACKEND "##BACKEND##" CACHE STRING "Atlas backend: METAL, OPENGL, VULKAN")
+set_property(CACHE ATLAS_BACKEND PROPERTY STRINGS METAL OPENGL VULKAN)
+string(TOUPPER "${ATLAS_BACKEND}" ATLAS_BACKEND)
+
+if(NOT EXISTS "${CMAKE_SOURCE_DIR}/lib/macOS-atlas-metal.a")
+    message(FATAL_ERROR "Missing ${CMAKE_SOURCE_DIR}/lib/macOS-atlas-metal.a")
+endif()
+if(NOT EXISTS "${CMAKE_SOURCE_DIR}/lib/macOS-atlas-opengl.a")
+    message(FATAL_ERROR "Missing ${CMAKE_SOURCE_DIR}/lib/macOS-atlas-opengl.a")
+endif()
+if(NOT EXISTS "${CMAKE_SOURCE_DIR}/lib/macOS-atlas-vulkan.a")
+    message(FATAL_ERROR "Missing ${CMAKE_SOURCE_DIR}/lib/macOS-atlas-vulkan.a")
+endif()
+
+if(ATLAS_BACKEND STREQUAL "METAL")
+    set(ATLAS_BINARY "${CMAKE_SOURCE_DIR}/lib/macOS-atlas-metal.a")
+elseif(ATLAS_BACKEND STREQUAL "OPENGL")
+    set(ATLAS_BINARY "${CMAKE_SOURCE_DIR}/lib/macOS-atlas-opengl.a")
+elseif(ATLAS_BACKEND STREQUAL "VULKAN")
+    set(ATLAS_BINARY "${CMAKE_SOURCE_DIR}/lib/macOS-atlas-vulkan.a")
+else()
+    message(FATAL_ERROR "Unsupported ATLAS_BACKEND='${ATLAS_BACKEND}'")
+endif()
+
+file(GLOB_RECURSE SOURCE_FILES ##PROJECTNAME##/*.cpp)
 add_executable(##PROJECTNAMELC## ${SOURCE_FILES})
+
 target_include_directories(##PROJECTNAMELC## PRIVATE include lib/include)
 
-link_directories(${CMAKE_SOURCE_DIR}/lib)
+add_library(atlasbundle STATIC IMPORTED GLOBAL)
+set_target_properties(atlasbundle PROPERTIES IMPORTED_LOCATION "${ATLAS_BINARY}")
 
-add_library(atlas STATIC IMPORTED)
-set_target_properties(atlas PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/lib/libatlas.a)
+target_link_libraries(##PROJECTNAMELC## PRIVATE atlasbundle)
 
-add_library(bezel STATIC IMPORTED)
-set_target_properties(bezel PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/lib/libbezel.a)
-
-add_library(finewave STATIC IMPORTED)
-set_target_properties(finewave PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/lib/libfinewave.a)
-
-add_library(aurora STATIC IMPORTED)
-set_target_properties(aurora PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/lib/libaurora.a)
-
-add_library(hydra STATIC IMPORTED)
-set_target_properties(hydra PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/lib/libhydra.a)
-
-add_library(opal STATIC IMPORTED)
-set_target_properties(opal PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/lib/libopal.a)
-
-add_library(JoltAtlas STATIC IMPORTED)
-set_target_properties(JoltAtlas PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/lib/libJolt.a)
-
-get_filename_component(ASSETS_ABS "${CMAKE_CURRENT_SOURCE_DIR}" ABSOLUTE)
-target_compile_definitions(##PROJECTNAMELC## PRIVATE MAIN_PATH="${ASSETS_ABS}")
-
-target_link_libraries(##PROJECTNAMELC## PRIVATE atlas bezel OpenGL::GL glfw glm::glm finewave aurora hydra ${OPENAL_LIB} JoltAtlas assimp::assimp opal Freetype::Freetype)
-
-if(BEZEL_NATIVE)
-else()
-    include_directories(${joltphysics_SOURCE_DIR})
-    target_compile_definitions(##PROJECTNAMELC## PRIVATE
-    JPH_PROFILE_ENABLED=1
-    JPH_DEBUG_RENDERER=1
-    JPH_OBJECT_STREAM=1
-)
+if(APPLE)
+    if(ATLAS_BACKEND STREQUAL "METAL")
+        target_link_libraries(##PROJECTNAMELC## PRIVATE
+            "-framework Metal"
+            "-framework MetalKit"
+            "-framework MetalFX"
+            "-framework Cocoa"
+            "-framework IOKit"
+            "-framework QuartzCore")
+    elseif(ATLAS_BACKEND STREQUAL "OPENGL")
+        target_link_libraries(##PROJECTNAMELC## PRIVATE
+            "-framework OpenGL"
+            "-framework Cocoa"
+            "-framework IOKit")
+    elseif(ATLAS_BACKEND STREQUAL "VULKAN")
+        target_link_libraries(##PROJECTNAMELC## PRIVATE
+            "-framework Cocoa"
+            "-framework IOKit"
+            "-framework QuartzCore")
+    endif()
 endif()
+"###;
 
-if(BACKEND_OPENGL)
-    target_link_libraries(##PROJECTNAMELC## PRIVATE "-framework OpenGL" "-framework Cocoa" "-framework IOKit")
-elseif(BACKEND_VULKAN)
-    target_link_libraries(##PROJECTNAMELC## PRIVATE "-framework Cocoa" "-framework IOKit" "-framework QuartzCore")
-elseif(BACKEND_METAL)
-    target_link_libraries(##PROJECTNAMELC## PRIVATE "-framework Metal" "-framework MetalKit" "-framework Cocoa" "-framework IOKit" "-framework QuartzCore")
-endif()
-
-"#;
-
-const TEMPLATE_CONFIG: &str = r#"
-[project]
+const TEMPLATE_CONFIG: &str = r#"[project]
 name = "((PROJECTNAME))"
 app_name = "((PROJECTNAME))"
+backend = "((BACKEND))"
+platform = "((PLATFORM))"
+atlas_version = "((ATLAS_VERSION))"
 
 [pack]
 icon = "none"
 supported_platforms = "all"
 "#;
 
-fn clear_previous_lines(n: usize) {
-    for _ in 0..n {
-        print!("\x1B[1A");
-        print!("\x1B[2K");
+fn create_or_open_branch(repo_path: &Path) {
+    let git_dir = repo_path.join(".git");
+    if !git_dir.exists() {
+        return;
     }
-    std::io::stdout().flush().unwrap();
+
+    let theme = ColorfulTheme::default();
+    let should_branch = Confirm::with_theme(&theme)
+        .with_prompt("Create or switch to a new git branch?")
+        .default(false)
+        .interact()
+        .unwrap_or(false);
+
+    if !should_branch {
+        return;
+    }
+
+    let branch_name: String = Input::with_theme(&theme)
+        .with_prompt("Branch name")
+        .with_initial_text("feature/atlas-setup")
+        .interact_text()
+        .unwrap_or_else(|_| String::from("feature/atlas-setup"));
+
+    let _ = std::process::Command::new("git")
+        .current_dir(repo_path)
+        .arg("checkout")
+        .arg("-b")
+        .arg(&branch_name)
+        .status();
 }
 
 pub fn create(cmd: Commands) {
@@ -298,92 +335,189 @@ pub fn create(cmd: Commands) {
         path,
         version,
         branch,
+        backend,
+        platform,
     } = cmd
     {
-        if version != "latest" {
-            eprintln!("Only 'latest' version is supported at the moment.");
+        let releases = match fetch_releases("maxvdec", "atlas") {
+            Ok(r) => r,
+            Err(e) => {
+                eprintln!("{} {e}", "Failed to fetch releases:".red().bold());
+                return;
+            }
+        };
+
+        let release = match pick_release(&version, &releases) {
+            Ok(r) => r,
+            Err(e) => {
+                eprintln!("{} {e}", "Failed to choose release:".red().bold());
+                return;
+            }
+        };
+
+        let assets = match find_macos_assets(&release) {
+            Ok(a) => a,
+            Err(e) => {
+                eprintln!("{} {e}", "Invalid release assets:".red().bold());
+                return;
+            }
+        };
+
+        let theme = ColorfulTheme::default();
+        let selected_platform = match platform.and_then(|p| normalize_platform(&p)) {
+            Some(p) => p,
+            None => {
+                let options = ["macOS", "Windows", "Linux"];
+                let idx = Select::with_theme(&theme)
+                    .with_prompt("Target platform")
+                    .items(&options)
+                    .default(0)
+                    .interact()
+                    .unwrap_or(0);
+                options[idx].to_lowercase()
+            }
+        };
+
+        let selected_backend = match backend.and_then(|b| normalize_backend(&b)) {
+            Some(b) => b,
+            None => {
+                let options = ["METAL", "OPENGL", "VULKAN"];
+                let default_idx = if selected_platform == "macos" { 0 } else { 2 };
+                let idx = Select::with_theme(&theme)
+                    .with_prompt("Rendering backend")
+                    .items(&options)
+                    .default(default_idx)
+                    .interact()
+                    .unwrap_or(default_idx);
+                options[idx].to_string()
+            }
+        };
+
+        let project_path = path.unwrap_or_else(|| name.clone());
+        if Path::new(&project_path).exists() {
+            eprintln!(
+                "{} {}",
+                "Target path already exists:".red().bold(),
+                project_path
+            );
             return;
         }
-        let project_path = path.unwrap_or_else(|| name.clone());
-        std::fs::create_dir_all(project_path.clone()).unwrap();
 
-        // Create the main directory
-        std::fs::create_dir(project_path.clone() + "/" + &name).unwrap();
-        match std::fs::File::create(project_path.clone() + "/" + &name + "/main.cpp")
-            .unwrap()
-            .write_all(TEMPLATE_MAIN.as_bytes())
+        if fs::create_dir_all(&project_path).is_err() {
+            eprintln!("{}", "Could not create project directory".red().bold());
+            return;
+        }
+
+        let project_root = PathBuf::from(&project_path);
+        if fs::create_dir(project_root.join(&name)).is_err() {
+            eprintln!("{}", "Could not create source directory".red().bold());
+            return;
+        }
+        if fs::create_dir(project_root.join("assets")).is_err() {
+            eprintln!("{}", "Could not create assets directory".red().bold());
+            return;
+        }
+        if fs::create_dir_all(project_root.join("lib/include")).is_err() {
+            eprintln!("{}", "Could not create include directory".red().bold());
+            return;
+        }
+        if fs::create_dir(project_root.join("include")).is_err() {
+            eprintln!(
+                "{}",
+                "Could not create local include directory".red().bold()
+            );
+            return;
+        }
+
+        let main_path = project_root.join(&name).join("main.cpp");
+        if fs::File::create(&main_path)
+            .and_then(|mut f| f.write_all(TEMPLATE_MAIN.as_bytes()))
+            .is_err()
         {
-            Ok(_) => println!("{}", "Created main.cpp".italic().cyan()),
-            Err(e) => eprintln!("Error creating main.cpp: {e}"),
+            eprintln!("{}", "Could not write main.cpp".red().bold());
+            return;
         }
 
-        // Create the assets directory
-        std::fs::create_dir(project_path.clone() + "/assets").unwrap();
-
-        // Create the include directory
-        std::fs::create_dir_all(project_path.clone() + "/lib/include").unwrap();
-        std::fs::create_dir(project_path.clone() + "/include").unwrap();
-
-        // Obtain the include files from the GitHub repository
-        let outdir = Path::new(&project_path).join("lib/include");
-        let mut pull_branch = "stable";
-        if version == "dev" {
-            pull_branch = "main";
+        let spinner = ProgressBar::new_spinner();
+        if let Ok(style) = ProgressStyle::with_template("{spinner} {msg}") {
+            spinner.set_style(style);
         }
-        if let Some(ref branch_name) = branch {
-            pull_branch = branch_name;
-        }
-        match fetch_folder("maxvdec", "atlas", "include", &outdir, pull_branch, &[]) {
-            Ok(downloaded_files) => {
-                clear_previous_lines(downloaded_files as usize);
-                println!("{}", "Successfully fetched include files.".italic().cyan())
-            }
-            Err(e) => eprintln!("Error fetching include files: {e}"),
-        }
+        spinner.enable_steady_tick(std::time::Duration::from_millis(80));
 
-        match fetch_folder(
+        let pull_branch = branch.unwrap_or_else(|| String::from("stable"));
+        spinner.set_message("Downloading Atlas headers");
+        let outdir = project_root.join("lib/include");
+        if fetch_folder("maxvdec", "atlas", "include", &outdir, &pull_branch, &[]).is_err() {
+            spinner.finish_and_clear();
+            eprintln!("{}", "Failed to download include files".red().bold());
+            return;
+        }
+        if fetch_folder(
             "maxvdec",
             "atlas",
             "extern",
             &outdir,
-            pull_branch,
+            &pull_branch,
             &["freetype"],
-        ) {
-            Ok(downloaded_files) => {
-                clear_previous_lines(downloaded_files as usize);
-                println!(
-                    "{}",
-                    "Successfully fetched extern include files.".italic().cyan()
-                )
-            }
-            Err(e) => eprintln!("Error fetching extern files: {e}"),
+        )
+        .is_err()
+        {
+            spinner.finish_and_clear();
+            eprintln!("{}", "Failed to download extern headers".red().bold());
+            return;
         }
 
-        fetch_all_assets(
-            "maxvdec",
-            "atlas",
-            Path::new(&project_path).join("lib").as_path(),
-        )
-        .unwrap();
-        println!("{}", "Successfully fetched library files.".italic().cyan());
+        spinner.set_message("Downloading macOS backend binaries");
+        let lib_dir = project_root.join("lib");
+        if download_asset(&assets.metal, &lib_dir.join("macOS-atlas-metal.a")).is_err()
+            || download_asset(&assets.opengl, &lib_dir.join("macOS-atlas-opengl.a")).is_err()
+            || download_asset(&assets.vulkan, &lib_dir.join("macOS-atlas-vulkan.a")).is_err()
+        {
+            spinner.finish_and_clear();
+            eprintln!("{}", "Failed to download release libraries".red().bold());
+            return;
+        }
+        spinner.finish_and_clear();
 
         let cmake_content = TEMPLATE_CMAKE
             .replace("##PROJECTNAME##", &name)
-            .replace("##PROJECTNAMELC##", &name.to_lowercase());
-        std::fs::File::create(project_path.clone() + "/CMakeLists.txt")
-            .unwrap()
-            .write_all(cmake_content.as_bytes())
-            .unwrap();
-        println!("{}", "Created CMakeLists.txt".italic().cyan());
+            .replace("##PROJECTNAMELC##", &name.to_lowercase())
+            .replace("##BACKEND##", &selected_backend);
+        if fs::File::create(project_root.join("CMakeLists.txt"))
+            .and_then(|mut f| f.write_all(cmake_content.as_bytes()))
+            .is_err()
+        {
+            eprintln!("{}", "Could not write CMakeLists.txt".red().bold());
+            return;
+        }
+
+        let atlas_toml = TEMPLATE_CONFIG
+            .replace("((PROJECTNAME))", &name)
+            .replace("((BACKEND))", &selected_backend)
+            .replace("((PLATFORM))", &selected_platform)
+            .replace("((ATLAS_VERSION))", &release.tag_name);
+
+        if fs::File::create(project_root.join("atlas.toml"))
+            .and_then(|mut f| f.write_all(atlas_toml.as_bytes()))
+            .is_err()
+        {
+            eprintln!("{}", "Could not write atlas.toml".red().bold());
+            return;
+        }
+
+        create_or_open_branch(&project_root);
+
+        println!(
+            "{} {}",
+            "Created Atlas project:".green().bold(),
+            name.bold().green()
+        );
+        println!("{} {}", "Release:".cyan(), release.tag_name.bold());
+        println!("{} {}", "Platform:".cyan(), selected_platform.bold());
+        println!("{} {}", "Backend:".cyan(), selected_backend.bold());
         println!(
             "{}",
-            format!("Project '{name}' created successfully!")
-                .bold()
-                .green()
+            "Next: atlas build, atlas run, atlas pack, atlas clangd".yellow()
         );
-        std::fs::File::create(project_path.clone() + "/atlas.toml")
-            .unwrap()
-            .write_all(TEMPLATE_CONFIG.replace("((PROJECTNAME))", &name).as_bytes())
-            .unwrap();
     }
 }

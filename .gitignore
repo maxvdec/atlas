@@ -30,3 +30,4 @@ build.ninja
 Testing
 __pycache__
 build_verify
+dist
