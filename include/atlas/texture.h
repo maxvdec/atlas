@@ -136,8 +136,11 @@ enum class TextureType : int {
  *
  */
 struct CheckerTile {
+    /** @brief First alternating checker color. */
     Color color1;
+    /** @brief Second alternating checker color. */
     Color color2;
+    /** @brief Size of each checker cell in pixels. */
     int checkSize;
 };
 
@@ -283,16 +286,24 @@ struct Texture {
     static Texture createRainStreak(int width, int height,
                                     TextureParameters params = {},
                                     Color borderColor = {0, 0, 0, 0});
-    static Texture create(int width, int height,
-                          opal::TextureFormat format = opal::TextureFormat::Rgba8,
-                          opal::TextureDataFormat dataFormat =
-                              opal::TextureDataFormat::Rgba,
-                          TextureType type = TextureType::Color,
-                          TextureParameters params = {},
-                          Color borderColor = {0, 0, 0, 0});
+    /**
+     * @brief Creates an empty texture with explicit GPU/data formats.
+     */
+    static Texture
+    create(int width, int height,
+           opal::TextureFormat format = opal::TextureFormat::Rgba8,
+           opal::TextureDataFormat dataFormat = opal::TextureDataFormat::Rgba,
+           TextureType type = TextureType::Color, TextureParameters params = {},
+           Color borderColor = {0, 0, 0, 0});
 
+    /**
+     * @brief Creates a screen-aligned preview quad and displays this texture.
+     */
     void display(Window &window, float zindex = 0);
 
+    /**
+     * @brief Optional helper object used when displaying the texture directly.
+     */
     std::shared_ptr<CoreObject> object = nullptr;
 
   private:
@@ -356,8 +367,15 @@ struct Cubemap {
      */
     static Cubemap fromResourceGroup(ResourceGroup &resourceGroup);
 
+    /**
+     * @brief Creates a cubemap where each face is initialized from a solid
+     * color.
+     */
     static Cubemap fromColors(const std::array<Color, 6> &colors, int size);
 
+    /**
+     * @brief Updates the existing cubemap faces with new solid colors.
+     */
     void updateWithColors(const std::array<Color, 6> &colors);
 };
 
@@ -660,9 +678,13 @@ class Skybox : public Renderable {
 };
 
 struct BloomElement {
+    /** @brief Size of this bloom mip level in floating-point units. */
     glm::vec2 size;
+    /** @brief Integer size of this bloom mip level in pixels. */
     glm::ivec2 intSize;
+    /** @brief Backend texture identifier for the mip level. */
     Id textureId;
+    /** @brief Texture object that stores this bloom level. */
     std::shared_ptr<opal::Texture> texture;
 };
 

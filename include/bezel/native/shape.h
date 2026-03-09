@@ -23,12 +23,16 @@
  */
 class Shape {
   public:
+    /** @brief Runtime type tag for concrete shape implementations. */
     enum class ShapeType { Sphere, Box, Convex };
 
+    /** @brief Returns the concrete runtime shape type. */
     virtual ShapeType getType() const = 0;
 
+    /** @brief Returns the local-space center of mass of this shape. */
     virtual glm::vec3 getCenterOfMass() const { return centerOfMass; }
 
+    /** @brief Returns the local-space inertia tensor of this shape. */
     virtual glm::mat3 getInertiaTensor() const = 0;
 
     virtual Bounds getBounds(const glm::vec3 &pos,
@@ -200,8 +204,11 @@ class Convex : public Shape {
  *
  */
 struct Triangle {
+    /** @brief Index of first vertex. */
     int a;
+    /** @brief Index of second vertex. */
     int b;
+    /** @brief Index of third vertex. */
     int c;
 };
 
@@ -210,7 +217,9 @@ struct Triangle {
  *
  */
 struct Edge {
+    /** @brief Index of first vertex. */
     int a;
+    /** @brief Index of second vertex. */
     int b;
 
     inline bool operator==(const Edge &other) const {

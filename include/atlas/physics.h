@@ -142,14 +142,24 @@ struct SweepResult {
  * @brief High-level query operations issued by `Rigidbody`.
  */
 enum class QueryOperation {
+    /** @brief Raycast against all hits from this rigidbody's origin. */
     RaycastAll,
+    /** @brief Raycast returning the closest hit from this rigidbody's origin.
+     */
     Raycast,
+    /** @brief World-space raycast returning the closest hit. */
     RaycastWorld,
+    /** @brief World-space raycast returning all hits. */
     RaycastWorldAll,
+    /** @brief Tagged raycast returning the closest hit. */
     RaycastTagged,
+    /** @brief Tagged raycast returning all hits. */
     RaycastTaggedAll,
+    /** @brief Sweep/predict movement returning closest hit. */
     Movement,
+    /** @brief Overlap query operation. */
     Overlap,
+    /** @brief Sweep/predict movement returning all hits. */
     MovementAll,
 };
 
@@ -231,14 +241,20 @@ class Joint : public Component {
   public:
     virtual ~Joint() = default;
 
+    /** @brief Parent endpoint of the constraint. */
     JointChild parent;
+    /** @brief Child endpoint of the constraint. */
     JointChild child;
 
+    /** @brief Anchor interpretation space (local/global). */
     Space space = Space::Global;
 
+    /** @brief Anchor point used to build the underlying joint. */
     Position3d anchor = Position3d::invalid();
 
+    /** @brief Force threshold above which the joint breaks. */
     float breakForce = 0.0f;
+    /** @brief Torque threshold above which the joint breaks. */
     float breakTorque = 0.0f;
 
     /**
@@ -274,10 +290,14 @@ class HingeJoint final : public Joint {
     std::shared_ptr<bezel::HingeJoint> joint;
 
   public:
+    /** @brief Primary hinge axis. */
     Normal3d axis1 = Normal3d::up();
+    /** @brief Secondary reference axis. */
     Normal3d axis2 = Normal3d::up();
 
+    /** @brief Optional angular limits for hinge rotation. */
     AngleLimits limits;
+    /** @brief Optional motor settings for hinge actuation. */
     Motor motor;
 
     /** @brief Synchronizes/creates the native hinge joint. */
@@ -294,14 +314,20 @@ class SpringJoint final : public Joint {
     std::shared_ptr<bezel::SpringJoint> joint;
 
   public:
+    /** @brief Optional secondary anchor on the child body. */
     Position3d anchorB = Position3d::invalid();
 
+    /** @brief Rest length used when spring mode is active. */
     float restLength = 1.0f;
 
+    /** @brief Enables min/max distance clamping when true. */
     bool useLimits = false;
+    /** @brief Minimum allowed spring length. */
     float minLength = 0.0f;
+    /** @brief Maximum allowed spring length. */
     float maxLength = 0.0f;
 
+    /** @brief Spring tuning parameters. */
     Spring spring;
 
     /** @brief Synchronizes/creates the native spring joint. */
@@ -320,11 +346,16 @@ class Vehicle final : public Component {
     bezel::PhysicsWorld *boundWorld = nullptr;
 
   public:
+    /** @brief Vehicle setup forwarded to Bezel. */
     bezel::VehicleSettings settings;
 
-    float forward = 0.0f;   // [-1, 1]
-    float right = 0.0f;     // [-1, 1]
-    float brake = 0.0f;     // [0, 1]
+    /** @brief Forward input axis in [-1, 1]. */
+    float forward = 0.0f; // [-1, 1]
+    /** @brief Steering input axis in [-1, 1]. */
+    float right = 0.0f; // [-1, 1]
+    /** @brief Brake input in [0, 1]. */
+    float brake = 0.0f; // [0, 1]
+    /** @brief Handbrake input in [0, 1]. */
     float handBrake = 0.0f; // [0, 1]
 
     /** @brief Creates the vehicle constraint when attached. */
@@ -388,22 +419,33 @@ class Rigidbody : public Component {
     /** @brief Adds to the rigidbody's angular velocity. */
     void addAngularVelocity(const Position3d &velocity);
 
+    /** @brief Sets the maximum linear speed clamp. */
     void setMaxLinearVelocity(float maxLinearVelocity);
+    /** @brief Sets the maximum angular speed clamp. */
     void setMaxAngularVelocity(float maxAngularVelocity);
 
+    /** @brief Returns current world-space linear velocity. */
     Velocity3d getLinearVelocity();
+    /** @brief Returns current world-space angular velocity. */
     Velocity3d getAngularVelocity();
+    /** @brief Returns current speed vector (backend-dependent semantic). */
     Velocity3d getVelocity();
 
+    /** @brief Queues a closest-hit raycast from this body's position. */
     void raycast(const Position3d &direction, float maxDistance = 1000.0f);
+    /** @brief Queues an all-hit raycast from this body's position. */
     void raycastAll(const Position3d &direction, float maxDistance = 100.0f);
+    /** @brief Queues a closest-hit world-space raycast. */
     void raycastWorld(const Position3d &origin, const Position3d &direction,
                       float maxDistance = 1000.0f);
+    /** @brief Queues an all-hit world-space raycast. */
     void raycastWorldAll(const Position3d &origin, const Position3d &direction,
                          float maxDistance = 1000.0f);
+    /** @brief Queues a closest-hit raycast filtered by tags. */
     void raycastTagged(const std::vector<std::string> &tags,
                        const Position3d &direction,
                        float maxDistance = 1000.0f);
+    /** @brief Queues an all-hit raycast filtered by tags. */
     void raycastTaggedAll(const std::vector<std::string> &tags,
                           const Position3d &direction,
                           float maxDistance = 1000.0f);

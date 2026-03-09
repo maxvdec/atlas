@@ -192,9 +192,13 @@ class AudioPlayer : public Component {
      * audio playback.
      *
      */
+    /**
+     * @brief Owned audio source used for playback and spatial updates.
+     */
     std::unique_ptr<AudioSource> source;
 
   private:
+    /** @brief Tracks whether `source` has already been created. */
     bool sourceInitialized{};
 
     void ensureSourceInitialized() {

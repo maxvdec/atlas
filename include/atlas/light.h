@@ -237,6 +237,9 @@ struct Light {
      *
      */
     Color shineColor = Color::white();
+    /**
+     * @brief Overall brightness multiplier applied to this light.
+     */
     float intensity = 1.0f;
 
     /**
@@ -248,12 +251,11 @@ struct Light {
      * @param shineColor The color that the light will use for specular
      * highlights.
      */
-    Light(const Position3d& pos = {0.0f, 0.0f, 0.0f},
-          const Color& color = Color::white(), float distance = 50.f,
-          const Color& shineColor = Color::white(), float intensity = 1.0f)
+    Light(const Position3d &pos = {0.0f, 0.0f, 0.0f},
+          const Color &color = Color::white(), float distance = 50.f,
+          const Color &shineColor = Color::white(), float intensity = 1.0f)
         : position(pos), color(color), shineColor(shineColor),
-          intensity(intensity), distance(distance) {
-    }
+          intensity(intensity), distance(distance) {}
 
     /**
      * @brief Function that sets the color of the light.
@@ -273,7 +275,7 @@ struct Light {
      *
      * @param window The window in which to add the debug object.
      */
-    void addDebugObject(Window& window);
+    void addDebugObject(Window &window);
 
     /**
      * @brief The debug object that visualizes the light in the scene.
@@ -300,16 +302,19 @@ struct Light {
      * @param window The window in which to cast shadows.
      * @param resolution The resolution from which to build the shadow map.
      */
-    void castShadows(Window& window, int resolution = 2048);
+    void castShadows(Window &window, int resolution = 2048);
 
     /**
      * @brief The render target that holds the shadow map.
      *
      */
-    RenderTarget* shadowRenderTarget = nullptr;
+    RenderTarget *shadowRenderTarget = nullptr;
+    /**
+     * @brief Cached shadow matrices and bias used for the current shadow map.
+     */
     ShadowParams lastShadowParams;
 
-private:
+  private:
     bool doesCastShadows = false;
 
     std::vector<glm::mat4> calculateShadowTransforms() const;
@@ -336,7 +341,7 @@ private:
  *
  */
 class DirectionalLight {
-public:
+  public:
     /**
      * @brief The direction in which the light is pointing. This should be a
      * normalized vector.
@@ -354,6 +359,9 @@ public:
      *
      */
     Color shineColor = Color::white();
+    /**
+     * @brief Overall brightness multiplier applied to this directional light.
+     */
     float intensity = 1.0f;
 
     /**
@@ -364,13 +372,12 @@ public:
      * @param shineColor The color that the light will use for specular
      * highlights.
      */
-    DirectionalLight(const Magnitude3d& dir = {0.0f, -1.0f, 0.0f},
-                     const Color& color = Color::white(),
-                     const Color& shineColor = Color::white(),
+    DirectionalLight(const Magnitude3d &dir = {0.0f, -1.0f, 0.0f},
+                     const Color &color = Color::white(),
+                     const Color &shineColor = Color::white(),
                      float intensity = 1.0f)
         : direction(dir.normalized()), color(color), shineColor(shineColor),
-          intensity(intensity) {
-    }
+          intensity(intensity) {}
 
     /**
      * @brief Function that sets the color of the light.
@@ -383,7 +390,7 @@ public:
      * @brief Object that holds the render target for shadow mapping.
      *
      */
-    RenderTarget* shadowRenderTarget = nullptr;
+    RenderTarget *shadowRenderTarget = nullptr;
     /**
      * @brief Cached shadow parameters used when the shadow map was last
      * rendered. Keeping this in sync with the shadow map avoids sampling
@@ -397,21 +404,21 @@ public:
      * @param window  The window in which to cast shadows.
      * @param resolution The resolution to use for the shadow map.
      */
-    void castShadows(Window& window, int resolution = 4096);
+    void castShadows(Window &window, int resolution = 4096);
 
-private:
+  private:
     bool doesCastShadows = false;
 
-    ShadowParams
-    calculateLightSpaceMatrix(const std::vector<Renderable*>& renderable) const;
+    ShadowParams calculateLightSpaceMatrix(
+        const std::vector<Renderable *> &renderable) const;
 
     friend class Window;
     friend class CoreObject;
     friend class Terrain;
 
-private:
+  private:
     std::vector<glm::vec4>
-    getCameraFrustumCornersWorldSpace(Camera* camera, Window* window) const;
+    getCameraFrustumCornersWorldSpace(Camera *camera, Window *window) const;
 };
 
 /**
@@ -457,7 +464,13 @@ struct Spotlight {
      *
      */
     Color shineColor = Color::white();
+    /**
+     * @brief Overall brightness multiplier applied to this spotlight.
+     */
     float intensity = 1.0f;
+    /**
+     * @brief Maximum influence distance of the spotlight.
+     */
     float range = 50.0f;
 
     /**
@@ -471,12 +484,12 @@ struct Spotlight {
      * @param shineColor The color that the spotlight will use for specular
      * highlights.
      */
-    Spotlight(const Position3d& pos = {0.0f, 0.0f, 0.0f},
+    Spotlight(const Position3d &pos = {0.0f, 0.0f, 0.0f},
               Magnitude3d dir = {0.0f, -1.0f, 0.0f},
-              const Color& color = Color::white(), const float angle = 35.f,
+              const Color &color = Color::white(), const float angle = 35.f,
               const float outerAngle = 40.f,
-              const Color& shineColor = Color::white(),
-              float intensity = 1.0f, float range = 50.0f)
+              const Color &shineColor = Color::white(), float intensity = 1.0f,
+              float range = 50.0f)
         : position(pos), direction(dir), color(color), shineColor(shineColor),
           intensity(intensity), range(range),
           cutOff(glm::cos(glm::radians(static_cast<double>(angle)))),
@@ -501,7 +514,7 @@ struct Spotlight {
      *
      * @param window The window in which to add the debug object.
      */
-    void addDebugObject(Window& window);
+    void addDebugObject(Window &window);
     /**
      * @brief Function that updates the rotation of the debug object.
      *
@@ -512,7 +525,7 @@ struct Spotlight {
      *
      * @param target The position to look at.
      */
-    void lookAt(const Position3d& target);
+    void lookAt(const Position3d &target);
 
     /**
      * @brief The debug object that visualizes the spotlight in the scene.
@@ -535,7 +548,7 @@ struct Spotlight {
      * @brief The render target to which the spotlight casts shadows.
      *
      */
-    RenderTarget* shadowRenderTarget = nullptr;
+    RenderTarget *shadowRenderTarget = nullptr;
     /**
      * @brief Cached shadow parameters used when the shadow map was last
      * rendered. Keeping this in sync with the shadow map avoids sampling
@@ -549,9 +562,9 @@ struct Spotlight {
      * @param window The window in which to cast shadows.
      * @param resolution The resolution to use for the shadow map.
      */
-    void castShadows(Window& window, int resolution = 2048);
+    void castShadows(Window &window, int resolution = 2048);
 
-private:
+  private:
     bool doesCastShadows = true;
 
     std::tuple<glm::mat4, glm::mat4> calculateLightSpaceMatrix() const;
@@ -592,7 +605,13 @@ struct AreaLight {
      * @brief Specular highlight color for the light.
      */
     Color shineColor = Color::white();
+    /**
+     * @brief Overall brightness multiplier applied to the area light.
+     */
     float intensity = 1.0f;
+    /**
+     * @brief Maximum distance at which this area light contributes.
+     */
     float range = 50.0f;
 
     /**
@@ -634,7 +653,7 @@ struct AreaLight {
      * accordingly. Rotation is applied to a canonical frame (right=+X, up=+Y,
      * normal=+Z) in the order: roll(Z), pitch(X), yaw(Y).
      */
-    void setRotation(const Rotation3d& r) {
+    void setRotation(const Rotation3d &r) {
         rotation = r;
         updateAxesFromRotation();
     }
@@ -642,7 +661,7 @@ struct AreaLight {
     /**
      * @brief Applies a delta rotation (in degrees) and updates right/up.
      */
-    void rotate(const Rotation3d& delta) {
+    void rotate(const Rotation3d &delta) {
         rotation = rotation + delta;
         updateAxesFromRotation();
     }
@@ -651,17 +670,23 @@ struct AreaLight {
      * @brief Debug helpers for visualizing the rectangle in the scene.
      */
     void createDebugObject();
-    void addDebugObject(Window& window);
-    void castShadows(Window& window, int resolution = 2048);
+    void addDebugObject(Window &window);
+    void castShadows(Window &window, int resolution = 2048);
 
     /**
      * @brief Optional debug object visualizing the area light.
      */
     std::shared_ptr<CoreObject> debugObject = nullptr;
-    RenderTarget* shadowRenderTarget = nullptr;
+    /**
+     * @brief Optional shadow render target generated for this area light.
+     */
+    RenderTarget *shadowRenderTarget = nullptr;
+    /**
+     * @brief Cached shadow matrices and bias for the current area-light map.
+     */
     ShadowParams lastShadowParams;
 
-private:
+  private:
     bool doesCastShadows = false;
     ShadowParams calculateLightSpaceMatrix() const;
     /**

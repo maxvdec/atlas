@@ -256,6 +256,9 @@ class Window {
      */
     int height;
 
+    /**
+     * @brief Index of the frame currently being rendered.
+     */
     int currentFrame;
 
     /**
@@ -270,6 +273,9 @@ class Window {
      */
     ~Window();
 
+    /**
+     * @brief Sets the clear color used before each render pass.
+     */
     void setClearColor(const Color &color) { this->clearColor = color; }
 
     /**
@@ -320,6 +326,9 @@ class Window {
      * idea.
      */
     void addObject(Renderable *object);
+    /**
+     * @brief Removes a previously registered renderable from the window.
+     */
     void removeObject(Renderable *object);
     /**
      * @brief Adds a renderable object with higher rendering priority.
@@ -474,6 +483,9 @@ class Window {
     float gravity = 9.81f;
 
     void useTracer(bool enable) { this->waitForTracer = enable; }
+    /**
+     * @brief Configures console log visibility per severity.
+     */
     void setLogOutput(bool showLogs, bool showWarnings, bool showErrors);
 
     /**
@@ -501,6 +513,9 @@ class Window {
      */
     float getRenderScale() const { return this->renderScale; }
 
+    /**
+     * @brief Enables Metal-based upscaling and sets the internal ratio.
+     */
     void useMetalUpscaling(float ratio = 0.75f);
     bool isMetalUpscalingEnabled() const { return this->metalUpscalingEnabled; }
     float getMetalUpscalingRatio() const { return this->metalUpscalingRatio; }
@@ -530,35 +545,60 @@ class Window {
      */
     RenderTarget *currentRenderTarget = nullptr;
 
+    /** @brief Destination blend factor for forward pipelines. */
     opal::BlendFunc dstBlend = opal::BlendFunc::DstAlpha;
+    /** @brief Source blend factor for forward pipelines. */
     opal::BlendFunc srcBlend = opal::BlendFunc::OneMinusSrcAlpha;
+    /** @brief Front-face winding used by forward rendering. */
     opal::FrontFace frontFace = opal::FrontFace::CounterClockwise;
+    /** @brief Front-face winding used by deferred passes. */
     opal::FrontFace deferredFrontFace = opal::FrontFace::CounterClockwise;
+    /** @brief Active culling mode for generated pipelines. */
     opal::CullMode cullMode = opal::CullMode::Back;
+    /** @brief Depth comparison function for generated pipelines. */
     opal::CompareOp depthCompareOp = opal::CompareOp::Less;
+    /** @brief Polygon rasterization mode (fill/line/point). */
     opal::RasterizerMode rasterizerMode = opal::RasterizerMode::Fill;
+    /** @brief Primitive topology used for draw calls. */
     opal::PrimitiveStyle primitiveStyle = opal::PrimitiveStyle::Triangles;
+    /** @brief Enables depth testing when true. */
     bool useDepth = true;
+    /** @brief Enables color blending when true. */
     bool useBlending = true;
+    /** @brief Enables depth buffer writes when true. */
     bool writeDepth = true;
+    /** @brief Enables multisampling in generated pipelines when available. */
     bool useMultisampling = true;
+    /** @brief Cached viewport X origin. */
     int viewportX = 0;
+    /** @brief Cached viewport Y origin. */
     int viewportY = 0;
+    /** @brief Cached viewport width. */
     int viewportWidth = 0;
+    /** @brief Cached viewport height. */
     int viewportHeight = 0;
+    /** @brief Shared rendering device used by the window. */
     std::shared_ptr<opal::Device> device;
 
+    /** @brief Physics world bound to this window's simulation step. */
     std::shared_ptr<bezel::PhysicsWorld> physicsWorld;
 
+    /** @brief True only during the very first rendered frame. */
     bool firstFrame = true;
 
+    /** @brief Whether DDGI lighting is enabled on supported platforms. */
     bool usesGlobalIllumination = false;
+    /** @brief Whether the path tracing pass is currently enabled. */
     bool usePathTracing = false;
 #ifdef METAL
     std::shared_ptr<photon::GlobalIllumination> ddgiSystem;
     std::shared_ptr<photon::PathTracing> pathTracer;
 #endif
 
+    /**
+     * @brief Computes the world-space bounds that enclose visible scene
+     * geometry.
+     */
     BoundingBox getSceneBoundingBox();
 
   private:

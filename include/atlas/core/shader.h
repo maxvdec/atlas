@@ -110,8 +110,12 @@ enum class AtlasVertexShader {
 };
 
 enum class AtlasComputeShader {
+    /** @brief Compute shader that traces DDGI probe rays. */
     DDGI,
+    /** @brief Compute shader that writes DDGI probe irradiance into an atlas.
+     */
     DDGI_WRITE,
+    /** @brief Compute shader used for path tracing output generation. */
     PathTracer,
 };
 
@@ -176,6 +180,7 @@ enum class ShaderCapability {
      * @brief Provides access to environment parameters (fog, rim light, etc.).
      */
     Environment,
+    /** @brief Shader supports fluid/water-specific uniforms and paths. */
     Fluid,
 };
 
@@ -313,8 +318,10 @@ struct ComputeShader {
      */
     std::vector<ShaderCapability> capabilities;
 
+    /** @brief Backend shader object after successful compilation. */
     std::shared_ptr<opal::Shader> shader = nullptr;
 
+    /** @brief Engine-level identifier for this compiled shader. */
     Id shaderId = 0;
 };
 
@@ -422,7 +429,9 @@ enum class AtlasFragmentShader {
      * @brief Fragment shader that upsamples and blends bloom textures.
      */
     Upsample,
+    /** @brief Fragment shader dedicated to fluid surface rendering. */
     Fluid,
+    /** @brief Fragment shader implementing screen-space reflections. */
     SSR,
 };
 

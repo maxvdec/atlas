@@ -19,6 +19,7 @@
  */
 class AudioEffect {
   protected:
+    /** @brief Backend effect identifier used by the audio implementation. */
     Id id;
 
     friend class AudioSource;

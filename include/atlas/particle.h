@@ -216,8 +216,17 @@ class ParticleEmitter : public GameObject {
     void disableTexture() { useTexture = false; };
 
     void setPosition(const Position3d &newPosition) override;
+    /**
+     * @brief Moves the emitter by a relative offset.
+     */
     void move(const Position3d &deltaPosition) override;
+    /**
+     * @brief Returns the emitter world-space origin.
+     */
     Position3d getPosition() const override { return position; };
+    /**
+     * @brief Particle emitters do not cast scene shadows.
+     */
     bool canCastShadows() const override { return false; };
 
     bool canUseDeferredRendering() override { return false; }
@@ -294,13 +303,20 @@ class ParticleEmitter : public GameObject {
     ParticleSettings settings;
 
   private:
+    /** @brief Particle pool reused across emissions. */
     std::vector<Particle> particles;
+    /** @brief Maximum capacity of the particle pool. */
     unsigned int maxParticles;
+    /** @brief Number of currently active particles in the pool. */
     unsigned int activeParticleCount = 0;
 
+    /** @brief Active emission pattern. */
     ParticleEmissionType emissionType = ParticleEmissionType::Fountain;
+    /** @brief Primary direction used when spawning particles. */
     Magnitude3d direction = {0.0, 1.0, 0.0};
+    /** @brief Radius around the emitter origin where particles can spawn. */
     float spawnRadius = 0.1f;
+    /** @brief Continuous spawn rate in particles per second. */
     float spawnRate = 10.0f;
 
     float timeSinceLastEmission = 0.0f;
@@ -309,6 +325,7 @@ class ParticleEmitter : public GameObject {
     bool hasEmittedOnce = false;
     int burstCount = 0;
 
+    /** @brief Drawing state used to render particle billboards. */
     std::shared_ptr<opal::DrawingState> vao = nullptr;
     std::shared_ptr<opal::Buffer> quadBuffer = nullptr;
     std::shared_ptr<opal::Buffer> instanceBuffer = nullptr;

@@ -168,8 +168,12 @@ class Noise {
      */
     static float fractal(float x, float y, int octaves, float persistence);
 
+    /** @brief Global seed value used by noise helpers when enabled. */
     static float seed;
+    /** @brief Indicates whether the global seed has already been initialized.
+     */
     static bool initializedSeed;
+    /** @brief When true, helper functions use the shared `seed` value. */
     static bool useSeed;
 };
 
@@ -190,6 +194,9 @@ class TerrainGenerator {
      */
     virtual float generateHeight(float x, float y) = 0;
 
+    /**
+     * @brief Optional hook invoked when the generator is attached to a terrain.
+     */
     virtual void applyTo(Terrain &) const {};
 };
 

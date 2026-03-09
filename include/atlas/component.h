@@ -59,8 +59,14 @@ class Component {
      */
     virtual void init() {}
 
+    /**
+     * @brief Called before each physics simulation step.
+     */
     virtual void beforePhysics() {}
 
+    /**
+     * @brief Called immediately after the component is attached to an object.
+     */
     virtual void atAttach() {}
 
     /**
@@ -100,20 +106,28 @@ class Component {
      */
     Component() = default;
 
+    /** @brief Called when this object starts colliding with another object. */
     virtual void onCollisionEnter([[maybe_unused]] GameObject *other) {}
 
+    /** @brief Called when this object stops colliding with another object. */
     virtual void onCollisionExit([[maybe_unused]] GameObject *other) {}
 
+    /** @brief Called while this object remains in contact with another object.
+     */
     virtual void onCollisionStay([[maybe_unused]] GameObject *other) {}
 
+    /** @brief Called when a signal starts from another object. */
     virtual void onSignalRecieve([[maybe_unused]] const std::string &signal,
                                  [[maybe_unused]] GameObject *sender) {}
 
+    /** @brief Called when a previously received signal ends. */
     virtual void onSignalEnd([[maybe_unused]] const std::string &signal,
                              [[maybe_unused]] GameObject *sender) {}
 
+    /** @brief Called when asynchronous physics query results arrive. */
     virtual void onQueryReceive([[maybe_unused]] QueryResult &result) {}
 
+    /** @brief Returns a clone of the component when supported. */
     virtual std::shared_ptr<Component> clone() const { return nullptr; }
 
     /**
@@ -181,8 +195,9 @@ class TraitComponent : public Component {
 };
 
 namespace atlas {
+/** @brief Global lookup table from object id to live GameObject pointers. */
 inline std::map<int, GameObject *> gameObjects = {};
-}
+} // namespace atlas
 
 /**
  * @brief Base class for all Game Objects. It extends from \ref Renderable and
@@ -406,6 +421,7 @@ class GameObject : public Renderable {
         return nullptr;
     }
 
+    /** @brief Cached rigidbody component pointer when attached. */
     Rigidbody *rigidbody = nullptr;
 
     /**
@@ -413,10 +429,13 @@ class GameObject : public Renderable {
      */
     unsigned int getId() override { return id; }
 
+    /** @brief Returns object rotation in Euler angles. */
     virtual Rotation3d getRotation() const { return Rotation3d(0.f, 0.f, 0.f); }
 
+    /** @brief Adds another object as a dependency for update ordering. */
     void addDependency(GameObject *obj) { dependencies.push_back(obj); }
 
+    /** @brief Returns all registered dependencies for this object. */
     std::vector<GameObject *> getDependencies() const { return dependencies; }
 
   protected:

@@ -337,10 +337,20 @@ class Scene {
      */
     void setEnvironment(Environment newEnv) { environment = std::move(newEnv); }
 
+    /**
+     * @brief Internal update hook used by the renderer to advance scene-wide
+     * effects.
+     */
     void updateScene(float dt);
 
+    /**
+     * @brief Returns the currently active skybox instance.
+     */
     std::shared_ptr<Skybox> getSkybox() const { return skybox; }
 
+    /**
+     * @brief Atmosphere settings used for procedural sky and weather.
+     */
     Atmosphere atmosphere;
 
   private:

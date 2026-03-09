@@ -48,9 +48,9 @@ std::shared_ptr<opal::Texture> createFallbackIrradianceTexture() {
 }
 
 std::shared_ptr<opal::Texture> createFallbackSkyboxTexture() {
-    constexpr unsigned char horizon[4] = {170, 195, 225, 255};
-    constexpr unsigned char zenith[4] = {120, 170, 235, 255};
-    constexpr unsigned char nadir[4] = {215, 220, 230, 255};
+    constexpr unsigned char horizon[4] = {0, 0, 0, 255};
+    constexpr unsigned char zenith[4] = {0, 0, 0, 255};
+    constexpr unsigned char nadir[4] = {0, 0, 0, 255};
     const unsigned char *faceColors[6] = {horizon, horizon, zenith,
                                           nadir,   horizon, horizon};
     auto texture = opal::Texture::create(

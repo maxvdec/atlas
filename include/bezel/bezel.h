@@ -54,7 +54,9 @@ constexpr uint32_t INVALID_JOLT_ID = UINT32_MAX;
  * @brief Maps between an underlying physics engine ID and an Atlas object ID.
  */
 struct BodyIdentifier {
+    /** @brief Backend body identifier (Jolt body id when using Jolt). */
     uint32_t joltId;
+    /** @brief Corresponding Atlas object identifier. */
     uint32_t atlasId;
 };
 
@@ -237,6 +239,9 @@ using JointChild = std::variant<Rigidbody *, WorldBody>;
 
 enum class SpringMode { FrequencyAndDamping, StiffnessAndDamping };
 
+/**
+ * @brief Coordinate space used by joint anchors and constraints.
+ */
 enum class Space { Local, Global };
 
 /**
@@ -336,6 +341,7 @@ class SpringJoint final : public Joint {
 // ----------------------------
 
 struct VehicleWheelSettings {
+    /** @brief Wheel center position in chassis local space. */
     Position3d position = {0.0f, 0.0f, 0.0f};
 
     bool enableSuspensionForcePoint = false;
@@ -363,33 +369,53 @@ struct VehicleWheelSettings {
 };
 
 struct VehicleDifferential {
+    /** @brief Index of the left wheel participating in the differential. */
     int leftWheel = -1;
+    /** @brief Index of the right wheel participating in the differential. */
     int rightWheel = -1;
+    /** @brief Ratio applied between engine and wheel angular speeds. */
     float differentialRatio = 3.42f;
+    /** @brief Torque split between left and right wheels [0, 1]. */
     float leftRightSplit = 0.5f;
+    /** @brief Limited-slip ratio controlling wheel speed difference. */
     float limitedSlipRatio = 1.4f;
+    /** @brief Fraction of engine torque fed into this differential. */
     float engineTorqueRatio = 1.0f;
 };
 
 struct VehicleEngine {
+    /** @brief Maximum engine torque output. */
     float maxTorque = 500.0f;
+    /** @brief Minimum engine RPM when running. */
     float minRPM = 1000.0f;
+    /** @brief Redline RPM. */
     float maxRPM = 6000.0f;
+    /** @brief Engine rotational inertia. */
     float inertia = 0.5f;
+    /** @brief Passive engine angular damping. */
     float angularDamping = 0.2f;
 };
 
 enum class VehicleTransmissionMode { Auto, Manual };
 
 struct VehicleTransmission {
+    /** @brief Whether shifting is automatic or manual. */
     VehicleTransmissionMode mode = VehicleTransmissionMode::Auto;
+    /** @brief Forward gear ratios in ascending gear order. */
     std::vector<float> gearRatios = {2.66f, 1.78f, 1.3f, 1.0f, 0.74f};
+    /** @brief Reverse gear ratios. */
     std::vector<float> reverseGearRatios = {-2.90f};
+    /** @brief Gear switch duration in seconds. */
     float switchTime = 0.5f;
+    /** @brief Clutch release duration in seconds. */
     float clutchReleaseTime = 0.3f;
+    /** @brief Delay before a shift starts. */
     float switchLatency = 0.5f;
+    /** @brief RPM threshold for automatic upshift. */
     float shiftUpRPM = 4000.0f;
+    /** @brief RPM threshold for automatic downshift. */
     float shiftDownRPM = 2000.0f;
+    /** @brief Clutch torque capacity scalar. */
     float clutchStrength = 10.0f;
 };
 
@@ -448,8 +474,10 @@ class Vehicle final {
 
     void create(const std::shared_ptr<PhysicsWorld> &world);
     void destroy(const std::shared_ptr<PhysicsWorld> &world);
+    /** @brief Returns whether the backend vehicle constraint exists. */
     bool isCreated() const;
 
+    /** @brief Updates steering, throttle, brake, and handbrake inputs. */
     void setDriverInput(float forward, float right, float brake,
                         float handBrake);
 
@@ -465,8 +493,11 @@ class Vehicle final {
  * @brief Backend rigid body representation used by Atlas components.
  */
 struct Rigidbody {
+    /** @brief World-space body position. */
     Position3d position;
+    /** @brief Euler rotation representation in world space. */
     Rotation3d rotation;
+    /** @brief Quaternion rotation representation in world space. */
     glm::quat rotationQuat = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
 
     bool isSensor = false;
@@ -536,13 +567,17 @@ struct Rigidbody {
     void setMaximumAngularVelocity(float maxAngularVelocity);
     void setMaximumLinearVelocity(float maxLinearVelocity);
 
+    /** @brief Creates and registers the backend body in the world. */
     void create(const std::shared_ptr<PhysicsWorld> &world);
     /** @brief Replaces the collider used by this rigidbody. */
     void setCollider(std::shared_ptr<Collider> collider);
 
     void applyProperties(const std::shared_ptr<PhysicsWorld> &world);
 
+    /** @brief Recreates or updates backend body state after property changes.
+     */
     void refresh(const std::shared_ptr<PhysicsWorld> &world);
+    /** @brief Removes and destroys the backend body from the world. */
     void destroy(const std::shared_ptr<PhysicsWorld> &world);
 };
 

@@ -18,6 +18,8 @@
 #include "atlas/units.h"
 
 class Window;
+class Shape;
+struct Point;
 
 /**
  * @brief Structure representing a point of intersection in both world and model
@@ -25,7 +27,9 @@ class Window;
  *
  */
 struct IntersectionPoint {
+    /** @brief Contact position in world-space coordinates. */
     glm::vec3 worldSpacePoint;
+    /** @brief Contact position transformed into the body's model space. */
     glm::vec3 modelSpacePoint;
 };
 
@@ -36,14 +40,21 @@ class Body;
  *
  */
 struct Contact {
+    /** @brief Contact point information relative to body A. */
     IntersectionPoint pointA;
+    /** @brief Contact point information relative to body B. */
     IntersectionPoint pointB;
 
+    /** @brief Collision normal pointing from body A to body B. */
     glm::vec3 normal;
+    /** @brief Signed separation (negative when penetrating). */
     float separationDistance;
+    /** @brief Time of impact for continuous collision tests. */
     float timeOfImpact;
 
+    /** @brief First body participating in the contact. */
     std::shared_ptr<Body> bodyA;
+    /** @brief Second body participating in the contact. */
     std::shared_ptr<Body> bodyB;
 
     /**
@@ -76,13 +87,21 @@ struct Contact {
  */
 class Body {
   public:
+    /** @brief World-space position of the body. */
     Position3d position;
+    /** @brief Orientation represented as a quaternion. */
     glm::quat orientation;
+    /** @brief Collision shape bound to this body. */
     std::shared_ptr<Shape> shape;
+    /** @brief Current linear velocity in world space. */
     glm::vec3 linearVelocity = {0.0f, 0.0f, 0.0f};
+    /** @brief Current angular velocity in world space. */
     glm::vec3 angularVelocity = {0.0f, 0.0f, 0.0f};
+    /** @brief Inverse mass (0 means infinite mass / static). */
     float invMass = 0.0f;
+    /** @brief Coefficient controlling restitution on impact. */
     float elasticity = 0.0f;
+    /** @brief Friction coefficient used during contact resolution. */
     float friction = 0.5f;
 
     /**
