@@ -6334,7 +6334,11 @@ struct Material {
     int roughnessTextureIndex;
     int aoTextureIndex;
     int opacityTextureIndex;
-    int _pad1[2];
+    float _pad1[2];
+
+    float transmittance;
+    float ior;
+    float _pad2[2];
 };
 
 struct MeshData {
@@ -6419,9 +6423,7 @@ float pow5(float x) {
     return x2 * x2 * x;
 }
 
-float luminance(float3 c) {
-    return dot(c, float3(0.2126, 0.7152, 0.0722));
-}
+float luminance(float3 c) { return dot(c, float3(0.2126, 0.7152, 0.0722)); }
 
 float3 clampLuminance(float3 c, float maxL) {
     float l = luminance(c);
@@ -6494,117 +6496,116 @@ float3 normalizeOr(float3 v, float3 fallback) {
 constexpr sampler materialTexSampler(coord::normalized, address::repeat,
                                      filter::linear, mip_filter::linear);
 
-#define PT_MATERIAL_TEXTURE_PARAMS                                           \
-    texture2d<float> materialTexture0, texture2d<float> materialTexture1,    \
-        texture2d<float> materialTexture2, texture2d<float> materialTexture3,\
-        texture2d<float> materialTexture4, texture2d<float> materialTexture5,\
-        texture2d<float> materialTexture6, texture2d<float> materialTexture7,\
-        texture2d<float> materialTexture8, texture2d<float> materialTexture9,\
-        texture2d<float> materialTexture10,                                  \
-        texture2d<float> materialTexture11,                                  \
-        texture2d<float> materialTexture12,                                  \
-        texture2d<float> materialTexture13,                                  \
-        texture2d<float> materialTexture14,                                  \
-        texture2d<float> materialTexture15,                                  \
-        texture2d<float> materialTexture16,                                  \
-        texture2d<float> materialTexture17,                                  \
-        texture2d<float> materialTexture18,                                  \
-        texture2d<float> materialTexture19,                                  \
-        texture2d<float> materialTexture20,                                  \
-        texture2d<float> materialTexture21,                                  \
-        texture2d<float> materialTexture22,                                  \
-        texture2d<float> materialTexture23,                                  \
-        texture2d<float> materialTexture24,                                  \
-        texture2d<float> materialTexture25,                                  \
-        texture2d<float> materialTexture26,                                  \
-        texture2d<float> materialTexture27,                                  \
-        texture2d<float> materialTexture28,                                  \
-        texture2d<float> materialTexture29,                                  \
-        texture2d<float> materialTexture30,                                  \
-        texture2d<float> materialTexture31,                                  \
-        texture2d<float> materialTexture32,                                  \
-        texture2d<float> materialTexture33,                                  \
-        texture2d<float> materialTexture34,                                  \
-        texture2d<float> materialTexture35,                                  \
-        texture2d<float> materialTexture36,                                  \
-        texture2d<float> materialTexture37,                                  \
-        texture2d<float> materialTexture38,                                  \
-        texture2d<float> materialTexture39,                                  \
-        texture2d<float> materialTexture40,                                  \
-        texture2d<float> materialTexture41,                                  \
-        texture2d<float> materialTexture42,                                  \
-        texture2d<float> materialTexture43,                                  \
-        texture2d<float> materialTexture44,                                  \
-        texture2d<float> materialTexture45,                                  \
-        texture2d<float> materialTexture46,                                  \
-        texture2d<float> materialTexture47
+#define PT_MATERIAL_TEXTURE_PARAMS                                             \
+    texture2d<float> materialTexture0, texture2d<float> materialTexture1,      \
+        texture2d<float> materialTexture2, texture2d<float> materialTexture3,  \
+        texture2d<float> materialTexture4, texture2d<float> materialTexture5,  \
+        texture2d<float> materialTexture6, texture2d<float> materialTexture7,  \
+        texture2d<float> materialTexture8, texture2d<float> materialTexture9,  \
+        texture2d<float> materialTexture10,                                    \
+        texture2d<float> materialTexture11,                                    \
+        texture2d<float> materialTexture12,                                    \
+        texture2d<float> materialTexture13,                                    \
+        texture2d<float> materialTexture14,                                    \
+        texture2d<float> materialTexture15,                                    \
+        texture2d<float> materialTexture16,                                    \
+        texture2d<float> materialTexture17,                                    \
+        texture2d<float> materialTexture18,                                    \
+        texture2d<float> materialTexture19,                                    \
+        texture2d<float> materialTexture20,                                    \
+        texture2d<float> materialTexture21,                                    \
+        texture2d<float> materialTexture22,                                    \
+        texture2d<float> materialTexture23,                                    \
+        texture2d<float> materialTexture24,                                    \
+        texture2d<float> materialTexture25,                                    \
+        texture2d<float> materialTexture26,                                    \
+        texture2d<float> materialTexture27,                                    \
+        texture2d<float> materialTexture28,                                    \
+        texture2d<float> materialTexture29,                                    \
+        texture2d<float> materialTexture30,                                    \
+        texture2d<float> materialTexture31,                                    \
+        texture2d<float> materialTexture32,                                    \
+        texture2d<float> materialTexture33,                                    \
+        texture2d<float> materialTexture34,                                    \
+        texture2d<float> materialTexture35,                                    \
+        texture2d<float> materialTexture36,                                    \
+        texture2d<float> materialTexture37,                                    \
+        texture2d<float> materialTexture38,                                    \
+        texture2d<float> materialTexture39,                                    \
+        texture2d<float> materialTexture40,                                    \
+        texture2d<float> materialTexture41,                                    \
+        texture2d<float> materialTexture42,                                    \
+        texture2d<float> materialTexture43,                                    \
+        texture2d<float> materialTexture44,                                    \
+        texture2d<float> materialTexture45,                                    \
+        texture2d<float> materialTexture46, texture2d<float> materialTexture47
 
-#define PT_MATERIAL_TEXTURE_ARGS                                             \
-    materialTexture0, materialTexture1, materialTexture2, materialTexture3,  \
-        materialTexture4, materialTexture5, materialTexture6,                \
-        materialTexture7, materialTexture8, materialTexture9,                \
-        materialTexture10, materialTexture11, materialTexture12,             \
-        materialTexture13, materialTexture14, materialTexture15,             \
-        materialTexture16, materialTexture17, materialTexture18,             \
-        materialTexture19, materialTexture20, materialTexture21,             \
-        materialTexture22, materialTexture23, materialTexture24,             \
-        materialTexture25, materialTexture26, materialTexture27,             \
-        materialTexture28, materialTexture29, materialTexture30,             \
-        materialTexture31, materialTexture32, materialTexture33,             \
-        materialTexture34, materialTexture35, materialTexture36,             \
-        materialTexture37, materialTexture38, materialTexture39,             \
-        materialTexture40, materialTexture41, materialTexture42,             \
-        materialTexture43, materialTexture44, materialTexture45,             \
+#define PT_MATERIAL_TEXTURE_ARGS                                               \
+    materialTexture0, materialTexture1, materialTexture2, materialTexture3,    \
+        materialTexture4, materialTexture5, materialTexture6,                  \
+        materialTexture7, materialTexture8, materialTexture9,                  \
+        materialTexture10, materialTexture11, materialTexture12,               \
+        materialTexture13, materialTexture14, materialTexture15,               \
+        materialTexture16, materialTexture17, materialTexture18,               \
+        materialTexture19, materialTexture20, materialTexture21,               \
+        materialTexture22, materialTexture23, materialTexture24,               \
+        materialTexture25, materialTexture26, materialTexture27,               \
+        materialTexture28, materialTexture29, materialTexture30,               \
+        materialTexture31, materialTexture32, materialTexture33,               \
+        materialTexture34, materialTexture35, materialTexture36,               \
+        materialTexture37, materialTexture38, materialTexture39,               \
+        materialTexture40, materialTexture41, materialTexture42,               \
+        materialTexture43, materialTexture44, materialTexture45,               \
         materialTexture46, materialTexture47
 
-#define PT_MATERIAL_TEXTURE_BINDINGS                                         \
-    texture2d<float> materialTexture0 [[texture(12)]],                       \
-        texture2d<float> materialTexture1 [[texture(13)]],                   \
-        texture2d<float> materialTexture2 [[texture(14)]],                   \
-        texture2d<float> materialTexture3 [[texture(15)]],                   \
-        texture2d<float> materialTexture4 [[texture(16)]],                   \
-        texture2d<float> materialTexture5 [[texture(17)]],                   \
-        texture2d<float> materialTexture6 [[texture(18)]],                   \
-        texture2d<float> materialTexture7 [[texture(19)]],                   \
-        texture2d<float> materialTexture8 [[texture(20)]],                   \
-        texture2d<float> materialTexture9 [[texture(21)]],                   \
-        texture2d<float> materialTexture10 [[texture(22)]],                  \
-        texture2d<float> materialTexture11 [[texture(23)]],                  \
-        texture2d<float> materialTexture12 [[texture(24)]],                  \
-        texture2d<float> materialTexture13 [[texture(25)]],                  \
-        texture2d<float> materialTexture14 [[texture(26)]],                  \
-        texture2d<float> materialTexture15 [[texture(27)]],                  \
-        texture2d<float> materialTexture16 [[texture(28)]],                  \
-        texture2d<float> materialTexture17 [[texture(29)]],                  \
-        texture2d<float> materialTexture18 [[texture(30)]],                  \
-        texture2d<float> materialTexture19 [[texture(31)]],                  \
-        texture2d<float> materialTexture20 [[texture(32)]],                  \
-        texture2d<float> materialTexture21 [[texture(33)]],                  \
-        texture2d<float> materialTexture22 [[texture(34)]],                  \
-        texture2d<float> materialTexture23 [[texture(35)]],                  \
-        texture2d<float> materialTexture24 [[texture(36)]],                  \
-        texture2d<float> materialTexture25 [[texture(37)]],                  \
-        texture2d<float> materialTexture26 [[texture(38)]],                  \
-        texture2d<float> materialTexture27 [[texture(39)]],                  \
-        texture2d<float> materialTexture28 [[texture(40)]],                  \
-        texture2d<float> materialTexture29 [[texture(41)]],                  \
-        texture2d<float> materialTexture30 [[texture(42)]],                  \
-        texture2d<float> materialTexture31 [[texture(43)]],                  \
-        texture2d<float> materialTexture32 [[texture(44)]],                  \
-        texture2d<float> materialTexture33 [[texture(45)]],                  \
-        texture2d<float> materialTexture34 [[texture(46)]],                  \
-        texture2d<float> materialTexture35 [[texture(47)]],                  \
-        texture2d<float> materialTexture36 [[texture(48)]],                  \
-        texture2d<float> materialTexture37 [[texture(49)]],                  \
-        texture2d<float> materialTexture38 [[texture(50)]],                  \
-        texture2d<float> materialTexture39 [[texture(51)]],                  \
-        texture2d<float> materialTexture40 [[texture(52)]],                  \
-        texture2d<float> materialTexture41 [[texture(53)]],                  \
-        texture2d<float> materialTexture42 [[texture(54)]],                  \
-        texture2d<float> materialTexture43 [[texture(55)]],                  \
-        texture2d<float> materialTexture44 [[texture(56)]],                  \
-        texture2d<float> materialTexture45 [[texture(57)]],                  \
-        texture2d<float> materialTexture46 [[texture(58)]],                  \
+#define PT_MATERIAL_TEXTURE_BINDINGS                                           \
+    texture2d<float> materialTexture0 [[texture(12)]],                         \
+        texture2d<float> materialTexture1 [[texture(13)]],                     \
+        texture2d<float> materialTexture2 [[texture(14)]],                     \
+        texture2d<float> materialTexture3 [[texture(15)]],                     \
+        texture2d<float> materialTexture4 [[texture(16)]],                     \
+        texture2d<float> materialTexture5 [[texture(17)]],                     \
+        texture2d<float> materialTexture6 [[texture(18)]],                     \
+        texture2d<float> materialTexture7 [[texture(19)]],                     \
+        texture2d<float> materialTexture8 [[texture(20)]],                     \
+        texture2d<float> materialTexture9 [[texture(21)]],                     \
+        texture2d<float> materialTexture10 [[texture(22)]],                    \
+        texture2d<float> materialTexture11 [[texture(23)]],                    \
+        texture2d<float> materialTexture12 [[texture(24)]],                    \
+        texture2d<float> materialTexture13 [[texture(25)]],                    \
+        texture2d<float> materialTexture14 [[texture(26)]],                    \
+        texture2d<float> materialTexture15 [[texture(27)]],                    \
+        texture2d<float> materialTexture16 [[texture(28)]],                    \
+        texture2d<float> materialTexture17 [[texture(29)]],                    \
+        texture2d<float> materialTexture18 [[texture(30)]],                    \
+        texture2d<float> materialTexture19 [[texture(31)]],                    \
+        texture2d<float> materialTexture20 [[texture(32)]],                    \
+        texture2d<float> materialTexture21 [[texture(33)]],                    \
+        texture2d<float> materialTexture22 [[texture(34)]],                    \
+        texture2d<float> materialTexture23 [[texture(35)]],                    \
+        texture2d<float> materialTexture24 [[texture(36)]],                    \
+        texture2d<float> materialTexture25 [[texture(37)]],                    \
+        texture2d<float> materialTexture26 [[texture(38)]],                    \
+        texture2d<float> materialTexture27 [[texture(39)]],                    \
+        texture2d<float> materialTexture28 [[texture(40)]],                    \
+        texture2d<float> materialTexture29 [[texture(41)]],                    \
+        texture2d<float> materialTexture30 [[texture(42)]],                    \
+        texture2d<float> materialTexture31 [[texture(43)]],                    \
+        texture2d<float> materialTexture32 [[texture(44)]],                    \
+        texture2d<float> materialTexture33 [[texture(45)]],                    \
+        texture2d<float> materialTexture34 [[texture(46)]],                    \
+        texture2d<float> materialTexture35 [[texture(47)]],                    \
+        texture2d<float> materialTexture36 [[texture(48)]],                    \
+        texture2d<float> materialTexture37 [[texture(49)]],                    \
+        texture2d<float> materialTexture38 [[texture(50)]],                    \
+        texture2d<float> materialTexture39 [[texture(51)]],                    \
+        texture2d<float> materialTexture40 [[texture(52)]],                    \
+        texture2d<float> materialTexture41 [[texture(53)]],                    \
+        texture2d<float> materialTexture42 [[texture(54)]],                    \
+        texture2d<float> materialTexture43 [[texture(55)]],                    \
+        texture2d<float> materialTexture44 [[texture(56)]],                    \
+        texture2d<float> materialTexture45 [[texture(57)]],                    \
+        texture2d<float> materialTexture46 [[texture(58)]],                    \
         texture2d<float> materialTexture47 [[texture(59)]]
 
 float4 sampleMaterialTexture(int textureIndex, float2 uv,
@@ -6716,14 +6717,18 @@ void resolveMaterialParameters(Material mat, float2 uv, uint textureCount,
                                PT_MATERIAL_TEXTURE_PARAMS,
                                thread float3 &albedo, thread float &metallic,
                                thread float &roughness, thread float &ao,
-                               thread float3 &emissive) {
+                               thread float3 &emissive, thread float &outIor,
+                               thread float &outTransmittance) {
     albedo = clamp(mat.albedo.xyz, float3(0.0), float3(1.0));
     metallic = mat.metallic;
     roughness = mat.roughness;
     ao = mat.ao;
-    emissive =
-        clampLuminance(float3(mat.emissiveColor) * min(max(mat.emissiveIntensity, 0.0), 8.0),
-                       8.0);
+    emissive = clampLuminance(float3(mat.emissiveColor) *
+                                  min(max(mat.emissiveIntensity, 0.0), 8.0),
+                              8.0);
+
+    outIor = max(mat.ior, 1.0);
+    outTransmittance = clamp(mat.transmittance, 0.0, 1.0);
 
     if (mat.albedoTextureIndex >= 0 &&
         uint(mat.albedoTextureIndex) < textureCount) {
@@ -6766,9 +6771,8 @@ void resolveMaterialParameters(Material mat, float2 uv, uint textureCount,
 }
 
 float3 resolveShadingNormal(Material mat, float2 uv, float3 localN,
-                            float3 localT, float3 localB,
-                            InstanceData inst, uint textureCount,
-                            PT_MATERIAL_TEXTURE_PARAMS) {
+                            float3 localT, float3 localB, InstanceData inst,
+                            uint textureCount, PT_MATERIAL_TEXTURE_PARAMS) {
     float3x3 normalMatrix =
         float3x3(inst.normalCol0.xyz, inst.normalCol1.xyz, inst.normalCol2.xyz);
     float3 N = normalizeOr(normalMatrix * localN, float3(0.0, 1.0, 0.0));
@@ -6787,12 +6791,10 @@ float3 resolveShadingNormal(Material mat, float2 uv, float3 localN,
 
     bool useNormalMap = mat._pad1[0] != 0;
     float normalStrength = max(mat._pad0, 0.0f);
-    if (useNormalMap && normalStrength > 0.0 &&
-        mat.normalTextureIndex >= 0 &&
+    if (useNormalMap && normalStrength > 0.0 && mat.normalTextureIndex >= 0 &&
         uint(mat.normalTextureIndex) < textureCount) {
-        float3 tangentNormal = sampleMaterialTexture(
-                                   mat.normalTextureIndex, uv,
-                                   PT_MATERIAL_TEXTURE_ARGS)
+        float3 tangentNormal = sampleMaterialTexture(mat.normalTextureIndex, uv,
+                                                     PT_MATERIAL_TEXTURE_ARGS)
                                    .xyz;
         tangentNormal = tangentNormal * 2.0 - 1.0;
         tangentNormal.xy *= normalStrength;
@@ -6919,8 +6921,8 @@ float3 evalPBR(float3 albedo, float metallic, float roughness, float3 N,
 
     float3 specular = (D * G * F) / max(4.0 * NdotV * NdotL, 1e-4);
     float3 kD = (1.0 - F) * (1.0 - clamp(metallic, 0.0, 1.0));
-    float diffuseFactor =
-        disneyDiffuseFactor(NdotV, NdotL, max(dot(L, H), 0.0), clampedRoughness);
+    float diffuseFactor = disneyDiffuseFactor(NdotV, NdotL, max(dot(L, H), 0.0),
+                                              clampedRoughness);
     float3 diffuse = (kD * albedo * diffuseFactor) / M_PI_F;
 
     return (diffuse + specular) * lightColor * intensity * NdotL;
@@ -6934,16 +6936,27 @@ float3 evalSubsurface(float3 albedo, float3 N, float3 V, float3 L,
     float backLit = clamp(-NdotL, 0.0, 1.0);
     float wrapAmount = mix(0.2, 0.7, clamp(roughness, 0.0, 1.0));
     float wrapped = clamp((NdotL + wrapAmount) / (1.0 + wrapAmount), 0.0, 1.0);
-    float viewScatter =
-        pow(clamp(1.0 - max(dot(V, L), 0.0), 0.0, 1.0), 2.0);
+    float viewScatter = pow(clamp(1.0 - max(dot(V, L), 0.0), 0.0, 1.0), 2.0);
     float transmission = backLit * (0.35 + 0.65 * viewScatter);
     float diffuseBleed = wrapped * (0.5 + 0.5 * (1.0 - NdotV));
     float profile = mix(diffuseBleed, transmission, 0.65);
-    float thicknessFalloff =
-        exp(-max(sssThickness, 0.01) * (1.0 - backLit));
+    float thicknessFalloff = exp(-max(sssThickness, 0.01) * (1.0 - backLit));
     return (albedo * lightColor * intensity * sssStrength * profile *
             thicknessFalloff) /
            M_PI_F;
+}
+
+float3 evalTransmission(float3 albedo, float3 N, float3 V, float3 L,
+                        float3 lightColor, float intensity, float roughness,
+                        float ior) {
+    float3 H = normalize(V + L);
+    float NdotL = max(dot(N, -L), 0.0);
+    float VdotH = max(dot(V, H), 0.0);
+    float3 F0 = float3(pow((ior - 1.0) / (ior + 1.0), 2.0));
+    float3 F = F_Schlick(VdotH, F0);
+    float3 transmitFactor = (1.0 - F) * albedo;
+    float D = D_GGX(max(dot(N, H), 0.0), roughness);
+    return transmitFactor * lightColor * intensity * D * NdotL / M_PI_F;
 }
 
 // ---------------------------------------------------------------------------
@@ -6953,8 +6966,8 @@ float3 evalSubsurface(float3 albedo, float3 N, float3 V, float3 L,
 float3 evalDirectLightingPBR(intersector<triangle_data, instancing> isect,
                              instance_acceleration_structure sceneAS, float3 P,
                              float3 N, float3 V, float3 albedo, float metallic,
-                             float roughness, float sssStrength,
-                             float sssThickness,
+                             float roughness, float ior, float transmittance,
+                             float sssStrength, float sssThickness,
                              constant DirectionalLightData &dirLight,
                              constant SceneData &sceneData,
                              constant PointLight *pointLights,
@@ -6970,10 +6983,15 @@ float3 evalDirectLightingPBR(intersector<triangle_data, instancing> isect,
         float3 s = evalSubsurface(albedo, N, V, L, dirLight.color,
                                   max(dirLight.intensity, 0.0), roughness,
                                   sssStrength, sssThickness);
+        float3 t =
+            evalTransmission(albedo, N, V, L, dirLight.color,
+                             max(dirLight.intensity, 0.0), roughness, ior) *
+            transmittance;
         if (!isOccludedDirectionalLight(dirLight, P, N, isect, sceneAS)) {
             float3 lightContribution = clampLuminance(c + s, 8.0);
             lighting += lightContribution;
         }
+        lighting += clampLuminance(t, 4.0);
     }
 
     // Point lights
@@ -6987,15 +7005,18 @@ float3 evalDirectLightingPBR(intersector<triangle_data, instancing> isect,
         float rangeFade = 1.0 - smoothstep(lightRange * 0.75, lightRange, dist);
         float atten = rangeFade / max(distSq, 1e-4);
         float intensity = max(pointLights[i].intensity, 0.0) * atten;
-        float3 c =
-            evalPBR(albedo, metallic, roughness, N, V, L, pointLights[i].color,
-                    intensity);
-        float3 s = evalSubsurface(albedo, N, V, L, pointLights[i].color,
-                                  intensity, roughness, sssStrength,
-                                  sssThickness);
+        float3 c = evalPBR(albedo, metallic, roughness, N, V, L,
+                           pointLights[i].color, intensity);
+        float3 s =
+            evalSubsurface(albedo, N, V, L, pointLights[i].color, intensity,
+                           roughness, sssStrength, sssThickness);
+        float3 t = evalTransmission(albedo, N, V, L, pointLights[i].color,
+                                    intensity, roughness, ior) *
+                   transmittance;
         if (!isOccludedPointLight(pointLights[i], P, N, isect, sceneAS)) {
             float3 lightContribution = clampLuminance(c + s, 8.0);
             lighting += lightContribution;
+            lighting += clampLuminance(t, 4.0);
         }
     }
 
@@ -7014,15 +7035,18 @@ float3 evalDirectLightingPBR(intersector<triangle_data, instancing> isect,
         float rangeFade = 1.0 - smoothstep(lightRange * 0.75, lightRange, dist);
         float atten = rangeFade / max(distSq, 1e-4);
         float intensity = max(spotLights[i].intensity, 0.0) * atten * spot;
-        float3 c =
-            evalPBR(albedo, metallic, roughness, N, V, L, spotLights[i].color,
-                    intensity);
-        float3 s = evalSubsurface(albedo, N, V, L, spotLights[i].color,
-                                  intensity, roughness, sssStrength,
-                                  sssThickness);
+        float3 c = evalPBR(albedo, metallic, roughness, N, V, L,
+                           spotLights[i].color, intensity);
+        float3 s =
+            evalSubsurface(albedo, N, V, L, spotLights[i].color, intensity,
+                           roughness, sssStrength, sssThickness);
+        float3 t = evalTransmission(albedo, N, V, L, spotLights[i].color,
+                                    intensity, roughness, ior) *
+                   transmittance;
         if (!isOccludedSpotLight(spotLights[i], P, N, isect, sceneAS)) {
             float3 lightContribution = clampLuminance(c + s, 8.0);
             lighting += lightContribution;
+            lighting += clampLuminance(t, 4.0);
         }
     }
 
@@ -7037,21 +7061,23 @@ float3 evalDirectLightingPBR(intersector<triangle_data, instancing> isect,
                              ? abs(dot(lightNorm, -L))
                              : max(dot(lightNorm, -L), 0.0);
         float area = 4.0 * areaLights[i].halfWidth * areaLights[i].halfHeight;
-        float minDist =
-            max(max(areaLights[i].halfWidth, areaLights[i].halfHeight) * 0.5,
-                0.15);
+        float minDist = max(
+            max(areaLights[i].halfWidth, areaLights[i].halfHeight) * 0.5, 0.15);
         float distSq = dist * dist + minDist * minDist;
         float atten = (cosLight * area) / max(distSq, 1e-4);
         float intensity = max(areaLights[i].intensity, 0.0) * atten;
-        float3 c =
-            evalPBR(albedo, metallic, roughness, N, V, L, areaLights[i].color,
-                    intensity);
-        float3 s = evalSubsurface(albedo, N, V, L, areaLights[i].color,
-                                  intensity, roughness, sssStrength,
-                                  sssThickness);
+        float3 c = evalPBR(albedo, metallic, roughness, N, V, L,
+                           areaLights[i].color, intensity);
+        float3 s =
+            evalSubsurface(albedo, N, V, L, areaLights[i].color, intensity,
+                           roughness, sssStrength, sssThickness);
+        float3 t = evalTransmission(albedo, N, V, L, areaLights[i].color,
+                                    intensity, roughness, ior) *
+                   transmittance;
         if (!isOccludedAreaLight(areaLights[i], P, N, isect, sceneAS)) {
             float3 lightContribution = clampLuminance(c + s, 8.0);
             lighting += lightContribution;
+            lighting += clampLuminance(t, 4.0);
         }
     }
 
@@ -7073,8 +7099,7 @@ float3 sampleRadiance(uint2 gid, uint sampleIndex, uint w,
                       constant PointLight *pointLights,
                       constant SpotLight *spotLights,
                       constant AreaLight *areaLights,
-                      PT_MATERIAL_TEXTURE_PARAMS,
-                      texturecube<float> skybox) {
+                      PT_MATERIAL_TEXTURE_PARAMS, texturecube<float> skybox) {
     uint rng = seedBase(gid, w, sceneData.frameIndex, sampleIndex);
 
     ray surfaceRay = primaryRay;
@@ -7149,9 +7174,9 @@ float3 sampleRadiance(uint2 gid, uint sampleIndex, uint w,
         return skyColor(surfaceRay.direction, 0.0, skybox);
     }
 
-    float3 N = resolveShadingNormal(
-        mat, texUV, localN, localT, localB, inst, sceneData.materialTextureCount,
-        PT_MATERIAL_TEXTURE_ARGS);
+    float3 N = resolveShadingNormal(mat, texUV, localN, localT, localB, inst,
+                                    sceneData.materialTextureCount,
+                                    PT_MATERIAL_TEXTURE_ARGS);
     float3 P = surfaceRay.origin + surfaceRay.direction * hit.distance;
     float3 V = normalize(-surfaceRay.direction);
     if (dot(N, V) < 0.0) {
@@ -7163,16 +7188,18 @@ float3 sampleRadiance(uint2 gid, uint sampleIndex, uint w,
     float roughness;
     float ao;
     float3 emissive;
-    resolveMaterialParameters(
-        mat, texUV, sceneData.materialTextureCount, PT_MATERIAL_TEXTURE_ARGS,
-        albedo, metallic, roughness, ao, emissive);
+    float ior;
+    float transmittance;
+    resolveMaterialParameters(mat, texUV, sceneData.materialTextureCount,
+                              PT_MATERIAL_TEXTURE_ARGS, albedo, metallic,
+                              roughness, ao, emissive, ior, transmittance);
     float sssStrength = clamp(1.0 - mat.albedo.w, 0.0, 1.0) * (1.0 - metallic);
     float sssThickness = mix(0.25, 1.75, ao);
 
     float3 direct = evalDirectLightingPBR(
-        isect, sceneAS, P, N, V, albedo, metallic, roughness,
-        sssStrength, sssThickness, dirLight, sceneData, pointLights, spotLights,
-        areaLights);
+        isect, sceneAS, P, N, V, albedo, metallic, roughness, ior,
+        transmittance, sssStrength, sssThickness, dirLight, sceneData,
+        pointLights, spotLights, areaLights);
 
     float3 indirect = float3(0.0);
 
@@ -7182,6 +7209,8 @@ float3 sampleRadiance(uint2 gid, uint sampleIndex, uint w,
 
         float specProb =
             clamp(metallic * mix(0.35, 0.9, 1.0 - roughness), 0.0, 0.9);
+        float transmitProb = transmittance * (1.0 - metallic);
+        float diffuseProb = max(1.0 - specProb - transmitProb, 0.0);
 
         float3x3 basis = buildOrthonormalBasis(N);
         ray bounceRay;
@@ -7208,8 +7237,33 @@ float3 sampleRadiance(uint2 gid, uint sampleIndex, uint w,
             float3 Fs = F_Schlick(max(dot(V, H_world), 0.0), F0);
             float Gs = G_Smith(NdotV2, NdotL2, roughness);
 
-            brdfWeight = (Fs * Gs / max(4.0 * NdotV2, 1e-4)) /
-                         max(specProb, 1e-4);
+            brdfWeight =
+                (Fs * Gs / max(4.0 * NdotV2, 1e-4)) / max(specProb, 1e-4);
+
+        } else if (transmitProb > 1e-4 &&
+                   chooseSplit < specProb + transmitProb) {
+            bool entering = dot(N, V) > 0.0;
+            float eta = entering ? (1.0 / ior) : ior;
+            float3 faceN = entering ? N : -N;
+
+            float3 refractDir = refract(-V, faceN, eta);
+
+            if (length(refractDir) < 1e-5) {
+                refractDir = reflect(-V, faceN);
+            }
+
+            bounceRay.origin = P - faceN * 0.002;
+            bounceRay.direction = normalize(refractDir);
+
+            float3 F0t = float3(pow((ior - 1.0) / (ior + 1.0), 2.0));
+            float3 Ft = F_Schlick(max(dot(V, faceN), 0.0), F0t);
+            float3 kT = (1.0 - Ft) * albedo;
+
+            float meanFreePath = 0.5;
+            float3 absorption =
+                exp(-((1.0 - albedo) / max(meanFreePath, 1e-4)) * 1.0);
+
+            brdfWeight = (kT * absorption) / max(transmitProb, 1e-4);
 
         } else {
             float2 u = float2(rand(rng), rand(rng));
@@ -7247,18 +7301,21 @@ float3 sampleRadiance(uint2 gid, uint sampleIndex, uint w,
             float2 bUV = float2(vertices[bj0].uv) * bb0 +
                          float2(vertices[bj1].uv) * bb1 +
                          float2(vertices[bj2].uv) * bb2;
-            float3 bLocalN = normalizeOr(float3(vertices[bj0].normal) * bb0 +
-                                             float3(vertices[bj1].normal) * bb1 +
-                                             float3(vertices[bj2].normal) * bb2,
-                                         float3(0.0, 1.0, 0.0));
-            float3 bLocalT = normalizeOr(float3(vertices[bj0].tangent) * bb0 +
-                                             float3(vertices[bj1].tangent) * bb1 +
-                                             float3(vertices[bj2].tangent) * bb2,
-                                         float3(1.0, 0.0, 0.0));
-            float3 bLocalB = normalizeOr(float3(vertices[bj0].bitangent) * bb0 +
-                                             float3(vertices[bj1].bitangent) * bb1 +
-                                             float3(vertices[bj2].bitangent) * bb2,
-                                         float3(0.0, 0.0, 1.0));
+            float3 bLocalN =
+                normalizeOr(float3(vertices[bj0].normal) * bb0 +
+                                float3(vertices[bj1].normal) * bb1 +
+                                float3(vertices[bj2].normal) * bb2,
+                            float3(0.0, 1.0, 0.0));
+            float3 bLocalT =
+                normalizeOr(float3(vertices[bj0].tangent) * bb0 +
+                                float3(vertices[bj1].tangent) * bb1 +
+                                float3(vertices[bj2].tangent) * bb2,
+                            float3(1.0, 0.0, 0.0));
+            float3 bLocalB =
+                normalizeOr(float3(vertices[bj0].bitangent) * bb0 +
+                                float3(vertices[bj1].bitangent) * bb1 +
+                                float3(vertices[bj2].bitangent) * bb2,
+                            float3(0.0, 0.0, 1.0));
             float3 bN = resolveShadingNormal(
                 bmat, bUV, bLocalN, bLocalT, bLocalB, binst,
                 sceneData.materialTextureCount, PT_MATERIAL_TEXTURE_ARGS);
@@ -7274,22 +7331,24 @@ float3 sampleRadiance(uint2 gid, uint sampleIndex, uint w,
             float bRoughness;
             float bAo;
             float3 bEmissive;
-            resolveMaterialParameters(
-                bmat, bUV, sceneData.materialTextureCount,
-                PT_MATERIAL_TEXTURE_ARGS, bAlbedo, bMetallic, bRoughness, bAo,
-                bEmissive);
+            float bIor;
+            float bTransmittance;
+            resolveMaterialParameters(bmat, bUV, sceneData.materialTextureCount,
+                                      PT_MATERIAL_TEXTURE_ARGS, bAlbedo,
+                                      bMetallic, bRoughness, bAo, bEmissive,
+                                      bIor, bTransmittance);
+
             float bSssStrength =
                 clamp(1.0 - bmat.albedo.w, 0.0, 1.0) * (1.0 - bMetallic);
             float bSssThickness = mix(0.25, 1.75, bAo);
 
             float3 bounceDirect = evalDirectLightingPBR(
-                isect, sceneAS, bP, bN, bV, bAlbedo, bMetallic,
-                bRoughness, bSssStrength, bSssThickness, dirLight, sceneData,
-                pointLights, spotLights, areaLights);
+                isect, sceneAS, bP, bN, bV, bAlbedo, bMetallic, bRoughness,
+                bIor, bTransmittance, bSssStrength, bSssThickness, dirLight,
+                sceneData, pointLights, spotLights, areaLights);
 
-            float3 bAmbient =
-                bAlbedo * max(sceneData.ambientIntensity, 0.0) *
-                (1.0 - bMetallic) * bAo;
+            float3 bAmbient = bAlbedo * max(sceneData.ambientIntensity, 0.0) *
+                              (1.0 - bMetallic) * bAo;
             indirect = brdfWeight * (bAmbient + bounceDirect + bEmissive) *
                        sceneData.indirectStrength;
         }
@@ -7349,11 +7408,10 @@ kernel void main0(texture2d<float, access::write> outTex [[texture(0)]],
         primaryRay.min_distance = 0.001;
         primaryRay.max_distance = 1.0e30;
 
-        float3 sample = sampleRadiance(gid, s, w, isect, sceneAS, primaryRay,
-                                       materials, meshData, vertices, indices,
-                                       instanceData, dirLight, sceneData,
-                                       pointLights, spotLights, areaLights,
-                                       PT_MATERIAL_TEXTURE_ARGS, skybox);
+        float3 sample = sampleRadiance(
+            gid, s, w, isect, sceneAS, primaryRay, materials, meshData,
+            vertices, indices, instanceData, dirLight, sceneData, pointLights,
+            spotLights, areaLights, PT_MATERIAL_TEXTURE_ARGS, skybox);
         color += clampLuminance(sample, 10.0);
     }
 
