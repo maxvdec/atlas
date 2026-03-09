@@ -94,6 +94,18 @@ kernel void main0(texture2d<float, access::write> outTexture [[texture(0)]],
         return;
     }
 
+    uint updateStride = max(rt.probeUpdateStride, 1u);
+    uint updateOffset =
+        (updateStride > 1u) ? (rt.probeUpdateOffset % updateStride) : 0u;
+    bool probeIsActive =
+        (updateStride <= 1u) ||
+        ((probeIndex >= updateOffset) &&
+         (((probeIndex - updateOffset) % updateStride) == 0u));
+    if (!probeIsActive) {
+        outTexture.write(prevTexture.read(gid), gid);
+        return;
+    }
+
     uint localX = gid.x - tileX * tileRes;
     uint localY = gid.y - tileY * tileRes;
 
@@ -162,7 +174,7 @@ kernel void main0(texture2d<float, access::write> outTexture [[texture(0)]],
     float probeValidity = (1.0f - nearPenalty) * (1.0f - missPenalty);
     probeValidity = clamp(probeValidity, 0.005f, 1.0f);
 
-    float h = clamp(max(rt.hysteresis, 0.985f), 0.0f, 0.995f);
+    float h = clamp(rt.hysteresis, 0.0f, 0.995f);
     float3 blended = (rt.frameIndex == 0u) ? irradiance : mix(irradiance, prevValue, h);
     float blendedValidity =
         (rt.frameIndex == 0u)

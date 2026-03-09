@@ -641,8 +641,14 @@ void Window::deferredRendering(
             (float)ddgiSystem->probeSpace->probesPerRow,
             (float)ddgiSystem->probeSpace->totalProbes());
 
-        lightPipeline->bindTexture("irradianceMap",
-                                   ddgiSystem->irradianceMap->texture, 16);
+        std::shared_ptr<opal::Texture> ddgiIrradianceTexture =
+            ddgiSystem->irradianceMap->texture;
+        if (ddgiSystem->irradianceMapPrev != nullptr &&
+            ddgiSystem->irradianceMapPrev->texture != nullptr &&
+            ddgiSystem->frameIndex <= 1) {
+            ddgiIrradianceTexture = ddgiSystem->irradianceMapPrev->texture;
+        }
+        lightPipeline->bindTexture("irradianceMap", ddgiIrradianceTexture, 16);
     } else {
         lightPipeline->setUniform3f("ps.origin", 0.0f, 0.0f, 0.0f);
         lightPipeline->setUniform3f("ps.spacing", 1.0f, 1.0f, 1.0f);

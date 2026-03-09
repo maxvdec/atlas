@@ -37,13 +37,14 @@ int registerMaterialTextureSlot(
     if (texture.texture == nullptr) {
         return -1;
     }
-    uint64_t key =
-        static_cast<uint64_t>(reinterpret_cast<uintptr_t>(texture.texture.get()));
+    uint64_t key = static_cast<uint64_t>(
+        reinterpret_cast<uintptr_t>(texture.texture.get()));
     auto it = slotByTexture.find(key);
     if (it != slotByTexture.end()) {
         return it->second;
     }
-    if (materialTextures.size() >= static_cast<size_t>(kDdgiMaxMaterialTextures)) {
+    if (materialTextures.size() >=
+        static_cast<size_t>(kDdgiMaxMaterialTextures)) {
         return -1;
     }
     int slot = static_cast<int>(materialTextures.size());
@@ -97,7 +98,8 @@ uint64_t computeDdgiLayoutSignature(const std::vector<CoreObject *> &objects,
             continue;
         }
         signature = hashCombineU64(
-            signature, static_cast<uint64_t>(reinterpret_cast<uintptr_t>(object)));
+            signature,
+            static_cast<uint64_t>(reinterpret_cast<uintptr_t>(object)));
         signature = hashCombineU64(
             signature, static_cast<uint64_t>(object->vertices.size()));
         signature = hashCombineU64(
@@ -106,51 +108,64 @@ uint64_t computeDdgiLayoutSignature(const std::vector<CoreObject *> &objects,
         Rotation3d rot = object->getRotation();
         Size3d scl = object->getScale();
         glm::quat rotQuat = rot.toGlmQuat();
-        signature = hashCombineU64(signature, hashFloat(static_cast<float>(pos.x)));
-        signature = hashCombineU64(signature, hashFloat(static_cast<float>(pos.y)));
-        signature = hashCombineU64(signature, hashFloat(static_cast<float>(pos.z)));
+        signature =
+            hashCombineU64(signature, hashFloat(static_cast<float>(pos.x)));
+        signature =
+            hashCombineU64(signature, hashFloat(static_cast<float>(pos.y)));
+        signature =
+            hashCombineU64(signature, hashFloat(static_cast<float>(pos.z)));
         signature = hashCombineU64(signature, hashFloat(rotQuat.x));
         signature = hashCombineU64(signature, hashFloat(rotQuat.y));
         signature = hashCombineU64(signature, hashFloat(rotQuat.z));
         signature = hashCombineU64(signature, hashFloat(rotQuat.w));
-        signature = hashCombineU64(signature, hashFloat(static_cast<float>(scl.x)));
-        signature = hashCombineU64(signature, hashFloat(static_cast<float>(scl.y)));
-        signature = hashCombineU64(signature, hashFloat(static_cast<float>(scl.z)));
         signature =
-            hashCombineU64(signature, static_cast<uint64_t>(object->textures.size()));
+            hashCombineU64(signature, hashFloat(static_cast<float>(scl.x)));
+        signature =
+            hashCombineU64(signature, hashFloat(static_cast<float>(scl.y)));
+        signature =
+            hashCombineU64(signature, hashFloat(static_cast<float>(scl.z)));
         signature = hashCombineU64(
-            signature, static_cast<uint64_t>(object->material.useNormalMap ? 1 : 0));
+            signature, static_cast<uint64_t>(object->textures.size()));
         signature = hashCombineU64(
-            signature, hashFloat(static_cast<float>(object->material.albedo.r)));
-        signature = hashCombineU64(
-            signature, hashFloat(static_cast<float>(object->material.albedo.g)));
-        signature = hashCombineU64(
-            signature, hashFloat(static_cast<float>(object->material.albedo.b)));
-        signature = hashCombineU64(
-            signature, hashFloat(static_cast<float>(object->material.albedo.a)));
-        signature = hashCombineU64(
-            signature, hashFloat(static_cast<float>(object->material.metallic)));
-        signature = hashCombineU64(
-            signature, hashFloat(static_cast<float>(object->material.roughness)));
+            signature,
+            static_cast<uint64_t>(object->material.useNormalMap ? 1 : 0));
+        signature = hashCombineU64(signature, hashFloat(static_cast<float>(
+                                                  object->material.albedo.r)));
+        signature = hashCombineU64(signature, hashFloat(static_cast<float>(
+                                                  object->material.albedo.g)));
+        signature = hashCombineU64(signature, hashFloat(static_cast<float>(
+                                                  object->material.albedo.b)));
+        signature = hashCombineU64(signature, hashFloat(static_cast<float>(
+                                                  object->material.albedo.a)));
+        signature = hashCombineU64(signature, hashFloat(static_cast<float>(
+                                                  object->material.metallic)));
+        signature = hashCombineU64(signature, hashFloat(static_cast<float>(
+                                                  object->material.roughness)));
         signature = hashCombineU64(
             signature, hashFloat(static_cast<float>(object->material.ao)));
-        signature = hashCombineU64(signature, hashFloat(static_cast<float>(
-                                                object->material.emissiveColor.r)));
-        signature = hashCombineU64(signature, hashFloat(static_cast<float>(
-                                                object->material.emissiveColor.g)));
-        signature = hashCombineU64(signature, hashFloat(static_cast<float>(
-                                                object->material.emissiveColor.b)));
         signature = hashCombineU64(
-            signature, hashFloat(static_cast<float>(object->material.emissiveIntensity)));
+            signature,
+            hashFloat(static_cast<float>(object->material.emissiveColor.r)));
         signature = hashCombineU64(
-            signature, hashFloat(static_cast<float>(object->material.normalMapStrength)));
+            signature,
+            hashFloat(static_cast<float>(object->material.emissiveColor.g)));
+        signature = hashCombineU64(
+            signature,
+            hashFloat(static_cast<float>(object->material.emissiveColor.b)));
+        signature = hashCombineU64(
+            signature,
+            hashFloat(static_cast<float>(object->material.emissiveIntensity)));
+        signature = hashCombineU64(
+            signature,
+            hashFloat(static_cast<float>(object->material.normalMapStrength)));
         for (const auto &texture : object->textures) {
-            signature = hashCombineU64(signature,
-                                       static_cast<uint64_t>(texture.type));
-            uint64_t textureKey = texture.texture != nullptr
-                                      ? static_cast<uint64_t>(reinterpret_cast<uintptr_t>(
-                                            texture.texture.get()))
-                                      : static_cast<uint64_t>(texture.id);
+            signature =
+                hashCombineU64(signature, static_cast<uint64_t>(texture.type));
+            uint64_t textureKey =
+                texture.texture != nullptr
+                    ? static_cast<uint64_t>(
+                          reinterpret_cast<uintptr_t>(texture.texture.get()))
+                    : static_cast<uint64_t>(texture.id);
             signature = hashCombineU64(signature, textureKey);
         }
     }
@@ -268,10 +283,9 @@ void photon::GlobalIllumination::updateProbeLayout() {
                                     seenDdgiObjects, ddgiObjects);
     }
     const uint64_t layoutSignature = computeDdgiLayoutSignature(
-        ddgiObjects, std::max(0.001f, probeSpacing), probeSpace->probeResolution,
-        probeSpace->textureBorderSize);
-    if (hasCachedLayoutSignature &&
-        cachedLayoutSignature == layoutSignature &&
+        ddgiObjects, std::max(0.001f, probeSpacing),
+        probeSpace->probeResolution, probeSpace->textureBorderSize);
+    if (hasCachedLayoutSignature && cachedLayoutSignature == layoutSignature &&
         probeRadianceBuffer != nullptr && irradianceMap != nullptr &&
         irradianceMapPrev != nullptr) {
         return;
@@ -318,14 +332,14 @@ void photon::GlobalIllumination::updateProbeLayout() {
             0.0f, object->material.normalMapStrength * normalMapStrength);
         baseMaterial._pad0 = normalStrength;
         baseMaterial._pad1 = useNormalMap ? 1.0f : 0.0f;
-        baseMaterial.albedoTextureIndex = findTextureSlotForType(
-            object->textures, TextureType::Color, materialTextures,
-            textureSlots);
+        baseMaterial.albedoTextureIndex =
+            findTextureSlotForType(object->textures, TextureType::Color,
+                                   materialTextures, textureSlots);
         int normalTextureIndex = -1;
         if (useNormalMap && normalStrength > 0.0f) {
-            normalTextureIndex = findTextureSlotForType(
-                object->textures, TextureType::Normal, materialTextures,
-                textureSlots);
+            normalTextureIndex =
+                findTextureSlotForType(object->textures, TextureType::Normal,
+                                       materialTextures, textureSlots);
             if (normalTextureIndex < 0) {
                 normalTextureIndex = findTextureSlotForType(
                     object->textures, TextureType::Parallax, materialTextures,
@@ -333,12 +347,12 @@ void photon::GlobalIllumination::updateProbeLayout() {
             }
         }
         baseMaterial.normalTextureIndex = normalTextureIndex;
-        baseMaterial.metallicTextureIndex = findTextureSlotForType(
-            object->textures, TextureType::Metallic, materialTextures,
-            textureSlots);
-        baseMaterial.roughnessTextureIndex = findTextureSlotForType(
-            object->textures, TextureType::Roughness, materialTextures,
-            textureSlots);
+        baseMaterial.metallicTextureIndex =
+            findTextureSlotForType(object->textures, TextureType::Metallic,
+                                   materialTextures, textureSlots);
+        baseMaterial.roughnessTextureIndex =
+            findTextureSlotForType(object->textures, TextureType::Roughness,
+                                   materialTextures, textureSlots);
         baseMaterial.aoTextureIndex = findTextureSlotForType(
             object->textures, TextureType::AO, materialTextures, textureSlots);
         bool materialBound = false;
@@ -357,26 +371,26 @@ void photon::GlobalIllumination::updateProbeLayout() {
             tri.v0 = model * glm::vec4(v0.position.toGlm(), 1.0f);
             tri.v1 = model * glm::vec4(v1.position.toGlm(), 1.0f);
             tri.v2 = model * glm::vec4(v2.position.toGlm(), 1.0f);
-            glm::vec3 n0 =
-                normalizeOr(normalMatrix * v0.normal.toGlm(), glm::vec3(0, 1, 0));
-            glm::vec3 n1 =
-                normalizeOr(normalMatrix * v1.normal.toGlm(), glm::vec3(0, 1, 0));
-            glm::vec3 n2 =
-                normalizeOr(normalMatrix * v2.normal.toGlm(), glm::vec3(0, 1, 0));
+            glm::vec3 n0 = normalizeOr(normalMatrix * v0.normal.toGlm(),
+                                       glm::vec3(0, 1, 0));
+            glm::vec3 n1 = normalizeOr(normalMatrix * v1.normal.toGlm(),
+                                       glm::vec3(0, 1, 0));
+            glm::vec3 n2 = normalizeOr(normalMatrix * v2.normal.toGlm(),
+                                       glm::vec3(0, 1, 0));
             tri.n0 = glm::vec4(n0, 0.0f);
             tri.n1 = glm::vec4(n1, 0.0f);
             tri.n2 = glm::vec4(n2, 0.0f);
-            tri.uv0 = glm::vec4(v0.textureCoordinate[0], v0.textureCoordinate[1],
-                                0.0f, 0.0f);
-            tri.uv1 = glm::vec4(v1.textureCoordinate[0], v1.textureCoordinate[1],
-                                0.0f, 0.0f);
-            tri.uv2 = glm::vec4(v2.textureCoordinate[0], v2.textureCoordinate[1],
-                                0.0f, 0.0f);
+            tri.uv0 = glm::vec4(v0.textureCoordinate[0],
+                                v0.textureCoordinate[1], 0.0f, 0.0f);
+            tri.uv1 = glm::vec4(v1.textureCoordinate[0],
+                                v1.textureCoordinate[1], 0.0f, 0.0f);
+            tri.uv2 = glm::vec4(v2.textureCoordinate[0],
+                                v2.textureCoordinate[1], 0.0f, 0.0f);
 
             auto fillTangentFrame = [&](const CoreVertex &v, const glm::vec3 &n,
                                         glm::vec4 &tOut, glm::vec4 &bOut) {
-                glm::vec3 t =
-                    normalizeOr(linearMatrix * v.tangent.toGlm(), glm::vec3(1, 0, 0));
+                glm::vec3 t = normalizeOr(linearMatrix * v.tangent.toGlm(),
+                                          glm::vec3(1, 0, 0));
                 glm::vec3 b = normalizeOr(linearMatrix * v.bitangent.toGlm(),
                                           glm::vec3(0, 0, 1));
                 if (glm::dot(glm::cross(t, b), glm::cross(t, b)) <= 1e-10f) {
@@ -499,7 +513,7 @@ void photon::GlobalIllumination::updateProbeLayout() {
                             opal::TextureDataFormat::Rgba, TextureType::Color));
     }
 
-    int effectiveRaysPerProbe = std::max(1, raysPerProbe / 4);
+    int effectiveRaysPerProbe = std::max(1, raysPerProbe);
     if (probeRadianceBuffer == nullptr ||
         probeRadianceCapacity != totalProbeCount * effectiveRaysPerProbe) {
         int totalElements = totalProbeCount * effectiveRaysPerProbe;
@@ -530,15 +544,15 @@ void photon::GlobalIllumination::render(
         static_cast<uint>(std::max(1, this->probeSpace->totalProbes()));
     const uint requestedRays =
         static_cast<uint>(std::max(1, this->raysPerProbe));
-    const uint effectiveRays = std::max(1u, requestedRays / 4u);
+    const uint effectiveRays = std::max(1u, requestedRays);
     uint updateStride = static_cast<uint>(std::max(1, this->probeUpdateStride));
     if (frameIndex < static_cast<int>(updateStride) + 2) {
         updateStride = 1u;
     }
-    uint updateOffset = (updateStride > 1u)
-                            ? static_cast<uint>(std::max(0, frameIndex)) %
-                                  updateStride
-                            : 0u;
+    uint updateOffset =
+        (updateStride > 1u)
+            ? static_cast<uint>(std::max(0, frameIndex)) % updateStride
+            : 0u;
     if (totalProbes > 0u) {
         updateOffset %= totalProbes;
     }
@@ -611,7 +625,8 @@ void photon::GlobalIllumination::render(
         }
 
         const auto &scenePointLights = scene->getPointLights();
-        pointLights.reserve(std::min<size_t>(scenePointLights.size(), maxPointGI));
+        pointLights.reserve(
+            std::min<size_t>(scenePointLights.size(), maxPointGI));
         for (auto *light : scenePointLights) {
             if (light == nullptr) {
                 continue;
@@ -845,6 +860,7 @@ void photon::GlobalIllumination::render(
     const int dispatchHeight = std::max(1, irradianceMap->creationData.height);
     commandBuffer->dispatch(static_cast<uint>(dispatchWidth),
                             static_cast<uint>(dispatchHeight), 1);
+    commandBuffer->computeBarrier();
 
     frameIndex = std::min(frameIndex + 1, 1 << 30);
 }
