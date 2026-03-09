@@ -51,8 +51,8 @@ std::shared_ptr<opal::Texture> createFallbackSkyboxTexture() {
     constexpr unsigned char horizon[4] = {170, 195, 225, 255};
     constexpr unsigned char zenith[4] = {120, 170, 235, 255};
     constexpr unsigned char nadir[4] = {215, 220, 230, 255};
-    const unsigned char *faceColors[6] = {
-        horizon, horizon, zenith, nadir, horizon, horizon};
+    const unsigned char *faceColors[6] = {horizon, horizon, zenith,
+                                          nadir,   horizon, horizon};
     auto texture = opal::Texture::create(
         opal::TextureType::TextureCubeMap, opal::TextureFormat::Rgba8, 1, 1,
         opal::TextureDataFormat::Rgba, nullptr, 1);
@@ -101,8 +101,8 @@ uint64_t hashFloat(float value) {
     return static_cast<uint64_t>(bits);
 }
 
-uint64_t computeDeferredGeometrySignature(
-    const std::vector<Renderable *> &renderables) {
+uint64_t
+computeDeferredGeometrySignature(const std::vector<Renderable *> &renderables) {
     uint64_t signature = 1469598103934665603ULL;
     for (auto *renderable : renderables) {
         if (renderable == nullptr) {
@@ -477,9 +477,8 @@ void Window::deferredRendering(
         const int ddgiLayoutInterval = 4;
         const int ddgiRenderInterval = 1;
 
-        bool needImmediateLayout =
-            ddgiSystem->probeRadianceBuffer == nullptr ||
-            ddgiSystem->probeSpace == nullptr;
+        bool needImmediateLayout = ddgiSystem->probeRadianceBuffer == nullptr ||
+                                   ddgiSystem->probeSpace == nullptr;
         if (needImmediateLayout || ddgiLayoutCountdown <= 0) {
             ddgiSystem->updateProbeLayout();
             ddgiLayoutCountdown = ddgiLayoutInterval - 1;
@@ -496,6 +495,8 @@ void Window::deferredRendering(
     }
 #endif
 
+    this->ssaoMapsDirty = true;
+    this->ssaoUpdateCooldown = 0.0f;
     this->renderSSAO(commandBuffer);
 
     auto targetRenderPass = opal::RenderPass::create();
@@ -571,6 +572,7 @@ void Window::deferredRendering(
     lightPipeline->enableDepthTest(false);
     lightPipeline->enableDepthWrite(false);
     lightPipeline->enableBlending(false);
+    lightPipeline->setViewport(0, 0, target->getWidth(), target->getHeight());
     lightPipeline->bind();
 
     lightPipeline->bindTexture2D("gPosition", this->gBuffer->gPosition.id, 0);
@@ -613,7 +615,8 @@ void Window::deferredRendering(
 
 #ifdef METAL
     if (usesGlobalIllumination && ddgiSystem != nullptr &&
-        ddgiSystem->probeSpace != nullptr && ddgiSystem->irradianceMap != nullptr &&
+        ddgiSystem->probeSpace != nullptr &&
+        ddgiSystem->irradianceMap != nullptr &&
         ddgiSystem->irradianceMap->texture != nullptr) {
         lightPipeline->setUniform3f("ps.origin",
                                     ddgiSystem->probeSpace->originWorldSpace.x,

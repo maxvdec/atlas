@@ -511,7 +511,8 @@ static inline __attribute__((always_inline)) float calculateShadow(
         return 0.0;
     }
     float3 clipCoords = fragPosLightSpace.xyz / float3(fragPosLightSpace.w);
-    float3 projCoords = (clipCoords * 0.5) + float3(0.5);
+    float2 projCoordsXY = (clipCoords.xy * 0.5) + float2(0.5);
+    float3 projCoords = float3(projCoordsXY, clipCoords.z);
     bool _456 = projCoords.x < 0.0;
     bool _463;
     if (!_456) {
@@ -999,8 +1000,8 @@ static inline float3 sampleDDGIIrradiance(texture2d<float> ddgiTexture,
                 float3 dirToProbe = (sDist > 1e-4f) ? surfaceToProbe / sDist
                                                     : float3(0.0f, 1.0f, 0.0f);
                 float frontW = max(dot(safeNormal, dirToProbe), 0.0f);
-                float backfaceW = mix(0.180000007152557373046875, 1.0f,
-                                      frontW * frontW);
+                float backfaceW =
+                    mix(0.180000007152557373046875, 1.0f, frontW * frontW);
                 float distNorm = sDist / spacingScale;
                 float distNorm2 = distNorm * distNorm;
                 float distanceW =
@@ -1104,7 +1105,8 @@ fragment main0_out main0(
     float normalLength = length(sampledNormal);
     bool hasNormal = all(isfinite(sampledNormal)) &&
                      normalLength > 9.9999997473787516355514526367188e-06;
-    bool hasDepth = isfinite(depthSample) && depthSample < 0.999989986419677734375;
+    bool hasDepth =
+        isfinite(depthSample) && depthSample < 0.999989986419677734375;
     bool hasGeometry = hasNormal || hasDepth;
     if (!hasGeometry) {
         float2 ndc = in.TexCoord * 2.0f - 1.0f;
@@ -1129,8 +1131,7 @@ fragment main0_out main0(
     float3 geomNormal = cross(dfdx(FragPos), dfdy(FragPos));
     float geomNormalLen = length(geomNormal);
     bool hasGeomNormal = all(isfinite(geomNormal)) &&
-                         geomNormalLen >
-                             9.9999997473787516355514526367188e-06;
+                         geomNormalLen > 9.9999997473787516355514526367188e-06;
     float3 shadowNormal = N;
     float3 ddgiNormal = N;
     if (hasGeomNormal) {
@@ -1150,6 +1151,7 @@ fragment main0_out main0(
     float metallic = fast::clamp(matData.x, 0.0, 1.0);
     float roughness = fast::clamp(matData.y, 0.0, 1.0);
     float ao = fast::clamp(matData.z, 0.0, 1.0);
+
     float viewDistance =
         fast::max(length(float3(_526.cameraPosition) - FragPos),
                   9.9999999747524270787835121154785e-07);
@@ -1160,15 +1162,15 @@ fragment main0_out main0(
         fast::clamp(ssao.sample(ssaoSmplr, in.TexCoord).x, 0.0, 1.0);
 
     float ssaoContrast =
-        fast::clamp(powr(ssaoFactor, 1.35000002384185791015625), 0.0, 1.0);
+        fast::clamp(powr(ssaoFactor, 1.10000002384185791015625), 0.0, 1.0);
     float occlusion =
-        fast::clamp(ao * (0.180000007152557373046875 +
-                          (0.819999992847442626953125 * ssaoContrast)),
+        fast::clamp(ao * (0.0500000007450580596923828125 +
+                          (0.949999988079071044921875 * ssaoContrast)),
                     0.0, 1.0);
     float lightingOcclusion =
-        fast::clamp(0.2800000011920928955078125 +
-                        (0.7200000286102294921875 * ssaoContrast),
-                    0.2800000011920928955078125, 1.0);
+        fast::clamp(0.0500000007450580596923828125 +
+                        (0.949999988079071044921875 * ssaoContrast),
+                    0.0500000007450580596923828125, 1.0);
     float directionalShadow = 0.0;
     float spotShadow = 0.0;
     float areaShadow = 0.0;
@@ -1433,16 +1435,17 @@ fragment main0_out main0(
             float3(0.0f));
     float3 bleedAlbedo = albedo;
     float3 ddgiDiffuse = boostedIrradiance * bleedAlbedo * INV_PI *
-                         (1.0f - metallic) * ddgiGain * 0.85000002384185791015625;
+                         (1.0f - metallic) * ddgiGain *
+                         0.85000002384185791015625;
     float sideFactor = clamp(1.0f - abs(N.y), 0.0f, 1.0f);
-    float ddgiSurfaceFactor = 0.550000011920928955078125 +
-                              sideFactor * 0.449999988079071044921875;
+    float ddgiSurfaceFactor =
+        0.550000011920928955078125 + sideFactor * 0.449999988079071044921875;
     ddgiDiffuse *= ddgiSurfaceFactor;
     float ddgiDiffuseLuma = dot(ddgiDiffuse, float3(0.2126f, 0.7152f, 0.0722f));
     float sceneRefLuma =
         dot(ambientBase + lighting * 0.35f, float3(0.2126f, 0.7152f, 0.0722f));
-    float ddgiLumaCap = sceneRefLuma * 0.85000002384185791015625 +
-                        0.07999999821186065673828125;
+    float ddgiLumaCap =
+        sceneRefLuma * 0.85000002384185791015625 + 0.07999999821186065673828125;
     if (ddgiDiffuseLuma > ddgiLumaCap) {
         ddgiDiffuse *= (ddgiLumaCap / ddgiDiffuseLuma);
     }
@@ -1485,7 +1488,12 @@ fragment main0_out main0(
         iblContribution = ((kD * diffuseIBL) + (kS * specularIBL)) * occlusion;
     }
     float3 finalColor = (ambient + lighting + ddgiSpecular) + iblContribution;
-    if (ddgiDebugMode >= 39.5f) {
+
+    // Debug AO view mode:
+    // ps.debugColor.w >= 9.5f -> visualize SSAO directly in grayscale.
+    if (ddgiDebugMode >= 9.5f && ddgiDebugMode < 19.5f) {
+        finalColor = float3(ssaoFactor);
+    } else if (ddgiDebugMode >= 39.5f) {
         finalColor =
             max(ddgiDiffuse * 3.0f + ddgiSpecular * 2.0f, float3(0.0f));
     } else if (ddgiDebugMode >= 29.5f) {

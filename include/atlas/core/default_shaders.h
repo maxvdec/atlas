@@ -3745,7 +3745,8 @@ static inline __attribute__((always_inline)) float calculateShadow(
         return 0.0;
     }
     float3 clipCoords = fragPosLightSpace.xyz / float3(fragPosLightSpace.w);
-    float3 projCoords = (clipCoords * 0.5) + float3(0.5);
+    float2 projCoordsXY = (clipCoords.xy * 0.5) + float2(0.5);
+    float3 projCoords = float3(projCoordsXY, clipCoords.z);
     bool _456 = projCoords.x < 0.0;
     bool _463;
     if (!_456) {
@@ -4233,8 +4234,8 @@ static inline float3 sampleDDGIIrradiance(texture2d<float> ddgiTexture,
                 float3 dirToProbe = (sDist > 1e-4f) ? surfaceToProbe / sDist
                                                     : float3(0.0f, 1.0f, 0.0f);
                 float frontW = max(dot(safeNormal, dirToProbe), 0.0f);
-                float backfaceW = mix(0.180000007152557373046875, 1.0f,
-                                      frontW * frontW);
+                float backfaceW =
+                    mix(0.180000007152557373046875, 1.0f, frontW * frontW);
                 float distNorm = sDist / spacingScale;
                 float distNorm2 = distNorm * distNorm;
                 float distanceW =
@@ -4338,7 +4339,8 @@ fragment main0_out main0(
     float normalLength = length(sampledNormal);
     bool hasNormal = all(isfinite(sampledNormal)) &&
                      normalLength > 9.9999997473787516355514526367188e-06;
-    bool hasDepth = isfinite(depthSample) && depthSample < 0.999989986419677734375;
+    bool hasDepth =
+        isfinite(depthSample) && depthSample < 0.999989986419677734375;
     bool hasGeometry = hasNormal || hasDepth;
     if (!hasGeometry) {
         float2 ndc = in.TexCoord * 2.0f - 1.0f;
@@ -4363,8 +4365,7 @@ fragment main0_out main0(
     float3 geomNormal = cross(dfdx(FragPos), dfdy(FragPos));
     float geomNormalLen = length(geomNormal);
     bool hasGeomNormal = all(isfinite(geomNormal)) &&
-                         geomNormalLen >
-                             9.9999997473787516355514526367188e-06;
+                         geomNormalLen > 9.9999997473787516355514526367188e-06;
     float3 shadowNormal = N;
     float3 ddgiNormal = N;
     if (hasGeomNormal) {
@@ -4384,6 +4385,7 @@ fragment main0_out main0(
     float metallic = fast::clamp(matData.x, 0.0, 1.0);
     float roughness = fast::clamp(matData.y, 0.0, 1.0);
     float ao = fast::clamp(matData.z, 0.0, 1.0);
+
     float viewDistance =
         fast::max(length(float3(_526.cameraPosition) - FragPos),
                   9.9999999747524270787835121154785e-07);
@@ -4394,15 +4396,15 @@ fragment main0_out main0(
         fast::clamp(ssao.sample(ssaoSmplr, in.TexCoord).x, 0.0, 1.0);
 
     float ssaoContrast =
-        fast::clamp(powr(ssaoFactor, 1.35000002384185791015625), 0.0, 1.0);
+        fast::clamp(powr(ssaoFactor, 1.10000002384185791015625), 0.0, 1.0);
     float occlusion =
-        fast::clamp(ao * (0.180000007152557373046875 +
-                          (0.819999992847442626953125 * ssaoContrast)),
+        fast::clamp(ao * (0.0500000007450580596923828125 +
+                          (0.949999988079071044921875 * ssaoContrast)),
                     0.0, 1.0);
     float lightingOcclusion =
-        fast::clamp(0.2800000011920928955078125 +
-                        (0.7200000286102294921875 * ssaoContrast),
-                    0.2800000011920928955078125, 1.0);
+        fast::clamp(0.0500000007450580596923828125 +
+                        (0.949999988079071044921875 * ssaoContrast),
+                    0.0500000007450580596923828125, 1.0);
     float directionalShadow = 0.0;
     float spotShadow = 0.0;
     float areaShadow = 0.0;
@@ -4667,16 +4669,17 @@ fragment main0_out main0(
             float3(0.0f));
     float3 bleedAlbedo = albedo;
     float3 ddgiDiffuse = boostedIrradiance * bleedAlbedo * INV_PI *
-                         (1.0f - metallic) * ddgiGain * 0.85000002384185791015625;
+                         (1.0f - metallic) * ddgiGain *
+                         0.85000002384185791015625;
     float sideFactor = clamp(1.0f - abs(N.y), 0.0f, 1.0f);
-    float ddgiSurfaceFactor = 0.550000011920928955078125 +
-                              sideFactor * 0.449999988079071044921875;
+    float ddgiSurfaceFactor =
+        0.550000011920928955078125 + sideFactor * 0.449999988079071044921875;
     ddgiDiffuse *= ddgiSurfaceFactor;
     float ddgiDiffuseLuma = dot(ddgiDiffuse, float3(0.2126f, 0.7152f, 0.0722f));
     float sceneRefLuma =
         dot(ambientBase + lighting * 0.35f, float3(0.2126f, 0.7152f, 0.0722f));
-    float ddgiLumaCap = sceneRefLuma * 0.85000002384185791015625 +
-                        0.07999999821186065673828125;
+    float ddgiLumaCap =
+        sceneRefLuma * 0.85000002384185791015625 + 0.07999999821186065673828125;
     if (ddgiDiffuseLuma > ddgiLumaCap) {
         ddgiDiffuse *= (ddgiLumaCap / ddgiDiffuseLuma);
     }
@@ -4719,17 +4722,22 @@ fragment main0_out main0(
         iblContribution = ((kD * diffuseIBL) + (kS * specularIBL)) * occlusion;
     }
     float3 finalColor = (ambient + lighting + ddgiSpecular) + iblContribution;
-    if (ddgiDebugMode >= 39.5f) {
+
+    // Debug AO view mode:
+    // ps.debugColor.w >= 9.5f -> visualize SSAO directly in grayscale.
+    if (ddgiDebugMode >= 9.5f && ddgiDebugMode < 19.5f) {
+        finalColor = float3(ssaoFactor);
+    } else if (ddgiDebugMode >= 39.5f) {
         finalColor =
             max(ddgiDiffuse * 3.0f + ddgiSpecular * 2.0f, float3(0.0f));
     } else if (ddgiDebugMode >= 29.5f) {
-        finalColor = ddgiIrradiance * ddgiGain * 4.0f;
+        finalColor = ddgiIrradiance * ddgiGain )"
+R"(* 4.0f;
     } else if (ddgiDebugMode >= 19.5f) {
         finalColor = ddgiDiffuse * 3.0f;
     } else if (!(_526.useIBL != 0u)) {
         float3 I = fast::normalize(FragPos - float3(_526.cameraPosition));
-        float3 R_1 = reflect)"
-R"((-I, N);
+        float3 R_1 = reflect(-I, N);
         float param_47 = fast::max(dot(N, -I), 0.0);
         float3 param_48 = F0;
         float3 F_1 = fresnelSchlick(param_47, param_48);
@@ -7947,78 +7955,95 @@ R"(#include <metal_stdlib>
 
 using namespace metal;
 
-struct Paramters
-{
+struct Paramters {
     float4x4 projection;
+    float4x4 inverseProjection;
     float4x4 view;
     float2 noiseScale;
 };
 
-struct Samples
-{
+struct Samples {
     float3 samples[64];
 };
 
-struct main0_out
-{
+struct main0_out {
     float FragColor [[color(0)]];
 };
 
-struct main0_in
-{
+struct main0_in {
     float2 TexCoord [[user(locn0)]];
 };
 
-fragment main0_out main0(main0_in in [[stage_in]], constant Paramters& _43 [[buffer(0)]], constant Samples& _137 [[buffer(1)]], texture2d<float> gPosition [[texture(0)]], texture2d<float> gNormal [[texture(1)]], texture2d<float> texNoise [[texture(2)]], sampler gPositionSmplr [[sampler(0)]], sampler gNormalSmplr [[sampler(1)]], sampler texNoiseSmplr [[sampler(2)]])
-{
+static inline float3 reconstructViewPos(float2 uv, float depth,
+                                        float4x4 inverseProjection) {
+    float2 ndc;
+    ndc.x = uv.x * 2.0 - 1.0;
+    ndc.y = (1.0 - uv.y) * 2.0 - 1.0;
+    float ndcZ = depth * 2.0 - 1.0;
+    float4 clip = float4(ndc, ndcZ, 1.0);
+    float4 viewPos = inverseProjection * clip;
+    float invW = 1.0 / max(abs(viewPos.w), 1e-6);
+    return viewPos.xyz * invW;
+}
+
+fragment main0_out main0(main0_in in [[stage_in]],
+                         constant Paramters &_43 [[buffer(0)]],
+                         constant Samples &_137 [[buffer(1)]],
+                         texture2d<float> gPosition [[texture(0)]],
+                         texture2d<float> gNormal [[texture(1)]],
+                         texture2d<float> texNoise [[texture(2)]],
+                         sampler gPositionSmplr [[sampler(0)]],
+                         sampler gNormalSmplr [[sampler(1)]],
+                         sampler texNoiseSmplr [[sampler(2)]]) {
     main0_out out = {};
-    float3 fragPosWorld = gPosition.sample(gPositionSmplr, in.TexCoord).xyz;
-    if (!all(isfinite(fragPosWorld)))
-    {
+    float3 sampledNormalWorld = gNormal.sample(gNormalSmplr, in.TexCoord).xyz;
+    float sampledNormalLength = length(sampledNormalWorld);
+    if (!all(isfinite(sampledNormalWorld)) ||
+        sampledNormalLength <= 0.001000000047497451305389404296875) {
         out.FragColor = 1.0;
         return out;
     }
-    float3 geometricNormal = cross(dfdx(fragPosWorld), dfdy(fragPosWorld));
-    float geometricNormalLength = length(geometricNormal);
-    bool hasGeometricNormal = all(isfinite(geometricNormal)) && geometricNormalLength > 0.001000000047497451305389404296875;
-    float3 sampledNormalWorld = gNormal.sample(gNormalSmplr, in.TexCoord).xyz;
-    float sampledNormalLength = length(sampledNormalWorld);
-    bool hasSampledNormal = all(isfinite(sampledNormalWorld)) && sampledNormalLength > 0.001000000047497451305389404296875;
-    float3 normalWorld;
-    if (hasGeometricNormal)
-    {
-        normalWorld = geometricNormal / geometricNormalLength;
-        if (hasSampledNormal)
-        {
-            float3 shadingNormal = sampledNormalWorld / sampledNormalLength;
-            if (dot(normalWorld, shadingNormal) < 0.0)
-            {
-                normalWorld = -normalWorld;
-            }
-        }
+    float4 gPositionCenter = gPosition.sample(gPositionSmplr, in.TexCoord);
+    float centerDepth = gPositionCenter.w;
+    if (!isfinite(centerDepth)) {
+        out.FragColor = 1.0;
+        return out;
     }
-    else
-    {
-        if (!hasSampledNormal)
-        {
-            out.FragColor = 1.0;
-            return out;
-        }
-        normalWorld = sampledNormalWorld / sampledNormalLength;
-    }
-    float3 fragPos = (_43.view * float4(fragPosWorld, 1.0)).xyz;
+    centerDepth = clamp(centerDepth, 0.0, 1.0);
+    float3 fragPos = reconstructViewPos(in.TexCoord, centerDepth,
+                                        _43.inverseProjection);
+    float3 normalWorld = sampledNormalWorld / sampledNormalLength;
     float3 normal = fast::normalize((_43.view * float4(normalWorld, 0.0)).xyz);
-    float3 randomVec = fast::normalize((texNoise.sample(texNoiseSmplr, (in.TexCoord * _43.noiseScale)).xyz * 2.0) - float3(1.0));
-    float3 tangent = fast::normalize(randomVec - (normal * dot(randomVec, normal)));
+    float3 randomVec = fast::normalize(
+        (texNoise.sample(texNoiseSmplr, (in.TexCoord * _43.noiseScale)).xyz *
+         2.0) -
+        float3(1.0));
+    float3 tangent =
+        fast::normalize(randomVec - (normal * dot(randomVec, normal)));
     float3 bitangent = cross(normal, tangent);
     float3x3 TBN = float3x3(float3(tangent), float3(bitangent), float3(normal));
     float viewDepth = abs(fragPos.z);
-    float sampleRadius = mix(0.550000011920928955078125, 2.2000000476837158203125, clamp(viewDepth / 140.0, 0.0, 1.0));
-    float depthBias = mix(0.006000000052154064178466796875, 0.0240000002086162567138671875, clamp(viewDepth / 180.0, 0.0, 1.0));
+    float baseRadius =
+        mix(0.550000011920928955078125, 2.2000000476837158203125,
+            clamp(viewDepth / 140.0, 0.0, 1.0));
+    float3 dPosDx = dfdx(fragPos);
+    float3 dPosDy = dfdy(fragPos);
+    float pixelWorldScale = max(length(dPosDx), length(dPosDy));
+    if (!isfinite(pixelWorldScale)) {
+        pixelWorldScale = 0.0;
+    }
+    float sampleRadius =
+        clamp(max(baseRadius, pixelWorldScale * 6.0), 0.3499999940395355,
+              12.0);
+    float depthBias = clamp(
+        max(mix(0.006000000052154064178466796875,
+                0.0240000002086162567138671875,
+                clamp(viewDepth / 180.0, 0.0, 1.0)),
+            sampleRadius * 0.009999999776482582),
+        0.003000000026077032, 0.07999999821186066);
     float occlusion = 0.0;
     int validSamples = 0;
-    for (int i = 0; i < 64; i++)
-    {
+    for (int i = 0; i < 64; i++) {
         float3 samplePos = TBN * _137.samples[i];
         samplePos = fragPos + (samplePos * sampleRadius);
         float4 offset = _43.projection * float4(samplePos, 1.0);
@@ -8034,52 +8059,44 @@ fragment main0_out main0(main0_in in [[stage_in]], constant Paramters& _43 [[buf
         offset.y = 1.0 - _178.y;
         bool _185 = offset.x < 0.0;
         bool _192;
-        if (!_185)
-        {
+        if (!_185) {
             _192 = offset.x > 1.0;
-        }
-        else
-        {
+        } else {
             _192 = _185;
         }
         bool _199;
-        if (!_192)
-        {
+        if (!_192) {
             _199 = offset.y < 0.0;
-        }
-        else
-        {
+        } else {
             _199 = _192;
         }
         bool _206;
-        if (!_199)
-        {
+        if (!_199) {
             _206 = offset.y > 1.0;
-        }
-        else
-        {
+        } else {
             _206 = _199;
         }
-        if (_206)
-        {
+        if (_206) {
             continue;
         }
-        float3 samplePosWorld = gPosition.sample(gPositionSmplr, offset.xy).xyz;
-        if (!all(isfinite(samplePosWorld)))
-        {
+        float sampleDepth = gPosition.sample(gPositionSmplr, offset.xy).w;
+        if (!isfinite(sampleDepth)) {
             continue;
         }
-        float sampleDepth = (_43.view * float4(samplePosWorld, 1.0)).z;
-        float rangeCheck = smoothstep(0.0, 1.0, sampleRadius / (abs(fragPos.z - sampleDepth) + 0.0005000000237487256526947021484375));
-        occlusion += (float(sampleDepth >= (samplePos.z + depthBias)) * rangeCheck);
+        sampleDepth = clamp(sampleDepth, 0.0, 1.0);
+        float3 sampleViewPos =
+            reconstructViewPos(offset.xy, sampleDepth, _43.inverseProjection);
+        float rangeCheck =
+            smoothstep(0.0, 1.0,
+                       sampleRadius / (abs(fragPos.z - sampleViewPos.z) +
+                                        0.0005000000237487256526947021484375));
+        occlusion +=
+            (float(sampleViewPos.z >= (samplePos.z + depthBias)) * rangeCheck);
         validSamples++;
     }
-    if (validSamples > 0)
-    {
+    if (validSamples > 0) {
         occlusion = 1.0 - (occlusion / float(validSamples));
-    }
-    else
-    {
+    } else {
         occlusion = 1.0;
     }
     out.FragColor = occlusion;
