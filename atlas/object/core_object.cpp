@@ -611,6 +611,18 @@ void CoreObject::render(float dt,
                                          static_cast<int>(textures[i].type));
         }
     }
+    if (shaderSupportsTextures) {
+        this->pipeline->setUniform1f("normalMapStrength",
+                                     material.normalMapStrength);
+        this->pipeline->setUniform1i("useNormalMap",
+                                     material.useNormalMap ? 1 : 0);
+        if (Window::mainWindow != nullptr && Window::mainWindow->getCamera() != nullptr) {
+            this->pipeline->setUniform3f(
+                "cameraPosition", Window::mainWindow->getCamera()->position.x,
+                Window::mainWindow->getCamera()->position.y,
+                Window::mainWindow->getCamera()->position.z);
+        }
+    }
 
     if (std::find(shaderProgram.capabilities.begin(),
                   shaderProgram.capabilities.end(),
@@ -621,12 +633,15 @@ void CoreObject::render(float dt,
         this->pipeline->setUniform1f("material.metallic", material.metallic);
         this->pipeline->setUniform1f("material.roughness", material.roughness);
         this->pipeline->setUniform1f("material.ao", material.ao);
+        this->pipeline->setUniform1f("material.reflectivity",
+                                     material.reflectivity);
 
         this->pipeline->setUniform3f("albedo", material.albedo.r,
                                      material.albedo.g, material.albedo.b);
         this->pipeline->setUniform1f("metallic", material.metallic);
         this->pipeline->setUniform1f("roughness", material.roughness);
         this->pipeline->setUniform1f("ao", material.ao);
+        this->pipeline->setUniform1f("reflectivity", material.reflectivity);
     }
 
     const bool shaderSupportsIbl =

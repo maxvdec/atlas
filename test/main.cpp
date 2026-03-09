@@ -196,7 +196,7 @@ class MainScene : public Scene {
         Resource fontResource = Workspace::get().createResource(
             "arial.ttf", "ArialFont", ResourceType::Font);
 
-        this->setAmbientIntensity(1.0f);
+        this->setAmbientIntensity(0.1f);
 
         window.addObject(&sponza);
 
@@ -208,7 +208,7 @@ class MainScene : public Scene {
         atmosphere.setTime(12);
         atmosphere.cycle = false;
         atmosphere.useGlobalLight();
-        // atmosphere.castShadowsFromSunlight(4096);
+        atmosphere.castShadowsFromSunlight(4096);
 
         this->setUseAtmosphereSkybox(true);
     }

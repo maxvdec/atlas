@@ -12,6 +12,7 @@
 #include "opal/opal.h"
 #include <cstddef>
 #include <cmath>
+#include <cstring>
 #include <memory>
 #include <unordered_map>
 #include <unordered_set>
@@ -50,8 +51,8 @@ std::shared_ptr<opal::Texture> createFallbackSkyboxTexture() {
     constexpr unsigned char horizon[4] = {170, 195, 225, 255};
     constexpr unsigned char zenith[4] = {120, 170, 235, 255};
     constexpr unsigned char nadir[4] = {215, 220, 230, 255};
-    const unsigned char *faceColors[6] = {
-        horizon, horizon, zenith, nadir, horizon, horizon};
+    const unsigned char *faceColors[6] = {horizon, horizon, zenith,
+                                          nadir,   horizon, horizon};
     auto texture = opal::Texture::create(
         opal::TextureType::TextureCubeMap, opal::TextureFormat::Rgba8, 1, 1,
         opal::TextureDataFormat::Rgba, nullptr, 1);
@@ -87,6 +88,57 @@ std::shared_ptr<opal::Texture> createFallbackShadowCubemapTexture() {
         texture->updateFace(face, white, 1, 1, opal::TextureDataFormat::Rgba);
     }
     return texture;
+}
+
+uint64_t hashCombineU64(uint64_t seed, uint64_t value) {
+    seed ^= value + 0x9e3779b97f4a7c15ULL + (seed << 6) + (seed >> 2);
+    return seed;
+}
+
+uint64_t hashFloat(float value) {
+    uint32_t bits = 0;
+    std::memcpy(&bits, &value, sizeof(float));
+    return static_cast<uint64_t>(bits);
+}
+
+uint64_t
+computeDeferredGeometrySignature(const std::vector<Renderable *> &renderables) {
+    uint64_t signature = 1469598103934665603ULL;
+    for (auto *renderable : renderables) {
+        if (renderable == nullptr) {
+            continue;
+        }
+        signature = hashCombineU64(
+            signature,
+            static_cast<uint64_t>(reinterpret_cast<uintptr_t>(renderable)));
+        Position3d position = renderable->getPosition();
+        Size3d scale = renderable->getScale();
+        signature = hashCombineU64(signature,
+                                   hashFloat(static_cast<float>(position.x)));
+        signature = hashCombineU64(signature,
+                                   hashFloat(static_cast<float>(position.y)));
+        signature = hashCombineU64(signature,
+                                   hashFloat(static_cast<float>(position.z)));
+        signature =
+            hashCombineU64(signature, hashFloat(static_cast<float>(scale.x)));
+        signature =
+            hashCombineU64(signature, hashFloat(static_cast<float>(scale.y)));
+        signature =
+            hashCombineU64(signature, hashFloat(static_cast<float>(scale.z)));
+        if (auto *object = dynamic_cast<CoreObject *>(renderable)) {
+            Rotation3d rotation = object->getRotation();
+            glm::quat rotationQuat = rotation.toGlmQuat();
+            signature = hashCombineU64(signature, hashFloat(rotationQuat.x));
+            signature = hashCombineU64(signature, hashFloat(rotationQuat.y));
+            signature = hashCombineU64(signature, hashFloat(rotationQuat.z));
+            signature = hashCombineU64(signature, hashFloat(rotationQuat.w));
+            signature = hashCombineU64(
+                signature, static_cast<uint64_t>(object->vertices.size()));
+            signature = hashCombineU64(
+                signature, static_cast<uint64_t>(object->indices.size()));
+        }
+    }
+    return signature;
 }
 
 std::vector<GPUDirectionalLight>
@@ -202,6 +254,7 @@ buildGPUAreaLights(const std::vector<AreaLight *> &lights, int maxCount) {
 void Window::enableGlobalIllumination() {
     usesGlobalIllumination = true;
     ddgiSystem = std::make_shared<photon::GlobalIllumination>();
+    ddgiSystem->sampleNormalMaps = false;
     ddgiSystem->init();
 }
 
@@ -276,17 +329,68 @@ void Window::deferredRendering(
     commandBuffer->clear(0.0f, 0.0f, 0.0f, 1.0f, 1.0f);
 
     std::unordered_set<Renderable *> activeDeferredRenderables;
+    std::vector<Renderable *> orderedDeferredRenderables;
     activeDeferredRenderables.reserve(this->renderables.size() +
                                       this->firstRenderables.size());
-    for (auto *obj : this->renderables) {
-        if (obj != nullptr && obj->canUseDeferredRendering()) {
-            activeDeferredRenderables.insert(obj);
+    orderedDeferredRenderables.reserve(this->renderables.size() +
+                                       this->firstRenderables.size());
+
+    auto collectDeferredRenderable = [&](Renderable *obj) {
+        if (obj == nullptr) {
+            return;
         }
-    }
+        if (auto *model = dynamic_cast<Model *>(obj)) {
+            const auto &meshes =
+                static_cast<const Model *>(model)->getObjects();
+            for (const auto &mesh : meshes) {
+                CoreObject *meshRenderable = mesh.get();
+                if (meshRenderable == nullptr) {
+                    continue;
+                }
+                bool hasAnyTexture = !meshRenderable->textures.empty();
+                if (!hasAnyTexture) {
+                    meshRenderable->material = model->material;
+                }
+                meshRenderable->material.useNormalMap =
+                    model->material.useNormalMap;
+                meshRenderable->material.normalMapStrength =
+                    model->material.normalMapStrength;
+                meshRenderable->useDeferredRendering =
+                    model->useDeferredRendering;
+                if (!meshRenderable->canUseDeferredRendering()) {
+                    continue;
+                }
+                if (activeDeferredRenderables.insert(meshRenderable).second) {
+                    orderedDeferredRenderables.push_back(meshRenderable);
+                }
+            }
+            return;
+        }
+        if (!obj->canUseDeferredRendering()) {
+            return;
+        }
+        if (activeDeferredRenderables.insert(obj).second) {
+            orderedDeferredRenderables.push_back(obj);
+        }
+    };
+
     for (auto *obj : this->firstRenderables) {
-        if (obj != nullptr && obj->canUseDeferredRendering()) {
-            activeDeferredRenderables.insert(obj);
-        }
+        collectDeferredRenderable(obj);
+    }
+    for (auto *obj : this->renderables) {
+        collectDeferredRenderable(obj);
+    }
+
+    static uint64_t lastDeferredGeometrySignature = 0;
+    static bool hasDeferredGeometrySignature = false;
+    const uint64_t deferredGeometrySignature =
+        computeDeferredGeometrySignature(orderedDeferredRenderables);
+    if (!hasDeferredGeometrySignature ||
+        deferredGeometrySignature != lastDeferredGeometrySignature) {
+        this->ssaoMapsDirty = true;
+        this->ssaoUpdateCooldown = 0.0f;
+        lastDeferredGeometrySignature = deferredGeometrySignature;
+        hasDeferredGeometrySignature = true;
     }
 
     for (auto it = deferredPrograms.begin(); it != deferredPrograms.end();) {
@@ -305,14 +409,8 @@ void Window::deferredRendering(
         }
     }
 
-    std::unordered_set<Renderable *> renderedDeferred;
-    renderedDeferred.reserve(activeDeferredRenderables.size());
-
     auto renderDeferredRenderable = [&](Renderable *obj) {
         if (obj == nullptr || !obj->canUseDeferredRendering()) {
-            return;
-        }
-        if (!renderedDeferred.insert(obj).second) {
             return;
         }
 
@@ -334,7 +432,7 @@ void Window::deferredRendering(
             pipelineEntry.height != gbufferHeight) {
             auto deferredPipeline = opal::Pipeline::create();
             deferredPipeline->setViewport(0, 0, gbufferWidth, gbufferHeight);
-            deferredPipeline->setCullMode(opal::CullMode::None);
+            deferredPipeline->setCullMode(this->cullMode);
             deferredPipeline->setFrontFace(this->deferredFrontFace);
             deferredPipeline->enableDepthTest(true);
             deferredPipeline->setDepthCompareOp(opal::CompareOp::Less);
@@ -348,13 +446,17 @@ void Window::deferredRendering(
         obj->setViewMatrix(this->camera->calculateViewMatrix());
         obj->setProjectionMatrix(calculateProjectionMatrix());
         obj->setPipeline(pipelineEntry.pipeline);
-        obj->render(getDeltaTime(), commandBuffer, false);
+        if (auto *coreObject = dynamic_cast<CoreObject *>(obj)) {
+            ShaderProgram originalProgram = coreObject->shaderProgram;
+            coreObject->shaderProgram = programIt->second;
+            coreObject->render(getDeltaTime(), commandBuffer, false);
+            coreObject->shaderProgram = originalProgram;
+        } else {
+            obj->render(getDeltaTime(), commandBuffer, false);
+        }
     };
 
-    for (auto *obj : this->firstRenderables) {
-        renderDeferredRenderable(obj);
-    }
-    for (auto *obj : this->renderables) {
+    for (auto *obj : orderedDeferredRenderables) {
         renderDeferredRenderable(obj);
     }
 
@@ -375,9 +477,8 @@ void Window::deferredRendering(
         const int ddgiLayoutInterval = 4;
         const int ddgiRenderInterval = 1;
 
-        bool needImmediateLayout =
-            ddgiSystem->probeRadianceBuffer == nullptr ||
-            ddgiSystem->probeSpace == nullptr;
+        bool needImmediateLayout = ddgiSystem->probeRadianceBuffer == nullptr ||
+                                   ddgiSystem->probeSpace == nullptr;
         if (needImmediateLayout || ddgiLayoutCountdown <= 0) {
             ddgiSystem->updateProbeLayout();
             ddgiLayoutCountdown = ddgiLayoutInterval - 1;
@@ -394,6 +495,8 @@ void Window::deferredRendering(
     }
 #endif
 
+    this->ssaoMapsDirty = true;
+    this->ssaoUpdateCooldown = 0.0f;
     this->renderSSAO(commandBuffer);
 
     auto targetRenderPass = opal::RenderPass::create();
@@ -469,6 +572,7 @@ void Window::deferredRendering(
     lightPipeline->enableDepthTest(false);
     lightPipeline->enableDepthWrite(false);
     lightPipeline->enableBlending(false);
+    lightPipeline->setViewport(0, 0, target->getWidth(), target->getHeight());
     lightPipeline->bind();
 
     lightPipeline->bindTexture2D("gPosition", this->gBuffer->gPosition.id, 0);
@@ -511,7 +615,8 @@ void Window::deferredRendering(
 
 #ifdef METAL
     if (usesGlobalIllumination && ddgiSystem != nullptr &&
-        ddgiSystem->probeSpace != nullptr && ddgiSystem->irradianceMap != nullptr &&
+        ddgiSystem->probeSpace != nullptr &&
+        ddgiSystem->irradianceMap != nullptr &&
         ddgiSystem->irradianceMap->texture != nullptr) {
         lightPipeline->setUniform3f("ps.origin",
                                     ddgiSystem->probeSpace->originWorldSpace.x,
@@ -536,8 +641,14 @@ void Window::deferredRendering(
             (float)ddgiSystem->probeSpace->probesPerRow,
             (float)ddgiSystem->probeSpace->totalProbes());
 
-        lightPipeline->bindTexture("irradianceMap",
-                                   ddgiSystem->irradianceMap->texture, 16);
+        std::shared_ptr<opal::Texture> ddgiIrradianceTexture =
+            ddgiSystem->irradianceMap->texture;
+        if (ddgiSystem->irradianceMapPrev != nullptr &&
+            ddgiSystem->irradianceMapPrev->texture != nullptr &&
+            ddgiSystem->frameIndex <= 1) {
+            ddgiIrradianceTexture = ddgiSystem->irradianceMapPrev->texture;
+        }
+        lightPipeline->bindTexture("irradianceMap", ddgiIrradianceTexture, 16);
     } else {
         lightPipeline->setUniform3f("ps.origin", 0.0f, 0.0f, 0.0f);
         lightPipeline->setUniform3f("ps.spacing", 1.0f, 1.0f, 1.0f);
@@ -575,11 +686,28 @@ void Window::deferredRendering(
 
     // Send directional lights using buffer binding
     int dirLightCount = std::min((int)scene->directionalLights.size(), 256);
+    std::vector<GPUDirectionalLight> gpuDirLights;
+    if (dirLightCount > 0) {
+        gpuDirLights =
+            buildGPUDirectionalLights(scene->directionalLights, dirLightCount);
+    } else if (scene->atmosphere.isEnabled()) {
+        GPUDirectionalLight gpu{};
+        glm::vec3 sunDir = scene->atmosphere.getSunAngle().toGlm();
+        if (glm::length(sunDir) > 0.0001f) {
+            gpu.direction = -glm::normalize(sunDir);
+        } else {
+            gpu.direction = glm::vec3(0.0f, -1.0f, 0.0f);
+        }
+        Color skyLight = scene->atmosphere.getLightColor();
+        gpu.diffuse = glm::vec3(skyLight.r, skyLight.g, skyLight.b);
+        gpu.specular = gpu.diffuse;
+        gpu.intensity = scene->atmosphere.getLightIntensity() * 1.2f;
+        gpuDirLights.push_back(gpu);
+        dirLightCount = 1;
+    }
     lightPipeline->setUniform1i("directionalLightCount", dirLightCount);
 
-    if (dirLightCount > 0) {
-        auto gpuDirLights =
-            buildGPUDirectionalLights(scene->directionalLights, dirLightCount);
+    if (!gpuDirLights.empty()) {
         lightPipeline->bindBuffer("DirectionalLights", gpuDirLights);
     }
 

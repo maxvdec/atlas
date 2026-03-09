@@ -67,6 +67,8 @@ class PathTracing {
     int raysPerPixel = 4;
     int maxBounces = 1;
     float indirectStrength = 0.55f;
+    bool sampleNormalMaps = true;
+    float normalMapStrength = 1.0f;
 
     std::shared_ptr<opal::Framebuffer> copySrcFramebuffer;
     std::shared_ptr<opal::Framebuffer> copyDstFramebuffer;
@@ -180,6 +182,9 @@ class GlobalIllumination {
     float maxRayDistance = 20.f;
     float normalBias = 0.05;
     float hysteresis = 0.85;
+    bool sampleNormalMaps = false;
+    float normalMapStrength = 1.0f;
+    int probeUpdateStride = 4;
     int frameIndex = 0;
     uint64_t cachedLayoutSignature = 0;
     bool hasCachedLayoutSignature = false;

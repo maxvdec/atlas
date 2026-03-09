@@ -23,8 +23,8 @@
 
 namespace {
 constexpr int kPathTracerMaterialTextureUnitStart = 12;
-constexpr int kPathTracerMaxMaterialTextures = 20;
-constexpr int kPathTracerSkyboxTextureUnit = 32;
+constexpr int kPathTracerMaxMaterialTextures = 48;
+constexpr int kPathTracerSkyboxTextureUnit = 60;
 
 std::shared_ptr<opal::Texture> createFallbackSkyboxTexture() {
     constexpr unsigned char horizon[4] = {170, 195, 225, 255};
@@ -112,11 +112,21 @@ void collectPathTracingObjectsFromQueue(
             continue;
         }
         if (auto *model = dynamic_cast<Model *>(renderable)) {
-            for (const auto &mesh : model->getObjects()) {
+            const auto &meshes =
+                static_cast<const Model *>(model)->getObjects();
+            for (const auto &mesh : meshes) {
                 CoreObject *object = mesh.get();
                 if (object == nullptr) {
                     continue;
                 }
+                bool hasAnyTexture = !object->textures.empty();
+                if (!hasAnyTexture) {
+                    object->material = model->material;
+                }
+                object->material.useNormalMap = model->material.useNormalMap;
+                object->material.normalMapStrength =
+                    model->material.normalMapStrength;
+                object->useDeferredRendering = model->useDeferredRendering;
                 if (seen.insert(object).second) {
                     objects.push_back(object);
                 }
@@ -193,7 +203,8 @@ void photon::PathTracing::buildAccelerationStructure(
         int metallicTextureIndex;
         int roughnessTextureIndex;
         int aoTextureIndex;
-        int _pad1[3];
+        int opacityTextureIndex;
+        int _pad1[2];
     };
 
     static_assert(sizeof(MaterialData) == 80);
@@ -326,17 +337,41 @@ void photon::PathTracing::buildAccelerationStructure(
             data.emissiveColor[0] = object->material.emissiveColor.r;
             data.emissiveColor[1] = object->material.emissiveColor.g;
             data.emissiveColor[2] = object->material.emissiveColor.b;
-            data._pad0 = 0.0f;
+            const bool useNormalMap =
+                object->material.useNormalMap && sampleNormalMaps;
+            const float normalStrength = std::max(
+                0.0f,
+                object->material.normalMapStrength * normalMapStrength);
+            data._pad0 = normalStrength;
             data.albedoTextureIndex = findTextureSlotForType(
                 object->textures, TextureType::Color, materialTextures,
                 textureSlots);
-            data.normalTextureIndex = -1;
-            data.metallicTextureIndex = -1;
-            data.roughnessTextureIndex = -1;
-            data.aoTextureIndex = -1;
-            data._pad1[0] = 0;
+            int normalTextureIndex = -1;
+            if (useNormalMap && normalStrength > 0.0f) {
+                normalTextureIndex = findTextureSlotForType(
+                    object->textures, TextureType::Normal, materialTextures,
+                    textureSlots);
+                if (normalTextureIndex < 0) {
+                    normalTextureIndex = findTextureSlotForType(
+                        object->textures, TextureType::Parallax,
+                        materialTextures, textureSlots);
+                }
+            }
+            data.normalTextureIndex = normalTextureIndex;
+            data.metallicTextureIndex = findTextureSlotForType(
+                object->textures, TextureType::Metallic, materialTextures,
+                textureSlots);
+            data.roughnessTextureIndex = findTextureSlotForType(
+                object->textures, TextureType::Roughness, materialTextures,
+                textureSlots);
+            data.aoTextureIndex = findTextureSlotForType(
+                object->textures, TextureType::AO, materialTextures,
+                textureSlots);
+            data.opacityTextureIndex = findTextureSlotForType(
+                object->textures, TextureType::Opacity, materialTextures,
+                textureSlots);
+            data._pad1[0] = useNormalMap ? 1 : 0;
             data._pad1[1] = 0;
-            data._pad1[2] = 0;
             materialData.push_back(data);
 
             MeshData mdata;
@@ -603,12 +638,16 @@ void photon::PathTracing::render(
     glm::vec3 directionalLightDirection(0.0f, -1.0f, 0.0f);
     glm::vec3 directionalLightColor(1.0f, 1.0f, 1.0f);
     float directionalLightIntensity = 0.0f;
+    float ambientIntensity = 0.0f;
 
     Scene *scene = (Window::mainWindow != nullptr)
                        ? Window::mainWindow->getCurrentScene()
                        : nullptr;
 
     if (scene != nullptr) {
+        ambientIntensity = scene->isAutomaticAmbientEnabled()
+                               ? scene->getAutomaticAmbientIntensity()
+                               : scene->getAmbientIntensity();
         const auto &directionalLights = scene->getDirectionalLights();
         for (auto *light : directionalLights) {
             if (light == nullptr) {
@@ -666,6 +705,8 @@ void photon::PathTracing::render(
         directionalLightColor.z);
     pathTracingPipeline->setUniform1f("dirLight.intensity",
                                       directionalLightIntensity);
+    pathTracingPipeline->setUniform1f("sceneData.ambientIntensity",
+                                      ambientIntensity);
     pathTracingPipeline->setUniform1i("sceneData.numPointLights",
                                       pointLightCount);
     pathTracingPipeline->setUniform1i("sceneData.numSpotLights",

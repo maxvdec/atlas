@@ -16,7 +16,8 @@ const int TEXTURE_PARALLAX = 6;
 const int TEXTURE_METALLIC = 9;
 const int TEXTURE_ROUGHNESS = 10;
 const int TEXTURE_AO = 11;
-const int TEXTURE_HDR_ENVIRONMENT = 12;
+const int TEXTURE_OPACITY = 12;
+const int TEXTURE_HDR_ENVIRONMENT = 13;
 
 const float PI = 3.14159265;
 
@@ -680,7 +681,15 @@ void main() {
     vec3 albedo = material.albedo;
     vec4 albedoTex = enableTextures(TEXTURE_COLOR);
     if (albedoTex != vec4(-1.0)) {
-        albedo = albedoTex.rgb;
+        albedo *= albedoTex.rgb;
+    }
+    vec4 opacityTex = enableTextures(TEXTURE_OPACITY);
+    if (opacityTex != vec4(-1.0)) {
+        if (opacityTex.r < 0.1) {
+            discard;
+        }
+    } else if (material.albedo.a < 0.999 && albedoTex != vec4(-1.0) && albedoTex.a < 0.1) {
+        discard;
     }
 
     float metallic = material.metallic;
