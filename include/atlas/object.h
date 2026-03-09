@@ -69,6 +69,8 @@ struct Material {
     float emissiveIntensity = 0.0f;
     float normalMapStrength = 1.0f;
     bool useNormalMap = true;
+    float transmittance = 0.0f;
+    float ior = 1.0f;
 };
 
 /**
@@ -966,10 +968,9 @@ class Model : public GameObject {
     }
 
     bool canCastShadows() const override {
-        return std::any_of(objects.begin(), objects.end(),
-                           [](const auto &obj) {
-                               return obj != nullptr && obj->canCastShadows();
-                           });
+        return std::any_of(objects.begin(), objects.end(), [](const auto &obj) {
+            return obj != nullptr && obj->canCastShadows();
+        });
     }
 
     Model() = default;

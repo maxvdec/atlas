@@ -206,9 +206,11 @@ void photon::PathTracing::buildAccelerationStructure(
         int aoTextureIndex;
         int opacityTextureIndex;
         int _pad1[2];
-    };
 
-    static_assert(sizeof(MaterialData) == 80);
+        float transmittance;
+        float ior;
+        float _pad2[2];
+    };
 
     struct MeshData {
         uint vertexOffset;
@@ -338,6 +340,8 @@ void photon::PathTracing::buildAccelerationStructure(
             data.emissiveColor[0] = object->material.emissiveColor.r;
             data.emissiveColor[1] = object->material.emissiveColor.g;
             data.emissiveColor[2] = object->material.emissiveColor.b;
+            data.ior = object->material.ior;
+            data.transmittance = object->material.transmittance;
             const bool useNormalMap =
                 object->material.useNormalMap && sampleNormalMaps;
             const float normalStrength = std::max(

@@ -302,8 +302,8 @@ class MainScene : public Scene {
         cubeBox = createBox({0.6f, 0.6f, 0.6f});
         cubeBox.material.albedo = boxWhite;
         cubeBox.material.roughness = 0.0f;
-        cubeBox.material.metallic = 1.0f;
-        cubeBox.material.ao = 1.0f;
+        cubeBox.material.ior = 1.5f;
+        cubeBox.material.transmittance = 0.9f;
         cubeBox.setPosition({0.42f, 0.3f, -0.5f});
         cubeBox.setRotation({0.0f, 11.0f, 0.0f});
         window.addObject(&cubeBox);
@@ -327,7 +327,8 @@ class MainScene : public Scene {
 
         window.enablePathTracing();
         // window.pathTracer->pathTracingTexture->display(window);
-        window.pathTracer->raysPerPixel = 128;
+        window.pathTracer->raysPerPixel = 4;
+        window.pathTracer->maxBounces = 16;
     }
 };
 
