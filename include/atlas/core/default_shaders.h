@@ -6461,12 +6461,6 @@ float3 skyColor(float3 dir, float intensity, texturecube<float> skybox) {
         sampleDir = float3(0.0, 1.0, 0.0);
     }
     float3 sky = skybox.sample(skyboxSampler, sampleDir).xyz;
-    if (luminance(sky) < 0.0005) {
-        float t = clamp(sampleDir.y * 0.5 + 0.5, 0.0, 1.0);
-        float3 horizon = float3(0.74, 0.79, 0.88);
-        float3 zenith = float3(0.5, 0.64, 0.84);
-        sky = mix(horizon, zenith, float3(t));
-    }
     float scale = intensity > 0.0 ? intensity : 1.0;
     return sky * scale;
 }
@@ -6818,17 +6812,16 @@ float3 lambert(float3 albedo, float3 N, float3 L, float3 lightColor,
 bool isOccluded(intersector<triangle_data, instancing> isect,
                 instance_acceleration_structure sceneAS, float3 P, float3 N,
                 float3 L, float maxDistance) {
+    float ndlAbs = abs(dot(N, L));
+    float shadowBias = mix(0.003, 0.0008, ndlAbs);
     ray shadowRay;
-    shadowRay.origin = P + N * 0.01;
+    shadowRay.origin = P + N * shadowBias;
     shadowRay.direction = L;
-    shadowRay.min_distance = 0.01;
-    shadowRay.max_distance = maxDistance;
+    shadowRay.min_distance = shadowBias;
+    shadowRay.max_distance = max(maxDistance - shadowBias, shadowBias + 1e-4);
 
     auto shadowHit = isect.intersect(shadowRay, sceneAS, 0xFF);
-    if (shadowHit.type == intersection_type::none) {
-        return false;
-    }
-    return shadowHit.distance > 0.02;
+    return shadowHit.type != intersection_type::none;
 }
 
 bool isOccludedDirectionalLight(DirectionalLightData light, float3 P, float3 N,
@@ -7295,7 +7288,7 @@ float3 sampleRadiance(uint2 gid, uint sampleIndex, uint w,
                 pointLights, spotLights, areaLights);
 
             float3 bAmbient =
-                bAlbedo * max(sceneData.ambientIntensity, 0.04) *
+                bAlbedo * max(sceneData.ambientIntensity, 0.0) *
                 (1.0 - bMetallic) * bAo;
             indirect = brdfWeight * (bAmbient + bounceDirect + bEmissive) *
                        sceneData.indirectStrength;
@@ -7305,7 +7298,7 @@ float3 sampleRadiance(uint2 gid, uint sampleIndex, uint w,
     }
 
     float3 ambient =
-        albedo * max(sceneData.ambientIntensity, 0.04) * (1.0 - metallic) * ao;
+        albedo * max(sceneData.ambientIntensity, 0.0) * (1.0 - metallic) * ao;
     return clampLuminance(ambient + direct + emissive + indirect, 10.0);
 }
 

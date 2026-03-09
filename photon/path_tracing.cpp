@@ -27,11 +27,11 @@ constexpr int kPathTracerMaxMaterialTextures = 48;
 constexpr int kPathTracerSkyboxTextureUnit = 60;
 
 std::shared_ptr<opal::Texture> createFallbackSkyboxTexture() {
-    constexpr unsigned char horizon[4] = {170, 195, 225, 255};
-    constexpr unsigned char zenith[4] = {120, 170, 235, 255};
-    constexpr unsigned char nadir[4] = {215, 220, 230, 255};
-    const unsigned char *faceColors[6] = {
-        horizon, horizon, zenith, nadir, horizon, horizon};
+    constexpr unsigned char horizon[4] = {0, 0, 0, 255};
+    constexpr unsigned char zenith[4] = {0, 0, 0, 255};
+    constexpr unsigned char nadir[4] = {0, 0, 0, 255};
+    const unsigned char *faceColors[6] = {horizon, horizon, zenith,
+                                          nadir,   horizon, horizon};
     auto texture = opal::Texture::create(
         opal::TextureType::TextureCubeMap, opal::TextureFormat::Rgba8, 1, 1,
         opal::TextureDataFormat::Rgba, nullptr, 1);
@@ -69,8 +69,8 @@ int registerMaterialTextureSlot(
     if (texture.texture == nullptr) {
         return -1;
     }
-    uint64_t key =
-        static_cast<uint64_t>(reinterpret_cast<uintptr_t>(texture.texture.get()));
+    uint64_t key = static_cast<uint64_t>(
+        reinterpret_cast<uintptr_t>(texture.texture.get()));
     auto it = slotByTexture.find(key);
     if (it != slotByTexture.end()) {
         return it->second;
@@ -100,7 +100,8 @@ int findTextureSlotForType(
 
 void collectPathTracingObjectsFromQueue(
     const std::vector<Renderable *> &renderables,
-    std::unordered_set<CoreObject *> &seen, std::vector<CoreObject *> &objects) {
+    std::unordered_set<CoreObject *> &seen,
+    std::vector<CoreObject *> &objects) {
     for (auto *renderable : renderables) {
         if (renderable == nullptr) {
             continue;
@@ -157,13 +158,13 @@ void photon::PathTracing::init() {
     outputWidth = std::max(1, Window::mainWindow->viewportWidth);
     outputHeight = std::max(1, Window::mainWindow->viewportHeight);
 
-    pathTracingTexture = std::make_shared<Texture>(Texture::create(
-        outputWidth, outputHeight, opal::TextureFormat::Rgba16F,
-        opal::TextureDataFormat::Rgba, TextureType::Color));
+    pathTracingTexture = std::make_shared<Texture>(
+        Texture::create(outputWidth, outputHeight, opal::TextureFormat::Rgba16F,
+                        opal::TextureDataFormat::Rgba, TextureType::Color));
 
-    pathTracingTexturePrev = std::make_shared<Texture>(Texture::create(
-        outputWidth, outputHeight, opal::TextureFormat::Rgba16F,
-        opal::TextureDataFormat::Rgba, TextureType::Color));
+    pathTracingTexturePrev = std::make_shared<Texture>(
+        Texture::create(outputWidth, outputHeight, opal::TextureFormat::Rgba16F,
+                        opal::TextureDataFormat::Rgba, TextureType::Color));
 
     copySrcFramebuffer = std::make_shared<opal::Framebuffer>();
     copyDstFramebuffer = std::make_shared<opal::Framebuffer>();
@@ -179,12 +180,12 @@ void photon::PathTracing::resizeOutput(int width, int height) {
 
     outputWidth = newWidth;
     outputHeight = newHeight;
-    pathTracingTexture = std::make_shared<Texture>(Texture::create(
-        outputWidth, outputHeight, opal::TextureFormat::Rgba16F,
-        opal::TextureDataFormat::Rgba, TextureType::Color));
-    pathTracingTexturePrev = std::make_shared<Texture>(Texture::create(
-        outputWidth, outputHeight, opal::TextureFormat::Rgba16F,
-        opal::TextureDataFormat::Rgba, TextureType::Color));
+    pathTracingTexture = std::make_shared<Texture>(
+        Texture::create(outputWidth, outputHeight, opal::TextureFormat::Rgba16F,
+                        opal::TextureDataFormat::Rgba, TextureType::Color));
+    pathTracingTexturePrev = std::make_shared<Texture>(
+        Texture::create(outputWidth, outputHeight, opal::TextureFormat::Rgba16F,
+                        opal::TextureDataFormat::Rgba, TextureType::Color));
     frameIndex = 0;
 }
 
@@ -253,8 +254,8 @@ void photon::PathTracing::buildAccelerationStructure(
     std::vector<uint32_t> allIndices;
     std::vector<MeshData> meshData;
 
-    bool needsRebuild = objectBLAS.empty() ||
-                        cachedObjects.size() != traceableObjects.size();
+    bool needsRebuild =
+        objectBLAS.empty() || cachedObjects.size() != traceableObjects.size();
     if (!needsRebuild) {
         for (size_t i = 0; i < traceableObjects.size(); ++i) {
             if (cachedObjects[i] != traceableObjects[i]) {
@@ -321,8 +322,8 @@ void photon::PathTracing::buildAccelerationStructure(
                 allIndices.push_back(vertexOffset + index);
             }
 
-            auto blas = opal::PrimitiveAccelerationStructure::create(vertices,
-                                                                     indices);
+            auto blas =
+                opal::PrimitiveAccelerationStructure::create(vertices, indices);
             objectBLAS[objectID] = blas;
 
             MaterialData data;
@@ -340,12 +341,11 @@ void photon::PathTracing::buildAccelerationStructure(
             const bool useNormalMap =
                 object->material.useNormalMap && sampleNormalMaps;
             const float normalStrength = std::max(
-                0.0f,
-                object->material.normalMapStrength * normalMapStrength);
+                0.0f, object->material.normalMapStrength * normalMapStrength);
             data._pad0 = normalStrength;
-            data.albedoTextureIndex = findTextureSlotForType(
-                object->textures, TextureType::Color, materialTextures,
-                textureSlots);
+            data.albedoTextureIndex =
+                findTextureSlotForType(object->textures, TextureType::Color,
+                                       materialTextures, textureSlots);
             int normalTextureIndex = -1;
             if (useNormalMap && normalStrength > 0.0f) {
                 normalTextureIndex = findTextureSlotForType(
@@ -358,18 +358,18 @@ void photon::PathTracing::buildAccelerationStructure(
                 }
             }
             data.normalTextureIndex = normalTextureIndex;
-            data.metallicTextureIndex = findTextureSlotForType(
-                object->textures, TextureType::Metallic, materialTextures,
-                textureSlots);
-            data.roughnessTextureIndex = findTextureSlotForType(
-                object->textures, TextureType::Roughness, materialTextures,
-                textureSlots);
-            data.aoTextureIndex = findTextureSlotForType(
-                object->textures, TextureType::AO, materialTextures,
-                textureSlots);
-            data.opacityTextureIndex = findTextureSlotForType(
-                object->textures, TextureType::Opacity, materialTextures,
-                textureSlots);
+            data.metallicTextureIndex =
+                findTextureSlotForType(object->textures, TextureType::Metallic,
+                                       materialTextures, textureSlots);
+            data.roughnessTextureIndex =
+                findTextureSlotForType(object->textures, TextureType::Roughness,
+                                       materialTextures, textureSlots);
+            data.aoTextureIndex =
+                findTextureSlotForType(object->textures, TextureType::AO,
+                                       materialTextures, textureSlots);
+            data.opacityTextureIndex =
+                findTextureSlotForType(object->textures, TextureType::Opacity,
+                                       materialTextures, textureSlots);
             data._pad1[0] = useNormalMap ? 1 : 0;
             data._pad1[1] = 0;
             materialData.push_back(data);
@@ -670,9 +670,9 @@ void photon::PathTracing::render(
                 directionalLightDirection = -glm::normalize(sceneDirection);
             }
             Color atmosphereLightColor = scene->atmosphere.getLightColor();
-            directionalLightColor = glm::vec3(atmosphereLightColor.r,
-                                              atmosphereLightColor.g,
-                                              atmosphereLightColor.b);
+            directionalLightColor =
+                glm::vec3(atmosphereLightColor.r, atmosphereLightColor.g,
+                          atmosphereLightColor.b);
             directionalLightIntensity =
                 scene->atmosphere.getLightIntensity() * 1.2f;
             directionalLightCount = 1;
@@ -700,9 +700,9 @@ void photon::PathTracing::render(
     pathTracingPipeline->setUniform3f(
         "dirLight.direction", directionalLightDirection.x,
         directionalLightDirection.y, directionalLightDirection.z);
-    pathTracingPipeline->setUniform3f(
-        "dirLight.color", directionalLightColor.x, directionalLightColor.y,
-        directionalLightColor.z);
+    pathTracingPipeline->setUniform3f("dirLight.color", directionalLightColor.x,
+                                      directionalLightColor.y,
+                                      directionalLightColor.z);
     pathTracingPipeline->setUniform1f("dirLight.intensity",
                                       directionalLightIntensity);
     pathTracingPipeline->setUniform1f("sceneData.ambientIntensity",
@@ -778,10 +778,9 @@ void photon::PathTracing::render(
         if (i < static_cast<int>(materialTextures.size())) {
             texture = materialTextures[static_cast<size_t>(i)];
         }
-        pathTracingPipeline->bindTexture("materialTexture" + std::to_string(i),
-                                         texture,
-                                         kPathTracerMaterialTextureUnitStart +
-                                             i);
+        pathTracingPipeline->bindTexture(
+            "materialTexture" + std::to_string(i), texture,
+            kPathTracerMaterialTextureUnitStart + i);
     }
 
     commandBuffer->dispatch(outputWidth, outputHeight, 1);
