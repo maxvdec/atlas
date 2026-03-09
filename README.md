@@ -45,6 +45,65 @@ Go to the releases page [here](https://github.com/maxvdec/atlas/releases) to dow
 atlas create myProject
 ```
 
+## Atlas CLI Workflow
+
+The CLI now provides a full project lifecycle:
+
+```bash
+atlas create myProject
+atlas build
+atlas run
+atlas pack
+atlas clangd
+```
+
+### Project Creation Experience
+
+- `atlas create` offers an interactive terminal flow.
+- You can choose:
+  - release version (from available GitHub releases)
+  - target platform (`macOS`, `Windows`, `Linux`)
+  - rendering backend (`METAL`, `OPENGL`, `VULKAN`)
+- It downloads compiler-independent prelinked macOS libraries:
+  - `macOS-atlas-metal.a`
+  - `macOS-atlas-opengl.a`
+  - `macOS-atlas-vulkan.a`
+- It can optionally create/switch to a new git branch right after scaffolding.
+
+### Release Output
+
+Running:
+
+```bash
+just release
+```
+
+now produces:
+
+- `dist/release/macOS-atlas-metal.a`
+- `dist/release/macOS-atlas-opengl.a`
+- `dist/release/macOS-atlas-vulkan.a`
+
+Each archive bundles Atlas and its internal engine modules into one static archive per backend.
+
+### Build / Run / Pack / Clangd
+
+- `atlas build` configures and builds using backend from `atlas.toml`.
+- `atlas run` builds then runs the produced executable.
+- `atlas pack` builds and creates distributable output:
+  - macOS: `.app` bundle in `dist/`
+  - other platforms: executable in `dist/`
+- `atlas clangd` generates `build/compile_commands.json` and exposes it at project root as `compile_commands.json`.
+
+You can override backend per command:
+
+```bash
+atlas build --backend VULKAN
+atlas run --backend OPENGL
+atlas pack --backend METAL
+atlas clangd --backend METAL
+```
+
 ## Building from Source
 
 To build the engine from source, you will need to have CMake and a C++ compiler installed on your system. Then you can clone the repository and build the engine using the following commands:

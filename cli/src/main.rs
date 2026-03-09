@@ -14,9 +14,13 @@ fn main() {
         Commands::Create { .. } => {
             create::create(cli.command);
         }
+        Commands::Build { .. } => {
+            pack::build(cli.command);
+        }
         Commands::Pack { .. } => {
             pack::pack(cli.command);
         }
         Commands::Run { .. } => pack::run(cli.command),
+        Commands::Clangd { .. } => pack::clangd(cli.command),
     }
 }

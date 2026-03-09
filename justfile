@@ -37,9 +37,17 @@ cli:
     cargo build
 
 release backend="AUTO":
-    mkdir -p build
-    cd build && cmake -G "{{ GENERATOR }}" -DCMAKE_BUILD_TYPE=Release -DBACKEND={{ backend }} .. 
-    cd build && ninja -j8
+    rm -rf build/release-metal build/release-opengl build/release-vulkan dist/release
+    mkdir -p build/release-metal build/release-opengl build/release-vulkan dist/release
+    cd build/release-metal && cmake -G "{{ GENERATOR }}" -DCMAKE_BUILD_TYPE=Release -DBACKEND=METAL ../..
+    cd build/release-metal && ninja -j8 atlas bezel finewave aurora hydra opal photon
+    cd build/release-opengl && cmake -G "{{ GENERATOR }}" -DCMAKE_BUILD_TYPE=Release -DBACKEND=OPENGL ../..
+    cd build/release-opengl && ninja -j8 atlas bezel finewave aurora hydra opal photon
+    cd build/release-vulkan && cmake -G "{{ GENERATOR }}" -DCMAKE_BUILD_TYPE=Release -DBACKEND=VULKAN ../..
+    cd build/release-vulkan && ninja -j8 atlas bezel finewave aurora hydra opal photon
+    libtool -static -o dist/release/macOS-atlas-metal.a build/release-metal/lib/libatlas.a build/release-metal/lib/libbezel.a build/release-metal/lib/libfinewave.a build/release-metal/lib/libaurora.a build/release-metal/lib/libhydra.a build/release-metal/lib/libopal.a build/release-metal/lib/libphoton.a build/release-metal/_deps/joltphysics-build/lib/libJolt.a
+    libtool -static -o dist/release/macOS-atlas-opengl.a build/release-opengl/lib/libatlas.a build/release-opengl/lib/libbezel.a build/release-opengl/lib/libfinewave.a build/release-opengl/lib/libaurora.a build/release-opengl/lib/libhydra.a build/release-opengl/lib/libopal.a build/release-opengl/lib/libphoton.a build/release-opengl/_deps/joltphysics-build/lib/libJolt.a
+    libtool -static -o dist/release/macOS-atlas-vulkan.a build/release-vulkan/lib/libatlas.a build/release-vulkan/lib/libbezel.a build/release-vulkan/lib/libfinewave.a build/release-vulkan/lib/libaurora.a build/release-vulkan/lib/libhydra.a build/release-vulkan/lib/libopal.a build/release-vulkan/lib/libphoton.a build/release-vulkan/_deps/joltphysics-build/lib/libJolt.a
 
 docs backend="AUTO":
     mkdir -p build

@@ -11,33 +11,54 @@ pub enum Commands {
         branch: Option<String>,
         #[arg(default_value_t = String::from("latest"))]
         version: String,
+        #[arg(long)]
+        backend: Option<String>,
+        #[arg(long)]
+        platform: Option<String>,
+    },
+    Build {
+        #[arg(default_value_t = 0, long, short)]
+        release: u8,
+        #[arg(long)]
+        backend: Option<String>,
     },
     Pack {
         #[arg(default_value_t = 0, long, short)]
         release: u8,
+        #[arg(long)]
+        backend: Option<String>,
     },
     Run {
         #[arg(default_value_t = 0, long, short)]
         release: u8,
+        #[arg(long)]
+        backend: Option<String>,
+    },
+    Clangd {
+        #[arg(long)]
+        backend: Option<String>,
     },
 }
 
 #[derive(serde::Deserialize)]
-struct ProjectConfig {
-    name: String,
-    app_name: Option<String>,
+pub struct ProjectConfig {
+    pub name: String,
+    pub app_name: Option<String>,
+    pub backend: Option<String>,
+    pub platform: Option<String>,
+    pub atlas_version: Option<String>,
 }
 
 #[derive(serde::Deserialize)]
-struct PackConfig {
-    icon: String,
-    supported_platforms: String,
-    version: Option<String>,
-    identifier: Option<String>,
+pub struct PackConfig {
+    pub icon: String,
+    pub supported_platforms: String,
+    pub version: Option<String>,
+    pub identifier: Option<String>,
 }
 
 #[derive(serde::Deserialize)]
-struct Config {
-    project: ProjectConfig,
-    pack: PackConfig,
+pub struct Config {
+    pub project: ProjectConfig,
+    pub pack: PackConfig,
 }
