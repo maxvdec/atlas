@@ -1,7 +1,7 @@
 var searchData=
 [
   ['left_0',['left',['../struct_position3d.html#a328811d8b222ff435d76dc77e1019daa',1,'Position3d']]],
-  ['light_1',['Light',['../struct_light.html#a705f837df8db28b0259a0edc1858492d',1,'Light']]],
+  ['light_1',['Light',['../struct_light.html#a0a8e8da9a77b424cd87430362445eb2a',1,'Light']]],
   ['lime_2',['lime',['../struct_color.html#a34898221fb64dae6c8fd48a582e5e9ec',1,'Color']]],
   ['link_3',['link',['../classopal_1_1_shader_program.html#aa8a7f5fb4eb17c63e675761785ca8ee5',1,'opal::ShaderProgram']]],
   ['log_4',['log',['../class_logger.html#a6ac263adba503ee9aabf95c6b2df30e5',1,'Logger']]],

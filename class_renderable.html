@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -240,7 +240,7 @@ Example</h2>
 <div class="ttc" id="aclass_renderable_html_aaa53405a3eb174752fce5e4a2fc8dca8"><div class="ttname"><a href="#aaa53405a3eb174752fce5e4a2fc8dca8">Renderable::initialize</a></div><div class="ttdeci">virtual void initialize()</div><div class="ttdoc">Function to initialize the object. Can be overridden by derived.</div><div class="ttdef"><b>Definition</b> <a href="renderable_8h_source.html#l00092">renderable.h:92</a></div></div>
 <div class="ttc" id="aclass_renderable_html_ae1b11967b98e6ba4393640652242083f"><div class="ttname"><a href="#ae1b11967b98e6ba4393640652242083f">Renderable::setViewMatrix</a></div><div class="ttdeci">virtual void setViewMatrix(const glm::mat4 &amp;view)</div><div class="ttdoc">Function to set the view matrix for the object. Called from Window for internal purposes.</div><div class="ttdef"><b>Definition</b> <a href="renderable_8h_source.html#l00109">renderable.h:109</a></div></div>
 <div class="ttc" id="aclass_renderable_html_afb2aa3ad0ab8dcfc54088173ea7182cd"><div class="ttname"><a href="#afb2aa3ad0ab8dcfc54088173ea7182cd">Renderable::update</a></div><div class="ttdeci">virtual void update(Window &amp;window)</div><div class="ttdoc">Function to update the object each frame.</div><div class="ttdef"><b>Definition</b> <a href="renderable_8h_source.html#l00102">renderable.h:102</a></div></div>
-<div class="ttc" id="aclassopal_1_1_device_html"><div class="ttname"><a href="classopal_1_1_device.html">opal::Device</a></div><div class="ttdoc">Represents the rendering device abstraction for OpenGL/Vulkan. Manages command buffer acquisition,...</div><div class="ttdef"><b>Definition</b> <a href="opal_8h_source.html#l00153">opal.h:153</a></div></div>
+<div class="ttc" id="aclassopal_1_1_device_html"><div class="ttname"><a href="classopal_1_1_device.html">opal::Device</a></div><div class="ttdoc">Represents the rendering device abstraction for OpenGL/Vulkan. Manages command buffer acquisition,...</div><div class="ttdef"><b>Definition</b> <a href="opal_8h_source.html#l00159">opal.h:159</a></div></div>
 <div class="ttc" id="astruct_position3d_html"><div class="ttname"><a href="struct_position3d.html">Position3d</a></div><div class="ttdoc">Structure representing a position in 3D space with double precision. Provides arithmetic operations a...</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00033">units.h:33</a></div></div>
 </div><!-- fragment --> 
 <p class="definition">Definition at line <a class="el" href="renderable_8h_source.html#l00074">74</a> of file <a class="el" href="renderable_8h_source.html">renderable.h</a>.</p>
@@ -327,7 +327,7 @@ Example</h2>
 <p>Function to determine if the object can cast shadows. Can be overridden by derived classes. </p>
 <dl class="section return"><dt>Returns</dt><dd>true if the object can cast shadows, false otherwise. </dd></dl>
 
-<p>Reimplemented in <a class="el" href="class_compound_object.html#a1c28c8c1394e02e46cbc8200ad4dd9dd">CompoundObject</a>, <a class="el" href="class_core_object.html#a64c15d294b3cd28e4dc04a554ce9e9c0">CoreObject</a>, and <a class="el" href="class_particle_emitter.html#ab0a773a7d892d7347a815e7e497dd83b">ParticleEmitter</a>.</p>
+<p>Reimplemented in <a class="el" href="class_compound_object.html#a1c28c8c1394e02e46cbc8200ad4dd9dd">CompoundObject</a>, <a class="el" href="class_core_object.html#a64c15d294b3cd28e4dc04a554ce9e9c0">CoreObject</a>, <a class="el" href="class_model.html#ad6da4e22fd6e4fa8e5332c584f61756e">Model</a>, and <a class="el" href="class_particle_emitter.html#ab0a773a7d892d7347a815e7e497dd83b">ParticleEmitter</a>.</p>
 
 <p class="definition">Definition at line <a class="el" href="renderable_8h_source.html#l00161">161</a> of file <a class="el" href="renderable_8h_source.html">renderable.h</a>.</p>
 <div class="fragment"><div class="line"><span class="lineno">  161</span>{ <span class="keywordflow">return</span> <span class="keyword">false</span>; };</div>
@@ -488,7 +488,7 @@ Example</h2>
 <p>Function to get the scale of the object in 3D space. </p>
 <dl class="section return"><dt>Returns</dt><dd>The scale of the object as a <a class="el" href="units_8h.html#a64eae7ddcc7a03ddf2cda1866b0fb3aa" title="Type alias for 3D size dimensions.">Size3d</a> struct. </dd></dl>
 
-<p>Reimplemented in <a class="el" href="class_compound_object.html#ad506aaf4b387e22b7278581c26978838">CompoundObject</a>, <a class="el" href="class_core_object.html#a8c8169d24e303581bc1ce6d0ac8cb92d">CoreObject</a>, and <a class="el" href="struct_fluid.html#a28e59e0bb5e3c479f5cb9ede6b15677c">Fluid</a>.</p>
+<p>Reimplemented in <a class="el" href="class_compound_object.html#ad506aaf4b387e22b7278581c26978838">CompoundObject</a>, <a class="el" href="class_core_object.html#a8c8169d24e303581bc1ce6d0ac8cb92d">CoreObject</a>, <a class="el" href="struct_fluid.html#a28e59e0bb5e3c479f5cb9ede6b15677c">Fluid</a>, and <a class="el" href="class_model.html#adf32150fe67ba67c26a43eeb3bbb5869">Model</a>.</p>
 
 <p class="definition">Definition at line <a class="el" href="renderable_8h_source.html#l00154">154</a> of file <a class="el" href="renderable_8h_source.html">renderable.h</a>.</p>
 <div class="fragment"><div class="line"><span class="lineno">  154</span>{ <span class="keywordflow">return</span> {1.0f, 1.0f, 1.0f}; };</div>
@@ -553,7 +553,7 @@ Example</h2>
 <p>Function to get the vertices of the object in 3D space. </p>
 <dl class="section return"><dt>Returns</dt><dd>The vertices of the object as a vector of <a class="el" href="struct_core_vertex.html" title="Structure representing a single vertex in 3D space, including position, color, texture coordinates,...">CoreVertex</a> structs. </dd></dl>
 
-<p>Reimplemented in <a class="el" href="class_compound_object.html#a861e922b1025bb7bfa000ab858470185">CompoundObject</a>, and <a class="el" href="class_core_object.html#adac5522b978d9300dc27bc9233704533">CoreObject</a>.</p>
+<p>Reimplemented in <a class="el" href="class_compound_object.html#a861e922b1025bb7bfa000ab858470185">CompoundObject</a>, <a class="el" href="class_core_object.html#adac5522b978d9300dc27bc9233704533">CoreObject</a>, and <a class="el" href="class_model.html#a7c876d302f1218a62d6ad2d80eea44a5">Model</a>.</p>
 
 <p class="definition">Definition at line <a class="el" href="renderable_8h_source.html#l00148">148</a> of file <a class="el" href="renderable_8h_source.html">renderable.h</a>.</p>
 <div class="fragment"><div class="line"><span class="lineno">  148</span>{ <span class="keywordflow">return</span> {}; };</div>

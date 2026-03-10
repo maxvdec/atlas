@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -138,11 +138,25 @@ Public Attributes</h2></td></tr>
 <tr class="memdesc:abbaeac8374986ca82670ff0d7749c566"><td class="mdescLeft">&#160;</td><td class="mdescRight">Roughness factor influencing the spread of specular highlights.  <br /></td></tr>
 <tr class="memitem:a0946dbf03359dc3cd8d32910045dc5d4" id="r_a0946dbf03359dc3cd8d32910045dc5d4"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#a0946dbf03359dc3cd8d32910045dc5d4">ao</a> = 1.0f</td></tr>
 <tr class="memdesc:a0946dbf03359dc3cd8d32910045dc5d4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Ambient occlusion term used to darken creases and cavities.  <br /></td></tr>
+<tr class="memitem:a8d977d0b7386da7e3ac6879f458d3f0f" id="r_a8d977d0b7386da7e3ac6879f458d3f0f"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#a8d977d0b7386da7e3ac6879f458d3f0f">reflectivity</a> = 0.0f</td></tr>
+<tr class="memdesc:a8d977d0b7386da7e3ac6879f458d3f0f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Additional scalar controlling mirror-like reflections.  <br /></td></tr>
+<tr class="memitem:acc0ef2aaa0a8397960f79681060abbf7" id="r_acc0ef2aaa0a8397960f79681060abbf7"><td class="memItemLeft"><a class="el" href="struct_color.html">Color</a>&#160;</td><td class="memItemRight"><a class="el" href="#acc0ef2aaa0a8397960f79681060abbf7">emissiveColor</a> = {0.0, 0.0, 0.0, 1.0}</td></tr>
+<tr class="memdesc:acc0ef2aaa0a8397960f79681060abbf7"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="struct_color.html" title="Structure representing an RGBA color with double precision. Provides arithmetic operations and common...">Color</a> emitted by the surface when emissive lighting is enabled.  <br /></td></tr>
+<tr class="memitem:adb24c1c6c910ef7e1a9ba69bd74f9ea8" id="r_adb24c1c6c910ef7e1a9ba69bd74f9ea8"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#adb24c1c6c910ef7e1a9ba69bd74f9ea8">emissiveIntensity</a> = 0.0f</td></tr>
+<tr class="memdesc:adb24c1c6c910ef7e1a9ba69bd74f9ea8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Intensity multiplier for emissiveColor.  <br /></td></tr>
+<tr class="memitem:af7ad93281f02e2ac921acd3830e4dd15" id="r_af7ad93281f02e2ac921acd3830e4dd15"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#af7ad93281f02e2ac921acd3830e4dd15">normalMapStrength</a> = 1.0f</td></tr>
+<tr class="memdesc:af7ad93281f02e2ac921acd3830e4dd15"><td class="mdescLeft">&#160;</td><td class="mdescRight">Strength applied to sampled normal maps.  <br /></td></tr>
+<tr class="memitem:a7b91b7f7ee29efc4fcb036860119eb8f" id="r_a7b91b7f7ee29efc4fcb036860119eb8f"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#a7b91b7f7ee29efc4fcb036860119eb8f">useNormalMap</a> = true</td></tr>
+<tr class="memdesc:a7b91b7f7ee29efc4fcb036860119eb8f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Whether normal map sampling is enabled for this material.  <br /></td></tr>
+<tr class="memitem:acf0041fabf89bd46d5d902c4236a075e" id="r_acf0041fabf89bd46d5d902c4236a075e"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#acf0041fabf89bd46d5d902c4236a075e">transmittance</a> = 0.0f</td></tr>
+<tr class="memdesc:acf0041fabf89bd46d5d902c4236a075e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fraction of transmitted light for translucent materials.  <br /></td></tr>
+<tr class="memitem:a413be91016208c8b13f059e31052a879" id="r_a413be91016208c8b13f059e31052a879"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#a413be91016208c8b13f059e31052a879">ior</a> = 1.0f</td></tr>
+<tr class="memdesc:a413be91016208c8b13f059e31052a879"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="object_8h.html#ad53d6229d7ec28555a9c9c2fd9abf773" title="Represents an index in a buffer.">Index</a> of refraction used for transmission effects.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Structure representing the material properties of an object. Based on Phong reflection model. </p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00048">48</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00050">50</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
 </div><a name="doc-variable-members" id="doc-variable-members"></a><h2 id="header-doc-variable-members" class="groupheader">Member Data Documentation</h2>
 <a id="aa61df35ac281fa40c0745235494d4b19" name="aa61df35ac281fa40c0745235494d4b19"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aa61df35ac281fa40c0745235494d4b19">&#9670;&#160;</a></span>albedo</h2>
@@ -158,8 +172,8 @@ Public Attributes</h2></td></tr>
 
 <p>Base color contribution of the surface. </p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00052">52</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   52</span>{1.0, 1.0, 1.0, 1.0};</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00054">54</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   54</span>{1.0, 1.0, 1.0, 1.0};</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -177,7 +191,62 @@ Public Attributes</h2></td></tr>
 
 <p>Ambient occlusion term used to darken creases and cavities. </p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00064">64</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00066">66</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+
+</div>
+</div>
+<a id="acc0ef2aaa0a8397960f79681060abbf7" name="acc0ef2aaa0a8397960f79681060abbf7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acc0ef2aaa0a8397960f79681060abbf7">&#9670;&#160;</a></span>emissiveColor</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="struct_color.html">Color</a> Material::emissiveColor = {0.0, 0.0, 0.0, 1.0}</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p><a class="el" href="struct_color.html" title="Structure representing an RGBA color with double precision. Provides arithmetic operations and common...">Color</a> emitted by the surface when emissive lighting is enabled. </p>
+
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00074">74</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   74</span>{0.0, 0.0, 0.0, 1.0};</div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="adb24c1c6c910ef7e1a9ba69bd74f9ea8" name="adb24c1c6c910ef7e1a9ba69bd74f9ea8"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adb24c1c6c910ef7e1a9ba69bd74f9ea8">&#9670;&#160;</a></span>emissiveIntensity</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">float Material::emissiveIntensity = 0.0f</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Intensity multiplier for emissiveColor. </p>
+
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00078">78</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+
+</div>
+</div>
+<a id="a413be91016208c8b13f059e31052a879" name="a413be91016208c8b13f059e31052a879"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a413be91016208c8b13f059e31052a879">&#9670;&#160;</a></span>ior</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">float Material::ior = 1.0f</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p><a class="el" href="object_8h.html#ad53d6229d7ec28555a9c9c2fd9abf773" title="Represents an index in a buffer.">Index</a> of refraction used for transmission effects. </p>
+
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00094">94</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
 
 </div>
 </div>
@@ -195,7 +264,43 @@ Public Attributes</h2></td></tr>
 
 <p>Metallic factor controlling how conductive the material behaves. </p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00056">56</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00058">58</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+
+</div>
+</div>
+<a id="af7ad93281f02e2ac921acd3830e4dd15" name="af7ad93281f02e2ac921acd3830e4dd15"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af7ad93281f02e2ac921acd3830e4dd15">&#9670;&#160;</a></span>normalMapStrength</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">float Material::normalMapStrength = 1.0f</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Strength applied to sampled normal maps. </p>
+
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00082">82</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+
+</div>
+</div>
+<a id="a8d977d0b7386da7e3ac6879f458d3f0f" name="a8d977d0b7386da7e3ac6879f458d3f0f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8d977d0b7386da7e3ac6879f458d3f0f">&#9670;&#160;</a></span>reflectivity</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">float Material::reflectivity = 0.0f</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Additional scalar controlling mirror-like reflections. </p>
+
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00070">70</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
 
 </div>
 </div>
@@ -213,7 +318,43 @@ Public Attributes</h2></td></tr>
 
 <p>Roughness factor influencing the spread of specular highlights. </p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00060">60</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00062">62</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+
+</div>
+</div>
+<a id="acf0041fabf89bd46d5d902c4236a075e" name="acf0041fabf89bd46d5d902c4236a075e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acf0041fabf89bd46d5d902c4236a075e">&#9670;&#160;</a></span>transmittance</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">float Material::transmittance = 0.0f</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Fraction of transmitted light for translucent materials. </p>
+
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00090">90</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+
+</div>
+</div>
+<a id="a7b91b7f7ee29efc4fcb036860119eb8f" name="a7b91b7f7ee29efc4fcb036860119eb8f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7b91b7f7ee29efc4fcb036860119eb8f">&#9670;&#160;</a></span>useNormalMap</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool Material::useNormalMap = true</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Whether normal map sampling is enabled for this material. </p>
+
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00086">86</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
 
 </div>
 </div>

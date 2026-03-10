@@ -13,12 +13,13 @@ var searchData=
   ['enabledepthwrite_10',['enableDepthWrite',['../classopal_1_1_pipeline.html#a36a699e67afa4e8b827371b4751ec89f',1,'opal::Pipeline']]],
   ['enablemultisampling_11',['enableMultisampling',['../classopal_1_1_pipeline.html#a471463424b6a38dd0b471d4ec5773f48',1,'opal::Pipeline']]],
   ['enablepolygonoffset_12',['enablePolygonOffset',['../classopal_1_1_pipeline.html#a0495e5c1577fab5ab1c57676f11d8dfd',1,'opal::Pipeline']]],
-  ['enabletexture_13',['enableTexture',['../class_particle_emitter.html#a80e4e373b9296ee5d9ed33822fec3b83',1,'ParticleEmitter']]],
-  ['enableweather_14',['enableWeather',['../class_atmosphere.html#a29ca17056da25c107dd71251eeea84f2',1,'Atmosphere']]],
-  ['endpass_15',['endPass',['../classopal_1_1_command_buffer.html#a5b8329dd7cc72a2a809124360a4a3b8b',1,'opal::CommandBuffer']]],
-  ['enumeratemonitors_16',['enumerateMonitors',['../class_window.html#a9a108e8d770a35f894520cbc9e8ffe76',1,'Window']]],
-  ['epaexpand_17',['epaExpand',['../namespacebezel.html#a302569782e842ff805fac641ff8431da',1,'bezel']]],
-  ['error_18',['error',['../class_logger.html#a21d3ff393ae4d9b074bb9e952dc69c93',1,'Logger']]],
-  ['expand_19',['expand',['../class_bounds.html#a8971f66bfd951e16426ee10d5835cec0',1,'Bounds::expand(std::vector&lt; glm::vec3 &gt; pts, const int number)'],['../class_bounds.html#a246aa767e226ec38f1b927012df3ab1e',1,'Bounds::expand(const glm::vec3 rhs)'],['../class_bounds.html#a3d2cf840b97a63278c3993df60ecfd3f',1,'Bounds::expand(const Bounds &amp;rhs)']]],
-  ['expandconvexhull_20',['expandConvexHull',['../namespacebezel.html#a981738541d073c0a6a1a043a10b6e167',1,'bezel']]]
+  ['enablessr_13',['enableSSR',['../class_window.html#a3a48733a28b0a0db19cbcb5a98c6632c',1,'Window']]],
+  ['enabletexture_14',['enableTexture',['../class_particle_emitter.html#a80e4e373b9296ee5d9ed33822fec3b83',1,'ParticleEmitter']]],
+  ['enableweather_15',['enableWeather',['../class_atmosphere.html#a29ca17056da25c107dd71251eeea84f2',1,'Atmosphere']]],
+  ['endpass_16',['endPass',['../classopal_1_1_command_buffer.html#a5b8329dd7cc72a2a809124360a4a3b8b',1,'opal::CommandBuffer']]],
+  ['enumeratemonitors_17',['enumerateMonitors',['../class_window.html#a9a108e8d770a35f894520cbc9e8ffe76',1,'Window']]],
+  ['epaexpand_18',['epaExpand',['../namespacebezel.html#a302569782e842ff805fac641ff8431da',1,'bezel']]],
+  ['error_19',['error',['../class_logger.html#a21d3ff393ae4d9b074bb9e952dc69c93',1,'Logger']]],
+  ['expand_20',['expand',['../class_bounds.html#a8971f66bfd951e16426ee10d5835cec0',1,'Bounds::expand(std::vector&lt; glm::vec3 &gt; pts, const int number)'],['../class_bounds.html#a246aa767e226ec38f1b927012df3ab1e',1,'Bounds::expand(const glm::vec3 rhs)'],['../class_bounds.html#a3d2cf840b97a63278c3993df60ecfd3f',1,'Bounds::expand(const Bounds &amp;rhs)']]],
+  ['expandconvexhull_21',['expandConvexHull',['../namespacebezel.html#a981738541d073c0a6a1a043a10b6e167',1,'bezel']]]
 ];

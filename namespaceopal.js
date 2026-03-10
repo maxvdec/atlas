@@ -94,7 +94,8 @@ var namespaceopal =
       [ "Fragment", "namespaceopal.html#ac23791665e1eef39729e293f0b0f0254a37d01b98065725fe3a1d30acf3a0064a", null ],
       [ "Geometry", "namespaceopal.html#ac23791665e1eef39729e293f0b0f0254ad9c6333623e6357515fcbf17be806273", null ],
       [ "TessellationControl", "namespaceopal.html#ac23791665e1eef39729e293f0b0f0254a91a08ad964ef35c89ae69cd4176cfb4a", null ],
-      [ "TessellationEvaluation", "namespaceopal.html#ac23791665e1eef39729e293f0b0f0254a85a5d743bd284736223e3c1e95c6b952", null ]
+      [ "TessellationEvaluation", "namespaceopal.html#ac23791665e1eef39729e293f0b0f0254a85a5d743bd284736223e3c1e95c6b952", null ],
+      [ "Compute", "namespaceopal.html#ac23791665e1eef39729e293f0b0f0254aa623a8d0366bf079411aa30be45b2d10", null ]
     ] ],
     [ "TextureAxis", "namespaceopal.html#a2f7ec34c43320cbcd737cd190f2f4bee", [
       [ "S", "namespaceopal.html#a2f7ec34c43320cbcd737cd190f2f4beea5dbc98dcc983a70728bd082d1a47546e", null ],

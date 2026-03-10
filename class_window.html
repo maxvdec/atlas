@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -139,6 +139,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a245d821e6016fa1f6970ccbbedd635f6" id="r_a245d821e6016fa1f6970ccbbedd635f6"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="#a245d821e6016fa1f6970ccbbedd635f6">~Window</a> ()</td></tr>
 <tr class="memdesc:a245d821e6016fa1f6970ccbbedd635f6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destructor for <a class="el" href="class_window.html" title="Structure representing a window in the application. This contains the main interface for interacting ...">Window</a>.  <br /></td></tr>
 <tr class="memitem:a7154e12eabaec47019c738b66fafe24b" id="r_a7154e12eabaec47019c738b66fafe24b"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a7154e12eabaec47019c738b66fafe24b">setClearColor</a> (const <a class="el" href="struct_color.html">Color</a> &amp;color)</td></tr>
+<tr class="memdesc:a7154e12eabaec47019c738b66fafe24b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Sets the clear color used before each render pass.  <br /></td></tr>
 <tr class="memitem:ae137ec42ddc87d666d49661484410091" id="r_ae137ec42ddc87d666d49661484410091"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#ae137ec42ddc87d666d49661484410091">run</a> ()</td></tr>
 <tr class="memdesc:ae137ec42ddc87d666d49661484410091"><td class="mdescLeft">&#160;</td><td class="mdescRight">Starts the main window loop and begins rendering.  <br /></td></tr>
 <tr class="memitem:a35055c04498121d39741bfcd5082705b" id="r_a35055c04498121d39741bfcd5082705b"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a35055c04498121d39741bfcd5082705b">close</a> ()</td></tr>
@@ -152,6 +153,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a884249b8d0ff2d1f1c1c0b3c2a2ca7ee" id="r_a884249b8d0ff2d1f1c1c0b3c2a2ca7ee"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a884249b8d0ff2d1f1c1c0b3c2a2ca7ee">addObject</a> (<a class="el" href="class_renderable.html">Renderable</a> *object)</td></tr>
 <tr class="memdesc:a884249b8d0ff2d1f1c1c0b3c2a2ca7ee"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a renderable object to the window.  <br /></td></tr>
 <tr class="memitem:a1ffe2fa90a1b62c2131ca177137b62fa" id="r_a1ffe2fa90a1b62c2131ca177137b62fa"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a1ffe2fa90a1b62c2131ca177137b62fa">removeObject</a> (<a class="el" href="class_renderable.html">Renderable</a> *object)</td></tr>
+<tr class="memdesc:a1ffe2fa90a1b62c2131ca177137b62fa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Removes a previously registered renderable from the window.  <br /></td></tr>
 <tr class="memitem:a99712c4adeb4d4a1b9df61ed94c44655" id="r_a99712c4adeb4d4a1b9df61ed94c44655"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a99712c4adeb4d4a1b9df61ed94c44655">addPreferencedObject</a> (<a class="el" href="class_renderable.html">Renderable</a> *object)</td></tr>
 <tr class="memdesc:a99712c4adeb4d4a1b9df61ed94c44655"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds a renderable object with higher rendering priority.  <br /></td></tr>
 <tr class="memitem:a0a0b2f9cf1148457729000dcdb258819" id="r_a0a0b2f9cf1148457729000dcdb258819"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a0a0b2f9cf1148457729000dcdb258819">addPreludeObject</a> (<a class="el" href="class_renderable.html">Renderable</a> *object)</td></tr>
@@ -194,16 +196,25 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:afe9743b73137fdf4e269c69a823c08e4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets the current frames per second.  <br /></td></tr>
 <tr class="memitem:ae4ae02f15f1fd1e030d888afbe0ab77c" id="r_ae4ae02f15f1fd1e030d888afbe0ab77c"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#ae4ae02f15f1fd1e030d888afbe0ab77c">useTracer</a> (bool enable)</td></tr>
 <tr class="memitem:a41c3c499806fb5709876a51eaee01626" id="r_a41c3c499806fb5709876a51eaee01626"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a41c3c499806fb5709876a51eaee01626">setLogOutput</a> (bool showLogs, bool showWarnings, bool showErrors)</td></tr>
+<tr class="memdesc:a41c3c499806fb5709876a51eaee01626"><td class="mdescLeft">&#160;</td><td class="mdescRight">Configures console log visibility per severity.  <br /></td></tr>
 <tr class="memitem:adafb4dc8a3af7af838df8d2feba7086f" id="r_adafb4dc8a3af7af838df8d2feba7086f"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#adafb4dc8a3af7af838df8d2feba7086f">useDeferredRendering</a> ()</td></tr>
 <tr class="memdesc:adafb4dc8a3af7af838df8d2feba7086f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enables deferred rendering for the window. This allows for more advanced lighting and post-processing effects.  <br /></td></tr>
 <tr class="memitem:a733d1c5e32c4c1f62578844242763c61" id="r_a733d1c5e32c4c1f62578844242763c61"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#a733d1c5e32c4c1f62578844242763c61">getRenderScale</a> () const</td></tr>
 <tr class="memdesc:a733d1c5e32c4c1f62578844242763c61"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the active internal render scale.  <br /></td></tr>
+<tr class="memitem:ac23335eac7e325c1dc9868c8d241e3e5" id="r_ac23335eac7e325c1dc9868c8d241e3e5"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#ac23335eac7e325c1dc9868c8d241e3e5">useMetalUpscaling</a> (float ratio=0.75f)</td></tr>
+<tr class="memdesc:ac23335eac7e325c1dc9868c8d241e3e5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enables Metal-based upscaling and sets the internal ratio.  <br /></td></tr>
+<tr class="memitem:a6a4b089c65710486f911db328f0e04d4" id="r_a6a4b089c65710486f911db328f0e04d4"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#a6a4b089c65710486f911db328f0e04d4">isMetalUpscalingEnabled</a> () const</td></tr>
+<tr class="memitem:a23f5da45d7474ef6e0dfd59db0ada843" id="r_a23f5da45d7474ef6e0dfd59db0ada843"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#a23f5da45d7474ef6e0dfd59db0ada843">getMetalUpscalingRatio</a> () const</td></tr>
 <tr class="memitem:aac9117a294cadfd7035c5d4bf0dc73f6" id="r_aac9117a294cadfd7035c5d4bf0dc73f6"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#aac9117a294cadfd7035c5d4bf0dc73f6">getSSAORenderScale</a> () const</td></tr>
 <tr class="memdesc:aac9117a294cadfd7035c5d4bf0dc73f6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the SSAO-specific render scale.  <br /></td></tr>
 <tr class="memitem:ad25aee2c5ce600fe92efd1c1b5787eef" id="r_ad25aee2c5ce600fe92efd1c1b5787eef"><td class="memItemLeft">std::shared_ptr&lt; <a class="el" href="classopal_1_1_device.html">opal::Device</a> &gt;&#160;</td><td class="memItemRight"><a class="el" href="#ad25aee2c5ce600fe92efd1c1b5787eef">getDevice</a> () const</td></tr>
 <tr class="memdesc:ad25aee2c5ce600fe92efd1c1b5787eef"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the opal device instance for rendering.  <br /></td></tr>
 <tr class="memitem:aa14de47eea029b5670de01c53c956e6c" id="r_aa14de47eea029b5670de01c53c956e6c"><td class="memItemLeft"><a class="el" href="class_render_target.html">RenderTarget</a> *&#160;</td><td class="memItemRight"><a class="el" href="#aa14de47eea029b5670de01c53c956e6c">getGBuffer</a> () const</td></tr>
 <tr class="memdesc:aa14de47eea029b5670de01c53c956e6c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the lazily created deferred geometry buffer.  <br /></td></tr>
+<tr class="memitem:a3a48733a28b0a0db19cbcb5a98c6632c" id="r_a3a48733a28b0a0db19cbcb5a98c6632c"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a3a48733a28b0a0db19cbcb5a98c6632c">enableSSR</a> (bool enabled=true)</td></tr>
+<tr class="memitem:abee3700204e50e18c67777f549121480" id="r_abee3700204e50e18c67777f549121480"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#abee3700204e50e18c67777f549121480">isSSREnabled</a> () const</td></tr>
+<tr class="memitem:aa847ce692de563d6a8481d7ff5c8d78f" id="r_aa847ce692de563d6a8481d7ff5c8d78f"><td class="memItemLeft"><a class="el" href="struct_bounding_box.html">BoundingBox</a>&#160;</td><td class="memItemRight"><a class="el" href="#aa847ce692de563d6a8481d7ff5c8d78f">getSceneBoundingBox</a> ()</td></tr>
+<tr class="memdesc:aa847ce692de563d6a8481d7ff5c8d78f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Computes the world-space bounds that enclose visible scene geometry.  <br /></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-static-methods" class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
@@ -218,6 +229,8 @@ Public Attributes</h2></td></tr>
 <tr class="memdesc:af5b1c436782cc9752d386493fbc5dc8c"><td class="mdescLeft">&#160;</td><td class="mdescRight">The width of the window in pixels.  <br /></td></tr>
 <tr class="memitem:af0ac1732ca6b79a6f6b78aa344140514" id="r_af0ac1732ca6b79a6f6b78aa344140514"><td class="memItemLeft">int&#160;</td><td class="memItemRight"><a class="el" href="#af0ac1732ca6b79a6f6b78aa344140514">height</a></td></tr>
 <tr class="memdesc:af0ac1732ca6b79a6f6b78aa344140514"><td class="mdescLeft">&#160;</td><td class="mdescRight">The height of the window in pixels.  <br /></td></tr>
+<tr class="memitem:a75325c0ddfc5cbe5625a8840643ee10c" id="r_a75325c0ddfc5cbe5625a8840643ee10c"><td class="memItemLeft">int&#160;</td><td class="memItemRight"><a class="el" href="#a75325c0ddfc5cbe5625a8840643ee10c">currentFrame</a></td></tr>
+<tr class="memdesc:a75325c0ddfc5cbe5625a8840643ee10c"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="object_8h.html#ad53d6229d7ec28555a9c9c2fd9abf773" title="Represents an index in a buffer.">Index</a> of the frame currently being rendered.  <br /></td></tr>
 <tr class="memitem:a84bf9cade8239d6aa81287e05f2fcafb" id="r_a84bf9cade8239d6aa81287e05f2fcafb"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#a84bf9cade8239d6aa81287e05f2fcafb">gravity</a> = 9.81f</td></tr>
 <tr class="memdesc:a84bf9cade8239d6aa81287e05f2fcafb"><td class="mdescLeft">&#160;</td><td class="mdescRight">The gravity constant applied to physics bodies. Default is 9.81 m/s².  <br /></td></tr>
 <tr class="memitem:a2133e2bb4562bcc491d091a640dcae88" id="r_a2133e2bb4562bcc491d091a640dcae88"><td class="memItemLeft">std::shared_ptr&lt; <a class="el" href="class_audio_engine.html">AudioEngine</a> &gt;&#160;</td><td class="memItemRight"><a class="el" href="#a2133e2bb4562bcc491d091a640dcae88">audioEngine</a></td></tr>
@@ -227,24 +240,47 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:a53afa1fac74e273d2f16cb62b174edca" id="r_a53afa1fac74e273d2f16cb62b174edca"><td class="memItemLeft"><a class="el" href="class_render_target.html">RenderTarget</a> *&#160;</td><td class="memItemRight"><a class="el" href="#a53afa1fac74e273d2f16cb62b174edca">currentRenderTarget</a> = nullptr</td></tr>
 <tr class="memdesc:a53afa1fac74e273d2f16cb62b174edca"><td class="mdescLeft">&#160;</td><td class="mdescRight">Points to the render target currently bound for drawing.  <br /></td></tr>
 <tr class="memitem:a6e5adeeae9007bf6796457081916117e" id="r_a6e5adeeae9007bf6796457081916117e"><td class="memItemLeft"><a class="el" href="namespaceopal.html#a21cf4cdb5a3daf53f4097bea2a184d92">opal::BlendFunc</a>&#160;</td><td class="memItemRight"><a class="el" href="#a6e5adeeae9007bf6796457081916117e">dstBlend</a> = <a class="el" href="namespaceopal.html#a21cf4cdb5a3daf53f4097bea2a184d92af72dbe2436b38a39e5927ed644e6818b">opal::BlendFunc::DstAlpha</a></td></tr>
+<tr class="memdesc:a6e5adeeae9007bf6796457081916117e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destination blend factor for forward pipelines.  <br /></td></tr>
 <tr class="memitem:abb0f4d2f4beaab70813d775d9c32511f" id="r_abb0f4d2f4beaab70813d775d9c32511f"><td class="memItemLeft"><a class="el" href="namespaceopal.html#a21cf4cdb5a3daf53f4097bea2a184d92">opal::BlendFunc</a>&#160;</td><td class="memItemRight"><a class="el" href="#abb0f4d2f4beaab70813d775d9c32511f">srcBlend</a> = <a class="el" href="namespaceopal.html#a21cf4cdb5a3daf53f4097bea2a184d92ac00a6016489cff63d50d489ce52254cc">opal::BlendFunc::OneMinusSrcAlpha</a></td></tr>
+<tr class="memdesc:abb0f4d2f4beaab70813d775d9c32511f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Source blend factor for forward pipelines.  <br /></td></tr>
 <tr class="memitem:a43a04b16650580bb5ee777257398253a" id="r_a43a04b16650580bb5ee777257398253a"><td class="memItemLeft"><a class="el" href="namespaceopal.html#a5896ae64717f16fffbc1f783a79aa1fc">opal::FrontFace</a>&#160;</td><td class="memItemRight"><a class="el" href="#a43a04b16650580bb5ee777257398253a">frontFace</a> = <a class="el" href="namespaceopal.html#a5896ae64717f16fffbc1f783a79aa1fca8f23635f9ec49db2161fc5cddf033a79">opal::FrontFace::CounterClockwise</a></td></tr>
+<tr class="memdesc:a43a04b16650580bb5ee777257398253a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Front-face winding used by forward rendering.  <br /></td></tr>
 <tr class="memitem:aeb70ae58aa3e207069fa9f093b23f997" id="r_aeb70ae58aa3e207069fa9f093b23f997"><td class="memItemLeft"><a class="el" href="namespaceopal.html#a5896ae64717f16fffbc1f783a79aa1fc">opal::FrontFace</a>&#160;</td><td class="memItemRight"><a class="el" href="#aeb70ae58aa3e207069fa9f093b23f997">deferredFrontFace</a> = <a class="el" href="namespaceopal.html#a5896ae64717f16fffbc1f783a79aa1fca8f23635f9ec49db2161fc5cddf033a79">opal::FrontFace::CounterClockwise</a></td></tr>
+<tr class="memdesc:aeb70ae58aa3e207069fa9f093b23f997"><td class="mdescLeft">&#160;</td><td class="mdescRight">Front-face winding used by deferred passes.  <br /></td></tr>
 <tr class="memitem:ae6cc0cc5f4502efc7c2f3fe7089dbbe9" id="r_ae6cc0cc5f4502efc7c2f3fe7089dbbe9"><td class="memItemLeft"><a class="el" href="namespaceopal.html#add006f246cb414178a8c265b79edb008">opal::CullMode</a>&#160;</td><td class="memItemRight"><a class="el" href="#ae6cc0cc5f4502efc7c2f3fe7089dbbe9">cullMode</a> = <a class="el" href="namespaceopal.html#add006f246cb414178a8c265b79edb008a0557fa923dcee4d0f86b1409f5c2167f">opal::CullMode::Back</a></td></tr>
+<tr class="memdesc:ae6cc0cc5f4502efc7c2f3fe7089dbbe9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Active culling mode for generated pipelines.  <br /></td></tr>
 <tr class="memitem:a40857d1e74de7d7c99ebeb62605c2393" id="r_a40857d1e74de7d7c99ebeb62605c2393"><td class="memItemLeft"><a class="el" href="namespaceopal.html#aa865954abe3c03f9552eb2789cf2e7f6">opal::CompareOp</a>&#160;</td><td class="memItemRight"><a class="el" href="#a40857d1e74de7d7c99ebeb62605c2393">depthCompareOp</a> = <a class="el" href="namespaceopal.html#aa865954abe3c03f9552eb2789cf2e7f6a1cfdf0e8d0c87a228c1f40d9bee7888b">opal::CompareOp::Less</a></td></tr>
+<tr class="memdesc:a40857d1e74de7d7c99ebeb62605c2393"><td class="mdescLeft">&#160;</td><td class="mdescRight">Depth comparison function for generated pipelines.  <br /></td></tr>
 <tr class="memitem:a525dad49e173db91ae84acb6ce63faa0" id="r_a525dad49e173db91ae84acb6ce63faa0"><td class="memItemLeft"><a class="el" href="namespaceopal.html#a28f9a91b3648e9c463fcd5fb95bf3afb">opal::RasterizerMode</a>&#160;</td><td class="memItemRight"><a class="el" href="#a525dad49e173db91ae84acb6ce63faa0">rasterizerMode</a> = <a class="el" href="namespaceopal.html#a28f9a91b3648e9c463fcd5fb95bf3afbadb3e3f51c9107e26c9bccf9a188ce2ed">opal::RasterizerMode::Fill</a></td></tr>
+<tr class="memdesc:a525dad49e173db91ae84acb6ce63faa0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Polygon rasterization mode (fill/line/point).  <br /></td></tr>
 <tr class="memitem:af4ee5fe20cfe2443986d86987ccb67ed" id="r_af4ee5fe20cfe2443986d86987ccb67ed"><td class="memItemLeft"><a class="el" href="namespaceopal.html#a0f2a10029931d49d9cb7366b874115ba">opal::PrimitiveStyle</a>&#160;</td><td class="memItemRight"><a class="el" href="#af4ee5fe20cfe2443986d86987ccb67ed">primitiveStyle</a> = <a class="el" href="namespaceopal.html#a0f2a10029931d49d9cb7366b874115baa7ca66fdfaad3eb33fc65d7490178f856">opal::PrimitiveStyle::Triangles</a></td></tr>
+<tr class="memdesc:af4ee5fe20cfe2443986d86987ccb67ed"><td class="mdescLeft">&#160;</td><td class="mdescRight">Primitive topology used for draw calls.  <br /></td></tr>
 <tr class="memitem:a6f90483b38ed6da5e0454d1cd2f25e5a" id="r_a6f90483b38ed6da5e0454d1cd2f25e5a"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#a6f90483b38ed6da5e0454d1cd2f25e5a">useDepth</a> = true</td></tr>
+<tr class="memdesc:a6f90483b38ed6da5e0454d1cd2f25e5a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enables depth testing when true.  <br /></td></tr>
 <tr class="memitem:a2dea4b9c0c67fc468fe370a15ba1bc70" id="r_a2dea4b9c0c67fc468fe370a15ba1bc70"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#a2dea4b9c0c67fc468fe370a15ba1bc70">useBlending</a> = true</td></tr>
+<tr class="memdesc:a2dea4b9c0c67fc468fe370a15ba1bc70"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enables color blending when true.  <br /></td></tr>
 <tr class="memitem:ad78f26e26e5b198b9f184664920e7b6a" id="r_ad78f26e26e5b198b9f184664920e7b6a"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#ad78f26e26e5b198b9f184664920e7b6a">writeDepth</a> = true</td></tr>
+<tr class="memdesc:ad78f26e26e5b198b9f184664920e7b6a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enables depth buffer writes when true.  <br /></td></tr>
 <tr class="memitem:ae7493fde4db26f51111590c8f2a2639f" id="r_ae7493fde4db26f51111590c8f2a2639f"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#ae7493fde4db26f51111590c8f2a2639f">useMultisampling</a> = true</td></tr>
+<tr class="memdesc:ae7493fde4db26f51111590c8f2a2639f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Enables multisampling in generated pipelines when available.  <br /></td></tr>
 <tr class="memitem:a5e5ab9cde8287d883ba1e478966a73e1" id="r_a5e5ab9cde8287d883ba1e478966a73e1"><td class="memItemLeft">int&#160;</td><td class="memItemRight"><a class="el" href="#a5e5ab9cde8287d883ba1e478966a73e1">viewportX</a> = 0</td></tr>
+<tr class="memdesc:a5e5ab9cde8287d883ba1e478966a73e1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Cached viewport X origin.  <br /></td></tr>
 <tr class="memitem:a35bcd5f913a9a9c05dd8e26861940b88" id="r_a35bcd5f913a9a9c05dd8e26861940b88"><td class="memItemLeft">int&#160;</td><td class="memItemRight"><a class="el" href="#a35bcd5f913a9a9c05dd8e26861940b88">viewportY</a> = 0</td></tr>
+<tr class="memdesc:a35bcd5f913a9a9c05dd8e26861940b88"><td class="mdescLeft">&#160;</td><td class="mdescRight">Cached viewport Y origin.  <br /></td></tr>
 <tr class="memitem:abe49e4de350f8d2a4f8614bbfc910f26" id="r_abe49e4de350f8d2a4f8614bbfc910f26"><td class="memItemLeft">int&#160;</td><td class="memItemRight"><a class="el" href="#abe49e4de350f8d2a4f8614bbfc910f26">viewportWidth</a> = 0</td></tr>
+<tr class="memdesc:abe49e4de350f8d2a4f8614bbfc910f26"><td class="mdescLeft">&#160;</td><td class="mdescRight">Cached viewport width.  <br /></td></tr>
 <tr class="memitem:a17a2a73291678410ba73174150f1d597" id="r_a17a2a73291678410ba73174150f1d597"><td class="memItemLeft">int&#160;</td><td class="memItemRight"><a class="el" href="#a17a2a73291678410ba73174150f1d597">viewportHeight</a> = 0</td></tr>
+<tr class="memdesc:a17a2a73291678410ba73174150f1d597"><td class="mdescLeft">&#160;</td><td class="mdescRight">Cached viewport height.  <br /></td></tr>
 <tr class="memitem:a9ee934fe903cd23d8dcd9735f8201b93" id="r_a9ee934fe903cd23d8dcd9735f8201b93"><td class="memItemLeft">std::shared_ptr&lt; <a class="el" href="classopal_1_1_device.html">opal::Device</a> &gt;&#160;</td><td class="memItemRight"><a class="el" href="#a9ee934fe903cd23d8dcd9735f8201b93">device</a></td></tr>
+<tr class="memdesc:a9ee934fe903cd23d8dcd9735f8201b93"><td class="mdescLeft">&#160;</td><td class="mdescRight">Shared rendering device used by the window.  <br /></td></tr>
 <tr class="memitem:a54c8f345fe6fbb315dcfb98ed423a2af" id="r_a54c8f345fe6fbb315dcfb98ed423a2af"><td class="memItemLeft">std::shared_ptr&lt; <a class="el" href="classbezel_1_1_physics_world.html">bezel::PhysicsWorld</a> &gt;&#160;</td><td class="memItemRight"><a class="el" href="#a54c8f345fe6fbb315dcfb98ed423a2af">physicsWorld</a></td></tr>
+<tr class="memdesc:a54c8f345fe6fbb315dcfb98ed423a2af"><td class="mdescLeft">&#160;</td><td class="mdescRight">Physics world bound to this window's simulation step.  <br /></td></tr>
 <tr class="memitem:af6e64f66fca2376cca828401f4f3de8c" id="r_af6e64f66fca2376cca828401f4f3de8c"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#af6e64f66fca2376cca828401f4f3de8c">firstFrame</a> = true</td></tr>
+<tr class="memdesc:af6e64f66fca2376cca828401f4f3de8c"><td class="mdescLeft">&#160;</td><td class="mdescRight">True only during the very first rendered frame.  <br /></td></tr>
+<tr class="memitem:a5cf5dd859da05a2ba8903f28f5cfabde" id="r_a5cf5dd859da05a2ba8903f28f5cfabde"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#a5cf5dd859da05a2ba8903f28f5cfabde">usesGlobalIllumination</a> = false</td></tr>
+<tr class="memdesc:a5cf5dd859da05a2ba8903f28f5cfabde"><td class="mdescLeft">&#160;</td><td class="mdescRight">Whether DDGI lighting is enabled on supported platforms.  <br /></td></tr>
+<tr class="memitem:a971d29b383ffdb467710cbc034344b50" id="r_a971d29b383ffdb467710cbc034344b50"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#a971d29b383ffdb467710cbc034344b50">usePathTracing</a> = false</td></tr>
+<tr class="memdesc:a971d29b383ffdb467710cbc034344b50"><td class="mdescLeft">&#160;</td><td class="mdescRight">Whether the path tracing pass is currently enabled.  <br /></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-static-attribs" class="groupheader"><a id="pub-static-attribs" name="pub-static-attribs"></a>
 Static Public Attributes</h2></td></tr>
@@ -258,6 +294,8 @@ Friends</h2></td></tr>
 <tr class="memitem:a7c2d49dc122804ba058a10c20e8d048d" id="r_a7c2d49dc122804ba058a10c20e8d048d"><td class="memItemLeft">class&#160;</td><td class="memItemRight"><a class="el" href="#a7c2d49dc122804ba058a10c20e8d048d">DirectionalLight</a></td></tr>
 <tr class="memitem:aee0ad1dafe471596e6d25530d9fbaf0c" id="r_aee0ad1dafe471596e6d25530d9fbaf0c"><td class="memItemLeft">class&#160;</td><td class="memItemRight"><a class="el" href="#aee0ad1dafe471596e6d25530d9fbaf0c">Text</a></td></tr>
 <tr class="memitem:a8a16a8def173094d17ed062879646b6b" id="r_a8a16a8def173094d17ed062879646b6b"><td class="memItemLeft">class&#160;</td><td class="memItemRight"><a class="el" href="#a8a16a8def173094d17ed062879646b6b">Terrain</a></td></tr>
+<tr class="memitem:a8651151fb3e12d0bce6a247729779b41" id="r_a8651151fb3e12d0bce6a247729779b41"><td class="memItemLeft">class&#160;</td><td class="memItemRight"><a class="el" href="#a8651151fb3e12d0bce6a247729779b41">photon::GlobalIllumination</a></td></tr>
+<tr class="memitem:a7bd2d360f80eb3add0821647da15daee" id="r_a7bd2d360f80eb3add0821647da15daee"><td class="memItemLeft">class&#160;</td><td class="memItemRight"><a class="el" href="#a7bd2d360f80eb3add0821647da15daee">photon::PathTracing</a></td></tr>
 <tr class="memitem:a92c19ce92f8fc0109e55bc4795031dd1" id="r_a92c19ce92f8fc0109e55bc4795031dd1"><td class="memItemLeft">struct&#160;</td><td class="memItemRight"><a class="el" href="#a92c19ce92f8fc0109e55bc4795031dd1">Fluid</a></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
@@ -283,13 +321,13 @@ Example</h2>
 <div class="ttc" id="aclass_camera_html"><div class="ttname"><a href="class_camera.html">Camera</a></div><div class="ttdoc">Class representing a camera in 3D space, capable of generating view and projection matrices....</div><div class="ttdef"><b>Definition</b> <a href="camera_8h_source.html#l00040">camera.h:40</a></div></div>
 <div class="ttc" id="aclass_scene_html"><div class="ttname"><a href="class_scene.html">Scene</a></div><div class="ttdoc">Abstract class that represents a 3D scene. It contains all lights and objects that are going to be re...</div><div class="ttdef"><b>Definition</b> <a href="scene_8h_source.html#l00143">scene.h:143</a></div></div>
 <div class="ttc" id="aclass_window_html_a68f992d1a0889f976d886d36a424aeda"><div class="ttname"><a href="#a68f992d1a0889f976d886d36a424aeda">Window::Window</a></div><div class="ttdeci">Window(const WindowConfiguration &amp;config)</div><div class="ttdoc">Constructs a window with the specified configuration.</div></div>
-<div class="ttc" id="aclass_window_html_ac9dbe2a378024e3a3c417b4cb50adbb3"><div class="ttname"><a href="#ac9dbe2a378024e3a3c417b4cb50adbb3">Window::CoreObject</a></div><div class="ttdeci">friend class CoreObject</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00674">window.h:674</a></div></div>
-<div class="ttc" id="astruct_window_configuration_html"><div class="ttname"><a href="struct_window_configuration.html">WindowConfiguration</a></div><div class="ttdoc">Structure representing the configuration options for creating a window.</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00045">window.h:45</a></div></div>
-<div class="ttc" id="astruct_window_configuration_html_a4df560282200968d1957c90a801959be"><div class="ttname"><a href="struct_window_configuration.html#a4df560282200968d1957c90a801959be">WindowConfiguration::width</a></div><div class="ttdeci">int width</div><div class="ttdoc">The width of the window in pixels.</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00055">window.h:55</a></div></div>
-<div class="ttc" id="astruct_window_configuration_html_aa56b982e392a5e2c45854bdc86af277f"><div class="ttname"><a href="struct_window_configuration.html#aa56b982e392a5e2c45854bdc86af277f">WindowConfiguration::height</a></div><div class="ttdeci">int height</div><div class="ttdoc">The height of the window in pixels.</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00060">window.h:60</a></div></div>
-<div class="ttc" id="astruct_window_configuration_html_abf7b5dd301a90c647a15b2e5168c7d66"><div class="ttname"><a href="struct_window_configuration.html#abf7b5dd301a90c647a15b2e5168c7d66">WindowConfiguration::title</a></div><div class="ttdeci">std::string title</div><div class="ttdoc">The title of the window.</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00050">window.h:50</a></div></div>
+<div class="ttc" id="aclass_window_html_ac9dbe2a378024e3a3c417b4cb50adbb3"><div class="ttname"><a href="#ac9dbe2a378024e3a3c417b4cb50adbb3">Window::CoreObject</a></div><div class="ttdeci">friend class CoreObject</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00745">window.h:745</a></div></div>
+<div class="ttc" id="astruct_window_configuration_html"><div class="ttname"><a href="struct_window_configuration.html">WindowConfiguration</a></div><div class="ttdoc">Structure representing the configuration options for creating a window.</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00046">window.h:46</a></div></div>
+<div class="ttc" id="astruct_window_configuration_html_a4df560282200968d1957c90a801959be"><div class="ttname"><a href="struct_window_configuration.html#a4df560282200968d1957c90a801959be">WindowConfiguration::width</a></div><div class="ttdeci">int width</div><div class="ttdoc">The width of the window in pixels.</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00056">window.h:56</a></div></div>
+<div class="ttc" id="astruct_window_configuration_html_aa56b982e392a5e2c45854bdc86af277f"><div class="ttname"><a href="struct_window_configuration.html#aa56b982e392a5e2c45854bdc86af277f">WindowConfiguration::height</a></div><div class="ttdeci">int height</div><div class="ttdoc">The height of the window in pixels.</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00061">window.h:61</a></div></div>
+<div class="ttc" id="astruct_window_configuration_html_abf7b5dd301a90c647a15b2e5168c7d66"><div class="ttname"><a href="struct_window_configuration.html#abf7b5dd301a90c647a15b2e5168c7d66">WindowConfiguration::title</a></div><div class="ttdeci">std::string title</div><div class="ttdoc">The title of the window.</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00051">window.h:51</a></div></div>
 </div><!-- fragment --> 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00240">240</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00241">241</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a68f992d1a0889f976d886d36a424aeda" name="a68f992d1a0889f976d886d36a424aeda"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a68f992d1a0889f976d886d36a424aeda">&#9670;&#160;</a></span>Window()</h2>
@@ -361,8 +399,8 @@ Example</h2>
 
 <p>Activates debug mode for the window. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00441">441</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  441</span>{ this-&gt;debug = <span class="keyword">true</span>; }</div>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00458">458</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  458</span>{ this-&gt;debug = <span class="keyword">true</span>; }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -486,7 +524,7 @@ Example</h2>
   </dd>
 </dl>
 
-<p class="reference">References <a class="el" href="window_8h_source.html#l00675">RenderTarget</a>.</p>
+<p class="reference">References <a class="el" href="window_8h_source.html#l00746">RenderTarget</a>.</p>
 
 </div>
 </div>
@@ -572,8 +610,36 @@ Example</h2>
 
 <p>Deactivates debug mode for the window. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00446">446</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  446</span>{ this-&gt;debug = <span class="keyword">false</span>; }</div>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00463">463</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  463</span>{ this-&gt;debug = <span class="keyword">false</span>; }</div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="a3a48733a28b0a0db19cbcb5a98c6632c" name="a3a48733a28b0a0db19cbcb5a98c6632c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a3a48733a28b0a0db19cbcb5a98c6632c">&#9670;&#160;</a></span>enableSSR()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Window::enableSSR </td>
+          <td>(</td>
+          <td class="paramtype">bool</td>          <td class="paramname"><span class="paramname"><em>enabled</em></span><span class="paramdefsep"> = </span><span class="paramdefval">true</span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00540">540</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  540</span>{ this-&gt;useSSR = enabled; }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -631,8 +697,8 @@ Example</h2>
 <p>Gets the current camera. </p>
 <dl class="section return"><dt>Returns</dt><dd>(Camera*) Pointer to the current camera. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00417">417</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  417</span>{ <span class="keywordflow">return</span> camera; }</div>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00434">434</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  434</span>{ <span class="keywordflow">return</span> camera; }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -662,8 +728,8 @@ Example</h2>
 <p>Gets the current scene being rendered. </p>
 <dl class="section return"><dt>Returns</dt><dd>(Scene*) Pointer to the current scene. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00411">411</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  411</span>{ <span class="keywordflow">return</span> currentScene; }</div>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00428">428</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  428</span>{ <span class="keywordflow">return</span> currentScene; }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -713,8 +779,8 @@ Example</h2>
 <p>Gets the delta time between frames. </p>
 <dl class="section return"><dt>Returns</dt><dd>(float) Delta time in seconds. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00453">453</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  453</span>{ <span class="keywordflow">return</span> this-&gt;deltaTime; }</div>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00470">470</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  470</span>{ <span class="keywordflow">return</span> this-&gt;deltaTime; }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -743,11 +809,11 @@ Example</h2>
 
 <p>Returns the opal device instance for rendering. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00504">504</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  504</span>{ <span class="keywordflow">return</span> this-&gt;<a class="code hl_variable" href="#a9ee934fe903cd23d8dcd9735f8201b93">device</a>; }</div>
-<div class="ttc" id="aclass_window_html_a9ee934fe903cd23d8dcd9735f8201b93"><div class="ttname"><a href="#a9ee934fe903cd23d8dcd9735f8201b93">Window::device</a></div><div class="ttdeci">std::shared_ptr&lt; opal::Device &gt; device</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00534">window.h:534</a></div></div>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00531">531</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  531</span>{ <span class="keywordflow">return</span> this-&gt;<a class="code hl_variable" href="#a9ee934fe903cd23d8dcd9735f8201b93">device</a>; }</div>
+<div class="ttc" id="aclass_window_html_a9ee934fe903cd23d8dcd9735f8201b93"><div class="ttname"><a href="#a9ee934fe903cd23d8dcd9735f8201b93">Window::device</a></div><div class="ttdeci">std::shared_ptr&lt; opal::Device &gt; device</div><div class="ttdoc">Shared rendering device used by the window.</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00581">window.h:581</a></div></div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="window_8h_source.html#l00534">device</a>.</p>
+<p class="reference">References <a class="el" href="window_8h_source.html#l00581">device</a>.</p>
 
 </div>
 </div>
@@ -777,8 +843,8 @@ Example</h2>
 <p>Gets the current frames per second. </p>
 <dl class="section return"><dt>Returns</dt><dd>(float) Frames per second value. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00459">459</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  459</span>{ <span class="keywordflow">return</span> this-&gt;framesPerSecond; }</div>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00476">476</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  476</span>{ <span class="keywordflow">return</span> this-&gt;framesPerSecond; }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -808,11 +874,39 @@ Example</h2>
 <p>Returns the lazily created deferred geometry buffer. </p>
 <dl class="section return"><dt>Returns</dt><dd>(RenderTarget*) Pointer to the G-buffer contents. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00511">511</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  511</span>{ <span class="keywordflow">return</span> gBuffer.get(); }</div>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00538">538</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  538</span>{ <span class="keywordflow">return</span> gBuffer.get(); }</div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="window_8h_source.html#l00675">RenderTarget</a>.</p>
+<p class="reference">References <a class="el" href="window_8h_source.html#l00746">RenderTarget</a>.</p>
 
+</div>
+</div>
+<a id="a23f5da45d7474ef6e0dfd59db0ada843" name="a23f5da45d7474ef6e0dfd59db0ada843"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a23f5da45d7474ef6e0dfd59db0ada843">&#9670;&#160;</a></span>getMetalUpscalingRatio()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">float Window::getMetalUpscalingRatio </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00521">521</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  521</span>{ <span class="keywordflow">return</span> this-&gt;metalUpscalingRatio; }</div>
+</div><!-- fragment -->
 </div>
 </div>
 <a id="a733d1c5e32c4c1f62578844242763c61" name="a733d1c5e32c4c1f62578844242763c61"></a>
@@ -840,9 +934,30 @@ Example</h2>
 
 <p>Returns the active internal render scale. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00494">494</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  494</span>{ <span class="keywordflow">return</span> this-&gt;renderScale; }</div>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00514">514</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  514</span>{ <span class="keywordflow">return</span> this-&gt;renderScale; }</div>
 </div><!-- fragment -->
+</div>
+</div>
+<a id="aa847ce692de563d6a8481d7ff5c8d78f" name="aa847ce692de563d6a8481d7ff5c8d78f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa847ce692de563d6a8481d7ff5c8d78f">&#9670;&#160;</a></span>getSceneBoundingBox()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="struct_bounding_box.html">BoundingBox</a> Window::getSceneBoundingBox </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Computes the world-space bounds that enclose visible scene geometry. </p>
+
+<p class="reference">References <a class="el" href="window_8h_source.html#l00752">Fluid</a>, and <a class="el" href="window_8h_source.html#l00746">RenderTarget</a>.</p>
+
 </div>
 </div>
 <a id="a45631c1890acbdff3bc1321236b131ef" name="a45631c1890acbdff3bc1321236b131ef"></a>
@@ -871,13 +986,13 @@ Example</h2>
 <p>Gets the framebuffer size of the window. </p>
 <dl class="section return"><dt>Returns</dt><dd>(<a class="el" href="struct_size2d.html" title="Structure representing 2D dimensions with width and height. Provides arithmetic operations and conver...">Size2d</a>) The width and height of the framebuffer. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00430">430</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  430</span>                     {</div>
-<div class="line"><span class="lineno">  431</span>        <span class="keywordtype">int</span> fbw, fbh;</div>
-<div class="line"><span class="lineno">  432</span>        glfwGetFramebufferSize(<span class="keyword">static_cast&lt;</span>GLFWwindow *<span class="keyword">&gt;</span>(windowRef), &amp;fbw,</div>
-<div class="line"><span class="lineno">  433</span>                               &amp;fbh);</div>
-<div class="line"><span class="lineno">  434</span>        <span class="keywordflow">return</span> {<span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(fbw), <span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(fbh)};</div>
-<div class="line"><span class="lineno">  435</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00447">447</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  447</span>                     {</div>
+<div class="line"><span class="lineno">  448</span>        <span class="keywordtype">int</span> fbw, fbh;</div>
+<div class="line"><span class="lineno">  449</span>        glfwGetFramebufferSize(<span class="keyword">static_cast&lt;</span>GLFWwindow *<span class="keyword">&gt;</span>(windowRef), &amp;fbw,</div>
+<div class="line"><span class="lineno">  450</span>                               &amp;fbh);</div>
+<div class="line"><span class="lineno">  451</span>        <span class="keywordflow">return</span> {<span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(fbw), <span class="keyword">static_cast&lt;</span><span class="keywordtype">float</span><span class="keyword">&gt;</span>(fbh)};</div>
+<div class="line"><span class="lineno">  452</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -906,8 +1021,8 @@ Example</h2>
 
 <p>Returns the SSAO-specific render scale. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00499">499</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  499</span>{ <span class="keywordflow">return</span> this-&gt;ssaoRenderScale; }</div>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00526">526</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  526</span>{ <span class="keywordflow">return</span> this-&gt;ssaoRenderScale; }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -983,6 +1098,62 @@ Example</h2>
 
 </div>
 </div>
+<a id="a6a4b089c65710486f911db328f0e04d4" name="a6a4b089c65710486f911db328f0e04d4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6a4b089c65710486f911db328f0e04d4">&#9670;&#160;</a></span>isMetalUpscalingEnabled()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool Window::isMetalUpscalingEnabled </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00520">520</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  520</span>{ <span class="keywordflow">return</span> this-&gt;metalUpscalingEnabled; }</div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="abee3700204e50e18c67777f549121480" name="abee3700204e50e18c67777f549121480"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abee3700204e50e18c67777f549121480">&#9670;&#160;</a></span>isSSREnabled()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool Window::isSSREnabled </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00541">541</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  541</span>{ <span class="keywordflow">return</span> this-&gt;useSSR; }</div>
+</div><!-- fragment -->
+</div>
+</div>
 <a id="a82a904e9db9c0aa3e6e235da92a79ab4" name="a82a904e9db9c0aa3e6e235da92a79ab4"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a82a904e9db9c0aa3e6e235da92a79ab4">&#9670;&#160;</a></span>releaseMouse()</h2>
 
@@ -1016,6 +1187,8 @@ Example</h2>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>Removes a previously registered renderable from the window. </p>
 
 </div>
 </div>
@@ -1087,8 +1260,10 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00270">270</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  270</span>{ this-&gt;clearColor = color; }</div>
+<p>Sets the clear color used before each render pass. </p>
+
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00279">279</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  279</span>{ this-&gt;clearColor = color; }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -1166,6 +1341,8 @@ Example</h2>
       </table>
 </div><div class="memdoc">
 
+<p>Configures console log visibility per severity. </p>
+
 </div>
 </div>
 <a id="ac693d92bb6f52273932549cd121a5755" name="ac693d92bb6f52273932549cd121a5755"></a>
@@ -1237,6 +1414,25 @@ Example</h2>
 
 </div>
 </div>
+<a id="ac23335eac7e325c1dc9868c8d241e3e5" name="ac23335eac7e325c1dc9868c8d241e3e5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac23335eac7e325c1dc9868c8d241e3e5">&#9670;&#160;</a></span>useMetalUpscaling()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void Window::useMetalUpscaling </td>
+          <td>(</td>
+          <td class="paramtype">float</td>          <td class="paramname"><span class="paramname"><em>ratio</em></span><span class="paramdefsep"> = </span><span class="paramdefval">0.75f</span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Enables Metal-based upscaling and sets the internal ratio. </p>
+
+</div>
+</div>
 <a id="ae4ae02f15f1fd1e030d888afbe0ab77c" name="ae4ae02f15f1fd1e030d888afbe0ab77c"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ae4ae02f15f1fd1e030d888afbe0ab77c">&#9670;&#160;</a></span>useTracer()</h2>
 
@@ -1260,8 +1456,8 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00468">468</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  468</span>{ this-&gt;waitForTracer = enable; }</div>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00485">485</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  485</span>{ this-&gt;waitForTracer = enable; }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -1286,9 +1482,9 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00674">674</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00745">745</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
-<p class="reference">References <a class="el" href="window_8h_source.html#l00674">CoreObject</a>.</p>
+<p class="reference">References <a class="el" href="window_8h_source.html#l00745">CoreObject</a>.</p>
 
 </div>
 </div>
@@ -1312,9 +1508,9 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00676">676</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00747">747</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
-<p class="reference">References <a class="el" href="window_8h_source.html#l00676">DirectionalLight</a>.</p>
+<p class="reference">References <a class="el" href="window_8h_source.html#l00747">DirectionalLight</a>.</p>
 
 </div>
 </div>
@@ -1338,9 +1534,57 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00679">679</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00752">752</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
-<p class="reference">References <a class="el" href="window_8h_source.html#l00679">Fluid</a>.</p>
+<p class="reference">References <a class="el" href="window_8h_source.html#l00752">Fluid</a>.</p>
+
+</div>
+</div>
+<a id="a8651151fb3e12d0bce6a247729779b41" name="a8651151fb3e12d0bce6a247729779b41"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8651151fb3e12d0bce6a247729779b41">&#9670;&#160;</a></span>photon::GlobalIllumination</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">friend class <a class="el" href="classphoton_1_1_global_illumination.html">photon::GlobalIllumination</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel friend">friend</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00750">750</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+
+</div>
+</div>
+<a id="a7bd2d360f80eb3add0821647da15daee" name="a7bd2d360f80eb3add0821647da15daee"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7bd2d360f80eb3add0821647da15daee">&#9670;&#160;</a></span>photon::PathTracing</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">friend class <a class="el" href="classphoton_1_1_path_tracing.html">photon::PathTracing</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel friend">friend</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00751">751</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1364,9 +1608,9 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00675">675</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00746">746</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
-<p class="reference">References <a class="el" href="window_8h_source.html#l00675">RenderTarget</a>.</p>
+<p class="reference">References <a class="el" href="window_8h_source.html#l00746">RenderTarget</a>.</p>
 
 </div>
 </div>
@@ -1390,9 +1634,9 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00678">678</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00749">749</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
-<p class="reference">References <a class="el" href="window_8h_source.html#l00678">Terrain</a>.</p>
+<p class="reference">References <a class="el" href="window_8h_source.html#l00749">Terrain</a>.</p>
 
 </div>
 </div>
@@ -1416,9 +1660,9 @@ Example</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00677">677</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00748">748</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
-<p class="reference">References <a class="el" href="window_8h_source.html#l00677">Text</a>.</p>
+<p class="reference">References <a class="el" href="window_8h_source.html#l00748">Text</a>.</p>
 
 </div>
 </div>
@@ -1437,7 +1681,7 @@ Example</h2>
 
 <p>The audio engine instance for managing spatial audio. Shared across the window. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00476">476</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00496">496</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1453,7 +1697,27 @@ Example</h2>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00522">522</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p>Active culling mode for generated pipelines. </p>
+
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00557">557</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+
+</div>
+</div>
+<a id="a75325c0ddfc5cbe5625a8840643ee10c" name="a75325c0ddfc5cbe5625a8840643ee10c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a75325c0ddfc5cbe5625a8840643ee10c">&#9670;&#160;</a></span>currentFrame</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int Window::currentFrame</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p><a class="el" href="object_8h.html#ad53d6229d7ec28555a9c9c2fd9abf773" title="Represents an index in a buffer.">Index</a> of the frame currently being rendered. </p>
+
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00262">262</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1471,7 +1735,7 @@ Example</h2>
 
 <p>Points to the render target currently bound for drawing. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00516">516</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00546">546</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1487,7 +1751,9 @@ Example</h2>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00521">521</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p>Front-face winding used by deferred passes. </p>
+
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00555">555</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1503,7 +1769,9 @@ Example</h2>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00523">523</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p>Depth comparison function for generated pipelines. </p>
+
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00559">559</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1519,7 +1787,9 @@ Example</h2>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00534">534</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p>Shared rendering device used by the window. </p>
+
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00581">581</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1535,7 +1805,9 @@ Example</h2>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00518">518</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p>Destination blend factor for forward pipelines. </p>
+
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00549">549</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1551,7 +1823,9 @@ Example</h2>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00538">538</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p>True only during the very first rendered frame. </p>
+
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00587">587</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1567,7 +1841,9 @@ Example</h2>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00520">520</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p>Front-face winding used by forward rendering. </p>
+
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00553">553</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1585,7 +1861,7 @@ Example</h2>
 
 <p>The gravity constant applied to physics bodies. Default is 9.81 m/s². </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00466">466</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00483">483</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1603,7 +1879,7 @@ Example</h2>
 
 <p>The height of the window in pixels. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00256">256</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00257">257</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1629,7 +1905,7 @@ Example</h2>
 
 <p>Static pointer to the main window instance. Used for global access to the primary window. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00404">404</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00421">421</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1645,7 +1921,9 @@ Example</h2>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00536">536</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p>Physics world bound to this window's simulation step. </p>
+
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00584">584</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1661,7 +1939,9 @@ Example</h2>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00525">525</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p>Primitive topology used for draw calls. </p>
+
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00563">563</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1677,7 +1957,9 @@ Example</h2>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00524">524</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p>Polygon rasterization mode (fill/line/point). </p>
+
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00561">561</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1693,7 +1975,9 @@ Example</h2>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00519">519</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p>Source blend factor for forward pipelines. </p>
+
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00551">551</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1711,7 +1995,7 @@ Example</h2>
 
 <p>The title of the window displayed in the title bar. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00246">246</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00247">247</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1727,7 +2011,9 @@ Example</h2>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00527">527</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p>Enables color blending when true. </p>
+
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00567">567</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1743,7 +2029,9 @@ Example</h2>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00526">526</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p>Enables depth testing when true. </p>
+
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00565">565</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1759,7 +2047,27 @@ Example</h2>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00529">529</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p>Enables multisampling in generated pipelines when available. </p>
+
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00571">571</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+
+</div>
+</div>
+<a id="a971d29b383ffdb467710cbc034344b50" name="a971d29b383ffdb467710cbc034344b50"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a971d29b383ffdb467710cbc034344b50">&#9670;&#160;</a></span>usePathTracing</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool Window::usePathTracing = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Whether the path tracing pass is currently enabled. </p>
+
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00592">592</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1777,7 +2085,25 @@ Example</h2>
 
 <p>Whether the window is using deferred rendering. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00489">489</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00509">509</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+
+</div>
+</div>
+<a id="a5cf5dd859da05a2ba8903f28f5cfabde" name="a5cf5dd859da05a2ba8903f28f5cfabde"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5cf5dd859da05a2ba8903f28f5cfabde">&#9670;&#160;</a></span>usesGlobalIllumination</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool Window::usesGlobalIllumination = false</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Whether DDGI lighting is enabled on supported platforms. </p>
+
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00590">590</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1793,7 +2119,9 @@ Example</h2>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00533">533</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p>Cached viewport height. </p>
+
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00579">579</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1809,7 +2137,9 @@ Example</h2>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00532">532</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p>Cached viewport width. </p>
+
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00577">577</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1825,7 +2155,9 @@ Example</h2>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00530">530</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p>Cached viewport X origin. </p>
+
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00573">573</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1841,7 +2173,9 @@ Example</h2>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00531">531</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p>Cached viewport Y origin. </p>
+
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00575">575</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1859,7 +2193,7 @@ Example</h2>
 
 <p>The width of the window in pixels. </p>
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00251">251</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00252">252</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>
@@ -1875,7 +2209,9 @@ Example</h2>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00528">528</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
+<p>Enables depth buffer writes when true. </p>
+
+<p class="definition">Definition at line <a class="el" href="window_8h_source.html#l00569">569</a> of file <a class="el" href="window_8h_source.html">window.h</a>.</p>
 
 </div>
 </div>

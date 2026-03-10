@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -143,8 +143,9 @@ Inheritance diagram for Model:</div>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a2703e648303a35bd1f35c23f4da7600b" id="r_a2703e648303a35bd1f35c23f4da7600b"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a2703e648303a35bd1f35c23f4da7600b">fromResource</a> (const <a class="el" href="struct_resource.html">Resource</a> &amp;resource)</td></tr>
 <tr class="memdesc:a2703e648303a35bd1f35c23f4da7600b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Loads the model from a resource.  <br /></td></tr>
-<tr class="memitem:af2f4d13f48508e046f3b57e59ba420fb" id="r_af2f4d13f48508e046f3b57e59ba420fb"><td class="memItemLeft">std::vector&lt; std::shared_ptr&lt; <a class="el" href="class_core_object.html">CoreObject</a> &gt; &gt;&#160;</td><td class="memItemRight"><a class="el" href="#af2f4d13f48508e046f3b57e59ba420fb">getObjects</a> ()</td></tr>
-<tr class="memdesc:af2f4d13f48508e046f3b57e59ba420fb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets the objects that make up the model.  <br /></td></tr>
+<tr class="memitem:a2e9f3d9230b1726b893c6699aa2cc0f6" id="r_a2e9f3d9230b1726b893c6699aa2cc0f6"><td class="memItemLeft">std::vector&lt; std::shared_ptr&lt; <a class="el" href="class_core_object.html">CoreObject</a> &gt; &gt; &amp;&#160;</td><td class="memItemRight"><a class="el" href="#a2e9f3d9230b1726b893c6699aa2cc0f6">getObjects</a> ()</td></tr>
+<tr class="memdesc:a2e9f3d9230b1726b893c6699aa2cc0f6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets the objects that make up the model.  <br /></td></tr>
+<tr class="memitem:a81cd511e7055ff464f7b8efd6a8c25e3" id="r_a81cd511e7055ff464f7b8efd6a8c25e3"><td class="memItemLeft">const std::vector&lt; std::shared_ptr&lt; <a class="el" href="class_core_object.html">CoreObject</a> &gt; &gt; &amp;&#160;</td><td class="memItemRight"><a class="el" href="#a81cd511e7055ff464f7b8efd6a8c25e3">getObjects</a> () const</td></tr>
 <tr class="memitem:aeb27cb91b9a787f06d8c8001169968bc" id="r_aeb27cb91b9a787f06d8c8001169968bc"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#aeb27cb91b9a787f06d8c8001169968bc">move</a> (const <a class="el" href="struct_position3d.html">Position3d</a> &amp;deltaPosition) override</td></tr>
 <tr class="memdesc:aeb27cb91b9a787f06d8c8001169968bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Moves the model by a certain amount.  <br /></td></tr>
 <tr class="memitem:a7cd6f92f17a58446c6b1d2ea70e2e0d5" id="r_a7cd6f92f17a58446c6b1d2ea70e2e0d5"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a7cd6f92f17a58446c6b1d2ea70e2e0d5">setPosition</a> (const <a class="el" href="struct_position3d.html">Position3d</a> &amp;newPosition) override</td></tr>
@@ -171,6 +172,14 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a93840117d6b7bb02f947a40bdab42dda"><td class="mdescLeft">&#160;</td><td class="mdescRight">Retrieves the shader program currently bound to the first mesh.  <br /></td></tr>
 <tr class="memitem:a773e85c486ebaf5e0f3afe9da3381212" id="r_a773e85c486ebaf5e0f3afe9da3381212"><td class="memItemLeft"><a class="el" href="struct_position3d.html">Position3d</a>&#160;</td><td class="memItemRight"><a class="el" href="#a773e85c486ebaf5e0f3afe9da3381212">getPosition</a> () const override</td></tr>
 <tr class="memdesc:a773e85c486ebaf5e0f3afe9da3381212"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the world-space position of the first mesh in the model.  <br /></td></tr>
+<tr class="memitem:a7c876d302f1218a62d6ad2d80eea44a5" id="r_a7c876d302f1218a62d6ad2d80eea44a5"><td class="memItemLeft">std::vector&lt; <a class="el" href="struct_core_vertex.html">CoreVertex</a> &gt;&#160;</td><td class="memItemRight"><a class="el" href="#a7c876d302f1218a62d6ad2d80eea44a5">getVertices</a> () const override</td></tr>
+<tr class="memdesc:a7c876d302f1218a62d6ad2d80eea44a5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to get the vertices of the object in 3D space.  <br /></td></tr>
+<tr class="memitem:adf32150fe67ba67c26a43eeb3bbb5869" id="r_adf32150fe67ba67c26a43eeb3bbb5869"><td class="memItemLeft"><a class="el" href="units_8h.html#a64eae7ddcc7a03ddf2cda1866b0fb3aa">Size3d</a>&#160;</td><td class="memItemRight"><a class="el" href="#adf32150fe67ba67c26a43eeb3bbb5869">getScale</a> () const override</td></tr>
+<tr class="memdesc:adf32150fe67ba67c26a43eeb3bbb5869"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to get the scale of the object in 3D space.  <br /></td></tr>
+<tr class="memitem:a58776e17a471807c28b3489de18f1fb1" id="r_a58776e17a471807c28b3489de18f1fb1"><td class="memItemLeft"><a class="el" href="struct_rotation3d.html">Rotation3d</a>&#160;</td><td class="memItemRight"><a class="el" href="#a58776e17a471807c28b3489de18f1fb1">getRotation</a> () const override</td></tr>
+<tr class="memdesc:a58776e17a471807c28b3489de18f1fb1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns object rotation in Euler angles.  <br /></td></tr>
+<tr class="memitem:ad6da4e22fd6e4fa8e5332c584f61756e" id="r_ad6da4e22fd6e4fa8e5332c584f61756e"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#ad6da4e22fd6e4fa8e5332c584f61756e">canCastShadows</a> () const override</td></tr>
+<tr class="memdesc:ad6da4e22fd6e4fa8e5332c584f61756e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to determine if the object can cast shadows. Can be overridden by derived classes.  <br /></td></tr>
 <tr class="memitem:ab5bdabea36b1d1bee80151e2da913373" id="r_ab5bdabea36b1d1bee80151e2da913373"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="#ab5bdabea36b1d1bee80151e2da913373">Model</a> ()=default</td></tr>
 <tr class="memitem:a5de7005f4cc2280b14e942aa64506195" id="r_a5de7005f4cc2280b14e942aa64506195"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#a5de7005f4cc2280b14e942aa64506195">canUseDeferredRendering</a> () override</td></tr>
 <tr class="memdesc:a5de7005f4cc2280b14e942aa64506195"><td class="mdescLeft">&#160;</td><td class="mdescRight">Checks if the model can use deferred rendering.  <br /></td></tr>
@@ -214,20 +223,15 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:ac9a87febca21d5f4e4d69bde2973950d inherit pub_methods_class_game_object"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets the first component that matches the specified type.  <br /></td></tr>
 <tr class="memitem:a6ec5febd0b246ca17ad06a0463db6445 inherit pub_methods_class_game_object" id="r_a6ec5febd0b246ca17ad06a0463db6445"><td class="memItemLeft">unsigned int&#160;</td><td class="memItemRight"><a class="el" href="class_game_object.html#a6ec5febd0b246ca17ad06a0463db6445">getId</a> () override</td></tr>
 <tr class="memdesc:a6ec5febd0b246ca17ad06a0463db6445 inherit pub_methods_class_game_object"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the unique identifier associated with this object.  <br /></td></tr>
-<tr class="memitem:a6fdf9066668a13404fdca02f969b6e11 inherit pub_methods_class_game_object" id="r_a6fdf9066668a13404fdca02f969b6e11"><td class="memItemLeft">virtual <a class="el" href="struct_rotation3d.html">Rotation3d</a>&#160;</td><td class="memItemRight"><a class="el" href="class_game_object.html#a6fdf9066668a13404fdca02f969b6e11">getRotation</a> () const</td></tr>
 <tr class="memitem:ac433c6aa2b98139d2f9e418bbc5e539c inherit pub_methods_class_game_object" id="r_ac433c6aa2b98139d2f9e418bbc5e539c"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="class_game_object.html#ac433c6aa2b98139d2f9e418bbc5e539c">addDependency</a> (<a class="el" href="class_game_object.html">GameObject</a> *obj)</td></tr>
+<tr class="memdesc:ac433c6aa2b98139d2f9e418bbc5e539c inherit pub_methods_class_game_object"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds another object as a dependency for update ordering.  <br /></td></tr>
 <tr class="memitem:a7d4f4fc438b1cc0423c4048da8ab8993 inherit pub_methods_class_game_object" id="r_a7d4f4fc438b1cc0423c4048da8ab8993"><td class="memItemLeft">std::vector&lt; <a class="el" href="class_game_object.html">GameObject</a> * &gt;&#160;</td><td class="memItemRight"><a class="el" href="class_game_object.html#a7d4f4fc438b1cc0423c4048da8ab8993">getDependencies</a> () const</td></tr>
+<tr class="memdesc:a7d4f4fc438b1cc0423c4048da8ab8993 inherit pub_methods_class_game_object"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns all registered dependencies for this object.  <br /></td></tr>
 <tr class="inherit_header pub_methods_class_renderable"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pub_methods_class_renderable')"><span class="dynarrow"><span class="arrowhead closed"></span></span>Public Member Functions inherited from <a class="el" href="class_renderable.html">Renderable</a></td></tr>
 <tr class="memitem:a0c0180d14588c6ed436cc7d153c9b22c inherit pub_methods_class_renderable" id="r_a0c0180d14588c6ed436cc7d153c9b22c"><td class="memItemLeft">virtual std::optional&lt; <a class="el" href="struct_shader_program.html">ShaderProgram</a> &gt;&#160;</td><td class="memItemRight"><a class="el" href="class_renderable.html#a0c0180d14588c6ed436cc7d153c9b22c">getShaderProgram</a> ()</td></tr>
 <tr class="memdesc:a0c0180d14588c6ed436cc7d153c9b22c inherit pub_methods_class_renderable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the currently bound shader program, if any.  <br /></td></tr>
 <tr class="memitem:a2fcaae3ae9e7fe9bf942b3a9ef58ae55 inherit pub_methods_class_renderable" id="r_a2fcaae3ae9e7fe9bf942b3a9ef58ae55"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_renderable.html#a2fcaae3ae9e7fe9bf942b3a9ef58ae55">setShader</a> (const <a class="el" href="struct_shader_program.html">ShaderProgram</a> &amp;shaderProgram)</td></tr>
 <tr class="memdesc:a2fcaae3ae9e7fe9bf942b3a9ef58ae55 inherit pub_methods_class_renderable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Replaces the shader program bound to the renderable.  <br /></td></tr>
-<tr class="memitem:a699e0a52700234e195a44f7be4e4d531 inherit pub_methods_class_renderable" id="r_a699e0a52700234e195a44f7be4e4d531"><td class="memItemLeft">virtual std::vector&lt; <a class="el" href="struct_core_vertex.html">CoreVertex</a> &gt;&#160;</td><td class="memItemRight"><a class="el" href="class_renderable.html#a699e0a52700234e195a44f7be4e4d531">getVertices</a> () const</td></tr>
-<tr class="memdesc:a699e0a52700234e195a44f7be4e4d531 inherit pub_methods_class_renderable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to get the vertices of the object in 3D space.  <br /></td></tr>
-<tr class="memitem:a98ddcdedf7f0c6d440be821c80d6ed12 inherit pub_methods_class_renderable" id="r_a98ddcdedf7f0c6d440be821c80d6ed12"><td class="memItemLeft">virtual <a class="el" href="units_8h.html#a64eae7ddcc7a03ddf2cda1866b0fb3aa">Size3d</a>&#160;</td><td class="memItemRight"><a class="el" href="class_renderable.html#a98ddcdedf7f0c6d440be821c80d6ed12">getScale</a> () const</td></tr>
-<tr class="memdesc:a98ddcdedf7f0c6d440be821c80d6ed12 inherit pub_methods_class_renderable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to get the scale of the object in 3D space.  <br /></td></tr>
-<tr class="memitem:a54a97abc4b6fe3280505da3b587cba98 inherit pub_methods_class_renderable" id="r_a54a97abc4b6fe3280505da3b587cba98"><td class="memItemLeft">virtual bool&#160;</td><td class="memItemRight"><a class="el" href="class_renderable.html#a54a97abc4b6fe3280505da3b587cba98">canCastShadows</a> () const</td></tr>
-<tr class="memdesc:a54a97abc4b6fe3280505da3b587cba98 inherit pub_methods_class_renderable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to determine if the object can cast shadows. Can be overridden by derived classes.  <br /></td></tr>
 <tr class="memitem:a2103eed2f7f54bca8ba1001907b367a9 inherit pub_methods_class_renderable" id="r_a2103eed2f7f54bca8ba1001907b367a9"><td class="memItemLeft">virtual&#160;</td><td class="memItemRight"><a class="el" href="class_renderable.html#a2103eed2f7f54bca8ba1001907b367a9">~Renderable</a> ()=default</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
@@ -238,6 +242,7 @@ Public Attributes</h2></td></tr>
 <tr class="memdesc:a4ed78d5a7b7f548a4b9c917c05e4924a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Whether the model should use deferred rendering. When false, the model is rendered in the forward rendering pass.  <br /></td></tr>
 <tr class="inherit_header pub_attribs_class_game_object"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pub_attribs_class_game_object')"><span class="dynarrow"><span class="arrowhead closed"></span></span>Public Attributes inherited from <a class="el" href="class_game_object.html">GameObject</a></td></tr>
 <tr class="memitem:a6e80f980f1d08eba8e84ed564d541ece inherit pub_attribs_class_game_object" id="r_a6e80f980f1d08eba8e84ed564d541ece"><td class="memItemLeft"><a class="el" href="class_rigidbody.html">Rigidbody</a> *&#160;</td><td class="memItemRight"><a class="el" href="class_game_object.html#a6e80f980f1d08eba8e84ed564d541ece">rigidbody</a> = nullptr</td></tr>
+<tr class="memdesc:a6e80f980f1d08eba8e84ed564d541ece inherit pub_attribs_class_game_object"><td class="mdescLeft">&#160;</td><td class="mdescRight">Cached rigidbody component pointer when attached.  <br /></td></tr>
 <tr class="inherit_header pub_attribs_class_renderable"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pub_attribs_class_renderable')"><span class="dynarrow"><span class="arrowhead closed"></span></span>Public Attributes inherited from <a class="el" href="class_renderable.html">Renderable</a></td></tr>
 <tr class="memitem:a7cb09219e507e1c1395efced124e3b58 inherit pub_attribs_class_renderable" id="r_a7cb09219e507e1c1395efced124e3b58"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="class_renderable.html#a7cb09219e507e1c1395efced124e3b58">renderDepthOfView</a> = false</td></tr>
 <tr class="memdesc:a7cb09219e507e1c1395efced124e3b58 inherit pub_attribs_class_renderable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Whether the object should be included in depth of field calculations. When true, contributes to blur effects.  <br /></td></tr>
@@ -269,16 +274,16 @@ Example</h2>
 <div class="line">     myModel.<a class="code hl_function" href="#a24148dc5603a0a2e3da010b89cbde5b8">setRotation</a>({0.0f, 45.0f, 0.0f});</div>
 <div class="line">     <span class="comment">// Add the model to the scene</span></div>
 <div class="line">     window.addObject(&amp;myModel);</div>
-<div class="ttc" id="aclass_model_html_a24148dc5603a0a2e3da010b89cbde5b8"><div class="ttname"><a href="#a24148dc5603a0a2e3da010b89cbde5b8">Model::setRotation</a></div><div class="ttdeci">void setRotation(const Rotation3d &amp;newRotation) override</div><div class="ttdoc">Assigns an absolute rotation to every mesh in the model.</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00784">object.h:784</a></div></div>
+<div class="ttc" id="aclass_model_html_a24148dc5603a0a2e3da010b89cbde5b8"><div class="ttname"><a href="#a24148dc5603a0a2e3da010b89cbde5b8">Model::setRotation</a></div><div class="ttdeci">void setRotation(const Rotation3d &amp;newRotation) override</div><div class="ttdoc">Assigns an absolute rotation to every mesh in the model.</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00835">object.h:835</a></div></div>
 <div class="ttc" id="aclass_model_html_a2703e648303a35bd1f35c23f4da7600b"><div class="ttname"><a href="#a2703e648303a35bd1f35c23f4da7600b">Model::fromResource</a></div><div class="ttdeci">void fromResource(const Resource &amp;resource)</div><div class="ttdoc">Loads the model from a resource.</div></div>
-<div class="ttc" id="aclass_model_html_a7cd6f92f17a58446c6b1d2ea70e2e0d5"><div class="ttname"><a href="#a7cd6f92f17a58446c6b1d2ea70e2e0d5">Model::setPosition</a></div><div class="ttdeci">void setPosition(const Position3d &amp;newPosition) override</div><div class="ttdoc">Set the Position object.</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00775">object.h:775</a></div></div>
-<div class="ttc" id="aclass_model_html_a9620da538736e7eea3b38c727cbe3571"><div class="ttname"><a href="#a9620da538736e7eea3b38c727cbe3571">Model::setScale</a></div><div class="ttdeci">void setScale(const Scale3d &amp;newScale) override</div><div class="ttdoc">Scales every mesh in the model uniformly.</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00802">object.h:802</a></div></div>
+<div class="ttc" id="aclass_model_html_a7cd6f92f17a58446c6b1d2ea70e2e0d5"><div class="ttname"><a href="#a7cd6f92f17a58446c6b1d2ea70e2e0d5">Model::setPosition</a></div><div class="ttdeci">void setPosition(const Position3d &amp;newPosition) override</div><div class="ttdoc">Set the Position object.</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00826">object.h:826</a></div></div>
+<div class="ttc" id="aclass_model_html_a9620da538736e7eea3b38c727cbe3571"><div class="ttname"><a href="#a9620da538736e7eea3b38c727cbe3571">Model::setScale</a></div><div class="ttdeci">void setScale(const Scale3d &amp;newScale) override</div><div class="ttdoc">Scales every mesh in the model uniformly.</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00853">object.h:853</a></div></div>
 <div class="ttc" id="aclass_model_html_ab5bdabea36b1d1bee80151e2da913373"><div class="ttname"><a href="#ab5bdabea36b1d1bee80151e2da913373">Model::Model</a></div><div class="ttdeci">Model()=default</div></div>
 <div class="ttc" id="aclass_workspace_html_a621d969343b29e86d8053d561b2a228e"><div class="ttname"><a href="class_workspace.html#a621d969343b29e86d8053d561b2a228e">Workspace::createResource</a></div><div class="ttdeci">Resource createResource(const fs::path &amp;path, const std::string &amp;name, ResourceType type=ResourceType::File)</div><div class="ttdoc">Creates a new resource from a file path.</div></div>
 <div class="ttc" id="aclass_workspace_html_a8588fb898bffea4777ceffab7c2c7795"><div class="ttname"><a href="class_workspace.html#a8588fb898bffea4777ceffab7c2c7795">Workspace::get</a></div><div class="ttdeci">static Workspace &amp; get()</div><div class="ttdef"><b>Definition</b> <a href="workspace_8h_source.html#l00091">workspace.h:91</a></div></div>
 <div class="ttc" id="astruct_resource_html"><div class="ttname"><a href="struct_resource.html">Resource</a></div><div class="ttdoc">Structure representing a single resource in the workspace.</div><div class="ttdef"><b>Definition</b> <a href="workspace_8h_source.html#l00030">workspace.h:30</a></div></div>
 </div><!-- fragment --> 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00743">743</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00791">791</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="ab5bdabea36b1d1bee80151e2da913373" name="ab5bdabea36b1d1bee80151e2da913373"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab5bdabea36b1d1bee80151e2da913373">&#9670;&#160;</a></span>Model()</h2>
@@ -333,12 +338,49 @@ Example</h2>
 
 <p>Reimplemented from <a class="el" href="class_game_object.html#a7e28874d7a5c387330b97cf93671a3f8">GameObject</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00793">793</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  793</span>                                                        {</div>
-<div class="line"><span class="lineno">  794</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
-<div class="line"><span class="lineno">  795</span>            obj-&gt;attachTexture(texture);</div>
-<div class="line"><span class="lineno">  796</span>        }</div>
-<div class="line"><span class="lineno">  797</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00844">844</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  844</span>                                                        {</div>
+<div class="line"><span class="lineno">  845</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><span class="lineno">  846</span>            obj-&gt;attachTexture(texture);</div>
+<div class="line"><span class="lineno">  847</span>        }</div>
+<div class="line"><span class="lineno">  848</span>    }</div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="ad6da4e22fd6e4fa8e5332c584f61756e" name="ad6da4e22fd6e4fa8e5332c584f61756e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad6da4e22fd6e4fa8e5332c584f61756e">&#9670;&#160;</a></span>canCastShadows()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool Model::canCastShadows </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span><span class="mlabel override">override</span><span class="mlabel virtual">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Function to determine if the object can cast shadows. Can be overridden by derived classes. </p>
+<dl class="section return"><dt>Returns</dt><dd>true if the object can cast shadows, false otherwise. </dd></dl>
+
+<p>Reimplemented from <a class="el" href="class_renderable.html#a54a97abc4b6fe3280505da3b587cba98">Renderable</a>.</p>
+
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l01007">1007</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno"> 1007</span>                                         {</div>
+<div class="line"><span class="lineno"> 1008</span>        <span class="keywordflow">return</span> std::any_of(objects.begin(), objects.end(), [](<span class="keyword">const</span> <span class="keyword">auto</span> &amp;obj) {</div>
+<div class="line"><span class="lineno"> 1009</span>            return obj != nullptr &amp;&amp; obj-&gt;canCastShadows();</div>
+<div class="line"><span class="lineno"> 1010</span>        });</div>
+<div class="line"><span class="lineno"> 1011</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -370,11 +412,11 @@ Example</h2>
 
 <p>Reimplemented from <a class="el" href="class_renderable.html#a1427af9032f3e6c7f91f9b23948ee166">Renderable</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00912">912</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  912</span>{ <span class="keywordflow">return</span> <a class="code hl_variable" href="#a4ed78d5a7b7f548a4b9c917c05e4924a">useDeferredRendering</a>; }</div>
-<div class="ttc" id="aclass_model_html_a4ed78d5a7b7f548a4b9c917c05e4924a"><div class="ttname"><a href="#a4ed78d5a7b7f548a4b9c917c05e4924a">Model::useDeferredRendering</a></div><div class="ttdeci">bool useDeferredRendering</div><div class="ttdoc">Whether the model should use deferred rendering. When false, the model is rendered in the forward ren...</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l00905">object.h:905</a></div></div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l01033">1033</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno"> 1033</span>{ <span class="keywordflow">return</span> <a class="code hl_variable" href="#a4ed78d5a7b7f548a4b9c917c05e4924a">useDeferredRendering</a>; }</div>
+<div class="ttc" id="aclass_model_html_a4ed78d5a7b7f548a4b9c917c05e4924a"><div class="ttname"><a href="#a4ed78d5a7b7f548a4b9c917c05e4924a">Model::useDeferredRendering</a></div><div class="ttdeci">bool useDeferredRendering</div><div class="ttdoc">Whether the model should use deferred rendering. When false, the model is rendered in the forward ren...</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l01026">object.h:1026</a></div></div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="object_8h_source.html#l00905">useDeferredRendering</a>.</p>
+<p class="reference">References <a class="el" href="object_8h_source.html#l01026">useDeferredRendering</a>.</p>
 
 </div>
 </div>
@@ -403,8 +445,8 @@ Example</h2>
 
 </div>
 </div>
-<a id="af2f4d13f48508e046f3b57e59ba420fb" name="af2f4d13f48508e046f3b57e59ba420fb"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af2f4d13f48508e046f3b57e59ba420fb">&#9670;&#160;</a></span>getObjects()</h2>
+<a id="a2e9f3d9230b1726b893c6699aa2cc0f6" name="a2e9f3d9230b1726b893c6699aa2cc0f6"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2e9f3d9230b1726b893c6699aa2cc0f6">&#9670;&#160;</a></span>getObjects() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -413,7 +455,7 @@ Example</h2>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">std::vector&lt; std::shared_ptr&lt; <a class="el" href="class_core_object.html">CoreObject</a> &gt; &gt; Model::getObjects </td>
+          <td class="memname">std::vector&lt; std::shared_ptr&lt; <a class="el" href="class_core_object.html">CoreObject</a> &gt; &gt; &amp; Model::getObjects </td>
           <td>(</td>
           <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
           <td></td>
@@ -429,8 +471,38 @@ Example</h2>
 <p>Gets the objects that make up the model. </p>
 <dl class="section return"><dt>Returns</dt><dd>(std::vector&lt;std::shared_ptr&lt;CoreObject&gt;&gt;) The objects. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00757">757</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  757</span>{ <span class="keywordflow">return</span> objects; }</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00805">805</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  805</span>{ <span class="keywordflow">return</span> objects; }</div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="a81cd511e7055ff464f7b8efd6a8c25e3" name="a81cd511e7055ff464f7b8efd6a8c25e3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a81cd511e7055ff464f7b8efd6a8c25e3">&#9670;&#160;</a></span>getObjects() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">const std::vector&lt; std::shared_ptr&lt; <a class="el" href="class_core_object.html">CoreObject</a> &gt; &gt; &amp; Model::getObjects </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00806">806</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  806</span>                                                                   {</div>
+<div class="line"><span class="lineno">  807</span>        <span class="keywordflow">return</span> objects;</div>
+<div class="line"><span class="lineno">  808</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -461,13 +533,13 @@ Example</h2>
 
 <p>Reimplemented from <a class="el" href="class_renderable.html#a574ee474fb94c8f4e918d923d3b03d3f">Renderable</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00875">875</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  875</span>                                                                    {</div>
-<div class="line"><span class="lineno">  876</span>        <span class="keywordflow">if</span> (objects.empty()) {</div>
-<div class="line"><span class="lineno">  877</span>            <span class="keywordflow">return</span> std::nullopt;</div>
-<div class="line"><span class="lineno">  878</span>        }</div>
-<div class="line"><span class="lineno">  879</span>        <span class="keywordflow">return</span> objects[0]-&gt;getPipeline();</div>
-<div class="line"><span class="lineno">  880</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00956">956</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  956</span>                                                                    {</div>
+<div class="line"><span class="lineno">  957</span>        <span class="keywordflow">if</span> (objects.empty()) {</div>
+<div class="line"><span class="lineno">  958</span>            <span class="keywordflow">return</span> std::nullopt;</div>
+<div class="line"><span class="lineno">  959</span>        }</div>
+<div class="line"><span class="lineno">  960</span>        <span class="keywordflow">return</span> objects[0]-&gt;getPipeline();</div>
+<div class="line"><span class="lineno">  961</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -498,13 +570,139 @@ Example</h2>
 
 <p>Reimplemented from <a class="el" href="class_renderable.html#a644269034ac58f64e47d88846c365cf4">Renderable</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00885">885</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  885</span>                                            {</div>
-<div class="line"><span class="lineno">  886</span>        <span class="keywordflow">if</span> (objects.empty()) {</div>
-<div class="line"><span class="lineno">  887</span>            <span class="keywordflow">throw</span> std::runtime_error(<span class="stringliteral">&quot;Model has no objects.&quot;</span>);</div>
-<div class="line"><span class="lineno">  888</span>        }</div>
-<div class="line"><span class="lineno">  889</span>        <span class="keywordflow">return</span> objects[0]-&gt;getPosition();</div>
-<div class="line"><span class="lineno">  890</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00966">966</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  966</span>                                            {</div>
+<div class="line"><span class="lineno">  967</span>        <span class="keywordflow">if</span> (objects.empty()) {</div>
+<div class="line"><span class="lineno">  968</span>            <span class="keywordflow">throw</span> std::runtime_error(<span class="stringliteral">&quot;Model has no objects.&quot;</span>);</div>
+<div class="line"><span class="lineno">  969</span>        }</div>
+<div class="line"><span class="lineno">  970</span>        <span class="keywordflow">return</span> objects[0]-&gt;getPosition();</div>
+<div class="line"><span class="lineno">  971</span>    }</div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="a58776e17a471807c28b3489de18f1fb1" name="a58776e17a471807c28b3489de18f1fb1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a58776e17a471807c28b3489de18f1fb1">&#9670;&#160;</a></span>getRotation()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="struct_rotation3d.html">Rotation3d</a> Model::getRotation </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span><span class="mlabel override">override</span><span class="mlabel virtual">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Returns object rotation in Euler angles. </p>
+
+<p>Reimplemented from <a class="el" href="class_game_object.html#a6fdf9066668a13404fdca02f969b6e11">GameObject</a>.</p>
+
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l01000">1000</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno"> 1000</span>                                            {</div>
+<div class="line"><span class="lineno"> 1001</span>        <span class="keywordflow">if</span> (objects.empty()) {</div>
+<div class="line"><span class="lineno"> 1002</span>            <span class="keywordflow">return</span> {0.0f, 0.0f, 0.0f};</div>
+<div class="line"><span class="lineno"> 1003</span>        }</div>
+<div class="line"><span class="lineno"> 1004</span>        <span class="keywordflow">return</span> objects[0]-&gt;getRotation();</div>
+<div class="line"><span class="lineno"> 1005</span>    }</div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="adf32150fe67ba67c26a43eeb3bbb5869" name="adf32150fe67ba67c26a43eeb3bbb5869"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adf32150fe67ba67c26a43eeb3bbb5869">&#9670;&#160;</a></span>getScale()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="units_8h.html#a64eae7ddcc7a03ddf2cda1866b0fb3aa">Size3d</a> Model::getScale </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span><span class="mlabel override">override</span><span class="mlabel virtual">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Function to get the scale of the object in 3D space. </p>
+<dl class="section return"><dt>Returns</dt><dd>The scale of the object as a <a class="el" href="units_8h.html#a64eae7ddcc7a03ddf2cda1866b0fb3aa" title="Type alias for 3D size dimensions.">Size3d</a> struct. </dd></dl>
+
+<p>Reimplemented from <a class="el" href="class_renderable.html#a98ddcdedf7f0c6d440be821c80d6ed12">Renderable</a>.</p>
+
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00993">993</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  993</span>                                     {</div>
+<div class="line"><span class="lineno">  994</span>        <span class="keywordflow">if</span> (objects.empty()) {</div>
+<div class="line"><span class="lineno">  995</span>            <span class="keywordflow">return</span> {1.0f, 1.0f, 1.0f};</div>
+<div class="line"><span class="lineno">  996</span>        }</div>
+<div class="line"><span class="lineno">  997</span>        <span class="keywordflow">return</span> objects[0]-&gt;getScale();</div>
+<div class="line"><span class="lineno">  998</span>    }</div>
+</div><!-- fragment -->
+</div>
+</div>
+<a id="a7c876d302f1218a62d6ad2d80eea44a5" name="a7c876d302f1218a62d6ad2d80eea44a5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7c876d302f1218a62d6ad2d80eea44a5">&#9670;&#160;</a></span>getVertices()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::vector&lt; <a class="el" href="struct_core_vertex.html">CoreVertex</a> &gt; Model::getVertices </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span><span class="mlabel override">override</span><span class="mlabel virtual">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Function to get the vertices of the object in 3D space. </p>
+<dl class="section return"><dt>Returns</dt><dd>The vertices of the object as a vector of <a class="el" href="struct_core_vertex.html" title="Structure representing a single vertex in 3D space, including position, color, texture coordinates,...">CoreVertex</a> structs. </dd></dl>
+
+<p>Reimplemented from <a class="el" href="class_renderable.html#a699e0a52700234e195a44f7be4e4d531">Renderable</a>.</p>
+
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00973">973</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  973</span>                                                       {</div>
+<div class="line"><span class="lineno">  974</span>        std::vector&lt;CoreVertex&gt; vertices;</div>
+<div class="line"><span class="lineno">  975</span>        <span class="keywordtype">size_t</span> totalVertices = 0;</div>
+<div class="line"><span class="lineno">  976</span>        <span class="keywordflow">for</span> (<span class="keyword">const</span> <span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><span class="lineno">  977</span>            <span class="keywordflow">if</span> (obj == <span class="keyword">nullptr</span>) {</div>
+<div class="line"><span class="lineno">  978</span>                <span class="keywordflow">continue</span>;</div>
+<div class="line"><span class="lineno">  979</span>            }</div>
+<div class="line"><span class="lineno">  980</span>            totalVertices += obj-&gt;vertices.size();</div>
+<div class="line"><span class="lineno">  981</span>        }</div>
+<div class="line"><span class="lineno">  982</span>        vertices.reserve(totalVertices);</div>
+<div class="line"><span class="lineno">  983</span>        <span class="keywordflow">for</span> (<span class="keyword">const</span> <span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><span class="lineno">  984</span>            <span class="keywordflow">if</span> (obj == <span class="keyword">nullptr</span>) {</div>
+<div class="line"><span class="lineno">  985</span>                <span class="keywordflow">continue</span>;</div>
+<div class="line"><span class="lineno">  986</span>            }</div>
+<div class="line"><span class="lineno">  987</span>            vertices.insert(vertices.end(), obj-&gt;vertices.begin(),</div>
+<div class="line"><span class="lineno">  988</span>                            obj-&gt;vertices.end());</div>
+<div class="line"><span class="lineno">  989</span>        }</div>
+<div class="line"><span class="lineno">  990</span>        <span class="keywordflow">return</span> vertices;</div>
+<div class="line"><span class="lineno">  991</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -535,18 +733,29 @@ Example</h2>
 
 <p>Reimplemented from <a class="el" href="class_renderable.html#aaa53405a3eb174752fce5e4a2fc8dca8">Renderable</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00844">844</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  844</span>                               {</div>
-<div class="line"><span class="lineno">  845</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;component : <a class="code hl_variable" href="class_game_object.html#a545e4ed29df0e16304d46c73404c0ce6">components</a>) {</div>
-<div class="line"><span class="lineno">  846</span>            component-&gt;init();</div>
-<div class="line"><span class="lineno">  847</span>        }</div>
-<div class="line"><span class="lineno">  848</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
-<div class="line"><span class="lineno">  849</span>            obj-&gt;initialize();</div>
-<div class="line"><span class="lineno">  850</span>        }</div>
-<div class="line"><span class="lineno">  851</span>    }</div>
-<div class="ttc" id="aclass_game_object_html_a545e4ed29df0e16304d46c73404c0ce6"><div class="ttname"><a href="class_game_object.html#a545e4ed29df0e16304d46c73404c0ce6">GameObject::components</a></div><div class="ttdeci">std::vector&lt; std::shared_ptr&lt; Component &gt; &gt; components</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00423">component.h:423</a></div></div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00915">915</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  915</span>                               {</div>
+<div class="line"><span class="lineno">  916</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;component : <a class="code hl_variable" href="class_game_object.html#a545e4ed29df0e16304d46c73404c0ce6">components</a>) {</div>
+<div class="line"><span class="lineno">  917</span>            component-&gt;init();</div>
+<div class="line"><span class="lineno">  918</span>        }</div>
+<div class="line"><span class="lineno">  919</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><span class="lineno">  920</span>            <span class="keywordflow">if</span> (obj == <span class="keyword">nullptr</span>) {</div>
+<div class="line"><span class="lineno">  921</span>                <span class="keywordflow">continue</span>;</div>
+<div class="line"><span class="lineno">  922</span>            }</div>
+<div class="line"><span class="lineno">  923</span>            <span class="keywordtype">bool</span> hasAnyTexture = !obj-&gt;textures.empty();</div>
+<div class="line"><span class="lineno">  924</span>            <span class="keywordflow">if</span> (!hasAnyTexture) {</div>
+<div class="line"><span class="lineno">  925</span>                obj-&gt;material = <a class="code hl_variable" href="#acb2e155d98ff0980bc40958bb5b79868">material</a>;</div>
+<div class="line"><span class="lineno">  926</span>            }</div>
+<div class="line"><span class="lineno">  927</span>            obj-&gt;material.useNormalMap = <a class="code hl_variable" href="#acb2e155d98ff0980bc40958bb5b79868">material</a>.useNormalMap;</div>
+<div class="line"><span class="lineno">  928</span>            obj-&gt;material.normalMapStrength = <a class="code hl_variable" href="#acb2e155d98ff0980bc40958bb5b79868">material</a>.normalMapStrength;</div>
+<div class="line"><span class="lineno">  929</span>            obj-&gt;useDeferredRendering = <a class="code hl_variable" href="#a4ed78d5a7b7f548a4b9c917c05e4924a">useDeferredRendering</a>;</div>
+<div class="line"><span class="lineno">  930</span>            obj-&gt;initialize();</div>
+<div class="line"><span class="lineno">  931</span>        }</div>
+<div class="line"><span class="lineno">  932</span>    }</div>
+<div class="ttc" id="aclass_game_object_html_a545e4ed29df0e16304d46c73404c0ce6"><div class="ttname"><a href="class_game_object.html#a545e4ed29df0e16304d46c73404c0ce6">GameObject::components</a></div><div class="ttdeci">std::vector&lt; std::shared_ptr&lt; Component &gt; &gt; components</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00442">component.h:442</a></div></div>
+<div class="ttc" id="aclass_model_html_acb2e155d98ff0980bc40958bb5b79868"><div class="ttname"><a href="#acb2e155d98ff0980bc40958bb5b79868">Model::material</a></div><div class="ttdeci">Material material</div><div class="ttdoc">The material properties shared by all objects in the model.</div><div class="ttdef"><b>Definition</b> <a href="object_8h_source.html#l01019">object.h:1019</a></div></div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="component_8h_source.html#l00423">GameObject::components</a>.</p>
+<p class="reference">References <a class="el" href="component_8h_source.html#l00442">GameObject::components</a>, <a class="el" href="object_8h_source.html#l01019">material</a>, and <a class="el" href="object_8h_source.html#l01026">useDeferredRendering</a>.</p>
 
 </div>
 </div>
@@ -583,12 +792,12 @@ Example</h2>
 
 <p>Reimplemented from <a class="el" href="class_game_object.html#acaa8d8c46548f338987ebf9cd054b2b5">GameObject</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00764">764</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  764</span>                                                        {</div>
-<div class="line"><span class="lineno">  765</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
-<div class="line"><span class="lineno">  766</span>            obj-&gt;move(deltaPosition);</div>
-<div class="line"><span class="lineno">  767</span>        }</div>
-<div class="line"><span class="lineno">  768</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00815">815</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  815</span>                                                        {</div>
+<div class="line"><span class="lineno">  816</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><span class="lineno">  817</span>            obj-&gt;move(deltaPosition);</div>
+<div class="line"><span class="lineno">  818</span>        }</div>
+<div class="line"><span class="lineno">  819</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -628,17 +837,27 @@ Example</h2>
 
 <p>Implements <a class="el" href="class_renderable.html#aa9e2cf20f3ee2d1808714fd5e2857a3e">Renderable</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00820">820</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  821</span>                                                    {</div>
-<div class="line"><span class="lineno">  822</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;component : <a class="code hl_variable" href="class_game_object.html#a545e4ed29df0e16304d46c73404c0ce6">components</a>) {</div>
-<div class="line"><span class="lineno">  823</span>            component-&gt;update(dt);</div>
-<div class="line"><span class="lineno">  824</span>        }</div>
-<div class="line"><span class="lineno">  825</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
-<div class="line"><span class="lineno">  826</span>            obj-&gt;render(dt, commandBuffer, updatePipeline);</div>
-<div class="line"><span class="lineno">  827</span>        }</div>
-<div class="line"><span class="lineno">  828</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00871">871</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  872</span>                                                    {</div>
+<div class="line"><span class="lineno">  873</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;component : <a class="code hl_variable" href="class_game_object.html#a545e4ed29df0e16304d46c73404c0ce6">components</a>) {</div>
+<div class="line"><span class="lineno">  874</span>            component-&gt;update(dt);</div>
+<div class="line"><span class="lineno">  875</span>        }</div>
+<div class="line"><span class="lineno">  876</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><span class="lineno">  877</span>            <span class="keywordflow">if</span> (obj == <span class="keyword">nullptr</span>) {</div>
+<div class="line"><span class="lineno">  878</span>                <span class="keywordflow">continue</span>;</div>
+<div class="line"><span class="lineno">  879</span>            }</div>
+<div class="line"><span class="lineno">  880</span>            <span class="keywordtype">bool</span> hasAnyTexture = !obj-&gt;textures.empty();</div>
+<div class="line"><span class="lineno">  881</span>            <span class="keywordflow">if</span> (!hasAnyTexture) {</div>
+<div class="line"><span class="lineno">  882</span>                obj-&gt;material = <a class="code hl_variable" href="#acb2e155d98ff0980bc40958bb5b79868">material</a>;</div>
+<div class="line"><span class="lineno">  883</span>            }</div>
+<div class="line"><span class="lineno">  884</span>            obj-&gt;material.useNormalMap = <a class="code hl_variable" href="#acb2e155d98ff0980bc40958bb5b79868">material</a>.useNormalMap;</div>
+<div class="line"><span class="lineno">  885</span>            obj-&gt;material.normalMapStrength = <a class="code hl_variable" href="#acb2e155d98ff0980bc40958bb5b79868">material</a>.normalMapStrength;</div>
+<div class="line"><span class="lineno">  886</span>            obj-&gt;useDeferredRendering = <a class="code hl_variable" href="#a4ed78d5a7b7f548a4b9c917c05e4924a">useDeferredRendering</a>;</div>
+<div class="line"><span class="lineno">  887</span>            obj-&gt;render(dt, commandBuffer, updatePipeline);</div>
+<div class="line"><span class="lineno">  888</span>        }</div>
+<div class="line"><span class="lineno">  889</span>    }</div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="component_8h_source.html#l00423">GameObject::components</a>.</p>
+<p class="reference">References <a class="el" href="component_8h_source.html#l00442">GameObject::components</a>, <a class="el" href="object_8h_source.html#l01019">material</a>, and <a class="el" href="object_8h_source.html#l01026">useDeferredRendering</a>.</p>
 
 </div>
 </div>
@@ -669,12 +888,12 @@ Example</h2>
 
 <p>Reimplemented from <a class="el" href="class_renderable.html#aa9754c3fbf73c0c760fe14a9d7709a82">Renderable</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00865">865</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  865</span>                                                                     {</div>
-<div class="line"><span class="lineno">  866</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
-<div class="line"><span class="lineno">  867</span>            obj-&gt;setPipeline(pipeline);</div>
-<div class="line"><span class="lineno">  868</span>        }</div>
-<div class="line"><span class="lineno">  869</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00946">946</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  946</span>                                                                     {</div>
+<div class="line"><span class="lineno">  947</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><span class="lineno">  948</span>            obj-&gt;setPipeline(pipeline);</div>
+<div class="line"><span class="lineno">  949</span>        }</div>
+<div class="line"><span class="lineno">  950</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -711,12 +930,12 @@ Example</h2>
 
 <p>Reimplemented from <a class="el" href="class_game_object.html#ac1a103e7a0c90dc1ea293b7d2fdb0634">GameObject</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00775">775</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  775</span>                                                             {</div>
-<div class="line"><span class="lineno">  776</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
-<div class="line"><span class="lineno">  777</span>            obj-&gt;setPosition(newPosition);</div>
-<div class="line"><span class="lineno">  778</span>        }</div>
-<div class="line"><span class="lineno">  779</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00826">826</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  826</span>                                                             {</div>
+<div class="line"><span class="lineno">  827</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><span class="lineno">  828</span>            obj-&gt;setPosition(newPosition);</div>
+<div class="line"><span class="lineno">  829</span>        }</div>
+<div class="line"><span class="lineno">  830</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -747,12 +966,12 @@ Example</h2>
 
 <p>Reimplemented from <a class="el" href="class_renderable.html#a0c865743cb1e0bbc44b754f9e1b50bb3">Renderable</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00856">856</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  856</span>                                                                 {</div>
-<div class="line"><span class="lineno">  857</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
-<div class="line"><span class="lineno">  858</span>            obj-&gt;setProjectionMatrix(projection);</div>
-<div class="line"><span class="lineno">  859</span>        }</div>
-<div class="line"><span class="lineno">  860</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00937">937</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  937</span>                                                                 {</div>
+<div class="line"><span class="lineno">  938</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><span class="lineno">  939</span>            obj-&gt;setProjectionMatrix(projection);</div>
+<div class="line"><span class="lineno">  940</span>        }</div>
+<div class="line"><span class="lineno">  941</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -783,12 +1002,12 @@ Example</h2>
 
 <p>Reimplemented from <a class="el" href="class_game_object.html#a63d28fb59276d40d10cae25f05306451">GameObject</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00784">784</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  784</span>                                                             {</div>
-<div class="line"><span class="lineno">  785</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
-<div class="line"><span class="lineno">  786</span>            obj-&gt;setRotation(newRotation);</div>
-<div class="line"><span class="lineno">  787</span>        }</div>
-<div class="line"><span class="lineno">  788</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00835">835</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  835</span>                                                             {</div>
+<div class="line"><span class="lineno">  836</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><span class="lineno">  837</span>            obj-&gt;setRotation(newRotation);</div>
+<div class="line"><span class="lineno">  838</span>        }</div>
+<div class="line"><span class="lineno">  839</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -819,12 +1038,12 @@ Example</h2>
 
 <p>Reimplemented from <a class="el" href="class_game_object.html#ab1d5418661030a841e752bdb462b1ebc">GameObject</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00802">802</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  802</span>                                                    {</div>
-<div class="line"><span class="lineno">  803</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
-<div class="line"><span class="lineno">  804</span>            obj-&gt;setScale(newScale);</div>
-<div class="line"><span class="lineno">  805</span>        }</div>
-<div class="line"><span class="lineno">  806</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00853">853</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  853</span>                                                    {</div>
+<div class="line"><span class="lineno">  854</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><span class="lineno">  855</span>            obj-&gt;setScale(newScale);</div>
+<div class="line"><span class="lineno">  856</span>        }</div>
+<div class="line"><span class="lineno">  857</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -855,12 +1074,12 @@ Example</h2>
 
 <p>Reimplemented from <a class="el" href="class_renderable.html#ae1b11967b98e6ba4393640652242083f">Renderable</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00811">811</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  811</span>                                                     {</div>
-<div class="line"><span class="lineno">  812</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
-<div class="line"><span class="lineno">  813</span>            obj-&gt;setViewMatrix(view);</div>
-<div class="line"><span class="lineno">  814</span>        }</div>
-<div class="line"><span class="lineno">  815</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00862">862</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  862</span>                                                     {</div>
+<div class="line"><span class="lineno">  863</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><span class="lineno">  864</span>            obj-&gt;setViewMatrix(view);</div>
+<div class="line"><span class="lineno">  865</span>        }</div>
+<div class="line"><span class="lineno">  866</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -891,13 +1110,25 @@ Example</h2>
 
 <p>Reimplemented from <a class="el" href="class_renderable.html#afb2aa3ad0ab8dcfc54088173ea7182cd">Renderable</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00834">834</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  834</span>                                         {</div>
-<div class="line"><span class="lineno">  835</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
-<div class="line"><span class="lineno">  836</span>            obj-&gt;update(window);</div>
-<div class="line"><span class="lineno">  837</span>        }</div>
-<div class="line"><span class="lineno">  838</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00895">895</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  895</span>                                         {</div>
+<div class="line"><span class="lineno">  896</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;obj : objects) {</div>
+<div class="line"><span class="lineno">  897</span>            <span class="keywordflow">if</span> (obj == <span class="keyword">nullptr</span>) {</div>
+<div class="line"><span class="lineno">  898</span>                <span class="keywordflow">continue</span>;</div>
+<div class="line"><span class="lineno">  899</span>            }</div>
+<div class="line"><span class="lineno">  900</span>            <span class="keywordtype">bool</span> hasAnyTexture = !obj-&gt;textures.empty();</div>
+<div class="line"><span class="lineno">  901</span>            <span class="keywordflow">if</span> (!hasAnyTexture) {</div>
+<div class="line"><span class="lineno">  902</span>                obj-&gt;material = <a class="code hl_variable" href="#acb2e155d98ff0980bc40958bb5b79868">material</a>;</div>
+<div class="line"><span class="lineno">  903</span>            }</div>
+<div class="line"><span class="lineno">  904</span>            obj-&gt;material.useNormalMap = <a class="code hl_variable" href="#acb2e155d98ff0980bc40958bb5b79868">material</a>.useNormalMap;</div>
+<div class="line"><span class="lineno">  905</span>            obj-&gt;material.normalMapStrength = <a class="code hl_variable" href="#acb2e155d98ff0980bc40958bb5b79868">material</a>.normalMapStrength;</div>
+<div class="line"><span class="lineno">  906</span>            obj-&gt;useDeferredRendering = <a class="code hl_variable" href="#a4ed78d5a7b7f548a4b9c917c05e4924a">useDeferredRendering</a>;</div>
+<div class="line"><span class="lineno">  907</span>            obj-&gt;update(window);</div>
+<div class="line"><span class="lineno">  908</span>        }</div>
+<div class="line"><span class="lineno">  909</span>    }</div>
 </div><!-- fragment -->
+<p class="reference">References <a class="el" href="object_8h_source.html#l01019">material</a>, and <a class="el" href="object_8h_source.html#l01026">useDeferredRendering</a>.</p>
+
 </div>
 </div>
 <a name="doc-variable-members" id="doc-variable-members"></a><h2 id="header-doc-variable-members" class="groupheader">Member Data Documentation</h2>
@@ -915,7 +1146,7 @@ Example</h2>
 
 <p>The material properties shared by all objects in the model. </p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00898">898</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l01019">1019</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
 
 </div>
 </div>
@@ -933,7 +1164,7 @@ Example</h2>
 
 <p>Whether the model should use deferred rendering. When false, the model is rendered in the forward rendering pass. </p>
 
-<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l00905">905</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="object_8h_source.html#l01026">1026</a> of file <a class="el" href="object_8h_source.html">object.h</a>.</p>
 
 </div>
 </div>

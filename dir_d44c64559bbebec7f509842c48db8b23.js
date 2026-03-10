@@ -5,5 +5,6 @@ var dir_d44c64559bbebec7f509842c48db8b23 =
     [ "bezel", "dir_c8cd6a2874df7a292439a554610d1733.html", "dir_c8cd6a2874df7a292439a554610d1733" ],
     [ "finewave", "dir_01f67c4ebf38d68f23a71bd470661e84.html", "dir_01f67c4ebf38d68f23a71bd470661e84" ],
     [ "hydra", "dir_ebddc7057cc9d7d063cd5a0709e1bd9f.html", "dir_ebddc7057cc9d7d063cd5a0709e1bd9f" ],
-    [ "opal", "dir_5c57282728d92cbab1f0524ccf528b4e.html", "dir_5c57282728d92cbab1f0524ccf528b4e" ]
+    [ "opal", "dir_5c57282728d92cbab1f0524ccf528b4e.html", "dir_5c57282728d92cbab1f0524ccf528b4e" ],
+    [ "photon", "dir_54b7d3f1f095118a4592d756983e7c33.html", "dir_54b7d3f1f095118a4592d756983e7c33" ]
 ];

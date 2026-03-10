@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -133,12 +133,14 @@ $(function(){initNavTree('struct_cubemap.html','','struct_cubemap-members'); });
 <tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a4fc11bc00551fb70691529c1b16bcdcf" id="r_a4fc11bc00551fb70691529c1b16bcdcf"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a4fc11bc00551fb70691529c1b16bcdcf">updateWithColors</a> (const std::array&lt; <a class="el" href="struct_color.html">Color</a>, 6 &gt; &amp;colors)</td></tr>
+<tr class="memdesc:a4fc11bc00551fb70691529c1b16bcdcf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates the existing cubemap faces with new solid colors.  <br /></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-static-methods" class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
 <tr class="memitem:ae5986bc2dbf885ead71ce672f7dd4137" id="r_ae5986bc2dbf885ead71ce672f7dd4137"><td class="memItemLeft">static <a class="el" href="struct_cubemap.html">Cubemap</a>&#160;</td><td class="memItemRight"><a class="el" href="#ae5986bc2dbf885ead71ce672f7dd4137">fromResourceGroup</a> (<a class="el" href="struct_resource_group.html">ResourceGroup</a> &amp;resourceGroup)</td></tr>
 <tr class="memdesc:ae5986bc2dbf885ead71ce672f7dd4137"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a cubemap from a resource group.  <br /></td></tr>
 <tr class="memitem:a6e50b3412c0dbd04d9e32aec5e78b011" id="r_a6e50b3412c0dbd04d9e32aec5e78b011"><td class="memItemLeft">static <a class="el" href="struct_cubemap.html">Cubemap</a>&#160;</td><td class="memItemRight"><a class="el" href="#a6e50b3412c0dbd04d9e32aec5e78b011">fromColors</a> (const std::array&lt; <a class="el" href="struct_color.html">Color</a>, 6 &gt; &amp;colors, int size)</td></tr>
+<tr class="memdesc:a6e50b3412c0dbd04d9e32aec5e78b011"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates a cubemap where each face is initialized from a solid color.  <br /></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -160,7 +162,7 @@ Public Attributes</h2></td></tr>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Structure that holds the data for a cubemap texture. </p>
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00297">297</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00323">323</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
 <a id="a6e50b3412c0dbd04d9e32aec5e78b011" name="a6e50b3412c0dbd04d9e32aec5e78b011"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a6e50b3412c0dbd04d9e32aec5e78b011">&#9670;&#160;</a></span>fromColors()</h2>
@@ -188,6 +190,8 @@ Public Attributes</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
+
+<p>Creates a cubemap where each face is initialized from a solid color. </p>
 
 </div>
 </div>
@@ -240,6 +244,8 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
+<p>Updates the existing cubemap faces with new solid colors. </p>
+
 </div>
 </div>
 <a name="doc-variable-members" id="doc-variable-members"></a><h2 id="header-doc-variable-members" class="groupheader">Member Data Documentation</h2>
@@ -257,7 +263,7 @@ Public Attributes</h2></td></tr>
 
 <p>Average color sampled across the cubemap faces for ambient approximations. </p>
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00328">328</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00354">354</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 
 </div>
 </div>
@@ -275,7 +281,7 @@ Public Attributes</h2></td></tr>
 
 <p>The data for the texture creation. </p>
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00307">307</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00333">333</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 
 </div>
 </div>
@@ -293,7 +299,7 @@ Public Attributes</h2></td></tr>
 
 <p>Flag indicating whether averageColor contains sampled data. </p>
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00333">333</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00359">359</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 
 </div>
 </div>
@@ -311,7 +317,7 @@ Public Attributes</h2></td></tr>
 
 <p>The core <a class="el" href="units_8h.html#aa39ddd1645a5d1634a3da83ba560d45e" title="Type alias for OpenGL object identifiers.">Id</a> for the texture in OpenGL. </p>
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00312">312</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00338">338</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 
 </div>
 </div>
@@ -329,7 +335,7 @@ Public Attributes</h2></td></tr>
 
 <p>The resources for the six faces of the cubemap, in the order: +X, -X, +Y, -Y, +Z, -Z. </p>
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00302">302</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00328">328</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 
 </div>
 </div>
@@ -347,7 +353,7 @@ Public Attributes</h2></td></tr>
 
 <p>The opal texture object. </p>
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00317">317</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00343">343</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 
 </div>
 </div>
@@ -365,7 +371,7 @@ Public Attributes</h2></td></tr>
 
 <p>The type of the texture (<a class="el" href="struct_cubemap.html" title="Structure that holds the data for a cubemap texture.">Cubemap</a>). </p>
 
-<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00322">322</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="texture_8h_source.html#l00348">348</a> of file <a class="el" href="texture_8h_source.html">texture.h</a>.</p>
 
 </div>
 </div>

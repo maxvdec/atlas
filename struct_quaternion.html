@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -131,19 +131,27 @@ $(function(){initNavTree('struct_quaternion.html','','struct_quaternion-members'
 <tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a2309b867c9f53a7b34b8bca3d4e199f3" id="r_a2309b867c9f53a7b34b8bca3d4e199f3"><td class="memItemLeft">glm::quat&#160;</td><td class="memItemRight"><a class="el" href="#a2309b867c9f53a7b34b8bca3d4e199f3">toGlm</a> () const</td></tr>
+<tr class="memdesc:a2309b867c9f53a7b34b8bca3d4e199f3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts to a GLM quaternion (<span class="tt"><a class="el" href="#aa44a65ab99e36f6ab8771030eed8a7ad" title="Scalar component of the quaternion.">w</a>, <a class="el" href="#a8b80f191a3155cc0158d2b4f4d50b2cb" title="X component of the quaternion vector part.">x</a>, <a class="el" href="#a3bd3f270462944423611f44e19d2511b" title="Y component of the quaternion vector part.">y</a>, <a class="el" href="#a625cb732d8ff3083e7852b86b736ab29" title="Z component of the quaternion vector part.">z</a></span>).  <br /></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-static-methods" class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
 <tr class="memitem:a62d2d26acc0172b6da0238e16aac30ac" id="r_a62d2d26acc0172b6da0238e16aac30ac"><td class="memItemLeft">static <a class="el" href="struct_quaternion.html">Quaternion</a>&#160;</td><td class="memItemRight"><a class="el" href="#a62d2d26acc0172b6da0238e16aac30ac">fromGlm</a> (const glm::quat &amp;quat)</td></tr>
+<tr class="memdesc:a62d2d26acc0172b6da0238e16aac30ac"><td class="mdescLeft">&#160;</td><td class="mdescRight">Builds a <a class="el" href="struct_quaternion.html">Quaternion</a> from a GLM quaternion.  <br /></td></tr>
 <tr class="memitem:ad4e0d425359f1d0a3adae1d2fd0ee1fb" id="r_ad4e0d425359f1d0a3adae1d2fd0ee1fb"><td class="memItemLeft">static <a class="el" href="struct_rotation3d.html">Rotation3d</a>&#160;</td><td class="memItemRight"><a class="el" href="#ad4e0d425359f1d0a3adae1d2fd0ee1fb">toEuler</a> (const <a class="el" href="struct_quaternion.html">Quaternion</a> &amp;quat)</td></tr>
+<tr class="memdesc:ad4e0d425359f1d0a3adae1d2fd0ee1fb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Converts this quaternion to Euler rotation angles.  <br /></td></tr>
 <tr class="memitem:a9c92d2f13c2472cf12290da10a4bf387" id="r_a9c92d2f13c2472cf12290da10a4bf387"><td class="memItemLeft">static <a class="el" href="struct_quaternion.html">Quaternion</a>&#160;</td><td class="memItemRight"><a class="el" href="#a9c92d2f13c2472cf12290da10a4bf387">fromEuler</a> (const <a class="el" href="struct_rotation3d.html">Rotation3d</a> &amp;euler)</td></tr>
+<tr class="memdesc:a9c92d2f13c2472cf12290da10a4bf387"><td class="mdescLeft">&#160;</td><td class="mdescRight">Builds a quaternion from Euler rotation angles.  <br /></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a8b80f191a3155cc0158d2b4f4d50b2cb" id="r_a8b80f191a3155cc0158d2b4f4d50b2cb"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#a8b80f191a3155cc0158d2b4f4d50b2cb">x</a></td></tr>
+<tr class="memdesc:a8b80f191a3155cc0158d2b4f4d50b2cb"><td class="mdescLeft">&#160;</td><td class="mdescRight">X component of the quaternion vector part.  <br /></td></tr>
 <tr class="memitem:a3bd3f270462944423611f44e19d2511b" id="r_a3bd3f270462944423611f44e19d2511b"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#a3bd3f270462944423611f44e19d2511b">y</a></td></tr>
+<tr class="memdesc:a3bd3f270462944423611f44e19d2511b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Y component of the quaternion vector part.  <br /></td></tr>
 <tr class="memitem:a625cb732d8ff3083e7852b86b736ab29" id="r_a625cb732d8ff3083e7852b86b736ab29"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#a625cb732d8ff3083e7852b86b736ab29">z</a></td></tr>
+<tr class="memdesc:a625cb732d8ff3083e7852b86b736ab29"><td class="mdescLeft">&#160;</td><td class="mdescRight">Z component of the quaternion vector part.  <br /></td></tr>
 <tr class="memitem:aa44a65ab99e36f6ab8771030eed8a7ad" id="r_aa44a65ab99e36f6ab8771030eed8a7ad"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#aa44a65ab99e36f6ab8771030eed8a7ad">w</a></td></tr>
+<tr class="memdesc:aa44a65ab99e36f6ab8771030eed8a7ad"><td class="mdescLeft">&#160;</td><td class="mdescRight">Scalar component of the quaternion.  <br /></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-friends" class="groupheader"><a id="friends" name="friends"></a>
 Friends</h2></td></tr>
@@ -151,7 +159,7 @@ Friends</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock">
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00237">237</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00266">266</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
 <a id="a9c92d2f13c2472cf12290da10a4bf387" name="a9c92d2f13c2472cf12290da10a4bf387"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a9c92d2f13c2472cf12290da10a4bf387">&#9670;&#160;</a></span>fromEuler()</h2>
@@ -176,14 +184,16 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00259">259</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  259</span>                                                         {</div>
-<div class="line"><span class="lineno">  260</span>        <span class="keywordflow">return</span> <a class="code hl_function" href="#a62d2d26acc0172b6da0238e16aac30ac">fromGlm</a>(euler.<a class="code hl_function" href="struct_rotation3d.html#a8b2e2d882dd836fd5b6b5fa6f494a4f2">toGlmQuat</a>());</div>
-<div class="line"><span class="lineno">  261</span>    }</div>
-<div class="ttc" id="astruct_quaternion_html_a62d2d26acc0172b6da0238e16aac30ac"><div class="ttname"><a href="#a62d2d26acc0172b6da0238e16aac30ac">Quaternion::fromGlm</a></div><div class="ttdeci">static Quaternion fromGlm(const glm::quat &amp;quat)</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00245">units.h:245</a></div></div>
-<div class="ttc" id="astruct_rotation3d_html_a8b2e2d882dd836fd5b6b5fa6f494a4f2"><div class="ttname"><a href="struct_rotation3d.html#a8b2e2d882dd836fd5b6b5fa6f494a4f2">Rotation3d::toGlmQuat</a></div><div class="ttdeci">glm::quat toGlmQuat() const</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00197">units.h:197</a></div></div>
+<p>Builds a quaternion from Euler rotation angles. </p>
+
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00296">296</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  296</span>                                                         {</div>
+<div class="line"><span class="lineno">  297</span>        <span class="keywordflow">return</span> <a class="code hl_function" href="#a62d2d26acc0172b6da0238e16aac30ac">fromGlm</a>(euler.<a class="code hl_function" href="struct_rotation3d.html#a8b2e2d882dd836fd5b6b5fa6f494a4f2">toGlmQuat</a>());</div>
+<div class="line"><span class="lineno">  298</span>    }</div>
+<div class="ttc" id="astruct_quaternion_html_a62d2d26acc0172b6da0238e16aac30ac"><div class="ttname"><a href="#a62d2d26acc0172b6da0238e16aac30ac">Quaternion::fromGlm</a></div><div class="ttdeci">static Quaternion fromGlm(const glm::quat &amp;quat)</div><div class="ttdoc">Builds a Quaternion from a GLM quaternion.</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00280">units.h:280</a></div></div>
+<div class="ttc" id="astruct_rotation3d_html_a8b2e2d882dd836fd5b6b5fa6f494a4f2"><div class="ttname"><a href="struct_rotation3d.html#a8b2e2d882dd836fd5b6b5fa6f494a4f2">Rotation3d::toGlmQuat</a></div><div class="ttdeci">glm::quat toGlmQuat() const</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00226">units.h:226</a></div></div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="units_8h_source.html#l00245">fromGlm()</a>, and <a class="el" href="units_8h_source.html#l00197">Rotation3d::toGlmQuat()</a>.</p>
+<p class="reference">References <a class="el" href="units_8h_source.html#l00280">fromGlm()</a>, and <a class="el" href="units_8h_source.html#l00226">Rotation3d::toGlmQuat()</a>.</p>
 
 </div>
 </div>
@@ -210,10 +220,12 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00245">245</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  245</span>                                                   {</div>
-<div class="line"><span class="lineno">  246</span>        <span class="keywordflow">return</span> {.x = quat.x, .y = quat.y, .z = quat.z, .w = quat.w};</div>
-<div class="line"><span class="lineno">  247</span>    }</div>
+<p>Builds a <a class="el" href="struct_quaternion.html">Quaternion</a> from a GLM quaternion. </p>
+
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00280">280</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  280</span>                                                   {</div>
+<div class="line"><span class="lineno">  281</span>        <span class="keywordflow">return</span> {.x = quat.x, .y = quat.y, .z = quat.z, .w = quat.w};</div>
+<div class="line"><span class="lineno">  282</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -240,14 +252,16 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00255">255</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  255</span>                                                      {</div>
-<div class="line"><span class="lineno">  256</span>        <span class="keywordflow">return</span> <a class="code hl_function" href="struct_rotation3d.html#abcac30171bdd8fc2aa4300db6c9bd715">Rotation3d::fromGlmQuat</a>(quat.<a class="code hl_function" href="#a2309b867c9f53a7b34b8bca3d4e199f3">toGlm</a>());</div>
-<div class="line"><span class="lineno">  257</span>    }</div>
-<div class="ttc" id="astruct_quaternion_html_a2309b867c9f53a7b34b8bca3d4e199f3"><div class="ttname"><a href="#a2309b867c9f53a7b34b8bca3d4e199f3">Quaternion::toGlm</a></div><div class="ttdeci">glm::quat toGlm() const</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00243">units.h:243</a></div></div>
-<div class="ttc" id="astruct_rotation3d_html_abcac30171bdd8fc2aa4300db6c9bd715"><div class="ttname"><a href="struct_rotation3d.html#abcac30171bdd8fc2aa4300db6c9bd715">Rotation3d::fromGlmQuat</a></div><div class="ttdeci">static Rotation3d fromGlmQuat(const glm::quat &amp;quat)</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00209">units.h:209</a></div></div>
+<p>Converts this quaternion to Euler rotation angles. </p>
+
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00291">291</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  291</span>                                                      {</div>
+<div class="line"><span class="lineno">  292</span>        <span class="keywordflow">return</span> <a class="code hl_function" href="struct_rotation3d.html#abcac30171bdd8fc2aa4300db6c9bd715">Rotation3d::fromGlmQuat</a>(quat.<a class="code hl_function" href="#a2309b867c9f53a7b34b8bca3d4e199f3">toGlm</a>());</div>
+<div class="line"><span class="lineno">  293</span>    }</div>
+<div class="ttc" id="astruct_quaternion_html_a2309b867c9f53a7b34b8bca3d4e199f3"><div class="ttname"><a href="#a2309b867c9f53a7b34b8bca3d4e199f3">Quaternion::toGlm</a></div><div class="ttdeci">glm::quat toGlm() const</div><div class="ttdoc">Converts to a GLM quaternion (w, x, y, z).</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00277">units.h:277</a></div></div>
+<div class="ttc" id="astruct_rotation3d_html_abcac30171bdd8fc2aa4300db6c9bd715"><div class="ttname"><a href="struct_rotation3d.html#abcac30171bdd8fc2aa4300db6c9bd715">Rotation3d::fromGlmQuat</a></div><div class="ttdeci">static Rotation3d fromGlmQuat(const glm::quat &amp;quat)</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00238">units.h:238</a></div></div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="units_8h_source.html#l00209">Rotation3d::fromGlmQuat()</a>, and <a class="el" href="units_8h_source.html#l00243">toGlm()</a>.</p>
+<p class="reference">References <a class="el" href="units_8h_source.html#l00238">Rotation3d::fromGlmQuat()</a>, and <a class="el" href="units_8h_source.html#l00277">toGlm()</a>.</p>
 
 </div>
 </div>
@@ -274,14 +288,16 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00243">243</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  243</span>{ <span class="keywordflow">return</span> glm::quat(<a class="code hl_variable" href="#aa44a65ab99e36f6ab8771030eed8a7ad">w</a>, <a class="code hl_variable" href="#a8b80f191a3155cc0158d2b4f4d50b2cb">x</a>, <a class="code hl_variable" href="#a3bd3f270462944423611f44e19d2511b">y</a>, <a class="code hl_variable" href="#a625cb732d8ff3083e7852b86b736ab29">z</a>); }</div>
-<div class="ttc" id="astruct_quaternion_html_a3bd3f270462944423611f44e19d2511b"><div class="ttname"><a href="#a3bd3f270462944423611f44e19d2511b">Quaternion::y</a></div><div class="ttdeci">float y</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00239">units.h:239</a></div></div>
-<div class="ttc" id="astruct_quaternion_html_a625cb732d8ff3083e7852b86b736ab29"><div class="ttname"><a href="#a625cb732d8ff3083e7852b86b736ab29">Quaternion::z</a></div><div class="ttdeci">float z</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00240">units.h:240</a></div></div>
-<div class="ttc" id="astruct_quaternion_html_a8b80f191a3155cc0158d2b4f4d50b2cb"><div class="ttname"><a href="#a8b80f191a3155cc0158d2b4f4d50b2cb">Quaternion::x</a></div><div class="ttdeci">float x</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00238">units.h:238</a></div></div>
-<div class="ttc" id="astruct_quaternion_html_aa44a65ab99e36f6ab8771030eed8a7ad"><div class="ttname"><a href="#aa44a65ab99e36f6ab8771030eed8a7ad">Quaternion::w</a></div><div class="ttdeci">float w</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00241">units.h:241</a></div></div>
+<p>Converts to a GLM quaternion (<span class="tt"><a class="el" href="#aa44a65ab99e36f6ab8771030eed8a7ad" title="Scalar component of the quaternion.">w</a>, <a class="el" href="#a8b80f191a3155cc0158d2b4f4d50b2cb" title="X component of the quaternion vector part.">x</a>, <a class="el" href="#a3bd3f270462944423611f44e19d2511b" title="Y component of the quaternion vector part.">y</a>, <a class="el" href="#a625cb732d8ff3083e7852b86b736ab29" title="Z component of the quaternion vector part.">z</a></span>). </p>
+
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00277">277</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  277</span>{ <span class="keywordflow">return</span> glm::quat(<a class="code hl_variable" href="#aa44a65ab99e36f6ab8771030eed8a7ad">w</a>, <a class="code hl_variable" href="#a8b80f191a3155cc0158d2b4f4d50b2cb">x</a>, <a class="code hl_variable" href="#a3bd3f270462944423611f44e19d2511b">y</a>, <a class="code hl_variable" href="#a625cb732d8ff3083e7852b86b736ab29">z</a>); }</div>
+<div class="ttc" id="astruct_quaternion_html_a3bd3f270462944423611f44e19d2511b"><div class="ttname"><a href="#a3bd3f270462944423611f44e19d2511b">Quaternion::y</a></div><div class="ttdeci">float y</div><div class="ttdoc">Y component of the quaternion vector part.</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00270">units.h:270</a></div></div>
+<div class="ttc" id="astruct_quaternion_html_a625cb732d8ff3083e7852b86b736ab29"><div class="ttname"><a href="#a625cb732d8ff3083e7852b86b736ab29">Quaternion::z</a></div><div class="ttdeci">float z</div><div class="ttdoc">Z component of the quaternion vector part.</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00272">units.h:272</a></div></div>
+<div class="ttc" id="astruct_quaternion_html_a8b80f191a3155cc0158d2b4f4d50b2cb"><div class="ttname"><a href="#a8b80f191a3155cc0158d2b4f4d50b2cb">Quaternion::x</a></div><div class="ttdeci">float x</div><div class="ttdoc">X component of the quaternion vector part.</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00268">units.h:268</a></div></div>
+<div class="ttc" id="astruct_quaternion_html_aa44a65ab99e36f6ab8771030eed8a7ad"><div class="ttname"><a href="#aa44a65ab99e36f6ab8771030eed8a7ad">Quaternion::w</a></div><div class="ttdeci">float w</div><div class="ttdoc">Scalar component of the quaternion.</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00274">units.h:274</a></div></div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="units_8h_source.html#l00241">w</a>, <a class="el" href="units_8h_source.html#l00238">x</a>, <a class="el" href="units_8h_source.html#l00239">y</a>, and <a class="el" href="units_8h_source.html#l00240">z</a>.</p>
+<p class="reference">References <a class="el" href="units_8h_source.html#l00274">w</a>, <a class="el" href="units_8h_source.html#l00268">x</a>, <a class="el" href="units_8h_source.html#l00270">y</a>, and <a class="el" href="units_8h_source.html#l00272">z</a>.</p>
 
 </div>
 </div>
@@ -313,14 +329,14 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00249">249</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  249</span>                                                                       {</div>
-<div class="line"><span class="lineno">  250</span>        os &lt;&lt; <span class="stringliteral">&quot;Quaternion(&quot;</span> &lt;&lt; q.<a class="code hl_variable" href="#a8b80f191a3155cc0158d2b4f4d50b2cb">x</a> &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; q.<a class="code hl_variable" href="#a3bd3f270462944423611f44e19d2511b">y</a> &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; q.<a class="code hl_variable" href="#a625cb732d8ff3083e7852b86b736ab29">z</a> &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; q.<a class="code hl_variable" href="#aa44a65ab99e36f6ab8771030eed8a7ad">w</a></div>
-<div class="line"><span class="lineno">  251</span>           &lt;&lt; <span class="stringliteral">&quot;)&quot;</span>;</div>
-<div class="line"><span class="lineno">  252</span>        <span class="keywordflow">return</span> os;</div>
-<div class="line"><span class="lineno">  253</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00284">284</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  284</span>                                                                       {</div>
+<div class="line"><span class="lineno">  285</span>        os &lt;&lt; <span class="stringliteral">&quot;Quaternion(&quot;</span> &lt;&lt; q.<a class="code hl_variable" href="#a8b80f191a3155cc0158d2b4f4d50b2cb">x</a> &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; q.<a class="code hl_variable" href="#a3bd3f270462944423611f44e19d2511b">y</a> &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; q.<a class="code hl_variable" href="#a625cb732d8ff3083e7852b86b736ab29">z</a> &lt;&lt; <span class="stringliteral">&quot;, &quot;</span> &lt;&lt; q.<a class="code hl_variable" href="#aa44a65ab99e36f6ab8771030eed8a7ad">w</a></div>
+<div class="line"><span class="lineno">  286</span>           &lt;&lt; <span class="stringliteral">&quot;)&quot;</span>;</div>
+<div class="line"><span class="lineno">  287</span>        <span class="keywordflow">return</span> os;</div>
+<div class="line"><span class="lineno">  288</span>    }</div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="units_8h_source.html#l00241">w</a>, <a class="el" href="units_8h_source.html#l00238">x</a>, <a class="el" href="units_8h_source.html#l00239">y</a>, and <a class="el" href="units_8h_source.html#l00240">z</a>.</p>
+<p class="reference">References <a class="el" href="units_8h_source.html#l00274">w</a>, <a class="el" href="units_8h_source.html#l00268">x</a>, <a class="el" href="units_8h_source.html#l00270">y</a>, and <a class="el" href="units_8h_source.html#l00272">z</a>.</p>
 
 </div>
 </div>
@@ -337,7 +353,9 @@ Friends</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00241">241</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<p>Scalar component of the quaternion. </p>
+
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00274">274</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
 
 </div>
 </div>
@@ -353,7 +371,9 @@ Friends</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00238">238</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<p>X component of the quaternion vector part. </p>
+
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00268">268</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
 
 </div>
 </div>
@@ -369,7 +389,9 @@ Friends</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00239">239</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<p>Y component of the quaternion vector part. </p>
+
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00270">270</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
 
 </div>
 </div>
@@ -385,7 +407,9 @@ Friends</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00240">240</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<p>Z component of the quaternion vector part. </p>
+
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00272">272</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
 
 </div>
 </div>

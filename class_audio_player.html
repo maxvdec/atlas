@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -171,7 +171,9 @@ Public Member Functions</h2></td></tr>
 <tr class="inherit_header pub_methods_class_component"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pub_methods_class_component')"><span class="dynarrow"><span class="arrowhead closed"></span></span>Public Member Functions inherited from <a class="el" href="class_component.html">Component</a></td></tr>
 <tr class="memitem:ad82d7393e339c1b19cc17a0d55b5674d inherit pub_methods_class_component" id="r_ad82d7393e339c1b19cc17a0d55b5674d"><td class="memItemLeft">virtual&#160;</td><td class="memItemRight"><a class="el" href="class_component.html#ad82d7393e339c1b19cc17a0d55b5674d">~Component</a> ()=default</td></tr>
 <tr class="memitem:a83bd6e1c4f6eb813dd446a4319e98035 inherit pub_methods_class_component" id="r_a83bd6e1c4f6eb813dd446a4319e98035"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_component.html#a83bd6e1c4f6eb813dd446a4319e98035">beforePhysics</a> ()</td></tr>
+<tr class="memdesc:a83bd6e1c4f6eb813dd446a4319e98035 inherit pub_methods_class_component"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called before each physics simulation step.  <br /></td></tr>
 <tr class="memitem:a4e12b49dcc049256848f0efb84c1ace3 inherit pub_methods_class_component" id="r_a4e12b49dcc049256848f0efb84c1ace3"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_component.html#a4e12b49dcc049256848f0efb84c1ace3">atAttach</a> ()</td></tr>
+<tr class="memdesc:a4e12b49dcc049256848f0efb84c1ace3 inherit pub_methods_class_component"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called immediately after the component is attached to an object.  <br /></td></tr>
 <tr class="memitem:a686b5206d066d32955dcf151d113e667 inherit pub_methods_class_component" id="r_a686b5206d066d32955dcf151d113e667"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_component.html#a686b5206d066d32955dcf151d113e667">setViewMatrix</a> (const glm::mat4 &amp;view)</td></tr>
 <tr class="memdesc:a686b5206d066d32955dcf151d113e667 inherit pub_methods_class_component"><td class="mdescLeft">&#160;</td><td class="mdescRight">Performs changes when the <a class="el" href="class_game_object.html" title="Base class for all Game Objects. It extends from Renderable and it provides common functionality for ...">GameObject</a>'s view matrix is updated.  <br /></td></tr>
 <tr class="memitem:a8efb5aafd9909785aee68660a5edc319 inherit pub_methods_class_component" id="r_a8efb5aafd9909785aee68660a5edc319"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_component.html#a8efb5aafd9909785aee68660a5edc319">setProjectionMatrix</a> (const glm::mat4 &amp;projection)</td></tr>
@@ -181,12 +183,19 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a404098a91640552f9d0284d08b53def4 inherit pub_methods_class_component" id="r_a404098a91640552f9d0284d08b53def4"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="class_component.html#a404098a91640552f9d0284d08b53def4">Component</a> ()=default</td></tr>
 <tr class="memdesc:a404098a91640552f9d0284d08b53def4 inherit pub_methods_class_component"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new <a class="el" href="class_component.html" title="Behavior or property that can be attached to a GameObject to extend its capabilities.">Component</a> object.  <br /></td></tr>
 <tr class="memitem:a2af73436a1514c8db3f3876a6f3bc3d8 inherit pub_methods_class_component" id="r_a2af73436a1514c8db3f3876a6f3bc3d8"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_component.html#a2af73436a1514c8db3f3876a6f3bc3d8">onCollisionEnter</a> (<a class="el" href="class_game_object.html">GameObject</a> *other)</td></tr>
+<tr class="memdesc:a2af73436a1514c8db3f3876a6f3bc3d8 inherit pub_methods_class_component"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called when this object starts colliding with another object.  <br /></td></tr>
 <tr class="memitem:aeb0bf2c6f2215da76d758e5ff58b9902 inherit pub_methods_class_component" id="r_aeb0bf2c6f2215da76d758e5ff58b9902"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_component.html#aeb0bf2c6f2215da76d758e5ff58b9902">onCollisionExit</a> (<a class="el" href="class_game_object.html">GameObject</a> *other)</td></tr>
+<tr class="memdesc:aeb0bf2c6f2215da76d758e5ff58b9902 inherit pub_methods_class_component"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called when this object stops colliding with another object.  <br /></td></tr>
 <tr class="memitem:af86cc990a53aa9b9c3d70572558aecb5 inherit pub_methods_class_component" id="r_af86cc990a53aa9b9c3d70572558aecb5"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_component.html#af86cc990a53aa9b9c3d70572558aecb5">onCollisionStay</a> (<a class="el" href="class_game_object.html">GameObject</a> *other)</td></tr>
+<tr class="memdesc:af86cc990a53aa9b9c3d70572558aecb5 inherit pub_methods_class_component"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called while this object remains in contact with another object.  <br /></td></tr>
 <tr class="memitem:a9749b406011df2556b004acd2f032935 inherit pub_methods_class_component" id="r_a9749b406011df2556b004acd2f032935"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_component.html#a9749b406011df2556b004acd2f032935">onSignalRecieve</a> (const std::string &amp;signal, <a class="el" href="class_game_object.html">GameObject</a> *sender)</td></tr>
+<tr class="memdesc:a9749b406011df2556b004acd2f032935 inherit pub_methods_class_component"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called when a signal starts from another object.  <br /></td></tr>
 <tr class="memitem:aeea623ce757a97a895a2500f6de6a33c inherit pub_methods_class_component" id="r_aeea623ce757a97a895a2500f6de6a33c"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_component.html#aeea623ce757a97a895a2500f6de6a33c">onSignalEnd</a> (const std::string &amp;signal, <a class="el" href="class_game_object.html">GameObject</a> *sender)</td></tr>
+<tr class="memdesc:aeea623ce757a97a895a2500f6de6a33c inherit pub_methods_class_component"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called when a previously received signal ends.  <br /></td></tr>
 <tr class="memitem:a7ad81a397c06433353d21b1d5aa7eda9 inherit pub_methods_class_component" id="r_a7ad81a397c06433353d21b1d5aa7eda9"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_component.html#a7ad81a397c06433353d21b1d5aa7eda9">onQueryReceive</a> (<a class="el" href="struct_query_result.html">QueryResult</a> &amp;result)</td></tr>
+<tr class="memdesc:a7ad81a397c06433353d21b1d5aa7eda9 inherit pub_methods_class_component"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called when asynchronous physics query results arrive.  <br /></td></tr>
 <tr class="memitem:ab7b5b4676ca88400a52f66d95c9c828e inherit pub_methods_class_component" id="r_ab7b5b4676ca88400a52f66d95c9c828e"><td class="memItemLeft">virtual std::shared_ptr&lt; <a class="el" href="class_component.html">Component</a> &gt;&#160;</td><td class="memItemRight"><a class="el" href="class_component.html#ab7b5b4676ca88400a52f66d95c9c828e">clone</a> () const</td></tr>
+<tr class="memdesc:ab7b5b4676ca88400a52f66d95c9c828e inherit pub_methods_class_component"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a clone of the component when supported.  <br /></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -308,7 +317,7 @@ Example</h2>
 <div class="line"><span class="lineno">   70</span>          sourceInitialized(other.sourceInitialized) {</div>
 <div class="line"><span class="lineno">   71</span>        other.sourceInitialized = <span class="keyword">false</span>;</div>
 <div class="line"><span class="lineno">   72</span>    }</div>
-<div class="ttc" id="aclass_audio_player_html_a57f411e3ce3d3aef39af086788595708"><div class="ttname"><a href="#a57f411e3ce3d3aef39af086788595708">AudioPlayer::source</a></div><div class="ttdeci">std::unique_ptr&lt; AudioSource &gt; source</div><div class="ttdoc">Get the audio source. This allows for advanced manipulation of the audio playback.</div><div class="ttdef"><b>Definition</b> <a href="atlas_2audio_8h_source.html#l00195">audio.h:195</a></div></div>
+<div class="ttc" id="aclass_audio_player_html_a57f411e3ce3d3aef39af086788595708"><div class="ttname"><a href="#a57f411e3ce3d3aef39af086788595708">AudioPlayer::source</a></div><div class="ttdeci">std::unique_ptr&lt; AudioSource &gt; source</div><div class="ttdoc">Get the audio source. This allows for advanced manipulation of the audio playback.</div><div class="ttdef"><b>Definition</b> <a href="atlas_2audio_8h_source.html#l00198">audio.h:198</a></div></div>
 </div><!-- fragment -->
 <p class="reference">References <a class="el" href="atlas_2audio_8h_source.html#l00049">AudioPlayer()</a>.</p>
 
@@ -346,7 +355,7 @@ Example</h2>
 <div class="line"><span class="lineno">  187</span>        <a class="code hl_variable" href="#a57f411e3ce3d3aef39af086788595708">source</a>-&gt;disableSpatialization();</div>
 <div class="line"><span class="lineno">  188</span>    }</div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="atlas_2audio_8h_source.html#l00195">source</a>.</p>
+<p class="reference">References <a class="el" href="atlas_2audio_8h_source.html#l00198">source</a>.</p>
 
 </div>
 </div>
@@ -385,7 +394,7 @@ Example</h2>
 <div class="line"><span class="lineno">   97</span>        }</div>
 <div class="line"><span class="lineno">   98</span>    }</div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="atlas_2audio_8h_source.html#l00195">source</a>.</p>
+<p class="reference">References <a class="el" href="atlas_2audio_8h_source.html#l00198">source</a>.</p>
 
 </div>
 </div>
@@ -431,7 +440,7 @@ Example</h2>
 <div class="line"><span class="lineno">   86</span>        <span class="keywordflow">return</span> *<span class="keyword">this</span>;</div>
 <div class="line"><span class="lineno">   87</span>    }</div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="atlas_2audio_8h_source.html#l00049">AudioPlayer()</a>, and <a class="el" href="atlas_2audio_8h_source.html#l00195">source</a>.</p>
+<p class="reference">References <a class="el" href="atlas_2audio_8h_source.html#l00049">AudioPlayer()</a>, and <a class="el" href="atlas_2audio_8h_source.html#l00198">source</a>.</p>
 
 </div>
 </div>
@@ -496,7 +505,7 @@ Example</h2>
 <div class="line"><span class="lineno">  115</span>        <a class="code hl_variable" href="#a57f411e3ce3d3aef39af086788595708">source</a>-&gt;pause();</div>
 <div class="line"><span class="lineno">  116</span>    }</div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="atlas_2audio_8h_source.html#l00195">source</a>.</p>
+<p class="reference">References <a class="el" href="atlas_2audio_8h_source.html#l00198">source</a>.</p>
 
 </div>
 </div>
@@ -531,7 +540,7 @@ Example</h2>
 <div class="line"><span class="lineno">  106</span>        <a class="code hl_variable" href="#a57f411e3ce3d3aef39af086788595708">source</a>-&gt;play();</div>
 <div class="line"><span class="lineno">  107</span>    }</div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="atlas_2audio_8h_source.html#l00195">source</a>.</p>
+<p class="reference">References <a class="el" href="atlas_2audio_8h_source.html#l00198">source</a>.</p>
 
 </div>
 </div>
@@ -573,7 +582,7 @@ Example</h2>
 <div class="line"><span class="lineno">  167</span>        <a class="code hl_variable" href="#a57f411e3ce3d3aef39af086788595708">source</a>-&gt;setPosition(position);</div>
 <div class="line"><span class="lineno">  168</span>    }</div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="atlas_2audio_8h_source.html#l00195">source</a>.</p>
+<p class="reference">References <a class="el" href="atlas_2audio_8h_source.html#l00198">source</a>.</p>
 
 </div>
 </div>
@@ -614,7 +623,7 @@ Example</h2>
 <div class="line"><span class="lineno">  134</span>        <a class="code hl_variable" href="#a57f411e3ce3d3aef39af086788595708">source</a>-&gt;fromFile(std::move(sourceResource));</div>
 <div class="line"><span class="lineno">  135</span>    }</div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="atlas_2audio_8h_source.html#l00195">source</a>.</p>
+<p class="reference">References <a class="el" href="atlas_2audio_8h_source.html#l00198">source</a>.</p>
 
 </div>
 </div>
@@ -649,7 +658,7 @@ Example</h2>
 <div class="line"><span class="lineno">  124</span>        <a class="code hl_variable" href="#a57f411e3ce3d3aef39af086788595708">source</a>-&gt;stop();</div>
 <div class="line"><span class="lineno">  125</span>    }</div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="atlas_2audio_8h_source.html#l00195">source</a>.</p>
+<p class="reference">References <a class="el" href="atlas_2audio_8h_source.html#l00198">source</a>.</p>
 
 </div>
 </div>
@@ -704,15 +713,15 @@ Example</h2>
 <div class="line"><span class="lineno">  156</span>        <a class="code hl_variable" href="#a57f411e3ce3d3aef39af086788595708">source</a>-&gt;setPosition(this-&gt;<a class="code hl_variable" href="class_component.html#a702063beef62c1319e2019fa1525f5bf">object</a>-&gt;getPosition());</div>
 <div class="line"><span class="lineno">  157</span>    }</div>
 <div class="ttc" id="aclass_camera_html_aa039dfa8c2a624a999b69b0fece3f6fb"><div class="ttname"><a href="class_camera.html#aa039dfa8c2a624a999b69b0fece3f6fb">Camera::position</a></div><div class="ttdeci">Position3d position</div><div class="ttdoc">The position of the camera in 3D space.</div><div class="ttdef"><b>Definition</b> <a href="camera_8h_source.html#l00046">camera.h:46</a></div></div>
-<div class="ttc" id="aclass_camera_html_ad3e377decee8b087e74188cf4e7b0795"><div class="ttname"><a href="class_camera.html#ad3e377decee8b087e74188cf4e7b0795">Camera::getVelocity</a></div><div class="ttdeci">Magnitude3d getVelocity() const</div><div class="ttdoc">Get the velocity of the camera based on its front vector and movement speed.</div><div class="ttdef"><b>Definition</b> <a href="camera_8h_source.html#l00195">camera.h:195</a></div></div>
-<div class="ttc" id="aclass_camera_html_afbf79ea00fe5e9086a72b29119e08311"><div class="ttname"><a href="class_camera.html#afbf79ea00fe5e9086a72b29119e08311">Camera::getFrontVector</a></div><div class="ttdeci">Normal3d getFrontVector() const</div><div class="ttdoc">Get the front vector of the camera, representing the direction it is facing.</div><div class="ttdef"><b>Definition</b> <a href="camera_8h_source.html#l00181">camera.h:181</a></div></div>
-<div class="ttc" id="aclass_component_html_a702063beef62c1319e2019fa1525f5bf"><div class="ttname"><a href="class_component.html#a702063beef62c1319e2019fa1525f5bf">Component::object</a></div><div class="ttdeci">GameObject * object</div><div class="ttdoc">Gets the GameObject associated with the component.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00123">component.h:123</a></div></div>
-<div class="ttc" id="aclass_window_html_a2133e2bb4562bcc491d091a640dcae88"><div class="ttname"><a href="class_window.html#a2133e2bb4562bcc491d091a640dcae88">Window::audioEngine</a></div><div class="ttdeci">std::shared_ptr&lt; AudioEngine &gt; audioEngine</div><div class="ttdoc">The audio engine instance for managing spatial audio. Shared across the window.</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00476">window.h:476</a></div></div>
-<div class="ttc" id="aclass_window_html_a44bd50953bdd8e5c40a690aaa9842fea"><div class="ttname"><a href="class_window.html#a44bd50953bdd8e5c40a690aaa9842fea">Window::getCamera</a></div><div class="ttdeci">Camera * getCamera()</div><div class="ttdoc">Gets the current camera.</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00417">window.h:417</a></div></div>
-<div class="ttc" id="aclass_window_html_aa3c2a95cf2ce8cbbb668247f029b610c"><div class="ttname"><a href="class_window.html#aa3c2a95cf2ce8cbbb668247f029b610c">Window::mainWindow</a></div><div class="ttdeci">static Window * mainWindow</div><div class="ttdoc">Static pointer to the main window instance. Used for global access to the primary window.</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00404">window.h:404</a></div></div>
+<div class="ttc" id="aclass_camera_html_ad3e377decee8b087e74188cf4e7b0795"><div class="ttname"><a href="class_camera.html#ad3e377decee8b087e74188cf4e7b0795">Camera::getVelocity</a></div><div class="ttdeci">Magnitude3d getVelocity() const</div><div class="ttdoc">Get the velocity of the camera based on its front vector and movement speed.</div><div class="ttdef"><b>Definition</b> <a href="camera_8h_source.html#l00201">camera.h:201</a></div></div>
+<div class="ttc" id="aclass_camera_html_afbf79ea00fe5e9086a72b29119e08311"><div class="ttname"><a href="class_camera.html#afbf79ea00fe5e9086a72b29119e08311">Camera::getFrontVector</a></div><div class="ttdeci">Normal3d getFrontVector() const</div><div class="ttdoc">Get the front vector of the camera, representing the direction it is facing.</div><div class="ttdef"><b>Definition</b> <a href="camera_8h_source.html#l00187">camera.h:187</a></div></div>
+<div class="ttc" id="aclass_component_html_a702063beef62c1319e2019fa1525f5bf"><div class="ttname"><a href="class_component.html#a702063beef62c1319e2019fa1525f5bf">Component::object</a></div><div class="ttdeci">GameObject * object</div><div class="ttdoc">Gets the GameObject associated with the component.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00137">component.h:137</a></div></div>
+<div class="ttc" id="aclass_window_html_a2133e2bb4562bcc491d091a640dcae88"><div class="ttname"><a href="class_window.html#a2133e2bb4562bcc491d091a640dcae88">Window::audioEngine</a></div><div class="ttdeci">std::shared_ptr&lt; AudioEngine &gt; audioEngine</div><div class="ttdoc">The audio engine instance for managing spatial audio. Shared across the window.</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00496">window.h:496</a></div></div>
+<div class="ttc" id="aclass_window_html_a44bd50953bdd8e5c40a690aaa9842fea"><div class="ttname"><a href="class_window.html#a44bd50953bdd8e5c40a690aaa9842fea">Window::getCamera</a></div><div class="ttdeci">Camera * getCamera()</div><div class="ttdoc">Gets the current camera.</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00434">window.h:434</a></div></div>
+<div class="ttc" id="aclass_window_html_aa3c2a95cf2ce8cbbb668247f029b610c"><div class="ttname"><a href="class_window.html#aa3c2a95cf2ce8cbbb668247f029b610c">Window::mainWindow</a></div><div class="ttdeci">static Window * mainWindow</div><div class="ttdoc">Static pointer to the main window instance. Used for global access to the primary window.</div><div class="ttdef"><b>Definition</b> <a href="window_8h_source.html#l00421">window.h:421</a></div></div>
 <div class="ttc" id="aunits_8h_html_aa79dcdba8644f852dbd5163b96868793"><div class="ttname"><a href="units_8h.html#aa79dcdba8644f852dbd5163b96868793">Normal3d</a></div><div class="ttdeci">Position3d Normal3d</div><div class="ttdoc">Type alias for 3D normal vectors.</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00133">units.h:133</a></div></div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="window_8h_source.html#l00476">Window::audioEngine</a>, <a class="el" href="window_8h_source.html#l00417">Window::getCamera()</a>, <a class="el" href="camera_8h_source.html#l00181">Camera::getFrontVector()</a>, <a class="el" href="camera_8h_source.html#l00195">Camera::getVelocity()</a>, <a class="el" href="window_8h_source.html#l00404">Window::mainWindow</a>, <a class="el" href="component_8h_source.html#l00123">Component::object</a>, <a class="el" href="camera_8h_source.html#l00046">Camera::position</a>, and <a class="el" href="atlas_2audio_8h_source.html#l00195">source</a>.</p>
+<p class="reference">References <a class="el" href="window_8h_source.html#l00496">Window::audioEngine</a>, <a class="el" href="window_8h_source.html#l00434">Window::getCamera()</a>, <a class="el" href="camera_8h_source.html#l00187">Camera::getFrontVector()</a>, <a class="el" href="camera_8h_source.html#l00201">Camera::getVelocity()</a>, <a class="el" href="window_8h_source.html#l00421">Window::mainWindow</a>, <a class="el" href="component_8h_source.html#l00137">Component::object</a>, <a class="el" href="camera_8h_source.html#l00046">Camera::position</a>, and <a class="el" href="atlas_2audio_8h_source.html#l00198">source</a>.</p>
 
 </div>
 </div>
@@ -747,7 +756,7 @@ Example</h2>
 <div class="line"><span class="lineno">  177</span>        <a class="code hl_variable" href="#a57f411e3ce3d3aef39af086788595708">source</a>-&gt;useSpatialization();</div>
 <div class="line"><span class="lineno">  178</span>    }</div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="atlas_2audio_8h_source.html#l00195">source</a>.</p>
+<p class="reference">References <a class="el" href="atlas_2audio_8h_source.html#l00198">source</a>.</p>
 
 </div>
 </div>
@@ -765,8 +774,9 @@ Example</h2>
 </div><div class="memdoc">
 
 <p>Get the audio source. This allows for advanced manipulation of the audio playback. </p>
+<p>Owned audio source used for playback and spatial updates. </p>
 
-<p class="definition">Definition at line <a class="el" href="atlas_2audio_8h_source.html#l00195">195</a> of file <a class="el" href="atlas_2audio_8h_source.html">audio.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="atlas_2audio_8h_source.html#l00198">198</a> of file <a class="el" href="atlas_2audio_8h_source.html">audio.h</a>.</p>
 
 </div>
 </div>

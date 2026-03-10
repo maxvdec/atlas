@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -137,18 +137,26 @@ Public Member Functions</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:abce739f010524b531de60d30032a345b" id="r_abce739f010524b531de60d30032a345b"><td class="memItemLeft">unsigned int&#160;</td><td class="memItemRight"><a class="el" href="#abce739f010524b531de60d30032a345b">frameNumber</a></td></tr>
+<tr class="memdesc:abce739f010524b531de60d30032a345b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Frame index for this aggregate packet.  <br /></td></tr>
 <tr class="memitem:acae09156418d2c1ee52e7feeafe8372a" id="r_acae09156418d2c1ee52e7feeafe8372a"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#acae09156418d2c1ee52e7feeafe8372a">cpuFrameTimeMs</a></td></tr>
+<tr class="memdesc:acae09156418d2c1ee52e7feeafe8372a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Total CPU frame time in milliseconds.  <br /></td></tr>
 <tr class="memitem:ad954fbea942eaf717dc16f1073e3bd24" id="r_ad954fbea942eaf717dc16f1073e3bd24"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#ad954fbea942eaf717dc16f1073e3bd24">gpuFrameTimeMs</a></td></tr>
+<tr class="memdesc:ad954fbea942eaf717dc16f1073e3bd24"><td class="mdescLeft">&#160;</td><td class="mdescRight">Total GPU frame time in milliseconds.  <br /></td></tr>
 <tr class="memitem:a8860605228cd8770148d6c1c87da1fd1" id="r_a8860605228cd8770148d6c1c87da1fd1"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#a8860605228cd8770148d6c1c87da1fd1">mainThreadTimeMs</a></td></tr>
+<tr class="memdesc:a8860605228cd8770148d6c1c87da1fd1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Main thread execution time in milliseconds.  <br /></td></tr>
 <tr class="memitem:aa7e819b4efadac7cce96a5af8392d65a" id="r_aa7e819b4efadac7cce96a5af8392d65a"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#aa7e819b4efadac7cce96a5af8392d65a">workerThreadTimeMs</a></td></tr>
+<tr class="memdesc:aa7e819b4efadac7cce96a5af8392d65a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Worker thread execution time in milliseconds.  <br /></td></tr>
 <tr class="memitem:a3ccaead1b181e691b3cb49e00eb6eb88" id="r_a3ccaead1b181e691b3cb49e00eb6eb88"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#a3ccaead1b181e691b3cb49e00eb6eb88">memoryMb</a></td></tr>
+<tr class="memdesc:a3ccaead1b181e691b3cb49e00eb6eb88"><td class="mdescLeft">&#160;</td><td class="mdescRight">Process memory usage in MB.  <br /></td></tr>
 <tr class="memitem:a48c06c276825f40285bb7e4099138767" id="r_a48c06c276825f40285bb7e4099138767"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#a48c06c276825f40285bb7e4099138767">cpuUsagePercent</a></td></tr>
+<tr class="memdesc:a48c06c276825f40285bb7e4099138767"><td class="mdescLeft">&#160;</td><td class="mdescRight">CPU utilization percentage for the frame.  <br /></td></tr>
 <tr class="memitem:a84ac850b5b01e5b07c8f63abb5755cde" id="r_a84ac850b5b01e5b07c8f63abb5755cde"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#a84ac850b5b01e5b07c8f63abb5755cde">gpuUsagePercent</a></td></tr>
+<tr class="memdesc:a84ac850b5b01e5b07c8f63abb5755cde"><td class="mdescLeft">&#160;</td><td class="mdescRight">GPU utilization percentage for the frame.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Per-frame timing and utilization telemetry. </p>
 
-<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00232">232</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00269">269</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
 <a id="a519a7ed1943a108dd384c3a06365c4f0" name="a519a7ed1943a108dd384c3a06365c4f0"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a519a7ed1943a108dd384c3a06365c4f0">&#9670;&#160;</a></span>send()</h2>
@@ -182,7 +190,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00234">234</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
+<p>Total CPU frame time in milliseconds. </p>
+
+<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00273">273</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
 
 </div>
 </div>
@@ -198,7 +208,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00239">239</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
+<p>CPU utilization percentage for the frame. </p>
+
+<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00283">283</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
 
 </div>
 </div>
@@ -214,7 +226,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00233">233</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
+<p>Frame index for this aggregate packet. </p>
+
+<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00271">271</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
 
 </div>
 </div>
@@ -230,7 +244,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00235">235</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
+<p>Total GPU frame time in milliseconds. </p>
+
+<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00275">275</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
 
 </div>
 </div>
@@ -246,7 +262,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00240">240</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
+<p>GPU utilization percentage for the frame. </p>
+
+<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00285">285</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
 
 </div>
 </div>
@@ -262,7 +280,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00236">236</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
+<p>Main thread execution time in milliseconds. </p>
+
+<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00277">277</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
 
 </div>
 </div>
@@ -278,7 +298,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00238">238</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
+<p>Process memory usage in MB. </p>
+
+<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00281">281</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
 
 </div>
 </div>
@@ -294,7 +316,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00237">237</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
+<p>Worker thread execution time in milliseconds. </p>
+
+<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00279">279</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
 
 </div>
 </div>

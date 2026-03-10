@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -121,9 +121,13 @@ $(function(){initNavTree('functions_vars_r.html','',''); });
 <h3 class="doxsection"><a id="index_r" name="index_r"></a>- r -</h3><ul>
 <li>r&#160;:&#160;<a class="el" href="struct_color.html#a3958a556b47d2de3dd45c75aac833c20">Color</a></li>
 <li>radius&#160;:&#160;<a class="el" href="classbezel_1_1_capsule_collider.html#a13381f648bea9528ad85fca66289cd32">bezel::CapsuleCollider</a>, <a class="el" href="classbezel_1_1_sphere_collider.html#af65e52f1dfa987da1bafbdcbacdcf98b">bezel::SphereCollider</a>, <a class="el" href="structbezel_1_1_vehicle_wheel_settings.html#a4a8a3fca90b6720a16e2ec94d9a23d72">bezel::VehicleWheelSettings</a>, <a class="el" href="struct_g_p_u_point_light.html#aff237a60470d5bacfc9511fbdbbd56c5">GPUPointLight</a>, <a class="el" href="struct_light_bloom.html#a165b93c57ba198bb5a5643594c1ead12">LightBloom</a>, <a class="el" href="struct_point_light_constants.html#a9c6a4d43f99919ad7d3cf864e6dd3e66">PointLightConstants</a>, <a class="el" href="class_sphere.html#ae6f42f0da6679a2f0b4a22681ccccf38">Sphere</a></li>
+<li>range&#160;:&#160;<a class="el" href="struct_area_light.html#aed35ad050e7e95ea6c0e6948951e5d87">AreaLight</a>, <a class="el" href="struct_g_p_u_area_light.html#af0d3eee0a3a4589727d7287802416d58">GPUAreaLight</a>, <a class="el" href="struct_g_p_u_spot_light.html#a0999b945eb454954e263f63a0e677d32">GPUSpotLight</a>, <a class="el" href="struct_spotlight.html#a44f27bde1ed8542d868809227c0f463b">Spotlight</a></li>
 <li>rasterizerMode&#160;:&#160;<a class="el" href="class_window.html#a525dad49e173db91ae84acb6ce63faa0">Window</a></li>
 <li>raycastResult&#160;:&#160;<a class="el" href="struct_query_result.html#a621807b6c859c85f0c91fec89c5a07d7">QueryResult</a></li>
+<li>raysPerPixel&#160;:&#160;<a class="el" href="classphoton_1_1_path_tracing.html#a45702d2c27742c9b034662e2afe5e1d9">photon::PathTracing</a></li>
+<li>raysPerProbe&#160;:&#160;<a class="el" href="classphoton_1_1_global_illumination.html#a67821d64858f8fca241e7a0b1cee5c5d">photon::GlobalIllumination</a></li>
 <li>red&#160;:&#160;<a class="el" href="struct_chromatic_aberration_parameters.html#a28e5f08629979677e9bcb31a244c52f8">ChromaticAberrationParameters</a></li>
+<li>reflectivity&#160;:&#160;<a class="el" href="struct_material.html#a8d977d0b7386da7e3ac6879f458d3f0f">Material</a></li>
 <li>refreshRate&#160;:&#160;<a class="el" href="struct_video_mode.html#a635022bd3a9dcbf3175d2a60f5bf35c5">VideoMode</a></li>
 <li>renderbufferID&#160;:&#160;<a class="el" href="classopal_1_1_depth_stencil_buffer.html#a5fa314ffe2d15c8fcf369e409919352f">opal::DepthStencilBuffer</a></li>
 <li>renderDepthOfView&#160;:&#160;<a class="el" href="class_renderable.html#a7cb09219e507e1c1395efced124e3b58">Renderable</a></li>
@@ -150,7 +154,8 @@ $(function(){initNavTree('functions_vars_r.html','',''); });
 <li>roll&#160;:&#160;<a class="el" href="struct_rotation3d.html#a4f6f6c46d5dc9fd9c55bfe3f2751ffee">Rotation3d</a></li>
 <li>rotation&#160;:&#160;<a class="el" href="struct_area_light.html#aac8628e4f55d5f24295d220cb88d2c31">AreaLight</a>, <a class="el" href="structbezel_1_1_rigidbody.html#abe89022fc445de63a2af76e5766bbae0">bezel::Rigidbody</a>, <a class="el" href="class_core_object.html#a7ebc137645d25de5365b893661973cd9">CoreObject</a>, <a class="el" href="struct_instance.html#a01a9049398c7873c47dcf5b7c24cf510">Instance</a>, <a class="el" href="class_terrain.html#a5aa45ff1f10bb1d71fd8e8956037be93">Terrain</a></li>
 <li>rotationQuat&#160;:&#160;<a class="el" href="structbezel_1_1_rigidbody.html#accaed6e3dd0ece6fe055dd288e9cfcb5">bezel::Rigidbody</a></li>
-<li>roughness&#160;:&#160;<a class="el" href="struct_material.html#abbaeac8374986ca82670ff0d7749c566">Material</a></li>
+<li>roughness&#160;:&#160;<a class="el" href="struct_material.html#abbaeac8374986ca82670ff0d7749c566">Material</a>, <a class="el" href="structphoton_1_1_global_illumination_1_1_d_d_g_i_material.html#adf01cf1318ecc93188f8abd34e46d691">photon::GlobalIllumination::DDGIMaterial</a></li>
+<li>roughnessTextureIndex&#160;:&#160;<a class="el" href="structphoton_1_1_global_illumination_1_1_d_d_g_i_material.html#ab6bdc8b95b081adc1b1bba6eb2d50ddd">photon::GlobalIllumination::DDGIMaterial</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->

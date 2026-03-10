@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -128,15 +128,21 @@ $(function(){initNavTree('structbezel_1_1_vehicle_differential.html','','structb
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:aced456b7632628fb38003dd6528ec9ae" id="r_aced456b7632628fb38003dd6528ec9ae"><td class="memItemLeft">int&#160;</td><td class="memItemRight"><a class="el" href="#aced456b7632628fb38003dd6528ec9ae">leftWheel</a> = -1</td></tr>
+<tr class="memdesc:aced456b7632628fb38003dd6528ec9ae"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="object_8h.html#ad53d6229d7ec28555a9c9c2fd9abf773" title="Represents an index in a buffer.">Index</a> of the left wheel participating in the differential.  <br /></td></tr>
 <tr class="memitem:a07955a1f69498afb63808eacb0631fff" id="r_a07955a1f69498afb63808eacb0631fff"><td class="memItemLeft">int&#160;</td><td class="memItemRight"><a class="el" href="#a07955a1f69498afb63808eacb0631fff">rightWheel</a> = -1</td></tr>
+<tr class="memdesc:a07955a1f69498afb63808eacb0631fff"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="object_8h.html#ad53d6229d7ec28555a9c9c2fd9abf773" title="Represents an index in a buffer.">Index</a> of the right wheel participating in the differential.  <br /></td></tr>
 <tr class="memitem:a2f794cf0384f30b34471db4705f86622" id="r_a2f794cf0384f30b34471db4705f86622"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#a2f794cf0384f30b34471db4705f86622">differentialRatio</a> = 3.42f</td></tr>
+<tr class="memdesc:a2f794cf0384f30b34471db4705f86622"><td class="mdescLeft">&#160;</td><td class="mdescRight">Ratio applied between engine and wheel angular speeds.  <br /></td></tr>
 <tr class="memitem:a2ac4d8ebb9ccca998fadbeb70a9885cc" id="r_a2ac4d8ebb9ccca998fadbeb70a9885cc"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#a2ac4d8ebb9ccca998fadbeb70a9885cc">leftRightSplit</a> = 0.5f</td></tr>
+<tr class="memdesc:a2ac4d8ebb9ccca998fadbeb70a9885cc"><td class="mdescLeft">&#160;</td><td class="mdescRight">Torque split between left and right wheels [0, 1].  <br /></td></tr>
 <tr class="memitem:ad40c519f42d077f3fd14e5b2bda1953e" id="r_ad40c519f42d077f3fd14e5b2bda1953e"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#ad40c519f42d077f3fd14e5b2bda1953e">limitedSlipRatio</a> = 1.4f</td></tr>
+<tr class="memdesc:ad40c519f42d077f3fd14e5b2bda1953e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Limited-slip ratio controlling wheel speed difference.  <br /></td></tr>
 <tr class="memitem:aed1e3db6eb83ba346098449ab0065a0d" id="r_aed1e3db6eb83ba346098449ab0065a0d"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#aed1e3db6eb83ba346098449ab0065a0d">engineTorqueRatio</a> = 1.0f</td></tr>
+<tr class="memdesc:aed1e3db6eb83ba346098449ab0065a0d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Fraction of engine torque fed into this differential.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock">
-<p class="definition">Definition at line <a class="el" href="bezel_8h_source.html#l00365">365</a> of file <a class="el" href="bezel_8h_source.html">bezel.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="bezel_8h_source.html#l00371">371</a> of file <a class="el" href="bezel_8h_source.html">bezel.h</a>.</p>
 </div><a name="doc-variable-members" id="doc-variable-members"></a><h2 id="header-doc-variable-members" class="groupheader">Member Data Documentation</h2>
 <a id="a2f794cf0384f30b34471db4705f86622" name="a2f794cf0384f30b34471db4705f86622"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a2f794cf0384f30b34471db4705f86622">&#9670;&#160;</a></span>differentialRatio</h2>
@@ -150,7 +156,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="bezel_8h_source.html#l00368">368</a> of file <a class="el" href="bezel_8h_source.html">bezel.h</a>.</p>
+<p>Ratio applied between engine and wheel angular speeds. </p>
+
+<p class="definition">Definition at line <a class="el" href="bezel_8h_source.html#l00377">377</a> of file <a class="el" href="bezel_8h_source.html">bezel.h</a>.</p>
 
 </div>
 </div>
@@ -166,7 +174,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="bezel_8h_source.html#l00371">371</a> of file <a class="el" href="bezel_8h_source.html">bezel.h</a>.</p>
+<p>Fraction of engine torque fed into this differential. </p>
+
+<p class="definition">Definition at line <a class="el" href="bezel_8h_source.html#l00383">383</a> of file <a class="el" href="bezel_8h_source.html">bezel.h</a>.</p>
 
 </div>
 </div>
@@ -182,7 +192,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="bezel_8h_source.html#l00369">369</a> of file <a class="el" href="bezel_8h_source.html">bezel.h</a>.</p>
+<p>Torque split between left and right wheels [0, 1]. </p>
+
+<p class="definition">Definition at line <a class="el" href="bezel_8h_source.html#l00379">379</a> of file <a class="el" href="bezel_8h_source.html">bezel.h</a>.</p>
 
 </div>
 </div>
@@ -198,7 +210,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="bezel_8h_source.html#l00366">366</a> of file <a class="el" href="bezel_8h_source.html">bezel.h</a>.</p>
+<p><a class="el" href="object_8h.html#ad53d6229d7ec28555a9c9c2fd9abf773" title="Represents an index in a buffer.">Index</a> of the left wheel participating in the differential. </p>
+
+<p class="definition">Definition at line <a class="el" href="bezel_8h_source.html#l00373">373</a> of file <a class="el" href="bezel_8h_source.html">bezel.h</a>.</p>
 
 </div>
 </div>
@@ -214,7 +228,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="bezel_8h_source.html#l00370">370</a> of file <a class="el" href="bezel_8h_source.html">bezel.h</a>.</p>
+<p>Limited-slip ratio controlling wheel speed difference. </p>
+
+<p class="definition">Definition at line <a class="el" href="bezel_8h_source.html#l00381">381</a> of file <a class="el" href="bezel_8h_source.html">bezel.h</a>.</p>
 
 </div>
 </div>
@@ -230,7 +246,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="bezel_8h_source.html#l00367">367</a> of file <a class="el" href="bezel_8h_source.html">bezel.h</a>.</p>
+<p><a class="el" href="object_8h.html#ad53d6229d7ec28555a9c9c2fd9abf773" title="Represents an index in a buffer.">Index</a> of the right wheel participating in the differential. </p>
+
+<p class="definition">Definition at line <a class="el" href="bezel_8h_source.html#l00375">375</a> of file <a class="el" href="bezel_8h_source.html">bezel.h</a>.</p>
 
 </div>
 </div>

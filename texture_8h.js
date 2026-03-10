@@ -35,6 +35,7 @@ var texture_8h =
       [ "Metallic", "texture_8h.html#a579bf435a05d45b75f553d37ebbb3225a19dce4a66f8f7b74a6ef0664a88a15dd", null ],
       [ "Roughness", "texture_8h.html#a579bf435a05d45b75f553d37ebbb3225a767078b82d60bc9dfaec29326b0b7c06", null ],
       [ "AO", "texture_8h.html#a579bf435a05d45b75f553d37ebbb3225a2c64c5cf613d8b9f4f7f3980d29aca10", null ],
+      [ "Opacity", "texture_8h.html#a579bf435a05d45b75f553d37ebbb3225abad6a5dd8c28e6b14f8e986615e3dc98", null ],
       [ "HDR", "texture_8h.html#a579bf435a05d45b75f553d37ebbb3225a6cad826248cd3f4e93da71e7b49928e3", null ]
     ] ],
     [ "TextureWrappingMode", "texture_8h.html#a2b9a75ec8d4f3f3f2e9150d48d065141", [

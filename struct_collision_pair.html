@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -137,7 +137,9 @@ Public Member Functions</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a42774adc74909268b2ba38eda0aa3a6b" id="r_a42774adc74909268b2ba38eda0aa3a6b"><td class="memItemLeft">int&#160;</td><td class="memItemRight"><a class="el" href="#a42774adc74909268b2ba38eda0aa3a6b">a</a></td></tr>
+<tr class="memdesc:a42774adc74909268b2ba38eda0aa3a6b"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="object_8h.html#ad53d6229d7ec28555a9c9c2fd9abf773" title="Represents an index in a buffer.">Index</a> of the first potentially colliding body.  <br /></td></tr>
 <tr class="memitem:a09afe374ddc500b1324dbeb43cdf28df" id="r_a09afe374ddc500b1324dbeb43cdf28df"><td class="memItemLeft">int&#160;</td><td class="memItemRight"><a class="el" href="#a09afe374ddc500b1324dbeb43cdf28df">b</a></td></tr>
+<tr class="memdesc:a09afe374ddc500b1324dbeb43cdf28df"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="object_8h.html#ad53d6229d7ec28555a9c9c2fd9abf773" title="Represents an index in a buffer.">Index</a> of the second potentially colliding body.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Structure representing a pair of potentially colliding bodies. </p>
@@ -167,10 +169,10 @@ Public Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="bounds_8h_source.html#l00147">147</a> of file <a class="el" href="bounds_8h_source.html">bounds.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  147</span>                                                           {</div>
-<div class="line"><span class="lineno">  148</span>        <span class="keywordflow">return</span> !(*<span class="keyword">this</span> == other);</div>
-<div class="line"><span class="lineno">  149</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="bounds_8h_source.html#l00149">149</a> of file <a class="el" href="bounds_8h_source.html">bounds.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  149</span>                                                           {</div>
+<div class="line"><span class="lineno">  150</span>        <span class="keywordflow">return</span> !(*<span class="keyword">this</span> == other);</div>
+<div class="line"><span class="lineno">  151</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -197,14 +199,14 @@ Public Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="bounds_8h_source.html#l00143">143</a> of file <a class="el" href="bounds_8h_source.html">bounds.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  143</span>                                                           {</div>
-<div class="line"><span class="lineno">  144</span>        <span class="keywordflow">return</span> (<a class="code hl_variable" href="#a42774adc74909268b2ba38eda0aa3a6b">a</a> == other.<a class="code hl_variable" href="#a42774adc74909268b2ba38eda0aa3a6b">a</a> &amp;&amp; <a class="code hl_variable" href="#a09afe374ddc500b1324dbeb43cdf28df">b</a> == other.<a class="code hl_variable" href="#a09afe374ddc500b1324dbeb43cdf28df">b</a>) || (<a class="code hl_variable" href="#a42774adc74909268b2ba38eda0aa3a6b">a</a> == other.<a class="code hl_variable" href="#a09afe374ddc500b1324dbeb43cdf28df">b</a> &amp;&amp; <a class="code hl_variable" href="#a09afe374ddc500b1324dbeb43cdf28df">b</a> == other.<a class="code hl_variable" href="#a42774adc74909268b2ba38eda0aa3a6b">a</a>);</div>
-<div class="line"><span class="lineno">  145</span>    }</div>
-<div class="ttc" id="astruct_collision_pair_html_a09afe374ddc500b1324dbeb43cdf28df"><div class="ttname"><a href="#a09afe374ddc500b1324dbeb43cdf28df">CollisionPair::b</a></div><div class="ttdeci">int b</div><div class="ttdef"><b>Definition</b> <a href="bounds_8h_source.html#l00141">bounds.h:141</a></div></div>
-<div class="ttc" id="astruct_collision_pair_html_a42774adc74909268b2ba38eda0aa3a6b"><div class="ttname"><a href="#a42774adc74909268b2ba38eda0aa3a6b">CollisionPair::a</a></div><div class="ttdeci">int a</div><div class="ttdef"><b>Definition</b> <a href="bounds_8h_source.html#l00140">bounds.h:140</a></div></div>
+<p class="definition">Definition at line <a class="el" href="bounds_8h_source.html#l00145">145</a> of file <a class="el" href="bounds_8h_source.html">bounds.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  145</span>                                                           {</div>
+<div class="line"><span class="lineno">  146</span>        <span class="keywordflow">return</span> (<a class="code hl_variable" href="#a42774adc74909268b2ba38eda0aa3a6b">a</a> == other.<a class="code hl_variable" href="#a42774adc74909268b2ba38eda0aa3a6b">a</a> &amp;&amp; <a class="code hl_variable" href="#a09afe374ddc500b1324dbeb43cdf28df">b</a> == other.<a class="code hl_variable" href="#a09afe374ddc500b1324dbeb43cdf28df">b</a>) || (<a class="code hl_variable" href="#a42774adc74909268b2ba38eda0aa3a6b">a</a> == other.<a class="code hl_variable" href="#a09afe374ddc500b1324dbeb43cdf28df">b</a> &amp;&amp; <a class="code hl_variable" href="#a09afe374ddc500b1324dbeb43cdf28df">b</a> == other.<a class="code hl_variable" href="#a42774adc74909268b2ba38eda0aa3a6b">a</a>);</div>
+<div class="line"><span class="lineno">  147</span>    }</div>
+<div class="ttc" id="astruct_collision_pair_html_a09afe374ddc500b1324dbeb43cdf28df"><div class="ttname"><a href="#a09afe374ddc500b1324dbeb43cdf28df">CollisionPair::b</a></div><div class="ttdeci">int b</div><div class="ttdoc">Index of the second potentially colliding body.</div><div class="ttdef"><b>Definition</b> <a href="bounds_8h_source.html#l00143">bounds.h:143</a></div></div>
+<div class="ttc" id="astruct_collision_pair_html_a42774adc74909268b2ba38eda0aa3a6b"><div class="ttname"><a href="#a42774adc74909268b2ba38eda0aa3a6b">CollisionPair::a</a></div><div class="ttdeci">int a</div><div class="ttdoc">Index of the first potentially colliding body.</div><div class="ttdef"><b>Definition</b> <a href="bounds_8h_source.html#l00141">bounds.h:141</a></div></div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="bounds_8h_source.html#l00140">a</a>, and <a class="el" href="bounds_8h_source.html#l00141">b</a>.</p>
+<p class="reference">References <a class="el" href="bounds_8h_source.html#l00141">a</a>, and <a class="el" href="bounds_8h_source.html#l00143">b</a>.</p>
 
 </div>
 </div>
@@ -221,7 +223,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="bounds_8h_source.html#l00140">140</a> of file <a class="el" href="bounds_8h_source.html">bounds.h</a>.</p>
+<p><a class="el" href="object_8h.html#ad53d6229d7ec28555a9c9c2fd9abf773" title="Represents an index in a buffer.">Index</a> of the first potentially colliding body. </p>
+
+<p class="definition">Definition at line <a class="el" href="bounds_8h_source.html#l00141">141</a> of file <a class="el" href="bounds_8h_source.html">bounds.h</a>.</p>
 
 </div>
 </div>
@@ -237,7 +241,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="bounds_8h_source.html#l00141">141</a> of file <a class="el" href="bounds_8h_source.html">bounds.h</a>.</p>
+<p><a class="el" href="object_8h.html#ad53d6229d7ec28555a9c9c2fd9abf773" title="Represents an index in a buffer.">Index</a> of the second potentially colliding body. </p>
+
+<p class="definition">Definition at line <a class="el" href="bounds_8h_source.html#l00143">143</a> of file <a class="el" href="bounds_8h_source.html">bounds.h</a>.</p>
 
 </div>
 </div>

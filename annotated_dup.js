@@ -59,6 +59,11 @@ var annotated_dup =
       [ "ResolveAction", "classopal_1_1_resolve_action.html", "classopal_1_1_resolve_action" ],
       [ "CommandBuffer", "classopal_1_1_command_buffer.html", "classopal_1_1_command_buffer" ]
     ] ],
+    [ "photon", "namespacephoton.html", [
+      [ "ProbeSpace", "structphoton_1_1_probe_space.html", "structphoton_1_1_probe_space" ],
+      [ "PathTracing", "classphoton_1_1_path_tracing.html", "classphoton_1_1_path_tracing" ],
+      [ "GlobalIllumination", "classphoton_1_1_global_illumination.html", "classphoton_1_1_global_illumination" ]
+    ] ],
     [ "AllocationPacket", "struct_allocation_packet.html", "struct_allocation_packet" ],
     [ "AmbientLight", "struct_ambient_light.html", "struct_ambient_light" ],
     [ "AngleLimits", "struct_angle_limits.html", "struct_angle_limits" ],
@@ -74,6 +79,7 @@ var annotated_dup =
     [ "BloomRenderTarget", "class_bloom_render_target.html", "class_bloom_render_target" ],
     [ "Blur", "class_blur.html", "class_blur" ],
     [ "Body", "class_body.html", "class_body" ],
+    [ "BoundingBox", "struct_bounding_box.html", "struct_bounding_box" ],
     [ "Bounds", "class_bounds.html", "class_bounds" ],
     [ "Box", "class_box.html", "class_box" ],
     [ "Camera", "class_camera.html", "class_camera" ],
@@ -89,6 +95,7 @@ var annotated_dup =
     [ "Component", "class_component.html", "class_component" ],
     [ "CompoundGenerator", "class_compound_generator.html", "class_compound_generator" ],
     [ "CompoundObject", "class_compound_object.html", "class_compound_object" ],
+    [ "ComputeShader", "struct_compute_shader.html", "struct_compute_shader" ],
     [ "Contact", "struct_contact.html", "struct_contact" ],
     [ "Convex", "class_convex.html", "class_convex" ],
     [ "CoreObject", "class_core_object.html", "class_core_object" ],

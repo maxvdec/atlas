@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -137,16 +137,22 @@ Public Member Functions</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:adaff965745f854f03ce65935ce15ca9f" id="r_adaff965745f854f03ce65935ce15ca9f"><td class="memItemLeft">unsigned int&#160;</td><td class="memItemRight"><a class="el" href="#adaff965745f854f03ce65935ce15ca9f">frameNumber</a></td></tr>
+<tr class="memdesc:adaff965745f854f03ce65935ce15ca9f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Frame index for this aggregate packet.  <br /></td></tr>
 <tr class="memitem:a6e3b269bb67d1affc264bf1720b47db7" id="r_a6e3b269bb67d1affc264bf1720b47db7"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#a6e3b269bb67d1affc264bf1720b47db7">totalAllocatedMb</a></td></tr>
+<tr class="memdesc:a6e3b269bb67d1affc264bf1720b47db7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Total allocated memory in MB.  <br /></td></tr>
 <tr class="memitem:afe9ff81fca9aa63aa69fbc99f9474a57" id="r_afe9ff81fca9aa63aa69fbc99f9474a57"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#afe9ff81fca9aa63aa69fbc99f9474a57">totalGPUMb</a></td></tr>
+<tr class="memdesc:afe9ff81fca9aa63aa69fbc99f9474a57"><td class="mdescLeft">&#160;</td><td class="mdescRight">GPU memory usage in MB.  <br /></td></tr>
 <tr class="memitem:a4d7e6c4f3d2aa856451081f824a69bde" id="r_a4d7e6c4f3d2aa856451081f824a69bde"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#a4d7e6c4f3d2aa856451081f824a69bde">totalCPUMb</a></td></tr>
+<tr class="memdesc:a4d7e6c4f3d2aa856451081f824a69bde"><td class="mdescLeft">&#160;</td><td class="mdescRight">CPU memory usage in MB.  <br /></td></tr>
 <tr class="memitem:a6b1e6e81cb2dc82de9f4710a97ceea13" id="r_a6b1e6e81cb2dc82de9f4710a97ceea13"><td class="memItemLeft">int&#160;</td><td class="memItemRight"><a class="el" href="#a6b1e6e81cb2dc82de9f4710a97ceea13">allocationCount</a></td></tr>
+<tr class="memdesc:a6b1e6e81cb2dc82de9f4710a97ceea13"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of allocation events in the frame.  <br /></td></tr>
 <tr class="memitem:a7e8e3a2a075601b337ec3ddb5c37568c" id="r_a7e8e3a2a075601b337ec3ddb5c37568c"><td class="memItemLeft">int&#160;</td><td class="memItemRight"><a class="el" href="#a7e8e3a2a075601b337ec3ddb5c37568c">deallocationCount</a></td></tr>
+<tr class="memdesc:a7e8e3a2a075601b337ec3ddb5c37568c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of deallocation events in the frame.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Per-frame aggregate memory telemetry. </p>
 
-<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00215">215</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00246">246</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
 <a id="a4138aa150b52582f1434a1056f6a9468" name="a4138aa150b52582f1434a1056f6a9468"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a4138aa150b52582f1434a1056f6a9468">&#9670;&#160;</a></span>send()</h2>
@@ -180,7 +186,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00220">220</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
+<p>Number of allocation events in the frame. </p>
+
+<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00256">256</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
 
 </div>
 </div>
@@ -196,7 +204,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00221">221</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
+<p>Number of deallocation events in the frame. </p>
+
+<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00258">258</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
 
 </div>
 </div>
@@ -212,7 +222,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00216">216</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
+<p>Frame index for this aggregate packet. </p>
+
+<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00248">248</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
 
 </div>
 </div>
@@ -228,7 +240,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00217">217</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
+<p>Total allocated memory in MB. </p>
+
+<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00250">250</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
 
 </div>
 </div>
@@ -244,7 +258,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00219">219</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
+<p>CPU memory usage in MB. </p>
+
+<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00254">254</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
 
 </div>
 </div>
@@ -260,7 +276,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00218">218</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
+<p>GPU memory usage in MB. </p>
+
+<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00252">252</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
 
 </div>
 </div>

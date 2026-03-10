@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -137,16 +137,22 @@ Public Member Functions</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a0b77ab77b86f502d2202bb99a0fa6654" id="r_a0b77ab77b86f502d2202bb99a0fa6654"><td class="memItemLeft">std::string&#160;</td><td class="memItemRight"><a class="el" href="#a0b77ab77b86f502d2202bb99a0fa6654">description</a></td></tr>
+<tr class="memdesc:a0b77ab77b86f502d2202bb99a0fa6654"><td class="mdescLeft">&#160;</td><td class="mdescRight">Human-readable allocation description.  <br /></td></tr>
 <tr class="memitem:a9591adcd07a418df33486ae3efa826a2" id="r_a9591adcd07a418df33486ae3efa826a2"><td class="memItemLeft">std::string&#160;</td><td class="memItemRight"><a class="el" href="#a9591adcd07a418df33486ae3efa826a2">owner</a></td></tr>
+<tr class="memdesc:a9591adcd07a418df33486ae3efa826a2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Subsystem or owner responsible for the allocation.  <br /></td></tr>
 <tr class="memitem:a41dbe68c43d6b8ad22d716822d4f3a3e" id="r_a41dbe68c43d6b8ad22d716822d4f3a3e"><td class="memItemLeft"><a class="el" href="data_8h.html#a5916da91d2bde2cc030df3b8ac283c1f">DebugMemoryDomain</a>&#160;</td><td class="memItemRight"><a class="el" href="#a41dbe68c43d6b8ad22d716822d4f3a3e">domain</a></td></tr>
+<tr class="memdesc:a41dbe68c43d6b8ad22d716822d4f3a3e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Memory domain where bytes were allocated.  <br /></td></tr>
 <tr class="memitem:ad7c1a32f287c2ddc4a0df43bba8321c6" id="r_ad7c1a32f287c2ddc4a0df43bba8321c6"><td class="memItemLeft"><a class="el" href="data_8h.html#ab534a4243e0e6f75ad1f8f49683f9b58">DebugResourceKind</a>&#160;</td><td class="memItemRight"><a class="el" href="#ad7c1a32f287c2ddc4a0df43bba8321c6">kind</a></td></tr>
+<tr class="memdesc:ad7c1a32f287c2ddc4a0df43bba8321c6"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="struct_resource.html" title="Structure representing a single resource in the workspace.">Resource</a> kind associated with this allocation.  <br /></td></tr>
 <tr class="memitem:a29ec048eb3055044632bb3ec7f171732" id="r_a29ec048eb3055044632bb3ec7f171732"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#a29ec048eb3055044632bb3ec7f171732">sizeMb</a></td></tr>
+<tr class="memdesc:a29ec048eb3055044632bb3ec7f171732"><td class="mdescLeft">&#160;</td><td class="mdescRight">Allocation size in megabytes.  <br /></td></tr>
 <tr class="memitem:a74d261bca2f16b41369bcf0e73ac53dd" id="r_a74d261bca2f16b41369bcf0e73ac53dd"><td class="memItemLeft">unsigned int&#160;</td><td class="memItemRight"><a class="el" href="#a74d261bca2f16b41369bcf0e73ac53dd">frameNumber</a></td></tr>
+<tr class="memdesc:a74d261bca2f16b41369bcf0e73ac53dd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Frame index at which allocation happened.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Single allocation event packet. </p>
 
-<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00200">200</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00225">225</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
 <a id="a238dbf8cb7196bfd0a7daeeb67915319" name="a238dbf8cb7196bfd0a7daeeb67915319"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a238dbf8cb7196bfd0a7daeeb67915319">&#9670;&#160;</a></span>send()</h2>
@@ -180,7 +186,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00201">201</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
+<p>Human-readable allocation description. </p>
+
+<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00227">227</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
 
 </div>
 </div>
@@ -196,7 +204,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00203">203</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
+<p>Memory domain where bytes were allocated. </p>
+
+<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00231">231</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
 
 </div>
 </div>
@@ -212,7 +222,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00206">206</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
+<p>Frame index at which allocation happened. </p>
+
+<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00237">237</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
 
 </div>
 </div>
@@ -228,7 +240,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00204">204</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
+<p><a class="el" href="struct_resource.html" title="Structure representing a single resource in the workspace.">Resource</a> kind associated with this allocation. </p>
+
+<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00233">233</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
 
 </div>
 </div>
@@ -244,7 +258,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00202">202</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
+<p>Subsystem or owner responsible for the allocation. </p>
+
+<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00229">229</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
 
 </div>
 </div>
@@ -260,7 +276,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00205">205</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
+<p>Allocation size in megabytes. </p>
+
+<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00235">235</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
 
 </div>
 </div>

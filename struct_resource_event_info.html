@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -137,15 +137,20 @@ Public Member Functions</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a72c0b411280abaac00699b136e7393d7" id="r_a72c0b411280abaac00699b136e7393d7"><td class="memItemLeft">std::string&#160;</td><td class="memItemRight"><a class="el" href="#a72c0b411280abaac00699b136e7393d7">callerObject</a></td></tr>
+<tr class="memdesc:a72c0b411280abaac00699b136e7393d7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Emitter that triggered the resource event.  <br /></td></tr>
 <tr class="memitem:a9c576ff79cc92ba12fcfca6b785ec637" id="r_a9c576ff79cc92ba12fcfca6b785ec637"><td class="memItemLeft"><a class="el" href="data_8h.html#a3997353493fdf53c2c32c752f6ba3c6e">DebugResourceType</a>&#160;</td><td class="memItemRight"><a class="el" href="#a9c576ff79cc92ba12fcfca6b785ec637">resourceType</a></td></tr>
+<tr class="memdesc:a9c576ff79cc92ba12fcfca6b785ec637"><td class="mdescLeft">&#160;</td><td class="mdescRight">Category of resource involved.  <br /></td></tr>
 <tr class="memitem:a74400f1f3265e506d3ec5cb7c90badbf" id="r_a74400f1f3265e506d3ec5cb7c90badbf"><td class="memItemLeft"><a class="el" href="data_8h.html#a85920750bb776f36c014830a6736ce8e">DebugResourceOperation</a>&#160;</td><td class="memItemRight"><a class="el" href="#a74400f1f3265e506d3ec5cb7c90badbf">operation</a></td></tr>
+<tr class="memdesc:a74400f1f3265e506d3ec5cb7c90badbf"><td class="mdescLeft">&#160;</td><td class="mdescRight">Lifecycle transition that occurred.  <br /></td></tr>
 <tr class="memitem:a39f10ddd8c4ce8aa1673f5c8933b1001" id="r_a39f10ddd8c4ce8aa1673f5c8933b1001"><td class="memItemLeft">unsigned int&#160;</td><td class="memItemRight"><a class="el" href="#a39f10ddd8c4ce8aa1673f5c8933b1001">frameNumber</a></td></tr>
+<tr class="memdesc:a39f10ddd8c4ce8aa1673f5c8933b1001"><td class="mdescLeft">&#160;</td><td class="mdescRight">Frame index at which the event was recorded.  <br /></td></tr>
 <tr class="memitem:a0dbd3fa0b3d0f211fecfbe4656400833" id="r_a0dbd3fa0b3d0f211fecfbe4656400833"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#a0dbd3fa0b3d0f211fecfbe4656400833">sizeMb</a></td></tr>
+<tr class="memdesc:a0dbd3fa0b3d0f211fecfbe4656400833"><td class="mdescLeft">&#160;</td><td class="mdescRight">Approximate resource size in megabytes.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="struct_resource.html" title="Structure representing a single resource in the workspace.">Resource</a> lifecycle event emitted by resource systems. </p>
 
-<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00081">81</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00088">88</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
 <a id="a9cabc24d04c0219fc69516d719d9bc15" name="a9cabc24d04c0219fc69516d719d9bc15"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a9cabc24d04c0219fc69516d719d9bc15">&#9670;&#160;</a></span>send()</h2>
@@ -179,7 +184,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00082">82</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
+<p>Emitter that triggered the resource event. </p>
+
+<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00090">90</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
 
 </div>
 </div>
@@ -195,7 +202,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00085">85</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
+<p>Frame index at which the event was recorded. </p>
+
+<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00096">96</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
 
 </div>
 </div>
@@ -211,7 +220,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00084">84</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
+<p>Lifecycle transition that occurred. </p>
+
+<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00094">94</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
 
 </div>
 </div>
@@ -227,7 +238,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00083">83</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
+<p>Category of resource involved. </p>
+
+<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00092">92</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
 
 </div>
 </div>
@@ -243,7 +256,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00086">86</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
+<p>Approximate resource size in megabytes. </p>
+
+<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00098">98</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
 
 </div>
 </div>

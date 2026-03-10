@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -137,17 +137,24 @@ Public Member Functions</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a7563b7648d82a4dfe259593f0eeba43d" id="r_a7563b7648d82a4dfe259593f0eeba43d"><td class="memItemLeft"><a class="el" href="struct_intersection_point.html">IntersectionPoint</a>&#160;</td><td class="memItemRight"><a class="el" href="#a7563b7648d82a4dfe259593f0eeba43d">pointA</a></td></tr>
+<tr class="memdesc:a7563b7648d82a4dfe259593f0eeba43d"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="struct_contact.html" title="Structure representing a contact between two physics bodies.">Contact</a> point information relative to body A.  <br /></td></tr>
 <tr class="memitem:a5e7fbf9bae06ecd385345db493bf2ef6" id="r_a5e7fbf9bae06ecd385345db493bf2ef6"><td class="memItemLeft"><a class="el" href="struct_intersection_point.html">IntersectionPoint</a>&#160;</td><td class="memItemRight"><a class="el" href="#a5e7fbf9bae06ecd385345db493bf2ef6">pointB</a></td></tr>
+<tr class="memdesc:a5e7fbf9bae06ecd385345db493bf2ef6"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="struct_contact.html" title="Structure representing a contact between two physics bodies.">Contact</a> point information relative to body B.  <br /></td></tr>
 <tr class="memitem:afb4170a4c6f854f1f8b15ee2cc0a057f" id="r_afb4170a4c6f854f1f8b15ee2cc0a057f"><td class="memItemLeft">glm::vec3&#160;</td><td class="memItemRight"><a class="el" href="#afb4170a4c6f854f1f8b15ee2cc0a057f">normal</a></td></tr>
+<tr class="memdesc:afb4170a4c6f854f1f8b15ee2cc0a057f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Collision normal pointing from body A to body B.  <br /></td></tr>
 <tr class="memitem:a15a71d63f397281e1b94a81b1d362580" id="r_a15a71d63f397281e1b94a81b1d362580"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#a15a71d63f397281e1b94a81b1d362580">separationDistance</a></td></tr>
+<tr class="memdesc:a15a71d63f397281e1b94a81b1d362580"><td class="mdescLeft">&#160;</td><td class="mdescRight">Signed separation (negative when penetrating).  <br /></td></tr>
 <tr class="memitem:a81c72c90bbf627e1300b4051633a9668" id="r_a81c72c90bbf627e1300b4051633a9668"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#a81c72c90bbf627e1300b4051633a9668">timeOfImpact</a></td></tr>
+<tr class="memdesc:a81c72c90bbf627e1300b4051633a9668"><td class="mdescLeft">&#160;</td><td class="mdescRight">Time of impact for continuous collision tests.  <br /></td></tr>
 <tr class="memitem:a7706ef506e9be6afb2b39281465f16fd" id="r_a7706ef506e9be6afb2b39281465f16fd"><td class="memItemLeft">std::shared_ptr&lt; <a class="el" href="class_body.html">Body</a> &gt;&#160;</td><td class="memItemRight"><a class="el" href="#a7706ef506e9be6afb2b39281465f16fd">bodyA</a></td></tr>
+<tr class="memdesc:a7706ef506e9be6afb2b39281465f16fd"><td class="mdescLeft">&#160;</td><td class="mdescRight">First body participating in the contact.  <br /></td></tr>
 <tr class="memitem:a23c97b210a488868e09c48ec3b0833ae" id="r_a23c97b210a488868e09c48ec3b0833ae"><td class="memItemLeft">std::shared_ptr&lt; <a class="el" href="class_body.html">Body</a> &gt;&#160;</td><td class="memItemRight"><a class="el" href="#a23c97b210a488868e09c48ec3b0833ae">bodyB</a></td></tr>
+<tr class="memdesc:a23c97b210a488868e09c48ec3b0833ae"><td class="mdescLeft">&#160;</td><td class="mdescRight">Second body participating in the contact.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Structure representing a contact between two physics bodies. </p>
 
-<p class="definition">Definition at line <a class="el" href="body_8h_source.html#l00038">38</a> of file <a class="el" href="body_8h_source.html">body.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="body_8h_source.html#l00042">42</a> of file <a class="el" href="body_8h_source.html">body.h</a>.</p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
 <a id="a1c8e1671ef4c43e789c81d278200a8b9" name="a1c8e1671ef4c43e789c81d278200a8b9"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a1c8e1671ef4c43e789c81d278200a8b9">&#9670;&#160;</a></span>compareTo()</h2>
@@ -188,7 +195,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="body_8h_source.html#l00046">46</a> of file <a class="el" href="body_8h_source.html">body.h</a>.</p>
+<p>First body participating in the contact. </p>
+
+<p class="definition">Definition at line <a class="el" href="body_8h_source.html#l00056">56</a> of file <a class="el" href="body_8h_source.html">body.h</a>.</p>
 
 </div>
 </div>
@@ -204,7 +213,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="body_8h_source.html#l00047">47</a> of file <a class="el" href="body_8h_source.html">body.h</a>.</p>
+<p>Second body participating in the contact. </p>
+
+<p class="definition">Definition at line <a class="el" href="body_8h_source.html#l00058">58</a> of file <a class="el" href="body_8h_source.html">body.h</a>.</p>
 
 </div>
 </div>
@@ -220,7 +231,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="body_8h_source.html#l00042">42</a> of file <a class="el" href="body_8h_source.html">body.h</a>.</p>
+<p>Collision normal pointing from body A to body B. </p>
+
+<p class="definition">Definition at line <a class="el" href="body_8h_source.html#l00049">49</a> of file <a class="el" href="body_8h_source.html">body.h</a>.</p>
 
 </div>
 </div>
@@ -236,7 +249,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="body_8h_source.html#l00039">39</a> of file <a class="el" href="body_8h_source.html">body.h</a>.</p>
+<p><a class="el" href="struct_contact.html" title="Structure representing a contact between two physics bodies.">Contact</a> point information relative to body A. </p>
+
+<p class="definition">Definition at line <a class="el" href="body_8h_source.html#l00044">44</a> of file <a class="el" href="body_8h_source.html">body.h</a>.</p>
 
 </div>
 </div>
@@ -252,7 +267,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="body_8h_source.html#l00040">40</a> of file <a class="el" href="body_8h_source.html">body.h</a>.</p>
+<p><a class="el" href="struct_contact.html" title="Structure representing a contact between two physics bodies.">Contact</a> point information relative to body B. </p>
+
+<p class="definition">Definition at line <a class="el" href="body_8h_source.html#l00046">46</a> of file <a class="el" href="body_8h_source.html">body.h</a>.</p>
 
 </div>
 </div>
@@ -268,7 +285,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="body_8h_source.html#l00043">43</a> of file <a class="el" href="body_8h_source.html">body.h</a>.</p>
+<p>Signed separation (negative when penetrating). </p>
+
+<p class="definition">Definition at line <a class="el" href="body_8h_source.html#l00051">51</a> of file <a class="el" href="body_8h_source.html">body.h</a>.</p>
 
 </div>
 </div>
@@ -284,7 +303,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="body_8h_source.html#l00044">44</a> of file <a class="el" href="body_8h_source.html">body.h</a>.</p>
+<p>Time of impact for continuous collision tests. </p>
+
+<p class="definition">Definition at line <a class="el" href="body_8h_source.html#l00053">53</a> of file <a class="el" href="body_8h_source.html">body.h</a>.</p>
 
 </div>
 </div>

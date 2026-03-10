@@ -90,18 +90,19 @@ var NAVTREEINDEX =
 [
 "annotated.html",
 "class_color_correction.html",
-"class_interactive.html#ad64e02d22351b5d4cd9f7ca344decd85",
-"class_rigidbody.html#affbce6fa5cbb40cc650ac034093ee67e",
-"class_worley_noise.html#a43d855be0f8322ae815d89f8f478870e",
-"classopal_1_1_command_buffer.html#a5b8329dd7cc72a2a809124360a4a3b8b",
-"classopal_1_1_shader_program.html#a39b1d9af7f4400c3ec983693a5fe014f",
-"functions_vars_m.html",
-"namespacebezel__jolt.html#a3fe528abd21e2e6ca3372b6bbec5b75e",
-"shape_8h_source.html",
-"struct_g_p_u_directional_light.html#a9b4cf84da4a18d0a0ab1293152a4d238",
-"struct_resource_event_info.html#a9cabc24d04c0219fc69516d719d9bc15",
-"structbezel_1_1_rigidbody.html#a1ddb6a7be53c9511cab36281540055f8",
-"structopal_1_1_drawing_state.html"
+"class_interactive.html#a84da05fce439cb9bc689bae6774dd4e4",
+"class_rigidbody.html#ad695af599d53b34c3cf6cd5e8f772da8",
+"class_window.html#aeb70ae58aa3e207069fa9f093b23f997",
+"classopal_1_1_buffer.html#a9fc0b44aec7c5153eb95b1238ac9ea26",
+"classopal_1_1_resolve_action.html",
+"data_8h.html#ab534a4243e0e6f75ad1f8f49683f9b58a44b9fced3049ce58beb51494589782e0",
+"input_8h.html#a9479d299e1852e6140dcca1f405868aba8cf04a9734132302f96da8e113e80ce5",
+"namespaceopal.html#add006f246cb414178a8c265b79edb008a5835bab1ade0060909e31a06af2e2cde",
+"struct_color.html#ad59827d26560a708b1a5e73488faf050",
+"struct_light.html#a1071eaa556f4bb2a9345fdfba7e6f220",
+"struct_spotlight.html",
+"structbezel_1_1_rigidbody.html#ac645523c230763f640e91e04028642d5",
+"structphoton_1_1_global_illumination_1_1_d_d_g_i_material.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronization';

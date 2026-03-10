@@ -7,10 +7,11 @@ var searchData=
   ['body_4',['Body',['../class_body.html',1,'']]],
   ['bodyactivationlistenermain_5',['BodyActivationListenerMain',['../classbezel__jolt_1_1_body_activation_listener_main.html',1,'bezel_jolt']]],
   ['bodyidentifier_6',['BodyIdentifier',['../structbezel_1_1_body_identifier.html',1,'bezel']]],
-  ['bounds_7',['Bounds',['../class_bounds.html',1,'']]],
-  ['box_8',['Box',['../class_box.html',1,'']]],
-  ['boxcollider_9',['BoxCollider',['../classbezel_1_1_box_collider.html',1,'bezel']]],
-  ['breakableconstraint_10',['BreakableConstraint',['../structbezel_1_1_physics_world_1_1_breakable_constraint.html',1,'bezel::PhysicsWorld']]],
-  ['broadphaselayerimpl_11',['BroadPhaseLayerImpl',['../classbezel__jolt_1_1_broad_phase_layer_impl.html',1,'bezel_jolt']]],
-  ['buffer_12',['Buffer',['../classopal_1_1_buffer.html',1,'opal']]]
+  ['boundingbox_7',['BoundingBox',['../struct_bounding_box.html',1,'']]],
+  ['bounds_8',['Bounds',['../class_bounds.html',1,'']]],
+  ['box_9',['Box',['../class_box.html',1,'']]],
+  ['boxcollider_10',['BoxCollider',['../classbezel_1_1_box_collider.html',1,'bezel']]],
+  ['breakableconstraint_11',['BreakableConstraint',['../structbezel_1_1_physics_world_1_1_breakable_constraint.html',1,'bezel::PhysicsWorld']]],
+  ['broadphaselayerimpl_12',['BroadPhaseLayerImpl',['../classbezel__jolt_1_1_broad_phase_layer_impl.html',1,'bezel_jolt']]],
+  ['buffer_13',['Buffer',['../classopal_1_1_buffer.html',1,'opal']]]
 ];

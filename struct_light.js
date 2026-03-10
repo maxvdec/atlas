@@ -1,6 +1,6 @@
 var struct_light =
 [
-    [ "Light", "struct_light.html#a705f837df8db28b0259a0edc1858492d", null ],
+    [ "Light", "struct_light.html#a0a8e8da9a77b424cd87430362445eb2a", null ],
     [ "addDebugObject", "struct_light.html#a7e11b67a959370fd2493be3ab024a3e6", null ],
     [ "calculateConstants", "struct_light.html#a24c4613acc9b74cde2d48f703dce147f", null ],
     [ "castShadows", "struct_light.html#ae0aa784aa44058529266ad54fe24e776", null ],
@@ -11,6 +11,7 @@ var struct_light =
     [ "color", "struct_light.html#ad7a168d26aed1bf7cca1a8d8e6f8ada4", null ],
     [ "debugObject", "struct_light.html#abe9a65b82bf6e067618ba7713582f2ed", null ],
     [ "distance", "struct_light.html#aebfa78420d5cf261be042325ff392b62", null ],
+    [ "intensity", "struct_light.html#a1071eaa556f4bb2a9345fdfba7e6f220", null ],
     [ "lastShadowParams", "struct_light.html#afd46a921a3365c7a99cac658ac210308", null ],
     [ "position", "struct_light.html#ad1bbf10bd6b27da5ddb05399d863ab2b", null ],
     [ "shadowRenderTarget", "struct_light.html#a45bc9d3d7d10feecc7b9042f00c54813", null ],

@@ -48,6 +48,8 @@ var class_core_object =
     [ "update", "class_core_object.html#a349d72e3e15473a290d52efea62271f9", null ],
     [ "updateModelMatrix", "class_core_object.html#a0fb3920e11ed1f0c7989541eb320f536", null ],
     [ "updateVertices", "class_core_object.html#a9de6dbb8dc1d791fcadc39bae6696eba", null ],
+    [ "photon::GlobalIllumination", "class_core_object.html#a8651151fb3e12d0bce6a247729779b41", null ],
+    [ "photon::PathTracing", "class_core_object.html#a7bd2d360f80eb3add0821647da15daee", null ],
     [ "RenderTarget", "class_core_object.html#aa5afc6f82b7b587ed5ada4d227ce32aa", null ],
     [ "Skybox", "class_core_object.html#ab014b9cbfb27085cf9809e79096e9568", null ],
     [ "Window", "class_core_object.html#a553f958a25683445088050a69d3de8e9", null ],

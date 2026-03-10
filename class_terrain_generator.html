@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -147,11 +147,12 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a80ad336990a06e22160807615c880e70" id="r_a80ad336990a06e22160807615c880e70"><td class="memItemLeft">virtual float&#160;</td><td class="memItemRight"><a class="el" href="#a80ad336990a06e22160807615c880e70">generateHeight</a> (float x, float y)=0</td></tr>
 <tr class="memdesc:a80ad336990a06e22160807615c880e70"><td class="mdescLeft">&#160;</td><td class="mdescRight">Evaluates the height of the terrain at the requested position.  <br /></td></tr>
 <tr class="memitem:a64d46f39afa83dcd30470c41dc44ee40" id="r_a64d46f39afa83dcd30470c41dc44ee40"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="#a64d46f39afa83dcd30470c41dc44ee40">applyTo</a> (<a class="el" href="class_terrain.html">Terrain</a> &amp;) const</td></tr>
+<tr class="memdesc:a64d46f39afa83dcd30470c41dc44ee40"><td class="mdescLeft">&#160;</td><td class="mdescRight">Optional hook invoked when the generator is attached to a terrain.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Abstract interface that translates 2D coordinates into heights. </p>
 
-<p class="definition">Definition at line <a class="el" href="procedural_8h_source.html#l00180">180</a> of file <a class="el" href="procedural_8h_source.html">procedural.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="procedural_8h_source.html#l00184">184</a> of file <a class="el" href="procedural_8h_source.html">procedural.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a20b5eb12bfe5d5cb9e858c61ae0f09a0" name="a20b5eb12bfe5d5cb9e858c61ae0f09a0"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a20b5eb12bfe5d5cb9e858c61ae0f09a0">&#9670;&#160;</a></span>~TerrainGenerator()</h2>
@@ -202,8 +203,10 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="procedural_8h_source.html#l00193">193</a> of file <a class="el" href="procedural_8h_source.html">procedural.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  193</span>{};</div>
+<p>Optional hook invoked when the generator is attached to a terrain. </p>
+
+<p class="definition">Definition at line <a class="el" href="procedural_8h_source.html#l00200">200</a> of file <a class="el" href="procedural_8h_source.html">procedural.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  200</span>{};</div>
 </div><!-- fragment -->
 </div>
 </div>

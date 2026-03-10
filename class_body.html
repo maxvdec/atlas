@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -171,13 +171,21 @@ Static Public Member Functions</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a4a96ea854ac2c1d39c04954530ed83fb" id="r_a4a96ea854ac2c1d39c04954530ed83fb"><td class="memItemLeft"><a class="el" href="struct_position3d.html">Position3d</a>&#160;</td><td class="memItemRight"><a class="el" href="#a4a96ea854ac2c1d39c04954530ed83fb">position</a></td></tr>
+<tr class="memdesc:a4a96ea854ac2c1d39c04954530ed83fb"><td class="mdescLeft">&#160;</td><td class="mdescRight">World-space position of the body.  <br /></td></tr>
 <tr class="memitem:a9b112aeb26e736f839f18707273d3c06" id="r_a9b112aeb26e736f839f18707273d3c06"><td class="memItemLeft">glm::quat&#160;</td><td class="memItemRight"><a class="el" href="#a9b112aeb26e736f839f18707273d3c06">orientation</a></td></tr>
+<tr class="memdesc:a9b112aeb26e736f839f18707273d3c06"><td class="mdescLeft">&#160;</td><td class="mdescRight">Orientation represented as a quaternion.  <br /></td></tr>
 <tr class="memitem:a9aeaeace695cdbb452b0ad927529bf52" id="r_a9aeaeace695cdbb452b0ad927529bf52"><td class="memItemLeft">std::shared_ptr&lt; <a class="el" href="class_shape.html">Shape</a> &gt;&#160;</td><td class="memItemRight"><a class="el" href="#a9aeaeace695cdbb452b0ad927529bf52">shape</a></td></tr>
+<tr class="memdesc:a9aeaeace695cdbb452b0ad927529bf52"><td class="mdescLeft">&#160;</td><td class="mdescRight">Collision shape bound to this body.  <br /></td></tr>
 <tr class="memitem:a4831e51fa63833e559bcf5a8dbae1c06" id="r_a4831e51fa63833e559bcf5a8dbae1c06"><td class="memItemLeft">glm::vec3&#160;</td><td class="memItemRight"><a class="el" href="#a4831e51fa63833e559bcf5a8dbae1c06">linearVelocity</a> = {0.0f, 0.0f, 0.0f}</td></tr>
+<tr class="memdesc:a4831e51fa63833e559bcf5a8dbae1c06"><td class="mdescLeft">&#160;</td><td class="mdescRight">Current linear velocity in world space.  <br /></td></tr>
 <tr class="memitem:a6f9bd0b59a4f9d8099079d3ff07b37b0" id="r_a6f9bd0b59a4f9d8099079d3ff07b37b0"><td class="memItemLeft">glm::vec3&#160;</td><td class="memItemRight"><a class="el" href="#a6f9bd0b59a4f9d8099079d3ff07b37b0">angularVelocity</a> = {0.0f, 0.0f, 0.0f}</td></tr>
+<tr class="memdesc:a6f9bd0b59a4f9d8099079d3ff07b37b0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Current angular velocity in world space.  <br /></td></tr>
 <tr class="memitem:a4d999f83fe2f4fde24c48a152847e3f1" id="r_a4d999f83fe2f4fde24c48a152847e3f1"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#a4d999f83fe2f4fde24c48a152847e3f1">invMass</a> = 0.0f</td></tr>
+<tr class="memdesc:a4d999f83fe2f4fde24c48a152847e3f1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Inverse mass (0 means infinite mass / static).  <br /></td></tr>
 <tr class="memitem:adef10e86149a8f2b21a0bf969f1e2412" id="r_adef10e86149a8f2b21a0bf969f1e2412"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#adef10e86149a8f2b21a0bf969f1e2412">elasticity</a> = 0.0f</td></tr>
+<tr class="memdesc:adef10e86149a8f2b21a0bf969f1e2412"><td class="mdescLeft">&#160;</td><td class="mdescRight">Coefficient controlling restitution on impact.  <br /></td></tr>
 <tr class="memitem:af745d2d91e9d27b12d3c294eed73512d" id="r_af745d2d91e9d27b12d3c294eed73512d"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#af745d2d91e9d27b12d3c294eed73512d">friction</a> = 0.5f</td></tr>
+<tr class="memdesc:af745d2d91e9d27b12d3c294eed73512d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Friction coefficient used during contact resolution.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Class representing a physical body in a physics simulation. It includes methods for applying forces, detecting collisions, and updating the body's state. </p>
@@ -195,7 +203,7 @@ Example</h2>
 <div class="line">body-&gt;elasticity = 0.8f;</div>
 <div class="line">body-&gt;friction = 0.5f;</div>
 </div><!-- fragment --> 
-<p class="definition">Definition at line <a class="el" href="body_8h_source.html#l00077">77</a> of file <a class="el" href="body_8h_source.html">body.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="body_8h_source.html#l00088">88</a> of file <a class="el" href="body_8h_source.html">body.h</a>.</p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
 <a id="ac27b43482cad87c971a2a164bf5f8ef4" name="ac27b43482cad87c971a2a164bf5f8ef4"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ac27b43482cad87c971a2a164bf5f8ef4">&#9670;&#160;</a></span>applyAngularImpulse()</h2>
@@ -308,17 +316,17 @@ Example</h2>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="body_8h_source.html#l00154">154</a> of file <a class="el" href="body_8h_source.html">body.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  154</span>                                      {</div>
-<div class="line"><span class="lineno">  155</span>        <span class="keywordflow">if</span> (mass &lt;= 0.0f) {</div>
-<div class="line"><span class="lineno">  156</span>            <a class="code hl_variable" href="#a4d999f83fe2f4fde24c48a152847e3f1">invMass</a> = 0.0f; <span class="comment">// Infinite mass</span></div>
-<div class="line"><span class="lineno">  157</span>        } <span class="keywordflow">else</span> {</div>
-<div class="line"><span class="lineno">  158</span>            <a class="code hl_variable" href="#a4d999f83fe2f4fde24c48a152847e3f1">invMass</a> = 1.0f / mass;</div>
-<div class="line"><span class="lineno">  159</span>        }</div>
-<div class="line"><span class="lineno">  160</span>    }</div>
-<div class="ttc" id="aclass_body_html_a4d999f83fe2f4fde24c48a152847e3f1"><div class="ttname"><a href="#a4d999f83fe2f4fde24c48a152847e3f1">Body::invMass</a></div><div class="ttdeci">float invMass</div><div class="ttdef"><b>Definition</b> <a href="body_8h_source.html#l00084">body.h:84</a></div></div>
+<p class="definition">Definition at line <a class="el" href="body_8h_source.html#l00173">173</a> of file <a class="el" href="body_8h_source.html">body.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  173</span>                                      {</div>
+<div class="line"><span class="lineno">  174</span>        <span class="keywordflow">if</span> (mass &lt;= 0.0f) {</div>
+<div class="line"><span class="lineno">  175</span>            <a class="code hl_variable" href="#a4d999f83fe2f4fde24c48a152847e3f1">invMass</a> = 0.0f; <span class="comment">// Infinite mass</span></div>
+<div class="line"><span class="lineno">  176</span>        } <span class="keywordflow">else</span> {</div>
+<div class="line"><span class="lineno">  177</span>            <a class="code hl_variable" href="#a4d999f83fe2f4fde24c48a152847e3f1">invMass</a> = 1.0f / mass;</div>
+<div class="line"><span class="lineno">  178</span>        }</div>
+<div class="line"><span class="lineno">  179</span>    }</div>
+<div class="ttc" id="aclass_body_html_a4d999f83fe2f4fde24c48a152847e3f1"><div class="ttname"><a href="#a4d999f83fe2f4fde24c48a152847e3f1">Body::invMass</a></div><div class="ttdeci">float invMass</div><div class="ttdoc">Inverse mass (0 means infinite mass / static).</div><div class="ttdef"><b>Definition</b> <a href="body_8h_source.html#l00101">body.h:101</a></div></div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="body_8h_source.html#l00084">invMass</a>.</p>
+<p class="reference">References <a class="el" href="body_8h_source.html#l00101">invMass</a>.</p>
 
 </div>
 </div>
@@ -428,15 +436,15 @@ Example</h2>
 <p>Gets the mass of the body. </p>
 <dl class="section return"><dt>Returns</dt><dd>(float) The mass of the body, or INFINITY for infinite mass. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="body_8h_source.html#l00167">167</a> of file <a class="el" href="body_8h_source.html">body.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  167</span>                                 {</div>
-<div class="line"><span class="lineno">  168</span>        <span class="keywordflow">if</span> (<a class="code hl_variable" href="#a4d999f83fe2f4fde24c48a152847e3f1">invMass</a> == 0.0f) {</div>
-<div class="line"><span class="lineno">  169</span>            <span class="keywordflow">return</span> INFINITY;</div>
-<div class="line"><span class="lineno">  170</span>        }</div>
-<div class="line"><span class="lineno">  171</span>        <span class="keywordflow">return</span> 1.0f / <a class="code hl_variable" href="#a4d999f83fe2f4fde24c48a152847e3f1">invMass</a>;</div>
-<div class="line"><span class="lineno">  172</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="body_8h_source.html#l00186">186</a> of file <a class="el" href="body_8h_source.html">body.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  186</span>                                 {</div>
+<div class="line"><span class="lineno">  187</span>        <span class="keywordflow">if</span> (<a class="code hl_variable" href="#a4d999f83fe2f4fde24c48a152847e3f1">invMass</a> == 0.0f) {</div>
+<div class="line"><span class="lineno">  188</span>            <span class="keywordflow">return</span> INFINITY;</div>
+<div class="line"><span class="lineno">  189</span>        }</div>
+<div class="line"><span class="lineno">  190</span>        <span class="keywordflow">return</span> 1.0f / <a class="code hl_variable" href="#a4d999f83fe2f4fde24c48a152847e3f1">invMass</a>;</div>
+<div class="line"><span class="lineno">  191</span>    }</div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="body_8h_source.html#l00084">invMass</a>.</p>
+<p class="reference">References <a class="el" href="body_8h_source.html#l00101">invMass</a>.</p>
 
 </div>
 </div>
@@ -676,8 +684,10 @@ Example</h2>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="body_8h_source.html#l00083">83</a> of file <a class="el" href="body_8h_source.html">body.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   83</span>{0.0f, 0.0f, 0.0f};</div>
+<p>Current angular velocity in world space. </p>
+
+<p class="definition">Definition at line <a class="el" href="body_8h_source.html#l00099">99</a> of file <a class="el" href="body_8h_source.html">body.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   99</span>{0.0f, 0.0f, 0.0f};</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -693,7 +703,9 @@ Example</h2>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="body_8h_source.html#l00085">85</a> of file <a class="el" href="body_8h_source.html">body.h</a>.</p>
+<p>Coefficient controlling restitution on impact. </p>
+
+<p class="definition">Definition at line <a class="el" href="body_8h_source.html#l00103">103</a> of file <a class="el" href="body_8h_source.html">body.h</a>.</p>
 
 </div>
 </div>
@@ -709,7 +721,9 @@ Example</h2>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="body_8h_source.html#l00086">86</a> of file <a class="el" href="body_8h_source.html">body.h</a>.</p>
+<p>Friction coefficient used during contact resolution. </p>
+
+<p class="definition">Definition at line <a class="el" href="body_8h_source.html#l00105">105</a> of file <a class="el" href="body_8h_source.html">body.h</a>.</p>
 
 </div>
 </div>
@@ -725,7 +739,9 @@ Example</h2>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="body_8h_source.html#l00084">84</a> of file <a class="el" href="body_8h_source.html">body.h</a>.</p>
+<p>Inverse mass (0 means infinite mass / static). </p>
+
+<p class="definition">Definition at line <a class="el" href="body_8h_source.html#l00101">101</a> of file <a class="el" href="body_8h_source.html">body.h</a>.</p>
 
 </div>
 </div>
@@ -741,8 +757,10 @@ Example</h2>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="body_8h_source.html#l00082">82</a> of file <a class="el" href="body_8h_source.html">body.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   82</span>{0.0f, 0.0f, 0.0f};</div>
+<p>Current linear velocity in world space. </p>
+
+<p class="definition">Definition at line <a class="el" href="body_8h_source.html#l00097">97</a> of file <a class="el" href="body_8h_source.html">body.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   97</span>{0.0f, 0.0f, 0.0f};</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -758,7 +776,9 @@ Example</h2>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="body_8h_source.html#l00080">80</a> of file <a class="el" href="body_8h_source.html">body.h</a>.</p>
+<p>Orientation represented as a quaternion. </p>
+
+<p class="definition">Definition at line <a class="el" href="body_8h_source.html#l00093">93</a> of file <a class="el" href="body_8h_source.html">body.h</a>.</p>
 
 </div>
 </div>
@@ -774,7 +794,9 @@ Example</h2>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="body_8h_source.html#l00079">79</a> of file <a class="el" href="body_8h_source.html">body.h</a>.</p>
+<p>World-space position of the body. </p>
+
+<p class="definition">Definition at line <a class="el" href="body_8h_source.html#l00091">91</a> of file <a class="el" href="body_8h_source.html">body.h</a>.</p>
 
 </div>
 </div>
@@ -790,7 +812,9 @@ Example</h2>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="body_8h_source.html#l00081">81</a> of file <a class="el" href="body_8h_source.html">body.h</a>.</p>
+<p>Collision shape bound to this body. </p>
+
+<p class="definition">Definition at line <a class="el" href="body_8h_source.html#l00095">95</a> of file <a class="el" href="body_8h_source.html">body.h</a>.</p>
 
 </div>
 </div>

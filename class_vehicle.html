@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -161,20 +161,32 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a404098a91640552f9d0284d08b53def4 inherit pub_methods_class_component" id="r_a404098a91640552f9d0284d08b53def4"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="class_component.html#a404098a91640552f9d0284d08b53def4">Component</a> ()=default</td></tr>
 <tr class="memdesc:a404098a91640552f9d0284d08b53def4 inherit pub_methods_class_component"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new <a class="el" href="class_component.html" title="Behavior or property that can be attached to a GameObject to extend its capabilities.">Component</a> object.  <br /></td></tr>
 <tr class="memitem:a2af73436a1514c8db3f3876a6f3bc3d8 inherit pub_methods_class_component" id="r_a2af73436a1514c8db3f3876a6f3bc3d8"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_component.html#a2af73436a1514c8db3f3876a6f3bc3d8">onCollisionEnter</a> (<a class="el" href="class_game_object.html">GameObject</a> *other)</td></tr>
+<tr class="memdesc:a2af73436a1514c8db3f3876a6f3bc3d8 inherit pub_methods_class_component"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called when this object starts colliding with another object.  <br /></td></tr>
 <tr class="memitem:aeb0bf2c6f2215da76d758e5ff58b9902 inherit pub_methods_class_component" id="r_aeb0bf2c6f2215da76d758e5ff58b9902"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_component.html#aeb0bf2c6f2215da76d758e5ff58b9902">onCollisionExit</a> (<a class="el" href="class_game_object.html">GameObject</a> *other)</td></tr>
+<tr class="memdesc:aeb0bf2c6f2215da76d758e5ff58b9902 inherit pub_methods_class_component"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called when this object stops colliding with another object.  <br /></td></tr>
 <tr class="memitem:af86cc990a53aa9b9c3d70572558aecb5 inherit pub_methods_class_component" id="r_af86cc990a53aa9b9c3d70572558aecb5"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_component.html#af86cc990a53aa9b9c3d70572558aecb5">onCollisionStay</a> (<a class="el" href="class_game_object.html">GameObject</a> *other)</td></tr>
+<tr class="memdesc:af86cc990a53aa9b9c3d70572558aecb5 inherit pub_methods_class_component"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called while this object remains in contact with another object.  <br /></td></tr>
 <tr class="memitem:a9749b406011df2556b004acd2f032935 inherit pub_methods_class_component" id="r_a9749b406011df2556b004acd2f032935"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_component.html#a9749b406011df2556b004acd2f032935">onSignalRecieve</a> (const std::string &amp;signal, <a class="el" href="class_game_object.html">GameObject</a> *sender)</td></tr>
+<tr class="memdesc:a9749b406011df2556b004acd2f032935 inherit pub_methods_class_component"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called when a signal starts from another object.  <br /></td></tr>
 <tr class="memitem:aeea623ce757a97a895a2500f6de6a33c inherit pub_methods_class_component" id="r_aeea623ce757a97a895a2500f6de6a33c"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_component.html#aeea623ce757a97a895a2500f6de6a33c">onSignalEnd</a> (const std::string &amp;signal, <a class="el" href="class_game_object.html">GameObject</a> *sender)</td></tr>
+<tr class="memdesc:aeea623ce757a97a895a2500f6de6a33c inherit pub_methods_class_component"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called when a previously received signal ends.  <br /></td></tr>
 <tr class="memitem:a7ad81a397c06433353d21b1d5aa7eda9 inherit pub_methods_class_component" id="r_a7ad81a397c06433353d21b1d5aa7eda9"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_component.html#a7ad81a397c06433353d21b1d5aa7eda9">onQueryReceive</a> (<a class="el" href="struct_query_result.html">QueryResult</a> &amp;result)</td></tr>
+<tr class="memdesc:a7ad81a397c06433353d21b1d5aa7eda9 inherit pub_methods_class_component"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called when asynchronous physics query results arrive.  <br /></td></tr>
 <tr class="memitem:ab7b5b4676ca88400a52f66d95c9c828e inherit pub_methods_class_component" id="r_ab7b5b4676ca88400a52f66d95c9c828e"><td class="memItemLeft">virtual std::shared_ptr&lt; <a class="el" href="class_component.html">Component</a> &gt;&#160;</td><td class="memItemRight"><a class="el" href="class_component.html#ab7b5b4676ca88400a52f66d95c9c828e">clone</a> () const</td></tr>
+<tr class="memdesc:ab7b5b4676ca88400a52f66d95c9c828e inherit pub_methods_class_component"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a clone of the component when supported.  <br /></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a758516497076fc8be22757fb62fa791d" id="r_a758516497076fc8be22757fb62fa791d"><td class="memItemLeft"><a class="el" href="structbezel_1_1_vehicle_settings.html">bezel::VehicleSettings</a>&#160;</td><td class="memItemRight"><a class="el" href="#a758516497076fc8be22757fb62fa791d">settings</a></td></tr>
+<tr class="memdesc:a758516497076fc8be22757fb62fa791d"><td class="mdescLeft">&#160;</td><td class="mdescRight"><a class="el" href="class_vehicle.html" title="Vehicle component backed by Bezel&#39;s vehicle implementation.">Vehicle</a> setup forwarded to Bezel.  <br /></td></tr>
 <tr class="memitem:a21345bd92174cfa0e9961ba2b7f7b7db" id="r_a21345bd92174cfa0e9961ba2b7f7b7db"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#a21345bd92174cfa0e9961ba2b7f7b7db">forward</a> = 0.0f</td></tr>
+<tr class="memdesc:a21345bd92174cfa0e9961ba2b7f7b7db"><td class="mdescLeft">&#160;</td><td class="mdescRight">Forward input axis in [-1, 1].  <br /></td></tr>
 <tr class="memitem:a0130ef0d8a6303ce56b48cc83480ae61" id="r_a0130ef0d8a6303ce56b48cc83480ae61"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#a0130ef0d8a6303ce56b48cc83480ae61">right</a> = 0.0f</td></tr>
+<tr class="memdesc:a0130ef0d8a6303ce56b48cc83480ae61"><td class="mdescLeft">&#160;</td><td class="mdescRight">Steering input axis in [-1, 1].  <br /></td></tr>
 <tr class="memitem:abed3bb7c8fe5046f9902add030b97175" id="r_abed3bb7c8fe5046f9902add030b97175"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#abed3bb7c8fe5046f9902add030b97175">brake</a> = 0.0f</td></tr>
+<tr class="memdesc:abed3bb7c8fe5046f9902add030b97175"><td class="mdescLeft">&#160;</td><td class="mdescRight">Brake input in [0, 1].  <br /></td></tr>
 <tr class="memitem:a5d07bf9235ced9c13d6ac61e177bc98b" id="r_a5d07bf9235ced9c13d6ac61e177bc98b"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#a5d07bf9235ced9c13d6ac61e177bc98b">handBrake</a> = 0.0f</td></tr>
+<tr class="memdesc:a5d07bf9235ced9c13d6ac61e177bc98b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Handbrake input in [0, 1].  <br /></td></tr>
 <tr class="inherit_header pub_attribs_class_component"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pub_attribs_class_component')"><span class="dynarrow"><span class="arrowhead closed"></span></span>Public Attributes inherited from <a class="el" href="class_component.html">Component</a></td></tr>
 <tr class="memitem:a702063beef62c1319e2019fa1525f5bf inherit pub_attribs_class_component" id="r_a702063beef62c1319e2019fa1525f5bf"><td class="memItemLeft"><a class="el" href="class_game_object.html">GameObject</a> *&#160;</td><td class="memItemRight"><a class="el" href="class_component.html#a702063beef62c1319e2019fa1525f5bf">object</a> = nullptr</td></tr>
 <tr class="memdesc:a702063beef62c1319e2019fa1525f5bf inherit pub_attribs_class_component"><td class="mdescLeft">&#160;</td><td class="mdescRight">Gets the <a class="el" href="class_game_object.html" title="Base class for all Game Objects. It extends from Renderable and it provides common functionality for ...">GameObject</a> associated with the component.  <br /></td></tr>
@@ -182,7 +194,7 @@ Public Attributes</h2></td></tr>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p><a class="el" href="class_vehicle.html" title="Vehicle component backed by Bezel&#39;s vehicle implementation.">Vehicle</a> component backed by Bezel's vehicle implementation. </p>
 
-<p class="definition">Definition at line <a class="el" href="physics_8h_source.html#l00316">316</a> of file <a class="el" href="physics_8h_source.html">physics.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="physics_8h_source.html#l00342">342</a> of file <a class="el" href="physics_8h_source.html">physics.h</a>.</p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
 <a id="a4cb7bdd7126f4f1096ed6e43ddf57d4f" name="a4cb7bdd7126f4f1096ed6e43ddf57d4f"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a4cb7bdd7126f4f1096ed6e43ddf57d4f">&#9670;&#160;</a></span>atAttach()</h2>
@@ -274,7 +286,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="physics_8h_source.html#l00327">327</a> of file <a class="el" href="physics_8h_source.html">physics.h</a>.</p>
+<p>Brake input in [0, 1]. </p>
+
+<p class="definition">Definition at line <a class="el" href="physics_8h_source.html#l00357">357</a> of file <a class="el" href="physics_8h_source.html">physics.h</a>.</p>
 
 </div>
 </div>
@@ -290,7 +304,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="physics_8h_source.html#l00325">325</a> of file <a class="el" href="physics_8h_source.html">physics.h</a>.</p>
+<p>Forward input axis in [-1, 1]. </p>
+
+<p class="definition">Definition at line <a class="el" href="physics_8h_source.html#l00353">353</a> of file <a class="el" href="physics_8h_source.html">physics.h</a>.</p>
 
 </div>
 </div>
@@ -306,7 +322,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="physics_8h_source.html#l00328">328</a> of file <a class="el" href="physics_8h_source.html">physics.h</a>.</p>
+<p>Handbrake input in [0, 1]. </p>
+
+<p class="definition">Definition at line <a class="el" href="physics_8h_source.html#l00359">359</a> of file <a class="el" href="physics_8h_source.html">physics.h</a>.</p>
 
 </div>
 </div>
@@ -322,7 +340,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="physics_8h_source.html#l00326">326</a> of file <a class="el" href="physics_8h_source.html">physics.h</a>.</p>
+<p>Steering input axis in [-1, 1]. </p>
+
+<p class="definition">Definition at line <a class="el" href="physics_8h_source.html#l00355">355</a> of file <a class="el" href="physics_8h_source.html">physics.h</a>.</p>
 
 </div>
 </div>
@@ -338,7 +358,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="physics_8h_source.html#l00323">323</a> of file <a class="el" href="physics_8h_source.html">physics.h</a>.</p>
+<p><a class="el" href="class_vehicle.html" title="Vehicle component backed by Bezel&#39;s vehicle implementation.">Vehicle</a> setup forwarded to Bezel. </p>
+
+<p class="definition">Definition at line <a class="el" href="physics_8h_source.html#l00350">350</a> of file <a class="el" href="physics_8h_source.html">physics.h</a>.</p>
 
 </div>
 </div>

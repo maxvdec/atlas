@@ -23,6 +23,7 @@ var hierarchy =
       [ "bezel_jolt::BodyActivationListenerMain", "classbezel__jolt_1_1_body_activation_listener_main.html", null ]
     ] ],
     [ "bezel::BodyIdentifier", "structbezel_1_1_body_identifier.html", null ],
+    [ "BoundingBox", "struct_bounding_box.html", null ],
     [ "Bounds", "class_bounds.html", null ],
     [ "bezel::PhysicsWorld::BreakableConstraint", "structbezel_1_1_physics_world_1_1_breakable_constraint.html", null ],
     [ "JPH::BroadPhaseLayerInterface", null, [
@@ -60,6 +61,7 @@ var hierarchy =
       [ "TraitComponent< T >", "class_trait_component.html", null ],
       [ "Vehicle", "class_vehicle.html", null ]
     ] ],
+    [ "ComputeShader", "struct_compute_shader.html", null ],
     [ "Contact", "struct_contact.html", null ],
     [ "JPH::ContactListener", null, [
       [ "GlobalContactListener", "class_global_contact_listener.html", null ]
@@ -68,6 +70,8 @@ var hierarchy =
     [ "opal::ContextConfiguration", "structopal_1_1_context_configuration.html", null ],
     [ "CoreVertex", "struct_core_vertex.html", null ],
     [ "Cubemap", "struct_cubemap.html", null ],
+    [ "photon::GlobalIllumination::DDGIMaterial", "structphoton_1_1_global_illumination_1_1_d_d_g_i_material.html", null ],
+    [ "photon::GlobalIllumination::DDGITriangle", "structphoton_1_1_global_illumination_1_1_d_d_g_i_triangle.html", null ],
     [ "DebugObjectPacket", "struct_debug_object_packet.html", null ],
     [ "DebugTimer", "class_debug_timer.html", null ],
     [ "opal::DepthStencilBuffer", "classopal_1_1_depth_stencil_buffer.html", null ],
@@ -104,6 +108,7 @@ var hierarchy =
     [ "FrameResourcesInfo", "struct_frame_resources_info.html", null ],
     [ "FrameTimingPacket", "struct_frame_timing_packet.html", null ],
     [ "GeometryShader", "struct_geometry_shader.html", null ],
+    [ "photon::GlobalIllumination", "classphoton_1_1_global_illumination.html", null ],
     [ "GPUAreaLight", "struct_g_p_u_area_light.html", null ],
     [ "GPUDirectionalLight", "struct_g_p_u_directional_light.html", null ],
     [ "GPUPointLight", "struct_g_p_u_point_light.html", null ],
@@ -145,6 +150,7 @@ var hierarchy =
     [ "PairKeyHash", "struct_pair_key_hash.html", null ],
     [ "Particle", "struct_particle.html", null ],
     [ "ParticleSettings", "struct_particle_settings.html", null ],
+    [ "photon::PathTracing", "classphoton_1_1_path_tracing.html", null ],
     [ "PerlinNoise", "struct_perlin_noise.html", null ],
     [ "bezel::PhysicsWorld", "classbezel_1_1_physics_world.html", null ],
     [ "opal::Pipeline", "classopal_1_1_pipeline.html", null ],
@@ -154,6 +160,7 @@ var hierarchy =
     [ "Position2d", "struct_position2d.html", null ],
     [ "Position3d", "struct_position3d.html", null ],
     [ "PosterizationParameters", "struct_posterization_parameters.html", null ],
+    [ "photon::ProbeSpace", "structphoton_1_1_probe_space.html", null ],
     [ "PseudoBody", "struct_pseudo_body.html", null ],
     [ "Quaternion", "struct_quaternion.html", null ],
     [ "QueryResult", "struct_query_result.html", null ],

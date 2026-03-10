@@ -2,6 +2,8 @@ var default__shaders_8h =
 [
     [ "COLOR_FRAG", "default__shaders_8h.html#a56686808191d97f1d6a78ed6c8b3ad02", null ],
     [ "COLOR_VERT", "default__shaders_8h.html#abd40d744c94aaf9963332aadd7b06466", null ],
+    [ "DDGI", "default__shaders_8h.html#a472aca2b61e023561cdd788ac5a8a6e7", null ],
+    [ "DDGI_WRITE", "default__shaders_8h.html#a434c81135c7df8ef6b70ec769064a7f1", null ],
     [ "DEBUG_FRAG", "default__shaders_8h.html#ab61110f9533f7aaccfce61ce7b25da9b", null ],
     [ "DEBUG_VERT", "default__shaders_8h.html#a8aa02451898eb17af41dbd2d3b424679", null ],
     [ "DEFERRED_FRAG", "default__shaders_8h.html#a3b9ee65bbed780cf1716fe8e098cdd27", null ],
@@ -20,6 +22,7 @@ var default__shaders_8h =
     [ "MAIN_VERT", "default__shaders_8h.html#a43a37aa39509166536b1a6ef3c32be54", null ],
     [ "PARTICLE_FRAG", "default__shaders_8h.html#adbc40b4a97e5a3bf53b4b7128dfbdc9e", null ],
     [ "PARTICLE_VERT", "default__shaders_8h.html#a88c8c32c6aa70e502d94dc3765a54a85", null ],
+    [ "PATH", "default__shaders_8h.html#ad6061da079d0985ccc40e60fd76baa0b", null ],
     [ "POINT_DEPTH_FRAG", "default__shaders_8h.html#aee226ae18ed5464f74cd0abeb795fa84", null ],
     [ "POINT_DEPTH_GEOM", "default__shaders_8h.html#ad346966a531110057848a978cf65409d", null ],
     [ "POINT_DEPTH_NOGEOM_FRAG", "default__shaders_8h.html#ad35413ab72d67dd4ca0c458a2fdec585", null ],

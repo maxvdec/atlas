@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -156,7 +156,7 @@ Public Attributes</h2></td></tr>
 <div class="textblock"><p><a class="el" href="struct_triangle.html" title="Structure representing a triangle with three vertex indices.">Triangle</a> mesh collider defined by indexed geometry. </p>
 <dl class="section warning"><dt>Warning</dt><dd>Mesh colliders are typically more expensive than primitives. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="bezel_8h_source.html#l00139">139</a> of file <a class="el" href="bezel_8h_source.html">bezel.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="bezel_8h_source.html#l00141">141</a> of file <a class="el" href="bezel_8h_source.html">bezel.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a231943bffad83d274f1975ae718ca16f" name="a231943bffad83d274f1975ae718ca16f"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a231943bffad83d274f1975ae718ca16f">&#9670;&#160;</a></span>MeshCollider()</h2>
@@ -177,7 +177,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="reference">References <a class="el" href="bezel_8h_source.html#l00142">indices</a>, and <a class="el" href="bezel_8h_source.html#l00141">vertices</a>.</p>
+<p class="reference">References <a class="el" href="bezel_8h_source.html#l00144">indices</a>, and <a class="el" href="bezel_8h_source.html#l00143">vertices</a>.</p>
 
 </div>
 </div>
@@ -236,17 +236,17 @@ Public Attributes</h2></td></tr>
 
 <p>Implements <a class="el" href="classbezel_1_1_collider.html#a3bc2b14dbff349804c176a84ae99a2a9">bezel::Collider</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="bezel_8h_source.html#l00144">144</a> of file <a class="el" href="bezel_8h_source.html">bezel.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  144</span>                                        {</div>
-<div class="line"><span class="lineno">  145</span>        <span class="keywordtype">float</span> minExtent = std::numeric_limits&lt;float&gt;::max();</div>
-<div class="line"><span class="lineno">  146</span>        <span class="keywordflow">for</span> (<span class="keyword">const</span> <span class="keyword">auto</span> &amp;vert : <a class="code hl_variable" href="#a352369fa6e812b805b816e445468fd7a">vertices</a>) {</div>
-<div class="line"><span class="lineno">  147</span>            minExtent = std::min({minExtent, vert.x, vert.y, vert.z});</div>
-<div class="line"><span class="lineno">  148</span>        }</div>
-<div class="line"><span class="lineno">  149</span>        <span class="keywordflow">return</span> minExtent;</div>
-<div class="line"><span class="lineno">  150</span>    }</div>
-<div class="ttc" id="aclassbezel_1_1_mesh_collider_html_a352369fa6e812b805b816e445468fd7a"><div class="ttname"><a href="#a352369fa6e812b805b816e445468fd7a">bezel::MeshCollider::vertices</a></div><div class="ttdeci">std::vector&lt; Position3d &gt; vertices</div><div class="ttdef"><b>Definition</b> <a href="bezel_8h_source.html#l00141">bezel.h:141</a></div></div>
+<p class="definition">Definition at line <a class="el" href="bezel_8h_source.html#l00146">146</a> of file <a class="el" href="bezel_8h_source.html">bezel.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  146</span>                                        {</div>
+<div class="line"><span class="lineno">  147</span>        <span class="keywordtype">float</span> minExtent = std::numeric_limits&lt;float&gt;::max();</div>
+<div class="line"><span class="lineno">  148</span>        <span class="keywordflow">for</span> (<span class="keyword">const</span> <span class="keyword">auto</span> &amp;vert : <a class="code hl_variable" href="#a352369fa6e812b805b816e445468fd7a">vertices</a>) {</div>
+<div class="line"><span class="lineno">  149</span>            minExtent = std::min({minExtent, vert.x, vert.y, vert.z});</div>
+<div class="line"><span class="lineno">  150</span>        }</div>
+<div class="line"><span class="lineno">  151</span>        <span class="keywordflow">return</span> minExtent;</div>
+<div class="line"><span class="lineno">  152</span>    }</div>
+<div class="ttc" id="aclassbezel_1_1_mesh_collider_html_a352369fa6e812b805b816e445468fd7a"><div class="ttname"><a href="#a352369fa6e812b805b816e445468fd7a">bezel::MeshCollider::vertices</a></div><div class="ttdeci">std::vector&lt; Position3d &gt; vertices</div><div class="ttdef"><b>Definition</b> <a href="bezel_8h_source.html#l00143">bezel.h:143</a></div></div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="bezel_8h_source.html#l00141">vertices</a>.</p>
+<p class="reference">References <a class="el" href="bezel_8h_source.html#l00143">vertices</a>.</p>
 
 </div>
 </div>
@@ -263,7 +263,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="bezel_8h_source.html#l00142">142</a> of file <a class="el" href="bezel_8h_source.html">bezel.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="bezel_8h_source.html#l00144">144</a> of file <a class="el" href="bezel_8h_source.html">bezel.h</a>.</p>
 
 </div>
 </div>
@@ -279,7 +279,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="bezel_8h_source.html#l00141">141</a> of file <a class="el" href="bezel_8h_source.html">bezel.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="bezel_8h_source.html#l00143">143</a> of file <a class="el" href="bezel_8h_source.html">bezel.h</a>.</p>
 
 </div>
 </div>

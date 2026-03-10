@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -139,7 +139,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a2bad5100d8af1a6669de5878d68f978c" id="r_a2bad5100d8af1a6669de5878d68f978c"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a2bad5100d8af1a6669de5878d68f978c">create</a> (const std::shared_ptr&lt; <a class="el" href="classbezel_1_1_physics_world.html">PhysicsWorld</a> &gt; &amp;world)</td></tr>
 <tr class="memitem:a322d93ea64eabe4f29e40e963233b200" id="r_a322d93ea64eabe4f29e40e963233b200"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a322d93ea64eabe4f29e40e963233b200">destroy</a> (const std::shared_ptr&lt; <a class="el" href="classbezel_1_1_physics_world.html">PhysicsWorld</a> &gt; &amp;world)</td></tr>
 <tr class="memitem:a2a341df22cc22911845a4b668397631f" id="r_a2a341df22cc22911845a4b668397631f"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#a2a341df22cc22911845a4b668397631f">isCreated</a> () const</td></tr>
+<tr class="memdesc:a2a341df22cc22911845a4b668397631f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns whether the backend vehicle constraint exists.  <br /></td></tr>
 <tr class="memitem:a9aa56d603c0fd89258330d9bfe593898" id="r_a9aa56d603c0fd89258330d9bfe593898"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a9aa56d603c0fd89258330d9bfe593898">setDriverInput</a> (float forward, float right, float brake, float handBrake)</td></tr>
+<tr class="memdesc:a9aa56d603c0fd89258330d9bfe593898"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates steering, throttle, brake, and handbrake inputs.  <br /></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -166,16 +168,16 @@ Example</h2>
 <div class="line"><span class="comment">// Each step</span></div>
 <div class="line">vehicle.<a class="code hl_function" href="#a9aa56d603c0fd89258330d9bfe593898">setDriverInput</a>(1.0f, 0.0f, 0.0f, 0.0f);</div>
 <div class="line">world-&gt;update(dt);</div>
-<div class="ttc" id="aclassbezel_1_1_vehicle_html"><div class="ttname"><a href="classbezel_1_1_vehicle.html">bezel::Vehicle</a></div><div class="ttdoc">High-level vehicle wrapper around Jolt&#39;s VehicleConstraint.</div><div class="ttdef"><b>Definition</b> <a href="bezel_8h_source.html#l00438">bezel.h:438</a></div></div>
+<div class="ttc" id="aclassbezel_1_1_vehicle_html"><div class="ttname"><a href="classbezel_1_1_vehicle.html">bezel::Vehicle</a></div><div class="ttdoc">High-level vehicle wrapper around Jolt&#39;s VehicleConstraint.</div><div class="ttdef"><b>Definition</b> <a href="bezel_8h_source.html#l00464">bezel.h:464</a></div></div>
 <div class="ttc" id="aclassbezel_1_1_vehicle_html_a2bad5100d8af1a6669de5878d68f978c"><div class="ttname"><a href="#a2bad5100d8af1a6669de5878d68f978c">bezel::Vehicle::create</a></div><div class="ttdeci">void create(const std::shared_ptr&lt; PhysicsWorld &gt; &amp;world)</div></div>
-<div class="ttc" id="aclassbezel_1_1_vehicle_html_a4668daa20159e0f8d6a7b31cf72e0293"><div class="ttname"><a href="#a4668daa20159e0f8d6a7b31cf72e0293">bezel::Vehicle::chassis</a></div><div class="ttdeci">Rigidbody * chassis</div><div class="ttdef"><b>Definition</b> <a href="bezel_8h_source.html#l00440">bezel.h:440</a></div></div>
-<div class="ttc" id="aclassbezel_1_1_vehicle_html_a9aa56d603c0fd89258330d9bfe593898"><div class="ttname"><a href="#a9aa56d603c0fd89258330d9bfe593898">bezel::Vehicle::setDriverInput</a></div><div class="ttdeci">void setDriverInput(float forward, float right, float brake, float handBrake)</div></div>
-<div class="ttc" id="aclassbezel_1_1_vehicle_html_aef2f07e2e12f1fa86318827a6cad1f6d"><div class="ttname"><a href="#aef2f07e2e12f1fa86318827a6cad1f6d">bezel::Vehicle::settings</a></div><div class="ttdeci">VehicleSettings settings</div><div class="ttdef"><b>Definition</b> <a href="bezel_8h_source.html#l00441">bezel.h:441</a></div></div>
+<div class="ttc" id="aclassbezel_1_1_vehicle_html_a4668daa20159e0f8d6a7b31cf72e0293"><div class="ttname"><a href="#a4668daa20159e0f8d6a7b31cf72e0293">bezel::Vehicle::chassis</a></div><div class="ttdeci">Rigidbody * chassis</div><div class="ttdef"><b>Definition</b> <a href="bezel_8h_source.html#l00466">bezel.h:466</a></div></div>
+<div class="ttc" id="aclassbezel_1_1_vehicle_html_a9aa56d603c0fd89258330d9bfe593898"><div class="ttname"><a href="#a9aa56d603c0fd89258330d9bfe593898">bezel::Vehicle::setDriverInput</a></div><div class="ttdeci">void setDriverInput(float forward, float right, float brake, float handBrake)</div><div class="ttdoc">Updates steering, throttle, brake, and handbrake inputs.</div></div>
+<div class="ttc" id="aclassbezel_1_1_vehicle_html_aef2f07e2e12f1fa86318827a6cad1f6d"><div class="ttname"><a href="#aef2f07e2e12f1fa86318827a6cad1f6d">bezel::Vehicle::settings</a></div><div class="ttdeci">VehicleSettings settings</div><div class="ttdef"><b>Definition</b> <a href="bezel_8h_source.html#l00467">bezel.h:467</a></div></div>
 <div class="ttc" id="astruct_position3d_html"><div class="ttname"><a href="struct_position3d.html">Position3d</a></div><div class="ttdoc">Structure representing a position in 3D space with double precision. Provides arithmetic operations a...</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00033">units.h:33</a></div></div>
-<div class="ttc" id="astructbezel_1_1_rigidbody_html_a9b3c20b9ea69af884c6cda9d30530346"><div class="ttname"><a href="structbezel_1_1_rigidbody.html#a9b3c20b9ea69af884c6cda9d30530346">bezel::Rigidbody::create</a></div><div class="ttdeci">void create(const std::shared_ptr&lt; PhysicsWorld &gt; &amp;world)</div></div>
-<div class="ttc" id="astructbezel_1_1_vehicle_settings_html_a39e84fe1f601514cb09f661d5e9a9499"><div class="ttname"><a href="structbezel_1_1_vehicle_settings.html#a39e84fe1f601514cb09f661d5e9a9499">bezel::VehicleSettings::wheels</a></div><div class="ttdeci">std::vector&lt; VehicleWheelSettings &gt; wheels</div><div class="ttdef"><b>Definition</b> <a href="bezel_8h_source.html#l00409">bezel.h:409</a></div></div>
+<div class="ttc" id="astructbezel_1_1_rigidbody_html_a9b3c20b9ea69af884c6cda9d30530346"><div class="ttname"><a href="structbezel_1_1_rigidbody.html#a9b3c20b9ea69af884c6cda9d30530346">bezel::Rigidbody::create</a></div><div class="ttdeci">void create(const std::shared_ptr&lt; PhysicsWorld &gt; &amp;world)</div><div class="ttdoc">Creates and registers the backend body in the world.</div></div>
+<div class="ttc" id="astructbezel_1_1_vehicle_settings_html_a39e84fe1f601514cb09f661d5e9a9499"><div class="ttname"><a href="structbezel_1_1_vehicle_settings.html#a39e84fe1f601514cb09f661d5e9a9499">bezel::VehicleSettings::wheels</a></div><div class="ttdeci">std::vector&lt; VehicleWheelSettings &gt; wheels</div><div class="ttdef"><b>Definition</b> <a href="bezel_8h_source.html#l00435">bezel.h:435</a></div></div>
 </div><!-- fragment --> 
-<p class="definition">Definition at line <a class="el" href="bezel_8h_source.html#l00438">438</a> of file <a class="el" href="bezel_8h_source.html">bezel.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="bezel_8h_source.html#l00464">464</a> of file <a class="el" href="bezel_8h_source.html">bezel.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a67b4aee7fad0e153395ebb6605cd6eca" name="a67b4aee7fad0e153395ebb6605cd6eca"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a67b4aee7fad0e153395ebb6605cd6eca">&#9670;&#160;</a></span>Vehicle() <span class="overload">[1/3]</span></h2>
@@ -298,6 +300,8 @@ Example</h2>
       </table>
 </div><div class="memdoc">
 
+<p>Returns whether the backend vehicle constraint exists. </p>
+
 </div>
 </div>
 <a id="a3bd09a6f379329682f10ec1b1ee068fe" name="a3bd09a6f379329682f10ec1b1ee068fe"></a>
@@ -375,6 +379,8 @@ Example</h2>
       </table>
 </div><div class="memdoc">
 
+<p>Updates steering, throttle, brake, and handbrake inputs. </p>
+
 </div>
 </div>
 <a name="doc-variable-members" id="doc-variable-members"></a><h2 id="header-doc-variable-members" class="groupheader">Member Data Documentation</h2>
@@ -390,7 +396,7 @@ Example</h2>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="bezel_8h_source.html#l00440">440</a> of file <a class="el" href="bezel_8h_source.html">bezel.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="bezel_8h_source.html#l00466">466</a> of file <a class="el" href="bezel_8h_source.html">bezel.h</a>.</p>
 
 </div>
 </div>
@@ -406,7 +412,7 @@ Example</h2>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="bezel_8h_source.html#l00441">441</a> of file <a class="el" href="bezel_8h_source.html">bezel.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="bezel_8h_source.html#l00467">467</a> of file <a class="el" href="bezel_8h_source.html">bezel.h</a>.</p>
 
 </div>
 </div>

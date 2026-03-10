@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -137,14 +137,18 @@ Public Member Functions</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a2884603caa3de8b3d076eb7ee57e5670" id="r_a2884603caa3de8b3d076eb7ee57e5670"><td class="memItemLeft">std::string&#160;</td><td class="memItemRight"><a class="el" href="#a2884603caa3de8b3d076eb7ee57e5670">name</a></td></tr>
+<tr class="memdesc:a2884603caa3de8b3d076eb7ee57e5670"><td class="mdescLeft">&#160;</td><td class="mdescRight">Event label shown in tracing UI.  <br /></td></tr>
 <tr class="memitem:a4427d242700a268ec55df46c551ce31d" id="r_a4427d242700a268ec55df46c551ce31d"><td class="memItemLeft"><a class="el" href="data_8h.html#a36d7a23e3ee4c781b597bcf642323545">TimingEventSubsystem</a>&#160;</td><td class="memItemRight"><a class="el" href="#a4427d242700a268ec55df46c551ce31d">subsystem</a></td></tr>
+<tr class="memdesc:a4427d242700a268ec55df46c551ce31d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Subsystem this timing event belongs to.  <br /></td></tr>
 <tr class="memitem:aa4d6329da83a2408426ecd7b9d5ba579" id="r_aa4d6329da83a2408426ecd7b9d5ba579"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#aa4d6329da83a2408426ecd7b9d5ba579">durationMs</a></td></tr>
+<tr class="memdesc:aa4d6329da83a2408426ecd7b9d5ba579"><td class="mdescLeft">&#160;</td><td class="mdescRight">Duration in milliseconds.  <br /></td></tr>
 <tr class="memitem:a06c8a583f2cd475c8328b90ade60666f" id="r_a06c8a583f2cd475c8328b90ade60666f"><td class="memItemLeft">unsigned int&#160;</td><td class="memItemRight"><a class="el" href="#a06c8a583f2cd475c8328b90ade60666f">frameNumber</a></td></tr>
+<tr class="memdesc:a06c8a583f2cd475c8328b90ade60666f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Frame index at which the event was captured.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Single timed event packet. </p>
 
-<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00265">265</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00310">310</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
 <a id="ac0f8345c319ffd5fe430c1aea8253895" name="ac0f8345c319ffd5fe430c1aea8253895"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ac0f8345c319ffd5fe430c1aea8253895">&#9670;&#160;</a></span>send()</h2>
@@ -178,7 +182,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00268">268</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
+<p>Duration in milliseconds. </p>
+
+<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00316">316</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
 
 </div>
 </div>
@@ -194,7 +200,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00269">269</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
+<p>Frame index at which the event was captured. </p>
+
+<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00318">318</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
 
 </div>
 </div>
@@ -210,7 +218,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00266">266</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
+<p>Event label shown in tracing UI. </p>
+
+<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00312">312</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
 
 </div>
 </div>
@@ -226,7 +236,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00267">267</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
+<p>Subsystem this timing event belongs to. </p>
+
+<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00314">314</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
 
 </div>
 </div>

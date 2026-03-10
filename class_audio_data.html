@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -146,7 +146,9 @@ Static Public Member Functions</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:abacb6f98ee7bd4a62f1fd8d7385a4781" id="r_abacb6f98ee7bd4a62f1fd8d7385a4781"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#abacb6f98ee7bd4a62f1fd8d7385a4781">isMono</a> = false</td></tr>
+<tr class="memdesc:abacb6f98ee7bd4a62f1fd8d7385a4781"><td class="mdescLeft">&#160;</td><td class="mdescRight">Indicates whether the decoded data contains a single channel.  <br /></td></tr>
 <tr class="memitem:a0b2583df19d7446a8f4832410417058a" id="r_a0b2583df19d7446a8f4832410417058a"><td class="memItemLeft"><a class="el" href="struct_resource.html">Resource</a>&#160;</td><td class="memItemRight"><a class="el" href="#a0b2583df19d7446a8f4832410417058a">resource</a></td></tr>
+<tr class="memdesc:a0b2583df19d7446a8f4832410417058a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Source resource used to create this buffer.  <br /></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-friends" class="groupheader"><a id="friends" name="friends"></a>
 Friends</h2></td></tr>
@@ -155,7 +157,7 @@ Friends</h2></td></tr>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Class representing loaded audio data that can be played by <a class="el" href="class_audio_source.html" title="Class representing an audio source that can play audio data with 3D spatial positioning.">AudioSource</a> instances. </p>
 
-<p class="definition">Definition at line <a class="el" href="finewave_2audio_8h_source.html#l00073">73</a> of file <a class="el" href="finewave_2audio_8h_source.html">audio.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="finewave_2audio_8h_source.html#l00076">76</a> of file <a class="el" href="finewave_2audio_8h_source.html">audio.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="ad0344f0fc71a86083ea56dbc13908162" name="ad0344f0fc71a86083ea56dbc13908162"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ad0344f0fc71a86083ea56dbc13908162">&#9670;&#160;</a></span>~AudioData()</h2>
@@ -203,13 +205,13 @@ Friends</h2></td></tr>
 <p>Creates audio data from a resource file. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname"><a class="el" href="#a0b2583df19d7446a8f4832410417058a">resource</a></td><td>The resource containing audio data. </td></tr>
+    <tr><td class="paramname"><a class="el" href="#a0b2583df19d7446a8f4832410417058a" title="Source resource used to create this buffer.">resource</a></td><td>The resource containing audio data. </td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>(std::shared_ptr&lt;AudioData&gt;) Shared pointer to the created audio data. </dd></dl>
 
-<p class="reference">References <a class="el" href="finewave_2audio_8h_source.html#l00098">resource</a>.</p>
+<p class="reference">References <a class="el" href="finewave_2audio_8h_source.html#l00107">resource</a>.</p>
 
 </div>
 </div>
@@ -239,8 +241,8 @@ Friends</h2></td></tr>
 <p>Gets the internal ID of the audio data. </p>
 <dl class="section return"><dt>Returns</dt><dd>(<a class="el" href="units_8h.html#aa39ddd1645a5d1634a3da83ba560d45e" title="Type alias for OpenGL object identifiers.">Id</a>) The audio data ID. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="finewave_2audio_8h_source.html#l00094">94</a> of file <a class="el" href="finewave_2audio_8h_source.html">audio.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   94</span>{ <span class="keywordflow">return</span> id; }</div>
+<p class="definition">Definition at line <a class="el" href="finewave_2audio_8h_source.html#l00097">97</a> of file <a class="el" href="finewave_2audio_8h_source.html">audio.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   97</span>{ <span class="keywordflow">return</span> id; }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -265,9 +267,9 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="finewave_2audio_8h_source.html#l00104">104</a> of file <a class="el" href="finewave_2audio_8h_source.html">audio.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="finewave_2audio_8h_source.html#l00116">116</a> of file <a class="el" href="finewave_2audio_8h_source.html">audio.h</a>.</p>
 
-<p class="reference">References <a class="el" href="finewave_2audio_8h_source.html#l00104">AudioSource</a>.</p>
+<p class="reference">References <a class="el" href="finewave_2audio_8h_source.html#l00116">AudioSource</a>.</p>
 
 </div>
 </div>
@@ -284,7 +286,9 @@ Friends</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="finewave_2audio_8h_source.html#l00096">96</a> of file <a class="el" href="finewave_2audio_8h_source.html">audio.h</a>.</p>
+<p>Indicates whether the decoded data contains a single channel. </p>
+
+<p class="definition">Definition at line <a class="el" href="finewave_2audio_8h_source.html#l00102">102</a> of file <a class="el" href="finewave_2audio_8h_source.html">audio.h</a>.</p>
 
 </div>
 </div>
@@ -300,7 +304,9 @@ Friends</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="finewave_2audio_8h_source.html#l00098">98</a> of file <a class="el" href="finewave_2audio_8h_source.html">audio.h</a>.</p>
+<p>Source resource used to create this buffer. </p>
+
+<p class="definition">Definition at line <a class="el" href="finewave_2audio_8h_source.html#l00107">107</a> of file <a class="el" href="finewave_2audio_8h_source.html">audio.h</a>.</p>
 
 </div>
 </div>

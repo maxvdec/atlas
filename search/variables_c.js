@@ -1,7 +1,7 @@
 var searchData=
 [
   ['lastmousedata_0',['lastMouseData',['../class_interactive.html#a096ed142d58f658e362c44976012d457',1,'Interactive']]],
-  ['lastshadowparams_1',['lastShadowParams',['../struct_light.html#afd46a921a3365c7a99cac658ac210308',1,'Light::lastShadowParams'],['../class_directional_light.html#acd466392cbfa8a6538c59f47bd04cd75',1,'DirectionalLight::lastShadowParams'],['../struct_spotlight.html#a12e1f218e98a0fc17cf855afeecccaae',1,'Spotlight::lastShadowParams']]],
+  ['lastshadowparams_1',['lastShadowParams',['../struct_light.html#afd46a921a3365c7a99cac658ac210308',1,'Light::lastShadowParams'],['../class_directional_light.html#acd466392cbfa8a6538c59f47bd04cd75',1,'DirectionalLight::lastShadowParams'],['../struct_spotlight.html#a12e1f218e98a0fc17cf855afeecccaae',1,'Spotlight::lastShadowParams'],['../struct_area_light.html#addab9859ed5a661b5fc67fca37fd43b7',1,'AreaLight::lastShadowParams']]],
   ['layoutpos_2',['layoutPos',['../struct_layout_descriptor.html#a20d2afc6d83235da2293245b6e3144ed',1,'LayoutDescriptor']]],
   ['leftrightsplit_3',['leftRightSplit',['../structbezel_1_1_vehicle_differential.html#a2ac4d8ebb9ccca998fadbeb70a9885cc',1,'bezel::VehicleDifferential']]],
   ['leftwheel_4',['leftWheel',['../structbezel_1_1_vehicle_differential.html#aced456b7632628fb38003dd6528ec9ae',1,'bezel::VehicleDifferential']]],
@@ -15,15 +15,16 @@ var searchData=
   ['lightprojection_12',['lightProjection',['../struct_g_p_u_shadow_params.html#aca8fccf9c6d08a00c1dabfb16668bc19',1,'GPUShadowParams::lightProjection'],['../struct_shadow_params.html#a5bfa79aa373ac10c35c7c825bb8f39bd',1,'ShadowParams::lightProjection']]],
   ['lightstepcount_13',['lightStepCount',['../class_clouds.html#a66c95c31865537191ab5a04c1233a519',1,'Clouds']]],
   ['lightstepmultiplier_14',['lightStepMultiplier',['../class_clouds.html#ab966a27e7b075efcd9c762a395dbce3e',1,'Clouds']]],
-  ['lightview_15',['lightView',['../struct_g_p_u_shadow_params.html#ad79af6751e049d5ad4567c8c6f58f8fe',1,'GPUShadowParams::lightView'],['../struct_shadow_params.html#aeaadb1369b3aa040c9465e6768e9aab3',1,'ShadowParams::lightView']]],
-  ['limitedslipratio_16',['limitedSlipRatio',['../structbezel_1_1_vehicle_differential.html#ad40c519f42d077f3fd14e5b2bda1953e',1,'bezel::VehicleDifferential']]],
-  ['limits_17',['limits',['../class_hinge_joint.html#ae408e8d5584963c3321404b18c21789b',1,'HingeJoint::limits'],['../classbezel_1_1_hinge_joint.html#a7e933144d71606b4a1a2d5ea7b0fad98',1,'bezel::HingeJoint::limits']]],
-  ['linear_18',['linear',['../struct_g_p_u_point_light.html#a5ae796757d3176af31f4acebaea062df',1,'GPUPointLight::linear'],['../struct_point_light_constants.html#a9eff07ab25d2421d1fd68d596fba0511',1,'PointLightConstants::linear']]],
-  ['lineardamping_19',['linearDamping',['../structbezel_1_1_rigidbody.html#a0dbdd213e2bff48aa01ea4af2386c3a3',1,'bezel::Rigidbody']]],
-  ['linearvelocity_20',['linearVelocity',['../structbezel_1_1_rigidbody.html#a48b14129b9898fb75633f8433ebfa5c0',1,'bezel::Rigidbody::linearVelocity'],['../class_body.html#a4831e51fa63833e559bcf5a8dbae1c06',1,'Body::linearVelocity']]],
-  ['loadedresources_21',['loadedResources',['../class_resource_tracker.html#a25afd90e50307dfa25b2a4643a2a6f56',1,'ResourceTracker']]],
-  ['location_22',['location',['../structopal_1_1_vertex_attribute.html#a7998dd277381282961ff78711ad3f688',1,'opal::VertexAttribute']]],
-  ['looksmoothness_23',['lookSmoothness',['../class_camera.html#a38944fa801da05f22169475b83799e8e',1,'Camera']]],
-  ['lookuptexture_24',['lookupTexture',['../class_environment.html#ac1e5e2fc8074a51f8777e6b7fd05c945',1,'Environment']]],
-  ['lut_25',['LUT',['../class_render_target.html#aa95b1e18bed3c2ae201217681987653e',1,'RenderTarget']]]
+  ['lighttype_15',['lightType',['../struct_g_p_u_shadow_params.html#aca511edc8bcd2a5a22ee56149ff4f6b5',1,'GPUShadowParams']]],
+  ['lightview_16',['lightView',['../struct_g_p_u_shadow_params.html#ad79af6751e049d5ad4567c8c6f58f8fe',1,'GPUShadowParams::lightView'],['../struct_shadow_params.html#aeaadb1369b3aa040c9465e6768e9aab3',1,'ShadowParams::lightView']]],
+  ['limitedslipratio_17',['limitedSlipRatio',['../structbezel_1_1_vehicle_differential.html#ad40c519f42d077f3fd14e5b2bda1953e',1,'bezel::VehicleDifferential']]],
+  ['limits_18',['limits',['../class_hinge_joint.html#ae408e8d5584963c3321404b18c21789b',1,'HingeJoint::limits'],['../classbezel_1_1_hinge_joint.html#a7e933144d71606b4a1a2d5ea7b0fad98',1,'bezel::HingeJoint::limits']]],
+  ['linear_19',['linear',['../struct_g_p_u_point_light.html#a5ae796757d3176af31f4acebaea062df',1,'GPUPointLight::linear'],['../struct_point_light_constants.html#a9eff07ab25d2421d1fd68d596fba0511',1,'PointLightConstants::linear']]],
+  ['lineardamping_20',['linearDamping',['../structbezel_1_1_rigidbody.html#a0dbdd213e2bff48aa01ea4af2386c3a3',1,'bezel::Rigidbody']]],
+  ['linearvelocity_21',['linearVelocity',['../structbezel_1_1_rigidbody.html#a48b14129b9898fb75633f8433ebfa5c0',1,'bezel::Rigidbody::linearVelocity'],['../class_body.html#a4831e51fa63833e559bcf5a8dbae1c06',1,'Body::linearVelocity']]],
+  ['loadedresources_22',['loadedResources',['../class_resource_tracker.html#a25afd90e50307dfa25b2a4643a2a6f56',1,'ResourceTracker']]],
+  ['location_23',['location',['../structopal_1_1_vertex_attribute.html#a7998dd277381282961ff78711ad3f688',1,'opal::VertexAttribute']]],
+  ['looksmoothness_24',['lookSmoothness',['../class_camera.html#a38944fa801da05f22169475b83799e8e',1,'Camera']]],
+  ['lookuptexture_25',['lookupTexture',['../class_environment.html#ac1e5e2fc8074a51f8777e6b7fd05c945',1,'Environment']]],
+  ['lut_26',['LUT',['../class_render_target.html#aa95b1e18bed3c2ae201217681987653e',1,'RenderTarget']]]
 ];

@@ -46,7 +46,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -290,241 +290,248 @@ $(function(){initNavTree('procedural_8h_source.html','',''); });
 <div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span><span class="comment">     * @param persistence Persistence factor per octave.</span></div>
 <div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span><span class="comment">     */</span></div>
 <div class="line"><a id="l00169" name="l00169"></a><span class="lineno"><a class="line" href="class_noise.html#abfef3a14874d85b2f297f63aad95a325">  169</a></span>    <span class="keyword">static</span> <span class="keywordtype">float</span> <a class="code hl_function" href="class_noise.html#abfef3a14874d85b2f297f63aad95a325">fractal</a>(<span class="keywordtype">float</span> x, <span class="keywordtype">float</span> y, <span class="keywordtype">int</span> octaves, <span class="keywordtype">float</span> persistence);</div>
-<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span> </div>
-<div class="line"><a id="l00171" name="l00171"></a><span class="lineno"><a class="line" href="class_noise.html#a5603280f5d09817bee3a5d0d12a1fab8">  171</a></span>    <span class="keyword">static</span> <span class="keywordtype">float</span> <a class="code hl_variable" href="class_noise.html#a5603280f5d09817bee3a5d0d12a1fab8">seed</a>;</div>
-<div class="line"><a id="l00172" name="l00172"></a><span class="lineno"><a class="line" href="class_noise.html#aa2a9eec8f83b902945f1632961b17c30">  172</a></span>    <span class="keyword">static</span> <span class="keywordtype">bool</span> <a class="code hl_variable" href="class_noise.html#aa2a9eec8f83b902945f1632961b17c30">initializedSeed</a>;</div>
-<div class="line"><a id="l00173" name="l00173"></a><span class="lineno"><a class="line" href="class_noise.html#a5596e726507d685af8082eb83977c2c4">  173</a></span>    <span class="keyword">static</span> <span class="keywordtype">bool</span> <a class="code hl_variable" href="class_noise.html#a5596e726507d685af8082eb83977c2c4">useSeed</a>;</div>
-<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span>};</div>
+<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span><span class="comment"></span> </div>
+<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span><span class="comment">    /** @brief Global seed value used by noise helpers when enabled. */</span></div>
+<div class="line"><a id="l00172" name="l00172"></a><span class="lineno"><a class="line" href="class_noise.html#a5603280f5d09817bee3a5d0d12a1fab8">  172</a></span>    <span class="keyword">static</span> <span class="keywordtype">float</span> <a class="code hl_variable" href="class_noise.html#a5603280f5d09817bee3a5d0d12a1fab8">seed</a>;<span class="comment"></span></div>
+<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span><span class="comment">    /** @brief Indicates whether the global seed has already been initialized.</span></div>
+<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span><span class="comment">     */</span></div>
+<div class="line"><a id="l00175" name="l00175"></a><span class="lineno"><a class="line" href="class_noise.html#aa2a9eec8f83b902945f1632961b17c30">  175</a></span>    <span class="keyword">static</span> <span class="keywordtype">bool</span> <a class="code hl_variable" href="class_noise.html#aa2a9eec8f83b902945f1632961b17c30">initializedSeed</a>;<span class="comment"></span></div>
+<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span><span class="comment">    /** @brief When true, helper functions use the shared `seed` value. */</span></div>
+<div class="line"><a id="l00177" name="l00177"></a><span class="lineno"><a class="line" href="class_noise.html#a5596e726507d685af8082eb83977c2c4">  177</a></span>    <span class="keyword">static</span> <span class="keywordtype">bool</span> <a class="code hl_variable" href="class_noise.html#a5596e726507d685af8082eb83977c2c4">useSeed</a>;</div>
+<div class="line"><a id="l00178" name="l00178"></a><span class="lineno">  178</span>};</div>
 </div>
-<div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span> </div>
-<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span><span class="keyword">class </span><a class="code hl_class" href="class_terrain.html">Terrain</a>;<span class="comment"></span></div>
-<div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span><span class="comment">/**</span></div>
-<div class="line"><a id="l00178" name="l00178"></a><span class="lineno">  178</span><span class="comment"> * @brief Abstract interface that translates 2D coordinates into heights.</span></div>
-<div class="line"><a id="l00179" name="l00179"></a><span class="lineno">  179</span><span class="comment"> */</span></div>
-<div class="foldopen" id="foldopen00180" data-start="{" data-end="};">
-<div class="line"><a id="l00180" name="l00180"></a><span class="lineno"><a class="line" href="class_terrain_generator.html">  180</a></span><span class="keyword">class </span><a class="code hl_class" href="class_terrain_generator.html">TerrainGenerator</a> {</div>
-<div class="line"><a id="l00181" name="l00181"></a><span class="lineno">  181</span>  <span class="keyword">public</span>:</div>
-<div class="line"><a id="l00182" name="l00182"></a><span class="lineno"><a class="line" href="class_terrain_generator.html#a20b5eb12bfe5d5cb9e858c61ae0f09a0">  182</a></span>    <span class="keyword">virtual</span> <a class="code hl_function" href="class_terrain_generator.html#a20b5eb12bfe5d5cb9e858c61ae0f09a0">~TerrainGenerator</a>() = <span class="keywordflow">default</span>;</div>
-<div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span><span class="comment"></span> </div>
-<div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span><span class="comment">     * @brief Evaluates the height of the terrain at the requested position.</span></div>
-<div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span><span class="comment">     * @param x X coordinate in world or heightmap space.</span></div>
-<div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span><span class="comment">     * @param y Y coordinate in world or heightmap space.</span></div>
-<div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span><span class="comment">     * @return Height value to assign to the terrain mesh.</span></div>
-<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00191" name="l00191"></a><span class="lineno"><a class="line" href="class_terrain_generator.html#a80ad336990a06e22160807615c880e70">  191</a></span>    <span class="keyword">virtual</span> <span class="keywordtype">float</span> <a class="code hl_function" href="class_terrain_generator.html#a80ad336990a06e22160807615c880e70">generateHeight</a>(<span class="keywordtype">float</span> x, <span class="keywordtype">float</span> y) = 0;</div>
-<div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span> </div>
-<div class="line"><a id="l00193" name="l00193"></a><span class="lineno"><a class="line" href="class_terrain_generator.html#a64d46f39afa83dcd30470c41dc44ee40">  193</a></span>    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_terrain_generator.html#a64d46f39afa83dcd30470c41dc44ee40">applyTo</a>(<a class="code hl_class" href="class_terrain.html">Terrain</a> &amp;)<span class="keyword"> const </span>{};</div>
-<div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span>};</div>
+<div class="line"><a id="l00179" name="l00179"></a><span class="lineno">  179</span> </div>
+<div class="line"><a id="l00180" name="l00180"></a><span class="lineno">  180</span><span class="keyword">class </span><a class="code hl_class" href="class_terrain.html">Terrain</a>;<span class="comment"></span></div>
+<div class="line"><a id="l00181" name="l00181"></a><span class="lineno">  181</span><span class="comment">/**</span></div>
+<div class="line"><a id="l00182" name="l00182"></a><span class="lineno">  182</span><span class="comment"> * @brief Abstract interface that translates 2D coordinates into heights.</span></div>
+<div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span><span class="comment"> */</span></div>
+<div class="foldopen" id="foldopen00184" data-start="{" data-end="};">
+<div class="line"><a id="l00184" name="l00184"></a><span class="lineno"><a class="line" href="class_terrain_generator.html">  184</a></span><span class="keyword">class </span><a class="code hl_class" href="class_terrain_generator.html">TerrainGenerator</a> {</div>
+<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span>  <span class="keyword">public</span>:</div>
+<div class="line"><a id="l00186" name="l00186"></a><span class="lineno"><a class="line" href="class_terrain_generator.html#a20b5eb12bfe5d5cb9e858c61ae0f09a0">  186</a></span>    <span class="keyword">virtual</span> <a class="code hl_function" href="class_terrain_generator.html#a20b5eb12bfe5d5cb9e858c61ae0f09a0">~TerrainGenerator</a>() = <span class="keywordflow">default</span>;</div>
+<div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span><span class="comment"></span> </div>
+<div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span><span class="comment">    /**</span></div>
+<div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span><span class="comment">     * @brief Evaluates the height of the terrain at the requested position.</span></div>
+<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span><span class="comment">     *</span></div>
+<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span><span class="comment">     * @param x X coordinate in world or heightmap space.</span></div>
+<div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span><span class="comment">     * @param y Y coordinate in world or heightmap space.</span></div>
+<div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span><span class="comment">     * @return Height value to assign to the terrain mesh.</span></div>
+<div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span><span class="comment">     */</span></div>
+<div class="line"><a id="l00195" name="l00195"></a><span class="lineno"><a class="line" href="class_terrain_generator.html#a80ad336990a06e22160807615c880e70">  195</a></span>    <span class="keyword">virtual</span> <span class="keywordtype">float</span> <a class="code hl_function" href="class_terrain_generator.html#a80ad336990a06e22160807615c880e70">generateHeight</a>(<span class="keywordtype">float</span> x, <span class="keywordtype">float</span> y) = 0;</div>
+<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span><span class="comment"></span> </div>
+<div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span><span class="comment">    /**</span></div>
+<div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span><span class="comment">     * @brief Optional hook invoked when the generator is attached to a terrain.</span></div>
+<div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span><span class="comment">     */</span></div>
+<div class="line"><a id="l00200" name="l00200"></a><span class="lineno"><a class="line" href="class_terrain_generator.html#a64d46f39afa83dcd30470c41dc44ee40">  200</a></span>    <span class="keyword">virtual</span> <span class="keywordtype">void</span> <a class="code hl_function" href="class_terrain_generator.html#a64d46f39afa83dcd30470c41dc44ee40">applyTo</a>(<a class="code hl_class" href="class_terrain.html">Terrain</a> &amp;)<span class="keyword"> const </span>{};</div>
+<div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span>};</div>
 </div>
-<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span><span class="comment"></span> </div>
-<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span><span class="comment">/**</span></div>
-<div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span><span class="comment"> * @brief Low-frequency noise generator used for rolling hills and plains.</span></div>
-<div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span><span class="comment"> *</span></div>
-<div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span><span class="comment"> * \subsection terraingenerator-example Example</span></div>
-<div class="line"><a id="l00200" name="l00200"></a><span class="lineno">  200</span><span class="comment"> * ```cpp</span></div>
-<div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span><span class="comment"> * // Use individual generators</span></div>
-<div class="line"><a id="l00202" name="l00202"></a><span class="lineno">  202</span><span class="comment"> * HillGenerator hills(0.02f, 15.0f);</span></div>
-<div class="line"><a id="l00203" name="l00203"></a><span class="lineno">  203</span><span class="comment"> * MountainGenerator mountains(8.0f, 120.0f, 6, 0.6f);</span></div>
-<div class="line"><a id="l00204" name="l00204"></a><span class="lineno">  204</span><span class="comment"> *</span></div>
-<div class="line"><a id="l00205" name="l00205"></a><span class="lineno">  205</span><span class="comment"> * // Or combine multiple generators</span></div>
-<div class="line"><a id="l00206" name="l00206"></a><span class="lineno">  206</span><span class="comment"> * CompoundGenerator combined;</span></div>
-<div class="line"><a id="l00207" name="l00207"></a><span class="lineno">  207</span><span class="comment"> * combined.addGenerator(PlainGenerator(0.03f, 3.0f));</span></div>
-<div class="line"><a id="l00208" name="l00208"></a><span class="lineno">  208</span><span class="comment"> * combined.addGenerator(MountainGenerator(10.0f, 80.0f));</span></div>
-<div class="line"><a id="l00209" name="l00209"></a><span class="lineno">  209</span><span class="comment"> * combined.addGenerator(HillGenerator(0.01f, 20.0f));</span></div>
-<div class="line"><a id="l00210" name="l00210"></a><span class="lineno">  210</span><span class="comment"> *</span></div>
-<div class="line"><a id="l00211" name="l00211"></a><span class="lineno">  211</span><span class="comment"> * // Apply to terrain</span></div>
-<div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span><span class="comment"> * Terrain terrain;</span></div>
-<div class="line"><a id="l00213" name="l00213"></a><span class="lineno">  213</span><span class="comment"> * combined.applyTo(terrain);</span></div>
-<div class="line"><a id="l00214" name="l00214"></a><span class="lineno">  214</span><span class="comment"> *</span></div>
-<div class="line"><a id="l00215" name="l00215"></a><span class="lineno">  215</span><span class="comment"> * // Or sample directly</span></div>
-<div class="line"><a id="l00216" name="l00216"></a><span class="lineno">  216</span><span class="comment"> * float heightValue = combined.generateHeight(100.0f, 50.0f);</span></div>
-<div class="line"><a id="l00217" name="l00217"></a><span class="lineno">  217</span><span class="comment"> * ```</span></div>
-<div class="line"><a id="l00218" name="l00218"></a><span class="lineno">  218</span><span class="comment"> */</span></div>
-<div class="foldopen" id="foldopen00219" data-start="{" data-end="};">
-<div class="line"><a id="l00219" name="l00219"></a><span class="lineno"><a class="line" href="class_hill_generator.html">  219</a></span><span class="keyword">class </span><a class="code hl_function" href="class_hill_generator.html#ae1698ec5581c01c52bfd4a37f17700db">HillGenerator</a> : <span class="keyword">public</span> <a class="code hl_class" href="class_terrain_generator.html">TerrainGenerator</a> {</div>
-<div class="line"><a id="l00220" name="l00220"></a><span class="lineno">  220</span>  <span class="keyword">private</span>:</div>
-<div class="line"><a id="l00221" name="l00221"></a><span class="lineno">  221</span>    <span class="keywordtype">float</span> scale;</div>
-<div class="line"><a id="l00222" name="l00222"></a><span class="lineno">  222</span>    <span class="keywordtype">float</span> amplitude;</div>
-<div class="line"><a id="l00223" name="l00223"></a><span class="lineno">  223</span> </div>
-<div class="line"><a id="l00224" name="l00224"></a><span class="lineno">  224</span>  <span class="keyword">public</span>:<span class="comment"></span></div>
-<div class="line"><a id="l00225" name="l00225"></a><span class="lineno">  225</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00226" name="l00226"></a><span class="lineno">  226</span><span class="comment">     * @brief Configures the hill generator parameters.</span></div>
-<div class="line"><a id="l00227" name="l00227"></a><span class="lineno">  227</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00228" name="l00228"></a><span class="lineno">  228</span><span class="comment">     * @param scale Noise scale controlling hill size.</span></div>
-<div class="line"><a id="l00229" name="l00229"></a><span class="lineno">  229</span><span class="comment">     * @param amplitude Maximum height contribution.</span></div>
-<div class="line"><a id="l00230" name="l00230"></a><span class="lineno">  230</span><span class="comment">     */</span></div>
-<div class="foldopen" id="foldopen00231" data-start="{" data-end="}">
-<div class="line"><a id="l00231" name="l00231"></a><span class="lineno"><a class="line" href="class_hill_generator.html#ae1698ec5581c01c52bfd4a37f17700db">  231</a></span>    <a class="code hl_function" href="class_hill_generator.html#ae1698ec5581c01c52bfd4a37f17700db">HillGenerator</a>(<span class="keywordtype">float</span> scale = 0.01f, <span class="keywordtype">float</span> amplitude = 10.0f)</div>
-<div class="line"><a id="l00232" name="l00232"></a><span class="lineno">  232</span>        : scale(scale), amplitude(amplitude) {}</div>
+<div class="line"><a id="l00202" name="l00202"></a><span class="lineno">  202</span><span class="comment"></span> </div>
+<div class="line"><a id="l00203" name="l00203"></a><span class="lineno">  203</span><span class="comment">/**</span></div>
+<div class="line"><a id="l00204" name="l00204"></a><span class="lineno">  204</span><span class="comment"> * @brief Low-frequency noise generator used for rolling hills and plains.</span></div>
+<div class="line"><a id="l00205" name="l00205"></a><span class="lineno">  205</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00206" name="l00206"></a><span class="lineno">  206</span><span class="comment"> * \subsection terraingenerator-example Example</span></div>
+<div class="line"><a id="l00207" name="l00207"></a><span class="lineno">  207</span><span class="comment"> * ```cpp</span></div>
+<div class="line"><a id="l00208" name="l00208"></a><span class="lineno">  208</span><span class="comment"> * // Use individual generators</span></div>
+<div class="line"><a id="l00209" name="l00209"></a><span class="lineno">  209</span><span class="comment"> * HillGenerator hills(0.02f, 15.0f);</span></div>
+<div class="line"><a id="l00210" name="l00210"></a><span class="lineno">  210</span><span class="comment"> * MountainGenerator mountains(8.0f, 120.0f, 6, 0.6f);</span></div>
+<div class="line"><a id="l00211" name="l00211"></a><span class="lineno">  211</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00212" name="l00212"></a><span class="lineno">  212</span><span class="comment"> * // Or combine multiple generators</span></div>
+<div class="line"><a id="l00213" name="l00213"></a><span class="lineno">  213</span><span class="comment"> * CompoundGenerator combined;</span></div>
+<div class="line"><a id="l00214" name="l00214"></a><span class="lineno">  214</span><span class="comment"> * combined.addGenerator(PlainGenerator(0.03f, 3.0f));</span></div>
+<div class="line"><a id="l00215" name="l00215"></a><span class="lineno">  215</span><span class="comment"> * combined.addGenerator(MountainGenerator(10.0f, 80.0f));</span></div>
+<div class="line"><a id="l00216" name="l00216"></a><span class="lineno">  216</span><span class="comment"> * combined.addGenerator(HillGenerator(0.01f, 20.0f));</span></div>
+<div class="line"><a id="l00217" name="l00217"></a><span class="lineno">  217</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00218" name="l00218"></a><span class="lineno">  218</span><span class="comment"> * // Apply to terrain</span></div>
+<div class="line"><a id="l00219" name="l00219"></a><span class="lineno">  219</span><span class="comment"> * Terrain terrain;</span></div>
+<div class="line"><a id="l00220" name="l00220"></a><span class="lineno">  220</span><span class="comment"> * combined.applyTo(terrain);</span></div>
+<div class="line"><a id="l00221" name="l00221"></a><span class="lineno">  221</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00222" name="l00222"></a><span class="lineno">  222</span><span class="comment"> * // Or sample directly</span></div>
+<div class="line"><a id="l00223" name="l00223"></a><span class="lineno">  223</span><span class="comment"> * float heightValue = combined.generateHeight(100.0f, 50.0f);</span></div>
+<div class="line"><a id="l00224" name="l00224"></a><span class="lineno">  224</span><span class="comment"> * ```</span></div>
+<div class="line"><a id="l00225" name="l00225"></a><span class="lineno">  225</span><span class="comment"> */</span></div>
+<div class="foldopen" id="foldopen00226" data-start="{" data-end="};">
+<div class="line"><a id="l00226" name="l00226"></a><span class="lineno"><a class="line" href="class_hill_generator.html">  226</a></span><span class="keyword">class </span><a class="code hl_function" href="class_hill_generator.html#ae1698ec5581c01c52bfd4a37f17700db">HillGenerator</a> : <span class="keyword">public</span> <a class="code hl_class" href="class_terrain_generator.html">TerrainGenerator</a> {</div>
+<div class="line"><a id="l00227" name="l00227"></a><span class="lineno">  227</span>  <span class="keyword">private</span>:</div>
+<div class="line"><a id="l00228" name="l00228"></a><span class="lineno">  228</span>    <span class="keywordtype">float</span> scale;</div>
+<div class="line"><a id="l00229" name="l00229"></a><span class="lineno">  229</span>    <span class="keywordtype">float</span> amplitude;</div>
+<div class="line"><a id="l00230" name="l00230"></a><span class="lineno">  230</span> </div>
+<div class="line"><a id="l00231" name="l00231"></a><span class="lineno">  231</span>  <span class="keyword">public</span>:<span class="comment"></span></div>
+<div class="line"><a id="l00232" name="l00232"></a><span class="lineno">  232</span><span class="comment">    /**</span></div>
+<div class="line"><a id="l00233" name="l00233"></a><span class="lineno">  233</span><span class="comment">     * @brief Configures the hill generator parameters.</span></div>
+<div class="line"><a id="l00234" name="l00234"></a><span class="lineno">  234</span><span class="comment">     *</span></div>
+<div class="line"><a id="l00235" name="l00235"></a><span class="lineno">  235</span><span class="comment">     * @param scale Noise scale controlling hill size.</span></div>
+<div class="line"><a id="l00236" name="l00236"></a><span class="lineno">  236</span><span class="comment">     * @param amplitude Maximum height contribution.</span></div>
+<div class="line"><a id="l00237" name="l00237"></a><span class="lineno">  237</span><span class="comment">     */</span></div>
+<div class="foldopen" id="foldopen00238" data-start="{" data-end="}">
+<div class="line"><a id="l00238" name="l00238"></a><span class="lineno"><a class="line" href="class_hill_generator.html#ae1698ec5581c01c52bfd4a37f17700db">  238</a></span>    <a class="code hl_function" href="class_hill_generator.html#ae1698ec5581c01c52bfd4a37f17700db">HillGenerator</a>(<span class="keywordtype">float</span> scale = 0.01f, <span class="keywordtype">float</span> amplitude = 10.0f)</div>
+<div class="line"><a id="l00239" name="l00239"></a><span class="lineno">  239</span>        : scale(scale), amplitude(amplitude) {}</div>
 </div>
-<div class="line"><a id="l00233" name="l00233"></a><span class="lineno">  233</span><span class="comment"></span> </div>
-<div class="line"><a id="l00234" name="l00234"></a><span class="lineno">  234</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00235" name="l00235"></a><span class="lineno">  235</span><span class="comment">     * @brief Samples Perlin noise and remaps it to a gentle hill profile.</span></div>
-<div class="line"><a id="l00236" name="l00236"></a><span class="lineno">  236</span><span class="comment">     */</span></div>
-<div class="foldopen" id="foldopen00237" data-start="{" data-end="}">
-<div class="line"><a id="l00237" name="l00237"></a><span class="lineno"><a class="line" href="class_hill_generator.html#a79c171ae4c09eda6ff481f1139e04e7e">  237</a></span>    <span class="keywordtype">float</span> <a class="code hl_function" href="class_hill_generator.html#a79c171ae4c09eda6ff481f1139e04e7e">generateHeight</a>(<span class="keywordtype">float</span> x, <span class="keywordtype">float</span> y)<span class="keyword"> override </span>{</div>
-<div class="line"><a id="l00238" name="l00238"></a><span class="lineno">  238</span>        <span class="keywordtype">float</span> noise = <a class="code hl_function" href="class_noise.html#a3bd6289706dd9fd5c7d6f67e88cbf212">Noise::perlin</a>(x / scale, y / scale);</div>
-<div class="line"><a id="l00239" name="l00239"></a><span class="lineno">  239</span>        <span class="keywordflow">return</span> (noise + 1.0f) * 0.5f * amplitude / 10.0f;</div>
-<div class="line"><a id="l00240" name="l00240"></a><span class="lineno">  240</span>    }</div>
+<div class="line"><a id="l00240" name="l00240"></a><span class="lineno">  240</span><span class="comment"></span> </div>
+<div class="line"><a id="l00241" name="l00241"></a><span class="lineno">  241</span><span class="comment">    /**</span></div>
+<div class="line"><a id="l00242" name="l00242"></a><span class="lineno">  242</span><span class="comment">     * @brief Samples Perlin noise and remaps it to a gentle hill profile.</span></div>
+<div class="line"><a id="l00243" name="l00243"></a><span class="lineno">  243</span><span class="comment">     */</span></div>
+<div class="foldopen" id="foldopen00244" data-start="{" data-end="}">
+<div class="line"><a id="l00244" name="l00244"></a><span class="lineno"><a class="line" href="class_hill_generator.html#a79c171ae4c09eda6ff481f1139e04e7e">  244</a></span>    <span class="keywordtype">float</span> <a class="code hl_function" href="class_hill_generator.html#a79c171ae4c09eda6ff481f1139e04e7e">generateHeight</a>(<span class="keywordtype">float</span> x, <span class="keywordtype">float</span> y)<span class="keyword"> override </span>{</div>
+<div class="line"><a id="l00245" name="l00245"></a><span class="lineno">  245</span>        <span class="keywordtype">float</span> noise = <a class="code hl_function" href="class_noise.html#a3bd6289706dd9fd5c7d6f67e88cbf212">Noise::perlin</a>(x / scale, y / scale);</div>
+<div class="line"><a id="l00246" name="l00246"></a><span class="lineno">  246</span>        <span class="keywordflow">return</span> (noise + 1.0f) * 0.5f * amplitude / 10.0f;</div>
+<div class="line"><a id="l00247" name="l00247"></a><span class="lineno">  247</span>    }</div>
 </div>
-<div class="line"><a id="l00241" name="l00241"></a><span class="lineno">  241</span>};</div>
+<div class="line"><a id="l00248" name="l00248"></a><span class="lineno">  248</span>};</div>
 </div>
-<div class="line"><a id="l00242" name="l00242"></a><span class="lineno">  242</span><span class="comment"></span> </div>
-<div class="line"><a id="l00243" name="l00243"></a><span class="lineno">  243</span><span class="comment">/**</span></div>
-<div class="line"><a id="l00244" name="l00244"></a><span class="lineno">  244</span><span class="comment"> * @brief Fractal noise generator that yields rugged mountainous features.</span></div>
-<div class="line"><a id="l00245" name="l00245"></a><span class="lineno">  245</span><span class="comment"> */</span></div>
-<div class="foldopen" id="foldopen00246" data-start="{" data-end="};">
-<div class="line"><a id="l00246" name="l00246"></a><span class="lineno"><a class="line" href="class_mountain_generator.html">  246</a></span><span class="keyword">class </span><a class="code hl_function" href="class_mountain_generator.html#a80c2174e4438dacbbabc70e5ef286d86">MountainGenerator</a> : <span class="keyword">public</span> <a class="code hl_class" href="class_terrain_generator.html">TerrainGenerator</a> {</div>
-<div class="line"><a id="l00247" name="l00247"></a><span class="lineno">  247</span>  <span class="keyword">private</span>:</div>
-<div class="line"><a id="l00248" name="l00248"></a><span class="lineno">  248</span>    <span class="keywordtype">float</span> scale;</div>
-<div class="line"><a id="l00249" name="l00249"></a><span class="lineno">  249</span>    <span class="keywordtype">float</span> amplitude;</div>
-<div class="line"><a id="l00250" name="l00250"></a><span class="lineno">  250</span>    <span class="keywordtype">int</span> octaves;</div>
-<div class="line"><a id="l00251" name="l00251"></a><span class="lineno">  251</span>    <span class="keywordtype">float</span> persistence;</div>
-<div class="line"><a id="l00252" name="l00252"></a><span class="lineno">  252</span> </div>
-<div class="line"><a id="l00253" name="l00253"></a><span class="lineno">  253</span>  <span class="keyword">public</span>:</div>
-<div class="foldopen" id="foldopen00254" data-start="{" data-end="}">
-<div class="line"><a id="l00254" name="l00254"></a><span class="lineno"><a class="line" href="class_mountain_generator.html#a80c2174e4438dacbbabc70e5ef286d86">  254</a></span>    <a class="code hl_function" href="class_mountain_generator.html#a80c2174e4438dacbbabc70e5ef286d86">MountainGenerator</a>(<span class="keywordtype">float</span> scale = 10.f, <span class="keywordtype">float</span> amplitude = 100.0f,</div>
-<div class="line"><a id="l00255" name="l00255"></a><span class="lineno">  255</span>                      <span class="keywordtype">int</span> octaves = 5, <span class="keywordtype">float</span> persistence = 0.5f)</div>
-<div class="line"><a id="l00256" name="l00256"></a><span class="lineno">  256</span>        : scale(scale), amplitude(amplitude), octaves(octaves),</div>
-<div class="line"><a id="l00257" name="l00257"></a><span class="lineno">  257</span>          persistence(persistence) {}</div>
+<div class="line"><a id="l00249" name="l00249"></a><span class="lineno">  249</span><span class="comment"></span> </div>
+<div class="line"><a id="l00250" name="l00250"></a><span class="lineno">  250</span><span class="comment">/**</span></div>
+<div class="line"><a id="l00251" name="l00251"></a><span class="lineno">  251</span><span class="comment"> * @brief Fractal noise generator that yields rugged mountainous features.</span></div>
+<div class="line"><a id="l00252" name="l00252"></a><span class="lineno">  252</span><span class="comment"> */</span></div>
+<div class="foldopen" id="foldopen00253" data-start="{" data-end="};">
+<div class="line"><a id="l00253" name="l00253"></a><span class="lineno"><a class="line" href="class_mountain_generator.html">  253</a></span><span class="keyword">class </span><a class="code hl_function" href="class_mountain_generator.html#a80c2174e4438dacbbabc70e5ef286d86">MountainGenerator</a> : <span class="keyword">public</span> <a class="code hl_class" href="class_terrain_generator.html">TerrainGenerator</a> {</div>
+<div class="line"><a id="l00254" name="l00254"></a><span class="lineno">  254</span>  <span class="keyword">private</span>:</div>
+<div class="line"><a id="l00255" name="l00255"></a><span class="lineno">  255</span>    <span class="keywordtype">float</span> scale;</div>
+<div class="line"><a id="l00256" name="l00256"></a><span class="lineno">  256</span>    <span class="keywordtype">float</span> amplitude;</div>
+<div class="line"><a id="l00257" name="l00257"></a><span class="lineno">  257</span>    <span class="keywordtype">int</span> octaves;</div>
+<div class="line"><a id="l00258" name="l00258"></a><span class="lineno">  258</span>    <span class="keywordtype">float</span> persistence;</div>
+<div class="line"><a id="l00259" name="l00259"></a><span class="lineno">  259</span> </div>
+<div class="line"><a id="l00260" name="l00260"></a><span class="lineno">  260</span>  <span class="keyword">public</span>:</div>
+<div class="foldopen" id="foldopen00261" data-start="{" data-end="}">
+<div class="line"><a id="l00261" name="l00261"></a><span class="lineno"><a class="line" href="class_mountain_generator.html#a80c2174e4438dacbbabc70e5ef286d86">  261</a></span>    <a class="code hl_function" href="class_mountain_generator.html#a80c2174e4438dacbbabc70e5ef286d86">MountainGenerator</a>(<span class="keywordtype">float</span> scale = 10.f, <span class="keywordtype">float</span> amplitude = 100.0f,</div>
+<div class="line"><a id="l00262" name="l00262"></a><span class="lineno">  262</span>                      <span class="keywordtype">int</span> octaves = 5, <span class="keywordtype">float</span> persistence = 0.5f)</div>
+<div class="line"><a id="l00263" name="l00263"></a><span class="lineno">  263</span>        : scale(scale), amplitude(amplitude), octaves(octaves),</div>
+<div class="line"><a id="l00264" name="l00264"></a><span class="lineno">  264</span>          persistence(persistence) {}</div>
 </div>
-<div class="line"><a id="l00258" name="l00258"></a><span class="lineno">  258</span><span class="comment"></span> </div>
-<div class="line"><a id="l00259" name="l00259"></a><span class="lineno">  259</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00260" name="l00260"></a><span class="lineno">  260</span><span class="comment">     * @brief Produces jagged mountain heights using fractal noise.</span></div>
-<div class="line"><a id="l00261" name="l00261"></a><span class="lineno">  261</span><span class="comment">     */</span></div>
-<div class="foldopen" id="foldopen00262" data-start="{" data-end="}">
-<div class="line"><a id="l00262" name="l00262"></a><span class="lineno"><a class="line" href="class_mountain_generator.html#a3087d383b2c00a1912202027d892ca0f">  262</a></span>    <span class="keywordtype">float</span> <a class="code hl_function" href="class_mountain_generator.html#a3087d383b2c00a1912202027d892ca0f">generateHeight</a>(<span class="keywordtype">float</span> x, <span class="keywordtype">float</span> y)<span class="keyword"> override </span>{</div>
-<div class="line"><a id="l00263" name="l00263"></a><span class="lineno">  263</span>        <span class="keywordtype">float</span> noise =</div>
-<div class="line"><a id="l00264" name="l00264"></a><span class="lineno">  264</span>            <a class="code hl_function" href="class_noise.html#abfef3a14874d85b2f297f63aad95a325">Noise::fractal</a>(x * scale, y * scale, octaves, persistence);</div>
-<div class="line"><a id="l00265" name="l00265"></a><span class="lineno">  265</span>        <span class="keywordtype">float</span> height = noise;</div>
-<div class="line"><a id="l00266" name="l00266"></a><span class="lineno">  266</span>        <span class="keywordflow">return</span> height * amplitude;</div>
-<div class="line"><a id="l00267" name="l00267"></a><span class="lineno">  267</span>    }</div>
+<div class="line"><a id="l00265" name="l00265"></a><span class="lineno">  265</span><span class="comment"></span> </div>
+<div class="line"><a id="l00266" name="l00266"></a><span class="lineno">  266</span><span class="comment">    /**</span></div>
+<div class="line"><a id="l00267" name="l00267"></a><span class="lineno">  267</span><span class="comment">     * @brief Produces jagged mountain heights using fractal noise.</span></div>
+<div class="line"><a id="l00268" name="l00268"></a><span class="lineno">  268</span><span class="comment">     */</span></div>
+<div class="foldopen" id="foldopen00269" data-start="{" data-end="}">
+<div class="line"><a id="l00269" name="l00269"></a><span class="lineno"><a class="line" href="class_mountain_generator.html#a3087d383b2c00a1912202027d892ca0f">  269</a></span>    <span class="keywordtype">float</span> <a class="code hl_function" href="class_mountain_generator.html#a3087d383b2c00a1912202027d892ca0f">generateHeight</a>(<span class="keywordtype">float</span> x, <span class="keywordtype">float</span> y)<span class="keyword"> override </span>{</div>
+<div class="line"><a id="l00270" name="l00270"></a><span class="lineno">  270</span>        <span class="keywordtype">float</span> noise =</div>
+<div class="line"><a id="l00271" name="l00271"></a><span class="lineno">  271</span>            <a class="code hl_function" href="class_noise.html#abfef3a14874d85b2f297f63aad95a325">Noise::fractal</a>(x * scale, y * scale, octaves, persistence);</div>
+<div class="line"><a id="l00272" name="l00272"></a><span class="lineno">  272</span>        <span class="keywordtype">float</span> height = noise;</div>
+<div class="line"><a id="l00273" name="l00273"></a><span class="lineno">  273</span>        <span class="keywordflow">return</span> height * amplitude;</div>
+<div class="line"><a id="l00274" name="l00274"></a><span class="lineno">  274</span>    }</div>
 </div>
-<div class="line"><a id="l00268" name="l00268"></a><span class="lineno">  268</span>};</div>
+<div class="line"><a id="l00275" name="l00275"></a><span class="lineno">  275</span>};</div>
 </div>
-<div class="line"><a id="l00269" name="l00269"></a><span class="lineno">  269</span><span class="comment"></span> </div>
-<div class="line"><a id="l00270" name="l00270"></a><span class="lineno">  270</span><span class="comment">/**</span></div>
-<div class="line"><a id="l00271" name="l00271"></a><span class="lineno">  271</span><span class="comment"> * @brief Gentle noise generator producing subtle undulating plains.</span></div>
-<div class="line"><a id="l00272" name="l00272"></a><span class="lineno">  272</span><span class="comment"> */</span></div>
-<div class="foldopen" id="foldopen00273" data-start="{" data-end="};">
-<div class="line"><a id="l00273" name="l00273"></a><span class="lineno"><a class="line" href="class_plain_generator.html">  273</a></span><span class="keyword">class </span><a class="code hl_function" href="class_plain_generator.html#aa9c2709c51b71a41c8547b2dbe737784">PlainGenerator</a> : <span class="keyword">public</span> <a class="code hl_class" href="class_terrain_generator.html">TerrainGenerator</a> {</div>
-<div class="line"><a id="l00274" name="l00274"></a><span class="lineno">  274</span>  <span class="keyword">private</span>:</div>
-<div class="line"><a id="l00275" name="l00275"></a><span class="lineno">  275</span>    <span class="keywordtype">float</span> amplitude;</div>
-<div class="line"><a id="l00276" name="l00276"></a><span class="lineno">  276</span>    <span class="keywordtype">float</span> scale;</div>
-<div class="line"><a id="l00277" name="l00277"></a><span class="lineno">  277</span> </div>
-<div class="line"><a id="l00278" name="l00278"></a><span class="lineno">  278</span>  <span class="keyword">public</span>:</div>
-<div class="foldopen" id="foldopen00279" data-start="{" data-end="}">
-<div class="line"><a id="l00279" name="l00279"></a><span class="lineno"><a class="line" href="class_plain_generator.html#aa9c2709c51b71a41c8547b2dbe737784">  279</a></span>    <a class="code hl_function" href="class_plain_generator.html#aa9c2709c51b71a41c8547b2dbe737784">PlainGenerator</a>(<span class="keywordtype">float</span> scale = 0.02f, <span class="keywordtype">float</span> amplitude = 2.0f)</div>
-<div class="line"><a id="l00280" name="l00280"></a><span class="lineno">  280</span>        : amplitude(amplitude), scale(scale) {}</div>
+<div class="line"><a id="l00276" name="l00276"></a><span class="lineno">  276</span><span class="comment"></span> </div>
+<div class="line"><a id="l00277" name="l00277"></a><span class="lineno">  277</span><span class="comment">/**</span></div>
+<div class="line"><a id="l00278" name="l00278"></a><span class="lineno">  278</span><span class="comment"> * @brief Gentle noise generator producing subtle undulating plains.</span></div>
+<div class="line"><a id="l00279" name="l00279"></a><span class="lineno">  279</span><span class="comment"> */</span></div>
+<div class="foldopen" id="foldopen00280" data-start="{" data-end="};">
+<div class="line"><a id="l00280" name="l00280"></a><span class="lineno"><a class="line" href="class_plain_generator.html">  280</a></span><span class="keyword">class </span><a class="code hl_function" href="class_plain_generator.html#aa9c2709c51b71a41c8547b2dbe737784">PlainGenerator</a> : <span class="keyword">public</span> <a class="code hl_class" href="class_terrain_generator.html">TerrainGenerator</a> {</div>
+<div class="line"><a id="l00281" name="l00281"></a><span class="lineno">  281</span>  <span class="keyword">private</span>:</div>
+<div class="line"><a id="l00282" name="l00282"></a><span class="lineno">  282</span>    <span class="keywordtype">float</span> amplitude;</div>
+<div class="line"><a id="l00283" name="l00283"></a><span class="lineno">  283</span>    <span class="keywordtype">float</span> scale;</div>
+<div class="line"><a id="l00284" name="l00284"></a><span class="lineno">  284</span> </div>
+<div class="line"><a id="l00285" name="l00285"></a><span class="lineno">  285</span>  <span class="keyword">public</span>:</div>
+<div class="foldopen" id="foldopen00286" data-start="{" data-end="}">
+<div class="line"><a id="l00286" name="l00286"></a><span class="lineno"><a class="line" href="class_plain_generator.html#aa9c2709c51b71a41c8547b2dbe737784">  286</a></span>    <a class="code hl_function" href="class_plain_generator.html#aa9c2709c51b71a41c8547b2dbe737784">PlainGenerator</a>(<span class="keywordtype">float</span> scale = 0.02f, <span class="keywordtype">float</span> amplitude = 2.0f)</div>
+<div class="line"><a id="l00287" name="l00287"></a><span class="lineno">  287</span>        : amplitude(amplitude), scale(scale) {}</div>
 </div>
-<div class="line"><a id="l00281" name="l00281"></a><span class="lineno">  281</span><span class="comment"></span> </div>
-<div class="line"><a id="l00282" name="l00282"></a><span class="lineno">  282</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00283" name="l00283"></a><span class="lineno">  283</span><span class="comment">     * @brief Returns low-amplitude Perlin noise suited for flat regions.</span></div>
-<div class="line"><a id="l00284" name="l00284"></a><span class="lineno">  284</span><span class="comment">     */</span></div>
-<div class="foldopen" id="foldopen00285" data-start="{" data-end="}">
-<div class="line"><a id="l00285" name="l00285"></a><span class="lineno"><a class="line" href="class_plain_generator.html#a4ef7e95e99259753834deb5e11cc678f">  285</a></span>    <span class="keywordtype">float</span> <a class="code hl_function" href="class_plain_generator.html#a4ef7e95e99259753834deb5e11cc678f">generateHeight</a>(<span class="keywordtype">float</span> x, <span class="keywordtype">float</span> y)<span class="keyword"> override </span>{</div>
-<div class="line"><a id="l00286" name="l00286"></a><span class="lineno">  286</span>        <span class="keywordtype">float</span> noise = <a class="code hl_function" href="class_noise.html#a3bd6289706dd9fd5c7d6f67e88cbf212">Noise::perlin</a>(x * scale, y * scale);</div>
-<div class="line"><a id="l00287" name="l00287"></a><span class="lineno">  287</span>        <span class="keywordflow">return</span> (noise + 1.0f) * 0.5f * amplitude / 2.0f;</div>
-<div class="line"><a id="l00288" name="l00288"></a><span class="lineno">  288</span>    }</div>
+<div class="line"><a id="l00288" name="l00288"></a><span class="lineno">  288</span><span class="comment"></span> </div>
+<div class="line"><a id="l00289" name="l00289"></a><span class="lineno">  289</span><span class="comment">    /**</span></div>
+<div class="line"><a id="l00290" name="l00290"></a><span class="lineno">  290</span><span class="comment">     * @brief Returns low-amplitude Perlin noise suited for flat regions.</span></div>
+<div class="line"><a id="l00291" name="l00291"></a><span class="lineno">  291</span><span class="comment">     */</span></div>
+<div class="foldopen" id="foldopen00292" data-start="{" data-end="}">
+<div class="line"><a id="l00292" name="l00292"></a><span class="lineno"><a class="line" href="class_plain_generator.html#a4ef7e95e99259753834deb5e11cc678f">  292</a></span>    <span class="keywordtype">float</span> <a class="code hl_function" href="class_plain_generator.html#a4ef7e95e99259753834deb5e11cc678f">generateHeight</a>(<span class="keywordtype">float</span> x, <span class="keywordtype">float</span> y)<span class="keyword"> override </span>{</div>
+<div class="line"><a id="l00293" name="l00293"></a><span class="lineno">  293</span>        <span class="keywordtype">float</span> noise = <a class="code hl_function" href="class_noise.html#a3bd6289706dd9fd5c7d6f67e88cbf212">Noise::perlin</a>(x * scale, y * scale);</div>
+<div class="line"><a id="l00294" name="l00294"></a><span class="lineno">  294</span>        <span class="keywordflow">return</span> (noise + 1.0f) * 0.5f * amplitude / 2.0f;</div>
+<div class="line"><a id="l00295" name="l00295"></a><span class="lineno">  295</span>    }</div>
 </div>
-<div class="line"><a id="l00289" name="l00289"></a><span class="lineno">  289</span>};</div>
+<div class="line"><a id="l00296" name="l00296"></a><span class="lineno">  296</span>};</div>
 </div>
-<div class="line"><a id="l00290" name="l00290"></a><span class="lineno">  290</span><span class="comment"></span> </div>
-<div class="line"><a id="l00291" name="l00291"></a><span class="lineno">  291</span><span class="comment">/**</span></div>
-<div class="line"><a id="l00292" name="l00292"></a><span class="lineno">  292</span><span class="comment"> * @brief Worley-noise-based generator that mimics coastline islands.</span></div>
-<div class="line"><a id="l00293" name="l00293"></a><span class="lineno">  293</span><span class="comment"> */</span></div>
-<div class="foldopen" id="foldopen00294" data-start="{" data-end="};">
-<div class="line"><a id="l00294" name="l00294"></a><span class="lineno"><a class="line" href="class_island_generator.html">  294</a></span><span class="keyword">class </span><a class="code hl_function" href="class_island_generator.html#a950411391dbd8c2b8953aa1d7fd9d2e1">IslandGenerator</a> : <span class="keyword">public</span> <a class="code hl_class" href="class_terrain_generator.html">TerrainGenerator</a> {</div>
-<div class="line"><a id="l00295" name="l00295"></a><span class="lineno">  295</span>  <span class="keyword">private</span>:</div>
-<div class="line"><a id="l00296" name="l00296"></a><span class="lineno">  296</span>    <span class="keywordtype">int</span> numFeatures;</div>
-<div class="line"><a id="l00297" name="l00297"></a><span class="lineno">  297</span>    <span class="keywordtype">float</span> scale;</div>
-<div class="line"><a id="l00298" name="l00298"></a><span class="lineno">  298</span> </div>
-<div class="line"><a id="l00299" name="l00299"></a><span class="lineno">  299</span>  <span class="keyword">public</span>:</div>
-<div class="foldopen" id="foldopen00300" data-start="{" data-end="}">
-<div class="line"><a id="l00300" name="l00300"></a><span class="lineno"><a class="line" href="class_island_generator.html#a950411391dbd8c2b8953aa1d7fd9d2e1">  300</a></span>    <a class="code hl_function" href="class_island_generator.html#a950411391dbd8c2b8953aa1d7fd9d2e1">IslandGenerator</a>(<span class="keywordtype">int</span> numFeatures = 10, <span class="keywordtype">float</span> scale = 0.01f)</div>
-<div class="line"><a id="l00301" name="l00301"></a><span class="lineno">  301</span>        : numFeatures(numFeatures), scale(scale) {}</div>
+<div class="line"><a id="l00297" name="l00297"></a><span class="lineno">  297</span><span class="comment"></span> </div>
+<div class="line"><a id="l00298" name="l00298"></a><span class="lineno">  298</span><span class="comment">/**</span></div>
+<div class="line"><a id="l00299" name="l00299"></a><span class="lineno">  299</span><span class="comment"> * @brief Worley-noise-based generator that mimics coastline islands.</span></div>
+<div class="line"><a id="l00300" name="l00300"></a><span class="lineno">  300</span><span class="comment"> */</span></div>
+<div class="foldopen" id="foldopen00301" data-start="{" data-end="};">
+<div class="line"><a id="l00301" name="l00301"></a><span class="lineno"><a class="line" href="class_island_generator.html">  301</a></span><span class="keyword">class </span><a class="code hl_function" href="class_island_generator.html#a950411391dbd8c2b8953aa1d7fd9d2e1">IslandGenerator</a> : <span class="keyword">public</span> <a class="code hl_class" href="class_terrain_generator.html">TerrainGenerator</a> {</div>
+<div class="line"><a id="l00302" name="l00302"></a><span class="lineno">  302</span>  <span class="keyword">private</span>:</div>
+<div class="line"><a id="l00303" name="l00303"></a><span class="lineno">  303</span>    <span class="keywordtype">int</span> numFeatures;</div>
+<div class="line"><a id="l00304" name="l00304"></a><span class="lineno">  304</span>    <span class="keywordtype">float</span> scale;</div>
+<div class="line"><a id="l00305" name="l00305"></a><span class="lineno">  305</span> </div>
+<div class="line"><a id="l00306" name="l00306"></a><span class="lineno">  306</span>  <span class="keyword">public</span>:</div>
+<div class="foldopen" id="foldopen00307" data-start="{" data-end="}">
+<div class="line"><a id="l00307" name="l00307"></a><span class="lineno"><a class="line" href="class_island_generator.html#a950411391dbd8c2b8953aa1d7fd9d2e1">  307</a></span>    <a class="code hl_function" href="class_island_generator.html#a950411391dbd8c2b8953aa1d7fd9d2e1">IslandGenerator</a>(<span class="keywordtype">int</span> numFeatures = 10, <span class="keywordtype">float</span> scale = 0.01f)</div>
+<div class="line"><a id="l00308" name="l00308"></a><span class="lineno">  308</span>        : numFeatures(numFeatures), scale(scale) {}</div>
 </div>
-<div class="line"><a id="l00302" name="l00302"></a><span class="lineno">  302</span><span class="comment"></span> </div>
-<div class="line"><a id="l00303" name="l00303"></a><span class="lineno">  303</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00304" name="l00304"></a><span class="lineno">  304</span><span class="comment">     * @brief Produces island-style plateaus using cellular noise.</span></div>
-<div class="line"><a id="l00305" name="l00305"></a><span class="lineno">  305</span><span class="comment">     */</span></div>
-<div class="foldopen" id="foldopen00306" data-start="{" data-end="}">
-<div class="line"><a id="l00306" name="l00306"></a><span class="lineno"><a class="line" href="class_island_generator.html#aad937fa6c922c0951b9f63ad8e0297e1">  306</a></span>    <span class="keywordtype">float</span> <a class="code hl_function" href="class_island_generator.html#aad937fa6c922c0951b9f63ad8e0297e1">generateHeight</a>(<span class="keywordtype">float</span> x, <span class="keywordtype">float</span> y)<span class="keyword"> override </span>{</div>
-<div class="line"><a id="l00307" name="l00307"></a><span class="lineno">  307</span>        <a class="code hl_class" href="class_worley_noise.html">WorleyNoise</a> worley(numFeatures);</div>
-<div class="line"><a id="l00308" name="l00308"></a><span class="lineno">  308</span>        <span class="keywordtype">float</span> noise = worley.<a class="code hl_function" href="class_worley_noise.html#a43d855be0f8322ae815d89f8f478870e">noise</a>(x * scale, y * scale);</div>
-<div class="line"><a id="l00309" name="l00309"></a><span class="lineno">  309</span>        <span class="keywordflow">return</span> std::clamp(noise, 0.0f, 1.0f);</div>
-<div class="line"><a id="l00310" name="l00310"></a><span class="lineno">  310</span>    }</div>
+<div class="line"><a id="l00309" name="l00309"></a><span class="lineno">  309</span><span class="comment"></span> </div>
+<div class="line"><a id="l00310" name="l00310"></a><span class="lineno">  310</span><span class="comment">    /**</span></div>
+<div class="line"><a id="l00311" name="l00311"></a><span class="lineno">  311</span><span class="comment">     * @brief Produces island-style plateaus using cellular noise.</span></div>
+<div class="line"><a id="l00312" name="l00312"></a><span class="lineno">  312</span><span class="comment">     */</span></div>
+<div class="foldopen" id="foldopen00313" data-start="{" data-end="}">
+<div class="line"><a id="l00313" name="l00313"></a><span class="lineno"><a class="line" href="class_island_generator.html#aad937fa6c922c0951b9f63ad8e0297e1">  313</a></span>    <span class="keywordtype">float</span> <a class="code hl_function" href="class_island_generator.html#aad937fa6c922c0951b9f63ad8e0297e1">generateHeight</a>(<span class="keywordtype">float</span> x, <span class="keywordtype">float</span> y)<span class="keyword"> override </span>{</div>
+<div class="line"><a id="l00314" name="l00314"></a><span class="lineno">  314</span>        <a class="code hl_class" href="class_worley_noise.html">WorleyNoise</a> worley(numFeatures);</div>
+<div class="line"><a id="l00315" name="l00315"></a><span class="lineno">  315</span>        <span class="keywordtype">float</span> noise = worley.<a class="code hl_function" href="class_worley_noise.html#a43d855be0f8322ae815d89f8f478870e">noise</a>(x * scale, y * scale);</div>
+<div class="line"><a id="l00316" name="l00316"></a><span class="lineno">  316</span>        <span class="keywordflow">return</span> std::clamp(noise, 0.0f, 1.0f);</div>
+<div class="line"><a id="l00317" name="l00317"></a><span class="lineno">  317</span>    }</div>
 </div>
-<div class="line"><a id="l00311" name="l00311"></a><span class="lineno">  311</span>};</div>
+<div class="line"><a id="l00318" name="l00318"></a><span class="lineno">  318</span>};</div>
 </div>
-<div class="line"><a id="l00312" name="l00312"></a><span class="lineno">  312</span><span class="comment"></span> </div>
-<div class="line"><a id="l00313" name="l00313"></a><span class="lineno">  313</span><span class="comment">/**</span></div>
-<div class="line"><a id="l00314" name="l00314"></a><span class="lineno">  314</span><span class="comment"> * @brief Aggregates multiple terrain generators and sums their contributions.</span></div>
-<div class="line"><a id="l00315" name="l00315"></a><span class="lineno">  315</span><span class="comment"> */</span></div>
-<div class="foldopen" id="foldopen00316" data-start="{" data-end="};">
-<div class="line"><a id="l00316" name="l00316"></a><span class="lineno"><a class="line" href="class_compound_generator.html">  316</a></span><span class="keyword">class </span><a class="code hl_class" href="class_compound_generator.html">CompoundGenerator</a> : <span class="keyword">public</span> <a class="code hl_class" href="class_terrain_generator.html">TerrainGenerator</a> {</div>
-<div class="line"><a id="l00317" name="l00317"></a><span class="lineno">  317</span>  <span class="keyword">private</span>:</div>
-<div class="line"><a id="l00318" name="l00318"></a><span class="lineno">  318</span>    std::vector&lt;std::shared_ptr&lt;TerrainGenerator&gt;&gt; generators;</div>
-<div class="line"><a id="l00319" name="l00319"></a><span class="lineno">  319</span> </div>
-<div class="line"><a id="l00320" name="l00320"></a><span class="lineno">  320</span>  <span class="keyword">public</span>:<span class="comment"></span></div>
-<div class="line"><a id="l00321" name="l00321"></a><span class="lineno">  321</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00322" name="l00322"></a><span class="lineno">  322</span><span class="comment">     * @brief Adds another generator to the compound stack.</span></div>
-<div class="line"><a id="l00323" name="l00323"></a><span class="lineno">  323</span><span class="comment">     *</span></div>
-<div class="line"><a id="l00324" name="l00324"></a><span class="lineno">  324</span><span class="comment">     * @tparam T Type of generator to store.</span></div>
-<div class="line"><a id="l00325" name="l00325"></a><span class="lineno">  325</span><span class="comment">     * @param gen Instance that will be copied into the stack.</span></div>
-<div class="line"><a id="l00326" name="l00326"></a><span class="lineno">  326</span><span class="comment">     */</span></div>
-<div class="line"><a id="l00327" name="l00327"></a><span class="lineno">  327</span>    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
-<div class="line"><a id="l00328" name="l00328"></a><span class="lineno">  328</span>        <span class="keyword">requires</span> std::is_base_of&lt;TerrainGenerator, T&gt;::value</div>
-<div class="foldopen" id="foldopen00329" data-start="{" data-end="}">
-<div class="line"><a id="l00329" name="l00329"></a><span class="lineno"><a class="line" href="class_compound_generator.html#ad1a0cfd3759f6e565c674a9707a42cc1">  329</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_compound_generator.html#ad1a0cfd3759f6e565c674a9707a42cc1">addGenerator</a>(<a class="code hl_enumvalue" href="input_8h.html#a9479d299e1852e6140dcca1f405868abab9ece18c950afbfa6b0fdbfa4ff731d3">T</a> gen) {</div>
-<div class="line"><a id="l00330" name="l00330"></a><span class="lineno">  330</span>        generators.push_back(std::make_shared&lt;T&gt;(std::move(gen)));</div>
-<div class="line"><a id="l00331" name="l00331"></a><span class="lineno">  331</span>    }</div>
-</div>
-<div class="line"><a id="l00332" name="l00332"></a><span class="lineno">  332</span><span class="comment"></span> </div>
-<div class="line"><a id="l00333" name="l00333"></a><span class="lineno">  333</span><span class="comment">    /**</span></div>
-<div class="line"><a id="l00334" name="l00334"></a><span class="lineno">  334</span><span class="comment">     * @brief Sums the height contributions of all registered generators.</span></div>
-<div class="line"><a id="l00335" name="l00335"></a><span class="lineno">  335</span><span class="comment">     */</span></div>
+<div class="line"><a id="l00319" name="l00319"></a><span class="lineno">  319</span><span class="comment"></span> </div>
+<div class="line"><a id="l00320" name="l00320"></a><span class="lineno">  320</span><span class="comment">/**</span></div>
+<div class="line"><a id="l00321" name="l00321"></a><span class="lineno">  321</span><span class="comment"> * @brief Aggregates multiple terrain generators and sums their contributions.</span></div>
+<div class="line"><a id="l00322" name="l00322"></a><span class="lineno">  322</span><span class="comment"> */</span></div>
+<div class="foldopen" id="foldopen00323" data-start="{" data-end="};">
+<div class="line"><a id="l00323" name="l00323"></a><span class="lineno"><a class="line" href="class_compound_generator.html">  323</a></span><span class="keyword">class </span><a class="code hl_class" href="class_compound_generator.html">CompoundGenerator</a> : <span class="keyword">public</span> <a class="code hl_class" href="class_terrain_generator.html">TerrainGenerator</a> {</div>
+<div class="line"><a id="l00324" name="l00324"></a><span class="lineno">  324</span>  <span class="keyword">private</span>:</div>
+<div class="line"><a id="l00325" name="l00325"></a><span class="lineno">  325</span>    std::vector&lt;std::shared_ptr&lt;TerrainGenerator&gt;&gt; generators;</div>
+<div class="line"><a id="l00326" name="l00326"></a><span class="lineno">  326</span> </div>
+<div class="line"><a id="l00327" name="l00327"></a><span class="lineno">  327</span>  <span class="keyword">public</span>:<span class="comment"></span></div>
+<div class="line"><a id="l00328" name="l00328"></a><span class="lineno">  328</span><span class="comment">    /**</span></div>
+<div class="line"><a id="l00329" name="l00329"></a><span class="lineno">  329</span><span class="comment">     * @brief Adds another generator to the compound stack.</span></div>
+<div class="line"><a id="l00330" name="l00330"></a><span class="lineno">  330</span><span class="comment">     *</span></div>
+<div class="line"><a id="l00331" name="l00331"></a><span class="lineno">  331</span><span class="comment">     * @tparam T Type of generator to store.</span></div>
+<div class="line"><a id="l00332" name="l00332"></a><span class="lineno">  332</span><span class="comment">     * @param gen Instance that will be copied into the stack.</span></div>
+<div class="line"><a id="l00333" name="l00333"></a><span class="lineno">  333</span><span class="comment">     */</span></div>
+<div class="line"><a id="l00334" name="l00334"></a><span class="lineno">  334</span>    <span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</div>
+<div class="line"><a id="l00335" name="l00335"></a><span class="lineno">  335</span>        <span class="keyword">requires</span> std::is_base_of&lt;TerrainGenerator, T&gt;::value</div>
 <div class="foldopen" id="foldopen00336" data-start="{" data-end="}">
-<div class="line"><a id="l00336" name="l00336"></a><span class="lineno"><a class="line" href="class_compound_generator.html#aae88c2164a2111a0c4702fd213300010">  336</a></span>    <span class="keywordtype">float</span> <a class="code hl_function" href="class_compound_generator.html#aae88c2164a2111a0c4702fd213300010">generateHeight</a>(<span class="keywordtype">float</span> x, <span class="keywordtype">float</span> y)<span class="keyword"> override </span>{</div>
-<div class="line"><a id="l00337" name="l00337"></a><span class="lineno">  337</span>        <span class="keywordtype">float</span> height = 0.0f;</div>
-<div class="line"><a id="l00338" name="l00338"></a><span class="lineno">  338</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;g : generators) {</div>
-<div class="line"><a id="l00339" name="l00339"></a><span class="lineno">  339</span>            height += g-&gt;generateHeight(x, y);</div>
-<div class="line"><a id="l00340" name="l00340"></a><span class="lineno">  340</span>        }</div>
-<div class="line"><a id="l00341" name="l00341"></a><span class="lineno">  341</span>        <span class="keywordflow">return</span> height;</div>
-<div class="line"><a id="l00342" name="l00342"></a><span class="lineno">  342</span>    }</div>
+<div class="line"><a id="l00336" name="l00336"></a><span class="lineno"><a class="line" href="class_compound_generator.html#ad1a0cfd3759f6e565c674a9707a42cc1">  336</a></span>    <span class="keywordtype">void</span> <a class="code hl_function" href="class_compound_generator.html#ad1a0cfd3759f6e565c674a9707a42cc1">addGenerator</a>(<a class="code hl_enumvalue" href="input_8h.html#a9479d299e1852e6140dcca1f405868abab9ece18c950afbfa6b0fdbfa4ff731d3">T</a> gen) {</div>
+<div class="line"><a id="l00337" name="l00337"></a><span class="lineno">  337</span>        generators.push_back(std::make_shared&lt;T&gt;(std::move(gen)));</div>
+<div class="line"><a id="l00338" name="l00338"></a><span class="lineno">  338</span>    }</div>
 </div>
-<div class="line"><a id="l00343" name="l00343"></a><span class="lineno">  343</span>};</div>
+<div class="line"><a id="l00339" name="l00339"></a><span class="lineno">  339</span><span class="comment"></span> </div>
+<div class="line"><a id="l00340" name="l00340"></a><span class="lineno">  340</span><span class="comment">    /**</span></div>
+<div class="line"><a id="l00341" name="l00341"></a><span class="lineno">  341</span><span class="comment">     * @brief Sums the height contributions of all registered generators.</span></div>
+<div class="line"><a id="l00342" name="l00342"></a><span class="lineno">  342</span><span class="comment">     */</span></div>
+<div class="foldopen" id="foldopen00343" data-start="{" data-end="}">
+<div class="line"><a id="l00343" name="l00343"></a><span class="lineno"><a class="line" href="class_compound_generator.html#aae88c2164a2111a0c4702fd213300010">  343</a></span>    <span class="keywordtype">float</span> <a class="code hl_function" href="class_compound_generator.html#aae88c2164a2111a0c4702fd213300010">generateHeight</a>(<span class="keywordtype">float</span> x, <span class="keywordtype">float</span> y)<span class="keyword"> override </span>{</div>
+<div class="line"><a id="l00344" name="l00344"></a><span class="lineno">  344</span>        <span class="keywordtype">float</span> height = 0.0f;</div>
+<div class="line"><a id="l00345" name="l00345"></a><span class="lineno">  345</span>        <span class="keywordflow">for</span> (<span class="keyword">auto</span> &amp;g : generators) {</div>
+<div class="line"><a id="l00346" name="l00346"></a><span class="lineno">  346</span>            height += g-&gt;generateHeight(x, y);</div>
+<div class="line"><a id="l00347" name="l00347"></a><span class="lineno">  347</span>        }</div>
+<div class="line"><a id="l00348" name="l00348"></a><span class="lineno">  348</span>        <span class="keywordflow">return</span> height;</div>
+<div class="line"><a id="l00349" name="l00349"></a><span class="lineno">  349</span>    }</div>
 </div>
-<div class="line"><a id="l00344" name="l00344"></a><span class="lineno">  344</span> </div>
-<div class="line"><a id="l00345" name="l00345"></a><span class="lineno">  345</span><span class="preprocessor">#endif </span><span class="comment">// AURORA_PROCEDURAL_H</span></div>
-<div class="ttc" id="aclass_compound_generator_html"><div class="ttname"><a href="class_compound_generator.html">CompoundGenerator</a></div><div class="ttdoc">Aggregates multiple terrain generators and sums their contributions.</div><div class="ttdef"><b>Definition</b> <a href="#l00316">procedural.h:316</a></div></div>
-<div class="ttc" id="aclass_compound_generator_html_aae88c2164a2111a0c4702fd213300010"><div class="ttname"><a href="class_compound_generator.html#aae88c2164a2111a0c4702fd213300010">CompoundGenerator::generateHeight</a></div><div class="ttdeci">float generateHeight(float x, float y) override</div><div class="ttdoc">Sums the height contributions of all registered generators.</div><div class="ttdef"><b>Definition</b> <a href="#l00336">procedural.h:336</a></div></div>
-<div class="ttc" id="aclass_compound_generator_html_ad1a0cfd3759f6e565c674a9707a42cc1"><div class="ttname"><a href="class_compound_generator.html#ad1a0cfd3759f6e565c674a9707a42cc1">CompoundGenerator::addGenerator</a></div><div class="ttdeci">void addGenerator(T gen)</div><div class="ttdoc">Adds another generator to the compound stack.</div><div class="ttdef"><b>Definition</b> <a href="#l00329">procedural.h:329</a></div></div>
+<div class="line"><a id="l00350" name="l00350"></a><span class="lineno">  350</span>};</div>
+</div>
+<div class="line"><a id="l00351" name="l00351"></a><span class="lineno">  351</span> </div>
+<div class="line"><a id="l00352" name="l00352"></a><span class="lineno">  352</span><span class="preprocessor">#endif </span><span class="comment">// AURORA_PROCEDURAL_H</span></div>
+<div class="ttc" id="aclass_compound_generator_html"><div class="ttname"><a href="class_compound_generator.html">CompoundGenerator</a></div><div class="ttdoc">Aggregates multiple terrain generators and sums their contributions.</div><div class="ttdef"><b>Definition</b> <a href="#l00323">procedural.h:323</a></div></div>
+<div class="ttc" id="aclass_compound_generator_html_aae88c2164a2111a0c4702fd213300010"><div class="ttname"><a href="class_compound_generator.html#aae88c2164a2111a0c4702fd213300010">CompoundGenerator::generateHeight</a></div><div class="ttdeci">float generateHeight(float x, float y) override</div><div class="ttdoc">Sums the height contributions of all registered generators.</div><div class="ttdef"><b>Definition</b> <a href="#l00343">procedural.h:343</a></div></div>
+<div class="ttc" id="aclass_compound_generator_html_ad1a0cfd3759f6e565c674a9707a42cc1"><div class="ttname"><a href="class_compound_generator.html#ad1a0cfd3759f6e565c674a9707a42cc1">CompoundGenerator::addGenerator</a></div><div class="ttdeci">void addGenerator(T gen)</div><div class="ttdoc">Adds another generator to the compound stack.</div><div class="ttdef"><b>Definition</b> <a href="#l00336">procedural.h:336</a></div></div>
 <div class="ttc" id="aclass_fractal_noise_html_a199b6403118e551fde28178be869fa86"><div class="ttname"><a href="class_fractal_noise.html#a199b6403118e551fde28178be869fa86">FractalNoise::noise</a></div><div class="ttdeci">float noise(float x, float y) const</div><div class="ttdoc">Samples compounded Perlin noise with the configured settings.</div></div>
 <div class="ttc" id="aclass_fractal_noise_html_a3f736b09e65a00b60c5dc97ca36e821e"><div class="ttname"><a href="class_fractal_noise.html#a3f736b09e65a00b60c5dc97ca36e821e">FractalNoise::FractalNoise</a></div><div class="ttdeci">FractalNoise(int o, float p)</div><div class="ttdoc">Configures the octave count and persistence of the fractal.</div></div>
-<div class="ttc" id="aclass_hill_generator_html_a79c171ae4c09eda6ff481f1139e04e7e"><div class="ttname"><a href="class_hill_generator.html#a79c171ae4c09eda6ff481f1139e04e7e">HillGenerator::generateHeight</a></div><div class="ttdeci">float generateHeight(float x, float y) override</div><div class="ttdoc">Samples Perlin noise and remaps it to a gentle hill profile.</div><div class="ttdef"><b>Definition</b> <a href="#l00237">procedural.h:237</a></div></div>
-<div class="ttc" id="aclass_hill_generator_html_ae1698ec5581c01c52bfd4a37f17700db"><div class="ttname"><a href="class_hill_generator.html#ae1698ec5581c01c52bfd4a37f17700db">HillGenerator::HillGenerator</a></div><div class="ttdeci">HillGenerator(float scale=0.01f, float amplitude=10.0f)</div><div class="ttdoc">Configures the hill generator parameters.</div><div class="ttdef"><b>Definition</b> <a href="#l00231">procedural.h:231</a></div></div>
-<div class="ttc" id="aclass_island_generator_html_a950411391dbd8c2b8953aa1d7fd9d2e1"><div class="ttname"><a href="class_island_generator.html#a950411391dbd8c2b8953aa1d7fd9d2e1">IslandGenerator::IslandGenerator</a></div><div class="ttdeci">IslandGenerator(int numFeatures=10, float scale=0.01f)</div><div class="ttdef"><b>Definition</b> <a href="#l00300">procedural.h:300</a></div></div>
-<div class="ttc" id="aclass_island_generator_html_aad937fa6c922c0951b9f63ad8e0297e1"><div class="ttname"><a href="class_island_generator.html#aad937fa6c922c0951b9f63ad8e0297e1">IslandGenerator::generateHeight</a></div><div class="ttdeci">float generateHeight(float x, float y) override</div><div class="ttdoc">Produces island-style plateaus using cellular noise.</div><div class="ttdef"><b>Definition</b> <a href="#l00306">procedural.h:306</a></div></div>
-<div class="ttc" id="aclass_mountain_generator_html_a3087d383b2c00a1912202027d892ca0f"><div class="ttname"><a href="class_mountain_generator.html#a3087d383b2c00a1912202027d892ca0f">MountainGenerator::generateHeight</a></div><div class="ttdeci">float generateHeight(float x, float y) override</div><div class="ttdoc">Produces jagged mountain heights using fractal noise.</div><div class="ttdef"><b>Definition</b> <a href="#l00262">procedural.h:262</a></div></div>
-<div class="ttc" id="aclass_mountain_generator_html_a80c2174e4438dacbbabc70e5ef286d86"><div class="ttname"><a href="class_mountain_generator.html#a80c2174e4438dacbbabc70e5ef286d86">MountainGenerator::MountainGenerator</a></div><div class="ttdeci">MountainGenerator(float scale=10.f, float amplitude=100.0f, int octaves=5, float persistence=0.5f)</div><div class="ttdef"><b>Definition</b> <a href="#l00254">procedural.h:254</a></div></div>
+<div class="ttc" id="aclass_hill_generator_html_a79c171ae4c09eda6ff481f1139e04e7e"><div class="ttname"><a href="class_hill_generator.html#a79c171ae4c09eda6ff481f1139e04e7e">HillGenerator::generateHeight</a></div><div class="ttdeci">float generateHeight(float x, float y) override</div><div class="ttdoc">Samples Perlin noise and remaps it to a gentle hill profile.</div><div class="ttdef"><b>Definition</b> <a href="#l00244">procedural.h:244</a></div></div>
+<div class="ttc" id="aclass_hill_generator_html_ae1698ec5581c01c52bfd4a37f17700db"><div class="ttname"><a href="class_hill_generator.html#ae1698ec5581c01c52bfd4a37f17700db">HillGenerator::HillGenerator</a></div><div class="ttdeci">HillGenerator(float scale=0.01f, float amplitude=10.0f)</div><div class="ttdoc">Configures the hill generator parameters.</div><div class="ttdef"><b>Definition</b> <a href="#l00238">procedural.h:238</a></div></div>
+<div class="ttc" id="aclass_island_generator_html_a950411391dbd8c2b8953aa1d7fd9d2e1"><div class="ttname"><a href="class_island_generator.html#a950411391dbd8c2b8953aa1d7fd9d2e1">IslandGenerator::IslandGenerator</a></div><div class="ttdeci">IslandGenerator(int numFeatures=10, float scale=0.01f)</div><div class="ttdef"><b>Definition</b> <a href="#l00307">procedural.h:307</a></div></div>
+<div class="ttc" id="aclass_island_generator_html_aad937fa6c922c0951b9f63ad8e0297e1"><div class="ttname"><a href="class_island_generator.html#aad937fa6c922c0951b9f63ad8e0297e1">IslandGenerator::generateHeight</a></div><div class="ttdeci">float generateHeight(float x, float y) override</div><div class="ttdoc">Produces island-style plateaus using cellular noise.</div><div class="ttdef"><b>Definition</b> <a href="#l00313">procedural.h:313</a></div></div>
+<div class="ttc" id="aclass_mountain_generator_html_a3087d383b2c00a1912202027d892ca0f"><div class="ttname"><a href="class_mountain_generator.html#a3087d383b2c00a1912202027d892ca0f">MountainGenerator::generateHeight</a></div><div class="ttdeci">float generateHeight(float x, float y) override</div><div class="ttdoc">Produces jagged mountain heights using fractal noise.</div><div class="ttdef"><b>Definition</b> <a href="#l00269">procedural.h:269</a></div></div>
+<div class="ttc" id="aclass_mountain_generator_html_a80c2174e4438dacbbabc70e5ef286d86"><div class="ttname"><a href="class_mountain_generator.html#a80c2174e4438dacbbabc70e5ef286d86">MountainGenerator::MountainGenerator</a></div><div class="ttdeci">MountainGenerator(float scale=10.f, float amplitude=100.0f, int octaves=5, float persistence=0.5f)</div><div class="ttdef"><b>Definition</b> <a href="#l00261">procedural.h:261</a></div></div>
 <div class="ttc" id="aclass_noise_html"><div class="ttname"><a href="class_noise.html">Noise</a></div><div class="ttdoc">Convenience namespace bundling the available noise algorithms.</div><div class="ttdef"><b>Definition</b> <a href="#l00147">procedural.h:147</a></div></div>
 <div class="ttc" id="aclass_noise_html_a36d9dcdd5d6d4174c3168462e654110b"><div class="ttname"><a href="class_noise.html#a36d9dcdd5d6d4174c3168462e654110b">Noise::simplex</a></div><div class="ttdeci">static float simplex(float x, float y)</div><div class="ttdoc">Samples Simplex noise using the global seed when enabled.</div></div>
 <div class="ttc" id="aclass_noise_html_a38beb9ad307c49b826290b6ad2f486cb"><div class="ttname"><a href="class_noise.html#a38beb9ad307c49b826290b6ad2f486cb">Noise::worley</a></div><div class="ttdeci">static float worley(float x, float y)</div><div class="ttdoc">Samples Worley noise using the global seed when enabled.</div></div>
 <div class="ttc" id="aclass_noise_html_a3bd6289706dd9fd5c7d6f67e88cbf212"><div class="ttname"><a href="class_noise.html#a3bd6289706dd9fd5c7d6f67e88cbf212">Noise::perlin</a></div><div class="ttdeci">static float perlin(float x, float y)</div><div class="ttdoc">Samples Perlin noise using the global seed when enabled.</div></div>
-<div class="ttc" id="aclass_noise_html_a5596e726507d685af8082eb83977c2c4"><div class="ttname"><a href="class_noise.html#a5596e726507d685af8082eb83977c2c4">Noise::useSeed</a></div><div class="ttdeci">static bool useSeed</div><div class="ttdef"><b>Definition</b> <a href="#l00173">procedural.h:173</a></div></div>
-<div class="ttc" id="aclass_noise_html_a5603280f5d09817bee3a5d0d12a1fab8"><div class="ttname"><a href="class_noise.html#a5603280f5d09817bee3a5d0d12a1fab8">Noise::seed</a></div><div class="ttdeci">static float seed</div><div class="ttdef"><b>Definition</b> <a href="#l00171">procedural.h:171</a></div></div>
-<div class="ttc" id="aclass_noise_html_aa2a9eec8f83b902945f1632961b17c30"><div class="ttname"><a href="class_noise.html#aa2a9eec8f83b902945f1632961b17c30">Noise::initializedSeed</a></div><div class="ttdeci">static bool initializedSeed</div><div class="ttdef"><b>Definition</b> <a href="#l00172">procedural.h:172</a></div></div>
+<div class="ttc" id="aclass_noise_html_a5596e726507d685af8082eb83977c2c4"><div class="ttname"><a href="class_noise.html#a5596e726507d685af8082eb83977c2c4">Noise::useSeed</a></div><div class="ttdeci">static bool useSeed</div><div class="ttdoc">When true, helper functions use the shared seed value.</div><div class="ttdef"><b>Definition</b> <a href="#l00177">procedural.h:177</a></div></div>
+<div class="ttc" id="aclass_noise_html_a5603280f5d09817bee3a5d0d12a1fab8"><div class="ttname"><a href="class_noise.html#a5603280f5d09817bee3a5d0d12a1fab8">Noise::seed</a></div><div class="ttdeci">static float seed</div><div class="ttdoc">Global seed value used by noise helpers when enabled.</div><div class="ttdef"><b>Definition</b> <a href="#l00172">procedural.h:172</a></div></div>
+<div class="ttc" id="aclass_noise_html_aa2a9eec8f83b902945f1632961b17c30"><div class="ttname"><a href="class_noise.html#aa2a9eec8f83b902945f1632961b17c30">Noise::initializedSeed</a></div><div class="ttdeci">static bool initializedSeed</div><div class="ttdoc">Indicates whether the global seed has already been initialized.</div><div class="ttdef"><b>Definition</b> <a href="#l00175">procedural.h:175</a></div></div>
 <div class="ttc" id="aclass_noise_html_abfef3a14874d85b2f297f63aad95a325"><div class="ttname"><a href="class_noise.html#abfef3a14874d85b2f297f63aad95a325">Noise::fractal</a></div><div class="ttdeci">static float fractal(float x, float y, int octaves, float persistence)</div><div class="ttdoc">Samples a fractal sum of Perlin noise with runtime parameters.</div></div>
-<div class="ttc" id="aclass_plain_generator_html_a4ef7e95e99259753834deb5e11cc678f"><div class="ttname"><a href="class_plain_generator.html#a4ef7e95e99259753834deb5e11cc678f">PlainGenerator::generateHeight</a></div><div class="ttdeci">float generateHeight(float x, float y) override</div><div class="ttdoc">Returns low-amplitude Perlin noise suited for flat regions.</div><div class="ttdef"><b>Definition</b> <a href="#l00285">procedural.h:285</a></div></div>
-<div class="ttc" id="aclass_plain_generator_html_aa9c2709c51b71a41c8547b2dbe737784"><div class="ttname"><a href="class_plain_generator.html#aa9c2709c51b71a41c8547b2dbe737784">PlainGenerator::PlainGenerator</a></div><div class="ttdeci">PlainGenerator(float scale=0.02f, float amplitude=2.0f)</div><div class="ttdef"><b>Definition</b> <a href="#l00279">procedural.h:279</a></div></div>
+<div class="ttc" id="aclass_plain_generator_html_a4ef7e95e99259753834deb5e11cc678f"><div class="ttname"><a href="class_plain_generator.html#a4ef7e95e99259753834deb5e11cc678f">PlainGenerator::generateHeight</a></div><div class="ttdeci">float generateHeight(float x, float y) override</div><div class="ttdoc">Returns low-amplitude Perlin noise suited for flat regions.</div><div class="ttdef"><b>Definition</b> <a href="#l00292">procedural.h:292</a></div></div>
+<div class="ttc" id="aclass_plain_generator_html_aa9c2709c51b71a41c8547b2dbe737784"><div class="ttname"><a href="class_plain_generator.html#aa9c2709c51b71a41c8547b2dbe737784">PlainGenerator::PlainGenerator</a></div><div class="ttdeci">PlainGenerator(float scale=0.02f, float amplitude=2.0f)</div><div class="ttdef"><b>Definition</b> <a href="#l00286">procedural.h:286</a></div></div>
 <div class="ttc" id="aclass_simplex_noise_html"><div class="ttname"><a href="class_simplex_noise.html">SimplexNoise</a></div><div class="ttdoc">2D Simplex noise helper that delivers sharper ridges than Perlin.</div><div class="ttdef"><b>Definition</b> <a href="#l00060">procedural.h:60</a></div></div>
 <div class="ttc" id="aclass_simplex_noise_html_a91b944e9a4e76977a777e64a75727801"><div class="ttname"><a href="class_simplex_noise.html#a91b944e9a4e76977a777e64a75727801">SimplexNoise::noise</a></div><div class="ttdeci">static float noise(float xin, float yin)</div><div class="ttdoc">Computes Simplex noise for the supplied coordinates.</div></div>
-<div class="ttc" id="aclass_terrain_generator_html"><div class="ttname"><a href="class_terrain_generator.html">TerrainGenerator</a></div><div class="ttdoc">Abstract interface that translates 2D coordinates into heights.</div><div class="ttdef"><b>Definition</b> <a href="#l00180">procedural.h:180</a></div></div>
+<div class="ttc" id="aclass_terrain_generator_html"><div class="ttname"><a href="class_terrain_generator.html">TerrainGenerator</a></div><div class="ttdoc">Abstract interface that translates 2D coordinates into heights.</div><div class="ttdef"><b>Definition</b> <a href="#l00184">procedural.h:184</a></div></div>
 <div class="ttc" id="aclass_terrain_generator_html_a20b5eb12bfe5d5cb9e858c61ae0f09a0"><div class="ttname"><a href="class_terrain_generator.html#a20b5eb12bfe5d5cb9e858c61ae0f09a0">TerrainGenerator::~TerrainGenerator</a></div><div class="ttdeci">virtual ~TerrainGenerator()=default</div></div>
-<div class="ttc" id="aclass_terrain_generator_html_a64d46f39afa83dcd30470c41dc44ee40"><div class="ttname"><a href="class_terrain_generator.html#a64d46f39afa83dcd30470c41dc44ee40">TerrainGenerator::applyTo</a></div><div class="ttdeci">virtual void applyTo(Terrain &amp;) const</div><div class="ttdef"><b>Definition</b> <a href="#l00193">procedural.h:193</a></div></div>
+<div class="ttc" id="aclass_terrain_generator_html_a64d46f39afa83dcd30470c41dc44ee40"><div class="ttname"><a href="class_terrain_generator.html#a64d46f39afa83dcd30470c41dc44ee40">TerrainGenerator::applyTo</a></div><div class="ttdeci">virtual void applyTo(Terrain &amp;) const</div><div class="ttdoc">Optional hook invoked when the generator is attached to a terrain.</div><div class="ttdef"><b>Definition</b> <a href="#l00200">procedural.h:200</a></div></div>
 <div class="ttc" id="aclass_terrain_generator_html_a80ad336990a06e22160807615c880e70"><div class="ttname"><a href="class_terrain_generator.html#a80ad336990a06e22160807615c880e70">TerrainGenerator::generateHeight</a></div><div class="ttdeci">virtual float generateHeight(float x, float y)=0</div><div class="ttdoc">Evaluates the height of the terrain at the requested position.</div></div>
 <div class="ttc" id="aclass_terrain_html"><div class="ttname"><a href="class_terrain.html">Terrain</a></div><div class="ttdoc">Tessellated terrain surface that can be generated procedurally or from heightmaps.</div><div class="ttdef"><b>Definition</b> <a href="terrain_8h_source.html#l00147">terrain.h:147</a></div></div>
 <div class="ttc" id="aclass_worley_noise_html"><div class="ttname"><a href="class_worley_noise.html">WorleyNoise</a></div><div class="ttdoc">Worley (cellular) noise generator used for island and crater shapes.</div><div class="ttdef"><b>Definition</b> <a href="#l00080">procedural.h:80</a></div></div>

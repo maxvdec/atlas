@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -145,11 +145,12 @@ Public Member Functions</h2></td></tr>
 <tr class="inherit_header pub_methods_class_terrain_generator"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pub_methods_class_terrain_generator')"><span class="dynarrow"><span class="arrowhead closed"></span></span>Public Member Functions inherited from <a class="el" href="class_terrain_generator.html">TerrainGenerator</a></td></tr>
 <tr class="memitem:a20b5eb12bfe5d5cb9e858c61ae0f09a0 inherit pub_methods_class_terrain_generator" id="r_a20b5eb12bfe5d5cb9e858c61ae0f09a0"><td class="memItemLeft">virtual&#160;</td><td class="memItemRight"><a class="el" href="class_terrain_generator.html#a20b5eb12bfe5d5cb9e858c61ae0f09a0">~TerrainGenerator</a> ()=default</td></tr>
 <tr class="memitem:a64d46f39afa83dcd30470c41dc44ee40 inherit pub_methods_class_terrain_generator" id="r_a64d46f39afa83dcd30470c41dc44ee40"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_terrain_generator.html#a64d46f39afa83dcd30470c41dc44ee40">applyTo</a> (<a class="el" href="class_terrain.html">Terrain</a> &amp;) const</td></tr>
+<tr class="memdesc:a64d46f39afa83dcd30470c41dc44ee40 inherit pub_methods_class_terrain_generator"><td class="mdescLeft">&#160;</td><td class="mdescRight">Optional hook invoked when the generator is attached to a terrain.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Gentle noise generator producing subtle undulating plains. </p>
 
-<p class="definition">Definition at line <a class="el" href="procedural_8h_source.html#l00273">273</a> of file <a class="el" href="procedural_8h_source.html">procedural.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="procedural_8h_source.html#l00280">280</a> of file <a class="el" href="procedural_8h_source.html">procedural.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="aa9c2709c51b71a41c8547b2dbe737784" name="aa9c2709c51b71a41c8547b2dbe737784"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aa9c2709c51b71a41c8547b2dbe737784">&#9670;&#160;</a></span>PlainGenerator()</h2>
@@ -178,8 +179,8 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="procedural_8h_source.html#l00279">279</a> of file <a class="el" href="procedural_8h_source.html">procedural.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  280</span>        : amplitude(amplitude), scale(scale) {}</div>
+<p class="definition">Definition at line <a class="el" href="procedural_8h_source.html#l00286">286</a> of file <a class="el" href="procedural_8h_source.html">procedural.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  287</span>        : amplitude(amplitude), scale(scale) {}</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -215,11 +216,11 @@ Public Member Functions</h2></td></tr>
 
 <p>Implements <a class="el" href="class_terrain_generator.html#a80ad336990a06e22160807615c880e70">TerrainGenerator</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="procedural_8h_source.html#l00285">285</a> of file <a class="el" href="procedural_8h_source.html">procedural.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  285</span>                                                    {</div>
-<div class="line"><span class="lineno">  286</span>        <span class="keywordtype">float</span> noise = <a class="code hl_function" href="class_noise.html#a3bd6289706dd9fd5c7d6f67e88cbf212">Noise::perlin</a>(x * scale, y * scale);</div>
-<div class="line"><span class="lineno">  287</span>        <span class="keywordflow">return</span> (noise + 1.0f) * 0.5f * amplitude / 2.0f;</div>
-<div class="line"><span class="lineno">  288</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="procedural_8h_source.html#l00292">292</a> of file <a class="el" href="procedural_8h_source.html">procedural.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  292</span>                                                    {</div>
+<div class="line"><span class="lineno">  293</span>        <span class="keywordtype">float</span> noise = <a class="code hl_function" href="class_noise.html#a3bd6289706dd9fd5c7d6f67e88cbf212">Noise::perlin</a>(x * scale, y * scale);</div>
+<div class="line"><span class="lineno">  294</span>        <span class="keywordflow">return</span> (noise + 1.0f) * 0.5f * amplitude / 2.0f;</div>
+<div class="line"><span class="lineno">  295</span>    }</div>
 <div class="ttc" id="aclass_noise_html_a3bd6289706dd9fd5c7d6f67e88cbf212"><div class="ttname"><a href="class_noise.html#a3bd6289706dd9fd5c7d6f67e88cbf212">Noise::perlin</a></div><div class="ttdeci">static float perlin(float x, float y)</div><div class="ttdoc">Samples Perlin noise using the global seed when enabled.</div></div>
 </div><!-- fragment -->
 <p class="reference">References <a class="el" href="class_noise.html#a3bd6289706dd9fd5c7d6f67e88cbf212">Noise::perlin()</a>.</p>

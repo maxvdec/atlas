@@ -1,6 +1,7 @@
 var units_8h =
 [
     [ "Position3d", "struct_position3d.html", "struct_position3d" ],
+    [ "BoundingBox", "struct_bounding_box.html", "struct_bounding_box" ],
     [ "Rotation3d", "struct_rotation3d.html", "struct_rotation3d" ],
     [ "Quaternion", "struct_quaternion.html", "struct_quaternion" ],
     [ "Color", "struct_color.html", "struct_color" ],

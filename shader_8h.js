@@ -1,6 +1,7 @@
 var shader_8h =
 [
     [ "VertexShader", "struct_vertex_shader.html", "struct_vertex_shader" ],
+    [ "ComputeShader", "struct_compute_shader.html", "struct_compute_shader" ],
     [ "FragmentShader", "struct_fragment_shader.html", "struct_fragment_shader" ],
     [ "GeometryShader", "struct_geometry_shader.html", "struct_geometry_shader" ],
     [ "TessellationShader", "class_tessellation_shader.html", "class_tessellation_shader" ],
@@ -8,6 +9,11 @@ var shader_8h =
     [ "ShaderProgram", "struct_shader_program.html", "struct_shader_program" ],
     [ "DEFAULT_FRAG_SHADER", "shader_8h.html#ae3dc3c5c789f2407bf2e7c2799bec14e", null ],
     [ "DEFAULT_VERT_SHADER", "shader_8h.html#ad7c89fac3d5c6fcaafd9bc338cc8a2d2", null ],
+    [ "AtlasComputeShader", "shader_8h.html#a3f2f7cad5661081d348cc7c6f09f0908", [
+      [ "DDGI", "shader_8h.html#a3f2f7cad5661081d348cc7c6f09f0908afff287a54a6d46004ac11efb8d31e594", null ],
+      [ "DDGI_WRITE", "shader_8h.html#a3f2f7cad5661081d348cc7c6f09f0908a135ae7e90bbf12b00cf8b7c12dd8f2ff", null ],
+      [ "PathTracer", "shader_8h.html#a3f2f7cad5661081d348cc7c6f09f0908a92e4428abedcf75ee19c2b4068a4e34e", null ]
+    ] ],
     [ "AtlasFragmentShader", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0", [
       [ "Debug", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0aa603905470e2a5b8c13e96b579ef0dba", null ],
       [ "Color", "shader_8h.html#ae4b5ffebe5841702defe3060ebbe08d0acb5feb1b7314637725a2e73bdc9f7295", null ],

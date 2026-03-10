@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -135,6 +135,7 @@ $(function(){initNavTree('units_8h.html','',''); });
 Classes</h2></td></tr>
 <tr class="memitem:Position3d" id="r_Position3d"><td class="memItemLeft">struct &#160;</td><td class="memItemRight"><a class="el" href="struct_position3d.html">Position3d</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Structure representing a position in 3D space with double precision. Provides arithmetic operations and conversions to/from GLM types.  <a href="struct_position3d.html#details">More...</a><br /></td></tr>
+<tr class="memitem:BoundingBox" id="r_BoundingBox"><td class="memItemLeft">struct &#160;</td><td class="memItemRight"><a class="el" href="struct_bounding_box.html">BoundingBox</a></td></tr>
 <tr class="memitem:Rotation3d" id="r_Rotation3d"><td class="memItemLeft">struct &#160;</td><td class="memItemRight"><a class="el" href="struct_rotation3d.html">Rotation3d</a></td></tr>
 <tr class="memdesc:"><td class="mdescLeft">&#160;</td><td class="mdescRight">Structure representing rotation in 3D space using Euler angles. Provides arithmetic operations and conversions to/from GLM quaternions.  <a href="struct_rotation3d.html#details">More...</a><br /></td></tr>
 <tr class="memitem:Quaternion" id="r_Quaternion"><td class="memItemLeft">struct &#160;</td><td class="memItemRight"><a class="el" href="struct_quaternion.html">Quaternion</a></td></tr>
@@ -160,9 +161,13 @@ Typedefs</h2></td></tr>
 <tr class="memitem:afa7de6f8211b70367d0d4a845db0369a" id="r_afa7de6f8211b70367d0d4a845db0369a"><td class="memItemLeft">using&#160;</td><td class="memItemRight"><a class="el" href="#afa7de6f8211b70367d0d4a845db0369a">Magnitude3d</a> = <a class="el" href="struct_position3d.html">Position3d</a></td></tr>
 <tr class="memdesc:afa7de6f8211b70367d0d4a845db0369a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type alias for 3D magnitude vectors.  <br /></td></tr>
 <tr class="memitem:a1a9e33026a2338c2e67961b26c8d8a26" id="r_a1a9e33026a2338c2e67961b26c8d8a26"><td class="memItemLeft">using&#160;</td><td class="memItemRight"><a class="el" href="#a1a9e33026a2338c2e67961b26c8d8a26">Impulse3d</a> = <a class="el" href="struct_position3d.html">Position3d</a></td></tr>
+<tr class="memdesc:a1a9e33026a2338c2e67961b26c8d8a26"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type alias for 3D impulse vectors.  <br /></td></tr>
 <tr class="memitem:ac94b308ca027b2e63f8b7a5fca71f6ad" id="r_ac94b308ca027b2e63f8b7a5fca71f6ad"><td class="memItemLeft">using&#160;</td><td class="memItemRight"><a class="el" href="#ac94b308ca027b2e63f8b7a5fca71f6ad">Force3d</a> = <a class="el" href="struct_position3d.html">Position3d</a></td></tr>
+<tr class="memdesc:ac94b308ca027b2e63f8b7a5fca71f6ad"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type alias for 3D force vectors.  <br /></td></tr>
 <tr class="memitem:a9cae88f0ee19c76726bf93ac9f6f7e51" id="r_a9cae88f0ee19c76726bf93ac9f6f7e51"><td class="memItemLeft">using&#160;</td><td class="memItemRight"><a class="el" href="#a9cae88f0ee19c76726bf93ac9f6f7e51">Vector3</a> = <a class="el" href="struct_position3d.html">Position3d</a></td></tr>
+<tr class="memdesc:a9cae88f0ee19c76726bf93ac9f6f7e51"><td class="mdescLeft">&#160;</td><td class="mdescRight">Generic type alias for 3D vectors.  <br /></td></tr>
 <tr class="memitem:a1b9aa5a4c5146cc45a21959a2724cd5d" id="r_a1b9aa5a4c5146cc45a21959a2724cd5d"><td class="memItemLeft">using&#160;</td><td class="memItemRight"><a class="el" href="#a1b9aa5a4c5146cc45a21959a2724cd5d">Velocity3d</a> = <a class="el" href="struct_position3d.html">Position3d</a></td></tr>
+<tr class="memdesc:a1b9aa5a4c5146cc45a21959a2724cd5d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type alias for 3D velocity vectors.  <br /></td></tr>
 <tr class="memitem:aa39ddd1645a5d1634a3da83ba560d45e" id="r_aa39ddd1645a5d1634a3da83ba560d45e"><td class="memItemLeft">using&#160;</td><td class="memItemRight"><a class="el" href="#aa39ddd1645a5d1634a3da83ba560d45e">Id</a> = unsigned int</td></tr>
 <tr class="memdesc:aa39ddd1645a5d1634a3da83ba560d45e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type alias for OpenGL object identifiers.  <br /></td></tr>
 <tr class="memitem:ae90d9c4d383cd5d94c30f49cf4f91753" id="r_ae90d9c4d383cd5d94c30f49cf4f91753"><td class="memItemLeft">using&#160;</td><td class="memItemRight"><a class="el" href="#ae90d9c4d383cd5d94c30f49cf4f91753">Scale2d</a> = <a class="el" href="struct_position2d.html">Position2d</a></td></tr>
@@ -172,6 +177,7 @@ Typedefs</h2></td></tr>
 <tr class="memitem:a48cb5ec1b3f30ba3c80b52d84531e07c" id="r_a48cb5ec1b3f30ba3c80b52d84531e07c"><td class="memItemLeft">using&#160;</td><td class="memItemRight"><a class="el" href="#a48cb5ec1b3f30ba3c80b52d84531e07c">Movement2d</a> = <a class="el" href="struct_position2d.html">Position2d</a></td></tr>
 <tr class="memdesc:a48cb5ec1b3f30ba3c80b52d84531e07c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type alias for 2D movement vectors.  <br /></td></tr>
 <tr class="memitem:a0adb96725017e45579dc798b67336b65" id="r_a0adb96725017e45579dc798b67336b65"><td class="memItemLeft">using&#160;</td><td class="memItemRight"><a class="el" href="#a0adb96725017e45579dc798b67336b65">Magnitude2d</a> = <a class="el" href="struct_position2d.html">Position2d</a></td></tr>
+<tr class="memdesc:a0adb96725017e45579dc798b67336b65"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type alias for 2D magnitude vectors.  <br /></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-enum-members" class="groupheader"><a id="enum-members" name="enum-members"></a>
 Enumerations</h2></td></tr>
@@ -200,7 +206,9 @@ Enumerations</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00141">141</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<p>Type alias for 3D force vectors. </p>
+
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00143">143</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
 
 </div>
 </div>
@@ -218,7 +226,7 @@ Enumerations</h2></td></tr>
 
 <p>Type alias for OpenGL object identifiers. </p>
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00369">369</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00406">406</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
 
 </div>
 </div>
@@ -234,7 +242,9 @@ Enumerations</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00140">140</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<p>Type alias for 3D impulse vectors. </p>
+
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00141">141</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
 
 </div>
 </div>
@@ -250,7 +260,9 @@ Enumerations</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00447">447</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<p>Type alias for 2D magnitude vectors. </p>
+
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00487">487</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
 
 </div>
 </div>
@@ -286,7 +298,7 @@ Enumerations</h2></td></tr>
 
 <p>Type alias for 2D movement vectors. </p>
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00446">446</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00485">485</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
 
 </div>
 </div>
@@ -322,7 +334,7 @@ Enumerations</h2></td></tr>
 
 <p>Type alias for 2D points. </p>
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00441">441</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00480">480</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
 
 </div>
 </div>
@@ -358,7 +370,7 @@ Enumerations</h2></td></tr>
 
 <p>Type alias for 2D scaling factors. </p>
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00436">436</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00475">475</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
 
 </div>
 </div>
@@ -410,7 +422,9 @@ Enumerations</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00142">142</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<p>Generic type alias for 3D vectors. </p>
+
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00145">145</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
 
 </div>
 </div>
@@ -426,7 +440,9 @@ Enumerations</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00143">143</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<p>Type alias for 3D velocity vectors. </p>
+
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00147">147</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
 
 </div>
 </div>
@@ -467,39 +483,39 @@ Enumerations</h2></td></tr>
 </td></tr>
 </table>
 
-<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00375">375</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  375</span>                       {<span class="comment"></span></div>
-<div class="line"><span class="lineno">  376</span><span class="comment">    /**</span></div>
-<div class="line"><span class="lineno">  377</span><span class="comment">     * @brief Positive Y axis.</span></div>
-<div class="line"><span class="lineno">  378</span><span class="comment">     */</span></div>
-<div class="line"><span class="lineno">  379</span>    <a class="code hl_enumvalue" href="#ab8c8d5e469ffb9cf502ea12708d544f5a258f49887ef8d14ac268c92b02503aaa">Up</a>,<span class="comment"></span></div>
-<div class="line"><span class="lineno">  380</span><span class="comment">    /**</span></div>
-<div class="line"><span class="lineno">  381</span><span class="comment">     * @brief Negative Y axis.</span></div>
-<div class="line"><span class="lineno">  382</span><span class="comment">     */</span></div>
-<div class="line"><span class="lineno">  383</span>    <a class="code hl_enumvalue" href="#ab8c8d5e469ffb9cf502ea12708d544f5a08a38277b0309070706f6652eeae9a53">Down</a>,<span class="comment"></span></div>
-<div class="line"><span class="lineno">  384</span><span class="comment">    /**</span></div>
-<div class="line"><span class="lineno">  385</span><span class="comment">     * @brief Negative X axis.</span></div>
-<div class="line"><span class="lineno">  386</span><span class="comment">     */</span></div>
-<div class="line"><span class="lineno">  387</span>    <a class="code hl_enumvalue" href="#ab8c8d5e469ffb9cf502ea12708d544f5a945d5e233cf7d6240f6b783b36a374ff">Left</a>,<span class="comment"></span></div>
-<div class="line"><span class="lineno">  388</span><span class="comment">    /**</span></div>
-<div class="line"><span class="lineno">  389</span><span class="comment">     * @brief Positive X axis.</span></div>
-<div class="line"><span class="lineno">  390</span><span class="comment">     */</span></div>
-<div class="line"><span class="lineno">  391</span>    <a class="code hl_enumvalue" href="#ab8c8d5e469ffb9cf502ea12708d544f5a92b09c7c48c520c3c55e497875da437c">Right</a>,<span class="comment"></span></div>
-<div class="line"><span class="lineno">  392</span><span class="comment">    /**</span></div>
-<div class="line"><span class="lineno">  393</span><span class="comment">     * @brief Positive Z axis.</span></div>
-<div class="line"><span class="lineno">  394</span><span class="comment">     */</span></div>
-<div class="line"><span class="lineno">  395</span>    <a class="code hl_enumvalue" href="#ab8c8d5e469ffb9cf502ea12708d544f5a67d2f6740a8eaebf4d5c6f79be8da481">Forward</a>,<span class="comment"></span></div>
-<div class="line"><span class="lineno">  396</span><span class="comment">    /**</span></div>
-<div class="line"><span class="lineno">  397</span><span class="comment">     * @brief Negative Z axis.</span></div>
-<div class="line"><span class="lineno">  398</span><span class="comment">     */</span></div>
-<div class="line"><span class="lineno">  399</span>    <a class="code hl_enumvalue" href="#ab8c8d5e469ffb9cf502ea12708d544f5ab3263eb38f8903efc271cc7a760da510">Backward</a></div>
-<div class="line"><span class="lineno">  400</span>};</div>
-<div class="ttc" id="aunits_8h_html_ab8c8d5e469ffb9cf502ea12708d544f5a08a38277b0309070706f6652eeae9a53"><div class="ttname"><a href="#ab8c8d5e469ffb9cf502ea12708d544f5a08a38277b0309070706f6652eeae9a53">Direction3d::Down</a></div><div class="ttdeci">@ Down</div><div class="ttdoc">Negative Y axis.</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00383">units.h:383</a></div></div>
-<div class="ttc" id="aunits_8h_html_ab8c8d5e469ffb9cf502ea12708d544f5a258f49887ef8d14ac268c92b02503aaa"><div class="ttname"><a href="#ab8c8d5e469ffb9cf502ea12708d544f5a258f49887ef8d14ac268c92b02503aaa">Direction3d::Up</a></div><div class="ttdeci">@ Up</div><div class="ttdoc">Positive Y axis.</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00379">units.h:379</a></div></div>
-<div class="ttc" id="aunits_8h_html_ab8c8d5e469ffb9cf502ea12708d544f5a67d2f6740a8eaebf4d5c6f79be8da481"><div class="ttname"><a href="#ab8c8d5e469ffb9cf502ea12708d544f5a67d2f6740a8eaebf4d5c6f79be8da481">Direction3d::Forward</a></div><div class="ttdeci">@ Forward</div><div class="ttdoc">Positive Z axis.</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00395">units.h:395</a></div></div>
-<div class="ttc" id="aunits_8h_html_ab8c8d5e469ffb9cf502ea12708d544f5a92b09c7c48c520c3c55e497875da437c"><div class="ttname"><a href="#ab8c8d5e469ffb9cf502ea12708d544f5a92b09c7c48c520c3c55e497875da437c">Direction3d::Right</a></div><div class="ttdeci">@ Right</div><div class="ttdoc">Positive X axis.</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00391">units.h:391</a></div></div>
-<div class="ttc" id="aunits_8h_html_ab8c8d5e469ffb9cf502ea12708d544f5a945d5e233cf7d6240f6b783b36a374ff"><div class="ttname"><a href="#ab8c8d5e469ffb9cf502ea12708d544f5a945d5e233cf7d6240f6b783b36a374ff">Direction3d::Left</a></div><div class="ttdeci">@ Left</div><div class="ttdoc">Negative X axis.</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00387">units.h:387</a></div></div>
-<div class="ttc" id="aunits_8h_html_ab8c8d5e469ffb9cf502ea12708d544f5ab3263eb38f8903efc271cc7a760da510"><div class="ttname"><a href="#ab8c8d5e469ffb9cf502ea12708d544f5ab3263eb38f8903efc271cc7a760da510">Direction3d::Backward</a></div><div class="ttdeci">@ Backward</div><div class="ttdoc">Negative Z axis.</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00399">units.h:399</a></div></div>
+<p class="definition">Definition at line <a class="el" href="units_8h_source.html#l00412">412</a> of file <a class="el" href="units_8h_source.html">units.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  412</span>                       {<span class="comment"></span></div>
+<div class="line"><span class="lineno">  413</span><span class="comment">    /**</span></div>
+<div class="line"><span class="lineno">  414</span><span class="comment">     * @brief Positive Y axis.</span></div>
+<div class="line"><span class="lineno">  415</span><span class="comment">     */</span></div>
+<div class="line"><span class="lineno">  416</span>    <a class="code hl_enumvalue" href="#ab8c8d5e469ffb9cf502ea12708d544f5a258f49887ef8d14ac268c92b02503aaa">Up</a>,<span class="comment"></span></div>
+<div class="line"><span class="lineno">  417</span><span class="comment">    /**</span></div>
+<div class="line"><span class="lineno">  418</span><span class="comment">     * @brief Negative Y axis.</span></div>
+<div class="line"><span class="lineno">  419</span><span class="comment">     */</span></div>
+<div class="line"><span class="lineno">  420</span>    <a class="code hl_enumvalue" href="#ab8c8d5e469ffb9cf502ea12708d544f5a08a38277b0309070706f6652eeae9a53">Down</a>,<span class="comment"></span></div>
+<div class="line"><span class="lineno">  421</span><span class="comment">    /**</span></div>
+<div class="line"><span class="lineno">  422</span><span class="comment">     * @brief Negative X axis.</span></div>
+<div class="line"><span class="lineno">  423</span><span class="comment">     */</span></div>
+<div class="line"><span class="lineno">  424</span>    <a class="code hl_enumvalue" href="#ab8c8d5e469ffb9cf502ea12708d544f5a945d5e233cf7d6240f6b783b36a374ff">Left</a>,<span class="comment"></span></div>
+<div class="line"><span class="lineno">  425</span><span class="comment">    /**</span></div>
+<div class="line"><span class="lineno">  426</span><span class="comment">     * @brief Positive X axis.</span></div>
+<div class="line"><span class="lineno">  427</span><span class="comment">     */</span></div>
+<div class="line"><span class="lineno">  428</span>    <a class="code hl_enumvalue" href="#ab8c8d5e469ffb9cf502ea12708d544f5a92b09c7c48c520c3c55e497875da437c">Right</a>,<span class="comment"></span></div>
+<div class="line"><span class="lineno">  429</span><span class="comment">    /**</span></div>
+<div class="line"><span class="lineno">  430</span><span class="comment">     * @brief Positive Z axis.</span></div>
+<div class="line"><span class="lineno">  431</span><span class="comment">     */</span></div>
+<div class="line"><span class="lineno">  432</span>    <a class="code hl_enumvalue" href="#ab8c8d5e469ffb9cf502ea12708d544f5a67d2f6740a8eaebf4d5c6f79be8da481">Forward</a>,<span class="comment"></span></div>
+<div class="line"><span class="lineno">  433</span><span class="comment">    /**</span></div>
+<div class="line"><span class="lineno">  434</span><span class="comment">     * @brief Negative Z axis.</span></div>
+<div class="line"><span class="lineno">  435</span><span class="comment">     */</span></div>
+<div class="line"><span class="lineno">  436</span>    <a class="code hl_enumvalue" href="#ab8c8d5e469ffb9cf502ea12708d544f5ab3263eb38f8903efc271cc7a760da510">Backward</a></div>
+<div class="line"><span class="lineno">  437</span>};</div>
+<div class="ttc" id="aunits_8h_html_ab8c8d5e469ffb9cf502ea12708d544f5a08a38277b0309070706f6652eeae9a53"><div class="ttname"><a href="#ab8c8d5e469ffb9cf502ea12708d544f5a08a38277b0309070706f6652eeae9a53">Direction3d::Down</a></div><div class="ttdeci">@ Down</div><div class="ttdoc">Negative Y axis.</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00420">units.h:420</a></div></div>
+<div class="ttc" id="aunits_8h_html_ab8c8d5e469ffb9cf502ea12708d544f5a258f49887ef8d14ac268c92b02503aaa"><div class="ttname"><a href="#ab8c8d5e469ffb9cf502ea12708d544f5a258f49887ef8d14ac268c92b02503aaa">Direction3d::Up</a></div><div class="ttdeci">@ Up</div><div class="ttdoc">Positive Y axis.</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00416">units.h:416</a></div></div>
+<div class="ttc" id="aunits_8h_html_ab8c8d5e469ffb9cf502ea12708d544f5a67d2f6740a8eaebf4d5c6f79be8da481"><div class="ttname"><a href="#ab8c8d5e469ffb9cf502ea12708d544f5a67d2f6740a8eaebf4d5c6f79be8da481">Direction3d::Forward</a></div><div class="ttdeci">@ Forward</div><div class="ttdoc">Positive Z axis.</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00432">units.h:432</a></div></div>
+<div class="ttc" id="aunits_8h_html_ab8c8d5e469ffb9cf502ea12708d544f5a92b09c7c48c520c3c55e497875da437c"><div class="ttname"><a href="#ab8c8d5e469ffb9cf502ea12708d544f5a92b09c7c48c520c3c55e497875da437c">Direction3d::Right</a></div><div class="ttdeci">@ Right</div><div class="ttdoc">Positive X axis.</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00428">units.h:428</a></div></div>
+<div class="ttc" id="aunits_8h_html_ab8c8d5e469ffb9cf502ea12708d544f5a945d5e233cf7d6240f6b783b36a374ff"><div class="ttname"><a href="#ab8c8d5e469ffb9cf502ea12708d544f5a945d5e233cf7d6240f6b783b36a374ff">Direction3d::Left</a></div><div class="ttdeci">@ Left</div><div class="ttdoc">Negative X axis.</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00424">units.h:424</a></div></div>
+<div class="ttc" id="aunits_8h_html_ab8c8d5e469ffb9cf502ea12708d544f5ab3263eb38f8903efc271cc7a760da510"><div class="ttname"><a href="#ab8c8d5e469ffb9cf502ea12708d544f5ab3263eb38f8903efc271cc7a760da510">Direction3d::Backward</a></div><div class="ttdeci">@ Backward</div><div class="ttdoc">Negative Z axis.</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00436">units.h:436</a></div></div>
 </div><!-- fragment -->
 </div>
 </div>

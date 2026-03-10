@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -119,6 +119,7 @@ $(function(){initNavTree('struct_area_light.html','','struct_area_light-members'
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
+<a href="#friends">Friends</a> &#124;
 <a href="struct_area_light-members.html">List of all members</a>  </div>
   <div class="headertitle"><div class="title">AreaLight Struct Reference</div></div>
 </div><!--header-->
@@ -142,6 +143,7 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:afda077c24397d643aa6a2972a28caba2" id="r_afda077c24397d643aa6a2972a28caba2"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#afda077c24397d643aa6a2972a28caba2">createDebugObject</a> ()</td></tr>
 <tr class="memdesc:afda077c24397d643aa6a2972a28caba2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Debug helpers for visualizing the rectangle in the scene.  <br /></td></tr>
 <tr class="memitem:ac0e6600ed7b2c6cc17cf9e081059131c" id="r_ac0e6600ed7b2c6cc17cf9e081059131c"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#ac0e6600ed7b2c6cc17cf9e081059131c">addDebugObject</a> (<a class="el" href="class_window.html">Window</a> &amp;window)</td></tr>
+<tr class="memitem:a05a6fbea35b0bda9a428ed99e8e037f7" id="r_a05a6fbea35b0bda9a428ed99e8e037f7"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a05a6fbea35b0bda9a428ed99e8e037f7">castShadows</a> (<a class="el" href="class_window.html">Window</a> &amp;window, int resolution=2048)</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -157,6 +159,10 @@ Public Attributes</h2></td></tr>
 <tr class="memdesc:a7c5301af2da43bd235cdf1ab710f0086"><td class="mdescLeft">&#160;</td><td class="mdescRight">Diffuse/emissive color of the light.  <br /></td></tr>
 <tr class="memitem:a87cd9fc615a5c01a7b0c34d30882298a" id="r_a87cd9fc615a5c01a7b0c34d30882298a"><td class="memItemLeft"><a class="el" href="struct_color.html">Color</a>&#160;</td><td class="memItemRight"><a class="el" href="#a87cd9fc615a5c01a7b0c34d30882298a">shineColor</a> = <a class="el" href="struct_color.html#aad4699ae003d7a86b5edc5fccdbaf4c8">Color::white</a>()</td></tr>
 <tr class="memdesc:a87cd9fc615a5c01a7b0c34d30882298a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Specular highlight color for the light.  <br /></td></tr>
+<tr class="memitem:aba5be418d9ab027c2379575a4ef3e810" id="r_aba5be418d9ab027c2379575a4ef3e810"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#aba5be418d9ab027c2379575a4ef3e810">intensity</a> = 1.0f</td></tr>
+<tr class="memdesc:aba5be418d9ab027c2379575a4ef3e810"><td class="mdescLeft">&#160;</td><td class="mdescRight">Overall brightness multiplier applied to the area light.  <br /></td></tr>
+<tr class="memitem:aed35ad050e7e95ea6c0e6948951e5d87" id="r_aed35ad050e7e95ea6c0e6948951e5d87"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#aed35ad050e7e95ea6c0e6948951e5d87">range</a> = 50.0f</td></tr>
+<tr class="memdesc:aed35ad050e7e95ea6c0e6948951e5d87"><td class="mdescLeft">&#160;</td><td class="mdescRight">Maximum distance at which this area light contributes.  <br /></td></tr>
 <tr class="memitem:a55e92eab392d1c273a3172b24ba8fe07" id="r_a55e92eab392d1c273a3172b24ba8fe07"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#a55e92eab392d1c273a3172b24ba8fe07">angle</a> = 90.0f</td></tr>
 <tr class="memdesc:a55e92eab392d1c273a3172b24ba8fe07"><td class="mdescLeft">&#160;</td><td class="mdescRight">Emission cone half-angle in degrees around the plane normal. For example, 90 means a hemisphere emission relative to the plane normal.  <br /></td></tr>
 <tr class="memitem:acd34991156a5e820be6568bd47dd0a2c" id="r_acd34991156a5e820be6568bd47dd0a2c"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#acd34991156a5e820be6568bd47dd0a2c">castsBothSides</a> = false</td></tr>
@@ -165,11 +171,20 @@ Public Attributes</h2></td></tr>
 <tr class="memdesc:aac8628e4f55d5f24295d220cb88d2c31"><td class="mdescLeft">&#160;</td><td class="mdescRight">Rotation tracking for the area light. Changing this and calling setRotation/rotate will update right/up consistently.  <br /></td></tr>
 <tr class="memitem:a92d06c9d0e09b36c7bcf59ded1da534b" id="r_a92d06c9d0e09b36c7bcf59ded1da534b"><td class="memItemLeft">std::shared_ptr&lt; <a class="el" href="class_core_object.html">CoreObject</a> &gt;&#160;</td><td class="memItemRight"><a class="el" href="#a92d06c9d0e09b36c7bcf59ded1da534b">debugObject</a> = nullptr</td></tr>
 <tr class="memdesc:a92d06c9d0e09b36c7bcf59ded1da534b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Optional debug object visualizing the area light.  <br /></td></tr>
+<tr class="memitem:a1465056748e3d955924afa2d56a42e64" id="r_a1465056748e3d955924afa2d56a42e64"><td class="memItemLeft"><a class="el" href="class_render_target.html">RenderTarget</a> *&#160;</td><td class="memItemRight"><a class="el" href="#a1465056748e3d955924afa2d56a42e64">shadowRenderTarget</a> = nullptr</td></tr>
+<tr class="memdesc:a1465056748e3d955924afa2d56a42e64"><td class="mdescLeft">&#160;</td><td class="mdescRight">Optional shadow render target generated for this area light.  <br /></td></tr>
+<tr class="memitem:addab9859ed5a661b5fc67fca37fd43b7" id="r_addab9859ed5a661b5fc67fca37fd43b7"><td class="memItemLeft"><a class="el" href="struct_shadow_params.html">ShadowParams</a>&#160;</td><td class="memItemRight"><a class="el" href="#addab9859ed5a661b5fc67fca37fd43b7">lastShadowParams</a></td></tr>
+<tr class="memdesc:addab9859ed5a661b5fc67fca37fd43b7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Cached shadow matrices and bias for the current area-light map.  <br /></td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 id="header-friends" class="groupheader"><a id="friends" name="friends"></a>
+Friends</h2></td></tr>
+<tr class="memitem:a553f958a25683445088050a69d3de8e9" id="r_a553f958a25683445088050a69d3de8e9"><td class="memItemLeft">class&#160;</td><td class="memItemRight"><a class="el" href="#a553f958a25683445088050a69d3de8e9">Window</a></td></tr>
+<tr class="memitem:ac9dbe2a378024e3a3c417b4cb50adbb3" id="r_ac9dbe2a378024e3a3c417b4cb50adbb3"><td class="memItemLeft">class&#160;</td><td class="memItemRight"><a class="el" href="#ac9dbe2a378024e3a3c417b4cb50adbb3">CoreObject</a></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Rectangular area light with controllable emission angle and two-sided emission. The rectangle is defined by its center (position) and two oriented axes (right, up) and size (width, height). The plane normal is normalize(cross(right, up)). </p>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00560">560</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00582">582</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
 <a id="ac0e6600ed7b2c6cc17cf9e081059131c" name="ac0e6600ed7b2c6cc17cf9e081059131c"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ac0e6600ed7b2c6cc17cf9e081059131c">&#9670;&#160;</a></span>addDebugObject()</h2>
@@ -185,6 +200,31 @@ Public Attributes</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p class="reference">References <a class="el" href="light_8h_source.html#l00720">Window</a>.</p>
+
+</div>
+</div>
+<a id="a05a6fbea35b0bda9a428ed99e8e037f7" name="a05a6fbea35b0bda9a428ed99e8e037f7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a05a6fbea35b0bda9a428ed99e8e037f7">&#9670;&#160;</a></span>castShadows()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void AreaLight::castShadows </td>
+          <td>(</td>
+          <td class="paramtype"><a class="el" href="class_window.html">Window</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>window</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int</td>          <td class="paramname"><span class="paramname"><em>resolution</em></span><span class="paramdefsep"> = </span><span class="paramdefval">2048</span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="reference">References <a class="el" href="light_8h_source.html#l00720">Window</a>.</p>
 
 </div>
 </div>
@@ -232,18 +272,18 @@ Public Attributes</h2></td></tr>
 
 <p>Compute the plane normal (normalize(cross(right, up))). </p>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00609">609</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  609</span>                                  {</div>
-<div class="line"><span class="lineno">  610</span>        glm::vec3 u = glm::normalize(<a class="code hl_variable" href="#ad74cd37dfbb1ff4e498c1e56ca74ddf3">right</a>.toGlm());</div>
-<div class="line"><span class="lineno">  611</span>        glm::vec3 v = glm::normalize(<a class="code hl_variable" href="#ac5fa7f5efc48389faf985bce3296ae54">up</a>.toGlm());</div>
-<div class="line"><span class="lineno">  612</span>        glm::vec3 n = glm::normalize(glm::cross(u, v));</div>
-<div class="line"><span class="lineno">  613</span>        <span class="keywordflow">return</span> <a class="code hl_function" href="struct_position3d.html#a824e59149fabc3261e92a2aa0d358d28">Magnitude3d::fromGlm</a>(n);</div>
-<div class="line"><span class="lineno">  614</span>    }</div>
-<div class="ttc" id="astruct_area_light_html_ac5fa7f5efc48389faf985bce3296ae54"><div class="ttname"><a href="#ac5fa7f5efc48389faf985bce3296ae54">AreaLight::up</a></div><div class="ttdeci">Magnitude3d up</div><div class="ttdoc">Oriented axis for height direction (normalized).</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00572">light.h:572</a></div></div>
-<div class="ttc" id="astruct_area_light_html_ad74cd37dfbb1ff4e498c1e56ca74ddf3"><div class="ttname"><a href="#ad74cd37dfbb1ff4e498c1e56ca74ddf3">AreaLight::right</a></div><div class="ttdeci">Magnitude3d right</div><div class="ttdoc">Oriented axis for width direction (normalized).</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00568">light.h:568</a></div></div>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00639">639</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  639</span>                                  {</div>
+<div class="line"><span class="lineno">  640</span>        glm::vec3 u = glm::normalize(<a class="code hl_variable" href="#ad74cd37dfbb1ff4e498c1e56ca74ddf3">right</a>.toGlm());</div>
+<div class="line"><span class="lineno">  641</span>        glm::vec3 v = glm::normalize(<a class="code hl_variable" href="#ac5fa7f5efc48389faf985bce3296ae54">up</a>.toGlm());</div>
+<div class="line"><span class="lineno">  642</span>        glm::vec3 n = glm::normalize(glm::cross(u, v));</div>
+<div class="line"><span class="lineno">  643</span>        <span class="keywordflow">return</span> <a class="code hl_function" href="struct_position3d.html#a824e59149fabc3261e92a2aa0d358d28">Magnitude3d::fromGlm</a>(n);</div>
+<div class="line"><span class="lineno">  644</span>    }</div>
+<div class="ttc" id="astruct_area_light_html_ac5fa7f5efc48389faf985bce3296ae54"><div class="ttname"><a href="#ac5fa7f5efc48389faf985bce3296ae54">AreaLight::up</a></div><div class="ttdeci">Magnitude3d up</div><div class="ttdoc">Oriented axis for height direction (normalized).</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00594">light.h:594</a></div></div>
+<div class="ttc" id="astruct_area_light_html_ad74cd37dfbb1ff4e498c1e56ca74ddf3"><div class="ttname"><a href="#ad74cd37dfbb1ff4e498c1e56ca74ddf3">AreaLight::right</a></div><div class="ttdeci">Magnitude3d right</div><div class="ttdoc">Oriented axis for width direction (normalized).</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00590">light.h:590</a></div></div>
 <div class="ttc" id="astruct_position3d_html_a824e59149fabc3261e92a2aa0d358d28"><div class="ttname"><a href="struct_position3d.html#a824e59149fabc3261e92a2aa0d358d28">Position3d::fromGlm</a></div><div class="ttdeci">static Position3d fromGlm(const glm::vec3 &amp;vec)</div><div class="ttdef"><b>Definition</b> <a href="units_8h_source.html#l00104">units.h:104</a></div></div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="units_8h_source.html#l00104">Position3d::fromGlm()</a>, <a class="el" href="light_8h_source.html#l00568">right</a>, and <a class="el" href="light_8h_source.html#l00572">up</a>.</p>
+<p class="reference">References <a class="el" href="units_8h_source.html#l00104">Position3d::fromGlm()</a>, <a class="el" href="light_8h_source.html#l00590">right</a>, and <a class="el" href="light_8h_source.html#l00594">up</a>.</p>
 
 </div>
 </div>
@@ -272,14 +312,14 @@ Public Attributes</h2></td></tr>
 
 <p>Applies a delta rotation (in degrees) and updates right/up. </p>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00634">634</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  634</span>                                         {</div>
-<div class="line"><span class="lineno">  635</span>        <a class="code hl_variable" href="#aac8628e4f55d5f24295d220cb88d2c31">rotation</a> = <a class="code hl_variable" href="#aac8628e4f55d5f24295d220cb88d2c31">rotation</a> + delta;</div>
-<div class="line"><span class="lineno">  636</span>        updateAxesFromRotation();</div>
-<div class="line"><span class="lineno">  637</span>    }</div>
-<div class="ttc" id="astruct_area_light_html_aac8628e4f55d5f24295d220cb88d2c31"><div class="ttname"><a href="#aac8628e4f55d5f24295d220cb88d2c31">AreaLight::rotation</a></div><div class="ttdeci">Rotation3d rotation</div><div class="ttdoc">Rotation tracking for the area light. Changing this and calling setRotation/rotate will update right/...</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00604">light.h:604</a></div></div>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00664">664</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  664</span>                                         {</div>
+<div class="line"><span class="lineno">  665</span>        <a class="code hl_variable" href="#aac8628e4f55d5f24295d220cb88d2c31">rotation</a> = <a class="code hl_variable" href="#aac8628e4f55d5f24295d220cb88d2c31">rotation</a> + delta;</div>
+<div class="line"><span class="lineno">  666</span>        updateAxesFromRotation();</div>
+<div class="line"><span class="lineno">  667</span>    }</div>
+<div class="ttc" id="astruct_area_light_html_aac8628e4f55d5f24295d220cb88d2c31"><div class="ttname"><a href="#aac8628e4f55d5f24295d220cb88d2c31">AreaLight::rotation</a></div><div class="ttdeci">Rotation3d rotation</div><div class="ttdoc">Rotation tracking for the area light. Changing this and calling setRotation/rotate will update right/...</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00634">light.h:634</a></div></div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="light_8h_source.html#l00604">rotation</a>.</p>
+<p class="reference">References <a class="el" href="light_8h_source.html#l00634">rotation</a>.</p>
 
 </div>
 </div>
@@ -308,11 +348,11 @@ Public Attributes</h2></td></tr>
 
 <p>Convenience to set diffuse color. </p>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00619">619</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  619</span>{ <a class="code hl_variable" href="#a7c5301af2da43bd235cdf1ab710f0086">color</a> = c; }</div>
-<div class="ttc" id="astruct_area_light_html_a7c5301af2da43bd235cdf1ab710f0086"><div class="ttname"><a href="#a7c5301af2da43bd235cdf1ab710f0086">AreaLight::color</a></div><div class="ttdeci">Color color</div><div class="ttdoc">Diffuse/emissive color of the light.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00581">light.h:581</a></div></div>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00649">649</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  649</span>{ <a class="code hl_variable" href="#a7c5301af2da43bd235cdf1ab710f0086">color</a> = c; }</div>
+<div class="ttc" id="astruct_area_light_html_a7c5301af2da43bd235cdf1ab710f0086"><div class="ttname"><a href="#a7c5301af2da43bd235cdf1ab710f0086">AreaLight::color</a></div><div class="ttdeci">Color color</div><div class="ttdoc">Diffuse/emissive color of the light.</div><div class="ttdef"><b>Definition</b> <a href="light_8h_source.html#l00603">light.h:603</a></div></div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="light_8h_source.html#l00581">color</a>.</p>
+<p class="reference">References <a class="el" href="light_8h_source.html#l00603">color</a>.</p>
 
 </div>
 </div>
@@ -341,13 +381,66 @@ Public Attributes</h2></td></tr>
 
 <p>Sets absolute rotation (in degrees) and updates right/up accordingly. Rotation is applied to a canonical frame (right=+X, up=+Y, normal=+Z) in the order: roll(Z), pitch(X), yaw(Y). </p>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00626">626</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  626</span>                                          {</div>
-<div class="line"><span class="lineno">  627</span>        <a class="code hl_variable" href="#aac8628e4f55d5f24295d220cb88d2c31">rotation</a> = r;</div>
-<div class="line"><span class="lineno">  628</span>        updateAxesFromRotation();</div>
-<div class="line"><span class="lineno">  629</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00656">656</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  656</span>                                          {</div>
+<div class="line"><span class="lineno">  657</span>        <a class="code hl_variable" href="#aac8628e4f55d5f24295d220cb88d2c31">rotation</a> = r;</div>
+<div class="line"><span class="lineno">  658</span>        updateAxesFromRotation();</div>
+<div class="line"><span class="lineno">  659</span>    }</div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="light_8h_source.html#l00604">rotation</a>.</p>
+<p class="reference">References <a class="el" href="light_8h_source.html#l00634">rotation</a>.</p>
+
+</div>
+</div>
+<a name="doc-related-members" id="doc-related-members"></a><h2 id="header-doc-related-members" class="groupheader">Friends And Related Symbol Documentation</h2>
+<a id="ac9dbe2a378024e3a3c417b4cb50adbb3" name="ac9dbe2a378024e3a3c417b4cb50adbb3"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac9dbe2a378024e3a3c417b4cb50adbb3">&#9670;&#160;</a></span>CoreObject</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">friend class <a class="el" href="class_core_object.html">CoreObject</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel friend">friend</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00721">721</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+
+<p class="reference">References <a class="el" href="light_8h_source.html#l00721">CoreObject</a>.</p>
+
+</div>
+</div>
+<a id="a553f958a25683445088050a69d3de8e9" name="a553f958a25683445088050a69d3de8e9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a553f958a25683445088050a69d3de8e9">&#9670;&#160;</a></span>Window</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">friend class <a class="el" href="class_window.html">Window</a></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel friend">friend</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00720">720</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+
+<p class="reference">References <a class="el" href="light_8h_source.html#l00720">Window</a>.</p>
 
 </div>
 </div>
@@ -366,7 +459,7 @@ Public Attributes</h2></td></tr>
 
 <p>Emission cone half-angle in degrees around the plane normal. For example, 90 means a hemisphere emission relative to the plane normal. </p>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00591">591</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00621">621</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 
 </div>
 </div>
@@ -384,7 +477,7 @@ Public Attributes</h2></td></tr>
 
 <p>If true, the light emits on both sides of the rectangle plane. </p>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00596">596</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00626">626</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 
 </div>
 </div>
@@ -402,7 +495,7 @@ Public Attributes</h2></td></tr>
 
 <p>Diffuse/emissive color of the light. </p>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00581">581</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00603">603</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 
 </div>
 </div>
@@ -420,7 +513,43 @@ Public Attributes</h2></td></tr>
 
 <p>Optional debug object visualizing the area light. </p>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00648">648</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00679">679</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+
+</div>
+</div>
+<a id="aba5be418d9ab027c2379575a4ef3e810" name="aba5be418d9ab027c2379575a4ef3e810"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aba5be418d9ab027c2379575a4ef3e810">&#9670;&#160;</a></span>intensity</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">float AreaLight::intensity = 1.0f</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Overall brightness multiplier applied to the area light. </p>
+
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00611">611</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+
+</div>
+</div>
+<a id="addab9859ed5a661b5fc67fca37fd43b7" name="addab9859ed5a661b5fc67fca37fd43b7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#addab9859ed5a661b5fc67fca37fd43b7">&#9670;&#160;</a></span>lastShadowParams</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="struct_shadow_params.html">ShadowParams</a> AreaLight::lastShadowParams</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Cached shadow matrices and bias for the current area-light map. </p>
+
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00687">687</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 
 </div>
 </div>
@@ -438,9 +567,27 @@ Public Attributes</h2></td></tr>
 
 <p>Center position of the rectangle. </p>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00564">564</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  564</span>{0.0, 0.0, 0.0};</div>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00586">586</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  586</span>{0.0, 0.0, 0.0};</div>
 </div><!-- fragment -->
+</div>
+</div>
+<a id="aed35ad050e7e95ea6c0e6948951e5d87" name="aed35ad050e7e95ea6c0e6948951e5d87"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aed35ad050e7e95ea6c0e6948951e5d87">&#9670;&#160;</a></span>range</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">float AreaLight::range = 50.0f</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Maximum distance at which this area light contributes. </p>
+
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00615">615</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+
 </div>
 </div>
 <a id="ad74cd37dfbb1ff4e498c1e56ca74ddf3" name="ad74cd37dfbb1ff4e498c1e56ca74ddf3"></a>
@@ -457,8 +604,8 @@ Public Attributes</h2></td></tr>
 
 <p>Oriented axis for width direction (normalized). </p>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00568">568</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  568</span>{1.0, 0.0, 0.0};</div>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00590">590</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  590</span>{1.0, 0.0, 0.0};</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -477,9 +624,27 @@ Public Attributes</h2></td></tr>
 <p>Rotation tracking for the area light. Changing this and calling setRotation/rotate will update right/up consistently. </p>
 <p>Rotation order matches <a class="el" href="class_core_object.html" title="Represents a 3D object in the scene, including its geometry, material and every interaction with the ...">CoreObject</a> (roll Z, then pitch X, then yaw Y). </p>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00604">604</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  604</span>{0.0, 0.0, 0.0};</div>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00634">634</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  634</span>{0.0, 0.0, 0.0};</div>
 </div><!-- fragment -->
+</div>
+</div>
+<a id="a1465056748e3d955924afa2d56a42e64" name="a1465056748e3d955924afa2d56a42e64"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1465056748e3d955924afa2d56a42e64">&#9670;&#160;</a></span>shadowRenderTarget</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="class_render_target.html">RenderTarget</a>* AreaLight::shadowRenderTarget = nullptr</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Optional shadow render target generated for this area light. </p>
+
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00683">683</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+
 </div>
 </div>
 <a id="a87cd9fc615a5c01a7b0c34d30882298a" name="a87cd9fc615a5c01a7b0c34d30882298a"></a>
@@ -496,7 +661,7 @@ Public Attributes</h2></td></tr>
 
 <p>Specular highlight color for the light. </p>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00585">585</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00607">607</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
 
 </div>
 </div>
@@ -514,8 +679,8 @@ Public Attributes</h2></td></tr>
 
 <p>Width and height of the rectangle. </p>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00576">576</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  576</span>{1.0, 1.0};</div>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00598">598</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  598</span>{1.0, 1.0};</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -533,8 +698,8 @@ Public Attributes</h2></td></tr>
 
 <p>Oriented axis for height direction (normalized). </p>
 
-<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00572">572</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  572</span>{0.0, 1.0, 0.0};</div>
+<p class="definition">Definition at line <a class="el" href="light_8h_source.html#l00594">594</a> of file <a class="el" href="light_8h_source.html">light.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  594</span>{0.0, 1.0, 0.0};</div>
 </div><!-- fragment -->
 </div>
 </div>

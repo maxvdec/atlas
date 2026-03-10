@@ -9,5 +9,6 @@ var namespaces_dup =
     [ "bezel", "namespacebezel.html", "namespacebezel" ],
     [ "bezel_jolt", "namespacebezel__jolt.html", "namespacebezel__jolt" ],
     [ "JPH", "namespace_j_p_h.html", null ],
-    [ "opal", "namespaceopal.html", "namespaceopal" ]
+    [ "opal", "namespaceopal.html", "namespaceopal" ],
+    [ "photon", "namespacephoton.html", "namespacephoton" ]
 ];

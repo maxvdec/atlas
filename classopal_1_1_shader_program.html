@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -120,6 +120,7 @@ $(function(){initNavTree('classopal_1_1_shader_program.html','','classopal_1_1_s
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="#pub-static-methods">Static Public Member Functions</a> &#124;
 <a href="#pub-attribs">Public Attributes</a> &#124;
+<a href="#friends">Friends</a> &#124;
 <a href="classopal_1_1_shader_program-members.html">List of all members</a>  </div>
   <div class="headertitle"><div class="title">opal::ShaderProgram Class Reference</div></div>
 </div><!--header-->
@@ -130,11 +131,12 @@ $(function(){initNavTree('classopal_1_1_shader_program.html','','classopal_1_1_s
 <tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a39b1d9af7f4400c3ec983693a5fe014f" id="r_a39b1d9af7f4400c3ec983693a5fe014f"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="#a39b1d9af7f4400c3ec983693a5fe014f">~ShaderProgram</a> ()</td></tr>
-<tr class="memitem:a920479d6e9b97a81aeca62c6f4fcc6eb" id="r_a920479d6e9b97a81aeca62c6f4fcc6eb"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a920479d6e9b97a81aeca62c6f4fcc6eb">attachShader</a> (const std::shared_ptr&lt; <a class="el" href="classopal_1_1_shader.html">Shader</a> &gt; &amp;shader, int callerId=-1)</td></tr>
+<tr class="memitem:a920479d6e9b97a81aeca62c6f4fcc6eb" id="r_a920479d6e9b97a81aeca62c6f4fcc6eb"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a920479d6e9b97a81aeca62c6f4fcc6eb">attachShader</a> (const std::shared_ptr&lt; <a class="el" href="#a03c2d524ace9ade9c3f55b43c99bcea1">Shader</a> &gt; &amp;shader, int callerId=-1)</td></tr>
 <tr class="memitem:aa8a7f5fb4eb17c63e675761785ca8ee5" id="r_aa8a7f5fb4eb17c63e675761785ca8ee5"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#aa8a7f5fb4eb17c63e675761785ca8ee5">link</a> ()</td></tr>
 <tr class="memitem:a08e893925095bc6514461bdcf96ff5c2" id="r_a08e893925095bc6514461bdcf96ff5c2"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a08e893925095bc6514461bdcf96ff5c2">use</a> ()</td></tr>
 <tr class="memitem:a389d836807a68daba7820cfd677e2dc5" id="r_a389d836807a68daba7820cfd677e2dc5"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#a389d836807a68daba7820cfd677e2dc5">getProgramStatus</a> () const</td></tr>
 <tr class="memitem:a73dc864ceea9e336eefa444d1a8a8f4d" id="r_a73dc864ceea9e336eefa444d1a8a8f4d"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a73dc864ceea9e336eefa444d1a8a8f4d">getProgramLog</a> (char *logBuffer, size_t bufferSize) const</td></tr>
+<tr class="memitem:a7704e7043d8fc4b6a54a98c9a2aa6938" id="r_a7704e7043d8fc4b6a54a98c9a2aa6938"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#a7704e7043d8fc4b6a54a98c9a2aa6938">isComputeProgram</a> () const</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-static-methods" class="groupheader"><a id="pub-static-methods" name="pub-static-methods"></a>
 Static Public Member Functions</h2></td></tr>
@@ -143,11 +145,17 @@ Static Public Member Functions</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:aaafeaff1cae89e4ad102b2fd215e503e" id="r_aaafeaff1cae89e4ad102b2fd215e503e"><td class="memItemLeft">uint&#160;</td><td class="memItemRight"><a class="el" href="#aaafeaff1cae89e4ad102b2fd215e503e">programID</a></td></tr>
-<tr class="memitem:a7948b3f88ed96fb69228162715807eab" id="r_a7948b3f88ed96fb69228162715807eab"><td class="memItemLeft">std::vector&lt; std::shared_ptr&lt; <a class="el" href="classopal_1_1_shader.html">Shader</a> &gt; &gt;&#160;</td><td class="memItemRight"><a class="el" href="#a7948b3f88ed96fb69228162715807eab">attachedShaders</a></td></tr>
+<tr class="memitem:a7948b3f88ed96fb69228162715807eab" id="r_a7948b3f88ed96fb69228162715807eab"><td class="memItemLeft">std::vector&lt; std::shared_ptr&lt; <a class="el" href="#a03c2d524ace9ade9c3f55b43c99bcea1">Shader</a> &gt; &gt;&#160;</td><td class="memItemRight"><a class="el" href="#a7948b3f88ed96fb69228162715807eab">attachedShaders</a></td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 id="header-friends" class="groupheader"><a id="friends" name="friends"></a>
+Friends</h2></td></tr>
+<tr class="memitem:a03c2d524ace9ade9c3f55b43c99bcea1" id="r_a03c2d524ace9ade9c3f55b43c99bcea1"><td class="memItemLeft">class&#160;</td><td class="memItemRight"><a class="el" href="#a03c2d524ace9ade9c3f55b43c99bcea1">Shader</a></td></tr>
+<tr class="memitem:af9f0f1adbd5baee7830839447205af8d" id="r_af9f0f1adbd5baee7830839447205af8d"><td class="memItemLeft">class&#160;</td><td class="memItemRight"><a class="el" href="#af9f0f1adbd5baee7830839447205af8d">Pipeline</a></td></tr>
+<tr class="memitem:a2d1fa14292823ae3718f547daeb56928" id="r_a2d1fa14292823ae3718f547daeb56928"><td class="memItemLeft">class&#160;</td><td class="memItemRight"><a class="el" href="#a2d1fa14292823ae3718f547daeb56928">CommandBuffer</a></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock">
-<p class="definition">Definition at line <a class="el" href="opal_8h_source.html#l00474">474</a> of file <a class="el" href="opal_8h_source.html">opal.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="opal_8h_source.html#l00481">481</a> of file <a class="el" href="opal_8h_source.html">opal.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a39b1d9af7f4400c3ec983693a5fe014f" name="a39b1d9af7f4400c3ec983693a5fe014f"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a39b1d9af7f4400c3ec983693a5fe014f">&#9670;&#160;</a></span>~ShaderProgram()</h2>
@@ -176,7 +184,7 @@ Public Attributes</h2></td></tr>
         <tr>
           <td class="memname">void opal::ShaderProgram::attachShader </td>
           <td>(</td>
-          <td class="paramtype">const std::shared_ptr&lt; <a class="el" href="classopal_1_1_shader.html">Shader</a> &gt; &amp;</td>          <td class="paramname"><span class="paramname"><em>shader</em></span>, </td>
+          <td class="paramtype">const std::shared_ptr&lt; <a class="el" href="#a03c2d524ace9ade9c3f55b43c99bcea1">Shader</a> &gt; &amp;</td>          <td class="paramname"><span class="paramname"><em>shader</em></span>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -251,6 +259,34 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="a7704e7043d8fc4b6a54a98c9a2aa6938" name="a7704e7043d8fc4b6a54a98c9a2aa6938"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7704e7043d8fc4b6a54a98c9a2aa6938">&#9670;&#160;</a></span>isComputeProgram()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool opal::ShaderProgram::isComputeProgram </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td> const</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel inline">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="opal_8h_source.html#l00495">495</a> of file <a class="el" href="opal_8h_source.html">opal.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  495</span>{ <span class="keywordflow">return</span> computeProgram; }</div>
+</div><!-- fragment -->
+</div>
+</div>
 <a id="aa8a7f5fb4eb17c63e675761785ca8ee5" name="aa8a7f5fb4eb17c63e675761785ca8ee5"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aa8a7f5fb4eb17c63e675761785ca8ee5">&#9670;&#160;</a></span>link()</h2>
 
@@ -285,6 +321,85 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a name="doc-related-members" id="doc-related-members"></a><h2 id="header-doc-related-members" class="groupheader">Friends And Related Symbol Documentation</h2>
+<a id="a2d1fa14292823ae3718f547daeb56928" name="a2d1fa14292823ae3718f547daeb56928"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2d1fa14292823ae3718f547daeb56928">&#9670;&#160;</a></span>CommandBuffer</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">friend class CommandBuffer</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel friend">friend</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="opal_8h_source.html#l00513">513</a> of file <a class="el" href="opal_8h_source.html">opal.h</a>.</p>
+
+<p class="reference">References <a class="el" href="opal_8h_source.html#l00513">CommandBuffer</a>.</p>
+
+</div>
+</div>
+<a id="af9f0f1adbd5baee7830839447205af8d" name="af9f0f1adbd5baee7830839447205af8d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af9f0f1adbd5baee7830839447205af8d">&#9670;&#160;</a></span>Pipeline</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">friend class Pipeline</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel friend">friend</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="opal_8h_source.html#l00512">512</a> of file <a class="el" href="opal_8h_source.html">opal.h</a>.</p>
+
+<p class="reference">References <a class="el" href="opal_8h_source.html#l00512">Pipeline</a>.</p>
+
+</div>
+</div>
+<a id="a03c2d524ace9ade9c3f55b43c99bcea1" name="a03c2d524ace9ade9c3f55b43c99bcea1"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a03c2d524ace9ade9c3f55b43c99bcea1">&#9670;&#160;</a></span>Shader</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">friend class Shader</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel friend">friend</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="opal_8h_source.html#l00511">511</a> of file <a class="el" href="opal_8h_source.html">opal.h</a>.</p>
+
+<p class="reference">References <a class="el" href="opal_8h_source.html#l00511">Shader</a>.</p>
+
+</div>
+</div>
 <a name="doc-variable-members" id="doc-variable-members"></a><h2 id="header-doc-variable-members" class="groupheader">Member Data Documentation</h2>
 <a id="a7948b3f88ed96fb69228162715807eab" name="a7948b3f88ed96fb69228162715807eab"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a7948b3f88ed96fb69228162715807eab">&#9670;&#160;</a></span>attachedShaders</h2>
@@ -293,12 +408,12 @@ Public Attributes</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">std::vector&lt;std::shared_ptr&lt;<a class="el" href="classopal_1_1_shader.html">Shader</a>&gt; &gt; opal::ShaderProgram::attachedShaders</td>
+          <td class="memname">std::vector&lt;std::shared_ptr&lt;<a class="el" href="#a03c2d524ace9ade9c3f55b43c99bcea1">Shader</a>&gt; &gt; opal::ShaderProgram::attachedShaders</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="opal_8h_source.html#l00487">487</a> of file <a class="el" href="opal_8h_source.html">opal.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="opal_8h_source.html#l00494">494</a> of file <a class="el" href="opal_8h_source.html">opal.h</a>.</p>
 
 </div>
 </div>
@@ -314,7 +429,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="opal_8h_source.html#l00486">486</a> of file <a class="el" href="opal_8h_source.html">opal.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="opal_8h_source.html#l00493">493</a> of file <a class="el" href="opal_8h_source.html">opal.h</a>.</p>
 
 </div>
 </div>

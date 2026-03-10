@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -152,7 +152,9 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a162f8cdc070537a71f2ad0b5e763b86f" id="r_a162f8cdc070537a71f2ad0b5e763b86f"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="#a162f8cdc070537a71f2ad0b5e763b86f">init</a> ()</td></tr>
 <tr class="memdesc:a162f8cdc070537a71f2ad0b5e763b86f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Initializes the component. This method is called once when the component is added to a <a class="el" href="class_game_object.html" title="Base class for all Game Objects. It extends from Renderable and it provides common functionality for ...">GameObject</a>.  <br /></td></tr>
 <tr class="memitem:a83bd6e1c4f6eb813dd446a4319e98035" id="r_a83bd6e1c4f6eb813dd446a4319e98035"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="#a83bd6e1c4f6eb813dd446a4319e98035">beforePhysics</a> ()</td></tr>
+<tr class="memdesc:a83bd6e1c4f6eb813dd446a4319e98035"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called before each physics simulation step.  <br /></td></tr>
 <tr class="memitem:a4e12b49dcc049256848f0efb84c1ace3" id="r_a4e12b49dcc049256848f0efb84c1ace3"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="#a4e12b49dcc049256848f0efb84c1ace3">atAttach</a> ()</td></tr>
+<tr class="memdesc:a4e12b49dcc049256848f0efb84c1ace3"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called immediately after the component is attached to an object.  <br /></td></tr>
 <tr class="memitem:a3b3bee5d55446124842e5f2e229e1384" id="r_a3b3bee5d55446124842e5f2e229e1384"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="#a3b3bee5d55446124842e5f2e229e1384">update</a> (float deltaTime)</td></tr>
 <tr class="memdesc:a3b3bee5d55446124842e5f2e229e1384"><td class="mdescLeft">&#160;</td><td class="mdescRight">Updates the component each frame. This method is called every frame before rendering.  <br /></td></tr>
 <tr class="memitem:a686b5206d066d32955dcf151d113e667" id="r_a686b5206d066d32955dcf151d113e667"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="#a686b5206d066d32955dcf151d113e667">setViewMatrix</a> (const glm::mat4 &amp;view)</td></tr>
@@ -164,12 +166,19 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a404098a91640552f9d0284d08b53def4" id="r_a404098a91640552f9d0284d08b53def4"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="#a404098a91640552f9d0284d08b53def4">Component</a> ()=default</td></tr>
 <tr class="memdesc:a404098a91640552f9d0284d08b53def4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new <a class="el" href="class_component.html" title="Behavior or property that can be attached to a GameObject to extend its capabilities.">Component</a> object.  <br /></td></tr>
 <tr class="memitem:a2af73436a1514c8db3f3876a6f3bc3d8" id="r_a2af73436a1514c8db3f3876a6f3bc3d8"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="#a2af73436a1514c8db3f3876a6f3bc3d8">onCollisionEnter</a> (<a class="el" href="class_game_object.html">GameObject</a> *other)</td></tr>
+<tr class="memdesc:a2af73436a1514c8db3f3876a6f3bc3d8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called when this object starts colliding with another object.  <br /></td></tr>
 <tr class="memitem:aeb0bf2c6f2215da76d758e5ff58b9902" id="r_aeb0bf2c6f2215da76d758e5ff58b9902"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="#aeb0bf2c6f2215da76d758e5ff58b9902">onCollisionExit</a> (<a class="el" href="class_game_object.html">GameObject</a> *other)</td></tr>
+<tr class="memdesc:aeb0bf2c6f2215da76d758e5ff58b9902"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called when this object stops colliding with another object.  <br /></td></tr>
 <tr class="memitem:af86cc990a53aa9b9c3d70572558aecb5" id="r_af86cc990a53aa9b9c3d70572558aecb5"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="#af86cc990a53aa9b9c3d70572558aecb5">onCollisionStay</a> (<a class="el" href="class_game_object.html">GameObject</a> *other)</td></tr>
+<tr class="memdesc:af86cc990a53aa9b9c3d70572558aecb5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called while this object remains in contact with another object.  <br /></td></tr>
 <tr class="memitem:a9749b406011df2556b004acd2f032935" id="r_a9749b406011df2556b004acd2f032935"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="#a9749b406011df2556b004acd2f032935">onSignalRecieve</a> (const std::string &amp;signal, <a class="el" href="class_game_object.html">GameObject</a> *sender)</td></tr>
+<tr class="memdesc:a9749b406011df2556b004acd2f032935"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called when a signal starts from another object.  <br /></td></tr>
 <tr class="memitem:aeea623ce757a97a895a2500f6de6a33c" id="r_aeea623ce757a97a895a2500f6de6a33c"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="#aeea623ce757a97a895a2500f6de6a33c">onSignalEnd</a> (const std::string &amp;signal, <a class="el" href="class_game_object.html">GameObject</a> *sender)</td></tr>
+<tr class="memdesc:aeea623ce757a97a895a2500f6de6a33c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called when a previously received signal ends.  <br /></td></tr>
 <tr class="memitem:a7ad81a397c06433353d21b1d5aa7eda9" id="r_a7ad81a397c06433353d21b1d5aa7eda9"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="#a7ad81a397c06433353d21b1d5aa7eda9">onQueryReceive</a> (<a class="el" href="struct_query_result.html">QueryResult</a> &amp;result)</td></tr>
+<tr class="memdesc:a7ad81a397c06433353d21b1d5aa7eda9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called when asynchronous physics query results arrive.  <br /></td></tr>
 <tr class="memitem:ab7b5b4676ca88400a52f66d95c9c828e" id="r_ab7b5b4676ca88400a52f66d95c9c828e"><td class="memItemLeft">virtual std::shared_ptr&lt; <a class="el" href="class_component.html">Component</a> &gt;&#160;</td><td class="memItemRight"><a class="el" href="#ab7b5b4676ca88400a52f66d95c9c828e">clone</a> () const</td></tr>
+<tr class="memdesc:ab7b5b4676ca88400a52f66d95c9c828e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns a clone of the component when supported.  <br /></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
@@ -191,7 +200,7 @@ Example of a component</h2>
 <div class="line">   }</div>
 <div class="line">};</div>
 <div class="ttc" id="aclass_component_html_a162f8cdc070537a71f2ad0b5e763b86f"><div class="ttname"><a href="#a162f8cdc070537a71f2ad0b5e763b86f">Component::init</a></div><div class="ttdeci">virtual void init()</div><div class="ttdoc">Initializes the component. This method is called once when the component is added to a GameObject.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00060">component.h:60</a></div></div>
-<div class="ttc" id="aclass_component_html_a3b3bee5d55446124842e5f2e229e1384"><div class="ttname"><a href="#a3b3bee5d55446124842e5f2e229e1384">Component::update</a></div><div class="ttdeci">virtual void update(float deltaTime)</div><div class="ttdoc">Updates the component each frame. This method is called every frame before rendering.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00072">component.h:72</a></div></div>
+<div class="ttc" id="aclass_component_html_a3b3bee5d55446124842e5f2e229e1384"><div class="ttname"><a href="#a3b3bee5d55446124842e5f2e229e1384">Component::update</a></div><div class="ttdeci">virtual void update(float deltaTime)</div><div class="ttdoc">Updates the component each frame. This method is called every frame before rendering.</div><div class="ttdef"><b>Definition</b> <a href="component_8h_source.html#l00078">component.h:78</a></div></div>
 <div class="ttc" id="aclass_component_html_a404098a91640552f9d0284d08b53def4"><div class="ttname"><a href="#a404098a91640552f9d0284d08b53def4">Component::Component</a></div><div class="ttdeci">Component()=default</div><div class="ttdoc">Construct a new Component object.</div></div>
 </div><!-- fragment --> 
 <p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00052">52</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
@@ -272,10 +281,12 @@ Example of a component</h2>
 </table>
 </div><div class="memdoc">
 
+<p>Called immediately after the component is attached to an object. </p>
+
 <p>Reimplemented in <a class="el" href="class_rigidbody.html#a1e981fd719d8d85d83b183ed8a45f3d4">Rigidbody</a>, and <a class="el" href="class_vehicle.html#a4cb7bdd7126f4f1096ed6e43ddf57d4f">Vehicle</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00064">64</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   64</span>{}</div>
+<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00070">70</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   70</span>{}</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -302,10 +313,12 @@ Example of a component</h2>
 </table>
 </div><div class="memdoc">
 
+<p>Called before each physics simulation step. </p>
+
 <p>Reimplemented in <a class="el" href="class_fixed_joint.html#aa96cefe1a6e97828e1a29e205a2f43f7">FixedJoint</a>, <a class="el" href="class_hinge_joint.html#af6f440d6d4379c235f58fcc202cb6311">HingeJoint</a>, <a class="el" href="class_joint.html#a6084be6fef5db811247dae6a505812e4">Joint</a>, <a class="el" href="class_rigidbody.html#acf0b7f46ca30d66ae5fbe19c35b9bc57">Rigidbody</a>, <a class="el" href="class_spring_joint.html#af8919930f1ae70b84fbb165164e4579d">SpringJoint</a>, and <a class="el" href="class_vehicle.html#aeb6d57a5e736ff6d9cc6636c2f5e06e3">Vehicle</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00062">62</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   62</span>{}</div>
+<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00065">65</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   65</span>{}</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -332,10 +345,12 @@ Example of a component</h2>
 </table>
 </div><div class="memdoc">
 
+<p>Returns a clone of the component when supported. </p>
+
 <p>Reimplemented in <a class="el" href="class_rigidbody.html#a611c3cdd0c5ea0b6b2ca66eda817fcfd">Rigidbody</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00117">117</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  117</span>{ <span class="keywordflow">return</span> <span class="keyword">nullptr</span>; }</div>
+<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00131">131</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  131</span>{ <span class="keywordflow">return</span> <span class="keyword">nullptr</span>; }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -414,8 +429,10 @@ Example of a component</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00103">103</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  103</span>{}</div>
+<p>Called when this object starts colliding with another object. </p>
+
+<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00110">110</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  110</span>{}</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -442,8 +459,10 @@ Example of a component</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00105">105</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  105</span>{}</div>
+<p>Called when this object stops colliding with another object. </p>
+
+<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00113">113</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  113</span>{}</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -470,8 +489,10 @@ Example of a component</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00107">107</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  107</span>{}</div>
+<p>Called while this object remains in contact with another object. </p>
+
+<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00117">117</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  117</span>{}</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -498,8 +519,10 @@ Example of a component</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00115">115</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  115</span>{}</div>
+<p>Called when asynchronous physics query results arrive. </p>
+
+<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00128">128</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  128</span>{}</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -530,8 +553,10 @@ Example of a component</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00112">112</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  113</span>                                                                  {}</div>
+<p>Called when a previously received signal ends. </p>
+
+<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00124">124</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  125</span>                                                                  {}</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -562,8 +587,10 @@ Example of a component</h2>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00109">109</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  110</span>                                                                      {}</div>
+<p>Called when a signal starts from another object. </p>
+
+<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00120">120</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  121</span>                                                                      {}</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -598,8 +625,8 @@ Example of a component</h2>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00088">88</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   88</span>{}</div>
+<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00094">94</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   94</span>{}</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -634,8 +661,8 @@ Example of a component</h2>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00079">79</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   79</span>{}</div>
+<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00085">85</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   85</span>{}</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -672,8 +699,8 @@ Example of a component</h2>
 
 <p>Reimplemented in <a class="el" href="class_audio_player.html#ae1eca28510c218215fd57d63e905fd95">AudioPlayer</a>, <a class="el" href="class_rigidbody.html#ac8cd27b3518b9f5b9e8823ce0a0eea49">Rigidbody</a>, and <a class="el" href="class_trait_component.html#a0e50cc755c76537307fb8d7a1d8d5505">TraitComponent&lt; T &gt;</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00072">72</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   72</span>{}</div>
+<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00078">78</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   78</span>{}</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -692,7 +719,7 @@ Example of a component</h2>
 
 <p>Gets the <a class="el" href="class_game_object.html" title="Base class for all Game Objects. It extends from Renderable and it provides common functionality for ...">GameObject</a> associated with the component. </p>
 
-<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00123">123</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00137">137</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
 
 </div>
 </div>

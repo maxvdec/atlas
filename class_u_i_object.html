@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -192,8 +192,11 @@ Additional Inherited Members</h2></td></tr>
 <tr class="memitem:a6ec5febd0b246ca17ad06a0463db6445 inherit pub_methods_class_game_object" id="r_a6ec5febd0b246ca17ad06a0463db6445"><td class="memItemLeft">unsigned int&#160;</td><td class="memItemRight"><a class="el" href="class_game_object.html#a6ec5febd0b246ca17ad06a0463db6445">getId</a> () override</td></tr>
 <tr class="memdesc:a6ec5febd0b246ca17ad06a0463db6445 inherit pub_methods_class_game_object"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the unique identifier associated with this object.  <br /></td></tr>
 <tr class="memitem:a6fdf9066668a13404fdca02f969b6e11 inherit pub_methods_class_game_object" id="r_a6fdf9066668a13404fdca02f969b6e11"><td class="memItemLeft">virtual <a class="el" href="struct_rotation3d.html">Rotation3d</a>&#160;</td><td class="memItemRight"><a class="el" href="class_game_object.html#a6fdf9066668a13404fdca02f969b6e11">getRotation</a> () const</td></tr>
+<tr class="memdesc:a6fdf9066668a13404fdca02f969b6e11 inherit pub_methods_class_game_object"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns object rotation in Euler angles.  <br /></td></tr>
 <tr class="memitem:ac433c6aa2b98139d2f9e418bbc5e539c inherit pub_methods_class_game_object" id="r_ac433c6aa2b98139d2f9e418bbc5e539c"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="class_game_object.html#ac433c6aa2b98139d2f9e418bbc5e539c">addDependency</a> (<a class="el" href="class_game_object.html">GameObject</a> *obj)</td></tr>
+<tr class="memdesc:ac433c6aa2b98139d2f9e418bbc5e539c inherit pub_methods_class_game_object"><td class="mdescLeft">&#160;</td><td class="mdescRight">Adds another object as a dependency for update ordering.  <br /></td></tr>
 <tr class="memitem:a7d4f4fc438b1cc0423c4048da8ab8993 inherit pub_methods_class_game_object" id="r_a7d4f4fc438b1cc0423c4048da8ab8993"><td class="memItemLeft">std::vector&lt; <a class="el" href="class_game_object.html">GameObject</a> * &gt;&#160;</td><td class="memItemRight"><a class="el" href="class_game_object.html#a7d4f4fc438b1cc0423c4048da8ab8993">getDependencies</a> () const</td></tr>
+<tr class="memdesc:a7d4f4fc438b1cc0423c4048da8ab8993 inherit pub_methods_class_game_object"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns all registered dependencies for this object.  <br /></td></tr>
 <tr class="inherit_header pub_methods_class_renderable"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pub_methods_class_renderable')"><span class="dynarrow"><span class="arrowhead closed"></span></span>Public Member Functions inherited from <a class="el" href="class_renderable.html">Renderable</a></td></tr>
 <tr class="memitem:aa9e2cf20f3ee2d1808714fd5e2857a3e inherit pub_methods_class_renderable" id="r_aa9e2cf20f3ee2d1808714fd5e2857a3e"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_renderable.html#aa9e2cf20f3ee2d1808714fd5e2857a3e">render</a> (float dt, std::shared_ptr&lt; <a class="el" href="classopal_1_1_command_buffer.html">opal::CommandBuffer</a> &gt; commandBuffer, bool updatePipeline=false)=0</td></tr>
 <tr class="memdesc:aa9e2cf20f3ee2d1808714fd5e2857a3e inherit pub_methods_class_renderable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Function to render the object. Must be implemented by derived classes.  <br /></td></tr>
@@ -222,6 +225,7 @@ Additional Inherited Members</h2></td></tr>
 <tr class="memitem:a2103eed2f7f54bca8ba1001907b367a9 inherit pub_methods_class_renderable" id="r_a2103eed2f7f54bca8ba1001907b367a9"><td class="memItemLeft">virtual&#160;</td><td class="memItemRight"><a class="el" href="class_renderable.html#a2103eed2f7f54bca8ba1001907b367a9">~Renderable</a> ()=default</td></tr>
 <tr class="inherit_header pub_attribs_class_game_object"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pub_attribs_class_game_object')"><span class="dynarrow"><span class="arrowhead closed"></span></span>Public Attributes inherited from <a class="el" href="class_game_object.html">GameObject</a></td></tr>
 <tr class="memitem:a6e80f980f1d08eba8e84ed564d541ece inherit pub_attribs_class_game_object" id="r_a6e80f980f1d08eba8e84ed564d541ece"><td class="memItemLeft"><a class="el" href="class_rigidbody.html">Rigidbody</a> *&#160;</td><td class="memItemRight"><a class="el" href="class_game_object.html#a6e80f980f1d08eba8e84ed564d541ece">rigidbody</a> = nullptr</td></tr>
+<tr class="memdesc:a6e80f980f1d08eba8e84ed564d541ece inherit pub_attribs_class_game_object"><td class="mdescLeft">&#160;</td><td class="mdescRight">Cached rigidbody component pointer when attached.  <br /></td></tr>
 <tr class="inherit_header pub_attribs_class_renderable"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pub_attribs_class_renderable')"><span class="dynarrow"><span class="arrowhead closed"></span></span>Public Attributes inherited from <a class="el" href="class_renderable.html">Renderable</a></td></tr>
 <tr class="memitem:a7cb09219e507e1c1395efced124e3b58 inherit pub_attribs_class_renderable" id="r_a7cb09219e507e1c1395efced124e3b58"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="class_renderable.html#a7cb09219e507e1c1395efced124e3b58">renderDepthOfView</a> = false</td></tr>
 <tr class="memdesc:a7cb09219e507e1c1395efced124e3b58 inherit pub_attribs_class_renderable"><td class="mdescLeft">&#160;</td><td class="mdescRight">Whether the object should be included in depth of field calculations. When true, contributes to blur effects.  <br /></td></tr>
@@ -236,7 +240,7 @@ Additional Inherited Members</h2></td></tr>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>A <a class="el" href="class_u_i_object.html" title="A UIObject is a GameObject that is used for creating user interface elements.">UIObject</a> is a <a class="el" href="class_game_object.html" title="Base class for all Game Objects. It extends from Renderable and it provides common functionality for ...">GameObject</a> that is used for creating user interface elements. </p>
 
-<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00654">654</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="component_8h_source.html#l00673">673</a> of file <a class="el" href="component_8h_source.html">component.h</a>.</p>
 </div><hr/>The documentation for this class was generated from the following file:<ul>
 <li>include/atlas/<a class="el" href="component_8h_source.html">component.h</a></li>
 </ul>

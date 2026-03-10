@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -129,16 +129,20 @@ $(function(){initNavTree('struct_pair_key.html','','struct_pair_key-members'); }
 <tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a0074f01d0fe2e7bed8e4117674b56fd5" id="r_a0074f01d0fe2e7bed8e4117674b56fd5"><td class="memItemLeft">&#160;</td><td class="memItemRight"><a class="el" href="#a0074f01d0fe2e7bed8e4117674b56fd5">PairKey</a> (JPH::BodyID b1, JPH::BodyID b2)</td></tr>
+<tr class="memdesc:a0074f01d0fe2e7bed8e4117674b56fd5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Builds an order-independent pair key.  <br /></td></tr>
 <tr class="memitem:aa44be44ed9064c0c48521d5a229e93c6" id="r_aa44be44ed9064c0c48521d5a229e93c6"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#aa44be44ed9064c0c48521d5a229e93c6">operator==</a> (const <a class="el" href="struct_pair_key.html">PairKey</a> &amp;other) const</td></tr>
+<tr class="memdesc:aa44be44ed9064c0c48521d5a229e93c6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Equality check used by hash containers.  <br /></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a88def075f4eb52a8ad5f4cecd9c59f62" id="r_a88def075f4eb52a8ad5f4cecd9c59f62"><td class="memItemLeft">JPH::BodyID&#160;</td><td class="memItemRight"><a class="el" href="#a88def075f4eb52a8ad5f4cecd9c59f62">body1</a></td></tr>
+<tr class="memdesc:a88def075f4eb52a8ad5f4cecd9c59f62"><td class="mdescLeft">&#160;</td><td class="mdescRight">First body identifier in the pair.  <br /></td></tr>
 <tr class="memitem:a783aa102eaf71e320c431ea05b0ea2af" id="r_a783aa102eaf71e320c431ea05b0ea2af"><td class="memItemLeft">JPH::BodyID&#160;</td><td class="memItemRight"><a class="el" href="#a783aa102eaf71e320c431ea05b0ea2af">body2</a></td></tr>
+<tr class="memdesc:a783aa102eaf71e320c431ea05b0ea2af"><td class="mdescLeft">&#160;</td><td class="mdescRight">Second body identifier in the pair.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock">
-<p class="definition">Definition at line <a class="el" href="query_8h_source.html#l00031">31</a> of file <a class="el" href="query_8h_source.html">query.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="query_8h_source.html#l00033">33</a> of file <a class="el" href="query_8h_source.html">query.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a0074f01d0fe2e7bed8e4117674b56fd5" name="a0074f01d0fe2e7bed8e4117674b56fd5"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a0074f01d0fe2e7bed8e4117674b56fd5">&#9670;&#160;</a></span>PairKey()</h2>
@@ -159,6 +163,8 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
+<p>Builds an order-independent pair key. </p>
+
 </div>
 </div>
 <a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
@@ -177,6 +183,8 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
+<p>Equality check used by hash containers. </p>
+
 <p class="reference">References <a class="el" href="#a0074f01d0fe2e7bed8e4117674b56fd5">PairKey()</a>.</p>
 
 </div>
@@ -194,7 +202,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="query_8h_source.html#l00032">32</a> of file <a class="el" href="query_8h_source.html">query.h</a>.</p>
+<p>First body identifier in the pair. </p>
+
+<p class="definition">Definition at line <a class="el" href="query_8h_source.html#l00035">35</a> of file <a class="el" href="query_8h_source.html">query.h</a>.</p>
 
 </div>
 </div>
@@ -210,7 +220,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="query_8h_source.html#l00033">33</a> of file <a class="el" href="query_8h_source.html">query.h</a>.</p>
+<p>Second body identifier in the pair. </p>
+
+<p class="definition">Definition at line <a class="el" href="query_8h_source.html#l00037">37</a> of file <a class="el" href="query_8h_source.html">query.h</a>.</p>
 
 </div>
 </div>

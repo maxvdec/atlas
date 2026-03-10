@@ -1,6 +1,6 @@
 var struct_spotlight =
 [
-    [ "Spotlight", "struct_spotlight.html#aa567fc073d5789d5408254bb40f81fcc", null ],
+    [ "Spotlight", "struct_spotlight.html#a48828cd9ee5630bdec0ce0ae6e2a605a", null ],
     [ "addDebugObject", "struct_spotlight.html#a082f097e1211a2c8cea65ed23ff88850", null ],
     [ "castShadows", "struct_spotlight.html#aa4e2a1f2de5b55bbaa5c87cbe69507ca", null ],
     [ "createDebugObject", "struct_spotlight.html#a16acf8b80a179a48c711105292c80721", null ],
@@ -13,9 +13,11 @@ var struct_spotlight =
     [ "cutOff", "struct_spotlight.html#a25f32efd9b4ef48ba5218fffe279ce79", null ],
     [ "debugObject", "struct_spotlight.html#aa485c4de548e3ad947834a566a4d3ebd", null ],
     [ "direction", "struct_spotlight.html#aeb10b51233ba3eb1933738e3ac8cfae6", null ],
+    [ "intensity", "struct_spotlight.html#a00579f7edf13d42f908a27eae8ea09a1", null ],
     [ "lastShadowParams", "struct_spotlight.html#a12e1f218e98a0fc17cf855afeecccaae", null ],
     [ "outerCutoff", "struct_spotlight.html#a01229439116d8beeafc6b71b1b449abc", null ],
     [ "position", "struct_spotlight.html#a76c95332e1fdf991ca0c183acc3e2e07", null ],
+    [ "range", "struct_spotlight.html#a44f27bde1ed8542d868809227c0f463b", null ],
     [ "shadowRenderTarget", "struct_spotlight.html#ab8fe5c18b98dabe97c91b54ac711feb5", null ],
     [ "shineColor", "struct_spotlight.html#a843e9257823edd70d7f6eb914e80c3e2", null ]
 ];

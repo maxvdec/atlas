@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -145,11 +145,12 @@ Public Member Functions</h2></td></tr>
 <tr class="inherit_header pub_methods_class_terrain_generator"><td colspan="2" onclick="javascript:dynsection.toggleInherit('pub_methods_class_terrain_generator')"><span class="dynarrow"><span class="arrowhead closed"></span></span>Public Member Functions inherited from <a class="el" href="class_terrain_generator.html">TerrainGenerator</a></td></tr>
 <tr class="memitem:a20b5eb12bfe5d5cb9e858c61ae0f09a0 inherit pub_methods_class_terrain_generator" id="r_a20b5eb12bfe5d5cb9e858c61ae0f09a0"><td class="memItemLeft">virtual&#160;</td><td class="memItemRight"><a class="el" href="class_terrain_generator.html#a20b5eb12bfe5d5cb9e858c61ae0f09a0">~TerrainGenerator</a> ()=default</td></tr>
 <tr class="memitem:a64d46f39afa83dcd30470c41dc44ee40 inherit pub_methods_class_terrain_generator" id="r_a64d46f39afa83dcd30470c41dc44ee40"><td class="memItemLeft">virtual void&#160;</td><td class="memItemRight"><a class="el" href="class_terrain_generator.html#a64d46f39afa83dcd30470c41dc44ee40">applyTo</a> (<a class="el" href="class_terrain.html">Terrain</a> &amp;) const</td></tr>
+<tr class="memdesc:a64d46f39afa83dcd30470c41dc44ee40 inherit pub_methods_class_terrain_generator"><td class="mdescLeft">&#160;</td><td class="mdescRight">Optional hook invoked when the generator is attached to a terrain.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Worley-noise-based generator that mimics coastline islands. </p>
 
-<p class="definition">Definition at line <a class="el" href="procedural_8h_source.html#l00294">294</a> of file <a class="el" href="procedural_8h_source.html">procedural.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="procedural_8h_source.html#l00301">301</a> of file <a class="el" href="procedural_8h_source.html">procedural.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a950411391dbd8c2b8953aa1d7fd9d2e1" name="a950411391dbd8c2b8953aa1d7fd9d2e1"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a950411391dbd8c2b8953aa1d7fd9d2e1">&#9670;&#160;</a></span>IslandGenerator()</h2>
@@ -178,8 +179,8 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="procedural_8h_source.html#l00300">300</a> of file <a class="el" href="procedural_8h_source.html">procedural.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  301</span>        : numFeatures(numFeatures), scale(scale) {}</div>
+<p class="definition">Definition at line <a class="el" href="procedural_8h_source.html#l00307">307</a> of file <a class="el" href="procedural_8h_source.html">procedural.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  308</span>        : numFeatures(numFeatures), scale(scale) {}</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -215,12 +216,12 @@ Public Member Functions</h2></td></tr>
 
 <p>Implements <a class="el" href="class_terrain_generator.html#a80ad336990a06e22160807615c880e70">TerrainGenerator</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="procedural_8h_source.html#l00306">306</a> of file <a class="el" href="procedural_8h_source.html">procedural.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  306</span>                                                    {</div>
-<div class="line"><span class="lineno">  307</span>        WorleyNoise worley(numFeatures);</div>
-<div class="line"><span class="lineno">  308</span>        <span class="keywordtype">float</span> noise = worley.noise(x * scale, y * scale);</div>
-<div class="line"><span class="lineno">  309</span>        <span class="keywordflow">return</span> std::clamp(noise, 0.0f, 1.0f);</div>
-<div class="line"><span class="lineno">  310</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="procedural_8h_source.html#l00313">313</a> of file <a class="el" href="procedural_8h_source.html">procedural.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  313</span>                                                    {</div>
+<div class="line"><span class="lineno">  314</span>        WorleyNoise worley(numFeatures);</div>
+<div class="line"><span class="lineno">  315</span>        <span class="keywordtype">float</span> noise = worley.noise(x * scale, y * scale);</div>
+<div class="line"><span class="lineno">  316</span>        <span class="keywordflow">return</span> std::clamp(noise, 0.0f, 1.0f);</div>
+<div class="line"><span class="lineno">  317</span>    }</div>
 </div><!-- fragment -->
 <p class="reference">References <a class="el" href="class_worley_noise.html#a43d855be0f8322ae815d89f8f478870e">WorleyNoise::noise()</a>.</p>
 

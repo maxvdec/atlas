@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -246,7 +246,7 @@ Example</h2>
 
 <p><a class="el" href="class_joint.html" title="Base component for constraint-style joints.">Joint</a> endpoint that can reference either a <span class="tt"><a class="el" href="class_game_object.html" title="Base class for all Game Objects. It extends from Renderable and it provides common functionality for ...">GameObject</a></span> or the world. </p>
 
-<p class="definition">Definition at line <a class="el" href="physics_8h_source.html#l00178">178</a> of file <a class="el" href="physics_8h_source.html">physics.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="physics_8h_source.html#l00188">188</a> of file <a class="el" href="physics_8h_source.html">physics.h</a>.</p>
 
 </div>
 </div>
@@ -289,38 +289,57 @@ Example</h2>
 
 <p>High-level query operations issued by <span class="tt"><a class="el" href="class_rigidbody.html" title="Component that binds a Bezel rigidbody to a GameObject.">Rigidbody</a></span>. </p>
 <table class="fieldtable">
-<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a74122df3f8aabd6f36938c219fced043a1e872db3341a50ed12d1ed41cede31e0" name="a74122df3f8aabd6f36938c219fced043a1e872db3341a50ed12d1ed41cede31e0"></a>RaycastAll&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a74122df3f8aabd6f36938c219fced043a117e624bbbd5afc75a3150ba85d3cb93" name="a74122df3f8aabd6f36938c219fced043a117e624bbbd5afc75a3150ba85d3cb93"></a>Raycast&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a74122df3f8aabd6f36938c219fced043ae3e2bfb3a71a8278b7c11ac58479a9e6" name="a74122df3f8aabd6f36938c219fced043ae3e2bfb3a71a8278b7c11ac58479a9e6"></a>RaycastWorld&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a74122df3f8aabd6f36938c219fced043a2bf699463d52f48cbf15081a1d1d549d" name="a74122df3f8aabd6f36938c219fced043a2bf699463d52f48cbf15081a1d1d549d"></a>RaycastWorldAll&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a74122df3f8aabd6f36938c219fced043af1c574b5ad029fd49330b0fcc4bb14d6" name="a74122df3f8aabd6f36938c219fced043af1c574b5ad029fd49330b0fcc4bb14d6"></a>RaycastTagged&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a74122df3f8aabd6f36938c219fced043a70ea8d17272d5ce613249aa8a8968b19" name="a74122df3f8aabd6f36938c219fced043a70ea8d17272d5ce613249aa8a8968b19"></a>RaycastTaggedAll&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a74122df3f8aabd6f36938c219fced043a4642e767f9251fa40afadbc963f80b7a" name="a74122df3f8aabd6f36938c219fced043a4642e767f9251fa40afadbc963f80b7a"></a>Movement&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a74122df3f8aabd6f36938c219fced043a2359a16283d7b4bfaaff2f6e90cbd116" name="a74122df3f8aabd6f36938c219fced043a2359a16283d7b4bfaaff2f6e90cbd116"></a>Overlap&#160;</td><td class="fielddoc"></td></tr>
-<tr><td class="fieldname"><a id="a74122df3f8aabd6f36938c219fced043a04866ea68e6852d0e0227f359c18454c" name="a74122df3f8aabd6f36938c219fced043a04866ea68e6852d0e0227f359c18454c"></a>MovementAll&#160;</td><td class="fielddoc"></td></tr>
+<tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a74122df3f8aabd6f36938c219fced043a1e872db3341a50ed12d1ed41cede31e0" name="a74122df3f8aabd6f36938c219fced043a1e872db3341a50ed12d1ed41cede31e0"></a>RaycastAll&#160;</td><td class="fielddoc"><p>Raycast against all hits from this rigidbody's origin. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a74122df3f8aabd6f36938c219fced043a117e624bbbd5afc75a3150ba85d3cb93" name="a74122df3f8aabd6f36938c219fced043a117e624bbbd5afc75a3150ba85d3cb93"></a>Raycast&#160;</td><td class="fielddoc"><p>Raycast returning the closest hit from this rigidbody's origin. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a74122df3f8aabd6f36938c219fced043ae3e2bfb3a71a8278b7c11ac58479a9e6" name="a74122df3f8aabd6f36938c219fced043ae3e2bfb3a71a8278b7c11ac58479a9e6"></a>RaycastWorld&#160;</td><td class="fielddoc"><p>World-space raycast returning the closest hit. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a74122df3f8aabd6f36938c219fced043a2bf699463d52f48cbf15081a1d1d549d" name="a74122df3f8aabd6f36938c219fced043a2bf699463d52f48cbf15081a1d1d549d"></a>RaycastWorldAll&#160;</td><td class="fielddoc"><p>World-space raycast returning all hits. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a74122df3f8aabd6f36938c219fced043af1c574b5ad029fd49330b0fcc4bb14d6" name="a74122df3f8aabd6f36938c219fced043af1c574b5ad029fd49330b0fcc4bb14d6"></a>RaycastTagged&#160;</td><td class="fielddoc"><p>Tagged raycast returning the closest hit. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a74122df3f8aabd6f36938c219fced043a70ea8d17272d5ce613249aa8a8968b19" name="a74122df3f8aabd6f36938c219fced043a70ea8d17272d5ce613249aa8a8968b19"></a>RaycastTaggedAll&#160;</td><td class="fielddoc"><p>Tagged raycast returning all hits. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a74122df3f8aabd6f36938c219fced043a4642e767f9251fa40afadbc963f80b7a" name="a74122df3f8aabd6f36938c219fced043a4642e767f9251fa40afadbc963f80b7a"></a>Movement&#160;</td><td class="fielddoc"><p>Sweep/predict movement returning closest hit. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a74122df3f8aabd6f36938c219fced043a2359a16283d7b4bfaaff2f6e90cbd116" name="a74122df3f8aabd6f36938c219fced043a2359a16283d7b4bfaaff2f6e90cbd116"></a>Overlap&#160;</td><td class="fielddoc"><p>Overlap query operation. </p>
+</td></tr>
+<tr><td class="fieldname"><a id="a74122df3f8aabd6f36938c219fced043a04866ea68e6852d0e0227f359c18454c" name="a74122df3f8aabd6f36938c219fced043a04866ea68e6852d0e0227f359c18454c"></a>MovementAll&#160;</td><td class="fielddoc"><p>Sweep/predict movement returning all hits. </p>
+</td></tr>
 </table>
 
 <p class="definition">Definition at line <a class="el" href="physics_8h_source.html#l00144">144</a> of file <a class="el" href="physics_8h_source.html">physics.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  144</span>                          {</div>
-<div class="line"><span class="lineno">  145</span>    <a class="code hl_enumvalue" href="#a74122df3f8aabd6f36938c219fced043a1e872db3341a50ed12d1ed41cede31e0">RaycastAll</a>,</div>
-<div class="line"><span class="lineno">  146</span>    <a class="code hl_enumvalue" href="#a74122df3f8aabd6f36938c219fced043a117e624bbbd5afc75a3150ba85d3cb93">Raycast</a>,</div>
-<div class="line"><span class="lineno">  147</span>    <a class="code hl_enumvalue" href="#a74122df3f8aabd6f36938c219fced043ae3e2bfb3a71a8278b7c11ac58479a9e6">RaycastWorld</a>,</div>
-<div class="line"><span class="lineno">  148</span>    <a class="code hl_enumvalue" href="#a74122df3f8aabd6f36938c219fced043a2bf699463d52f48cbf15081a1d1d549d">RaycastWorldAll</a>,</div>
-<div class="line"><span class="lineno">  149</span>    <a class="code hl_enumvalue" href="#a74122df3f8aabd6f36938c219fced043af1c574b5ad029fd49330b0fcc4bb14d6">RaycastTagged</a>,</div>
-<div class="line"><span class="lineno">  150</span>    <a class="code hl_enumvalue" href="#a74122df3f8aabd6f36938c219fced043a70ea8d17272d5ce613249aa8a8968b19">RaycastTaggedAll</a>,</div>
-<div class="line"><span class="lineno">  151</span>    <a class="code hl_enumvalue" href="#a74122df3f8aabd6f36938c219fced043a4642e767f9251fa40afadbc963f80b7a">Movement</a>,</div>
-<div class="line"><span class="lineno">  152</span>    <a class="code hl_enumvalue" href="#a74122df3f8aabd6f36938c219fced043a2359a16283d7b4bfaaff2f6e90cbd116">Overlap</a>,</div>
-<div class="line"><span class="lineno">  153</span>    <a class="code hl_enumvalue" href="#a74122df3f8aabd6f36938c219fced043a04866ea68e6852d0e0227f359c18454c">MovementAll</a>,</div>
-<div class="line"><span class="lineno">  154</span>};</div>
-<div class="ttc" id="aphysics_8h_html_a74122df3f8aabd6f36938c219fced043a04866ea68e6852d0e0227f359c18454c"><div class="ttname"><a href="#a74122df3f8aabd6f36938c219fced043a04866ea68e6852d0e0227f359c18454c">QueryOperation::MovementAll</a></div><div class="ttdeci">@ MovementAll</div><div class="ttdef"><b>Definition</b> <a href="physics_8h_source.html#l00153">physics.h:153</a></div></div>
-<div class="ttc" id="aphysics_8h_html_a74122df3f8aabd6f36938c219fced043a117e624bbbd5afc75a3150ba85d3cb93"><div class="ttname"><a href="#a74122df3f8aabd6f36938c219fced043a117e624bbbd5afc75a3150ba85d3cb93">QueryOperation::Raycast</a></div><div class="ttdeci">@ Raycast</div><div class="ttdef"><b>Definition</b> <a href="physics_8h_source.html#l00146">physics.h:146</a></div></div>
-<div class="ttc" id="aphysics_8h_html_a74122df3f8aabd6f36938c219fced043a1e872db3341a50ed12d1ed41cede31e0"><div class="ttname"><a href="#a74122df3f8aabd6f36938c219fced043a1e872db3341a50ed12d1ed41cede31e0">QueryOperation::RaycastAll</a></div><div class="ttdeci">@ RaycastAll</div><div class="ttdef"><b>Definition</b> <a href="physics_8h_source.html#l00145">physics.h:145</a></div></div>
-<div class="ttc" id="aphysics_8h_html_a74122df3f8aabd6f36938c219fced043a2359a16283d7b4bfaaff2f6e90cbd116"><div class="ttname"><a href="#a74122df3f8aabd6f36938c219fced043a2359a16283d7b4bfaaff2f6e90cbd116">QueryOperation::Overlap</a></div><div class="ttdeci">@ Overlap</div><div class="ttdef"><b>Definition</b> <a href="physics_8h_source.html#l00152">physics.h:152</a></div></div>
-<div class="ttc" id="aphysics_8h_html_a74122df3f8aabd6f36938c219fced043a2bf699463d52f48cbf15081a1d1d549d"><div class="ttname"><a href="#a74122df3f8aabd6f36938c219fced043a2bf699463d52f48cbf15081a1d1d549d">QueryOperation::RaycastWorldAll</a></div><div class="ttdeci">@ RaycastWorldAll</div><div class="ttdef"><b>Definition</b> <a href="physics_8h_source.html#l00148">physics.h:148</a></div></div>
-<div class="ttc" id="aphysics_8h_html_a74122df3f8aabd6f36938c219fced043a4642e767f9251fa40afadbc963f80b7a"><div class="ttname"><a href="#a74122df3f8aabd6f36938c219fced043a4642e767f9251fa40afadbc963f80b7a">QueryOperation::Movement</a></div><div class="ttdeci">@ Movement</div><div class="ttdef"><b>Definition</b> <a href="physics_8h_source.html#l00151">physics.h:151</a></div></div>
-<div class="ttc" id="aphysics_8h_html_a74122df3f8aabd6f36938c219fced043a70ea8d17272d5ce613249aa8a8968b19"><div class="ttname"><a href="#a74122df3f8aabd6f36938c219fced043a70ea8d17272d5ce613249aa8a8968b19">QueryOperation::RaycastTaggedAll</a></div><div class="ttdeci">@ RaycastTaggedAll</div><div class="ttdef"><b>Definition</b> <a href="physics_8h_source.html#l00150">physics.h:150</a></div></div>
-<div class="ttc" id="aphysics_8h_html_a74122df3f8aabd6f36938c219fced043ae3e2bfb3a71a8278b7c11ac58479a9e6"><div class="ttname"><a href="#a74122df3f8aabd6f36938c219fced043ae3e2bfb3a71a8278b7c11ac58479a9e6">QueryOperation::RaycastWorld</a></div><div class="ttdeci">@ RaycastWorld</div><div class="ttdef"><b>Definition</b> <a href="physics_8h_source.html#l00147">physics.h:147</a></div></div>
-<div class="ttc" id="aphysics_8h_html_a74122df3f8aabd6f36938c219fced043af1c574b5ad029fd49330b0fcc4bb14d6"><div class="ttname"><a href="#a74122df3f8aabd6f36938c219fced043af1c574b5ad029fd49330b0fcc4bb14d6">QueryOperation::RaycastTagged</a></div><div class="ttdeci">@ RaycastTagged</div><div class="ttdef"><b>Definition</b> <a href="physics_8h_source.html#l00149">physics.h:149</a></div></div>
+<div class="fragment"><div class="line"><span class="lineno">  144</span>                          {<span class="comment"></span></div>
+<div class="line"><span class="lineno">  145</span><span class="comment">    /** @brief Raycast against all hits from this rigidbody&#39;s origin. */</span></div>
+<div class="line"><span class="lineno">  146</span>    <a class="code hl_enumvalue" href="#a74122df3f8aabd6f36938c219fced043a1e872db3341a50ed12d1ed41cede31e0">RaycastAll</a>,<span class="comment"></span></div>
+<div class="line"><span class="lineno">  147</span><span class="comment">    /** @brief Raycast returning the closest hit from this rigidbody&#39;s origin.</span></div>
+<div class="line"><span class="lineno">  148</span><span class="comment">     */</span></div>
+<div class="line"><span class="lineno">  149</span>    <a class="code hl_enumvalue" href="#a74122df3f8aabd6f36938c219fced043a117e624bbbd5afc75a3150ba85d3cb93">Raycast</a>,<span class="comment"></span></div>
+<div class="line"><span class="lineno">  150</span><span class="comment">    /** @brief World-space raycast returning the closest hit. */</span></div>
+<div class="line"><span class="lineno">  151</span>    <a class="code hl_enumvalue" href="#a74122df3f8aabd6f36938c219fced043ae3e2bfb3a71a8278b7c11ac58479a9e6">RaycastWorld</a>,<span class="comment"></span></div>
+<div class="line"><span class="lineno">  152</span><span class="comment">    /** @brief World-space raycast returning all hits. */</span></div>
+<div class="line"><span class="lineno">  153</span>    <a class="code hl_enumvalue" href="#a74122df3f8aabd6f36938c219fced043a2bf699463d52f48cbf15081a1d1d549d">RaycastWorldAll</a>,<span class="comment"></span></div>
+<div class="line"><span class="lineno">  154</span><span class="comment">    /** @brief Tagged raycast returning the closest hit. */</span></div>
+<div class="line"><span class="lineno">  155</span>    <a class="code hl_enumvalue" href="#a74122df3f8aabd6f36938c219fced043af1c574b5ad029fd49330b0fcc4bb14d6">RaycastTagged</a>,<span class="comment"></span></div>
+<div class="line"><span class="lineno">  156</span><span class="comment">    /** @brief Tagged raycast returning all hits. */</span></div>
+<div class="line"><span class="lineno">  157</span>    <a class="code hl_enumvalue" href="#a74122df3f8aabd6f36938c219fced043a70ea8d17272d5ce613249aa8a8968b19">RaycastTaggedAll</a>,<span class="comment"></span></div>
+<div class="line"><span class="lineno">  158</span><span class="comment">    /** @brief Sweep/predict movement returning closest hit. */</span></div>
+<div class="line"><span class="lineno">  159</span>    <a class="code hl_enumvalue" href="#a74122df3f8aabd6f36938c219fced043a4642e767f9251fa40afadbc963f80b7a">Movement</a>,<span class="comment"></span></div>
+<div class="line"><span class="lineno">  160</span><span class="comment">    /** @brief Overlap query operation. */</span></div>
+<div class="line"><span class="lineno">  161</span>    <a class="code hl_enumvalue" href="#a74122df3f8aabd6f36938c219fced043a2359a16283d7b4bfaaff2f6e90cbd116">Overlap</a>,<span class="comment"></span></div>
+<div class="line"><span class="lineno">  162</span><span class="comment">    /** @brief Sweep/predict movement returning all hits. */</span></div>
+<div class="line"><span class="lineno">  163</span>    <a class="code hl_enumvalue" href="#a74122df3f8aabd6f36938c219fced043a04866ea68e6852d0e0227f359c18454c">MovementAll</a>,</div>
+<div class="line"><span class="lineno">  164</span>};</div>
+<div class="ttc" id="aphysics_8h_html_a74122df3f8aabd6f36938c219fced043a04866ea68e6852d0e0227f359c18454c"><div class="ttname"><a href="#a74122df3f8aabd6f36938c219fced043a04866ea68e6852d0e0227f359c18454c">QueryOperation::MovementAll</a></div><div class="ttdeci">@ MovementAll</div><div class="ttdoc">Sweep/predict movement returning all hits.</div><div class="ttdef"><b>Definition</b> <a href="physics_8h_source.html#l00163">physics.h:163</a></div></div>
+<div class="ttc" id="aphysics_8h_html_a74122df3f8aabd6f36938c219fced043a117e624bbbd5afc75a3150ba85d3cb93"><div class="ttname"><a href="#a74122df3f8aabd6f36938c219fced043a117e624bbbd5afc75a3150ba85d3cb93">QueryOperation::Raycast</a></div><div class="ttdeci">@ Raycast</div><div class="ttdoc">Raycast returning the closest hit from this rigidbody&#39;s origin.</div><div class="ttdef"><b>Definition</b> <a href="physics_8h_source.html#l00149">physics.h:149</a></div></div>
+<div class="ttc" id="aphysics_8h_html_a74122df3f8aabd6f36938c219fced043a1e872db3341a50ed12d1ed41cede31e0"><div class="ttname"><a href="#a74122df3f8aabd6f36938c219fced043a1e872db3341a50ed12d1ed41cede31e0">QueryOperation::RaycastAll</a></div><div class="ttdeci">@ RaycastAll</div><div class="ttdoc">Raycast against all hits from this rigidbody&#39;s origin.</div><div class="ttdef"><b>Definition</b> <a href="physics_8h_source.html#l00146">physics.h:146</a></div></div>
+<div class="ttc" id="aphysics_8h_html_a74122df3f8aabd6f36938c219fced043a2359a16283d7b4bfaaff2f6e90cbd116"><div class="ttname"><a href="#a74122df3f8aabd6f36938c219fced043a2359a16283d7b4bfaaff2f6e90cbd116">QueryOperation::Overlap</a></div><div class="ttdeci">@ Overlap</div><div class="ttdoc">Overlap query operation.</div><div class="ttdef"><b>Definition</b> <a href="physics_8h_source.html#l00161">physics.h:161</a></div></div>
+<div class="ttc" id="aphysics_8h_html_a74122df3f8aabd6f36938c219fced043a2bf699463d52f48cbf15081a1d1d549d"><div class="ttname"><a href="#a74122df3f8aabd6f36938c219fced043a2bf699463d52f48cbf15081a1d1d549d">QueryOperation::RaycastWorldAll</a></div><div class="ttdeci">@ RaycastWorldAll</div><div class="ttdoc">World-space raycast returning all hits.</div><div class="ttdef"><b>Definition</b> <a href="physics_8h_source.html#l00153">physics.h:153</a></div></div>
+<div class="ttc" id="aphysics_8h_html_a74122df3f8aabd6f36938c219fced043a4642e767f9251fa40afadbc963f80b7a"><div class="ttname"><a href="#a74122df3f8aabd6f36938c219fced043a4642e767f9251fa40afadbc963f80b7a">QueryOperation::Movement</a></div><div class="ttdeci">@ Movement</div><div class="ttdoc">Sweep/predict movement returning closest hit.</div><div class="ttdef"><b>Definition</b> <a href="physics_8h_source.html#l00159">physics.h:159</a></div></div>
+<div class="ttc" id="aphysics_8h_html_a74122df3f8aabd6f36938c219fced043a70ea8d17272d5ce613249aa8a8968b19"><div class="ttname"><a href="#a74122df3f8aabd6f36938c219fced043a70ea8d17272d5ce613249aa8a8968b19">QueryOperation::RaycastTaggedAll</a></div><div class="ttdeci">@ RaycastTaggedAll</div><div class="ttdoc">Tagged raycast returning all hits.</div><div class="ttdef"><b>Definition</b> <a href="physics_8h_source.html#l00157">physics.h:157</a></div></div>
+<div class="ttc" id="aphysics_8h_html_a74122df3f8aabd6f36938c219fced043ae3e2bfb3a71a8278b7c11ac58479a9e6"><div class="ttname"><a href="#a74122df3f8aabd6f36938c219fced043ae3e2bfb3a71a8278b7c11ac58479a9e6">QueryOperation::RaycastWorld</a></div><div class="ttdeci">@ RaycastWorld</div><div class="ttdoc">World-space raycast returning the closest hit.</div><div class="ttdef"><b>Definition</b> <a href="physics_8h_source.html#l00151">physics.h:151</a></div></div>
+<div class="ttc" id="aphysics_8h_html_a74122df3f8aabd6f36938c219fced043af1c574b5ad029fd49330b0fcc4bb14d6"><div class="ttname"><a href="#a74122df3f8aabd6f36938c219fced043af1c574b5ad029fd49330b0fcc4bb14d6">QueryOperation::RaycastTagged</a></div><div class="ttdeci">@ RaycastTagged</div><div class="ttdoc">Tagged raycast returning the closest hit.</div><div class="ttdef"><b>Definition</b> <a href="physics_8h_source.html#l00155">physics.h:155</a></div></div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -350,10 +369,10 @@ Example</h2>
 <tr><td class="fieldname"><a id="ab11a1dda34491acff014ddfc9e6bafb8a4cc6684df7b4a92b1dec6fce3264fac8" name="ab11a1dda34491acff014ddfc9e6bafb8a4cc6684df7b4a92b1dec6fce3264fac8"></a>Global&#160;</td><td class="fielddoc"></td></tr>
 </table>
 
-<p class="definition">Definition at line <a class="el" href="physics_8h_source.html#l00188">188</a> of file <a class="el" href="physics_8h_source.html">physics.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  188</span>{ <a class="code hl_enumvalue" href="#ab11a1dda34491acff014ddfc9e6bafb8a509820290d57f333403f490dde7316f4">Local</a>, <a class="code hl_enumvalue" href="#ab11a1dda34491acff014ddfc9e6bafb8a4cc6684df7b4a92b1dec6fce3264fac8">Global</a> };</div>
-<div class="ttc" id="aphysics_8h_html_ab11a1dda34491acff014ddfc9e6bafb8a4cc6684df7b4a92b1dec6fce3264fac8"><div class="ttname"><a href="#ab11a1dda34491acff014ddfc9e6bafb8a4cc6684df7b4a92b1dec6fce3264fac8">Space::Global</a></div><div class="ttdeci">@ Global</div><div class="ttdef"><b>Definition</b> <a href="physics_8h_source.html#l00188">physics.h:188</a></div></div>
-<div class="ttc" id="aphysics_8h_html_ab11a1dda34491acff014ddfc9e6bafb8a509820290d57f333403f490dde7316f4"><div class="ttname"><a href="#ab11a1dda34491acff014ddfc9e6bafb8a509820290d57f333403f490dde7316f4">Space::Local</a></div><div class="ttdeci">@ Local</div><div class="ttdef"><b>Definition</b> <a href="physics_8h_source.html#l00188">physics.h:188</a></div></div>
+<p class="definition">Definition at line <a class="el" href="physics_8h_source.html#l00198">198</a> of file <a class="el" href="physics_8h_source.html">physics.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  198</span>{ <a class="code hl_enumvalue" href="#ab11a1dda34491acff014ddfc9e6bafb8a509820290d57f333403f490dde7316f4">Local</a>, <a class="code hl_enumvalue" href="#ab11a1dda34491acff014ddfc9e6bafb8a4cc6684df7b4a92b1dec6fce3264fac8">Global</a> };</div>
+<div class="ttc" id="aphysics_8h_html_ab11a1dda34491acff014ddfc9e6bafb8a4cc6684df7b4a92b1dec6fce3264fac8"><div class="ttname"><a href="#ab11a1dda34491acff014ddfc9e6bafb8a4cc6684df7b4a92b1dec6fce3264fac8">Space::Global</a></div><div class="ttdeci">@ Global</div><div class="ttdef"><b>Definition</b> <a href="physics_8h_source.html#l00198">physics.h:198</a></div></div>
+<div class="ttc" id="aphysics_8h_html_ab11a1dda34491acff014ddfc9e6bafb8a509820290d57f333403f490dde7316f4"><div class="ttname"><a href="#ab11a1dda34491acff014ddfc9e6bafb8a509820290d57f333403f490dde7316f4">Space::Local</a></div><div class="ttdeci">@ Local</div><div class="ttdef"><b>Definition</b> <a href="physics_8h_source.html#l00198">physics.h:198</a></div></div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -383,10 +402,10 @@ Example</h2>
 <tr><td class="fieldname"><a id="ad9c8bbb873d64258a183fd4d0932b1d0a80c2dd5c28197f2baebff76bf0299d47" name="ad9c8bbb873d64258a183fd4d0932b1d0a80c2dd5c28197f2baebff76bf0299d47"></a>StiffnessAndDamping&#160;</td><td class="fielddoc"></td></tr>
 </table>
 
-<p class="definition">Definition at line <a class="el" href="physics_8h_source.html#l00183">183</a> of file <a class="el" href="physics_8h_source.html">physics.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  183</span>{ <a class="code hl_enumvalue" href="#ad9c8bbb873d64258a183fd4d0932b1d0a52630869b4ed10261d514c91e9c9c018">FrequencyAndDamping</a>, <a class="code hl_enumvalue" href="#ad9c8bbb873d64258a183fd4d0932b1d0a80c2dd5c28197f2baebff76bf0299d47">StiffnessAndDamping</a> };</div>
-<div class="ttc" id="aphysics_8h_html_ad9c8bbb873d64258a183fd4d0932b1d0a52630869b4ed10261d514c91e9c9c018"><div class="ttname"><a href="#ad9c8bbb873d64258a183fd4d0932b1d0a52630869b4ed10261d514c91e9c9c018">SpringMode::FrequencyAndDamping</a></div><div class="ttdeci">@ FrequencyAndDamping</div><div class="ttdef"><b>Definition</b> <a href="physics_8h_source.html#l00183">physics.h:183</a></div></div>
-<div class="ttc" id="aphysics_8h_html_ad9c8bbb873d64258a183fd4d0932b1d0a80c2dd5c28197f2baebff76bf0299d47"><div class="ttname"><a href="#ad9c8bbb873d64258a183fd4d0932b1d0a80c2dd5c28197f2baebff76bf0299d47">SpringMode::StiffnessAndDamping</a></div><div class="ttdeci">@ StiffnessAndDamping</div><div class="ttdef"><b>Definition</b> <a href="physics_8h_source.html#l00183">physics.h:183</a></div></div>
+<p class="definition">Definition at line <a class="el" href="physics_8h_source.html#l00193">193</a> of file <a class="el" href="physics_8h_source.html">physics.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  193</span>{ <a class="code hl_enumvalue" href="#ad9c8bbb873d64258a183fd4d0932b1d0a52630869b4ed10261d514c91e9c9c018">FrequencyAndDamping</a>, <a class="code hl_enumvalue" href="#ad9c8bbb873d64258a183fd4d0932b1d0a80c2dd5c28197f2baebff76bf0299d47">StiffnessAndDamping</a> };</div>
+<div class="ttc" id="aphysics_8h_html_ad9c8bbb873d64258a183fd4d0932b1d0a52630869b4ed10261d514c91e9c9c018"><div class="ttname"><a href="#ad9c8bbb873d64258a183fd4d0932b1d0a52630869b4ed10261d514c91e9c9c018">SpringMode::FrequencyAndDamping</a></div><div class="ttdeci">@ FrequencyAndDamping</div><div class="ttdef"><b>Definition</b> <a href="physics_8h_source.html#l00193">physics.h:193</a></div></div>
+<div class="ttc" id="aphysics_8h_html_ad9c8bbb873d64258a183fd4d0932b1d0a80c2dd5c28197f2baebff76bf0299d47"><div class="ttname"><a href="#ad9c8bbb873d64258a183fd4d0932b1d0a80c2dd5c28197f2baebff76bf0299d47">SpringMode::StiffnessAndDamping</a></div><div class="ttdeci">@ StiffnessAndDamping</div><div class="ttdef"><b>Definition</b> <a href="physics_8h_source.html#l00193">physics.h:193</a></div></div>
 </div><!-- fragment -->
 </div>
 </div>

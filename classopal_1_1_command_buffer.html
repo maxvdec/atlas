@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -142,7 +142,10 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a30dea764877b491dd37d8def9cadd6cb" id="r_a30dea764877b491dd37d8def9cadd6cb"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a30dea764877b491dd37d8def9cadd6cb">drawIndexed</a> (uint indexCount, uint instanceCount=1, uint firstIndex=0, int vertexOffset=0, uint firstInstance=0, int objectId=-1)</td></tr>
 <tr class="memitem:a824bc79433e4b41d4f718ba696dddc8e" id="r_a824bc79433e4b41d4f718ba696dddc8e"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a824bc79433e4b41d4f718ba696dddc8e">drawPatches</a> (uint vertexCount, uint firstVertex=0, int objectId=-1)</td></tr>
 <tr class="memdesc:a824bc79433e4b41d4f718ba696dddc8e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Draws using tessellation patches.  <br /></td></tr>
+<tr class="memitem:a27bdbbae7fac90e1e46c8c46a4bf8c1f" id="r_a27bdbbae7fac90e1e46c8c46a4bf8c1f"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a27bdbbae7fac90e1e46c8c46a4bf8c1f">dispatch</a> (uint threadCountX, uint threadCountY=1, uint threadCountZ=1)</td></tr>
+<tr class="memitem:a4ae6c0934c8aba6ad6a8406526465c21" id="r_a4ae6c0934c8aba6ad6a8406526465c21"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a4ae6c0934c8aba6ad6a8406526465c21">computeBarrier</a> ()</td></tr>
 <tr class="memitem:ac77da83bec874d27ca8b1eea50236e9e" id="r_ac77da83bec874d27ca8b1eea50236e9e"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#ac77da83bec874d27ca8b1eea50236e9e">performResolve</a> (const std::shared_ptr&lt; <a class="el" href="classopal_1_1_resolve_action.html">ResolveAction</a> &gt; &amp;resolveAction)</td></tr>
+<tr class="memitem:ae07150bd6207c68defe69e4124c88d20" id="r_ae07150bd6207c68defe69e4124c88d20"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#ae07150bd6207c68defe69e4124c88d20">performSpatialUpscale</a> (const std::shared_ptr&lt; <a class="el" href="struct_texture.html">Texture</a> &gt; &amp;sourceTexture)</td></tr>
 <tr class="memitem:a716ed953c2d9052c64b68788d73e089c" id="r_a716ed953c2d9052c64b68788d73e089c"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a716ed953c2d9052c64b68788d73e089c">clearColor</a> (float r, float g, float b, float a)</td></tr>
 <tr class="memitem:a4499c2a39d0cb5e9112120eedfef3755" id="r_a4499c2a39d0cb5e9112120eedfef3755"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a4499c2a39d0cb5e9112120eedfef3755">clearDepth</a> (float depth)</td></tr>
 <tr class="memitem:aa6cbb452302cbadb66ad7d92901bb8a9" id="r_aa6cbb452302cbadb66ad7d92901bb8a9"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#aa6cbb452302cbadb66ad7d92901bb8a9">clear</a> (float r, float g, float b, float a, float depth)</td></tr>
@@ -154,7 +157,7 @@ Friends</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock">
-<p class="definition">Definition at line <a class="el" href="opal_8h_source.html#l01075">1075</a> of file <a class="el" href="opal_8h_source.html">opal.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="opal_8h_source.html#l01169">1169</a> of file <a class="el" href="opal_8h_source.html">opal.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="ae39ffcae4ce4d6843aba20c9be9c9941" name="ae39ffcae4ce4d6843aba20c9be9c9941"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ae39ffcae4ce4d6843aba20c9be9c9941">&#9670;&#160;</a></span>~CommandBuffer()</h2>
@@ -347,6 +350,49 @@ Friends</h2></td></tr>
 
 </div>
 </div>
+<a id="a4ae6c0934c8aba6ad6a8406526465c21" name="a4ae6c0934c8aba6ad6a8406526465c21"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4ae6c0934c8aba6ad6a8406526465c21">&#9670;&#160;</a></span>computeBarrier()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void opal::CommandBuffer::computeBarrier </td>
+          <td>(</td>
+          <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a27bdbbae7fac90e1e46c8c46a4bf8c1f" name="a27bdbbae7fac90e1e46c8c46a4bf8c1f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a27bdbbae7fac90e1e46c8c46a4bf8c1f">&#9670;&#160;</a></span>dispatch()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void opal::CommandBuffer::dispatch </td>
+          <td>(</td>
+          <td class="paramtype">uint</td>          <td class="paramname"><span class="paramname"><em>threadCountX</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint</td>          <td class="paramname"><span class="paramname"><em>threadCountY</em></span><span class="paramdefsep"> = </span><span class="paramdefval">1</span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint</td>          <td class="paramname"><span class="paramname"><em>threadCountZ</em></span><span class="paramdefsep"> = </span><span class="paramdefval">1</span>&#160;)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a39582b9307c3595f31667ce305a797ef" name="a39582b9307c3595f31667ce305a797ef"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a39582b9307c3595f31667ce305a797ef">&#9670;&#160;</a></span>draw()</h2>
 
@@ -510,6 +556,23 @@ Friends</h2></td></tr>
 
 </div>
 </div>
+<a id="ae07150bd6207c68defe69e4124c88d20" name="ae07150bd6207c68defe69e4124c88d20"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ae07150bd6207c68defe69e4124c88d20">&#9670;&#160;</a></span>performSpatialUpscale()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool opal::CommandBuffer::performSpatialUpscale </td>
+          <td>(</td>
+          <td class="paramtype">const std::shared_ptr&lt; <a class="el" href="struct_texture.html">Texture</a> &gt; &amp;</td>          <td class="paramname"><span class="paramname"><em>sourceTexture</em></span></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="a8ce7981e2db34a4cd0a6518b2d20c593" name="a8ce7981e2db34a4cd0a6518b2d20c593"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a8ce7981e2db34a4cd0a6518b2d20c593">&#9670;&#160;</a></span>start()</h2>
 
@@ -582,9 +645,9 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="opal_8h_source.html#l01139">1139</a> of file <a class="el" href="opal_8h_source.html">opal.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="opal_8h_source.html#l01254">1254</a> of file <a class="el" href="opal_8h_source.html">opal.h</a>.</p>
 
-<p class="reference">References <a class="el" href="opal_8h_source.html#l01139">Device</a>.</p>
+<p class="reference">References <a class="el" href="opal_8h_source.html#l01254">Device</a>.</p>
 
 </div>
 </div>

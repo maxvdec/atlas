@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -135,13 +135,17 @@ Inheritance diagram for GlobalContactListener:</div>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a602165f694a904efc8fd6a5a9c393491" id="r_a602165f694a904efc8fd6a5a9c393491"><td class="memItemLeft">JPH::ValidateResult&#160;</td><td class="memItemRight"><a class="el" href="#a602165f694a904efc8fd6a5a9c393491">OnContactValidate</a> (const JPH::Body &amp;, const JPH::Body &amp;, JPH::RVec3Arg, const JPH::CollideShapeResult &amp;) override</td></tr>
 <tr class="memitem:abc97b36f8cb9f4cf500b59427bd3191b" id="r_abc97b36f8cb9f4cf500b59427bd3191b"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#abc97b36f8cb9f4cf500b59427bd3191b">OnContactAdded</a> (const JPH::Body &amp;inBody1, const JPH::Body &amp;inBody2, const JPH::ContactManifold &amp;inManifold, JPH::ContactSettings &amp;ioSettings) override</td></tr>
+<tr class="memdesc:abc97b36f8cb9f4cf500b59427bd3191b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Invoked when a new contact manifold is created.  <br /></td></tr>
 <tr class="memitem:a613aa4c0651331e9acf924b375b0bfb4" id="r_a613aa4c0651331e9acf924b375b0bfb4"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a613aa4c0651331e9acf924b375b0bfb4">OnContactPersisted</a> (const JPH::Body &amp;inBody1, const JPH::Body &amp;inBody2, const JPH::ContactManifold &amp;inManifold, JPH::ContactSettings &amp;ioSettings) override</td></tr>
+<tr class="memdesc:a613aa4c0651331e9acf924b375b0bfb4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Invoked while an existing contact manifold persists.  <br /></td></tr>
 <tr class="memitem:aebfa18b07a825a7904f785c1d16c225c" id="r_aebfa18b07a825a7904f785c1d16c225c"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#aebfa18b07a825a7904f785c1d16c225c">OnContactRemoved</a> (const JPH::SubShapeIDPair &amp;inSubShapePair) override</td></tr>
+<tr class="memdesc:aebfa18b07a825a7904f785c1d16c225c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Invoked when contact between sub-shapes ends.  <br /></td></tr>
 <tr class="memitem:ae9878f548ce572eda7b802e374f02dca" id="r_ae9878f548ce572eda7b802e374f02dca"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#ae9878f548ce572eda7b802e374f02dca">dispatchEvents</a> ()</td></tr>
+<tr class="memdesc:ae9878f548ce572eda7b802e374f02dca"><td class="mdescLeft">&#160;</td><td class="mdescRight">Flushes queued contact events into Atlas callbacks.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock">
-<p class="definition">Definition at line <a class="el" href="query_8h_source.html#l00044">44</a> of file <a class="el" href="query_8h_source.html">query.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="query_8h_source.html#l00051">51</a> of file <a class="el" href="query_8h_source.html">query.h</a>.</p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
 <a id="ae9878f548ce572eda7b802e374f02dca" name="ae9878f548ce572eda7b802e374f02dca"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ae9878f548ce572eda7b802e374f02dca">&#9670;&#160;</a></span>dispatchEvents()</h2>
@@ -157,6 +161,8 @@ Public Member Functions</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>Flushes queued contact events into Atlas callbacks. </p>
 
 </div>
 </div>
@@ -197,6 +203,8 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
+<p>Invoked when a new contact manifold is created. </p>
+
 </div>
 </div>
 <a id="a613aa4c0651331e9acf924b375b0bfb4" name="a613aa4c0651331e9acf924b375b0bfb4"></a>
@@ -236,6 +244,8 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
+<p>Invoked while an existing contact manifold persists. </p>
+
 </div>
 </div>
 <a id="aebfa18b07a825a7904f785c1d16c225c" name="aebfa18b07a825a7904f785c1d16c225c"></a>
@@ -260,6 +270,8 @@ Public Member Functions</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
+
+<p>Invoked when contact between sub-shapes ends. </p>
 
 </div>
 </div>
@@ -300,10 +312,10 @@ Public Member Functions</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="query_8h_source.html#l00047">47</a> of file <a class="el" href="query_8h_source.html">query.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   48</span>                                                              {</div>
-<div class="line"><span class="lineno">   49</span>        <span class="keywordflow">return</span> JPH::ValidateResult::AcceptAllContactsForThisBodyPair;</div>
-<div class="line"><span class="lineno">   50</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="query_8h_source.html#l00054">54</a> of file <a class="el" href="query_8h_source.html">query.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   55</span>                                                              {</div>
+<div class="line"><span class="lineno">   56</span>        <span class="keywordflow">return</span> JPH::ValidateResult::AcceptAllContactsForThisBodyPair;</div>
+<div class="line"><span class="lineno">   57</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>

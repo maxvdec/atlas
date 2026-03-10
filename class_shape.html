@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -147,12 +147,16 @@ Public Types</h2></td></tr>
 , <a class="el" href="#a4cb9bc6c74b4184257003c83a8d8d39ea3cfce651e667ab85486dd42a8185f98a">Box</a>
 , <a class="el" href="#a4cb9bc6c74b4184257003c83a8d8d39ea766cae017fab4bcc1d1e83fbb9af87c3">Convex</a>
  }</td></tr>
+<tr class="memdesc:a4cb9bc6c74b4184257003c83a8d8d39e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Runtime type tag for concrete shape implementations.  <a href="#a4cb9bc6c74b4184257003c83a8d8d39e">More...</a><br /></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-pub-methods" class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a1a4b4fa6764bc94365fec828de08d667" id="r_a1a4b4fa6764bc94365fec828de08d667"><td class="memItemLeft">virtual <a class="el" href="#a4cb9bc6c74b4184257003c83a8d8d39e">ShapeType</a>&#160;</td><td class="memItemRight"><a class="el" href="#a1a4b4fa6764bc94365fec828de08d667">getType</a> () const =0</td></tr>
+<tr class="memdesc:a1a4b4fa6764bc94365fec828de08d667"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the concrete runtime shape type.  <br /></td></tr>
 <tr class="memitem:a70fbd011007b13c474b031aaf38d0a4d" id="r_a70fbd011007b13c474b031aaf38d0a4d"><td class="memItemLeft">virtual glm::vec3&#160;</td><td class="memItemRight"><a class="el" href="#a70fbd011007b13c474b031aaf38d0a4d">getCenterOfMass</a> () const</td></tr>
+<tr class="memdesc:a70fbd011007b13c474b031aaf38d0a4d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the local-space center of mass of this shape.  <br /></td></tr>
 <tr class="memitem:ab73e920f2730afb22e3a9b2d597a89d2" id="r_ab73e920f2730afb22e3a9b2d597a89d2"><td class="memItemLeft">virtual glm::mat3&#160;</td><td class="memItemRight"><a class="el" href="#ab73e920f2730afb22e3a9b2d597a89d2">getInertiaTensor</a> () const =0</td></tr>
+<tr class="memdesc:ab73e920f2730afb22e3a9b2d597a89d2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns the local-space inertia tensor of this shape.  <br /></td></tr>
 <tr class="memitem:ac942bbdbba2011bb79af65117be2d151" id="r_ac942bbdbba2011bb79af65117be2d151"><td class="memItemLeft">virtual <a class="el" href="class_bounds.html">Bounds</a>&#160;</td><td class="memItemRight"><a class="el" href="#ac942bbdbba2011bb79af65117be2d151">getBounds</a> (const glm::vec3 &amp;pos, const glm::quat &amp;orientation) const =0</td></tr>
 <tr class="memitem:a5843b8523d0dac25818b031365dc1cd8" id="r_a5843b8523d0dac25818b031365dc1cd8"><td class="memItemLeft">virtual <a class="el" href="class_bounds.html">Bounds</a>&#160;</td><td class="memItemRight"><a class="el" href="#a5843b8523d0dac25818b031365dc1cd8">getBounds</a> () const =0</td></tr>
 <tr class="memitem:aca400d93e5a501e378c1ec208dbb7a03" id="r_aca400d93e5a501e378c1ec208dbb7a03"><td class="memItemLeft">virtual glm::vec3&#160;</td><td class="memItemRight"><a class="el" href="#aca400d93e5a501e378c1ec208dbb7a03">support</a> (const glm::vec3 &amp;dir, const glm::vec3 &amp;pos, const glm::quat &amp;orientation, float bias) const =0</td></tr>
@@ -188,14 +192,16 @@ Protected Attributes</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
+
+<p>Runtime type tag for concrete shape implementations. </p>
 <table class="fieldtable">
 <tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a4cb9bc6c74b4184257003c83a8d8d39eab7095f057db3fefa7325ad93a04e14fd" name="a4cb9bc6c74b4184257003c83a8d8d39eab7095f057db3fefa7325ad93a04e14fd"></a>Sphere&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="a4cb9bc6c74b4184257003c83a8d8d39ea3cfce651e667ab85486dd42a8185f98a" name="a4cb9bc6c74b4184257003c83a8d8d39ea3cfce651e667ab85486dd42a8185f98a"></a>Box&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="a4cb9bc6c74b4184257003c83a8d8d39ea766cae017fab4bcc1d1e83fbb9af87c3" name="a4cb9bc6c74b4184257003c83a8d8d39ea766cae017fab4bcc1d1e83fbb9af87c3"></a>Convex&#160;</td><td class="fielddoc"></td></tr>
 </table>
 
-<p class="definition">Definition at line <a class="el" href="shape_8h_source.html#l00026">26</a> of file <a class="el" href="shape_8h_source.html">shape.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   26</span>{ Sphere, Box, Convex };</div>
+<p class="definition">Definition at line <a class="el" href="shape_8h_source.html#l00027">27</a> of file <a class="el" href="shape_8h_source.html">shape.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   27</span>{ Sphere, Box, Convex };</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -251,8 +257,8 @@ Protected Attributes</h2></td></tr>
 
 <p>Reimplemented in <a class="el" href="class_box.html#ad59b073186a324e24ec1973d7e9e9cf5">Box</a>, and <a class="el" href="class_convex.html#ab648963a6756e18801f68437033e2a55">Convex</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="shape_8h_source.html#l00047">47</a> of file <a class="el" href="shape_8h_source.html">shape.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   47</span>{};</div>
+<p class="definition">Definition at line <a class="el" href="shape_8h_source.html#l00051">51</a> of file <a class="el" href="shape_8h_source.html">shape.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   51</span>{};</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -285,10 +291,10 @@ Protected Attributes</h2></td></tr>
 
 <p>Reimplemented in <a class="el" href="class_box.html#adaba3fd9ab8b836227c02769123b9f7f">Box</a>, and <a class="el" href="class_convex.html#a05ef2bf9aa5f48d5a06c7c0225066ee6">Convex</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="shape_8h_source.html#l00042">42</a> of file <a class="el" href="shape_8h_source.html">shape.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   43</span>                                                            {</div>
-<div class="line"><span class="lineno">   44</span>        <span class="keywordflow">return</span> 0.0f;</div>
-<div class="line"><span class="lineno">   45</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="shape_8h_source.html#l00046">46</a> of file <a class="el" href="shape_8h_source.html">shape.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   47</span>                                                            {</div>
+<div class="line"><span class="lineno">   48</span>        <span class="keywordflow">return</span> 0.0f;</div>
+<div class="line"><span class="lineno">   49</span>    }</div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -373,11 +379,13 @@ Protected Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="shape_8h_source.html#l00030">30</a> of file <a class="el" href="shape_8h_source.html">shape.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   30</span>{ <span class="keywordflow">return</span> <a class="code hl_variable" href="#a17c692b8c1802d97e00cd88a306cccba">centerOfMass</a>; }</div>
-<div class="ttc" id="aclass_shape_html_a17c692b8c1802d97e00cd88a306cccba"><div class="ttname"><a href="#a17c692b8c1802d97e00cd88a306cccba">Shape::centerOfMass</a></div><div class="ttdeci">glm::vec3 centerOfMass</div><div class="ttdef"><b>Definition</b> <a href="shape_8h_source.html#l00052">shape.h:52</a></div></div>
+<p>Returns the local-space center of mass of this shape. </p>
+
+<p class="definition">Definition at line <a class="el" href="shape_8h_source.html#l00033">33</a> of file <a class="el" href="shape_8h_source.html">shape.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   33</span>{ <span class="keywordflow">return</span> <a class="code hl_variable" href="#a17c692b8c1802d97e00cd88a306cccba">centerOfMass</a>; }</div>
+<div class="ttc" id="aclass_shape_html_a17c692b8c1802d97e00cd88a306cccba"><div class="ttname"><a href="#a17c692b8c1802d97e00cd88a306cccba">Shape::centerOfMass</a></div><div class="ttdeci">glm::vec3 centerOfMass</div><div class="ttdef"><b>Definition</b> <a href="shape_8h_source.html#l00056">shape.h:56</a></div></div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="shape_8h_source.html#l00052">centerOfMass</a>.</p>
+<p class="reference">References <a class="el" href="shape_8h_source.html#l00056">centerOfMass</a>.</p>
 
 </div>
 </div>
@@ -403,6 +411,8 @@ Protected Attributes</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
+
+<p>Returns the local-space inertia tensor of this shape. </p>
 
 <p>Implemented in <a class="el" href="class_box.html#a19ea93c7956409eba55971305332602e">Box</a>, <a class="el" href="class_convex.html#abf6f55fece4fb68cdb0ece8540b0276f">Convex</a>, and <a class="el" href="class_sphere.html#af4e184f9d33922696fd79a042b789cc6">Sphere</a>.</p>
 
@@ -430,6 +440,8 @@ Protected Attributes</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
+
+<p>Returns the concrete runtime shape type. </p>
 
 <p>Implemented in <a class="el" href="class_box.html#a474b6aab765ab104ca4f9ed24215d3e7">Box</a>, <a class="el" href="class_convex.html#a9b3847e76c22979840e2dac6679990af">Convex</a>, and <a class="el" href="class_sphere.html#afec42c7082346cc00a5a28ee9b4fcf87">Sphere</a>.</p>
 
@@ -497,8 +509,8 @@ Protected Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="shape_8h_source.html#l00052">52</a> of file <a class="el" href="shape_8h_source.html">shape.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   52</span>{0.0f, 0.0f, 0.0f};</div>
+<p class="definition">Definition at line <a class="el" href="shape_8h_source.html#l00056">56</a> of file <a class="el" href="shape_8h_source.html">shape.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   56</span>{0.0f, 0.0f, 0.0f};</div>
 </div><!-- fragment -->
 </div>
 </div>

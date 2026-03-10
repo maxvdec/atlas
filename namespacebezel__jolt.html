@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -142,13 +142,18 @@ Enumerations</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 id="header-func-members" class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a070f216b41a95f9a38a4d75ef32e2cdb" id="r_a070f216b41a95f9a38a4d75ef32e2cdb"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a070f216b41a95f9a38a4d75ef32e2cdb">AtlasLog</a> (<a class="el" href="#ad8ce12750f5027b41715a250ff5276fb">JoltLogLevel</a> level, std::string_view msg)</td></tr>
+<tr class="memdesc:a070f216b41a95f9a38a4d75ef32e2cdb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Routes a Jolt log message through Atlas logging facilities.  <br /></td></tr>
 <tr class="memitem:ac9b06e4dfd086931d92a46550690549e" id="r_ac9b06e4dfd086931d92a46550690549e"><td class="memItemLeft"><a class="el" href="#ad8ce12750f5027b41715a250ff5276fb">JoltLogLevel</a>&#160;</td><td class="memItemRight"><a class="el" href="#ac9b06e4dfd086931d92a46550690549e">Classify</a> (std::string_view s)</td></tr>
+<tr class="memdesc:ac9b06e4dfd086931d92a46550690549e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Attempts to classify a Jolt log message severity.  <br /></td></tr>
 <tr class="memitem:a3fe528abd21e2e6ca3372b6bbec5b75e" id="r_a3fe528abd21e2e6ca3372b6bbec5b75e"><td class="memItemLeft">void&#160;</td><td class="memItemRight"><a class="el" href="#a3fe528abd21e2e6ca3372b6bbec5b75e">TraceImpl</a> (const char *fmt,...)</td></tr>
+<tr class="memdesc:a3fe528abd21e2e6ca3372b6bbec5b75e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Internal printf-style bridge used by Jolt logging callbacks.  <br /></td></tr>
 <tr class="memitem:aeb2e9b8b2a6afb97b831a67a63742f62" id="r_aeb2e9b8b2a6afb97b831a67a63742f62"><td class="memItemLeft">bool&#160;</td><td class="memItemRight"><a class="el" href="#aeb2e9b8b2a6afb97b831a67a63742f62">AssertFailedImpl</a> (const char *expr, const char *msg, const char *file, JPH::uint line)</td></tr>
+<tr class="memdesc:aeb2e9b8b2a6afb97b831a67a63742f62"><td class="mdescLeft">&#160;</td><td class="mdescRight">Assertion callback bridge used by Jolt in debug checks.  <br /></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 id="header-var-members" class="groupheader"><a id="var-members" name="var-members"></a>
 Variables</h2></td></tr>
 <tr class="memitem:a488137d5f4de9a5d8bcf1bb5f6cae4f6" id="r_a488137d5f4de9a5d8bcf1bb5f6cae4f6"><td class="memItemLeft">std::map&lt; JPH::BodyID, <a class="el" href="structbezel_1_1_rigidbody.html">bezel::Rigidbody</a> * &gt;&#160;</td><td class="memItemRight"><a class="el" href="#a488137d5f4de9a5d8bcf1bb5f6cae4f6">bodyIdToRigidbodyMap</a></td></tr>
+<tr class="memdesc:a488137d5f4de9a5d8bcf1bb5f6cae4f6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Map from Jolt body IDs to Bezel rigidbody wrappers.  <br /></td></tr>
 </table>
 <a name="doc-enum-members" id="doc-enum-members"></a><h2 id="header-doc-enum-members" class="groupheader">Enumeration Type Documentation</h2>
 <a id="ad8ce12750f5027b41715a250ff5276fb" name="ad8ce12750f5027b41715a250ff5276fb"></a>
@@ -176,11 +181,11 @@ Variables</h2></td></tr>
 <tr><td class="fieldname"><a id="ad8ce12750f5027b41715a250ff5276fba902b0d55fddef6f8d651fe1035b7d4bd" name="ad8ce12750f5027b41715a250ff5276fba902b0d55fddef6f8d651fe1035b7d4bd"></a>Error&#160;</td><td class="fielddoc"></td></tr>
 </table>
 
-<p class="definition">Definition at line <a class="el" href="world_8h_source.html#l00110">110</a> of file <a class="el" href="world_8h_source.html">world.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">  110</span>{ <a class="code hl_enumvalue" href="#ad8ce12750f5027b41715a250ff5276fba4059b0251f66a18cb56f544728796875">Info</a>, <a class="code hl_enumvalue" href="#ad8ce12750f5027b41715a250ff5276fba0eaadb4fcb48a0a0ed7bc9868be9fbaa">Warning</a>, <a class="code hl_enumvalue" href="#ad8ce12750f5027b41715a250ff5276fba902b0d55fddef6f8d651fe1035b7d4bd">Error</a> };</div>
-<div class="ttc" id="anamespacebezel__jolt_html_ad8ce12750f5027b41715a250ff5276fba0eaadb4fcb48a0a0ed7bc9868be9fbaa"><div class="ttname"><a href="#ad8ce12750f5027b41715a250ff5276fba0eaadb4fcb48a0a0ed7bc9868be9fbaa">bezel_jolt::JoltLogLevel::Warning</a></div><div class="ttdeci">@ Warning</div><div class="ttdef"><b>Definition</b> <a href="world_8h_source.html#l00110">world.h:110</a></div></div>
-<div class="ttc" id="anamespacebezel__jolt_html_ad8ce12750f5027b41715a250ff5276fba4059b0251f66a18cb56f544728796875"><div class="ttname"><a href="#ad8ce12750f5027b41715a250ff5276fba4059b0251f66a18cb56f544728796875">bezel_jolt::JoltLogLevel::Info</a></div><div class="ttdeci">@ Info</div><div class="ttdef"><b>Definition</b> <a href="world_8h_source.html#l00110">world.h:110</a></div></div>
-<div class="ttc" id="anamespacebezel__jolt_html_ad8ce12750f5027b41715a250ff5276fba902b0d55fddef6f8d651fe1035b7d4bd"><div class="ttname"><a href="#ad8ce12750f5027b41715a250ff5276fba902b0d55fddef6f8d651fe1035b7d4bd">bezel_jolt::JoltLogLevel::Error</a></div><div class="ttdeci">@ Error</div><div class="ttdef"><b>Definition</b> <a href="world_8h_source.html#l00110">world.h:110</a></div></div>
+<p class="definition">Definition at line <a class="el" href="world_8h_source.html#l00111">111</a> of file <a class="el" href="world_8h_source.html">world.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">  111</span>{ <a class="code hl_enumvalue" href="#ad8ce12750f5027b41715a250ff5276fba4059b0251f66a18cb56f544728796875">Info</a>, <a class="code hl_enumvalue" href="#ad8ce12750f5027b41715a250ff5276fba0eaadb4fcb48a0a0ed7bc9868be9fbaa">Warning</a>, <a class="code hl_enumvalue" href="#ad8ce12750f5027b41715a250ff5276fba902b0d55fddef6f8d651fe1035b7d4bd">Error</a> };</div>
+<div class="ttc" id="anamespacebezel__jolt_html_ad8ce12750f5027b41715a250ff5276fba0eaadb4fcb48a0a0ed7bc9868be9fbaa"><div class="ttname"><a href="#ad8ce12750f5027b41715a250ff5276fba0eaadb4fcb48a0a0ed7bc9868be9fbaa">bezel_jolt::JoltLogLevel::Warning</a></div><div class="ttdeci">@ Warning</div><div class="ttdef"><b>Definition</b> <a href="world_8h_source.html#l00111">world.h:111</a></div></div>
+<div class="ttc" id="anamespacebezel__jolt_html_ad8ce12750f5027b41715a250ff5276fba4059b0251f66a18cb56f544728796875"><div class="ttname"><a href="#ad8ce12750f5027b41715a250ff5276fba4059b0251f66a18cb56f544728796875">bezel_jolt::JoltLogLevel::Info</a></div><div class="ttdeci">@ Info</div><div class="ttdef"><b>Definition</b> <a href="world_8h_source.html#l00111">world.h:111</a></div></div>
+<div class="ttc" id="anamespacebezel__jolt_html_ad8ce12750f5027b41715a250ff5276fba902b0d55fddef6f8d651fe1035b7d4bd"><div class="ttname"><a href="#ad8ce12750f5027b41715a250ff5276fba902b0d55fddef6f8d651fe1035b7d4bd">bezel_jolt::JoltLogLevel::Error</a></div><div class="ttdeci">@ Error</div><div class="ttdef"><b>Definition</b> <a href="world_8h_source.html#l00111">world.h:111</a></div></div>
 </div><!-- fragment -->
 </div>
 </div>
@@ -214,6 +219,8 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
+<p>Assertion callback bridge used by Jolt in debug checks. </p>
+
 </div>
 </div>
 <a id="a070f216b41a95f9a38a4d75ef32e2cdb" name="a070f216b41a95f9a38a4d75ef32e2cdb"></a>
@@ -235,6 +242,8 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
+<p>Routes a Jolt log message through Atlas logging facilities. </p>
+
 </div>
 </div>
 <a id="ac9b06e4dfd086931d92a46550690549e" name="ac9b06e4dfd086931d92a46550690549e"></a>
@@ -251,6 +260,8 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>Attempts to classify a Jolt log message severity. </p>
 
 </div>
 </div>
@@ -272,6 +283,8 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>Internal printf-style bridge used by Jolt logging callbacks. </p>
 
 </div>
 </div>
@@ -295,6 +308,8 @@ Variables</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
+
+<p>Map from Jolt body IDs to Bezel rigidbody wrappers. </p>
 
 </div>
 </div>

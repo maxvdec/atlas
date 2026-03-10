@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -137,14 +137,18 @@ Public Member Functions</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 id="header-pub-attribs" class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
 <tr class="memitem:a2fa3ec8a81d00b61ae027f6dc811d943" id="r_a2fa3ec8a81d00b61ae027f6dc811d943"><td class="memItemLeft">unsigned int&#160;</td><td class="memItemRight"><a class="el" href="#a2fa3ec8a81d00b61ae027f6dc811d943">frameNumber</a></td></tr>
+<tr class="memdesc:a2fa3ec8a81d00b61ae027f6dc811d943"><td class="mdescLeft">&#160;</td><td class="mdescRight">Frame index for this aggregate packet.  <br /></td></tr>
 <tr class="memitem:a52cac1fbe218d128ca75564667e35eda" id="r_a52cac1fbe218d128ca75564667e35eda"><td class="memItemLeft">unsigned int&#160;</td><td class="memItemRight"><a class="el" href="#a52cac1fbe218d128ca75564667e35eda">drawCallCount</a></td></tr>
+<tr class="memdesc:a52cac1fbe218d128ca75564667e35eda"><td class="mdescLeft">&#160;</td><td class="mdescRight">Number of draw calls observed during the frame.  <br /></td></tr>
 <tr class="memitem:a16dc06c922f65b97ff7d74863cebc415" id="r_a16dc06c922f65b97ff7d74863cebc415"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#a16dc06c922f65b97ff7d74863cebc415">frameTimeMs</a></td></tr>
+<tr class="memdesc:a16dc06c922f65b97ff7d74863cebc415"><td class="mdescLeft">&#160;</td><td class="mdescRight">Total frame time in milliseconds.  <br /></td></tr>
 <tr class="memitem:a95314f7d77f6c83b929136067eef3f85" id="r_a95314f7d77f6c83b929136067eef3f85"><td class="memItemLeft">float&#160;</td><td class="memItemRight"><a class="el" href="#a95314f7d77f6c83b929136067eef3f85">fps</a></td></tr>
+<tr class="memdesc:a95314f7d77f6c83b929136067eef3f85"><td class="mdescLeft">&#160;</td><td class="mdescRight">Frames per second derived from frame time.  <br /></td></tr>
 </table>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Per-frame aggregate draw call telemetry. </p>
 
-<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00047">47</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00050">50</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
 </div><a name="doc-func-members" id="doc-func-members"></a><h2 id="header-doc-func-members" class="groupheader">Member Function Documentation</h2>
 <a id="a167515872489e29582d631162d024736" name="a167515872489e29582d631162d024736"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a167515872489e29582d631162d024736">&#9670;&#160;</a></span>send()</h2>
@@ -178,7 +182,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00049">49</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
+<p>Number of draw calls observed during the frame. </p>
+
+<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00054">54</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
 
 </div>
 </div>
@@ -194,7 +200,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00051">51</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
+<p>Frames per second derived from frame time. </p>
+
+<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00058">58</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
 
 </div>
 </div>
@@ -210,7 +218,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00048">48</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
+<p>Frame index for this aggregate packet. </p>
+
+<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00052">52</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
 
 </div>
 </div>
@@ -226,7 +236,9 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00050">50</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
+<p>Total frame time in milliseconds. </p>
+
+<p class="definition">Definition at line <a class="el" href="data_8h_source.html#l00056">56</a> of file <a class="el" href="data_8h_source.html">data.h</a>.</p>
 
 </div>
 </div>

@@ -46,7 +46,7 @@
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -253,80 +253,82 @@ $(function(){initNavTree('bounds_8h_source.html','',''); });
 <div class="line"><a id="l00137" name="l00137"></a><span class="lineno">  137</span><span class="comment"> *</span></div>
 <div class="line"><a id="l00138" name="l00138"></a><span class="lineno">  138</span><span class="comment"> */</span></div>
 <div class="foldopen" id="foldopen00139" data-start="{" data-end="};">
-<div class="line"><a id="l00139" name="l00139"></a><span class="lineno"><a class="line" href="struct_collision_pair.html">  139</a></span><span class="keyword">struct </span><a class="code hl_struct" href="struct_collision_pair.html">CollisionPair</a> {</div>
-<div class="line"><a id="l00140" name="l00140"></a><span class="lineno"><a class="line" href="struct_collision_pair.html#a42774adc74909268b2ba38eda0aa3a6b">  140</a></span>    <span class="keywordtype">int</span> <a class="code hl_variable" href="struct_collision_pair.html#a42774adc74909268b2ba38eda0aa3a6b">a</a>;</div>
-<div class="line"><a id="l00141" name="l00141"></a><span class="lineno"><a class="line" href="struct_collision_pair.html#a09afe374ddc500b1324dbeb43cdf28df">  141</a></span>    <span class="keywordtype">int</span> <a class="code hl_variable" href="struct_collision_pair.html#a09afe374ddc500b1324dbeb43cdf28df">b</a>;</div>
-<div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span> </div>
-<div class="foldopen" id="foldopen00143" data-start="{" data-end="}">
-<div class="line"><a id="l00143" name="l00143"></a><span class="lineno"><a class="line" href="struct_collision_pair.html#ae5814aeedddbfeb61447ec642cd308fd">  143</a></span>    <span class="keyword">inline</span> <span class="keywordtype">bool</span> <a class="code hl_function" href="struct_collision_pair.html#ae5814aeedddbfeb61447ec642cd308fd">operator==</a>(<span class="keyword">const</span> <a class="code hl_struct" href="struct_collision_pair.html">CollisionPair</a> &amp;other)<span class="keyword"> const </span>{</div>
-<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span>        <span class="keywordflow">return</span> (<a class="code hl_variable" href="struct_collision_pair.html#a42774adc74909268b2ba38eda0aa3a6b">a</a> == other.<a class="code hl_variable" href="struct_collision_pair.html#a42774adc74909268b2ba38eda0aa3a6b">a</a> &amp;&amp; <a class="code hl_variable" href="struct_collision_pair.html#a09afe374ddc500b1324dbeb43cdf28df">b</a> == other.<a class="code hl_variable" href="struct_collision_pair.html#a09afe374ddc500b1324dbeb43cdf28df">b</a>) || (<a class="code hl_variable" href="struct_collision_pair.html#a42774adc74909268b2ba38eda0aa3a6b">a</a> == other.<a class="code hl_variable" href="struct_collision_pair.html#a09afe374ddc500b1324dbeb43cdf28df">b</a> &amp;&amp; <a class="code hl_variable" href="struct_collision_pair.html#a09afe374ddc500b1324dbeb43cdf28df">b</a> == other.<a class="code hl_variable" href="struct_collision_pair.html#a42774adc74909268b2ba38eda0aa3a6b">a</a>);</div>
-<div class="line"><a id="l00145" name="l00145"></a><span class="lineno">  145</span>    }</div>
+<div class="line"><a id="l00139" name="l00139"></a><span class="lineno"><a class="line" href="struct_collision_pair.html">  139</a></span><span class="keyword">struct </span><a class="code hl_struct" href="struct_collision_pair.html">CollisionPair</a> {<span class="comment"></span></div>
+<div class="line"><a id="l00140" name="l00140"></a><span class="lineno">  140</span><span class="comment">    /** @brief Index of the first potentially colliding body. */</span></div>
+<div class="line"><a id="l00141" name="l00141"></a><span class="lineno"><a class="line" href="struct_collision_pair.html#a42774adc74909268b2ba38eda0aa3a6b">  141</a></span>    <span class="keywordtype">int</span> <a class="code hl_variable" href="struct_collision_pair.html#a42774adc74909268b2ba38eda0aa3a6b">a</a>;<span class="comment"></span></div>
+<div class="line"><a id="l00142" name="l00142"></a><span class="lineno">  142</span><span class="comment">    /** @brief Index of the second potentially colliding body. */</span></div>
+<div class="line"><a id="l00143" name="l00143"></a><span class="lineno"><a class="line" href="struct_collision_pair.html#a09afe374ddc500b1324dbeb43cdf28df">  143</a></span>    <span class="keywordtype">int</span> <a class="code hl_variable" href="struct_collision_pair.html#a09afe374ddc500b1324dbeb43cdf28df">b</a>;</div>
+<div class="line"><a id="l00144" name="l00144"></a><span class="lineno">  144</span> </div>
+<div class="foldopen" id="foldopen00145" data-start="{" data-end="}">
+<div class="line"><a id="l00145" name="l00145"></a><span class="lineno"><a class="line" href="struct_collision_pair.html#ae5814aeedddbfeb61447ec642cd308fd">  145</a></span>    <span class="keyword">inline</span> <span class="keywordtype">bool</span> <a class="code hl_function" href="struct_collision_pair.html#ae5814aeedddbfeb61447ec642cd308fd">operator==</a>(<span class="keyword">const</span> <a class="code hl_struct" href="struct_collision_pair.html">CollisionPair</a> &amp;other)<span class="keyword"> const </span>{</div>
+<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span>        <span class="keywordflow">return</span> (<a class="code hl_variable" href="struct_collision_pair.html#a42774adc74909268b2ba38eda0aa3a6b">a</a> == other.<a class="code hl_variable" href="struct_collision_pair.html#a42774adc74909268b2ba38eda0aa3a6b">a</a> &amp;&amp; <a class="code hl_variable" href="struct_collision_pair.html#a09afe374ddc500b1324dbeb43cdf28df">b</a> == other.<a class="code hl_variable" href="struct_collision_pair.html#a09afe374ddc500b1324dbeb43cdf28df">b</a>) || (<a class="code hl_variable" href="struct_collision_pair.html#a42774adc74909268b2ba38eda0aa3a6b">a</a> == other.<a class="code hl_variable" href="struct_collision_pair.html#a09afe374ddc500b1324dbeb43cdf28df">b</a> &amp;&amp; <a class="code hl_variable" href="struct_collision_pair.html#a09afe374ddc500b1324dbeb43cdf28df">b</a> == other.<a class="code hl_variable" href="struct_collision_pair.html#a42774adc74909268b2ba38eda0aa3a6b">a</a>);</div>
+<div class="line"><a id="l00147" name="l00147"></a><span class="lineno">  147</span>    }</div>
 </div>
-<div class="line"><a id="l00146" name="l00146"></a><span class="lineno">  146</span> </div>
-<div class="foldopen" id="foldopen00147" data-start="{" data-end="}">
-<div class="line"><a id="l00147" name="l00147"></a><span class="lineno"><a class="line" href="struct_collision_pair.html#a72b23a0630c5e0aa5234766ae56e12c2">  147</a></span>    <span class="keyword">inline</span> <span class="keywordtype">bool</span> <a class="code hl_function" href="struct_collision_pair.html#a72b23a0630c5e0aa5234766ae56e12c2">operator!=</a>(<span class="keyword">const</span> <a class="code hl_struct" href="struct_collision_pair.html">CollisionPair</a> &amp;other)<span class="keyword"> const </span>{</div>
-<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span>        <span class="keywordflow">return</span> !(*<span class="keyword">this</span> == other);</div>
-<div class="line"><a id="l00149" name="l00149"></a><span class="lineno">  149</span>    }</div>
+<div class="line"><a id="l00148" name="l00148"></a><span class="lineno">  148</span> </div>
+<div class="foldopen" id="foldopen00149" data-start="{" data-end="}">
+<div class="line"><a id="l00149" name="l00149"></a><span class="lineno"><a class="line" href="struct_collision_pair.html#a72b23a0630c5e0aa5234766ae56e12c2">  149</a></span>    <span class="keyword">inline</span> <span class="keywordtype">bool</span> <a class="code hl_function" href="struct_collision_pair.html#a72b23a0630c5e0aa5234766ae56e12c2">operator!=</a>(<span class="keyword">const</span> <a class="code hl_struct" href="struct_collision_pair.html">CollisionPair</a> &amp;other)<span class="keyword"> const </span>{</div>
+<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span>        <span class="keywordflow">return</span> !(*<span class="keyword">this</span> == other);</div>
+<div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span>    }</div>
 </div>
-<div class="line"><a id="l00150" name="l00150"></a><span class="lineno">  150</span>};</div>
+<div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span>};</div>
 </div>
-<div class="line"><a id="l00151" name="l00151"></a><span class="lineno">  151</span><span class="comment"></span> </div>
-<div class="line"><a id="l00152" name="l00152"></a><span class="lineno">  152</span><span class="comment">/**</span></div>
-<div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span><span class="comment"> * @brief Namespace containing collision detection and broad-phase algorithms.</span></div>
-<div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span><span class="comment"> *</span></div>
-<div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span><span class="comment"> */</span></div>
-<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespacebezel.html">bezel</a> {<span class="comment"></span></div>
-<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span><span class="comment">/**</span></div>
-<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span><span class="comment"> * @brief Comparison function for Sweep and Prune algorithm.</span></div>
-<div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span><span class="comment"> *</span></div>
-<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span><span class="comment"> * @param a First body to compare.</span></div>
-<div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span><span class="comment"> * @param b Second body to compare.</span></div>
-<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span><span class="comment"> * @return (int) Comparison result.</span></div>
-<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span><span class="comment"> */</span></div>
-<div class="line"><a id="l00164" name="l00164"></a><span class="lineno"><a class="line" href="namespacebezel.html#a05f8b5ccbc5b09d5062ec46e47e71f13">  164</a></span><span class="keywordtype">int</span> <a class="code hl_function" href="namespacebezel.html#a05f8b5ccbc5b09d5062ec46e47e71f13">compareSAP</a>(<span class="keywordtype">void</span> *a, <span class="keywordtype">void</span> *b);</div>
-<div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span><span class="comment"></span> </div>
-<div class="line"><a id="l00166" name="l00166"></a><span class="lineno">  166</span><span class="comment">/**</span></div>
-<div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span><span class="comment"> * @brief Sorts bodies for bounds checking.</span></div>
-<div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span><span class="comment"> *</span></div>
-<div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span><span class="comment"> * @param bodies Vector of physics bodies to sort.</span></div>
-<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span><span class="comment"> * @param sortedArray Output array of sorted pseudo bodies.</span></div>
-<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span><span class="comment"> * @param dt Delta time for prediction.</span></div>
-<div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span><span class="comment"> */</span></div>
-<div class="line"><a id="l00173" name="l00173"></a><span class="lineno"><a class="line" href="namespacebezel.html#a74244934d9413fece5cc0bd29b5213d5">  173</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="namespacebezel.html#a74244934d9413fece5cc0bd29b5213d5">sortBodiesForBounds</a>(std::vector&lt;std::shared_ptr&lt;Body&gt;&gt; bodies,</div>
-<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span>                         std::vector&lt;PseudoBody&gt; &amp;sortedArray, <span class="keywordtype">float</span> dt);</div>
-<div class="line"><a id="l00175" name="l00175"></a><span class="lineno">  175</span><span class="comment"></span> </div>
-<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span><span class="comment">/**</span></div>
-<div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span><span class="comment"> * @brief Builds collision pairs from sorted bodies.</span></div>
-<div class="line"><a id="l00178" name="l00178"></a><span class="lineno">  178</span><span class="comment"> *</span></div>
-<div class="line"><a id="l00179" name="l00179"></a><span class="lineno">  179</span><span class="comment"> * @param pairs Output vector of collision pairs.</span></div>
-<div class="line"><a id="l00180" name="l00180"></a><span class="lineno">  180</span><span class="comment"> * @param bodies Vector of sorted pseudo bodies.</span></div>
-<div class="line"><a id="l00181" name="l00181"></a><span class="lineno">  181</span><span class="comment"> */</span></div>
-<div class="line"><a id="l00182" name="l00182"></a><span class="lineno"><a class="line" href="namespacebezel.html#ad66c3fef1f803accf3ec7ec3b144d450">  182</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="namespacebezel.html#ad66c3fef1f803accf3ec7ec3b144d450">buildPairs</a>(std::vector&lt;CollisionPair&gt; &amp;pairs,</div>
-<div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span>                std::vector&lt;PseudoBody&gt; &amp;bodies);</div>
-<div class="line"><a id="l00184" name="l00184"></a><span class="lineno">  184</span><span class="comment"></span> </div>
-<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span><span class="comment">/**</span></div>
-<div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span><span class="comment"> * @brief Performs 1D sweep and prune collision detection.</span></div>
-<div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span><span class="comment"> *</span></div>
-<div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span><span class="comment"> * @param bodies Vector of physics bodies.</span></div>
-<div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span><span class="comment"> * @param pairs Output vector of collision pairs.</span></div>
-<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span><span class="comment"> * @param dt Delta time for prediction.</span></div>
-<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span><span class="comment"> */</span></div>
-<div class="line"><a id="l00192" name="l00192"></a><span class="lineno"><a class="line" href="namespacebezel.html#a2dcc7b65199d4b5c74834caf177660af">  192</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="namespacebezel.html#a2dcc7b65199d4b5c74834caf177660af">sweepAndPrune1d</a>(std::vector&lt;std::shared_ptr&lt;Body&gt;&gt; bodies,</div>
-<div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span>                     std::vector&lt;CollisionPair&gt; &amp;pairs, <span class="keywordtype">float</span> dt);</div>
-<div class="line"><a id="l00194" name="l00194"></a><span class="lineno">  194</span><span class="comment"></span> </div>
-<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span><span class="comment">/**</span></div>
-<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span><span class="comment"> * @brief Performs broad phase collision detection.</span></div>
-<div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span><span class="comment"> *</span></div>
-<div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span><span class="comment"> * @param bodies Vector of physics bodies.</span></div>
-<div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span><span class="comment"> * @param pairs Output vector of collision pairs.</span></div>
-<div class="line"><a id="l00200" name="l00200"></a><span class="lineno">  200</span><span class="comment"> * @param dt Delta time for prediction.</span></div>
-<div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span><span class="comment"> */</span></div>
-<div class="line"><a id="l00202" name="l00202"></a><span class="lineno"><a class="line" href="namespacebezel.html#a11ee629e2162c4f0df27daf0d32fe12b">  202</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="namespacebezel.html#a11ee629e2162c4f0df27daf0d32fe12b">broadPhase</a>(std::vector&lt;std::shared_ptr&lt;Body&gt;&gt; bodies,</div>
-<div class="line"><a id="l00203" name="l00203"></a><span class="lineno">  203</span>                std::vector&lt;CollisionPair&gt; &amp;pairs, <span class="keywordtype">float</span> dt);</div>
-<div class="line"><a id="l00204" name="l00204"></a><span class="lineno">  204</span>} <span class="comment">// namespace bezel</span></div>
-<div class="line"><a id="l00205" name="l00205"></a><span class="lineno">  205</span> </div>
-<div class="line"><a id="l00206" name="l00206"></a><span class="lineno">  206</span><span class="preprocessor">#endif </span><span class="comment">// BEZEL_BOUNDS_H</span></div>
-<div class="ttc" id="aclass_body_html"><div class="ttname"><a href="class_body.html">Body</a></div><div class="ttdoc">Class representing a physical body in a physics simulation. It includes methods for applying forces,...</div><div class="ttdef"><b>Definition</b> <a href="body_8h_source.html#l00077">body.h:77</a></div></div>
+<div class="line"><a id="l00153" name="l00153"></a><span class="lineno">  153</span><span class="comment"></span> </div>
+<div class="line"><a id="l00154" name="l00154"></a><span class="lineno">  154</span><span class="comment">/**</span></div>
+<div class="line"><a id="l00155" name="l00155"></a><span class="lineno">  155</span><span class="comment"> * @brief Namespace containing collision detection and broad-phase algorithms.</span></div>
+<div class="line"><a id="l00156" name="l00156"></a><span class="lineno">  156</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00157" name="l00157"></a><span class="lineno">  157</span><span class="comment"> */</span></div>
+<div class="line"><a id="l00158" name="l00158"></a><span class="lineno">  158</span><span class="keyword">namespace </span><a class="code hl_namespace" href="namespacebezel.html">bezel</a> {<span class="comment"></span></div>
+<div class="line"><a id="l00159" name="l00159"></a><span class="lineno">  159</span><span class="comment">/**</span></div>
+<div class="line"><a id="l00160" name="l00160"></a><span class="lineno">  160</span><span class="comment"> * @brief Comparison function for Sweep and Prune algorithm.</span></div>
+<div class="line"><a id="l00161" name="l00161"></a><span class="lineno">  161</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00162" name="l00162"></a><span class="lineno">  162</span><span class="comment"> * @param a First body to compare.</span></div>
+<div class="line"><a id="l00163" name="l00163"></a><span class="lineno">  163</span><span class="comment"> * @param b Second body to compare.</span></div>
+<div class="line"><a id="l00164" name="l00164"></a><span class="lineno">  164</span><span class="comment"> * @return (int) Comparison result.</span></div>
+<div class="line"><a id="l00165" name="l00165"></a><span class="lineno">  165</span><span class="comment"> */</span></div>
+<div class="line"><a id="l00166" name="l00166"></a><span class="lineno"><a class="line" href="namespacebezel.html#a05f8b5ccbc5b09d5062ec46e47e71f13">  166</a></span><span class="keywordtype">int</span> <a class="code hl_function" href="namespacebezel.html#a05f8b5ccbc5b09d5062ec46e47e71f13">compareSAP</a>(<span class="keywordtype">void</span> *a, <span class="keywordtype">void</span> *b);</div>
+<div class="line"><a id="l00167" name="l00167"></a><span class="lineno">  167</span><span class="comment"></span> </div>
+<div class="line"><a id="l00168" name="l00168"></a><span class="lineno">  168</span><span class="comment">/**</span></div>
+<div class="line"><a id="l00169" name="l00169"></a><span class="lineno">  169</span><span class="comment"> * @brief Sorts bodies for bounds checking.</span></div>
+<div class="line"><a id="l00170" name="l00170"></a><span class="lineno">  170</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00171" name="l00171"></a><span class="lineno">  171</span><span class="comment"> * @param bodies Vector of physics bodies to sort.</span></div>
+<div class="line"><a id="l00172" name="l00172"></a><span class="lineno">  172</span><span class="comment"> * @param sortedArray Output array of sorted pseudo bodies.</span></div>
+<div class="line"><a id="l00173" name="l00173"></a><span class="lineno">  173</span><span class="comment"> * @param dt Delta time for prediction.</span></div>
+<div class="line"><a id="l00174" name="l00174"></a><span class="lineno">  174</span><span class="comment"> */</span></div>
+<div class="line"><a id="l00175" name="l00175"></a><span class="lineno"><a class="line" href="namespacebezel.html#a74244934d9413fece5cc0bd29b5213d5">  175</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="namespacebezel.html#a74244934d9413fece5cc0bd29b5213d5">sortBodiesForBounds</a>(std::vector&lt;std::shared_ptr&lt;Body&gt;&gt; bodies,</div>
+<div class="line"><a id="l00176" name="l00176"></a><span class="lineno">  176</span>                         std::vector&lt;PseudoBody&gt; &amp;sortedArray, <span class="keywordtype">float</span> dt);</div>
+<div class="line"><a id="l00177" name="l00177"></a><span class="lineno">  177</span><span class="comment"></span> </div>
+<div class="line"><a id="l00178" name="l00178"></a><span class="lineno">  178</span><span class="comment">/**</span></div>
+<div class="line"><a id="l00179" name="l00179"></a><span class="lineno">  179</span><span class="comment"> * @brief Builds collision pairs from sorted bodies.</span></div>
+<div class="line"><a id="l00180" name="l00180"></a><span class="lineno">  180</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00181" name="l00181"></a><span class="lineno">  181</span><span class="comment"> * @param pairs Output vector of collision pairs.</span></div>
+<div class="line"><a id="l00182" name="l00182"></a><span class="lineno">  182</span><span class="comment"> * @param bodies Vector of sorted pseudo bodies.</span></div>
+<div class="line"><a id="l00183" name="l00183"></a><span class="lineno">  183</span><span class="comment"> */</span></div>
+<div class="line"><a id="l00184" name="l00184"></a><span class="lineno"><a class="line" href="namespacebezel.html#ad66c3fef1f803accf3ec7ec3b144d450">  184</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="namespacebezel.html#ad66c3fef1f803accf3ec7ec3b144d450">buildPairs</a>(std::vector&lt;CollisionPair&gt; &amp;pairs,</div>
+<div class="line"><a id="l00185" name="l00185"></a><span class="lineno">  185</span>                std::vector&lt;PseudoBody&gt; &amp;bodies);</div>
+<div class="line"><a id="l00186" name="l00186"></a><span class="lineno">  186</span><span class="comment"></span> </div>
+<div class="line"><a id="l00187" name="l00187"></a><span class="lineno">  187</span><span class="comment">/**</span></div>
+<div class="line"><a id="l00188" name="l00188"></a><span class="lineno">  188</span><span class="comment"> * @brief Performs 1D sweep and prune collision detection.</span></div>
+<div class="line"><a id="l00189" name="l00189"></a><span class="lineno">  189</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00190" name="l00190"></a><span class="lineno">  190</span><span class="comment"> * @param bodies Vector of physics bodies.</span></div>
+<div class="line"><a id="l00191" name="l00191"></a><span class="lineno">  191</span><span class="comment"> * @param pairs Output vector of collision pairs.</span></div>
+<div class="line"><a id="l00192" name="l00192"></a><span class="lineno">  192</span><span class="comment"> * @param dt Delta time for prediction.</span></div>
+<div class="line"><a id="l00193" name="l00193"></a><span class="lineno">  193</span><span class="comment"> */</span></div>
+<div class="line"><a id="l00194" name="l00194"></a><span class="lineno"><a class="line" href="namespacebezel.html#a2dcc7b65199d4b5c74834caf177660af">  194</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="namespacebezel.html#a2dcc7b65199d4b5c74834caf177660af">sweepAndPrune1d</a>(std::vector&lt;std::shared_ptr&lt;Body&gt;&gt; bodies,</div>
+<div class="line"><a id="l00195" name="l00195"></a><span class="lineno">  195</span>                     std::vector&lt;CollisionPair&gt; &amp;pairs, <span class="keywordtype">float</span> dt);</div>
+<div class="line"><a id="l00196" name="l00196"></a><span class="lineno">  196</span><span class="comment"></span> </div>
+<div class="line"><a id="l00197" name="l00197"></a><span class="lineno">  197</span><span class="comment">/**</span></div>
+<div class="line"><a id="l00198" name="l00198"></a><span class="lineno">  198</span><span class="comment"> * @brief Performs broad phase collision detection.</span></div>
+<div class="line"><a id="l00199" name="l00199"></a><span class="lineno">  199</span><span class="comment"> *</span></div>
+<div class="line"><a id="l00200" name="l00200"></a><span class="lineno">  200</span><span class="comment"> * @param bodies Vector of physics bodies.</span></div>
+<div class="line"><a id="l00201" name="l00201"></a><span class="lineno">  201</span><span class="comment"> * @param pairs Output vector of collision pairs.</span></div>
+<div class="line"><a id="l00202" name="l00202"></a><span class="lineno">  202</span><span class="comment"> * @param dt Delta time for prediction.</span></div>
+<div class="line"><a id="l00203" name="l00203"></a><span class="lineno">  203</span><span class="comment"> */</span></div>
+<div class="line"><a id="l00204" name="l00204"></a><span class="lineno"><a class="line" href="namespacebezel.html#a11ee629e2162c4f0df27daf0d32fe12b">  204</a></span><span class="keywordtype">void</span> <a class="code hl_function" href="namespacebezel.html#a11ee629e2162c4f0df27daf0d32fe12b">broadPhase</a>(std::vector&lt;std::shared_ptr&lt;Body&gt;&gt; bodies,</div>
+<div class="line"><a id="l00205" name="l00205"></a><span class="lineno">  205</span>                std::vector&lt;CollisionPair&gt; &amp;pairs, <span class="keywordtype">float</span> dt);</div>
+<div class="line"><a id="l00206" name="l00206"></a><span class="lineno">  206</span>} <span class="comment">// namespace bezel</span></div>
+<div class="line"><a id="l00207" name="l00207"></a><span class="lineno">  207</span> </div>
+<div class="line"><a id="l00208" name="l00208"></a><span class="lineno">  208</span><span class="preprocessor">#endif </span><span class="comment">// BEZEL_BOUNDS_H</span></div>
+<div class="ttc" id="aclass_body_html"><div class="ttname"><a href="class_body.html">Body</a></div><div class="ttdoc">Class representing a physical body in a physics simulation. It includes methods for applying forces,...</div><div class="ttdef"><b>Definition</b> <a href="body_8h_source.html#l00088">body.h:88</a></div></div>
 <div class="ttc" id="aclass_bounds_html_a19092760bc7b5e1423b30a9ef8f1da8b"><div class="ttname"><a href="class_bounds.html#a19092760bc7b5e1423b30a9ef8f1da8b">Bounds::clear</a></div><div class="ttdeci">void clear()</div><div class="ttdoc">Clears the bounds, resetting them to default values.</div></div>
 <div class="ttc" id="aclass_bounds_html_a246aa767e226ec38f1b927012df3ab1e"><div class="ttname"><a href="class_bounds.html#a246aa767e226ec38f1b927012df3ab1e">Bounds::expand</a></div><div class="ttdeci">void expand(const glm::vec3 rhs)</div><div class="ttdoc">Expands the bounds to include a single point.</div></div>
 <div class="ttc" id="aclass_bounds_html_a37a5107c0c496a0f1762165770ddca47"><div class="ttname"><a href="class_bounds.html#a37a5107c0c496a0f1762165770ddca47">Bounds::doesIntersect</a></div><div class="ttdeci">bool doesIntersect(const Bounds &amp;other)</div><div class="ttdoc">Checks if this bounds intersects with another bounds.</div></div>
@@ -348,11 +350,11 @@ $(function(){initNavTree('bounds_8h_source.html','',''); });
 <div class="ttc" id="anamespacebezel_html_a74244934d9413fece5cc0bd29b5213d5"><div class="ttname"><a href="namespacebezel.html#a74244934d9413fece5cc0bd29b5213d5">bezel::sortBodiesForBounds</a></div><div class="ttdeci">void sortBodiesForBounds(std::vector&lt; std::shared_ptr&lt; Body &gt; &gt; bodies, std::vector&lt; PseudoBody &gt; &amp;sortedArray, float dt)</div><div class="ttdoc">Sorts bodies for bounds checking.</div></div>
 <div class="ttc" id="anamespacebezel_html_ad66c3fef1f803accf3ec7ec3b144d450"><div class="ttname"><a href="namespacebezel.html#ad66c3fef1f803accf3ec7ec3b144d450">bezel::buildPairs</a></div><div class="ttdeci">void buildPairs(std::vector&lt; CollisionPair &gt; &amp;pairs, std::vector&lt; PseudoBody &gt; &amp;bodies)</div><div class="ttdoc">Builds collision pairs from sorted bodies.</div></div>
 <div class="ttc" id="astruct_collision_pair_html"><div class="ttname"><a href="struct_collision_pair.html">CollisionPair</a></div><div class="ttdoc">Structure representing a pair of potentially colliding bodies.</div><div class="ttdef"><b>Definition</b> <a href="#l00139">bounds.h:139</a></div></div>
-<div class="ttc" id="astruct_collision_pair_html_a09afe374ddc500b1324dbeb43cdf28df"><div class="ttname"><a href="struct_collision_pair.html#a09afe374ddc500b1324dbeb43cdf28df">CollisionPair::b</a></div><div class="ttdeci">int b</div><div class="ttdef"><b>Definition</b> <a href="#l00141">bounds.h:141</a></div></div>
-<div class="ttc" id="astruct_collision_pair_html_a42774adc74909268b2ba38eda0aa3a6b"><div class="ttname"><a href="struct_collision_pair.html#a42774adc74909268b2ba38eda0aa3a6b">CollisionPair::a</a></div><div class="ttdeci">int a</div><div class="ttdef"><b>Definition</b> <a href="#l00140">bounds.h:140</a></div></div>
-<div class="ttc" id="astruct_collision_pair_html_a72b23a0630c5e0aa5234766ae56e12c2"><div class="ttname"><a href="struct_collision_pair.html#a72b23a0630c5e0aa5234766ae56e12c2">CollisionPair::operator!=</a></div><div class="ttdeci">bool operator!=(const CollisionPair &amp;other) const</div><div class="ttdef"><b>Definition</b> <a href="#l00147">bounds.h:147</a></div></div>
-<div class="ttc" id="astruct_collision_pair_html_ae5814aeedddbfeb61447ec642cd308fd"><div class="ttname"><a href="struct_collision_pair.html#ae5814aeedddbfeb61447ec642cd308fd">CollisionPair::operator==</a></div><div class="ttdeci">bool operator==(const CollisionPair &amp;other) const</div><div class="ttdef"><b>Definition</b> <a href="#l00143">bounds.h:143</a></div></div>
-<div class="ttc" id="astruct_pseudo_body_html"><div class="ttname"><a href="struct_pseudo_body.html">PseudoBody</a></div><div class="ttdoc">Structure representing a pseudo body for collision detection algorithms.</div><div class="ttdef"><b>Definition</b> <a href="body_8h_source.html#l00234">body.h:234</a></div></div>
+<div class="ttc" id="astruct_collision_pair_html_a09afe374ddc500b1324dbeb43cdf28df"><div class="ttname"><a href="struct_collision_pair.html#a09afe374ddc500b1324dbeb43cdf28df">CollisionPair::b</a></div><div class="ttdeci">int b</div><div class="ttdoc">Index of the second potentially colliding body.</div><div class="ttdef"><b>Definition</b> <a href="#l00143">bounds.h:143</a></div></div>
+<div class="ttc" id="astruct_collision_pair_html_a42774adc74909268b2ba38eda0aa3a6b"><div class="ttname"><a href="struct_collision_pair.html#a42774adc74909268b2ba38eda0aa3a6b">CollisionPair::a</a></div><div class="ttdeci">int a</div><div class="ttdoc">Index of the first potentially colliding body.</div><div class="ttdef"><b>Definition</b> <a href="#l00141">bounds.h:141</a></div></div>
+<div class="ttc" id="astruct_collision_pair_html_a72b23a0630c5e0aa5234766ae56e12c2"><div class="ttname"><a href="struct_collision_pair.html#a72b23a0630c5e0aa5234766ae56e12c2">CollisionPair::operator!=</a></div><div class="ttdeci">bool operator!=(const CollisionPair &amp;other) const</div><div class="ttdef"><b>Definition</b> <a href="#l00149">bounds.h:149</a></div></div>
+<div class="ttc" id="astruct_collision_pair_html_ae5814aeedddbfeb61447ec642cd308fd"><div class="ttname"><a href="struct_collision_pair.html#ae5814aeedddbfeb61447ec642cd308fd">CollisionPair::operator==</a></div><div class="ttdeci">bool operator==(const CollisionPair &amp;other) const</div><div class="ttdef"><b>Definition</b> <a href="#l00145">bounds.h:145</a></div></div>
+<div class="ttc" id="astruct_pseudo_body_html"><div class="ttname"><a href="struct_pseudo_body.html">PseudoBody</a></div><div class="ttdoc">Structure representing a pseudo body for collision detection algorithms.</div><div class="ttdef"><b>Definition</b> <a href="body_8h_source.html#l00253">body.h:253</a></div></div>
 </div><!-- fragment --></div><!-- contents -->
 </div><!-- doc-content -->
 </div><!-- container -->

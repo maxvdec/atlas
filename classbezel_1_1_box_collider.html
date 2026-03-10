@@ -53,7 +53,7 @@ MathJax.Hub.Config({
  <tbody>
  <tr id="projectrow">
   <td id="projectalign">
-   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 6.1</span>
+   <div id="projectname">Atlas<span id="projectnumber">&#160;Alpha 7</span>
    </div>
    <div id="projectbrief">Build everything, and beyond</div>
   </td>
@@ -154,7 +154,7 @@ Public Attributes</h2></td></tr>
 <a name="details" id="details"></a><h2 id="header-details" class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Axis-aligned box collider defined by half-extents. </p>
 
-<p class="definition">Definition at line <a class="el" href="bezel_8h_source.html#l00085">85</a> of file <a class="el" href="bezel_8h_source.html">bezel.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="bezel_8h_source.html#l00087">87</a> of file <a class="el" href="bezel_8h_source.html">bezel.h</a>.</p>
 </div><a name="doc-constructors" id="doc-constructors"></a><h2 id="header-doc-constructors" class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a938f0706cd64d6b9799064a3822a7c57" name="a938f0706cd64d6b9799064a3822a7c57"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a938f0706cd64d6b9799064a3822a7c57">&#9670;&#160;</a></span>BoxCollider()</h2>
@@ -179,11 +179,11 @@ Public Attributes</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="bezel_8h_source.html#l00089">89</a> of file <a class="el" href="bezel_8h_source.html">bezel.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   89</span>: <a class="code hl_variable" href="#a191c7c6f611b102b1bb2d7c245219ae3">halfExtents</a>(<a class="code hl_variable" href="#a191c7c6f611b102b1bb2d7c245219ae3">halfExtents</a>) {}</div>
-<div class="ttc" id="aclassbezel_1_1_box_collider_html_a191c7c6f611b102b1bb2d7c245219ae3"><div class="ttname"><a href="#a191c7c6f611b102b1bb2d7c245219ae3">bezel::BoxCollider::halfExtents</a></div><div class="ttdeci">Position3d halfExtents</div><div class="ttdef"><b>Definition</b> <a href="bezel_8h_source.html#l00087">bezel.h:87</a></div></div>
+<p class="definition">Definition at line <a class="el" href="bezel_8h_source.html#l00091">91</a> of file <a class="el" href="bezel_8h_source.html">bezel.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   91</span>: <a class="code hl_variable" href="#a191c7c6f611b102b1bb2d7c245219ae3">halfExtents</a>(<a class="code hl_variable" href="#a191c7c6f611b102b1bb2d7c245219ae3">halfExtents</a>) {}</div>
+<div class="ttc" id="aclassbezel_1_1_box_collider_html_a191c7c6f611b102b1bb2d7c245219ae3"><div class="ttname"><a href="#a191c7c6f611b102b1bb2d7c245219ae3">bezel::BoxCollider::halfExtents</a></div><div class="ttdeci">Position3d halfExtents</div><div class="ttdef"><b>Definition</b> <a href="bezel_8h_source.html#l00089">bezel.h:89</a></div></div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="bezel_8h_source.html#l00087">halfExtents</a>.</p>
+<p class="reference">References <a class="el" href="bezel_8h_source.html#l00089">halfExtents</a>.</p>
 
 </div>
 </div>
@@ -242,12 +242,12 @@ Public Attributes</h2></td></tr>
 
 <p>Implements <a class="el" href="classbezel_1_1_collider.html#a3bc2b14dbff349804c176a84ae99a2a9">bezel::Collider</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="bezel_8h_source.html#l00091">91</a> of file <a class="el" href="bezel_8h_source.html">bezel.h</a>.</p>
-<div class="fragment"><div class="line"><span class="lineno">   91</span>                                        {</div>
-<div class="line"><span class="lineno">   92</span>        <span class="keywordflow">return</span> std::min({<a class="code hl_variable" href="#a191c7c6f611b102b1bb2d7c245219ae3">halfExtents</a>.x, <a class="code hl_variable" href="#a191c7c6f611b102b1bb2d7c245219ae3">halfExtents</a>.y, <a class="code hl_variable" href="#a191c7c6f611b102b1bb2d7c245219ae3">halfExtents</a>.z});</div>
-<div class="line"><span class="lineno">   93</span>    }</div>
+<p class="definition">Definition at line <a class="el" href="bezel_8h_source.html#l00093">93</a> of file <a class="el" href="bezel_8h_source.html">bezel.h</a>.</p>
+<div class="fragment"><div class="line"><span class="lineno">   93</span>                                        {</div>
+<div class="line"><span class="lineno">   94</span>        <span class="keywordflow">return</span> std::min({<a class="code hl_variable" href="#a191c7c6f611b102b1bb2d7c245219ae3">halfExtents</a>.x, <a class="code hl_variable" href="#a191c7c6f611b102b1bb2d7c245219ae3">halfExtents</a>.y, <a class="code hl_variable" href="#a191c7c6f611b102b1bb2d7c245219ae3">halfExtents</a>.z});</div>
+<div class="line"><span class="lineno">   95</span>    }</div>
 </div><!-- fragment -->
-<p class="reference">References <a class="el" href="bezel_8h_source.html#l00087">halfExtents</a>.</p>
+<p class="reference">References <a class="el" href="bezel_8h_source.html#l00089">halfExtents</a>.</p>
 
 </div>
 </div>
@@ -264,7 +264,7 @@ Public Attributes</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="bezel_8h_source.html#l00087">87</a> of file <a class="el" href="bezel_8h_source.html">bezel.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="bezel_8h_source.html#l00089">89</a> of file <a class="el" href="bezel_8h_source.html">bezel.h</a>.</p>
 
 </div>
 </div>
