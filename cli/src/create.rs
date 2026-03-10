@@ -1,6 +1,7 @@
 use crate::Commands;
 use colored::Colorize;
-use dialoguer::{theme::ColorfulTheme, Confirm, Input, Select};
+use dialoguer::theme::ColorfulTheme;
+use dialoguer::{Confirm, Input, Select};
 use indicatif::{ProgressBar, ProgressStyle};
 use reqwest::blocking::Client;
 use serde::Deserialize;
@@ -32,9 +33,9 @@ struct Release {
 
 #[derive(Clone)]
 struct AtlasBinarySet {
-    metal: ReleaseAsset,
-    opengl: ReleaseAsset,
-    vulkan: ReleaseAsset,
+    metal: Option<ReleaseAsset>,
+    opengl: Option<ReleaseAsset>,
+    vulkan: Option<ReleaseAsset>,
 }
 
 fn normalize_backend(input: &str) -> Option<String> {
@@ -167,18 +168,33 @@ fn find_macos_assets(release: &Release) -> Result<AtlasBinarySet, Box<dyn std::e
         }
     }
 
-    match (metal, opengl, vulkan) {
-        (Some(metal), Some(opengl), Some(vulkan)) => Ok(AtlasBinarySet {
-            metal,
-            opengl,
-            vulkan,
-        }),
-        _ => Err(format!(
-            "Release '{}' does not contain all required macOS assets",
+    if metal.is_none() && opengl.is_none() && vulkan.is_none() {
+        return Err(format!(
+            "Release '{}' does not contain any macOS backend archive or that release is too old. Please choose a different release or specify a newer version.",
             release.tag_name
         )
-        .into()),
+        .into());
     }
+
+    Ok(AtlasBinarySet {
+        metal,
+        opengl,
+        vulkan,
+    })
+}
+
+fn available_backends(assets: &AtlasBinarySet) -> Vec<String> {
+    let mut values = Vec::new();
+    if assets.metal.is_some() {
+        values.push(String::from("METAL"));
+    }
+    if assets.opengl.is_some() {
+        values.push(String::from("OPENGL"));
+    }
+    if assets.vulkan.is_some() {
+        values.push(String::from("VULKAN"));
+    }
+    values
 }
 
 fn download_asset(asset: &ReleaseAsset, out_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
@@ -229,19 +245,9 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-set(ATLAS_BACKEND "##BACKEND##" CACHE STRING "Atlas backend: METAL, OPENGL, VULKAN")
-set_property(CACHE ATLAS_BACKEND PROPERTY STRINGS METAL OPENGL VULKAN)
+set(ATLAS_BACKEND "##BACKEND##" CACHE STRING "Atlas backend")
+set_property(CACHE ATLAS_BACKEND PROPERTY STRINGS ##BACKEND_OPTIONS##)
 string(TOUPPER "${ATLAS_BACKEND}" ATLAS_BACKEND)
-
-if(NOT EXISTS "${CMAKE_SOURCE_DIR}/lib/macOS-atlas-metal.a")
-    message(FATAL_ERROR "Missing ${CMAKE_SOURCE_DIR}/lib/macOS-atlas-metal.a")
-endif()
-if(NOT EXISTS "${CMAKE_SOURCE_DIR}/lib/macOS-atlas-opengl.a")
-    message(FATAL_ERROR "Missing ${CMAKE_SOURCE_DIR}/lib/macOS-atlas-opengl.a")
-endif()
-if(NOT EXISTS "${CMAKE_SOURCE_DIR}/lib/macOS-atlas-vulkan.a")
-    message(FATAL_ERROR "Missing ${CMAKE_SOURCE_DIR}/lib/macOS-atlas-vulkan.a")
-endif()
 
 if(ATLAS_BACKEND STREQUAL "METAL")
     set(ATLAS_BINARY "${CMAKE_SOURCE_DIR}/lib/macOS-atlas-metal.a")
@@ -251,6 +257,10 @@ elseif(ATLAS_BACKEND STREQUAL "VULKAN")
     set(ATLAS_BINARY "${CMAKE_SOURCE_DIR}/lib/macOS-atlas-vulkan.a")
 else()
     message(FATAL_ERROR "Unsupported ATLAS_BACKEND='${ATLAS_BACKEND}'")
+endif()
+
+if(NOT EXISTS "${ATLAS_BINARY}")
+    message(FATAL_ERROR "Missing ${ATLAS_BINARY}")
 endif()
 
 file(GLOB_RECURSE SOURCE_FILES ##PROJECTNAME##/*.cpp)
@@ -378,18 +388,47 @@ pub fn create(cmd: Commands) {
             }
         };
 
+        let available = available_backends(&assets);
         let selected_backend = match backend.and_then(|b| normalize_backend(&b)) {
-            Some(b) => b,
+            Some(b) => {
+                if !available.iter().any(|candidate| candidate == &b) {
+                    eprintln!(
+                        "{} {}",
+                        "Requested backend is not available in selected release:"
+                            .red()
+                            .bold(),
+                        b
+                    );
+                    eprintln!(
+                        "{} {}",
+                        "Available backends:".yellow(),
+                        available.join(", ")
+                    );
+                    return;
+                }
+                b
+            }
             None => {
-                let options = ["METAL", "OPENGL", "VULKAN"];
-                let default_idx = if selected_platform == "macos" { 0 } else { 2 };
-                let idx = Select::with_theme(&theme)
-                    .with_prompt("Rendering backend")
-                    .items(&options)
-                    .default(default_idx)
-                    .interact()
-                    .unwrap_or(default_idx);
-                options[idx].to_string()
+                if available.len() == 1 {
+                    available[0].clone()
+                } else {
+                    let default_backend = if selected_platform == "macos" {
+                        String::from("METAL")
+                    } else {
+                        String::from("VULKAN")
+                    };
+                    let default_idx = available
+                        .iter()
+                        .position(|b| b == &default_backend)
+                        .unwrap_or(0);
+                    let idx = Select::with_theme(&theme)
+                        .with_prompt("Rendering backend")
+                        .items(&available)
+                        .default(default_idx)
+                        .interact()
+                        .unwrap_or(default_idx);
+                    available[idx].clone()
+                }
             }
         };
 
@@ -469,20 +508,45 @@ pub fn create(cmd: Commands) {
 
         spinner.set_message("Downloading macOS backend binaries");
         let lib_dir = project_root.join("lib");
-        if download_asset(&assets.metal, &lib_dir.join("macOS-atlas-metal.a")).is_err()
-            || download_asset(&assets.opengl, &lib_dir.join("macOS-atlas-opengl.a")).is_err()
-            || download_asset(&assets.vulkan, &lib_dir.join("macOS-atlas-vulkan.a")).is_err()
-        {
-            spinner.finish_and_clear();
-            eprintln!("{}", "Failed to download release libraries".red().bold());
-            return;
+        if let Some(asset) = &assets.metal {
+            if download_asset(asset, &lib_dir.join("macOS-atlas-metal.a")).is_err() {
+                spinner.finish_and_clear();
+                eprintln!(
+                    "{}",
+                    "Failed to download Metal backend library".red().bold()
+                );
+                return;
+            }
+        }
+        if let Some(asset) = &assets.opengl {
+            if download_asset(asset, &lib_dir.join("macOS-atlas-opengl.a")).is_err() {
+                spinner.finish_and_clear();
+                eprintln!(
+                    "{}",
+                    "Failed to download OpenGL backend library".red().bold()
+                );
+                return;
+            }
+        }
+        if let Some(asset) = &assets.vulkan {
+            if download_asset(asset, &lib_dir.join("macOS-atlas-vulkan.a")).is_err() {
+                spinner.finish_and_clear();
+                eprintln!(
+                    "{}",
+                    "Failed to download Vulkan backend library".red().bold()
+                );
+                return;
+            }
         }
         spinner.finish_and_clear();
+
+        let backend_options = available.join(" ");
 
         let cmake_content = TEMPLATE_CMAKE
             .replace("##PROJECTNAME##", &name)
             .replace("##PROJECTNAMELC##", &name.to_lowercase())
-            .replace("##BACKEND##", &selected_backend);
+            .replace("##BACKEND##", &selected_backend)
+            .replace("##BACKEND_OPTIONS##", &backend_options);
         if fs::File::create(project_root.join("CMakeLists.txt"))
             .and_then(|mut f| f.write_all(cmake_content.as_bytes()))
             .is_err()
