@@ -62,6 +62,9 @@ class AudioEngine {
      */
     void setMasterVolume(float volume);
 
+    /**
+     * @brief Name of the currently selected playback device.
+     */
     std::string deviceName;
 };
 
@@ -93,13 +96,22 @@ class AudioData {
      */
     Id getId() const { return id; }
 
+    /**
+     * @brief Indicates whether the decoded data contains a single channel.
+     */
     bool isMono = false;
 
+    /**
+     * @brief Source resource used to create this buffer.
+     */
     Resource resource;
 
   private:
+    /** @brief Backend buffer identifier. */
     Id id;
+    /** @brief Raw decoded PCM bytes. */
     std::vector<char> data;
+    /** @brief Sample rate in Hz. */
     unsigned int sampleRate;
     friend class AudioSource;
 };
@@ -240,10 +252,15 @@ class AudioSource {
     void useSpatialization();
 
   private:
+    /** @brief Backend source identifier. */
     Id id;
+    /** @brief Optional mono companion source used by some backends. */
     Id monoId;
+    /** @brief Bound audio data currently assigned to this source. */
     std::shared_ptr<AudioData> data;
+    /** @brief Mono conversion cache when required by backend features. */
     std::shared_ptr<AudioData> monoData;
+    /** @brief True when source attenuation is spatialized in 3D. */
     bool isSpatialized = false;
 };
 

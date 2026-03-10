@@ -88,6 +88,7 @@ struct Rigidbody;
 
 namespace bezel_jolt {
 
+/** @brief Map from Jolt body IDs to Bezel rigidbody wrappers. */
 extern std::map<JPH::BodyID, bezel::Rigidbody *> bodyIdToRigidbodyMap;
 
 class BroadPhaseLayerImpl final : public JPH::BroadPhaseLayerInterface {
@@ -109,9 +110,13 @@ class BroadPhaseLayerImpl final : public JPH::BroadPhaseLayerInterface {
 
 enum class JoltLogLevel { Info, Warning, Error };
 
+/** @brief Routes a Jolt log message through Atlas logging facilities. */
 void AtlasLog(JoltLogLevel level, std::string_view msg);
+/** @brief Attempts to classify a Jolt log message severity. */
 JoltLogLevel Classify(std::string_view s);
+/** @brief Internal printf-style bridge used by Jolt logging callbacks. */
 void TraceImpl(const char *fmt, ...);
+/** @brief Assertion callback bridge used by Jolt in debug checks. */
 bool AssertFailedImpl(const char *expr, const char *msg, const char *file,
                       JPH::uint line);
 

@@ -33,8 +33,11 @@ enum class DrawCallType { Draw = 1, Indexed = 2, Patch = 3 };
  * @brief Draw call telemetry emitted by the renderer.
  */
 struct DrawCallInfo {
+    /** @brief Name/id of the renderable or system that issued the call. */
     std::string callerObject;
+    /** @brief Draw call topology/dispatch kind. */
     DrawCallType type;
+    /** @brief Frame index at which the call was recorded. */
     unsigned int frameNumber;
 
     /** @brief Sends this event to the tracer sink. */
@@ -45,9 +48,13 @@ struct DrawCallInfo {
  * @brief Per-frame aggregate draw call telemetry.
  */
 struct FrameDrawInfo {
+    /** @brief Frame index for this aggregate packet. */
     unsigned int frameNumber;
+    /** @brief Number of draw calls observed during the frame. */
     unsigned int drawCallCount;
+    /** @brief Total frame time in milliseconds. */
     float frameTimeMs;
+    /** @brief Frames per second derived from frame time. */
     float fps;
 
     /** @brief Sends this event to the tracer sink. */
@@ -79,10 +86,15 @@ enum class DebugResourceOperation {
  * @brief Resource lifecycle event emitted by resource systems.
  */
 struct ResourceEventInfo {
+    /** @brief Emitter that triggered the resource event. */
     std::string callerObject;
+    /** @brief Category of resource involved. */
     DebugResourceType resourceType;
+    /** @brief Lifecycle transition that occurred. */
     DebugResourceOperation operation;
+    /** @brief Frame index at which the event was recorded. */
     unsigned int frameNumber;
+    /** @brief Approximate resource size in megabytes. */
     float sizeMb;
 
     /** @brief Sends this event to the tracer sink. */
@@ -93,10 +105,15 @@ struct ResourceEventInfo {
  * @brief Per-frame aggregate resource telemetry.
  */
 struct FrameResourcesInfo {
+    /** @brief Frame index for this aggregate packet. */
     unsigned int frameNumber;
+    /** @brief Number of resources created in this frame. */
     int resourcesCreated;
+    /** @brief Number of resources loaded in this frame. */
     int resourcesLoaded;
+    /** @brief Number of resources unloaded in this frame. */
     int resourcesUnloaded;
+    /** @brief Total estimated memory footprint in MB. */
     float totalMemoryMb;
 
     /** @brief Sends this event to the tracer sink. */
@@ -107,7 +124,9 @@ struct FrameResourcesInfo {
  * @brief Counts resources per kind.
  */
 struct IndividualResourceTypeInfo {
+    /** @brief Resource category being counted. */
     DebugResourceType resourceType;
+    /** @brief Number of resources observed in that category. */
     int count;
 };
 
@@ -119,9 +138,13 @@ class ResourceTracker {
     ResourceTracker() = default;
 
   public:
+    /** @brief Number of resource create events observed. */
     int createdResources = 0;
+    /** @brief Number of resource load events observed. */
     int loadedResources = 0;
+    /** @brief Number of resource unload events observed. */
     int unloadedResources = 0;
+    /** @brief Accumulated memory footprint estimate in MB. */
     float totalMemoryMb = 0.0f;
 
     static ResourceTracker &getInstance() {
@@ -148,7 +171,9 @@ enum class DebugObjectType {
  * @brief Object-level telemetry packet.
  */
 struct DebugObjectPacket {
+    /** @brief Object identifier in engine space. */
     int objectId;
+    /** @brief High-level object classification. */
     DebugObjectType objectType;
 
     int triangleCount;
@@ -198,11 +223,17 @@ enum class DebugResourceKind {
  * @brief Single allocation event packet.
  */
 struct AllocationPacket {
+    /** @brief Human-readable allocation description. */
     std::string description;
+    /** @brief Subsystem or owner responsible for the allocation. */
     std::string owner;
+    /** @brief Memory domain where bytes were allocated. */
     DebugMemoryDomain domain;
+    /** @brief Resource kind associated with this allocation. */
     DebugResourceKind kind;
+    /** @brief Allocation size in megabytes. */
     float sizeMb;
+    /** @brief Frame index at which allocation happened. */
     unsigned int frameNumber;
 
     /** @brief Sends this event to the tracer sink. */
@@ -213,11 +244,17 @@ struct AllocationPacket {
  * @brief Per-frame aggregate memory telemetry.
  */
 struct FrameMemoryPacket {
+    /** @brief Frame index for this aggregate packet. */
     unsigned int frameNumber;
+    /** @brief Total allocated memory in MB. */
     float totalAllocatedMb;
+    /** @brief GPU memory usage in MB. */
     float totalGPUMb;
+    /** @brief CPU memory usage in MB. */
     float totalCPUMb;
+    /** @brief Number of allocation events in the frame. */
     int allocationCount;
+    /** @brief Number of deallocation events in the frame. */
     int deallocationCount;
 
     /** @brief Sends this event to the tracer sink. */
@@ -230,13 +267,21 @@ struct FrameMemoryPacket {
  * @brief Per-frame timing and utilization telemetry.
  */
 struct FrameTimingPacket {
+    /** @brief Frame index for this aggregate packet. */
     unsigned int frameNumber;
+    /** @brief Total CPU frame time in milliseconds. */
     float cpuFrameTimeMs;
+    /** @brief Total GPU frame time in milliseconds. */
     float gpuFrameTimeMs;
+    /** @brief Main thread execution time in milliseconds. */
     float mainThreadTimeMs;
+    /** @brief Worker thread execution time in milliseconds. */
     float workerThreadTimeMs;
+    /** @brief Process memory usage in MB. */
     float memoryMb;
+    /** @brief CPU utilization percentage for the frame. */
     float cpuUsagePercent;
+    /** @brief GPU utilization percentage for the frame. */
     float gpuUsagePercent;
 
     /** @brief Sends this event to the tracer sink. */
@@ -263,9 +308,13 @@ enum class TimingEventSubsystem {
  * @brief Single timed event packet.
  */
 struct TimingEventPacket {
+    /** @brief Event label shown in tracing UI. */
     std::string name;
+    /** @brief Subsystem this timing event belongs to. */
     TimingEventSubsystem subsystem;
+    /** @brief Duration in milliseconds. */
     float durationMs;
+    /** @brief Frame index at which the event was captured. */
     unsigned int frameNumber;
 
     /** @brief Sends this event to the tracer sink. */

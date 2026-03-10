@@ -137,7 +137,9 @@ class Body;
  *
  */
 struct CollisionPair {
+    /** @brief Index of the first potentially colliding body. */
     int a;
+    /** @brief Index of the second potentially colliding body. */
     int b;
 
     inline bool operator==(const CollisionPair &other) const {

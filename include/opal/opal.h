@@ -116,10 +116,15 @@ struct ImageCollection {
 #endif
 
 struct DeviceInfo {
+    /** @brief GPU/adapter name reported by the backend. */
     std::string deviceName;
+    /** @brief Vendor name reported by the backend. */
     std::string vendorName;
+    /** @brief Driver version string. */
     std::string driverVersion;
+    /** @brief Rendering API version string. */
     std::string renderingVersion;
+    /** @brief Opal runtime version string. */
     std::string opalVersion;
 };
 

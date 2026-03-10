@@ -121,6 +121,12 @@ class Camera {
      * @param newPosition The new position to set the camera to.
      */
     void setPosition(const Position3d &newPosition);
+    /**
+     * @brief Repositions the camera while preserving its current yaw/pitch
+     * orientation and forward direction.
+     *
+     * @param newPosition The new world-space camera position.
+     */
     void setPositionKeepingOrientation(const Position3d &newPosition);
     /**
      * @brief Sets the point where the camera is looking at in 3D space.

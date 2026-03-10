@@ -137,27 +137,35 @@ using Normal3d = Position3d;
  */
 using Magnitude3d = Position3d;
 
+/** @brief Type alias for 3D impulse vectors. */
 using Impulse3d = Position3d;
+/** @brief Type alias for 3D force vectors. */
 using Force3d = Position3d;
+/** @brief Generic type alias for 3D vectors. */
 using Vector3 = Position3d;
+/** @brief Type alias for 3D velocity vectors. */
 using Velocity3d = Position3d;
 
 struct Quaternion;
 
 struct BoundingBox {
+    /** @brief Minimum corner of the box (inclusive). */
     Position3d min;
+    /** @brief Maximum corner of the box (inclusive). */
     Position3d max;
 
     BoundingBox() : min(Position3d::zero()), max(Position3d::zero()) {}
     BoundingBox(const Position3d &min, const Position3d &max)
         : min(min), max(max) {}
 
+    /** @brief Returns true when the point lies inside the bounds. */
     bool contains(const Position3d &point) const {
         return (point.x >= min.x && point.x <= max.x) &&
                (point.y >= min.y && point.y <= max.y) &&
                (point.z >= min.z && point.z <= max.z);
     }
 
+    /** @brief Returns true when two axis-aligned boxes overlap. */
     bool intersects(const BoundingBox &other) const {
         return (min.x <= other.max.x && max.x >= other.min.x) &&
                (min.y <= other.max.y && max.y >= other.min.y) &&
@@ -256,13 +264,19 @@ struct Rotation3d {
 };
 
 struct Quaternion {
+    /** @brief X component of the quaternion vector part. */
     float x;
+    /** @brief Y component of the quaternion vector part. */
     float y;
+    /** @brief Z component of the quaternion vector part. */
     float z;
+    /** @brief Scalar component of the quaternion. */
     float w;
 
+    /** @brief Converts to a GLM quaternion (`w, x, y, z`). */
     glm::quat toGlm() const { return glm::quat(w, x, y, z); }
 
+    /** @brief Builds a Quaternion from a GLM quaternion. */
     static Quaternion fromGlm(const glm::quat &quat) {
         return {.x = quat.x, .y = quat.y, .z = quat.z, .w = quat.w};
     }
@@ -273,10 +287,12 @@ struct Quaternion {
         return os;
     }
 
+    /** @brief Converts this quaternion to Euler rotation angles. */
     static Rotation3d toEuler(const Quaternion &quat) {
         return Rotation3d::fromGlmQuat(quat.toGlm());
     }
 
+    /** @brief Builds a quaternion from Euler rotation angles. */
     static Quaternion fromEuler(const Rotation3d &euler) {
         return fromGlm(euler.toGlmQuat());
     }
@@ -426,7 +442,9 @@ enum class Direction3d {
  *
  */
 struct Position2d {
+    /** @brief X coordinate in 2D space. */
     float x;
+    /** @brief Y coordinate in 2D space. */
     float y;
 
     Position2d operator+(const Position2d &other) const {
@@ -465,6 +483,7 @@ using Point2d = Position2d;
  *
  */
 using Movement2d = Position2d;
+/** @brief Type alias for 2D magnitude vectors. */
 using Magnitude2d = Position2d;
 
 /**

@@ -64,12 +64,33 @@ struct Material {
      * @brief Ambient occlusion term used to darken creases and cavities.
      */
     float ao = 1.0f;
+    /**
+     * @brief Additional scalar controlling mirror-like reflections.
+     */
     float reflectivity = 0.0f;
+    /**
+     * @brief Color emitted by the surface when emissive lighting is enabled.
+     */
     Color emissiveColor = {0.0, 0.0, 0.0, 1.0};
+    /**
+     * @brief Intensity multiplier for emissiveColor.
+     */
     float emissiveIntensity = 0.0f;
+    /**
+     * @brief Strength applied to sampled normal maps.
+     */
     float normalMapStrength = 1.0f;
+    /**
+     * @brief Whether normal map sampling is enabled for this material.
+     */
     bool useNormalMap = true;
+    /**
+     * @brief Fraction of transmitted light for translucent materials.
+     */
     float transmittance = 0.0f;
+    /**
+     * @brief Index of refraction used for transmission effects.
+     */
     float ior = 1.0f;
 };
 
@@ -294,6 +315,9 @@ class CoreObject : public GameObject {
      *
      */
     std::vector<Index> indices;
+    /**
+     * @brief Shader program currently associated with this object.
+     */
     ShaderProgram shaderProgram;
     /**
      * @brief The textures applied to the object.
@@ -319,6 +343,9 @@ class CoreObject : public GameObject {
      */
     CoreObject();
 
+    /**
+     * @brief Cached graphics pipeline built from shader and state settings.
+     */
     std::shared_ptr<opal::Pipeline> pipeline;
 
     /**
@@ -362,6 +389,10 @@ class CoreObject : public GameObject {
      */
     void initialize() override;
 
+    /**
+     * @brief Marks the pipeline dirty and rebuilds it against current window
+     * state.
+     */
     void refreshPipeline();
 
     std::optional<std::shared_ptr<opal::Pipeline>> getPipeline() override;
@@ -415,6 +446,9 @@ class CoreObject : public GameObject {
      * @brief Assigns an absolute rotation to the object.
      */
     void setRotation(const Rotation3d &newRotation) override;
+    /**
+     * @brief Sets orientation directly from a quaternion.
+     */
     void setRotationQuat(const glm::quat &quat);
     /**
      * @brief Rotates the object so its forward vector points towards a
@@ -596,6 +630,9 @@ class CoreObject : public GameObject {
      */
     bool canCastShadows() const override { return castsShadows; }
 
+    /**
+     * @brief Returns the current Euler rotation (pitch, yaw, roll).
+     */
     Rotation3d getRotation() const override { return rotation; }
 
     /**

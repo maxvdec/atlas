@@ -72,6 +72,9 @@ class Logger {
     void warning(const std::string &message, const std::string &file, int line);
     /** @brief Logs an error message. */
     void error(const std::string &message, const std::string &file, int line);
+    /**
+     * @brief Configures which severities are echoed to the local console.
+     */
     void setConsoleFilter(bool showLogs, bool showWarnings, bool showErrors);
 };
 
@@ -100,9 +103,12 @@ class Logger {
  */
 class DebugTimer {
   public:
+    /** @brief Starts timing a labeled scope. */
     DebugTimer(const std::string &name);
+    /** @brief Stops timing and reports elapsed duration. */
     ~DebugTimer();
 
+    /** @brief Stops timing manually and returns elapsed milliseconds. */
     uint64_t stop();
 
   private:

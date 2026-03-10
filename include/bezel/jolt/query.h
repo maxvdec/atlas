@@ -31,15 +31,20 @@
  */
 
 struct PairKey {
+    /** @brief First body identifier in the pair. */
     JPH::BodyID body1;
+    /** @brief Second body identifier in the pair. */
     JPH::BodyID body2;
 
+    /** @brief Builds an order-independent pair key. */
     PairKey(JPH::BodyID b1, JPH::BodyID b2);
 
+    /** @brief Equality check used by hash containers. */
     bool operator==(const PairKey &other) const;
 };
 
 struct PairKeyHash {
+    /** @brief Hash function for PairKey. */
     size_t operator()(const PairKey &key) const noexcept;
 };
 
@@ -51,16 +56,20 @@ class GlobalContactListener final : public JPH::ContactListener {
         return JPH::ValidateResult::AcceptAllContactsForThisBodyPair;
     }
 
+    /** @brief Invoked when a new contact manifold is created. */
     void OnContactAdded(const JPH::Body &inBody1, const JPH::Body &inBody2,
                         const JPH::ContactManifold &inManifold,
                         JPH::ContactSettings &ioSettings) override;
 
+    /** @brief Invoked while an existing contact manifold persists. */
     void OnContactPersisted(const JPH::Body &inBody1, const JPH::Body &inBody2,
                             const JPH::ContactManifold &inManifold,
                             JPH::ContactSettings &ioSettings) override;
 
+    /** @brief Invoked when contact between sub-shapes ends. */
     void OnContactRemoved(const JPH::SubShapeIDPair &inSubShapePair) override;
 
+    /** @brief Flushes queued contact events into Atlas callbacks. */
     void dispatchEvents();
 
   private:
@@ -95,7 +104,9 @@ class GlobalContactListener final : public JPH::ContactListener {
 
 class JoltCollisionDispatcher : public bezel::CollisionDispatcher {
   public:
+    /** @brief Installs the contact listener on the provided world. */
     void setup(bezel::PhysicsWorld *world) override;
+    /** @brief Dispatches queued collision/signal events for the frame. */
     void update(bezel::PhysicsWorld *world) override;
 
   private:
