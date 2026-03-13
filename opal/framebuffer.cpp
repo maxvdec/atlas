@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <memory>
 #include <utility>
+#include <atlas/tracer/log.h>
 #ifdef METAL
 #include "metal_state.h"
 #endif
@@ -20,6 +21,7 @@
 
 namespace opal {
 
+#ifndef OPENGL
 namespace {
 
 void upsertColorAttachment(std::vector<Attachment> &attachments, int colorIndex,
@@ -93,6 +95,8 @@ collectDrawColorAttachments(const std::shared_ptr<Framebuffer> &fb,
 }
 
 } // namespace
+
+#endif
 
 Framebuffer::~Framebuffer() {
 #ifdef METAL

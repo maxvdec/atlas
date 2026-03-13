@@ -1017,6 +1017,7 @@ void Pipeline::bindTexture2D(const std::string &name, uint textureId, int unit,
     glBindTexture(GL_TEXTURE_2D, textureId);
     int location = glGetUniformLocation(shaderProgram->programID, name.c_str());
     glUniform1i(location, unit);
+    (void)callerId;
 #elif defined(VULKAN)
     auto texture = Texture::getTextureFromHandle(textureId);
     bindTexture(name, texture, unit, callerId);
@@ -1033,6 +1034,8 @@ void Pipeline::bindTexture3D(const std::string &name, uint textureId, int unit,
     glBindTexture(GL_TEXTURE_3D, textureId);
     int location = glGetUniformLocation(shaderProgram->programID, name.c_str());
     glUniform1i(location, unit);
+    (void)callerId;
+
 #elif defined(VULKAN)
     auto texture = Texture::getTextureFromHandle(textureId);
     bindTexture(name, texture, unit, callerId);
@@ -1049,6 +1052,7 @@ void Pipeline::bindTextureCubemap(const std::string &name, uint textureId,
     glBindTexture(GL_TEXTURE_CUBE_MAP, textureId);
     int location = glGetUniformLocation(shaderProgram->programID, name.c_str());
     glUniform1i(location, unit);
+    (void)callerId;
 #elif defined(VULKAN)
     auto texture = Texture::getTextureFromHandle(textureId);
     bindTexture(name, texture, unit, callerId);

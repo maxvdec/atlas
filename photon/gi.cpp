@@ -26,6 +26,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#ifdef METAL
 namespace {
 constexpr int kDdgiMaterialTextureUnitStart = 10;
 constexpr int kDdgiMaxMaterialTextures = 24;
@@ -864,3 +865,5 @@ void photon::GlobalIllumination::render(
 
     frameIndex = std::min(frameIndex + 1, 1 << 30);
 }
+
+#endif

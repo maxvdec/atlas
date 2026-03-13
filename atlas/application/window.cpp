@@ -49,8 +49,7 @@ template <typename T> void hashCombine(std::size_t &seed, const T &value) {
             (seed >> 2);
 }
 
-void appendShadowCaster(Renderable *obj,
-                        std::unordered_set<Renderable *> &seen,
+void appendShadowCaster(Renderable *obj, std::unordered_set<Renderable *> &seen,
                         std::vector<Renderable *> &casters) {
     if (obj == nullptr) {
         return;
@@ -59,7 +58,8 @@ void appendShadowCaster(Renderable *obj,
         const auto &meshes = static_cast<const Model *>(model)->getObjects();
         for (const auto &mesh : meshes) {
             Renderable *meshRenderable = mesh.get();
-            if (meshRenderable == nullptr || !meshRenderable->canCastShadows()) {
+            if (meshRenderable == nullptr ||
+                !meshRenderable->canCastShadows()) {
                 continue;
             }
             if (seen.insert(meshRenderable).second) {
@@ -103,8 +103,8 @@ collectShadowCasters(const std::vector<Renderable *> &firstRenderables,
     return casters;
 }
 
-std::size_t computeShadowCasterSignature(
-    const std::vector<Renderable *> &shadowCasters) {
+std::size_t
+computeShadowCasterSignature(const std::vector<Renderable *> &shadowCasters) {
     std::size_t signature = 1469598103934665603ULL;
 
     for (auto *obj : shadowCasters) {
@@ -148,11 +148,12 @@ Window::Window(const WindowConfiguration &config)
                                           .applicationVersion = ""});
     atlas_log("Using Metal backend");
 #else
-    auto context =
-        opal::Context::create({.useOpenGL = true,
-                               .majorVersion = 4,
-                               .minorVersion = 1,
-                               .profile = opal::OpenGLProfile::Core});
+    auto context = opal::Context::create({.useOpenGL = true,
+                                          .majorVersion = 4,
+                                          .minorVersion = 1,
+                                          .profile = opal::OpenGLProfile::Core,
+                                          .applicationName = config.title,
+                                          .applicationVersion = "0.0"});
     atlas_log("Using OpenGL backend");
 #endif
 
@@ -162,8 +163,8 @@ Window::Window(const WindowConfiguration &config)
 #elif defined(METAL)
     frontFace = opal::FrontFace::
         CounterClockwise; // NOLINT(*-prefer-member-initializer)
-    deferredFrontFace =
-        opal::FrontFace::CounterClockwise; // NOLINT(*-prefer-member-initializer)
+    deferredFrontFace = opal::FrontFace::
+        CounterClockwise; // NOLINT(*-prefer-member-initializer)
 #else
     this->frontFace = opal::FrontFace::CounterClockwise;
     this->deferredFrontFace = opal::FrontFace::CounterClockwise;
@@ -560,7 +561,9 @@ void Window::run() {
                 if (pathTracer == nullptr) {
                     continue;
                 }
-                pathTracer->resizeOutput(target->getWidth(), target->getHeight());
+#ifdef METAL
+                pathTracer->resizeOutput(target->getWidth(),
+                                         target->getHeight());
                 pathTracer->render(commandBuffer);
                 // Copy to the current target
                 pathTracer->copySrcFramebuffer->attachTexture(
@@ -571,6 +574,7 @@ void Window::run() {
                     pathTracer->copySrcFramebuffer,
                     pathTracer->copyDstFramebuffer, 0);
                 commandBuffer->performResolve(copy);
+#endif
 
                 continue;
             }
@@ -1451,8 +1455,9 @@ void Window::renderLightsToShadowMaps(
         }
     }
 
-    const std::vector<Renderable *> shadowCasters = collectShadowCasters(
-        this->firstRenderables, this->renderables, this->lateForwardRenderables);
+    const std::vector<Renderable *> shadowCasters =
+        collectShadowCasters(this->firstRenderables, this->renderables,
+                             this->lateForwardRenderables);
     const std::size_t shadowCasterSignature =
         computeShadowCasterSignature(shadowCasters);
     const bool castersMoved =
@@ -2382,9 +2387,11 @@ BoundingBox Window::getSceneBoundingBox() {
     return {Position3d::fromGlm(worldMin), Position3d::fromGlm(worldMax)};
 }
 
+#ifdef METAL
 void Window::enablePathTracing() {
     this->usesDeferred = false;
     this->usePathTracing = true;
     this->pathTracer = std::make_shared<photon::PathTracing>();
     pathTracer->init();
 }
+#endif
