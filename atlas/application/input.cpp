@@ -149,3 +149,13 @@ AxisTrigger Joystick::getDualAxisTrigger(int axisIndexX, int axisIndexY) const {
     return AxisTrigger::controller(this->joystickID, axisIndexX, false,
                                    axisIndexY);
 }
+
+void Gamepad::rumble(float strength, float duration) const {
+    SDL_Gamepad *gamepad = SDL_OpenGamepad(this->controllerID);
+    if (!gamepad) {
+        atlas_error("Failed to open gamepad for rumble");
+        return;
+    }
+    SDL_RumbleGamepad(gamepad, (Uint16)(strength * 65535),
+                      (Uint16)(strength * 65535), (Uint32)(duration * 1000));
+}

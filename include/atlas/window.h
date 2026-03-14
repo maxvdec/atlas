@@ -295,6 +295,8 @@ struct Gamepad {
     static AxisTrigger getGlobalAxisTrigger(const ControllerAxis &axis);
     Trigger getButtonTrigger(int buttonIndex) const;
     static Trigger getGlobalButtonTrigger(int buttonIndex);
+
+    void rumble(float strength, float duration) const;
 };
 
 using Controller = Gamepad;

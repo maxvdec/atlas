@@ -149,6 +149,7 @@ class MainScene : public Scene {
     ParticleEmitter emitter;
     WaterPot waterPot;
     Model sponza;
+    Controller controller;
 
     bool doesUpdate = true;
     bool fall = false;
@@ -157,6 +158,8 @@ class MainScene : public Scene {
     void update(Window &window) override {
         if (!doesUpdate)
             return;
+
+        controller.rumble(2.f, 1.0f);
 
         camera.updateWithActions(window, "move", "look", "upAndDown");
         if (window.isKeyActive(Key::Escape)) {
@@ -203,6 +206,8 @@ class MainScene : public Scene {
         env.lightBloom.radius = 0.008f;
         env.lightBloom.maxSamples = 5;
         this->setEnvironment(env);
+
+        controller = window.getController(window.getControllers()[0]);
 
         auto moveAction = InputAction::createAxisInputAction(
             "move",
