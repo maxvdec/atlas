@@ -13,9 +13,43 @@
 #include "atlas/input.h"
 #include <algorithm>
 #include <algorithm>
+#include <cmath>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/glm.hpp>
 #include <string>
+
+namespace {
+constexpr float CAMERA_CONTROLLER_DEADZONE = 0.2f;
+
+float applyControllerDeadzone(float value) {
+    return std::abs(value) < CAMERA_CONTROLLER_DEADZONE ? 0.0f : value;
+}
+
+glm::vec2 sampleControllerAxisPair(Window &window, int axisIndexX,
+                                   int axisIndexY, bool invertY) {
+    glm::vec2 selected(0.0f, 0.0f);
+    float bestMagnitude = -1.0f;
+
+    for (const auto &controller : window.getControllers()) {
+        auto pair =
+            window.getControllerAxisPairValue(controller.id, axisIndexX,
+                                              axisIndexY);
+        float x = applyControllerDeadzone(pair.first);
+        float y = applyControllerDeadzone(pair.second);
+        if (invertY) {
+            y = -y;
+        }
+
+        float magnitude = glm::length(glm::vec2(x, y));
+        if (magnitude > bestMagnitude) {
+            selected = {x, y};
+            bestMagnitude = magnitude;
+        }
+    }
+
+    return selected;
+}
+}
 
 glm::mat4 Camera::calculateViewMatrix() const {
     glm::dvec3 camPos(position.x, position.y, position.z);
@@ -95,8 +129,27 @@ void Camera::update(Window &window) {
     glm::vec3 upVector(0.0f, 1.0f, 0.0f); // Assuming Y-up coordinate system
 
     float deltaTime = window.getDeltaTime();
+    glm::vec2 controllerMove = sampleControllerAxisPair(
+        window, GLFW_GAMEPAD_AXIS_LEFT_X, GLFW_GAMEPAD_AXIS_LEFT_Y, true);
+    glm::vec2 controllerLook = sampleControllerAxisPair(
+        window, GLFW_GAMEPAD_AXIS_RIGHT_X, GLFW_GAMEPAD_AXIS_RIGHT_Y, true);
 
     float cameraSpeed = movementSpeed * deltaTime;
+
+    targetYaw += controllerLook.x * controllerLookSensitivity * deltaTime;
+    targetPitch += controllerLook.y * controllerLookSensitivity * deltaTime;
+
+    targetPitch = std::min(targetPitch, 89.0f);
+    targetPitch = std::max(targetPitch, -89.0f);
+
+    yaw += (targetYaw - yaw) * lookSmoothness;
+    pitch += (targetPitch - pitch) * lookSmoothness;
+
+    glm::vec3 front;
+    front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    front.y = sin(glm::radians(pitch));
+    front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+    camFront = glm::normalize(front);
 
     if (window.isKeyActive(Key::W) || window.isKeyActive(Key::Up)) {
         camPos += cameraSpeed * camFront;
@@ -117,6 +170,14 @@ void Camera::update(Window &window) {
         camPos.y -= cameraSpeed;
     }
 
+    glm::vec2 moveVector = controllerMove;
+    if (glm::length(moveVector) > 1.0f) {
+        moveVector = glm::normalize(moveVector);
+    }
+    camPos += moveVector.y * cameraSpeed * camFront;
+    camPos += moveVector.x * cameraSpeed *
+              glm::normalize(glm::cross(camFront, upVector));
+
     position = {camPos.x, camPos.y, camPos.z};
     target = {camPos.x + camFront.x, camPos.y + camFront.y,
               camPos.z + camFront.z};
@@ -129,8 +190,27 @@ void Camera::updateWithActions(Window &window, const std::string &moveAxis,
     AxisPacket lookInput = window.getAxisActionValue(lookAction);
     AxisPacket upDownInput = window.getAxisActionValue(upAndDownAction);
 
-    float xoffset = lookInput.deltaX * mouseSensitivity;
-    float yoffset = lookInput.deltaY * mouseSensitivity;
+    float deltaTime = window.getDeltaTime();
+    float xoffset = lookInput.inputDeltaX * mouseSensitivity;
+    float yoffset = lookInput.inputDeltaY * mouseSensitivity;
+
+    if (lookInput.hasValueInput) {
+        glm::vec2 lookVector(lookInput.valueX, lookInput.valueY);
+        if (glm::length(lookVector) > 1.0f) {
+            lookVector = glm::normalize(lookVector);
+        }
+        xoffset += lookVector.x * controllerLookSensitivity * deltaTime;
+        yoffset += lookVector.y * controllerLookSensitivity * deltaTime;
+    }
+
+    glm::vec2 fallbackLook = sampleControllerAxisPair(
+        window, GLFW_GAMEPAD_AXIS_RIGHT_X, GLFW_GAMEPAD_AXIS_RIGHT_Y, true);
+    if (glm::length(fallbackLook) > 0.0f &&
+        glm::length(fallbackLook) > glm::length(glm::vec2(lookInput.valueX,
+                                                          lookInput.valueY))) {
+        xoffset += fallbackLook.x * controllerLookSensitivity * deltaTime;
+        yoffset += fallbackLook.y * controllerLookSensitivity * deltaTime;
+    }
 
     targetYaw += xoffset;
     targetPitch += yoffset;
@@ -153,15 +233,24 @@ void Camera::updateWithActions(Window &window, const std::string &moveAxis,
     glm::vec3 camFront =
         glm::normalize(glm::vec3(target.x, target.y, target.z) - camPos);
     glm::vec3 upVector(0.0f, 1.0f, 0.0f);
-    float cameraSpeed = movementSpeed * window.getDeltaTime();
-    glm::vec2 moveVector(moveInput.x, moveInput.y);
+    float cameraSpeed = movementSpeed * deltaTime;
+    glm::vec2 moveVector = moveInput.hasValueInput
+                               ? glm::vec2(moveInput.valueX, moveInput.valueY)
+                               : glm::vec2(moveInput.x, moveInput.y);
+    glm::vec2 fallbackMove = sampleControllerAxisPair(
+        window, GLFW_GAMEPAD_AXIS_LEFT_X, GLFW_GAMEPAD_AXIS_LEFT_Y, true);
+    if (glm::length(fallbackMove) > glm::length(moveVector)) {
+        moveVector = fallbackMove;
+    }
     if (glm::length(moveVector) > 1.0f) {
         moveVector = glm::normalize(moveVector);
     }
+    float verticalInput =
+        upDownInput.hasValueInput ? upDownInput.valueY : upDownInput.y;
     camPos += moveVector.y * cameraSpeed * camFront;
     camPos += moveVector.x * cameraSpeed *
               glm::normalize(glm::cross(camFront, upVector));
-    camPos += upDownInput.y * cameraSpeed * upVector;
+    camPos += verticalInput * cameraSpeed * upVector;
 
     position = {camPos.x, camPos.y, camPos.z};
     target = {camPos.x + camFront.x, camPos.y + camFront.y,

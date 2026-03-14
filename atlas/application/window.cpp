@@ -52,6 +52,133 @@ template <typename T> void hashCombine(std::size_t &seed, const T &value) {
             (seed >> 2);
 }
 
+float getControllerAxisValueForDevice(int controllerID, int axisIndex) {
+    if (!glfwJoystickPresent(controllerID)) {
+        return 0.0f;
+    }
+    if (glfwJoystickIsGamepad(controllerID) == GLFW_FALSE) {
+        int axisCount = 0;
+        const float *axes = glfwGetJoystickAxes(controllerID, &axisCount);
+        if (axes != nullptr && axisIndex >= 0 && axisIndex < axisCount) {
+            return axes[axisIndex];
+        }
+        return 0.0f;
+    }
+
+    GLFWgamepadstate state;
+    if (glfwGetGamepadState(controllerID, &state) &&
+        axisIndex >= 0 && axisIndex <= GLFW_GAMEPAD_AXIS_LAST) {
+        return state.axes[axisIndex];
+    }
+
+    int axisCount = 0;
+    const float *axes = glfwGetJoystickAxes(controllerID, &axisCount);
+    if (axes != nullptr && axisIndex >= 0 && axisIndex < axisCount) {
+        return axes[axisIndex];
+    }
+    return 0.0f;
+}
+
+std::pair<float, float> getControllerAxisPairValueForDevice(int controllerID,
+                                                            int axisIndexX,
+                                                            int axisIndexY) {
+    auto readStandardPair = [&](int glfwID) {
+        return std::pair<float, float>{
+            getControllerAxisValueForDevice(glfwID, axisIndexX),
+            getControllerAxisValueForDevice(glfwID, axisIndexY)};
+    };
+
+    auto readJoystickPair = [&](int glfwID) {
+        int axisCount = 0;
+        const float *axes = glfwGetJoystickAxes(glfwID, &axisCount);
+        if (axes == nullptr || axisCount < 2) {
+            return std::pair<float, float>{0.0f, 0.0f};
+        }
+
+        struct AxisPairCandidate {
+            int x;
+            int y;
+            float magnitude;
+        };
+
+        std::vector<AxisPairCandidate> candidates;
+        int limit = std::min(axisCount, 8);
+        for (int start = 0; start + 1 < limit; start += 2) {
+            float x = axes[start];
+            float y = axes[start + 1];
+            candidates.push_back({start, start + 1, std::sqrt(x * x + y * y)});
+        }
+
+        if (candidates.empty()) {
+            return std::pair<float, float>{0.0f, 0.0f};
+        }
+
+        std::sort(candidates.begin(), candidates.end(),
+                  [](const AxisPairCandidate &left,
+                     const AxisPairCandidate &right) {
+                      return left.magnitude > right.magnitude;
+                  });
+
+        bool hasPreferredPair =
+            axisIndexX >= 0 && axisIndexY >= 0 && axisIndexX < axisCount &&
+            axisIndexY < axisCount;
+        if (hasPreferredPair) {
+            float preferredX = axes[axisIndexX];
+            float preferredY = axes[axisIndexY];
+            float preferredMagnitude =
+                std::sqrt(preferredX * preferredX + preferredY * preferredY);
+            if (preferredMagnitude > 0.01f) {
+                return std::pair<float, float>{preferredX, preferredY};
+            }
+        }
+
+        int requestedPairIndex = axisIndexX >= 0 ? axisIndexX / 2 : 0;
+        if (requestedPairIndex >= 0 &&
+            requestedPairIndex < static_cast<int>(candidates.size()) &&
+            candidates[requestedPairIndex].magnitude > 0.01f) {
+            const auto &candidate = candidates[requestedPairIndex];
+            return std::pair<float, float>{axes[candidate.x], axes[candidate.y]};
+        }
+
+        if (requestedPairIndex == 0 && candidates.front().magnitude > 0.01f) {
+            const auto &candidate = candidates.front();
+            return std::pair<float, float>{axes[candidate.x], axes[candidate.y]};
+        }
+
+        return std::pair<float, float>{0.0f, 0.0f};
+    };
+
+    auto readPair = [&](int glfwID) {
+        if (glfwJoystickIsGamepad(glfwID) == GLFW_FALSE) {
+            return readJoystickPair(glfwID);
+        }
+        return readStandardPair(glfwID);
+    };
+
+    if (controllerID != CONTROLLER_UNDEFINED) {
+        return readPair(controllerID);
+    }
+
+    std::pair<float, float> selected{0.0f, 0.0f};
+    float bestMagnitude = -1.0f;
+    for (int i = 0; i < 16; ++i) {
+        int glfwID = GLFW_JOYSTICK_1 + i;
+        if (!glfwJoystickPresent(glfwID)) {
+            continue;
+        }
+
+        auto pair = readPair(glfwID);
+        float magnitude =
+            std::sqrt(pair.first * pair.first + pair.second * pair.second);
+        if (magnitude > bestMagnitude) {
+            selected = pair;
+            bestMagnitude = magnitude;
+        }
+    }
+
+    return selected;
+}
+
 void registerGamepadMappings() {
     auto *updateGamepadMappings = reinterpret_cast<int (*)(const char *)>(
         dlsym(RTLD_DEFAULT, "glfwUpdateGamepadMappings"));
@@ -2506,6 +2633,7 @@ bool Window::isActionCurrentlyActive(const std::string &actionName) {
 }
 
 AxisPacket Window::getAxisActionValue(const std::string &actionName) {
+    AxisPacket packet;
     auto inputAction = getInputAction(actionName);
     if (inputAction) {
         if (!inputAction->isAxis) {
@@ -2529,78 +2657,6 @@ AxisPacket Window::getAxisActionValue(const std::string &actionName) {
                 }
                 return value;
             };
-
-            auto selectJoystickFallbackAxisPair = [&](int joystickID) {
-                int axisCount = 0;
-                const float *axes = glfwGetJoystickAxes(joystickID, &axisCount);
-                if (axes == nullptr || axisCount < 2) {
-                    return std::pair<float, float>{0.0f, 0.0f};
-                }
-
-                float bestX = 0.0f;
-                float bestY = 0.0f;
-                float bestMagnitude = -1.0f;
-
-                int pairSearchCount = std::min(axisCount, 8);
-                for (int first = 0; first < pairSearchCount; ++first) {
-                    for (int second = first + 1; second < pairSearchCount;
-                         ++second) {
-                        float x = applyDeadzone(axes[first]);
-                        float y = applyDeadzone(axes[second]);
-                        if (inputAction->invertControllerY) {
-                            y = -y;
-                        }
-
-                        float magnitude = std::sqrt(x * x + y * y);
-                        if (magnitude > bestMagnitude) {
-                            bestX = x;
-                            bestY = y;
-                            bestMagnitude = magnitude;
-                        }
-                    }
-                }
-
-                return std::pair<float, float>{bestX, bestY};
-            };
-
-            auto selectGlobalControllerAxisPair =
-                [&](int axisIndexX, int axisIndexY) {
-                    float selectedX = 0.0f;
-                    float selectedY = 0.0f;
-                    float selectedMagnitude = -1.0f;
-
-                    for (int i = 0; i < 16; ++i) {
-                        int glfwID = GLFW_JOYSTICK_1 + i;
-                        if (!glfwJoystickPresent(glfwID)) {
-                            continue;
-                        }
-
-                        float x = 0.0f;
-                        float y = 0.0f;
-                        if (glfwJoystickIsGamepad(glfwID) == GLFW_FALSE) {
-                            auto pair = selectJoystickFallbackAxisPair(glfwID);
-                            x = pair.first;
-                            y = pair.second;
-                        } else {
-                            x = getControllerAxisValue(glfwID, axisIndexX);
-                            y = getControllerAxisValue(glfwID, axisIndexY);
-                            x = applyDeadzone(x);
-                            y = applyDeadzone(y);
-                            if (inputAction->invertControllerY) {
-                                y = -y;
-                            }
-                        }
-
-                        float magnitude = std::sqrt(x * x + y * y);
-                        if (magnitude > selectedMagnitude) {
-                            selectedX = x;
-                            selectedY = y;
-                            selectedMagnitude = magnitude;
-                        }
-                    }
-
-                    return std::pair<float, float>{selectedX, selectedY};
-                };
 
             for (const auto &axisTrigger : inputAction->axisTriggers) {
                 if (axisTrigger.type == AxisTriggerType::KeyCustom) {
@@ -2656,32 +2712,13 @@ AxisPacket Window::getAxisActionValue(const std::string &actionName) {
                     hasValueInput = true;
                 } else if (axisTrigger.type ==
                            AxisTriggerType::ControllerAxis) {
-                    float x = 0.0f;
-                    float y = 0.0f;
-                    if (axisTrigger.controllerID == CONTROLLER_UNDEFINED) {
-                        auto pair = selectGlobalControllerAxisPair(
-                            axisTrigger.axisIndex, axisTrigger.axisIndexY);
-                        x = pair.first;
-                        y = pair.second;
-                    } else {
-                        if (glfwJoystickPresent(axisTrigger.controllerID) &&
-                            glfwJoystickIsGamepad(axisTrigger.controllerID) ==
-                                GLFW_FALSE) {
-                            auto pair = selectJoystickFallbackAxisPair(
-                                axisTrigger.controllerID);
-                            x = pair.first;
-                            y = pair.second;
-                        } else {
-                            x = getControllerAxisValue(axisTrigger.controllerID,
-                                                       axisTrigger.axisIndex);
-                            y = getControllerAxisValue(axisTrigger.controllerID,
-                                                       axisTrigger.axisIndexY);
-                            x = applyDeadzone(x);
-                            y = applyDeadzone(y);
-                            if (inputAction->invertControllerY) {
-                                y = -y;
-                            }
-                        }
+                    auto pair = this->getControllerAxisPairValue(
+                        axisTrigger.controllerID, axisTrigger.axisIndex,
+                        axisTrigger.axisIndexY);
+                    float x = applyDeadzone(pair.first);
+                    float y = applyDeadzone(pair.second);
+                    if (inputAction->invertControllerY) {
+                        y = -y;
                     }
                     accumulatedValueX += x;
                     accumulatedValueY += y;
@@ -2735,6 +2772,17 @@ AxisPacket Window::getAxisActionValue(const std::string &actionName) {
                 inputAction->axisDeltaX = valueDeltaX;
                 inputAction->axisDeltaY = valueDeltaY;
             }
+
+            packet.deltaX = inputAction->axisDeltaX;
+            packet.deltaY = inputAction->axisDeltaY;
+            packet.x = inputAction->axisX;
+            packet.y = inputAction->axisY;
+            packet.valueX = hasValueInput ? inputAction->axisX : 0.0f;
+            packet.valueY = hasValueInput ? inputAction->axisY : 0.0f;
+            packet.inputDeltaX = hasDeltaInput ? accumulatedDeltaX : 0.0f;
+            packet.inputDeltaY = hasDeltaInput ? accumulatedDeltaY : 0.0f;
+            packet.hasValueInput = hasValueInput;
+            packet.hasDeltaInput = hasDeltaInput;
         }
     } else {
         atlas_warning("Tried to get an axis value for an action that doesn't "
@@ -2742,10 +2790,7 @@ AxisPacket Window::getAxisActionValue(const std::string &actionName) {
                       actionName);
         return {};
     }
-    return {.deltaX = inputAction->axisDeltaX,
-            .deltaY = inputAction->axisDeltaY,
-            .x = inputAction->axisX,
-            .y = inputAction->axisY};
+    return packet;
 }
 
 bool Window::isTriggerActive(const Trigger &trigger) {
@@ -2869,23 +2914,14 @@ float Window::getControllerAxisValue(int controllerID, int axisIndex) {
         }
         return foundAny ? selected : 0.0f;
     }
-    if (!glfwJoystickPresent(controllerID)) {
-        return 0.0f;
-    }
-    if (glfwJoystickIsGamepad(controllerID) == GLFW_FALSE) {
-        int axisCount;
-        const float *axes = glfwGetJoystickAxes(controllerID, &axisCount);
-        if (axes && axisIndex >= 0 && axisIndex < axisCount) {
-            return axes[axisIndex];
-        }
-    }
-    GLFWgamepadstate state;
-    if (glfwGetGamepadState(controllerID, &state)) {
-        if (axisIndex >= 0 && axisIndex <= GLFW_GAMEPAD_AXIS_LAST) {
-            return state.axes[axisIndex];
-        }
-    }
-    return 0.0f;
+    return getControllerAxisValueForDevice(controllerID, axisIndex);
+}
+
+std::pair<float, float> Window::getControllerAxisPairValue(int controllerID,
+                                                           int axisIndexX,
+                                                           int axisIndexY) {
+    return getControllerAxisPairValueForDevice(controllerID, axisIndexX,
+                                               axisIndexY);
 }
 
 #ifdef METAL

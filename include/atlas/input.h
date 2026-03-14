@@ -285,6 +285,12 @@ struct AxisPacket {
     float deltaY = 0.f;
     float x = 0.f;
     float y = 0.f;
+    float valueX = 0.f;
+    float valueY = 0.f;
+    float inputDeltaX = 0.f;
+    float inputDeltaY = 0.f;
+    bool hasValueInput = false;
+    bool hasDeltaInput = false;
 };
 
 /**

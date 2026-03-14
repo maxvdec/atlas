@@ -8,7 +8,7 @@ set(JOLT_VERSION "5.5.0")
 
 message("Using Compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
 
-add_definitions(-DATLAS_VERSION="Alpha 7")
+add_definitions(-DATLAS_VERSION="Alpha 8")
 add_definitions(-DOPAL_VERSION="3 Tetrahedron")
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION OFF)
 

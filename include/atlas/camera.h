@@ -84,6 +84,7 @@ class Camera {
      *
      */
     float mouseSensitivity = 0.1f;
+    float controllerLookSensitivity = 180.f;
     /**
      * @brief The factor to determine how smoothly the camera looks at the
      * target.

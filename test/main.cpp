@@ -218,8 +218,13 @@ class MainScene : public Scene {
         moveAction->controllerDeadzone = 0.2f;
         moveAction->invertControllerY = true;
         window.addInputAction(moveAction);
-        window.addInputAction(
-            InputAction::createAxisInputAction("look", {AxisTrigger::mouse()}));
+        auto lookAction = InputAction::createAxisInputAction(
+            "look", {AxisTrigger::mouse(),
+                     Controller::getGlobalAxisTrigger(
+                         ControllerAxis::RightStick)});
+        lookAction->controllerDeadzone = 0.2f;
+        lookAction->invertControllerY = true;
+        window.addInputAction(lookAction);
         window.addInputAction(InputAction::createSingleAxisInputAction(
             "upAndDown", Trigger::fromKey(Key::Space),
             Trigger::fromKey(Key::LeftShift)));

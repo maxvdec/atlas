@@ -30,6 +30,7 @@
 #include <string>
 #include <tuple>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 using CoreWindowReference = void *;
@@ -509,6 +510,9 @@ class Window {
 
     bool isControllerButtonPressed(int controllerID, int buttonIndex);
     float getControllerAxisValue(int controllerID, int axisIndex);
+    std::pair<float, float> getControllerAxisPairValue(int controllerID,
+                                                       int axisIndexX,
+                                                       int axisIndexY);
 
     /**
      * @brief Releases mouse capture, allowing the cursor to move freely.
