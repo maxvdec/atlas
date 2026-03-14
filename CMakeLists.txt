@@ -8,7 +8,7 @@ set(JOLT_VERSION "5.5.0")
 
 message("Using Compiler: ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}")
 
-add_definitions(-DATLAS_VERSION="Alpha 7")
+add_definitions(-DATLAS_VERSION="Alpha 8")
 add_definitions(-DOPAL_VERSION="3 Tetrahedron")
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION OFF)
 
@@ -210,7 +210,7 @@ endif()
 find_package(glm      REQUIRED)
 find_package(Freetype REQUIRED)
 find_package(Assimp   REQUIRED)
-find_package(glfw3    REQUIRED)
+find_package(SDL3     REQUIRED CONFIG)
 
 if(APPLE)
     set(OPENAL_LIB     /opt/homebrew/opt/openal-soft/lib/libopenal.dylib)
@@ -247,7 +247,7 @@ file(GLOB_RECURSE PHOTON_SOURCES   CONFIGURE_DEPENDS photon/*.cpp)
 
 # ─── bezel ───────────────────────────────────────────────────────────────────
 add_library(bezel ${BEZEL_SOURCES})
-target_link_libraries(bezel PRIVATE glfw glm::glm)
+target_link_libraries(bezel PRIVATE SDL3::SDL3 glm::glm)
 if(BEZEL_NATIVE)
     target_compile_definitions(bezel PRIVATE NATIVE)
 else()
@@ -260,12 +260,12 @@ endif()
 
 # ─── finewave ────────────────────────────────────────────────────────────────
 add_library(finewave ${FINEWAVE_SOURCES})
-target_link_libraries(finewave PRIVATE glfw glm::glm ${OPENAL_LIB})
+target_link_libraries(finewave PRIVATE SDL3::SDL3 glm::glm ${OPENAL_LIB})
 target_include_directories(finewave PRIVATE ${OPENAL_INCLUDE})
 
 # ─── opal ────────────────────────────────────────────────────────────────────
 add_library(opal ${OPAL_SOURCES})
-target_link_libraries(opal PRIVATE glm::glm glfw)
+target_link_libraries(opal PRIVATE glm::glm SDL3::SDL3)
 add_dependencies(opal generate_shaders)
 
 if(BACKEND_OPENGL)
@@ -282,7 +282,7 @@ add_dependencies(photon generate_shaders)
 
 # ─── aurora ──────────────────────────────────────────────────────────────────
 add_library(aurora ${AURORA_SOURCES})
-target_link_libraries(aurora PRIVATE glm::glm glfw bezel)
+target_link_libraries(aurora PRIVATE glm::glm SDL3::SDL3 bezel)
 add_dependencies(aurora generate_shaders)
 
 if(BACKEND_OPENGL)
@@ -293,7 +293,7 @@ endif()
 
 # ─── hydra ───────────────────────────────────────────────────────────────────
 add_library(hydra ${HYDRA_SOURCES})
-target_link_libraries(hydra PRIVATE glm::glm glfw bezel)
+target_link_libraries(hydra PRIVATE glm::glm SDL3::SDL3 bezel)
 add_dependencies(hydra generate_shaders)
 
 if(BACKEND_OPENGL)
@@ -308,7 +308,7 @@ add_dependencies(atlas generate_shaders)
 
 target_link_libraries(atlas
     PUBLIC
-        glfw
+        SDL3::SDL3
         glm::glm
         bezel
         finewave

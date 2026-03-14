@@ -154,7 +154,7 @@ void ParticleEmitter::updateParticle(Particle& p, float deltaTime) {
     else if (emissionType == ParticleEmissionType::Ambient) {
         p.velocity.y += settings.gravity * 0.1f * deltaTime;
 
-        float time = static_cast<float>(glfwGetTime());
+        float time = atlasGetTimeSeconds();
         p.velocity.x +=
             sin((time * 1.0f) + (p.position.x * 0.1f)) * 0.02f * deltaTime;
         p.velocity.z +=

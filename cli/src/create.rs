@@ -209,7 +209,8 @@ fn download_asset(asset: &ReleaseAsset, out_path: &Path) -> Result<(), Box<dyn s
     Ok(())
 }
 
-const TEMPLATE_MAIN: &str = r#"#include <atlas/window.h>
+const TEMPLATE_MAIN: &str = r#"#include <SDL3/SDL_main.h>
+#include <atlas/window.h>
 #include <atlas/scene.h>
 #include <atlas/object.h>
 
@@ -263,6 +264,8 @@ if(NOT EXISTS "${ATLAS_BINARY}")
     message(FATAL_ERROR "Missing ${ATLAS_BINARY}")
 endif()
 
+find_package(SDL3 REQUIRED CONFIG)
+
 file(GLOB_RECURSE SOURCE_FILES ##PROJECTNAME##/*.cpp)
 add_executable(##PROJECTNAMELC## ${SOURCE_FILES})
 
@@ -271,7 +274,7 @@ target_include_directories(##PROJECTNAMELC## PRIVATE include lib/include)
 add_library(atlasbundle STATIC IMPORTED GLOBAL)
 set_target_properties(atlasbundle PROPERTIES IMPORTED_LOCATION "${ATLAS_BINARY}")
 
-target_link_libraries(##PROJECTNAMELC## PRIVATE atlasbundle)
+target_link_libraries(##PROJECTNAMELC## PRIVATE atlasbundle SDL3::SDL3)
 
 if(APPLE)
     if(ATLAS_BACKEND STREQUAL "METAL")

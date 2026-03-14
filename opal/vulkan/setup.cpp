@@ -12,9 +12,8 @@
 #include <vector>
 #ifdef VULKAN
 #include <opal/opal.h>
+#include <SDL3/SDL_vulkan.h>
 #include <vulkan/vulkan.h>
-#define GLFW_INCLUDE_VULKAN
-#include <glfw/glfw3.h>
 
 namespace opal {
 void Context::createInstance() {
@@ -110,14 +109,14 @@ bool Context::hasValidationLayer() {
 
 std::vector<const char *> Context::getExtensions() {
     uint32_t extensionCount = 0;
-    const char **glfwExtensions =
-        glfwGetRequiredInstanceExtensions(&extensionCount);
+    const char *const *sdlExtensions =
+        SDL_Vulkan_GetInstanceExtensions(&extensionCount);
 
     std::vector<const char *> extensions;
 
     extensions.reserve(extensionCount);
     for (uint32_t i = 0; i < extensionCount; i++) {
-        extensions.emplace_back(glfwExtensions[i]);
+        extensions.emplace_back(sdlExtensions[i]);
     }
 
     if (this->config.createValidationLayers) {
@@ -178,8 +177,8 @@ void Context::setupMessenger() {
 }
 
 void Context::setupSurface() {
-    if (glfwCreateWindowSurface(this->instance, this->window, nullptr,
-                                &this->surface) != VK_SUCCESS) {
+    if (!SDL_Vulkan_CreateSurface(this->window, this->instance, nullptr,
+                                  &this->surface)) {
         throw std::runtime_error("Failed to create window surface!");
     }
 }

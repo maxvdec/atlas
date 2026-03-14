@@ -11,6 +11,7 @@
 #define WINDOW_H
 
 #include "atlas/camera.h"
+#include "atlas/core/windowing.h"
 #include "atlas/core/renderable.h"
 #include "atlas/input.h"
 #include "atlas/object.h"
@@ -30,10 +31,11 @@
 #include <string>
 #include <tuple>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
-using CoreWindowReference = void *;
-using CoreMonitorReference = void *;
+using CoreWindowReference = SDL_Window *;
+using CoreMonitorReference = SDL_DisplayID;
 
 constexpr int WINDOW_CENTERED = -1;
 constexpr int DEFAULT_ASPECT_RATIO = -1;
@@ -211,6 +213,113 @@ class Monitor {
     CoreMonitorReference monitorRef;
 };
 
+enum class ControllerAxis {
+    LeftStick,
+    LeftStickX,
+    LeftStickY,
+    RightStick,
+    RightStickX,
+    RightStickY,
+    Trigger,
+    LeftTrigger,
+    RightTrigger
+};
+
+enum class ControllerButton : int {
+    A = 0,
+    B,
+    X,
+    Y,
+    LeftBumper,
+    RightBumper,
+    Back,
+    Start,
+    Guide,
+    LeftThumb,
+    RightThumb,
+    DPadUp,
+    DPadRight,
+    DPadDown,
+    DPadLeft,
+    ButtonCount,
+};
+
+enum class NintendoControllerButton : int {
+    B = 0,
+    A,
+    Y,
+    X,
+    L,
+    R,
+    ZL,
+    ZR,
+    Minus,
+    Plus,
+    LeftStick,
+    RightStick,
+    DPadUp,
+    DPadRight,
+    DPadDown,
+    DPadLeft,
+    ButtonCount,
+};
+
+enum class SonyControllerButton : int {
+    Cross = 0,
+    Circle,
+    Square,
+    Triangle,
+    L1,
+    R1,
+    L2,
+    R2,
+    Share,
+    Options,
+    LeftStick,
+    RightStick,
+    DPadUp,
+    DPadRight,
+    DPadDown,
+    DPadLeft,
+    ButtonCount,
+};
+
+#define CONTROLLER_UNDEFINED (-2)
+
+struct Gamepad {
+    int controllerID;
+    std::string name;
+    bool connected;
+
+    AxisTrigger getAxisTrigger(const ControllerAxis &axis) const;
+    static AxisTrigger getGlobalAxisTrigger(const ControllerAxis &axis);
+    Trigger getButtonTrigger(int buttonIndex) const;
+    static Trigger getGlobalButtonTrigger(int buttonIndex);
+
+    void rumble(float strength, float duration) const;
+};
+
+using Controller = Gamepad;
+
+struct Joystick {
+    int joystickID;
+    std::string name;
+    bool connected;
+
+    AxisTrigger getSingleAxisTrigger(int axisIndex) const;
+    AxisTrigger getDualAxisTrigger(int axisIndexX, int axisIndexY) const;
+    Trigger getButtonTrigger(int buttonIndex) const;
+
+    int getAxisCount() const;
+    int getButtonCount() const;
+};
+
+struct ControllerID {
+    int id;
+    std::string name;
+    bool isJoystick;
+};
+
 struct ShaderProgram;
 struct Fluid;
 
@@ -313,6 +422,10 @@ class Window {
      */
     std::vector<Monitor> static enumerateMonitors();
 
+    std::vector<ControllerID> getControllers() const;
+    Controller getController(const ControllerID &controllerID) const;
+    Joystick getJoystick(const ControllerID &joystickID) const;
+
 #ifdef METAL
     void enableGlobalIllumination();
     void enablePathTracing();
@@ -386,14 +499,23 @@ class Window {
      * @param key The key to check.
      * @return (bool) True if the key is pressed, false otherwise.
      */
-    bool isKeyPressed(Key key);
+    bool isKeyActive(Key key);
     /**
      * @brief Checks if a key was clicked (pressed and released) this frame.
      *
      * @param key The key to check.
      * @return (bool) True if the key was clicked, false otherwise.
      */
-    bool isKeyClicked(Key key);
+    bool isKeyPressed(Key key);
+
+    bool isMouseButtonActive(MouseButton button);
+    bool isMouseButtonPressed(MouseButton button);
+
+    bool isControllerButtonPressed(int controllerID, int buttonIndex);
+    float getControllerAxisValue(int controllerID, int axisIndex);
+    std::pair<float, float> getControllerAxisPairValue(int controllerID,
+                                                       int axisIndexX,
+                                                       int axisIndexY);
 
     /**
      * @brief Releases mouse capture, allowing the cursor to move freely.
@@ -446,8 +568,7 @@ class Window {
      */
     Size2d getSize() {
         int fbw, fbh;
-        glfwGetFramebufferSize(static_cast<GLFWwindow *>(windowRef), &fbw,
-                               &fbh);
+        atlasGetWindowSizeInPixels(windowRef, &fbw, &fbh);
         return {static_cast<float>(fbw), static_cast<float>(fbh)};
     }
 
@@ -599,7 +720,28 @@ class Window {
      */
     BoundingBox getSceneBoundingBox();
 
+    void addInputAction(const std::shared_ptr<InputAction> &action) {
+        inputActions.push_back(action);
+    }
+    void resetInputActions() { inputActions.clear(); }
+    std::shared_ptr<InputAction> getInputAction(const std::string &name) const {
+        for (const auto &action : inputActions) {
+            if (action->name == name) {
+                return action;
+            }
+        }
+        return nullptr;
+    }
+
+    bool isActionTriggered(const std::string &actionName);
+    bool isActionCurrentlyActive(const std::string &actionName);
+    AxisPacket getAxisActionValue(const std::string &actionName);
+
   private:
+    bool isTriggerActive(const Trigger &trigger);
+    bool isTriggerPressed(const Trigger &trigger);
+    Position2d relativeMousePos;
+    std::vector<std::shared_ptr<InputAction>> inputActions;
     std::shared_ptr<opal::CommandBuffer> activeCommandBuffer = nullptr;
     CoreWindowReference windowRef;
     std::vector<Renderable *> pendingObjects;
@@ -678,6 +820,7 @@ class Window {
     float lastTime = 0.0f;
     float deltaTime = 0.0f;
     float framesPerSecond = 0.0f;
+    bool shouldClose = false;
 
     ShaderProgram depthProgram;
     ShaderProgram pointDepthProgram;

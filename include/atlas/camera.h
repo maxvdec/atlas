@@ -12,6 +12,7 @@
 
 #include "atlas/units.h"
 #include <glm/glm.hpp>
+#include <string>
 
 class Window;
 
@@ -83,6 +84,7 @@ class Camera {
      *
      */
     float mouseSensitivity = 0.1f;
+    float controllerLookSensitivity = 180.f;
     /**
      * @brief The factor to determine how smoothly the camera looks at the
      * target.
@@ -147,6 +149,10 @@ class Camera {
      * @param window The window from which to get input.
      */
     void update(Window &window);
+
+    void updateWithActions(Window &window, const std::string &moveAxis,
+                           const std::string &lookAction,
+                           const std::string &upAndDownAction);
     /**
      * @brief Updates the camera's look direction based on mouse movement.
      *
