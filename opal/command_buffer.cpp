@@ -1142,10 +1142,10 @@ void CommandBuffer::beginPass(std::shared_ptr<RenderPass> newRenderPass) {
         if (deviceState.context == nullptr) {
             throw std::runtime_error("Metal device context is missing");
         }
-        GLFWwindow *window = deviceState.context->getWindow();
         int fbWidth = 0;
         int fbHeight = 0;
-        glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
+        atlasGetWindowSizeInPixels(deviceState.context->getWindow(), &fbWidth,
+                                   &fbHeight);
         fbWidth = std::max(1, fbWidth);
         fbHeight = std::max(1, fbHeight);
 

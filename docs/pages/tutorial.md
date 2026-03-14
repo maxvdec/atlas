@@ -28,6 +28,7 @@ we're going to edit `testProject/main.cpp` and remove all of its content, becaus
 Creating a Window is the first step to every application. The window is our canvas, and to create it, with Atlas is quite simple. This is the code we're going to need:
 
 ```c++
+#include <SDL3/SDL_main.h>
 #include <atlas/window.h>
 
 int main() {
@@ -51,6 +52,7 @@ Now, scenes are one other important concept in Atlas. Scenes are the base of eve
 In this scene, we're just going to create a cube.
 
 ```c++
+#include <SDL3/SDL_main.h>
 #include "atlas/object.h"
 #include "atlas/scene.h"
 #include "atlas/window.h"
@@ -501,6 +503,7 @@ fpsText.addTraitComponent<Text>(FPSTextUpdater());
 And that's it! We have our final scene!
 
 ```c++
+#include <SDL3/SDL_main.h>
 #include "atlas/camera.h"
 #include "atlas/light.h"
 #include "atlas/object.h"

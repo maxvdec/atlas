@@ -130,9 +130,9 @@ void Camera::update(Window &window) {
 
     float deltaTime = window.getDeltaTime();
     glm::vec2 controllerMove = sampleControllerAxisPair(
-        window, GLFW_GAMEPAD_AXIS_LEFT_X, GLFW_GAMEPAD_AXIS_LEFT_Y, true);
+        window, CONTROLLER_AXIS_LEFT_X, CONTROLLER_AXIS_LEFT_Y, true);
     glm::vec2 controllerLook = sampleControllerAxisPair(
-        window, GLFW_GAMEPAD_AXIS_RIGHT_X, GLFW_GAMEPAD_AXIS_RIGHT_Y, true);
+        window, CONTROLLER_AXIS_RIGHT_X, CONTROLLER_AXIS_RIGHT_Y, true);
 
     float cameraSpeed = movementSpeed * deltaTime;
 
@@ -204,7 +204,7 @@ void Camera::updateWithActions(Window &window, const std::string &moveAxis,
     }
 
     glm::vec2 fallbackLook = sampleControllerAxisPair(
-        window, GLFW_GAMEPAD_AXIS_RIGHT_X, GLFW_GAMEPAD_AXIS_RIGHT_Y, true);
+        window, CONTROLLER_AXIS_RIGHT_X, CONTROLLER_AXIS_RIGHT_Y, true);
     if (glm::length(fallbackLook) > 0.0f &&
         glm::length(fallbackLook) > glm::length(glm::vec2(lookInput.valueX,
                                                           lookInput.valueY))) {
@@ -238,7 +238,7 @@ void Camera::updateWithActions(Window &window, const std::string &moveAxis,
                                ? glm::vec2(moveInput.valueX, moveInput.valueY)
                                : glm::vec2(moveInput.x, moveInput.y);
     glm::vec2 fallbackMove = sampleControllerAxisPair(
-        window, GLFW_GAMEPAD_AXIS_LEFT_X, GLFW_GAMEPAD_AXIS_LEFT_Y, true);
+        window, CONTROLLER_AXIS_LEFT_X, CONTROLLER_AXIS_LEFT_Y, true);
     if (glm::length(fallbackMove) > glm::length(moveVector)) {
         moveVector = fallbackMove;
     }

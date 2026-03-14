@@ -11,13 +11,13 @@
 #define OPAL_H
 
 #include "Metal/Metal.hpp"
+#include "atlas/core/windowing.h"
 #ifdef VULKAN
 #include <vulkan/vulkan.hpp>
 #endif
 #include <cstddef>
 #include <memory>
 #include <glad/glad.h>
-#include <GLFW/glfw3.h>
 #include <string>
 #include <sys/types.h>
 #include <vector>
@@ -54,9 +54,7 @@ struct ContextConfiguration {
 };
 
 /**
- * @brief Rendering context wrapper (GLFW + backend initialization).
- *
- * For OpenGL, the context owns the `GLFWwindow*`.
+ * @brief Rendering context wrapper (SDL + backend initialization).
  */
 class Context {
   public:
@@ -64,22 +62,30 @@ class Context {
     static std::shared_ptr<Context> create(ContextConfiguration config = {});
     ~Context();
 
-    /** @brief Sets a GLFW window/context flag to a boolean value. */
-    void setFlag(int flag, bool enabled);
-    /** @brief Sets a GLFW window/context flag to an integer value. */
-    void setFlag(int flag, int value);
+    void setDecorated(bool enabled);
+    void setResizable(bool enabled);
+    void setTransparent(bool enabled);
+    void setAlwaysOnTop(bool enabled);
+    void setSamples(int value);
+    void setHighPixelDensity(bool enabled);
 
-    GLFWwindow *makeWindow(int width, int height, const char *title,
-                           GLFWmonitor *monitor = nullptr,
-                           GLFWwindow *share = nullptr);
+    SDL_Window *makeWindow(int width, int height, const char *title,
+                           SDL_DisplayID displayID = 0);
     /** @brief Returns the owned window pointer, if created. */
-    GLFWwindow *getWindow() const;
+    SDL_Window *getWindow() const;
 
     /** @brief Makes the context current for the calling thread. */
     void makeCurrent();
 
-    GLFWwindow *window = nullptr;
+    SDL_Window *window = nullptr;
+    SDL_GLContext glContext = nullptr;
     ContextConfiguration config;
+    bool decorated = true;
+    bool resizable = true;
+    bool transparent = false;
+    bool alwaysOnTop = false;
+    bool highPixelDensity = true;
+    int samples = 0;
 
 #ifdef VULKAN
     void createInstance();
@@ -174,11 +180,8 @@ class Device {
 
   public:
     long frameCount = 0;
-
-    static Device *globalInstance;
-#if defined(VULKAN) || defined(METAL)
     std::shared_ptr<Context> context = nullptr;
-#endif
+    static Device *globalInstance;
 
 #ifdef VULKAN
     static VkDevice globalDevice;
@@ -243,7 +246,7 @@ class Device {
     VkPresentModeKHR chooseSwapPresentMode(
         const std::vector<VkPresentModeKHR> &availablePresentModes);
     VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR &capabilities,
-                                GLFWwindow *window);
+                                SDL_Window *window);
     uint32_t findMemoryType(uint32_t typeFilter,
                             VkMemoryPropertyFlags properties);
 

@@ -28,7 +28,6 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
-#include <dlfcn.h>
 #include <iostream>
 #include <memory>
 #include <optional>
@@ -52,29 +51,183 @@ template <typename T> void hashCombine(std::size_t &seed, const T &value) {
             (seed >> 2);
 }
 
-float getControllerAxisValueForDevice(int controllerID, int axisIndex) {
-    if (!glfwJoystickPresent(controllerID)) {
-        return 0.0f;
-    }
-    if (glfwJoystickIsGamepad(controllerID) == GLFW_FALSE) {
-        int axisCount = 0;
-        const float *axes = glfwGetJoystickAxes(controllerID, &axisCount);
-        if (axes != nullptr && axisIndex >= 0 && axisIndex < axisCount) {
-            return axes[axisIndex];
+std::unordered_map<SDL_JoystickID, SDL_Gamepad *> &openGamepads() {
+    static std::unordered_map<SDL_JoystickID, SDL_Gamepad *> handles;
+    return handles;
+}
+
+std::unordered_map<SDL_JoystickID, SDL_Joystick *> &openJoysticks() {
+    static std::unordered_map<SDL_JoystickID, SDL_Joystick *> handles;
+    return handles;
+}
+
+std::vector<SDL_JoystickID> getConnectedJoystickIds() {
+    int count = 0;
+    SDL_JoystickID *ids = SDL_GetJoysticks(&count);
+    std::vector<SDL_JoystickID> result;
+    result.reserve(std::max(count, 0));
+    if (ids != nullptr) {
+        for (int i = 0; i < count; ++i) {
+            result.push_back(ids[i]);
         }
-        return 0.0f;
+        SDL_free(ids);
+    }
+    return result;
+}
+
+void closeGamepadHandle(SDL_JoystickID id) {
+    auto &handles = openGamepads();
+    auto it = handles.find(id);
+    if (it == handles.end()) {
+        return;
+    }
+    SDL_CloseGamepad(it->second);
+    handles.erase(it);
+}
+
+void closeJoystickHandle(SDL_JoystickID id) {
+    auto &handles = openJoysticks();
+    auto it = handles.find(id);
+    if (it == handles.end()) {
+        return;
+    }
+    SDL_CloseJoystick(it->second);
+    handles.erase(it);
+}
+
+void closeAllInputDeviceHandles() {
+    auto gamepadIds = std::vector<SDL_JoystickID>{};
+    for (const auto &[id, _] : openGamepads()) {
+        gamepadIds.push_back(id);
+    }
+    for (SDL_JoystickID id : gamepadIds) {
+        closeGamepadHandle(id);
     }
 
-    GLFWgamepadstate state;
-    if (glfwGetGamepadState(controllerID, &state) &&
-        axisIndex >= 0 && axisIndex <= GLFW_GAMEPAD_AXIS_LAST) {
-        return state.axes[axisIndex];
+    auto joystickIds = std::vector<SDL_JoystickID>{};
+    for (const auto &[id, _] : openJoysticks()) {
+        joystickIds.push_back(id);
+    }
+    for (SDL_JoystickID id : joystickIds) {
+        closeJoystickHandle(id);
+    }
+}
+
+SDL_Gamepad *getOpenGamepad(SDL_JoystickID id) {
+    auto &handles = openGamepads();
+    if (auto it = handles.find(id); it != handles.end()) {
+        return it->second;
+    }
+    if (!SDL_IsGamepad(id)) {
+        return nullptr;
+    }
+    SDL_Gamepad *gamepad = SDL_OpenGamepad(id);
+    if (gamepad != nullptr) {
+        handles[id] = gamepad;
+    }
+    return gamepad;
+}
+
+SDL_Joystick *getOpenJoystick(SDL_JoystickID id) {
+    auto &handles = openJoysticks();
+    if (auto it = handles.find(id); it != handles.end()) {
+        return it->second;
+    }
+    if (SDL_IsGamepad(id)) {
+        SDL_Gamepad *gamepad = getOpenGamepad(id);
+        if (gamepad != nullptr) {
+            return SDL_GetGamepadJoystick(gamepad);
+        }
+    }
+    SDL_Joystick *joystick = SDL_OpenJoystick(id);
+    if (joystick != nullptr) {
+        handles[id] = joystick;
+    }
+    return joystick;
+}
+
+SDL_GamepadButton toSDLGamepadButton(int buttonIndex) {
+    switch (buttonIndex) {
+    case static_cast<int>(ControllerButton::A):
+        return SDL_GAMEPAD_BUTTON_SOUTH;
+    case static_cast<int>(ControllerButton::B):
+        return SDL_GAMEPAD_BUTTON_EAST;
+    case static_cast<int>(ControllerButton::X):
+        return SDL_GAMEPAD_BUTTON_WEST;
+    case static_cast<int>(ControllerButton::Y):
+        return SDL_GAMEPAD_BUTTON_NORTH;
+    case static_cast<int>(ControllerButton::LeftBumper):
+        return SDL_GAMEPAD_BUTTON_LEFT_SHOULDER;
+    case static_cast<int>(ControllerButton::RightBumper):
+        return SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER;
+    case static_cast<int>(ControllerButton::Back):
+        return SDL_GAMEPAD_BUTTON_BACK;
+    case static_cast<int>(ControllerButton::Start):
+        return SDL_GAMEPAD_BUTTON_START;
+    case static_cast<int>(ControllerButton::Guide):
+        return SDL_GAMEPAD_BUTTON_GUIDE;
+    case static_cast<int>(ControllerButton::LeftThumb):
+        return SDL_GAMEPAD_BUTTON_LEFT_STICK;
+    case static_cast<int>(ControllerButton::RightThumb):
+        return SDL_GAMEPAD_BUTTON_RIGHT_STICK;
+    case static_cast<int>(ControllerButton::DPadUp):
+        return SDL_GAMEPAD_BUTTON_DPAD_UP;
+    case static_cast<int>(ControllerButton::DPadRight):
+        return SDL_GAMEPAD_BUTTON_DPAD_RIGHT;
+    case static_cast<int>(ControllerButton::DPadDown):
+        return SDL_GAMEPAD_BUTTON_DPAD_DOWN;
+    case static_cast<int>(ControllerButton::DPadLeft):
+        return SDL_GAMEPAD_BUTTON_DPAD_LEFT;
+    default:
+        return SDL_GAMEPAD_BUTTON_INVALID;
+    }
+}
+
+float normalizeGamepadAxisValue(int axisIndex, Sint16 value) {
+    float normalized = atlasNormalizeAxisValue(value);
+    if (axisIndex == CONTROLLER_AXIS_LEFT_TRIGGER ||
+        axisIndex == CONTROLLER_AXIS_RIGHT_TRIGGER) {
+        return std::max(0.0f, normalized);
+    }
+    return normalized;
+}
+
+std::vector<float> getJoystickAxes(SDL_JoystickID joystickID) {
+    std::vector<float> axes;
+    SDL_Joystick *joystick = getOpenJoystick(joystickID);
+    if (joystick == nullptr) {
+        return axes;
     }
 
-    int axisCount = 0;
-    const float *axes = glfwGetJoystickAxes(controllerID, &axisCount);
-    if (axes != nullptr && axisIndex >= 0 && axisIndex < axisCount) {
-        return axes[axisIndex];
+    const int axisCount = SDL_GetNumJoystickAxes(joystick);
+    if (axisCount <= 0) {
+        return axes;
+    }
+
+    axes.reserve(axisCount);
+    for (int i = 0; i < axisCount; ++i) {
+        axes.push_back(atlasNormalizeAxisValue(SDL_GetJoystickAxis(joystick, i)));
+    }
+    return axes;
+}
+
+float getControllerAxisValueForDevice(int controllerID, int axisIndex) {
+    if (SDL_IsGamepad(controllerID)) {
+        SDL_Gamepad *gamepad = getOpenGamepad(controllerID);
+        const SDL_GamepadAxis axis = atlasToSDLGamepadAxis(axisIndex);
+        if (gamepad != nullptr && axis != SDL_GAMEPAD_AXIS_INVALID) {
+            return normalizeGamepadAxisValue(
+                axisIndex, SDL_GetGamepadAxis(gamepad, axis));
+        }
+    }
+
+    SDL_Joystick *joystick = getOpenJoystick(controllerID);
+    if (joystick != nullptr) {
+        const int axisCount = SDL_GetNumJoystickAxes(joystick);
+        if (axisIndex >= 0 && axisIndex < axisCount) {
+            return atlasNormalizeAxisValue(
+                SDL_GetJoystickAxis(joystick, axisIndex));
+        }
     }
     return 0.0f;
 }
@@ -82,16 +235,15 @@ float getControllerAxisValueForDevice(int controllerID, int axisIndex) {
 std::pair<float, float> getControllerAxisPairValueForDevice(int controllerID,
                                                             int axisIndexX,
                                                             int axisIndexY) {
-    auto readStandardPair = [&](int glfwID) {
+    auto readStandardPair = [&](int joystickID) {
         return std::pair<float, float>{
-            getControllerAxisValueForDevice(glfwID, axisIndexX),
-            getControllerAxisValueForDevice(glfwID, axisIndexY)};
+            getControllerAxisValueForDevice(joystickID, axisIndexX),
+            getControllerAxisValueForDevice(joystickID, axisIndexY)};
     };
 
-    auto readJoystickPair = [&](int glfwID) {
-        int axisCount = 0;
-        const float *axes = glfwGetJoystickAxes(glfwID, &axisCount);
-        if (axes == nullptr || axisCount < 2) {
+    auto readJoystickPair = [&](int joystickID) {
+        const std::vector<float> axes = getJoystickAxes(joystickID);
+        if (axes.size() < 2) {
             return std::pair<float, float>{0.0f, 0.0f};
         }
 
@@ -102,10 +254,10 @@ std::pair<float, float> getControllerAxisPairValueForDevice(int controllerID,
         };
 
         std::vector<AxisPairCandidate> candidates;
-        int limit = std::min(axisCount, 8);
+        int limit = std::min(static_cast<int>(axes.size()), 8);
         for (int start = 0; start + 1 < limit; start += 2) {
-            float x = axes[start];
-            float y = axes[start + 1];
+            float x = axes.at(start);
+            float y = axes.at(start + 1);
             candidates.push_back({start, start + 1, std::sqrt(x * x + y * y)});
         }
 
@@ -120,11 +272,12 @@ std::pair<float, float> getControllerAxisPairValueForDevice(int controllerID,
                   });
 
         bool hasPreferredPair =
-            axisIndexX >= 0 && axisIndexY >= 0 && axisIndexX < axisCount &&
-            axisIndexY < axisCount;
+            axisIndexX >= 0 && axisIndexY >= 0 &&
+            axisIndexX < static_cast<int>(axes.size()) &&
+            axisIndexY < static_cast<int>(axes.size());
         if (hasPreferredPair) {
-            float preferredX = axes[axisIndexX];
-            float preferredY = axes[axisIndexY];
+            float preferredX = axes.at(axisIndexX);
+            float preferredY = axes.at(axisIndexY);
             float preferredMagnitude =
                 std::sqrt(preferredX * preferredX + preferredY * preferredY);
             if (preferredMagnitude > 0.01f) {
@@ -137,22 +290,24 @@ std::pair<float, float> getControllerAxisPairValueForDevice(int controllerID,
             requestedPairIndex < static_cast<int>(candidates.size()) &&
             candidates[requestedPairIndex].magnitude > 0.01f) {
             const auto &candidate = candidates[requestedPairIndex];
-            return std::pair<float, float>{axes[candidate.x], axes[candidate.y]};
+            return std::pair<float, float>{axes.at(candidate.x),
+                                           axes.at(candidate.y)};
         }
 
         if (requestedPairIndex == 0 && candidates.front().magnitude > 0.01f) {
             const auto &candidate = candidates.front();
-            return std::pair<float, float>{axes[candidate.x], axes[candidate.y]};
+            return std::pair<float, float>{axes.at(candidate.x),
+                                           axes.at(candidate.y)};
         }
 
         return std::pair<float, float>{0.0f, 0.0f};
     };
 
-    auto readPair = [&](int glfwID) {
-        if (glfwJoystickIsGamepad(glfwID) == GLFW_FALSE) {
-            return readJoystickPair(glfwID);
+    auto readPair = [&](int joystickID) {
+        if (!SDL_IsGamepad(joystickID)) {
+            return readJoystickPair(joystickID);
         }
-        return readStandardPair(glfwID);
+        return readStandardPair(joystickID);
     };
 
     if (controllerID != CONTROLLER_UNDEFINED) {
@@ -161,13 +316,8 @@ std::pair<float, float> getControllerAxisPairValueForDevice(int controllerID,
 
     std::pair<float, float> selected{0.0f, 0.0f};
     float bestMagnitude = -1.0f;
-    for (int i = 0; i < 16; ++i) {
-        int glfwID = GLFW_JOYSTICK_1 + i;
-        if (!glfwJoystickPresent(glfwID)) {
-            continue;
-        }
-
-        auto pair = readPair(glfwID);
+    for (SDL_JoystickID joystickID : getConnectedJoystickIds()) {
+        auto pair = readPair(joystickID);
         float magnitude =
             std::sqrt(pair.first * pair.first + pair.second * pair.second);
         if (magnitude > bestMagnitude) {
@@ -180,12 +330,6 @@ std::pair<float, float> getControllerAxisPairValueForDevice(int controllerID,
 }
 
 void registerGamepadMappings() {
-    auto *updateGamepadMappings = reinterpret_cast<int (*)(const char *)>(
-        dlsym(RTLD_DEFAULT, "glfwUpdateGamepadMappings"));
-    if (updateGamepadMappings == nullptr) {
-        return;
-    }
-
     static const char *const mappings[] = {
         "030000007e0500000920000011810000,Nintendo Switch Pro "
         "Controller,a:b0,b:b1,back:b9,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,"
@@ -225,7 +369,7 @@ void registerGamepadMappings() {
     };
 
     for (const char *mapping : mappings) {
-        updateGamepadMappings(mapping);
+        SDL_AddGamepadMapping(mapping);
     }
 }
 
@@ -350,47 +494,48 @@ Window::Window(const WindowConfiguration &config)
     this->deferredFrontFace = opal::FrontFace::CounterClockwise;
 #endif
 
-    context->setFlag(GLFW_DECORATED, config.decorations);
-    context->setFlag(GLFW_RESIZABLE, config.resizable);
-    context->setFlag(GLFW_TRANSPARENT_FRAMEBUFFER, config.transparent);
-    context->setFlag(GLFW_FLOATING, config.alwaysOnTop);
-    context->setFlag(GLFW_SAMPLES, config.multisampling ? 4 : 0);
+    context->setDecorated(config.decorations);
+    context->setResizable(config.resizable);
+    context->setTransparent(config.transparent);
+    context->setAlwaysOnTop(config.alwaysOnTop);
+    context->setSamples(config.multisampling ? 4 : 0);
+    context->setHighPixelDensity(true);
 
-#ifdef __APPLE__
-    context->setFlag(GLFW_COCOA_RETINA_FRAMEBUFFER, true);
-#endif
-
-    GLFWwindow *window = context->makeWindow(
-        config.width, config.height, config.title.c_str(), nullptr, nullptr);
+    SDL_Window *window =
+        context->makeWindow(config.width, config.height, config.title.c_str());
 
     registerGamepadMappings();
 
     context->makeCurrent();
 
     device = opal::Device::acquire(context);
+    this->windowRef = window;
+    this->shouldClose = false;
 
-    glfwSetWindowOpacity(window, config.opacity);
-    glfwSetInputMode(window, GLFW_CURSOR,
-                     config.mouseCaptured ? GLFW_CURSOR_DISABLED
-                                          : GLFW_CURSOR_NORMAL);
+    SDL_SetWindowOpacity(window, config.opacity);
+    if (config.mouseCaptured) {
+        captureMouse();
+    } else {
+        releaseMouse();
+    }
 
     int fbWidth, fbHeight;
-    glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
+    atlasGetWindowSizeInPixels(window, &fbWidth, &fbHeight);
     device->getDefaultFramebuffer()->setViewport(0, 0, fbWidth, fbHeight);
     this->viewportWidth = fbWidth;
     this->viewportHeight = fbHeight;
 
     if (config.posX != WINDOW_CENTERED && config.posY != WINDOW_CENTERED) {
-        glfwSetWindowPos(window, config.posX, config.posY);
+        SDL_SetWindowPosition(window, config.posX, config.posY);
     }
 
     if (config.aspectRatioX != DEFAULT_ASPECT_RATIO &&
         config.aspectRatioY != DEFAULT_ASPECT_RATIO) {
-        glfwSetWindowAspectRatio(window, config.aspectRatioX,
-                                 config.aspectRatioY);
+        float aspectRatio =
+            static_cast<float>(config.aspectRatioX) /
+            static_cast<float>(config.aspectRatioY);
+        SDL_SetWindowAspectRatio(window, aspectRatio, aspectRatio);
     }
-
-    this->windowRef = static_cast<CoreWindowReference>(window);
 
     this->renderScale = std::clamp(config.renderScale, 0.5f, 1.0f);
     this->ssaoRenderScale = std::clamp(config.ssaoScale, 0.25f, 1.0f);
@@ -399,46 +544,12 @@ Window::Window(const WindowConfiguration &config)
 
     Window::mainWindow = this;
 
-    glfwSetFramebufferSizeCallback(window, [](GLFWwindow *win, int, int) {
-        int fbWidth, fbHeight;
-        glfwGetFramebufferSize(win, &fbWidth, &fbHeight);
-        if (Window::mainWindow != nullptr) {
-            Window::mainWindow->viewportWidth = fbWidth;
-            Window::mainWindow->viewportHeight = fbHeight;
-            Window::mainWindow->shadowMapsDirty = true;
-            Window::mainWindow->ssaoMapsDirty = true;
-        }
-    });
-
-    double initialMouseX = 0.0;
-    double initialMouseY = 0.0;
-    glfwGetCursorPos(window, &initialMouseX, &initialMouseY);
-    lastMouseX = static_cast<float>(initialMouseX);
-    lastMouseY = static_cast<float>(initialMouseY);
+    float initialMouseX = 0.0f;
+    float initialMouseY = 0.0f;
+    SDL_GetMouseState(&initialMouseX, &initialMouseY);
+    lastMouseX = initialMouseX;
+    lastMouseY = initialMouseY;
     relativeMousePos = {0.0f, 0.0f};
-
-    glfwSetCursorPosCallback(
-        window, [](GLFWwindow *, double xpos, double ypos) {
-            Window *window = Window::mainWindow;
-            Position2d movement = {.x = (float)xpos - window->lastMouseX,
-                                   .y = window->lastMouseY - (float)ypos};
-            window->relativeMousePos.x += movement.x;
-            window->relativeMousePos.y += movement.y;
-            if (window->currentScene != nullptr) {
-                window->currentScene->onMouseMove(*window, movement);
-            }
-            window->lastMouseX = (float)xpos;
-            window->lastMouseY = (float)ypos;
-        });
-
-    glfwSetScrollCallback(
-        window, [](GLFWwindow *, double xoffset, double yoffset) {
-            Window *window = Window::mainWindow;
-            Position2d offset = {.x = (float)xoffset, .y = (float)yoffset};
-            if (window->currentScene != nullptr) {
-                window->currentScene->onMouseScroll(*window, offset);
-            }
-        });
 
     VertexShader vertexShader =
         VertexShader::fromDefaultShader(AtlasVertexShader::Depth);
@@ -533,9 +644,9 @@ Window::Window(const WindowConfiguration &config)
 }
 
 std::tuple<int, int> Window::getCursorPosition() {
-    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
-    double xpos, ypos;
-    glfwGetCursorPos(window, &xpos, &ypos);
+    float xpos = 0.0f;
+    float ypos = 0.0f;
+    SDL_GetMouseState(&xpos, &ypos);
     return {static_cast<int>(xpos), static_cast<int>(ypos)};
 }
 
@@ -561,12 +672,13 @@ void Window::run() {
     for (auto &obj : this->uiRenderables) {
         obj->initialize();
     }
-    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
+    SDL_Window *window = this->windowRef;
+    const SDL_WindowID windowID = SDL_GetWindowID(window);
 
     auto commandBuffer = device->acquireCommandBuffer();
     this->activeCommandBuffer = commandBuffer;
 
-    this->lastTime = static_cast<float>(glfwGetTime());
+    this->lastTime = atlasGetTimeSeconds();
 
     updatePipelineStateField(useMultisampling, this->useMultisampling);
     updatePipelineStateField(this->useDepth, true);
@@ -582,11 +694,72 @@ void Window::run() {
 
     constexpr float MAX_DELTA_TIME = 1.0f / 30.0f;
     this->firstFrame = true;
+    auto pollEvents = [&]() {
+        SDL_Event event;
+        while (SDL_PollEvent(&event)) {
+            switch (event.type) {
+            case SDL_EVENT_QUIT:
+                shouldClose = true;
+                break;
+            case SDL_EVENT_WINDOW_CLOSE_REQUESTED:
+                if (event.window.windowID == windowID) {
+                    shouldClose = true;
+                }
+                break;
+            case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
+                if (event.window.windowID == windowID) {
+                    int resizedWidth = 0;
+                    int resizedHeight = 0;
+                    atlasGetWindowSizeInPixels(window, &resizedWidth,
+                                               &resizedHeight);
+                    this->viewportWidth = resizedWidth;
+                    this->viewportHeight = resizedHeight;
+                    this->shadowMapsDirty = true;
+                    this->ssaoMapsDirty = true;
+                }
+                break;
+            case SDL_EVENT_MOUSE_MOTION:
+                if (event.motion.windowID == windowID) {
+                    Position2d movement = {
+                        .x = event.motion.xrel, .y = -event.motion.yrel};
+                    this->relativeMousePos.x += movement.x;
+                    this->relativeMousePos.y += movement.y;
+                    if (this->currentScene != nullptr) {
+                        this->currentScene->onMouseMove(*this, movement);
+                    }
+                    this->lastMouseX = event.motion.x;
+                    this->lastMouseY = event.motion.y;
+                }
+                break;
+            case SDL_EVENT_MOUSE_WHEEL:
+                if (event.wheel.windowID == windowID &&
+                    this->currentScene != nullptr) {
+                    float offsetX = event.wheel.x;
+                    float offsetY = event.wheel.y;
+                    if (event.wheel.direction == SDL_MOUSEWHEEL_FLIPPED) {
+                        offsetX = -offsetX;
+                        offsetY = -offsetY;
+                    }
+                    Position2d offset = {.x = offsetX, .y = offsetY};
+                    this->currentScene->onMouseScroll(*this, offset);
+                }
+                break;
+            case SDL_EVENT_GAMEPAD_REMOVED:
+                closeGamepadHandle(event.gdevice.which);
+                break;
+            case SDL_EVENT_JOYSTICK_REMOVED:
+                closeJoystickHandle(event.jdevice.which);
+                break;
+            default:
+                break;
+            }
+        }
+    };
 
-    while (!glfwWindowShouldClose(window)) {
+    while (!shouldClose) {
         currentFrame++;
         this->relativeMousePos = {.x = 0.0f, .y = 0.0f};
-        glfwPollEvents();
+        pollEvents();
 
         if (this->hasPendingSceneChange) {
             this->applyScene(this->pendingScene);
@@ -594,7 +767,7 @@ void Window::run() {
             this->hasPendingSceneChange = false;
         }
 
-        float currentTime = static_cast<float>(glfwGetTime());
+        float currentTime = atlasGetTimeSeconds();
         float rawDelta = currentTime - this->lastTime;
         this->lastTime = currentTime;
 
@@ -675,7 +848,7 @@ void Window::run() {
             commandBuffer->endPass();
             commandBuffer->commit();
 #ifdef OPENGL
-            glfwSwapBuffers(window);
+            SDL_GL_SwapWindow(window);
 #endif
             continue;
         }
@@ -904,7 +1077,7 @@ void Window::run() {
         // Render to the screen
         commandBuffer->beginPass(renderPass);
         int fbWidth, fbHeight;
-        glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
+        atlasGetWindowSizeInPixels(window, &fbWidth, &fbHeight);
         setViewportState(0, 0, fbWidth, fbHeight);
         commandBuffer->clearColor(this->clearColor.r, this->clearColor.g,
                                   this->clearColor.b, this->clearColor.a);
@@ -961,7 +1134,7 @@ void Window::run() {
         commandBuffer->endPass();
         commandBuffer->commit();
 #ifdef OPENGL
-        glfwSwapBuffers(window);
+        SDL_GL_SwapWindow(window);
 #endif
 
         uint64_t gpuTime = gpuTimer.stop();
@@ -1200,10 +1373,7 @@ void Window::setLogOutput(bool showLogs, bool showWarnings, bool showErrors) {
     Logger::getInstance().setConsoleFilter(showLogs, showWarnings, showErrors);
 }
 
-void Window::close() {
-    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
-    glfwSetWindowShouldClose(window, true);
-}
+void Window::close() { this->shouldClose = true; }
 
 void Window::setCamera(Camera *newCamera) { this->camera = newCamera; }
 
@@ -1291,8 +1461,7 @@ glm::mat4 Window::calculateProjectionMatrix() {
     glm::mat4 projection;
     if (!this->camera->useOrthographic) {
         int fbWidth, fbHeight;
-        GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
-        glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
+        atlasGetWindowSizeInPixels(this->windowRef, &fbWidth, &fbHeight);
 
         float aspectRatio =
             static_cast<float>(fbWidth) / static_cast<float>(fbHeight);
@@ -1301,8 +1470,7 @@ glm::mat4 Window::calculateProjectionMatrix() {
     } else {
         float orthoSize = this->camera->orthographicSize;
         int fbWidth, fbHeight;
-        GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
-        glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
+        atlasGetWindowSizeInPixels(this->windowRef, &fbWidth, &fbHeight);
         float aspectRatio =
             static_cast<float>(fbWidth) / static_cast<float>(fbHeight);
         projection = glm::ortho(-orthoSize * aspectRatio,
@@ -1320,30 +1488,34 @@ glm::mat4 Window::calculateProjectionMatrix() {
 void Window::setFullscreen(bool enable) {
     atlas_log(enable ? "Switching to fullscreen mode"
                      : "Switching to windowed mode");
-    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
+    SDL_Window *window = this->windowRef;
     if (enable) {
-        GLFWmonitor *monitor = glfwGetPrimaryMonitor();
-        const GLFWvidmode *mode = glfwGetVideoMode(monitor);
-        glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height,
-                             mode->refreshRate);
+        SDL_DisplayID displayID = SDL_GetPrimaryDisplay();
+        const SDL_DisplayMode *mode = SDL_GetCurrentDisplayMode(displayID);
+        if (mode != nullptr) {
+            SDL_SetWindowFullscreenMode(window, mode);
+        }
+        SDL_SetWindowFullscreen(window, true);
     } else {
-        int monitorWidth = this->width;
-        int monitorHeight = this->height;
-        glfwSetWindowMonitor(window, nullptr, 100, 100, monitorWidth,
-                             monitorHeight, 0);
+        SDL_SetWindowFullscreen(window, false);
+        SDL_SetWindowSize(window, this->width, this->height);
+        SDL_SetWindowPosition(window, 100, 100);
     }
 }
 
 void Window::setFullscreen(Monitor &monitor) {
-    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
-    GLFWmonitor *glfwMonitor = static_cast<GLFWmonitor *>(monitor.monitorRef);
-    const GLFWvidmode *mode = glfwGetVideoMode(glfwMonitor);
-    glfwSetWindowMonitor(window, glfwMonitor, 0, 0, mode->width, mode->height,
-                         mode->refreshRate);
+    SDL_Window *window = this->windowRef;
+    const SDL_DisplayMode *mode = SDL_GetCurrentDisplayMode(monitor.monitorRef);
+    auto [posX, posY] = monitor.getPosition();
+    SDL_SetWindowPosition(window, posX, posY);
+    if (mode != nullptr) {
+        SDL_SetWindowFullscreenMode(window, mode);
+    }
+    SDL_SetWindowFullscreen(window, true);
 }
 
 void Window::setWindowed(const WindowConfiguration &config) {
-    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
+    SDL_Window *window = this->windowRef;
     int windowWidth = config.width;
     int windowHeight = config.height;
     this->renderScale = std::clamp(config.renderScale, 0.5f, 1.0f);
@@ -1352,8 +1524,9 @@ void Window::setWindowed(const WindowConfiguration &config) {
     this->metalUpscalingRatio = this->renderScale;
     int posX = config.posX != WINDOW_CENTERED ? config.posX : 100;
     int posY = config.posY != WINDOW_CENTERED ? config.posY : 100;
-    glfwSetWindowMonitor(window, nullptr, posX, posY, windowWidth, windowHeight,
-                         0);
+    SDL_SetWindowFullscreen(window, false);
+    SDL_SetWindowSize(window, windowWidth, windowHeight);
+    SDL_SetWindowPosition(window, posX, posY);
     this->shadowMapsDirty = true;
     this->ssaoMapsDirty = true;
 }
@@ -1374,115 +1547,114 @@ void Window::useMetalUpscaling(float ratio) {
 }
 
 std::vector<Monitor> Window::enumerateMonitors() {
-    int count;
-    GLFWmonitor **monitors = glfwGetMonitors(&count);
+    int count = 0;
+    SDL_DisplayID *monitors = SDL_GetDisplays(&count);
     std::vector<Monitor> monitorList;
-    for (int i = 0; i < count; ++i) {
-        bool isPrimary = (monitors[i] == glfwGetPrimaryMonitor());
-        monitorList.emplace_back(static_cast<CoreMonitorReference>(monitors[i]),
-                                 i, isPrimary);
+    monitorList.reserve(std::max(count, 0));
+    for (int i = 0; monitors != nullptr && i < count; ++i) {
+        bool isPrimary = (monitors[i] == SDL_GetPrimaryDisplay());
+        monitorList.emplace_back(monitors[i], i, isPrimary);
     }
+    SDL_free(monitors);
     return monitorList;
 }
 
 Window::~Window() {
-    // Release opal framebuffers and textures (shared_ptr handles cleanup)
     this->pingpongFramebuffers.at(0) = nullptr;
     this->pingpongFramebuffers.at(1) = nullptr;
     this->pingpongTextures.at(1) = nullptr;
     this->pingpongTextures.at(1) = nullptr;
     this->pingpongWidth = 0;
     this->pingpongHeight = 0;
-
-    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
-    glfwDestroyWindow(window);
-    glfwTerminate();
+    closeAllInputDeviceHandles();
+    Window::mainWindow = nullptr;
 }
 
 Monitor::Monitor(CoreMonitorReference ref, int id, bool isPrimary)
     : monitorID(id), primary(isPrimary), monitorRef(ref) {}
 
 std::vector<VideoMode> Monitor::queryVideoModes() const {
-    GLFWmonitor *glfwMonitor = static_cast<GLFWmonitor *>(this->monitorRef);
-    int count;
-    const GLFWvidmode *modes = glfwGetVideoModes(glfwMonitor, &count);
+    int count = 0;
+    SDL_DisplayMode **modes =
+        SDL_GetFullscreenDisplayModes(this->monitorRef, &count);
     std::vector<VideoMode> videoModes;
-    for (int i = 0; i < count; ++i) {
-        videoModes.push_back({.width = modes[i].width,
-                              .height = modes[i].height,
-                              .refreshRate = modes[i].refreshRate});
+    videoModes.reserve(std::max(count, 0));
+    for (int i = 0; modes != nullptr && i < count; ++i) {
+        videoModes.push_back(
+            {.width = modes[i]->w,
+             .height = modes[i]->h,
+             .refreshRate = static_cast<int>(std::lround(modes[i]->refresh_rate))});
     }
+    SDL_free(modes);
     return videoModes;
 }
 
 VideoMode Monitor::getCurrentVideoMode() const {
-    GLFWmonitor *glfwMonitor = static_cast<GLFWmonitor *>(this->monitorRef);
-    const GLFWvidmode *mode = glfwGetVideoMode(glfwMonitor);
-    return {.width = mode->width,
-            .height = mode->height,
-            .refreshRate = mode->refreshRate};
+    const SDL_DisplayMode *mode = SDL_GetCurrentDisplayMode(this->monitorRef);
+    if (mode == nullptr) {
+        return {};
+    }
+    return {.width = mode->w,
+            .height = mode->h,
+            .refreshRate = static_cast<int>(std::lround(mode->refresh_rate))};
 }
 
-std::tuple<int, int> Monitor::getPhysicalSize() const {
-    GLFWmonitor *glfwMonitor = static_cast<GLFWmonitor *>(this->monitorRef);
-    int widthMM, heightMM;
-    glfwGetMonitorPhysicalSize(glfwMonitor, &widthMM, &heightMM);
-    return {widthMM, heightMM};
-}
+std::tuple<int, int> Monitor::getPhysicalSize() const { return {0, 0}; }
 
 std::tuple<int, int> Monitor::getPosition() const {
-    GLFWmonitor *glfwMonitor = static_cast<GLFWmonitor *>(this->monitorRef);
-    int posX, posY;
-    glfwGetMonitorPos(glfwMonitor, &posX, &posY);
-    return {posX, posY};
+    SDL_Rect rect{};
+    if (!SDL_GetDisplayBounds(this->monitorRef, &rect)) {
+        return {0, 0};
+    }
+    return {rect.x, rect.y};
 }
 
 std::tuple<float, float> Monitor::getContentScale() const {
-    GLFWmonitor *glfwMonitor = static_cast<GLFWmonitor *>(this->monitorRef);
-    float scaleX, scaleY;
-    glfwGetMonitorContentScale(glfwMonitor, &scaleX, &scaleY);
-    return {scaleX, scaleY};
+    float scale = SDL_GetDisplayContentScale(this->monitorRef);
+    if (scale <= 0.0f) {
+        scale = 1.0f;
+    }
+    return {scale, scale};
 }
 
 std::string Monitor::getName() const {
-    GLFWmonitor *glfwMonitor = static_cast<GLFWmonitor *>(this->monitorRef);
-    return std::string(glfwGetMonitorName(glfwMonitor));
+    const char *name = SDL_GetDisplayName(this->monitorRef);
+    return name != nullptr ? std::string(name) : std::string();
 }
 
-float Window::getTime() { return static_cast<float>(glfwGetTime()); }
+float Window::getTime() { return atlasGetTimeSeconds(); }
 
 bool Window::isKeyActive(Key key) {
-    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
-    int state = glfwGetKey(window, static_cast<int>(key));
-    return state == GLFW_PRESS || state == GLFW_REPEAT;
+    int keyCount = 0;
+    const bool *state = SDL_GetKeyboardState(&keyCount);
+    const int scancode = static_cast<int>(key);
+    return state != nullptr && scancode >= 0 && scancode < keyCount &&
+           state[scancode];
 }
 
 bool Window::isKeyPressed(Key key) {
-    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
-    int state = glfwGetKey(window, static_cast<int>(key));
-    return state == GLFW_PRESS;
+    return isKeyActive(key);
 }
 
 bool Window::isMouseButtonActive(MouseButton button) {
-    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
-    int state = glfwGetMouseButton(window, static_cast<int>(button));
-    return state == GLFW_PRESS;
+    const SDL_MouseButtonFlags state = SDL_GetMouseState(nullptr, nullptr);
+    return (state & SDL_BUTTON_MASK(static_cast<int>(button))) != 0;
 }
 
 bool Window::isMouseButtonPressed(MouseButton button) {
-    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
-    int state = glfwGetMouseButton(window, static_cast<int>(button));
-    return state == GLFW_PRESS;
+    return isMouseButtonActive(button);
 }
 
 void Window::releaseMouse() {
-    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    SDL_SetWindowRelativeMouseMode(this->windowRef, false);
+    SDL_SetWindowMouseGrab(this->windowRef, false);
+    SDL_ShowCursor();
 }
 
 void Window::captureMouse() {
-    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    SDL_SetWindowMouseGrab(this->windowRef, true);
+    SDL_SetWindowRelativeMouseMode(this->windowRef, true);
+    SDL_HideCursor();
 }
 
 void Window::addRenderTarget(RenderTarget *target) {
@@ -2145,9 +2317,8 @@ void Window::renderPingpong(RenderTarget *target) {
 
     updatePipelineStateField(this->useDepth, true);
 
-    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
     int fbWidth, fbHeight;
-    glfwGetFramebufferSize(window, &fbWidth, &fbHeight);
+    atlasGetWindowSizeInPixels(this->windowRef, &fbWidth, &fbHeight);
     setViewportState(0, 0, fbWidth, fbHeight);
 
     target->blurredTexture = Texture();
@@ -2704,8 +2875,7 @@ AxisPacket Window::getAxisActionValue(const std::string &actionName) {
                                                        axisTrigger.axisIndex);
                     val = applyDeadzone(val);
                     if (inputAction->invertControllerY &&
-                        (axisTrigger.axisIndex == GLFW_GAMEPAD_AXIS_LEFT_Y ||
-                         axisTrigger.axisIndex == GLFW_GAMEPAD_AXIS_RIGHT_Y)) {
+                        atlasIsControllerYAxis(axisTrigger.axisIndex)) {
                         val = -val;
                     }
                     accumulatedValueX += val;
@@ -2821,15 +2991,24 @@ bool Window::isTriggerPressed(const Trigger &trigger) {
 
 std::vector<ControllerID> Window::getControllers() const {
     std::vector<ControllerID> controllers;
-    for (int i = 0; i < 16; ++i) {
-        int glfwID = GLFW_JOYSTICK_1 + i;
-        if (glfwJoystickPresent(glfwID)) {
-            ControllerID id;
-            id.id = glfwID;
-            id.name = glfwGetJoystickName(glfwID);
-            id.isJoystick = glfwJoystickIsGamepad(glfwID) == GLFW_FALSE;
-            controllers.push_back(id);
+    const auto joystickIds = getConnectedJoystickIds();
+    controllers.reserve(joystickIds.size());
+    for (SDL_JoystickID joystickID : joystickIds) {
+        ControllerID id;
+        id.id = joystickID;
+        id.isJoystick = !SDL_IsGamepad(joystickID);
+        if (id.isJoystick) {
+            SDL_Joystick *joystick = getOpenJoystick(joystickID);
+            const char *name =
+                joystick != nullptr ? SDL_GetJoystickName(joystick) : nullptr;
+            id.name = name != nullptr ? std::string(name) : std::string();
+        } else {
+            SDL_Gamepad *gamepad = getOpenGamepad(joystickID);
+            const char *name =
+                gamepad != nullptr ? SDL_GetGamepadName(gamepad) : nullptr;
+            id.name = name != nullptr ? std::string(name) : std::string();
         }
+        controllers.push_back(id);
     }
     return controllers;
 }
@@ -2846,7 +3025,7 @@ Controller Window::getController(const ControllerID &id) const {
     Controller controller;
     controller.controllerID = id.id;
     controller.name = id.name;
-    controller.connected = glfwJoystickPresent(id.id);
+    controller.connected = getOpenGamepad(id.id) != nullptr;
     return controller;
 }
 
@@ -2862,54 +3041,52 @@ Joystick Window::getJoystick(const ControllerID &id) const {
     Joystick joystick;
     joystick.joystickID = id.id;
     joystick.name = id.name;
-    joystick.connected = glfwJoystickPresent(id.id);
+    joystick.connected = getOpenJoystick(id.id) != nullptr;
     return joystick;
 }
 
 bool Window::isControllerButtonPressed(int controllerID, int buttonIndex) {
     if (controllerID == CONTROLLER_UNDEFINED) {
-        for (int i = 0; i < 16; ++i) {
-            int glfwID = GLFW_JOYSTICK_1 + i;
-            if (glfwJoystickPresent(glfwID)) {
-                if (isControllerButtonPressed(glfwID, buttonIndex)) {
-                    return true;
-                }
+        for (SDL_JoystickID joystickID : getConnectedJoystickIds()) {
+            if (isControllerButtonPressed(joystickID, buttonIndex)) {
+                return true;
             }
         }
         return false;
     }
-    if (!glfwJoystickPresent(controllerID)) {
+
+    if (!SDL_IsGamepad(controllerID)) {
+        SDL_Joystick *joystick = getOpenJoystick(controllerID);
+        if (joystick == nullptr) {
+            return false;
+        }
+        const int buttonCount = SDL_GetNumJoystickButtons(joystick);
+        if (buttonIndex >= 0 && buttonIndex < buttonCount) {
+            return SDL_GetJoystickButton(joystick, buttonIndex);
+        }
         return false;
     }
-    if (glfwJoystickIsGamepad(controllerID) == GLFW_FALSE) {
-        int buttonCount;
-        const unsigned char *buttons =
-            glfwGetJoystickButtons(controllerID, &buttonCount);
-        if (buttons && buttonIndex >= 0 && buttonIndex < buttonCount) {
-            return buttons[buttonIndex] == GLFW_PRESS;
-        }
+
+    SDL_Gamepad *gamepad = getOpenGamepad(controllerID);
+    if (gamepad == nullptr) {
+        return false;
     }
-    GLFWgamepadstate state;
-    if (glfwGetGamepadState(controllerID, &state)) {
-        if (buttonIndex >= 0 && buttonIndex <= GLFW_GAMEPAD_BUTTON_LAST) {
-            return state.buttons[buttonIndex] == GLFW_PRESS;
-        }
+    const SDL_GamepadButton button = toSDLGamepadButton(buttonIndex);
+    if (button == SDL_GAMEPAD_BUTTON_INVALID) {
+        return false;
     }
-    return false;
+    return SDL_GetGamepadButton(gamepad, button);
 }
 
 float Window::getControllerAxisValue(int controllerID, int axisIndex) {
     if (controllerID == CONTROLLER_UNDEFINED) {
         float selected = 0.0f;
         bool foundAny = false;
-        for (int i = 0; i < 16; ++i) {
-            int glfwID = GLFW_JOYSTICK_1 + i;
-            if (glfwJoystickPresent(glfwID)) {
-                float val = getControllerAxisValue(glfwID, axisIndex);
-                if (!foundAny || std::abs(val) > std::abs(selected)) {
-                    selected = val;
-                    foundAny = true;
-                }
+        for (SDL_JoystickID joystickID : getConnectedJoystickIds()) {
+            float val = getControllerAxisValue(joystickID, axisIndex);
+            if (!foundAny || std::abs(val) > std::abs(selected)) {
+                selected = val;
+                foundAny = true;
             }
         }
         return foundAny ? selected : 0.0f;

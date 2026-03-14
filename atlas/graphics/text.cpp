@@ -146,8 +146,7 @@ void Text::initialize() {
     }
     Window *window = Window::mainWindow;
     int fbWidth, fbHeight;
-    glfwGetFramebufferSize(static_cast<GLFWwindow *>(window->windowRef),
-                           &fbWidth, &fbHeight);
+    atlasGetWindowSizeInPixels(window->windowRef, &fbWidth, &fbHeight);
 
 #if defined(VULKAN) || defined(METAL)
     projection = glm::ortho(0.0f, static_cast<float>(fbWidth),
@@ -199,9 +198,8 @@ void Text::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
     static std::shared_ptr<opal::Pipeline> textPipeline = nullptr;
     int fbWidth = 0;
     int fbHeight = 0;
-    glfwGetFramebufferSize(
-        static_cast<GLFWwindow *>(Window::mainWindow->windowRef), &fbWidth,
-        &fbHeight);
+    atlasGetWindowSizeInPixels(Window::mainWindow->windowRef, &fbWidth,
+                               &fbHeight);
 
     if (textPipeline == nullptr) {
         textPipeline = opal::Pipeline::create();
@@ -251,9 +249,8 @@ void Text::render(float dt, std::shared_ptr<opal::CommandBuffer> commandBuffer,
 
     commandBuffer->bindPipeline(textPipeline);
 
-    glfwGetFramebufferSize(
-        static_cast<GLFWwindow *>(Window::mainWindow->windowRef), &fbWidth,
-        &fbHeight);
+    atlasGetWindowSizeInPixels(Window::mainWindow->windowRef, &fbWidth,
+                               &fbHeight);
 #if defined(VULKAN) || defined(METAL)
     projection = glm::ortho(0.0f, static_cast<float>(fbWidth),
                             static_cast<float>(fbHeight), 0.0f);

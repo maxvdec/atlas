@@ -27,9 +27,8 @@ RenderTarget::RenderTarget(Window &window, RenderTargetType type,
                            int resolution) {
     atlas_log("Creating render target (type: " +
               std::to_string(static_cast<int>(type)) + ")");
-    GLFWwindow *glfwWindow = static_cast<GLFWwindow *>(window.windowRef);
     int fbWidth, fbHeight;
-    glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
+    atlasGetWindowSizeInPixels(window.windowRef, &fbWidth, &fbHeight);
 
     float targetScale = window.getRenderScale();
     if (type == RenderTargetType::SSAO || type == RenderTargetType::SSAOBlur) {
@@ -708,9 +707,8 @@ void RenderTarget::render(float dt,
         (viewportWidth <= 0 || viewportHeight <= 0)) {
         int fbWidth = 0;
         int fbHeight = 0;
-        glfwGetFramebufferSize(
-            static_cast<GLFWwindow *>(Window::mainWindow->windowRef), &fbWidth,
-            &fbHeight);
+        atlasGetWindowSizeInPixels(Window::mainWindow->windowRef, &fbWidth,
+                                   &fbHeight);
         viewportWidth = fbWidth;
         viewportHeight = fbHeight;
     }

@@ -11,6 +11,7 @@
 #define WINDOW_H
 
 #include "atlas/camera.h"
+#include "atlas/core/windowing.h"
 #include "atlas/core/renderable.h"
 #include "atlas/input.h"
 #include "atlas/object.h"
@@ -33,8 +34,8 @@
 #include <utility>
 #include <vector>
 
-using CoreWindowReference = void *;
-using CoreMonitorReference = void *;
+using CoreWindowReference = SDL_Window *;
+using CoreMonitorReference = SDL_DisplayID;
 
 constexpr int WINDOW_CENTERED = -1;
 constexpr int DEFAULT_ASPECT_RATIO = -1;
@@ -565,8 +566,7 @@ class Window {
      */
     Size2d getSize() {
         int fbw, fbh;
-        glfwGetFramebufferSize(static_cast<GLFWwindow *>(windowRef), &fbw,
-                               &fbh);
+        atlasGetWindowSizeInPixels(windowRef, &fbw, &fbh);
         return {static_cast<float>(fbw), static_cast<float>(fbh)};
     }
 
@@ -818,6 +818,7 @@ class Window {
     float lastTime = 0.0f;
     float deltaTime = 0.0f;
     float framesPerSecond = 0.0f;
+    bool shouldClose = false;
 
     ShaderProgram depthProgram;
     ShaderProgram pointDepthProgram;

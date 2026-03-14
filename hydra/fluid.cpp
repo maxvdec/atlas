@@ -22,7 +22,6 @@
 #include <string>
 
 #include <glad/glad.h>
-#include <GLFW/glfw3.h>
 #include <glm/gtc/matrix_transform.hpp>
 
 Fluid::Fluid() {
@@ -316,10 +315,9 @@ void Fluid::setWaterColor(const Color &newColor) { color = newColor; }
 void Fluid::ensureTargets(Window &window) {
     auto refreshTarget = [this,
                           &window](std::shared_ptr<RenderTarget> &target) {
-        GLFWwindow *glfwWindow = static_cast<GLFWwindow *>(window.windowRef);
         int fbWidth = 0;
         int fbHeight = 0;
-        glfwGetFramebufferSize(glfwWindow, &fbWidth, &fbHeight);
+        atlasGetWindowSizeInPixels(window.windowRef, &fbWidth, &fbHeight);
         float scale = window.getRenderScale();
         scale = std::clamp(scale, 0.1f, 1.0f);
         int desiredWidth =

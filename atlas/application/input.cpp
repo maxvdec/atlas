@@ -16,34 +16,34 @@ AxisTrigger Gamepad::getAxisTrigger(const ControllerAxis &axis) const {
     switch (axis) {
     case ControllerAxis::LeftStick:
         return AxisTrigger::controller(this->controllerID,
-                                       GLFW_GAMEPAD_AXIS_LEFT_X, false,
-                                       GLFW_GAMEPAD_AXIS_LEFT_Y);
+                                       CONTROLLER_AXIS_LEFT_X, false,
+                                       CONTROLLER_AXIS_LEFT_Y);
     case ControllerAxis::LeftStickX:
         return AxisTrigger::controller(this->controllerID,
-                                       GLFW_GAMEPAD_AXIS_LEFT_X, true);
+                                       CONTROLLER_AXIS_LEFT_X, true);
     case ControllerAxis::LeftStickY:
         return AxisTrigger::controller(this->controllerID,
-                                       GLFW_GAMEPAD_AXIS_LEFT_Y, true);
+                                       CONTROLLER_AXIS_LEFT_Y, true);
     case ControllerAxis::RightStick:
         return AxisTrigger::controller(this->controllerID,
-                                       GLFW_GAMEPAD_AXIS_RIGHT_X, false,
-                                       GLFW_GAMEPAD_AXIS_RIGHT_Y);
+                                       CONTROLLER_AXIS_RIGHT_X, false,
+                                       CONTROLLER_AXIS_RIGHT_Y);
     case ControllerAxis::RightStickX:
         return AxisTrigger::controller(this->controllerID,
-                                       GLFW_GAMEPAD_AXIS_RIGHT_X, true);
+                                       CONTROLLER_AXIS_RIGHT_X, true);
     case ControllerAxis::RightStickY:
         return AxisTrigger::controller(this->controllerID,
-                                       GLFW_GAMEPAD_AXIS_RIGHT_Y, true);
+                                       CONTROLLER_AXIS_RIGHT_Y, true);
     case ControllerAxis::Trigger:
         return AxisTrigger::controller(this->controllerID,
-                                       GLFW_GAMEPAD_AXIS_LEFT_TRIGGER, false,
-                                       GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER);
+                                       CONTROLLER_AXIS_LEFT_TRIGGER, false,
+                                       CONTROLLER_AXIS_RIGHT_TRIGGER);
     case ControllerAxis::LeftTrigger:
         return AxisTrigger::controller(this->controllerID,
-                                       GLFW_GAMEPAD_AXIS_LEFT_TRIGGER, true);
+                                       CONTROLLER_AXIS_LEFT_TRIGGER, true);
     case ControllerAxis::RightTrigger:
         return AxisTrigger::controller(this->controllerID,
-                                       GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER, true);
+                                       CONTROLLER_AXIS_RIGHT_TRIGGER, true);
     default:
         return AxisTrigger{};
     }
@@ -53,34 +53,34 @@ AxisTrigger Gamepad::getGlobalAxisTrigger(const ControllerAxis &axis) {
     switch (axis) {
     case ControllerAxis::LeftStick:
         return AxisTrigger::controller(CONTROLLER_UNDEFINED,
-                                       GLFW_GAMEPAD_AXIS_LEFT_X, false,
-                                       GLFW_GAMEPAD_AXIS_LEFT_Y);
+                                       CONTROLLER_AXIS_LEFT_X, false,
+                                       CONTROLLER_AXIS_LEFT_Y);
     case ControllerAxis::LeftStickX:
         return AxisTrigger::controller(CONTROLLER_UNDEFINED,
-                                       GLFW_GAMEPAD_AXIS_LEFT_X, true);
+                                       CONTROLLER_AXIS_LEFT_X, true);
     case ControllerAxis::LeftStickY:
         return AxisTrigger::controller(CONTROLLER_UNDEFINED,
-                                       GLFW_GAMEPAD_AXIS_LEFT_Y, true);
+                                       CONTROLLER_AXIS_LEFT_Y, true);
     case ControllerAxis::RightStick:
         return AxisTrigger::controller(CONTROLLER_UNDEFINED,
-                                       GLFW_GAMEPAD_AXIS_RIGHT_X, false,
-                                       GLFW_GAMEPAD_AXIS_RIGHT_Y);
+                                       CONTROLLER_AXIS_RIGHT_X, false,
+                                       CONTROLLER_AXIS_RIGHT_Y);
     case ControllerAxis::RightStickX:
         return AxisTrigger::controller(CONTROLLER_UNDEFINED,
-                                       GLFW_GAMEPAD_AXIS_RIGHT_X, true);
+                                       CONTROLLER_AXIS_RIGHT_X, true);
     case ControllerAxis::RightStickY:
         return AxisTrigger::controller(CONTROLLER_UNDEFINED,
-                                       GLFW_GAMEPAD_AXIS_RIGHT_Y, true);
+                                       CONTROLLER_AXIS_RIGHT_Y, true);
     case ControllerAxis::Trigger:
         return AxisTrigger::controller(CONTROLLER_UNDEFINED,
-                                       GLFW_GAMEPAD_AXIS_LEFT_TRIGGER, false,
-                                       GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER);
+                                       CONTROLLER_AXIS_LEFT_TRIGGER, false,
+                                       CONTROLLER_AXIS_RIGHT_TRIGGER);
     case ControllerAxis::LeftTrigger:
         return AxisTrigger::controller(CONTROLLER_UNDEFINED,
-                                       GLFW_GAMEPAD_AXIS_LEFT_TRIGGER, true);
+                                       CONTROLLER_AXIS_LEFT_TRIGGER, true);
     case ControllerAxis::RightTrigger:
         return AxisTrigger::controller(CONTROLLER_UNDEFINED,
-                                       GLFW_GAMEPAD_AXIS_RIGHT_TRIGGER, true);
+                                       CONTROLLER_AXIS_RIGHT_TRIGGER, true);
     default:
         return AxisTrigger{};
     }
@@ -89,11 +89,6 @@ AxisTrigger Gamepad::getGlobalAxisTrigger(const ControllerAxis &axis) {
 Trigger Gamepad::getButtonTrigger(int buttonIndex) const {
     if (buttonIndex < 0 || buttonIndex >= (int)ControllerButton::ButtonCount) {
         atlas_error("Button is out of bounds");
-        return Trigger{};
-    }
-    int glfwId = GLFW_GAMEPAD_BUTTON_A + buttonIndex;
-    if (glfwId > GLFW_GAMEPAD_BUTTON_LAST) {
-        atlas_error("Button index is out of GLFW bounds");
         return Trigger{};
     }
 
@@ -105,26 +100,28 @@ Trigger Gamepad::getGlobalButtonTrigger(int buttonIndex) {
         atlas_error("Button is out of bounds");
         return Trigger{};
     }
-    int glfwId = GLFW_GAMEPAD_BUTTON_A + buttonIndex;
-    if (glfwId > GLFW_GAMEPAD_BUTTON_LAST) {
-        atlas_error("Button index is out of GLFW bounds");
-        return Trigger{};
-    }
 
     return Trigger::fromControllerButton(CONTROLLER_UNDEFINED, buttonIndex);
 }
 
 int Joystick::getAxisCount() const {
-    int count;
-    const float *axes = glfwGetJoystickAxes(this->joystickID, &count);
-    return axes != nullptr ? count : 0;
+    SDL_Joystick *joystick = SDL_OpenJoystick(this->joystickID);
+    if (joystick == nullptr) {
+        return 0;
+    }
+    const int count = SDL_GetNumJoystickAxes(joystick);
+    SDL_CloseJoystick(joystick);
+    return count;
 }
 
 int Joystick::getButtonCount() const {
-    int count;
-    const unsigned char *buttons =
-        glfwGetJoystickButtons(this->joystickID, &count);
-    return buttons != nullptr ? count : 0;
+    SDL_Joystick *joystick = SDL_OpenJoystick(this->joystickID);
+    if (joystick == nullptr) {
+        return 0;
+    }
+    const int count = SDL_GetNumJoystickButtons(joystick);
+    SDL_CloseJoystick(joystick);
+    return count;
 }
 
 Trigger Joystick::getButtonTrigger(int buttonIndex) const {

@@ -1,3 +1,4 @@
+#include <SDL3/SDL_main.h>
 #include "atlas/camera.h"
 #include "atlas/input.h"
 #include "atlas/particle.h"
