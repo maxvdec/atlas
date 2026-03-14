@@ -2504,6 +2504,28 @@ AxisPacket Window::getAxisActionValue(const std::string &actionName) {
                     inputAction->axisDeltaY = this->relativeMousePos.y;
                     inputAction->axisX = this->lastMouseX;
                     inputAction->axisY = this->lastMouseY;
+                } else if (axisTrigger.type ==
+                               AxisTriggerType::ControllerAxis &&
+                           axisTrigger.controllerAxisSingle) {
+                    float previousX = inputAction->axisX;
+                    float val = getControllerAxisValue(axisTrigger.controllerID,
+                                                       axisTrigger.axisIndex);
+                    inputAction->axisDeltaX = val - previousX;
+                    inputAction->axisDeltaY = inputAction->axisDeltaX;
+                    inputAction->axisX = val;
+                    inputAction->axisY = val;
+                } else if (axisTrigger.type ==
+                           AxisTriggerType::ControllerAxis) {
+                    float previousX = inputAction->axisX;
+                    float previousY = inputAction->axisY;
+                    float x = getControllerAxisValue(axisTrigger.controllerID,
+                                                     axisTrigger.axisIndex);
+                    float y = getControllerAxisValue(axisTrigger.controllerID,
+                                                     axisTrigger.axisIndexY);
+                    inputAction->axisDeltaX = x - previousX;
+                    inputAction->axisDeltaY = y - previousY;
+                    inputAction->axisX = x;
+                    inputAction->axisY = y;
                 }
             }
         }
@@ -2524,6 +2546,9 @@ bool Window::isTriggerActive(const Trigger &trigger) {
         return isKeyActive(trigger.key);
     } else if (trigger.type == TriggerType::MouseButton) {
         return isMouseButtonActive(trigger.mouseButton);
+    } else if (trigger.type == TriggerType::ControllerButton) {
+        return isControllerButtonPressed(trigger.controllerButton.controllerID,
+                                         trigger.controllerButton.buttonIndex);
     } else {
         return false;
     }
@@ -2534,9 +2559,122 @@ bool Window::isTriggerPressed(const Trigger &trigger) {
         return isKeyPressed(trigger.key);
     } else if (trigger.type == TriggerType::MouseButton) {
         return isMouseButtonPressed(trigger.mouseButton);
+    } else if (trigger.type == TriggerType::ControllerButton) {
+        return isControllerButtonPressed(trigger.controllerButton.controllerID,
+                                         trigger.controllerButton.buttonIndex);
     } else {
         return false;
     }
+}
+
+std::vector<ControllerID> Window::enumerateControllers() const {
+    std::vector<ControllerID> controllers;
+    for (int i = 0; i < 16; ++i) {
+        int glfwID = GLFW_JOYSTICK_1 + i;
+        if (glfwJoystickPresent(glfwID)) {
+            ControllerID id;
+            id.id = glfwID;
+            id.name = glfwGetJoystickName(glfwID);
+            id.isJoystick = glfwJoystickIsGamepad(glfwID) == GLFW_FALSE;
+            controllers.push_back(id);
+        }
+    }
+    return controllers;
+}
+
+Controller Window::getController(const ControllerID &id) const {
+    if (id.isJoystick) {
+        atlas_warning(
+            "Tried to get a controller that is actually a joystick: " +
+            id.name);
+        Controller controller;
+        controller.connected = false;
+        return controller;
+    }
+    Controller controller;
+    controller.controllerID = id.id;
+    controller.name = id.name;
+    controller.connected = glfwJoystickPresent(id.id);
+    return controller;
+}
+
+Joystick Window::getJoystick(const ControllerID &id) const {
+    if (!id.isJoystick) {
+        atlas_warning(
+            "Tried to get a joystick that is actually a controller: " +
+            id.name);
+        Joystick joystick;
+        joystick.connected = false;
+        return joystick;
+    }
+    Joystick joystick;
+    joystick.joystickID = id.id;
+    joystick.name = id.name;
+    joystick.connected = glfwJoystickPresent(id.id);
+    return joystick;
+}
+
+bool Window::isControllerButtonPressed(int controllerID, int buttonIndex) {
+    if (controllerID == CONTROLLER_UNDEFINED) {
+        for (int i = 0; i < 16; ++i) {
+            int glfwID = GLFW_JOYSTICK_1 + i;
+            if (glfwJoystickPresent(glfwID) &&
+                glfwJoystickIsGamepad(glfwID) == GLFW_TRUE) {
+                if (isControllerButtonPressed(glfwID, buttonIndex)) {
+                    return true;
+                }
+            }
+        }
+    }
+    if (!glfwJoystickPresent(controllerID)) {
+        return false;
+    }
+    if (glfwJoystickIsGamepad(controllerID) == GLFW_FALSE) {
+        int buttonCount;
+        const unsigned char *buttons =
+            glfwGetJoystickButtons(controllerID, &buttonCount);
+        if (buttons && buttonIndex >= 0 && buttonIndex < buttonCount) {
+            return buttons[buttonIndex] == GLFW_PRESS;
+        }
+    }
+    GLFWgamepadstate state;
+    if (glfwGetGamepadState(controllerID, &state)) {
+        if (buttonIndex >= 0 && buttonIndex < GLFW_GAMEPAD_BUTTON_LAST) {
+            return state.buttons[buttonIndex] == GLFW_PRESS;
+        }
+    }
+    return false;
+}
+
+float Window::getControllerAxisValue(int controllerID, int axisIndex) {
+    if (controllerID == CONTROLLER_UNDEFINED) {
+        for (int i = 0; i < 16; ++i) {
+            int glfwID = GLFW_JOYSTICK_1 + i;
+            if (glfwJoystickPresent(glfwID) &&
+                glfwJoystickIsGamepad(glfwID) == GLFW_TRUE) {
+                float val = getControllerAxisValue(glfwID, axisIndex);
+                return val;
+            }
+        }
+        return 0.0f;
+    }
+    if (!glfwJoystickPresent(controllerID)) {
+        return 0.0f;
+    }
+    if (glfwJoystickIsGamepad(controllerID) == GLFW_FALSE) {
+        int axisCount;
+        const float *axes = glfwGetJoystickAxes(controllerID, &axisCount);
+        if (axes && axisIndex >= 0 && axisIndex < axisCount) {
+            return axes[axisIndex];
+        }
+    }
+    GLFWgamepadstate state;
+    if (glfwGetGamepadState(controllerID, &state)) {
+        if (axisIndex >= 0 && axisIndex < GLFW_GAMEPAD_AXIS_LAST) {
+            return state.axes[axisIndex];
+        }
+    }
+    return 0.0f;
 }
 
 #ifdef METAL

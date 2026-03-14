@@ -210,13 +210,19 @@ enum class MouseButton : int {
     Middle = GLFW_MOUSE_BUTTON_MIDDLE
 };
 
-enum class TriggerType { MouseButton, Key };
+enum class TriggerType { MouseButton, Key, ControllerButton };
+
+struct ControllerButtonTrigger {
+    int controllerID;
+    int buttonIndex;
+};
 
 struct Trigger {
     TriggerType type;
     union {
         MouseButton mouseButton;
         Key key;
+        ControllerButtonTrigger controllerButton;
     };
 
     static Trigger fromKey(Key key) {
@@ -226,9 +232,15 @@ struct Trigger {
     static Trigger fromMouseButton(MouseButton button) {
         return Trigger{.type = TriggerType::MouseButton, .mouseButton = button};
     }
+
+    static Trigger fromControllerButton(int controllerID, int buttonIndex) {
+        return Trigger{.type = TriggerType::ControllerButton,
+                       .controllerButton = {.controllerID = controllerID,
+                                            .buttonIndex = buttonIndex}};
+    }
 };
 
-enum class AxisTriggerType { MouseAxis, KeyCustom };
+enum class AxisTriggerType { MouseAxis, KeyCustom, ControllerAxis };
 
 struct AxisTrigger {
     AxisTriggerType type;
@@ -237,6 +249,13 @@ struct AxisTrigger {
     Trigger negativeX = {};
     Trigger positiveY = {};
     Trigger negativeY = {};
+
+    int controllerID = -1;
+    bool controllerAxisSingle = false;
+    int axisIndex = -1;
+    int axisIndexY = -1;
+
+    bool isJoystick = false;
 
     static AxisTrigger mouse() {
         return AxisTrigger{.type = AxisTriggerType::MouseAxis};
@@ -249,6 +268,15 @@ struct AxisTrigger {
                            .negativeX = negativeX,
                            .positiveY = positiveY,
                            .negativeY = negativeY};
+    }
+
+    static AxisTrigger controller(int controllerID, int axisIndex,
+                                  bool single = true, int axisIndexY = -1) {
+        return AxisTrigger{.type = AxisTriggerType::ControllerAxis,
+                           .controllerID = controllerID,
+                           .controllerAxisSingle = single,
+                           .axisIndex = axisIndex,
+                           .axisIndexY = axisIndexY};
     }
 };
 

@@ -211,6 +211,111 @@ class Monitor {
     CoreMonitorReference monitorRef;
 };
 
+enum class ControllerAxis {
+    LeftStick,
+    LeftStickX,
+    LeftStickY,
+    RightStick,
+    RightStickX,
+    RightStickY,
+    Trigger,
+    LeftTrigger,
+    RightTrigger
+};
+
+enum class ControllerButton : int {
+    A = 0,
+    B,
+    X,
+    Y,
+    LeftBumper,
+    RightBumper,
+    Back,
+    Start,
+    Guide,
+    LeftThumb,
+    RightThumb,
+    DPadUp,
+    DPadRight,
+    DPadDown,
+    DPadLeft,
+    ButtonCount,
+};
+
+enum class NintendoControllerButton : int {
+    B = 0,
+    A,
+    Y,
+    X,
+    L,
+    R,
+    ZL,
+    ZR,
+    Minus,
+    Plus,
+    LeftStick,
+    RightStick,
+    DPadUp,
+    DPadRight,
+    DPadDown,
+    DPadLeft,
+    ButtonCount,
+};
+
+enum class SonyControllerButton : int {
+    Cross = 0,
+    Circle,
+    Square,
+    Triangle,
+    L1,
+    R1,
+    L2,
+    R2,
+    Share,
+    Options,
+    LeftStick,
+    RightStick,
+    DPadUp,
+    DPadRight,
+    DPadDown,
+    DPadLeft,
+    ButtonCount,
+};
+
+#define CONTROLLER_UNDEFINED (-2)
+
+struct Gamepad {
+    int controllerID;
+    std::string name;
+    bool connected;
+
+    AxisTrigger getAxisTrigger(const ControllerAxis &axis) const;
+    static AxisTrigger getGlobalAxisTrigger(const ControllerAxis &axis);
+    Trigger getButtonTrigger(int buttonIndex) const;
+    static Trigger getGlobalButtonTrigger(int buttonIndex);
+};
+
+using Controller = Gamepad;
+
+struct Joystick {
+    int joystickID;
+    std::string name;
+    bool connected;
+
+    AxisTrigger getSingleAxisTrigger(int axisIndex) const;
+    AxisTrigger getDualAxisTrigger(int axisIndexX, int axisIndexY) const;
+    Trigger getButtonTrigger(int buttonIndex) const;
+
+    int getAxisCount() const;
+    int getButtonCount() const;
+};
+
+struct ControllerID {
+    int id;
+    std::string name;
+    bool isJoystick;
+};
+
 struct ShaderProgram;
 struct Fluid;
 
@@ -313,6 +418,10 @@ class Window {
      */
     std::vector<Monitor> static enumerateMonitors();
 
+    std::vector<ControllerID> enumerateControllers() const;
+    Controller getController(const ControllerID &controllerID) const;
+    Joystick getJoystick(const ControllerID &joystickID) const;
+
 #ifdef METAL
     void enableGlobalIllumination();
     void enablePathTracing();
@@ -397,6 +506,9 @@ class Window {
 
     bool isMouseButtonActive(MouseButton button);
     bool isMouseButtonPressed(MouseButton button);
+
+    bool isControllerButtonPressed(int controllerID, int buttonIndex);
+    float getControllerAxisValue(int controllerID, int axisIndex);
 
     /**
      * @brief Releases mouse capture, allowing the cursor to move freely.
