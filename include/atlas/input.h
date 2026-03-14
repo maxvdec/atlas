@@ -12,6 +12,9 @@
 
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <memory>
+#include <string>
+#include <vector>
 
 /**
  * @brief Enumeration of keyboard keys. Each key is a valid key in a keyboard.
@@ -207,6 +210,45 @@ enum class MouseButton : int {
     Middle = GLFW_MOUSE_BUTTON_MIDDLE
 };
 
+enum class TriggerType { MouseButton, Key };
+
+struct Trigger {
+    TriggerType type;
+    union {
+        MouseButton mouseButton;
+        Key key;
+    };
+};
+
+enum class AxisTriggerType { MouseAxis, KeyCustom };
+
+struct AxisTrigger {
+    AxisTriggerType type;
+
+    Trigger positiveX = {};
+    Trigger negativeX = {};
+    Trigger positiveY = {};
+    Trigger negativeY = {};
+
+    static AxisTrigger mouse() {
+        return AxisTrigger{.type = AxisTriggerType::MouseAxis};
+    }
+
+    static AxisTrigger custom(Trigger positiveX, Trigger negativeX,
+                              Trigger positiveY, Trigger negativeY) {
+        return AxisTrigger{.type = AxisTriggerType::KeyCustom,
+                           .positiveX = positiveX,
+                           .negativeX = negativeX,
+                           .positiveY = positiveY,
+                           .negativeY = negativeY};
+    }
+};
+
+struct AxisPacket {
+    float x = 0.f;
+    float y = 0.f;
+};
+
 /**
  * @brief Structure representing mouse movement data. It is automatically
  * handled and updated by the \ref Window class.
@@ -262,6 +304,19 @@ struct MouseScrollPacket {
      *
      */
     float yoffset;
+};
+
+class InputAction {
+  public:
+    static std::shared_ptr<InputAction>
+    createButtonInputAction(std::string name, std::vector<Trigger> triggers);
+    static std::shared_ptr<InputAction>
+    createAxisInputAction(std::string name, std::vector<AxisTrigger> triggers);
+
+    std::string name;
+    bool isAxis = false;
+    std::vector<Trigger> buttonTriggers;
+    std::vector<AxisTrigger> axisTriggers;
 };
 
 /**
