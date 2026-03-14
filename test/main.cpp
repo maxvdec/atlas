@@ -220,15 +220,19 @@ class MainScene : public Scene {
         moveAction->invertControllerY = true;
         window.addInputAction(moveAction);
         auto lookAction = InputAction::createAxisInputAction(
-            "look", {AxisTrigger::mouse(),
-                     Controller::getGlobalAxisTrigger(
-                         ControllerAxis::RightStick)});
+            "look", {AxisTrigger::mouse(), Controller::getGlobalAxisTrigger(
+                                               ControllerAxis::RightStick)});
         lookAction->controllerDeadzone = 0.2f;
         lookAction->invertControllerY = true;
         window.addInputAction(lookAction);
-        window.addInputAction(InputAction::createSingleAxisInputAction(
+        auto upAndDownAction = InputAction::createSingleAxisInputAction(
             "upAndDown", Trigger::fromKey(Key::Space),
-            Trigger::fromKey(Key::LeftShift)));
+            Trigger::fromKey(Key::LeftShift));
+        upAndDownAction->axisTriggers.push_back(AxisTrigger::custom(
+            Trigger::fromControllerButton(-2, (int)NintendoControllerButton::A),
+            Trigger::fromControllerButton(-2, (int)NintendoControllerButton::B),
+            {}, {}));
+        window.addInputAction(upAndDownAction);
 
         Workspace::get().setRootPath(std::string(TEST_PATH) + "/resources/");
 

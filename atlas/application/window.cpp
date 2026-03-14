@@ -674,6 +674,15 @@ void Window::run() {
     }
     SDL_Window *window = this->windowRef;
     const SDL_WindowID windowID = SDL_GetWindowID(window);
+    if (!SDL_ShowWindow(window)) {
+        atlas_warning("Failed to show window");
+    }
+    if (!SDL_SyncWindow(window)) {
+        atlas_warning("Failed to synchronize window state");
+    }
+    if (!SDL_RaiseWindow(window)) {
+        atlas_warning("Failed to focus window");
+    }
 
     auto commandBuffer = device->acquireCommandBuffer();
     this->activeCommandBuffer = commandBuffer;
