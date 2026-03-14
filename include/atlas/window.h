@@ -386,14 +386,17 @@ class Window {
      * @param key The key to check.
      * @return (bool) True if the key is pressed, false otherwise.
      */
-    bool isKeyPressed(Key key);
+    bool isKeyActive(Key key);
     /**
      * @brief Checks if a key was clicked (pressed and released) this frame.
      *
      * @param key The key to check.
      * @return (bool) True if the key was clicked, false otherwise.
      */
-    bool isKeyClicked(Key key);
+    bool isKeyPressed(Key key);
+
+    bool isMouseButtonActive(MouseButton button);
+    bool isMouseButtonPressed(MouseButton button);
 
     /**
      * @brief Releases mouse capture, allowing the cursor to move freely.
@@ -599,7 +602,28 @@ class Window {
      */
     BoundingBox getSceneBoundingBox();
 
+    void addInputAction(const std::shared_ptr<InputAction> &action) {
+        inputActions.push_back(action);
+    }
+    void resetInputActions() { inputActions.clear(); }
+    std::shared_ptr<InputAction> getInputAction(const std::string &name) const {
+        for (const auto &action : inputActions) {
+            if (action->name == name) {
+                return action;
+            }
+        }
+        return nullptr;
+    }
+
+    bool isActionTriggered(const std::string &actionName);
+    bool isActionCurrentlyActive(const std::string &actionName);
+    AxisPacket getAxisActionValue(const std::string &actionName);
+
   private:
+    bool isTriggerActive(const Trigger &trigger);
+    bool isTriggerPressed(const Trigger &trigger);
+    Position2d relativeMousePos;
+    std::vector<std::shared_ptr<InputAction>> inputActions;
     std::shared_ptr<opal::CommandBuffer> activeCommandBuffer = nullptr;
     CoreWindowReference windowRef;
     std::vector<Renderable *> pendingObjects;

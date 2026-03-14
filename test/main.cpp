@@ -1,5 +1,5 @@
 #include "atlas/camera.h"
-#include "atlas/effect.h"
+#include "atlas/input.h"
 #include "atlas/particle.h"
 #include "atlas/light.h"
 #include "atlas/object.h"
@@ -18,6 +18,7 @@
 #include "hydra/fluid.h"
 #include <iostream>
 #include <memory>
+#include <vector>
 
 class SphereCube : public CompoundObject {
     CoreObject sphere;
@@ -121,7 +122,7 @@ class BallBehavior : public Component {
         }
     }
     void update(float) override {
-        if (Window::mainWindow->isKeyClicked(Key::N)) {
+        if (Window::mainWindow->isKeyPressed(Key::N)) {
             auto hinge = object->getComponent<HingeJoint>();
             if (hinge) {
                 std::cout << "Breaking hinge joint\n";
@@ -133,12 +134,8 @@ class BallBehavior : public Component {
 
 class MainScene : public Scene {
     CoreObject ground;
-    CoreObject wallLeft;
-    CoreObject wallRight;
-    CoreObject wallBack;
-    CoreObject cieling;
-    CoreObject tallBox;
-    CoreObject cubeBox;
+    CoreObject ball;
+    CoreObject ball2;
     DirectionalLight light;
     Camera camera;
     CoreObject lightObject;
@@ -154,45 +151,30 @@ class MainScene : public Scene {
 
     bool doesUpdate = true;
     bool fall = false;
-    int giDebugMode = 0;
 
   public:
     void update(Window &window) override {
         if (!doesUpdate)
             return;
 
-        camera.update(window);
-        if (window.isKeyPressed(Key::Escape)) {
+        camera.updateWithActions(window, "move", "look", "upAndDown");
+        if (window.isKeyActive(Key::Escape)) {
             window.releaseMouse();
             doesUpdate = false;
-        } else if (window.isKeyClicked(Key::Q)) {
+        } else if (window.isKeyPressed(Key::Q)) {
             fall = !fall;
-        } else if (window.isKeyClicked(Key::G) &&
-                   window.ddgiSystem != nullptr &&
-                   window.ddgiSystem->probeSpace != nullptr) {
-            giDebugMode = (giDebugMode + 1) % 4;
-            float debugAlpha = 0.0f;
-            if (giDebugMode == 1) {
-                debugAlpha = 20.0f;
-            } else if (giDebugMode == 2) {
-                debugAlpha = 30.0f;
-            } else if (giDebugMode == 3) {
-                debugAlpha = 40.0f;
-            }
-            window.ddgiSystem->probeSpace->debugColor =
-                Color(3.0f, 3.0f, 3.0f, debugAlpha);
         }
         if (fall) {
             camera.position.y -= 10.f * window.getDeltaTime();
         }
     }
 
-    void onMouseMove(Window &window, Movement2d movement) override {
-        if (!doesUpdate) {
-            return;
-        }
-        camera.updateLook(window, movement);
-    }
+    // void onMouseMove(Window &window, Movement2d movement) override {
+    //     if (!doesUpdate) {
+    //         return;
+    //     }
+    //     camera.updateLook(window, movement);
+    // }
 
     Cubemap createCubemap() {
         Resource right = Workspace::get().createResource(
@@ -213,8 +195,6 @@ class MainScene : public Scene {
         return Cubemap::fromResourceGroup(group);
     }
 
-#define COZY_LIGHT_COLOR Color(1.0f, 0.96f, 0.86f)
-
     void initialize(Window &window) override {
         Environment env;
         env.fog.intensity = 0.0;
@@ -223,90 +203,38 @@ class MainScene : public Scene {
         env.lightBloom.maxSamples = 5;
         this->setEnvironment(env);
 
+        window.addInputAction(InputAction::createAxisInputAction(
+            "move", {AxisTrigger::custom(
+                        Trigger::fromKey(Key::D), Trigger::fromKey(Key::A),
+                        Trigger::fromKey(Key::W), Trigger::fromKey(Key::S))}));
+        window.addInputAction(
+            InputAction::createAxisInputAction("look", {AxisTrigger::mouse()}));
+        window.addInputAction(InputAction::createSingleAxisInputAction(
+            "upAndDown", Trigger::fromKey(Key::Space),
+            Trigger::fromKey(Key::LeftShift)));
+
         Workspace::get().setRootPath(std::string(TEST_PATH) + "/resources/");
 
         camera = Camera();
-        camera.setPosition({0.0f, 1.0f, -4.f});
-        camera.lookAt({0.0f, 1.0f, 0.2f});
-        camera.farClip = 100.0f;
+        camera.setPosition({-5.0f, 1.0f, 2.0f});
+        camera.lookAt({0.0f, 0.0f, 0.0f});
+        camera.farClip = 1000.f;
         window.setCamera(&camera);
 
-        areaLight = AreaLight();
-        areaLight.position = {0.0f, 1.98f, 0.0f};
-        areaLight.setColor(COZY_LIGHT_COLOR);
-        areaLight.range = 6.5f;
-        areaLight.size = {0.70f, 0.46f};
-        areaLight.angle = 125.0f;
-        areaLight.castsBothSides = false;
-        areaLight.setRotation({90.0f, 0.0f, 0.0f});
-        areaLight.castShadows(window, 2048);
-        areaLight.intensity = 15;
+        ground = createBox({5.0f, 0.1f, 5.0f}, Color(0.8f, 0.8f, 0.8f));
+        ground.attachTexture(
+            Texture::fromResource(Workspace::get().createResource(
+                "ground.jpg", "GroundTexture", ResourceType::Image)));
+        ground.setPosition({0.0f, -0.1f, 0.0f});
+        window.addObject(&ground);
+
+        areaLight.position = {0.0f, 2.0f, 0.0f};
+        areaLight.rotate({0.0f, 90.0f, 0.0f});
+        areaLight.castsBothSides = true;
+        areaLight.setColor({0.7f, 0.7f, 0.7f, 1.0f});
         this->addAreaLight(&areaLight);
         areaLight.createDebugObject();
         areaLight.addDebugObject(window);
-
-        const Color wallWhite = Color(0.84f, 0.74f, 0.58f);
-        const Color boxWhite = Color(0.90f, 0.84f, 0.70f);
-        const Color wallRed = Color(0.98f, 0.05f, 0.03f);
-        const Color wallGreen = Color(0.04f, 0.95f, 0.07f);
-
-        ground = createBox({2.0f, 0.05f, 2.0f});
-        ground.material.albedo = wallWhite;
-        ground.material.roughness = 0.96f;
-        ground.material.metallic = 0.0f;
-        ground.material.ao = 1.0f;
-        ground.setPosition({0.0f, -0.025f, 0.0f});
-        window.addObject(&ground);
-
-        cieling = createBox({2.0f, 0.05f, 2.0f});
-        cieling.material.albedo = wallWhite;
-        cieling.material.roughness = 0.95f;
-        cieling.material.metallic = 0.0f;
-        cieling.material.ao = 1.0f;
-        cieling.setPosition({0.0f, 2.025f, 0.0f});
-        window.addObject(&cieling);
-
-        wallLeft = createBox({0.05f, 2.0f, 2.0f});
-        wallLeft.material.albedo = wallRed;
-        wallLeft.material.roughness = 0.94f;
-        wallLeft.material.metallic = 0.0f;
-        wallLeft.material.ao = 1.0f;
-        wallLeft.setPosition({-1.025f, 1.0f, 0.0f});
-        window.addObject(&wallLeft);
-
-        wallRight = createBox({0.05f, 2.0f, 2.0f});
-        wallRight.material.albedo = wallGreen;
-        wallRight.material.roughness = 0.94f;
-        wallRight.material.metallic = 0.0f;
-        wallRight.material.ao = 1.0f;
-        wallRight.setPosition({1.025f, 1.0f, 0.0f});
-        window.addObject(&wallRight);
-
-        wallBack = createBox({2.0f, 2.0f, 0.05f});
-        wallBack.material.albedo = wallWhite;
-        wallBack.material.roughness = 0.94f;
-        wallBack.material.metallic = 0.0f;
-        wallBack.material.ao = 1.0f;
-        wallBack.setPosition({0.0f, 1.0f, 1.025f});
-        window.addObject(&wallBack);
-
-        tallBox = createBox({0.56f, 1.2f, 0.56f});
-        tallBox.material.albedo = boxWhite;
-        tallBox.material.roughness = 0.78f;
-        tallBox.material.metallic = 0.0f;
-        tallBox.material.ao = 1.0f;
-        tallBox.setPosition({-0.42f, 0.6f, 0.5f});
-        tallBox.setRotation({0.0f, -16.0f, 0.0f});
-        window.addObject(&tallBox);
-
-        cubeBox = createBox({0.6f, 0.6f, 0.6f});
-        cubeBox.material.albedo = boxWhite;
-        cubeBox.material.roughness = 0.0f;
-        cubeBox.material.ior = 1.5f;
-        cubeBox.material.transmittance = 0.9f;
-        cubeBox.setPosition({0.42f, 0.3f, -0.5f});
-        cubeBox.setRotation({0.0f, 11.0f, 0.0f});
-        window.addObject(&cubeBox);
 
         Resource fontResource = Workspace::get().createResource(
             "arial.ttf", "Arial", ResourceType::Font);
@@ -317,18 +245,30 @@ class MainScene : public Scene {
         fpsText.addTraitComponent<Text>(FPSTextUpdater());
         window.addUIObject(&fpsText);
 
-        this->setAmbientIntensity(0.10f);
+        ball = createDebugSphere(0.5f, 32, 32);
+        ball.material.metallic = 1.0f;
+        ball.material.roughness = 0.0f;
+        ball.move({0.f, 1.0f, 1.0f});
+        window.addObject(&ball);
 
-        frameBuffer = RenderTarget(window, RenderTargetType::Multisampled);
+        ball2 = createDebugSphere(0.5f, 32, 32);
+        ball2.move({0.f, 1.0f, -1.0f});
+        window.addObject(&ball2);
+
+        light = DirectionalLight({0.35f, -1.0f, 0.2f}, Color::white());
+        this->setAmbientIntensity(0.2f);
+
+        frameBuffer = RenderTarget(window, RenderTargetType::Scene);
         window.addRenderTarget(&frameBuffer);
         frameBuffer.display(window);
 
-        // this->setUseAtmosphereSkybox(false);
+        this->setUseAtmosphereSkybox(true);
 
-        window.enablePathTracing();
-        // window.pathTracer->pathTracingTexture->display(window);
-        window.pathTracer->raysPerPixel = 4;
-        window.pathTracer->maxBounces = 16;
+        atmosphere.enable();
+        atmosphere.secondsPerHour = 4.f;
+        atmosphere.setTime(12.0);
+        atmosphere.cycle = false;
+        atmosphere.wind = {0.1f, 0.0f, 0.0f};
     }
 };
 
@@ -336,7 +276,7 @@ int main() {
     Window window({.title = "My Window",
                    .width = 1600,
                    .height = 1200,
-                   .renderScale = 5.0f,
+                   .renderScale = 0.5f,
                    .mouseCaptured = true,
                    .multisampling = false,
                    .ssaoScale = 0.4f});

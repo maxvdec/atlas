@@ -8,6 +8,7 @@
 */
 
 #include "atlas/core/shader.h"
+#include "atlas/input.h"
 #include "atlas/light.h"
 #include "atlas/network/pipe.h"
 #include "atlas/object.h"
@@ -228,14 +229,20 @@ Window::Window(const WindowConfiguration &config)
         }
     });
 
-    lastMouseX = width / 2.0;
-    lastMouseY = height / 2.0;
+    double initialMouseX = 0.0;
+    double initialMouseY = 0.0;
+    glfwGetCursorPos(window, &initialMouseX, &initialMouseY);
+    lastMouseX = static_cast<float>(initialMouseX);
+    lastMouseY = static_cast<float>(initialMouseY);
+    relativeMousePos = {0.0f, 0.0f};
 
     glfwSetCursorPosCallback(
         window, [](GLFWwindow *, double xpos, double ypos) {
             Window *window = Window::mainWindow;
             Position2d movement = {.x = (float)xpos - window->lastMouseX,
                                    .y = window->lastMouseY - (float)ypos};
+            window->relativeMousePos.x += movement.x;
+            window->relativeMousePos.y += movement.y;
             if (window->currentScene != nullptr) {
                 window->currentScene->onMouseMove(*window, movement);
             }
@@ -397,6 +404,7 @@ void Window::run() {
 
     while (!glfwWindowShouldClose(window)) {
         currentFrame++;
+        this->relativeMousePos = {.x = 0.0f, .y = 0.0f};
         glfwPollEvents();
 
         if (this->hasPendingSceneChange) {
@@ -1262,15 +1270,27 @@ std::string Monitor::getName() const {
 
 float Window::getTime() { return static_cast<float>(glfwGetTime()); }
 
-bool Window::isKeyPressed(Key key) {
+bool Window::isKeyActive(Key key) {
     GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
     int state = glfwGetKey(window, static_cast<int>(key));
     return state == GLFW_PRESS || state == GLFW_REPEAT;
 }
 
-bool Window::isKeyClicked(Key key) {
+bool Window::isKeyPressed(Key key) {
     GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
     int state = glfwGetKey(window, static_cast<int>(key));
+    return state == GLFW_PRESS;
+}
+
+bool Window::isMouseButtonActive(MouseButton button) {
+    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
+    int state = glfwGetMouseButton(window, static_cast<int>(button));
+    return state == GLFW_PRESS;
+}
+
+bool Window::isMouseButtonPressed(MouseButton button) {
+    GLFWwindow *window = static_cast<GLFWwindow *>(this->windowRef);
+    int state = glfwGetMouseButton(window, static_cast<int>(button));
     return state == GLFW_PRESS;
 }
 
@@ -2385,6 +2405,138 @@ BoundingBox Window::getSceneBoundingBox() {
         return {};
 
     return {Position3d::fromGlm(worldMin), Position3d::fromGlm(worldMax)};
+}
+
+bool Window::isActionTriggered(const std::string &actionName) {
+    auto inputAction = getInputAction(actionName);
+    if (inputAction) {
+        if (inputAction->isAxis) {
+            atlas_warning("Tried to get a boolean value for an action with an "
+                          "axis value assigned to it.");
+            return false;
+        } else {
+            for (const auto &trigger : inputAction->buttonTriggers) {
+                if (isTriggerPressed(trigger)) {
+                    return true;
+                }
+            }
+        }
+    } else {
+        atlas_warning(
+            "Tried to get the state of an action that doesn't exist: " +
+            actionName);
+    }
+    return false;
+}
+
+bool Window::isActionCurrentlyActive(const std::string &actionName) {
+    auto inputAction = getInputAction(actionName);
+    if (inputAction) {
+        if (inputAction->isAxis) {
+            atlas_warning("Tried to get a boolean value for an action with an "
+                          "axis value assigned to it.");
+            return false;
+        } else {
+            for (const auto &trigger : inputAction->buttonTriggers) {
+                if (isTriggerActive(trigger)) {
+                    return true;
+                }
+            }
+        }
+    } else {
+        atlas_warning(
+            "Tried to get the state of an action that doesn't exist: " +
+            actionName);
+    }
+    return false;
+}
+
+AxisPacket Window::getAxisActionValue(const std::string &actionName) {
+    auto inputAction = getInputAction(actionName);
+    if (inputAction) {
+        if (!inputAction->isAxis) {
+            atlas_warning("Tried to get an axis value for an action with a "
+                          "boolean value assigned to it.");
+            return {};
+        } else {
+            for (const auto &axisTrigger : inputAction->axisTriggers) {
+                if (axisTrigger.type == AxisTriggerType::KeyCustom) {
+                    if (inputAction->isAxisSingle) {
+                        float previousX = inputAction->axisX;
+                        float val = 0.0f;
+
+                        if (isTriggerActive(axisTrigger.positiveX)) {
+                            val += 1.0f;
+                        }
+                        if (isTriggerActive(axisTrigger.negativeX)) {
+                            val -= 1.0f;
+                        }
+                        inputAction->axisDeltaX = val - previousX;
+                        inputAction->axisDeltaY = inputAction->axisDeltaX;
+                        inputAction->axisX = val;
+                        inputAction->axisY = val;
+                    } else {
+                        float previousX = inputAction->axisX;
+                        float previousY = inputAction->axisY;
+                        float x = 0.0f;
+                        float y = 0.0f;
+
+                        if (isTriggerActive(axisTrigger.positiveX)) {
+                            x += 1.0f;
+                        }
+                        if (isTriggerActive(axisTrigger.negativeX)) {
+                            x -= 1.0f;
+                        }
+                        if (isTriggerActive(axisTrigger.positiveY)) {
+                            y += 1.0f;
+                        }
+                        if (isTriggerActive(axisTrigger.negativeY)) {
+                            y -= 1.0f;
+                        }
+
+                        inputAction->axisDeltaX = x - previousX;
+                        inputAction->axisDeltaY = y - previousY;
+                        inputAction->axisX = x;
+                        inputAction->axisY = y;
+                    }
+                } else if (axisTrigger.type == AxisTriggerType::MouseAxis) {
+                    inputAction->axisDeltaX = this->relativeMousePos.x;
+                    inputAction->axisDeltaY = this->relativeMousePos.y;
+                    inputAction->axisX = this->lastMouseX;
+                    inputAction->axisY = this->lastMouseY;
+                }
+            }
+        }
+    } else {
+        atlas_warning("Tried to get an axis value for an action that doesn't "
+                      "exist: " +
+                      actionName);
+        return {};
+    }
+    return {.deltaX = inputAction->axisDeltaX,
+            .deltaY = inputAction->axisDeltaY,
+            .x = inputAction->axisX,
+            .y = inputAction->axisY};
+}
+
+bool Window::isTriggerActive(const Trigger &trigger) {
+    if (trigger.type == TriggerType::Key) {
+        return isKeyActive(trigger.key);
+    } else if (trigger.type == TriggerType::MouseButton) {
+        return isMouseButtonActive(trigger.mouseButton);
+    } else {
+        return false;
+    }
+}
+
+bool Window::isTriggerPressed(const Trigger &trigger) {
+    if (trigger.type == TriggerType::Key) {
+        return isKeyPressed(trigger.key);
+    } else if (trigger.type == TriggerType::MouseButton) {
+        return isMouseButtonPressed(trigger.mouseButton);
+    } else {
+        return false;
+    }
 }
 
 #ifdef METAL

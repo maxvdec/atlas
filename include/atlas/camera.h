@@ -12,6 +12,7 @@
 
 #include "atlas/units.h"
 #include <glm/glm.hpp>
+#include <string>
 
 class Window;
 
@@ -147,6 +148,10 @@ class Camera {
      * @param window The window from which to get input.
      */
     void update(Window &window);
+
+    void updateWithActions(Window &window, const std::string &moveAxis,
+                           const std::string &lookAction,
+                           const std::string &upAndDownAction);
     /**
      * @brief Updates the camera's look direction based on mouse movement.
      *

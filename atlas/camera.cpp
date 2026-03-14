@@ -11,8 +11,11 @@
 #include "atlas/units.h"
 #include "atlas/window.h"
 #include "atlas/input.h"
+#include <algorithm>
+#include <algorithm>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/glm.hpp>
+#include <string>
 
 glm::mat4 Camera::calculateViewMatrix() const {
     glm::dvec3 camPos(position.x, position.y, position.z);
@@ -95,24 +98,70 @@ void Camera::update(Window &window) {
 
     float cameraSpeed = movementSpeed * deltaTime;
 
-    if (window.isKeyPressed(Key::W) || window.isKeyPressed(Key::Up)) {
+    if (window.isKeyActive(Key::W) || window.isKeyActive(Key::Up)) {
         camPos += cameraSpeed * camFront;
     }
-    if (window.isKeyPressed(Key::S) || window.isKeyPressed(Key::Down)) {
+    if (window.isKeyActive(Key::S) || window.isKeyActive(Key::Down)) {
         camPos -= cameraSpeed * camFront;
     }
-    if (window.isKeyPressed(Key::A) || window.isKeyPressed(Key::Left)) {
+    if (window.isKeyActive(Key::A) || window.isKeyActive(Key::Left)) {
         camPos -= glm::normalize(glm::cross(camFront, upVector)) * cameraSpeed;
     }
-    if (window.isKeyPressed(Key::D) || window.isKeyPressed(Key::Right)) {
+    if (window.isKeyActive(Key::D) || window.isKeyActive(Key::Right)) {
         camPos += glm::normalize(glm::cross(camFront, upVector)) * cameraSpeed;
     }
-    if (window.isKeyPressed(Key::Space)) {
+    if (window.isKeyActive(Key::Space)) {
         camPos.y += cameraSpeed;
     }
-    if (window.isKeyPressed(Key::LeftShift)) {
+    if (window.isKeyActive(Key::LeftShift)) {
         camPos.y -= cameraSpeed;
     }
+
+    position = {camPos.x, camPos.y, camPos.z};
+    target = {camPos.x + camFront.x, camPos.y + camFront.y,
+              camPos.z + camFront.z};
+}
+
+void Camera::updateWithActions(Window &window, const std::string &moveAxis,
+                               const std::string &lookAction,
+                               const std::string &upAndDownAction) {
+    AxisPacket moveInput = window.getAxisActionValue(moveAxis);
+    AxisPacket lookInput = window.getAxisActionValue(lookAction);
+    AxisPacket upDownInput = window.getAxisActionValue(upAndDownAction);
+
+    float xoffset = lookInput.deltaX * mouseSensitivity;
+    float yoffset = lookInput.deltaY * mouseSensitivity;
+
+    targetYaw += xoffset;
+    targetPitch += yoffset;
+
+    targetPitch = std::min(targetPitch, 89.0f);
+    targetPitch = std::max(targetPitch, -89.0f);
+
+    yaw += (targetYaw - yaw) * lookSmoothness;
+    pitch += (targetPitch - pitch) * lookSmoothness;
+
+    glm::vec3 front;
+    front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    front.y = sin(glm::radians(pitch));
+    front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+    front = glm::normalize(front);
+
+    target = {position.x + front.x, position.y + front.y, position.z + front.z};
+
+    glm::vec3 camPos = glm::vec3(position.x, position.y, position.z);
+    glm::vec3 camFront =
+        glm::normalize(glm::vec3(target.x, target.y, target.z) - camPos);
+    glm::vec3 upVector(0.0f, 1.0f, 0.0f);
+    float cameraSpeed = movementSpeed * window.getDeltaTime();
+    glm::vec2 moveVector(moveInput.x, moveInput.y);
+    if (glm::length(moveVector) > 1.0f) {
+        moveVector = glm::normalize(moveVector);
+    }
+    camPos += moveVector.y * cameraSpeed * camFront;
+    camPos += moveVector.x * cameraSpeed *
+              glm::normalize(glm::cross(camFront, upVector));
+    camPos += upDownInput.y * cameraSpeed * upVector;
 
     position = {camPos.x, camPos.y, camPos.z};
     target = {camPos.x + camFront.x, camPos.y + camFront.y,
@@ -126,10 +175,8 @@ void Camera::updateLook(Window &, Movement2d movement) {
     targetYaw += xoffset;
     targetPitch += yoffset;
 
-    if (targetPitch > 89.0f)
-        targetPitch = 89.0f;
-    if (targetPitch < -89.0f)
-        targetPitch = -89.0f;
+    targetPitch = std::min(targetPitch, 89.0f);
+    targetPitch = std::max(targetPitch, -89.0f);
 
     yaw += (targetYaw - yaw) * lookSmoothness;
     pitch += (targetPitch - pitch) * lookSmoothness;

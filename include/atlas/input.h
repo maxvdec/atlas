@@ -218,6 +218,14 @@ struct Trigger {
         MouseButton mouseButton;
         Key key;
     };
+
+    static Trigger fromKey(Key key) {
+        return Trigger{.type = TriggerType::Key, .key = key};
+    }
+
+    static Trigger fromMouseButton(MouseButton button) {
+        return Trigger{.type = TriggerType::MouseButton, .mouseButton = button};
+    }
 };
 
 enum class AxisTriggerType { MouseAxis, KeyCustom };
@@ -245,6 +253,8 @@ struct AxisTrigger {
 };
 
 struct AxisPacket {
+    float deltaX = 0.f;
+    float deltaY = 0.f;
     float x = 0.f;
     float y = 0.f;
 };
@@ -309,14 +319,47 @@ struct MouseScrollPacket {
 class InputAction {
   public:
     static std::shared_ptr<InputAction>
-    createButtonInputAction(std::string name, std::vector<Trigger> triggers);
+    createButtonInputAction(const std::string &name,
+                            const std::vector<Trigger> &triggers) {
+        InputAction action;
+        action.name = name;
+        action.isAxis = false;
+        action.buttonTriggers = triggers;
+        return std::make_shared<InputAction>(action);
+    }
     static std::shared_ptr<InputAction>
-    createAxisInputAction(std::string name, std::vector<AxisTrigger> triggers);
+    createAxisInputAction(const std::string &name,
+                          const std::vector<AxisTrigger> &triggers) {
+        InputAction action;
+        action.name = name;
+        action.isAxis = true;
+        action.axisTriggers = triggers;
+        return std::make_shared<InputAction>(action);
+    }
+
+    static std::shared_ptr<InputAction>
+    createSingleAxisInputAction(const std::string &name,
+                                const Trigger &positiveTrigger,
+                                const Trigger &negativeTrigger) {
+        InputAction action;
+        action.name = name;
+        action.isAxis = true;
+        action.isAxisSingle = true;
+        action.axisTriggers.push_back(
+            AxisTrigger::custom(positiveTrigger, negativeTrigger, {}, {}));
+        return std::make_shared<InputAction>(action);
+    }
 
     std::string name;
     bool isAxis = false;
+    bool isAxisSingle = false;
     std::vector<Trigger> buttonTriggers;
     std::vector<AxisTrigger> axisTriggers;
+
+    float axisX = 0.f;
+    float axisY = 0.f;
+    float axisDeltaX = 0.f;
+    float axisDeltaY = 0.f;
 };
 
 /**
