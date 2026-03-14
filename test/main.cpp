@@ -203,10 +203,21 @@ class MainScene : public Scene {
         env.lightBloom.maxSamples = 5;
         this->setEnvironment(env);
 
-        window.addInputAction(InputAction::createAxisInputAction(
-            "move", {AxisTrigger::custom(
-                        Trigger::fromKey(Key::D), Trigger::fromKey(Key::A),
-                        Trigger::fromKey(Key::W), Trigger::fromKey(Key::S))}));
+        auto moveAction = InputAction::createAxisInputAction(
+            "move",
+            {
+                AxisTrigger::custom(
+                    Trigger::fromKey(Key::D), Trigger::fromKey(Key::A),
+                    Trigger::fromKey(Key::W), Trigger::fromKey(Key::S)),
+                Controller::getGlobalAxisTrigger(ControllerAxis::LeftStick),
+            });
+        moveAction->clampAxis = true;
+        moveAction->axisClampMin = -1.0f;
+        moveAction->axisClampMax = 1.0f;
+        moveAction->normalize2D = true;
+        moveAction->controllerDeadzone = 0.2f;
+        moveAction->invertControllerY = true;
+        window.addInputAction(moveAction);
         window.addInputAction(
             InputAction::createAxisInputAction("look", {AxisTrigger::mouse()}));
         window.addInputAction(InputAction::createSingleAxisInputAction(

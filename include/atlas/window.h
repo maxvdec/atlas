@@ -418,7 +418,7 @@ class Window {
      */
     std::vector<Monitor> static enumerateMonitors();
 
-    std::vector<ControllerID> enumerateControllers() const;
+    std::vector<ControllerID> getControllers() const;
     Controller getController(const ControllerID &controllerID) const;
     Joystick getJoystick(const ControllerID &joystickID) const;
 

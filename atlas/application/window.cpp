@@ -26,7 +26,9 @@
 #include "finewave/audio.h"
 #include <atlas/window.h>
 #include <algorithm>
+#include <cmath>
 #include <cstdint>
+#include <dlfcn.h>
 #include <iostream>
 #include <memory>
 #include <optional>
@@ -48,6 +50,56 @@ namespace {
 template <typename T> void hashCombine(std::size_t &seed, const T &value) {
     seed ^= std::hash<T>{}(value) + 0x9e3779b97f4a7c15ULL + (seed << 6) +
             (seed >> 2);
+}
+
+void registerGamepadMappings() {
+    auto *updateGamepadMappings = reinterpret_cast<int (*)(const char *)>(
+        dlsym(RTLD_DEFAULT, "glfwUpdateGamepadMappings"));
+    if (updateGamepadMappings == nullptr) {
+        return;
+    }
+
+    static const char *const mappings[] = {
+        "030000007e0500000920000011810000,Nintendo Switch Pro "
+        "Controller,a:b0,b:b1,back:b9,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,"
+        "dpup:h0.1,guide:b11,leftshoulder:b5,leftstick:b12,lefttrigger:b7,"
+        "leftx:a0,lefty:a1,misc1:b4,rightshoulder:b6,rightstick:b13,"
+        "righttrigger:b8,rightx:a2,righty:a3,start:b10,x:b3,y:b2,"
+        "hint:!SDL_GAMECONTROLLER_USE_BUTTON_LABELS:=1,",
+        "050000004c69632050726f20436f6e00,Nintendo Switch Pro "
+        "Controller,crc:15b7,a:b0,b:b1,back:b8,dpdown:h0.4,dpleft:h0.8,"
+        "dpright:h0.2,dpup:h0.1,guide:b12,leftshoulder:b4,leftstick:b10,"
+        "lefttrigger:b6,leftx:a0,lefty:a1,misc1:b13,rightshoulder:b5,"
+        "rightstick:b11,righttrigger:b7,rightx:a2,righty:a3,start:b9,"
+        "x:b2,y:b3,hint:!SDL_GAMECONTROLLER_USE_BUTTON_LABELS:=1,",
+        "050000007e0500000920000001000000,Nintendo Switch Pro "
+        "Controller,a:b1,b:b0,back:b8,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,"
+        "dpup:h0.1,guide:b12,leftshoulder:b4,leftstick:b10,lefttrigger:b6,"
+        "leftx:a0,lefty:a1,rightshoulder:b5,rightstick:b11,righttrigger:b7,"
+        "rightx:a2,righty:a3,start:b9,x:b3,y:b2,"
+        "hint:!SDL_GAMECONTROLLER_USE_BUTTON_LABELS:=1,",
+        "050000007e0500000920000001800000,Nintendo Switch Pro "
+        "Controller,a:b0,b:b1,back:b9,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,"
+        "dpup:h0.1,guide:b11,leftshoulder:b5,leftstick:b12,lefttrigger:b7,"
+        "leftx:a0,lefty:a1,rightshoulder:b6,rightstick:b13,righttrigger:b8,"
+        "rightx:a2,righty:a3,start:b10,x:b3,y:b2,"
+        "hint:!SDL_GAMECONTROLLER_USE_BUTTON_LABELS:=1,",
+        "030000007e0500000920000000000000,Nintendo Switch Pro "
+        "Controller,a:b0,b:b1,back:b8,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,"
+        "dpup:h0.1,guide:b12,leftshoulder:b4,leftstick:b10,lefttrigger:b6,"
+        "leftx:a0,lefty:a1,rightshoulder:b5,rightstick:b11,righttrigger:b7,"
+        "rightx:a2,righty:a3,start:b9,x:b2,y:b3,",
+        "050000007e05000009200000ff070000,Nintendo Switch Pro "
+        "Controller,a:b1,b:b0,back:b8,dpdown:h0.4,dpleft:h0.8,dpright:h0.2,"
+        "dpup:h0.1,guide:b9,leftshoulder:b4,leftstick:b6,lefttrigger:a2,"
+        "leftx:a0,lefty:a1,rightshoulder:b5,rightstick:b7,righttrigger:a5,"
+        "rightx:a3,righty:a4,start:b10,x:b3,y:b2,"
+        "hint:!SDL_GAMECONTROLLER_USE_BUTTON_LABELS:=1,",
+    };
+
+    for (const char *mapping : mappings) {
+        updateGamepadMappings(mapping);
+    }
 }
 
 void appendShadowCaster(Renderable *obj, std::unordered_set<Renderable *> &seen,
@@ -183,6 +235,8 @@ Window::Window(const WindowConfiguration &config)
 
     GLFWwindow *window = context->makeWindow(
         config.width, config.height, config.title.c_str(), nullptr, nullptr);
+
+    registerGamepadMappings();
 
     context->makeCurrent();
 
@@ -2459,10 +2513,98 @@ AxisPacket Window::getAxisActionValue(const std::string &actionName) {
                           "boolean value assigned to it.");
             return {};
         } else {
+            float previousX = inputAction->axisX;
+            float previousY = inputAction->axisY;
+            float accumulatedValueX = 0.0f;
+            float accumulatedValueY = 0.0f;
+            float accumulatedDeltaX = 0.0f;
+            float accumulatedDeltaY = 0.0f;
+            bool hasValueInput = false;
+            bool hasDeltaInput = false;
+            bool usesPointerPosition = false;
+
+            auto applyDeadzone = [&](float value) {
+                if (std::abs(value) < inputAction->controllerDeadzone) {
+                    return 0.0f;
+                }
+                return value;
+            };
+
+            auto selectJoystickFallbackAxisPair = [&](int joystickID) {
+                int axisCount = 0;
+                const float *axes = glfwGetJoystickAxes(joystickID, &axisCount);
+                if (axes == nullptr || axisCount < 2) {
+                    return std::pair<float, float>{0.0f, 0.0f};
+                }
+
+                float bestX = 0.0f;
+                float bestY = 0.0f;
+                float bestMagnitude = -1.0f;
+
+                int pairSearchCount = std::min(axisCount, 8);
+                for (int first = 0; first < pairSearchCount; ++first) {
+                    for (int second = first + 1; second < pairSearchCount;
+                         ++second) {
+                        float x = applyDeadzone(axes[first]);
+                        float y = applyDeadzone(axes[second]);
+                        if (inputAction->invertControllerY) {
+                            y = -y;
+                        }
+
+                        float magnitude = std::sqrt(x * x + y * y);
+                        if (magnitude > bestMagnitude) {
+                            bestX = x;
+                            bestY = y;
+                            bestMagnitude = magnitude;
+                        }
+                    }
+                }
+
+                return std::pair<float, float>{bestX, bestY};
+            };
+
+            auto selectGlobalControllerAxisPair =
+                [&](int axisIndexX, int axisIndexY) {
+                    float selectedX = 0.0f;
+                    float selectedY = 0.0f;
+                    float selectedMagnitude = -1.0f;
+
+                    for (int i = 0; i < 16; ++i) {
+                        int glfwID = GLFW_JOYSTICK_1 + i;
+                        if (!glfwJoystickPresent(glfwID)) {
+                            continue;
+                        }
+
+                        float x = 0.0f;
+                        float y = 0.0f;
+                        if (glfwJoystickIsGamepad(glfwID) == GLFW_FALSE) {
+                            auto pair = selectJoystickFallbackAxisPair(glfwID);
+                            x = pair.first;
+                            y = pair.second;
+                        } else {
+                            x = getControllerAxisValue(glfwID, axisIndexX);
+                            y = getControllerAxisValue(glfwID, axisIndexY);
+                            x = applyDeadzone(x);
+                            y = applyDeadzone(y);
+                            if (inputAction->invertControllerY) {
+                                y = -y;
+                            }
+                        }
+
+                        float magnitude = std::sqrt(x * x + y * y);
+                        if (magnitude > selectedMagnitude) {
+                            selectedX = x;
+                            selectedY = y;
+                            selectedMagnitude = magnitude;
+                        }
+                    }
+
+                    return std::pair<float, float>{selectedX, selectedY};
+                };
+
             for (const auto &axisTrigger : inputAction->axisTriggers) {
                 if (axisTrigger.type == AxisTriggerType::KeyCustom) {
                     if (inputAction->isAxisSingle) {
-                        float previousX = inputAction->axisX;
                         float val = 0.0f;
 
                         if (isTriggerActive(axisTrigger.positiveX)) {
@@ -2471,13 +2613,9 @@ AxisPacket Window::getAxisActionValue(const std::string &actionName) {
                         if (isTriggerActive(axisTrigger.negativeX)) {
                             val -= 1.0f;
                         }
-                        inputAction->axisDeltaX = val - previousX;
-                        inputAction->axisDeltaY = inputAction->axisDeltaX;
-                        inputAction->axisX = val;
-                        inputAction->axisY = val;
+                        accumulatedValueX += val;
+                        hasValueInput = true;
                     } else {
-                        float previousX = inputAction->axisX;
-                        float previousY = inputAction->axisY;
                         float x = 0.0f;
                         float y = 0.0f;
 
@@ -2494,39 +2632,108 @@ AxisPacket Window::getAxisActionValue(const std::string &actionName) {
                             y -= 1.0f;
                         }
 
-                        inputAction->axisDeltaX = x - previousX;
-                        inputAction->axisDeltaY = y - previousY;
-                        inputAction->axisX = x;
-                        inputAction->axisY = y;
+                        accumulatedValueX += x;
+                        accumulatedValueY += y;
+                        hasValueInput = true;
                     }
                 } else if (axisTrigger.type == AxisTriggerType::MouseAxis) {
-                    inputAction->axisDeltaX = this->relativeMousePos.x;
-                    inputAction->axisDeltaY = this->relativeMousePos.y;
-                    inputAction->axisX = this->lastMouseX;
-                    inputAction->axisY = this->lastMouseY;
+                    accumulatedDeltaX += this->relativeMousePos.x;
+                    accumulatedDeltaY += this->relativeMousePos.y;
+                    hasDeltaInput = true;
+                    usesPointerPosition = true;
                 } else if (axisTrigger.type ==
                                AxisTriggerType::ControllerAxis &&
                            axisTrigger.controllerAxisSingle) {
-                    float previousX = inputAction->axisX;
                     float val = getControllerAxisValue(axisTrigger.controllerID,
                                                        axisTrigger.axisIndex);
-                    inputAction->axisDeltaX = val - previousX;
-                    inputAction->axisDeltaY = inputAction->axisDeltaX;
-                    inputAction->axisX = val;
-                    inputAction->axisY = val;
+                    val = applyDeadzone(val);
+                    if (inputAction->invertControllerY &&
+                        (axisTrigger.axisIndex == GLFW_GAMEPAD_AXIS_LEFT_Y ||
+                         axisTrigger.axisIndex == GLFW_GAMEPAD_AXIS_RIGHT_Y)) {
+                        val = -val;
+                    }
+                    accumulatedValueX += val;
+                    hasValueInput = true;
                 } else if (axisTrigger.type ==
                            AxisTriggerType::ControllerAxis) {
-                    float previousX = inputAction->axisX;
-                    float previousY = inputAction->axisY;
-                    float x = getControllerAxisValue(axisTrigger.controllerID,
-                                                     axisTrigger.axisIndex);
-                    float y = getControllerAxisValue(axisTrigger.controllerID,
-                                                     axisTrigger.axisIndexY);
-                    inputAction->axisDeltaX = x - previousX;
-                    inputAction->axisDeltaY = y - previousY;
-                    inputAction->axisX = x;
-                    inputAction->axisY = y;
+                    float x = 0.0f;
+                    float y = 0.0f;
+                    if (axisTrigger.controllerID == CONTROLLER_UNDEFINED) {
+                        auto pair = selectGlobalControllerAxisPair(
+                            axisTrigger.axisIndex, axisTrigger.axisIndexY);
+                        x = pair.first;
+                        y = pair.second;
+                    } else {
+                        if (glfwJoystickPresent(axisTrigger.controllerID) &&
+                            glfwJoystickIsGamepad(axisTrigger.controllerID) ==
+                                GLFW_FALSE) {
+                            auto pair = selectJoystickFallbackAxisPair(
+                                axisTrigger.controllerID);
+                            x = pair.first;
+                            y = pair.second;
+                        } else {
+                            x = getControllerAxisValue(axisTrigger.controllerID,
+                                                       axisTrigger.axisIndex);
+                            y = getControllerAxisValue(axisTrigger.controllerID,
+                                                       axisTrigger.axisIndexY);
+                            x = applyDeadzone(x);
+                            y = applyDeadzone(y);
+                            if (inputAction->invertControllerY) {
+                                y = -y;
+                            }
+                        }
+                    }
+                    accumulatedValueX += x;
+                    accumulatedValueY += y;
+                    hasValueInput = true;
                 }
+            }
+
+            if (hasValueInput) {
+                float axisX = accumulatedValueX * inputAction->axisScaleX;
+                float axisY = accumulatedValueY * inputAction->axisScaleY;
+
+                if (inputAction->isAxisSingle) {
+                    axisY = axisX;
+                }
+
+                if (inputAction->normalize2D && !inputAction->isAxisSingle) {
+                    float magnitude = std::sqrt(axisX * axisX + axisY * axisY);
+                    if (magnitude > 1.0f) {
+                        axisX /= magnitude;
+                        axisY /= magnitude;
+                    }
+                }
+
+                if (inputAction->clampAxis) {
+                    axisX = std::clamp(axisX, inputAction->axisClampMin,
+                                       inputAction->axisClampMax);
+                    axisY = std::clamp(axisY, inputAction->axisClampMin,
+                                       inputAction->axisClampMax);
+                }
+
+                inputAction->axisX = axisX;
+                inputAction->axisY = axisY;
+            } else if (hasDeltaInput) {
+                inputAction->axisX = this->lastMouseX;
+                inputAction->axisY = this->lastMouseY;
+            } else {
+                inputAction->axisX = 0.0f;
+                inputAction->axisY = 0.0f;
+            }
+
+            if (hasDeltaInput && !hasValueInput) {
+                inputAction->axisDeltaX = accumulatedDeltaX;
+                inputAction->axisDeltaY = accumulatedDeltaY;
+                if (!usesPointerPosition) {
+                    inputAction->axisX = accumulatedDeltaX;
+                    inputAction->axisY = accumulatedDeltaY;
+                }
+            } else {
+                float valueDeltaX = inputAction->axisX - previousX;
+                float valueDeltaY = inputAction->axisY - previousY;
+                inputAction->axisDeltaX = valueDeltaX;
+                inputAction->axisDeltaY = valueDeltaY;
             }
         }
     } else {
@@ -2567,7 +2774,7 @@ bool Window::isTriggerPressed(const Trigger &trigger) {
     }
 }
 
-std::vector<ControllerID> Window::enumerateControllers() const {
+std::vector<ControllerID> Window::getControllers() const {
     std::vector<ControllerID> controllers;
     for (int i = 0; i < 16; ++i) {
         int glfwID = GLFW_JOYSTICK_1 + i;
@@ -2618,13 +2825,13 @@ bool Window::isControllerButtonPressed(int controllerID, int buttonIndex) {
     if (controllerID == CONTROLLER_UNDEFINED) {
         for (int i = 0; i < 16; ++i) {
             int glfwID = GLFW_JOYSTICK_1 + i;
-            if (glfwJoystickPresent(glfwID) &&
-                glfwJoystickIsGamepad(glfwID) == GLFW_TRUE) {
+            if (glfwJoystickPresent(glfwID)) {
                 if (isControllerButtonPressed(glfwID, buttonIndex)) {
                     return true;
                 }
             }
         }
+        return false;
     }
     if (!glfwJoystickPresent(controllerID)) {
         return false;
@@ -2639,7 +2846,7 @@ bool Window::isControllerButtonPressed(int controllerID, int buttonIndex) {
     }
     GLFWgamepadstate state;
     if (glfwGetGamepadState(controllerID, &state)) {
-        if (buttonIndex >= 0 && buttonIndex < GLFW_GAMEPAD_BUTTON_LAST) {
+        if (buttonIndex >= 0 && buttonIndex <= GLFW_GAMEPAD_BUTTON_LAST) {
             return state.buttons[buttonIndex] == GLFW_PRESS;
         }
     }
@@ -2648,15 +2855,19 @@ bool Window::isControllerButtonPressed(int controllerID, int buttonIndex) {
 
 float Window::getControllerAxisValue(int controllerID, int axisIndex) {
     if (controllerID == CONTROLLER_UNDEFINED) {
+        float selected = 0.0f;
+        bool foundAny = false;
         for (int i = 0; i < 16; ++i) {
             int glfwID = GLFW_JOYSTICK_1 + i;
-            if (glfwJoystickPresent(glfwID) &&
-                glfwJoystickIsGamepad(glfwID) == GLFW_TRUE) {
+            if (glfwJoystickPresent(glfwID)) {
                 float val = getControllerAxisValue(glfwID, axisIndex);
-                return val;
+                if (!foundAny || std::abs(val) > std::abs(selected)) {
+                    selected = val;
+                    foundAny = true;
+                }
             }
         }
-        return 0.0f;
+        return foundAny ? selected : 0.0f;
     }
     if (!glfwJoystickPresent(controllerID)) {
         return 0.0f;
@@ -2670,7 +2881,7 @@ float Window::getControllerAxisValue(int controllerID, int axisIndex) {
     }
     GLFWgamepadstate state;
     if (glfwGetGamepadState(controllerID, &state)) {
-        if (axisIndex >= 0 && axisIndex < GLFW_GAMEPAD_AXIS_LAST) {
+        if (axisIndex >= 0 && axisIndex <= GLFW_GAMEPAD_AXIS_LAST) {
             return state.axes[axisIndex];
         }
     }

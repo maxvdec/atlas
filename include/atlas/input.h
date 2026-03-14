@@ -388,6 +388,14 @@ class InputAction {
     float axisY = 0.f;
     float axisDeltaX = 0.f;
     float axisDeltaY = 0.f;
+    bool clampAxis = true;
+    float axisClampMin = -1.f;
+    float axisClampMax = 1.f;
+    bool normalize2D = false;
+    float controllerDeadzone = 0.2f;
+    bool invertControllerY = false;
+    float axisScaleX = 1.f;
+    float axisScaleY = 1.f;
 };
 
 /**
